@@ -50,6 +50,8 @@ import {
   useAdminPsychologistDetail,
   useAdminPsychologistGrantCourtesy,
   useAdminPsychologistPublications,
+  useAdminPsychologistReports,
+  useAdminPsychologistReviews,
   useAdminPsychologistStatistics,
 } from "@/api/callers/psychologists";
 import { resolveApiError } from "@/api/handle";
@@ -64,6 +66,10 @@ import type {
   AdminPsychologistPublicationItem,
   AdminPsychologistPublicationMetric,
   AdminPsychologistPublicationsQuery,
+  AdminPsychologistReportItem,
+  AdminPsychologistReportsQuery,
+  AdminPsychologistReviewItem,
+  AdminPsychologistReviewsQuery,
   AdminPsychologistStatistics,
 } from "@/api/req/psychologists";
 import { InputController, SelectController, TextareaController } from "@/components/controllers";
@@ -88,9 +94,9 @@ const TABS = [
   { id: "plano", label: "Plano e pagamentos", ready: true },
   { id: "estatisticas", label: "Estatísticas", ready: true },
   { id: "publicacoes", label: "Publicações", ready: true },
-  { id: "avaliacoes", label: "Avaliações", ready: false, task: "TASK-58" },
+  { id: "avaliacoes", label: "Avaliações", ready: true },
   { id: "atividades", label: "Atividades", ready: false, task: "TASK-59" },
-  { id: "denuncias", label: "Denúncias", ready: false, task: "TASK-58" },
+  { id: "denuncias", label: "Denúncias", ready: true },
 ] as const;
 
 type ActiveTab = (typeof TABS)[number]["id"];
@@ -1403,6 +1409,509 @@ const PublicationsTab = ({ id }: { id: string }) => {
   );
 };
 
+const ratingStarValues = [1, 2, 3, 4, 5] as const;
+
+const RatingStars = ({ rating, size = "h-4 w-4" }: { rating: number; size?: string }) => (
+  <span
+    aria-label={`${rating} de 5 estrelas`}
+    className="inline-flex items-center gap-0.5"
+    role="img"
+  >
+    {ratingStarValues.map((star) => (
+      <Star
+        aria-hidden
+        className={cn(
+          size,
+          star <= Math.round(rating) ? "fill-amber-400 text-amber-400" : "text-border",
+        )}
+        key={star}
+      />
+    ))}
+  </span>
+);
+
+const SmallAvatar = ({ name, src }: { name: string; src: string | null }) => {
+  if (src && canRenderImage(src)) {
+    return (
+      <Image
+        alt={name}
+        className="h-12 w-12 rounded-full object-cover"
+        height={48}
+        src={src}
+        unoptimized
+        width={48}
+      />
+    );
+  }
+
+  return (
+    <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-primary-soft text-sm font-black text-primary">
+      {initials(name)}
+    </span>
+  );
+};
+
+const ReviewsTab = ({ id }: { id: string }) => {
+  const [rating, setRating] = useState("all");
+  const [status, setStatus] = useState("all");
+  const [page, setPage] = useState(1);
+  const queryInput = useMemo<AdminPsychologistReviewsQuery>(
+    () => ({
+      limit: 5,
+      page,
+      rating: rating === "all" ? undefined : Number(rating),
+      status: status === "all" ? undefined : status,
+    }),
+    [page, rating, status],
+  );
+  const query = useAdminPsychologistReviews(id, queryInput);
+  const errorMessage = query.error ? resolveApiError(query.error) : null;
+
+  if (query.isLoading) return <EngagementLoadingState rows={2} />;
+  if (query.isError && errorMessage) {
+    return <ErrorState message={errorMessage} onRetry={() => void query.refetch()} />;
+  }
+  if (!query.data) return null;
+
+  const reviews = query.data;
+  const maxDistribution = Math.max(1, ...reviews.summary.distribution.map((item) => item.count));
+
+  return (
+    <div className="space-y-5" data-psychologist-detail-tab="avaliacoes">
+      <div className="rounded-2xl border border-primary/20 bg-primary-soft p-4 text-sm font-bold text-muted">
+        Avaliações são somente leitura no Admin. Não há ação de editar, excluir, aprovar, reprovar
+        ou responder por aqui.
+      </div>
+
+      <section className="grid gap-5 xl:grid-cols-[0.8fr_1.2fr]">
+        <CardShell className="p-5">
+          <h2 className="text-lg font-black text-foreground">Avaliação geral</h2>
+          <div className="mt-5 flex flex-col gap-4 sm:flex-row sm:items-center">
+            <div>
+              <p className="text-6xl font-black text-foreground">
+                {reviews.summary.rating_avg.toLocaleString("pt-BR", {
+                  maximumFractionDigits: 1,
+                  minimumFractionDigits: 1,
+                })}
+              </p>
+              <RatingStars rating={reviews.summary.rating_avg} size="h-6 w-6" />
+              <p className="mt-2 text-sm font-bold text-muted">
+                {numberFormatter.format(reviews.summary.rating_count)} avaliações reais
+              </p>
+            </div>
+            <div className="w-full flex-1 space-y-3">
+              {reviews.summary.distribution.map((item) => (
+                <div
+                  className="grid grid-cols-[76px_1fr_44px] items-center gap-3"
+                  key={item.rating}
+                >
+                  <span className="text-sm font-black text-foreground">{item.rating} estrelas</span>
+                  <span className="h-2 overflow-hidden rounded-full bg-surface-muted">
+                    <span
+                      className="block h-full rounded-full bg-primary"
+                      style={{ width: `${(item.count / maxDistribution) * 100}%` }}
+                    />
+                  </span>
+                  <span className="text-right text-sm font-black text-muted">
+                    {numberFormatter.format(item.count)}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </CardShell>
+
+        <CardShell className="p-5">
+          <h2 className="text-lg font-black text-foreground">Status reais</h2>
+          {reviews.summary.statuses.length === 0 ? (
+            <p className="mt-3 rounded-2xl bg-surface-muted p-4 text-sm font-bold text-muted">
+              Nenhuma avaliação real encontrada para este psicólogo.
+            </p>
+          ) : (
+            <div className="mt-4 grid gap-3 sm:grid-cols-2">
+              {reviews.summary.statuses.map((item) => (
+                <div
+                  className="rounded-2xl border border-border bg-surface-muted/50 p-4"
+                  key={item.id}
+                >
+                  <p className="text-sm font-black text-muted">{item.label}</p>
+                  <p className="mt-2 text-3xl font-black text-foreground">
+                    {numberFormatter.format(item.count)}
+                  </p>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardShell>
+      </section>
+
+      <CardShell className="p-4">
+        <div className="grid gap-3 md:grid-cols-[1fr_1fr_auto] md:items-end">
+          <label className="block text-sm font-black text-muted">
+            Nota
+            <select
+              className="mt-2 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground"
+              onChange={(event) => {
+                setRating(event.target.value);
+                setPage(1);
+              }}
+              value={rating}
+            >
+              {reviews.filters.ratings.map((option) => (
+                <option key={option.id} value={option.id}>
+                  {option.label} ({numberFormatter.format(option.count)})
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="block text-sm font-black text-muted">
+            Status
+            <select
+              className="mt-2 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground"
+              onChange={(event) => {
+                setStatus(event.target.value);
+                setPage(1);
+              }}
+              value={status}
+            >
+              {reviews.filters.statuses.map((option) => (
+                <option key={option.id} value={option.id}>
+                  {option.label} ({numberFormatter.format(option.count)})
+                </option>
+              ))}
+            </select>
+          </label>
+          <Badge className="h-11 justify-center bg-primary-soft px-4 text-primary">
+            {reviews.active_filters_count} filtros ativos
+          </Badge>
+        </div>
+      </CardShell>
+
+      <CardShell className="overflow-hidden">
+        <div className="flex flex-col gap-2 border-b border-border p-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h2 className="text-xl font-black text-foreground">Avaliações e depoimentos</h2>
+            <p className="mt-1 text-sm text-muted">
+              Mostrando {numberFormatter.format(reviews.data.length)} de{" "}
+              {numberFormatter.format(reviews.count)} avaliações filtradas.
+            </p>
+          </div>
+          <Badge className="bg-primary-soft text-primary">Somente leitura</Badge>
+        </div>
+
+        {reviews.data.length === 0 ? (
+          <p className="p-5 text-sm font-bold text-muted">
+            Nenhuma avaliação real encontrada para os filtros atuais.
+          </p>
+        ) : (
+          <div className="divide-y divide-border">
+            {reviews.data.map((item: AdminPsychologistReviewItem) => (
+              <article className="p-4" key={item.id}>
+                <div className="flex gap-3">
+                  <SmallAvatar name={item.author.name} src={item.author.avatar} />
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h3 className="font-black text-foreground">{item.author.name}</h3>
+                      <span className="text-xs font-bold text-muted">
+                        {formatDate(item.created_at)}
+                      </span>
+                      <Badge className="bg-surface-muted text-muted">{item.status_label}</Badge>
+                    </div>
+                    <div className="mt-1">
+                      <RatingStars rating={item.rating} />
+                    </div>
+                    <p className="mt-3 text-sm font-bold leading-6 text-foreground">
+                      {item.comment || "Avaliação sem comentário textual."}
+                    </p>
+                    {item.response ? (
+                      <div className="mt-4 rounded-2xl bg-primary-soft p-4">
+                        <p className="text-xs font-black uppercase tracking-wide text-primary">
+                          Resposta do psicólogo · {formatDate(item.responded_at)}
+                        </p>
+                        <p className="mt-2 text-sm font-bold leading-6 text-foreground">
+                          {item.response}
+                        </p>
+                      </div>
+                    ) : null}
+                  </div>
+                </div>
+              </article>
+            ))}
+          </div>
+        )}
+
+        <div className="border-t border-border p-4">
+          <PublicationsPagination page={reviews.page} pages={reviews.pages} setPage={setPage} />
+        </div>
+      </CardShell>
+    </div>
+  );
+};
+
+const reportCardIcon: Record<"all" | "dismissed" | "in_review" | "total" | "upheld", LucideIcon> = {
+  all: Info,
+  dismissed: CheckCircle2,
+  in_review: Clock,
+  total: AlertTriangle,
+  upheld: ShieldCheck,
+};
+
+const resolveReportPeriod = (preset: string, customFrom: string, customTo: string) => {
+  if (preset === "custom") {
+    return customFrom && customTo ? { from: customFrom, to: customTo } : {};
+  }
+
+  const days = preset === "30d" ? 30 : preset === "180d" ? 180 : 90;
+  const to = new Date();
+  const from = new Date();
+  from.setDate(to.getDate() - (days - 1));
+
+  return {
+    from: formatInputDate(from.toISOString()),
+    to: formatInputDate(to.toISOString()),
+  };
+};
+
+const ReportStatusBadge = ({ group, label }: { group: string; label: string }) => {
+  const className =
+    group === "upheld"
+      ? "bg-red-50 text-danger"
+      : group === "dismissed"
+        ? "bg-emerald-50 text-success"
+        : "bg-orange-50 text-orange-700";
+
+  return <Badge className={className}>{label}</Badge>;
+};
+
+const ReportsTab = ({ id }: { id: string }) => {
+  const [period, setPeriod] = useState("90d");
+  const [customFrom, setCustomFrom] = useState("");
+  const [customTo, setCustomTo] = useState("");
+  const [type, setType] = useState<AdminPsychologistReportsQuery["type"]>("all");
+  const [status, setStatus] = useState<AdminPsychologistReportsQuery["status"]>("all");
+  const [page, setPage] = useState(1);
+  const periodRange = useMemo(
+    () => resolveReportPeriod(period, customFrom, customTo),
+    [customFrom, customTo, period],
+  );
+  const queryInput = useMemo<AdminPsychologistReportsQuery>(
+    () => ({
+      ...periodRange,
+      limit: 5,
+      page,
+      status,
+      type,
+    }),
+    [page, periodRange, status, type],
+  );
+  const query = useAdminPsychologistReports(id, queryInput);
+  const errorMessage = query.error ? resolveApiError(query.error) : null;
+
+  if (query.isLoading) return <EngagementLoadingState rows={2} />;
+  if (query.isError && errorMessage) {
+    return <ErrorState message={errorMessage} onRetry={() => void query.refetch()} />;
+  }
+  if (!query.data) return null;
+
+  const reports = query.data;
+
+  return (
+    <div className="space-y-5" data-psychologist-detail-tab="denuncias">
+      <div className="rounded-2xl border border-primary/20 bg-primary-soft p-4 text-sm font-bold text-muted">
+        Denúncias relacionadas a posts e respostas do psicólogo são exibidas apenas para leitura.
+        Resolver, aprovar, rejeitar ou aplicar medidas fica fora desta V1.
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        {reports.cards.map((card) => {
+          const Icon = reportCardIcon[card.id === "total" ? "total" : card.id];
+
+          return (
+            <CardShell className="p-5" key={card.id}>
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <p className="text-sm font-black text-foreground">{card.label}</p>
+                  <p className="mt-5 text-4xl font-black text-foreground">
+                    {numberFormatter.format(card.value)}
+                  </p>
+                  <p className="mt-2 text-xs font-bold text-muted">Fonte: {card.source}</p>
+                </div>
+                <IconCircle icon={Icon} />
+              </div>
+            </CardShell>
+          );
+        })}
+      </div>
+
+      <CardShell className="p-4">
+        <div className="grid gap-3 lg:grid-cols-[1fr_1fr_1fr_1fr_1fr_auto] lg:items-end">
+          <label className="block text-sm font-black text-muted">
+            Período
+            <select
+              className="mt-2 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground"
+              onChange={(event) => {
+                setPeriod(event.target.value);
+                setPage(1);
+              }}
+              value={period}
+            >
+              <option value="30d">Últimos 30 dias</option>
+              <option value="90d">Últimos 90 dias</option>
+              <option value="180d">Últimos 180 dias</option>
+              <option value="custom">Personalizado</option>
+            </select>
+          </label>
+          <label className="block text-sm font-black text-muted">
+            Tipo
+            <select
+              className="mt-2 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground"
+              onChange={(event) => {
+                setType(event.target.value as AdminPsychologistReportsQuery["type"]);
+                setPage(1);
+              }}
+              value={type}
+            >
+              {reports.filters.types.map((option) => (
+                <option key={option.id} value={option.id}>
+                  {option.label} ({numberFormatter.format(option.count)})
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="block text-sm font-black text-muted">
+            Status
+            <select
+              className="mt-2 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground"
+              onChange={(event) => {
+                setStatus(event.target.value as AdminPsychologistReportsQuery["status"]);
+                setPage(1);
+              }}
+              value={status}
+            >
+              {reports.filters.statuses.map((option) => (
+                <option key={option.id} value={option.id}>
+                  {option.label} ({numberFormatter.format(option.count)})
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="block text-sm font-black text-muted">
+            De
+            <input
+              className="mt-2 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground disabled:opacity-50"
+              disabled={period !== "custom"}
+              onChange={(event) => {
+                setCustomFrom(event.target.value);
+                setPage(1);
+              }}
+              type="date"
+              value={customFrom}
+            />
+          </label>
+          <label className="block text-sm font-black text-muted">
+            Até
+            <input
+              className="mt-2 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground disabled:opacity-50"
+              disabled={period !== "custom"}
+              onChange={(event) => {
+                setCustomTo(event.target.value);
+                setPage(1);
+              }}
+              type="date"
+              value={customTo}
+            />
+          </label>
+          <Badge className="h-11 justify-center bg-primary-soft px-4 text-primary">
+            {reports.active_filters_count} filtros
+          </Badge>
+        </div>
+        <p className="mt-3 text-xs font-bold text-muted">
+          Período consultado: {reports.period.from} a {reports.period.to}
+        </p>
+      </CardShell>
+
+      <CardShell className="overflow-hidden">
+        <div className="flex flex-col gap-2 border-b border-border p-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h2 className="text-xl font-black text-foreground">Denúncias recebidas</h2>
+            <p className="mt-1 text-sm text-muted">
+              Mostrando {numberFormatter.format(reports.data.length)} de{" "}
+              {numberFormatter.format(reports.count)} denúncias filtradas.
+            </p>
+          </div>
+          <Badge className="bg-primary-soft text-primary">Somente leitura</Badge>
+        </div>
+
+        {reports.data.length === 0 ? (
+          <p className="p-5 text-sm font-bold text-muted">
+            Nenhuma denúncia real encontrada para os filtros atuais.
+          </p>
+        ) : (
+          <div className="divide-y divide-border">
+            {reports.data.map((item: AdminPsychologistReportItem) => (
+              <article className="grid gap-4 p-4 xl:grid-cols-[1fr_220px]" key={item.id}>
+                <div className="flex gap-3">
+                  <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-orange-50 text-orange-700">
+                    <AlertTriangle aria-hidden className="h-5 w-5" />
+                  </span>
+                  <div className="min-w-0">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Badge className="bg-surface-muted text-muted">
+                        {item.content.type === "post" ? "Post" : "Resposta"}
+                      </Badge>
+                      <ReportStatusBadge group={item.status_group} label={item.status_label} />
+                      <span className="text-xs font-bold text-muted">
+                        {formatDateTime(item.created_at)}
+                      </span>
+                    </div>
+                    <h3 className="mt-2 font-black text-foreground">{item.content.title}</h3>
+                    <p className="mt-1 text-sm font-bold leading-6 text-muted">
+                      {item.content.excerpt}
+                    </p>
+                    <p className="mt-2 text-sm font-black text-foreground">
+                      Motivo: {item.reason_label}
+                    </p>
+                    {item.description ? (
+                      <p className="mt-1 text-sm font-bold leading-6 text-muted">
+                        Descrição: {item.description}
+                      </p>
+                    ) : null}
+                    <a
+                      className="mt-3 inline-flex items-center gap-1 text-xs font-black text-primary"
+                      href={toPublicHref(item.content.public_url)}
+                      rel="noreferrer"
+                      target="_blank"
+                    >
+                      Ver detalhes
+                      <ExternalLink aria-hidden className="h-3.5 w-3.5" />
+                    </a>
+                  </div>
+                </div>
+                <dl className="rounded-2xl bg-surface-muted p-4 text-sm">
+                  <div>
+                    <dt className="font-black text-muted">Denunciado por</dt>
+                    <dd className="mt-1 font-black text-foreground">{item.reported_by.label}</dd>
+                  </div>
+                  <div className="mt-4">
+                    <dt className="font-black text-muted">Comunidade</dt>
+                    <dd className="mt-1 font-black text-foreground">
+                      {item.content.community.name}
+                    </dd>
+                  </div>
+                </dl>
+              </article>
+            ))}
+          </div>
+        )}
+
+        <div className="border-t border-border p-4">
+          <PublicationsPagination page={reports.page} pages={reports.pages} setPage={setPage} />
+        </div>
+      </CardShell>
+    </div>
+  );
+};
+
 const BillingStatusBadge = ({ status }: { status: string | null }) => {
   const normalized = (status || "").toLowerCase();
   const className =
@@ -1945,6 +2454,10 @@ const Content = ({
       <StatisticsTab detail={detail} id={id} />
     ) : tab === "publicacoes" ? (
       <PublicationsTab id={id} />
+    ) : tab === "avaliacoes" ? (
+      <ReviewsTab id={id} />
+    ) : tab === "denuncias" ? (
+      <ReportsTab id={id} />
     ) : (
       <GeneralTab detail={detail} />
     )}
@@ -1954,7 +2467,9 @@ const Content = ({
       _product/proto/admin/Psicólogos/Detalhes do psicólogo/Perfil e Cadastro.png e
       _product/proto/admin/Psicólogos/Detalhes do psicólogo/Plano e pagamentos.png,
       _product/proto/admin/Psicólogos/Detalhes do psicólogo/Estatísticas.png e
-      _product/proto/admin/Psicólogos/Detalhes do psicólogo/Publicações.png. Builder/Quick Copy não
+      _product/proto/admin/Psicólogos/Detalhes do psicólogo/Publicações.png,
+      _product/proto/admin/Psicólogos/Detalhes do psicólogo/Avaliações.png e
+      _product/proto/admin/Psicólogos/Detalhes do psicólogo/Denúncias.png. Builder/Quick Copy não
       está disponível neste ambiente; a implementação foi feita a partir das imagens locais.
     </p>
   </main>
@@ -1967,7 +2482,9 @@ export const AdminPsychologistDetailClient = ({ id }: { id: string }) => {
     requestedTab === "perfil" ||
     requestedTab === "plano" ||
     requestedTab === "estatisticas" ||
-    requestedTab === "publicacoes"
+    requestedTab === "publicacoes" ||
+    requestedTab === "avaliacoes" ||
+    requestedTab === "denuncias"
       ? requestedTab
       : "geral";
   const query = useAdminPsychologistDetail(id);

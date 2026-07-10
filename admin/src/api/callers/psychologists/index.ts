@@ -3,9 +3,13 @@ import { adminPsychologistsKeys } from "@/api/cache/keys";
 import {
   type AdminPsychologistGrantCourtesyInput,
   type AdminPsychologistPublicationsQuery,
+  type AdminPsychologistReportsQuery,
+  type AdminPsychologistReviewsQuery,
   getAdminPsychologistBilling,
   getAdminPsychologistDetail,
   getAdminPsychologistPublications,
+  getAdminPsychologistReports,
+  getAdminPsychologistReviews,
   getAdminPsychologistStatistics,
   getAdminPsychologistsDashboard,
   getAdminPsychologistsList,
@@ -64,6 +68,28 @@ export const useAdminPsychologistPublications = (
     enabled: Boolean(id) && (options.enabled ?? true),
     queryFn: () => getAdminPsychologistPublications(id, input),
     queryKey: adminPsychologistsKeys.publications(id, input),
+  });
+
+export const useAdminPsychologistReviews = (
+  id: string,
+  input: AdminPsychologistReviewsQuery,
+  options: { enabled?: boolean } = {},
+) =>
+  useQuery({
+    enabled: Boolean(id) && (options.enabled ?? true),
+    queryFn: () => getAdminPsychologistReviews(id, input),
+    queryKey: adminPsychologistsKeys.reviews(id, input),
+  });
+
+export const useAdminPsychologistReports = (
+  id: string,
+  input: AdminPsychologistReportsQuery,
+  options: { enabled?: boolean } = {},
+) =>
+  useQuery({
+    enabled: Boolean(id) && (options.enabled ?? true),
+    queryFn: () => getAdminPsychologistReports(id, input),
+    queryKey: adminPsychologistsKeys.reports(id, input),
   });
 
 export const useAdminPsychologistGrantCourtesy = (id: string) => {

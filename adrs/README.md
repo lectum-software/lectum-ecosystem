@@ -125,3 +125,4 @@ Formato recomendado:
 - [ADR-0235 - Exposição administrativa de dados sensíveis no detalhe do psicólogo](0235-admin-detalhe-psicologo-dados-sensiveis.md) - Accepted
 - [ADR-0236 - Plano, pagamentos e cortesia do psicólogo no Admin](0236-admin-plano-pagamentos-cortesia-psicologo.md) - Accepted
 - [ADR-0237 - Estatísticas e publicações reais do psicólogo no Admin](0237-admin-psicologo-estatisticas-publicacoes.md) - Accepted
+- [ADR-0238 - Avaliações e denúncias do psicólogo no Admin são somente leitura](0238-admin-psicologo-avaliacoes-denuncias-readonly.md) - Accepted
