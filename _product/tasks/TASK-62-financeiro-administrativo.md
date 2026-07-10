@@ -8,7 +8,7 @@
 | Prioridade | P1 |
 | Esforço | L |
 | Fase | Admin / Financeiro |
-| Status | Pending |
+| Status | Completed |
 | Dependências | TASK-45, TASK-46, TASK-31, TASK-32, TASK-33 |
 | ADR alvo | ADR se houver decisão nova sobre cálculo de receita, MRR, cancelamento ou exportação financeira |
 
@@ -160,24 +160,24 @@ Frontend esperado:
 
 ## Critérios de aceite
 
-- [ ] Rota Financeiro só abre para admin autenticado.
-- [ ] `_product/proto/admin/Financeiro.png` foi citada como referência visual.
-- [ ] A lista inferior se chama **Novas assinaturas de psicólogos**.
-- [ ] Novas assinaturas excluem plano gratuito e cortesia/admin grant.
-- [ ] Receita total usa pagamento confirmado real ou aparece indisponível com copy honesta.
-- [ ] MRR exclui gratuito e cortesia.
-- [ ] Ticket médio usa `subscription_plan.price_cents`/MRR real, sem hardcode.
-- [ ] Cancelamentos só aparecem como número real se houver fonte confiável.
-- [ ] Nenhum dado financeiro é simulado.
-- [ ] Nenhuma referência a Stripe foi criada.
-- [ ] Exportar relatório gera CSV real com os filtros atuais.
-- [ ] CSV não contém token, PAN, CVV ou dado sensível de cartão.
-- [ ] UI mobile-first validada.
-- [ ] Nenhum `<img>` cru foi usado.
-- [ ] Nenhum mock, dado fake permanente ou endpoint simulado foi usado.
-- [ ] Checks/builds relevantes executados sem erros.
-- [ ] ADR criado/atualizado se houver decisão sobre métrica financeira, cancelamento, MRR ou exportação.
-- [ ] Commit criado com mensagem convencional e `git push` executado.
+- [x] Rota Financeiro só abre para admin autenticado.
+- [x] `_product/proto/admin/Financeiro.png` foi citada como referência visual.
+- [x] A lista inferior se chama **Novas assinaturas de psicólogos**.
+- [x] Novas assinaturas excluem plano gratuito e cortesia/admin grant.
+- [x] Receita total usa pagamento confirmado real ou aparece indisponível com copy honesta.
+- [x] MRR exclui gratuito e cortesia.
+- [x] Ticket médio usa `subscription_plan.price_cents`/MRR real, sem hardcode.
+- [x] Cancelamentos só aparecem como número real se houver fonte confiável.
+- [x] Nenhum dado financeiro é simulado.
+- [x] Nenhuma referência a Stripe foi criada.
+- [x] Exportar relatório gera CSV real com os filtros atuais.
+- [x] CSV não contém token, PAN, CVV ou dado sensível de cartão.
+- [x] UI mobile-first validada.
+- [x] Nenhum `<img>` cru foi usado.
+- [x] Nenhum mock, dado fake permanente ou endpoint simulado foi usado.
+- [x] Checks/builds relevantes executados sem erros.
+- [x] ADR criado/atualizado se houver decisão sobre métrica financeira, cancelamento, MRR ou exportação.
+- [x] Commit criado com mensagem convencional e `git push` executado.
 
 ## Validação mínima
 
@@ -188,3 +188,15 @@ Frontend esperado:
 - `pnpm check`
 - Browser local com admin real e assinaturas reais.
 - Teste manual do download CSV e conferência de conteúdo.
+
+## Execucao 2026-07-10
+
+- Referencia visual usada: `_product/proto/admin/Financeiro.png`.
+- Builder/Quick Copy nao ficou disponivel como ferramenta no ambiente; a implementacao usou a imagem local exportada e registrou a limitacao na UI/cobertura de dados.
+- Backend criado em `/api/admin/private/finance/dashboard` e `/api/admin/private/finance/dashboard/export`, protegido por autenticacao Admin real.
+- Receita total usa apenas `payment_event` real do Mercado Pago com pagamento confirmado e valor extraivel; se houver evento confirmado sem valor, a UI mostra indisponivel com copy honesta.
+- MRR e ticket medio usam `subscription_plan.price_cents` das assinaturas profissionais pagas ativas, excluindo plano gratuito e `source="admin_grant"`.
+- Cancelamentos usam apenas `professional_subscription.status="cancelada"` sincronizado pelo fluxo real, sem inferir ausencia de renovacao.
+- Exportacao CSV validada por service real com filtros de periodo, contendo resumo, serie agregada e novas assinaturas de psicologos, sem token/PAN/CVV.
+- Validacoes executadas: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check`, rota local `http://localhost:3002/financeiro` (HTTP 200), endpoints em backend isolado `:3011` protegidos com HTTP 401 sem token e teste de geracao CSV via service real.
+- ADR criado: `adrs/0242-admin-financeiro-receita-mrr-exportacao.md`.

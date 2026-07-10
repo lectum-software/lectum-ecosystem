@@ -1,5 +1,6 @@
 import type { CommunitiesDashboardQuery } from "@/api/req/communities";
 import type { DashboardSummaryQuery } from "@/api/req/dashboard";
+import type { FinanceDashboardQuery } from "@/api/req/finance";
 import type { PatientsDashboardQuery, PatientsDetailQuery } from "@/api/req/patients";
 import type {
   AdminPsychologistActivitiesQuery,
@@ -14,6 +15,7 @@ import type { TrafficSummaryQuery } from "@/api/req/traffic";
 type AdminRangeQuery =
   | CommunitiesDashboardQuery
   | DashboardSummaryQuery
+  | FinanceDashboardQuery
   | PatientsDashboardQuery
   | PatientsDetailQuery
   | PsychologistsDashboardQuery
@@ -21,6 +23,7 @@ type AdminRangeQuery =
 
 const normalizeRange = (input: AdminRangeQuery) => ({
   from: input.from || "default",
+  groupBy: "groupBy" in input ? input.groupBy || "day" : undefined,
   to: input.to || "default",
 });
 
@@ -99,6 +102,12 @@ export const adminCommunitiesKeys = {
     [...adminCommunitiesKeys.all, "dashboard", normalizeRange(input)] as const,
   detail: (id: string) => [...adminCommunitiesKeys.all, "detail", id] as const,
   rules: (id: string) => [...adminCommunitiesKeys.all, "rules", id] as const,
+};
+
+export const adminFinanceKeys = {
+  all: ["admin", "finance"] as const,
+  dashboard: (input: FinanceDashboardQuery) =>
+    [...adminFinanceKeys.all, "dashboard", normalizeRange(input)] as const,
 };
 
 export const adminPsychologistsKeys = {

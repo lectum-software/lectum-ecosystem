@@ -1,0 +1,161 @@
+import prisma from "@/infra/database/prisma";
+import type { AdminFinanceDateRange } from "../DTOs/IAdminFinanceDashboardDTO";
+
+const dateRangeWhere = (range: AdminFinanceDateRange) => ({
+  gte: range.start,
+  lte: range.end,
+});
+
+const paidPlanWhere = {
+  active: true,
+  deleted: false,
+  price_cents: {
+    gt: 0,
+  },
+  slug: {
+    not: "gratuito",
+  },
+};
+
+const paidGatewaySubscriptionWhere = {
+  deleted: false,
+  gateway: "mercadopago",
+  gateway_subscription_id: {
+    not: null,
+  },
+  plan: paidPlanWhere,
+  source: "mercadopago",
+};
+
+const subscriptionSelect = {
+  createdAt: true,
+  current_period_end: true,
+  gateway: true,
+  id: true,
+  source: true,
+  status: true,
+  updatedAt: true,
+  plan: {
+    select: {
+      id: true,
+      interval: true,
+      name: true,
+      price_cents: true,
+      slug: true,
+    },
+  },
+  psychologist: {
+    select: {
+      crp: true,
+      id: true,
+      user: {
+        select: {
+          email: true,
+          name: true,
+        },
+      },
+    },
+  },
+};
+
+export class AdminFinanceDashboardRepository {
+  async countActivePaidSubscriptionsAt(at: Date): Promise<number> {
+    return prisma.professional_subscription.count({
+      where: {
+        ...paidGatewaySubscriptionWhere,
+        createdAt: {
+          lte: at,
+        },
+        status: "ativa",
+        OR: [
+          { current_period_end: null },
+          {
+            current_period_end: {
+              gte: at,
+            },
+          },
+        ],
+      },
+    });
+  }
+
+  async countCancelledPaidSubscriptions(range: AdminFinanceDateRange): Promise<number> {
+    return prisma.professional_subscription.count({
+      where: {
+        ...paidGatewaySubscriptionWhere,
+        status: "cancelada",
+        updatedAt: dateRangeWhere(range),
+      },
+    });
+  }
+
+  async countNewPaidSubscriptions(range: AdminFinanceDateRange): Promise<number> {
+    return prisma.professional_subscription.count({
+      where: {
+        ...paidGatewaySubscriptionWhere,
+        createdAt: dateRangeWhere(range),
+        status: {
+          in: ["ativa", "cancelada", "inadimplente"],
+        },
+      },
+    });
+  }
+
+  async listActivePaidSubscriptionsAt(at: Date) {
+    return prisma.professional_subscription.findMany({
+      where: {
+        ...paidGatewaySubscriptionWhere,
+        createdAt: {
+          lte: at,
+        },
+        status: "ativa",
+        OR: [
+          { current_period_end: null },
+          {
+            current_period_end: {
+              gte: at,
+            },
+          },
+        ],
+      },
+      select: subscriptionSelect,
+    });
+  }
+
+  async listNewPaidSubscriptions(range: AdminFinanceDateRange, take = 50) {
+    return prisma.professional_subscription.findMany({
+      orderBy: {
+        createdAt: "desc",
+      },
+      take,
+      where: {
+        ...paidGatewaySubscriptionWhere,
+        createdAt: dateRangeWhere(range),
+        status: {
+          in: ["ativa", "cancelada", "inadimplente"],
+        },
+      },
+      select: subscriptionSelect,
+    });
+  }
+
+  async listPaymentEvents(range: AdminFinanceDateRange) {
+    return prisma.payment_event.findMany({
+      orderBy: {
+        createdAt: "asc",
+      },
+      where: {
+        createdAt: dateRangeWhere(range),
+        deleted: false,
+        gateway: "mercadopago",
+      },
+      select: {
+        createdAt: true,
+        external_id: true,
+        id: true,
+        payload: true,
+        type: true,
+      },
+    });
+  }
+}
