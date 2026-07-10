@@ -6,6 +6,7 @@ import apiAdminPrivateCommunitiesManage from "@/modules/api/admin/private/commun
 import apiAdminPrivateDashboardExport from "@/modules/api/admin/private/dashboard/export";
 import apiAdminPrivateDashboardSummary from "@/modules/api/admin/private/dashboard/summary";
 import apiAdminPrivatePsychologistsDashboard from "@/modules/api/admin/private/psychologists/dashboard";
+import apiAdminPrivatePsychologistsList from "@/modules/api/admin/private/psychologists/list";
 import apiAdminPrivateTrafficExport from "@/modules/api/admin/private/traffic/export";
 import apiAdminPrivateTrafficSummary from "@/modules/api/admin/private/traffic/summary";
 import apiAdminPublicAuthLogin from "@/modules/api/admin/public/auth/login";
@@ -135,6 +136,7 @@ mountRoute("/api/admin/private/communities", apiAdminPrivateCommunitiesManage);
 mountRoute("/api/admin/private/dashboard/summary", apiAdminPrivateDashboardSummary);
 mountRoute("/api/admin/private/dashboard/export", apiAdminPrivateDashboardExport);
 mountRoute("/api/admin/private/psychologists/dashboard", apiAdminPrivatePsychologistsDashboard);
+mountRoute("/api/admin/private/psychologists", apiAdminPrivatePsychologistsList);
 mountRoute("/api/admin/private/traffic/summary", apiAdminPrivateTrafficSummary);
 mountRoute("/api/admin/private/traffic/export", apiAdminPrivateTrafficExport);
 mountRoute("/api/private/user/favorites", privateAuth, apiPrivatePatientFavorites);

@@ -8,7 +8,7 @@
 | Prioridade | P1 |
 | Esforço | L |
 | Fase | Admin |
-| Status | Pending |
+| Status | Completed |
 | Dependências | TASK-45, TASK-46, TASK-53 |
 | ADR alvo | ADR se houver nova decisão sobre filtros persistidos, ordenação ou exposição de dados sensíveis |
 
@@ -108,20 +108,20 @@ Frontend esperado:
 
 ## Critérios de aceite
 
-- [ ] Lista só abre para admin autenticado.
-- [ ] Busca por nome/CRP usa backend real.
-- [ ] Filtros usam campos reais do banco.
-- [ ] Ordenação "Mais relevantes" usa ranking público real.
-- [ ] Métricas por linha vêm de dados reais.
-- [ ] Botão "Adicionar novo psicólogo" não aparece.
-- [ ] "Salvar busca" não aparece/habilita sem persistência real.
-- [ ] Paginação funciona.
-- [ ] UI mobile-first validada.
-- [ ] Nenhum mock, dado fake permanente ou endpoint simulado foi usado.
-- [ ] Nenhum `<img>` cru foi usado.
-- [ ] `_product/proto/admin/Psicólogos/Psicólogos- Lista.png` foi citado como referência visual.
-- [ ] Checks/builds relevantes foram executados sem erros.
-- [ ] Commit criado com mensagem convencional e `git push` executado.
+- [x] Lista só abre para admin autenticado.
+- [x] Busca por nome/CRP usa backend real.
+- [x] Filtros usam campos reais do banco.
+- [x] Ordenação "Mais relevantes" usa ranking público real.
+- [x] Métricas por linha vêm de dados reais.
+- [x] Botão "Adicionar novo psicólogo" não aparece.
+- [x] "Salvar busca" não aparece/habilita sem persistência real.
+- [x] Paginação funciona.
+- [x] UI mobile-first validada.
+- [x] Nenhum mock, dado fake permanente ou endpoint simulado foi usado.
+- [x] Nenhum `<img>` cru foi usado.
+- [x] `_product/proto/admin/Psicólogos/Psicólogos- Lista.png` foi citado como referência visual.
+- [x] Checks/builds relevantes foram executados sem erros.
+- [x] Commit criado com mensagem convencional e `git push` executado.
 
 ## Validação mínima
 
@@ -134,4 +134,23 @@ Frontend esperado:
 
 ## Notas de execução
 
-- Se um filtro visual não tiver campo real, omitir ou retornar indisponível em vez de simular.
+- Builder/Quick Copy `vcp://quickcopy/vcp-24aaa2941d814e5b90572bc93ae50e2a` não estava disponível como ferramenta neste ambiente; a implementação visual usou `_product/proto/admin/Psicólogos/Psicólogos- Lista.png`.
+- Endpoint real criado: `GET /api/admin/private/psychologists`, protegido por autenticação administrativa da TASK-45.
+- Rota Admin criada: `/psicologos/lista`, com filtros em URL, paginação, ordenação e layout mobile-first.
+- Ordenação `relevance` reutiliza o helper de ranking público `rankPsychologistCandidates`, compartilhado com a descoberta pública.
+- Campos pessoais sensíveis não foram expostos na lista; a resposta retorna apenas dados operacionais necessários para busca e triagem administrativa.
+- O botão **Adicionar novo psicólogo** e a ação **Salvar busca** permanecem fora da V1.
+- A rota mínima `/psicologos/[id]` foi adicionada sem dados simulados para evitar ação quebrada; o detalhe real fica para a TASK-55.
+- Nenhuma alteração em `backend/prisma/schema.prisma` ou `backend/prisma/migrations`; `db:migrate` não se aplica a esta task.
+- ADR criado: `adrs/0234-admin-lista-psicologos-ranking-filtros.md`.
+
+## Evidências de validação
+
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check`
+- API real autenticada: `GET /api/admin/private/psychologists?page=1&limit=2&sort=relevance` retornou `status=200`, `count=6`, `items=2` e `firstRank=1`.
+- API sem autenticação retornou `401`.
+- Browser local headless com admin real em `http://localhost:3002/psicologos/lista?sort=relevance&limit=8`: desktop com 6 linhas e ações reais; mobile 390px com 6 cards; sem **Adicionar novo psicólogo** e sem **Salvar busca**.

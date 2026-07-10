@@ -7,6 +7,39 @@ export type PsychologistsDashboardQuery = {
   to?: string;
 };
 
+export type PsychologistsListSort =
+  | "favorites"
+  | "name"
+  | "rating"
+  | "recent"
+  | "relevance"
+  | "whatsapp";
+
+export type PsychologistsListStatus = "free" | "pending" | "unpublished" | "verified";
+
+export type PsychologistsListExperience = "0_4" | "5_9" | "10_plus" | "unknown";
+
+export type PsychologistsListQuery = {
+  accepts_insurance?: boolean;
+  approach?: string;
+  city?: string;
+  discount_first_session?: boolean;
+  experience?: PsychologistsListExperience;
+  gender?: string;
+  language?: string;
+  limit?: number;
+  modality?: string;
+  page?: number;
+  plan?: string;
+  q?: string;
+  service?: string;
+  social_value?: boolean;
+  sort?: PsychologistsListSort;
+  state?: string;
+  status?: PsychologistsListStatus;
+  target_audience?: string;
+};
+
 export type PsychologistsDashboardTrend = "down" | "flat" | "unavailable" | "up";
 
 export type PsychologistsDashboardMetric = {
@@ -132,6 +165,66 @@ export type PsychologistsDashboardUnavailableMetric = {
   source: string;
 };
 
+export type PsychologistsListOption = {
+  count: number;
+  id: string;
+  label: string;
+};
+
+export type PsychologistsListFilters = {
+  approaches: PsychologistsListOption[];
+  cities: PsychologistsListOption[];
+  experience_ranges: PsychologistsListOption[];
+  genders: PsychologistsListOption[];
+  languages: PsychologistsListOption[];
+  modalities: PsychologistsListOption[];
+  plans: PsychologistsListOption[];
+  services: PsychologistsListOption[];
+  states: PsychologistsListOption[];
+  statuses: PsychologistsListOption[];
+  target_audience: PsychologistsListOption[];
+};
+
+export type PsychologistsListItem = {
+  accepts_insurance: boolean;
+  avatar: string | null;
+  city: string | null;
+  created_at: string;
+  crp: string | null;
+  detail_url: string;
+  discount_first_session: boolean;
+  experience_years: number | null;
+  favorites_count: number;
+  gender: string | null;
+  id: string;
+  name: string;
+  plan_name: string | null;
+  plan_slug: string | null;
+  public_profile_url: string;
+  published: boolean;
+  ranking_position: number | null;
+  ranking_score: number | null;
+  rating_avg: number;
+  rating_count: number;
+  social_value: boolean;
+  state: string | null;
+  status: PsychologistsListStatus;
+  verified: boolean;
+  whatsapp_clicks_count: number;
+};
+
+export type AdminPsychologistsList = {
+  active_filters_count: number;
+  count: number;
+  data: PsychologistsListItem[];
+  filters: PsychologistsListFilters;
+  page: number;
+  pages: number;
+  per_page: number;
+  sort: PsychologistsListSort;
+  source: "user+psychologist_profile+professional_subscription+public_ranking";
+};
+
 export type AdminPsychologistsDashboard = {
   cards: {
     churn: PsychologistsDashboardMetric;
@@ -166,16 +259,48 @@ export type AdminPsychologistsDashboard = {
   unavailable: PsychologistsDashboardUnavailableMetric[];
 };
 
-const cleanParams = (input: PsychologistsDashboardQuery) => ({
+const cleanDashboardParams = (input: PsychologistsDashboardQuery) => ({
   ...(input.from ? { from: input.from } : {}),
   ...(input.to ? { to: input.to } : {}),
+});
+
+const cleanListParams = (input: PsychologistsListQuery) => ({
+  ...(input.accepts_insurance ? { accepts_insurance: input.accepts_insurance } : {}),
+  ...(input.approach ? { approach: input.approach } : {}),
+  ...(input.city ? { city: input.city } : {}),
+  ...(input.discount_first_session ? { discount_first_session: input.discount_first_session } : {}),
+  ...(input.experience ? { experience: input.experience } : {}),
+  ...(input.gender ? { gender: input.gender } : {}),
+  ...(input.language ? { language: input.language } : {}),
+  ...(input.limit ? { limit: input.limit } : {}),
+  ...(input.modality ? { modality: input.modality } : {}),
+  ...(input.page ? { page: input.page } : {}),
+  ...(input.plan ? { plan: input.plan } : {}),
+  ...(input.q ? { q: input.q } : {}),
+  ...(input.service ? { service: input.service } : {}),
+  ...(input.social_value ? { social_value: input.social_value } : {}),
+  ...(input.sort ? { sort: input.sort } : {}),
+  ...(input.state ? { state: input.state } : {}),
+  ...(input.status ? { status: input.status } : {}),
+  ...(input.target_audience ? { target_audience: input.target_audience } : {}),
 });
 
 export const getAdminPsychologistsDashboard = async (input: PsychologistsDashboardQuery) => {
   const response = await adminApi.get<ApiResponse<AdminPsychologistsDashboard>>(
     "/api/admin/private/psychologists/dashboard",
     {
-      params: cleanParams(input),
+      params: cleanDashboardParams(input),
+    },
+  );
+
+  return resolveApiData(response.data);
+};
+
+export const getAdminPsychologistsList = async (input: PsychologistsListQuery) => {
+  const response = await adminApi.get<ApiResponse<AdminPsychologistsList>>(
+    "/api/admin/private/psychologists",
+    {
+      params: cleanListParams(input),
     },
   );
 

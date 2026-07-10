@@ -20,6 +20,7 @@ import {
   UsersRound,
 } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 import { type ReactNode, useMemo, useState } from "react";
 import { useAdminPsychologistsDashboard } from "@/api/callers/psychologists";
 import { resolveApiError } from "@/api/handle";
@@ -649,6 +650,12 @@ const PsychologistsTable = ({
       Mostrando {numberFormatter.format(items.length)} de {numberFormatter.format(total)}{" "}
       psicólogos.
     </p>
+    <Link
+      className="mt-3 inline-flex text-sm font-black text-primary hover:text-primary-hover"
+      href="/psicologos/lista"
+    >
+      Ver lista completa
+    </Link>
   </CardShell>
 );
 
