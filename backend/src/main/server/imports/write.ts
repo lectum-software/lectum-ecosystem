@@ -5,6 +5,7 @@ import apiAdminPrivateCommunitiesDashboard from "@/modules/api/admin/private/com
 import apiAdminPrivateCommunitiesManage from "@/modules/api/admin/private/communities/manage";
 import apiAdminPrivateDashboardExport from "@/modules/api/admin/private/dashboard/export";
 import apiAdminPrivateDashboardSummary from "@/modules/api/admin/private/dashboard/summary";
+import apiAdminPrivatePsychologistsActivities from "@/modules/api/admin/private/psychologists/activities";
 import apiAdminPrivatePsychologistsBilling from "@/modules/api/admin/private/psychologists/billing";
 import apiAdminPrivatePsychologistsDashboard from "@/modules/api/admin/private/psychologists/dashboard";
 import apiAdminPrivatePsychologistsDetail from "@/modules/api/admin/private/psychologists/detail";
@@ -145,6 +146,7 @@ mountRoute("/api/admin/private/psychologists", apiAdminPrivatePsychologistsDetai
 mountRoute("/api/admin/private/psychologists", apiAdminPrivatePsychologistsBilling);
 mountRoute("/api/admin/private/psychologists", apiAdminPrivatePsychologistsEngagement);
 mountRoute("/api/admin/private/psychologists", apiAdminPrivatePsychologistsFeedback);
+mountRoute("/api/admin/private/psychologists", apiAdminPrivatePsychologistsActivities);
 mountRoute("/api/admin/private/traffic/summary", apiAdminPrivateTrafficSummary);
 mountRoute("/api/admin/private/traffic/export", apiAdminPrivateTrafficExport);
 mountRoute("/api/private/user/favorites", privateAuth, apiPrivatePatientFavorites);

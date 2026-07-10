@@ -8,7 +8,7 @@
 | Prioridade | P2 |
 | Esforço | M |
 | Fase | Admin |
-| Status | Pending |
+| Status | Completed |
 | Dependências | TASK-45, TASK-46, TASK-55, TASK-57, TASK-58 |
 | ADR alvo | ADR apenas se for criado novo modelo de auditoria |
 
@@ -74,19 +74,19 @@ Exibir uma linha do tempo simples de eventos reais associados ao psicólogo, sem
 
 ## Critérios de aceite
 
-- [ ] Aba só abre para admin autenticado.
-- [ ] Copy não promete "todas as ações".
-- [ ] Eventos são derivados de fontes reais existentes.
-- [ ] Categorias sem fonte confiável não aparecem ou aparecem como indisponíveis.
-- [ ] Filtros funcionam sobre dados reais.
-- [ ] Links "Ver detalhes" só aparecem quando há destino real.
-- [ ] Exportação só aparece/habilita se houver endpoint real.
-- [ ] UI mobile-first validada.
-- [ ] Nenhum mock, dado fake permanente ou endpoint simulado foi usado.
-- [ ] Nenhum `<img>` cru foi usado.
-- [ ] `_product/proto/admin/Psicólogos/Detalhes do psicólogo/Atividades.png` foi citada como referência visual.
-- [ ] Checks/builds relevantes executados sem erros.
-- [ ] Commit criado com mensagem convencional e `git push` executado.
+- [x] Aba só abre para admin autenticado.
+- [x] Copy não promete "todas as ações".
+- [x] Eventos são derivados de fontes reais existentes.
+- [x] Categorias sem fonte confiável não aparecem ou aparecem como indisponíveis.
+- [x] Filtros funcionam sobre dados reais.
+- [x] Links "Ver detalhes" só aparecem quando há destino real.
+- [x] Exportação só aparece/habilita se houver endpoint real.
+- [x] UI mobile-first validada.
+- [x] Nenhum mock, dado fake permanente ou endpoint simulado foi usado.
+- [x] Nenhum `<img>` cru foi usado.
+- [x] `_product/proto/admin/Psicólogos/Detalhes do psicólogo/Atividades.png` foi citada como referência visual.
+- [x] Checks/builds relevantes executados sem erros.
+- [x] Commit criado com mensagem convencional e `git push` executado.
 
 ## Validação mínima
 
@@ -96,3 +96,14 @@ Exibir uma linha do tempo simples de eventos reais associados ao psicólogo, sem
 - `pnpm --dir admin build`
 - `pnpm check`
 - Browser local com admin real e psicólogo real.
+
+## Execução
+
+- Implementado endpoint privado Admin `GET /api/admin/private/psychologists/:id/activities`.
+- O feed deriva eventos reais de `user`, `psychologist_profile`, `professional_subscription`, `community_post`, `post_reply`, `post_save`, `post_reply_save`, `contact_request`, `professional_review` e `post_report`.
+- Nenhum modelo novo de auditoria foi criado; categorias sem fonte confiável retornam em `unavailable` e a copy não promete listar todas as ações.
+- Exportação não foi exibida porque não existe endpoint real de exportação para atividades nesta V1.
+- A aba Atividades foi habilitada no Admin com filtros reais de período, área, tipo e busca textual, lista paginada mobile-first e links somente para rotas públicas reais.
+- Referência visual usada: `_product/proto/admin/Psicólogos/Detalhes do psicólogo/Atividades.png`; Builder/Quick Copy não estava disponível no ambiente.
+- ADR criado: `adrs/0239-admin-atividades-psicologo-feed-derivado.md`.
+- Validações executadas: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check`, API local autenticada e browser local via Edge/CDP em `/psicologos/demo-profile-marina-rocha?tab=atividades`.

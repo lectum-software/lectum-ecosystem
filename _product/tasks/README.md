@@ -139,7 +139,7 @@ ou cortesia manual.
 | 56 | [TASK-56 - Detalhe administrativo do psicólogo: Plano, pagamentos e cortesia](TASK-56-detalhe-psicologo-plano-pagamentos-admin.md) | Completed | 45, 46, 55, 31A, 31C, 32, 33 |
 | 57 | [TASK-57 - Detalhe administrativo do psicólogo: Estatísticas e publicações](TASK-57-detalhe-psicologo-estatisticas-publicacoes-admin.md) | Completed | 45, 46, 55 |
 | 58 | [TASK-58 - Detalhe administrativo do psicólogo: Avaliações e denúncias](TASK-58-detalhe-psicologo-avaliacoes-denuncias-admin.md) | Completed | 45, 46, 55 |
-| 59 | [TASK-59 - Detalhe administrativo do psicólogo: Atividades simples](TASK-59-detalhe-psicologo-atividades-admin.md) | Pending | 45, 46, 55, 57, 58 |
+| 59 | [TASK-59 - Detalhe administrativo do psicólogo: Atividades simples](TASK-59-detalhe-psicologo-atividades-admin.md) | Completed | 45, 46, 55, 57, 58 |
 | 60 | [TASK-60 - Dashboard administrativo de pacientes](TASK-60-dashboard-administrativo-pacientes.md) | Pending | 45, 46 |
 | 61 | [TASK-61 - Detalhe administrativo do paciente](TASK-61-detalhe-administrativo-paciente.md) | Pending | 45, 46, 60 |
 | 62 | [TASK-62 - Financeiro administrativo](TASK-62-financeiro-administrativo.md) | Pending | 45, 46, 31, 32, 33 |

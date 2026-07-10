@@ -695,6 +695,64 @@ export type AdminPsychologistReports = {
   unavailable: { description: string; id: string; label: string; source: string }[];
 };
 
+export type AdminPsychologistActivitiesQuery = {
+  area?: string;
+  from?: string;
+  limit?: number;
+  page?: number;
+  q?: string;
+  to?: string;
+  type?: string;
+};
+
+export type AdminPsychologistActivityItem = {
+  actor: {
+    id: string;
+    name: string;
+    role: string;
+  } | null;
+  area: {
+    id: string;
+    label: string;
+  };
+  description: string;
+  detail_url: string | null;
+  id: string;
+  occurred_at: string;
+  source: string;
+  type: {
+    id: string;
+    label: string;
+  };
+};
+
+export type AdminPsychologistActivities = {
+  active_filters_count: number;
+  count: number;
+  coverage_note: string;
+  data: AdminPsychologistActivityItem[];
+  export: {
+    available: false;
+    reason: string;
+  };
+  filters: {
+    areas: { count: number; id: string; label: string }[];
+    types: { count: number; id: string; label: string }[];
+  };
+  page: number;
+  pages: number;
+  per_page: number;
+  period: {
+    from: string | null;
+    label: string;
+    max_days: number | null;
+    timezone: "server-local";
+    to: string | null;
+  };
+  source: "user+psychologist_profile+professional_subscription+community_post+post_reply+post_save+post_reply_save+contact_request+professional_review+post_report";
+  unavailable: { description: string; id: string; label: string; source: string }[];
+};
+
 export type AdminPsychologistsDashboard = {
   cards: {
     churn: PsychologistsDashboardMetric;
@@ -781,6 +839,16 @@ const cleanReportsParams = (input: AdminPsychologistReportsQuery) => ({
   ...(input.type ? { type: input.type } : {}),
 });
 
+const cleanActivitiesParams = (input: AdminPsychologistActivitiesQuery) => ({
+  ...(input.area ? { area: input.area } : {}),
+  ...(input.from ? { from: input.from } : {}),
+  ...(input.limit ? { limit: input.limit } : {}),
+  ...(input.page ? { page: input.page } : {}),
+  ...(input.q ? { q: input.q } : {}),
+  ...(input.to ? { to: input.to } : {}),
+  ...(input.type ? { type: input.type } : {}),
+});
+
 export const getAdminPsychologistsDashboard = async (input: PsychologistsDashboardQuery) => {
   const response = await adminApi.get<ApiResponse<AdminPsychologistsDashboard>>(
     "/api/admin/private/psychologists/dashboard",
@@ -863,6 +931,20 @@ export const getAdminPsychologistReports = async (
     `/api/admin/private/psychologists/${encodeURIComponent(id)}/reports`,
     {
       params: cleanReportsParams(input),
+    },
+  );
+
+  return resolveApiData(response.data);
+};
+
+export const getAdminPsychologistActivities = async (
+  id: string,
+  input: AdminPsychologistActivitiesQuery,
+) => {
+  const response = await adminApi.get<ApiResponse<AdminPsychologistActivities>>(
+    `/api/admin/private/psychologists/${encodeURIComponent(id)}/activities`,
+    {
+      params: cleanActivitiesParams(input),
     },
   );
 

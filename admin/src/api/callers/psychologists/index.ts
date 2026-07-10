@@ -1,10 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { adminPsychologistsKeys } from "@/api/cache/keys";
 import {
+  type AdminPsychologistActivitiesQuery,
   type AdminPsychologistGrantCourtesyInput,
   type AdminPsychologistPublicationsQuery,
   type AdminPsychologistReportsQuery,
   type AdminPsychologistReviewsQuery,
+  getAdminPsychologistActivities,
   getAdminPsychologistBilling,
   getAdminPsychologistDetail,
   getAdminPsychologistPublications,
@@ -90,6 +92,17 @@ export const useAdminPsychologistReports = (
     enabled: Boolean(id) && (options.enabled ?? true),
     queryFn: () => getAdminPsychologistReports(id, input),
     queryKey: adminPsychologistsKeys.reports(id, input),
+  });
+
+export const useAdminPsychologistActivities = (
+  id: string,
+  input: AdminPsychologistActivitiesQuery,
+  options: { enabled?: boolean } = {},
+) =>
+  useQuery({
+    enabled: Boolean(id) && (options.enabled ?? true),
+    queryFn: () => getAdminPsychologistActivities(id, input),
+    queryKey: adminPsychologistsKeys.activities(id, input),
   });
 
 export const useAdminPsychologistGrantCourtesy = (id: string) => {

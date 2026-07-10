@@ -46,6 +46,7 @@ import { FormProvider, type SubmitHandler, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 import {
+  useAdminPsychologistActivities,
   useAdminPsychologistBilling,
   useAdminPsychologistDetail,
   useAdminPsychologistGrantCourtesy,
@@ -56,6 +57,8 @@ import {
 } from "@/api/callers/psychologists";
 import { resolveApiError } from "@/api/handle";
 import type {
+  AdminPsychologistActivitiesQuery,
+  AdminPsychologistActivityItem,
   AdminPsychologistBilling,
   AdminPsychologistCatalogItem,
   AdminPsychologistDetail,
@@ -95,9 +98,14 @@ const TABS = [
   { id: "estatisticas", label: "Estatísticas", ready: true },
   { id: "publicacoes", label: "Publicações", ready: true },
   { id: "avaliacoes", label: "Avaliações", ready: true },
-  { id: "atividades", label: "Atividades", ready: false, task: "TASK-59" },
+  { id: "atividades", label: "Atividades", ready: true },
   { id: "denuncias", label: "Denúncias", ready: true },
-] as const;
+] as const satisfies readonly {
+  id: string;
+  label: string;
+  ready: boolean;
+  task?: string;
+}[];
 
 type ActiveTab = (typeof TABS)[number]["id"];
 
@@ -414,7 +422,9 @@ const DetailHeader = ({ detail, tab }: { detail: AdminPsychologistDetail; tab: A
                   aria-disabled
                   className={className}
                   key={item.id}
-                  title={`${item.label} será implementada em ${item.task}`}
+                  title={`${item.label} será implementada em ${
+                    "task" in item ? item.task : "task futura"
+                  }`}
                   type="button"
                 >
                   {item.label}
@@ -1912,6 +1922,297 @@ const ReportsTab = ({ id }: { id: string }) => {
   );
 };
 
+const resolveActivityPeriod = (preset: string, customFrom: string, customTo: string) => {
+  if (preset === "all") return {};
+  if (preset === "custom") {
+    return customFrom && customTo ? { from: customFrom, to: customTo } : {};
+  }
+
+  const days = preset === "30d" ? 30 : preset === "180d" ? 180 : 90;
+  const to = new Date();
+  const from = new Date();
+  from.setDate(to.getDate() - (days - 1));
+
+  return {
+    from: formatInputDate(from.toISOString()),
+    to: formatInputDate(to.toISOString()),
+  };
+};
+
+const activityIcon = (item: AdminPsychologistActivityItem): LucideIcon => {
+  if (item.area.id === "financeiro") return Wallet;
+  if (item.area.id === "atendimento") return MessageCircle;
+  if (item.area.id === "avaliacoes") return Star;
+  if (item.area.id === "denuncias") return AlertTriangle;
+  if (item.type.id.includes("save")) return Bookmark;
+  if (item.type.id.includes("reply")) return MessageCircle;
+  if (item.type.id.includes("post")) return FileText;
+
+  return UserRound;
+};
+
+const areaTone = (area: string) => {
+  const tones: Record<string, string> = {
+    atendimento: "bg-emerald-50 text-success",
+    avaliacoes: "bg-yellow-50 text-yellow-700",
+    comunidade: "bg-blue-50 text-blue-700",
+    denuncias: "bg-red-50 text-danger",
+    financeiro: "bg-primary-soft text-primary",
+    perfil: "bg-surface-muted text-muted",
+  };
+
+  return tones[area] ?? "bg-surface-muted text-muted";
+};
+
+const ActivitiesTab = ({ id }: { id: string }) => {
+  const [period, setPeriod] = useState("all");
+  const [customFrom, setCustomFrom] = useState("");
+  const [customTo, setCustomTo] = useState("");
+  const [area, setArea] = useState("all");
+  const [type, setType] = useState("all");
+  const [q, setQ] = useState("");
+  const [page, setPage] = useState(1);
+  const periodRange = useMemo(
+    () => resolveActivityPeriod(period, customFrom, customTo),
+    [customFrom, customTo, period],
+  );
+  const queryInput = useMemo<AdminPsychologistActivitiesQuery>(
+    () => ({
+      ...periodRange,
+      area,
+      limit: 8,
+      page,
+      q: q.trim() || undefined,
+      type,
+    }),
+    [area, page, periodRange, q, type],
+  );
+  const query = useAdminPsychologistActivities(id, queryInput);
+  const errorMessage = query.error ? resolveApiError(query.error) : null;
+
+  if (query.isLoading) return <EngagementLoadingState rows={2} />;
+  if (query.isError && errorMessage) {
+    return <ErrorState message={errorMessage} onRetry={() => void query.refetch()} />;
+  }
+  if (!query.data) return null;
+
+  const activities = query.data;
+
+  return (
+    <div className="space-y-5" data-psychologist-detail-tab="atividades">
+      <div className="rounded-2xl border border-primary/20 bg-primary-soft p-4 text-sm font-bold text-muted">
+        {activities.coverage_note}
+      </div>
+
+      <CardShell className="p-4">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-end">
+          <label className="block flex-1 text-sm font-black text-muted">
+            Período
+            <select
+              className="mt-2 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground"
+              onChange={(event) => {
+                setPeriod(event.target.value);
+                setPage(1);
+              }}
+              value={period}
+            >
+              <option value="all">Todo histórico registrado</option>
+              <option value="30d">Últimos 30 dias</option>
+              <option value="90d">Últimos 90 dias</option>
+              <option value="180d">Últimos 180 dias</option>
+              <option value="custom">Personalizado</option>
+            </select>
+          </label>
+          <label className="block flex-1 text-sm font-black text-muted">
+            Área
+            <select
+              className="mt-2 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground"
+              onChange={(event) => {
+                setArea(event.target.value);
+                setPage(1);
+              }}
+              value={area}
+            >
+              {activities.filters.areas.map((option) => (
+                <option key={option.id} value={option.id}>
+                  {option.label} ({numberFormatter.format(option.count)})
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="block flex-1 text-sm font-black text-muted">
+            Tipo de atividade
+            <select
+              className="mt-2 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground"
+              onChange={(event) => {
+                setType(event.target.value);
+                setPage(1);
+              }}
+              value={type}
+            >
+              {activities.filters.types.map((option) => (
+                <option key={option.id} value={option.id}>
+                  {option.label} ({numberFormatter.format(option.count)})
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="block flex-1 text-sm font-black text-muted">
+            Buscar
+            <span className="mt-2 flex h-11 items-center rounded-control border border-border bg-surface px-3">
+              <Search aria-hidden className="h-4 w-4 shrink-0 text-muted" />
+              <input
+                className="h-full min-w-0 flex-1 bg-transparent px-2 text-sm font-bold text-foreground outline-none placeholder:text-muted"
+                onChange={(event) => {
+                  setQ(event.target.value);
+                  setPage(1);
+                }}
+                placeholder="Buscar por descrição..."
+                value={q}
+              />
+            </span>
+          </label>
+        </div>
+
+        {period === "custom" ? (
+          <div className="mt-3 grid gap-3 sm:grid-cols-2">
+            <label className="block text-sm font-black text-muted">
+              De
+              <input
+                className="mt-2 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground"
+                onChange={(event) => {
+                  setCustomFrom(event.target.value);
+                  setPage(1);
+                }}
+                type="date"
+                value={customFrom}
+              />
+            </label>
+            <label className="block text-sm font-black text-muted">
+              Até
+              <input
+                className="mt-2 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground"
+                onChange={(event) => {
+                  setCustomTo(event.target.value);
+                  setPage(1);
+                }}
+                type="date"
+                value={customTo}
+              />
+            </label>
+          </div>
+        ) : null}
+
+        <div className="mt-3 flex flex-wrap items-center gap-2 text-xs font-bold text-muted">
+          <Badge className="bg-primary-soft text-primary">
+            {activities.active_filters_count} filtros ativos
+          </Badge>
+          <span>
+            Período consultado:{" "}
+            {activities.period.from && activities.period.to
+              ? `${activities.period.from} a ${activities.period.to}`
+              : activities.period.label}
+          </span>
+          <span>· Exportação indisponível: {activities.export.reason}</span>
+        </div>
+      </CardShell>
+
+      {activities.unavailable.length > 0 ? (
+        <div className="grid gap-3 md:grid-cols-2">
+          {activities.unavailable.map((item) => (
+            <CardShell className="p-4" key={item.id}>
+              <div className="flex gap-3">
+                <IconCircle icon={Info} />
+                <div>
+                  <h2 className="text-sm font-black text-foreground">{item.label}</h2>
+                  <p className="mt-1 text-sm font-bold leading-6 text-muted">{item.description}</p>
+                  <p className="mt-2 text-xs font-bold text-muted">Fonte: {item.source}</p>
+                </div>
+              </div>
+            </CardShell>
+          ))}
+        </div>
+      ) : null}
+
+      <CardShell className="overflow-hidden">
+        <div className="flex flex-col gap-2 border-b border-border p-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h2 className="text-xl font-black text-foreground">Atividades da conta</h2>
+            <p className="mt-1 text-sm text-muted">
+              Mostrando {numberFormatter.format(activities.data.length)} de{" "}
+              {numberFormatter.format(activities.count)} eventos principais filtrados.
+            </p>
+          </div>
+          <Badge className="bg-primary-soft text-primary">Fontes reais</Badge>
+        </div>
+
+        {activities.data.length === 0 ? (
+          <p className="p-5 text-sm font-bold text-muted">
+            Nenhuma atividade real encontrada para os filtros atuais.
+          </p>
+        ) : (
+          <div className="divide-y divide-border">
+            {activities.data.map((item) => {
+              const Icon = activityIcon(item);
+
+              return (
+                <article className="grid gap-4 p-4 xl:grid-cols-[190px_1fr_180px]" key={item.id}>
+                  <div className="text-sm font-black text-foreground">
+                    {formatDateTime(item.occurred_at)}
+                  </div>
+                  <div className="flex gap-3">
+                    <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-primary-soft text-primary">
+                      <Icon aria-hidden className="h-5 w-5" />
+                    </span>
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Badge className={areaTone(item.area.id)}>{item.area.label}</Badge>
+                        <Badge className="bg-surface-muted text-muted">{item.type.label}</Badge>
+                      </div>
+                      <p className="mt-2 text-sm font-bold leading-6 text-foreground">
+                        {item.description}
+                      </p>
+                      <p className="mt-1 text-xs font-bold text-muted">Fonte: {item.source}</p>
+                      {item.detail_url ? (
+                        <a
+                          className="mt-3 inline-flex items-center gap-1 text-xs font-black text-primary"
+                          href={toPublicHref(item.detail_url)}
+                          rel="noreferrer"
+                          target="_blank"
+                        >
+                          Ver detalhes
+                          <ExternalLink aria-hidden className="h-3.5 w-3.5" />
+                        </a>
+                      ) : null}
+                    </div>
+                  </div>
+                  <div className="rounded-2xl bg-surface-muted p-3 text-sm">
+                    <p className="font-black text-muted">Usuário/ator</p>
+                    <p className="mt-1 font-black text-foreground">
+                      {item.actor?.name || "Não informado"}
+                    </p>
+                    {item.actor?.role ? (
+                      <p className="mt-1 text-xs font-bold text-muted">{item.actor.role}</p>
+                    ) : null}
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        )}
+
+        <div className="border-t border-border p-4">
+          <PublicationsPagination
+            page={activities.page}
+            pages={activities.pages}
+            setPage={setPage}
+          />
+        </div>
+      </CardShell>
+    </div>
+  );
+};
+
 const BillingStatusBadge = ({ status }: { status: string | null }) => {
   const normalized = (status || "").toLowerCase();
   const className =
@@ -2456,6 +2757,8 @@ const Content = ({
       <PublicationsTab id={id} />
     ) : tab === "avaliacoes" ? (
       <ReviewsTab id={id} />
+    ) : tab === "atividades" ? (
+      <ActivitiesTab id={id} />
     ) : tab === "denuncias" ? (
       <ReportsTab id={id} />
     ) : (
@@ -2469,7 +2772,8 @@ const Content = ({
       _product/proto/admin/Psicólogos/Detalhes do psicólogo/Estatísticas.png e
       _product/proto/admin/Psicólogos/Detalhes do psicólogo/Publicações.png,
       _product/proto/admin/Psicólogos/Detalhes do psicólogo/Avaliações.png e
-      _product/proto/admin/Psicólogos/Detalhes do psicólogo/Denúncias.png. Builder/Quick Copy não
+      _product/proto/admin/Psicólogos/Detalhes do psicólogo/Denúncias.png,
+      _product/proto/admin/Psicólogos/Detalhes do psicólogo/Atividades.png. Builder/Quick Copy não
       está disponível neste ambiente; a implementação foi feita a partir das imagens locais.
     </p>
   </main>
@@ -2484,6 +2788,7 @@ export const AdminPsychologistDetailClient = ({ id }: { id: string }) => {
     requestedTab === "estatisticas" ||
     requestedTab === "publicacoes" ||
     requestedTab === "avaliacoes" ||
+    requestedTab === "atividades" ||
     requestedTab === "denuncias"
       ? requestedTab
       : "geral";
