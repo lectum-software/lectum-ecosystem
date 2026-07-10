@@ -425,9 +425,12 @@ export type AdminPsychologistBilling = {
 };
 
 export type AdminPsychologistGrantCourtesyInput = {
+  cpf?: string | null;
+  crp?: string | null;
   crp_registration_date?: string | null;
   notes?: string | null;
   period_days: number;
+  regional_crp?: string | null;
 };
 
 export type AdminPsychologistGrantCourtesyResponse = {
@@ -440,6 +443,12 @@ export type AdminPsychologistGrantCourtesyResponse = {
       profileId: string;
       userId: string;
     };
+    identity_override: {
+      cpf: string | null;
+      crp: string | null;
+      crp_number: string | null;
+      crp_region: string | null;
+    } | null;
     subscription: {
       current_period_end: string;
       id: string;

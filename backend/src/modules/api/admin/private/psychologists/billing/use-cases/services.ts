@@ -5,6 +5,7 @@ import {
   grantProfessionalSubscription,
   parseGrantCrpRegistrationDate,
 } from "@/operations/subscriptions/grant-professional-subscription-service";
+import { parseStoredCrp } from "@/utils/professional-registry";
 import type {
   AdminPsychologistBillingDTO,
   AdminPsychologistBillingPaymentHistory,
@@ -31,14 +32,11 @@ const trimOrNull = (value?: string | null) => {
 };
 
 const splitCrp = (crp: string | null) => {
-  const normalized = trimOrNull(crp);
-  if (!normalized) return { regional_crp: null, registration_number: null };
-
-  const [regional, ...rest] = normalized.split(/[/-]/).map((part) => part.trim());
+  const { crp_number, crp_region } = parseStoredCrp(crp);
 
   return {
-    regional_crp: regional ? `${regional}a Regiao` : null,
-    registration_number: rest.length > 0 ? rest.join("/") : normalized,
+    regional_crp: trimOrNull(crp_region),
+    registration_number: trimOrNull(crp_number),
   };
 };
 
@@ -186,6 +184,7 @@ const mapGrantError = (err: unknown): Resolve => {
   const copy: Record<string, string> = {
     crp_registration_date_future: "A data de inscricao no CRP nao pode estar no futuro.",
     crp_registration_date_invalid: "A data de inscricao no CRP e invalida.",
+    cpf_invalid: "Informe um CPF valido com 11 digitos.",
     external_billing_subscription_blocks_admin_grant:
       "Existe assinatura vinculada ao gateway. Reconcile a cobranca real antes de conceder cortesia.",
     professional_plan_not_found: "Plano profissional ativo nao encontrado.",
@@ -293,6 +292,9 @@ export const grantCourtesy = async (data: IAdminPsychologistBillingGrantDTO): Pr
   try {
     const grantResult = await grantProfessionalSubscription({
       actor: adminActor(data.auth ?? data.admin),
+      cpf: data.b.cpf === undefined ? undefined : trimOrNull(data.b.cpf),
+      crpNumber: data.b.crp === undefined ? undefined : trimOrNull(data.b.crp),
+      crpRegion: data.b.regional_crp === undefined ? undefined : trimOrNull(data.b.regional_crp),
       days: data.b.period_days,
       notes: trimOrNull(data.b.notes) ?? undefined,
       psychologistProfileId: profile.id,

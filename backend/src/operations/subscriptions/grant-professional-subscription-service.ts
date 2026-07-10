@@ -5,6 +5,9 @@ const SOURCE_ADMIN_GRANT = "admin_grant";
 
 export type GrantProfessionalSubscriptionArgs = {
   actor: string;
+  cpf?: string | null;
+  crpNumber?: string | null;
+  crpRegion?: string | null;
   days?: number;
   notes?: string;
   psychologistEmail?: string;
@@ -19,6 +22,64 @@ export type GrantProfessionalSubscriptionTarget = {
   name: string;
   profileId: string;
   userId: string;
+};
+
+const trimToNull = (value?: string | null) => {
+  const normalized = value?.trim();
+  return normalized || null;
+};
+
+const onlyDigits = (value?: string | null) => String(value ?? "").replace(/\D/g, "");
+
+const normalizeCpfForOverride = (value?: string | null) => {
+  if (value === undefined) return undefined;
+
+  const digits = onlyDigits(value);
+  if (!digits) return null;
+
+  const calcDigit = (base: string, factor: number) => {
+    const sum = base
+      .split("")
+      .reduce((total, digit, index) => total + Number(digit) * (factor - index), 0);
+    const rest = (sum * 10) % 11;
+    return rest === 10 ? 0 : rest;
+  };
+
+  const isValid =
+    digits.length === 11 &&
+    !/^(\d)\1+$/.test(digits) &&
+    calcDigit(digits.slice(0, 9), 10) === Number(digits[9]) &&
+    calcDigit(digits.slice(0, 10), 11) === Number(digits[10]);
+
+  if (!isValid) {
+    throw new Error("cpf_invalid");
+  }
+
+  return digits;
+};
+
+const buildCrp = (region?: string | null, number?: string | null) => {
+  const normalizedRegion = trimToNull(region);
+  const normalizedNumber = trimToNull(number);
+
+  if (normalizedRegion && normalizedNumber) return `${normalizedRegion}/${normalizedNumber}`;
+  return normalizedRegion || normalizedNumber || null;
+};
+
+const normalizeIdentityOverride = (args: GrantProfessionalSubscriptionArgs) => {
+  const hasCpfOverride = args.cpf !== undefined;
+  const hasCrpOverride = args.crpRegion !== undefined || args.crpNumber !== undefined;
+
+  if (!hasCpfOverride && !hasCrpOverride) return null;
+
+  return {
+    cpf: normalizeCpfForOverride(args.cpf),
+    crp: hasCrpOverride ? buildCrp(args.crpRegion, args.crpNumber) : undefined,
+    crpNumber: hasCrpOverride ? trimToNull(args.crpNumber) : undefined,
+    crpRegion: hasCrpOverride ? trimToNull(args.crpRegion) : undefined,
+    hasCpfOverride,
+    hasCrpOverride,
+  };
 };
 
 export const parseGrantCrpRegistrationDate = (value: string) => {
@@ -154,6 +215,7 @@ export const grantProfessionalSubscription = async (args: GrantProfessionalSubsc
 
   const target = await findTarget(args);
   const periodEnd = resolveGrantPeriodEnd(args);
+  const identityOverride = normalizeIdentityOverride(args);
   const professionalPlan = await prisma.subscription_plan.findFirst({
     where: {
       active: true,
@@ -217,14 +279,30 @@ export const grantProfessionalSubscription = async (args: GrantProfessionalSubsc
       },
     });
 
+    const profileUpdateData: {
+      cpf?: string | null;
+      crp?: string | null;
+      crp_registration_date?: Date;
+    } = {};
+
     if (args.registrationDate) {
+      profileUpdateData.crp_registration_date = args.registrationDate;
+    }
+
+    if (identityOverride?.hasCpfOverride) {
+      profileUpdateData.cpf = identityOverride.cpf ?? null;
+    }
+
+    if (identityOverride?.hasCrpOverride) {
+      profileUpdateData.crp = identityOverride.crp ?? null;
+    }
+
+    if (Object.keys(profileUpdateData).length > 0) {
       await tx.psychologist_profile.update({
         where: {
           id: target.profileId,
         },
-        data: {
-          crp_registration_date: args.registrationDate,
-        },
+        data: profileUpdateData,
       });
     }
 
@@ -251,6 +329,14 @@ export const grantProfessionalSubscription = async (args: GrantProfessionalSubsc
   return {
     crp_registration_date: args.registrationDate ?? null,
     granted_to: target,
+    identity_override: identityOverride
+      ? {
+          cpf: identityOverride.hasCpfOverride ? (identityOverride.cpf ?? null) : null,
+          crp: identityOverride.hasCrpOverride ? (identityOverride.crp ?? null) : null,
+          crp_number: identityOverride.hasCrpOverride ? (identityOverride.crpNumber ?? null) : null,
+          crp_region: identityOverride.hasCrpOverride ? (identityOverride.crpRegion ?? null) : null,
+        }
+      : null,
     subscription: {
       id: subscription.id,
       current_period_end: subscription.current_period_end,

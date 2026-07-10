@@ -82,6 +82,9 @@ Exibir plano, método e histórico financeiro do psicólogo e permitir concessã
 - [x] Plano atual usa `professional_subscription` real.
 - [x] Histórico financeiro usa dados reais ou exibe indisponível honesto.
 - [x] Cortesia pela UI reutiliza regra real do comando operacional.
+- [x] CPF, Regional e CRP da cortesia são editáveis no Admin.
+- [x] Alterações administrativas de CPF/Regional/CRP se sobrepõem aos dados informados pelo psicólogo no perfil.
+- [x] Sobrescrita administrativa de identidade não preenche `cfp_verified_at` sem consulta real.
 - [x] Data de inscrição CRP é exigida quando necessária.
 - [x] Cancelar assinatura e alterar cartão não aparecem/habilitam sem implementação real.
 - [x] Não há simulação de pagamento.
@@ -130,3 +133,14 @@ Exibir plano, método e histórico financeiro do psicólogo e permitir concessã
 - O serviço compartilhado `grantProfessionalSubscription` deixou de exigir motivo; novas concessões gravam `grant_reason=null`.
 - O campo `grant_reason` permanece no banco apenas por compatibilidade com registros legados.
 - Validações executadas: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir backend subscription:grant -- --help`, `pnpm --dir admin check`, `pnpm --dir admin build` e `pnpm check`.
+
+## Ajuste complementar 2026-07-10 - identidade editável na cortesia
+
+- Decisão de produto: os campos CPF, Regional e CRP exibidos em "Conceder cortesia" devem ser editáveis.
+- O formulário Admin passou a inicializar os campos com os dados atuais do `psychologist_profile` e enviá-los no `POST /api/admin/private/psychologists/:id/billing/grant-courtesy`.
+- O serviço compartilhado `grantProfessionalSubscription` ganhou sobrescrita opcional de identidade profissional (`cpf`, `crpRegion`, `crpNumber`) e persiste os valores em `psychologist_profile.cpf` e `psychologist_profile.crp` na mesma transação que concede a cortesia.
+- O comando operacional `subscription:grant` recebeu flags opcionais `--cpf`, `--crp-region` e `--crp-number` para manter paridade com a regra usada pela UI.
+- A operação não preenche `cfp_verified_at`; validação CFP/InfoSimples continua sendo a única fonte desse timestamp.
+- Validação manual em browser local headless Chrome/CDP, viewport mobile 390x844, confirmou a aba `?tab=plano` com os campos `cpf`, `regional_crp` e `crp` renderizados como inputs editáveis antes do período/data/notas.
+- Validação negativa sem mutação: `pnpm --dir backend subscription:grant -- --psychologist-user-id <id-real> --days 30 --actor "Validacao Codex" --cpf 111.111.111-11` retornou `cpf_invalid`.
+- Validações executadas: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir backend subscription:grant -- --help`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e `git diff --check`.

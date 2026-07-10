@@ -136,15 +136,48 @@ const METRIC_ICONS: Record<string, LucideIcon> = {
 const CARD = "rounded-card border border-border bg-surface shadow-admin-soft";
 
 const courtesyBaseSchema = z.object({
+  cpf: z.string().max(14, "Use no maximo 14 caracteres.").optional(),
+  crp: z.string().max(40, "Use no maximo 40 caracteres.").optional(),
   crp_registration_date: z.string().optional(),
   notes: z.string().max(500, "Use no maximo 500 caracteres.").optional(),
   period_days: z.string().min(1, "Selecione o periodo."),
+  regional_crp: z.string().max(120, "Use no maximo 120 caracteres.").optional(),
 });
 
 type CourtesyFormValues = z.infer<typeof courtesyBaseSchema>;
 
+const onlyDigits = (value?: string | null) => String(value ?? "").replace(/\D/g, "");
+
+const isValidCpf = (value: string) => {
+  const cpf = onlyDigits(value);
+  if (!cpf) return true;
+  if (cpf.length !== 11) return false;
+  if (/^(\d)\1+$/.test(cpf)) return false;
+
+  const calcDigit = (base: string, factor: number) => {
+    const sum = base
+      .split("")
+      .reduce((total, digit, index) => total + Number(digit) * (factor - index), 0);
+    const rest = (sum * 10) % 11;
+    return rest === 10 ? 0 : rest;
+  };
+
+  const digit1 = calcDigit(cpf.slice(0, 9), 10);
+  const digit2 = calcDigit(cpf.slice(0, 10), 11);
+
+  return digit1 === Number(cpf[9]) && digit2 === Number(cpf[10]);
+};
+
 const createCourtesySchema = (requiresCrpRegistrationDate: boolean) =>
   courtesyBaseSchema.superRefine((values, ctx) => {
+    if (values.cpf?.trim() && !isValidCpf(values.cpf)) {
+      ctx.addIssue({
+        code: "custom",
+        message: "Informe um CPF valido ou deixe em branco.",
+        path: ["cpf"],
+      });
+    }
+
     if (requiresCrpRegistrationDate && !values.crp_registration_date?.trim()) {
       ctx.addIssue({
         code: "custom",
@@ -214,6 +247,13 @@ const formatInputDate = (value?: string | null) => {
   if (Number.isNaN(date.getTime())) return "";
 
   return date.toISOString().slice(0, 10);
+};
+
+const formatCpfInput = (value?: string | null) => {
+  const digits = onlyDigits(value);
+  if (digits.length !== 11) return value ?? "";
+
+  return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6, 9)}-${digits.slice(9)}`;
 };
 
 const formatPaymentMethod = (method: AdminPsychologistBilling["payment_method"]) => {
@@ -2411,9 +2451,12 @@ const CourtesyForm = ({ billing, id }: { billing: AdminPsychologistBilling; id: 
   const mutation = useAdminPsychologistGrantCourtesy(id);
   const form = useForm<CourtesyFormValues>({
     defaultValues: {
+      cpf: formatCpfInput(billing.courtesy.cpf),
+      crp: billing.courtesy.registration_number || billing.courtesy.crp || "",
       crp_registration_date: formatInputDate(billing.courtesy.crp_registration_date),
       notes: "",
       period_days: String(billing.courtesy.period_options[1]?.days ?? 90),
+      regional_crp: billing.courtesy.regional_crp || "",
     },
     mode: "onSubmit",
     resolver: zodResolver(createCourtesySchema(billing.courtesy.requires_crp_registration_date)),
@@ -2422,9 +2465,12 @@ const CourtesyForm = ({ billing, id }: { billing: AdminPsychologistBilling; id: 
 
   useEffect(() => {
     form.reset({
+      cpf: formatCpfInput(billing.courtesy.cpf),
+      crp: billing.courtesy.registration_number || billing.courtesy.crp || "",
       crp_registration_date: formatInputDate(billing.courtesy.crp_registration_date),
       notes: "",
       period_days: String(billing.courtesy.period_options[1]?.days ?? 90),
+      regional_crp: billing.courtesy.regional_crp || "",
     });
   }, [billing.courtesy, form]);
 
@@ -2436,9 +2482,12 @@ const CourtesyForm = ({ billing, id }: { billing: AdminPsychologistBilling; id: 
 
     try {
       await mutation.mutateAsync({
+        cpf: values.cpf?.trim() || null,
+        crp: values.crp?.trim() || null,
         crp_registration_date: values.crp_registration_date?.trim() || null,
         notes: values.notes?.trim() || null,
         period_days: Number(values.period_days),
+        regional_crp: values.regional_crp?.trim() || null,
       });
       toast.success("Cortesia concedida com sucesso.");
     } catch (error) {
@@ -2464,27 +2513,31 @@ const CourtesyForm = ({ billing, id }: { billing: AdminPsychologistBilling; id: 
         </div>
       ) : null}
 
-      <dl className="mt-5 grid gap-3 text-sm sm:grid-cols-3">
-        <div className="rounded-2xl border border-border bg-surface-muted p-3">
-          <dt className="font-black text-muted">CPF</dt>
-          <dd className="mt-1 font-bold text-foreground">{formatNullable(billing.courtesy.cpf)}</dd>
-        </div>
-        <div className="rounded-2xl border border-border bg-surface-muted p-3">
-          <dt className="font-black text-muted">Regional</dt>
-          <dd className="mt-1 font-bold text-foreground">
-            {formatNullable(billing.courtesy.regional_crp)}
-          </dd>
-        </div>
-        <div className="rounded-2xl border border-border bg-surface-muted p-3">
-          <dt className="font-black text-muted">CRP</dt>
-          <dd className="mt-1 font-bold text-foreground">
-            {formatNullable(billing.courtesy.registration_number || billing.courtesy.crp)}
-          </dd>
-        </div>
-      </dl>
-
       <FormProvider {...form}>
         <form className="mt-5 space-y-4" noValidate onSubmit={form.handleSubmit(onSubmit)}>
+          <div className="grid gap-4 sm:grid-cols-3">
+            <InputController<CourtesyFormValues>
+              autoComplete="off"
+              disabled={disabled}
+              label="CPF"
+              name="cpf"
+              placeholder="000.000.000-00"
+            />
+            <InputController<CourtesyFormValues>
+              autoComplete="off"
+              disabled={disabled}
+              label="Regional"
+              name="regional_crp"
+              placeholder="Ex.: CRP-06"
+            />
+            <InputController<CourtesyFormValues>
+              autoComplete="off"
+              disabled={disabled}
+              label="CRP"
+              name="crp"
+              placeholder="Numero do registro"
+            />
+          </div>
           <div className="grid gap-4 sm:grid-cols-2">
             <SelectController<CourtesyFormValues>
               disabled={disabled}

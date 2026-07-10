@@ -681,6 +681,8 @@ Complemento 2026-07-04: no fluxo pago via gateway (`source="mercadopago"`), assi
 
 Quando uma concessão `admin_grant` substitui a validação automática do CFP, a operação deve informar a data de inscrição no CRP do profissional para atualizar `psychologist_profile.crp_registration_date`. Essa data permanece interna, não é editável na tela de perfil e alimenta o cálculo de anos de experiência exibido apenas para assinantes/cortesias ativos.
 
+Complemento 2026-07-10: no Admin, a mesma operação de cortesia pode sobrescrever CPF, Regional e CRP informados pelo psicólogo quando a equipe operacional precisar corrigir a identidade profissional antes da concessão. A persistência usa os campos existentes `psychologist_profile.cpf` (somente dígitos) e `psychologist_profile.crp` (`regional/registro` quando ambos existirem), sem criar tabela nova e sem preencher artificialmente `psychologist_profile.cfp_verified_at`; essa data continua exclusiva de consulta CFP/InfoSimples real.
+
 `billing_address` (TASK-32, "Endereço de Faturamento"):
 
 | Campo | Tipo | Notas |

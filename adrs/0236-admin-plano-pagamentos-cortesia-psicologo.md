@@ -59,3 +59,22 @@ Também existe o risco de uma concessão administrativa substituir indevidamente
 ## Complemento 2026-07-10 - remoção do motivo no Admin
 
 Produto decidiu remover o motivo da cortesia do painel administrativo. A UI de concessão não exibe campo de motivo, o endpoint Admin não exige `reason` no body e o serviço compartilhado grava `grant_reason=null` para novas concessões. Notas internas opcionais continuam disponíveis para auditoria operacional quando necessário.
+
+## Complemento 2026-07-10 - CPF, Regional e CRP editáveis na cortesia
+
+Produto decidiu que a operação de cortesia também pode corrigir CPF, Regional e CRP antes de conceder o benefício. Esses campos deixam de ser cards somente leitura e passam a fazer parte do formulário Admin.
+
+Decisão:
+
+- `POST /api/admin/private/psychologists/:id/billing/grant-courtesy` aceita `cpf`, `regional_crp` e `crp` opcionais.
+- A regra fica no serviço compartilhado `grantProfessionalSubscription`, que normaliza CPF para dígitos, monta `psychologist_profile.crp` como `regional/registro` quando ambos existirem e persiste a sobrescrita na mesma transação da concessão.
+- O comando `subscription:grant` expõe `--cpf`, `--crp-region` e `--crp-number` para manter paridade operacional.
+- A sobrescrita manual não preenche `cfp_verified_at`; esse timestamp permanece exclusivo da consulta real CFP/InfoSimples.
+
+Consequência: dados corrigidos pelo Admin se sobrepõem aos dados informados pelo psicólogo no perfil, sem criar novo schema nem simular validação documental.
+
+Validação complementar:
+
+- Browser local headless Chrome/CDP em viewport mobile 390x844 confirmou a aba `?tab=plano` com `cpf`, `regional_crp` e `crp` renderizados como inputs editáveis.
+- `pnpm --dir backend subscription:grant -- --help` exibiu as novas flags.
+- Validação negativa sem mutação com CPF inválido retornou `cpf_invalid`.

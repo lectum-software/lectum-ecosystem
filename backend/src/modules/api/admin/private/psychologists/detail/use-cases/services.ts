@@ -2,6 +2,7 @@ import type { Resolve } from "@/helpers/return";
 import { error, msg } from "@/helpers/translate";
 import { crpExperienceYears } from "@/utils/professional-experience";
 import { normalizeProfessionalDisplayName } from "@/utils/professional-name";
+import { parseStoredCrp } from "@/utils/professional-registry";
 import { rankPsychologistCandidates } from "@/utils/psychologist-public-ranking";
 import type {
   AdminPsychologistCatalogItem,
@@ -112,14 +113,11 @@ const mapStatus = (
 };
 
 const splitCrp = (crp: string | null) => {
-  const normalized = trimOrNull(crp);
-  if (!normalized) return { regional_crp: null, registration_number: null };
-
-  const [regional, ...rest] = normalized.split(/[/-]/).map((part) => part.trim());
+  const { crp_number, crp_region } = parseStoredCrp(crp);
 
   return {
-    regional_crp: regional ? `${regional}ª Região` : null,
-    registration_number: rest.length > 0 ? rest.join("/") : normalized,
+    regional_crp: trimOrNull(crp_region),
+    registration_number: trimOrNull(crp_number),
   };
 };
 

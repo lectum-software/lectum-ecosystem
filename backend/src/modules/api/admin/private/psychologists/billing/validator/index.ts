@@ -39,6 +39,30 @@ export const grantSchema: IValidatorRequest = {
       nullable: true,
       optional: true,
     },
+    {
+      key: "cpf",
+      coerse: "string",
+      method: "string",
+      max: 14,
+      nullable: true,
+      optional: true,
+    },
+    {
+      key: "regional_crp",
+      coerse: "string",
+      method: "string",
+      max: 120,
+      nullable: true,
+      optional: true,
+    },
+    {
+      key: "crp",
+      coerse: "string",
+      method: "string",
+      max: 40,
+      nullable: true,
+      optional: true,
+    },
   ],
 };
 

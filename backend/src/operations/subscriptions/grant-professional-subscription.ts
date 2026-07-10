@@ -29,6 +29,11 @@ Experiencia profissional:
   --crp-registration-date <YYYY-MM-DD ou DD/MM/YYYY>
   Data de inscricao no CRP. Campo interno usado para calcular tempo de experiencia
   quando a cortesia substitui a consulta CFP automatica.
+  --cpf <CPF>
+  --crp-region <regional>
+  --crp-number <registro>
+  Sobrescreve CPF/Regional/CRP do perfil quando a operacao manual de cortesia
+  precisa substituir dados informados pelo psicologo.
 
 Seguranca:
   se houver assinatura nao cancelada vinculada a gateway, o comando bloqueia a concessao.
@@ -111,7 +116,10 @@ const parseArgs = (argv: string[]): GrantProfessionalSubscriptionArgs | null => 
 
   const allowedFlags = new Set([
     "actor",
+    "cpf",
+    "crp-number",
     "crp-registration-date",
+    "crp-region",
     "days",
     "notes",
     "psychologist-email",
@@ -157,6 +165,13 @@ const parseArgs = (argv: string[]): GrantProfessionalSubscriptionArgs | null => 
 
   return {
     actor: assertNonEmpty(flags.get("actor"), "--actor e obrigatorio para auditoria."),
+    cpf: flags.has("cpf") ? (getOptionalString(flags, "cpf") ?? null) : undefined,
+    crpNumber: flags.has("crp-number")
+      ? (getOptionalString(flags, "crp-number") ?? null)
+      : undefined,
+    crpRegion: flags.has("crp-region")
+      ? (getOptionalString(flags, "crp-region") ?? null)
+      : undefined,
     days,
     notes: getOptionalString(flags, "notes"),
     psychologistEmail: getOptionalString(flags, "psychologist-email"),

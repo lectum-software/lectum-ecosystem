@@ -67,9 +67,12 @@ export type AdminPsychologistBillingDTO = {
 };
 
 export type AdminPsychologistBillingGrantBody = {
+  cpf?: string | null;
+  crp?: string | null;
   crp_registration_date?: string | null;
   notes?: string | null;
   period_days: number;
+  regional_crp?: string | null;
 };
 
 export type IAdminPsychologistBillingShowDTO = Request & {
