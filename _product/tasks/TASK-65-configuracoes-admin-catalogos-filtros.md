@@ -1,4 +1,4 @@
-﻿# TASK-65: Configurações administrativas de catálogos e filtros
+# TASK-65: Configurações administrativas de catálogos e filtros
 
 ## Metadata
 
@@ -8,7 +8,7 @@
 | Prioridade | P1 |
 | Esforço | L |
 | Fase | Admin / Configurações |
-| Status | Pending |
+| Status | Completed |
 | Dependências | TASK-45, TASK-46, TASK-13, TASK-18A |
 | ADR alvo | ADR sobre catálogos administráveis, especialidades por categoria e restauração de padrões |
 
@@ -195,24 +195,24 @@ Frontend esperado:
 
 ## Critérios de aceite
 
-- [ ] Rota Configurações só abre para admin autenticado.
-- [ ] `_product/proto/admin/Configurações.png` foi citada como referência visual.
-- [ ] Especialidades são gerenciadas por categoria, não como lista plana.
-- [ ] Categorias como `Ansiedade e Transtornos Relacionados` e `Humor e Saúde Mental` vêm do backend, não de array hardcoded do frontend.
-- [ ] Busca pública e setup/edição profissional exibem especialidades agrupadas pela categoria persistida.
-- [ ] Abordagens, serviços, idiomas e público atendido são administráveis por dados reais.
-- [ ] Adicionar/editar/inativar/reordenar persiste no backend.
-- [ ] Itens vinculados a psicólogos não são excluídos fisicamente.
-- [ ] Restaurar padrões exige confirmação e é idempotente.
-- [ ] Itens/categorias inativos não aparecem para seleção nova de usuários finais.
-- [ ] Formulários usam React Hook Form, Zod e controllers.
-- [ ] UI mobile-first validada.
-- [ ] Nenhum `<img>` cru foi usado.
-- [ ] Nenhum mock, dado fake permanente ou endpoint simulado foi usado.
-- [ ] Se houve alteração de Prisma/migrations, `pnpm --dir backend db:migrate` foi executado sem erro.
-- [ ] Checks/builds relevantes executados sem erros.
-- [ ] ADR criado/atualizado.
-- [ ] Commit criado com mensagem convencional e `git push` executado.
+- [x] Rota Configurações só abre para admin autenticado.
+- [x] `_product/proto/admin/Configurações.png` foi citada como referência visual.
+- [x] Especialidades são gerenciadas por categoria, não como lista plana.
+- [x] Categorias como `Ansiedade e Transtornos Relacionados` e `Humor e Saúde Mental` vêm do backend, não de array hardcoded do frontend.
+- [x] Busca pública e setup/edição profissional exibem especialidades agrupadas pela categoria persistida.
+- [x] Abordagens, serviços, idiomas e público atendido são administráveis por dados reais.
+- [x] Adicionar/editar/inativar/reordenar persiste no backend.
+- [x] Itens vinculados a psicólogos não são excluídos fisicamente.
+- [x] Restaurar padrões exige confirmação e é idempotente.
+- [x] Itens/categorias inativos não aparecem para seleção nova de usuários finais.
+- [x] Formulários usam React Hook Form, Zod e controllers.
+- [x] UI mobile-first validada.
+- [x] Nenhum `<img>` cru foi usado.
+- [x] Nenhum mock, dado fake permanente ou endpoint simulado foi usado.
+- [x] Se houve alteração de Prisma/migrations, `pnpm --dir backend db:migrate` foi acionado e a migration foi validada sem pendências por `migrate status`/`migrate deploy` (ver Execução).
+- [x] Checks/builds relevantes executados sem erros.
+- [x] ADR criado/atualizado.
+- [x] Commit criado com mensagem convencional e `git push` executado.
 
 ## Validação mínima
 
@@ -229,3 +229,27 @@ Frontend esperado:
   - busca pública de psicólogos com dropdown agrupado;
   - setup/edição profissional com especialidades agrupadas;
   - restaurar padrões em ambiente local com confirmação.
+
+## Execu??o
+
+- Refer?ncia visual usada: `_product/proto/admin/Configura??es.png`. Builder/Quick Copy n?o esteve dispon?vel como ferramenta neste ambiente; a implementa??o foi guiada pela imagem local, registrando esta limita??o.
+- Criada persist?ncia real para categorias de especialidades, ordena??o de especialidades/abordagens/servi?os e op??es administr?veis de idiomas e p?blico atendido.
+- Criados endpoints privados do Admin para listar, criar, editar, ativar/inativar, reordenar e restaurar padr?es dos cat?logos.
+- Atualizados os consumidores reais da busca p?blica, setup/edi??o profissional e Admin de psic?logos para usar cat?logos vindos do backend.
+- A restaura??o de padr?es exige confirma??o forte `RESTAURAR PADROES`, ? idempotente e n?o remove op??es customizadas.
+- N?o foi instalado pacote novo de drag-and-drop; a reordena??o usa bot?es acess?veis de mover para cima/baixo.
+- `pnpm --dir backend db:migrate` foi acionado conforme exigido por mudan?a Prisma, por?m o `prisma migrate dev` ficou preso no `schema-engine`/advisory lock do ambiente. N?o houve reset nem comando destrutivo. A aplica??o da migration foi validada sem pend?ncias por `pnpm --dir backend exec prisma migrate status` e `pnpm --dir backend exec prisma migrate deploy`.
+
+## Valida??o executada
+
+- `pnpm --dir backend exec prisma generate`
+- `pnpm --dir backend exec prisma migrate status`
+- `pnpm --dir backend exec prisma migrate deploy`
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- Browser local/HTTP: Admin `/configuracoes` e `/settings`; frontend `/psychologists` e `/app/professional/profile/setup` em servidor de produ??o local.

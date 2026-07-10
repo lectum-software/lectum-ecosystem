@@ -1,17 +1,20 @@
-import { type ReactNode, useEffect, useMemo } from "react";
+﻿import { type ReactNode, useEffect, useMemo } from "react";
 import { z } from "zod";
 import type { DirectoryPsychologistFilters } from "@/api/generator/types/directory";
 import { type Field, type FieldOption, useFormList } from "@/hooks/form";
 import { CITY_OPTIONS_BY_STATE } from "../professional/profile/setup/brazil-cities";
 import {
   GENDER_OPTIONS,
-  LANGUAGE_OPTIONS,
-  PUBLIC_TARGET_OPTIONS,
   RACE_COLOR_OPTIONS,
   RELIGION_OPTIONS,
   STATE_OPTIONS,
 } from "../professional/profile/setup/options";
-import { toCatalogOptions, toGroupedSpecialtyOptions, toServiceOptions } from "./filter-options";
+import {
+  toCatalogOptions,
+  toGroupedSpecialtyOptions,
+  toLanguageOptions,
+  toServiceOptions,
+} from "./filter-options";
 
 export type PatientModalityFilter = "online" | "presencial";
 
@@ -177,7 +180,8 @@ export const usePsychologistsFilterForm = ({
         label: "Público atendido",
         emptyLabel: "Todos os públicos",
         inputClassName: filterSelectInputClassName,
-        options: PUBLIC_TARGET_OPTIONS,
+        loading,
+        options: toCatalogOptions(filters?.target_audiences),
         searchable: true,
         searchMode: "dropdown",
       },
@@ -247,7 +251,8 @@ export const usePsychologistsFilterForm = ({
         label: "Idiomas de atendimento",
         emptyLabel: "Todos os idiomas",
         inputClassName: filterSelectInputClassName,
-        options: LANGUAGE_OPTIONS,
+        loading,
+        options: toLanguageOptions(filters?.languages),
         searchable: true,
         searchMode: "dropdown",
       },
@@ -284,8 +289,10 @@ export const usePsychologistsFilterForm = ({
     ],
     [
       filters?.approaches,
+      filters?.languages,
       filters?.services,
       filters?.specialties,
+      filters?.target_audiences,
       loading,
       onSearchChange,
       searchSuggestionsSlot,

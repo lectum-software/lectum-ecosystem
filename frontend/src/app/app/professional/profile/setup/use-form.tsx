@@ -1,7 +1,7 @@
 ﻿import { z } from "zod";
 import type { FreeProfessionalProfile } from "@/api/generator/types/free-profile";
 import { onlyDigits } from "@/components/controllers/utils";
-import { type Field, useFormList } from "@/hooks/form";
+import { type Field, type FieldOption, useFormList } from "@/hooks/form";
 import {
   COUNTRY_CALLING_CODE_OPTIONS,
   DEFAULT_COUNTRY_CALLING_CODE,
@@ -184,156 +184,159 @@ const PROFESSIONAL_COUNTRY_CALLING_CODE_OPTIONS = COUNTRY_CALLING_CODE_OPTIONS.m
   option.country === "BR" ? { ...option, label: "+55" } : option,
 );
 
-export const fields = [
-  {
-    name: "name",
-    field: "input",
-    label: "Nome completo",
-    placeholder: "Ex.: Roberto Silva",
-    required: true,
-    autoComplete: "name",
-  },
-  {
-    name: "gender",
-    field: "select",
-    label: "Gênero",
-    placeholder: "Selecione seu gênero",
-    options: GENDER_OPTIONS,
-    required: true,
-  },
-  {
-    name: "race_color",
-    field: "select",
-    label: "Raça/Cor",
-    placeholder: "Selecione sua raça/cor",
-    options: RACE_COLOR_OPTIONS,
-  },
-  {
-    name: "religion",
-    field: "select",
-    label: "Religião",
-    placeholder: "Selecione sua religião",
-    options: RELIGION_OPTIONS,
-  },
-  {
-    name: "cpf",
-    field: "cpf",
-    label: "CPF",
-    placeholder: "000.000.000-00",
-    required: true,
-    autoComplete: "off",
-  },
-  {
-    name: "birthdate",
-    field: "calendar",
-    label: "Data de Nascimento",
-    required: true,
-    autoComplete: "bday",
-  },
-  {
-    name: "crp_region",
-    field: "select",
-    label: "Regional do CRP",
-    placeholder: "Selecione a regional",
-    options: CRP_REGION_OPTIONS,
-    required: true,
-  },
-  {
-    name: "crp_number",
-    field: "input",
-    label: "Nº Registro CRP",
-    placeholder: "000000",
-    required: true,
-  },
-  {
-    name: "whatsapp",
-    field: "phone",
-    label: "WhatsApp profissional",
-    placeholder: "(00) 00000-0000",
-    countryCodeClassName: "w-20 min-w-20 shrink-0 px-2 py-0.5",
-    countryCodeName: "countryCode",
-    countryCodeOptions: PROFESSIONAL_COUNTRY_CALLING_CODE_OPTIONS,
-    required: true,
-    autoComplete: "tel",
-  },
-  {
-    name: "headline",
-    field: "input",
-    label: "Bio",
-    placeholder: "Ex.: Especialista em Relacionamentos",
-    description: "Escreva brevemente a sua proposta de valor",
-    max: 120,
-    showCounter: true,
-  },
-  {
-    name: "bio",
-    field: "textarea",
-    label: "Apresentação de texto",
-    placeholder: "Conte sobre sua trajetória, experiência e como você ajuda seus pacientes.",
-    rows: 6,
-  },
-  {
-    name: "modality",
-    field: "select",
-    label: "Modalidades",
-    required: true,
-    options: MODALITY_OPTIONS,
-  },
-  {
-    name: "language",
-    field: "select",
-    label: "Idiomas",
-    placeholder: "Selecione o idioma",
-    required: true,
-    options: LANGUAGE_OPTIONS,
-  },
-  {
-    name: "address_street",
-    field: "input",
-    label: "Logradouro",
-    placeholder: "Ex.: Rua das Flores",
-  },
-  {
-    name: "address_number",
-    field: "input",
-    label: "Número",
-    placeholder: "123",
-  },
-  {
-    name: "address_complement",
-    field: "input",
-    label: "Complemento",
-    placeholder: "Apto 42",
-  },
-  {
-    name: "address_district",
-    field: "input",
-    label: "Bairro",
-    placeholder: "Centro",
-  },
-  {
-    name: "address_zip",
-    field: "input",
-    label: "CEP",
-    placeholder: "00000-000",
-  },
-  {
-    name: "address_city",
-    field: "select",
-    label: "Cidade",
-    placeholder: "Selecione a cidade",
-    options: [],
-    required: true,
-  },
-  {
-    name: "address_state",
-    field: "select",
-    label: "Estado",
-    placeholder: "Selecione o estado",
-    options: STATE_OPTIONS,
-    required: true,
-  },
-] satisfies Field<FreeProfileForm>[];
+export const createFields = (languageOptions: FieldOption[] = LANGUAGE_OPTIONS) =>
+  [
+    {
+      name: "name",
+      field: "input",
+      label: "Nome completo",
+      placeholder: "Ex.: Roberto Silva",
+      required: true,
+      autoComplete: "name",
+    },
+    {
+      name: "gender",
+      field: "select",
+      label: "Gênero",
+      placeholder: "Selecione seu gênero",
+      options: GENDER_OPTIONS,
+      required: true,
+    },
+    {
+      name: "race_color",
+      field: "select",
+      label: "Raça/Cor",
+      placeholder: "Selecione sua raça/cor",
+      options: RACE_COLOR_OPTIONS,
+    },
+    {
+      name: "religion",
+      field: "select",
+      label: "Religião",
+      placeholder: "Selecione sua religião",
+      options: RELIGION_OPTIONS,
+    },
+    {
+      name: "cpf",
+      field: "cpf",
+      label: "CPF",
+      placeholder: "000.000.000-00",
+      required: true,
+      autoComplete: "off",
+    },
+    {
+      name: "birthdate",
+      field: "calendar",
+      label: "Data de Nascimento",
+      required: true,
+      autoComplete: "bday",
+    },
+    {
+      name: "crp_region",
+      field: "select",
+      label: "Regional do CRP",
+      placeholder: "Selecione a regional",
+      options: CRP_REGION_OPTIONS,
+      required: true,
+    },
+    {
+      name: "crp_number",
+      field: "input",
+      label: "Nº Registro CRP",
+      placeholder: "000000",
+      required: true,
+    },
+    {
+      name: "whatsapp",
+      field: "phone",
+      label: "WhatsApp profissional",
+      placeholder: "(00) 00000-0000",
+      countryCodeClassName: "w-20 min-w-20 shrink-0 px-2 py-0.5",
+      countryCodeName: "countryCode",
+      countryCodeOptions: PROFESSIONAL_COUNTRY_CALLING_CODE_OPTIONS,
+      required: true,
+      autoComplete: "tel",
+    },
+    {
+      name: "headline",
+      field: "input",
+      label: "Bio",
+      placeholder: "Ex.: Especialista em Relacionamentos",
+      description: "Escreva brevemente a sua proposta de valor",
+      max: 120,
+      showCounter: true,
+    },
+    {
+      name: "bio",
+      field: "textarea",
+      label: "Apresentação de texto",
+      placeholder: "Conte sobre sua trajetória, experiência e como você ajuda seus pacientes.",
+      rows: 6,
+    },
+    {
+      name: "modality",
+      field: "select",
+      label: "Modalidades",
+      required: true,
+      options: MODALITY_OPTIONS,
+    },
+    {
+      name: "language",
+      field: "select",
+      label: "Idiomas",
+      placeholder: "Selecione o idioma",
+      required: true,
+      options: languageOptions,
+    },
+    {
+      name: "address_street",
+      field: "input",
+      label: "Logradouro",
+      placeholder: "Ex.: Rua das Flores",
+    },
+    {
+      name: "address_number",
+      field: "input",
+      label: "Número",
+      placeholder: "123",
+    },
+    {
+      name: "address_complement",
+      field: "input",
+      label: "Complemento",
+      placeholder: "Apto 42",
+    },
+    {
+      name: "address_district",
+      field: "input",
+      label: "Bairro",
+      placeholder: "Centro",
+    },
+    {
+      name: "address_zip",
+      field: "input",
+      label: "CEP",
+      placeholder: "00000-000",
+    },
+    {
+      name: "address_city",
+      field: "select",
+      label: "Cidade",
+      placeholder: "Selecione a cidade",
+      options: [],
+      required: true,
+    },
+    {
+      name: "address_state",
+      field: "select",
+      label: "Estado",
+      placeholder: "Selecione o estado",
+      options: STATE_OPTIONS,
+      required: true,
+    },
+  ] satisfies Field<FreeProfileForm>[];
+
+export const fields = createFields();
 
 const toWhatsappPhoneInput = (value?: string | null, countryCode = DEFAULT_COUNTRY_CALLING_CODE) =>
   getNationalDigits(value, countryCode).slice(0, 15);
@@ -423,9 +426,11 @@ export const getDefaultValues = (data?: FreeProfessionalProfile | null): FreePro
 
 export const useFreeProfileForm = (data?: FreeProfessionalProfile | null) => {
   const defaults = getDefaultValues(data);
+  const languageOptions =
+    data?.catalogs.languages?.map((item) => ({ label: item.name, value: item.name })) || [];
 
   return useFormList<FreeProfileForm>({
-    fields,
+    fields: createFields(languageOptions.length > 0 ? languageOptions : LANGUAGE_OPTIONS),
     schema: freeProfileSchema,
     defaultValues: defaults,
     values: defaults,

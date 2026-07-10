@@ -1,8 +1,20 @@
 ﻿import type { user } from "@/interfaces/objects";
 
 export type FreeProfileCatalogItem = {
+  active?: boolean;
+  category?: FreeProfileCatalogCategory | null;
+  category_id?: string | null;
   id: string;
   name: string;
+  position?: number;
+  slug: string;
+};
+
+export type FreeProfileCatalogCategory = {
+  active: boolean;
+  id: string;
+  name: string;
+  position: number;
   slug: string;
 };
 
@@ -89,9 +101,12 @@ export type FreeProfessionalProfileResponse = {
   };
   activation: FreeProfessionalProfileActivation;
   catalogs: {
+    specialty_categories: FreeProfileCatalogCategory[];
     specialties: FreeProfileCatalogItem[];
     services: FreeProfileCatalogItem[];
     approaches: FreeProfileCatalogItem[];
+    languages: FreeProfileCatalogItem[];
+    target_audiences: FreeProfileCatalogItem[];
   };
 };
 

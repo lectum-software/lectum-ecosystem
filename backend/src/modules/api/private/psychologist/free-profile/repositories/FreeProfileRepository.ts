@@ -12,11 +12,35 @@ import type {
 } from "../DTOs/IFreeProfileDTO";
 import type { IFreeProfileRepository } from "./interfaces/IFreeProfileRepository";
 
-const catalogSelect = {
+const categorySelect = {
+  active: true,
   id: true,
   name: true,
+  position: true,
+  slug: true,
+} satisfies Prisma.specialty_categorySelect;
+
+const specialtyCatalogSelect = {
+  active: true,
+  category: {
+    select: categorySelect,
+  },
+  category_id: true,
+  id: true,
+  name: true,
+  position: true,
+  slug: true,
+} satisfies Prisma.specialtySelect;
+
+const catalogSelect = {
+  active: true,
+  id: true,
+  name: true,
+  position: true,
   slug: true,
 };
+
+const catalogOrderBy = () => [{ position: "asc" as const }, { name: "asc" as const }];
 
 type UserWithProfile = NonNullable<Awaited<ReturnType<typeof getUserWithProfile>>>;
 
@@ -248,15 +272,15 @@ const getUserWithProfile = (userId: string) => {
         },
       },
       psychologist_specialties: {
-        where: { deleted: false, specialty: { active: true, deleted: false } },
-        select: { specialty: { select: catalogSelect } },
+        where: { deleted: false, specialty: { deleted: false } },
+        select: { specialty: { select: specialtyCatalogSelect } },
       },
       psychologist_services: {
-        where: { deleted: false, service: { active: true, deleted: false } },
+        where: { deleted: false, service: { deleted: false } },
         select: { service: { select: catalogSelect } },
       },
       psychologist_approaches: {
-        where: { deleted: false, approach: { active: true, deleted: false } },
+        where: { deleted: false, approach: { deleted: false } },
         select: { approach: { select: catalogSelect } },
       },
     },
@@ -264,27 +288,49 @@ const getUserWithProfile = (userId: string) => {
 };
 
 const getCatalogs = async () => {
-  const [specialties, services, approaches] = await Promise.all([
-    prisma.specialty.findMany({
-      where: { active: true, deleted: false },
-      orderBy: { name: "asc" },
-      select: catalogSelect,
-    }),
-    prisma.service.findMany({
-      where: { active: true, deleted: false },
-      orderBy: { name: "asc" },
-      select: catalogSelect,
-    }),
-    prisma.approach.findMany({
-      where: { active: true, deleted: false },
-      orderBy: { name: "asc" },
-      select: catalogSelect,
-    }),
-  ]);
+  const [specialty_categories, specialties, services, approaches, languages, target_audiences] =
+    await Promise.all([
+      prisma.specialty_category.findMany({
+        where: { active: true, deleted: false },
+        orderBy: catalogOrderBy(),
+        select: categorySelect,
+      }),
+      prisma.specialty.findMany({
+        where: {
+          active: true,
+          deleted: false,
+          category: {
+            active: true,
+            deleted: false,
+          },
+        },
+        orderBy: [{ category: { position: "asc" } }, { position: "asc" }, { name: "asc" }],
+        select: specialtyCatalogSelect,
+      }),
+      prisma.service.findMany({
+        where: { active: true, deleted: false },
+        orderBy: catalogOrderBy(),
+        select: catalogSelect,
+      }),
+      prisma.approach.findMany({
+        where: { active: true, deleted: false },
+        orderBy: catalogOrderBy(),
+        select: catalogSelect,
+      }),
+      prisma.profile_catalog_option.findMany({
+        where: { active: true, deleted: false, type: "language" },
+        orderBy: catalogOrderBy(),
+        select: catalogSelect,
+      }),
+      prisma.profile_catalog_option.findMany({
+        where: { active: true, deleted: false, type: "target_audience" },
+        orderBy: catalogOrderBy(),
+        select: catalogSelect,
+      }),
+    ]);
 
-  return { specialties, services, approaches };
+  return { specialty_categories, specialties, services, approaches, languages, target_audiences };
 };
-
 const toResponse = async (
   item: UserWithProfile,
 ): Promise<FreeProfessionalProfileResponse | null> => {

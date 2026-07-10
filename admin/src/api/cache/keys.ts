@@ -188,3 +188,8 @@ export const adminNotificationsKeys = {
     [...adminNotificationsKeys.all, "metrics", normalizeNotificationsRange(input)] as const,
   pushStatus: () => [...adminNotificationsKeys.all, "push-status"] as const,
 };
+
+export const adminSettingsKeys = {
+  all: ["admin", "settings"] as const,
+  catalogs: () => [...adminSettingsKeys.all, "catalogs"] as const,
+};

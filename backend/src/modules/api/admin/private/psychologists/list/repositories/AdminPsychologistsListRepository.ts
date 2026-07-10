@@ -80,6 +80,10 @@ const profileBaseSelect = {
           specialty: {
             active: true,
             deleted: false,
+            category: {
+              active: true,
+              deleted: false,
+            },
           },
         },
         select: {

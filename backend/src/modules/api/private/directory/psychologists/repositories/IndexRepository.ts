@@ -19,11 +19,35 @@ import type { IIndexRepository } from "./interfaces/IIndexRepository";
 const DEFAULT_LIMIT = 20;
 const MAX_LIMIT = 50;
 
-const catalogSelect = {
+const categorySelect = {
+  active: true,
   id: true,
   name: true,
+  position: true,
+  slug: true,
+} satisfies Prisma.specialty_categorySelect;
+
+const specialtyCatalogSelect = {
+  active: true,
+  category: {
+    select: categorySelect,
+  },
+  category_id: true,
+  id: true,
+  name: true,
+  position: true,
   slug: true,
 } satisfies Prisma.specialtySelect;
+
+const catalogSelect = {
+  active: true,
+  id: true,
+  name: true,
+  position: true,
+  slug: true,
+};
+
+const catalogOrderBy = () => [{ position: "asc" as const }, { name: "asc" as const }];
 
 const isCatalogItem = (value: DirectoryCatalogItem | null): value is DirectoryCatalogItem => {
   return Boolean(value?.id && value.name && value.slug);
@@ -205,6 +229,10 @@ export class IndexRepository implements IIndexRepository {
               slug: props.q.specialty || undefined,
               active: true,
               deleted: false,
+              category: {
+                active: true,
+                deleted: false,
+              },
             },
           },
         },
@@ -332,11 +360,15 @@ export class IndexRepository implements IIndexRepository {
                   specialty: {
                     active: true,
                     deleted: false,
+                    category: {
+                      active: true,
+                      deleted: false,
+                    },
                   },
                 },
                 select: {
                   specialty: {
-                    select: catalogSelect,
+                    select: specialtyCatalogSelect,
                   },
                 },
               },
@@ -427,43 +459,71 @@ export class IndexRepository implements IIndexRepository {
   }
 
   private async getFilters() {
-    const [specialties, services, approaches] = await Promise.all([
-      prisma.specialty.findMany({
-        where: {
-          active: true,
-          deleted: false,
-        },
-        select: catalogSelect,
-        orderBy: {
-          name: "asc",
-        },
-      }),
-      prisma.service.findMany({
-        where: {
-          active: true,
-          deleted: false,
-        },
-        select: catalogSelect,
-        orderBy: {
-          name: "asc",
-        },
-      }),
-      prisma.approach.findMany({
-        where: {
-          active: true,
-          deleted: false,
-        },
-        select: catalogSelect,
-        orderBy: {
-          name: "asc",
-        },
-      }),
-    ]);
+    const [specialty_categories, specialties, services, approaches, languages, target_audiences] =
+      await Promise.all([
+        prisma.specialty_category.findMany({
+          where: {
+            active: true,
+            deleted: false,
+          },
+          select: categorySelect,
+          orderBy: catalogOrderBy(),
+        }),
+        prisma.specialty.findMany({
+          where: {
+            active: true,
+            deleted: false,
+            category: {
+              active: true,
+              deleted: false,
+            },
+          },
+          select: specialtyCatalogSelect,
+          orderBy: [{ category: { position: "asc" } }, { position: "asc" }, { name: "asc" }],
+        }),
+        prisma.service.findMany({
+          where: {
+            active: true,
+            deleted: false,
+          },
+          select: catalogSelect,
+          orderBy: catalogOrderBy(),
+        }),
+        prisma.approach.findMany({
+          where: {
+            active: true,
+            deleted: false,
+          },
+          select: catalogSelect,
+          orderBy: catalogOrderBy(),
+        }),
+        prisma.profile_catalog_option.findMany({
+          where: {
+            active: true,
+            deleted: false,
+            type: "language",
+          },
+          select: catalogSelect,
+          orderBy: catalogOrderBy(),
+        }),
+        prisma.profile_catalog_option.findMany({
+          where: {
+            active: true,
+            deleted: false,
+            type: "target_audience",
+          },
+          select: catalogSelect,
+          orderBy: catalogOrderBy(),
+        }),
+      ]);
 
     return {
+      specialty_categories,
       specialties,
       services,
       approaches,
+      languages,
+      target_audiences,
     };
   }
 }

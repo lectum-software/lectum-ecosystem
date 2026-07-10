@@ -1,8 +1,20 @@
 ﻿import type { PostListPost } from "./posts";
 
 export type DirectoryCatalogItem = {
+  active?: boolean;
+  category?: DirectoryCatalogCategory | null;
+  category_id?: string | null;
   id: string;
   name: string;
+  position?: number;
+  slug: string;
+};
+
+export type DirectoryCatalogCategory = {
+  active: boolean;
+  id: string;
+  name: string;
+  position: number;
   slug: string;
 };
 export type DirectoryAcademicFormation = {
@@ -41,9 +53,12 @@ export type DirectoryPsychologist = {
 };
 
 export type DirectoryPsychologistFilters = {
+  specialty_categories: DirectoryCatalogCategory[];
   specialties: DirectoryCatalogItem[];
   services: DirectoryCatalogItem[];
   approaches: DirectoryCatalogItem[];
+  languages: DirectoryCatalogItem[];
+  target_audiences: DirectoryCatalogItem[];
 };
 
 export type DirectoryPsychologistsResponse = {

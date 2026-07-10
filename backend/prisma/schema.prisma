@@ -410,6 +410,23 @@ model professional_registry_check {
   @@map("professional_registry_checks")
 }
 
+model specialty_category {
+  id          String      @id @default(cuid())
+  deleted     Boolean     @default(false)
+  deletedAt   DateTime?   @map("deleted_at")
+  updatedAt   DateTime    @default(now()) @updatedAt @map("updated_at")
+  createdAt   DateTime    @default(now()) @map("created_at")
+  name        String
+  slug        String      @unique
+  active      Boolean     @default(true)
+  position    Int         @default(0)
+  specialties specialty[] @relation("specialty_category_specialty")
+
+  @@index([slug, active])
+  @@index([active, deleted, position])
+  @@map("specialty_categories")
+}
+
 model specialty {
   id                       String                   @id @default(cuid())
   deleted                  Boolean                  @default(false)
@@ -419,10 +436,14 @@ model specialty {
   name                     String
   slug                     String                   @unique
   active                   Boolean                  @default(true)
+  position                 Int                      @default(0)
+  category_id              String?                  @map("category_id")
+  category                 specialty_category?      @relation("specialty_category_specialty", fields: [category_id], references: [id], onDelete: SetNull)
   psychologist_specialties psychologist_specialty[] @relation("psychologist_specialty_specialty")
 
   @@index([slug, active])
   @@index([active, deleted])
+  @@index([category_id, active, deleted, position])
   @@map("specialties")
 }
 
@@ -435,10 +456,11 @@ model service {
   name                  String
   slug                  String                 @unique
   active                Boolean                @default(true)
+  position              Int                    @default(0)
   psychologist_services psychologist_service[] @relation("psychologist_service_service")
 
   @@index([slug, active])
-  @@index([active, deleted])
+  @@index([active, deleted, position])
   @@map("services")
 }
 
@@ -451,13 +473,31 @@ model approach {
   name                    String
   slug                    String                  @unique
   active                  Boolean                 @default(true)
+  position                Int                     @default(0)
   psychologist_approaches psychologist_approach[] @relation("psychologist_approach_approach")
 
   @@index([slug, active])
-  @@index([active, deleted])
+  @@index([active, deleted, position])
   @@map("approaches")
 }
 
+model profile_catalog_option {
+  id        String    @id @default(cuid())
+  deleted   Boolean   @default(false)
+  deletedAt DateTime? @map("deleted_at")
+  updatedAt DateTime  @default(now()) @updatedAt @map("updated_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+  type      String
+  name      String
+  slug      String
+  active    Boolean   @default(true)
+  position  Int       @default(0)
+  metadata  Json?
+
+  @@unique([type, slug])
+  @@index([type, active, deleted, position])
+  @@map("profile_catalog_options")
+}
 model psychologist_specialty {
   id              String    @id @default(cuid())
   deleted         Boolean   @default(false)
