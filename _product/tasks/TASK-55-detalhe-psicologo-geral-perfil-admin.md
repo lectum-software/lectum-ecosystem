@@ -8,7 +8,7 @@
 | Prioridade | P1 |
 | Esforço | L |
 | Fase | Admin |
-| Status | Pending |
+| Status | Completed |
 | Dependências | TASK-45, TASK-46, TASK-54 |
 | ADR alvo | ADR sobre exposição administrativa de dados sensíveis do psicólogo |
 
@@ -89,19 +89,19 @@ Criar o shell de detalhe do psicólogo e as abas Geral e Perfil/Cadastro com dad
 
 ## Critérios de aceite
 
-- [ ] Detalhe só abre para admin autenticado.
-- [ ] Header e tabs são reutilizáveis pelas tasks seguintes.
-- [ ] Aba Geral usa dados reais.
-- [ ] Aba Perfil e cadastro usa dados reais.
-- [ ] Dados sensíveis têm tratamento documentado em ADR.
-- [ ] "Stripe" não aparece; usar Mercado Pago quando aplicável.
-- [ ] Botões de edição que não funcionam não aparecem/habilitam.
-- [ ] UI mobile-first validada.
-- [ ] Nenhum mock, dado fake permanente ou endpoint simulado foi usado.
-- [ ] Nenhum `<img>` cru foi usado.
-- [ ] Imagens de referência foram citadas.
-- [ ] Checks/builds relevantes executados sem erros.
-- [ ] Commit criado com mensagem convencional e `git push` executado.
+- [x] Detalhe só abre para admin autenticado.
+- [x] Header e tabs são reutilizáveis pelas tasks seguintes.
+- [x] Aba Geral usa dados reais.
+- [x] Aba Perfil e cadastro usa dados reais.
+- [x] Dados sensíveis têm tratamento documentado em ADR.
+- [x] "Stripe" não aparece; usar Mercado Pago quando aplicável.
+- [x] Botões de edição que não funcionam não aparecem/habilitam.
+- [x] UI mobile-first validada.
+- [x] Nenhum mock, dado fake permanente ou endpoint simulado foi usado.
+- [x] Nenhum `<img>` cru foi usado.
+- [x] Imagens de referência foram citadas.
+- [x] Checks/builds relevantes executados sem erros.
+- [x] Commit criado com mensagem convencional e `git push` executado.
 
 ## Validação mínima
 
@@ -111,3 +111,25 @@ Criar o shell de detalhe do psicólogo e as abas Geral e Perfil/Cadastro com dad
 - `pnpm --dir admin build`
 - `pnpm check`
 - Browser local com admin real e psicólogo real.
+
+## Execucao TASK-55
+
+- Backend implementado em `GET /api/admin/private/psychologists/:id`, montado em `backend/src/main/server/imports/write.ts` com `adminAuth`.
+- Admin implementado em `/psicologos/[id]`, com shell/header/tabs reutilizaveis e abas V1 `Geral` e `Perfil e cadastro`.
+- Botoes de edicao do psicologo nao foram exibidos nesta V1.
+- Dados sensiveis sao exibidos somente no painel admin e documentados no ADR `0235-admin-detalhe-psicologo-dados-sensiveis.md`.
+- Onde o prototipo citava Stripe, a implementacao usa Mercado Pago quando aplicavel e nao renderiza "Stripe".
+- Builder/Quick Copy nao esteve disponivel como ferramenta neste ambiente; foram usadas as imagens locais:
+  - `_product/proto/admin/Psicologos/Detalhes do psicologo/Geral.png`;
+  - `_product/proto/admin/Psicologos/Detalhes do psicologo/Perfil e Cadastro.png`.
+- Nao houve alteracao de schema Prisma nem migrations; `db:migrate` nao foi necessario.
+
+## Evidencias de validacao
+
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check`
+- API local com admin real e psicologo real: 200 autenticado, 401 sem autenticacao, sem `gateway_token`, sem `gateway_subscription_id`, sem `password` e sem "Stripe".
+- Browser local no Admin em desktop e viewport mobile 390px: abas Geral/Perfil renderizadas com dados reais, sem botao "Editar psicologo" e sem "Stripe".

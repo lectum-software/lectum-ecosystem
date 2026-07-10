@@ -59,6 +59,7 @@ export const adminPsychologistsKeys = {
   all: ["admin", "psychologists"] as const,
   dashboard: (input: PsychologistsDashboardQuery) =>
     [...adminPsychologistsKeys.all, "dashboard", normalizeRange(input)] as const,
+  detail: (id: string) => [...adminPsychologistsKeys.all, "detail", id] as const,
   list: (input: PsychologistsListQuery) =>
     [...adminPsychologistsKeys.all, "list", normalizePsychologistsList(input)] as const,
 };
