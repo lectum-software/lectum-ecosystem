@@ -1,5 +1,6 @@
 "use client";
 
+import type { ComponentPropsWithoutRef } from "react";
 import type { FieldPath, FieldValues } from "react-hook-form";
 import { useController, useFormContext } from "react-hook-form";
 import { cn } from "@/lib/utils";
@@ -11,13 +12,19 @@ export type InputControllerProps<TFormValues extends FieldValues> = {
   type?: string;
   autoComplete?: string;
   disabled?: boolean;
+  inputMode?: ComponentPropsWithoutRef<"input">["inputMode"];
+  maskValue?: (value: string) => string;
+  maxLength?: number;
   required?: boolean;
 };
 
 export const InputController = <TFormValues extends FieldValues>({
   autoComplete,
   disabled,
+  inputMode,
   label,
+  maskValue,
+  maxLength,
   name,
   placeholder,
   required,
@@ -46,6 +53,11 @@ export const InputController = <TFormValues extends FieldValues>({
         )}
         disabled={disabled}
         id={String(name)}
+        inputMode={inputMode}
+        maxLength={maxLength}
+        onChangeCapture={(event) => {
+          if (maskValue) event.currentTarget.value = maskValue(event.currentTarget.value);
+        }}
         placeholder={placeholder}
         type={type}
       />

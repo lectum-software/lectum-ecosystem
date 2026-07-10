@@ -84,6 +84,8 @@ Exibir plano, método e histórico financeiro do psicólogo e permitir concessã
 - [x] Cortesia pela UI reutiliza regra real do comando operacional.
 - [x] CPF, Regional e CRP da cortesia são editáveis no Admin.
 - [x] Alterações administrativas de CPF/Regional/CRP se sobrepõem aos dados informados pelo psicólogo no perfil.
+- [x] Regional da cortesia usa lista suspensa com as mesmas opções da edição de perfil do psicólogo.
+- [x] CPF da cortesia aplica máscara visual `000.000.000-00`.
 - [x] Sobrescrita administrativa de identidade não preenche `cfp_verified_at` sem consulta real.
 - [x] Data de inscrição CRP é exigida quando necessária.
 - [x] Cancelar assinatura e alterar cartão não aparecem/habilitam sem implementação real.
@@ -144,3 +146,17 @@ Exibir plano, método e histórico financeiro do psicólogo e permitir concessã
 - Validação manual em browser local headless Chrome/CDP, viewport mobile 390x844, confirmou a aba `?tab=plano` com os campos `cpf`, `regional_crp` e `crp` renderizados como inputs editáveis antes do período/data/notas.
 - Validação negativa sem mutação: `pnpm --dir backend subscription:grant -- --psychologist-user-id <id-real> --days 30 --actor "Validacao Codex" --cpf 111.111.111-11` retornou `cpf_invalid`.
 - Validações executadas: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir backend subscription:grant -- --help`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e `git diff --check`.
+
+## Ajuste complementar 2026-07-10 - Regional como select e máscara de CPF
+
+- Decisão de produto: no painel Admin, o campo Regional da cortesia deve ser uma lista suspensa igual ao campo "Regional do CRP" da edição de perfil do psicólogo.
+- O formulário Admin passou a usar as 24 regionais do perfil profissional (`1ª Região - DF` a `24ª Região - AC/RO`) com placeholder "Selecione a regional"; valores legados fora da lista são preservados como "valor atual" para não apagar dados existentes.
+- O campo CPF passou a aplicar máscara progressiva no controller de input do Admin, mantendo `maxLength=14`, `inputMode=numeric` e envio normalizado para dígitos no submit.
+- Não houve alteração de schema Prisma, migrations ou package novo.
+- Validação browser local headless Chrome/CDP, viewport mobile 390x844, em `http://localhost:3102/psicologos/<id>?tab=plano`, confirmou:
+  - `regional_crp` renderizado como `select`;
+  - placeholder "Selecione a regional";
+  - opção "4ª Região - MG";
+  - 25 opções no total (placeholder + 24 regionais);
+  - máscara de CPF aplicada ao digitar um valor de teste.
+- Validações executadas: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e `git diff --check`.

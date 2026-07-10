@@ -109,6 +109,50 @@ const TABS = [
 
 type ActiveTab = (typeof TABS)[number]["id"];
 
+const CRP_REGION_OPTIONS = [
+  { label: "1ª Região - DF", value: "1ª Região - DF" },
+  { label: "2ª Região - PE", value: "2ª Região - PE" },
+  { label: "3ª Região - BA", value: "3ª Região - BA" },
+  { label: "4ª Região - MG", value: "4ª Região - MG" },
+  { label: "5ª Região - RJ", value: "5ª Região - RJ" },
+  { label: "6ª Região - SP", value: "6ª Região - SP" },
+  { label: "7ª Região - RS", value: "7ª Região - RS" },
+  { label: "8ª Região - PR", value: "8ª Região - PR" },
+  { label: "9ª Região - GO", value: "9ª Região - GO" },
+  { label: "10ª Região - PA/AP", value: "10ª Região - PA/AP" },
+  { label: "11ª Região - CE", value: "11ª Região - CE" },
+  { label: "12ª Região - SC", value: "12ª Região - SC" },
+  { label: "13ª Região - PB", value: "13ª Região - PB" },
+  { label: "14ª Região - MS", value: "14ª Região - MS" },
+  { label: "15ª Região - AL", value: "15ª Região - AL" },
+  { label: "16ª Região - ES", value: "16ª Região - ES" },
+  { label: "17ª Região - RN", value: "17ª Região - RN" },
+  { label: "18ª Região - MT", value: "18ª Região - MT" },
+  { label: "19ª Região - SE", value: "19ª Região - SE" },
+  { label: "20ª Região - AM/RR", value: "20ª Região - AM/RR" },
+  { label: "21ª Região - PI", value: "21ª Região - PI" },
+  { label: "22ª Região - MA", value: "22ª Região - MA" },
+  { label: "23ª Região - TO", value: "23ª Região - TO" },
+  { label: "24ª Região - AC/RO", value: "24ª Região - AC/RO" },
+] as const;
+
+const CRP_REGION_PLACEHOLDER = { label: "Selecione a regional", value: "" };
+
+const createCrpRegionSelectOptions = (currentValue?: string | null) => {
+  const currentRegional = String(currentValue ?? "").trim();
+  const baseOptions = [CRP_REGION_PLACEHOLDER, ...CRP_REGION_OPTIONS];
+
+  if (!currentRegional || CRP_REGION_OPTIONS.some((option) => option.value === currentRegional)) {
+    return baseOptions;
+  }
+
+  return [
+    CRP_REGION_PLACEHOLDER,
+    { label: `${currentRegional} (valor atual)`, value: currentRegional },
+    ...CRP_REGION_OPTIONS,
+  ];
+};
+
 const STATUS_COPY: Record<AdminPsychologistDetailStatus, { className: string; label: string }> = {
   free: { className: "bg-blue-50 text-blue-700", label: "Gratuito" },
   pending: { className: "bg-orange-50 text-orange-700", label: "Pendente" },
@@ -249,9 +293,15 @@ const formatInputDate = (value?: string | null) => {
   return date.toISOString().slice(0, 10);
 };
 
+const normalizeCpfInput = (value?: string | null) => onlyDigits(value).slice(0, 11);
+
 const formatCpfInput = (value?: string | null) => {
-  const digits = onlyDigits(value);
-  if (digits.length !== 11) return value ?? "";
+  const digits = normalizeCpfInput(value);
+  if (digits.length <= 3) return digits;
+  if (digits.length <= 6) return `${digits.slice(0, 3)}.${digits.slice(3)}`;
+  if (digits.length <= 9) {
+    return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6)}`;
+  }
 
   return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6, 9)}-${digits.slice(9)}`;
 };
@@ -2462,6 +2512,10 @@ const CourtesyForm = ({ billing, id }: { billing: AdminPsychologistBilling; id: 
     resolver: zodResolver(createCourtesySchema(billing.courtesy.requires_crp_registration_date)),
   });
   const disabled = !billing.courtesy.can_grant || mutation.isPending;
+  const regionalOptions = useMemo(
+    () => createCrpRegionSelectOptions(billing.courtesy.regional_crp),
+    [billing.courtesy.regional_crp],
+  );
 
   useEffect(() => {
     form.reset({
@@ -2482,7 +2536,7 @@ const CourtesyForm = ({ billing, id }: { billing: AdminPsychologistBilling; id: 
 
     try {
       await mutation.mutateAsync({
-        cpf: values.cpf?.trim() || null,
+        cpf: normalizeCpfInput(values.cpf) || null,
         crp: values.crp?.trim() || null,
         crp_registration_date: values.crp_registration_date?.trim() || null,
         notes: values.notes?.trim() || null,
@@ -2519,16 +2573,18 @@ const CourtesyForm = ({ billing, id }: { billing: AdminPsychologistBilling; id: 
             <InputController<CourtesyFormValues>
               autoComplete="off"
               disabled={disabled}
+              inputMode="numeric"
               label="CPF"
+              maskValue={formatCpfInput}
+              maxLength={14}
               name="cpf"
               placeholder="000.000.000-00"
             />
-            <InputController<CourtesyFormValues>
-              autoComplete="off"
+            <SelectController<CourtesyFormValues>
               disabled={disabled}
               label="Regional"
               name="regional_crp"
-              placeholder="Ex.: CRP-06"
+              options={regionalOptions}
             />
             <InputController<CourtesyFormValues>
               autoComplete="off"

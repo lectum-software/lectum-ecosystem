@@ -78,3 +78,24 @@ Validação complementar:
 - Browser local headless Chrome/CDP em viewport mobile 390x844 confirmou a aba `?tab=plano` com `cpf`, `regional_crp` e `crp` renderizados como inputs editáveis.
 - `pnpm --dir backend subscription:grant -- --help` exibiu as novas flags.
 - Validação negativa sem mutação com CPF inválido retornou `cpf_invalid`.
+
+## Complemento 2026-07-10 - Regional em lista e máscara de CPF
+
+Produto definiu que o campo Regional da cortesia no Admin deve ter a mesma experiência da edição de perfil do psicólogo, e que o CPF deve ter máscara visual durante a digitação.
+
+Decisão:
+
+- A lista do Admin replica as 24 opções `CRP_REGION_OPTIONS` usadas no perfil profissional (`1ª Região - DF` a `24ª Região - AC/RO`) e adiciona apenas o placeholder "Selecione a regional".
+- Caso um valor legado de regional não esteja na lista, a UI preserva esse valor como "valor atual" para evitar perda silenciosa de dados antes de o administrador escolher uma opção padronizada.
+- O controller de input do Admin aceita máscara por captura de mudança (`maskValue`) e o CPF da cortesia usa máscara progressiva `000.000.000-00`, `inputMode=numeric` e `maxLength=14`.
+- O submit continua enviando CPF normalizado para dígitos e Regional/CRP opcionais ao mesmo endpoint de cortesia; não houve alteração de backend, banco ou pacote.
+
+Consequência: a operação administrativa fica consistente com o perfil do psicólogo e reduz erro de digitação de CPF, preservando a regra de domínio existente de sobrescrita de identidade sem preencher `cfp_verified_at`.
+
+Validação complementar:
+
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check`
+- `git diff --check`
+- Browser local headless Chrome/CDP, viewport 390x844, confirmou `regional_crp` como `select`, placeholder, 24 regionais + placeholder e máscara de CPF aplicada ao digitar valor de teste.
