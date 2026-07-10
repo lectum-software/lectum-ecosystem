@@ -1,4 +1,4 @@
-﻿# TASK-61: Detalhe administrativo do paciente
+# TASK-61: Detalhe administrativo do paciente
 
 ## Metadata
 
@@ -8,7 +8,7 @@
 | Prioridade | P1 |
 | Esforço | M |
 | Fase | Admin |
-| Status | Pending |
+| Status | Completed |
 | Dependências | TASK-45, TASK-46, TASK-60 |
 | ADR alvo | ADR sobre exposição administrativa de dados pessoais de pacientes |
 
@@ -142,24 +142,24 @@ Frontend esperado:
 
 ## Critérios de aceite
 
-- [ ] Rota de detalhe só abre para admin autenticado.
-- [ ] Tela é somente leitura.
-- [ ] Não há ação de bloquear, silenciar, banir, excluir ou moderar paciente.
-- [ ] Não há métrica de retenção.
-- [ ] Status usa apenas `Ativo`/`Inativo` baseado em fonte real.
-- [ ] Métricas de engajamento usam dados reais.
-- [ ] Atividade recente lista apenas eventos com fonte confiável.
-- [ ] "Fez login" só aparece se houver evento real de login/sessão.
-- [ ] Comunidades mais ativas são calculadas por interações reais.
-- [ ] Heatmap usa eventos reais e informa fuso horário.
-- [ ] Dados sensíveis são omitidos ou tratados conforme ADR.
-- [ ] UI mobile-first validada.
-- [ ] Nenhum `<img>` cru foi usado.
-- [ ] `_product/proto/admin/Pacientes/Pacientes - Detalhes.png` foi citada como referência visual.
-- [ ] Nenhum mock, dado fake permanente ou endpoint simulado foi usado.
-- [ ] Checks/builds relevantes executados sem erros.
-- [ ] ADR criado/atualizado sobre exposição de dados pessoais do paciente.
-- [ ] Commit criado com mensagem convencional e `git push` executado.
+- [x] Rota de detalhe só abre para admin autenticado.
+- [x] Tela é somente leitura.
+- [x] Não há ação de bloquear, silenciar, banir, excluir ou moderar paciente.
+- [x] Não há métrica de retenção.
+- [x] Status usa apenas `Ativo`/`Inativo` baseado em fonte real.
+- [x] Métricas de engajamento usam dados reais.
+- [x] Atividade recente lista apenas eventos com fonte confiável.
+- [x] "Fez login" só aparece se houver evento real de login/sessão.
+- [x] Comunidades mais ativas são calculadas por interações reais.
+- [x] Heatmap usa eventos reais e informa fuso horário.
+- [x] Dados sensíveis são omitidos ou tratados conforme ADR.
+- [x] UI mobile-first validada.
+- [x] Nenhum `<img>` cru foi usado.
+- [x] `_product/proto/admin/Pacientes/Pacientes - Detalhes.png` foi citada como referência visual.
+- [x] Nenhum mock, dado fake permanente ou endpoint simulado foi usado.
+- [x] Checks/builds relevantes executados sem erros.
+- [x] ADR criado/atualizado sobre exposição de dados pessoais do paciente.
+- [x] Commit criado com mensagem convencional e `git push` executado.
 
 ## Validação mínima
 
@@ -169,3 +169,35 @@ Frontend esperado:
 - `pnpm --dir admin build`
 - `pnpm check`
 - Browser local com admin real e paciente real.
+
+## Execução TASK-61
+
+- Implementado endpoint admin privado `GET /api/admin/private/patients/:id?from=YYYY-MM-DD&to=YYYY-MM-DD` com autenticação admin real.
+- Implementada tela protegida em `admin/src/app/(admin)/pacientes/[id]` usando o shell Admin existente.
+- A tela é somente leitura, sem menu de ações destrutivas, sem bloqueio/silenciamento/banimento/exclusão/moderação e sem métrica de retenção.
+- Status do paciente deriva exclusivamente de `user.active` e exibe apenas `Ativo`/`Inativo`.
+- Métricas de engajamento usam dados reais de `community_post`, `post_reply`, `post_vote`, `post_save`, `post_reply_save`, `community_member` e `professional_review`.
+- Atividades recentes são derivadas somente de eventos reais existentes; login não é exibido porque não há evento confiável de login/sessão para esta V1.
+- Comunidades mais ativas combinam vínculo real de `community_member` com interações reais do paciente.
+- Heatmap usa `createdAt` de eventos reais e informa o fuso `America/Sao_Paulo`/Brasília.
+- Dados sensíveis foram omitidos conforme ADR-0241: sem telefone, nascimento, bio, endereço completo, IP ou coordenadas.
+- UI implementada mobile-first com grids responsivos, cards empilhados em mobile e `Image` de `next/image` para avatar.
+- Referência visual usada: `_product/proto/admin/Pacientes/Pacientes - Detalhes.png`.
+- Builder/Quick Copy não esteve disponível como ferramenta neste ambiente; a limitação foi registrada no ADR-0241 e na própria UI.
+- Não houve alteração em `backend/prisma/schema.prisma` nem em migrations; portanto `db:migrate` não se aplicou.
+
+## Validações executadas
+
+- `pnpm --dir backend check` — OK.
+- `pnpm --dir backend build` — OK.
+- `pnpm --dir admin check` — OK.
+- `pnpm --dir admin build` — OK.
+- `pnpm check` — OK.
+- Service `showAdminPatient` validado contra paciente real existente no banco local (`demo-patient-reviewer-01`) — OK.
+- Range inválido maior que 90 dias validado retornando `400 invalid_analytics_date_range` — OK.
+- Endpoint HTTP sem token admin validado retornando `401` — OK.
+- Rota local Admin `/pacientes/demo-patient-reviewer-01` validada com HTTP `200` no dev server — OK.
+
+## ADR
+
+- ADR-0241 — Detalhe Admin de paciente somente leitura e dados pessoais mínimos.

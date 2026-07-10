@@ -1,4 +1,4 @@
-﻿import { type RequestHandler, Router } from "express";
+import { type RequestHandler, Router } from "express";
 import apiAdminPrivateAuthHidrate from "@/modules/api/admin/private/auth/hidrate";
 import apiAdminPrivateAuthLogout from "@/modules/api/admin/private/auth/logout";
 import apiAdminPrivateCommunitiesDashboard from "@/modules/api/admin/private/communities/dashboard";
@@ -6,6 +6,7 @@ import apiAdminPrivateCommunitiesManage from "@/modules/api/admin/private/commun
 import apiAdminPrivateDashboardExport from "@/modules/api/admin/private/dashboard/export";
 import apiAdminPrivateDashboardSummary from "@/modules/api/admin/private/dashboard/summary";
 import apiAdminPrivatePatientsDashboard from "@/modules/api/admin/private/patients/dashboard";
+import apiAdminPrivatePatientsDetail from "@/modules/api/admin/private/patients/detail";
 import apiAdminPrivatePsychologistsActivities from "@/modules/api/admin/private/psychologists/activities";
 import apiAdminPrivatePsychologistsBilling from "@/modules/api/admin/private/psychologists/billing";
 import apiAdminPrivatePsychologistsDashboard from "@/modules/api/admin/private/psychologists/dashboard";
@@ -142,6 +143,7 @@ mountRoute("/api/admin/private/communities", apiAdminPrivateCommunitiesManage);
 mountRoute("/api/admin/private/dashboard/summary", apiAdminPrivateDashboardSummary);
 mountRoute("/api/admin/private/dashboard/export", apiAdminPrivateDashboardExport);
 mountRoute("/api/admin/private/patients/dashboard", apiAdminPrivatePatientsDashboard);
+mountRoute("/api/admin/private/patients", apiAdminPrivatePatientsDetail);
 mountRoute("/api/admin/private/psychologists/dashboard", apiAdminPrivatePsychologistsDashboard);
 mountRoute("/api/admin/private/psychologists", apiAdminPrivatePsychologistsList);
 mountRoute("/api/admin/private/psychologists", apiAdminPrivatePsychologistsDetail);

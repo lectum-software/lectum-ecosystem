@@ -128,3 +128,4 @@ Formato recomendado:
 - [ADR-0238 - Avaliações e denúncias do psicólogo no Admin são somente leitura](0238-admin-psicologo-avaliacoes-denuncias-readonly.md) - Accepted
 - [ADR-0239 - Atividades do psicólogo no Admin como feed derivado](0239-admin-atividades-psicologo-feed-derivado.md) - Accepted
 - [ADR-0240 - Dashboard Admin de pacientes com dados agregados e sem retenção V1](0240-admin-pacientes-dashboard-dados-agregados.md) - Accepted
+- [ADR-0241 - Detalhe Admin de paciente somente leitura e dados pessoais mínimos](0241-admin-detalhe-paciente-dados-minimos-readonly.md) - Accepted
