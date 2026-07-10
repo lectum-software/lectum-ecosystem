@@ -1,6 +1,6 @@
 "use client";
 
-import { Bell, ChevronLeft, LogOut, Menu, X } from "lucide-react";
+import { ChevronLeft, LogOut, Menu, X } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -108,7 +108,6 @@ const SidebarContent = ({ collapsed, onNavigate }: SidebarContentProps) => {
 export const AdminShell = ({ children }: PropsWithChildren) => {
   const [collapsed, setCollapsed] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const { admin } = useAdminAuth();
 
   const toggleCollapsed = () => {
     setCollapsed((current) => {
@@ -117,8 +116,6 @@ export const AdminShell = ({ children }: PropsWithChildren) => {
       return next;
     });
   };
-
-  const adminName = admin?.name || "Admin Lectum";
 
   return (
     <div className="min-h-dvh bg-background text-foreground">
@@ -171,43 +168,17 @@ export const AdminShell = ({ children }: PropsWithChildren) => {
       ) : null}
 
       <div className={cn("transition-[padding] duration-200 lg:pl-72", collapsed && "lg:pl-20")}>
-        <header className="sticky top-0 z-20 border-b border-border bg-background/92 backdrop-blur">
-          <div className="flex h-16 items-center justify-between gap-3 px-4 sm:px-6 lg:h-20 lg:px-8">
-            <div className="flex items-center gap-2">
-              <button
-                aria-label="Abrir menu administrativo"
-                className="grid h-11 w-11 place-items-center rounded-2xl border border-border bg-surface text-foreground shadow-control transition hover:border-border-strong lg:hidden"
-                onClick={() => setDrawerOpen(true)}
-                type="button"
-              >
-                <Menu aria-hidden className="h-5 w-5" />
-              </button>
-            </div>
-
-            <div className="flex items-center gap-2 sm:gap-3">
-              <button
-                aria-label="Abrir notificações administrativas"
-                className="grid h-11 w-11 place-items-center rounded-2xl border border-border bg-surface text-foreground shadow-control transition hover:border-border-strong"
-                type="button"
-              >
-                <Bell aria-hidden className="h-5 w-5" />
-              </button>
-
-              <button
-                aria-label="Abrir perfil administrativo"
-                className="flex h-11 items-center gap-2 rounded-2xl border border-border bg-surface px-2 pr-3 text-sm font-black text-foreground shadow-control transition hover:border-border-strong"
-                type="button"
-              >
-                <span className="grid h-8 w-8 place-items-center rounded-full bg-primary text-xs font-black text-white">
-                  AD
-                </span>
-                <span className="hidden max-w-36 truncate sm:block">{adminName}</span>
-              </button>
-            </div>
-          </div>
-        </header>
-
         <main className="mx-auto w-full max-w-[1440px] px-4 py-5 sm:px-6 lg:px-8 lg:py-8">
+          <div className="mb-4 flex lg:hidden">
+            <button
+              aria-label="Abrir menu administrativo"
+              className="grid h-11 w-11 place-items-center rounded-2xl border border-border bg-surface text-foreground shadow-control transition hover:border-border-strong"
+              onClick={() => setDrawerOpen(true)}
+              type="button"
+            >
+              <Menu aria-hidden className="h-5 w-5" />
+            </button>
+          </div>
           {children}
         </main>
       </div>
