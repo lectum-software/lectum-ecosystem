@@ -1,15 +1,6 @@
 "use client";
 
-import {
-  Bell,
-  ChevronLeft,
-  ChevronRight,
-  LogOut,
-  Menu,
-  PanelLeftClose,
-  PanelLeftOpen,
-  X,
-} from "lucide-react";
+import { Bell, ChevronLeft, LogOut, Menu, X } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -23,10 +14,9 @@ import { adminNavItems } from "./nav";
 type SidebarContentProps = {
   collapsed: boolean;
   onNavigate?: () => void;
-  onToggle?: () => void;
 };
 
-const SidebarContent = ({ collapsed, onNavigate, onToggle }: SidebarContentProps) => {
+const SidebarContent = ({ collapsed, onNavigate }: SidebarContentProps) => {
   const pathname = usePathname();
   const { admin, logout } = useAdminAuth();
   const adminName = admin?.name || "Admin Lectum";
@@ -110,27 +100,6 @@ const SidebarContent = ({ collapsed, onNavigate, onToggle }: SidebarContentProps
           <LogOut aria-hidden className="h-5 w-5" />
           <span className={cn(collapsed && "sr-only")}>Sair</span>
         </button>
-
-        {onToggle ? (
-          <button
-            aria-label={collapsed ? "Expandir menu lateral" : "Recolher menu lateral"}
-            className={cn(
-              "mt-2 hidden h-11 w-full items-center gap-3 rounded-2xl px-3 text-sm font-bold text-sidebar-muted transition hover:bg-white/10 hover:text-sidebar-foreground lg:flex",
-              collapsed && "justify-center px-2",
-            )}
-            onClick={onToggle}
-            type="button"
-          >
-            {collapsed ? (
-              <PanelLeftOpen aria-hidden className="h-5 w-5" />
-            ) : (
-              <PanelLeftClose aria-hidden className="h-5 w-5" />
-            )}
-            <span className={cn(collapsed && "sr-only")}>
-              {collapsed ? "Expandir" : "Recolher"}
-            </span>
-          </button>
-        ) : null}
       </div>
     </div>
   );
@@ -159,7 +128,24 @@ export const AdminShell = ({ children }: PropsWithChildren) => {
           collapsed ? "w-20" : "w-72",
         )}
       >
-        <SidebarContent collapsed={collapsed} onToggle={toggleCollapsed} />
+        <button
+          aria-label={collapsed ? "Expandir menu lateral" : "Recolher menu lateral"}
+          aria-pressed={!collapsed}
+          className="absolute top-9 right-0 z-20 inline-grid h-6 w-6 translate-x-1/2 place-items-center rounded-full border border-border/70 bg-surface/95 text-muted opacity-75 shadow-[0_3px_10px_rgb(15_23_42_/_8%)] transition-[background,color,opacity,transform,box-shadow] duration-200 ease-out hover:scale-[1.03] hover:bg-background hover:text-foreground hover:opacity-100 hover:shadow-[0_6px_14px_rgb(15_23_42_/_10%)] focus-visible:bg-background focus-visible:text-primary focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25 active:scale-95"
+          onClick={toggleCollapsed}
+          title={collapsed ? "Expandir menu" : "Recolher menu"}
+          type="button"
+        >
+          <ChevronLeft
+            aria-hidden="true"
+            className={cn(
+              "h-3 w-3 transition-transform duration-200 ease-out",
+              collapsed ? "rotate-180" : "rotate-0",
+            )}
+            strokeWidth={2}
+          />
+        </button>
+        <SidebarContent collapsed={collapsed} />
       </aside>
 
       {drawerOpen ? (
@@ -195,19 +181,6 @@ export const AdminShell = ({ children }: PropsWithChildren) => {
                 type="button"
               >
                 <Menu aria-hidden className="h-5 w-5" />
-              </button>
-              <button
-                aria-label={collapsed ? "Expandir menu lateral" : "Recolher menu lateral"}
-                className="hidden h-11 items-center gap-2 rounded-2xl border border-border bg-surface px-3 text-sm font-bold text-muted shadow-control transition hover:border-border-strong hover:text-foreground lg:flex"
-                onClick={toggleCollapsed}
-                type="button"
-              >
-                {collapsed ? (
-                  <ChevronRight aria-hidden className="h-4 w-4" />
-                ) : (
-                  <ChevronLeft aria-hidden className="h-4 w-4" />
-                )}
-                <span>{collapsed ? "Expandir" : "Recolher"}</span>
               </button>
             </div>
 
