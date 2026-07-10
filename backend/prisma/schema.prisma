@@ -69,6 +69,7 @@ model user {
   post_notification_mutes                 post_notification_mute[]      @relation("post_notification_mute_user")
   post_reports                            post_report[]                 @relation("post_report_reporter")
   notification_subscriptions              notification_subscription[]   @relation("notification_subscription_user")
+  notification_deliveries                 notification_delivery[]       @relation("notification_delivery_user")
   visitor_locations                       visitor_location[]            @relation("visitor_location_user")
   visitor_sessions                        visitor_session[]             @relation("visitor_session_user")
   page_view_events                        page_view_event[]             @relation("page_view_event_user")
@@ -86,24 +87,25 @@ model user {
 }
 
 model admin {
-  id               String        @id @default(cuid())
-  deleted          Boolean       @default(false)
-  deletedAt        DateTime?     @map("deleted_at")
-  updatedAt        DateTime      @default(now()) @updatedAt @map("updated_at")
-  createdAt        DateTime      @default(now()) @map("created_at")
-  name             String
-  email            String        @unique
-  password         String?
-  password_confirm String?
-  active           Boolean       @default(true)
-  confirmed        Boolean       @default(false)
-  confirmed_date   DateTime?
-  confirm_code     String?
-  confirm_date     DateTime?
-  recovery_code    String?
-  recovery_date    DateTime?
-  need_reset       Boolean       @default(false)
-  admin_tokens     admin_token[] @relation("admin_token_admin")
+  id                     String                        @id @default(cuid())
+  deleted                Boolean                       @default(false)
+  deletedAt              DateTime?                     @map("deleted_at")
+  updatedAt              DateTime                      @default(now()) @updatedAt @map("updated_at")
+  createdAt              DateTime                      @default(now()) @map("created_at")
+  name                   String
+  email                  String                        @unique
+  password               String?
+  password_confirm       String?
+  active                 Boolean                       @default(true)
+  confirmed              Boolean                       @default(false)
+  confirmed_date         DateTime?
+  confirm_code           String?
+  confirm_date           DateTime?
+  recovery_code          String?
+  recovery_date          DateTime?
+  need_reset             Boolean                       @default(false)
+  admin_tokens           admin_token[]                 @relation("admin_token_admin")
+  notification_campaigns admin_notification_campaign[] @relation("admin_notification_campaign_admin")
 
   @@index([email, deleted])
   @@index([active, deleted])
@@ -1025,20 +1027,77 @@ model notification_subscription {
 }
 
 model notification {
-  id            String    @id @default(cuid())
-  deleted       Boolean   @default(false)
+  id            String                  @id @default(cuid())
+  deleted       Boolean                 @default(false)
   deletedAt     DateTime?
-  updatedAt     DateTime  @default(now()) @updatedAt
-  createdAt     DateTime  @default(now())
+  updatedAt     DateTime                @default(now()) @updatedAt
+  createdAt     DateTime                @default(now())
   user_id       String
-  read          Boolean   @default(false)
+  read          Boolean                 @default(false)
   redirect      String?
   message_key   String
   message_props Json?
-  user          user      @relation("notifications", fields: [user_id], references: [id])
+  user          user                    @relation("notifications", fields: [user_id], references: [id])
+  deliveries    notification_delivery[] @relation("notification_delivery_notification")
 
   @@index([user_id])
   @@map("notifications")
+}
+
+model admin_notification_campaign {
+  id                  String                  @id @default(cuid())
+  deleted             Boolean                 @default(false)
+  deletedAt           DateTime?               @map("deleted_at")
+  updatedAt           DateTime                @default(now()) @updatedAt @map("updated_at")
+  createdAt           DateTime                @default(now()) @map("created_at")
+  title               String
+  body                String
+  redirect            String?
+  audience            String
+  channels            Json
+  status              String                  @default("draft")
+  scheduled_at        DateTime?
+  sent_at             DateTime?
+  canceled_at         DateTime?
+  created_by_admin_id String
+  created_by_admin    admin                   @relation("admin_notification_campaign_admin", fields: [created_by_admin_id], references: [id], onDelete: Cascade)
+  deliveries          notification_delivery[] @relation("notification_delivery_campaign")
+
+  @@index([status, scheduled_at])
+  @@index([created_by_admin_id, createdAt])
+  @@index([audience, deleted])
+  @@map("admin_notification_campaigns")
+}
+
+model notification_delivery {
+  id              String                       @id @default(cuid())
+  deleted         Boolean                      @default(false)
+  deletedAt       DateTime?                    @map("deleted_at")
+  updatedAt       DateTime                     @default(now()) @updatedAt @map("updated_at")
+  createdAt       DateTime                     @default(now()) @map("created_at")
+  campaign_id     String?
+  notification_id String?
+  user_id         String
+  source          String
+  trigger_key     String?
+  channel         String
+  status          String                       @default("queued")
+  sent_at         DateTime?
+  delivered_at    DateTime?
+  read_at         DateTime?
+  clicked_at      DateTime?
+  failure_reason  String?
+  metadata        Json?
+  campaign        admin_notification_campaign? @relation("notification_delivery_campaign", fields: [campaign_id], references: [id], onDelete: SetNull)
+  notification    notification?                @relation("notification_delivery_notification", fields: [notification_id], references: [id], onDelete: SetNull)
+  user            user                         @relation("notification_delivery_user", fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([campaign_id, channel, status])
+  @@index([notification_id])
+  @@index([user_id, createdAt])
+  @@index([source, trigger_key, createdAt])
+  @@index([channel, status, createdAt])
+  @@map("notification_deliveries")
 }
 
 model log__user {

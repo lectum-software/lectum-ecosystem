@@ -61,4 +61,10 @@ export const messages = {
       body: resolve("notification.salvamento.body", data),
     };
   },
+  admin_campaign: (data: Record<string, unknown>) => {
+    return {
+      title: String(data.title || "Lectum"),
+      body: String(data.body || "Voce tem uma nova notificacao"),
+    };
+  },
 };

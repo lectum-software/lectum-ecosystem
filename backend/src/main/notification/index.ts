@@ -1,11 +1,11 @@
-import webPush, { isWebPushConfigured } from "@/config/webPush";
-import type { Prisma } from "@/external/generated/prisma/client";
+﻿import type { Prisma } from "@/external/generated/prisma/client";
 import prisma from "@/infra/database/prisma";
 import { notification as emitNotification } from "@/main/socket/events/notification";
 import { messages } from "./constants";
+import { createNotificationDelivery } from "./deliveries";
 import { isChannelAllowed } from "./preferences";
+import { sendWebPushToSubscriptions } from "./push";
 
-const BASE = process.env.BASE || "";
 const ONE_HOUR_MS = 60 * 60 * 1000;
 
 type NotifyMeta = {
@@ -107,11 +107,10 @@ const shouldSuppressImmediatePush = async (params: {
 };
 
 /**
- * Cria a notificação in-app, emite em tempo real (Socket.IO) e envia push web,
- * respeitando `notification_preference`. No MVP web a preferência visual é
- * uma chave única por categoria, mas o dispatcher preserva compatibilidade
- * com registros legados `in_app`/`push`. Não é ligado a eventos de
- * domínio aqui — a produção de eventos é responsabilidade da TASK-29B.
+ * Cria a notificacao in-app, emite em tempo real (Socket.IO) e envia push web,
+ * respeitando `notification_preference`. As entregas reais ficam auditaveis em
+ * `notification_delivery` para uso do Admin; canais pulados ficam com status
+ * `skipped` e motivo explicito, sem inventar alcance.
  */
 export const notify = async (userIds: string[], meta: NotifyMeta) => {
   try {
@@ -130,37 +129,63 @@ export const notify = async (userIds: string[], meta: NotifyMeta) => {
       },
     });
 
-    const props = (meta.message_props ?? {}) as Prisma.InputJsonValue;
+    const propsRecord = meta.message_props ?? {};
+    const props = propsRecord as Prisma.InputJsonValue;
+    const emittedUserIds: string[] = [];
 
-    // 1. Persistir notificações in-app (canal in_app permitido).
-    const inAppUsers = users.filter((user) =>
-      isChannelAllowed(user.notification_preference?.prefs, meta.message_key, "in_app"),
-    );
+    for (const user of users) {
+      const now = new Date();
+      const inAppAllowed = isChannelAllowed(
+        user.notification_preference?.prefs,
+        meta.message_key,
+        "in_app",
+      );
 
-    if (inAppUsers.length > 0) {
-      await prisma.notification.createMany({
-        data: inAppUsers.map((user) => ({
-          user_id: user.id,
+      if (!inAppAllowed) {
+        await createNotificationDelivery({
+          channel: "in_app",
+          failureReason: "preference_disabled",
+          metadata: { message_key: meta.message_key },
+          source: "automatic",
+          status: "skipped",
+          triggerKey: meta.message_key,
+          userId: user.id,
+        });
+        continue;
+      }
+
+      const notification = await prisma.notification.create({
+        data: {
           message_key: meta.message_key,
           message_props: props,
           redirect: meta.redirect,
-        })),
+          user_id: user.id,
+        },
       });
 
-      // 2. Tempo real para quem estiver conectado.
-      await emitNotification(inAppUsers.map((user) => user.id));
+      await createNotificationDelivery({
+        channel: "in_app",
+        deliveredAt: now,
+        metadata: { message_key: meta.message_key },
+        notificationId: notification.id,
+        sentAt: now,
+        source: "automatic",
+        status: "delivered",
+        triggerKey: meta.message_key,
+        userId: user.id,
+      });
+      emittedUserIds.push(user.id);
     }
 
-    // 3. Push web (canal push permitido + subscription + VAPID configurado).
+    if (emittedUserIds.length > 0) {
+      await emitNotification(emittedUserIds);
+    }
+
     const build = messages[meta.message_key as keyof typeof messages];
     let targeted = 0;
     let sent = 0;
     let failed = 0;
-
-    if (!isWebPushConfigured()) {
-      console.log(`[WEB NOTIFICATION] push "${meta.message_key}" ignorado: VAPID não configurado.`);
-      return;
-    }
+    let skipped = 0;
 
     for (const user of users) {
       if (
@@ -171,45 +196,69 @@ export const notify = async (userIds: string[], meta: NotifyMeta) => {
           userId: user.id,
         })
       ) {
+        skipped++;
+        await createNotificationDelivery({
+          channel: "push",
+          failureReason: "push_suppressed_by_policy",
+          metadata: { message_key: meta.message_key },
+          source: "automatic",
+          status: "skipped",
+          triggerKey: meta.message_key,
+          userId: user.id,
+        });
         continue;
       }
 
       if (!isChannelAllowed(user.notification_preference?.prefs, meta.message_key, "push")) {
+        skipped++;
+        await createNotificationDelivery({
+          channel: "push",
+          failureReason: "preference_disabled",
+          metadata: { message_key: meta.message_key },
+          source: "automatic",
+          status: "skipped",
+          triggerKey: meta.message_key,
+          userId: user.id,
+        });
         continue;
       }
 
-      for (const sub of user.notification_subscriptions ?? []) {
-        if (!sub.subscription) continue;
-        targeted++;
+      const content = build
+        ? build(meta.message_props ?? {})
+        : { body: "Voce tem uma nova notificacao", title: "Lectum" };
+      const result = await sendWebPushToSubscriptions({
+        body: content.body,
+        messageProps: meta.message_props,
+        redirect: meta.redirect,
+        subscriptions: user.notification_subscriptions,
+        title: content.title,
+      });
+      const now = new Date();
 
-        try {
-          const content = build
-            ? build(meta.message_props ?? {})
-            : { title: "Lectum", body: "Você tem uma nova notificação" };
+      targeted += result.targetedCount;
+      sent += result.sentCount;
+      failed += result.failedCount;
+      if (result.status === "skipped") skipped++;
 
-          const payload = JSON.stringify({
-            notification: { ...content, icon: BASE ? `${BASE}/logo.png` : "/logo.png" },
-            data: { redirect: meta.redirect, message_props: meta.message_props },
-          });
-
-          await webPush.sendNotification(
-            sub.subscription as unknown as Parameters<typeof webPush.sendNotification>[0],
-            payload,
-          );
-          sent++;
-        } catch (error) {
-          failed++;
-          console.error(
-            "[WEB NOTIFICATION] erro ao enviar push:",
-            (error as { statusCode?: number })?.statusCode,
-            (error as Error)?.message,
-          );
-        }
-      }
+      await createNotificationDelivery({
+        channel: "push",
+        failureReason: result.failureReason ?? null,
+        metadata: {
+          failed_count: result.failedCount,
+          message_key: meta.message_key,
+          sent_count: result.sentCount,
+          targeted_count: result.targetedCount,
+        },
+        sentAt: result.status === "sent" ? now : null,
+        source: "automatic",
+        status: result.status,
+        triggerKey: meta.message_key,
+        userId: user.id,
+      });
     }
 
     console.log(
-      `[WEB NOTIFICATION] push "${meta.message_key}": ${targeted} alvo(s), ${sent} enviado(s), ${failed} falha(s).`,
+      `[WEB NOTIFICATION] push "${meta.message_key}": ${targeted} alvo(s), ${sent} enviado(s), ${failed} falha(s), ${skipped} ignorado(s).`,
     );
   } catch (error) {
     console.error("[WEB NOTIFICATION] erro no dispatcher:", (error as Error)?.message);

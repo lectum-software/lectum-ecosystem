@@ -121,7 +121,17 @@
     "admin_account_not_registered": "Não encontramos um administrador ativo para este e-mail.",
     "admin_auth_config_error": "Autenticação administrativa indisponível por configuração.",
     "admin_auth_inactive": "Administrador inativo",
-    "admin_auth_unconfirmed": "Administrador ainda não confirmado"
+    "admin_auth_unconfirmed": "Administrador ainda não confirmado",
+    "admin_notification_channel_required": "Selecione pelo menos um canal de notifica??o.",
+    "admin_notification_email_channel_not_allowed": "E-mail n?o est? dispon?vel nas notifica??es da V1.",
+    "admin_notification_invalid_channel": "Canal de notifica??o inv?lido. Use apenas in_app ou push.",
+    "admin_notification_invalid_audience": "P?blico da campanha inv?lido.",
+    "admin_notification_invalid_redirect": "Informe uma rota interna v?lida para o redirecionamento.",
+    "admin_notification_campaign_not_mutable": "Somente campanhas em rascunho podem ser editadas.",
+    "admin_notification_campaign_not_schedulable": "Somente campanhas em rascunho ou agendadas podem ser agendadas.",
+    "admin_notification_campaign_not_sendable": "Somente campanhas em rascunho ou agendadas podem ser enviadas.",
+    "admin_notification_campaign_not_cancelable": "Somente campanhas em rascunho ou agendadas podem ser canceladas.",
+    "admin_notification_invalid_schedule": "Informe uma data futura para agendar a campanha."
   },
   "message": {
     "store": "dado criado",
@@ -243,7 +253,9 @@
     "admin": "administrador",
     "admin_token": "token administrativo",
     "page_view_event": "pageview",
-    "important_action_event": "evento importante"
+    "important_action_event": "evento importante",
+    "admin_notification_campaign": "campanha administrativa de notifica??o",
+    "notification_delivery": "entrega de notifica??o"
   },
   "property": {
     "email": "email",

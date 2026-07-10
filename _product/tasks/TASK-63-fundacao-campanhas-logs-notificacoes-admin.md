@@ -8,7 +8,7 @@
 | Prioridade | P1 |
 | Esforço | L |
 | Fase | Admin / Notificações |
-| Status | Pending |
+| Status | Completed |
 | Dependências | TASK-29A, TASK-29B, TASK-38, TASK-45 |
 | ADR alvo | ADR sobre campanhas manuais, rastreio de entrega/abertura/clique e ausência de e-mail na V1 |
 
@@ -177,21 +177,21 @@ Validação:
 
 ## Critérios de aceite
 
-- [ ] Modelos/migrations de campanha e entrega/log foram criados.
-- [ ] `pnpm --dir backend db:migrate` executado após alteração de Prisma/migrations.
-- [ ] Não existe canal e-mail na V1.
-- [ ] Payloads com canal `email` são rejeitados.
-- [ ] Campanhas manuais suportam rascunho, agendamento, envio e cancelamento.
-- [ ] Entregas são materializadas por usuário e canal com fonte real.
-- [ ] Logs automáticos são gerados a partir do dispatcher real.
-- [ ] Push só é tentado com subscription/VAPID reais.
-- [ ] Abertura/leitura e clique só são registrados por eventos reais.
-- [ ] Métricas agregadas não inventam abertura/clique.
-- [ ] Preferências reais de notificação são respeitadas.
-- [ ] Nenhum mock, dado fake permanente ou endpoint simulado foi usado.
-- [ ] Checks/builds relevantes executados sem erros.
-- [ ] ADR criado/atualizado.
-- [ ] Commit criado com mensagem convencional e `git push` executado.
+- [x] Modelos/migrations de campanha e entrega/log foram criados.
+- [x] `pnpm --dir backend db:migrate` executado após alteração de Prisma/migrations.
+- [x] Não existe canal e-mail na V1.
+- [x] Payloads com canal `email` são rejeitados.
+- [x] Campanhas manuais suportam rascunho, agendamento, envio e cancelamento.
+- [x] Entregas são materializadas por usuário e canal com fonte real.
+- [x] Logs automáticos são gerados a partir do dispatcher real.
+- [x] Push só é tentado com subscription/VAPID reais.
+- [x] Abertura/leitura e clique só são registrados por eventos reais.
+- [x] Métricas agregadas não inventam abertura/clique.
+- [x] Preferências reais de notificação são respeitadas.
+- [x] Nenhum mock, dado fake permanente ou endpoint simulado foi usado.
+- [x] Checks/builds relevantes executados sem erros.
+- [x] ADR criado/atualizado.
+- [x] Commit criado com mensagem convencional e `git push` executado.
 
 ## Validação mínima
 
@@ -200,3 +200,16 @@ Validação:
 - `pnpm --dir backend build`
 - `pnpm check`
 - Teste manual/API com admin real criando rascunho e enviando campanha in-app para usuário real.
+
+## Execucao TASK-63
+
+- Migration criada/aplicada: `backend/prisma/migrations/20260710140831_add_admin_notification_campaigns`.
+- Modelos criados: `admin_notification_campaign` e `notification_delivery`.
+- Endpoints Admin registrados em `/api/admin/private/notifications` para campanhas, logs automaticos e metricas.
+- Endpoint de clique real registrado em `POST /api/private/notification/:id/click`; leitura in-app atualiza `read_at` nas entregas.
+- E-mail permanece fora da V1; canais aceitos sao somente `in_app` e `push`.
+- Push e marcado como `skipped` quando VAPID/subscription/preferencia real impedem envio.
+- Definicao de audiencia ativa: `user.active=true` e `deleted=false`; pacientes/psicologos usam `user.role`.
+- Validacoes executadas: `pnpm --dir backend db:migrate --name add_admin_notification_campaigns`, `pnpm --dir backend db:migrate`, `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm check`.
+- Teste de integracao temporario criou/enviou campanha in-app com admin e usuarios reais e removeu a massa temporaria ao final (8 entregas validadas, sem dado fake permanente).
+- ADR: `adrs/0243-admin-campanhas-logs-notificacoes.md`.

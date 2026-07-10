@@ -601,6 +601,14 @@ Endpoints de notificação (módulos separados, padrão do projeto): `notificati
 
 Push real foi decidido na TASK-03 (ver ADR-0006), usando `web-push`/VAPID e `notification_subscription`. Sem chaves VAPID reais no ambiente, persistir preferência mas não prometer entrega push.
 
+Complemento 2026-07-10 / TASK-63: o Admin passa a ter fundação de campanhas e logs sem e-mail.
+
+- `admin_notification_campaign` (`@@map("admin_notification_campaigns")`): rascunho/agendamento/envio/cancelamento de campanhas manuais criadas por `admin`, com `title`, `body`, `redirect`, `audience`, `channels Json` limitado a `in_app`/`push`, `status` (`draft`, `scheduled`, `sending`, `sent`, `canceled`, `failed`), `scheduled_at`, `sent_at`, `canceled_at` e `created_by_admin_id`.
+- `notification_delivery` (`@@map("notification_deliveries")`): log por usuário/canal/origem com `campaign_id?`, `notification_id?`, `user_id`, `source` (`manual`/`automatic`), `trigger_key`, `channel` (`in_app`/`push`), `status` (`queued`, `sent`, `delivered`, `read`, `clicked`, `failed`, `skipped`), `sent_at`, `delivered_at`, `read_at`, `clicked_at`, `failure_reason` e `metadata`.
+- `message_key="admin_campaign"` representa uma notificação manual do Admin na central in-app. As preferências existentes são respeitadas por chave/canal; se o usuário tiver `admin_campaign.enabled=false`, `in_app=false` ou `push=false`, a entrega é registrada como `skipped` sem alcance.
+- Abertura in-app usa o evento real de leitura (`PUT /api/private/notification/update/:id` ou `clean`) e clique usa `POST /api/private/notification/:id/click`. Push não tem abertura por recebimento; só pode ser contado quando houver interação real registrada.
+- Endpoints Admin privados: `/api/admin/private/notifications/campaigns`, `/api/admin/private/notifications/campaigns/:id`, `/send`, `/schedule`, `/cancel`, `/automatic-logs` e `/metrics`. E-mail, SMTP, pixel de tracking e métricas inventadas permanecem fora do escopo.
+
 ---
 
 ## Assinatura e cobrança (gateway = **Mercado Pago**; pendência = credenciais)

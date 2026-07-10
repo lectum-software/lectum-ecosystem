@@ -11,6 +11,7 @@ export const NOTIFICATION_MESSAGE_KEYS = [
   "downvote",
   "compartilhamento",
   "salvamento",
+  "admin_campaign",
 ] as const;
 
 export type NotificationMessageKey = (typeof NOTIFICATION_MESSAGE_KEYS)[number];

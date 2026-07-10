@@ -1,5 +1,6 @@
 //Client
 import prisma, { type ORM } from "@/infra/database/prisma";
+import { markAllUserNotificationDeliveriesRead } from "@/main/notification/deliveries";
 
 //DTOs
 import type { ICleanDTO } from "../DTOs/ICleanDTO";
@@ -23,6 +24,8 @@ export class CleanRepository implements ICleanRepository {
         read: true,
       },
     });
+
+    await markAllUserNotificationDeliveriesRead(auth.id!);
 
     return res.count;
   }

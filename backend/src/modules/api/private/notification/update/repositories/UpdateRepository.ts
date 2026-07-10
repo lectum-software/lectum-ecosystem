@@ -1,11 +1,11 @@
 //Client
 import prisma, { type ORM } from "@/infra/database/prisma";
-
 //Objects
 import type {
   //*
   notification,
 } from "@/interfaces/objects";
+import { markNotificationDeliveriesRead } from "@/main/notification/deliveries";
 
 //Utils
 
@@ -65,6 +65,13 @@ export class UpdateRepository implements IUpdateRepository {
 
       return item;
     });
+
+    if (props.b.read) {
+      await markNotificationDeliveriesRead({
+        notificationId: props.p.id,
+        userId: props.auth.id!,
+      });
+    }
 
     return updated;
   }
