@@ -124,3 +124,4 @@ Formato recomendado:
 - [ADR-0234 - Lista Admin de psicólogos usa ranking público e exposição operacional mínima](0234-admin-lista-psicologos-ranking-filtros.md) - Accepted
 - [ADR-0235 - Exposição administrativa de dados sensíveis no detalhe do psicólogo](0235-admin-detalhe-psicologo-dados-sensiveis.md) - Accepted
 - [ADR-0236 - Plano, pagamentos e cortesia do psicólogo no Admin](0236-admin-plano-pagamentos-cortesia-psicologo.md) - Accepted
+- [ADR-0237 - Estatísticas e publicações reais do psicólogo no Admin](0237-admin-psicologo-estatisticas-publicacoes.md) - Accepted

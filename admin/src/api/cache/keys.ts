@@ -1,6 +1,10 @@
 import type { CommunitiesDashboardQuery } from "@/api/req/communities";
 import type { DashboardSummaryQuery } from "@/api/req/dashboard";
-import type { PsychologistsDashboardQuery, PsychologistsListQuery } from "@/api/req/psychologists";
+import type {
+  AdminPsychologistPublicationsQuery,
+  PsychologistsDashboardQuery,
+  PsychologistsListQuery,
+} from "@/api/req/psychologists";
 import type { TrafficSummaryQuery } from "@/api/req/traffic";
 
 type AdminRangeQuery =
@@ -35,6 +39,16 @@ const normalizePsychologistsList = (input: PsychologistsListQuery) => ({
   target_audience: input.target_audience || "all",
 });
 
+const normalizePsychologistPublications = (input: AdminPsychologistPublicationsQuery) => ({
+  community: input.community || "all",
+  from: input.from || "default",
+  limit: input.limit || 5,
+  page: input.page || 1,
+  q: input.q || "",
+  to: input.to || "default",
+  type: input.type || "all",
+});
+
 export const adminDashboardKeys = {
   all: ["admin", "dashboard"] as const,
   summary: (input: DashboardSummaryQuery) =>
@@ -63,4 +77,12 @@ export const adminPsychologistsKeys = {
   detail: (id: string) => [...adminPsychologistsKeys.all, "detail", id] as const,
   list: (input: PsychologistsListQuery) =>
     [...adminPsychologistsKeys.all, "list", normalizePsychologistsList(input)] as const,
+  publications: (id: string, input: AdminPsychologistPublicationsQuery) =>
+    [
+      ...adminPsychologistsKeys.all,
+      "publications",
+      id,
+      normalizePsychologistPublications(input),
+    ] as const,
+  statistics: (id: string) => [...adminPsychologistsKeys.all, "statistics", id] as const,
 };

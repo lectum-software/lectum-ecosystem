@@ -8,7 +8,7 @@
 | Prioridade | P1 |
 | Esforço | L |
 | Fase | Admin |
-| Status | Pending |
+| Status | Completed |
 | Dependências | TASK-45, TASK-46, TASK-55 |
 | ADR alvo | ADR se houver nova decisão sobre métricas indisponíveis, vídeo ou atribuição |
 
@@ -70,17 +70,17 @@ Exibir estatísticas de negócio/comunidade e publicações do psicólogo com da
 
 ## Critérios de aceite
 
-- [ ] Abas só abrem para admin autenticado.
-- [ ] Estatísticas usam dados reais.
-- [ ] Métricas indisponíveis aparecem como indisponíveis ou são omitidas.
-- [ ] Publicações vêm de `community_post`/`post_reply` reais.
-- [ ] Filtros e paginação funcionam.
-- [ ] Vídeo usa `next/image`/player existente; nenhum `<img>` cru.
-- [ ] UI mobile-first validada.
-- [ ] Nenhum mock, dado fake permanente ou endpoint simulado foi usado.
-- [ ] Imagens de referência foram citadas.
-- [ ] Checks/builds relevantes executados sem erros.
-- [ ] Commit criado com mensagem convencional e `git push` executado.
+- [x] Abas só abrem para admin autenticado.
+- [x] Estatísticas usam dados reais.
+- [x] Métricas indisponíveis aparecem como indisponíveis ou são omitidas.
+- [x] Publicações vêm de `community_post`/`post_reply` reais.
+- [x] Filtros e paginação funcionam.
+- [x] Vídeo usa `next/image`/player existente; nenhum `<img>` cru.
+- [x] UI mobile-first validada.
+- [x] Nenhum mock, dado fake permanente ou endpoint simulado foi usado.
+- [x] Imagens de referência foram citadas.
+- [x] Checks/builds relevantes executados sem erros.
+- [x] Commit criado com mensagem convencional e `git push` executado.
 
 ## Validação mínima
 
@@ -90,3 +90,13 @@ Exibir estatísticas de negócio/comunidade e publicações do psicólogo com da
 - `pnpm --dir admin build`
 - `pnpm check`
 - Browser local com admin real.
+
+
+## Execução
+
+- Implementados endpoints privados Admin `GET /api/admin/private/psychologists/:id/statistics` e `GET /api/admin/private/psychologists/:id/publications` com dados reais existentes.
+- A aba **Estatísticas** exibe visualizações de perfil, cliques WhatsApp, favoritos, métricas de vídeo quando disponíveis, participação em comunidades e lista métricas sem tracking como indisponíveis.
+- A aba **Publicações** exibe totais, filtros por comunidade/tipo/período, paginação e lista somente leitura de posts/respostas reais.
+- Referências visuais usadas: `_product/proto/admin/Psicólogos/Detalhes do psicólogo/Estatísticas.png` e `_product/proto/admin/Psicólogos/Detalhes do psicólogo/Publicações.png`; Builder/Quick Copy não estava disponível no ambiente.
+- ADR criado: `adrs/0237-admin-psicologo-estatisticas-publicacoes.md`.
+- Validações executadas: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check`, API local autenticada e browser local via Edge/CDP nas abas `estatisticas` e `publicacoes`.

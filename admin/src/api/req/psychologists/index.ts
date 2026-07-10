@@ -455,6 +455,130 @@ export type AdminPsychologistGrantCourtesyResponse = {
   };
 };
 
+export type AdminPsychologistEngagementMetric = {
+  available: boolean;
+  id: string;
+  label: string;
+  source: string;
+  unit: "count" | "percentage" | "seconds";
+  unavailable_reason: string | null;
+  value: number | null;
+};
+
+export type AdminPsychologistStatistics = {
+  business: {
+    cards: AdminPsychologistEngagementMetric[];
+    series: AdminPsychologistStatisticsPoint[];
+  };
+  community: {
+    cards: AdminPsychologistEngagementMetric[];
+    communities: {
+      color: string | null;
+      id: string;
+      member_since: string | null;
+      name: string;
+      posts: number;
+      replies: number;
+      slug: string;
+    }[];
+    series: AdminPsychologistStatisticsPoint[];
+  };
+  period: {
+    days: number;
+    from: string;
+    label: string;
+    max_days: number;
+    timezone: "server-local";
+    to: string;
+  };
+  source: "profile_events+community_activity+video_sessions";
+  unavailable: AdminPsychologistEngagementMetric[];
+  video: {
+    available: boolean;
+    cover_url: string | null;
+    metrics: {
+      average_retention_percent: number;
+      completions: number;
+      replay_rate_percent: number;
+      sessions: number;
+    };
+    retention: { label: string; percentage: number; position_percent: number }[];
+    source: "profile_video_watch_session";
+    unavailable_reason: string | null;
+    video_url: string | null;
+  };
+};
+
+export type AdminPsychologistStatisticsPoint = {
+  comments_received: number;
+  date: string;
+  favorites: number;
+  profile_views: number;
+  replies: number;
+  saves: number;
+  whatsapp_clicks: number;
+  posts: number;
+};
+
+export type AdminPsychologistPublicationMetric = AdminPsychologistEngagementMetric;
+
+export type AdminPsychologistPublicationItem = {
+  community: {
+    color: string | null;
+    id: string;
+    name: string;
+    slug: string;
+  };
+  created_at: string;
+  excerpt: string;
+  id: string;
+  media: {
+    type: string | null;
+    url: string | null;
+  } | null;
+  metrics: {
+    comments: AdminPsychologistPublicationMetric;
+    downvotes: AdminPsychologistPublicationMetric;
+    saves: AdminPsychologistPublicationMetric;
+    shares: AdminPsychologistPublicationMetric;
+    upvotes: AdminPsychologistPublicationMetric;
+    views: AdminPsychologistPublicationMetric;
+  };
+  public_url: string;
+  source: "community_post" | "post_reply";
+  title: string;
+  type: "post" | "reply";
+};
+
+export type AdminPsychologistPublicationsQuery = {
+  community?: string;
+  from?: string;
+  limit?: number;
+  page?: number;
+  q?: string;
+  to?: string;
+  type?: "all" | "post" | "reply";
+};
+
+export type AdminPsychologistPublications = {
+  active_filters_count: number;
+  count: number;
+  data: AdminPsychologistPublicationItem[];
+  filters: {
+    communities: { id: string; label: string; slug: string }[];
+    types: { id: "all" | "post" | "reply"; label: string }[];
+  };
+  page: number;
+  pages: number;
+  per_page: number;
+  period: AdminPsychologistStatistics["period"];
+  source: "community_post+post_reply+post_vote+post_save+post_reply_save+post_share+page_view_event";
+  totals: {
+    cards: AdminPsychologistEngagementMetric[];
+  };
+  unavailable: AdminPsychologistEngagementMetric[];
+};
+
 export type AdminPsychologistsDashboard = {
   cards: {
     churn: PsychologistsDashboardMetric;
@@ -515,6 +639,16 @@ const cleanListParams = (input: PsychologistsListQuery) => ({
   ...(input.target_audience ? { target_audience: input.target_audience } : {}),
 });
 
+const cleanPublicationsParams = (input: AdminPsychologistPublicationsQuery) => ({
+  ...(input.community ? { community: input.community } : {}),
+  ...(input.from ? { from: input.from } : {}),
+  ...(input.limit ? { limit: input.limit } : {}),
+  ...(input.page ? { page: input.page } : {}),
+  ...(input.q ? { q: input.q } : {}),
+  ...(input.to ? { to: input.to } : {}),
+  ...(input.type ? { type: input.type } : {}),
+});
+
 export const getAdminPsychologistsDashboard = async (input: PsychologistsDashboardQuery) => {
   const response = await adminApi.get<ApiResponse<AdminPsychologistsDashboard>>(
     "/api/admin/private/psychologists/dashboard",
@@ -548,6 +682,28 @@ export const getAdminPsychologistDetail = async (id: string) => {
 export const getAdminPsychologistBilling = async (id: string) => {
   const response = await adminApi.get<ApiResponse<AdminPsychologistBilling>>(
     `/api/admin/private/psychologists/${encodeURIComponent(id)}/billing`,
+  );
+
+  return resolveApiData(response.data);
+};
+
+export const getAdminPsychologistStatistics = async (id: string) => {
+  const response = await adminApi.get<ApiResponse<AdminPsychologistStatistics>>(
+    `/api/admin/private/psychologists/${encodeURIComponent(id)}/statistics`,
+  );
+
+  return resolveApiData(response.data);
+};
+
+export const getAdminPsychologistPublications = async (
+  id: string,
+  input: AdminPsychologistPublicationsQuery,
+) => {
+  const response = await adminApi.get<ApiResponse<AdminPsychologistPublications>>(
+    `/api/admin/private/psychologists/${encodeURIComponent(id)}/publications`,
+    {
+      params: cleanPublicationsParams(input),
+    },
   );
 
   return resolveApiData(response.data);

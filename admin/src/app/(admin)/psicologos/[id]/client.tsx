@@ -3,11 +3,17 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   AlertTriangle,
+  ArrowDown,
   ArrowLeft,
+  ArrowUp,
   BadgeCheck,
+  BarChart3,
+  Bookmark,
   BookOpen,
   CalendarDays,
   CheckCircle2,
+  ChevronLeft,
+  ChevronRight,
   Clock,
   CreditCard,
   ExternalLink,
@@ -23,6 +29,8 @@ import {
   MessageCircle,
   Play,
   RefreshCw,
+  Search,
+  Share2,
   ShieldCheck,
   Star,
   Trophy,
@@ -33,7 +41,7 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
-import { type ReactNode, useEffect } from "react";
+import { type ReactNode, useEffect, useMemo, useState } from "react";
 import { FormProvider, type SubmitHandler, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -41,6 +49,8 @@ import {
   useAdminPsychologistBilling,
   useAdminPsychologistDetail,
   useAdminPsychologistGrantCourtesy,
+  useAdminPsychologistPublications,
+  useAdminPsychologistStatistics,
 } from "@/api/callers/psychologists";
 import { resolveApiError } from "@/api/handle";
 import type {
@@ -49,7 +59,12 @@ import type {
   AdminPsychologistDetail,
   AdminPsychologistDetailMetric,
   AdminPsychologistDetailStatus,
+  AdminPsychologistEngagementMetric,
   AdminPsychologistIntegrationStatus,
+  AdminPsychologistPublicationItem,
+  AdminPsychologistPublicationMetric,
+  AdminPsychologistPublicationsQuery,
+  AdminPsychologistStatistics,
 } from "@/api/req/psychologists";
 import { InputController, SelectController, TextareaController } from "@/components/controllers";
 import { cn } from "@/lib/utils";
@@ -71,8 +86,8 @@ const TABS = [
   { id: "geral", label: "Geral", ready: true },
   { id: "perfil", label: "Perfil e cadastro", ready: true },
   { id: "plano", label: "Plano e pagamentos", ready: true },
-  { id: "estatisticas", label: "Estatísticas", ready: false, task: "TASK-57" },
-  { id: "publicacoes", label: "Publicações", ready: false, task: "TASK-57" },
+  { id: "estatisticas", label: "Estatísticas", ready: true },
+  { id: "publicacoes", label: "Publicações", ready: true },
   { id: "avaliacoes", label: "Avaliações", ready: false, task: "TASK-58" },
   { id: "atividades", label: "Atividades", ready: false, task: "TASK-59" },
   { id: "denuncias", label: "Denúncias", ready: false, task: "TASK-58" },
@@ -213,6 +228,22 @@ const formatMetricValue = (metric: AdminPsychologistDetailMetric) => {
 
   return numberFormatter.format(metric.value);
 };
+
+const formatEngagementMetricValue = (metric: AdminPsychologistEngagementMetric) => {
+  if (!metric.available || metric.value === null) return "Indisponível";
+  if (metric.unit === "percentage") {
+    return `${metric.value.toLocaleString("pt-BR", {
+      maximumFractionDigits: 1,
+      minimumFractionDigits: 1,
+    })}%`;
+  }
+  if (metric.unit === "seconds") return `${numberFormatter.format(metric.value)}s`;
+
+  return numberFormatter.format(metric.value);
+};
+
+const engagementMetricTone = (metric: AdminPsychologistEngagementMetric) =>
+  metric.available ? "bg-surface text-foreground" : "bg-surface-muted text-muted";
 
 const listText = (items: string[] | AdminPsychologistCatalogItem[]) => {
   if (items.length === 0) return "Não informado";
@@ -698,6 +729,677 @@ const VideoCard = ({ detail }: { detail: AdminPsychologistDetail }) => {
         <p className="mt-4 text-sm font-bold text-muted">Nenhum vídeo cadastrado.</p>
       )}
     </CardShell>
+  );
+};
+
+const EngagementLoadingState = ({ rows = 3 }: { rows?: number }) => (
+  <div className="space-y-5" data-psychologist-engagement-loading="true">
+    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      {["card-1", "card-2", "card-3", "card-4"].map((key) => (
+        <div className={cn(CARD, "h-36 animate-pulse bg-surface-muted")} key={key} />
+      ))}
+    </div>
+    {Array.from({ length: rows }, (_, index) => `row-${index + 1}`).map((key) => (
+      <div className={cn(CARD, "h-64 animate-pulse bg-surface-muted")} key={key} />
+    ))}
+  </div>
+);
+
+const EngagementMetricCard = ({
+  icon: Icon,
+  metric,
+}: {
+  icon: LucideIcon;
+  metric: AdminPsychologistEngagementMetric;
+}) => (
+  <div className={cn("rounded-2xl border border-border p-4", engagementMetricTone(metric))}>
+    <IconCircle icon={Icon} />
+    <p className="mt-4 text-sm font-black text-muted">{metric.label}</p>
+    <p className="mt-2 text-2xl font-black text-foreground">
+      {formatEngagementMetricValue(metric)}
+    </p>
+    <p className="mt-2 text-xs font-bold text-muted">
+      {metric.available ? `Fonte: ${metric.source}` : metric.unavailable_reason}
+    </p>
+  </div>
+);
+
+const StatsBars = ({
+  keys,
+  points,
+}: {
+  keys: {
+    color: string;
+    key: keyof AdminPsychologistStatistics["business"]["series"][number];
+    label: string;
+  }[];
+  points: AdminPsychologistStatistics["business"]["series"];
+}) => {
+  const max = Math.max(
+    1,
+    ...points.flatMap((point) => keys.map((item) => Number(point[item.key] ?? 0))),
+  );
+
+  return (
+    <div className="mt-5">
+      <div className="mb-4 flex flex-wrap gap-3">
+        {keys.map((item) => (
+          <span
+            className="inline-flex items-center gap-2 text-xs font-black text-muted"
+            key={item.key}
+          >
+            <span className={cn("h-2.5 w-2.5 rounded-full", item.color)} />
+            {item.label}
+          </span>
+        ))}
+      </div>
+      <div className="grid min-h-52 grid-cols-[repeat(30,minmax(22px,1fr))] items-end gap-2 overflow-x-auto rounded-2xl bg-surface-muted p-4">
+        {points.map((point) => (
+          <div className="flex min-w-6 flex-col items-center gap-1" key={point.date}>
+            <div className="flex h-40 w-full items-end justify-center gap-1">
+              {keys.map((item) => (
+                <span
+                  className={cn("w-1.5 rounded-t-full", item.color)}
+                  key={item.key}
+                  style={{
+                    height: `${Math.max(4, (Number(point[item.key] ?? 0) / max) * 100)}%`,
+                  }}
+                  title={`${point.date} · ${item.label}: ${Number(point[item.key] ?? 0)}`}
+                />
+              ))}
+            </div>
+            <span className="-rotate-45 whitespace-nowrap text-[10px] font-bold text-subtle">
+              {point.date.slice(5)}
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+const StatisticsVideoCard = ({
+  detail,
+  statistics,
+}: {
+  detail: AdminPsychologistDetail;
+  statistics: AdminPsychologistStatistics;
+}) => {
+  const video = statistics.video;
+  const canUseCover = canRenderImage(video.cover_url || detail.profile.content.cover_image_url);
+  const cover = video.cover_url || detail.profile.content.cover_image_url;
+
+  return (
+    <CardShell className="p-5">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <h2 className="text-xl font-black text-foreground">Análises do vídeo de apresentação</h2>
+          <p className="mt-1 text-sm text-muted">
+            Retenção derivada de sessões reais de vídeo; sem sessões, a métrica fica indisponível.
+          </p>
+        </div>
+        <Badge
+          className={video.available ? "bg-emerald-50 text-success" : "bg-surface-muted text-muted"}
+        >
+          {video.available ? "Disponível" : "Indisponível"}
+        </Badge>
+      </div>
+
+      <div className="mt-5 grid gap-5 lg:grid-cols-[220px_1fr]">
+        <div className="max-w-[220px] overflow-hidden rounded-[1.5rem] border border-border bg-surface-muted">
+          <div className="relative aspect-[3/4]">
+            {canUseCover ? (
+              <Image
+                alt={`Capa do vídeo de apresentação de ${detail.header.name}`}
+                className="object-cover"
+                fill
+                sizes="220px"
+                src={cover ?? ""}
+                unoptimized
+              />
+            ) : (
+              <div className="grid h-full place-items-center text-primary">
+                <Video aria-hidden className="h-12 w-12" />
+              </div>
+            )}
+            <span className="absolute inset-0 grid place-items-center bg-overlay/20">
+              <span className="grid h-14 w-14 place-items-center rounded-full bg-white/90 text-primary shadow-admin-soft">
+                <Play aria-hidden className="ml-1 h-6 w-6 fill-current" />
+              </span>
+            </span>
+          </div>
+        </div>
+
+        <div>
+          <div className="grid gap-3 sm:grid-cols-3">
+            <div className="rounded-2xl bg-surface-muted p-4">
+              <p className="text-xs font-black text-muted">Visualizações</p>
+              <p className="mt-1 text-2xl font-black text-foreground">
+                {numberFormatter.format(video.metrics.sessions)}
+              </p>
+            </div>
+            <div className="rounded-2xl bg-surface-muted p-4">
+              <p className="text-xs font-black text-muted">Taxa de replays</p>
+              <p className="mt-1 text-2xl font-black text-foreground">
+                {video.metrics.replay_rate_percent.toLocaleString("pt-BR", {
+                  maximumFractionDigits: 1,
+                })}
+                %
+              </p>
+            </div>
+            <div className="rounded-2xl bg-surface-muted p-4">
+              <p className="text-xs font-black text-muted">Retenção média</p>
+              <p className="mt-1 text-2xl font-black text-foreground">
+                {video.metrics.average_retention_percent.toLocaleString("pt-BR", {
+                  maximumFractionDigits: 1,
+                })}
+                %
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-5 space-y-3">
+            {video.retention.map((bucket) => (
+              <div className="grid gap-2 sm:grid-cols-[70px_1fr_60px]" key={bucket.label}>
+                <span className="text-xs font-black text-muted">{bucket.label}</span>
+                <span className="h-3 overflow-hidden rounded-full bg-surface-muted">
+                  <span
+                    className="block h-full rounded-full bg-primary"
+                    style={{ width: `${Math.min(100, bucket.percentage)}%` }}
+                  />
+                </span>
+                <span className="text-xs font-black text-foreground">
+                  {bucket.percentage.toLocaleString("pt-BR", { maximumFractionDigits: 1 })}%
+                </span>
+              </div>
+            ))}
+          </div>
+
+          {!video.available ? (
+            <p className="mt-4 rounded-2xl border border-dashed border-border bg-surface-muted p-3 text-sm font-bold text-muted">
+              {video.unavailable_reason}
+            </p>
+          ) : null}
+        </div>
+      </div>
+    </CardShell>
+  );
+};
+
+const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: string }) => {
+  const query = useAdminPsychologistStatistics(id);
+  const errorMessage = query.error ? resolveApiError(query.error) : null;
+
+  if (query.isLoading) return <EngagementLoadingState />;
+  if (query.isError && errorMessage) {
+    return <ErrorState message={errorMessage} onRetry={() => void query.refetch()} />;
+  }
+  if (!query.data) return null;
+
+  const statistics = query.data;
+
+  return (
+    <div className="space-y-5" data-psychologist-detail-tab="estatisticas">
+      <div className="flex flex-col gap-3 rounded-2xl border border-primary/20 bg-primary-soft p-4 text-sm font-bold text-muted sm:flex-row sm:items-center sm:justify-between">
+        <span>
+          Período: {statistics.period.label} · {statistics.period.from} a {statistics.period.to}
+        </span>
+        <span>Fontes reais: {statistics.source}</span>
+      </div>
+
+      <section>
+        <h2 className="mb-3 text-xl font-black text-foreground">Estatísticas de negócio</h2>
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          {statistics.business.cards.map((item) => (
+            <EngagementMetricCard
+              icon={
+                item.id === "profile_views"
+                  ? Eye
+                  : item.id === "whatsapp_clicks"
+                    ? MessageCircle
+                    : item.id === "favorites"
+                      ? Heart
+                      : Search
+              }
+              key={item.id}
+              metric={item}
+            />
+          ))}
+        </div>
+        <CardShell className="mt-5 p-5">
+          <h3 className="text-lg font-black text-foreground">Evolução do período</h3>
+          <StatsBars
+            keys={[
+              { color: "bg-primary", key: "profile_views", label: "Visualizações" },
+              { color: "bg-emerald-500", key: "whatsapp_clicks", label: "WhatsApp" },
+              { color: "bg-pink-500", key: "favorites", label: "Favoritos" },
+            ]}
+            points={statistics.business.series}
+          />
+        </CardShell>
+      </section>
+
+      <StatisticsVideoCard detail={detail} statistics={statistics} />
+
+      <section className="grid gap-5 xl:grid-cols-[1.1fr_0.9fr]">
+        <CardShell className="p-5">
+          <h2 className="text-xl font-black text-foreground">Estatísticas de comunidade</h2>
+          <div className="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            {statistics.community.cards.map((item) => (
+              <EngagementMetricCard
+                icon={
+                  item.id === "posts"
+                    ? FileText
+                    : item.id === "replies"
+                      ? MessageCircle
+                      : item.id === "saves"
+                        ? Bookmark
+                        : BookOpen
+                }
+                key={item.id}
+                metric={item}
+              />
+            ))}
+          </div>
+          <StatsBars
+            keys={[
+              { color: "bg-primary", key: "posts", label: "Posts" },
+              { color: "bg-blue-500", key: "replies", label: "Respostas" },
+              { color: "bg-emerald-500", key: "saves", label: "Salvamentos" },
+              { color: "bg-orange-500", key: "comments_received", label: "Comentários recebidos" },
+            ]}
+            points={statistics.community.series}
+          />
+        </CardShell>
+
+        <CardShell className="p-5">
+          <h2 className="text-xl font-black text-foreground">Comunidades em que participa</h2>
+          {statistics.community.communities.length === 0 ? (
+            <p className="mt-4 rounded-2xl bg-surface-muted p-4 text-sm font-bold text-muted">
+              Nenhuma participação real em comunidade foi encontrada.
+            </p>
+          ) : (
+            <div className="mt-4 divide-y divide-border">
+              {statistics.community.communities.map((community) => (
+                <div className="grid gap-3 py-4 sm:grid-cols-[1fr_auto]" key={community.id}>
+                  <div>
+                    <p className="flex items-center gap-2 font-black text-foreground">
+                      <span
+                        className="h-3 w-3 rounded-full bg-primary"
+                        style={community.color ? { backgroundColor: community.color } : undefined}
+                      />
+                      {community.name}
+                    </p>
+                    <p className="mt-1 text-xs font-bold text-muted">
+                      Membro desde {formatDate(community.member_since)}
+                    </p>
+                  </div>
+                  <div className="flex gap-2 text-xs font-black">
+                    <Badge className="bg-surface-muted text-muted">
+                      {numberFormatter.format(community.posts)} posts
+                    </Badge>
+                    <Badge className="bg-surface-muted text-muted">
+                      {numberFormatter.format(community.replies)} respostas
+                    </Badge>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardShell>
+      </section>
+
+      {statistics.unavailable.length > 0 ? (
+        <CardShell className="p-4">
+          <p className="text-sm font-black text-foreground">Métricas indisponíveis nesta etapa</p>
+          <ul className="mt-2 list-disc space-y-1 pl-5 text-sm font-bold text-muted">
+            {statistics.unavailable.map((item) => (
+              <li key={item.id}>
+                {item.label}: {item.unavailable_reason}
+              </li>
+            ))}
+          </ul>
+        </CardShell>
+      ) : null}
+    </div>
+  );
+};
+
+const publicationMetricIcon: Record<keyof AdminPsychologistPublicationItem["metrics"], LucideIcon> =
+  {
+    comments: MessageCircle,
+    downvotes: ArrowDown,
+    saves: Bookmark,
+    shares: Share2,
+    upvotes: ArrowUp,
+    views: Eye,
+  };
+
+const PublicationMedia = ({ item }: { item: AdminPsychologistPublicationItem }) => {
+  const src = item.media?.url ?? null;
+  const looksLikeImage =
+    item.media?.type?.startsWith("image") || /\.(png|jpe?g|webp|gif)$/i.test(src ?? "");
+
+  if (src && looksLikeImage && canRenderImage(src)) {
+    return (
+      <Image
+        alt={`Mídia da publicação ${item.title}`}
+        className="h-14 w-14 rounded-2xl object-cover"
+        height={56}
+        src={src}
+        unoptimized
+        width={56}
+      />
+    );
+  }
+
+  return (
+    <span className="grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-primary-soft text-primary">
+      {item.type === "post" ? (
+        <FileText aria-hidden className="h-6 w-6" />
+      ) : (
+        <MessageCircle aria-hidden className="h-6 w-6" />
+      )}
+    </span>
+  );
+};
+
+const PublicationMetric = ({ metric }: { metric: AdminPsychologistPublicationMetric }) => {
+  const Icon =
+    publicationMetricIcon[metric.id as keyof AdminPsychologistPublicationItem["metrics"]] ??
+    BarChart3;
+
+  return (
+    <span
+      className="inline-flex items-center gap-1 rounded-full bg-surface-muted px-2 py-1 text-xs font-black text-muted"
+      title={metric.available ? metric.source : (metric.unavailable_reason ?? metric.source)}
+    >
+      <Icon aria-hidden className="h-3.5 w-3.5" />
+      {formatEngagementMetricValue(metric)}
+    </span>
+  );
+};
+
+const PublicationsPagination = ({
+  page,
+  pages,
+  setPage,
+}: {
+  page: number;
+  pages: number;
+  setPage: (page: number) => void;
+}) => (
+  <div className="flex flex-wrap items-center justify-center gap-2">
+    <button
+      className="grid h-10 w-10 place-items-center rounded-control border border-border bg-surface text-foreground disabled:opacity-40"
+      disabled={page <= 1}
+      onClick={() => setPage(Math.max(1, page - 1))}
+      type="button"
+    >
+      <ChevronLeft aria-hidden className="h-4 w-4" />
+    </button>
+    {Array.from({ length: Math.min(5, pages) }, (_, index) => {
+      const start = Math.min(Math.max(page - 2, 1), Math.max(pages - 4, 1));
+      const itemPage = start + index;
+      if (itemPage > pages) return null;
+
+      return (
+        <button
+          className={cn(
+            "h-10 min-w-10 rounded-control border px-3 text-sm font-black",
+            itemPage === page
+              ? "border-primary bg-primary text-primary-foreground"
+              : "border-border bg-surface text-foreground",
+          )}
+          key={itemPage}
+          onClick={() => setPage(itemPage)}
+          type="button"
+        >
+          {itemPage}
+        </button>
+      );
+    })}
+    <button
+      className="grid h-10 w-10 place-items-center rounded-control border border-border bg-surface text-foreground disabled:opacity-40"
+      disabled={page >= pages}
+      onClick={() => setPage(Math.min(pages, page + 1))}
+      type="button"
+    >
+      <ChevronRight aria-hidden className="h-4 w-4" />
+    </button>
+  </div>
+);
+
+const PublicationsTab = ({ id }: { id: string }) => {
+  const [q, setQ] = useState("");
+  const [community, setCommunity] = useState("all");
+  const [type, setType] = useState<AdminPsychologistPublicationsQuery["type"]>("all");
+  const [from, setFrom] = useState("");
+  const [to, setTo] = useState("");
+  const [page, setPage] = useState(1);
+  const queryInput = useMemo<AdminPsychologistPublicationsQuery>(
+    () => ({
+      community: community === "all" ? undefined : community,
+      from: from && to ? from : undefined,
+      limit: 5,
+      page,
+      q: q || undefined,
+      to: from && to ? to : undefined,
+      type,
+    }),
+    [community, from, page, q, to, type],
+  );
+  const query = useAdminPsychologistPublications(id, queryInput);
+  const errorMessage = query.error ? resolveApiError(query.error) : null;
+
+  if (query.isLoading) return <EngagementLoadingState rows={2} />;
+  if (query.isError && errorMessage) {
+    return <ErrorState message={errorMessage} onRetry={() => void query.refetch()} />;
+  }
+  if (!query.data) return null;
+
+  const publications = query.data;
+
+  return (
+    <div className="space-y-5" data-psychologist-detail-tab="publicacoes">
+      <div className="rounded-2xl border border-primary/20 bg-primary-soft p-4 text-sm font-bold text-muted">
+        Publicações vindas de community_post e post_reply reais. A tela é somente leitura: não há
+        moderação, edição ou remoção nesta task.
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        {publications.totals.cards.map((item) => (
+          <EngagementMetricCard
+            icon={
+              item.id === "posts"
+                ? FileText
+                : item.id === "replies"
+                  ? MessageCircle
+                  : item.id === "upvotes"
+                    ? ArrowUp
+                    : item.id === "downvotes"
+                      ? ArrowDown
+                      : item.id === "views"
+                        ? Eye
+                        : item.id === "saves"
+                          ? Bookmark
+                          : Share2
+            }
+            key={item.id}
+            metric={item}
+          />
+        ))}
+      </div>
+
+      <CardShell className="p-4">
+        <div className="grid gap-3 lg:grid-cols-[1.5fr_1fr_1fr_1fr_1fr]">
+          <label className="block text-sm font-black text-muted">
+            Buscar
+            <span className="mt-2 flex h-11 items-center gap-2 rounded-control border border-border bg-surface px-3">
+              <Search aria-hidden className="h-4 w-4 text-muted" />
+              <input
+                className="w-full bg-transparent text-sm font-bold text-foreground outline-none placeholder:text-subtle"
+                onChange={(event) => {
+                  setQ(event.target.value);
+                  setPage(1);
+                }}
+                placeholder="Título ou conteúdo"
+                type="search"
+                value={q}
+              />
+            </span>
+          </label>
+          <label className="block text-sm font-black text-muted">
+            Comunidade
+            <select
+              className="mt-2 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground"
+              onChange={(event) => {
+                setCommunity(event.target.value);
+                setPage(1);
+              }}
+              value={community}
+            >
+              <option value="all">Todas</option>
+              {publications.filters.communities.map((option) => (
+                <option key={option.id} value={option.id}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="block text-sm font-black text-muted">
+            Tipo
+            <select
+              className="mt-2 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground"
+              onChange={(event) => {
+                setType(event.target.value as AdminPsychologistPublicationsQuery["type"]);
+                setPage(1);
+              }}
+              value={type}
+            >
+              {publications.filters.types.map((option) => (
+                <option key={option.id} value={option.id}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="block text-sm font-black text-muted">
+            De
+            <input
+              className="mt-2 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground"
+              onChange={(event) => {
+                setFrom(event.target.value);
+                setPage(1);
+              }}
+              type="date"
+              value={from}
+            />
+          </label>
+          <label className="block text-sm font-black text-muted">
+            Até
+            <input
+              className="mt-2 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground"
+              onChange={(event) => {
+                setTo(event.target.value);
+                setPage(1);
+              }}
+              type="date"
+              value={to}
+            />
+          </label>
+        </div>
+        <div className="mt-3 flex flex-wrap items-center gap-2 text-xs font-bold text-muted">
+          <Badge className="bg-surface-muted text-muted">
+            {publications.active_filters_count} filtros ativos
+          </Badge>
+          <span>
+            Período consultado: {publications.period.from} a {publications.period.to}
+          </span>
+          {from && !to ? <span>Informe a data final para aplicar período.</span> : null}
+          {to && !from ? <span>Informe a data inicial para aplicar período.</span> : null}
+        </div>
+      </CardShell>
+
+      <CardShell className="overflow-hidden">
+        <div className="flex flex-col gap-2 border-b border-border p-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h2 className="text-xl font-black text-foreground">Publicações</h2>
+            <p className="mt-1 text-sm text-muted">
+              Mostrando {numberFormatter.format(publications.data.length)} de{" "}
+              {numberFormatter.format(publications.count)} registros.
+            </p>
+          </div>
+          <Badge className="bg-primary-soft text-primary">Somente leitura</Badge>
+        </div>
+
+        {publications.data.length === 0 ? (
+          <p className="p-5 text-sm font-bold text-muted">
+            Nenhuma publicação real encontrada para os filtros atuais.
+          </p>
+        ) : (
+          <div className="divide-y divide-border">
+            {publications.data.map((item) => (
+              <article
+                className="grid gap-4 p-4 lg:grid-cols-[1fr_auto]"
+                key={`${item.type}-${item.id}`}
+              >
+                <div className="flex gap-3">
+                  <PublicationMedia item={item} />
+                  <div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Badge className="bg-primary-soft text-primary">
+                        {item.type === "post" ? "Post" : "Resposta"}
+                      </Badge>
+                      <span className="text-xs font-bold text-muted">
+                        {item.community.name} · {formatDateTime(item.created_at)}
+                      </span>
+                    </div>
+                    <h3 className="mt-2 font-black text-foreground">{item.title}</h3>
+                    <p className="mt-1 text-sm font-bold leading-6 text-muted">{item.excerpt}</p>
+                    <a
+                      className="mt-2 inline-flex items-center gap-1 text-xs font-black text-primary"
+                      href={toPublicHref(item.public_url)}
+                      rel="noreferrer"
+                      target="_blank"
+                    >
+                      Ver no site público
+                      <ExternalLink aria-hidden className="h-3.5 w-3.5" />
+                    </a>
+                  </div>
+                </div>
+                <div className="flex flex-wrap items-center gap-2 lg:max-w-md lg:justify-end">
+                  {Object.values(item.metrics).map((metric) => (
+                    <PublicationMetric key={metric.id} metric={metric} />
+                  ))}
+                </div>
+              </article>
+            ))}
+          </div>
+        )}
+
+        <div className="border-t border-border p-4">
+          <PublicationsPagination
+            page={publications.page}
+            pages={publications.pages}
+            setPage={setPage}
+          />
+        </div>
+      </CardShell>
+
+      {publications.unavailable.length > 0 ? (
+        <CardShell className="p-4">
+          <p className="text-sm font-black text-foreground">Métricas indisponíveis nesta etapa</p>
+          <ul className="mt-2 list-disc space-y-1 pl-5 text-sm font-bold text-muted">
+            {publications.unavailable.map((item) => (
+              <li key={item.id}>
+                {item.label}: {item.unavailable_reason}
+              </li>
+            ))}
+          </ul>
+        </CardShell>
+      ) : null}
+    </div>
   );
 };
 
@@ -1239,6 +1941,10 @@ const Content = ({
       <ProfileTab detail={detail} />
     ) : tab === "plano" ? (
       <PlanBillingTab detail={detail} id={id} />
+    ) : tab === "estatisticas" ? (
+      <StatisticsTab detail={detail} id={id} />
+    ) : tab === "publicacoes" ? (
+      <PublicationsTab id={id} />
     ) : (
       <GeneralTab detail={detail} />
     )}
@@ -1246,9 +1952,10 @@ const Content = ({
     <p className="rounded-2xl bg-primary-soft/70 px-4 py-3 text-xs font-bold text-muted">
       Referências visuais: _product/proto/admin/Psicólogos/Detalhes do psicólogo/Geral.png,
       _product/proto/admin/Psicólogos/Detalhes do psicólogo/Perfil e Cadastro.png e
-      _product/proto/admin/Psicólogos/Detalhes do psicólogo/Plano e pagamentos.png. Builder/Quick
-      Copy não está disponível neste ambiente; a implementação foi feita a partir das imagens
-      locais.
+      _product/proto/admin/Psicólogos/Detalhes do psicólogo/Plano e pagamentos.png,
+      _product/proto/admin/Psicólogos/Detalhes do psicólogo/Estatísticas.png e
+      _product/proto/admin/Psicólogos/Detalhes do psicólogo/Publicações.png. Builder/Quick Copy não
+      está disponível neste ambiente; a implementação foi feita a partir das imagens locais.
     </p>
   </main>
 );
@@ -1257,7 +1964,12 @@ export const AdminPsychologistDetailClient = ({ id }: { id: string }) => {
   const searchParams = useSearchParams();
   const requestedTab = searchParams.get("tab") as ActiveTab | null;
   const tab: ActiveTab =
-    requestedTab === "perfil" || requestedTab === "plano" ? requestedTab : "geral";
+    requestedTab === "perfil" ||
+    requestedTab === "plano" ||
+    requestedTab === "estatisticas" ||
+    requestedTab === "publicacoes"
+      ? requestedTab
+      : "geral";
   const query = useAdminPsychologistDetail(id);
   const errorMessage = query.error ? resolveApiError(query.error) : null;
 
