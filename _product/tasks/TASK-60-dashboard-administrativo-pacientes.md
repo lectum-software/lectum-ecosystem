@@ -1,4 +1,4 @@
-﻿# TASK-60: Dashboard administrativo de pacientes
+# TASK-60: Dashboard administrativo de pacientes
 
 ## Metadata
 
@@ -8,7 +8,7 @@
 | Prioridade | P1 |
 | Esforço | M |
 | Fase | Admin |
-| Status | Pending |
+| Status | Completed |
 | Dependências | TASK-45, TASK-46 |
 | ADR alvo | ADR se houver decisão nova sobre exposição de dados de pacientes ou cálculo de atividade |
 
@@ -130,22 +130,22 @@ Frontend esperado:
 
 ## Critérios de aceite
 
-- [ ] Rota de Pacientes só abre para admin autenticado.
-- [ ] Dashboard usa somente dados reais de pacientes.
-- [ ] Cards exibidos: total, ativos, inativos e novos cadastros.
-- [ ] Card/linha/gráfico de retenção não existe nesta V1.
-- [ ] Status bloqueado/silenciado não aparece.
-- [ ] Lista resumida abre o detalhe do paciente.
-- [ ] Localização é agregada e só aparece quando houver fonte real.
-- [ ] Métricas sem fonte real aparecem como indisponíveis ou são omitidas com copy honesta.
-- [ ] Exportação só aparece/habilita com endpoint real.
-- [ ] UI mobile-first validada.
-- [ ] Nenhum `<img>` cru foi usado.
-- [ ] `_product/proto/admin/Pacientes/Pacientes - Dashboard.png` foi citada como referência visual.
-- [ ] Nenhum mock, dado fake permanente ou endpoint simulado foi usado.
-- [ ] Checks/builds relevantes executados sem erros.
-- [ ] ADR criado/atualizado se houver decisão sobre dados sensíveis, localização ou cálculo de atividade.
-- [ ] Commit criado com mensagem convencional e `git push` executado.
+- [x] Rota de Pacientes só abre para admin autenticado.
+- [x] Dashboard usa somente dados reais de pacientes.
+- [x] Cards exibidos: total, ativos, inativos e novos cadastros.
+- [x] Card/linha/gráfico de retenção não existe nesta V1.
+- [x] Status bloqueado/silenciado não aparece.
+- [x] Lista resumida abre o detalhe do paciente.
+- [x] Localização é agregada e só aparece quando houver fonte real.
+- [x] Métricas sem fonte real aparecem como indisponíveis ou são omitidas com copy honesta.
+- [x] Exportação só aparece/habilita com endpoint real.
+- [x] UI mobile-first validada.
+- [x] Nenhum `<img>` cru foi usado.
+- [x] `_product/proto/admin/Pacientes/Pacientes - Dashboard.png` foi citada como referência visual.
+- [x] Nenhum mock, dado fake permanente ou endpoint simulado foi usado.
+- [x] Checks/builds relevantes executados sem erros.
+- [x] ADR criado/atualizado se houver decisão sobre dados sensíveis, localização ou cálculo de atividade.
+- [x] Commit criado com mensagem convencional e `git push` executado.
 
 ## Validação mínima
 
@@ -155,3 +155,29 @@ Frontend esperado:
 - `pnpm --dir admin build`
 - `pnpm check`
 - Browser local com admin real e pacientes reais.
+
+## Execução
+
+- Implementado backend real `GET /api/admin/private/patients/dashboard` com autenticação admin, validação de período (máximo de 90 dias) e agregações somente a partir de `user`, `patient_profile`, `visitor_location` e eventos reais de comunidade.
+- Implementada rota protegida `/pacientes` no app `admin/` com cards de total, ativos, inativos e novos cadastros, gráfico temporal sem retenção, lista resumida com link para detalhe, estatísticas por gênero, localização agregada e forma de cadastro.
+- Criada rota reservada `/pacientes/[id]` como placeholder protegido e honesto para a TASK-61, sem dados fake de detalhe.
+- Exportação não foi exibida/habilitada porque o backend retorna `export.available=false` e não existe endpoint real de exportação no escopo.
+- Status bloqueado/silenciado, ações destrutivas e taxa de retenção permaneceram fora da V1 conforme decisão de produto.
+- Builder/Quick Copy não estava disponível neste ambiente; a referência visual usada foi `_product/proto/admin/Pacientes/Pacientes - Dashboard.png`.
+- Não houve alteração em `backend/prisma/schema.prisma` nem em migrations; por isso `pnpm --dir backend db:migrate` não foi executado.
+
+## Validações executadas
+
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check`
+- `buildPatientsDashboard({})` em banco local retornou dados reais: `total_patients=8`, `active_patients=8`, `inactive_patients=0`, `new_signups=8`, `recent=5`, `export.available=false`.
+- `buildPatientsDashboard({ from: "2026-01-01", to: "2026-04-30" })` retornou `status=400` por exceder o limite de 90 dias.
+- Backend local recém-iniciado em `http://localhost:3101` respondeu `401` para `GET /api/admin/private/patients/dashboard` sem token admin.
+- Rota local `http://localhost:3002/pacientes` respondeu `200` no servidor Admin local.
+
+## ADR
+
+- ADR-0240: Dashboard Admin de pacientes com dados agregados e sem retenção V1.
