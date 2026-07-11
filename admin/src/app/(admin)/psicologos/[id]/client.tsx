@@ -344,6 +344,7 @@ const BUSINESS_CHART_METRICS = [
     id: "profile_views",
     key: "profile_views",
     label: "Visualizações",
+    shortLabel: "Perfil",
     strokeClassName: "stroke-primary",
     swatchClassName: "bg-primary",
   },
@@ -353,6 +354,7 @@ const BUSINESS_CHART_METRICS = [
     id: "whatsapp_clicks",
     key: "whatsapp_clicks",
     label: "WhatsApp",
+    shortLabel: "WhatsApp",
     strokeClassName: "stroke-emerald-500",
     swatchClassName: "bg-emerald-500",
   },
@@ -362,6 +364,7 @@ const BUSINESS_CHART_METRICS = [
     id: "favorites",
     key: "favorites",
     label: "Favoritos",
+    shortLabel: "Fav.",
     strokeClassName: "stroke-pink-500",
     swatchClassName: "bg-pink-500",
   },
@@ -371,6 +374,7 @@ const BUSINESS_CHART_METRICS = [
     id: "search_results",
     key: "search_results",
     label: "Resultados de busca",
+    shortLabel: "Busca",
     strokeClassName: "stroke-blue-500",
     swatchClassName: "bg-blue-500",
   },
@@ -380,6 +384,7 @@ const BUSINESS_CHART_METRICS = [
   id: string;
   key: keyof AdminPsychologistStatistics["business"]["series"][number];
   label: string;
+  shortLabel: string;
   strokeClassName: string;
   swatchClassName: string;
 }[];
@@ -1600,12 +1605,13 @@ const BusinessMetricToggleCard = ({
   onToggle: () => void;
 }) => {
   const Icon = config.icon;
+  const displayValue = metric.available ? formatEngagementMetricValue(metric) : "—";
 
   return (
     <button
       aria-pressed={active}
       className={cn(
-        "inline-flex min-w-max items-center gap-2 rounded-full border px-3 py-2 text-left text-xs font-black transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2",
+        "inline-flex min-w-0 items-center justify-center gap-1 rounded-full border px-1.5 py-1.5 text-left text-[10px] font-black transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 sm:gap-1.5 sm:px-2",
         active
           ? "border-primary/40 bg-primary-soft text-primary"
           : "border-border bg-surface text-muted hover:border-primary/30 hover:bg-primary-soft/30",
@@ -1613,7 +1619,7 @@ const BusinessMetricToggleCard = ({
       )}
       disabled={!metric.available}
       onClick={onToggle}
-      title={`${metric.label}: ${formatEngagementMetricValue(metric)}. ${
+      title={`${metric.label}: ${displayValue}. ${
         !metric.available ? "Indisponível" : active ? "Visível no gráfico" : "Oculto no gráfico"
       }`}
       type="button"
@@ -1625,13 +1631,13 @@ const BusinessMetricToggleCard = ({
         )}
       />
       {metric.id === "whatsapp_clicks" ? (
-        <WhatsAppIcon aria-hidden className="h-4 w-4 shrink-0" />
+        <WhatsAppIcon aria-hidden className="hidden h-3.5 w-3.5 shrink-0 sm:block" />
       ) : (
-        <Icon aria-hidden className="h-4 w-4 shrink-0" />
+        <Icon aria-hidden className="hidden h-3.5 w-3.5 shrink-0 sm:block" />
       )}
-      <span className="whitespace-nowrap">{metric.label}</span>
-      <span className="rounded-full bg-surface px-2 py-0.5 text-foreground">
-        {formatEngagementMetricValue(metric)}
+      <span className="min-w-0 truncate">{config.shortLabel}</span>
+      <span className="rounded-full bg-surface px-1.5 py-0.5 text-foreground sm:px-2">
+        {displayValue}
       </span>
       <span className="sr-only">
         {!metric.available ? "Indisponível" : active ? "visível no gráfico" : "oculto no gráfico"}
@@ -1662,7 +1668,7 @@ const BusinessSeriesChart = ({
     );
   }
 
-  const chartWidth = Math.max(760, points.length * 30);
+  const chartWidth = 760;
   const chartHeight = 220;
   const paddingX = 24;
   const paddingY = 22;
@@ -1675,17 +1681,19 @@ const BusinessSeriesChart = ({
   const xFor = (index: number) =>
     paddingX + (points.length <= 1 ? innerWidth / 2 : (index / (points.length - 1)) * innerWidth);
   const yFor = (value: number) => paddingY + innerHeight - (value / max) * innerHeight;
+  const labelStep = Math.max(1, Math.ceil(points.length / 12));
 
   return (
-    <div className="mt-5 overflow-x-auto rounded-2xl bg-surface-muted p-4">
-      <div style={{ width: chartWidth }}>
+    <div className="mt-5 w-full overflow-hidden rounded-2xl bg-surface-muted p-4">
+      <div className="w-full">
         <svg
           aria-label="Evolução do período por contador selecionado"
-          className="block"
+          className="block h-[220px] w-full"
           height={chartHeight}
+          preserveAspectRatio="none"
           role="img"
           viewBox={`0 0 ${chartWidth} ${chartHeight}`}
-          width={chartWidth}
+          width="100%"
         >
           <title>Evolução do período</title>
           {[0, 0.25, 0.5, 0.75, 1].map((ratio) => {
@@ -1743,14 +1751,14 @@ const BusinessSeriesChart = ({
         </svg>
         <div
           className="grid gap-1"
-          style={{ gridTemplateColumns: `repeat(${points.length}, minmax(22px, 1fr))` }}
+          style={{ gridTemplateColumns: `repeat(${points.length}, 1fr)` }}
         >
-          {points.map((point) => (
+          {points.map((point, index) => (
             <span
-              className="-rotate-45 whitespace-nowrap text-center text-[10px] font-bold text-subtle"
+              className="-rotate-45 overflow-hidden whitespace-nowrap text-center text-[10px] font-bold text-subtle"
               key={point.date}
             >
-              {point.date.slice(5)}
+              {index % labelStep === 0 || index === points.length - 1 ? point.date.slice(5) : ""}
             </span>
           ))}
         </div>
@@ -1985,7 +1993,7 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: st
               </p>
             </div>
 
-            <fieldset className="-mx-1 mt-4 flex min-w-0 flex-nowrap gap-2 overflow-x-auto px-1 pb-2">
+            <fieldset className="mt-4 grid min-w-0 grid-cols-4 gap-1.5 sm:gap-2">
               <legend className="sr-only">Contadores exibidos no gráfico</legend>
               {businessCards.map(({ config, metric }) => (
                 <BusinessMetricToggleCard
