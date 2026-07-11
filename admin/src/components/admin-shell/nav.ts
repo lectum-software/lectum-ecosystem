@@ -13,7 +13,15 @@ export const adminNavItems = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutGrid },
   { label: "Tráfego", href: "/trafego", icon: ChartNoAxesCombined },
   { label: "Comunidades", href: "/comunidades", icon: MessageCircleMore },
-  { label: "Psicólogos", href: "/psicologos", icon: UsersRound },
+  {
+    label: "Psicólogos",
+    href: "/psicologos",
+    icon: UsersRound,
+    children: [
+      { label: "Dashboard", href: "/psicologos" },
+      { label: "Lista de Psicólogos", href: "/psicologos/lista" },
+    ],
+  },
   { label: "Pacientes", href: "/pacientes", icon: Gauge },
   { label: "Financeiro", href: "/financeiro", icon: CircleDollarSign },
   { label: "Notificações", href: "/notificacoes", icon: Bell },

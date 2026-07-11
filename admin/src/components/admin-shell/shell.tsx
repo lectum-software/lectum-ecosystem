@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronLeft, LogOut, Menu, X } from "lucide-react";
+import { ChevronDown, ChevronLeft, LogOut, Menu, X } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -14,11 +14,16 @@ import { adminNavItems } from "./nav";
 type SidebarContentProps = {
   collapsed: boolean;
   onNavigate?: () => void;
+  onRequestExpand?: () => void;
 };
 
-const SidebarContent = ({ collapsed, onNavigate }: SidebarContentProps) => {
+const isNavPathActive = (pathname: string, href: string) =>
+  pathname === href || pathname.startsWith(`${href}/`);
+
+const SidebarContent = ({ collapsed, onNavigate, onRequestExpand }: SidebarContentProps) => {
   const pathname = usePathname();
   const { admin, logout } = useAdminAuth();
+  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({});
   const adminName = admin?.name || "Admin Lectum";
   const initials = useMemo(() => {
     const names = adminName.split(" ").filter(Boolean);
@@ -49,7 +54,76 @@ const SidebarContent = ({ collapsed, onNavigate }: SidebarContentProps) => {
       <nav aria-label="Menu administrativo" className="flex-1 space-y-1 px-3 py-4">
         {adminNavItems.map((item) => {
           const Icon = item.icon;
-          const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
+          const isActive = isNavPathActive(pathname, item.href);
+
+          if ("children" in item) {
+            const isOpen = openGroups[item.href] ?? isActive;
+            const groupId = `admin-nav-${item.href.replaceAll("/", "-")}`;
+
+            return (
+              <div key={item.href}>
+                <button
+                  aria-controls={collapsed ? undefined : groupId}
+                  aria-current={isActive ? "page" : undefined}
+                  aria-expanded={collapsed ? undefined : isOpen}
+                  className={cn(
+                    "flex min-h-12 w-full items-center gap-3 rounded-2xl px-3 text-left text-sm font-bold transition",
+                    "text-sidebar-muted hover:bg-sidebar-active/45 hover:text-sidebar-foreground focus-visible:outline-white",
+                    isActive && "bg-sidebar-active text-sidebar-foreground shadow-admin-soft",
+                    collapsed && "justify-center px-2",
+                  )}
+                  onClick={() => {
+                    setOpenGroups((current) => ({
+                      ...current,
+                      [item.href]: true,
+                    }));
+                    if (collapsed) onRequestExpand?.();
+                  }}
+                  title={collapsed ? item.label : undefined}
+                  type="button"
+                >
+                  <Icon aria-hidden className="h-5 w-5 shrink-0" />
+                  <span className={cn("min-w-0 flex-1 truncate", collapsed && "sr-only")}>
+                    {item.label}
+                  </span>
+                  <ChevronDown
+                    aria-hidden
+                    className={cn(
+                      "h-4 w-4 shrink-0 transition-transform",
+                      isOpen && "rotate-180",
+                      collapsed && "hidden",
+                    )}
+                  />
+                </button>
+
+                {isOpen && !collapsed ? (
+                  <div className="mt-1 space-y-1 pl-8" id={groupId}>
+                    {item.children.map((child) => {
+                      const childIsActive =
+                        pathname === child.href ||
+                        (child.href !== item.href && pathname.startsWith(`${child.href}/`));
+
+                      return (
+                        <Link
+                          aria-current={childIsActive ? "page" : undefined}
+                          className={cn(
+                            "flex min-h-10 items-center rounded-xl border-l border-white/10 px-3 pl-4 text-sm font-bold transition",
+                            "text-sidebar-muted hover:bg-white/10 hover:text-sidebar-foreground focus-visible:outline-white",
+                            childIsActive && "bg-white/10 text-sidebar-foreground",
+                          )}
+                          href={child.href}
+                          key={child.href}
+                          onClick={onNavigate}
+                        >
+                          {child.label}
+                        </Link>
+                      );
+                    })}
+                  </div>
+                ) : null}
+              </div>
+            );
+          }
 
           return (
             <Link
@@ -116,6 +190,10 @@ export const AdminShell = ({ children }: PropsWithChildren) => {
       return next;
     });
   };
+  const expandCollapsedSidebar = () => {
+    setCollapsed(false);
+    setSidebarCollapsed(false);
+  };
 
   return (
     <div className="min-h-dvh bg-background text-foreground">
@@ -142,7 +220,7 @@ export const AdminShell = ({ children }: PropsWithChildren) => {
             strokeWidth={2}
           />
         </button>
-        <SidebarContent collapsed={collapsed} />
+        <SidebarContent collapsed={collapsed} onRequestExpand={expandCollapsedSidebar} />
       </aside>
 
       {drawerOpen ? (
