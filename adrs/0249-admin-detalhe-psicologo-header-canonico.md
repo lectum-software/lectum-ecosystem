@@ -18,6 +18,7 @@ O avatar do header também precisa refletir a foto profissional enviada pelo pr�
 - A avaliação no header exibe somente a contagem entre parênteses, por exemplo `0,0 (0)`.
 - O CRP do header usa máscara visual `00/00000` a partir de regional e número retornados pelo endpoint Admin, sem alterar o valor persistido.
 - O título profissional é derivado de `psychologist_profile.gender`: `Psicóloga` para gênero feminino/mulher e `Psicólogo` nos demais casos, evitando `Psicólogo(a)`.
+- O selo ao lado do nome usa o mesmo SVG canônico `VerifiedBadgeIcon` da Lectum (`viewBox="0 0 30 28"`, preenchimento `#308CE8`), em vez do ícone genérico do `lucide-react`.
 - O último acesso usa formato brasileiro explícito com preposição: `dd/mm/aaaa às HH:mm`.
 - URLs de mídia pública do backend em `/public/files/...` são resolvidas para `NEXT_PUBLIC_API_URL` no Admin antes de serem enviadas ao `next/image`.
 - O Admin mantém allowlist explícita de hosts de imagem e passa a aceitar também `NEXT_PUBLIC_IMAGE_REMOTE_HOSTS`, sem wildcard, para cobrir hosts públicos controlados quando a foto profissional estiver fora do host da API.
@@ -36,4 +37,4 @@ O avatar do header também precisa refletir a foto profissional enviada pelo pr�
 - `pnpm --dir admin build`
 - `pnpm check`
 - `git diff --check`
-- Browser local autenticado no Admin em `/psicologos/cmrfgznww0014xouh2tmz5dbf`, incluindo viewport 390px para o header: avatar real carregado por `next/image`, sem botão `Lista`, status `Ativo`, `Plano de cortesia`, avaliação `0,0 (0)`, CRP `04/12345`, termo `Psicólogo` e último acesso no formato `10/07/2026 às 21:57`.
+- Browser local autenticado no Admin em `/psicologos/cmrfgznww0014xouh2tmz5dbf`, incluindo viewport 390px para o header: avatar real carregado por `next/image`, sem botão `Lista`, status `Ativo`, `Plano de cortesia`, avaliação `0,0 (0)`, CRP `04/12345`, termo `Psicólogo` e último acesso no formato `10/07/2026 às 21:57`; o selo `VerifiedBadgeIcon` foi validado em perfil verificado local com `viewBox="0 0 30 28"` e `fill="#308CE8"`.

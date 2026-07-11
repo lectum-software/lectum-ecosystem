@@ -143,6 +143,7 @@ Criar o shell de detalhe do psicólogo e as abas Geral e Perfil/Cadastro com dad
 - A tag verde passou a representar `Ativo`/`Inativo` de `user.active`, e cortesia administrativa ativa passa a aparecer como `Plano de cortesia`.
 - A avaliacao passou para `0,0 (0)`, o CRP para a mascara `00/00000`, o termo profissional para `Psicólogo`/`Psicóloga` conforme `psychologist_profile.gender` e o ultimo acesso para `dd/mm/aaaa às HH:mm`.
 - A foto do header agora usa a mesma URL real de `user.avatar` retornada pelo endpoint Admin, renderizada com `next/image`; URLs publicas do backend em `/public/files/...` sao resolvidas contra `NEXT_PUBLIC_API_URL` e hosts externos continuam em allowlist explicita.
+- O selo de verificado ao lado do nome foi alinhado ao mesmo SVG canonico `VerifiedBadgeIcon` usado na Lectum, substituindo o icone generico `BadgeCheck`.
 - ADR criado: `adrs/0249-admin-detalhe-psicologo-header-canonico.md`.
 
 ## Evidencias de validacao do ajuste complementar
@@ -152,4 +153,4 @@ Criar o shell de detalhe do psicólogo e as abas Geral e Perfil/Cadastro com dad
 - `pnpm --dir admin build`
 - `pnpm check`
 - `git diff --check`
-- Browser local autenticado no Admin em `/psicologos/cmrfgznww0014xouh2tmz5dbf`, incluindo viewport 390px para o header: avatar real carregado por `next/image`, sem botao `Lista`, status `Ativo`, `Plano de cortesia`, avaliacao `0,0 (0)`, CRP `04/12345`, termo `Psicólogo` e ultimo acesso no formato `10/07/2026 às 21:57`.
+- Browser local autenticado no Admin em `/psicologos/cmrfgznww0014xouh2tmz5dbf`, incluindo viewport 390px para o header: avatar real carregado por `next/image`, sem botao `Lista`, status `Ativo`, `Plano de cortesia`, avaliacao `0,0 (0)`, CRP `04/12345`, termo `Psicólogo` e ultimo acesso no formato `10/07/2026 às 21:57`; o selo `VerifiedBadgeIcon` foi validado em perfil verificado local com `viewBox="0 0 30 28"` e `fill="#308CE8"`.

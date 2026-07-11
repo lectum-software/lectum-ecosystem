@@ -5,7 +5,6 @@ import {
   AlertTriangle,
   ArrowDown,
   ArrowUp,
-  BadgeCheck,
   BarChart3,
   Bookmark,
   BookOpen,
@@ -40,7 +39,7 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
-import { type ReactNode, useEffect, useMemo, useState } from "react";
+import { type ReactNode, type SVGProps, useEffect, useMemo, useState } from "react";
 import { FormProvider, type SubmitHandler, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -497,6 +496,22 @@ const Badge = ({ children, className }: { children: ReactNode; className?: strin
   </span>
 );
 
+const VerifiedBadgeIcon = ({ className, ...props }: SVGProps<SVGSVGElement>) => (
+  <svg
+    className={cn("h-5 w-5 shrink-0", className)}
+    fill="none"
+    viewBox="0 0 30 28"
+    xmlns="http://www.w3.org/2000/svg"
+    {...props}
+  >
+    <title>Perfil verificado</title>
+    <path
+      d="M10.3636 28L7.77273 23.7333L2.86364 22.6667L3.34091 17.7333L0 14L3.34091 10.2667L2.86364 5.33333L7.77273 4.26667L10.3636 0L15 1.93333L19.6364 0L22.2273 4.26667L27.1364 5.33333L26.6591 10.2667L30 14L26.6591 17.7333L27.1364 22.6667L22.2273 23.7333L19.6364 28L15 26.0667L10.3636 28ZM13.5682 18.7333L21.2727 11.2L19.3636 9.26667L13.5682 14.9333L10.6364 12.1333L8.72727 14L13.5682 18.7333Z"
+      fill="#308CE8"
+    />
+  </svg>
+);
+
 const Avatar = ({ name, src }: { name: string; src: string | null }) => {
   const imageSrc = renderableImageSrc(src);
 
@@ -578,7 +593,9 @@ const DetailHeader = ({ detail, tab }: { detail: AdminPsychologistDetail; tab: A
               <h1 className="text-3xl font-black tracking-tight text-foreground md:text-4xl">
                 {header.name}
               </h1>
-              {header.verified ? <BadgeCheck aria-hidden className="h-6 w-6 text-primary" /> : null}
+              {header.verified ? (
+                <VerifiedBadgeIcon aria-label="Perfil verificado" className="h-6 w-6" />
+              ) : null}
             </div>
             <div className="mt-2 flex flex-wrap items-center gap-2 text-sm font-black text-muted">
               <span>{getPsychologistTitle(detail.profile.professional.gender)}</span>
