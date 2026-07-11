@@ -199,3 +199,16 @@ A decisao evita que uma alteracao de CRP seja persistida por clique acidental ou
 automacao do cliente, sem transformar o salvamento em aprovacao/rejeicao: a
 operacao continua sem alterar `crp_status`, `cfp_verified_at`, assinatura,
 gateway ou cortesia.
+
+## Complemento 2026-07-11: rolagem independente no painel de registro
+
+Na aba Perfil e cadastro do detalhe Admin, a segunda coluna do Registro
+profissional permanece empilhada na rolagem unica mobile-first, mas em desktop
+`xl+` passa a ter `max-height` baseada na viewport, `overflow-y-auto` e
+`overscroll-contain`.
+
+A decisao preserva o painel sticky ja adotado, mas remove a dependencia de a
+primeira coluna chegar ao fim para o Admin conseguir rolar todo o Registro
+profissional. O trade-off e que, no desktop, a rolagem depende da coluna sob o
+ponteiro: sobre a coluna esquerda rola a pagina; sobre a coluna direita rola o
+painel de registro ate seus limites.

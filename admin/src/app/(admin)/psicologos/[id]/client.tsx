@@ -5122,7 +5122,7 @@ const ProfileTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: strin
           </InfoCard>
         </div>
 
-        <aside className="xl:sticky xl:top-5 xl:self-start">
+        <aside className="xl:sticky xl:top-5 xl:max-h-[calc(100dvh-2.5rem)] xl:self-start xl:overflow-y-auto xl:overscroll-contain xl:pr-1">
           <RegistryVerificationCard id={id} />
         </aside>
       </div>

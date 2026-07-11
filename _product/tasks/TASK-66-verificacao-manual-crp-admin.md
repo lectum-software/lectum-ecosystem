@@ -352,3 +352,10 @@ Se o schema atual não suportar auditoria mínima sem `raw`, usar `raw` com shap
 - A UI exige a frase `SALVAR REGISTRO` e resume Regional CRP, Nº CRP e Data de inscricao que serao salvos.
 - O endpoint administrativo `PUT /api/admin/private/psychologists/:id/registry-verification/identity` tambem exige `confirmation="SALVAR REGISTRO"`, evitando salvar alteracoes de CRP apenas por automacao de frontend.
 - Validacoes do ajuste: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm --dir backend typecheck` e `pnpm --dir backend build` passaram; `pnpm --dir backend check`/`pnpm check` ficaram bloqueados por arquivos nao relacionados ja presentes no workspace em `backend/src/modules/api/admin/private/psychologists/account`.
+
+### Ajuste de rolagem do registro profissional 2026-07-11
+
+- A segunda coluna da aba Perfil e cadastro continua mobile-first: em telas pequenas a pagina usa rolagem unica e os blocos seguem empilhados.
+- Em desktop `xl+`, a coluna do Registro profissional passou a ter altura maxima baseada na viewport e `overflow-y-auto`, mantendo o `sticky` sem depender da primeira coluna chegar ao fim para revelar todo o conteudo.
+- `overscroll-contain` foi aplicado para evitar que a rolagem interna vaze para a pagina enquanto o ponteiro estiver sobre a coluna direita.
+- Validacoes do ajuste: `pnpm --dir admin check` e `pnpm --dir admin build` passaram. Validacao visual autenticada ficou limitada porque este ambiente nao expoe controle do Chrome ja autenticado do usuario; a rota privada segue dependente de sessao Admin real.
