@@ -655,10 +655,21 @@ const formatEngagementMetricValue = (metric: AdminPsychologistEngagementMetric) 
 const engagementMetricTone = (metric: AdminPsychologistEngagementMetric) =>
   metric.available ? "bg-surface text-foreground" : "bg-surface-muted text-muted";
 
+const capitalizeOptionLabel = (value?: string | number | null) => {
+  const formatted = formatNullable(value);
+  if (formatted === "Não informado") return formatted;
+
+  return formatted.replace(/^(\s*)(\p{L})/u, (_, spaces: string, letter: string) => {
+    return `${spaces}${letter.toLocaleUpperCase("pt-BR")}`;
+  });
+};
+
 const listText = (items: string[] | AdminPsychologistCatalogItem[]) => {
   if (items.length === 0) return "Não informado";
 
-  return items.map((item) => (typeof item === "string" ? item : item.name)).join(", ");
+  return items
+    .map((item) => capitalizeOptionLabel(typeof item === "string" ? item : item.name))
+    .join(", ");
 };
 
 const formatResponsibleAdminName = (name?: string | null) => {
@@ -3458,13 +3469,16 @@ const ProfileTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: strin
 
   return (
     <div className="space-y-5" data-psychologist-detail-tab="perfil">
-      <div className="grid gap-5 xl:grid-cols-[0.95fr_1.05fr]">
+      <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(360px,0.8fr)] xl:items-start">
         <div className="space-y-5">
           <InfoCard icon={UserRound} title="Dados pessoais">
             <FieldRow label="CPF" value={formatCpfDisplay(personal.cpf)} />
             <FieldRow label="E-mail" value={personal.email} />
             <FieldRow label="Telefone" value={formatPhoneDisplay(personal.phone)} />
             <FieldRow label="Data de nascimento" value={formatDate(personal.birthdate)} />
+            <FieldRow label="Gênero" value={capitalizeOptionLabel(professional.gender)} />
+            <FieldRow label="Raça/cor" value={capitalizeOptionLabel(professional.race_color)} />
+            <FieldRow label="Religião" value={capitalizeOptionLabel(professional.religion)} />
             <FieldRow
               label="Endereço completo"
               value={
@@ -3475,38 +3489,58 @@ const ProfileTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: strin
             />
           </InfoCard>
 
-          <RegistryVerificationCard id={id} />
-
           <InfoCard icon={FileText} title="Dados profissionais">
-            <FieldRow label="Regional CRP" value={formatNullable(professional.regional_crp)} />
-            <FieldRow
-              label="Nº de Registro"
-              value={formatNullable(professional.registration_number)}
-            />
-            <FieldRow
-              label="Data registro CRP"
-              value={formatDate(professional.crp_registration_date)}
-            />
-            <FieldRow
-              label="Tempo de experiência"
-              value={
-                professional.experience_years === null
-                  ? "Não informado"
-                  : `${professional.experience_years} anos`
-              }
-            />
             <FieldRow label="Especialidades" value={listText(professional.specialties)} />
             <FieldRow label="Abordagens" value={listText(professional.approaches)} />
             <FieldRow label="Serviços" value={listText(professional.services)} />
             <FieldRow label="Público atendido" value={listText(professional.target_audience)} />
             <FieldRow label="Idiomas" value={listText(professional.languages)} />
-            <FieldRow label="Modalidades" value={formatNullable(professional.modality)} />
-            <FieldRow label="Gênero" value={formatNullable(professional.gender)} />
-            <FieldRow label="Raça/Cor" value={formatNullable(professional.race_color)} />
-            <FieldRow label="Religião" value={formatNullable(professional.religion)} />
+            <FieldRow label="Modalidades" value={capitalizeOptionLabel(professional.modality)} />
             <FieldRow label="Cadastro via" value={formatNullable(personal.provider)} />
             <FieldRow label="Data cadastro Lectum" value={formatDate(detail.header.created_at)} />
           </InfoCard>
+
+          <CardShell className="p-5">
+            <div className="flex items-center gap-3">
+              <IconCircle icon={CheckCircle2} />
+              <h2 className="text-lg font-black text-foreground">Selos e facilidades</h2>
+            </div>
+            <div className="mt-4 grid gap-3">
+              {activeFeatures.length > 0 ? (
+                activeFeatures.map((feature) => (
+                  <FeatureLine icon={feature.icon} key={feature.label} label={feature.label} />
+                ))
+              ) : (
+                <p className="rounded-2xl bg-surface-muted p-4 text-sm leading-6 text-foreground">
+                  Nenhum selo cadastrado.
+                </p>
+              )}
+            </div>
+          </CardShell>
+
+          <CardShell className="p-5">
+            <div className="flex items-center gap-3">
+              <IconCircle icon={Mail} />
+              <h2 className="text-lg font-black text-foreground">Bio</h2>
+            </div>
+            <div className="mt-4">
+              <TextBlock empty="Nenhuma bio cadastrada.">{profile.content.bio}</TextBlock>
+            </div>
+          </CardShell>
+
+          <CardShell className="p-5">
+            <div className="flex items-center gap-3">
+              <IconCircle icon={Globe2} />
+              <h2 className="text-lg font-black text-foreground">Texto de apresentação</h2>
+            </div>
+            <div className="mt-4">
+              <TextBlock empty="Nenhum texto de apresentação cadastrado.">
+                {profile.content.headline}
+              </TextBlock>
+            </div>
+          </CardShell>
+
+          <VideoCard detail={detail} />
 
           <InfoCard icon={BookOpen} title="Formação & Títulos">
             {hasAcademicFormation ? (
@@ -3538,51 +3572,11 @@ const ProfileTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: strin
               </div>
             )}
           </InfoCard>
-
-          <CardShell className="p-5">
-            <div className="flex items-center gap-3">
-              <IconCircle icon={CheckCircle2} />
-              <h2 className="text-lg font-black text-foreground">Selos e facilidades</h2>
-            </div>
-            <div className="mt-4 grid gap-3">
-              {activeFeatures.length > 0 ? (
-                activeFeatures.map((feature) => (
-                  <FeatureLine icon={feature.icon} key={feature.label} label={feature.label} />
-                ))
-              ) : (
-                <p className="rounded-2xl bg-surface-muted p-4 text-sm leading-6 text-foreground">
-                  Nenhum selo cadastrado.
-                </p>
-              )}
-            </div>
-          </CardShell>
         </div>
 
-        <div className="space-y-5">
-          <CardShell className="p-5">
-            <div className="flex items-center gap-3">
-              <IconCircle icon={Mail} />
-              <h2 className="text-lg font-black text-foreground">Bio</h2>
-            </div>
-            <div className="mt-4">
-              <TextBlock empty="Nenhuma bio cadastrada.">{profile.content.bio}</TextBlock>
-            </div>
-          </CardShell>
-
-          <CardShell className="p-5">
-            <div className="flex items-center gap-3">
-              <IconCircle icon={Globe2} />
-              <h2 className="text-lg font-black text-foreground">Texto de apresentação</h2>
-            </div>
-            <div className="mt-4">
-              <TextBlock empty="Nenhum texto de apresentação cadastrado.">
-                {profile.content.headline}
-              </TextBlock>
-            </div>
-          </CardShell>
-
-          <VideoCard detail={detail} />
-        </div>
+        <aside className="xl:sticky xl:top-5 xl:self-start">
+          <RegistryVerificationCard id={id} />
+        </aside>
       </div>
     </div>
   );

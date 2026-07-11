@@ -115,3 +115,7 @@ Quando o registro aparece ativo por cortesia administrativa, o card usa o mesmo 
 ## Complemento 2026-07-11: alerta no item Perfil e cadastro
 
 O menu de abas do detalhe Admin exibe alerta em "Perfil e cadastro" somente quando ha plano Profissional ativo nao cortesia e o registro ainda nao esta ativo. A mesma fronteira visual evita alertar Gratuito, Cortesia ou Profissional ja aprovado, que tambem nao devem expor acao de verificacao manual.
+
+## Complemento 2026-07-11: layout sticky do registro profissional
+
+Na aba Perfil e cadastro do Admin, Registro profissional fica isolado na segunda coluna e usa sticky no topo em desktop. A primeira coluna concentra os demais dados de perfil, conteudo e formacao. A decisao reduz a sensacao de area vazia durante rolagem longa e mantem a informacao de aprovacao profissional sempre acessivel sem duplicar dados de conselho em Dados profissionais.

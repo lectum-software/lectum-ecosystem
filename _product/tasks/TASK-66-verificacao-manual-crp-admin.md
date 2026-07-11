@@ -288,3 +288,11 @@ Se o schema atual não suportar auditoria mínima sem `raw`, usar `raw` com shap
 
 - O item "Perfil e cadastro" passou a exibir icone de alerta somente quando o psicologo tem plano Profissional ativo, nao e cortesia e o registro profissional ainda nao esta ativo.
 - A regra espelha o unico cenario em que o card Registro profissional deve oferecer verificacao manual: Profissional pendente, sem tratar Gratuito, Cortesia ou Profissional ja aprovado como alerta.
+
+### Ajuste de layout Perfil e cadastro 2026-07-11
+
+- A aba Perfil e cadastro passou a organizar a primeira coluna com Dados pessoais, Dados profissionais, Selos e facilidades, Bio, Texto de apresentacao, Video de apresentacao e Formacao & Titulos.
+- A segunda coluna ficou exclusiva para o card Registro profissional.
+- Em desktop, Registro profissional usa `position: sticky` no topo da viewport para permanecer visivel durante a rolagem longa da primeira coluna.
+- Genero, Raca/cor e Religiao ficam em Dados pessoais; Dados profissionais nao duplica Regional CRP, N? de registro, Data registro CRP, Tempo de experiencia, Genero, Raca/cor ou Religiao.
+- Opcoes de Dados profissionais seguem com primeira letra maiuscula apenas na apresentacao.
