@@ -283,3 +283,8 @@ Se o schema atual não suportar auditoria mínima sem `raw`, usar `raw` com shap
 
 - Para cortesia sem tentativas automaticas/manuais no historico, o card exibe "Aprovacao manual via Cortesia.".
 - O campo Responsavel exibe "Via API" quando a origem e automatica e o nome do Admin no formato "Admin Lectum" quando a origem e manual/cortesia; em cortesia, usa o mesmo `granted_by` da concessao, sem expor e-mail ou id.
+
+### Ajuste de alerta no menu Perfil e cadastro 2026-07-11
+
+- O item "Perfil e cadastro" passou a exibir icone de alerta somente quando o psicologo tem plano Profissional ativo, nao e cortesia e o registro profissional ainda nao esta ativo.
+- A regra espelha o unico cenario em que o card Registro profissional deve oferecer verificacao manual: Profissional pendente, sem tratar Gratuito, Cortesia ou Profissional ja aprovado como alerta.

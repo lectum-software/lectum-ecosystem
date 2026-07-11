@@ -455,6 +455,18 @@ const getHeaderPlanLabel = (detail: AdminPsychologistDetail) => {
   return detail.header.plan_name || "Sem plano ativo";
 };
 
+const needsManualRegistryReview = (detail: AdminPsychologistDetail) => {
+  const subscription = detail.general.subscription;
+  const hasActiveProfessionalPlan =
+    subscription.status === "ativa" &&
+    subscription.plan_slug !== "gratuito" &&
+    subscription.source !== "admin_grant";
+  const hasActiveRegistry =
+    detail.header.verified || detail.profile.professional.crp_status === "aprovado";
+
+  return hasActiveProfessionalPlan && !hasActiveRegistry;
+};
+
 const formatGrantedByName = (value?: string | null) => {
   const formatted = formatNullable(value);
   if (formatted === "Não informado") return formatted;
@@ -788,6 +800,7 @@ const DetailHeader = ({ detail, tab }: { detail: AdminPsychologistDetail; tab: A
   const pathname = usePathname();
   const header = detail.header;
   const profileStatus = header.active ? PROFILE_STATUS_COPY.active : PROFILE_STATUS_COPY.inactive;
+  const showProfileRegistryAlert = needsManualRegistryReview(detail);
 
   return (
     <CardShell className="overflow-hidden">
@@ -843,8 +856,9 @@ const DetailHeader = ({ detail, tab }: { detail: AdminPsychologistDetail; tab: A
         <nav aria-label="Abas do detalhe do psicólogo" className="flex min-w-max gap-1">
           {TABS.map((item) => {
             const active = item.id === tab;
+            const showRegistryAlert = item.id === "perfil" && showProfileRegistryAlert;
             const className = cn(
-              "relative inline-flex min-h-14 items-center justify-center px-3 text-sm font-black transition",
+              "relative inline-flex min-h-14 items-center justify-center gap-2 px-3 text-sm font-black transition",
               active ? "text-primary" : "text-foreground hover:text-primary",
               !item.ready && "cursor-not-allowed text-muted hover:text-muted",
             );
@@ -860,7 +874,13 @@ const DetailHeader = ({ detail, tab }: { detail: AdminPsychologistDetail; tab: A
                   }`}
                   type="button"
                 >
-                  {item.label}
+                  <span>{item.label}</span>
+                  {showRegistryAlert ? (
+                    <AlertTriangle
+                      aria-label="Registro profissional pendente de verificação manual"
+                      className="h-4 w-4 text-amber-600"
+                    />
+                  ) : null}
                   <span className="ml-2 rounded-full bg-surface-muted px-2 py-0.5 text-[10px] font-black uppercase tracking-wide text-muted">
                     Em breve
                   </span>
@@ -875,7 +895,13 @@ const DetailHeader = ({ detail, tab }: { detail: AdminPsychologistDetail; tab: A
                 href={item.id === "geral" ? pathname : `${pathname}?tab=${item.id}`}
                 key={item.id}
               >
-                {item.label}
+                <span>{item.label}</span>
+                {showRegistryAlert ? (
+                  <AlertTriangle
+                    aria-label="Registro profissional pendente de verificação manual"
+                    className="h-4 w-4 text-amber-600"
+                  />
+                ) : null}
                 {active ? (
                   <span className="absolute inset-x-3 bottom-0 h-1 rounded-t-full bg-primary" />
                 ) : null}

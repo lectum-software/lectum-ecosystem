@@ -111,3 +111,7 @@ O card de registro profissional separa os dados publicos do conselho dos dados o
 ## Complemento 2026-07-11: responsavel e historico de cortesia
 
 Quando o registro aparece ativo por cortesia administrativa, o card usa o mesmo `granted_by` da assinatura de cortesia como responsavel, mas normaliza a apresentacao para o nome do Admin no formato "Admin Lectum", sem e-mail ou id. Tambem mostra "Aprovacao manual via Cortesia." quando nao houver tentativas registradas em `professional_registry_check`. Para aprovacao via API, o responsavel exibido e "Via API".
+
+## Complemento 2026-07-11: alerta no item Perfil e cadastro
+
+O menu de abas do detalhe Admin exibe alerta em "Perfil e cadastro" somente quando ha plano Profissional ativo nao cortesia e o registro ainda nao esta ativo. A mesma fronteira visual evita alertar Gratuito, Cortesia ou Profissional ja aprovado, que tambem nao devem expor acao de verificacao manual.
