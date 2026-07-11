@@ -223,4 +223,24 @@ export class AdminPsychologistBillingRepository {
     const repository = new SubscriptionRepository();
     return repository.showPaymentHistory(subscription);
   }
+
+  async revokeCourtesy(
+    subscription: AdminPsychologistBillingSubscription,
+    actor: string,
+  ): Promise<professional_subscription> {
+    const now = new Date();
+    const previousNotes = subscription.grant_notes?.trim();
+    const revokeNote = `Cortesia revogada em ${now.toISOString()} por ${actor}.`;
+
+    return prisma.professional_subscription.update({
+      where: {
+        id: subscription.id,
+      },
+      data: {
+        current_period_end: now,
+        grant_notes: previousNotes ? `${previousNotes}\n${revokeNote}` : revokeNote,
+        status: "cancelada",
+      },
+    });
+  }
 }

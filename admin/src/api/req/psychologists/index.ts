@@ -375,8 +375,10 @@ export type AdminPsychologistBillingPaymentHistoryItem = {
 
 export type AdminPsychologistBilling = {
   courtesy: {
+    active_grant_id: string | null;
     blocked_reason: string | null;
     can_grant: boolean;
+    can_revoke: boolean;
     cpf: string | null;
     crp: string | null;
     crp_registration_date: string | null;
@@ -460,6 +462,14 @@ export type AdminPsychologistGrantCourtesyResponse = {
       source: string;
       status: string;
     };
+  };
+};
+
+export type AdminPsychologistRevokeCourtesyResponse = {
+  billing: AdminPsychologistBilling;
+  revoked: {
+    id: string;
+    status: "cancelada";
   };
 };
 
@@ -966,6 +976,14 @@ export const grantAdminPsychologistCourtesy = async (
   const response = await adminApi.post<ApiResponse<AdminPsychologistGrantCourtesyResponse>>(
     `/api/admin/private/psychologists/${encodeURIComponent(id)}/billing/grant-courtesy`,
     input,
+  );
+
+  return resolveApiData(response.data);
+};
+
+export const revokeAdminPsychologistCourtesy = async (id: string) => {
+  const response = await adminApi.post<ApiResponse<AdminPsychologistRevokeCourtesyResponse>>(
+    `/api/admin/private/psychologists/${encodeURIComponent(id)}/billing/revoke-courtesy`,
   );
 
   return resolveApiData(response.data);

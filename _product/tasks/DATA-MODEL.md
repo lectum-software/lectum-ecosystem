@@ -683,6 +683,8 @@ Quando uma concessão `admin_grant` substitui a validação automática do CFP, 
 
 Complemento 2026-07-10: no Admin, a mesma operação de cortesia pode sobrescrever CPF, Regional e CRP informados pelo psicólogo quando a equipe operacional precisar corrigir a identidade profissional antes da concessão. A persistência usa os campos existentes `psychologist_profile.cpf` (somente dígitos) e `psychologist_profile.crp` (`regional/registro` quando ambos existirem), sem criar tabela nova e sem preencher artificialmente `psychologist_profile.cfp_verified_at`; essa data continua exclusiva de consulta CFP/InfoSimples real.
 
+Complemento 2026-07-10: quando uma cortesia administrativa ativa precisa ser revogada pelo Admin, a operação cancela somente a assinatura `professional_subscription` vigente com `source="admin_grant"`, gravando `status="cancelada"` e `current_period_end` no momento da revogação. A revogação não cancela assinatura Mercado Pago, não altera cartão e não apaga CPF/Regional/CRP do `psychologist_profile`; esses campos permanecem como histórico operacional e eventual ponto de partida para nova concessão.
+
 `billing_address` (TASK-32, "Endereço de Faturamento"):
 
 | Campo | Tipo | Notas |

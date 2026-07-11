@@ -1,6 +1,6 @@
 ﻿import type { Request, Response } from "express";
 import { error500, send } from "@/helpers/return";
-import { grantCourtesy, showAdminPsychologistBilling } from "./services";
+import { grantCourtesy, revokeCourtesy, showAdminPsychologistBilling } from "./services";
 
 export const show = async (req: Request, res: Response) => {
   try {
@@ -21,5 +21,15 @@ export const grant = async (req: Request, res: Response) => {
     return send(res, resolve);
   } catch (err) {
     return error500(res, "admin_psychologist_billing_grant", err);
+  }
+};
+
+export const revoke = async (req: Request, res: Response) => {
+  try {
+    const resolve = await revokeCourtesy(req as unknown as Parameters<typeof revokeCourtesy>[0]);
+
+    return send(res, resolve);
+  } catch (err) {
+    return error500(res, "admin_psychologist_billing_revoke", err);
   }
 };

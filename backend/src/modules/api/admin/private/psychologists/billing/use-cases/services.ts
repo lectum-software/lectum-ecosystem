@@ -11,6 +11,7 @@ import type {
   AdminPsychologistBillingPaymentHistory,
   AdminPsychologistBillingPlan,
   IAdminPsychologistBillingGrantDTO,
+  IAdminPsychologistBillingRevokeDTO,
   IAdminPsychologistBillingShowDTO,
 } from "../DTOs/IAdminPsychologistBillingDTO";
 import {
@@ -138,12 +139,19 @@ const buildCourtesy = (
   const { regional_crp, registration_number } = splitCrp(profile.crp);
   const externalBillingActive =
     hasBlockingExternalSubscription(profile) || hasExternalBilling(subscription);
+  const hasActiveCourtesy = Boolean(
+    subscription?.source === "admin_grant" && isActiveAt(subscription, new Date()),
+  );
 
   return {
+    active_grant_id: hasActiveCourtesy ? (subscription?.id ?? null) : null,
     blocked_reason: externalBillingActive
       ? "Existe assinatura vinculada ao gateway. A concessao admin deve ser feita somente apos reconciliar/cancelar a cobranca real."
-      : null,
-    can_grant: !externalBillingActive,
+      : hasActiveCourtesy
+        ? "Este psicologo ja possui cortesia ativa. Revogue a cortesia atual antes de conceder uma nova."
+        : null,
+    can_grant: !externalBillingActive && !hasActiveCourtesy,
+    can_revoke: hasActiveCourtesy,
     cpf: trimOrNull(profile.cpf),
     crp: trimOrNull(profile.crp),
     crp_registration_date: profile.crp_registration_date,
@@ -314,4 +322,42 @@ export const grantCourtesy = async (data: IAdminPsychologistBillingGrantDTO): Pr
   } catch (err) {
     return mapGrantError(err);
   }
+};
+
+export const revokeCourtesy = async (
+  data: IAdminPsychologistBillingRevokeDTO,
+): Promise<Resolve> => {
+  const repository = new AdminPsychologistBillingRepository();
+  const profile = await repository.findPsychologist(data.p.id);
+
+  if (!profile) return notFound();
+
+  const currentSubscription = await repository.findCurrentSubscription(profile.id);
+
+  if (
+    currentSubscription?.source !== "admin_grant" ||
+    !isActiveAt(currentSubscription, new Date())
+  ) {
+    return {
+      status: 409,
+      success: false,
+      code: "active_admin_grant_not_found",
+      error: "Nao existe cortesia administrativa ativa para revogar.",
+    };
+  }
+
+  await repository.revokeCourtesy(currentSubscription, adminActor(data.auth ?? data.admin));
+  const billing = await showAdminPsychologistBilling(data);
+
+  return {
+    status: 200,
+    ...msg("update", {}),
+    data: {
+      billing: billing.data,
+      revoked: {
+        id: currentSubscription.id,
+        status: "cancelada",
+      },
+    },
+  };
 };

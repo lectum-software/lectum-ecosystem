@@ -18,6 +18,7 @@ import {
   grantAdminPsychologistCourtesy,
   type PsychologistsDashboardQuery,
   type PsychologistsListQuery,
+  revokeAdminPsychologistCourtesy,
 } from "@/api/req/psychologists";
 
 export const useAdminPsychologistsDashboard = (
@@ -111,6 +112,21 @@ export const useAdminPsychologistGrantCourtesy = (id: string) => {
   return useMutation({
     mutationFn: (input: AdminPsychologistGrantCourtesyInput) =>
       grantAdminPsychologistCourtesy(id, input),
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: adminPsychologistsKeys.all }),
+        queryClient.invalidateQueries({ queryKey: adminPsychologistsKeys.detail(id) }),
+        queryClient.invalidateQueries({ queryKey: adminPsychologistsKeys.billing(id) }),
+      ]);
+    },
+  });
+};
+
+export const useAdminPsychologistRevokeCourtesy = (id: string) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: () => revokeAdminPsychologistCourtesy(id),
     onSuccess: async () => {
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: adminPsychologistsKeys.all }),

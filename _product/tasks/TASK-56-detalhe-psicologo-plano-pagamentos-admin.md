@@ -86,6 +86,8 @@ Exibir plano, método e histórico financeiro do psicólogo e permitir concessã
 - [x] Alterações administrativas de CPF/Regional/CRP se sobrepõem aos dados informados pelo psicólogo no perfil.
 - [x] Regional da cortesia usa lista suspensa com as mesmas opções da edição de perfil do psicólogo.
 - [x] CPF da cortesia aplica máscara visual `000.000.000-00`.
+- [x] Cortesia ativa troca a ação do card para revogação.
+- [x] Revogação cancela apenas `source="admin_grant"` ativo, sem cancelar assinatura de gateway.
 - [x] Sobrescrita administrativa de identidade não preenche `cfp_verified_at` sem consulta real.
 - [x] Data de inscrição CRP é exigida quando necessária.
 - [x] Cancelar assinatura e alterar cartão não aparecem/habilitam sem implementação real.
@@ -160,3 +162,16 @@ Exibir plano, método e histórico financeiro do psicólogo e permitir concessã
   - 25 opções no total (placeholder + 24 regionais);
   - máscara de CPF aplicada ao digitar um valor de teste.
 - Validações executadas: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e `git diff --check`.
+
+## Ajuste complementar 2026-07-10 - revogação de cortesia ativa
+
+- Decisão de produto: depois que a cortesia for concedida, o card de cortesia no Admin deixa de exibir o formulário "Conceder cortesia" e passa a exibir a ação "Revogar cortesia".
+- Criado endpoint Admin privado real `POST /api/admin/private/psychologists/:id/billing/revoke-courtesy`.
+- A revogação é restrita à assinatura ativa `source="admin_grant"` e atualiza `professional_subscription.status="cancelada"` com `current_period_end` no momento da operação.
+- A ação não cancela assinatura Mercado Pago, não altera cartão e não remove CPF/Regional/CRP do perfil; estes dados permanecem para auditoria e eventual nova concessão.
+- O `GET /billing` passou a expor `courtesy.can_revoke`, `courtesy.active_grant_id` e bloqueia nova concessão enquanto houver cortesia ativa.
+- Validação API local com admin real:
+  - `GET /api/admin/private/psychologists/<id>/billing` retornou `can_revoke=true`, `can_grant=false`, `active_grant_id` presente e plano `admin_grant/ativa`;
+  - `POST /api/admin/private/psychologists/nao-existe/billing/revoke-courtesy` retornou `404` sem mutação.
+- Validação browser local headless Chrome/CDP, viewport mobile 390x844, confirmou que a aba `?tab=plano` exibe título e botão "Revogar cortesia" e não exibe mais "Conceder cortesia" quando há cortesia ativa.
+- Validações executadas: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e `git diff --check`.

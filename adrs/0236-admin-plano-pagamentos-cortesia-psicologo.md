@@ -99,3 +99,28 @@ Validação complementar:
 - `pnpm check`
 - `git diff --check`
 - Browser local headless Chrome/CDP, viewport 390x844, confirmou `regional_crp` como `select`, placeholder, 24 regionais + placeholder e máscara de CPF aplicada ao digitar valor de teste.
+
+## Complemento 2026-07-10 - revogação de cortesia ativa
+
+Produto definiu que, após uma cortesia administrativa estar ativa, a mesma área operacional do Admin deve mudar de concessão para revogação.
+
+Decisão:
+
+- `GET /api/admin/private/psychologists/:id/billing` passa a retornar `courtesy.can_revoke` e `courtesy.active_grant_id` quando a assinatura atual é `source="admin_grant"`, `status="ativa"` e ainda vigente.
+- Enquanto houver cortesia ativa, `courtesy.can_grant=false`; a UI renderiza o card "Revogar cortesia" no lugar do formulário "Conceder cortesia".
+- `POST /api/admin/private/psychologists/:id/billing/revoke-courtesy` cancela somente a assinatura administrativa ativa, marcando `professional_subscription.status="cancelada"` e `current_period_end` com a data/hora da operação.
+- A revogação registra uma linha em `grant_notes` com data/hora e ator admin, usando campo existente para auditoria sem migration.
+- A ação não cancela gateway, não altera cartão e não apaga CPF/Regional/CRP; se houver assinatura Mercado Pago, ela continua exigindo reconciliação/cancelamento no fluxo próprio.
+
+Consequência: o Admin não oferece nova concessão duplicada sobre uma cortesia ativa e passa a ter um caminho reversível e auditável para remover o entitlement manual `admin_grant`.
+
+Validação complementar:
+
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check`
+- `git diff --check`
+- API local com admin real confirmou `can_revoke=true`, `can_grant=false` e `active_grant_id` presente em cortesia ativa; chamada de revogação com id inexistente retornou `404` sem mutação.
+- Browser local headless Chrome/CDP em viewport 390x844 confirmou o card "Revogar cortesia" substituindo "Conceder cortesia" para psicólogo com cortesia ativa.

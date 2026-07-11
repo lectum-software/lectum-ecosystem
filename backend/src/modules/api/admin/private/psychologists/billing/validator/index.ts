@@ -68,5 +68,6 @@ export const grantSchema: IValidatorRequest = {
 
 export const showValidator = validator(showSchema);
 export const grantValidator = validator(grantSchema);
+export const revokeValidator = validator(showSchema);
 
 export default showValidator;

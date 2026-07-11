@@ -53,6 +53,7 @@ import {
   useAdminPsychologistPublications,
   useAdminPsychologistReports,
   useAdminPsychologistReviews,
+  useAdminPsychologistRevokeCourtesy,
   useAdminPsychologistStatistics,
 } from "@/api/callers/psychologists";
 import { resolveApiError } from "@/api/handle";
@@ -2497,7 +2498,7 @@ const PaymentHistoryCard = ({ billing }: { billing: AdminPsychologistBilling }) 
   </CardShell>
 );
 
-const CourtesyForm = ({ billing, id }: { billing: AdminPsychologistBilling; id: string }) => {
+const CourtesyGrantForm = ({ billing, id }: { billing: AdminPsychologistBilling; id: string }) => {
   const mutation = useAdminPsychologistGrantCourtesy(id);
   const form = useForm<CourtesyFormValues>({
     defaultValues: {
@@ -2649,6 +2650,79 @@ const CourtesyForm = ({ billing, id }: { billing: AdminPsychologistBilling; id: 
   );
 };
 
+const RevokeCourtesyCard = ({ billing, id }: { billing: AdminPsychologistBilling; id: string }) => {
+  const mutation = useAdminPsychologistRevokeCourtesy(id);
+
+  const onRevoke = async () => {
+    const confirmed = window.confirm(
+      "Confirmar revogacao da cortesia administrativa deste psicologo?",
+    );
+    if (!confirmed) return;
+
+    try {
+      await mutation.mutateAsync();
+      toast.success("Cortesia revogada com sucesso.");
+    } catch (error) {
+      toast.error(resolveApiError(error));
+    }
+  };
+
+  return (
+    <CardShell className="p-5">
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h2 className="text-xl font-black text-foreground">Revogar cortesia</h2>
+          <p className="mt-1 text-sm text-muted">
+            Este psicologo possui uma cortesia administrativa ativa.
+          </p>
+        </div>
+        <IconCircle icon={AlertTriangle} />
+      </div>
+
+      <div className="mt-5 grid gap-3 sm:grid-cols-2">
+        <div className="rounded-2xl border border-border bg-surface-muted p-4">
+          <p className="text-xs font-bold uppercase tracking-wide text-muted">Vigencia atual</p>
+          <p className="mt-1 text-sm font-black text-foreground">
+            Ate {formatDate(billing.plan.current_period_end)}
+          </p>
+        </div>
+        <div className="rounded-2xl border border-border bg-surface-muted p-4">
+          <p className="text-xs font-bold uppercase tracking-wide text-muted">Concedida por</p>
+          <p className="mt-1 text-sm font-black text-foreground">
+            {formatNullable(billing.plan.granted_by)}
+          </p>
+        </div>
+      </div>
+
+      <button
+        className="mt-5 inline-flex h-12 w-full items-center justify-center gap-2 rounded-control border border-danger bg-surface px-4 text-sm font-black text-danger transition hover:bg-danger/10 disabled:cursor-not-allowed disabled:border-border disabled:text-muted"
+        disabled={!billing.courtesy.can_revoke || mutation.isPending}
+        onClick={() => void onRevoke()}
+        type="button"
+      >
+        {mutation.isPending ? (
+          <Loader2 aria-hidden className="h-4 w-4 animate-spin" />
+        ) : (
+          <AlertTriangle aria-hidden className="h-4 w-4" />
+        )}
+        Revogar cortesia
+      </button>
+
+      <div className="mt-5 rounded-2xl border border-orange-200 bg-orange-50 p-4 text-sm font-bold text-orange-800">
+        A revogacao cancela somente a assinatura source=admin_grant ativa. Dados de CPF, Regional e
+        CRP permanecem no perfil para auditoria e eventual nova concessao.
+      </div>
+    </CardShell>
+  );
+};
+
+const CourtesyActionCard = ({ billing, id }: { billing: AdminPsychologistBilling; id: string }) =>
+  billing.courtesy.can_revoke ? (
+    <RevokeCourtesyCard billing={billing} id={id} />
+  ) : (
+    <CourtesyGrantForm billing={billing} id={id} />
+  );
+
 const PlanBillingTab = ({ id }: { detail: AdminPsychologistDetail; id: string }) => {
   const query = useAdminPsychologistBilling(id);
   const errorMessage = query.error ? resolveApiError(query.error) : null;
@@ -2666,7 +2740,7 @@ const PlanBillingTab = ({ id }: { detail: AdminPsychologistDetail; id: string })
       <div className="grid gap-5 xl:grid-cols-2">
         <CurrentPlanCard billing={query.data} />
         <PaymentMethodCard billing={query.data} />
-        <CourtesyForm billing={query.data} id={id} />
+        <CourtesyActionCard billing={query.data} id={id} />
         <PaymentHistoryCard billing={query.data} />
       </div>
     </div>

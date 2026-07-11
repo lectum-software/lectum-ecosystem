@@ -47,8 +47,10 @@ export type AdminPsychologistBillingCourtesyPeriodOption = {
 };
 
 export type AdminPsychologistBillingCourtesy = {
+  active_grant_id: string | null;
   blocked_reason: string | null;
   can_grant: boolean;
+  can_revoke: boolean;
   cpf: string | null;
   crp: string | null;
   crp_registration_date: Date | null;
@@ -88,6 +90,14 @@ export type IAdminPsychologistBillingGrantDTO = Request & {
     id: string;
   };
   b: AdminPsychologistBillingGrantBody;
+  auth: admin;
+  admin: admin;
+};
+
+export type IAdminPsychologistBillingRevokeDTO = Request & {
+  p: {
+    id: string;
+  };
   auth: admin;
   admin: admin;
 };
