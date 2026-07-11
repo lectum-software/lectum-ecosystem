@@ -338,6 +338,12 @@ autenticado (`viewer_id = psychologist_id`) e aplicar anti-spam de 6 horas por `
 `visualizacao_perfil` gera notificacao apenas para psicologo com entitlement profissional ativo, sem expor identidade do
 visitante.
 
+Complemento 2026-07-11: impressoes reais em resultados de busca/listagem usam o mesmo modelo com
+`source="search_result"` para alimentar o contador **Resultados de busca** no Admin. Aberturas reais do perfil continuam
+usando `source="profile_page"` e todas as metricas de visualizacao de perfil devem filtrar essa origem para nao misturar
+impressao de resultado com visita ao perfil. Impressoes de busca nao disparam notificacao `visualizacao_perfil` e tambem
+nao contabilizam autoimpressao do proprio psicologo.
+
 `profile_video_watch_session` (analytics do vídeo de apresentação, extensão da TASK-20):
 
 | Campo | Tipo | Notas |

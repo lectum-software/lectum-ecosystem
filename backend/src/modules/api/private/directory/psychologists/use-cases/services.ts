@@ -212,3 +212,23 @@ export const view = async (data: IProfileShowDTO) => {
     data: res,
   };
 };
+
+export const searchImpression = async (data: IProfileShowDTO) => {
+  const repository = new ProfileViewRepository();
+  const res = await repository.trackSearchResultImpression(data);
+
+  if (!res) {
+    return {
+      status: 404,
+      ...error("not_found", {
+        model: "psychologist_profile",
+      }),
+    };
+  }
+
+  return {
+    status: 200,
+    ...msg("store", {}),
+    data: res,
+  };
+};

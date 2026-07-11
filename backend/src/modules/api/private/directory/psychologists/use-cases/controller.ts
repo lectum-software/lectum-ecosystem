@@ -5,6 +5,7 @@ import service, {
   contact as contactService,
   posts as postsService,
   reviews as reviewsService,
+  searchImpression as searchImpressionService,
   show as showService,
   videoWatch as videoWatchService,
   view as viewService,
@@ -91,5 +92,17 @@ export const view = async (req: Request, res: Response) => {
     return send(res, resolve);
   } catch (err) {
     return error500(res, "directory_psychologists_view", err);
+  }
+};
+
+export const searchImpression = async (req: Request, res: Response) => {
+  try {
+    const resolve = await searchImpressionService(
+      req as unknown as Parameters<typeof searchImpressionService>[0],
+    );
+
+    return send(res, resolve);
+  } catch (err) {
+    return error500(res, "directory_psychologists_search_impression", err);
   }
 };

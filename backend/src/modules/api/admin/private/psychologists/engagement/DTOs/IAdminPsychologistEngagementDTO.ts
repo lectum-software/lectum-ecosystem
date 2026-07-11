@@ -39,6 +39,7 @@ export type AdminPsychologistStatisticsSeriesPoint = {
   profile_views: number;
   replies: number;
   saves: number;
+  search_results: number;
   whatsapp_clicks: number;
   posts: number;
 };
@@ -79,7 +80,7 @@ export type AdminPsychologistStatisticsDTO = {
     series: AdminPsychologistStatisticsSeriesPoint[];
   };
   period: AdminPsychologistStatisticsPeriod;
-  source: "profile_events+community_activity+video_sessions";
+  source: "profile_events+community_activity+video_sessions+search_impressions";
   unavailable: AdminPsychologistAvailabilityMetric[];
   video: AdminPsychologistStatisticsVideo;
 };

@@ -39,6 +39,20 @@ A Lectum já registra dados reais em eventos e tabelas de domínio, incluindo `p
 - A evolução futura de tracking de busca e respostas pode preencher os mesmos campos sem alterar o contrato principal, desde que a fonte real seja persistida.
 - A leitura de publicações não interfere no fluxo público de comunidades nem adiciona poderes de moderação fora do escopo aprovado.
 
+## Emenda 2026-07-11 — resultados de busca
+
+O contador **Resultados de busca** deixou de ser indisponível porque a listagem pública de psicólogos passou a registrar uma impressão real quando um card/slide de psicólogo fica ativo na busca.
+
+Decisão complementar:
+
+- Reutilizar `profile_view_event.source` para separar fontes sem criar tabela nova:
+  - `source="profile_page"` continua representando abertura real do perfil;
+  - `source="search_result"` representa impressão real do psicólogo em resultados de busca/listagem.
+- O endpoint público/optional-auth `POST /api/private/directory/psychologists/:id/search-impression` persiste a impressão de resultado sem disparar notificação de visualização de perfil.
+- Métricas de abertura de perfil no Admin, dashboard de psicólogos e analytics do psicólogo passam a filtrar `source="profile_page"`, evitando misturar impressão de busca com visita ao perfil.
+- A aba Admin **Estatísticas** passa a preencher o card **Resultados de busca** por `profile_view_event.source=search_result`.
+- A UI deduplica impressões por psicólogo e conjunto de search params na sessão renderizada, sem seed, mock ou estimativa.
+
 ## Validação
 
 - `pnpm --dir backend check`
@@ -50,6 +64,19 @@ A Lectum já registra dados reais em eventos e tabelas de domínio, incluindo `p
   - `GET /api/admin/private/psychologists/:id/statistics` retornou `200` com cards reais de negócio/comunidade e vídeo disponível quando há sessões reais;
   - `GET /api/admin/private/psychologists/:id/publications` retornou `200` com publicações reais de `community_post`/`post_reply`, filtros e paginação.
 - Browser local via Edge/CDP em `http://localhost:3002/psicologos/demo-profile-marina-rocha?tab=estatisticas` e `?tab=publicacoes`, com login administrativo real, confirmou renderização das duas abas, estado mobile-first em 390px, fontes reais e avisos de métricas indisponíveis.
+
+Validação da emenda de 2026-07-11:
+
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- Smoke real `POST /api/private/directory/psychologists/demo-psychologist-ana-luiza-mota/search-impression` retornou `200` com `tracked=true`.
+- Browser local/headless em 390x844 abriu `http://localhost:3000/psychologists?search=Ana`, exibiu Ana Luiza Mota e acionou o tracking real de impressão.
+- Leitura direta do service Admin `showAdminPsychologistStatistics` retornou o card `search_results` disponível com fonte `profile_view_event.source=search_result` e valor real persistido.
 
 ## Limitações da execução
 

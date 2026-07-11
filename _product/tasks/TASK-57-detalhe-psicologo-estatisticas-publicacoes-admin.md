@@ -100,3 +100,10 @@ Exibir estatÃ­sticas de negÃ³cio/comunidade e publicaÃ§Ãµes do psicÃ³logo com da
 - ReferÃªncias visuais usadas: `_product/proto/admin/PsicÃ³logos/Detalhes do psicÃ³logo/EstatÃ­sticas.png` e `_product/proto/admin/PsicÃ³logos/Detalhes do psicÃ³logo/PublicaÃ§Ãµes.png`; Builder/Quick Copy nÃ£o estava disponÃ­vel no ambiente.
 - ADR criado: `adrs/0237-admin-psicologo-estatisticas-publicacoes.md`.
 - ValidaÃ§Ãµes executadas: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check`, API local autenticada e browser local via Edge/CDP nas abas `estatisticas` e `publicacoes`.
+
+### Correção pós-validação em 2026-07-11
+
+- Ativado o contador **Resultados de busca** na aba Admin **Estatísticas** com tracking real de impressão do psicólogo quando o card/slide fica ativo na listagem pública.
+- A persistência reaproveita `profile_view_event.source="search_result"` e preserva `source="profile_page"` para aberturas reais do perfil, sem criar mock, seed ou estimativa.
+- O endpoint `POST /api/private/directory/psychologists/:id/search-impression` usa `optionalAuth`, não dispara notificação de visualização de perfil e ignora autoimpressão do próprio psicólogo.
+- As métricas existentes de visualização de perfil passaram a filtrar `source="profile_page"` para não misturar resultados de busca com visitas ao perfil.

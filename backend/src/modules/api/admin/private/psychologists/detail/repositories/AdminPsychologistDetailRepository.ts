@@ -369,6 +369,7 @@ export class AdminPsychologistDetailRepository {
       where: {
         deleted: false,
         psychologist_id: psychologistId,
+        source: "profile_page",
       },
     });
   }

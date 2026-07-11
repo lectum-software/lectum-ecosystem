@@ -6,14 +6,16 @@ import type {
 } from "../DTOs/IProfileDTO";
 
 const PROFILE_VIEW_ANTI_SPAM_WINDOW_MS = 6 * 60 * 60 * 1000;
+const PROFILE_PAGE_SOURCE = "profile_page";
+const SEARCH_RESULT_SOURCE = "search_result";
 
 const recentWindowStart = () => new Date(Date.now() - PROFILE_VIEW_ANTI_SPAM_WINDOW_MS);
 
 export class ProfileViewRepository {
-  async track(data: IProfileShowDTO): Promise<DirectoryPsychologistProfileViewResponse | null> {
-    const psychologist = await prisma.user.findFirst({
+  private async findTrackablePsychologist(id: string) {
+    return prisma.user.findFirst({
       where: {
-        id: data.p.id,
+        id,
         deleted: false,
         role: "psicologo",
         psychologist_profile: {
@@ -38,6 +40,10 @@ export class ProfileViewRepository {
         },
       },
     });
+  }
+
+  async track(data: IProfileShowDTO): Promise<DirectoryPsychologistProfileViewResponse | null> {
+    const psychologist = await this.findTrackablePsychologist(data.p.id);
 
     if (!psychologist) return null;
 
@@ -57,6 +63,7 @@ export class ProfileViewRepository {
         gte: recentWindowStart(),
       },
       deleted: false,
+      source: PROFILE_PAGE_SOURCE,
       ...(viewerId
         ? {
             viewer_id: viewerId,
@@ -86,6 +93,7 @@ export class ProfileViewRepository {
       data: {
         device_id: deviceId ?? null,
         psychologist_id: psychologist.id,
+        source: PROFILE_PAGE_SOURCE,
         viewer_id: viewerId,
       },
       select: {
@@ -97,6 +105,42 @@ export class ProfileViewRepository {
 
     return {
       notification_event_id: canNotify ? view.id : null,
+      tracked: true,
+    };
+  }
+
+  async trackSearchResultImpression(
+    data: IProfileShowDTO,
+  ): Promise<DirectoryPsychologistProfileViewResponse | null> {
+    const psychologist = await this.findTrackablePsychologist(data.p.id);
+
+    if (!psychologist) return null;
+
+    if (data.auth?.id === psychologist.id) {
+      return {
+        notification_event_id: null,
+        tracked: false,
+      };
+    }
+
+    const rawDevice = data.headers?.["x-device"];
+    const deviceId = Array.isArray(rawDevice) ? rawDevice[0] : rawDevice;
+    const viewerId = data.auth?.id ?? null;
+
+    await prisma.profile_view_event.create({
+      data: {
+        device_id: deviceId ?? null,
+        psychologist_id: psychologist.id,
+        source: SEARCH_RESULT_SOURCE,
+        viewer_id: viewerId,
+      },
+      select: {
+        id: true,
+      },
+    });
+
+    return {
+      notification_event_id: null,
       tracked: true,
     };
   }

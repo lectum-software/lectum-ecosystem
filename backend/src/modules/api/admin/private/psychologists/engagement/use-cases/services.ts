@@ -228,11 +228,13 @@ const buildSeries = (input: {
   profileViews: { createdAt: Date }[];
   replies: { createdAt: Date }[];
   replySaves: { createdAt: Date }[];
+  searchResults: { createdAt: Date }[];
   whatsappClicks: { createdAt: Date }[];
 }): AdminPsychologistStatisticsSeriesPoint[] => {
   const profileViews = groupDateCounts(input.profileViews, input.labels);
   const whatsappClicks = groupDateCounts(input.whatsappClicks, input.labels);
   const favorites = groupDateCounts(input.favorites, input.labels);
+  const searchResults = groupDateCounts(input.searchResults, input.labels);
   const posts = groupDateCounts(input.posts, input.labels);
   const replies = groupDateCounts(input.replies, input.labels);
   const commentsReceived = groupDateCounts(input.commentsReceived, input.labels);
@@ -245,6 +247,7 @@ const buildSeries = (input: {
     profile_views: valueFromMap(profileViews, date),
     replies: valueFromMap(replies, date),
     saves: valueFromMap(saves, date),
+    search_results: valueFromMap(searchResults, date),
     whatsapp_clicks: valueFromMap(whatsappClicks, date),
     posts: valueFromMap(posts, date),
   }));
@@ -403,16 +406,25 @@ export const showAdminPsychologistStatistics = async (
   if (!profile) return notFound();
 
   const userId = profile.user.id;
-  const [profileViews, whatsappClicks, favorites, videoSessions, posts, replies, memberships] =
-    await Promise.all([
-      repository.listProfileViews(userId, period.current.start, period.current.end),
-      repository.listWhatsappClicks(userId, period.current.start, period.current.end),
-      repository.listFavorites(userId, period.current.start, period.current.end),
-      repository.listVideoSessions(userId, period.current.start, period.current.end),
-      repository.listAuthoredPosts(userId, period.current.start, period.current.end),
-      repository.listAuthoredReplies(userId, period.current.start, period.current.end),
-      repository.listCommunities(userId),
-    ]);
+  const [
+    profileViews,
+    whatsappClicks,
+    favorites,
+    searchResults,
+    videoSessions,
+    posts,
+    replies,
+    memberships,
+  ] = await Promise.all([
+    repository.listProfileViews(userId, period.current.start, period.current.end),
+    repository.listWhatsappClicks(userId, period.current.start, period.current.end),
+    repository.listFavorites(userId, period.current.start, period.current.end),
+    repository.listSearchResultImpressions(userId, period.current.start, period.current.end),
+    repository.listVideoSessions(userId, period.current.start, period.current.end),
+    repository.listAuthoredPosts(userId, period.current.start, period.current.end),
+    repository.listAuthoredReplies(userId, period.current.start, period.current.end),
+    repository.listCommunities(userId),
+  ]);
 
   const postIds = posts.map((post) => post.id);
   const replyIds = replies.map((reply) => reply.id);
@@ -422,14 +434,7 @@ export const showAdminPsychologistStatistics = async (
     repository.listCommentsReceived(postIds, userId, period.current.start, period.current.end),
   ]);
   const savesCount = postSaves.length + replySaves.length;
-  const unavailable = [
-    unavailableMetric(
-      "search_results",
-      "Resultados de busca",
-      "not_tracked",
-      "Não existe tracking real de impressões em resultados de busca nesta etapa.",
-    ),
-  ];
+  const unavailable: AdminPsychologistAvailabilityMetric[] = [];
   const series = buildSeries({
     commentsReceived,
     favorites,
@@ -439,6 +444,7 @@ export const showAdminPsychologistStatistics = async (
     profileViews,
     replies,
     replySaves,
+    searchResults,
     whatsappClicks,
   });
 
@@ -448,7 +454,7 @@ export const showAdminPsychologistStatistics = async (
         metric({
           id: "profile_views",
           label: "Visualizações de perfil",
-          source: "profile_view_event",
+          source: "profile_view_event.source=profile_page",
           value: profileViews.length,
         }),
         metric({
@@ -463,7 +469,12 @@ export const showAdminPsychologistStatistics = async (
           source: "psychologist_favorite",
           value: favorites.length,
         }),
-        ...unavailable,
+        metric({
+          id: "search_results",
+          label: "Resultados de busca",
+          source: "profile_view_event.source=search_result",
+          value: searchResults.length,
+        }),
       ],
       series,
     },
@@ -498,7 +509,7 @@ export const showAdminPsychologistStatistics = async (
       series,
     },
     period: period.period,
-    source: "profile_events+community_activity+video_sessions",
+    source: "profile_events+community_activity+video_sessions+search_impressions",
     unavailable,
     video: buildVideo(profile, videoSessions),
   };

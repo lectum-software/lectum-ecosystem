@@ -44,6 +44,7 @@ import {
 import { createPortal } from "react-dom";
 import { useAccount } from "@/api/callers/account";
 import {
+  useDirectoryPsychologistSearchImpression,
   useDirectoryPsychologists,
   useDirectoryPsychologistVideoWatch,
 } from "@/api/callers/directory";
@@ -1128,6 +1129,7 @@ export const PsychologistsLogic = () => {
   const hasShownOnboardingTipThisVisitRef = useRef(false);
   const hasPersistedMySearchTipSeenRef = useRef(false);
   const hasPersistedWhatsappTipSeenRef = useRef(false);
+  const searchImpressionKeysRef = useRef<Set<string>>(new Set());
   const hasPlayedSwipeNudgeRef = useRef(false);
   const suppressNextTapRef = useRef(false);
   const didLongPressRef = useRef(false);
@@ -1207,6 +1209,7 @@ export const PsychologistsLogic = () => {
   const { mutate: trackFeaturedVideoWatch } = useDirectoryPsychologistVideoWatch(
     featuredPsychologistId ?? "",
   );
+  const { mutate: trackSearchResultImpression } = useDirectoryPsychologistSearchImpression();
 
   const handleFilterSearchChange = useCallback((value: string) => {
     setFilterModalSearchDraft(value);
@@ -1314,6 +1317,25 @@ export const PsychologistsLogic = () => {
   );
 
   const showInitialLoading = directory.isLoading && !response;
+  useEffect(() => {
+    if (showInitialLoading || directory.isFetching || errorMessage || !featuredPsychologistId) {
+      return;
+    }
+
+    const impressionKey = `${searchParamsString || "default"}:${featuredPsychologistId}`;
+    if (searchImpressionKeysRef.current.has(impressionKey)) return;
+
+    searchImpressionKeysRef.current.add(impressionKey);
+    trackSearchResultImpression(featuredPsychologistId);
+  }, [
+    directory.isFetching,
+    errorMessage,
+    featuredPsychologistId,
+    searchParamsString,
+    showInitialLoading,
+    trackSearchResultImpression,
+  ]);
+
   const canSwipeBetweenPsychologists = psychologists.length > 1;
   const infoSectionBottom = `calc(${metrics.navBarHeight}px + env(safe-area-inset-bottom) + ${metrics.bioBottomOffset}px)`;
   const searchSuggestionItems = useMemo(

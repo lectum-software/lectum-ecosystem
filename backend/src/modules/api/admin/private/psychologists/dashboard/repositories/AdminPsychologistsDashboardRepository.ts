@@ -259,6 +259,7 @@ export class AdminPsychologistsDashboardRepository
       where: {
         createdAt: eventCreatedAtWhere(range),
         deleted: false,
+        source: "profile_page",
       },
       select: {
         createdAt: true,

@@ -105,6 +105,20 @@ export const trackDirectoryPsychologistProfileView = async (id: string) => {
   });
 };
 
+export const trackDirectoryPsychologistSearchImpression = async (id: string) => {
+  const handle = callEndpoint({
+    route: "/api/private/directory/psychologists/:id/search-impression",
+    method: "POST",
+    params: { id },
+  });
+
+  return handleReq<DirectoryPsychologistProfileViewResponse>({
+    ...handle,
+    hideError: true,
+    signOutOnUnauthorized: false,
+  });
+};
+
 export const trackDirectoryPsychologistVideoWatch = async (
   id: string,
   body: DirectoryPsychologistVideoWatchPayload,

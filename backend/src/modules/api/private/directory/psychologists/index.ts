@@ -6,6 +6,7 @@ import {
   index,
   posts,
   reviews,
+  searchImpression,
   show,
   videoWatch,
   view,
@@ -31,6 +32,7 @@ routes.get(
 routes.post("/:id/contact", optionalAuth, contactValidator, contact);
 routes.post("/:id/contact-click", optionalAuth, profileShowValidator, contactClick);
 routes.post("/:id/view", optionalAuth, profileShowValidator, view);
+routes.post("/:id/search-impression", optionalAuth, profileShowValidator, searchImpression);
 routes.post("/:id/video-watch", optionalAuth, profileVideoWatchValidator, videoWatch);
 routes.get("/:id/posts", optionalAuth, profileListValidator, posts);
 routes.get("/:id/reviews", optionalAuth, profileListValidator, reviews);

@@ -155,6 +155,16 @@ export const useDirectoryPsychologistProfileView = (
     onSuccess: callbacks?.onSuccess,
   });
 
+export const useDirectoryPsychologistSearchImpression = (callbacks?: {
+  onError?: (error: unknown) => void;
+  onSuccess?: (data: DirectoryPsychologistProfileViewResponse) => void;
+}) =>
+  useMutation({
+    mutationFn: (id: string) => api.trackDirectoryPsychologistSearchImpression(id),
+    onError: callbacks?.onError,
+    onSuccess: callbacks?.onSuccess,
+  });
+
 export const useDirectoryPsychologistVideoWatch = (
   id: string,
   callbacks?: {

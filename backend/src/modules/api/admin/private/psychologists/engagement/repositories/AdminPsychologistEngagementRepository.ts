@@ -75,6 +75,9 @@ const replySelect = {
   },
 } satisfies Prisma.post_replySelect;
 
+const PROFILE_PAGE_SOURCE = "profile_page";
+const SEARCH_RESULT_SOURCE = "search_result";
+
 export type AdminPsychologistEngagementProfile = Prisma.psychologist_profileGetPayload<{
   select: typeof psychologistSelect;
 }>;
@@ -111,6 +114,19 @@ export class AdminPsychologistEngagementRepository {
         createdAt: { gte: from, lte: to },
         deleted: false,
         psychologist_id: psychologistId,
+        source: PROFILE_PAGE_SOURCE,
+      },
+      select: { createdAt: true },
+    });
+  }
+
+  async listSearchResultImpressions(psychologistId: string, from: Date, to: Date) {
+    return prisma.profile_view_event.findMany({
+      where: {
+        createdAt: { gte: from, lte: to },
+        deleted: false,
+        psychologist_id: psychologistId,
+        source: SEARCH_RESULT_SOURCE,
       },
       select: { createdAt: true },
     });

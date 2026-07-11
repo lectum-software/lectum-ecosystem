@@ -229,6 +229,7 @@ export class PsychologistAnalyticsRepository implements IPsychologistAnalyticsRe
           psychologist_id: userId,
           deleted: false,
           createdAt: createdAtWindow,
+          source: "profile_page",
           OR: [
             {
               viewer_id: null,
