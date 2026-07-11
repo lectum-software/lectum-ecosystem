@@ -3414,11 +3414,6 @@ const AccountTab = ({ id }: { id: string }) => {
 
   return (
     <div className="space-y-5" data-psychologist-detail-tab="conta">
-      <div className="rounded-2xl border border-primary/20 bg-primary-soft p-4 text-sm font-bold leading-6 text-muted">
-        Ações desta aba são administrativas, exigem motivo interno e não impersonam o psicólogo.
-        Alteração de e-mail e senha temporária encerram sessões reais em user_token.
-      </div>
-
       {googleOnly ? (
         <CardShell className="p-4">
           <div className="flex gap-3">
@@ -3426,8 +3421,8 @@ const AccountTab = ({ id }: { id: string }) => {
             <div>
               <h2 className="text-lg font-black text-foreground">Conta Google sem senha local</h2>
               <p className="mt-1 text-sm font-bold leading-6 text-muted">
-                Esta conta acessa via Google. Alteração de senha local e criação de senha local
-                estão fora do escopo desta task.
+                Esta conta acessa via Google. Alteração ou criação de senha local estão
+                indisponíveis.
               </p>
             </div>
           </div>
