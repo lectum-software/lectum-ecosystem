@@ -619,10 +619,6 @@ const DetailContent = ({ detail }: { detail: AdminPatientDetail }) => (
       </div>
     </div>
     <PrivacyNotes detail={detail} />
-    <p className="text-xs text-muted">
-      Referência visual: _product/proto/admin/Pacientes/Pacientes - Detalhes.png. Builder/Quick Copy
-      não está disponível neste ambiente; a implementação foi feita a partir da imagem local.
-    </p>
   </div>
 );
 export const AdminPatientDetailClient = ({ id }: { id: string }) => {

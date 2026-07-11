@@ -799,11 +799,6 @@ const DashboardContent = ({ summary }: { summary: AdminPatientsDashboard }) => (
     <RecentPatients summary={summary} />
     <Statistics summary={summary} />
     <CoverageNotes summary={summary} />
-
-    <p className="text-xs text-muted">
-      Referência visual: _product/proto/admin/Pacientes/Pacientes - Dashboard.png. Builder/Quick
-      Copy não está disponível neste ambiente; a implementação foi feita a partir da imagem local.
-    </p>
   </div>
 );
 

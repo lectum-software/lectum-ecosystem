@@ -284,9 +284,6 @@ const Header = ({
         Gerencie e envie notificações reais para usuários da plataforma. Esta área não é uma caixa
         de entrada do administrador.
       </p>
-      <p className="mt-2 text-xs font-bold text-muted">
-        Referência visual usada: _product/proto/admin/Notificações.png.
-      </p>
     </div>
     <div className="flex flex-col gap-3 xl:items-end">
       <div className="grid gap-3 sm:grid-cols-[1fr_1fr_auto]">

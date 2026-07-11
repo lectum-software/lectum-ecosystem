@@ -939,12 +939,6 @@ export const AdminPsychologistsListClient = () => {
           </div>
         </div>
       ) : null}
-
-      <p className="rounded-2xl bg-primary-soft/70 px-4 py-3 text-xs font-bold text-muted">
-        Referência visual: _product/proto/admin/Psicólogos/Psicólogos- Lista.png. Builder/Quick Copy
-        não está disponível neste ambiente, então a implementação foi feita a partir da imagem
-        local.
-      </p>
     </div>
   );
 };

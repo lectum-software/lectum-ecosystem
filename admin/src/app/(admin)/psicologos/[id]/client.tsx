@@ -4413,18 +4413,6 @@ const Content = ({
     ) : (
       <GeneralTab detail={detail} />
     )}
-
-    <p className="rounded-2xl bg-primary-soft/70 px-4 py-3 text-xs font-bold text-muted">
-      Referências visuais: _product/proto/admin/Psicólogos/Detalhes do psicólogo/Geral.png,
-      _product/proto/admin/Psicólogos/Detalhes do psicólogo/Perfil e Cadastro.png e
-      _product/proto/admin/Psicólogos/Detalhes do psicólogo/Plano e pagamentos.png,
-      _product/proto/admin/Psicólogos/Detalhes do psicólogo/Estatísticas.png e
-      _product/proto/admin/Psicólogos/Detalhes do psicólogo/Publicações.png,
-      _product/proto/admin/Psicólogos/Detalhes do psicólogo/Avaliações.png e
-      _product/proto/admin/Psicólogos/Detalhes do psicólogo/Denúncias.png,
-      _product/proto/admin/Psicólogos/Detalhes do psicólogo/Atividades.png. Builder/Quick Copy não
-      está disponível neste ambiente; a implementação foi feita a partir das imagens locais.
-    </p>
   </main>
 );
 

@@ -821,11 +821,6 @@ export const AdminSettingsClient = () => {
         </>
       )}
 
-      <div className="rounded-2xl border border-primary/10 bg-primary-soft/60 p-4 text-sm leading-6 text-primary">
-        Referência visual: _product/proto/admin/Configurações.png. Builder/Quick Copy não está
-        acessível como ferramenta neste ambiente, então a execução usou a imagem local exportada.
-      </div>
-
       {modal ? (
         <CatalogModal
           categories={categories}

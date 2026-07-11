@@ -685,11 +685,6 @@ const DashboardContent = ({ dashboard }: { dashboard: AdminFinanceDashboard }) =
     <RevenuePanel dashboard={dashboard} />
     <NewSubscriptions dashboard={dashboard} />
     <CoverageNotes dashboard={dashboard} />
-
-    <p className="text-xs text-muted">
-      Referência visual: _product/proto/admin/Financeiro.png. Nenhum dado foi simulado; a tela
-      consome endpoints privados reais do Admin.
-    </p>
   </div>
 );
 
