@@ -53,6 +53,18 @@ Decisão complementar:
 - A aba Admin **Estatísticas** passa a preencher o card **Resultados de busca** por `profile_view_event.source=search_result`.
 - A UI deduplica impressões por psicólogo e conjunto de search params na sessão renderizada, sem seed, mock ou estimativa.
 
+## Emenda 2026-07-11 — controles integrados ao gráfico
+
+A área superior da aba **Estatísticas** passa a priorizar leitura comparativa:
+
+- os cards de negócio viram botões acessíveis (`aria-pressed`) para mostrar/esconder as séries do gráfico;
+- o gráfico de evolução passa a exibir curvas das métricas ativas, incluindo **Resultados de busca**;
+- pelo menos uma métrica disponível permanece ativa para evitar gráfico vazio por acidente;
+- no desktop, a área superior usa duas colunas: à esquerda ficam contadores e evolução do período; à direita ficam dados gráficos/estatísticos do vídeo de apresentação;
+- no mobile, a composição continua empilhada para preservar leitura em ~390px.
+
+Essa mudança é apenas de apresentação e interação no Admin: não altera contrato de API, fonte de dados, tracking ou persistência.
+
 ## Validação
 
 - `pnpm --dir backend check`
@@ -77,6 +89,12 @@ Validação da emenda de 2026-07-11:
 - Smoke real `POST /api/private/directory/psychologists/demo-psychologist-ana-luiza-mota/search-impression` retornou `200` com `tracked=true`.
 - Browser local/headless em 390x844 abriu `http://localhost:3000/psychologists?search=Ana`, exibiu Ana Luiza Mota e acionou o tracking real de impressão.
 - Leitura direta do service Admin `showAdminPsychologistStatistics` retornou o card `search_results` disponível com fonte `profile_view_event.source=search_result` e valor real persistido.
+
+Validação da emenda de controles integrados:
+
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- Smoke HTTP local em `http://localhost:3002/psicologos/cmrglzdds000ajkuhqedavedb?tab=estatisticas` retornou `200`.
 
 ## Limitações da execução
 

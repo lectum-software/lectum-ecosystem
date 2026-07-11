@@ -337,6 +337,56 @@ const GENERAL_METRIC_LABELS: Record<string, string> = {
   rating_avg: "Avaliação",
 };
 
+const BUSINESS_CHART_METRICS = [
+  {
+    dotRadius: 5.5,
+    icon: Eye,
+    id: "profile_views",
+    key: "profile_views",
+    label: "Visualizações",
+    strokeClassName: "stroke-primary",
+    swatchClassName: "bg-primary",
+  },
+  {
+    dotRadius: 4.7,
+    icon: MessageCircle,
+    id: "whatsapp_clicks",
+    key: "whatsapp_clicks",
+    label: "WhatsApp",
+    strokeClassName: "stroke-emerald-500",
+    swatchClassName: "bg-emerald-500",
+  },
+  {
+    dotRadius: 3.9,
+    icon: Heart,
+    id: "favorites",
+    key: "favorites",
+    label: "Favoritos",
+    strokeClassName: "stroke-pink-500",
+    swatchClassName: "bg-pink-500",
+  },
+  {
+    dotRadius: 3.1,
+    icon: Search,
+    id: "search_results",
+    key: "search_results",
+    label: "Resultados de busca",
+    strokeClassName: "stroke-blue-500",
+    swatchClassName: "bg-blue-500",
+  },
+] as const satisfies readonly {
+  dotRadius: number;
+  icon: LucideIcon;
+  id: string;
+  key: keyof AdminPsychologistStatistics["business"]["series"][number];
+  label: string;
+  strokeClassName: string;
+  swatchClassName: string;
+}[];
+
+type BusinessChartMetric = (typeof BUSINESS_CHART_METRICS)[number];
+type BusinessChartMetricId = BusinessChartMetric["id"];
+
 const CARD = "rounded-card border border-border bg-surface shadow-admin-soft";
 
 const courtesyBaseSchema = z.object({
@@ -1538,6 +1588,176 @@ const EngagementMetricCard = ({
   </div>
 );
 
+const BusinessMetricToggleCard = ({
+  active,
+  config,
+  metric,
+  onToggle,
+}: {
+  active: boolean;
+  config: BusinessChartMetric;
+  metric: AdminPsychologistEngagementMetric;
+  onToggle: () => void;
+}) => (
+  <button
+    aria-pressed={active}
+    className={cn(
+      "rounded-2xl border p-4 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2",
+      active
+        ? "border-primary/40 bg-surface text-foreground shadow-admin-soft"
+        : "border-border bg-surface text-muted hover:border-primary/30 hover:bg-primary-soft/30",
+      !metric.available && "cursor-not-allowed bg-surface-muted opacity-70 hover:border-border",
+    )}
+    disabled={!metric.available}
+    onClick={onToggle}
+    type="button"
+  >
+    <span className="flex items-start justify-between gap-3">
+      <MetricIconCircle icon={config.icon} metricId={metric.id} />
+      <span
+        className={cn(
+          "inline-flex items-center gap-1.5 rounded-full px-2 py-1 text-[10px] font-black uppercase tracking-wide",
+          active ? "bg-primary-soft text-primary" : "bg-surface-muted text-muted",
+        )}
+      >
+        <span
+          className={cn(
+            "h-2 w-2 rounded-full",
+            active ? config.swatchClassName : "bg-current opacity-40",
+          )}
+        />
+        {!metric.available ? "Indisponível" : active ? "No gráfico" : "Oculto"}
+      </span>
+    </span>
+    <span className="mt-4 block text-sm font-black text-muted">{metric.label}</span>
+    <span className="mt-2 block text-2xl font-black text-foreground">
+      {formatEngagementMetricValue(metric)}
+    </span>
+    {!metric.available && metric.unavailable_reason ? (
+      <span className="mt-2 block text-xs font-bold text-muted">{metric.unavailable_reason}</span>
+    ) : null}
+  </button>
+);
+
+const BusinessSeriesChart = ({
+  keys,
+  points,
+}: {
+  keys: BusinessChartMetric[];
+  points: AdminPsychologistStatistics["business"]["series"];
+}) => {
+  if (keys.length === 0) {
+    return (
+      <div className="mt-5 rounded-2xl border border-dashed border-border bg-surface-muted p-6 text-sm font-bold text-muted">
+        Selecione pelo menos um contador disponível para visualizar a evolução.
+      </div>
+    );
+  }
+  if (points.length === 0) {
+    return (
+      <div className="mt-5 rounded-2xl border border-dashed border-border bg-surface-muted p-6 text-sm font-bold text-muted">
+        Nenhum ponto real de evolução foi encontrado para o período.
+      </div>
+    );
+  }
+
+  const chartWidth = Math.max(760, points.length * 30);
+  const chartHeight = 220;
+  const paddingX = 24;
+  const paddingY = 22;
+  const innerWidth = chartWidth - paddingX * 2;
+  const innerHeight = chartHeight - paddingY * 2;
+  const max = Math.max(
+    1,
+    ...points.flatMap((point) => keys.map((item) => Number(point[item.key] ?? 0))),
+  );
+  const xFor = (index: number) =>
+    paddingX + (points.length <= 1 ? innerWidth / 2 : (index / (points.length - 1)) * innerWidth);
+  const yFor = (value: number) => paddingY + innerHeight - (value / max) * innerHeight;
+
+  return (
+    <div className="mt-5 overflow-x-auto rounded-2xl bg-surface-muted p-4">
+      <div style={{ width: chartWidth }}>
+        <svg
+          aria-label="Evolução do período por contador selecionado"
+          className="block"
+          height={chartHeight}
+          role="img"
+          viewBox={`0 0 ${chartWidth} ${chartHeight}`}
+          width={chartWidth}
+        >
+          <title>Evolução do período</title>
+          {[0, 0.25, 0.5, 0.75, 1].map((ratio) => {
+            const y = paddingY + innerHeight * ratio;
+
+            return (
+              <line
+                className="stroke-border"
+                key={ratio}
+                strokeDasharray={ratio === 1 ? "0" : "4 6"}
+                strokeWidth="1"
+                x1={paddingX}
+                x2={chartWidth - paddingX}
+                y1={y}
+                y2={y}
+              />
+            );
+          })}
+          {keys.map((item) => {
+            const linePoints = points
+              .map((point, index) => `${xFor(index)},${yFor(Number(point[item.key] ?? 0))}`)
+              .join(" ");
+
+            return (
+              <polyline
+                className={cn("fill-none opacity-90", item.strokeClassName)}
+                key={item.id}
+                points={linePoints}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="3"
+              />
+            );
+          })}
+          {keys.map((item) =>
+            points.map((point, index) => {
+              const value = Number(point[item.key] ?? 0);
+
+              return (
+                <circle
+                  className={cn("fill-surface-muted", item.strokeClassName)}
+                  cx={xFor(index)}
+                  cy={yFor(value)}
+                  key={`${item.id}-${point.date}`}
+                  r={item.dotRadius}
+                  strokeWidth="2.4"
+                >
+                  <title>
+                    {point.date} · {item.label}: {numberFormatter.format(value)}
+                  </title>
+                </circle>
+              );
+            }),
+          )}
+        </svg>
+        <div
+          className="grid gap-1"
+          style={{ gridTemplateColumns: `repeat(${points.length}, minmax(22px, 1fr))` }}
+        >
+          {points.map((point) => (
+            <span
+              className="-rotate-45 whitespace-nowrap text-center text-[10px] font-bold text-subtle"
+              key={point.date}
+            >
+              {point.date.slice(5)}
+            </span>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const StatsBars = ({
   keys,
   points,
@@ -1593,9 +1813,11 @@ const StatsBars = ({
 };
 
 const StatisticsVideoCard = ({
+  className,
   detail,
   statistics,
 }: {
+  className?: string;
   detail: AdminPsychologistDetail;
   statistics: AdminPsychologistStatistics;
 }) => {
@@ -1603,7 +1825,7 @@ const StatisticsVideoCard = ({
   const cover = renderableImageSrc(video.cover_url || detail.profile.content.cover_image_url);
 
   return (
-    <CardShell className="p-5">
+    <CardShell className={cn("p-5", className)}>
       <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h2 className="text-xl font-black text-foreground">Análises do vídeo de apresentação</h2>
@@ -1701,6 +1923,21 @@ const StatisticsVideoCard = ({
 
 const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: string }) => {
   const query = useAdminPsychologistStatistics(id);
+  const [visibleBusinessMetricIds, setVisibleBusinessMetricIds] = useState<BusinessChartMetricId[]>(
+    () => BUSINESS_CHART_METRICS.map((item) => item.id),
+  );
+  const availableBusinessMetricIds = useMemo<BusinessChartMetricId[]>(() => {
+    const availableIds = new Set(
+      (query.data?.business.cards ?? [])
+        .filter((metric) => metric.available)
+        .map((metric) => metric.id),
+    );
+    const ids = BUSINESS_CHART_METRICS.filter((item) => availableIds.has(item.id)).map(
+      (item) => item.id,
+    );
+
+    return ids.length > 0 ? ids : BUSINESS_CHART_METRICS.map((item) => item.id);
+  }, [query.data?.business.cards]);
   const errorMessage = query.error ? resolveApiError(query.error) : null;
 
   if (query.isLoading) return <EngagementLoadingState />;
@@ -1710,42 +1947,69 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: st
   if (!query.data) return null;
 
   const statistics = query.data;
+  const businessMetricMap = new Map(statistics.business.cards.map((metric) => [metric.id, metric]));
+  const businessCards = BUSINESS_CHART_METRICS.flatMap((config) => {
+    const metric = businessMetricMap.get(config.id);
+
+    return metric ? [{ config, metric }] : [];
+  });
+  const visibleBusinessChartKeys = businessCards
+    .filter(
+      ({ config, metric }) => visibleBusinessMetricIds.includes(config.id) && metric.available,
+    )
+    .map(({ config }) => config);
+  const toggleBusinessMetric = (metricId: BusinessChartMetricId) => {
+    const metric = businessMetricMap.get(metricId);
+    if (!metric?.available) return;
+
+    setVisibleBusinessMetricIds((current) => {
+      if (!current.includes(metricId)) return [...current, metricId];
+
+      const next = current.filter((item) => item !== metricId);
+      const hasAnotherAvailable = next.some((item) => availableBusinessMetricIds.includes(item));
+
+      return hasAnotherAvailable ? next : current;
+    });
+  };
 
   return (
     <div className="space-y-5" data-psychologist-detail-tab="estatisticas">
-      <section>
-        <h2 className="mb-3 text-xl font-black text-foreground">Estatísticas de negócio</h2>
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          {statistics.business.cards.map((item) => (
-            <EngagementMetricCard
-              icon={
-                item.id === "profile_views"
-                  ? Eye
-                  : item.id === "whatsapp_clicks"
-                    ? MessageCircle
-                    : item.id === "favorites"
-                      ? Heart
-                      : Search
-              }
-              key={item.id}
-              metric={item}
-            />
-          ))}
-        </div>
-        <CardShell className="mt-5 p-5">
-          <h3 className="text-lg font-black text-foreground">Evolução do período</h3>
-          <StatsBars
-            keys={[
-              { color: "bg-primary", key: "profile_views", label: "Visualizações" },
-              { color: "bg-emerald-500", key: "whatsapp_clicks", label: "WhatsApp" },
-              { color: "bg-pink-500", key: "favorites", label: "Favoritos" },
-            ]}
-            points={statistics.business.series}
-          />
-        </CardShell>
-      </section>
+      <section className="grid gap-5 xl:grid-cols-[minmax(0,1.15fr)_minmax(360px,0.85fr)] xl:items-start">
+        <div className="space-y-5">
+          <div>
+            <h2 className="text-xl font-black text-foreground">Estatísticas de negócio</h2>
+            <p className="mt-1 text-sm font-bold text-muted">
+              Clique nos contadores para mostrar ou esconder as curvas no gráfico.
+            </p>
+            <div className="mt-3 grid gap-4 sm:grid-cols-2">
+              {businessCards.map(({ config, metric }) => (
+                <BusinessMetricToggleCard
+                  active={visibleBusinessMetricIds.includes(config.id) && metric.available}
+                  config={config}
+                  key={config.id}
+                  metric={metric}
+                  onToggle={() => toggleBusinessMetric(config.id)}
+                />
+              ))}
+            </div>
+          </div>
 
-      <StatisticsVideoCard detail={detail} statistics={statistics} />
+          <CardShell className="p-5">
+            <div>
+              <h3 className="text-lg font-black text-foreground">Evolução do período</h3>
+              <p className="mt-1 text-sm font-bold text-muted">
+                As curvas refletem somente os contadores ativos acima.
+              </p>
+            </div>
+            <BusinessSeriesChart
+              keys={visibleBusinessChartKeys}
+              points={statistics.business.series}
+            />
+          </CardShell>
+        </div>
+
+        <StatisticsVideoCard className="xl:h-full" detail={detail} statistics={statistics} />
+      </section>
 
       <section className="grid gap-5 xl:grid-cols-[1.1fr_0.9fr]">
         <CardShell className="p-5">
