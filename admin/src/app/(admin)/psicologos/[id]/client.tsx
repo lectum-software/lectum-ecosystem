@@ -433,6 +433,81 @@ const formatCpfInput = (value?: string | null) => {
   return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6, 9)}-${digits.slice(9)}`;
 };
 
+const formatCpfDisplay = (value?: string | null) => {
+  const formatted = formatCpfInput(value);
+
+  return formatted || formatNullable(value);
+};
+
+const formatPhoneDisplay = (value?: string | null) => {
+  const raw = String(value ?? "").trim();
+  if (!raw) return "Não informado";
+
+  const digits = onlyDigits(raw);
+  if (!digits) return raw;
+
+  const hasBrazilCode = digits.startsWith("55") && [12, 13].includes(digits.length);
+  const nationalDigits = hasBrazilCode ? digits.slice(2) : digits;
+  const prefix = hasBrazilCode ? "+55 " : "";
+
+  if (nationalDigits.length === 11) {
+    return `${prefix}(${nationalDigits.slice(0, 2)}) ${nationalDigits.slice(2, 7)}-${nationalDigits.slice(7)}`;
+  }
+
+  if (nationalDigits.length === 10) {
+    return `${prefix}(${nationalDigits.slice(0, 2)}) ${nationalDigits.slice(2, 6)}-${nationalDigits.slice(6)}`;
+  }
+
+  if (nationalDigits.length === 9) {
+    return `${nationalDigits.slice(0, 5)}-${nationalDigits.slice(5)}`;
+  }
+
+  if (nationalDigits.length === 8) {
+    return `${nationalDigits.slice(0, 4)}-${nationalDigits.slice(4)}`;
+  }
+
+  return raw;
+};
+
+const formatZipDisplay = (value?: string | null) => {
+  const raw = String(value ?? "").trim();
+  if (!raw) return null;
+
+  const digits = onlyDigits(raw);
+  if (digits.length === 8) return `${digits.slice(0, 5)}-${digits.slice(5)}`;
+
+  return raw;
+};
+
+const normalizeAddressPart = (value?: string | null) => {
+  const part = String(value ?? "").trim();
+
+  return part || null;
+};
+
+const formatPersonalAddress = (
+  address: AdminPsychologistDetail["profile"]["personal"]["address"],
+) => {
+  const formattedZip = formatZipDisplay(address.zip);
+  const line = [
+    normalizeAddressPart(address.street),
+    normalizeAddressPart(address.number),
+    normalizeAddressPart(address.complement),
+  ]
+    .filter(Boolean)
+    .join(", ");
+  const cityLine = [
+    normalizeAddressPart(address.district),
+    normalizeAddressPart(address.city),
+    normalizeAddressPart(address.state),
+    formattedZip ? `CEP ${formattedZip}` : null,
+  ]
+    .filter(Boolean)
+    .join(" - ");
+
+  return [line, cityLine].filter(Boolean).join("\n") || formatNullable(address.full);
+};
+
 const formatPaymentMethod = (method: AdminPsychologistBilling["payment_method"]) => {
   if (!method) return "Nao informado";
 
@@ -2815,18 +2890,18 @@ const ProfileTab = ({ detail }: { detail: AdminPsychologistDetail }) => {
       <div className="grid gap-5 xl:grid-cols-[0.95fr_1.05fr]">
         <div className="space-y-5">
           <InfoCard icon={UserRound} title="Dados pessoais">
-            <FieldRow label="CPF" value={formatNullable(personal.cpf)} />
+            <FieldRow label="CPF" value={formatCpfDisplay(personal.cpf)} />
             <FieldRow label="E-mail" value={personal.email} />
-            <FieldRow label="Telefone" value={formatNullable(personal.phone)} />
+            <FieldRow label="Telefone" value={formatPhoneDisplay(personal.phone)} />
             <FieldRow label="Data de nascimento" value={formatDate(personal.birthdate)} />
-            <FieldRow label="Cadastro via" value={formatNullable(personal.provider)} />
             <FieldRow
               label="Endereço completo"
               value={
-                <span className="whitespace-pre-line">{formatNullable(personal.address.full)}</span>
+                <span className="whitespace-pre-line">
+                  {formatPersonalAddress(personal.address)}
+                </span>
               }
             />
-            <FieldRow label="CEP" value={formatNullable(personal.address.zip)} />
           </InfoCard>
 
           <InfoCard icon={FileText} title="Dados profissionais">
