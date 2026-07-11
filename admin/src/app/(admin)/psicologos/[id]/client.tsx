@@ -3412,6 +3412,8 @@ const ProfileTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: strin
             />
           </InfoCard>
 
+          <RegistryVerificationCard id={id} />
+
           <InfoCard icon={FileText} title="Dados profissionais">
             <FieldRow label="Regional CRP" value={formatNullable(professional.regional_crp)} />
             <FieldRow
@@ -3442,8 +3444,6 @@ const ProfileTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: strin
             <FieldRow label="Cadastro via" value={formatNullable(personal.provider)} />
             <FieldRow label="Data cadastro Lectum" value={formatDate(detail.header.created_at)} />
           </InfoCard>
-
-          <RegistryVerificationCard id={id} />
 
           <InfoCard icon={BookOpen} title="Formação & Títulos">
             {hasAcademicFormation ? (
