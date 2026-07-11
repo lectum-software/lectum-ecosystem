@@ -8,7 +8,6 @@ import {
   BarChart3,
   Bookmark,
   BookOpen,
-  CalendarDays,
   CheckCircle2,
   ChevronLeft,
   ChevronRight,
@@ -2723,9 +2722,6 @@ const CourtesyGrantForm = ({ billing, id }: { billing: AdminPsychologistBilling;
       <div className="flex items-start justify-between gap-4">
         <div>
           <h2 className="text-xl font-black text-foreground">Conceder cortesia</h2>
-          <p className="mt-1 text-sm text-muted">
-            Usa a mesma regra operacional do comando subscription:grant.
-          </p>
         </div>
         <IconCircle icon={Gift} />
       </div>
@@ -2739,6 +2735,28 @@ const CourtesyGrantForm = ({ billing, id }: { billing: AdminPsychologistBilling;
       <FormProvider {...form}>
         <form className="mt-5 space-y-4" noValidate onSubmit={form.handleSubmit(onSubmit)}>
           <div className="grid gap-4 sm:grid-cols-3">
+            <SelectController<CourtesyFormValues>
+              disabled={disabled}
+              label="Regional CRP"
+              name="regional_crp"
+              options={regionalOptions}
+            />
+            <InputController<CourtesyFormValues>
+              autoComplete="off"
+              disabled={disabled}
+              label="CRP"
+              name="crp"
+              placeholder="Numero do registro"
+            />
+            <InputController<CourtesyFormValues>
+              disabled={disabled}
+              label="Data de inscricao no CRP"
+              name="crp_registration_date"
+              required={billing.courtesy.requires_crp_registration_date}
+              type="date"
+            />
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2">
             <InputController<CourtesyFormValues>
               autoComplete="off"
               disabled={disabled}
@@ -2751,21 +2769,7 @@ const CourtesyGrantForm = ({ billing, id }: { billing: AdminPsychologistBilling;
             />
             <SelectController<CourtesyFormValues>
               disabled={disabled}
-              label="Regional"
-              name="regional_crp"
-              options={regionalOptions}
-            />
-            <InputController<CourtesyFormValues>
-              autoComplete="off"
-              disabled={disabled}
-              label="CRP"
-              name="crp"
-              placeholder="Numero do registro"
-            />
-          </div>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <SelectController<CourtesyFormValues>
-              disabled={disabled}
+              insetChevron
               label="Periodo de cortesia"
               name="period_days"
               options={billing.courtesy.period_options.map((option) => ({
@@ -2773,13 +2777,6 @@ const CourtesyGrantForm = ({ billing, id }: { billing: AdminPsychologistBilling;
                 value: String(option.days),
               }))}
               required
-            />
-            <InputController<CourtesyFormValues>
-              disabled={disabled}
-              label="Data de inscricao no CRP"
-              name="crp_registration_date"
-              required={billing.courtesy.requires_crp_registration_date}
-              type="date"
             />
           </div>
           <TextareaController<CourtesyFormValues>
@@ -2804,16 +2801,6 @@ const CourtesyGrantForm = ({ billing, id }: { billing: AdminPsychologistBilling;
           </button>
         </form>
       </FormProvider>
-
-      <div className="mt-5 rounded-2xl bg-primary-soft p-4 text-sm font-bold text-muted">
-        <span className="inline-flex items-center gap-2 font-black text-primary">
-          <CalendarDays aria-hidden className="h-4 w-4" />
-          Regra de cobranca
-        </span>
-        <p className="mt-1">
-          A cortesia cria source=admin_grant, status=ativa e nao conta como receita.
-        </p>
-      </div>
     </CardShell>
   );
 };

@@ -225,3 +225,13 @@ Exibir plano, método e histórico financeiro do psicólogo e permitir concessã
 - Validacao API local com admin real no psicologo `cmrfgznww0014xouh2tmz5dbf`: `POST .../grant-courtesy` retornou cortesia `admin_grant/profissional` ativa e `POST .../revoke-courtesy` retornou o plano anterior `free_signup/gratuito` com `status=ativa`, `is_courtesy=false`, `can_revoke=false` e `can_grant=true`.
 - Validacao browser local headless Chrome/CDP em `http://localhost:3002/psicologos/cmrfgznww0014xouh2tmz5dbf?tab=plano` confirmou `Plano Gratuito` no card `Plano atual`, ausencia de `Plano de cortesia`/`Revogar cortesia` e retorno do formulario `Conceder cortesia`.
 - Validacoes executadas: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm check` e `git diff --check`.
+
+
+## Ajuste complementar 2026-07-11 - formulario de cortesia mais limpo
+
+- Pedido do usuario: simplificar o card `Conceder cortesia` removendo a frase operacional sobre o comando `subscription:grant` e o bloco `Regra de cobranca`.
+- A ordem visual dos campos passou a ser: `Regional CRP`, `CRP`, `Data de inscricao no CRP`, depois `CPF` e `Periodo de cortesia`, preservando a composicao mobile-first empilhada.
+- O select de `Periodo de cortesia` ganhou seta customizada com afastamento lateral (`right-5` e `pr-12`) para nao ficar colada na borda direita.
+- Nao houve alteracao de backend, endpoint, schema Prisma, migrations, packages ou regra de dominio.
+- Validacao browser local headless Chrome/CDP, viewport mobile-first 390px, confirmou ausencia da frase operacional, ausencia do bloco `Regra de cobranca`, ordem `Regional CRP` -> `CRP` -> `Data de inscricao no CRP` -> `CPF` -> `Periodo de cortesia` e `scrollWidth=390`.
+- Validacoes executadas: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e `git diff --check`.

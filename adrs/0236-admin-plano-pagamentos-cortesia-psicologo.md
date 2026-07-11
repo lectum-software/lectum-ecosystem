@@ -225,3 +225,24 @@ Validacao complementar:
 - `pnpm --dir backend build`
 - `pnpm check`
 - `git diff --check`
+
+
+## Complemento 2026-07-11 - formulario de concessao enxuto
+
+Produto decidiu reduzir a carga operacional visivel no card `Conceder cortesia`.
+
+Decisao:
+
+- Remover a frase de apoio sobre o comando `subscription:grant` e o bloco visual `Regra de cobranca`, mantendo essa regra documentada no ADR e aplicada no backend.
+- Reordenar os campos para priorizar dados de registro profissional (`Regional CRP`, `CRP`, `Data de inscricao no CRP`) antes de `CPF` e `Periodo de cortesia`.
+- Usar seta customizada somente no select de periodo para garantir margem visual a direita, sem instalar pacote novo.
+
+Consequencia: a tela fica mais direta para o administrador e preserva a mesma chamada real de concessao de cortesia.
+
+Validacao complementar:
+
+- Browser local headless Chrome/CDP, viewport mobile-first 390px, confirmou a nova ordem dos campos, ausencia da frase operacional e ausencia do bloco `Regra de cobranca`.
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check`
+- `git diff --check`

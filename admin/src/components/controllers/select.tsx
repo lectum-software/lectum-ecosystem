@@ -1,5 +1,6 @@
 ﻿"use client";
 
+import { ChevronDown } from "lucide-react";
 import type { FieldPath, FieldValues } from "react-hook-form";
 import { useController, useFormContext } from "react-hook-form";
 import { cn } from "@/lib/utils";
@@ -14,15 +15,19 @@ export type SelectControllerProps<TFormValues extends FieldValues> = {
   label: string;
   options: SelectControllerOption[];
   disabled?: boolean;
+  insetChevron?: boolean;
   required?: boolean;
+  selectClassName?: string;
 };
 
 export const SelectController = <TFormValues extends FieldValues>({
   disabled,
+  insetChevron,
   label,
   name,
   options,
   required,
+  selectClassName,
 }: SelectControllerProps<TFormValues>) => {
   const { control } = useFormContext<TFormValues>();
   const { field, fieldState } = useController({ control, name });
@@ -35,24 +40,34 @@ export const SelectController = <TFormValues extends FieldValues>({
         {label}
         {required ? <span className="text-danger"> *</span> : null}
       </span>
-      <select
-        {...field}
-        aria-describedby={errorId}
-        aria-invalid={hasError}
-        className={cn(
-          "h-12 w-full rounded-2xl border bg-surface px-4 text-base text-foreground shadow-control outline-none transition",
-          "focus:border-primary focus:ring-4 focus:ring-primary-soft",
-          hasError ? "border-danger" : "border-border",
-        )}
-        disabled={disabled}
-        id={String(name)}
-      >
-        {options.map((option) => (
-          <option key={option.value} value={option.value}>
-            {option.label}
-          </option>
-        ))}
-      </select>
+      <span className="relative block">
+        <select
+          {...field}
+          aria-describedby={errorId}
+          aria-invalid={hasError}
+          className={cn(
+            "h-12 w-full rounded-2xl border bg-surface px-4 text-base text-foreground shadow-control outline-none transition",
+            "focus:border-primary focus:ring-4 focus:ring-primary-soft",
+            insetChevron ? "appearance-none pr-12" : null,
+            hasError ? "border-danger" : "border-border",
+            selectClassName,
+          )}
+          disabled={disabled}
+          id={String(name)}
+        >
+          {options.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+        {insetChevron ? (
+          <ChevronDown
+            aria-hidden
+            className="pointer-events-none absolute right-5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted"
+          />
+        ) : null}
+      </span>
       <span className="mt-1 block min-h-5 text-xs font-medium text-danger" id={errorId}>
         {fieldState.error?.message || ""}
       </span>
