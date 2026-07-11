@@ -32,7 +32,12 @@ const SidebarContent = ({ collapsed, onNavigate, onRequestExpand }: SidebarConte
 
   return (
     <div className="flex h-full flex-col bg-sidebar text-sidebar-foreground">
-      <div className={cn("flex h-20 items-center gap-3 px-5", collapsed && "justify-center px-3")}>
+      <div
+        className={cn(
+          "flex h-20 shrink-0 items-center gap-3 px-5",
+          collapsed && "justify-center px-3",
+        )}
+      >
         <Image
           alt="Lectum"
           className={cn(collapsed && "hidden")}
@@ -51,110 +56,115 @@ const SidebarContent = ({ collapsed, onNavigate, onRequestExpand }: SidebarConte
         />
       </div>
 
-      <nav aria-label="Menu administrativo" className="flex-1 space-y-1 px-3 py-4">
-        {adminNavItems.map((item) => {
-          const Icon = item.icon;
-          const isActive = isNavPathActive(pathname, item.href);
+      <nav
+        aria-label="Menu administrativo"
+        className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 py-4"
+      >
+        <div className="space-y-1">
+          {adminNavItems.map((item) => {
+            const Icon = item.icon;
+            const isActive = isNavPathActive(pathname, item.href);
 
-          if ("children" in item) {
-            const isOpen = openGroups[item.href] ?? isActive;
-            const groupId = `admin-nav-${item.href.replaceAll("/", "-")}`;
+            if ("children" in item) {
+              const isOpen = openGroups[item.href] ?? isActive;
+              const groupId = `admin-nav-${item.href.replaceAll("/", "-")}`;
 
-            return (
-              <div key={item.href}>
-                <button
-                  aria-controls={collapsed ? undefined : groupId}
-                  aria-current={isActive ? "page" : undefined}
-                  aria-expanded={collapsed ? undefined : isOpen}
-                  className={cn(
-                    "flex min-h-12 w-full items-center gap-3 rounded-2xl px-3 text-left text-sm font-bold transition",
-                    "text-sidebar-muted hover:bg-sidebar-active/45 hover:text-sidebar-foreground focus-visible:outline-white",
-                    isActive && "bg-sidebar-active text-sidebar-foreground shadow-admin-soft",
-                    collapsed && "justify-center px-2",
-                  )}
-                  onClick={() => {
-                    if (collapsed) {
+              return (
+                <div key={item.href}>
+                  <button
+                    aria-controls={collapsed ? undefined : groupId}
+                    aria-current={isActive ? "page" : undefined}
+                    aria-expanded={collapsed ? undefined : isOpen}
+                    className={cn(
+                      "flex min-h-12 w-full items-center gap-3 rounded-2xl px-3 text-left text-sm font-bold transition",
+                      "text-sidebar-muted hover:bg-sidebar-active/45 hover:text-sidebar-foreground focus-visible:outline-white",
+                      isActive && "bg-sidebar-active text-sidebar-foreground shadow-admin-soft",
+                      collapsed && "justify-center px-2",
+                    )}
+                    onClick={() => {
+                      if (collapsed) {
+                        setOpenGroups((current) => ({
+                          ...current,
+                          [item.href]: true,
+                        }));
+                        onRequestExpand?.();
+                        return;
+                      }
+
                       setOpenGroups((current) => ({
                         ...current,
-                        [item.href]: true,
+                        [item.href]: !(current[item.href] ?? isActive),
                       }));
-                      onRequestExpand?.();
-                      return;
-                    }
+                    }}
+                    title={collapsed ? item.label : undefined}
+                    type="button"
+                  >
+                    <Icon aria-hidden className="h-5 w-5 shrink-0" />
+                    <span className={cn("min-w-0 flex-1 truncate", collapsed && "sr-only")}>
+                      {item.label}
+                    </span>
+                    <ChevronDown
+                      aria-hidden
+                      className={cn(
+                        "h-4 w-4 shrink-0 transition-transform",
+                        isOpen && "rotate-180",
+                        collapsed && "hidden",
+                      )}
+                    />
+                  </button>
 
-                    setOpenGroups((current) => ({
-                      ...current,
-                      [item.href]: !(current[item.href] ?? isActive),
-                    }));
-                  }}
-                  title={collapsed ? item.label : undefined}
-                  type="button"
-                >
-                  <Icon aria-hidden className="h-5 w-5 shrink-0" />
-                  <span className={cn("min-w-0 flex-1 truncate", collapsed && "sr-only")}>
-                    {item.label}
-                  </span>
-                  <ChevronDown
-                    aria-hidden
-                    className={cn(
-                      "h-4 w-4 shrink-0 transition-transform",
-                      isOpen && "rotate-180",
-                      collapsed && "hidden",
-                    )}
-                  />
-                </button>
+                  {isOpen && !collapsed ? (
+                    <div className="mt-1 space-y-1 pl-8" id={groupId}>
+                      {item.children.map((child) => {
+                        const childIsActive =
+                          pathname === child.href ||
+                          (child.href !== item.href && pathname.startsWith(`${child.href}/`));
 
-                {isOpen && !collapsed ? (
-                  <div className="mt-1 space-y-1 pl-8" id={groupId}>
-                    {item.children.map((child) => {
-                      const childIsActive =
-                        pathname === child.href ||
-                        (child.href !== item.href && pathname.startsWith(`${child.href}/`));
+                        return (
+                          <Link
+                            aria-current={childIsActive ? "page" : undefined}
+                            className={cn(
+                              "flex min-h-10 items-center rounded-xl border-l border-white/10 px-3 pl-4 text-sm font-bold transition",
+                              "text-sidebar-muted hover:bg-white/10 hover:text-sidebar-foreground focus-visible:outline-white",
+                              childIsActive && "bg-white/10 text-sidebar-foreground",
+                            )}
+                            href={child.href}
+                            key={child.href}
+                            onClick={onNavigate}
+                          >
+                            {child.label}
+                          </Link>
+                        );
+                      })}
+                    </div>
+                  ) : null}
+                </div>
+              );
+            }
 
-                      return (
-                        <Link
-                          aria-current={childIsActive ? "page" : undefined}
-                          className={cn(
-                            "flex min-h-10 items-center rounded-xl border-l border-white/10 px-3 pl-4 text-sm font-bold transition",
-                            "text-sidebar-muted hover:bg-white/10 hover:text-sidebar-foreground focus-visible:outline-white",
-                            childIsActive && "bg-white/10 text-sidebar-foreground",
-                          )}
-                          href={child.href}
-                          key={child.href}
-                          onClick={onNavigate}
-                        >
-                          {child.label}
-                        </Link>
-                      );
-                    })}
-                  </div>
-                ) : null}
-              </div>
+            return (
+              <Link
+                aria-current={isActive ? "page" : undefined}
+                className={cn(
+                  "flex min-h-12 items-center gap-3 rounded-2xl px-3 text-sm font-bold transition",
+                  "text-sidebar-muted hover:bg-sidebar-active/45 hover:text-sidebar-foreground focus-visible:outline-white",
+                  isActive && "bg-sidebar-active text-sidebar-foreground shadow-admin-soft",
+                  collapsed && "justify-center px-2",
+                )}
+                href={item.href}
+                key={item.href}
+                onClick={onNavigate}
+                title={collapsed ? item.label : undefined}
+              >
+                <Icon aria-hidden className="h-5 w-5 shrink-0" />
+                <span className={cn("truncate", collapsed && "sr-only")}>{item.label}</span>
+              </Link>
             );
-          }
-
-          return (
-            <Link
-              aria-current={isActive ? "page" : undefined}
-              className={cn(
-                "flex min-h-12 items-center gap-3 rounded-2xl px-3 text-sm font-bold transition",
-                "text-sidebar-muted hover:bg-sidebar-active/45 hover:text-sidebar-foreground focus-visible:outline-white",
-                isActive && "bg-sidebar-active text-sidebar-foreground shadow-admin-soft",
-                collapsed && "justify-center px-2",
-              )}
-              href={item.href}
-              key={item.href}
-              onClick={onNavigate}
-              title={collapsed ? item.label : undefined}
-            >
-              <Icon aria-hidden className="h-5 w-5 shrink-0" />
-              <span className={cn("truncate", collapsed && "sr-only")}>{item.label}</span>
-            </Link>
-          );
-        })}
+          })}
+        </div>
       </nav>
 
-      <div className="border-t border-white/10 p-3">
+      <div className="shrink-0 border-t border-white/10 p-3">
         <div
           className={cn(
             "flex items-center gap-3 rounded-2xl px-2 py-3",

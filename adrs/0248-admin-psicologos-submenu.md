@@ -50,6 +50,11 @@ preservando contexto em telas de detalhe.
 - O submenu permanece renderizado no fluxo normal logo abaixo de **Psicólogos**,
   sem posicionamento absoluto, deslocando apenas as opções posteriores do menu
   para baixo quando expandido.
+- O topo do shell e a área do usuário ficam com `shrink-0`, e a navegação central
+  passa a ser o único container rolável (`min-h-0 overflow-y-auto`). Assim, se o
+  submenu precisar ocupar mais altura, ele não reposiciona **Dashboard**,
+  **Tráfego** ou **Comunidades**; somente os itens abaixo de **Psicólogos** são
+  deslocados.
 
 ## Validação
 
