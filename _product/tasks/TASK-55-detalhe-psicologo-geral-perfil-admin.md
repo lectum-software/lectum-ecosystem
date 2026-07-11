@@ -154,3 +154,26 @@ Criar o shell de detalhe do psicólogo e as abas Geral e Perfil/Cadastro com dad
 - `pnpm check`
 - `git diff --check`
 - Browser local autenticado no Admin em `/psicologos/cmrfgznww0014xouh2tmz5dbf`, incluindo viewport 390px para o header: avatar real carregado por `next/image`, sem botao `Lista`, status `Ativo`, `Plano de cortesia`, avaliacao `0,0 (0)`, CRP `04/12345`, termo `Psicólogo` e ultimo acesso no formato `10/07/2026 às 21:57`; o selo `VerifiedBadgeIcon` foi validado em perfil verificado local com `viewBox="0 0 30 28"` e `fill="#308CE8"`.
+
+## Ajuste complementar 2026-07-11 - visibilidade em Dados profissionais
+
+- Pedido direto de produto aplicado na aba Admin `Perfil e cadastro`, card `Dados profissionais`.
+- A linha `Perfil visivel para pacientes` usa dados reais ja retornados pelo detalhe Admin:
+  - `header.active` para indicar se o perfil aparece agora para pacientes na busca publica;
+  - `header.published` para explicar quando a preferencia do psicologo esta ativada, mas o perfil ainda nao cumpre todos os criterios publicos.
+- Nao houve alteracao de contrato de API, schema Prisma, formulario ou package.
+- Builder/Quick Copy nao esteve acessivel como ferramenta neste ambiente; a referencia visual local continuou sendo `_product/proto/admin/Psicologos/Detalhes do psicologo/Perfil e Cadastro.png`.
+- Criterios do ajuste:
+  - [x] `Dados profissionais` mostra se o perfil esta visivel para pacientes.
+  - [x] O indicador usa dados reais do detalhe Admin, sem mock.
+  - [x] UI permanece mobile-first por reutilizar `FieldRow` responsivo do card.
+  - [x] Nenhum `<img>` cru foi usado.
+
+
+## Evidencias de validacao do ajuste de visibilidade
+
+- `pnpm --dir admin check` executado sem erros ou warnings.
+- `pnpm --dir admin build` executado sem erros apos repetir a tentativa inicial, que foi bloqueada por outro processo Next build em andamento.
+- `git diff --check -- admin/src/app/(admin)/psicologos/[id]/client.tsx _product/tasks/TASK-55-detalhe-psicologo-geral-perfil-admin.md adrs/0253-admin-visibilidade-publica-perfil-psicologo.md` executado sem erros.
+- `pnpm check` foi executado: frontend passou, backend ficou bloqueado por arquivos preexistentes/untracked da TASK-68 em `backend/src/modules/api/admin/private/psychologists/account/` e organizacao de imports em `backend/src/main/server/imports/write.ts`, fora do escopo deste ajuste.
+- Browser local: smoke em Chrome headless 390x844 para `/psicologos/cmrglzdds000ajkuhqedavedb?tab=perfil` gerou screenshot da protecao/carregamento do painel, mas a sessao Admin autenticada do navegador do usuario nao estava disponivel no headless para validar visualmente o card com dados reais.

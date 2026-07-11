@@ -4194,6 +4194,12 @@ const ProfileProfessionalEditForm = ({
 const ProfileReadOnlyProfessionalData = ({ detail }: { detail: AdminPsychologistDetail }) => {
   const professional = detail.profile.professional;
   const personal = detail.profile.personal;
+  const visibilityStatus = detail.header.active ? "active" : "inactive";
+  const visibilityDescription = detail.header.active
+    ? "Perfil aparece para pacientes na busca pública."
+    : detail.header.published
+      ? "Visibilidade ativada pelo psicólogo, mas o perfil ainda não cumpre todos os critérios públicos."
+      : "Visibilidade desativada pelo psicólogo.";
 
   return (
     <>
@@ -4203,6 +4209,17 @@ const ProfileReadOnlyProfessionalData = ({ detail }: { detail: AdminPsychologist
       <FieldRow label="Público atendido" value={listText(professional.target_audience)} />
       <FieldRow label="Idiomas" value={listText(professional.languages)} />
       <FieldRow label="Modalidades" value={capitalizeOptionLabel(professional.modality)} />
+      <FieldRow
+        label="Perfil visível para pacientes"
+        value={
+          <span className="flex flex-col items-start gap-2">
+            <Badge className={PROFILE_STATUS_COPY[visibilityStatus].className}>
+              {detail.header.active ? "Sim" : "Não"}
+            </Badge>
+            <span className="text-xs font-bold leading-5 text-muted">{visibilityDescription}</span>
+          </span>
+        }
+      />
       <FieldRow label="Cadastro via" value={formatNullable(personal.provider)} />
       <FieldRow label="Data cadastro Lectum" value={formatDate(detail.header.created_at)} />
     </>
