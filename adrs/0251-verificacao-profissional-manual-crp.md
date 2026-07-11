@@ -212,3 +212,15 @@ primeira coluna chegar ao fim para o Admin conseguir rolar todo o Registro
 profissional. O trade-off e que, no desktop, a rolagem depende da coluna sob o
 ponteiro: sobre a coluna esquerda rola a pagina; sobre a coluna direita rola o
 painel de registro ate seus limites.
+
+## Complemento 2026-07-11: remocao do resumo operacional Lectum
+
+O card Registro profissional deixa de exibir o resumo operacional "Lectum"
+com Plano, Aprovacao, Origem, Responsavel e Data aprovacao. Esses dados
+continuam existindo nos contratos e nas trilhas auditaveis, mas nao devem ocupar
+espaco fixo no painel quando o operador precisa priorizar os dados editaveis do
+conselho e o historico de tentativas.
+
+O bloco "Ultimas tentativas" permanece visivel porque e a evidencia auditavel
+mais util para entender tentativas automaticas, aprovacoes manuais, rejeicoes e
+responsaveis historicos sem duplicar resumo de status no card.

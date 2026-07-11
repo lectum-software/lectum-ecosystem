@@ -979,18 +979,6 @@ const listText = (items: string[] | AdminPsychologistCatalogItem[]) => {
     .join(", ");
 };
 
-const formatResponsibleAdminName = (name?: string | null) => {
-  const trimmed = name?.trim();
-  if (!trimmed) return null;
-
-  return (
-    trimmed
-      .replace(/\s+\S+@\S+(?:\s+\([^)]*\))?$/u, "")
-      .replace(/\s+\([a-z0-9]{8,}\)$/iu, "")
-      .trim() || null
-  );
-};
-
 const CardShell = ({ children, className }: { children: ReactNode; className?: string }) => (
   <section className={cn(CARD, className)}>{children}</section>
 );
@@ -4365,17 +4353,6 @@ const RegistryVerificationCard = ({ id }: { id: string }) => {
   const registry = query.data;
   if (!registry) return null;
 
-  const manualResponsibleName = formatResponsibleAdminName(
-    registry.summary.latest_manual_admin?.name,
-  );
-  const responsibleValue =
-    registry.summary.source === "api_automatica"
-      ? "Via API"
-      : manualResponsibleName
-        ? manualResponsibleName
-        : registry.summary.source === "manual_admin" || registry.summary.source === "admin_grant"
-          ? "Admin Lectum"
-          : "Não informado";
   const emptyAttemptsText =
     registry.summary.plan_type === "cortesia" && registry.summary.source === "admin_grant"
       ? "Aprovação manual via Cortesia."
@@ -4407,21 +4384,6 @@ const RegistryVerificationCard = ({ id }: { id: string }) => {
             setAction("save");
           }}
           registry={registry}
-        />
-      </div>
-
-      <div className="mt-5">
-        <h3 className="text-sm font-black text-foreground">Lectum</h3>
-      </div>
-
-      <div className="mt-2 grid gap-3">
-        <FieldRow label="Plano" value={registry.summary.plan_label} />
-        <FieldRow label="Aprovação" value={registry.summary.approval_label} />
-        <FieldRow label="Origem" value={registry.summary.source_label} />
-        <FieldRow label="Responsável" value={responsibleValue} />
-        <FieldRow
-          label="Data aprovação"
-          value={formatDateTime(registry.summary.latest_manual_checked_at)}
         />
       </div>
 

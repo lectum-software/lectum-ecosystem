@@ -359,3 +359,9 @@ Se o schema atual não suportar auditoria mínima sem `raw`, usar `raw` com shap
 - Em desktop `xl+`, a coluna do Registro profissional passou a ter altura maxima baseada na viewport e `overflow-y-auto`, mantendo o `sticky` sem depender da primeira coluna chegar ao fim para revelar todo o conteudo.
 - `overscroll-contain` foi aplicado para evitar que a rolagem interna vaze para a pagina enquanto o ponteiro estiver sobre a coluna direita.
 - Validacoes do ajuste: `pnpm --dir admin check` e `pnpm --dir admin build` passaram. Validacao visual autenticada ficou limitada porque este ambiente nao expoe controle do Chrome ja autenticado do usuario; a rota privada segue dependente de sessao Admin real.
+
+### Ajuste de resumo do registro profissional 2026-07-11
+
+- O card Registro profissional deixou de exibir o resumo operacional "Lectum" com Plano, Aprovacao, Origem, Responsavel e Data aprovacao.
+- O bloco "Ultimas tentativas" foi mantido para preservar o historico auditavel de tentativas automaticas e decisoes manuais.
+- Validacoes do ajuste: `pnpm --dir admin check`, `pnpm --dir admin build` e HTTP local em `/psicologos/[id]?tab=perfil` retornando 200. Validacao visual autenticada segue dependente da sessao Admin real no navegador do usuario.
