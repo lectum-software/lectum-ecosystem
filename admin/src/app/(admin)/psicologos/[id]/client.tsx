@@ -2907,12 +2907,13 @@ const ProfileTab = ({ detail }: { detail: AdminPsychologistDetail }) => {
           <InfoCard icon={FileText} title="Dados profissionais">
             <FieldRow label="Regional CRP" value={formatNullable(professional.regional_crp)} />
             <FieldRow
-              label="Nº de registro"
+              label="Nº de Registro"
               value={formatNullable(professional.registration_number)}
             />
-            <FieldRow label="CRP completo" value={formatNullable(professional.crp)} />
-            <FieldRow label="Status CRP" value={formatNullable(professional.crp_status)} />
-            <FieldRow label="Registro CRP" value={formatDate(professional.crp_registration_date)} />
+            <FieldRow
+              label="Data registro CRP"
+              value={formatDate(professional.crp_registration_date)}
+            />
             <FieldRow
               label="Tempo de experiência"
               value={
@@ -2926,11 +2927,12 @@ const ProfileTab = ({ detail }: { detail: AdminPsychologistDetail }) => {
             <FieldRow label="Serviços" value={listText(professional.services)} />
             <FieldRow label="Público atendido" value={listText(professional.target_audience)} />
             <FieldRow label="Idiomas" value={listText(professional.languages)} />
-            <FieldRow label="Modalidade" value={formatNullable(professional.modality)} />
+            <FieldRow label="Modalidades" value={formatNullable(professional.modality)} />
             <FieldRow label="Gênero" value={formatNullable(professional.gender)} />
             <FieldRow label="Raça/Cor" value={formatNullable(professional.race_color)} />
             <FieldRow label="Religião" value={formatNullable(professional.religion)} />
-            <FieldRow label="Data de cadastro" value={formatDate(detail.header.created_at)} />
+            <FieldRow label="Cadastro via" value={formatNullable(personal.provider)} />
+            <FieldRow label="Data cadastro Lectum" value={formatDate(detail.header.created_at)} />
           </InfoCard>
 
           <CardShell className="p-5">
