@@ -1532,9 +1532,9 @@ const EngagementMetricCard = ({
     <p className="mt-2 text-2xl font-black text-foreground">
       {formatEngagementMetricValue(metric)}
     </p>
-    <p className="mt-2 text-xs font-bold text-muted">
-      {metric.available ? `Fonte: ${metric.source}` : metric.unavailable_reason}
-    </p>
+    {!metric.available && metric.unavailable_reason ? (
+      <p className="mt-2 text-xs font-bold text-muted">{metric.unavailable_reason}</p>
+    ) : null}
   </div>
 );
 
@@ -1713,13 +1713,6 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: st
 
   return (
     <div className="space-y-5" data-psychologist-detail-tab="estatisticas">
-      <div className="flex flex-col gap-3 rounded-2xl border border-primary/20 bg-primary-soft p-4 text-sm font-bold text-muted sm:flex-row sm:items-center sm:justify-between">
-        <span>
-          Período: {statistics.period.label} · {statistics.period.from} a {statistics.period.to}
-        </span>
-        <span>Fontes reais: {statistics.source}</span>
-      </div>
-
       <section>
         <h2 className="mb-3 text-xl font-black text-foreground">Estatísticas de negócio</h2>
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
