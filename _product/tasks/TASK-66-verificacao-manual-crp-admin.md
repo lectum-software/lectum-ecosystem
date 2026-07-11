@@ -282,4 +282,4 @@ Se o schema atual não suportar auditoria mínima sem `raw`, usar `raw` com shap
 ### Ajuste de cortesia no registro profissional 2026-07-11
 
 - Para cortesia sem tentativas automaticas/manuais no historico, o card exibe "Aprovacao manual via Cortesia.".
-- O campo Responsavel exibe "Via API" quando a origem e automatica e o nome do Admin quando a origem e manual/cortesia; em cortesia, usa o mesmo `granted_by` da concessao.
+- O campo Responsavel exibe "Via API" quando a origem e automatica e o nome do Admin no formato "Admin Lectum" quando a origem e manual/cortesia; em cortesia, usa o mesmo `granted_by` da concessao, sem expor e-mail ou id.

@@ -110,4 +110,4 @@ O card de registro profissional separa os dados publicos do conselho dos dados o
 
 ## Complemento 2026-07-11: responsavel e historico de cortesia
 
-Quando o registro aparece ativo por cortesia administrativa, o card usa o mesmo `granted_by` da assinatura de cortesia como responsavel e mostra "Aprovacao manual via Cortesia." quando nao houver tentativas registradas em `professional_registry_check`. Para aprovacao via API, o responsavel exibido e "Via API".
+Quando o registro aparece ativo por cortesia administrativa, o card usa o mesmo `granted_by` da assinatura de cortesia como responsavel, mas normaliza a apresentacao para o nome do Admin no formato "Admin Lectum", sem e-mail ou id. Tambem mostra "Aprovacao manual via Cortesia." quando nao houver tentativas registradas em `professional_registry_check`. Para aprovacao via API, o responsavel exibido e "Via API".

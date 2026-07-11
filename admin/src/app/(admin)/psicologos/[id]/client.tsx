@@ -649,6 +649,18 @@ const listText = (items: string[] | AdminPsychologistCatalogItem[]) => {
   return items.map((item) => (typeof item === "string" ? item : item.name)).join(", ");
 };
 
+const formatResponsibleAdminName = (name?: string | null) => {
+  const trimmed = name?.trim();
+  if (!trimmed) return null;
+
+  return (
+    trimmed
+      .replace(/\s+\S+@\S+(?:\s+\([^)]*\))?$/u, "")
+      .replace(/\s+\([a-z0-9]{8,}\)$/iu, "")
+      .trim() || null
+  );
+};
+
 const CardShell = ({ children, className }: { children: ReactNode; className?: string }) => (
   <section className={cn(CARD, className)}>{children}</section>
 );
@@ -3275,13 +3287,14 @@ const RegistryVerificationCard = ({ id }: { id: string }) => {
     registry.identity.experience_years === null
       ? "Não informado"
       : `${registry.identity.experience_years} anos`;
+  const manualResponsibleName = formatResponsibleAdminName(
+    registry.summary.latest_manual_admin?.name,
+  );
   const responsibleValue =
     registry.summary.source === "api_automatica"
       ? "Via API"
-      : registry.summary.latest_manual_admin
-        ? [registry.summary.latest_manual_admin.name, registry.summary.latest_manual_admin.email]
-            .filter(Boolean)
-            .join(" · ") || "Admin Lectum"
+      : manualResponsibleName
+        ? manualResponsibleName
         : registry.summary.source === "manual_admin" || registry.summary.source === "admin_grant"
           ? "Admin Lectum"
           : "Não informado";
