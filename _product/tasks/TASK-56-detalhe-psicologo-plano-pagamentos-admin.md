@@ -183,3 +183,14 @@ Exibir plano, método e histórico financeiro do psicólogo e permitir concessã
 - A consequencia operacional da sobrescrita Admin fica protegida: o psicologo ve os campos desabilitados e o backend ignora qualquer tentativa de alterar `cpf`/`crp` via payload de perfil enquanto a cortesia estiver ativa.
 - Nao houve alteracao no endpoint Admin, schema Prisma, migrations ou packages.
 - Validacao complementar: API local real de `free-profile` retornou `identity_fields_locked=true` para `admin_grant` com `cfp_verified_at=null`, e Chrome/CDP headless mobile 390x844 confirmou os tres campos desabilitados na edicao do psicologo.
+
+## Ajuste complementar 2026-07-11 - copy do card Revogar cortesia
+
+- Pedido do usuario: simplificar a area de revogacao de cortesia no Admin.
+- O card `Revogar cortesia` removeu o bloco informativo laranja sobre regra operacional, porque a acao principal ja e suficiente nesta superficie.
+- A copy passou de `Este psicologo possui uma cortesia administrativa ativa.` para `Este psicologo possui uma cortesia ativa.`.
+- A vigencia passou a usar o prefixo acentuado `Até`.
+- O campo `Concedida por` passou a exibir somente o nome do admin no card de revogacao e no resumo do plano, ocultando e-mail e id interno do operador nessa superficie.
+- Nao houve alteracao de backend, endpoint, regra de revogacao, banco, packages ou dados persistidos.
+- Validacao browser local headless Chrome/CDP, viewport mobile-first 390px, confirmou a nova copy, `Até 10/07/2027`, ausencia do bloco operacional, ausencia de e-mail/id do admin e `scrollWidth=390`.
+- Validacoes executadas: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e `git diff --check`.

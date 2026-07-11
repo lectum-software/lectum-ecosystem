@@ -142,3 +142,24 @@ Validação complementar:
 
 - API local real de `GET /api/private/psychologist/free-profile` retornou `identity_fields_locked=true` para psicólogo com `source="admin_grant"` e `cfp_verified_at=null`.
 - Browser local headless Chrome/CDP em `/app/professional/profile/setup`, viewport mobile 390x844, confirmou `cpf`, `crp_region` e `crp_number` desabilitados e `scrollWidth=390`.
+
+## Complemento 2026-07-11 - copy enxuta em Revogar cortesia
+
+A tela Admin de detalhe do psicologo passou por refinamento de copy no card `Revogar cortesia` para reduzir ruido operacional.
+
+Decisao:
+
+- Remover o bloco explicativo sobre `source=admin_grant` do card de revogacao, sem alterar a regra de dominio ou o endpoint real.
+- Exibir `Este psicologo possui uma cortesia ativa.` em vez de enfatizar `administrativa` na frase de contexto.
+- Usar `Até` com acento no resumo de vigencia.
+- Mostrar apenas o nome do admin em `Concedida por`, no resumo do plano e no card de revogacao, ocultando e-mail e identificador interno nessa UI.
+
+Consequencia: a regra real de revogacao permanece documentada e aplicada no backend, mas a interface operacional fica mais limpa e nao expõe dado interno desnecessario no card principal.
+
+Validacao complementar:
+
+- Browser local headless Chrome/CDP no Admin, viewport mobile-first 390px, confirmou a copy simplificada, o prefixo `Até`, a remocao do bloco operacional e a exibicao de `Admin Lectum` sem e-mail/id interno.
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check`
+- `git diff --check`

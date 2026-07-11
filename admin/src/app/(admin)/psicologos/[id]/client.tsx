@@ -279,6 +279,18 @@ const formatNullable = (value?: string | number | null) => {
   return String(value);
 };
 
+const formatGrantedByName = (value?: string | null) => {
+  const formatted = formatNullable(value);
+  if (formatted === "Não informado") return formatted;
+
+  const nameOnly = formatted
+    .replace(/\s+[\w.!#$%&'*+/=?^`{|}~-]+@[\w-]+(?:\.[\w-]+)+/g, "")
+    .replace(/\s*\([^)]*\)\s*$/g, "")
+    .trim();
+
+  return nameOnly || formatted;
+};
+
 const formatMoney = (cents: number | null) => {
   if (cents === null) return "Não informado";
 
@@ -2383,7 +2395,7 @@ const CurrentPlanCard = ({ billing }: { billing: AdminPsychologistBilling }) => 
         <FieldRow label="Gateway" value={plan.gateway_label || "Sem vinculo ativo"} />
         <FieldRow label="Cortesia" value={plan.is_courtesy ? "Sim" : "Nao"} />
         {plan.is_courtesy ? (
-          <FieldRow label="Concedida por" value={formatNullable(plan.granted_by)} />
+          <FieldRow label="Concedida por" value={formatGrantedByName(plan.granted_by)} />
         ) : null}
       </dl>
 
@@ -2672,9 +2684,7 @@ const RevokeCourtesyCard = ({ billing, id }: { billing: AdminPsychologistBilling
       <div className="flex items-start justify-between gap-4">
         <div>
           <h2 className="text-xl font-black text-foreground">Revogar cortesia</h2>
-          <p className="mt-1 text-sm text-muted">
-            Este psicologo possui uma cortesia administrativa ativa.
-          </p>
+          <p className="mt-1 text-sm text-muted">Este psicologo possui uma cortesia ativa.</p>
         </div>
         <IconCircle icon={AlertTriangle} />
       </div>
@@ -2683,13 +2693,13 @@ const RevokeCourtesyCard = ({ billing, id }: { billing: AdminPsychologistBilling
         <div className="rounded-2xl border border-border bg-surface-muted p-4">
           <p className="text-xs font-bold uppercase tracking-wide text-muted">Vigencia atual</p>
           <p className="mt-1 text-sm font-black text-foreground">
-            Ate {formatDate(billing.plan.current_period_end)}
+            Até {formatDate(billing.plan.current_period_end)}
           </p>
         </div>
         <div className="rounded-2xl border border-border bg-surface-muted p-4">
           <p className="text-xs font-bold uppercase tracking-wide text-muted">Concedida por</p>
           <p className="mt-1 text-sm font-black text-foreground">
-            {formatNullable(billing.plan.granted_by)}
+            {formatGrantedByName(billing.plan.granted_by)}
           </p>
         </div>
       </div>
@@ -2707,11 +2717,6 @@ const RevokeCourtesyCard = ({ billing, id }: { billing: AdminPsychologistBilling
         )}
         Revogar cortesia
       </button>
-
-      <div className="mt-5 rounded-2xl border border-orange-200 bg-orange-50 p-4 text-sm font-bold text-orange-800">
-        A revogacao cancela somente a assinatura source=admin_grant ativa. Dados de CPF, Regional e
-        CRP permanecem no perfil para auditoria e eventual nova concessao.
-      </div>
     </CardShell>
   );
 };
