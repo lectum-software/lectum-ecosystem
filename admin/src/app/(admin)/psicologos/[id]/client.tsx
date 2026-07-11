@@ -3474,13 +3474,13 @@ const ProfileTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: strin
           <InfoCard icon={UserRound} title="Dados pessoais">
             <FieldRow label="CPF" value={formatCpfDisplay(personal.cpf)} />
             <FieldRow label="E-mail" value={personal.email} />
-            <FieldRow label="Telefone" value={formatPhoneDisplay(personal.phone)} />
+            <FieldRow label="WhatsApp" value={formatPhoneDisplay(personal.phone)} />
             <FieldRow label="Data de nascimento" value={formatDate(personal.birthdate)} />
             <FieldRow label="Gênero" value={capitalizeOptionLabel(professional.gender)} />
             <FieldRow label="Raça/cor" value={capitalizeOptionLabel(professional.race_color)} />
             <FieldRow label="Religião" value={capitalizeOptionLabel(professional.religion)} />
             <FieldRow
-              label="Endereço completo"
+              label="Endereço"
               value={
                 <span className="whitespace-pre-line">
                   {formatPersonalAddress(personal.address)}

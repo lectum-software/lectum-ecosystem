@@ -296,3 +296,7 @@ Se o schema atual não suportar auditoria mínima sem `raw`, usar `raw` com shap
 - Em desktop, Registro profissional usa `position: sticky` no topo da viewport para permanecer visivel durante a rolagem longa da primeira coluna.
 - Genero, Raca/cor e Religiao ficam em Dados pessoais; Dados profissionais nao duplica Regional CRP, N? de registro, Data registro CRP, Tempo de experiencia, Genero, Raca/cor ou Religiao.
 - Opcoes de Dados profissionais seguem com primeira letra maiuscula apenas na apresentacao.
+
+### Ajuste de copy Dados pessoais 2026-07-11
+
+- Na aba Perfil e cadastro, Dados pessoais passou a exibir "WhatsApp" no lugar de "Telefone" e "Endereco" no lugar de "Endereco completo".

@@ -119,3 +119,7 @@ O menu de abas do detalhe Admin exibe alerta em "Perfil e cadastro" somente quan
 ## Complemento 2026-07-11: layout sticky do registro profissional
 
 Na aba Perfil e cadastro do Admin, Registro profissional fica isolado na segunda coluna e usa sticky no topo em desktop. A primeira coluna concentra os demais dados de perfil, conteudo e formacao. A decisao reduz a sensacao de area vazia durante rolagem longa e mantem a informacao de aprovacao profissional sempre acessivel sem duplicar dados de conselho em Dados profissionais.
+
+## Complemento 2026-07-11: copy objetiva em dados pessoais
+
+Dados pessoais no Admin usa "WhatsApp" e "Endereco" para alinhar a leitura ao canal operacional real e reduzir ruido visual. A decisao nao altera contratos, persistencia nem regras de verificacao profissional.
