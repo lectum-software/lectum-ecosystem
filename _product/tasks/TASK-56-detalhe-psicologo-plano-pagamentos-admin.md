@@ -270,3 +270,12 @@ Exibir plano, método e histórico financeiro do psicólogo e permitir concessã
 - O histórico financeiro individual permanece dependente de `payment_event`/webhook para listar cada cobrança; o resumo do card `Plano atual` pode usar o agregado real do gateway para não zerar LTV quando o webhook não foi persistido.
 - Não houve alteração de schema Prisma, migrations ou packages.
 - Validação API local sem mutação em psicólogo real `cmrglzdds000ajkuhqedavedb`: `paidInstallmentsCount=1`, `lifetimeValueCents=990`, `lifetimeValueAvailable=true`.
+
+## Ajuste complementar 2026-07-11 - ocultar cortesia para plano profissional vigente
+
+- Pedido do usuário: quando o plano atual for `Plano Profissional`, remover a opção de conceder cortesia.
+- A UI Admin passou a não renderizar o card `Conceder cortesia` quando existir plano profissional vigente (`plan.is_paid`, `plan_slug="profissional"` ou nome `Plano Profissional`) e não houver cortesia ativa.
+- Plano gratuito ou ausência de plano continuam usando o fluxo de concessão existente; cortesia ativa continua exibindo somente a ação de revogação.
+- Não houve alteração de backend, endpoint, schema Prisma, migrations, packages ou gateway.
+- Validações executadas: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm --dir backend check`, `pnpm check` e `git diff --check`.
+- Browser local em `http://localhost:3002/psicologos/cmrglzdds000ajkuhqedavedb?tab=plano` retornou 200; validação visual autenticada automatizada permaneceu limitada por sessão Admin não exposta.

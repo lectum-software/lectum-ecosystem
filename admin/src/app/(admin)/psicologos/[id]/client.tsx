@@ -3864,8 +3864,22 @@ const CourtesyGrantForm = ({ billing, id }: { billing: AdminPsychologistBilling;
   );
 };
 
+const isCurrentProfessionalPlan = (billing: AdminPsychologistBilling) => {
+  const planSlug = billing.plan.plan_slug?.trim().toLowerCase();
+  const planName = billing.plan.plan_name?.trim().toLowerCase();
+
+  return Boolean(
+    billing.plan.id &&
+      !billing.plan.is_courtesy &&
+      !billing.courtesy.can_revoke &&
+      (billing.plan.is_paid || planSlug === "profissional" || planName === "plano profissional"),
+  );
+};
+
 const CourtesyActionCard = ({ billing, id }: { billing: AdminPsychologistBilling; id: string }) =>
-  billing.plan.is_courtesy || billing.courtesy.can_revoke ? null : (
+  billing.plan.is_courtesy ||
+  billing.courtesy.can_revoke ||
+  isCurrentProfessionalPlan(billing) ? null : (
     <CourtesyGrantForm billing={billing} id={id} />
   );
 
