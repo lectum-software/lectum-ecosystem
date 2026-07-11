@@ -12,6 +12,7 @@ import { useAppSelector } from "@/hooks/redux";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
 import {
+  getActiveProfessionalSubscription,
   getAfterPhoneVerificationPath,
   PSYCHOLOGIST_ONBOARDING_PATHS,
 } from "@/utils/psychologist-onboarding";
@@ -123,6 +124,9 @@ export const WhatsappVerificationLogic = () => {
   const phoneForm = usePhoneForm(user?.psychologist_profile?.whatsapp);
   const PhoneForm = phoneForm.Form;
   const nextHref = getAfterPhoneVerificationPath(user);
+  const activeProfessionalSubscription = getActiveProfessionalSubscription(
+    user?.psychologist_profile,
+  );
 
   const isPsychologist = user?.role === "psicologo";
 
@@ -168,7 +172,7 @@ export const WhatsappVerificationLogic = () => {
             <ArrowLeft className="h-4 w-4" aria-hidden="true" />
             Voltar para configuração de WhatsApp
           </button>
-        ) : (
+        ) : !activeProfessionalSubscription ? (
           <Link
             className="inline-flex items-center gap-2 text-sm font-semibold text-muted"
             href="/app/professional/billing/plans"
@@ -176,7 +180,7 @@ export const WhatsappVerificationLogic = () => {
             <ArrowLeft className="h-4 w-4" aria-hidden="true" />
             Voltar para planos
           </Link>
-        )}
+        ) : null}
 
         <div className="rounded-[var(--lectum-card-radius)] border border-border bg-surface px-5 py-7 shadow-[var(--lectum-shadow-soft)]">
           {savedPhone ? (

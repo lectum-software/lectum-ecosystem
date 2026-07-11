@@ -244,3 +244,29 @@ psicologo podia cair direto no perfil em vez de entrar em
 - Nenhum endpoint, modelo Prisma, pacote ou mock foi criado; a correcao fica
   restrita ao resolvedor frontend e ao helper de onboarding.
 
+## Atualizacao em 2026-07-11: sem retorno a planos no onboarding pago
+
+### Contexto
+
+No fluxo pago confirmado, o psicologo ja escolheu o Plano Profissional, concluiu
+o checkout real e avancou para as etapas operacionais de endereco, WhatsApp,
+verificacao profissional e perfil. Exibir o link `Voltar para planos` na etapa
+de WhatsApp sugere uma troca de plano fora do fluxo correto de gestao de
+assinatura.
+
+### Decisao
+
+- Na tela `/app/professional/whatsapp/verify`, ocultar o link `Voltar para
+  planos` quando existir assinatura profissional ativa no estado hidratado do
+  psicologo.
+- Manter a possibilidade de voltar para a configuracao de WhatsApp depois que o
+  numero e salvo, pois isso apenas edita a etapa atual antes de continuar.
+- Preservar o link para planos nos fluxos sem assinatura profissional ativa,
+  como escolha gratuita ainda retomavel.
+
+### Consequencias
+
+- O onboarding pago fica linear apos pagamento confirmado e nao incentiva voltar
+  a uma decisao comercial ja concluida.
+- A gestao posterior de plano/cartao continua pertencendo as telas de
+  assinatura, sem criar novo endpoint, mock ou regra de billing.
