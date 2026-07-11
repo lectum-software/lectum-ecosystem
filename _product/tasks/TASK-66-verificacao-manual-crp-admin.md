@@ -334,3 +334,9 @@ Se o schema atual não suportar auditoria mínima sem `raw`, usar `raw` com shap
 - O modal de aprovacao manual removeu a tag azul explicativa sobre uso dos campos do card.
 - O campo "Observacao/evidencia interna" deixou de aparecer e deixou de ser obrigatorio na aprovacao manual; a auditoria continua registrando admin responsavel, CPF, Regional CRP, Nº CRP, data de inscricao, situacao confirmada e snapshots anterior/proximo.
 - O backend aceita `notes` como campo opcional para compatibilidade com clientes anteriores, mas a UI Admin atual nao envia observacao na aprovacao manual.
+
+### Ajuste de edicao direta do registro profissional 2026-07-11
+
+- Regional CRP, Nº CRP e Data de inscricao permanecem editaveis pelo Admin em qualquer status do registro profissional, inclusive quando o registro ja esta ativo.
+- O card exibe a acao "Salvar registro", que persiste os campos pelo endpoint administrativo real de identidade do registro sem alterar `crp_status`, `cfp_verified_at`, assinatura, gateway ou cortesia.
+- Quando a aprovacao manual esta disponivel, o botao "Aprovar manualmente" continua usando os valores atuais do formulario para abrir a confirmacao forte.

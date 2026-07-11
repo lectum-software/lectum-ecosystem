@@ -168,3 +168,15 @@ compatibilidade com clientes antigos sem obrigar a UI atual a coletar texto. A
 auditoria continua registrando admin responsavel, dados conferidos, status
 anterior/proximo e `situation_confirmed=true`; rejeicoes seguem exigindo motivo
 obrigatorio.
+
+## Complemento 2026-07-11: edicao persistente do registro pelo Admin
+
+Regional CRP, Numero CRP e Data de inscricao ficam habilitados para edicao pelo
+Admin independentemente do status atual do registro profissional. A persistencia
+usa o endpoint administrativo existente de identidade do registro e nao altera
+aprovacao, `cfp_verified_at`, assinatura, gateway ou cortesia.
+
+Na pendencia profissional, o Admin pode salvar apenas a correcao cadastral ou
+usar os valores atuais do formulario para seguir com "Aprovar manualmente". Em
+registros ja ativos, "Salvar registro" permite corrigir dados publicos do
+conselho sem reabrir uma decisao de verificacao.

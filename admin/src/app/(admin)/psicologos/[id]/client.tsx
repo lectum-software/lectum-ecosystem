@@ -60,6 +60,7 @@ import {
   useAdminPsychologistStatistics,
   useAdminPsychologistUpdatePersonalData,
   useAdminPsychologistUpdateProfessionalData,
+  useAdminPsychologistUpdateRegistryIdentity,
 } from "@/api/callers/psychologists";
 import { useAdminSettingsCatalogs } from "@/api/callers/settings";
 import { resolveApiError } from "@/api/handle";
@@ -3282,16 +3283,19 @@ const RegistryVerificationDialog = ({
 const RegistryIdentityForm = ({
   canApprove,
   canReject,
+  id,
   onApprove,
   onReject,
   registry,
 }: {
   canApprove: boolean;
   canReject: boolean;
+  id: string;
   onApprove: (values: RegistryIdentityFormValues) => void;
   onReject: () => void;
   registry: AdminPsychologistRegistryVerification;
 }) => {
+  const mutation = useAdminPsychologistUpdateRegistryIdentity(id);
   const form = useForm<RegistryIdentityFormValues>({
     defaultValues: {
       crp: registry.identity.registration_number || "",
@@ -3314,14 +3318,37 @@ const RegistryIdentityForm = ({
     });
   }, [form, registry.identity]);
 
-  const fieldsDisabled = !canApprove;
-  const actionButtonCount = Number(canApprove) + Number(canReject);
+  const fieldsDisabled = mutation.isPending;
+  const actionButtonCount = 1 + Number(canApprove) + Number(canReject);
+  const actionGridClassName = cn(
+    "grid gap-3",
+    actionButtonCount === 2 ? "sm:grid-cols-2" : "",
+    actionButtonCount >= 3 ? "sm:grid-cols-2 xl:grid-cols-3" : "",
+  );
 
-  const onSubmit: SubmitHandler<RegistryIdentityFormValues> = (values) => {
+  const normalizeValues = (values: RegistryIdentityFormValues): RegistryIdentityFormValues => ({
+    crp: values.crp.trim(),
+    crp_registration_date: values.crp_registration_date.trim(),
+    regional_crp: values.regional_crp.trim(),
+  });
+
+  const onSubmit: SubmitHandler<RegistryIdentityFormValues> = async (values) => {
+    const normalizedValues = normalizeValues(values);
+    try {
+      await mutation.mutateAsync(normalizedValues);
+      form.reset(normalizedValues);
+      toast.success("Registro profissional atualizado.");
+    } catch (error) {
+      toast.error(resolveApiError(error));
+    }
+  };
+
+  const onApproveSubmit: SubmitHandler<RegistryIdentityFormValues> = (values) => {
+    const normalizedValues = normalizeValues(values);
     onApprove({
-      crp: values.crp.trim(),
-      crp_registration_date: values.crp_registration_date.trim(),
-      regional_crp: values.regional_crp.trim(),
+      crp: normalizedValues.crp,
+      crp_registration_date: normalizedValues.crp_registration_date,
+      regional_crp: normalizedValues.regional_crp,
     });
   };
 
@@ -3354,29 +3381,38 @@ const RegistryIdentityForm = ({
             />
           </div>
         </div>
-        {actionButtonCount > 0 ? (
-          <div className={cn("grid gap-3", actionButtonCount > 1 ? "sm:grid-cols-2" : "")}>
-            {canApprove ? (
-              <button
-                className="inline-flex h-12 w-full items-center justify-center gap-2 whitespace-nowrap rounded-control bg-primary px-4 text-sm font-black text-white transition hover:bg-primary-hover"
-                type="submit"
-              >
-                <ShieldCheck aria-hidden className="h-4 w-4" />
-                Aprovar manualmente
-              </button>
-            ) : null}
-            {canReject ? (
-              <button
-                className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-control border border-danger bg-surface px-4 text-sm font-black text-danger transition hover:bg-red-50"
-                onClick={onReject}
-                type="button"
-              >
-                <AlertTriangle aria-hidden className="h-4 w-4" />
-                Rejeitar verificação
-              </button>
-            ) : null}
-          </div>
-        ) : null}
+        <div className={actionGridClassName}>
+          <button
+            className="inline-flex h-12 w-full items-center justify-center gap-2 whitespace-nowrap rounded-control border border-primary bg-surface px-4 text-sm font-black text-primary transition hover:bg-primary-soft disabled:cursor-not-allowed disabled:border-border disabled:text-muted"
+            disabled={mutation.isPending}
+            type="submit"
+          >
+            {mutation.isPending ? <Loader2 aria-hidden className="h-4 w-4 animate-spin" /> : null}
+            Salvar registro
+          </button>
+          {canApprove ? (
+            <button
+              className="inline-flex h-12 w-full items-center justify-center gap-2 whitespace-nowrap rounded-control bg-primary px-4 text-sm font-black text-white transition hover:bg-primary-hover disabled:cursor-not-allowed disabled:bg-surface-muted disabled:text-muted"
+              disabled={mutation.isPending}
+              onClick={form.handleSubmit(onApproveSubmit)}
+              type="button"
+            >
+              <ShieldCheck aria-hidden className="h-4 w-4" />
+              Aprovar manualmente
+            </button>
+          ) : null}
+          {canReject ? (
+            <button
+              className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-control border border-danger bg-surface px-4 text-sm font-black text-danger transition hover:bg-red-50 disabled:cursor-not-allowed disabled:border-border disabled:text-muted"
+              disabled={mutation.isPending}
+              onClick={onReject}
+              type="button"
+            >
+              <AlertTriangle aria-hidden className="h-4 w-4" />
+              Rejeitar verificação
+            </button>
+          ) : null}
+        </div>
       </form>
     </FormProvider>
   );
@@ -3606,6 +3642,7 @@ const RegistryVerificationCard = ({ id }: { id: string }) => {
         <RegistryIdentityForm
           canApprove={registry.actions.can_approve_manually}
           canReject={registry.actions.can_reject_manually}
+          id={id}
           onApprove={(values) => {
             setIdentityDraft(values);
             setAction("approve");
