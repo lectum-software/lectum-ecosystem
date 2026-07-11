@@ -85,6 +85,7 @@ const hasLockedProfessionalIdentityFields = (profile: FreeProfessionalProfileRes
 const requiresPaidRegistryVerification = (profile: FreeProfessionalProfileResponse) =>
   !profile.plan.is_free &&
   profile.plan.source !== "admin_grant" &&
+  profile.profile.crp_status !== "aprovado" &&
   !profile.profile.cfp_verified_at;
 
 const paidRegistryVerificationRequired = () => ({

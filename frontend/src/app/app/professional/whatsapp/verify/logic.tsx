@@ -11,9 +11,11 @@ import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 import { useAppSelector } from "@/hooks/redux";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
+import {
+  getAfterPhoneVerificationPath,
+  PSYCHOLOGIST_ONBOARDING_PATHS,
+} from "@/utils/psychologist-onboarding";
 import { toWhatsappPhoneE164, usePhoneForm, type WhatsappPhoneForm } from "./use-form";
-
-const PROFILE_SETUP_HREF = "/app/professional/profile/setup";
 
 type ApiErrorData = {
   error?: string;
@@ -65,7 +67,7 @@ const FormHeader = () => (
   </header>
 );
 
-const SavedConfirmation = ({ phone }: { phone: string }) => (
+const SavedConfirmation = ({ nextHref, phone }: { nextHref: string; phone: string }) => (
   <div className="grid min-h-[520px] content-between gap-8 text-center">
     <div>
       <div className="mx-auto grid h-28 w-28 place-items-center rounded-full bg-surface text-primary shadow-[var(--lectum-shadow-soft)]">
@@ -84,15 +86,17 @@ const SavedConfirmation = ({ phone }: { phone: string }) => (
           </div>
           <div>
             <p className="text-xs font-bold uppercase tracking-[0.16em] text-primary">
-              Última etapa
+              {nextHref === PSYCHOLOGIST_ONBOARDING_PATHS.cfp ? "Próxima etapa" : "Última etapa"}
             </p>
             <h2 className="mt-1 text-xl font-bold text-foreground">
-              Vídeo de apresentação e perfil profissional
+              {nextHref === PSYCHOLOGIST_ONBOARDING_PATHS.cfp
+                ? "Verificação profissional"
+                : "Vídeo de apresentação e perfil profissional"}
             </h2>
             <p className="mt-3 text-sm leading-6 text-muted">
-              Envie um vídeo vertical de apresentação para ativar sua exibição na página de
-              psicólogos. Aproveite para completar seu perfil e gerar mais oportunidades de
-              atendimento.
+              {nextHref === PSYCHOLOGIST_ONBOARDING_PATHS.cfp
+                ? "Agora vamos confirmar seu registro profissional para liberar a configuração completa do perfil."
+                : "Envie um vídeo vertical de apresentação para ativar sua exibição na página de psicólogos. Aproveite para completar seu perfil e gerar mais oportunidades de atendimento."}
             </p>
           </div>
         </div>
@@ -103,7 +107,11 @@ const SavedConfirmation = ({ phone }: { phone: string }) => (
       asChild
       className="h-14 w-full rounded-full text-base shadow-[var(--lectum-shadow-soft)]"
     >
-      <Link href={PROFILE_SETUP_HREF}>Configurar perfil</Link>
+      <Link href={nextHref}>
+        {nextHref === PSYCHOLOGIST_ONBOARDING_PATHS.cfp
+          ? "Continuar para verificação"
+          : "Configurar perfil"}
+      </Link>
     </Button>
   </div>
 );
@@ -114,6 +122,7 @@ export const WhatsappVerificationLogic = () => {
   const [savedPhone, setSavedPhone] = useState<string | null>(null);
   const phoneForm = usePhoneForm(user?.psychologist_profile?.whatsapp);
   const PhoneForm = phoneForm.Form;
+  const nextHref = getAfterPhoneVerificationPath(user);
 
   const isPsychologist = user?.role === "psicologo";
 
@@ -171,7 +180,7 @@ export const WhatsappVerificationLogic = () => {
 
         <div className="rounded-[var(--lectum-card-radius)] border border-border bg-surface px-5 py-7 shadow-[var(--lectum-shadow-soft)]">
           {savedPhone ? (
-            <SavedConfirmation phone={savedPhone} />
+            <SavedConfirmation nextHref={nextHref} phone={savedPhone} />
           ) : (
             <>
               <FormHeader />

@@ -23,13 +23,15 @@
 
 ## Contexto
 
-O fluxo pago do psicólogo é: selecionar Plano Profissional, confirmar pagamento real, preencher endereço de faturamento, verificar registro profissional via CFP/InfoSimples, cadastrar WhatsApp e configurar/publicar perfil. A etapa de verificação profissional já existe em `/app/professional/cfp`, mas o produto identificou uma inconsistência: se o psicólogo com assinatura paga ativa sai dessa etapa, ele pode voltar para áreas do app sem conseguir retomar claramente a verificação e ainda pode receber selo de verificado apenas por ter assinatura ativa.
+O fluxo pago do psicólogo era: selecionar Plano Profissional, confirmar pagamento real, preencher endereço de faturamento, verificar registro profissional via CFP/InfoSimples, cadastrar WhatsApp e configurar/publicar perfil. Em 2026-07-11, a ordem operacional foi ajustada para reduzir fricção em caso de instabilidade da API automática: pagamento real → endereço de faturamento → cadastro de WhatsApp → verificação profissional → perfil.
+
+A etapa de verificação profissional já existe em `/app/professional/cfp`, mas o produto identificou uma inconsistência: se o psicólogo com assinatura paga ativa sai dessa etapa, ele pode voltar para áreas do app sem conseguir retomar claramente a verificação e ainda pode receber selo de verificado apenas por ter assinatura ativa.
 
 É obrigatório diferenciar esse estado do Plano Gratuito. Psicólogos gratuitos seguem a jornada gratuita por WhatsApp/perfil e não devem ser forçados à consulta CFP do fluxo pago. Psicólogos em cortesia administrativa (`source="admin_grant"`) continuam sendo equivalência operacional de verificação pública enquanto a cortesia estiver ativa.
 
 ## Objetivo
 
-Tornar a verificação de registro profissional uma etapa persistente e retomável do fluxo pago: psicólogo com Plano Profissional ativo via assinatura paga, endereço preenchido e `cfp_verified_at=null` deve ser redirecionado para `/app/professional/cfp`, não deve acessar edição do perfil profissional e não deve exibir selo público de verificado até confirmar o registro real.
+Tornar a verificação de registro profissional uma etapa persistente e retomável do fluxo pago: psicólogo com Plano Profissional ativo via assinatura paga, endereço preenchido, WhatsApp cadastrado e `cfp_verified_at=null` deve ser redirecionado para `/app/professional/cfp`, não deve acessar edição do perfil profissional e não deve exibir selo público de verificado até confirmar o registro real.
 
 ## Pré-requisitos e bloqueios
 
@@ -61,7 +63,7 @@ Tornar a verificação de registro profissional uma etapa persistente e retomáv
 
 ## Critérios de aceite
 
-- [x] Psicólogo com Plano Profissional pago ativo e `cfp_verified_at=null` é direcionado para `/app/professional/cfp` ao acessar áreas privadas não permitidas.
+- [x] Psicólogo com Plano Profissional pago ativo, endereço e WhatsApp cadastrados e `cfp_verified_at=null` é direcionado para `/app/professional/cfp` ao acessar áreas privadas não permitidas.
 - [x] Busca de CPF no CFP para ativação do selo verificado permite no máximo 3 tentativas persistidas por psicólogo e orienta suporte após esgotar.
 - [x] Edição/alteração de perfil profissional fica bloqueada no backend enquanto a verificação CFP do fluxo pago estiver pendente.
 - [x] Plano Gratuito não cai no gate de CFP do fluxo pago.
@@ -105,6 +107,13 @@ Tornar a verificação de registro profissional uma etapa persistente e retomáv
 - `pnpm --dir frontend build`
 - `pnpm check`
 - Smoke local com `next start --port 3100` e `curl -I http://127.0.0.1:3100/app/professional/cfp`: rota privada retornou `307` para login sem sessão, confirmando proteção/noindex. A validação autenticada de redirecionamento client-side para usuário pago pendente de CFP ficou limitada pela ausência de sessão real/browser autenticado neste ambiente.
+
+## Ajuste de fluxo em 2026-07-11 - WhatsApp antes da verificação profissional
+
+- Decisão de produto: no fluxo pago, o cadastro de WhatsApp deve ocorrer antes da verificação profissional para reduzir fricção quando a API automática estiver instável.
+- Nova ordem do fluxo pago: Plano Profissional → checkout/pagamento real → endereço de faturamento → WhatsApp → verificação profissional → perfil.
+- O cadastro do WhatsApp não libera edição/publicação completa do perfil profissional pago; o gate de perfil continua exigindo verificação profissional concluída.
+- `cfp_verified_at` continua sendo evidência de verificação automática, e a TASK-66 define a evolução para `crp_status="aprovado"` como aprovação canônica de produto também em aprovações manuais.
 
 ## Correção de limite de tentativas CFP em 2026-07-04
 

@@ -2,7 +2,7 @@
 
 ## Status
 
-Accepted
+Superseded em 2026-07-11 por ADR-0201 (complemento de fluxo: WhatsApp antes da verificação profissional).
 
 ## Task relacionada
 
@@ -43,3 +43,16 @@ Ao salvar o endereço de faturamento, o backend retorna `/app/professional/cfp` 
 ## Pendências
 
 - Validar manualmente no navegador com assinatura profissional ativa e `DOCUMENT_TOKEN` válido para confirmar o percurso completo com chamada real da InfoSimples.
+
+## Supersessão em 2026-07-11
+
+Produto decidiu inverter a ordem para reduzir fricção quando a API automática estiver instável. A ordem vigente do Plano Profissional pago passa a ser:
+
+1. Plano Profissional;
+2. checkout/pagamento real;
+3. endereço de faturamento;
+4. WhatsApp profissional;
+5. verificação profissional;
+6. configuração do perfil.
+
+O cadastro do WhatsApp não libera edição/publicação completa do perfil profissional pago; a verificação profissional continua obrigatória antes do perfil. A decisão vigente está documentada no complemento do ADR-0201 e nas tasks TASK-44/TASK-66.

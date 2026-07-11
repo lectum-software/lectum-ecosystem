@@ -25,9 +25,14 @@ export const isProfessionalSubscriptionActive = (subscription: SubscriptionLike)
 };
 
 export const isPaidRegistryVerificationComplete = (
-  profile: Pick<PsychologistProfileLike, "cfp_verified_at"> | null | undefined,
+  profile: Pick<PsychologistProfileLike, "cfp_verified_at" | "crp_status"> | null | undefined,
   subscription: SubscriptionLike,
-) => Boolean(profile?.cfp_verified_at || subscription?.source === "admin_grant");
+) =>
+  Boolean(
+    profile?.crp_status === "aprovado" ||
+      profile?.cfp_verified_at ||
+      subscription?.source === "admin_grant",
+  );
 
 export const getActiveProfessionalSubscription = (
   profile: Pick<PsychologistProfileLike, "subscriptions"> | null | undefined,
@@ -37,7 +42,24 @@ const getActiveSubscription = (
   profile: Pick<PsychologistProfileLike, "subscriptions"> | null | undefined,
 ) => profile?.subscriptions?.find(isActiveSubscription) ?? null;
 
-export const getAfterPhoneVerificationPath = () => PSYCHOLOGIST_ONBOARDING_PATHS.profileSetup;
+export const getAfterPhoneVerificationPath = (
+  data: Partial<Pick<user, "role" | "psychologist_profile">> | null | undefined,
+) => {
+  if (data?.role !== "psicologo") return PSYCHOLOGIST_ONBOARDING_PATHS.profileSetup;
+
+  const profile = data.psychologist_profile;
+  const activeProfessional = getActiveProfessionalSubscription(profile);
+
+  if (
+    profile &&
+    activeProfessional &&
+    !isPaidRegistryVerificationComplete(profile, activeProfessional)
+  ) {
+    return PSYCHOLOGIST_ONBOARDING_PATHS.cfp;
+  }
+
+  return PSYCHOLOGIST_ONBOARDING_PATHS.profileSetup;
+};
 
 export const getAfterPlanSelectionPath = () => PSYCHOLOGIST_ONBOARDING_PATHS.phone;
 
@@ -65,12 +87,12 @@ export const getPsychologistPaidOnboardingRequirementPath = (
     return PSYCHOLOGIST_ONBOARDING_PATHS.billingAddress;
   }
 
-  if (!isPaidRegistryVerificationComplete(profile, activeProfessional)) {
-    return PSYCHOLOGIST_ONBOARDING_PATHS.cfp;
-  }
-
   if (!profile.whatsapp) {
     return PSYCHOLOGIST_ONBOARDING_PATHS.phone;
+  }
+
+  if (!isPaidRegistryVerificationComplete(profile, activeProfessional)) {
+    return PSYCHOLOGIST_ONBOARDING_PATHS.cfp;
   }
 
   if (!profile.published) {

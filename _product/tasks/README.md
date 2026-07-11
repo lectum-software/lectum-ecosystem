@@ -17,7 +17,7 @@ Cada task é auto-suficiente e deve ser executada isoladamente por uma IA usando
 - A referência visual ativa é Builder Quick Copy + imagens exportadas em `_product/proto`.
 - O Builder está autenticado no espaço `Lectum` e o Quick Copy foi validado via `builder.io code`.
 - Existem 62 JPEGs exportados em `_product/proto`: 61 telas de produto e 1 ícone isolado.
-- A fila operacional agora possui 71 tasks: `TASK-00` a `TASK-65`, incluindo complementos `TASK-18A`, `TASK-29A`/`TASK-29B` e `TASK-31A` a `TASK-31C`.
+- A fila operacional agora possui 72 tasks: `TASK-00` a `TASK-66`, incluindo complementos `TASK-18A`, `TASK-29A`/`TASK-29B` e `TASK-31A` a `TASK-31C`.
 
 ## Inventário visual ativo
 
@@ -146,6 +146,7 @@ ou cortesia manual.
 | 63 | [TASK-63 - Fundação de campanhas e logs de notificações Admin](TASK-63-fundacao-campanhas-logs-notificacoes-admin.md) | Completed | 29A, 29B, 38, 45 |
 | 64 | [TASK-64 - Tela administrativa de notificações](TASK-64-tela-administrativa-notificacoes.md) | Completed | 45, 46, 63 |
 | 65 | [TASK-65 - Configurações administrativas de catálogos e filtros](TASK-65-configuracoes-admin-catalogos-filtros.md) | Completed | 45, 46, 13, 18A |
+| 66 | [TASK-66 - Verificação manual de CRP e origem genérica de verificação profissional](TASK-66-verificacao-manual-crp-admin.md) | Pending | 10, 44, 45, 46, 54, 55 |
 
 ## Ordem operacional recomendada sem bloqueios
 
@@ -185,6 +186,7 @@ Esta secao e a fila pratica para continuar o MVP sem bater nas tasks bloqueadas 
 30. [TASK-63 - Fundação de campanhas e logs de notificações Admin](TASK-63-fundacao-campanhas-logs-notificacoes-admin.md) foi adicionada em 2026-07-08 para sustentar campanhas manuais e logs automáticos com canais in-app/push, sem e-mail na V1.
 31. [TASK-64 - Tela administrativa de notificações](TASK-64-tela-administrativa-notificacoes.md) foi adicionada em 2026-07-08 para o Admin criar notificações e acompanhar logs automáticos reais.
 32. [TASK-65 - Configurações administrativas de catálogos e filtros](TASK-65-configuracoes-admin-catalogos-filtros.md) foi adicionada em 2026-07-08 para gerenciar filtros da busca/perfil, incluindo especialidades segmentadas por categorias persistidas.
+33. [TASK-66 - Verificação manual de CRP e origem genérica de verificação profissional](TASK-66-verificacao-manual-crp-admin.md) foi adicionada em 2026-07-11 para permitir aprovação/rejeição manual auditada quando a API automática estiver instável, mantendo `cfp_verified_at` como evidência automática e `crp_status="aprovado"` como aprovação canônica de produto.
 
 ### 1A. Trilha Admin planejada
 
@@ -211,6 +213,7 @@ Execute uma por vez, sempre validando, marcando critérios, ADR e commit/push:
 19. [TASK-63 - Fundação de campanhas e logs de notificações Admin](TASK-63-fundacao-campanhas-logs-notificacoes-admin.md)
 20. [TASK-64 - Tela administrativa de notificações](TASK-64-tela-administrativa-notificacoes.md)
 21. [TASK-65 - Configurações administrativas de catálogos e filtros](TASK-65-configuracoes-admin-catalogos-filtros.md)
+22. [TASK-66 - Verificação manual de CRP e origem genérica de verificação profissional](TASK-66-verificacao-manual-crp-admin.md)
 
 ### 1. Trilha executavel agora apos TASK-10
 
@@ -310,3 +313,9 @@ Uma task só pode ser marcada como concluída quando:
 
 - Psicologos no plano gratuito seguem da escolha do plano para `/app/professional/whatsapp/verify` e depois para `/app/professional/profile/setup`.
 - O plano gratuito exige apenas insercao do WhatsApp antes do perfil; nao exige consulta/validacao CFP/CRP via API.
+
+## Atualizacao de fluxo em 2026-07-11: WhatsApp antes da verificacao profissional no plano pago
+
+- Psicologos no Plano Profissional pago seguem, apos pagamento real e endereco de faturamento, para `/app/professional/whatsapp/verify`.
+- Depois de cadastrar o WhatsApp, psicologos pagos com verificacao profissional pendente seguem para `/app/professional/cfp`.
+- A edicao/publicacao do perfil profissional pago permanece bloqueada ate a verificacao profissional ser aprovada por API automatica ou aprovacao manual auditada.

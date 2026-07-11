@@ -27,7 +27,7 @@ import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
 import { type CfpSearchForm, useForm } from "./use-form";
 
-const nextStepHref = "/app/professional/whatsapp/verify";
+const nextStepHref = "/app/professional/profile/setup";
 const supportMessage =
   "Ol\u00e1, preciso de ajuda com a verifica\u00e7\u00e3o profissional CFP/CRP na Lectum.";
 const supportHref = `https://wa.me/5537998739534?text=${encodeURIComponent(supportMessage)}`;
@@ -283,13 +283,13 @@ const AlreadyVerifiedScreen = ({ cpf }: { cpf?: string | null }) => (
       <div className="mt-8 rounded-[24px] border border-success/20 bg-success/10 px-5 py-5 text-center text-success">
         <CheckCircle2 className="mx-auto h-8 w-8" aria-hidden="true" />
         <p className="mt-3 text-sm font-semibold">
-          Próximo passo: cadastrar seu WhatsApp profissional para contatos de pacientes.
+          Próximo passo: configurar seu perfil profissional para aparecer na Lectum.
         </p>
       </div>
 
       <Button asChild className="mt-7 h-14 w-full rounded-full text-base">
         <Link href={nextStepHref}>
-          Continuar para WhatsApp
+          Configurar perfil
           <ArrowRight className="h-4 w-4" aria-hidden="true" />
         </Link>
       </Button>
@@ -551,7 +551,10 @@ export const PsychologistCfpLogic = () => {
     );
   }
 
-  if (currentUser?.psychologist_profile?.cfp_verified_at) {
+  if (
+    currentUser?.psychologist_profile?.crp_status === "aprovado" ||
+    currentUser?.psychologist_profile?.cfp_verified_at
+  ) {
     return <AlreadyVerifiedScreen cpf={currentUser.psychologist_profile.cpf} />;
   }
 
@@ -559,7 +562,7 @@ export const PsychologistCfpLogic = () => {
     <PageFrame>
       <PremiumPanel>
         <CfpHero
-          description="Para ativar o selo de verificado no seu perfil, precisamos confirmar que você é um profissional com registro ativo no Conselho Federal de Psicologia"
+          description="Antes de liberar a configuração completa do perfil, precisamos confirmar que você é um profissional com registro ativo no Conselho Federal de Psicologia."
           title="Verificação Profissional"
         />
 
