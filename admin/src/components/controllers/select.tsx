@@ -22,7 +22,7 @@ export type SelectControllerProps<TFormValues extends FieldValues> = {
 
 export const SelectController = <TFormValues extends FieldValues>({
   disabled,
-  insetChevron,
+  insetChevron = true,
   label,
   name,
   options,
@@ -64,7 +64,7 @@ export const SelectController = <TFormValues extends FieldValues>({
         {insetChevron ? (
           <ChevronDown
             aria-hidden
-            className="pointer-events-none absolute right-5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted"
+            className="pointer-events-none absolute right-6 top-1/2 h-4 w-4 -translate-y-1/2 text-muted"
           />
         ) : null}
       </span>
