@@ -3528,6 +3528,10 @@ const CurrentPlanCard = ({ billing, id }: { billing: AdminPsychologistBilling; i
   const planPrice = isCourtesy ? null : formatPlanPrice(plan.price_cents, plan.interval);
   const planEndLabel = isCourtesy ? "Fim" : "Pr?xima renova??o";
   const internalNote = plan.grant_notes?.trim() || null;
+  const hasSubscription = Boolean(plan.id);
+  const lifetimeValue = plan.lifetime_value_available
+    ? formatMoney(plan.lifetime_value_cents ?? 0)
+    : "Indisponível";
 
   const onRevoke = async () => {
     const confirmed = window.confirm("Confirmar revogacao da cortesia deste psicologo?");
@@ -3558,6 +3562,29 @@ const CurrentPlanCard = ({ billing, id }: { billing: AdminPsychologistBilling; i
       <dl className="mt-5 divide-y divide-border text-sm">
         <FieldRow label="Inicio" value={formatDate(plan.started_at)} />
         <FieldRow label={planEndLabel} value={formatDate(plan.current_period_end)} />
+        {hasSubscription ? (
+          <>
+            <FieldRow
+              label="Quantidade de mensalidades pagas"
+              value={numberFormatter.format(plan.paid_installments_count)}
+            />
+            <FieldRow
+              label="Lifetime Value (LTV)"
+              value={
+                plan.lifetime_value_available || !plan.lifetime_value_unavailable_reason ? (
+                  lifetimeValue
+                ) : (
+                  <span className="flex flex-col gap-1">
+                    <span>{lifetimeValue}</span>
+                    <span className="text-xs font-bold text-subtle">
+                      {plan.lifetime_value_unavailable_reason}
+                    </span>
+                  </span>
+                )
+              }
+            />
+          </>
+        ) : null}
         {isCourtesy ? (
           <>
             <FieldRow label="Concedida por" value={formatGrantedByName(plan.granted_by)} />

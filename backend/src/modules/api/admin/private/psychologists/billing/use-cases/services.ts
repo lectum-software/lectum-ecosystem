@@ -15,6 +15,7 @@ import type {
   IAdminPsychologistBillingShowDTO,
 } from "../DTOs/IAdminPsychologistBillingDTO";
 import {
+  type AdminPsychologistBillingPaymentMetrics,
   type AdminPsychologistBillingRecord,
   AdminPsychologistBillingRepository,
   type AdminPsychologistBillingSubscription,
@@ -82,6 +83,7 @@ const subscriptionStartedAt = (subscription: AdminPsychologistBillingSubscriptio
 
 const buildPlan = (
   subscription: AdminPsychologistBillingSubscription | null,
+  paymentMetrics: AdminPsychologistBillingPaymentMetrics,
 ): AdminPsychologistBillingPlan => ({
   can_cancel: false,
   can_change_payment_method: false,
@@ -97,6 +99,10 @@ const buildPlan = (
   interval: subscription?.plan.interval ?? null,
   is_courtesy: subscription?.source === "admin_grant",
   is_paid: subscription?.source === "mercadopago" && (subscription.plan.price_cents ?? 0) > 0,
+  lifetime_value_available: paymentMetrics.lifetimeValueAvailable,
+  lifetime_value_cents: paymentMetrics.lifetimeValueCents,
+  lifetime_value_unavailable_reason: paymentMetrics.lifetimeValueUnavailableReason,
+  paid_installments_count: paymentMetrics.paidInstallmentsCount,
   plan_name: subscription?.plan.name ?? null,
   plan_slug: subscription?.plan.slug ?? null,
   price_cents: subscription?.plan.price_cents ?? null,
@@ -228,7 +234,7 @@ export const showAdminPsychologistBilling = async (
       paymentSource.gateway === "mercadopago" &&
       paymentSource.status !== "cancelada",
   );
-  const [paymentMethod, paymentHistoryItems] = await Promise.all([
+  const [paymentMethod, paymentHistoryItems, paymentMetrics] = await Promise.all([
     canUsePaymentMethod
       ? repository.findPaymentMethod(
           profile.user.id,
@@ -236,6 +242,7 @@ export const showAdminPsychologistBilling = async (
         )
       : Promise.resolve(null),
     repository.showPaymentHistory(paymentSource),
+    repository.summarizePaymentMetrics(profile.subscriptions),
   ]);
 
   const response: AdminPsychologistBillingDTO = {
@@ -250,7 +257,7 @@ export const showAdminPsychologistBilling = async (
           last4: paymentMethod.last4 ?? null,
         }
       : null,
-    plan: buildPlan(currentSubscription),
+    plan: buildPlan(currentSubscription, paymentMetrics),
     source: "professional_subscription+payment_method+payment_event+admin_grant_service",
   };
 

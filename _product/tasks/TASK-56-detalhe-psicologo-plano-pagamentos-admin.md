@@ -80,6 +80,7 @@ Exibir plano, método e histórico financeiro do psicólogo e permitir concessã
 
 - [x] Aba só abre para admin autenticado.
 - [x] Plano atual usa `professional_subscription` real.
+- [x] Plano atual exibe quantidade de mensalidades pagas e Lifetime Value (LTV) do psic?logo quando existe assinatura, usando `payment_event` real.
 - [x] Histórico financeiro usa dados reais ou exibe indisponível honesto.
 - [x] Cortesia pela UI reutiliza regra real do comando operacional.
 - [x] CPF, Regional e CRP da cortesia são editáveis no Admin.
@@ -247,3 +248,15 @@ Exibir plano, método e histórico financeiro do psicólogo e permitir concessã
 - Validacao browser local headless Chrome/CDP, viewport mobile-first 390px, confirmou `Fim`, ausencia de `Proxima renovacao`, `Nota interna`, a nota `teste de nota interna de cortesia`, `Revogar cortesia` e `scrollWidth=390`.
 - Validacoes executadas: `pnpm --dir admin check`, `pnpm --dir admin build` e `git diff --check`.
 - `pnpm check` foi acionado, mas ficou bloqueado por formatacao em arquivo local nao relacionado a esta mudanca (`frontend/src/app/app/professional/whatsapp/verify/logic.tsx`).
+
+## Ajuste complementar 2026-07-11 - mensalidades pagas e LTV no Plano atual
+
+- Pedido do usu?rio: quando o psic?logo possuir assinatura, o card `Plano atual` deve exibir `Quantidade de mensalidades pagas` e `Lifetime Value (LTV)` daquele psic?logo.
+- O endpoint `GET /api/admin/private/psychologists/:id/billing` passou a retornar os campos `paid_installments_count`, `lifetime_value_cents`, `lifetime_value_available` e `lifetime_value_unavailable_reason` em `plan`.
+- A contagem e o LTV s?o derivados exclusivamente de `payment_event` real associado ?s assinaturas Mercado Pago do psic?logo por `professional_subscription.id` ou `gateway_subscription_id`; n?o h? proje??o por pre?o do plano nem dado simulado.
+- Quando houver pagamento confirmado sem valor monet?rio extra?vel do payload bruto, o LTV fica indispon?vel com motivo honesto, sem somat?rio parcial.
+- A UI mobile-first do Admin exibe as duas linhas no card `Plano atual` somente quando h? assinatura (`plan.id`) e mant?m cortesia/notas/revoga??o no mesmo fluxo existente.
+- N?o houve altera??o de schema Prisma, migrations, packages, gateway ou regra de cortesia.
+- Valida??o API local com psic?logo real `cmrglzdds000ajkuhqedavedb` retornou `Plano Profissional`, `paid_installments_count=0`, `lifetime_value_cents=0` e `lifetime_value_available=true`, sem muta??o de dados.
+- Browser local/headless acessou `http://localhost:3002/psicologos/cmrglzdds000ajkuhqedavedb?tab=plano` com status HTTP 200; a valida??o visual autenticada ficou limitada ? sess?o Admin n?o exposta ao ambiente de automa??o, ent?o a evid?ncia principal de renderiza??o veio de `admin check/build` e da rota compilada.
+- Valida??es executadas: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e `git diff --check`.

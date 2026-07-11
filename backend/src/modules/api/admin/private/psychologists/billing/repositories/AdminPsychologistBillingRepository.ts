@@ -1,6 +1,10 @@
 ﻿import type { Prisma } from "@/external/generated/prisma/client";
 import prisma from "@/infra/database/prisma";
-import type { payment_method, professional_subscription } from "@/interfaces/objects";
+import type {
+  payment_event,
+  payment_method,
+  professional_subscription,
+} from "@/interfaces/objects";
 import type { BillingPaymentHistoryItem } from "@/modules/api/private/psychologist/billing/subscription/repositories/interfaces/ISubscriptionRepository";
 import { SubscriptionRepository } from "@/modules/api/private/psychologist/billing/subscription/repositories/SubscriptionRepository";
 import {
@@ -11,6 +15,127 @@ import {
 
 const ADMIN_GRANT_SOURCE = "admin_grant";
 const PREVIOUS_SUBSCRIPTION_RESTORE_WINDOW_MS = 5 * 60 * 1000;
+const PAYMENT_GATEWAY_FALLBACK = "mercadopago";
+
+const asRecord = (value: unknown): Record<string, unknown> | null =>
+  typeof value === "object" && value !== null && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : null;
+
+const toSafeString = (value: unknown) => {
+  if (typeof value === "string" && value.trim()) return value.trim();
+  if (typeof value === "number" && Number.isFinite(value)) return String(value);
+
+  return null;
+};
+
+const normalizeText = (value: unknown) =>
+  String(value ?? "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
+
+const valueContainsReference = (value: unknown, references: string[], depth = 0): boolean => {
+  if (references.length === 0 || depth > 8) return false;
+
+  const stringValue = toSafeString(value);
+  if (stringValue) {
+    return references.some((reference) => stringValue.includes(reference));
+  }
+
+  if (Array.isArray(value)) {
+    return value.some((item) => valueContainsReference(item, references, depth + 1));
+  }
+
+  const record = asRecord(value);
+  if (!record) return false;
+
+  return Object.values(record).some((item) => valueContainsReference(item, references, depth + 1));
+};
+
+const findPayloadValue = (value: unknown, keys: string[], depth = 0): unknown => {
+  if (depth > 8) return undefined;
+
+  if (Array.isArray(value)) {
+    for (const item of value) {
+      const found = findPayloadValue(item, keys, depth + 1);
+      if (found !== undefined) return found;
+    }
+
+    return undefined;
+  }
+
+  const record = asRecord(value);
+  if (!record) return undefined;
+
+  const normalizedKeys = keys.map((key) => key.toLowerCase());
+  for (const [key, entry] of Object.entries(record)) {
+    if (normalizedKeys.includes(key.toLowerCase())) return entry;
+  }
+
+  for (const entry of Object.values(record)) {
+    const found = findPayloadValue(entry, keys, depth + 1);
+    if (found !== undefined) return found;
+  }
+
+  return undefined;
+};
+
+const toAmountCents = (value: unknown): number | null => {
+  if (typeof value === "number" && Number.isFinite(value) && value > 0) {
+    return Math.round(value * 100);
+  }
+
+  if (typeof value !== "string") return null;
+
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+
+  const normalized =
+    trimmed.includes(",") && !trimmed.includes(".") ? trimmed.replace(",", ".") : trimmed;
+  const parsed = Number(normalized.replace(/[^0-9.-]/g, ""));
+
+  if (!Number.isFinite(parsed) || parsed <= 0) return null;
+
+  return Math.round(parsed * 100);
+};
+
+const extractPaymentAmountCents = (payload: unknown) =>
+  toAmountCents(
+    findPayloadValue(payload, [
+      "transaction_amount",
+      "total_paid_amount",
+      "paid_amount",
+      "amount",
+      "value",
+    ]),
+  );
+
+const isConfirmedPaymentStatus = (payload: unknown) => {
+  const status = normalizeText(
+    findPayloadValue(payload, ["status", "status_detail", "action", "payment_status"]),
+  );
+
+  return ["approved", "accredited", "authorized", "paid"].some((term) => status.includes(term));
+};
+
+const isPaymentEvent = (event: Pick<payment_event, "payload" | "type">) => {
+  const typeText = normalizeText(event.type);
+  if (typeText.includes("payment")) return true;
+
+  const topic = normalizeText(findPayloadValue(event.payload, ["topic", "type", "action"]));
+  return topic.includes("payment");
+};
+
+const isGatewaySubscription = (subscription: AdminPsychologistBillingSubscription) =>
+  Boolean(
+    subscription.source === "mercadopago" ||
+      subscription.gateway ||
+      subscription.gateway_subscription_id,
+  );
+
+const uniqueStrings = (values: Array<string | null | undefined>) =>
+  Array.from(new Set(values.filter((value): value is string => Boolean(value))));
 
 const billingSelect = {
   cfp_verified_at: true,
@@ -87,6 +212,13 @@ export type AdminPsychologistBillingRecord = Prisma.psychologist_profileGetPaylo
 
 export type AdminPsychologistBillingSubscription =
   AdminPsychologistBillingRecord["subscriptions"][number];
+
+export type AdminPsychologistBillingPaymentMetrics = {
+  lifetimeValueAvailable: boolean;
+  lifetimeValueCents: number | null;
+  lifetimeValueUnavailableReason: string | null;
+  paidInstallmentsCount: number;
+};
 
 export class AdminPsychologistBillingRepository {
   async findPsychologist(id: string): Promise<AdminPsychologistBillingRecord | null> {
@@ -214,6 +346,79 @@ export class AdminPsychologistBillingRepository {
   ): Promise<BillingPaymentHistoryItem[]> {
     const repository = new SubscriptionRepository();
     return repository.showPaymentHistory(subscription);
+  }
+
+  async summarizePaymentMetrics(
+    subscriptions: AdminPsychologistBillingSubscription[],
+  ): Promise<AdminPsychologistBillingPaymentMetrics> {
+    const gatewaySubscriptions = subscriptions.filter(isGatewaySubscription);
+    const references = uniqueStrings(
+      gatewaySubscriptions.flatMap((subscription) => [
+        subscription.id,
+        subscription.gateway_subscription_id,
+      ]),
+    );
+
+    if (references.length === 0) {
+      return {
+        lifetimeValueAvailable: true,
+        lifetimeValueCents: 0,
+        lifetimeValueUnavailableReason: null,
+        paidInstallmentsCount: 0,
+      };
+    }
+
+    const gateways = uniqueStrings(
+      gatewaySubscriptions.map((subscription) => subscription.gateway ?? PAYMENT_GATEWAY_FALLBACK),
+    );
+    const events = await prisma.payment_event.findMany({
+      where: {
+        deleted: false,
+        gateway: {
+          in: gateways.length > 0 ? gateways : [PAYMENT_GATEWAY_FALLBACK],
+        },
+      },
+      orderBy: {
+        createdAt: "asc",
+      },
+      select: {
+        payload: true,
+        type: true,
+      },
+    });
+    const confirmedPayments = events.filter(
+      (event) =>
+        valueContainsReference(event.payload, references) &&
+        isPaymentEvent(event) &&
+        isConfirmedPaymentStatus(event.payload),
+    );
+    const summary = confirmedPayments.reduce(
+      (accumulator, event) => {
+        const amountCents = extractPaymentAmountCents(event.payload);
+
+        if (amountCents === null) {
+          accumulator.missingAmountCount += 1;
+          return accumulator;
+        }
+
+        accumulator.lifetimeValueCents += amountCents;
+        return accumulator;
+      },
+      {
+        lifetimeValueCents: 0,
+        missingAmountCount: 0,
+      },
+    );
+
+    return {
+      lifetimeValueAvailable: summary.missingAmountCount === 0,
+      lifetimeValueCents: summary.missingAmountCount === 0 ? summary.lifetimeValueCents : null,
+      lifetimeValueUnavailableReason:
+        summary.missingAmountCount === 0
+          ? null
+          : "Existe pagamento confirmado sem valor monetário extraível no payment_event.",
+      paidInstallmentsCount: confirmedPayments.length,
+    };
   }
 
   async revokeCourtesy(

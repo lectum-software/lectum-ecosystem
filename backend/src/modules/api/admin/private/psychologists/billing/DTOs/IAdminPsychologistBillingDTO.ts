@@ -17,6 +17,10 @@ export type AdminPsychologistBillingPlan = {
   interval: string | null;
   is_courtesy: boolean;
   is_paid: boolean;
+  lifetime_value_available: boolean;
+  lifetime_value_cents: number | null;
+  lifetime_value_unavailable_reason: string | null;
+  paid_installments_count: number;
   plan_name: string | null;
   plan_slug: string | null;
   price_cents: number | null;
