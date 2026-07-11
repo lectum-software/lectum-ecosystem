@@ -2976,7 +2976,7 @@ const registryVerificationBadge = (registry: AdminPsychologistRegistryVerificati
   <Badge
     className={REGISTRY_VERIFICATION_TONE[registry.summary.status] ?? "bg-surface-muted text-muted"}
   >
-    {registry.summary.status_label}
+    {registry.summary.approval_label}
   </Badge>
 );
 
@@ -3269,6 +3269,13 @@ const RegistryVerificationCard = ({ id }: { id: string }) => {
   const registry = query.data;
   if (!registry) return null;
 
+  const canShowActions =
+    registry.actions.can_approve_manually || registry.actions.can_reject_manually;
+  const registryExperience =
+    registry.identity.experience_years === null
+      ? "Não informado"
+      : `${registry.identity.experience_years} anos`;
+
   return (
     <CardShell className="p-5">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
@@ -3281,17 +3288,26 @@ const RegistryVerificationCard = ({ id }: { id: string }) => {
         {registryVerificationBadge(registry)}
       </div>
 
-      <div className="mt-5 grid gap-3">
+      <div className="mt-5 grid gap-3 rounded-3xl border border-blue-100 bg-blue-50/70 p-4">
         <FieldRow label="Regional CRP" value={formatNullable(registry.identity.regional_crp)} />
         <FieldRow label="Nº CRP" value={formatNullable(registry.identity.registration_number)} />
         <FieldRow
           label="Data de inscrição"
           value={formatDate(registry.identity.crp_registration_date)}
         />
-        <FieldRow label="Status atual" value={registry.summary.status_label} />
+        <FieldRow label="Tempo de experiência" value={registryExperience} />
+      </div>
+
+      <div className="mt-5">
+        <h3 className="text-sm font-black text-foreground">Lectum</h3>
+      </div>
+
+      <div className="mt-2 grid gap-3">
+        <FieldRow label="Plano" value={registry.summary.plan_label} />
+        <FieldRow label="Aprovação" value={registry.summary.approval_label} />
         <FieldRow label="Origem" value={registry.summary.source_label} />
         <FieldRow
-          label="Responsável manual"
+          label="Responsável"
           value={
             registry.summary.latest_manual_admin
               ? [
@@ -3304,11 +3320,11 @@ const RegistryVerificationCard = ({ id }: { id: string }) => {
           }
         />
         <FieldRow
-          label="Data manual"
+          label="Data aprovação"
           value={formatDateTime(registry.summary.latest_manual_checked_at)}
         />
         <FieldRow
-          label="Observações manuais"
+          label="Observação"
           value={formatNullable(
             registry.summary.latest_manual_notes || registry.summary.latest_manual_reason,
           )}
@@ -3330,32 +3346,38 @@ const RegistryVerificationCard = ({ id }: { id: string }) => {
         )}
       </div>
 
-      <div className="mt-5 grid gap-3 sm:grid-cols-2">
-        <button
-          className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-control bg-primary px-4 text-sm font-black text-white transition hover:bg-primary-hover"
-          onClick={() => setAction("approve")}
-          type="button"
-        >
-          <ShieldCheck aria-hidden className="h-4 w-4" />
-          Aprovar CRP manualmente
-        </button>
-        <button
-          className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-control border border-danger bg-surface px-4 text-sm font-black text-danger transition hover:bg-red-50"
-          onClick={() => setAction("reject")}
-          type="button"
-        >
-          <AlertTriangle aria-hidden className="h-4 w-4" />
-          Rejeitar verificação
-        </button>
-      </div>
+      {canShowActions ? (
+        <div className="mt-5 grid gap-3 sm:grid-cols-2">
+          {registry.actions.can_approve_manually ? (
+            <button
+              className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-control bg-primary px-4 text-sm font-black text-white transition hover:bg-primary-hover"
+              onClick={() => setAction("approve")}
+              type="button"
+            >
+              <ShieldCheck aria-hidden className="h-4 w-4" />
+              Aprovar CRP manualmente
+            </button>
+          ) : null}
+          {registry.actions.can_reject_manually ? (
+            <button
+              className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-control border border-danger bg-surface px-4 text-sm font-black text-danger transition hover:bg-red-50"
+              onClick={() => setAction("reject")}
+              type="button"
+            >
+              <AlertTriangle aria-hidden className="h-4 w-4" />
+              Rejeitar verificação
+            </button>
+          ) : null}
+        </div>
+      ) : null}
 
-      {action === "approve" ? (
+      {action === "approve" && registry.actions.can_approve_manually ? (
         <RegistryVerificationDialog onClose={() => setAction(null)} title="Aprovar CRP manualmente">
           <RegistryApproveForm id={id} onClose={() => setAction(null)} registry={registry} />
         </RegistryVerificationDialog>
       ) : null}
 
-      {action === "reject" ? (
+      {action === "reject" && registry.actions.can_reject_manually ? (
         <RegistryVerificationDialog onClose={() => setAction(null)} title="Rejeitar verificação">
           <RegistryRejectForm id={id} onClose={() => setAction(null)} />
         </RegistryVerificationDialog>

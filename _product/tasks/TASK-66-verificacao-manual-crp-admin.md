@@ -272,3 +272,9 @@ Se o schema atual não suportar auditoria mínima sem `raw`, usar `raw` com shap
 - CPF deixou de ser exibido no card e nas ultimas tentativas do registro; o formulario de aprovacao manual continua exigindo CPF para auditoria real.
 - Cortesia administrativa ativa passou a aparecer no registro como ativacao manual, porque a concessao pressupoe verificacao administrativa previa do registro profissional.
 - Validacao read-only com psicologo real em cortesia ativa retornou `summaryStatus=aprovado`, `summaryLabel=Ativado manualmente`, `source=admin_grant` e `sourceLabel=Ativacao manual`.
+
+### Ajuste de opcoes do registro profissional 2026-07-11
+
+- O card passou a separar dados publicos do conselho (Regional, N? CRP, data de inscricao e tempo de experiencia) em bloco com fundo azulado leve.
+- A secao "Lectum" passou a exibir Plano, Aprovacao, Origem, Responsavel, Data aprovacao e Observacao.
+- A aprovacao/rejeicao manual ficou disponivel somente para plano Profissional com registro ainda pendente; Gratuito, Cortesia e Profissional ja ativo nao exibem acao de aprovacao manual.

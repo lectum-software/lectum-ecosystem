@@ -1,6 +1,6 @@
 ﻿import type { Prisma } from "@/external/generated/prisma/client";
 import prisma from "@/infra/database/prisma";
-import { activeProfessionalEntitlementWhere } from "@/utils/subscription-entitlement";
+import { activeSubscriptionPeriodWhere } from "@/utils/subscription-entitlement";
 
 const registryCheckSelect = {
   checked_at: true,
@@ -30,16 +30,34 @@ const profileSelect = {
     },
   },
   subscriptions: {
-    where: activeProfessionalEntitlementWhere(),
+    orderBy: {
+      createdAt: "desc" as const,
+    },
+    where: {
+      ...activeSubscriptionPeriodWhere(),
+      plan: {
+        active: true,
+        deleted: false,
+      },
+    },
     select: {
       createdAt: true,
       current_period_end: true,
+      grant_notes: true,
+      grant_reason: true,
       grant_started_at: true,
+      granted_by: true,
       id: true,
+      plan: {
+        select: {
+          name: true,
+          slug: true,
+        },
+      },
       source: true,
       status: true,
     },
-    take: 3,
+    take: 5,
   },
   user: {
     select: {

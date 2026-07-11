@@ -48,18 +48,22 @@ export type AdminPsychologistRegistryVerificationDTO = {
     cpf_masked: string | null;
     crp: string | null;
     crp_registration_date: Date | null;
+    experience_years: number | null;
     regional_crp: string | null;
     registration_number: string | null;
   };
   latest_attempts: AdminPsychologistRegistryVerificationAttempt[];
   source: "psychologist_profile+professional_registry_check";
   summary: {
+    approval_label: "Ativo" | "Pendente";
     cfp_verified_at: Date | null;
     crp_status: string;
     latest_manual_admin: AdminRegistryVerificationActor | null;
     latest_manual_checked_at: Date | null;
     latest_manual_notes: string | null;
     latest_manual_reason: string | null;
+    plan_label: "Cortesia" | "Gratuito" | "Profissional";
+    plan_type: "cortesia" | "gratuito" | "profissional";
     source: AdminRegistryVerificationSource;
     source_label: string;
     status: AdminRegistryVerificationStatus;

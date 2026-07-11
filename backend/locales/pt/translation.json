@@ -139,7 +139,9 @@
     "admin_registry_verification_date_future": "A data de inscrição no CRP não pode estar no futuro.",
     "admin_registry_verification_approval_confirmation_invalid": "Digite APROVAR CRP para confirmar a aprovação manual.",
     "admin_registry_verification_rejection_confirmation_invalid": "Digite REJEITAR CRP para confirmar a rejeição.",
-    "admin_registry_verification_situation_not_confirmed": "Confirme que a situação profissional foi verificada antes de aprovar."
+    "admin_registry_verification_situation_not_confirmed": "Confirme que a situação profissional foi verificada antes de aprovar.",
+    "admin_registry_verification_approval_not_allowed": "A aprovacao manual so esta disponivel para plano profissional com registro ainda pendente.",
+    "admin_registry_verification_rejection_not_allowed": "A rejeicao manual so esta disponivel para plano profissional com registro ainda pendente."
   },
   "message": {
     "store": "dado criado",

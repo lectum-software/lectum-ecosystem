@@ -103,3 +103,7 @@ adapter/auditoria técnica e não são propagados para UI ou respostas do fronte
 Uma cortesia administrativa ativa (`professional_subscription.source="admin_grant"`) tambem deve ser exibida no registro profissional como ativacao manual. A decisao preserva a cortesia como assinatura/entitlement operacional, mas evita que o card de registro pareca pendente quando o Admin ja concedeu acesso apos verificacao administrativa do registro profissional.
 
 O CPF permanece obrigatorio para a acao de aprovacao manual auditada, mas deixou de ser exibido no card Admin de registro profissional e nas ultimas tentativas do card.
+
+## Complemento 2026-07-11: acoes manuais por plano
+
+O card de registro profissional separa os dados publicos do conselho dos dados operacionais Lectum. A aprovacao/rejeicao manual fica disponivel apenas quando ha plano Profissional ativo e o registro ainda nao esta ativo. Plano Gratuito nao demanda aprovacao manual; Cortesia ja representa verificacao manual administrativa; Profissional com registro ativo ja foi aprovado pela origem existente.

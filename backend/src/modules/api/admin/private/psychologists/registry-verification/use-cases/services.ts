@@ -2,6 +2,7 @@
 import { error, msg } from "@/helpers/translate";
 import type { admin } from "@/interfaces/objects";
 import { parseGrantCrpRegistrationDate } from "@/operations/subscriptions/grant-professional-subscription-service";
+import { crpExperienceYears } from "@/utils/professional-experience";
 import { parseStoredCrp } from "@/utils/professional-registry";
 import type {
   AdminPsychologistRegistryVerificationAttempt,
@@ -186,13 +187,53 @@ const latestManualCheck = (checks: AdminPsychologistRegistryVerificationCheck[])
 const latestManualApproval = (checks: AdminPsychologistRegistryVerificationCheck[]) =>
   checks.find((check) => isManualCheck(check) && check.found) ?? null;
 
+type RegistryPlan = {
+  label: "Cortesia" | "Gratuito" | "Profissional";
+  type: "cortesia" | "gratuito" | "profissional";
+};
+
 const activeAdminGrantSubscription = (profile: AdminPsychologistRegistryVerificationRecord) =>
   profile.subscriptions.find((subscription) => subscription.source === "admin_grant") ?? null;
 
+const currentRegistryPlan = (
+  profile: AdminPsychologistRegistryVerificationRecord,
+): RegistryPlan => {
+  const subscriptions = [...profile.subscriptions].sort((left, right) => {
+    const leftCourtesy = Number(left.source === "admin_grant");
+    const rightCourtesy = Number(right.source === "admin_grant");
+    if (leftCourtesy !== rightCourtesy) return rightCourtesy - leftCourtesy;
+
+    const leftProfessional = Number(left.plan.slug !== "gratuito");
+    const rightProfessional = Number(right.plan.slug !== "gratuito");
+    if (leftProfessional !== rightProfessional) return rightProfessional - leftProfessional;
+
+    return right.createdAt.getTime() - left.createdAt.getTime();
+  });
+  const current = subscriptions[0] ?? null;
+
+  if (!current || current.plan.slug === "gratuito") {
+    return {
+      label: "Gratuito",
+      type: "gratuito",
+    };
+  }
+
+  if (current.source === "admin_grant") {
+    return {
+      label: "Cortesia",
+      type: "cortesia",
+    };
+  }
+
+  return {
+    label: "Profissional",
+    type: "profissional",
+  };
+};
+
 const sourceLabel = (source: AdminRegistryVerificationSource) => {
-  if (source === "manual_admin") return "Aprovação manual";
-  if (source === "api_automatica") return "API automática";
-  if (source === "admin_grant") return "Ativação manual";
+  if (source === "manual_admin" || source === "admin_grant") return "Manual";
+  if (source === "api_automatica") return "Via API";
 
   return "Sem origem aprovada";
 };
@@ -208,11 +249,20 @@ const summarizeVerification = (
   const latestStatus = attemptStatusFromRaw(latestRaw);
   const adminGrant = activeAdminGrantSubscription(profile);
   const activeAdminGrant = Boolean(adminGrant);
+  const plan = currentRegistryPlan(profile);
   const manualApprovalIsCurrent = Boolean(
     latestManualApproved &&
       (!profile.cfp_verified_at || latestManualApproved.checked_at >= profile.cfp_verified_at),
   );
-  const manualActor = latestManual ? actorFromRaw(getRawRecord(latestManual.raw)) : null;
+  const manualActor = latestManual
+    ? actorFromRaw(getRawRecord(latestManual.raw))
+    : adminGrant?.granted_by
+      ? {
+          email: null,
+          id: null,
+          name: adminGrant.granted_by,
+        }
+      : null;
   let status: AdminRegistryVerificationStatus = "pendente";
   let status_label = "Pendente";
   let source: AdminRegistryVerificationSource = "pendente";
@@ -261,13 +311,19 @@ const summarizeVerification = (
   }
 
   return {
+    approval_label: status === "aprovado" ? "Ativo" : "Pendente",
     cfp_verified_at: profile.cfp_verified_at,
     crp_status: profile.crp_status,
     latest_manual_admin: manualActor,
     latest_manual_checked_at:
       latestManual?.checked_at ?? adminGrant?.grant_started_at ?? adminGrant?.createdAt ?? null,
-    latest_manual_notes: getString(raw, "notes") ?? getString(raw, "observation"),
-    latest_manual_reason: getString(raw, "reason"),
+    latest_manual_notes:
+      getString(raw, "notes") ??
+      getString(raw, "observation") ??
+      trimOrNull(adminGrant?.grant_notes),
+    latest_manual_reason: getString(raw, "reason") ?? trimOrNull(adminGrant?.grant_reason),
+    plan_label: plan.label,
+    plan_type: plan.type,
     source,
     source_label: sourceLabel(source),
     status,
@@ -279,11 +335,14 @@ const buildResponse = (
   profile: AdminPsychologistRegistryVerificationRecord,
 ): AdminPsychologistRegistryVerificationDTO => {
   const { regional_crp, registration_number } = splitCrp(profile.crp);
+  const summary = summarizeVerification(profile);
+  const canManuallyReview =
+    summary.plan_type === "profissional" && summary.approval_label !== "Ativo";
 
   return {
     actions: {
-      can_approve_manually: true,
-      can_reject_manually: true,
+      can_approve_manually: canManuallyReview,
+      can_reject_manually: canManuallyReview,
       strong_approve_confirmation: APPROVE_CONFIRMATION,
       strong_reject_confirmation: REJECT_CONFIRMATION,
     },
@@ -292,12 +351,13 @@ const buildResponse = (
       cpf_masked: maskCpf(profile.cpf),
       crp: trimOrNull(profile.crp),
       crp_registration_date: profile.crp_registration_date,
+      experience_years: crpExperienceYears(profile.crp_registration_date),
       regional_crp,
       registration_number,
     },
     latest_attempts: profile.registry_checks.map(mapAttempt),
     source: "psychologist_profile+professional_registry_check",
-    summary: summarizeVerification(profile),
+    summary,
   };
 };
 
@@ -352,6 +412,10 @@ export const approveRegistryVerification = async (
   const profile = await repository.findPsychologist(data.p.id);
 
   if (!profile) return notFound();
+
+  if (!buildResponse(profile).actions.can_approve_manually) {
+    return serviceError(400, "admin_registry_verification_approval_not_allowed");
+  }
 
   const confirmation = data.b.confirmation?.trim();
   if (confirmation !== APPROVE_CONFIRMATION) {
@@ -441,6 +505,10 @@ export const rejectRegistryVerification = async (
   const profile = await repository.findPsychologist(data.p.id);
 
   if (!profile) return notFound();
+
+  if (!buildResponse(profile).actions.can_reject_manually) {
+    return serviceError(400, "admin_registry_verification_rejection_not_allowed");
+  }
 
   const confirmation = data.b.confirmation?.trim();
   if (confirmation !== REJECT_CONFIRMATION) {
