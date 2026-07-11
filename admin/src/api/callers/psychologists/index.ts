@@ -8,6 +8,8 @@ import {
   type AdminPsychologistRejectRegistryVerificationInput,
   type AdminPsychologistReportsQuery,
   type AdminPsychologistReviewsQuery,
+  type AdminPsychologistUpdatePersonalDataInput,
+  type AdminPsychologistUpdateProfessionalDataInput,
   type AdminPsychologistUpdateRegistryIdentityInput,
   approveAdminPsychologistRegistryVerification,
   getAdminPsychologistActivities,
@@ -25,6 +27,8 @@ import {
   type PsychologistsListQuery,
   rejectAdminPsychologistRegistryVerification,
   revokeAdminPsychologistCourtesy,
+  updateAdminPsychologistPersonalData,
+  updateAdminPsychologistProfessionalData,
   updateAdminPsychologistRegistryIdentity,
 } from "@/api/req/psychologists";
 
@@ -122,6 +126,39 @@ export const useAdminPsychologistActivities = (
     queryFn: () => getAdminPsychologistActivities(id, input),
     queryKey: adminPsychologistsKeys.activities(id, input),
   });
+
+const invalidatePsychologistProfileEdit = async (
+  queryClient: ReturnType<typeof useQueryClient>,
+  id: string,
+) => {
+  await Promise.all([
+    queryClient.invalidateQueries({ queryKey: adminPsychologistsKeys.all }),
+    queryClient.invalidateQueries({ queryKey: adminPsychologistsKeys.detail(id) }),
+    queryClient.invalidateQueries({
+      queryKey: [...adminPsychologistsKeys.all, "activities", id],
+    }),
+  ]);
+};
+
+export const useAdminPsychologistUpdatePersonalData = (id: string) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (input: AdminPsychologistUpdatePersonalDataInput) =>
+      updateAdminPsychologistPersonalData(id, input),
+    onSuccess: () => invalidatePsychologistProfileEdit(queryClient, id),
+  });
+};
+
+export const useAdminPsychologistUpdateProfessionalData = (id: string) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (input: AdminPsychologistUpdateProfessionalDataInput) =>
+      updateAdminPsychologistProfessionalData(id, input),
+    onSuccess: () => invalidatePsychologistProfileEdit(queryClient, id),
+  });
+};
 
 export const useAdminPsychologistGrantCourtesy = (id: string) => {
   const queryClient = useQueryClient();

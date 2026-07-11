@@ -142,7 +142,9 @@
     "admin_registry_verification_situation_not_confirmed": "Confirme que a situação profissional foi verificada antes de aprovar.",
     "admin_registry_verification_approval_not_allowed": "A aprovacao manual so esta disponivel para plano profissional com registro ainda pendente.",
     "admin_registry_verification_rejection_not_allowed": "A rejeicao manual so esta disponivel para plano profissional com registro ainda pendente.",
-    "admin_registry_identity_invalid": "Informe Regional CRP, numero do CRP e data de inscricao para atualizar o registro profissional."
+    "admin_registry_identity_invalid": "Informe Regional CRP, numero do CRP e data de inscricao para atualizar o registro profissional.",
+    "admin_psychologist_profile_cpf_change_confirmation_required": "Confirme explicitamente a altera??o de CPF de um psic?logo com CRP aprovado. Esta a??o n?o revalida nem invalida o registro automaticamente.",
+    "admin_psychologist_profile_invalid_modality": "Informe uma modalidade profissional v?lida."
   },
   "message": {
     "store": "dado criado",
@@ -225,7 +227,10 @@
     "billing_subscription_synced": "Status da assinatura atualizado com sucesso.",
     "billing_subscription_cancelled": "Assinatura cancelada com sucesso.",
     "admin_auth_success": "Autenticação administrativa realizada com sucesso",
-    "admin_logout_success": "Sessão administrativa encerrada com sucesso"
+    "admin_logout_success": "Sessão administrativa encerrada com sucesso",
+    "admin_psychologist_profile_personal_updated": "Dados pessoais atualizados com auditoria administrativa.",
+    "admin_psychologist_profile_professional_updated": "Dados profissionais atualizados com auditoria administrativa.",
+    "admin_psychologist_profile_no_changes": "Nenhuma altera??o foi identificada."
   },
   "gender": {
     "o": "o"

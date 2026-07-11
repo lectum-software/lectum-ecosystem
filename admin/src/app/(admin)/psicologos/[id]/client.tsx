@@ -42,7 +42,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { type ReactNode, type SVGProps, useEffect, useMemo, useState } from "react";
-import { FormProvider, type SubmitHandler, useForm } from "react-hook-form";
+import { FormProvider, type SubmitHandler, useForm, useWatch } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 import {
@@ -252,8 +252,16 @@ const mergeCurrentOption = (
 ) => {
   const normalized = String(currentValue ?? "").trim();
   if (!normalized || options.some((option) => option.value === normalized)) return [...options];
+  const [firstOption, ...restOptions] = options;
+  if (!firstOption) {
+    return [{ label: `${capitalizeOptionLabel(normalized)} (valor atual)`, value: normalized }];
+  }
 
-  return [options[0], { label: `${capitalizeOptionLabel(normalized)} (valor atual)`, value: normalized }, ...options.slice(1)];
+  return [
+    firstOption,
+    { label: `${capitalizeOptionLabel(normalized)} (valor atual)`, value: normalized },
+    ...restOptions,
+  ];
 };
 
 const PROFILE_STATUS_COPY: Record<"active" | "inactive", { className: string; label: string }> = {
@@ -421,13 +429,13 @@ const profilePersonalDataBaseSchema = z.object({
 type ProfilePersonalDataFormValues = z.infer<typeof profilePersonalDataBaseSchema>;
 
 const profileProfessionalDataSchema = z.object({
-  approach_ids: z.array(z.string()).default([]),
-  languages: z.array(z.string()).default([]),
+  approach_ids: z.array(z.string()),
+  languages: z.array(z.string()),
   modality: z.string().optional(),
   reason: z.string().max(500, "Use no máximo 500 caracteres.").optional(),
-  service_ids: z.array(z.string()).default([]),
-  specialty_ids: z.array(z.string()).default([]),
-  target_audience: z.array(z.string()).default([]),
+  service_ids: z.array(z.string()),
+  specialty_ids: z.array(z.string()),
+  target_audience: z.array(z.string()),
 });
 
 type ProfileProfessionalDataFormValues = z.infer<typeof profileProfessionalDataSchema>;
@@ -3663,11 +3671,511 @@ const RegistryVerificationCard = ({ id }: { id: string }) => {
   );
 };
 
+const ProfileEditButton = ({ disabled, onClick }: { disabled?: boolean; onClick: () => void }) => (
+  <button
+    className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-control border border-primary px-4 text-sm font-black text-primary transition hover:bg-primary-soft disabled:cursor-not-allowed disabled:border-border disabled:text-muted sm:w-auto"
+    disabled={disabled}
+    onClick={onClick}
+    type="button"
+  >
+    <Pencil aria-hidden className="h-4 w-4" />
+    Editar
+  </button>
+);
+
+const ProfileFormActions = ({
+  disabled,
+  onCancel,
+}: {
+  disabled?: boolean;
+  onCancel: () => void;
+}) => (
+  <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
+    <button
+      className="inline-flex h-11 items-center justify-center rounded-control border border-border px-4 text-sm font-black text-foreground transition hover:bg-surface-muted disabled:cursor-not-allowed disabled:text-muted"
+      disabled={disabled}
+      onClick={onCancel}
+      type="button"
+    >
+      Cancelar
+    </button>
+    <button
+      className="inline-flex h-11 items-center justify-center gap-2 rounded-control bg-primary px-4 text-sm font-black text-white transition hover:bg-primary-hover disabled:cursor-not-allowed disabled:bg-surface-muted disabled:text-muted"
+      disabled={disabled}
+      type="submit"
+    >
+      {disabled ? <Loader2 aria-hidden className="h-4 w-4 animate-spin" /> : null}
+      Salvar alterações
+    </button>
+  </div>
+);
+
+const isValidDateInput = (value?: string | null) => {
+  if (!value) return true;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+
+  const [yearValue, monthValue, dayValue] = value.split("-");
+  const year = Number(yearValue);
+  const month = Number(monthValue);
+  const day = Number(dayValue);
+  const date = new Date(Date.UTC(year, month - 1, day));
+  const today = new Date();
+  const todayTime = Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate());
+
+  return (
+    date.getUTCFullYear() === year &&
+    date.getUTCMonth() === month - 1 &&
+    date.getUTCDate() === day &&
+    date.getTime() >= Date.UTC(1900, 0, 1) &&
+    date.getTime() <= todayTime
+  );
+};
+
+const createPersonalDataSchema = (isRegistryApproved: boolean, currentCpf?: string | null) =>
+  profilePersonalDataBaseSchema.superRefine((values, ctx) => {
+    if (values.birthdate && !isValidDateInput(values.birthdate)) {
+      ctx.addIssue({
+        code: "custom",
+        message: "Informe uma data de nascimento válida.",
+        path: ["birthdate"],
+      });
+    }
+
+    const cpfChanged = onlyDigits(values.cpf) !== onlyDigits(currentCpf);
+    if (isRegistryApproved && cpfChanged && values.confirm_cpf_change !== "sim") {
+      ctx.addIssue({
+        code: "custom",
+        message:
+          "Confirme que a alteração administrativa do CPF não revalida nem invalida o CRP automaticamente.",
+        path: ["confirm_cpf_change"],
+      });
+    }
+  });
+
+const PersonalDataEditForm = ({
+  detail,
+  id,
+  onCancel,
+}: {
+  detail: AdminPsychologistDetail;
+  id: string;
+  onCancel: () => void;
+}) => {
+  const personal = detail.profile.personal;
+  const professional = detail.profile.professional;
+  const mutation = useAdminPsychologistUpdatePersonalData(id);
+  const schema = useMemo(
+    () => createPersonalDataSchema(professional.crp_status === "aprovado", personal.cpf),
+    [personal.cpf, professional.crp_status],
+  );
+  const form = useForm<ProfilePersonalDataFormValues>({
+    defaultValues: {
+      address_city: personal.address.city || "",
+      address_complement: personal.address.complement || "",
+      address_district: personal.address.district || "",
+      address_number: personal.address.number || "",
+      address_state: personal.address.state || "",
+      address_street: personal.address.street || "",
+      address_zip: formatZipInput(personal.address.zip),
+      birthdate: formatInputDate(personal.birthdate),
+      confirm_cpf_change: "",
+      cpf: formatCpfInput(personal.cpf),
+      gender: professional.gender || "",
+      race_color: professional.race_color || "",
+      reason: "",
+      religion: professional.religion || "",
+      whatsapp: formatWhatsappInput(personal.phone),
+    },
+    mode: "onSubmit",
+    resolver: zodResolver(schema),
+  });
+  const disabled = mutation.isPending;
+
+  useEffect(() => {
+    form.reset({
+      address_city: personal.address.city || "",
+      address_complement: personal.address.complement || "",
+      address_district: personal.address.district || "",
+      address_number: personal.address.number || "",
+      address_state: personal.address.state || "",
+      address_street: personal.address.street || "",
+      address_zip: formatZipInput(personal.address.zip),
+      birthdate: formatInputDate(personal.birthdate),
+      confirm_cpf_change: "",
+      cpf: formatCpfInput(personal.cpf),
+      gender: professional.gender || "",
+      race_color: professional.race_color || "",
+      reason: "",
+      religion: professional.religion || "",
+      whatsapp: formatWhatsappInput(personal.phone),
+    });
+  }, [form, personal, professional.gender, professional.race_color, professional.religion]);
+
+  const onSubmit: SubmitHandler<ProfilePersonalDataFormValues> = async (values) => {
+    try {
+      await mutation.mutateAsync({
+        address_city: emptyToNull(values.address_city),
+        address_complement: emptyToNull(values.address_complement),
+        address_district: emptyToNull(values.address_district),
+        address_number: emptyToNull(values.address_number),
+        address_state: emptyToNull(values.address_state)?.toUpperCase() ?? null,
+        address_street: emptyToNull(values.address_street),
+        address_zip: emptyToNull(values.address_zip ? onlyDigits(values.address_zip) : ""),
+        birthdate: emptyToNull(values.birthdate),
+        confirm_cpf_change: values.confirm_cpf_change === "sim",
+        cpf: emptyToNull(values.cpf ? onlyDigits(values.cpf) : ""),
+        gender: emptyToNull(values.gender),
+        race_color: emptyToNull(values.race_color),
+        reason: values.reason.trim(),
+        religion: emptyToNull(values.religion),
+        whatsapp: emptyToNull(values.whatsapp ? onlyDigits(values.whatsapp) : ""),
+      });
+      toast.success("Dados pessoais atualizados.");
+      onCancel();
+    } catch (error) {
+      toast.error(resolveApiError(error));
+    }
+  };
+
+  return (
+    <FormProvider {...form}>
+      <form className="space-y-4" noValidate onSubmit={form.handleSubmit(onSubmit)}>
+        <div className="rounded-2xl border border-blue-100 bg-blue-50/70 p-4 text-sm font-bold text-muted">
+          <span className="inline-flex items-center gap-2 text-foreground">
+            <Lock aria-hidden className="h-4 w-4 text-primary" />
+            E-mail é credencial de login e permanece somente leitura nesta task.
+          </span>
+          <p className="mt-2">E-mail atual: {personal.email}</p>
+        </div>
+        <div className="grid gap-4 md:grid-cols-2">
+          <InputController<ProfilePersonalDataFormValues>
+            disabled={disabled}
+            inputMode="numeric"
+            label="CPF"
+            maskValue={formatCpfInput}
+            maxLength={14}
+            name="cpf"
+            placeholder="000.000.000-00"
+          />
+          <InputController<ProfilePersonalDataFormValues>
+            disabled={disabled}
+            inputMode="tel"
+            label="WhatsApp"
+            maskValue={formatWhatsappInput}
+            maxLength={16}
+            name="whatsapp"
+            placeholder="+5537999999999"
+          />
+          <InputController<ProfilePersonalDataFormValues>
+            disabled={disabled}
+            label="Data de nascimento"
+            name="birthdate"
+            type="date"
+          />
+          <SelectController<ProfilePersonalDataFormValues>
+            disabled={disabled}
+            insetChevron
+            label="Gênero"
+            name="gender"
+            options={mergeCurrentOption(GENDER_OPTIONS, professional.gender)}
+          />
+          <SelectController<ProfilePersonalDataFormValues>
+            disabled={disabled}
+            insetChevron
+            label="Raça/cor"
+            name="race_color"
+            options={mergeCurrentOption(RACE_COLOR_OPTIONS, professional.race_color)}
+          />
+          <SelectController<ProfilePersonalDataFormValues>
+            disabled={disabled}
+            insetChevron
+            label="Religião"
+            name="religion"
+            options={mergeCurrentOption(RELIGION_OPTIONS, professional.religion)}
+          />
+        </div>
+        <div className="grid gap-4 md:grid-cols-2">
+          <InputController<ProfilePersonalDataFormValues>
+            disabled={disabled}
+            label="Logradouro"
+            name="address_street"
+            placeholder="Rua, avenida..."
+          />
+          <InputController<ProfilePersonalDataFormValues>
+            disabled={disabled}
+            label="Número"
+            name="address_number"
+          />
+          <InputController<ProfilePersonalDataFormValues>
+            disabled={disabled}
+            label="Complemento"
+            name="address_complement"
+          />
+          <InputController<ProfilePersonalDataFormValues>
+            disabled={disabled}
+            label="Bairro"
+            name="address_district"
+          />
+          <InputController<ProfilePersonalDataFormValues>
+            disabled={disabled}
+            inputMode="numeric"
+            label="CEP"
+            maskValue={formatZipInput}
+            maxLength={9}
+            name="address_zip"
+          />
+          <InputController<ProfilePersonalDataFormValues>
+            disabled={disabled}
+            label="Cidade"
+            name="address_city"
+          />
+          <SelectController<ProfilePersonalDataFormValues>
+            disabled={disabled}
+            insetChevron
+            label="UF"
+            name="address_state"
+            options={mergeCurrentOption(STATE_OPTIONS, personal.address.state)}
+          />
+        </div>
+        {professional.crp_status === "aprovado" ? (
+          <div className="rounded-2xl border border-orange-100 bg-orange-50 p-4 text-sm font-bold text-orange-700">
+            Alterar CPF em psicólogo aprovado não revalida nem invalida automaticamente o CRP.
+            Decisões de aprovação/rejeição continuam no card Registro profissional.
+          </div>
+        ) : null}
+        <SelectController<ProfilePersonalDataFormValues>
+          disabled={disabled}
+          insetChevron
+          label="Confirmação para alteração de CPF aprovado"
+          name="confirm_cpf_change"
+          options={[...CPF_CHANGE_CONFIRMATION_OPTIONS]}
+        />
+        <TextareaController<ProfilePersonalDataFormValues>
+          disabled={disabled}
+          label="Motivo/observação interna"
+          name="reason"
+          placeholder="Descreva a justificativa operacional da correção."
+          required
+          rows={4}
+        />
+        <ProfileFormActions disabled={disabled} onCancel={onCancel} />
+      </form>
+    </FormProvider>
+  );
+};
+
+const ProfileReadOnlyPersonalData = ({ detail }: { detail: AdminPsychologistDetail }) => {
+  const professional = detail.profile.professional;
+  const personal = detail.profile.personal;
+
+  return (
+    <>
+      <FieldRow label="CPF" value={formatCpfDisplay(personal.cpf)} />
+      <FieldRow
+        label="E-mail"
+        value={
+          <span className="inline-flex items-center gap-2">
+            {personal.email}
+            <Lock aria-label="Somente leitura" className="h-4 w-4 text-muted" />
+          </span>
+        }
+      />
+      <FieldRow label="WhatsApp" value={formatPhoneDisplay(personal.phone)} />
+      <FieldRow label="Data de nascimento" value={formatDate(personal.birthdate)} />
+      <FieldRow label="Gênero" value={capitalizeOptionLabel(professional.gender)} />
+      <FieldRow label="Raça/cor" value={capitalizeOptionLabel(professional.race_color)} />
+      <FieldRow label="Religião" value={capitalizeOptionLabel(professional.religion)} />
+      <FieldRow
+        label="Endereço"
+        value={
+          <span className="whitespace-pre-line">{formatPersonalAddress(personal.address)}</span>
+        }
+      />
+    </>
+  );
+};
+
+const activeOrSelected = <T extends { active: boolean; id?: string; name: string; slug: string }>(
+  item: T,
+  selectedValues: string[],
+  value: string,
+) => item.active || selectedValues.includes(value);
+
+const ProfileProfessionalEditForm = ({
+  detail,
+  id,
+  onCancel,
+}: {
+  detail: AdminPsychologistDetail;
+  id: string;
+  onCancel: () => void;
+}) => {
+  const professional = detail.profile.professional;
+  const mutation = useAdminPsychologistUpdateProfessionalData(id);
+  const catalogsQuery = useAdminSettingsCatalogs();
+  const form = useForm<ProfileProfessionalDataFormValues>({
+    defaultValues: {
+      approach_ids: professional.approaches.map((item) => item.id),
+      languages: professional.languages,
+      modality: professional.modality || "",
+      reason: "",
+      service_ids: professional.services.map((item) => item.id),
+      specialty_ids: professional.specialties.map((item) => item.id),
+      target_audience: professional.target_audience,
+    },
+    mode: "onSubmit",
+    resolver: zodResolver(profileProfessionalDataSchema),
+  });
+  const disabled = mutation.isPending || catalogsQuery.isLoading;
+  const catalogs = catalogsQuery.data;
+
+  useEffect(() => {
+    form.reset({
+      approach_ids: professional.approaches.map((item) => item.id),
+      languages: professional.languages,
+      modality: professional.modality || "",
+      reason: "",
+      service_ids: professional.services.map((item) => item.id),
+      specialty_ids: professional.specialties.map((item) => item.id),
+      target_audience: professional.target_audience,
+    });
+  }, [form, professional]);
+
+  const selected = useWatch({ control: form.control });
+  const specialtyOptions = useMemo(() => {
+    const selectedIds = selected.specialty_ids ?? [];
+
+    return (catalogs?.specialty_categories ?? [])
+      .flatMap((category) => category.specialties)
+      .filter((item) => activeOrSelected(item, selectedIds, item.id))
+      .map((item) => ({ label: item.name, value: item.id }));
+  }, [catalogs?.specialty_categories, selected.specialty_ids]);
+  const approachOptions = useMemo(() => {
+    const selectedIds = selected.approach_ids ?? [];
+
+    return (catalogs?.approaches ?? [])
+      .filter((item) => activeOrSelected(item, selectedIds, item.id))
+      .map((item) => ({ label: item.name, value: item.id }));
+  }, [catalogs?.approaches, selected.approach_ids]);
+  const serviceOptions = useMemo(() => {
+    const selectedIds = selected.service_ids ?? [];
+
+    return (catalogs?.services ?? [])
+      .filter((item) => activeOrSelected(item, selectedIds, item.id))
+      .map((item) => ({ label: item.name, value: item.id }));
+  }, [catalogs?.services, selected.service_ids]);
+  const languageOptions = useMemo(() => {
+    const selectedValues = selected.languages ?? [];
+
+    return (catalogs?.languages ?? [])
+      .filter((item) => activeOrSelected(item, selectedValues, item.name))
+      .map((item) => ({ label: item.name, value: item.name }));
+  }, [catalogs?.languages, selected.languages]);
+  const targetAudienceOptions = useMemo(() => {
+    const selectedValues = selected.target_audience ?? [];
+
+    return (catalogs?.target_audiences ?? [])
+      .filter((item) => activeOrSelected(item, selectedValues, item.slug))
+      .map((item) => ({ label: item.name, value: item.slug }));
+  }, [catalogs?.target_audiences, selected.target_audience]);
+  const catalogError = catalogsQuery.error ? resolveApiError(catalogsQuery.error) : null;
+
+  const onSubmit: SubmitHandler<ProfileProfessionalDataFormValues> = async (values) => {
+    try {
+      await mutation.mutateAsync({
+        approach_ids: values.approach_ids,
+        languages: values.languages,
+        modality: emptyToNull(values.modality) as "hibrido" | "online" | "presencial" | null,
+        reason: emptyToNull(values.reason),
+        service_ids: values.service_ids,
+        specialty_ids: values.specialty_ids,
+        target_audience: values.target_audience,
+      });
+      toast.success("Dados profissionais atualizados.");
+      onCancel();
+    } catch (error) {
+      toast.error(resolveApiError(error));
+    }
+  };
+
+  return (
+    <FormProvider {...form}>
+      <form className="space-y-4" noValidate onSubmit={form.handleSubmit(onSubmit)}>
+        {catalogError ? (
+          <ErrorState message={catalogError} onRetry={() => void catalogsQuery.refetch()} />
+        ) : null}
+        <SelectController<ProfileProfessionalDataFormValues>
+          disabled={disabled}
+          insetChevron
+          label="Formato de atendimento"
+          name="modality"
+          options={mergeCurrentOption(MODALITY_OPTIONS, professional.modality)}
+        />
+        <CheckboxGroupController<ProfileProfessionalDataFormValues>
+          disabled={disabled}
+          label="Especialidades"
+          name="specialty_ids"
+          options={specialtyOptions}
+        />
+        <CheckboxGroupController<ProfileProfessionalDataFormValues>
+          disabled={disabled}
+          label="Abordagens"
+          name="approach_ids"
+          options={approachOptions}
+        />
+        <CheckboxGroupController<ProfileProfessionalDataFormValues>
+          disabled={disabled}
+          label="Serviços"
+          name="service_ids"
+          options={serviceOptions}
+        />
+        <CheckboxGroupController<ProfileProfessionalDataFormValues>
+          disabled={disabled}
+          label="Idiomas"
+          name="languages"
+          options={languageOptions}
+        />
+        <CheckboxGroupController<ProfileProfessionalDataFormValues>
+          disabled={disabled}
+          label="Público atendido"
+          name="target_audience"
+          options={targetAudienceOptions}
+        />
+        <TextareaController<ProfileProfessionalDataFormValues>
+          disabled={disabled}
+          label="Motivo/observação interna"
+          name="reason"
+          placeholder="Opcional: registre o motivo da correção profissional."
+          rows={3}
+        />
+        <ProfileFormActions disabled={disabled} onCancel={onCancel} />
+      </form>
+    </FormProvider>
+  );
+};
+
+const ProfileReadOnlyProfessionalData = ({ detail }: { detail: AdminPsychologistDetail }) => {
+  const professional = detail.profile.professional;
+  const personal = detail.profile.personal;
+
+  return (
+    <>
+      <FieldRow label="Especialidades" value={listText(professional.specialties)} />
+      <FieldRow label="Abordagens" value={listText(professional.approaches)} />
+      <FieldRow label="Serviços" value={listText(professional.services)} />
+      <FieldRow label="Público atendido" value={listText(professional.target_audience)} />
+      <FieldRow label="Idiomas" value={listText(professional.languages)} />
+      <FieldRow label="Modalidades" value={capitalizeOptionLabel(professional.modality)} />
+      <FieldRow label="Cadastro via" value={formatNullable(personal.provider)} />
+      <FieldRow label="Data cadastro Lectum" value={formatDate(detail.header.created_at)} />
+    </>
+  );
+};
+
 const ProfileTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: string }) => {
   const profile = detail.profile;
-  const professional = profile.professional;
-  const personal = profile.personal;
   const academic = profile.academic;
+  const [editingSection, setEditingSection] = useState<"personal" | "professional" | null>(null);
   const hasAcademicFormation = Boolean(
     academic.title ||
       academic.institution ||
@@ -3696,33 +4204,50 @@ const ProfileTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: strin
     <div className="space-y-5" data-psychologist-detail-tab="perfil">
       <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(360px,0.8fr)] xl:items-start">
         <div className="space-y-5">
-          <InfoCard icon={UserRound} title="Dados pessoais">
-            <FieldRow label="CPF" value={formatCpfDisplay(personal.cpf)} />
-            <FieldRow label="E-mail" value={personal.email} />
-            <FieldRow label="WhatsApp" value={formatPhoneDisplay(personal.phone)} />
-            <FieldRow label="Data de nascimento" value={formatDate(personal.birthdate)} />
-            <FieldRow label="Gênero" value={capitalizeOptionLabel(professional.gender)} />
-            <FieldRow label="Raça/cor" value={capitalizeOptionLabel(professional.race_color)} />
-            <FieldRow label="Religião" value={capitalizeOptionLabel(professional.religion)} />
-            <FieldRow
-              label="Endereço"
-              value={
-                <span className="whitespace-pre-line">
-                  {formatPersonalAddress(personal.address)}
-                </span>
-              }
-            />
+          <InfoCard
+            action={
+              editingSection === "personal" ? null : (
+                <ProfileEditButton
+                  disabled={editingSection === "professional"}
+                  onClick={() => setEditingSection("personal")}
+                />
+              )
+            }
+            icon={UserRound}
+            title="Dados pessoais"
+          >
+            {editingSection === "personal" ? (
+              <PersonalDataEditForm
+                detail={detail}
+                id={id}
+                onCancel={() => setEditingSection(null)}
+              />
+            ) : (
+              <ProfileReadOnlyPersonalData detail={detail} />
+            )}
           </InfoCard>
 
-          <InfoCard icon={FileText} title="Dados profissionais">
-            <FieldRow label="Especialidades" value={listText(professional.specialties)} />
-            <FieldRow label="Abordagens" value={listText(professional.approaches)} />
-            <FieldRow label="Serviços" value={listText(professional.services)} />
-            <FieldRow label="Público atendido" value={listText(professional.target_audience)} />
-            <FieldRow label="Idiomas" value={listText(professional.languages)} />
-            <FieldRow label="Modalidades" value={capitalizeOptionLabel(professional.modality)} />
-            <FieldRow label="Cadastro via" value={formatNullable(personal.provider)} />
-            <FieldRow label="Data cadastro Lectum" value={formatDate(detail.header.created_at)} />
+          <InfoCard
+            action={
+              editingSection === "professional" ? null : (
+                <ProfileEditButton
+                  disabled={editingSection === "personal"}
+                  onClick={() => setEditingSection("professional")}
+                />
+              )
+            }
+            icon={FileText}
+            title="Dados profissionais"
+          >
+            {editingSection === "professional" ? (
+              <ProfileProfessionalEditForm
+                detail={detail}
+                id={id}
+                onCancel={() => setEditingSection(null)}
+              />
+            ) : (
+              <ProfileReadOnlyProfessionalData detail={detail} />
+            )}
           </InfoCard>
 
           <CardShell className="p-5">

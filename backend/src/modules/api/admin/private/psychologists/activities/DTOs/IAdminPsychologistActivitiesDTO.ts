@@ -26,6 +26,8 @@ export type AdminPsychologistActivityArea =
 
 export type AdminPsychologistActivityType =
   | "account_created"
+  | "admin_personal_data_updated"
+  | "admin_professional_data_updated"
   | "post_created"
   | "post_saved"
   | "profile_created"
@@ -86,7 +88,7 @@ export type AdminPsychologistActivitiesDTO = {
     timezone: "server-local";
     to: string | null;
   };
-  source: "user+psychologist_profile+professional_subscription+community_post+post_reply+post_save+post_reply_save+contact_request+professional_review+post_report";
+  source: "user+psychologist_profile+professional_subscription+community_post+post_reply+post_save+post_reply_save+contact_request+professional_review+post_report+admin_activity_log";
   unavailable: {
     description: string;
     id: string;

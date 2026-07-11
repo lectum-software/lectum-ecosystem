@@ -389,6 +389,34 @@ export type AdminPsychologistDetail = {
   source: "user+psychologist_profile+catalogs+subscriptions+metrics+events";
 };
 
+export type AdminPsychologistUpdatePersonalDataInput = {
+  address_city?: string | null;
+  address_complement?: string | null;
+  address_district?: string | null;
+  address_number?: string | null;
+  address_state?: string | null;
+  address_street?: string | null;
+  address_zip?: string | null;
+  birthdate?: string | null;
+  confirm_cpf_change?: boolean;
+  cpf?: string | null;
+  gender?: string | null;
+  race_color?: string | null;
+  reason: string;
+  religion?: string | null;
+  whatsapp?: string | null;
+};
+
+export type AdminPsychologistUpdateProfessionalDataInput = {
+  approach_ids?: string[];
+  languages?: string[];
+  modality?: "hibrido" | "online" | "presencial" | null;
+  reason?: string | null;
+  service_ids?: string[];
+  specialty_ids?: string[];
+  target_audience?: string[];
+};
+
 export type AdminPsychologistBillingPaymentHistoryItem = {
   amount_cents: number | null;
   description: string;
@@ -862,7 +890,7 @@ export type AdminPsychologistActivities = {
     timezone: "server-local";
     to: string | null;
   };
-  source: "user+psychologist_profile+professional_subscription+community_post+post_reply+post_save+post_reply_save+contact_request+professional_review+post_report";
+  source: "user+psychologist_profile+professional_subscription+community_post+post_reply+post_save+post_reply_save+contact_request+professional_review+post_report+admin_activity_log";
   unavailable: { description: string; id: string; label: string; source: string }[];
 };
 
@@ -987,6 +1015,30 @@ export const getAdminPsychologistsList = async (input: PsychologistsListQuery) =
 export const getAdminPsychologistDetail = async (id: string) => {
   const response = await adminApi.get<ApiResponse<AdminPsychologistDetail>>(
     `/api/admin/private/psychologists/${encodeURIComponent(id)}`,
+  );
+
+  return resolveApiData(response.data);
+};
+
+export const updateAdminPsychologistPersonalData = async (
+  id: string,
+  input: AdminPsychologistUpdatePersonalDataInput,
+) => {
+  const response = await adminApi.put<ApiResponse<AdminPsychologistDetail>>(
+    `/api/admin/private/psychologists/${encodeURIComponent(id)}/personal-data`,
+    input,
+  );
+
+  return resolveApiData(response.data);
+};
+
+export const updateAdminPsychologistProfessionalData = async (
+  id: string,
+  input: AdminPsychologistUpdateProfessionalDataInput,
+) => {
+  const response = await adminApi.put<ApiResponse<AdminPsychologistDetail>>(
+    `/api/admin/private/psychologists/${encodeURIComponent(id)}/professional-data`,
+    input,
   );
 
   return resolveApiData(response.data);

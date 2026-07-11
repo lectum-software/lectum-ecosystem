@@ -12,6 +12,7 @@ import type {
 import {
   type AdminPsychologistActivitiesProfile,
   AdminPsychologistActivitiesRepository,
+  type AdminPsychologistActivityAdminLog,
   type AdminPsychologistActivityPost,
   type AdminPsychologistActivityReply,
   type AdminPsychologistActivityReport,
@@ -24,25 +25,27 @@ const MS_PER_DAY = 86_400_000;
 
 const AREA_LABELS: Record<AdminPsychologistActivityArea, string> = {
   atendimento: "Atendimento",
-  avaliacoes: "Avaliações",
+  avaliacoes: "AvaliaÃ§Ãµes",
   comunidade: "Comunidade",
-  denuncias: "Denúncias",
+  denuncias: "DenÃºncias",
   financeiro: "Financeiro",
   perfil: "Perfil",
 };
 
 const TYPE_LABELS: Record<AdminPsychologistActivityType, string> = {
   account_created: "Conta criada",
-  post_created: "Criação de post",
+  admin_personal_data_updated: "Dados pessoais atualizados",
+  admin_professional_data_updated: "Dados profissionais atualizados",
+  post_created: "CriaÃ§Ã£o de post",
   post_saved: "Post salvo",
   profile_created: "Perfil criado",
-  profile_updated: "Atualização de perfil",
-  registry_verified: "Validação de registro",
+  profile_updated: "AtualizaÃ§Ã£o de perfil",
+  registry_verified: "ValidaÃ§Ã£o de registro",
   reply_created: "Resposta em comunidade",
   reply_saved: "Resposta salva",
-  report_received: "Denúncia recebida",
-  review_received: "Avaliação recebida",
-  review_responded: "Resposta à avaliação",
+  report_received: "DenÃºncia recebida",
+  review_received: "AvaliaÃ§Ã£o recebida",
+  review_responded: "Resposta Ã  avaliaÃ§Ã£o",
   subscription_started: "Assinatura registrada",
   whatsapp_click: "Clique no WhatsApp",
   whatsapp_verified: "WhatsApp verificado",
@@ -102,7 +105,7 @@ const resolvePeriod = (query: { from?: string; to?: string } = {}): PeriodResult
       current: { end: null, start: null },
       period: {
         from: null,
-        label: "Todo histórico registrado",
+        label: "Todo histÃ³rico registrado",
         max_days: null,
         timezone: "server-local",
         to: null,
@@ -131,7 +134,7 @@ const resolvePeriod = (query: { from?: string; to?: string } = {}): PeriodResult
     current: { end, start },
     period: {
       from: toDateKey(start),
-      label: "Período filtrado",
+      label: "PerÃ­odo filtrado",
       max_days: MAX_CUSTOM_PERIOD_DAYS,
       timezone: "server-local",
       to: toDateKey(end),
@@ -167,10 +170,10 @@ const roleLabel = (role: string) => {
   const labels: Record<string, string> = {
     admin: "Administrador",
     paciente: "Paciente",
-    psicologo: "Psicólogo",
+    psicologo: "PsicÃ³logo",
   };
 
-  return labels[role] ?? "Usuário";
+  return labels[role] ?? "UsuÃ¡rio";
 };
 
 const actorFromUser = (
@@ -185,12 +188,18 @@ const actorFromUser = (
   };
 };
 
+const actorFromAdmin = (admin: { name: string | null }): AdminPsychologistActivityActor => ({
+  id: "admin",
+  name: admin.name?.trim() || "Admin Lectum",
+  role: "Administrador",
+});
+
 const excerpt = (value: string | null | undefined, max = 90) => {
   const normalized = (value ?? "").replace(/\s+/g, " ").trim();
   if (!normalized) return "sem texto cadastrado";
   if (normalized.length <= max) return normalized;
 
-  return `${normalized.slice(0, max - 1).trim()}…`;
+  return `${normalized.slice(0, max - 1).trim()}â€¦`;
 };
 
 const postUrl = (post: AdminPsychologistActivityPost) =>
@@ -222,11 +231,48 @@ const reasonLabel = (reason: string) => {
     abuse: "abuso ou desrespeito",
     other: "outro motivo",
     privacy: "dados pessoais ou privacidade",
-    self_harm: "autolesão ou risco",
+    self_harm: "autolesÃ£o ou risco",
     spam: "spam",
   };
 
   return labels[reason] ?? reason;
+};
+
+const changedFieldsFromAudit = (value: unknown) => {
+  if (!Array.isArray(value)) return [];
+
+  return value
+    .map((item) => {
+      if (typeof item === "string") return item.trim();
+      if (item && typeof item === "object" && "label" in item) {
+        const label = (item as { label?: unknown }).label;
+        return typeof label === "string" ? label.trim() : "";
+      }
+
+      return "";
+    })
+    .filter(Boolean);
+};
+
+const adminLogType = (action: string): AdminPsychologistActivityType | null => {
+  if (action === "psychologist_personal_data_updated") return "admin_personal_data_updated";
+  if (action === "psychologist_professional_data_updated") {
+    return "admin_professional_data_updated";
+  }
+
+  return null;
+};
+
+const adminLogDescription = (log: AdminPsychologistActivityAdminLog) => {
+  const fields = changedFieldsFromAudit(log.changed_fields);
+  const fieldsText = fields.length > 0 ? fields.join(", ") : "campos do perfil";
+  const actionLabel =
+    log.action === "psychologist_personal_data_updated" ? "dados pessoais" : "dados profissionais";
+  const reason = log.reason?.trim();
+
+  return `Painel administrativo atualizou ${actionLabel}. Campos alterados: ${fieldsText}.${
+    reason ? ` Motivo/observaÃ§Ã£o interna: ${excerpt(reason, 140)}.` : ""
+  }`;
 };
 
 const makeActivity = (input: {
@@ -263,7 +309,7 @@ const profileEvents = (
     makeActivity({
       actor,
       area: "perfil",
-      description: "Conta do psicólogo criada na plataforma.",
+      description: "Conta do psicÃ³logo criada na plataforma.",
       id: `account-created-${profile.user.id}`,
       occurred_at: profile.user.createdAt,
       source: "user.createdAt",
@@ -285,7 +331,7 @@ const profileEvents = (
       makeActivity({
         actor,
         area: "perfil",
-        description: "Última atualização registrada no cadastro profissional.",
+        description: "Ãšltima atualizaÃ§Ã£o registrada no cadastro profissional.",
         id: `profile-updated-${profile.id}`,
         occurred_at: profile.updatedAt,
         source: "psychologist_profile.updatedAt",
@@ -313,7 +359,7 @@ const profileEvents = (
       makeActivity({
         actor,
         area: "atendimento",
-        description: "Número de WhatsApp confirmado para contato profissional.",
+        description: "NÃºmero de WhatsApp confirmado para contato profissional.",
         id: `whatsapp-verified-${profile.id}`,
         occurred_at: profile.whatsapp_verified_at,
         source: "psychologist_profile.whatsapp_verified_at",
@@ -374,7 +420,7 @@ const filtersFromActivities = (
     .sort((left, right) => left.label.localeCompare(right.label, "pt-BR"));
 
   return {
-    areas: [{ count: activities.length, id: "all", label: "Todas as áreas" }, ...areaOptions],
+    areas: [{ count: activities.length, id: "all", label: "Todas as Ã¡reas" }, ...areaOptions],
     types: [{ count: activities.length, id: "all", label: "Todos os tipos" }, ...typeOptions],
   };
 };
@@ -396,25 +442,39 @@ export const showAdminPsychologistActivities = async (
   if (!profile) return notFound();
 
   const psychologistUserId = profile.user.id;
-  const [posts, replies, postSaves, replySaves, subscriptions, contactRequests, reviews, reports] =
-    await Promise.all([
-      repository.listAuthoredPosts(psychologistUserId, period.current.start, period.current.end),
-      repository.listAuthoredReplies(psychologistUserId, period.current.start, period.current.end),
-      repository.listPostSavesByPsychologist(
-        psychologistUserId,
-        period.current.start,
-        period.current.end,
-      ),
-      repository.listReplySavesByPsychologist(
-        psychologistUserId,
-        period.current.start,
-        period.current.end,
-      ),
-      repository.listSubscriptions(profile.id, period.current.start, period.current.end),
-      repository.listContactRequests(psychologistUserId, period.current.start, period.current.end),
-      repository.listReviews(psychologistUserId, period.current.start, period.current.end),
-      repository.listReports(psychologistUserId, period.current.start, period.current.end),
-    ]);
+  const [
+    posts,
+    replies,
+    postSaves,
+    replySaves,
+    subscriptions,
+    contactRequests,
+    reviews,
+    reports,
+    adminLogs,
+  ] = await Promise.all([
+    repository.listAuthoredPosts(psychologistUserId, period.current.start, period.current.end),
+    repository.listAuthoredReplies(psychologistUserId, period.current.start, period.current.end),
+    repository.listPostSavesByPsychologist(
+      psychologistUserId,
+      period.current.start,
+      period.current.end,
+    ),
+    repository.listReplySavesByPsychologist(
+      psychologistUserId,
+      period.current.start,
+      period.current.end,
+    ),
+    repository.listSubscriptions(profile.id, period.current.start, period.current.end),
+    repository.listContactRequests(psychologistUserId, period.current.start, period.current.end),
+    repository.listReviews(psychologistUserId, period.current.start, period.current.end),
+    repository.listReports(psychologistUserId, period.current.start, period.current.end),
+    repository.listAdminActivityLogs(
+      Array.from(new Set([profile.id, profile.user.id])),
+      period.current.start,
+      period.current.end,
+    ),
+  ]);
 
   const psychologistActor = actorFromUser(profile.user);
   const activities: AdminPsychologistActivityItem[] = [
@@ -496,7 +556,7 @@ export const showAdminPsychologistActivities = async (
         makeActivity({
           actor: actorFromUser(review.author),
           area: "avaliacoes",
-          description: `Recebeu avaliação de ${review.rating} estrela${review.rating === 1 ? "" : "s"}: ${excerpt(
+          description: `Recebeu avaliaÃ§Ã£o de ${review.rating} estrela${review.rating === 1 ? "" : "s"}: ${excerpt(
             review.comment,
           )}.`,
           id: `review-${review.id}`,
@@ -511,7 +571,7 @@ export const showAdminPsychologistActivities = async (
           makeActivity({
             actor: psychologistActor,
             area: "avaliacoes",
-            description: `Resposta do psicólogo registrada para avaliação: ${excerpt(
+            description: `Resposta do psicÃ³logo registrada para avaliaÃ§Ã£o: ${excerpt(
               review.response,
             )}.`,
             id: `review-response-${review.id}`,
@@ -530,15 +590,31 @@ export const showAdminPsychologistActivities = async (
       return makeActivity({
         actor: null,
         area: "denuncias",
-        description: `Denúncia registrada em ${content.typeLabel} do psicólogo. Motivo: ${reasonLabel(
+        description: `DenÃºncia registrada em ${content.typeLabel} do psicÃ³logo. Motivo: ${reasonLabel(
           report.reason,
-        )}. Conteúdo: "${content.title}".`,
+        )}. ConteÃºdo: "${content.title}".`,
         detail_url: content.detailUrl,
         id: `report-${report.id}`,
         occurred_at: report.createdAt,
         source: "post_report",
         type: "report_received",
       });
+    }),
+    ...adminLogs.flatMap((log) => {
+      const type = adminLogType(log.action);
+      if (!type) return [];
+
+      return [
+        makeActivity({
+          actor: actorFromAdmin(log.admin),
+          area: "perfil",
+          description: adminLogDescription(log),
+          id: `admin-activity-${log.id}`,
+          occurred_at: log.createdAt,
+          source: "admin_activity_log",
+          type,
+        }),
+      ];
     }),
   ]
     .filter((item) => activityMatchesPeriod(item, period.current))
@@ -560,12 +636,12 @@ export const showAdminPsychologistActivities = async (
     ].filter(Boolean).length,
     count,
     coverage_note:
-      "Histórico dos principais eventos registrados para esta psicóloga na plataforma. Este feed não é uma auditoria completa.",
+      "HistÃ³rico dos principais eventos registrados para esta psicÃ³loga na plataforma. Este feed nÃ£o Ã© uma auditoria completa.",
     data: dataSlice,
     export: {
       available: false,
       reason:
-        "Exportação não exibida porque ainda não existe endpoint real para exportar atividades.",
+        "ExportaÃ§Ã£o nÃ£o exibida porque ainda nÃ£o existe endpoint real para exportar atividades.",
     },
     filters,
     page,
@@ -573,18 +649,18 @@ export const showAdminPsychologistActivities = async (
     per_page: query.limit,
     period: period.period,
     source:
-      "user+psychologist_profile+professional_subscription+community_post+post_reply+post_save+post_reply_save+contact_request+professional_review+post_report",
+      "user+psychologist_profile+professional_subscription+community_post+post_reply+post_save+post_reply_save+contact_request+professional_review+post_report+admin_activity_log",
     unavailable: [
       {
         description:
-          "Alterações específicas de campos e upload/troca de vídeo não possuem trilha de auditoria própria nesta V1.",
-        id: "field_level_audit",
-        label: "Auditoria completa de alterações",
+          "Alterações administrativas criadas a partir da TASK-67 possuem trilha própria; edições antigas e uploads/trocas de vídeo anteriores não foram retroagidos.",
+        id: "legacy_field_level_audit",
+        label: "Histórico anterior à auditoria administrativa",
         source: "not_tracked",
       },
       {
         description:
-          "Eventos de pagamento brutos não são exibidos aqui porque payment_event não possui vínculo confiável direto com o psicólogo.",
+          "Eventos de pagamento brutos nÃ£o sÃ£o exibidos aqui porque payment_event nÃ£o possui vÃ­nculo confiÃ¡vel direto com o psicÃ³logo.",
         id: "payment_events",
         label: "Eventos brutos de pagamento",
         source: "payment_event",

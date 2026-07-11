@@ -41,6 +41,28 @@ export interface admin {
   recovery_date?: Date | null;
   need_reset?: boolean | null;
   admin_tokens?: admin_token[] | null;
+  activity_logs?: admin_activity_log[] | null;
+}
+
+export interface admin_activity_log {
+  id?: string | null;
+  deleted?: boolean | null;
+  deletedAt?: Date | null;
+  updatedAt?: Date | null;
+  createdAt?: Date | null;
+  admin_id?: string | null;
+  target_type?: string | null;
+  target_id?: string | null;
+  domain?: string | null;
+  action?: string | null;
+  source?: string | null;
+  area?: string | null;
+  changed_fields?: unknown;
+  safe_before?: unknown;
+  safe_after?: unknown;
+  reason?: string | null;
+  metadata?: unknown;
+  admin?: admin | null;
 }
 
 export interface user_background {

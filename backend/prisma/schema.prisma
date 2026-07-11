@@ -105,6 +105,7 @@ model admin {
   recovery_date          DateTime?
   need_reset             Boolean                       @default(false)
   admin_tokens           admin_token[]                 @relation("admin_token_admin")
+  activity_logs          admin_activity_log[]          @relation("admin_activity_log_admin")
   notification_campaigns admin_notification_campaign[] @relation("admin_notification_campaign_admin")
 
   @@index([email, deleted])
@@ -127,6 +128,33 @@ model admin_token {
   @@index([token])
   @@index([admin_id, token, device_id])
   @@map("admin_tokens")
+}
+
+model admin_activity_log {
+  id             String    @id @default(cuid())
+  deleted        Boolean   @default(false)
+  deletedAt      DateTime? @map("deleted_at")
+  updatedAt      DateTime  @default(now()) @updatedAt @map("updated_at")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  admin_id       String    @map("admin_id")
+  target_type    String    @map("target_type")
+  target_id      String    @map("target_id")
+  domain         String
+  action         String
+  source         String    @default("admin_panel")
+  area           String?
+  changed_fields Json?     @map("changed_fields")
+  safe_before    Json?     @map("safe_before")
+  safe_after     Json?     @map("safe_after")
+  reason         String?
+  metadata       Json?
+  admin          admin     @relation("admin_activity_log_admin", fields: [admin_id], references: [id], onDelete: Cascade)
+
+  @@index([admin_id, createdAt])
+  @@index([target_type, target_id, createdAt])
+  @@index([domain, action, createdAt])
+  @@index([source, createdAt])
+  @@map("admin_activity_logs")
 }
 
 model notification_preference {

@@ -148,6 +148,21 @@ const reportSelect = {
   },
 } satisfies Prisma.post_reportSelect;
 
+const adminActivityLogSelect = {
+  action: true,
+  area: true,
+  changed_fields: true,
+  createdAt: true,
+  id: true,
+  reason: true,
+  source: true,
+  admin: {
+    select: {
+      name: true,
+    },
+  },
+} satisfies Prisma.admin_activity_logSelect;
+
 const createdAtBetween = (from: Date | null, to: Date | null) =>
   from && to ? { createdAt: { gte: from, lte: to } } : {};
 
@@ -185,6 +200,10 @@ export type AdminPsychologistActivityReview = Prisma.professional_reviewGetPaylo
 
 export type AdminPsychologistActivityReport = Prisma.post_reportGetPayload<{
   select: typeof reportSelect;
+}>;
+
+export type AdminPsychologistActivityAdminLog = Prisma.admin_activity_logGetPayload<{
+  select: typeof adminActivityLogSelect;
 }>;
 
 export class AdminPsychologistActivitiesRepository {
@@ -386,6 +405,23 @@ export class AdminPsychologistActivitiesRepository {
             },
           },
         ],
+      },
+    });
+  }
+
+  async listAdminActivityLogs(
+    targetIds: string[],
+    from: Date | null,
+    to: Date | null,
+  ): Promise<AdminPsychologistActivityAdminLog[]> {
+    return prisma.admin_activity_log.findMany({
+      orderBy: { createdAt: "desc" },
+      select: adminActivityLogSelect,
+      where: {
+        ...createdAtBetween(from, to),
+        deleted: false,
+        target_id: { in: targetIds },
+        target_type: "psychologist",
       },
     });
   }

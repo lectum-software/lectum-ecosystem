@@ -148,6 +148,21 @@ Não construir no MVP. Reservado aqui para que nenhuma task trate admin como `us
 
 `admin_token` (espelha `user_token`): `admin_id`, `token?`, `device_id?`, relação cascade, `@@map("admin_tokens")`.
 
+`admin_activity_log` / `admin_activity_logs` (TASK-67, auditoria administrativa genérica):
+
+| Campo | Tipo | Notas |
+|---|---|---|
+| `admin_id` | `String` | FK para `admin`; identifica o responsável operacional sem usar `user.role` |
+| `target_type`, `target_id` | `String` | alvo auditado; para edição de psicólogo usar `target_type="psychologist"` e `target_id=user.id` |
+| `domain`, `action`, `source`, `area` | `String` | domínio `psychologist_profile`, ações `psychologist_personal_data_updated`/`psychologist_professional_data_updated`, origem `admin_panel`, área `perfil_e_cadastro` |
+| `changed_fields` | `Json?` | lista segura de labels de campos alterados para a aba Atividades |
+| `safe_before`, `safe_after` | `Json?` | snapshots redigidos/mascarados; não armazenar CPF completo, endereço completo, e-mail, tokens ou payload bruto sensível |
+| `reason` | `String?` | motivo/observação interna da alteração administrativa |
+| `metadata` | `Json?` | metadados operacionais seguros, como `profile_id`, `changed_field_keys` e flags de confirmação |
+| `@@index([admin_id, createdAt])`, `@@index([target_type, target_id, createdAt])`, `@@index([domain, action, createdAt])`, `@@index([source, createdAt])` | | consulta por responsável, alvo e feed de atividades |
+
+Complemento TASK-67 (2026-07-11): edição administrativa de Dados pessoais e Dados profissionais do psicólogo usa endpoints Admin próprios, não impersona o psicólogo, não altera `user.email`, credenciais, plano, gateway, cortesia, `crp_status` ou `cfp_verified_at`. Alteração de CPF em psicólogo aprovado exige confirmação e motivo, mas não revalida nem invalida CRP automaticamente. Eventos novos entram em `/api/admin/private/psychologists/:id/activities` a partir de `admin_activity_log`; histórico anterior não é retroagido.
+
 Quando construído: módulo de audiência próprio (ex.: `backend/src/modules/manager/...` ou `api/admin`) com `public/auth` (login/recovery/confirm), `private/*` e middleware com estratégia `jwt-admin-manager`. Logs de auditoria (`log__user` e futuros) podem referenciar qual `admin` agiu, como no sample.
 
 ---
