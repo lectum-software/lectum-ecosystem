@@ -188,3 +188,14 @@ linha fixa "Observacao". Motivos e observacoes permanecem preservados em
 `professional_registry_check.raw` e podem aparecer no historico de ultimas
 tentativas, mas o resumo do registro prioriza plano, aprovacao, origem,
 responsavel e data de aprovacao.
+
+## Complemento 2026-07-11: confirmacao forte para salvar registro
+
+Salvar alteracoes diretas em Regional CRP, Numero CRP ou Data de inscricao passa
+a exigir confirmacao forte `SALVAR REGISTRO` em modal mobile-first e tambem no
+contrato backend `PUT /api/admin/private/psychologists/:id/registry-verification/identity`.
+
+A decisao evita que uma alteracao de CRP seja persistida por clique acidental ou
+automacao do cliente, sem transformar o salvamento em aprovacao/rejeicao: a
+operacao continua sem alterar `crp_status`, `cfp_verified_at`, assinatura,
+gateway ou cortesia.

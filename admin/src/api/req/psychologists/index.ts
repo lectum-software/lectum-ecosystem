@@ -550,6 +550,7 @@ export type AdminPsychologistRegistryVerification = {
     can_reject_manually: boolean;
     strong_approve_confirmation: "APROVAR CRP";
     strong_reject_confirmation: "REJEITAR CRP";
+    strong_save_confirmation: "SALVAR REGISTRO";
   };
   identity: {
     cpf: string | null;
@@ -591,6 +592,7 @@ export type AdminPsychologistRejectRegistryVerificationInput = {
 };
 
 export type AdminPsychologistUpdateRegistryIdentityInput = {
+  confirmation: string;
   crp: string;
   crp_registration_date: string;
   regional_crp: string;

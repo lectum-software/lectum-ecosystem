@@ -345,3 +345,10 @@ Se o schema atual não suportar auditoria mínima sem `raw`, usar `raw` com shap
 
 - O bloco operacional "Lectum" do card Registro profissional deixou de exibir o campo "Observacao".
 - Observacoes/motivos seguem preservados no historico de auditoria e nas ultimas tentativas quando existirem, mas nao aparecem mais como linha fixa do resumo do registro.
+
+### Ajuste de confirmacao forte ao salvar registro 2026-07-11
+
+- A acao "Salvar registro" fica habilitada apenas apos alteracao nos campos do card e abre confirmacao forte antes de persistir.
+- A UI exige a frase `SALVAR REGISTRO` e resume Regional CRP, Nº CRP e Data de inscricao que serao salvos.
+- O endpoint administrativo `PUT /api/admin/private/psychologists/:id/registry-verification/identity` tambem exige `confirmation="SALVAR REGISTRO"`, evitando salvar alteracoes de CRP apenas por automacao de frontend.
+- Validacoes do ajuste: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm --dir backend typecheck` e `pnpm --dir backend build` passaram; `pnpm --dir backend check`/`pnpm check` ficaram bloqueados por arquivos nao relacionados ja presentes no workspace em `backend/src/modules/api/admin/private/psychologists/account`.

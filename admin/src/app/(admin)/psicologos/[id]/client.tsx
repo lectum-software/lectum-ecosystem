@@ -393,6 +393,20 @@ const registryRejectSchema = registryRejectBaseSchema.superRefine((values, ctx) 
   }
 });
 
+const registrySaveBaseSchema = z.object({
+  confirmation: z.string(),
+});
+
+const registrySaveSchema = registrySaveBaseSchema.superRefine((values, ctx) => {
+  if (values.confirmation.trim() !== "SALVAR REGISTRO") {
+    ctx.addIssue({
+      code: "custom",
+      message: "Digite SALVAR REGISTRO para confirmar.",
+      path: ["confirmation"],
+    });
+  }
+});
+
 const registryIdentitySchema = z.object({
   crp: z.string().min(1, "Informe o número do CRP.").max(40, "Use no máximo 40 caracteres."),
   crp_registration_date: z.string().min(1, "Informe a data de inscrição no CRP."),
@@ -402,6 +416,7 @@ const registryIdentitySchema = z.object({
 type RegistryApproveFormValues = z.infer<typeof registryApproveBaseSchema>;
 type RegistryIdentityFormValues = z.infer<typeof registryIdentitySchema>;
 type RegistryRejectFormValues = z.infer<typeof registryRejectBaseSchema>;
+type RegistrySaveFormValues = z.infer<typeof registrySaveBaseSchema>;
 
 const profilePersonalDataBaseSchema = z.object({
   address_city: z.string().max(120, "Use no máximo 120 caracteres.").optional(),
@@ -3283,19 +3298,18 @@ const RegistryVerificationDialog = ({
 const RegistryIdentityForm = ({
   canApprove,
   canReject,
-  id,
   onApprove,
   onReject,
+  onSave,
   registry,
 }: {
   canApprove: boolean;
   canReject: boolean;
-  id: string;
   onApprove: (values: RegistryIdentityFormValues) => void;
   onReject: () => void;
+  onSave: (values: RegistryIdentityFormValues) => void;
   registry: AdminPsychologistRegistryVerification;
 }) => {
-  const mutation = useAdminPsychologistUpdateRegistryIdentity(id);
   const form = useForm<RegistryIdentityFormValues>({
     defaultValues: {
       crp: registry.identity.registration_number || "",
@@ -3318,7 +3332,6 @@ const RegistryIdentityForm = ({
     });
   }, [form, registry.identity]);
 
-  const fieldsDisabled = mutation.isPending;
   const actionButtonCount = 1 + Number(canApprove) + Number(canReject);
   const actionGridClassName = cn(
     "grid gap-3",
@@ -3332,15 +3345,9 @@ const RegistryIdentityForm = ({
     regional_crp: values.regional_crp.trim(),
   });
 
-  const onSubmit: SubmitHandler<RegistryIdentityFormValues> = async (values) => {
+  const onSubmit: SubmitHandler<RegistryIdentityFormValues> = (values) => {
     const normalizedValues = normalizeValues(values);
-    try {
-      await mutation.mutateAsync(normalizedValues);
-      form.reset(normalizedValues);
-      toast.success("Registro profissional atualizado.");
-    } catch (error) {
-      toast.error(resolveApiError(error));
-    }
+    onSave(normalizedValues);
   };
 
   const onApproveSubmit: SubmitHandler<RegistryIdentityFormValues> = (values) => {
@@ -3357,7 +3364,6 @@ const RegistryIdentityForm = ({
       <form className="space-y-4" noValidate onSubmit={form.handleSubmit(onSubmit)}>
         <div className="grid gap-4 sm:grid-cols-2">
           <SelectController<RegistryIdentityFormValues>
-            disabled={fieldsDisabled}
             label="Regional CRP"
             name="regional_crp"
             options={regionalOptions}
@@ -3365,7 +3371,6 @@ const RegistryIdentityForm = ({
           />
           <InputController<RegistryIdentityFormValues>
             autoComplete="off"
-            disabled={fieldsDisabled}
             label="Nº CRP"
             name="crp"
             placeholder="Número do registro"
@@ -3373,7 +3378,6 @@ const RegistryIdentityForm = ({
           />
           <div className="sm:col-span-2">
             <InputController<RegistryIdentityFormValues>
-              disabled={fieldsDisabled}
               label="Data de inscrição no CRP"
               name="crp_registration_date"
               required
@@ -3384,16 +3388,14 @@ const RegistryIdentityForm = ({
         <div className={actionGridClassName}>
           <button
             className="inline-flex h-12 w-full items-center justify-center gap-2 whitespace-nowrap rounded-control border border-primary bg-surface px-4 text-sm font-black text-primary transition hover:bg-primary-soft disabled:cursor-not-allowed disabled:border-border disabled:text-muted"
-            disabled={mutation.isPending}
+            disabled={!form.formState.isDirty}
             type="submit"
           >
-            {mutation.isPending ? <Loader2 aria-hidden className="h-4 w-4 animate-spin" /> : null}
             Salvar registro
           </button>
           {canApprove ? (
             <button
-              className="inline-flex h-12 w-full items-center justify-center gap-2 whitespace-nowrap rounded-control bg-primary px-4 text-sm font-black text-white transition hover:bg-primary-hover disabled:cursor-not-allowed disabled:bg-surface-muted disabled:text-muted"
-              disabled={mutation.isPending}
+              className="inline-flex h-12 w-full items-center justify-center gap-2 whitespace-nowrap rounded-control bg-primary px-4 text-sm font-black text-white transition hover:bg-primary-hover"
               onClick={form.handleSubmit(onApproveSubmit)}
               type="button"
             >
@@ -3403,8 +3405,7 @@ const RegistryIdentityForm = ({
           ) : null}
           {canReject ? (
             <button
-              className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-control border border-danger bg-surface px-4 text-sm font-black text-danger transition hover:bg-red-50 disabled:cursor-not-allowed disabled:border-border disabled:text-muted"
-              disabled={mutation.isPending}
+              className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-control border border-danger bg-surface px-4 text-sm font-black text-danger transition hover:bg-red-50"
               onClick={onReject}
               type="button"
             >
@@ -3413,6 +3414,83 @@ const RegistryIdentityForm = ({
             </button>
           ) : null}
         </div>
+      </form>
+    </FormProvider>
+  );
+};
+
+const RegistrySaveIdentityForm = ({
+  id,
+  identityDraft,
+  onClose,
+  registry,
+}: {
+  id: string;
+  identityDraft: RegistryIdentityFormValues;
+  onClose: () => void;
+  registry: AdminPsychologistRegistryVerification;
+}) => {
+  const mutation = useAdminPsychologistUpdateRegistryIdentity(id);
+  const confirmationText = registry.actions.strong_save_confirmation;
+  const form = useForm<RegistrySaveFormValues>({
+    defaultValues: { confirmation: "" },
+    mode: "onSubmit",
+    resolver: zodResolver(registrySaveSchema),
+  });
+
+  useEffect(() => {
+    form.reset({ confirmation: "" });
+  }, [form]);
+
+  const onSubmit: SubmitHandler<RegistrySaveFormValues> = async (values) => {
+    try {
+      await mutation.mutateAsync({
+        ...identityDraft,
+        confirmation: values.confirmation.trim(),
+      });
+      toast.success("Registro profissional atualizado.");
+      onClose();
+    } catch (error) {
+      toast.error(resolveApiError(error));
+    }
+  };
+
+  return (
+    <FormProvider {...form}>
+      <form className="space-y-4" noValidate onSubmit={form.handleSubmit(onSubmit)}>
+        <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm font-bold leading-6 text-muted">
+          <p className="font-black text-foreground">
+            Confirme antes de salvar a alteração do registro profissional.
+          </p>
+          <div className="mt-3 grid gap-2 rounded-2xl bg-surface/80 p-3">
+            <FieldRow label="Regional CRP" value={identityDraft.regional_crp} />
+            <FieldRow label="Nº CRP" value={identityDraft.crp} />
+            <FieldRow
+              label="Data de inscrição"
+              value={formatNullable(identityDraft.crp_registration_date)}
+            />
+          </div>
+          <p className="mt-3">
+            Esta ação altera os dados públicos do conselho sem aprovar, rejeitar ou revalidar
+            automaticamente o CRP. Digite <strong>{confirmationText}</strong> para continuar.
+          </p>
+        </div>
+        <InputController<RegistrySaveFormValues>
+          autoComplete="off"
+          disabled={mutation.isPending}
+          label="Confirmação forte"
+          name="confirmation"
+          placeholder={`Digite ${confirmationText}`}
+          required
+        />
+        <button
+          className="inline-flex h-12 w-full items-center justify-center gap-2 whitespace-nowrap rounded-control bg-primary px-4 text-sm font-black text-white transition hover:bg-primary-hover disabled:cursor-not-allowed disabled:bg-surface-muted disabled:text-muted"
+          disabled={mutation.isPending}
+          type="submit"
+        >
+          {mutation.isPending ? <Loader2 aria-hidden className="h-4 w-4 animate-spin" /> : null}
+          Salvar registro
+        </button>
       </form>
     </FormProvider>
   );
@@ -3590,7 +3668,7 @@ const RegistryRejectForm = ({ id, onClose }: { id: string; onClose: () => void }
 };
 
 const RegistryVerificationCard = ({ id }: { id: string }) => {
-  const [action, setAction] = useState<"approve" | "reject" | null>(null);
+  const [action, setAction] = useState<"approve" | "reject" | "save" | null>(null);
   const [identityDraft, setIdentityDraft] = useState<RegistryIdentityFormValues | null>(null);
   const query = useAdminPsychologistRegistryVerification(id);
   const errorMessage = query.error ? resolveApiError(query.error) : null;
@@ -3642,12 +3720,15 @@ const RegistryVerificationCard = ({ id }: { id: string }) => {
         <RegistryIdentityForm
           canApprove={registry.actions.can_approve_manually}
           canReject={registry.actions.can_reject_manually}
-          id={id}
           onApprove={(values) => {
             setIdentityDraft(values);
             setAction("approve");
           }}
           onReject={() => setAction("reject")}
+          onSave={(values) => {
+            setIdentityDraft(values);
+            setAction("save");
+          }}
           registry={registry}
         />
       </div>
@@ -3681,6 +3762,17 @@ const RegistryVerificationCard = ({ id }: { id: string }) => {
           </ul>
         )}
       </div>
+
+      {action === "save" && identityDraft ? (
+        <RegistryVerificationDialog onClose={() => setAction(null)} title="Salvar registro">
+          <RegistrySaveIdentityForm
+            id={id}
+            identityDraft={identityDraft}
+            onClose={() => setAction(null)}
+            registry={registry}
+          />
+        </RegistryVerificationDialog>
+      ) : null}
 
       {action === "approve" && registry.actions.can_approve_manually ? (
         <RegistryVerificationDialog onClose={() => setAction(null)} title="Aprovar CRP manualmente">

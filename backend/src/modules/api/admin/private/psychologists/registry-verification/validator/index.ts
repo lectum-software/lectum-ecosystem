@@ -47,6 +47,7 @@ export const updateIdentitySchema: IValidatorRequest = {
     { key: "regional_crp", coerse: "string", method: "string", min: 1, max: 120 },
     { key: "crp", coerse: "string", method: "string", min: 1, max: 40 },
     { key: "crp_registration_date", coerse: "string", method: "string", min: 10, max: 10 },
+    { key: "confirmation", coerse: "string", method: "string", min: 10, max: 20 },
   ],
 };
 

@@ -25,6 +25,7 @@ import {
 const MANUAL_PROVIDER = "manual_admin";
 const APPROVE_CONFIRMATION = "APROVAR CRP";
 const REJECT_CONFIRMATION = "REJEITAR CRP";
+const SAVE_CONFIRMATION = "SALVAR REGISTRO";
 
 type RawRecord = Record<string, unknown>;
 
@@ -346,6 +347,7 @@ const buildResponse = (
       can_reject_manually: canManuallyReview,
       strong_approve_confirmation: APPROVE_CONFIRMATION,
       strong_reject_confirmation: REJECT_CONFIRMATION,
+      strong_save_confirmation: SAVE_CONFIRMATION,
     },
     identity: {
       cpf: trimOrNull(profile.cpf),
@@ -413,6 +415,11 @@ export const updateRegistryIdentity = async (
   const profile = await repository.findPsychologist(data.p.id);
 
   if (!profile) return notFound();
+
+  const confirmation = data.b.confirmation?.trim();
+  if (confirmation !== SAVE_CONFIRMATION) {
+    return serviceError(400, "admin_registry_identity_confirmation_invalid");
+  }
 
   const regionalCrp = trimOrNull(data.b.regional_crp);
   const registrationNumber = trimOrNull(data.b.crp);

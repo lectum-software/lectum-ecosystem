@@ -42,6 +42,7 @@ export type AdminPsychologistRegistryVerificationDTO = {
     can_reject_manually: boolean;
     strong_approve_confirmation: "APROVAR CRP";
     strong_reject_confirmation: "REJEITAR CRP";
+    strong_save_confirmation: "SALVAR REGISTRO";
   };
   identity: {
     cpf: string | null;
@@ -98,6 +99,7 @@ export type IAdminPsychologistRegistryVerificationUpdateIdentityDTO = Request & 
   admin?: admin;
   auth?: admin;
   b: {
+    confirmation: string;
     crp: string;
     crp_registration_date: string;
     regional_crp: string;
