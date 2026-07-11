@@ -21,6 +21,9 @@ A aba Atividades já existia como linha do tempo de fontes reais, mas não havia
 - Manter `user.email` somente leitura: os endpoints não aceitam `email` porque o validator é `strict` e o frontend não envia o campo.
 - Alteração administrativa de CPF em psicólogo com `crp_status="aprovado"` exige confirmação explícita e motivo, mas não altera `crp_status` nem `cfp_verified_at`.
 - Dados profissionais usam catálogos reais persistidos; valores já vinculados e atualmente inativos podem ser preservados, mas novas seleções precisam existir em catálogo ativo.
+- Refinamento de UI: o aviso e a confirmação forte de CPF aprovado aparecem somente quando o valor do CPF foi efetivamente alterado no formulário.
+- Refinamento de consistência: dropdowns estáticos do Admin em Perfil e cadastro devem espelhar as opções disponíveis ao psicólogo no fluxo de edição/cadastro profissional; quando o Admin precisa permitir limpeza de campo opcional, adiciona apenas a opção vazia `Não informado`.
+- O WhatsApp administrativo usa máscara visual de telefone no formulário e continua normalizando para dígitos/E.164 antes de persistir.
 
 ## Consequências
 
@@ -28,3 +31,4 @@ A aba Atividades já existia como linha do tempo de fontes reais, mas não havia
 - A aba Atividades passa a mostrar edições administrativas novas, mas não retroage eventos antigos.
 - O schema ganhou migration própria e `DATA-MODEL.md` passou a documentar o contrato de auditoria.
 - O log foi desenhado para exibição operacional, não para exportação completa de auditoria ou retenção legal detalhada.
+- A indicação de e-mail somente leitura permanece no card de leitura, mas a faixa informativa foi removida do modo de edição para reduzir ruído visual após a criação da aba Conta.

@@ -325,3 +325,10 @@ Regras LGPD:
 - Se o schema atual já possuir algum log administrativo, preferir reutilizar e estender em vez de criar tabela paralela.
 - Se for necessário criar novo modelo de auditoria, atualizar `DATA-MODEL.md`, criar migration e executar `pnpm --dir backend db:migrate`.
 - Se `prisma migrate dev` falhar por conflito com dados/estado do banco de desenvolvimento, não resetar automaticamente; explicar o erro e perguntar ao usuário antes de qualquer comando destrutivo.
+
+### Ajuste de UX em 2026-07-11
+
+- Removida a faixa informativa de e-mail credencial no modo de edição de **Dados pessoais**; o e-mail segue somente leitura no card.
+- WhatsApp no formulário administrativo recebeu máscara visual de telefone e continua sendo normalizado para dígitos antes do submit.
+- O aviso e a confirmação de alteração de CPF aprovado agora aparecem somente quando o CPF foi alterado.
+- Dropdowns estáticos de **Dados pessoais** e modalidade no Admin foram alinhados às opções disponíveis no fluxo do psicólogo, preservando apenas `Não informado` como opção extra para campos opcionais do Admin.
