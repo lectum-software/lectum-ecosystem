@@ -365,3 +365,9 @@ Se o schema atual não suportar auditoria mínima sem `raw`, usar `raw` com shap
 - O card Registro profissional deixou de exibir o resumo operacional "Lectum" com Plano, Aprovacao, Origem, Responsavel e Data aprovacao.
 - O bloco "Ultimas tentativas" foi mantido para preservar o historico auditavel de tentativas automaticas e decisoes manuais.
 - Validacoes do ajuste: `pnpm --dir admin check`, `pnpm --dir admin build` e HTTP local em `/psicologos/[id]?tab=perfil` retornando 200. Validacao visual autenticada segue dependente da sessao Admin real no navegador do usuario.
+
+### Ajuste de status nas ultimas tentativas 2026-07-11
+
+- Nas tags dos itens de "Ultimas tentativas", o resultado encontrado passou de "Encontrado" para "Ativo".
+- Itens sem aprovacao passaram de "Sem aprovacao" para "Inativo".
+- Validacoes do ajuste: `pnpm --dir admin check`, `pnpm --dir admin build` e HTTP local em `/psicologos/[id]?tab=perfil` retornando 200.

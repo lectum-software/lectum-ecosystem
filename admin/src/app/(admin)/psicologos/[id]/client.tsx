@@ -3917,7 +3917,7 @@ const RegistryAttemptItem = ({
       <Badge
         className={attempt.found ? "bg-emerald-50 text-success" : "bg-surface-muted text-muted"}
       >
-        {attempt.found ? "Encontrado" : "Sem aprovação"}
+        {attempt.found ? "Ativo" : "Inativo"}
       </Badge>
     </div>
     <div className="mt-3 grid gap-2 text-xs font-bold text-muted sm:grid-cols-2">

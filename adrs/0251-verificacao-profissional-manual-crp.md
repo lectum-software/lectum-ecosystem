@@ -224,3 +224,13 @@ conselho e o historico de tentativas.
 O bloco "Ultimas tentativas" permanece visivel porque e a evidencia auditavel
 mais util para entender tentativas automaticas, aprovacoes manuais, rejeicoes e
 responsaveis historicos sem duplicar resumo de status no card.
+
+## Complemento 2026-07-11: status ativo/inativo nas tentativas
+
+Nas tags dos itens de "Ultimas tentativas", a UI passa a traduzir `found=true`
+como "Ativo" e `found=false` como "Inativo", em vez de "Encontrado" e
+"Sem aprovacao".
+
+A decisao alinha a leitura operacional do Admin com o estado apresentado no topo
+do Registro profissional. O historico, fonte, data, CRP e responsavel da
+tentativa continuam preservados no item.
