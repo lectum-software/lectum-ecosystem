@@ -1598,46 +1598,47 @@ const BusinessMetricToggleCard = ({
   config: BusinessChartMetric;
   metric: AdminPsychologistEngagementMetric;
   onToggle: () => void;
-}) => (
-  <button
-    aria-pressed={active}
-    className={cn(
-      "rounded-2xl border p-4 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2",
-      active
-        ? "border-primary/40 bg-surface text-foreground shadow-admin-soft"
-        : "border-border bg-surface text-muted hover:border-primary/30 hover:bg-primary-soft/30",
-      !metric.available && "cursor-not-allowed bg-surface-muted opacity-70 hover:border-border",
-    )}
-    disabled={!metric.available}
-    onClick={onToggle}
-    type="button"
-  >
-    <span className="flex items-start justify-between gap-3">
-      <MetricIconCircle icon={config.icon} metricId={metric.id} />
+}) => {
+  const Icon = config.icon;
+
+  return (
+    <button
+      aria-pressed={active}
+      className={cn(
+        "inline-flex min-w-max items-center gap-2 rounded-full border px-3 py-2 text-left text-xs font-black transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2",
+        active
+          ? "border-primary/40 bg-primary-soft text-primary"
+          : "border-border bg-surface text-muted hover:border-primary/30 hover:bg-primary-soft/30",
+        !metric.available && "cursor-not-allowed bg-surface-muted opacity-60 hover:border-border",
+      )}
+      disabled={!metric.available}
+      onClick={onToggle}
+      title={`${metric.label}: ${formatEngagementMetricValue(metric)}. ${
+        !metric.available ? "Indisponível" : active ? "Visível no gráfico" : "Oculto no gráfico"
+      }`}
+      type="button"
+    >
       <span
         className={cn(
-          "inline-flex items-center gap-1.5 rounded-full px-2 py-1 text-[10px] font-black uppercase tracking-wide",
-          active ? "bg-primary-soft text-primary" : "bg-surface-muted text-muted",
+          "h-2.5 w-2.5 shrink-0 rounded-full",
+          active ? config.swatchClassName : "bg-current opacity-40",
         )}
-      >
-        <span
-          className={cn(
-            "h-2 w-2 rounded-full",
-            active ? config.swatchClassName : "bg-current opacity-40",
-          )}
-        />
-        {!metric.available ? "Indisponível" : active ? "No gráfico" : "Oculto"}
+      />
+      {metric.id === "whatsapp_clicks" ? (
+        <WhatsAppIcon aria-hidden className="h-4 w-4 shrink-0" />
+      ) : (
+        <Icon aria-hidden className="h-4 w-4 shrink-0" />
+      )}
+      <span className="whitespace-nowrap">{metric.label}</span>
+      <span className="rounded-full bg-surface px-2 py-0.5 text-foreground">
+        {formatEngagementMetricValue(metric)}
       </span>
-    </span>
-    <span className="mt-4 block text-sm font-black text-muted">{metric.label}</span>
-    <span className="mt-2 block text-2xl font-black text-foreground">
-      {formatEngagementMetricValue(metric)}
-    </span>
-    {!metric.available && metric.unavailable_reason ? (
-      <span className="mt-2 block text-xs font-bold text-muted">{metric.unavailable_reason}</span>
-    ) : null}
-  </button>
-);
+      <span className="sr-only">
+        {!metric.available ? "Indisponível" : active ? "visível no gráfico" : "oculto no gráfico"}
+      </span>
+    </button>
+  );
+};
 
 const BusinessSeriesChart = ({
   keys,
@@ -1975,13 +1976,17 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: st
   return (
     <div className="space-y-5" data-psychologist-detail-tab="estatisticas">
       <section className="grid gap-5 xl:grid-cols-[minmax(0,1.15fr)_minmax(360px,0.85fr)] xl:items-start">
-        <div className="space-y-5">
-          <div>
-            <h2 className="text-xl font-black text-foreground">Estatísticas de negócio</h2>
-            <p className="mt-1 text-sm font-bold text-muted">
-              Clique nos contadores para mostrar ou esconder as curvas no gráfico.
-            </p>
-            <div className="mt-3 grid gap-4 sm:grid-cols-2">
+        <div className="min-w-0">
+          <CardShell className="min-w-0 p-5">
+            <div>
+              <h2 className="text-xl font-black text-foreground">Estatísticas de negócio</h2>
+              <p className="mt-1 text-sm font-bold text-muted">
+                Use os botões para mostrar ou esconder curvas na evolução do período.
+              </p>
+            </div>
+
+            <fieldset className="-mx-1 mt-4 flex min-w-0 flex-nowrap gap-2 overflow-x-auto px-1 pb-2">
+              <legend className="sr-only">Contadores exibidos no gráfico</legend>
               {businessCards.map(({ config, metric }) => (
                 <BusinessMetricToggleCard
                   active={visibleBusinessMetricIds.includes(config.id) && metric.available}
@@ -1991,16 +1996,8 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: st
                   onToggle={() => toggleBusinessMetric(config.id)}
                 />
               ))}
-            </div>
-          </div>
+            </fieldset>
 
-          <CardShell className="p-5">
-            <div>
-              <h3 className="text-lg font-black text-foreground">Evolução do período</h3>
-              <p className="mt-1 text-sm font-bold text-muted">
-                As curvas refletem somente os contadores ativos acima.
-              </p>
-            </div>
             <BusinessSeriesChart
               keys={visibleBusinessChartKeys}
               points={statistics.business.series}
