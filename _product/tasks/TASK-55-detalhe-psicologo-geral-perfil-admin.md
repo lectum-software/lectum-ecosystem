@@ -133,3 +133,23 @@ Criar o shell de detalhe do psicólogo e as abas Geral e Perfil/Cadastro com dad
 - `pnpm check`
 - API local com admin real e psicologo real: 200 autenticado, 401 sem autenticacao, sem `gateway_token`, sem `gateway_subscription_id`, sem `password` e sem "Stripe".
 - Browser local no Admin em desktop e viewport mobile 390px: abas Geral/Perfil renderizadas com dados reais, sem botao "Editar psicologo" e sem "Stripe".
+
+
+## Ajuste complementar 2026-07-11 - header administrativo
+
+- Pedido direto de produto aplicado no header do detalhe Admin do psicólogo.
+- Builder/Quick Copy nao esteve acessivel como ferramenta neste ambiente; a verificacao visual usou a tela local e as referencias ja inventariadas em `_product/proto/admin/Psicologos/Detalhes do psicologo/`.
+- O botao `Lista` foi removido; o link `Ver perfil publico` permanece no header.
+- A tag verde passou a representar `Ativo`/`Inativo` de `user.active`, e cortesia administrativa ativa passa a aparecer como `Plano de cortesia`.
+- A avaliacao passou para `0,0 (0)`, o CRP para a mascara `00/00000`, o termo profissional para `Psicólogo`/`Psicóloga` conforme `psychologist_profile.gender` e o ultimo acesso para `dd/mm/aaaa às HH:mm`.
+- A foto do header agora usa a mesma URL real de `user.avatar` retornada pelo endpoint Admin, renderizada com `next/image`; URLs publicas do backend em `/public/files/...` sao resolvidas contra `NEXT_PUBLIC_API_URL` e hosts externos continuam em allowlist explicita.
+- ADR criado: `adrs/0249-admin-detalhe-psicologo-header-canonico.md`.
+
+## Evidencias de validacao do ajuste complementar
+
+- `pnpm --dir admin exec biome check --write 'src/app/(admin)/psicologos/[id]/client.tsx' next.config.ts`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check`
+- `git diff --check`
+- Browser local autenticado no Admin em `/psicologos/cmrfgznww0014xouh2tmz5dbf`, incluindo viewport 390px para o header: avatar real carregado por `next/image`, sem botao `Lista`, status `Ativo`, `Plano de cortesia`, avaliacao `0,0 (0)`, CRP `04/12345`, termo `Psicólogo` e ultimo acesso no formato `10/07/2026 às 21:57`.

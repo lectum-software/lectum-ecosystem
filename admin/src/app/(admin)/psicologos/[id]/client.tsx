@@ -4,7 +4,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import {
   AlertTriangle,
   ArrowDown,
-  ArrowLeft,
   ArrowUp,
   BadgeCheck,
   BarChart3,
@@ -64,7 +63,6 @@ import type {
   AdminPsychologistCatalogItem,
   AdminPsychologistDetail,
   AdminPsychologistDetailMetric,
-  AdminPsychologistDetailStatus,
   AdminPsychologistEngagementMetric,
   AdminPsychologistIntegrationStatus,
   AdminPsychologistPublicationItem,
@@ -85,12 +83,13 @@ const currencyFormatter = new Intl.NumberFormat("pt-BR", {
   style: "currency",
 });
 const dateFormatter = new Intl.DateTimeFormat("pt-BR", { dateStyle: "short" });
-const dateTimeFormatter = new Intl.DateTimeFormat("pt-BR", {
-  dateStyle: "short",
-  timeStyle: "short",
+const timeFormatter = new Intl.DateTimeFormat("pt-BR", {
+  hour: "2-digit",
+  minute: "2-digit",
 });
 const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
 const publicFrontendUrl = process.env.NEXT_PUBLIC_FRONTEND_URL || "http://localhost:3000";
+const publicMediaPathPrefixes = ["/public/files/"] as const;
 
 const TABS = [
   { id: "geral", label: "Geral", ready: true },
@@ -154,11 +153,9 @@ const createCrpRegionSelectOptions = (currentValue?: string | null) => {
   ];
 };
 
-const STATUS_COPY: Record<AdminPsychologistDetailStatus, { className: string; label: string }> = {
-  free: { className: "bg-blue-50 text-blue-700", label: "Gratuito" },
-  pending: { className: "bg-orange-50 text-orange-700", label: "Pendente" },
-  unpublished: { className: "bg-surface-muted text-muted", label: "Não publicado" },
-  verified: { className: "bg-emerald-50 text-success", label: "Verificado" },
+const PROFILE_STATUS_COPY: Record<"active" | "inactive", { className: string; label: string }> = {
+  active: { className: "bg-emerald-50 text-success", label: "Ativo" },
+  inactive: { className: "bg-red-50 text-danger", label: "Inativo" },
 };
 
 const INTEGRATION_TONE: Record<AdminPsychologistIntegrationStatus["status"], string> = {
@@ -238,15 +235,74 @@ const toPublicHref = (url: string) => {
   return `${publicFrontendUrl.replace(/\/$/, "")}${url}`;
 };
 
-const canRenderImage = (src: string | null) => {
-  if (!src) return false;
-  if (src.startsWith("/")) return true;
+const isPublicMediaPath = (pathname: string) =>
+  publicMediaPathPrefixes.some((prefix) => pathname.startsWith(prefix));
+
+const resolveAdminMediaUrl = (src?: string | null) => {
+  const value = src?.trim();
+  if (!value) return null;
+
+  const apiBase = apiUrl.replace(/\/$/, "");
 
   try {
-    const url = new URL(src);
-    const apiHost = new URL(apiUrl).hostname;
+    const parsed = new URL(value, apiBase);
+    if (isPublicMediaPath(parsed.pathname)) {
+      return `${apiBase}${parsed.pathname}${parsed.search}`;
+    }
+    if (value.startsWith("http")) return value;
+    return value.startsWith("/") ? value : `${apiBase}/${value}`;
+  } catch {
+    if (publicMediaPathPrefixes.some((prefix) => value.startsWith(prefix))) {
+      return `${apiBase}${value}`;
+    }
+    return value.startsWith("/") || value.startsWith("http") ? value : null;
+  }
+};
 
-    return ["localhost", "127.0.0.1", apiHost].includes(url.hostname);
+const allowedRemoteImageHosts = () => {
+  const hosts = new Set(["localhost", "127.0.0.1", "lh3.googleusercontent.com"]);
+
+  for (const candidate of [
+    apiUrl,
+    ...(process.env.NEXT_PUBLIC_IMAGE_REMOTE_HOSTS?.split(",") ?? []),
+  ]) {
+    const normalized = candidate.trim();
+    if (!normalized) continue;
+
+    try {
+      const url = new URL(normalized.includes("://") ? normalized : `https://${normalized}`);
+      if (url.hostname) hosts.add(url.hostname);
+    } catch {
+      // Entradas inválidas de env não devem quebrar o header.
+    }
+  }
+
+  return hosts;
+};
+
+const canRenderImage = (src: string | null) => {
+  const resolved = resolveAdminMediaUrl(src);
+  if (!resolved) return false;
+  if (resolved.startsWith("/")) return true;
+
+  try {
+    const url = new URL(resolved);
+
+    return allowedRemoteImageHosts().has(url.hostname);
+  } catch {
+    return false;
+  }
+};
+
+const renderableImageSrc = (src: string | null) => {
+  const resolved = resolveAdminMediaUrl(src);
+
+  return resolved && canRenderImage(resolved) ? resolved : null;
+};
+
+const isPublicAdminMediaSrc = (src: string) => {
+  try {
+    return isPublicMediaPath(new URL(src, apiUrl).pathname);
   } catch {
     return false;
   }
@@ -270,13 +326,51 @@ const formatDate = (value?: string | null) => {
 const formatDateTime = (value?: string | null) => {
   if (!value) return "Não informado";
 
-  return dateTimeFormatter.format(new Date(value));
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "Não informado";
+
+  return `${dateFormatter.format(date)} às ${timeFormatter.format(date)}`;
 };
 
 const formatNullable = (value?: string | number | null) => {
   if (value === null || value === undefined || value === "") return "Não informado";
 
   return String(value);
+};
+
+const formatAdminHeaderCrp = (detail: AdminPsychologistDetail) => {
+  const professional = detail.profile.professional;
+  const [fallbackRegion, ...fallbackRegistrationParts] = String(detail.header.crp ?? "").split("/");
+  const regionDigits = onlyDigits(professional.regional_crp || fallbackRegion).slice(0, 2);
+  const registrationDigits = onlyDigits(
+    professional.registration_number || fallbackRegistrationParts.join("/"),
+  ).slice(0, 5);
+
+  if (regionDigits && registrationDigits) {
+    return `${regionDigits.padStart(2, "0")}/${registrationDigits.padStart(5, "0")}`;
+  }
+
+  return detail.header.crp || "CRP não informado";
+};
+
+const getPsychologistTitle = (gender?: string | null) => {
+  const normalized = String(gender ?? "")
+    .trim()
+    .toLowerCase();
+
+  return normalized === "feminino" || normalized === "mulher" ? "Psicóloga" : "Psicólogo";
+};
+
+const getHeaderPlanLabel = (detail: AdminPsychologistDetail) => {
+  const subscription = detail.general.subscription;
+  const hasCourtesy =
+    subscription.source === "admin_grant" &&
+    subscription.status === "ativa" &&
+    subscription.plan_slug !== "gratuito";
+
+  if (hasCourtesy) return "Plano de cortesia";
+
+  return detail.header.plan_name || "Sem plano ativo";
 };
 
 const formatGrantedByName = (value?: string | null) => {
@@ -383,7 +477,9 @@ const Badge = ({ children, className }: { children: ReactNode; className?: strin
 );
 
 const Avatar = ({ name, src }: { name: string; src: string | null }) => {
-  if (!canRenderImage(src)) {
+  const imageSrc = renderableImageSrc(src);
+
+  if (!imageSrc) {
     return (
       <span className="grid h-24 w-24 shrink-0 place-items-center rounded-full bg-primary-soft text-2xl font-black text-primary md:h-28 md:w-28">
         {initials(name)}
@@ -397,7 +493,8 @@ const Avatar = ({ name, src }: { name: string; src: string | null }) => {
       className="h-24 w-24 shrink-0 rounded-full object-cover md:h-28 md:w-28"
       height={112}
       priority
-      src={src ?? ""}
+      src={imageSrc}
+      unoptimized={isPublicAdminMediaSrc(imageSrc)}
       width={112}
     />
   );
@@ -448,6 +545,7 @@ const ErrorState = ({ message, onRetry }: { message: string; onRetry: () => void
 const DetailHeader = ({ detail, tab }: { detail: AdminPsychologistDetail; tab: ActiveTab }) => {
   const pathname = usePathname();
   const header = detail.header;
+  const profileStatus = header.active ? PROFILE_STATUS_COPY.active : PROFILE_STATUS_COPY.inactive;
 
   return (
     <CardShell className="overflow-hidden">
@@ -462,24 +560,20 @@ const DetailHeader = ({ detail, tab }: { detail: AdminPsychologistDetail; tab: A
               {header.verified ? <BadgeCheck aria-hidden className="h-6 w-6 text-primary" /> : null}
             </div>
             <div className="mt-2 flex flex-wrap items-center gap-2 text-sm font-black text-muted">
-              <span>Psicólogo(a)</span>
+              <span>{getPsychologistTitle(detail.profile.professional.gender)}</span>
               <span aria-hidden>•</span>
-              <span>{header.crp || "CRP não informado"}</span>
+              <span>{formatAdminHeaderCrp(detail)}</span>
             </div>
             <div className="mt-3 flex flex-wrap gap-2">
-              <Badge className={STATUS_COPY[header.status].className}>
-                {STATUS_COPY[header.status].label}
-              </Badge>
-              <Badge className="bg-primary-soft text-primary">
-                {header.plan_name || "Sem plano ativo"}
-              </Badge>
+              <Badge className={profileStatus.className}>{profileStatus.label}</Badge>
+              <Badge className="bg-primary-soft text-primary">{getHeaderPlanLabel(detail)}</Badge>
               <Badge className="bg-amber-50 text-amber-700">
                 <Star aria-hidden className="mr-1 h-3.5 w-3.5 fill-amber-500 text-amber-500" />
                 {header.rating_avg.toLocaleString("pt-BR", {
                   maximumFractionDigits: 1,
                   minimumFractionDigits: 1,
                 })}{" "}
-                ({numberFormatter.format(header.rating_count)} avaliações)
+                ({numberFormatter.format(header.rating_count)})
               </Badge>
             </div>
             <p className="mt-3 inline-flex items-center gap-2 text-xs font-bold text-muted">
@@ -489,13 +583,6 @@ const DetailHeader = ({ detail, tab }: { detail: AdminPsychologistDetail; tab: A
           </div>
         </div>
         <div className="flex flex-col gap-2 sm:flex-row md:flex-col xl:flex-row">
-          <Link
-            className="inline-flex h-11 items-center justify-center gap-2 rounded-control border border-border bg-surface px-4 text-sm font-black text-foreground transition hover:border-primary hover:text-primary"
-            href="/psicologos/lista"
-          >
-            <ArrowLeft aria-hidden className="h-4 w-4" />
-            Lista
-          </Link>
           <a
             className="inline-flex h-11 items-center justify-center gap-2 rounded-control border border-primary bg-surface px-4 text-sm font-black text-primary transition hover:bg-primary-soft"
             href={toPublicHref(header.public_profile_url)}
@@ -801,8 +888,7 @@ const TextBlock = ({ children, empty }: { children?: string | null; empty: strin
 
 const VideoCard = ({ detail }: { detail: AdminPsychologistDetail }) => {
   const content = detail.profile.content;
-  const canUseCover = canRenderImage(content.video_cover_url || content.cover_image_url);
-  const cover = content.video_cover_url || content.cover_image_url;
+  const cover = renderableImageSrc(content.video_cover_url || content.cover_image_url);
 
   return (
     <CardShell className="p-5">
@@ -812,14 +898,14 @@ const VideoCard = ({ detail }: { detail: AdminPsychologistDetail }) => {
       </div>
       <div className="mt-5 max-w-sm overflow-hidden rounded-[1.6rem] border border-border bg-surface-muted">
         <div className="relative aspect-[3/4] w-full">
-          {canUseCover ? (
+          {cover ? (
             <Image
               alt={`Capa do vídeo de apresentação de ${detail.header.name}`}
               className="object-cover"
               fill
               sizes="(max-width: 640px) 100vw, 360px"
-              src={cover ?? ""}
-              unoptimized
+              src={cover}
+              unoptimized={isPublicAdminMediaSrc(cover)}
             />
           ) : (
             <div className="grid h-full place-items-center bg-primary-soft text-primary">
@@ -944,8 +1030,7 @@ const StatisticsVideoCard = ({
   statistics: AdminPsychologistStatistics;
 }) => {
   const video = statistics.video;
-  const canUseCover = canRenderImage(video.cover_url || detail.profile.content.cover_image_url);
-  const cover = video.cover_url || detail.profile.content.cover_image_url;
+  const cover = renderableImageSrc(video.cover_url || detail.profile.content.cover_image_url);
 
   return (
     <CardShell className="p-5">
@@ -966,14 +1051,14 @@ const StatisticsVideoCard = ({
       <div className="mt-5 grid gap-5 lg:grid-cols-[220px_1fr]">
         <div className="max-w-[220px] overflow-hidden rounded-[1.5rem] border border-border bg-surface-muted">
           <div className="relative aspect-[3/4]">
-            {canUseCover ? (
+            {cover ? (
               <Image
                 alt={`Capa do vídeo de apresentação de ${detail.header.name}`}
                 className="object-cover"
                 fill
                 sizes="220px"
-                src={cover ?? ""}
-                unoptimized
+                src={cover}
+                unoptimized={isPublicAdminMediaSrc(cover)}
               />
             ) : (
               <div className="grid h-full place-items-center text-primary">
@@ -1195,17 +1280,18 @@ const publicationMetricIcon: Record<keyof AdminPsychologistPublicationItem["metr
 
 const PublicationMedia = ({ item }: { item: AdminPsychologistPublicationItem }) => {
   const src = item.media?.url ?? null;
+  const imageSrc = renderableImageSrc(src);
   const looksLikeImage =
     item.media?.type?.startsWith("image") || /\.(png|jpe?g|webp|gif)$/i.test(src ?? "");
 
-  if (src && looksLikeImage && canRenderImage(src)) {
+  if (imageSrc && looksLikeImage) {
     return (
       <Image
         alt={`Mídia da publicação ${item.title}`}
         className="h-14 w-14 rounded-2xl object-cover"
         height={56}
-        src={src}
-        unoptimized
+        src={imageSrc}
+        unoptimized={isPublicAdminMediaSrc(imageSrc)}
         width={56}
       />
     );
@@ -1543,14 +1629,16 @@ const RatingStars = ({ rating, size = "h-4 w-4" }: { rating: number; size?: stri
 );
 
 const SmallAvatar = ({ name, src }: { name: string; src: string | null }) => {
-  if (src && canRenderImage(src)) {
+  const imageSrc = renderableImageSrc(src);
+
+  if (imageSrc) {
     return (
       <Image
         alt={name}
         className="h-12 w-12 rounded-full object-cover"
         height={48}
-        src={src}
-        unoptimized
+        src={imageSrc}
+        unoptimized={isPublicAdminMediaSrc(imageSrc)}
         width={48}
       />
     );
