@@ -100,12 +100,20 @@ const isProfessionalIdentityLocked = ({
   cpf,
   crp,
   isFree,
+  source,
 }: {
   cfpVerifiedAt?: Date | null;
   cpf?: string | null;
   crp?: string | null;
   isFree: boolean;
-}) => !isFree && Boolean(cfpVerifiedAt) && onlyDigits(cpf).length === 11 && hasText(crp);
+  source?: string | null;
+}) => {
+  const hasAdministrativeCourtesy = !isFree && source === "admin_grant";
+  const hasVerifiedRegistryIdentity =
+    !isFree && Boolean(cfpVerifiedAt) && onlyDigits(cpf).length === 11 && hasText(crp);
+
+  return hasAdministrativeCourtesy || hasVerifiedRegistryIdentity;
+};
 
 const buildActivationPendingFields = ({
   address,
@@ -352,6 +360,7 @@ const toResponse = async (
     cpf: profile.cpf,
     crp: displayCrp,
     isFree,
+    source: current?.source ?? null,
   });
   const academic = {
     title: profile.academic_title,

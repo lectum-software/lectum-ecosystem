@@ -175,3 +175,11 @@ Exibir plano, método e histórico financeiro do psicólogo e permitir concessã
   - `POST /api/admin/private/psychologists/nao-existe/billing/revoke-courtesy` retornou `404` sem mutação.
 - Validação browser local headless Chrome/CDP, viewport mobile 390x844, confirmou que a aba `?tab=plano` exibe título e botão "Revogar cortesia" e não exibe mais "Conceder cortesia" quando há cortesia ativa.
 - Validações executadas: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e `git diff --check`.
+
+## Ajuste complementar 2026-07-11 - identidade travada no perfil apos cortesia
+
+- Decisao de produto: apos a concessao de cortesia ativa, os dados de identidade corrigidos pelo Admin (`CPF`, `Regional do CRP` e `No Registro CRP`) nao podem ser editados pela tela do proprio psicologo.
+- O endpoint privado do perfil do psicologo passou a retornar `profile.identity_fields_locked=true` quando a assinatura atual e `source="admin_grant"`, mantendo `cfp_verified_at` exclusivo da consulta CFP/InfoSimples real.
+- A consequencia operacional da sobrescrita Admin fica protegida: o psicologo ve os campos desabilitados e o backend ignora qualquer tentativa de alterar `cpf`/`crp` via payload de perfil enquanto a cortesia estiver ativa.
+- Nao houve alteracao no endpoint Admin, schema Prisma, migrations ou packages.
+- Validacao complementar: API local real de `free-profile` retornou `identity_fields_locked=true` para `admin_grant` com `cfp_verified_at=null`, e Chrome/CDP headless mobile 390x844 confirmou os tres campos desabilitados na edicao do psicologo.

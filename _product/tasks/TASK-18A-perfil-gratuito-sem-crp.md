@@ -508,3 +508,28 @@ Validacoes executadas:
 - API local real: `PUT /api/private/psychologist/free-profile` sem `birthdate` retornou `400` com `code="invalid_birthdate"`.
 - Chrome/CDP headless em `http://localhost:3000/app/professional/profile/setup`, viewport mobile 390x844, com usuario psicologo temporario real: confirmou `Data de Nascimento`, input `type="date"`, indicador obrigatorio e `scrollWidth=390`.
 - Usuario psicologo temporario de validacao removido do banco ao final.
+
+## Ajuste complementar em 2026-07-11 - cortesia ativa bloqueia CPF/CRP no perfil
+
+- Pedido do usuario: apos a concessao de uma cortesia, `CPF`, `Regional do CRP` e `No Registro CRP` devem se tornar ineditaveis na edicao do psicologo.
+- O backend do `free-profile` passou a considerar a assinatura ativa `source="admin_grant"` como fonte operacional suficiente para retornar `profile.identity_fields_locked=true`, mesmo sem preencher artificialmente `cfp_verified_at`.
+- A UI de `/app/professional/profile/setup` ja respeitava essa flag e, portanto, passa a renderizar os tres campos como desabilitados para cortesia ativa sem criar regra paralela no frontend.
+- O `PUT /api/private/psychologist/free-profile` continua recalculando a flag e ignorando `cpf`/`crp` no repository quando a identidade esta bloqueada, impedindo sobrescrita por payload manipulado.
+- Nao houve alteracao de schema Prisma, migrations, endpoints, packages, storage ou contratos publicos.
+- Builder/Quick Copy nao esta exposto como ferramenta direta neste ambiente; a referencia visual usada permanece o prototipo local `_product/proto/Editar Perfil - Psicologo.jpg` e o print enviado pelo usuario.
+- ADR atualizado: `adrs/0186-bloqueio-cpf-crp-validacao-profissional.md`.
+
+Criterio complementar:
+
+- [x] Em cortesia administrativa ativa, CPF, Regional do CRP e No Registro CRP ficam ineditaveis na edicao do psicologo e nao podem ser sobrescritos pelo payload do proprio perfil.
+
+Validacoes executadas:
+
+- API local real: `GET /api/private/psychologist/free-profile` com psicologo real em cortesia ativa retornou `status=200`, `plan.source="admin_grant"`, `profile.cfp_verified_at=null` e `profile.identity_fields_locked=true`.
+- Chrome/CDP headless em `http://localhost:3000/app/professional/profile/setup`, viewport mobile 390x844, com psicologo real em cortesia ativa: confirmou `cpf`, `crp_region` e `crp_number` desabilitados, valores `123.456.789-09`, `4ª Região - MG`, `123457`, ausencia de erro de acesso e `scrollWidth=390`.
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- `git diff --check`

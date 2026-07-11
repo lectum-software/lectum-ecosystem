@@ -124,3 +124,21 @@ Validação complementar:
 - `git diff --check`
 - API local com admin real confirmou `can_revoke=true`, `can_grant=false` e `active_grant_id` presente em cortesia ativa; chamada de revogação com id inexistente retornou `404` sem mutação.
 - Browser local headless Chrome/CDP em viewport 390x844 confirmou o card "Revogar cortesia" substituindo "Conceder cortesia" para psicólogo com cortesia ativa.
+
+## Complemento 2026-07-11 - cortesia bloqueia edição de identidade pelo psicólogo
+
+Produto definiu que, depois que a cortesia administrativa for concedida, CPF, Regional do CRP e Nº de registro CRP deixam de ser editáveis na tela do próprio psicólogo. A equipe operacional passa a ser a fonte desses dados durante a vigência da cortesia, especialmente porque o Admin pode corrigi-los antes da concessão.
+
+Decisão:
+
+- `profile.identity_fields_locked` no endpoint privado `/api/private/psychologist/free-profile` também fica `true` quando a assinatura ativa é `source="admin_grant"` e o plano não é gratuito.
+- Essa trava não preenche `psychologist_profile.cfp_verified_at`; validação CFP/InfoSimples continua sendo a única fonte desse timestamp.
+- O frontend do perfil já respeita a flag do backend e renderiza `cpf`, `crp_region` e `crp_number` como desabilitados.
+- O update do perfil continua ignorando `cpf`/`crp` quando a flag está ativa, impedindo sobrescrita por payload manipulado.
+
+Consequência: dados corrigidos no Admin se sobrepõem aos dados informados pelo psicólogo e ficam protegidos durante a cortesia ativa, sem migration, novo endpoint ou package novo.
+
+Validação complementar:
+
+- API local real de `GET /api/private/psychologist/free-profile` retornou `identity_fields_locked=true` para psicólogo com `source="admin_grant"` e `cfp_verified_at=null`.
+- Browser local headless Chrome/CDP em `/app/professional/profile/setup`, viewport mobile 390x844, confirmou `cpf`, `crp_region` e `crp_number` desabilitados e `scrollWidth=390`.
