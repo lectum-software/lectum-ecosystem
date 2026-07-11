@@ -7,6 +7,7 @@ import type {
 } from "@/interfaces/objects";
 import type { BillingPaymentHistoryItem } from "@/modules/api/private/psychologist/billing/subscription/repositories/interfaces/ISubscriptionRepository";
 import { SubscriptionRepository } from "@/modules/api/private/psychologist/billing/subscription/repositories/SubscriptionRepository";
+import { getPaymentGateway } from "@/modules/billing/payment-gateway";
 import {
   actionableProfessionalGatewaySubscriptionWhere,
   activeFreeSubscriptionWhere,
@@ -132,6 +133,14 @@ const isGatewaySubscription = (subscription: AdminPsychologistBillingSubscriptio
     subscription.source === "mercadopago" ||
       subscription.gateway ||
       subscription.gateway_subscription_id,
+  );
+
+const isMercadoPagoSubscription = (subscription: AdminPsychologistBillingSubscription) =>
+  Boolean(
+    subscription.gateway_subscription_id &&
+      (subscription.source === "mercadopago" ||
+        subscription.gateway === "mercadopago" ||
+        !subscription.gateway),
   );
 
 const uniqueStrings = (values: Array<string | null | undefined>) =>
@@ -348,6 +357,69 @@ export class AdminPsychologistBillingRepository {
     return repository.showPaymentHistory(subscription);
   }
 
+  private async summarizeGatewayPaymentMetrics(
+    subscriptions: AdminPsychologistBillingSubscription[],
+  ): Promise<AdminPsychologistBillingPaymentMetrics | null> {
+    const mercadoPagoSubscriptions = subscriptions.filter(isMercadoPagoSubscription);
+
+    if (mercadoPagoSubscriptions.length === 0) return null;
+
+    try {
+      const gateway = getPaymentGateway();
+      const summaries = await Promise.allSettled(
+        mercadoPagoSubscriptions.map((subscription) =>
+          gateway.getSubscriptionPaymentSummary(subscription.gateway_subscription_id!),
+        ),
+      );
+      const fulfilledSummaries = summaries
+        .filter(
+          (
+            summary,
+          ): summary is PromiseFulfilledResult<
+            Awaited<ReturnType<typeof gateway.getSubscriptionPaymentSummary>>
+          > => summary.status === "fulfilled",
+        )
+        .map((summary) => summary.value);
+
+      if (fulfilledSummaries.length === 0) return null;
+
+      const aggregate = fulfilledSummaries.reduce(
+        (accumulator, summary) => {
+          accumulator.paidInstallmentsCount += summary.charged_quantity;
+
+          if (summary.charged_quantity > 0 && summary.charged_amount_cents === null) {
+            accumulator.missingAmountCount += 1;
+            return accumulator;
+          }
+
+          accumulator.lifetimeValueCents += summary.charged_amount_cents ?? 0;
+          return accumulator;
+        },
+        {
+          lifetimeValueCents: 0,
+          missingAmountCount: 0,
+          paidInstallmentsCount: 0,
+        },
+      );
+      const rejectedCount = summaries.length - fulfilledSummaries.length;
+      const hasUnavailableAmount = aggregate.missingAmountCount > 0 || rejectedCount > 0;
+
+      return {
+        lifetimeValueAvailable: !hasUnavailableAmount,
+        lifetimeValueCents: hasUnavailableAmount ? null : aggregate.lifetimeValueCents,
+        lifetimeValueUnavailableReason:
+          aggregate.missingAmountCount > 0
+            ? "O gateway confirmou cobranças, mas não retornou valor monetário agregado suficiente para calcular o LTV."
+            : rejectedCount > 0
+              ? "Parte das assinaturas do gateway não pôde ser reconciliada agora."
+              : null,
+        paidInstallmentsCount: aggregate.paidInstallmentsCount,
+      };
+    } catch {
+      return null;
+    }
+  }
+
   async summarizePaymentMetrics(
     subscriptions: AdminPsychologistBillingSubscription[],
   ): Promise<AdminPsychologistBillingPaymentMetrics> {
@@ -367,6 +439,10 @@ export class AdminPsychologistBillingRepository {
         paidInstallmentsCount: 0,
       };
     }
+
+    const gatewayMetrics = await this.summarizeGatewayPaymentMetrics(gatewaySubscriptions);
+
+    if (gatewayMetrics) return gatewayMetrics;
 
     const gateways = uniqueStrings(
       gatewaySubscriptions.map((subscription) => subscription.gateway ?? PAYMENT_GATEWAY_FALLBACK),

@@ -292,3 +292,21 @@ Valida??o complementar:
 - `pnpm check`
 - Valida??o API local sem muta??o em psic?logo real `cmrglzdds000ajkuhqedavedb`: retorno 200 com `Plano Profissional`, `paid_installments_count=0`, `lifetime_value_cents=0` e `lifetime_value_available=true`.
 - Browser local/headless acessou a rota Admin `/psicologos/cmrglzdds000ajkuhqedavedb?tab=plano` com HTTP 200; a sess?o Admin autenticada do navegador do usu?rio n?o estava exposta para automa??o visual.
+
+## Complemento 2026-07-11 - reconciliação de LTV pelo resumo real do Mercado Pago
+
+Após a inclusão de mensalidades pagas e LTV no card `Plano atual`, foi identificado um caso real em que a assinatura Mercado Pago estava ativa e já tinha a primeira cobrança confirmada em 11/07/2026, mas nenhum webhook havia sido persistido em `payment_event`. A UI, corretamente limitada aos eventos locais naquele momento, mostrava 0 mensalidades e LTV R$ 0,00.
+
+Decisão:
+
+- Estender a porta `PaymentGateway` com `getSubscriptionPaymentSummary(gatewaySubscriptionId)` para obter o agregado financeiro real da assinatura no gateway.
+- Implementar no `MercadoPagoAdapter` a leitura do `GET /preapproval/{id}`, usando `summarized.charged_quantity` como quantidade de mensalidades pagas e `summarized.charged_amount` como LTV em centavos.
+- No Admin, preferir esse agregado real do gateway para assinaturas Mercado Pago com `gateway_subscription_id`; se a reconciliação online não estiver disponível, manter fallback para `payment_event` local.
+- Não estimar receita pelo preço do plano e não criar `payment_event` artificial. O histórico individual de cobranças continua dependendo de eventos reais de webhook/pagamento persistidos.
+
+Consequência: o card `Plano atual` deixa de zerar mensalidades/LTV quando o webhook falha ou ainda não chegou, mas preserva a regra de não inventar pagamento. O dado vem do próprio gateway e continua segregado da listagem individual de histórico financeiro.
+
+Validação complementar:
+
+- Consulta real ao Mercado Pago para `gateway_subscription_id=8fc3a14ea54542e2a08a0be45869df51` retornou `summarized.charged_quantity=1` e `summarized.charged_amount=9.9`.
+- Repositório Admin para o psicólogo real `cmrglzdds000ajkuhqedavedb` passou a retornar `paidInstallmentsCount=1`, `lifetimeValueCents=990`, `lifetimeValueAvailable=true`.

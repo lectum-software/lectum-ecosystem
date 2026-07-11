@@ -6,6 +6,7 @@ import type {
   GatewayCancelSubscriptionInput,
   GatewaySubscription,
   GatewaySubscriptionInput,
+  GatewaySubscriptionPaymentSummary,
   GatewaySubscriptionPlanInput,
   GatewaySubscriptionPlanResult,
   GatewaySubscriptionResult,
@@ -29,6 +30,14 @@ type MercadoPagoWebhookBody = {
   data?: {
     id?: string | number;
   };
+};
+
+type MercadoPagoPreApprovalRaw = {
+  summarized?: {
+    charged_amount?: unknown;
+    charged_quantity?: unknown;
+    last_charged_date?: unknown;
+  } | null;
 };
 
 const GATEWAY = "mercadopago";
@@ -92,6 +101,27 @@ const toStringOrNull = (value: unknown) => {
 const toSafeString = (value: unknown) => (typeof value === "string" ? value : undefined);
 
 const toSafeNumber = (value: unknown) => (typeof value === "number" ? value : undefined);
+
+const toFiniteNumberOrNull = (value: unknown) => {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  if (typeof value !== "string") return null;
+
+  const parsed = Number(value.replace(",", "."));
+
+  return Number.isFinite(parsed) ? parsed : null;
+};
+
+const toNonNegativeInteger = (value: unknown) => {
+  const parsed = toFiniteNumberOrNull(value);
+
+  return parsed === null || parsed < 0 ? 0 : Math.trunc(parsed);
+};
+
+const toAmountCentsOrNull = (value: unknown) => {
+  const parsed = toFiniteNumberOrNull(value);
+
+  return parsed === null || parsed < 0 ? null : Math.round(parsed * 100);
+};
 
 const toIsoDateString = (value?: Date | string | null) => {
   if (!value) return undefined;
@@ -369,6 +399,22 @@ export class MercadoPagoAdapter implements PaymentGateway {
       external_reference: response.external_reference ?? null,
       next_payment_date: response.next_payment_date ?? null,
       raw: response,
+    };
+  }
+
+  async getSubscriptionPaymentSummary(
+    gatewaySubscriptionId: string,
+  ): Promise<GatewaySubscriptionPaymentSummary> {
+    const subscription = await this.getSubscription(gatewaySubscriptionId);
+    const raw = isObject(subscription.raw) ? (subscription.raw as MercadoPagoPreApprovalRaw) : null;
+    const summarized = raw?.summarized ?? null;
+
+    return {
+      gateway_subscription_id: subscription.gateway_subscription_id,
+      charged_amount_cents: toAmountCentsOrNull(summarized?.charged_amount),
+      charged_quantity: toNonNegativeInteger(summarized?.charged_quantity),
+      last_charged_at: toSafeString(summarized?.last_charged_date) ?? null,
+      raw: summarized ?? null,
     };
   }
 

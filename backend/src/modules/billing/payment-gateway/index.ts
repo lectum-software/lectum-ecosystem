@@ -16,6 +16,7 @@ export type {
   GatewayCancelSubscriptionInput,
   GatewaySubscription,
   GatewaySubscriptionInput,
+  GatewaySubscriptionPaymentSummary,
   GatewaySubscriptionPlanInput,
   GatewaySubscriptionPlanResult,
   GatewaySubscriptionResult,

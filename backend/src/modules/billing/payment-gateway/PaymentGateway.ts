@@ -52,6 +52,14 @@ export type GatewaySubscription = {
   raw: unknown;
 };
 
+export type GatewaySubscriptionPaymentSummary = {
+  gateway_subscription_id: string;
+  charged_amount_cents: number | null;
+  charged_quantity: number;
+  last_charged_at?: string | null;
+  raw: unknown;
+};
+
 export type GatewayWebhookEvent = {
   externalId: string;
   type: string;
@@ -76,6 +84,9 @@ export interface PaymentGateway {
   ): Promise<GatewaySubscriptionResult>;
   cancelSubscription(input: GatewayCancelSubscriptionInput): Promise<GatewaySubscriptionResult>;
   getSubscription(gatewaySubscriptionId: string): Promise<GatewaySubscription>;
+  getSubscriptionPaymentSummary(
+    gatewaySubscriptionId: string,
+  ): Promise<GatewaySubscriptionPaymentSummary>;
   verifyWebhookSignature(input: VerifyWebhookSignatureInput): boolean;
   parseWebhookEvent(body: unknown): GatewayWebhookEvent | null;
 }

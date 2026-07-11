@@ -260,3 +260,13 @@ Exibir plano, método e histórico financeiro do psicólogo e permitir concessã
 - Valida??o API local com psic?logo real `cmrglzdds000ajkuhqedavedb` retornou `Plano Profissional`, `paid_installments_count=0`, `lifetime_value_cents=0` e `lifetime_value_available=true`, sem muta??o de dados.
 - Browser local/headless acessou `http://localhost:3002/psicologos/cmrglzdds000ajkuhqedavedb?tab=plano` com status HTTP 200; a valida??o visual autenticada ficou limitada ? sess?o Admin n?o exposta ao ambiente de automa??o, ent?o a evid?ncia principal de renderiza??o veio de `admin check/build` e da rota compilada.
 - Valida??es executadas: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e `git diff --check`.
+
+## Ajuste complementar 2026-07-11 - reconciliação de LTV pelo resumo real do gateway
+
+- Investigação do psicólogo real `cmrglzdds000ajkuhqedavedb` confirmou que a assinatura Mercado Pago estava `authorized/ativa`, com primeira cobrança em 11/07/2026, mas sem qualquer registro local em `payment_event`; por isso a leitura anterior baseada só em webhook persistido exibia `paid_installments_count=0` e `LTV=R$ 0,00`.
+- O endpoint `GET /api/admin/private/psychologists/:id/billing` passou a reconciliar o resumo real da assinatura no Mercado Pago (`preapproval.summarized.charged_quantity` e `charged_amount`) quando houver assinatura `source/gateway="mercadopago"` com `gateway_subscription_id`.
+- `payment_event` continua sendo usado como fallback quando a reconciliação online do gateway não estiver disponível; não há projeção por preço do plano, seed, mock ou pagamento inventado.
+- Para o psicólogo validado, a reconciliação real retornou `charged_quantity=1` e `charged_amount=9.9`, resultando em `paid_installments_count=1` e `lifetime_value_cents=990`.
+- O histórico financeiro individual permanece dependente de `payment_event`/webhook para listar cada cobrança; o resumo do card `Plano atual` pode usar o agregado real do gateway para não zerar LTV quando o webhook não foi persistido.
+- Não houve alteração de schema Prisma, migrations ou packages.
+- Validação API local sem mutação em psicólogo real `cmrglzdds000ajkuhqedavedb`: `paidInstallmentsCount=1`, `lifetimeValueCents=990`, `lifetimeValueAvailable=true`.
