@@ -10,7 +10,6 @@ import {
   Filter,
   Heart,
   MessageCircle,
-  MoreVertical,
   RefreshCw,
   Search,
   SlidersHorizontal,
@@ -61,7 +60,10 @@ const LOADING_ROWS = ["loading-1", "loading-2", "loading-3", "loading-4", "loadi
 
 const CardShell = ({ children, className }: { children?: ReactNode; className?: string }) => (
   <section
-    className={cn("rounded-card border border-border bg-surface shadow-admin-soft", className)}
+    className={cn(
+      "min-w-0 max-w-full rounded-card border border-border bg-surface shadow-admin-soft",
+      className,
+    )}
   >
     {children}
   </section>
@@ -352,7 +354,7 @@ const SearchBox = ({ onSearch, value }: { onSearch: (value: string) => void; val
   };
 
   return (
-    <form className="flex w-full gap-2" onSubmit={submit}>
+    <form className="flex w-full min-w-0 flex-col gap-2 sm:flex-row" onSubmit={submit}>
       <label className="relative min-w-0 flex-1">
         <span className="sr-only">Buscar por nome ou CRP</span>
         <Search
@@ -367,7 +369,7 @@ const SearchBox = ({ onSearch, value }: { onSearch: (value: string) => void; val
         />
       </label>
       <button
-        className="h-12 rounded-control bg-primary px-4 text-sm font-black text-white shadow-control transition hover:bg-primary-hover"
+        className="h-12 w-full shrink-0 rounded-control bg-primary px-4 text-sm font-black text-white shadow-control transition hover:bg-primary-hover sm:w-auto"
         type="submit"
       >
         Buscar
@@ -410,7 +412,7 @@ const MetricCell = ({ icon, label, value }: { icon: ReactNode; label: string; va
 );
 
 const RowActions = ({ item }: { item: PsychologistsListItem }) => (
-  <div className="flex items-center gap-2">
+  <div className="flex shrink-0 items-center gap-2">
     <Link
       className="grid h-10 w-10 place-items-center rounded-2xl border border-border bg-surface text-foreground shadow-control transition hover:border-primary hover:text-primary"
       href={item.detail_url}
@@ -429,14 +431,11 @@ const RowActions = ({ item }: { item: PsychologistsListItem }) => (
       <ExternalLink aria-hidden className="h-4 w-4" />
       <span className="sr-only">Abrir perfil público de {item.name}</span>
     </a>
-    <span className="grid h-10 w-10 place-items-center rounded-2xl text-muted">
-      <MoreVertical aria-hidden className="h-4 w-4" />
-    </span>
   </div>
 );
 
 const MobilePsychologistCard = ({ item }: { item: PsychologistsListItem }) => (
-  <article className="rounded-3xl border border-border bg-surface p-4 shadow-control">
+  <article className="min-w-0 rounded-3xl border border-border bg-surface p-4 shadow-control">
     <div className="flex items-start justify-between gap-3">
       <div className="flex min-w-0 items-center gap-3">
         <Avatar name={item.name} src={item.avatar} />
@@ -489,28 +488,38 @@ const MobilePsychologistCard = ({ item }: { item: PsychologistsListItem }) => (
 );
 
 const PsychologistsTable = ({ items }: { items: PsychologistsListItem[] }) => (
-  <div className="hidden overflow-x-auto lg:block">
-    <table className="w-full min-w-[940px] text-left text-sm">
+  <div className="hidden min-w-0 max-w-full overflow-hidden min-[1700px]:block">
+    <table className="w-full table-fixed text-left text-sm">
       <caption className="sr-only">Lista administrativa de psicólogos</caption>
+      <colgroup>
+        <col className="w-20" />
+        <col className="w-[28%]" />
+        <col className="w-[14%]" />
+        <col className="w-[11%]" />
+        <col className="w-[13%]" />
+        <col className="w-[10%]" />
+        <col className="w-[10%]" />
+        <col className="w-24" />
+      </colgroup>
       <thead className="border-b border-border text-xs text-muted">
         <tr>
-          <th className="px-4 py-4 font-black">Ranking</th>
-          <th className="px-4 py-4 font-black">Psicólogo</th>
-          <th className="px-4 py-4 font-black">Localização</th>
-          <th className="px-4 py-4 font-black">Experiência</th>
-          <th className="px-4 py-4 font-black">Avaliações</th>
-          <th className="px-4 py-4 font-black">Favoritado</th>
-          <th className="px-4 py-4 font-black">WhatsApp</th>
-          <th className="px-4 py-4 font-black">Ações</th>
+          <th className="px-3 py-4 font-black">Ranking</th>
+          <th className="px-3 py-4 font-black">Psicólogo</th>
+          <th className="px-3 py-4 font-black">Localização</th>
+          <th className="px-3 py-4 font-black">Experiência</th>
+          <th className="px-3 py-4 font-black">Avaliações</th>
+          <th className="px-3 py-4 font-black">Favoritado</th>
+          <th className="px-3 py-4 font-black">WhatsApp</th>
+          <th className="px-3 py-4 font-black">Ações</th>
         </tr>
       </thead>
       <tbody className="divide-y divide-border">
         {items.map((item) => (
           <tr className="transition hover:bg-surface-muted/50" key={item.id}>
-            <td className="px-4 py-5 text-2xl font-black text-primary">
+            <td className="px-3 py-5 text-2xl font-black text-primary">
               {item.ranking_position ? `#${item.ranking_position}` : "—"}
             </td>
-            <td className="px-4 py-5">
+            <td className="px-3 py-5">
               <div className="flex min-w-0 items-center gap-3">
                 <Avatar name={item.name} src={item.avatar} />
                 <div className="min-w-0">
@@ -530,30 +539,30 @@ const PsychologistsTable = ({ items }: { items: PsychologistsListItem[] }) => (
                 </div>
               </div>
             </td>
-            <td className="px-4 py-5 font-bold text-muted">
+            <td className="break-words px-3 py-5 font-bold text-muted">
               {[item.city, item.state].filter(Boolean).join(", ") || "Não informado"}
             </td>
-            <td className="px-4 py-5 font-bold text-foreground">
+            <td className="break-words px-3 py-5 font-bold text-foreground">
               {item.experience_years ? `${item.experience_years} anos+` : "—"}
             </td>
-            <td className="px-4 py-5">
+            <td className="break-words px-3 py-5">
               <RatingCell item={item} />
             </td>
-            <td className="px-4 py-5">
+            <td className="break-words px-3 py-5">
               <MetricCell
                 icon={<Heart aria-hidden className="h-4 w-4 text-primary" />}
                 label="total"
                 value={item.favorites_count}
               />
             </td>
-            <td className="px-4 py-5">
+            <td className="break-words px-3 py-5">
               <MetricCell
                 icon={<MessageCircle aria-hidden className="h-4 w-4 text-success" />}
                 label="cliques"
                 value={item.whatsapp_clicks_count}
               />
             </td>
-            <td className="px-4 py-5">
+            <td className="px-3 py-5">
               <RowActions item={item} />
             </td>
           </tr>
@@ -726,7 +735,7 @@ export const AdminPsychologistsListClient = () => {
   const page = Math.min(query.page ?? 1, pages);
 
   return (
-    <div className="space-y-6">
+    <div className="min-w-0 max-w-full space-y-6 overflow-x-clip">
       <header className="space-y-4">
         <nav
           aria-label="Breadcrumb"
@@ -755,9 +764,9 @@ export const AdminPsychologistsListClient = () => {
               Encontre profissionais por nome, CRP e filtros reais cadastrados no backend.
             </p>
           </div>
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+          <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
             <button
-              className="inline-flex h-12 items-center justify-center gap-2 rounded-control border border-border bg-surface px-4 text-sm font-black text-foreground shadow-control"
+              className="inline-flex h-12 min-w-0 items-center justify-center gap-2 rounded-control border border-border bg-surface px-4 text-sm font-black text-foreground shadow-control"
               onClick={() => setFiltersOpen(true)}
               type="button"
             >
@@ -778,8 +787,8 @@ export const AdminPsychologistsListClient = () => {
         </div>
       </header>
 
-      <div className="grid gap-5 lg:grid-cols-[300px_1fr]">
-        <aside className="hidden lg:block">
+      <div className="grid min-w-0 max-w-full gap-5 lg:grid-cols-[minmax(0,300px)_minmax(0,1fr)]">
+        <aside className="hidden min-w-0 lg:block">
           <FilterPanel
             data={summary}
             onClear={clearFilters}
@@ -788,17 +797,17 @@ export const AdminPsychologistsListClient = () => {
           />
         </aside>
 
-        <div className="space-y-4">
-          <div className="grid gap-3 xl:grid-cols-[1fr_auto] xl:items-center">
+        <div className="min-w-0 space-y-4">
+          <div className="grid min-w-0 gap-3 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-center">
             <SearchBox
               key={query.q || "empty-search"}
               onSearch={(value) => replaceParams({ q: value || null })}
               value={query.q}
             />
-            <label className="flex items-center gap-2 text-sm font-black text-muted xl:justify-end">
+            <label className="flex min-w-0 flex-col gap-2 text-sm font-black text-muted sm:flex-row sm:items-center xl:justify-end">
               Ordenar por
               <select
-                className="h-12 rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground shadow-control"
+                className="h-12 min-w-0 rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground shadow-control"
                 onChange={(event) =>
                   replaceParams({ sort: event.target.value as PsychologistsListSort })
                 }
@@ -843,7 +852,7 @@ export const AdminPsychologistsListClient = () => {
               {summary && items.length === 0 ? <EmptyState /> : null}
               {summary && items.length > 0 ? (
                 <>
-                  <div className="space-y-3 lg:hidden">
+                  <div className="space-y-3 min-[1700px]:hidden">
                     {items.map((item) => (
                       <MobilePsychologistCard item={item} key={item.id} />
                     ))}

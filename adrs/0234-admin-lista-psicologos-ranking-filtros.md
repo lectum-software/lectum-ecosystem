@@ -23,6 +23,7 @@ Builder/Quick Copy `vcp://quickcopy/vcp-24aaa2941d814e5b90572bc93ae50e2a` não e
 - Manter filtros em URL/search params e sem persistência de busca salva nesta V1.
 - Criar a rota protegida `/psicologos/lista` no app Admin, com visual mobile-first e filtros em drawer no mobile.
 - Incluir uma rota mínima `/psicologos/[id]` sem dados simulados apenas para evitar navegação quebrada a partir da lista; o detalhe real fica para a TASK-55.
+- Ajuste de regressão em 2026-07-11: manter a lista sem rolagem horizontal de viewport usando containers `min-w-0`/`minmax(0,1fr)`, tabela fluida apenas em larguras amplas (`min-width: 1700px`) e cards mobile-first nas demais larguras; remover o ícone inerte de menu por linha para preservar somente as ações reais da V1.
 
 ## Consequências
 
@@ -30,6 +31,7 @@ Builder/Quick Copy `vcp://quickcopy/vcp-24aaa2941d814e5b90572bc93ae50e2a` não e
 - Alterações futuras no ranking público continuam refletindo no Admin quando passarem pelo helper compartilhado.
 - A ausência de busca salva e criação manual reduz escopo da V1 e evita persistência local falsa.
 - O detalhe do psicólogo ainda depende da TASK-55 para exibir dados administrativos completos.
+- Em viewports intermediárias, a página prioriza cards sem rolagem horizontal em vez de espremer a tabela densa de oito colunas; a tabela completa permanece disponível quando há largura suficiente para caber no shell com filtros laterais.
 
 ## Validação
 
@@ -41,6 +43,7 @@ Builder/Quick Copy `vcp://quickcopy/vcp-24aaa2941d814e5b90572bc93ae50e2a` não e
 - Chamada real de `GET /api/admin/private/psychologists?page=1&limit=2&sort=relevance` com admin existente retornando `status=200`, `count=6`, `items=2` e `firstRank=1`.
 - Chamada sem autenticação para o mesmo endpoint retornando `401`.
 - Browser local headless em `http://localhost:3002/psicologos/lista?sort=relevance&limit=8` com admin real, validando desktop com 6 linhas, ações de detalhe/perfil público, viewport mobile de 390px com 6 cards, ausência de **Adicionar novo psicólogo** e ausência de **Salvar busca**.
+- Revalidação de regressão em 2026-07-11: Chrome headless local com sessão admin real em `http://localhost:3002/psicologos/lista?sort=relevance&limit=8`; desktop 1920px e mobile 390px retornaram `documentScrollWidth <= innerWidth`, sem overflow horizontal de viewport.
 
 ## Pendências
 

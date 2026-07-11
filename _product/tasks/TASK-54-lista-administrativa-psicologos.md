@@ -154,3 +154,13 @@ Frontend esperado:
 - API real autenticada: `GET /api/admin/private/psychologists?page=1&limit=2&sort=relevance` retornou `status=200`, `count=6`, `items=2` e `firstRank=1`.
 - API sem autenticação retornou `401`.
 - Browser local headless com admin real em `http://localhost:3002/psicologos/lista?sort=relevance&limit=8`: desktop com 6 linhas e ações reais; mobile 390px com 6 cards; sem **Adicionar novo psicólogo** e sem **Salvar busca**.
+
+## Correcao de regressao em 2026-07-11
+
+- Corrigido overflow horizontal da rota Admin `/psicologos/lista` sem alterar contrato de API nem dados: containers agora podem encolher com `min-w-0`/`minmax(0,1fr)`, a tabela densa so aparece em larguras amplas e os cards mobile-first cobrem larguras menores.
+- Removido o icone inerte de menu por linha, mantendo apenas as acoes reais da V1: abrir detalhe administrativo e abrir perfil publico.
+- Referencia visual mantida: `_product/proto/admin/Psicólogos/Psicólogos- Lista.png`; Builder/Quick Copy continua indisponivel como ferramenta neste ambiente.
+- Validacao executada:
+  - `pnpm --dir admin check`
+  - `pnpm --dir admin build`
+  - Browser local headless com sessao admin real em `http://localhost:3002/psicologos/lista?sort=relevance&limit=8`: desktop 1920px e mobile 390px com `documentScrollWidth <= innerWidth`, sem overflow horizontal de viewport.
