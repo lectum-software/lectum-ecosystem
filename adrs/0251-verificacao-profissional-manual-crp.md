@@ -107,3 +107,7 @@ O CPF permanece obrigatorio para a acao de aprovacao manual auditada, mas deixou
 ## Complemento 2026-07-11: acoes manuais por plano
 
 O card de registro profissional separa os dados publicos do conselho dos dados operacionais Lectum. A aprovacao/rejeicao manual fica disponivel apenas quando ha plano Profissional ativo e o registro ainda nao esta ativo. Plano Gratuito nao demanda aprovacao manual; Cortesia ja representa verificacao manual administrativa; Profissional com registro ativo ja foi aprovado pela origem existente.
+
+## Complemento 2026-07-11: responsavel e historico de cortesia
+
+Quando o registro aparece ativo por cortesia administrativa, o card usa o mesmo `granted_by` da assinatura de cortesia como responsavel e mostra "Aprovacao manual via Cortesia." quando nao houver tentativas registradas em `professional_registry_check`. Para aprovacao via API, o responsavel exibido e "Via API".

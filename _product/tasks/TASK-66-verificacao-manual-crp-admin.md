@@ -278,3 +278,8 @@ Se o schema atual não suportar auditoria mínima sem `raw`, usar `raw` com shap
 - O card passou a separar dados publicos do conselho (Regional, N? CRP, data de inscricao e tempo de experiencia) em bloco com fundo azulado leve.
 - A secao "Lectum" passou a exibir Plano, Aprovacao, Origem, Responsavel, Data aprovacao e Observacao.
 - A aprovacao/rejeicao manual ficou disponivel somente para plano Profissional com registro ainda pendente; Gratuito, Cortesia e Profissional ja ativo nao exibem acao de aprovacao manual.
+
+### Ajuste de cortesia no registro profissional 2026-07-11
+
+- Para cortesia sem tentativas automaticas/manuais no historico, o card exibe "Aprovacao manual via Cortesia.".
+- O campo Responsavel exibe "Via API" quando a origem e automatica e o nome do Admin quando a origem e manual/cortesia; em cortesia, usa o mesmo `granted_by` da concessao.

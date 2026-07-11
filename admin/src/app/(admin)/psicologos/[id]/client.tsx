@@ -3275,6 +3275,20 @@ const RegistryVerificationCard = ({ id }: { id: string }) => {
     registry.identity.experience_years === null
       ? "Não informado"
       : `${registry.identity.experience_years} anos`;
+  const responsibleValue =
+    registry.summary.source === "api_automatica"
+      ? "Via API"
+      : registry.summary.latest_manual_admin
+        ? [registry.summary.latest_manual_admin.name, registry.summary.latest_manual_admin.email]
+            .filter(Boolean)
+            .join(" · ") || "Admin Lectum"
+        : registry.summary.source === "manual_admin" || registry.summary.source === "admin_grant"
+          ? "Admin Lectum"
+          : "Não informado";
+  const emptyAttemptsText =
+    registry.summary.plan_type === "cortesia" && registry.summary.source === "admin_grant"
+      ? "Aprovação manual via Cortesia."
+      : "Nenhuma tentativa automática ou decisão manual registrada.";
 
   return (
     <CardShell className="p-5">
@@ -3306,19 +3320,7 @@ const RegistryVerificationCard = ({ id }: { id: string }) => {
         <FieldRow label="Plano" value={registry.summary.plan_label} />
         <FieldRow label="Aprovação" value={registry.summary.approval_label} />
         <FieldRow label="Origem" value={registry.summary.source_label} />
-        <FieldRow
-          label="Responsável"
-          value={
-            registry.summary.latest_manual_admin
-              ? [
-                  registry.summary.latest_manual_admin.name,
-                  registry.summary.latest_manual_admin.email,
-                ]
-                  .filter(Boolean)
-                  .join(" · ") || "Admin Lectum"
-              : "Não informado"
-          }
-        />
+        <FieldRow label="Responsável" value={responsibleValue} />
         <FieldRow
           label="Data aprovação"
           value={formatDateTime(registry.summary.latest_manual_checked_at)}
@@ -3335,7 +3337,7 @@ const RegistryVerificationCard = ({ id }: { id: string }) => {
         <h3 className="text-sm font-black text-foreground">Últimas tentativas</h3>
         {registry.latest_attempts.length === 0 ? (
           <p className="mt-3 rounded-2xl bg-surface-muted p-4 text-sm font-bold text-muted">
-            Nenhuma tentativa automática ou decisão manual registrada.
+            {emptyAttemptsText}
           </p>
         ) : (
           <ul className="mt-3 space-y-3">
