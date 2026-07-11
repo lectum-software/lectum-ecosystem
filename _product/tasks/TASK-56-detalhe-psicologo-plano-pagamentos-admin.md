@@ -306,3 +306,13 @@ Exibir plano, método e histórico financeiro do psicólogo e permitir concessã
 - Validação API local sem mutação no psicólogo real: `payment_methods_count=0`, mas `GET billing` passou a retornar `payment_method.brand=Visa`, `gateway=mercadopago`, `last4=null`, `exp_month=null`, `exp_year=null`.
 - Não houve alteração de schema Prisma, migrations ou packages.
 - Validações executadas: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e `git diff --check` nos arquivos alterados.
+
+## Ajuste complementar 2026-07-11 - cortesia no lugar da forma de pagamento no plano gratuito
+
+- Pedido do usuário: quando o plano atual for gratuito, remover o card `Forma de pagamento` e exibir `Conceder cortesia` no mesmo slot, ao lado de `Plano atual`.
+- A UI Admin agora detecta plano gratuito vigente por `plan_slug="gratuito"`, nome `Plano Gratuito` ou preço zero, desde que não seja cortesia ativa nem plano profissional pago, e substitui o slot da forma de pagamento pelo formulário real de cortesia.
+- Plano Profissional e cortesia ativa preservam o comportamento existente: Plano Profissional não exibe concessão de cortesia e cortesia ativa continua com revogação inline no card `Plano atual`.
+- Não houve alteração de backend, endpoint, schema Prisma, migrations, packages ou regra de domínio.
+- Builder/Quick Copy não está exposto como ferramenta no ambiente; a referência visual usada foi o PNG local `_product/proto/admin/Psicólogos/Detalhes do psicólogo/Plano e pagamentos.png` e a captura enviada pelo usuário.
+- Validações executadas: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm --dir frontend check`, `pnpm --dir backend check`, `pnpm check`.
+- Browser local: `GET http://localhost:3002/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=plano` retornou 200; a conferência visual autenticada ficou limitada pela sessão Admin não exposta ao ambiente de automação.

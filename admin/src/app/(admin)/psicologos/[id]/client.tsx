@@ -4122,6 +4122,19 @@ const isCurrentProfessionalPlan = (billing: AdminPsychologistBilling) => {
   );
 };
 
+const isCurrentFreePlan = (billing: AdminPsychologistBilling) => {
+  const planSlug = billing.plan.plan_slug?.trim().toLowerCase();
+  const planName = billing.plan.plan_name?.trim().toLowerCase();
+
+  return Boolean(
+    billing.plan.id &&
+      !billing.plan.is_courtesy &&
+      !billing.courtesy.can_revoke &&
+      !billing.plan.is_paid &&
+      (planSlug === "gratuito" || planName === "plano gratuito" || billing.plan.price_cents === 0),
+  );
+};
+
 const CourtesyActionCard = ({ billing, id }: { billing: AdminPsychologistBilling; id: string }) =>
   billing.plan.is_courtesy ||
   billing.courtesy.can_revoke ||
@@ -4141,12 +4154,18 @@ const PlanBillingTab = ({ id }: { detail: AdminPsychologistDetail; id: string })
 
   if (!query.data) return null;
 
+  const showCourtesyBesidePlan = isCurrentFreePlan(query.data);
+
   return (
     <div className="space-y-5" data-psychologist-detail-tab="plano">
       <div className="grid gap-5 xl:grid-cols-2">
         <CurrentPlanCard billing={query.data} id={id} />
-        <PaymentMethodCard billing={query.data} />
-        <CourtesyActionCard billing={query.data} id={id} />
+        {showCourtesyBesidePlan ? (
+          <CourtesyActionCard billing={query.data} id={id} />
+        ) : (
+          <PaymentMethodCard billing={query.data} />
+        )}
+        {!showCourtesyBesidePlan ? <CourtesyActionCard billing={query.data} id={id} /> : null}
         <PaymentHistoryCard billing={query.data} />
       </div>
     </div>
