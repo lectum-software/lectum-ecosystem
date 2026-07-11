@@ -1002,6 +1002,7 @@ const TextBlock = ({ children, empty }: { children?: string | null; empty: strin
 const VideoCard = ({ detail }: { detail: AdminPsychologistDetail }) => {
   const content = detail.profile.content;
   const cover = renderableImageSrc(content.video_cover_url || content.cover_image_url);
+  const videoSrc = resolveAdminMediaUrl(content.video_url);
 
   return (
     <CardShell className="p-5">
@@ -1009,46 +1010,26 @@ const VideoCard = ({ detail }: { detail: AdminPsychologistDetail }) => {
         <IconCircle icon={Video} />
         <h2 className="text-lg font-black text-foreground">Vídeo de apresentação</h2>
       </div>
-      <div className="mt-5 max-w-sm overflow-hidden rounded-[1.6rem] border border-border bg-surface-muted">
-        <div className="relative aspect-[3/4] w-full">
-          {cover ? (
-            <Image
-              alt={`Capa do vídeo de apresentação de ${detail.header.name}`}
-              className="object-cover"
-              fill
-              sizes="(max-width: 640px) 100vw, 360px"
-              src={cover}
-              unoptimized={isPublicAdminMediaSrc(cover)}
-            />
-          ) : (
-            <div className="grid h-full place-items-center bg-primary-soft text-primary">
-              <Video aria-hidden className="h-14 w-14" />
-            </div>
-          )}
-          <span className="absolute inset-0 grid place-items-center bg-overlay/20">
-            <span className="grid h-16 w-16 place-items-center rounded-full bg-white/90 text-primary shadow-admin-soft">
-              <Play aria-hidden className="ml-1 h-7 w-7 fill-current" />
-            </span>
-          </span>
+
+      {videoSrc ? (
+        <div className="mt-5 max-w-sm overflow-hidden rounded-[1.6rem] border border-border bg-black">
+          {/* biome-ignore lint/a11y/useMediaCaption: o backend ainda não expõe arquivo de legenda para o vídeo do perfil. */}
+          <video
+            aria-label={`Vídeo de apresentação de ${detail.header.name}`}
+            className="aspect-[3/4] w-full bg-black object-cover"
+            controls
+            playsInline
+            poster={cover || undefined}
+            preload="metadata"
+            src={videoSrc}
+          />
         </div>
-      </div>
-      {content.video_url ? (
-        <a
-          className="mt-4 inline-flex h-11 items-center justify-center gap-2 rounded-control border border-border bg-surface px-4 text-sm font-black text-foreground transition hover:border-primary hover:text-primary"
-          href={content.video_url}
-          rel="noreferrer"
-          target="_blank"
-        >
-          <ExternalLink aria-hidden className="h-4 w-4" />
-          Abrir vídeo
-        </a>
       ) : (
         <p className="mt-4 text-sm font-bold text-muted">Nenhum vídeo cadastrado.</p>
       )}
     </CardShell>
   );
 };
-
 const EngagementLoadingState = ({ rows = 3 }: { rows?: number }) => (
   <div className="space-y-5" data-psychologist-engagement-loading="true">
     <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
