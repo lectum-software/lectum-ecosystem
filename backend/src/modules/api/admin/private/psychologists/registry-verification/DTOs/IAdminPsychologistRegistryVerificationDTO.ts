@@ -94,6 +94,19 @@ export type IAdminPsychologistRegistryVerificationApproveDTO = Request & {
   };
 };
 
+export type IAdminPsychologistRegistryVerificationUpdateIdentityDTO = Request & {
+  admin?: admin;
+  auth?: admin;
+  b: {
+    crp: string;
+    crp_registration_date: string;
+    regional_crp: string;
+  };
+  p: {
+    id: string;
+  };
+};
+
 export type IAdminPsychologistRegistryVerificationRejectDTO = Request & {
   admin?: admin;
   auth?: admin;

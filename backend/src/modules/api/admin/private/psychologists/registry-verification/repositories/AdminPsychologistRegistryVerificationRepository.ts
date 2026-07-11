@@ -113,6 +113,11 @@ export type RejectManualRegistryVerificationArgs = {
   regionalCrp: string | null;
 };
 
+export type UpdateRegistryIdentityArgs = {
+  crp: string;
+  registrationDate: Date;
+};
+
 export class AdminPsychologistRegistryVerificationRepository {
   async findPsychologist(id: string): Promise<AdminPsychologistRegistryVerificationRecord | null> {
     return prisma.psychologist_profile.findFirst({
@@ -201,6 +206,21 @@ export class AdminPsychologistRegistryVerificationRepository {
         },
         select: registryCheckSelect,
       });
+    });
+  }
+
+  async updateIdentity(profileId: string, args: UpdateRegistryIdentityArgs) {
+    return prisma.psychologist_profile.update({
+      where: {
+        id: profileId,
+      },
+      data: {
+        crp: args.crp,
+        crp_registration_date: args.registrationDate,
+      },
+      select: {
+        id: true,
+      },
     });
   }
 }

@@ -562,6 +562,12 @@ export type AdminPsychologistRejectRegistryVerificationInput = {
   reason: string;
 };
 
+export type AdminPsychologistUpdateRegistryIdentityInput = {
+  crp: string;
+  crp_registration_date: string;
+  regional_crp: string;
+};
+
 export type AdminPsychologistEngagementMetric = {
   available: boolean;
   id: string;
@@ -1104,6 +1110,18 @@ export const rejectAdminPsychologistRegistryVerification = async (
 ) => {
   const response = await adminApi.post<ApiResponse<AdminPsychologistRegistryVerification>>(
     `/api/admin/private/psychologists/${encodeURIComponent(id)}/registry-verification/reject`,
+    input,
+  );
+
+  return resolveApiData(response.data);
+};
+
+export const updateAdminPsychologistRegistryIdentity = async (
+  id: string,
+  input: AdminPsychologistUpdateRegistryIdentityInput,
+) => {
+  const response = await adminApi.put<ApiResponse<AdminPsychologistRegistryVerification>>(
+    `/api/admin/private/psychologists/${encodeURIComponent(id)}/registry-verification/identity`,
     input,
   );
 

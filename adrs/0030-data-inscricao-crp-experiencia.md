@@ -45,3 +45,16 @@ Os contratos públicos continuam retornando apenas `formation_years`, calculado 
 ## Pendências
 
 - Não há interface admin no MVP; a inserção manual permanece via CLI operacional.
+
+## Complemento 2026-07-11: dados públicos do registro profissional
+
+Com a evolução do Admin na TASK-66, `crp_registration_date` deixa de ser tratado
+como dado exclusivamente interno: Regional CRP, Nº CRP e data de inscrição passam
+a poder ser corrigidos pela equipe administrativa e exibidos no perfil público do
+psicólogo como dados do conselho profissional. A edição continua bloqueada para o
+psicólogo e não altera sozinha `crp_status`, `cfp_verified_at`, assinatura,
+gateway ou cortesia.
+
+O cálculo de `formation_years` pode continuar existindo para compatibilidade com
+contratos antigos, mas o card Admin de registro profissional não exibe mais tempo
+de experiência e prioriza os três dados públicos do registro.

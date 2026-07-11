@@ -1,9 +1,10 @@
-﻿import type { professional_registry_check, psychologist_profile } from "@/interfaces/objects";
+import type { professional_registry_check, psychologist_profile } from "@/interfaces/objects";
 import type { CfpResult, CfpSearchBody, StoredRegistryCheckRaw } from "../../DTOs/ICfpDTO";
 
 export interface ICfpRepository {
   getProfile(userId: string): Promise<psychologist_profile | null>;
   countCpfSearchAttempts(psychologistId: string): Promise<number>;
+  saveSubmittedCpf(props: { psychologistId: string; cpf: string }): Promise<void>;
   createCheck(props: {
     psychologistId: string;
     request: CfpSearchBody;

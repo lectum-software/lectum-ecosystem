@@ -24,6 +24,7 @@ export type DirectoryPsychologistProfile = {
   video_url: string | null;
   video_cover_url: string | null;
   crp: string | null;
+  crp_registration_date: Date | null;
   gender: string | null;
   modality: string | null;
   languages: string[];
@@ -36,6 +37,8 @@ export type DirectoryPsychologistProfile = {
   verified: boolean;
   available_today: boolean;
   formation_years: number | null;
+  regional_crp: string | null;
+  registration_number: string | null;
   discount_first_session: boolean;
   social_value: boolean;
   accepts_insurance: boolean;

@@ -56,6 +56,7 @@ import {
   useAdminPsychologistReviews,
   useAdminPsychologistRevokeCourtesy,
   useAdminPsychologistStatistics,
+  useAdminPsychologistUpdateRegistryIdentity,
 } from "@/api/callers/psychologists";
 import { resolveApiError } from "@/api/handle";
 import type {
@@ -289,7 +290,14 @@ const registryRejectSchema = registryRejectBaseSchema.superRefine((values, ctx) 
   }
 });
 
+const registryIdentitySchema = z.object({
+  crp: z.string().min(1, "Informe o número do CRP.").max(40, "Use no máximo 40 caracteres."),
+  crp_registration_date: z.string().min(1, "Informe a data de inscrição no CRP."),
+  regional_crp: z.string().min(1, "Selecione a regional do CRP."),
+});
+
 type RegistryApproveFormValues = z.infer<typeof registryApproveBaseSchema>;
+type RegistryIdentityFormValues = z.infer<typeof registryIdentitySchema>;
 type RegistryRejectFormValues = z.infer<typeof registryRejectBaseSchema>;
 
 const createCourtesySchema = (requiresCrpRegistrationDate: boolean) =>
@@ -3107,6 +3115,94 @@ const RegistryVerificationDialog = ({
   </div>
 );
 
+const RegistryIdentityForm = ({
+  id,
+  onClose,
+  registry,
+}: {
+  id: string;
+  onClose?: () => void;
+  registry: AdminPsychologistRegistryVerification;
+}) => {
+  const mutation = useAdminPsychologistUpdateRegistryIdentity(id);
+  const form = useForm<RegistryIdentityFormValues>({
+    defaultValues: {
+      crp: registry.identity.registration_number || "",
+      crp_registration_date: formatInputDate(registry.identity.crp_registration_date),
+      regional_crp: registry.identity.regional_crp || "",
+    },
+    mode: "onSubmit",
+    resolver: zodResolver(registryIdentitySchema),
+  });
+  const regionalOptions = useMemo(
+    () => createCrpRegionSelectOptions(registry.identity.regional_crp),
+    [registry.identity.regional_crp],
+  );
+
+  useEffect(() => {
+    form.reset({
+      crp: registry.identity.registration_number || "",
+      crp_registration_date: formatInputDate(registry.identity.crp_registration_date),
+      regional_crp: registry.identity.regional_crp || "",
+    });
+  }, [form, registry.identity]);
+
+  const onSubmit: SubmitHandler<RegistryIdentityFormValues> = async (values) => {
+    try {
+      await mutation.mutateAsync({
+        crp: values.crp.trim(),
+        crp_registration_date: values.crp_registration_date.trim(),
+        regional_crp: values.regional_crp.trim(),
+      });
+      toast.success("Registro profissional atualizado.");
+      onClose?.();
+    } catch (error) {
+      toast.error(resolveApiError(error));
+    }
+  };
+
+  return (
+    <FormProvider {...form}>
+      <form className="space-y-4" noValidate onSubmit={form.handleSubmit(onSubmit)}>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <SelectController<RegistryIdentityFormValues>
+            disabled={mutation.isPending}
+            label="Regional CRP"
+            name="regional_crp"
+            options={regionalOptions}
+            required
+          />
+          <InputController<RegistryIdentityFormValues>
+            autoComplete="off"
+            disabled={mutation.isPending}
+            label="Nº CRP"
+            name="crp"
+            placeholder="Número do registro"
+            required
+          />
+          <div className="sm:col-span-2">
+            <InputController<RegistryIdentityFormValues>
+              disabled={mutation.isPending}
+              label="Data de inscrição no CRP"
+              name="crp_registration_date"
+              required
+              type="date"
+            />
+          </div>
+        </div>
+        <button
+          className="inline-flex h-12 w-full items-center justify-center gap-2 whitespace-nowrap rounded-control bg-primary px-4 text-sm font-black text-white transition hover:bg-primary-hover disabled:cursor-not-allowed disabled:bg-surface-muted disabled:text-muted"
+          disabled={mutation.isPending}
+          type="submit"
+        >
+          {mutation.isPending ? <Loader2 aria-hidden className="h-4 w-4 animate-spin" /> : null}
+          Salvar dados públicos
+        </button>
+      </form>
+    </FormProvider>
+  );
+};
+
 const RegistryApproveForm = ({
   id,
   onClose,
@@ -3320,10 +3416,6 @@ const RegistryVerificationCard = ({ id }: { id: string }) => {
 
   const canShowActions =
     registry.actions.can_approve_manually || registry.actions.can_reject_manually;
-  const registryExperience =
-    registry.identity.experience_years === null
-      ? "Não informado"
-      : `${registry.identity.experience_years} anos`;
   const manualResponsibleName = formatResponsibleAdminName(
     registry.summary.latest_manual_admin?.name,
   );
@@ -3353,13 +3445,12 @@ const RegistryVerificationCard = ({ id }: { id: string }) => {
       </div>
 
       <div className="mt-5 grid gap-3 rounded-3xl border border-blue-100 bg-blue-50/70 p-4">
-        <FieldRow label="Regional CRP" value={formatNullable(registry.identity.regional_crp)} />
-        <FieldRow label="Nº CRP" value={formatNullable(registry.identity.registration_number)} />
-        <FieldRow
-          label="Data de inscrição"
-          value={formatDate(registry.identity.crp_registration_date)}
-        />
-        <FieldRow label="Tempo de experiência" value={registryExperience} />
+        <div className="mb-1">
+          <p className="text-xs font-black uppercase tracking-[0.16em] text-blue-700">
+            Dados públicos
+          </p>
+        </div>
+        <RegistryIdentityForm id={id} registry={registry} />
       </div>
 
       <div className="mt-5">

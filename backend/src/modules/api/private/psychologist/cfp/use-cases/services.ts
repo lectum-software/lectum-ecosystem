@@ -176,18 +176,6 @@ export const search = async (data: ICfpSearchDTO) => {
     };
   }
 
-  const token = process.env.DOCUMENT_TOKEN?.trim();
-  if (!token) {
-    logCfpSearchError("CFP_SEARCH_PROVIDER_TOKEN_MISSING", {
-      traceId,
-    });
-
-    return {
-      status: 503,
-      ...error("cfp_provider_config_error", {}),
-    };
-  }
-
   const request = {
     cpf: normalizeDigits(data.b.cpf) || undefined,
     nome: normalizeText(data.b.nome),
@@ -241,6 +229,25 @@ export const search = async (data: ICfpSearchDTO) => {
   }
 
   const usedAttempts = request.cpf ? await repository.countCpfSearchAttempts(profile.id!) : 0;
+
+  if (request.cpf) {
+    await repository.saveSubmittedCpf({
+      cpf: request.cpf,
+      psychologistId: profile.id!,
+    });
+  }
+
+  const token = process.env.DOCUMENT_TOKEN?.trim();
+  if (!token) {
+    logCfpSearchError("CFP_SEARCH_PROVIDER_TOKEN_MISSING", {
+      traceId,
+    });
+
+    return {
+      status: 503,
+      ...error("cfp_provider_config_error", {}),
+    };
+  }
 
   if (request.cpf && usedAttempts >= CPF_SEARCH_ATTEMPT_LIMIT) {
     const attempts = toAttempts(usedAttempts);

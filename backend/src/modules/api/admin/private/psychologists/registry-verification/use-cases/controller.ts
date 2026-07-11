@@ -4,6 +4,7 @@ import {
   approveRegistryVerification,
   rejectRegistryVerification,
   showRegistryVerification,
+  updateRegistryIdentity,
 } from "./services";
 
 export const show = async (req: Request, res: Response) => {
@@ -27,6 +28,18 @@ export const approve = async (req: Request, res: Response) => {
     return send(res, resolve);
   } catch (err) {
     return error500(res, "admin_psychologist_registry_verification_approve", err);
+  }
+};
+
+export const updateIdentity = async (req: Request, res: Response) => {
+  try {
+    const resolve = await updateRegistryIdentity(
+      req as unknown as Parameters<typeof updateRegistryIdentity>[0],
+    );
+
+    return send(res, resolve);
+  } catch (err) {
+    return error500(res, "admin_psychologist_registry_verification_update_identity", err);
   }
 };
 

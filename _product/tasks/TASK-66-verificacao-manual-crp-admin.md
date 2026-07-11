@@ -205,6 +205,7 @@ Se o schema atual não suportar auditoria mínima sem `raw`, usar `raw` com shap
 ## Critérios de aceite
 
 - [x] Admin autenticado consegue visualizar o status de verificação profissional no detalhe do psicólogo.
+- [x] CPF valido informado pelo psicologo na verificacao profissional fica salvo e aparece no detalhe Admin mesmo quando a API automatica falha.
 - [x] Admin consegue aprovar CRP manualmente com CPF, Regional, CRP, data de inscrição e observação/evidência interna.
 - [x] Admin consegue rejeitar verificação com motivo obrigatório.
 - [x] Aprovação manual atualiza `crp_status="aprovado"` e mantém `cfp_verified_at` nulo/inalterado.
@@ -312,3 +313,17 @@ Se o schema atual não suportar auditoria mínima sem `raw`, usar `raw` com shap
 - O status verde/vermelho do header Admin passou a representar se o perfil entra na lista publica de psicologos, e nao apenas se a conta de usuario esta ativa.
 - A regra reutiliza a mesma elegibilidade da listagem publica/ranking: perfil publicado, conta ativa, dados obrigatorios completos e entitlement profissional conforme helpers existentes.
 - Perfis profissionais pendentes de registro ou incompletos ficam com tag "Inativo" no header do detalhe Admin.
+
+### Ajuste de campos publicos do registro profissional 2026-07-11
+
+- O card Registro profissional removeu "Tempo de experiencia".
+- Regional CRP, Nº CRP e Data de inscricao ficaram editaveis diretamente no card, sem modal, usando React Hook Form/Zod/controllers.
+- A edicao administrativa atualiza os dados publicos do conselho em `psychologist_profile.crp` e `psychologist_profile.crp_registration_date`, sem alterar aprovacao, `cfp_verified_at`, assinatura, gateway ou cortesia.
+- O perfil publico do psicologo passa a receber Regional CRP, Nº CRP e Data de inscricao para exibicao como dados do registro profissional.
+
+### Ajuste de CPF pendente da verificacao automatica 2026-07-11
+
+- O endpoint `/api/private/psychologist/cfp/search` passou a persistir o CPF valido em `psychologist_profile.cpf` antes de consultar a API automatica.
+- Se a API automatica falhar, estiver indisponivel, sem token operacional ou retornar erro, o CPF fica visivel em Dados pessoais no detalhe Admin do psicologo; tentativas historicas com CPF em `professional_registry_check` tambem entram como fallback de exibicao.
+- A persistencia nao aprova o registro, nao preenche `cfp_verified_at`, nao altera CRP/data e nao sobrescreve identidades ja bloqueadas por aprovacao profissional ou cortesia administrativa ativa.
+- Validacao local com psicologo real: a busca com token operacional vazio retornou erro de configuracao esperado, persistiu o CPF informado em `psychologist_profile.cpf`, manteve `crp_status=pendente`/`cfp_verified_at=null` e o detalhe Admin passou a devolver o CPF em `profile.personal.cpf`.

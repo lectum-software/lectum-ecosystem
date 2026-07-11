@@ -8,6 +8,7 @@ import {
   type AdminPsychologistRejectRegistryVerificationInput,
   type AdminPsychologistReportsQuery,
   type AdminPsychologistReviewsQuery,
+  type AdminPsychologistUpdateRegistryIdentityInput,
   approveAdminPsychologistRegistryVerification,
   getAdminPsychologistActivities,
   getAdminPsychologistBilling,
@@ -24,6 +25,7 @@ import {
   type PsychologistsListQuery,
   rejectAdminPsychologistRegistryVerification,
   revokeAdminPsychologistCourtesy,
+  updateAdminPsychologistRegistryIdentity,
 } from "@/api/req/psychologists";
 
 export const useAdminPsychologistsDashboard = (
@@ -176,6 +178,24 @@ export const useAdminPsychologistRejectRegistryVerification = (id: string) => {
   return useMutation({
     mutationFn: (input: AdminPsychologistRejectRegistryVerificationInput) =>
       rejectAdminPsychologistRegistryVerification(id, input),
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: adminPsychologistsKeys.all }),
+        queryClient.invalidateQueries({ queryKey: adminPsychologistsKeys.detail(id) }),
+        queryClient.invalidateQueries({
+          queryKey: adminPsychologistsKeys.registryVerification(id),
+        }),
+      ]);
+    },
+  });
+};
+
+export const useAdminPsychologistUpdateRegistryIdentity = (id: string) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (input: AdminPsychologistUpdateRegistryIdentityInput) =>
+      updateAdminPsychologistRegistryIdentity(id, input),
     onSuccess: async () => {
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: adminPsychologistsKeys.all }),

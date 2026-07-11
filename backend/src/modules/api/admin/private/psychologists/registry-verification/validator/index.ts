@@ -33,8 +33,18 @@ export const rejectSchema: IValidatorRequest = {
   ],
 };
 
+export const updateIdentitySchema: IValidatorRequest = {
+  params: [psychologistParam],
+  body: [
+    { key: "regional_crp", coerse: "string", method: "string", min: 1, max: 120 },
+    { key: "crp", coerse: "string", method: "string", min: 1, max: 40 },
+    { key: "crp_registration_date", coerse: "string", method: "string", min: 10, max: 10 },
+  ],
+};
+
 export const showValidator = validator(showSchema);
 export const approveValidator = validator(approveSchema);
 export const rejectValidator = validator(rejectSchema);
+export const updateIdentityValidator = validator(updateIdentitySchema);
 
 export default showValidator;

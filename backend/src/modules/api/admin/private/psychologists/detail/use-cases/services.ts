@@ -122,6 +122,10 @@ const splitCrp = (crp: string | null) => {
   };
 };
 
+const latestSubmittedCpf = (profile: AdminPsychologistDetailRecord) =>
+  trimOrNull(profile.cpf) ??
+  trimOrNull(profile.registry_checks.find((check) => trimOrNull(check.cpf))?.cpf);
+
 const fullAddress = (profile: AdminPsychologistDetailRecord) => {
   const line = [
     trimOrNull(profile.professional_address_street),
@@ -564,7 +568,7 @@ const buildDetail = async (
           zip: trimOrNull(profile.professional_address_zip),
         },
         birthdate: profile.birthdate,
-        cpf: trimOrNull(profile.cpf),
+        cpf: latestSubmittedCpf(profile),
         email: profile.user.email,
         phone: trimOrNull(profile.whatsapp),
         provider: profile.user.provider,

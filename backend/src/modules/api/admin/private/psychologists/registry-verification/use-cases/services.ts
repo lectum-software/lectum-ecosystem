@@ -13,6 +13,7 @@ import type {
   IAdminPsychologistRegistryVerificationApproveDTO,
   IAdminPsychologistRegistryVerificationRejectDTO,
   IAdminPsychologistRegistryVerificationShowDTO,
+  IAdminPsychologistRegistryVerificationUpdateIdentityDTO,
 } from "../DTOs/IAdminPsychologistRegistryVerificationDTO";
 import {
   type AdminPsychologistRegistryVerificationCheck,
@@ -402,6 +403,50 @@ export const showRegistryVerification = async (
     status: 200,
     ...msg("show", {}),
     data: buildResponse(profile),
+  };
+};
+
+export const updateRegistryIdentity = async (
+  data: IAdminPsychologistRegistryVerificationUpdateIdentityDTO,
+): Promise<Resolve> => {
+  const repository = new AdminPsychologistRegistryVerificationRepository();
+  const profile = await repository.findPsychologist(data.p.id);
+
+  if (!profile) return notFound();
+
+  const regionalCrp = trimOrNull(data.b.regional_crp);
+  const registrationNumber = trimOrNull(data.b.crp);
+  if (!regionalCrp || !registrationNumber) {
+    return serviceError(400, "admin_registry_identity_invalid");
+  }
+
+  let registrationDate: Date;
+  try {
+    registrationDate = parseRegistrationDate(data.b.crp_registration_date);
+  } catch (err) {
+    const code = err instanceof Error ? err.message : "crp_registration_date_invalid";
+    return serviceError(
+      400,
+      code === "crp_registration_date_future"
+        ? "admin_registry_verification_date_future"
+        : "admin_registry_verification_date_invalid",
+    );
+  }
+
+  const crp = buildCrp(regionalCrp, registrationNumber);
+  if (!crp) return serviceError(400, "admin_registry_identity_invalid");
+
+  await repository.updateIdentity(profile.id, {
+    crp,
+    registrationDate,
+  });
+
+  const updatedProfile = await repository.findPsychologist(data.p.id);
+
+  return {
+    status: 200,
+    ...msg("update", {}),
+    data: updatedProfile ? buildResponse(updatedProfile) : null,
   };
 };
 

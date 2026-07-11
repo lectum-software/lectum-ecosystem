@@ -4,6 +4,7 @@ import {
   ArrowLeft,
   BadgePercent,
   BriefcaseBusiness,
+  CalendarDays,
   CornerUpLeft,
   FileText,
   GraduationCap,
@@ -211,6 +212,13 @@ const formatDate = (value: string | null) => {
     year: "numeric",
   }).format(new Date(value));
 };
+
+const formatProfileField = (value?: string | null) => {
+  const normalized = value?.trim();
+  return normalized || "Não informado";
+};
+
+const formatRegistryDate = (value?: string | null) => (value ? formatDate(value) : "Não informado");
 
 const toPsychologistWhatsAppIdentity = (profile: DirectoryPsychologistProfile) => ({
   avatar: profile.avatar,
@@ -1806,6 +1814,9 @@ const AboutTab = ({
     "Idiomas não informados.",
   );
   const modalityText = formatList([formatAttendanceLabel(profile)], "Modalidade não informada.");
+  const registryRegionalText = formatProfileField(profile.regional_crp);
+  const registryNumberText = formatProfileField(profile.registration_number);
+  const registryDateText = formatRegistryDate(profile.crp_registration_date);
 
   return (
     <div className="grid gap-3.5 bg-[#F5F7FA] px-3 pt-3.5 pb-1 dark:bg-background sm:px-4 sm:pt-4">
@@ -1813,6 +1824,24 @@ const AboutTab = ({
         {bioText ? <ExpandableAboutText text={bioText} /> : null}
         <PresentationVideo profile={profile} />
         {profile.whatsapp_url ? <AboutContactInfoBlock /> : null}
+      </ProfileSectionCard>
+
+      <ProfileSectionCard title="Registro profissional">
+        <div className="mt-3 grid gap-2.5 sm:grid-cols-3">
+          <ProfileInfoCard
+            compact
+            icon={ShieldCheck}
+            label="Regional CRP"
+            value={registryRegionalText}
+          />
+          <ProfileInfoCard compact icon={FileText} label="Nº CRP" value={registryNumberText} />
+          <ProfileInfoCard
+            compact
+            icon={CalendarDays}
+            label="Data de inscrição"
+            value={registryDateText}
+          />
+        </div>
       </ProfileSectionCard>
 
       <ProfileSectionCard title="Especialidades">

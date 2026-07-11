@@ -105,6 +105,7 @@ export const adminPsychologistDetailSelect = {
     },
     select: {
       checked_at: true,
+      cpf: true,
       found: true,
       provider: true,
       registro: true,

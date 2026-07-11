@@ -131,3 +131,23 @@ Quando a pendencia de registro profissional e acionavel pelo Admin, o status "Pe
 ## Complemento 2026-07-11: status ativo como listagem publica
 
 No detalhe Admin do psicologo, a tag "Ativo/Inativo" do header passa a significar presenca na lista publica de psicologos, nao apenas `user.active`. A decisao reaproveita os candidatos do ranking/listagem publica ja calculados no backend; se o perfil nao aparece entre esses candidatos, o header mostra "Inativo" mesmo com a conta de usuario ativa.
+
+## Complemento 2026-07-11: registro publico editavel na propria tela
+
+Regional CRP, Numero CRP e Data de inscricao passam a ser campos editaveis
+diretamente no card Registro profissional do Admin, sem modal. A edicao usa o
+endpoint `PUT /api/admin/private/psychologists/:id/registry-verification/identity`
+e atualiza somente `psychologist_profile.crp` e
+`psychologist_profile.crp_registration_date`.
+
+A alteracao nao aprova nem rejeita o registro, nao preenche `cfp_verified_at`,
+nao cria/cancela assinatura, nao altera gateway e nao concede cortesia. Esses
+tres campos passam a ser retornados no contrato do perfil publico para exibicao
+como dados do conselho profissional. O card Admin removeu o campo Tempo de
+experiencia para evitar tratar a data de inscricao como derivacao principal.
+
+## Complemento 2026-07-11: CPF pendente visivel ao Admin
+
+Quando o psicologo informa um CPF valido na etapa de verificacao profissional, o backend persiste esse CPF em `psychologist_profile.cpf` antes de consultar a API automatica. Assim, se a consulta externa falhar, estiver indisponivel, sem token operacional ou retornar erro, o Admin ainda visualiza o CPF em Dados pessoais no detalhe do psicologo para triagem manual.
+
+Essa persistencia nao aprova o registro, nao preenche `cfp_verified_at`, nao altera CRP/data de inscricao e nao sobrescreve identidades ja bloqueadas por aprovacao profissional ou cortesia administrativa ativa. Para tentativas historicas que ja tenham CPF em `professional_registry_check`, o detalhe Admin usa esse CPF como fallback de exibicao, sem copiar retroativamente dados nem criar aprovacao.

@@ -11,6 +11,7 @@ import { getPostIdsWithPsychologistReplies } from "@/utils/community-post-replie
 import { getMutedPostIds } from "@/utils/post-notification-mute";
 import { crpExperienceYears } from "@/utils/professional-experience";
 import { normalizeProfessionalDisplayName } from "@/utils/professional-name";
+import { parseStoredCrp } from "@/utils/professional-registry";
 import {
   activeProfessionalEntitlementWhere,
   isVerifiedProfessionalEntitlement,
@@ -1165,6 +1166,7 @@ export class ProfileRepository implements IProfileRepository {
     const profile = item?.psychologist_profile;
     if (!item || !profile) return null;
     if (!hasPublishedProfileRequirements(item, profile)) return null;
+    const { crp_number, crp_region } = parseStoredCrp(profile.crp);
 
     return {
       id: item.id,
@@ -1176,6 +1178,7 @@ export class ProfileRepository implements IProfileRepository {
       video_url: profile.video_url,
       video_cover_url: profile.video_cover_url,
       crp: profile.crp,
+      crp_registration_date: profile.crp_registration_date,
       gender: profile.gender,
       modality: profile.modality,
       languages: normalizeLanguages(profile.languages),
@@ -1192,6 +1195,8 @@ export class ProfileRepository implements IProfileRepository {
       verified: isProfessionalVerified(profile),
       available_today: hasAvailableToday(profile.available_days),
       formation_years: crpExperienceYears(profile.crp_registration_date),
+      regional_crp: crp_region,
+      registration_number: crp_number,
       discount_first_session: profile.discount_first_session,
       social_value: profile.social_value,
       accepts_insurance: profile.accepts_insurance,

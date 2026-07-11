@@ -3,6 +3,7 @@ import prisma, { type ORM } from "@/infra/database/prisma";
 import type { professional_registry_check, psychologist_profile } from "@/interfaces/objects";
 import { parseCrpRegistrationDate } from "@/utils/professional-experience";
 import { buildCrpFromRegistryResult } from "@/utils/professional-registry";
+import { activeProfessionalCourtesyEntitlementWhere } from "@/utils/subscription-entitlement";
 import type { CfpResult, CfpSearchBody, StoredRegistryCheckRaw } from "../DTOs/ICfpDTO";
 import type { ICfpRepository } from "./interfaces/ICfpRepository";
 
@@ -33,6 +34,30 @@ export class CfpRepository implements ICfpRepository {
         deleted: false,
         cpf: {
           not: null,
+        },
+      },
+    });
+  }
+
+  async saveSubmittedCpf(props: { psychologistId: string; cpf: string }): Promise<void> {
+    const cpf = normalizeDigits(props.cpf);
+    if (!cpf) return;
+
+    await this.profileRepository.updateMany({
+      data: {
+        cpf,
+      },
+      where: {
+        id: props.psychologistId,
+        deleted: false,
+        cfp_verified_at: null,
+        crp_status: {
+          not: "aprovado",
+        },
+        NOT: {
+          subscriptions: {
+            some: activeProfessionalCourtesyEntitlementWhere(),
+          },
         },
       },
     });
