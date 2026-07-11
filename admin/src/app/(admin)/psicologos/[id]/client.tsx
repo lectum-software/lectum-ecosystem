@@ -21,9 +21,11 @@ import {
   Heart,
   Info,
   Loader2,
+  Lock,
   type LucideIcon,
   Mail,
   MessageCircle,
+  Pencil,
   Play,
   RefreshCw,
   Search,
@@ -56,8 +58,10 @@ import {
   useAdminPsychologistReviews,
   useAdminPsychologistRevokeCourtesy,
   useAdminPsychologistStatistics,
-  useAdminPsychologistUpdateRegistryIdentity,
+  useAdminPsychologistUpdatePersonalData,
+  useAdminPsychologistUpdateProfessionalData,
 } from "@/api/callers/psychologists";
+import { useAdminSettingsCatalogs } from "@/api/callers/settings";
 import { resolveApiError } from "@/api/handle";
 import type {
   AdminPsychologistActivitiesQuery,
@@ -79,7 +83,12 @@ import type {
   AdminPsychologistReviewsQuery,
   AdminPsychologistStatistics,
 } from "@/api/req/psychologists";
-import { InputController, SelectController, TextareaController } from "@/components/controllers";
+import {
+  CheckboxGroupController,
+  InputController,
+  SelectController,
+  TextareaController,
+} from "@/components/controllers";
 import { cn } from "@/lib/utils";
 
 const numberFormatter = new Intl.NumberFormat("pt-BR");
@@ -156,6 +165,95 @@ const createCrpRegionSelectOptions = (currentValue?: string | null) => {
     { label: `${currentRegional} (valor atual)`, value: currentRegional },
     ...CRP_REGION_OPTIONS,
   ];
+};
+
+const EMPTY_SELECT_OPTION = { label: "Não informado", value: "" };
+
+const GENDER_OPTIONS = [
+  EMPTY_SELECT_OPTION,
+  { label: "Feminino", value: "feminino" },
+  { label: "Masculino", value: "masculino" },
+  { label: "Não binário", value: "nao_binario" },
+  { label: "Prefiro não informar", value: "prefiro_nao_informar" },
+] as const;
+
+const RACE_COLOR_OPTIONS = [
+  EMPTY_SELECT_OPTION,
+  { label: "Amarela", value: "amarela" },
+  { label: "Branca", value: "branca" },
+  { label: "Indígena", value: "indigena" },
+  { label: "Parda", value: "parda" },
+  { label: "Preta", value: "preta" },
+  { label: "Prefiro não informar", value: "prefiro_nao_informar" },
+] as const;
+
+const RELIGION_OPTIONS = [
+  EMPTY_SELECT_OPTION,
+  { label: "Agnóstica", value: "agnostica" },
+  { label: "Ateia", value: "ateia" },
+  { label: "Budista", value: "budista" },
+  { label: "Católica", value: "catolica" },
+  { label: "Espírita", value: "espirita" },
+  { label: "Evangélica", value: "evangelica" },
+  { label: "Judaica", value: "judaica" },
+  { label: "Matriz africana", value: "matriz_africana" },
+  { label: "Outra", value: "outra" },
+  { label: "Prefiro não informar", value: "prefiro_nao_informar" },
+] as const;
+
+const STATE_OPTIONS = [
+  EMPTY_SELECT_OPTION,
+  ...[
+    "AC",
+    "AL",
+    "AP",
+    "AM",
+    "BA",
+    "CE",
+    "DF",
+    "ES",
+    "GO",
+    "MA",
+    "MT",
+    "MS",
+    "MG",
+    "PA",
+    "PB",
+    "PR",
+    "PE",
+    "PI",
+    "RJ",
+    "RN",
+    "RS",
+    "RO",
+    "RR",
+    "SC",
+    "SP",
+    "SE",
+    "TO",
+  ].map((state) => ({ label: state, value: state })),
+] as const;
+
+const MODALITY_OPTIONS = [
+  EMPTY_SELECT_OPTION,
+  { label: "Online", value: "online" },
+  { label: "Presencial", value: "presencial" },
+  { label: "Híbrido", value: "hibrido" },
+] as const;
+
+const CPF_CHANGE_CONFIRMATION_OPTIONS = [
+  { label: "Não, manter sem confirmação", value: "" },
+  { label: "Sim, confirmo a alteração administrativa", value: "sim" },
+] as const;
+
+const mergeCurrentOption = (
+  options: readonly { label: string; value: string }[],
+  currentValue?: string | null,
+) => {
+  const normalized = String(currentValue ?? "").trim();
+  if (!normalized || options.some((option) => option.value === normalized)) return [...options];
+
+  return [options[0], { label: `${capitalizeOptionLabel(normalized)} (valor atual)`, value: normalized }, ...options.slice(1)];
 };
 
 const PROFILE_STATUS_COPY: Record<"active" | "inactive", { className: string; label: string }> = {
@@ -299,6 +397,44 @@ const registryIdentitySchema = z.object({
 type RegistryApproveFormValues = z.infer<typeof registryApproveBaseSchema>;
 type RegistryIdentityFormValues = z.infer<typeof registryIdentitySchema>;
 type RegistryRejectFormValues = z.infer<typeof registryRejectBaseSchema>;
+
+const profilePersonalDataBaseSchema = z.object({
+  address_city: z.string().max(120, "Use no máximo 120 caracteres.").optional(),
+  address_complement: z.string().max(120, "Use no máximo 120 caracteres.").optional(),
+  address_district: z.string().max(120, "Use no máximo 120 caracteres.").optional(),
+  address_number: z.string().max(40, "Use no máximo 40 caracteres.").optional(),
+  address_state: z.string().max(2, "Use a UF com 2 letras.").optional(),
+  address_street: z.string().max(160, "Use no máximo 160 caracteres.").optional(),
+  address_zip: z.string().max(12, "Use no máximo 12 caracteres.").optional(),
+  birthdate: z.string().optional(),
+  confirm_cpf_change: z.string().optional(),
+  cpf: z
+    .string()
+    .optional()
+    .refine((value) => !value || isValidCpf(value), "Informe um CPF válido."),
+  gender: z.string().max(80, "Use no máximo 80 caracteres.").optional(),
+  race_color: z.string().max(80, "Use no máximo 80 caracteres.").optional(),
+  reason: z
+    .string()
+    .min(10, "Informe o motivo interno com pelo menos 10 caracteres.")
+    .max(500, "Use no máximo 500 caracteres."),
+  religion: z.string().max(80, "Use no máximo 80 caracteres.").optional(),
+  whatsapp: z.string().max(24, "Use no máximo 24 caracteres.").optional(),
+});
+
+type ProfilePersonalDataFormValues = z.infer<typeof profilePersonalDataBaseSchema>;
+
+const profileProfessionalDataSchema = z.object({
+  approach_ids: z.array(z.string()).default([]),
+  languages: z.array(z.string()).default([]),
+  modality: z.string().optional(),
+  reason: z.string().max(500, "Use no máximo 500 caracteres.").optional(),
+  service_ids: z.array(z.string()).default([]),
+  specialty_ids: z.array(z.string()).default([]),
+  target_audience: z.array(z.string()).default([]),
+});
+
+type ProfileProfessionalDataFormValues = z.infer<typeof profileProfessionalDataSchema>;
 
 const createCourtesySchema = (requiresCrpRegistrationDate: boolean) =>
   courtesyBaseSchema.superRefine((values, ctx) => {
@@ -572,6 +708,19 @@ const formatPhoneDisplay = (value?: string | null) => {
   return raw;
 };
 
+const formatWhatsappInput = (value?: string | null) => {
+  const digits = onlyDigits(value).slice(0, 15);
+
+  return digits ? `+${digits}` : "";
+};
+
+const formatZipInput = (value?: string | null) => {
+  const digits = onlyDigits(value).slice(0, 8);
+  if (digits.length <= 5) return digits;
+
+  return `${digits.slice(0, 5)}-${digits.slice(5)}`;
+};
+
 const formatZipDisplay = (value?: string | null) => {
   const raw = String(value ?? "").trim();
   if (!raw) return null;
@@ -580,6 +729,12 @@ const formatZipDisplay = (value?: string | null) => {
   if (digits.length === 8) return `${digits.slice(0, 5)}-${digits.slice(5)}`;
 
   return raw;
+};
+
+const emptyToNull = (value?: string | null) => {
+  const normalized = String(value ?? "").trim();
+
+  return normalized || null;
 };
 
 const normalizeAddressPart = (value?: string | null) => {
@@ -1135,20 +1290,25 @@ const FieldRow = ({ label, value }: { label: string; value: ReactNode }) => (
 );
 
 const InfoCard = ({
+  action,
   children,
   icon: Icon,
   title,
 }: {
+  action?: ReactNode;
   children: ReactNode;
   icon: LucideIcon;
   title: string;
 }) => (
   <CardShell className="p-5">
-    <div className="flex items-center gap-3">
-      <IconCircle icon={Icon} />
-      <h2 className="text-lg font-black text-foreground">{title}</h2>
+    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex items-center gap-3">
+        <IconCircle icon={Icon} />
+        <h2 className="text-lg font-black text-foreground">{title}</h2>
+      </div>
+      {action ? <div className="w-full sm:w-auto">{action}</div> : null}
     </div>
-    <dl className="mt-4">{children}</dl>
+    <div className="mt-4">{children}</div>
   </CardShell>
 );
 
@@ -3116,15 +3276,18 @@ const RegistryVerificationDialog = ({
 );
 
 const RegistryIdentityForm = ({
-  id,
-  onClose,
+  canApprove,
+  canReject,
+  onApprove,
+  onReject,
   registry,
 }: {
-  id: string;
-  onClose?: () => void;
+  canApprove: boolean;
+  canReject: boolean;
+  onApprove: (values: RegistryIdentityFormValues) => void;
+  onReject: () => void;
   registry: AdminPsychologistRegistryVerification;
 }) => {
-  const mutation = useAdminPsychologistUpdateRegistryIdentity(id);
   const form = useForm<RegistryIdentityFormValues>({
     defaultValues: {
       crp: registry.identity.registration_number || "",
@@ -3147,18 +3310,15 @@ const RegistryIdentityForm = ({
     });
   }, [form, registry.identity]);
 
-  const onSubmit: SubmitHandler<RegistryIdentityFormValues> = async (values) => {
-    try {
-      await mutation.mutateAsync({
-        crp: values.crp.trim(),
-        crp_registration_date: values.crp_registration_date.trim(),
-        regional_crp: values.regional_crp.trim(),
-      });
-      toast.success("Registro profissional atualizado.");
-      onClose?.();
-    } catch (error) {
-      toast.error(resolveApiError(error));
-    }
+  const fieldsDisabled = !canApprove;
+  const actionButtonCount = Number(canApprove) + Number(canReject);
+
+  const onSubmit: SubmitHandler<RegistryIdentityFormValues> = (values) => {
+    onApprove({
+      crp: values.crp.trim(),
+      crp_registration_date: values.crp_registration_date.trim(),
+      regional_crp: values.regional_crp.trim(),
+    });
   };
 
   return (
@@ -3166,7 +3326,7 @@ const RegistryIdentityForm = ({
       <form className="space-y-4" noValidate onSubmit={form.handleSubmit(onSubmit)}>
         <div className="grid gap-4 sm:grid-cols-2">
           <SelectController<RegistryIdentityFormValues>
-            disabled={mutation.isPending}
+            disabled={fieldsDisabled}
             label="Regional CRP"
             name="regional_crp"
             options={regionalOptions}
@@ -3174,7 +3334,7 @@ const RegistryIdentityForm = ({
           />
           <InputController<RegistryIdentityFormValues>
             autoComplete="off"
-            disabled={mutation.isPending}
+            disabled={fieldsDisabled}
             label="Nº CRP"
             name="crp"
             placeholder="Número do registro"
@@ -3182,7 +3342,7 @@ const RegistryIdentityForm = ({
           />
           <div className="sm:col-span-2">
             <InputController<RegistryIdentityFormValues>
-              disabled={mutation.isPending}
+              disabled={fieldsDisabled}
               label="Data de inscrição no CRP"
               name="crp_registration_date"
               required
@@ -3190,14 +3350,29 @@ const RegistryIdentityForm = ({
             />
           </div>
         </div>
-        <button
-          className="inline-flex h-12 w-full items-center justify-center gap-2 whitespace-nowrap rounded-control bg-primary px-4 text-sm font-black text-white transition hover:bg-primary-hover disabled:cursor-not-allowed disabled:bg-surface-muted disabled:text-muted"
-          disabled={mutation.isPending}
-          type="submit"
-        >
-          {mutation.isPending ? <Loader2 aria-hidden className="h-4 w-4 animate-spin" /> : null}
-          Salvar dados públicos
-        </button>
+        {actionButtonCount > 0 ? (
+          <div className={cn("grid gap-3", actionButtonCount > 1 ? "sm:grid-cols-2" : "")}>
+            {canApprove ? (
+              <button
+                className="inline-flex h-12 w-full items-center justify-center gap-2 whitespace-nowrap rounded-control bg-primary px-4 text-sm font-black text-white transition hover:bg-primary-hover"
+                type="submit"
+              >
+                <ShieldCheck aria-hidden className="h-4 w-4" />
+                Aprovar manualmente
+              </button>
+            ) : null}
+            {canReject ? (
+              <button
+                className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-control border border-danger bg-surface px-4 text-sm font-black text-danger transition hover:bg-red-50"
+                onClick={onReject}
+                type="button"
+              >
+                <AlertTriangle aria-hidden className="h-4 w-4" />
+                Rejeitar verificação
+              </button>
+            ) : null}
+          </div>
+        ) : null}
       </form>
     </FormProvider>
   );
@@ -3205,43 +3380,56 @@ const RegistryIdentityForm = ({
 
 const RegistryApproveForm = ({
   id,
+  identityDraft,
   onClose,
   registry,
 }: {
   id: string;
+  identityDraft?: RegistryIdentityFormValues | null;
   onClose: () => void;
   registry: AdminPsychologistRegistryVerification;
 }) => {
   const mutation = useAdminPsychologistApproveRegistryVerification(id);
+  const identityDefaults = useMemo(
+    () => ({
+      crp: identityDraft?.crp ?? registry.identity.registration_number ?? "",
+      crp_registration_date:
+        identityDraft?.crp_registration_date ??
+        formatInputDate(registry.identity.crp_registration_date),
+      regional_crp: identityDraft?.regional_crp ?? registry.identity.regional_crp ?? "",
+    }),
+    [
+      identityDraft,
+      registry.identity.crp_registration_date,
+      registry.identity.regional_crp,
+      registry.identity.registration_number,
+    ],
+  );
   const form = useForm<RegistryApproveFormValues>({
     defaultValues: {
       confirmation: "",
       cpf: formatCpfInput(registry.identity.cpf),
-      crp: registry.identity.registration_number || "",
-      crp_registration_date: formatInputDate(registry.identity.crp_registration_date),
+      crp: identityDefaults.crp,
+      crp_registration_date: identityDefaults.crp_registration_date,
       notes: "",
-      regional_crp: registry.identity.regional_crp || "",
+      regional_crp: identityDefaults.regional_crp,
       situation_confirmed: "",
     },
     mode: "onSubmit",
     resolver: zodResolver(registryApproveSchema),
   });
-  const regionalOptions = useMemo(
-    () => createCrpRegionSelectOptions(registry.identity.regional_crp),
-    [registry.identity.regional_crp],
-  );
 
   useEffect(() => {
     form.reset({
       confirmation: "",
       cpf: formatCpfInput(registry.identity.cpf),
-      crp: registry.identity.registration_number || "",
-      crp_registration_date: formatInputDate(registry.identity.crp_registration_date),
+      crp: identityDefaults.crp,
+      crp_registration_date: identityDefaults.crp_registration_date,
       notes: "",
-      regional_crp: registry.identity.regional_crp || "",
+      regional_crp: identityDefaults.regional_crp,
       situation_confirmed: "",
     });
-  }, [form, registry.identity]);
+  }, [form, identityDefaults, registry.identity.cpf]);
 
   const onSubmit: SubmitHandler<RegistryApproveFormValues> = async (values) => {
     try {
@@ -3264,22 +3452,10 @@ const RegistryApproveForm = ({
   return (
     <FormProvider {...form}>
       <form className="space-y-4" noValidate onSubmit={form.handleSubmit(onSubmit)}>
-        <div className="grid gap-4 sm:grid-cols-2">
-          <SelectController<RegistryApproveFormValues>
-            disabled={mutation.isPending}
-            label="Regional CRP"
-            name="regional_crp"
-            options={regionalOptions}
-            required
-          />
-          <InputController<RegistryApproveFormValues>
-            autoComplete="off"
-            disabled={mutation.isPending}
-            label="Nº CRP"
-            name="crp"
-            placeholder="Número do registro"
-            required
-          />
+        <div className="rounded-2xl border border-blue-100 bg-blue-50/70 p-4 text-sm font-bold text-muted">
+          A aprovação usará o Regional CRP, Nº CRP e Data de inscrição preenchidos no card.
+        </div>
+        <div className="grid gap-4">
           <InputController<RegistryApproveFormValues>
             autoComplete="off"
             disabled={mutation.isPending}
@@ -3290,13 +3466,6 @@ const RegistryApproveForm = ({
             name="cpf"
             placeholder="000.000.000-00"
             required
-          />
-          <InputController<RegistryApproveFormValues>
-            disabled={mutation.isPending}
-            label="Data de inscrição no CRP"
-            name="crp_registration_date"
-            required
-            type="date"
           />
         </div>
         <SelectController<RegistryApproveFormValues>
@@ -3396,6 +3565,7 @@ const RegistryRejectForm = ({ id, onClose }: { id: string; onClose: () => void }
 
 const RegistryVerificationCard = ({ id }: { id: string }) => {
   const [action, setAction] = useState<"approve" | "reject" | null>(null);
+  const [identityDraft, setIdentityDraft] = useState<RegistryIdentityFormValues | null>(null);
   const query = useAdminPsychologistRegistryVerification(id);
   const errorMessage = query.error ? resolveApiError(query.error) : null;
 
@@ -3414,8 +3584,6 @@ const RegistryVerificationCard = ({ id }: { id: string }) => {
   const registry = query.data;
   if (!registry) return null;
 
-  const canShowActions =
-    registry.actions.can_approve_manually || registry.actions.can_reject_manually;
   const manualResponsibleName = formatResponsibleAdminName(
     registry.summary.latest_manual_admin?.name,
   );
@@ -3445,12 +3613,16 @@ const RegistryVerificationCard = ({ id }: { id: string }) => {
       </div>
 
       <div className="mt-5 grid gap-3 rounded-3xl border border-blue-100 bg-blue-50/70 p-4">
-        <div className="mb-1">
-          <p className="text-xs font-black uppercase tracking-[0.16em] text-blue-700">
-            Dados públicos
-          </p>
-        </div>
-        <RegistryIdentityForm id={id} registry={registry} />
+        <RegistryIdentityForm
+          canApprove={registry.actions.can_approve_manually}
+          canReject={registry.actions.can_reject_manually}
+          onApprove={(values) => {
+            setIdentityDraft(values);
+            setAction("approve");
+          }}
+          onReject={() => setAction("reject")}
+          registry={registry}
+        />
       </div>
 
       <div className="mt-5">
@@ -3489,34 +3661,14 @@ const RegistryVerificationCard = ({ id }: { id: string }) => {
         )}
       </div>
 
-      {canShowActions ? (
-        <div className="mt-5 grid gap-3 sm:grid-cols-2">
-          {registry.actions.can_approve_manually ? (
-            <button
-              className="inline-flex h-12 w-full items-center justify-center gap-2 whitespace-nowrap rounded-control bg-primary px-4 text-sm font-black text-white transition hover:bg-primary-hover"
-              onClick={() => setAction("approve")}
-              type="button"
-            >
-              <ShieldCheck aria-hidden className="h-4 w-4" />
-              Aprovar manualmente
-            </button>
-          ) : null}
-          {registry.actions.can_reject_manually ? (
-            <button
-              className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-control border border-danger bg-surface px-4 text-sm font-black text-danger transition hover:bg-red-50"
-              onClick={() => setAction("reject")}
-              type="button"
-            >
-              <AlertTriangle aria-hidden className="h-4 w-4" />
-              Rejeitar verificação
-            </button>
-          ) : null}
-        </div>
-      ) : null}
-
       {action === "approve" && registry.actions.can_approve_manually ? (
         <RegistryVerificationDialog onClose={() => setAction(null)} title="Aprovar CRP manualmente">
-          <RegistryApproveForm id={id} onClose={() => setAction(null)} registry={registry} />
+          <RegistryApproveForm
+            id={id}
+            identityDraft={identityDraft}
+            onClose={() => setAction(null)}
+            registry={registry}
+          />
         </RegistryVerificationDialog>
       ) : null}
 

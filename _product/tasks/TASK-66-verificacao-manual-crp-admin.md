@@ -71,7 +71,7 @@ Permitir que o Admin aprove ou rejeite manualmente o CRP de um psicólogo quando
   - observações/evidências internas quando existirem.
 - Criar ação **Aprovar CRP manualmente**:
   - abrir modal/drawer mobile-first;
-  - campos: Regional CRP, Nº CRP, CPF, Data de inscrição no CRP, situação confirmada e observação/evidência interna;
+  - campos: Regional CRP, Nº CRP e Data de inscrição no CRP ficam no card; a confirmação exibe CPF, situação confirmada, observação/evidência interna e confirmação forte;
   - Regional CRP deve usar a mesma lista do perfil/cortesia Admin quando possível;
   - CPF deve usar máscara visual e normalização para dígitos;
   - exigir confirmação forte, por exemplo `APROVAR CRP`.
@@ -318,7 +318,8 @@ Se o schema atual não suportar auditoria mínima sem `raw`, usar `raw` com shap
 
 - O card Registro profissional removeu "Tempo de experiencia".
 - Regional CRP, Nº CRP e Data de inscricao ficaram editaveis diretamente no card, sem modal, usando React Hook Form/Zod/controllers.
-- A edicao administrativa atualiza os dados publicos do conselho em `psychologist_profile.crp` e `psychologist_profile.crp_registration_date`, sem alterar aprovacao, `cfp_verified_at`, assinatura, gateway ou cortesia.
+- O card nao exibe mais o texto "Dados publicos" nem o botao "Salvar dados publicos"; o bloco dos campos mostra as acoes "Aprovar manualmente" e "Rejeitar verificacao".
+- Na aprovacao manual, os dados preenchidos inline atualizam os dados publicos do conselho em `psychologist_profile.crp` e `psychologist_profile.crp_registration_date`, sem preencher `cfp_verified_at`, criar/cancelar assinatura, alterar gateway ou conceder cortesia.
 - O perfil publico do psicologo passa a receber Regional CRP, Nº CRP e Data de inscricao para exibicao como dados do registro profissional.
 
 ### Ajuste de CPF pendente da verificacao automatica 2026-07-11

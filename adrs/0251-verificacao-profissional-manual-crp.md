@@ -135,16 +135,19 @@ No detalhe Admin do psicologo, a tag "Ativo/Inativo" do header passa a significa
 ## Complemento 2026-07-11: registro publico editavel na propria tela
 
 Regional CRP, Numero CRP e Data de inscricao passam a ser campos editaveis
-diretamente no card Registro profissional do Admin, sem modal. A edicao usa o
-endpoint `PUT /api/admin/private/psychologists/:id/registry-verification/identity`
-e atualiza somente `psychologist_profile.crp` e
-`psychologist_profile.crp_registration_date`.
+diretamente no card Registro profissional do Admin, sem modal. O card nao exibe
+mais o rotulo "Dados publicos" nem o botao isolado "Salvar dados publicos"; os
+botoes visiveis do bloco sao "Aprovar manualmente" e "Rejeitar verificacao".
 
-A alteracao nao aprova nem rejeita o registro, nao preenche `cfp_verified_at`,
-nao cria/cancela assinatura, nao altera gateway e nao concede cortesia. Esses
-tres campos passam a ser retornados no contrato do perfil publico para exibicao
-como dados do conselho profissional. O card Admin removeu o campo Tempo de
-experiencia para evitar tratar a data de inscricao como derivacao principal.
+Na aprovacao manual, os valores inline alimentam a decisao auditada e atualizam
+`psychologist_profile.crp` e `psychologist_profile.crp_registration_date`. O
+endpoint `PUT /api/admin/private/psychologists/:id/registry-verification/identity`
+permanece como contrato administrativo de correcao controlada desses dados
+publicos, sem alterar aprovacao, `cfp_verified_at`, assinatura, gateway ou
+cortesia. Esses tres campos passam a ser retornados no contrato do perfil
+publico para exibicao como dados do conselho profissional. O card Admin removeu
+o campo Tempo de experiencia para evitar tratar a data de inscricao como
+derivacao principal.
 
 ## Complemento 2026-07-11: CPF pendente visivel ao Admin
 
