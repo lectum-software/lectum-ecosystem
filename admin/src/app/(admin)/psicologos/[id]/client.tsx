@@ -2568,6 +2568,8 @@ const CurrentPlanCard = ({ billing, id }: { billing: AdminPsychologistBilling; i
   const isCourtesy = plan.is_courtesy;
   const planTitle = isCourtesy ? "Plano de cortesia" : plan.plan_name || "Sem plano ativo";
   const planPrice = isCourtesy ? null : formatPlanPrice(plan.price_cents, plan.interval);
+  const planEndLabel = isCourtesy ? "Fim" : "Pr?xima renova??o";
+  const internalNote = plan.grant_notes?.trim() || null;
 
   const onRevoke = async () => {
     const confirmed = window.confirm("Confirmar revogacao da cortesia deste psicologo?");
@@ -2597,9 +2599,21 @@ const CurrentPlanCard = ({ billing, id }: { billing: AdminPsychologistBilling; i
 
       <dl className="mt-5 divide-y divide-border text-sm">
         <FieldRow label="Inicio" value={formatDate(plan.started_at)} />
-        <FieldRow label="Proxima renovacao" value={formatDate(plan.current_period_end)} />
+        <FieldRow label={planEndLabel} value={formatDate(plan.current_period_end)} />
         {isCourtesy ? (
-          <FieldRow label="Concedida por" value={formatGrantedByName(plan.granted_by)} />
+          <>
+            <FieldRow label="Concedida por" value={formatGrantedByName(plan.granted_by)} />
+            <FieldRow
+              label="Nota interna"
+              value={
+                internalNote ? (
+                  <span className="whitespace-pre-line">{internalNote}</span>
+                ) : (
+                  "N?o informada"
+                )
+              }
+            />
+          </>
         ) : null}
       </dl>
 

@@ -246,3 +246,22 @@ Validacao complementar:
 - `pnpm --dir admin build`
 - `pnpm check`
 - `git diff --check`
+
+## Complemento 2026-07-11 - nota interna no Plano atual de cortesia
+
+Produto decidiu que o resumo principal da cortesia ativa deve expor a nota interna da concessao no proprio card `Plano atual`, sem criar nova fonte de dados.
+
+Decisao:
+
+- Renderizar `professional_subscription.grant_notes` como linha `Nota interna` somente quando o plano atual for `source="admin_grant"`/cortesia ativa.
+- Trocar o rotulo `Proxima renovacao` por `Fim` nesse mesmo estado de cortesia, mantendo `current_period_end` como data de encerramento.
+- Manter o rotulo `Proxima renovacao` para planos pagos/nao cortesia.
+
+Consequencia: o Admin consegue ler a observacao operacional da concessao junto da vigencia e da acao de revogar, sem alterar endpoint, schema, auditoria ou regra de dominio.
+
+Validacao complementar:
+
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check`
+- `git diff --check`
