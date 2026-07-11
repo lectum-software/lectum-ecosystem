@@ -300,3 +300,9 @@ Se o schema atual não suportar auditoria mínima sem `raw`, usar `raw` com shap
 ### Ajuste de copy Dados pessoais 2026-07-11
 
 - Na aba Perfil e cadastro, Dados pessoais passou a exibir "WhatsApp" no lugar de "Telefone" e "Endereco" no lugar de "Endereco completo".
+
+### Ajuste visual do pendente profissional 2026-07-11
+
+- Quando o status do registro profissional e pendente, a tag "Pendente" usa tom vermelho.
+- No mesmo cenario, o icone de alerta do item "Perfil e cadastro" tambem usa vermelho.
+- O botao de acao primario foi reduzido para "Aprovar manualmente" e marcado para nao quebrar linha.

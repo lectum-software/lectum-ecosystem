@@ -176,7 +176,7 @@ const REGISTRY_VERIFICATION_TONE: Record<string, string> = {
   aprovado: "bg-emerald-50 text-success",
   em_analise: "bg-blue-50 text-blue-700",
   limite_tentativas: "bg-orange-50 text-orange-700",
-  pendente: "bg-surface-muted text-muted",
+  pendente: "bg-red-50 text-danger",
   rejeitado: "bg-red-50 text-danger",
 };
 
@@ -889,7 +889,7 @@ const DetailHeader = ({ detail, tab }: { detail: AdminPsychologistDetail; tab: A
                   {showRegistryAlert ? (
                     <AlertTriangle
                       aria-label="Registro profissional pendente de verificação manual"
-                      className="h-4 w-4 text-amber-600"
+                      className="h-4 w-4 text-danger"
                     />
                   ) : null}
                   <span className="ml-2 rounded-full bg-surface-muted px-2 py-0.5 text-[10px] font-black uppercase tracking-wide text-muted">
@@ -910,7 +910,7 @@ const DetailHeader = ({ detail, tab }: { detail: AdminPsychologistDetail; tab: A
                 {showRegistryAlert ? (
                   <AlertTriangle
                     aria-label="Registro profissional pendente de verificação manual"
-                    className="h-4 w-4 text-amber-600"
+                    className="h-4 w-4 text-danger"
                   />
                 ) : null}
                 {active ? (
@@ -3230,12 +3230,12 @@ const RegistryApproveForm = ({
           required
         />
         <button
-          className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-control bg-primary px-4 text-sm font-black text-white transition hover:bg-primary-hover disabled:cursor-not-allowed disabled:bg-surface-muted disabled:text-muted"
+          className="inline-flex h-12 w-full items-center justify-center gap-2 whitespace-nowrap rounded-control bg-primary px-4 text-sm font-black text-white transition hover:bg-primary-hover disabled:cursor-not-allowed disabled:bg-surface-muted disabled:text-muted"
           disabled={mutation.isPending}
           type="submit"
         >
           {mutation.isPending ? <Loader2 aria-hidden className="h-4 w-4 animate-spin" /> : null}
-          Aprovar CRP manualmente
+          Aprovar manualmente
         </button>
       </form>
     </FormProvider>
@@ -3402,12 +3402,12 @@ const RegistryVerificationCard = ({ id }: { id: string }) => {
         <div className="mt-5 grid gap-3 sm:grid-cols-2">
           {registry.actions.can_approve_manually ? (
             <button
-              className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-control bg-primary px-4 text-sm font-black text-white transition hover:bg-primary-hover"
+              className="inline-flex h-12 w-full items-center justify-center gap-2 whitespace-nowrap rounded-control bg-primary px-4 text-sm font-black text-white transition hover:bg-primary-hover"
               onClick={() => setAction("approve")}
               type="button"
             >
               <ShieldCheck aria-hidden className="h-4 w-4" />
-              Aprovar CRP manualmente
+              Aprovar manualmente
             </button>
           ) : null}
           {registry.actions.can_reject_manually ? (

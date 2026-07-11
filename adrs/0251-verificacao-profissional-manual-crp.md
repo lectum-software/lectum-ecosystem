@@ -123,3 +123,7 @@ Na aba Perfil e cadastro do Admin, Registro profissional fica isolado na segunda
 ## Complemento 2026-07-11: copy objetiva em dados pessoais
 
 Dados pessoais no Admin usa "WhatsApp" e "Endereco" para alinhar a leitura ao canal operacional real e reduzir ruido visual. A decisao nao altera contratos, persistencia nem regras de verificacao profissional.
+
+## Complemento 2026-07-11: tom vermelho para pendencia acionavel
+
+Quando a pendencia de registro profissional e acionavel pelo Admin, o status "Pendente" e o icone de alerta em "Perfil e cadastro" usam tom vermelho. O CTA primario usa "Aprovar manualmente" sem quebra de linha para comunicar uma acao objetiva e caber no layout de duas colunas.
