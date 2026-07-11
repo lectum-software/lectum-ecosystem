@@ -482,13 +482,13 @@ const buildDetail = async (
 
   const ranked = await rankPsychologistCandidates(rankingCandidates, null);
   const rankIndex = ranked.findIndex(({ item }) => item.user.id === userId);
-  const ranking =
-    rankIndex >= 0
-      ? {
-          position: rankIndex + 1,
-          score: roundScore(ranked[rankIndex].ranking.score),
-        }
-      : null;
+  const isListedInPublicDirectory = rankIndex >= 0;
+  const ranking = isListedInPublicDirectory
+    ? {
+        position: rankIndex + 1,
+        score: roundScore(ranked[rankIndex].ranking.score),
+      }
+    : null;
   const status = mapStatus(profile, now);
   const { regional_crp, registration_number } = splitCrp(profile.crp);
   const accountHistory = buildAccountHistory(profile, currentSubscription);
@@ -516,7 +516,7 @@ const buildDetail = async (
       subscription: currentSubscription,
     },
     header: {
-      active: profile.user.active,
+      active: isListedInPublicDirectory,
       avatar: profile.user.avatar,
       created_at: profile.user.createdAt,
       crp: profile.crp,

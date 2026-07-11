@@ -306,3 +306,9 @@ Se o schema atual não suportar auditoria mínima sem `raw`, usar `raw` com shap
 - Quando o status do registro profissional e pendente, a tag "Pendente" usa tom vermelho.
 - No mesmo cenario, o icone de alerta do item "Perfil e cadastro" tambem usa vermelho.
 - O botao de acao primario foi reduzido para "Aprovar manualmente" e marcado para nao quebrar linha.
+
+### Ajuste de status ativo do perfil 2026-07-11
+
+- O status verde/vermelho do header Admin passou a representar se o perfil entra na lista publica de psicologos, e nao apenas se a conta de usuario esta ativa.
+- A regra reutiliza a mesma elegibilidade da listagem publica/ranking: perfil publicado, conta ativa, dados obrigatorios completos e entitlement profissional conforme helpers existentes.
+- Perfis profissionais pendentes de registro ou incompletos ficam com tag "Inativo" no header do detalhe Admin.

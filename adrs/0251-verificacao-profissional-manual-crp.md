@@ -127,3 +127,7 @@ Dados pessoais no Admin usa "WhatsApp" e "Endereco" para alinhar a leitura ao ca
 ## Complemento 2026-07-11: tom vermelho para pendencia acionavel
 
 Quando a pendencia de registro profissional e acionavel pelo Admin, o status "Pendente" e o icone de alerta em "Perfil e cadastro" usam tom vermelho. O CTA primario usa "Aprovar manualmente" sem quebra de linha para comunicar uma acao objetiva e caber no layout de duas colunas.
+
+## Complemento 2026-07-11: status ativo como listagem publica
+
+No detalhe Admin do psicologo, a tag "Ativo/Inativo" do header passa a significar presenca na lista publica de psicologos, nao apenas `user.active`. A decisao reaproveita os candidatos do ranking/listagem publica ja calculados no backend; se o perfil nao aparece entre esses candidatos, o header mostra "Inativo" mesmo com a conta de usuario ativa.
