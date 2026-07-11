@@ -200,7 +200,7 @@ export const AdminShell = ({ children }: PropsWithChildren) => {
       <aside
         className={cn(
           "fixed inset-y-0 left-0 z-30 hidden border-r border-white/10 transition-[width] duration-200 lg:block",
-          collapsed ? "w-20" : "w-72",
+          collapsed ? "w-20" : "w-60",
         )}
       >
         <button
@@ -231,7 +231,7 @@ export const AdminShell = ({ children }: PropsWithChildren) => {
             onClick={() => setDrawerOpen(false)}
             type="button"
           />
-          <aside className="relative h-full w-[min(84vw,320px)] shadow-admin">
+          <aside className="relative h-full w-[min(80vw,300px)] shadow-admin">
             <button
               aria-label="Fechar menu administrativo"
               className="absolute right-3 top-3 z-10 grid h-10 w-10 place-items-center rounded-full bg-white/10 text-white"
@@ -245,7 +245,7 @@ export const AdminShell = ({ children }: PropsWithChildren) => {
         </div>
       ) : null}
 
-      <div className={cn("transition-[padding] duration-200 lg:pl-72", collapsed && "lg:pl-20")}>
+      <div className={cn("transition-[padding] duration-200 lg:pl-60", collapsed && "lg:pl-20")}>
         <main className="mx-auto w-full max-w-[1440px] px-4 py-5 sm:px-6 lg:px-8 lg:py-8">
           <div className="mb-4 flex lg:hidden">
             <button
