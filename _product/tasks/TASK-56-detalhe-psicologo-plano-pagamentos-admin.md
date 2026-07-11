@@ -295,3 +295,14 @@ Exibir plano, método e histórico financeiro do psicólogo e permitir concessã
 - Não houve alteração de schema Prisma, migrations ou packages.
 - Validação API local sem mutação no psicólogo real `cmrglzdds000ajkuhqedavedb`: `payment_history.available=true`, item `Mensalidade`, `amount_cents=990`, `status=pago`, `occurred_at=2026-07-11T18:03:17.796Z`, e o card manteve `paid_installments_count=1`/`lifetime_value_cents=990`.
 - Validações executadas: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e `git diff --check`.
+
+
+## Ajuste complementar 2026-07-11 - forma de pagamento no checkout normal
+
+- Pedido do usuário: corrigir o card `Forma de pagamento` para exibir o cartão de teste informado no checkout.
+- Diagnóstico: a assinatura Mercado Pago do psicólogo real `cmrglzdds000ajkuhqedavedb` estava ativa e paga, mas não havia registro local em `payment_methods`; o checkout normal criava a assinatura, porém só persistia a máscara do cartão em fluxos de cortesia/alterar cartão.
+- O checkout normal agora salva `payment_methods` com dados seguros informados pelo frontend/SDK (bandeira e final quando existirem), usando o `gateway_subscription_id` retornado pelo gateway.
+- Para assinaturas já existentes sem `payment_methods`, o Admin usa fallback seguro do Mercado Pago e exibe a bandeira retornada em `preapproval.payment_method_id`, sem inventar final/validade e sem persistir dado artificial em leitura.
+- Validação API local sem mutação no psicólogo real: `payment_methods_count=0`, mas `GET billing` passou a retornar `payment_method.brand=Visa`, `gateway=mercadopago`, `last4=null`, `exp_month=null`, `exp_year=null`.
+- Não houve alteração de schema Prisma, migrations ou packages.
+- Validações executadas: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e `git diff --check` nos arquivos alterados.

@@ -33,6 +33,27 @@ const toSafeString = (value: unknown) => {
   return null;
 };
 
+const PAYMENT_METHOD_BRAND_LABELS: Record<string, string> = {
+  amex: "American Express",
+  elo: "Elo",
+  hipercard: "Hipercard",
+  master: "Mastercard",
+  mastercard: "Mastercard",
+  visa: "Visa",
+};
+
+const toPaymentMethodBrandLabel = (value: unknown) => {
+  const raw = toSafeString(value);
+  if (!raw) return null;
+
+  const normalized = raw
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
+
+  return PAYMENT_METHOD_BRAND_LABELS[normalized] ?? raw.toUpperCase();
+};
+
 const normalizeText = (value: unknown) =>
   String(value ?? "")
     .normalize("NFD")
@@ -376,7 +397,7 @@ export class AdminPsychologistBillingRepository {
     userId: string,
     gatewayToken?: string | null,
   ): Promise<payment_method | null> {
-    return prisma.payment_method.findFirst({
+    const localPaymentMethod = await prisma.payment_method.findFirst({
       where: {
         deleted: false,
         gateway: "mercadopago",
@@ -394,6 +415,27 @@ export class AdminPsychologistBillingRepository {
         last4: true,
       },
     });
+
+    if (localPaymentMethod || !gatewayToken) return localPaymentMethod;
+
+    try {
+      const gatewaySubscription = await getPaymentGateway().getSubscription(gatewayToken);
+      const raw = asRecord(gatewaySubscription.raw);
+      const brand = toPaymentMethodBrandLabel(raw?.payment_method_id);
+
+      if (!brand) return null;
+
+      return {
+        brand,
+        exp_month: null,
+        exp_year: null,
+        gateway: PAYMENT_GATEWAY_FALLBACK,
+        gateway_token: gatewayToken,
+        last4: null,
+      };
+    } catch {
+      return null;
+    }
   }
 
   async showPaymentHistory(

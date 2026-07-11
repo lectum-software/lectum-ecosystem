@@ -334,3 +334,27 @@ Validação complementar:
 - `pnpm --dir admin build`
 - `pnpm check`
 - `git diff --check`
+
+
+## Complemento 2026-07-11 - persistência e fallback seguro de forma de pagamento
+
+Foi identificado que o checkout normal de assinatura Mercado Pago criava a assinatura e a cobrança, mas não persistia a máscara do cartão em `payment_methods`. Como o Admin exibe somente dados seguros locais, o card `Forma de pagamento` ficava vazio mesmo com uma assinatura paga.
+
+Decisão:
+
+- Persistir `payment_methods` também no checkout normal, usando apenas dados seguros enviados pelo frontend/SDK: bandeira e final quando existirem, vinculados ao `gateway_subscription_id` da assinatura.
+- Manter o fluxo existente de troca de cartão/cortesia salvando a mesma entidade, sem criar tabela ou contrato paralelo.
+- Para assinaturas antigas sem registro local de `payment_methods`, permitir fallback somente de leitura no Admin: consultar a assinatura real no gateway e mapear `preapproval.payment_method_id` para uma bandeira humana segura.
+- Não exibir nem persistir `card_id`, token, credencial do gateway ou qualquer dado sensível; se o gateway não retornar final/validade pelo endpoint seguro, esses campos permanecem nulos.
+
+Consequência: novos checkouts passam a alimentar o card `Forma de pagamento` com a máscara local, e assinaturas antigas podem exibir pelo menos a bandeira real do cartão quando o gateway informar esse dado seguro. A correção não cria mocks, seeds, migrações ou dados artificiais.
+
+Validação complementar:
+
+- `showAdminPsychologistBilling` para o psicólogo real `cmrglzdds000ajkuhqedavedb` retornou `payment_method.brand=Visa`, `gateway=mercadopago`, `last4=null`, `exp_month=null` e `exp_year=null` com `payment_methods_count=0` local.
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check`
+- `git diff --check` nos arquivos alterados

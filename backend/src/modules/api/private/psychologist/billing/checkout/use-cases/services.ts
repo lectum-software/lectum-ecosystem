@@ -366,7 +366,7 @@ export default async (data: ICheckoutDTO) => {
             status: "inativa",
           },
         );
-        await repository.savePaymentMethodReference(data.auth.id!, {
+        const paymentMethod = await repository.savePaymentMethodReference(data.auth.id!, {
           gatewaySubscriptionId: gatewayResult.gateway_subscription_id,
           ...paymentMethodDisplay,
         });
@@ -383,6 +383,7 @@ export default async (data: ICheckoutDTO) => {
               repository,
               userId: data.auth.id!,
             }),
+            payment_method: paymentMethod,
             pending_confirmation: false,
             scheduled_start_date: courtesyStartDate?.toISOString() ?? null,
           },
@@ -415,12 +416,10 @@ export default async (data: ICheckoutDTO) => {
           }
         : undefined,
     );
-    if (isCourtesyRenewal) {
-      await repository.savePaymentMethodReference(data.auth.id!, {
-        gatewaySubscriptionId: gatewayResult.gateway_subscription_id,
-        ...paymentMethodDisplay,
-      });
-    }
+    const paymentMethod = await repository.savePaymentMethodReference(data.auth.id!, {
+      gatewaySubscriptionId: gatewayResult.gateway_subscription_id,
+      ...paymentMethodDisplay,
+    });
 
     return {
       status: 200,
@@ -439,6 +438,7 @@ export default async (data: ICheckoutDTO) => {
               userId: data.auth.id!,
             })
           : undefined,
+        payment_method: paymentMethod,
         pending_confirmation: !isCourtesyRenewal,
         scheduled_start_date: courtesyStartDate?.toISOString() ?? null,
       },
