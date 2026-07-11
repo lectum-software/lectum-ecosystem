@@ -310,3 +310,27 @@ Validação complementar:
 
 - Consulta real ao Mercado Pago para `gateway_subscription_id=8fc3a14ea54542e2a08a0be45869df51` retornou `summarized.charged_quantity=1` e `summarized.charged_amount=9.9`.
 - Repositório Admin para o psicólogo real `cmrglzdds000ajkuhqedavedb` passou a retornar `paidInstallmentsCount=1`, `lifetimeValueCents=990`, `lifetimeValueAvailable=true`.
+
+## Complemento 2026-07-11 - histórico via resumo real do gateway quando o webhook local estiver ausente
+
+A tela Admin de Plano e pagamentos precisa exibir o pagamento real quando a assinatura Mercado Pago já possui cobrança confirmada, mesmo que o webhook local ainda não tenha sido persistido em `payment_event`.
+
+Decisão:
+
+- Manter `payment_event` como fonte preferencial para histórico individual quando houver eventos reconciliados.
+- Quando não houver evento local e a assinatura for Mercado Pago com `gateway_subscription_id`, consultar o resumo real do gateway e gerar uma linha segura de histórico somente se `summarized.charged_quantity > 0`.
+- Ler `summarized.last_charged_amount` e `summarized.last_charged_date` no adapter Mercado Pago para preencher valor e data da cobrança exibida; `summarized.charged_amount` continua representando o agregado usado no LTV.
+- Não criar nem persistir `payment_event` artificial a partir do resumo, para evitar misturar reconciliação online com trilha de webhook.
+- Remover da UI Admin o texto operacional sobre `payment_event` e a badge de disponibilidade do card, deixando o histórico focado no dado exibido ao operador.
+
+Consequência: para assinaturas com uma cobrança real confirmada e sem webhook local, o Admin passa a ver a mensalidade paga no histórico sem mock e sem mutação de dados. Quando houver múltiplas cobranças sem eventos individuais, a linha de fallback representa a última cobrança confirmada pelo gateway; a trilha detalhada continua dependendo dos eventos reais persistidos.
+
+Validação complementar:
+
+- `showAdminPsychologistBilling` para o psicólogo real `cmrglzdds000ajkuhqedavedb` retornou `payment_history.available=true`, item `Mensalidade`, `amount_cents=990`, `status=pago` e `occurred_at=2026-07-11T18:03:17.796Z`.
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check`
+- `git diff --check`

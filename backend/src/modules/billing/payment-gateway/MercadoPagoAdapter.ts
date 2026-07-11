@@ -36,6 +36,7 @@ type MercadoPagoPreApprovalRaw = {
   summarized?: {
     charged_amount?: unknown;
     charged_quantity?: unknown;
+    last_charged_amount?: unknown;
     last_charged_date?: unknown;
   } | null;
 };
@@ -413,6 +414,7 @@ export class MercadoPagoAdapter implements PaymentGateway {
       gateway_subscription_id: subscription.gateway_subscription_id,
       charged_amount_cents: toAmountCentsOrNull(summarized?.charged_amount),
       charged_quantity: toNonNegativeInteger(summarized?.charged_quantity),
+      last_charged_amount_cents: toAmountCentsOrNull(summarized?.last_charged_amount),
       last_charged_at: toSafeString(summarized?.last_charged_date) ?? null,
       raw: summarized ?? null,
     };

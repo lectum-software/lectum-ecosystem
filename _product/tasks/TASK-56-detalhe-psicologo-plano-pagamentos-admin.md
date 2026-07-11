@@ -284,3 +284,14 @@ Exibir plano, método e histórico financeiro do psicólogo e permitir concessã
 
 - Pedido do usuário: trocar o rótulo `Quantidade de mensalidades pagas` por `Mensalidades` no card `Plano atual`.
 - A alteração é somente de copy na UI Admin; não muda endpoint, cálculo de LTV, reconciliação com gateway, schema Prisma, packages ou regra de domínio.
+
+## Ajuste complementar 2026-07-11 - histórico de pagamentos por resumo do gateway
+
+- Pedido do usuário: limpar a seção `Histórico de pagamentos`, removendo a frase técnica sobre `payment_event`, removendo a tag `Indisponível`, corrigindo o título com acento e exibindo o pagamento real já existente.
+- A UI Admin passou a renderizar apenas o título `Histórico de pagamentos` e a tabela/estado vazio, sem a frase `Fonte real: payment_event reconciliado com a assinatura.` e sem badge de disponibilidade.
+- O backend agora usa o resumo real do Mercado Pago como fallback do histórico quando não existe `payment_event` local para uma assinatura `mercadopago` com `gateway_subscription_id` e o gateway confirma cobrança paga.
+- O adapter Mercado Pago passou a ler também `summarized.last_charged_amount`, mantendo `summarized.charged_amount` como LTV agregado e usando o valor/data da última cobrança para o item do histórico.
+- Não foi criado `payment_event` artificial, seed, mock ou pagamento inventado; a linha exibida vem exclusivamente do resumo real retornado pelo gateway.
+- Não houve alteração de schema Prisma, migrations ou packages.
+- Validação API local sem mutação no psicólogo real `cmrglzdds000ajkuhqedavedb`: `payment_history.available=true`, item `Mensalidade`, `amount_cents=990`, `status=pago`, `occurred_at=2026-07-11T18:03:17.796Z`, e o card manteve `paid_installments_count=1`/`lifetime_value_cents=990`.
+- Validações executadas: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e `git diff --check`.

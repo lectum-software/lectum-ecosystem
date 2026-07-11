@@ -56,6 +56,7 @@ export type GatewaySubscriptionPaymentSummary = {
   gateway_subscription_id: string;
   charged_amount_cents: number | null;
   charged_quantity: number;
+  last_charged_amount_cents: number | null;
   last_charged_at?: string | null;
   raw: unknown;
 };

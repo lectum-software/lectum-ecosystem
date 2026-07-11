@@ -3665,28 +3665,12 @@ const PaymentMethodCard = ({ billing }: { billing: AdminPsychologistBilling }) =
 
 const PaymentHistoryCard = ({ billing }: { billing: AdminPsychologistBilling }) => (
   <CardShell className="p-5 xl:col-span-2">
-    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-      <div>
-        <h2 className="text-xl font-black text-foreground">Historico de pagamentos</h2>
-        <p className="mt-1 text-sm text-muted">
-          Fonte real: payment_event reconciliado com a assinatura.
-        </p>
-      </div>
-      <Badge
-        className={
-          billing.payment_history.available
-            ? "bg-emerald-50 text-success"
-            : "bg-surface-muted text-muted"
-        }
-      >
-        {billing.payment_history.available ? "Disponivel" : "Indisponivel"}
-      </Badge>
-    </div>
+    <h2 className="text-xl font-black text-foreground">Histórico de pagamentos</h2>
 
     {!billing.payment_history.available ? (
       <div className="mt-5 rounded-2xl border border-dashed border-border bg-surface-muted p-4 text-sm font-bold text-muted">
         {billing.payment_history.reason ||
-          "Historico financeiro indisponivel para este psicologo no momento."}
+          "Histórico financeiro indisponível para este psicólogo no momento."}
       </div>
     ) : (
       <div className="mt-5 overflow-x-auto">

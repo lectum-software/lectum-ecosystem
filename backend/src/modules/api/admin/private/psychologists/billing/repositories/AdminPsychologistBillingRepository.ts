@@ -7,7 +7,10 @@ import type {
 } from "@/interfaces/objects";
 import type { BillingPaymentHistoryItem } from "@/modules/api/private/psychologist/billing/subscription/repositories/interfaces/ISubscriptionRepository";
 import { SubscriptionRepository } from "@/modules/api/private/psychologist/billing/subscription/repositories/SubscriptionRepository";
-import { getPaymentGateway } from "@/modules/billing/payment-gateway";
+import {
+  type GatewaySubscriptionPaymentSummary,
+  getPaymentGateway,
+} from "@/modules/billing/payment-gateway";
 import {
   actionableProfessionalGatewaySubscriptionWhere,
   activeFreeSubscriptionWhere,
@@ -142,6 +145,49 @@ const isMercadoPagoSubscription = (subscription: AdminPsychologistBillingSubscri
         subscription.gateway === "mercadopago" ||
         !subscription.gateway),
   );
+
+const isMercadoPagoPaymentHistorySource = (subscription: professional_subscription | null) =>
+  Boolean(
+    subscription?.gateway_subscription_id &&
+      (subscription.source === "mercadopago" ||
+        subscription.gateway === "mercadopago" ||
+        !subscription.gateway),
+  );
+
+const toDateOrNull = (value?: string | null) => {
+  if (!value) return null;
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+
+  return date;
+};
+
+const buildGatewaySummaryPaymentHistoryItem = (
+  subscription: professional_subscription,
+  summary: GatewaySubscriptionPaymentSummary,
+): BillingPaymentHistoryItem | null => {
+  if (summary.charged_quantity <= 0) return null;
+
+  const amountCents =
+    summary.last_charged_amount_cents ??
+    (summary.charged_quantity === 1 ? summary.charged_amount_cents : null);
+
+  return {
+    amount_cents: amountCents,
+    description:
+      summary.charged_quantity === 1
+        ? "Cobrança confirmada pelo gateway."
+        : "Última mensalidade confirmada pelo gateway.",
+    external_id: summary.gateway_subscription_id,
+    gateway: subscription.gateway ?? PAYMENT_GATEWAY_FALLBACK,
+    id: `gateway-summary:${summary.gateway_subscription_id}:latest-paid-installment`,
+    occurred_at: toDateOrNull(summary.last_charged_at),
+    status: "pago",
+    status_label: "Pago",
+    title: "Mensalidade",
+  };
+};
 
 const uniqueStrings = (values: Array<string | null | undefined>) =>
   Array.from(new Set(values.filter((value): value is string => Boolean(value))));
@@ -354,7 +400,23 @@ export class AdminPsychologistBillingRepository {
     subscription: professional_subscription | null,
   ): Promise<BillingPaymentHistoryItem[]> {
     const repository = new SubscriptionRepository();
-    return repository.showPaymentHistory(subscription);
+    const items = await repository.showPaymentHistory(subscription);
+
+    if (items.length > 0 || !subscription || !isMercadoPagoPaymentHistorySource(subscription)) {
+      return items;
+    }
+
+    try {
+      const gateway = getPaymentGateway();
+      const summary = await gateway.getSubscriptionPaymentSummary(
+        subscription.gateway_subscription_id!,
+      );
+      const fallbackItem = buildGatewaySummaryPaymentHistoryItem(subscription, summary);
+
+      return fallbackItem ? [fallbackItem] : [];
+    } catch {
+      return items;
+    }
   }
 
   private async summarizeGatewayPaymentMetrics(
