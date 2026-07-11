@@ -213,3 +213,15 @@ Exibir plano, método e histórico financeiro do psicólogo e permitir concessã
 - Nao houve alteracao de backend, endpoint, schema Prisma, migrations, packages ou regra de dominio.
 - Validacao browser local headless Chrome/CDP, viewport mobile-first 390px, confirmou ausencia das linhas `Gateway` e `Cortesia`, permanencia de `Concedida por`, `Revogar cortesia` e `scrollWidth=390`.
 - Validacoes executadas: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e `git diff --check`.
+
+
+## Ajuste complementar 2026-07-11 - revogacao retorna plano anterior
+
+- Pedido do usuario: quando uma cortesia for revogada, o card `Plano atual` deve voltar ao plano anterior real do psicologo, seja gratuito ou assinante, em vez de continuar exibindo a cortesia revogada.
+- A revogacao Admin agora, na mesma transacao, cancela somente a assinatura `source="admin_grant"` ativa e reativa a assinatura anterior real sem gateway quando ela existir (`free_signup` ou legado/profissional nao-admin).
+- A busca do plano atual deixou de usar assinatura cancelada como fallback; se nao houver assinatura ativa, o endpoint retorna plano nulo em vez de tratar uma cortesia cancelada como plano vigente.
+- Para preservar historico ja existente, a restauracao prioriza a assinatura cancelada na janela da concessao e, se necessario, o ultimo plano nao-admin anterior a cortesia.
+- Nao houve alteracao de schema Prisma, migrations, packages ou gateway.
+- Validacao API local com admin real no psicologo `cmrfgznww0014xouh2tmz5dbf`: `POST .../grant-courtesy` retornou cortesia `admin_grant/profissional` ativa e `POST .../revoke-courtesy` retornou o plano anterior `free_signup/gratuito` com `status=ativa`, `is_courtesy=false`, `can_revoke=false` e `can_grant=true`.
+- Validacao browser local headless Chrome/CDP em `http://localhost:3002/psicologos/cmrfgznww0014xouh2tmz5dbf?tab=plano` confirmou `Plano Gratuito` no card `Plano atual`, ausencia de `Plano de cortesia`/`Revogar cortesia` e retorno do formulario `Conceder cortesia`.
+- Validacoes executadas: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm check` e `git diff --check`.

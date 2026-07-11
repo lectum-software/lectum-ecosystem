@@ -9,6 +9,9 @@ import {
   activeProfessionalEntitlementWhere,
 } from "@/utils/subscription-entitlement";
 
+const ADMIN_GRANT_SOURCE = "admin_grant";
+const PREVIOUS_SUBSCRIPTION_RESTORE_WINDOW_MS = 5 * 60 * 1000;
+
 const billingSelect = {
   cfp_verified_at: true,
   cpf: true,
@@ -149,18 +152,7 @@ export class AdminPsychologistBillingRepository {
 
     if (activeFree) return activeFree;
 
-    return prisma.professional_subscription.findFirst({
-      where: {
-        deleted: false,
-        psychologist_id: psychologistId,
-      },
-      include: {
-        plan: true,
-      },
-      orderBy: {
-        createdAt: "desc",
-      },
-    });
+    return null;
   }
 
   async findScheduledGatewaySubscription(
@@ -232,15 +224,108 @@ export class AdminPsychologistBillingRepository {
     const previousNotes = subscription.grant_notes?.trim();
     const revokeNote = `Cortesia revogada em ${now.toISOString()} por ${actor}.`;
 
-    return prisma.professional_subscription.update({
-      where: {
-        id: subscription.id,
-      },
-      data: {
-        current_period_end: now,
-        grant_notes: previousNotes ? `${previousNotes}\n${revokeNote}` : revokeNote,
+    return prisma.$transaction(async (tx) => {
+      const grant = await tx.professional_subscription.findUnique({
+        where: {
+          id: subscription.id,
+        },
+        select: {
+          createdAt: true,
+          grant_notes: true,
+          id: true,
+          psychologist_id: true,
+          source: true,
+        },
+      });
+
+      if (!grant || grant.source !== ADMIN_GRANT_SOURCE) {
+        return tx.professional_subscription.update({
+          where: {
+            id: subscription.id,
+          },
+          data: {
+            current_period_end: now,
+            grant_notes: previousNotes ? `${previousNotes}\n${revokeNote}` : revokeNote,
+            status: "cancelada",
+          },
+        });
+      }
+
+      const restoreWindowStart = new Date(
+        grant.createdAt.getTime() - PREVIOUS_SUBSCRIPTION_RESTORE_WINDOW_MS,
+      );
+      const restoreWindowEnd = new Date(
+        grant.createdAt.getTime() + PREVIOUS_SUBSCRIPTION_RESTORE_WINDOW_MS,
+      );
+      const previousSubscriptionWhere = {
+        deleted: false,
+        gateway: null,
+        gateway_subscription_id: null,
+        id: {
+          not: grant.id,
+        },
+        plan: {
+          active: true,
+          deleted: false,
+        },
+        psychologist_id: grant.psychologist_id,
+        source: {
+          not: ADMIN_GRANT_SOURCE,
+        },
         status: "cancelada",
-      },
+      } satisfies Prisma.professional_subscriptionWhereInput;
+      const previousSubscriptionOrderBy = [
+        {
+          createdAt: "desc" as const,
+        },
+        {
+          updatedAt: "desc" as const,
+        },
+      ];
+      const previousSubscription =
+        (await tx.professional_subscription.findFirst({
+          where: {
+            ...previousSubscriptionWhere,
+            updatedAt: {
+              gte: restoreWindowStart,
+              lte: restoreWindowEnd,
+            },
+          },
+          orderBy: previousSubscriptionOrderBy,
+        })) ??
+        (await tx.professional_subscription.findFirst({
+          where: {
+            ...previousSubscriptionWhere,
+            createdAt: {
+              lt: grant.createdAt,
+            },
+          },
+          orderBy: previousSubscriptionOrderBy,
+        }));
+
+      const revokedGrant = await tx.professional_subscription.update({
+        where: {
+          id: grant.id,
+        },
+        data: {
+          current_period_end: now,
+          grant_notes: previousNotes ? `${previousNotes}\n${revokeNote}` : revokeNote,
+          status: "cancelada",
+        },
+      });
+
+      if (previousSubscription) {
+        await tx.professional_subscription.update({
+          where: {
+            id: previousSubscription.id,
+          },
+          data: {
+            status: "ativa",
+          },
+        });
+      }
+
+      return revokedGrant;
     });
   }
 }

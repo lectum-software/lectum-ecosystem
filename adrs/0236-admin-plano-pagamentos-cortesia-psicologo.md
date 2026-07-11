@@ -203,3 +203,25 @@ Validacao complementar:
 - `pnpm --dir admin build`
 - `pnpm check`
 - `git diff --check`
+
+
+## Complemento 2026-07-11 - retorno ao plano anterior apos revogacao
+
+Produto definiu que revogar uma cortesia administrativa deve remover apenas o entitlement manual e devolver o psicologo ao plano real anterior, sem deixar a cortesia cancelada como plano vigente.
+
+Decisao:
+
+- `POST /api/admin/private/psychologists/:id/billing/revoke-courtesy` passa a executar a revogacao em transacao: cancela o `professional_subscription.source="admin_grant"` ativo e reativa a assinatura anterior real sem gateway quando encontrada.
+- A assinatura anterior e localizada primeiro pela janela operacional da concessao, porque o servico de concessao cancela o plano substituido na mesma transacao; como fallback para historico local ja existente, usa-se o ultimo plano nao-admin anterior a cortesia.
+- `findCurrentSubscription` nao retorna mais assinatura cancelada como plano atual. Se nao houver plano ativo, o endpoint deve informar ausencia de plano vigente em vez de promover historico cancelado.
+
+Consequencia: depois da revogacao, o Admin e os demais consumidores do endpoint veem novamente o plano gratuito ou assinante real do psicologo. A regra continua sem cancelar gateway, sem criar cobranca manual e sem alterar schema.
+
+Validacao complementar:
+
+- API local com admin real: concessao seguida de revogacao em psicologo real retornou `admin_grant/profissional` durante a cortesia e, apos a revogacao, `free_signup/gratuito`, `status=ativa`, `is_courtesy=false`.
+- Browser local headless Chrome/CDP confirmou o card `Plano atual` exibindo `Plano Gratuito`, sem `Plano de cortesia` nem botao `Revogar cortesia` apos a revogacao.
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm check`
+- `git diff --check`
