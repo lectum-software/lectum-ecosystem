@@ -973,26 +973,12 @@ const InfoCard = ({
   </CardShell>
 );
 
-const FeatureLine = ({
-  enabled,
-  icon: Icon,
-  label,
-}: {
-  enabled: boolean;
-  icon: LucideIcon;
-  label: string;
-}) => (
-  <div className="flex items-center justify-between gap-3 rounded-2xl border border-border bg-surface-muted p-3">
-    <span className="inline-flex items-center gap-3 text-sm font-black text-foreground">
-      <Icon aria-hidden className="h-5 w-5 text-primary" />
-      {label}
-    </span>
-    <Badge className={enabled ? "bg-emerald-50 text-success" : "bg-surface text-muted"}>
-      {enabled ? "Sim" : "Não"}
-    </Badge>
+const FeatureLine = ({ icon: Icon, label }: { icon: LucideIcon; label: string }) => (
+  <div className="flex items-center gap-3 rounded-2xl border border-border bg-surface-muted p-3 text-sm font-black text-foreground">
+    <Icon aria-hidden className="h-5 w-5 text-primary" />
+    {label}
   </div>
 );
-
 const TextBlock = ({ children, empty }: { children?: string | null; empty: string }) => (
   <p className="whitespace-pre-line rounded-2xl bg-surface-muted p-4 text-sm leading-6 text-foreground">
     {children || empty}
@@ -2872,6 +2858,23 @@ const ProfileTab = ({ detail }: { detail: AdminPsychologistDetail }) => {
       academic.graduation_year ||
       academic.formations.length > 0,
   );
+  const activeFeatures = [
+    {
+      enabled: profile.features.discount_first_session,
+      icon: CreditCard,
+      label: "Desconto 1ª sessão",
+    },
+    {
+      enabled: profile.features.accepts_insurance,
+      icon: ShieldCheck,
+      label: "Aceita convênios",
+    },
+    {
+      enabled: profile.features.social_value,
+      icon: Heart,
+      label: "Valor social",
+    },
+  ].filter((feature) => feature.enabled);
 
   return (
     <div className="space-y-5" data-psychologist-detail-tab="perfil">
@@ -2960,21 +2963,15 @@ const ProfileTab = ({ detail }: { detail: AdminPsychologistDetail }) => {
               <h2 className="text-lg font-black text-foreground">Selos e facilidades</h2>
             </div>
             <div className="mt-4 grid gap-3">
-              <FeatureLine
-                enabled={profile.features.discount_first_session}
-                icon={CreditCard}
-                label="Desconto 1ª sessão"
-              />
-              <FeatureLine
-                enabled={profile.features.accepts_insurance}
-                icon={ShieldCheck}
-                label="Aceita convênios"
-              />
-              <FeatureLine
-                enabled={profile.features.social_value}
-                icon={Heart}
-                label="Valor social"
-              />
+              {activeFeatures.length > 0 ? (
+                activeFeatures.map((feature) => (
+                  <FeatureLine icon={feature.icon} key={feature.label} label={feature.label} />
+                ))
+              ) : (
+                <p className="rounded-2xl bg-surface-muted p-4 text-sm leading-6 text-foreground">
+                  Nenhum selo cadastrado.
+                </p>
+              )}
             </div>
           </CardShell>
         </div>
