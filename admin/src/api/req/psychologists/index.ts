@@ -417,6 +417,52 @@ export type AdminPsychologistUpdateProfessionalDataInput = {
   target_audience?: string[];
 };
 
+export type AdminPsychologistAccount = {
+  active: boolean;
+  capabilities: {
+    can_change_email: boolean;
+    can_send_email_confirmation: boolean;
+    can_send_password_reset: boolean;
+    can_set_temporary_password: boolean;
+    can_revoke_sessions: boolean;
+  };
+  confirmed: boolean;
+  confirmed_at: string | null;
+  created_at: string;
+  email: string;
+  has_password: boolean;
+  last_access_at: string | null;
+  need_reset: boolean;
+  provider: string;
+  provider_label: string;
+  sessions: {
+    active_count: number;
+    devices_count: number;
+    last_access_at: string | null;
+    source: "user_token";
+  };
+  source: "user+user_token";
+};
+
+export type AdminPsychologistAccountReasonInput = {
+  reason: string;
+};
+
+export type AdminPsychologistChangeEmailInput = AdminPsychologistAccountReasonInput & {
+  confirmation: string;
+  email: string;
+};
+
+export type AdminPsychologistSetTemporaryPasswordInput = AdminPsychologistAccountReasonInput & {
+  confirmation: string;
+  password: string;
+  password_confirm: string;
+};
+
+export type AdminPsychologistRevokeSessionsInput = AdminPsychologistAccountReasonInput & {
+  confirmation: string;
+};
+
 export type AdminPsychologistBillingPaymentHistoryItem = {
   amount_cents: number | null;
   description: string;
@@ -1040,6 +1086,74 @@ export const updateAdminPsychologistProfessionalData = async (
 ) => {
   const response = await adminApi.put<ApiResponse<AdminPsychologistDetail>>(
     `/api/admin/private/psychologists/${encodeURIComponent(id)}/professional-data`,
+    input,
+  );
+
+  return resolveApiData(response.data);
+};
+
+export const getAdminPsychologistAccount = async (id: string) => {
+  const response = await adminApi.get<ApiResponse<AdminPsychologistAccount>>(
+    `/api/admin/private/psychologists/${encodeURIComponent(id)}/account`,
+  );
+
+  return resolveApiData(response.data);
+};
+
+export const changeAdminPsychologistAccountEmail = async (
+  id: string,
+  input: AdminPsychologistChangeEmailInput,
+) => {
+  const response = await adminApi.post<ApiResponse<AdminPsychologistAccount>>(
+    `/api/admin/private/psychologists/${encodeURIComponent(id)}/account/change-email`,
+    input,
+  );
+
+  return resolveApiData(response.data);
+};
+
+export const sendAdminPsychologistAccountEmailConfirmation = async (
+  id: string,
+  input: AdminPsychologistAccountReasonInput,
+) => {
+  const response = await adminApi.post<ApiResponse<AdminPsychologistAccount>>(
+    `/api/admin/private/psychologists/${encodeURIComponent(id)}/account/send-email-confirmation`,
+    input,
+  );
+
+  return resolveApiData(response.data);
+};
+
+export const sendAdminPsychologistAccountPasswordReset = async (
+  id: string,
+  input: AdminPsychologistAccountReasonInput,
+) => {
+  const response = await adminApi.post<ApiResponse<AdminPsychologistAccount>>(
+    `/api/admin/private/psychologists/${encodeURIComponent(id)}/account/send-password-reset`,
+    input,
+  );
+
+  return resolveApiData(response.data);
+};
+
+export const setAdminPsychologistAccountTemporaryPassword = async (
+  id: string,
+  input: AdminPsychologistSetTemporaryPasswordInput,
+) => {
+  const response = await adminApi.post<ApiResponse<AdminPsychologistAccount>>(
+    `/api/admin/private/psychologists/${encodeURIComponent(id)}/account/set-temporary-password`,
+    input,
+  );
+
+  return resolveApiData(response.data);
+};
+
+export const revokeAdminPsychologistAccountSessions = async (
+  id: string,
+  input: AdminPsychologistRevokeSessionsInput,
+) => {
+  const response = await adminApi.post<ApiResponse<AdminPsychologistAccount>>(
+    `/api/admin/private/psychologists/${encodeURIComponent(id)}/account/revoke-sessions`,
     input,
   );
 

@@ -145,7 +145,13 @@
     "admin_registry_identity_invalid": "Informe Regional CRP, numero do CRP e data de inscricao para atualizar o registro profissional.",
     "admin_registry_identity_confirmation_invalid": "Digite SALVAR REGISTRO para confirmar a alteracao do registro profissional.",
     "admin_psychologist_profile_cpf_change_confirmation_required": "Confirme explicitamente a altera??o de CPF de um psic?logo com CRP aprovado. Esta a??o n?o revalida nem invalida o registro automaticamente.",
-    "admin_psychologist_profile_invalid_modality": "Informe uma modalidade profissional v?lida."
+    "admin_psychologist_profile_invalid_modality": "Informe uma modalidade profissional v?lida.",
+    "admin_psychologist_account_change_email_confirmation_invalid": "Digite ALTERAR EMAIL para confirmar a altera??o administrativa de e-mail.",
+    "admin_psychologist_account_email_already_confirmed": "O e-mail desta conta j? est? confirmado ou n?o pode receber confirma??o agora.",
+    "admin_psychologist_account_email_provider_unavailable": "Envio de e-mail transacional indispon?vel neste ambiente. A a??o n?o foi conclu?da.",
+    "admin_psychologist_account_password_support_unavailable": "Esta conta n?o possui senha local para suporte administrativo de senha.",
+    "admin_psychologist_account_revoke_sessions_confirmation_invalid": "Digite ENCERRAR SESSOES para confirmar o encerramento das sess?es.",
+    "admin_psychologist_account_temporary_password_confirmation_invalid": "Digite ALTERAR SENHA para confirmar a senha tempor?ria."
   },
   "message": {
     "store": "dado criado",
@@ -231,7 +237,12 @@
     "admin_logout_success": "Sessão administrativa encerrada com sucesso",
     "admin_psychologist_profile_personal_updated": "Dados pessoais atualizados com auditoria administrativa.",
     "admin_psychologist_profile_professional_updated": "Dados profissionais atualizados com auditoria administrativa.",
-    "admin_psychologist_profile_no_changes": "Nenhuma altera??o foi identificada."
+    "admin_psychologist_profile_no_changes": "Nenhuma altera??o foi identificada.",
+    "admin_psychologist_account_email_changed": "E-mail da conta alterado com auditoria administrativa. A nova confirma??o foi enviada e as sess?es foram encerradas.",
+    "admin_psychologist_account_email_confirmation_sent": "Confirma??o de e-mail reenviada com auditoria administrativa.",
+    "admin_psychologist_account_password_reset_sent": "Link de redefini??o enviado com auditoria administrativa.",
+    "admin_psychologist_account_sessions_revoked": "Sess?es do psic?logo encerradas com auditoria administrativa.",
+    "admin_psychologist_account_temporary_password_set": "Senha tempor?ria definida com auditoria administrativa. A troca ser? obrigat?ria no pr?ximo login."
   },
   "gender": {
     "o": "o"

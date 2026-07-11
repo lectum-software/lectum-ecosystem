@@ -63,6 +63,7 @@ export type user = {
   has_seen_psychologist_original_post_tip?: boolean;
   has_seen_community_post_tip?: boolean;
   provider?: string | null;
+  need_reset?: boolean | null;
   user_tokens?: user_token[];
   patient_profile?: patient_profile | null;
   psychologist_profile?: psychologist_profile | null;

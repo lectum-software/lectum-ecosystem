@@ -9,6 +9,7 @@ import apiAdminPrivateFinanceDashboard from "@/modules/api/admin/private/finance
 import apiAdminPrivateNotifications from "@/modules/api/admin/private/notifications";
 import apiAdminPrivatePatientsDashboard from "@/modules/api/admin/private/patients/dashboard";
 import apiAdminPrivatePatientsDetail from "@/modules/api/admin/private/patients/detail";
+import apiAdminPrivatePsychologistsAccount from "@/modules/api/admin/private/psychologists/account";
 import apiAdminPrivatePsychologistsActivities from "@/modules/api/admin/private/psychologists/activities";
 import apiAdminPrivatePsychologistsBilling from "@/modules/api/admin/private/psychologists/billing";
 import apiAdminPrivatePsychologistsDashboard from "@/modules/api/admin/private/psychologists/dashboard";
@@ -158,6 +159,7 @@ mountRoute("/api/admin/private/psychologists", apiAdminPrivatePsychologistsDetai
 mountRoute("/api/admin/private/psychologists", apiAdminPrivatePsychologistsBilling);
 mountRoute("/api/admin/private/psychologists", apiAdminPrivatePsychologistsRegistryVerification);
 mountRoute("/api/admin/private/psychologists", apiAdminPrivatePsychologistsProfileEdit);
+mountRoute("/api/admin/private/psychologists", apiAdminPrivatePsychologistsAccount);
 mountRoute("/api/admin/private/psychologists", apiAdminPrivatePsychologistsEngagement);
 mountRoute("/api/admin/private/psychologists", apiAdminPrivatePsychologistsFeedback);
 mountRoute("/api/admin/private/psychologists", apiAdminPrivatePsychologistsActivities);

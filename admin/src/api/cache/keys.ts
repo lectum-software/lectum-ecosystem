@@ -143,6 +143,7 @@ export const adminFinanceKeys = {
 
 export const adminPsychologistsKeys = {
   all: ["admin", "psychologists"] as const,
+  account: (id: string) => [...adminPsychologistsKeys.all, "account", id] as const,
   activities: (id: string, input: AdminPsychologistActivitiesQuery) =>
     [
       ...adminPsychologistsKeys.all,

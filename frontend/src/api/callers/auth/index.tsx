@@ -21,6 +21,10 @@ export interface UseAuthProps {
       onSuccess?: (data: user) => void;
       onError?: (error: unknown) => void;
     };
+    needResetPassword?: {
+      onSuccess?: (data: user) => void;
+      onError?: (error: unknown) => void;
+    };
     registerPatient?: {
       onSuccess?: (data: user) => void;
       onError?: (error: unknown) => void;
@@ -71,6 +75,12 @@ export const useAuth = ({ callbacks, enableHidrate = false }: UseAuthProps = {})
     onError: callbacks?.resetPassword?.onError,
   });
 
+  const needResetPassword = useMutation({
+    mutationFn: (body: api.ResetPasswordPayload) => api.needResetPassword(body),
+    onSuccess: callbacks?.needResetPassword?.onSuccess,
+    onError: callbacks?.needResetPassword?.onError,
+  });
+
   const registerPatient = useMutation({
     mutationFn: (body: api.RegisterPatientPayload) => api.registerPatient(body),
     onSuccess: callbacks?.registerPatient?.onSuccess,
@@ -111,6 +121,7 @@ export const useAuth = ({ callbacks, enableHidrate = false }: UseAuthProps = {})
 
   return {
     login,
+    needResetPassword,
     recovery,
     resetPassword,
     registerPatient,

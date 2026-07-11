@@ -12,7 +12,7 @@ export const recoveryEmailSend = async (props: IRecoveryEmailSend) => {
   const minutes = process.env.CODE_API_USER_VALID_MINUTES;
   const url = `${process.env.WEB_URL?.split(",")[0]}${process.env.RECOVERY_URL}?code=${props.code}`;
 
-  await send({
+  return send({
     to: props.email,
     subject: resolve("email.recovery_code"),
     template: "transactional",

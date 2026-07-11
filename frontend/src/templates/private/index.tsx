@@ -86,6 +86,7 @@ type NavigationItem = {
 };
 
 const NOTIFICATIONS_HREF = "/app/notifications";
+const NEED_RESET_PATH = "/app/account/need-reset";
 const DEFAULT_RESTRICTED_AREA_COPY = {
   description:
     "Entre ou crie sua conta para acessar seu perfil, salvar preferências e continuar sua experiência na Lectum.",
@@ -299,6 +300,7 @@ const PAID_ONBOARDING_MANAGEMENT_PATHS = new Set([
   "/app/professional/billing/plans",
   "/app/professional/billing/subscription",
   "/app/settings/account",
+  NEED_RESET_PATH,
 ]);
 
 const isPrimaryDesktopNavigationPath = (pathname: string) => {
@@ -480,6 +482,14 @@ export const PrivateTemplate = ({
   const restrictedAreaReturnTo = normalizedPathname;
   const restrictedAreaSignupHref = `/auth/profile-selection?redirectTo=${encodeURIComponent(restrictedAreaReturnTo)}`;
   const restrictedAreaLoginHref = `/auth/login?redirectTo=${encodeURIComponent(restrictedAreaReturnTo)}`;
+  const shouldRequirePasswordReset = Boolean(sessionUser?.need_reset);
+  const isNeedResetPath = isPathOrDescendant(normalizedPathname, NEED_RESET_PATH);
+  const shouldRedirectToNeedReset =
+    hasToken &&
+    !isSessionLoading &&
+    !shouldShowSessionError &&
+    shouldRequirePasswordReset &&
+    !isNeedResetPath;
 
   const navigateToAuth = (href: string) => {
     if (hasToken || shouldShowSessionError) {
@@ -496,6 +506,7 @@ export const PrivateTemplate = ({
 
   useEffect(() => {
     if (!hasToken || isSessionLoading || shouldShowSessionError) return;
+    if (sessionUser?.need_reset) return;
 
     const requiredPath = getPsychologistPaidOnboardingRequirementPath(sessionUser);
 
@@ -503,6 +514,17 @@ export const PrivateTemplate = ({
 
     router.replace(requiredPath);
   }, [hasToken, isSessionLoading, normalizedPathname, router, sessionUser, shouldShowSessionError]);
+
+  useEffect(() => {
+    if (!shouldRedirectToNeedReset) return;
+
+    const redirectTo =
+      normalizedPathname && normalizedPathname !== "/"
+        ? `?redirectTo=${encodeURIComponent(normalizedPathname)}`
+        : "";
+
+    router.replace(`${NEED_RESET_PATH}${redirectTo}`);
+  }, [normalizedPathname, router, shouldRedirectToNeedReset]);
 
   useEffect(() => {
     if (!shouldAutoHideNavigation) return;
@@ -846,6 +868,24 @@ export const PrivateTemplate = ({
               </div>
             </div>
           </section>
+        </PageShell>
+        {navigationMarkup}
+      </>
+    );
+  }
+
+  if (shouldRedirectToNeedReset) {
+    return (
+      <>
+        <NotificationManager />
+        <PageShell
+          contentClassName={cn(
+            "grid min-h-[55vh] place-items-center",
+            navigationAwarePageShellClassName,
+          )}
+          style={pageShellStyle}
+        >
+          <LoadingState label="Preparando troca de senha obrigatória" />
         </PageShell>
         {navigationMarkup}
       </>

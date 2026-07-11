@@ -11,7 +11,7 @@ export const confirmEmailSend = async (props: IConfirmEmailSend) => {
   const name = props?.name?.split(" ")?.[0];
   const minutes = process.env.CODE_API_USER_VALID_MINUTES;
 
-  await send({
+  return send({
     to: props.email,
     subject: resolve("email.confirm_code"),
     template: "transactional",

@@ -20,8 +20,10 @@ import {
   Globe2,
   Heart,
   Info,
+  KeyRound,
   Loader2,
   Lock,
+  LogOut,
   type LucideIcon,
   Mail,
   MessageCircle,
@@ -29,6 +31,7 @@ import {
   Play,
   RefreshCw,
   Search,
+  Send,
   Share2,
   ShieldCheck,
   Star,
@@ -46,9 +49,11 @@ import { FormProvider, type SubmitHandler, useForm, useWatch } from "react-hook-
 import { toast } from "sonner";
 import { z } from "zod";
 import {
+  useAdminPsychologistAccount,
   useAdminPsychologistActivities,
   useAdminPsychologistApproveRegistryVerification,
   useAdminPsychologistBilling,
+  useAdminPsychologistChangeAccountEmail,
   useAdminPsychologistDetail,
   useAdminPsychologistGrantCourtesy,
   useAdminPsychologistPublications,
@@ -57,6 +62,10 @@ import {
   useAdminPsychologistReports,
   useAdminPsychologistReviews,
   useAdminPsychologistRevokeCourtesy,
+  useAdminPsychologistRevokeSessions,
+  useAdminPsychologistSendEmailConfirmation,
+  useAdminPsychologistSendPasswordReset,
+  useAdminPsychologistSetTemporaryPassword,
   useAdminPsychologistStatistics,
   useAdminPsychologistUpdatePersonalData,
   useAdminPsychologistUpdateProfessionalData,
@@ -65,6 +74,7 @@ import {
 import { useAdminSettingsCatalogs } from "@/api/callers/settings";
 import { resolveApiError } from "@/api/handle";
 import type {
+  AdminPsychologistAccount,
   AdminPsychologistActivitiesQuery,
   AdminPsychologistActivityItem,
   AdminPsychologistBilling,
@@ -115,6 +125,7 @@ const TABS = [
   { id: "avaliacoes", label: "Avaliações", ready: true },
   { id: "atividades", label: "Atividades", ready: true },
   { id: "denuncias", label: "Denúncias", ready: true },
+  { id: "conta", label: "Conta", ready: true },
 ] as const satisfies readonly {
   id: string;
   label: string;
@@ -170,76 +181,79 @@ const createCrpRegionSelectOptions = (currentValue?: string | null) => {
 
 const EMPTY_SELECT_OPTION = { label: "Não informado", value: "" };
 
+// Mantém as opções administrativas alinhadas com
+// frontend/src/app/app/professional/profile/setup/options.ts.
+// O Admin adiciona apenas a opção vazia para permitir limpar campos opcionais.
 const GENDER_OPTIONS = [
   EMPTY_SELECT_OPTION,
   { label: "Feminino", value: "feminino" },
   { label: "Masculino", value: "masculino" },
   { label: "Não binário", value: "nao_binario" },
-  { label: "Prefiro não informar", value: "prefiro_nao_informar" },
+  { label: "Outro", value: "outro" },
+  { label: "Prefiro não informar", value: "nao_informar" },
 ] as const;
 
 const RACE_COLOR_OPTIONS = [
   EMPTY_SELECT_OPTION,
-  { label: "Amarela", value: "amarela" },
   { label: "Branca", value: "branca" },
-  { label: "Indígena", value: "indigena" },
-  { label: "Parda", value: "parda" },
   { label: "Preta", value: "preta" },
-  { label: "Prefiro não informar", value: "prefiro_nao_informar" },
+  { label: "Parda", value: "parda" },
+  { label: "Amarela", value: "amarela" },
+  { label: "Indígena", value: "indigena" },
+  { label: "Prefiro não informar", value: "nao_informar" },
 ] as const;
 
 const RELIGION_OPTIONS = [
   EMPTY_SELECT_OPTION,
-  { label: "Agnóstica", value: "agnostica" },
-  { label: "Ateia", value: "ateia" },
-  { label: "Budista", value: "budista" },
   { label: "Católica", value: "catolica" },
-  { label: "Espírita", value: "espirita" },
   { label: "Evangélica", value: "evangelica" },
+  { label: "Espírita", value: "espirita" },
+  { label: "Umbanda/Candomblé", value: "umbanda_candomble" },
   { label: "Judaica", value: "judaica" },
-  { label: "Matriz africana", value: "matriz_africana" },
+  { label: "Islâmica", value: "islamica" },
+  { label: "Budista", value: "budista" },
+  { label: "Sem religião", value: "sem_religiao" },
+  { label: "Ateu/Agnóstico", value: "ateu_agnostico" },
   { label: "Outra", value: "outra" },
-  { label: "Prefiro não informar", value: "prefiro_nao_informar" },
+  { label: "Prefiro não informar", value: "nao_informar" },
 ] as const;
 
 const STATE_OPTIONS = [
   EMPTY_SELECT_OPTION,
-  ...[
-    "AC",
-    "AL",
-    "AP",
-    "AM",
-    "BA",
-    "CE",
-    "DF",
-    "ES",
-    "GO",
-    "MA",
-    "MT",
-    "MS",
-    "MG",
-    "PA",
-    "PB",
-    "PR",
-    "PE",
-    "PI",
-    "RJ",
-    "RN",
-    "RS",
-    "RO",
-    "RR",
-    "SC",
-    "SP",
-    "SE",
-    "TO",
-  ].map((state) => ({ label: state, value: state })),
+  { label: "Acre", value: "AC" },
+  { label: "Alagoas", value: "AL" },
+  { label: "Amapá", value: "AP" },
+  { label: "Amazonas", value: "AM" },
+  { label: "Bahia", value: "BA" },
+  { label: "Ceará", value: "CE" },
+  { label: "Distrito Federal", value: "DF" },
+  { label: "Espírito Santo", value: "ES" },
+  { label: "Goiás", value: "GO" },
+  { label: "Maranhão", value: "MA" },
+  { label: "Mato Grosso", value: "MT" },
+  { label: "Mato Grosso do Sul", value: "MS" },
+  { label: "Minas Gerais", value: "MG" },
+  { label: "Pará", value: "PA" },
+  { label: "Paraíba", value: "PB" },
+  { label: "Paraná", value: "PR" },
+  { label: "Pernambuco", value: "PE" },
+  { label: "Piauí", value: "PI" },
+  { label: "Rio de Janeiro", value: "RJ" },
+  { label: "Rio Grande do Norte", value: "RN" },
+  { label: "Rio Grande do Sul", value: "RS" },
+  { label: "Rondônia", value: "RO" },
+  { label: "Roraima", value: "RR" },
+  { label: "Santa Catarina", value: "SC" },
+  { label: "São Paulo", value: "SP" },
+  { label: "Sergipe", value: "SE" },
+  { label: "Tocantins", value: "TO" },
 ] as const;
 
 const MODALITY_OPTIONS = [
   EMPTY_SELECT_OPTION,
   { label: "Online", value: "online" },
   { label: "Presencial", value: "presencial" },
-  { label: "Híbrido", value: "hibrido" },
+  { label: "Presencial e Online", value: "hibrido" },
 ] as const;
 
 const CPF_CHANGE_CONFIRMATION_OPTIONS = [
@@ -263,6 +277,19 @@ const mergeCurrentOption = (
     { label: `${capitalizeOptionLabel(normalized)} (valor atual)`, value: normalized },
     ...restOptions,
   ];
+};
+
+const getStaticOptionLabel = (
+  options: readonly { label: string; value: string }[],
+  value?: string | null,
+) => {
+  const normalized = String(value ?? "").trim();
+  if (!normalized) return "Não informado";
+
+  return (
+    options.find((option) => option.value === normalized)?.label ??
+    capitalizeOptionLabel(normalized)
+  );
 };
 
 const PROFILE_STATUS_COPY: Record<"active" | "inactive", { className: string; label: string }> = {
@@ -455,6 +482,74 @@ const profileProfessionalDataSchema = z.object({
 });
 
 type ProfileProfessionalDataFormValues = z.infer<typeof profileProfessionalDataSchema>;
+
+const accountReasonSchema = z.object({
+  reason: z
+    .string()
+    .min(10, "Informe o motivo interno com pelo menos 10 caracteres.")
+    .max(500, "Use no maximo 500 caracteres."),
+});
+
+const accountChangeEmailSchema = accountReasonSchema
+  .extend({
+    confirmation: z.string(),
+    email: z.string().email("Informe um e-mail valido."),
+  })
+  .superRefine((values, ctx) => {
+    if (values.confirmation.trim().toUpperCase() !== "ALTERAR EMAIL") {
+      ctx.addIssue({
+        code: "custom",
+        message: "Digite ALTERAR EMAIL para confirmar.",
+        path: ["confirmation"],
+      });
+    }
+  });
+
+const accountTemporaryPasswordSchema = accountReasonSchema
+  .extend({
+    confirmation: z.string(),
+    password: z
+      .string()
+      .min(10, "Use pelo menos 10 caracteres.")
+      .max(128, "Use no maximo 128 caracteres."),
+    password_confirm: z.string(),
+  })
+  .superRefine((values, ctx) => {
+    if (values.confirmation.trim().toUpperCase() !== "ALTERAR SENHA") {
+      ctx.addIssue({
+        code: "custom",
+        message: "Digite ALTERAR SENHA para confirmar.",
+        path: ["confirmation"],
+      });
+    }
+
+    if (values.password !== values.password_confirm) {
+      ctx.addIssue({
+        code: "custom",
+        message: "As senhas precisam ser iguais.",
+        path: ["password_confirm"],
+      });
+    }
+  });
+
+const accountRevokeSessionsSchema = accountReasonSchema
+  .extend({
+    confirmation: z.string(),
+  })
+  .superRefine((values, ctx) => {
+    if (values.confirmation.trim().toUpperCase() !== "ENCERRAR SESSOES") {
+      ctx.addIssue({
+        code: "custom",
+        message: "Digite ENCERRAR SESSOES para confirmar.",
+        path: ["confirmation"],
+      });
+    }
+  });
+
+type AccountReasonFormValues = z.infer<typeof accountReasonSchema>;
+type AccountChangeEmailFormValues = z.infer<typeof accountChangeEmailSchema>;
+type AccountTemporaryPasswordFormValues = z.infer<typeof accountTemporaryPasswordSchema>;
+type AccountRevokeSessionsFormValues = z.infer<typeof accountRevokeSessionsSchema>;
 
 const createCourtesySchema = (requiresCrpRegistrationDate: boolean) =>
   courtesyBaseSchema.superRefine((values, ctx) => {
@@ -730,8 +825,37 @@ const formatPhoneDisplay = (value?: string | null) => {
 
 const formatWhatsappInput = (value?: string | null) => {
   const digits = onlyDigits(value).slice(0, 15);
+  if (!digits) return "";
 
-  return digits ? `+${digits}` : "";
+  const formatNationalPhone = (nationalDigits: string, prefix = "") => {
+    if (nationalDigits.length <= 2) {
+      return nationalDigits ? `${prefix}(${nationalDigits}` : prefix.trim();
+    }
+
+    if (nationalDigits.length <= 7) {
+      return `${prefix}(${nationalDigits.slice(0, 2)}) ${nationalDigits.slice(2)}`;
+    }
+
+    if (nationalDigits.length <= 10) {
+      return `${prefix}(${nationalDigits.slice(0, 2)}) ${nationalDigits.slice(2, 6)}-${nationalDigits.slice(6)}`;
+    }
+
+    return `${prefix}(${nationalDigits.slice(0, 2)}) ${nationalDigits.slice(2, 7)}-${nationalDigits.slice(7, 11)}`;
+  };
+
+  if (digits === "55") {
+    return "+55 ";
+  }
+
+  if (digits.startsWith("55") && digits.length > 2) {
+    return formatNationalPhone(digits.slice(2), "+55 ");
+  }
+
+  if (digits.length <= 11) {
+    return formatNationalPhone(digits);
+  }
+
+  return `+${digits}`;
 };
 
 const formatZipInput = (value?: string | null) => {
@@ -2572,6 +2696,7 @@ const activityIcon = (item: AdminPsychologistActivityItem): LucideIcon => {
   if (item.area.id === "financeiro") return Wallet;
   if (item.area.id === "atendimento") return MessageCircle;
   if (item.area.id === "avaliacoes") return Star;
+  if (item.area.id === "conta") return KeyRound;
   if (item.area.id === "denuncias") return AlertTriangle;
   if (item.type.id.includes("save")) return Bookmark;
   if (item.type.id.includes("reply")) return MessageCircle;
@@ -2585,6 +2710,7 @@ const areaTone = (area: string) => {
     atendimento: "bg-emerald-50 text-success",
     avaliacoes: "bg-yellow-50 text-yellow-700",
     comunidade: "bg-blue-50 text-blue-700",
+    conta: "bg-primary-soft text-primary",
     denuncias: "bg-red-50 text-danger",
     financeiro: "bg-primary-soft text-primary",
     perfil: "bg-surface-muted text-muted",
@@ -2838,6 +2964,535 @@ const ActivitiesTab = ({ id }: { id: string }) => {
           />
         </div>
       </CardShell>
+    </div>
+  );
+};
+
+const booleanBadge = (value: boolean, labels: { false: string; true: string }) => (
+  <Badge className={value ? "bg-emerald-50 text-success" : "bg-orange-50 text-orange-700"}>
+    {value ? labels.true : labels.false}
+  </Badge>
+);
+
+const AccountUnavailableNotice = ({ children }: { children: ReactNode }) => (
+  <div className="rounded-2xl border border-dashed border-border bg-surface-muted p-4 text-sm font-bold leading-6 text-muted">
+    {children}
+  </div>
+);
+
+const AccountSummaryCard = ({ account }: { account: AdminPsychologistAccount }) => (
+  <InfoCard icon={ShieldCheck} title="Resumo da conta">
+    <dl className="divide-y divide-border">
+      <FieldRow label="E-mail atual" value={account.email} />
+      <FieldRow
+        label="Status do e-mail"
+        value={booleanBadge(account.confirmed, {
+          false: "Pendente",
+          true: "Confirmado",
+        })}
+      />
+      <FieldRow label="Confirmado em" value={formatDateTime(account.confirmed_at)} />
+      <FieldRow label="Método de login" value={account.provider_label} />
+      <FieldRow
+        label="Senha local"
+        value={booleanBadge(account.has_password, {
+          false: "Não possui senha local",
+          true: "Possui senha local",
+        })}
+      />
+      <FieldRow
+        label="Status da conta"
+        value={booleanBadge(account.active, {
+          false: "Inativa",
+          true: "Ativa",
+        })}
+      />
+      <FieldRow
+        label="Troca obrigatória"
+        value={booleanBadge(account.need_reset, {
+          false: "Sem pendência",
+          true: "Pendente",
+        })}
+      />
+      <FieldRow label="Conta criada em" value={formatDateTime(account.created_at)} />
+      <FieldRow label="Último acesso" value={formatDateTime(account.last_access_at)} />
+      <FieldRow
+        label="Sessões ativas"
+        value={`${numberFormatter.format(account.sessions.active_count)} sessão(ões) em ${numberFormatter.format(
+          account.sessions.devices_count,
+        )} dispositivo(s)`}
+      />
+    </dl>
+  </InfoCard>
+);
+
+const AccountChangeEmailForm = ({
+  account,
+  id,
+}: {
+  account: AdminPsychologistAccount;
+  id: string;
+}) => {
+  const mutation = useAdminPsychologistChangeAccountEmail(id);
+  const form = useForm<AccountChangeEmailFormValues>({
+    defaultValues: {
+      confirmation: "",
+      email: "",
+      reason: "",
+    },
+    mode: "onSubmit",
+    resolver: zodResolver(accountChangeEmailSchema),
+  });
+  const disabled = !account.capabilities.can_change_email || mutation.isPending;
+
+  const onSubmit: SubmitHandler<AccountChangeEmailFormValues> = async (values) => {
+    try {
+      await mutation.mutateAsync({
+        confirmation: values.confirmation.trim().toUpperCase(),
+        email: values.email.trim().toLowerCase(),
+        reason: values.reason.trim(),
+      });
+      form.reset();
+      toast.success("E-mail alterado. Confirmação enviada para o novo endereço.");
+    } catch (error) {
+      toast.error(resolveApiError(error));
+    }
+  };
+
+  return (
+    <FormProvider {...form}>
+      <form className="grid gap-3" noValidate onSubmit={form.handleSubmit(onSubmit)}>
+        <InputController<AccountChangeEmailFormValues>
+          autoComplete="off"
+          disabled={disabled}
+          label="Novo e-mail"
+          name="email"
+          placeholder="novo@email.com"
+          required
+          type="email"
+        />
+        <TextareaController<AccountChangeEmailFormValues>
+          disabled={disabled}
+          label="Motivo/observação interna"
+          name="reason"
+          placeholder="Explique a solicitação recebida pelo suporte."
+          required
+          rows={3}
+        />
+        <InputController<AccountChangeEmailFormValues>
+          autoComplete="off"
+          disabled={disabled}
+          label="Confirmação forte"
+          name="confirmation"
+          placeholder="ALTERAR EMAIL"
+          required
+        />
+        <button
+          className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-control bg-primary px-4 text-sm font-black text-white transition hover:bg-primary-hover disabled:cursor-not-allowed disabled:bg-surface-muted disabled:text-muted"
+          disabled={disabled}
+          type="submit"
+        >
+          {mutation.isPending ? (
+            <Loader2 aria-hidden className="h-4 w-4 animate-spin" />
+          ) : (
+            <Mail aria-hidden className="h-4 w-4" />
+          )}
+          Alterar e-mail
+        </button>
+      </form>
+    </FormProvider>
+  );
+};
+
+const AccountSendEmailConfirmationForm = ({
+  account,
+  id,
+}: {
+  account: AdminPsychologistAccount;
+  id: string;
+}) => {
+  const mutation = useAdminPsychologistSendEmailConfirmation(id);
+  const form = useForm<AccountReasonFormValues>({
+    defaultValues: { reason: "" },
+    mode: "onSubmit",
+    resolver: zodResolver(accountReasonSchema),
+  });
+  const disabled = !account.capabilities.can_send_email_confirmation || mutation.isPending;
+
+  const onSubmit: SubmitHandler<AccountReasonFormValues> = async (values) => {
+    try {
+      await mutation.mutateAsync({ reason: values.reason.trim() });
+      form.reset();
+      toast.success("Confirmação de e-mail reenviada.");
+    } catch (error) {
+      toast.error(resolveApiError(error));
+    }
+  };
+
+  if (!account.capabilities.can_send_email_confirmation) {
+    return (
+      <AccountUnavailableNotice>
+        Reenvio disponível apenas quando o e-mail está pendente de confirmação.
+      </AccountUnavailableNotice>
+    );
+  }
+
+  return (
+    <FormProvider {...form}>
+      <form className="grid gap-3" noValidate onSubmit={form.handleSubmit(onSubmit)}>
+        <TextareaController<AccountReasonFormValues>
+          disabled={disabled}
+          label="Motivo/observação interna"
+          name="reason"
+          placeholder="Informe o motivo do reenvio."
+          required
+          rows={3}
+        />
+        <button
+          className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-control border border-primary bg-surface px-4 text-sm font-black text-primary transition hover:bg-primary-soft disabled:cursor-not-allowed disabled:border-border disabled:text-muted"
+          disabled={disabled}
+          type="submit"
+        >
+          {mutation.isPending ? (
+            <Loader2 aria-hidden className="h-4 w-4 animate-spin" />
+          ) : (
+            <Send aria-hidden className="h-4 w-4" />
+          )}
+          Reenviar confirmação
+        </button>
+      </form>
+    </FormProvider>
+  );
+};
+
+const AccountPasswordResetForm = ({
+  account,
+  id,
+}: {
+  account: AdminPsychologistAccount;
+  id: string;
+}) => {
+  const mutation = useAdminPsychologistSendPasswordReset(id);
+  const form = useForm<AccountReasonFormValues>({
+    defaultValues: { reason: "" },
+    mode: "onSubmit",
+    resolver: zodResolver(accountReasonSchema),
+  });
+  const disabled = !account.capabilities.can_send_password_reset || mutation.isPending;
+
+  const onSubmit: SubmitHandler<AccountReasonFormValues> = async (values) => {
+    try {
+      await mutation.mutateAsync({ reason: values.reason.trim() });
+      form.reset();
+      toast.success("Link de redefinição enviado.");
+    } catch (error) {
+      toast.error(resolveApiError(error));
+    }
+  };
+
+  if (!account.capabilities.can_send_password_reset) {
+    return (
+      <AccountUnavailableNotice>
+        Esta conta acessa via Google. Redefinição de senha local indisponível.
+      </AccountUnavailableNotice>
+    );
+  }
+
+  return (
+    <FormProvider {...form}>
+      <form className="grid gap-3" noValidate onSubmit={form.handleSubmit(onSubmit)}>
+        <TextareaController<AccountReasonFormValues>
+          disabled={disabled}
+          label="Motivo/observação interna"
+          name="reason"
+          placeholder="Explique por que o link será enviado pelo Admin."
+          required
+          rows={3}
+        />
+        <button
+          className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-control border border-primary bg-surface px-4 text-sm font-black text-primary transition hover:bg-primary-soft disabled:cursor-not-allowed disabled:border-border disabled:text-muted"
+          disabled={disabled}
+          type="submit"
+        >
+          {mutation.isPending ? (
+            <Loader2 aria-hidden className="h-4 w-4 animate-spin" />
+          ) : (
+            <Send aria-hidden className="h-4 w-4" />
+          )}
+          Enviar link de redefinição
+        </button>
+      </form>
+    </FormProvider>
+  );
+};
+
+const AccountTemporaryPasswordForm = ({
+  account,
+  id,
+}: {
+  account: AdminPsychologistAccount;
+  id: string;
+}) => {
+  const mutation = useAdminPsychologistSetTemporaryPassword(id);
+  const form = useForm<AccountTemporaryPasswordFormValues>({
+    defaultValues: {
+      confirmation: "",
+      password: "",
+      password_confirm: "",
+      reason: "",
+    },
+    mode: "onSubmit",
+    resolver: zodResolver(accountTemporaryPasswordSchema),
+  });
+  const disabled = !account.capabilities.can_set_temporary_password || mutation.isPending;
+
+  const onSubmit: SubmitHandler<AccountTemporaryPasswordFormValues> = async (values) => {
+    try {
+      await mutation.mutateAsync({
+        confirmation: values.confirmation.trim().toUpperCase(),
+        password: values.password,
+        password_confirm: values.password_confirm,
+        reason: values.reason.trim(),
+      });
+      form.reset();
+      toast.success("Senha temporária definida. O psicólogo deverá trocá-la no próximo login.");
+    } catch (error) {
+      toast.error(resolveApiError(error));
+    }
+  };
+
+  if (!account.capabilities.can_set_temporary_password) {
+    return (
+      <AccountUnavailableNotice>
+        Esta conta acessa via Google. Alteração de senha local indisponível.
+      </AccountUnavailableNotice>
+    );
+  }
+
+  return (
+    <FormProvider {...form}>
+      <form className="grid gap-3" noValidate onSubmit={form.handleSubmit(onSubmit)}>
+        <div className="rounded-2xl border border-orange-200 bg-orange-50 p-3 text-sm font-bold leading-6 text-orange-800">
+          A senha temporária não será exibida novamente, não será gravada em auditoria e exigirá
+          troca obrigatória no próximo login do psicólogo.
+        </div>
+        <div className="grid gap-3 md:grid-cols-2">
+          <InputController<AccountTemporaryPasswordFormValues>
+            autoComplete="new-password"
+            disabled={disabled}
+            label="Senha temporária"
+            name="password"
+            required
+            type="password"
+          />
+          <InputController<AccountTemporaryPasswordFormValues>
+            autoComplete="new-password"
+            disabled={disabled}
+            label="Confirmar senha temporária"
+            name="password_confirm"
+            required
+            type="password"
+          />
+        </div>
+        <TextareaController<AccountTemporaryPasswordFormValues>
+          disabled={disabled}
+          label="Motivo/observação interna"
+          name="reason"
+          placeholder="Registre o motivo excepcional para senha temporária."
+          required
+          rows={3}
+        />
+        <InputController<AccountTemporaryPasswordFormValues>
+          autoComplete="off"
+          disabled={disabled}
+          label="Confirmação forte"
+          name="confirmation"
+          placeholder="ALTERAR SENHA"
+          required
+        />
+        <button
+          className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-control bg-danger px-4 text-sm font-black text-white transition hover:bg-danger/90 disabled:cursor-not-allowed disabled:bg-surface-muted disabled:text-muted"
+          disabled={disabled}
+          type="submit"
+        >
+          {mutation.isPending ? (
+            <Loader2 aria-hidden className="h-4 w-4 animate-spin" />
+          ) : (
+            <KeyRound aria-hidden className="h-4 w-4" />
+          )}
+          Definir senha temporária
+        </button>
+      </form>
+    </FormProvider>
+  );
+};
+
+const AccountRevokeSessionsForm = ({
+  account,
+  id,
+}: {
+  account: AdminPsychologistAccount;
+  id: string;
+}) => {
+  const mutation = useAdminPsychologistRevokeSessions(id);
+  const form = useForm<AccountRevokeSessionsFormValues>({
+    defaultValues: {
+      confirmation: "",
+      reason: "",
+    },
+    mode: "onSubmit",
+    resolver: zodResolver(accountRevokeSessionsSchema),
+  });
+  const disabled = !account.capabilities.can_revoke_sessions || mutation.isPending;
+
+  const onSubmit: SubmitHandler<AccountRevokeSessionsFormValues> = async (values) => {
+    try {
+      await mutation.mutateAsync({
+        confirmation: values.confirmation.trim().toUpperCase(),
+        reason: values.reason.trim(),
+      });
+      form.reset();
+      toast.success("Sessões do psicólogo encerradas.");
+    } catch (error) {
+      toast.error(resolveApiError(error));
+    }
+  };
+
+  return (
+    <FormProvider {...form}>
+      <form className="grid gap-3" noValidate onSubmit={form.handleSubmit(onSubmit)}>
+        {!account.capabilities.can_revoke_sessions ? (
+          <AccountUnavailableNotice>
+            Nenhuma sessão ativa real foi encontrada em user_token.
+          </AccountUnavailableNotice>
+        ) : null}
+        <TextareaController<AccountRevokeSessionsFormValues>
+          disabled={disabled}
+          label="Motivo/observação interna"
+          name="reason"
+          placeholder="Explique por que as sessões serão encerradas."
+          required
+          rows={3}
+        />
+        <InputController<AccountRevokeSessionsFormValues>
+          autoComplete="off"
+          disabled={disabled}
+          label="Confirmação forte"
+          name="confirmation"
+          placeholder="ENCERRAR SESSOES"
+          required
+        />
+        <button
+          className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-control border border-danger bg-surface px-4 text-sm font-black text-danger transition hover:bg-red-50 disabled:cursor-not-allowed disabled:border-border disabled:text-muted"
+          disabled={disabled}
+          type="submit"
+        >
+          {mutation.isPending ? (
+            <Loader2 aria-hidden className="h-4 w-4 animate-spin" />
+          ) : (
+            <LogOut aria-hidden className="h-4 w-4" />
+          )}
+          Encerrar sessões
+        </button>
+      </form>
+    </FormProvider>
+  );
+};
+
+const AccountTab = ({ id }: { id: string }) => {
+  const query = useAdminPsychologistAccount(id);
+  const errorMessage = query.error ? resolveApiError(query.error) : null;
+
+  if (query.isLoading) return <EngagementLoadingState rows={2} />;
+  if (query.isError && errorMessage) {
+    return <ErrorState message={errorMessage} onRetry={() => void query.refetch()} />;
+  }
+  if (!query.data) return null;
+
+  const account = query.data;
+  const googleOnly = account.provider === "google" && !account.has_password;
+
+  return (
+    <div className="space-y-5" data-psychologist-detail-tab="conta">
+      <div className="rounded-2xl border border-primary/20 bg-primary-soft p-4 text-sm font-bold leading-6 text-muted">
+        Ações desta aba são administrativas, exigem motivo interno e não impersonam o psicólogo.
+        Alteração de e-mail e senha temporária encerram sessões reais em user_token.
+      </div>
+
+      {googleOnly ? (
+        <CardShell className="p-4">
+          <div className="flex gap-3">
+            <IconCircle icon={Lock} />
+            <div>
+              <h2 className="text-lg font-black text-foreground">Conta Google sem senha local</h2>
+              <p className="mt-1 text-sm font-bold leading-6 text-muted">
+                Esta conta acessa via Google. Alteração de senha local e criação de senha local
+                estão fora do escopo desta task.
+              </p>
+            </div>
+          </div>
+        </CardShell>
+      ) : null}
+
+      <div className="grid gap-5 xl:grid-cols-[0.9fr_1.1fr]">
+        <AccountSummaryCard account={account} />
+
+        <InfoCard icon={Mail} title="E-mail da conta">
+          <div className="grid gap-5">
+            <div className="rounded-2xl border border-border bg-surface-muted p-4 text-sm font-bold leading-6 text-muted">
+              Alterar e-mail exige nova confirmação, envia e-mail transacional real quando
+              configurado e encerra sessões do psicólogo.
+            </div>
+            {!account.capabilities.can_change_email ? (
+              <AccountUnavailableNotice>
+                Alteração administrativa de e-mail bloqueada para identidade sem senha local.
+              </AccountUnavailableNotice>
+            ) : null}
+            <AccountChangeEmailForm account={account} id={id} />
+            <AccountSendEmailConfirmationForm account={account} id={id} />
+          </div>
+        </InfoCard>
+      </div>
+
+      <div className="grid gap-5 xl:grid-cols-2">
+        <InfoCard icon={KeyRound} title="Senha e recuperação">
+          <div className="grid gap-5">
+            <div>
+              <h3 className="mb-2 text-sm font-black text-foreground">
+                Ação preferencial: link de redefinição
+              </h3>
+              <AccountPasswordResetForm account={account} id={id} />
+            </div>
+            <div>
+              <h3 className="mb-2 text-sm font-black text-foreground">
+                Suporte excepcional: senha temporária
+              </h3>
+              <AccountTemporaryPasswordForm account={account} id={id} />
+            </div>
+          </div>
+        </InfoCard>
+
+        <InfoCard icon={ShieldCheck} title="Sessões e segurança">
+          <div className="grid gap-4">
+            <dl className="divide-y divide-border">
+              <FieldRow
+                label="Sessões ativas"
+                value={numberFormatter.format(account.sessions.active_count)}
+              />
+              <FieldRow
+                label="Dispositivos"
+                value={numberFormatter.format(account.sessions.devices_count)}
+              />
+              <FieldRow
+                label="Última sessão"
+                value={formatDateTime(account.sessions.last_access_at)}
+              />
+              <FieldRow label="Fonte" value={account.sessions.source} />
+            </dl>
+            <AccountRevokeSessionsForm account={account} id={id} />
+          </div>
+        </InfoCard>
+      </div>
     </div>
   );
 };
@@ -3934,6 +4589,10 @@ const PersonalDataEditForm = ({
     });
   }, [form, personal, professional.gender, professional.race_color, professional.religion]);
 
+  const watchedCpf = useWatch({ control: form.control, name: "cpf" });
+  const isApprovedCpfChanged =
+    professional.crp_status === "aprovado" && onlyDigits(watchedCpf) !== onlyDigits(personal.cpf);
+
   const onSubmit: SubmitHandler<ProfilePersonalDataFormValues> = async (values) => {
     try {
       await mutation.mutateAsync({
@@ -3945,7 +4604,7 @@ const PersonalDataEditForm = ({
         address_street: emptyToNull(values.address_street),
         address_zip: emptyToNull(values.address_zip ? onlyDigits(values.address_zip) : ""),
         birthdate: emptyToNull(values.birthdate),
-        confirm_cpf_change: values.confirm_cpf_change === "sim",
+        confirm_cpf_change: isApprovedCpfChanged && values.confirm_cpf_change === "sim",
         cpf: emptyToNull(values.cpf ? onlyDigits(values.cpf) : ""),
         gender: emptyToNull(values.gender),
         race_color: emptyToNull(values.race_color),
@@ -3963,13 +4622,6 @@ const PersonalDataEditForm = ({
   return (
     <FormProvider {...form}>
       <form className="space-y-4" noValidate onSubmit={form.handleSubmit(onSubmit)}>
-        <div className="rounded-2xl border border-blue-100 bg-blue-50/70 p-4 text-sm font-bold text-muted">
-          <span className="inline-flex items-center gap-2 text-foreground">
-            <Lock aria-hidden className="h-4 w-4 text-primary" />
-            E-mail é credencial de login e permanece somente leitura nesta task.
-          </span>
-          <p className="mt-2">E-mail atual: {personal.email}</p>
-        </div>
         <div className="grid gap-4 md:grid-cols-2">
           <InputController<ProfilePersonalDataFormValues>
             disabled={disabled}
@@ -3985,9 +4637,9 @@ const PersonalDataEditForm = ({
             inputMode="tel"
             label="WhatsApp"
             maskValue={formatWhatsappInput}
-            maxLength={16}
+            maxLength={20}
             name="whatsapp"
-            placeholder="+5537999999999"
+            placeholder="+55 (00) 00000-0000"
           />
           <InputController<ProfilePersonalDataFormValues>
             disabled={disabled}
@@ -4060,19 +4712,21 @@ const PersonalDataEditForm = ({
             options={mergeCurrentOption(STATE_OPTIONS, personal.address.state)}
           />
         </div>
-        {professional.crp_status === "aprovado" ? (
+        {isApprovedCpfChanged ? (
           <div className="rounded-2xl border border-orange-100 bg-orange-50 p-4 text-sm font-bold text-orange-700">
             Alterar CPF em psicólogo aprovado não revalida nem invalida automaticamente o CRP.
             Decisões de aprovação/rejeição continuam no card Registro profissional.
           </div>
         ) : null}
-        <SelectController<ProfilePersonalDataFormValues>
-          disabled={disabled}
-          insetChevron
-          label="Confirmação para alteração de CPF aprovado"
-          name="confirm_cpf_change"
-          options={[...CPF_CHANGE_CONFIRMATION_OPTIONS]}
-        />
+        {isApprovedCpfChanged ? (
+          <SelectController<ProfilePersonalDataFormValues>
+            disabled={disabled}
+            insetChevron
+            label="Confirmação para alteração de CPF aprovado"
+            name="confirm_cpf_change"
+            options={[...CPF_CHANGE_CONFIRMATION_OPTIONS]}
+          />
+        ) : null}
         <TextareaController<ProfilePersonalDataFormValues>
           disabled={disabled}
           label="Motivo/observação interna"
@@ -4105,9 +4759,15 @@ const ProfileReadOnlyPersonalData = ({ detail }: { detail: AdminPsychologistDeta
       />
       <FieldRow label="WhatsApp" value={formatPhoneDisplay(personal.phone)} />
       <FieldRow label="Data de nascimento" value={formatDate(personal.birthdate)} />
-      <FieldRow label="Gênero" value={capitalizeOptionLabel(professional.gender)} />
-      <FieldRow label="Raça/cor" value={capitalizeOptionLabel(professional.race_color)} />
-      <FieldRow label="Religião" value={capitalizeOptionLabel(professional.religion)} />
+      <FieldRow label="Gênero" value={getStaticOptionLabel(GENDER_OPTIONS, professional.gender)} />
+      <FieldRow
+        label="Raça/cor"
+        value={getStaticOptionLabel(RACE_COLOR_OPTIONS, professional.race_color)}
+      />
+      <FieldRow
+        label="Religião"
+        value={getStaticOptionLabel(RELIGION_OPTIONS, professional.religion)}
+      />
       <FieldRow
         label="Endereço"
         value={
@@ -4294,7 +4954,10 @@ const ProfileReadOnlyProfessionalData = ({ detail }: { detail: AdminPsychologist
       <FieldRow label="Serviços" value={listText(professional.services)} />
       <FieldRow label="Público atendido" value={listText(professional.target_audience)} />
       <FieldRow label="Idiomas" value={listText(professional.languages)} />
-      <FieldRow label="Modalidades" value={capitalizeOptionLabel(professional.modality)} />
+      <FieldRow
+        label="Modalidades"
+        value={getStaticOptionLabel(MODALITY_OPTIONS, professional.modality)}
+      />
       <FieldRow
         label="Perfil visível para pacientes"
         value={
@@ -4513,6 +5176,8 @@ const Content = ({
       <ActivitiesTab id={id} />
     ) : tab === "denuncias" ? (
       <ReportsTab id={id} />
+    ) : tab === "conta" ? (
+      <AccountTab id={id} />
     ) : (
       <GeneralTab detail={detail} />
     )}
@@ -4529,7 +5194,8 @@ export const AdminPsychologistDetailClient = ({ id }: { id: string }) => {
     requestedTab === "publicacoes" ||
     requestedTab === "avaliacoes" ||
     requestedTab === "atividades" ||
-    requestedTab === "denuncias"
+    requestedTab === "denuncias" ||
+    requestedTab === "conta"
       ? requestedTab
       : "geral";
   const query = useAdminPsychologistDetail(id);

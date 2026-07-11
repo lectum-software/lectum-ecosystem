@@ -27,6 +27,7 @@ const AREA_LABELS: Record<AdminPsychologistActivityArea, string> = {
   atendimento: "Atendimento",
   avaliacoes: "AvaliaÃ§Ãµes",
   comunidade: "Comunidade",
+  conta: "Conta e acesso",
   denuncias: "DenÃºncias",
   financeiro: "Financeiro",
   perfil: "Perfil",
@@ -34,6 +35,11 @@ const AREA_LABELS: Record<AdminPsychologistActivityArea, string> = {
 
 const TYPE_LABELS: Record<AdminPsychologistActivityType, string> = {
   account_created: "Conta criada",
+  account_email_changed: "E-mail da conta alterado",
+  account_email_confirmation_sent: "Confirma\u00e7\u00e3o de e-mail reenviada",
+  account_password_reset_sent: "Link de redefini\u00e7\u00e3o enviado",
+  account_sessions_revoked: "Sess\u00f5es encerradas",
+  account_temporary_password_set: "Senha tempor\u00e1ria definida",
   admin_personal_data_updated: "Dados pessoais atualizados",
   admin_professional_data_updated: "Dados profissionais atualizados",
   post_created: "CriaÃ§Ã£o de post",
@@ -259,22 +265,52 @@ const adminLogType = (action: string): AdminPsychologistActivityType | null => {
   if (action === "psychologist_professional_data_updated") {
     return "admin_professional_data_updated";
   }
+  if (action === "psychologist_account_email_changed") return "account_email_changed";
+  if (action === "psychologist_account_email_confirmation_sent") {
+    return "account_email_confirmation_sent";
+  }
+  if (action === "psychologist_account_password_reset_sent") {
+    return "account_password_reset_sent";
+  }
+  if (action === "psychologist_account_temporary_password_set") {
+    return "account_temporary_password_set";
+  }
+  if (action === "psychologist_account_sessions_revoked") return "account_sessions_revoked";
 
   return null;
 };
 
-const adminLogDescription = (log: AdminPsychologistActivityAdminLog) => {
-  const fields = changedFieldsFromAudit(log.changed_fields);
-  const fieldsText = fields.length > 0 ? fields.join(", ") : "campos do perfil";
-  const actionLabel =
-    log.action === "psychologist_personal_data_updated" ? "dados pessoais" : "dados profissionais";
-  const reason = log.reason?.trim();
+const adminAccountActionLabel = (action: string) => {
+  const labels: Record<string, string> = {
+    psychologist_account_email_changed: "alterou o e-mail da conta",
+    psychologist_account_email_confirmation_sent: "reenviou a confirma\u00e7\u00e3o de e-mail",
+    psychologist_account_password_reset_sent: "enviou link de redefini\u00e7\u00e3o de senha",
+    psychologist_account_sessions_revoked: "encerrou as sess\u00f5es do psic\u00f3logo",
+    psychologist_account_temporary_password_set: "definiu senha tempor\u00e1ria",
+  };
 
-  return `Painel administrativo atualizou ${actionLabel}. Campos alterados: ${fieldsText}.${
-    reason ? ` Motivo/observaÃ§Ã£o interna: ${excerpt(reason, 140)}.` : ""
-  }`;
+  return labels[action] ?? "atualizou a conta";
 };
 
+const adminLogDescription = (log: AdminPsychologistActivityAdminLog) => {
+  const fields = changedFieldsFromAudit(log.changed_fields);
+  const isAccountAction = log.action.startsWith("psychologist_account_");
+  const fieldsText =
+    fields.length > 0 ? fields.join(", ") : isAccountAction ? "conta" : "campos do perfil";
+  const actionLabel = isAccountAction
+    ? adminAccountActionLabel(log.action)
+    : log.action === "psychologist_personal_data_updated"
+      ? "dados pessoais"
+      : "dados profissionais";
+  const reason = log.reason?.trim();
+  const prefix = isAccountAction
+    ? `Painel administrativo ${actionLabel}`
+    : `Painel administrativo atualizou ${actionLabel}`;
+
+  return `${prefix}. Campos alterados: ${fieldsText}.${
+    reason ? ` Motivo/observa\u00e7\u00e3o interna: ${excerpt(reason, 140)}.` : ""
+  }`;
+};
 const makeActivity = (input: {
   actor: AdminPsychologistActivityActor;
   area: AdminPsychologistActivityArea;
@@ -607,7 +643,7 @@ export const showAdminPsychologistActivities = async (
       return [
         makeActivity({
           actor: actorFromAdmin(log.admin),
-          area: "perfil",
+          area: log.action.startsWith("psychologist_account_") ? "conta" : "perfil",
           description: adminLogDescription(log),
           id: `admin-activity-${log.id}`,
           occurred_at: log.createdAt,

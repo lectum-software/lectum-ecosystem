@@ -1,17 +1,23 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { adminPsychologistsKeys } from "@/api/cache/keys";
 import {
+  type AdminPsychologistAccountReasonInput,
   type AdminPsychologistActivitiesQuery,
   type AdminPsychologistApproveRegistryVerificationInput,
+  type AdminPsychologistChangeEmailInput,
   type AdminPsychologistGrantCourtesyInput,
   type AdminPsychologistPublicationsQuery,
   type AdminPsychologistRejectRegistryVerificationInput,
   type AdminPsychologistReportsQuery,
   type AdminPsychologistReviewsQuery,
+  type AdminPsychologistRevokeSessionsInput,
+  type AdminPsychologistSetTemporaryPasswordInput,
   type AdminPsychologistUpdatePersonalDataInput,
   type AdminPsychologistUpdateProfessionalDataInput,
   type AdminPsychologistUpdateRegistryIdentityInput,
   approveAdminPsychologistRegistryVerification,
+  changeAdminPsychologistAccountEmail,
+  getAdminPsychologistAccount,
   getAdminPsychologistActivities,
   getAdminPsychologistBilling,
   getAdminPsychologistDetail,
@@ -26,7 +32,11 @@ import {
   type PsychologistsDashboardQuery,
   type PsychologistsListQuery,
   rejectAdminPsychologistRegistryVerification,
+  revokeAdminPsychologistAccountSessions,
   revokeAdminPsychologistCourtesy,
+  sendAdminPsychologistAccountEmailConfirmation,
+  sendAdminPsychologistAccountPasswordReset,
+  setAdminPsychologistAccountTemporaryPassword,
   updateAdminPsychologistPersonalData,
   updateAdminPsychologistProfessionalData,
   updateAdminPsychologistRegistryIdentity,
@@ -57,6 +67,13 @@ export const useAdminPsychologistDetail = (id: string, options: { enabled?: bool
     enabled: Boolean(id) && (options.enabled ?? true),
     queryFn: () => getAdminPsychologistDetail(id),
     queryKey: adminPsychologistsKeys.detail(id),
+  });
+
+export const useAdminPsychologistAccount = (id: string, options: { enabled?: boolean } = {}) =>
+  useQuery({
+    enabled: Boolean(id) && (options.enabled ?? true),
+    queryFn: () => getAdminPsychologistAccount(id),
+    queryKey: adminPsychologistsKeys.account(id),
   });
 
 export const useAdminPsychologistBilling = (id: string, options: { enabled?: boolean } = {}) =>
@@ -140,6 +157,20 @@ const invalidatePsychologistProfileEdit = async (
   ]);
 };
 
+const invalidatePsychologistAccount = async (
+  queryClient: ReturnType<typeof useQueryClient>,
+  id: string,
+) => {
+  await Promise.all([
+    queryClient.invalidateQueries({ queryKey: adminPsychologistsKeys.all }),
+    queryClient.invalidateQueries({ queryKey: adminPsychologistsKeys.detail(id) }),
+    queryClient.invalidateQueries({ queryKey: adminPsychologistsKeys.account(id) }),
+    queryClient.invalidateQueries({
+      queryKey: [...adminPsychologistsKeys.all, "activities", id],
+    }),
+  ]);
+};
+
 export const useAdminPsychologistUpdatePersonalData = (id: string) => {
   const queryClient = useQueryClient();
 
@@ -157,6 +188,56 @@ export const useAdminPsychologistUpdateProfessionalData = (id: string) => {
     mutationFn: (input: AdminPsychologistUpdateProfessionalDataInput) =>
       updateAdminPsychologistProfessionalData(id, input),
     onSuccess: () => invalidatePsychologistProfileEdit(queryClient, id),
+  });
+};
+
+export const useAdminPsychologistChangeAccountEmail = (id: string) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (input: AdminPsychologistChangeEmailInput) =>
+      changeAdminPsychologistAccountEmail(id, input),
+    onSuccess: () => invalidatePsychologistAccount(queryClient, id),
+  });
+};
+
+export const useAdminPsychologistSendEmailConfirmation = (id: string) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (input: AdminPsychologistAccountReasonInput) =>
+      sendAdminPsychologistAccountEmailConfirmation(id, input),
+    onSuccess: () => invalidatePsychologistAccount(queryClient, id),
+  });
+};
+
+export const useAdminPsychologistSendPasswordReset = (id: string) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (input: AdminPsychologistAccountReasonInput) =>
+      sendAdminPsychologistAccountPasswordReset(id, input),
+    onSuccess: () => invalidatePsychologistAccount(queryClient, id),
+  });
+};
+
+export const useAdminPsychologistSetTemporaryPassword = (id: string) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (input: AdminPsychologistSetTemporaryPasswordInput) =>
+      setAdminPsychologistAccountTemporaryPassword(id, input),
+    onSuccess: () => invalidatePsychologistAccount(queryClient, id),
+  });
+};
+
+export const useAdminPsychologistRevokeSessions = (id: string) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (input: AdminPsychologistRevokeSessionsInput) =>
+      revokeAdminPsychologistAccountSessions(id, input),
+    onSuccess: () => invalidatePsychologistAccount(queryClient, id),
   });
 };
 

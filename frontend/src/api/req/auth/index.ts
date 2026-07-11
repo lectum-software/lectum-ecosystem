@@ -86,6 +86,18 @@ export const resetPassword = async (code: string, body: ResetPasswordPayload) =>
   });
 };
 
+export const needResetPassword = async (body: ResetPasswordPayload) => {
+  const handle = callEndpoint({
+    route: "/api/private/auth/need_reset",
+    body,
+  });
+
+  return handleReq<user>({
+    ...handle,
+    hideError: true,
+  });
+};
+
 export const registerPatient = async (body: RegisterPatientPayload) => {
   const handle = callEndpoint({
     route: "/api/public/user/store",
