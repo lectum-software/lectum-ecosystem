@@ -998,11 +998,11 @@ const VideoCard = ({ detail }: { detail: AdminPsychologistDetail }) => {
       </div>
 
       {videoSrc ? (
-        <div className="mt-5 max-w-sm overflow-hidden rounded-[1.6rem] border border-border bg-black">
+        <div className="mt-5 max-w-[260px] overflow-hidden rounded-[1.6rem] border border-border bg-black">
           {/* biome-ignore lint/a11y/useMediaCaption: o backend ainda não expõe arquivo de legenda para o vídeo do perfil. */}
           <video
             aria-label={`Vídeo de apresentação de ${detail.header.name}`}
-            className="aspect-[3/4] w-full bg-black object-cover"
+            className="aspect-[9/16] w-full bg-black object-cover"
             controls
             playsInline
             poster={cover || undefined}
