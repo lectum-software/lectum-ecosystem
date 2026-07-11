@@ -279,6 +279,7 @@ const rankingCandidateSelect = {
   createdAt: true,
   crp: true,
   crp_registration_date: true,
+  crp_status: true,
   gender: true,
   headline: true,
   id: true,

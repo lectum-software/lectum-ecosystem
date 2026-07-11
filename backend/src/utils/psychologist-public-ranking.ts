@@ -77,6 +77,7 @@ export type PsychologistRankingCandidate = {
   cpf: string | null;
   createdAt: Date;
   crp: string | null;
+  crp_status?: string | null;
   gender: string | null;
   headline: string | null;
   languages: Prisma.JsonValue | null;

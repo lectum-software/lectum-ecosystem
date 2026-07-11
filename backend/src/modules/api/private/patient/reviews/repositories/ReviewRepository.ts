@@ -57,6 +57,7 @@ export class ReviewRepository implements IReviewRepository {
                   crp: true,
                   gender: true,
                   cfp_verified_at: true,
+                  crp_status: true,
                   subscriptions: {
                     where: activeProfessionalEntitlementWhere(),
                     select: { id: true, source: true },
@@ -129,6 +130,7 @@ export class ReviewRepository implements IReviewRepository {
             crp: true,
             gender: true,
             cfp_verified_at: true,
+            crp_status: true,
             subscriptions: {
               where: activeProfessionalEntitlementWhere(),
               select: { id: true, source: true },

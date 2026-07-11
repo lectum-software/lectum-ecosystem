@@ -23,6 +23,7 @@ const profileBaseSelect = {
   createdAt: true,
   crp: true,
   crp_registration_date: true,
+  crp_status: true,
   discount_first_session: true,
   gender: true,
   headline: true,
@@ -226,6 +227,20 @@ export class AdminPsychologistsListRepository implements IAdminPsychologistsList
             source: true,
             status: true,
             updatedAt: true,
+          },
+        },
+        registry_checks: {
+          orderBy: [{ checked_at: "desc" }, { createdAt: "desc" }],
+          select: {
+            checked_at: true,
+            createdAt: true,
+            found: true,
+            provider: true,
+            raw: true,
+          },
+          take: 2,
+          where: {
+            deleted: false,
           },
         },
       },

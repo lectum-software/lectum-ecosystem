@@ -212,7 +212,11 @@ const buildMentors = (
       rating_avg: Number(profile?.rating_avg ?? 0),
       replies_count: 0,
       upvotes_count: 0,
-      verified: Boolean(profile?.cfp_verified_at || profile?.subscriptions.length),
+      verified: Boolean(
+        profile?.crp_status === "aprovado" ||
+          profile?.cfp_verified_at ||
+          profile?.subscriptions.length,
+      ),
     };
 
     current.replies_count += 1;

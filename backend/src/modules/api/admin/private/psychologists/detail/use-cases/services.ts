@@ -79,6 +79,7 @@ const hasVerifiedEntitlementAt = (profile: AdminPsychologistDetailRecord, date: 
   const entitlements = activeProfessionalSubscriptionsAt(profile, date);
   if (entitlements.length === 0) return false;
 
+  if (profile.crp_status === "aprovado") return true;
   if (profile.cfp_verified_at && profile.cfp_verified_at <= date) return true;
 
   return entitlements.some(
@@ -301,13 +302,16 @@ const buildIntegrations = (
   return [
     {
       checked_at: profile.cfp_verified_at ?? registryCheck?.checked_at ?? null,
-      id: "cfp",
-      label: "Validação CRP",
-      source: profile.cfp_verified_at
-        ? "psychologist_profile.cfp_verified_at"
-        : "professional_registry_check",
-      status: profile.cfp_verified_at ? "active" : registryCheck ? "pending" : "missing",
-      status_label: profile.cfp_verified_at ? "OK" : registryCheck ? "Em análise" : "Sem validação",
+      id: "registry",
+      label: "Verificação profissional",
+      source: profile.cfp_verified_at ? "api_automatica" : "professional_registry_check",
+      status: profile.crp_status === "aprovado" ? "active" : registryCheck ? "pending" : "missing",
+      status_label:
+        profile.crp_status === "aprovado"
+          ? "Aprovado"
+          : registryCheck
+            ? "Em análise"
+            : "Sem validação",
     },
     {
       checked_at: subscription.started_at,

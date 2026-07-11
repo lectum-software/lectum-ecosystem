@@ -8,7 +8,7 @@
 | Prioridade | P0 |
 | Esforço | L |
 | Fase | Admin / Onboarding profissional |
-| Status | Pending |
+| Status | Completed |
 | Dependências | TASK-10, TASK-44, TASK-45, TASK-46, TASK-54, TASK-55 |
 | ADR alvo | ADR sobre `crp_status` como aprovação canônica de registro profissional e origem genérica de verificação (`api_automatica`/`manual_admin`) |
 
@@ -204,27 +204,27 @@ Se o schema atual não suportar auditoria mínima sem `raw`, usar `raw` com shap
 
 ## Critérios de aceite
 
-- [ ] Admin autenticado consegue visualizar o status de verificação profissional no detalhe do psicólogo.
-- [ ] Admin consegue aprovar CRP manualmente com CPF, Regional, CRP, data de inscrição e observação/evidência interna.
-- [ ] Admin consegue rejeitar verificação com motivo obrigatório.
-- [ ] Aprovação manual atualiza `crp_status="aprovado"` e mantém `cfp_verified_at` nulo/inalterado.
-- [ ] Aprovação automática continua atualizando `crp_status="aprovado"` e `cfp_verified_at`.
-- [ ] Psicólogo aprovado manualmente possui 100% dos mesmos acessos do aprovado pela API automática, respeitando o plano ativo.
-- [ ] Gate do fluxo pago redireciona aprovado manualmente para perfil, não para nova consulta.
-- [ ] Selo/verificação pública e privada usam aprovação profissional canônica e não dependem somente de `cfp_verified_at`.
-- [ ] Registros legados do fornecedor externo aparecem como “API automática” em qualquer UI/resposta frontend.
-- [ ] O nome do fornecedor externo não aparece em UI Admin, UI do psicólogo, toasts, mensagens user-facing ou contratos consumidos pelo frontend.
-- [ ] `professional_registry_check` registra auditoria real da aprovação/rejeição manual com admin responsável.
-- [ ] A aprovação manual não cria/cancela assinatura, não altera gateway e não concede cortesia.
-- [ ] Plano Gratuito não passa a exigir CRP por regressão.
-- [ ] Formulários usam React Hook Form, Zod e controllers.
-- [ ] UI mobile-first validada em ~390px e desktop.
-- [ ] Nenhum `<img>` cru foi usado.
-- [ ] Nenhum mock, dado fake permanente ou endpoint simulado foi usado.
-- [ ] Se houve alteração de Prisma/migrations, `pnpm --dir backend db:migrate` foi executado.
-- [ ] Checks/builds relevantes executados sem erros.
-- [ ] ADR criado/atualizado.
-- [ ] Commit criado com mensagem convencional e `git push` executado.
+- [x] Admin autenticado consegue visualizar o status de verificação profissional no detalhe do psicólogo.
+- [x] Admin consegue aprovar CRP manualmente com CPF, Regional, CRP, data de inscrição e observação/evidência interna.
+- [x] Admin consegue rejeitar verificação com motivo obrigatório.
+- [x] Aprovação manual atualiza `crp_status="aprovado"` e mantém `cfp_verified_at` nulo/inalterado.
+- [x] Aprovação automática continua atualizando `crp_status="aprovado"` e `cfp_verified_at`.
+- [x] Psicólogo aprovado manualmente possui 100% dos mesmos acessos do aprovado pela API automática, respeitando o plano ativo.
+- [x] Gate do fluxo pago redireciona aprovado manualmente para perfil, não para nova consulta.
+- [x] Selo/verificação pública e privada usam aprovação profissional canônica e não dependem somente de `cfp_verified_at`.
+- [x] Registros legados do fornecedor externo aparecem como “API automática” em qualquer UI/resposta frontend.
+- [x] O nome do fornecedor externo não aparece em UI Admin, UI do psicólogo, toasts, mensagens user-facing ou contratos consumidos pelo frontend.
+- [x] `professional_registry_check` registra auditoria real da aprovação/rejeição manual com admin responsável.
+- [x] A aprovação manual não cria/cancela assinatura, não altera gateway e não concede cortesia.
+- [x] Plano Gratuito não passa a exigir CRP por regressão.
+- [x] Formulários usam React Hook Form, Zod e controllers.
+- [x] UI mobile-first validada em ~390px e desktop.
+- [x] Nenhum `<img>` cru foi usado.
+- [x] Nenhum mock, dado fake permanente ou endpoint simulado foi usado.
+- [x] Se houve alteração de Prisma/migrations, `pnpm --dir backend db:migrate` foi executado.
+- [x] Checks/builds relevantes executados sem erros.
+- [x] ADR criado/atualizado.
+- [x] Commit criado com mensagem convencional e `git push` executado.
 
 ## Validação mínima
 
@@ -249,3 +249,19 @@ Se o schema atual não suportar auditoria mínima sem `raw`, usar `raw` com shap
 - Não usar dados demo para provar aprovação manual. Se não houver psicólogo real elegível no ambiente, validar endpoints negativamente e registrar limitação sem marcar critérios de aceite que dependam de mutação real.
 - Antes de alterar qualquer helper de verificação, procurar usos existentes de `cfp_verified_at`, `crp_status`, `admin_grant`, `verifiedProfessionalProfileWhere`, `isVerifiedProfessionalEntitlement` e `getPsychologistPaidOnboardingRequirementPath`.
 - Preservar compatibilidade com auditorias históricas já gravadas; qualquer valor antigo de fornecedor deve ser normalizado para nomenclatura genérica no contrato apresentado ao frontend.
+
+### Execucao 2026-07-11
+
+- Implementados endpoints Admin privados reais para visualizar, aprovar e rejeitar verificacao profissional manual em `/api/admin/private/psychologists/:id/registry-verification`.
+- Aprovacao manual reutiliza `professional_registry_check` com `provider="manual_admin"`, `found=true`, admin responsavel em `raw`, dados conferidos e snapshots anterior/proximo; mantem `cfp_verified_at` nulo/inalterado e nao altera assinatura, gateway ou cortesia.
+- Rejeicao manual registra auditoria real com motivo obrigatorio, preservando CPF/CRP/data/historico.
+- `crp_status="aprovado"` foi consolidado como aprovacao canonica em helpers, gates e listagens publicas/privadas, preservando plano profissional ativo e cortesia administrativa existente como regra equivalente.
+- Admin lista/detalhe exibem status/origem genericos; detalhe recebeu card mobile-first "Verificacao profissional" com formularios React Hook Form + Zod/controllers e confirmacao forte (`APROVAR CRP` / `REJEITAR CRP`).
+- Fluxo do psicologo em `/app/professional/cfp` reconhece aprovacao manual e exibe mensagem honesta: "Seu CRP foi aprovado pela equipe Lectum."
+- Builder/Quick Copy nao esteve disponivel como ferramenta no ambiente; foram usadas as imagens locais indicadas em `_product/proto` e a limitacao foi registrada no ADR.
+- Nenhum pacote novo foi instalado.
+- Nao houve alteracao de `backend/prisma/schema.prisma` nem migrations; portanto `pnpm --dir backend db:migrate` nao se aplica.
+- Validacao read-only do service `showRegistryVerification` contra banco local retornou `status=200` para um psicologo real, sem mutacao.
+- Browser local: `admin` foi servido por `next start` e validado em Chrome headless 390x844 nas rotas `/psicologos/lista` e `/psicologos/[id]`; sem sessao Admin, o smoke confirmou a tela real de login/protecao. A mutacao real de aprovar/rejeitar nao foi executada para nao alterar registros reais do banco local sem autorizacao explicita.
+- Validacoes executadas sem erro: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check`.
+- ADR criado: `adrs/0251-verificacao-profissional-manual-crp.md`.

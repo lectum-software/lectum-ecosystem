@@ -99,18 +99,23 @@ const isProfessionalIdentityLocked = ({
   cfpVerifiedAt,
   cpf,
   crp,
+  crpStatus,
   isFree,
   source,
 }: {
   cfpVerifiedAt?: Date | null;
   cpf?: string | null;
   crp?: string | null;
+  crpStatus?: string | null;
   isFree: boolean;
   source?: string | null;
 }) => {
   const hasAdministrativeCourtesy = !isFree && source === "admin_grant";
   const hasVerifiedRegistryIdentity =
-    !isFree && Boolean(cfpVerifiedAt) && onlyDigits(cpf).length === 11 && hasText(crp);
+    !isFree &&
+    (Boolean(cfpVerifiedAt) || crpStatus === "aprovado") &&
+    onlyDigits(cpf).length === 11 &&
+    hasText(crp);
 
   return hasAdministrativeCourtesy || hasVerifiedRegistryIdentity;
 };
@@ -359,6 +364,7 @@ const toResponse = async (
     cfpVerifiedAt: profile.cfp_verified_at,
     cpf: profile.cpf,
     crp: displayCrp,
+    crpStatus: profile.crp_status,
     isFree,
     source: current?.source ?? null,
   });

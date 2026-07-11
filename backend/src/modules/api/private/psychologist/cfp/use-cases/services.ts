@@ -405,7 +405,6 @@ export const search = async (data: ICfpSearchDTO) => {
       status: 502,
       ...error("cfp_provider_error", {
         ...(attempts ? { attempts } : {}),
-        provider_code: response.code || "unknown",
       }),
     };
   }

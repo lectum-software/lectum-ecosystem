@@ -50,6 +50,15 @@ const STATUS_COPY: Record<PsychologistsListStatus, { className: string; label: s
   verified: { className: "bg-emerald-50 text-emerald-700", label: "Verificado" },
 };
 
+const REGISTRY_STATUS_TONE: Record<string, string> = {
+  api_indisponivel: "bg-orange-50 text-orange-700",
+  aprovado: "bg-emerald-50 text-emerald-700",
+  em_analise: "bg-blue-50 text-blue-700",
+  limite_tentativas: "bg-orange-50 text-orange-700",
+  pendente: "bg-surface-muted text-muted",
+  rejeitado: "bg-red-50 text-danger",
+};
+
 const numberFormatter = new Intl.NumberFormat("pt-BR");
 const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
 const publicFrontendUrl = process.env.NEXT_PUBLIC_FRONTEND_URL || "http://localhost:3000";
@@ -386,6 +395,17 @@ const statusBadge = (status: PsychologistsListStatus) => (
   </span>
 );
 
+const registryStatusBadge = (item: PsychologistsListItem) => (
+  <span
+    className={cn(
+      "rounded-full px-2.5 py-1 text-xs font-black",
+      REGISTRY_STATUS_TONE[item.registry_verification.status] ?? "bg-surface-muted text-muted",
+    )}
+  >
+    {item.registry_verification.status_label}
+  </span>
+);
+
 const RatingCell = ({ item }: { item: PsychologistsListItem }) => (
   <div>
     <p className="inline-flex items-center gap-1 font-black text-foreground">
@@ -479,6 +499,15 @@ const MobilePsychologistCard = ({ item }: { item: PsychologistsListItem }) => (
         <p className="text-xs font-bold text-muted">Status</p>
         <div className="mt-1">{statusBadge(item.status)}</div>
       </div>
+      <div className="col-span-2">
+        <p className="text-xs font-bold text-muted">Verificação profissional</p>
+        <div className="mt-1 flex flex-wrap items-center gap-2">
+          {registryStatusBadge(item)}
+          <span className="text-xs font-bold text-subtle">
+            {item.registry_verification.source_label}
+          </span>
+        </div>
+      </div>
     </div>
     <div className="mt-4 flex items-center justify-between gap-3 border-t border-border pt-4">
       <p className="text-xs font-bold text-muted">{item.plan_name || "Sem plano ativo"}</p>
@@ -532,6 +561,7 @@ const PsychologistsTable = ({ items }: { items: PsychologistsListItem[] }) => (
                   </p>
                   <div className="mt-2 flex flex-wrap gap-2">
                     {statusBadge(item.status)}
+                    {registryStatusBadge(item)}
                     <span className="rounded-full bg-primary-soft px-2.5 py-1 text-xs font-black text-primary">
                       {item.plan_name || "Sem plano"}
                     </span>

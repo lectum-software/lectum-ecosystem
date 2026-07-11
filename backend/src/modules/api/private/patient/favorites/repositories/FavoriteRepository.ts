@@ -257,6 +257,7 @@ export class FavoriteRepository implements IFavoriteRepository {
                   show_experience_tag: true,
                   crp_registration_date: true,
                   cfp_verified_at: true,
+                  crp_status: true,
                   whatsapp: true,
                   subscriptions: {
                     where: activeProfessionalEntitlementWhere(),

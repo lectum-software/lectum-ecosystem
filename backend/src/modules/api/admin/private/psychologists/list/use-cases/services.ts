@@ -9,6 +9,7 @@ import type {
   AdminPsychologistsListItem,
   AdminPsychologistsListOption,
   AdminPsychologistsListQuery,
+  AdminPsychologistsListRegistryVerification,
   AdminPsychologistsListSort,
   IAdminPsychologistsListDTO,
 } from "../DTOs/IAdminPsychologistsListDTO";
@@ -148,6 +149,7 @@ const hasVerifiedEntitlementAt = (profile: AdminPsychologistListProfileRecord, d
   const entitlements = activeProfessionalSubscriptionsAt(profile, date);
   if (entitlements.length === 0) return false;
 
+  if (profile.crp_status === "aprovado") return true;
   if (profile.cfp_verified_at && profile.cfp_verified_at <= date) return true;
 
   return entitlements.some(
@@ -155,6 +157,87 @@ const hasVerifiedEntitlementAt = (profile: AdminPsychologistListProfileRecord, d
       subscription.source === "admin_grant" &&
       (subscription.grant_started_at ?? subscription.createdAt) <= date,
   );
+};
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  Boolean(value && typeof value === "object" && !Array.isArray(value));
+
+const rawAttemptStatus = (value: unknown) => {
+  if (!isRecord(value)) return null;
+  const status = value.attempt_status;
+
+  return typeof status === "string" ? status : null;
+};
+
+const isManualCheck = (check: AdminPsychologistListProfileRecord["registry_checks"][number]) =>
+  check.provider === "manual_admin" ||
+  (isRecord(check.raw) &&
+    (check.raw.source === "manual_admin" || check.raw.verification_origin === "manual_admin"));
+
+const registrySourceLabel = (source: AdminPsychologistsListRegistryVerification["source"]) => {
+  if (source === "manual_admin") return "Aprovação manual";
+  if (source === "api_automatica") return "API automática";
+  if (source === "admin_grant") return "Cortesia administrativa";
+
+  return "Sem origem aprovada";
+};
+
+const buildRegistryVerification = (
+  profile: AdminPsychologistListProfileRecord,
+): AdminPsychologistsListRegistryVerification => {
+  const latestCheck = profile.registry_checks[0] ?? null;
+  const latestManualApproval = profile.registry_checks.find(
+    (check) => isManualCheck(check) && check.found,
+  );
+  const latestStatus = rawAttemptStatus(latestCheck?.raw);
+  let source: AdminPsychologistsListRegistryVerification["source"] = "pendente";
+  let status: AdminPsychologistsListRegistryVerification["status"] = "pendente";
+  let status_label = "Pendente";
+
+  if (profile.crp_status === "aprovado") {
+    status = "aprovado";
+    if (
+      latestManualApproval &&
+      (!profile.cfp_verified_at || latestManualApproval.checked_at >= profile.cfp_verified_at)
+    ) {
+      source = "manual_admin";
+      status_label = "Aprovado manualmente";
+    } else if (profile.cfp_verified_at) {
+      source = "api_automatica";
+      status_label = "Aprovado via API automática";
+    } else if (
+      profile.subscriptions.some((subscription) => subscription.source === "admin_grant")
+    ) {
+      source = "admin_grant";
+      status_label = "Aprovado por cortesia administrativa";
+    } else {
+      source = latestManualApproval ? "manual_admin" : "api_automatica";
+      status_label = latestManualApproval ? "Aprovado manualmente" : "Aprovado";
+    }
+  } else if (profile.crp_status === "rejeitado") {
+    status = "rejeitado";
+    source = latestCheck && isManualCheck(latestCheck) ? "manual_admin" : "pendente";
+    status_label = "Rejeitado";
+  } else if (latestStatus === "provider_rate_limited") {
+    status = "limite_tentativas";
+    source = "api_automatica";
+    status_label = "Limite de tentativas atingido";
+  } else if (latestStatus === "provider_unavailable" || latestStatus === "provider_config_error") {
+    status = "api_indisponivel";
+    source = "api_automatica";
+    status_label = "API automática indisponível";
+  } else if (profile.crp_status === "em_analise") {
+    status = "em_analise";
+    source = latestCheck && isManualCheck(latestCheck) ? "manual_admin" : "api_automatica";
+    status_label = "Em análise";
+  }
+
+  return {
+    source,
+    source_label: registrySourceLabel(source),
+    status,
+    status_label,
+  };
 };
 
 const pickCurrentPlan = (profile: AdminPsychologistListProfileRecord, date: Date) => {
@@ -303,6 +386,7 @@ const buildItem = (
     social_value: profile.social_value,
     state: profile.professional_address_state,
     status,
+    registry_verification: buildRegistryVerification(profile),
     verified: status === "verified",
     whatsapp_clicks_count: params.whatsappCounts.get(profile.user.id) ?? 0,
   };

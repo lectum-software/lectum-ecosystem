@@ -156,6 +156,8 @@ export const adminPsychologistsKeys = {
   detail: (id: string) => [...adminPsychologistsKeys.all, "detail", id] as const,
   list: (input: PsychologistsListQuery) =>
     [...adminPsychologistsKeys.all, "list", normalizePsychologistsList(input)] as const,
+  registryVerification: (id: string) =>
+    [...adminPsychologistsKeys.all, "registry-verification", id] as const,
   publications: (id: string, input: AdminPsychologistPublicationsQuery) =>
     [
       ...adminPsychologistsKeys.all,

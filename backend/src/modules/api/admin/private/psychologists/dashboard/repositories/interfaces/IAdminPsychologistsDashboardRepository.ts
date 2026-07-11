@@ -30,6 +30,7 @@ export type AdminPsychologistProfileRecord = {
   createdAt: Date;
   crp: string | null;
   crp_registration_date: Date | null;
+  crp_status: string;
   discount_first_session: boolean;
   gender: string | null;
   headline: string | null;

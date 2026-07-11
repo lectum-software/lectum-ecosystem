@@ -29,7 +29,7 @@ import { type CfpSearchForm, useForm } from "./use-form";
 
 const nextStepHref = "/app/professional/profile/setup";
 const supportMessage =
-  "Ol\u00e1, preciso de ajuda com a verifica\u00e7\u00e3o profissional CFP/CRP na Lectum.";
+  "Ol\u00e1, preciso de ajuda com a verifica\u00e7\u00e3o profissional na Lectum.";
 const supportHref = `https://wa.me/5537998739534?text=${encodeURIComponent(supportMessage)}`;
 const supportLinkProps = {
   href: supportHref,
@@ -37,7 +37,7 @@ const supportLinkProps = {
   target: "_blank",
 } as const;
 const cfpSystemErrorMessage =
-  "N\u00e3o foi poss\u00edvel consultar o cadastro do Conselho Federal de Psicologia agora.";
+  "N\u00e3o foi poss\u00edvel concluir a verifica\u00e7\u00e3o autom\u00e1tica agora.";
 const genericStatusErrorPattern = /^Request failed with status code \d+$/i;
 
 type ApiError = Error & {
@@ -90,7 +90,7 @@ const resolveApiError = (error: unknown) => {
     code: getStringValue(data.code) || getStringValue(responseData.code),
     message:
       (shouldUseCfpSystemMessage ? cfpSystemErrorMessage : rawMessage) ||
-      "N\u00e3o foi poss\u00edvel consultar o CFP agora. Tente novamente.",
+      "N\u00e3o foi poss\u00edvel concluir a verifica\u00e7\u00e3o autom\u00e1tica agora. Tente novamente.",
     status,
   };
 };
@@ -222,7 +222,7 @@ const LoadingScreen = () => (
   <PageFrame>
     <PremiumPanel className="md:max-w-3xl md:justify-self-center">
       <CfpHero
-        description="Estamos verificando suas informações no Conselho Federal de Psicologia. A consulta real pode levar até um minuto."
+        description="Estamos verificando suas informações pela API automática. A consulta real pode levar até um minuto."
         title="Consultando seus dados"
       />
       <div className="mx-auto mt-8 grid max-w-md justify-items-center gap-4 rounded-[24px] border border-border bg-surface-muted px-5 py-6 text-center">
@@ -230,7 +230,7 @@ const LoadingScreen = () => (
           <Loader2 className="absolute h-16 w-16 animate-spin" aria-hidden="true" />
           <ShieldCheck className="h-6 w-6" aria-hidden="true" />
         </div>
-        <p className="text-sm font-semibold text-muted">Conexão segura com a consulta CFP</p>
+        <p className="text-sm font-semibold text-muted">Conexão segura com a API automática</p>
       </div>
     </PremiumPanel>
   </PageFrame>
@@ -265,14 +265,22 @@ const NotFoundScreen = ({ onRetry }: { onRetry: () => void }) => (
   </PageFrame>
 );
 
-const AlreadyVerifiedScreen = ({ cpf }: { cpf?: string | null }) => (
+const AlreadyVerifiedScreen = ({
+  cpf,
+  manualApproved,
+}: {
+  cpf?: string | null;
+  manualApproved: boolean;
+}) => (
   <PageFrame>
     <PremiumPanel className="md:max-w-3xl md:justify-self-center">
       <CfpHero
         description={
-          cpf
-            ? `O CPF ${formatCpf(cpf)} já possui confirmação profissional via CFP.`
-            : "Seu cadastro profissional já possui confirmação real via CFP."
+          manualApproved
+            ? "Seu CRP foi aprovado pela equipe Lectum."
+            : cpf
+              ? `O CPF ${formatCpf(cpf)} já possui confirmação profissional pela verificação automática.`
+              : "Seu cadastro profissional já possui confirmação real pela verificação automática."
         }
         eyebrow="Validação concluída"
         icon={ShieldCheck}
@@ -360,7 +368,7 @@ const ResultCard = ({
     </div>
 
     <p className="mt-5 border-border border-t pt-5 text-sm leading-6 text-muted">
-      Dados retornados pela consulta pública do CFP.
+      Dados retornados pela verificação automática.
     </p>
   </button>
 );
@@ -555,7 +563,17 @@ export const PsychologistCfpLogic = () => {
     currentUser?.psychologist_profile?.crp_status === "aprovado" ||
     currentUser?.psychologist_profile?.cfp_verified_at
   ) {
-    return <AlreadyVerifiedScreen cpf={currentUser.psychologist_profile.cpf} />;
+    const manualApproved = Boolean(
+      currentUser.psychologist_profile.crp_status === "aprovado" &&
+        !currentUser.psychologist_profile.cfp_verified_at,
+    );
+
+    return (
+      <AlreadyVerifiedScreen
+        cpf={currentUser.psychologist_profile.cpf}
+        manualApproved={manualApproved}
+      />
+    );
   }
 
   return (

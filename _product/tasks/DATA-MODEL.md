@@ -199,7 +199,7 @@ Quando construído: módulo de audiência próprio (ex.: `backend/src/modules/ma
 | `published` | `Boolean @default(false)` | só `true` aparece na busca (PRD §7: apenas ativos/verificados) |
 | `@@index([user_id])`, `@@index([published, deleted])` | | |
 
-Regra complementar de identidade profissional (TASK-34, atualizada em 2026-07-11): CPF e CRP permanecem editáveis em perfis gratuitos ou sem validação profissional usada para entitlement. A API privada de perfil deve expor o campo derivado `profile.identity_fields_locked=true` quando houver assinatura profissional ativa não gratuita com `cfp_verified_at` preenchido por consulta real autorizada e CPF/CRP persistidos. Complemento de cortesia: uma cortesia administrativa ativa (`professional_subscription.source="admin_grant"`, plano não gratuito, status vigente) também bloqueia CPF, Regional do CRP e Nº de registro CRP na edição do psicólogo, mesmo sem preencher artificialmente `cfp_verified_at`, porque o Admin passa a ser a fonte operacional desses campos durante a cortesia. Quando essa flag estiver ativa, o backend ignora qualquer tentativa de alterar CPF/CRP pelo perfil e o frontend renderiza os campos bloqueados.
+Regra complementar de identidade profissional (TASK-34, atualizada em 2026-07-11): CPF e CRP permanecem editáveis em perfis gratuitos ou sem validação profissional usada para entitlement. A API privada de perfil deve expor o campo derivado `profile.identity_fields_locked=true` quando houver assinatura profissional ativa não gratuita com `crp_status="aprovado"` ou `cfp_verified_at` preenchido por consulta real autorizada e CPF/CRP persistidos. Complemento de cortesia: uma cortesia administrativa ativa (`professional_subscription.source="admin_grant"`, plano não gratuito, status vigente) também bloqueia CPF, Regional do CRP e Nº de registro CRP na edição do psicólogo, mesmo sem preencher artificialmente `cfp_verified_at`, porque o Admin passa a ser a fonte operacional desses campos durante a cortesia. Quando essa flag estiver ativa, o backend ignora qualquer tentativa de alterar CPF/CRP pelo perfil e o frontend renderiza os campos bloqueados.
 
 `phone_verification` (OTP por SMS/Twilio para WhatsApp do psicólogo, TASK-16):
 
@@ -268,6 +268,8 @@ Especialidade, serviço e abordagem são filtros da busca (TASK-13) e seções d
 | `checked_at` | `DateTime @default(now())` | instante da consulta |
 | `@@index([psychologist_id, checked_at])` | | |
 | `@@index([cpf])` | | |
+
+Complemento TASK-66 (2026-07-11): a tabela também registra decisões manuais do Admin sem migration nova. Para aprovação/rejeição manual, usar `provider="manual_admin"`, `found=true|false`, `checked_at` da decisão e `raw` com `source="manual_admin"`, admin responsável, dados conferidos, motivo/observação e snapshot anterior/próximo. `psychologist_profile.cfp_verified_at` continua reservado exclusivamente para evidência da API automática real; a aprovação canônica de produto é `psychologist_profile.crp_status="aprovado"`.
 
 ---
 

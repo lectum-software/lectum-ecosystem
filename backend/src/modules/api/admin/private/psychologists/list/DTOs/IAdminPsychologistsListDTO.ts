@@ -49,6 +49,19 @@ export type AdminPsychologistsListOption = {
   label: string;
 };
 
+export type AdminPsychologistsListRegistryVerification = {
+  source: "admin_grant" | "api_automatica" | "manual_admin" | "pendente";
+  source_label: string;
+  status:
+    | "api_indisponivel"
+    | "aprovado"
+    | "em_analise"
+    | "limite_tentativas"
+    | "pendente"
+    | "rejeitado";
+  status_label: string;
+};
+
 export type AdminPsychologistsListFilters = {
   approaches: AdminPsychologistsListOption[];
   cities: AdminPsychologistsListOption[];
@@ -87,6 +100,7 @@ export type AdminPsychologistsListItem = {
   social_value: boolean;
   state: string | null;
   status: "free" | "pending" | "unpublished" | "verified";
+  registry_verification: AdminPsychologistsListRegistryVerification;
   verified: boolean;
   whatsapp_clicks_count: number;
 };

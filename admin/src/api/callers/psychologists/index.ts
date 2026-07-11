@@ -2,14 +2,18 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { adminPsychologistsKeys } from "@/api/cache/keys";
 import {
   type AdminPsychologistActivitiesQuery,
+  type AdminPsychologistApproveRegistryVerificationInput,
   type AdminPsychologistGrantCourtesyInput,
   type AdminPsychologistPublicationsQuery,
+  type AdminPsychologistRejectRegistryVerificationInput,
   type AdminPsychologistReportsQuery,
   type AdminPsychologistReviewsQuery,
+  approveAdminPsychologistRegistryVerification,
   getAdminPsychologistActivities,
   getAdminPsychologistBilling,
   getAdminPsychologistDetail,
   getAdminPsychologistPublications,
+  getAdminPsychologistRegistryVerification,
   getAdminPsychologistReports,
   getAdminPsychologistReviews,
   getAdminPsychologistStatistics,
@@ -18,6 +22,7 @@ import {
   grantAdminPsychologistCourtesy,
   type PsychologistsDashboardQuery,
   type PsychologistsListQuery,
+  rejectAdminPsychologistRegistryVerification,
   revokeAdminPsychologistCourtesy,
 } from "@/api/req/psychologists";
 
@@ -53,6 +58,16 @@ export const useAdminPsychologistBilling = (id: string, options: { enabled?: boo
     enabled: Boolean(id) && (options.enabled ?? true),
     queryFn: () => getAdminPsychologistBilling(id),
     queryKey: adminPsychologistsKeys.billing(id),
+  });
+
+export const useAdminPsychologistRegistryVerification = (
+  id: string,
+  options: { enabled?: boolean } = {},
+) =>
+  useQuery({
+    enabled: Boolean(id) && (options.enabled ?? true),
+    queryFn: () => getAdminPsychologistRegistryVerification(id),
+    queryKey: adminPsychologistsKeys.registryVerification(id),
   });
 
 export const useAdminPsychologistStatistics = (id: string, options: { enabled?: boolean } = {}) =>
@@ -132,6 +147,42 @@ export const useAdminPsychologistRevokeCourtesy = (id: string) => {
         queryClient.invalidateQueries({ queryKey: adminPsychologistsKeys.all }),
         queryClient.invalidateQueries({ queryKey: adminPsychologistsKeys.detail(id) }),
         queryClient.invalidateQueries({ queryKey: adminPsychologistsKeys.billing(id) }),
+      ]);
+    },
+  });
+};
+
+export const useAdminPsychologistApproveRegistryVerification = (id: string) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (input: AdminPsychologistApproveRegistryVerificationInput) =>
+      approveAdminPsychologistRegistryVerification(id, input),
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: adminPsychologistsKeys.all }),
+        queryClient.invalidateQueries({ queryKey: adminPsychologistsKeys.detail(id) }),
+        queryClient.invalidateQueries({
+          queryKey: adminPsychologistsKeys.registryVerification(id),
+        }),
+      ]);
+    },
+  });
+};
+
+export const useAdminPsychologistRejectRegistryVerification = (id: string) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (input: AdminPsychologistRejectRegistryVerificationInput) =>
+      rejectAdminPsychologistRegistryVerification(id, input),
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: adminPsychologistsKeys.all }),
+        queryClient.invalidateQueries({ queryKey: adminPsychologistsKeys.detail(id) }),
+        queryClient.invalidateQueries({
+          queryKey: adminPsychologistsKeys.registryVerification(id),
+        }),
       ]);
     },
   });

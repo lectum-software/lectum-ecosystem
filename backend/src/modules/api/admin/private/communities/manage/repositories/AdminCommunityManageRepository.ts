@@ -1,8 +1,8 @@
 ﻿import type { Prisma } from "@/external/generated/prisma/client";
 import prisma from "@/infra/database/prisma";
 import {
-  activeProfessionalCourtesyEntitlementWhere,
   activeProfessionalEntitlementWhere,
+  verifiedProfessionalProfileWhere,
 } from "@/utils/subscription-entitlement";
 import type {
   AdminCommunityRuleBody,
@@ -215,11 +215,7 @@ export class AdminCommunityManageRepository {
           psychologist_profile: {
             is: {
               deleted: false,
-              OR: [
-                { cfp_verified_at: { not: null } },
-                { subscriptions: { some: activeProfessionalCourtesyEntitlementWhere() } },
-                { subscriptions: { some: activeProfessionalEntitlementWhere() } },
-              ],
+              ...verifiedProfessionalProfileWhere(),
             },
           },
         },
@@ -238,15 +234,11 @@ export class AdminCommunityManageRepository {
             psychologist_profile: {
               select: {
                 cfp_verified_at: true,
+                crp_status: true,
                 crp: true,
                 rating_avg: true,
                 subscriptions: {
-                  where: {
-                    OR: [
-                      activeProfessionalCourtesyEntitlementWhere(),
-                      activeProfessionalEntitlementWhere(),
-                    ],
-                  },
+                  where: activeProfessionalEntitlementWhere(),
                   select: { id: true },
                 },
               },

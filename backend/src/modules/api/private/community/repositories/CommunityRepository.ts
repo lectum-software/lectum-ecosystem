@@ -5,8 +5,9 @@ import { getPostIdsWithPsychologistReplies } from "@/utils/community-post-replie
 import { getMutedPostIds } from "@/utils/post-notification-mute";
 import { normalizeProfessionalDisplayName } from "@/utils/professional-name";
 import {
-  activeProfessionalCourtesyEntitlementWhere,
   activeProfessionalEntitlementWhere,
+  isVerifiedProfessionalEntitlement,
+  verifiedProfessionalProfileWhere,
 } from "@/utils/subscription-entitlement";
 import { buildLectumWhatsappUrl, type LectumWhatsappMessageSource } from "@/utils/whatsapp-contact";
 import type {
@@ -75,6 +76,7 @@ const professionalProfileSelect = {
   crp: true,
   whatsapp: true,
   cfp_verified_at: true,
+  crp_status: true,
   subscriptions: {
     where: activeProfessionalEntitlementWhere(),
     select: {
@@ -150,18 +152,7 @@ const postSelect = {
         psychologist_profile: {
           is: {
             deleted: false,
-            OR: [
-              {
-                cfp_verified_at: {
-                  not: null,
-                },
-              },
-              {
-                subscriptions: {
-                  some: activeProfessionalCourtesyEntitlementWhere(),
-                },
-              },
-            ],
+            ...verifiedProfessionalProfileWhere(),
           },
         },
       },
@@ -645,13 +636,12 @@ const anonymousDisplayNameForAuthor = (authorId: string) => {
 };
 
 const isProfessionalVerified = (
-  profile?: { cfp_verified_at: Date | null; subscriptions: { source?: string | null }[] } | null,
-) => {
-  return Boolean(
-    profile?.cfp_verified_at ||
-      profile?.subscriptions.some((subscription) => subscription.source === "admin_grant"),
-  );
-};
+  profile?: {
+    cfp_verified_at: Date | null;
+    crp_status?: string | null;
+    subscriptions: { source?: string | null }[];
+  } | null,
+) => isVerifiedProfessionalEntitlement(profile);
 
 const hasPaidProfessionalEntitlement = (profile?: { subscriptions: { id: string }[] } | null) => {
   return Boolean(profile?.subscriptions.length);
@@ -660,6 +650,7 @@ const hasPaidProfessionalEntitlement = (profile?: { subscriptions: { id: string 
 const buildProfessionalWhatsappUrl = (
   profile?: {
     cfp_verified_at: Date | null;
+    crp_status?: string | null;
     subscriptions: { id: string; source?: string | null }[];
     whatsapp: string | null;
   } | null,
@@ -676,6 +667,7 @@ const buildProfessionalWhatsappUrl = (
 const mentorBadgeForScore = (
   profile?: {
     cfp_verified_at: Date | null;
+    crp_status?: string | null;
     subscriptions: { id: string; source?: string | null }[];
   } | null,
   score = 0,
@@ -1703,21 +1695,7 @@ export class CommunityRepository implements ICommunityRepository {
                 video_url: "",
               },
             ],
-            subscriptions: {
-              some: activeProfessionalEntitlementWhere(),
-            },
-            OR: [
-              {
-                cfp_verified_at: {
-                  not: null,
-                },
-              },
-              {
-                subscriptions: {
-                  some: activeProfessionalCourtesyEntitlementWhere(),
-                },
-              },
-            ],
+            ...verifiedProfessionalProfileWhere(),
           },
         },
       },

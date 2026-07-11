@@ -29,6 +29,7 @@ export type AdminPsychologistListProfileRecord = {
   createdAt: Date;
   crp: string | null;
   crp_registration_date: Date | null;
+  crp_status: string;
   discount_first_session: boolean;
   gender: string | null;
   headline: string | null;
@@ -40,6 +41,13 @@ export type AdminPsychologistListProfileRecord = {
   published: boolean;
   rating_avg: number;
   rating_count: number;
+  registry_checks: Array<{
+    checked_at: Date;
+    createdAt: Date;
+    found: boolean;
+    provider: string;
+    raw: Prisma.JsonValue | null;
+  }>;
   social_value: boolean;
   subscriptions: AdminPsychologistListSubscriptionRecord[];
   target_audience: Prisma.JsonValue | null;
@@ -78,7 +86,7 @@ export type AdminPsychologistListProfileRecord = {
 
 export type AdminPsychologistListRankingCandidateRecord = Omit<
   AdminPsychologistListProfileRecord,
-  "subscriptions"
+  "registry_checks" | "subscriptions"
 > & {
   subscriptions: Array<{
     id: string;

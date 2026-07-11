@@ -18,7 +18,10 @@ import type {
 } from "@/interfaces/pagination";
 //Utils
 import { format } from "@/utils/pagination";
-import { activeProfessionalEntitlementWhere } from "@/utils/subscription-entitlement";
+import {
+  activeProfessionalEntitlementWhere,
+  isVerifiedProfessionalEntitlement,
+} from "@/utils/subscription-entitlement";
 //DTOs
 import type {
   //*
@@ -39,6 +42,7 @@ const notificationAuthorSelect = {
     select: {
       gender: true,
       cfp_verified_at: true,
+      crp_status: true,
       subscriptions: {
         where: activeProfessionalEntitlementWhere(),
         select: {
@@ -84,12 +88,12 @@ const professionalLabelForGender = (gender?: string | null) => {
 };
 
 const isProfessionalVerified = (
-  profile?: { cfp_verified_at: Date | null; subscriptions: { source?: string | null }[] } | null,
-) =>
-  Boolean(
-    profile?.cfp_verified_at ||
-      profile?.subscriptions.some((subscription) => subscription.source === "admin_grant"),
-  );
+  profile?: {
+    cfp_verified_at: Date | null;
+    crp_status?: string | null;
+    subscriptions: { source?: string | null }[];
+  } | null,
+) => isVerifiedProfessionalEntitlement(profile);
 
 const toNotificationActor = (author: NotificationAuthor, anonymous = false) => {
   const isPsychologist = author.role === "psicologo";

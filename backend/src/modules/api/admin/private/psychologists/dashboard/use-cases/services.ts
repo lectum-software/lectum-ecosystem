@@ -266,6 +266,7 @@ const hasVerifiedEntitlementAt = (profile: AdminPsychologistProfileRecord, date:
   const entitlements = activeProfessionalSubscriptionsAt(profile, date);
   if (entitlements.length === 0) return false;
 
+  if (profile.crp_status === "aprovado") return true;
   if (profile.cfp_verified_at && profile.cfp_verified_at <= date) return true;
 
   return entitlements.some(
@@ -695,11 +696,11 @@ export const buildPsychologistsDashboard = async (
       verified_psychologists: metric({
         current: currentVerified.length,
         description:
-          "Psicólogos com entitlement profissional ativo e validação CFP ou cortesia administrativa ativa.",
+          "Psicólogos com entitlement profissional ativo e verificação profissional canônica ou cortesia administrativa ativa.",
         id: "verified_psychologists",
         label: "Psicólogos verificados",
         previous: previousVerified.length,
-        source: "psychologist_profile.cfp_verified_at+professional_subscription",
+        source: "psychologist_profile.crp_status+professional_subscription",
       }),
     },
     filters_searches: {

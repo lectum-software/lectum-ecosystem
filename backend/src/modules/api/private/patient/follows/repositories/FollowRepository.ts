@@ -124,6 +124,7 @@ export class FollowRepository implements IFollowRepository {
                   rating_avg: true,
                   rating_count: true,
                   cfp_verified_at: true,
+                  crp_status: true,
                   subscriptions: {
                     where: activeProfessionalEntitlementWhere(),
                     select: {

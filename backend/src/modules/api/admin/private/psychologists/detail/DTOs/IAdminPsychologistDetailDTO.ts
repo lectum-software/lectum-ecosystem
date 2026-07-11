@@ -27,7 +27,7 @@ export type AdminPsychologistDetailEvent = {
 
 export type AdminPsychologistIntegrationStatus = {
   checked_at: Date | null;
-  id: "cfp" | "email" | "mercado_pago" | "subscription" | "whatsapp";
+  id: "email" | "mercado_pago" | "registry" | "subscription" | "whatsapp";
   label: string;
   source: string;
   status: "active" | "configured" | "missing" | "pending" | "synced" | "unavailable";

@@ -51,11 +51,11 @@ export const activeProfessionalCourtesyEntitlementWhere =
     source: "admin_grant",
   });
 
-export const verifiedProfessionalProfileWhere = (): Prisma.psychologist_profileWhereInput => ({
-  subscriptions: {
-    some: activeProfessionalEntitlementWhere(),
-  },
+export const professionalRegistryApprovalWhere = (): Prisma.psychologist_profileWhereInput => ({
   OR: [
+    {
+      crp_status: "aprovado",
+    },
     {
       cfp_verified_at: {
         not: null,
@@ -69,12 +69,33 @@ export const verifiedProfessionalProfileWhere = (): Prisma.psychologist_profileW
   ],
 });
 
+export const verifiedProfessionalProfileWhere = (): Prisma.psychologist_profileWhereInput => ({
+  subscriptions: {
+    some: activeProfessionalEntitlementWhere(),
+  },
+  ...professionalRegistryApprovalWhere(),
+});
+
 export type ProfessionalVerificationProfile = {
   cfp_verified_at?: Date | string | null;
+  crp_status?: string | null;
   subscriptions?: Array<{
     id?: string | null;
     source?: string | null;
   }> | null;
+};
+
+export const hasProfessionalRegistryApproval = (
+  profile?: ProfessionalVerificationProfile | null,
+) => {
+  const subscriptions = profile?.subscriptions ?? [];
+  const hasCrpStatusApproval = profile?.crp_status === "aprovado";
+  const hasAutomaticEvidence = Boolean(profile?.cfp_verified_at);
+  const hasAdministrativeCourtesy = subscriptions.some(
+    (subscription) => subscription.source === "admin_grant",
+  );
+
+  return hasCrpStatusApproval || hasAutomaticEvidence || hasAdministrativeCourtesy;
 };
 
 export const isVerifiedProfessionalEntitlement = (
@@ -82,10 +103,6 @@ export const isVerifiedProfessionalEntitlement = (
 ) => {
   const subscriptions = profile?.subscriptions ?? [];
   const hasProfessionalEntitlement = subscriptions.length > 0;
-  const hasRegistryVerification = Boolean(profile?.cfp_verified_at);
-  const hasAdministrativeCourtesy = subscriptions.some(
-    (subscription) => subscription.source === "admin_grant",
-  );
 
-  return hasProfessionalEntitlement && (hasRegistryVerification || hasAdministrativeCourtesy);
+  return hasProfessionalEntitlement && hasProfessionalRegistryApproval(profile);
 };

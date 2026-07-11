@@ -34,6 +34,7 @@ import {
   UserRound,
   Video,
   Wallet,
+  X,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -44,10 +45,13 @@ import { toast } from "sonner";
 import { z } from "zod";
 import {
   useAdminPsychologistActivities,
+  useAdminPsychologistApproveRegistryVerification,
   useAdminPsychologistBilling,
   useAdminPsychologistDetail,
   useAdminPsychologistGrantCourtesy,
   useAdminPsychologistPublications,
+  useAdminPsychologistRegistryVerification,
+  useAdminPsychologistRejectRegistryVerification,
   useAdminPsychologistReports,
   useAdminPsychologistReviews,
   useAdminPsychologistRevokeCourtesy,
@@ -66,6 +70,8 @@ import type {
   AdminPsychologistPublicationItem,
   AdminPsychologistPublicationMetric,
   AdminPsychologistPublicationsQuery,
+  AdminPsychologistRegistryVerification,
+  AdminPsychologistRegistryVerificationAttempt,
   AdminPsychologistReportItem,
   AdminPsychologistReportsQuery,
   AdminPsychologistReviewItem,
@@ -165,6 +171,15 @@ const INTEGRATION_TONE: Record<AdminPsychologistIntegrationStatus["status"], str
   unavailable: "bg-surface-muted text-muted",
 };
 
+const REGISTRY_VERIFICATION_TONE: Record<string, string> = {
+  api_indisponivel: "bg-orange-50 text-orange-700",
+  aprovado: "bg-emerald-50 text-success",
+  em_analise: "bg-blue-50 text-blue-700",
+  limite_tentativas: "bg-orange-50 text-orange-700",
+  pendente: "bg-surface-muted text-muted",
+  rejeitado: "bg-red-50 text-danger",
+};
+
 const METRIC_ICONS: Record<string, LucideIcon> = {
   favorites: Heart,
   profile_views: Eye,
@@ -221,6 +236,61 @@ const isValidCpf = (value: string) => {
 
   return digit1 === Number(cpf[9]) && digit2 === Number(cpf[10]);
 };
+
+const registryApproveBaseSchema = z.object({
+  confirmation: z.string(),
+  cpf: z
+    .string()
+    .min(1, "Informe o CPF.")
+    .refine((value) => isValidCpf(value), "Informe um CPF válido."),
+  crp: z.string().min(1, "Informe o número do CRP.").max(40, "Use no máximo 40 caracteres."),
+  crp_registration_date: z.string().min(1, "Informe a data de inscrição no CRP."),
+  notes: z
+    .string()
+    .min(10, "Descreva a evidência interna com pelo menos 10 caracteres.")
+    .max(1000, "Use no máximo 1000 caracteres."),
+  regional_crp: z.string().min(1, "Selecione a regional do CRP."),
+  situation_confirmed: z.string(),
+});
+
+const registryApproveSchema = registryApproveBaseSchema.superRefine((values, ctx) => {
+  if (values.confirmation.trim() !== "APROVAR CRP") {
+    ctx.addIssue({
+      code: "custom",
+      message: "Digite APROVAR CRP para confirmar.",
+      path: ["confirmation"],
+    });
+  }
+
+  if (values.situation_confirmed !== "sim") {
+    ctx.addIssue({
+      code: "custom",
+      message: "Confirme que a situação foi verificada.",
+      path: ["situation_confirmed"],
+    });
+  }
+});
+
+const registryRejectBaseSchema = z.object({
+  confirmation: z.string(),
+  reason: z
+    .string()
+    .min(10, "Informe um motivo em PT-BR com pelo menos 10 caracteres.")
+    .max(1000, "Use no máximo 1000 caracteres."),
+});
+
+const registryRejectSchema = registryRejectBaseSchema.superRefine((values, ctx) => {
+  if (values.confirmation.trim() !== "REJEITAR CRP") {
+    ctx.addIssue({
+      code: "custom",
+      message: "Digite REJEITAR CRP para confirmar.",
+      path: ["confirmation"],
+    });
+  }
+});
+
+type RegistryApproveFormValues = z.infer<typeof registryApproveBaseSchema>;
+type RegistryRejectFormValues = z.infer<typeof registryRejectBaseSchema>;
 
 const createCourtesySchema = (requiresCrpRegistrationDate: boolean) =>
   courtesyBaseSchema.superRefine((values, ctx) => {
@@ -2902,7 +2972,404 @@ const PlanBillingTab = ({ id }: { detail: AdminPsychologistDetail; id: string })
   );
 };
 
-const ProfileTab = ({ detail }: { detail: AdminPsychologistDetail }) => {
+const registryVerificationBadge = (registry: AdminPsychologistRegistryVerification) => (
+  <Badge
+    className={REGISTRY_VERIFICATION_TONE[registry.summary.status] ?? "bg-surface-muted text-muted"}
+  >
+    {registry.summary.status_label}
+  </Badge>
+);
+
+const RegistryAttemptItem = ({
+  attempt,
+}: {
+  attempt: AdminPsychologistRegistryVerificationAttempt;
+}) => (
+  <li className="rounded-2xl border border-border bg-surface-muted/50 p-3">
+    <div className="flex flex-wrap items-center justify-between gap-2">
+      <div>
+        <p className="text-sm font-black text-foreground">{attempt.result_label}</p>
+        <p className="text-xs font-bold text-muted">
+          {attempt.source_label} · {formatDateTime(attempt.checked_at)}
+        </p>
+      </div>
+      <Badge
+        className={attempt.found ? "bg-emerald-50 text-success" : "bg-surface-muted text-muted"}
+      >
+        {attempt.found ? "Encontrado" : "Sem aprovação"}
+      </Badge>
+    </div>
+    <div className="mt-3 grid gap-2 text-xs font-bold text-muted sm:grid-cols-2">
+      <span>CPF: {attempt.cpf_masked || "Não informado"}</span>
+      <span>
+        CRP:{" "}
+        {[attempt.regional_crp, attempt.registration_number].filter(Boolean).join(" / ") ||
+          "Não informado"}
+      </span>
+    </div>
+    {attempt.responsible_admin ? (
+      <p className="mt-2 text-xs font-bold text-muted">
+        Responsável:{" "}
+        {[attempt.responsible_admin.name, attempt.responsible_admin.email]
+          .filter(Boolean)
+          .join(" · ") || "Admin Lectum"}
+      </p>
+    ) : null}
+    {attempt.notes || attempt.reason ? (
+      <p className="mt-2 rounded-xl bg-surface px-3 py-2 text-xs font-bold leading-5 text-muted">
+        {attempt.notes || attempt.reason}
+      </p>
+    ) : null}
+  </li>
+);
+
+const RegistryVerificationDialog = ({
+  children,
+  onClose,
+  title,
+}: {
+  children: ReactNode;
+  onClose: () => void;
+  title: string;
+}) => (
+  <div
+    aria-modal="true"
+    className="fixed inset-0 z-50 flex items-end justify-center bg-foreground/40 p-0 sm:items-center sm:p-4"
+    role="dialog"
+  >
+    <div className="max-h-[92vh] w-full overflow-y-auto rounded-t-[28px] border border-border bg-surface p-5 shadow-admin-soft sm:max-w-2xl sm:rounded-[28px]">
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <p className="text-xs font-black uppercase tracking-[0.2em] text-primary">
+            Verificação profissional
+          </p>
+          <h3 className="mt-1 text-xl font-black text-foreground">{title}</h3>
+        </div>
+        <button
+          aria-label="Fechar"
+          className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-border text-muted transition hover:bg-surface-muted"
+          onClick={onClose}
+          type="button"
+        >
+          <X aria-hidden className="h-4 w-4" />
+        </button>
+      </div>
+      <div className="mt-5">{children}</div>
+    </div>
+  </div>
+);
+
+const RegistryApproveForm = ({
+  id,
+  onClose,
+  registry,
+}: {
+  id: string;
+  onClose: () => void;
+  registry: AdminPsychologistRegistryVerification;
+}) => {
+  const mutation = useAdminPsychologistApproveRegistryVerification(id);
+  const form = useForm<RegistryApproveFormValues>({
+    defaultValues: {
+      confirmation: "",
+      cpf: formatCpfInput(registry.identity.cpf),
+      crp: registry.identity.registration_number || "",
+      crp_registration_date: formatInputDate(registry.identity.crp_registration_date),
+      notes: "",
+      regional_crp: registry.identity.regional_crp || "",
+      situation_confirmed: "",
+    },
+    mode: "onSubmit",
+    resolver: zodResolver(registryApproveSchema),
+  });
+  const regionalOptions = useMemo(
+    () => createCrpRegionSelectOptions(registry.identity.regional_crp),
+    [registry.identity.regional_crp],
+  );
+
+  useEffect(() => {
+    form.reset({
+      confirmation: "",
+      cpf: formatCpfInput(registry.identity.cpf),
+      crp: registry.identity.registration_number || "",
+      crp_registration_date: formatInputDate(registry.identity.crp_registration_date),
+      notes: "",
+      regional_crp: registry.identity.regional_crp || "",
+      situation_confirmed: "",
+    });
+  }, [form, registry.identity]);
+
+  const onSubmit: SubmitHandler<RegistryApproveFormValues> = async (values) => {
+    try {
+      await mutation.mutateAsync({
+        confirmation: values.confirmation.trim(),
+        cpf: normalizeCpfInput(values.cpf),
+        crp: values.crp.trim(),
+        crp_registration_date: values.crp_registration_date.trim(),
+        notes: values.notes.trim(),
+        regional_crp: values.regional_crp.trim(),
+        situation_confirmed: values.situation_confirmed === "sim",
+      });
+      toast.success("CRP aprovado manualmente.");
+      onClose();
+    } catch (error) {
+      toast.error(resolveApiError(error));
+    }
+  };
+
+  return (
+    <FormProvider {...form}>
+      <form className="space-y-4" noValidate onSubmit={form.handleSubmit(onSubmit)}>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <SelectController<RegistryApproveFormValues>
+            disabled={mutation.isPending}
+            label="Regional CRP"
+            name="regional_crp"
+            options={regionalOptions}
+            required
+          />
+          <InputController<RegistryApproveFormValues>
+            autoComplete="off"
+            disabled={mutation.isPending}
+            label="Nº CRP"
+            name="crp"
+            placeholder="Número do registro"
+            required
+          />
+          <InputController<RegistryApproveFormValues>
+            autoComplete="off"
+            disabled={mutation.isPending}
+            inputMode="numeric"
+            label="CPF"
+            maskValue={formatCpfInput}
+            maxLength={14}
+            name="cpf"
+            placeholder="000.000.000-00"
+            required
+          />
+          <InputController<RegistryApproveFormValues>
+            disabled={mutation.isPending}
+            label="Data de inscrição no CRP"
+            name="crp_registration_date"
+            required
+            type="date"
+          />
+        </div>
+        <SelectController<RegistryApproveFormValues>
+          disabled={mutation.isPending}
+          label="Situação confirmada"
+          name="situation_confirmed"
+          options={[
+            { label: "Selecione", value: "" },
+            { label: "Sim, situação ativa conferida", value: "sim" },
+          ]}
+          required
+        />
+        <TextareaController<RegistryApproveFormValues>
+          disabled={mutation.isPending}
+          label="Observação/evidência interna"
+          name="notes"
+          placeholder="Descreva a evidência consultada e a decisão operacional."
+          required
+          rows={4}
+        />
+        <InputController<RegistryApproveFormValues>
+          autoComplete="off"
+          disabled={mutation.isPending}
+          label="Confirmação forte"
+          name="confirmation"
+          placeholder="Digite APROVAR CRP"
+          required
+        />
+        <button
+          className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-control bg-primary px-4 text-sm font-black text-white transition hover:bg-primary-hover disabled:cursor-not-allowed disabled:bg-surface-muted disabled:text-muted"
+          disabled={mutation.isPending}
+          type="submit"
+        >
+          {mutation.isPending ? <Loader2 aria-hidden className="h-4 w-4 animate-spin" /> : null}
+          Aprovar CRP manualmente
+        </button>
+      </form>
+    </FormProvider>
+  );
+};
+
+const RegistryRejectForm = ({ id, onClose }: { id: string; onClose: () => void }) => {
+  const mutation = useAdminPsychologistRejectRegistryVerification(id);
+  const form = useForm<RegistryRejectFormValues>({
+    defaultValues: {
+      confirmation: "",
+      reason: "",
+    },
+    mode: "onSubmit",
+    resolver: zodResolver(registryRejectSchema),
+  });
+
+  const onSubmit: SubmitHandler<RegistryRejectFormValues> = async (values) => {
+    try {
+      await mutation.mutateAsync({
+        confirmation: values.confirmation.trim(),
+        reason: values.reason.trim(),
+      });
+      toast.success("Verificação rejeitada.");
+      onClose();
+    } catch (error) {
+      toast.error(resolveApiError(error));
+    }
+  };
+
+  return (
+    <FormProvider {...form}>
+      <form className="space-y-4" noValidate onSubmit={form.handleSubmit(onSubmit)}>
+        <TextareaController<RegistryRejectFormValues>
+          disabled={mutation.isPending}
+          label="Motivo da rejeição"
+          name="reason"
+          placeholder="Explique em PT-BR o motivo operacional da rejeição."
+          required
+          rows={5}
+        />
+        <InputController<RegistryRejectFormValues>
+          autoComplete="off"
+          disabled={mutation.isPending}
+          label="Confirmação forte"
+          name="confirmation"
+          placeholder="Digite REJEITAR CRP"
+          required
+        />
+        <button
+          className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-control bg-danger px-4 text-sm font-black text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:bg-surface-muted disabled:text-muted"
+          disabled={mutation.isPending}
+          type="submit"
+        >
+          {mutation.isPending ? <Loader2 aria-hidden className="h-4 w-4 animate-spin" /> : null}
+          Rejeitar verificação
+        </button>
+      </form>
+    </FormProvider>
+  );
+};
+
+const RegistryVerificationCard = ({ id }: { id: string }) => {
+  const [action, setAction] = useState<"approve" | "reject" | null>(null);
+  const query = useAdminPsychologistRegistryVerification(id);
+  const errorMessage = query.error ? resolveApiError(query.error) : null;
+
+  if (query.isLoading) {
+    return (
+      <CardShell className="p-5">
+        <div className="h-40 animate-pulse rounded-3xl bg-surface-muted" />
+      </CardShell>
+    );
+  }
+
+  if (query.isError && errorMessage) {
+    return <ErrorState message={errorMessage} onRetry={() => void query.refetch()} />;
+  }
+
+  const registry = query.data;
+  if (!registry) return null;
+
+  return (
+    <CardShell className="p-5">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div className="flex items-start gap-3">
+          <IconCircle icon={ShieldCheck} />
+          <div>
+            <h2 className="text-lg font-black text-foreground">Verificação profissional</h2>
+            <p className="mt-1 text-sm font-bold text-muted">
+              Aprovação canônica do CRP sem expor fornecedor externo.
+            </p>
+          </div>
+        </div>
+        {registryVerificationBadge(registry)}
+      </div>
+
+      <div className="mt-5 grid gap-3">
+        <FieldRow label="CPF" value={registry.identity.cpf_masked || "Não informado"} />
+        <FieldRow label="Regional CRP" value={formatNullable(registry.identity.regional_crp)} />
+        <FieldRow label="Nº CRP" value={formatNullable(registry.identity.registration_number)} />
+        <FieldRow
+          label="Data de inscrição"
+          value={formatDate(registry.identity.crp_registration_date)}
+        />
+        <FieldRow label="Status atual" value={registry.summary.status_label} />
+        <FieldRow label="Origem" value={registry.summary.source_label} />
+        <FieldRow
+          label="Responsável manual"
+          value={
+            registry.summary.latest_manual_admin
+              ? [
+                  registry.summary.latest_manual_admin.name,
+                  registry.summary.latest_manual_admin.email,
+                ]
+                  .filter(Boolean)
+                  .join(" · ") || "Admin Lectum"
+              : "Não informado"
+          }
+        />
+        <FieldRow
+          label="Data manual"
+          value={formatDateTime(registry.summary.latest_manual_checked_at)}
+        />
+        <FieldRow
+          label="Observações manuais"
+          value={formatNullable(
+            registry.summary.latest_manual_notes || registry.summary.latest_manual_reason,
+          )}
+        />
+      </div>
+
+      <div className="mt-5">
+        <h3 className="text-sm font-black text-foreground">Últimas tentativas</h3>
+        {registry.latest_attempts.length === 0 ? (
+          <p className="mt-3 rounded-2xl bg-surface-muted p-4 text-sm font-bold text-muted">
+            Nenhuma tentativa automática ou decisão manual registrada.
+          </p>
+        ) : (
+          <ul className="mt-3 space-y-3">
+            {registry.latest_attempts.slice(0, 4).map((attempt) => (
+              <RegistryAttemptItem attempt={attempt} key={attempt.id} />
+            ))}
+          </ul>
+        )}
+      </div>
+
+      <div className="mt-5 grid gap-3 sm:grid-cols-2">
+        <button
+          className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-control bg-primary px-4 text-sm font-black text-white transition hover:bg-primary-hover"
+          onClick={() => setAction("approve")}
+          type="button"
+        >
+          <ShieldCheck aria-hidden className="h-4 w-4" />
+          Aprovar CRP manualmente
+        </button>
+        <button
+          className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-control border border-danger bg-surface px-4 text-sm font-black text-danger transition hover:bg-red-50"
+          onClick={() => setAction("reject")}
+          type="button"
+        >
+          <AlertTriangle aria-hidden className="h-4 w-4" />
+          Rejeitar verificação
+        </button>
+      </div>
+
+      {action === "approve" ? (
+        <RegistryVerificationDialog onClose={() => setAction(null)} title="Aprovar CRP manualmente">
+          <RegistryApproveForm id={id} onClose={() => setAction(null)} registry={registry} />
+        </RegistryVerificationDialog>
+      ) : null}
+
+      {action === "reject" ? (
+        <RegistryVerificationDialog onClose={() => setAction(null)} title="Rejeitar verificação">
+          <RegistryRejectForm id={id} onClose={() => setAction(null)} />
+        </RegistryVerificationDialog>
+      ) : null}
+    </CardShell>
+  );
+};
+
+const ProfileTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: string }) => {
   const profile = detail.profile;
   const professional = profile.professional;
   const personal = profile.personal;
@@ -2980,6 +3447,8 @@ const ProfileTab = ({ detail }: { detail: AdminPsychologistDetail }) => {
             <FieldRow label="Cadastro via" value={formatNullable(personal.provider)} />
             <FieldRow label="Data cadastro Lectum" value={formatDate(detail.header.created_at)} />
           </InfoCard>
+
+          <RegistryVerificationCard id={id} />
 
           <InfoCard icon={BookOpen} title="Formação & Títulos">
             {hasAcademicFormation ? (
@@ -3089,7 +3558,7 @@ const Content = ({
     <DetailHeader detail={detail} tab={tab} />
 
     {tab === "perfil" ? (
-      <ProfileTab detail={detail} />
+      <ProfileTab detail={detail} id={id} />
     ) : tab === "plano" ? (
       <PlanBillingTab detail={detail} id={id} />
     ) : tab === "estatisticas" ? (

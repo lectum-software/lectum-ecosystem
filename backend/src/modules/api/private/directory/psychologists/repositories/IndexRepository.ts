@@ -309,6 +309,7 @@ export class IndexRepository implements IIndexRepository {
           cpf: true,
           crp_registration_date: true,
           cfp_verified_at: true,
+          crp_status: true,
           gender: true,
           target_audience: true,
           discount_first_session: true,

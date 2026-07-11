@@ -29,6 +29,7 @@ const profileBaseSelect = {
   createdAt: true,
   crp: true,
   crp_registration_date: true,
+  crp_status: true,
   discount_first_session: true,
   gender: true,
   headline: true,

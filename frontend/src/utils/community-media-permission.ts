@@ -32,7 +32,10 @@ export const hasActiveProfessionalCourtesyGrant = (userData?: user | null) =>
 
 export const getCommunityMediaPermission = (userData?: user | null): CommunityMediaPermission => {
   const activeProfessionalPlan = hasActiveProfessionalMediaPlan(userData);
-  const hasVerifiedIdentity = Boolean(userData?.psychologist_profile?.cfp_verified_at);
+  const hasVerifiedIdentity = Boolean(
+    userData?.psychologist_profile?.crp_status === "aprovado" ||
+      userData?.psychologist_profile?.cfp_verified_at,
+  );
   const hasCourtesyGrant = hasActiveProfessionalCourtesyGrant(userData);
   const canAttach = Boolean(
     userData?.role === "psicologo" &&
