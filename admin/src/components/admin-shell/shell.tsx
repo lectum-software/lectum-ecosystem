@@ -31,7 +31,7 @@ const SidebarContent = ({ collapsed, onNavigate, onRequestExpand }: SidebarConte
   }, [adminName]);
 
   return (
-    <div className="flex h-full flex-col bg-sidebar text-sidebar-foreground">
+    <div className="scrollbar-none flex h-full flex-col overflow-y-auto overscroll-contain bg-sidebar text-sidebar-foreground">
       <div
         className={cn(
           "flex h-20 shrink-0 items-center gap-3 px-5",
@@ -56,10 +56,7 @@ const SidebarContent = ({ collapsed, onNavigate, onRequestExpand }: SidebarConte
         />
       </div>
 
-      <nav
-        aria-label="Menu administrativo"
-        className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 py-4"
-      >
+      <nav aria-label="Menu administrativo" className="shrink-0 px-3 py-4">
         <div className="space-y-1">
           {adminNavItems.map((item) => {
             const Icon = item.icon;
