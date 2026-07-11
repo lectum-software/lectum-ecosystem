@@ -3000,7 +3000,6 @@ const RegistryAttemptItem = ({
       </Badge>
     </div>
     <div className="mt-3 grid gap-2 text-xs font-bold text-muted sm:grid-cols-2">
-      <span>CPF: {attempt.cpf_masked || "Não informado"}</span>
       <span>
         CRP:{" "}
         {[attempt.regional_crp, attempt.registration_number].filter(Boolean).join(" / ") ||
@@ -3276,17 +3275,13 @@ const RegistryVerificationCard = ({ id }: { id: string }) => {
         <div className="flex items-start gap-3">
           <IconCircle icon={ShieldCheck} />
           <div>
-            <h2 className="text-lg font-black text-foreground">Verificação profissional</h2>
-            <p className="mt-1 text-sm font-bold text-muted">
-              Aprovação canônica do CRP sem expor fornecedor externo.
-            </p>
+            <h2 className="text-lg font-black text-foreground">Registro profissional</h2>
           </div>
         </div>
         {registryVerificationBadge(registry)}
       </div>
 
       <div className="mt-5 grid gap-3">
-        <FieldRow label="CPF" value={registry.identity.cpf_masked || "Não informado"} />
         <FieldRow label="Regional CRP" value={formatNullable(registry.identity.regional_crp)} />
         <FieldRow label="Nº CRP" value={formatNullable(registry.identity.registration_number)} />
         <FieldRow

@@ -186,13 +186,13 @@ const latestManualCheck = (checks: AdminPsychologistRegistryVerificationCheck[])
 const latestManualApproval = (checks: AdminPsychologistRegistryVerificationCheck[]) =>
   checks.find((check) => isManualCheck(check) && check.found) ?? null;
 
-const hasActiveAdminGrant = (profile: AdminPsychologistRegistryVerificationRecord) =>
-  profile.subscriptions.some((subscription) => subscription.source === "admin_grant");
+const activeAdminGrantSubscription = (profile: AdminPsychologistRegistryVerificationRecord) =>
+  profile.subscriptions.find((subscription) => subscription.source === "admin_grant") ?? null;
 
 const sourceLabel = (source: AdminRegistryVerificationSource) => {
   if (source === "manual_admin") return "Aprovação manual";
   if (source === "api_automatica") return "API automática";
-  if (source === "admin_grant") return "Cortesia administrativa";
+  if (source === "admin_grant") return "Ativação manual";
 
   return "Sem origem aprovada";
 };
@@ -206,6 +206,8 @@ const summarizeVerification = (
   const latestCheck = profile.registry_checks[0] ?? null;
   const latestRaw = getRawRecord(latestCheck?.raw);
   const latestStatus = attemptStatusFromRaw(latestRaw);
+  const adminGrant = activeAdminGrantSubscription(profile);
+  const activeAdminGrant = Boolean(adminGrant);
   const manualApprovalIsCurrent = Boolean(
     latestManualApproved &&
       (!profile.cfp_verified_at || latestManualApproved.checked_at >= profile.cfp_verified_at),
@@ -215,18 +217,20 @@ const summarizeVerification = (
   let status_label = "Pendente";
   let source: AdminRegistryVerificationSource = "pendente";
 
-  if (profile.crp_status === "aprovado") {
+  if (manualApprovalIsCurrent) {
+    status = "aprovado";
+    source = "manual_admin";
+    status_label = "Aprovado manualmente";
+  } else if (activeAdminGrant) {
+    status = "aprovado";
+    source = "admin_grant";
+    status_label = "Ativado manualmente";
+  } else if (profile.crp_status === "aprovado") {
     status = "aprovado";
 
-    if (manualApprovalIsCurrent) {
-      source = "manual_admin";
-      status_label = "Aprovado manualmente";
-    } else if (profile.cfp_verified_at) {
+    if (profile.cfp_verified_at) {
       source = "api_automatica";
       status_label = "Aprovado via API automática";
-    } else if (hasActiveAdminGrant(profile)) {
-      source = "admin_grant";
-      status_label = "Aprovado por cortesia administrativa";
     } else if (latestManualApproved) {
       source = "manual_admin";
       status_label = "Aprovado manualmente";
@@ -260,7 +264,8 @@ const summarizeVerification = (
     cfp_verified_at: profile.cfp_verified_at,
     crp_status: profile.crp_status,
     latest_manual_admin: manualActor,
-    latest_manual_checked_at: latestManual?.checked_at ?? null,
+    latest_manual_checked_at:
+      latestManual?.checked_at ?? adminGrant?.grant_started_at ?? adminGrant?.createdAt ?? null,
     latest_manual_notes: getString(raw, "notes") ?? getString(raw, "observation"),
     latest_manual_reason: getString(raw, "reason"),
     source,

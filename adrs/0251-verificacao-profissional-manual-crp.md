@@ -97,3 +97,9 @@ adapter/auditoria técnica e não são propagados para UI ou respostas do fronte
 
 - Validar manualmente approve/reject em um psicólogo real elegível quando houver
   autorização explícita para alterar dados do banco de desenvolvimento.
+
+## Complemento 2026-07-11: cortesia como ativacao manual
+
+Uma cortesia administrativa ativa (`professional_subscription.source="admin_grant"`) tambem deve ser exibida no registro profissional como ativacao manual. A decisao preserva a cortesia como assinatura/entitlement operacional, mas evita que o card de registro pareca pendente quando o Admin ja concedeu acesso apos verificacao administrativa do registro profissional.
+
+O CPF permanece obrigatorio para a acao de aprovacao manual auditada, mas deixou de ser exibido no card Admin de registro profissional e nas ultimas tentativas do card.

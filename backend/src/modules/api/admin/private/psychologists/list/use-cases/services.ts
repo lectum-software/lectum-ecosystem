@@ -177,7 +177,7 @@ const isManualCheck = (check: AdminPsychologistListProfileRecord["registry_check
 const registrySourceLabel = (source: AdminPsychologistsListRegistryVerification["source"]) => {
   if (source === "manual_admin") return "Aprovação manual";
   if (source === "api_automatica") return "API automática";
-  if (source === "admin_grant") return "Cortesia administrativa";
+  if (source === "admin_grant") return "Ativação manual";
 
   return "Sem origem aprovada";
 };
@@ -190,26 +190,29 @@ const buildRegistryVerification = (
     (check) => isManualCheck(check) && check.found,
   );
   const latestStatus = rawAttemptStatus(latestCheck?.raw);
+  const activeAdminGrant = profile.subscriptions.some(
+    (subscription) => subscription.source === "admin_grant",
+  );
   let source: AdminPsychologistsListRegistryVerification["source"] = "pendente";
   let status: AdminPsychologistsListRegistryVerification["status"] = "pendente";
   let status_label = "Pendente";
 
-  if (profile.crp_status === "aprovado") {
+  if (
+    latestManualApproval &&
+    (!profile.cfp_verified_at || latestManualApproval.checked_at >= profile.cfp_verified_at)
+  ) {
     status = "aprovado";
-    if (
-      latestManualApproval &&
-      (!profile.cfp_verified_at || latestManualApproval.checked_at >= profile.cfp_verified_at)
-    ) {
-      source = "manual_admin";
-      status_label = "Aprovado manualmente";
-    } else if (profile.cfp_verified_at) {
+    source = "manual_admin";
+    status_label = "Aprovado manualmente";
+  } else if (activeAdminGrant) {
+    status = "aprovado";
+    source = "admin_grant";
+    status_label = "Ativado manualmente";
+  } else if (profile.crp_status === "aprovado") {
+    status = "aprovado";
+    if (profile.cfp_verified_at) {
       source = "api_automatica";
       status_label = "Aprovado via API automática";
-    } else if (
-      profile.subscriptions.some((subscription) => subscription.source === "admin_grant")
-    ) {
-      source = "admin_grant";
-      status_label = "Aprovado por cortesia administrativa";
     } else {
       source = latestManualApproval ? "manual_admin" : "api_automatica";
       status_label = latestManualApproval ? "Aprovado manualmente" : "Aprovado";

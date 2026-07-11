@@ -265,3 +265,10 @@ Se o schema atual não suportar auditoria mínima sem `raw`, usar `raw` com shap
 - Browser local: `admin` foi servido por `next start` e validado em Chrome headless 390x844 nas rotas `/psicologos/lista` e `/psicologos/[id]`; sem sessao Admin, o smoke confirmou a tela real de login/protecao. A mutacao real de aprovar/rejeitar nao foi executada para nao alterar registros reais do banco local sem autorizacao explicita.
 - Validacoes executadas sem erro: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check`.
 - ADR criado: `adrs/0251-verificacao-profissional-manual-crp.md`.
+
+### Ajuste de card 2026-07-11
+
+- Card Admin renomeado de "Verificacao profissional" para "Registro profissional" e removido texto explicativo interno.
+- CPF deixou de ser exibido no card e nas ultimas tentativas do registro; o formulario de aprovacao manual continua exigindo CPF para auditoria real.
+- Cortesia administrativa ativa passou a aparecer no registro como ativacao manual, porque a concessao pressupoe verificacao administrativa previa do registro profissional.
+- Validacao read-only com psicologo real em cortesia ativa retornou `summaryStatus=aprovado`, `summaryLabel=Ativado manualmente`, `source=admin_grant` e `sourceLabel=Ativacao manual`.
