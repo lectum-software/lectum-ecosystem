@@ -49,7 +49,7 @@ export const updateProfessionalDataSchema: IValidatorRequest = {
     { key: "languages", coerse: "string_array", method: "string_array", optional: true },
     { key: "target_audience", coerse: "string_array", method: "string_array", optional: true },
     optionalNullableString("modality", 20),
-    optionalNullableString("reason", 500),
+    { key: "reason", coerse: "string", method: "string", min: 10, max: 500 },
   ],
 };
 

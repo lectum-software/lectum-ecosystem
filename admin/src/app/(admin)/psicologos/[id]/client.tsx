@@ -9,6 +9,7 @@ import {
   Bookmark,
   BookOpen,
   CheckCircle2,
+  ChevronDown,
   ChevronLeft,
   ChevronRight,
   Clock,
@@ -94,12 +95,7 @@ import type {
   AdminPsychologistReviewsQuery,
   AdminPsychologistStatistics,
 } from "@/api/req/psychologists";
-import {
-  CheckboxGroupController,
-  InputController,
-  SelectController,
-  TextareaController,
-} from "@/components/controllers";
+import { InputController, SelectController, TextareaController } from "@/components/controllers";
 import { cn } from "@/lib/utils";
 
 const numberFormatter = new Intl.NumberFormat("pt-BR");
@@ -108,6 +104,10 @@ const currencyFormatter = new Intl.NumberFormat("pt-BR", {
   style: "currency",
 });
 const dateFormatter = new Intl.DateTimeFormat("pt-BR", { dateStyle: "short" });
+const dateOnlyFormatter = new Intl.DateTimeFormat("pt-BR", {
+  dateStyle: "short",
+  timeZone: "UTC",
+});
 const timeFormatter = new Intl.DateTimeFormat("pt-BR", {
   hour: "2-digit",
   minute: "2-digit",
@@ -463,6 +463,7 @@ const profilePersonalDataBaseSchema = z.object({
   race_color: z.string().max(80, "Use no máximo 80 caracteres.").optional(),
   reason: z
     .string()
+    .trim()
     .min(10, "Informe o motivo interno com pelo menos 10 caracteres.")
     .max(500, "Use no máximo 500 caracteres."),
   religion: z.string().max(80, "Use no máximo 80 caracteres.").optional(),
@@ -473,9 +474,13 @@ type ProfilePersonalDataFormValues = z.infer<typeof profilePersonalDataBaseSchem
 
 const profileProfessionalDataSchema = z.object({
   approach_ids: z.array(z.string()),
-  languages: z.array(z.string()),
+  language: z.string().max(80, "Use no máximo 80 caracteres.").optional(),
   modality: z.string().optional(),
-  reason: z.string().max(500, "Use no máximo 500 caracteres.").optional(),
+  reason: z
+    .string()
+    .trim()
+    .min(10, "Informe o motivo interno com pelo menos 10 caracteres.")
+    .max(500, "Use no máximo 500 caracteres."),
   service_ids: z.array(z.string()),
   specialty_ids: z.array(z.string()),
   target_audience: z.array(z.string()),
@@ -662,6 +667,20 @@ const formatDate = (value?: string | null) => {
   if (!value) return "Não informado";
 
   return dateFormatter.format(new Date(value));
+};
+
+const formatDateOnly = (value?: string | null) => {
+  if (!value) return "Não informado";
+
+  const isoDate = value.match(/^(\d{4})-(\d{2})-(\d{2})/)?.[0];
+  if (isoDate) {
+    return dateOnlyFormatter.format(new Date(`${isoDate}T00:00:00.000Z`));
+  }
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "Não informado";
+
+  return dateOnlyFormatter.format(date);
 };
 
 const formatDateTime = (value?: string | null) => {
@@ -4742,7 +4761,7 @@ const ProfileReadOnlyPersonalData = ({ detail }: { detail: AdminPsychologistDeta
         }
       />
       <FieldRow label="WhatsApp" value={formatPhoneDisplay(personal.phone)} />
-      <FieldRow label="Data de nascimento" value={formatDate(personal.birthdate)} />
+      <FieldRow label="Data de nascimento" value={formatDateOnly(personal.birthdate)} />
       <FieldRow label="Gênero" value={getStaticOptionLabel(GENDER_OPTIONS, professional.gender)} />
       <FieldRow
         label="Raça/cor"
@@ -4768,6 +4787,222 @@ const activeOrSelected = <T extends { active: boolean; id?: string; name: string
   value: string,
 ) => item.active || selectedValues.includes(value);
 
+type AdminProfessionalOption = {
+  label: string;
+  value: string;
+};
+
+type AdminProfessionalOptionGroup = {
+  options: AdminProfessionalOption[];
+  title: string;
+};
+
+const toggleSelectedValue = (values: string[], value: string) =>
+  values.includes(value) ? values.filter((item) => item !== value) : [...values, value];
+
+const AdminProfessionalTagField = ({
+  disabled = false,
+  error,
+  groups,
+  label,
+  onChange,
+  options,
+  placeholder,
+  selected,
+}: {
+  disabled?: boolean;
+  error?: string;
+  groups?: AdminProfessionalOptionGroup[];
+  label: string;
+  onChange: (values: string[]) => void;
+  options: AdminProfessionalOption[];
+  placeholder: string;
+  selected: string[];
+}) => {
+  const [open, setOpen] = useState(false);
+  const optionMap = useMemo(
+    () => new Map(options.map((option) => [option.value, option] as const)),
+    [options],
+  );
+  const selectedOptions = selected.map((value) => optionMap.get(value) ?? { label: value, value });
+  const renderGroups =
+    groups?.filter((group) => group.options.length > 0) ??
+    (options.length > 0 ? [{ options, title: "Opções" }] : []);
+  const hasError = Boolean(error);
+
+  return (
+    <div className="w-full">
+      <span className="mb-2 block text-sm font-black text-foreground">{label}</span>
+      <div
+        className={cn(
+          "rounded-3xl border bg-surface p-3 shadow-sm transition",
+          hasError ? "border-danger" : "border-border",
+          disabled
+            ? "opacity-60"
+            : "focus-within:border-primary focus-within:ring-2 focus-within:ring-primary-soft",
+        )}
+      >
+        <div className="flex min-h-12 flex-wrap items-center gap-2">
+          {selectedOptions.length > 0 ? (
+            selectedOptions.map((option) => (
+              <span
+                className="inline-flex items-center gap-2 rounded-full border border-primary bg-primary-soft px-3 py-2 text-xs font-black text-primary"
+                key={option.value}
+              >
+                {option.label}
+                <button
+                  aria-label={`Remover ${option.label}`}
+                  className="rounded-full p-0.5 text-primary transition hover:bg-surface"
+                  disabled={disabled}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    onChange(selected.filter((value) => value !== option.value));
+                  }}
+                  type="button"
+                >
+                  <X aria-hidden className="h-3.5 w-3.5" />
+                </button>
+              </span>
+            ))
+          ) : (
+            <span className="text-sm font-bold text-subtle">{placeholder}</span>
+          )}
+          <button
+            aria-expanded={open}
+            className="ml-auto inline-flex h-10 w-10 items-center justify-center rounded-full text-muted transition hover:bg-surface-muted"
+            disabled={disabled}
+            onClick={() => setOpen((current) => !current)}
+            type="button"
+          >
+            <ChevronDown
+              aria-hidden
+              className={cn("h-4 w-4 transition-transform", open ? "rotate-180" : "")}
+            />
+          </button>
+        </div>
+        {open && !disabled ? (
+          <div className="mt-3 max-h-72 overflow-y-auto rounded-2xl border border-border bg-surface-muted p-2">
+            {renderGroups.length > 0 ? (
+              renderGroups.map((group) => (
+                <div className="py-1" key={group.title}>
+                  {group.title ? (
+                    <p className="px-2 py-2 text-xs font-black uppercase tracking-wide text-subtle">
+                      {group.title}
+                    </p>
+                  ) : null}
+                  <div className="grid gap-1">
+                    {group.options.map((option) => {
+                      const isSelected = selected.includes(option.value);
+
+                      return (
+                        <button
+                          className={cn(
+                            "flex w-full items-center justify-between rounded-2xl px-3 py-2 text-left text-sm font-bold transition",
+                            isSelected
+                              ? "bg-primary-soft text-primary"
+                              : "text-foreground hover:bg-surface",
+                          )}
+                          key={option.value}
+                          onClick={() => onChange(toggleSelectedValue(selected, option.value))}
+                          type="button"
+                        >
+                          <span>{option.label}</span>
+                          {isSelected ? (
+                            <span className="text-xs font-black">Selecionado</span>
+                          ) : null}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))
+            ) : (
+              <p className="px-3 py-4 text-sm font-bold text-muted">
+                Nenhuma opção ativa disponível no catálogo.
+              </p>
+            )}
+          </div>
+        ) : null}
+      </div>
+      <span
+        className={cn(
+          "mt-1 block min-h-5 text-xs font-bold",
+          hasError ? "text-danger" : "text-transparent",
+        )}
+      >
+        {error || " "}
+      </span>
+    </div>
+  );
+};
+
+const AdminProfessionalChipPicker = ({
+  disabled = false,
+  error,
+  label,
+  onChange,
+  options,
+  selected,
+}: {
+  disabled?: boolean;
+  error?: string;
+  label: string;
+  onChange: (values: string[]) => void;
+  options: AdminProfessionalOption[];
+  selected: string[];
+}) => {
+  const hasError = Boolean(error);
+
+  return (
+    <fieldset className="w-full">
+      <legend className="mb-2 text-sm font-black text-foreground">{label}</legend>
+      <div
+        className={cn(
+          "flex flex-wrap gap-2 rounded-3xl border bg-surface p-3 shadow-sm",
+          hasError ? "border-danger" : "border-border",
+          disabled ? "opacity-60" : "",
+        )}
+      >
+        {options.length > 0 ? (
+          options.map((option) => {
+            const isSelected = selected.includes(option.value);
+
+            return (
+              <button
+                aria-pressed={isSelected}
+                className={cn(
+                  "rounded-full border px-4 py-2 text-sm font-black transition",
+                  isSelected
+                    ? "border-primary bg-primary-soft text-primary ring-1 ring-primary"
+                    : "border-border bg-surface text-foreground hover:border-primary hover:text-primary",
+                )}
+                disabled={disabled}
+                key={option.value}
+                onClick={() => onChange(toggleSelectedValue(selected, option.value))}
+                type="button"
+              >
+                {option.label}
+              </button>
+            );
+          })
+        ) : (
+          <p className="px-1 py-2 text-sm font-bold text-muted">
+            Nenhuma opção ativa disponível no catálogo.
+          </p>
+        )}
+      </div>
+      <span
+        className={cn(
+          "mt-1 block min-h-5 text-xs font-bold",
+          hasError ? "text-danger" : "text-transparent",
+        )}
+      >
+        {error || " "}
+      </span>
+    </fieldset>
+  );
+};
+
 const ProfileProfessionalEditForm = ({
   detail,
   id,
@@ -4783,7 +5018,7 @@ const ProfileProfessionalEditForm = ({
   const form = useForm<ProfileProfessionalDataFormValues>({
     defaultValues: {
       approach_ids: professional.approaches.map((item) => item.id),
-      languages: professional.languages,
+      language: professional.languages[0] || "",
       modality: professional.modality || "",
       reason: "",
       service_ids: professional.services.map((item) => item.id),
@@ -4799,7 +5034,7 @@ const ProfileProfessionalEditForm = ({
   useEffect(() => {
     form.reset({
       approach_ids: professional.approaches.map((item) => item.id),
-      languages: professional.languages,
+      language: professional.languages[0] || "",
       modality: professional.modality || "",
       reason: "",
       service_ids: professional.services.map((item) => item.id),
@@ -4809,14 +5044,22 @@ const ProfileProfessionalEditForm = ({
   }, [form, professional]);
 
   const selected = useWatch({ control: form.control });
-  const specialtyOptions = useMemo(() => {
+  const specialtyGroups = useMemo(() => {
     const selectedIds = selected.specialty_ids ?? [];
 
     return (catalogs?.specialty_categories ?? [])
-      .flatMap((category) => category.specialties)
-      .filter((item) => activeOrSelected(item, selectedIds, item.id))
-      .map((item) => ({ label: item.name, value: item.id }));
+      .map((category) => ({
+        options: category.specialties
+          .filter((item) => activeOrSelected(item, selectedIds, item.id))
+          .map((item) => ({ label: item.name, value: item.id })),
+        title: category.name,
+      }))
+      .filter((group) => group.options.length > 0);
   }, [catalogs?.specialty_categories, selected.specialty_ids]);
+  const specialtyOptions = useMemo(
+    () => specialtyGroups.flatMap((group) => group.options),
+    [specialtyGroups],
+  );
   const approachOptions = useMemo(() => {
     const selectedIds = selected.approach_ids ?? [];
 
@@ -4832,12 +5075,12 @@ const ProfileProfessionalEditForm = ({
       .map((item) => ({ label: item.name, value: item.id }));
   }, [catalogs?.services, selected.service_ids]);
   const languageOptions = useMemo(() => {
-    const selectedValues = selected.languages ?? [];
+    const selectedValues = selected.language ? [selected.language] : [];
 
     return (catalogs?.languages ?? [])
       .filter((item) => activeOrSelected(item, selectedValues, item.name))
       .map((item) => ({ label: item.name, value: item.name }));
-  }, [catalogs?.languages, selected.languages]);
+  }, [catalogs?.languages, selected.language]);
   const targetAudienceOptions = useMemo(() => {
     const selectedValues = selected.target_audience ?? [];
 
@@ -4851,9 +5094,9 @@ const ProfileProfessionalEditForm = ({
     try {
       await mutation.mutateAsync({
         approach_ids: values.approach_ids,
-        languages: values.languages,
+        languages: values.language ? [values.language] : [],
         modality: emptyToNull(values.modality) as "hibrido" | "online" | "presencial" | null,
-        reason: emptyToNull(values.reason),
+        reason: values.reason.trim(),
         service_ids: values.service_ids,
         specialty_ids: values.specialty_ids,
         target_audience: values.target_audience,
@@ -4874,45 +5117,69 @@ const ProfileProfessionalEditForm = ({
         <SelectController<ProfileProfessionalDataFormValues>
           disabled={disabled}
           insetChevron
-          label="Formato de atendimento"
+          label="Modalidades"
           name="modality"
           options={mergeCurrentOption(MODALITY_OPTIONS, professional.modality)}
         />
-        <CheckboxGroupController<ProfileProfessionalDataFormValues>
+        <AdminProfessionalTagField
           disabled={disabled}
+          error={form.formState.errors.specialty_ids?.message}
+          groups={specialtyGroups}
           label="Especialidades"
-          name="specialty_ids"
+          onChange={(values) =>
+            form.setValue("specialty_ids", values, { shouldDirty: true, shouldValidate: true })
+          }
           options={specialtyOptions}
+          placeholder="Selecione as especialidades"
+          selected={selected.specialty_ids ?? []}
         />
-        <CheckboxGroupController<ProfileProfessionalDataFormValues>
+        <AdminProfessionalTagField
           disabled={disabled}
+          error={form.formState.errors.approach_ids?.message}
           label="Abordagens"
-          name="approach_ids"
+          onChange={(values) =>
+            form.setValue("approach_ids", values, { shouldDirty: true, shouldValidate: true })
+          }
           options={approachOptions}
+          placeholder="Selecione as abordagens"
+          selected={selected.approach_ids ?? []}
         />
-        <CheckboxGroupController<ProfileProfessionalDataFormValues>
+        <SelectController<ProfileProfessionalDataFormValues>
           disabled={disabled}
-          label="Serviços"
-          name="service_ids"
-          options={serviceOptions}
-        />
-        <CheckboxGroupController<ProfileProfessionalDataFormValues>
-          disabled={disabled}
+          insetChevron
           label="Idiomas"
-          name="languages"
-          options={languageOptions}
+          name="language"
+          options={mergeCurrentOption(
+            [EMPTY_SELECT_OPTION, ...languageOptions],
+            professional.languages[0],
+          )}
         />
-        <CheckboxGroupController<ProfileProfessionalDataFormValues>
+        <AdminProfessionalChipPicker
           disabled={disabled}
-          label="Público atendido"
-          name="target_audience"
+          error={form.formState.errors.service_ids?.message}
+          label="Serviços"
+          onChange={(values) =>
+            form.setValue("service_ids", values, { shouldDirty: true, shouldValidate: true })
+          }
+          options={serviceOptions}
+          selected={selected.service_ids ?? []}
+        />
+        <AdminProfessionalChipPicker
+          disabled={disabled}
+          error={form.formState.errors.target_audience?.message}
+          label="Público"
+          onChange={(values) =>
+            form.setValue("target_audience", values, { shouldDirty: true, shouldValidate: true })
+          }
           options={targetAudienceOptions}
+          selected={selected.target_audience ?? []}
         />
         <TextareaController<ProfileProfessionalDataFormValues>
           disabled={disabled}
           label="Motivo/observação interna"
           name="reason"
-          placeholder="Opcional: registre o motivo da correção profissional."
+          placeholder="Descreva a justificativa operacional da correção profissional."
+          required
           rows={3}
         />
         <ProfileFormActions disabled={disabled} onCancel={onCancel} />

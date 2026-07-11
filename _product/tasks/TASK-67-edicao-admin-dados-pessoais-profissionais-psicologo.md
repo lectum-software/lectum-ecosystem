@@ -332,3 +332,11 @@ Regras LGPD:
 - WhatsApp no formulário administrativo recebeu máscara visual de telefone e continua sendo normalizado para dígitos antes do submit.
 - O aviso e a confirmação de alteração de CPF aprovado agora aparecem somente quando o CPF foi alterado.
 - Dropdowns estáticos de **Dados pessoais** e modalidade no Admin foram alinhados às opções disponíveis no fluxo do psicólogo, preservando apenas `Não informado` como opção extra para campos opcionais do Admin.
+
+### Ajuste de consistência profissional em 2026-07-11
+
+- A data de nascimento em **Dados pessoais** passou a ser renderizada como data pura em UTC para não retroceder um dia por conversão de fuso horário.
+- A edição de **Dados profissionais** passou a usar os mesmos padrões disponíveis aos psicólogos: especialidades e abordagens em lista suspensa com chips, idioma em select e serviços/público em chips de seleção.
+- O campo **Motivo/observação interna** em **Dados profissionais** passou a ser obrigatório no frontend e no validator backend.
+- Validações executadas com sucesso após o ajuste: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm check`.
+- Browser local: rota Admin `/psicologos/cmrglzdds000ajkuhqedavedb?tab=perfil` respondeu HTTP 200 em `localhost:3002`; smoke headless mobile/desktop foi limitado pela ausência de sessão Admin autenticada no navegador headless, exibindo o estado de carregamento/redirecionamento.

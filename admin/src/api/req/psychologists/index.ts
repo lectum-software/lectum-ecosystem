@@ -411,7 +411,7 @@ export type AdminPsychologistUpdateProfessionalDataInput = {
   approach_ids?: string[];
   languages?: string[];
   modality?: "hibrido" | "online" | "presencial" | null;
-  reason?: string | null;
+  reason: string;
   service_ids?: string[];
   specialty_ids?: string[];
   target_audience?: string[];
