@@ -73,11 +73,19 @@ const SidebarContent = ({ collapsed, onNavigate, onRequestExpand }: SidebarConte
                     collapsed && "justify-center px-2",
                   )}
                   onClick={() => {
+                    if (collapsed) {
+                      setOpenGroups((current) => ({
+                        ...current,
+                        [item.href]: true,
+                      }));
+                      onRequestExpand?.();
+                      return;
+                    }
+
                     setOpenGroups((current) => ({
                       ...current,
-                      [item.href]: true,
+                      [item.href]: !(current[item.href] ?? isActive),
                     }));
-                    if (collapsed) onRequestExpand?.();
                   }}
                   title={collapsed ? item.label : undefined}
                   type="button"

@@ -44,6 +44,12 @@ preservando contexto em telas de detalhe.
 - Em sidebar desktop recolhida, o clique no ícone de Psicólogos expande a
   sidebar antes de exibir o submenu, preservando a navegação compacta sem
   esconder as opções filhas.
+- O clique no item raiz também recolhe o submenu quando ele já está aberto,
+  inclusive em rotas ativas de `/psicologos`, para permitir alternar
+  explicitamente entre os estados expandido e recolhido.
+- O submenu permanece renderizado no fluxo normal logo abaixo de **Psicólogos**,
+  sem posicionamento absoluto, deslocando apenas as opções posteriores do menu
+  para baixo quando expandido.
 
 ## Validação
 
