@@ -71,7 +71,7 @@ Permitir que o Admin aprove ou rejeite manualmente o CRP de um psicólogo quando
   - observações/evidências internas quando existirem.
 - Criar ação **Aprovar CRP manualmente**:
   - abrir modal/drawer mobile-first;
-  - campos: Regional CRP, Nº CRP e Data de inscrição no CRP ficam no card; a confirmação exibe CPF, situação confirmada, observação/evidência interna e confirmação forte;
+  - campos: Regional CRP, Nº CRP e Data de inscrição no CRP ficam no card; a confirmação exibe CPF, situação confirmada e confirmação forte, sem campo de observação/evidência interna obrigatório;
   - Regional CRP deve usar a mesma lista do perfil/cortesia Admin quando possível;
   - CPF deve usar máscara visual e normalização para dígitos;
   - exigir confirmação forte, por exemplo `APROVAR CRP`.
@@ -197,7 +197,7 @@ A auditoria manual deve registrar, no mínimo:
 - registro CRP;
 - data de inscrição no CRP;
 - admin responsável (`admin.id`, nome/e-mail ou identificador seguro disponível);
-- motivo/observação interna;
+- motivo obrigatório em rejeições e observação interna opcional em aprovações;
 - status anterior e novo.
 
 Se o schema atual não suportar auditoria mínima sem `raw`, usar `raw` com shape documentado nesta task/ADR. Se optar por campo novo, atualizar primeiro `DATA-MODEL.md`, criar migration e executar `db:migrate`.
@@ -206,7 +206,7 @@ Se o schema atual não suportar auditoria mínima sem `raw`, usar `raw` com shap
 
 - [x] Admin autenticado consegue visualizar o status de verificação profissional no detalhe do psicólogo.
 - [x] CPF valido informado pelo psicologo na verificacao profissional fica salvo e aparece no detalhe Admin mesmo quando a API automatica falha.
-- [x] Admin consegue aprovar CRP manualmente com CPF, Regional, CRP, data de inscrição e observação/evidência interna.
+- [x] Admin consegue aprovar CRP manualmente com CPF, Regional, CRP, data de inscrição, situação confirmada e confirmação forte, sem exigir observação/evidência interna.
 - [x] Admin consegue rejeitar verificação com motivo obrigatório.
 - [x] Aprovação manual atualiza `crp_status="aprovado"` e mantém `cfp_verified_at` nulo/inalterado.
 - [x] Aprovação automática continua atualizando `crp_status="aprovado"` e `cfp_verified_at`.
@@ -328,3 +328,9 @@ Se o schema atual não suportar auditoria mínima sem `raw`, usar `raw` com shap
 - Se a API automatica falhar, estiver indisponivel, sem token operacional ou retornar erro, o CPF fica visivel em Dados pessoais no detalhe Admin do psicologo; tentativas historicas com CPF em `professional_registry_check` tambem entram como fallback de exibicao.
 - A persistencia nao aprova o registro, nao preenche `cfp_verified_at`, nao altera CRP/data e nao sobrescreve identidades ja bloqueadas por aprovacao profissional ou cortesia administrativa ativa.
 - Validacao local com psicologo real: a busca com token operacional vazio retornou erro de configuracao esperado, persistiu o CPF informado em `psychologist_profile.cpf`, manteve `crp_status=pendente`/`cfp_verified_at=null` e o detalhe Admin passou a devolver o CPF em `profile.personal.cpf`.
+
+### Ajuste da confirmacao de aprovacao manual 2026-07-11
+
+- O modal de aprovacao manual removeu a tag azul explicativa sobre uso dos campos do card.
+- O campo "Observacao/evidencia interna" deixou de aparecer e deixou de ser obrigatorio na aprovacao manual; a auditoria continua registrando admin responsavel, CPF, Regional CRP, Nº CRP, data de inscricao, situacao confirmada e snapshots anterior/proximo.
+- O backend aceita `notes` como campo opcional para compatibilidade com clientes anteriores, mas a UI Admin atual nao envia observacao na aprovacao manual.

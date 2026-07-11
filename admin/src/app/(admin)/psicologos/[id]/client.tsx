@@ -344,10 +344,6 @@ const registryApproveBaseSchema = z.object({
     .refine((value) => isValidCpf(value), "Informe um CPF válido."),
   crp: z.string().min(1, "Informe o número do CRP.").max(40, "Use no máximo 40 caracteres."),
   crp_registration_date: z.string().min(1, "Informe a data de inscrição no CRP."),
-  notes: z
-    .string()
-    .min(10, "Descreva a evidência interna com pelo menos 10 caracteres.")
-    .max(1000, "Use no máximo 1000 caracteres."),
   regional_crp: z.string().min(1, "Selecione a regional do CRP."),
   situation_confirmed: z.string(),
 });
@@ -3411,7 +3407,6 @@ const RegistryApproveForm = ({
       cpf: formatCpfInput(registry.identity.cpf),
       crp: identityDefaults.crp,
       crp_registration_date: identityDefaults.crp_registration_date,
-      notes: "",
       regional_crp: identityDefaults.regional_crp,
       situation_confirmed: "",
     },
@@ -3425,7 +3420,6 @@ const RegistryApproveForm = ({
       cpf: formatCpfInput(registry.identity.cpf),
       crp: identityDefaults.crp,
       crp_registration_date: identityDefaults.crp_registration_date,
-      notes: "",
       regional_crp: identityDefaults.regional_crp,
       situation_confirmed: "",
     });
@@ -3438,7 +3432,6 @@ const RegistryApproveForm = ({
         cpf: normalizeCpfInput(values.cpf),
         crp: values.crp.trim(),
         crp_registration_date: values.crp_registration_date.trim(),
-        notes: values.notes.trim(),
         regional_crp: values.regional_crp.trim(),
         situation_confirmed: values.situation_confirmed === "sim",
       });
@@ -3452,9 +3445,6 @@ const RegistryApproveForm = ({
   return (
     <FormProvider {...form}>
       <form className="space-y-4" noValidate onSubmit={form.handleSubmit(onSubmit)}>
-        <div className="rounded-2xl border border-blue-100 bg-blue-50/70 p-4 text-sm font-bold text-muted">
-          A aprovação usará o Regional CRP, Nº CRP e Data de inscrição preenchidos no card.
-        </div>
         <div className="grid gap-4">
           <InputController<RegistryApproveFormValues>
             autoComplete="off"
@@ -3477,14 +3467,6 @@ const RegistryApproveForm = ({
             { label: "Sim, situação ativa conferida", value: "sim" },
           ]}
           required
-        />
-        <TextareaController<RegistryApproveFormValues>
-          disabled={mutation.isPending}
-          label="Observação/evidência interna"
-          name="notes"
-          placeholder="Descreva a evidência consultada e a decisão operacional."
-          required
-          rows={4}
         />
         <InputController<RegistryApproveFormValues>
           autoComplete="off"

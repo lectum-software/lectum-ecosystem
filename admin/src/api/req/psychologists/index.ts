@@ -552,7 +552,7 @@ export type AdminPsychologistApproveRegistryVerificationInput = {
   cpf: string;
   crp: string;
   crp_registration_date: string;
-  notes: string;
+  notes?: string | null;
   regional_crp: string;
   situation_confirmed: boolean;
 };

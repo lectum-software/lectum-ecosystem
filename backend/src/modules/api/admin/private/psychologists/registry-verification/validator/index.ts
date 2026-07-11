@@ -20,7 +20,15 @@ export const approveSchema: IValidatorRequest = {
     { key: "cpf", coerse: "string", method: "string", min: 11, max: 14 },
     { key: "crp_registration_date", coerse: "string", method: "string", min: 10, max: 10 },
     { key: "situation_confirmed", coerse: "boolean", method: "boolean" },
-    { key: "notes", coerse: "string", method: "string", min: 10, max: 1000 },
+    {
+      key: "notes",
+      coerse: "string",
+      method: "string",
+      min: 10,
+      max: 1000,
+      nullable: true,
+      optional: true,
+    },
     { key: "confirmation", coerse: "string", method: "string", min: 10, max: 20 },
   ],
 };

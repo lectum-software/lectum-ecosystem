@@ -477,7 +477,7 @@ export const approveRegistryVerification = async (
   const regionalCrp = trimOrNull(data.b.regional_crp);
   const registrationNumber = trimOrNull(data.b.crp);
   const notes = trimOrNull(data.b.notes);
-  if (!regionalCrp || !registrationNumber || !notes) {
+  if (!regionalCrp || !registrationNumber) {
     return serviceError(400, "admin_registry_verification_approval_invalid");
   }
 
@@ -524,7 +524,7 @@ export const approveRegistryVerification = async (
         crp_registration_date: registrationDate.toISOString(),
         crp_status: "aprovado",
       },
-      notes,
+      ...(notes ? { notes } : {}),
       previous: toAuditProfile(previous),
       source: MANUAL_PROVIDER,
       verification_origin: MANUAL_PROVIDER,

@@ -45,7 +45,7 @@ aprovar e rejeitar manualmente a verificação. As decisões manuais reutilizam
 - `found=true` para aprovação e `found=false` para rejeição;
 - `checked_at` da decisão;
 - `raw.source="manual_admin"` com admin responsável, dados conferidos,
-  observação/motivo e snapshots anterior/próximo.
+  observação opcional, motivo obrigatório em rejeições e snapshots anterior/próximo.
 
 A aprovação manual atualiza `cpf`, `crp`, `crp_registration_date` e
 `crp_status="aprovado"`, preservando `cfp_verified_at`. A rejeição atualiza
@@ -154,3 +154,17 @@ derivacao principal.
 Quando o psicologo informa um CPF valido na etapa de verificacao profissional, o backend persiste esse CPF em `psychologist_profile.cpf` antes de consultar a API automatica. Assim, se a consulta externa falhar, estiver indisponivel, sem token operacional ou retornar erro, o Admin ainda visualiza o CPF em Dados pessoais no detalhe do psicologo para triagem manual.
 
 Essa persistencia nao aprova o registro, nao preenche `cfp_verified_at`, nao altera CRP/data de inscricao e nao sobrescreve identidades ja bloqueadas por aprovacao profissional ou cortesia administrativa ativa. Para tentativas historicas que ja tenham CPF em `professional_registry_check`, o detalhe Admin usa esse CPF como fallback de exibicao, sem copiar retroativamente dados nem criar aprovacao.
+
+## Complemento 2026-07-11: aprovacao manual sem observacao obrigatoria
+
+O modal de aprovacao manual do CRP deixa de exibir a tag explicativa sobre uso
+dos dados do card e remove o campo "Observacao/evidencia interna". A decisao
+reduz atrito operacional porque Regional CRP, Numero CRP e Data de inscricao ja
+sao editados no card, enquanto a confirmacao da aprovacao deve pedir apenas CPF,
+situacao confirmada e confirmacao forte.
+
+No backend, `notes` passa a ser opcional na aprovacao manual para manter
+compatibilidade com clientes antigos sem obrigar a UI atual a coletar texto. A
+auditoria continua registrando admin responsavel, dados conferidos, status
+anterior/proximo e `situation_confirmed=true`; rejeicoes seguem exigindo motivo
+obrigatorio.
