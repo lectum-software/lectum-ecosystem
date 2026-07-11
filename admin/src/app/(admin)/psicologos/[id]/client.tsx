@@ -3665,12 +3665,6 @@ const RegistryVerificationCard = ({ id }: { id: string }) => {
           label="Data aprovação"
           value={formatDateTime(registry.summary.latest_manual_checked_at)}
         />
-        <FieldRow
-          label="Observação"
-          value={formatNullable(
-            registry.summary.latest_manual_notes || registry.summary.latest_manual_reason,
-          )}
-        />
       </div>
 
       <div className="mt-5">

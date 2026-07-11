@@ -340,3 +340,8 @@ Se o schema atual não suportar auditoria mínima sem `raw`, usar `raw` com shap
 - Regional CRP, Nº CRP e Data de inscricao permanecem editaveis pelo Admin em qualquer status do registro profissional, inclusive quando o registro ja esta ativo.
 - O card exibe a acao "Salvar registro", que persiste os campos pelo endpoint administrativo real de identidade do registro sem alterar `crp_status`, `cfp_verified_at`, assinatura, gateway ou cortesia.
 - Quando a aprovacao manual esta disponivel, o botao "Aprovar manualmente" continua usando os valores atuais do formulario para abrir a confirmacao forte.
+
+### Ajuste de observacao no registro profissional 2026-07-11
+
+- O bloco operacional "Lectum" do card Registro profissional deixou de exibir o campo "Observacao".
+- Observacoes/motivos seguem preservados no historico de auditoria e nas ultimas tentativas quando existirem, mas nao aparecem mais como linha fixa do resumo do registro.

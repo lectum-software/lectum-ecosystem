@@ -180,3 +180,11 @@ Na pendencia profissional, o Admin pode salvar apenas a correcao cadastral ou
 usar os valores atuais do formulario para seguir com "Aprovar manualmente". Em
 registros ja ativos, "Salvar registro" permite corrigir dados publicos do
 conselho sem reabrir uma decisao de verificacao.
+
+## Complemento 2026-07-11: resumo do registro sem observacao fixa
+
+O bloco operacional "Lectum" do card Registro profissional nao exibe mais a
+linha fixa "Observacao". Motivos e observacoes permanecem preservados em
+`professional_registry_check.raw` e podem aparecer no historico de ultimas
+tentativas, mas o resumo do registro prioriza plano, aprovacao, origem,
+responsavel e data de aprovacao.
