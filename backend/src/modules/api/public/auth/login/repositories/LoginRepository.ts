@@ -78,6 +78,18 @@ export class LoginRepository implements ILoginRepository {
 
     if (!res) throw new Error("user not found");
 
+    if (res.provider === "google" && !res.password && res.need_reset) {
+      return this.repository.update({
+        where: { id: data.id! },
+        data: { need_reset: false },
+        include: {
+          user_tokens: this.tokens,
+          //
+          ...loginInclude(),
+        },
+      });
+    }
+
     return res;
   }
 
@@ -106,7 +118,7 @@ export class LoginRepository implements ILoginRepository {
           role,
           confirmed: true,
           confirmed_date: new Date(),
-          need_reset: true,
+          need_reset: false,
         },
         include: {
           user_tokens: this.tokens,

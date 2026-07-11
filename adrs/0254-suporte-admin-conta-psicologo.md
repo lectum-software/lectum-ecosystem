@@ -19,6 +19,7 @@ Também já existia auditoria administrativa genérica da TASK-67 via `admin_act
 - Não criar senha local para conta Google/OAuth sem senha local; a UI mostra indisponibilidade honesta.
 - Exigir envio transacional real para confirmação/redefinição. Se o provedor não estiver configurado, retornar erro honesto em vez de simular envio.
 - No frontend do usuário, respeitar `need_reset=true` redirecionando para `/app/account/need-reset` e usando `POST /api/private/auth/need_reset`.
+- Correção pós-validação em 2026-07-11: cadastro/autenticação Google-only não deve definir nem manter `need_reset=true`, porque isso força a criação indevida de senha local. `has_password` continua significando exclusivamente `Boolean(user.password)` para uma senha local realmente existente.
 
 ## Consequências
 
@@ -27,6 +28,7 @@ Também já existia auditoria administrativa genérica da TASK-67 via `admin_act
 - A aba Atividades passa a exibir eventos de Conta e acesso sem expor senha, hash, códigos de confirmação, recovery code, JWT ou tokens.
 - Ambientes sem SMTP configurado bloqueiam envios com retorno honesto; a operação não é marcada como enviada falsamente.
 - Builder/Quick Copy não estava disponível no ambiente; a UI seguiu os padrões das imagens locais das abas Geral, Denúncias e Atividades.
+- Contas criadas somente com Google passam a permanecer como `provider="google"`, `password=null` e `need_reset=false`; se uma conta Google-only antiga ainda tiver `need_reset=true` sem senha local, a hidratação corrige o flag para evitar exigir criação de senha local.
 
 ## Task relacionada
 

@@ -398,6 +398,7 @@ O endpoint de leitura deve retornar, no m?nimo, dados seguros equivalentes a:
 - O frontend do usu?rio agora respeita `need_reset=true`, redireciona para `/app/account/need-reset` e usa o endpoint real `POST /api/private/auth/need_reset`.
 - Builder/Quick Copy n?o estava dispon?vel no ambiente; foram usadas as imagens locais indicadas em `_product/proto/admin/Psic?logos/Detalhes do psic?logo`. N?o havia prot?tipo espec?fico da aba Conta.
 - N?o houve altera??o em Prisma schema ou migrations; `pnpm --dir backend db:migrate` n?o foi necess?rio.
+- Corre??o p?s-valida??o em 2026-07-11: login/cadastro Google-only n?o cria nem exige senha local. O fluxo Google passa a persistir `need_reset=false`, e a hidrata??o corrige contas Google-only antigas que tenham `need_reset=true` sem `user.password`, evitando for?ar a cria??o indevida de senha local.
 
 
 ### Valida??o executada
