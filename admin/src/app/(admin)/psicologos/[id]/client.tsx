@@ -3572,7 +3572,7 @@ const CurrentPlanCard = ({ billing, id }: { billing: AdminPsychologistBilling; i
         {hasSubscription ? (
           <>
             <FieldRow
-              label="Quantidade de mensalidades pagas"
+              label="Mensalidades"
               value={numberFormatter.format(plan.paid_installments_count)}
             />
             <FieldRow

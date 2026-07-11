@@ -279,3 +279,8 @@ Exibir plano, método e histórico financeiro do psicólogo e permitir concessã
 - Não houve alteração de backend, endpoint, schema Prisma, migrations, packages ou gateway.
 - Validações executadas: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm --dir backend check`, `pnpm check` e `git diff --check`.
 - Browser local em `http://localhost:3002/psicologos/cmrglzdds000ajkuhqedavedb?tab=plano` retornou 200; validação visual autenticada automatizada permaneceu limitada por sessão Admin não exposta.
+
+## Ajuste complementar 2026-07-11 - copy de mensalidades no Plano atual
+
+- Pedido do usuário: trocar o rótulo `Quantidade de mensalidades pagas` por `Mensalidades` no card `Plano atual`.
+- A alteração é somente de copy na UI Admin; não muda endpoint, cálculo de LTV, reconciliação com gateway, schema Prisma, packages ou regra de domínio.
