@@ -194,3 +194,14 @@ Exibir plano, método e histórico financeiro do psicólogo e permitir concessã
 - Nao houve alteracao de backend, endpoint, regra de revogacao, banco, packages ou dados persistidos.
 - Validacao browser local headless Chrome/CDP, viewport mobile-first 390px, confirmou a nova copy, `Até 10/07/2027`, ausencia do bloco operacional, ausencia de e-mail/id do admin e `scrollWidth=390`.
 - Validacoes executadas: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e `git diff --check`.
+
+## Ajuste complementar 2026-07-11 - Plano atual enxuto com revogacao inline
+
+- Pedido do usuario: simplificar o card `Plano atual` na aba `Plano e pagamentos`.
+- O card deixou de exibir a frase operacional sobre `professional_subscription`, as tags de status/source e o bloco `Acoes financeiras pelo Admin`.
+- Assinaturas pagas ativas exibem o nome do plano e preco no formato mensal visual, por exemplo `Plano Profissional` e `R$ 9,90/mês`.
+- Cortesias ativas exibem `Plano de cortesia` no resumo principal, mantendo os dados de vigencia e `Concedida por`.
+- A acao `Revogar cortesia` passou para a base do card `Plano atual`, abaixo de `Concedida por`; o card separado de revogacao deixou de aparecer para cortesia ativa.
+- Nao houve alteracao de backend, endpoint, schema Prisma, migrations, packages ou regra de dominio.
+- Validacao browser local headless Chrome/CDP, viewport mobile-first 390px, confirmou `Plano de cortesia`, ausencia do texto tecnico, ausencia das tags, ausencia do bloco de acoes financeiras, um unico botao `Revogar cortesia` abaixo de `Concedida por`, ausencia do formulario `Conceder cortesia` nesse estado e `scrollWidth=390`.
+- Validacoes executadas: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e `git diff --check`.

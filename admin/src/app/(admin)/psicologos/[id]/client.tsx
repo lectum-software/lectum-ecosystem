@@ -391,6 +391,27 @@ const formatMoney = (cents: number | null) => {
   return currencyFormatter.format(cents / 100);
 };
 
+const formatPlanInterval = (interval?: string | null) => {
+  const normalized = String(interval ?? "")
+    .trim()
+    .toLowerCase();
+
+  if (!normalized) return null;
+  if (["month", "monthly", "mes", "mês"].includes(normalized)) return "mês";
+  if (["year", "yearly", "ano"].includes(normalized)) return "ano";
+
+  return normalized;
+};
+
+const formatPlanPrice = (cents: number | null, interval?: string | null) => {
+  const price = formatMoney(cents);
+  const planInterval = formatPlanInterval(interval);
+
+  return planInterval && price !== "Nao informado" && price !== "Não informado"
+    ? `${price}/${planInterval}`
+    : price;
+};
+
 const formatInputDate = (value?: string | null) => {
   if (!value) return "";
 
@@ -2403,18 +2424,6 @@ const ActivitiesTab = ({ id }: { id: string }) => {
   );
 };
 
-const BillingStatusBadge = ({ status }: { status: string | null }) => {
-  const normalized = (status || "").toLowerCase();
-  const className =
-    normalized === "ativa"
-      ? "bg-emerald-50 text-success"
-      : normalized.includes("cancel")
-        ? "bg-red-50 text-danger"
-        : "bg-surface-muted text-muted";
-
-  return <Badge className={className}>{status || "Nao informado"}</Badge>;
-};
-
 const PaymentHistoryBadge = ({
   status,
   label,
@@ -2442,65 +2451,67 @@ const BillingLoadingState = () => (
   </div>
 );
 
-const CurrentPlanCard = ({ billing }: { billing: AdminPsychologistBilling }) => {
+const CurrentPlanCard = ({ billing, id }: { billing: AdminPsychologistBilling; id: string }) => {
   const plan = billing.plan;
+  const revokeMutation = useAdminPsychologistRevokeCourtesy(id);
+  const isCourtesy = plan.is_courtesy;
+  const planTitle = isCourtesy ? "Plano de cortesia" : plan.plan_name || "Sem plano ativo";
+  const planPrice = isCourtesy ? null : formatPlanPrice(plan.price_cents, plan.interval);
+
+  const onRevoke = async () => {
+    const confirmed = window.confirm("Confirmar revogacao da cortesia deste psicologo?");
+    if (!confirmed) return;
+
+    try {
+      await revokeMutation.mutateAsync();
+      toast.success("Cortesia revogada com sucesso.");
+    } catch (error) {
+      toast.error(resolveApiError(error));
+    }
+  };
 
   return (
     <CardShell className="p-5">
       <div className="flex items-start justify-between gap-4">
         <div>
           <h2 className="text-xl font-black text-foreground">Plano atual</h2>
-          <p className="mt-1 text-sm text-muted">
-            Dados reais de professional_subscription, sem simulacao de pagamento.
-          </p>
         </div>
         <IconCircle icon={Wallet} />
       </div>
 
       <div className="mt-5 rounded-[1.5rem] border border-primary/10 bg-primary-soft/60 p-4">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <p className="text-lg font-black text-foreground">
-              {plan.plan_name || "Sem plano ativo"}
-            </p>
-            <p className="mt-1 text-sm font-bold text-muted">
-              {formatMoney(plan.price_cents)}
-              {plan.interval ? ` / ${plan.interval}` : ""}
-            </p>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <BillingStatusBadge status={plan.status} />
-            {plan.source_label ? (
-              <Badge className="bg-primary-soft text-primary">{plan.source_label}</Badge>
-            ) : null}
-          </div>
-        </div>
+        <p className="text-lg font-black text-foreground">{planTitle}</p>
+        {planPrice ? <p className="mt-1 text-sm font-bold text-muted">{planPrice}</p> : null}
       </div>
 
       <dl className="mt-5 divide-y divide-border text-sm">
         <FieldRow label="Inicio" value={formatDate(plan.started_at)} />
         <FieldRow label="Proxima renovacao" value={formatDate(plan.current_period_end)} />
         <FieldRow label="Gateway" value={plan.gateway_label || "Sem vinculo ativo"} />
-        <FieldRow label="Cortesia" value={plan.is_courtesy ? "Sim" : "Nao"} />
-        {plan.is_courtesy ? (
+        <FieldRow label="Cortesia" value={isCourtesy ? "Sim" : "Nao"} />
+        {isCourtesy ? (
           <FieldRow label="Concedida por" value={formatGrantedByName(plan.granted_by)} />
         ) : null}
       </dl>
 
-      <div className="mt-5 rounded-2xl bg-primary-soft p-4 text-sm font-bold text-muted">
-        <span className="inline-flex items-center gap-2 font-black text-primary">
-          <Info aria-hidden className="h-4 w-4" />
-          Acoes financeiras pelo Admin
-        </span>
-        <p className="mt-1">
-          Alteracoes de cobranca e troca de cartao ficam fora desta V1. Cartao continua sendo
-          tokenizado pelo usuario no gateway.
-        </p>
-      </div>
+      {isCourtesy ? (
+        <button
+          className="mt-5 inline-flex h-12 w-full items-center justify-center gap-2 rounded-control border border-danger bg-surface px-4 text-sm font-black text-danger transition hover:bg-danger/10 disabled:cursor-not-allowed disabled:border-border disabled:text-muted"
+          disabled={!billing.courtesy.can_revoke || revokeMutation.isPending}
+          onClick={() => void onRevoke()}
+          type="button"
+        >
+          {revokeMutation.isPending ? (
+            <Loader2 aria-hidden className="h-4 w-4 animate-spin" />
+          ) : (
+            <AlertTriangle aria-hidden className="h-4 w-4" />
+          )}
+          Revogar cortesia
+        </button>
+      ) : null}
     </CardShell>
   );
 };
-
 const PaymentMethodCard = ({ billing }: { billing: AdminPsychologistBilling }) => (
   <CardShell className="p-5">
     <div className="flex items-start justify-between gap-4">
@@ -2750,69 +2761,8 @@ const CourtesyGrantForm = ({ billing, id }: { billing: AdminPsychologistBilling;
   );
 };
 
-const RevokeCourtesyCard = ({ billing, id }: { billing: AdminPsychologistBilling; id: string }) => {
-  const mutation = useAdminPsychologistRevokeCourtesy(id);
-
-  const onRevoke = async () => {
-    const confirmed = window.confirm(
-      "Confirmar revogacao da cortesia administrativa deste psicologo?",
-    );
-    if (!confirmed) return;
-
-    try {
-      await mutation.mutateAsync();
-      toast.success("Cortesia revogada com sucesso.");
-    } catch (error) {
-      toast.error(resolveApiError(error));
-    }
-  };
-
-  return (
-    <CardShell className="p-5">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <h2 className="text-xl font-black text-foreground">Revogar cortesia</h2>
-          <p className="mt-1 text-sm text-muted">Este psicologo possui uma cortesia ativa.</p>
-        </div>
-        <IconCircle icon={AlertTriangle} />
-      </div>
-
-      <div className="mt-5 grid gap-3 sm:grid-cols-2">
-        <div className="rounded-2xl border border-border bg-surface-muted p-4">
-          <p className="text-xs font-bold uppercase tracking-wide text-muted">Vigencia atual</p>
-          <p className="mt-1 text-sm font-black text-foreground">
-            Até {formatDate(billing.plan.current_period_end)}
-          </p>
-        </div>
-        <div className="rounded-2xl border border-border bg-surface-muted p-4">
-          <p className="text-xs font-bold uppercase tracking-wide text-muted">Concedida por</p>
-          <p className="mt-1 text-sm font-black text-foreground">
-            {formatGrantedByName(billing.plan.granted_by)}
-          </p>
-        </div>
-      </div>
-
-      <button
-        className="mt-5 inline-flex h-12 w-full items-center justify-center gap-2 rounded-control border border-danger bg-surface px-4 text-sm font-black text-danger transition hover:bg-danger/10 disabled:cursor-not-allowed disabled:border-border disabled:text-muted"
-        disabled={!billing.courtesy.can_revoke || mutation.isPending}
-        onClick={() => void onRevoke()}
-        type="button"
-      >
-        {mutation.isPending ? (
-          <Loader2 aria-hidden className="h-4 w-4 animate-spin" />
-        ) : (
-          <AlertTriangle aria-hidden className="h-4 w-4" />
-        )}
-        Revogar cortesia
-      </button>
-    </CardShell>
-  );
-};
-
 const CourtesyActionCard = ({ billing, id }: { billing: AdminPsychologistBilling; id: string }) =>
-  billing.courtesy.can_revoke ? (
-    <RevokeCourtesyCard billing={billing} id={id} />
-  ) : (
+  billing.plan.is_courtesy || billing.courtesy.can_revoke ? null : (
     <CourtesyGrantForm billing={billing} id={id} />
   );
 
@@ -2831,7 +2781,7 @@ const PlanBillingTab = ({ id }: { detail: AdminPsychologistDetail; id: string })
   return (
     <div className="space-y-5" data-psychologist-detail-tab="plano">
       <div className="grid gap-5 xl:grid-cols-2">
-        <CurrentPlanCard billing={query.data} />
+        <CurrentPlanCard billing={query.data} id={id} />
         <PaymentMethodCard billing={query.data} />
         <CourtesyActionCard billing={query.data} id={id} />
         <PaymentHistoryCard billing={query.data} />

@@ -163,3 +163,24 @@ Validacao complementar:
 - `pnpm --dir admin build`
 - `pnpm check`
 - `git diff --check`
+
+## Complemento 2026-07-11 - Plano atual como superficie principal da cortesia
+
+O card `Plano atual` passou a concentrar a leitura e a acao de cortesia ativa. A UI anterior repetia informacoes operacionais em etiquetas e em um card separado de revogacao.
+
+Decisao:
+
+- Remover do card `Plano atual` a frase tecnica sobre `professional_subscription`, as etiquetas de status/source e o bloco `Acoes financeiras pelo Admin`.
+- Exibir assinatura paga como nome do plano e preco mensal (`R$ 9,90/mês`) sem etiquetas redundantes.
+- Exibir cortesia ativa como `Plano de cortesia`, preservando dados de vigencia e operador em `Concedida por`.
+- Mover o botao `Revogar cortesia` para a base do proprio card `Plano atual`, abaixo de `Concedida por`.
+
+Consequencia: a tela reduz ruido visual e deixa a revogacao proxima do contexto do plano atual, sem alterar endpoint, regra de dominio ou registro de auditoria da cortesia.
+
+Validacao complementar:
+
+- Browser local headless Chrome/CDP no Admin, viewport mobile-first 390px, confirmou o botao `Revogar cortesia` no card `Plano atual`, abaixo de `Concedida por`, sem o card separado de revogacao e sem o formulario `Conceder cortesia` quando o plano exibido e cortesia.
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check`
+- `git diff --check`
