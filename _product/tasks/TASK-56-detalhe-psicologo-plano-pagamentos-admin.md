@@ -205,3 +205,11 @@ Exibir plano, método e histórico financeiro do psicólogo e permitir concessã
 - Nao houve alteracao de backend, endpoint, schema Prisma, migrations, packages ou regra de dominio.
 - Validacao browser local headless Chrome/CDP, viewport mobile-first 390px, confirmou `Plano de cortesia`, ausencia do texto tecnico, ausencia das tags, ausencia do bloco de acoes financeiras, um unico botao `Revogar cortesia` abaixo de `Concedida por`, ausencia do formulario `Conceder cortesia` nesse estado e `scrollWidth=390`.
 - Validacoes executadas: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e `git diff --check`.
+
+## Ajuste complementar 2026-07-11 - Plano atual sem Gateway e Cortesia
+
+- Pedido do usuario: remover as linhas `Gateway` e `Cortesia` do card `Plano atual`.
+- O card permanece exibindo nome do plano, `Inicio`, `Proxima renovacao`, `Concedida por` quando houver cortesia e o botao `Revogar cortesia` para cortesia ativa.
+- Nao houve alteracao de backend, endpoint, schema Prisma, migrations, packages ou regra de dominio.
+- Validacao browser local headless Chrome/CDP, viewport mobile-first 390px, confirmou ausencia das linhas `Gateway` e `Cortesia`, permanencia de `Concedida por`, `Revogar cortesia` e `scrollWidth=390`.
+- Validacoes executadas: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e `git diff --check`.

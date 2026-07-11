@@ -184,3 +184,22 @@ Validacao complementar:
 - `pnpm --dir admin build`
 - `pnpm check`
 - `git diff --check`
+
+## Complemento 2026-07-11 - Plano atual sem metadados operacionais
+
+O refinamento visual do card `Plano atual` continuou removendo metadados operacionais que nao precisam aparecer para o Admin nessa leitura principal.
+
+Decisao:
+
+- Remover as linhas `Gateway` e `Cortesia` do card `Plano atual`.
+- Manter apenas dados relevantes para a leitura do plano/cortesia: nome do plano, datas de vigencia, operador em `Concedida por` quando houver cortesia e a acao `Revogar cortesia`.
+
+Consequencia: o card fica mais curto e focado na decisao operacional sem alterar a resposta do endpoint de billing nem a regra de dominio.
+
+Validacao complementar:
+
+- Browser local headless Chrome/CDP no Admin, viewport mobile-first 390px, confirmou o card `Plano atual` sem as linhas `Gateway` e `Cortesia`, mantendo `Concedida por` e `Revogar cortesia`.
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check`
+- `git diff --check`

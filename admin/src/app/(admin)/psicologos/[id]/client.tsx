@@ -2487,8 +2487,6 @@ const CurrentPlanCard = ({ billing, id }: { billing: AdminPsychologistBilling; i
       <dl className="mt-5 divide-y divide-border text-sm">
         <FieldRow label="Inicio" value={formatDate(plan.started_at)} />
         <FieldRow label="Proxima renovacao" value={formatDate(plan.current_period_end)} />
-        <FieldRow label="Gateway" value={plan.gateway_label || "Sem vinculo ativo"} />
-        <FieldRow label="Cortesia" value={isCourtesy ? "Sim" : "Nao"} />
         {isCourtesy ? (
           <FieldRow label="Concedida por" value={formatGrantedByName(plan.granted_by)} />
         ) : null}
