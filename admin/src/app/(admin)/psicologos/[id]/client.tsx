@@ -2884,6 +2884,13 @@ const ProfileTab = ({ detail }: { detail: AdminPsychologistDetail }) => {
   const profile = detail.profile;
   const professional = profile.professional;
   const personal = profile.personal;
+  const academic = profile.academic;
+  const hasAcademicFormation = Boolean(
+    academic.title ||
+      academic.institution ||
+      academic.graduation_year ||
+      academic.formations.length > 0,
+  );
 
   return (
     <div className="space-y-5" data-psychologist-detail-tab="perfil">
@@ -2935,6 +2942,37 @@ const ProfileTab = ({ detail }: { detail: AdminPsychologistDetail }) => {
             <FieldRow label="Data cadastro Lectum" value={formatDate(detail.header.created_at)} />
           </InfoCard>
 
+          <InfoCard icon={BookOpen} title="Formação & Títulos">
+            {hasAcademicFormation ? (
+              <>
+                <FieldRow label="Título" value={formatNullable(academic.title)} />
+                <FieldRow label="Instituição" value={formatNullable(academic.institution)} />
+                <FieldRow
+                  label="Ano de formação"
+                  value={formatNullable(academic.graduation_year)}
+                />
+                <div className="border-b border-border py-3 last:border-0">
+                  <dt className="text-sm font-black text-muted">Formações adicionais</dt>
+                  <dd className="mt-2 text-sm font-bold text-foreground">
+                    {academic.formations.length === 0 ? (
+                      "Não informado"
+                    ) : (
+                      <ul className="list-disc space-y-1 pl-5">
+                        {academic.formations.map((formation) => (
+                          <li key={formation}>{formation}</li>
+                        ))}
+                      </ul>
+                    )}
+                  </dd>
+                </div>
+              </>
+            ) : (
+              <div className="rounded-2xl bg-surface-muted p-4 text-sm leading-6 text-foreground">
+                Nenhuma formação cadastrada.
+              </div>
+            )}
+          </InfoCard>
+
           <CardShell className="p-5">
             <div className="flex items-center gap-3">
               <IconCircle icon={CheckCircle2} />
@@ -2961,29 +2999,6 @@ const ProfileTab = ({ detail }: { detail: AdminPsychologistDetail }) => {
         </div>
 
         <div className="space-y-5">
-          <InfoCard icon={BookOpen} title="Formação e títulos">
-            <FieldRow label="Título" value={formatNullable(profile.academic.title)} />
-            <FieldRow label="Instituição" value={formatNullable(profile.academic.institution)} />
-            <FieldRow
-              label="Ano de formação"
-              value={formatNullable(profile.academic.graduation_year)}
-            />
-            <div className="border-b border-border py-3 last:border-0">
-              <dt className="text-sm font-black text-muted">Formações adicionais</dt>
-              <dd className="mt-2 text-sm font-bold text-foreground">
-                {profile.academic.formations.length === 0 ? (
-                  "Não informado"
-                ) : (
-                  <ul className="list-disc space-y-1 pl-5">
-                    {profile.academic.formations.map((formation) => (
-                      <li key={formation}>{formation}</li>
-                    ))}
-                  </ul>
-                )}
-              </dd>
-            </div>
-          </InfoCard>
-
           <CardShell className="p-5">
             <div className="flex items-center gap-3">
               <IconCircle icon={Mail} />
