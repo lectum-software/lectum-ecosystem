@@ -2812,17 +2812,6 @@ const ProfileTab = ({ detail }: { detail: AdminPsychologistDetail }) => {
 
   return (
     <div className="space-y-5" data-psychologist-detail-tab="perfil">
-      <div className="rounded-2xl border border-primary/20 bg-primary-soft p-4 text-sm font-bold text-muted">
-        <span className="inline-flex items-center gap-2 font-black text-primary">
-          <ShieldCheck aria-hidden className="h-4 w-4" />
-          Dados sensíveis — acesso administrativo
-        </span>
-        <p className="mt-1">
-          CPF, telefone e endereço são exibidos somente neste painel autenticado e não são usados em
-          telas públicas.
-        </p>
-      </div>
-
       <div className="grid gap-5 xl:grid-cols-[0.95fr_1.05fr]">
         <div className="space-y-5">
           <InfoCard icon={UserRound} title="Dados pessoais">
