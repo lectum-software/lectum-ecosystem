@@ -256,6 +256,8 @@ Decisao:
 - Renderizar `professional_subscription.grant_notes` como linha `Nota interna` somente quando o plano atual for `source="admin_grant"`/cortesia ativa.
 - Trocar o rotulo `Proxima renovacao` por `Fim` nesse mesmo estado de cortesia, mantendo `current_period_end` como data de encerramento.
 - Manter o rotulo `Proxima renovacao` para planos pagos/nao cortesia.
+- Considerar a cortesia ativa na UI quando `plan.is_courtesy`, `plan.source="admin_grant"` ou `courtesy.can_revoke=true`, tornando o resumo resiliente a respostas de billing que ainda carreguem campos derivados desatualizados.
+- Corrigir os labels do formulario de concessao para `Data de inscrição no CRP` e `Período de cortesia`.
 
 Consequencia: o Admin consegue ler a observacao operacional da concessao junto da vigencia e da acao de revogar, sem alterar endpoint, schema, auditoria ou regra de dominio.
 
@@ -263,5 +265,6 @@ Validacao complementar:
 
 - `pnpm --dir admin check`
 - `pnpm --dir admin build`
-- `pnpm check`
 - `git diff --check`
+- Browser local headless Chrome/CDP em viewport 390px confirmou `Fim`, ausencia de `Proxima renovacao`, `Nota interna`, texto real da nota e `scrollWidth=390`.
+- `pnpm check` foi acionado, mas bloqueou em formatacao de arquivo local nao relacionado (`frontend/src/app/app/professional/whatsapp/verify/logic.tsx`).

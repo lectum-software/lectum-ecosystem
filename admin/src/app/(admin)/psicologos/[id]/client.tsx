@@ -2565,7 +2565,8 @@ const BillingLoadingState = () => (
 const CurrentPlanCard = ({ billing, id }: { billing: AdminPsychologistBilling; id: string }) => {
   const plan = billing.plan;
   const revokeMutation = useAdminPsychologistRevokeCourtesy(id);
-  const isCourtesy = plan.is_courtesy;
+  const isCourtesy =
+    plan.is_courtesy || plan.source === "admin_grant" || billing.courtesy.can_revoke;
   const planTitle = isCourtesy ? "Plano de cortesia" : plan.plan_name || "Sem plano ativo";
   const planPrice = isCourtesy ? null : formatPlanPrice(plan.price_cents, plan.interval);
   const planEndLabel = isCourtesy ? "Fim" : "Pr?xima renova??o";
@@ -2817,7 +2818,7 @@ const CourtesyGrantForm = ({ billing, id }: { billing: AdminPsychologistBilling;
             />
             <InputController<CourtesyFormValues>
               disabled={disabled}
-              label="Data de inscricao no CRP"
+              label="Data de inscrição no CRP"
               name="crp_registration_date"
               required={billing.courtesy.requires_crp_registration_date}
               type="date"
@@ -2837,7 +2838,7 @@ const CourtesyGrantForm = ({ billing, id }: { billing: AdminPsychologistBilling;
             <SelectController<CourtesyFormValues>
               disabled={disabled}
               insetChevron
-              label="Periodo de cortesia"
+              label="Período de cortesia"
               name="period_days"
               options={billing.courtesy.period_options.map((option) => ({
                 label: option.label,

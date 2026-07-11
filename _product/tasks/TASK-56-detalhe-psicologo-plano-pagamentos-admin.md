@@ -241,5 +241,9 @@ Exibir plano, método e histórico financeiro do psicólogo e permitir concessã
 - Pedido do usuario: quando o plano atual for cortesia, exibir a nota interna da concessao e trocar o rotulo `Proxima renovacao` por `Fim`.
 - O card `Plano atual` agora usa o campo real `plan.grant_notes` retornado pelo endpoint de billing para renderizar a linha `Nota interna` apenas em cortesia ativa.
 - Para cortesia ativa, a data final continua vindo de `current_period_end`, mas o rotulo da linha passa a ser `Fim`; para planos nao cortesia, o rotulo permanece `Proxima renovacao`.
+- A deteccao visual de cortesia considera `plan.is_courtesy`, `plan.source="admin_grant"` ou `courtesy.can_revoke=true`, evitando que respostas antigas/parciais escondam a nota interna e mantenham o rotulo incorreto.
+- Os labels do formulario `Conceder cortesia` foram corrigidos para `Data de inscrição no CRP` e `Período de cortesia`.
 - Nao houve alteracao de backend, endpoint, schema Prisma, migrations, packages ou regra de dominio.
-- Validacoes executadas: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e `git diff --check`.
+- Validacao browser local headless Chrome/CDP, viewport mobile-first 390px, confirmou `Fim`, ausencia de `Proxima renovacao`, `Nota interna`, a nota `teste de nota interna de cortesia`, `Revogar cortesia` e `scrollWidth=390`.
+- Validacoes executadas: `pnpm --dir admin check`, `pnpm --dir admin build` e `git diff --check`.
+- `pnpm check` foi acionado, mas ficou bloqueado por formatacao em arquivo local nao relacionado a esta mudanca (`frontend/src/app/app/professional/whatsapp/verify/logic.tsx`).
