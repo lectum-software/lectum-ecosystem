@@ -1,6 +1,9 @@
 import { parsePhoneNumberFromString } from "libphonenumber-js";
 import prisma from "@/infra/database/prisma";
-import { normalizeProfessionalDisplayName } from "@/utils/professional-name";
+import {
+  buildProfessionalFullDisplayName,
+  getProfessionalWhatsappDisplayName,
+} from "@/utils/professional-name";
 import { buildLectumWhatsappUrl } from "@/utils/whatsapp-contact";
 import type {
   DirectoryPsychologistContactResponse,
@@ -29,23 +32,50 @@ const normalizePhone = (value: string) => {
   return parsed.number;
 };
 
-const toWhatsAppUrl = (phone: string, psychologistName?: string | null) =>
-  buildLectumWhatsappUrl({ phone, psychologistName, source: "profile" });
+const toWhatsAppUrl = (
+  phone: string,
+  psychologistName?: string | null,
+  psychologistWhatsappName?: string | null,
+) =>
+  buildLectumWhatsappUrl({
+    phone,
+    psychologistName,
+    psychologistWhatsappName,
+    source: "profile",
+  });
 
 const isSelfProfessionalAction = (authId: string | null | undefined, psychologistId: string) =>
   Boolean(authId && authId === psychologistId);
 
 const toContactResponse = (
-  psychologist: { id: string; name: string | null },
+  psychologist: {
+    id: string;
+    name: string | null;
+    psychologist_profile?: {
+      professional_first_name?: string | null;
+      professional_last_name?: string | null;
+    } | null;
+  },
   psychologistPhone: string,
   contactRequestId: string | null,
-): DirectoryPsychologistContactResponse => ({
-  contact_request_id: contactRequestId,
-  psychologist_id: psychologist.id,
-  tracked: Boolean(contactRequestId),
-  whatsapp_url:
-    toWhatsAppUrl(psychologistPhone, normalizeProfessionalDisplayName(psychologist.name)) ?? "",
-});
+): DirectoryPsychologistContactResponse => {
+  const displayName = buildProfessionalFullDisplayName({
+    fallbackName: psychologist.name,
+    firstName: psychologist.psychologist_profile?.professional_first_name,
+    lastName: psychologist.psychologist_profile?.professional_last_name,
+  });
+  const whatsappDisplayName = getProfessionalWhatsappDisplayName({
+    fallbackName: displayName,
+    firstName: psychologist.psychologist_profile?.professional_first_name,
+  });
+
+  return {
+    contact_request_id: contactRequestId,
+    psychologist_id: psychologist.id,
+    tracked: Boolean(contactRequestId),
+    whatsapp_url: toWhatsAppUrl(psychologistPhone, displayName, whatsappDisplayName) ?? "",
+  };
+};
 
 export class ContactRepository implements IContactRepository {
   async registerClick(data: IContactClickDTO): Promise<ContactRepositoryResult> {
@@ -75,6 +105,8 @@ export class ContactRepository implements IContactRepository {
         name: true,
         psychologist_profile: {
           select: {
+            professional_first_name: true,
+            professional_last_name: true,
             whatsapp: true,
           },
         },
@@ -168,6 +200,8 @@ export class ContactRepository implements IContactRepository {
         name: true,
         psychologist_profile: {
           select: {
+            professional_first_name: true,
+            professional_last_name: true,
             whatsapp: true,
           },
         },

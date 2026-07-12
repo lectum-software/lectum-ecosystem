@@ -1,5 +1,6 @@
-﻿import { z } from "zod";
+import { z } from "zod";
 import { error, msg } from "@/helpers/translate";
+import { buildProfessionalFullDisplayName } from "@/utils/professional-name";
 import type {
   FreeProfessionalProfileAcademic,
   FreeProfessionalProfileAddress,
@@ -148,7 +149,9 @@ const normalizeAddress = (
 });
 
 const updateSchema = z.object({
-  name: z.string().trim().min(2).max(120),
+  name: z.string().trim().min(2).max(160),
+  professional_first_name: z.string().trim().min(2).max(80),
+  professional_last_name: z.string().trim().min(1).max(120),
   cpf: z.string().nullable().optional(),
   birthdate: z.string().trim().nullable().optional(),
   gender: z.string().trim().max(40).nullable().optional(),
@@ -332,7 +335,13 @@ export const update = async (data: IFreeProfessionalProfileUpdateDTO) => {
   const primaryAcademic = resolvedAcademicFormations[0] || legacyAcademic;
 
   const body: Required<FreeProfessionalProfileUpdateBody> = {
-    name: parsed.data.name,
+    name: buildProfessionalFullDisplayName({
+      fallbackName: parsed.data.name,
+      firstName: parsed.data.professional_first_name,
+      lastName: parsed.data.professional_last_name,
+    }),
+    professional_first_name: parsed.data.professional_first_name,
+    professional_last_name: parsed.data.professional_last_name,
     cpf,
     birthdate,
     gender: trimToNull(parsed.data.gender),

@@ -1,4 +1,4 @@
-﻿import type { user } from "@/interfaces/objects";
+import type { user } from "@/interfaces/objects";
 
 export type FreeProfileCatalogItem = {
   active?: boolean;
@@ -52,6 +52,8 @@ export type FreeProfessionalProfileResponse = {
   };
   profile: {
     id: string;
+    professional_first_name: string | null;
+    professional_last_name: string | null;
     headline: string | null;
     bio: string | null;
     modality: string | null;
@@ -112,6 +114,8 @@ export type FreeProfessionalProfileResponse = {
 
 export type FreeProfessionalProfileUpdateBody = {
   name?: string;
+  professional_first_name?: string | null;
+  professional_last_name?: string | null;
   cpf?: string | null;
   birthdate?: Date | null;
   gender?: string | null;

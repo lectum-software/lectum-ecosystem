@@ -5,6 +5,7 @@ export type PatientRelationPsychologist = {
   relation_id: string;
   relation_created_at: string;
   name: string;
+  whatsapp_name?: string | null;
   avatar: string | null;
   headline: string | null;
   bio: string | null;

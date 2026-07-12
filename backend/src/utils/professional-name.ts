@@ -13,6 +13,32 @@ export const normalizeProfessionalDisplayName = (fullName?: string | null) =>
     .replace(/\s{2,}/g, " ")
     .trim();
 
+export const normalizeProfessionalNamePart = (value?: string | null) =>
+  String(value ?? "")
+    .replace(/\s{2,}/g, " ")
+    .trim();
+
+export const buildProfessionalFullDisplayName = ({
+  fallbackName,
+  firstName,
+  lastName,
+}: {
+  fallbackName?: string | null;
+  firstName?: string | null;
+  lastName?: string | null;
+}) => {
+  const fullName = [
+    normalizeProfessionalNamePart(firstName),
+    normalizeProfessionalNamePart(lastName),
+  ]
+    .filter(Boolean)
+    .join(" ");
+
+  return (
+    fullName || normalizeProfessionalDisplayName(fallbackName) || String(fallbackName ?? "").trim()
+  );
+};
+
 export const getProfessionalShortDisplayName = (
   fullName?: string | null,
   fallback = "psic\u00f3logo",
@@ -27,4 +53,21 @@ export const getProfessionalShortDisplayName = (
   return (
     parts.find((part) => !NAME_CONNECTIVE_PARTS.has(part.toLocaleLowerCase("pt-BR"))) ?? parts[0]
   );
+};
+
+export const getProfessionalWhatsappDisplayName = ({
+  fallbackName,
+  firstName,
+}: {
+  fallbackName?: string | null;
+  firstName?: string | null;
+}) => normalizeProfessionalNamePart(firstName) || getProfessionalShortDisplayName(fallbackName, "");
+
+export const splitProfessionalNameFallback = (fullName?: string | null) => {
+  const parts = normalizeProfessionalDisplayName(fullName).split(/\s+/).filter(Boolean);
+
+  return {
+    firstName: parts[0] ?? null,
+    lastName: parts.length > 1 ? parts.slice(1).join(" ") : null,
+  };
 };

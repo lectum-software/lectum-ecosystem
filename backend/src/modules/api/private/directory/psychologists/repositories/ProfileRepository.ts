@@ -10,7 +10,10 @@ import { getCommunityMentorRankingSignals } from "@/utils/community-mentor-ranki
 import { getPostIdsWithPsychologistReplies } from "@/utils/community-post-replies";
 import { getMutedPostIds } from "@/utils/post-notification-mute";
 import { crpExperienceYears } from "@/utils/professional-experience";
-import { normalizeProfessionalDisplayName } from "@/utils/professional-name";
+import {
+  buildProfessionalFullDisplayName,
+  getProfessionalWhatsappDisplayName,
+} from "@/utils/professional-name";
 import { parseStoredCrp } from "@/utils/professional-registry";
 import {
   activeProfessionalEntitlementWhere,
@@ -57,6 +60,8 @@ const communityCardSelect = {
 } satisfies Prisma.communitySelect;
 
 const professionalProfileSelect = {
+  professional_first_name: true,
+  professional_last_name: true,
   gender: true,
   crp: true,
   whatsapp: true,
@@ -358,8 +363,15 @@ const hasAvailableToday = (value: unknown) => {
 const buildWhatsappUrl = (
   value?: string | null,
   psychologistName?: string | null,
+  psychologistWhatsappName?: string | null,
   source: LectumWhatsappMessageSource = "profile",
-) => buildLectumWhatsappUrl({ phone: value, psychologistName, source });
+) =>
+  buildLectumWhatsappUrl({
+    phone: value,
+    psychologistName,
+    psychologistWhatsappName,
+    source,
+  });
 
 const anonymousDisplayNameForAuthor = (authorId: string) => {
   let hash = 0;
@@ -391,11 +403,12 @@ const buildProfessionalWhatsappUrl = (
     whatsapp: string | null;
   } | null,
   psychologistName?: string | null,
+  psychologistWhatsappName?: string | null,
   source: LectumWhatsappMessageSource = "community_post",
 ) => {
   if (!isProfessionalVerified(profile) || !hasPaidProfessionalEntitlement(profile)) return null;
 
-  return buildWhatsappUrl(profile?.whatsapp, psychologistName, source);
+  return buildWhatsappUrl(profile?.whatsapp, psychologistName, psychologistWhatsappName, source);
 };
 
 const mentorBadgeForScore = (
@@ -515,8 +528,18 @@ const toPostAuthorResponse = (
   const isPsychologist = author.role === "psicologo";
   const shouldMaskAuthor = !isPsychologist && anonymous;
   const displayName = isPsychologist
-    ? normalizeProfessionalDisplayName(author.name) || author.name
+    ? buildProfessionalFullDisplayName({
+        fallbackName: author.name,
+        firstName: profile?.professional_first_name,
+        lastName: profile?.professional_last_name,
+      })
     : author.name;
+  const whatsappDisplayName = isPsychologist
+    ? getProfessionalWhatsappDisplayName({
+        fallbackName: displayName,
+        firstName: profile?.professional_first_name,
+      })
+    : null;
   const featuredBadge =
     (forceFeaturedBadgeOverride
       ? featuredBadgeOverride
@@ -531,8 +554,14 @@ const toPostAuthorResponse = (
     crp: isPsychologist ? (profile?.crp ?? null) : null,
     verified: isPsychologist && isProfessionalVerified(profile),
     featured_badge: isPsychologist ? featuredBadge : null,
+    whatsapp_name: isPsychologist ? whatsappDisplayName : null,
     whatsapp_url: isPsychologist
-      ? buildProfessionalWhatsappUrl(profile, displayName, whatsappMessageSource)
+      ? buildProfessionalWhatsappUrl(
+          profile,
+          displayName,
+          whatsappDisplayName,
+          whatsappMessageSource,
+        )
       : null,
   };
 };
@@ -1080,6 +1109,8 @@ export class ProfileRepository implements IProfileRepository {
         },
         psychologist_profile: {
           select: {
+            professional_first_name: true,
+            professional_last_name: true,
             headline: true,
             bio: true,
             cover_image_url: true,
@@ -1167,10 +1198,20 @@ export class ProfileRepository implements IProfileRepository {
     if (!item || !profile) return null;
     if (!hasPublishedProfileRequirements(item, profile)) return null;
     const { crp_number, crp_region } = parseStoredCrp(profile.crp);
+    const displayName = buildProfessionalFullDisplayName({
+      fallbackName: item.name,
+      firstName: profile.professional_first_name,
+      lastName: profile.professional_last_name,
+    });
+    const whatsappDisplayName = getProfessionalWhatsappDisplayName({
+      fallbackName: displayName,
+      firstName: profile.professional_first_name,
+    });
 
     return {
       id: item.id,
-      name: normalizeProfessionalDisplayName(item.name) || item.name,
+      name: displayName,
+      whatsapp_name: whatsappDisplayName,
       avatar: item.avatar,
       headline: profile.headline,
       bio: profile.bio,
@@ -1201,10 +1242,7 @@ export class ProfileRepository implements IProfileRepository {
       social_value: profile.social_value,
       accepts_insurance: profile.accepts_insurance,
       show_experience_tag: profile.show_experience_tag,
-      whatsapp_url: buildWhatsappUrl(
-        profile.whatsapp,
-        normalizeProfessionalDisplayName(item.name) || item.name,
-      ),
+      whatsapp_url: buildWhatsappUrl(profile.whatsapp, displayName, whatsappDisplayName),
       favorited: item.favorited_by_patients.length > 0,
       followed: item.followed_by_patients.length > 0,
       whatsapp_available: Boolean(profile.whatsapp),

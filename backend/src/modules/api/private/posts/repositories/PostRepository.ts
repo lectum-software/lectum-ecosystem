@@ -4,7 +4,10 @@ import { canAttachCommunityMedia } from "@/utils/community-media-entitlement";
 import { getCommunityMentorRankingSignals } from "@/utils/community-mentor-ranking";
 import { getPostIdsWithPsychologistReplies } from "@/utils/community-post-replies";
 import { getMutedPostIds } from "@/utils/post-notification-mute";
-import { normalizeProfessionalDisplayName } from "@/utils/professional-name";
+import {
+  buildProfessionalFullDisplayName,
+  getProfessionalWhatsappDisplayName,
+} from "@/utils/professional-name";
 import {
   activeProfessionalEntitlementWhere,
   isVerifiedProfessionalEntitlement,
@@ -66,6 +69,8 @@ const communitySelect = {
 } satisfies Prisma.communitySelect;
 
 const professionalProfileSelect = {
+  professional_first_name: true,
+  professional_last_name: true,
   gender: true,
   crp: true,
   whatsapp: true,
@@ -283,11 +288,13 @@ const buildProfessionalWhatsappUrl = (
     whatsapp: string | null;
   } | null,
   psychologistName?: string | null,
+  psychologistWhatsappName?: string | null,
   source: LectumWhatsappMessageSource = "community_post",
 ) => {
   return buildLectumWhatsappUrl({
     phone: profile?.whatsapp,
     psychologistName,
+    psychologistWhatsappName,
     source,
   });
 };
@@ -338,8 +345,19 @@ const toAuthorResponse = (
   const shouldHideIdentity = isDeletedAuthor || shouldMaskAuthor;
   const deletedName = isPsychologist ? "Psicólogo Excluído" : "Membro Excluído";
   const displayName = isPsychologist
-    ? normalizeProfessionalDisplayName(author.name) || author.name
+    ? buildProfessionalFullDisplayName({
+        fallbackName: author.name,
+        firstName: profile?.professional_first_name,
+        lastName: profile?.professional_last_name,
+      })
     : author.name;
+  const whatsappDisplayName =
+    isPsychologist && !isDeletedAuthor
+      ? getProfessionalWhatsappDisplayName({
+          fallbackName: displayName,
+          firstName: profile?.professional_first_name,
+        })
+      : null;
 
   return {
     id: author.id,
@@ -360,9 +378,15 @@ const toAuthorResponse = (
     verified: isPsychologist && !isDeletedAuthor && isProfessionalVerified(profile),
     featured_badge:
       isPsychologist && !isDeletedAuthor ? mentorBadgeForScore(profile, mentorScore) : null,
+    whatsapp_name: whatsappDisplayName,
     whatsapp_url:
       isPsychologist && !isDeletedAuthor
-        ? buildProfessionalWhatsappUrl(profile, displayName, whatsappMessageSource)
+        ? buildProfessionalWhatsappUrl(
+            profile,
+            displayName,
+            whatsappDisplayName,
+            whatsappMessageSource,
+          )
         : null,
   };
 };

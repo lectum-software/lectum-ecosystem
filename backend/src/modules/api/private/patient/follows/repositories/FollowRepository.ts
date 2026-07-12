@@ -1,6 +1,6 @@
 import type { Prisma } from "@/external/generated/prisma/client";
 import prisma, { type ORM } from "@/infra/database/prisma";
-import { normalizeProfessionalDisplayName } from "@/utils/professional-name";
+import { buildProfessionalFullDisplayName } from "@/utils/professional-name";
 import {
   activeProfessionalEntitlementWhere,
   isVerifiedProfessionalEntitlement,
@@ -116,6 +116,8 @@ export class FollowRepository implements IFollowRepository {
               },
               psychologist_profile: {
                 select: {
+                  professional_first_name: true,
+                  professional_last_name: true,
                   headline: true,
                   bio: true,
                   crp: true,
@@ -190,12 +192,17 @@ export class FollowRepository implements IFollowRepository {
           const profile = item.psychologist.psychologist_profile;
           if (!profile) return null;
 
+          const displayName = buildProfessionalFullDisplayName({
+            fallbackName: item.psychologist.name,
+            firstName: profile.professional_first_name,
+            lastName: profile.professional_last_name,
+          });
+
           return {
             id: item.psychologist.id,
             relation_id: item.id,
             relation_created_at: item.createdAt,
-            name:
-              normalizeProfessionalDisplayName(item.psychologist.name) || item.psychologist.name,
+            name: displayName,
             avatar: item.psychologist.avatar,
             headline: profile.headline,
             bio: profile.bio,

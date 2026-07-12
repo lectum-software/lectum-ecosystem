@@ -3,7 +3,10 @@ import prisma, { type ORM } from "@/infra/database/prisma";
 import { getCommunityMentorRankingSignals } from "@/utils/community-mentor-ranking";
 import { getPostIdsWithPsychologistReplies } from "@/utils/community-post-replies";
 import { getMutedPostIds } from "@/utils/post-notification-mute";
-import { normalizeProfessionalDisplayName } from "@/utils/professional-name";
+import {
+  buildProfessionalFullDisplayName,
+  getProfessionalWhatsappDisplayName,
+} from "@/utils/professional-name";
 import {
   activeProfessionalEntitlementWhere,
   isVerifiedProfessionalEntitlement,
@@ -72,6 +75,8 @@ const communityRuleSelect = {
 } satisfies Prisma.community_ruleSelect;
 
 const professionalProfileSelect = {
+  professional_first_name: true,
+  professional_last_name: true,
   gender: true,
   crp: true,
   whatsapp: true,
@@ -104,6 +109,8 @@ const topMentorUserSelect = {
   psychologist_profile: {
     select: {
       headline: true,
+      professional_first_name: true,
+      professional_last_name: true,
       crp: true,
       rating_avg: true,
       rating_count: true,
@@ -655,14 +662,29 @@ const buildProfessionalWhatsappUrl = (
     whatsapp: string | null;
   } | null,
   psychologistName?: string | null,
+  psychologistWhatsappName?: string | null,
   source: LectumWhatsappMessageSource = "community_post",
 ) => {
   return buildLectumWhatsappUrl({
     phone: profile?.whatsapp,
     psychologistName,
+    psychologistWhatsappName,
     source,
   });
 };
+
+const buildUserProfessionalDisplayName = (user: {
+  name?: string | null;
+  psychologist_profile?: {
+    professional_first_name?: string | null;
+    professional_last_name?: string | null;
+  } | null;
+}) =>
+  buildProfessionalFullDisplayName({
+    fallbackName: user.name,
+    firstName: user.psychologist_profile?.professional_first_name,
+    lastName: user.psychologist_profile?.professional_last_name,
+  });
 
 const mentorBadgeForScore = (
   profile?: {
@@ -1144,8 +1166,19 @@ const toAuthorResponse = (
   const shouldHideIdentity = isDeletedAuthor || shouldMaskAuthor;
   const deletedName = isPsychologist ? "Psicólogo Excluído" : "Membro Excluído";
   const displayName = isPsychologist
-    ? normalizeProfessionalDisplayName(author.name) || author.name
+    ? buildProfessionalFullDisplayName({
+        fallbackName: author.name,
+        firstName: profile?.professional_first_name,
+        lastName: profile?.professional_last_name,
+      })
     : author.name;
+  const whatsappDisplayName =
+    isPsychologist && !isDeletedAuthor
+      ? getProfessionalWhatsappDisplayName({
+          fallbackName: displayName,
+          firstName: profile?.professional_first_name,
+        })
+      : null;
 
   return {
     id: author.id,
@@ -1165,9 +1198,15 @@ const toAuthorResponse = (
     verified: isPsychologist && !isDeletedAuthor && isProfessionalVerified(profile),
     featured_badge:
       isPsychologist && !isDeletedAuthor ? mentorBadgeForScore(profile, mentorScore) : null,
+    whatsapp_name: whatsappDisplayName,
     whatsapp_url:
       isPsychologist && !isDeletedAuthor
-        ? buildProfessionalWhatsappUrl(profile, displayName, whatsappMessageSource)
+        ? buildProfessionalWhatsappUrl(
+            profile,
+            displayName,
+            whatsappDisplayName,
+            whatsappMessageSource,
+          )
         : null,
   };
 };
@@ -2111,8 +2150,8 @@ export class CommunityRepository implements ICommunityRepository {
         const removedPostDiff = a.metrics.removed_posts - b.metrics.removed_posts;
         if (removedPostDiff !== 0) return removedPostDiff;
 
-        const aName = normalizeProfessionalDisplayName(a.mentor.name) || a.mentor.name;
-        const bName = normalizeProfessionalDisplayName(b.mentor.name) || b.mentor.name;
+        const aName = buildUserProfessionalDisplayName(a.mentor);
+        const bName = buildUserProfessionalDisplayName(b.mentor);
         const nameDiff = aName.localeCompare(bName, "pt-BR");
         if (nameDiff !== 0) return nameDiff;
 
@@ -2130,7 +2169,7 @@ export class CommunityRepository implements ICommunityRepository {
         badge: topMentorBadgeForPosition(position),
         professional: {
           id: item.mentor.id,
-          name: normalizeProfessionalDisplayName(item.mentor.name) || item.mentor.name,
+          name: buildUserProfessionalDisplayName(item.mentor),
           avatar: item.mentor.avatar,
           headline: profile?.headline ?? null,
           crp: profile?.crp ?? null,

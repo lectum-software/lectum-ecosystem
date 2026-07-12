@@ -193,6 +193,8 @@ Quando construído: módulo de audiência próprio (ex.: `backend/src/modules/ma
 | Campo | Tipo | Notas |
 |---|---|---|
 | `user_id` | `String @unique` | FK `user`, cascade |
+| `professional_first_name` | `String?` | Nome profissional do psicólogo para controle do CTA `Fale com [nome]` e saudação da mensagem pronta de WhatsApp; nullable para compatibilidade com perfis legados |
+| `professional_last_name` | `String?` | Sobrenome profissional do psicólogo; usado para montar `user.name`/nome completo profissional derivado nas APIs públicas e privadas |
 | `headline` | `String?` | bio curta exibida no card/perfil; opcional para publicação pública |
 | `bio` | `String?` | texto de apresentação/"Sobre"/experiência; opcional para publicação pública |
 | `cover_image_url` | `String?` | imagem pública independente de capa do perfil; não reutiliza thumbnail/frame de vídeo |
@@ -219,6 +221,8 @@ Quando construído: módulo de audiência próprio (ex.: `backend/src/modules/ma
 Regra complementar de identidade profissional (TASK-34, atualizada em 2026-07-11): CPF e CRP permanecem editáveis em perfis gratuitos ou sem validação profissional usada para entitlement. A API privada de perfil deve expor o campo derivado `profile.identity_fields_locked=true` quando houver assinatura profissional ativa não gratuita com `crp_status="aprovado"` ou `cfp_verified_at` preenchido por consulta real autorizada e CPF/CRP persistidos. Complemento de cortesia: uma cortesia administrativa ativa (`professional_subscription.source="admin_grant"`, plano não gratuito, status vigente) também bloqueia CPF, Regional do CRP e Nº de registro CRP na edição do psicólogo, mesmo sem preencher artificialmente `cfp_verified_at`, porque o Admin passa a ser a fonte operacional desses campos durante a cortesia. Quando essa flag estiver ativa, o backend ignora qualquer tentativa de alterar CPF/CRP pelo perfil e o frontend renderiza os campos bloqueados.
 
 Complemento TASK-66 (2026-07-11): na etapa `/api/private/psychologist/cfp/search`, um CPF válido informado pelo psicólogo é persistido em `psychologist_profile.cpf` antes da chamada externa, mesmo quando a API automática falha, fica indisponível ou retorna erro operacional. Essa persistência não aprova o registro, não preenche `cfp_verified_at`, não altera CRP/data e não sobrescreve identidades já bloqueadas por aprovação profissional ou cortesia administrativa ativa; serve para a triagem do Admin na aba Perfil e cadastro. Tentativas históricas com CPF em `professional_registry_check` podem ser usadas como fallback de exibição no Admin sem copiar dados retroativamente.
+
+Complemento TASK-69 (2026-07-12): psicólogos passam a ter `professional_first_name` e `professional_last_name` no `psychologist_profile`. O cadastro manual exige os dois campos e deriva `user.name` para compatibilidade. O cadastro/login Google preenche esses campos por `given_name`/`family_name` quando disponíveis, com fallback para `displayName`. Pacientes permanecem com campo único de nome de exibição em `user.name`/`patient_profile`, sem sobrenome de exibição.
 
 `phone_verification` (OTP por SMS/Twilio para WhatsApp do psicólogo, TASK-16):
 
@@ -828,7 +832,8 @@ Para evitar referência a tabela inexistente, criar nesta ordem (cada uma com su
 
 ## Complemento 2026-06-26 - mensagens `wa.me` personalizadas
 
-- Links `author.whatsapp_url` e `whatsapp_url` de perfil/listagem/contato passam a incluir mensagem pronta com o mesmo primeiro nome útil exibido no CTA `Falar com ...` do psicólogo quando disponível.
-- O primeiro nome útil normaliza espaços, remove prefixos/títulos profissionais de início (`Dr.`, `Dra.`, `Psicólogo`, `Psicóloga`, `Psi`/`Psic.`) e usa o primeiro termo restante que não seja partícula de nome (`de`, `da`, `do`, `das`, `dos`, `di`, `du`, `e`); se não houver nome, mantém fallback genérico.
+- Links `author.whatsapp_url` e `whatsapp_url` de perfil/listagem/contato passam a incluir mensagem pronta com o mesmo nome exibido no CTA `Fale com ...` do psicólogo quando disponível.
+- A partir da TASK-69, esse nome vem prioritariamente de `psychologist_profile.professional_first_name`; se o campo estiver vazio em perfil legado, o fallback continua usando o primeiro nome útil derivado de `user.name`.
+- O fallback de primeiro nome útil normaliza espaços, remove prefixos/títulos profissionais de início (`Dr.`, `Dra.`, `Psicólogo`, `Psicóloga`, `Psi`/`Psic.`) e usa o primeiro termo restante que não seja partícula de nome (`de`, `da`, `do`, `das`, `dos`, `di`, `du`, `e`); se não houver nome, mantém fallback genérico.
 - O texto do `wa.me` é contextual: perfil (`encontrei seu perfil na Lectum`), post profissional (`encontrei seu post na Lectum`) e resposta/comentário profissional (`encontrei sua resposta na Lectum`).
-- O contrato permanece uma string URL pública; não há exposição do telefone bruto fora do link de intenção nem mudança de schema.
+- O contrato permanece uma string URL pública; não há exposição do telefone bruto fora do link de intenção.

@@ -13,6 +13,7 @@ import {
   useState,
 } from "react";
 import {
+  getPsychologistWhatsappDisplayName,
   PsychologistWhatsAppButtonContent,
   PsychologistWhatsAppRedirectButton,
 } from "@/components/psychologists/psychologist-whatsapp-redirect-button";
@@ -44,6 +45,7 @@ export type PsychologistCardItem = {
   social_value?: boolean;
   accepts_insurance?: boolean;
   show_experience_tag?: boolean;
+  whatsapp_name?: string | null;
   whatsapp_url?: string | null;
   favorited: boolean;
   specialties: Array<{ name: string }>;
@@ -582,6 +584,9 @@ export function PsychologistCard({
   const mediaIsPublic = isPublicMediaUrl(avatarSrc);
   const tags = buildBenefitTags(psychologist);
   const displayName = getPsychologistDisplayName(psychologist);
+  const whatsappName =
+    psychologist.whatsapp_name ||
+    getPsychologistWhatsappDisplayName({ id: psychologist.id, name: displayName });
   const route = `/psychologists/${psychologist.id}`;
   const overlayRef = useRef<HTMLDivElement>(null);
   const shareButtonRef = useRef<HTMLButtonElement>(null);
@@ -862,10 +867,11 @@ export function PsychologistCard({
                   id: psychologist.id,
                   name: displayName,
                   typeLabel: getPsychologistTypeLabel(psychologist.gender),
+                  whatsappName,
                   whatsappUrl: psychologist.whatsapp_url,
                 }}
               >
-                <PsychologistWhatsAppButtonContent />
+                <PsychologistWhatsAppButtonContent label={`Fale com ${whatsappName}`} />
               </PsychologistWhatsAppRedirectButton>
             ) : (
               <Button

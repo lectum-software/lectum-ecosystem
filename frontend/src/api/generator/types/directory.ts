@@ -1,4 +1,4 @@
-﻿import type { PostListPost } from "./posts";
+import type { PostListPost } from "./posts";
 
 export type DirectoryCatalogItem = {
   active?: boolean;
@@ -26,6 +26,7 @@ export type DirectoryAcademicFormation = {
 export type DirectoryPsychologist = {
   id: string;
   name: string;
+  whatsapp_name: string | null;
   avatar: string | null;
   headline: string | null;
   bio: string | null;

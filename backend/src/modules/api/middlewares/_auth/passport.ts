@@ -15,6 +15,11 @@ import type { user } from "@/interfaces/objects";
 //Repositories
 import { LoginRepository } from "@/modules/api/public/auth/login/repositories/LoginRepository";
 import { getGoogleOAuthCallbackUrl } from "@/modules/api/public/google/utils/config";
+import {
+  buildProfessionalFullDisplayName,
+  normalizeProfessionalNamePart,
+  splitProfessionalNameFallback,
+} from "@/utils/professional-name";
 //Emits
 import { emit_hidrate } from "./emit";
 import { getJwtSecret } from "./utils/jwt-secret";
@@ -38,6 +43,21 @@ const parseUserRole = (role: unknown): UserRole | undefined => {
   if (typeof role !== "string") return undefined;
 
   return allowedUserRoles.includes(role as UserRole) ? (role as UserRole) : undefined;
+};
+
+const resolveGoogleProfessionalNameParts = (profile: Profile) => {
+  const fallback = splitProfessionalNameFallback(profile.displayName);
+  const profileJson = (profile._json ?? {}) as {
+    family_name?: string | null;
+    given_name?: string | null;
+  };
+  const firstName = normalizeProfessionalNamePart(profileJson.given_name) || fallback.firstName;
+  const lastName = normalizeProfessionalNamePart(profileJson.family_name) || fallback.lastName;
+
+  return {
+    firstName,
+    lastName,
+  };
 };
 
 passport.serializeUser<user>((user, done) => {
@@ -116,8 +136,18 @@ passport.use(
             type: 3,
           });
 
-        const googleName = profile.displayName?.trim();
+        const googleDisplayName = profile.displayName?.trim();
+        const googleProfessionalName = resolveGoogleProfessionalNameParts(profile);
+        const googleName = googleDisplayName;
         const googleAvatar = profile.photos?.[0]?.value;
+        const googleNameForRole = (targetRole?: string | null) =>
+          targetRole === "psicologo"
+            ? buildProfessionalFullDisplayName({
+                fallbackName: googleDisplayName || email,
+                firstName: googleProfessionalName.firstName,
+                lastName: googleProfessionalName.lastName,
+              })
+            : googleDisplayName || email;
 
         const repo = new LoginRepository(device_id, [
           { model: "company", columns: ["ai_api_key"] },
@@ -179,8 +209,13 @@ passport.use(
             provider: "google",
           };
 
-          if (googleName && (!linkedUser.name || linkedUser.provider === "google")) {
-            profileUpdate.name = googleName;
+          const linkedUserGoogleName = googleNameForRole(linkedUser.role);
+
+          if (
+            (googleName || linkedUser.role === "psicologo") &&
+            (!linkedUser.name || linkedUser.provider === "google")
+          ) {
+            profileUpdate.name = linkedUserGoogleName;
           }
 
           if (googleAvatar && !linkedUser.avatar) {
@@ -198,6 +233,29 @@ passport.use(
               status: 404,
               ...error("account_not_found", {}),
               type: 3,
+            });
+          }
+
+          if (
+            linkedUser.id &&
+            linkedUser.role === "psicologo" &&
+            (googleProfessionalName.firstName || googleProfessionalName.lastName)
+          ) {
+            await prisma.psychologist_profile.updateMany({
+              where: {
+                user_id: linkedUser.id,
+                deleted: false,
+                OR: [
+                  { professional_first_name: null },
+                  { professional_first_name: "" },
+                  { professional_last_name: null },
+                  { professional_last_name: "" },
+                ],
+              },
+              data: {
+                professional_first_name: googleProfessionalName.firstName || undefined,
+                professional_last_name: googleProfessionalName.lastName || undefined,
+              },
             });
           }
 
@@ -310,7 +368,11 @@ passport.use(
 
           user = await repo.store({
             b: {
-              name: googleName || email,
+              name: googleNameForRole(role),
+              professional_first_name:
+                role === "psicologo" ? googleProfessionalName.firstName : undefined,
+              professional_last_name:
+                role === "psicologo" ? googleProfessionalName.lastName : undefined,
               email,
               avatar: googleAvatar,
               provider: "google",
@@ -322,8 +384,13 @@ passport.use(
         } else {
           const profileUpdate: { name?: string; avatar?: string | null; provider?: string } = {};
 
-          if (googleName && (!user.name || user.provider === "google")) {
-            profileUpdate.name = googleName;
+          const userGoogleName = googleNameForRole(user.role);
+
+          if (
+            (googleName || user.role === "psicologo") &&
+            (!user.name || user.provider === "google")
+          ) {
+            profileUpdate.name = userGoogleName;
           }
 
           if (googleAvatar && !user.avatar) {
@@ -339,6 +406,29 @@ passport.use(
               p: { id: user.id },
               b: profileUpdate,
               auth: user,
+            });
+          }
+
+          if (
+            user?.id &&
+            user.role === "psicologo" &&
+            (googleProfessionalName.firstName || googleProfessionalName.lastName)
+          ) {
+            await prisma.psychologist_profile.updateMany({
+              where: {
+                user_id: user.id,
+                deleted: false,
+                OR: [
+                  { professional_first_name: null },
+                  { professional_first_name: "" },
+                  { professional_last_name: null },
+                  { professional_last_name: "" },
+                ],
+              },
+              data: {
+                professional_first_name: googleProfessionalName.firstName || undefined,
+                professional_last_name: googleProfessionalName.lastName || undefined,
+              },
             });
           }
         }

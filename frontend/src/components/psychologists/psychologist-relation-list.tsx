@@ -11,6 +11,7 @@ import { usePatient } from "@/api/callers/patient";
 import type { PatientRelationPsychologist, PatientRelationQuery } from "@/api/generator/types";
 import { getFavoritePsychologists } from "@/api/req/patient";
 import {
+  getPsychologistWhatsappDisplayName,
   PsychologistWhatsAppButtonContent,
   PsychologistWhatsAppRedirectButton,
 } from "@/components/psychologists/psychologist-whatsapp-redirect-button";
@@ -331,6 +332,9 @@ const FavoritePsychologistCard = ({
   const route = `/psychologists/${psychologist.id}`;
   const favoriteBio = getFavoriteBio(psychologist);
   const displayName = normalizeProfessionalDisplayName(psychologist.name) || psychologist.name;
+  const whatsappName =
+    psychologist.whatsapp_name ||
+    getPsychologistWhatsappDisplayName({ id: psychologist.id, name: displayName });
 
   const handleFavoriteClick = (event: MouseEvent<HTMLButtonElement>) => {
     event.preventDefault();
@@ -403,7 +407,7 @@ const FavoritePsychologistCard = ({
 
         <div className="mt-auto pt-4 sm:pt-5">
           <PsychologistWhatsAppRedirectButton
-            aria-label={`Chamar ${displayName} no WhatsApp`}
+            aria-label={`Fale com ${whatsappName} no WhatsApp`}
             className="inline-flex min-h-[30px] w-full min-w-0 items-center justify-center gap-1 rounded-[11px] bg-success px-2 py-1.5 text-[10px] font-extrabold leading-none text-white transition-colors hover:bg-success/90 active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-success/45 sm:min-h-[34px] sm:gap-1.5 sm:rounded-[13px] sm:px-2.5 sm:py-1.5 sm:text-[11px]"
             psychologist={{
               avatar: psychologist.avatar,
@@ -411,13 +415,14 @@ const FavoritePsychologistCard = ({
               id: psychologist.id,
               name: displayName,
               typeLabel: getContactProfession(psychologist.gender),
+              whatsappName,
               whatsappUrl: psychologist.whatsapp_url,
             }}
             stopPropagation
           >
             <PsychologistWhatsAppButtonContent
               iconClassName="h-3 w-3 sm:h-3.5 sm:w-3.5"
-              label="WhatsApp"
+              label={`Fale com ${whatsappName}`}
               labelClassName="inline-flex min-w-max shrink-0 items-center self-center !overflow-visible !text-clip text-[10px] font-extrabold leading-none sm:text-[11px]"
             />
           </PsychologistWhatsAppRedirectButton>

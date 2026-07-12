@@ -17,6 +17,7 @@ export type DirectoryPsychologistAcademicFormation = {
 export type DirectoryPsychologistProfile = {
   id: string;
   name: string;
+  whatsapp_name: string | null;
   avatar: string | null;
   headline: string | null;
   bio: string | null;

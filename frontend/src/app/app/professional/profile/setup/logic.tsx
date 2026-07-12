@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import {
   Award,
@@ -1360,9 +1360,13 @@ export const ProfessionalProfileSetupLogic = () => {
     const lockedIdentityProfile = shouldLockProfessionalIdentityFields
       ? profile.data?.profile
       : null;
+    const professionalFirstName = values.professional_first_name.trim();
+    const professionalLastName = values.professional_last_name.trim();
 
     update.mutate({
-      name: values.name,
+      name: [professionalFirstName, professionalLastName].filter(Boolean).join(" "),
+      professional_first_name: professionalFirstName,
+      professional_last_name: professionalLastName,
       cpf: lockedIdentityProfile ? lockedIdentityProfile.cpf : values.cpf || null,
       birthdate: values.birthdate || null,
       gender: values.gender || null,
@@ -1773,7 +1777,10 @@ export const ProfessionalProfileSetupLogic = () => {
             <SectionCard icon={UserRound} title="Informações básicas">
               <div className="grid gap-4">
                 <div className="grid gap-3">
-                  {renderField("name")}
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    {renderField("professional_first_name")}
+                    {renderField("professional_last_name")}
+                  </div>
                   {renderField("cpf", lockedIdentityFieldProps)}
                   {renderField("birthdate")}
                   {renderField("gender")}

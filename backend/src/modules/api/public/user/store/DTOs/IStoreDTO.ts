@@ -10,6 +10,8 @@ export interface IStoreDTO {
   b: {
     //*
     name: string;
+    professional_first_name?: string;
+    professional_last_name?: string;
     email: string;
     active?: boolean;
     password: string;

@@ -5,16 +5,21 @@ export const TERMS_VERSION = "task09-professional-terms-pending-legal-copy";
 
 export const registerPsychologistSchema = z
   .object({
-    name: z
+    professional_first_name: z
       .string()
       .trim()
-      .min(2, "Informe seu nome completo")
-      .max(120, "Use no máximo 120 caracteres"),
-    email: z.email("Informe um e-mail profissional válido"),
+      .min(2, "Informe seu nome profissional")
+      .max(80, "Use no m\u00e1ximo 80 caracteres"),
+    professional_last_name: z
+      .string()
+      .trim()
+      .min(1, "Informe seu sobrenome profissional")
+      .max(120, "Use no m\u00e1ximo 120 caracteres"),
+    email: z.email("Informe um e-mail profissional v\u00e1lido"),
     password: z
       .string()
-      .min(10, "Use no mínimo 10 caracteres")
-      .max(128, "Use no máximo 128 caracteres"),
+      .min(10, "Use no m\u00ednimo 10 caracteres")
+      .max(128, "Use no m\u00e1ximo 128 caracteres"),
     password_confirm: z.string().min(1, "Confirme sua senha"),
     terms_accepted: z.boolean().refine((value) => value, {
       message: "Aceite os termos profissionais para continuar",
@@ -34,11 +39,19 @@ export type RegisterPsychologistForm = z.infer<typeof registerPsychologistSchema
 
 const fields = [
   {
-    name: "name",
+    name: "professional_first_name",
     field: "input",
-    label: "Nome completo",
-    placeholder: "Seu nome profissional",
-    autoComplete: "name",
+    label: "Nome profissional",
+    placeholder: "Ex.: Ana Clara",
+    autoComplete: "given-name",
+    inputClassName: "h-14 rounded-[var(--lectum-control-radius)] bg-surface-muted text-base",
+  },
+  {
+    name: "professional_last_name",
+    field: "input",
+    label: "Sobrenome profissional",
+    placeholder: "Ex.: Martins",
+    autoComplete: "family-name",
     inputClassName: "h-14 rounded-[var(--lectum-control-radius)] bg-surface-muted text-base",
   },
   {
@@ -54,7 +67,7 @@ const fields = [
     name: "password",
     field: "input",
     label: "Senha",
-    placeholder: "••••••••",
+    placeholder: "\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022",
     type: "password",
     autoComplete: "new-password",
     inputClassName: "h-14 rounded-[var(--lectum-control-radius)] bg-surface-muted text-base",
@@ -63,7 +76,7 @@ const fields = [
     name: "password_confirm",
     field: "input",
     label: "Confirmar senha",
-    placeholder: "••••••••",
+    placeholder: "\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022",
     type: "password",
     autoComplete: "new-password",
     inputClassName: "h-14 rounded-[var(--lectum-control-radius)] bg-surface-muted text-base",
@@ -72,7 +85,7 @@ const fields = [
     name: "terms_accepted",
     field: "checkbox",
     label:
-      "Ao criar uma conta, você concorda com nossos Termos de Serviço e Política de Privacidade.",
+      "Ao criar uma conta, voc\u00ea concorda com nossos Termos de Servi\u00e7o e Pol\u00edtica de Privacidade.",
     inputClassName: "mt-0.5 h-4 w-4",
   },
 ] satisfies Field<RegisterPsychologistForm>[];
@@ -82,7 +95,8 @@ export const useForm = () => {
     fields,
     schema: registerPsychologistSchema,
     defaultValues: {
-      name: "",
+      professional_first_name: "",
+      professional_last_name: "",
       email: "",
       password: "",
       password_confirm: "",

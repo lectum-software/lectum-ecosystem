@@ -37,7 +37,13 @@ export class StoreRepository implements IStoreRepository {
     else if (props.include) read.include = props.include;
 
     const created = await prisma.$transaction(async (tx) => {
-      const { terms_accepted, terms_version, ...userData } = props.b;
+      const {
+        professional_first_name,
+        professional_last_name,
+        terms_accepted,
+        terms_version,
+        ...userData
+      } = props.b;
       const role = userData.role || "paciente";
 
       const item = await tx.user.create({
@@ -60,6 +66,8 @@ export class StoreRepository implements IStoreRepository {
         await tx.psychologist_profile.create({
           data: {
             user_id: item.id,
+            professional_first_name,
+            professional_last_name,
             crp_status: "pendente",
             published: false,
           },

@@ -28,6 +28,8 @@ export type RegisterPatientPayload = {
 
 export type RegisterPsychologistPayload = {
   name: string;
+  professional_first_name: string;
+  professional_last_name: string;
   email: string;
   password: string;
   password_confirm: string;

@@ -33,6 +33,22 @@ export const schema: IValidatorRequest = {
       coerse: "string",
     },
     {
+      key: "professional_first_name",
+      method: "string",
+      coerse: "string",
+      optional: true,
+      min: 2,
+      max: 80,
+    },
+    {
+      key: "professional_last_name",
+      method: "string",
+      coerse: "string",
+      optional: true,
+      min: 1,
+      max: 120,
+    },
+    {
       key: "email",
       method: "email",
       coerse: "string",

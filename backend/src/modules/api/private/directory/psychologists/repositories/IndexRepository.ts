@@ -1,7 +1,10 @@
 import type { Prisma } from "@/external/generated/prisma/client";
 import prisma, { type ORM } from "@/infra/database/prisma";
 import { crpExperienceYears } from "@/utils/professional-experience";
-import { normalizeProfessionalDisplayName } from "@/utils/professional-name";
+import {
+  buildProfessionalFullDisplayName,
+  getProfessionalWhatsappDisplayName,
+} from "@/utils/professional-name";
 import { rankPsychologistCandidates } from "@/utils/psychologist-public-ranking";
 import {
   activeProfessionalEntitlementWhere,
@@ -89,8 +92,17 @@ const hasAvailableToday = (value: unknown) => {
   return normalizeStringArray(value).includes(currentWeekdayValue());
 };
 
-const buildWhatsappUrl = (value?: string | null, psychologistName?: string | null) =>
-  buildLectumWhatsappUrl({ phone: value, psychologistName, source: "profile" });
+const buildWhatsappUrl = (
+  value?: string | null,
+  psychologistName?: string | null,
+  psychologistWhatsappName?: string | null,
+) =>
+  buildLectumWhatsappUrl({
+    phone: value,
+    psychologistName,
+    psychologistWhatsappName,
+    source: "profile",
+  });
 
 const normalizePagination = (query: IIndexDTO["q"]) => {
   const page = Math.max(1, Number(query.page || 1));
@@ -298,6 +310,8 @@ export class IndexRepository implements IIndexRepository {
         select: {
           id: true,
           user_id: true,
+          professional_first_name: true,
+          professional_last_name: true,
           createdAt: true,
           updatedAt: true,
           headline: true,
@@ -415,43 +429,53 @@ export class IndexRepository implements IIndexRepository {
       .map(({ item }) => item);
 
     return {
-      data: rankedCandidates.map((item) => ({
-        id: item.user.id,
-        name: normalizeProfessionalDisplayName(item.user.name) || item.user.name,
-        avatar: item.user.avatar,
-        headline: item.headline,
-        bio: item.bio,
-        video_url: item.video_url,
-        video_cover_url: item.video_cover_url,
-        crp: item.crp,
-        gender: item.gender,
-        modality: item.modality,
-        languages: normalizeLanguages(item.languages),
-        rating_avg: item.rating_avg,
-        rating_count: item.rating_count,
-        verified: isVerifiedProfessionalEntitlement(item),
-        available_today: hasAvailableToday(item.available_days),
-        formation_years: crpExperienceYears(item.crp_registration_date),
-        discount_first_session: item.discount_first_session,
-        social_value: item.social_value,
-        accepts_insurance: item.accepts_insurance,
-        show_experience_tag: item.show_experience_tag,
-        whatsapp_url: buildWhatsappUrl(
-          item.whatsapp,
-          normalizeProfessionalDisplayName(item.user.name) || item.user.name,
-        ),
-        favorited: item.user.favorited_by_patients.length > 0,
-        followed: item.user.followed_by_patients.length > 0,
-        specialties: item.user.psychologist_specialties
-          .map(({ specialty }) => specialty)
-          .filter(isCatalogItem),
-        services: item.user.psychologist_services
-          .map(({ service }) => service)
-          .filter(isCatalogItem),
-        approaches: item.user.psychologist_approaches
-          .map(({ approach }) => approach)
-          .filter(isCatalogItem),
-      })),
+      data: rankedCandidates.map((item) => {
+        const displayName = buildProfessionalFullDisplayName({
+          fallbackName: item.user.name,
+          firstName: item.professional_first_name,
+          lastName: item.professional_last_name,
+        });
+        const whatsappName = getProfessionalWhatsappDisplayName({
+          fallbackName: displayName,
+          firstName: item.professional_first_name,
+        });
+
+        return {
+          id: item.user.id,
+          name: displayName,
+          whatsapp_name: whatsappName,
+          avatar: item.user.avatar,
+          headline: item.headline,
+          bio: item.bio,
+          video_url: item.video_url,
+          video_cover_url: item.video_cover_url,
+          crp: item.crp,
+          gender: item.gender,
+          modality: item.modality,
+          languages: normalizeLanguages(item.languages),
+          rating_avg: item.rating_avg,
+          rating_count: item.rating_count,
+          verified: isVerifiedProfessionalEntitlement(item),
+          available_today: hasAvailableToday(item.available_days),
+          formation_years: crpExperienceYears(item.crp_registration_date),
+          discount_first_session: item.discount_first_session,
+          social_value: item.social_value,
+          accepts_insurance: item.accepts_insurance,
+          show_experience_tag: item.show_experience_tag,
+          whatsapp_url: buildWhatsappUrl(item.whatsapp, displayName, whatsappName),
+          favorited: item.user.favorited_by_patients.length > 0,
+          followed: item.user.followed_by_patients.length > 0,
+          specialties: item.user.psychologist_specialties
+            .map(({ specialty }) => specialty)
+            .filter(isCatalogItem),
+          services: item.user.psychologist_services
+            .map(({ service }) => service)
+            .filter(isCatalogItem),
+          approaches: item.user.psychologist_approaches
+            .map(({ approach }) => approach)
+            .filter(isCatalogItem),
+        };
+      }),
       filters,
       page: pagination.page,
       pages: Math.ceil(count / pagination.limit),

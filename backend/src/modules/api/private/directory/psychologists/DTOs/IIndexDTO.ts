@@ -1,4 +1,4 @@
-﻿import type { user } from "@/interfaces/objects";
+import type { user } from "@/interfaces/objects";
 import type { PaginationResponse } from "@/interfaces/pagination";
 
 export type DirectoryCatalogItem = {
@@ -22,6 +22,7 @@ export type DirectoryCatalogCategory = {
 export type DirectoryPsychologist = {
   id: string;
   name: string;
+  whatsapp_name: string | null;
   avatar: string | null;
   headline: string | null;
   bio: string | null;

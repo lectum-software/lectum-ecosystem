@@ -1,4 +1,4 @@
-﻿import { z } from "zod";
+import { z } from "zod";
 import type { FreeProfessionalProfile } from "@/api/generator/types/free-profile";
 import { onlyDigits } from "@/components/controllers/utils";
 import { type Field, type FieldOption, useFormList } from "@/hooks/form";
@@ -24,7 +24,8 @@ export type AcademicFormationForm = {
 };
 
 export type FreeProfileForm = {
-  name: string;
+  professional_first_name: string;
+  professional_last_name: string;
   gender: string;
   race_color: string | null;
   religion: string | null;
@@ -108,7 +109,8 @@ const isValidBirthdate = (value: string) => {
 
 export const freeProfileSchema = z
   .object({
-    name: z.string().trim().min(2, "Informe seu nome profissional").max(120),
+    professional_first_name: z.string().trim().min(2, "Informe seu nome profissional").max(80),
+    professional_last_name: z.string().trim().min(1, "Informe seu sobrenome profissional").max(120),
     gender: z.string().trim().min(1, "Selecione seu gênero").max(40),
     race_color: z.string().trim().max(40).nullable(),
     religion: z.string().trim().max(80).nullable(),
@@ -187,12 +189,20 @@ const PROFESSIONAL_COUNTRY_CALLING_CODE_OPTIONS = COUNTRY_CALLING_CODE_OPTIONS.m
 export const createFields = (languageOptions: FieldOption[] = LANGUAGE_OPTIONS) =>
   [
     {
-      name: "name",
+      name: "professional_first_name",
       field: "input",
-      label: "Nome completo",
-      placeholder: "Ex.: Roberto Silva",
+      label: "Nome profissional",
+      placeholder: "Ex.: Roberto",
       required: true,
-      autoComplete: "name",
+      autoComplete: "given-name",
+    },
+    {
+      name: "professional_last_name",
+      field: "input",
+      label: "Sobrenome profissional",
+      placeholder: "Ex.: Silva",
+      required: true,
+      autoComplete: "family-name",
     },
     {
       name: "gender",
@@ -383,11 +393,25 @@ const hasConfiguredProfile = (data?: FreeProfessionalProfile | null) => {
   );
 };
 
-export const getDefaultValues = (data?: FreeProfessionalProfile | null): FreeProfileForm => {
-  const countryCode = findCountryCallingCode(data?.profile.whatsapp);
+const splitProfessionalNameFallback = (fullName?: string | null) => {
+  const parts = String(fullName ?? "")
+    .trim()
+    .replace(/\s{2,}/g, " ")
+    .split(/\s+/)
+    .filter(Boolean);
 
   return {
-    name: data?.user.name || "",
+    firstName: parts[0] ?? "",
+    lastName: parts.length > 1 ? parts.slice(1).join(" ") : "",
+  };
+};
+export const getDefaultValues = (data?: FreeProfessionalProfile | null): FreeProfileForm => {
+  const countryCode = findCountryCallingCode(data?.profile.whatsapp);
+  const fallbackName = splitProfessionalNameFallback(data?.user.name);
+
+  return {
+    professional_first_name: data?.profile.professional_first_name || fallbackName.firstName,
+    professional_last_name: data?.profile.professional_last_name || fallbackName.lastName,
     gender: data?.profile.gender || "",
     race_color: data?.profile.race_color || "",
     religion: data?.profile.religion || "",

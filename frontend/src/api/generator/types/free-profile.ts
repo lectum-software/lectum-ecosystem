@@ -50,6 +50,8 @@ export type FreeProfessionalProfile = {
   };
   profile: {
     id: string;
+    professional_first_name: string | null;
+    professional_last_name: string | null;
     headline: string | null;
     bio: string | null;
     modality: string | null;
@@ -110,6 +112,8 @@ export type FreeProfessionalProfile = {
 
 export type FreeProfessionalProfilePayload = {
   name: string;
+  professional_first_name: string;
+  professional_last_name: string;
   cpf: string | null;
   birthdate: string | null;
   gender: string | null;

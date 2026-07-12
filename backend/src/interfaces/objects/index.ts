@@ -120,6 +120,8 @@ export interface psychologist_profile {
   updatedAt?: Date | null;
   createdAt?: Date | null;
   user_id?: string | null;
+  professional_first_name?: string | null;
+  professional_last_name?: string | null;
   headline?: string | null;
   bio?: string | null;
   cover_image_url?: string | null;

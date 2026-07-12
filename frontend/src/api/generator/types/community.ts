@@ -76,6 +76,7 @@ export type CommunityAuthor = {
   crp: string | null;
   verified: boolean;
   featured_badge: string | null;
+  whatsapp_name: string | null;
   whatsapp_url: string | null;
 };
 

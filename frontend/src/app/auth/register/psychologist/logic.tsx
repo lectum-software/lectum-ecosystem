@@ -69,8 +69,13 @@ export const RegisterPsychologistLogic = () => {
 
   const handleSubmit = (data: RegisterPsychologistForm) => {
     setApiError(null);
+    const professionalFirstName = data.professional_first_name.trim();
+    const professionalLastName = data.professional_last_name.trim();
+
     registerPsychologist.mutate({
-      name: data.name.trim(),
+      name: [professionalFirstName, professionalLastName].filter(Boolean).join(" "),
+      professional_first_name: professionalFirstName,
+      professional_last_name: professionalLastName,
       email: data.email,
       password: data.password,
       password_confirm: data.password_confirm,

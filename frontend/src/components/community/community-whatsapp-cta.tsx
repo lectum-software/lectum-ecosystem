@@ -2,15 +2,13 @@
 
 import Image from "next/image";
 import {
+  getPsychologistWhatsappDisplayName,
   PsychologistWhatsAppButtonContent,
   type PsychologistWhatsAppIdentity,
   PsychologistWhatsAppRedirectButton,
 } from "@/components/psychologists/psychologist-whatsapp-redirect-button";
 import { cn } from "@/lib/utils";
-import {
-  getProfessionalShortDisplayName,
-  normalizeProfessionalDisplayName,
-} from "@/utils/professional-name";
+import { normalizeProfessionalDisplayName } from "@/utils/professional-name";
 
 export type CommunityWhatsAppAuthor = {
   avatar?: string | null;
@@ -18,6 +16,7 @@ export type CommunityWhatsAppAuthor = {
   id: string;
   name: string;
   type_label?: string | null;
+  whatsapp_name?: string | null;
   whatsapp_url?: string | null;
 };
 
@@ -39,6 +38,7 @@ export const toCommunityWhatsAppIdentity = (
   id: author.id,
   name: normalizeProfessionalDisplayName(author.name) || author.name,
   typeLabel: author.type_label,
+  whatsappName: author.whatsapp_name,
   whatsappUrl: author.whatsapp_url,
 });
 
@@ -49,7 +49,7 @@ export const CommunityWhatsAppCta = ({
   stopPropagation = false,
 }: CommunityWhatsAppCtaProps) => {
   const headingLabel = "WhatsApp";
-  const actionLabel = `Falar com ${getProfessionalShortDisplayName(psychologist.name)}`;
+  const actionLabel = `Fale com ${getPsychologistWhatsappDisplayName(psychologist)}`;
 
   return (
     <PsychologistWhatsAppRedirectButton

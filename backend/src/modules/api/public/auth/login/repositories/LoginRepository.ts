@@ -109,7 +109,13 @@ export class LoginRepository implements ILoginRepository {
 
   async store(data: IStoreDTO): Promise<user | null> {
     const res = await prisma.$transaction(async (tx) => {
-      const { terms_accepted, terms_version, ...userData } = data.b;
+      const {
+        professional_first_name,
+        professional_last_name,
+        terms_accepted,
+        terms_version,
+        ...userData
+      } = data.b;
       const role = userData.role || "paciente";
 
       const user = await tx.user.create({
@@ -139,6 +145,8 @@ export class LoginRepository implements ILoginRepository {
         await tx.psychologist_profile.create({
           data: {
             user_id: user.id,
+            professional_first_name,
+            professional_last_name,
             crp_status: "pendente",
             published: false,
           },

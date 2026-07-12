@@ -1,7 +1,10 @@
 import type { Prisma } from "@/external/generated/prisma/client";
 import prisma, { type ORM } from "@/infra/database/prisma";
 import { crpExperienceYears } from "@/utils/professional-experience";
-import { normalizeProfessionalDisplayName } from "@/utils/professional-name";
+import {
+  buildProfessionalFullDisplayName,
+  getProfessionalWhatsappDisplayName,
+} from "@/utils/professional-name";
 import {
   activeProfessionalEntitlementWhere,
   isVerifiedProfessionalEntitlement,
@@ -72,8 +75,17 @@ const moreExperiencedCutoffDate = () => {
   return date;
 };
 
-const buildWhatsappUrl = (value?: string | null, psychologistName?: string | null) =>
-  buildLectumWhatsappUrl({ phone: value, psychologistName, source: "profile" });
+const buildWhatsappUrl = (
+  value?: string | null,
+  psychologistName?: string | null,
+  psychologistWhatsappName?: string | null,
+) =>
+  buildLectumWhatsappUrl({
+    phone: value,
+    psychologistName,
+    psychologistWhatsappName,
+    source: "profile",
+  });
 
 const isCatalogItem = (
   value: PatientRelationCatalogItem | null,
@@ -239,6 +251,8 @@ export class FavoriteRepository implements IFavoriteRepository {
               },
               psychologist_profile: {
                 select: {
+                  professional_first_name: true,
+                  professional_last_name: true,
                   headline: true,
                   bio: true,
                   cover_image_url: true,
@@ -324,12 +338,22 @@ export class FavoriteRepository implements IFavoriteRepository {
           const profile = item.psychologist.psychologist_profile;
           if (!profile) return null;
 
+          const displayName = buildProfessionalFullDisplayName({
+            fallbackName: item.psychologist.name,
+            firstName: profile.professional_first_name,
+            lastName: profile.professional_last_name,
+          });
+          const whatsappDisplayName = getProfessionalWhatsappDisplayName({
+            fallbackName: displayName,
+            firstName: profile.professional_first_name,
+          });
+
           return {
             id: item.psychologist.id,
             relation_id: item.id,
             relation_created_at: item.createdAt,
-            name:
-              normalizeProfessionalDisplayName(item.psychologist.name) || item.psychologist.name,
+            name: displayName,
+            whatsapp_name: whatsappDisplayName,
             avatar: item.psychologist.avatar,
             headline: profile.headline,
             bio: profile.bio,
@@ -349,10 +373,7 @@ export class FavoriteRepository implements IFavoriteRepository {
             social_value: profile.social_value,
             accepts_insurance: profile.accepts_insurance,
             show_experience_tag: profile.show_experience_tag,
-            whatsapp_url: buildWhatsappUrl(
-              profile.whatsapp,
-              normalizeProfessionalDisplayName(item.psychologist.name) || item.psychologist.name,
-            ),
+            whatsapp_url: buildWhatsappUrl(profile.whatsapp, displayName, whatsappDisplayName),
             favorited: item.psychologist.favorited_by_patients.length > 0,
             followed: item.psychologist.followed_by_patients.length > 0,
             specialties: item.psychologist.psychologist_specialties

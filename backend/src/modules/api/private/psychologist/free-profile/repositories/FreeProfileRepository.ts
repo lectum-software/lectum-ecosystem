@@ -2,8 +2,13 @@ import { DeleteObjectCommand } from "@aws-sdk/client-s3";
 import { PUBLIC_BUCKET, S3 } from "@/config/multer/s3";
 import type { Prisma } from "@/external/generated/prisma/client";
 import prisma from "@/infra/database/prisma";
+import {
+  buildProfessionalFullDisplayName,
+  getProfessionalWhatsappDisplayName,
+} from "@/utils/professional-name";
 import { parseStoredCrp, resolveCrpFromRegistryChecks } from "@/utils/professional-registry";
 import { activeSubscriptionPeriodWhere } from "@/utils/subscription-entitlement";
+import { buildLectumWhatsappUrl } from "@/utils/whatsapp-contact";
 import type {
   FreeProfessionalProfileActivationPendingField,
   FreeProfessionalProfileResponse,
@@ -80,10 +85,17 @@ const normalizeAcademicFormations = (
 
 const onlyDigits = (value?: string | null) => String(value ?? "").replace(/\D/g, "");
 
-const buildWhatsappUrl = (value?: string | null) => {
-  const digits = onlyDigits(value);
-  return digits ? `https://wa.me/${digits}` : null;
-};
+const buildWhatsappUrl = (
+  value?: string | null,
+  psychologistName?: string | null,
+  psychologistWhatsappName?: string | null,
+) =>
+  buildLectumWhatsappUrl({
+    phone: value,
+    psychologistName,
+    psychologistWhatsappName,
+    source: "profile",
+  });
 
 const buildCrp = (region?: string | null, number?: string | null) => {
   const normalizedRegion = region?.trim();
@@ -225,6 +237,8 @@ const getUserWithProfile = (userId: string) => {
       psychologist_profile: {
         select: {
           id: true,
+          professional_first_name: true,
+          professional_last_name: true,
           headline: true,
           bio: true,
           modality: true,
@@ -349,6 +363,15 @@ const toResponse = async (
 ): Promise<FreeProfessionalProfileResponse | null> => {
   const profile = item.psychologist_profile;
   if (!profile) return null;
+  const displayName = buildProfessionalFullDisplayName({
+    fallbackName: item.name,
+    firstName: profile.professional_first_name,
+    lastName: profile.professional_last_name,
+  });
+  const whatsappDisplayName = getProfessionalWhatsappDisplayName({
+    fallbackName: displayName,
+    firstName: profile.professional_first_name,
+  });
 
   const current = profile.subscriptions[0] || null;
   const planSlug = current?.plan?.slug || null;
@@ -398,7 +421,7 @@ const toResponse = async (
     approaches: selected.approaches,
     crp,
     languages,
-    name: item.name,
+    name: displayName,
     profile,
     services: selected.services,
     specialties: selected.specialties,
@@ -408,11 +431,13 @@ const toResponse = async (
   return {
     user: {
       id: item.id,
-      name: item.name,
+      name: displayName,
       avatar: item.avatar,
     },
     profile: {
       id: profile.id,
+      professional_first_name: profile.professional_first_name,
+      professional_last_name: profile.professional_last_name,
       headline: profile.headline,
       bio: profile.bio,
       modality: profile.modality,
@@ -423,7 +448,7 @@ const toResponse = async (
       race_color: profile.race_color,
       religion: profile.religion,
       whatsapp: profile.whatsapp,
-      whatsapp_url: buildWhatsappUrl(profile.whatsapp),
+      whatsapp_url: buildWhatsappUrl(profile.whatsapp, displayName, whatsappDisplayName),
       cover_image_url: profile.cover_image_url,
       video_url: profile.video_url,
       video_cover_url: profile.video_cover_url,
@@ -489,6 +514,8 @@ export class FreeProfileRepository implements IFreeProfileRepository {
       await tx.psychologist_profile.update({
         where: { id: profile.id },
         data: {
+          professional_first_name: body.professional_first_name,
+          professional_last_name: body.professional_last_name,
           headline: body.headline,
           bio: body.bio,
           modality: body.modality,

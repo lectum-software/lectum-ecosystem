@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import {
   ArrowLeft,
@@ -61,6 +61,7 @@ import { CommunityPostCard } from "@/components/community/community-post-card";
 import { MentorBadge } from "@/components/community/mentor-badge";
 import { useProgressiveConversion } from "@/components/conversion/progressive-conversion-provider";
 import {
+  getPsychologistWhatsappDisplayName,
   PsychologistWhatsAppButtonContent,
   PsychologistWhatsAppRedirectButton,
 } from "@/components/psychologists/psychologist-whatsapp-redirect-button";
@@ -218,6 +219,7 @@ const toPsychologistWhatsAppIdentity = (profile: DirectoryPsychologistProfile) =
   id: profile.id,
   name: getPsychologistDisplayName(profile) || profile.name,
   typeLabel: getPsychologistTitle(profile.gender),
+  whatsappName: profile.whatsapp_name,
   whatsappUrl: profile.whatsapp_url,
 });
 
@@ -2152,7 +2154,8 @@ const WhatsAppCta = ({ profile }: { profile: DirectoryPsychologistProfile }) => 
     return null;
   }
 
-  const displayName = getPsychologistDisplayName(profile) || profile.name || "Profissional";
+  const whatsappIdentity = toPsychologistWhatsAppIdentity(profile);
+  const whatsappName = getPsychologistWhatsappDisplayName(whatsappIdentity);
 
   return (
     <>
@@ -2163,24 +2166,27 @@ const WhatsAppCta = ({ profile }: { profile: DirectoryPsychologistProfile }) => 
         <div className="mx-auto w-full max-w-[430px]">
           <PsychologistWhatsAppRedirectButton
             className="inline-flex h-11 w-full min-w-0 items-center justify-center gap-2 rounded-[8px] bg-success px-3 text-[13px] font-bold text-white transition hover:bg-success/90"
-            psychologist={toPsychologistWhatsAppIdentity(profile)}
+            psychologist={whatsappIdentity}
           >
-            <PsychologistWhatsAppButtonContent iconClassName="h-4 w-4" />
+            <PsychologistWhatsAppButtonContent
+              iconClassName="h-4 w-4"
+              label={`Fale com ${whatsappName}`}
+            />
           </PsychologistWhatsAppRedirectButton>
         </div>
       </div>
 
       <PsychologistWhatsAppRedirectButton
-        aria-label={`Chamar ${displayName} no WhatsApp`}
+        aria-label={`Fale com ${whatsappName} no WhatsApp`}
         className="group fixed right-5 bottom-10 z-40 hidden h-14 w-14 place-items-center rounded-full border-[5px] border-white bg-[#16A34A] text-white shadow-[0_14px_30px_rgba(22,163,74,0.26)] transition-[transform,background-color,box-shadow] duration-200 ease-out hover:-translate-y-1 hover:bg-[#15803D] hover:shadow-[0_18px_36px_rgba(22,163,74,0.32)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#16A34A] focus-visible:ring-offset-2 focus-visible:ring-offset-white motion-safe:animate-[lectum-desktop-create-float_4.2s_ease-in-out_infinite] lg:grid lg:h-16 lg:w-16 xl:right-20 2xl:right-28"
-        psychologist={toPsychologistWhatsAppIdentity(profile)}
-        title="Chamar no WhatsApp"
+        psychologist={whatsappIdentity}
+        title={`Fale com ${whatsappName}`}
       >
         <WhatsAppIcon
           className="h-7 w-7 transition group-hover:scale-105 lg:h-8 lg:w-8"
           aria-hidden="true"
         />
-        <span className="sr-only">Chamar no WhatsApp</span>
+        <span className="sr-only">Fale com {whatsappName}</span>
       </PsychologistWhatsAppRedirectButton>
     </>
   );

@@ -4781,7 +4781,7 @@ export const PsychologistsLogic = () => {
                                     }}
                                   >
                                     <PsychologistWhatsAppRedirectButton
-                                      aria-label={`Chamar ${psychologist.name} no WhatsApp`}
+                                      aria-label={`Fale com ${psychologist.whatsapp_name || psychologist.name} no WhatsApp`}
                                       className="grid place-items-center rounded-full bg-transparent text-white transition active:scale-95"
                                       data-psychologists-tip-target={
                                         isActiveSlide ? "whatsapp" : undefined
@@ -4797,6 +4797,7 @@ export const PsychologistsLogic = () => {
                                           null,
                                           false,
                                         ),
+                                        whatsappName: psychologist.whatsapp_name,
                                         whatsappUrl: psychologist.whatsapp_url,
                                       }}
                                       stopPropagation
@@ -5229,7 +5230,7 @@ export const PsychologistsLogic = () => {
                   <div className="grid w-[68px] justify-items-center gap-1 text-center">
                     {desktopActionPsychologist.whatsapp_url ? (
                       <PsychologistWhatsAppRedirectButton
-                        aria-label={`Chamar ${desktopActionPsychologist.name} no WhatsApp`}
+                        aria-label={`Fale com ${desktopActionPsychologist.whatsapp_name || desktopActionPsychologist.name} no WhatsApp`}
                         className="grid h-10 w-10 place-items-center rounded-full border border-[#d5f5df] bg-white text-[#22C55E] transition hover:scale-105 hover:bg-[#f8fafc] active:scale-95"
                         data-psychologists-tip-target={
                           isDesktopActionRailHidden ? undefined : "whatsapp"
@@ -5245,6 +5246,7 @@ export const PsychologistsLogic = () => {
                             null,
                             false,
                           ),
+                          whatsappName: desktopActionPsychologist.whatsapp_name,
                           whatsappUrl: desktopActionPsychologist.whatsapp_url,
                         }}
                         stopPropagation

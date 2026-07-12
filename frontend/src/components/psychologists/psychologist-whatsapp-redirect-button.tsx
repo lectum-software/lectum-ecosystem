@@ -12,7 +12,10 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { formatCrpLabel } from "@/utils/crp";
 import { isPublicMediaUrl, resolvePublicMediaUrl } from "@/utils/media";
-import { normalizeProfessionalDisplayName } from "@/utils/professional-name";
+import {
+  getProfessionalShortDisplayName,
+  normalizeProfessionalDisplayName,
+} from "@/utils/professional-name";
 
 export const WHATSAPP_REDIRECT_MIN_DELAY_MS = 900;
 const TRACKING_WAIT_LIMIT_MS = 1400;
@@ -24,6 +27,7 @@ export type PsychologistWhatsAppIdentity = {
   avatar?: string | null;
   crp?: string | null;
   typeLabel?: string | null;
+  whatsappName?: string | null;
   whatsappUrl?: string | null;
 };
 
@@ -85,6 +89,9 @@ const professionalLabel = (psychologist: PsychologistWhatsAppIdentity) => {
 
   return `${typeLabel} • ${formatCrpLabel(psychologist.crp)}`;
 };
+
+export const getPsychologistWhatsappDisplayName = (psychologist: PsychologistWhatsAppIdentity) =>
+  psychologist.whatsappName?.trim() || getProfessionalShortDisplayName(psychologist.name);
 
 export const openPsychologistWhatsApp = (url: string) => {
   window.location.assign(url);
