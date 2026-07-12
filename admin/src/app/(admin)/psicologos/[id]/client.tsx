@@ -1909,9 +1909,11 @@ const formatVideoAxisTime = (positionPercent: number, durationSeconds?: number |
 };
 
 const VideoRetentionLineChart = ({
+  currentTimeSeconds,
   durationSeconds,
   retention,
 }: {
+  currentTimeSeconds?: number | null;
   durationSeconds?: number | null;
   retention: AdminPsychologistStatistics["video"]["retention"];
 }) => {
@@ -1955,6 +1957,14 @@ const VideoRetentionLineChart = ({
           { label: "50%", percentage: 0, position_percent: 50 },
           { label: "100%", percentage: 0, position_percent: 100 },
         ];
+  const playbackPositionPercent =
+    durationSeconds && durationSeconds > 0 && Number.isFinite(durationSeconds)
+      ? Math.min(100, Math.max(0, (((currentTimeSeconds ?? 0) || 0) / durationSeconds) * 100))
+      : null;
+  const playbackX =
+    playbackPositionPercent === null
+      ? null
+      : padding.left + (playbackPositionPercent / 100) * innerWidth;
 
   return (
     <div className="h-[260px]">
@@ -1997,6 +2007,22 @@ const VideoRetentionLineChart = ({
           strokeLinejoin="round"
           strokeWidth="3"
         />
+        {playbackX === null ? null : (
+          <g>
+            <line
+              className="stroke-primary"
+              opacity="0.72"
+              strokeDasharray="4 5"
+              strokeLinecap="round"
+              strokeWidth="2"
+              x1={playbackX}
+              x2={playbackX}
+              y1={padding.top}
+              y2={padding.top + innerHeight}
+            />
+            <circle className="fill-primary" cx={playbackX} cy={padding.top + innerHeight} r="4" />
+          </g>
+        )}
         {xAxisLabels.map((bucket) => {
           const x =
             padding.left + (Math.min(100, Math.max(0, bucket.position_percent)) / 100) * innerWidth;
@@ -2034,7 +2060,12 @@ const StatisticsVideoCard = ({
       detail.profile.content.cover_image_url,
   );
   const videoSrc = resolveAdminMediaUrl(video.video_url || detail.profile.content.video_url);
+  const [videoCurrentTimeSeconds, setVideoCurrentTimeSeconds] = useState(0);
   const [videoDurationSeconds, setVideoDurationSeconds] = useState<number | null>(null);
+
+  const updateVideoCurrentTime = (currentTime: number) => {
+    setVideoCurrentTimeSeconds(Number.isFinite(currentTime) && currentTime > 0 ? currentTime : 0);
+  };
 
   const updateVideoDuration = (duration: number) => {
     setVideoDurationSeconds(Number.isFinite(duration) && duration > 0 ? duration : null);
@@ -2056,7 +2087,12 @@ const StatisticsVideoCard = ({
                 className="h-full w-full bg-black object-cover"
                 controls
                 onDurationChange={(event) => updateVideoDuration(event.currentTarget.duration)}
-                onLoadedMetadata={(event) => updateVideoDuration(event.currentTarget.duration)}
+                onLoadedMetadata={(event) => {
+                  updateVideoDuration(event.currentTarget.duration);
+                  updateVideoCurrentTime(event.currentTarget.currentTime);
+                }}
+                onSeeked={(event) => updateVideoCurrentTime(event.currentTarget.currentTime)}
+                onTimeUpdate={(event) => updateVideoCurrentTime(event.currentTarget.currentTime)}
                 playsInline
                 poster={cover || undefined}
                 preload="metadata"
@@ -2088,6 +2124,7 @@ const StatisticsVideoCard = ({
 
         <div className="min-w-0">
           <VideoRetentionLineChart
+            currentTimeSeconds={videoCurrentTimeSeconds}
             durationSeconds={videoDurationSeconds}
             retention={video.retention}
           />
