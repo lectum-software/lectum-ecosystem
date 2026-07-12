@@ -40,12 +40,13 @@ const CHART_COLORS = ["#3b16f3", "#1788ff", "#19b96f", "#ff7a1a", "#f8288f"];
 const CARD_ORDER = [
   "total_psychologists",
   "free_psychologists",
-  "verified_psychologists",
+  "subscriber_psychologists",
+  "courtesy_psychologists",
   "new_signups",
-  "subscription_revenue",
   "churn",
 ] as const;
 
+type DashboardMetricKey = (typeof CARD_ORDER)[number];
 type DashboardPeriodValue = NonNullable<PsychologistsDashboardQuery["period"]>;
 type DashboardPeriodPreset = Exclude<DashboardPeriodValue, "custom">;
 type DashboardRange = Pick<PsychologistsDashboardQuery, "from" | "to">;
@@ -146,11 +147,12 @@ const hasDashboardRecords = (summary: AdminPsychologistsDashboard) => {
   const cardsHaveData = Object.values(summary.cards).some((metric) => metric.value > 0);
   const timelineHasData = summary.timeline.points.some(
     (point) =>
+      point.total_psychologists > 0 ||
+      point.free_psychologists > 0 ||
+      point.subscriber_psychologists > 0 ||
+      point.courtesy_psychologists > 0 ||
       point.new_signups > 0 ||
-      point.paid_subscriptions_started > 0 ||
-      point.profile_views > 0 ||
-      point.reviews_received > 0 ||
-      point.whatsapp_clicks > 0,
+      point.churn > 0,
   );
 
   return (
@@ -189,6 +191,18 @@ const toneClasses = {
   red: "bg-red-50 text-danger",
 };
 
+const DASHBOARD_METRIC_CONFIG = {
+  churn: { color: "#e5484d", icon: TrendingDown, tone: "red" },
+  courtesy_psychologists: { color: "#8b5cf6", icon: Award, tone: "pink" },
+  free_psychologists: { color: "#13a85b", icon: UsersRound, tone: "green" },
+  new_signups: { color: "#ff7a1a", icon: UserPlus, tone: "orange" },
+  subscriber_psychologists: { color: "#1788ff", icon: UserCheck, tone: "blue" },
+  total_psychologists: { color: "#3b16f3", icon: UsersRound, tone: "purple" },
+} satisfies Record<
+  DashboardMetricKey,
+  { color: string; icon: LucideIcon; tone: keyof typeof toneClasses }
+>;
+
 const TrendBadge = ({ metric }: { metric: PsychologistsDashboardMetric }) => {
   if (metric.unavailable)
     return <span className="text-xs font-bold text-warning">Indisponível</span>;
@@ -209,15 +223,32 @@ const TrendBadge = ({ metric }: { metric: PsychologistsDashboardMetric }) => {
 };
 
 const MetricCard = ({
+  active,
   icon: Icon,
   metric,
+  onToggle,
   tone,
 }: {
+  active: boolean;
   icon: LucideIcon;
   metric: PsychologistsDashboardMetric;
+  onToggle: () => void;
   tone: keyof typeof toneClasses;
 }) => (
-  <CardShell className="min-h-44 p-5">
+  <button
+    aria-pressed={active}
+    className={cn(
+      "min-h-44 rounded-card border bg-surface p-5 text-left shadow-admin-soft transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2",
+      active
+        ? "border-primary/40"
+        : "border-border opacity-70 hover:border-primary/30 hover:opacity-100",
+    )}
+    onClick={onToggle}
+    title={`${metric.label}: ${formatMetricValue(metric)}. ${
+      active ? "Visível no gráfico" : "Oculto no gráfico"
+    }`}
+    type="button"
+  >
     <div className="flex items-start justify-between gap-3">
       <div className={cn("grid h-12 w-12 place-items-center rounded-full", toneClasses[tone])}>
         <Icon aria-hidden className="h-5 w-5" />
@@ -237,8 +268,9 @@ const MetricCard = ({
         <TrendBadge metric={metric} />
         <span className="text-xs font-medium text-muted">vs. período anterior</span>
       </div>
+      <span className="sr-only">{active ? "visível no gráfico" : "oculto no gráfico"}</span>
     </div>
-  </CardShell>
+  </button>
 );
 
 const LoadingGrid = () => (
@@ -318,17 +350,48 @@ const Avatar = ({ name, src }: { name: string; src: string | null }) => {
   );
 };
 
-const TimelineChart = ({ points }: { points: PsychologistsDashboardDailyPoint[] }) => {
+const formatTimelineMetricValue = (metric: PsychologistsDashboardMetric, value: number) => {
+  if (metric.unit === "currency_cents") return currencyFormatter.format(value / 100);
+  if (metric.unit === "percentage") return `${numberFormatter.format(value)}%`;
+
+  return numberFormatter.format(value);
+};
+
+const TimelineChart = ({
+  metrics,
+  points,
+  visibleMetricKeys,
+}: {
+  metrics: AdminPsychologistsDashboard["cards"];
+  points: PsychologistsDashboardDailyPoint[];
+  visibleMetricKeys: DashboardMetricKey[];
+}) => {
   const width = 760;
   const height = 300;
   const padding = { bottom: 44, left: 50, right: 20, top: 24 };
-  const series = [
-    { color: "#3b16f3", key: "profile_views", label: "Visualizações de perfil" },
-    { color: "#1788ff", key: "whatsapp_clicks", label: "Cliques no WhatsApp" },
-    { color: "#19b96f", key: "reviews_received", label: "Avaliações recebidas" },
-    { color: "#ff7a1a", key: "new_signups", label: "Novos cadastros" },
-    { color: "#f8288f", key: "paid_subscriptions_started", label: "Assinaturas pagas iniciadas" },
-  ] as const;
+  const series = visibleMetricKeys.map((key) => ({
+    color: DASHBOARD_METRIC_CONFIG[key].color,
+    key,
+    label: metrics[key].label,
+    metric: metrics[key],
+  }));
+
+  if (series.length === 0) {
+    return (
+      <div className="mt-5 rounded-2xl border border-dashed border-border bg-surface-muted p-6 text-sm font-bold text-muted">
+        Selecione pelo menos um contador para visualizar a evolução.
+      </div>
+    );
+  }
+
+  if (points.length === 0) {
+    return (
+      <div className="mt-5 rounded-2xl border border-dashed border-border bg-surface-muted p-6 text-sm font-bold text-muted">
+        Nenhum ponto real de evolução foi encontrado para o período.
+      </div>
+    );
+  }
+
   const maxValue = Math.max(1, ...points.flatMap((point) => series.map((item) => point[item.key])));
   const chartWidth = width - padding.left - padding.right;
   const chartHeight = height - padding.top - padding.bottom;
@@ -336,6 +399,7 @@ const TimelineChart = ({ points }: { points: PsychologistsDashboardDailyPoint[] 
     points.length <= 1 ? width / 2 : padding.left + (index * chartWidth) / (points.length - 1);
   const getY = (value: number) => padding.top + chartHeight - (value / maxValue) * chartHeight;
   const gridValues = [0, 0.25, 0.5, 0.75, 1].map((ratio) => Math.round(maxValue * ratio));
+  const labelStep = Math.max(1, Math.ceil(points.length / 8));
 
   return (
     <figure className="mt-5 overflow-hidden">
@@ -353,7 +417,7 @@ const TimelineChart = ({ points }: { points: PsychologistsDashboardDailyPoint[] 
       </div>
       <div className="overflow-x-auto">
         <svg
-          aria-label="Gráfico temporal de atividade dos psicólogos"
+          aria-label="Gráfico temporal dos contadores de psicólogos"
           className="min-w-[680px]"
           role="img"
           viewBox={`0 0 ${width} ${height}`}
@@ -398,7 +462,7 @@ const TimelineChart = ({ points }: { points: PsychologistsDashboardDailyPoint[] 
                   <circle
                     cx={getX(index)}
                     cy={getY(point[item.key])}
-                    fill="#fff"
+                    fill="var(--admin-surface)"
                     key={`${item.key}-${point.date}`}
                     r="4"
                     stroke={item.color}
@@ -409,18 +473,20 @@ const TimelineChart = ({ points }: { points: PsychologistsDashboardDailyPoint[] 
             );
           })}
 
-          {points.map((point, index) => (
-            <text
-              fill="var(--admin-foreground)"
-              fontSize="11"
-              key={point.date}
-              textAnchor="middle"
-              x={getX(index)}
-              y={height - 12}
-            >
-              {formatDate(point.date)}
-            </text>
-          ))}
+          {points.map((point, index) =>
+            index % labelStep === 0 || index === points.length - 1 ? (
+              <text
+                fill="var(--admin-foreground)"
+                fontSize="11"
+                key={point.date}
+                textAnchor="middle"
+                x={getX(index)}
+                y={height - 12}
+              >
+                {formatDate(point.date)}
+              </text>
+            ) : null,
+          )}
         </svg>
       </div>
       <details className="mt-3 rounded-2xl bg-surface-muted p-3 text-xs text-muted">
@@ -434,7 +500,7 @@ const TimelineChart = ({ points }: { points: PsychologistsDashboardDailyPoint[] 
               {points
                 .map(
                   (point) =>
-                    `${formatDate(point.date)}: ${numberFormatter.format(point[item.key])}`,
+                    `${formatDate(point.date)}: ${formatTimelineMetricValue(item.metric, point[item.key])}`,
                 )
                 .join("; ")}
             </p>
@@ -920,74 +986,110 @@ const PsychologistsHeader = ({
   </div>
 );
 
-const CardsGrid = ({ summary }: { summary: AdminPsychologistsDashboard }) => {
+const CardsGrid = ({
+  activeMetricKeys,
+  onToggleMetric,
+  summary,
+}: {
+  activeMetricKeys: DashboardMetricKey[];
+  onToggleMetric: (key: DashboardMetricKey) => void;
+  summary: AdminPsychologistsDashboard;
+}) => {
   const cards = summary.cards;
-  const config: Record<
-    (typeof CARD_ORDER)[number],
-    { icon: LucideIcon; tone: keyof typeof toneClasses }
-  > = {
-    churn: { icon: TrendingDown, tone: "red" },
-    free_psychologists: { icon: UsersRound, tone: "green" },
-    new_signups: { icon: UserPlus, tone: "orange" },
-    subscription_revenue: { icon: CircleDollarSign, tone: "pink" },
-    total_psychologists: { icon: UsersRound, tone: "purple" },
-    verified_psychologists: { icon: UserCheck, tone: "blue" },
-  };
 
   return (
     <section>
       <h2 className="mb-4 text-xl font-black text-foreground">Visão geral</h2>
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6">
-        {CARD_ORDER.map((key) => (
-          <MetricCard key={key} metric={cards[key]} {...config[key]} />
-        ))}
+        {CARD_ORDER.map((key) => {
+          const config = DASHBOARD_METRIC_CONFIG[key];
+
+          return (
+            <MetricCard
+              active={activeMetricKeys.includes(key)}
+              key={key}
+              metric={cards[key]}
+              onToggle={() => onToggleMetric(key)}
+              {...config}
+            />
+          );
+        })}
       </div>
     </section>
   );
 };
 
-const DashboardContent = ({ summary }: { summary: AdminPsychologistsDashboard }) => (
-  <div className="space-y-6">
-    {!hasDashboardRecords(summary) ? <EmptyState period={summary.period} /> : null}
+const DashboardContent = ({ summary }: { summary: AdminPsychologistsDashboard }) => {
+  const [visibleMetricKeys, setVisibleMetricKeys] = useState<DashboardMetricKey[]>(() => [
+    ...CARD_ORDER,
+  ]);
+  const activeMetricKeys = CARD_ORDER.filter((key) => visibleMetricKeys.includes(key));
+  const toggleMetric = (metricKey: DashboardMetricKey) => {
+    setVisibleMetricKeys((current) => {
+      if (!current.includes(metricKey)) return [...current, metricKey];
 
-    <CardsGrid summary={summary} />
+      const next = current.filter((item) => item !== metricKey);
+      return next.length > 0 ? next : current;
+    });
+  };
 
-    <CardShell className="p-5">
-      <PanelTitle icon={Activity} source={summary.timeline.source} title="Evolução no período" />
-      <TimelineChart points={summary.timeline.points} />
-    </CardShell>
+  return (
+    <div className="space-y-6">
+      {!hasDashboardRecords(summary) ? <EmptyState period={summary.period} /> : null}
 
-    <div className="grid gap-4 xl:grid-cols-[1.25fr_0.85fr]">
-      <PsychologistsTable items={summary.psychologists.items} total={summary.psychologists.total} />
-      <RankingList items={summary.ranking.items} />
-    </div>
+      <CardsGrid
+        activeMetricKeys={activeMetricKeys}
+        onToggleMetric={toggleMetric}
+        summary={summary}
+      />
 
-    <section>
-      <h2 className="mb-4 text-xl font-black text-foreground">Estatísticas</h2>
-      <StatsContent summary={summary} />
-    </section>
-
-    <SearchUnavailableCard summary={summary} />
-
-    {summary.unavailable.length > 0 ? (
-      <CardShell className="bg-primary-soft/70 p-5">
-        <div className="flex gap-3">
-          <AlertTriangle aria-hidden className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
-          <div>
-            <h2 className="font-black text-foreground">Limitações exibidas honestamente</h2>
-            <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-muted">
-              {summary.unavailable.map((item) => (
-                <li key={item.id}>
-                  <strong className="text-foreground">{item.label}:</strong> {item.description}
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
+      <CardShell className="p-5">
+        <PanelTitle icon={Activity} source={summary.timeline.source} title="Evolução no período" />
+        <p className="mt-2 text-xs font-bold text-muted">
+          Clique em um contador para exibir ou esconder a curva correspondente no gráfico.
+        </p>
+        <TimelineChart
+          metrics={summary.cards}
+          points={summary.timeline.points}
+          visibleMetricKeys={activeMetricKeys}
+        />
       </CardShell>
-    ) : null}
-  </div>
-);
+
+      <div className="grid gap-4 xl:grid-cols-[1.25fr_0.85fr]">
+        <PsychologistsTable
+          items={summary.psychologists.items}
+          total={summary.psychologists.total}
+        />
+        <RankingList items={summary.ranking.items} />
+      </div>
+
+      <section>
+        <h2 className="mb-4 text-xl font-black text-foreground">Estatísticas</h2>
+        <StatsContent summary={summary} />
+      </section>
+
+      <SearchUnavailableCard summary={summary} />
+
+      {summary.unavailable.length > 0 ? (
+        <CardShell className="bg-primary-soft/70 p-5">
+          <div className="flex gap-3">
+            <AlertTriangle aria-hidden className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
+            <div>
+              <h2 className="font-black text-foreground">Limitações exibidas honestamente</h2>
+              <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-muted">
+                {summary.unavailable.map((item) => (
+                  <li key={item.id}>
+                    <strong className="text-foreground">{item.label}:</strong> {item.description}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </CardShell>
+      ) : null}
+    </div>
+  );
+};
 
 export const AdminPsychologistsClient = () => {
   const [period, setPeriod] = useState<DashboardPeriodValue>("week");

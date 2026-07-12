@@ -40,12 +40,13 @@ export type AdminPsychologistsDashboardMetric = {
 };
 
 export type AdminPsychologistsDashboardDailyPoint = {
+  churn: number;
+  courtesy_psychologists: number;
   date: string;
+  free_psychologists: number;
   new_signups: number;
-  paid_subscriptions_started: number;
-  profile_views: number;
-  reviews_received: number;
-  whatsapp_clicks: number;
+  subscriber_psychologists: number;
+  total_psychologists: number;
 };
 
 export type AdminPsychologistsDashboardPsychologist = {
@@ -139,11 +140,11 @@ export type AdminPsychologistsDashboardUnavailableMetric = {
 export type AdminPsychologistsDashboardSummary = {
   cards: {
     churn: AdminPsychologistsDashboardMetric;
+    courtesy_psychologists: AdminPsychologistsDashboardMetric;
     free_psychologists: AdminPsychologistsDashboardMetric;
     new_signups: AdminPsychologistsDashboardMetric;
-    subscription_revenue: AdminPsychologistsDashboardMetric;
+    subscriber_psychologists: AdminPsychologistsDashboardMetric;
     total_psychologists: AdminPsychologistsDashboardMetric;
-    verified_psychologists: AdminPsychologistsDashboardMetric;
   };
   filters_searches: {
     available: false;
@@ -165,7 +166,7 @@ export type AdminPsychologistsDashboardSummary = {
   statistics: AdminPsychologistsDashboardStatistics;
   timeline: {
     points: AdminPsychologistsDashboardDailyPoint[];
-    source: "user+contact_request+profile_view_event+professional_review+professional_subscription";
+    source: "user+professional_subscription";
   };
   unavailable: AdminPsychologistsDashboardUnavailableMetric[];
 };

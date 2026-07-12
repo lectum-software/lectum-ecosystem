@@ -16,7 +16,6 @@ import type {
 } from "../DTOs/IAdminPsychologistsDashboardDTO";
 import { AdminPsychologistsDashboardRepository } from "../repositories/AdminPsychologistsDashboardRepository";
 import type {
-  AdminPsychologistEventRecord,
   AdminPsychologistProfileRecord,
   AdminPsychologistSubscriptionRecord,
 } from "../repositories/interfaces/IAdminPsychologistsDashboardRepository";
@@ -24,7 +23,8 @@ import type {
 const DEFAULT_PERIOD_DAYS = 7;
 const MAX_PERIOD_DAYS = 3660;
 const MS_PER_DAY = 86_400_000;
-const GATEWAY_REVENUE_SOURCE = "mercadopago";
+const COURTESY_SUBSCRIPTION_SOURCE = "admin_grant";
+const PAID_SUBSCRIPTION_SOURCE = "mercadopago";
 
 const STATUS_ACTIVE = "ativa";
 const STATUS_CANCELLED = "cancelada";
@@ -287,15 +287,40 @@ const isProfessionalPlan = (subscription: AdminPsychologistSubscriptionRecord) =
   subscription.plan.slug !== FREE_PLAN_SLUG;
 
 const isPaidGatewaySubscription = (subscription: AdminPsychologistSubscriptionRecord) =>
-  subscription.source === GATEWAY_REVENUE_SOURCE &&
+  subscription.source === PAID_SUBSCRIPTION_SOURCE &&
   isProfessionalPlan(subscription) &&
   subscription.plan.price_cents > 0;
+
+const isCourtesySubscription = (subscription: AdminPsychologistSubscriptionRecord) =>
+  subscription.source === COURTESY_SUBSCRIPTION_SOURCE && isProfessionalPlan(subscription);
 
 const activeSubscriptionsAt = (profile: AdminPsychologistProfileRecord, date: Date) =>
   profile.subscriptions.filter((subscription) => subscriptionActiveAt(subscription, date));
 
 const hasActiveFreeAt = (profile: AdminPsychologistProfileRecord, date: Date) =>
   activeSubscriptionsAt(profile, date).some(isFreeSubscription);
+
+const getPlanSegmentAt = (
+  profile: AdminPsychologistProfileRecord,
+  date: Date,
+): "courtesy" | "free" | "none" | "subscriber" => {
+  const activeSubscriptions = activeSubscriptionsAt(profile, date);
+
+  if (activeSubscriptions.some(isPaidGatewaySubscription)) return "subscriber";
+  if (activeSubscriptions.some(isCourtesySubscription)) return "courtesy";
+  if (activeSubscriptions.some(isFreeSubscription)) return "free";
+
+  return "none";
+};
+
+const hasActiveSubscriberAt = (profile: AdminPsychologistProfileRecord, date: Date) =>
+  getPlanSegmentAt(profile, date) === "subscriber";
+
+const hasActiveCourtesyAt = (profile: AdminPsychologistProfileRecord, date: Date) =>
+  getPlanSegmentAt(profile, date) === "courtesy";
+
+const hasCurrentFreePlanAt = (profile: AdminPsychologistProfileRecord, date: Date) =>
+  getPlanSegmentAt(profile, date) === "free";
 
 const activeProfessionalSubscriptionsAt = (profile: AdminPsychologistProfileRecord, date: Date) =>
   activeSubscriptionsAt(profile, date).filter(isProfessionalPlan);
@@ -330,26 +355,6 @@ const pickCurrentPlan = (profile: AdminPsychologistProfileRecord, date: Date) =>
 const flattenSubscriptions = (profiles: AdminPsychologistProfileRecord[]) =>
   profiles.flatMap((profile) => profile.subscriptions);
 
-const sumEstimatedMrrCentsAt = (profiles: AdminPsychologistProfileRecord[], date: Date) =>
-  profiles.reduce((total, profile) => {
-    const paidActive = activeSubscriptionsAt(profile, date).filter(isPaidGatewaySubscription);
-    if (paidActive.length === 0) return total;
-
-    const highestPlan = paidActive.reduce((highest, subscription) =>
-      subscription.plan.price_cents > highest.plan.price_cents ? subscription : highest,
-    );
-
-    return total + highestPlan.plan.price_cents;
-  }, 0);
-
-const paidGatewayStartedInRange = (
-  subscriptions: AdminPsychologistSubscriptionRecord[],
-  range: AdminPsychologistsDashboardDateRange,
-) =>
-  subscriptions.filter(
-    (item) => isPaidGatewaySubscription(item) && dateInRange(item.createdAt, range),
-  );
-
 const paidGatewayCanceledInRange = (
   subscriptions: AdminPsychologistSubscriptionRecord[],
   range: AdminPsychologistsDashboardDateRange,
@@ -378,7 +383,9 @@ const calculateChurnPercent = (
       total + activeSubscriptionsAt(profile, range.start).filter(isPaidGatewaySubscription).length,
     0,
   );
-  const starts = paidGatewayStartedInRange(subscriptions, range).length;
+  const starts = subscriptions.filter(
+    (item) => isPaidGatewaySubscription(item) && dateInRange(item.createdAt, range),
+  ).length;
   const denominator = activeAtPeriodStart + starts;
   const canceled = paidGatewayCanceledInRange(subscriptions, range).length;
 
@@ -412,29 +419,36 @@ const getDateCount = (counts: Map<string, number>, label: string) => counts.get(
 
 const buildTimeline = (params: {
   labels: string[];
-  newSignups: AdminPsychologistProfileRecord[];
-  paidSubscriptionsStarted: AdminPsychologistSubscriptionRecord[];
-  profileViews: AdminPsychologistEventRecord[];
-  reviews: AdminPsychologistEventRecord[];
-  whatsappContacts: AdminPsychologistEventRecord[];
+  profiles: AdminPsychologistProfileRecord[];
 }): AdminPsychologistsDashboardDailyPoint[] => {
   const newSignupsByDate = countByDate(
-    params.newSignups.map((profile) => ({ createdAt: profile.user.createdAt })),
+    params.profiles.map((profile) => ({ createdAt: profile.user.createdAt })),
     params.labels,
   );
-  const paidSubscriptionsByDate = countByDate(params.paidSubscriptionsStarted, params.labels);
-  const profileViewsByDate = countByDate(params.profileViews, params.labels);
-  const reviewsByDate = countByDate(params.reviews, params.labels);
-  const whatsappByDate = countByDate(params.whatsappContacts, params.labels);
 
-  return params.labels.map((date) => ({
-    date,
-    new_signups: getDateCount(newSignupsByDate, date),
-    paid_subscriptions_started: getDateCount(paidSubscriptionsByDate, date),
-    profile_views: getDateCount(profileViewsByDate, date),
-    reviews_received: getDateCount(reviewsByDate, date),
-    whatsapp_clicks: getDateCount(whatsappByDate, date),
-  }));
+  return params.labels.map((date) => {
+    const dayStart = parseDateOnly(date, "start") ?? startOfDate(new Date(date));
+    const dayEnd = parseDateOnly(date, "end") ?? endOfDate(new Date(date));
+    const profilesCreatedUntilDay = params.profiles.filter((profile) =>
+      profileCreatedUntil(profile, dayEnd),
+    );
+
+    return {
+      churn: calculateChurnPercent(params.profiles, { end: dayEnd, start: dayStart }).value,
+      courtesy_psychologists: profilesCreatedUntilDay.filter((profile) =>
+        hasActiveCourtesyAt(profile, dayEnd),
+      ).length,
+      date,
+      free_psychologists: profilesCreatedUntilDay.filter((profile) =>
+        hasCurrentFreePlanAt(profile, dayEnd),
+      ).length,
+      new_signups: getDateCount(newSignupsByDate, date),
+      subscriber_psychologists: profilesCreatedUntilDay.filter((profile) =>
+        hasActiveSubscriberAt(profile, dayEnd),
+      ).length,
+      total_psychologists: profilesCreatedUntilDay.length,
+    };
+  });
 };
 
 const addMapCount = (
@@ -645,17 +659,9 @@ export const buildPsychologistsDashboard = async (
 
   const { current, labels, period, previous } = resolvedPeriod.period;
 
-  const [rankingCandidates, profileViews, previousProfileViews, reviews, whatsappContacts] =
-    await Promise.all([
-      repository.listPublicRankingCandidates(),
-      repository.listProfileViews(current),
-      repository.listProfileViews(previous),
-      repository.listPublishedReviews(current),
-      repository.listWhatsappContactRequests(current),
-    ]);
+  const rankingCandidates = await repository.listPublicRankingCandidates();
 
-  const subscriptions = flattenSubscriptions(profiles);
-  const currentProfiles = profiles;
+  const currentProfiles = profiles.filter((profile) => profileCreatedUntil(profile, current.end));
   const previousProfiles = profiles.filter((profile) => profileCreatedUntil(profile, previous.end));
   const currentNewSignups = profiles.filter((profile) =>
     dateInRange(profile.user.createdAt, current),
@@ -663,19 +669,26 @@ export const buildPsychologistsDashboard = async (
   const previousNewSignups = profiles.filter((profile) =>
     dateInRange(profile.user.createdAt, previous),
   );
-  const currentFree = profiles.filter((profile) => hasActiveFreeAt(profile, current.end));
-  const previousFree = profiles.filter((profile) => hasActiveFreeAt(profile, previous.end));
-  const currentVerified = profiles.filter((profile) =>
-    hasVerifiedEntitlementAt(profile, current.end),
+  const currentFree = currentProfiles.filter((profile) =>
+    hasCurrentFreePlanAt(profile, current.end),
   );
-  const previousVerified = profiles.filter((profile) =>
-    hasVerifiedEntitlementAt(profile, previous.end),
+  const previousFree = previousProfiles.filter((profile) =>
+    hasCurrentFreePlanAt(profile, previous.end),
   );
-  const currentRevenue = sumEstimatedMrrCentsAt(profiles, current.end);
-  const previousRevenue = sumEstimatedMrrCentsAt(profiles, previous.end);
+  const currentSubscribers = currentProfiles.filter((profile) =>
+    hasActiveSubscriberAt(profile, current.end),
+  );
+  const previousSubscribers = previousProfiles.filter((profile) =>
+    hasActiveSubscriberAt(profile, previous.end),
+  );
+  const currentCourtesy = currentProfiles.filter((profile) =>
+    hasActiveCourtesyAt(profile, current.end),
+  );
+  const previousCourtesy = previousProfiles.filter((profile) =>
+    hasActiveCourtesyAt(profile, previous.end),
+  );
   const currentChurn = calculateChurnPercent(profiles, current);
   const previousChurn = calculateChurnPercent(profiles, previous);
-  const currentPaidSubscriptionsStarted = paidGatewayStartedInRange(subscriptions, current);
   const rankedPsychologists = await rankPsychologistCandidates(rankingCandidates, null);
 
   const summary: AdminPsychologistsDashboardSummary = {
@@ -686,7 +699,7 @@ export const buildPsychologistsDashboard = async (
           "Cancelamentos de assinaturas profissionais Mercado Pago no período ÷ base ativa no início + novas assinaturas pagas no período. Cortesias e plano gratuito não entram.",
         estimated: currentChurn.denominator === 0,
         id: "churn",
-        label: "Churn (cancelamentos)",
+        label: "Churn",
         previous: previousChurn.value,
         source: "professional_subscription.source=mercadopago/status=cancelada",
         unit: "percentage",
@@ -697,9 +710,19 @@ export const buildPsychologistsDashboard = async (
             }
           : {}),
       }),
+      courtesy_psychologists: metric({
+        current: currentCourtesy.length,
+        description:
+          "Psicólogos com cortesia administrativa profissional ativa no fim do período selecionado.",
+        id: "courtesy_psychologists",
+        label: "Psicólogos cortesia",
+        previous: previousCourtesy.length,
+        source: "professional_subscription.source=admin_grant/status=ativa",
+      }),
       free_psychologists: metric({
         current: currentFree.length,
-        description: "Psicólogos com plano gratuito ativo no fim do período selecionado.",
+        description:
+          "Psicólogos cujo segmento ativo no fim do período é o plano gratuito; assinantes pagos e cortesias são contados separadamente.",
         id: "free_psychologists",
         label: "Psicólogos gratuitos",
         previous: previousFree.length,
@@ -713,34 +736,23 @@ export const buildPsychologistsDashboard = async (
         previous: previousNewSignups.length,
         source: "user.createdAt/role=psicologo",
       }),
-      subscription_revenue: metric({
-        current: currentRevenue,
+      subscriber_psychologists: metric({
+        current: currentSubscribers.length,
         description:
-          "MRR estimado por assinaturas profissionais ativas originadas no Mercado Pago no fim do período. Cortesias/admin_grant e plano gratuito não contam como receita.",
-        estimated: true,
-        id: "subscription_revenue",
-        label: "Receita de assinaturas",
-        previous: previousRevenue,
-        source: "professional_subscription.source=mercadopago+subscription_plan.price_cents",
-        unit: "currency_cents",
+          "Psicólogos com assinatura profissional paga Mercado Pago ativa no fim do período selecionado.",
+        id: "subscriber_psychologists",
+        label: "Psicólogos assinantes",
+        previous: previousSubscribers.length,
+        source: "professional_subscription.source=mercadopago/status=ativa",
       }),
       total_psychologists: metric({
         current: currentProfiles.length,
         description:
-          "Snapshot atual de usuários ativos com role psicologo e perfil profissional não deletado.",
+          "Usuários ativos com role psicologo e perfil profissional não deletado existentes até o fim do período.",
         id: "total_psychologists",
         label: "Total de psicólogos",
         previous: previousProfiles.length,
         source: "user.role=psicologo+psychologist_profile",
-      }),
-      verified_psychologists: metric({
-        current: currentVerified.length,
-        description:
-          "Psicólogos com entitlement profissional ativo e verificação profissional canônica ou cortesia administrativa ativa.",
-        id: "verified_psychologists",
-        label: "Psicólogos verificados",
-        previous: previousVerified.length,
-        source: "psychologist_profile.crp_status+professional_subscription",
       }),
     },
     filters_searches: {
@@ -775,14 +787,9 @@ export const buildPsychologistsDashboard = async (
     timeline: {
       points: buildTimeline({
         labels,
-        newSignups: currentNewSignups,
-        paidSubscriptionsStarted: currentPaidSubscriptionsStarted,
-        profileViews,
-        reviews,
-        whatsappContacts,
+        profiles,
       }),
-      source:
-        "user+contact_request+profile_view_event+professional_review+professional_subscription",
+      source: "user+professional_subscription",
     },
     unavailable: [
       {
@@ -800,17 +807,6 @@ export const buildPsychologistsDashboard = async (
               id: "churn_denominator_zero",
               label: "Churn de assinaturas",
               source: "professional_subscription",
-            },
-          ]
-        : []),
-      ...(profileViews.length === 0 && previousProfileViews.length === 0
-        ? [
-            {
-              description:
-                "Sem profile_view_event no período atual nem anterior; visualizações aparecem zeradas sem simulação.",
-              id: "profile_views_empty",
-              label: "Visualizações de perfil",
-              source: "profile_view_event",
             },
           ]
         : []),

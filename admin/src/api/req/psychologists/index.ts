@@ -70,12 +70,13 @@ export type PsychologistsDashboardPeriod = {
 };
 
 export type PsychologistsDashboardDailyPoint = {
+  churn: number;
+  courtesy_psychologists: number;
   date: string;
+  free_psychologists: number;
   new_signups: number;
-  paid_subscriptions_started: number;
-  profile_views: number;
-  reviews_received: number;
-  whatsapp_clicks: number;
+  subscriber_psychologists: number;
+  total_psychologists: number;
 };
 
 export type PsychologistsDashboardPsychologist = {
@@ -974,11 +975,11 @@ export type AdminPsychologistActivities = {
 export type AdminPsychologistsDashboard = {
   cards: {
     churn: PsychologistsDashboardMetric;
+    courtesy_psychologists: PsychologistsDashboardMetric;
     free_psychologists: PsychologistsDashboardMetric;
     new_signups: PsychologistsDashboardMetric;
-    subscription_revenue: PsychologistsDashboardMetric;
+    subscriber_psychologists: PsychologistsDashboardMetric;
     total_psychologists: PsychologistsDashboardMetric;
-    verified_psychologists: PsychologistsDashboardMetric;
   };
   filters_searches: {
     available: false;
@@ -1000,7 +1001,7 @@ export type AdminPsychologistsDashboard = {
   statistics: PsychologistsDashboardStatistics;
   timeline: {
     points: PsychologistsDashboardDailyPoint[];
-    source: "user+contact_request+profile_view_event+professional_review+professional_subscription";
+    source: "user+professional_subscription";
   };
   unavailable: PsychologistsDashboardUnavailableMetric[];
 };

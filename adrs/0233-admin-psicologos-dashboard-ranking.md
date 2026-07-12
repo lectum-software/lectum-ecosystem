@@ -26,6 +26,14 @@ Atualização 2026-07-12:
 - `period=all` deriva o início pelo primeiro cadastro real de psicólogo retornado por `user.createdAt`, sem mockar data inicial.
 - A UI do Admin usa o mesmo modelo de seletor aplicado nas estatísticas do detalhe do psicólogo e remove a linha redundante de período consultado e descrições longas dentro dos cards de contadores.
 
+
+Atualização 2026-07-12 (contadores integrados ao gráfico):
+
+- O painel passa a expor seis contadores operacionais: **Total de psicólogos**, **Psicólogos gratuitos**, **Psicólogos assinantes**, **Psicólogos cortesia**, **Novos cadastros** e **Churn**.
+- **Psicólogos assinantes** conta assinaturas profissionais pagas ativas com `professional_subscription.source="mercadopago"`; **Psicólogos cortesia** conta concessões profissionais ativas com `source="admin_grant"`; **Psicólogos gratuitos** usa o segmento gratuito ativo, sem somar profissionais que estejam como assinantes ou cortesia.
+- O gráfico temporal do dashboard deixa de usar curvas de eventos de engajamento e passa a usar as mesmas chaves dos contadores, permitindo que cada card funcione como toggle para exibir ou esconder sua curva.
+- Receita estimada e psicólogos verificados deixam de aparecer como cards primários neste dashboard, sem remover as fórmulas documentadas nem as fontes reais para telas financeiras/detalhes que precisem delas.
+
 ## Consequências
 
 - O Admin não cria uma métrica de ranking divergente do Explorar público.
@@ -50,3 +58,4 @@ Atualização 2026-07-12:
 - Browser local headless em `http://localhost:3002/psicologos` com admin real temporário, validando viewport mobile de 390px e desktop, ausência de "Adicionar novo psicólogo" e presença de seções reais.
 - Atualização 2026-07-12: `pnpm --dir admin check`, `pnpm --dir admin build` e Biome direcionado nos arquivos do dashboard backend.
 - Atualização 2026-07-12: `pnpm --dir backend check`, `pnpm --dir backend build` e `pnpm check` foram tentados, mas ficaram bloqueados por alterações pré-existentes no workspace (formatação/TypeScript fora do dashboard e `backend/prisma/schema.prisma` com falha P1012 no `prisma generate`).
+- Atualização 2026-07-12 (contadores integrados): `pnpm --dir admin check` (sem erros, com warning pré-existente fora do dashboard em `admin/src/app/(admin)/psicologos/[id]/client.tsx`), `pnpm --dir admin build`, Biome direcionado nos DTO/services do dashboard, `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm check` e smoke HTTP local em `/psicologos` retornando 200.

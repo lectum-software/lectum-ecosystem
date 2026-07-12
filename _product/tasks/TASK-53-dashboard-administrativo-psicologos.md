@@ -156,3 +156,14 @@ Packages usados:
 - Validações desta correção: `pnpm --dir admin check`, `pnpm --dir admin build` e `pnpm --dir backend exec biome check --error-on-warnings src/modules/api/admin/private/psychologists/dashboard/use-cases/services.ts src/modules/api/admin/private/psychologists/dashboard/DTOs/IAdminPsychologistsDashboardDTO.ts src/modules/api/admin/private/psychologists/dashboard/validator/index.ts`.
 - `pnpm --dir backend check`, `pnpm --dir backend build` e `pnpm check` foram executados, mas ficaram bloqueados por alterações pré-existentes no workspace (formatação/TypeScript em fluxos de nome profissional/WhatsApp e `backend/prisma/schema.prisma` já modificado com falha P1012 no `prisma generate`).
 - Browser local/headless em 390px confirmou a rota protegida em `/psicologos` redirecionando/carregando sem sessão Admin; validação visual autenticada depende de sessão Admin real no navegador do operador.
+
+### Correção UX/analytics em 2026-07-12 - contadores no gráfico
+
+- Os cards principais do dashboard passam a ser: **Total de psicólogos**, **Psicólogos gratuitos**, **Psicólogos assinantes**, **Psicólogos cortesia**, **Novos cadastros** e **Churn**.
+- O gráfico **Evolução no período** usa as mesmas métricas dos cards, com séries reais derivadas de `user` e `professional_subscription`.
+- Cada card funciona como toggle acessível para exibir/esconder sua curva no gráfico, mantendo pelo menos uma curva ativa.
+- `Psicólogos assinantes` conta assinaturas profissionais pagas Mercado Pago ativas; `Psicólogos cortesia` conta concessões `admin_grant` ativas; `Psicólogos gratuitos` conta o segmento gratuito ativo sem sobrepor assinantes/cortesias.
+- Receita estimada e psicólogos verificados foram removidos dos cards primários por decisão de produto desta correção, sem criar fonte paralela nem mock.
+- Referência visual local mantida: `_product/proto/admin/Psicólogos/Psicólogos - Dashboard.png`; Builder/Quick Copy não estava disponível como ferramenta callable no ambiente.
+- Validações desta correção: `pnpm --dir admin check` (sem erros, com warning pré-existente fora do dashboard em `admin/src/app/(admin)/psicologos/[id]/client.tsx`), `pnpm --dir admin build`, `pnpm --dir backend exec biome check --error-on-warnings src/modules/api/admin/private/psychologists/dashboard/use-cases/services.ts src/modules/api/admin/private/psychologists/dashboard/DTOs/IAdminPsychologistsDashboardDTO.ts`, `pnpm --dir backend check`, `pnpm --dir backend build` e `pnpm check`.
+- Smoke HTTP local em `http://localhost:3002/psicologos` retornou 200; validação visual autenticada/click real dos cards depende de sessão Admin no navegador do operador.
