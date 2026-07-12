@@ -69,6 +69,16 @@ A área superior da aba **Estatísticas** passa a priorizar leitura comparativa:
 
 Essa mudança preserva as fontes reais de dados, tracking e persistência, mas amplia o contrato de leitura de estatísticas com filtros opcionais de período (`period`, `from`, `to`) para que contadores, gráfico de negócio e vídeo de apresentação usem a mesma janela temporal.
 
+## Emenda 2026-07-12 — granularidade adaptativa no gráfico de contadores
+
+O gráfico de contadores da aba **Estatísticas** passa a adaptar a granularidade visual ao tamanho do período:
+
+- períodos de até 31 dias continuam com pontos diários;
+- períodos de 32 a 120 dias são somados em janelas semanais de 7 dias a partir do início do filtro;
+- períodos acima de 120 dias são somados por mês.
+
+Essa agregação ocorre apenas na UI Admin para reduzir ruído visual em períodos longos, sem alterar a fonte real, o endpoint de estatísticas nem os totais recebidos. Os tooltips exibem o intervalo agregado e os valores somados da série ativa.
+
 ## Validação
 
 - `pnpm --dir backend check`
@@ -99,6 +109,12 @@ Validação da emenda de controles integrados:
 - `pnpm --dir admin check`
 - `pnpm --dir admin build`
 - Smoke HTTP local em `http://localhost:3002/psicologos/cmrglzdds000ajkuhqedavedb?tab=estatisticas` retornou `200`.
+
+Validação da emenda de granularidade adaptativa:
+
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- Smoke HTTP local em `http://localhost:3002/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=estatisticas` retornou `200`.
 
 ## Limitações da execução
 
