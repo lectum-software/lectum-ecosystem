@@ -224,3 +224,24 @@ Frontend esperado:
   - desktop `1440x1000`: textos removidos ausentes, busca com largura aproximada `470px`, **Ordenar por** acima do seletor e **Filtros ativos** a direita do seletor;
   - modal de filtros ainda abriu pelo botao **Filtros ativos**;
   - mobile `390x844`: textos removidos ausentes e sem overflow horizontal de viewport.
+
+## Execucao complementar: copy e acao de limpar filtros (2026-07-12)
+
+- Pedido do usuario: remover a acao textual **Limpar filtros** da area principal de controles e simplificar o subtitulo para **Encontre profissionais por nome, CRP e filtros cadastrados.**
+- A acao de limpar filtros continua disponivel dentro da modal de filtros como **Limpar**, preservando a capacidade de resetar filtros sem ocupar a area principal da lista.
+- Nao houve alteracao de backend, Prisma, migrations, packages, contratos de API, dados, filtros, ranking, paginacao ou ordenacao.
+
+### Criterios complementares
+
+- [x] O texto **Limpar filtros** nao aparece mais na area principal da lista.
+- [x] O subtitulo do cabecalho usa a copy **Encontre profissionais por nome, CRP e filtros cadastrados.**
+- [x] A modal de filtros continua abrindo pelo botao **Filtros ativos**.
+- [x] Nenhum backend, Prisma/migrations ou package foi alterado.
+
+### Validacao complementar
+
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/psicologos/lista/client.tsx"`
+- `pnpm --dir admin exec eslint "src/app/(admin)/psicologos/lista/client.tsx"`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- Browser local/headless com admin temporario real removido ao final validando desktop e mobile base `390px`.

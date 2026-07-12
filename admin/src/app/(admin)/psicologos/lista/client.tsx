@@ -907,7 +907,7 @@ export const AdminPsychologistsListClient = () => {
               Lista de Psicólogos
             </h1>
             <p className="mt-2 text-sm font-medium text-muted">
-              Encontre profissionais por nome, CRP e filtros reais cadastrados no backend.
+              Encontre profissionais por nome, CRP e filtros cadastrados.
             </p>
           </div>
         </div>
@@ -949,13 +949,6 @@ export const AdminPsychologistsListClient = () => {
               <span className="rounded-full bg-primary-soft px-2 py-0.5 text-xs text-primary">
                 {summary?.active_filters_count ?? 0}
               </span>
-            </button>
-            <button
-              className="h-12 rounded-control px-4 text-sm font-black text-primary transition hover:bg-primary-soft"
-              onClick={clearFilters}
-              type="button"
-            >
-              Limpar filtros
             </button>
           </div>
         </div>

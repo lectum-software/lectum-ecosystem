@@ -26,6 +26,7 @@ Builder/Quick Copy `vcp://quickcopy/vcp-24aaa2941d814e5b90572bc93ae50e2a` não e
 - Ajuste de regressão em 2026-07-11: manter a lista sem rolagem horizontal de viewport usando containers `min-w-0`/`minmax(0,1fr)`, tabela fluida apenas em larguras amplas (`min-width: 1700px`) e cards mobile-first nas demais larguras; remover o ícone inerte de menu por linha para preservar somente as ações reais da V1.
 - Complemento em 2026-07-12: remover a coluna lateral fixa de filtros em desktop e centralizar todos os filtros no botão **Filtros ativos**, que abre uma modal/drawer responsiva inspirada na descoberta pública de psicólogos. A modal mantém estado local e só persiste filtros na URL ao clicar **Aplicar filtros**, preservando ranking, paginação, endpoint e contratos existentes.
 - Complemento visual em 2026-07-12: reduzir ruído operacional da lista removendo a etiqueta **Ranking público aplicado**, a linha técnica de fonte e badges de escopo V1 do card de resultados. O ranking continua aplicado no backend pela ordenação `relevance`; a UI passa a agrupar busca, ordenação e filtros como controles de uma mesma área, com **Ordenar por** acima do seletor e **Filtros ativos** à direita em desktop.
+- Complemento de copy em 2026-07-12: remover **Limpar filtros** da área principal para manter os controles enxutos e trocar o subtítulo para **Encontre profissionais por nome, CRP e filtros cadastrados.** A ação de reset segue disponível dentro da modal como **Limpar**, evitando perda funcional.
 
 ## Consequências
 
@@ -36,6 +37,7 @@ Builder/Quick Copy `vcp://quickcopy/vcp-24aaa2941d814e5b90572bc93ae50e2a` não e
 - Em viewports intermediárias, a página prioriza cards sem rolagem horizontal em vez de espremer a tabela densa de oito colunas; a tabela completa permanece disponível quando há largura suficiente no shell sem reservar coluna lateral de filtros.
 - A lista ganha mais largura útil em desktop porque deixa de reservar coluna fixa para filtros. O custo é um clique adicional para refinar a busca, aceito por alinhar o Admin ao padrão mental já usado pelo usuário final na descoberta.
 - O cabeçalho fica menos técnico para a operação diária, reduz redundância visual e mantém os dados de implementação em task/ADR em vez de expô-los ao usuário Admin.
+- A limpeza de filtros passa a exigir abrir a modal, mas a tela principal fica menos carregada e mantém foco em busca, ordenação e segmentação.
 
 ## Validação
 
@@ -51,6 +53,7 @@ Builder/Quick Copy `vcp://quickcopy/vcp-24aaa2941d814e5b90572bc93ae50e2a` não e
 - Revalidação de UI em 2026-07-12: `pnpm --dir admin check`, `pnpm --dir admin build` e browser local headless/CDP com admin temporário real removido ao final em desktop `1440x1000` e mobile `390x844`; antes da abertura não havia **Filtros de busca** visível fora da modal, e após clicar **Filtros ativos** a modal exibiu Localização, Status/plano, Selos/diferenciais e Perfil profissional sem overflow horizontal.
 - `pnpm check` foi executado em 2026-07-12 e bloqueou por formatação preexistente no `frontend/` fora do escopo deste complemento (`frontend/src/app/app/professional/profile/setup/use-form.tsx` e `frontend/src/app/auth/register/psychologist/use-form.tsx`).
 - Revalidação visual complementar em 2026-07-12: `pnpm --dir admin exec biome check --write "src/app/(admin)/psicologos/lista/client.tsx"`, `pnpm --dir admin exec eslint "src/app/(admin)/psicologos/lista/client.tsx"`, `pnpm --dir admin check`, `pnpm --dir admin build` e browser local/headless com admin temporário real removido ao final em desktop `1440x1000` e mobile `390x844`, validando ausência de textos removidos, busca limitada, label compacto de ordenação, filtro à direita do seletor em desktop e modal de filtros funcional.
+- Revalidação de copy em 2026-07-12: `pnpm --dir admin exec biome check --write "src/app/(admin)/psicologos/lista/client.tsx"`, `pnpm --dir admin exec eslint "src/app/(admin)/psicologos/lista/client.tsx"`, `pnpm --dir admin check`, `pnpm --dir admin build` e browser local/headless em desktop e mobile base `390px`, validando subtítulo simplificado, ausência de **Limpar filtros** na área principal e modal de filtros ainda funcional.
 
 ## Pendências
 
