@@ -2081,24 +2081,30 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: st
         <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
           <label className="grid gap-1 text-xs font-black text-muted">
             Período
-            <select
-              className="h-10 min-w-[170px] rounded-2xl border border-border bg-surface px-3 text-sm font-black text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
-              onChange={(event) =>
-                handleStatisticsPeriodChange(event.target.value as StatisticsPeriodPreset)
-              }
-              value={statisticsPeriod}
-            >
-              {statisticsPeriod === "custom" ? (
-                <option disabled hidden value="custom">
-                  Personalizado
-                </option>
-              ) : null}
-              {STATISTICS_PERIOD_OPTIONS.map((option) => (
-                <option key={option.id} value={option.id}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
+            <span className="relative">
+              <select
+                className="h-10 min-w-[170px] appearance-none rounded-2xl border border-border bg-surface py-0 pl-3 pr-11 text-sm font-black text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+                onChange={(event) =>
+                  handleStatisticsPeriodChange(event.target.value as StatisticsPeriodPreset)
+                }
+                value={statisticsPeriod}
+              >
+                {statisticsPeriod === "custom" ? (
+                  <option disabled hidden value="custom">
+                    Personalizado
+                  </option>
+                ) : null}
+                {STATISTICS_PERIOD_OPTIONS.map((option) => (
+                  <option key={option.id} value={option.id}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown
+                aria-hidden
+                className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground"
+              />
+            </span>
           </label>
 
           <div className="grid gap-2 sm:grid-cols-2">
