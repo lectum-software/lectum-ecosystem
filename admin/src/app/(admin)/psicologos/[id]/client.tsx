@@ -1910,7 +1910,8 @@ const VideoRetentionLineChart = ({
   const innerHeight = chartHeight - padding.top - padding.bottom;
   const yAxisLabels = [100, 75, 50, 25, 0];
   const points = sortedRetention.map((bucket) => {
-    const x = padding.left + (Math.min(100, Math.max(0, bucket.position_percent)) / 100) * innerWidth;
+    const x =
+      padding.left + (Math.min(100, Math.max(0, bucket.position_percent)) / 100) * innerWidth;
     const y =
       padding.top + ((100 - Math.min(100, Math.max(0, bucket.percentage))) / 100) * innerHeight;
 
@@ -1936,11 +1937,11 @@ const VideoRetentionLineChart = ({
         ];
 
   return (
-    <div className="grid h-full min-h-[260px] grid-rows-[auto_1fr]">
+    <div className="grid h-[260px] grid-rows-[auto_minmax(0,1fr)]">
       <p className="text-xs font-black text-foreground">Retenção do vídeo</p>
       <svg
         aria-label="Gráfico de retenção do vídeo de apresentação"
-        className="mt-2 block h-full min-h-[230px] w-full"
+        className="mt-2 block h-full min-h-0 w-full"
         height={chartHeight}
         role="img"
         viewBox={`0 0 ${chartWidth} ${chartHeight}`}
@@ -1979,8 +1980,7 @@ const VideoRetentionLineChart = ({
         />
         {xAxisLabels.map((bucket) => {
           const x =
-            padding.left +
-            (Math.min(100, Math.max(0, bucket.position_percent)) / 100) * innerWidth;
+            padding.left + (Math.min(100, Math.max(0, bucket.position_percent)) / 100) * innerWidth;
 
           return (
             <text
@@ -2023,13 +2023,13 @@ const StatisticsVideoCard = ({
       </h2>
 
       <div className="mt-4 grid flex-1 gap-4 md:grid-cols-[minmax(136px,150px)_minmax(0,1fr)] md:items-start 2xl:grid-cols-[minmax(146px,160px)_minmax(0,1fr)]">
-        <div className="mx-auto h-[260px] w-auto max-w-full overflow-hidden rounded-[1.25rem] border border-border bg-black md:mx-0">
+        <div className="mx-auto aspect-[9/16] h-[260px] max-w-full overflow-hidden rounded-[1.25rem] border border-border bg-black md:mx-0">
           {videoSrc ? (
             <>
               {/* biome-ignore lint/a11y/useMediaCaption: o backend ainda não expõe arquivo de legenda para o vídeo do perfil. */}
               <video
                 aria-label={`Miniplayer do vídeo de apresentação de ${detail.header.name}`}
-                className="h-full bg-black object-cover"
+                className="h-full w-full bg-black object-cover"
                 controls
                 playsInline
                 poster={cover || undefined}
@@ -2224,27 +2224,25 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: st
       </div>
 
       <section className="grid items-stretch gap-5 xl:grid-cols-[minmax(0,1.15fr)_minmax(360px,0.85fr)]">
-        <div className="min-w-0 xl:h-full">
-          <CardShell className="min-w-0 p-5 xl:h-full">
-            <fieldset className="grid min-w-0 grid-cols-4 gap-1.5 sm:gap-2">
-              <legend className="sr-only">Contadores exibidos no gráfico</legend>
-              {businessCards.map(({ config, metric }) => (
-                <BusinessMetricToggleCard
-                  active={visibleBusinessMetricIds.includes(config.id) && metric.available}
-                  config={config}
-                  key={config.id}
-                  metric={metric}
-                  onToggle={() => toggleBusinessMetric(config.id)}
-                />
-              ))}
-            </fieldset>
+        <CardShell className="min-w-0 p-5 xl:h-full">
+          <fieldset className="grid min-w-0 grid-cols-4 gap-1.5 sm:gap-2">
+            <legend className="sr-only">Contadores exibidos no gráfico</legend>
+            {businessCards.map(({ config, metric }) => (
+              <BusinessMetricToggleCard
+                active={visibleBusinessMetricIds.includes(config.id) && metric.available}
+                config={config}
+                key={config.id}
+                metric={metric}
+                onToggle={() => toggleBusinessMetric(config.id)}
+              />
+            ))}
+          </fieldset>
 
-            <BusinessSeriesChart
-              keys={visibleBusinessChartKeys}
-              points={statistics.business.series}
-            />
-          </CardShell>
-        </div>
+          <BusinessSeriesChart
+            keys={visibleBusinessChartKeys}
+            points={statistics.business.series}
+          />
+        </CardShell>
 
         <StatisticsVideoCard className="xl:h-full" detail={detail} statistics={statistics} />
       </section>
