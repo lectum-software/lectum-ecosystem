@@ -1890,9 +1890,29 @@ const StatsBars = ({
   );
 };
 
+const formatVideoAxisTime = (positionPercent: number, durationSeconds?: number | null) => {
+  if (!durationSeconds || !Number.isFinite(durationSeconds) || durationSeconds <= 0) {
+    return positionPercent === 0 ? "0:00" : "—";
+  }
+
+  const clampedPosition = Math.min(100, Math.max(0, positionPercent));
+  const totalSeconds = Math.round((clampedPosition / 100) * durationSeconds);
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+
+  if (hours > 0) {
+    return `${hours}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+  }
+
+  return `${minutes}:${String(seconds).padStart(2, "0")}`;
+};
+
 const VideoRetentionLineChart = ({
+  durationSeconds,
   retention,
 }: {
+  durationSeconds?: number | null;
   retention: AdminPsychologistStatistics["video"]["retention"];
 }) => {
   const sortedRetention = [...retention].sort(
@@ -1989,7 +2009,7 @@ const VideoRetentionLineChart = ({
               x={x}
               y={chartHeight - 8}
             >
-              {bucket.label}
+              {formatVideoAxisTime(bucket.position_percent, durationSeconds)}
             </text>
           );
         })}
@@ -2014,6 +2034,11 @@ const StatisticsVideoCard = ({
       detail.profile.content.cover_image_url,
   );
   const videoSrc = resolveAdminMediaUrl(video.video_url || detail.profile.content.video_url);
+  const [videoDurationSeconds, setVideoDurationSeconds] = useState<number | null>(null);
+
+  const updateVideoDuration = (duration: number) => {
+    setVideoDurationSeconds(Number.isFinite(duration) && duration > 0 ? duration : null);
+  };
 
   return (
     <CardShell className={cn("flex flex-col p-4 sm:p-5", className)}>
@@ -2030,6 +2055,8 @@ const StatisticsVideoCard = ({
                 aria-label={`Miniplayer do vídeo de apresentação de ${detail.header.name}`}
                 className="h-full w-full bg-black object-cover"
                 controls
+                onDurationChange={(event) => updateVideoDuration(event.currentTarget.duration)}
+                onLoadedMetadata={(event) => updateVideoDuration(event.currentTarget.duration)}
                 playsInline
                 poster={cover || undefined}
                 preload="metadata"
@@ -2060,7 +2087,10 @@ const StatisticsVideoCard = ({
         </div>
 
         <div className="min-w-0">
-          <VideoRetentionLineChart retention={video.retention} />
+          <VideoRetentionLineChart
+            durationSeconds={videoDurationSeconds}
+            retention={video.retention}
+          />
         </div>
 
         <div className="grid min-w-0 grid-cols-3 gap-2 md:col-span-2">
