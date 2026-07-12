@@ -8,12 +8,12 @@ export const registerPsychologistSchema = z
     professional_first_name: z
       .string()
       .trim()
-      .min(2, "Informe seu nome profissional")
+      .min(2, "Informe seu nome")
       .max(80, "Use no m\u00e1ximo 80 caracteres"),
     professional_last_name: z
       .string()
       .trim()
-      .min(1, "Informe seu sobrenome profissional")
+      .min(1, "Informe seu sobrenome")
       .max(120, "Use no m\u00e1ximo 120 caracteres"),
     email: z.email("Informe um e-mail profissional v\u00e1lido"),
     password: z
@@ -41,15 +41,16 @@ const fields = [
   {
     name: "professional_first_name",
     field: "input",
-    label: "Nome profissional",
+    label: "Nome",
     placeholder: "Ex.: Ana Clara",
+    description: "Esse nome aparece no bot\u00e3o de WhatsApp do seu perfil.",
     autoComplete: "given-name",
     inputClassName: "h-14 rounded-[var(--lectum-control-radius)] bg-surface-muted text-base",
   },
   {
     name: "professional_last_name",
     field: "input",
-    label: "Sobrenome profissional",
+    label: "Sobrenome",
     placeholder: "Ex.: Martins",
     autoComplete: "family-name",
     inputClassName: "h-14 rounded-[var(--lectum-control-radius)] bg-surface-muted text-base",

@@ -88,6 +88,7 @@ Builder/Quick Copy não está exposto como ferramenta callable neste ambiente; f
 - DTOs de descoberta/perfil/comunidade/favoritos expõem `whatsapp_name`; URLs `wa.me` usam o mesmo nome do CTA.
 - Paciente permaneceu com nome de exibição único.
 - Builder/Quick Copy não estava exposto como ferramenta callable; validação visual usou imagens locais do inventário e browser local.
+- Ajuste pós-entrega em 2026-07-12: os rótulos visíveis dos campos no cadastro e no perfil profissional passam a ser **Nome** e **Sobrenome**; o campo **Nome** exibe o informativo curto de que esse valor aparece no botão de WhatsApp do perfil.
 
 ## Validação realizada
 
@@ -102,3 +103,11 @@ Builder/Quick Copy não está exposto como ferramenta callable neste ambiente; f
   - `/psychologists/demo-psychologist-marina-rocha`: CTA `Fale com Marina`.
   - API local `/api/private/directory/psychologists`: `whatsapp_name=Marina` e mensagem `Olá Marina, ...`.
   - `/app/professional/profile/setup`: rota privada validada por redirect 307 para login sem sessão; a UI autenticada foi coberta por build/typecheck e pela mesma fundação de campos do formulário.
+
+### Validação do ajuste pós-entrega 2026-07-12
+
+- `pnpm --dir frontend check`.
+- `pnpm --dir frontend build`.
+- Browser local Chrome headless:
+  - `/auth/register/psychologist` em 390x900 e 1366x900, com formulário de e-mail expandido, exibiu **Nome**, **Sobrenome** e o informativo "Esse nome aparece no botão de WhatsApp do seu perfil.", sem os rótulos antigos.
+  - `/app/professional/profile/setup` em 390x900 redirecionou para login sem sessão (`/auth/login?callbackUrl=...`); a UI autenticada usa o mesmo `use-form.tsx` alterado e foi coberta por build/typecheck.

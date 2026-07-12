@@ -109,8 +109,8 @@ const isValidBirthdate = (value: string) => {
 
 export const freeProfileSchema = z
   .object({
-    professional_first_name: z.string().trim().min(2, "Informe seu nome profissional").max(80),
-    professional_last_name: z.string().trim().min(1, "Informe seu sobrenome profissional").max(120),
+    professional_first_name: z.string().trim().min(2, "Informe seu nome").max(80),
+    professional_last_name: z.string().trim().min(1, "Informe seu sobrenome").max(120),
     gender: z.string().trim().min(1, "Selecione seu gênero").max(40),
     race_color: z.string().trim().max(40).nullable(),
     religion: z.string().trim().max(80).nullable(),
@@ -191,15 +191,16 @@ export const createFields = (languageOptions: FieldOption[] = LANGUAGE_OPTIONS) 
     {
       name: "professional_first_name",
       field: "input",
-      label: "Nome profissional",
+      label: "Nome",
       placeholder: "Ex.: Roberto",
+      description: "Esse nome aparece no botão de WhatsApp do seu perfil.",
       required: true,
       autoComplete: "given-name",
     },
     {
       name: "professional_last_name",
       field: "input",
-      label: "Sobrenome profissional",
+      label: "Sobrenome",
       placeholder: "Ex.: Silva",
       required: true,
       autoComplete: "family-name",
