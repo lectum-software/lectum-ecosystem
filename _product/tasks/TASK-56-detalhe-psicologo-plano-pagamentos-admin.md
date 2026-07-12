@@ -354,3 +354,14 @@ Exibir plano, método e histórico financeiro do psicólogo e permitir concessã
 - Builder/Quick Copy não está exposto como ferramenta no ambiente; a referência visual usada foi o PNG local `_product/proto/admin/Psicólogos/Detalhes do psicólogo/Plano e pagamentos.png` e a captura enviada pelo usuário.
 - Validações executadas: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e `git diff --check` nos arquivos alterados.
 - Browser local: `GET http://localhost:3002/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=plano` retornou 200; a conferência visual autenticada ficou limitada pela sessão Admin não exposta ao ambiente de automação.
+
+## Ajuste complementar 2026-07-11 - bloco de cortesia ativa no slot de pagamento
+
+- Pedido do usuário: quando o plano atual for cortesia, manter o bloco de cortesia no lugar de `Forma de pagamento`, com opção de revogar cortesia, informações do CRP, `Concedida por` e `Nota interna`.
+- A UI Admin passou a detectar cortesia ativa por `plan.is_courtesy`, `plan.source="admin_grant"` ou `courtesy.can_revoke` e renderizar `Cortesia ativa` no slot lateral ao `Plano atual`.
+- O bloco lateral de cortesia ativa exibe `Regional CRP`, `CRP`, `Data inscrição CRP`, `Concedida por`, `Nota interna` e a ação real `Revogar cortesia`.
+- O card `Plano atual` passou a exibir `R$ 0,00/mês` abaixo de `Plano de cortesia` e deixou os metadados operacionais da cortesia concentrados no bloco lateral.
+- Não houve alteração de backend, endpoint, schema Prisma, migrations, packages, gateway ou regra de concessão/revogação.
+- Builder/Quick Copy não está exposto como ferramenta no ambiente; a referência visual usada foi o PNG local `_product/proto/admin/Psicólogos/Detalhes do psicólogo/Plano e pagamentos.png` e a captura enviada pelo usuário.
+- Validações executadas: `pnpm --dir admin check`, `pnpm --dir admin build` e `git diff --check` nos arquivos alterados. `pnpm check` foi reexecutado e ficou bloqueado por erros preexistentes fora deste ajuste em `frontend/src/utils/psychologist-onboarding.ts` e `frontend/src/app/app/professional/billing/checkout/logic.tsx`.
+- Browser local: `GET http://localhost:3002/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=plano` retornou 200; a conferência visual autenticada ficou limitada pela sessão Admin não exposta ao ambiente de automação.

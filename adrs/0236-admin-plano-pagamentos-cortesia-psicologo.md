@@ -402,3 +402,24 @@ Validação complementar:
 - `pnpm check`
 - `git diff --check` nos arquivos alterados
 - Browser local: `GET http://localhost:3002/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=plano` retornou 200; a conferência visual autenticada ficou limitada pela sessão Admin não exposta ao ambiente de automação.
+
+## Complemento 2026-07-11 - cortesia ativa ocupa o slot da forma de pagamento
+
+Produto definiu que a cortesia ativa deve permanecer na mesma região operacional usada para concessão de cortesia em plano gratuito, em vez de manter o card de forma de pagamento vazio ao lado do `Plano atual`.
+
+Decisão:
+
+- Quando a assinatura vigente for cortesia (`plan.is_courtesy`, `plan.source="admin_grant"` ou `courtesy.can_revoke`), a UI Admin renderiza um card `Cortesia ativa` no slot lateral ao `Plano atual`.
+- O card lateral exibe os dados reais já retornados pelo contrato de billing: `Regional CRP`, `CRP`, `Data inscrição CRP`, `plan.granted_by` como `Concedida por`, `plan.grant_notes` como `Nota interna` e a ação real `Revogar cortesia`.
+- O `Plano atual` continua exibindo nome, vigência, mensalidades e LTV, mas passa a mostrar `R$ 0,00/mês` abaixo de `Plano de cortesia` e deixa os metadados de operação da cortesia no card lateral.
+- Não foi criado novo endpoint, tabela, mock, dado fake ou regra paralela; a revogação segue usando o endpoint existente.
+
+Consequência: a tela evita mostrar `Forma de pagamento` vazia para cortesia, preserva o contexto operacional da concessão/revogação e mantém o resumo do plano mais simples.
+
+Validação complementar:
+
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check` foi reexecutado e ficou bloqueado por erros preexistentes fora deste ajuste em `frontend/src/utils/psychologist-onboarding.ts` e `frontend/src/app/app/professional/billing/checkout/logic.tsx`
+- `git diff --check` nos arquivos alterados
+- Browser local: `GET http://localhost:3002/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=plano` retornou 200; a conferência visual autenticada ficou limitada pela sessão Admin não exposta ao ambiente de automação.

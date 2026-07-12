@@ -1890,6 +1890,115 @@ const StatsBars = ({
   );
 };
 
+const VideoRetentionLineChart = ({
+  retention,
+}: {
+  retention: AdminPsychologistStatistics["video"]["retention"];
+}) => {
+  const sortedRetention = [...retention].sort(
+    (left, right) => left.position_percent - right.position_percent,
+  );
+  const chartWidth = 440;
+  const chartHeight = 260;
+  const padding = {
+    bottom: 34,
+    left: 48,
+    right: 12,
+    top: 22,
+  };
+  const innerWidth = chartWidth - padding.left - padding.right;
+  const innerHeight = chartHeight - padding.top - padding.bottom;
+  const yAxisLabels = [100, 75, 50, 25, 0];
+  const points = sortedRetention.map((bucket) => {
+    const x = padding.left + (Math.min(100, Math.max(0, bucket.position_percent)) / 100) * innerWidth;
+    const y =
+      padding.top + ((100 - Math.min(100, Math.max(0, bucket.percentage))) / 100) * innerHeight;
+
+    return { ...bucket, x, y };
+  });
+  const fallbackY = padding.top + innerHeight;
+  const linePath =
+    points.length > 0
+      ? points.map((point, index) => `${index === 0 ? "M" : "L"} ${point.x} ${point.y}`).join(" ")
+      : `M ${padding.left} ${fallbackY} L ${chartWidth - padding.right} ${fallbackY}`;
+  const firstPoint = points[0] ?? { x: padding.left, y: fallbackY };
+  const lastPoint = points.at(-1) ?? { x: chartWidth - padding.right, y: fallbackY };
+  const areaPath = `${linePath} L ${lastPoint.x} ${padding.top + innerHeight} L ${firstPoint.x} ${
+    padding.top + innerHeight
+  } Z`;
+  const xAxisLabels =
+    sortedRetention.length > 0
+      ? sortedRetention
+      : [
+          { label: "0%", percentage: 0, position_percent: 0 },
+          { label: "50%", percentage: 0, position_percent: 50 },
+          { label: "100%", percentage: 0, position_percent: 100 },
+        ];
+
+  return (
+    <div className="grid h-full min-h-[260px] grid-rows-[auto_1fr]">
+      <p className="text-xs font-black text-foreground">Retenção do vídeo</p>
+      <svg
+        aria-label="Gráfico de retenção do vídeo de apresentação"
+        className="mt-2 block h-full min-h-[230px] w-full"
+        height={chartHeight}
+        role="img"
+        viewBox={`0 0 ${chartWidth} ${chartHeight}`}
+        width="100%"
+      >
+        <title>Retenção do vídeo</title>
+        <defs>
+          <linearGradient id="admin-video-retention-fill" x1="0" x2="0" y1="0" y2="1">
+            <stop offset="0%" stopColor="var(--admin-primary)" stopOpacity="0.22" />
+            <stop offset="100%" stopColor="var(--admin-primary)" stopOpacity="0.02" />
+          </linearGradient>
+        </defs>
+        {yAxisLabels.map((label) => {
+          const y = padding.top + ((100 - label) / 100) * innerHeight;
+
+          return (
+            <text
+              className="fill-muted text-[10px] font-black"
+              dominantBaseline="middle"
+              key={label}
+              x={padding.left - 12}
+              y={y}
+            >
+              {label}%
+            </text>
+          );
+        })}
+        <path d={areaPath} fill="url(#admin-video-retention-fill)" />
+        <path
+          className="stroke-primary"
+          d={linePath}
+          fill="none"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth="3"
+        />
+        {xAxisLabels.map((bucket) => {
+          const x =
+            padding.left +
+            (Math.min(100, Math.max(0, bucket.position_percent)) / 100) * innerWidth;
+
+          return (
+            <text
+              className="fill-muted text-[10px] font-black"
+              key={bucket.label}
+              textAnchor="middle"
+              x={x}
+              y={chartHeight - 8}
+            >
+              {bucket.label}
+            </text>
+          );
+        })}
+      </svg>
+    </div>
+  );
+};
+
 const StatisticsVideoCard = ({
   className,
   detail,
@@ -1908,19 +2017,19 @@ const StatisticsVideoCard = ({
   const videoSrc = resolveAdminMediaUrl(video.video_url || detail.profile.content.video_url);
 
   return (
-    <CardShell className={cn("p-4 sm:p-5", className)}>
+    <CardShell className={cn("flex flex-col p-4 sm:p-5", className)}>
       <h2 className="text-lg font-black leading-tight text-foreground">
         Análises do vídeo de apresentação
       </h2>
 
-      <div className="mt-4 grid gap-4 md:grid-cols-[160px_minmax(0,1fr)] md:items-start 2xl:grid-cols-[180px_minmax(0,1fr)]">
-        <div className="mx-auto w-full max-w-[160px] overflow-hidden rounded-[1.25rem] border border-border bg-black md:mx-0 2xl:max-w-[180px]">
+      <div className="mt-4 grid flex-1 gap-4 md:grid-cols-[minmax(136px,150px)_minmax(0,1fr)] md:items-start 2xl:grid-cols-[minmax(146px,160px)_minmax(0,1fr)]">
+        <div className="mx-auto h-[260px] w-auto max-w-full overflow-hidden rounded-[1.25rem] border border-border bg-black md:mx-0">
           {videoSrc ? (
             <>
               {/* biome-ignore lint/a11y/useMediaCaption: o backend ainda não expõe arquivo de legenda para o vídeo do perfil. */}
               <video
                 aria-label={`Miniplayer do vídeo de apresentação de ${detail.header.name}`}
-                className="aspect-[9/16] w-full bg-black object-cover"
+                className="h-full bg-black object-cover"
                 controls
                 playsInline
                 poster={cover || undefined}
@@ -1929,7 +2038,7 @@ const StatisticsVideoCard = ({
               />
             </>
           ) : (
-            <div className="grid aspect-[9/16] place-items-center bg-surface-muted p-4 text-center">
+            <div className="grid h-full place-items-center bg-surface-muted p-4 text-center">
               {cover ? (
                 <div className="relative h-full w-full overflow-hidden rounded-2xl">
                   <Image
@@ -1952,22 +2061,7 @@ const StatisticsVideoCard = ({
         </div>
 
         <div className="min-w-0">
-          <div className="space-y-2.5">
-            {video.retention.map((bucket) => (
-              <div className="grid grid-cols-[46px_1fr_44px] items-center gap-2" key={bucket.label}>
-                <span className="text-xs font-black text-muted">{bucket.label}</span>
-                <span className="h-3 overflow-hidden rounded-full bg-surface-muted">
-                  <span
-                    className="block h-full rounded-full bg-primary"
-                    style={{ width: `${Math.min(100, bucket.percentage)}%` }}
-                  />
-                </span>
-                <span className="text-xs font-black text-foreground">
-                  {bucket.percentage.toLocaleString("pt-BR", { maximumFractionDigits: 1 })}%
-                </span>
-              </div>
-            ))}
-          </div>
+          <VideoRetentionLineChart retention={video.retention} />
         </div>
 
         <div className="grid min-w-0 grid-cols-3 gap-2 md:col-span-2">
@@ -2129,9 +2223,9 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: st
         </div>
       </div>
 
-      <section className="grid gap-5 xl:grid-cols-[minmax(0,1.15fr)_minmax(360px,0.85fr)] xl:items-start">
-        <div className="min-w-0">
-          <CardShell className="min-w-0 p-5">
+      <section className="grid items-stretch gap-5 xl:grid-cols-[minmax(0,1.15fr)_minmax(360px,0.85fr)]">
+        <div className="min-w-0 xl:h-full">
+          <CardShell className="min-w-0 p-5 xl:h-full">
             <fieldset className="grid min-w-0 grid-cols-4 gap-1.5 sm:gap-2">
               <legend className="sr-only">Contadores exibidos no gráfico</legend>
               {businessCards.map(({ config, metric }) => (
@@ -3927,31 +4021,19 @@ const BillingLoadingState = () => (
   </div>
 );
 
-const CurrentPlanCard = ({ billing, id }: { billing: AdminPsychologistBilling; id: string }) => {
+const isCurrentCourtesyPlan = (billing: AdminPsychologistBilling) =>
+  billing.plan.is_courtesy || billing.plan.source === "admin_grant" || billing.courtesy.can_revoke;
+
+const CurrentPlanCard = ({ billing }: { billing: AdminPsychologistBilling }) => {
   const plan = billing.plan;
-  const revokeMutation = useAdminPsychologistRevokeCourtesy(id);
-  const isCourtesy =
-    plan.is_courtesy || plan.source === "admin_grant" || billing.courtesy.can_revoke;
+  const isCourtesy = isCurrentCourtesyPlan(billing);
   const planTitle = isCourtesy ? "Plano de cortesia" : plan.plan_name || "Sem plano ativo";
-  const planPrice = isCourtesy ? null : formatPlanPrice(plan.price_cents, plan.interval);
-  const planEndLabel = isCourtesy ? "Fim" : "Pr?xima renova??o";
-  const internalNote = plan.grant_notes?.trim() || null;
+  const planPrice = isCourtesy ? "R$ 0,00/mês" : formatPlanPrice(plan.price_cents, plan.interval);
+  const planEndLabel = isCourtesy ? "Fim" : "Próxima renovação";
   const hasSubscription = Boolean(plan.id);
   const lifetimeValue = plan.lifetime_value_available
     ? formatMoney(plan.lifetime_value_cents ?? 0)
     : "Indisponível";
-
-  const onRevoke = async () => {
-    const confirmed = window.confirm("Confirmar revogacao da cortesia deste psicologo?");
-    if (!confirmed) return;
-
-    try {
-      await revokeMutation.mutateAsync();
-      toast.success("Cortesia revogada com sucesso.");
-    } catch (error) {
-      toast.error(resolveApiError(error));
-    }
-  };
 
   return (
     <CardShell className="p-5">
@@ -3993,38 +4075,75 @@ const CurrentPlanCard = ({ billing, id }: { billing: AdminPsychologistBilling; i
             />
           </>
         ) : null}
-        {isCourtesy ? (
-          <>
-            <FieldRow label="Concedida por" value={formatGrantedByName(plan.granted_by)} />
-            <FieldRow
-              label="Nota interna"
-              value={
-                internalNote ? (
-                  <span className="whitespace-pre-line">{internalNote}</span>
-                ) : (
-                  "N?o informada"
-                )
-              }
-            />
-          </>
-        ) : null}
+      </dl>
+    </CardShell>
+  );
+};
+
+const ActiveCourtesyCard = ({ billing, id }: { billing: AdminPsychologistBilling; id: string }) => {
+  const revokeMutation = useAdminPsychologistRevokeCourtesy(id);
+  const internalNote = billing.plan.grant_notes?.trim() || null;
+
+  const onRevoke = async () => {
+    const confirmed = window.confirm("Confirmar revogação da cortesia deste psicólogo?");
+    if (!confirmed) return;
+
+    try {
+      await revokeMutation.mutateAsync();
+      toast.success("Cortesia revogada com sucesso.");
+    } catch (error) {
+      toast.error(resolveApiError(error));
+    }
+  };
+
+  return (
+    <CardShell className="p-5">
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h2 className="text-xl font-black text-foreground">Cortesia ativa</h2>
+          <p className="mt-1 text-sm text-muted">
+            Dados usados para a concessão administrativa vigente.
+          </p>
+        </div>
+        <IconCircle icon={Gift} />
+      </div>
+
+      <dl className="mt-5 divide-y divide-border text-sm">
+        <FieldRow label="Regional CRP" value={billing.courtesy.regional_crp || "Não informado"} />
+        <FieldRow
+          label="CRP"
+          value={billing.courtesy.registration_number || billing.courtesy.crp || "Não informado"}
+        />
+        <FieldRow
+          label="Data inscrição CRP"
+          value={formatDate(billing.courtesy.crp_registration_date)}
+        />
+        <FieldRow label="Concedida por" value={formatGrantedByName(billing.plan.granted_by)} />
+        <FieldRow
+          label="Nota interna"
+          value={
+            internalNote ? (
+              <span className="whitespace-pre-line">{internalNote}</span>
+            ) : (
+              "Não informada"
+            )
+          }
+        />
       </dl>
 
-      {isCourtesy ? (
-        <button
-          className="mt-5 inline-flex h-12 w-full items-center justify-center gap-2 rounded-control border border-danger bg-surface px-4 text-sm font-black text-danger transition hover:bg-danger/10 disabled:cursor-not-allowed disabled:border-border disabled:text-muted"
-          disabled={!billing.courtesy.can_revoke || revokeMutation.isPending}
-          onClick={() => void onRevoke()}
-          type="button"
-        >
-          {revokeMutation.isPending ? (
-            <Loader2 aria-hidden className="h-4 w-4 animate-spin" />
-          ) : (
-            <AlertTriangle aria-hidden className="h-4 w-4" />
-          )}
-          Revogar cortesia
-        </button>
-      ) : null}
+      <button
+        className="mt-5 inline-flex h-12 w-full items-center justify-center gap-2 rounded-control border border-danger bg-surface px-4 text-sm font-black text-danger transition hover:bg-danger/10 disabled:cursor-not-allowed disabled:border-border disabled:text-muted"
+        disabled={!billing.courtesy.can_revoke || revokeMutation.isPending}
+        onClick={() => void onRevoke()}
+        type="button"
+      >
+        {revokeMutation.isPending ? (
+          <Loader2 aria-hidden className="h-4 w-4 animate-spin" />
+        ) : (
+          <AlertTriangle aria-hidden className="h-4 w-4" />
+        )}
+        Revogar cortesia
+      </button>
     </CardShell>
   );
 };
@@ -4416,13 +4535,16 @@ const PlanBillingTab = ({ id }: { detail: AdminPsychologistDetail; id: string })
 
   if (!query.data) return null;
 
-  const showCourtesyBesidePlan = isCurrentFreePlan(query.data);
+  const showActiveCourtesy = isCurrentCourtesyPlan(query.data);
+  const showCourtesyBesidePlan = showActiveCourtesy || isCurrentFreePlan(query.data);
 
   return (
     <div className="space-y-5" data-psychologist-detail-tab="plano">
       <div className="grid gap-5 xl:grid-cols-2">
-        <CurrentPlanCard billing={query.data} id={id} />
-        {showCourtesyBesidePlan ? (
+        <CurrentPlanCard billing={query.data} />
+        {showActiveCourtesy ? (
+          <ActiveCourtesyCard billing={query.data} id={id} />
+        ) : showCourtesyBesidePlan ? (
           <CourtesyActionCard billing={query.data} id={id} />
         ) : (
           <PaymentMethodCard billing={query.data} />
