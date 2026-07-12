@@ -4,6 +4,7 @@ import type { ApiResponse } from "@/api/types";
 
 export type PsychologistsDashboardQuery = {
   from?: string;
+  period?: "all" | "custom" | "month" | "week" | "year";
   to?: string;
 };
 
@@ -1006,6 +1007,7 @@ export type AdminPsychologistsDashboard = {
 
 const cleanDashboardParams = (input: PsychologistsDashboardQuery) => ({
   ...(input.from ? { from: input.from } : {}),
+  ...(input.period ? { period: input.period } : {}),
   ...(input.to ? { to: input.to } : {}),
 });
 

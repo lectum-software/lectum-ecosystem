@@ -19,12 +19,21 @@ Builder/Quick Copy `vcp://quickcopy/vcp-24aaa2941d814e5b90572bc93ae50e2a` não e
 - Exibir filtros mais buscados como indisponíveis porque ainda não há tracking persistido por termo/filtro de busca no diretório público.
 - Entregar a rota Admin protegida em `/psicologos`, seguindo a navegação já existente do app Admin.
 
+Atualização 2026-07-12:
+
+- A rota do dashboard passa a aceitar `period=week|month|year|all|custom`, mantendo `from`/`to` para período personalizado.
+- O limite operacional do dashboard foi ampliado para 3660 dias para permitir **Este ano** e **Todo o período** sem voltar aos chips fixos de 7/30/90 dias.
+- `period=all` deriva o início pelo primeiro cadastro real de psicólogo retornado por `user.createdAt`, sem mockar data inicial.
+- A UI do Admin usa o mesmo modelo de seletor aplicado nas estatísticas do detalhe do psicólogo e remove a linha redundante de período consultado e descrições longas dentro dos cards de contadores.
+
 ## Consequências
 
 - O Admin não cria uma métrica de ranking divergente do Explorar público.
 - As métricas financeiras ficam úteis para operação, mas explicitamente estimadas até existir conciliação financeira confirmada por evento de pagamento/receita líquida.
 - Métricas sem fonte real aparecem como indisponíveis em vez de serem preenchidas com dados inventados.
 - A fórmula compartilhada reduz duplicação e obriga futuras alterações de ranqueamento público a refletirem no Admin.
+
+- Períodos longos podem gerar séries diárias maiores, mas mantêm a consulta honesta sobre dados reais e seguem o limite já usado nas estatísticas individuais.
 
 ## Task relacionada
 
@@ -39,3 +48,5 @@ Builder/Quick Copy `vcp://quickcopy/vcp-24aaa2941d814e5b90572bc93ae50e2a` não e
 - `pnpm check`
 - Chamada real da API com admin temporário e remoção posterior do usuário de validação.
 - Browser local headless em `http://localhost:3002/psicologos` com admin real temporário, validando viewport mobile de 390px e desktop, ausência de "Adicionar novo psicólogo" e presença de seções reais.
+- Atualização 2026-07-12: `pnpm --dir admin check`, `pnpm --dir admin build` e Biome direcionado nos arquivos do dashboard backend.
+- Atualização 2026-07-12: `pnpm --dir backend check`, `pnpm --dir backend build` e `pnpm check` foram tentados, mas ficaram bloqueados por alterações pré-existentes no workspace (formatação/TypeScript fora do dashboard e `backend/prisma/schema.prisma` com falha P1012 no `prisma generate`).

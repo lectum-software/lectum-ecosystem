@@ -144,3 +144,15 @@ Packages usados:
 - Churn usa cancelamentos reais de assinaturas profissionais Mercado Pago no período dividido por base paga ativa no início + novas assinaturas pagas no período; cortesia e gratuito ficam fora.
 - Filtros mais buscados aparecem como indisponíveis porque não há tracking persistido de filtros/termos de busca.
 - Validações executadas: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check`, chamada real da API com admin temporário e validação headless local em `/psicologos` nos viewports 390px e desktop.
+
+### Correção UX em 2026-07-12
+
+- Título do dashboard alterado para **Dashboard de Psicólogos**.
+- Linha **Período consultado** removida do topo da rota `/psicologos`.
+- Chips rápidos **7 dias**, **30 dias** e **90 dias** removidos; o filtro passou a seguir o seletor usado nas estatísticas do detalhe do psicólogo: **Esta semana**, **Este mês**, **Este ano** e **Todo o período**, mantendo datas manuais como período personalizado.
+- Textos descritivos longos dentro dos cards de contadores foram removidos da UI, preservando os dados reais no contrato.
+- Backend do dashboard passou a aceitar `period=week|month|year|all|custom`; `period=all` deriva o início pelo primeiro cadastro real de psicólogo e não usa data mockada.
+- Referência visual consultada: `_product/proto/admin/Psicólogos/Psicólogos - Dashboard.png`; Builder/Quick Copy não estava disponível como ferramenta callable no ambiente.
+- Validações desta correção: `pnpm --dir admin check`, `pnpm --dir admin build` e `pnpm --dir backend exec biome check --error-on-warnings src/modules/api/admin/private/psychologists/dashboard/use-cases/services.ts src/modules/api/admin/private/psychologists/dashboard/DTOs/IAdminPsychologistsDashboardDTO.ts src/modules/api/admin/private/psychologists/dashboard/validator/index.ts`.
+- `pnpm --dir backend check`, `pnpm --dir backend build` e `pnpm check` foram executados, mas ficaram bloqueados por alterações pré-existentes no workspace (formatação/TypeScript em fluxos de nome profissional/WhatsApp e `backend/prisma/schema.prisma` já modificado com falha P1012 no `prisma generate`).
+- Browser local/headless em 390px confirmou a rota protegida em `/psicologos` redirecionando/carregando sem sessão Admin; validação visual autenticada depende de sessão Admin real no navegador do operador.

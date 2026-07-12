@@ -30,6 +30,7 @@ type AdminRangeQuery =
 const normalizeRange = (input: AdminRangeQuery) => ({
   from: input.from || "default",
   groupBy: "groupBy" in input ? input.groupBy || "day" : undefined,
+  period: "period" in input ? input.period || "default" : undefined,
   to: input.to || "default",
 });
 

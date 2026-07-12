@@ -22,7 +22,7 @@ import type {
 } from "../repositories/interfaces/IAdminPsychologistsDashboardRepository";
 
 const DEFAULT_PERIOD_DAYS = 7;
-const MAX_PERIOD_DAYS = 90;
+const MAX_PERIOD_DAYS = 3660;
 const MS_PER_DAY = 86_400_000;
 const GATEWAY_REVENUE_SOURCE = "mercadopago";
 
@@ -82,6 +82,19 @@ const startOfDate = (date: Date) => {
   return next;
 };
 
+const startOfWeek = (date: Date) => {
+  const next = startOfDate(date);
+  const day = next.getDay();
+  const diff = day === 0 ? -6 : 1 - day;
+  next.setDate(next.getDate() + diff);
+
+  return next;
+};
+
+const startOfMonth = (date: Date) => new Date(date.getFullYear(), date.getMonth(), 1);
+
+const startOfYear = (date: Date) => new Date(date.getFullYear(), 0, 1);
+
 const endOfDate = (date: Date) => {
   const next = new Date(date);
   next.setHours(23, 59, 59, 999);
@@ -117,15 +130,19 @@ const daysBetweenInclusive = (from: Date, to: Date) => {
 const buildLabels = (from: Date, days: number) =>
   Array.from({ length: days }, (_, index) => toDateKey(addDays(from, index)));
 
-const resolvePeriod = (query: AdminPsychologistsDashboardQuery): PeriodResult => {
+const resolvePeriod = (
+  query: AdminPsychologistsDashboardQuery,
+  allPeriodStartDate?: Date,
+): PeriodResult => {
   const hasCustomFrom = Boolean(query.from);
   const hasCustomTo = Boolean(query.to);
+  const preset = query.period || (hasCustomFrom || hasCustomTo ? "custom" : null);
 
   let start: Date;
   let end: Date;
   let label = "Últimos 7 dias";
 
-  if (hasCustomFrom || hasCustomTo) {
+  if (preset === "custom") {
     if (!hasCustomFrom || !hasCustomTo) {
       return { success: false, code: "invalid_analytics_date_range" };
     }
@@ -140,6 +157,28 @@ const resolvePeriod = (query: AdminPsychologistsDashboardQuery): PeriodResult =>
     start = customStart;
     end = customEnd;
     label = "Período personalizado";
+  } else if (preset === "week") {
+    const today = new Date();
+    start = startOfWeek(today);
+    end = endOfDate(today);
+    label = "Esta semana";
+  } else if (preset === "month") {
+    const today = new Date();
+    start = startOfMonth(today);
+    end = endOfDate(today);
+    label = "Este mês";
+  } else if (preset === "year") {
+    const today = new Date();
+    start = startOfYear(today);
+    end = endOfDate(today);
+    label = "Este ano";
+  } else if (preset === "all") {
+    const today = new Date();
+    start = startOfDate(allPeriodStartDate ?? addDays(today, -(DEFAULT_PERIOD_DAYS - 1)));
+    end = endOfDate(today);
+    label = "Todo o período";
+  } else if (preset) {
+    return { success: false, code: "invalid_analytics_date_range" };
   } else {
     const today = new Date();
     end = endOfDate(today);
@@ -174,7 +213,6 @@ const resolvePeriod = (query: AdminPsychologistsDashboardQuery): PeriodResult =>
     },
   };
 };
-
 const roundPercent = (value: number) => Math.round(value * 10) / 10;
 
 const percentageChange = (current: number, previous: number) => {
@@ -584,10 +622,20 @@ const buildPsychologistsList = (
 
 const roundRankingScore = (value: number) => Math.round(value * 1000) / 10;
 
+const getAllPeriodStartDate = (profiles: AdminPsychologistProfileRecord[]) =>
+  profiles.reduce<Date | undefined>((earliest, profile) => {
+    const createdAt = profile.user.createdAt;
+    if (!earliest || createdAt < earliest) return createdAt;
+
+    return earliest;
+  }, undefined);
+
 export const buildPsychologistsDashboard = async (
   query: AdminPsychologistsDashboardQuery,
 ): Promise<Resolve> => {
-  const resolvedPeriod = resolvePeriod(query ?? {});
+  const repository = new AdminPsychologistsDashboardRepository();
+  const profiles = await repository.listPsychologistProfiles();
+  const resolvedPeriod = resolvePeriod(query ?? {}, getAllPeriodStartDate(profiles));
   if (!resolvedPeriod.success) {
     return {
       status: 400,
@@ -595,24 +643,16 @@ export const buildPsychologistsDashboard = async (
     };
   }
 
-  const repository = new AdminPsychologistsDashboardRepository();
   const { current, labels, period, previous } = resolvedPeriod.period;
 
-  const [
-    profiles,
-    rankingCandidates,
-    profileViews,
-    previousProfileViews,
-    reviews,
-    whatsappContacts,
-  ] = await Promise.all([
-    repository.listPsychologistProfiles(),
-    repository.listPublicRankingCandidates(),
-    repository.listProfileViews(current),
-    repository.listProfileViews(previous),
-    repository.listPublishedReviews(current),
-    repository.listWhatsappContactRequests(current),
-  ]);
+  const [rankingCandidates, profileViews, previousProfileViews, reviews, whatsappContacts] =
+    await Promise.all([
+      repository.listPublicRankingCandidates(),
+      repository.listProfileViews(current),
+      repository.listProfileViews(previous),
+      repository.listPublishedReviews(current),
+      repository.listWhatsappContactRequests(current),
+    ]);
 
   const subscriptions = flattenSubscriptions(profiles);
   const currentProfiles = profiles;
@@ -669,7 +709,7 @@ export const buildPsychologistsDashboard = async (
         current: currentNewSignups.length,
         description: "Novos usuários com role psicologo criados no período selecionado.",
         id: "new_signups",
-        label: "Novos cadastros (semana)",
+        label: "Novos cadastros",
         previous: previousNewSignups.length,
         source: "user.createdAt/role=psicologo",
       }),
