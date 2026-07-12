@@ -2143,12 +2143,11 @@ const VideoRetentionLineChart = ({
       : padding.left + (playbackPositionPercent / 100) * innerWidth;
 
   return (
-    <div className="h-[clamp(240px,18vw,320px)]">
+    <div className="h-[clamp(240px,15vw,280px)]">
       <svg
         aria-label="Gráfico de retenção do vídeo de apresentação"
         className="block h-full min-h-0 w-full"
         height={chartHeight}
-        preserveAspectRatio="none"
         role="img"
         viewBox={`0 0 ${chartWidth} ${chartHeight}`}
         width="100%"
@@ -2254,8 +2253,8 @@ const StatisticsVideoCard = ({
         Análises do vídeo de apresentação
       </h2>
 
-      <div className="mt-4 grid flex-1 gap-4 md:grid-cols-[minmax(136px,180px)_minmax(0,1fr)] md:items-stretch 2xl:grid-cols-[minmax(170px,180px)_minmax(0,1fr)]">
-        <div className="mx-auto aspect-[9/16] h-[clamp(240px,18vw,320px)] max-w-full overflow-hidden rounded-[1.25rem] border border-border bg-black md:mx-0">
+      <div className="mt-4 grid flex-1 gap-4 md:grid-cols-[minmax(136px,158px)_minmax(0,1fr)] md:items-stretch 2xl:grid-cols-[minmax(150px,158px)_minmax(0,1fr)]">
+        <div className="mx-auto aspect-[9/16] h-[clamp(240px,15vw,280px)] max-w-full overflow-hidden rounded-[1.25rem] border border-border bg-black md:mx-0">
           {videoSrc ? (
             <>
               {/* biome-ignore lint/a11y/useMediaCaption: o backend ainda não expõe arquivo de legenda para o vídeo do perfil. */}
