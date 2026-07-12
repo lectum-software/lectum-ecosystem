@@ -364,7 +364,7 @@ const BUSINESS_CHART_METRICS = [
     id: "favorites",
     key: "favorites",
     label: "Favoritos",
-    shortLabel: "Fav.",
+    shortLabel: "Favoritos",
     strokeClassName: "stroke-pink-500",
     swatchClassName: "bg-pink-500",
   },
@@ -1598,14 +1598,13 @@ const BusinessMetricToggleCard = ({
   metric: AdminPsychologistEngagementMetric;
   onToggle: () => void;
 }) => {
-  const Icon = config.icon;
   const displayValue = metric.available ? formatEngagementMetricValue(metric) : "—";
 
   return (
     <button
       aria-pressed={active}
       className={cn(
-        "inline-flex min-w-0 items-center justify-center gap-1 rounded-full border px-1.5 py-1.5 text-left text-[10px] font-black transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 sm:gap-1.5 sm:px-2",
+        "inline-flex min-w-0 items-center justify-center gap-1 rounded-full border px-1.5 py-1.5 text-left text-[9px] font-black leading-none transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 sm:px-2 sm:text-[10px]",
         active
           ? "border-primary/40 bg-primary-soft text-primary"
           : "border-border bg-surface text-muted hover:border-primary/30 hover:bg-primary-soft/30",
@@ -1624,12 +1623,7 @@ const BusinessMetricToggleCard = ({
           active ? config.swatchClassName : "bg-current opacity-40",
         )}
       />
-      {metric.id === "whatsapp_clicks" ? (
-        <WhatsAppIcon aria-hidden className="hidden h-3.5 w-3.5 shrink-0 sm:block" />
-      ) : (
-        <Icon aria-hidden className="hidden h-3.5 w-3.5 shrink-0 sm:block" />
-      )}
-      <span className="min-w-0 truncate">{config.shortLabel}</span>
+      <span className="whitespace-nowrap">{config.shortLabel}</span>
       <span className="rounded-full bg-surface px-1.5 py-0.5 text-foreground sm:px-2">
         {displayValue}
       </span>
