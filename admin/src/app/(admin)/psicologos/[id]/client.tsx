@@ -2443,7 +2443,7 @@ const StatisticsVideoCard = ({
         Análises do vídeo de apresentação
       </h2>
 
-      <div className="mt-4 grid flex-1 gap-x-5 gap-y-4 md:grid-cols-[minmax(136px,158px)_minmax(0,1fr)] md:items-start 2xl:grid-cols-[minmax(150px,158px)_minmax(0,1fr)]">
+      <div className="mt-4 grid gap-x-5 gap-y-4 md:grid-cols-[minmax(136px,158px)_minmax(0,1fr)] md:items-start 2xl:grid-cols-[minmax(150px,158px)_minmax(0,1fr)]">
         <div className="mx-auto aspect-[4/5] h-[clamp(190px,12vw,220px)] max-w-full overflow-hidden rounded-[1.25rem] border border-border bg-black md:mx-0">
           {videoSrc ? (
             <>
@@ -2723,7 +2723,7 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: st
         </CardShell>
 
         <StatisticsVideoCard
-          className="xl:h-full"
+          className="xl:self-start"
           detail={detail}
           statistics={businessStatistics}
         />
