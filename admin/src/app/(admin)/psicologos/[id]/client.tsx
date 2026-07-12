@@ -29,7 +29,6 @@ import {
   Mail,
   MessageCircle,
   Pencil,
-  Play,
   RefreshCw,
   Search,
   Send,
@@ -1901,80 +1900,59 @@ const StatisticsVideoCard = ({
   statistics: AdminPsychologistStatistics;
 }) => {
   const video = statistics.video;
-  const cover = renderableImageSrc(video.cover_url || detail.profile.content.cover_image_url);
+  const cover = renderableImageSrc(
+    video.cover_url ||
+      detail.profile.content.video_cover_url ||
+      detail.profile.content.cover_image_url,
+  );
+  const videoSrc = resolveAdminMediaUrl(video.video_url || detail.profile.content.video_url);
 
   return (
     <CardShell className={cn("p-4 sm:p-5", className)}>
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <h2 className="text-lg font-black leading-tight text-foreground">
-            Análises do vídeo de apresentação
-          </h2>
-          <p className="mt-1 text-xs font-medium leading-relaxed text-muted sm:text-sm">
-            Retenção derivada de sessões reais de vídeo; sem sessões, a métrica fica indisponível.
-          </p>
-        </div>
-        <Badge
-          className={video.available ? "bg-emerald-50 text-success" : "bg-surface-muted text-muted"}
-        >
-          {video.available ? "Disponível" : "Indisponível"}
-        </Badge>
-      </div>
+      <h2 className="text-lg font-black leading-tight text-foreground">
+        Análises do vídeo de apresentação
+      </h2>
 
-      <div className="mt-4 grid gap-4 md:grid-cols-[160px_minmax(0,1fr)] 2xl:grid-cols-[180px_minmax(0,1fr)]">
-        <div className="mx-auto w-full max-w-[160px] overflow-hidden rounded-[1.25rem] border border-border bg-surface-muted md:mx-0 2xl:max-w-[180px]">
-          <div className="relative aspect-[3/4]">
-            {cover ? (
-              <Image
-                alt={`Capa do vídeo de apresentação de ${detail.header.name}`}
-                className="object-cover"
-                fill
-                sizes="(min-width: 1536px) 180px, 160px"
-                src={cover}
-                unoptimized={isPublicAdminMediaSrc(cover)}
+      <div className="mt-4 grid gap-4 md:grid-cols-[160px_minmax(0,1fr)] md:items-start 2xl:grid-cols-[180px_minmax(0,1fr)]">
+        <div className="mx-auto w-full max-w-[160px] overflow-hidden rounded-[1.25rem] border border-border bg-black md:mx-0 2xl:max-w-[180px]">
+          {videoSrc ? (
+            <>
+              {/* biome-ignore lint/a11y/useMediaCaption: o backend ainda não expõe arquivo de legenda para o vídeo do perfil. */}
+              <video
+                aria-label={`Miniplayer do vídeo de apresentação de ${detail.header.name}`}
+                className="aspect-[9/16] w-full bg-black object-cover"
+                controls
+                playsInline
+                poster={cover || undefined}
+                preload="metadata"
+                src={videoSrc}
               />
-            ) : (
-              <div className="grid h-full place-items-center text-primary">
-                <Video aria-hidden className="h-12 w-12" />
-              </div>
-            )}
-            <span className="absolute inset-0 grid place-items-center bg-overlay/20">
-              <span className="grid h-12 w-12 place-items-center rounded-full bg-white/90 text-primary shadow-admin-soft">
-                <Play aria-hidden className="ml-1 h-5 w-5 fill-current" />
-              </span>
-            </span>
-          </div>
+            </>
+          ) : (
+            <div className="grid aspect-[9/16] place-items-center bg-surface-muted p-4 text-center">
+              {cover ? (
+                <div className="relative h-full w-full overflow-hidden rounded-2xl">
+                  <Image
+                    alt={`Capa do vídeo de apresentação de ${detail.header.name}`}
+                    className="object-cover"
+                    fill
+                    sizes="(min-width: 1536px) 180px, 160px"
+                    src={cover}
+                    unoptimized={isPublicAdminMediaSrc(cover)}
+                  />
+                </div>
+              ) : (
+                <div className="grid gap-2 text-primary">
+                  <Video aria-hidden className="mx-auto h-10 w-10" />
+                  <span className="text-xs font-black text-muted">Nenhum vídeo cadastrado</span>
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         <div className="min-w-0">
-          <div className="grid grid-cols-3 gap-2">
-            <div className="min-w-0 rounded-2xl bg-surface-muted p-3">
-              <p className="text-xs font-black text-muted">Visualizações</p>
-              <p className="mt-1 text-xl font-black text-foreground">
-                {numberFormatter.format(video.metrics.sessions)}
-              </p>
-            </div>
-            <div className="min-w-0 rounded-2xl bg-surface-muted p-3">
-              <p className="text-xs font-black text-muted">Replays</p>
-              <p className="mt-1 text-xl font-black text-foreground">
-                {video.metrics.replay_rate_percent.toLocaleString("pt-BR", {
-                  maximumFractionDigits: 1,
-                })}
-                %
-              </p>
-            </div>
-            <div className="min-w-0 rounded-2xl bg-surface-muted p-3">
-              <p className="text-xs font-black text-muted">Retenção</p>
-              <p className="mt-1 text-xl font-black text-foreground">
-                {video.metrics.average_retention_percent.toLocaleString("pt-BR", {
-                  maximumFractionDigits: 1,
-                })}
-                %
-              </p>
-            </div>
-          </div>
-
-          <div className="mt-4 space-y-2.5">
+          <div className="space-y-2.5">
             {video.retention.map((bucket) => (
               <div className="grid grid-cols-[46px_1fr_44px] items-center gap-2" key={bucket.label}>
                 <span className="text-xs font-black text-muted">{bucket.label}</span>
@@ -1990,12 +1968,33 @@ const StatisticsVideoCard = ({
               </div>
             ))}
           </div>
+        </div>
 
-          {!video.available ? (
-            <p className="mt-3 rounded-2xl border border-dashed border-border bg-surface-muted p-3 text-xs font-bold leading-relaxed text-muted">
-              {video.unavailable_reason}
+        <div className="grid min-w-0 grid-cols-3 gap-2 md:col-span-2">
+          <div className="min-w-0 rounded-2xl bg-surface-muted p-3">
+            <p className="text-xs font-black text-muted">Visualizações</p>
+            <p className="mt-1 text-xl font-black text-foreground">
+              {numberFormatter.format(video.metrics.sessions)}
             </p>
-          ) : null}
+          </div>
+          <div className="min-w-0 rounded-2xl bg-surface-muted p-3">
+            <p className="text-xs font-black text-muted">Replays</p>
+            <p className="mt-1 text-xl font-black text-foreground">
+              {video.metrics.replay_rate_percent.toLocaleString("pt-BR", {
+                maximumFractionDigits: 1,
+              })}
+              %
+            </p>
+          </div>
+          <div className="min-w-0 rounded-2xl bg-surface-muted p-3">
+            <p className="text-xs font-black text-muted">Retenção</p>
+            <p className="mt-1 text-xl font-black text-foreground">
+              {video.metrics.average_retention_percent.toLocaleString("pt-BR", {
+                maximumFractionDigits: 1,
+              })}
+              %
+            </p>
+          </div>
         </div>
       </div>
     </CardShell>
