@@ -2967,35 +2967,6 @@ const PublicationsTab = ({ id }: { id: string }) => {
 
   return (
     <div className="space-y-5" data-psychologist-detail-tab="publicacoes">
-      <div className="rounded-2xl border border-primary/20 bg-primary-soft p-4 text-sm font-bold text-muted">
-        Publicações vindas de community_post e post_reply reais. A tela é somente leitura: não há
-        moderação, edição ou remoção nesta task.
-      </div>
-
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        {publications.totals.cards.map((item) => (
-          <EngagementMetricCard
-            icon={
-              item.id === "posts"
-                ? FileText
-                : item.id === "replies"
-                  ? MessageCircle
-                  : item.id === "upvotes"
-                    ? ArrowUp
-                    : item.id === "downvotes"
-                      ? ArrowDown
-                      : item.id === "views"
-                        ? Eye
-                        : item.id === "saves"
-                          ? Bookmark
-                          : Share2
-            }
-            key={item.id}
-            metric={item}
-          />
-        ))}
-      </div>
-
       <CardShell className="p-4">
         <div className="grid gap-3 lg:grid-cols-[1.5fr_1fr_1fr_1fr_1fr]">
           <label className="block text-sm font-black text-muted">
