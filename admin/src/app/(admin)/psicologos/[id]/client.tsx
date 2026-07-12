@@ -392,7 +392,8 @@ const BUSINESS_CHART_METRICS = [
 
 type BusinessChartMetric = (typeof BUSINESS_CHART_METRICS)[number];
 type BusinessChartMetricId = BusinessChartMetric["id"];
-type StatisticsPeriodPreset = NonNullable<AdminPsychologistStatisticsQuery["period"]>;
+type StatisticsPeriodValue = NonNullable<AdminPsychologistStatisticsQuery["period"]>;
+type StatisticsPeriodPreset = Exclude<StatisticsPeriodValue, "custom">;
 type StatisticsCustomRange = Pick<AdminPsychologistStatisticsQuery, "from" | "to">;
 
 const STATISTICS_PERIOD_OPTIONS: { id: StatisticsPeriodPreset; label: string }[] = [
@@ -400,7 +401,6 @@ const STATISTICS_PERIOD_OPTIONS: { id: StatisticsPeriodPreset; label: string }[]
   { id: "month", label: "Este mês" },
   { id: "year", label: "Este ano" },
   { id: "all", label: "Todo o período" },
-  { id: "custom", label: "Personalizado" },
 ];
 
 const CARD = "rounded-card border border-border bg-surface shadow-admin-soft";
@@ -772,13 +772,38 @@ const startOfCurrentWeek = () => {
   return date;
 };
 
-const getDefaultStatisticsCustomRange = (): Required<StatisticsCustomRange> => ({
-  from: toDateInputValue(startOfCurrentWeek()),
-  to: toDateInputValue(new Date()),
-});
+const startOfCurrentMonth = () => {
+  const date = new Date();
+  date.setDate(1);
+
+  return date;
+};
+
+const startOfCurrentYear = () => new Date(new Date().getFullYear(), 0, 1);
+
+const dateInputValueFromString = (value?: string | null) => {
+  if (!value) return toDateInputValue(new Date());
+
+  const date = new Date(value);
+
+  return Number.isNaN(date.getTime()) ? toDateInputValue(new Date()) : toDateInputValue(date);
+};
+
+const getStatisticsRangeForPeriod = (
+  period: StatisticsPeriodPreset,
+  createdAt?: string | null,
+): Required<StatisticsCustomRange> => {
+  const today = toDateInputValue(new Date());
+
+  if (period === "month") return { from: toDateInputValue(startOfCurrentMonth()), to: today };
+  if (period === "year") return { from: toDateInputValue(startOfCurrentYear()), to: today };
+  if (period === "all") return { from: dateInputValueFromString(createdAt), to: today };
+
+  return { from: toDateInputValue(startOfCurrentWeek()), to: today };
+};
 
 const buildStatisticsPeriodQuery = (
-  period: StatisticsPeriodPreset,
+  period: StatisticsPeriodValue,
   customRange: StatisticsCustomRange,
 ): AdminPsychologistStatisticsQuery =>
   period === "custom" ? { from: customRange.from, period, to: customRange.to } : { period };
@@ -1974,9 +1999,9 @@ const StatisticsVideoCard = ({
 };
 
 const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: string }) => {
-  const [statisticsPeriod, setStatisticsPeriod] = useState<StatisticsPeriodPreset>("week");
+  const [statisticsPeriod, setStatisticsPeriod] = useState<StatisticsPeriodValue>("week");
   const [customStatisticsRange, setCustomStatisticsRange] = useState<StatisticsCustomRange>(() =>
-    getDefaultStatisticsCustomRange(),
+    getStatisticsRangeForPeriod("week", detail.header.created_at),
   );
   const statisticsPeriodQuery = useMemo(
     () => buildStatisticsPeriodQuery(statisticsPeriod, customStatisticsRange),
@@ -1999,6 +2024,19 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: st
     return ids.length > 0 ? ids : BUSINESS_CHART_METRICS.map((item) => item.id);
   }, [query.data?.business.cards]);
   const errorMessage = query.error ? resolveApiError(query.error) : null;
+  const handleStatisticsPeriodChange = (period: StatisticsPeriodPreset) => {
+    setStatisticsPeriod(period);
+    setCustomStatisticsRange(getStatisticsRangeForPeriod(period, detail.header.created_at));
+  };
+  const handleStatisticsDateChange = (field: keyof StatisticsCustomRange, value: string) => {
+    if (!value) return;
+
+    setStatisticsPeriod("custom");
+    setCustomStatisticsRange((current) => ({
+      ...current,
+      [field]: value,
+    }));
+  };
 
   if (query.isLoading) return <EngagementLoadingState />;
   if (query.isError && errorMessage) {
@@ -2042,10 +2080,15 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: st
             <select
               className="h-10 min-w-[170px] rounded-2xl border border-border bg-surface px-3 text-sm font-black text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
               onChange={(event) =>
-                setStatisticsPeriod(event.target.value as StatisticsPeriodPreset)
+                handleStatisticsPeriodChange(event.target.value as StatisticsPeriodPreset)
               }
               value={statisticsPeriod}
             >
+              {statisticsPeriod === "custom" ? (
+                <option disabled hidden value="custom">
+                  Personalizado
+                </option>
+              ) : null}
               {STATISTICS_PERIOD_OPTIONS.map((option) => (
                 <option key={option.id} value={option.id}>
                   {option.label}
@@ -2054,38 +2097,26 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: st
             </select>
           </label>
 
-          {statisticsPeriod === "custom" ? (
-            <div className="grid gap-2 sm:grid-cols-2">
-              <label className="grid gap-1 text-xs font-black text-muted">
-                De
-                <input
-                  className="h-10 rounded-2xl border border-border bg-surface px-3 text-sm font-black text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
-                  onChange={(event) =>
-                    setCustomStatisticsRange((current) => ({
-                      ...current,
-                      from: event.target.value,
-                    }))
-                  }
-                  type="date"
-                  value={customStatisticsRange.from}
-                />
-              </label>
-              <label className="grid gap-1 text-xs font-black text-muted">
-                Até
-                <input
-                  className="h-10 rounded-2xl border border-border bg-surface px-3 text-sm font-black text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
-                  onChange={(event) =>
-                    setCustomStatisticsRange((current) => ({
-                      ...current,
-                      to: event.target.value,
-                    }))
-                  }
-                  type="date"
-                  value={customStatisticsRange.to}
-                />
-              </label>
-            </div>
-          ) : null}
+          <div className="grid gap-2 sm:grid-cols-2">
+            <label className="grid gap-1 text-xs font-black text-muted">
+              De
+              <input
+                className="h-10 rounded-2xl border border-border bg-surface px-3 text-sm font-black text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+                onChange={(event) => handleStatisticsDateChange("from", event.target.value)}
+                type="date"
+                value={customStatisticsRange.from}
+              />
+            </label>
+            <label className="grid gap-1 text-xs font-black text-muted">
+              Até
+              <input
+                className="h-10 rounded-2xl border border-border bg-surface px-3 text-sm font-black text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+                onChange={(event) => handleStatisticsDateChange("to", event.target.value)}
+                type="date"
+                value={customStatisticsRange.to}
+              />
+            </label>
+          </div>
         </div>
       </div>
 
