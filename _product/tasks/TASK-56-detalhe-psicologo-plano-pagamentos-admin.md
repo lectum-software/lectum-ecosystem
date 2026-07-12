@@ -333,3 +333,13 @@ Exibir plano, método e histórico financeiro do psicólogo e permitir concessã
 - A alteração é somente de copy retornada pelo backend para planos sem cobrança financeira; não muda gateway, cálculo financeiro, histórico real, endpoint, schema Prisma, migrations, packages ou regra de domínio.
 - Builder/Quick Copy não está exposto como ferramenta no ambiente; a referência visual usada foi o PNG local `_product/proto/admin/Psicólogos/Detalhes do psicólogo/Plano e pagamentos.png` e a captura enviada pelo usuário.
 - Validações executadas: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm check`, `git diff --check` nos arquivos alterados e `GET http://localhost:3002/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=plano` com status 200.
+
+## Ajuste complementar 2026-07-11 - confirmação forte para concessão de cortesia
+
+- Pedido do usuário: a ação `Conceder cortesia` deve exigir confirmação forte antes de efetivar a concessão.
+- O formulário Admin passou a exibir o campo obrigatório `Confirmação forte`, com a frase `CONCEDER CORTESIA`, validado por React Hook Form/Zod antes do submit real.
+- O endpoint `POST /api/admin/private/psychologists/:id/billing/grant-courtesy` também passou a exigir `confirmation="CONCEDER CORTESIA"`, mantendo a proteção no backend mesmo se a UI for contornada.
+- O `window.confirm` foi removido; a confirmação forte digitada entra no contrato do endpoint, mas não altera plano, gateway, schema Prisma, migrations ou packages.
+- Builder/Quick Copy não está exposto como ferramenta no ambiente; a referência visual usada foi o PNG local `_product/proto/admin/Psicólogos/Detalhes do psicólogo/Plano e pagamentos.png` e a captura enviada pelo usuário.
+- Validações executadas: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e `git diff --check` nos arquivos alterados.
+- Browser local: `GET http://localhost:3002/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=plano` retornou 200; a conferência visual autenticada ficou limitada pela sessão Admin não exposta ao ambiente de automação.

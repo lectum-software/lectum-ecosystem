@@ -16,6 +16,13 @@ export const grantSchema: IValidatorRequest = {
   params: [psychologistParam],
   body: [
     {
+      key: "confirmation",
+      coerse: "string",
+      method: "string",
+      min: 1,
+      max: 40,
+    },
+    {
       key: "period_days",
       coerse: "number",
       method: "numeric",

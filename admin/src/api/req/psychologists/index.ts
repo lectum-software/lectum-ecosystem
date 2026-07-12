@@ -533,6 +533,7 @@ export type AdminPsychologistBilling = {
 };
 
 export type AdminPsychologistGrantCourtesyInput = {
+  confirmation: string;
   cpf: string;
   crp: string;
   crp_registration_date: string;

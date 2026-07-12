@@ -358,3 +358,26 @@ Validação complementar:
 - `pnpm --dir admin build`
 - `pnpm check`
 - `git diff --check` nos arquivos alterados
+
+## Complemento 2026-07-11 - confirmação forte na concessão de cortesia
+
+A concessão de cortesia administrativa é uma ação sensível porque cria acesso profissional gratuito, atualiza dados de identidade usados na concessão e altera o plano vigente do psicólogo. A confirmação nativa do navegador não oferecia uma barreira operacional suficientemente explícita nem era validada no backend.
+
+Decisão:
+
+- Exigir que o Admin digite `CONCEDER CORTESIA` no formulário antes do submit.
+- Validar a frase no frontend com React Hook Form/Zod para feedback inline e também no endpoint Admin privado `POST /api/admin/private/psychologists/:id/billing/grant-courtesy`.
+- Rejeitar a mutação no backend com `courtesy_grant_confirmation_invalid` quando a confirmação estiver ausente ou divergente.
+- Remover o `window.confirm`, preservando a ação real, auditoria existente via `grant_notes/granted_by`, bloqueio por gateway e reutilização do serviço compartilhado de concessão.
+
+Consequência: a operação fica menos propensa a clique acidental e não depende apenas da UI para proteger a mutação. Não há alteração de schema Prisma, migrations, packages, gateway ou política de receita.
+
+Validação complementar:
+
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check`
+- `git diff --check` nos arquivos alterados
+- Browser local: `GET http://localhost:3002/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=plano` retornou 200; a conferência visual autenticada ficou limitada pela sessão Admin não exposta ao ambiente de automação.

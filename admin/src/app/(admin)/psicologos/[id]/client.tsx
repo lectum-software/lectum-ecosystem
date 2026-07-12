@@ -393,28 +393,40 @@ type BusinessChartMetric = (typeof BUSINESS_CHART_METRICS)[number];
 type BusinessChartMetricId = BusinessChartMetric["id"];
 
 const CARD = "rounded-card border border-border bg-surface shadow-admin-soft";
+const COURTESY_GRANT_CONFIRMATION = "CONCEDER CORTESIA";
 
-const courtesyBaseSchema = z.object({
-  cpf: z
-    .string()
-    .trim()
-    .min(1, "Informe o CPF.")
-    .max(14, "Use no maximo 14 caracteres.")
-    .refine((value) => isValidCpf(value), "Informe um CPF valido."),
-  crp: z.string().trim().min(1, "Informe o CRP.").max(40, "Use no maximo 40 caracteres."),
-  crp_registration_date: z.string().trim().min(1, "Informe a data inscrição CRP."),
-  notes: z
-    .string()
-    .trim()
-    .min(1, "Informe as notas internas.")
-    .max(500, "Use no maximo 500 caracteres."),
-  period_days: z.string().min(1, "Selecione o periodo."),
-  regional_crp: z
-    .string()
-    .trim()
-    .min(1, "Selecione a regional do CRP.")
-    .max(120, "Use no maximo 120 caracteres."),
-});
+const courtesyBaseSchema = z
+  .object({
+    confirmation: z.string(),
+    cpf: z
+      .string()
+      .trim()
+      .min(1, "Informe o CPF.")
+      .max(14, "Use no maximo 14 caracteres.")
+      .refine((value) => isValidCpf(value), "Informe um CPF valido."),
+    crp: z.string().trim().min(1, "Informe o CRP.").max(40, "Use no maximo 40 caracteres."),
+    crp_registration_date: z.string().trim().min(1, "Informe a data inscrição CRP."),
+    notes: z
+      .string()
+      .trim()
+      .min(1, "Informe as notas internas.")
+      .max(500, "Use no maximo 500 caracteres."),
+    period_days: z.string().min(1, "Selecione o periodo."),
+    regional_crp: z
+      .string()
+      .trim()
+      .min(1, "Selecione a regional do CRP.")
+      .max(120, "Use no maximo 120 caracteres."),
+  })
+  .superRefine((values, ctx) => {
+    if (values.confirmation.trim().toUpperCase() !== COURTESY_GRANT_CONFIRMATION) {
+      ctx.addIssue({
+        code: "custom",
+        message: `Digite ${COURTESY_GRANT_CONFIRMATION} para confirmar.`,
+        path: ["confirmation"],
+      });
+    }
+  });
 
 type CourtesyFormValues = z.infer<typeof courtesyBaseSchema>;
 
@@ -3966,6 +3978,7 @@ const CourtesyGrantForm = ({ billing, id }: { billing: AdminPsychologistBilling;
   const mutation = useAdminPsychologistGrantCourtesy(id);
   const form = useForm<CourtesyFormValues>({
     defaultValues: {
+      confirmation: "",
       cpf: formatCpfInput(billing.courtesy.cpf),
       crp: billing.courtesy.registration_number || billing.courtesy.crp || "",
       crp_registration_date: formatInputDate(billing.courtesy.crp_registration_date),
@@ -3984,6 +3997,7 @@ const CourtesyGrantForm = ({ billing, id }: { billing: AdminPsychologistBilling;
 
   useEffect(() => {
     form.reset({
+      confirmation: "",
       cpf: formatCpfInput(billing.courtesy.cpf),
       crp: billing.courtesy.registration_number || billing.courtesy.crp || "",
       crp_registration_date: formatInputDate(billing.courtesy.crp_registration_date),
@@ -3994,13 +4008,9 @@ const CourtesyGrantForm = ({ billing, id }: { billing: AdminPsychologistBilling;
   }, [billing.courtesy, form]);
 
   const onSubmit: SubmitHandler<CourtesyFormValues> = async (values) => {
-    const confirmed = window.confirm(
-      "Confirmar concessao de cortesia profissional para este psicologo?",
-    );
-    if (!confirmed) return;
-
     try {
       await mutation.mutateAsync({
+        confirmation: values.confirmation.trim().toUpperCase(),
         cpf: normalizeCpfInput(values.cpf),
         crp: values.crp.trim(),
         crp_registration_date: values.crp_registration_date.trim(),
@@ -4086,6 +4096,18 @@ const CourtesyGrantForm = ({ billing, id }: { billing: AdminPsychologistBilling;
             placeholder="Observações internas para auditoria"
             required
             rows={3}
+          />
+          <div className="rounded-2xl border border-orange-200 bg-orange-50 p-3 text-sm font-bold leading-6 text-orange-800">
+            A cortesia cria acesso profissional gratuito e fica registrada para auditoria. Digite{" "}
+            <strong>{COURTESY_GRANT_CONFIRMATION}</strong> para confirmar.
+          </div>
+          <InputController<CourtesyFormValues>
+            autoComplete="off"
+            disabled={disabled}
+            label="Confirmação forte"
+            name="confirmation"
+            placeholder={COURTESY_GRANT_CONFIRMATION}
+            required
           />
 
           <button

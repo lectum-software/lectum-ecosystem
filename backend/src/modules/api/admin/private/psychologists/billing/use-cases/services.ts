@@ -27,6 +27,7 @@ const COURTESY_PERIOD_OPTIONS = [
   { days: 180, label: "180 dias" },
   { days: 365, label: "1 ano" },
 ];
+const COURTESY_GRANT_CONFIRMATION = "CONCEDER CORTESIA";
 
 const trimOrNull = (value?: string | null) => {
   const normalized = value?.trim();
@@ -273,6 +274,15 @@ export const grantCourtesy = async (data: IAdminPsychologistBillingGrantDTO): Pr
   const profile = await repository.findPsychologist(data.p.id);
 
   if (!profile) return notFound();
+
+  if (data.b.confirmation?.trim().toUpperCase() !== COURTESY_GRANT_CONFIRMATION) {
+    return {
+      status: 400,
+      success: false,
+      code: "courtesy_grant_confirmation_invalid",
+      error: `Digite ${COURTESY_GRANT_CONFIRMATION} para confirmar a concessão.`,
+    };
+  }
 
   const currentSubscription = await repository.findCurrentSubscription(profile.id);
   const currentCourtesy = buildCourtesy(profile, currentSubscription);
