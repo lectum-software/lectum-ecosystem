@@ -46,6 +46,9 @@ reforçada.
 Após revisão visual, o bloco **Comunidades em que participa** foi movido para
 baixo do gráfico. Assim, o card do gráfico ocupa a largura total disponível da
 seção e aproveita melhor o espaço horizontal para os contadores e curvas.
+Em seguida, o desenho do SVG do gráfico foi ajustado para manter proporção
+natural (`preserveAspectRatio`) e usar uma área maior, evitando a impressão de
+curva achatada ou esticada horizontalmente em cards largos.
 
 ## Consequências
 
@@ -53,6 +56,8 @@ seção e aproveita melhor o espaço horizontal para os contadores e curvas.
   consistente com os demais gráficos do Admin.
 - O gráfico de comunidade ganha mais largura no desktop, e a lista de
   comunidades deixa de competir lateralmente com a área principal de análise.
+- O componente de curvas mantém proporção visual consistente em larguras
+  diferentes, com rolagem horizontal em telas estreitas quando necessário.
 - A API passa a retornar mais campos seguros na série de estatísticas, sem expor
   dados sensíveis de usuários votantes, compartilhamentos ou identificadores
   técnicos desnecessários.

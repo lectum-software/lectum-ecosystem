@@ -2159,10 +2159,10 @@ const StatisticsSeriesChart = ({
   }
 
   const chartPoints = aggregateStatisticsChartPoints(points);
-  const chartWidth = 760;
-  const chartHeight = 190;
-  const paddingX = 24;
-  const paddingY = 22;
+  const chartWidth = 1120;
+  const chartHeight = 280;
+  const paddingX = 32;
+  const paddingY = 28;
   const innerWidth = chartWidth - paddingX * 2;
   const innerHeight = chartHeight - paddingY * 2;
   const max = Math.max(
@@ -2181,16 +2181,16 @@ const StatisticsSeriesChart = ({
   );
 
   return (
-    <div className="mt-4 w-full overflow-hidden rounded-2xl bg-surface-muted p-4">
-      <div className="w-full">
+    <div className="mt-4 w-full overflow-x-auto rounded-2xl bg-surface-muted p-4">
+      <div className="mx-auto w-full min-w-[760px] max-w-[1120px]">
         <svg
           aria-label="Evolução do período por contador selecionado"
-          className="block h-[190px] w-full"
+          className="block h-auto w-full"
           height={chartHeight}
-          preserveAspectRatio="none"
+          preserveAspectRatio="xMidYMid meet"
           role="img"
           viewBox={`0 0 ${chartWidth} ${chartHeight}`}
-          width="100%"
+          width={chartWidth}
         >
           <title>Evolução do período</title>
           {[0, 0.25, 0.5, 0.75, 1].map((ratio) => {
