@@ -668,7 +668,7 @@ const StatsContent = ({ summary }: { summary: AdminPsychologistsDashboard }) => 
       <PanelTitle icon={Heart} title="Desconto 1ª sessão" />
       <BooleanDonut metric={summary.statistics.discount_first_session} />
     </CardShell>
-    <CardShell className="p-5 xl:col-span-3">
+    <CardShell className="p-5">
       <PanelTitle icon={CircleDollarSign} title="Valor social" />
       <BooleanDonut metric={summary.statistics.social_value} />
     </CardShell>

@@ -195,3 +195,10 @@ Packages usados:
 - Referência visual local mantida: `_product/proto/admin/Psicólogos/Psicólogos - Dashboard.png`; Builder/Quick Copy não estava disponível como ferramenta callable no ambiente.
 - Validações desta correção: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm --dir backend check`, `pnpm --dir backend build` e smoke HTTP local em `http://localhost:3002/psicologos` retornando 200.
 - Validações do ajuste de ordem: `pnpm --dir admin check`, `pnpm --dir admin build` e smoke HTTP local em `http://localhost:3002/psicologos` retornando 200.
+
+### Correção UX em 2026-07-12 - valor social ao lado do desconto
+
+- O card **Valor social** deixou de ocupar a linha inteira em desktop e passa a usar a mesma largura dos demais cards booleanos, ficando ao lado de **Desconto 1ª sessão** quando houver espaço horizontal.
+- Não houve alteração de contrato backend, cálculo, Prisma, mock ou fonte de dados; o ajuste é apenas de composição visual da grade de estatísticas.
+- Referência visual local mantida: `_product/proto/admin/Psicólogos/Psicólogos - Dashboard.png`; Builder/Quick Copy não estava disponível como ferramenta callable no ambiente.
+- Validações desta correção: `pnpm --dir admin check`, `pnpm --dir admin build` e smoke HTTP local em `http://localhost:3002/psicologos` retornando 200.

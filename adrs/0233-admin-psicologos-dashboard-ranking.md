@@ -52,6 +52,10 @@ Atualização 2026-07-12 (especialidades nas estatísticas):
 - As tags visuais de fonte dos cards de estatísticas foram removidas para reduzir ruído visual; os campos `source` continuam presentes no contrato backend/frontend para rastreabilidade técnica.
 - **Especialidades** passa a aparecer antes de **Serviços** na ordem visual dos cards, priorizando a leitura de especialidades clínicas antes dos serviços oferecidos.
 
+Atualização 2026-07-12 (valor social ao lado do desconto):
+
+- O card **Valor social** deixa de ocupar `xl:col-span-3` e passa a seguir a mesma largura dos demais cards booleanos, permitindo que fique ao lado de **Desconto 1ª sessão** no desktop sem alterar o contrato ou os cálculos.
+
 ## Consequências
 
 - O Admin não cria uma métrica de ranking divergente do Explorar público.
@@ -82,3 +86,4 @@ Atualização 2026-07-12 (especialidades nas estatísticas):
 - Atualização 2026-07-12 (simplificação visual do gráfico): `pnpm --dir admin check`, `pnpm --dir admin build` e smoke HTTP local em `/psicologos` retornando 200.
 - Atualização 2026-07-12 (especialidades nas estatísticas): `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm --dir backend check`, `pnpm --dir backend build` e smoke HTTP local em `/psicologos` retornando 200.
 - Atualização 2026-07-12 (ordem das especialidades): `pnpm --dir admin check`, `pnpm --dir admin build` e smoke HTTP local em `/psicologos` retornando 200.
+- Atualização 2026-07-12 (valor social ao lado do desconto): `pnpm --dir admin check`, `pnpm --dir admin build` e smoke HTTP local em `/psicologos` retornando 200.
