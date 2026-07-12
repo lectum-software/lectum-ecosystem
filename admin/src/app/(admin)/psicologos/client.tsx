@@ -611,90 +611,65 @@ const SearchUnavailableCard = ({ summary }: { summary: AdminPsychologistsDashboa
 const StatsContent = ({ summary }: { summary: AdminPsychologistsDashboard }) => (
   <div className="grid gap-4 xl:grid-cols-3">
     <CardShell className="p-5">
-      <PanelTitle icon={ShieldCheck} source={summary.statistics.services.source} title="Serviços" />
+      <PanelTitle icon={ShieldCheck} title="Serviços" />
       <ProgressList
         items={summary.statistics.services.items}
         total={summary.statistics.services.total}
       />
     </CardShell>
     <CardShell className="p-5">
-      <PanelTitle
-        icon={MessageCircle}
-        source={summary.statistics.approaches.source}
-        title="Abordagens"
+      <PanelTitle icon={Award} title="Especialidades" />
+      <ProgressList
+        items={summary.statistics.specialties.items}
+        total={summary.statistics.specialties.total}
       />
+    </CardShell>
+    <CardShell className="p-5">
+      <PanelTitle icon={MessageCircle} title="Abordagens" />
       <ProgressList
         items={summary.statistics.approaches.items}
         total={summary.statistics.approaches.total}
       />
     </CardShell>
     <CardShell className="p-5">
-      <PanelTitle
-        icon={UsersRound}
-        source={summary.statistics.target_audience.source}
-        title="Público atendido"
-      />
+      <PanelTitle icon={UsersRound} title="Público atendido" />
       <ProgressList
         items={summary.statistics.target_audience.items}
         total={summary.statistics.target_audience.total}
       />
     </CardShell>
     <CardShell className="p-5">
-      <PanelTitle
-        icon={Activity}
-        source={summary.statistics.modalities.source}
-        title="Modalidades"
-      />
+      <PanelTitle icon={Activity} title="Modalidades" />
       <ProgressList
         items={summary.statistics.modalities.items}
         total={summary.statistics.modalities.total}
       />
     </CardShell>
     <CardShell className="p-5">
-      <PanelTitle icon={UsersRound} source={summary.statistics.gender.source} title="Gênero" />
+      <PanelTitle icon={UsersRound} title="Gênero" />
       <DonutChart items={summary.statistics.gender.items} total={summary.statistics.gender.total} />
     </CardShell>
     <CardShell className="p-5">
-      <PanelTitle
-        icon={Award}
-        source={summary.statistics.states.source}
-        title="Distribuição por estado"
-      />
+      <PanelTitle icon={Award} title="Distribuição por estado" />
       <ProgressList
         items={summary.statistics.states.items}
         total={summary.statistics.states.total}
       />
     </CardShell>
     <CardShell className="p-5">
-      <PanelTitle
-        icon={Star}
-        source={summary.statistics.experience_over_10_years.source}
-        title="Mais de 10 anos"
-      />
+      <PanelTitle icon={Star} title="Mais de 10 anos" />
       <BooleanDonut metric={summary.statistics.experience_over_10_years} />
     </CardShell>
     <CardShell className="p-5">
-      <PanelTitle
-        icon={ShieldCheck}
-        source={summary.statistics.accepts_insurance.source}
-        title="Aceita convênios"
-      />
+      <PanelTitle icon={ShieldCheck} title="Aceita convênios" />
       <BooleanDonut metric={summary.statistics.accepts_insurance} />
     </CardShell>
     <CardShell className="p-5">
-      <PanelTitle
-        icon={Heart}
-        source={summary.statistics.discount_first_session.source}
-        title="Desconto 1ª sessão"
-      />
+      <PanelTitle icon={Heart} title="Desconto 1ª sessão" />
       <BooleanDonut metric={summary.statistics.discount_first_session} />
     </CardShell>
     <CardShell className="p-5 xl:col-span-3">
-      <PanelTitle
-        icon={CircleDollarSign}
-        source={summary.statistics.social_value.source}
-        title="Valor social"
-      />
+      <PanelTitle icon={CircleDollarSign} title="Valor social" />
       <BooleanDonut metric={summary.statistics.social_value} />
     </CardShell>
   </div>

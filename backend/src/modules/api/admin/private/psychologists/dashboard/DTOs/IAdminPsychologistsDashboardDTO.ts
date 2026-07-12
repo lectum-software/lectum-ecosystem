@@ -117,6 +117,11 @@ export type AdminPsychologistsDashboardStatistics = {
     source: "psychologist_service";
     total: number;
   };
+  specialties: {
+    items: AdminPsychologistsDashboardBreakdownItem[];
+    source: "psychologist_specialty";
+    total: number;
+  };
   social_value: AdminPsychologistsDashboardBooleanBreakdown;
   states: {
     items: AdminPsychologistsDashboardBreakdownItem[];

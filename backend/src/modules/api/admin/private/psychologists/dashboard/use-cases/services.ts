@@ -505,6 +505,7 @@ const jsonStringArray = (value: AdminPsychologistProfileRecord["target_audience"
 
 const buildStatistics = (profiles: AdminPsychologistProfileRecord[]) => {
   const services = new Map<string, { count: number; label: string }>();
+  const specialties = new Map<string, { count: number; label: string }>();
   const approaches = new Map<string, { count: number; label: string }>();
   const targetAudience = new Map<string, { count: number; label: string }>();
   const modalities = new Map<string, { count: number; label: string }>();
@@ -514,6 +515,10 @@ const buildStatistics = (profiles: AdminPsychologistProfileRecord[]) => {
   for (const profile of profiles) {
     for (const relation of profile.user.psychologist_services) {
       addMapCount(services, relation.service.slug, relation.service.name);
+    }
+
+    for (const relation of profile.user.psychologist_specialties) {
+      addMapCount(specialties, relation.specialty.slug, relation.specialty.name);
     }
 
     for (const relation of profile.user.psychologist_approaches) {
@@ -579,6 +584,11 @@ const buildStatistics = (profiles: AdminPsychologistProfileRecord[]) => {
     services: {
       items: buildBreakdown(services, total),
       source: "psychologist_service" as const,
+      total,
+    },
+    specialties: {
+      items: buildBreakdown(specialties, total),
+      source: "psychologist_specialty" as const,
       total,
     },
     social_value: booleanBreakdown({

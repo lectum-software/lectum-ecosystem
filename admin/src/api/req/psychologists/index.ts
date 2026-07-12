@@ -147,6 +147,11 @@ export type PsychologistsDashboardStatistics = {
     source: "psychologist_service";
     total: number;
   };
+  specialties: {
+    items: PsychologistsDashboardBreakdownItem[];
+    source: "psychologist_specialty";
+    total: number;
+  };
   social_value: PsychologistsDashboardBooleanBreakdown;
   states: {
     items: PsychologistsDashboardBreakdownItem[];

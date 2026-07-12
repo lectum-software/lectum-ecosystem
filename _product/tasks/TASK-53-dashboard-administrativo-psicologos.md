@@ -185,3 +185,11 @@ Packages usados:
 - O sombreamento dos cards de contadores selecionados foi removido, mantendo a borda/estado ativo e preservando o clique para exibir/esconder curvas.
 - Referência visual local mantida: `_product/proto/admin/Psicólogos/Psicólogos - Dashboard.png`; Builder/Quick Copy não estava disponível como ferramenta callable no ambiente.
 - Validações desta correção: `pnpm --dir admin check`, `pnpm --dir admin build` e smoke HTTP local em `http://localhost:3002/psicologos` retornando 200.
+
+### Correção UX/dados em 2026-07-12 - especialidades nas estatísticas
+
+- As tags técnicas de fonte nos cards da seção **Estatísticas** foram removidas da UI, preservando os campos `source` no contrato para auditoria e diagnóstico.
+- Adicionado bloco real **Especialidades** na seção **Estatísticas**, derivado de `user.psychologist_specialties.specialty` já carregado pelo repositório Admin do dashboard.
+- Não houve criação de tabela, campo Prisma, mock ou fonte paralela; a nova estatística reutiliza relações reais de catálogo existentes.
+- Referência visual local mantida: `_product/proto/admin/Psicólogos/Psicólogos - Dashboard.png`; Builder/Quick Copy não estava disponível como ferramenta callable no ambiente.
+- Validações desta correção: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm --dir backend check`, `pnpm --dir backend build` e smoke HTTP local em `http://localhost:3002/psicologos` retornando 200.

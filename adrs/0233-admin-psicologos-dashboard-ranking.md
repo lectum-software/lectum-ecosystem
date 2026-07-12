@@ -46,6 +46,11 @@ Atualização 2026-07-12 (simplificação visual do gráfico):
 - As cores dos ícones dos cards passam a usar os mesmos valores das séries SVG do gráfico, mantendo os cards como controle visual primário de exibição/ocultação.
 - Cards selecionados deixam de aplicar sombra, reduzindo ruído visual sem remover a borda/estado ativo.
 
+Atualização 2026-07-12 (especialidades nas estatísticas):
+
+- A seção **Estatísticas** passa a incluir o agrupamento real **Especialidades**, calculado a partir de `psychologist_specialty`/`specialty` já selecionados pelo repositório do dashboard.
+- As tags visuais de fonte dos cards de estatísticas foram removidas para reduzir ruído visual; os campos `source` continuam presentes no contrato backend/frontend para rastreabilidade técnica.
+
 ## Consequências
 
 - O Admin não cria uma métrica de ranking divergente do Explorar público.
@@ -74,3 +79,4 @@ Atualização 2026-07-12 (simplificação visual do gráfico):
 - Atualização 2026-07-12 (contadores integrados): `pnpm --dir admin check` (sem erros, com warning pré-existente fora do dashboard em `admin/src/app/(admin)/psicologos/[id]/client.tsx`), `pnpm --dir admin build`, Biome direcionado nos DTO/services do dashboard, `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm check` e smoke HTTP local em `/psicologos` retornando 200.
 - Atualização 2026-07-12 (remoção de lista/ranking): `pnpm --dir admin check`, `pnpm --dir admin build`, smoke HTTP local em `/psicologos` retornando 200; `pnpm check` tentado e encerrado por timeout de 124s sem saída conclusiva.
 - Atualização 2026-07-12 (simplificação visual do gráfico): `pnpm --dir admin check`, `pnpm --dir admin build` e smoke HTTP local em `/psicologos` retornando 200.
+- Atualização 2026-07-12 (especialidades nas estatísticas): `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm --dir backend check`, `pnpm --dir backend build` e smoke HTTP local em `/psicologos` retornando 200.
