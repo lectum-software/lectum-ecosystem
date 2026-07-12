@@ -430,7 +430,7 @@ const FilterPanel = ({
         value={query.plan}
       />
       <FilterSelectField
-        className="col-span-1"
+        className="col-span-2"
         label="Perfil"
         onChange={(value) => onFilter("profile_status", value || null)}
         options={PROFILE_STATUS_FILTER_OPTIONS}
@@ -438,7 +438,7 @@ const FilterPanel = ({
         value={query.profile_status}
       />
       <FilterSelectField
-        className="col-span-1"
+        className="col-span-2"
         label="Registro profissional"
         onChange={(value) => onFilter("registry_status", value || null)}
         options={REGISTRY_STATUS_FILTER_OPTIONS}

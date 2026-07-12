@@ -32,6 +32,7 @@ Builder/Quick Copy `vcp://quickcopy/vcp-24aaa2941d814e5b90572bc93ae50e2a` não e
 - Complemento de filtros em 2026-07-12: a modal/drawer de filtros da lista Admin foi alinhada ao filtro da descoberta publica de psicologos para pacientes, com a mesma ordem de campos, copy principal, selos/facilidades e botao unico **Aplicar filtros**. Para evitar uma interface divergente, a UI remove os filtros administrativos antigos **Status e plano**, **Experiencia** e **Selos e diferenciais**, e limpa os parametros legados `status`, `plan` e `experience` da URL ao aplicar ou limpar filtros. O backend Admin passou a aceitar filtros reais `available_today`, `more_experienced`, `verified`, `specialty`, `race_color` e `religion`, alem de expor opcoes `specialties`, `race_colors` e `religions`, sem criar mocks, migrations ou packages.
 
 - Complemento administrativo de filtros em 2026-07-12: apos validacao de uso no painel, a modal deixou de repetir a busca textual por nome/CRP e removeu **Somente verificados** para reduzir redundancia com a busca principal e com a coluna de registro. Foram adicionados filtros operacionais de **Plano** (`professional`/Assinante, `courtesy`/Cortesia, `free`/Gratuito), **Perfil** (`profile_status=active|inactive`) e **Registro profissional** (`registry_status=active|pending`). A decisao preserva a busca textual na area principal, limpa parametros legados `verified`, `status` e `experience` ao aplicar/limpar filtros, e usa apenas sinais reais ja existentes no contrato/lista.
+- Complemento visual em 2026-07-12: **Perfil** e **Registro profissional** passam a ocupar linhas completas e separadas no drawer de filtros, em vez de dividir a mesma linha em desktop. A decisao melhora leitura operacional e preserva os mesmos parametros reais `profile_status` e `registry_status`, sem alterar backend ou contrato de API.
 
 ## Consequências
 
@@ -48,6 +49,7 @@ Builder/Quick Copy `vcp://quickcopy/vcp-24aaa2941d814e5b90572bc93ae50e2a` não e
 - A lista Admin passa a segmentar com o mesmo modelo mental da descoberta publica. O custo e deixar filtros administrativos de status/plano fora da UI principal, mantendo-os apenas como compatibilidade de contrato para deep links antigos e removendo-os quando o usuario aplica o novo filtro.
 
 - O drawer deixa de ser uma copia literal da descoberta publica e passa a equilibrar criterios publicos com filtros administrativos pedidos para a operacao. O custo e manter semantica especifica no backend para `plan=professional|courtesy|free`, aceita por refletir os mesmos labels exibidos na tabela.
+- O drawer fica mais alto, mas reduz ambiguidade entre status do perfil e status do registro profissional ao evitar dois selects administrativos lado a lado.
 
 ## Validação
 
@@ -70,6 +72,7 @@ Builder/Quick Copy `vcp://quickcopy/vcp-24aaa2941d814e5b90572bc93ae50e2a` não e
 - Revalidacao de filtros publicos em 2026-07-12: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check`, smoke API autenticado em `GET /api/admin/private/psychologists?available_today=true&verified=true&specialty=teste&race_color=teste&religion=teste&more_experienced=true` retornando `200`, `active_filters_count=6` e filtros `specialties`, `race_colors`, `religions`; browser local/headless/CDP com admin temporario real validou desktop `1440x1000` (modal `560px`, labels publicos presentes, textos antigos ausentes) e mobile `390x844` (modal `390px`, sem overflow horizontal).
 
 - Revalidacao de filtros administrativos em 2026-07-12: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check`, smoke API autenticado em `GET /api/admin/private/psychologists?plan=professional&profile_status=active&registry_status=pending` retornando `200` e `active_filters_count=3`; browser local/headless/CDP com admin temporario real validou desktop `1440x1000` e mobile `390x844` com novos campos/opcoes, sem **Pesquisa**, **Buscar por nome ou CRP** e **Somente verificados**, e sem overflow horizontal.
+- Revalidacao visual de layout em 2026-07-12: `pnpm --dir admin exec biome format --write "src/app/(admin)/psicologos/lista/client.tsx"`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e browser local/headless/CDP com admin temporario real removido ao final. Desktop `1440x1000` e mobile `390x844` validaram **Perfil** e **Registro profissional** em linhas separadas, ambos com a mesma largura/coluna de **Plano** e sem overflow horizontal de viewport.
 
 ## Pendências
 

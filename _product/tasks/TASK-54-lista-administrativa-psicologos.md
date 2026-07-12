@@ -361,3 +361,26 @@ Frontend esperado:
 - `pnpm check`
 - Smoke API autenticado: `GET /api/admin/private/psychologists?plan=professional&profile_status=active&registry_status=pending` retornou `200` e `active_filters_count=3`.
 - Browser local/headless/CDP com admin temporario real removido ao final: desktop `1440x1000` e mobile `390x844` validaram ausencia de **Pesquisa**, **Buscar por nome ou CRP** e **Somente verificados**, presenca dos novos campos/opcoes e ausencia de overflow horizontal.
+
+## Execucao complementar: Perfil e Registro em linhas separadas (2026-07-12)
+
+- Pedido do usuario: na modal de filtros da lista Admin de psicologos, os campos **Perfil** e **Registro profissional** devem aparecer em linhas diferentes.
+- Frontend Admin: os dois selects passaram a ocupar a largura completa do grid da modal, mantendo **Plano** acima e preservando a ordem e os mesmos parametros reais `profile_status` e `registry_status`.
+- Nao houve alteracao de backend, Prisma/migrations, packages, contratos de API, dados, filtros, ranking, paginacao ou ordenacao.
+
+### Criterios complementares
+
+- [x] **Perfil** ocupa uma linha propria na modal de filtros.
+- [x] **Registro profissional** ocupa outra linha propria abaixo de **Perfil**.
+- [x] A modal continua mobile-first em base `390px` e sem overflow horizontal de viewport.
+- [x] Nenhum backend, Prisma/migrations ou package foi alterado.
+
+### Validacao complementar
+
+- `pnpm --dir admin exec biome format --write "src/app/(admin)/psicologos/lista/client.tsx"`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check`
+- Browser local/headless/CDP com admin temporario real removido ao final:
+  - desktop `1440x1000`: **Perfil** e **Registro profissional** ficaram em linhas separadas, com mesma largura/coluna de **Plano** e `document.documentElement.scrollWidth=1440`;
+  - mobile base `390x844`: **Perfil** e **Registro profissional** ficaram em linhas separadas, com mesma largura/coluna de **Plano** e `document.documentElement.scrollWidth=390`.
