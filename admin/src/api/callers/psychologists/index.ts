@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { adminPsychologistsKeys } from "@/api/cache/keys";
+import { adminCommunitiesKeys, adminDashboardKeys, adminPsychologistsKeys } from "@/api/cache/keys";
 import {
   type AdminPsychologistAccountReasonInput,
   type AdminPsychologistActivitiesQuery,
@@ -8,6 +8,8 @@ import {
   type AdminPsychologistGrantCourtesyInput,
   type AdminPsychologistPublicationsQuery,
   type AdminPsychologistRejectRegistryVerificationInput,
+  type AdminPsychologistReportResolveInput,
+  type AdminPsychologistReportStartReviewInput,
   type AdminPsychologistReportsQuery,
   type AdminPsychologistReviewsQuery,
   type AdminPsychologistRevokeSessionsInput,
@@ -33,11 +35,13 @@ import {
   type PsychologistsDashboardQuery,
   type PsychologistsListQuery,
   rejectAdminPsychologistRegistryVerification,
+  resolveAdminPsychologistReport,
   revokeAdminPsychologistAccountSessions,
   revokeAdminPsychologistCourtesy,
   sendAdminPsychologistAccountEmailConfirmation,
   sendAdminPsychologistAccountPasswordReset,
   setAdminPsychologistAccountTemporaryPassword,
+  startAdminPsychologistReportReview,
   updateAdminPsychologistPersonalData,
   updateAdminPsychologistProfessionalData,
   updateAdminPsychologistRegistryIdentity,
@@ -177,6 +181,22 @@ const invalidatePsychologistAccount = async (
   ]);
 };
 
+const invalidatePsychologistReports = async (
+  queryClient: ReturnType<typeof useQueryClient>,
+  id: string,
+) => {
+  await Promise.all([
+    queryClient.invalidateQueries({ queryKey: adminPsychologistsKeys.all }),
+    queryClient.invalidateQueries({ queryKey: adminPsychologistsKeys.detail(id) }),
+    queryClient.invalidateQueries({ queryKey: [...adminPsychologistsKeys.all, "reports", id] }),
+    queryClient.invalidateQueries({
+      queryKey: [...adminPsychologistsKeys.all, "activities", id],
+    }),
+    queryClient.invalidateQueries({ queryKey: adminDashboardKeys.all }),
+    queryClient.invalidateQueries({ queryKey: adminCommunitiesKeys.all }),
+  ]);
+};
+
 export const useAdminPsychologistUpdatePersonalData = (id: string) => {
   const queryClient = useQueryClient();
 
@@ -244,6 +264,36 @@ export const useAdminPsychologistRevokeSessions = (id: string) => {
     mutationFn: (input: AdminPsychologistRevokeSessionsInput) =>
       revokeAdminPsychologistAccountSessions(id, input),
     onSuccess: () => invalidatePsychologistAccount(queryClient, id),
+  });
+};
+
+export const useAdminPsychologistStartReportReview = (id: string) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      input,
+      reportId,
+    }: {
+      input: AdminPsychologistReportStartReviewInput;
+      reportId: string;
+    }) => startAdminPsychologistReportReview(id, reportId, input),
+    onSuccess: () => invalidatePsychologistReports(queryClient, id),
+  });
+};
+
+export const useAdminPsychologistResolveReport = (id: string) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      input,
+      reportId,
+    }: {
+      input: AdminPsychologistReportResolveInput;
+      reportId: string;
+    }) => resolveAdminPsychologistReport(id, reportId, input),
+    onSuccess: () => invalidatePsychologistReports(queryClient, id),
   });
 };
 

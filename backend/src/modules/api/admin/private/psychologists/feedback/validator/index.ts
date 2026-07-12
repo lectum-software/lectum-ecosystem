@@ -8,6 +8,30 @@ const psychologistParam = {
   max: 120,
 } satisfies NonNullable<IValidatorRequest["params"]>[number];
 
+const reportParam = {
+  key: "reportId",
+  coerse: "string",
+  method: "string",
+  min: 1,
+  max: 120,
+} satisfies NonNullable<IValidatorRequest["params"]>[number];
+
+const reasonField = {
+  key: "reason",
+  coerse: "string",
+  method: "string",
+  min: 10,
+  max: 500,
+} satisfies NonNullable<IValidatorRequest["body"]>[number];
+
+const confirmationField = {
+  key: "confirmation",
+  coerse: "string",
+  method: "string",
+  min: 3,
+  max: 60,
+} satisfies NonNullable<IValidatorRequest["body"]>[number];
+
 const paginationQuery: NonNullable<IValidatorRequest["query"]> = [
   {
     key: "limit",
@@ -57,5 +81,22 @@ export const reportsSchema: IValidatorRequest = {
   ],
 };
 
+export const startReportReviewSchema: IValidatorRequest = {
+  params: [psychologistParam, reportParam],
+  body: [reasonField],
+};
+
+export const resolveReportSchema: IValidatorRequest = {
+  params: [psychologistParam, reportParam],
+  body: [
+    reasonField,
+    confirmationField,
+    { key: "resolution", coerse: "string", method: "string", min: 6, max: 20 },
+    { key: "measure", coerse: "string", method: "string", min: 3, max: 30, optional: true },
+  ],
+};
+
 export const reviewsValidator = validator(reviewsSchema);
 export const reportsValidator = validator(reportsSchema);
+export const startReportReviewValidator = validator(startReportReviewSchema);
+export const resolveReportValidator = validator(resolveReportSchema);

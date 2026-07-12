@@ -50,6 +50,10 @@ const TYPE_LABELS: Record<AdminPsychologistActivityType, string> = {
   reply_created: "Resposta em comunidade",
   reply_saved: "Resposta salva",
   report_received: "DenÃºncia recebida",
+  report_content_removed: "Den\u00fancia procedente com conte\u00fado removido",
+  report_dismissed: "Den\u00fancia improcedente",
+  report_review_started: "Den\u00fancia em an\u00e1lise",
+  report_upheld: "Den\u00fancia procedente",
   review_received: "AvaliaÃ§Ã£o recebida",
   review_responded: "Resposta Ã  avaliaÃ§Ã£o",
   subscription_started: "Assinatura registrada",
@@ -276,6 +280,10 @@ const adminLogType = (action: string): AdminPsychologistActivityType | null => {
     return "account_temporary_password_set";
   }
   if (action === "psychologist_account_sessions_revoked") return "account_sessions_revoked";
+  if (action === "psychologist_report_review_started") return "report_review_started";
+  if (action === "psychologist_report_dismissed") return "report_dismissed";
+  if (action === "psychologist_report_upheld") return "report_upheld";
+  if (action === "psychologist_report_content_removed") return "report_content_removed";
 
   return null;
 };
@@ -292,20 +300,42 @@ const adminAccountActionLabel = (action: string) => {
   return labels[action] ?? "atualizou a conta";
 };
 
+const adminReportActionLabel = (action: string) => {
+  const labels: Record<string, string> = {
+    psychologist_report_content_removed:
+      "resolveu a den\u00fancia como procedente e removeu o conte\u00fado",
+    psychologist_report_dismissed: "resolveu a den\u00fancia como improcedente",
+    psychologist_report_review_started: "colocou a den\u00fancia em an\u00e1lise",
+    psychologist_report_upheld: "resolveu a den\u00fancia como procedente",
+  };
+
+  return labels[action] ?? "atualizou a den\u00fancia";
+};
+
 const adminLogDescription = (log: AdminPsychologistActivityAdminLog) => {
   const fields = changedFieldsFromAudit(log.changed_fields);
   const isAccountAction = log.action.startsWith("psychologist_account_");
+  const isReportAction = log.action.startsWith("psychologist_report_");
   const fieldsText =
-    fields.length > 0 ? fields.join(", ") : isAccountAction ? "conta" : "campos do perfil";
+    fields.length > 0
+      ? fields.join(", ")
+      : isAccountAction
+        ? "conta"
+        : isReportAction
+          ? "den\u00fancia"
+          : "campos do perfil";
   const actionLabel = isAccountAction
     ? adminAccountActionLabel(log.action)
-    : log.action === "psychologist_personal_data_updated"
-      ? "dados pessoais"
-      : "dados profissionais";
+    : isReportAction
+      ? adminReportActionLabel(log.action)
+      : log.action === "psychologist_personal_data_updated"
+        ? "dados pessoais"
+        : "dados profissionais";
   const reason = log.reason?.trim();
-  const prefix = isAccountAction
-    ? `Painel administrativo ${actionLabel}`
-    : `Painel administrativo atualizou ${actionLabel}`;
+  const prefix =
+    isAccountAction || isReportAction
+      ? `Painel administrativo ${actionLabel}`
+      : `Painel administrativo atualizou ${actionLabel}`;
 
   return `${prefix}. Campos alterados: ${fieldsText}.${
     reason ? ` Motivo/observa\u00e7\u00e3o interna: ${excerpt(reason, 140)}.` : ""
@@ -643,7 +673,11 @@ export const showAdminPsychologistActivities = async (
       return [
         makeActivity({
           actor: actorFromAdmin(log.admin),
-          area: log.action.startsWith("psychologist_account_") ? "conta" : "perfil",
+          area: log.action.startsWith("psychologist_account_")
+            ? "conta"
+            : log.action.startsWith("psychologist_report_")
+              ? "denuncias"
+              : "perfil",
           description: adminLogDescription(log),
           id: `admin-activity-${log.id}`,
           occurred_at: log.createdAt,

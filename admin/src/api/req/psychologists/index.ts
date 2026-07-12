@@ -856,7 +856,7 @@ export type AdminPsychologistReviews = {
   };
 };
 
-export type AdminPsychologistReportsStatusGroup = "dismissed" | "in_review" | "upheld";
+export type AdminPsychologistReportsStatusGroup = "dismissed" | "in_review" | "pending" | "upheld";
 
 export type AdminPsychologistReportsQuery = {
   from?: string;
@@ -869,6 +869,7 @@ export type AdminPsychologistReportsQuery = {
 
 export type AdminPsychologistReportItem = {
   content: {
+    available: boolean;
     community: {
       id: string;
       name: string;
@@ -876,13 +877,24 @@ export type AdminPsychologistReportItem = {
     };
     excerpt: string;
     id: string;
-    public_url: string;
+    public_url: string | null;
     title: string;
     type: "post" | "reply";
+    unavailable_reason: string | null;
+  };
+  capabilities: {
+    can_remove_content: boolean;
+    can_resolve_dismissed: boolean;
+    can_resolve_upheld: boolean;
+    can_start_review: boolean;
   };
   created_at: string;
   description: string | null;
   id: string;
+  moderation: {
+    status: string;
+    status_label: string;
+  };
   reason: string;
   reason_label: string;
   reported_by: {
@@ -896,12 +908,12 @@ export type AdminPsychologistReportItem = {
 
 export type AdminPsychologistReports = {
   access: {
-    mode: "read_only";
+    mode: "moderation";
     restrictions: string[];
   };
   active_filters_count: number;
   cards: {
-    id: "dismissed" | "in_review" | "total" | "upheld";
+    id: "dismissed" | "in_review" | "pending" | "total" | "upheld";
     label: string;
     source: "post_report";
     value: number;
@@ -922,6 +934,25 @@ export type AdminPsychologistReports = {
   period: AdminPsychologistStatistics["period"];
   source: "post_report+community_post+post_reply";
   unavailable: { description: string; id: string; label: string; source: string }[];
+};
+
+export type AdminPsychologistReportStartReviewInput = {
+  reason: string;
+};
+
+export type AdminPsychologistReportResolveInput = {
+  confirmation: string;
+  measure?: "none" | "remove_content";
+  reason: string;
+  resolution: "dismissed" | "upheld";
+};
+
+export type AdminPsychologistReportActionResponse = {
+  affected_reports_count: number;
+  content_already_unavailable: boolean;
+  content_removed: boolean;
+  report: AdminPsychologistReportItem;
+  source: "post_report+admin_activity_log";
 };
 
 export type AdminPsychologistActivitiesQuery = {
@@ -1274,6 +1305,36 @@ export const getAdminPsychologistReports = async (
     {
       params: cleanReportsParams(input),
     },
+  );
+
+  return resolveApiData(response.data);
+};
+
+export const startAdminPsychologistReportReview = async (
+  id: string,
+  reportId: string,
+  input: AdminPsychologistReportStartReviewInput,
+) => {
+  const response = await adminApi.post<ApiResponse<AdminPsychologistReportActionResponse>>(
+    `/api/admin/private/psychologists/${encodeURIComponent(id)}/reports/${encodeURIComponent(
+      reportId,
+    )}/start-review`,
+    input,
+  );
+
+  return resolveApiData(response.data);
+};
+
+export const resolveAdminPsychologistReport = async (
+  id: string,
+  reportId: string,
+  input: AdminPsychologistReportResolveInput,
+) => {
+  const response = await adminApi.post<ApiResponse<AdminPsychologistReportActionResponse>>(
+    `/api/admin/private/psychologists/${encodeURIComponent(id)}/reports/${encodeURIComponent(
+      reportId,
+    )}/resolve`,
+    input,
   );
 
   return resolveApiData(response.data);

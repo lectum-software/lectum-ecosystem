@@ -69,10 +69,10 @@ export type AdminPsychologistReviewsDTO = {
   };
 };
 
-export type AdminPsychologistReportsStatusGroup = "dismissed" | "in_review" | "upheld";
+export type AdminPsychologistReportsStatusGroup = "dismissed" | "in_review" | "pending" | "upheld";
 
 export type AdminPsychologistReportsCard = {
-  id: "dismissed" | "in_review" | "total" | "upheld";
+  id: "dismissed" | "in_review" | "pending" | "total" | "upheld";
   label: string;
   source: "post_report";
   value: number;
@@ -80,6 +80,7 @@ export type AdminPsychologistReportsCard = {
 
 export type AdminPsychologistReportItem = {
   content: {
+    available: boolean;
     community: {
       id: string;
       name: string;
@@ -87,13 +88,24 @@ export type AdminPsychologistReportItem = {
     };
     excerpt: string;
     id: string;
-    public_url: string;
+    public_url: string | null;
     title: string;
     type: "post" | "reply";
+    unavailable_reason: string | null;
+  };
+  capabilities: {
+    can_remove_content: boolean;
+    can_resolve_dismissed: boolean;
+    can_resolve_upheld: boolean;
+    can_start_review: boolean;
   };
   created_at: Date;
   description: string | null;
   id: string;
+  moderation: {
+    status: string;
+    status_label: string;
+  };
   reason: string;
   reason_label: string;
   reported_by: {
@@ -107,7 +119,7 @@ export type AdminPsychologistReportItem = {
 
 export type AdminPsychologistReportsDTO = {
   access: {
-    mode: "read_only";
+    mode: "moderation";
     restrictions: string[];
   };
   active_filters_count: number;
@@ -133,6 +145,25 @@ export type AdminPsychologistReportsDTO = {
   unavailable: { description: string; id: string; label: string; source: string }[];
 };
 
+export type AdminPsychologistReportStartReviewBody = {
+  reason: string;
+};
+
+export type AdminPsychologistReportResolveBody = {
+  confirmation: string;
+  measure?: "none" | "remove_content" | string;
+  reason: string;
+  resolution: "dismissed" | "upheld" | string;
+};
+
+export type AdminPsychologistReportActionDTO = {
+  affected_reports_count: number;
+  content_already_unavailable: boolean;
+  content_removed: boolean;
+  report: AdminPsychologistReportItem;
+  source: "post_report+admin_activity_log";
+};
+
 export type IAdminPsychologistReviewsDTO = Request & {
   p: {
     id: string;
@@ -145,4 +176,20 @@ export type IAdminPsychologistReportsDTO = Request & {
     id: string;
   };
   q: AdminPsychologistReportsQuery;
+};
+
+export type IAdminPsychologistReportStartReviewDTO = Request & {
+  b: AdminPsychologistReportStartReviewBody;
+  p: {
+    id: string;
+    reportId: string;
+  };
+};
+
+export type IAdminPsychologistReportResolveDTO = Request & {
+  b: AdminPsychologistReportResolveBody;
+  p: {
+    id: string;
+    reportId: string;
+  };
 };

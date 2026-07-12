@@ -60,12 +60,14 @@ import {
   useAdminPsychologistRegistryVerification,
   useAdminPsychologistRejectRegistryVerification,
   useAdminPsychologistReports,
+  useAdminPsychologistResolveReport,
   useAdminPsychologistReviews,
   useAdminPsychologistRevokeCourtesy,
   useAdminPsychologistRevokeSessions,
   useAdminPsychologistSendEmailConfirmation,
   useAdminPsychologistSendPasswordReset,
   useAdminPsychologistSetTemporaryPassword,
+  useAdminPsychologistStartReportReview,
   useAdminPsychologistStatistics,
   useAdminPsychologistUpdatePersonalData,
   useAdminPsychologistUpdateProfessionalData,
@@ -773,6 +775,46 @@ type AccountReasonFormValues = z.infer<typeof accountReasonSchema>;
 type AccountChangeEmailFormValues = z.infer<typeof accountChangeEmailSchema>;
 type AccountTemporaryPasswordFormValues = z.infer<typeof accountTemporaryPasswordSchema>;
 type AccountRevokeSessionsFormValues = z.infer<typeof accountRevokeSessionsSchema>;
+
+const REPORT_DISMISS_CONFIRMATION = "DENUNCIA IMPROCEDENTE";
+const REPORT_UPHOLD_CONFIRMATION = "DENUNCIA PROCEDENTE";
+
+const reportStartReviewSchema = accountReasonSchema;
+
+const reportDismissSchema = accountReasonSchema
+  .extend({
+    confirmation: z.string(),
+  })
+  .superRefine((values, ctx) => {
+    if (values.confirmation.trim().toUpperCase() !== REPORT_DISMISS_CONFIRMATION) {
+      ctx.addIssue({
+        code: "custom",
+        message: `Digite ${REPORT_DISMISS_CONFIRMATION} para confirmar.`,
+        path: ["confirmation"],
+      });
+    }
+  });
+
+const reportUpholdSchema = accountReasonSchema
+  .extend({
+    confirmation: z.string(),
+    measure: z.enum(["none", "remove_content"], {
+      message: "Selecione a medida de moderação.",
+    }),
+  })
+  .superRefine((values, ctx) => {
+    if (values.confirmation.trim().toUpperCase() !== REPORT_UPHOLD_CONFIRMATION) {
+      ctx.addIssue({
+        code: "custom",
+        message: `Digite ${REPORT_UPHOLD_CONFIRMATION} para confirmar.`,
+        path: ["confirmation"],
+      });
+    }
+  });
+
+type ReportStartReviewFormValues = z.infer<typeof reportStartReviewSchema>;
+type ReportDismissFormValues = z.infer<typeof reportDismissSchema>;
+type ReportUpholdFormValues = z.infer<typeof reportUpholdSchema>;
 
 const toPublicHref = (url: string) => {
   if (/^https?:\/\//.test(url)) return url;
@@ -3285,10 +3327,14 @@ const ReviewsTab = ({ id }: { id: string }) => {
   );
 };
 
-const reportCardIcon: Record<"all" | "dismissed" | "in_review" | "total" | "upheld", LucideIcon> = {
+const reportCardIcon: Record<
+  "all" | "dismissed" | "in_review" | "pending" | "total" | "upheld",
+  LucideIcon
+> = {
   all: Info,
   dismissed: CheckCircle2,
   in_review: Clock,
+  pending: AlertTriangle,
   total: AlertTriangle,
   upheld: ShieldCheck,
 };
@@ -3315,9 +3361,339 @@ const ReportStatusBadge = ({ group, label }: { group: string; label: string }) =
       ? "bg-red-50 text-danger"
       : group === "dismissed"
         ? "bg-emerald-50 text-success"
-        : "bg-orange-50 text-orange-700";
+        : group === "pending"
+          ? "bg-yellow-50 text-yellow-700"
+          : "bg-orange-50 text-orange-700";
 
   return <Badge className={className}>{label}</Badge>;
+};
+
+type ReportModerationAction = "dismiss" | "start_review" | "uphold";
+type ReportModerationState = {
+  action: ReportModerationAction;
+  report: AdminPsychologistReportItem;
+} | null;
+
+const ReportModerationDialog = ({
+  id,
+  onClose,
+  state,
+}: {
+  id: string;
+  onClose: () => void;
+  state: NonNullable<ReportModerationState>;
+}) => {
+  const title =
+    state.action === "start_review"
+      ? "Marcar denúncia em análise"
+      : state.action === "dismiss"
+        ? "Resolver como improcedente"
+        : "Resolver como procedente";
+
+  return (
+    <div
+      aria-modal="true"
+      className="fixed inset-0 z-50 flex items-end justify-center bg-foreground/40 p-0 sm:items-center sm:p-4"
+      role="dialog"
+    >
+      <div className="max-h-[92vh] w-full overflow-y-auto rounded-t-[28px] border border-border bg-surface p-5 shadow-admin-soft sm:max-w-2xl sm:rounded-[28px]">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <p className="text-xs font-black uppercase tracking-[0.2em] text-primary">
+              Denúncias e moderação
+            </p>
+            <h3 className="mt-1 text-xl font-black text-foreground">{title}</h3>
+            <p className="mt-2 text-sm font-bold leading-6 text-muted">
+              {state.report.content.type === "post" ? "Post" : "Resposta"} em{" "}
+              {state.report.content.community.name}: {state.report.content.title}
+            </p>
+          </div>
+          <button
+            aria-label="Fechar"
+            className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-border text-muted transition hover:bg-surface-muted"
+            onClick={onClose}
+            type="button"
+          >
+            <X aria-hidden className="h-4 w-4" />
+          </button>
+        </div>
+        <div className="mt-5">
+          {state.action === "start_review" ? (
+            <ReportStartReviewForm id={id} onClose={onClose} report={state.report} />
+          ) : state.action === "dismiss" ? (
+            <ReportDismissForm id={id} onClose={onClose} report={state.report} />
+          ) : (
+            <ReportUpholdForm id={id} onClose={onClose} report={state.report} />
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const ReportStartReviewForm = ({
+  id,
+  onClose,
+  report,
+}: {
+  id: string;
+  onClose: () => void;
+  report: AdminPsychologistReportItem;
+}) => {
+  const mutation = useAdminPsychologistStartReportReview(id);
+  const form = useForm<ReportStartReviewFormValues>({
+    defaultValues: { reason: "" },
+    mode: "onSubmit",
+    resolver: zodResolver(reportStartReviewSchema),
+  });
+
+  const onSubmit: SubmitHandler<ReportStartReviewFormValues> = async (values) => {
+    try {
+      await mutation.mutateAsync({
+        input: { reason: values.reason.trim() },
+        reportId: report.id,
+      });
+      form.reset();
+      toast.success("Denúncia colocada em análise.");
+      onClose();
+    } catch (error) {
+      toast.error(resolveApiError(error));
+    }
+  };
+
+  return (
+    <FormProvider {...form}>
+      <form className="grid gap-3" noValidate onSubmit={form.handleSubmit(onSubmit)}>
+        <TextareaController<ReportStartReviewFormValues>
+          disabled={mutation.isPending}
+          label="Motivo/observação interna"
+          name="reason"
+          placeholder="Registre por que esta denúncia entrou em análise."
+          required
+          rows={4}
+        />
+        <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+          <button
+            className="inline-flex h-12 items-center justify-center rounded-control border border-border px-4 text-sm font-black text-muted transition hover:bg-surface-muted"
+            disabled={mutation.isPending}
+            onClick={onClose}
+            type="button"
+          >
+            Cancelar
+          </button>
+          <button
+            className="inline-flex h-12 items-center justify-center gap-2 rounded-control bg-primary px-4 text-sm font-black text-white transition hover:bg-primary-hover disabled:cursor-not-allowed disabled:bg-surface-muted disabled:text-muted"
+            disabled={mutation.isPending}
+            type="submit"
+          >
+            {mutation.isPending ? (
+              <Loader2 aria-hidden className="h-4 w-4 animate-spin" />
+            ) : (
+              <Clock aria-hidden className="h-4 w-4" />
+            )}
+            Marcar em análise
+          </button>
+        </div>
+      </form>
+    </FormProvider>
+  );
+};
+
+const ReportDismissForm = ({
+  id,
+  onClose,
+  report,
+}: {
+  id: string;
+  onClose: () => void;
+  report: AdminPsychologistReportItem;
+}) => {
+  const mutation = useAdminPsychologistResolveReport(id);
+  const form = useForm<ReportDismissFormValues>({
+    defaultValues: { confirmation: "", reason: "" },
+    mode: "onSubmit",
+    resolver: zodResolver(reportDismissSchema),
+  });
+
+  const onSubmit: SubmitHandler<ReportDismissFormValues> = async (values) => {
+    try {
+      await mutation.mutateAsync({
+        input: {
+          confirmation: values.confirmation.trim().toUpperCase(),
+          reason: values.reason.trim(),
+          resolution: "dismissed",
+        },
+        reportId: report.id,
+      });
+      form.reset();
+      toast.success("Denúncia resolvida como improcedente.");
+      onClose();
+    } catch (error) {
+      toast.error(resolveApiError(error));
+    }
+  };
+
+  return (
+    <FormProvider {...form}>
+      <form className="grid gap-3" noValidate onSubmit={form.handleSubmit(onSubmit)}>
+        <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-3 text-sm font-bold leading-6 text-emerald-800">
+          Esta ação encerra a denúncia como improcedente e não altera o conteúdo denunciado.
+        </div>
+        <TextareaController<ReportDismissFormValues>
+          disabled={mutation.isPending}
+          label="Motivo/observação interna"
+          name="reason"
+          placeholder="Explique por que a denúncia foi considerada improcedente."
+          required
+          rows={4}
+        />
+        <InputController<ReportDismissFormValues>
+          autoComplete="off"
+          disabled={mutation.isPending}
+          label="Confirmação forte"
+          name="confirmation"
+          placeholder={REPORT_DISMISS_CONFIRMATION}
+          required
+        />
+        <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+          <button
+            className="inline-flex h-12 items-center justify-center rounded-control border border-border px-4 text-sm font-black text-muted transition hover:bg-surface-muted"
+            disabled={mutation.isPending}
+            onClick={onClose}
+            type="button"
+          >
+            Cancelar
+          </button>
+          <button
+            className="inline-flex h-12 items-center justify-center gap-2 rounded-control border border-success bg-surface px-4 text-sm font-black text-success transition hover:bg-emerald-50 disabled:cursor-not-allowed disabled:border-border disabled:text-muted"
+            disabled={mutation.isPending}
+            type="submit"
+          >
+            {mutation.isPending ? (
+              <Loader2 aria-hidden className="h-4 w-4 animate-spin" />
+            ) : (
+              <CheckCircle2 aria-hidden className="h-4 w-4" />
+            )}
+            Resolver como improcedente
+          </button>
+        </div>
+      </form>
+    </FormProvider>
+  );
+};
+
+const ReportUpholdForm = ({
+  id,
+  onClose,
+  report,
+}: {
+  id: string;
+  onClose: () => void;
+  report: AdminPsychologistReportItem;
+}) => {
+  const mutation = useAdminPsychologistResolveReport(id);
+  const measureOptions = report.capabilities.can_remove_content
+    ? [
+        { label: "Remover conteúdo denunciado", value: "remove_content" },
+        { label: "Manter conteúdo sem alteração", value: "none" },
+      ]
+    : [{ label: "Manter conteúdo sem alteração", value: "none" }];
+  const form = useForm<ReportUpholdFormValues>({
+    defaultValues: {
+      confirmation: "",
+      measure: report.capabilities.can_remove_content ? "remove_content" : "none",
+      reason: "",
+    },
+    mode: "onSubmit",
+    resolver: zodResolver(reportUpholdSchema),
+  });
+  const selectedMeasure = useWatch({ control: form.control, name: "measure" });
+
+  const onSubmit: SubmitHandler<ReportUpholdFormValues> = async (values) => {
+    try {
+      await mutation.mutateAsync({
+        input: {
+          confirmation: values.confirmation.trim().toUpperCase(),
+          measure: values.measure,
+          reason: values.reason.trim(),
+          resolution: "upheld",
+        },
+        reportId: report.id,
+      });
+      form.reset();
+      toast.success(
+        values.measure === "remove_content"
+          ? "Denúncia procedente. Conteúdo removido."
+          : "Denúncia resolvida como procedente.",
+      );
+      onClose();
+    } catch (error) {
+      toast.error(resolveApiError(error));
+    }
+  };
+
+  return (
+    <FormProvider {...form}>
+      <form className="grid gap-3" noValidate onSubmit={form.handleSubmit(onSubmit)}>
+        <div className="rounded-2xl border border-red-200 bg-red-50 p-3 text-sm font-bold leading-6 text-red-800">
+          {report.content.available
+            ? "Se a medida for remover, o conteúdo sairá das listagens públicas. Esta ação não notifica nem aplica sanções de conta automaticamente."
+            : (report.content.unavailable_reason ??
+              "O conteúdo denunciado já está indisponível. A denúncia pode ser encerrada como procedente sem nova remoção.")}
+        </div>
+        <SelectController<ReportUpholdFormValues>
+          disabled={mutation.isPending}
+          label="Medida"
+          name="measure"
+          options={measureOptions}
+          required
+        />
+        <TextareaController<ReportUpholdFormValues>
+          disabled={mutation.isPending}
+          label="Motivo/observação interna"
+          name="reason"
+          placeholder="Explique por que a denúncia foi considerada procedente."
+          required
+          rows={4}
+        />
+        <InputController<ReportUpholdFormValues>
+          autoComplete="off"
+          disabled={mutation.isPending}
+          label="Confirmação forte"
+          name="confirmation"
+          placeholder={REPORT_UPHOLD_CONFIRMATION}
+          required
+        />
+        {selectedMeasure === "remove_content" ? (
+          <p className="rounded-2xl bg-surface-muted p-3 text-xs font-bold leading-5 text-muted">
+            A remoção é persistente por soft delete e não apaga a denúncia nem a auditoria.
+          </p>
+        ) : null}
+        <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+          <button
+            className="inline-flex h-12 items-center justify-center rounded-control border border-border px-4 text-sm font-black text-muted transition hover:bg-surface-muted"
+            disabled={mutation.isPending}
+            onClick={onClose}
+            type="button"
+          >
+            Cancelar
+          </button>
+          <button
+            className="inline-flex h-12 items-center justify-center gap-2 rounded-control bg-danger px-4 text-sm font-black text-white transition hover:bg-danger/90 disabled:cursor-not-allowed disabled:bg-surface-muted disabled:text-muted"
+            disabled={mutation.isPending}
+            type="submit"
+          >
+            {mutation.isPending ? (
+              <Loader2 aria-hidden className="h-4 w-4 animate-spin" />
+            ) : (
+              <ShieldCheck aria-hidden className="h-4 w-4" />
+            )}
+            Resolver como procedente
+          </button>
+        </div>
+      </form>
+    </FormProvider>
+  );
 };
 
 const ReportsTab = ({ id }: { id: string }) => {
@@ -3327,6 +3703,7 @@ const ReportsTab = ({ id }: { id: string }) => {
   const [type, setType] = useState<AdminPsychologistReportsQuery["type"]>("all");
   const [status, setStatus] = useState<AdminPsychologistReportsQuery["status"]>("all");
   const [page, setPage] = useState(1);
+  const [moderationState, setModerationState] = useState<ReportModerationState>(null);
   const periodRange = useMemo(
     () => resolveReportPeriod(period, customFrom, customTo),
     [customFrom, customTo, period],
@@ -3476,7 +3853,7 @@ const ReportsTab = ({ id }: { id: string }) => {
               {numberFormatter.format(reports.count)} denúncias filtradas.
             </p>
           </div>
-          <Badge className="bg-primary-soft text-primary">Somente leitura</Badge>
+          <Badge className="bg-primary-soft text-primary">Moderação auditada</Badge>
         </div>
 
         {reports.data.length === 0 ? (
@@ -3513,15 +3890,22 @@ const ReportsTab = ({ id }: { id: string }) => {
                         Descrição: {item.description}
                       </p>
                     ) : null}
-                    <a
-                      className="mt-3 inline-flex items-center gap-1 text-xs font-black text-primary"
-                      href={toPublicHref(item.content.public_url)}
-                      rel="noreferrer"
-                      target="_blank"
-                    >
-                      Ver detalhes
-                      <ExternalLink aria-hidden className="h-3.5 w-3.5" />
-                    </a>
+                    {item.content.available && item.content.public_url ? (
+                      <a
+                        className="mt-3 inline-flex items-center gap-1 text-xs font-black text-primary"
+                        href={toPublicHref(item.content.public_url)}
+                        rel="noreferrer"
+                        target="_blank"
+                      >
+                        Ver detalhes
+                        <ExternalLink aria-hidden className="h-3.5 w-3.5" />
+                      </a>
+                    ) : (
+                      <p className="mt-3 rounded-2xl bg-surface-muted p-3 text-xs font-bold leading-5 text-muted">
+                        {item.content.unavailable_reason ??
+                          "Conteúdo indisponível nas listagens públicas."}
+                      </p>
+                    )}
                   </div>
                 </div>
                 <dl className="rounded-2xl bg-surface-muted p-4 text-sm">
@@ -3535,6 +3919,50 @@ const ReportsTab = ({ id }: { id: string }) => {
                       {item.content.community.name}
                     </dd>
                   </div>
+                  <div className="mt-4 border-t border-border pt-4">
+                    <dt className="font-black text-muted">Moderação</dt>
+                    <dd className="mt-3 grid gap-2">
+                      {item.capabilities.can_start_review ? (
+                        <button
+                          className="inline-flex min-h-10 items-center justify-center gap-2 rounded-control border border-border bg-surface px-3 py-2 text-xs font-black text-foreground transition hover:bg-surface-muted"
+                          onClick={() =>
+                            setModerationState({ action: "start_review", report: item })
+                          }
+                          type="button"
+                        >
+                          <Clock aria-hidden className="h-4 w-4" />
+                          Marcar em análise
+                        </button>
+                      ) : null}
+                      {item.capabilities.can_resolve_dismissed ? (
+                        <button
+                          className="inline-flex min-h-10 items-center justify-center gap-2 rounded-control border border-success/30 bg-emerald-50 px-3 py-2 text-xs font-black text-success transition hover:bg-emerald-100"
+                          onClick={() => setModerationState({ action: "dismiss", report: item })}
+                          type="button"
+                        >
+                          <CheckCircle2 aria-hidden className="h-4 w-4" />
+                          Improcedente
+                        </button>
+                      ) : null}
+                      {item.capabilities.can_resolve_upheld ? (
+                        <button
+                          className="inline-flex min-h-10 items-center justify-center gap-2 rounded-control border border-danger/30 bg-red-50 px-3 py-2 text-xs font-black text-danger transition hover:bg-red-100"
+                          onClick={() => setModerationState({ action: "uphold", report: item })}
+                          type="button"
+                        >
+                          <ShieldCheck aria-hidden className="h-4 w-4" />
+                          Procedente
+                        </button>
+                      ) : null}
+                      {!item.capabilities.can_start_review &&
+                      !item.capabilities.can_resolve_dismissed &&
+                      !item.capabilities.can_resolve_upheld ? (
+                        <span className="rounded-2xl bg-surface px-3 py-2 text-xs font-bold text-muted">
+                          Denúncia já encerrada.
+                        </span>
+                      ) : null}
+                    </dd>
+                  </div>
                 </dl>
               </article>
             ))}
@@ -3545,6 +3973,14 @@ const ReportsTab = ({ id }: { id: string }) => {
           <PublicationsPagination page={reports.page} pages={reports.pages} setPage={setPage} />
         </div>
       </CardShell>
+
+      {moderationState ? (
+        <ReportModerationDialog
+          id={id}
+          onClose={() => setModerationState(null)}
+          state={moderationState}
+        />
+      ) : null}
     </div>
   );
 };

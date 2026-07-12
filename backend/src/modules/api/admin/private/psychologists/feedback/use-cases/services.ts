@@ -1,7 +1,9 @@
 ﻿import type { Resolve } from "@/helpers/return";
 import { error, msg } from "@/helpers/translate";
 import type {
+  AdminPsychologistReportActionDTO,
   AdminPsychologistReportItem,
+  AdminPsychologistReportResolveBody,
   AdminPsychologistReportsDTO,
   AdminPsychologistReportsQuery,
   AdminPsychologistReportsStatusGroup,
@@ -9,11 +11,15 @@ import type {
   AdminPsychologistReviewItem,
   AdminPsychologistReviewsDTO,
   AdminPsychologistReviewsQuery,
+  IAdminPsychologistReportResolveDTO,
+  IAdminPsychologistReportStartReviewDTO,
   IAdminPsychologistReportsDTO,
   IAdminPsychologistReviewsDTO,
 } from "../DTOs/IAdminPsychologistFeedbackDTO";
 import {
   AdminPsychologistFeedbackRepository,
+  type AdminPsychologistReportAudit,
+  type AdminPsychologistReportMutationResult,
   type AdminPsychologistReportRecord,
   type AdminPsychologistReviewRecord,
 } from "../repositories/AdminPsychologistFeedbackRepository";
@@ -24,6 +30,8 @@ const MAX_LIMIT = 50;
 const DEFAULT_REPORT_PERIOD_DAYS = 90;
 const MAX_REPORT_PERIOD_DAYS = 180;
 const MS_PER_DAY = 86_400_000;
+const DISMISS_REPORT_CONFIRMATION = "DENUNCIA IMPROCEDENTE";
+const UPHOLD_REPORT_CONFIRMATION = "DENUNCIA PROCEDENTE";
 
 const pad = (value: number) => String(value).padStart(2, "0");
 const toDateKey = (date: Date) =>
@@ -81,7 +89,7 @@ const resolveReportsPeriod = (query: { from?: string; to?: string } = {}): Repor
   const hasCustomTo = Boolean(query.to);
   let start: Date;
   let end: Date;
-  let label = "Últimos 90 dias";
+  let label = "\u00daltimos 90 dias";
 
   if (hasCustomFrom || hasCustomTo) {
     if (!hasCustomFrom || !hasCustomTo)
@@ -96,7 +104,7 @@ const resolveReportsPeriod = (query: { from?: string; to?: string } = {}): Repor
 
     start = customStart;
     end = customEnd;
-    label = "Período personalizado";
+    label = "Per\u00edodo personalizado";
   } else {
     const today = new Date();
     end = endOfDate(today);
@@ -145,16 +153,16 @@ const labelFromStatus = (status: string) => {
   const labels: Record<string, string> = {
     aprovada: "Aprovada",
     aprovado: "Aprovado",
-    em_analise: "Em análise",
-    "em analise": "Em análise",
+    "em analise": "Em an\u00e1lise",
+    em_analise: "Em an\u00e1lise",
     improcedente: "Improcedente",
     pendente: "Pendente",
     procedente: "Procedente",
     publicada: "Publicada",
-    rejeitada: "Rejeitada",
-    rejeitado: "Rejeitado",
-    resolvida: "Resolvida",
-    resolvido: "Resolvido",
+    rejeitada: "Improcedente",
+    rejeitado: "Improcedente",
+    resolvida: "Procedente",
+    resolvido: "Procedente",
   };
 
   return labels[normalized] ?? status;
@@ -162,6 +170,9 @@ const labelFromStatus = (status: string) => {
 
 const reportStatusGroup = (status: string): AdminPsychologistReportsStatusGroup => {
   const normalized = normalizeText(status).replace(/_/g, " ");
+
+  if (["pendente", "pending"].includes(normalized)) return "pending";
+  if (["em analise", "in review", "in_review"].includes(normalized)) return "in_review";
 
   if (["improcedente", "rejeitada", "rejeitado", "dismissed", "rejected"].includes(normalized)) {
     return "dismissed";
@@ -181,7 +192,7 @@ const reasonLabel = (reason: string) => {
     abuse: "Abuso ou desrespeito",
     other: "Outro motivo",
     privacy: "Dados pessoais ou privacidade",
-    self_harm: "Autolesão ou risco",
+    self_harm: "Autoles\u00e3o ou risco",
     spam: "Spam",
   };
 
@@ -191,23 +202,38 @@ const reasonLabel = (reason: string) => {
 const roleLabel = (role: string) => {
   const labels: Record<string, string> = {
     paciente: "Paciente",
-    psicologo: "Psicólogo",
+    psicologo: "Psic\u00f3logo",
   };
 
-  return labels[role] ?? "Usuário";
+  return labels[role] ?? "Usu\u00e1rio";
 };
 
 const excerpt = (value: string | null | undefined, max = 120) => {
   const normalized = (value ?? "").replace(/\s+/g, " ").trim();
-  if (!normalized) return "Sem descrição.";
+  if (!normalized) return "Sem descri\u00e7\u00e3o.";
   if (normalized.length <= max) return normalized;
 
-  return `${normalized.slice(0, max - 1).trim()}…`;
+  return `${normalized.slice(0, max - 1).trim()}...`;
 };
 
 const notFound = () => ({
   status: 404,
   ...error("not_found", { model: "psychologist" }),
+});
+
+const reportNotFound = () => ({
+  status: 404,
+  ...error("not_found", { model: "post_report" }),
+});
+
+const adminRequired = () => ({
+  status: 403,
+  ...error("role_not_authorized", {}),
+});
+
+const invalidReportStatus = () => ({
+  status: 409,
+  ...error("admin_psychologist_report_invalid_status", {}),
 });
 
 const distributionFromReviews = (
@@ -292,7 +318,9 @@ export const showAdminPsychologistReviews = async (
   const response: AdminPsychologistReviewsDTO = {
     access: {
       mode: "read_only",
-      restrictions: ["Admin não edita, exclui, aprova, reprova nem responde avaliações nesta V1."],
+      restrictions: [
+        "Admin n\u00e3o edita, exclui, aprova, reprova nem responde avalia\u00e7\u00f5es nesta V1.",
+      ],
     },
     active_filters_count: [
       query.rating !== "all" ? query.rating : "",
@@ -307,7 +335,7 @@ export const showAdminPsychologistReviews = async (
             ? reviews.length
             : reviews.filter((review) => review.rating === Number(rating)).length,
         id: rating,
-        label: rating === "all" ? "Todas as avaliações" : `${rating} estrelas`,
+        label: rating === "all" ? "Todas as avalia\u00e7\u00f5es" : `${rating} estrelas`,
       })),
       statuses: [{ count: reviews.length, id: "all", label: "Todos os status" }, ...statusOptions],
     },
@@ -334,7 +362,10 @@ const normalizeReportsQuery = (query: AdminPsychologistReportsQuery = {}) => ({
   ...normalizePagination(query, DEFAULT_REPORTS_LIMIT),
   from: query.from,
   status:
-    query.status === "in_review" || query.status === "dismissed" || query.status === "upheld"
+    query.status === "pending" ||
+    query.status === "in_review" ||
+    query.status === "dismissed" ||
+    query.status === "upheld"
       ? query.status
       : "all",
   to: query.to,
@@ -344,33 +375,115 @@ const normalizeReportsQuery = (query: AdminPsychologistReportsQuery = {}) => ({
 const reportContentType = (report: AdminPsychologistReportRecord): "post" | "reply" =>
   report.reply ? "reply" : "post";
 
+const reportContentAvailable = (report: AdminPsychologistReportRecord) => {
+  if (report.reply) {
+    return (
+      !report.reply.deleted &&
+      !report.reply.post.deleted &&
+      report.reply.post.status === "publicado" &&
+      !report.reply.post.community.deleted
+    );
+  }
+
+  return (
+    !report.post.deleted && report.post.status === "publicado" && !report.post.community.deleted
+  );
+};
+
+const reportUnavailableReason = (report: AdminPsychologistReportRecord) => {
+  if (report.reply) {
+    if (report.reply.deleted) return "Resposta denunciada j\u00e1 foi removida.";
+    if (report.reply.post.deleted || report.reply.post.status !== "publicado") {
+      return "Publica\u00e7\u00e3o da resposta j\u00e1 est\u00e1 indispon\u00edvel.";
+    }
+    if (report.reply.post.community.deleted)
+      return "Comunidade da resposta est\u00e1 indispon\u00edvel.";
+  } else {
+    if (report.post.deleted || report.post.status !== "publicado") {
+      return "Publica\u00e7\u00e3o denunciada j\u00e1 est\u00e1 indispon\u00edvel.";
+    }
+    if (report.post.community.deleted)
+      return "Comunidade da publica\u00e7\u00e3o est\u00e1 indispon\u00edvel.";
+  }
+
+  return null;
+};
+
+const canStartReview = (status: string) => reportStatusGroup(status) === "pending";
+const canResolve = (status: string) => {
+  const group = reportStatusGroup(status);
+  return group === "pending" || group === "in_review";
+};
+
+const reportCommunity = (report: AdminPsychologistReportRecord) =>
+  report.reply ? report.reply.post.community : report.post.community;
+
+const reportPostId = (report: AdminPsychologistReportRecord) =>
+  report.reply ? report.reply.post.id : report.post.id;
+
+const reportTitle = (report: AdminPsychologistReportRecord) => {
+  if (!report.reply) return report.post.title;
+
+  return report.reply.title || `Resposta em: ${report.reply.post.title}`;
+};
+
+const reportContent = (report: AdminPsychologistReportRecord) =>
+  report.reply ? report.reply.content : report.post.content;
+
+const reportTargetId = (report: AdminPsychologistReportRecord) =>
+  report.reply ? report.reply.id : report.post.id;
+
+const reportPublicUrl = (report: AdminPsychologistReportRecord) => {
+  if (!reportContentAvailable(report)) return null;
+
+  const community = reportCommunity(report);
+  const postId = reportPostId(report);
+
+  return report.reply
+    ? `/community/${community.slug}/post/${postId}/thread/${report.reply.id}`
+    : `/community/${community.slug}/post/${postId}`;
+};
+
+const safeCommunity = (report: AdminPsychologistReportRecord) => {
+  const community = reportCommunity(report);
+
+  return {
+    id: community.id,
+    name: community.name,
+    slug: community.slug,
+  };
+};
+
 const toReportItem = (report: AdminPsychologistReportRecord): AdminPsychologistReportItem => {
   const type = reportContentType(report);
   const statusGroup = reportStatusGroup(report.status);
-  const community = type === "reply" ? report.reply!.post.community : report.post.community;
-  const postId = type === "reply" ? report.reply!.post.id : report.post.id;
-  const title =
-    type === "reply"
-      ? report.reply!.title || `Resposta em: ${report.reply!.post.title}`
-      : report.post.title;
-  const content = type === "reply" ? report.reply!.content : report.post.content;
-  const publicUrl =
-    type === "reply"
-      ? `/community/${community.slug}/post/${postId}/thread/${report.reply!.id}`
-      : `/community/${community.slug}/post/${postId}`;
+  const available = reportContentAvailable(report);
+  const resolves = canResolve(report.status);
 
   return {
+    capabilities: {
+      can_remove_content: resolves && available,
+      can_resolve_dismissed: resolves,
+      can_resolve_upheld: resolves,
+      can_start_review: canStartReview(report.status),
+    },
     content: {
-      community,
-      excerpt: excerpt(content),
-      id: type === "reply" ? report.reply!.id : report.post.id,
-      public_url: publicUrl,
-      title,
+      available,
+      community: safeCommunity(report),
+      excerpt: excerpt(reportContent(report)),
+      id: reportTargetId(report),
+      public_url: reportPublicUrl(report),
+      title: reportTitle(report),
       type,
+      unavailable_reason: available ? null : reportUnavailableReason(report),
     },
     created_at: report.createdAt,
     description: report.description,
     id: report.id,
+    moderation: {
+      status: report.status,
+      status_label: labelFromStatus(report.status),
+    },
     reason: report.reason,
     reason_label: reasonLabel(report.reason),
     reported_by: {
@@ -422,8 +535,10 @@ export const showAdminPsychologistReports = async (
 
   const response: AdminPsychologistReportsDTO = {
     access: {
-      mode: "read_only",
-      restrictions: ["Admin não resolve, aprova, rejeita nem altera status de denúncias nesta V1."],
+      mode: "moderation",
+      restrictions: [
+        "Modera\u00e7\u00e3o limitada a triagem e resolu\u00e7\u00e3o da den\u00fancia; san\u00e7\u00f5es de conta ficam fora desta task.",
+      ],
     },
     active_filters_count: [
       query.type !== "all" ? query.type : "",
@@ -431,10 +546,11 @@ export const showAdminPsychologistReports = async (
       query.from && query.to ? "period" : "",
     ].filter(Boolean).length,
     cards: [
-      { id: "total", label: "Total de denúncias", source: "post_report", value: items.length },
+      { id: "total", label: "Total de den\u00fancias", source: "post_report", value: items.length },
+      { id: "pending", label: "Pendentes", source: "post_report", value: countByStatus("pending") },
       {
         id: "in_review",
-        label: "Em análise",
+        label: "Em an\u00e1lise",
         source: "post_report",
         value: countByStatus("in_review"),
       },
@@ -451,7 +567,8 @@ export const showAdminPsychologistReports = async (
     filters: {
       statuses: [
         { count: items.length, id: "all", label: "Todos os status" },
-        { count: countByStatus("in_review"), id: "in_review", label: "Em análise" },
+        { count: countByStatus("pending"), id: "pending", label: "Pendentes" },
+        { count: countByStatus("in_review"), id: "in_review", label: "Em an\u00e1lise" },
         { count: countByStatus("dismissed"), id: "dismissed", label: "Improcedentes" },
         { count: countByStatus("upheld"), id: "upheld", label: "Procedentes" },
       ],
@@ -473,5 +590,191 @@ export const showAdminPsychologistReports = async (
     status: 200,
     ...msg("show", {}),
     data: response,
+  };
+};
+
+const loadReport = async (psychologistId: string, reportId: string) => {
+  const repository = new AdminPsychologistFeedbackRepository();
+  const profile = await repository.findPsychologist(psychologistId);
+  if (!profile) return { profile: null, report: null, repository };
+
+  const report = await repository.findReportForPsychologist(profile.user.id, reportId);
+
+  return { profile, report, repository };
+};
+
+const safeTargetSummary = (report: AdminPsychologistReportRecord) => ({
+  Comunidade: reportCommunity(report).name,
+  Conteudo: reportTitle(report),
+  Tipo: report.reply ? "Resposta" : "Post",
+});
+
+const createReportAudit = (input: {
+  action: AdminPsychologistReportAudit["action"];
+  adminId: string;
+  changedFields: string[];
+  metadata?: AdminPsychologistReportAudit["metadata"];
+  reason: string;
+  report: AdminPsychologistReportRecord;
+  safeAfter?: AdminPsychologistReportAudit["safeAfter"];
+  targetId: string;
+}): AdminPsychologistReportAudit => ({
+  action: input.action,
+  adminId: input.adminId,
+  changedFields: input.changedFields,
+  metadata: input.metadata,
+  reason: input.reason,
+  safeAfter: input.safeAfter,
+  safeBefore: {
+    "Status da denuncia": labelFromStatus(input.report.status),
+    ...safeTargetSummary(input.report),
+  },
+  targetId: input.targetId,
+});
+
+const reportActionResponse = (
+  result: AdminPsychologistReportMutationResult,
+): AdminPsychologistReportActionDTO => ({
+  affected_reports_count: result.affectedReportsCount,
+  content_already_unavailable: result.contentAlreadyUnavailable,
+  content_removed: result.contentRemoved,
+  report: toReportItem(result.report),
+  source: "post_report+admin_activity_log",
+});
+
+export const startAdminPsychologistReportReview = async (
+  data: IAdminPsychologistReportStartReviewDTO,
+): Promise<Resolve> => {
+  const admin = data.admin ?? data.auth;
+  if (!admin?.id) return adminRequired();
+
+  const { profile, report, repository } = await loadReport(data.p.id, data.p.reportId);
+  if (!profile) return notFound();
+  if (!report) return reportNotFound();
+  if (!canStartReview(report.status)) return invalidReportStatus();
+
+  const result = await repository.startReview({
+    audit: createReportAudit({
+      action: "psychologist_report_review_started",
+      adminId: admin.id,
+      changedFields: ["Status da denuncia"],
+      reason: data.b.reason.trim(),
+      report,
+      safeAfter: {
+        "Status da denuncia": "Em analise",
+        ...safeTargetSummary(report),
+      },
+      targetId: profile.user.id,
+    }),
+    report,
+  });
+
+  return {
+    status: 200,
+    ...msg("admin_psychologist_report_review_started", {}),
+    data: reportActionResponse(result),
+  };
+};
+
+const dismissConfirmationIsValid = (body: AdminPsychologistReportResolveBody) =>
+  body.confirmation.trim().toUpperCase() === DISMISS_REPORT_CONFIRMATION;
+
+const upholdConfirmationIsValid = (body: AdminPsychologistReportResolveBody) =>
+  body.confirmation.trim().toUpperCase() === UPHOLD_REPORT_CONFIRMATION;
+
+export const resolveAdminPsychologistReport = async (
+  data: IAdminPsychologistReportResolveDTO,
+): Promise<Resolve> => {
+  const admin = data.admin ?? data.auth;
+  if (!admin?.id) return adminRequired();
+
+  const { profile, report, repository } = await loadReport(data.p.id, data.p.reportId);
+  if (!profile) return notFound();
+  if (!report) return reportNotFound();
+  if (!canResolve(report.status)) return invalidReportStatus();
+
+  if (data.b.resolution === "dismissed") {
+    if (!dismissConfirmationIsValid(data.b)) {
+      return {
+        status: 400,
+        ...error("admin_psychologist_report_dismiss_confirmation_invalid", {}),
+      };
+    }
+
+    const result = await repository.resolveDismissed({
+      audit: createReportAudit({
+        action: "psychologist_report_dismissed",
+        adminId: admin.id,
+        changedFields: ["Status da denuncia"],
+        metadata: {
+          resolution: "dismissed",
+        },
+        reason: data.b.reason.trim(),
+        report,
+        safeAfter: {
+          "Status da denuncia": "Improcedente",
+          ...safeTargetSummary(report),
+        },
+        targetId: profile.user.id,
+      }),
+      report,
+    });
+
+    return {
+      status: 200,
+      ...msg("admin_psychologist_report_dismissed", {}),
+      data: reportActionResponse(result),
+    };
+  }
+
+  if (data.b.resolution !== "upheld") return invalidReportStatus();
+
+  if (!upholdConfirmationIsValid(data.b)) {
+    return {
+      status: 400,
+      ...error("admin_psychologist_report_uphold_confirmation_invalid", {}),
+    };
+  }
+
+  const measure = data.b.measure === "remove_content" ? "remove_content" : "none";
+  const action: AdminPsychologistReportAudit["action"] =
+    measure === "remove_content"
+      ? "psychologist_report_content_removed"
+      : "psychologist_report_upheld";
+  const result = await repository.resolveUpheld({
+    audit: createReportAudit({
+      action,
+      adminId: admin.id,
+      changedFields:
+        measure === "remove_content"
+          ? ["Status da denuncia", "Conteudo denunciado"]
+          : ["Status da denuncia"],
+      metadata: {
+        measure,
+        resolution: "upheld",
+      },
+      reason: data.b.reason.trim(),
+      report,
+      safeAfter: {
+        "Medida aplicada":
+          measure === "remove_content" ? "Remover conteudo denunciado" : "Manter conteudo",
+        "Status da denuncia": "Procedente",
+        ...safeTargetSummary(report),
+      },
+      targetId: profile.user.id,
+    }),
+    measure,
+    report,
+  });
+
+  return {
+    status: 200,
+    ...msg(
+      result.contentRemoved
+        ? "admin_psychologist_report_content_removed"
+        : "admin_psychologist_report_upheld",
+      {},
+    ),
+    data: reportActionResponse(result),
   };
 };

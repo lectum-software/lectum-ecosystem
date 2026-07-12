@@ -133,3 +133,4 @@ Formato recomendado:
 - [ADR-0254 - Suporte administrativo de conta do psicólogo](0254-suporte-admin-conta-psicologo.md) - Accepted
 - [ADR-0256 - Cortesia ativa pula fluxo de assinatura e endereço](0256-cortesia-pula-fluxo-assinatura-endereco.md) - Accepted
 - [ADR-0257 - Nome profissional separado do psicólogo para WhatsApp](0257-nome-profissional-psicologo-whatsapp.md) - Accepted
+- [ADR-0262 - Resolução administrativa auditada de denúncias recebidas](0262-resolucao-admin-denuncias-recebidas.md) - Accepted
