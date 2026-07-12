@@ -15,7 +15,7 @@ Builder/Quick Copy `vcp://quickcopy/vcp-24aaa2941d814e5b90572bc93ae50e2a` não e
 - Extrair a fórmula real de ranking público para `backend/src/utils/psychologist-public-ranking.ts` e fazer a descoberta pública e o dashboard Admin consumirem o mesmo helper.
 - Criar o endpoint protegido `GET /api/admin/private/psychologists/dashboard` com período padrão de 7 dias e limite de 90 dias.
 - Tratar receita como **MRR estimado** de assinaturas profissionais ativas originadas no Mercado Pago (`source=mercadopago`) e preço do `subscription_plan`; `admin_grant`, cortesias e plano gratuito não contam como receita.
-- Documentar churn no service como cancelamentos reais de assinaturas profissionais Mercado Pago no período dividido por base paga ativa no início + novas assinaturas pagas do período; cortesias e gratuito ficam fora do numerador e denominador.
+- Documentar churn no service como cancelamentos reais de assinaturas profissionais Mercado Pago no período dividido pela base paga ativa no início do período; novas assinaturas do período não entram no denominador; cortesias e gratuito ficam fora do numerador e denominador.
 - Exibir filtros mais buscados como indisponíveis porque ainda não há tracking persistido por termo/filtro de busca no diretório público.
 - Entregar a rota Admin protegida em `/psicologos`, seguindo a navegação já existente do app Admin.
 
@@ -56,11 +56,17 @@ Atualização 2026-07-12 (valor social ao lado do desconto):
 
 - O card **Valor social** deixa de ocupar `xl:col-span-3` e passa a seguir a mesma largura dos demais cards booleanos, permitindo que fique ao lado de **Desconto 1ª sessão** no desktop sem alterar o contrato ou os cálculos.
 
-Atualiza��o 2026-07-12 (churn com contagem absoluta):
+Atualização 2026-07-12 (churn com contagem absoluta):
 
-- A m�trica **Churn** mant�m `value` como percentual calculado pela f�rmula j� documentada, mas passa a expor `value_count` e `previous_value_count` opcionais com a contagem absoluta de cancelamentos reais Mercado Pago do per�odo.
-- O card de churn no Admin passa a renderizar `cancelamentos (percentual)`, por exemplo `0 (0%)`, para evitar que o percentual apare�a sem a escala absoluta do problema.
-- A tag visual **estimado** foi removida dos cards do dashboard de psic�logos; quando o churn n�o tem base paga, o estado **Indispon�vel** continua sendo a sinaliza��o honesta.
+- A métrica **Churn** mantém `value` como percentual e passa a expor `value_count` e `previous_value_count` opcionais com a contagem absoluta de cancelamentos reais Mercado Pago do período.
+- O card de churn no Admin passa a renderizar `cancelamentos (percentual)`, por exemplo `0 (0%)`, para evitar que o percentual apareça sem a escala absoluta do problema.
+- A tag visual **estimado** foi removida dos cards do dashboard de psicólogos; quando o churn não tem base paga, o estado **Indisponível** continua sendo a sinalização honesta.
+
+Atualização 2026-07-12 (denominador clássico do churn):
+
+- O percentual de **Churn** passa a usar somente a base paga Mercado Pago ativa no início do período como denominador.
+- Novas assinaturas pagas iniciadas dentro do período não são somadas ao denominador; elas devem ser analisadas por métricas de aquisição/cancelamento precoce se o produto precisar dessa leitura.
+- A contagem absoluta exibida no card continua representando cancelamentos reais Mercado Pago no período, enquanto o percentual responde à perda frente à base inicial.
 
 ## Consequências
 
@@ -95,4 +101,5 @@ Atualiza��o 2026-07-12 (churn com contagem absoluta):
 - Atualização 2026-07-12 (valor social ao lado do desconto): `pnpm --dir admin check`, `pnpm --dir admin build` e smoke HTTP local em `/psicologos` retornando 200.
 
 
-- Atualiza��o 2026-07-12 (churn com contagem absoluta): `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build` e smoke HTTP local em `/psicologos` retornando 200; `pnpm check` falhou por erros TypeScript preexistentes/concomitantes fora do escopo em `backend/src/modules/api/admin/private/psychologists/feedback/use-cases/services.ts`.
+- Atualiza��o 2026-07-12 (churn com contagem absoluta): `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build` e smoke HTTP local em `/psicologos` retornando 200; `pnpm check` falhou por erros TypeScript preexistentes/concomitantes fora do escopo em `backend/src/modules/api/admin/private/psychologists/feedback/use-cases/services.ts`.
+- Atualização 2026-07-12 (denominador clássico do churn): `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm --dir frontend check`, `pnpm check` e smoke HTTP local em `/psicologos` retornando 200.

@@ -372,27 +372,34 @@ const paidGatewayCanceledInRange = (
       dateInRange(item.updatedAt, range),
   );
 
+const paidGatewaySubscriptionInOpeningBaseAt = (
+  subscription: AdminPsychologistSubscriptionRecord,
+  date: Date,
+) => {
+  if (!isPaidGatewaySubscription(subscription)) return false;
+  if (subscription.createdAt > date) return false;
+  if (subscription.current_period_end && subscription.current_period_end <= date) return false;
+  if (subscription.status === STATUS_ACTIVE) return true;
+
+  return subscription.status === STATUS_CANCELLED && subscription.updatedAt > date;
+};
+
 /**
  * Churn V1 do Admin Psicólogos:
  * cancelamentos reais de assinaturas profissionais originadas no gateway Mercado Pago no período
- * dividido por assinaturas profissionais do gateway ativas no início do período somadas às novas
- * assinaturas profissionais do gateway iniciadas no próprio período. Cortesias/admin_grant e plano
- * gratuito não entram no numerador nem denominador.
+ * divididos pela base paga ativa no início do período. Novas assinaturas iniciadas dentro do
+ * período não entram no denominador. Cortesias/admin_grant e plano gratuito não entram no
+ * numerador nem denominador.
  */
 const calculateChurnPercent = (
   profiles: AdminPsychologistProfileRecord[],
   range: AdminPsychologistsDashboardDateRange,
 ) => {
   const subscriptions = flattenSubscriptions(profiles);
-  const activeAtPeriodStart = profiles.reduce(
-    (total, profile) =>
-      total + activeSubscriptionsAt(profile, range.start).filter(isPaidGatewaySubscription).length,
-    0,
+  const openingBase = subscriptions.filter((item) =>
+    paidGatewaySubscriptionInOpeningBaseAt(item, range.start),
   );
-  const starts = subscriptions.filter(
-    (item) => isPaidGatewaySubscription(item) && dateInRange(item.createdAt, range),
-  ).length;
-  const denominator = activeAtPeriodStart + starts;
+  const denominator = openingBase.length;
   const canceled = paidGatewayCanceledInRange(subscriptions, range).length;
 
   if (denominator === 0) {
@@ -712,7 +719,7 @@ export const buildPsychologistsDashboard = async (
       churn: metric({
         current: currentChurn.value,
         description:
-          "Cancelamentos de assinaturas profissionais Mercado Pago no período ÷ base ativa no início + novas assinaturas pagas no período. Cortesias e plano gratuito não entram.",
+          "Cancelamentos de assinaturas profissionais Mercado Pago no período ÷ base paga ativa no início do período. Novas assinaturas do período não entram no denominador; cortesias e plano gratuito não entram.",
         id: "churn",
         label: "Churn",
         previous: previousChurn.value,
@@ -723,7 +730,8 @@ export const buildPsychologistsDashboard = async (
         valueCount: currentChurn.canceled,
         ...(currentChurn.denominator === 0
           ? {
-              unavailableReason: "Não há base paga Mercado Pago no período para calcular churn.",
+              unavailableReason:
+                "Não há base paga Mercado Pago ativa no início do período para calcular churn.",
             }
           : {}),
       }),
@@ -820,7 +828,7 @@ export const buildPsychologistsDashboard = async (
         ? [
             {
               description:
-                "Churn exige assinaturas profissionais Mercado Pago ativas ou iniciadas no período; não há base para o período atual.",
+                "Churn exige assinaturas profissionais Mercado Pago ativas no início do período; não há base para o período atual.",
               id: "churn_denominator_zero",
               label: "Churn de assinaturas",
               source: "professional_subscription",

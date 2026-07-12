@@ -141,7 +141,7 @@ Packages usados:
 - A rota do app Admin entregue é `/psicologos`, equivalente à rota administrativa protegida definida pela navegação existente do painel.
 - O ranking administrativo reutiliza o helper compartilhado `backend/src/utils/psychologist-public-ranking.ts`, extraído da descoberta pública sem alterar a fórmula.
 - Receita é MRR estimado com assinaturas profissionais ativas `source=mercadopago`; `admin_grant`/cortesia e plano gratuito não contam como receita.
-- Churn usa cancelamentos reais de assinaturas profissionais Mercado Pago no período dividido por base paga ativa no início + novas assinaturas pagas no período; cortesia e gratuito ficam fora.
+- Churn usa cancelamentos reais de assinaturas profissionais Mercado Pago no período dividido pela base paga ativa no início do período; novas assinaturas pagas no período não entram no denominador; cortesia e gratuito ficam fora.
 - Filtros mais buscados aparecem como indisponíveis porque não há tracking persistido de filtros/termos de busca.
 - Validações executadas: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check`, chamada real da API com admin temporário e validação headless local em `/psicologos` nos viewports 390px e desktop.
 
@@ -203,12 +203,22 @@ Packages usados:
 - Referência visual local mantida: `_product/proto/admin/Psicólogos/Psicólogos - Dashboard.png`; Builder/Quick Copy não estava disponível como ferramenta callable no ambiente.
 - Validações desta correção: `pnpm --dir admin check`, `pnpm --dir admin build` e smoke HTTP local em `http://localhost:3002/psicologos` retornando 200.
 
-### Corre��o UX/dados em 2026-07-12 - churn com contagem absoluta
+### Corre��o UX/dados em 2026-07-12 - churn com contagem absoluta
 
-- A tag visual **estimado** foi removida dos cards do dashboard de psic�logos; para churn sem base, a UI mant�m o estado honesto **Indispon�vel**.
+- A tag visual **estimado** foi removida dos cards do dashboard de psic�logos; para churn sem base, a UI mant�m o estado honesto **Indispon�vel**.
 - O card **Churn** passa a exibir o valor no formato `cancelamentos (percentual)`, por exemplo `0 (0%)`.
-- O backend preserva `value` como percentual do churn e adiciona `value_count`/`previous_value_count` opcionais ao contrato de m�trica para expor a contagem absoluta de cancelamentos reais Mercado Pago do per�odo sem alterar a s�rie temporal.
-- N�o houve altera��o de Prisma schema, migrations, f�rmula de churn, mock ou fonte paralela de dados.
-- Refer�ncia visual local mantida: `_product/proto/admin/Psic�logos/Psic�logos - Dashboard.png`; Builder/Quick Copy n�o estava dispon�vel como ferramenta callable no ambiente.
-- Valida��es desta corre��o: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build` e smoke HTTP local em `http://localhost:3002/psicologos` retornando 200.
-- `pnpm check` foi executado, mas falhou por erros TypeScript preexistentes/concomitantes fora do escopo desta corre��o em `backend/src/modules/api/admin/private/psychologists/feedback/use-cases/services.ts`.
+- O backend preserva `value` como percentual do churn e adiciona `value_count`/`previous_value_count` opcionais ao contrato de m�trica para expor a contagem absoluta de cancelamentos reais Mercado Pago do per�odo sem alterar a s�rie temporal.
+- N�o houve altera��o de Prisma schema, migrations, f�rmula de churn, mock ou fonte paralela de dados.
+- Refer�ncia visual local mantida: `_product/proto/admin/Psic�logos/Psic�logos - Dashboard.png`; Builder/Quick Copy n�o estava dispon�vel como ferramenta callable no ambiente.
+- Valida��es desta corre��o: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build` e smoke HTTP local em `http://localhost:3002/psicologos` retornando 200.
+- `pnpm check` foi executado, mas falhou por erros TypeScript preexistentes/concomitantes fora do escopo desta corre��o em `backend/src/modules/api/admin/private/psychologists/feedback/use-cases/services.ts`.
+
+
+### Correção dados em 2026-07-12 - denominador clássico do churn
+
+- A fórmula do **Churn** foi ajustada para usar `cancelamentos pagos Mercado Pago no período ÷ base paga ativa no início do período`.
+- Novas assinaturas pagas iniciadas dentro do período não são mais somadas ao denominador, evitando diluir ou distorcer o percentual de perda da base inicial.
+- O card continua exibindo `cancelamentos (percentual)`, por exemplo `0 (0%)`; `value_count` permanece como a contagem absoluta de cancelamentos reais Mercado Pago no período.
+- Quando não há base paga Mercado Pago ativa no início do período, o churn segue com estado honesto **Indisponível**.
+- Não houve alteração de Prisma schema, migrations, mock ou fonte paralela de dados.
+- Validações desta correção: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm --dir frontend check`, `pnpm check` e smoke HTTP local em `http://localhost:3002/psicologos` retornando 200.
