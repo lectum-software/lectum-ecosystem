@@ -40,6 +40,12 @@ Atualização 2026-07-12 (remoção de blocos lista/ranking):
 - Os dados reais de lista e ranking permanecem no contrato do dashboard por compatibilidade e para usos dedicados/futuros, mas não compõem mais a experiência visual principal da página.
 - O estado vazio do dashboard passa a considerar apenas os cards e a série temporal que continuam visíveis, evitando que blocos removidos escondam uma ausência real de dados exibidos.
 
+Atualização 2026-07-12 (simplificação visual do gráfico):
+
+- O dashboard remove a legenda textual com bolinhas, a tag de fonte do card de evolução, o texto instrucional e o resumo textual expansível do gráfico.
+- As cores dos ícones dos cards passam a usar os mesmos valores das séries SVG do gráfico, mantendo os cards como controle visual primário de exibição/ocultação.
+- Cards selecionados deixam de aplicar sombra, reduzindo ruído visual sem remover a borda/estado ativo.
+
 ## Consequências
 
 - O Admin não cria uma métrica de ranking divergente do Explorar público.
@@ -67,3 +73,4 @@ Atualização 2026-07-12 (remoção de blocos lista/ranking):
 - Atualização 2026-07-12: `pnpm --dir backend check`, `pnpm --dir backend build` e `pnpm check` foram tentados, mas ficaram bloqueados por alterações pré-existentes no workspace (formatação/TypeScript fora do dashboard e `backend/prisma/schema.prisma` com falha P1012 no `prisma generate`).
 - Atualização 2026-07-12 (contadores integrados): `pnpm --dir admin check` (sem erros, com warning pré-existente fora do dashboard em `admin/src/app/(admin)/psicologos/[id]/client.tsx`), `pnpm --dir admin build`, Biome direcionado nos DTO/services do dashboard, `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm check` e smoke HTTP local em `/psicologos` retornando 200.
 - Atualização 2026-07-12 (remoção de lista/ranking): `pnpm --dir admin check`, `pnpm --dir admin build`, smoke HTTP local em `/psicologos` retornando 200; `pnpm check` tentado e encerrado por timeout de 124s sem saída conclusiva.
+- Atualização 2026-07-12 (simplificação visual do gráfico): `pnpm --dir admin check`, `pnpm --dir admin build` e smoke HTTP local em `/psicologos` retornando 200.

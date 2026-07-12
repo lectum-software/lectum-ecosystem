@@ -155,26 +155,23 @@ const CardShell = ({ children, className }: { children?: ReactNode; className?: 
   </section>
 );
 
-const toneClasses = {
-  blue: "bg-blue-50 text-blue-600",
-  green: "bg-emerald-50 text-emerald-600",
-  orange: "bg-orange-50 text-orange-600",
-  pink: "bg-pink-50 text-pink-600",
-  purple: "bg-primary-soft text-primary",
-  red: "bg-red-50 text-danger",
+const hexToRgba = (hex: string, alpha: number) => {
+  const normalized = hex.replace("#", "");
+  const red = Number.parseInt(normalized.slice(0, 2), 16);
+  const green = Number.parseInt(normalized.slice(2, 4), 16);
+  const blue = Number.parseInt(normalized.slice(4, 6), 16);
+
+  return `rgba(${red}, ${green}, ${blue}, ${alpha})`;
 };
 
 const DASHBOARD_METRIC_CONFIG = {
-  churn: { color: "#e5484d", icon: TrendingDown, tone: "red" },
-  courtesy_psychologists: { color: "#8b5cf6", icon: Award, tone: "pink" },
-  free_psychologists: { color: "#13a85b", icon: UsersRound, tone: "green" },
-  new_signups: { color: "#ff7a1a", icon: UserPlus, tone: "orange" },
-  subscriber_psychologists: { color: "#1788ff", icon: UserCheck, tone: "blue" },
-  total_psychologists: { color: "#3b16f3", icon: UsersRound, tone: "purple" },
-} satisfies Record<
-  DashboardMetricKey,
-  { color: string; icon: LucideIcon; tone: keyof typeof toneClasses }
->;
+  churn: { color: "#e5484d", icon: TrendingDown },
+  courtesy_psychologists: { color: "#8b5cf6", icon: Award },
+  free_psychologists: { color: "#13a85b", icon: UsersRound },
+  new_signups: { color: "#ff7a1a", icon: UserPlus },
+  subscriber_psychologists: { color: "#1788ff", icon: UserCheck },
+  total_psychologists: { color: "#3b16f3", icon: UsersRound },
+} satisfies Record<DashboardMetricKey, { color: string; icon: LucideIcon }>;
 
 const TrendBadge = ({ metric }: { metric: PsychologistsDashboardMetric }) => {
   if (metric.unavailable)
@@ -197,24 +194,24 @@ const TrendBadge = ({ metric }: { metric: PsychologistsDashboardMetric }) => {
 
 const MetricCard = ({
   active,
+  color,
   icon: Icon,
   metric,
   onToggle,
-  tone,
 }: {
   active: boolean;
+  color: string;
   icon: LucideIcon;
   metric: PsychologistsDashboardMetric;
   onToggle: () => void;
-  tone: keyof typeof toneClasses;
 }) => (
   <button
     aria-pressed={active}
     className={cn(
-      "min-h-44 rounded-card border bg-surface p-5 text-left shadow-admin-soft transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2",
+      "min-h-44 rounded-card border bg-surface p-5 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2",
       active
-        ? "border-primary/40"
-        : "border-border opacity-70 hover:border-primary/30 hover:opacity-100",
+        ? "border-primary/40 shadow-none"
+        : "border-border opacity-70 shadow-admin-soft hover:border-primary/30 hover:opacity-100",
     )}
     onClick={onToggle}
     title={`${metric.label}: ${formatMetricValue(metric)}. ${
@@ -223,7 +220,10 @@ const MetricCard = ({
     type="button"
   >
     <div className="flex items-start justify-between gap-3">
-      <div className={cn("grid h-12 w-12 place-items-center rounded-full", toneClasses[tone])}>
+      <div
+        className="grid h-12 w-12 place-items-center rounded-full"
+        style={{ backgroundColor: hexToRgba(color, 0.1), color }}
+      >
         <Icon aria-hidden className="h-5 w-5" />
       </div>
       {metric.estimated ? (
@@ -295,19 +295,10 @@ const EmptyState = ({ period }: { period: AdminPsychologistsDashboard["period"] 
   </CardShell>
 );
 
-const formatTimelineMetricValue = (metric: PsychologistsDashboardMetric, value: number) => {
-  if (metric.unit === "currency_cents") return currencyFormatter.format(value / 100);
-  if (metric.unit === "percentage") return `${numberFormatter.format(value)}%`;
-
-  return numberFormatter.format(value);
-};
-
 const TimelineChart = ({
-  metrics,
   points,
   visibleMetricKeys,
 }: {
-  metrics: AdminPsychologistsDashboard["cards"];
   points: PsychologistsDashboardDailyPoint[];
   visibleMetricKeys: DashboardMetricKey[];
 }) => {
@@ -317,8 +308,6 @@ const TimelineChart = ({
   const series = visibleMetricKeys.map((key) => ({
     color: DASHBOARD_METRIC_CONFIG[key].color,
     key,
-    label: metrics[key].label,
-    metric: metrics[key],
   }));
 
   if (series.length === 0) {
@@ -348,18 +337,6 @@ const TimelineChart = ({
 
   return (
     <figure className="mt-5 overflow-hidden">
-      <div className="mb-3 flex flex-wrap gap-3">
-        {series.map((item) => (
-          <span className="flex items-center gap-2 text-xs font-bold text-muted" key={item.key}>
-            <span
-              aria-hidden
-              className="h-2.5 w-2.5 rounded-full"
-              style={{ backgroundColor: item.color }}
-            />
-            {item.label}
-          </span>
-        ))}
-      </div>
       <div className="overflow-x-auto">
         <svg
           aria-label="Gráfico temporal dos contadores de psicólogos"
@@ -434,24 +411,6 @@ const TimelineChart = ({
           )}
         </svg>
       </div>
-      <details className="mt-3 rounded-2xl bg-surface-muted p-3 text-xs text-muted">
-        <summary className="cursor-pointer font-black text-foreground">
-          Resumo textual do gráfico
-        </summary>
-        <div className="mt-2 grid gap-2 sm:grid-cols-2">
-          {series.map((item) => (
-            <p key={item.key}>
-              <strong className="text-foreground">{item.label}:</strong>{" "}
-              {points
-                .map(
-                  (point) =>
-                    `${formatDate(point.date)}: ${formatTimelineMetricValue(item.metric, point[item.key])}`,
-                )
-                .join("; ")}
-            </p>
-          ))}
-        </div>
-      </details>
     </figure>
   );
 };
@@ -757,9 +716,7 @@ const PsychologistsHeader = ({
       <h1 className="text-3xl font-black tracking-tight text-foreground md:text-4xl">
         Dashboard de Psicólogos
       </h1>
-      <p className="mt-2 text-sm font-medium text-muted">
-        Gerencie perfis, aprovações, assinaturas e desempenho dos psicólogos da plataforma.
-      </p>
+      <p className="mt-2 text-sm font-medium text-muted">Gerencie os psicólogos da plataforma.</p>
     </div>
 
     <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
@@ -873,15 +830,8 @@ const DashboardContent = ({ summary }: { summary: AdminPsychologistsDashboard })
       />
 
       <CardShell className="p-5">
-        <PanelTitle icon={Activity} source={summary.timeline.source} title="Evolução no período" />
-        <p className="mt-2 text-xs font-bold text-muted">
-          Clique em um contador para exibir ou esconder a curva correspondente no gráfico.
-        </p>
-        <TimelineChart
-          metrics={summary.cards}
-          points={summary.timeline.points}
-          visibleMetricKeys={activeMetricKeys}
-        />
+        <PanelTitle icon={Activity} title="Evolução no período" />
+        <TimelineChart points={summary.timeline.points} visibleMetricKeys={activeMetricKeys} />
       </CardShell>
 
       <section>

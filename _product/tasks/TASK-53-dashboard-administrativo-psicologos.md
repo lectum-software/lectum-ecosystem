@@ -176,3 +176,12 @@ Packages usados:
 - Referência visual local mantida: `_product/proto/admin/Psicólogos/Psicólogos - Dashboard.png`; Builder/Quick Copy não estava disponível como ferramenta callable no ambiente.
 - Validações desta correção: `pnpm --dir admin check`, `pnpm --dir admin build` e smoke HTTP local em `http://localhost:3002/psicologos` retornando 200.
 - `pnpm check` foi tentado nesta correção, mas atingiu timeout depois de 124s sem saída conclusiva; as validações específicas do app Admin foram concluídas sem erros.
+
+### Correção UX em 2026-07-12 - simplificação do gráfico
+
+- Texto auxiliar do topo alterado para **Gerencie os psicólogos da plataforma.**.
+- A tag de fonte do card **Evolução no período** foi ocultada na UI e o texto instrucional sobre clicar nos contadores foi removido.
+- A legenda com bolinhas coloridas e o bloco **Resumo textual do gráfico** foram removidos do gráfico; as cores dos ícones dos contadores agora usam exatamente as mesmas cores das séries do gráfico.
+- O sombreamento dos cards de contadores selecionados foi removido, mantendo a borda/estado ativo e preservando o clique para exibir/esconder curvas.
+- Referência visual local mantida: `_product/proto/admin/Psicólogos/Psicólogos - Dashboard.png`; Builder/Quick Copy não estava disponível como ferramenta callable no ambiente.
+- Validações desta correção: `pnpm --dir admin check`, `pnpm --dir admin build` e smoke HTTP local em `http://localhost:3002/psicologos` retornando 200.
