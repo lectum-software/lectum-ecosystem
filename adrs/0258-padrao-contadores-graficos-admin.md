@@ -31,6 +31,8 @@ Padronizar contadores de gráficos no Admin com:
 - contadores posicionados acima do gráfico;
 - contador clicável para alternar a curva exibida;
 - ícone do contador na mesma cor visual da curva correspondente;
+- ícone posicionado acima do texto/valor, deixando o rótulo usar a largura total
+  do card e evitando truncamento;
 - botão selecionado sem `shadow-admin-soft`, usando `shadow-none`;
 - estado indisponível honesto e desabilitado quando a métrica não tiver dado real.
 

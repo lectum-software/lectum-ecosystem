@@ -1872,21 +1872,23 @@ const BusinessMetricToggleCard = ({
       }`}
       type="button"
     >
-      <span className="flex min-w-0 items-start gap-3">
-        <span
-          className={cn(
-            "grid h-10 w-10 shrink-0 place-items-center rounded-full",
-            config.iconToneClassName,
-            config.iconClassName,
-          )}
-        >
-          {config.id === "whatsapp_clicks" ? (
-            <WhatsAppIcon aria-hidden className="h-5 w-5" />
-          ) : (
-            <Icon aria-hidden className="h-5 w-5" />
-          )}
+      <span className="block min-w-0 max-w-full">
+        <span className="block">
+          <span
+            className={cn(
+              "grid h-10 w-10 shrink-0 place-items-center rounded-full",
+              config.iconToneClassName,
+              config.iconClassName,
+            )}
+          >
+            {config.id === "whatsapp_clicks" ? (
+              <WhatsAppIcon aria-hidden className="h-5 w-5" />
+            ) : (
+              <Icon aria-hidden className="h-5 w-5" />
+            )}
+          </span>
         </span>
-        <span className="block min-w-0 max-w-full">
+        <span className="mt-4 block min-w-0 max-w-full">
           <span className="block max-w-full break-words text-xs font-black leading-snug text-foreground">
             {metric.label}
           </span>
