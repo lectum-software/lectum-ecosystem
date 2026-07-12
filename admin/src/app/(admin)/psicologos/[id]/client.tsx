@@ -1859,10 +1859,10 @@ const BusinessMetricToggleCard = ({
     <button
       aria-pressed={active}
       className={cn(
-        "min-w-0 overflow-hidden rounded-2xl border p-3 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2",
+        "min-w-0 overflow-hidden rounded-2xl border-2 p-3 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2",
         active
-          ? "border-primary/40 bg-surface shadow-none"
-          : "border-border bg-surface hover:border-primary/30 hover:bg-primary-soft/20",
+          ? "border-primary bg-primary-soft/10 shadow-none"
+          : "border-border/80 bg-surface hover:border-primary/40 hover:bg-primary-soft/20",
         !metric.available && "cursor-not-allowed bg-surface-muted opacity-60 hover:border-border",
       )}
       disabled={!metric.available}
