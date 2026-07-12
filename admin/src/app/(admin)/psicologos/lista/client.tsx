@@ -57,15 +57,6 @@ const STATUS_COPY: Record<PsychologistsListStatus, { className: string; label: s
   verified: { className: "bg-emerald-50 text-emerald-700", label: "Verificado" },
 };
 
-const REGISTRY_STATUS_TONE: Record<string, string> = {
-  api_indisponivel: "bg-orange-50 text-orange-700",
-  aprovado: "bg-emerald-50 text-emerald-700",
-  em_analise: "bg-blue-50 text-blue-700",
-  limite_tentativas: "bg-orange-50 text-orange-700",
-  pendente: "bg-surface-muted text-muted",
-  rejeitado: "bg-red-50 text-danger",
-};
-
 const numberFormatter = new Intl.NumberFormat("pt-BR");
 const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
 const publicFrontendUrl = process.env.NEXT_PUBLIC_FRONTEND_URL || "http://localhost:3000";
@@ -412,63 +403,86 @@ const SearchBox = ({ onSearch, value }: { onSearch: (value: string) => void; val
   );
 };
 
-const statusBadge = (status: PsychologistsListStatus) => (
+const badgeClassName = {
+  active: "bg-emerald-50 text-emerald-700",
+  courtesy: "bg-violet-50 text-violet-700",
+  free: "bg-blue-50 text-blue-700",
+  inactive: "bg-surface-muted text-muted",
+  pending: "bg-orange-50 text-orange-700",
+  professional: "bg-primary-soft text-primary",
+} as const;
+
+const CompactBadge = ({
+  children,
+  tone,
+}: {
+  children: ReactNode;
+  tone: keyof typeof badgeClassName;
+}) => (
   <span
-    className={cn("rounded-full px-2.5 py-1 text-xs font-black", STATUS_COPY[status].className)}
+    className={cn("inline-flex rounded-full px-2.5 py-1 text-xs font-black", badgeClassName[tone])}
   >
-    {STATUS_COPY[status].label}
+    {children}
   </span>
 );
 
-const registryStatusBadge = (item: PsychologistsListItem) => (
-  <span
-    className={cn(
-      "rounded-full px-2.5 py-1 text-xs font-black",
-      REGISTRY_STATUS_TONE[item.registry_verification.status] ?? "bg-surface-muted text-muted",
-    )}
-  >
-    {item.registry_verification.status_label}
-  </span>
-);
+const resolvePlanLabel = (item: PsychologistsListItem) => {
+  const value = `${item.plan_slug ?? ""} ${item.plan_name ?? ""}`.toLowerCase();
+
+  if (item.registry_verification.source === "admin_grant")
+    return { label: "Cortesia", tone: "courtesy" as const };
+  if (value.includes("cortesia")) return { label: "Cortesia", tone: "courtesy" as const };
+  if (value.includes("gratuito") || !item.plan_name)
+    return { label: "Gratuito", tone: "free" as const };
+
+  return { label: "Profissional", tone: "professional" as const };
+};
+
+const resolveRegistryLabel = (item: PsychologistsListItem) =>
+  item.registry_verification.status === "aprovado"
+    ? { label: "Ativo", tone: "active" as const }
+    : { label: "Pendente", tone: "pending" as const };
+
+const resolveProfileLabel = (item: PsychologistsListItem) =>
+  item.published
+    ? { label: "Ativo", tone: "active" as const }
+    : { label: "Inativo", tone: "inactive" as const };
 
 const RatingCell = ({ item }: { item: PsychologistsListItem }) => (
-  <div>
-    <p className="inline-flex items-center gap-1 font-black text-foreground">
-      <Star aria-hidden className="h-4 w-4 fill-warning text-warning" />
-      {item.rating_avg.toLocaleString("pt-BR", {
-        maximumFractionDigits: 1,
-        minimumFractionDigits: 1,
-      })}
-    </p>
-    <p className="mt-1 text-xs font-bold text-muted">
-      {numberFormatter.format(item.rating_count)} avaliações
-    </p>
-  </div>
+  <span className="inline-flex items-center gap-1 whitespace-nowrap font-black text-foreground">
+    <Star aria-hidden className="h-4 w-4 fill-warning text-warning" />
+    {item.rating_avg.toLocaleString("pt-BR", {
+      maximumFractionDigits: 1,
+      minimumFractionDigits: 1,
+    })}
+    <span className="text-xs font-bold text-muted">
+      ({numberFormatter.format(item.rating_count)})
+    </span>
+  </span>
 );
 
-const MetricCell = ({ icon, label, value }: { icon: ReactNode; label: string; value: number }) => (
-  <div>
-    <p className="inline-flex items-center gap-1 font-black text-foreground">
-      {icon}
-      {numberFormatter.format(value)}
-    </p>
-    <p className="mt-1 text-xs font-bold text-muted">{label}</p>
-  </div>
+const MetricCell = ({ icon, value }: { icon: ReactNode; value: number }) => (
+  <span className="inline-flex items-center gap-1 whitespace-nowrap font-black text-foreground">
+    {icon}
+    {numberFormatter.format(value)}
+  </span>
 );
 
 const RowActions = ({ item }: { item: PsychologistsListItem }) => (
   <div className="flex shrink-0 items-center gap-2">
     <Link
-      className="grid h-10 w-10 place-items-center rounded-2xl border border-border bg-surface text-foreground shadow-control transition hover:border-primary hover:text-primary"
+      className="grid h-9 w-9 place-items-center rounded-2xl border border-border bg-surface text-foreground shadow-control transition hover:border-primary hover:text-primary"
       href={item.detail_url}
+      onClick={(event) => event.stopPropagation()}
       title="Abrir detalhe administrativo"
     >
       <Eye aria-hidden className="h-4 w-4" />
       <span className="sr-only">Abrir detalhe administrativo de {item.name}</span>
     </Link>
     <a
-      className="grid h-10 w-10 place-items-center rounded-2xl border border-border bg-surface text-foreground shadow-control transition hover:border-primary hover:text-primary"
+      className="grid h-9 w-9 place-items-center rounded-2xl border border-border bg-surface text-foreground shadow-control transition hover:border-primary hover:text-primary"
       href={toPublicHref(item.public_profile_url)}
+      onClick={(event) => event.stopPropagation()}
       rel="noreferrer"
       target="_blank"
       title="Abrir perfil público"
@@ -479,88 +493,34 @@ const RowActions = ({ item }: { item: PsychologistsListItem }) => (
   </div>
 );
 
-const MobilePsychologistCard = ({ item }: { item: PsychologistsListItem }) => (
-  <article className="min-w-0 rounded-3xl border border-border bg-surface p-4 shadow-control">
-    <div className="flex items-start justify-between gap-3">
-      <div className="flex min-w-0 items-center gap-3">
-        <Avatar name={item.name} src={item.avatar} />
-        <div className="min-w-0">
-          <p className="truncate text-base font-black text-foreground">
-            {item.name}{" "}
-            {item.verified ? <BadgeCheck className="inline h-4 w-4 text-primary" /> : null}
-          </p>
-          <p className="text-xs font-bold text-muted">{item.crp || "CRP não informado"}</p>
-        </div>
-      </div>
-      <p className="text-xl font-black text-primary">
-        {item.ranking_position ? `#${item.ranking_position}` : "—"}
-      </p>
-    </div>
-    <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
-      <div>
-        <p className="text-xs font-bold text-muted">Localização</p>
-        <p className="font-black text-foreground">
-          {[item.city, item.state].filter(Boolean).join(", ") || "Não informado"}
-        </p>
-      </div>
-      <div>
-        <p className="text-xs font-bold text-muted">Experiência</p>
-        <p className="font-black text-foreground">
-          {item.experience_years ? `${item.experience_years} anos+` : "Não informada"}
-        </p>
-      </div>
-      <RatingCell item={item} />
-      <MetricCell
-        icon={<Heart aria-hidden className="h-4 w-4 text-primary" />}
-        label="favoritos"
-        value={item.favorites_count}
-      />
-      <MetricCell
-        icon={<MessageCircle aria-hidden className="h-4 w-4 text-success" />}
-        label="WhatsApp"
-        value={item.whatsapp_clicks_count}
-      />
-      <div>
-        <p className="text-xs font-bold text-muted">Status</p>
-        <div className="mt-1">{statusBadge(item.status)}</div>
-      </div>
-      <div className="col-span-2">
-        <p className="text-xs font-bold text-muted">Verificação profissional</p>
-        <div className="mt-1 flex flex-wrap items-center gap-2">
-          {registryStatusBadge(item)}
-          <span className="text-xs font-bold text-subtle">
-            {item.registry_verification.source_label}
-          </span>
-        </div>
-      </div>
-    </div>
-    <div className="mt-4 flex items-center justify-between gap-3 border-t border-border pt-4">
-      <p className="text-xs font-bold text-muted">{item.plan_name || "Sem plano ativo"}</p>
-      <RowActions item={item} />
-    </div>
-  </article>
-);
-
-const PsychologistsTable = ({ items }: { items: PsychologistsListItem[] }) => (
-  <div className="hidden min-w-0 max-w-full overflow-hidden min-[1700px]:block">
-    <table className="w-full table-fixed text-left text-sm">
+const PsychologistsTable = ({
+  items,
+  onOpenDetail,
+}: {
+  items: PsychologistsListItem[];
+  onOpenDetail: (href: string) => void;
+}) => (
+  <div className="min-w-0 max-w-full overflow-x-auto">
+    <table className="w-full min-w-[1120px] table-fixed text-left text-sm">
       <caption className="sr-only">Lista administrativa de psicólogos</caption>
       <colgroup>
-        <col className="w-20" />
-        <col className="w-[28%]" />
-        <col className="w-[14%]" />
-        <col className="w-[11%]" />
-        <col className="w-[13%]" />
-        <col className="w-[10%]" />
-        <col className="w-[10%]" />
         <col className="w-24" />
+        <col className="w-[25%]" />
+        <col className="w-32" />
+        <col className="w-28" />
+        <col className="w-32" />
+        <col className="w-32" />
+        <col className="w-32" />
+        <col className="w-32" />
+        <col className="w-28" />
       </colgroup>
       <thead className="border-b border-border text-xs text-muted">
         <tr>
           <th className="px-3 py-4 font-black">Ranking</th>
           <th className="px-3 py-4 font-black">Psicólogo</th>
-          <th className="px-3 py-4 font-black">Localização</th>
-          <th className="px-3 py-4 font-black">Experiência</th>
+          <th className="px-3 py-4 font-black">Plano</th>
+          <th className="px-3 py-4 font-black">Perfil</th>
+          <th className="px-3 py-4 font-black">Registro</th>
           <th className="px-3 py-4 font-black">Avaliações</th>
           <th className="px-3 py-4 font-black">Favoritado</th>
           <th className="px-3 py-4 font-black">WhatsApp</th>
@@ -568,60 +528,75 @@ const PsychologistsTable = ({ items }: { items: PsychologistsListItem[] }) => (
         </tr>
       </thead>
       <tbody className="divide-y divide-border">
-        {items.map((item) => (
-          <tr className="transition hover:bg-surface-muted/50" key={item.id}>
-            <td className="px-3 py-5 text-2xl font-black text-primary">
-              {item.ranking_position ? `#${item.ranking_position}` : "—"}
-            </td>
-            <td className="px-3 py-5">
-              <div className="flex min-w-0 items-center gap-3">
-                <Avatar name={item.name} src={item.avatar} />
-                <div className="min-w-0">
-                  <p className="truncate font-black text-foreground">
-                    {item.name}{" "}
-                    {item.verified ? <BadgeCheck className="inline h-4 w-4 text-primary" /> : null}
-                  </p>
-                  <p className="truncate text-xs font-bold text-muted">
-                    Psicóloga · {item.crp || "CRP não informado"}
-                  </p>
-                  <div className="mt-2 flex flex-wrap gap-2">
-                    {statusBadge(item.status)}
-                    {registryStatusBadge(item)}
-                    <span className="rounded-full bg-primary-soft px-2.5 py-1 text-xs font-black text-primary">
-                      {item.plan_name || "Sem plano"}
-                    </span>
+        {items.map((item) => {
+          const plan = resolvePlanLabel(item);
+          const profile = resolveProfileLabel(item);
+          const registry = resolveRegistryLabel(item);
+
+          return (
+            <tr
+              aria-label={`Abrir detalhe administrativo de ${item.name}`}
+              className="cursor-pointer transition hover:bg-surface-muted/50 focus:bg-primary-soft/60 focus:outline-none"
+              key={item.id}
+              onClick={() => onOpenDetail(item.detail_url)}
+              onKeyDown={(event) => {
+                if (event.target !== event.currentTarget) return;
+                if (event.key === "Enter" || event.key === " ") {
+                  event.preventDefault();
+                  onOpenDetail(item.detail_url);
+                }
+              }}
+              tabIndex={0}
+            >
+              <td className="whitespace-nowrap px-3 py-3 text-xl font-black text-primary">
+                {item.ranking_position ? `#${item.ranking_position}` : "—"}
+              </td>
+              <td className="px-3 py-3">
+                <div className="flex min-w-0 items-center gap-3">
+                  <Avatar name={item.name} src={item.avatar} />
+                  <div className="min-w-0">
+                    <p className="truncate font-black text-foreground">
+                      {item.name}{" "}
+                      {item.verified ? (
+                        <BadgeCheck className="inline h-4 w-4 text-primary" />
+                      ) : null}
+                    </p>
+                    <p className="truncate text-xs font-bold text-muted">
+                      {item.crp || "CRP não informado"}
+                    </p>
                   </div>
                 </div>
-              </div>
-            </td>
-            <td className="break-words px-3 py-5 font-bold text-muted">
-              {[item.city, item.state].filter(Boolean).join(", ") || "Não informado"}
-            </td>
-            <td className="break-words px-3 py-5 font-bold text-foreground">
-              {item.experience_years ? `${item.experience_years} anos+` : "—"}
-            </td>
-            <td className="break-words px-3 py-5">
-              <RatingCell item={item} />
-            </td>
-            <td className="break-words px-3 py-5">
-              <MetricCell
-                icon={<Heart aria-hidden className="h-4 w-4 text-primary" />}
-                label="total"
-                value={item.favorites_count}
-              />
-            </td>
-            <td className="break-words px-3 py-5">
-              <MetricCell
-                icon={<MessageCircle aria-hidden className="h-4 w-4 text-success" />}
-                label="cliques"
-                value={item.whatsapp_clicks_count}
-              />
-            </td>
-            <td className="px-3 py-5">
-              <RowActions item={item} />
-            </td>
-          </tr>
-        ))}
+              </td>
+              <td className="whitespace-nowrap px-3 py-3">
+                <CompactBadge tone={plan.tone}>{plan.label}</CompactBadge>
+              </td>
+              <td className="whitespace-nowrap px-3 py-3">
+                <CompactBadge tone={profile.tone}>{profile.label}</CompactBadge>
+              </td>
+              <td className="whitespace-nowrap px-3 py-3">
+                <CompactBadge tone={registry.tone}>{registry.label}</CompactBadge>
+              </td>
+              <td className="whitespace-nowrap px-3 py-3">
+                <RatingCell item={item} />
+              </td>
+              <td className="whitespace-nowrap px-3 py-3">
+                <MetricCell
+                  icon={<Heart aria-hidden className="h-4 w-4 text-primary" />}
+                  value={item.favorites_count}
+                />
+              </td>
+              <td className="whitespace-nowrap px-3 py-3">
+                <MetricCell
+                  icon={<MessageCircle aria-hidden className="h-4 w-4 text-success" />}
+                  value={item.whatsapp_clicks_count}
+                />
+              </td>
+              <td className="whitespace-nowrap px-3 py-3">
+                <RowActions item={item} />
+              </td>
+            </tr>
+          );
+        })}
       </tbody>
     </table>
   </div>
@@ -969,14 +944,7 @@ export const AdminPsychologistsListClient = () => {
             ) : null}
             {summary && items.length === 0 ? <EmptyState /> : null}
             {summary && items.length > 0 ? (
-              <>
-                <div className="space-y-3 min-[1700px]:hidden">
-                  {items.map((item) => (
-                    <MobilePsychologistCard item={item} key={item.id} />
-                  ))}
-                </div>
-                <PsychologistsTable items={items} />
-              </>
+              <PsychologistsTable items={items} onOpenDetail={(href) => router.push(href)} />
             ) : null}
           </div>
 

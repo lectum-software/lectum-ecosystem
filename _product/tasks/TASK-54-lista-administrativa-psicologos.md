@@ -245,3 +245,34 @@ Frontend esperado:
 - `pnpm --dir admin check`
 - `pnpm --dir admin build`
 - Browser local/headless com admin temporario real removido ao final validando desktop e mobile base `390px`.
+
+## Execucao complementar: tabela operacional de uma linha (2026-07-12)
+
+- Pedido do usuario: a listagem de psicologos deve ser uma tabela operacional com uma linha por profissional e colunas **Ranking**, **Psicologo**, **Plano**, **Perfil**, **Registro**, **Avaliacoes**, **Favoritado**, **WhatsApp** e acoes de detalhe/perfil publico.
+- Frontend Admin: a rota `/psicologos/lista` deixou de alternar para cards na lista de resultados; os profissionais agora aparecem em tabela unica, com rolagem horizontal interna em telas estreitas para preservar uma linha por profissional sem overflow de viewport.
+- O clique em qualquer area da linha abre o detalhe administrativo do psicologo. Os icones de olho e abrir perfil publico continuam disponiveis e nao disparam clique duplicado da linha.
+- Os campos continuam usando dados reais do contrato existente:
+  - `ranking_position` para **Ranking**;
+  - `avatar`, `name` e `crp` para **Psicologo**;
+  - `plan_slug`/`plan_name` e `registry_verification.source="admin_grant"` para **Plano** (`Profissional`, `Gratuito`, `Cortesia`);
+  - `published` para **Perfil** (`Ativo`, `Inativo`);
+  - `registry_verification.status` para **Registro** (`Ativo`, `Pendente`);
+  - `rating_avg`/`rating_count`, `favorites_count` e `whatsapp_clicks_count` para as metricas.
+- Nao houve alteracao de backend, Prisma, migrations, packages, contratos de API, dados, filtros, ranking, paginacao ou ordenacao.
+
+### Criterios complementares
+
+- [x] A lista exibe as colunas pedidas: Ranking, Psicologo, Plano, Perfil, Registro, Avaliacoes, Favoritado, WhatsApp e acoes.
+- [x] Cada profissional ocupa uma unica linha de tabela.
+- [x] Clicar na linha abre o detalhe administrativo do psicologo.
+- [x] Os icones de olho e abrir perfil publico continuam funcionando sem acionar navegação duplicada da linha.
+- [x] A lista continua mobile-first com rolagem horizontal interna em ~390px, sem overflow horizontal de viewport.
+- [x] Nenhum backend, Prisma/migrations ou package foi alterado.
+
+### Validacao complementar
+
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/psicologos/lista/client.tsx"`
+- `pnpm --dir admin exec eslint "src/app/(admin)/psicologos/lista/client.tsx"`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- Browser local/headless com admin temporario real removido ao final validando desktop e mobile base `390px`.
