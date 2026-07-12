@@ -316,3 +316,13 @@ Exibir plano, método e histórico financeiro do psicólogo e permitir concessã
 - Builder/Quick Copy não está exposto como ferramenta no ambiente; a referência visual usada foi o PNG local `_product/proto/admin/Psicólogos/Detalhes do psicólogo/Plano e pagamentos.png` e a captura enviada pelo usuário.
 - Validações executadas: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm --dir frontend check`, `pnpm --dir backend check`, `pnpm check`.
 - Browser local: `GET http://localhost:3002/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=plano` retornou 200; a conferência visual autenticada ficou limitada pela sessão Admin não exposta ao ambiente de automação.
+
+## Ajuste complementar 2026-07-11 - campos obrigatórios no formulário de cortesia
+
+- Pedido do usuário: no bloco `Conceder cortesia`, todos os campos devem ser obrigatórios e o rótulo `Data de inscrição no CRP` deve virar `Data inscrição CRP`.
+- O formulário Admin passou a exigir `Regional CRP`, `CRP`, `Data inscrição CRP`, `CPF`, `Período de cortesia` e `Notas internas` com validação React Hook Form/Zod e indicadores visuais de obrigatório nos controllers.
+- A placeholder de `Notas internas` deixou de indicar opcionalidade e passou para `Observações internas para auditoria`.
+- O contrato TypeScript do caller Admin passou a tratar os campos do submit de cortesia como obrigatórios; o backend, schema Prisma, migrations, packages e regra de concessão não foram alterados.
+- Builder/Quick Copy não está exposto como ferramenta no ambiente; a referência visual usada foi o PNG local `_product/proto/admin/Psicólogos/Detalhes do psicólogo/Plano e pagamentos.png` e a captura enviada pelo usuário.
+- Validações executadas: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check`.
+- Browser local: `GET http://localhost:3002/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=plano` retornou 200; a conferência visual autenticada ficou limitada pela sessão Admin não exposta ao ambiente de automação.

@@ -395,12 +395,25 @@ type BusinessChartMetricId = BusinessChartMetric["id"];
 const CARD = "rounded-card border border-border bg-surface shadow-admin-soft";
 
 const courtesyBaseSchema = z.object({
-  cpf: z.string().max(14, "Use no maximo 14 caracteres.").optional(),
-  crp: z.string().max(40, "Use no maximo 40 caracteres.").optional(),
-  crp_registration_date: z.string().optional(),
-  notes: z.string().max(500, "Use no maximo 500 caracteres.").optional(),
+  cpf: z
+    .string()
+    .trim()
+    .min(1, "Informe o CPF.")
+    .max(14, "Use no maximo 14 caracteres.")
+    .refine((value) => isValidCpf(value), "Informe um CPF valido."),
+  crp: z.string().trim().min(1, "Informe o CRP.").max(40, "Use no maximo 40 caracteres."),
+  crp_registration_date: z.string().trim().min(1, "Informe a data inscrição CRP."),
+  notes: z
+    .string()
+    .trim()
+    .min(1, "Informe as notas internas.")
+    .max(500, "Use no maximo 500 caracteres."),
   period_days: z.string().min(1, "Selecione o periodo."),
-  regional_crp: z.string().max(120, "Use no maximo 120 caracteres.").optional(),
+  regional_crp: z
+    .string()
+    .trim()
+    .min(1, "Selecione a regional do CRP.")
+    .max(120, "Use no maximo 120 caracteres."),
 });
 
 type CourtesyFormValues = z.infer<typeof courtesyBaseSchema>;
@@ -610,25 +623,6 @@ type AccountReasonFormValues = z.infer<typeof accountReasonSchema>;
 type AccountChangeEmailFormValues = z.infer<typeof accountChangeEmailSchema>;
 type AccountTemporaryPasswordFormValues = z.infer<typeof accountTemporaryPasswordSchema>;
 type AccountRevokeSessionsFormValues = z.infer<typeof accountRevokeSessionsSchema>;
-
-const createCourtesySchema = (requiresCrpRegistrationDate: boolean) =>
-  courtesyBaseSchema.superRefine((values, ctx) => {
-    if (values.cpf?.trim() && !isValidCpf(values.cpf)) {
-      ctx.addIssue({
-        code: "custom",
-        message: "Informe um CPF valido ou deixe em branco.",
-        path: ["cpf"],
-      });
-    }
-
-    if (requiresCrpRegistrationDate && !values.crp_registration_date?.trim()) {
-      ctx.addIssue({
-        code: "custom",
-        message: "Informe a data de inscricao no CRP.",
-        path: ["crp_registration_date"],
-      });
-    }
-  });
 
 const toPublicHref = (url: string) => {
   if (/^https?:\/\//.test(url)) return url;
@@ -3986,7 +3980,7 @@ const CourtesyGrantForm = ({ billing, id }: { billing: AdminPsychologistBilling;
       regional_crp: billing.courtesy.regional_crp || "",
     },
     mode: "onSubmit",
-    resolver: zodResolver(createCourtesySchema(billing.courtesy.requires_crp_registration_date)),
+    resolver: zodResolver(courtesyBaseSchema),
   });
   const disabled = !billing.courtesy.can_grant || mutation.isPending;
   const regionalOptions = useMemo(
@@ -4013,12 +4007,12 @@ const CourtesyGrantForm = ({ billing, id }: { billing: AdminPsychologistBilling;
 
     try {
       await mutation.mutateAsync({
-        cpf: normalizeCpfInput(values.cpf) || null,
-        crp: values.crp?.trim() || null,
-        crp_registration_date: values.crp_registration_date?.trim() || null,
-        notes: values.notes?.trim() || null,
+        cpf: normalizeCpfInput(values.cpf),
+        crp: values.crp.trim(),
+        crp_registration_date: values.crp_registration_date.trim(),
+        notes: values.notes.trim(),
         period_days: Number(values.period_days),
-        regional_crp: values.regional_crp?.trim() || null,
+        regional_crp: values.regional_crp.trim(),
       });
       toast.success("Cortesia concedida com sucesso.");
     } catch (error) {
@@ -4049,6 +4043,7 @@ const CourtesyGrantForm = ({ billing, id }: { billing: AdminPsychologistBilling;
               label="Regional CRP"
               name="regional_crp"
               options={regionalOptions}
+              required
             />
             <InputController<CourtesyFormValues>
               autoComplete="off"
@@ -4056,12 +4051,13 @@ const CourtesyGrantForm = ({ billing, id }: { billing: AdminPsychologistBilling;
               label="CRP"
               name="crp"
               placeholder="Numero do registro"
+              required
             />
             <InputController<CourtesyFormValues>
               disabled={disabled}
-              label="Data de inscrição no CRP"
+              label="Data inscrição CRP"
               name="crp_registration_date"
-              required={billing.courtesy.requires_crp_registration_date}
+              required
               type="date"
             />
           </div>
@@ -4075,6 +4071,7 @@ const CourtesyGrantForm = ({ billing, id }: { billing: AdminPsychologistBilling;
               maxLength={14}
               name="cpf"
               placeholder="000.000.000-00"
+              required
             />
             <SelectController<CourtesyFormValues>
               disabled={disabled}
@@ -4092,7 +4089,8 @@ const CourtesyGrantForm = ({ billing, id }: { billing: AdminPsychologistBilling;
             disabled={disabled}
             label="Notas internas"
             name="notes"
-            placeholder="Observacoes opcionais para auditoria"
+            placeholder="Observações internas para auditoria"
+            required
             rows={3}
           />
 

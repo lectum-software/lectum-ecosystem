@@ -533,12 +533,12 @@ export type AdminPsychologistBilling = {
 };
 
 export type AdminPsychologistGrantCourtesyInput = {
-  cpf?: string | null;
-  crp?: string | null;
-  crp_registration_date?: string | null;
-  notes?: string | null;
+  cpf: string;
+  crp: string;
+  crp_registration_date: string;
+  notes: string;
   period_days: number;
-  regional_crp?: string | null;
+  regional_crp: string;
 };
 
 export type AdminPsychologistGrantCourtesyResponse = {
