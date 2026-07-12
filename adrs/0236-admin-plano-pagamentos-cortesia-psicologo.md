@@ -381,3 +381,24 @@ Validação complementar:
 - `pnpm check`
 - `git diff --check` nos arquivos alterados
 - Browser local: `GET http://localhost:3002/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=plano` retornou 200; a conferência visual autenticada ficou limitada pela sessão Admin não exposta ao ambiente de automação.
+
+## Complemento 2026-07-11 - modal de revisão antes da confirmação forte
+
+Após a adoção da confirmação forte `CONCEDER CORTESIA`, Produto refinou a experiência para que a palavra-chave não fique exposta no formulário principal. A revisão deve ocorrer em uma etapa explícita antes da mutação real.
+
+Decisão:
+
+- O formulário `Conceder cortesia` coleta os dados obrigatórios e, no submit válido, abre uma modal de revisão.
+- A modal mostra os dados inseridos de CRP (`Regional CRP`, `CRP` e `Data inscrição CRP`) e também resume `CPF` e `Período de cortesia` para reduzir erro operacional.
+- O campo `Confirmação forte` fica somente na modal e continua exigindo `CONCEDER CORTESIA` por React Hook Form/Zod.
+- O backend permanece exigindo `confirmation="CONCEDER CORTESIA"`; a modal altera apenas a superfície de UX e não enfraquece o contrato real.
+
+Consequência: o Admin revisa os dados críticos antes de confirmar e a ação continua protegida contra clique acidental e contra chamada sem confirmação no backend. Não há alteração de schema Prisma, migrations, packages, gateway ou cálculo financeiro.
+
+Validação complementar:
+
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check`
+- `git diff --check` nos arquivos alterados
+- Browser local: `GET http://localhost:3002/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=plano` retornou 200; a conferência visual autenticada ficou limitada pela sessão Admin não exposta ao ambiente de automação.

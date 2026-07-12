@@ -343,3 +343,14 @@ Exibir plano, método e histórico financeiro do psicólogo e permitir concessã
 - Builder/Quick Copy não está exposto como ferramenta no ambiente; a referência visual usada foi o PNG local `_product/proto/admin/Psicólogos/Detalhes do psicólogo/Plano e pagamentos.png` e a captura enviada pelo usuário.
 - Validações executadas: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e `git diff --check` nos arquivos alterados.
 - Browser local: `GET http://localhost:3002/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=plano` retornou 200; a conferência visual autenticada ficou limitada pela sessão Admin não exposta ao ambiente de automação.
+
+## Ajuste complementar 2026-07-11 - modal de confirmação forte da cortesia
+
+- Pedido do usuário: a confirmação forte da ação `Conceder cortesia` deve abrir uma modal com as informações de CRP inseridas e o campo para digitar a palavra-chave.
+- O formulário principal voltou a coletar apenas dados da concessão; ao submeter, ele valida os campos obrigatórios e abre uma modal mobile-first de confirmação.
+- A modal exibe `Regional CRP`, `CRP`, `Data inscrição CRP`, `CPF` e `Período de cortesia` antes do campo obrigatório para digitar `CONCEDER CORTESIA`.
+- A mutação real continua sendo disparada somente pela modal, enviando `confirmation="CONCEDER CORTESIA"` ao endpoint Admin privado já protegido no backend.
+- Não houve alteração de backend, schema Prisma, migrations, packages, gateway ou regra de concessão.
+- Builder/Quick Copy não está exposto como ferramenta no ambiente; a referência visual usada foi o PNG local `_product/proto/admin/Psicólogos/Detalhes do psicólogo/Plano e pagamentos.png` e a captura enviada pelo usuário.
+- Validações executadas: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e `git diff --check` nos arquivos alterados.
+- Browser local: `GET http://localhost:3002/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=plano` retornou 200; a conferência visual autenticada ficou limitada pela sessão Admin não exposta ao ambiente de automação.
