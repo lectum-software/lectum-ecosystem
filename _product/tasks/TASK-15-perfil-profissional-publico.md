@@ -787,3 +787,20 @@ Validacoes executadas:
 - `pnpm check`
 - Chrome headless/CDP mobile 390x844 em `/psychologists/cmr6pzpbn000h5guht478a9l4` com sessao real do proprio psicologo: `overviewAvaliarCount=0`, usuario persistido igual ao perfil.
 - Chrome headless/CDP mobile 390x844 em `/psychologists/cmr6pzpbn000h5guht478a9l4?tab=avaliacoes`: `reviewsTabAvaliarCount=0`.
+
+## Registro de ajuste complementar em 2026-07-12 - ocultar bloco de registro profissional
+
+- Pedido do usuario: remover do perfil publico do psicologo o bloco `Registro profissional` com Regional CRP, Numero CRP e Data de inscricao.
+- A aba `Geral` agora segue diretamente de `Sobre` para `Especialidades`, sem renderizar o card administrativo completo de registro profissional.
+- O ajuste ficou restrito ao frontend da rota reutilizada por `/psychologists/[id]` e `/app/psychologist/[id]`; nao houve alteracao de backend, Prisma, migrations, contratos, packages, dados persistidos, WhatsApp, publicacoes ou avaliacoes.
+- O cabecalho compacto do perfil permanece inalterado, preservando a identificacao profissional resumida existente.
+- Builder/Quick Copy foi testado via `npx "@builder.io/dev-tools@latest" auth status`, mas retornou `Not Authenticated to Builder.io`; a validacao visual usou o print do usuario e a referencia local `_product/proto/Perfil Profissional - Sobre.jpg`.
+- ADR atualizado: `adrs/0032-refinamento-perfil-profissional-publico.md`.
+
+Validacoes executadas:
+
+- `npx "@builder.io/dev-tools@latest" auth status` em `frontend/`.
+- `pnpm --dir frontend exec biome check --write -- "src/app/app/psychologist/[id]/logic.tsx"`.
+- `pnpm --dir frontend check`.
+- `pnpm --dir frontend build`.
+- Chrome headless/CDP mobile 390x844 em `/psychologists/cmrgztri7000tn0uh1q4n8vxf`, confirmando `Especialidades` presente e `Registro profissional`, `Regional CRP`, `No CRP` e `Data de inscricao` ausentes.

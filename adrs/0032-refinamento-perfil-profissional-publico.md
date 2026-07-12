@@ -305,3 +305,13 @@ O estado vazio de `Publicações` no perfil público do psicólogo passa a usar 
 A decisão remove a expressão mais técnica/ambígua `publicações públicas` ou `publicações persistidas e publicadas`, preservando a contagem real `0` e sem alterar backend, contratos, persistência, ordenação, layout estrutural ou regras de publicação.
 
 Validações executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e Chrome headless local 390x844 em `/psychologists/cmr6pzpbn000h5guht478a9l4?tab=publicacoes`.
+
+## Ajuste complementar em 2026-07-12 - ocultar bloco de registro profissional
+
+A aba `Geral` do perfil público do psicólogo deixa de exibir o card `Registro profissional` que detalhava Regional CRP, Nº CRP e Data de inscrição.
+
+A decisão reduz exposição pública granular de dados cadastrais do conselho sem alterar o contrato existente nem apagar dados persistidos. O cabeçalho compacto do perfil continua podendo exibir o rótulo profissional/CRP resumido já existente, enquanto o bloco administrativo completo fica fora da vitrine pública.
+
+Não houve alteração de backend, Prisma, migrations, packages, regras de publicação, WhatsApp, avaliações ou publicações.
+
+Validações executadas: `npx "@builder.io/dev-tools@latest" auth status` em `frontend/` retornou `Not Authenticated to Builder.io`; validação visual seguiu com a captura do usuário e a referência local `_product/proto/Perfil Profissional - Sobre.jpg`. Também foram executados `pnpm --dir frontend exec biome check --write -- "src/app/app/psychologist/[id]/logic.tsx"`, `pnpm --dir frontend check`, `pnpm --dir frontend build` e Chrome headless/CDP mobile 390x844 em `/psychologists/cmrgztri7000tn0uh1q4n8vxf`, confirmando `Especialidades` presente e `Registro profissional`, `Regional CRP`, `Nº CRP` e `Data de inscrição` ausentes.
