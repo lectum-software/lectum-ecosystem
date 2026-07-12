@@ -184,13 +184,14 @@ const registrySourceLabel = (source: AdminPsychologistsListRegistryVerification[
 
 const buildRegistryVerification = (
   profile: AdminPsychologistListProfileRecord,
+  date: Date,
 ): AdminPsychologistsListRegistryVerification => {
   const latestCheck = profile.registry_checks[0] ?? null;
   const latestManualApproval = profile.registry_checks.find(
     (check) => isManualCheck(check) && check.found,
   );
   const latestStatus = rawAttemptStatus(latestCheck?.raw);
-  const activeAdminGrant = profile.subscriptions.some(
+  const activeAdminGrant = activeProfessionalSubscriptionsAt(profile, date).some(
     (subscription) => subscription.source === "admin_grant",
   );
   let source: AdminPsychologistsListRegistryVerification["source"] = "pendente";
@@ -389,7 +390,7 @@ const buildItem = (
     social_value: profile.social_value,
     state: profile.professional_address_state,
     status,
-    registry_verification: buildRegistryVerification(profile),
+    registry_verification: buildRegistryVerification(profile, params.date),
     verified: status === "verified",
     whatsapp_clicks_count: params.whatsappCounts.get(profile.user.id) ?? 0,
   };
