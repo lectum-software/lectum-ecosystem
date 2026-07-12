@@ -249,6 +249,59 @@ export class AdminPsychologistEngagementRepository {
     });
   }
 
+  async listPostVotes(postIds: string[], from?: Date, to?: Date) {
+    if (postIds.length === 0) return [];
+
+    return prisma.post_vote.findMany({
+      where: {
+        ...(from && to ? { createdAt: { gte: from, lte: to } } : {}),
+        deleted: false,
+        post_id: { in: postIds },
+      },
+      select: { createdAt: true, post_id: true, value: true },
+    });
+  }
+
+  async listReplyVotes(replyIds: string[], from?: Date, to?: Date) {
+    if (replyIds.length === 0) return [];
+
+    return prisma.post_vote.findMany({
+      where: {
+        ...(from && to ? { createdAt: { gte: from, lte: to } } : {}),
+        deleted: false,
+        reply_id: { in: replyIds },
+      },
+      select: { createdAt: true, reply_id: true, value: true },
+    });
+  }
+
+  async listPostShareEvents(postIds: string[], from?: Date, to?: Date) {
+    if (postIds.length === 0) return [];
+
+    return prisma.post_share.findMany({
+      where: {
+        ...(from && to ? { createdAt: { gte: from, lte: to } } : {}),
+        deleted: false,
+        post_id: { in: postIds },
+        reply_id: null,
+      },
+      select: { createdAt: true, post_id: true },
+    });
+  }
+
+  async listReplyShareEvents(replyIds: string[], from?: Date, to?: Date) {
+    if (replyIds.length === 0) return [];
+
+    return prisma.post_share.findMany({
+      where: {
+        ...(from && to ? { createdAt: { gte: from, lte: to } } : {}),
+        deleted: false,
+        reply_id: { in: replyIds },
+      },
+      select: { createdAt: true, reply_id: true },
+    });
+  }
+
   async countReplyChildren(replyIds: string[]) {
     if (replyIds.length === 0) return [];
 

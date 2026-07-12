@@ -346,6 +346,21 @@ const GENERAL_METRIC_LABELS: Record<string, string> = {
   rating_avg: "Avaliação",
 };
 
+type StatisticsSeriesPoint = AdminPsychologistStatistics["business"]["series"][number];
+type StatisticsSeriesMetricKey = Exclude<keyof StatisticsSeriesPoint, "date">;
+type StatisticsChartMetric = {
+  dotRadius: number;
+  icon: LucideIcon;
+  iconClassName: string;
+  iconToneClassName: string;
+  id: string;
+  key: StatisticsSeriesMetricKey;
+  label: string;
+  shortLabel: string;
+  strokeClassName: string;
+  swatchClassName: string;
+};
+
 const BUSINESS_CHART_METRICS = [
   {
     dotRadius: 4.2,
@@ -395,25 +410,101 @@ const BUSINESS_CHART_METRICS = [
     strokeClassName: "stroke-blue-500",
     swatchClassName: "bg-blue-500",
   },
-] as const satisfies readonly {
-  dotRadius: number;
-  id: string;
-  icon: LucideIcon;
-  iconClassName: string;
-  iconToneClassName: string;
-  key: keyof AdminPsychologistStatistics["business"]["series"][number];
-  label: string;
-  shortLabel: string;
-  strokeClassName: string;
-  swatchClassName: string;
-}[];
+] as const satisfies readonly StatisticsChartMetric[];
+
+const COMMUNITY_CHART_METRICS = [
+  {
+    dotRadius: 4.2,
+    icon: FileText,
+    iconClassName: "text-primary",
+    iconToneClassName: "bg-primary-soft",
+    id: "posts",
+    key: "posts",
+    label: "Posts",
+    shortLabel: "Posts",
+    strokeClassName: "stroke-primary",
+    swatchClassName: "bg-primary",
+  },
+  {
+    dotRadius: 3.9,
+    icon: MessageCircle,
+    iconClassName: "text-blue-500",
+    iconToneClassName: "bg-blue-50",
+    id: "replies",
+    key: "replies",
+    label: "Respostas",
+    shortLabel: "Respostas",
+    strokeClassName: "stroke-blue-500",
+    swatchClassName: "bg-blue-500",
+  },
+  {
+    dotRadius: 3.7,
+    icon: ArrowUp,
+    iconClassName: "text-emerald-500",
+    iconToneClassName: "bg-emerald-50",
+    id: "upvotes",
+    key: "upvotes",
+    label: "Upvotes",
+    shortLabel: "Upvotes",
+    strokeClassName: "stroke-emerald-500",
+    swatchClassName: "bg-emerald-500",
+  },
+  {
+    dotRadius: 3.5,
+    icon: ArrowDown,
+    iconClassName: "text-red-500",
+    iconToneClassName: "bg-red-50",
+    id: "downvotes",
+    key: "downvotes",
+    label: "Downvotes",
+    shortLabel: "Downvotes",
+    strokeClassName: "stroke-red-500",
+    swatchClassName: "bg-red-500",
+  },
+  {
+    dotRadius: 3.3,
+    icon: Bookmark,
+    iconClassName: "text-orange-500",
+    iconToneClassName: "bg-orange-50",
+    id: "saves",
+    key: "saves",
+    label: "Salvamentos",
+    shortLabel: "Salvos",
+    strokeClassName: "stroke-orange-500",
+    swatchClassName: "bg-orange-500",
+  },
+  {
+    dotRadius: 3.1,
+    icon: Share2,
+    iconClassName: "text-violet-500",
+    iconToneClassName: "bg-violet-50",
+    id: "shares",
+    key: "shares",
+    label: "Compartilhamentos",
+    shortLabel: "Shares",
+    strokeClassName: "stroke-violet-500",
+    swatchClassName: "bg-violet-500",
+  },
+  {
+    dotRadius: 3,
+    icon: BookOpen,
+    iconClassName: "text-pink-500",
+    iconToneClassName: "bg-pink-50",
+    id: "comments_received",
+    key: "comments_received",
+    label: "Comentários recebidos",
+    shortLabel: "Comentários",
+    strokeClassName: "stroke-pink-500",
+    swatchClassName: "bg-pink-500",
+  },
+] as const satisfies readonly StatisticsChartMetric[];
 
 type BusinessChartMetric = (typeof BUSINESS_CHART_METRICS)[number];
 type BusinessChartMetricId = BusinessChartMetric["id"];
-type BusinessSeriesPoint = AdminPsychologistStatistics["business"]["series"][number];
-type BusinessSeriesMetricKey = Exclude<keyof BusinessSeriesPoint, "date">;
+type CommunityChartMetric = (typeof COMMUNITY_CHART_METRICS)[number];
+type CommunityChartMetricId = CommunityChartMetric["id"];
 type BusinessChartGranularity = "day" | "month" | "week";
-type BusinessChartPoint = BusinessSeriesPoint & {
+type BusinessChartPoint = StatisticsSeriesPoint & {
   chartLabel: string;
   tooltipLabel: string;
 };
@@ -429,8 +520,11 @@ const BUSINESS_SERIES_METRIC_KEYS = [
   "saves",
   "search_results",
   "whatsapp_clicks",
+  "upvotes",
+  "downvotes",
+  "shares",
   "posts",
-] as const satisfies readonly BusinessSeriesMetricKey[];
+] as const satisfies readonly StatisticsSeriesMetricKey[];
 
 const MS_PER_DAY = 86_400_000;
 
@@ -1245,9 +1339,6 @@ const formatPreviousPeriod = (
   return `${formatDayMonth(comparison.previous_from)} - ${formatDayMonth(comparison.previous_to)}`;
 };
 
-const engagementMetricTone = (metric: AdminPsychologistEngagementMetric) =>
-  metric.available ? "bg-surface text-foreground" : "bg-surface-muted text-muted";
-
 const capitalizeOptionLabel = (value?: string | number | null) => {
   const formatted = formatNullable(value);
   if (formatted === "Não informado") return formatted;
@@ -1786,25 +1877,6 @@ const EngagementLoadingState = ({ rows = 3 }: { rows?: number }) => (
   </div>
 );
 
-const EngagementMetricCard = ({
-  icon: Icon,
-  metric,
-}: {
-  icon: LucideIcon;
-  metric: AdminPsychologistEngagementMetric;
-}) => (
-  <div className={cn("rounded-2xl border border-border p-4", engagementMetricTone(metric))}>
-    <IconCircle icon={Icon} />
-    <p className="mt-4 text-sm font-black text-muted">{metric.label}</p>
-    <p className="mt-2 text-2xl font-black text-foreground">
-      {formatEngagementMetricValue(metric)}
-    </p>
-    {!metric.available && metric.unavailable_reason ? (
-      <p className="mt-2 text-xs font-bold text-muted">{metric.unavailable_reason}</p>
-    ) : null}
-  </div>
-);
-
 const MetricComparisonLine = ({
   comparison,
   className,
@@ -1841,14 +1913,14 @@ const MetricComparisonLine = ({
   );
 };
 
-const BusinessMetricToggleCard = ({
+const StatisticsMetricToggleCard = ({
   active,
   config,
   metric,
   onToggle,
 }: {
   active: boolean;
-  config: BusinessChartMetric;
+  config: StatisticsChartMetric;
   metric: AdminPsychologistEngagementMetric;
   onToggle: () => void;
 }) => {
@@ -1955,14 +2027,17 @@ const createEmptyBusinessChartPoint = (
   chartLabel,
   comments_received: 0,
   date,
+  downvotes: 0,
   favorites: 0,
   posts: 0,
   profile_views: 0,
   replies: 0,
   saves: 0,
   search_results: 0,
+  shares: 0,
   tooltipLabel,
   whatsapp_clicks: 0,
+  upvotes: 0,
 });
 
 const getBusinessMonthBucket = (date: Date, firstDate: Date, lastDate: Date) => {
@@ -2000,7 +2075,7 @@ const getBusinessWeekBucket = (date: Date, firstDate: Date, lastDate: Date) => {
   };
 };
 
-const aggregateBusinessChartPoints = (
+const aggregateStatisticsChartPoints = (
   points: AdminPsychologistStatistics["business"]["series"],
 ): BusinessChartPoint[] => {
   const parsedPoints = points.flatMap((point) => {
@@ -2061,11 +2136,11 @@ const aggregateBusinessChartPoints = (
   return [...bucketMap.values()];
 };
 
-const BusinessSeriesChart = ({
+const StatisticsSeriesChart = ({
   keys,
   points,
 }: {
-  keys: BusinessChartMetric[];
+  keys: readonly StatisticsChartMetric[];
   points: AdminPsychologistStatistics["business"]["series"];
 }) => {
   if (keys.length === 0) {
@@ -2083,7 +2158,7 @@ const BusinessSeriesChart = ({
     );
   }
 
-  const chartPoints = aggregateBusinessChartPoints(points);
+  const chartPoints = aggregateStatisticsChartPoints(points);
   const chartWidth = 760;
   const chartHeight = 190;
   const paddingX = 24;
@@ -2181,60 +2256,6 @@ const BusinessSeriesChart = ({
             </span>
           ))}
         </div>
-      </div>
-    </div>
-  );
-};
-
-const StatsBars = ({
-  keys,
-  points,
-}: {
-  keys: {
-    color: string;
-    key: keyof AdminPsychologistStatistics["business"]["series"][number];
-    label: string;
-  }[];
-  points: AdminPsychologistStatistics["business"]["series"];
-}) => {
-  const max = Math.max(
-    1,
-    ...points.flatMap((point) => keys.map((item) => Number(point[item.key] ?? 0))),
-  );
-
-  return (
-    <div className="mt-5">
-      <div className="mb-4 flex flex-wrap gap-3">
-        {keys.map((item) => (
-          <span
-            className="inline-flex items-center gap-2 text-xs font-black text-muted"
-            key={item.key}
-          >
-            <span className={cn("h-2.5 w-2.5 rounded-full", item.color)} />
-            {item.label}
-          </span>
-        ))}
-      </div>
-      <div className="grid min-h-52 grid-cols-[repeat(30,minmax(22px,1fr))] items-end gap-2 overflow-x-auto rounded-2xl bg-surface-muted p-4">
-        {points.map((point) => (
-          <div className="flex min-w-6 flex-col items-center gap-1" key={point.date}>
-            <div className="flex h-40 w-full items-end justify-center gap-1">
-              {keys.map((item) => (
-                <span
-                  className={cn("w-1.5 rounded-t-full", item.color)}
-                  key={item.key}
-                  style={{
-                    height: `${Math.max(4, (Number(point[item.key] ?? 0) / max) * 100)}%`,
-                  }}
-                  title={`${point.date} · ${item.label}: ${Number(point[item.key] ?? 0)}`}
-                />
-              ))}
-            </div>
-            <span className="-rotate-45 whitespace-nowrap text-[10px] font-bold text-subtle">
-              {point.date.slice(5)}
-            </span>
-          </div>
-        ))}
       </div>
     </div>
   );
@@ -2549,6 +2570,9 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: st
   const [visibleBusinessMetricIds, setVisibleBusinessMetricIds] = useState<BusinessChartMetricId[]>(
     () => BUSINESS_CHART_METRICS.map((item) => item.id),
   );
+  const [visibleCommunityMetricIds, setVisibleCommunityMetricIds] = useState<
+    CommunityChartMetricId[]
+  >(() => COMMUNITY_CHART_METRICS.map((item) => item.id));
   const availableBusinessMetricIds = useMemo<BusinessChartMetricId[]>(() => {
     const availableIds = new Set(
       (businessStatisticsQuery.data?.business.cards ?? [])
@@ -2561,6 +2585,18 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: st
 
     return ids.length > 0 ? ids : BUSINESS_CHART_METRICS.map((item) => item.id);
   }, [businessStatisticsQuery.data?.business.cards]);
+  const availableCommunityMetricIds = useMemo<CommunityChartMetricId[]>(() => {
+    const availableIds = new Set(
+      (communityStatisticsQuery.data?.community.cards ?? [])
+        .filter((metric) => metric.available)
+        .map((metric) => metric.id),
+    );
+    const ids = COMMUNITY_CHART_METRICS.filter((item) => availableIds.has(item.id)).map(
+      (item) => item.id,
+    );
+
+    return ids.length > 0 ? ids : COMMUNITY_CHART_METRICS.map((item) => item.id);
+  }, [communityStatisticsQuery.data?.community.cards]);
   const businessStatisticsErrorMessage = businessStatisticsQuery.error
     ? resolveApiError(businessStatisticsQuery.error)
     : null;
@@ -2653,14 +2689,27 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: st
   const businessMetricMap = new Map(
     businessStatistics.business.cards.map((metric) => [metric.id, metric]),
   );
+  const communityMetricMap = new Map(
+    communityStatistics.community.cards.map((metric) => [metric.id, metric]),
+  );
   const businessCards = BUSINESS_CHART_METRICS.flatMap((config) => {
     const metric = businessMetricMap.get(config.id);
+
+    return metric ? [{ config, metric }] : [];
+  });
+  const communityCards = COMMUNITY_CHART_METRICS.flatMap((config) => {
+    const metric = communityMetricMap.get(config.id);
 
     return metric ? [{ config, metric }] : [];
   });
   const visibleBusinessChartKeys = businessCards
     .filter(
       ({ config, metric }) => visibleBusinessMetricIds.includes(config.id) && metric.available,
+    )
+    .map(({ config }) => config);
+  const visibleCommunityChartKeys = communityCards
+    .filter(
+      ({ config, metric }) => visibleCommunityMetricIds.includes(config.id) && metric.available,
     )
     .map(({ config }) => config);
   const toggleBusinessMetric = (metricId: BusinessChartMetricId) => {
@@ -2672,6 +2721,19 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: st
 
       const next = current.filter((item) => item !== metricId);
       const hasAnotherAvailable = next.some((item) => availableBusinessMetricIds.includes(item));
+
+      return hasAnotherAvailable ? next : current;
+    });
+  };
+  const toggleCommunityMetric = (metricId: CommunityChartMetricId) => {
+    const metric = communityMetricMap.get(metricId);
+    if (!metric?.available) return;
+
+    setVisibleCommunityMetricIds((current) => {
+      if (!current.includes(metricId)) return [...current, metricId];
+
+      const next = current.filter((item) => item !== metricId);
+      const hasAnotherAvailable = next.some((item) => availableCommunityMetricIds.includes(item));
 
       return hasAnotherAvailable ? next : current;
     });
@@ -2706,7 +2768,7 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: st
           <fieldset className="grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-2 2xl:grid-cols-4">
             <legend className="sr-only">Contadores exibidos no gráfico</legend>
             {businessCards.map(({ config, metric }) => (
-              <BusinessMetricToggleCard
+              <StatisticsMetricToggleCard
                 active={visibleBusinessMetricIds.includes(config.id) && metric.available}
                 config={config}
                 key={config.id}
@@ -2716,7 +2778,7 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: st
             ))}
           </fieldset>
 
-          <BusinessSeriesChart
+          <StatisticsSeriesChart
             keys={visibleBusinessChartKeys}
             points={businessStatistics.business.series}
           />
@@ -2750,30 +2812,21 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: st
 
       <section aria-busy={isCommunityRefreshing} className="grid gap-5 xl:grid-cols-[1.1fr_0.9fr]">
         <CardShell className="p-5">
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            {communityStatistics.community.cards.map((item) => (
-              <EngagementMetricCard
-                icon={
-                  item.id === "posts"
-                    ? FileText
-                    : item.id === "replies"
-                      ? MessageCircle
-                      : item.id === "saves"
-                        ? Bookmark
-                        : BookOpen
-                }
-                key={item.id}
-                metric={item}
+          <fieldset className="grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+            <legend className="sr-only">Contadores de comunidade exibidos no gráfico</legend>
+            {communityCards.map(({ config, metric }) => (
+              <StatisticsMetricToggleCard
+                active={visibleCommunityMetricIds.includes(config.id) && metric.available}
+                config={config}
+                key={config.id}
+                metric={metric}
+                onToggle={() => toggleCommunityMetric(config.id)}
               />
             ))}
-          </div>
-          <StatsBars
-            keys={[
-              { color: "bg-primary", key: "posts", label: "Posts" },
-              { color: "bg-blue-500", key: "replies", label: "Respostas" },
-              { color: "bg-emerald-500", key: "saves", label: "Salvamentos" },
-              { color: "bg-orange-500", key: "comments_received", label: "Comentários recebidos" },
-            ]}
+          </fieldset>
+
+          <StatisticsSeriesChart
+            keys={visibleCommunityChartKeys}
             points={communityStatistics.community.series}
           />
         </CardShell>

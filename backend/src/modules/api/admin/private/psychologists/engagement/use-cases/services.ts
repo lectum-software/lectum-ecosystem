@@ -292,11 +292,15 @@ const buildSeries = (input: {
   commentsReceived: { createdAt: Date }[];
   favorites: { createdAt: Date }[];
   labels: string[];
+  postShares: { createdAt: Date }[];
   postSaves: { createdAt: Date }[];
+  postVotes: { createdAt: Date; value: number }[];
   posts: { createdAt: Date }[];
   profileViews: { createdAt: Date }[];
   replies: { createdAt: Date }[];
+  replyShares: { createdAt: Date }[];
   replySaves: { createdAt: Date }[];
+  replyVotes: { createdAt: Date; value: number }[];
   searchResults: { createdAt: Date }[];
   whatsappClicks: { createdAt: Date }[];
 }): AdminPsychologistStatisticsSeriesPoint[] => {
@@ -308,16 +312,28 @@ const buildSeries = (input: {
   const replies = groupDateCounts(input.replies, input.labels);
   const commentsReceived = groupDateCounts(input.commentsReceived, input.labels);
   const saves = groupDateCounts([...input.postSaves, ...input.replySaves], input.labels);
+  const upvotes = groupDateCounts(
+    [...input.postVotes, ...input.replyVotes].filter((vote) => vote.value === 1),
+    input.labels,
+  );
+  const downvotes = groupDateCounts(
+    [...input.postVotes, ...input.replyVotes].filter((vote) => vote.value === -1),
+    input.labels,
+  );
+  const shares = groupDateCounts([...input.postShares, ...input.replyShares], input.labels);
 
   return input.labels.map((date) => ({
     comments_received: valueFromMap(commentsReceived, date),
     date,
+    downvotes: valueFromMap(downvotes, date),
     favorites: valueFromMap(favorites, date),
     profile_views: valueFromMap(profileViews, date),
     replies: valueFromMap(replies, date),
     saves: valueFromMap(saves, date),
     search_results: valueFromMap(searchResults, date),
+    shares: valueFromMap(shares, date),
     whatsapp_clicks: valueFromMap(whatsappClicks, date),
+    upvotes: valueFromMap(upvotes, date),
     posts: valueFromMap(posts, date),
   }));
 };
@@ -515,6 +531,8 @@ export const showAdminPsychologistStatistics = async (
     previousVideoSessions,
     posts,
     replies,
+    previousPosts,
+    previousReplies,
     memberships,
   ] = await Promise.all([
     repository.listProfileViews(userId, period.current.start, period.current.end),
@@ -529,27 +547,77 @@ export const showAdminPsychologistStatistics = async (
     repository.listVideoSessions(userId, period.previous.start, period.previous.end),
     repository.listAuthoredPosts(userId, period.current.start, period.current.end),
     repository.listAuthoredReplies(userId, period.current.start, period.current.end),
+    repository.listAuthoredPosts(userId, period.previous.start, period.previous.end),
+    repository.listAuthoredReplies(userId, period.previous.start, period.previous.end),
     repository.listCommunities(userId),
   ]);
 
   const postIds = posts.map((post) => post.id);
   const replyIds = replies.map((reply) => reply.id);
-  const [postSaves, replySaves, commentsReceived] = await Promise.all([
+  const previousPostIds = previousPosts.map((post) => post.id);
+  const previousReplyIds = previousReplies.map((reply) => reply.id);
+  const [
+    postSaves,
+    replySaves,
+    commentsReceived,
+    postVotes,
+    replyVotes,
+    postShares,
+    replyShares,
+    previousPostSaves,
+    previousReplySaves,
+    previousCommentsReceived,
+    previousPostVotes,
+    previousReplyVotes,
+    previousPostShares,
+    previousReplyShares,
+  ] = await Promise.all([
     repository.listPostSaves(postIds, period.current.start, period.current.end),
     repository.listReplySaves(replyIds, period.current.start, period.current.end),
     repository.listCommentsReceived(postIds, userId, period.current.start, period.current.end),
+    repository.listPostVotes(postIds, period.current.start, period.current.end),
+    repository.listReplyVotes(replyIds, period.current.start, period.current.end),
+    repository.listPostShareEvents(postIds, period.current.start, period.current.end),
+    repository.listReplyShareEvents(replyIds, period.current.start, period.current.end),
+    repository.listPostSaves(previousPostIds, period.previous.start, period.previous.end),
+    repository.listReplySaves(previousReplyIds, period.previous.start, period.previous.end),
+    repository.listCommentsReceived(
+      previousPostIds,
+      userId,
+      period.previous.start,
+      period.previous.end,
+    ),
+    repository.listPostVotes(previousPostIds, period.previous.start, period.previous.end),
+    repository.listReplyVotes(previousReplyIds, period.previous.start, period.previous.end),
+    repository.listPostShareEvents(previousPostIds, period.previous.start, period.previous.end),
+    repository.listReplyShareEvents(previousReplyIds, period.previous.start, period.previous.end),
   ]);
   const savesCount = postSaves.length + replySaves.length;
+  const previousSavesCount = previousPostSaves.length + previousReplySaves.length;
+  const upvotesCount = [...postVotes, ...replyVotes].filter((vote) => vote.value === 1).length;
+  const previousUpvotesCount = [...previousPostVotes, ...previousReplyVotes].filter(
+    (vote) => vote.value === 1,
+  ).length;
+  const downvotesCount = [...postVotes, ...replyVotes].filter((vote) => vote.value === -1).length;
+  const previousDownvotesCount = [...previousPostVotes, ...previousReplyVotes].filter(
+    (vote) => vote.value === -1,
+  ).length;
+  const sharesCount = postShares.length + replyShares.length;
+  const previousSharesCount = previousPostShares.length + previousReplyShares.length;
   const unavailable: AdminPsychologistAvailabilityMetric[] = [];
   const series = buildSeries({
     commentsReceived,
     favorites,
     labels: period.labels,
+    postShares,
     postSaves,
+    postVotes,
     posts,
     profileViews,
     replies,
+    replyShares,
     replySaves,
+    replyVotes,
     searchResults,
     whatsappClicks,
   });
@@ -603,24 +671,53 @@ export const showAdminPsychologistStatistics = async (
     community: {
       cards: [
         metric({
+          comparison: buildComparison(posts.length, previousPosts.length, period.period),
           id: "posts",
           label: "Posts",
           source: "community_post.author_id",
           value: posts.length,
         }),
         metric({
+          comparison: buildComparison(replies.length, previousReplies.length, period.period),
           id: "replies",
           label: "Respostas",
           source: "post_reply.author_id",
           value: replies.length,
         }),
         metric({
+          comparison: buildComparison(upvotesCount, previousUpvotesCount, period.period),
+          id: "upvotes",
+          label: "Upvotes",
+          source: "post_vote.value=1 em community_post/post_reply do psicólogo",
+          value: upvotesCount,
+        }),
+        metric({
+          comparison: buildComparison(downvotesCount, previousDownvotesCount, period.period),
+          id: "downvotes",
+          label: "Downvotes",
+          source: "post_vote.value=-1 em community_post/post_reply do psicólogo",
+          value: downvotesCount,
+        }),
+        metric({
+          comparison: buildComparison(savesCount, previousSavesCount, period.period),
           id: "saves",
           label: "Salvamentos",
           source: "post_save+post_reply_save",
           value: savesCount,
         }),
         metric({
+          comparison: buildComparison(sharesCount, previousSharesCount, period.period),
+          id: "shares",
+          label: "Compartilhamentos",
+          source: "post_share em community_post/post_reply do psicólogo",
+          value: sharesCount,
+        }),
+        metric({
+          comparison: buildComparison(
+            commentsReceived.length,
+            previousCommentsReceived.length,
+            period.period,
+          ),
           id: "comments_received",
           label: "Comentários recebidos",
           source: "post_reply em posts do psicólogo",

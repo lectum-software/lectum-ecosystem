@@ -49,12 +49,15 @@ export type AdminPsychologistStatisticsPeriod = {
 export type AdminPsychologistStatisticsSeriesPoint = {
   comments_received: number;
   date: string;
+  downvotes: number;
   favorites: number;
   profile_views: number;
   replies: number;
   saves: number;
   search_results: number;
+  shares: number;
   whatsapp_clicks: number;
+  upvotes: number;
   posts: number;
 };
 
