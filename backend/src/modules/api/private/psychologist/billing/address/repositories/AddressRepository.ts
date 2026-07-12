@@ -40,7 +40,12 @@ export class AddressRepository implements IAddressRepository {
     return this.subscriptionRepository.findFirst({
       where: {
         ...activeProfessionalEntitlementWhere(),
+        gateway: "mercadopago",
+        gateway_subscription_id: {
+          not: null,
+        },
         psychologist_id: psychologistId,
+        source: "mercadopago",
       },
       include: {
         plan: true,

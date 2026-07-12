@@ -123,3 +123,12 @@ Tornar a verificação de registro profissional uma etapa persistente e retomáv
 - Os tipos frontend de CFP foram atualizados com o campo opcional `attempts` do contrato de resposta, sem alterar a fundação de formulário ou recriar UI.
 - ADR atualizado: `adrs/0201-verificacao-cfp-retomavel-fluxo-pago.md`.
 - Validação desta correção: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir frontend build`, `pnpm --dir frontend check` e `pnpm check`. A primeira tentativa de `pnpm --dir frontend check` falhou por tipos stale em `.next/types`; a primeira tentativa de `pnpm --dir frontend build` encontrou outro build Next em andamento. Após o build finalizar/regenerar `.next`, `frontend build`, `frontend check` e `pnpm check` executaram sem erros.
+
+## Correção de regressão em 2026-07-11 - cortesia fora do fluxo de assinatura
+
+- Pedido direto de produto: psicólogo com cortesia administrativa ativa não deve entrar no fluxo de assinatura paga, incluindo checkout, cartão e endereço de faturamento.
+- A regra de onboarding passou a pular `/app/professional/billing/address` quando a assinatura ativa tem `source="admin_grant"`.
+- Acesso direto a checkout/endereço com cortesia ativa redireciona para a próxima etapa real do cadastro profissional ou para gestão de assinatura, sem solicitar endereço de cobrança.
+- O endpoint de endereço de faturamento passou a aceitar somente assinatura profissional paga Mercado Pago ativa (`source="mercadopago"`, `gateway="mercadopago"`, `gateway_subscription_id` real).
+- ADR criado: `adrs/0256-cortesia-pula-fluxo-assinatura-endereco.md`.
+- Validação: `pnpm --dir frontend check`, `pnpm --dir backend check`, `pnpm --dir frontend build`, `pnpm --dir backend build`, `pnpm check` e smoke local sem sessão em `/app/professional/billing/address` retornando `307` para login. A validação autenticada fica dependente da sessão real do psicólogo afetado.

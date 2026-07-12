@@ -11,15 +11,21 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 import { toast } from "sonner";
 import { usePsychologistBilling } from "@/api/callers/psychologist-billing";
 import type { ProfessionalSubscription } from "@/api/generator/types/billing";
 import { EmptyState } from "@/components/ui/empty-state";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
+import { useAppSelector } from "@/hooks/redux";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
-import { PSYCHOLOGIST_ONBOARDING_PATHS } from "@/utils/psychologist-onboarding";
+import {
+  getPsychologistRegistrationRequirementPath,
+  isAdministrativeCourtesySubscription,
+  PSYCHOLOGIST_ONBOARDING_PATHS,
+} from "@/utils/psychologist-onboarding";
 import {
   type BillingAddressForm,
   toBillingAddressPayload,
@@ -79,6 +85,7 @@ const AddressHeader = () => (
 
 export const ProfessionalBillingAddressLogic = () => {
   const router = useRouter();
+  const user = useAppSelector((state) => state.user);
   const billingAddressForm = useBillingAddressForm();
   const AddressForm = billingAddressForm.Form;
 
@@ -96,7 +103,17 @@ export const ProfessionalBillingAddressLogic = () => {
 
   const current = billing.current.data?.current ?? null;
   const activeProfessional = isActiveProfessional(current);
+  const activeCourtesy = isAdministrativeCourtesySubscription(current);
+  const courtesyRedirectPath = user
+    ? (getPsychologistRegistrationRequirementPath(user) ?? "/app/professional/billing")
+    : null;
   const isLoading = billing.current.isLoading;
+
+  useEffect(() => {
+    if (!activeCourtesy || !courtesyRedirectPath) return;
+
+    router.replace(courtesyRedirectPath);
+  }, [activeCourtesy, courtesyRedirectPath, router]);
 
   const submitAddress = billingAddressForm.hook.handleSubmit((values: BillingAddressForm) => {
     billing.address.mutate(toBillingAddressPayload(values));
@@ -171,36 +188,42 @@ export const ProfessionalBillingAddressLogic = () => {
           ) : null}
 
           {!isLoading && !billing.current.isError && activeProfessional ? (
-            <>
-              <div className="mt-6 flex justify-center">
-                <span
-                  className="inline-flex items-center gap-2 rounded-full border border-success/30 bg-success/10 px-4 py-2 text-sm font-extrabold text-success"
-                  role="status"
-                >
-                  <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
-                  Pagamento bem-sucedido
-                </span>
+            activeCourtesy ? (
+              <div className="mt-8">
+                <LoadingState label="Redirecionando para sua próxima etapa" />
               </div>
+            ) : (
+              <>
+                <div className="mt-6 flex justify-center">
+                  <span
+                    className="inline-flex items-center gap-2 rounded-full border border-success/30 bg-success/10 px-4 py-2 text-sm font-extrabold text-success"
+                    role="status"
+                  >
+                    <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
+                    Pagamento bem-sucedido
+                  </span>
+                </div>
 
-              <AddressForm
-                className="mt-6 grid gap-1 md:grid-cols-2 md:gap-x-4"
-                {...billingAddressForm.formProps}
-                onSubmit={submitAddress}
-              >
-                <Button
-                  className="mt-3 h-14 w-full rounded-full text-base md:col-span-2"
-                  disabled={billing.address.isPending}
-                  type="submit"
+                <AddressForm
+                  className="mt-6 grid gap-1 md:grid-cols-2 md:gap-x-4"
+                  {...billingAddressForm.formProps}
+                  onSubmit={submitAddress}
                 >
-                  {billing.address.isPending ? (
-                    <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-                  ) : (
-                    <ArrowRight className="h-4 w-4" aria-hidden="true" />
-                  )}
-                  Salvar e continuar
-                </Button>
-              </AddressForm>
-            </>
+                  <Button
+                    className="mt-3 h-14 w-full rounded-full text-base md:col-span-2"
+                    disabled={billing.address.isPending}
+                    type="submit"
+                  >
+                    {billing.address.isPending ? (
+                      <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                    ) : (
+                      <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                    )}
+                    Salvar e continuar
+                  </Button>
+                </AddressForm>
+              </>
+            )
           ) : null}
         </div>
       </section>

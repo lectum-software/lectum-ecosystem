@@ -131,3 +131,4 @@ Formato recomendado:
 - [ADR-0241 - Detalhe Admin de paciente somente leitura e dados pessoais mínimos](0241-admin-detalhe-paciente-dados-minimos-readonly.md) - Accepted
 - [ADR-0252 - Edição administrativa auditada de dados do psicólogo](0252-edicao-admin-auditada-dados-psicologo.md) - Accepted
 - [ADR-0254 - Suporte administrativo de conta do psicólogo](0254-suporte-admin-conta-psicologo.md) - Accepted
+- [ADR-0256 - Cortesia ativa pula fluxo de assinatura e endereço](0256-cortesia-pula-fluxo-assinatura-endereco.md) - Accepted

@@ -24,6 +24,9 @@ export const isProfessionalSubscriptionActive = (subscription: SubscriptionLike)
   return subscription.plan?.active !== false && subscription.plan?.slug === "profissional";
 };
 
+export const isAdministrativeCourtesySubscription = (subscription: SubscriptionLike) =>
+  isProfessionalSubscriptionActive(subscription) && subscription?.source === "admin_grant";
+
 export const isPaidRegistryVerificationComplete = (
   profile: Pick<PsychologistProfileLike, "cfp_verified_at" | "crp_status"> | null | undefined,
   subscription: SubscriptionLike,
@@ -83,7 +86,7 @@ export const getPsychologistPaidOnboardingRequirementPath = (
 
   if (!profile || !activeProfessional) return null;
 
-  if (!hasBillingAddress(profile)) {
+  if (!isAdministrativeCourtesySubscription(activeProfessional) && !hasBillingAddress(profile)) {
     return PSYCHOLOGIST_ONBOARDING_PATHS.billingAddress;
   }
 

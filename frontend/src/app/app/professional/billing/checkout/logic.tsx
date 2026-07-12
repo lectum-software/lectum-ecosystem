@@ -18,7 +18,11 @@ import { useAppSelector } from "@/hooks/redux";
 import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
-import { PSYCHOLOGIST_ONBOARDING_PATHS } from "@/utils/psychologist-onboarding";
+import {
+  getPsychologistRegistrationRequirementPath,
+  isAdministrativeCourtesySubscription,
+  PSYCHOLOGIST_ONBOARDING_PATHS,
+} from "@/utils/psychologist-onboarding";
 
 const publicKey = process.env.NEXT_PUBLIC_MERCADO_PAGO_PUBLIC_KEY;
 const mercadoPagoEnv = process.env.NEXT_PUBLIC_MERCADO_PAGO_ENV?.trim().toLowerCase();
@@ -75,12 +79,6 @@ const isCurrentPeriodValid = (currentPeriodEnd?: string | null) => {
 
 const isActiveProfessional = (subscription?: ProfessionalSubscription | null) =>
   subscription?.status === "ativa" &&
-  subscription.plan?.slug === "profissional" &&
-  isCurrentPeriodValid(subscription.current_period_end);
-
-const isActiveCourtesySubscription = (subscription?: ProfessionalSubscription | null) =>
-  subscription?.source === "admin_grant" &&
-  subscription.status === "ativa" &&
   subscription.plan?.slug === "profissional" &&
   isCurrentPeriodValid(subscription.current_period_end);
 
@@ -165,7 +163,8 @@ export const ProfessionalBillingCheckoutLogic = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const isCourtesyRenewal = searchParams.get("intent") === "courtesy-renewal";
-  const userEmail = useAppSelector((state) => state.user?.email || "");
+  const user = useAppSelector((state) => state.user);
+  const userEmail = user?.email || "";
   const payerEmail = resolveMercadoPagoPayerEmail(userEmail);
   const [checkoutResult, setCheckoutResult] = useState<BillingCheckoutResponse | null>(null);
   const billingCallbacks = useMemo(
@@ -206,7 +205,10 @@ export const ProfessionalBillingCheckoutLogic = () => {
   const professionalPlan = billing.plans.data?.plans.find((plan) => plan.slug === "profissional");
   const current = billing.current.data?.current ?? null;
   const activeProfessional = isActiveProfessional(current);
-  const activeCourtesy = isActiveCourtesySubscription(current);
+  const activeCourtesy = isAdministrativeCourtesySubscription(current);
+  const courtesyRedirectPath = user
+    ? (getPsychologistRegistrationRequirementPath(user) ?? "/app/professional/billing")
+    : null;
   const shouldBypassActiveRedirect = isCourtesyRenewal && activeCourtesy;
   const pendingProfessional =
     Boolean(checkoutResult?.pending_confirmation) || isPendingProfessional(current);
@@ -219,8 +221,22 @@ export const ProfessionalBillingCheckoutLogic = () => {
   useEffect(() => {
     if (isCurrentSubscriptionLoading || !activeProfessional || shouldBypassActiveRedirect) return;
 
+    if (activeCourtesy) {
+      if (courtesyRedirectPath) {
+        router.replace(courtesyRedirectPath);
+      }
+      return;
+    }
+
     router.replace(PSYCHOLOGIST_ONBOARDING_PATHS.billingAddress);
-  }, [activeProfessional, isCurrentSubscriptionLoading, router, shouldBypassActiveRedirect]);
+  }, [
+    activeCourtesy,
+    activeProfessional,
+    courtesyRedirectPath,
+    isCurrentSubscriptionLoading,
+    router,
+    shouldBypassActiveRedirect,
+  ]);
 
   const initialization = useMemo(
     () => ({
@@ -348,7 +364,13 @@ export const ProfessionalBillingCheckoutLogic = () => {
     return (
       <PrivateTemplate showHeader={false}>
         <section className="mx-auto grid min-h-[55vh] w-full max-w-[430px] place-items-center">
-          <LoadingState label="Redirecionando para endereço" />
+          <LoadingState
+            label={
+              activeCourtesy
+                ? "Redirecionando para sua próxima etapa"
+                : "Redirecionando para endereço"
+            }
+          />
         </section>
       </PrivateTemplate>
     );
