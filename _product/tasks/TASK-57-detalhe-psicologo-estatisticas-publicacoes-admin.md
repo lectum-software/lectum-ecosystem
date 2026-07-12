@@ -107,3 +107,11 @@ Exibir estatÃ­sticas de negÃ³cio/comunidade e publicaÃ§Ãµes do psicÃ³logo com da
 - A persistência reaproveita `profile_view_event.source="search_result"` e preserva `source="profile_page"` para aberturas reais do perfil, sem criar mock, seed ou estimativa.
 - O endpoint `POST /api/private/directory/psychologists/:id/search-impression` usa `optionalAuth`, não dispara notificação de visualização de perfil e ignora autoimpressão do próprio psicólogo.
 - As métricas existentes de visualização de perfil passaram a filtrar `source="profile_page"` para não misturar resultados de busca com visitas ao perfil.
+### Correção visual em 2026-07-12
+
+- O título **Estatísticas de comunidade** foi movido para fora do card branco, seguindo o padrão visual de **Estatísticas de negócio**.
+- A seção de comunidade passou a ter seu próprio filtro de período e datas à direita do título.
+- Os filtros de negócio/vídeo e comunidade são independentes: alterar o período da comunidade não altera o período de negócio.
+- A implementação reaproveita o endpoint real de estatísticas em duas queries separadas, sem alterar contrato backend e sem mock.
+- Referência visual consultada: `_product/proto/admin/Psicólogos/Detalhes do psicólogo/Estatísticas.png`; Builder/Quick Copy não estava disponível como ferramenta callable no ambiente.
+- Validações executadas: `pnpm --dir admin check`, `pnpm --dir admin build` e browser local/headless via Edge/CDP em `http://localhost:3012/psicologos/demo-psychologist-marina-rocha?tab=estatisticas` com admin temporário real removido ao final, confirmando título fora do card e filtros independentes.

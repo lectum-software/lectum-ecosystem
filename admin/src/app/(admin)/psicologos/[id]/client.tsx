@@ -835,6 +835,74 @@ const buildStatisticsPeriodQuery = (
 ): AdminPsychologistStatisticsQuery =>
   period === "custom" ? { from: customRange.from, period, to: customRange.to } : { period };
 
+type StatisticsPeriodControlsProps = {
+  idPrefix: string;
+  onDateChange: (field: keyof StatisticsCustomRange, value: string) => void;
+  onPeriodChange: (period: StatisticsPeriodPreset) => void;
+  period: StatisticsPeriodValue;
+  range: StatisticsCustomRange;
+};
+
+const StatisticsPeriodControls = ({
+  idPrefix,
+  onDateChange,
+  onPeriodChange,
+  period,
+  range,
+}: StatisticsPeriodControlsProps) => (
+  <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
+    <label className="grid gap-1 text-xs font-black text-muted" htmlFor={`${idPrefix}-period`}>
+      Período
+      <span className="relative">
+        <select
+          className="h-10 min-w-[170px] appearance-none rounded-2xl border border-border bg-surface py-0 pl-3 pr-11 text-sm font-black text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+          id={`${idPrefix}-period`}
+          onChange={(event) => onPeriodChange(event.target.value as StatisticsPeriodPreset)}
+          value={period}
+        >
+          {period === "custom" ? (
+            <option disabled hidden value="custom">
+              Personalizado
+            </option>
+          ) : null}
+          {STATISTICS_PERIOD_OPTIONS.map((option) => (
+            <option key={option.id} value={option.id}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+        <ChevronDown
+          aria-hidden
+          className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground"
+        />
+      </span>
+    </label>
+
+    <div className="grid gap-2 sm:grid-cols-2">
+      <label className="grid gap-1 text-xs font-black text-muted" htmlFor={`${idPrefix}-from`}>
+        De
+        <input
+          className="h-10 rounded-2xl border border-border bg-surface px-3 text-sm font-black text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+          id={`${idPrefix}-from`}
+          onChange={(event) => onDateChange("from", event.target.value)}
+          type="date"
+          value={range.from ?? ""}
+        />
+      </label>
+      <label className="grid gap-1 text-xs font-black text-muted" htmlFor={`${idPrefix}-to`}>
+        Até
+        <input
+          className="h-10 rounded-2xl border border-border bg-surface px-3 text-sm font-black text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+          id={`${idPrefix}-to`}
+          onChange={(event) => onDateChange("to", event.target.value)}
+          type="date"
+          value={range.to ?? ""}
+        />
+      </label>
+    </div>
+  </div>
+);
+
 const formatDateTime = (value?: string | null) => {
   if (!value) return "Não informado";
 
@@ -2340,21 +2408,35 @@ const StatisticsVideoCard = ({
 };
 
 const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: string }) => {
-  const [statisticsPeriod, setStatisticsPeriod] = useState<StatisticsPeriodValue>("week");
-  const [customStatisticsRange, setCustomStatisticsRange] = useState<StatisticsCustomRange>(() =>
-    getStatisticsRangeForPeriod("week", detail.header.created_at),
+  const [businessStatisticsPeriod, setBusinessStatisticsPeriod] =
+    useState<StatisticsPeriodValue>("week");
+  const [businessStatisticsRange, setBusinessStatisticsRange] = useState<StatisticsCustomRange>(
+    () => getStatisticsRangeForPeriod("week", detail.header.created_at),
   );
-  const statisticsPeriodQuery = useMemo(
-    () => buildStatisticsPeriodQuery(statisticsPeriod, customStatisticsRange),
-    [customStatisticsRange, statisticsPeriod],
+  const [communityStatisticsPeriod, setCommunityStatisticsPeriod] =
+    useState<StatisticsPeriodValue>("week");
+  const [communityStatisticsRange, setCommunityStatisticsRange] = useState<StatisticsCustomRange>(
+    () => getStatisticsRangeForPeriod("week", detail.header.created_at),
   );
-  const query = useAdminPsychologistStatistics(id, statisticsPeriodQuery);
+  const businessStatisticsPeriodQuery = useMemo(
+    () => buildStatisticsPeriodQuery(businessStatisticsPeriod, businessStatisticsRange),
+    [businessStatisticsPeriod, businessStatisticsRange],
+  );
+  const communityStatisticsPeriodQuery = useMemo(
+    () => buildStatisticsPeriodQuery(communityStatisticsPeriod, communityStatisticsRange),
+    [communityStatisticsPeriod, communityStatisticsRange],
+  );
+  const businessStatisticsQuery = useAdminPsychologistStatistics(id, businessStatisticsPeriodQuery);
+  const communityStatisticsQuery = useAdminPsychologistStatistics(
+    id,
+    communityStatisticsPeriodQuery,
+  );
   const [visibleBusinessMetricIds, setVisibleBusinessMetricIds] = useState<BusinessChartMetricId[]>(
     () => BUSINESS_CHART_METRICS.map((item) => item.id),
   );
   const availableBusinessMetricIds = useMemo<BusinessChartMetricId[]>(() => {
     const availableIds = new Set(
-      (query.data?.business.cards ?? [])
+      (businessStatisticsQuery.data?.business.cards ?? [])
         .filter((metric) => metric.available)
         .map((metric) => metric.id),
     );
@@ -2363,30 +2445,84 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: st
     );
 
     return ids.length > 0 ? ids : BUSINESS_CHART_METRICS.map((item) => item.id);
-  }, [query.data?.business.cards]);
-  const errorMessage = query.error ? resolveApiError(query.error) : null;
-  const handleStatisticsPeriodChange = (period: StatisticsPeriodPreset) => {
-    setStatisticsPeriod(period);
-    setCustomStatisticsRange(getStatisticsRangeForPeriod(period, detail.header.created_at));
+  }, [businessStatisticsQuery.data?.business.cards]);
+  const businessStatisticsErrorMessage = businessStatisticsQuery.error
+    ? resolveApiError(businessStatisticsQuery.error)
+    : null;
+  const communityStatisticsErrorMessage = communityStatisticsQuery.error
+    ? resolveApiError(communityStatisticsQuery.error)
+    : null;
+  const handleBusinessStatisticsPeriodChange = (period: StatisticsPeriodPreset) => {
+    setBusinessStatisticsPeriod(period);
+    setBusinessStatisticsRange(getStatisticsRangeForPeriod(period, detail.header.created_at));
   };
-  const handleStatisticsDateChange = (field: keyof StatisticsCustomRange, value: string) => {
+  const handleBusinessStatisticsDateChange = (
+    field: keyof StatisticsCustomRange,
+    value: string,
+  ) => {
     if (!value) return;
 
-    setStatisticsPeriod("custom");
-    setCustomStatisticsRange((current) => ({
+    setBusinessStatisticsPeriod("custom");
+    setBusinessStatisticsRange((current) => ({
+      ...current,
+      [field]: value,
+    }));
+  };
+  const handleCommunityStatisticsPeriodChange = (period: StatisticsPeriodPreset) => {
+    setCommunityStatisticsPeriod(period);
+    setCommunityStatisticsRange(getStatisticsRangeForPeriod(period, detail.header.created_at));
+  };
+  const handleCommunityStatisticsDateChange = (
+    field: keyof StatisticsCustomRange,
+    value: string,
+  ) => {
+    if (!value) return;
+
+    setCommunityStatisticsPeriod("custom");
+    setCommunityStatisticsRange((current) => ({
       ...current,
       [field]: value,
     }));
   };
 
-  if (query.isLoading) return <EngagementLoadingState />;
-  if (query.isError && errorMessage) {
-    return <ErrorState message={errorMessage} onRetry={() => void query.refetch()} />;
+  if (businessStatisticsQuery.isLoading || communityStatisticsQuery.isLoading) {
+    return <EngagementLoadingState />;
   }
-  if (!query.data) return null;
+  if (businessStatisticsQuery.isError && businessStatisticsErrorMessage) {
+    return (
+      <ErrorState
+        message={businessStatisticsErrorMessage}
+        onRetry={() => {
+          void businessStatisticsQuery.refetch();
+          void communityStatisticsQuery.refetch();
+        }}
+      />
+    );
+  }
+  if (communityStatisticsQuery.isError && communityStatisticsErrorMessage) {
+    return (
+      <ErrorState
+        message={communityStatisticsErrorMessage}
+        onRetry={() => {
+          void businessStatisticsQuery.refetch();
+          void communityStatisticsQuery.refetch();
+        }}
+      />
+    );
+  }
+  if (!businessStatisticsQuery.data || !communityStatisticsQuery.data) return null;
 
-  const statistics = query.data;
-  const businessMetricMap = new Map(statistics.business.cards.map((metric) => [metric.id, metric]));
+  const businessStatistics = businessStatisticsQuery.data;
+  const communityStatistics = communityStatisticsQuery.data;
+  const unavailableMetrics = [
+    ...businessStatistics.unavailable,
+    ...communityStatistics.unavailable.filter(
+      (metric) => !businessStatistics.unavailable.some((item) => item.id === metric.id),
+    ),
+  ];
+  const businessMetricMap = new Map(
+    businessStatistics.business.cards.map((metric) => [metric.id, metric]),
+  );
   const businessCards = BUSINESS_CHART_METRICS.flatMap((config) => {
     const metric = businessMetricMap.get(config.id);
 
@@ -2415,56 +2551,13 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: st
     <div className="space-y-5" data-psychologist-detail-tab="estatisticas">
       <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
         <h2 className="text-xl font-black text-foreground">Estatísticas de negócio</h2>
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
-          <label className="grid gap-1 text-xs font-black text-muted">
-            Período
-            <span className="relative">
-              <select
-                className="h-10 min-w-[170px] appearance-none rounded-2xl border border-border bg-surface py-0 pl-3 pr-11 text-sm font-black text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
-                onChange={(event) =>
-                  handleStatisticsPeriodChange(event.target.value as StatisticsPeriodPreset)
-                }
-                value={statisticsPeriod}
-              >
-                {statisticsPeriod === "custom" ? (
-                  <option disabled hidden value="custom">
-                    Personalizado
-                  </option>
-                ) : null}
-                {STATISTICS_PERIOD_OPTIONS.map((option) => (
-                  <option key={option.id} value={option.id}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-              <ChevronDown
-                aria-hidden
-                className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground"
-              />
-            </span>
-          </label>
-
-          <div className="grid gap-2 sm:grid-cols-2">
-            <label className="grid gap-1 text-xs font-black text-muted">
-              De
-              <input
-                className="h-10 rounded-2xl border border-border bg-surface px-3 text-sm font-black text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
-                onChange={(event) => handleStatisticsDateChange("from", event.target.value)}
-                type="date"
-                value={customStatisticsRange.from}
-              />
-            </label>
-            <label className="grid gap-1 text-xs font-black text-muted">
-              Até
-              <input
-                className="h-10 rounded-2xl border border-border bg-surface px-3 text-sm font-black text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
-                onChange={(event) => handleStatisticsDateChange("to", event.target.value)}
-                type="date"
-                value={customStatisticsRange.to}
-              />
-            </label>
-          </div>
-        </div>
+        <StatisticsPeriodControls
+          idPrefix="business-statistics"
+          onDateChange={handleBusinessStatisticsDateChange}
+          onPeriodChange={handleBusinessStatisticsPeriodChange}
+          period={businessStatisticsPeriod}
+          range={businessStatisticsRange}
+        />
       </div>
 
       <section className="grid items-stretch gap-5 xl:grid-cols-[minmax(0,1.15fr)_minmax(360px,0.85fr)]">
@@ -2484,18 +2577,32 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: st
 
           <BusinessSeriesChart
             keys={visibleBusinessChartKeys}
-            points={statistics.business.series}
+            points={businessStatistics.business.series}
           />
         </CardShell>
 
-        <StatisticsVideoCard className="xl:h-full" detail={detail} statistics={statistics} />
+        <StatisticsVideoCard
+          className="xl:h-full"
+          detail={detail}
+          statistics={businessStatistics}
+        />
       </section>
+
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+        <h2 className="text-xl font-black text-foreground">Estatísticas de comunidade</h2>
+        <StatisticsPeriodControls
+          idPrefix="community-statistics"
+          onDateChange={handleCommunityStatisticsDateChange}
+          onPeriodChange={handleCommunityStatisticsPeriodChange}
+          period={communityStatisticsPeriod}
+          range={communityStatisticsRange}
+        />
+      </div>
 
       <section className="grid gap-5 xl:grid-cols-[1.1fr_0.9fr]">
         <CardShell className="p-5">
-          <h2 className="text-xl font-black text-foreground">Estatísticas de comunidade</h2>
-          <div className="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            {statistics.community.cards.map((item) => (
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            {communityStatistics.community.cards.map((item) => (
               <EngagementMetricCard
                 icon={
                   item.id === "posts"
@@ -2518,19 +2625,19 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: st
               { color: "bg-emerald-500", key: "saves", label: "Salvamentos" },
               { color: "bg-orange-500", key: "comments_received", label: "Comentários recebidos" },
             ]}
-            points={statistics.community.series}
+            points={communityStatistics.community.series}
           />
         </CardShell>
 
         <CardShell className="p-5">
           <h2 className="text-xl font-black text-foreground">Comunidades em que participa</h2>
-          {statistics.community.communities.length === 0 ? (
+          {communityStatistics.community.communities.length === 0 ? (
             <p className="mt-4 rounded-2xl bg-surface-muted p-4 text-sm font-bold text-muted">
               Nenhuma participação real em comunidade foi encontrada.
             </p>
           ) : (
             <div className="mt-4 divide-y divide-border">
-              {statistics.community.communities.map((community) => (
+              {communityStatistics.community.communities.map((community) => (
                 <div className="grid gap-3 py-4 sm:grid-cols-[1fr_auto]" key={community.id}>
                   <div>
                     <p className="flex items-center gap-2 font-black text-foreground">
@@ -2559,11 +2666,11 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: st
         </CardShell>
       </section>
 
-      {statistics.unavailable.length > 0 ? (
+      {unavailableMetrics.length > 0 ? (
         <CardShell className="p-4">
           <p className="text-sm font-black text-foreground">Métricas indisponíveis nesta etapa</p>
           <ul className="mt-2 list-disc space-y-1 pl-5 text-sm font-bold text-muted">
-            {statistics.unavailable.map((item) => (
+            {unavailableMetrics.map((item) => (
               <li key={item.id}>
                 {item.label}: {item.unavailable_reason}
               </li>

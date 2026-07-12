@@ -79,6 +79,19 @@ O gráfico de contadores da aba **Estatísticas** passa a adaptar a granularidad
 
 Essa agregação ocorre apenas na UI Admin para reduzir ruído visual em períodos longos, sem alterar a fonte real, o endpoint de estatísticas nem os totais recebidos. Os tooltips exibem o intervalo agregado e os valores somados da série ativa.
 
+## Emenda 2026-07-12 — filtro independente de comunidade
+
+A seção **Estatísticas de comunidade** passa a seguir a mesma hierarquia visual de **Estatísticas de negócio**: título fora do card branco e controles de período/datas na lateral direita no desktop, empilhando em mobile-first.
+
+Decisão complementar:
+
+- Manter o contrato backend atual de `GET /api/admin/private/psychologists/:id/statistics`.
+- Executar duas queries reais da mesma leitura: uma para negócio/vídeo e outra para comunidade.
+- Cada query recebe seu próprio estado de `period`, `from` e `to`, permitindo que o Admin altere comunidade sem alterar negócio/vídeo.
+- Não criar endpoint paralelo nem parâmetro composto enquanto a necessidade for apenas separar o estado visual do filtro.
+
+Consequência: há uma segunda leitura de estatísticas quando os períodos divergem, mas ela reaproveita dados reais e evita mudança de contrato backend para um refinamento de UI. Se o custo da tela crescer, uma task futura pode evoluir o contrato para períodos nomeados por seção.
+
 ## Validação
 
 - `pnpm --dir backend check`
@@ -115,6 +128,15 @@ Validação da emenda de granularidade adaptativa:
 - `pnpm --dir admin check`
 - `pnpm --dir admin build`
 - Smoke HTTP local em `http://localhost:3002/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=estatisticas` retornou `200`.
+
+Validação da emenda de filtro independente de comunidade:
+
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- Browser local/headless via Edge/CDP em `http://localhost:3012/psicologos/demo-psychologist-marina-rocha?tab=estatisticas`, com admin temporário real removido ao final, confirmou:
+  - título **Estatísticas de comunidade** fora do card branco;
+  - campos **Período**, **De** e **Até** próprios da comunidade;
+  - alteração do período da comunidade para `Este mês` mantendo negócio em `Esta semana`.
 
 ## Limitações da execução
 
