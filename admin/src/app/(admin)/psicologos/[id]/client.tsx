@@ -350,6 +350,9 @@ const BUSINESS_CHART_METRICS = [
   {
     dotRadius: 4.2,
     id: "profile_views",
+    icon: Eye,
+    iconClassName: "text-primary",
+    iconToneClassName: "bg-primary-soft",
     key: "profile_views",
     label: "Visualizações",
     shortLabel: "Perfil",
@@ -359,6 +362,9 @@ const BUSINESS_CHART_METRICS = [
   {
     dotRadius: 3.8,
     id: "whatsapp_clicks",
+    icon: MessageCircle,
+    iconClassName: "text-emerald-500",
+    iconToneClassName: "bg-emerald-50",
     key: "whatsapp_clicks",
     label: "WhatsApp",
     shortLabel: "WhatsApp",
@@ -368,6 +374,9 @@ const BUSINESS_CHART_METRICS = [
   {
     dotRadius: 3.4,
     id: "favorites",
+    icon: Heart,
+    iconClassName: "text-pink-500",
+    iconToneClassName: "bg-pink-50",
     key: "favorites",
     label: "Favoritos",
     shortLabel: "Favoritos",
@@ -377,6 +386,9 @@ const BUSINESS_CHART_METRICS = [
   {
     dotRadius: 3,
     id: "search_results",
+    icon: Search,
+    iconClassName: "text-blue-500",
+    iconToneClassName: "bg-blue-50",
     key: "search_results",
     label: "Resultados de busca",
     shortLabel: "Busca",
@@ -386,6 +398,9 @@ const BUSINESS_CHART_METRICS = [
 ] as const satisfies readonly {
   dotRadius: number;
   id: string;
+  icon: LucideIcon;
+  iconClassName: string;
+  iconToneClassName: string;
   key: keyof AdminPsychologistStatistics["business"]["series"][number];
   label: string;
   shortLabel: string;
@@ -1828,14 +1843,17 @@ const MetricComparisonLine = ({
 
 const BusinessMetricToggleCard = ({
   active,
+  config,
   metric,
   onToggle,
 }: {
   active: boolean;
+  config: BusinessChartMetric;
   metric: AdminPsychologistEngagementMetric;
   onToggle: () => void;
 }) => {
   const displayValue = metric.available ? formatEngagementMetricValue(metric) : "—";
+  const Icon = config.icon;
 
   return (
     <button
@@ -1843,7 +1861,7 @@ const BusinessMetricToggleCard = ({
       className={cn(
         "min-w-0 overflow-hidden rounded-2xl border p-3 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2",
         active
-          ? "border-primary/40 bg-surface shadow-admin-soft"
+          ? "border-primary/40 bg-surface shadow-none"
           : "border-border bg-surface hover:border-primary/30 hover:bg-primary-soft/20",
         !metric.available && "cursor-not-allowed bg-surface-muted opacity-60 hover:border-border",
       )}
@@ -1854,12 +1872,27 @@ const BusinessMetricToggleCard = ({
       }`}
       type="button"
     >
-      <span className="block min-w-0 max-w-full">
-        <span className="block max-w-full break-words text-xs font-black leading-snug text-foreground">
-          {metric.label}
+      <span className="flex min-w-0 items-start gap-3">
+        <span
+          className={cn(
+            "grid h-10 w-10 shrink-0 place-items-center rounded-full",
+            config.iconToneClassName,
+            config.iconClassName,
+          )}
+        >
+          {config.id === "whatsapp_clicks" ? (
+            <WhatsAppIcon aria-hidden className="h-5 w-5" />
+          ) : (
+            <Icon aria-hidden className="h-5 w-5" />
+          )}
         </span>
-        <span className="mt-2 block text-2xl font-black leading-none text-foreground">
-          {displayValue}
+        <span className="block min-w-0 max-w-full">
+          <span className="block max-w-full break-words text-xs font-black leading-snug text-foreground">
+            {metric.label}
+          </span>
+          <span className="mt-2 block text-2xl font-black leading-none text-foreground">
+            {displayValue}
+          </span>
         </span>
       </span>
       {metric.available ? (
@@ -2673,6 +2706,7 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: st
             {businessCards.map(({ config, metric }) => (
               <BusinessMetricToggleCard
                 active={visibleBusinessMetricIds.includes(config.id) && metric.available}
+                config={config}
                 key={config.id}
                 metric={metric}
                 onToggle={() => toggleBusinessMetric(config.id)}
