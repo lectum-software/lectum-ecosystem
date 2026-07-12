@@ -703,6 +703,14 @@ export type AdminPsychologistStatistics = {
   };
 };
 
+export type AdminPsychologistStatisticsPeriodFilter = "all" | "custom" | "month" | "week" | "year";
+
+export type AdminPsychologistStatisticsQuery = {
+  from?: string;
+  period?: AdminPsychologistStatisticsPeriodFilter;
+  to?: string;
+};
+
 export type AdminPsychologistStatisticsPoint = {
   comments_received: number;
   date: string;
@@ -1018,6 +1026,12 @@ const cleanPublicationsParams = (input: AdminPsychologistPublicationsQuery) => (
   ...(input.type ? { type: input.type } : {}),
 });
 
+const cleanStatisticsParams = (input: AdminPsychologistStatisticsQuery = {}) => ({
+  ...(input.from ? { from: input.from } : {}),
+  ...(input.period ? { period: input.period } : {}),
+  ...(input.to ? { to: input.to } : {}),
+});
+
 const cleanReviewsParams = (input: AdminPsychologistReviewsQuery) => ({
   ...(input.limit ? { limit: input.limit } : {}),
   ...(input.page ? { page: input.page } : {}),
@@ -1182,9 +1196,15 @@ export const getAdminPsychologistRegistryVerification = async (id: string) => {
   return resolveApiData(response.data);
 };
 
-export const getAdminPsychologistStatistics = async (id: string) => {
+export const getAdminPsychologistStatistics = async (
+  id: string,
+  input: AdminPsychologistStatisticsQuery = {},
+) => {
   const response = await adminApi.get<ApiResponse<AdminPsychologistStatistics>>(
     `/api/admin/private/psychologists/${encodeURIComponent(id)}/statistics`,
+    {
+      params: cleanStatisticsParams(input),
+    },
   );
 
   return resolveApiData(response.data);

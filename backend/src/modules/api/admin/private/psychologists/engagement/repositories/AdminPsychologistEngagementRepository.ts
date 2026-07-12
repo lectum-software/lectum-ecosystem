@@ -10,6 +10,7 @@ const psychologistSelect = {
   user: {
     select: {
       active: true,
+      createdAt: true,
       id: true,
       name: true,
       role: true,

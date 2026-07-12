@@ -18,7 +18,7 @@ import {
 } from "../repositories/AdminPsychologistEngagementRepository";
 
 const DEFAULT_PERIOD_DAYS = 30;
-const MAX_PERIOD_DAYS = 90;
+const MAX_PERIOD_DAYS = 3660;
 const MS_PER_DAY = 86_400_000;
 
 const pad = (value: number) => String(value).padStart(2, "0");
@@ -36,6 +36,18 @@ const startOfDate = (date: Date) => {
   next.setHours(0, 0, 0, 0);
   return next;
 };
+
+const startOfMonth = (date: Date) => startOfDate(new Date(date.getFullYear(), date.getMonth(), 1));
+
+const startOfWeek = (date: Date) => {
+  const next = startOfDate(date);
+  const day = next.getDay();
+  const diff = day === 0 ? -6 : 1 - day;
+
+  return addDays(next, diff);
+};
+
+const startOfYear = (date: Date) => startOfDate(new Date(date.getFullYear(), 0, 1));
 
 const endOfDate = (date: Date) => {
   const next = new Date(date);
@@ -73,14 +85,18 @@ type PeriodResult =
     }
   | { code: string; success: false };
 
-const resolvePeriod = (query: { from?: string; to?: string } = {}): PeriodResult => {
+const resolvePeriod = (
+  query: { from?: string; period?: string; to?: string } = {},
+  allPeriodStartDate?: Date,
+): PeriodResult => {
   const hasCustomFrom = Boolean(query.from);
   const hasCustomTo = Boolean(query.to);
+  const preset = query.period || (hasCustomFrom || hasCustomTo ? "custom" : null);
   let start: Date;
   let end: Date;
   let label = "Últimos 30 dias";
 
-  if (hasCustomFrom || hasCustomTo) {
+  if (preset === "custom") {
     if (!hasCustomFrom || !hasCustomTo)
       return { success: false, code: "invalid_analytics_date_range" };
 
@@ -94,6 +110,28 @@ const resolvePeriod = (query: { from?: string; to?: string } = {}): PeriodResult
     start = customStart;
     end = customEnd;
     label = "Período personalizado";
+  } else if (preset === "week") {
+    const today = new Date();
+    start = startOfWeek(today);
+    end = endOfDate(today);
+    label = "Esta semana";
+  } else if (preset === "month") {
+    const today = new Date();
+    start = startOfMonth(today);
+    end = endOfDate(today);
+    label = "Este mês";
+  } else if (preset === "year") {
+    const today = new Date();
+    start = startOfYear(today);
+    end = endOfDate(today);
+    label = "Este ano";
+  } else if (preset === "all") {
+    const today = new Date();
+    start = startOfDate(allPeriodStartDate ?? addDays(today, -(DEFAULT_PERIOD_DAYS - 1)));
+    end = endOfDate(today);
+    label = "Todo o período";
+  } else if (preset) {
+    return { success: false, code: "invalid_analytics_date_range" };
   } else {
     const today = new Date();
     end = endOfDate(today);
@@ -398,12 +436,12 @@ const notFound = () => ({
 export const showAdminPsychologistStatistics = async (
   data: IAdminPsychologistStatisticsDTO,
 ): Promise<Resolve> => {
-  const period = resolvePeriod(data.q ?? {});
-  if (!period.success) return { status: 400, ...error(period.code, {}) };
-
   const repository = new AdminPsychologistEngagementRepository();
   const profile = await repository.findPsychologist(data.p.id);
   if (!profile) return notFound();
+
+  const period = resolvePeriod(data.q ?? {}, profile.user.createdAt);
+  if (!period.success) return { status: 400, ...error(period.code, {}) };
 
   const userId = profile.user.id;
   const [

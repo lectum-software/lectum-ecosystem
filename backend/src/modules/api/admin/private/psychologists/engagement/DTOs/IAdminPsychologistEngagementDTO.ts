@@ -2,6 +2,7 @@
 
 export type AdminPsychologistEngagementQuery = {
   from?: string;
+  period?: "all" | "custom" | "month" | "week" | "year";
   to?: string;
 };
 

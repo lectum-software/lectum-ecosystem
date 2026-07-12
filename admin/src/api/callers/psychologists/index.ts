@@ -12,6 +12,7 @@ import {
   type AdminPsychologistReviewsQuery,
   type AdminPsychologistRevokeSessionsInput,
   type AdminPsychologistSetTemporaryPasswordInput,
+  type AdminPsychologistStatisticsQuery,
   type AdminPsychologistUpdatePersonalDataInput,
   type AdminPsychologistUpdateProfessionalDataInput,
   type AdminPsychologistUpdateRegistryIdentityInput,
@@ -93,11 +94,15 @@ export const useAdminPsychologistRegistryVerification = (
     queryKey: adminPsychologistsKeys.registryVerification(id),
   });
 
-export const useAdminPsychologistStatistics = (id: string, options: { enabled?: boolean } = {}) =>
+export const useAdminPsychologistStatistics = (
+  id: string,
+  input: AdminPsychologistStatisticsQuery = {},
+  options: { enabled?: boolean } = {},
+) =>
   useQuery({
     enabled: Boolean(id) && (options.enabled ?? true),
-    queryFn: () => getAdminPsychologistStatistics(id),
-    queryKey: adminPsychologistsKeys.statistics(id),
+    queryFn: () => getAdminPsychologistStatistics(id, input),
+    queryKey: adminPsychologistsKeys.statistics(id, input),
   });
 
 export const useAdminPsychologistPublications = (

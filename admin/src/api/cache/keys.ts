@@ -12,6 +12,7 @@ import type {
   AdminPsychologistPublicationsQuery,
   AdminPsychologistReportsQuery,
   AdminPsychologistReviewsQuery,
+  AdminPsychologistStatisticsQuery,
   PsychologistsDashboardQuery,
   PsychologistsListQuery,
 } from "@/api/req/psychologists";
@@ -61,6 +62,12 @@ const normalizePsychologistPublications = (input: AdminPsychologistPublicationsQ
   q: input.q || "",
   to: input.to || "default",
   type: input.type || "all",
+});
+
+const normalizePsychologistStatistics = (input: AdminPsychologistStatisticsQuery = {}) => ({
+  from: input.from || "default",
+  period: input.period || "week",
+  to: input.to || "default",
 });
 
 const normalizePsychologistReviews = (input: AdminPsychologistReviewsQuery) => ({
@@ -170,7 +177,13 @@ export const adminPsychologistsKeys = {
     [...adminPsychologistsKeys.all, "reports", id, normalizePsychologistReports(input)] as const,
   reviews: (id: string, input: AdminPsychologistReviewsQuery) =>
     [...adminPsychologistsKeys.all, "reviews", id, normalizePsychologistReviews(input)] as const,
-  statistics: (id: string) => [...adminPsychologistsKeys.all, "statistics", id] as const,
+  statistics: (id: string, input: AdminPsychologistStatisticsQuery = {}) =>
+    [
+      ...adminPsychologistsKeys.all,
+      "statistics",
+      id,
+      normalizePsychologistStatistics(input),
+    ] as const,
 };
 
 export const adminPatientsKeys = {

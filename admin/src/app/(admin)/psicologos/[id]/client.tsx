@@ -94,6 +94,7 @@ import type {
   AdminPsychologistReviewItem,
   AdminPsychologistReviewsQuery,
   AdminPsychologistStatistics,
+  AdminPsychologistStatisticsQuery,
 } from "@/api/req/psychologists";
 import { InputController, SelectController, TextareaController } from "@/components/controllers";
 import { cn } from "@/lib/utils";
@@ -391,6 +392,16 @@ const BUSINESS_CHART_METRICS = [
 
 type BusinessChartMetric = (typeof BUSINESS_CHART_METRICS)[number];
 type BusinessChartMetricId = BusinessChartMetric["id"];
+type StatisticsPeriodPreset = NonNullable<AdminPsychologistStatisticsQuery["period"]>;
+type StatisticsCustomRange = Pick<AdminPsychologistStatisticsQuery, "from" | "to">;
+
+const STATISTICS_PERIOD_OPTIONS: { id: StatisticsPeriodPreset; label: string }[] = [
+  { id: "week", label: "Esta semana" },
+  { id: "month", label: "Este mês" },
+  { id: "year", label: "Este ano" },
+  { id: "all", label: "Todo o período" },
+  { id: "custom", label: "Personalizado" },
+];
 
 const CARD = "rounded-card border border-border bg-surface shadow-admin-soft";
 const COURTESY_GRANT_CONFIRMATION = "CONCEDER CORTESIA";
@@ -743,6 +754,34 @@ const formatDateOnly = (value?: string | null) => {
 
   return dateOnlyFormatter.format(date);
 };
+
+const toDateInputValue = (date: Date) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+};
+
+const startOfCurrentWeek = () => {
+  const date = new Date();
+  const day = date.getDay();
+  const diff = day === 0 ? -6 : 1 - day;
+  date.setDate(date.getDate() + diff);
+
+  return date;
+};
+
+const getDefaultStatisticsCustomRange = (): Required<StatisticsCustomRange> => ({
+  from: toDateInputValue(startOfCurrentWeek()),
+  to: toDateInputValue(new Date()),
+});
+
+const buildStatisticsPeriodQuery = (
+  period: StatisticsPeriodPreset,
+  customRange: StatisticsCustomRange,
+): AdminPsychologistStatisticsQuery =>
+  period === "custom" ? { from: customRange.from, period, to: customRange.to } : { period };
 
 const formatDateTime = (value?: string | null) => {
   if (!value) return "Não informado";
@@ -1935,7 +1974,15 @@ const StatisticsVideoCard = ({
 };
 
 const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: string }) => {
-  const query = useAdminPsychologistStatistics(id);
+  const [statisticsPeriod, setStatisticsPeriod] = useState<StatisticsPeriodPreset>("week");
+  const [customStatisticsRange, setCustomStatisticsRange] = useState<StatisticsCustomRange>(() =>
+    getDefaultStatisticsCustomRange(),
+  );
+  const statisticsPeriodQuery = useMemo(
+    () => buildStatisticsPeriodQuery(statisticsPeriod, customStatisticsRange),
+    [customStatisticsRange, statisticsPeriod],
+  );
+  const query = useAdminPsychologistStatistics(id, statisticsPeriodQuery);
   const [visibleBusinessMetricIds, setVisibleBusinessMetricIds] = useState<BusinessChartMetricId[]>(
     () => BUSINESS_CHART_METRICS.map((item) => item.id),
   );
@@ -1987,17 +2034,65 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: st
 
   return (
     <div className="space-y-5" data-psychologist-detail-tab="estatisticas">
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+        <h2 className="text-xl font-black text-foreground">Estatísticas de negócio</h2>
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
+          <label className="grid gap-1 text-xs font-black text-muted">
+            Período
+            <select
+              className="h-10 min-w-[170px] rounded-2xl border border-border bg-surface px-3 text-sm font-black text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+              onChange={(event) =>
+                setStatisticsPeriod(event.target.value as StatisticsPeriodPreset)
+              }
+              value={statisticsPeriod}
+            >
+              {STATISTICS_PERIOD_OPTIONS.map((option) => (
+                <option key={option.id} value={option.id}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          {statisticsPeriod === "custom" ? (
+            <div className="grid gap-2 sm:grid-cols-2">
+              <label className="grid gap-1 text-xs font-black text-muted">
+                De
+                <input
+                  className="h-10 rounded-2xl border border-border bg-surface px-3 text-sm font-black text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+                  onChange={(event) =>
+                    setCustomStatisticsRange((current) => ({
+                      ...current,
+                      from: event.target.value,
+                    }))
+                  }
+                  type="date"
+                  value={customStatisticsRange.from}
+                />
+              </label>
+              <label className="grid gap-1 text-xs font-black text-muted">
+                Até
+                <input
+                  className="h-10 rounded-2xl border border-border bg-surface px-3 text-sm font-black text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+                  onChange={(event) =>
+                    setCustomStatisticsRange((current) => ({
+                      ...current,
+                      to: event.target.value,
+                    }))
+                  }
+                  type="date"
+                  value={customStatisticsRange.to}
+                />
+              </label>
+            </div>
+          ) : null}
+        </div>
+      </div>
+
       <section className="grid gap-5 xl:grid-cols-[minmax(0,1.15fr)_minmax(360px,0.85fr)] xl:items-start">
         <div className="min-w-0">
           <CardShell className="min-w-0 p-5">
-            <div>
-              <h2 className="text-xl font-black text-foreground">Estatísticas de negócio</h2>
-              <p className="mt-1 text-sm font-bold text-muted">
-                Use os botões para mostrar ou esconder curvas na evolução do período.
-              </p>
-            </div>
-
-            <fieldset className="mt-4 grid min-w-0 grid-cols-4 gap-1.5 sm:gap-2">
+            <fieldset className="grid min-w-0 grid-cols-4 gap-1.5 sm:gap-2">
               <legend className="sr-only">Contadores exibidos no gráfico</legend>
               {businessCards.map(({ config, metric }) => (
                 <BusinessMetricToggleCard
