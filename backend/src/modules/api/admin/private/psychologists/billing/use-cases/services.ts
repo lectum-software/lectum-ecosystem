@@ -128,7 +128,7 @@ const buildPaymentHistory = (
   const reason =
     subscription?.source === "mercadopago"
       ? "Nenhum payment_event confirmado foi encontrado para esta assinatura."
-      : "Este plano nao possui cobranca financeira confirmada no gateway.";
+      : "Este plano não possui cobrança financeira.";
 
   return {
     available: false,
