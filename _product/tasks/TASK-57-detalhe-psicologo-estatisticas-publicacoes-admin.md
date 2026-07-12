@@ -125,3 +125,14 @@ Exibir estatísticas de negócio/comunidade e publicações do psicólogo com da
 - Os filtros continuam independentes: alterar negócio/vídeo não altera comunidade, e alterar comunidade não altera negócio/vídeo.
 - A implementação usa o endpoint real Admin de estatísticas, sem mock, sem seed e sem alteração de contrato backend.
 - Validações executadas: `pnpm --dir admin check`, `pnpm --dir admin build` e browser local/headless via Edge/CDP com atraso controlado nas requisições de estatísticas, confirmando que a aba permaneceu renderizada e que apenas a seção afetada exibiu `Atualizando`.
+
+### Correção visual e comparativa em 2026-07-12
+
+- Restaurada a hierarquia visual do protótipo da aba **Estatísticas**: os contadores **Visualizações de perfil**, **Resultados de busca**, **Cliques no WhatsApp** e **Favoritados** voltaram a ser cards/KPIs com ícone, valor e comparação, em vez de pílulas compactas.
+- O gráfico de negócio permanece controlável por esses cards acessíveis (`aria-pressed`), mas a leitura primária volta a ser o KPI conforme `_product/proto/admin/Psicólogos/Detalhes do psicólogo/Estatísticas.png`.
+- O contrato real `GET /api/admin/private/psychologists/:id/statistics` passou a retornar o período anterior e comparações reais para contadores de negócio e métricas do vídeo, calculadas com a janela imediatamente anterior ao filtro aplicado.
+- As métricas do vídeo (**Visualizações**, **Taxa de replays** e **Retenção média**) exibem crescimento/queda contra o período anterior sem expor dados sensíveis e sem estimativa.
+- A proporção da seção **Análises do vídeo de apresentação** foi ajustada para reduzir o peso do preview do vídeo e dar mais espaço horizontal ao gráfico de retenção.
+- Não houve alteração em Prisma schema ou migrations; `pnpm --dir backend db:migrate` não foi necessário.
+- Builder/Quick Copy não estava disponível como ferramenta callable no ambiente; a correção usou o PNG local da aba **Estatísticas** e o recorte atual fornecido pelo usuário.
+- Validações executadas em worktree limpo com apenas esta correção aplicada: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm --dir frontend check` e `pnpm check`.

@@ -14,8 +14,19 @@ export type AdminPsychologistPublicationsQuery = AdminPsychologistEngagementQuer
   type?: "all" | "post" | "reply";
 };
 
+export type AdminPsychologistEngagementTrend = "down" | "flat" | "unavailable" | "up";
+
+export type AdminPsychologistMetricComparison = {
+  change_percent: number | null;
+  previous_from: string;
+  previous_to: string;
+  previous_value: number;
+  trend: AdminPsychologistEngagementTrend;
+};
+
 export type AdminPsychologistAvailabilityMetric = {
   available: boolean;
+  comparison?: AdminPsychologistMetricComparison | null;
   id: string;
   label: string;
   source: string;
@@ -29,6 +40,8 @@ export type AdminPsychologistStatisticsPeriod = {
   from: string;
   label: string;
   max_days: number;
+  previous_from: string;
+  previous_to: string;
   timezone: "server-local";
   to: string;
 };
@@ -47,6 +60,11 @@ export type AdminPsychologistStatisticsSeriesPoint = {
 
 export type AdminPsychologistStatisticsVideo = {
   available: boolean;
+  comparisons: {
+    average_retention_percent: AdminPsychologistMetricComparison;
+    replay_rate_percent: AdminPsychologistMetricComparison;
+    sessions: AdminPsychologistMetricComparison;
+  };
   cover_url: string | null;
   metrics: {
     average_retention_percent: number;

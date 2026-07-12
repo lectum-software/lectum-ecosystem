@@ -2,6 +2,7 @@
 import { error, msg } from "@/helpers/translate";
 import type {
   AdminPsychologistAvailabilityMetric,
+  AdminPsychologistMetricComparison,
   AdminPsychologistPublicationItem,
   AdminPsychologistPublicationsDTO,
   AdminPsychologistPublicationsQuery,
@@ -81,6 +82,7 @@ type PeriodResult =
       current: { end: Date; start: Date };
       labels: string[];
       period: AdminPsychologistStatisticsPeriod;
+      previous: { end: Date; start: Date };
       success: true;
     }
   | { code: string; success: false };
@@ -144,6 +146,8 @@ const resolvePeriod = (
   }
 
   const labels = Array.from({ length: days }, (_, index) => toDateKey(addDays(start, index)));
+  const previousEnd = endOfDate(addDays(start, -1));
+  const previousStart = startOfDate(addDays(start, -days));
 
   return {
     success: true,
@@ -154,14 +158,18 @@ const resolvePeriod = (
       from: toDateKey(start),
       label,
       max_days: MAX_PERIOD_DAYS,
+      previous_from: toDateKey(previousStart),
+      previous_to: toDateKey(previousEnd),
       timezone: "server-local",
       to: toDateKey(end),
     },
+    previous: { end: previousEnd, start: previousStart },
   };
 };
 
 const metric = (input: {
   available?: boolean;
+  comparison?: AdminPsychologistMetricComparison | null;
   id: string;
   label: string;
   source: string;
@@ -170,6 +178,7 @@ const metric = (input: {
   value: number | null;
 }): AdminPsychologistAvailabilityMetric => ({
   available: input.available ?? input.value !== null,
+  ...(input.comparison ? { comparison: input.comparison } : {}),
   id: input.id,
   label: input.label,
   source: input.source,
@@ -189,6 +198,28 @@ const unavailableMetric = (id: string, label: string, source: string, reason: st
   });
 
 const roundPercent = (value: number) => Math.round(value * 10) / 10;
+
+const percentageChange = (current: number, previous: number) => {
+  if (previous === 0) return current === 0 ? 0 : null;
+
+  return roundPercent(((current - previous) / previous) * 100);
+};
+
+const buildComparison = (
+  current: number,
+  previous: number,
+  period: AdminPsychologistStatisticsPeriod,
+): AdminPsychologistMetricComparison => {
+  const change = percentageChange(current, previous);
+
+  return {
+    change_percent: change,
+    previous_from: period.previous_from,
+    previous_to: period.previous_to,
+    previous_value: previous,
+    trend: change === null ? "unavailable" : change > 0 ? "up" : change < 0 ? "down" : "flat",
+  };
+};
 
 const groupDateCounts = <T extends { createdAt: Date }>(items: T[], labels: string[]) => {
   const counts = new Map(labels.map((label) => [label, 0]));
@@ -291,14 +322,11 @@ const buildSeries = (input: {
   }));
 };
 
-const buildVideo = (
-  profile: {
-    cover_image_url: string | null;
-    video_cover_url: string | null;
-    video_url: string | null;
-  },
-  sessions: Awaited<ReturnType<AdminPsychologistEngagementRepository["listVideoSessions"]>>,
-): AdminPsychologistStatisticsDTO["video"] => {
+type VideoSessions = Awaited<
+  ReturnType<AdminPsychologistEngagementRepository["listVideoSessions"]>
+>;
+
+const buildVideoMetrics = (sessions: VideoSessions) => {
   const total = sessions.length;
   const completions = sessions.filter(
     (session) => session.completed || session.milestone_100,
@@ -318,6 +346,28 @@ const buildVideo = (
           ) / total,
         );
 
+  return {
+    average_retention_percent: averageRetention,
+    completions,
+    replay_rate_percent: total > 0 ? roundPercent((replaySessions / total) * 100) : 0,
+    sessions: total,
+  };
+};
+
+const buildVideo = (
+  profile: {
+    cover_image_url: string | null;
+    video_cover_url: string | null;
+    video_url: string | null;
+  },
+  sessions: VideoSessions,
+  previousSessions: VideoSessions,
+  period: AdminPsychologistStatisticsPeriod,
+): AdminPsychologistStatisticsDTO["video"] => {
+  const total = sessions.length;
+  const metrics = buildVideoMetrics(sessions);
+  const previousMetrics = buildVideoMetrics(previousSessions);
+  const completions = metrics.completions;
   const retention = [
     { label: "0%", percentage: total > 0 ? 100 : 0, position_percent: 0 },
     {
@@ -353,13 +403,21 @@ const buildVideo = (
 
   return {
     available: total > 0,
-    cover_url: profile.video_cover_url ?? profile.cover_image_url,
-    metrics: {
-      average_retention_percent: averageRetention,
-      completions,
-      replay_rate_percent: total > 0 ? roundPercent((replaySessions / total) * 100) : 0,
-      sessions: total,
+    comparisons: {
+      average_retention_percent: buildComparison(
+        metrics.average_retention_percent,
+        previousMetrics.average_retention_percent,
+        period,
+      ),
+      replay_rate_percent: buildComparison(
+        metrics.replay_rate_percent,
+        previousMetrics.replay_rate_percent,
+        period,
+      ),
+      sessions: buildComparison(metrics.sessions, previousMetrics.sessions, period),
     },
+    cover_url: profile.video_cover_url ?? profile.cover_image_url,
+    metrics,
     retention,
     source: "profile_video_watch_session",
     unavailable_reason:
@@ -450,6 +508,11 @@ export const showAdminPsychologistStatistics = async (
     favorites,
     searchResults,
     videoSessions,
+    previousProfileViews,
+    previousWhatsappClicks,
+    previousFavorites,
+    previousSearchResults,
+    previousVideoSessions,
     posts,
     replies,
     memberships,
@@ -459,6 +522,11 @@ export const showAdminPsychologistStatistics = async (
     repository.listFavorites(userId, period.current.start, period.current.end),
     repository.listSearchResultImpressions(userId, period.current.start, period.current.end),
     repository.listVideoSessions(userId, period.current.start, period.current.end),
+    repository.listProfileViews(userId, period.previous.start, period.previous.end),
+    repository.listWhatsappClicks(userId, period.previous.start, period.previous.end),
+    repository.listFavorites(userId, period.previous.start, period.previous.end),
+    repository.listSearchResultImpressions(userId, period.previous.start, period.previous.end),
+    repository.listVideoSessions(userId, period.previous.start, period.previous.end),
     repository.listAuthoredPosts(userId, period.current.start, period.current.end),
     repository.listAuthoredReplies(userId, period.current.start, period.current.end),
     repository.listCommunities(userId),
@@ -490,24 +558,40 @@ export const showAdminPsychologistStatistics = async (
     business: {
       cards: [
         metric({
+          comparison: buildComparison(
+            profileViews.length,
+            previousProfileViews.length,
+            period.period,
+          ),
           id: "profile_views",
           label: "Visualizações de perfil",
           source: "profile_view_event.source=profile_page",
           value: profileViews.length,
         }),
         metric({
+          comparison: buildComparison(
+            whatsappClicks.length,
+            previousWhatsappClicks.length,
+            period.period,
+          ),
           id: "whatsapp_clicks",
           label: "Cliques no WhatsApp",
           source: "contact_request.channel=whatsapp",
           value: whatsappClicks.length,
         }),
         metric({
+          comparison: buildComparison(favorites.length, previousFavorites.length, period.period),
           id: "favorites",
           label: "Favoritados",
           source: "psychologist_favorite",
           value: favorites.length,
         }),
         metric({
+          comparison: buildComparison(
+            searchResults.length,
+            previousSearchResults.length,
+            period.period,
+          ),
           id: "search_results",
           label: "Resultados de busca",
           source: "profile_view_event.source=search_result",
@@ -549,7 +633,7 @@ export const showAdminPsychologistStatistics = async (
     period: period.period,
     source: "profile_events+community_activity+video_sessions+search_impressions",
     unavailable,
-    video: buildVideo(profile, videoSessions),
+    video: buildVideo(profile, videoSessions, previousVideoSessions, period.period),
   };
 
   return {

@@ -107,6 +107,29 @@ Decisão complementar:
 
 Consequência: a UI preserva contexto, gráfico, títulos e filtros durante refetches, com uma leitura extra apenas quando a seção alterada possui período diferente.
 
+## Emenda 2026-07-12 — comparativo real e restauração dos cards de negócio
+
+O recorte visual ativo da aba **Estatísticas** exige que os contadores de negócio sejam lidos como KPIs, não apenas como legenda compacta do gráfico, e que os contadores/vídeo mostrem crescimento ou queda em relação ao período anterior.
+
+Decisão complementar:
+
+- Ampliar o contrato de `GET /api/admin/private/psychologists/:id/statistics` com `previous_from`/`previous_to` no período.
+- Incluir comparação real nos cards de negócio:
+  - `profile_views`;
+  - `search_results`;
+  - `whatsapp_clicks`;
+  - `favorites`.
+- Incluir comparação real nas métricas do vídeo:
+  - sessões/visualizações;
+  - taxa de replay;
+  - retenção média.
+- Calcular o período anterior como a janela imediatamente anterior, com a mesma quantidade de dias do filtro atual.
+- Quando o período anterior for zero e o atual for maior que zero, retornar `change_percent=null` e `trend="unavailable"` para não inventar percentual infinito.
+- Manter os cards de negócio como botões acessíveis (`aria-pressed`) que controlam as séries visíveis no gráfico, mas com aparência de card/KPI alinhada ao protótipo.
+- Ajustar o preview do vídeo para proporção visual mais compacta, preservando o gráfico de retenção como elemento principal do card de vídeo.
+
+Consequência: o endpoint faz leituras adicionais das mesmas fontes persistidas no período anterior, sem tabela nova, sem mock e sem estimativa. O Admin ganha leitura comparativa coerente com o protótipo, mantendo a interação existente de ligar/desligar séries.
+
 ## Validação
 
 - `pnpm --dir backend check`
@@ -164,6 +187,16 @@ Validação da emenda de atualização parcial:
   - trocar o período de comunidade manteve a aba renderizada sem skeleton global;
   - apenas **Estatísticas de comunidade** exibiu `Atualizando`;
   - o filtro de negócio permaneceu inalterado.
+
+Validação da emenda de comparativo real e restauração dos cards:
+
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm --dir frontend check`
+- `pnpm check`
+- Validação executada em worktree limpo com apenas esta correção aplicada, porque o workspace principal continha alterações não relacionadas em andamento.
 
 ## Limitações da execução
 

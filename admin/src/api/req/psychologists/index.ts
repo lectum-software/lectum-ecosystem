@@ -651,6 +651,13 @@ export type AdminPsychologistUpdateRegistryIdentityInput = {
 
 export type AdminPsychologistEngagementMetric = {
   available: boolean;
+  comparison?: {
+    change_percent: number | null;
+    previous_from: string;
+    previous_to: string;
+    previous_value: number;
+    trend: PsychologistsDashboardTrend;
+  } | null;
   id: string;
   label: string;
   source: string;
@@ -682,6 +689,8 @@ export type AdminPsychologistStatistics = {
     from: string;
     label: string;
     max_days: number;
+    previous_from: string;
+    previous_to: string;
     timezone: "server-local";
     to: string;
   };
@@ -689,6 +698,11 @@ export type AdminPsychologistStatistics = {
   unavailable: AdminPsychologistEngagementMetric[];
   video: {
     available: boolean;
+    comparisons: {
+      average_retention_percent: NonNullable<AdminPsychologistEngagementMetric["comparison"]>;
+      replay_rate_percent: NonNullable<AdminPsychologistEngagementMetric["comparison"]>;
+      sessions: NonNullable<AdminPsychologistEngagementMetric["comparison"]>;
+    };
     cover_url: string | null;
     metrics: {
       average_retention_percent: number;

@@ -345,6 +345,7 @@ const BUSINESS_CHART_METRICS = [
   {
     dotRadius: 4.2,
     icon: Eye,
+    iconCircleClassName: "bg-primary-soft text-primary",
     id: "profile_views",
     key: "profile_views",
     label: "Visualizações",
@@ -355,6 +356,7 @@ const BUSINESS_CHART_METRICS = [
   {
     dotRadius: 3.8,
     icon: MessageCircle,
+    iconCircleClassName: "bg-emerald-50 text-emerald-600",
     id: "whatsapp_clicks",
     key: "whatsapp_clicks",
     label: "WhatsApp",
@@ -365,6 +367,7 @@ const BUSINESS_CHART_METRICS = [
   {
     dotRadius: 3.4,
     icon: Heart,
+    iconCircleClassName: "bg-pink-50 text-pink-600",
     id: "favorites",
     key: "favorites",
     label: "Favoritos",
@@ -375,6 +378,7 @@ const BUSINESS_CHART_METRICS = [
   {
     dotRadius: 3,
     icon: Search,
+    iconCircleClassName: "bg-blue-50 text-blue-600",
     id: "search_results",
     key: "search_results",
     label: "Resultados de busca",
@@ -385,6 +389,7 @@ const BUSINESS_CHART_METRICS = [
 ] as const satisfies readonly {
   dotRadius: number;
   icon: LucideIcon;
+  iconCircleClassName: string;
   id: string;
   key: keyof AdminPsychologistStatistics["business"]["series"][number];
   label: string;
@@ -1198,6 +1203,24 @@ const formatEngagementMetricValue = (metric: AdminPsychologistEngagementMetric) 
   return numberFormatter.format(metric.value);
 };
 
+const formatChange = (value: number | null) => {
+  if (value === null) return "sem base anterior";
+  if (value === 0) return "0%";
+
+  return `${value > 0 ? "+" : ""}${value.toLocaleString("pt-BR", {
+    maximumFractionDigits: 1,
+    minimumFractionDigits: 0,
+  })}%`;
+};
+
+const formatPreviousPeriod = (
+  comparison?: AdminPsychologistEngagementMetric["comparison"] | null,
+) => {
+  if (!comparison) return "período anterior";
+
+  return `${formatDateOnly(comparison.previous_from)} - ${formatDateOnly(comparison.previous_to)}`;
+};
+
 const engagementMetricTone = (metric: AdminPsychologistEngagementMetric) =>
   metric.available ? "bg-surface text-foreground" : "bg-surface-muted text-muted";
 
@@ -1758,6 +1781,35 @@ const EngagementMetricCard = ({
   </div>
 );
 
+const MetricComparisonLine = ({
+  comparison,
+  className,
+}: {
+  className?: string;
+  comparison?: AdminPsychologistEngagementMetric["comparison"] | null;
+}) => {
+  const trend = comparison?.trend ?? "unavailable";
+  const hasArrow = trend === "up" || trend === "down";
+  const TrendIcon = trend === "down" ? ArrowDown : ArrowUp;
+
+  return (
+    <div className={cn("flex flex-wrap items-center gap-1.5 text-[0.68rem]", className)}>
+      <span
+        className={cn(
+          "inline-flex items-center gap-1 font-black",
+          trend === "up" && "text-success",
+          trend === "down" && "text-danger",
+          (trend === "flat" || trend === "unavailable") && "text-muted",
+        )}
+      >
+        {hasArrow ? <TrendIcon aria-hidden className="h-3 w-3" /> : null}
+        {formatChange(comparison?.change_percent ?? null)}
+      </span>
+      <span className="font-bold text-muted">vs. {formatPreviousPeriod(comparison)}</span>
+    </div>
+  );
+};
+
 const BusinessMetricToggleCard = ({
   active,
   config,
@@ -1770,15 +1822,16 @@ const BusinessMetricToggleCard = ({
   onToggle: () => void;
 }) => {
   const displayValue = metric.available ? formatEngagementMetricValue(metric) : "—";
+  const Icon = config.icon;
 
   return (
     <button
       aria-pressed={active}
       className={cn(
-        "inline-flex min-w-0 items-center justify-center gap-1 rounded-full border px-1.5 py-1.5 text-left text-[9px] font-black leading-none transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 sm:px-2 sm:text-[10px]",
+        "min-w-0 rounded-2xl border p-3 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2",
         active
-          ? "border-primary/40 bg-primary-soft text-primary"
-          : "border-border bg-surface text-muted hover:border-primary/30 hover:bg-primary-soft/30",
+          ? "border-primary/40 bg-surface shadow-admin-soft"
+          : "border-border bg-surface hover:border-primary/30 hover:bg-primary-soft/20",
         !metric.available && "cursor-not-allowed bg-surface-muted opacity-60 hover:border-border",
       )}
       disabled={!metric.available}
@@ -1788,16 +1841,33 @@ const BusinessMetricToggleCard = ({
       }`}
       type="button"
     >
-      <span
-        className={cn(
-          "h-2.5 w-2.5 shrink-0 rounded-full",
-          active ? config.swatchClassName : "bg-current opacity-40",
-        )}
-      />
-      <span className="whitespace-nowrap">{config.shortLabel}</span>
-      <span className="rounded-full bg-surface px-1.5 py-0.5 text-foreground sm:px-2">
-        {displayValue}
+      <span className="flex min-w-0 items-start gap-3">
+        <span
+          className={cn(
+            "grid h-10 w-10 shrink-0 place-items-center rounded-xl",
+            config.iconCircleClassName,
+          )}
+        >
+          {config.id === "whatsapp_clicks" ? (
+            <WhatsAppIcon aria-hidden className="h-5 w-5" />
+          ) : (
+            <Icon aria-hidden className="h-5 w-5" />
+          )}
+        </span>
+        <span className="min-w-0">
+          <span className="block text-xs font-black leading-snug text-foreground">
+            {metric.label}
+          </span>
+          <span className="mt-2 block text-2xl font-black leading-none text-foreground">
+            {displayValue}
+          </span>
+        </span>
       </span>
+      {metric.available ? (
+        <MetricComparisonLine className="mt-3" comparison={metric.comparison} />
+      ) : metric.unavailable_reason ? (
+        <span className="mt-3 block text-xs font-bold text-muted">{metric.unavailable_reason}</span>
+      ) : null}
       <span className="sr-only">
         {!metric.available ? "Indisponível" : active ? "visível no gráfico" : "oculto no gráfico"}
       </span>
@@ -2167,12 +2237,12 @@ const VideoRetentionLineChart = ({
     (left, right) => left.position_percent - right.position_percent,
   );
   const chartWidth = 440;
-  const chartHeight = 260;
+  const chartHeight = 220;
   const padding = {
-    bottom: 34,
+    bottom: 30,
     left: 48,
     right: 12,
-    top: 22,
+    top: 18,
   };
   const innerWidth = chartWidth - padding.left - padding.right;
   const innerHeight = chartHeight - padding.top - padding.bottom;
@@ -2213,7 +2283,7 @@ const VideoRetentionLineChart = ({
       : padding.left + (playbackPositionPercent / 100) * innerWidth;
 
   return (
-    <div className="h-[clamp(240px,15vw,280px)]">
+    <div className="h-[clamp(190px,12vw,220px)]">
       <svg
         aria-label="Gráfico de retenção do vídeo de apresentação"
         className="block h-full min-h-0 w-full"
@@ -2290,6 +2360,22 @@ const VideoRetentionLineChart = ({
   );
 };
 
+const VideoSummaryMetric = ({
+  comparison,
+  label,
+  value,
+}: {
+  comparison: NonNullable<AdminPsychologistEngagementMetric["comparison"]>;
+  label: string;
+  value: string;
+}) => (
+  <div className="min-w-0">
+    <p className="text-xs font-black text-muted">{label}</p>
+    <p className="mt-1 text-2xl font-black leading-none text-foreground">{value}</p>
+    <MetricComparisonLine className="mt-2" comparison={comparison} />
+  </div>
+);
+
 const StatisticsVideoCard = ({
   className,
   detail,
@@ -2323,8 +2409,8 @@ const StatisticsVideoCard = ({
         Análises do vídeo de apresentação
       </h2>
 
-      <div className="mt-4 grid flex-1 gap-4 md:grid-cols-[minmax(136px,158px)_minmax(0,1fr)] md:items-stretch 2xl:grid-cols-[minmax(150px,158px)_minmax(0,1fr)]">
-        <div className="mx-auto aspect-[9/16] h-[clamp(240px,15vw,280px)] max-w-full overflow-hidden rounded-[1.25rem] border border-border bg-black md:mx-0">
+      <div className="mt-4 grid flex-1 gap-x-5 gap-y-4 md:grid-cols-[minmax(136px,158px)_minmax(0,1fr)] md:items-start 2xl:grid-cols-[minmax(150px,158px)_minmax(0,1fr)]">
+        <div className="mx-auto aspect-[4/5] h-[clamp(190px,12vw,220px)] max-w-full overflow-hidden rounded-[1.25rem] border border-border bg-black md:mx-0">
           {videoSrc ? (
             <>
               {/* biome-ignore lint/a11y/useMediaCaption: o backend ainda não expõe arquivo de legenda para o vídeo do perfil. */}
@@ -2369,6 +2455,7 @@ const StatisticsVideoCard = ({
         </div>
 
         <div className="min-w-0">
+          <p className="mb-1 text-xs font-black text-foreground">Retenção do vídeo</p>
           <VideoRetentionLineChart
             currentTimeSeconds={videoCurrentTimeSeconds}
             durationSeconds={videoDurationSeconds}
@@ -2376,31 +2463,26 @@ const StatisticsVideoCard = ({
           />
         </div>
 
-        <div className="grid min-w-0 grid-cols-3 gap-2 md:col-span-2">
-          <div className="min-w-0 rounded-2xl bg-surface-muted p-3">
-            <p className="text-xs font-black text-muted">Visualizações</p>
-            <p className="mt-1 text-xl font-black text-foreground">
-              {numberFormatter.format(video.metrics.sessions)}
-            </p>
-          </div>
-          <div className="min-w-0 rounded-2xl bg-surface-muted p-3">
-            <p className="text-xs font-black text-muted">Replays</p>
-            <p className="mt-1 text-xl font-black text-foreground">
-              {video.metrics.replay_rate_percent.toLocaleString("pt-BR", {
-                maximumFractionDigits: 1,
-              })}
-              %
-            </p>
-          </div>
-          <div className="min-w-0 rounded-2xl bg-surface-muted p-3">
-            <p className="text-xs font-black text-muted">Retenção</p>
-            <p className="mt-1 text-xl font-black text-foreground">
-              {video.metrics.average_retention_percent.toLocaleString("pt-BR", {
-                maximumFractionDigits: 1,
-              })}
-              %
-            </p>
-          </div>
+        <div className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-3 md:col-span-2">
+          <VideoSummaryMetric
+            comparison={video.comparisons.sessions}
+            label="Visualizações"
+            value={numberFormatter.format(video.metrics.sessions)}
+          />
+          <VideoSummaryMetric
+            comparison={video.comparisons.replay_rate_percent}
+            label="Taxa de replays"
+            value={`${video.metrics.replay_rate_percent.toLocaleString("pt-BR", {
+              maximumFractionDigits: 1,
+            })}%`}
+          />
+          <VideoSummaryMetric
+            comparison={video.comparisons.average_retention_percent}
+            label="Retenção média"
+            value={`${video.metrics.average_retention_percent.toLocaleString("pt-BR", {
+              maximumFractionDigits: 1,
+            })}%`}
+          />
         </div>
       </div>
     </CardShell>
@@ -2583,12 +2665,9 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: st
         />
       </div>
 
-      <section
-        aria-busy={isBusinessRefreshing}
-        className="grid items-stretch gap-5 xl:grid-cols-[minmax(0,1.15fr)_minmax(360px,0.85fr)]"
-      >
+      <section aria-busy={isBusinessRefreshing} className="grid items-stretch gap-5 xl:grid-cols-2">
         <CardShell className="min-w-0 p-5 xl:h-full">
-          <fieldset className="grid min-w-0 grid-cols-4 gap-1.5 sm:gap-2">
+          <fieldset className="grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-2 2xl:grid-cols-4">
             <legend className="sr-only">Contadores exibidos no gráfico</legend>
             {businessCards.map(({ config, metric }) => (
               <BusinessMetricToggleCard
