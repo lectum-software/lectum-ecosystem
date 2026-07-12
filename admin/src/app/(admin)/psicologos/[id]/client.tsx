@@ -1937,11 +1937,10 @@ const VideoRetentionLineChart = ({
         ];
 
   return (
-    <div className="grid h-[260px] grid-rows-[auto_minmax(0,1fr)]">
-      <p className="text-xs font-black text-foreground">Retenção do vídeo</p>
+    <div className="h-[260px]">
       <svg
         aria-label="Gráfico de retenção do vídeo de apresentação"
-        className="mt-2 block h-full min-h-0 w-full"
+        className="block h-full min-h-0 w-full"
         height={chartHeight}
         role="img"
         viewBox={`0 0 ${chartWidth} ${chartHeight}`}
