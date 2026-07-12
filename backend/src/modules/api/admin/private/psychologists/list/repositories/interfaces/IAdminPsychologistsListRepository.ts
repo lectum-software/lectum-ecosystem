@@ -39,6 +39,7 @@ export type AdminPsychologistListProfileRecord = {
   professional_address_city: string | null;
   professional_address_state: string | null;
   published: boolean;
+  race_color: string | null;
   rating_avg: number;
   rating_count: number;
   registry_checks: Array<{
@@ -48,6 +49,8 @@ export type AdminPsychologistListProfileRecord = {
     provider: string;
     raw: Prisma.JsonValue | null;
   }>;
+  religion: string | null;
+  show_experience_tag: boolean;
   social_value: boolean;
   subscriptions: AdminPsychologistListSubscriptionRecord[];
   target_audience: Prisma.JsonValue | null;

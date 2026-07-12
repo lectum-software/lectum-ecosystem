@@ -25,6 +25,7 @@ export type AdminPsychologistsListExperience = (typeof ADMIN_PSYCHOLOGISTS_LIST_
 export type AdminPsychologistsListQuery = {
   accepts_insurance?: boolean;
   approach?: string;
+  available_today?: boolean;
   city?: string;
   discount_first_session?: boolean;
   experience?: AdminPsychologistsListExperience;
@@ -32,15 +33,20 @@ export type AdminPsychologistsListQuery = {
   language?: string;
   limit?: number;
   modality?: string;
+  more_experienced?: boolean;
   page?: number;
   plan?: string;
   q?: string;
+  race_color?: string;
+  religion?: string;
   service?: string;
   social_value?: boolean;
   sort?: AdminPsychologistsListSort;
+  specialty?: string;
   state?: string;
   status?: AdminPsychologistsListStatus;
   target_audience?: string;
+  verified?: boolean;
 };
 
 export type AdminPsychologistsListOption = {
@@ -70,7 +76,10 @@ export type AdminPsychologistsListFilters = {
   languages: AdminPsychologistsListOption[];
   modalities: AdminPsychologistsListOption[];
   plans: AdminPsychologistsListOption[];
+  race_colors: AdminPsychologistsListOption[];
+  religions: AdminPsychologistsListOption[];
   services: AdminPsychologistsListOption[];
+  specialties: AdminPsychologistsListOption[];
   states: AdminPsychologistsListOption[];
   statuses: AdminPsychologistsListOption[];
   target_audience: AdminPsychologistsListOption[];

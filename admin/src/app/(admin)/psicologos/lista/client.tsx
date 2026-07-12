@@ -2,16 +2,23 @@
 
 import {
   AlertTriangle,
+  Award,
+  BadgePercent,
+  CalendarCheck,
+  Check,
   ChevronLeft,
   ChevronRight,
   ExternalLink,
   Eye,
   Filter,
+  HandHeart,
   Heart,
+  type LucideIcon,
   RefreshCw,
   Search,
-  SlidersHorizontal,
+  ShieldCheck,
   Star,
+  Stethoscope,
   UsersRound,
   X,
 } from "lucide-react";
@@ -36,7 +43,6 @@ import type {
   PsychologistsListOption,
   PsychologistsListQuery,
   PsychologistsListSort,
-  PsychologistsListStatus,
 } from "@/api/req/psychologists";
 import { cn } from "@/lib/utils";
 
@@ -49,39 +55,97 @@ const SORT_OPTIONS: Array<{ id: PsychologistsListSort; label: string }> = [
   { id: "name", label: "Nome" },
 ];
 
-const STATUS_COPY: Record<PsychologistsListStatus, { className: string; label: string }> = {
-  free: { className: "bg-blue-50 text-blue-700", label: "Gratuito" },
-  pending: { className: "bg-orange-50 text-orange-700", label: "Pendente" },
-  unpublished: { className: "bg-surface-muted text-muted", label: "Não publicado" },
-  verified: { className: "bg-emerald-50 text-emerald-700", label: "Verificado" },
-};
-
 const numberFormatter = new Intl.NumberFormat("pt-BR");
 const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
 const publicFrontendUrl = process.env.NEXT_PUBLIC_FRONTEND_URL || "http://localhost:3000";
 const listSorts = new Set(SORT_OPTIONS.map((item) => item.id));
-const listExperience = new Set(["0_4", "5_9", "10_plus", "unknown"]);
-const listStatuses = new Set(Object.keys(STATUS_COPY));
 const LOADING_ROWS = ["loading-1", "loading-2", "loading-3", "loading-4", "loading-5", "loading-6"];
 const FILTER_MODAL_CLOSE_DELAY_MS = 260;
 const FILTER_KEYS = [
   "accepts_insurance",
   "approach",
+  "available_today",
   "city",
   "discount_first_session",
-  "experience",
   "gender",
   "language",
   "modality",
-  "plan",
+  "more_experienced",
+  "q",
+  "race_color",
+  "religion",
   "service",
   "social_value",
+  "specialty",
   "state",
-  "status",
   "target_audience",
+  "verified",
 ] as const satisfies readonly (keyof PsychologistsListQuery)[];
 
 type FilterQueryKey = (typeof FILTER_KEYS)[number];
+
+const DEPRECATED_FILTER_KEYS = ["experience", "plan", "status"] as const;
+
+type FilterFeatureKey = Extract<
+  FilterQueryKey,
+  | "accepts_insurance"
+  | "available_today"
+  | "discount_first_session"
+  | "more_experienced"
+  | "social_value"
+  | "verified"
+>;
+
+type FilterFeatureOption = {
+  description: string;
+  icon: LucideIcon;
+  label: string;
+  name: FilterFeatureKey;
+};
+
+const FILTER_FEATURE_OPTIONS: FilterFeatureOption[] = [
+  {
+    description: "Psicólogos com disponibilidade para atendimento ainda hoje.",
+    icon: CalendarCheck,
+    label: "Disponível hoje",
+    name: "available_today",
+  },
+  {
+    description: "Psicólogos com registro verificado junto ao Conselho Federal de Psicologia.",
+    icon: ShieldCheck,
+    label: "Somente verificados",
+    name: "verified",
+  },
+  {
+    description: "Psicólogos com mais de 10 anos de experiência.",
+    icon: Award,
+    label: "Mais experientes",
+    name: "more_experienced",
+  },
+  {
+    description: "Psicólogos com condição especial para a primeira consulta.",
+    icon: BadgePercent,
+    label: "Desconto na 1ª sessão",
+    name: "discount_first_session",
+  },
+  {
+    description: "Psicólogos que atendem por planos de saúde.",
+    icon: Stethoscope,
+    label: "Aceita convênios",
+    name: "accepts_insurance",
+  },
+  {
+    description: "Para a população de baixa renda.",
+    icon: HandHeart,
+    label: "Valor social",
+    name: "social_value",
+  },
+];
+
+const MODALITY_FILTER_OPTIONS: PsychologistsListOption[] = [
+  { count: 0, id: "online", label: "Online" },
+  { count: 0, id: "presencial", label: "Presencial" },
+];
 
 const CardShell = ({ children, className }: { children?: ReactNode; className?: string }) => (
   <section
@@ -105,28 +169,29 @@ const parseBoolean = (value: string | null) => (value === "true" ? true : undefi
 
 const parseQuery = (params: URLSearchParams): PsychologistsListQuery => {
   const sort = params.get("sort") as PsychologistsListSort | null;
-  const status = params.get("status") as PsychologistsListStatus | null;
-  const experience = params.get("experience") as PsychologistsListQuery["experience"] | null;
 
   return {
     accepts_insurance: parseBoolean(params.get("accepts_insurance")),
     approach: params.get("approach") || undefined,
+    available_today: parseBoolean(params.get("available_today")),
     city: params.get("city") || undefined,
     discount_first_session: parseBoolean(params.get("discount_first_session")),
-    experience: experience && listExperience.has(experience) ? experience : undefined,
     gender: params.get("gender") || undefined,
     language: params.get("language") || undefined,
     limit: Math.min(50, parsePositiveNumber(params.get("limit"), 12)),
     modality: params.get("modality") || undefined,
+    more_experienced: parseBoolean(params.get("more_experienced")),
     page: parsePositiveNumber(params.get("page"), 1),
-    plan: params.get("plan") || undefined,
     q: params.get("q") || undefined,
+    race_color: params.get("race_color") || undefined,
+    religion: params.get("religion") || undefined,
     service: params.get("service") || undefined,
     social_value: parseBoolean(params.get("social_value")),
     sort: sort && listSorts.has(sort) ? sort : "relevance",
+    specialty: params.get("specialty") || undefined,
     state: params.get("state") || undefined,
-    status: status && listStatuses.has(status) ? status : undefined,
     target_audience: params.get("target_audience") || undefined,
+    verified: parseBoolean(params.get("verified")),
   };
 };
 
@@ -204,193 +269,270 @@ const Avatar = ({ name, src }: { name: string; src: string | null }) => {
   );
 };
 
-const SelectField = ({
+const FilterTextField = ({
+  className,
+  label,
+  onChange,
+  placeholder,
+  value,
+}: {
+  className?: string;
+  label: string;
+  onChange: (value: string) => void;
+  placeholder: string;
+  value?: string;
+}) => (
+  <label className={cn("grid min-w-0 gap-2 text-sm font-semibold text-foreground", className)}>
+    <span>{label}</span>
+    <span className="relative block">
+      <Search
+        aria-hidden
+        className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-subtle"
+      />
+      <input
+        className="h-12 w-full rounded-2xl border border-border/80 bg-surface-muted px-4 pl-11 text-sm font-bold text-foreground shadow-none outline-none transition placeholder:text-subtle focus:border-primary focus:ring-4 focus:ring-primary/10"
+        maxLength={120}
+        onChange={(event) => onChange(event.target.value)}
+        placeholder={placeholder}
+        value={value || ""}
+      />
+    </span>
+    <span className="block min-h-4 text-xs font-medium leading-4 text-danger" />
+  </label>
+);
+
+const FilterSelectField = ({
+  className,
   label,
   onChange,
   options,
   placeholder,
   value,
 }: {
+  className?: string;
   label: string;
   onChange: (value: string) => void;
   options: PsychologistsListOption[];
   placeholder: string;
   value?: string;
 }) => (
-  <label className="block text-sm font-black text-foreground">
-    {label}
-    <select
-      className="mt-2 h-12 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground shadow-control outline-none transition focus:border-primary"
-      onChange={(event) => onChange(event.target.value)}
-      value={value || ""}
-    >
-      <option value="">{placeholder}</option>
-      {options.map((option) => (
-        <option key={option.id} value={option.id}>
-          {option.label} ({numberFormatter.format(option.count)})
-        </option>
-      ))}
-    </select>
+  <label className={cn("grid min-w-0 gap-2 text-sm font-semibold text-foreground", className)}>
+    <span>{label}</span>
+    <span className="relative block">
+      <select
+        className="h-12 w-full appearance-none rounded-2xl border border-border/80 bg-surface-muted px-4 pr-11 text-sm font-bold text-foreground shadow-none outline-none transition focus:border-primary focus:ring-4 focus:ring-primary/10"
+        onChange={(event) => onChange(event.target.value)}
+        value={value || ""}
+      >
+        <option value="">{placeholder}</option>
+        {options.map((option) => (
+          <option key={option.id} value={option.id}>
+            {option.label}
+          </option>
+        ))}
+      </select>
+      <ChevronRight
+        aria-hidden
+        className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 rotate-90 text-muted"
+      />
+    </span>
+    <span className="block min-h-4 text-xs font-medium leading-4 text-danger" />
   </label>
 );
 
-const ToggleFilter = ({
+const FilterFeatureCard = ({
   checked,
-  label,
-  onChange,
+  onToggle,
+  option,
 }: {
   checked: boolean;
-  label: string;
-  onChange: (checked: boolean) => void;
-}) => (
-  <label className="flex items-center gap-3 text-sm font-bold text-foreground">
-    <input
-      checked={checked}
-      className="h-5 w-5 rounded border-border text-primary accent-primary"
-      onChange={(event) => onChange(event.target.checked)}
-      type="checkbox"
-    />
-    {label}
-  </label>
-);
+  onToggle: (name: FilterFeatureKey) => void;
+  option: FilterFeatureOption;
+}) => {
+  const Icon = option.icon;
+
+  return (
+    <button
+      aria-pressed={checked}
+      className={cn(
+        "group flex w-full items-start gap-3 rounded-[22px] border p-3.5 text-left transition duration-200 ease-out sm:p-4",
+        checked
+          ? "border-primary/45 bg-surface shadow-[0_12px_28px_rgb(48_140_232_/_10%)]"
+          : "border-border/70 bg-surface shadow-[0_8px_22px_rgb(15_23_42_/_4%)] hover:-translate-y-0.5 hover:border-primary/25 hover:shadow-[0_14px_32px_rgb(15_23_42_/_7%)]",
+      )}
+      onClick={() => onToggle(option.name)}
+      type="button"
+    >
+      <span
+        className={cn(
+          "grid h-10 w-10 shrink-0 place-items-center rounded-2xl transition duration-200 ease-out",
+          checked
+            ? "bg-primary-soft text-primary ring-1 ring-primary/20"
+            : "bg-primary-soft/70 text-primary",
+        )}
+      >
+        <Icon aria-hidden className="h-5 w-5" strokeWidth={2.2} />
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="block text-sm font-extrabold leading-5 text-foreground">
+          {option.label}
+        </span>
+        <span className="mt-1 block text-xs leading-5 text-muted">{option.description}</span>
+      </span>
+      <span
+        className={cn(
+          "mt-1 flex h-6 w-11 shrink-0 items-center rounded-full border p-0.5 transition duration-200 ease-out",
+          checked
+            ? "border-primary/45 bg-primary"
+            : "border-border bg-surface-muted group-hover:border-primary/25",
+        )}
+      >
+        <span
+          className={cn(
+            "grid h-5 w-5 place-items-center rounded-full bg-surface text-transparent shadow-[0_2px_8px_rgb(15_23_42_/_12%)] transition duration-200 ease-out",
+            checked && "translate-x-5 text-primary",
+          )}
+        >
+          <Check aria-hidden className="h-3 w-3" strokeWidth={2.8} />
+        </span>
+      </span>
+    </button>
+  );
+};
 
 const FilterPanel = ({
-  className,
   data,
   onFilter,
   query,
-  showHeader = true,
 }: {
-  className?: string;
   data?: AdminPsychologistsList;
   onFilter: (key: FilterQueryKey, value: string | boolean | null) => void;
   query: PsychologistsListQuery;
-  showHeader?: boolean;
 }) => {
   const filters = data?.filters;
   const empty: PsychologistsListOption[] = [];
+  const toggleFilterFeature = (name: FilterFeatureKey) => {
+    onFilter(name, query[name] === true ? null : true);
+  };
 
   return (
-    <div className={cn("space-y-5", className)}>
-      {showHeader ? (
+    <>
+      <FilterTextField
+        className="col-span-2"
+        label="Pesquisa"
+        onChange={(value) => onFilter("q", value || null)}
+        placeholder="Buscar por nome ou CRP"
+        value={query.q}
+      />
+      <FilterSelectField
+        className="col-span-2"
+        label="Especialidade"
+        onChange={(value) => onFilter("specialty", value || null)}
+        options={filters?.specialties ?? empty}
+        placeholder="Todas"
+        value={query.specialty}
+      />
+      <FilterSelectField
+        className="col-span-2"
+        label="Serviços"
+        onChange={(value) => onFilter("service", value || null)}
+        options={filters?.services ?? empty}
+        placeholder="Todos os serviços"
+        value={query.service}
+      />
+      <FilterSelectField
+        className="col-span-2"
+        label="Modalidades de atendimento"
+        onChange={(value) => onFilter("modality", value || null)}
+        options={MODALITY_FILTER_OPTIONS}
+        placeholder="Todas as modalidades"
+        value={query.modality}
+      />
+      <FilterSelectField
+        className="col-span-2"
+        label="Abordagens"
+        onChange={(value) => onFilter("approach", value || null)}
+        options={filters?.approaches ?? empty}
+        placeholder="Todas as abordagens"
+        value={query.approach}
+      />
+      <FilterSelectField
+        className="col-span-2"
+        label="Público atendido"
+        onChange={(value) => onFilter("target_audience", value || null)}
+        options={filters?.target_audience ?? empty}
+        placeholder="Todos os públicos"
+        value={query.target_audience}
+      />
+      <FilterSelectField
+        className="col-span-1"
+        label="Estado"
+        onChange={(value) => onFilter("state", value || null)}
+        options={filters?.states ?? empty}
+        placeholder="Todos"
+        value={query.state}
+      />
+      <FilterSelectField
+        className="col-span-1"
+        label="Cidade"
+        onChange={(value) => onFilter("city", value || null)}
+        options={filters?.cities ?? empty}
+        placeholder="Todas as cidades"
+        value={query.city}
+      />
+      <FilterSelectField
+        className="col-span-2"
+        label="Gênero do psicólogo"
+        onChange={(value) => onFilter("gender", value || null)}
+        options={filters?.genders ?? empty}
+        placeholder="Todos os gêneros"
+        value={query.gender}
+      />
+      <FilterSelectField
+        className="col-span-2"
+        label="Raça do psicólogo"
+        onChange={(value) => onFilter("race_color", value || null)}
+        options={filters?.race_colors ?? empty}
+        placeholder="Todas as raças/cores"
+        value={query.race_color}
+      />
+      <FilterSelectField
+        className="col-span-2"
+        label="Religião do psicólogo"
+        onChange={(value) => onFilter("religion", value || null)}
+        options={filters?.religions ?? empty}
+        placeholder="Todas as religiões"
+        value={query.religion}
+      />
+      <FilterSelectField
+        className="col-span-2"
+        label="Idiomas de atendimento"
+        onChange={(value) => onFilter("language", value || null)}
+        options={filters?.languages ?? empty}
+        placeholder="Todos os idiomas"
+        value={query.language}
+      />
+
+      <section className="col-span-2 mt-2 grid gap-3">
         <div>
-          <h2 className="text-lg font-black text-foreground">Filtros de busca</h2>
-          <p className="mt-1 text-xs font-bold text-muted">
-            Todos os filtros usam campos reais dos perfis profissionais.
+          <h3 className="text-sm font-extrabold text-foreground">Selos e facilidades</h3>
+          <p className="mt-1 text-xs leading-5 text-muted">
+            Refine por confiança, acessibilidade e condições de atendimento.
           </p>
         </div>
-      ) : null}
 
-      <div className="space-y-5">
-        <div className="space-y-3">
-          <h3 className="text-sm font-black text-foreground">Localização</h3>
-          <SelectField
-            label="Estado"
-            onChange={(value) => onFilter("state", value || null)}
-            options={filters?.states ?? empty}
-            placeholder="Todos os estados"
-            value={query.state}
-          />
-          <SelectField
-            label="Cidade"
-            onChange={(value) => onFilter("city", value || null)}
-            options={filters?.cities ?? empty}
-            placeholder="Todas as cidades"
-            value={query.city}
-          />
+        <div className="grid gap-3">
+          {FILTER_FEATURE_OPTIONS.map((option) => (
+            <FilterFeatureCard
+              checked={query[option.name] === true}
+              key={option.name}
+              onToggle={toggleFilterFeature}
+              option={option}
+            />
+          ))}
         </div>
-
-        <div className="space-y-3 border-t border-border pt-4">
-          <h3 className="text-sm font-black text-foreground">Status e plano</h3>
-          <SelectField
-            label="Status"
-            onChange={(value) => onFilter("status", value || null)}
-            options={filters?.statuses ?? empty}
-            placeholder="Todos"
-            value={query.status}
-          />
-          <SelectField
-            label="Plano"
-            onChange={(value) => onFilter("plan", value || null)}
-            options={filters?.plans ?? empty}
-            placeholder="Todos os planos"
-            value={query.plan}
-          />
-        </div>
-
-        <div className="space-y-3 border-t border-border pt-4">
-          <h3 className="text-sm font-black text-foreground">Selos e diferenciais</h3>
-          <SelectField
-            label="Experiência"
-            onChange={(value) => onFilter("experience", value || null)}
-            options={filters?.experience_ranges ?? empty}
-            placeholder="Todas"
-            value={query.experience}
-          />
-          <ToggleFilter
-            checked={query.discount_first_session === true}
-            label="Desconto 1ª sessão"
-            onChange={(checked) => onFilter("discount_first_session", checked || null)}
-          />
-          <ToggleFilter
-            checked={query.accepts_insurance === true}
-            label="Aceita convênios"
-            onChange={(checked) => onFilter("accepts_insurance", checked || null)}
-          />
-          <ToggleFilter
-            checked={query.social_value === true}
-            label="Valor social"
-            onChange={(checked) => onFilter("social_value", checked || null)}
-          />
-        </div>
-
-        <div className="space-y-3 border-t border-border pt-4">
-          <h3 className="text-sm font-black text-foreground">Perfil profissional</h3>
-          <SelectField
-            label="Público atendido"
-            onChange={(value) => onFilter("target_audience", value || null)}
-            options={filters?.target_audience ?? empty}
-            placeholder="Todos"
-            value={query.target_audience}
-          />
-          <SelectField
-            label="Abordagem"
-            onChange={(value) => onFilter("approach", value || null)}
-            options={filters?.approaches ?? empty}
-            placeholder="Todas"
-            value={query.approach}
-          />
-          <SelectField
-            label="Serviço"
-            onChange={(value) => onFilter("service", value || null)}
-            options={filters?.services ?? empty}
-            placeholder="Todos"
-            value={query.service}
-          />
-          <SelectField
-            label="Modalidade"
-            onChange={(value) => onFilter("modality", value || null)}
-            options={filters?.modalities ?? empty}
-            placeholder="Todas"
-            value={query.modality}
-          />
-          <SelectField
-            label="Idioma"
-            onChange={(value) => onFilter("language", value || null)}
-            options={filters?.languages ?? empty}
-            placeholder="Todos"
-            value={query.language}
-          />
-          <SelectField
-            label="Gênero"
-            onChange={(value) => onFilter("gender", value || null)}
-            options={filters?.genders ?? empty}
-            placeholder="Todos"
-            value={query.gender}
-          />
-        </div>
-      </div>
-    </div>
+      </section>
+    </>
   );
 };
 
@@ -812,6 +954,8 @@ export const AdminPsychologistsListClient = () => {
       }
     }
 
+    for (const key of DEPRECATED_FILTER_KEYS) params.delete(key);
+
     if (options.resetPage !== false) params.delete("page");
     const next = params.toString();
     router.replace(next ? `${pathname}?${next}` : pathname, { scroll: false });
@@ -856,7 +1000,14 @@ export const AdminPsychologistsListClient = () => {
   }, [query]);
 
   const clearFilters = () => {
-    router.replace(pathname, { scroll: false });
+    const params = new URLSearchParams(searchString);
+
+    for (const key of FILTER_KEYS) params.delete(key);
+    for (const key of DEPRECATED_FILTER_KEYS) params.delete(key);
+    params.delete("page");
+
+    const next = params.toString();
+    router.replace(next ? `${pathname}?${next}` : pathname, { scroll: false });
     closeFilters();
   };
 
@@ -879,6 +1030,8 @@ export const AdminPsychologistsListClient = () => {
         params.set(key, String(value));
       }
     }
+
+    for (const key of DEPRECATED_FILTER_KEYS) params.delete(key);
 
     params.delete("page");
 
@@ -1037,74 +1190,59 @@ export const AdminPsychologistsListClient = () => {
           />
           <div
             className={cn(
-              "relative flex h-[100dvh] w-full flex-col overflow-hidden rounded-none border-border bg-surface shadow-admin transition-transform duration-300 ease-out motion-reduce:transition-none sm:h-auto sm:max-h-[min(860px,calc(100dvh-2rem))] sm:max-w-3xl sm:rounded-[2rem] sm:border",
-              filtersSheetOpen ? "translate-y-0" : "translate-y-full sm:translate-y-4",
+              "relative flex h-[100dvh] w-full flex-col overflow-hidden rounded-none border-border bg-surface text-foreground shadow-admin transition-transform duration-300 ease-out motion-reduce:transition-none sm:h-auto sm:max-h-[min(880px,calc(100dvh-2rem))] sm:max-w-[560px] sm:rounded-[32px] sm:border",
+              filtersSheetOpen ? "translate-y-0" : "translate-y-full",
             )}
             role="document"
           >
-            <div className="shrink-0 border-b border-border bg-surface/95 px-4 py-3 backdrop-blur sm:px-6 sm:py-4">
-              <div className="grid grid-cols-[2.5rem_minmax(0,1fr)_auto] items-start gap-3">
+            <div className="shrink-0 border-b border-border bg-surface/95 px-5 py-2.5 backdrop-blur sm:px-6 sm:py-3">
+              <div className="grid grid-cols-[2.25rem_minmax(0,1fr)_auto] items-start gap-x-3">
                 <button
                   aria-label="Fechar filtros"
-                  className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl border border-border bg-background text-muted transition hover:bg-surface-muted hover:text-foreground"
+                  className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-border bg-background text-muted transition duration-200 ease-out hover:bg-surface-muted hover:text-foreground"
                   onClick={closeFilters}
                   type="button"
                 >
-                  <X aria-hidden className="h-4 w-4" />
+                  <X aria-hidden className="h-4 w-4" strokeWidth={2.25} />
                 </button>
-                <div className="min-w-0 pt-1">
-                  <div className="flex items-center gap-2">
-                    <SlidersHorizontal aria-hidden className="h-5 w-5 shrink-0 text-primary" />
-                    <h2
-                      className="text-lg font-black leading-6 text-foreground"
-                      id="admin-psychologists-filters-title"
-                    >
-                      Filtros de busca
-                    </h2>
-                  </div>
-                  <p className="mt-1 text-xs font-bold leading-5 text-muted sm:text-sm">
-                    Segmente a lista com os mesmos dados reais usados na descoberta pública de
-                    psicólogos.
-                  </p>
-                </div>
+                <h2
+                  className="self-center text-lg font-extrabold leading-5 text-foreground"
+                  id="admin-psychologists-filters-title"
+                >
+                  Filtros de busca
+                </h2>
                 <button
-                  className="mt-1 rounded-full px-2 py-1 text-xs font-black text-primary transition hover:bg-primary-soft"
+                  className="self-center rounded-full px-2 py-1 text-[13px] font-medium text-primary transition duration-200 ease-out hover:bg-primary-soft"
                   onClick={clearFilters}
                   type="button"
                 >
                   Limpar
                 </button>
+
+                <p className="col-span-2 col-start-2 mt-1 max-w-[292px] text-[13px] leading-[17px] text-muted sm:max-w-none sm:text-sm sm:leading-5">
+                  Ajuste os critérios para encontrar o psicólogo ideal para você
+                </p>
               </div>
             </div>
 
-            <div className="min-h-0 flex-1 overflow-y-auto px-4 py-5 sm:px-6">
-              <FilterPanel
-                className="mx-auto max-w-2xl"
-                data={summary}
-                onFilter={updateDraftFilter}
-                query={draftQuery}
-                showHeader={false}
-              />
-            </div>
+            <form
+              className="grid min-h-0 flex-1 grid-cols-2 gap-x-3 gap-y-1 overflow-y-auto px-5 py-4 sm:px-6"
+              onSubmit={(event) => {
+                event.preventDefault();
+                applyDraftFilters();
+              }}
+            >
+              <FilterPanel data={summary} onFilter={updateDraftFilter} query={draftQuery} />
 
-            <div className="shrink-0 border-t border-border bg-surface/95 px-4 py-3 shadow-admin-soft sm:px-6">
-              <div className="mx-auto flex max-w-2xl flex-col gap-2 sm:flex-row sm:items-center sm:justify-end">
+              <div className="sticky bottom-0 col-span-2 -mx-5 mt-5 bg-gradient-to-t from-surface via-surface/95 to-surface/0 px-5 pb-2 pt-8 sm:-mx-6 sm:px-6">
                 <button
-                  className="h-12 rounded-control border border-border bg-surface px-5 text-sm font-black text-foreground transition hover:border-border-strong"
-                  onClick={closeFilters}
-                  type="button"
-                >
-                  Cancelar
-                </button>
-                <button
-                  className="h-12 rounded-control bg-primary px-5 text-sm font-black text-white shadow-control transition hover:bg-primary-hover"
-                  onClick={applyDraftFilters}
-                  type="button"
+                  className="inline-flex h-12 w-full items-center justify-center rounded-full bg-primary px-5 text-sm font-extrabold text-white shadow-control transition duration-200 ease-out hover:-translate-y-px hover:bg-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+                  type="submit"
                 >
                   Aplicar filtros
                 </button>
               </div>
-            </div>
+            </form>
           </div>
         </div>
       ) : null}

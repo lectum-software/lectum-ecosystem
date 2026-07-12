@@ -118,6 +118,34 @@ const jsonStringArray = (value: unknown): string[] => {
   return value.map((item) => String(item).trim()).filter(Boolean);
 };
 
+const currentWeekdayValue = () => {
+  const weekday = new Intl.DateTimeFormat("pt-BR", {
+    timeZone: "America/Sao_Paulo",
+    weekday: "long",
+  }).format(new Date());
+
+  const normalized = weekday
+    .normalize("NFD")
+    .replace(/\p{Diacritic}/gu, "")
+    .toLowerCase();
+
+  if (normalized.includes("segunda")) return "segunda";
+  if (normalized.includes("terca")) return "terca";
+  if (normalized.includes("quarta")) return "quarta";
+  if (normalized.includes("quinta")) return "quinta";
+  if (normalized.includes("sexta")) return "sexta";
+  if (normalized.includes("sabado")) return "sabado";
+
+  return "domingo";
+};
+
+const moreExperiencedCutoffDate = (date: Date) => {
+  const cutoff = new Date(date);
+  cutoff.setFullYear(cutoff.getFullYear() - 10);
+
+  return cutoff;
+};
+
 const subscriptionActiveAt = (
   subscription: AdminPsychologistListSubscriptionRecord,
   date: Date,
@@ -302,6 +330,46 @@ const matchesJsonArray = (value: unknown, expected?: string) => {
   return jsonStringArray(value).some((item) => normalizeKey(item) === normalizeKey(expected));
 };
 
+const matchesAvailableToday = (profile: AdminPsychologistListProfileRecord, expected?: boolean) => {
+  if (typeof expected !== "boolean") return true;
+
+  const available = jsonStringArray(profile.available_days).includes(currentWeekdayValue());
+
+  return available === expected;
+};
+
+const matchesMoreExperienced = (
+  profile: AdminPsychologistListProfileRecord,
+  date: Date,
+  expected?: boolean,
+) => {
+  if (typeof expected !== "boolean") return true;
+  if (!expected) return true;
+
+  return (
+    profile.show_experience_tag &&
+    Boolean(
+      profile.crp_registration_date &&
+        profile.crp_registration_date < moreExperiencedCutoffDate(date),
+    )
+  );
+};
+
+const matchesModality = (current: string | null | undefined, expected?: string) => {
+  const normalizedExpected = expected ? normalizeKey(expected) : "";
+  if (!normalizedExpected) return true;
+  if (!current) return false;
+
+  const normalizedCurrent = normalizeKey(current);
+
+  if (normalizedExpected === "online") return ["hibrido", "online"].includes(normalizedCurrent);
+  if (normalizedExpected === "presencial") {
+    return ["hibrido", "presencial"].includes(normalizedCurrent);
+  }
+
+  return normalizedCurrent === normalizedExpected;
+};
+
 const matchesSearch = (profile: AdminPsychologistListProfileRecord, search?: string) => {
   const normalized = normalizeSearchText(search).trim();
   if (!normalized) return true;
@@ -330,6 +398,9 @@ const matchesFilters = (
     (!query.status || mapStatus(profile, date) === query.status) &&
     (!query.plan || planSlug === query.plan) &&
     (!query.experience || mapExperience(profile) === query.experience) &&
+    (!query.verified || mapStatus(profile, date) === "verified") &&
+    matchesAvailableToday(profile, query.available_today) &&
+    matchesMoreExperienced(profile, date, query.more_experienced) &&
     (typeof query.discount_first_session !== "boolean" ||
       profile.discount_first_session === query.discount_first_session) &&
     (typeof query.accepts_insurance !== "boolean" ||
@@ -340,13 +411,19 @@ const matchesFilters = (
       profile.user.psychologist_approaches.some(({ approach }) =>
         getNormalizedOptionMatch(approach.slug, query.approach),
       )) &&
+    (!query.specialty ||
+      profile.user.psychologist_specialties.some(({ specialty }) =>
+        getNormalizedOptionMatch(specialty.slug, query.specialty),
+      )) &&
     (!query.service ||
       profile.user.psychologist_services.some(({ service }) =>
         getNormalizedOptionMatch(service.slug, query.service),
       )) &&
-    getNormalizedOptionMatch(profile.modality, query.modality) &&
+    matchesModality(profile.modality, query.modality) &&
     matchesJsonArray(profile.languages, query.language) &&
-    getNormalizedOptionMatch(profile.gender, query.gender)
+    getNormalizedOptionMatch(profile.gender, query.gender) &&
+    getNormalizedOptionMatch(profile.race_color, query.race_color) &&
+    getNormalizedOptionMatch(profile.religion, query.religion)
   );
 };
 
@@ -468,7 +545,10 @@ const buildFilters = (
   const languages = new Map<string, { count: number; label: string }>();
   const modalities = new Map<string, { count: number; label: string }>();
   const plans = new Map<string, { count: number; label: string }>();
+  const raceColors = new Map<string, { count: number; label: string }>();
+  const religions = new Map<string, { count: number; label: string }>();
   const services = new Map<string, { count: number; label: string }>();
+  const specialties = new Map<string, { count: number; label: string }>();
   const states = new Map<string, { count: number; label: string }>();
   const statuses = new Map<string, { count: number; label: string }>();
   const targetAudience = new Map<string, { count: number; label: string }>();
@@ -496,6 +576,10 @@ const buildFilters = (
       addOptionCount(approaches, approach.slug, approach.name);
     }
 
+    for (const { specialty } of profile.user.psychologist_specialties) {
+      addOptionCount(specialties, specialty.slug, specialty.name);
+    }
+
     for (const { service } of profile.user.psychologist_services) {
       addOptionCount(services, service.slug, service.name);
     }
@@ -517,6 +601,16 @@ const buildFilters = (
       const key = normalizeKey(profile.gender);
       addOptionCount(genders, key, GENDER_LABELS[key] ?? profile.gender.trim());
     }
+
+    if (profile.race_color?.trim()) {
+      const raceColor = profile.race_color.trim();
+      addOptionCount(raceColors, normalizeKey(raceColor), raceColor);
+    }
+
+    if (profile.religion?.trim()) {
+      const religion = profile.religion.trim();
+      addOptionCount(religions, normalizeKey(religion), religion);
+    }
   }
 
   return {
@@ -527,7 +621,10 @@ const buildFilters = (
     languages: optionsFromMap(languages),
     modalities: optionsFromMap(modalities),
     plans: optionsFromMap(plans),
+    race_colors: optionsFromMap(raceColors),
+    religions: optionsFromMap(religions),
     services: optionsFromMap(services),
+    specialties: optionsFromMap(specialties),
     states: optionsFromMap(states),
     statuses: optionsFromMap(statuses),
     target_audience: optionsFromMap(targetAudience),
@@ -542,15 +639,21 @@ const activeFiltersCount = (query: AdminPsychologistsListQuery) =>
     query.status,
     query.plan,
     query.experience,
+    query.available_today,
+    query.more_experienced,
+    query.verified,
     query.discount_first_session,
     query.accepts_insurance,
     query.social_value,
     query.target_audience,
+    query.specialty,
     query.approach,
     query.service,
     query.modality,
     query.language,
     query.gender,
+    query.race_color,
+    query.religion,
   ].filter((value) => value !== undefined && value !== null && value !== "").length;
 
 export const listAdminPsychologists = async (

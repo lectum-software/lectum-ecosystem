@@ -301,3 +301,34 @@ Frontend esperado:
 - Browser local/headless/CDP com admin temporario real removido ao final:
   - desktop `1440x1000`: 7 linhas reais, `CRP 04/123456` presente, `4ª Região - MG/123456` ausente, 6 selos Lectum de verificado e 7 icones Lectum de WhatsApp;
   - mobile base `390x844`: rota carregada autenticada, tabela com linhas reais, `document.documentElement.scrollWidth=390`, sem overflow horizontal de viewport.
+
+## Execucao complementar: filtros iguais a descoberta publica (2026-07-12)
+
+- Pedido do usuario: na lista de psicologos do Admin, o filtro de busca deve ficar exatamente igual ao filtro exibido para pacientes na pagina publica de psicologos.
+- Frontend Admin: a modal/drawer de `/psicologos/lista` passou a usar a mesma ordem, labels e copy da descoberta publica: Pesquisa, Especialidade, Servicos, Modalidades de atendimento, Abordagens, Publico atendido, Estado, Cidade, Genero do psicologo, Raca do psicologo, Religiao do psicologo, Idiomas de atendimento e Selos e facilidades.
+- A UI removeu os grupos administrativos antigos **Status e plano**, **Experiencia** e **Selos e diferenciais** da modal, mantendo apenas o botao sticky **Aplicar filtros** e a acao **Limpar** no cabecalho, como na descoberta publica.
+- Backend Admin: `GET /api/admin/private/psychologists` passou a aceitar filtros reais `available_today`, `more_experienced`, `verified`, `specialty`, `race_color` e `religion`, alem de retornar opcoes reais `specialties`, `race_colors` e `religions` no contrato de filtros.
+- A regra de modalidade foi alinhada a descoberta publica: filtro `online` inclui perfis `online` e `hibrido`, e filtro `presencial` inclui perfis `presencial` e `hibrido`.
+- Parametros antigos `status`, `plan` e `experience` continuam tolerados no contrato por compatibilidade, mas a UI nova os remove da URL ao aplicar/limpar filtros.
+- Builder/Quick Copy nao estava exposto como ferramenta callable neste ambiente; a referencia ativa para o comportamento foi o codigo real da descoberta publica em `frontend/src/app/app/psychologists/*` e a tela local validada no browser.
+- Nao houve alteracao de Prisma schema/migrations nem instalacao de packages.
+
+### Criterios complementares
+
+- [x] A modal de filtros do Admin exibe os mesmos campos e ordem do filtro da pagina de psicologos para pacientes.
+- [x] O header da modal usa **Filtros de busca**, subtitulo **Ajuste os criterios para encontrar o psicologo ideal para voce**, acao **Limpar** e botao sticky **Aplicar filtros**.
+- [x] Os filtros antigos **Status e plano**, **Experiencia** e **Selos e diferenciais** nao aparecem mais na modal.
+- [x] Os novos filtros usam dados reais do backend Admin, sem mock e sem endpoints simulados.
+- [x] A modal foi validada em desktop e mobile base `390px`, sem overflow horizontal de viewport.
+- [x] Nenhum `<img>` cru foi usado.
+- [x] Nenhum package, Prisma schema ou migration foi alterado.
+
+### Validacao complementar
+
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check`
+- Smoke API autenticado: `GET /api/admin/private/psychologists?available_today=true&verified=true&specialty=teste&race_color=teste&religion=teste&more_experienced=true` retornou `200`, `active_filters_count=6` e filtros `specialties`, `race_colors` e `religions` presentes.
+- Browser local/headless/CDP com admin temporario real: desktop `1440x1000` validou modal com largura `560px`, todos os labels publicos presentes e textos antigos ausentes; mobile base `390x844` validou largura `390px`, todos os labels publicos presentes e `document.documentElement.scrollWidth=390`.

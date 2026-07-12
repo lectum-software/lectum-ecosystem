@@ -19,6 +19,19 @@ export const schema: IValidatorRequest = {
       optional: true,
     },
     { key: "q", coerse: "string", method: "string", max: 120, optional: true },
+    {
+      key: "available_today",
+      coerse: "boolean",
+      method: "boolean",
+      optional: true,
+    },
+    {
+      key: "more_experienced",
+      coerse: "boolean",
+      method: "boolean",
+      optional: true,
+    },
+    { key: "verified", coerse: "boolean", method: "boolean", optional: true },
     { key: "state", coerse: "string", method: "string", max: 2, format: "upper", optional: true },
     { key: "city", coerse: "string", method: "string", max: 120, optional: true },
     {
@@ -57,10 +70,13 @@ export const schema: IValidatorRequest = {
       optional: true,
     },
     { key: "approach", coerse: "string", method: "string", max: 100, optional: true },
+    { key: "specialty", coerse: "string", method: "string", max: 100, optional: true },
     { key: "service", coerse: "string", method: "string", max: 100, optional: true },
     { key: "modality", coerse: "string", method: "string", max: 40, optional: true },
     { key: "language", coerse: "string", method: "string", max: 80, optional: true },
     { key: "gender", coerse: "string", method: "string", max: 80, optional: true },
+    { key: "race_color", coerse: "string", method: "string", max: 80, optional: true },
+    { key: "religion", coerse: "string", method: "string", max: 80, optional: true },
     {
       key: "sort",
       coerse: "string",

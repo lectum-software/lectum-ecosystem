@@ -23,6 +23,7 @@ export type PsychologistsListExperience = "0_4" | "5_9" | "10_plus" | "unknown";
 export type PsychologistsListQuery = {
   accepts_insurance?: boolean;
   approach?: string;
+  available_today?: boolean;
   city?: string;
   discount_first_session?: boolean;
   experience?: PsychologistsListExperience;
@@ -30,15 +31,20 @@ export type PsychologistsListQuery = {
   language?: string;
   limit?: number;
   modality?: string;
+  more_experienced?: boolean;
   page?: number;
   plan?: string;
   q?: string;
+  race_color?: string;
+  religion?: string;
   service?: string;
   social_value?: boolean;
   sort?: PsychologistsListSort;
+  specialty?: string;
   state?: string;
   status?: PsychologistsListStatus;
   target_audience?: string;
+  verified?: boolean;
 };
 
 export type PsychologistsDashboardTrend = "down" | "flat" | "unavailable" | "up";
@@ -215,7 +221,10 @@ export type PsychologistsListFilters = {
   languages: PsychologistsListOption[];
   modalities: PsychologistsListOption[];
   plans: PsychologistsListOption[];
+  race_colors: PsychologistsListOption[];
+  religions: PsychologistsListOption[];
   services: PsychologistsListOption[];
+  specialties: PsychologistsListOption[];
   states: PsychologistsListOption[];
   statuses: PsychologistsListOption[];
   target_audience: PsychologistsListOption[];
@@ -1056,6 +1065,7 @@ const cleanDashboardParams = (input: PsychologistsDashboardQuery) => ({
 const cleanListParams = (input: PsychologistsListQuery) => ({
   ...(input.accepts_insurance ? { accepts_insurance: input.accepts_insurance } : {}),
   ...(input.approach ? { approach: input.approach } : {}),
+  ...(input.available_today ? { available_today: input.available_today } : {}),
   ...(input.city ? { city: input.city } : {}),
   ...(input.discount_first_session ? { discount_first_session: input.discount_first_session } : {}),
   ...(input.experience ? { experience: input.experience } : {}),
@@ -1063,15 +1073,20 @@ const cleanListParams = (input: PsychologistsListQuery) => ({
   ...(input.language ? { language: input.language } : {}),
   ...(input.limit ? { limit: input.limit } : {}),
   ...(input.modality ? { modality: input.modality } : {}),
+  ...(input.more_experienced ? { more_experienced: input.more_experienced } : {}),
   ...(input.page ? { page: input.page } : {}),
   ...(input.plan ? { plan: input.plan } : {}),
   ...(input.q ? { q: input.q } : {}),
+  ...(input.race_color ? { race_color: input.race_color } : {}),
+  ...(input.religion ? { religion: input.religion } : {}),
   ...(input.service ? { service: input.service } : {}),
   ...(input.social_value ? { social_value: input.social_value } : {}),
   ...(input.sort ? { sort: input.sort } : {}),
+  ...(input.specialty ? { specialty: input.specialty } : {}),
   ...(input.state ? { state: input.state } : {}),
   ...(input.status ? { status: input.status } : {}),
   ...(input.target_audience ? { target_audience: input.target_audience } : {}),
+  ...(input.verified ? { verified: input.verified } : {}),
 });
 
 const cleanPublicationsParams = (input: AdminPsychologistPublicationsQuery) => ({
