@@ -2001,18 +2001,18 @@ const StatisticsSeriesChart = ({
   const chartPoints = aggregateStatisticsChartPoints(points);
   const chartWidth = 1120;
   const chartHeight = 280;
-  const paddingX = 32;
-  const paddingY = 28;
-  const innerWidth = chartWidth - paddingX * 2;
-  const innerHeight = chartHeight - paddingY * 2;
+  const padding = { bottom: 28, left: 58, right: 28, top: 28 };
+  const innerWidth = chartWidth - padding.left - padding.right;
+  const innerHeight = chartHeight - padding.top - padding.bottom;
   const max = Math.max(
     1,
     ...chartPoints.flatMap((point) => keys.map((item) => Number(point[item.key] ?? 0))),
   );
   const xFor = (index: number) =>
-    paddingX +
+    padding.left +
     (chartPoints.length <= 1 ? innerWidth / 2 : (index / (chartPoints.length - 1)) * innerWidth);
-  const yFor = (value: number) => paddingY + innerHeight - (value / max) * innerHeight;
+  const yFor = (value: number) => padding.top + innerHeight - (value / max) * innerHeight;
+  const gridValues = [0, 0.25, 0.5, 0.75, 1].map((ratio) => Math.round(max * ratio));
   const labelStep = Math.max(1, Math.ceil(chartPoints.length / 8));
   const dateLabels = chartPoints.flatMap((point, index) =>
     index % labelStep === 0 || index === chartPoints.length - 1
@@ -2033,20 +2033,30 @@ const StatisticsSeriesChart = ({
           width={chartWidth}
         >
           <title>Evolução do período</title>
-          {[0, 0.25, 0.5, 0.75, 1].map((ratio) => {
-            const y = paddingY + innerHeight * ratio;
+          {gridValues.map((value) => {
+            const y = yFor(value);
 
             return (
-              <line
-                className="stroke-border"
-                key={ratio}
-                strokeDasharray={ratio === 1 ? "0" : "4 6"}
-                strokeWidth="1"
-                x1={paddingX}
-                x2={chartWidth - paddingX}
-                y1={y}
-                y2={y}
-              />
+              <g key={`business-grid-${value}-${y}`}>
+                <line
+                  className="stroke-border"
+                  strokeDasharray={value === 0 ? "0" : "4 6"}
+                  strokeWidth="1"
+                  x1={padding.left}
+                  x2={chartWidth - padding.right}
+                  y1={y}
+                  y2={y}
+                />
+                <text
+                  className="fill-muted text-[10px] font-black"
+                  dominantBaseline="middle"
+                  textAnchor="end"
+                  x={padding.left - 12}
+                  y={y}
+                >
+                  {numberFormatter.format(value)}
+                </text>
+              </g>
             );
           })}
           {keys.map((item) => {
