@@ -2810,9 +2810,9 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: st
         />
       </div>
 
-      <section aria-busy={isCommunityRefreshing} className="grid gap-5 xl:grid-cols-[1.1fr_0.9fr]">
+      <section aria-busy={isCommunityRefreshing} className="grid gap-5">
         <CardShell className="p-5">
-          <fieldset className="grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+          <fieldset className="grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4 2xl:grid-cols-7">
             <legend className="sr-only">Contadores de comunidade exibidos no gráfico</legend>
             {communityCards.map(({ config, metric }) => (
               <StatisticsMetricToggleCard

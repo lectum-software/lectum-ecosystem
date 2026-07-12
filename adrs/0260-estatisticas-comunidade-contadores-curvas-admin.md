@@ -43,10 +43,16 @@ exibição/ocultação de suas curvas e seguem o padrão visual de ícone acima 
 texto, cor alinhada à curva, sem sombra no selecionado e com borda ativa
 reforçada.
 
+Após revisão visual, o bloco **Comunidades em que participa** foi movido para
+baixo do gráfico. Assim, o card do gráfico ocupa a largura total disponível da
+seção e aproveita melhor o espaço horizontal para os contadores e curvas.
+
 ## Consequências
 
 - A experiência de leitura e comparação das métricas de comunidade fica
   consistente com os demais gráficos do Admin.
+- O gráfico de comunidade ganha mais largura no desktop, e a lista de
+  comunidades deixa de competir lateralmente com a área principal de análise.
 - A API passa a retornar mais campos seguros na série de estatísticas, sem expor
   dados sensíveis de usuários votantes, compartilhamentos ou identificadores
   técnicos desnecessários.
