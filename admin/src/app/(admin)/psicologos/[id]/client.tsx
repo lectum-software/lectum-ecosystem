@@ -1757,16 +1757,14 @@ const formatChartMonth = (date: Date) => {
   return month.charAt(0).toUpperCase() + month.slice(1);
 };
 
-const formatChartDayMonth = (date: Date) =>
-  `${String(date.getUTCDate()).padStart(2, "0")} ${formatChartMonth(date)}`;
+const formatChartShortDate = (date: Date) =>
+  `${String(date.getUTCDate()).padStart(2, "0")}/${String(date.getUTCMonth() + 1).padStart(
+    2,
+    "0",
+  )}`;
 
 const formatChartWeekLabel = (start: Date, end: Date) =>
-  start.getUTCMonth() === end.getUTCMonth() && start.getUTCFullYear() === end.getUTCFullYear()
-    ? `${String(start.getUTCDate()).padStart(2, "0")}–${String(end.getUTCDate()).padStart(
-        2,
-        "0",
-      )} ${formatChartMonth(start)}`
-    : `${formatChartDayMonth(start)}–${formatChartDayMonth(end)}`;
+  `${formatChartShortDate(start)}–${formatChartShortDate(end)}`;
 
 const formatChartMonthLabel = (date: Date) => `${formatChartMonth(date)}/${date.getUTCFullYear()}`;
 
@@ -1803,7 +1801,7 @@ const getBusinessMonthBucket = (date: Date, firstDate: Date, lastDate: Date) => 
   const visibleEnd = monthEnd > lastDate ? lastDate : monthEnd;
 
   return {
-    chartLabel: formatChartMonth(monthStart),
+    chartLabel: formatChartShortDate(monthStart),
     date: toChartDateKey(monthStart),
     key: toChartDateKey(monthStart),
     tooltipLabel: `${formatChartMonthLabel(monthStart)} · ${formatDateOnly(
@@ -1840,11 +1838,15 @@ const aggregateBusinessChartPoints = (
   });
 
   if (parsedPoints.length !== points.length || parsedPoints.length === 0) {
-    return points.map((point) => ({
-      ...point,
-      chartLabel: point.date.slice(5),
-      tooltipLabel: point.date,
-    }));
+    return points.map((point) => {
+      const date = parseChartDate(point.date);
+
+      return {
+        ...point,
+        chartLabel: date ? formatChartShortDate(date) : point.date,
+        tooltipLabel: point.date,
+      };
+    });
   }
 
   const sortedPoints = [...parsedPoints].sort(
@@ -1861,7 +1863,7 @@ const aggregateBusinessChartPoints = (
   if (granularity === "day") {
     return sortedPoints.map(({ date, point }) => ({
       ...point,
-      chartLabel: point.date.slice(5),
+      chartLabel: formatChartShortDate(date),
       tooltipLabel: formatDateOnly(toChartDateKey(date)),
     }));
   }
