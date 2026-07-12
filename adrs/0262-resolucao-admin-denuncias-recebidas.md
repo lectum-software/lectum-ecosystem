@@ -12,6 +12,7 @@ A aba **Denúncias** do detalhe administrativo do psicólogo existia como leitur
 
 - Reutilizar `post_report.status` como máquina de estado operacional: `pendente` é o estado não terminal exibido no Admin, `em_analise` permanece apenas como legado agrupado em **Pendente**, `rejeitada` representa improcedência e `resolvida` representa procedência.
 - Não expor mais a etapa/opção **Em análise** na aba Denúncias: sem card, filtro, capacidade, modal, ação ou endpoint para mover uma denúncia para análise antes da resolução.
+- Na UI da aba Denúncias, filtros devem ser enxutos e consistentes com Dashboard/Estatísticas: sem faixa informativa redundante, sem chip de contagem de filtros, sem linha "Período consultado", ordem Tipo → Status → Período → De → Até e campos de data sempre visíveis com aplicação ao sair do grupo de datas.
 - Registrar cada ação em `admin_activity_log` com `area="denuncias"`, `source="admin_panel"`, motivo obrigatório, `safe_before`/`safe_after` seguros e metadados sem conteúdo integral ou dados pessoais do denunciante.
 - Remover conteúdo apenas por soft delete real:
   - post: `community_post.deleted=true`, `deletedAt` preenchido, `status="removido"` e respostas associadas removidas por soft delete;
@@ -25,4 +26,5 @@ A aba **Denúncias** do detalhe administrativo do psicólogo existia como leitur
 - O feed público continua protegido pelos filtros existentes de `deleted=false` e `status="publicado"`.
 - Reabertura de denúncia, sanções de conta e notificações ficam para tasks futuras com ADR próprio.
 - Registros legados em `post_report.status="em_analise"` continuam resolvíveis diretamente como pendentes, sem migração de schema.
+- A remoção de cópias auxiliares e badges de filtro reduz ruído operacional; a data continua auditável pelo contrato/API, mas não é repetida na UI.
 - A validação local não dispara mutações reais sem autorização explícita sobre uma denúncia específica; endpoints protegidos, contratos, builds e checks validam a implementação.

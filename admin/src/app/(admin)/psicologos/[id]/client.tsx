@@ -3331,11 +3331,20 @@ const reportCardIcon: Record<"all" | "dismissed" | "pending" | "total" | "upheld
   upheld: ShieldCheck,
 };
 
-const resolveReportPeriod = (preset: string, customFrom: string, customTo: string) => {
-  if (preset === "custom") {
-    return customFrom && customTo ? { from: customFrom, to: customTo } : {};
-  }
+type ReportPeriodValue = "30d" | "90d" | "180d" | "custom";
+type ReportPeriodPreset = Exclude<ReportPeriodValue, "custom">;
+type ReportDateRange = {
+  from: string;
+  to: string;
+};
 
+const REPORT_PERIOD_OPTIONS: { id: ReportPeriodPreset; label: string }[] = [
+  { id: "30d", label: "Últimos 30 dias" },
+  { id: "90d", label: "Últimos 90 dias" },
+  { id: "180d", label: "Últimos 180 dias" },
+];
+
+const getReportRangeForPeriod = (preset: ReportPeriodPreset): ReportDateRange => {
   const days = preset === "30d" ? 30 : preset === "180d" ? 180 : 90;
   const to = new Date();
   const from = new Date();
@@ -3345,6 +3354,18 @@ const resolveReportPeriod = (preset: string, customFrom: string, customTo: strin
     from: formatInputDate(from.toISOString()),
     to: formatInputDate(to.toISOString()),
   };
+};
+
+const reportDateFromInput = (value: string) => {
+  const [year, month, day] = value.split("-").map(Number);
+
+  return new Date(year, month - 1, day, 12, 0, 0, 0);
+};
+
+const isValidReportRange = (range: ReportDateRange) => {
+  if (!range.from || !range.to) return false;
+
+  return reportDateFromInput(range.from) <= reportDateFromInput(range.to);
 };
 
 const ReportStatusBadge = ({ group, label }: { group: string; label: string }) => {
@@ -3615,29 +3636,76 @@ const ReportUpholdForm = ({
 };
 
 const ReportsTab = ({ id }: { id: string }) => {
-  const [period, setPeriod] = useState("90d");
-  const [customFrom, setCustomFrom] = useState("");
-  const [customTo, setCustomTo] = useState("");
+  const [selectedPeriod, setSelectedPeriod] = useState<ReportPeriodValue>("90d");
+  const [appliedRange, setAppliedRange] = useState<ReportDateRange>(() =>
+    getReportRangeForPeriod("90d"),
+  );
+  const [draftRange, setDraftRange] = useState<ReportDateRange>(() =>
+    getReportRangeForPeriod("90d"),
+  );
+  const [rangeError, setRangeError] = useState<string | null>(null);
   const [type, setType] = useState<AdminPsychologistReportsQuery["type"]>("all");
   const [status, setStatus] = useState<AdminPsychologistReportsQuery["status"]>("all");
   const [page, setPage] = useState(1);
   const [moderationState, setModerationState] = useState<ReportModerationState>(null);
-  const periodRange = useMemo(
-    () => resolveReportPeriod(period, customFrom, customTo),
-    [customFrom, customTo, period],
-  );
   const queryInput = useMemo<AdminPsychologistReportsQuery>(
     () => ({
-      ...periodRange,
+      ...appliedRange,
       limit: 5,
       page,
       status,
       type,
     }),
-    [page, periodRange, status, type],
+    [appliedRange, page, status, type],
   );
   const query = useAdminPsychologistReports(id, queryInput);
   const errorMessage = query.error ? resolveApiError(query.error) : null;
+  const handleReportPeriodChange = (value: ReportPeriodPreset) => {
+    const nextRange = getReportRangeForPeriod(value);
+
+    setRangeError(null);
+    setSelectedPeriod(value);
+    setDraftRange(nextRange);
+    setAppliedRange(nextRange);
+    setPage(1);
+  };
+  const handleReportDateChange = (field: keyof ReportDateRange, value: string) => {
+    setRangeError(null);
+    setSelectedPeriod("custom");
+    setDraftRange((current) => ({
+      ...current,
+      [field]: value,
+    }));
+  };
+  const commitReportRange = () => {
+    if (!isValidReportRange(draftRange)) {
+      setRangeError(
+        "Informe um período personalizado completo, com data inicial menor ou igual à final.",
+      );
+      return;
+    }
+
+    setRangeError(null);
+    setAppliedRange(draftRange);
+    setPage(1);
+  };
+  const handleReportDateControlsBlur = (event: {
+    currentTarget: HTMLDivElement;
+    relatedTarget: EventTarget | null;
+  }) => {
+    const currentTarget = event.currentTarget;
+    const nextFocusedElement = event.relatedTarget as Node | null;
+
+    if (nextFocusedElement && currentTarget.contains(nextFocusedElement)) return;
+
+    window.setTimeout(() => {
+      const activeElement = document.activeElement;
+
+      if (activeElement && currentTarget.contains(activeElement)) return;
+
+      commitReportRange();
+    }, 0);
+  };
 
   if (query.isLoading) return <EngagementLoadingState rows={2} />;
   if (query.isError && errorMessage) {
@@ -3649,11 +3717,6 @@ const ReportsTab = ({ id }: { id: string }) => {
 
   return (
     <div className="space-y-5" data-psychologist-detail-tab="denuncias">
-      <div className="rounded-2xl border border-primary/20 bg-primary-soft p-4 text-sm font-bold text-muted">
-        Denúncias relacionadas a posts e respostas do psicólogo são exibidas apenas para leitura.
-        Resolver, aprovar, rejeitar ou aplicar medidas fica fora desta V1.
-      </div>
-
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {reports.cards.map((card) => {
           const Icon = reportCardIcon[card.id === "total" ? "total" : card.id];
@@ -3676,23 +3739,7 @@ const ReportsTab = ({ id }: { id: string }) => {
       </div>
 
       <CardShell className="p-4">
-        <div className="grid gap-3 lg:grid-cols-[1fr_1fr_1fr_1fr_1fr_auto] lg:items-end">
-          <label className="block text-sm font-black text-muted">
-            Período
-            <select
-              className="mt-2 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground"
-              onChange={(event) => {
-                setPeriod(event.target.value);
-                setPage(1);
-              }}
-              value={period}
-            >
-              <option value="30d">Últimos 30 dias</option>
-              <option value="90d">Últimos 90 dias</option>
-              <option value="180d">Últimos 180 dias</option>
-              <option value="custom">Personalizado</option>
-            </select>
-          </label>
+        <div className="grid gap-3 lg:grid-cols-[1fr_1fr_1fr_2fr] lg:items-end">
           <label className="block text-sm font-black text-muted">
             Tipo
             <select
@@ -3728,38 +3775,50 @@ const ReportsTab = ({ id }: { id: string }) => {
             </select>
           </label>
           <label className="block text-sm font-black text-muted">
-            De
-            <input
-              className="mt-2 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground disabled:opacity-50"
-              disabled={period !== "custom"}
+            Período
+            <select
+              className="mt-2 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground"
               onChange={(event) => {
-                setCustomFrom(event.target.value);
-                setPage(1);
+                handleReportPeriodChange(event.target.value as ReportPeriodPreset);
               }}
-              type="date"
-              value={customFrom}
-            />
+              value={selectedPeriod}
+            >
+              {selectedPeriod === "custom" ? (
+                <option disabled hidden value="custom">
+                  Personalizado
+                </option>
+              ) : null}
+              {REPORT_PERIOD_OPTIONS.map((option) => (
+                <option key={option.id} value={option.id}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
           </label>
-          <label className="block text-sm font-black text-muted">
-            Até
-            <input
-              className="mt-2 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground disabled:opacity-50"
-              disabled={period !== "custom"}
-              onChange={(event) => {
-                setCustomTo(event.target.value);
-                setPage(1);
-              }}
-              type="date"
-              value={customTo}
-            />
-          </label>
-          <Badge className="h-11 justify-center bg-primary-soft px-4 text-primary">
-            {reports.active_filters_count} filtros
-          </Badge>
+          <div className="grid gap-3 sm:grid-cols-2" onBlur={handleReportDateControlsBlur}>
+            <label className="block text-sm font-black text-muted">
+              De
+              <input
+                className="mt-2 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground"
+                max={draftRange.to}
+                onChange={(event) => handleReportDateChange("from", event.target.value)}
+                type="date"
+                value={draftRange.from}
+              />
+            </label>
+            <label className="block text-sm font-black text-muted">
+              Até
+              <input
+                className="mt-2 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground"
+                min={draftRange.from}
+                onChange={(event) => handleReportDateChange("to", event.target.value)}
+                type="date"
+                value={draftRange.to}
+              />
+            </label>
+          </div>
         </div>
-        <p className="mt-3 text-xs font-bold text-muted">
-          Período consultado: {reports.period.from} a {reports.period.to}
-        </p>
+        {rangeError ? <p className="mt-3 text-xs font-bold text-danger">{rangeError}</p> : null}
       </CardShell>
 
       <CardShell className="overflow-hidden">

@@ -316,6 +316,7 @@ Regras:
 - [x] `?tab=denuncias` continua funcionando e filtros/deep links existentes não quebram.
 - [x] Denúncias exibem status real distinguindo pendente, improcedente e procedente; registros legados em `em_analise` aparecem como pendentes.
 - [x] A opção/ação **Em análise** foi removida da UI, filtros, cards e contrato Admin.
+- [x] A aba **Denúncias** removeu a faixa informativa, a linha de período consultado e o chip de filtros, mantendo filtros na ordem Tipo, Status, Período, De e Até com campos de data sempre visíveis.
 - [x] Admin consegue resolver denúncia como **Improcedente** com motivo obrigatório e confirmação forte.
 - [x] Resolver como improcedente atualiza `post_report.status="rejeitada"`, registra auditoria e não altera conteúdo.
 - [x] Admin consegue resolver denúncia como **Procedente** com motivo obrigatório, confirmação forte e escolha de medida.
@@ -378,6 +379,7 @@ Regras:
 - Não houve alteração em Prisma schema ou migrations; `pnpm --dir backend db:migrate` não foi necessário.
 - Mutações reais de moderação não foram disparadas contra denúncias existentes sem autorização explícita para alterar dados locais/prod-like; endpoints foram validados negativamente sem sessão Admin e contratos/builds/checks validaram a implementação.
 - Correção pós-validação em 2026-07-12: removida a etapa/opção **Em análise** de Denúncias; `em_analise` legado passa a ser agrupado como **Pendente** e resolvido diretamente.
+- Correção de UI em 2026-07-12: removida a faixa informativa da aba, removidos "Período consultado" e chip de filtros, filtros reordenados para Tipo, Status, Período, De e Até, e datas passam a seguir o padrão de dashboard/estatísticas com campos sempre visíveis e aplicação ao sair do grupo de datas.
 
 ### Validação executada
 
@@ -392,4 +394,9 @@ Regras:
 - Correção 2026-07-12:
   - `rg` confirmou ausência de `start_review`, `can_start_review`, `start-review` e card/ação **Em análise** no contrato/UI Admin;
   - `GET http://localhost:3002/psicologos/test-id?tab=denuncias` retornou 200 no dev server local, confirmando que a rota continua acessível/guardada.
+- Correção de UI 2026-07-12:
+  - `pnpm --dir admin check`
+  - `pnpm --dir admin build`
+  - `pnpm check`
+  - `rg` confirmou ausência da faixa "Denúncias relacionadas...", da linha "Período consultado" e do chip `reports.active_filters_count` na aba **Denúncias**.
 - Browser local/headless em 390px e desktop para `http://localhost:3002/psicologos/test-id?tab=denuncias` confirmou rota/guard Admin sem quebrar o deep link, redirecionando para login por ausência de sessão no contexto headless.
