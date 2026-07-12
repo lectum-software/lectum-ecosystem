@@ -611,17 +611,17 @@ const SearchUnavailableCard = ({ summary }: { summary: AdminPsychologistsDashboa
 const StatsContent = ({ summary }: { summary: AdminPsychologistsDashboard }) => (
   <div className="grid gap-4 xl:grid-cols-3">
     <CardShell className="p-5">
-      <PanelTitle icon={ShieldCheck} title="Serviços" />
-      <ProgressList
-        items={summary.statistics.services.items}
-        total={summary.statistics.services.total}
-      />
-    </CardShell>
-    <CardShell className="p-5">
       <PanelTitle icon={Award} title="Especialidades" />
       <ProgressList
         items={summary.statistics.specialties.items}
         total={summary.statistics.specialties.total}
+      />
+    </CardShell>
+    <CardShell className="p-5">
+      <PanelTitle icon={ShieldCheck} title="Serviços" />
+      <ProgressList
+        items={summary.statistics.services.items}
+        total={summary.statistics.services.total}
       />
     </CardShell>
     <CardShell className="p-5">

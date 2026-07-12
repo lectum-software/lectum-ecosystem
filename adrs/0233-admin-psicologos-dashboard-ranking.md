@@ -50,6 +50,7 @@ Atualização 2026-07-12 (especialidades nas estatísticas):
 
 - A seção **Estatísticas** passa a incluir o agrupamento real **Especialidades**, calculado a partir de `psychologist_specialty`/`specialty` já selecionados pelo repositório do dashboard.
 - As tags visuais de fonte dos cards de estatísticas foram removidas para reduzir ruído visual; os campos `source` continuam presentes no contrato backend/frontend para rastreabilidade técnica.
+- **Especialidades** passa a aparecer antes de **Serviços** na ordem visual dos cards, priorizando a leitura de especialidades clínicas antes dos serviços oferecidos.
 
 ## Consequências
 
@@ -80,3 +81,4 @@ Atualização 2026-07-12 (especialidades nas estatísticas):
 - Atualização 2026-07-12 (remoção de lista/ranking): `pnpm --dir admin check`, `pnpm --dir admin build`, smoke HTTP local em `/psicologos` retornando 200; `pnpm check` tentado e encerrado por timeout de 124s sem saída conclusiva.
 - Atualização 2026-07-12 (simplificação visual do gráfico): `pnpm --dir admin check`, `pnpm --dir admin build` e smoke HTTP local em `/psicologos` retornando 200.
 - Atualização 2026-07-12 (especialidades nas estatísticas): `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm --dir backend check`, `pnpm --dir backend build` e smoke HTTP local em `/psicologos` retornando 200.
+- Atualização 2026-07-12 (ordem das especialidades): `pnpm --dir admin check`, `pnpm --dir admin build` e smoke HTTP local em `/psicologos` retornando 200.
