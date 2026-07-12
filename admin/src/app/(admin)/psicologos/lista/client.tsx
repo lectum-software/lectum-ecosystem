@@ -21,7 +21,15 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { type FormEvent, type ReactNode, useMemo, useState } from "react";
+import {
+  type FormEvent,
+  type ReactNode,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { useAdminPsychologistsList } from "@/api/callers/psychologists";
 import { resolveApiError } from "@/api/handle";
 import type {
@@ -66,6 +74,25 @@ const listSorts = new Set(SORT_OPTIONS.map((item) => item.id));
 const listExperience = new Set(["0_4", "5_9", "10_plus", "unknown"]);
 const listStatuses = new Set(Object.keys(STATUS_COPY));
 const LOADING_ROWS = ["loading-1", "loading-2", "loading-3", "loading-4", "loading-5", "loading-6"];
+const FILTER_MODAL_CLOSE_DELAY_MS = 260;
+const FILTER_KEYS = [
+  "accepts_insurance",
+  "approach",
+  "city",
+  "discount_first_session",
+  "experience",
+  "gender",
+  "language",
+  "modality",
+  "plan",
+  "service",
+  "social_value",
+  "state",
+  "status",
+  "target_audience",
+] as const satisfies readonly (keyof PsychologistsListQuery)[];
+
+type FilterQueryKey = (typeof FILTER_KEYS)[number];
 
 const CardShell = ({ children, className }: { children?: ReactNode; className?: string }) => (
   <section
@@ -214,34 +241,33 @@ const ToggleFilter = ({
 );
 
 const FilterPanel = ({
+  className,
   data,
-  onClear,
   onFilter,
   query,
+  showHeader = true,
 }: {
+  className?: string;
   data?: AdminPsychologistsList;
-  onClear: () => void;
-  onFilter: (key: keyof PsychologistsListQuery, value: string | boolean | null) => void;
+  onFilter: (key: FilterQueryKey, value: string | boolean | null) => void;
   query: PsychologistsListQuery;
+  showHeader?: boolean;
 }) => {
   const filters = data?.filters;
   const empty: PsychologistsListOption[] = [];
 
   return (
-    <CardShell className="p-4 lg:sticky lg:top-24">
-      <div className="flex items-start justify-between gap-3">
+    <div className={cn("space-y-5", className)}>
+      {showHeader ? (
         <div>
           <h2 className="text-lg font-black text-foreground">Filtros de busca</h2>
           <p className="mt-1 text-xs font-bold text-muted">
             Todos os filtros usam campos reais dos perfis profissionais.
           </p>
         </div>
-        <button className="text-xs font-black text-primary" onClick={onClear} type="button">
-          Limpar
-        </button>
-      </div>
+      ) : null}
 
-      <div className="mt-5 space-y-5">
+      <div className="space-y-5">
         <div className="space-y-3">
           <h3 className="text-sm font-black text-foreground">Localização</h3>
           <SelectField
@@ -350,7 +376,7 @@ const FilterPanel = ({
           />
         </div>
       </div>
-    </CardShell>
+    </div>
   );
 };
 
@@ -732,6 +758,10 @@ export const AdminPsychologistsListClient = () => {
   const searchString = searchParams.toString();
   const query = useMemo(() => parseQuery(new URLSearchParams(searchString)), [searchString]);
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [filtersSheetOpen, setFiltersSheetOpen] = useState(false);
+  const [draftQuery, setDraftQuery] = useState<PsychologistsListQuery>(query);
+  const filterCloseTimerRef = useRef<number | null>(null);
+  const filterOpenFrameRef = useRef<number | null>(null);
   const listQuery = useAdminPsychologistsList(query);
   const queryError = listQuery.error ? resolveApiError(listQuery.error) : null;
 
@@ -754,10 +784,101 @@ export const AdminPsychologistsListClient = () => {
     router.replace(next ? `${pathname}?${next}` : pathname, { scroll: false });
   };
 
+  const closeFilters = useCallback(() => {
+    if (filterOpenFrameRef.current) {
+      window.cancelAnimationFrame(filterOpenFrameRef.current);
+      filterOpenFrameRef.current = null;
+    }
+
+    setFiltersSheetOpen(false);
+
+    if (filterCloseTimerRef.current) {
+      window.clearTimeout(filterCloseTimerRef.current);
+    }
+
+    filterCloseTimerRef.current = window.setTimeout(() => {
+      setFiltersOpen(false);
+      filterCloseTimerRef.current = null;
+    }, FILTER_MODAL_CLOSE_DELAY_MS);
+  }, []);
+
+  const openFilters = useCallback(() => {
+    if (filterCloseTimerRef.current) {
+      window.clearTimeout(filterCloseTimerRef.current);
+      filterCloseTimerRef.current = null;
+    }
+
+    if (filterOpenFrameRef.current) {
+      window.cancelAnimationFrame(filterOpenFrameRef.current);
+    }
+
+    setDraftQuery(query);
+    setFiltersSheetOpen(false);
+    setFiltersOpen(true);
+
+    filterOpenFrameRef.current = window.requestAnimationFrame(() => {
+      setFiltersSheetOpen(true);
+      filterOpenFrameRef.current = null;
+    });
+  }, [query]);
+
   const clearFilters = () => {
     router.replace(pathname, { scroll: false });
-    setFiltersOpen(false);
+    closeFilters();
   };
+
+  const updateDraftFilter = (key: FilterQueryKey, value: string | boolean | null) => {
+    setDraftQuery((current) => ({
+      ...current,
+      [key]: value === null || value === "" || value === false ? undefined : value,
+    }));
+  };
+
+  const applyDraftFilters = () => {
+    const params = new URLSearchParams(searchString);
+
+    for (const key of FILTER_KEYS) {
+      const value = draftQuery[key];
+
+      if (value === null || value === undefined || value === "" || value === false) {
+        params.delete(key);
+      } else {
+        params.set(key, String(value));
+      }
+    }
+
+    params.delete("page");
+
+    const next = params.toString();
+    router.replace(next ? `${pathname}?${next}` : pathname, { scroll: false });
+    closeFilters();
+  };
+
+  useEffect(() => {
+    if (!filtersOpen) return;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") closeFilters();
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [closeFilters, filtersOpen]);
+
+  useEffect(
+    () => () => {
+      if (filterCloseTimerRef.current) window.clearTimeout(filterCloseTimerRef.current);
+      if (filterOpenFrameRef.current) window.cancelAnimationFrame(filterOpenFrameRef.current);
+    },
+    [],
+  );
 
   const summary = listQuery.data;
   const items = summary?.data ?? [];
@@ -797,7 +918,7 @@ export const AdminPsychologistsListClient = () => {
           <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
             <button
               className="inline-flex h-12 min-w-0 items-center justify-center gap-2 rounded-control border border-border bg-surface px-4 text-sm font-black text-foreground shadow-control"
-              onClick={() => setFiltersOpen(true)}
+              onClick={openFilters}
               type="button"
             >
               <Filter aria-hidden className="h-4 w-4" />
@@ -817,124 +938,168 @@ export const AdminPsychologistsListClient = () => {
         </div>
       </header>
 
-      <div className="grid min-w-0 max-w-full gap-5 lg:grid-cols-[minmax(0,300px)_minmax(0,1fr)]">
-        <aside className="hidden min-w-0 lg:block">
-          <FilterPanel
-            data={summary}
-            onClear={clearFilters}
-            onFilter={(key, value) => replaceParams({ [key]: value })}
-            query={query}
+      <div className="min-w-0 space-y-4">
+        <div className="grid min-w-0 gap-3 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-center">
+          <SearchBox
+            key={query.q || "empty-search"}
+            onSearch={(value) => replaceParams({ q: value || null })}
+            value={query.q}
           />
-        </aside>
+          <label className="flex min-w-0 flex-col gap-2 text-sm font-black text-muted sm:flex-row sm:items-center xl:justify-end">
+            Ordenar por
+            <select
+              className="h-12 min-w-0 rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground shadow-control"
+              onChange={(event) =>
+                replaceParams({ sort: event.target.value as PsychologistsListSort })
+              }
+              value={query.sort || "relevance"}
+            >
+              {SORT_OPTIONS.map((option) => (
+                <option key={option.id} value={option.id}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
 
-        <div className="min-w-0 space-y-4">
-          <div className="grid min-w-0 gap-3 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-center">
-            <SearchBox
-              key={query.q || "empty-search"}
-              onSearch={(value) => replaceParams({ q: value || null })}
-              value={query.q}
-            />
-            <label className="flex min-w-0 flex-col gap-2 text-sm font-black text-muted sm:flex-row sm:items-center xl:justify-end">
-              Ordenar por
-              <select
-                className="h-12 min-w-0 rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground shadow-control"
-                onChange={(event) =>
-                  replaceParams({ sort: event.target.value as PsychologistsListSort })
-                }
-                value={query.sort || "relevance"}
-              >
-                {SORT_OPTIONS.map((option) => (
-                  <option key={option.id} value={option.id}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-            </label>
+        <CardShell className="overflow-hidden">
+          <div className="flex flex-col gap-3 border-b border-border px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-sm font-black text-foreground">
+                {summary ? numberFormatter.format(summary.count) : "—"} psicólogos encontrados
+              </p>
+              <p className="mt-1 text-xs font-bold text-muted">
+                Fonte: endpoint admin privado com dados reais do perfil profissional.
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2 text-xs font-black text-muted">
+              <span className="rounded-full bg-primary-soft px-3 py-1 text-primary">
+                Criação manual fora da V1
+              </span>
+              <span className="rounded-full bg-surface-muted px-3 py-1">
+                Preferências fora da V1
+              </span>
+            </div>
           </div>
 
-          <CardShell className="overflow-hidden">
-            <div className="flex flex-col gap-3 border-b border-border px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <p className="text-sm font-black text-foreground">
-                  {summary ? numberFormatter.format(summary.count) : "—"} psicólogos encontrados
-                </p>
-                <p className="mt-1 text-xs font-bold text-muted">
-                  Fonte: endpoint admin privado com dados reais do perfil profissional.
-                </p>
+          <div className="p-4 lg:p-0">
+            {listQuery.isLoading ? <LoadingState /> : null}
+            {listQuery.isError && queryError ? (
+              <div className="p-4">
+                <ErrorState message={queryError} onRetry={() => void listQuery.refetch()} />
               </div>
-              <div className="flex flex-wrap gap-2 text-xs font-black text-muted">
-                <span className="rounded-full bg-primary-soft px-3 py-1 text-primary">
-                  Criação manual fora da V1
-                </span>
-                <span className="rounded-full bg-surface-muted px-3 py-1">
-                  Preferências fora da V1
-                </span>
-              </div>
-            </div>
-
-            <div className="p-4 lg:p-0">
-              {listQuery.isLoading ? <LoadingState /> : null}
-              {listQuery.isError && queryError ? (
-                <div className="p-4">
-                  <ErrorState message={queryError} onRetry={() => void listQuery.refetch()} />
-                </div>
-              ) : null}
-              {summary && items.length === 0 ? <EmptyState /> : null}
-              {summary && items.length > 0 ? (
-                <>
-                  <div className="space-y-3 min-[1700px]:hidden">
-                    {items.map((item) => (
-                      <MobilePsychologistCard item={item} key={item.id} />
-                    ))}
-                  </div>
-                  <PsychologistsTable items={items} />
-                </>
-              ) : null}
-            </div>
-
-            {summary ? (
-              <Pagination
-                onChangePage={(nextPage) => replaceParams({ page: nextPage }, { resetPage: false })}
-                onLimit={(limit) => replaceParams({ limit, page: 1 }, { resetPage: false })}
-                page={page}
-                pages={pages}
-                perPage={summary.per_page}
-              />
             ) : null}
-          </CardShell>
-        </div>
+            {summary && items.length === 0 ? <EmptyState /> : null}
+            {summary && items.length > 0 ? (
+              <>
+                <div className="space-y-3 min-[1700px]:hidden">
+                  {items.map((item) => (
+                    <MobilePsychologistCard item={item} key={item.id} />
+                  ))}
+                </div>
+                <PsychologistsTable items={items} />
+              </>
+            ) : null}
+          </div>
+
+          {summary ? (
+            <Pagination
+              onChangePage={(nextPage) => replaceParams({ page: nextPage }, { resetPage: false })}
+              onLimit={(limit) => replaceParams({ limit, page: 1 }, { resetPage: false })}
+              page={page}
+              pages={pages}
+              perPage={summary.per_page}
+            />
+          ) : null}
+        </CardShell>
       </div>
 
       {filtersOpen ? (
-        <div className="fixed inset-0 z-50 lg:hidden">
+        <div
+          aria-labelledby="admin-psychologists-filters-title"
+          aria-modal="true"
+          className={cn(
+            "fixed inset-0 z-50 flex items-end justify-center bg-overlay p-0 text-foreground backdrop-blur-sm transition-opacity duration-200 sm:items-center sm:p-6",
+            filtersSheetOpen ? "opacity-100" : "opacity-0",
+          )}
+          role="dialog"
+        >
           <button
             aria-label="Fechar filtros"
-            className="absolute inset-0 bg-overlay"
-            onClick={() => setFiltersOpen(false)}
+            className="absolute inset-0"
+            onClick={closeFilters}
             type="button"
           />
-          <div className="absolute inset-y-0 right-0 flex w-[min(92vw,390px)] flex-col bg-background shadow-admin">
-            <div className="flex items-center justify-between border-b border-border p-4">
-              <div className="flex items-center gap-2">
-                <SlidersHorizontal aria-hidden className="h-5 w-5 text-primary" />
-                <p className="font-black text-foreground">Filtros</p>
+          <div
+            className={cn(
+              "relative flex h-[100dvh] w-full flex-col overflow-hidden rounded-none border-border bg-surface shadow-admin transition-transform duration-300 ease-out motion-reduce:transition-none sm:h-auto sm:max-h-[min(860px,calc(100dvh-2rem))] sm:max-w-3xl sm:rounded-[2rem] sm:border",
+              filtersSheetOpen ? "translate-y-0" : "translate-y-full sm:translate-y-4",
+            )}
+            role="document"
+          >
+            <div className="shrink-0 border-b border-border bg-surface/95 px-4 py-3 backdrop-blur sm:px-6 sm:py-4">
+              <div className="grid grid-cols-[2.5rem_minmax(0,1fr)_auto] items-start gap-3">
+                <button
+                  aria-label="Fechar filtros"
+                  className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl border border-border bg-background text-muted transition hover:bg-surface-muted hover:text-foreground"
+                  onClick={closeFilters}
+                  type="button"
+                >
+                  <X aria-hidden className="h-4 w-4" />
+                </button>
+                <div className="min-w-0 pt-1">
+                  <div className="flex items-center gap-2">
+                    <SlidersHorizontal aria-hidden className="h-5 w-5 shrink-0 text-primary" />
+                    <h2
+                      className="text-lg font-black leading-6 text-foreground"
+                      id="admin-psychologists-filters-title"
+                    >
+                      Filtros de busca
+                    </h2>
+                  </div>
+                  <p className="mt-1 text-xs font-bold leading-5 text-muted sm:text-sm">
+                    Segmente a lista com os mesmos dados reais usados na descoberta pública de
+                    psicólogos.
+                  </p>
+                </div>
+                <button
+                  className="mt-1 rounded-full px-2 py-1 text-xs font-black text-primary transition hover:bg-primary-soft"
+                  onClick={clearFilters}
+                  type="button"
+                >
+                  Limpar
+                </button>
               </div>
-              <button
-                className="grid h-10 w-10 place-items-center rounded-2xl border border-border bg-surface"
-                onClick={() => setFiltersOpen(false)}
-                type="button"
-              >
-                <X aria-hidden className="h-4 w-4" />
-                <span className="sr-only">Fechar filtros</span>
-              </button>
             </div>
-            <div className="min-h-0 flex-1 overflow-y-auto p-4">
+
+            <div className="min-h-0 flex-1 overflow-y-auto px-4 py-5 sm:px-6">
               <FilterPanel
+                className="mx-auto max-w-2xl"
                 data={summary}
-                onClear={clearFilters}
-                onFilter={(key, value) => replaceParams({ [key]: value })}
-                query={query}
+                onFilter={updateDraftFilter}
+                query={draftQuery}
+                showHeader={false}
               />
+            </div>
+
+            <div className="shrink-0 border-t border-border bg-surface/95 px-4 py-3 shadow-admin-soft sm:px-6">
+              <div className="mx-auto flex max-w-2xl flex-col gap-2 sm:flex-row sm:items-center sm:justify-end">
+                <button
+                  className="h-12 rounded-control border border-border bg-surface px-5 text-sm font-black text-foreground transition hover:border-border-strong"
+                  onClick={closeFilters}
+                  type="button"
+                >
+                  Cancelar
+                </button>
+                <button
+                  className="h-12 rounded-control bg-primary px-5 text-sm font-black text-white shadow-control transition hover:bg-primary-hover"
+                  onClick={applyDraftFilters}
+                  type="button"
+                >
+                  Aplicar filtros
+                </button>
+              </div>
             </div>
           </div>
         </div>

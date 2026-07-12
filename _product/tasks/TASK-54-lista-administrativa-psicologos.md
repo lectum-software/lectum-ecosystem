@@ -164,3 +164,33 @@ Frontend esperado:
   - `pnpm --dir admin check`
   - `pnpm --dir admin build`
   - Browser local headless com sessao admin real em `http://localhost:3002/psicologos/lista?sort=relevance&limit=8`: desktop 1920px e mobile 390px com `documentScrollWidth <= innerWidth`, sem overflow horizontal de viewport.
+
+## Execucao complementar: filtros em modal na lista Admin (2026-07-12)
+
+- Pedido do usuario: remover a coluna lateral **Filtros de busca** da lista Admin de psicologos e fazer o botao **Filtros ativos** abrir uma modal com as opcoes de filtros, alinhada ao comportamento da descoberta publica de psicologos.
+- Referencias visuais usadas: `_product/proto/admin/Psicólogos/Psicólogos- Lista.png` e `_product/proto/Filtros de Psicólogos - Serviços Expandidos.jpg`. Builder/Quick Copy `vcp://quickcopy/vcp-24aaa2941d814e5b90572bc93ae50e2a` nao esta exposto como ferramenta callable neste ambiente.
+- Frontend Admin: a rota `/psicologos/lista` deixou de renderizar a coluna fixa de filtros em desktop; todos os breakpoints usam o botao **Filtros ativos** para abrir uma modal/drawer responsiva.
+- A modal e mobile-first: ocupa a altura da viewport em ~390px, abre como sheet inferior e, em desktop, centraliza com largura maxima; Escape/backdrop/cancelar fecham sem aplicar alteracoes.
+- Os filtros continuam usando os mesmos campos reais, query params e endpoint Admin privado ja existentes; as alteracoes feitas na modal usam estado local e so atualizam a URL ao clicar **Aplicar filtros**.
+- Nao houve alteracao de backend, Prisma, migrations, packages, contratos de API, dados, ranking, paginacao ou ordenacao.
+- Nenhum `<img>`, mock, endpoint simulado ou dado fake permanente foi usado.
+
+### Criterios complementares
+
+- [x] A coluna lateral **Filtros de busca** nao aparece mais na lista Admin antes de abrir a modal.
+- [x] O botao **Filtros ativos** abre uma modal com Localizacao, Status/plano, Selos/diferenciais e Perfil profissional.
+- [x] A modal funciona em desktop e mobile base ~390px sem overflow horizontal de viewport.
+- [x] Filtros continuam persistidos em URL/search params somente ao aplicar.
+- [x] Nenhuma alteracao de backend, Prisma/migrations ou package foi feita.
+
+### Validacao complementar
+
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- Browser local headless/CDP com admin temporario real removido ao final em `http://localhost:3002/psicologos/lista?sort=relevance&limit=8`:
+  - desktop `1440x1000`: sem titulo de filtros visivel fora da modal; modal abriu com secoes esperadas e largura `768px`;
+  - mobile `390x844`: sem titulo de filtros visivel fora da modal; modal abriu ocupando `390x844`;
+  - ambos com `document.documentElement.scrollWidth <= innerWidth`.
+- `pnpm check` foi executado e ficou bloqueado por erros de formatacao preexistentes no `frontend/` fora deste ajuste:
+  - `frontend/src/app/app/professional/profile/setup/use-form.tsx`;
+  - `frontend/src/app/auth/register/psychologist/use-form.tsx`.
