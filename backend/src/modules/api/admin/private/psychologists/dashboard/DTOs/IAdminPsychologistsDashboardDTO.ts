@@ -31,12 +31,14 @@ export type AdminPsychologistsDashboardMetric = {
   id: string;
   label: string;
   previous_value: number;
+  previous_value_count?: number;
   source: string;
   trend: AdminPsychologistsDashboardTrend;
   unit: "count" | "currency_cents" | "decimal" | "percentage";
   unavailable: boolean;
   unavailable_reason?: string;
   value: number;
+  value_count?: number;
 };
 
 export type AdminPsychologistsDashboardDailyPoint = {

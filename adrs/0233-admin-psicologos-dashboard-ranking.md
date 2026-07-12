@@ -56,6 +56,12 @@ AtualizaÃ§Ã£o 2026-07-12 (valor social ao lado do desconto):
 
 - O card **Valor social** deixa de ocupar `xl:col-span-3` e passa a seguir a mesma largura dos demais cards booleanos, permitindo que fique ao lado de **Desconto 1Âª sessÃ£o** no desktop sem alterar o contrato ou os cÃ¡lculos.
 
+Atualização 2026-07-12 (churn com contagem absoluta):
+
+- A métrica **Churn** mantém `value` como percentual calculado pela fórmula já documentada, mas passa a expor `value_count` e `previous_value_count` opcionais com a contagem absoluta de cancelamentos reais Mercado Pago do período.
+- O card de churn no Admin passa a renderizar `cancelamentos (percentual)`, por exemplo `0 (0%)`, para evitar que o percentual apareça sem a escala absoluta do problema.
+- A tag visual **estimado** foi removida dos cards do dashboard de psicólogos; quando o churn não tem base paga, o estado **Indisponível** continua sendo a sinalização honesta.
+
 ## ConsequÃªncias
 
 - O Admin nÃ£o cria uma mÃ©trica de ranking divergente do Explorar pÃºblico.
@@ -87,3 +93,6 @@ AtualizaÃ§Ã£o 2026-07-12 (valor social ao lado do desconto):
 - AtualizaÃ§Ã£o 2026-07-12 (especialidades nas estatÃ­sticas): `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm --dir backend check`, `pnpm --dir backend build` e smoke HTTP local em `/psicologos` retornando 200.
 - AtualizaÃ§Ã£o 2026-07-12 (ordem das especialidades): `pnpm --dir admin check`, `pnpm --dir admin build` e smoke HTTP local em `/psicologos` retornando 200.
 - AtualizaÃ§Ã£o 2026-07-12 (valor social ao lado do desconto): `pnpm --dir admin check`, `pnpm --dir admin build` e smoke HTTP local em `/psicologos` retornando 200.
+
+
+- Atualização 2026-07-12 (churn com contagem absoluta): `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build` e smoke HTTP local em `/psicologos` retornando 200; `pnpm check` falhou por erros TypeScript preexistentes/concomitantes fora do escopo em `backend/src/modules/api/admin/private/psychologists/feedback/use-cases/services.ts`.

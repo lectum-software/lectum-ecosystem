@@ -202,3 +202,13 @@ Packages usados:
 - NÃ£o houve alteraÃ§Ã£o de contrato backend, cÃ¡lculo, Prisma, mock ou fonte de dados; o ajuste Ã© apenas de composiÃ§Ã£o visual da grade de estatÃ­sticas.
 - ReferÃªncia visual local mantida: `_product/proto/admin/PsicÃ³logos/PsicÃ³logos - Dashboard.png`; Builder/Quick Copy nÃ£o estava disponÃ­vel como ferramenta callable no ambiente.
 - ValidaÃ§Ãµes desta correÃ§Ã£o: `pnpm --dir admin check`, `pnpm --dir admin build` e smoke HTTP local em `http://localhost:3002/psicologos` retornando 200.
+
+### Correção UX/dados em 2026-07-12 - churn com contagem absoluta
+
+- A tag visual **estimado** foi removida dos cards do dashboard de psicólogos; para churn sem base, a UI mantém o estado honesto **Indisponível**.
+- O card **Churn** passa a exibir o valor no formato `cancelamentos (percentual)`, por exemplo `0 (0%)`.
+- O backend preserva `value` como percentual do churn e adiciona `value_count`/`previous_value_count` opcionais ao contrato de métrica para expor a contagem absoluta de cancelamentos reais Mercado Pago do período sem alterar a série temporal.
+- Não houve alteração de Prisma schema, migrations, fórmula de churn, mock ou fonte paralela de dados.
+- Referência visual local mantida: `_product/proto/admin/Psicólogos/Psicólogos - Dashboard.png`; Builder/Quick Copy não estava disponível como ferramenta callable no ambiente.
+- Validações desta correção: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build` e smoke HTTP local em `http://localhost:3002/psicologos` retornando 200.
+- `pnpm check` foi executado, mas falhou por erros TypeScript preexistentes/concomitantes fora do escopo desta correção em `backend/src/modules/api/admin/private/psychologists/feedback/use-cases/services.ts`.

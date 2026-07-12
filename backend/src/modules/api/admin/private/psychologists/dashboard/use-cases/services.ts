@@ -228,10 +228,12 @@ const metric = (params: {
   id: string;
   label: string;
   previous: number;
+  previousValueCount?: number;
   source: string;
   unit?: AdminPsychologistsDashboardMetric["unit"];
   unavailable?: boolean;
   unavailableReason?: string;
+  valueCount?: number;
 }): AdminPsychologistsDashboardMetric => {
   const change = percentageChange(params.current, params.previous);
 
@@ -241,6 +243,9 @@ const metric = (params: {
     id: params.id,
     label: params.label,
     previous_value: params.previous,
+    ...(typeof params.previousValueCount === "number"
+      ? { previous_value_count: params.previousValueCount }
+      : {}),
     source: params.source,
     trend: change === null ? "unavailable" : change > 0 ? "up" : change < 0 ? "down" : "flat",
     unit: params.unit ?? "count",
@@ -248,6 +253,7 @@ const metric = (params: {
     ...(typeof params.estimated === "boolean" ? { estimated: params.estimated } : {}),
     ...(params.unavailableReason ? { unavailable_reason: params.unavailableReason } : {}),
     value: params.current,
+    ...(typeof params.valueCount === "number" ? { value_count: params.valueCount } : {}),
   };
 };
 
@@ -707,13 +713,14 @@ export const buildPsychologistsDashboard = async (
         current: currentChurn.value,
         description:
           "Cancelamentos de assinaturas profissionais Mercado Pago no período ÷ base ativa no início + novas assinaturas pagas no período. Cortesias e plano gratuito não entram.",
-        estimated: currentChurn.denominator === 0,
         id: "churn",
         label: "Churn",
         previous: previousChurn.value,
+        previousValueCount: previousChurn.canceled,
         source: "professional_subscription.source=mercadopago/status=cancelada",
         unit: "percentage",
         unavailable: currentChurn.denominator === 0,
+        valueCount: currentChurn.canceled,
         ...(currentChurn.denominator === 0
           ? {
               unavailableReason: "Não há base paga Mercado Pago no período para calcular churn.",

@@ -119,9 +119,15 @@ const formatChange = (value: number | null) => {
   })}%`;
 };
 
+const formatPercentageValue = (value: number) => `${numberFormatter.format(value)}%`;
+
 const formatMetricValue = (metric: PsychologistsDashboardMetric) => {
+  if (metric.id === "churn" && typeof metric.value_count === "number") {
+    return `${numberFormatter.format(metric.value_count)} (${formatPercentageValue(metric.value)})`;
+  }
+
   if (metric.unit === "currency_cents") return currencyFormatter.format(metric.value / 100);
-  if (metric.unit === "percentage") return `${numberFormatter.format(metric.value)}%`;
+  if (metric.unit === "percentage") return formatPercentageValue(metric.value);
 
   return numberFormatter.format(metric.value);
 };
@@ -227,11 +233,6 @@ const MetricCard = ({
       >
         <Icon aria-hidden className="h-5 w-5" />
       </div>
-      {metric.estimated ? (
-        <span className="rounded-full bg-primary-soft px-2 py-1 text-[0.65rem] font-black text-primary">
-          estimado
-        </span>
-      ) : null}
     </div>
     <div className="mt-5 space-y-2">
       <p className="text-sm font-black text-foreground">{metric.label}</p>
