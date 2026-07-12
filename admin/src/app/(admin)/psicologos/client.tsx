@@ -29,6 +29,7 @@ import type {
   PsychologistsDashboardMetric,
   PsychologistsDashboardQuery,
 } from "@/api/req/psychologists";
+import { aggregateCalendarChartPoints } from "@/lib/chart-time-series";
 import { cn } from "@/lib/utils";
 
 const CHART_COLORS = ["#3b16f3", "#1788ff", "#19b96f", "#ff7a1a", "#f8288f"];
@@ -326,14 +327,28 @@ const TimelineChart = ({
     );
   }
 
-  const maxValue = Math.max(1, ...points.flatMap((point) => series.map((item) => point[item.key])));
+  const chartPoints = aggregateCalendarChartPoints(points, CARD_ORDER, {
+    metricAggregations: {
+      churn: "last",
+      courtesy_psychologists: "last",
+      free_psychologists: "last",
+      subscriber_psychologists: "last",
+      total_psychologists: "last",
+    },
+  });
+  const maxValue = Math.max(
+    1,
+    ...chartPoints.flatMap((point) => series.map((item) => point[item.key])),
+  );
   const chartWidth = width - padding.left - padding.right;
   const chartHeight = height - padding.top - padding.bottom;
   const getX = (index: number) =>
-    points.length <= 1 ? width / 2 : padding.left + (index * chartWidth) / (points.length - 1);
+    chartPoints.length <= 1
+      ? width / 2
+      : padding.left + (index * chartWidth) / (chartPoints.length - 1);
   const getY = (value: number) => padding.top + chartHeight - (value / maxValue) * chartHeight;
   const gridValues = [0, 0.25, 0.5, 0.75, 1].map((ratio) => Math.round(maxValue * ratio));
-  const labelStep = Math.max(1, Math.ceil(points.length / 8));
+  const labelStep = Math.max(1, Math.ceil(chartPoints.length / 8));
 
   return (
     <figure className="mt-5 overflow-hidden">
@@ -364,7 +379,7 @@ const TimelineChart = ({
           })}
 
           {series.map((item) => {
-            const path = points
+            const path = chartPoints
               .map(
                 (point, index) =>
                   `${index === 0 ? "M" : "L"}${getX(index)},${getY(point[item.key])}`,
@@ -380,7 +395,7 @@ const TimelineChart = ({
                   strokeLinecap="round"
                   strokeWidth="4"
                 />
-                {points.map((point, index) => (
+                {chartPoints.map((point, index) => (
                   <circle
                     cx={getX(index)}
                     cy={getY(point[item.key])}
@@ -395,8 +410,8 @@ const TimelineChart = ({
             );
           })}
 
-          {points.map((point, index) =>
-            index % labelStep === 0 || index === points.length - 1 ? (
+          {chartPoints.map((point, index) =>
+            index % labelStep === 0 || index === chartPoints.length - 1 ? (
               <text
                 fill="var(--admin-foreground)"
                 fontSize="11"
@@ -405,7 +420,7 @@ const TimelineChart = ({
                 x={getX(index)}
                 y={height - 12}
               >
-                {formatDate(point.date)}
+                {point.chartLabel}
               </text>
             ) : null,
           )}

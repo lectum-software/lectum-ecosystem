@@ -27,6 +27,7 @@ import type {
   PatientsDashboardQuery,
   PatientsDashboardRecentPatient,
 } from "@/api/req/patients";
+import { aggregateCalendarChartPoints } from "@/lib/chart-time-series";
 import { cn } from "@/lib/utils";
 
 const QUICK_RANGES = [7, 30, 90] as const;
@@ -290,13 +291,30 @@ const TimelineChart = ({ points }: { points: PatientsDashboardDailyPoint[] }) =>
     { color: CHART_COLORS[2], key: "inactive_patients", label: "Pacientes inativos" },
     { color: CHART_COLORS[3], key: "new_signups", label: "Novos cadastros" },
   ] as const;
-  const maxValue = Math.max(1, ...points.flatMap((point) => series.map((item) => point[item.key])));
+  const chartPoints = aggregateCalendarChartPoints(
+    points,
+    ["active_patients", "inactive_patients", "new_signups", "total_patients"] as const,
+    {
+      metricAggregations: {
+        active_patients: "last",
+        inactive_patients: "last",
+        total_patients: "last",
+      },
+    },
+  );
+  const maxValue = Math.max(
+    1,
+    ...chartPoints.flatMap((point) => series.map((item) => point[item.key])),
+  );
   const chartWidth = width - padding.left - padding.right;
   const chartHeight = height - padding.top - padding.bottom;
   const getX = (index: number) =>
-    points.length <= 1 ? width / 2 : padding.left + (index * chartWidth) / (points.length - 1);
+    chartPoints.length <= 1
+      ? width / 2
+      : padding.left + (index * chartWidth) / (chartPoints.length - 1);
   const getY = (value: number) => padding.top + chartHeight - (value / maxValue) * chartHeight;
   const gridValues = [0, 0.25, 0.5, 0.75, 1].map((ratio) => Math.round(maxValue * ratio));
+  const labelStep = Math.max(1, Math.ceil(chartPoints.length / 8));
 
   return (
     <figure className="mt-5 overflow-hidden">
@@ -338,7 +356,7 @@ const TimelineChart = ({ points }: { points: PatientsDashboardDailyPoint[] }) =>
           })}
 
           {series.map((item) => {
-            const path = points
+            const path = chartPoints
               .map(
                 (point, index) =>
                   `${index === 0 ? "M" : "L"}${getX(index)},${getY(point[item.key])}`,
@@ -354,7 +372,7 @@ const TimelineChart = ({ points }: { points: PatientsDashboardDailyPoint[] }) =>
                   strokeLinecap="round"
                   strokeWidth="3.5"
                 />
-                {points.map((point, index) => (
+                {chartPoints.map((point, index) => (
                   <circle
                     cx={getX(index)}
                     cy={getY(point[item.key])}
@@ -369,18 +387,20 @@ const TimelineChart = ({ points }: { points: PatientsDashboardDailyPoint[] }) =>
             );
           })}
 
-          {points.map((point, index) => (
-            <text
-              fill="var(--admin-foreground)"
-              fontSize="11"
-              key={point.date}
-              textAnchor="middle"
-              x={getX(index)}
-              y={height - 14}
-            >
-              {formatDate(point.date)}
-            </text>
-          ))}
+          {chartPoints.map((point, index) =>
+            index % labelStep === 0 || index === chartPoints.length - 1 ? (
+              <text
+                fill="var(--admin-foreground)"
+                fontSize="11"
+                key={point.date}
+                textAnchor="middle"
+                x={getX(index)}
+                y={height - 14}
+              >
+                {point.chartLabel}
+              </text>
+            ) : null,
+          )}
         </svg>
       </div>
       <details className="mt-3 rounded-2xl bg-surface-muted p-3 text-xs text-muted">
@@ -391,11 +411,8 @@ const TimelineChart = ({ points }: { points: PatientsDashboardDailyPoint[] }) =>
           {series.map((item) => (
             <p key={item.key}>
               <strong className="text-foreground">{item.label}:</strong>{" "}
-              {points
-                .map(
-                  (point) =>
-                    `${formatDate(point.date)}: ${numberFormatter.format(point[item.key])}`,
-                )
+              {chartPoints
+                .map((point) => `${point.tooltipLabel}: ${numberFormatter.format(point[item.key])}`)
                 .join("; ")}
             </p>
           ))}

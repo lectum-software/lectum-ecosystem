@@ -31,6 +31,7 @@ import type {
   PatientsDetailMetric,
   PatientsDetailQuery,
 } from "@/api/req/patients";
+import { aggregateCalendarChartPoints } from "@/lib/chart-time-series";
 import { cn } from "@/lib/utils";
 
 const QUICK_RANGES = [7, 30, 90] as const;
@@ -311,15 +312,25 @@ const EngagementChart = ({ detail }: { detail: AdminPatientDetail }) => {
   const height = 320;
   const padding = { bottom: 46, left: 46, right: 24, top: 24 };
   const points = detail.series.points;
+  const chartPoints = aggregateCalendarChartPoints(points, [
+    "comments_created",
+    "downvotes_received",
+    "posts_created",
+    "responses_received",
+    "upvotes_received",
+  ] as const);
   const maxValue = Math.max(
     1,
-    ...points.flatMap((point) => seriesConfig.map((item) => point[item.key])),
+    ...chartPoints.flatMap((point) => seriesConfig.map((item) => point[item.key])),
   );
   const chartWidth = width - padding.left - padding.right;
   const chartHeight = height - padding.top - padding.bottom;
   const getX = (index: number) =>
-    points.length <= 1 ? width / 2 : padding.left + (index * chartWidth) / (points.length - 1);
+    chartPoints.length <= 1
+      ? width / 2
+      : padding.left + (index * chartWidth) / (chartPoints.length - 1);
   const getY = (value: number) => padding.top + chartHeight - (value / maxValue) * chartHeight;
+  const labelStep = Math.max(1, Math.ceil(chartPoints.length / 8));
 
   return (
     <CardShell className="p-5">
@@ -378,7 +389,7 @@ const EngagementChart = ({ detail }: { detail: AdminPatientDetail }) => {
               );
             })}
             {seriesConfig.map((item) => {
-              const path = points
+              const path = chartPoints
                 .map(
                   (point, index) =>
                     `${index === 0 ? "M" : "L"}${getX(index)},${getY(point[item.key])}`,
@@ -393,7 +404,7 @@ const EngagementChart = ({ detail }: { detail: AdminPatientDetail }) => {
                     strokeLinecap="round"
                     strokeWidth="3"
                   />
-                  {points.map((point, index) => (
+                  {chartPoints.map((point, index) => (
                     <circle
                       cx={getX(index)}
                       cy={getY(point[item.key])}
@@ -407,18 +418,20 @@ const EngagementChart = ({ detail }: { detail: AdminPatientDetail }) => {
                 </g>
               );
             })}
-            {points.map((point, index) => (
-              <text
-                fill="var(--admin-foreground)"
-                fontSize="11"
-                key={point.date}
-                textAnchor="middle"
-                x={getX(index)}
-                y={height - 14}
-              >
-                {formatDate(point.date)}
-              </text>
-            ))}
+            {chartPoints.map((point, index) =>
+              index % labelStep === 0 || index === chartPoints.length - 1 ? (
+                <text
+                  fill="var(--admin-foreground)"
+                  fontSize="11"
+                  key={point.date}
+                  textAnchor="middle"
+                  x={getX(index)}
+                  y={height - 14}
+                >
+                  {point.chartLabel}
+                </text>
+              ) : null,
+            )}
           </svg>
         </div>
       </figure>

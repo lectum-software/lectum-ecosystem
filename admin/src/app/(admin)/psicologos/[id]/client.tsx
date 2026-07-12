@@ -96,6 +96,7 @@ import type {
   AdminPsychologistStatisticsQuery,
 } from "@/api/req/psychologists";
 import { InputController, SelectController, TextareaController } from "@/components/controllers";
+import { aggregateCalendarChartPoints, type CalendarChartPoint } from "@/lib/chart-time-series";
 import { cn } from "@/lib/utils";
 
 const numberFormatter = new Intl.NumberFormat("pt-BR");
@@ -111,10 +112,6 @@ const dateOnlyFormatter = new Intl.DateTimeFormat("pt-BR", {
 const dayMonthFormatter = new Intl.DateTimeFormat("pt-BR", {
   day: "2-digit",
   month: "2-digit",
-  timeZone: "UTC",
-});
-const chartMonthFormatter = new Intl.DateTimeFormat("pt-BR", {
-  month: "short",
   timeZone: "UTC",
 });
 const timeFormatter = new Intl.DateTimeFormat("pt-BR", {
@@ -503,11 +500,7 @@ type BusinessChartMetric = (typeof BUSINESS_CHART_METRICS)[number];
 type BusinessChartMetricId = BusinessChartMetric["id"];
 type CommunityChartMetric = (typeof COMMUNITY_CHART_METRICS)[number];
 type CommunityChartMetricId = CommunityChartMetric["id"];
-type BusinessChartGranularity = "day" | "month" | "week";
-type BusinessChartPoint = StatisticsSeriesPoint & {
-  chartLabel: string;
-  tooltipLabel: string;
-};
+type BusinessChartPoint = CalendarChartPoint<StatisticsSeriesMetricKey>;
 type StatisticsPeriodValue = NonNullable<AdminPsychologistStatisticsQuery["period"]>;
 type StatisticsPeriodPreset = Exclude<StatisticsPeriodValue, "custom">;
 type StatisticsCustomRange = Pick<AdminPsychologistStatisticsQuery, "from" | "to">;
@@ -525,8 +518,6 @@ const BUSINESS_SERIES_METRIC_KEYS = [
   "shares",
   "posts",
 ] as const satisfies readonly StatisticsSeriesMetricKey[];
-
-const MS_PER_DAY = 86_400_000;
 
 const STATISTICS_PERIOD_OPTIONS: { id: StatisticsPeriodPreset; label: string }[] = [
   { id: "week", label: "Esta semana" },
@@ -1981,160 +1972,9 @@ const StatisticsMetricToggleCard = ({
   );
 };
 
-const parseChartDate = (value: string) => {
-  const match = value.match(/^(\d{4})-(\d{2})-(\d{2})/);
-  if (!match) return null;
-
-  const [, year, month, day] = match;
-  const date = new Date(Date.UTC(Number(year), Number(month) - 1, Number(day)));
-
-  return Number.isNaN(date.getTime()) ? null : date;
-};
-
-const toChartDateKey = (date: Date) => date.toISOString().slice(0, 10);
-
-const addChartDays = (date: Date, days: number) => new Date(date.getTime() + days * MS_PER_DAY);
-
-const formatChartMonth = (date: Date) => {
-  const month = chartMonthFormatter.format(date).replace(".", "");
-
-  return month.charAt(0).toUpperCase() + month.slice(1);
-};
-
-const formatChartShortDate = (date: Date) =>
-  `${String(date.getUTCDate()).padStart(2, "0")}/${String(date.getUTCMonth() + 1).padStart(
-    2,
-    "0",
-  )}`;
-
-const formatChartWeekLabel = (start: Date, end: Date) =>
-  `${formatChartShortDate(start)}–${formatChartShortDate(end)}`;
-
-const formatChartMonthLabel = (date: Date) => `${formatChartMonth(date)}/${date.getUTCFullYear()}`;
-
-const resolveBusinessChartGranularity = (spanDays: number): BusinessChartGranularity => {
-  if (spanDays <= 31) return "day";
-  if (spanDays <= 120) return "week";
-
-  return "month";
-};
-
-const createEmptyBusinessChartPoint = (
-  date: string,
-  chartLabel: string,
-  tooltipLabel: string,
-): BusinessChartPoint => ({
-  chartLabel,
-  comments_received: 0,
-  date,
-  downvotes: 0,
-  favorites: 0,
-  posts: 0,
-  profile_views: 0,
-  replies: 0,
-  saves: 0,
-  search_results: 0,
-  shares: 0,
-  tooltipLabel,
-  whatsapp_clicks: 0,
-  upvotes: 0,
-});
-
-const getBusinessMonthBucket = (date: Date, firstDate: Date, lastDate: Date) => {
-  const monthStart = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), 1));
-  const nextMonthStart = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth() + 1, 1));
-  const monthEnd = addChartDays(nextMonthStart, -1);
-  const visibleStart = monthStart < firstDate ? firstDate : monthStart;
-  const visibleEnd = monthEnd > lastDate ? lastDate : monthEnd;
-
-  return {
-    chartLabel: formatChartShortDate(monthStart),
-    date: toChartDateKey(monthStart),
-    key: toChartDateKey(monthStart),
-    tooltipLabel: `${formatChartMonthLabel(monthStart)} · ${formatDateOnly(
-      toChartDateKey(visibleStart),
-    )} – ${formatDateOnly(toChartDateKey(visibleEnd))}`,
-  };
-};
-
-const getBusinessWeekBucket = (date: Date, firstDate: Date, lastDate: Date) => {
-  const daysFromStart = Math.max(
-    0,
-    Math.floor((date.getTime() - firstDate.getTime()) / MS_PER_DAY),
-  );
-  const weekStart = addChartDays(firstDate, Math.floor(daysFromStart / 7) * 7);
-  const naturalWeekEnd = addChartDays(weekStart, 6);
-  const weekEnd = naturalWeekEnd > lastDate ? lastDate : naturalWeekEnd;
-  const dateKey = toChartDateKey(weekStart);
-
-  return {
-    chartLabel: formatChartWeekLabel(weekStart, weekEnd),
-    date: dateKey,
-    key: dateKey,
-    tooltipLabel: `${formatDateOnly(dateKey)} – ${formatDateOnly(toChartDateKey(weekEnd))}`,
-  };
-};
-
 const aggregateStatisticsChartPoints = (
   points: AdminPsychologistStatistics["business"]["series"],
-): BusinessChartPoint[] => {
-  const parsedPoints = points.flatMap((point) => {
-    const date = parseChartDate(point.date);
-
-    return date ? [{ date, point }] : [];
-  });
-
-  if (parsedPoints.length !== points.length || parsedPoints.length === 0) {
-    return points.map((point) => {
-      const date = parseChartDate(point.date);
-
-      return {
-        ...point,
-        chartLabel: date ? formatChartShortDate(date) : point.date,
-        tooltipLabel: point.date,
-      };
-    });
-  }
-
-  const sortedPoints = [...parsedPoints].sort(
-    (left, right) => left.date.getTime() - right.date.getTime(),
-  );
-  const firstDate = sortedPoints[0].date;
-  const lastDate = sortedPoints.at(-1)?.date ?? firstDate;
-  const spanDays = Math.max(
-    1,
-    Math.round((lastDate.getTime() - firstDate.getTime()) / MS_PER_DAY) + 1,
-  );
-  const granularity = resolveBusinessChartGranularity(spanDays);
-
-  if (granularity === "day") {
-    return sortedPoints.map(({ date, point }) => ({
-      ...point,
-      chartLabel: formatChartShortDate(date),
-      tooltipLabel: formatDateOnly(toChartDateKey(date)),
-    }));
-  }
-
-  const bucketMap = new Map<string, BusinessChartPoint>();
-
-  for (const { date, point } of sortedPoints) {
-    const bucket =
-      granularity === "week"
-        ? getBusinessWeekBucket(date, firstDate, lastDate)
-        : getBusinessMonthBucket(date, firstDate, lastDate);
-    const existing =
-      bucketMap.get(bucket.key) ??
-      createEmptyBusinessChartPoint(bucket.date, bucket.chartLabel, bucket.tooltipLabel);
-
-    for (const key of BUSINESS_SERIES_METRIC_KEYS) {
-      existing[key] += Number(point[key] ?? 0);
-    }
-
-    bucketMap.set(bucket.key, existing);
-  }
-
-  return [...bucketMap.values()];
-};
+): BusinessChartPoint[] => aggregateCalendarChartPoints(points, BUSINESS_SERIES_METRIC_KEYS);
 
 const StatisticsSeriesChart = ({
   keys,

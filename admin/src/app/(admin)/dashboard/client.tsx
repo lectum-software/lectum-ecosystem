@@ -30,6 +30,7 @@ import type {
   DashboardPendingReport,
   DashboardSummaryQuery,
 } from "@/api/req/dashboard";
+import { aggregateCalendarChartPoints } from "@/lib/chart-time-series";
 import { cn } from "@/lib/utils";
 
 const COLORS = ["#3b16f3", "#1788ff", "#19b96f", "#ff7a1a"];
@@ -254,10 +255,14 @@ const LineChart = ({
   const width = 680;
   const height = 280;
   const padding = { bottom: 44, left: 44, right: 20, top: 24 };
-  const labels = series[0]?.points.map((point) => point.date) ?? [];
+  const chartSeries = series.map((item) => ({
+    ...item,
+    points: aggregateCalendarChartPoints(item.points, ["count"] as const),
+  }));
+  const labels = chartSeries[0]?.points ?? [];
   const maxValue = Math.max(
     1,
-    ...series.flatMap((item) => item.points.map((point) => point.count)),
+    ...chartSeries.flatMap((item) => item.points.map((point) => point.count)),
   );
   const chartWidth = width - padding.left - padding.right;
   const chartHeight = height - padding.top - padding.bottom;
@@ -265,6 +270,7 @@ const LineChart = ({
     labels.length <= 1 ? width / 2 : padding.left + (index * chartWidth) / (labels.length - 1);
   const getY = (value: number) => padding.top + chartHeight - (value / maxValue) * chartHeight;
   const gridValues = [0, 0.25, 0.5, 0.75, 1].map((ratio) => Math.round(maxValue * ratio));
+  const labelStep = Math.max(1, Math.ceil(labels.length / 8));
 
   return (
     <figure className="mt-5 overflow-hidden">
@@ -294,7 +300,7 @@ const LineChart = ({
             );
           })}
 
-          {series.map((item) => {
+          {chartSeries.map((item) => {
             const path = item.points
               .map(
                 (point, index) => `${index === 0 ? "M" : "L"}${getX(index)},${getY(point.count)}`,
@@ -325,18 +331,20 @@ const LineChart = ({
             );
           })}
 
-          {labels.map((label, index) => (
-            <text
-              fill="#06104a"
-              fontSize="11"
-              key={label}
-              textAnchor="middle"
-              x={getX(index)}
-              y={height - 12}
-            >
-              {formatDate(label)}
-            </text>
-          ))}
+          {labels.map((point, index) =>
+            index % labelStep === 0 || index === labels.length - 1 ? (
+              <text
+                fill="#06104a"
+                fontSize="11"
+                key={point.date}
+                textAnchor="middle"
+                x={getX(index)}
+                y={height - 12}
+              >
+                {point.chartLabel}
+              </text>
+            ) : null,
+          )}
         </svg>
       </div>
       <details className="mt-3 rounded-2xl bg-surface-muted p-3 text-xs text-muted">
@@ -344,11 +352,11 @@ const LineChart = ({
           Resumo textual do gráfico
         </summary>
         <div className="mt-2 grid gap-2 sm:grid-cols-2">
-          {series.map((item) => (
+          {chartSeries.map((item) => (
             <div key={item.label}>
               <p className="font-black text-foreground">{item.label}</p>
               <p>
-                {item.points.map((point) => `${formatDate(point.date)}: ${point.count}`).join("; ")}
+                {item.points.map((point) => `${point.tooltipLabel}: ${point.count}`).join("; ")}
               </p>
             </div>
           ))}
@@ -362,11 +370,15 @@ const BarChart = ({ points }: { points: DashboardFinancialPoint[] }) => {
   const width = 520;
   const height = 250;
   const padding = { bottom: 38, left: 42, right: 16, top: 18 };
-  const maxValue = Math.max(1, ...points.map((point) => point.value_cents));
+  const chartPoints = aggregateCalendarChartPoints(points, ["value_cents"] as const, {
+    metricAggregations: { value_cents: "last" },
+  });
+  const maxValue = Math.max(1, ...chartPoints.map((point) => point.value_cents));
   const chartWidth = width - padding.left - padding.right;
   const chartHeight = height - padding.top - padding.bottom;
   const barGap = 10;
-  const barWidth = points.length > 0 ? Math.max(12, chartWidth / points.length - barGap) : 20;
+  const barWidth =
+    chartPoints.length > 0 ? Math.max(12, chartWidth / chartPoints.length - barGap) : 20;
 
   return (
     <figure className="mt-5 overflow-hidden">
@@ -396,7 +408,7 @@ const BarChart = ({ points }: { points: DashboardFinancialPoint[] }) => {
               </g>
             );
           })}
-          {points.map((point, index) => {
+          {chartPoints.map((point, index) => {
             const barHeight = (point.value_cents / maxValue) * chartHeight;
             const x = padding.left + index * (barWidth + barGap);
             const y = padding.top + chartHeight - barHeight;
@@ -418,7 +430,7 @@ const BarChart = ({ points }: { points: DashboardFinancialPoint[] }) => {
                   x={x + barWidth / 2}
                   y={height - 12}
                 >
-                  {formatDate(point.date)}
+                  {point.chartLabel}
                 </text>
               </g>
             );

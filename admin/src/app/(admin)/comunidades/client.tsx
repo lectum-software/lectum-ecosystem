@@ -27,6 +27,7 @@ import type {
   CommunitiesDashboardRecentPost,
   CommunitiesDashboardTopCommunity,
 } from "@/api/req/communities";
+import { aggregateCalendarChartPoints } from "@/lib/chart-time-series";
 import { cn } from "@/lib/utils";
 
 const QUICK_RANGES = [7, 30, 90] as const;
@@ -276,10 +277,14 @@ const LineChart = ({ series }: { series: CommunitiesDashboardActivitySeries[] })
   const width = 760;
   const height = 300;
   const padding = { bottom: 44, left: 48, right: 20, top: 24 };
-  const labels = series[0]?.points.map((point) => point.date) ?? [];
+  const chartSeries = series.map((item) => ({
+    ...item,
+    points: aggregateCalendarChartPoints(item.points, ["value"] as const),
+  }));
+  const labels = chartSeries[0]?.points ?? [];
   const maxValue = Math.max(
     1,
-    ...series.flatMap((item) => item.points.map((point) => point.value)),
+    ...chartSeries.flatMap((item) => item.points.map((point) => point.value)),
   );
   const chartWidth = width - padding.left - padding.right;
   const chartHeight = height - padding.top - padding.bottom;
@@ -287,11 +292,12 @@ const LineChart = ({ series }: { series: CommunitiesDashboardActivitySeries[] })
     labels.length <= 1 ? width / 2 : padding.left + (index * chartWidth) / (labels.length - 1);
   const getY = (value: number) => padding.top + chartHeight - (value / maxValue) * chartHeight;
   const gridValues = [0, 0.25, 0.5, 0.75, 1].map((ratio) => Math.round(maxValue * ratio));
+  const labelStep = Math.max(1, Math.ceil(labels.length / 8));
 
   return (
     <figure className="mt-5 overflow-hidden">
       <div className="flex flex-wrap gap-3">
-        {series.map((item) => (
+        {chartSeries.map((item) => (
           <span className="flex items-center gap-2 text-xs font-bold text-muted" key={item.id}>
             <span
               aria-hidden
@@ -328,7 +334,7 @@ const LineChart = ({ series }: { series: CommunitiesDashboardActivitySeries[] })
             );
           })}
 
-          {series.map((item) => {
+          {chartSeries.map((item) => {
             const path = item.points
               .map(
                 (point, index) => `${index === 0 ? "M" : "L"}${getX(index)},${getY(point.value)}`,
@@ -359,18 +365,20 @@ const LineChart = ({ series }: { series: CommunitiesDashboardActivitySeries[] })
             );
           })}
 
-          {labels.map((label, index) => (
-            <text
-              fill="#06104a"
-              fontSize="11"
-              key={label}
-              textAnchor="middle"
-              x={getX(index)}
-              y={height - 12}
-            >
-              {formatDate(label)}
-            </text>
-          ))}
+          {labels.map((point, index) =>
+            index % labelStep === 0 || index === labels.length - 1 ? (
+              <text
+                fill="#06104a"
+                fontSize="11"
+                key={point.date}
+                textAnchor="middle"
+                x={getX(index)}
+                y={height - 12}
+              >
+                {point.chartLabel}
+              </text>
+            ) : null,
+          )}
         </svg>
       </div>
       <details className="mt-3 rounded-2xl bg-surface-muted p-3 text-xs text-muted">
@@ -378,11 +386,11 @@ const LineChart = ({ series }: { series: CommunitiesDashboardActivitySeries[] })
           Resumo textual do gráfico
         </summary>
         <div className="mt-2 grid gap-2 sm:grid-cols-2">
-          {series.map((item) => (
+          {chartSeries.map((item) => (
             <div key={item.id}>
               <p className="font-black text-foreground">{item.label}</p>
               <p>
-                {item.points.map((point) => `${formatDate(point.date)}: ${point.value}`).join("; ")}
+                {item.points.map((point) => `${point.tooltipLabel}: ${point.value}`).join("; ")}
               </p>
             </div>
           ))}

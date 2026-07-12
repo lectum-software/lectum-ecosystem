@@ -40,7 +40,6 @@ import type {
   AdminCommunityDetail,
   AdminCommunityIdentity,
   AdminCommunityPerformanceMetric,
-  AdminCommunityPerformancePoint,
   AdminCommunityPopularPost,
   AdminCommunityRule,
   AdminCommunityRuleInput,
@@ -48,6 +47,7 @@ import type {
   AdminCommunityUpdateInput,
 } from "@/api/req/communities";
 import { InputController, TextareaController } from "@/components/controllers";
+import { aggregateCalendarChartPoints } from "@/lib/chart-time-series";
 import { cn } from "@/lib/utils";
 
 const numberFormatter = new Intl.NumberFormat("pt-BR");
@@ -228,40 +228,49 @@ const SummaryCards = ({ detail }: { detail: AdminCommunityDetail }) => (
 
 const PerformanceSection = ({ detail }: { detail: AdminCommunityDetail }) => {
   const points = detail.performance.points;
+  const chartPoints = aggregateCalendarChartPoints(points, [
+    "comments",
+    "members",
+    "posts",
+    "reports",
+  ] as const);
   const width = 760;
   const height = 260;
   const padding = { bottom: 38, left: 48, right: 20, top: 20 };
   const maxValue = Math.max(
     1,
-    ...points.flatMap((point) => [point.posts, point.comments, point.members, point.reports]),
+    ...chartPoints.flatMap((point) => [point.posts, point.comments, point.members, point.reports]),
   );
   const chartWidth = width - padding.left - padding.right;
   const chartHeight = height - padding.top - padding.bottom;
   const getX = (index: number) =>
-    points.length <= 1 ? width / 2 : padding.left + (index * chartWidth) / (points.length - 1);
+    chartPoints.length <= 1
+      ? width / 2
+      : padding.left + (index * chartWidth) / (chartPoints.length - 1);
   const getY = (value: number) => padding.top + chartHeight - (value / maxValue) * chartHeight;
   const series = [
     {
       color: "#3300ff",
-      get: (point: AdminCommunityPerformancePoint) => point.posts,
+      key: "posts",
       label: "Posts",
     },
     {
       color: "#2f8cff",
-      get: (point: AdminCommunityPerformancePoint) => point.comments,
+      key: "comments",
       label: "Comentários",
     },
     {
       color: "#13a85b",
-      get: (point: AdminCommunityPerformancePoint) => point.members,
+      key: "members",
       label: "Novos membros",
     },
     {
       color: "#e5484d",
-      get: (point: AdminCommunityPerformancePoint) => point.reports,
+      key: "reports",
       label: "Denúncias",
     },
-  ];
+  ] as const;
+  const labelStep = Math.max(1, Math.ceil(chartPoints.length / 8));
 
   return (
     <section className={cn(cardClass, "p-5")}>
@@ -302,10 +311,10 @@ const PerformanceSection = ({ detail }: { detail: AdminCommunityDetail }) => {
             );
           })}
           {series.map((item) => {
-            const path = points
+            const path = chartPoints
               .map(
                 (point, index) =>
-                  `${index === 0 ? "M" : "L"}${getX(index)},${getY(item.get(point))}`,
+                  `${index === 0 ? "M" : "L"}${getX(index)},${getY(point[item.key])}`,
               )
               .join(" ");
 
@@ -320,18 +329,18 @@ const PerformanceSection = ({ detail }: { detail: AdminCommunityDetail }) => {
               />
             );
           })}
-          {points
-            .filter((_, index) => index === 0 || index === points.length - 1 || index % 7 === 0)
-            .map((point, index) => (
+          {chartPoints
+            .filter((_, index) => index % labelStep === 0 || index === chartPoints.length - 1)
+            .map((point) => (
               <text
                 fill="#06104a"
                 fontSize="11"
                 key={point.date}
                 textAnchor="middle"
-                x={getX(points.findIndex((item) => item.date === point.date))}
+                x={getX(chartPoints.findIndex((item) => item.date === point.date))}
                 y={height - 10}
               >
-                {index === 0 ? formatDate(point.date) : formatDate(point.date)}
+                {point.chartLabel}
               </text>
             ))}
         </svg>
@@ -1065,15 +1074,13 @@ const DetailContent = ({ detail, slug }: { detail: AdminCommunityDetail; slug: s
 
   return (
     <div className="space-y-5">
-      <div className="flex flex-wrap items-center gap-2 text-sm font-bold text-muted">
+      <div className="flex flex-wrap items-center justify-between gap-2 text-sm font-bold text-muted">
         <Link className="inline-flex items-center gap-2 text-primary" href="/comunidades">
           <ArrowLeft aria-hidden className="h-4 w-4" />
-          Comunidades
+          Voltar para comunidades
         </Link>
-        <span>/</span>
-        <span>{detail.community.name}</span>
         <Link
-          className="ml-auto inline-flex items-center gap-2 rounded-control border border-border bg-surface px-3 py-2 text-xs font-black text-muted transition hover:border-primary hover:text-primary"
+          className="inline-flex items-center gap-2 rounded-control border border-border bg-surface px-3 py-2 text-xs font-black text-muted transition hover:border-primary hover:text-primary"
           href={`/community/${detail.community.slug}`}
           target="_blank"
         >

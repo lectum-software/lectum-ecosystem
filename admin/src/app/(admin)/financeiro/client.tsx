@@ -26,6 +26,7 @@ import type {
   FinanceSeriesPoint,
   FinanceSubscriptionItem,
 } from "@/api/req/finance";
+import { aggregateCalendarChartPoints } from "@/lib/chart-time-series";
 import { cn } from "@/lib/utils";
 
 const QUICK_RANGES = [7, 30, 90] as const;
@@ -63,7 +64,7 @@ const getQuickRange = (days: number): FinanceDashboardQuery => {
 
   return {
     from: toInputDate(from),
-    groupBy: days > 45 ? "week" : "day",
+    groupBy: days > 45 ? "month" : "day",
     to: toInputDate(today),
   };
 };
@@ -284,7 +285,6 @@ const FinanceHeader = ({
             value={range.groupBy || "day"}
           >
             <option value="day">Diário</option>
-            <option value="week">Semanal</option>
             <option value="month">Mensal</option>
           </select>
         </label>
@@ -342,19 +342,28 @@ const FinanceChart = ({
   const width = 780;
   const height = 340;
   const padding = { bottom: 50, left: 62, right: 28, top: 24 };
+  const chartPoints = aggregateCalendarChartPoints(
+    points.map((point) => ({
+      confirmed_payments: point.confirmed_payments,
+      date: point.start_date,
+      new_subscriptions: point.new_subscriptions,
+      revenue_cents: point.revenue_cents,
+    })),
+    ["confirmed_payments", "new_subscriptions", "revenue_cents"] as const,
+  );
   const chartWidth = width - padding.left - padding.right;
   const chartHeight = height - padding.top - padding.bottom;
-  const maxRevenue = Math.max(1, ...points.map((point) => point.revenue_cents));
-  const maxSubscriptions = Math.max(1, ...points.map((point) => point.new_subscriptions));
+  const maxRevenue = Math.max(1, ...chartPoints.map((point) => point.revenue_cents));
+  const maxSubscriptions = Math.max(1, ...chartPoints.map((point) => point.new_subscriptions));
   const getX = (index: number) =>
-    points.length <= 1
+    chartPoints.length <= 1
       ? padding.left + chartWidth / 2
-      : padding.left + (index * chartWidth) / (points.length - 1);
+      : padding.left + (index * chartWidth) / (chartPoints.length - 1);
   const getRevenueY = (value: number) =>
     padding.top + chartHeight - (value / maxRevenue) * chartHeight;
   const getBarHeight = (value: number) => (value / maxSubscriptions) * chartHeight;
   const gridValues = [0, 0.25, 0.5, 0.75, 1].map((ratio) => Math.round(maxRevenue * ratio));
-  const linePath = points
+  const linePath = chartPoints
     .map(
       (point, index) =>
         `${index === 0 ? "M" : "L"}${getX(index)},${getRevenueY(point.revenue_cents)}`,
@@ -402,14 +411,14 @@ const FinanceChart = ({
             );
           })}
 
-          {points.map((point, index) => {
+          {chartPoints.map((point, index) => {
             const x = getX(index);
             const barHeight = getBarHeight(point.new_subscriptions);
             return (
               <rect
                 fill={CHART_COLORS.subscription}
                 height={barHeight}
-                key={`finance-bar-${point.start_date}-${point.end_date}`}
+                key={`finance-bar-${point.date}`}
                 opacity="0.22"
                 rx="6"
                 width="22"
@@ -426,28 +435,28 @@ const FinanceChart = ({
             strokeLinecap="round"
             strokeWidth="3.5"
           />
-          {points.map((point, index) => (
+          {chartPoints.map((point, index) => (
             <circle
               cx={getX(index)}
               cy={getRevenueY(point.revenue_cents)}
               fill="var(--admin-surface)"
-              key={`finance-point-${point.start_date}-${point.end_date}`}
+              key={`finance-point-${point.date}`}
               r="4.5"
               stroke={CHART_COLORS.line}
               strokeWidth="2.5"
             />
           ))}
 
-          {points.map((point, index) => (
+          {chartPoints.map((point, index) => (
             <text
               fill="var(--admin-foreground)"
               fontSize="11"
-              key={`finance-label-${point.start_date}-${point.end_date}`}
+              key={`finance-label-${point.date}`}
               textAnchor="middle"
               x={getX(index)}
               y={height - 15}
             >
-              {formatDate(point.start_date)}
+              {point.chartLabel}
             </text>
           ))}
         </svg>
@@ -457,11 +466,9 @@ const FinanceChart = ({
           Resumo textual do gráfico
         </summary>
         <div className="mt-2 grid gap-2 sm:grid-cols-2">
-          {points.map((point) => (
-            <p key={`${point.start_date}-${point.end_date}`}>
-              <strong className="text-foreground">
-                {formatDate(point.start_date)} — {formatDate(point.end_date)}:
-              </strong>{" "}
+          {chartPoints.map((point) => (
+            <p key={point.date}>
+              <strong className="text-foreground">{point.tooltipLabel}:</strong>{" "}
               {formatMoney(point.revenue_cents)} em {point.confirmed_payments} pagamentos
               confirmados; {numberFormatter.format(point.new_subscriptions)} novas assinaturas
               pagas.
