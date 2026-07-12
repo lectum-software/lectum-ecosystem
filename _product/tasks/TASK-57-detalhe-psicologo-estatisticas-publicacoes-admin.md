@@ -101,17 +101,27 @@ Exibir estat√≠sticas de neg√≥cio/comunidade e publica√ß√µes do psic√≥logo com da
 - ADR criado: `adrs/0237-admin-psicologo-estatisticas-publicacoes.md`.
 - Valida√ß√µes executadas: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check`, API local autenticada e browser local via Edge/CDP nas abas `estatisticas` e `publicacoes`.
 
-### CorreÁ„o pÛs-validaÁ„o em 2026-07-11
+### Corre√ß√£o p√≥s-valida√ß√£o em 2026-07-11
 
-- Ativado o contador **Resultados de busca** na aba Admin **EstatÌsticas** com tracking real de impress„o do psicÛlogo quando o card/slide fica ativo na listagem p˙blica.
-- A persistÍncia reaproveita `profile_view_event.source="search_result"` e preserva `source="profile_page"` para aberturas reais do perfil, sem criar mock, seed ou estimativa.
-- O endpoint `POST /api/private/directory/psychologists/:id/search-impression` usa `optionalAuth`, n„o dispara notificaÁ„o de visualizaÁ„o de perfil e ignora autoimpress„o do prÛprio psicÛlogo.
-- As mÈtricas existentes de visualizaÁ„o de perfil passaram a filtrar `source="profile_page"` para n„o misturar resultados de busca com visitas ao perfil.
-### CorreÁ„o visual em 2026-07-12
+- Ativado o contador **Resultados de busca** na aba Admin **Estat√≠sticas** com tracking real de impress√£o do psic√≥logo quando o card/slide fica ativo na listagem p√∫blica.
+- A persist√™ncia reaproveita `profile_view_event.source="search_result"` e preserva `source="profile_page"` para aberturas reais do perfil, sem criar mock, seed ou estimativa.
+- O endpoint `POST /api/private/directory/psychologists/:id/search-impression` usa `optionalAuth`, n√£o dispara notifica√ß√£o de visualiza√ß√£o de perfil e ignora autoimpress√£o do pr√≥prio psic√≥logo.
+- As m√©tricas existentes de visualiza√ß√£o de perfil passaram a filtrar `source="profile_page"` para n√£o misturar resultados de busca com visitas ao perfil.
+### Corre√ß√£o visual em 2026-07-12
 
-- O tÌtulo **EstatÌsticas de comunidade** foi movido para fora do card branco, seguindo o padr„o visual de **EstatÌsticas de negÛcio**.
-- A seÁ„o de comunidade passou a ter seu prÛprio filtro de perÌodo e datas ‡ direita do tÌtulo.
-- Os filtros de negÛcio/vÌdeo e comunidade s„o independentes: alterar o perÌodo da comunidade n„o altera o perÌodo de negÛcio.
-- A implementaÁ„o reaproveita o endpoint real de estatÌsticas em duas queries separadas, sem alterar contrato backend e sem mock.
-- ReferÍncia visual consultada: `_product/proto/admin/PsicÛlogos/Detalhes do psicÛlogo/EstatÌsticas.png`; Builder/Quick Copy n„o estava disponÌvel como ferramenta callable no ambiente.
-- ValidaÁıes executadas: `pnpm --dir admin check`, `pnpm --dir admin build` e browser local/headless via Edge/CDP em `http://localhost:3012/psicologos/demo-psychologist-marina-rocha?tab=estatisticas` com admin tempor·rio real removido ao final, confirmando tÌtulo fora do card e filtros independentes.
+- O t√≠tulo **Estat√≠sticas de comunidade** foi movido para fora do card branco, seguindo o padr√£o visual de **Estat√≠sticas de neg√≥cio**.
+- A se√ß√£o de comunidade passou a ter seu pr√≥prio filtro de per√≠odo e datas √† direita do t√≠tulo.
+- Os filtros de neg√≥cio/v√≠deo e comunidade s√£o independentes: alterar o per√≠odo da comunidade n√£o altera o per√≠odo de neg√≥cio.
+- A implementa√ß√£o reaproveita o endpoint real de estat√≠sticas em duas queries separadas, sem alterar contrato backend e sem mock.
+- Refer√™ncia visual consultada: `_product/proto/admin/Psic√≥logos/Detalhes do psic√≥logo/Estat√≠sticas.png`; Builder/Quick Copy n√£o estava dispon√≠vel como ferramenta callable no ambiente.
+- Valida√ß√µes executadas: `pnpm --dir admin check`, `pnpm --dir admin build` e browser local/headless via Edge/CDP em `http://localhost:3012/psicologos/demo-psychologist-marina-rocha?tab=estatisticas` com admin tempor√°rio real removido ao final, confirmando t√≠tulo fora do card e filtros independentes.
+
+
+### Corre√ß√£o UX em 2026-07-12
+
+- A troca de per√≠odo/data em **Estat√≠sticas** deixou de substituir a aba inteira pelo skeleton global.
+- As queries de estat√≠sticas mant√™m o √∫ltimo resultado vis√≠vel durante a busca da nova janela (`placeholderData`), evitando recarregar t√≠tulos, filtros e a se√ß√£o n√£o afetada.
+- O feedback de carregamento agora fica restrito √† se√ß√£o em atualiza√ß√£o: **Estat√≠sticas de neg√≥cio** ou **Estat√≠sticas de comunidade** exibem o estado `Atualizando` enquanto preservam os dados anteriores.
+- Os filtros continuam independentes: alterar neg√≥cio/v√≠deo n√£o altera comunidade, e alterar comunidade n√£o altera neg√≥cio/v√≠deo.
+- A implementa√ß√£o usa o endpoint real Admin de estat√≠sticas, sem mock, sem seed e sem altera√ß√£o de contrato backend.
+- Valida√ß√µes executadas: `pnpm --dir admin check`, `pnpm --dir admin build` e browser local/headless via Edge/CDP com atraso controlado nas requisi√ß√µes de estat√≠sticas, confirmando que a aba permaneceu renderizada e que apenas a se√ß√£o afetada exibiu `Atualizando`.

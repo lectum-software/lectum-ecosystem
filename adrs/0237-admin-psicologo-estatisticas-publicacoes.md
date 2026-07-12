@@ -92,6 +92,21 @@ Decisão complementar:
 
 Consequência: há uma segunda leitura de estatísticas quando os períodos divergem, mas ela reaproveita dados reais e evita mudança de contrato backend para um refinamento de UI. Se o custo da tela crescer, uma task futura pode evoluir o contrato para períodos nomeados por seção.
 
+## Emenda 2026-07-12 — atualização parcial de estatísticas
+
+A troca de período/data na aba **Estatísticas** não deve desmontar a aba inteira depois da primeira carga.
+
+Decisão complementar:
+
+- Usar `placeholderData` nas queries de estatísticas para manter o último resultado visível enquanto a nova janela é buscada.
+- Exibir o skeleton global somente na carga inicial sem dados.
+- Restringir o feedback de atualização à seção afetada com o estado `Atualizando`:
+  - negócio/vídeo ao trocar o filtro de **Estatísticas de negócio**;
+  - comunidade ao trocar o filtro de **Estatísticas de comunidade**.
+- Manter filtros independentes e o contrato backend atual de `GET /api/admin/private/psychologists/:id/statistics`.
+
+Consequência: a UI preserva contexto, gráfico, títulos e filtros durante refetches, com uma leitura extra apenas quando a seção alterada possui período diferente.
+
 ## Validação
 
 - `pnpm --dir backend check`
@@ -137,6 +152,18 @@ Validação da emenda de filtro independente de comunidade:
   - título **Estatísticas de comunidade** fora do card branco;
   - campos **Período**, **De** e **Até** próprios da comunidade;
   - alteração do período da comunidade para `Este mês` mantendo negócio em `Esta semana`.
+
+Validação da emenda de atualização parcial:
+
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- Browser local/headless via Edge/CDP em Next start local com backend real, admin temporário real removido ao final e atraso controlado nas requisições de estatísticas, confirmou:
+  - trocar o período de negócio manteve a aba renderizada sem skeleton global;
+  - apenas **Estatísticas de negócio** exibiu `Atualizando`;
+  - o filtro de comunidade permaneceu inalterado;
+  - trocar o período de comunidade manteve a aba renderizada sem skeleton global;
+  - apenas **Estatísticas de comunidade** exibiu `Atualizando`;
+  - o filtro de negócio permaneceu inalterado.
 
 ## Limitações da execução
 

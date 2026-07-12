@@ -101,6 +101,7 @@ export const useAdminPsychologistStatistics = (
 ) =>
   useQuery({
     enabled: Boolean(id) && (options.enabled ?? true),
+    placeholderData: (previousData) => previousData,
     queryFn: () => getAdminPsychologistStatistics(id, input),
     queryKey: adminPsychologistsKeys.statistics(id, input),
   });

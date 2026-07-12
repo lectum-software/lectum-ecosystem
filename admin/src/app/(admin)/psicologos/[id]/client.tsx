@@ -2452,6 +2452,13 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: st
   const communityStatisticsErrorMessage = communityStatisticsQuery.error
     ? resolveApiError(communityStatisticsQuery.error)
     : null;
+  const isInitialStatisticsLoading =
+    (businessStatisticsQuery.isLoading && !businessStatisticsQuery.data) ||
+    (communityStatisticsQuery.isLoading && !communityStatisticsQuery.data);
+  const isBusinessRefreshing =
+    businessStatisticsQuery.isFetching && Boolean(businessStatisticsQuery.data);
+  const isCommunityRefreshing =
+    communityStatisticsQuery.isFetching && Boolean(communityStatisticsQuery.data);
   const handleBusinessStatisticsPeriodChange = (period: StatisticsPeriodPreset) => {
     setBusinessStatisticsPeriod(period);
     setBusinessStatisticsRange(getStatisticsRangeForPeriod(period, detail.header.created_at));
@@ -2485,10 +2492,14 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: st
     }));
   };
 
-  if (businessStatisticsQuery.isLoading || communityStatisticsQuery.isLoading) {
+  if (isInitialStatisticsLoading) {
     return <EngagementLoadingState />;
   }
-  if (businessStatisticsQuery.isError && businessStatisticsErrorMessage) {
+  if (
+    businessStatisticsQuery.isError &&
+    businessStatisticsErrorMessage &&
+    !businessStatisticsQuery.data
+  ) {
     return (
       <ErrorState
         message={businessStatisticsErrorMessage}
@@ -2499,7 +2510,11 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: st
       />
     );
   }
-  if (communityStatisticsQuery.isError && communityStatisticsErrorMessage) {
+  if (
+    communityStatisticsQuery.isError &&
+    communityStatisticsErrorMessage &&
+    !communityStatisticsQuery.data
+  ) {
     return (
       <ErrorState
         message={communityStatisticsErrorMessage}
@@ -2550,7 +2565,15 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: st
   return (
     <div className="space-y-5" data-psychologist-detail-tab="estatisticas">
       <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
-        <h2 className="text-xl font-black text-foreground">Estatísticas de negócio</h2>
+        <div className="flex flex-wrap items-center gap-2">
+          <h2 className="text-xl font-black text-foreground">Estatísticas de negócio</h2>
+          {isBusinessRefreshing ? (
+            <span className="inline-flex items-center gap-1 rounded-full bg-primary-soft px-2.5 py-1 text-xs font-black text-primary">
+              <Loader2 aria-hidden className="h-3.5 w-3.5 animate-spin" />
+              Atualizando
+            </span>
+          ) : null}
+        </div>
         <StatisticsPeriodControls
           idPrefix="business-statistics"
           onDateChange={handleBusinessStatisticsDateChange}
@@ -2560,7 +2583,10 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: st
         />
       </div>
 
-      <section className="grid items-stretch gap-5 xl:grid-cols-[minmax(0,1.15fr)_minmax(360px,0.85fr)]">
+      <section
+        aria-busy={isBusinessRefreshing}
+        className="grid items-stretch gap-5 xl:grid-cols-[minmax(0,1.15fr)_minmax(360px,0.85fr)]"
+      >
         <CardShell className="min-w-0 p-5 xl:h-full">
           <fieldset className="grid min-w-0 grid-cols-4 gap-1.5 sm:gap-2">
             <legend className="sr-only">Contadores exibidos no gráfico</legend>
@@ -2589,7 +2615,15 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: st
       </section>
 
       <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
-        <h2 className="text-xl font-black text-foreground">Estatísticas de comunidade</h2>
+        <div className="flex flex-wrap items-center gap-2">
+          <h2 className="text-xl font-black text-foreground">Estatísticas de comunidade</h2>
+          {isCommunityRefreshing ? (
+            <span className="inline-flex items-center gap-1 rounded-full bg-primary-soft px-2.5 py-1 text-xs font-black text-primary">
+              <Loader2 aria-hidden className="h-3.5 w-3.5 animate-spin" />
+              Atualizando
+            </span>
+          ) : null}
+        </div>
         <StatisticsPeriodControls
           idPrefix="community-statistics"
           onDateChange={handleCommunityStatisticsDateChange}
@@ -2599,7 +2633,7 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: st
         />
       </div>
 
-      <section className="grid gap-5 xl:grid-cols-[1.1fr_0.9fr]">
+      <section aria-busy={isCommunityRefreshing} className="grid gap-5 xl:grid-cols-[1.1fr_0.9fr]">
         <CardShell className="p-5">
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
             {communityStatistics.community.cards.map((item) => (
