@@ -14,7 +14,6 @@ import {
   Search,
   SlidersHorizontal,
   Star,
-  Trophy,
   UsersRound,
   X,
 } from "lucide-react";
@@ -902,20 +901,44 @@ export const AdminPsychologistsListClient = () => {
           <span>/</span>
           <span className="text-foreground">Lista de psicólogos</span>
         </nav>
-        <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
+        <div>
           <div>
-            <p className="inline-flex items-center gap-2 text-xs font-black uppercase tracking-[0.28em] text-primary">
-              <Trophy aria-hidden className="h-4 w-4" />
-              Ranking público aplicado
-            </p>
-            <h1 className="mt-2 text-3xl font-black tracking-tight text-foreground md:text-4xl">
+            <h1 className="text-3xl font-black tracking-tight text-foreground md:text-4xl">
               Lista de Psicólogos
             </h1>
             <p className="mt-2 text-sm font-medium text-muted">
               Encontre profissionais por nome, CRP e filtros reais cadastrados no backend.
             </p>
           </div>
-          <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
+        </div>
+      </header>
+
+      <div className="min-w-0 space-y-4">
+        <div className="flex min-w-0 flex-col gap-3 xl:flex-row xl:items-end xl:justify-between">
+          <div className="min-w-0 xl:w-full xl:max-w-[560px]">
+            <SearchBox
+              key={query.q || "empty-search"}
+              onSearch={(value) => replaceParams({ q: value || null })}
+              value={query.q}
+            />
+          </div>
+          <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-end xl:flex-nowrap xl:justify-end">
+            <label className="flex min-w-0 flex-col gap-1 text-xs font-black text-muted sm:min-w-[210px]">
+              Ordenar por
+              <select
+                className="h-12 min-w-0 rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground shadow-control"
+                onChange={(event) =>
+                  replaceParams({ sort: event.target.value as PsychologistsListSort })
+                }
+                value={query.sort || "relevance"}
+              >
+                {SORT_OPTIONS.map((option) => (
+                  <option key={option.id} value={option.id}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </label>
             <button
               className="inline-flex h-12 min-w-0 items-center justify-center gap-2 rounded-control border border-border bg-surface px-4 text-sm font-black text-foreground shadow-control"
               onClick={openFilters}
@@ -936,51 +959,12 @@ export const AdminPsychologistsListClient = () => {
             </button>
           </div>
         </div>
-      </header>
-
-      <div className="min-w-0 space-y-4">
-        <div className="grid min-w-0 gap-3 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-center">
-          <SearchBox
-            key={query.q || "empty-search"}
-            onSearch={(value) => replaceParams({ q: value || null })}
-            value={query.q}
-          />
-          <label className="flex min-w-0 flex-col gap-2 text-sm font-black text-muted sm:flex-row sm:items-center xl:justify-end">
-            Ordenar por
-            <select
-              className="h-12 min-w-0 rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground shadow-control"
-              onChange={(event) =>
-                replaceParams({ sort: event.target.value as PsychologistsListSort })
-              }
-              value={query.sort || "relevance"}
-            >
-              {SORT_OPTIONS.map((option) => (
-                <option key={option.id} value={option.id}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-          </label>
-        </div>
 
         <CardShell className="overflow-hidden">
-          <div className="flex flex-col gap-3 border-b border-border px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <p className="text-sm font-black text-foreground">
-                {summary ? numberFormatter.format(summary.count) : "—"} psicólogos encontrados
-              </p>
-              <p className="mt-1 text-xs font-bold text-muted">
-                Fonte: endpoint admin privado com dados reais do perfil profissional.
-              </p>
-            </div>
-            <div className="flex flex-wrap gap-2 text-xs font-black text-muted">
-              <span className="rounded-full bg-primary-soft px-3 py-1 text-primary">
-                Criação manual fora da V1
-              </span>
-              <span className="rounded-full bg-surface-muted px-3 py-1">
-                Preferências fora da V1
-              </span>
-            </div>
+          <div className="border-b border-border px-4 py-4">
+            <p className="text-sm font-black text-foreground">
+              {summary ? numberFormatter.format(summary.count) : "—"} psicólogos encontrados
+            </p>
           </div>
 
           <div className="p-4 lg:p-0">

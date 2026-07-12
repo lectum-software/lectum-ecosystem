@@ -194,3 +194,33 @@ Frontend esperado:
 - `pnpm check` foi executado e ficou bloqueado por erros de formatacao preexistentes no `frontend/` fora deste ajuste:
   - `frontend/src/app/app/professional/profile/setup/use-form.tsx`;
   - `frontend/src/app/auth/register/psychologist/use-form.tsx`.
+
+## Execucao complementar: refinamento de cabecalho, busca e controles (2026-07-12)
+
+- Pedido do usuario: remover o texto **Ranking publico aplicado**, reduzir a barra de pesquisa, posicionar **Ordenar por** pequeno acima do seletor, mover **Filtros ativos** para a direita do seletor de ordenacao e remover textos auxiliares/badges do card de resultados.
+- Frontend Admin: a rota `/psicologos/lista` manteve o endpoint, query params, filtros reais, modal de filtros e ordenacao existentes; a alteracao foi apenas de composicao visual.
+- O cabecalho da lista ficou mais limpo, sem a etiqueta de ranking. O ranking publico continua aplicado pela ordenacao `relevance`, sem expor texto redundante na UI.
+- O grupo de controles agora fica mobile-first: busca em largura total no mobile e limitada em desktop, seletor de ordenacao com label compacto em cima, e botao **Filtros ativos** imediatamente a direita do seletor em telas amplas.
+- O card de resultados exibe apenas a contagem de psicologos encontrados, sem a linha de fonte tecnica e sem os badges de escopo V1.
+- Builder/Quick Copy `vcp://quickcopy/vcp-24aaa2941d814e5b90572bc93ae50e2a` nao esta exposto como ferramenta callable neste ambiente; a referencia visual permanece `_product/proto/admin/Psicólogos/Psicólogos- Lista.png` e a captura enviada pelo usuario.
+- Nao houve alteracao de backend, Prisma, migrations, packages, contratos de API, dados, filtros ou ranking.
+
+### Criterios complementares
+
+- [x] O texto **Ranking publico aplicado** nao aparece mais no cabecalho.
+- [x] **Ordenar por** aparece como label pequeno acima do seletor.
+- [x] O botao **Filtros ativos** fica a direita do seletor de ordenacao em desktop e segue empilhado de forma mobile-first em telas estreitas.
+- [x] A barra de pesquisa foi limitada em desktop sem perder largura total no mobile.
+- [x] A linha de fonte tecnica e os badges **Criacao manual fora da V1**/**Preferencias fora da V1** foram removidos do card de resultados.
+- [x] Nenhum backend, Prisma/migrations ou package foi alterado.
+
+### Validacao complementar
+
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/psicologos/lista/client.tsx"`
+- `pnpm --dir admin exec eslint "src/app/(admin)/psicologos/lista/client.tsx"`
+- `pnpm --dir admin check` foi executado e ficou bloqueado por erros TypeScript preexistentes fora deste ajuste em `admin/src/app/(admin)/psicologos/client.tsx`, causados por divergencia de tipos de dashboard de psicologos em arquivos ja modificados no working tree.
+- `pnpm --dir admin build` foi executado e ficou bloqueado pelo mesmo erro TypeScript preexistente em `admin/src/app/(admin)/psicologos/client.tsx`.
+- Browser local/headless com admin temporario real removido ao final:
+  - desktop `1440x1000`: textos removidos ausentes, busca com largura aproximada `470px`, **Ordenar por** acima do seletor e **Filtros ativos** a direita do seletor;
+  - modal de filtros ainda abriu pelo botao **Filtros ativos**;
+  - mobile `390x844`: textos removidos ausentes e sem overflow horizontal de viewport.
