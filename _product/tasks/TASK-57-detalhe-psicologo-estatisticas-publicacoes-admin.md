@@ -136,3 +136,10 @@ Exibir estatísticas de negócio/comunidade e publicações do psicólogo com da
 - Não houve alteração em Prisma schema ou migrations; `pnpm --dir backend db:migrate` não foi necessário.
 - Builder/Quick Copy não estava disponível como ferramenta callable no ambiente; a correção usou o PNG local da aba **Estatísticas** e o recorte atual fornecido pelo usuário.
 - Validações executadas em worktree limpo com apenas esta correção aplicada: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm --dir frontend check` e `pnpm check`.
+
+### Refinamento visual em 2026-07-12
+
+- Corrigido o overflow de texto nos cards de contadores da aba **Estatísticas** com largura útil maior no bloco de negócio, cards com conteúdo contido, labels/comparativos quebrando linha dentro do botão e remoção dos ícones internos para ampliar a área útil do texto.
+- Removido o rótulo visível **Retenção do vídeo** da seção de vídeo, preservando somente o gráfico.
+- Os comparativos passaram a exibir datas no formato curto `dd/mm - dd/mm`, sem ano, para reduzir ruído visual.
+- Validações executadas em worktree limpo com apenas esta correção aplicada: `pnpm --dir admin check`, `pnpm --dir admin build` e smoke HTTP local em `/psicologos/test-id?tab=estatisticas`.

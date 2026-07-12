@@ -108,6 +108,11 @@ const dateOnlyFormatter = new Intl.DateTimeFormat("pt-BR", {
   dateStyle: "short",
   timeZone: "UTC",
 });
+const dayMonthFormatter = new Intl.DateTimeFormat("pt-BR", {
+  day: "2-digit",
+  month: "2-digit",
+  timeZone: "UTC",
+});
 const chartMonthFormatter = new Intl.DateTimeFormat("pt-BR", {
   month: "short",
   timeZone: "UTC",
@@ -344,8 +349,6 @@ const GENERAL_METRIC_LABELS: Record<string, string> = {
 const BUSINESS_CHART_METRICS = [
   {
     dotRadius: 4.2,
-    icon: Eye,
-    iconCircleClassName: "bg-primary-soft text-primary",
     id: "profile_views",
     key: "profile_views",
     label: "Visualizações",
@@ -355,8 +358,6 @@ const BUSINESS_CHART_METRICS = [
   },
   {
     dotRadius: 3.8,
-    icon: MessageCircle,
-    iconCircleClassName: "bg-emerald-50 text-emerald-600",
     id: "whatsapp_clicks",
     key: "whatsapp_clicks",
     label: "WhatsApp",
@@ -366,8 +367,6 @@ const BUSINESS_CHART_METRICS = [
   },
   {
     dotRadius: 3.4,
-    icon: Heart,
-    iconCircleClassName: "bg-pink-50 text-pink-600",
     id: "favorites",
     key: "favorites",
     label: "Favoritos",
@@ -377,8 +376,6 @@ const BUSINESS_CHART_METRICS = [
   },
   {
     dotRadius: 3,
-    icon: Search,
-    iconCircleClassName: "bg-blue-50 text-blue-600",
     id: "search_results",
     key: "search_results",
     label: "Resultados de busca",
@@ -388,8 +385,6 @@ const BUSINESS_CHART_METRICS = [
   },
 ] as const satisfies readonly {
   dotRadius: number;
-  icon: LucideIcon;
-  iconCircleClassName: string;
   id: string;
   key: keyof AdminPsychologistStatistics["business"]["series"][number];
   label: string;
@@ -785,6 +780,20 @@ const formatDateOnly = (value?: string | null) => {
   if (Number.isNaN(date.getTime())) return "Não informado";
 
   return dateOnlyFormatter.format(date);
+};
+
+const formatDayMonth = (value?: string | null) => {
+  if (!value) return "00/00";
+
+  const isoDate = value.match(/^(\d{4})-(\d{2})-(\d{2})/)?.[0];
+  if (isoDate) {
+    return dayMonthFormatter.format(new Date(`${isoDate}T00:00:00.000Z`));
+  }
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "00/00";
+
+  return dayMonthFormatter.format(date);
 };
 
 const toDateInputValue = (date: Date) => {
@@ -1218,7 +1227,7 @@ const formatPreviousPeriod = (
 ) => {
   if (!comparison) return "período anterior";
 
-  return `${formatDateOnly(comparison.previous_from)} - ${formatDateOnly(comparison.previous_to)}`;
+  return `${formatDayMonth(comparison.previous_from)} - ${formatDayMonth(comparison.previous_to)}`;
 };
 
 const engagementMetricTone = (metric: AdminPsychologistEngagementMetric) =>
@@ -1793,7 +1802,12 @@ const MetricComparisonLine = ({
   const TrendIcon = trend === "down" ? ArrowDown : ArrowUp;
 
   return (
-    <div className={cn("flex flex-wrap items-center gap-1.5 text-[0.68rem]", className)}>
+    <div
+      className={cn(
+        "flex min-w-0 max-w-full flex-wrap items-center gap-1.5 text-[0.68rem]",
+        className,
+      )}
+    >
       <span
         className={cn(
           "inline-flex items-center gap-1 font-black",
@@ -1805,30 +1819,29 @@ const MetricComparisonLine = ({
         {hasArrow ? <TrendIcon aria-hidden className="h-3 w-3" /> : null}
         {formatChange(comparison?.change_percent ?? null)}
       </span>
-      <span className="font-bold text-muted">vs. {formatPreviousPeriod(comparison)}</span>
+      <span className="min-w-0 break-words font-bold text-muted">
+        vs. {formatPreviousPeriod(comparison)}
+      </span>
     </div>
   );
 };
 
 const BusinessMetricToggleCard = ({
   active,
-  config,
   metric,
   onToggle,
 }: {
   active: boolean;
-  config: BusinessChartMetric;
   metric: AdminPsychologistEngagementMetric;
   onToggle: () => void;
 }) => {
   const displayValue = metric.available ? formatEngagementMetricValue(metric) : "—";
-  const Icon = config.icon;
 
   return (
     <button
       aria-pressed={active}
       className={cn(
-        "min-w-0 rounded-2xl border p-3 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2",
+        "min-w-0 overflow-hidden rounded-2xl border p-3 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2",
         active
           ? "border-primary/40 bg-surface shadow-admin-soft"
           : "border-border bg-surface hover:border-primary/30 hover:bg-primary-soft/20",
@@ -1841,26 +1854,12 @@ const BusinessMetricToggleCard = ({
       }`}
       type="button"
     >
-      <span className="flex min-w-0 items-start gap-3">
-        <span
-          className={cn(
-            "grid h-10 w-10 shrink-0 place-items-center rounded-xl",
-            config.iconCircleClassName,
-          )}
-        >
-          {config.id === "whatsapp_clicks" ? (
-            <WhatsAppIcon aria-hidden className="h-5 w-5" />
-          ) : (
-            <Icon aria-hidden className="h-5 w-5" />
-          )}
+      <span className="block min-w-0 max-w-full">
+        <span className="block max-w-full break-words text-xs font-black leading-snug text-foreground">
+          {metric.label}
         </span>
-        <span className="min-w-0">
-          <span className="block text-xs font-black leading-snug text-foreground">
-            {metric.label}
-          </span>
-          <span className="mt-2 block text-2xl font-black leading-none text-foreground">
-            {displayValue}
-          </span>
+        <span className="mt-2 block text-2xl font-black leading-none text-foreground">
+          {displayValue}
         </span>
       </span>
       {metric.available ? (
@@ -2292,7 +2291,7 @@ const VideoRetentionLineChart = ({
         viewBox={`0 0 ${chartWidth} ${chartHeight}`}
         width="100%"
       >
-        <title>Retenção do vídeo</title>
+        <title>Curva de retenção</title>
         <defs>
           <linearGradient id="admin-video-retention-fill" x1="0" x2="0" y1="0" y2="1">
             <stop offset="0%" stopColor="var(--admin-primary)" stopOpacity="0.22" />
@@ -2455,7 +2454,6 @@ const StatisticsVideoCard = ({
         </div>
 
         <div className="min-w-0">
-          <p className="mb-1 text-xs font-black text-foreground">Retenção do vídeo</p>
           <VideoRetentionLineChart
             currentTimeSeconds={videoCurrentTimeSeconds}
             durationSeconds={videoDurationSeconds}
@@ -2665,14 +2663,16 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: st
         />
       </div>
 
-      <section aria-busy={isBusinessRefreshing} className="grid items-stretch gap-5 xl:grid-cols-2">
+      <section
+        aria-busy={isBusinessRefreshing}
+        className="grid items-stretch gap-5 xl:grid-cols-[minmax(0,1.12fr)_minmax(440px,0.88fr)]"
+      >
         <CardShell className="min-w-0 p-5 xl:h-full">
           <fieldset className="grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-2 2xl:grid-cols-4">
             <legend className="sr-only">Contadores exibidos no gráfico</legend>
             {businessCards.map(({ config, metric }) => (
               <BusinessMetricToggleCard
                 active={visibleBusinessMetricIds.includes(config.id) && metric.available}
-                config={config}
                 key={config.id}
                 metric={metric}
                 onToggle={() => toggleBusinessMetric(config.id)}

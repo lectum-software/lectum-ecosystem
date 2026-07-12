@@ -127,6 +127,7 @@ Decisão complementar:
 - Quando o período anterior for zero e o atual for maior que zero, retornar `change_percent=null` e `trend="unavailable"` para não inventar percentual infinito.
 - Manter os cards de negócio como botões acessíveis (`aria-pressed`) que controlam as séries visíveis no gráfico, mas com aparência de card/KPI alinhada ao protótipo.
 - Ajustar o preview do vídeo para proporção visual mais compacta, preservando o gráfico de retenção como elemento principal do card de vídeo.
+- Refinamento visual posterior: os cards de negócio devem conter todo texto dentro do botão, mesmo com quebra de linha; os ícones internos dos cards foram removidos para ampliar a área útil do texto; os comparativos devem usar datas curtas `dd/mm - dd/mm`; e o rótulo visível **Retenção do vídeo** não deve aparecer acima do gráfico.
 
 Consequência: o endpoint faz leituras adicionais das mesmas fontes persistidas no período anterior, sem tabela nova, sem mock e sem estimativa. O Admin ganha leitura comparativa coerente com o protótipo, mantendo a interação existente de ligar/desligar séries.
 
@@ -197,6 +198,12 @@ Validação da emenda de comparativo real e restauração dos cards:
 - `pnpm --dir frontend check`
 - `pnpm check`
 - Validação executada em worktree limpo com apenas esta correção aplicada, porque o workspace principal continha alterações não relacionadas em andamento.
+
+Validação do refinamento visual dos cards/comparativos:
+
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- Smoke HTTP local em `/psicologos/test-id?tab=estatisticas`.
 
 ## Limitações da execução
 
