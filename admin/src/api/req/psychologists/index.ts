@@ -34,8 +34,10 @@ export type PsychologistsListQuery = {
   more_experienced?: boolean;
   page?: number;
   plan?: string;
+  profile_status?: string;
   q?: string;
   race_color?: string;
+  registry_status?: string;
   religion?: string;
   service?: string;
   social_value?: boolean;
@@ -1071,8 +1073,10 @@ const cleanListParams = (input: PsychologistsListQuery) => ({
   ...(input.more_experienced ? { more_experienced: input.more_experienced } : {}),
   ...(input.page ? { page: input.page } : {}),
   ...(input.plan ? { plan: input.plan } : {}),
+  ...(input.profile_status ? { profile_status: input.profile_status } : {}),
   ...(input.q ? { q: input.q } : {}),
   ...(input.race_color ? { race_color: input.race_color } : {}),
+  ...(input.registry_status ? { registry_status: input.registry_status } : {}),
   ...(input.religion ? { religion: input.religion } : {}),
   ...(input.service ? { service: input.service } : {}),
   ...(input.social_value ? { social_value: input.social_value } : {}),

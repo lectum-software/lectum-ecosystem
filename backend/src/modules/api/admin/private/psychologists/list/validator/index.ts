@@ -43,6 +43,20 @@ export const schema: IValidatorRequest = {
     },
     { key: "plan", coerse: "string", method: "string", max: 80, optional: true },
     {
+      key: "profile_status",
+      coerse: "string",
+      method: "string",
+      max: 20,
+      optional: true,
+    },
+    {
+      key: "registry_status",
+      coerse: "string",
+      method: "string",
+      max: 20,
+      optional: true,
+    },
+    {
       key: "experience",
       coerse: "string",
       method: "string",

@@ -16,7 +16,6 @@ import {
   type LucideIcon,
   RefreshCw,
   Search,
-  ShieldCheck,
   Star,
   Stethoscope,
   UsersRound,
@@ -71,20 +70,22 @@ const FILTER_KEYS = [
   "language",
   "modality",
   "more_experienced",
+  "plan",
+  "profile_status",
   "q",
   "race_color",
+  "registry_status",
   "religion",
   "service",
   "social_value",
   "specialty",
   "state",
   "target_audience",
-  "verified",
 ] as const satisfies readonly (keyof PsychologistsListQuery)[];
 
 type FilterQueryKey = (typeof FILTER_KEYS)[number];
 
-const DEPRECATED_FILTER_KEYS = ["experience", "plan", "status"] as const;
+const DEPRECATED_FILTER_KEYS = ["experience", "status", "verified"] as const;
 
 type FilterFeatureKey = Extract<
   FilterQueryKey,
@@ -93,7 +94,6 @@ type FilterFeatureKey = Extract<
   | "discount_first_session"
   | "more_experienced"
   | "social_value"
-  | "verified"
 >;
 
 type FilterFeatureOption = {
@@ -109,12 +109,6 @@ const FILTER_FEATURE_OPTIONS: FilterFeatureOption[] = [
     icon: CalendarCheck,
     label: "Disponível hoje",
     name: "available_today",
-  },
-  {
-    description: "Psicólogos com registro verificado junto ao Conselho Federal de Psicologia.",
-    icon: ShieldCheck,
-    label: "Somente verificados",
-    name: "verified",
   },
   {
     description: "Psicólogos com mais de 10 anos de experiência.",
@@ -145,6 +139,22 @@ const FILTER_FEATURE_OPTIONS: FilterFeatureOption[] = [
 const MODALITY_FILTER_OPTIONS: PsychologistsListOption[] = [
   { count: 0, id: "online", label: "Online" },
   { count: 0, id: "presencial", label: "Presencial" },
+];
+
+const PLAN_FILTER_OPTIONS: PsychologistsListOption[] = [
+  { count: 0, id: "professional", label: "Assinante" },
+  { count: 0, id: "courtesy", label: "Cortesia" },
+  { count: 0, id: "free", label: "Gratuito" },
+];
+
+const PROFILE_STATUS_FILTER_OPTIONS: PsychologistsListOption[] = [
+  { count: 0, id: "active", label: "Ativo" },
+  { count: 0, id: "inactive", label: "Inativo" },
+];
+
+const REGISTRY_STATUS_FILTER_OPTIONS: PsychologistsListOption[] = [
+  { count: 0, id: "active", label: "Ativo" },
+  { count: 0, id: "pending", label: "Pendente" },
 ];
 
 const CardShell = ({ children, className }: { children?: ReactNode; className?: string }) => (
@@ -182,8 +192,11 @@ const parseQuery = (params: URLSearchParams): PsychologistsListQuery => {
     modality: params.get("modality") || undefined,
     more_experienced: parseBoolean(params.get("more_experienced")),
     page: parsePositiveNumber(params.get("page"), 1),
+    plan: params.get("plan") || undefined,
+    profile_status: params.get("profile_status") || undefined,
     q: params.get("q") || undefined,
     race_color: params.get("race_color") || undefined,
+    registry_status: params.get("registry_status") || undefined,
     religion: params.get("religion") || undefined,
     service: params.get("service") || undefined,
     social_value: parseBoolean(params.get("social_value")),
@@ -191,7 +204,6 @@ const parseQuery = (params: URLSearchParams): PsychologistsListQuery => {
     specialty: params.get("specialty") || undefined,
     state: params.get("state") || undefined,
     target_audience: params.get("target_audience") || undefined,
-    verified: parseBoolean(params.get("verified")),
   };
 };
 
@@ -268,38 +280,6 @@ const Avatar = ({ name, src }: { name: string; src: string | null }) => {
     />
   );
 };
-
-const FilterTextField = ({
-  className,
-  label,
-  onChange,
-  placeholder,
-  value,
-}: {
-  className?: string;
-  label: string;
-  onChange: (value: string) => void;
-  placeholder: string;
-  value?: string;
-}) => (
-  <label className={cn("grid min-w-0 gap-2 text-sm font-semibold text-foreground", className)}>
-    <span>{label}</span>
-    <span className="relative block">
-      <Search
-        aria-hidden
-        className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-subtle"
-      />
-      <input
-        className="h-12 w-full rounded-2xl border border-border/80 bg-surface-muted px-4 pl-11 text-sm font-bold text-foreground shadow-none outline-none transition placeholder:text-subtle focus:border-primary focus:ring-4 focus:ring-primary/10"
-        maxLength={120}
-        onChange={(event) => onChange(event.target.value)}
-        placeholder={placeholder}
-        value={value || ""}
-      />
-    </span>
-    <span className="block min-h-4 text-xs font-medium leading-4 text-danger" />
-  </label>
-);
 
 const FilterSelectField = ({
   className,
@@ -417,13 +397,6 @@ const FilterPanel = ({
 
   return (
     <>
-      <FilterTextField
-        className="col-span-2"
-        label="Pesquisa"
-        onChange={(value) => onFilter("q", value || null)}
-        placeholder="Buscar por nome ou CRP"
-        value={query.q}
-      />
       <FilterSelectField
         className="col-span-2"
         label="Especialidade"
@@ -447,6 +420,30 @@ const FilterPanel = ({
         options={MODALITY_FILTER_OPTIONS}
         placeholder="Todas as modalidades"
         value={query.modality}
+      />
+      <FilterSelectField
+        className="col-span-2"
+        label="Plano"
+        onChange={(value) => onFilter("plan", value || null)}
+        options={PLAN_FILTER_OPTIONS}
+        placeholder="Todos os planos"
+        value={query.plan}
+      />
+      <FilterSelectField
+        className="col-span-1"
+        label="Perfil"
+        onChange={(value) => onFilter("profile_status", value || null)}
+        options={PROFILE_STATUS_FILTER_OPTIONS}
+        placeholder="Todos"
+        value={query.profile_status}
+      />
+      <FilterSelectField
+        className="col-span-1"
+        label="Registro profissional"
+        onChange={(value) => onFilter("registry_status", value || null)}
+        options={REGISTRY_STATUS_FILTER_OPTIONS}
+        placeholder="Todos"
+        value={query.registry_status}
       />
       <FilterSelectField
         className="col-span-2"

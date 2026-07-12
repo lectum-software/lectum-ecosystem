@@ -332,3 +332,32 @@ Frontend esperado:
 - `pnpm check`
 - Smoke API autenticado: `GET /api/admin/private/psychologists?available_today=true&verified=true&specialty=teste&race_color=teste&religion=teste&more_experienced=true` retornou `200`, `active_filters_count=6` e filtros `specialties`, `race_colors` e `religions` presentes.
 - Browser local/headless/CDP com admin temporario real: desktop `1440x1000` validou modal com largura `560px`, todos os labels publicos presentes e textos antigos ausentes; mobile base `390x844` validou largura `390px`, todos os labels publicos presentes e `document.documentElement.scrollWidth=390`.
+
+## Execucao complementar: filtros administrativos no drawer de busca (2026-07-12)
+
+- Pedido do usuario: no painel Admin, remover da modal de filtros o campo de pesquisa por nome/CRP e a opcao **Somente verificados**, e adicionar filtros administrativos de **Plano**, **Perfil** e **Registro profissional**.
+- Frontend Admin: a modal de `/psicologos/lista` agora mantem a busca por nome/CRP apenas no controle principal da pagina, fora do drawer de filtros.
+- O grupo **Selos e facilidades** removeu a opcao **Somente verificados**. Parametros legados `verified`, `status` e `experience` passam a ser limpos da URL quando o Admin aplica ou limpa os filtros.
+- Foram adicionados selects estaticos e reais para **Plano** (`Assinante`, `Cortesia`, `Gratuito`), **Perfil** (`Ativo`, `Inativo`) e **Registro profissional** (`Ativo`, `Pendente`).
+- Backend Admin: `GET /api/admin/private/psychologists` passou a aceitar `profile_status` e `registry_status`; o filtro `plan` passou a tratar `professional`, `courtesy` e `free` conforme os mesmos sinais reais usados na tabela (assinatura profissional ativa, cortesia/admin grant e gratuito/sem plano ativo).
+- Nao houve alteracao de Prisma schema/migrations nem instalacao de packages.
+
+### Criterios complementares
+
+- [x] A modal de filtros nao exibe mais o campo **Pesquisa** nem o placeholder **Buscar por nome ou CRP**.
+- [x] A modal de filtros nao exibe mais a opcao **Somente verificados**.
+- [x] A modal exibe **Plano** com opcoes **Assinante**, **Cortesia** e **Gratuito**.
+- [x] A modal exibe **Perfil** com opcoes **Ativo** e **Inativo**.
+- [x] A modal exibe **Registro profissional** com opcoes **Ativo** e **Pendente**.
+- [x] Os novos filtros usam dados reais do contrato Admin, sem mock e sem endpoint simulado.
+- [x] A modal foi validada em desktop e mobile base `390px`, sem overflow horizontal de viewport.
+
+### Validacao complementar
+
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check`
+- Smoke API autenticado: `GET /api/admin/private/psychologists?plan=professional&profile_status=active&registry_status=pending` retornou `200` e `active_filters_count=3`.
+- Browser local/headless/CDP com admin temporario real removido ao final: desktop `1440x1000` e mobile `390x844` validaram ausencia de **Pesquisa**, **Buscar por nome ou CRP** e **Somente verificados**, presenca dos novos campos/opcoes e ausencia de overflow horizontal.

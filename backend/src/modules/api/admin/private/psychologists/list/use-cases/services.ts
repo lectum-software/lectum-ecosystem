@@ -40,6 +40,8 @@ const STATUSES = new Set<AdminPsychologistsListItem["status"]>([
   "pending",
 ]);
 const EXPERIENCES = new Set<AdminPsychologistsListExperience>(["0_4", "5_9", "10_plus", "unknown"]);
+const PROFILE_STATUSES = new Set(["active", "inactive"]);
+const REGISTRY_STATUSES = new Set(["active", "pending"]);
 
 const EXPERIENCE_LABELS: Record<AdminPsychologistsListExperience, string> = {
   "0_4": "0 a 4 anos",
@@ -370,6 +372,54 @@ const matchesModality = (current: string | null | undefined, expected?: string) 
   return normalizedCurrent === normalizedExpected;
 };
 
+const matchesPlanFilter = (
+  profile: AdminPsychologistListProfileRecord,
+  date: Date,
+  expected?: string,
+) => {
+  const normalizedExpected = expected ? normalizeKey(expected) : "";
+  if (!normalizedExpected) return true;
+
+  const plan = pickCurrentPlan(profile, date);
+
+  if (normalizedExpected === "courtesy") {
+    return activeSubscriptionsAt(profile, date).some(
+      (subscription) => subscription.source === "admin_grant",
+    );
+  }
+
+  if (normalizedExpected === "free") {
+    return !plan || isFreeSubscription(plan);
+  }
+
+  if (["professional", "assinante", "subscriber"].includes(normalizedExpected)) {
+    return Boolean(plan && isProfessionalPlan(plan) && plan.source !== "admin_grant");
+  }
+
+  return (plan?.plan.slug ?? "sem_plano") === normalizedExpected;
+};
+
+const matchesProfileStatus = (
+  profile: AdminPsychologistListProfileRecord,
+  expected?: "active" | "inactive",
+) => {
+  if (!expected) return true;
+
+  return expected === "active" ? profile.published : !profile.published;
+};
+
+const matchesRegistryStatus = (
+  profile: AdminPsychologistListProfileRecord,
+  date: Date,
+  expected?: "active" | "pending",
+) => {
+  if (!expected) return true;
+
+  const active = buildRegistryVerification(profile, date).status === "aprovado";
+
+  return expected === "active" ? active : !active;
+};
+
 const matchesSearch = (profile: AdminPsychologistListProfileRecord, search?: string) => {
   const normalized = normalizeSearchText(search).trim();
   if (!normalized) return true;
@@ -387,45 +437,41 @@ const matchesFilters = (
   profile: AdminPsychologistListProfileRecord,
   query: AdminPsychologistsListQuery,
   date: Date,
-) => {
-  const plan = pickCurrentPlan(profile, date);
-  const planSlug = plan?.plan.slug ?? "sem_plano";
-
-  return (
-    matchesSearch(profile, query.q) &&
-    getExactTextMatch(profile.professional_address_state, query.state) &&
-    getExactTextMatch(profile.professional_address_city, query.city) &&
-    (!query.status || mapStatus(profile, date) === query.status) &&
-    (!query.plan || planSlug === query.plan) &&
-    (!query.experience || mapExperience(profile) === query.experience) &&
-    (!query.verified || mapStatus(profile, date) === "verified") &&
-    matchesAvailableToday(profile, query.available_today) &&
-    matchesMoreExperienced(profile, date, query.more_experienced) &&
-    (typeof query.discount_first_session !== "boolean" ||
-      profile.discount_first_session === query.discount_first_session) &&
-    (typeof query.accepts_insurance !== "boolean" ||
-      profile.accepts_insurance === query.accepts_insurance) &&
-    (typeof query.social_value !== "boolean" || profile.social_value === query.social_value) &&
-    matchesJsonArray(profile.target_audience, query.target_audience) &&
-    (!query.approach ||
-      profile.user.psychologist_approaches.some(({ approach }) =>
-        getNormalizedOptionMatch(approach.slug, query.approach),
-      )) &&
-    (!query.specialty ||
-      profile.user.psychologist_specialties.some(({ specialty }) =>
-        getNormalizedOptionMatch(specialty.slug, query.specialty),
-      )) &&
-    (!query.service ||
-      profile.user.psychologist_services.some(({ service }) =>
-        getNormalizedOptionMatch(service.slug, query.service),
-      )) &&
-    matchesModality(profile.modality, query.modality) &&
-    matchesJsonArray(profile.languages, query.language) &&
-    getNormalizedOptionMatch(profile.gender, query.gender) &&
-    getNormalizedOptionMatch(profile.race_color, query.race_color) &&
-    getNormalizedOptionMatch(profile.religion, query.religion)
-  );
-};
+) =>
+  matchesSearch(profile, query.q) &&
+  getExactTextMatch(profile.professional_address_state, query.state) &&
+  getExactTextMatch(profile.professional_address_city, query.city) &&
+  (!query.status || mapStatus(profile, date) === query.status) &&
+  matchesPlanFilter(profile, date, query.plan) &&
+  matchesProfileStatus(profile, query.profile_status) &&
+  matchesRegistryStatus(profile, date, query.registry_status) &&
+  (!query.experience || mapExperience(profile) === query.experience) &&
+  (!query.verified || mapStatus(profile, date) === "verified") &&
+  matchesAvailableToday(profile, query.available_today) &&
+  matchesMoreExperienced(profile, date, query.more_experienced) &&
+  (typeof query.discount_first_session !== "boolean" ||
+    profile.discount_first_session === query.discount_first_session) &&
+  (typeof query.accepts_insurance !== "boolean" ||
+    profile.accepts_insurance === query.accepts_insurance) &&
+  (typeof query.social_value !== "boolean" || profile.social_value === query.social_value) &&
+  matchesJsonArray(profile.target_audience, query.target_audience) &&
+  (!query.approach ||
+    profile.user.psychologist_approaches.some(({ approach }) =>
+      getNormalizedOptionMatch(approach.slug, query.approach),
+    )) &&
+  (!query.specialty ||
+    profile.user.psychologist_specialties.some(({ specialty }) =>
+      getNormalizedOptionMatch(specialty.slug, query.specialty),
+    )) &&
+  (!query.service ||
+    profile.user.psychologist_services.some(({ service }) =>
+      getNormalizedOptionMatch(service.slug, query.service),
+    )) &&
+  matchesModality(profile.modality, query.modality) &&
+  matchesJsonArray(profile.languages, query.language) &&
+  getNormalizedOptionMatch(profile.gender, query.gender) &&
+  getNormalizedOptionMatch(profile.race_color, query.race_color) &&
+  getNormalizedOptionMatch(profile.religion, query.religion);
 
 const roundScore = (value: number) => Math.round(value * 1000) / 10;
 const ratingAverage = (value: number) => Math.round((value / 100) * 10) / 10;
@@ -638,6 +684,8 @@ const activeFiltersCount = (query: AdminPsychologistsListQuery) =>
     query.city,
     query.status,
     query.plan,
+    query.profile_status,
+    query.registry_status,
     query.experience,
     query.available_today,
     query.more_experienced,
@@ -662,6 +710,8 @@ export const listAdminPsychologists = async (
   if (
     (query.status && !STATUSES.has(query.status)) ||
     (query.experience && !EXPERIENCES.has(query.experience)) ||
+    (query.profile_status && !PROFILE_STATUSES.has(query.profile_status)) ||
+    (query.registry_status && !REGISTRY_STATUSES.has(query.registry_status)) ||
     (query.sort && !SORTS.has(query.sort))
   ) {
     return {

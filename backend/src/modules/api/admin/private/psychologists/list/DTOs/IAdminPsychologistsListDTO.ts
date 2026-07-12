@@ -36,8 +36,10 @@ export type AdminPsychologistsListQuery = {
   more_experienced?: boolean;
   page?: number;
   plan?: string;
+  profile_status?: "active" | "inactive";
   q?: string;
   race_color?: string;
+  registry_status?: "active" | "pending";
   religion?: string;
   service?: string;
   social_value?: boolean;
