@@ -63,6 +63,7 @@ A área superior da aba **Estatísticas** passa a priorizar leitura comparativa:
 - no desktop, a área superior usa duas colunas: à esquerda ficam contadores e evolução do período; à direita ficam dados gráficos/estatísticos do vídeo de apresentação;
 - no mobile, a composição continua empilhada para preservar leitura em ~390px.
 - Ajuste de refinamento: esses controles devem ser botões compactos, em uma única linha horizontal dentro do card do gráfico, e não cards grandes separados. O bloco não deve ter rolagem horizontal; o gráfico deve usar a largura útil disponível e reduzir marcações quando necessário.
+- Ajuste visual posterior: os blocos de **Estatísticas de negócio** e **Análises do vídeo de apresentação** devem ter pesos visuais compatíveis; o gráfico de negócio fica menos alto e o card de vídeo usa preview, títulos, métricas e retenção mais compactos para não dominar a área superior.
 
 Essa mudança é apenas de apresentação e interação no Admin: não altera contrato de API, fonte de dados, tracking ou persistência.
 

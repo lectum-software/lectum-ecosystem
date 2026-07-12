@@ -339,7 +339,7 @@ const GENERAL_METRIC_LABELS: Record<string, string> = {
 
 const BUSINESS_CHART_METRICS = [
   {
-    dotRadius: 5.5,
+    dotRadius: 4.2,
     icon: Eye,
     id: "profile_views",
     key: "profile_views",
@@ -349,7 +349,7 @@ const BUSINESS_CHART_METRICS = [
     swatchClassName: "bg-primary",
   },
   {
-    dotRadius: 4.7,
+    dotRadius: 3.8,
     icon: MessageCircle,
     id: "whatsapp_clicks",
     key: "whatsapp_clicks",
@@ -359,7 +359,7 @@ const BUSINESS_CHART_METRICS = [
     swatchClassName: "bg-emerald-500",
   },
   {
-    dotRadius: 3.9,
+    dotRadius: 3.4,
     icon: Heart,
     id: "favorites",
     key: "favorites",
@@ -369,7 +369,7 @@ const BUSINESS_CHART_METRICS = [
     swatchClassName: "bg-pink-500",
   },
   {
-    dotRadius: 3.1,
+    dotRadius: 3,
     icon: Search,
     id: "search_results",
     key: "search_results",
@@ -1669,7 +1669,7 @@ const BusinessSeriesChart = ({
   }
 
   const chartWidth = 760;
-  const chartHeight = 220;
+  const chartHeight = 190;
   const paddingX = 24;
   const paddingY = 22;
   const innerWidth = chartWidth - paddingX * 2;
@@ -1681,14 +1681,19 @@ const BusinessSeriesChart = ({
   const xFor = (index: number) =>
     paddingX + (points.length <= 1 ? innerWidth / 2 : (index / (points.length - 1)) * innerWidth);
   const yFor = (value: number) => paddingY + innerHeight - (value / max) * innerHeight;
-  const labelStep = Math.max(1, Math.ceil(points.length / 12));
+  const labelStep = Math.max(1, Math.ceil(points.length / 8));
+  const dateLabels = points.flatMap((point, index) =>
+    index % labelStep === 0 || index === points.length - 1
+      ? [{ date: point.date, label: point.date.slice(5) }]
+      : [],
+  );
 
   return (
-    <div className="mt-5 w-full overflow-hidden rounded-2xl bg-surface-muted p-4">
+    <div className="mt-4 w-full overflow-hidden rounded-2xl bg-surface-muted p-4">
       <div className="w-full">
         <svg
           aria-label="Evolução do período por contador selecionado"
-          className="block h-[220px] w-full"
+          className="block h-[190px] w-full"
           height={chartHeight}
           preserveAspectRatio="none"
           role="img"
@@ -1739,7 +1744,7 @@ const BusinessSeriesChart = ({
                   cy={yFor(value)}
                   key={`${item.id}-${point.date}`}
                   r={item.dotRadius}
-                  strokeWidth="2.4"
+                  strokeWidth="2"
                 >
                   <title>
                     {point.date} · {item.label}: {numberFormatter.format(value)}
@@ -1750,15 +1755,12 @@ const BusinessSeriesChart = ({
           )}
         </svg>
         <div
-          className="grid gap-1"
-          style={{ gridTemplateColumns: `repeat(${points.length}, 1fr)` }}
+          className="mt-1 grid gap-1"
+          style={{ gridTemplateColumns: `repeat(${dateLabels.length}, 1fr)` }}
         >
-          {points.map((point, index) => (
-            <span
-              className="-rotate-45 overflow-hidden whitespace-nowrap text-center text-[10px] font-bold text-subtle"
-              key={point.date}
-            >
-              {index % labelStep === 0 || index === points.length - 1 ? point.date.slice(5) : ""}
+          {dateLabels.map(({ date, label }) => (
+            <span className="min-w-0 text-center text-[10px] font-bold text-subtle" key={date}>
+              {label}
             </span>
           ))}
         </div>
@@ -1834,11 +1836,13 @@ const StatisticsVideoCard = ({
   const cover = renderableImageSrc(video.cover_url || detail.profile.content.cover_image_url);
 
   return (
-    <CardShell className={cn("p-5", className)}>
+    <CardShell className={cn("p-4 sm:p-5", className)}>
       <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h2 className="text-xl font-black text-foreground">Análises do vídeo de apresentação</h2>
-          <p className="mt-1 text-sm text-muted">
+          <h2 className="text-lg font-black leading-tight text-foreground">
+            Análises do vídeo de apresentação
+          </h2>
+          <p className="mt-1 text-xs font-medium leading-relaxed text-muted sm:text-sm">
             Retenção derivada de sessões reais de vídeo; sem sessões, a métrica fica indisponível.
           </p>
         </div>
@@ -1849,15 +1853,15 @@ const StatisticsVideoCard = ({
         </Badge>
       </div>
 
-      <div className="mt-5 grid gap-5 lg:grid-cols-[220px_1fr]">
-        <div className="max-w-[220px] overflow-hidden rounded-[1.5rem] border border-border bg-surface-muted">
+      <div className="mt-4 grid gap-4 md:grid-cols-[160px_minmax(0,1fr)] 2xl:grid-cols-[180px_minmax(0,1fr)]">
+        <div className="mx-auto w-full max-w-[160px] overflow-hidden rounded-[1.25rem] border border-border bg-surface-muted md:mx-0 2xl:max-w-[180px]">
           <div className="relative aspect-[3/4]">
             {cover ? (
               <Image
                 alt={`Capa do vídeo de apresentação de ${detail.header.name}`}
                 className="object-cover"
                 fill
-                sizes="220px"
+                sizes="(min-width: 1536px) 180px, 160px"
                 src={cover}
                 unoptimized={isPublicAdminMediaSrc(cover)}
               />
@@ -1867,33 +1871,33 @@ const StatisticsVideoCard = ({
               </div>
             )}
             <span className="absolute inset-0 grid place-items-center bg-overlay/20">
-              <span className="grid h-14 w-14 place-items-center rounded-full bg-white/90 text-primary shadow-admin-soft">
-                <Play aria-hidden className="ml-1 h-6 w-6 fill-current" />
+              <span className="grid h-12 w-12 place-items-center rounded-full bg-white/90 text-primary shadow-admin-soft">
+                <Play aria-hidden className="ml-1 h-5 w-5 fill-current" />
               </span>
             </span>
           </div>
         </div>
 
-        <div>
-          <div className="grid gap-3 sm:grid-cols-3">
-            <div className="rounded-2xl bg-surface-muted p-4">
+        <div className="min-w-0">
+          <div className="grid grid-cols-3 gap-2">
+            <div className="min-w-0 rounded-2xl bg-surface-muted p-3">
               <p className="text-xs font-black text-muted">Visualizações</p>
-              <p className="mt-1 text-2xl font-black text-foreground">
+              <p className="mt-1 text-xl font-black text-foreground">
                 {numberFormatter.format(video.metrics.sessions)}
               </p>
             </div>
-            <div className="rounded-2xl bg-surface-muted p-4">
-              <p className="text-xs font-black text-muted">Taxa de replays</p>
-              <p className="mt-1 text-2xl font-black text-foreground">
+            <div className="min-w-0 rounded-2xl bg-surface-muted p-3">
+              <p className="text-xs font-black text-muted">Replays</p>
+              <p className="mt-1 text-xl font-black text-foreground">
                 {video.metrics.replay_rate_percent.toLocaleString("pt-BR", {
                   maximumFractionDigits: 1,
                 })}
                 %
               </p>
             </div>
-            <div className="rounded-2xl bg-surface-muted p-4">
-              <p className="text-xs font-black text-muted">Retenção média</p>
-              <p className="mt-1 text-2xl font-black text-foreground">
+            <div className="min-w-0 rounded-2xl bg-surface-muted p-3">
+              <p className="text-xs font-black text-muted">Retenção</p>
+              <p className="mt-1 text-xl font-black text-foreground">
                 {video.metrics.average_retention_percent.toLocaleString("pt-BR", {
                   maximumFractionDigits: 1,
                 })}
@@ -1902,9 +1906,9 @@ const StatisticsVideoCard = ({
             </div>
           </div>
 
-          <div className="mt-5 space-y-3">
+          <div className="mt-4 space-y-2.5">
             {video.retention.map((bucket) => (
-              <div className="grid gap-2 sm:grid-cols-[70px_1fr_60px]" key={bucket.label}>
+              <div className="grid grid-cols-[46px_1fr_44px] items-center gap-2" key={bucket.label}>
                 <span className="text-xs font-black text-muted">{bucket.label}</span>
                 <span className="h-3 overflow-hidden rounded-full bg-surface-muted">
                   <span
@@ -1920,7 +1924,7 @@ const StatisticsVideoCard = ({
           </div>
 
           {!video.available ? (
-            <p className="mt-4 rounded-2xl border border-dashed border-border bg-surface-muted p-3 text-sm font-bold text-muted">
+            <p className="mt-3 rounded-2xl border border-dashed border-border bg-surface-muted p-3 text-xs font-bold leading-relaxed text-muted">
               {video.unavailable_reason}
             </p>
           ) : null}
