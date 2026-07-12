@@ -1777,7 +1777,7 @@ export const ProfessionalProfileSetupLogic = () => {
             <SectionCard icon={UserRound} title="Informações básicas">
               <div className="grid gap-4">
                 <div className="grid gap-3">
-                  <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="grid gap-3 sm:grid-cols-2 sm:items-start">
                     {renderField("professional_first_name")}
                     {renderField("professional_last_name")}
                   </div>

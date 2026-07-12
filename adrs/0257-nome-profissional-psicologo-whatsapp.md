@@ -17,6 +17,7 @@ Pacientes usam nome de exibicao como identidade publica na comunidade. Criar sob
 - No cadastro manual de psicologo, coletar nome profissional e sobrenome profissional via React Hook Form/Zod/controllers.
 - No cadastro/login Google de psicologo, usar `given_name` e `family_name` quando disponiveis; se ausentes, dividir `displayName` como fallback.
 - Na UI do cadastro e do perfil profissional, exibir os campos como "Nome" e "Sobrenome" para reduzir complexidade visual, mantendo o significado de dominio em `professional_first_name` e `professional_last_name`.
+- Posicionar o informativo do campo "Nome" abaixo do input para preservar leitura natural do campo antes da explicacao contextual.
 - Manter pacientes com campo unico de nome de exibicao.
 - Expor `whatsapp_name` nos DTOs de descoberta, perfil, favoritos e comunidade quando o autor/alvo for psicologo.
 - Usar o mesmo nome profissional do CTA `Fale com [nome]` na saudacao da mensagem `wa.me`.
@@ -24,7 +25,7 @@ Pacientes usam nome de exibicao como identidade publica na comunidade. Criar sob
 ## Consequencias
 
 - Psicologos passam a controlar o nome curto usado no WhatsApp sem criar um terceiro campo de exibicao.
-- O campo "Nome" informa explicitamente que esse valor aparece no botao de WhatsApp do perfil.
+- O campo "Nome" informa explicitamente, abaixo do input, que esse valor aparece no botao de WhatsApp do perfil.
 - Links legados continuam funcionando: se os novos campos estiverem vazios, o fallback deriva o primeiro nome util de `user.name`.
 - O frontend passa a renderizar CTAs textuais como `Fale com [nome profissional]` onde ha espaco para texto.
 - O backend continua sem expor telefone bruto fora da URL publica de intencao.
@@ -40,3 +41,4 @@ Pacientes usam nome de exibicao como identidade publica na comunidade. Criar sob
 - `pnpm --dir frontend check`.
 - Builds e browser local registrados no arquivo da task.
 - Ajuste de copy 2026-07-12: `pnpm --dir frontend check`, `pnpm --dir frontend build` e browser local Chrome headless em 390x900/1366x900.
+- Ajuste de posicionamento/alinhamento 2026-07-12: `pnpm --dir frontend check`, `pnpm --dir frontend build` e validacoes registradas na TASK-69.

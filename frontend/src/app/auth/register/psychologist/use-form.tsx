@@ -43,7 +43,11 @@ const fields = [
     field: "input",
     label: "Nome",
     placeholder: "Ex.: Ana Clara",
-    description: "Esse nome aparece no bot\u00e3o de WhatsApp do seu perfil.",
+    after: (
+      <span className="mt-1 block text-xs font-normal leading-5 text-muted">
+        Esse nome aparece no botão de WhatsApp do seu perfil.
+      </span>
+    ),
     autoComplete: "given-name",
     inputClassName: "h-14 rounded-[var(--lectum-control-radius)] bg-surface-muted text-base",
   },

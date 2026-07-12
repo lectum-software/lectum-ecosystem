@@ -89,6 +89,7 @@ Builder/Quick Copy não está exposto como ferramenta callable neste ambiente; f
 - Paciente permaneceu com nome de exibição único.
 - Builder/Quick Copy não estava exposto como ferramenta callable; validação visual usou imagens locais do inventário e browser local.
 - Ajuste pós-entrega em 2026-07-12: os rótulos visíveis dos campos no cadastro e no perfil profissional passam a ser **Nome** e **Sobrenome**; o campo **Nome** exibe o informativo curto de que esse valor aparece no botão de WhatsApp do perfil.
+- Ajuste de posicionamento em 2026-07-12: o informativo do campo **Nome** passa a aparecer abaixo do input, não entre o rótulo e o campo.
 
 ## Validação realizada
 
@@ -111,3 +112,13 @@ Builder/Quick Copy não está exposto como ferramenta callable neste ambiente; f
 - Browser local Chrome headless:
   - `/auth/register/psychologist` em 390x900 e 1366x900, com formulário de e-mail expandido, exibiu **Nome**, **Sobrenome** e o informativo "Esse nome aparece no botão de WhatsApp do seu perfil.", sem os rótulos antigos.
   - `/app/professional/profile/setup` em 390x900 redirecionou para login sem sessão (`/auth/login?callbackUrl=...`); a UI autenticada usa o mesmo `use-form.tsx` alterado e foi coberta por build/typecheck.
+
+### Validação do ajuste de posicionamento 2026-07-12
+
+- `pnpm --dir frontend check`.
+- `pnpm --dir frontend build`.
+- Browser local Chrome headless em `next start` na porta 3010:
+  - `/auth/register/psychologist` em 390x900 e 1366x900, com formulário de e-mail expandido, manteve o informativo abaixo do input **Nome** e sem rótulos antigos.
+- Perfil profissional autenticado:
+  - o grid desktop dos campos **Nome** e **Sobrenome** recebeu `sm:items-start`, evitando que o campo **Sobrenome** seja esticado/deslocado pela altura extra do informativo abaixo de **Nome**;
+  - `/app/professional/profile/setup` depende de sessão real do psicólogo; a validação autenticada visual pode ser confirmada na sessão local já aberta pelo usuário.

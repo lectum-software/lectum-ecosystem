@@ -193,7 +193,11 @@ export const createFields = (languageOptions: FieldOption[] = LANGUAGE_OPTIONS) 
       field: "input",
       label: "Nome",
       placeholder: "Ex.: Roberto",
-      description: "Esse nome aparece no botão de WhatsApp do seu perfil.",
+      after: (
+        <span className="mt-1 block text-xs font-normal leading-5 text-muted">
+          Esse nome aparece no botão de WhatsApp do seu perfil.
+        </span>
+      ),
       required: true,
       autoComplete: "given-name",
     },
