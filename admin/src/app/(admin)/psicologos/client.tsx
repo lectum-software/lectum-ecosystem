@@ -4,7 +4,6 @@ import {
   Activity,
   AlertTriangle,
   Award,
-  BadgeCheck,
   ChevronDown,
   CircleDollarSign,
   Heart,
@@ -19,8 +18,6 @@ import {
   UserPlus,
   UsersRound,
 } from "lucide-react";
-import Image from "next/image";
-import Link from "next/link";
 import { type ReactNode, useMemo, useState } from "react";
 import { useAdminPsychologistsDashboard } from "@/api/callers/psychologists";
 import { resolveApiError } from "@/api/handle";
@@ -30,9 +27,7 @@ import type {
   PsychologistsDashboardBreakdownItem,
   PsychologistsDashboardDailyPoint,
   PsychologistsDashboardMetric,
-  PsychologistsDashboardPsychologist,
   PsychologistsDashboardQuery,
-  PsychologistsDashboardRankingItem,
 } from "@/api/req/psychologists";
 import { cn } from "@/lib/utils";
 
@@ -113,12 +108,6 @@ const formatDate = (value: string) =>
     month: "short",
   }).format(dateFromInput(value));
 
-const formatDateTime = (value: string) =>
-  new Intl.DateTimeFormat("pt-BR", {
-    dateStyle: "short",
-    timeStyle: "short",
-  }).format(new Date(value));
-
 const formatChange = (value: number | null) => {
   if (value === null) return "sem base anterior";
   if (value === 0) return "0%";
@@ -155,23 +144,7 @@ const hasDashboardRecords = (summary: AdminPsychologistsDashboard) => {
       point.churn > 0,
   );
 
-  return (
-    cardsHaveData || timelineHasData || summary.psychologists.total > 0 || summary.ranking.total > 0
-  );
-};
-
-const statusLabel: Record<PsychologistsDashboardPsychologist["status"], string> = {
-  gratuito: "Gratuito",
-  nao_publicado: "Não publicado",
-  pendente: "Pendente",
-  verificado: "Verificado",
-};
-
-const statusClasses: Record<PsychologistsDashboardPsychologist["status"], string> = {
-  gratuito: "bg-blue-50 text-blue-700",
-  nao_publicado: "bg-orange-50 text-orange-700",
-  pendente: "bg-surface-muted text-muted",
-  verificado: "bg-emerald-50 text-emerald-700",
+  return cardsHaveData || timelineHasData;
 };
 
 const CardShell = ({ children, className }: { children?: ReactNode; className?: string }) => (
@@ -321,34 +294,6 @@ const EmptyState = ({ period }: { period: AdminPsychologistsDashboard["period"] 
     </div>
   </CardShell>
 );
-
-const Avatar = ({ name, src }: { name: string; src: string | null }) => {
-  const initials = name
-    .split(" ")
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0])
-    .join("")
-    .toUpperCase();
-
-  if (!src) {
-    return (
-      <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-primary-soft text-sm font-black text-primary">
-        {initials || "PS"}
-      </span>
-    );
-  }
-
-  return (
-    <Image
-      alt={`Foto de ${name}`}
-      className="h-11 w-11 shrink-0 rounded-full object-cover"
-      height={44}
-      src={src}
-      width={44}
-    />
-  );
-};
 
 const formatTimelineMetricValue = (metric: PsychologistsDashboardMetric, value: number) => {
   if (metric.unit === "currency_cents") return currencyFormatter.format(value / 100);
@@ -685,122 +630,6 @@ const BooleanDonut = ({ metric }: { metric: PsychologistsDashboardBooleanBreakdo
   />
 );
 
-const PsychologistsTable = ({
-  items,
-  total,
-}: {
-  items: PsychologistsDashboardPsychologist[];
-  total: number;
-}) => (
-  <CardShell className="p-5">
-    <PanelTitle icon={UsersRound} source="user+psychologist_profile" title="Lista de psicólogos" />
-    <div className="mt-5 overflow-x-auto">
-      <table className="w-full min-w-[720px] text-left text-sm">
-        <caption className="sr-only">Lista resumida de psicólogos administrativos</caption>
-        <thead className="text-xs text-muted">
-          <tr>
-            <th className="py-3 font-black">Psicólogo</th>
-            <th className="py-3 font-black">Status</th>
-            <th className="py-3 font-black">Plano</th>
-            <th className="py-3 font-black">Cidade/UF</th>
-            <th className="py-3 font-black">Cadastro em</th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-border">
-          {items.map((item) => (
-            <tr key={item.id}>
-              <td className="py-4">
-                <div className="flex min-w-0 items-center gap-3">
-                  <Avatar name={item.name} src={item.avatar} />
-                  <div className="min-w-0">
-                    <p className="truncate font-black text-foreground">{item.name}</p>
-                    <p className="truncate text-xs text-muted">{item.crp || item.email}</p>
-                  </div>
-                </div>
-              </td>
-              <td className="py-4">
-                <span
-                  className={cn(
-                    "rounded-full px-2 py-1 text-xs font-black",
-                    statusClasses[item.status],
-                  )}
-                >
-                  {statusLabel[item.status]}
-                </span>
-              </td>
-              <td className="py-4 font-bold text-foreground">
-                {item.plan_name || "Sem plano ativo"}
-              </td>
-              <td className="py-4 text-muted">
-                {[item.city, item.state].filter(Boolean).join(", ") || "Não informado"}
-              </td>
-              <td className="py-4 text-muted">{formatDateTime(item.created_at)}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-      {items.length === 0 ? (
-        <p className="rounded-2xl bg-surface-muted p-4 text-sm text-muted">
-          Nenhum psicólogo real encontrado.
-        </p>
-      ) : null}
-    </div>
-    <p className="mt-4 text-xs font-bold text-muted">
-      Mostrando {numberFormatter.format(items.length)} de {numberFormatter.format(total)}{" "}
-      psicólogos.
-    </p>
-    <Link
-      className="mt-3 inline-flex text-sm font-black text-primary hover:text-primary-hover"
-      href="/psicologos/lista"
-    >
-      Ver lista completa
-    </Link>
-  </CardShell>
-);
-
-const RankingList = ({ items }: { items: PsychologistsDashboardRankingItem[] }) => (
-  <CardShell className="p-5">
-    <PanelTitle
-      icon={Award}
-      source="ranking público compartilhado"
-      title="Ranking dos psicólogos"
-    />
-    <div className="mt-4 divide-y divide-border">
-      {items.length === 0 ? (
-        <p className="rounded-2xl bg-surface-muted p-4 text-sm text-muted">
-          Nenhum profissional elegível à descoberta pública no período atual.
-        </p>
-      ) : (
-        items.map((item) => (
-          <div className="flex items-center justify-between gap-3 py-3" key={item.id}>
-            <div className="flex min-w-0 items-center gap-3">
-              <span className="w-8 shrink-0 text-xl font-black text-primary">#{item.position}</span>
-              <Avatar name={item.name} src={item.avatar} />
-              <div className="min-w-0">
-                <p className="truncate font-black text-foreground">
-                  {item.name}{" "}
-                  {item.verified ? (
-                    <BadgeCheck aria-label="Verificado" className="inline h-4 w-4 text-primary" />
-                  ) : null}
-                </p>
-                <p className="text-xs text-muted">{item.crp || "CRP não informado"}</p>
-              </div>
-            </div>
-            <div className="text-right">
-              <p className="text-lg font-black text-foreground">{item.score}</p>
-              <p className="text-xs font-bold text-muted">score público</p>
-            </div>
-          </div>
-        ))
-      )}
-    </div>
-    <p className="mt-4 text-xs leading-relaxed text-muted">
-      Reutiliza a mesma fórmula real do Explorar público: vídeo, WhatsApp, favoritos, avaliações,
-      completude, recência e randomização determinística controlada.
-    </p>
-  </CardShell>
-);
-
 const SearchUnavailableCard = ({ summary }: { summary: AdminPsychologistsDashboard }) => (
   <CardShell className="border-dashed p-5">
     <div className="flex gap-3">
@@ -1054,14 +883,6 @@ const DashboardContent = ({ summary }: { summary: AdminPsychologistsDashboard })
           visibleMetricKeys={activeMetricKeys}
         />
       </CardShell>
-
-      <div className="grid gap-4 xl:grid-cols-[1.25fr_0.85fr]">
-        <PsychologistsTable
-          items={summary.psychologists.items}
-          total={summary.psychologists.total}
-        />
-        <RankingList items={summary.ranking.items} />
-      </div>
 
       <section>
         <h2 className="mb-4 text-xl font-black text-foreground">Estatísticas</h2>

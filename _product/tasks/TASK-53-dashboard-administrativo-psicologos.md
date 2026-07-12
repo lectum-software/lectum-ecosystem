@@ -167,3 +167,12 @@ Packages usados:
 - Referência visual local mantida: `_product/proto/admin/Psicólogos/Psicólogos - Dashboard.png`; Builder/Quick Copy não estava disponível como ferramenta callable no ambiente.
 - Validações desta correção: `pnpm --dir admin check` (sem erros, com warning pré-existente fora do dashboard em `admin/src/app/(admin)/psicologos/[id]/client.tsx`), `pnpm --dir admin build`, `pnpm --dir backend exec biome check --error-on-warnings src/modules/api/admin/private/psychologists/dashboard/use-cases/services.ts src/modules/api/admin/private/psychologists/dashboard/DTOs/IAdminPsychologistsDashboardDTO.ts`, `pnpm --dir backend check`, `pnpm --dir backend build` e `pnpm check`.
 - Smoke HTTP local em `http://localhost:3002/psicologos` retornou 200; validação visual autenticada/click real dos cards depende de sessão Admin no navegador do operador.
+
+### Correção UX em 2026-07-12 - remoção de lista e ranking
+
+- Por decisão de produto, os blocos **Lista de psicólogos** e **Ranking dos psicólogos** foram removidos da rota `/psicologos`.
+- O dashboard agora mantém o foco nos contadores integrados ao gráfico, estatísticas agregadas e estados/limitações honestos; a listagem operacional segue concentrada na rota dedicada `/psicologos/lista`.
+- O endpoint/contrato backend não foi alterado nesta correção para preservar dados reais já agregados e compatibilidade; a UI apenas deixou de renderizar esses blocos e o estado vazio passou a considerar somente cards e série temporal visíveis.
+- Referência visual local mantida: `_product/proto/admin/Psicólogos/Psicólogos - Dashboard.png`; Builder/Quick Copy não estava disponível como ferramenta callable no ambiente.
+- Validações desta correção: `pnpm --dir admin check`, `pnpm --dir admin build` e smoke HTTP local em `http://localhost:3002/psicologos` retornando 200.
+- `pnpm check` foi tentado nesta correção, mas atingiu timeout depois de 124s sem saída conclusiva; as validações específicas do app Admin foram concluídas sem erros.

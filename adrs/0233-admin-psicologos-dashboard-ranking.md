@@ -34,6 +34,12 @@ Atualização 2026-07-12 (contadores integrados ao gráfico):
 - O gráfico temporal do dashboard deixa de usar curvas de eventos de engajamento e passa a usar as mesmas chaves dos contadores, permitindo que cada card funcione como toggle para exibir ou esconder sua curva.
 - Receita estimada e psicólogos verificados deixam de aparecer como cards primários neste dashboard, sem remover as fórmulas documentadas nem as fontes reais para telas financeiras/detalhes que precisem delas.
 
+Atualização 2026-07-12 (remoção de blocos lista/ranking):
+
+- A rota `/psicologos` deixou de renderizar os blocos resumidos **Lista de psicólogos** e **Ranking dos psicólogos**.
+- Os dados reais de lista e ranking permanecem no contrato do dashboard por compatibilidade e para usos dedicados/futuros, mas não compõem mais a experiência visual principal da página.
+- O estado vazio do dashboard passa a considerar apenas os cards e a série temporal que continuam visíveis, evitando que blocos removidos escondam uma ausência real de dados exibidos.
+
 ## Consequências
 
 - O Admin não cria uma métrica de ranking divergente do Explorar público.
@@ -42,6 +48,7 @@ Atualização 2026-07-12 (contadores integrados ao gráfico):
 - A fórmula compartilhada reduz duplicação e obriga futuras alterações de ranqueamento público a refletirem no Admin.
 
 - Períodos longos podem gerar séries diárias maiores, mas mantêm a consulta honesta sobre dados reais e seguem o limite já usado nas estatísticas individuais.
+- O dashboard de psicólogos fica menos duplicado em relação à rota dedicada de lista, mantendo a página focada em contadores, gráfico e estatísticas agregadas.
 
 ## Task relacionada
 
@@ -59,3 +66,4 @@ Atualização 2026-07-12 (contadores integrados ao gráfico):
 - Atualização 2026-07-12: `pnpm --dir admin check`, `pnpm --dir admin build` e Biome direcionado nos arquivos do dashboard backend.
 - Atualização 2026-07-12: `pnpm --dir backend check`, `pnpm --dir backend build` e `pnpm check` foram tentados, mas ficaram bloqueados por alterações pré-existentes no workspace (formatação/TypeScript fora do dashboard e `backend/prisma/schema.prisma` com falha P1012 no `prisma generate`).
 - Atualização 2026-07-12 (contadores integrados): `pnpm --dir admin check` (sem erros, com warning pré-existente fora do dashboard em `admin/src/app/(admin)/psicologos/[id]/client.tsx`), `pnpm --dir admin build`, Biome direcionado nos DTO/services do dashboard, `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm check` e smoke HTTP local em `/psicologos` retornando 200.
+- Atualização 2026-07-12 (remoção de lista/ranking): `pnpm --dir admin check`, `pnpm --dir admin build`, smoke HTTP local em `/psicologos` retornando 200; `pnpm check` tentado e encerrado por timeout de 124s sem saída conclusiva.
