@@ -6831,21 +6831,6 @@ const Content = ({
   tab: ActiveTab;
 }) => (
   <main className="space-y-5" data-psychologist-detail-id={id}>
-    <nav
-      aria-label="Breadcrumb"
-      className="flex flex-wrap items-center gap-2 text-sm font-bold text-muted"
-    >
-      <Link className="hover:text-primary" href="/dashboard">
-        Dashboard
-      </Link>
-      <span>/</span>
-      <Link className="hover:text-primary" href="/psicologos/lista">
-        Psicólogos
-      </Link>
-      <span>/</span>
-      <span className="text-foreground">Detalhes do psicólogo</span>
-    </nav>
-
     <DetailHeader detail={detail} tab={tab} />
 
     {tab === "perfil" ? (

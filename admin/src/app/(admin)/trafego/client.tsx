@@ -575,11 +575,6 @@ const TrafficHeader = ({
 }) => (
   <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
     <div>
-      <nav aria-label="Breadcrumb" className="mb-3 text-xs font-black text-muted">
-        <span>Dashboard</span>
-        <span className="mx-2 text-subtle">›</span>
-        <span className="text-primary">Tráfego</span>
-      </nav>
       <h1 className="text-3xl font-black tracking-tight text-foreground md:text-4xl">Tráfego</h1>
       <p className="mt-2 text-sm font-medium text-muted">
         Acompanhe o comportamento de acesso e as principais origens de tráfego da plataforma.

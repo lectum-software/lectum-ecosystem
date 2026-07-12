@@ -1071,20 +1071,6 @@ export const AdminPsychologistsListClient = () => {
   return (
     <div className="min-w-0 max-w-full space-y-6 overflow-x-clip">
       <header className="space-y-4">
-        <nav
-          aria-label="Breadcrumb"
-          className="flex flex-wrap items-center gap-2 text-xs font-bold text-muted"
-        >
-          <Link className="hover:text-primary" href="/dashboard">
-            Dashboard
-          </Link>
-          <span>/</span>
-          <Link className="hover:text-primary" href="/psicologos">
-            Psicólogos
-          </Link>
-          <span>/</span>
-          <span className="text-foreground">Lista de psicólogos</span>
-        </nav>
         <div>
           <div>
             <h1 className="text-3xl font-black tracking-tight text-foreground md:text-4xl">
