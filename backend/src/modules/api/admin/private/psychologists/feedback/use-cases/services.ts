@@ -12,7 +12,6 @@ import type {
   AdminPsychologistReviewsDTO,
   AdminPsychologistReviewsQuery,
   IAdminPsychologistReportResolveDTO,
-  IAdminPsychologistReportStartReviewDTO,
   IAdminPsychologistReportsDTO,
   IAdminPsychologistReviewsDTO,
 } from "../DTOs/IAdminPsychologistFeedbackDTO";
@@ -153,8 +152,8 @@ const labelFromStatus = (status: string) => {
   const labels: Record<string, string> = {
     aprovada: "Aprovada",
     aprovado: "Aprovado",
-    "em analise": "Em an\u00e1lise",
-    em_analise: "Em an\u00e1lise",
+    "em analise": "Pendente",
+    em_analise: "Pendente",
     improcedente: "Improcedente",
     pendente: "Pendente",
     procedente: "Procedente",
@@ -172,7 +171,7 @@ const reportStatusGroup = (status: string): AdminPsychologistReportsStatusGroup 
   const normalized = normalizeText(status).replace(/_/g, " ");
 
   if (["pendente", "pending"].includes(normalized)) return "pending";
-  if (["em analise", "in review", "in_review"].includes(normalized)) return "in_review";
+  if (["em analise", "in review", "in_review"].includes(normalized)) return "pending";
 
   if (["improcedente", "rejeitada", "rejeitado", "dismissed", "rejected"].includes(normalized)) {
     return "dismissed";
@@ -184,7 +183,7 @@ const reportStatusGroup = (status: string): AdminPsychologistReportsStatusGroup 
     return "upheld";
   }
 
-  return "in_review";
+  return "pending";
 };
 
 const reasonLabel = (reason: string) => {
@@ -362,12 +361,11 @@ const normalizeReportsQuery = (query: AdminPsychologistReportsQuery = {}) => ({
   ...normalizePagination(query, DEFAULT_REPORTS_LIMIT),
   from: query.from,
   status:
-    query.status === "pending" ||
-    query.status === "in_review" ||
-    query.status === "dismissed" ||
-    query.status === "upheld"
+    query.status === "pending" || query.status === "dismissed" || query.status === "upheld"
       ? query.status
-      : "all",
+      : query.status === "in_review"
+        ? "pending"
+        : "all",
   to: query.to,
   type: query.type === "post" || query.type === "reply" ? query.type : "all",
 });
@@ -409,10 +407,9 @@ const reportUnavailableReason = (report: AdminPsychologistReportRecord) => {
   return null;
 };
 
-const canStartReview = (status: string) => reportStatusGroup(status) === "pending";
 const canResolve = (status: string) => {
   const group = reportStatusGroup(status);
-  return group === "pending" || group === "in_review";
+  return group === "pending";
 };
 
 const reportCommunity = (report: AdminPsychologistReportRecord) =>
@@ -465,7 +462,6 @@ const toReportItem = (report: AdminPsychologistReportRecord): AdminPsychologistR
       can_remove_content: resolves && available,
       can_resolve_dismissed: resolves,
       can_resolve_upheld: resolves,
-      can_start_review: canStartReview(report.status),
     },
     content: {
       available,
@@ -549,12 +545,6 @@ export const showAdminPsychologistReports = async (
       { id: "total", label: "Total de den\u00fancias", source: "post_report", value: items.length },
       { id: "pending", label: "Pendentes", source: "post_report", value: countByStatus("pending") },
       {
-        id: "in_review",
-        label: "Em an\u00e1lise",
-        source: "post_report",
-        value: countByStatus("in_review"),
-      },
-      {
         id: "dismissed",
         label: "Improcedentes",
         source: "post_report",
@@ -568,7 +558,6 @@ export const showAdminPsychologistReports = async (
       statuses: [
         { count: items.length, id: "all", label: "Todos os status" },
         { count: countByStatus("pending"), id: "pending", label: "Pendentes" },
-        { count: countByStatus("in_review"), id: "in_review", label: "Em an\u00e1lise" },
         { count: countByStatus("dismissed"), id: "dismissed", label: "Improcedentes" },
         { count: countByStatus("upheld"), id: "upheld", label: "Procedentes" },
       ],
@@ -641,40 +630,6 @@ const reportActionResponse = (
   report: toReportItem(result.report),
   source: "post_report+admin_activity_log",
 });
-
-export const startAdminPsychologistReportReview = async (
-  data: IAdminPsychologistReportStartReviewDTO,
-): Promise<Resolve> => {
-  const admin = data.admin ?? data.auth;
-  if (!admin?.id) return adminRequired();
-
-  const { profile, report, repository } = await loadReport(data.p.id, data.p.reportId);
-  if (!profile) return notFound();
-  if (!report) return reportNotFound();
-  if (!canStartReview(report.status)) return invalidReportStatus();
-
-  const result = await repository.startReview({
-    audit: createReportAudit({
-      action: "psychologist_report_review_started",
-      adminId: admin.id,
-      changedFields: ["Status da denuncia"],
-      reason: data.b.reason.trim(),
-      report,
-      safeAfter: {
-        "Status da denuncia": "Em analise",
-        ...safeTargetSummary(report),
-      },
-      targetId: profile.user.id,
-    }),
-    report,
-  });
-
-  return {
-    status: 200,
-    ...msg("admin_psychologist_report_review_started", {}),
-    data: reportActionResponse(result),
-  };
-};
 
 const dismissConfirmationIsValid = (body: AdminPsychologistReportResolveBody) =>
   body.confirmation.trim().toUpperCase() === DISMISS_REPORT_CONFIRMATION;

@@ -22,7 +22,8 @@ Decisões de produto desta task:
 
 - A aba **Denúncias** deixa de ser somente leitura para denúncias elegíveis.
 - Usar `post_report.status` existente sempre que possível:
-  - `pendente` e `em_analise` são estados não terminais;
+  - `pendente` e `em_analise` são estados não terminais no banco;
+  - a UI/Admin não expõe mais a etapa/opção **Em análise**; registros legados em `em_analise` são agrupados como **Pendentes** e resolvidos diretamente;
   - `rejeitada` representa denúncia improcedente;
   - `resolvida` representa denúncia procedente.
 - Remoção de conteúdo deve ser soft delete real em `community_post`/`post_reply`, nunca hard delete.
@@ -62,8 +63,7 @@ Permitir que um Admin autenticado resolva denúncias recebidas contra posts e re
   - “Denúncias relacionadas a posts e respostas do psicólogo podem ser triadas e resolvidas com auditoria. Medidas de conta não fazem parte desta tela.”
 - Manter o deep link `?tab=denuncias` e filtros existentes.
 - Ajustar cards/filtros/lista para distinguir:
-  - `Pendente`;
-  - `Em análise`;
+  - `Pendente` (incluindo registros legados em `em_analise`);
   - `Improcedente`;
   - `Procedente`.
 - Cada denúncia deve mostrar dados seguros:
@@ -81,19 +81,14 @@ Permitir que um Admin autenticado resolva denúncias recebidas contra posts e re
 
 Implementar ações por denúncia:
 
-1. **Marcar em análise**
-   - Disponível para `status=pendente`.
-   - Exige motivo/observação interna obrigatória.
-   - Atualiza `post_report.status="em_analise"`.
-
-2. **Resolver como improcedente**
-   - Disponível para `pendente` ou `em_analise`.
+1. **Resolver como improcedente**
+   - Disponível para `pendente` ou `em_analise` legado, exibidos como pendentes na UI.
    - Exige motivo obrigatório e confirmação forte, por exemplo `DENUNCIA IMPROCEDENTE`.
    - Atualiza `post_report.status="rejeitada"`.
    - Não altera o conteúdo denunciado.
 
-3. **Resolver como procedente**
-   - Disponível para `pendente` ou `em_analise`.
+2. **Resolver como procedente**
+   - Disponível para `pendente` ou `em_analise` legado, exibidos como pendentes na UI.
    - Exige motivo obrigatório, confirmação forte e escolha de medida.
    - Medidas:
      - `Manter conteúdo sem alteração`;
@@ -140,7 +135,6 @@ Denúncias terminais (`resolvida`/`rejeitada`) não devem exibir ação de resol
 
 Criar ou estender endpoints Admin privados reais, protegidos por autenticação Admin, preferindo o módulo existente de feedback/denúncias do psicólogo:
 
-- `POST /api/admin/private/psychologists/:id/reports/:reportId/start-review`;
 - `POST /api/admin/private/psychologists/:id/reports/:reportId/resolve`.
 
 Também estender, quando necessário:
@@ -164,7 +158,6 @@ Também estender, quando necessário:
 
 O endpoint de leitura deve continuar retornando cards/filtros/lista e adicionar capacidades por denúncia quando aplicável:
 
-- `capabilities.can_start_review`;
 - `capabilities.can_resolve_dismissed`;
 - `capabilities.can_resolve_upheld`;
 - `capabilities.can_remove_content`;
@@ -173,25 +166,10 @@ O endpoint de leitura deve continuar retornando cards/filtros/lista e adicionar 
 
 `access.mode` não deve continuar afirmando `read_only` se ações reais estiverem disponíveis.
 
-### Marcar em análise
+### Sem etapa Em análise
 
-Payload mínimo:
-
-- `reason`: motivo/observação interna obrigatório.
-
-Regras:
-
-- Permitido somente para denúncia `pendente`.
-- Atualizar `post_report.status` para `em_analise`.
-- Registrar `admin_activity_log` com:
-  - domínio documentado, por exemplo `community_moderation`;
-  - `area="denuncias"`;
-  - `action="psychologist_report_review_started"` ou equivalente documentado em ADR;
-  - `target_type="psychologist"`;
-  - `target_id` conforme padrão das atividades atuais;
-  - `reason` obrigatório;
-  - `safe_before`/`safe_after` com status antes/depois e metadados seguros;
-  - `metadata` com `report_id`, `target_type`, `target_id`, `post_id`/`reply_id` quando necessário, sem conteúdo completo.
+- A UI/Admin não deve exibir card, filtro, capacidade, modal ou endpoint para marcar denúncia como **Em análise**.
+- Registros históricos em `post_report.status="em_analise"` permanecem válidos no banco, mas o contrato de leitura deve agrupá-los em `status_group="pending"`, label **Pendente** e permitir resolução direta.
 
 ### Resolver como improcedente
 
@@ -234,7 +212,6 @@ Regras:
 ### Atividades e auditoria
 
 - Atualizar a aba **Atividades** para listar eventos reais:
-  - `Denúncia colocada em análise`;
   - `Denúncia resolvida como improcedente`;
   - `Denúncia resolvida como procedente`;
   - `Conteúdo denunciado removido`.
@@ -337,9 +314,8 @@ Regras:
 
 - [x] A aba **Denúncias** deixa de informar “somente leitura” e passa a exibir ações reais para denúncias elegíveis.
 - [x] `?tab=denuncias` continua funcionando e filtros/deep links existentes não quebram.
-- [x] Denúncias exibem status real distinguindo pendente, em análise, improcedente e procedente.
-- [x] Admin consegue marcar denúncia pendente como **Em análise** com motivo obrigatório.
-- [x] Marcar em análise atualiza `post_report.status="em_analise"` e registra auditoria real.
+- [x] Denúncias exibem status real distinguindo pendente, improcedente e procedente; registros legados em `em_analise` aparecem como pendentes.
+- [x] A opção/ação **Em análise** foi removida da UI, filtros, cards e contrato Admin.
 - [x] Admin consegue resolver denúncia como **Improcedente** com motivo obrigatório e confirmação forte.
 - [x] Resolver como improcedente atualiza `post_report.status="rejeitada"`, registra auditoria e não altera conteúdo.
 - [x] Admin consegue resolver denúncia como **Procedente** com motivo obrigatório, confirmação forte e escolha de medida.
@@ -374,7 +350,6 @@ Regras:
 - `pnpm --dir backend db:migrate` se houver alteração em `backend/prisma/schema.prisma` ou `backend/prisma/migrations`.
 - Browser local:
   - Admin `/psicologos/[id]?tab=denuncias` em ~390px e desktop;
-  - marcar uma denúncia real pendente como em análise, ou registrar validação negativa sem mock quando não houver dado elegível;
   - resolver uma denúncia real como improcedente sem alterar conteúdo;
   - resolver uma denúncia real como procedente com `measure=none` ou remoção real quando houver autorização explícita para alterar dados locais;
   - confirmar que conteúdo removido não aparece no feed/detalhe público de comunidade;
@@ -394,14 +369,15 @@ Regras:
 ## Execução TASK-70
 
 - Implementado suporte real de moderação na aba **Denúncias** do detalhe administrativo do psicólogo, mantendo filtros/deep link e adicionando capacidades por denúncia.
-- Criados endpoints Admin privados para marcar denúncia em análise e resolver como improcedente/procedente, protegidos por autenticação Admin e validators reais.
-- `post_report.status` foi reutilizado sem migração: `pendente`/`em_analise` como não terminais, `rejeitada` como improcedente e `resolvida` como procedente.
+- Criado endpoint Admin privado para resolver denúncias como improcedente/procedente, protegido por autenticação Admin e validators reais; a etapa/opção **Em análise** foi removida.
+- `post_report.status` foi reutilizado sem migração: `pendente` como não terminal principal, `em_analise` como legado agrupado em pendentes, `rejeitada` como improcedente e `resolvida` como procedente.
 - A remoção de conteúdo usa soft delete real em `community_post`/`post_reply`, preserva auditoria e fecha denúncias não terminais do mesmo alvo quando o conteúdo sai do ar.
 - A auditoria usa `admin_activity_log` existente com área `denuncias`, origem `admin_panel`, motivo obrigatório e payload seguro sem conteúdo integral, dados pessoais do denunciante ou segredos.
-- A aba **Atividades** passa a listar eventos administrativos de denúncias: em análise, improcedente, procedente e conteúdo removido.
+- A aba **Atividades** lista eventos administrativos de denúncias: improcedente, procedente e conteúdo removido; eventos históricos de `em_analise` não são mais gerados.
 - Builder/Quick Copy não estava disponível como ferramenta no ambiente; foram usadas as imagens locais de Denúncias, Atividades e Geral indicadas em `_product/proto/admin/Psicólogos/Detalhes do psicólogo`. Não havia protótipo específico para modal/drawer de resolução.
 - Não houve alteração em Prisma schema ou migrations; `pnpm --dir backend db:migrate` não foi necessário.
 - Mutações reais de moderação não foram disparadas contra denúncias existentes sem autorização explícita para alterar dados locais/prod-like; endpoints foram validados negativamente sem sessão Admin e contratos/builds/checks validaram a implementação.
+- Correção pós-validação em 2026-07-12: removida a etapa/opção **Em análise** de Denúncias; `em_analise` legado passa a ser agrupado como **Pendente** e resolvido diretamente.
 
 ### Validação executada
 
@@ -412,6 +388,8 @@ Regras:
 - `pnpm check`
 - Smoke HTTP sem sessão Admin:
   - `GET /api/admin/private/psychologists/test-id/reports` retornou 401;
-  - `POST /api/admin/private/psychologists/test-id/reports/report-id/start-review` retornou 401;
   - `POST /api/admin/private/psychologists/test-id/reports/report-id/resolve` retornou 401.
+- Correção 2026-07-12:
+  - `rg` confirmou ausência de `start_review`, `can_start_review`, `start-review` e card/ação **Em análise** no contrato/UI Admin;
+  - `GET http://localhost:3002/psicologos/test-id?tab=denuncias` retornou 200 no dev server local, confirmando que a rota continua acessível/guardada.
 - Browser local/headless em 390px e desktop para `http://localhost:3002/psicologos/test-id?tab=denuncias` confirmou rota/guard Admin sem quebrar o deep link, redirecionando para login por ausência de sessão no contexto headless.

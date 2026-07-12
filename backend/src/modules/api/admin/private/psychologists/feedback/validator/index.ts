@@ -81,11 +81,6 @@ export const reportsSchema: IValidatorRequest = {
   ],
 };
 
-export const startReportReviewSchema: IValidatorRequest = {
-  params: [psychologistParam, reportParam],
-  body: [reasonField],
-};
-
 export const resolveReportSchema: IValidatorRequest = {
   params: [psychologistParam, reportParam],
   body: [
@@ -98,5 +93,4 @@ export const resolveReportSchema: IValidatorRequest = {
 
 export const reviewsValidator = validator(reviewsSchema);
 export const reportsValidator = validator(reportsSchema);
-export const startReportReviewValidator = validator(startReportReviewSchema);
 export const resolveReportValidator = validator(resolveReportSchema);

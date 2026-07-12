@@ -9,7 +9,6 @@ import {
   type AdminPsychologistPublicationsQuery,
   type AdminPsychologistRejectRegistryVerificationInput,
   type AdminPsychologistReportResolveInput,
-  type AdminPsychologistReportStartReviewInput,
   type AdminPsychologistReportsQuery,
   type AdminPsychologistReviewsQuery,
   type AdminPsychologistRevokeSessionsInput,
@@ -41,7 +40,6 @@ import {
   sendAdminPsychologistAccountEmailConfirmation,
   sendAdminPsychologistAccountPasswordReset,
   setAdminPsychologistAccountTemporaryPassword,
-  startAdminPsychologistReportReview,
   updateAdminPsychologistPersonalData,
   updateAdminPsychologistProfessionalData,
   updateAdminPsychologistRegistryIdentity,
@@ -264,21 +262,6 @@ export const useAdminPsychologistRevokeSessions = (id: string) => {
     mutationFn: (input: AdminPsychologistRevokeSessionsInput) =>
       revokeAdminPsychologistAccountSessions(id, input),
     onSuccess: () => invalidatePsychologistAccount(queryClient, id),
-  });
-};
-
-export const useAdminPsychologistStartReportReview = (id: string) => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: ({
-      input,
-      reportId,
-    }: {
-      input: AdminPsychologistReportStartReviewInput;
-      reportId: string;
-    }) => startAdminPsychologistReportReview(id, reportId, input),
-    onSuccess: () => invalidatePsychologistReports(queryClient, id),
   });
 };
 

@@ -11,7 +11,7 @@ export type AdminPsychologistReportsQuery = {
   from?: string;
   limit?: number;
   page?: number;
-  status?: "all" | "dismissed" | "in_review" | "upheld" | string;
+  status?: "all" | "dismissed" | "pending" | "upheld" | string;
   to?: string;
   type?: "all" | "post" | "reply" | string;
 };
@@ -69,10 +69,10 @@ export type AdminPsychologistReviewsDTO = {
   };
 };
 
-export type AdminPsychologistReportsStatusGroup = "dismissed" | "in_review" | "pending" | "upheld";
+export type AdminPsychologistReportsStatusGroup = "dismissed" | "pending" | "upheld";
 
 export type AdminPsychologistReportsCard = {
-  id: "dismissed" | "in_review" | "pending" | "total" | "upheld";
+  id: "dismissed" | "pending" | "total" | "upheld";
   label: string;
   source: "post_report";
   value: number;
@@ -97,7 +97,6 @@ export type AdminPsychologistReportItem = {
     can_remove_content: boolean;
     can_resolve_dismissed: boolean;
     can_resolve_upheld: boolean;
-    can_start_review: boolean;
   };
   created_at: Date;
   description: string | null;
@@ -145,10 +144,6 @@ export type AdminPsychologistReportsDTO = {
   unavailable: { description: string; id: string; label: string; source: string }[];
 };
 
-export type AdminPsychologistReportStartReviewBody = {
-  reason: string;
-};
-
 export type AdminPsychologistReportResolveBody = {
   confirmation: string;
   measure?: "none" | "remove_content" | string;
@@ -176,14 +171,6 @@ export type IAdminPsychologistReportsDTO = Request & {
     id: string;
   };
   q: AdminPsychologistReportsQuery;
-};
-
-export type IAdminPsychologistReportStartReviewDTO = Request & {
-  b: AdminPsychologistReportStartReviewBody;
-  p: {
-    id: string;
-    reportId: string;
-  };
 };
 
 export type IAdminPsychologistReportResolveDTO = Request & {
