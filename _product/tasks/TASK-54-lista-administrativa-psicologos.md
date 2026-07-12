@@ -276,3 +276,28 @@ Frontend esperado:
 - `pnpm --dir admin check`
 - `pnpm --dir admin build`
 - Browser local/headless com admin temporario real removido ao final validando desktop e mobile base `390px`.
+
+## Execucao complementar: icones Lectum e CRP compacto na tabela (2026-07-12)
+
+- Pedido do usuario: trocar o icone de verificado da lista para o selo usado na Lectum, trocar a metrica de WhatsApp para o icone de WhatsApp usado na Lectum e exibir o CRP abaixo do nome no formato compacto `00/000000`, sem textos como `4ª Região - MG/123456`.
+- Frontend Admin: a rota `/psicologos/lista` agora usa os SVGs equivalentes aos icones Lectum de verificado e WhatsApp ja usados no produto, sem `<img>` e sem package novo.
+- O CRP exibido na coluna **Psicologo** passa por formatacao visual local alinhada ao helper do app principal: remove prefixo `CRP`, deriva os digitos da regional antes da `/`, aplica `padStart(2, "0")` na regional e `padStart(6, "0")` no registro. Exemplo validado: `4ª Região - MG/123456` vira `CRP 04/123456`.
+- Nao houve alteracao de backend, Prisma, migrations, packages, contratos de API, dados, filtros, ranking, paginacao ou ordenacao.
+- Builder/Quick Copy `vcp://quickcopy/vcp-24aaa2941d814e5b90572bc93ae50e2a` nao esta exposto como ferramenta callable neste ambiente; a referencia visual permanece `_product/proto/admin/Psicólogos/Psicólogos- Lista.png` e as capturas enviadas pelo usuario.
+
+### Criterios complementares
+
+- [x] O selo de verificado na coluna **Psicologo** usa o icone Lectum.
+- [x] A coluna **WhatsApp** usa o icone de WhatsApp Lectum.
+- [x] O CRP abaixo do nome e exibido no formato compacto, por exemplo `CRP 04/123456`, e nao como `4ª Região - MG/123456`.
+- [x] Nenhum backend, Prisma/migrations ou package foi alterado.
+
+### Validacao complementar
+
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/psicologos/lista/client.tsx"`
+- `pnpm --dir admin exec eslint "src/app/(admin)/psicologos/lista/client.tsx"`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build` (primeira tentativa paralela com `check` excedeu timeout; reexecutado isoladamente com sucesso)
+- Browser local/headless/CDP com admin temporario real removido ao final:
+  - desktop `1440x1000`: 7 linhas reais, `CRP 04/123456` presente, `4ª Região - MG/123456` ausente, 6 selos Lectum de verificado e 7 icones Lectum de WhatsApp;
+  - mobile base `390x844`: rota carregada autenticada, tabela com linhas reais, `document.documentElement.scrollWidth=390`, sem overflow horizontal de viewport.
