@@ -18,6 +18,7 @@ Padronizar os gráficos temporais do Admin com um helper compartilhado em `admin
 - métricas de estoque/snapshot usam o último valor do mês;
 - rótulos visuais usam data curta ou mês/ano, e o resumo textual preserva o intervalo do bucket.
 - gráficos temporais com eixo vertical devem exibir os valores numéricos do eixo Y.
+- a área reservada ao eixo Y deve ser compacta, mantendo leitura dos números sem reduzir excessivamente a largura útil do gráfico.
 
 A regra foi aplicada aos gráficos temporais de Dashboard, Comunidades, Detalhe de comunidade, Financeiro, Pacientes, Detalhe de paciente, Dashboard de psicólogos e Estatísticas do psicólogo.
 

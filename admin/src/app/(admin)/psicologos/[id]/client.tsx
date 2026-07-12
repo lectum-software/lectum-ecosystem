@@ -2043,7 +2043,7 @@ const StatisticsSeriesChart = ({
   const chartPoints = aggregateStatisticsChartPoints(points);
   const chartWidth = 1120;
   const chartHeight = 280;
-  const padding = { bottom: 28, left: 58, right: 28, top: 28 };
+  const padding = { bottom: 28, left: 42, right: 28, top: 28 };
   const innerWidth = chartWidth - padding.left - padding.right;
   const innerHeight = chartHeight - padding.top - padding.bottom;
   const max = Math.max(
@@ -2093,7 +2093,7 @@ const StatisticsSeriesChart = ({
                   className="fill-muted text-[10px] font-black"
                   dominantBaseline="middle"
                   textAnchor="end"
-                  x={padding.left - 12}
+                  x={padding.left - 8}
                   y={y}
                 >
                   {numberFormatter.format(value)}
