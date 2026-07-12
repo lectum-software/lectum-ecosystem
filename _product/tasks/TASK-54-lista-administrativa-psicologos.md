@@ -218,8 +218,8 @@ Frontend esperado:
 
 - `pnpm --dir admin exec biome check --write "src/app/(admin)/psicologos/lista/client.tsx"`
 - `pnpm --dir admin exec eslint "src/app/(admin)/psicologos/lista/client.tsx"`
-- `pnpm --dir admin check` foi executado e ficou bloqueado por erros TypeScript preexistentes fora deste ajuste em `admin/src/app/(admin)/psicologos/client.tsx`, causados por divergencia de tipos de dashboard de psicologos em arquivos ja modificados no working tree.
-- `pnpm --dir admin build` foi executado e ficou bloqueado pelo mesmo erro TypeScript preexistente em `admin/src/app/(admin)/psicologos/client.tsx`.
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
 - Browser local/headless com admin temporario real removido ao final:
   - desktop `1440x1000`: textos removidos ausentes, busca com largura aproximada `470px`, **Ordenar por** acima do seletor e **Filtros ativos** a direita do seletor;
   - modal de filtros ainda abriu pelo botao **Filtros ativos**;
