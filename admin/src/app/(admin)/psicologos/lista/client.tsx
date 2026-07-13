@@ -559,7 +559,7 @@ const SearchBox = ({ onSearch, value }: { onSearch: (value: string) => void; val
 const badgeClassName = {
   active: "bg-emerald-50 text-emerald-700",
   courtesy: "bg-violet-50 text-violet-700",
-  free: "bg-blue-50 text-blue-700",
+  free: "bg-surface-muted text-muted",
   inactive: "bg-surface-muted text-muted",
   pending: "bg-orange-50 text-orange-700",
   professional: "bg-primary-soft text-primary",
