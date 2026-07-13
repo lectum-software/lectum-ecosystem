@@ -524,6 +524,8 @@ type CommunityChartMetricId = CommunityChartMetric["id"];
 type StatisticsPeriodValue = NonNullable<AdminPsychologistStatisticsQuery["period"]>;
 type StatisticsPeriodPreset = Exclude<StatisticsPeriodValue, "custom">;
 type StatisticsCustomRange = Pick<AdminPsychologistStatisticsQuery, "from" | "to">;
+type PublicationsPeriodValue = NonNullable<AdminPsychologistPublicationsQuery["period"]>;
+type PublicationsCustomRange = Pick<AdminPsychologistPublicationsQuery, "from" | "to">;
 
 const BUSINESS_SERIES_METRIC_KEYS = [
   "comments_received",
@@ -545,6 +547,14 @@ const STATISTICS_PERIOD_OPTIONS: { id: StatisticsPeriodPreset; label: string }[]
   { id: "month", label: "Este mês" },
   { id: "year", label: "Este ano" },
   { id: "all", label: "Todo o período" },
+];
+
+const PUBLICATIONS_PERIOD_OPTIONS: { id: PublicationsPeriodValue; label: string }[] = [
+  { id: "week", label: "Esta semana" },
+  { id: "month", label: "Este mês" },
+  { id: "year", label: "Este ano" },
+  { id: "all", label: "Todo o período" },
+  { id: "custom", label: "Personalizado" },
 ];
 
 const CARD = "rounded-card border border-border/80 bg-surface/95 shadow-admin-soft backdrop-blur";
@@ -3233,27 +3243,74 @@ const PublicationsPagination = ({
   </div>
 );
 
-const PublicationsTab = ({ id }: { id: string }) => {
+const PublicationsTab = ({ createdAt, id }: { createdAt: string; id: string }) => {
   const [q, setQ] = useState("");
   const [community, setCommunity] = useState("all");
   const [type, setType] = useState<AdminPsychologistPublicationsQuery["type"]>("all");
-  const [from, setFrom] = useState("");
-  const [to, setTo] = useState("");
+  const [selectedPeriod, setSelectedPeriod] = useState<PublicationsPeriodValue>("all");
+  const [appliedPeriod, setAppliedPeriod] = useState<PublicationsPeriodValue>("all");
+  const [draftRange, setDraftRange] = useState<PublicationsCustomRange>(() =>
+    getStatisticsRangeForPeriod("week", createdAt),
+  );
+  const [appliedRange, setAppliedRange] = useState<PublicationsCustomRange>(() =>
+    getStatisticsRangeForPeriod("week", createdAt),
+  );
+  const [rangeError, setRangeError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
+  const customRangeIsValid = isValidStatisticsRange(draftRange);
   const queryInput = useMemo<AdminPsychologistPublicationsQuery>(
     () => ({
       community: community === "all" ? undefined : community,
-      from: from && to ? from : undefined,
+      from: appliedPeriod === "custom" ? appliedRange.from : undefined,
       limit: 5,
       page,
+      period: appliedPeriod,
       q: q || undefined,
-      to: from && to ? to : undefined,
+      to: appliedPeriod === "custom" ? appliedRange.to : undefined,
       type,
     }),
-    [community, from, page, q, to, type],
+    [appliedPeriod, appliedRange.from, appliedRange.to, community, page, q, type],
   );
   const query = useAdminPsychologistPublications(id, queryInput);
   const errorMessage = query.error ? resolveApiError(query.error) : null;
+  const handlePeriodChange = (period: PublicationsPeriodValue) => {
+    setSelectedPeriod(period);
+    setRangeError(null);
+    setPage(1);
+
+    if (period === "custom") {
+      if (!customRangeIsValid) {
+        setRangeError(
+          "Informe um período personalizado completo, com data inicial menor ou igual à final.",
+        );
+        return;
+      }
+
+      setAppliedPeriod("custom");
+      setAppliedRange(draftRange);
+      return;
+    }
+
+    setAppliedPeriod(period);
+  };
+  const handleCustomDateChange = (field: keyof PublicationsCustomRange, value: string) => {
+    const nextRange = { ...draftRange, [field]: value };
+
+    setSelectedPeriod("custom");
+    setDraftRange(nextRange);
+    setPage(1);
+
+    if (!isValidStatisticsRange(nextRange)) {
+      setRangeError(
+        "Informe um período personalizado completo, com data inicial menor ou igual à final.",
+      );
+      return;
+    }
+
+    setRangeError(null);
+    setAppliedPeriod("custom");
+    setAppliedRange(nextRange);
+  };
 
   if (query.isLoading) return <EngagementLoadingState rows={2} />;
   if (query.isError && errorMessage) {
@@ -3266,7 +3323,14 @@ const PublicationsTab = ({ id }: { id: string }) => {
   return (
     <div className="space-y-5" data-psychologist-detail-tab="publicacoes">
       <CardShell className="p-4">
-        <div className="grid gap-3 lg:grid-cols-[1.5fr_1fr_1fr_1fr_1fr]">
+        <div
+          className={cn(
+            "grid gap-3",
+            selectedPeriod === "custom"
+              ? "lg:grid-cols-[1.35fr_0.9fr_0.75fr_0.9fr_0.8fr_0.8fr]"
+              : "lg:grid-cols-[1.5fr_1fr_1fr_1fr]",
+          )}
+        >
           <label className="block text-sm font-black text-muted">
             Buscar
             <span className="mt-2 flex h-11 items-center gap-2 rounded-control border border-border bg-surface px-3">
@@ -3319,40 +3383,49 @@ const PublicationsTab = ({ id }: { id: string }) => {
             </select>
           </label>
           <label className="block text-sm font-black text-muted">
-            De
-            <input
+            Período
+            <select
               className="mt-2 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground"
               onChange={(event) => {
-                setFrom(event.target.value);
-                setPage(1);
+                handlePeriodChange(event.target.value as PublicationsPeriodValue);
               }}
-              type="date"
-              value={from}
-            />
+              value={selectedPeriod}
+            >
+              {PUBLICATIONS_PERIOD_OPTIONS.map((option) => (
+                <option key={option.id} value={option.id}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
           </label>
-          <label className="block text-sm font-black text-muted">
-            Até
-            <input
-              className="mt-2 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground"
-              onChange={(event) => {
-                setTo(event.target.value);
-                setPage(1);
-              }}
-              type="date"
-              value={to}
-            />
-          </label>
+          {selectedPeriod === "custom" ? (
+            <>
+              <label className="block text-sm font-black text-muted">
+                De
+                <input
+                  className="mt-2 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground"
+                  max={draftRange.to}
+                  onChange={(event) => handleCustomDateChange("from", event.target.value)}
+                  type="date"
+                  value={draftRange.from ?? ""}
+                />
+              </label>
+              <label className="block text-sm font-black text-muted">
+                Até
+                <input
+                  className="mt-2 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground"
+                  min={draftRange.from}
+                  onChange={(event) => handleCustomDateChange("to", event.target.value)}
+                  type="date"
+                  value={draftRange.to ?? ""}
+                />
+              </label>
+            </>
+          ) : null}
         </div>
-        <div className="mt-3 flex flex-wrap items-center gap-2 text-xs font-bold text-muted">
-          <Badge className="bg-surface-muted text-muted">
-            {publications.active_filters_count} filtros ativos
-          </Badge>
-          <span>
-            Período consultado: {publications.period.from} a {publications.period.to}
-          </span>
-          {from && !to ? <span>Informe a data final para aplicar período.</span> : null}
-          {to && !from ? <span>Informe a data inicial para aplicar período.</span> : null}
-        </div>
+        {selectedPeriod === "custom" && rangeError ? (
+          <p className="mt-3 text-xs font-bold text-danger">{rangeError}</p>
+        ) : null}
       </CardShell>
 
       <CardShell className="overflow-hidden">
@@ -7199,7 +7272,7 @@ const Content = ({
     ) : tab === "estatisticas" ? (
       <StatisticsTab detail={detail} id={id} />
     ) : tab === "publicacoes" ? (
-      <PublicationsTab id={id} />
+      <PublicationsTab createdAt={detail.header.created_at} id={id} />
     ) : tab === "avaliacoes" ? (
       <ReviewsTab id={id} />
     ) : tab === "atividades" ? (

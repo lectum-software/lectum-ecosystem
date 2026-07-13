@@ -1024,6 +1024,7 @@ const normalizePublicationQuery = (query: AdminPsychologistPublicationsQuery = {
   from: query.from,
   limit: Math.min(Math.max(Number(query.limit || 5), 1), 20),
   page: Math.max(Number(query.page || 1), 1),
+  period: query.period,
   q: query.q?.trim() || "",
   to: query.to,
   type: query.type === "post" || query.type === "reply" ? query.type : "all",
@@ -1179,12 +1180,15 @@ export const showAdminPsychologistPublications = async (
   data: IAdminPsychologistPublicationsDTO,
 ): Promise<Resolve> => {
   const query = normalizePublicationQuery(data.q ?? {});
-  const period = resolvePeriod({ from: query.from, to: query.to });
-  if (!period.success) return { status: 400, ...error(period.code, {}) };
-
   const repository = new AdminPsychologistEngagementRepository();
   const profile = await repository.findPsychologist(data.p.id);
   if (!profile) return notFound();
+
+  const period = resolvePeriod(
+    { from: query.from, period: query.period, to: query.to },
+    profile.user.createdAt,
+  );
+  if (!period.success) return { status: 400, ...error(period.code, {}) };
 
   const userId = profile.user.id;
   const [posts, replies] = await Promise.all([
@@ -1315,7 +1319,7 @@ export const showAdminPsychologistPublications = async (
       query.q,
       query.community !== "all" ? query.community : "",
       query.type !== "all" ? query.type : "",
-      query.from && query.to ? "period" : "",
+      (query.period && query.period !== "all") || (query.from && query.to) ? "period" : "",
     ].filter(Boolean).length,
     count,
     data: dataSlice,

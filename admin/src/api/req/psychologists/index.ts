@@ -834,6 +834,7 @@ export type AdminPsychologistPublicationsQuery = {
   from?: string;
   limit?: number;
   page?: number;
+  period?: AdminPsychologistStatisticsPeriodFilter;
   q?: string;
   to?: string;
   type?: "all" | "post" | "reply";
@@ -1133,6 +1134,7 @@ const cleanPublicationsParams = (input: AdminPsychologistPublicationsQuery) => (
   ...(input.from ? { from: input.from } : {}),
   ...(input.limit ? { limit: input.limit } : {}),
   ...(input.page ? { page: input.page } : {}),
+  ...(input.period ? { period: input.period } : {}),
   ...(input.q ? { q: input.q } : {}),
   ...(input.to ? { to: input.to } : {}),
   ...(input.type ? { type: input.type } : {}),
