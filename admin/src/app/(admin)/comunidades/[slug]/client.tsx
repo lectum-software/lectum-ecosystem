@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -6,15 +6,21 @@ import {
   ArrowDown,
   ArrowLeft,
   ArrowUp,
+  BarChart3,
   CalendarDays,
   Edit3,
   Eye,
+  FileText,
+  Flag,
+  History,
   ImagePlus,
   Loader2,
   MessageCircle,
   Plus,
   RefreshCw,
   Save,
+  Search,
+  ShieldCheck,
   Star,
   ToggleLeft,
   ToggleRight,
@@ -23,24 +29,38 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { usePathname, useSearchParams } from "next/navigation";
 import { type ChangeEvent, useEffect, useMemo, useRef, useState } from "react";
 import { FormProvider, useForm, useWatch } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 import {
+  useAdminCommunityActivities,
   useAdminCommunityAvatarUpload,
+  useAdminCommunityContent,
   useAdminCommunityCreateRule,
   useAdminCommunityDeleteRule,
   useAdminCommunityDetail,
+  useAdminCommunityRanking,
+  useAdminCommunityRemoveContent,
+  useAdminCommunityReports,
   useAdminCommunityUpdate,
   useAdminCommunityUpdateRule,
 } from "@/api/callers/communities";
 import { resolveApiError } from "@/api/handle";
 import type {
+  AdminCommunityActivitiesQuery,
+  AdminCommunityActivityItem,
+  AdminCommunityContentItem,
+  AdminCommunityContentQuery,
   AdminCommunityDetail,
   AdminCommunityIdentity,
   AdminCommunityPerformanceMetric,
   AdminCommunityPopularPost,
+  AdminCommunityRankingItem,
+  AdminCommunityRankingQuery,
+  AdminCommunityReportItem,
+  AdminCommunityReportsQuery,
   AdminCommunityRule,
   AdminCommunityRuleInput,
   AdminCommunityTopMentor,
@@ -79,8 +99,34 @@ const ruleFormSchema = z.object({
   title: z.string().trim().min(2, "Informe o título.").max(120, "Use até 120 caracteres."),
 });
 
+const removeContentFormSchema = z.object({
+  confirmation: z
+    .string()
+    .trim()
+    .refine(
+      (value) => value.toUpperCase() === "REMOVER CONTEUDO",
+      "Digite REMOVER CONTEUDO para confirmar.",
+    ),
+  reason: z.string().trim().min(3, "Informe o motivo.").max(500, "Use até 500 caracteres."),
+});
+
 type CommunityFormValues = z.infer<typeof communityFormSchema>;
 type RuleFormValues = z.infer<typeof ruleFormSchema>;
+type RemoveContentFormValues = z.infer<typeof removeContentFormSchema>;
+
+const communityTabs = [
+  { icon: BarChart3, id: "geral", label: "Geral" },
+  { icon: Edit3, id: "dados", label: "Dados" },
+  { icon: FileText, id: "conteudo", label: "Conteúdo" },
+  { icon: Star, id: "ranking", label: "Ranking" },
+  { icon: Flag, id: "denuncias", label: "Denúncias" },
+  { icon: History, id: "atividades", label: "Atividades" },
+] as const;
+
+type CommunityTab = (typeof communityTabs)[number]["id"];
+
+const parseCommunityTab = (value: string | null): CommunityTab =>
+  communityTabs.some((tab) => tab.id === value) ? (value as CommunityTab) : "geral";
 
 const cardClass = "rounded-card border border-border bg-surface shadow-admin-soft";
 
@@ -370,16 +416,8 @@ const PerformanceSection = ({ detail }: { detail: AdminCommunityDetail }) => {
   );
 };
 
-const CommunityHeader = ({
-  community,
-  editing,
-  onEdit,
-}: {
-  community: AdminCommunityIdentity;
-  editing: boolean;
-  onEdit: () => void;
-}) => (
-  <section className={cn(cardClass, "overflow-hidden")}>
+const CommunityHeader = ({ community }: { community: AdminCommunityIdentity }) => (
+  <div className="overflow-hidden">
     <div className="flex flex-col gap-5 p-5 md:flex-row md:items-start md:justify-between md:p-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
         <div
@@ -422,16 +460,15 @@ const CommunityHeader = ({
           </div>
         </div>
       </div>
-      <button
+      <Link
         className="inline-flex h-11 items-center justify-center gap-2 rounded-control border border-border bg-surface px-4 text-sm font-black text-foreground transition hover:border-primary hover:text-primary"
-        onClick={onEdit}
-        type="button"
+        href={`/comunidades/${community.slug}?tab=dados`}
       >
         <Edit3 aria-hidden className="h-4 w-4" />
-        {editing ? "Fechar edição" : "Editar comunidade"}
-      </button>
+        Editar comunidade
+      </Link>
     </div>
-  </section>
+  </div>
 );
 
 const CommunityEditForm = ({
@@ -1033,6 +1070,658 @@ const RulesManager = ({ id, rules }: { id: string; rules: AdminCommunityRule[] }
   );
 };
 
+const CommunityTabs = ({ activeTab, pathname }: { activeTab: CommunityTab; pathname: string }) => (
+  <nav
+    aria-label="Abas da comunidade"
+    className="overflow-x-auto border-t border-border bg-surface px-4 sm:px-6"
+  >
+    <div className="flex min-w-max gap-6">
+      {communityTabs.map((tab) => {
+        const Icon = tab.icon;
+        const active = tab.id === activeTab;
+
+        return (
+          <Link
+            className={cn(
+              "inline-flex items-center gap-2 border-b-4 px-1 py-4 text-sm font-black transition",
+              active
+                ? "border-primary text-primary"
+                : "border-transparent text-foreground hover:text-primary",
+            )}
+            href={`${pathname}?tab=${tab.id}`}
+            key={tab.id}
+          >
+            <Icon aria-hidden className="h-4 w-4" />
+            {tab.label}
+          </Link>
+        );
+      })}
+    </div>
+  </nav>
+);
+
+const PaginationControls = ({
+  page,
+  pages,
+  setPage,
+}: {
+  page: number;
+  pages: number;
+  setPage: (page: number) => void;
+}) => (
+  <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+    <p className="text-xs font-bold text-muted">
+      Página {numberFormatter.format(page)} de {numberFormatter.format(pages)}
+    </p>
+    <div className="flex gap-2">
+      <button
+        className="h-10 rounded-control border border-border bg-surface px-4 text-xs font-black text-foreground disabled:opacity-40"
+        disabled={page <= 1}
+        onClick={() => setPage(page - 1)}
+        type="button"
+      >
+        Anterior
+      </button>
+      <button
+        className="h-10 rounded-control border border-border bg-surface px-4 text-xs font-black text-foreground disabled:opacity-40"
+        disabled={page >= pages}
+        onClick={() => setPage(page + 1)}
+        type="button"
+      >
+        Próxima
+      </button>
+    </div>
+  </div>
+);
+
+const QueryStatus = ({
+  error,
+  loading,
+  onRetry,
+}: {
+  error: unknown;
+  loading: boolean;
+  onRetry: () => void;
+}) => {
+  if (loading) {
+    return (
+      <div className="rounded-2xl bg-surface-muted p-4 text-sm font-bold text-muted">
+        Carregando dados reais...
+      </div>
+    );
+  }
+
+  if (!error) return null;
+
+  return (
+    <div className="flex flex-col gap-3 rounded-2xl border border-red-100 bg-red-50 p-4 text-sm text-danger sm:flex-row sm:items-center sm:justify-between">
+      <span>{resolveApiError(error)}</span>
+      <button className="font-black" onClick={onRetry} type="button">
+        Tentar novamente
+      </button>
+    </div>
+  );
+};
+
+const RemoveContentForm = ({
+  item,
+  onCancel,
+  slug,
+}: {
+  item: AdminCommunityContentItem;
+  onCancel: () => void;
+  slug: string;
+}) => {
+  const mutation = useAdminCommunityRemoveContent(slug);
+  const form = useForm<RemoveContentFormValues>({
+    defaultValues: {
+      confirmation: "",
+      reason: "",
+    },
+    mode: "onSubmit",
+    resolver: zodResolver(removeContentFormSchema),
+  });
+
+  const onSubmit = async (values: RemoveContentFormValues) => {
+    try {
+      await mutation.mutateAsync({
+        input: {
+          confirmation: values.confirmation,
+          reason: values.reason.trim(),
+        },
+        targetId: item.content_id,
+        targetType: item.type,
+      });
+      toast.success("Conteúdo removido com auditoria administrativa.");
+      form.reset();
+      onCancel();
+    } catch (error) {
+      toast.error(resolveApiError(error));
+    }
+  };
+
+  return (
+    <FormProvider {...form}>
+      <form
+        className="mt-3 grid gap-3 rounded-2xl border border-red-100 bg-red-50 p-3"
+        noValidate
+        onSubmit={form.handleSubmit(onSubmit)}
+      >
+        <div>
+          <p className="text-sm font-black text-danger">Remoção administrativa de conteúdo</p>
+          <p className="mt-1 text-xs leading-5 text-danger">
+            A ação remove o {item.type === "post" ? "post" : "comentário"} e registra auditoria
+            real. Quando for post, os comentários vinculados também são encerrados.
+          </p>
+        </div>
+        <TextareaController<RemoveContentFormValues>
+          label="Motivo interno obrigatório"
+          name="reason"
+          required
+          rows={3}
+        />
+        <InputController<RemoveContentFormValues>
+          label="Confirmação forte"
+          name="confirmation"
+          placeholder="REMOVER CONTEUDO"
+          required
+        />
+        <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
+          <button
+            className="h-10 rounded-control border border-border bg-surface px-4 text-xs font-black text-foreground"
+            onClick={onCancel}
+            type="button"
+          >
+            Cancelar
+          </button>
+          <button
+            className="inline-flex h-10 items-center justify-center gap-2 rounded-control bg-danger px-4 text-xs font-black text-white disabled:opacity-70"
+            disabled={mutation.isPending}
+            type="submit"
+          >
+            {mutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+            Remover conteúdo
+          </button>
+        </div>
+      </form>
+    </FormProvider>
+  );
+};
+
+const ContentItemCard = ({
+  item,
+  selected,
+  setSelected,
+  slug,
+}: {
+  item: AdminCommunityContentItem;
+  selected: boolean;
+  setSelected: (item: AdminCommunityContentItem | null) => void;
+  slug: string;
+}) => (
+  <article className="rounded-2xl border border-border bg-surface p-4">
+    <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+      <div>
+        <div className="flex flex-wrap items-center gap-2">
+          <StatusBadge tone={item.status === "published" ? "green" : "muted"}>
+            {item.status === "published" ? "Publicado" : "Removido"}
+          </StatusBadge>
+          <span className="rounded-full bg-surface-muted px-2.5 py-1 text-xs font-black text-muted">
+            {item.type === "post" ? "Post" : "Comentário"}
+          </span>
+          <span className="text-xs font-bold text-muted">{formatDateTime(item.created_at)}</span>
+        </div>
+        <h3 className="mt-3 text-base font-black text-foreground">
+          {item.title || item.parent_post_title || "Comentário sem título"}
+        </h3>
+        <p className="mt-2 text-sm leading-6 text-muted">{item.excerpt || "Sem texto."}</p>
+        <p className="mt-2 text-xs font-bold text-muted">
+          Autor: {item.author.name} ({item.author.role})
+        </p>
+      </div>
+      <div className="grid gap-2 text-xs font-bold text-muted sm:grid-cols-5 lg:min-w-[360px]">
+        <span>{numberFormatter.format(item.metrics.upvotes_count)} upvotes</span>
+        <span>{numberFormatter.format(item.metrics.downvotes_count)} downvotes</span>
+        <span>{numberFormatter.format(item.metrics.comments_count)} comentários</span>
+        <span>{numberFormatter.format(item.metrics.saves_count)} salvos</span>
+        <span>{numberFormatter.format(item.metrics.reports_count)} denúncias</span>
+      </div>
+    </div>
+    <div className="mt-4 flex flex-wrap gap-2">
+      <Link
+        className="inline-flex h-10 items-center justify-center gap-2 rounded-control border border-border px-3 text-xs font-black text-foreground transition hover:border-primary hover:text-primary"
+        href={item.public_url}
+        target="_blank"
+      >
+        <Eye className="h-4 w-4" />
+        Ver no site
+      </Link>
+      {item.status === "published" ? (
+        <button
+          className="inline-flex h-10 items-center justify-center gap-2 rounded-control border border-red-100 px-3 text-xs font-black text-danger transition hover:bg-red-50"
+          onClick={() => setSelected(selected ? null : item)}
+          type="button"
+        >
+          <Trash2 className="h-4 w-4" />
+          {selected ? "Fechar remoção" : "Remover"}
+        </button>
+      ) : null}
+    </div>
+    {selected ? (
+      <RemoveContentForm item={item} onCancel={() => setSelected(null)} slug={slug} />
+    ) : null}
+  </article>
+);
+
+const ContentTab = ({ slug }: { slug: string }) => {
+  const [query, setQuery] = useState<AdminCommunityContentQuery>({
+    limit: 10,
+    page: 1,
+    q: "",
+    status: "all",
+    type: "all",
+  });
+  const [selected, setSelected] = useState<AdminCommunityContentItem | null>(null);
+  const result = useAdminCommunityContent(slug, query);
+
+  const updateQuery = (patch: Partial<AdminCommunityContentQuery>) => {
+    setSelected(null);
+    setQuery((current) => ({ ...current, ...patch, page: patch.page ?? 1 }));
+  };
+
+  return (
+    <section className={cn(cardClass, "p-5")}>
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <h2 className="text-lg font-black text-foreground">Conteúdo da comunidade</h2>
+          <p className="mt-1 text-sm text-muted">
+            Posts e comentários reais, com remoção administrativa auditada e sem mock.
+          </p>
+        </div>
+        <StatusBadge tone="muted">
+          {numberFormatter.format(result.data?.count ?? 0)} itens
+        </StatusBadge>
+      </div>
+      <div className="mt-5 grid gap-3 lg:grid-cols-[1fr_auto_auto]">
+        <label className="relative block">
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
+          <input
+            className="h-11 w-full rounded-control border border-border bg-surface pl-10 pr-3 text-sm font-bold outline-none transition focus:border-primary"
+            onChange={(event) => updateQuery({ q: event.target.value })}
+            placeholder="Buscar por texto, título ou autor"
+            value={query.q ?? ""}
+          />
+        </label>
+        <select
+          className="h-11 rounded-control border border-border bg-surface px-3 text-sm font-bold"
+          onChange={(event) =>
+            updateQuery({ type: event.target.value as AdminCommunityContentQuery["type"] })
+          }
+          value={query.type}
+        >
+          <option value="all">Todos os tipos</option>
+          <option value="posts">Posts</option>
+          <option value="comments">Comentários</option>
+        </select>
+        <select
+          className="h-11 rounded-control border border-border bg-surface px-3 text-sm font-bold"
+          onChange={(event) =>
+            updateQuery({ status: event.target.value as AdminCommunityContentQuery["status"] })
+          }
+          value={query.status}
+        >
+          <option value="all">Todos os status</option>
+          <option value="published">Publicados</option>
+          <option value="removed">Removidos</option>
+        </select>
+      </div>
+      <div className="mt-5 space-y-3">
+        <QueryStatus
+          error={result.error}
+          loading={result.isLoading}
+          onRetry={() => void result.refetch()}
+        />
+        {result.data?.data.length === 0 ? (
+          <p className="rounded-2xl bg-surface-muted p-4 text-sm text-muted">
+            Nenhum conteúdo encontrado com os filtros atuais.
+          </p>
+        ) : null}
+        {result.data?.data.map((item) => (
+          <ContentItemCard
+            item={item}
+            key={`${item.type}-${item.content_id}`}
+            selected={selected?.content_id === item.content_id}
+            setSelected={setSelected}
+            slug={slug}
+          />
+        ))}
+      </div>
+      {result.data ? (
+        <div className="mt-5">
+          <PaginationControls
+            page={result.data.page}
+            pages={result.data.pages}
+            setPage={(page) => updateQuery({ page })}
+          />
+        </div>
+      ) : null}
+    </section>
+  );
+};
+
+const RankingTrend = ({ item }: { item: AdminCommunityRankingItem }) => {
+  if (item.trend === "up") {
+    return (
+      <span className="inline-flex items-center gap-1 text-success">
+        <ArrowUp className="h-4 w-4" /> subiu {item.position_delta}
+      </span>
+    );
+  }
+  if (item.trend === "down") {
+    return (
+      <span className="inline-flex items-center gap-1 text-danger">
+        <ArrowDown className="h-4 w-4" /> caiu {Math.abs(item.position_delta ?? 0)}
+      </span>
+    );
+  }
+  if (item.trend === "new") return <span className="text-primary">novo no ranking</span>;
+
+  return <span className="text-muted">estável</span>;
+};
+
+const RankingTab = ({ slug }: { slug: string }) => {
+  const [query, setQuery] = useState<AdminCommunityRankingQuery>({
+    limit: 10,
+    page: 1,
+    period: "30d",
+    q: "",
+  });
+  const result = useAdminCommunityRanking(slug, query);
+  const updateQuery = (patch: Partial<AdminCommunityRankingQuery>) =>
+    setQuery((current) => ({ ...current, ...patch, page: patch.page ?? 1 }));
+
+  return (
+    <section className={cn(cardClass, "p-5")}>
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <h2 className="text-lg font-black text-foreground">Ranking da comunidade</h2>
+          <p className="mt-1 text-sm text-muted">
+            Todos os psicólogos participantes recebem uma posição, inclusive com score zero.
+          </p>
+        </div>
+        <StatusBadge tone="muted">
+          {numberFormatter.format(result.data?.count ?? 0)} psicólogos
+        </StatusBadge>
+      </div>
+      <label className="relative mt-5 block">
+        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
+        <input
+          className="h-11 w-full rounded-control border border-border bg-surface pl-10 pr-3 text-sm font-bold outline-none transition focus:border-primary"
+          onChange={(event) => updateQuery({ q: event.target.value })}
+          placeholder="Buscar psicólogo participante"
+          value={query.q ?? ""}
+        />
+      </label>
+      <div className="mt-5 space-y-3">
+        <QueryStatus
+          error={result.error}
+          loading={result.isLoading}
+          onRetry={() => void result.refetch()}
+        />
+        {result.data?.data.length === 0 ? (
+          <p className="rounded-2xl bg-surface-muted p-4 text-sm text-muted">
+            Nenhum psicólogo participante encontrado.
+          </p>
+        ) : null}
+        {result.data?.data.map((item) => (
+          <article
+            className="grid gap-4 rounded-2xl border border-border bg-surface p-4 xl:grid-cols-[1fr_auto]"
+            key={item.mentor.id}
+          >
+            <div className="flex gap-3">
+              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-primary-soft text-sm font-black text-primary">
+                #{item.position}
+              </span>
+              <div className="relative grid h-12 w-12 shrink-0 place-items-center overflow-hidden rounded-full bg-surface-muted text-xs font-black text-primary">
+                {item.mentor.avatar ? (
+                  <Image
+                    alt={`Avatar de ${item.mentor.name}`}
+                    className="object-cover"
+                    fill
+                    sizes="48px"
+                    src={item.mentor.avatar}
+                    unoptimized
+                  />
+                ) : (
+                  initials(item.mentor.name)
+                )}
+              </div>
+              <div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <h3 className="font-black text-foreground">{item.mentor.name}</h3>
+                  {item.mentor.verified ? (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-primary-soft px-2 py-1 text-xs font-black text-primary">
+                      <ShieldCheck className="h-3 w-3" />
+                      verificado
+                    </span>
+                  ) : null}
+                </div>
+                <p className="mt-1 text-xs text-muted">{item.mentor.crp || "CRP não informado"}</p>
+                <p className="mt-2 text-xs font-black">
+                  <RankingTrend item={item} />
+                  {item.previous_position ? ` · antes #${item.previous_position}` : ""}
+                </p>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3 text-xs sm:grid-cols-4 xl:min-w-[460px]">
+              <span>
+                <strong className="block text-lg text-foreground">
+                  {numberFormatter.format(item.score)}
+                </strong>
+                Score
+              </span>
+              <span>
+                <strong className="block text-lg text-foreground">
+                  {numberFormatter.format(item.metrics.posts_published)}
+                </strong>
+                Posts
+              </span>
+              <span>
+                <strong className="block text-lg text-foreground">
+                  {numberFormatter.format(item.metrics.replies_published)}
+                </strong>
+                Respostas
+              </span>
+              <span>
+                <strong className="block text-lg text-foreground">
+                  {numberFormatter.format(item.metrics.upvotes_received)}
+                </strong>
+                Upvotes
+              </span>
+            </div>
+          </article>
+        ))}
+      </div>
+      {result.data ? (
+        <div className="mt-5 space-y-3">
+          <PaginationControls
+            page={result.data.page}
+            pages={result.data.pages}
+            setPage={(page) => updateQuery({ page })}
+          />
+          <p className="text-xs leading-5 text-muted">
+            Fórmula:{" "}
+            {String(result.data.formula.description ?? "pontuação de mentoria da comunidade")}
+          </p>
+        </div>
+      ) : null}
+    </section>
+  );
+};
+
+const ReportsTab = ({ slug }: { slug: string }) => {
+  const [query, setQuery] = useState<AdminCommunityReportsQuery>({
+    limit: 10,
+    page: 1,
+    q: "",
+    status: "all",
+    type: "all",
+  });
+  const result = useAdminCommunityReports(slug, query);
+  const updateQuery = (patch: Partial<AdminCommunityReportsQuery>) =>
+    setQuery((current) => ({ ...current, ...patch, page: patch.page ?? 1 }));
+
+  return (
+    <section className={cn(cardClass, "p-5")}>
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <h2 className="text-lg font-black text-foreground">Denúncias da comunidade</h2>
+          <p className="mt-1 text-sm text-muted">
+            Denúncias reais vinculadas a posts e comentários desta comunidade.
+          </p>
+        </div>
+        <StatusBadge tone="muted">
+          {numberFormatter.format(result.data?.count ?? 0)} denúncias
+        </StatusBadge>
+      </div>
+      <div className="mt-5 grid gap-3 lg:grid-cols-[1fr_auto]">
+        <input
+          className="h-11 rounded-control border border-border bg-surface px-3 text-sm font-bold"
+          onChange={(event) => updateQuery({ q: event.target.value })}
+          placeholder="Buscar denúncia"
+          value={query.q ?? ""}
+        />
+        <select
+          className="h-11 rounded-control border border-border bg-surface px-3 text-sm font-bold"
+          onChange={(event) =>
+            updateQuery({ status: event.target.value as AdminCommunityReportsQuery["status"] })
+          }
+          value={query.status}
+        >
+          <option value="all">Todos os status</option>
+          <option value="pendente">Pendentes</option>
+          <option value="em_analise">Em análise</option>
+          <option value="resolvida">Resolvidas</option>
+          <option value="rejeitada">Rejeitadas</option>
+        </select>
+      </div>
+      <div className="mt-5 space-y-3">
+        <QueryStatus
+          error={result.error}
+          loading={result.isLoading}
+          onRetry={() => void result.refetch()}
+        />
+        {result.data?.data.length === 0 ? (
+          <p className="rounded-2xl bg-surface-muted p-4 text-sm text-muted">
+            Nenhuma denúncia encontrada para esta comunidade.
+          </p>
+        ) : null}
+        {result.data?.data.map((report: AdminCommunityReportItem) => (
+          <article className="rounded-2xl border border-border p-4" key={report.id}>
+            <div className="flex flex-wrap items-center gap-2">
+              <StatusBadge tone={report.status === "pendente" ? "green" : "muted"}>
+                {report.status}
+              </StatusBadge>
+              <span className="text-xs font-bold text-muted">
+                {formatDateTime(report.created_at)}
+              </span>
+              <span className="text-xs font-bold text-muted">Reporter: {report.reporter_role}</span>
+            </div>
+            <h3 className="mt-3 font-black text-foreground">{report.reason}</h3>
+            <p className="mt-2 text-sm text-muted">
+              {report.description || report.content.excerpt || "Sem descrição."}
+            </p>
+            <p className="mt-2 text-xs font-bold text-muted">
+              Conteúdo: {report.content.type === "post" ? "post" : "comentário"} ·{" "}
+              {report.content.available ? "disponível" : "removido/indisponível"}
+            </p>
+          </article>
+        ))}
+      </div>
+      {result.data ? (
+        <div className="mt-5">
+          <PaginationControls
+            page={result.data.page}
+            pages={result.data.pages}
+            setPage={(page) => updateQuery({ page })}
+          />
+        </div>
+      ) : null}
+    </section>
+  );
+};
+
+const ActivitiesTab = ({ slug }: { slug: string }) => {
+  const [query, setQuery] = useState<AdminCommunityActivitiesQuery>({
+    limit: 10,
+    page: 1,
+    q: "",
+    type: "all",
+  });
+  const result = useAdminCommunityActivities(slug, query);
+  const updateQuery = (patch: Partial<AdminCommunityActivitiesQuery>) =>
+    setQuery((current) => ({ ...current, ...patch, page: patch.page ?? 1 }));
+
+  return (
+    <section className={cn(cardClass, "p-5")}>
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <h2 className="text-lg font-black text-foreground">Atividades administrativas</h2>
+          <p className="mt-1 text-sm text-muted">
+            Eventos auditados no painel administrativo para esta comunidade.
+          </p>
+        </div>
+        <StatusBadge tone="muted">
+          {numberFormatter.format(result.data?.count ?? 0)} eventos
+        </StatusBadge>
+      </div>
+      <input
+        className="mt-5 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold"
+        onChange={(event) => updateQuery({ q: event.target.value })}
+        placeholder="Buscar atividade"
+        value={query.q ?? ""}
+      />
+      <div className="mt-5 space-y-3">
+        <QueryStatus
+          error={result.error}
+          loading={result.isLoading}
+          onRetry={() => void result.refetch()}
+        />
+        {result.data?.data.length === 0 ? (
+          <p className="rounded-2xl bg-surface-muted p-4 text-sm text-muted">
+            Nenhuma atividade administrativa registrada para esta comunidade.
+          </p>
+        ) : null}
+        {result.data?.data.map((activity: AdminCommunityActivityItem) => (
+          <article className="rounded-2xl border border-border p-4" key={activity.id}>
+            <div className="flex flex-wrap items-center gap-2 text-xs font-bold text-muted">
+              <span>{formatDateTime(activity.created_at)}</span>
+              <span>Área: {activity.area}</span>
+              <span>Origem: Painel administrativo</span>
+            </div>
+            <h3 className="mt-2 font-black text-foreground">{activity.summary}</h3>
+            <p className="mt-1 text-sm text-muted">Ator: {activity.actor}</p>
+            {activity.reason ? (
+              <p className="mt-2 rounded-2xl bg-surface-muted p-3 text-sm text-muted">
+                Motivo: {activity.reason}
+              </p>
+            ) : null}
+          </article>
+        ))}
+      </div>
+      {result.data ? (
+        <div className="mt-5">
+          <PaginationControls
+            page={result.data.page}
+            pages={result.data.pages}
+            setPage={(page) => updateQuery({ page })}
+          />
+        </div>
+      ) : null}
+    </section>
+  );
+};
+
 const LoadingState = () => (
   <div className="space-y-5">
     <div className={cn(cardClass, "h-48 animate-pulse bg-surface-muted")} />
@@ -1069,60 +1758,73 @@ const ErrorState = ({ message, onRetry }: { message: string; onRetry: () => void
   </section>
 );
 
-const DetailContent = ({ detail, slug }: { detail: AdminCommunityDetail; slug: string }) => {
-  const [editing, setEditing] = useState(false);
-
-  return (
-    <div className="space-y-5">
-      <div className="flex flex-wrap items-center justify-between gap-2 text-sm font-bold text-muted">
-        <Link className="inline-flex items-center gap-2 text-primary" href="/comunidades">
-          <ArrowLeft aria-hidden className="h-4 w-4" />
-          Voltar para comunidades
-        </Link>
-        <Link
-          className="inline-flex items-center gap-2 rounded-control border border-border bg-surface px-3 py-2 text-xs font-black text-muted transition hover:border-primary hover:text-primary"
-          href={`/community/${detail.community.slug}`}
-          target="_blank"
-        >
-          <Eye aria-hidden className="h-4 w-4" />
-          Ver no site
-        </Link>
-      </div>
-
-      <CommunityHeader
-        community={detail.community}
-        editing={editing}
-        onEdit={() => setEditing((value) => !value)}
-      />
-
-      {editing ? (
-        <CommunityEditForm
-          community={detail.community}
-          id={slug}
-          onDone={() => setEditing(false)}
-        />
-      ) : null}
-
-      <div className="grid gap-5 2xl:grid-cols-[1.15fr_1fr]">
-        <SummaryCards detail={detail} />
-        <PerformanceSection detail={detail} />
-      </div>
-
-      <div className="grid gap-5 xl:grid-cols-[1fr_0.8fr]">
-        <CommunityInfoCard community={detail.community} />
-        <TopMentorsCard mentors={detail.top_mentors} />
-      </div>
-
-      <div className="grid gap-5 2xl:grid-cols-[1.1fr_0.9fr]">
-        <PopularPostsCard posts={detail.popular_posts} />
-        <RulesManager id={slug} rules={detail.rules} />
-      </div>
+const DetailContent = ({
+  activeTab,
+  detail,
+  pathname,
+  slug,
+}: {
+  activeTab: CommunityTab;
+  detail: AdminCommunityDetail;
+  pathname: string;
+  slug: string;
+}) => (
+  <div className="space-y-5">
+    <div className="flex flex-wrap items-center justify-between gap-2 text-sm font-bold text-muted">
+      <Link className="inline-flex items-center gap-2 text-primary" href="/comunidades">
+        <ArrowLeft aria-hidden className="h-4 w-4" />
+        Voltar para comunidades
+      </Link>
+      <Link
+        className="inline-flex items-center gap-2 rounded-control border border-border bg-surface px-3 py-2 text-xs font-black text-muted transition hover:border-primary hover:text-primary"
+        href={`/community/${detail.community.slug}`}
+        target="_blank"
+      >
+        <Eye aria-hidden className="h-4 w-4" />
+        Ver no site
+      </Link>
     </div>
-  );
-};
+
+    <section className={cn(cardClass, "overflow-hidden")}>
+      <CommunityHeader community={detail.community} />
+      <CommunityTabs activeTab={activeTab} pathname={pathname} />
+    </section>
+
+    {activeTab === "geral" ? (
+      <>
+        <div className="grid gap-5 2xl:grid-cols-[1.15fr_1fr]">
+          <SummaryCards detail={detail} />
+          <PerformanceSection detail={detail} />
+        </div>
+        <div className="grid gap-5 2xl:grid-cols-[1.1fr_0.9fr]">
+          <PopularPostsCard posts={detail.popular_posts} />
+          <TopMentorsCard mentors={detail.top_mentors} />
+        </div>
+      </>
+    ) : null}
+
+    {activeTab === "dados" ? (
+      <div className="grid gap-5 2xl:grid-cols-[1fr_0.9fr]">
+        <div className="space-y-5">
+          <CommunityEditForm community={detail.community} id={slug} onDone={() => undefined} />
+          <RulesManager id={slug} rules={detail.rules} />
+        </div>
+        <CommunityInfoCard community={detail.community} />
+      </div>
+    ) : null}
+
+    {activeTab === "conteudo" ? <ContentTab slug={slug} /> : null}
+    {activeTab === "ranking" ? <RankingTab slug={slug} /> : null}
+    {activeTab === "denuncias" ? <ReportsTab slug={slug} /> : null}
+    {activeTab === "atividades" ? <ActivitiesTab slug={slug} /> : null}
+  </div>
+);
 
 export const AdminCommunityDetailClient = ({ slug }: { slug: string }) => {
   const query = useAdminCommunityDetail(slug);
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const activeTab = parseCommunityTab(searchParams.get("tab"));
   const errorMessage = query.error ? resolveApiError(query.error) : null;
 
   return (
@@ -1131,7 +1833,9 @@ export const AdminCommunityDetailClient = ({ slug }: { slug: string }) => {
       {query.isError && errorMessage ? (
         <ErrorState message={errorMessage} onRetry={() => void query.refetch()} />
       ) : null}
-      {query.data ? <DetailContent detail={query.data} slug={slug} /> : null}
+      {query.data ? (
+        <DetailContent activeTab={activeTab} detail={query.data} pathname={pathname} slug={slug} />
+      ) : null}
     </main>
   );
 };

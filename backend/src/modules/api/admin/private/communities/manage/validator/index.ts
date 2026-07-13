@@ -16,6 +16,49 @@ const ruleParam = {
   max: 120,
 } satisfies NonNullable<IValidatorRequest["params"]>[number];
 
+const targetTypeParam = {
+  key: "targetType",
+  coerse: "string",
+  method: "string",
+  min: 3,
+  max: 10,
+} satisfies NonNullable<IValidatorRequest["params"]>[number];
+
+const targetIdParam = {
+  key: "targetId",
+  coerse: "string",
+  method: "string",
+  min: 1,
+  max: 120,
+} satisfies NonNullable<IValidatorRequest["params"]>[number];
+
+const paginationQuery = [
+  {
+    key: "page",
+    coerse: "number",
+    method: "numeric",
+    int: true,
+    min: 1,
+    optional: true,
+  },
+  {
+    key: "limit",
+    coerse: "number",
+    method: "numeric",
+    int: true,
+    min: 1,
+    max: 50,
+    optional: true,
+  },
+  {
+    key: "q",
+    coerse: "string",
+    method: "string",
+    max: 120,
+    optional: true,
+  },
+] satisfies NonNullable<IValidatorRequest["query"]>;
+
 export const showSchema: IValidatorRequest = {
   params: [communityParam],
 };
@@ -129,11 +172,106 @@ export const deleteRuleSchema: IValidatorRequest = {
   params: [communityParam, ruleParam],
 };
 
+export const contentSchema: IValidatorRequest = {
+  params: [communityParam],
+  query: [
+    ...paginationQuery,
+    {
+      key: "type",
+      coerse: "string",
+      method: "string",
+      max: 20,
+      optional: true,
+    },
+    {
+      key: "status",
+      coerse: "string",
+      method: "string",
+      max: 20,
+      optional: true,
+    },
+  ],
+};
+
+export const rankingSchema: IValidatorRequest = {
+  params: [communityParam],
+  query: [
+    ...paginationQuery,
+    {
+      key: "period",
+      coerse: "string",
+      method: "string",
+      max: 10,
+      optional: true,
+    },
+  ],
+};
+
+export const reportsSchema: IValidatorRequest = {
+  params: [communityParam],
+  query: [
+    ...paginationQuery,
+    {
+      key: "type",
+      coerse: "string",
+      method: "string",
+      max: 20,
+      optional: true,
+    },
+    {
+      key: "status",
+      coerse: "string",
+      method: "string",
+      max: 30,
+      optional: true,
+    },
+  ],
+};
+
+export const activitiesSchema: IValidatorRequest = {
+  params: [communityParam],
+  query: [
+    ...paginationQuery,
+    {
+      key: "type",
+      coerse: "string",
+      method: "string",
+      max: 80,
+      optional: true,
+    },
+  ],
+};
+
+export const removeContentSchema: IValidatorRequest = {
+  params: [communityParam, targetTypeParam, targetIdParam],
+  body: [
+    {
+      key: "reason",
+      coerse: "string",
+      method: "string",
+      min: 3,
+      max: 500,
+    },
+    {
+      key: "confirmation",
+      coerse: "string",
+      method: "string",
+      min: 3,
+      max: 80,
+    },
+  ],
+};
+
 export const showValidator = validator(showSchema);
 export const updateValidator = validator(updateSchema);
 export const avatarValidator = validator(showSchema);
 export const ruleValidator = validator(ruleSchema);
 export const updateRuleValidator = validator(updateRuleSchema);
 export const deleteRuleValidator = validator(deleteRuleSchema);
+export const contentValidator = validator(contentSchema);
+export const rankingValidator = validator(rankingSchema);
+export const reportsValidator = validator(reportsSchema);
+export const activitiesValidator = validator(activitiesSchema);
+export const removeContentValidator = validator(removeContentSchema);
 
 export default showValidator;

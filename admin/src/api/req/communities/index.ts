@@ -217,6 +217,192 @@ export type AdminCommunityDetail = {
   top_mentors: AdminCommunityTopMentor[];
 };
 
+export type AdminCommunityPaginationQuery = {
+  limit?: number;
+  page?: number;
+  q?: string;
+};
+
+export type AdminCommunityContentQuery = AdminCommunityPaginationQuery & {
+  status?: "all" | "published" | "removed";
+  type?: "all" | "comments" | "posts";
+};
+
+export type AdminCommunityContentItem = {
+  author: {
+    avatar: string | null;
+    id: string;
+    name: string;
+    role: string;
+  };
+  content_id: string;
+  created_at: string;
+  deleted_at: string | null;
+  excerpt: string;
+  metrics: {
+    comments_count: number;
+    downvotes_count: number;
+    reports_count: number;
+    saves_count: number;
+    upvotes_count: number;
+  };
+  parent_post_title: string | null;
+  post_id: string;
+  public_url: string;
+  status: "published" | "removed";
+  title: string | null;
+  type: "comment" | "post";
+};
+
+export type AdminCommunityContent = {
+  community: Pick<AdminCommunityIdentity, "id" | "name" | "slug">;
+  count: number;
+  data: AdminCommunityContentItem[];
+  page: number;
+  pages: number;
+  per_page: number;
+  source: "community_post+post_reply";
+};
+
+export type AdminCommunityRemoveContentInput = {
+  confirmation: string;
+  reason: string;
+};
+
+export type AdminCommunityRemoveContentResult = {
+  affected_reports_count: number;
+  affected_replies_count: number;
+  content_id: string;
+  post_id: string;
+  type: "comment" | "post";
+};
+
+export type AdminCommunityRankingQuery = AdminCommunityPaginationQuery & {
+  period?: "30d";
+};
+
+export type AdminCommunityRankingItem = {
+  membership_created_at: string;
+  mentor: {
+    avatar: string | null;
+    crp: string | null;
+    headline: string | null;
+    id: string;
+    name: string;
+    profile_url: string;
+    rating_avg: number;
+    rating_count: number;
+    verified: boolean;
+  };
+  metrics: {
+    active_days: number;
+    comments_received: number;
+    community_whatsapp_clicks: number;
+    downvotes_received: number;
+    participation_events: number;
+    posts_published: number;
+    removed_posts: number;
+    removed_posts_penalty: number;
+    replies_published: number;
+    saves_received: number;
+    shares_received: number;
+    upvotes_received: number;
+  };
+  position: number;
+  position_delta: number | null;
+  previous_position: number | null;
+  score: number;
+  score_breakdown: {
+    active_days_points: number;
+    comments_points: number;
+    community_whatsapp_points: number;
+    downvotes_penalty: number;
+    posts_points: number;
+    removed_posts_penalty: number;
+    replies_points: number;
+    saves_points: number;
+    shares_points: number;
+    upvotes_points: number;
+  };
+  trend: "down" | "flat" | "new" | "up";
+};
+
+export type AdminCommunityRanking = {
+  community: Pick<AdminCommunityIdentity, "id" | "name" | "slug">;
+  count: number;
+  data: AdminCommunityRankingItem[];
+  formula: Record<string, unknown>;
+  page: number;
+  pages: number;
+  per_page: number;
+  period: {
+    current_from: string;
+    current_to: string;
+    days: 30;
+    label: "Últimos 30 dias";
+    previous_from: string;
+    previous_to: string;
+  };
+  source: "community_member+community_post+post_reply+post_vote+post_save+post_share";
+};
+
+export type AdminCommunityReportsQuery = AdminCommunityPaginationQuery & {
+  status?: "all" | "em_analise" | "pendente" | "rejeitada" | "resolvida";
+  type?: "all" | "comment" | "post" | "reply";
+};
+
+export type AdminCommunityReportItem = {
+  content: {
+    available: boolean;
+    excerpt: string;
+    id: string;
+    post_id: string;
+    title: string | null;
+    type: "comment" | "post";
+  };
+  created_at: string;
+  description: string | null;
+  id: string;
+  reason: string;
+  reporter_role: string;
+  status: string;
+};
+
+export type AdminCommunityReports = {
+  community: Pick<AdminCommunityIdentity, "id" | "name" | "slug">;
+  count: number;
+  data: AdminCommunityReportItem[];
+  page: number;
+  pages: number;
+  per_page: number;
+  source: "post_report";
+};
+
+export type AdminCommunityActivitiesQuery = AdminCommunityPaginationQuery & {
+  type?: string;
+};
+
+export type AdminCommunityActivityItem = {
+  action: string;
+  actor: string;
+  area: string;
+  created_at: string;
+  id: string;
+  reason: string | null;
+  source: string;
+  summary: string;
+};
+
+export type AdminCommunityActivities = {
+  community: Pick<AdminCommunityIdentity, "id" | "name" | "slug">;
+  count: number;
+  data: AdminCommunityActivityItem[];
+  page: number;
+  pages: number;
+  per_page: number;
+  source: "admin_activity_log";
+};
+
 export type AdminCommunityUpdateInput = {
   description?: string | null;
   name: string;
@@ -249,6 +435,17 @@ const cleanParams = (input: CommunitiesDashboardQuery) => ({
   ...(input.to ? { to: input.to } : {}),
 });
 
+const cleanPaginationParams = <T extends AdminCommunityPaginationQuery>(input: T = {} as T) => ({
+  ...(input.limit ? { limit: input.limit } : {}),
+  ...(input.page ? { page: input.page } : {}),
+  ...(input.q ? { q: input.q } : {}),
+  ...Object.fromEntries(
+    Object.entries(input as Record<string, unknown>).filter(
+      ([key, value]) => !["limit", "page", "q"].includes(key) && value !== undefined,
+    ),
+  ),
+});
+
 export const getAdminCommunitiesDashboard = async (input: CommunitiesDashboardQuery) => {
   const response = await adminApi.get<ApiResponse<AdminCommunitiesDashboard>>(
     "/api/admin/private/communities/dashboard",
@@ -263,6 +460,69 @@ export const getAdminCommunitiesDashboard = async (input: CommunitiesDashboardQu
 export const getAdminCommunityDetail = async (id: string) => {
   const response = await adminApi.get<ApiResponse<AdminCommunityDetail>>(
     `/api/admin/private/communities/${encodeURIComponent(id)}`,
+  );
+
+  return resolveApiData(response.data);
+};
+
+export const getAdminCommunityContent = async (id: string, input: AdminCommunityContentQuery) => {
+  const response = await adminApi.get<ApiResponse<AdminCommunityContent>>(
+    `/api/admin/private/communities/${encodeURIComponent(id)}/content`,
+    {
+      params: cleanPaginationParams(input),
+    },
+  );
+
+  return resolveApiData(response.data);
+};
+
+export const removeAdminCommunityContent = async (
+  id: string,
+  targetType: "comment" | "post",
+  targetId: string,
+  input: AdminCommunityRemoveContentInput,
+) => {
+  const response = await adminApi.post<ApiResponse<AdminCommunityRemoveContentResult>>(
+    `/api/admin/private/communities/${encodeURIComponent(id)}/content/${encodeURIComponent(
+      targetType,
+    )}/${encodeURIComponent(targetId)}/remove`,
+    input,
+  );
+
+  return resolveApiData(response.data);
+};
+
+export const getAdminCommunityRanking = async (id: string, input: AdminCommunityRankingQuery) => {
+  const response = await adminApi.get<ApiResponse<AdminCommunityRanking>>(
+    `/api/admin/private/communities/${encodeURIComponent(id)}/ranking`,
+    {
+      params: cleanPaginationParams(input),
+    },
+  );
+
+  return resolveApiData(response.data);
+};
+
+export const getAdminCommunityReports = async (id: string, input: AdminCommunityReportsQuery) => {
+  const response = await adminApi.get<ApiResponse<AdminCommunityReports>>(
+    `/api/admin/private/communities/${encodeURIComponent(id)}/reports`,
+    {
+      params: cleanPaginationParams(input),
+    },
+  );
+
+  return resolveApiData(response.data);
+};
+
+export const getAdminCommunityActivities = async (
+  id: string,
+  input: AdminCommunityActivitiesQuery,
+) => {
+  const response = await adminApi.get<ApiResponse<AdminCommunityActivities>>(
+    `/api/admin/private/communities/${encodeURIComponent(id)}/activities`,
+    {
+      params: cleanPaginationParams(input),
+    },
   );
 
   return resolveApiData(response.data);

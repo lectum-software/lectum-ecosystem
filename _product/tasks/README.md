@@ -17,7 +17,7 @@ Cada task é auto-suficiente e deve ser executada isoladamente por uma IA usando
 - A referência visual ativa é Builder Quick Copy + imagens exportadas em `_product/proto`.
 - O Builder está autenticado no espaço `Lectum` e o Quick Copy foi validado via `builder.io code`.
 - Existem 62 JPEGs exportados em `_product/proto`: 61 telas de produto e 1 ícone isolado.
-- A fila operacional agora possui 76 tasks: `TASK-00` a `TASK-70`, incluindo complementos `TASK-18A`, `TASK-29A`/`TASK-29B` e `TASK-31A` a `TASK-31C`.
+- A fila operacional agora possui 77 tasks: `TASK-00` a `TASK-71`, incluindo complementos `TASK-18A`, `TASK-29A`/`TASK-29B` e `TASK-31A` a `TASK-31C`.
 
 ## Inventário visual ativo
 
@@ -151,6 +151,7 @@ ou cortesia manual.
 | 68 | [TASK-68 - Conta e acesso do psicólogo no Admin](TASK-68-conta-acesso-psicologo-admin.md) | Completed | 05, 06, 30, 45, 46, 55, 58, 59, 67 |
 | 69 | [TASK-69 - Nome profissional separado para WhatsApp do psicólogo](TASK-69-nome-profissional-whatsapp-psicologo.md) | Completed | 09, 16, 18A, 30 |
 | 70 | [TASK-70 - Resolução administrativa de denúncias recebidas](TASK-70-resolucao-denuncias-recebidas-admin.md) | Completed | 23, 24, 26, 45, 46, 55, 58, 59, 67 |
+| 71 | [TASK-71 - Abas administrativas da comunidade, conteúdo e ranking completo](TASK-71-admin-comunidade-abas-conteudo-ranking.md) | Completed | 23, 24, 26, 27, 45, 46, 51, 52, 67, 70 |
 
 ## Ordem operacional recomendada sem bloqueios
 
@@ -193,6 +194,7 @@ Esta secao e a fila pratica para continuar o MVP sem bater nas tasks bloqueadas 
 33. [TASK-66 - Verificação manual de CRP e origem genérica de verificação profissional](TASK-66-verificacao-manual-crp-admin.md) foi adicionada em 2026-07-11 para permitir aprovação/rejeição manual auditada quando a API automática estiver instável, mantendo `cfp_verified_at` como evidência automática e `crp_status="aprovado"` como aprovação canônica de produto.
 34. [TASK-67 - Edição administrativa auditada de dados pessoais e profissionais do psicólogo](TASK-67-edicao-admin-dados-pessoais-profissionais-psicologo.md) foi adicionada em 2026-07-11 para permitir correções administrativas em Dados pessoais (exceto e-mail) e Dados profissionais, com auditoria real e eventos visíveis na aba Atividades.
 35. [TASK-68 - Conta e acesso do psicólogo no Admin](TASK-68-conta-acesso-psicologo-admin.md) foi adicionada em 2026-07-11 para centralizar suporte de conta após Denúncias, incluindo alteração administrativa de e-mail, reenvio de confirmação, link de redefinição e senha temporária auditada para contas com login por e-mail e senha.
+36. [TASK-71 - Abas administrativas da comunidade, conteúdo e ranking completo](TASK-71-admin-comunidade-abas-conteudo-ranking.md) foi adicionada em 2026-07-13 para organizar o detalhe de comunidade em abas contextuais, permitir moderação auditada de posts/comentários e listar ranking completo de psicólogos participantes.
 
 ### 1A. Trilha Admin planejada
 
@@ -222,6 +224,7 @@ Execute uma por vez, sempre validando, marcando critérios, ADR e commit/push:
 22. [TASK-66 - Verificação manual de CRP e origem genérica de verificação profissional](TASK-66-verificacao-manual-crp-admin.md)
 23. [TASK-67 - Edição administrativa auditada de dados pessoais e profissionais do psicólogo](TASK-67-edicao-admin-dados-pessoais-profissionais-psicologo.md)
 24. [TASK-68 - Conta e acesso do psicólogo no Admin](TASK-68-conta-acesso-psicologo-admin.md)
+25. [TASK-71 - Abas administrativas da comunidade, conteúdo e ranking completo](TASK-71-admin-comunidade-abas-conteudo-ranking.md)
 
 ### 1. Trilha executavel agora apos TASK-10
 

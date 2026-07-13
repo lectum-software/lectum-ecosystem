@@ -1,26 +1,54 @@
 ﻿import type { Resolve } from "@/helpers/return";
 import { error, msg } from "@/helpers/translate";
+import { buildProfessionalFullDisplayName } from "@/utils/professional-name";
 import type {
+  AdminCommunityActivitiesDTO,
+  AdminCommunityActivityItemDTO,
+  AdminCommunityContentDTO,
+  AdminCommunityContentItemDTO,
   AdminCommunityDetailDTO,
   AdminCommunityIdentity,
   AdminCommunityPerformanceMetricDTO,
   AdminCommunityPerformancePointDTO,
+  AdminCommunityRankingDTO,
+  AdminCommunityRankingItemDTO,
+  AdminCommunityRemoveContentDTO,
+  AdminCommunityReportItemDTO,
+  AdminCommunityReportsDTO,
   AdminCommunityRuleBody,
   AdminCommunityRuleDTO,
   AdminCommunityUpdateBody,
+  IAdminCommunityActivitiesDTO,
   IAdminCommunityAvatarDTO,
+  IAdminCommunityContentDTO,
+  IAdminCommunityRankingDTO,
+  IAdminCommunityRemoveContentDTO,
+  IAdminCommunityReportsDTO,
   IAdminCommunityRuleDTO,
   IAdminCommunityShowDTO,
   IAdminCommunityUpdateDTO,
 } from "../DTOs/IAdminCommunityManageDTO";
 import {
+  type AdminCommunityActivityRecord,
+  type AdminCommunityContentPostRecord,
+  type AdminCommunityContentReplyRecord,
   AdminCommunityManageRepository,
+  type AdminCommunityMemberRecord,
+  type AdminCommunityMentorMetrics,
   type AdminCommunityRecord,
+  type AdminCommunityReportRecord,
   type AdminCommunityRuleRecord,
+  adminCommunityMentorFormula,
+  adminCommunityMentorScore,
+  adminCommunityMentorScoreBreakdown,
 } from "../repositories/AdminCommunityManageRepository";
 
 const DETAIL_PERIOD_DAYS = 30;
 const HEX_COLOR = /^#[0-9A-Fa-f]{6}$/;
+const DEFAULT_PAGE = 1;
+const DEFAULT_PAGE_SIZE = 10;
+const MAX_PAGE_SIZE = 50;
+const REMOVE_CONTENT_CONFIRMATION = "REMOVER CONTEUDO";
 
 const addDays = (date: Date, days: number) => {
   const next = new Date(date);
@@ -45,6 +73,35 @@ const dateKey = (date: Date) =>
   `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
 
 const roundPercent = (value: number) => Math.round(value * 10) / 10;
+const stripHtml = (value: string | null | undefined) =>
+  (value ?? "")
+    .replace(/<[^>]*>/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+const excerpt = (value: string | null | undefined, size = 180) => {
+  const clean = stripHtml(value);
+  if (clean.length <= size) return clean;
+
+  return `${clean.slice(0, size - 1).trim()}…`;
+};
+const normalizeSearch = (value?: string | null) => value?.trim().toLowerCase() ?? "";
+const normalizePage = (page?: number) => Math.max(DEFAULT_PAGE, Number(page || DEFAULT_PAGE));
+const normalizeLimit = (limit?: number) =>
+  Math.min(MAX_PAGE_SIZE, Math.max(1, Number(limit || DEFAULT_PAGE_SIZE)));
+const paginate = <T>(items: T[], page: number, limit: number) => {
+  const count = items.length;
+  const pages = Math.max(1, Math.ceil(count / limit));
+  const safePage = Math.min(page, pages);
+  const start = (safePage - 1) * limit;
+
+  return {
+    count,
+    data: items.slice(start, start + limit),
+    page: safePage,
+    pages,
+    per_page: limit,
+  };
+};
 const percentageChange = (current: number, previous: number) => {
   if (previous === 0) return current === 0 ? 0 : null;
 
@@ -99,6 +156,274 @@ const mapRule = (rule: AdminCommunityRuleRecord): AdminCommunityRuleDTO => ({
   title: rule.title,
   updated_at: rule.updatedAt,
 });
+
+const communitySummary = (community: AdminCommunityRecord) => ({
+  id: community.id,
+  name: community.name,
+  slug: community.slug,
+});
+
+const contentIsRemoved = (
+  item: AdminCommunityContentPostRecord | AdminCommunityContentReplyRecord,
+) => {
+  if ("status" in item) return item.deleted || item.status === "removido";
+
+  return item.deleted || item.post.deleted || item.post.status === "removido";
+};
+
+const mapPostContent = (
+  community: AdminCommunityRecord,
+  post: AdminCommunityContentPostRecord,
+): AdminCommunityContentItemDTO => ({
+  author: {
+    avatar: post.author.avatar,
+    id: post.author.id,
+    name: post.anonymous ? "Paciente anônimo" : post.author.name,
+    role: post.anonymous ? "anonymous" : post.author.role,
+  },
+  content_id: post.id,
+  created_at: post.createdAt,
+  deleted_at: post.deletedAt,
+  excerpt: excerpt(post.content),
+  metrics: {
+    comments_count: post.replies_count,
+    downvotes_count: post.downvotes_count,
+    reports_count: post.reports.length,
+    saves_count: post.saves_count,
+    upvotes_count: post.upvotes_count,
+  },
+  parent_post_title: null,
+  post_id: post.id,
+  public_url: `/community/${community.slug}/post/${post.id}`,
+  status: contentIsRemoved(post) ? "removed" : "published",
+  title: post.title,
+  type: "post",
+});
+
+const mapReplyContent = (
+  community: AdminCommunityRecord,
+  reply: AdminCommunityContentReplyRecord,
+): AdminCommunityContentItemDTO => ({
+  author: {
+    avatar: reply.author.avatar,
+    id: reply.author.id,
+    name: reply.author.name,
+    role: reply.author.role,
+  },
+  content_id: reply.id,
+  created_at: reply.createdAt,
+  deleted_at: reply.deletedAt,
+  excerpt: excerpt(reply.content),
+  metrics: {
+    comments_count: 0,
+    downvotes_count: reply.downvotes_count,
+    reports_count: reply.reports.length,
+    saves_count: reply.saves.length,
+    upvotes_count: reply.upvotes_count,
+  },
+  parent_post_title: reply.post.title,
+  post_id: reply.post_id,
+  public_url: `/community/${community.slug}/post/${reply.post_id}`,
+  status: contentIsRemoved(reply) ? "removed" : "published",
+  title: reply.title,
+  type: "comment",
+});
+
+const contentMatchesSearch = (item: AdminCommunityContentItemDTO, search: string) => {
+  if (!search) return true;
+
+  return [item.title, item.excerpt, item.parent_post_title, item.author.name]
+    .filter(Boolean)
+    .some((value) => value?.toLowerCase().includes(search));
+};
+
+const contentSafeBefore = (item: AdminCommunityContentItemDTO) => ({
+  author_role: item.author.role,
+  content_id: item.content_id,
+  content_type: item.type,
+  excerpt: item.excerpt,
+  post_id: item.post_id,
+  reports_count: item.metrics.reports_count,
+  title: item.title,
+});
+
+const mapReport = (report: AdminCommunityReportRecord): AdminCommunityReportItemDTO => {
+  const isReply = Boolean(report.reply_id && report.reply);
+  const target = isReply ? report.reply : report.post;
+  const postId = isReply ? report.reply?.post_id : report.post_id;
+  const available = Boolean(
+    isReply
+      ? report.reply &&
+          !report.reply.deleted &&
+          !report.reply.post.deleted &&
+          report.reply.post.status === "publicado"
+      : report.post && !report.post.deleted && report.post.status === "publicado",
+  );
+
+  return {
+    content: {
+      available,
+      excerpt: excerpt(target?.content),
+      id: target?.id ?? report.target_id,
+      post_id: postId ?? report.post_id,
+      title: target?.title ?? null,
+      type: isReply ? "comment" : "post",
+    },
+    created_at: report.createdAt,
+    description: report.description,
+    id: report.id,
+    reason: report.reason,
+    reporter_role: report.reporter.role,
+    status: report.status,
+  };
+};
+
+const reportMatchesSearch = (item: AdminCommunityReportItemDTO, search: string) => {
+  if (!search) return true;
+
+  return [item.reason, item.description, item.content.title, item.content.excerpt]
+    .filter(Boolean)
+    .some((value) => value?.toLowerCase().includes(search));
+};
+
+const activitySummary = (activity: AdminCommunityActivityRecord) => {
+  if (activity.action === "community_content_removed") return "Conteúdo removido";
+  if (activity.action.includes("rule")) return "Regra da comunidade alterada";
+  if (activity.action.includes("avatar")) return "Avatar da comunidade alterado";
+  if (activity.action.includes("update")) return "Dados da comunidade alterados";
+
+  return activity.action.replace(/_/g, " ");
+};
+
+const mapActivity = (activity: AdminCommunityActivityRecord): AdminCommunityActivityItemDTO => ({
+  action: activity.action,
+  actor: activity.admin.name || activity.admin.email,
+  area: activity.area || "Comunidade",
+  created_at: activity.createdAt,
+  id: activity.id,
+  reason: activity.reason,
+  source: activity.source,
+  summary: activitySummary(activity),
+});
+
+const activityMatchesSearch = (item: AdminCommunityActivityItemDTO, search: string) => {
+  if (!search) return true;
+
+  return [item.action, item.summary, item.reason, item.actor, item.area]
+    .filter(Boolean)
+    .some((value) => value?.toLowerCase().includes(search));
+};
+
+const mentorDisplayName = (member: AdminCommunityMemberRecord) =>
+  buildProfessionalFullDisplayName({
+    fallbackName: member.user.name,
+    firstName: member.user.psychologist_profile?.professional_first_name,
+    lastName: member.user.psychologist_profile?.professional_last_name,
+  });
+
+const verifiedMentor = (member: AdminCommunityMemberRecord) => {
+  const profile = member.user.psychologist_profile;
+
+  return Boolean(
+    profile?.crp_status === "aprovado" || profile?.cfp_verified_at || profile?.subscriptions.length,
+  );
+};
+
+const compareRanking = (
+  left: {
+    member: AdminCommunityMemberRecord;
+    metrics: AdminCommunityMentorMetrics;
+    score: number;
+  },
+  right: {
+    member: AdminCommunityMemberRecord;
+    metrics: AdminCommunityMentorMetrics;
+    score: number;
+  },
+) => {
+  const scoreDiff = right.score - left.score;
+  if (scoreDiff !== 0) return scoreDiff;
+
+  const upvoteDiff = right.metrics.upvotes_received - left.metrics.upvotes_received;
+  if (upvoteDiff !== 0) return upvoteDiff;
+
+  const commentDiff = right.metrics.comments_received - left.metrics.comments_received;
+  if (commentDiff !== 0) return commentDiff;
+
+  const saveDiff = right.metrics.saves_received - left.metrics.saves_received;
+  if (saveDiff !== 0) return saveDiff;
+
+  const activeDayDiff = right.metrics.active_days - left.metrics.active_days;
+  if (activeDayDiff !== 0) return activeDayDiff;
+
+  const replyDiff = right.metrics.replies_published - left.metrics.replies_published;
+  if (replyDiff !== 0) return replyDiff;
+
+  const postDiff = right.metrics.posts_published - left.metrics.posts_published;
+  if (postDiff !== 0) return postDiff;
+
+  const downvoteDiff = left.metrics.downvotes_received - right.metrics.downvotes_received;
+  if (downvoteDiff !== 0) return downvoteDiff;
+
+  const removedPostDiff = left.metrics.removed_posts - right.metrics.removed_posts;
+  if (removedPostDiff !== 0) return removedPostDiff;
+
+  const nameDiff = mentorDisplayName(left.member).localeCompare(
+    mentorDisplayName(right.member),
+    "pt-BR",
+  );
+  if (nameDiff !== 0) return nameDiff;
+
+  return left.member.user.id.localeCompare(right.member.user.id);
+};
+
+const rankMembers = (
+  members: AdminCommunityMemberRecord[],
+  metricsByMentorId: Map<string, AdminCommunityMentorMetrics>,
+) =>
+  members
+    .map((member) => {
+      const metrics = metricsByMentorId.get(member.user.id) ?? {
+        active_days: 0,
+        comments_received: 0,
+        community_whatsapp_clicks: 0,
+        downvotes_received: 0,
+        posts_published: 0,
+        removed_posts: 0,
+        removed_posts_penalty: 0,
+        replies_published: 0,
+        saves_received: 0,
+        shares_received: 0,
+        upvotes_received: 0,
+      };
+
+      return {
+        member,
+        metrics,
+        score: adminCommunityMentorScore(metrics),
+      };
+    })
+    .sort(compareRanking)
+    .map((item, index) => ({
+      ...item,
+      position: index + 1,
+    }));
+
+const buildRankingPeriod = () => {
+  const today = endOfDay(new Date());
+  const currentStart = startOfDay(addDays(today, -(DETAIL_PERIOD_DAYS - 1)));
+  const previousEnd = endOfDay(addDays(currentStart, -1));
+  const previousStart = startOfDay(addDays(currentStart, -DETAIL_PERIOD_DAYS));
+
+  return {
+    current_from: currentStart,
+    current_to: today,
+    days: DETAIL_PERIOD_DAYS as 30,
+    label: "Últimos 30 dias" as const,
+    previous_from: previousStart,
+    previous_to: previousEnd,
+  };
+};
 
 const normalizeNullableText = (value: string | null | undefined) => {
   const normalized = value?.trim();
@@ -457,5 +782,301 @@ export const deleteRule = async (data: IAdminCommunityShowDTO): Promise<Resolve>
     status: 200,
     ...msg("deleted", { model: "community_rule" }),
     data: mapRule(rule as AdminCommunityRuleRecord),
+  };
+};
+
+export const listContent = async (data: IAdminCommunityContentDTO): Promise<Resolve> => {
+  const repository = new AdminCommunityManageRepository();
+  const community = await findCommunityOrNotFound(repository, data.p.id);
+  if (!community) return notFound();
+
+  const queryType = data.q.type ?? "all";
+  const queryStatus = data.q.status ?? "all";
+  const search = normalizeSearch(data.q.q);
+  const page = normalizePage(data.q.page);
+  const limit = normalizeLimit(data.q.limit);
+  const { posts, replies } = await repository.listContent(community.id);
+  const postItems =
+    queryType === "all" || queryType === "posts"
+      ? posts.map((post) => mapPostContent(community, post))
+      : [];
+  const replyItems =
+    queryType === "all" || queryType === "comments"
+      ? replies.map((reply) => mapReplyContent(community, reply))
+      : [];
+  const items = [...postItems, ...replyItems]
+    .filter((item) => queryStatus === "all" || item.status === queryStatus)
+    .filter((item) => contentMatchesSearch(item, search))
+    .sort((left, right) => right.created_at.getTime() - left.created_at.getTime());
+  const result = paginate(items, page, limit);
+  const payload: AdminCommunityContentDTO = {
+    community: communitySummary(community),
+    count: result.count,
+    data: result.data,
+    page: result.page,
+    pages: result.pages,
+    per_page: result.per_page,
+    source: "community_post+post_reply",
+  };
+
+  return {
+    status: 200,
+    ...msg("index", {}),
+    data: payload,
+  };
+};
+
+export const removeContent = async (data: IAdminCommunityRemoveContentDTO): Promise<Resolve> => {
+  const admin = data.admin ?? data.auth;
+  if (!admin?.id) {
+    return {
+      status: 401,
+      ...error("token_not_authorized", {}),
+    };
+  }
+
+  const repository = new AdminCommunityManageRepository();
+  const community = await findCommunityOrNotFound(repository, data.p.id);
+  if (!community) return notFound();
+
+  if (data.b.confirmation.trim().toUpperCase() !== REMOVE_CONTENT_CONFIRMATION) {
+    return {
+      status: 400,
+      ...error("admin_community_content_remove_confirmation_invalid", {}),
+    };
+  }
+
+  const targetType = data.p.targetType === "reply" ? "comment" : data.p.targetType;
+  if (targetType !== "post" && targetType !== "comment") {
+    return {
+      status: 400,
+      ...error("admin_community_content_target_invalid", {}),
+    };
+  }
+
+  if (targetType === "post") {
+    const post = await repository.findPostContent(community.id, data.p.targetId ?? "");
+    if (!post) {
+      return {
+        status: 404,
+        ...error("admin_community_content_target_invalid", {}),
+      };
+    }
+    const item = mapPostContent(community, post);
+    if (item.status === "removed") {
+      return {
+        status: 409,
+        ...error("admin_community_content_remove_unavailable", {}),
+      };
+    }
+
+    const removed = await repository.removePostContent({
+      adminId: admin.id,
+      communityId: community.id,
+      post,
+      reason: data.b.reason,
+      safeBefore: contentSafeBefore(item),
+    });
+    const payload: AdminCommunityRemoveContentDTO = {
+      affected_reports_count: removed.affectedReportsCount,
+      affected_replies_count: removed.affectedRepliesCount,
+      content_id: post.id,
+      post_id: post.id,
+      type: "post",
+    };
+
+    return {
+      status: 200,
+      ...msg("admin_community_content_removed", {}),
+      data: payload,
+    };
+  }
+
+  const reply = await repository.findReplyContent(community.id, data.p.targetId ?? "");
+  if (!reply) {
+    return {
+      status: 404,
+      ...error("admin_community_content_target_invalid", {}),
+    };
+  }
+  const item = mapReplyContent(community, reply);
+  if (item.status === "removed") {
+    return {
+      status: 409,
+      ...error("admin_community_content_remove_unavailable", {}),
+    };
+  }
+
+  const removed = await repository.removeReplyContent({
+    adminId: admin.id,
+    communityId: community.id,
+    reason: data.b.reason,
+    reply,
+    safeBefore: contentSafeBefore(item),
+  });
+  const payload: AdminCommunityRemoveContentDTO = {
+    affected_reports_count: removed.affectedReportsCount,
+    affected_replies_count: removed.affectedRepliesCount,
+    content_id: reply.id,
+    post_id: reply.post_id,
+    type: "comment",
+  };
+
+  return {
+    status: 200,
+    ...msg("admin_community_content_removed", {}),
+    data: payload,
+  };
+};
+
+export const listRanking = async (data: IAdminCommunityRankingDTO): Promise<Resolve> => {
+  const repository = new AdminCommunityManageRepository();
+  const community = await findCommunityOrNotFound(repository, data.p.id);
+  if (!community) return notFound();
+
+  const page = normalizePage(data.q.page);
+  const limit = normalizeLimit(data.q.limit);
+  const search = normalizeSearch(data.q.q);
+  const period = buildRankingPeriod();
+  const members = await repository.listPsychologistMembers(community.id);
+  const mentorIds = members.map((member) => member.user.id);
+  const [currentMetrics, previousMetrics] = await Promise.all([
+    repository.buildMentorMetrics(community.id, mentorIds, period.current_from, period.current_to),
+    repository.buildMentorMetrics(
+      community.id,
+      mentorIds,
+      period.previous_from,
+      period.previous_to,
+    ),
+  ]);
+  const currentRanking = rankMembers(members, currentMetrics);
+  const previousByMentorId = new Map(
+    rankMembers(members, previousMetrics).map((item) => [item.member.user.id, item.position]),
+  );
+  const filteredRanking = currentRanking.filter((item) =>
+    search ? mentorDisplayName(item.member).toLowerCase().includes(search) : true,
+  );
+  const paginated = paginate(filteredRanking, page, limit);
+  const payload: AdminCommunityRankingDTO = {
+    community: communitySummary(community),
+    count: paginated.count,
+    data: paginated.data.map((item): AdminCommunityRankingItemDTO => {
+      const joinedAfterPreviousPeriod = item.member.createdAt > period.previous_to;
+      const previousPosition = joinedAfterPreviousPeriod
+        ? null
+        : (previousByMentorId.get(item.member.user.id) ?? null);
+      const positionDelta = previousPosition ? previousPosition - item.position : null;
+      const trend =
+        positionDelta === null
+          ? "new"
+          : positionDelta > 0
+            ? "up"
+            : positionDelta < 0
+              ? "down"
+              : "flat";
+      const profile = item.member.user.psychologist_profile;
+      const name = mentorDisplayName(item.member);
+
+      return {
+        membership_created_at: item.member.createdAt,
+        mentor: {
+          avatar: item.member.user.avatar,
+          crp: profile?.crp ?? null,
+          headline: profile?.headline ?? null,
+          id: item.member.user.id,
+          name,
+          profile_url: `/psychologists/${item.member.user.id}`,
+          rating_avg: Number(profile?.rating_avg ?? 0),
+          rating_count: Number(profile?.rating_count ?? 0),
+          verified: verifiedMentor(item.member),
+        },
+        metrics: {
+          ...item.metrics,
+          participation_events: item.metrics.posts_published + item.metrics.replies_published,
+        },
+        position: item.position,
+        position_delta: positionDelta,
+        previous_position: previousPosition,
+        score: item.score,
+        score_breakdown: adminCommunityMentorScoreBreakdown(item.metrics),
+        trend,
+      };
+    }),
+    formula: adminCommunityMentorFormula(),
+    page: paginated.page,
+    pages: paginated.pages,
+    per_page: paginated.per_page,
+    period,
+    source: "community_member+community_post+post_reply+post_vote+post_save+post_share",
+  };
+
+  return {
+    status: 200,
+    ...msg("index", {}),
+    data: payload,
+  };
+};
+
+export const listReports = async (data: IAdminCommunityReportsDTO): Promise<Resolve> => {
+  const repository = new AdminCommunityManageRepository();
+  const community = await findCommunityOrNotFound(repository, data.p.id);
+  if (!community) return notFound();
+
+  const page = normalizePage(data.q.page);
+  const limit = normalizeLimit(data.q.limit);
+  const search = normalizeSearch(data.q.q);
+  const status = data.q.status ?? "all";
+  const type = data.q.type ?? "all";
+  const reports = (await repository.listReports(community.id))
+    .map(mapReport)
+    .filter((item) => status === "all" || item.status === status)
+    .filter((item) => type === "all" || item.content.type === (type === "reply" ? "comment" : type))
+    .filter((item) => reportMatchesSearch(item, search));
+  const paginated = paginate(reports, page, limit);
+  const payload: AdminCommunityReportsDTO = {
+    community: communitySummary(community),
+    count: paginated.count,
+    data: paginated.data,
+    page: paginated.page,
+    pages: paginated.pages,
+    per_page: paginated.per_page,
+    source: "post_report",
+  };
+
+  return {
+    status: 200,
+    ...msg("index", {}),
+    data: payload,
+  };
+};
+
+export const listActivities = async (data: IAdminCommunityActivitiesDTO): Promise<Resolve> => {
+  const repository = new AdminCommunityManageRepository();
+  const community = await findCommunityOrNotFound(repository, data.p.id);
+  if (!community) return notFound();
+
+  const page = normalizePage(data.q.page);
+  const limit = normalizeLimit(data.q.limit);
+  const search = normalizeSearch(data.q.q);
+  const type = data.q.type ?? "all";
+  const activities = (await repository.listActivities(community.id))
+    .map(mapActivity)
+    .filter((item) => type === "all" || item.action === type)
+    .filter((item) => activityMatchesSearch(item, search));
+  const paginated = paginate(activities, page, limit);
+  const payload: AdminCommunityActivitiesDTO = {
+    community: communitySummary(community),
+    count: paginated.count,
+    data: paginated.data,
+    page: paginated.page,
+    pages: paginated.pages,
+    per_page: paginated.per_page,
+    source: "admin_activity_log",
+  };
+
+  return {
+    status: 200,
+    ...msg("index", {}),
+    data: payload,
   };
 };

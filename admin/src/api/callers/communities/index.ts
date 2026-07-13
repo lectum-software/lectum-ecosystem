@@ -1,13 +1,23 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { adminCommunitiesKeys } from "@/api/cache/keys";
 import {
+  type AdminCommunityActivitiesQuery,
+  type AdminCommunityContentQuery,
+  type AdminCommunityRankingQuery,
+  type AdminCommunityRemoveContentInput,
+  type AdminCommunityReportsQuery,
   type AdminCommunityRuleInput,
   type AdminCommunityUpdateInput,
   type CommunitiesDashboardQuery,
   createAdminCommunityRule,
   deleteAdminCommunityRule,
   getAdminCommunitiesDashboard,
+  getAdminCommunityActivities,
+  getAdminCommunityContent,
   getAdminCommunityDetail,
+  getAdminCommunityRanking,
+  getAdminCommunityReports,
+  removeAdminCommunityContent,
   updateAdminCommunity,
   updateAdminCommunityRule,
   uploadAdminCommunityAvatar,
@@ -28,6 +38,50 @@ export const useAdminCommunityDetail = (id: string, options: { enabled?: boolean
     enabled: (options.enabled ?? true) && Boolean(id),
     queryFn: () => getAdminCommunityDetail(id),
     queryKey: adminCommunitiesKeys.detail(id),
+  });
+
+export const useAdminCommunityContent = (
+  id: string,
+  input: AdminCommunityContentQuery,
+  options: { enabled?: boolean } = {},
+) =>
+  useQuery({
+    enabled: (options.enabled ?? true) && Boolean(id),
+    queryFn: () => getAdminCommunityContent(id, input),
+    queryKey: adminCommunitiesKeys.content(id, input),
+  });
+
+export const useAdminCommunityRanking = (
+  id: string,
+  input: AdminCommunityRankingQuery,
+  options: { enabled?: boolean } = {},
+) =>
+  useQuery({
+    enabled: (options.enabled ?? true) && Boolean(id),
+    queryFn: () => getAdminCommunityRanking(id, input),
+    queryKey: adminCommunitiesKeys.ranking(id, input),
+  });
+
+export const useAdminCommunityReports = (
+  id: string,
+  input: AdminCommunityReportsQuery,
+  options: { enabled?: boolean } = {},
+) =>
+  useQuery({
+    enabled: (options.enabled ?? true) && Boolean(id),
+    queryFn: () => getAdminCommunityReports(id, input),
+    queryKey: adminCommunitiesKeys.reports(id, input),
+  });
+
+export const useAdminCommunityActivities = (
+  id: string,
+  input: AdminCommunityActivitiesQuery,
+  options: { enabled?: boolean } = {},
+) =>
+  useQuery({
+    enabled: (options.enabled ?? true) && Boolean(id),
+    queryFn: () => getAdminCommunityActivities(id, input),
+    queryKey: adminCommunitiesKeys.activities(id, input),
   });
 
 const invalidateCommunity = async (queryClient: ReturnType<typeof useQueryClient>, id: string) => {
@@ -80,6 +134,23 @@ export const useAdminCommunityDeleteRule = (id: string) => {
 
   return useMutation({
     mutationFn: (ruleId: string) => deleteAdminCommunityRule(id, ruleId),
+    onSuccess: () => invalidateCommunity(queryClient, id),
+  });
+};
+
+export const useAdminCommunityRemoveContent = (id: string) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      input,
+      targetId,
+      targetType,
+    }: {
+      input: AdminCommunityRemoveContentInput;
+      targetId: string;
+      targetType: "comment" | "post";
+    }) => removeAdminCommunityContent(id, targetType, targetId, input),
     onSuccess: () => invalidateCommunity(queryClient, id),
   });
 };

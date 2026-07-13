@@ -154,7 +154,10 @@
     "admin_psychologist_account_temporary_password_confirmation_invalid": "Digite ALTERAR SENHA para confirmar a senha tempor?ria.",
     "admin_psychologist_report_dismiss_confirmation_invalid": "Digite DENUNCIA IMPROCEDENTE para resolver a denúncia como improcedente.",
     "admin_psychologist_report_invalid_status": "Esta denúncia não está em um status que permita esta ação.",
-    "admin_psychologist_report_uphold_confirmation_invalid": "Digite DENUNCIA PROCEDENTE para resolver a denúncia como procedente."
+    "admin_psychologist_report_uphold_confirmation_invalid": "Digite DENUNCIA PROCEDENTE para resolver a denúncia como procedente.",
+    "admin_community_content_remove_confirmation_invalid": "Digite REMOVER CONTEUDO para confirmar a remoção administrativa do conteúdo.",
+    "admin_community_content_remove_unavailable": "Este conteúdo já está removido ou indisponível.",
+    "admin_community_content_target_invalid": "Conteúdo da comunidade não encontrado para moderação."
   },
   "message": {
     "store": "dado criado",
@@ -249,7 +252,8 @@
     "admin_psychologist_report_content_removed": "Denúncia resolvida como procedente e conteúdo removido.",
     "admin_psychologist_report_dismissed": "Denúncia resolvida como improcedente.",
     "admin_psychologist_report_review_started": "Denúncia marcada como em análise.",
-    "admin_psychologist_report_upheld": "Denúncia resolvida como procedente."
+    "admin_psychologist_report_upheld": "Denúncia resolvida como procedente.",
+    "admin_community_content_removed": "Conteúdo removido com auditoria administrativa."
   },
   "gender": {
     "o": "o"

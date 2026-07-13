@@ -1,4 +1,10 @@
-import type { CommunitiesDashboardQuery } from "@/api/req/communities";
+import type {
+  AdminCommunityActivitiesQuery,
+  AdminCommunityContentQuery,
+  AdminCommunityRankingQuery,
+  AdminCommunityReportsQuery,
+  CommunitiesDashboardQuery,
+} from "@/api/req/communities";
 import type { DashboardSummaryQuery } from "@/api/req/dashboard";
 import type { FinanceDashboardQuery } from "@/api/req/finance";
 import type {
@@ -124,6 +130,36 @@ const normalizeNotificationLogs = (input: AdminNotificationLogsQuery) => ({
   trigger_key: input.trigger_key || "",
 });
 
+const normalizeCommunityContent = (input: AdminCommunityContentQuery) => ({
+  limit: input.limit || 10,
+  page: input.page || 1,
+  q: input.q || "",
+  status: input.status || "all",
+  type: input.type || "all",
+});
+
+const normalizeCommunityRanking = (input: AdminCommunityRankingQuery) => ({
+  limit: input.limit || 10,
+  page: input.page || 1,
+  period: input.period || "30d",
+  q: input.q || "",
+});
+
+const normalizeCommunityReports = (input: AdminCommunityReportsQuery) => ({
+  limit: input.limit || 10,
+  page: input.page || 1,
+  q: input.q || "",
+  status: input.status || "all",
+  type: input.type || "all",
+});
+
+const normalizeCommunityActivities = (input: AdminCommunityActivitiesQuery) => ({
+  limit: input.limit || 10,
+  page: input.page || 1,
+  q: input.q || "",
+  type: input.type || "all",
+});
+
 export const adminDashboardKeys = {
   all: ["admin", "dashboard"] as const,
   summary: (input: DashboardSummaryQuery) =>
@@ -138,9 +174,17 @@ export const adminTrafficKeys = {
 
 export const adminCommunitiesKeys = {
   all: ["admin", "communities"] as const,
+  activities: (id: string, input: AdminCommunityActivitiesQuery) =>
+    [...adminCommunitiesKeys.all, "activities", id, normalizeCommunityActivities(input)] as const,
+  content: (id: string, input: AdminCommunityContentQuery) =>
+    [...adminCommunitiesKeys.all, "content", id, normalizeCommunityContent(input)] as const,
   dashboard: (input: CommunitiesDashboardQuery) =>
     [...adminCommunitiesKeys.all, "dashboard", normalizeRange(input)] as const,
   detail: (id: string) => [...adminCommunitiesKeys.all, "detail", id] as const,
+  ranking: (id: string, input: AdminCommunityRankingQuery) =>
+    [...adminCommunitiesKeys.all, "ranking", id, normalizeCommunityRanking(input)] as const,
+  reports: (id: string, input: AdminCommunityReportsQuery) =>
+    [...adminCommunitiesKeys.all, "reports", id, normalizeCommunityReports(input)] as const,
   rules: (id: string) => [...adminCommunitiesKeys.all, "rules", id] as const,
 };
 

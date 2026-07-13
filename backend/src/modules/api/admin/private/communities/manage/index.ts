@@ -2,18 +2,28 @@ import { Router } from "express";
 import multer from "@/config/multer";
 import adminAuth from "../../../middlewares/_auth";
 import {
+  activities,
   authorizeAvatarUpload,
   avatar,
+  content,
   createRule,
   deleteRule,
+  ranking,
+  removeContent,
+  reports,
   rules,
   show,
   update,
   updateRule,
 } from "./use-cases/controller";
 import {
+  activitiesValidator,
   avatarValidator,
+  contentValidator,
   deleteRuleValidator,
+  rankingValidator,
+  removeContentValidator,
+  reportsValidator,
   ruleValidator,
   showValidator,
   updateRuleValidator,
@@ -25,6 +35,11 @@ const routes = Router();
 routes.use(adminAuth);
 routes.get("/:id", showValidator, show);
 routes.put("/:id", updateValidator, update);
+routes.get("/:id/content", contentValidator, content);
+routes.post("/:id/content/:targetType/:targetId/remove", removeContentValidator, removeContent);
+routes.get("/:id/ranking", rankingValidator, ranking);
+routes.get("/:id/reports", reportsValidator, reports);
+routes.get("/:id/activities", activitiesValidator, activities);
 routes.post(
   "/:id/avatar",
   avatarValidator,

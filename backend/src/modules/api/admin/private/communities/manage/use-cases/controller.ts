@@ -3,7 +3,12 @@ import { error500, send } from "@/helpers/return";
 import {
   createRule as createRuleService,
   deleteRule as deleteRuleService,
+  listActivities as listActivitiesService,
+  listContent as listContentService,
+  listRanking as listRankingService,
+  listReports as listReportsService,
   listRules as listRulesService,
+  removeContent as removeContentService,
   showCommunity as showCommunityService,
   updateCommunity as updateCommunityService,
   updateRule as updateRuleService,
@@ -105,5 +110,65 @@ export const deleteRule = async (req: Request, res: Response) => {
     return send(res, resolve);
   } catch (err) {
     return error500(res, "admin_community_rule_delete", err);
+  }
+};
+
+export const content = async (req: Request, res: Response) => {
+  try {
+    const resolve = await listContentService(
+      req as unknown as Parameters<typeof listContentService>[0],
+    );
+
+    return send(res, resolve);
+  } catch (err) {
+    return error500(res, "admin_community_content", err);
+  }
+};
+
+export const removeContent = async (req: Request, res: Response) => {
+  try {
+    const resolve = await removeContentService(
+      req as unknown as Parameters<typeof removeContentService>[0],
+    );
+
+    return send(res, resolve);
+  } catch (err) {
+    return error500(res, "admin_community_content_remove", err);
+  }
+};
+
+export const ranking = async (req: Request, res: Response) => {
+  try {
+    const resolve = await listRankingService(
+      req as unknown as Parameters<typeof listRankingService>[0],
+    );
+
+    return send(res, resolve);
+  } catch (err) {
+    return error500(res, "admin_community_ranking", err);
+  }
+};
+
+export const reports = async (req: Request, res: Response) => {
+  try {
+    const resolve = await listReportsService(
+      req as unknown as Parameters<typeof listReportsService>[0],
+    );
+
+    return send(res, resolve);
+  } catch (err) {
+    return error500(res, "admin_community_reports", err);
+  }
+};
+
+export const activities = async (req: Request, res: Response) => {
+  try {
+    const resolve = await listActivitiesService(
+      req as unknown as Parameters<typeof listActivitiesService>[0],
+    );
+
+    return send(res, resolve);
+  } catch (err) {
+    return error500(res, "admin_community_activities", err);
   }
 };
