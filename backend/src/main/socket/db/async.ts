@@ -22,16 +22,24 @@ export const emitError = async (
 };
 
 export const emitAsync = async (id: string, device_id?: string) => {
-  const _BACKGROUND = new Repository();
-  const _AUTH = new LoginRepository();
+  try {
+    const _BACKGROUND = new Repository();
+    const _AUTH = new LoginRepository();
 
-  const list = await _BACKGROUND.list({ id });
+    const list = await _BACKGROUND.list({ id });
 
-  const update = list?.find((action) => action.type === "HIDRATE");
+    const update = list?.find((action) => action.type === "HIDRATE");
 
-  if (update && device_id) {
-    const data = await _AUTH.hidrate({ id }, device_id);
-    emit_hidrate(data, device_id);
+    if (update && device_id) {
+      const data = await _AUTH.hidrate({ id }, device_id);
+      await emit_hidrate(data, device_id);
+    }
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "erro desconhecido";
+    console.warn(
+      "[SOCKET] Sincroniza\u00e7\u00e3o ass\u00edncrona de hidrata\u00e7\u00e3o falhou",
+      message,
+    );
   }
 };
 

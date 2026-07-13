@@ -134,3 +134,4 @@ Formato recomendado:
 - [ADR-0256 - Cortesia ativa pula fluxo de assinatura e endereço](0256-cortesia-pula-fluxo-assinatura-endereco.md) - Accepted
 - [ADR-0257 - Nome profissional separado do psicólogo para WhatsApp](0257-nome-profissional-psicologo-whatsapp.md) - Accepted
 - [ADR-0262 - Resolução administrativa auditada de denúncias recebidas](0262-resolucao-admin-denuncias-recebidas.md) - Accepted
+- [ADR-0265 - Hidratação assíncrona de socket como best-effort](0265-socket-hidratacao-assincrona-best-effort.md) - Accepted
