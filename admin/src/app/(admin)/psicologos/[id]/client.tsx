@@ -1545,11 +1545,26 @@ const ErrorState = ({ message, onRetry }: { message: string; onRetry: () => void
   </CardShell>
 );
 
-const DetailHeader = ({ detail, tab }: { detail: AdminPsychologistDetail; tab: ActiveTab }) => {
+const DetailHeader = ({
+  detail,
+  id,
+  tab,
+}: {
+  detail: AdminPsychologistDetail;
+  id: string;
+  tab: ActiveTab;
+}) => {
   const pathname = usePathname();
   const header = detail.header;
   const profileStatus = header.active ? PROFILE_STATUS_COPY.active : PROFILE_STATUS_COPY.inactive;
   const showProfileRegistryAlert = needsManualRegistryReview(detail);
+  const reportsAlertInput = useMemo<AdminPsychologistReportsQuery>(
+    () => ({ limit: 1, page: 1, status: "pending", type: "all" }),
+    [],
+  );
+  const reportsAlertQuery = useAdminPsychologistReports(id, reportsAlertInput);
+  const pendingReportsCount =
+    reportsAlertQuery.data?.cards.find((card) => card.id === "pending")?.value ?? 0;
 
   return (
     <CardShell className="overflow-hidden">
@@ -1606,6 +1621,7 @@ const DetailHeader = ({ detail, tab }: { detail: AdminPsychologistDetail; tab: A
           {TABS.map((item) => {
             const active = item.id === tab;
             const showRegistryAlert = item.id === "perfil" && showProfileRegistryAlert;
+            const showReportsAlert = item.id === "denuncias" && pendingReportsCount > 0;
             const className = cn(
               "relative inline-flex min-h-12 items-center justify-center gap-2 rounded-full px-3.5 text-sm font-black transition",
               active ? "text-primary" : "text-foreground hover:text-primary",
@@ -1630,6 +1646,12 @@ const DetailHeader = ({ detail, tab }: { detail: AdminPsychologistDetail; tab: A
                       className="h-4 w-4 text-danger"
                     />
                   ) : null}
+                  {showReportsAlert ? (
+                    <AlertTriangle
+                      aria-label="Há denúncias pendentes"
+                      className="h-4 w-4 text-danger"
+                    />
+                  ) : null}
                   <span className="ml-2 rounded-full bg-surface-muted px-2 py-0.5 text-[10px] font-black uppercase tracking-wide text-muted">
                     Em breve
                   </span>
@@ -1648,6 +1670,12 @@ const DetailHeader = ({ detail, tab }: { detail: AdminPsychologistDetail; tab: A
                 {showRegistryAlert ? (
                   <AlertTriangle
                     aria-label="Registro profissional pendente de verificação manual"
+                    className="h-4 w-4 text-danger"
+                  />
+                ) : null}
+                {showReportsAlert ? (
+                  <AlertTriangle
+                    aria-label="Há denúncias pendentes"
                     className="h-4 w-4 text-danger"
                   />
                 ) : null}
@@ -4186,7 +4214,6 @@ const ReportsTab = ({ id }: { id: string }) => {
                   <p className="mt-5 text-4xl font-black text-foreground">
                     {numberFormatter.format(card.value)}
                   </p>
-                  <p className="mt-2 text-xs font-bold text-muted">Fonte: {card.source}</p>
                 </div>
                 <IconCircle icon={Icon} />
               </div>
@@ -7319,7 +7346,7 @@ const Content = ({
   tab: ActiveTab;
 }) => (
   <main className="space-y-7" data-psychologist-detail-id={id}>
-    <DetailHeader detail={detail} tab={tab} />
+    <DetailHeader detail={detail} id={id} tab={tab} />
 
     {tab === "perfil" ? (
       <ProfileTab detail={detail} id={id} />
