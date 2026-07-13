@@ -95,6 +95,7 @@ export type AdminPsychologistsListItem = {
   crp: string | null;
   detail_url: string;
   discount_first_session: boolean;
+  email: string;
   experience_years: number | null;
   favorites_count: number;
   gender: string | null;

@@ -48,6 +48,7 @@ const profileBaseSelect = {
     select: {
       avatar: true,
       createdAt: true,
+      email: true,
       id: true,
       name: true,
       psychologist_approaches: {

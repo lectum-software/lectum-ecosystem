@@ -426,7 +426,7 @@ const matchesSearch = (profile: AdminPsychologistListProfileRecord, search?: str
 
   const crpDigits = (profile.crp ?? "").replace(/\D/g, "");
   const searchDigits = search?.replace(/\D/g, "") ?? "";
-  const haystack = [profile.user.name, profile.crp]
+  const haystack = [profile.user.name, profile.user.email, profile.crp]
     .map((value) => normalizeSearchText(value))
     .join(" ");
 
@@ -497,6 +497,7 @@ const buildItem = (
     crp: profile.crp,
     detail_url: `/psicologos/${profile.user.id}`,
     discount_first_session: profile.discount_first_session,
+    email: profile.user.email,
     experience_years: crpExperienceYears(profile.crp_registration_date),
     favorites_count: params.favoriteCounts.get(profile.user.id) ?? 0,
     gender: profile.gender,

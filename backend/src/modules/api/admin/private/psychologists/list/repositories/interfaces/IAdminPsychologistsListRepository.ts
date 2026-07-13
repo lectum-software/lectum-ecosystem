@@ -58,6 +58,7 @@ export type AdminPsychologistListProfileRecord = {
   user: {
     avatar: string | null;
     createdAt: Date;
+    email: string;
     id: string;
     name: string;
     psychologist_approaches: Array<{

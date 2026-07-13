@@ -15,7 +15,6 @@ import {
   type LucideIcon,
   RefreshCw,
   Search,
-  Star,
   Stethoscope,
   UsersRound,
   X,
@@ -53,6 +52,12 @@ const SORT_OPTIONS: Array<{ id: PsychologistsListSort; label: string }> = [
 ];
 
 const numberFormatter = new Intl.NumberFormat("pt-BR");
+const registrationDateFormatter = new Intl.DateTimeFormat("pt-BR", {
+  day: "2-digit",
+  month: "2-digit",
+  timeZone: "America/Sao_Paulo",
+  year: "numeric",
+});
 const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
 const publicFrontendUrl = process.env.NEXT_PUBLIC_FRONTEND_URL || "http://localhost:3000";
 const listSorts = new Set(SORT_OPTIONS.map((item) => item.id));
@@ -235,29 +240,11 @@ const initials = (name: string) =>
     .join("")
     .toUpperCase() || "PS";
 
-const onlyDigits = (value?: string | null) => String(value ?? "").replace(/\D/g, "");
+const formatRegistrationDate = (value: string) => {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "—";
 
-const stripCrpPrefix = (value: string) => value.replace(/^(?:CRP\s*[:\-–—]?\s*)+/i, "").trim();
-
-const formatCrpNumber = (value?: string | null) => {
-  const normalized = stripCrpPrefix(value?.trim() ?? "");
-  if (!normalized) return null;
-
-  const [rawRegion, ...rawNumberParts] = normalized.split("/");
-  const regionDigits = onlyDigits(rawRegion).slice(0, 2);
-  const numberDigits = onlyDigits(rawNumberParts.join("/")).slice(0, 6);
-
-  if (regionDigits && numberDigits) {
-    return `${regionDigits.padStart(2, "0")}/${numberDigits.padStart(6, "0")}`;
-  }
-
-  return normalized;
-};
-
-const formatCrpLabel = (value?: string | null) => {
-  const crp = formatCrpNumber(value);
-
-  return crp ? `CRP ${crp}` : "CRP não informado";
+  return registrationDateFormatter.format(date);
 };
 
 const Avatar = ({ name, src }: { name: string; src: string | null }) => {
@@ -553,7 +540,7 @@ const SearchBox = ({ onSearch, value }: { onSearch: (value: string) => void; val
 
   return (
     <label className="relative block w-full min-w-0">
-      <span className="sr-only">Buscar por nome ou CRP</span>
+      <span className="sr-only">Buscar por nome, e-mail ou CRP</span>
       <Search
         aria-hidden
         className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-subtle"
@@ -561,7 +548,7 @@ const SearchBox = ({ onSearch, value }: { onSearch: (value: string) => void; val
       <input
         className="h-12 w-full rounded-full border border-border bg-surface py-2 pl-10 pr-4 text-sm font-bold text-foreground shadow-control outline-none transition placeholder:text-subtle focus:border-primary focus:ring-2 focus:ring-primary/15"
         onChange={(event) => setDraft(event.target.value)}
-        placeholder="Nome ou CRP do psicólogo..."
+        placeholder="Nome, e-mail ou CRP..."
         type="search"
         value={draft}
       />
@@ -630,19 +617,6 @@ const resolveProfileLabel = (item: PsychologistsListItem) =>
     ? { label: "Ativo", tone: "active" as const }
     : { label: "Inativo", tone: "inactive" as const };
 
-const RatingCell = ({ item }: { item: PsychologistsListItem }) => (
-  <span className="inline-flex items-center gap-1 whitespace-nowrap font-semibold text-foreground">
-    <Star aria-hidden className="h-4 w-4 fill-warning text-warning" />
-    {item.rating_avg.toLocaleString("pt-BR", {
-      maximumFractionDigits: 1,
-      minimumFractionDigits: 1,
-    })}
-    <span className="text-xs font-bold text-muted">
-      ({numberFormatter.format(item.rating_count)})
-    </span>
-  </span>
-);
-
 const RowActions = ({ item }: { item: PsychologistsListItem }) => (
   <div className="flex shrink-0 items-center justify-center gap-1.5">
     <Link
@@ -692,8 +666,8 @@ const PsychologistCard = ({ item }: { item: PsychologistsListItem }) => {
                 />
               ) : null}
             </p>
-            <p className="mt-0.5 truncate text-xs font-medium text-muted">
-              {formatCrpLabel(item.crp)}
+            <p className="mt-0.5 truncate text-xs font-medium text-muted" title={item.email}>
+              {item.email}
             </p>
           </div>
         </div>
@@ -708,13 +682,9 @@ const PsychologistCard = ({ item }: { item: PsychologistsListItem }) => {
 
       <dl className="mt-4 grid max-w-xs gap-2 text-xs text-muted">
         <div className="rounded-2xl bg-surface-muted px-3 py-2">
-          <dt>Avaliações</dt>
+          <dt>Data de cadastro</dt>
           <dd className="mt-1 text-sm font-semibold text-foreground">
-            {item.rating_avg.toLocaleString("pt-BR", {
-              maximumFractionDigits: 1,
-              minimumFractionDigits: 1,
-            })}{" "}
-            ({numberFormatter.format(item.rating_count)})
+            {formatRegistrationDate(item.created_at)}
           </dd>
         </div>
       </dl>
@@ -742,20 +712,20 @@ const PsychologistsTable = ({
         <colgroup>
           <col className="w-[7%]" />
           <col className="w-[31%]" />
+          <col className="w-[14%]" />
           <col className="w-[12%]" />
           <col className="w-[11%]" />
           <col className="w-[13%]" />
-          <col className="w-[14%]" />
           <col className="w-[12%]" />
         </colgroup>
         <thead className="border-b border-border bg-surface-muted/70 text-xs text-muted">
           <tr>
             <th className="px-2 py-4 font-semibold">Rank</th>
             <th className="px-2 py-4 font-semibold">Psicólogo</th>
+            <th className="px-2 py-4 font-semibold">Data de cadastro</th>
             <th className="px-2 py-4 font-semibold">Plano</th>
             <th className="px-2 py-4 font-semibold">Perfil</th>
             <th className="px-2 py-4 font-semibold">Registro</th>
-            <th className="px-2 py-4 font-semibold">Avaliações</th>
             <th className="px-2 py-4 text-center font-semibold">Ações</th>
           </tr>
         </thead>
@@ -796,11 +766,14 @@ const PsychologistsTable = ({
                           />
                         ) : null}
                       </p>
-                      <p className="truncate text-xs font-bold text-muted">
-                        {formatCrpLabel(item.crp)}
+                      <p className="truncate text-xs font-bold text-muted" title={item.email}>
+                        {item.email}
                       </p>
                     </div>
                   </div>
+                </td>
+                <td className="whitespace-nowrap px-2 py-3 font-semibold text-foreground">
+                  {formatRegistrationDate(item.created_at)}
                 </td>
                 <td className="whitespace-nowrap px-2 py-3">
                   <CompactBadge tone={plan.tone}>{plan.label}</CompactBadge>
@@ -810,9 +783,6 @@ const PsychologistsTable = ({
                 </td>
                 <td className="whitespace-nowrap px-2 py-3">
                   <CompactBadge tone={registry.tone}>{registry.label}</CompactBadge>
-                </td>
-                <td className="whitespace-nowrap px-2 py-3">
-                  <RatingCell item={item} />
                 </td>
                 <td className="px-2 py-3 text-center">
                   <RowActions item={item} />
