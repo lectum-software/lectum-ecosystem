@@ -107,6 +107,25 @@ export type AdminPsychologistStatisticsCommunityItem = {
   slug: string;
 };
 
+export type AdminPsychologistPlatformUsageTopPage = {
+  count: number;
+  label: string;
+  percentage: number;
+};
+
+export type AdminPsychologistPlatformUsage = {
+  access_days_count: number;
+  average_duration_seconds: number | null;
+  duration_unavailable_reason: string | null;
+  last_access_at: Date | null;
+  period_from: string;
+  period_to: string;
+  sessions_count: number;
+  source: "page_view_event";
+  top_pages: AdminPsychologistPlatformUsageTopPage[];
+  unavailable_reason: string | null;
+};
+
 export type AdminPsychologistStatisticsDTO = {
   business: {
     cards: AdminPsychologistAvailabilityMetric[];
@@ -118,7 +137,8 @@ export type AdminPsychologistStatisticsDTO = {
     series: AdminPsychologistStatisticsSeriesPoint[];
   };
   period: AdminPsychologistStatisticsPeriod;
-  source: "profile_events+community_activity+video_sessions+search_impressions+professional_review";
+  platform_usage: AdminPsychologistPlatformUsage;
+  source: "profile_events+community_activity+video_sessions+search_impressions+professional_review+page_view_event";
   unavailable: AdminPsychologistAvailabilityMetric[];
   video: AdminPsychologistStatisticsVideo;
 };

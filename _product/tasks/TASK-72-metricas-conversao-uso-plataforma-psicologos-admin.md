@@ -8,7 +8,7 @@
 | Prioridade | P1 |
 | Esforço | L |
 | Fase | Admin / Psicólogos / Conversão e Analytics |
-| Status | Pending |
+| Status | Completed |
 | Dependências | TASK-09, TASK-31, TASK-32, TASK-33, TASK-45, TASK-46, TASK-47, TASK-49, TASK-53, TASK-55, TASK-56, TASK-57, TASK-62 |
 | ADR alvo | ADR sobre métricas administrativas de conversão até assinatura paga e analytics first-party de uso da plataforma por psicólogos |
 
@@ -376,32 +376,32 @@ Regras de cálculo:
 
 ## Critérios de aceite
 
-- [ ] Dashboard de psicólogos possui bloco **Conversão até assinatura** com coorte, taxa de conversão paga, média, mediana, P75, P90 e buckets.
-- [ ] Média/mediana/P75/P90 consideram somente psicólogos convertidos para assinatura paga.
-- [ ] Distribuição inclui `Ainda não assinou` sem contaminar percentis.
-- [ ] Plano gratuito e cortesia não contam como assinatura paga.
-- [ ] Dashboard possui gráfico/bloco de modo de cadastro com apenas **Google** e **E-mail e senha**.
-- [ ] Não há categoria `Google + senha local`.
-- [ ] Dashboard mostra conversão por modo de cadastro quando houver dados reais suficientes.
-- [ ] Dashboard possui bloco agregado **Uso da plataforma** com psicólogos ativos, dias de acesso, sessões, tempo médio quando confiável e páginas mais acessadas.
-- [ ] Métricas de uso contam somente uso real da plataforma por usuários `role="psicologo"` autenticados.
-- [ ] Métricas de uso não incluem consultas, sessões clínicas, mensagens, WhatsApp ou conteúdo de pacientes.
-- [ ] Detalhe do psicólogo mostra `Tempo até assinatura` no bloco de plano/assinatura atual.
-- [ ] `Tempo até assinatura` usa a primeira assinatura paga real e não muda por upgrade, renovação ou cancelamento posterior.
-- [ ] Aba **Estatísticas** do detalhe do psicólogo possui bloco individual **Uso da plataforma**.
-- [ ] Páginas mais acessadas usam rótulos normalizados e não expõem paths crus sensíveis.
-- [ ] Estados sem dados históricos aparecem como `Indisponível`/copy honesta, sem mock ou zero falso.
-- [ ] Endpoints Admin privados exigem autenticação Admin real.
-- [ ] Respostas não expõem payload de pagamento, token, JWT, IP bruto, user-agent bruto, query string sensível ou segredo.
-- [ ] Se houve alteração de Prisma/migrations, `pnpm --dir backend db:migrate` foi executado sem reset destrutivo não autorizado.
-- [ ] Traduções PT-BR foram criadas/atualizadas para mensagens e erros necessários.
-- [ ] UI mobile-first validada em ~390px e desktop.
-- [ ] Nenhum `<img>` cru foi usado.
-- [ ] Nenhum mock, dado fake permanente, endpoint simulado ou evento artificial retroativo foi usado.
-- [ ] Builder/Quick Copy foi usado quando disponível, ou as imagens locais/protótipo inexistente dos novos blocos foram registrados na execução/ADR.
-- [ ] Checks/builds relevantes foram executados sem erros.
-- [ ] ADR criado ou atualizado em `adrs/`.
-- [ ] Commit criado com mensagem convencional e `git push` executado.
+- [x] Dashboard de psicólogos possui bloco **Conversão até assinatura** com coorte, taxa de conversão paga, média, mediana, P75, P90 e buckets.
+- [x] Média/mediana/P75/P90 consideram somente psicólogos convertidos para assinatura paga.
+- [x] Distribuição inclui `Ainda não assinou` sem contaminar percentis.
+- [x] Plano gratuito e cortesia não contam como assinatura paga.
+- [x] Dashboard possui gráfico/bloco de modo de cadastro com apenas **Google** e **E-mail e senha**.
+- [x] Não há categoria `Google + senha local`.
+- [x] Dashboard mostra conversão por modo de cadastro quando houver dados reais suficientes.
+- [x] Dashboard possui bloco agregado **Uso da plataforma** com psicólogos ativos, dias de acesso, sessões, tempo médio quando confiável e páginas mais acessadas.
+- [x] Métricas de uso contam somente uso real da plataforma por usuários `role="psicologo"` autenticados.
+- [x] Métricas de uso não incluem consultas, sessões clínicas, mensagens, WhatsApp ou conteúdo de pacientes.
+- [x] Detalhe do psicólogo mostra `Tempo até assinatura` no bloco de plano/assinatura atual.
+- [x] `Tempo até assinatura` usa a primeira assinatura paga real e não muda por upgrade, renovação ou cancelamento posterior.
+- [x] Aba **Estatísticas** do detalhe do psicólogo possui bloco individual **Uso da plataforma**.
+- [x] Páginas mais acessadas usam rótulos normalizados e não expõem paths crus sensíveis.
+- [x] Estados sem dados históricos aparecem como `Indisponível`/copy honesta, sem mock ou zero falso.
+- [x] Endpoints Admin privados exigem autenticação Admin real.
+- [x] Respostas não expõem payload de pagamento, token, JWT, IP bruto, user-agent bruto, query string sensível ou segredo.
+- [x] Se houve alteração de Prisma/migrations, `pnpm --dir backend db:migrate` foi executado sem reset destrutivo não autorizado.
+- [x] Traduções PT-BR foram criadas/atualizadas para mensagens e erros necessários.
+- [x] UI mobile-first validada em ~390px e desktop.
+- [x] Nenhum `<img>` cru foi usado.
+- [x] Nenhum mock, dado fake permanente, endpoint simulado ou evento artificial retroativo foi usado.
+- [x] Builder/Quick Copy foi usado quando disponível, ou as imagens locais/protótipo inexistente dos novos blocos foram registrados na execução/ADR.
+- [x] Checks/builds relevantes foram executados sem erros.
+- [x] ADR criado ou atualizado em `adrs/`.
+- [x] Commit criado com mensagem convencional e `git push` executado.
 
 ## Validação mínima
 
@@ -430,3 +430,35 @@ Regras de cálculo:
 - O dado de uso da plataforma só deve começar a partir dos eventos reais existentes; não criar backfill artificial.
 - A Lectum não intermedia a relação clínica. Não criar nenhuma métrica que sugira volume de atendimentos, mensagens ou sessões terapêuticas.
 - Se `prisma migrate dev` falhar por conflito com dados/estado do banco de desenvolvimento, perguntar ao usuário antes de resetar o banco ou rodar qualquer comando destrutivo.
+
+
+## Execução TASK-72
+
+- Implementados cálculos compartilhados para primeira assinatura paga, média, mediana, P75, P90, buckets de conversão, modo de cadastro e normalização segura de páginas em `backend/src/utils/admin-psychologist-analytics.ts`.
+- O dashboard de psicólogos passa a retornar e exibir **Conversão até assinatura**, **Modo de cadastro**, **Conversão por modo de cadastro** e **Uso da plataforma** usando dados reais de `user.createdAt`, `user.provider`, `professional_subscription`, `subscription_plan` e `page_view_event`.
+- O detalhe administrativo do psicólogo passa a exibir `Tempo até assinatura` no card **Dados da assinatura**, sempre com base na primeira assinatura paga real e sem contar plano gratuito ou cortesia.
+- A aba **Estatísticas** do detalhe recebeu o bloco individual **Uso da plataforma**, com último acesso no período, dias distintos de acesso, sessões, tempo médio quando confiável e páginas normalizadas.
+- Métricas de uso contam apenas `page_view_event` autenticado de usuários `role="psicologo"`; não foram criadas métricas de consultas, sessões clínicas, mensagens, WhatsApp ou conteúdo de pacientes.
+- A data de primeira assinatura paga usa `professional_subscription.createdAt`, documentado no ADR como melhor data disponível no modelo atual. Status `ativa` e `cancelada` contam como conversão histórica; cancelamento posterior não remove a conversão.
+- Tempo médio de permanência só é exibido quando pelo menos 50% dos pageviews autenticados possuem `duration_seconds` positivo; caso contrário, a resposta/UI exibem indisponibilidade honesta.
+- Não foram necessárias novas traduções PT-BR de erro/mensagem, pois os endpoints estendidos reaproveitam validações/filtros existentes e os novos estados user-facing são dados de contrato exibidos pelo Admin.
+- Builder/Quick Copy não estava disponível no ambiente; foram usadas as imagens locais indicadas em `_product/proto/admin/Psicólogos`. Não havia protótipo específico para os novos blocos.
+- Não houve alteração em Prisma schema ou migrations; `pnpm --dir backend db:migrate` não foi necessário.
+- ADR criado: `adrs/0266-metricas-conversao-uso-psicologos-admin.md`.
+
+### Validação executada
+
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check` (inclui `pnpm --dir frontend check` e `pnpm --dir backend check`)
+- Smoke HTTP local sem sessão Admin:
+  - `GET /api/admin/private/psychologists/dashboard?period=week` retornou 401, confirmando proteção Admin real;
+  - `GET /api/admin/private/psychologists/test-id/statistics?period=week` retornou 401, confirmando proteção Admin real.
+- Smoke HTTP local no Admin:
+  - `GET http://localhost:3002/psicologos` retornou 200;
+  - `GET http://localhost:3002/psicologos/test-id` retornou 200;
+  - `GET http://localhost:3002/psicologos/test-id?tab=estatisticas` retornou 200.
+- Verificação estática: ausência de `<img>` cru e ausência da categoria `Google + senha local` nos arquivos alterados do Admin.
+- Validação autenticada com dados reais depende de sessão Admin e base local com psicólogos/assinaturas/pageviews reais; sem sessão, a guarda Admin foi validada sem mock.

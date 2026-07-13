@@ -1,5 +1,6 @@
 ﻿import type { Resolve } from "@/helpers/return";
 import { error, msg } from "@/helpers/translate";
+import { summarizePlatformUsage } from "@/utils/admin-psychologist-analytics";
 import type {
   AdminPsychologistAvailabilityMetric,
   AdminPsychologistEngagementQuery,
@@ -764,6 +765,7 @@ export const showAdminPsychologistStatistics = async (
     previousPosts,
     previousReplies,
     memberships,
+    platformPageViews,
   ] = await Promise.all([
     repository.listProfileViews(userId, period.current.start, period.current.end),
     repository.listWhatsappClicks(userId, period.current.start, period.current.end),
@@ -784,6 +786,7 @@ export const showAdminPsychologistStatistics = async (
     repository.listAuthoredPosts(userId, period.previous.start, period.previous.end),
     repository.listAuthoredReplies(userId, period.previous.start, period.previous.end),
     repository.listCommunities(userId),
+    repository.listPlatformPageViews(userId, period.current.start, period.current.end),
   ]);
 
   const communityPosts = filterPostsByCommunity(posts, query.community);
@@ -883,6 +886,31 @@ export const showAdminPsychologistStatistics = async (
     repository,
   });
   const communityRankingMetric = buildCommunityRankingMetric(query.community, communityItems);
+  const platformUsageSummary = summarizePlatformUsage({
+    eligiblePsychologistsCount: 1,
+    pageViews: platformPageViews,
+  });
+  const platformUsage = {
+    access_days_count:
+      platformPageViews.length > 0
+        ? new Set(platformPageViews.map((view) => toDateKey(view.occurred_at))).size
+        : 0,
+    average_duration_seconds: platformUsageSummary.average_duration_seconds,
+    duration_unavailable_reason: platformUsageSummary.duration_unavailable_reason,
+    last_access_at:
+      platformPageViews.length > 0
+        ? platformPageViews.reduce<Date | null>(
+            (latest, view) => (!latest || view.occurred_at > latest ? view.occurred_at : latest),
+            null,
+          )
+        : null,
+    period_from: period.period.from,
+    period_to: period.period.to,
+    sessions_count: new Set(platformPageViews.map((view) => view.session_id)).size,
+    source: "page_view_event" as const,
+    top_pages: platformUsageSummary.top_pages,
+    unavailable_reason: platformUsageSummary.unavailable_reason,
+  };
 
   const response: AdminPsychologistStatisticsDTO = {
     business: {
@@ -1006,8 +1034,9 @@ export const showAdminPsychologistStatistics = async (
       series: communitySeries,
     },
     period: period.period,
+    platform_usage: platformUsage,
     source:
-      "profile_events+community_activity+video_sessions+search_impressions+professional_review",
+      "profile_events+community_activity+video_sessions+search_impressions+professional_review+page_view_event",
     unavailable,
     video: buildVideo(profile, videoSessions, previousVideoSessions, period.period),
   };

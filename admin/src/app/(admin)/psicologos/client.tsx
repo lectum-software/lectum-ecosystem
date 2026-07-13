@@ -213,6 +213,30 @@ const formatChange = (value: number | null) => {
 
 const formatPercentageValue = (value: number) => `${numberFormatter.format(value)}%`;
 
+const formatNullablePercentage = (value: number | null) =>
+  typeof value === "number" ? formatPercentageValue(value) : "Indisponível";
+
+const formatDaysMetric = (value: number | null) => {
+  if (typeof value !== "number") return "Indisponível";
+  if (value === 0) return "Mesmo dia";
+
+  return `${numberFormatter.format(value)} dias`;
+};
+
+const formatDecimalMetric = (value: number | null) =>
+  typeof value === "number" ? numberFormatter.format(value) : "Indisponível";
+
+const formatSecondsMetric = (value: number | null) => {
+  if (typeof value !== "number") return "Indisponível";
+
+  const seconds = Math.round(value);
+  const minutes = Math.floor(seconds / 60);
+  const remainder = seconds % 60;
+  if (minutes <= 0) return `${seconds}s`;
+
+  return `${minutes}min ${String(remainder).padStart(2, "0")}s`;
+};
+
 const isValidRange = (range: DashboardRange, period: DashboardPeriodValue) => {
   if (period !== "custom") return true;
   if (!range.from || !range.to) return false;
@@ -790,6 +814,188 @@ const SupplyDemandListRow = ({ row }: { row: SupplyDemandComparisonRow }) => {
   );
 };
 
+const MiniBar = ({
+  label,
+  percentage,
+  value,
+}: {
+  label: string;
+  percentage: number;
+  value: ReactNode;
+}) => (
+  <div className="space-y-2">
+    <div className="flex items-center justify-between gap-3 text-xs font-black">
+      <span className="text-muted">{label}</span>
+      <span className="text-foreground">{value}</span>
+    </div>
+    <div className="h-2 overflow-hidden rounded-full bg-surface-muted">
+      <div
+        aria-hidden
+        className="h-full rounded-full bg-primary"
+        style={{ width: `${Math.min(100, Math.max(0, percentage))}%` }}
+      />
+    </div>
+  </div>
+);
+
+const ConversionAndUsageBlocks = ({ summary }: { summary: AdminPsychologistsDashboard }) => {
+  const conversion = summary.conversion;
+  const platformUsage = summary.platform_usage;
+
+  return (
+    <section className="grid gap-5 xl:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)]">
+      <CardShell className="p-5">
+        <PanelTitle icon={TrendingDown} title="Conversão até assinatura" />
+        <p className="mt-2 text-sm font-bold leading-6 text-muted">
+          Coorte de cadastro: {formatDate(conversion.cohort_from)} a{" "}
+          {formatDate(conversion.cohort_to)}. Plano gratuito e cortesia não contam como assinatura
+          paga.
+        </p>
+        <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          {[
+            ["Cadastros", numberFormatter.format(conversion.registered_count)],
+            ["Assinaram", numberFormatter.format(conversion.converted_paid_count)],
+            ["Taxa paga", formatNullablePercentage(conversion.conversion_rate)],
+            ["Média", formatDaysMetric(conversion.average_days)],
+            ["Mediana", formatDaysMetric(conversion.median_days)],
+            ["P75", formatDaysMetric(conversion.p75_days)],
+            ["P90", formatDaysMetric(conversion.p90_days)],
+          ].map(([label, value]) => (
+            <div className="rounded-2xl bg-surface-muted p-3" key={label}>
+              <p className="text-xs font-black text-muted">{label}</p>
+              <p className="mt-1 text-xl font-black text-foreground">{value}</p>
+            </div>
+          ))}
+        </div>
+        {conversion.unavailable_reason ? (
+          <p className="mt-4 rounded-2xl border border-dashed border-border bg-surface-muted p-3 text-sm font-bold text-muted">
+            {conversion.unavailable_reason}
+          </p>
+        ) : null}
+        <div className="mt-5 grid gap-3 md:grid-cols-2">
+          <div className="rounded-2xl border border-border/70 p-4">
+            <h3 className="text-sm font-black text-foreground">Distribuição por prazo</h3>
+            <div className="mt-4 space-y-3">
+              {conversion.buckets.map((bucket) => (
+                <MiniBar
+                  key={bucket.id}
+                  label={bucket.label}
+                  percentage={bucket.percentage}
+                  value={`${numberFormatter.format(bucket.count)} · ${formatPercentageValue(
+                    bucket.percentage,
+                  )}`}
+                />
+              ))}
+            </div>
+          </div>
+          <div className="rounded-2xl border border-border/70 p-4">
+            <h3 className="text-sm font-black text-foreground">Conversão por modo de cadastro</h3>
+            <div className="mt-4 space-y-4">
+              {summary.conversion_by_signup_method.map((item) => (
+                <div className="rounded-2xl bg-surface-muted p-3" key={item.id}>
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-sm font-black text-foreground">{item.label}</p>
+                      <p className="text-xs font-bold text-muted">
+                        {numberFormatter.format(item.converted_paid_count)} de{" "}
+                        {numberFormatter.format(item.registered_count)} assinaram
+                      </p>
+                    </div>
+                    <span className="text-sm font-black text-primary">
+                      {formatNullablePercentage(item.conversion_rate)}
+                    </span>
+                  </div>
+                  <p className="mt-2 text-xs font-bold text-muted">
+                    Mediana: {formatDaysMetric(item.median_days)} · Média:{" "}
+                    {formatDaysMetric(item.average_days)}
+                  </p>
+                  {!item.sample_sufficient && item.unavailable_reason ? (
+                    <p className="mt-2 text-xs font-bold text-subtle">{item.unavailable_reason}</p>
+                  ) : null}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </CardShell>
+
+      <div className="grid gap-5">
+        <CardShell className="p-5">
+          <PanelTitle icon={UserPlus} title="Modo de cadastro" />
+          <p className="mt-2 text-sm font-bold leading-6 text-muted">
+            Cadastro é tratado como Google ou E-mail e senha. Não existe categoria Google + senha
+            local.
+          </p>
+          <div className="mt-5 space-y-4">
+            {summary.signup_method.items.map((item) => (
+              <MiniBar
+                key={item.id}
+                label={item.label}
+                percentage={item.percentage}
+                value={`${numberFormatter.format(item.count)} · ${formatPercentageValue(
+                  item.percentage,
+                )}`}
+              />
+            ))}
+          </div>
+          {summary.signup_method.unknown_count > 0 ? (
+            <p className="mt-4 text-xs font-bold text-subtle">
+              {numberFormatter.format(summary.signup_method.unknown_count)} cadastro(s) legado(s)
+              com via indisponível foram mantidos fora das duas categorias de produto.
+            </p>
+          ) : null}
+        </CardShell>
+
+        <CardShell className="p-5">
+          <PanelTitle icon={Activity} title="Uso da plataforma" />
+          <p className="mt-2 text-sm font-bold leading-6 text-muted">
+            Uso autenticado da plataforma Lectum por psicólogos no período. Não inclui consultas,
+            sessões clínicas, mensagens ou WhatsApp.
+          </p>
+          <div className="mt-5 grid gap-3 sm:grid-cols-2">
+            {[
+              ["Ativos", numberFormatter.format(platformUsage.active_psychologists_count)],
+              ["Taxa ativa", formatNullablePercentage(platformUsage.active_psychologists_rate)],
+              ["Dias médios", formatDaysMetric(platformUsage.average_access_days)],
+              ["Sessões médias", formatDecimalMetric(platformUsage.average_sessions)],
+              ["Tempo médio", formatSecondsMetric(platformUsage.average_duration_seconds)],
+            ].map(([label, value]) => (
+              <div className="rounded-2xl bg-surface-muted p-3" key={label}>
+                <p className="text-xs font-black text-muted">{label}</p>
+                <p className="mt-1 text-lg font-black text-foreground">{value}</p>
+              </div>
+            ))}
+          </div>
+          {platformUsage.duration_unavailable_reason ? (
+            <p className="mt-3 text-xs font-bold text-subtle">
+              {platformUsage.duration_unavailable_reason}
+            </p>
+          ) : null}
+          {platformUsage.unavailable_reason ? (
+            <p className="mt-4 rounded-2xl border border-dashed border-border bg-surface-muted p-3 text-sm font-bold text-muted">
+              {platformUsage.unavailable_reason}
+            </p>
+          ) : (
+            <div className="mt-5 space-y-3">
+              <h3 className="text-sm font-black text-foreground">Páginas mais acessadas</h3>
+              {platformUsage.top_pages.map((page) => (
+                <MiniBar
+                  key={page.label}
+                  label={page.label}
+                  percentage={page.percentage}
+                  value={`${numberFormatter.format(page.count)} · ${formatPercentageValue(
+                    page.percentage,
+                  )}`}
+                />
+              ))}
+            </div>
+          )}
+        </CardShell>
+      </div>
+    </section>
+  );
+};
+
 const StatsContent = ({ summary }: { summary: AdminPsychologistsDashboard }) => {
   const [activeDimensionId, setActiveDimensionId] = useState("specialties");
   const [optionQuery, setOptionQuery] = useState("");
@@ -1146,6 +1352,8 @@ const DashboardContent = ({ summary }: { summary: AdminPsychologistsDashboard })
         <PanelTitle icon={Activity} title="Evolução no período" />
         <TimelineChart points={summary.timeline.points} visibleMetricKeys={activeMetricKeys} />
       </CardShell>
+
+      <ConversionAndUsageBlocks summary={summary} />
 
       <StatsContent summary={summary} />
     </div>

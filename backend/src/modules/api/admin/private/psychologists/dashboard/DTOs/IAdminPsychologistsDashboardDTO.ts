@@ -166,6 +166,81 @@ export type AdminPsychologistsDashboardUnavailableMetric = {
   source: string;
 };
 
+export type AdminPsychologistsDashboardConversionBucket = {
+  count: number;
+  id: "days_1_3" | "days_4_7" | "days_8_30" | "not_converted" | "over_30" | "same_day";
+  label: string;
+  percentage: number;
+};
+
+export type AdminPsychologistsDashboardConversion = {
+  average_days: number | null;
+  buckets: AdminPsychologistsDashboardConversionBucket[];
+  cohort_from: string;
+  cohort_to: string;
+  conversion_rate: number | null;
+  converted_paid_count: number;
+  median_days: number | null;
+  p75_days: number | null;
+  p90_days: number | null;
+  registered_count: number;
+  source: "user.createdAt+professional_subscription+subscription_plan";
+  unavailable_reason: string | null;
+};
+
+export type AdminPsychologistsDashboardSignupMethodItem = {
+  count: number;
+  id: "email_password" | "google";
+  label: string;
+  percentage: number;
+};
+
+export type AdminPsychologistsDashboardSignupMethod = {
+  items: AdminPsychologistsDashboardSignupMethodItem[];
+  source: "user.provider";
+  total: number;
+  unknown_count: number;
+};
+
+export type AdminPsychologistsDashboardConversionBySignupMethodItem = {
+  average_days: number | null;
+  conversion_rate: number | null;
+  converted_paid_count: number;
+  id: "email_password" | "google";
+  label: string;
+  median_days: number | null;
+  registered_count: number;
+  sample_sufficient: boolean;
+  unavailable_reason: string | null;
+};
+
+export type AdminPsychologistsDashboardPlatformUsageTopPage = {
+  count: number;
+  label: string;
+  percentage: number;
+};
+
+export type AdminPsychologistsDashboardPlatformUsageSeriesPoint = {
+  active_psychologists: number;
+  date: string;
+  pageviews: number;
+  sessions: number;
+};
+
+export type AdminPsychologistsDashboardPlatformUsage = {
+  active_psychologists_count: number;
+  active_psychologists_rate: number | null;
+  average_access_days: number | null;
+  average_duration_seconds: number | null;
+  average_sessions: number | null;
+  duration_unavailable_reason: string | null;
+  eligible_psychologists_count: number;
+  source: "page_view_event";
+  series: AdminPsychologistsDashboardPlatformUsageSeriesPoint[];
+  top_pages: AdminPsychologistsDashboardPlatformUsageTopPage[];
+  unavailable_reason: string | null;
+};
+
 export type AdminPsychologistsDashboardSummary = {
   cards: {
     churn: AdminPsychologistsDashboardMetric;
@@ -175,6 +250,8 @@ export type AdminPsychologistsDashboardSummary = {
     subscriber_psychologists: AdminPsychologistsDashboardMetric;
     total_psychologists: AdminPsychologistsDashboardMetric;
   };
+  conversion: AdminPsychologistsDashboardConversion;
+  conversion_by_signup_method: AdminPsychologistsDashboardConversionBySignupMethodItem[];
   filters_searches: {
     available: false;
     description: string;
@@ -182,6 +259,7 @@ export type AdminPsychologistsDashboardSummary = {
   };
   directory_filters: AdminPsychologistsDashboardDirectoryFilters;
   period: AdminPsychologistsDashboardPeriod;
+  platform_usage: AdminPsychologistsDashboardPlatformUsage;
   psychologists: {
     items: AdminPsychologistsDashboardPsychologist[];
     source: "user+psychologist_profile+professional_subscription";
@@ -193,6 +271,7 @@ export type AdminPsychologistsDashboardSummary = {
     source: "shared_psychologist_public_ranking_helper";
     total: number;
   };
+  signup_method: AdminPsychologistsDashboardSignupMethod;
   statistics: AdminPsychologistsDashboardStatistics;
   timeline: {
     points: AdminPsychologistsDashboardDailyPoint[];

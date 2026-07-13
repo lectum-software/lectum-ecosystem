@@ -1,5 +1,6 @@
 import type { Resolve } from "@/helpers/return";
 import { error, msg } from "@/helpers/translate";
+import { timeToFirstPaidSubscription } from "@/utils/admin-psychologist-analytics";
 import { crpExperienceYears } from "@/utils/professional-experience";
 import { normalizeProfessionalDisplayName } from "@/utils/professional-name";
 import { parseStoredCrp } from "@/utils/professional-registry";
@@ -207,6 +208,11 @@ const buildSubscription = (profile: AdminPsychologistDetailRecord, date: Date) =
     source: subscription?.source ?? null,
     started_at: subscriptionSourceDate(subscription),
     status: subscription?.status ?? null,
+    time_to_first_paid_subscription: timeToFirstPaidSubscription({
+      currentSubscription: subscription,
+      registeredAt: profile.user.createdAt,
+      subscriptions: profile.subscriptions,
+    }),
   } satisfies AdminPsychologistDetailDTO["general"]["subscription"];
 };
 

@@ -204,6 +204,77 @@ export type PsychologistsDashboardUnavailableMetric = {
   source: string;
 };
 
+export type PsychologistsDashboardConversionBucket = {
+  count: number;
+  id: "days_1_3" | "days_4_7" | "days_8_30" | "not_converted" | "over_30" | "same_day";
+  label: string;
+  percentage: number;
+};
+
+export type PsychologistsDashboardConversion = {
+  average_days: number | null;
+  buckets: PsychologistsDashboardConversionBucket[];
+  cohort_from: string;
+  cohort_to: string;
+  conversion_rate: number | null;
+  converted_paid_count: number;
+  median_days: number | null;
+  p75_days: number | null;
+  p90_days: number | null;
+  registered_count: number;
+  source: "user.createdAt+professional_subscription+subscription_plan";
+  unavailable_reason: string | null;
+};
+
+export type PsychologistsDashboardSignupMethodItem = {
+  count: number;
+  id: "email_password" | "google";
+  label: string;
+  percentage: number;
+};
+
+export type PsychologistsDashboardSignupMethod = {
+  items: PsychologistsDashboardSignupMethodItem[];
+  source: "user.provider";
+  total: number;
+  unknown_count: number;
+};
+
+export type PsychologistsDashboardConversionBySignupMethodItem = {
+  average_days: number | null;
+  conversion_rate: number | null;
+  converted_paid_count: number;
+  id: "email_password" | "google";
+  label: string;
+  median_days: number | null;
+  registered_count: number;
+  sample_sufficient: boolean;
+  unavailable_reason: string | null;
+};
+
+export type PsychologistsDashboardPlatformUsage = {
+  active_psychologists_count: number;
+  active_psychologists_rate: number | null;
+  average_access_days: number | null;
+  average_duration_seconds: number | null;
+  average_sessions: number | null;
+  duration_unavailable_reason: string | null;
+  eligible_psychologists_count: number;
+  source: "page_view_event";
+  series: {
+    active_psychologists: number;
+    date: string;
+    pageviews: number;
+    sessions: number;
+  }[];
+  top_pages: {
+    count: number;
+    label: string;
+    percentage: number;
+  }[];
+  unavailable_reason: string | null;
+};
+
 export type PsychologistsListOption = {
   count: number;
   id: string;
@@ -355,6 +426,13 @@ export type AdminPsychologistDetail = {
       source: string | null;
       started_at: string | null;
       status: string | null;
+      time_to_first_paid_subscription: {
+        days: number | null;
+        first_paid_subscription_at: string | null;
+        label: string;
+        registered_at: string | null;
+        status: "converted" | "courtesy_only" | "free_only" | "not_converted" | "unavailable";
+      };
     };
   };
   header: {
@@ -742,7 +820,23 @@ export type AdminPsychologistStatistics = {
     timezone: "server-local";
     to: string;
   };
-  source: "profile_events+community_activity+video_sessions+search_impressions+professional_review";
+  platform_usage: {
+    access_days_count: number;
+    average_duration_seconds: number | null;
+    duration_unavailable_reason: string | null;
+    last_access_at: string | null;
+    period_from: string;
+    period_to: string;
+    sessions_count: number;
+    source: "page_view_event";
+    top_pages: {
+      count: number;
+      label: string;
+      percentage: number;
+    }[];
+    unavailable_reason: string | null;
+  };
+  source: "profile_events+community_activity+video_sessions+search_impressions+professional_review+page_view_event";
   unavailable: AdminPsychologistEngagementMetric[];
   video: {
     available: boolean;
@@ -1068,6 +1162,8 @@ export type AdminPsychologistsDashboard = {
     subscriber_psychologists: PsychologistsDashboardMetric;
     total_psychologists: PsychologistsDashboardMetric;
   };
+  conversion: PsychologistsDashboardConversion;
+  conversion_by_signup_method: PsychologistsDashboardConversionBySignupMethodItem[];
   filters_searches: {
     available: false;
     description: string;
@@ -1075,6 +1171,7 @@ export type AdminPsychologistsDashboard = {
   };
   directory_filters: PsychologistsDashboardDirectoryFilters;
   period: PsychologistsDashboardPeriod;
+  platform_usage: PsychologistsDashboardPlatformUsage;
   psychologists: {
     items: PsychologistsDashboardPsychologist[];
     source: "user+psychologist_profile+professional_subscription";
@@ -1086,6 +1183,7 @@ export type AdminPsychologistsDashboard = {
     source: "shared_psychologist_public_ranking_helper";
     total: number;
   };
+  signup_method: PsychologistsDashboardSignupMethod;
   statistics: PsychologistsDashboardStatistics;
   timeline: {
     points: PsychologistsDashboardDailyPoint[];

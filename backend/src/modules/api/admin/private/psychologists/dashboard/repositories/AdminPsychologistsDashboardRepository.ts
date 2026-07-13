@@ -96,6 +96,7 @@ const profileBaseSelect = {
       email: true,
       id: true,
       name: true,
+      provider: true,
       psychologist_approaches: {
         where: {
           approach: {
@@ -321,6 +322,8 @@ export class AdminPsychologistsDashboardRepository
           select: {
             createdAt: true,
             current_period_end: true,
+            gateway: true,
+            gateway_subscription_id: true,
             grant_started_at: true,
             id: true,
             plan: {
@@ -354,6 +357,35 @@ export class AdminPsychologistsDashboardRepository
             source: true,
           },
           take: 1,
+        },
+      },
+    });
+  }
+
+  async listPlatformPageViews(range: AdminPsychologistsDashboardDateRange) {
+    return prisma.page_view_event.findMany({
+      orderBy: {
+        occurred_at: "asc",
+      },
+      select: {
+        duration_seconds: true,
+        normalized_path: true,
+        occurred_at: true,
+        page_kind: true,
+        path: true,
+        session_id: true,
+        user_id: true,
+      },
+      where: {
+        deleted: false,
+        occurred_at: eventCreatedAtWhere(range),
+        user_id: {
+          not: null,
+        },
+        user: {
+          active: true,
+          deleted: false,
+          role: "psicologo",
         },
       },
     });

@@ -124,6 +124,33 @@ export class AdminPsychologistEngagementRepository {
     });
   }
 
+  async listPlatformPageViews(userId: string, from: Date, to: Date) {
+    return prisma.page_view_event.findMany({
+      orderBy: {
+        occurred_at: "asc",
+      },
+      select: {
+        duration_seconds: true,
+        normalized_path: true,
+        occurred_at: true,
+        page_kind: true,
+        path: true,
+        session_id: true,
+        user_id: true,
+      },
+      where: {
+        deleted: false,
+        occurred_at: { gte: from, lte: to },
+        user_id: userId,
+        user: {
+          active: true,
+          deleted: false,
+          role: "psicologo",
+        },
+      },
+    });
+  }
+
   async listSearchResultImpressions(psychologistId: string, from: Date, to: Date) {
     return prisma.profile_view_event.findMany({
       where: {

@@ -1386,6 +1386,17 @@ const formatEngagementMetricValue = (metric: AdminPsychologistEngagementMetric) 
   return numberFormatter.format(metric.value);
 };
 
+const formatPlatformDuration = (value: number | null) => {
+  if (typeof value !== "number") return "Indisponível";
+
+  const seconds = Math.round(value);
+  const minutes = Math.floor(seconds / 60);
+  const remainder = seconds % 60;
+  if (minutes <= 0) return `${seconds}s`;
+
+  return `${minutes}min ${String(remainder).padStart(2, "0")}s`;
+};
+
 const formatChange = (value: number | null) => {
   if (value === null) return "sem base anterior";
   if (value === 0) return "0%";
@@ -1766,6 +1777,7 @@ const SubscriptionCard = ({
   const rows: Array<[string, ReactNode]> = [
     ["Plano atual", subscription.plan_name || "Sem plano ativo"],
     ["Início", formatDate(subscription.started_at)],
+    ["Tempo até assinatura", subscription.time_to_first_paid_subscription.label],
     ["Próxima renovação", formatSubscriptionRenewal(subscription)],
     ["LTV", formatSubscriptionLtv(billing, billingLoading, billingError)],
   ];
@@ -2806,6 +2818,78 @@ const StatisticsVideoCard = ({
   );
 };
 
+const PsychologistPlatformUsageCard = ({
+  statistics,
+}: {
+  statistics: AdminPsychologistStatistics;
+}) => {
+  const usage = statistics.platform_usage;
+
+  return (
+    <CardShell className="p-5">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <h2 className="text-lg font-black text-foreground">Uso da plataforma</h2>
+          <p className="mt-1 text-sm font-bold leading-6 text-muted">
+            Navegação autenticada do psicólogo na Lectum entre {formatDateOnly(usage.period_from)} e{" "}
+            {formatDateOnly(usage.period_to)}. Não inclui consultas, sessões clínicas, mensagens ou
+            WhatsApp.
+          </p>
+        </div>
+        <Badge className="bg-surface-muted text-muted">page_view_event</Badge>
+      </div>
+
+      <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        {[
+          ["Último acesso", formatDateTime(usage.last_access_at)],
+          ["Dias com acesso", numberFormatter.format(usage.access_days_count)],
+          ["Sessões", numberFormatter.format(usage.sessions_count)],
+          ["Tempo médio", formatPlatformDuration(usage.average_duration_seconds)],
+        ].map(([label, value]) => (
+          <div className="rounded-2xl bg-surface-muted p-3" key={label}>
+            <p className="text-xs font-black text-muted">{label}</p>
+            <p className="mt-1 text-lg font-black text-foreground">{value}</p>
+          </div>
+        ))}
+      </div>
+
+      {usage.duration_unavailable_reason ? (
+        <p className="mt-3 text-xs font-bold text-subtle">{usage.duration_unavailable_reason}</p>
+      ) : null}
+
+      {usage.unavailable_reason ? (
+        <p className="mt-5 rounded-2xl border border-dashed border-border bg-surface-muted p-4 text-sm font-bold text-muted">
+          {usage.unavailable_reason}
+        </p>
+      ) : (
+        <div className="mt-5">
+          <h3 className="text-sm font-black text-foreground">Páginas mais acessadas</h3>
+          <div className="mt-3 grid gap-3 md:grid-cols-2">
+            {usage.top_pages.map((page) => (
+              <div className="rounded-2xl border border-border/70 p-3" key={page.label}>
+                <div className="flex items-center justify-between gap-3 text-xs font-black">
+                  <span className="text-muted">{page.label}</span>
+                  <span className="text-foreground">
+                    {numberFormatter.format(page.count)} · {page.percentage.toLocaleString("pt-BR")}
+                    %
+                  </span>
+                </div>
+                <div className="mt-2 h-2 overflow-hidden rounded-full bg-surface-muted">
+                  <div
+                    aria-hidden
+                    className="h-full rounded-full bg-primary"
+                    style={{ width: `${Math.min(100, Math.max(0, page.percentage))}%` }}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </CardShell>
+  );
+};
+
 const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: string }) => {
   const [businessStatisticsSelectedPeriod, setBusinessStatisticsSelectedPeriod] =
     useState<StatisticsPeriodValue>("week");
@@ -3144,6 +3228,8 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: st
             points={businessStatistics.business.series}
           />
         </CardShell>
+
+        <PsychologistPlatformUsageCard statistics={businessStatistics} />
 
         <StatisticsVideoCard detail={detail} statistics={businessStatistics} />
       </section>

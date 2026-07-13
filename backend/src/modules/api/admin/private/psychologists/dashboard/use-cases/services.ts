@@ -1,5 +1,14 @@
 import type { Resolve } from "@/helpers/return";
 import { error, msg } from "@/helpers/translate";
+import {
+  firstPaidProfessionalSubscription,
+  isPaidProfessionalSubscription,
+  roundOneDecimal,
+  signupMethodFromProvider,
+  signupMethodLabel,
+  summarizeConversionCohort,
+  summarizePlatformUsage,
+} from "@/utils/admin-psychologist-analytics";
 import { crpExperienceYears } from "@/utils/professional-experience";
 import { rankPsychologistCandidates } from "@/utils/psychologist-public-ranking";
 import type {
@@ -24,7 +33,6 @@ const DEFAULT_PERIOD_DAYS = 7;
 const MAX_PERIOD_DAYS = 3660;
 const MS_PER_DAY = 86_400_000;
 const COURTESY_SUBSCRIPTION_SOURCE = "admin_grant";
-const PAID_SUBSCRIPTION_SOURCE = "mercadopago";
 
 const STATUS_ACTIVE = "ativa";
 const STATUS_CANCELLED = "cancelada";
@@ -293,9 +301,7 @@ const isProfessionalPlan = (subscription: AdminPsychologistSubscriptionRecord) =
   subscription.plan.slug !== FREE_PLAN_SLUG;
 
 const isPaidGatewaySubscription = (subscription: AdminPsychologistSubscriptionRecord) =>
-  subscription.source === PAID_SUBSCRIPTION_SOURCE &&
-  isProfessionalPlan(subscription) &&
-  subscription.plan.price_cents > 0;
+  isPaidProfessionalSubscription(subscription);
 
 const isCourtesySubscription = (subscription: AdminPsychologistSubscriptionRecord) =>
   subscription.source === COURTESY_SUBSCRIPTION_SOURCE && isProfessionalPlan(subscription);
@@ -634,6 +640,75 @@ const buildStatistics = (profiles: AdminPsychologistProfileRecord[]) => {
   };
 };
 
+const buildSignupMethod = (profiles: AdminPsychologistProfileRecord[]) => {
+  const counts = {
+    email_password: 0,
+    google: 0,
+    unknown: 0,
+  };
+
+  for (const profile of profiles) {
+    counts[signupMethodFromProvider(profile.user.provider)] += 1;
+  }
+
+  const total = profiles.length;
+
+  return {
+    items: (["google", "email_password"] as const).map((id) => ({
+      count: counts[id],
+      id,
+      label: signupMethodLabel(id),
+      percentage: safePercentage(counts[id], total),
+    })),
+    source: "user.provider" as const,
+    total,
+    unknown_count: counts.unknown,
+  };
+};
+
+const buildConversionBySignupMethod = (profiles: AdminPsychologistProfileRecord[]) =>
+  (["google", "email_password"] as const).map((id) => {
+    const methodProfiles = profiles.filter(
+      (profile) => signupMethodFromProvider(profile.user.provider) === id,
+    );
+    const convertedDays = methodProfiles.flatMap((profile) => {
+      const firstPaid = firstPaidProfessionalSubscription(profile.subscriptions);
+      if (!firstPaid) return [];
+
+      return [
+        Math.max(
+          0,
+          Math.floor(
+            (startOfDate(firstPaid.createdAt).getTime() -
+              startOfDate(profile.user.createdAt).getTime()) /
+              MS_PER_DAY,
+          ),
+        ),
+      ];
+    });
+    const conversion = summarizeConversionCohort(methodProfiles);
+    const sampleSufficient = methodProfiles.length >= 3 && convertedDays.length > 0;
+
+    return {
+      average_days: sampleSufficient ? conversion.average_days : null,
+      conversion_rate:
+        methodProfiles.length > 0
+          ? roundOneDecimal((convertedDays.length / methodProfiles.length) * 100)
+          : null,
+      converted_paid_count: convertedDays.length,
+      id,
+      label: signupMethodLabel(id),
+      median_days: sampleSufficient ? conversion.median_days : null,
+      registered_count: methodProfiles.length,
+      sample_sufficient: sampleSufficient,
+      unavailable_reason: sampleSufficient
+        ? null
+        : methodProfiles.length === 0
+          ? "Sem psicólogos cadastrados por esta via na coorte."
+          : "Amostra insuficiente para comparar prazo por modo de cadastro.",
+    };
+  });
+
 const mapPsychologistStatus = (
   profile: AdminPsychologistProfileRecord,
   date: Date,
@@ -697,7 +772,10 @@ export const buildPsychologistsDashboard = async (
 
   const { current, labels, period, previous } = resolvedPeriod.period;
 
-  const rankingCandidates = await repository.listPublicRankingCandidates();
+  const [rankingCandidates, platformPageViews] = await Promise.all([
+    repository.listPublicRankingCandidates(),
+    repository.listPlatformPageViews(current),
+  ]);
 
   const currentProfiles = profiles.filter((profile) => profileCreatedUntil(profile, current.end));
   const previousProfiles = profiles.filter((profile) => profileCreatedUntil(profile, previous.end));
@@ -728,6 +806,12 @@ export const buildPsychologistsDashboard = async (
   const currentChurn = calculateChurnPercent(profiles, current);
   const previousChurn = calculateChurnPercent(profiles, previous);
   const rankedPsychologists = await rankPsychologistCandidates(rankingCandidates, null);
+  const conversion = summarizeConversionCohort(currentNewSignups);
+  const platformUsage = summarizePlatformUsage({
+    eligiblePsychologistsCount: currentProfiles.length,
+    labels,
+    pageViews: platformPageViews,
+  });
 
   const summary: AdminPsychologistsDashboardSummary = {
     cards: {
@@ -795,6 +879,13 @@ export const buildPsychologistsDashboard = async (
         source: "user.role=psicologo+psychologist_profile",
       }),
     },
+    conversion: {
+      ...conversion,
+      cohort_from: period.from,
+      cohort_to: period.to,
+      source: "user.createdAt+professional_subscription+subscription_plan",
+    },
+    conversion_by_signup_method: buildConversionBySignupMethod(currentNewSignups),
     filters_searches: {
       available: false,
       description:
@@ -803,6 +894,11 @@ export const buildPsychologistsDashboard = async (
     },
     directory_filters: directoryFilters,
     period,
+    platform_usage: {
+      ...platformUsage,
+      eligible_psychologists_count: currentProfiles.length,
+      source: "page_view_event",
+    },
     psychologists: {
       items: buildPsychologistsList(profiles, current.end),
       source: "user+psychologist_profile+professional_subscription",
@@ -824,6 +920,7 @@ export const buildPsychologistsDashboard = async (
       source: "shared_psychologist_public_ranking_helper",
       total: rankedPsychologists.length,
     },
+    signup_method: buildSignupMethod(currentNewSignups),
     statistics: buildStatistics(profiles),
     timeline: {
       points: buildTimeline({
@@ -848,6 +945,17 @@ export const buildPsychologistsDashboard = async (
               id: "churn_denominator_zero",
               label: "Churn de assinaturas",
               source: "professional_subscription",
+            },
+          ]
+        : []),
+      ...(platformUsage.unavailable_reason
+        ? [
+            {
+              description:
+                "Uso da plataforma por psicólogos depende de page_view_event autenticado no período selecionado.",
+              id: "platform_usage",
+              label: "Uso da plataforma",
+              source: "page_view_event",
             },
           ]
         : []),

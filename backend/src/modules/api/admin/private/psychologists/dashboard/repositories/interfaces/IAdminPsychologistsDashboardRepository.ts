@@ -7,6 +7,8 @@ import type {
 export type AdminPsychologistSubscriptionRecord = {
   createdAt: Date;
   current_period_end: Date | null;
+  gateway: string | null;
+  gateway_subscription_id?: string | null;
   grant_started_at: Date | null;
   id: string;
   plan: {
@@ -55,6 +57,7 @@ export type AdminPsychologistProfileRecord = {
     email: string;
     id: string;
     name: string;
+    provider: string | null;
     psychologist_approaches: Array<{
       approach: {
         id: string;
@@ -97,11 +100,24 @@ export type AdminPsychologistEventRecord = {
   psychologist_id: string;
 };
 
+export type AdminPsychologistPlatformPageViewRecord = {
+  duration_seconds: number | null;
+  normalized_path: string;
+  occurred_at: Date;
+  page_kind: string;
+  path: string;
+  session_id: string;
+  user_id: string | null;
+};
+
 export interface IAdminPsychologistsDashboardRepository {
   listProfileViews(
     range: AdminPsychologistsDashboardDateRange,
   ): Promise<AdminPsychologistEventRecord[]>;
   listDirectoryFilters(): Promise<AdminPsychologistsDashboardDirectoryFilters>;
+  listPlatformPageViews(
+    range: AdminPsychologistsDashboardDateRange,
+  ): Promise<AdminPsychologistPlatformPageViewRecord[]>;
   listPsychologistProfiles(): Promise<AdminPsychologistProfileRecord[]>;
   listPublicRankingCandidates(): Promise<AdminPsychologistRankingCandidateRecord[]>;
   listPublishedReviews(

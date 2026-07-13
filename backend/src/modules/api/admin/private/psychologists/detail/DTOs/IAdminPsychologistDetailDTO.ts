@@ -34,6 +34,14 @@ export type AdminPsychologistIntegrationStatus = {
   status_label: string;
 };
 
+export type AdminPsychologistTimeToFirstPaidSubscription = {
+  days: number | null;
+  first_paid_subscription_at: Date | null;
+  label: string;
+  registered_at: Date | null;
+  status: "converted" | "courtesy_only" | "free_only" | "not_converted" | "unavailable";
+};
+
 export type AdminPsychologistDetailDTO = {
   general: {
     account_history: AdminPsychologistDetailEvent[];
@@ -59,6 +67,7 @@ export type AdminPsychologistDetailDTO = {
       source: string | null;
       started_at: Date | null;
       status: string | null;
+      time_to_first_paid_subscription: AdminPsychologistTimeToFirstPaidSubscription;
     };
   };
   header: {
