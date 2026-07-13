@@ -3686,10 +3686,7 @@ const ReviewsTab = ({ id }: { id: string }) => {
       <CardShell className="p-5 sm:p-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">
-              leitura consolidada
-            </p>
-            <h2 className="mt-2 text-xl font-semibold tracking-[-0.02em] text-foreground">
+            <h2 className="text-xl font-semibold tracking-[-0.02em] text-foreground">
               Avaliação geral
             </h2>
           </div>
@@ -3761,10 +3758,7 @@ const ReviewsTab = ({ id }: { id: string }) => {
       <CardShell className="overflow-hidden">
         <div className="flex flex-col gap-3 border-b border-border p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">
-              depoimentos reais
-            </p>
-            <h2 className="mt-2 text-xl font-semibold tracking-[-0.02em] text-foreground">
+            <h2 className="text-xl font-semibold tracking-[-0.02em] text-foreground">
               Avaliações e depoimentos
             </h2>
             <p className="mt-1 text-sm font-medium leading-6 text-muted">
@@ -3773,7 +3767,6 @@ const ReviewsTab = ({ id }: { id: string }) => {
               {ratingFilterLabel ? ` com ${ratingFilterLabel}` : " filtradas"}.
             </p>
           </div>
-          <Badge className="bg-primary-soft text-primary font-semibold">Somente leitura</Badge>
         </div>
 
         {reviews.data.length === 0 ? (
