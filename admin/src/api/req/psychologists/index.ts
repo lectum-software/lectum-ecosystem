@@ -384,6 +384,11 @@ export type AdminPsychologistDetailMetric = {
 };
 
 export type AdminPsychologistDetailEvent = {
+  actor?: {
+    id: string;
+    name: string;
+    role: string;
+  } | null;
   created_at: string;
   description: string;
   id: string;

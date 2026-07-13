@@ -496,16 +496,20 @@ const notFound = () => ({
   ...error("not_found", { model: "psychologist" }),
 });
 
-export const showAdminPsychologistActivities = async (
-  data: IAdminPsychologistActivitiesDTO,
-): Promise<Resolve> => {
-  const query = normalizeQuery(data.q ?? {});
-  const period = resolvePeriod({ from: query.from, to: query.to });
-  if (!period.success) return { status: 400, ...error(period.code, {}) };
+type ActivityPeriod = { end: Date | null; start: Date | null };
 
-  const repository = new AdminPsychologistActivitiesRepository();
-  const profile = await repository.findPsychologist(data.p.id);
-  if (!profile) return notFound();
+export const buildAdminPsychologistActivityItems = async ({
+  id,
+  period,
+  repository = new AdminPsychologistActivitiesRepository(),
+}: {
+  id: string;
+  period?: ActivityPeriod;
+  repository?: AdminPsychologistActivitiesRepository;
+}) => {
+  const currentPeriod = period ?? { end: null, start: null };
+  const profile = await repository.findPsychologist(id);
+  if (!profile) return null;
 
   const psychologistUserId = profile.user.id;
   const [
@@ -519,26 +523,26 @@ export const showAdminPsychologistActivities = async (
     reports,
     adminLogs,
   ] = await Promise.all([
-    repository.listAuthoredPosts(psychologistUserId, period.current.start, period.current.end),
-    repository.listAuthoredReplies(psychologistUserId, period.current.start, period.current.end),
+    repository.listAuthoredPosts(psychologistUserId, currentPeriod.start, currentPeriod.end),
+    repository.listAuthoredReplies(psychologistUserId, currentPeriod.start, currentPeriod.end),
     repository.listPostSavesByPsychologist(
       psychologistUserId,
-      period.current.start,
-      period.current.end,
+      currentPeriod.start,
+      currentPeriod.end,
     ),
     repository.listReplySavesByPsychologist(
       psychologistUserId,
-      period.current.start,
-      period.current.end,
+      currentPeriod.start,
+      currentPeriod.end,
     ),
-    repository.listSubscriptions(profile.id, period.current.start, period.current.end),
-    repository.listContactRequests(psychologistUserId, period.current.start, period.current.end),
-    repository.listReviews(psychologistUserId, period.current.start, period.current.end),
-    repository.listReports(psychologistUserId, period.current.start, period.current.end),
+    repository.listSubscriptions(profile.id, currentPeriod.start, currentPeriod.end),
+    repository.listContactRequests(psychologistUserId, currentPeriod.start, currentPeriod.end),
+    repository.listReviews(psychologistUserId, currentPeriod.start, currentPeriod.end),
+    repository.listReports(psychologistUserId, currentPeriod.start, currentPeriod.end),
     repository.listAdminActivityLogs(
       Array.from(new Set([profile.id, profile.user.id])),
-      period.current.start,
-      period.current.end,
+      currentPeriod.start,
+      currentPeriod.end,
     ),
   ]);
 
@@ -687,11 +691,27 @@ export const showAdminPsychologistActivities = async (
       ];
     }),
   ]
-    .filter((item) => activityMatchesPeriod(item, period.current))
+    .filter((item) => activityMatchesPeriod(item, currentPeriod))
     .sort((left, right) => right.occurred_at.getTime() - left.occurred_at.getTime());
 
-  const filters = filtersFromActivities(activities);
-  const filtered = activities.filter((item) => activityMatchesQuery(item, query));
+  return { activities, profile };
+};
+
+export const showAdminPsychologistActivities = async (
+  data: IAdminPsychologistActivitiesDTO,
+): Promise<Resolve> => {
+  const query = normalizeQuery(data.q ?? {});
+  const period = resolvePeriod({ from: query.from, to: query.to });
+  if (!period.success) return { status: 400, ...error(period.code, {}) };
+
+  const activityFeed = await buildAdminPsychologistActivityItems({
+    id: data.p.id,
+    period: period.current,
+  });
+  if (!activityFeed) return notFound();
+
+  const filters = filtersFromActivities(activityFeed.activities);
+  const filtered = activityFeed.activities.filter((item) => activityMatchesQuery(item, query));
   const count = filtered.length;
   const pages = Math.max(1, Math.ceil(count / query.limit));
   const page = Math.min(query.page, pages);

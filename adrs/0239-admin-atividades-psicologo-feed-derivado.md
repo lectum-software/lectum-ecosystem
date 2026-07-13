@@ -72,10 +72,19 @@ leitura" e substituir a coluna técnica **Fonte** por **Usuário**. Para eventos
 confiável no contrato resumido, a UI exibe "Não informado"; para posts e respostas criados pelo
 profissional, a UI usa o nome real do psicólogo carregado no cabeçalho do detalhe.
 
+Para evitar divergência entre a aba **Geral** e a aba **Atividades**, o backend passou a montar
+`general.recent_activity` a partir do mesmo construtor real usado por
+`GET /api/admin/private/psychologists/:id/activities`, limitando apenas a quantidade exibida no
+resumo. Assim, a aba Geral mostra os eventos mais recentes do mesmo feed da aba Atividades, com o
+mesmo ator, tipo, descrição e ordenação.
+
 Validações do refinamento:
 
 - `pnpm --dir admin check`
 - `pnpm --dir admin build`
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm check`
 - `GET http://localhost:3002/psicologos/cmgrztri7000tn0uh1q4n8vxf?tab=atividades` retornou `200` no ambiente local.
 - `GET http://localhost:3002/psicologos/cmgrztri7000tn0uh1q4n8vxf` retornou `200` no ambiente local após o ajuste da aba Geral.
 

@@ -1918,20 +1918,11 @@ const RegistryStatusCard = ({ id }: { id: string }) => {
 
 const RecentActivity = ({
   events,
-  psychologistName,
 }: {
   events: AdminPsychologistDetail["general"]["recent_activity"];
-  psychologistName: string | null;
 }) => {
-  const activityUserFor = (
-    event: AdminPsychologistDetail["general"]["recent_activity"][number],
-  ) => {
-    if (event.type === "post_created" || event.type === "reply_created") {
-      return { name: psychologistName || "Psicólogo", role: "Psicólogo" };
-    }
-
-    return { name: "Não informado", role: null };
-  };
+  const activityUserFor = (event: AdminPsychologistDetail["general"]["recent_activity"][number]) =>
+    event.actor ?? { name: "Não informado", role: null };
 
   return (
     <CardShell className="p-5">
@@ -2012,10 +2003,7 @@ const GeneralTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: strin
       </div>
 
       <div className="grid gap-5">
-        <RecentActivity
-          events={detail.general.recent_activity}
-          psychologistName={detail.header.name}
-        />
+        <RecentActivity events={detail.general.recent_activity} />
       </div>
     </div>
   );

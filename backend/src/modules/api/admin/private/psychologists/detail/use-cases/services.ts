@@ -5,6 +5,7 @@ import { crpExperienceYears } from "@/utils/professional-experience";
 import { normalizeProfessionalDisplayName } from "@/utils/professional-name";
 import { parseStoredCrp } from "@/utils/professional-registry";
 import { rankPsychologistCandidates } from "@/utils/psychologist-public-ranking";
+import { buildAdminPsychologistActivityItems } from "../../activities/use-cases/services";
 import type {
   AdminPsychologistCatalogItem,
   AdminPsychologistDetailDTO,
@@ -375,50 +376,6 @@ const buildIntegrations = (
   ];
 };
 
-const eventFromPost = (
-  post: Awaited<ReturnType<AdminPsychologistDetailRepository["listRecentPosts"]>>[number],
-): AdminPsychologistDetailEvent => ({
-  created_at: post.createdAt,
-  description: `Post publicado na comunidade ${post.community.name}.`,
-  id: `post-${post.id}`,
-  label: post.title,
-  source: "community_post",
-  type: "post_created",
-});
-
-const eventFromReply = (
-  reply: Awaited<ReturnType<AdminPsychologistDetailRepository["listRecentReplies"]>>[number],
-): AdminPsychologistDetailEvent => ({
-  created_at: reply.createdAt,
-  description: `Resposta publicada no post ${reply.post.title}.`,
-  id: `reply-${reply.id}`,
-  label: "Resposta em comunidade",
-  source: "post_reply",
-  type: "reply_created",
-});
-
-const eventFromReview = (
-  review: Awaited<ReturnType<AdminPsychologistDetailRepository["listRecentReviews"]>>[number],
-): AdminPsychologistDetailEvent => ({
-  created_at: review.createdAt,
-  description: `Avaliacao publica recebida com nota ${review.rating}.`,
-  id: `review-${review.id}`,
-  label: "Avaliacao recebida",
-  source: "professional_review",
-  type: "review_received",
-});
-
-const eventFromContact = (
-  contact: Awaited<ReturnType<AdminPsychologistDetailRepository["listRecentContacts"]>>[number],
-): AdminPsychologistDetailEvent => ({
-  created_at: contact.createdAt,
-  description: "Clique no WhatsApp registrado para este profissional.",
-  id: `contact-${contact.id}`,
-  label: "Clique no WhatsApp",
-  source: "contact_request",
-  type: "whatsapp_click",
-});
-
 const buildMetrics = (input: {
   favorites: number;
   profileViews: number;
@@ -470,25 +427,14 @@ const buildDetail = async (
   const now = new Date();
   const userId = profile.user.id;
   const currentSubscription = buildSubscription(profile, now);
-  const [
-    favorites,
-    whatsappClicks,
-    profileViews,
-    rankingCandidates,
-    posts,
-    replies,
-    reviews,
-    contacts,
-  ] = await Promise.all([
-    repository.countFavorites(userId),
-    repository.countWhatsappClicks(userId),
-    repository.countProfileViews(userId),
-    repository.listPublicRankingCandidates(),
-    repository.listRecentPosts(userId),
-    repository.listRecentReplies(userId),
-    repository.listRecentReviews(userId),
-    repository.listRecentContacts(userId),
-  ]);
+  const [favorites, whatsappClicks, profileViews, rankingCandidates, activityFeed] =
+    await Promise.all([
+      repository.countFavorites(userId),
+      repository.countWhatsappClicks(userId),
+      repository.countProfileViews(userId),
+      repository.listPublicRankingCandidates(),
+      buildAdminPsychologistActivityItems({ id: profile.id }),
+    ]);
 
   const ranked = await rankPsychologistCandidates(rankingCandidates, null);
   const rankIndex = ranked.findIndex(({ item }) => item.user.id === userId);
@@ -502,14 +448,17 @@ const buildDetail = async (
   const status = mapStatus(profile, now);
   const { regional_crp, registration_number } = splitCrp(profile.crp);
   const accountHistory = buildAccountHistory(profile, currentSubscription);
-  const recentActivity = [
-    ...posts.map(eventFromPost),
-    ...replies.map(eventFromReply),
-    ...reviews.map(eventFromReview),
-    ...contacts.map(eventFromContact),
-  ]
-    .sort((left, right) => right.created_at.getTime() - left.created_at.getTime())
-    .slice(0, 6);
+  const recentActivity: AdminPsychologistDetailEvent[] = (activityFeed?.activities ?? [])
+    .slice(0, 6)
+    .map((activity) => ({
+      actor: activity.actor,
+      created_at: activity.occurred_at,
+      description: activity.description,
+      id: activity.id,
+      label: activity.type.label,
+      source: activity.source,
+      type: activity.type.id,
+    }));
 
   return {
     general: {
