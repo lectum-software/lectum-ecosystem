@@ -2446,6 +2446,10 @@ const StatisticsVideoCard = ({
       <h2 className="text-lg font-black leading-tight text-foreground">
         Análises do vídeo de apresentação
       </h2>
+      <p className="mt-1 text-sm font-bold text-muted">
+        Período: {statistics.period.label} · {formatDateOnly(statistics.period.from)} a{" "}
+        {formatDateOnly(statistics.period.to)}
+      </p>
 
       <div className="mt-4 grid gap-4 xl:grid-cols-[minmax(150px,190px)_minmax(0,1fr)_minmax(220px,280px)] xl:items-stretch">
         <div className="order-1 min-w-0">
