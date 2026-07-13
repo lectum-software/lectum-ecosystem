@@ -112,7 +112,8 @@ Exibir uma linha do tempo simples de eventos reais associados ao psicólogo, sem
 
 - A lista principal da aba Atividades foi simplificada para uma tabela compacta, mais sóbria e alinhada ao bloco "Atividades recentes" da aba Geral.
 - O refinamento manteve apenas as colunas Data, Ação, Descrição e Usuário na tabela; Área, Fonte e Detalhes permanecem no contrato do endpoint quando aplicável, mas não aparecem na listagem principal.
+- No bloco "Atividades recentes" da aba Geral, a tag "Somente leitura" foi removida e a coluna Fonte foi substituída por Usuário, exibindo "Não informado" quando não há ator confiável no resumo.
 - O refinamento preservou dados reais, filtros e paginação; não houve alteração de endpoint, schema, mocks ou packages.
 - Referências visuais usadas: screenshots enviados na solicitação e `_product/proto/admin/Psicólogos/Detalhes do psicólogo/Atividades.png`; Builder/Quick Copy não estava disponível como ferramenta direta no ambiente.
-- Validações do refinamento: `pnpm --dir admin check`, `pnpm --dir admin build` e `GET http://localhost:3002/psicologos/cmgrztri7000tn0uh1q4n8vxf?tab=atividades` com retorno `200`.
+- Validações do refinamento: `pnpm --dir admin check`, `pnpm --dir admin build`, `GET http://localhost:3002/psicologos/cmgrztri7000tn0uh1q4n8vxf?tab=atividades` com retorno `200` e `GET http://localhost:3002/psicologos/cmgrztri7000tn0uh1q4n8vxf` com retorno `200`.
 - ADR atualizado: `adrs/0239-admin-atividades-psicologo-feed-derivado.md`.

@@ -67,11 +67,17 @@ limpa.
 No mobile, a tabela permanece dentro de rolagem horizontal do card, seguindo o padrão já usado
 na aba **Geral**, sem criar uma visualização paralela ou fonte de dados alternativa.
 
+O bloco **Atividades recentes** da aba **Geral** também passou a ocultar a tag visual "Somente
+leitura" e substituir a coluna técnica **Fonte** por **Usuário**. Para eventos recentes sem ator
+confiável no contrato resumido, a UI exibe "Não informado"; para posts e respostas criados pelo
+profissional, a UI usa o nome real do psicólogo carregado no cabeçalho do detalhe.
+
 Validações do refinamento:
 
 - `pnpm --dir admin check`
 - `pnpm --dir admin build`
 - `GET http://localhost:3002/psicologos/cmgrztri7000tn0uh1q4n8vxf?tab=atividades` retornou `200` no ambiente local.
+- `GET http://localhost:3002/psicologos/cmgrztri7000tn0uh1q4n8vxf` retornou `200` no ambiente local após o ajuste da aba Geral.
 
 ## Validação
 

@@ -1918,51 +1918,73 @@ const RegistryStatusCard = ({ id }: { id: string }) => {
 
 const RecentActivity = ({
   events,
+  psychologistName,
 }: {
   events: AdminPsychologistDetail["general"]["recent_activity"];
-}) => (
-  <CardShell className="p-5">
-    <div className="flex items-start justify-between gap-3">
-      <div>
-        <h2 className="text-lg font-black text-foreground">Atividades recentes</h2>
-        <p className="mt-1 text-sm text-muted">
-          Registro simples dos principais eventos reais encontrados.
+  psychologistName: string | null;
+}) => {
+  const activityUserFor = (
+    event: AdminPsychologistDetail["general"]["recent_activity"][number],
+  ) => {
+    if (event.type === "post_created" || event.type === "reply_created") {
+      return { name: psychologistName || "Psicólogo", role: "Psicólogo" };
+    }
+
+    return { name: "Não informado", role: null };
+  };
+
+  return (
+    <CardShell className="p-5">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h2 className="text-lg font-black text-foreground">Atividades recentes</h2>
+          <p className="mt-1 text-sm text-muted">
+            Registro simples dos principais eventos reais encontrados.
+          </p>
+        </div>
+      </div>
+      {events.length === 0 ? (
+        <p className="mt-5 rounded-2xl bg-surface-muted p-4 text-sm text-muted">
+          Nenhuma atividade recente real encontrada para este psicólogo.
         </p>
-      </div>
-      <Badge className="bg-surface-muted text-muted">Somente leitura</Badge>
-    </div>
-    {events.length === 0 ? (
-      <p className="mt-5 rounded-2xl bg-surface-muted p-4 text-sm text-muted">
-        Nenhuma atividade recente real encontrada para este psicólogo.
-      </p>
-    ) : (
-      <div className="mt-4 overflow-x-auto">
-        <table className="w-full min-w-[720px] text-left text-sm">
-          <thead className="border-b border-border text-xs text-muted">
-            <tr>
-              <th className="py-3 pr-3 font-black">Data</th>
-              <th className="px-3 py-3 font-black">Ação</th>
-              <th className="px-3 py-3 font-black">Descrição</th>
-              <th className="px-3 py-3 font-black">Fonte</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-border">
-            {events.map((event) => (
-              <tr key={event.id}>
-                <td className="py-3 pr-3 font-bold text-muted">
-                  {formatDateTime(event.created_at)}
-                </td>
-                <td className="px-3 py-3 font-black text-foreground">{event.label}</td>
-                <td className="px-3 py-3 text-muted">{event.description}</td>
-                <td className="px-3 py-3 text-xs font-bold text-subtle">{event.source}</td>
+      ) : (
+        <div className="mt-4 overflow-x-auto">
+          <table className="w-full min-w-[720px] text-left text-sm">
+            <thead className="border-b border-border text-xs text-muted">
+              <tr>
+                <th className="py-3 pr-3 font-black">Data</th>
+                <th className="px-3 py-3 font-black">Ação</th>
+                <th className="px-3 py-3 font-black">Descrição</th>
+                <th className="px-3 py-3 font-black">Usuário</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    )}
-  </CardShell>
-);
+            </thead>
+            <tbody className="divide-y divide-border">
+              {events.map((event) => {
+                const user = activityUserFor(event);
+
+                return (
+                  <tr key={event.id}>
+                    <td className="py-3 pr-3 font-bold text-muted">
+                      {formatDateTime(event.created_at)}
+                    </td>
+                    <td className="px-3 py-3 font-black text-foreground">{event.label}</td>
+                    <td className="px-3 py-3 text-muted">{event.description}</td>
+                    <td className="px-3 py-3">
+                      <span className="block font-black text-foreground">{user.name}</span>
+                      {user.role ? (
+                        <span className="mt-1 block text-xs font-bold text-muted">{user.role}</span>
+                      ) : null}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </CardShell>
+  );
+};
 
 const GeneralTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: string }) => {
   const metrics = orderGeneralMetrics(detail.general.metrics);
@@ -1990,7 +2012,10 @@ const GeneralTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: strin
       </div>
 
       <div className="grid gap-5">
-        <RecentActivity events={detail.general.recent_activity} />
+        <RecentActivity
+          events={detail.general.recent_activity}
+          psychologistName={detail.header.name}
+        />
       </div>
     </div>
   );
