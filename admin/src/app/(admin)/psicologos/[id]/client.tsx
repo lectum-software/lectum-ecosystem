@@ -1828,8 +1828,7 @@ const RegistryStatusCard = ({ id }: { id: string }) => {
         <div className="flex items-start gap-3">
           <IconCircle icon={AlertTriangle} />
           <div>
-            <h2 className="text-lg font-black text-foreground">Status do registro CRP</h2>
-            <p className="mt-1 text-sm text-muted">{errorMessage}</p>
+            <p className="text-sm text-muted">{errorMessage}</p>
           </div>
         </div>
         <button
@@ -1868,14 +1867,7 @@ const RegistryStatusCard = ({ id }: { id: string }) => {
 
   return (
     <CardShell className="p-5">
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <h2 className="text-lg font-black text-foreground">Status do registro CRP</h2>
-          <p className="mt-1 text-sm text-muted">Resumo real da verificação profissional.</p>
-        </div>
-        <IconCircle icon={ShieldCheck} />
-      </div>
-      <div className="mt-5 rounded-[28px] border border-primary/15 bg-primary-soft/55 p-4">
+      <div className="rounded-[28px] border border-primary/15 bg-primary-soft/55 p-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <p className="text-xs font-black uppercase tracking-[0.12em] text-primary">
@@ -1907,7 +1899,6 @@ const RegistryStatusCard = ({ id }: { id: string }) => {
         className="mt-4 inline-flex h-11 w-full items-center justify-center gap-2 rounded-control border border-primary/45 bg-surface px-4 text-sm font-black text-primary shadow-control transition hover:bg-primary-soft sm:w-auto"
         href={`${pathname}?tab=perfil`}
       >
-        <ShieldCheck aria-hidden className="h-4 w-4" />
         Abrir registro profissional
       </Link>
     </CardShell>
