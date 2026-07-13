@@ -4009,7 +4009,6 @@ const ReportUpholdForm = ({
     mode: "onSubmit",
     resolver: zodResolver(reportUpholdSchema),
   });
-  const selectedMeasure = useWatch({ control: form.control, name: "measure" });
 
   const onSubmit: SubmitHandler<ReportUpholdFormValues> = async (values) => {
     try {
@@ -4066,11 +4065,6 @@ const ReportUpholdForm = ({
           placeholder={REPORT_UPHOLD_CONFIRMATION}
           required
         />
-        {selectedMeasure === "remove_content" ? (
-          <p className="rounded-2xl bg-surface-muted p-3 text-xs font-bold leading-5 text-muted">
-            A remoção é persistente por soft delete e não apaga a denúncia nem a auditoria.
-          </p>
-        ) : null}
         <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
           <button
             className="inline-flex h-12 items-center justify-center rounded-control border border-border px-4 text-sm font-black text-muted transition hover:bg-surface-muted"
