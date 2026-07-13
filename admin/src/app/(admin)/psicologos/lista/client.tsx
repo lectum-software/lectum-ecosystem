@@ -1100,18 +1100,15 @@ export const AdminPsychologistsListClient = () => {
         <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.12em] text-primary">
-              Diretório administrativo
+              Psicólogos
             </p>
             <h1 className="mt-2 text-3xl font-bold tracking-tight text-foreground md:text-4xl">
               Lista de Psicólogos
             </h1>
             <p className="mt-2 max-w-2xl text-sm font-medium leading-6 text-muted">
-              Busca e filtros reais com uma leitura mais calma, refinada e alinhada ao site.
+              Acesse todos os profissionais da plataforma.
             </p>
           </div>
-          <span className="inline-flex w-fit items-center rounded-full bg-primary-soft px-3 py-1.5 text-xs font-semibold text-primary">
-            Piloto visual
-          </span>
         </div>
       </header>
 
