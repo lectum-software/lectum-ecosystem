@@ -1,7 +1,6 @@
 "use client";
 
 import { ChevronDown, ChevronLeft, LogOut, Menu, X } from "lucide-react";
-import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { PropsWithChildren } from "react";
@@ -44,27 +43,26 @@ const SidebarContent = ({
       )}
     >
       <div
-        className={cn(
-          "flex h-20 shrink-0 items-center gap-3 px-5",
-          collapsed && "justify-center px-3",
-        )}
+        className={cn("flex h-20 shrink-0 items-center px-5", collapsed && "justify-center px-3")}
       >
-        <Image
-          alt="Lectum"
-          className={cn(collapsed && "hidden")}
-          height={42}
-          priority
-          src="/logo-light.png"
-          width={150}
-        />
-        <Image
-          alt="Lectum"
-          className={cn(!collapsed && "hidden")}
-          height={36}
-          priority
-          src="/logo-icon.svg"
-          width={36}
-        />
+        <div className={cn("min-w-0", collapsed && "text-center")}>
+          <p
+            className={cn(
+              "truncate text-2xl font-black uppercase leading-none tracking-[0.12em] text-primary",
+              collapsed && "text-lg tracking-[0.04em]",
+            )}
+          >
+            {collapsed ? "L" : "LECTUM"}
+          </p>
+          <p
+            className={cn(
+              "mt-1 truncate text-xs font-bold text-sidebar-muted",
+              collapsed && "sr-only",
+            )}
+          >
+            Painel Administrativo
+          </p>
+        </div>
       </div>
 
       <nav aria-label="Menu administrativo" className="shrink-0 px-3 py-4">
