@@ -196,3 +196,17 @@ Criar o shell de detalhe do psicólogo e as abas Geral e Perfil/Cadastro com dad
 - `pnpm check`
 - `git diff --check -- admin/src/app/(admin)/psicologos/[id]/client.tsx`
 - Browser local/headless em `http://localhost:3002/psicologos/cmrgztri7000tn0uh1q4n8vxf` com viewports 390x844 e 1440x1000 retornou 200 e confirmou o guard real do Admin; validacao visual autenticada do conteudo da aba depende da sessao Admin do navegador do usuario.
+
+## Ajuste complementar 2026-07-13 - remover faixa de aviso em assinatura
+
+- Pedido direto de produto aplicado na aba Admin `Geral`, card `Dados da assinatura`.
+- A faixa informativa `Dados de pagamento sensíveis não são retornados...` foi removida para reduzir ruído visual no resumo.
+- O contrato seguro permanece inalterado: dados sensíveis de pagamento continuam sem ser retornados pelo backend.
+- Não houve alteração de schema Prisma, migrations, contrato de API, package ou ADR arquitetural.
+
+### Validacao do ajuste da faixa de assinatura
+
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `git diff --check -- admin/src/app/(admin)/psicologos/[id]/client.tsx _product/tasks/TASK-55-detalhe-psicologo-geral-perfil-admin.md`
+- Smoke HTTP local em `http://localhost:3002/psicologos/cmrgztri7000tn0uh1q4n8vxf` retornou 200; validação visual autenticada segue dependente da sessão Admin real do navegador do usuário.

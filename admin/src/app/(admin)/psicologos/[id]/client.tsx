@@ -1713,10 +1713,6 @@ const SubscriptionCard = ({ detail }: { detail: AdminPsychologistDetail }) => {
           </div>
         ))}
       </dl>
-      <p className="mt-4 rounded-2xl bg-primary-soft p-3 text-xs font-bold text-muted">
-        Dados de pagamento sensíveis não são retornados. Onde houver gateway, o produto real usa
-        Mercado Pago.
-      </p>
     </CardShell>
   );
 };
