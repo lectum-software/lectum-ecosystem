@@ -4513,10 +4513,6 @@ const ActivitiesTab = ({ id }: { id: string }) => {
 
   return (
     <div className="space-y-5" data-psychologist-detail-tab="atividades">
-      <div className="rounded-2xl border border-primary/20 bg-primary-soft p-4 text-sm font-bold text-muted">
-        {activities.coverage_note}
-      </div>
-
       <CardShell className="p-4">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-end">
           <label className="block flex-1 text-sm font-black text-muted">
@@ -4615,37 +4611,7 @@ const ActivitiesTab = ({ id }: { id: string }) => {
             </label>
           </div>
         ) : null}
-
-        <div className="mt-3 flex flex-wrap items-center gap-2 text-xs font-bold text-muted">
-          <Badge className="bg-primary-soft text-primary">
-            {activities.active_filters_count} filtros ativos
-          </Badge>
-          <span>
-            Período consultado:{" "}
-            {activities.period.from && activities.period.to
-              ? `${activities.period.from} a ${activities.period.to}`
-              : activities.period.label}
-          </span>
-          <span>· Exportação indisponível: {activities.export.reason}</span>
-        </div>
       </CardShell>
-
-      {activities.unavailable.length > 0 ? (
-        <div className="grid gap-3 md:grid-cols-2">
-          {activities.unavailable.map((item) => (
-            <CardShell className="p-4" key={item.id}>
-              <div className="flex gap-3">
-                <IconCircle icon={Info} />
-                <div>
-                  <h2 className="text-sm font-black text-foreground">{item.label}</h2>
-                  <p className="mt-1 text-sm font-bold leading-6 text-muted">{item.description}</p>
-                  <p className="mt-2 text-xs font-bold text-muted">Fonte: {item.source}</p>
-                </div>
-              </div>
-            </CardShell>
-          ))}
-        </div>
-      ) : null}
 
       <CardShell className="overflow-hidden">
         <div className="flex flex-col gap-2 border-b border-border p-4 sm:flex-row sm:items-center sm:justify-between">

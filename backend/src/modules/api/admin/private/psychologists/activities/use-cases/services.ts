@@ -25,10 +25,10 @@ const MS_PER_DAY = 86_400_000;
 
 const AREA_LABELS: Record<AdminPsychologistActivityArea, string> = {
   atendimento: "Atendimento",
-  avaliacoes: "AvaliaÃ§Ãµes",
+  avaliacoes: "Avaliações",
   comunidade: "Comunidade",
   conta: "Conta e acesso",
-  denuncias: "DenÃºncias",
+  denuncias: "Denúncias",
   financeiro: "Financeiro",
   perfil: "Perfil",
 };
@@ -42,20 +42,20 @@ const TYPE_LABELS: Record<AdminPsychologistActivityType, string> = {
   account_temporary_password_set: "Senha tempor\u00e1ria definida",
   admin_personal_data_updated: "Dados pessoais atualizados",
   admin_professional_data_updated: "Dados profissionais atualizados",
-  post_created: "CriaÃ§Ã£o de post",
+  post_created: "Criação de post",
   post_saved: "Post salvo",
   profile_created: "Perfil criado",
-  profile_updated: "AtualizaÃ§Ã£o de perfil",
-  registry_verified: "ValidaÃ§Ã£o de registro",
+  profile_updated: "Atualização de perfil",
+  registry_verified: "Validação de registro",
   reply_created: "Resposta em comunidade",
   reply_saved: "Resposta salva",
-  report_received: "DenÃºncia recebida",
+  report_received: "Denúncia recebida",
   report_content_removed: "Den\u00fancia procedente com conte\u00fado removido",
   report_dismissed: "Den\u00fancia improcedente",
   report_review_started: "Den\u00fancia em an\u00e1lise",
   report_upheld: "Den\u00fancia procedente",
-  review_received: "AvaliaÃ§Ã£o recebida",
-  review_responded: "Resposta Ã  avaliaÃ§Ã£o",
+  review_received: "Avaliação recebida",
+  review_responded: "Resposta à avaliação",
   subscription_started: "Assinatura registrada",
   whatsapp_click: "Clique no WhatsApp",
   whatsapp_verified: "WhatsApp verificado",
@@ -115,7 +115,7 @@ const resolvePeriod = (query: { from?: string; to?: string } = {}): PeriodResult
       current: { end: null, start: null },
       period: {
         from: null,
-        label: "Todo histÃ³rico registrado",
+        label: "Todo histórico registrado",
         max_days: null,
         timezone: "server-local",
         to: null,
@@ -144,7 +144,7 @@ const resolvePeriod = (query: { from?: string; to?: string } = {}): PeriodResult
     current: { end, start },
     period: {
       from: toDateKey(start),
-      label: "PerÃ­odo filtrado",
+      label: "Período filtrado",
       max_days: MAX_CUSTOM_PERIOD_DAYS,
       timezone: "server-local",
       to: toDateKey(end),
@@ -180,10 +180,10 @@ const roleLabel = (role: string) => {
   const labels: Record<string, string> = {
     admin: "Administrador",
     paciente: "Paciente",
-    psicologo: "PsicÃ³logo",
+    psicologo: "Psicólogo",
   };
 
-  return labels[role] ?? "UsuÃ¡rio";
+  return labels[role] ?? "Usuário";
 };
 
 const actorFromUser = (
@@ -209,7 +209,7 @@ const excerpt = (value: string | null | undefined, max = 90) => {
   if (!normalized) return "sem texto cadastrado";
   if (normalized.length <= max) return normalized;
 
-  return `${normalized.slice(0, max - 1).trim()}â€¦`;
+  return `${normalized.slice(0, max - 1).trim()}…`;
 };
 
 const postUrl = (post: AdminPsychologistActivityPost) =>
@@ -241,7 +241,7 @@ const reasonLabel = (reason: string) => {
     abuse: "abuso ou desrespeito",
     other: "outro motivo",
     privacy: "dados pessoais ou privacidade",
-    self_harm: "autolesÃ£o ou risco",
+    self_harm: "autolesão ou risco",
     spam: "spam",
   };
 
@@ -375,7 +375,7 @@ const profileEvents = (
     makeActivity({
       actor,
       area: "perfil",
-      description: "Conta do psicÃ³logo criada na plataforma.",
+      description: "Conta do psicólogo criada na plataforma.",
       id: `account-created-${profile.user.id}`,
       occurred_at: profile.user.createdAt,
       source: "user.createdAt",
@@ -397,7 +397,7 @@ const profileEvents = (
       makeActivity({
         actor,
         area: "perfil",
-        description: "Ãšltima atualizaÃ§Ã£o registrada no cadastro profissional.",
+        description: "Última atualização registrada no cadastro profissional.",
         id: `profile-updated-${profile.id}`,
         occurred_at: profile.updatedAt,
         source: "psychologist_profile.updatedAt",
@@ -425,7 +425,7 @@ const profileEvents = (
       makeActivity({
         actor,
         area: "atendimento",
-        description: "NÃºmero de WhatsApp confirmado para contato profissional.",
+        description: "Número de WhatsApp confirmado para contato profissional.",
         id: `whatsapp-verified-${profile.id}`,
         occurred_at: profile.whatsapp_verified_at,
         source: "psychologist_profile.whatsapp_verified_at",
@@ -486,7 +486,7 @@ const filtersFromActivities = (
     .sort((left, right) => left.label.localeCompare(right.label, "pt-BR"));
 
   return {
-    areas: [{ count: activities.length, id: "all", label: "Todas as Ã¡reas" }, ...areaOptions],
+    areas: [{ count: activities.length, id: "all", label: "Todas as áreas" }, ...areaOptions],
     types: [{ count: activities.length, id: "all", label: "Todos os tipos" }, ...typeOptions],
   };
 };
@@ -622,7 +622,7 @@ export const showAdminPsychologistActivities = async (
         makeActivity({
           actor: actorFromUser(review.author),
           area: "avaliacoes",
-          description: `Recebeu avaliaÃ§Ã£o de ${review.rating} estrela${review.rating === 1 ? "" : "s"}: ${excerpt(
+          description: `Recebeu avaliação de ${review.rating} estrela${review.rating === 1 ? "" : "s"}: ${excerpt(
             review.comment,
           )}.`,
           id: `review-${review.id}`,
@@ -637,7 +637,7 @@ export const showAdminPsychologistActivities = async (
           makeActivity({
             actor: psychologistActor,
             area: "avaliacoes",
-            description: `Resposta do psicÃ³logo registrada para avaliaÃ§Ã£o: ${excerpt(
+            description: `Resposta do psicólogo registrada para avaliação: ${excerpt(
               review.response,
             )}.`,
             id: `review-response-${review.id}`,
@@ -656,9 +656,9 @@ export const showAdminPsychologistActivities = async (
       return makeActivity({
         actor: null,
         area: "denuncias",
-        description: `DenÃºncia registrada em ${content.typeLabel} do psicÃ³logo. Motivo: ${reasonLabel(
+        description: `Denúncia registrada em ${content.typeLabel} do psicólogo. Motivo: ${reasonLabel(
           report.reason,
-        )}. ConteÃºdo: "${content.title}".`,
+        )}. Conteúdo: "${content.title}".`,
         detail_url: content.detailUrl,
         id: `report-${report.id}`,
         occurred_at: report.createdAt,
@@ -705,13 +705,12 @@ export const showAdminPsychologistActivities = async (
       query.from && query.to ? "period" : "",
     ].filter(Boolean).length,
     count,
-    coverage_note:
-      "HistÃ³rico dos principais eventos registrados para esta psicÃ³loga na plataforma. Este feed nÃ£o Ã© uma auditoria completa.",
+    coverage_note: "",
     data: dataSlice,
     export: {
       available: false,
       reason:
-        "ExportaÃ§Ã£o nÃ£o exibida porque ainda nÃ£o existe endpoint real para exportar atividades.",
+        "Exportação não exibida porque ainda não existe endpoint real para exportar atividades.",
     },
     filters,
     page,
@@ -720,22 +719,7 @@ export const showAdminPsychologistActivities = async (
     period: period.period,
     source:
       "user+psychologist_profile+professional_subscription+community_post+post_reply+post_save+post_reply_save+contact_request+professional_review+post_report+admin_activity_log",
-    unavailable: [
-      {
-        description:
-          "Alterações administrativas criadas a partir da TASK-67 possuem trilha própria; edições antigas e uploads/trocas de vídeo anteriores não foram retroagidos.",
-        id: "legacy_field_level_audit",
-        label: "Histórico anterior à auditoria administrativa",
-        source: "not_tracked",
-      },
-      {
-        description:
-          "Eventos de pagamento brutos nÃ£o sÃ£o exibidos aqui porque payment_event nÃ£o possui vÃ­nculo confiÃ¡vel direto com o psicÃ³logo.",
-        id: "payment_events",
-        label: "Eventos brutos de pagamento",
-        source: "payment_event",
-      },
-    ],
+    unavailable: [],
   };
 
   return {

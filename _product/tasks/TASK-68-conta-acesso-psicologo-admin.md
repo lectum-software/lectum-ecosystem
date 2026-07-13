@@ -399,6 +399,7 @@ O endpoint de leitura deve retornar, no m?nimo, dados seguros equivalentes a:
 - Builder/Quick Copy n?o estava dispon?vel no ambiente; foram usadas as imagens locais indicadas em `_product/proto/admin/Psic?logos/Detalhes do psic?logo`. N?o havia prot?tipo espec?fico da aba Conta.
 - N?o houve altera??o em Prisma schema ou migrations; `pnpm --dir backend db:migrate` n?o foi necess?rio.
 - Corre??o p?s-valida??o em 2026-07-11: login/cadastro Google-only n?o cria nem exige senha local. O fluxo Google passa a persistir `need_reset=false`, e a hidrata??o corrige contas Google-only antigas que tenham `need_reset=true` sem `user.password`, evitando for?ar a cria??o indevida de senha local.
+- Correção visual em 2026-07-13: na aba **Atividades**, foram removidas a faixa "Histórico dos principais eventos", a linha de filtros/período/exportação e os cards "Histórico anterior à auditoria administrativa" e "Eventos brutos de pagamento"; os rótulos textuais do feed foram normalizados para PT-BR sem mojibake.
 
 
 ### Valida??o executada
@@ -415,3 +416,4 @@ O endpoint de leitura deve retornar, no m?nimo, dados seguros equivalentes a:
   - `http://localhost:3002/psicologos/test-id?tab=conta` retornou 200 e redirecionou para login por aus?ncia de sess?o Admin, confirmando guard sem quebrar rota.
   - `http://localhost:3000/app/account/need-reset` retornou 200; fluxo autenticado real depende de usu?rio com `need_reset=true`.
 - Muta??o real de e-mail/senha/sess?es n?o foi disparada sem um psic?logo real autorizado e sem inten??o expl?cita de alterar dados reais; endpoints e contratos foram validados por typecheck/build/check.
+- Correção visual 2026-07-13: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check`, smoke HTTP local em `/psicologos/[id]?tab=atividades` com status 200 e verificação estática das remoções solicitadas.
