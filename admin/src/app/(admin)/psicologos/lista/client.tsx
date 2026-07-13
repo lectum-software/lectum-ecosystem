@@ -558,11 +558,11 @@ const SearchBox = ({ onSearch, value }: { onSearch: (value: string) => void; val
 
 const badgeClassName = {
   active: "bg-emerald-50 text-emerald-700",
-  courtesy: "bg-violet-50 text-violet-700",
+  courtesy: "bg-surface-muted text-muted",
   free: "bg-surface-muted text-muted",
   inactive: "bg-surface-muted text-muted",
   pending: "bg-orange-50 text-orange-700",
-  professional: "bg-primary-soft text-primary",
+  professional: "bg-surface-muted text-muted",
 } as const;
 
 const CompactBadge = ({

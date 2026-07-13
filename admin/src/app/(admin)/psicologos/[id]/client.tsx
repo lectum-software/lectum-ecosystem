@@ -1572,7 +1572,7 @@ const DetailHeader = ({ detail, tab }: { detail: AdminPsychologistDetail; tab: A
             </div>
             <div className="mt-3 flex flex-wrap gap-2">
               <Badge className={profileStatus.className}>{profileStatus.label}</Badge>
-              <Badge className="bg-primary-soft text-primary">{getHeaderPlanLabel(detail)}</Badge>
+              <Badge className="bg-surface-muted text-muted">{getHeaderPlanLabel(detail)}</Badge>
               <Badge className="bg-amber-50 text-amber-700">
                 <Star aria-hidden className="mr-1 h-3.5 w-3.5 fill-amber-500 text-amber-500" />
                 {header.rating_avg.toLocaleString("pt-BR", {
