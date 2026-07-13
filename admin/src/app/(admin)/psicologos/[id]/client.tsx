@@ -2844,12 +2844,10 @@ const PsychologistPlatformUsageCard = ({
         <div>
           <h2 className="text-lg font-black text-foreground">Uso da plataforma</h2>
           <p className="mt-1 text-sm font-bold leading-6 text-muted">
-            Navegação autenticada do psicólogo na Lectum entre {formatDateOnly(usage.period_from)} e{" "}
-            {formatDateOnly(usage.period_to)}. Não inclui consultas, sessões clínicas, mensagens ou
-            WhatsApp.
+            Período: {statistics.period.label} · {formatDateOnly(usage.period_from)} a{" "}
+            {formatDateOnly(usage.period_to)}
           </p>
         </div>
-        <Badge className="bg-surface-muted text-muted">page_view_event</Badge>
       </div>
 
       <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
@@ -3242,9 +3240,9 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: st
           />
         </CardShell>
 
-        <PsychologistPlatformUsageCard statistics={businessStatistics} />
-
         <StatisticsVideoCard detail={detail} statistics={businessStatistics} />
+
+        <PsychologistPlatformUsageCard statistics={businessStatistics} />
       </section>
 
       <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-start">
