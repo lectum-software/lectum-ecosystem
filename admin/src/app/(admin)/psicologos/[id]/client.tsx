@@ -2997,12 +2997,6 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: st
 
   const businessStatistics = businessStatisticsQuery.data;
   const communityStatistics = communityStatisticsQuery.data;
-  const unavailableMetrics = [
-    ...businessStatistics.unavailable,
-    ...communityStatistics.unavailable.filter(
-      (metric) => !businessStatistics.unavailable.some((item) => item.id === metric.id),
-    ),
-  ];
   const businessMetricMap = new Map(
     businessStatistics.business.cards.map((metric) => [metric.id, metric]),
   );
@@ -3194,19 +3188,6 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: st
           />
         </CardShell>
       </section>
-
-      {unavailableMetrics.length > 0 ? (
-        <CardShell className="p-4">
-          <p className="text-sm font-black text-foreground">Métricas indisponíveis nesta etapa</p>
-          <ul className="mt-2 list-disc space-y-1 pl-5 text-sm font-bold text-muted">
-            {unavailableMetrics.map((item) => (
-              <li key={item.id}>
-                {item.label}: {item.unavailable_reason}
-              </li>
-            ))}
-          </ul>
-        </CardShell>
-      ) : null}
     </div>
   );
 };
@@ -3583,19 +3564,6 @@ const PublicationsTab = ({ createdAt, id }: { createdAt: string; id: string }) =
           />
         </div>
       </CardShell>
-
-      {publications.unavailable.length > 0 ? (
-        <CardShell className="p-4">
-          <p className="text-sm font-black text-foreground">Métricas indisponíveis nesta etapa</p>
-          <ul className="mt-2 list-disc space-y-1 pl-5 text-sm font-bold text-muted">
-            {publications.unavailable.map((item) => (
-              <li key={item.id}>
-                {item.label}: {item.unavailable_reason}
-              </li>
-            ))}
-          </ul>
-        </CardShell>
-      ) : null}
     </div>
   );
 };

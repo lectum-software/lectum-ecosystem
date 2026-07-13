@@ -22,6 +22,7 @@ Também já existia auditoria administrativa genérica da TASK-67 via `admin_act
 - Correção pós-validação em 2026-07-11: cadastro/autenticação Google-only não deve definir nem manter `need_reset=true`, porque isso força a criação indevida de senha local. `has_password` continua significando exclusivamente `Boolean(user.password)` para uma senha local realmente existente.
 - Correção visual em 2026-07-13: a aba **Atividades** do detalhe do psicólogo deixou de renderizar a faixa explicativa, a linha de filtros/período/exportação e os cards de indisponibilidade "Histórico anterior à auditoria administrativa" e "Eventos brutos de pagamento"; os rótulos textuais do feed foram normalizados para PT-BR sem mojibake.
 - Correção visual complementar em 2026-07-13: a lista de eventos da aba **Atividades** passou a mostrar somente a tag principal do tipo de atividade, sem o selo "Fontes reais" nem linhas de fonte técnica por item, e reutiliza o ícone proprietário de WhatsApp já usado na Lectum para eventos de clique.
+- Correção visual adicional em 2026-07-13: a faixa "Métricas indisponíveis nesta etapa" deixou de aparecer nas abas do detalhe do psicólogo, mantendo indisponibilidades apenas em sinalizações inline quando o contrato real trouxer esse estado.
 
 ## Consequências
 
