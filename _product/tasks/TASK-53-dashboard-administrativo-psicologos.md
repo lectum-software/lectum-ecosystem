@@ -222,3 +222,10 @@ Packages usados:
 - Quando não há base paga Mercado Pago ativa no início do período, o churn segue com estado honesto **Indisponível**.
 - Não houve alteração de Prisma schema, migrations, mock ou fonte paralela de dados.
 - Validações desta correção: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm --dir frontend check`, `pnpm check` e smoke HTTP local em `http://localhost:3002/psicologos` retornando 200.
+
+### Correção UX em 2026-07-13 - taxa nos contadores de plano
+
+- Os cards **Psicólogos gratuitos**, **Psicólogos assinantes** e **Psicólogos cortesia** passam a exibir `quantidade (percentual)` usando o total real de psicólogos como denominador, por exemplo `0 (0%)`.
+- O percentual fica com menor peso visual que a contagem, preservando legibilidade mobile-first e mantendo o mesmo tratamento visual em **Churn**.
+- Não houve alteração de contrato backend, Prisma, migrations, mock ou fonte paralela de dados; o cálculo é derivado no Admin a partir dos cards reais já retornados pelo dashboard.
+- Validações desta correção: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke HTTP local em `http://localhost:3002/psicologos` retornando 200.

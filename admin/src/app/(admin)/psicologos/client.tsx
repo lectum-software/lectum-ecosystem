@@ -213,17 +213,6 @@ const formatChange = (value: number | null) => {
 
 const formatPercentageValue = (value: number) => `${numberFormatter.format(value)}%`;
 
-const formatMetricValue = (metric: PsychologistsDashboardMetric) => {
-  if (metric.id === "churn" && typeof metric.value_count === "number") {
-    return `${numberFormatter.format(metric.value_count)} (${formatPercentageValue(metric.value)})`;
-  }
-
-  if (metric.unit === "currency_cents") return currencyFormatter.format(metric.value / 100);
-  if (metric.unit === "percentage") return formatPercentageValue(metric.value);
-
-  return numberFormatter.format(metric.value);
-};
-
 const isValidRange = (range: DashboardRange, period: DashboardPeriodValue) => {
   if (period !== "custom") return true;
   if (!range.from || !range.to) return false;
@@ -275,6 +264,52 @@ const DASHBOARD_METRIC_CONFIG = {
   total_psychologists: { color: "#308ce8", icon: UsersRound },
 } satisfies Record<DashboardMetricKey, { color: string; icon: LucideIcon }>;
 
+const RATE_WITH_COUNT_METRICS = [
+  "courtesy_psychologists",
+  "free_psychologists",
+  "subscriber_psychologists",
+] as const;
+
+const shouldShowPlanShareRate = (metric: PsychologistsDashboardMetric) =>
+  RATE_WITH_COUNT_METRICS.includes(metric.id as (typeof RATE_WITH_COUNT_METRICS)[number]);
+
+const getPlanShareRate = (metric: PsychologistsDashboardMetric, total: number | undefined) => {
+  if (!shouldShowPlanShareRate(metric)) return null;
+
+  return total && total > 0 ? toOneDecimal((metric.value / total) * 100) : 0;
+};
+
+const getMetricValueParts = (
+  metric: PsychologistsDashboardMetric,
+  options?: { totalPsychologists?: number },
+) => {
+  const planShareRate = getPlanShareRate(metric, options?.totalPsychologists);
+
+  if (planShareRate !== null) {
+    return {
+      main: numberFormatter.format(metric.value),
+      rate: `(${formatPercentageValue(planShareRate)})`,
+    };
+  }
+
+  if (metric.id === "churn" && typeof metric.value_count === "number") {
+    return {
+      main: numberFormatter.format(metric.value_count),
+      rate: `(${formatPercentageValue(metric.value)})`,
+    };
+  }
+
+  if (metric.unit === "currency_cents") {
+    return { main: currencyFormatter.format(metric.value / 100), rate: null };
+  }
+
+  if (metric.unit === "percentage") {
+    return { main: formatPercentageValue(metric.value), rate: null };
+  }
+
+  return { main: numberFormatter.format(metric.value), rate: null };
+};
+
 const TrendBadge = ({ metric }: { metric: PsychologistsDashboardMetric }) => {
   if (metric.unavailable)
     return (
@@ -302,55 +337,69 @@ const MetricCard = ({
   icon: Icon,
   metric,
   onToggle,
+  totalPsychologists,
 }: {
   active: boolean;
   color: string;
   icon: LucideIcon;
   metric: PsychologistsDashboardMetric;
   onToggle: () => void;
-}) => (
-  <button
-    aria-pressed={active}
-    className={cn(
-      "min-h-[8.75rem] min-w-0 rounded-card border bg-surface/95 p-3 text-left shadow-admin-soft transition duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 md:p-4 xl:min-h-[8.25rem] xl:p-3",
-      active
-        ? "border-primary/35 ring-1 ring-primary/10"
-        : "border-border/70 hover:-translate-y-0.5 hover:border-primary/25",
-    )}
-    onClick={onToggle}
-    title={`${metric.label}: ${formatMetricValue(metric)}. ${
-      active ? "Visível no gráfico" : "Oculto no gráfico"
-    }`}
-    type="button"
-  >
-    <div className="flex items-start justify-between gap-3">
-      <div
-        className="grid h-9 w-9 place-items-center rounded-full xl:h-8 xl:w-8"
-        style={{ backgroundColor: hexToRgba(color, 0.1), color }}
-      >
-        <Icon aria-hidden className="h-4 w-4" />
+  totalPsychologists?: number;
+}) => {
+  const valueParts = getMetricValueParts(metric, { totalPsychologists });
+  const formattedValue = valueParts.rate
+    ? `${valueParts.main} ${valueParts.rate}`
+    : valueParts.main;
+
+  return (
+    <button
+      aria-pressed={active}
+      className={cn(
+        "min-h-[8.75rem] min-w-0 rounded-card border bg-surface/95 p-3 text-left shadow-admin-soft transition duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 md:p-4 xl:min-h-[8.25rem] xl:p-3",
+        active
+          ? "border-primary/35 ring-1 ring-primary/10"
+          : "border-border/70 hover:-translate-y-0.5 hover:border-primary/25",
+      )}
+      onClick={onToggle}
+      title={`${metric.label}: ${formattedValue}. ${
+        active ? "Visível no gráfico" : "Oculto no gráfico"
+      }`}
+      type="button"
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div
+          className="grid h-9 w-9 place-items-center rounded-full xl:h-8 xl:w-8"
+          style={{ backgroundColor: hexToRgba(color, 0.1), color }}
+        >
+          <Icon aria-hidden className="h-4 w-4" />
+        </div>
       </div>
-    </div>
-    <div className="mt-4 min-w-0 space-y-1.5 xl:mt-3">
-      <p
-        className="truncate whitespace-nowrap text-xs font-semibold text-foreground"
-        title={metric.label}
-      >
-        {metric.label}
-      </p>
-      <p className="truncate whitespace-nowrap text-2xl font-bold tracking-tight text-foreground xl:text-[1.65rem]">
-        {formatMetricValue(metric)}
-      </p>
-      <div className="flex min-w-0 items-center gap-1.5 overflow-hidden whitespace-nowrap">
-        <TrendBadge metric={metric} />
-        <span className="min-w-0 truncate text-[0.68rem] font-medium text-muted">
-          vs. período anterior
-        </span>
+      <div className="mt-4 min-w-0 space-y-1.5 xl:mt-3">
+        <p
+          className="truncate whitespace-nowrap text-xs font-semibold text-foreground"
+          title={metric.label}
+        >
+          {metric.label}
+        </p>
+        <p className="flex min-w-0 items-baseline gap-1.5 overflow-hidden whitespace-nowrap text-2xl font-bold tracking-tight text-foreground xl:text-[1.65rem]">
+          <span className="min-w-0 truncate">{valueParts.main}</span>
+          {valueParts.rate ? (
+            <span className="shrink-0 text-base font-semibold text-muted xl:text-sm">
+              {valueParts.rate}
+            </span>
+          ) : null}
+        </p>
+        <div className="flex min-w-0 items-center gap-1.5 overflow-hidden whitespace-nowrap">
+          <TrendBadge metric={metric} />
+          <span className="min-w-0 truncate text-[0.68rem] font-medium text-muted">
+            vs. período anterior
+          </span>
+        </div>
+        <span className="sr-only">{active ? "visível no gráfico" : "oculto no gráfico"}</span>
       </div>
-      <span className="sr-only">{active ? "visível no gráfico" : "oculto no gráfico"}</span>
-    </div>
-  </button>
-);
+    </button>
+  );
+};
 
 const LoadingGrid = () => (
   <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
@@ -1059,6 +1108,7 @@ const CardsGrid = ({
               key={key}
               metric={cards[key]}
               onToggle={() => onToggleMetric(key)}
+              totalPsychologists={cards.total_psychologists.value}
               {...config}
             />
           );
