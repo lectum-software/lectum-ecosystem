@@ -91,7 +91,6 @@ import type {
   AdminPsychologistDetail,
   AdminPsychologistDetailMetric,
   AdminPsychologistEngagementMetric,
-  AdminPsychologistIntegrationStatus,
   AdminPsychologistPublicationItem,
   AdminPsychologistPublicationMetric,
   AdminPsychologistPublicationsQuery,
@@ -310,15 +309,6 @@ const getStaticOptionLabel = (
 const PROFILE_STATUS_COPY: Record<"active" | "inactive", { className: string; label: string }> = {
   active: { className: "bg-emerald-50 text-success", label: "Ativo" },
   inactive: { className: "bg-red-50 text-danger", label: "Inativo" },
-};
-
-const INTEGRATION_TONE: Record<AdminPsychologistIntegrationStatus["status"], string> = {
-  active: "bg-emerald-50 text-success",
-  configured: "bg-blue-50 text-blue-700",
-  missing: "bg-surface-muted text-muted",
-  pending: "bg-orange-50 text-orange-700",
-  synced: "bg-emerald-50 text-success",
-  unavailable: "bg-surface-muted text-muted",
 };
 
 const REGISTRY_VERIFICATION_TONE: Record<string, string> = {
@@ -1731,66 +1721,127 @@ const SubscriptionCard = ({ detail }: { detail: AdminPsychologistDetail }) => {
   );
 };
 
-const IntegrationsCard = ({ detail }: { detail: AdminPsychologistDetail }) => (
-  <CardShell className="p-5">
-    <h2 className="text-lg font-black text-foreground">Integrações automáticas</h2>
-    <div className="mt-4 overflow-x-auto">
-      <table className="w-full min-w-[620px] text-left text-sm">
-        <thead className="border-b border-border text-xs text-muted">
-          <tr>
-            <th className="py-3 pr-3 font-black">Integração</th>
-            <th className="px-3 py-3 font-black">Status</th>
-            <th className="px-3 py-3 font-black">Última sincronização</th>
-            <th className="px-3 py-3 font-black">Fonte</th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-border">
-          {detail.general.integrations.map((integration) => (
-            <tr key={integration.id}>
-              <td className="py-3 pr-3 font-black text-foreground">{integration.label}</td>
-              <td className="px-3 py-3">
-                <Badge className={INTEGRATION_TONE[integration.status]}>
-                  {integration.status_label}
-                </Badge>
-              </td>
-              <td className="px-3 py-3 font-bold text-muted">
-                {formatDateTime(integration.checked_at)}
-              </td>
-              <td className="px-3 py-3 text-xs font-bold text-muted">{integration.source}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  </CardShell>
-);
+const registryResponsibleLabel = (registry: AdminPsychologistRegistryVerification) => {
+  const actor = registry.summary.latest_manual_admin;
+  if (actor?.name) return actor.name;
+  if (registry.summary.source === "api_automatica") return "Via API automática";
+  if (registry.summary.source === "admin_grant" || registry.summary.source === "manual_admin") {
+    return "Admin Lectum";
+  }
 
-const EventTimeline = ({
-  events,
-}: {
-  events: AdminPsychologistDetail["general"]["account_history"];
-}) => (
-  <CardShell className="p-5">
-    <h2 className="text-lg font-black text-foreground">Histórico da conta</h2>
-    <p className="mt-1 text-sm text-muted">
-      Eventos derivados de registros existentes; não é auditoria completa.
-    </p>
-    <ol className="mt-5 space-y-4">
-      {events.map((event) => (
-        <li className="grid gap-3 sm:grid-cols-[160px_1fr]" key={event.id}>
-          <time className="text-sm font-black text-primary">
-            {formatDateTime(event.created_at)}
-          </time>
-          <div className="rounded-2xl border border-border bg-surface-muted p-3">
-            <p className="font-black text-foreground">{event.label}</p>
-            <p className="mt-1 text-sm text-muted">{event.description}</p>
-            <p className="mt-2 text-xs font-bold text-subtle">Fonte: {event.source}</p>
+  return "Não informado";
+};
+
+const registryLastUpdate = (registry: AdminPsychologistRegistryVerification) =>
+  registry.summary.latest_manual_checked_at ??
+  registry.summary.cfp_verified_at ??
+  registry.latest_attempts[0]?.checked_at ??
+  null;
+
+const RegistryStatusCard = ({ id }: { id: string }) => {
+  const pathname = usePathname();
+  const query = useAdminPsychologistRegistryVerification(id);
+  const errorMessage = query.error ? resolveApiError(query.error) : null;
+
+  if (query.isLoading) {
+    return (
+      <CardShell className="p-5">
+        <div className="h-52 animate-pulse rounded-3xl bg-surface-muted" />
+      </CardShell>
+    );
+  }
+
+  if (query.isError && errorMessage) {
+    return (
+      <CardShell className="p-5">
+        <div className="flex items-start gap-3">
+          <IconCircle icon={AlertTriangle} />
+          <div>
+            <h2 className="text-lg font-black text-foreground">Status do registro CRP</h2>
+            <p className="mt-1 text-sm text-muted">{errorMessage}</p>
           </div>
-        </li>
-      ))}
-    </ol>
-  </CardShell>
-);
+        </div>
+        <button
+          className="mt-5 inline-flex h-11 w-full items-center justify-center gap-2 rounded-control border border-border bg-surface px-4 text-sm font-black text-foreground transition hover:border-primary sm:w-auto"
+          onClick={() => void query.refetch()}
+          type="button"
+        >
+          <RefreshCw aria-hidden className="h-4 w-4" />
+          Tentar novamente
+        </button>
+      </CardShell>
+    );
+  }
+
+  const registry = query.data;
+  if (!registry) return null;
+
+  const lastUpdate = registryLastUpdate(registry);
+  const summaryItems = [
+    { label: "Regional CRP", value: formatNullable(registry.identity.regional_crp) },
+    { label: "Nº CRP", value: formatNullable(registry.identity.registration_number) },
+    {
+      label: "Data de inscrição",
+      value: formatDateOnly(registry.identity.crp_registration_date),
+    },
+    { label: "Origem", value: registry.summary.source_label },
+    { label: "Responsável", value: registryResponsibleLabel(registry) },
+    { label: "Última atualização", value: formatDateTime(lastUpdate) },
+  ];
+  const helperText =
+    registry.summary.status === "aprovado"
+      ? "Registro ativo para operações Lectum. Dados públicos do conselho podem ser revisados em Perfil e cadastro."
+      : registry.actions.can_approve_manually
+        ? "Registro pendente. Revise os dados do conselho e aprove ou rejeite em Perfil e cadastro."
+        : "Resumo somente leitura. Ações do registro ficam concentradas em Perfil e cadastro.";
+
+  return (
+    <CardShell className="p-5">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h2 className="text-lg font-black text-foreground">Status do registro CRP</h2>
+          <p className="mt-1 text-sm text-muted">Resumo real da verificação profissional.</p>
+        </div>
+        <IconCircle icon={ShieldCheck} />
+      </div>
+      <div className="mt-5 rounded-[28px] border border-primary/15 bg-primary-soft/55 p-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <p className="text-xs font-black uppercase tracking-[0.12em] text-primary">
+              Situação atual
+            </p>
+            <p className="mt-1 text-xl font-black text-foreground">
+              {registry.summary.status_label}
+            </p>
+          </div>
+          <Badge
+            className={
+              REGISTRY_VERIFICATION_TONE[registry.summary.status] ?? "bg-surface-muted text-muted"
+            }
+          >
+            {registry.summary.approval_label}
+          </Badge>
+        </div>
+        <p className="mt-3 text-sm font-bold leading-6 text-muted">{helperText}</p>
+      </div>
+      <dl className="mt-4 divide-y divide-border text-sm">
+        {summaryItems.map((item) => (
+          <div className="grid gap-1 py-3 sm:grid-cols-[170px_1fr]" key={item.label}>
+            <dt className="font-black text-muted">{item.label}</dt>
+            <dd className="font-bold text-foreground">{item.value}</dd>
+          </div>
+        ))}
+      </dl>
+      <Link
+        className="mt-4 inline-flex h-11 w-full items-center justify-center gap-2 rounded-control border border-primary/45 bg-surface px-4 text-sm font-black text-primary shadow-control transition hover:bg-primary-soft sm:w-auto"
+        href={`${pathname}?tab=perfil`}
+      >
+        <ShieldCheck aria-hidden className="h-4 w-4" />
+        Abrir registro profissional
+      </Link>
+    </CardShell>
+  );
+};
 
 const RecentActivity = ({
   events,
@@ -1840,7 +1891,7 @@ const RecentActivity = ({
   </CardShell>
 );
 
-const GeneralTab = ({ detail }: { detail: AdminPsychologistDetail }) => {
+const GeneralTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: string }) => {
   const metrics = orderGeneralMetrics(detail.general.metrics);
 
   return (
@@ -1856,11 +1907,10 @@ const GeneralTab = ({ detail }: { detail: AdminPsychologistDetail }) => {
 
       <div className="grid gap-5 xl:grid-cols-[1.1fr_0.9fr]">
         <SubscriptionCard detail={detail} />
-        <IntegrationsCard detail={detail} />
+        <RegistryStatusCard id={id} />
       </div>
 
-      <div className="grid gap-5 2xl:grid-cols-[0.9fr_1.1fr]">
-        <EventTimeline events={detail.general.account_history} />
+      <div className="grid gap-5">
         <RecentActivity events={detail.general.recent_activity} />
       </div>
     </div>
@@ -3243,6 +3293,33 @@ const PublicationsPagination = ({
   </div>
 );
 
+const PublicationFilterSelect = ({
+  children,
+  id,
+  onChange,
+  value,
+}: {
+  children: ReactNode;
+  id: string;
+  onChange: (value: string) => void;
+  value: string;
+}) => (
+  <span className="relative mt-2 block">
+    <select
+      className="h-11 w-full appearance-none rounded-control border border-border bg-surface py-0 pl-3 pr-14 text-sm font-bold text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+      id={id}
+      onChange={(event) => onChange(event.target.value)}
+      value={value}
+    >
+      {children}
+    </select>
+    <ChevronDown
+      aria-hidden
+      className="pointer-events-none absolute right-5 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground"
+    />
+  </span>
+);
+
 const PublicationsTab = ({ createdAt, id }: { createdAt: string; id: string }) => {
   const [q, setQ] = useState("");
   const [community, setCommunity] = useState("all");
@@ -3250,10 +3327,10 @@ const PublicationsTab = ({ createdAt, id }: { createdAt: string; id: string }) =
   const [selectedPeriod, setSelectedPeriod] = useState<PublicationsPeriodValue>("all");
   const [appliedPeriod, setAppliedPeriod] = useState<PublicationsPeriodValue>("all");
   const [draftRange, setDraftRange] = useState<PublicationsCustomRange>(() =>
-    getStatisticsRangeForPeriod("week", createdAt),
+    getStatisticsRangeForPeriod("all", createdAt),
   );
   const [appliedRange, setAppliedRange] = useState<PublicationsCustomRange>(() =>
-    getStatisticsRangeForPeriod("week", createdAt),
+    getStatisticsRangeForPeriod("all", createdAt),
   );
   const [rangeError, setRangeError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
@@ -3291,6 +3368,10 @@ const PublicationsTab = ({ createdAt, id }: { createdAt: string; id: string }) =
       return;
     }
 
+    const nextRange = getStatisticsRangeForPeriod(period, createdAt);
+
+    setDraftRange(nextRange);
+    setAppliedRange(nextRange);
     setAppliedPeriod(period);
   };
   const handleCustomDateChange = (field: keyof PublicationsCustomRange, value: string) => {
@@ -3323,14 +3404,7 @@ const PublicationsTab = ({ createdAt, id }: { createdAt: string; id: string }) =
   return (
     <div className="space-y-5" data-psychologist-detail-tab="publicacoes">
       <CardShell className="p-4">
-        <div
-          className={cn(
-            "grid gap-3",
-            selectedPeriod === "custom"
-              ? "lg:grid-cols-[1.35fr_0.9fr_0.75fr_0.9fr_0.8fr_0.8fr]"
-              : "lg:grid-cols-[1.5fr_1fr_1fr_1fr]",
-          )}
-        >
+        <div className="grid gap-3 lg:grid-cols-[1.35fr_0.9fr_0.75fr_0.9fr_0.8fr_0.8fr]">
           <label className="block text-sm font-black text-muted">
             Buscar
             <span className="mt-2 flex h-11 items-center gap-2 rounded-control border border-border bg-surface px-3">
@@ -3347,12 +3421,12 @@ const PublicationsTab = ({ createdAt, id }: { createdAt: string; id: string }) =
               />
             </span>
           </label>
-          <label className="block text-sm font-black text-muted">
+          <label className="block text-sm font-black text-muted" htmlFor="publications-community">
             Comunidade
-            <select
-              className="mt-2 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground"
-              onChange={(event) => {
-                setCommunity(event.target.value);
+            <PublicationFilterSelect
+              id="publications-community"
+              onChange={(value) => {
+                setCommunity(value);
                 setPage(1);
               }}
               value={community}
@@ -3363,32 +3437,30 @@ const PublicationsTab = ({ createdAt, id }: { createdAt: string; id: string }) =
                   {option.label}
                 </option>
               ))}
-            </select>
+            </PublicationFilterSelect>
           </label>
-          <label className="block text-sm font-black text-muted">
+          <label className="block text-sm font-black text-muted" htmlFor="publications-type">
             Tipo
-            <select
-              className="mt-2 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground"
-              onChange={(event) => {
-                setType(event.target.value as AdminPsychologistPublicationsQuery["type"]);
+            <PublicationFilterSelect
+              id="publications-type"
+              onChange={(value) => {
+                setType(value as AdminPsychologistPublicationsQuery["type"]);
                 setPage(1);
               }}
-              value={type}
+              value={type ?? "all"}
             >
               {publications.filters.types.map((option) => (
                 <option key={option.id} value={option.id}>
                   {option.label}
                 </option>
               ))}
-            </select>
+            </PublicationFilterSelect>
           </label>
-          <label className="block text-sm font-black text-muted">
+          <label className="block text-sm font-black text-muted" htmlFor="publications-period">
             Período
-            <select
-              className="mt-2 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground"
-              onChange={(event) => {
-                handlePeriodChange(event.target.value as PublicationsPeriodValue);
-              }}
+            <PublicationFilterSelect
+              id="publications-period"
+              onChange={(value) => handlePeriodChange(value as PublicationsPeriodValue)}
               value={selectedPeriod}
             >
               {PUBLICATIONS_PERIOD_OPTIONS.map((option) => (
@@ -3396,36 +3468,30 @@ const PublicationsTab = ({ createdAt, id }: { createdAt: string; id: string }) =
                   {option.label}
                 </option>
               ))}
-            </select>
+            </PublicationFilterSelect>
           </label>
-          {selectedPeriod === "custom" ? (
-            <>
-              <label className="block text-sm font-black text-muted">
-                De
-                <input
-                  className="mt-2 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground"
-                  max={draftRange.to}
-                  onChange={(event) => handleCustomDateChange("from", event.target.value)}
-                  type="date"
-                  value={draftRange.from ?? ""}
-                />
-              </label>
-              <label className="block text-sm font-black text-muted">
-                Até
-                <input
-                  className="mt-2 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground"
-                  min={draftRange.from}
-                  onChange={(event) => handleCustomDateChange("to", event.target.value)}
-                  type="date"
-                  value={draftRange.to ?? ""}
-                />
-              </label>
-            </>
-          ) : null}
+          <label className="block text-sm font-black text-muted">
+            De
+            <input
+              className="mt-2 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground"
+              max={draftRange.to}
+              onChange={(event) => handleCustomDateChange("from", event.target.value)}
+              type="date"
+              value={draftRange.from ?? ""}
+            />
+          </label>
+          <label className="block text-sm font-black text-muted">
+            Até
+            <input
+              className="mt-2 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground"
+              min={draftRange.from}
+              onChange={(event) => handleCustomDateChange("to", event.target.value)}
+              type="date"
+              value={draftRange.to ?? ""}
+            />
+          </label>
         </div>
-        {selectedPeriod === "custom" && rangeError ? (
-          <p className="mt-3 text-xs font-bold text-danger">{rangeError}</p>
-        ) : null}
+        {rangeError ? <p className="mt-3 text-xs font-bold text-danger">{rangeError}</p> : null}
       </CardShell>
 
       <CardShell className="overflow-hidden">
@@ -7282,7 +7348,7 @@ const Content = ({
     ) : tab === "conta" ? (
       <AccountTab id={id} />
     ) : (
-      <GeneralTab detail={detail} />
+      <GeneralTab detail={detail} id={id} />
     )}
   </main>
 );

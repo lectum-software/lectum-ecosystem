@@ -177,3 +177,22 @@ Criar o shell de detalhe do psicólogo e as abas Geral e Perfil/Cadastro com dad
 - `git diff --check -- admin/src/app/(admin)/psicologos/[id]/client.tsx _product/tasks/TASK-55-detalhe-psicologo-geral-perfil-admin.md adrs/0253-admin-visibilidade-publica-perfil-psicologo.md` executado sem erros.
 - `pnpm check` foi executado: frontend passou, backend ficou bloqueado por arquivos preexistentes/untracked da TASK-68 em `backend/src/modules/api/admin/private/psychologists/account/` e organizacao de imports em `backend/src/main/server/imports/write.ts`, fora do escopo deste ajuste.
 - Browser local: smoke em Chrome headless 390x844 para `/psicologos/cmrglzdds000ajkuhqedavedb?tab=perfil` gerou screenshot da protecao/carregamento do painel, mas a sessao Admin autenticada do navegador do usuario nao estava disponivel no headless para validar visualmente o card com dados reais.
+
+## Ajuste complementar 2026-07-13 - Geral com status do registro CRP
+
+- Pedido direto de produto aplicado na aba Admin `Geral` do detalhe do psicologo.
+- O bloco `Integracoes automaticas` foi removido da aba Geral.
+- O bloco `Historico da conta` foi removido da aba Geral para nao competir com a aba dedicada `Atividades` e com a aba `Conta`.
+- Foi adicionado o card `Status do registro CRP`, usando o endpoint administrativo real de verificacao profissional para exibir status, origem, responsavel, Regional CRP, Numero CRP, Data de inscricao e ultima atualizacao.
+- O card e somente resumo na aba Geral; as acoes e edicoes sensiveis continuam concentradas em `Perfil e cadastro > Registro profissional`.
+- UI permanece mobile-first: cards empilhados em ~390px e grade em desktop.
+- Builder/Quick Copy nao esteve acessivel como ferramenta neste ambiente; foram usadas a captura enviada pelo usuario e a referencia local `_product/proto/admin/Psicologos/Detalhes do psicologo/Geral.png`.
+- Nao houve alteracao de Prisma schema ou migrations; `pnpm --dir backend db:migrate` nao se aplica.
+
+### Validacao do ajuste de Geral/CRP
+
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check`
+- `git diff --check -- admin/src/app/(admin)/psicologos/[id]/client.tsx`
+- Browser local/headless em `http://localhost:3002/psicologos/cmrgztri7000tn0uh1q4n8vxf` com viewports 390x844 e 1440x1000 retornou 200 e confirmou o guard real do Admin; validacao visual autenticada do conteudo da aba depende da sessao Admin do navegador do usuario.

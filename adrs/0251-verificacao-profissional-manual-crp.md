@@ -251,3 +251,16 @@ tentativa continuam preservados no item.
 A modal global de confirmacao forte para "Salvar registro" passa a carregar a classe `admin-premium-pilot` no proprio portal para preservar tokens, pesos e paleta do piloto mesmo fora da arvore do shell Admin. A rolagem interna foi removida e o conteudo foi reorganizado em um resumo compacto dos dados do CRP seguido da confirmacao forte e da acao principal.
 
 A data de inscricao exibida no resumo da confirmacao usa o mesmo formatter de data apenas-dia do Admin, apresentando `dd/mm/aaaa` em vez do valor tecnico `aaaa-mm-dd` usado pelo campo `type="date"`.
+
+## Complemento 2026-07-13: resumo do registro CRP na aba Geral
+
+A aba Geral do detalhe Admin do psicologo deixa de exibir os blocos
+"Integracoes automaticas" e "Historico da conta". O status operacional do CRP
+passa a ocupar esse espaco como card de resumo `Status do registro CRP`, alimentado
+pelo endpoint real de verificacao profissional ja existente.
+
+A decisao evita duplicidade com a aba Conta e com a aba Atividades, mantendo na
+Geral apenas um resumo de leitura rapida: status, origem, responsavel, Regional
+CRP, Numero CRP, Data de inscricao e ultima atualizacao. Edicao dos dados do
+conselho, aprovacao/rejeicao manual e historico de tentativas continuam
+concentrados em `Perfil e cadastro > Registro profissional`.
