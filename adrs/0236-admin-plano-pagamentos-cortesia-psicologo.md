@@ -423,3 +423,24 @@ Validação complementar:
 - `pnpm check` foi reexecutado e ficou bloqueado por erros preexistentes fora deste ajuste em `frontend/src/utils/psychologist-onboarding.ts` e `frontend/src/app/app/professional/billing/checkout/logic.tsx`
 - `git diff --check` nos arquivos alterados
 - Browser local: `GET http://localhost:3002/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=plano` retornou 200; a conferência visual autenticada ficou limitada pela sessão Admin não exposta ao ambiente de automação.
+
+## Complemento 2026-07-13 - renovação não aplicável para plano gratuito
+
+Produto decidiu que a leitura administrativa do card `Plano atual` não deve tratar ausência de `current_period_end` do plano gratuito como dado faltante.
+
+Decisão:
+
+- Para plano gratuito vigente, exibir `Não se aplica` na linha `Próxima renovação`.
+- Para assinatura paga, manter a data real de renovação quando existir.
+- Para cortesia ativa, manter o rótulo `Fim` e a data real de encerramento da concessão, pois esse campo representa término da cortesia, não renovação.
+
+Consequência: o Admin diferencia ausência legítima de renovação em plano gratuito de indisponibilidade de dado financeiro, sem alterar contrato de API ou persistência.
+
+Validação complementar:
+
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `git diff --check` nos arquivos alterados
+- Verificação estática do `CurrentPlanCard`
+- Smoke HTTP local `GET /psicologos/cmrgrztri7000tn0uh1q4n8vxf?tab=plano` com status 200
+- `pnpm check` foi executado e ficou bloqueado por formatação em alterações locais não relacionadas da TASK-72 nos módulos backend de métricas/engajamento e em `backend/src/utils/admin-psychologist-analytics.ts`

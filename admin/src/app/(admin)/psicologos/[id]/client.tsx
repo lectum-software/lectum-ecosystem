@@ -5249,6 +5249,9 @@ const CurrentPlanCard = ({ billing }: { billing: AdminPsychologistBilling }) => 
   const planPrice = isCourtesy ? "R$ 0,00/mês" : formatPlanPrice(plan.price_cents, plan.interval);
   const planEndLabel = isCourtesy ? "Fim" : "Próxima renovação";
   const hasSubscription = Boolean(plan.id);
+  const planEndValue = isCurrentFreePlan(billing)
+    ? "Não se aplica"
+    : formatDate(plan.current_period_end);
   const lifetimeValue = plan.lifetime_value_available
     ? formatMoney(plan.lifetime_value_cents ?? 0)
     : "Indisponível";
@@ -5269,7 +5272,7 @@ const CurrentPlanCard = ({ billing }: { billing: AdminPsychologistBilling }) => 
 
       <dl className="mt-5 divide-y divide-border text-sm">
         <FieldRow label="Inicio" value={formatDate(plan.started_at)} />
-        <FieldRow label={planEndLabel} value={formatDate(plan.current_period_end)} />
+        <FieldRow label={planEndLabel} value={planEndValue} />
         {hasSubscription ? (
           <>
             <FieldRow

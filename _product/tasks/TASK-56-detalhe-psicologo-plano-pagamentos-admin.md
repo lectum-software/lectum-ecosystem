@@ -365,3 +365,11 @@ Exibir plano, método e histórico financeiro do psicólogo e permitir concessã
 - Builder/Quick Copy não está exposto como ferramenta no ambiente; a referência visual usada foi o PNG local `_product/proto/admin/Psicólogos/Detalhes do psicólogo/Plano e pagamentos.png` e a captura enviada pelo usuário.
 - Validações executadas: `pnpm --dir admin check`, `pnpm --dir admin build` e `git diff --check` nos arquivos alterados. `pnpm check` foi reexecutado e ficou bloqueado por erros preexistentes fora deste ajuste em `frontend/src/utils/psychologist-onboarding.ts` e `frontend/src/app/app/professional/billing/checkout/logic.tsx`.
 - Browser local: `GET http://localhost:3002/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=plano` retornou 200; a conferência visual autenticada ficou limitada pela sessão Admin não exposta ao ambiente de automação.
+
+## Ajuste complementar 2026-07-13 - próxima renovação do plano gratuito
+
+- Pedido do usuário: no card `Plano atual` da aba Assinatura/Plano, planos sem renovação real devem exibir `Não se aplica` em vez de `Não informado` na linha `Próxima renovação`.
+- A UI Admin passou a detectar plano gratuito vigente pelo contrato real de billing e renderizar `Não se aplica`; planos pagos continuam exibindo a data real de renovação, e cortesia ativa permanece usando o rótulo `Fim` com a data de encerramento.
+- Não houve alteração de backend, endpoint, schema Prisma, migrations, packages ou cálculo financeiro.
+- Builder/Quick Copy não está exposto como ferramenta no ambiente; a referência visual usada foi o PNG local `_product/proto/admin/Psicólogos/Detalhes do psicólogo/Plano e pagamentos.png` e a captura enviada pelo usuário.
+- Validações executadas: `pnpm --dir admin check`, `pnpm --dir admin build`, `git diff --check` nos arquivos alterados, verificação estática do `CurrentPlanCard` e smoke HTTP local em `/psicologos/cmrgrztri7000tn0uh1q4n8vxf?tab=plano` com status 200. `pnpm check` foi executado e ficou bloqueado por formatação em alterações locais não relacionadas da TASK-72 nos módulos backend de métricas/engajamento e no arquivo não rastreado `backend/src/utils/admin-psychologist-analytics.ts`.
