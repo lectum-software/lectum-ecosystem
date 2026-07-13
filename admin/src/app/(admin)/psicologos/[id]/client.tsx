@@ -1703,9 +1703,73 @@ const MetricCard = ({ metric }: { metric: AdminPsychologistDetailMetric }) => {
   );
 };
 
-const SubscriptionCard = ({ detail }: { detail: AdminPsychologistDetail }) => {
+const isFreeOrCourtesySubscription = (
+  subscription: AdminPsychologistDetail["general"]["subscription"],
+) => {
+  const planSlug = subscription.plan_slug?.trim().toLowerCase();
+  const planName = subscription.plan_name?.trim().toLowerCase();
+  const source = subscription.source?.trim().toLowerCase();
+
+  return (
+    source === "admin_grant" ||
+    source === "free_signup" ||
+    planSlug === "gratuito" ||
+    planName === "plano gratuito"
+  );
+};
+
+const formatSubscriptionRenewal = (
+  subscription: AdminPsychologistDetail["general"]["subscription"],
+) => {
+  if (isFreeOrCourtesySubscription(subscription)) return "Não se aplica";
+
+  return formatDate(subscription.current_period_end);
+};
+
+const formatSubscriptionLtv = (
+  billing: AdminPsychologistBilling | undefined,
+  billingLoading: boolean,
+  billingError: boolean,
+) => {
+  if (billing?.plan.lifetime_value_available) {
+    return formatMoney(billing.plan.lifetime_value_cents ?? 0);
+  }
+
+  if (billing?.plan.lifetime_value_unavailable_reason) {
+    return (
+      <span className="flex flex-col gap-1">
+        <span>Indisponível</span>
+        <span className="text-xs font-bold text-subtle">
+          {billing.plan.lifetime_value_unavailable_reason}
+        </span>
+      </span>
+    );
+  }
+
+  if (billingLoading) return "Carregando";
+  if (billingError) return "Indisponível";
+
+  return "Não informado";
+};
+
+const SubscriptionCard = ({
+  billing,
+  billingError,
+  billingLoading,
+  detail,
+}: {
+  billing?: AdminPsychologistBilling;
+  billingError: boolean;
+  billingLoading: boolean;
+  detail: AdminPsychologistDetail;
+}) => {
   const subscription = detail.general.subscription;
-  const method = subscription.payment_method;
+  const rows: Array<[string, ReactNode]> = [
+    ["Plano atual", subscription.plan_name || "Sem plano ativo"],
+    ["Início", formatDate(subscription.started_at)],
+    ["Próxima renovação", formatSubscriptionRenewal(subscription)],
+    ["LTV", formatSubscriptionLtv(billing, billingLoading, billingError)],
+  ];
 
   return (
     <CardShell className="p-5">
@@ -1717,24 +1781,7 @@ const SubscriptionCard = ({ detail }: { detail: AdminPsychologistDetail }) => {
         <IconCircle icon={Wallet} />
       </div>
       <dl className="mt-5 divide-y divide-border text-sm">
-        {[
-          ["Plano atual", subscription.plan_name || "Sem plano ativo"],
-          ["Status", subscription.status || "Não informado"],
-          ["Início da assinatura", formatDate(subscription.started_at)],
-          ["Próxima renovação", formatDate(subscription.current_period_end)],
-          ["Valor", formatMoney(subscription.price_cents)],
-          ["Gateway", subscription.gateway_label || "Sem vínculo ativo"],
-          [
-            "Forma de pagamento",
-            method
-              ? `${method.brand || "Cartão"} •••• ${method.last4 || "----"}${
-                  method.exp_month && method.exp_year
-                    ? ` · validade ${String(method.exp_month).padStart(2, "0")}/${method.exp_year}`
-                    : ""
-                }`
-              : "Não informado",
-          ],
-        ].map(([label, value]) => (
+        {rows.map(([label, value]) => (
           <div className="grid gap-1 py-3 sm:grid-cols-[190px_1fr]" key={label}>
             <dt className="font-black text-muted">{label}</dt>
             <dd className="font-bold text-foreground">{value}</dd>
@@ -1917,6 +1964,7 @@ const RecentActivity = ({
 
 const GeneralTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: string }) => {
   const metrics = orderGeneralMetrics(detail.general.metrics);
+  const billingQuery = useAdminPsychologistBilling(id);
 
   return (
     <div className="space-y-5" data-psychologist-detail-tab="geral">
@@ -1930,7 +1978,12 @@ const GeneralTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: strin
       </section>
 
       <div className="grid gap-5 xl:grid-cols-[1.1fr_0.9fr]">
-        <SubscriptionCard detail={detail} />
+        <SubscriptionCard
+          billing={billingQuery.data}
+          billingError={billingQuery.isError}
+          billingLoading={billingQuery.isLoading}
+          detail={detail}
+        />
         <RegistryStatusCard id={id} />
       </div>
 

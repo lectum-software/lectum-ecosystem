@@ -403,6 +403,7 @@ O endpoint de leitura deve retornar, no m?nimo, dados seguros equivalentes a:
 - Correção visual complementar em 2026-07-13: na aba **Atividades**, foram removidos o selo "Fontes reais", as linhas "Fonte:" em cada evento e a tag de área; o card passou a exibir apenas a tag principal do tipo de atividade, o rótulo "Usuário" e o ícone proprietário de WhatsApp nos eventos de clique.
 - Correção visual adicional em 2026-07-13: removida a faixa "Métricas indisponíveis nesta etapa" no detalhe administrativo do psicólogo; métricas indisponíveis continuam sinalizadas de forma inline nos cards/contadores quando o contrato real retornar indisponibilidade.
 - Correção visual de paginação em 2026-07-13: nos navegadores de página do detalhe administrativo do psicólogo, a página selecionada passou a usar texto branco sobre o fundo primário para manter contraste adequado.
+- Correção visual de assinatura em 2026-07-13: no bloco **Dados da assinatura** da aba Geral, foram removidas as linhas `Status`, `Gateway` e `Forma de pagamento`; `Início da assinatura` foi reduzido para `Início`; `Próxima renovação` passa a exibir `Não se aplica` para plano gratuito ou cortesia; e `Valor` foi substituído por `LTV` com base na consulta real de billing.
 
 
 ### Valida??o executada
@@ -423,3 +424,4 @@ O endpoint de leitura deve retornar, no m?nimo, dados seguros equivalentes a:
 - Correção visual complementar 2026-07-13: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check`, smoke HTTP local em `/psicologos/[id]?tab=atividades` com status 200 e verificação estática de remoção de "Fontes reais", "Fonte:" e tag de área.
 - Correção visual de paginação 2026-07-13: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check`, `git diff --check`, smoke HTTP local em `/psicologos/[id]?tab=publicacoes` com status 200 e verificação estática de `text-white` na página selecionada.
 - Correção visual adicional 2026-07-13: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check`, smoke HTTP local em `/psicologos/[id]?tab=publicacoes` com status 200 e verificação estática de ausência da faixa "Métricas indisponíveis nesta etapa".
+- Correção visual de assinatura 2026-07-13: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check`, smoke HTTP local em `/psicologos/cmrgrztri7000tn0uh1q4n8vxf` com status 200 e verificação estática do bloco `SubscriptionCard` sem `Status`, `Gateway`, `Forma de pagamento`, `Início da assinatura` e `Valor`, com `Início`, `Próxima renovação`, `Não se aplica` e `LTV`.
