@@ -277,12 +277,14 @@ const DASHBOARD_METRIC_CONFIG = {
 
 const TrendBadge = ({ metric }: { metric: PsychologistsDashboardMetric }) => {
   if (metric.unavailable)
-    return <span className="text-xs font-bold text-warning">Indisponível</span>;
+    return (
+      <span className="whitespace-nowrap text-[0.68rem] font-bold text-warning">Indisponível</span>
+    );
 
   return (
     <span
       className={cn(
-        "text-xs font-semibold",
+        "whitespace-nowrap text-[0.68rem] font-semibold",
         metric.trend === "up" && "text-success",
         metric.trend === "down" && "text-danger",
         metric.trend === "flat" && "text-muted",
@@ -310,7 +312,7 @@ const MetricCard = ({
   <button
     aria-pressed={active}
     className={cn(
-      "min-h-44 rounded-card border bg-surface/95 p-5 text-left shadow-admin-soft transition duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2",
+      "min-h-[8.75rem] min-w-0 rounded-card border bg-surface/95 p-3 text-left shadow-admin-soft transition duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 md:p-4 xl:min-h-[8.25rem] xl:p-3",
       active
         ? "border-primary/35 ring-1 ring-primary/10"
         : "border-border/70 hover:-translate-y-0.5 hover:border-primary/25",
@@ -323,20 +325,27 @@ const MetricCard = ({
   >
     <div className="flex items-start justify-between gap-3">
       <div
-        className="grid h-12 w-12 place-items-center rounded-full"
+        className="grid h-9 w-9 place-items-center rounded-full xl:h-8 xl:w-8"
         style={{ backgroundColor: hexToRgba(color, 0.1), color }}
       >
-        <Icon aria-hidden className="h-5 w-5" />
+        <Icon aria-hidden className="h-4 w-4" />
       </div>
     </div>
-    <div className="mt-5 space-y-2">
-      <p className="text-sm font-semibold text-foreground">{metric.label}</p>
-      <p className="text-3xl font-bold tracking-tight text-foreground">
+    <div className="mt-4 min-w-0 space-y-1.5 xl:mt-3">
+      <p
+        className="truncate whitespace-nowrap text-xs font-semibold text-foreground"
+        title={metric.label}
+      >
+        {metric.label}
+      </p>
+      <p className="truncate whitespace-nowrap text-2xl font-bold tracking-tight text-foreground xl:text-[1.65rem]">
         {formatMetricValue(metric)}
       </p>
-      <div className="flex flex-wrap items-center gap-2">
+      <div className="flex min-w-0 items-center gap-1.5 overflow-hidden whitespace-nowrap">
         <TrendBadge metric={metric} />
-        <span className="text-xs font-medium text-muted">vs. período anterior</span>
+        <span className="min-w-0 truncate text-[0.68rem] font-medium text-muted">
+          vs. período anterior
+        </span>
       </div>
       <span className="sr-only">{active ? "visível no gráfico" : "oculto no gráfico"}</span>
     </div>
@@ -344,9 +353,12 @@ const MetricCard = ({
 );
 
 const LoadingGrid = () => (
-  <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6">
+  <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
     {CARD_ORDER.map((key) => (
-      <CardShell className="h-44 animate-pulse bg-surface-muted" key={`psych-skeleton-${key}`} />
+      <CardShell
+        className="h-[8.75rem] animate-pulse bg-surface-muted xl:h-[8.25rem]"
+        key={`psych-skeleton-${key}`}
+      />
     ))}
   </div>
 );
@@ -1037,7 +1049,7 @@ const CardsGrid = ({
   return (
     <section>
       <h2 className="mb-4 text-xl font-bold text-foreground">Visão geral</h2>
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6">
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
         {CARD_ORDER.map((key) => {
           const config = DASHBOARD_METRIC_CONFIG[key];
 
