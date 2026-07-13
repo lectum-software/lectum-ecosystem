@@ -402,6 +402,7 @@ O endpoint de leitura deve retornar, no m?nimo, dados seguros equivalentes a:
 - Correção visual em 2026-07-13: na aba **Atividades**, foram removidas a faixa "Histórico dos principais eventos", a linha de filtros/período/exportação e os cards "Histórico anterior à auditoria administrativa" e "Eventos brutos de pagamento"; os rótulos textuais do feed foram normalizados para PT-BR sem mojibake.
 - Correção visual complementar em 2026-07-13: na aba **Atividades**, foram removidos o selo "Fontes reais", as linhas "Fonte:" em cada evento e a tag de área; o card passou a exibir apenas a tag principal do tipo de atividade, o rótulo "Usuário" e o ícone proprietário de WhatsApp nos eventos de clique.
 - Correção visual adicional em 2026-07-13: removida a faixa "Métricas indisponíveis nesta etapa" no detalhe administrativo do psicólogo; métricas indisponíveis continuam sinalizadas de forma inline nos cards/contadores quando o contrato real retornar indisponibilidade.
+- Correção visual de paginação em 2026-07-13: nos navegadores de página do detalhe administrativo do psicólogo, a página selecionada passou a usar texto branco sobre o fundo primário para manter contraste adequado.
 
 
 ### Valida??o executada
@@ -420,4 +421,5 @@ O endpoint de leitura deve retornar, no m?nimo, dados seguros equivalentes a:
 - Muta??o real de e-mail/senha/sess?es n?o foi disparada sem um psic?logo real autorizado e sem inten??o expl?cita de alterar dados reais; endpoints e contratos foram validados por typecheck/build/check.
 - Correção visual 2026-07-13: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check`, smoke HTTP local em `/psicologos/[id]?tab=atividades` com status 200 e verificação estática das remoções solicitadas.
 - Correção visual complementar 2026-07-13: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check`, smoke HTTP local em `/psicologos/[id]?tab=atividades` com status 200 e verificação estática de remoção de "Fontes reais", "Fonte:" e tag de área.
+- Correção visual de paginação 2026-07-13: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check`, `git diff --check`, smoke HTTP local em `/psicologos/[id]?tab=publicacoes` com status 200 e verificação estática de `text-white` na página selecionada.
 - Correção visual adicional 2026-07-13: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check`, smoke HTTP local em `/psicologos/[id]?tab=publicacoes` com status 200 e verificação estática de ausência da faixa "Métricas indisponíveis nesta etapa".

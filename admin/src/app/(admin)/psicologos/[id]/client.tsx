@@ -3276,7 +3276,7 @@ const PublicationsPagination = ({
           className={cn(
             "h-10 min-w-10 rounded-control border px-3 text-sm font-black",
             itemPage === page
-              ? "border-primary bg-primary text-primary-foreground"
+              ? "border-primary bg-primary text-white"
               : "border-border bg-surface text-foreground",
           )}
           key={itemPage}
