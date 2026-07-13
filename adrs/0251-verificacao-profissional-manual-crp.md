@@ -200,6 +200,17 @@ automacao do cliente, sem transformar o salvamento em aprovacao/rejeicao: a
 operacao continua sem alterar `crp_status`, `cfp_verified_at`, assinatura,
 gateway ou cortesia.
 
+## Complemento 2026-07-13: modal global para confirmar salvamento
+
+A confirmacao forte de "Salvar registro" deve ser renderizada fora do card
+Registro profissional, como modal global da tela principal. A UI usa portal no
+`document.body` para evitar que o painel sticky/rolavel do registro transforme o
+modal em um bloco interno da coluna direita.
+
+A decisao preserva a edicao inline dos campos publicos do conselho no card, mas
+mantem a etapa sensivel de confirmacao em uma camada visual superior e centrada
+na experiencia da pagina.
+
 ## Complemento 2026-07-11: rolagem independente no painel de registro
 
 Na aba Perfil e cadastro do detalhe Admin, a segunda coluna do Registro

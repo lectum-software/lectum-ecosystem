@@ -52,6 +52,7 @@ import {
   useMemo,
   useState,
 } from "react";
+import { createPortal } from "react-dom";
 import { FormProvider, type SubmitHandler, useForm, useWatch } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -5695,33 +5696,37 @@ const RegistryVerificationDialog = ({
   children: ReactNode;
   onClose: () => void;
   title: string;
-}) => (
-  <div
-    aria-modal="true"
-    className="fixed inset-0 z-50 flex items-end justify-center bg-foreground/40 p-0 sm:items-center sm:p-4"
-    role="dialog"
-  >
-    <div className="max-h-[92vh] w-full overflow-y-auto rounded-t-[28px] border border-border bg-surface p-5 shadow-admin-soft sm:max-w-2xl sm:rounded-[28px]">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <p className="text-xs font-black uppercase tracking-[0.2em] text-primary">
-            Verificação profissional
-          </p>
-          <h3 className="mt-1 text-xl font-black text-foreground">{title}</h3>
+}) => {
+  const dialog = (
+    <div
+      aria-modal="true"
+      className="fixed inset-0 z-50 flex items-end justify-center bg-foreground/40 p-0 sm:items-center sm:p-4"
+      role="dialog"
+    >
+      <div className="max-h-[92vh] w-full overflow-y-auto rounded-t-[28px] border border-border bg-surface p-5 shadow-admin-soft sm:max-w-2xl sm:rounded-[28px]">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <p className="text-xs font-black uppercase tracking-[0.2em] text-primary">
+              Verificação profissional
+            </p>
+            <h3 className="mt-1 text-xl font-black text-foreground">{title}</h3>
+          </div>
+          <button
+            aria-label="Fechar"
+            className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-border text-muted transition hover:bg-surface-muted"
+            onClick={onClose}
+            type="button"
+          >
+            <X aria-hidden className="h-4 w-4" />
+          </button>
         </div>
-        <button
-          aria-label="Fechar"
-          className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-border text-muted transition hover:bg-surface-muted"
-          onClick={onClose}
-          type="button"
-        >
-          <X aria-hidden className="h-4 w-4" />
-        </button>
+        <div className="mt-5">{children}</div>
       </div>
-      <div className="mt-5">{children}</div>
     </div>
-  </div>
-);
+  );
+
+  return typeof document === "undefined" ? null : createPortal(dialog, document.body);
+};
 
 const RegistryIdentityForm = ({
   canApprove,
