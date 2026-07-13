@@ -1368,6 +1368,13 @@ const ReplyCard = ({
       className="relative rounded-[20px] py-0.5 text-[#182033] transition-[background-color,box-shadow] duration-500 dark:text-foreground"
       id={`reply-${reply.id}`}
     >
+      {hasTreeContinuation ? (
+        <span
+          className="pointer-events-none absolute top-10 bottom-0 left-4 z-0 w-0.5 -translate-x-1/2 rounded-full bg-border-strong sm:left-[1.125rem]"
+          aria-hidden="true"
+        />
+      ) : null}
+
       <div className="grid grid-cols-[2rem_minmax(0,1fr)] gap-x-2.5 rounded-[20px] transition-colors sm:grid-cols-[2.25rem_minmax(0,1fr)]">
         <div className="relative flex justify-center">
           <AuthorAvatar
@@ -1377,12 +1384,6 @@ const ReplyCard = ({
             onProfileClick={psychologistProfileHref ? stopReplyTreeCollapsePropagation : undefined}
             size={avatarSize}
           />
-          {hasTreeContinuation ? (
-            <span
-              className="absolute top-10 bottom-[-0.95rem] left-1/2 w-px -translate-x-1/2 bg-[#DCE4EE] dark:bg-border"
-              aria-hidden="true"
-            />
-          ) : null}
         </div>
 
         <div className="min-w-0 rounded-[18px] px-0.5 py-0.5">
@@ -1547,15 +1548,27 @@ const ReplyCard = ({
 
       {hasTreeContinuation ? (
         <div
-          className="relative mt-2 ml-4 grid gap-3 border-[#DCE4EE] border-l pl-4 dark:border-border sm:ml-[18px] sm:pl-5"
+          className="relative z-10 mt-2 ml-4 grid gap-3 pl-[18px] sm:ml-[18px] sm:pl-[22px]"
           id={`reply-children-${reply.id}`}
         >
           {visibleChildren.map((child) => (
             <div className="relative" key={child.id}>
-              <span
-                className="pointer-events-none absolute top-0 -left-4 h-4 w-4 rounded-bl-[12px] border-[#DCE4EE] border-b border-l dark:border-border sm:-left-5 sm:h-[1.125rem] sm:w-5"
+              <svg
+                className="pointer-events-none absolute top-0 -left-[18px] z-0 h-5 w-[18px] overflow-visible text-border-strong sm:-left-[22px] sm:w-[22px]"
                 aria-hidden="true"
-              />
+                focusable="false"
+                viewBox="0 0 22 20"
+              >
+                <path
+                  d="M0 0 V10 C0 14.4 3.6 18 8 18 H22"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2.25}
+                  vectorEffect="non-scaling-stroke"
+                />
+              </svg>
               <ReplyCard
                 activeInlineReplyFormRef={activeInlineReplyFormRef}
                 currentUserId={currentUserId}
