@@ -175,3 +175,9 @@ Exibir estatísticas de negócio/comunidade e publicações do psicólogo com da
 - Validacoes executadas para este complemento: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check`, `pnpm --dir backend db:migrate` e `pnpm --dir backend exec prisma migrate status`.
 - Validacao funcional direta do service `showAdminPsychologistStatistics`: com `community=all`, o card `ranking` retornou indisponibilidade honesta; com uma comunidade real selecionada, os contadores de comunidade foram recalculados para a comunidade filtrada sem expor dados sensiveis.
 - Smoke HTTP local: Admin `/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=estatisticas` retornou 200; API Admin sem sessao retornou 401, preservando autenticacao real.
+
+### Ajuste visual do carregamento de comunidade em 2026-07-12
+
+- O indicador `Atualizando` de **Estatisticas de comunidade** agora usa espaco reservado no bloco do titulo e posicionamento absoluto, evitando deslocar os filtros de **Comunidade**, **Periodo**, **De** e **Ate** durante o carregamento/refetch.
+- Os filtros da secao permanecem no mesmo grid do cabecalho e usam `lg:flex-nowrap` em desktop para nao mudar de linha enquanto a query de comunidade esta carregando.
+- Validacoes executadas para este ajuste: `pnpm --dir admin check`, `pnpm --dir admin build` e smoke HTTP local em `/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=estatisticas` retornando 200.

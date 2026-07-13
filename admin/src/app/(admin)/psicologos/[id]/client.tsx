@@ -2934,17 +2934,24 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: st
         <StatisticsVideoCard detail={detail} statistics={businessStatistics} />
       </section>
 
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
-        <div className="flex flex-wrap items-center gap-2">
+      <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-start">
+        <div className="relative min-h-16 min-w-0">
           <h2 className="text-xl font-black text-foreground">Estatísticas de comunidade</h2>
-          {isCommunityRefreshing ? (
-            <span className="inline-flex items-center gap-1 rounded-full bg-primary-soft px-2.5 py-1 text-xs font-black text-primary">
-              <Loader2 aria-hidden className="h-3.5 w-3.5 animate-spin" />
-              Atualizando
-            </span>
-          ) : null}
+          <span
+            aria-hidden={!isCommunityRefreshing}
+            className={cn(
+              "absolute left-0 top-8 inline-flex items-center gap-1 rounded-full bg-primary-soft px-2.5 py-1 text-xs font-black text-primary transition-opacity duration-150",
+              isCommunityRefreshing ? "opacity-100" : "pointer-events-none opacity-0",
+            )}
+          >
+            <Loader2
+              aria-hidden
+              className={cn("h-3.5 w-3.5", isCommunityRefreshing ? "animate-spin" : "")}
+            />
+            Atualizando
+          </span>
         </div>
-        <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-end lg:justify-end">
+        <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-end lg:flex-nowrap lg:justify-end">
           <label
             className="grid gap-1 text-xs font-black text-muted"
             htmlFor="community-statistics-community"

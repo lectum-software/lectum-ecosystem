@@ -158,6 +158,18 @@ Decisao complementar:
 
 Consequencia: o Admin consegue alternar a leitura entre visao consolidada e visao por comunidade, preservando fontes reais e evitando inventar um ranking agregado sem regra de produto.
 
+## Emenda 2026-07-12 - estabilidade dos filtros durante refresh de comunidade
+
+O feedback `Atualizando` da secao **Estatisticas de comunidade** nao deve participar do fluxo horizontal dos filtros, porque o refetch ocorre ao trocar a comunidade e nao pode deslocar os controles que o Admin acabou de acionar.
+
+Decisao complementar:
+
+- Manter o indicador de carregamento no bloco do titulo, com espaco reservado e posicionamento absoluto.
+- Manter os filtros de **Comunidade**, **Periodo**, **De** e **Ate** em uma coluna propria do grid do cabecalho.
+- Evitar quebra de linha no desktop com `lg:flex-nowrap`, preservando a posicao visual dos filtros durante `isCommunityRefreshing`.
+
+Consequencia: o Admin recebe feedback honesto de atualizacao sem layout shift nos filtros da secao.
+
 ## Validação
 
 - `pnpm --dir backend check`
@@ -264,6 +276,12 @@ Validacao da emenda de filtro por comunidade e ranking:
 - `pnpm --dir backend exec prisma migrate status`
 - Service direto `showAdminPsychologistStatistics` com `community=all` e com comunidade real selecionada confirmou ranking indisponivel de forma honesta em **Todas** e recalculo dos contadores para a comunidade filtrada.
 - Smoke HTTP local confirmou Admin `/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=estatisticas` com status 200 e API Admin protegida com 401 sem sessao.
+
+Validacao da emenda de estabilidade dos filtros:
+
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- Smoke HTTP local confirmou Admin `/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=estatisticas` com status 200.
 
 ## Limitações da execução
 
