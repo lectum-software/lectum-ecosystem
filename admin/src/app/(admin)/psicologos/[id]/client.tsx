@@ -85,7 +85,6 @@ import { resolveApiError } from "@/api/handle";
 import type {
   AdminPsychologistAccount,
   AdminPsychologistActivitiesQuery,
-  AdminPsychologistActivityItem,
   AdminPsychologistBilling,
   AdminPsychologistCatalogItem,
   AdminPsychologistDetail,
@@ -4455,20 +4454,6 @@ const resolveActivityPeriod = (preset: string, customFrom: string, customTo: str
   };
 };
 
-const activityIcon = (item: AdminPsychologistActivityItem): LucideIcon | typeof WhatsAppIcon => {
-  if (item.type.id === "whatsapp_click") return WhatsAppIcon;
-  if (item.area.id === "financeiro") return Wallet;
-  if (item.area.id === "atendimento") return MessageCircle;
-  if (item.area.id === "avaliacoes") return Star;
-  if (item.area.id === "conta") return KeyRound;
-  if (item.area.id === "denuncias") return AlertTriangle;
-  if (item.type.id.includes("save")) return Bookmark;
-  if (item.type.id.includes("reply")) return MessageCircle;
-  if (item.type.id.includes("post")) return FileText;
-
-  return UserRound;
-};
-
 const ActivitiesTab = ({ id }: { id: string }) => {
   const [period, setPeriod] = useState("all");
   const [customFrom, setCustomFrom] = useState("");
@@ -4621,51 +4606,38 @@ const ActivitiesTab = ({ id }: { id: string }) => {
             Nenhuma atividade real encontrada para os filtros atuais.
           </p>
         ) : (
-          <div className="divide-y divide-border">
-            {activities.data.map((item) => {
-              const Icon = activityIcon(item);
-
-              return (
-                <article className="grid gap-4 p-4 xl:grid-cols-[190px_1fr_180px]" key={item.id}>
-                  <div className="text-sm font-black text-foreground">
-                    {formatDateTime(item.occurred_at)}
-                  </div>
-                  <div className="flex gap-3">
-                    <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-primary-soft text-primary">
-                      <Icon aria-hidden className="h-5 w-5" />
-                    </span>
-                    <div className="min-w-0">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <Badge className="bg-surface-muted text-muted">{item.type.label}</Badge>
-                      </div>
-                      <p className="mt-2 text-sm font-bold leading-6 text-foreground">
-                        {item.description}
-                      </p>
-                      {item.detail_url ? (
-                        <a
-                          className="mt-3 inline-flex items-center gap-1 text-xs font-black text-primary"
-                          href={toPublicHref(item.detail_url)}
-                          rel="noreferrer"
-                          target="_blank"
-                        >
-                          Ver detalhes
-                          <ExternalLink aria-hidden className="h-3.5 w-3.5" />
-                        </a>
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[720px] text-left text-sm">
+              <thead className="border-b border-border text-xs text-muted">
+                <tr>
+                  <th className="py-3 pr-3 pl-4 font-black">Data</th>
+                  <th className="px-3 py-3 font-black">Ação</th>
+                  <th className="px-3 py-3 font-black">Descrição</th>
+                  <th className="py-3 pr-4 pl-3 font-black">Usuário</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {activities.data.map((item) => (
+                  <tr key={item.id}>
+                    <td className="py-3 pr-3 pl-4 font-bold text-muted">
+                      {formatDateTime(item.occurred_at)}
+                    </td>
+                    <td className="px-3 py-3 font-black text-foreground">{item.type.label}</td>
+                    <td className="px-3 py-3 text-muted">{item.description}</td>
+                    <td className="py-3 pr-4 pl-3">
+                      <span className="block font-black text-foreground">
+                        {item.actor?.name || "Não informado"}
+                      </span>
+                      {item.actor?.role ? (
+                        <span className="mt-1 block text-xs font-bold text-muted">
+                          {item.actor.role}
+                        </span>
                       ) : null}
-                    </div>
-                  </div>
-                  <div className="rounded-2xl bg-surface-muted p-3 text-sm">
-                    <p className="font-black text-muted">Usuário</p>
-                    <p className="mt-1 font-black text-foreground">
-                      {item.actor?.name || "Não informado"}
-                    </p>
-                    {item.actor?.role ? (
-                      <p className="mt-1 text-xs font-bold text-muted">{item.actor.role}</p>
-                    ) : null}
-                  </div>
-                </article>
-              );
-            })}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         )}
 

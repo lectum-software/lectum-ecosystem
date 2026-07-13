@@ -45,6 +45,34 @@ O modelo atual já possui fontes reais para alguns eventos principais, como cria
 - Uma auditoria completa futura deverá ser implementada como nova decisão/modelagem, com captura explícita de eventos e política de retenção.
 - `payment_event` permanece fora do feed porque não há vínculo confiável direto com o psicólogo no schema atual.
 
+## Atualização 2026-07-13: refinamento visual da lista
+
+Após validação de produto, a aba **Atividades** passou a usar uma tabela compacta e sóbria,
+alinhada ao bloco **Atividades recentes** da aba **Geral** e ao protótipo local da TASK-59.
+A decisão remove a composição visual em cards com ícones grandes e reduz a listagem principal
+às colunas de leitura rápida, sem alterar os dados reais, filtros ou paginação retornados pelo
+endpoint.
+
+A tabela mantém as colunas essenciais de leitura operacional:
+
+- data;
+- ação;
+- descrição;
+- usuário;
+
+As informações de área, fonte e link de detalhe continuam disponíveis no contrato do endpoint
+para uso administrativo futuro, mas não aparecem na tabela principal para manter a leitura mais
+limpa.
+
+No mobile, a tabela permanece dentro de rolagem horizontal do card, seguindo o padrão já usado
+na aba **Geral**, sem criar uma visualização paralela ou fonte de dados alternativa.
+
+Validações do refinamento:
+
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `GET http://localhost:3002/psicologos/cmgrztri7000tn0uh1q4n8vxf?tab=atividades` retornou `200` no ambiente local.
+
 ## Validação
 
 - `pnpm --dir backend check`

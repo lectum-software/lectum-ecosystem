@@ -107,3 +107,12 @@ Exibir uma linha do tempo simples de eventos reais associados ao psicólogo, sem
 - Referência visual usada: `_product/proto/admin/Psicólogos/Detalhes do psicólogo/Atividades.png`; Builder/Quick Copy não estava disponível no ambiente.
 - ADR criado: `adrs/0239-admin-atividades-psicologo-feed-derivado.md`.
 - Validações executadas: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check`, API local autenticada e browser local via Edge/CDP em `/psicologos/demo-profile-marina-rocha?tab=atividades`.
+
+## Refinamento visual em 2026-07-13
+
+- A lista principal da aba Atividades foi simplificada para uma tabela compacta, mais sóbria e alinhada ao bloco "Atividades recentes" da aba Geral.
+- O refinamento manteve apenas as colunas Data, Ação, Descrição e Usuário na tabela; Área, Fonte e Detalhes permanecem no contrato do endpoint quando aplicável, mas não aparecem na listagem principal.
+- O refinamento preservou dados reais, filtros e paginação; não houve alteração de endpoint, schema, mocks ou packages.
+- Referências visuais usadas: screenshots enviados na solicitação e `_product/proto/admin/Psicólogos/Detalhes do psicólogo/Atividades.png`; Builder/Quick Copy não estava disponível como ferramenta direta no ambiente.
+- Validações do refinamento: `pnpm --dir admin check`, `pnpm --dir admin build` e `GET http://localhost:3002/psicologos/cmgrztri7000tn0uh1q4n8vxf?tab=atividades` com retorno `200`.
+- ADR atualizado: `adrs/0239-admin-atividades-psicologo-feed-derivado.md`.
