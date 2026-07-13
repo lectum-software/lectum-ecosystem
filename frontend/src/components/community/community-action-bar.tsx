@@ -91,12 +91,16 @@ const separatorClassName = (size: CommunityActionSize, presentation: VotePresent
 
 const textOnlyReplyClassName = (size: CommunityActionSize) =>
   cn(
-    "inline-flex shrink-0 items-center justify-center rounded-md leading-none tracking-[-0.01em] text-muted transition-[color,transform] duration-200 hover:text-foreground active:scale-[0.97]",
-    size === "xs" ? "h-7 px-1.5" : size === "md" ? "h-10 shrink-0 px-3" : "h-9 shrink-0 px-2.5",
+    "inline-flex min-w-0 items-center justify-center rounded-md leading-none tracking-[-0.01em] text-muted transition-[color,transform] duration-200 hover:text-foreground active:scale-[0.97]",
+    size === "xs"
+      ? "h-7 shrink px-1"
+      : size === "md"
+        ? "h-10 shrink-0 px-3"
+        : "h-9 shrink-0 px-2.5",
   );
 
 const textOnlyReplyTextClassName =
-  "block whitespace-nowrap text-[12px] font-semibold leading-none tracking-[-0.01em]";
+  "block min-w-0 truncate whitespace-nowrap text-[12px] font-semibold leading-none tracking-[-0.01em]";
 
 const stopActionPropagation =
   (handler?: ActionHandler): ActionHandler =>
@@ -135,7 +139,7 @@ export const CommunityActionBar = ({
       <div
         className={cn(
           "flex min-w-0 flex-nowrap items-center sm:flex-none",
-          inlineEndSlot ? "flex-none" : "flex-1",
+          inlineEndSlot ? "flex-1 overflow-hidden sm:flex-none sm:overflow-visible" : "flex-1",
           size === "xs" ? "gap-1 sm:gap-1.5" : "gap-1.5",
         )}
       >
