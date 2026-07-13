@@ -170,6 +170,18 @@ Decisao complementar:
 
 Consequencia: o Admin recebe feedback honesto de atualizacao sem layout shift nos filtros da secao.
 
+## Emenda 2026-07-12 - remocao do bloco Comunidades em que participa
+
+Por decisao de produto posterior, a aba **Estatisticas** nao deve mais exibir a tabela/bloco **Comunidades em que participa** abaixo do grafico de comunidade.
+
+Decisao complementar:
+
+- Remover apenas a renderizacao do bloco no Admin, preservando cards, grafico e filtro de comunidade.
+- Manter o contrato `community.communities` no endpoint de estatisticas, porque a lista real continua necessaria para popular o seletor **Comunidade**.
+- Nao alterar banco, ranking, backfill de membros ou dados persistidos nesta remocao visual.
+
+Consequencia: a aba fica mais focada nos indicadores e evita duplicar a informacao de comunidade que ja e usada como filtro.
+
 ## Validação
 
 - `pnpm --dir backend check`
@@ -278,6 +290,12 @@ Validacao da emenda de filtro por comunidade e ranking:
 - Smoke HTTP local confirmou Admin `/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=estatisticas` com status 200 e API Admin protegida com 401 sem sessao.
 
 Validacao da emenda de estabilidade dos filtros:
+
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- Smoke HTTP local confirmou Admin `/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=estatisticas` com status 200.
+
+Validacao da emenda de remocao do bloco de comunidades:
 
 - `pnpm --dir admin check`
 - `pnpm --dir admin build`

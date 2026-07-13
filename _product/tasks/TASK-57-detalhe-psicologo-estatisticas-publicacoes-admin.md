@@ -181,3 +181,9 @@ Exibir estatísticas de negócio/comunidade e publicações do psicólogo com da
 - O indicador `Atualizando` de **Estatisticas de comunidade** agora usa espaco reservado no bloco do titulo e posicionamento absoluto, evitando deslocar os filtros de **Comunidade**, **Periodo**, **De** e **Ate** durante o carregamento/refetch.
 - Os filtros da secao permanecem no mesmo grid do cabecalho e usam `lg:flex-nowrap` em desktop para nao mudar de linha enquanto a query de comunidade esta carregando.
 - Validacoes executadas para este ajuste: `pnpm --dir admin check`, `pnpm --dir admin build` e smoke HTTP local em `/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=estatisticas` retornando 200.
+
+### Remocao do bloco de comunidades em 2026-07-12
+
+- O bloco visual **Comunidades em que participa** foi removido da aba **Estatisticas**, mantendo apenas os cards, grafico e filtro de comunidade da secao.
+- O contrato real continua retornando as comunidades do psicologo para popular o filtro **Comunidade**; nenhum mock, endpoint paralelo ou alteracao de banco foi adicionada.
+- Validacoes executadas para este ajuste: `pnpm --dir admin check`, `pnpm --dir admin build` e smoke HTTP local em `/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=estatisticas` retornando 200.

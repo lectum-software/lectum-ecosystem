@@ -353,7 +353,6 @@ const GENERAL_METRIC_LABELS: Record<string, string> = {
 };
 
 type StatisticsSeriesPoint = AdminPsychologistStatistics["business"]["series"][number];
-type StatisticsCommunityItem = AdminPsychologistStatistics["community"]["communities"][number];
 type StatisticsSeriesMetricKey = Exclude<keyof StatisticsSeriesPoint, "date">;
 type StatisticsChartMetric = {
   dotRadius: number;
@@ -1491,54 +1490,6 @@ const Avatar = ({ name, src }: { name: string; src: string | null }) => {
       unoptimized={isPublicAdminMediaSrc(imageSrc)}
       width={112}
     />
-  );
-};
-
-const CommunityAvatar = ({
-  color,
-  name,
-  src,
-}: {
-  color: string | null;
-  name: string;
-  src: string | null;
-}) => {
-  const imageSrc = renderableImageSrc(src);
-
-  if (!imageSrc) {
-    return (
-      <span
-        aria-hidden
-        className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl border border-border bg-primary-soft text-xs font-black text-primary"
-        style={color ? { borderColor: color } : undefined}
-      >
-        {initials(name).slice(0, 2)}
-      </span>
-    );
-  }
-
-  return (
-    <Image
-      alt={`Avatar da comunidade ${name}`}
-      className="h-12 w-12 shrink-0 rounded-2xl object-cover"
-      height={48}
-      src={imageSrc}
-      unoptimized={isPublicAdminMediaSrc(imageSrc)}
-      width={48}
-    />
-  );
-};
-
-const CommunityRankingBadge = ({ ranking }: { ranking: StatisticsCommunityItem["ranking"] }) => {
-  if (!ranking) {
-    return <Badge className="w-fit bg-surface-muted text-muted">Sem ranking</Badge>;
-  }
-
-  return (
-    <Badge className="w-fit gap-1 bg-primary-soft text-primary">
-      <Trophy aria-hidden className="h-3.5 w-3.5" />
-      Top #{numberFormatter.format(ranking.position)}
-    </Badge>
   );
 };
 
@@ -2843,14 +2794,6 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: st
       label: community.name,
     })),
   ];
-  const filteredCommunityRows =
-    communityStatisticsSelectedCommunity === "all"
-      ? communityStatistics.community.communities
-      : communityStatistics.community.communities.filter(
-          (community) =>
-            community.id === communityStatisticsSelectedCommunity ||
-            community.slug === communityStatisticsSelectedCommunity,
-        );
   const visibleBusinessChartKeys = businessCards
     .filter(
       ({ config, metric }) => visibleBusinessMetricIds.includes(config.id) && metric.available,
@@ -3016,80 +2959,6 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: st
             keys={visibleCommunityChartKeys}
             points={communityStatistics.community.series}
           />
-        </CardShell>
-
-        <CardShell className="p-5">
-          <h2 className="text-xl font-black text-foreground">Comunidades em que participa</h2>
-          {filteredCommunityRows.length === 0 ? (
-            <p className="mt-4 rounded-2xl bg-surface-muted p-4 text-sm font-bold text-muted">
-              Nenhuma participação real foi encontrada para o filtro de comunidade selecionado.
-            </p>
-          ) : (
-            <div className="mt-4">
-              <div className="hidden border-b border-border px-1 pb-3 text-xs font-black uppercase tracking-[0.12em] text-muted md:grid md:grid-cols-[minmax(360px,1fr)_repeat(4,minmax(140px,1fr))] md:items-center md:gap-8">
-                <span>Comunidade</span>
-                <span className="text-center">Membro desde</span>
-                <span className="text-center">Posts</span>
-                <span className="text-center">Respostas</span>
-                <span className="text-center">Ranking</span>
-              </div>
-              <div className="divide-y divide-border">
-                {filteredCommunityRows.map((community) => (
-                  <div
-                    className="grid gap-4 py-4 md:grid-cols-[minmax(360px,1fr)_repeat(4,minmax(140px,1fr))] md:items-center md:gap-8"
-                    key={community.id}
-                  >
-                    <div className="flex min-w-0 items-center gap-3">
-                      <CommunityAvatar
-                        color={community.color}
-                        name={community.name}
-                        src={community.avatar_url}
-                      />
-                      <div className="min-w-0">
-                        <p className="truncate font-black text-foreground" title={community.name}>
-                          {community.name}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div>
-                      <span className="block text-xs font-black uppercase tracking-[0.12em] text-muted md:hidden">
-                        Membro desde
-                      </span>
-                      <span className="mt-1 block text-sm font-black text-foreground md:mt-0 md:text-center">
-                        {formatDate(community.member_since)}
-                      </span>
-                    </div>
-
-                    <div>
-                      <span className="block text-xs font-black uppercase tracking-[0.12em] text-muted md:hidden">
-                        Posts
-                      </span>
-                      <span className="mt-1 block text-sm font-black text-foreground md:mt-0 md:text-center">
-                        {numberFormatter.format(community.posts)}
-                      </span>
-                    </div>
-
-                    <div>
-                      <span className="block text-xs font-black uppercase tracking-[0.12em] text-muted md:hidden">
-                        Respostas
-                      </span>
-                      <span className="mt-1 block text-sm font-black text-foreground md:mt-0 md:text-center">
-                        {numberFormatter.format(community.replies)}
-                      </span>
-                    </div>
-
-                    <div className="md:flex md:justify-center">
-                      <span className="mb-1 block text-xs font-black uppercase tracking-[0.12em] text-muted md:hidden">
-                        Ranking
-                      </span>
-                      <CommunityRankingBadge ranking={community.ranking} />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
         </CardShell>
       </section>
 
