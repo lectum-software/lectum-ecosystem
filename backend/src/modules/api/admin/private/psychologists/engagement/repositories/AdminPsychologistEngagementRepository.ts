@@ -184,6 +184,7 @@ export class AdminPsychologistEngagementRepository {
       select: {
         completed: true,
         duration_seconds: true,
+        last_event_at: true,
         max_position_seconds: true,
         milestone_100: true,
         milestone_25: true,
@@ -191,6 +192,8 @@ export class AdminPsychologistEngagementRepository {
         milestone_75: true,
         replay_count: true,
         retention_buckets: true,
+        video_url: true,
+        viewer_id: true,
         watched_seconds: true,
       },
     });

@@ -2257,143 +2257,286 @@ const formatVideoAxisTime = (positionPercent: number, durationSeconds?: number |
   return `${minutes}:${String(seconds).padStart(2, "0")}`;
 };
 
+const clampVideoPercent = (value: number) => Math.min(100, Math.max(0, value));
+
+type VideoRetentionCurvePoint = {
+  percentage: number;
+  position_percent: number;
+};
+
+const ADMIN_RETENTION_CHART_WIDTH = 300;
+const ADMIN_RETENTION_CHART_TOP = 12;
+const ADMIN_RETENTION_CHART_BOTTOM = 116;
+const ADMIN_RETENTION_CHART_LEFT_PADDING = 18;
+const ADMIN_RETENTION_CHART_RIGHT_PADDING = 58;
+
+const toVideoRetentionChartPoint = (positionPercent: number, percentage: number) => {
+  const x =
+    ADMIN_RETENTION_CHART_LEFT_PADDING +
+    (clampVideoPercent(positionPercent) / 100) *
+      (ADMIN_RETENTION_CHART_WIDTH -
+        ADMIN_RETENTION_CHART_LEFT_PADDING -
+        ADMIN_RETENTION_CHART_RIGHT_PADDING);
+  const y =
+    ADMIN_RETENTION_CHART_TOP +
+    ((100 - clampVideoPercent(percentage)) / 100) *
+      (ADMIN_RETENTION_CHART_BOTTOM - ADMIN_RETENTION_CHART_TOP);
+
+  return { x, y };
+};
+
+const buildVideoRetentionCurvePoints = ({
+  retention,
+  views,
+}: {
+  retention: AdminPsychologistStatistics["video"]["retention"];
+  views: number;
+}): VideoRetentionCurvePoint[] => {
+  if (views <= 0) {
+    return [
+      { percentage: 0, position_percent: 0 },
+      { percentage: 0, position_percent: 100 },
+    ];
+  }
+
+  const intermediatePoints = retention
+    .filter((point) => point.position_percent > 0 && point.position_percent < 100)
+    .sort((left, right) => left.position_percent - right.position_percent)
+    .map((point) => ({
+      percentage: clampVideoPercent(point.percentage),
+      position_percent: clampVideoPercent(point.position_percent),
+    }));
+
+  return [
+    { percentage: 100, position_percent: 0 },
+    ...intermediatePoints,
+    { percentage: 0, position_percent: 100 },
+  ];
+};
+
+const buildSmoothVideoRetentionPath = (points: VideoRetentionCurvePoint[]) => {
+  if (points.length === 0) return "";
+
+  const chartPoints = points.map((point) =>
+    toVideoRetentionChartPoint(point.position_percent, point.percentage),
+  );
+  const firstPoint = chartPoints[0];
+  if (!firstPoint) return "";
+  let path = `M ${firstPoint.x.toFixed(2)} ${firstPoint.y.toFixed(2)}`;
+
+  if (chartPoints.length === 1) return path;
+
+  if (chartPoints.length === 2) {
+    const lastPoint = chartPoints[1];
+    if (!lastPoint) return path;
+
+    const control1X = firstPoint.x + (lastPoint.x - firstPoint.x) * 0.42;
+    const control2X = firstPoint.x + (lastPoint.x - firstPoint.x) * 0.78;
+
+    return `${path} C ${control1X.toFixed(2)} ${firstPoint.y.toFixed(
+      2,
+    )}, ${control2X.toFixed(2)} ${lastPoint.y.toFixed(2)}, ${lastPoint.x.toFixed(
+      2,
+    )} ${lastPoint.y.toFixed(2)}`;
+  }
+
+  for (let index = 1; index < chartPoints.length - 1; index += 1) {
+    const point = chartPoints[index];
+    const nextPoint = chartPoints[index + 1];
+
+    if (!point || !nextPoint) continue;
+
+    const midX = (point.x + nextPoint.x) / 2;
+    const midY = (point.y + nextPoint.y) / 2;
+
+    path += ` Q ${point.x.toFixed(2)} ${point.y.toFixed(2)}, ${midX.toFixed(2)} ${midY.toFixed(2)}`;
+  }
+
+  const penultimatePoint = chartPoints[chartPoints.length - 2];
+  const lastPoint = chartPoints[chartPoints.length - 1];
+
+  if (penultimatePoint && lastPoint) {
+    path += ` Q ${penultimatePoint.x.toFixed(2)} ${penultimatePoint.y.toFixed(
+      2,
+    )}, ${lastPoint.x.toFixed(2)} ${lastPoint.y.toFixed(2)}`;
+  }
+
+  return path;
+};
+
 const VideoRetentionLineChart = ({
   currentTimeSeconds,
   durationSeconds,
+  dropoff,
   retention,
+  views,
 }: {
   currentTimeSeconds?: number | null;
   durationSeconds?: number | null;
+  dropoff?: AdminPsychologistStatistics["video"]["retention_dropoff"];
   retention: AdminPsychologistStatistics["video"]["retention"];
+  views: number;
 }) => {
-  const sortedRetention = [...retention].sort(
-    (left, right) => left.position_percent - right.position_percent,
-  );
-  const chartWidth = 440;
-  const chartHeight = 220;
-  const padding = {
-    bottom: 30,
-    left: 48,
-    right: 12,
-    top: 18,
+  const chartPoints = buildVideoRetentionCurvePoints({ retention, views });
+  const smoothPath = buildSmoothVideoRetentionPath(chartPoints);
+  const firstChartPoint = chartPoints[0] ?? { percentage: 0, position_percent: 0 };
+  const lastChartPoint = chartPoints[chartPoints.length - 1] ?? {
+    percentage: 0,
+    position_percent: 100,
   };
-  const innerWidth = chartWidth - padding.left - padding.right;
-  const innerHeight = chartHeight - padding.top - padding.bottom;
-  const yAxisLabels = [100, 75, 50, 25, 0];
-  const points = sortedRetention.map((bucket) => {
-    const x =
-      padding.left + (Math.min(100, Math.max(0, bucket.position_percent)) / 100) * innerWidth;
-    const y =
-      padding.top + ((100 - Math.min(100, Math.max(0, bucket.percentage))) / 100) * innerHeight;
-
-    return { ...bucket, x, y };
-  });
-  const fallbackY = padding.top + innerHeight;
-  const linePath =
-    points.length > 0
-      ? buildSmoothSvgPath(points)
-      : `M ${padding.left} ${fallbackY} L ${chartWidth - padding.right} ${fallbackY}`;
-  const firstPoint = points[0] ?? { x: padding.left, y: fallbackY };
-  const lastPoint = points.at(-1) ?? { x: chartWidth - padding.right, y: fallbackY };
-  const areaPath = `${linePath} L ${lastPoint.x} ${padding.top + innerHeight} L ${firstPoint.x} ${
-    padding.top + innerHeight
-  } Z`;
-  const xAxisLabels =
-    sortedRetention.length > 0
-      ? sortedRetention
-      : [
-          { label: "0%", percentage: 0, position_percent: 0 },
-          { label: "50%", percentage: 0, position_percent: 50 },
-          { label: "100%", percentage: 0, position_percent: 100 },
-        ];
+  const firstAreaPoint = toVideoRetentionChartPoint(
+    firstChartPoint.position_percent,
+    firstChartPoint.percentage,
+  );
+  const lastAreaPoint = toVideoRetentionChartPoint(
+    lastChartPoint.position_percent,
+    lastChartPoint.percentage,
+  );
+  const areaPath = smoothPath
+    ? `${smoothPath} L ${lastAreaPoint.x.toFixed(
+        2,
+      )} ${ADMIN_RETENTION_CHART_BOTTOM} L ${firstAreaPoint.x.toFixed(
+        2,
+      )} ${ADMIN_RETENTION_CHART_BOTTOM} Z`
+    : "";
   const playbackPositionPercent =
     durationSeconds && durationSeconds > 0 && Number.isFinite(durationSeconds)
-      ? Math.min(100, Math.max(0, (((currentTimeSeconds ?? 0) || 0) / durationSeconds) * 100))
-      : null;
-  const playbackX =
-    playbackPositionPercent === null
-      ? null
-      : padding.left + (playbackPositionPercent / 100) * innerWidth;
+      ? clampVideoPercent((((currentTimeSeconds ?? 0) || 0) / durationSeconds) * 100)
+      : 0;
+  const playbackPoint = toVideoRetentionChartPoint(playbackPositionPercent, 0);
+  const progressX =
+    durationSeconds && durationSeconds > 0 ? playbackPoint.x : ADMIN_RETENTION_CHART_LEFT_PADDING;
 
   return (
-    <div className="h-[clamp(220px,18vw,280px)]">
-      <svg
-        aria-label="Gráfico de retenção do vídeo de apresentação"
-        className="block h-full min-h-0 w-full"
-        height={chartHeight}
-        role="img"
-        viewBox={`0 0 ${chartWidth} ${chartHeight}`}
-        width="100%"
-      >
-        <title>Curva de retenção</title>
-        <defs>
-          <linearGradient id="admin-video-retention-fill" x1="0" x2="0" y1="0" y2="1">
-            <stop offset="0%" stopColor="var(--admin-primary)" stopOpacity="0.22" />
-            <stop offset="100%" stopColor="var(--admin-primary)" stopOpacity="0.02" />
-          </linearGradient>
-        </defs>
-        {yAxisLabels.map((label) => {
-          const y = padding.top + ((100 - label) / 100) * innerHeight;
-
-          return (
-            <text
-              className="fill-muted text-[10px] font-medium"
-              dominantBaseline="middle"
-              key={label}
-              x={padding.left - 12}
-              y={y}
+    <div className="grid min-w-0 gap-3">
+      <div className="relative w-full overflow-hidden rounded-[22px] bg-transparent px-1 py-2 text-left">
+        <svg
+          aria-label="Curva estimada de retenção do vídeo de apresentação"
+          className="mx-auto h-[clamp(170px,18vw,230px)] w-full max-w-[620px] overflow-visible text-subtle"
+          preserveAspectRatio="xMidYMid meet"
+          role="img"
+          viewBox="0 0 300 130"
+        >
+          <title>Curva contínua estimada de retenção de 100% a 0%</title>
+          <defs>
+            <linearGradient id="admin-video-retention-gradient" x1="0" x2="1" y1="0" y2="0">
+              <stop offset="0%" stopColor="var(--admin-primary)" />
+              <stop offset="100%" stopColor="var(--admin-primary-hover)" />
+            </linearGradient>
+            <linearGradient id="admin-video-retention-fill" x1="0" x2="0" y1="0" y2="1">
+              <stop offset="0%" stopColor="var(--admin-primary)" stopOpacity="0.16" />
+              <stop offset="100%" stopColor="var(--admin-primary)" stopOpacity="0" />
+            </linearGradient>
+            <filter
+              colorInterpolationFilters="sRGB"
+              height="160%"
+              id="admin-video-retention-shadow"
+              width="160%"
+              x="-30%"
+              y="-30%"
             >
-              {label}%
-            </text>
-          );
-        })}
-        <path d={areaPath} fill="url(#admin-video-retention-fill)" />
-        <path
-          className="stroke-primary"
-          d={linePath}
-          fill="none"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth="2.4"
-        />
-        {playbackX === null ? null : (
-          <g>
+              <feDropShadow
+                dx="0"
+                dy="2"
+                floodColor="var(--admin-primary)"
+                floodOpacity="0.14"
+                stdDeviation="1.4"
+              />
+            </filter>
+          </defs>
+          <line
+            stroke="currentColor"
+            strokeDasharray="3 6"
+            strokeOpacity="0.42"
+            strokeWidth="0.8"
+            vectorEffect="non-scaling-stroke"
+            x1={ADMIN_RETENTION_CHART_LEFT_PADDING}
+            x2={ADMIN_RETENTION_CHART_WIDTH - ADMIN_RETENTION_CHART_RIGHT_PADDING + 4}
+            y1="12"
+            y2="12"
+          />
+          <line
+            stroke="currentColor"
+            strokeDasharray="3 6"
+            strokeOpacity="0.42"
+            strokeWidth="0.8"
+            vectorEffect="non-scaling-stroke"
+            x1={ADMIN_RETENTION_CHART_LEFT_PADDING}
+            x2={ADMIN_RETENTION_CHART_WIDTH - ADMIN_RETENTION_CHART_RIGHT_PADDING + 4}
+            y1="64"
+            y2="64"
+          />
+          {areaPath ? <path d={areaPath} fill="url(#admin-video-retention-fill)" /> : null}
+          <path
+            d={smoothPath}
+            fill="none"
+            filter="url(#admin-video-retention-shadow)"
+            stroke="url(#admin-video-retention-gradient)"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth="2.4"
+            vectorEffect="non-scaling-stroke"
+          />
+          {durationSeconds && durationSeconds > 0 ? (
             <line
-              className="stroke-primary"
-              opacity="0.72"
-              strokeDasharray="4 5"
-              strokeLinecap="round"
-              strokeWidth="1.7"
-              x1={playbackX}
-              x2={playbackX}
-              y1={padding.top}
-              y2={padding.top + innerHeight}
+              stroke="var(--admin-primary)"
+              strokeOpacity="0.45"
+              strokeWidth="1.1"
+              vectorEffect="non-scaling-stroke"
+              x1={playbackPoint.x}
+              x2={playbackPoint.x}
+              y1="12"
+              y2="122"
             />
-            <circle
-              className="fill-primary"
-              cx={playbackX}
-              cy={padding.top + innerHeight}
-              r="3.2"
-            />
-          </g>
-        )}
-        {xAxisLabels.map((bucket) => {
-          const x =
-            padding.left + (Math.min(100, Math.max(0, bucket.position_percent)) / 100) * innerWidth;
+          ) : null}
+          <line
+            className="stroke-border"
+            strokeLinecap="round"
+            strokeWidth="3.4"
+            vectorEffect="non-scaling-stroke"
+            x1={ADMIN_RETENTION_CHART_LEFT_PADDING}
+            x2={ADMIN_RETENTION_CHART_WIDTH - ADMIN_RETENTION_CHART_RIGHT_PADDING + 4}
+            y1="122"
+            y2="122"
+          />
+          <line
+            stroke="var(--admin-primary)"
+            strokeLinecap="round"
+            strokeWidth="3.4"
+            vectorEffect="non-scaling-stroke"
+            x1={ADMIN_RETENTION_CHART_LEFT_PADDING}
+            x2={progressX}
+            y1="122"
+            y2="122"
+          />
+          <circle
+            className="fill-surface stroke-border"
+            cx={progressX}
+            cy="122"
+            r="6.5"
+            strokeWidth="1.5"
+            vectorEffect="non-scaling-stroke"
+          />
+        </svg>
+        <span className="pointer-events-none absolute right-5 top-4 rounded-full bg-surface/95 px-1.5 py-0.5 text-[0.65rem] font-extrabold leading-none text-subtle shadow-sm">
+          100%
+        </span>
+        <span className="pointer-events-none absolute right-5 top-1/2 -translate-y-1/2 rounded-full bg-surface/95 px-1.5 py-0.5 text-[0.65rem] font-extrabold leading-none text-subtle shadow-sm">
+          50%
+        </span>
+      </div>
 
-          return (
-            <text
-              className="fill-muted text-[10px] font-medium"
-              key={bucket.label}
-              textAnchor="middle"
-              x={x}
-              y={chartHeight - 8}
-            >
-              {formatVideoAxisTime(bucket.position_percent, durationSeconds)}
-            </text>
-          );
-        })}
-      </svg>
+      {dropoff ? (
+        <div className="rounded-2xl border border-border/70 bg-surface px-3 py-3 text-left text-xs leading-5 text-muted">
+          <span className="block font-black text-foreground">Maior queda estimada</span>
+          <span>{`Entre ${dropoff.from_milestone}% e ${
+            dropoff.to_milestone
+          }% do vídeo (${formatVideoAxisTime(
+            dropoff.from_milestone,
+            durationSeconds,
+          )} - ${formatVideoAxisTime(dropoff.to_milestone, durationSeconds)}).`}</span>
+        </div>
+      ) : null}
     </div>
   );
 };
@@ -2501,8 +2644,10 @@ const StatisticsVideoCard = ({
         <div className="order-3 min-w-0 rounded-[1.5rem] border border-border/70 bg-surface-muted/40 p-3 sm:p-4 xl:order-2">
           <VideoRetentionLineChart
             currentTimeSeconds={videoCurrentTimeSeconds}
-            durationSeconds={videoDurationSeconds}
+            dropoff={video.retention_dropoff}
+            durationSeconds={videoDurationSeconds ?? video.duration_seconds}
             retention={video.retention}
+            views={video.metrics.sessions}
           />
         </div>
 

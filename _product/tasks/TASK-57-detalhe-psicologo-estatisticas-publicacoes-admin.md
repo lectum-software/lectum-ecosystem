@@ -187,3 +187,13 @@ Exibir estatísticas de negócio/comunidade e publicações do psicólogo com da
 - O bloco visual **Comunidades em que participa** foi removido da aba **Estatisticas**, mantendo apenas os cards, grafico e filtro de comunidade da secao.
 - O contrato real continua retornando as comunidades do psicologo para popular o filtro **Comunidade**; nenhum mock, endpoint paralelo ou alteracao de banco foi adicionada.
 - Validacoes executadas para este ajuste: `pnpm --dir admin check`, `pnpm --dir admin build` e smoke HTTP local em `/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=estatisticas` retornando 200.
+
+### Alinhamento da retenção de vídeo com Analytics do psicólogo em 2026-07-13
+
+- O gráfico Admin de **Análises do vídeo de apresentação** foi alinhado à regra do Analytics do psicólogo: vídeo atual do perfil, sessões reais reproduzidas, exclusão de autoações e buckets de retenção de 5% com fallback para marcos legados.
+- A retenção média no Admin passa a seguir a mesma semântica do psicólogo: tempo médio assistido dividido pela duração do vídeo.
+- O contrato Admin de estatísticas foi ampliado com `duration_seconds`, `average_watch_seconds` e `retention_dropoff` para renderizar a curva contínua estimada e o maior trecho de queda sem expor dados sensíveis.
+- A visualização do Admin agora desenha a curva contínua estimada de 100% até 0% no fim do eixo, com playhead sincronizado ao miniplayer, como no painel do psicólogo.
+- Não houve alteração de Prisma schema ou migrations; `pnpm --dir backend db:migrate` não foi necessário.
+- Builder/Quick Copy não estava disponível como ferramenta callable no ambiente; foram usados o PNG local `_product/proto/admin/Psicólogos/Detalhes do psicólogo/Estatísticas.png` e o recorte atual enviado pelo usuário.
+- Validações executadas para este ajuste: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check`, chamada direta do service `showAdminPsychologistStatistics` confirmando 20 pontos de retenção e smoke HTTP local em `/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=estatisticas` retornando 200.

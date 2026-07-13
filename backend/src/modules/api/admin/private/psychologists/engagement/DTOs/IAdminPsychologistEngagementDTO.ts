@@ -71,7 +71,16 @@ export type AdminPsychologistStatisticsVideo = {
     sessions: AdminPsychologistMetricComparison;
   };
   cover_url: string | null;
+  duration_seconds: number | null;
+  retention_dropoff: {
+    from_milestone: number;
+    to_milestone: number;
+    rate_drop: number;
+    from_seconds: number;
+    to_seconds: number;
+  } | null;
   metrics: {
+    average_watch_seconds: number;
     average_retention_percent: number;
     completions: number;
     replay_rate_percent: number;

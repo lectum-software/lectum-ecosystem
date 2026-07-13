@@ -182,6 +182,21 @@ Decisao complementar:
 
 Consequencia: a aba fica mais focada nos indicadores e evita duplicar a informacao de comunidade que ja e usada como filtro.
 
+## Emenda 2026-07-13 - retencao do video alinhada ao Analytics do psicologo
+
+Por decisao de produto, o grafico de video exibido no Admin deve usar a mesma regra e a mesma visualizacao do grafico de retencao exibido ao psicologo em `/app/professional/analytics`.
+
+Decisao complementar:
+
+- O endpoint Admin `GET /api/admin/private/psychologists/:id/statistics` calcula a secao de video somente para o `psychologist_profile.video_url` vigente, evitando misturar sessoes de videos antigos.
+- A agregacao de retencao usa os mesmos buckets internos de 5% (`retention_buckets`) do Analytics do psicologo, com fallback por `max_position_seconds`/`duration_seconds` e marcos legados 25/50/75/100 para sessoes antigas.
+- Sessoes autenticadas do proprio psicologo e sessoes sem reproducao real continuam fora da leitura exibida, alinhando Admin e Analytics do psicologo.
+- A retencao media do Admin passa a representar a proporcao entre tempo medio assistido e duracao do video, equivalente a `average_retention_rate` do Analytics do psicologo.
+- A resposta Admin passa a expor `duration_seconds`, `average_watch_seconds` e `retention_dropoff` seguros, sem segredo ou payload bruto, para renderizar o mesmo diagnostico visual de maior queda estimada.
+- O grafico Admin passa a desenhar a curva continua estimada, iniciando em 100% quando ha visualizacoes reais e encerrando visualmente em 0% no fim do eixo, como o grafico do psicologo.
+
+Consequencia: os dois paineis deixam de divergir entre marcos 25/50/75/100 e buckets de 5%, preservam a fonte real `profile_video_watch_session` e evitam conclusoes diferentes sobre o mesmo video. O contrato foi ampliado de forma compativel; campos existentes permanecem disponiveis.
+
 ## Validação
 
 - `pnpm --dir backend check`
@@ -299,6 +314,16 @@ Validacao da emenda de remocao do bloco de comunidades:
 
 - `pnpm --dir admin check`
 - `pnpm --dir admin build`
+- Smoke HTTP local confirmou Admin `/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=estatisticas` com status 200.
+
+Validacao da emenda de retencao do video alinhada ao Analytics do psicologo:
+
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check`
+- Chamada direta do service `showAdminPsychologistStatistics` confirmou 20 pontos de retencao de 5% e contrato seguro com `duration_seconds`, `average_watch_seconds` e `retention_dropoff`.
 - Smoke HTTP local confirmou Admin `/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=estatisticas` com status 200.
 
 ## Limitações da execução
