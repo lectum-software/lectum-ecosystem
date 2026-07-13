@@ -124,6 +124,23 @@ export type PsychologistsDashboardBreakdownItem = {
   percentage: number;
 };
 
+export type PsychologistsDashboardDirectoryFilterItem = {
+  category_id?: string | null;
+  category_label?: string | null;
+  id: string;
+  label: string;
+  position?: number | null;
+  slug: string;
+};
+
+export type PsychologistsDashboardDirectoryFilters = {
+  approaches: PsychologistsDashboardDirectoryFilterItem[];
+  languages: PsychologistsDashboardDirectoryFilterItem[];
+  services: PsychologistsDashboardDirectoryFilterItem[];
+  specialties: PsychologistsDashboardDirectoryFilterItem[];
+  target_audiences: PsychologistsDashboardDirectoryFilterItem[];
+};
+
 export type PsychologistsDashboardBooleanBreakdown = {
   false_count: number;
   false_label: string;
@@ -145,6 +162,11 @@ export type PsychologistsDashboardStatistics = {
   gender: {
     items: PsychologistsDashboardBreakdownItem[];
     source: "psychologist_profile.gender";
+    total: number;
+  };
+  languages: {
+    items: PsychologistsDashboardBreakdownItem[];
+    source: "psychologist_profile.languages";
     total: number;
   };
   modalities: {
@@ -681,7 +703,7 @@ export type AdminPsychologistEngagementMetric = {
   id: string;
   label: string;
   source: string;
-  unit: "count" | "percentage" | "seconds";
+  unit: "count" | "percentage" | "position" | "seconds";
   unavailable_reason: string | null;
   value: number | null;
 };
@@ -694,11 +716,16 @@ export type AdminPsychologistStatistics = {
   community: {
     cards: AdminPsychologistEngagementMetric[];
     communities: {
+      avatar_url: string | null;
       color: string | null;
       id: string;
       member_since: string | null;
       name: string;
       posts: number;
+      ranking: {
+        position: number;
+        score: number;
+      } | null;
       replies: number;
       slug: string;
     }[];
@@ -714,7 +741,7 @@ export type AdminPsychologistStatistics = {
     timezone: "server-local";
     to: string;
   };
-  source: "profile_events+community_activity+video_sessions+search_impressions";
+  source: "profile_events+community_activity+video_sessions+search_impressions+professional_review";
   unavailable: AdminPsychologistEngagementMetric[];
   video: {
     available: boolean;
@@ -740,6 +767,7 @@ export type AdminPsychologistStatistics = {
 export type AdminPsychologistStatisticsPeriodFilter = "all" | "custom" | "month" | "week" | "year";
 
 export type AdminPsychologistStatisticsQuery = {
+  community?: string;
   from?: string;
   period?: AdminPsychologistStatisticsPeriodFilter;
   to?: string;
@@ -752,6 +780,7 @@ export type AdminPsychologistStatisticsPoint = {
   favorites: number;
   profile_views: number;
   replies: number;
+  reviews: number;
   saves: number;
   search_results: number;
   shares: number;
@@ -1033,6 +1062,7 @@ export type AdminPsychologistsDashboard = {
     description: string;
     source: "not_tracked";
   };
+  directory_filters: PsychologistsDashboardDirectoryFilters;
   period: PsychologistsDashboardPeriod;
   psychologists: {
     items: PsychologistsDashboardPsychologist[];
@@ -1099,6 +1129,7 @@ const cleanPublicationsParams = (input: AdminPsychologistPublicationsQuery) => (
 });
 
 const cleanStatisticsParams = (input: AdminPsychologistStatisticsQuery = {}) => ({
+  ...(input.community ? { community: input.community } : {}),
   ...(input.from ? { from: input.from } : {}),
   ...(input.period ? { period: input.period } : {}),
   ...(input.to ? { to: input.to } : {}),

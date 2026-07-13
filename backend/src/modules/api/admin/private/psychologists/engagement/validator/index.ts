@@ -9,6 +9,7 @@ const psychologistParam = {
 } satisfies NonNullable<IValidatorRequest["params"]>[number];
 
 const periodQuery: NonNullable<IValidatorRequest["query"]> = [
+  { key: "community", coerse: "string", method: "string", max: 120, optional: true },
   { key: "from", coerse: "string", method: "string", max: 10, optional: true },
   { key: "period", coerse: "string", method: "string", max: 20, optional: true },
   { key: "to", coerse: "string", method: "string", max: 10, optional: true },
@@ -23,7 +24,6 @@ export const publicationsSchema: IValidatorRequest = {
   params: [psychologistParam],
   query: [
     ...periodQuery,
-    { key: "community", coerse: "string", method: "string", max: 120, optional: true },
     {
       key: "limit",
       coerse: "number",

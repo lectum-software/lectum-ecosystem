@@ -66,6 +66,7 @@ const normalizePsychologistPublications = (input: AdminPsychologistPublicationsQ
 });
 
 const normalizePsychologistStatistics = (input: AdminPsychologistStatisticsQuery = {}) => ({
+  community: input.community || "all",
   from: input.from || "default",
   period: input.period || "week",
   to: input.to || "default",

@@ -16,7 +16,7 @@ import {
   UsersRound,
   XCircle,
 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { type FocusEventHandler, useMemo, useState } from "react";
 import { useAdminFinanceDashboard, useAdminFinanceExport } from "@/api/callers/finance";
 import { resolveApiError } from "@/api/handle";
 import type {
@@ -26,6 +26,7 @@ import type {
   FinanceSeriesPoint,
   FinanceSubscriptionItem,
 } from "@/api/req/finance";
+import { useDateRangeCommitOnBlur } from "@/hooks/use-date-range-commit-on-blur";
 import { aggregateCalendarChartPoints } from "@/lib/chart-time-series";
 import { cn } from "@/lib/utils";
 
@@ -231,15 +232,21 @@ const FinanceHeader = ({
   exportError,
   exportFeedback,
   exportPending,
+  onDateChange,
+  onDateControlsBlur,
   onExport,
   range,
+  rangeError,
   setRange,
 }: {
   exportError: string | null;
   exportFeedback: string | null;
   exportPending: boolean;
+  onDateChange: (field: "from" | "to", value: string) => void;
+  onDateControlsBlur: FocusEventHandler<HTMLDivElement>;
   onExport: () => void;
   range: FinanceDashboardQuery;
+  rangeError: string | null;
   setRange: (range: FinanceDashboardQuery) => void;
 }) => (
   <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
@@ -251,13 +258,13 @@ const FinanceHeader = ({
     </div>
 
     <div className="flex flex-col gap-3 xl:items-end">
-      <div className="grid gap-3 sm:grid-cols-[1fr_1fr_150px]">
+      <div className="grid gap-3 sm:grid-cols-[1fr_1fr_150px]" onBlur={onDateControlsBlur}>
         <label className="text-xs font-black text-muted">
           De
           <input
             className="mt-1 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground shadow-control focus:border-primary"
             max={range.to}
-            onChange={(event) => setRange({ ...range, from: event.target.value })}
+            onChange={(event) => onDateChange("from", event.target.value)}
             type="date"
             value={range.from}
           />
@@ -267,7 +274,7 @@ const FinanceHeader = ({
           <input
             className="mt-1 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground shadow-control focus:border-primary"
             min={range.from}
-            onChange={(event) => setRange({ ...range, to: event.target.value })}
+            onChange={(event) => onDateChange("to", event.target.value)}
             type="date"
             value={range.to}
           />
@@ -303,7 +310,7 @@ const FinanceHeader = ({
         ))}
         <button
           className="inline-flex h-10 items-center justify-center gap-2 rounded-control bg-primary px-4 text-sm font-black text-white shadow-admin-glow transition hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-60"
-          disabled={exportPending}
+          disabled={exportPending || !isValidRange(range)}
           onClick={onExport}
           type="button"
         >
@@ -315,6 +322,7 @@ const FinanceHeader = ({
           Exportar relatório
         </button>
       </div>
+      {rangeError ? <p className="text-xs font-bold text-danger">{rangeError}</p> : null}
       {exportFeedback ? <p className="text-xs font-bold text-success">{exportFeedback}</p> : null}
       {exportError ? <p className="text-xs font-bold text-danger">{exportError}</p> : null}
     </div>
@@ -696,18 +704,32 @@ const DashboardContent = ({ dashboard }: { dashboard: AdminFinanceDashboard }) =
 );
 
 export const AdminFinanceClient = () => {
-  const [range, setRange] = useState<FinanceDashboardQuery>(() => getQuickRange(30));
   const [exportFeedback, setExportFeedback] = useState<string | null>(null);
   const [exportError, setExportError] = useState<string | null>(null);
-  const validRange = isValidRange(range);
-  const query = useAdminFinanceDashboard(range, { enabled: validRange });
+  const {
+    appliedRange,
+    applyRange,
+    draftRange,
+    handleDateChange,
+    handleDateControlsBlur,
+    rangeError,
+  } = useDateRangeCommitOnBlur<FinanceDashboardQuery>({
+    initialRange: () => getQuickRange(30),
+    isValidRange,
+    onApply: () => {
+      setExportFeedback(null);
+      setExportError(null);
+    },
+  });
+  const validRange = isValidRange(appliedRange);
+  const query = useAdminFinanceDashboard(appliedRange, { enabled: validRange });
   const exportMutation = useAdminFinanceExport();
   const queryError = query.error ? resolveApiError(query.error) : null;
   const periodCopy = useMemo(() => {
-    if (!range.from || !range.to) return "Selecione um período válido";
+    if (!appliedRange.from || !appliedRange.to) return "Selecione um período válido";
 
-    return `${formatDate(range.from)} — ${formatDate(range.to)}`;
-  }, [range]);
+    return `${formatDate(appliedRange.from)} — ${formatDate(appliedRange.to)}`;
+  }, [appliedRange]);
 
   const handleExport = async () => {
     if (!validRange) return;
@@ -716,7 +738,7 @@ export const AdminFinanceClient = () => {
     setExportError(null);
 
     try {
-      const result = await exportMutation.mutateAsync(range);
+      const result = await exportMutation.mutateAsync(appliedRange);
       downloadBlob(result.blob, result.filename);
       setExportFeedback(`Relatório ${result.filename} baixado em CSV.`);
     } catch (error) {
@@ -730,13 +752,12 @@ export const AdminFinanceClient = () => {
         exportError={exportError}
         exportFeedback={exportFeedback}
         exportPending={exportMutation.isPending}
+        onDateChange={handleDateChange}
+        onDateControlsBlur={handleDateControlsBlur}
         onExport={handleExport}
-        range={range}
-        setRange={(nextRange) => {
-          setExportFeedback(null);
-          setExportError(null);
-          setRange(nextRange);
-        }}
+        range={draftRange}
+        rangeError={rangeError}
+        setRange={applyRange}
       />
 
       <div className="flex flex-wrap items-center gap-2 text-sm text-muted">
@@ -752,7 +773,7 @@ export const AdminFinanceClient = () => {
       {!validRange ? (
         <ErrorState
           message="A data inicial precisa ser menor ou igual à data final."
-          onRetry={() => setRange(getQuickRange(30))}
+          onRetry={() => applyRange(getQuickRange(30))}
         />
       ) : null}
 

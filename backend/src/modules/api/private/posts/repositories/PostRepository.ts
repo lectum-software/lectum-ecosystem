@@ -1,6 +1,7 @@
 import type { Prisma } from "@/external/generated/prisma/client";
 import prisma, { type ORM } from "@/infra/database/prisma";
 import { canAttachCommunityMedia } from "@/utils/community-media-entitlement";
+import { ensureCommunityMembership } from "@/utils/community-membership";
 import { getCommunityMentorRankingSignals } from "@/utils/community-mentor-ranking";
 import { getPostIdsWithPsychologistReplies } from "@/utils/community-post-replies";
 import { getMutedPostIds } from "@/utils/post-notification-mute";
@@ -1855,6 +1856,12 @@ export class PostRepository implements IPostRepository {
     }
 
     const reply = await prisma.$transaction(async (transaction) => {
+      await ensureCommunityMembership({
+        client: transaction,
+        communityId: post.community_id,
+        userId: data.auth.id!,
+      });
+
       const created = await transaction.post_reply.create({
         data: {
           post_id: post.id,

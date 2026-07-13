@@ -1,5 +1,7 @@
 ﻿import type { Prisma } from "@/external/generated/prisma/client";
 import prisma from "@/infra/database/prisma";
+import { getCommunityMentorRankingSignals } from "@/utils/community-mentor-ranking";
+import { verifiedProfessionalProfileWhere } from "@/utils/subscription-entitlement";
 
 const psychologistSelect = {
   cover_image_url: true,
@@ -19,6 +21,7 @@ const psychologistSelect = {
 } satisfies Prisma.psychologist_profileSelect;
 
 const communitySelect = {
+  avatar_url: true,
   id: true,
   name: true,
   slug: true,
@@ -148,6 +151,21 @@ export class AdminPsychologistEngagementRepository {
   async listFavorites(psychologistId: string, from: Date, to: Date) {
     return prisma.psychologist_favorite.findMany({
       where: {
+        createdAt: { gte: from, lte: to },
+        deleted: false,
+        psychologist_id: psychologistId,
+      },
+      select: { createdAt: true },
+    });
+  }
+
+  async listReviews(psychologistId: string, from: Date, to: Date) {
+    return prisma.professional_review.findMany({
+      where: {
+        author: {
+          active: true,
+          deleted: false,
+        },
         createdAt: { gte: from, lte: to },
         deleted: false,
         psychologist_id: psychologistId,
@@ -371,5 +389,128 @@ export class AdminPsychologistEngagementRepository {
         community: { deleted: false },
       },
     });
+  }
+
+  async listCommunityPsychologistParticipantIds(communityIds: string[]) {
+    const uniqueCommunityIds = [...new Set(communityIds.filter(Boolean))];
+    const participantIdsByCommunityId = new Map<string, Set<string>>();
+
+    if (uniqueCommunityIds.length === 0) return participantIdsByCommunityId;
+
+    const ensureCommunity = (communityId: string) => {
+      const existing = participantIdsByCommunityId.get(communityId);
+      if (existing) return existing;
+
+      const next = new Set<string>();
+      participantIdsByCommunityId.set(communityId, next);
+
+      return next;
+    };
+
+    const [members, posts, replies] = await Promise.all([
+      prisma.community_member.findMany({
+        select: {
+          community_id: true,
+          user_id: true,
+        },
+        where: {
+          community_id: { in: uniqueCommunityIds },
+          deleted: false,
+          community: { deleted: false },
+          user: {
+            active: true,
+            deleted: false,
+            role: "psicologo",
+          },
+        },
+      }),
+      prisma.community_post.findMany({
+        select: {
+          author_id: true,
+          community_id: true,
+        },
+        where: {
+          community_id: { in: uniqueCommunityIds },
+          deleted: false,
+          community: { deleted: false },
+          author: {
+            active: true,
+            deleted: false,
+            role: "psicologo",
+          },
+        },
+      }),
+      prisma.post_reply.findMany({
+        select: {
+          author_id: true,
+          post: {
+            select: {
+              community_id: true,
+            },
+          },
+        },
+        where: {
+          deleted: false,
+          author: {
+            active: true,
+            deleted: false,
+            role: "psicologo",
+          },
+          post: {
+            community_id: { in: uniqueCommunityIds },
+            community: { deleted: false },
+            deleted: false,
+          },
+        },
+      }),
+    ]);
+
+    for (const member of members) {
+      ensureCommunity(member.community_id).add(member.user_id);
+    }
+
+    for (const post of posts) {
+      ensureCommunity(post.community_id).add(post.author_id);
+    }
+
+    for (const reply of replies) {
+      ensureCommunity(reply.post.community_id).add(reply.author_id);
+    }
+
+    return participantIdsByCommunityId;
+  }
+
+  async getCommunityMentorRankingSignals(communityId: string, mentorIds: string[]) {
+    return getCommunityMentorRankingSignals(communityId, mentorIds);
+  }
+
+  async listTopMentorEligiblePsychologistIds() {
+    const mentors = await prisma.user.findMany({
+      where: {
+        active: true,
+        deleted: false,
+        role: "psicologo",
+        psychologist_profile: {
+          is: {
+            deleted: false,
+            published: true,
+            video_url: {
+              not: null,
+            },
+            NOT: [
+              {
+                video_url: "",
+              },
+            ],
+            ...verifiedProfessionalProfileWhere(),
+          },
+        },
+      },
+      select: {
+        id: true,
+      },
+    });
+
+    return mentors.map((mentor) => mentor.id);
   }
 }

@@ -15,12 +15,18 @@ type SidebarContentProps = {
   collapsed: boolean;
   onNavigate?: () => void;
   onRequestExpand?: () => void;
+  premiumPilot?: boolean;
 };
 
 const isNavPathActive = (pathname: string, href: string) =>
   pathname === href || pathname.startsWith(`${href}/`);
 
-const SidebarContent = ({ collapsed, onNavigate, onRequestExpand }: SidebarContentProps) => {
+const SidebarContent = ({
+  collapsed,
+  onNavigate,
+  onRequestExpand,
+  premiumPilot = false,
+}: SidebarContentProps) => {
   const pathname = usePathname();
   const { admin, logout } = useAdminAuth();
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({});
@@ -31,7 +37,12 @@ const SidebarContent = ({ collapsed, onNavigate, onRequestExpand }: SidebarConte
   }, [adminName]);
 
   return (
-    <div className="scrollbar-none flex h-full flex-col overflow-y-auto overscroll-contain bg-sidebar text-sidebar-foreground">
+    <div
+      className={cn(
+        "scrollbar-none flex h-full flex-col overflow-y-auto overscroll-contain bg-sidebar text-sidebar-foreground",
+        premiumPilot && "bg-sidebar/95 backdrop-blur",
+      )}
+    >
       <div
         className={cn(
           "flex h-20 shrink-0 items-center gap-3 px-5",
@@ -74,8 +85,13 @@ const SidebarContent = ({ collapsed, onNavigate, onRequestExpand }: SidebarConte
                     aria-expanded={collapsed ? undefined : isOpen}
                     className={cn(
                       "flex min-h-12 w-full items-center gap-3 rounded-2xl px-3 text-left text-sm font-bold transition",
-                      "text-sidebar-muted hover:bg-sidebar-active/45 hover:text-sidebar-foreground focus-visible:outline-white",
-                      isActive && "bg-sidebar-active text-sidebar-foreground shadow-admin-soft",
+                      premiumPilot
+                        ? "text-sidebar-muted hover:bg-sidebar-active hover:text-primary focus-visible:outline-primary"
+                        : "text-sidebar-muted hover:bg-sidebar-active/45 hover:text-sidebar-foreground focus-visible:outline-white",
+                      isActive &&
+                        (premiumPilot
+                          ? "bg-sidebar-active text-primary shadow-control ring-1 ring-primary/10"
+                          : "bg-sidebar-active text-sidebar-foreground shadow-admin-soft"),
                       collapsed && "justify-center px-2",
                     )}
                     onClick={() => {
@@ -121,9 +137,14 @@ const SidebarContent = ({ collapsed, onNavigate, onRequestExpand }: SidebarConte
                           <Link
                             aria-current={childIsActive ? "page" : undefined}
                             className={cn(
-                              "flex min-h-10 items-center rounded-xl border-l border-white/10 px-3 pl-4 text-sm font-bold transition",
-                              "text-sidebar-muted hover:bg-white/10 hover:text-sidebar-foreground focus-visible:outline-white",
-                              childIsActive && "bg-white/10 text-sidebar-foreground",
+                              "flex min-h-10 items-center rounded-xl border-l px-3 pl-4 text-sm font-bold transition",
+                              premiumPilot
+                                ? "border-border text-sidebar-muted hover:bg-sidebar-active hover:text-primary focus-visible:outline-primary"
+                                : "border-white/10 text-sidebar-muted hover:bg-white/10 hover:text-sidebar-foreground focus-visible:outline-white",
+                              childIsActive &&
+                                (premiumPilot
+                                  ? "border-primary/30 bg-sidebar-active text-primary"
+                                  : "bg-white/10 text-sidebar-foreground"),
                             )}
                             href={child.href}
                             key={child.href}
@@ -144,8 +165,13 @@ const SidebarContent = ({ collapsed, onNavigate, onRequestExpand }: SidebarConte
                 aria-current={isActive ? "page" : undefined}
                 className={cn(
                   "flex min-h-12 items-center gap-3 rounded-2xl px-3 text-sm font-bold transition",
-                  "text-sidebar-muted hover:bg-sidebar-active/45 hover:text-sidebar-foreground focus-visible:outline-white",
-                  isActive && "bg-sidebar-active text-sidebar-foreground shadow-admin-soft",
+                  premiumPilot
+                    ? "text-sidebar-muted hover:bg-sidebar-active hover:text-primary focus-visible:outline-primary"
+                    : "text-sidebar-muted hover:bg-sidebar-active/45 hover:text-sidebar-foreground focus-visible:outline-white",
+                  isActive &&
+                    (premiumPilot
+                      ? "bg-sidebar-active text-primary shadow-control ring-1 ring-primary/10"
+                      : "bg-sidebar-active text-sidebar-foreground shadow-admin-soft"),
                   collapsed && "justify-center px-2",
                 )}
                 href={item.href}
@@ -161,7 +187,9 @@ const SidebarContent = ({ collapsed, onNavigate, onRequestExpand }: SidebarConte
         </div>
       </nav>
 
-      <div className="shrink-0 border-t border-white/10 p-3">
+      <div
+        className={cn("shrink-0 border-t p-3", premiumPilot ? "border-border" : "border-white/10")}
+      >
         <div
           className={cn(
             "flex items-center gap-3 rounded-2xl px-2 py-3",
@@ -180,7 +208,10 @@ const SidebarContent = ({ collapsed, onNavigate, onRequestExpand }: SidebarConte
         <button
           aria-label="Sair do painel administrativo"
           className={cn(
-            "mt-2 flex h-11 w-full items-center gap-3 rounded-2xl px-3 text-sm font-bold text-sidebar-muted transition hover:bg-white/10 hover:text-sidebar-foreground",
+            "mt-2 flex h-11 w-full items-center gap-3 rounded-2xl px-3 text-sm font-bold text-sidebar-muted transition",
+            premiumPilot
+              ? "hover:bg-sidebar-active hover:text-primary"
+              : "hover:bg-white/10 hover:text-sidebar-foreground",
             collapsed && "justify-center px-2",
           )}
           onClick={() => void logout()}
@@ -197,6 +228,8 @@ const SidebarContent = ({ collapsed, onNavigate, onRequestExpand }: SidebarConte
 export const AdminShell = ({ children }: PropsWithChildren) => {
   const [collapsed, setCollapsed] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const pathname = usePathname();
+  const premiumPilot = pathname === "/psicologos" || pathname.startsWith("/psicologos/");
 
   const toggleCollapsed = () => {
     setCollapsed((current) => {
@@ -211,10 +244,16 @@ export const AdminShell = ({ children }: PropsWithChildren) => {
   };
 
   return (
-    <div className="min-h-dvh bg-background text-foreground">
+    <div
+      className={cn(
+        "min-h-dvh bg-background text-foreground",
+        premiumPilot && "admin-premium-pilot",
+      )}
+    >
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-30 hidden border-r border-white/10 transition-[width] duration-200 lg:block",
+          "fixed inset-y-0 left-0 z-30 hidden border-r transition-[width] duration-200 lg:block",
+          premiumPilot ? "border-border shadow-admin-soft" : "border-white/10",
           collapsed ? "w-20" : "w-60",
         )}
       >
@@ -235,7 +274,11 @@ export const AdminShell = ({ children }: PropsWithChildren) => {
             strokeWidth={2}
           />
         </button>
-        <SidebarContent collapsed={collapsed} onRequestExpand={expandCollapsedSidebar} />
+        <SidebarContent
+          collapsed={collapsed}
+          onRequestExpand={expandCollapsedSidebar}
+          premiumPilot={premiumPilot}
+        />
       </aside>
 
       {drawerOpen ? (
@@ -249,13 +292,22 @@ export const AdminShell = ({ children }: PropsWithChildren) => {
           <aside className="relative h-full w-[min(80vw,300px)] shadow-admin">
             <button
               aria-label="Fechar menu administrativo"
-              className="absolute right-3 top-3 z-10 grid h-10 w-10 place-items-center rounded-full bg-white/10 text-white"
+              className={cn(
+                "absolute right-3 top-3 z-10 grid h-10 w-10 place-items-center rounded-full",
+                premiumPilot
+                  ? "border border-border bg-surface text-foreground"
+                  : "bg-white/10 text-white",
+              )}
               onClick={() => setDrawerOpen(false)}
               type="button"
             >
               <X aria-hidden className="h-5 w-5" />
             </button>
-            <SidebarContent collapsed={false} onNavigate={() => setDrawerOpen(false)} />
+            <SidebarContent
+              collapsed={false}
+              onNavigate={() => setDrawerOpen(false)}
+              premiumPilot={premiumPilot}
+            />
           </aside>
         </div>
       ) : null}

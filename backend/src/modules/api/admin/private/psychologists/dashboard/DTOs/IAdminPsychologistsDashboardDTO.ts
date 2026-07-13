@@ -86,6 +86,23 @@ export type AdminPsychologistsDashboardBreakdownItem = {
   percentage: number;
 };
 
+export type AdminPsychologistsDashboardDirectoryFilterItem = {
+  category_id?: string | null;
+  category_label?: string | null;
+  id: string;
+  label: string;
+  position?: number | null;
+  slug: string;
+};
+
+export type AdminPsychologistsDashboardDirectoryFilters = {
+  approaches: AdminPsychologistsDashboardDirectoryFilterItem[];
+  languages: AdminPsychologistsDashboardDirectoryFilterItem[];
+  services: AdminPsychologistsDashboardDirectoryFilterItem[];
+  specialties: AdminPsychologistsDashboardDirectoryFilterItem[];
+  target_audiences: AdminPsychologistsDashboardDirectoryFilterItem[];
+};
+
 export type AdminPsychologistsDashboardBooleanBreakdown = {
   false_count: number;
   false_label: string;
@@ -107,6 +124,11 @@ export type AdminPsychologistsDashboardStatistics = {
   gender: {
     items: AdminPsychologistsDashboardBreakdownItem[];
     source: "psychologist_profile.gender";
+    total: number;
+  };
+  languages: {
+    items: AdminPsychologistsDashboardBreakdownItem[];
+    source: "psychologist_profile.languages";
     total: number;
   };
   modalities: {
@@ -158,6 +180,7 @@ export type AdminPsychologistsDashboardSummary = {
     description: string;
     source: "not_tracked";
   };
+  directory_filters: AdminPsychologistsDashboardDirectoryFilters;
   period: AdminPsychologistsDashboardPeriod;
   psychologists: {
     items: AdminPsychologistsDashboardPsychologist[];

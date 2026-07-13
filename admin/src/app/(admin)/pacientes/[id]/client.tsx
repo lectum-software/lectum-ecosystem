@@ -22,7 +22,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { type FocusEventHandler, useMemo } from "react";
 import { useAdminPatientDetail } from "@/api/callers/patients";
 import { resolveApiError } from "@/api/handle";
 import type {
@@ -31,6 +31,7 @@ import type {
   PatientsDetailMetric,
   PatientsDetailQuery,
 } from "@/api/req/patients";
+import { useDateRangeCommitOnBlur } from "@/hooks/use-date-range-commit-on-blur";
 import { aggregateCalendarChartPoints } from "@/lib/chart-time-series";
 import { cn } from "@/lib/utils";
 
@@ -203,20 +204,26 @@ const ErrorState = ({ message, onRetry }: { message: string; onRetry: () => void
 );
 
 const PeriodFilters = ({
+  onDateChange,
+  onDateControlsBlur,
   range,
+  rangeError,
   setRange,
 }: {
+  onDateChange: (field: "from" | "to", value: string) => void;
+  onDateControlsBlur: FocusEventHandler<HTMLDivElement>;
   range: PatientsDetailQuery;
+  rangeError: string | null;
   setRange: (range: PatientsDetailQuery) => void;
 }) => (
   <div className="flex flex-col gap-3 rounded-card border border-border bg-surface p-4 shadow-admin-soft sm:flex-row sm:items-end sm:justify-between">
-    <div className="grid gap-3 sm:grid-cols-2">
+    <div className="grid gap-3 sm:grid-cols-2" onBlur={onDateControlsBlur}>
       <label className="text-xs font-black text-muted">
         De
         <input
           className="mt-1 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground shadow-control focus:border-primary"
           max={range.to}
-          onChange={(event) => setRange({ ...range, from: event.target.value })}
+          onChange={(event) => onDateChange("from", event.target.value)}
           type="date"
           value={range.from}
         />
@@ -226,7 +233,7 @@ const PeriodFilters = ({
         <input
           className="mt-1 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground shadow-control focus:border-primary"
           min={range.from}
-          onChange={(event) => setRange({ ...range, to: event.target.value })}
+          onChange={(event) => onDateChange("to", event.target.value)}
           type="date"
           value={range.to}
         />
@@ -244,6 +251,7 @@ const PeriodFilters = ({
         </button>
       ))}
     </div>
+    {rangeError ? <p className="max-w-md text-xs font-bold text-danger">{rangeError}</p> : null}
   </div>
 );
 
@@ -635,14 +643,24 @@ const DetailContent = ({ detail }: { detail: AdminPatientDetail }) => (
   </div>
 );
 export const AdminPatientDetailClient = ({ id }: { id: string }) => {
-  const [range, setRange] = useState<PatientsDetailQuery>(() => getQuickRange(30));
-  const validRange = isValidRange(range);
-  const query = useAdminPatientDetail(id, range, { enabled: validRange });
+  const {
+    appliedRange,
+    applyRange,
+    draftRange,
+    handleDateChange,
+    handleDateControlsBlur,
+    rangeError,
+  } = useDateRangeCommitOnBlur<PatientsDetailQuery>({
+    initialRange: () => getQuickRange(30),
+    isValidRange,
+  });
+  const validRange = isValidRange(appliedRange);
+  const query = useAdminPatientDetail(id, appliedRange, { enabled: validRange });
   const queryError = query.error ? resolveApiError(query.error) : null;
   const periodCopy = useMemo(() => {
-    if (!range.from || !range.to) return "Selecione um período válido";
-    return `${formatDate(range.from)} — ${formatDate(range.to)}`;
-  }, [range]);
+    if (!appliedRange.from || !appliedRange.to) return "Selecione um período válido";
+    return `${formatDate(appliedRange.from)} — ${formatDate(appliedRange.to)}`;
+  }, [appliedRange]);
 
   return (
     <div className="space-y-6">
@@ -665,7 +683,13 @@ export const AdminPatientDetailClient = ({ id }: { id: string }) => {
             </p>
           </div>
         </div>
-        <PeriodFilters range={range} setRange={setRange} />
+        <PeriodFilters
+          onDateChange={handleDateChange}
+          onDateControlsBlur={handleDateControlsBlur}
+          range={draftRange}
+          rangeError={rangeError}
+          setRange={applyRange}
+        />
       </div>
       <div className="flex flex-wrap items-center gap-2 text-sm text-muted">
         <CalendarDays aria-hidden className="h-4 w-4" />
@@ -676,7 +700,7 @@ export const AdminPatientDetailClient = ({ id }: { id: string }) => {
       {!validRange ? (
         <ErrorState
           message="A data inicial precisa ser menor ou igual à data final."
-          onRetry={() => setRange(getQuickRange(30))}
+          onRetry={() => applyRange(getQuickRange(30))}
         />
       ) : null}
       {validRange && query.isLoading ? (

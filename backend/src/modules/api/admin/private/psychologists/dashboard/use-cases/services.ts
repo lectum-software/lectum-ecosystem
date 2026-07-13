@@ -479,9 +479,9 @@ const addMapCount = (
 const buildBreakdown = (
   map: Map<string, { count: number; label: string }>,
   total: number,
-  limit = 6,
-): AdminPsychologistsDashboardBreakdownItem[] =>
-  [...map.entries()]
+  limit?: number,
+): AdminPsychologistsDashboardBreakdownItem[] => {
+  const items = [...map.entries()]
     .map(([id, item]) => ({
       count: item.count,
       id,
@@ -492,8 +492,10 @@ const buildBreakdown = (
       if (right.count !== left.count) return right.count - left.count;
 
       return left.label.localeCompare(right.label, "pt-BR");
-    })
-    .slice(0, limit);
+    });
+
+  return typeof limit === "number" ? items.slice(0, limit) : items;
+};
 
 const booleanBreakdown = (params: {
   falseLabel?: string;
@@ -521,6 +523,7 @@ const buildStatistics = (profiles: AdminPsychologistProfileRecord[]) => {
   const specialties = new Map<string, { count: number; label: string }>();
   const approaches = new Map<string, { count: number; label: string }>();
   const targetAudience = new Map<string, { count: number; label: string }>();
+  const languages = new Map<string, { count: number; label: string }>();
   const modalities = new Map<string, { count: number; label: string }>();
   const gender = new Map<string, { count: number; label: string }>();
   const states = new Map<string, { count: number; label: string }>();
@@ -540,6 +543,10 @@ const buildStatistics = (profiles: AdminPsychologistProfileRecord[]) => {
 
     for (const audience of jsonStringArray(profile.target_audience)) {
       addMapCount(targetAudience, normalizeKey(audience), audience);
+    }
+
+    for (const language of jsonStringArray(profile.languages)) {
+      addMapCount(languages, normalizeKey(language), language);
     }
 
     if (profile.modality?.trim()) {
@@ -587,6 +594,11 @@ const buildStatistics = (profiles: AdminPsychologistProfileRecord[]) => {
     gender: {
       items: buildBreakdown(gender, total, 4),
       source: "psychologist_profile.gender" as const,
+      total,
+    },
+    languages: {
+      items: buildBreakdown(languages, total),
+      source: "psychologist_profile.languages" as const,
       total,
     },
     modalities: {
@@ -671,7 +683,10 @@ export const buildPsychologistsDashboard = async (
   query: AdminPsychologistsDashboardQuery,
 ): Promise<Resolve> => {
   const repository = new AdminPsychologistsDashboardRepository();
-  const profiles = await repository.listPsychologistProfiles();
+  const [profiles, directoryFilters] = await Promise.all([
+    repository.listPsychologistProfiles(),
+    repository.listDirectoryFilters(),
+  ]);
   const resolvedPeriod = resolvePeriod(query ?? {}, getAllPeriodStartDate(profiles));
   if (!resolvedPeriod.success) {
     return {
@@ -786,6 +801,7 @@ export const buildPsychologistsDashboard = async (
         "A plataforma ainda não persiste eventos de busca e filtros do diretório de psicólogos com dimensão de filtro pesquisado.",
       source: "not_tracked",
     },
+    directory_filters: directoryFilters,
     period,
     psychologists: {
       items: buildPsychologistsList(profiles, current.end),

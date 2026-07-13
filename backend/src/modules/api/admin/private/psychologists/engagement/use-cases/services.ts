@@ -2,6 +2,7 @@
 import { error, msg } from "@/helpers/translate";
 import type {
   AdminPsychologistAvailabilityMetric,
+  AdminPsychologistEngagementQuery,
   AdminPsychologistMetricComparison,
   AdminPsychologistPublicationItem,
   AdminPsychologistPublicationsDTO,
@@ -298,6 +299,7 @@ const buildSeries = (input: {
   posts: { createdAt: Date }[];
   profileViews: { createdAt: Date }[];
   replies: { createdAt: Date }[];
+  reviews: { createdAt: Date }[];
   replyShares: { createdAt: Date }[];
   replySaves: { createdAt: Date }[];
   replyVotes: { createdAt: Date; value: number }[];
@@ -307,6 +309,7 @@ const buildSeries = (input: {
   const profileViews = groupDateCounts(input.profileViews, input.labels);
   const whatsappClicks = groupDateCounts(input.whatsappClicks, input.labels);
   const favorites = groupDateCounts(input.favorites, input.labels);
+  const reviews = groupDateCounts(input.reviews, input.labels);
   const searchResults = groupDateCounts(input.searchResults, input.labels);
   const posts = groupDateCounts(input.posts, input.labels);
   const replies = groupDateCounts(input.replies, input.labels);
@@ -329,6 +332,7 @@ const buildSeries = (input: {
     favorites: valueFromMap(favorites, date),
     profile_views: valueFromMap(profileViews, date),
     replies: valueFromMap(replies, date),
+    reviews: valueFromMap(reviews, date),
     saves: valueFromMap(saves, date),
     search_results: valueFromMap(searchResults, date),
     shares: valueFromMap(shares, date),
@@ -442,7 +446,16 @@ const buildVideo = (
   };
 };
 
+const earlierDate = (current: Date | null, candidate: Date | null) => {
+  if (!candidate) return current;
+  if (!current) return candidate;
+
+  return candidate < current ? candidate : current;
+};
+
 const buildCommunityItems = (input: {
+  allPosts: AdminPsychologistEngagementPost[];
+  allReplies: AdminPsychologistEngagementReply[];
   memberships: Awaited<ReturnType<AdminPsychologistEngagementRepository["listCommunities"]>>;
   posts: AdminPsychologistEngagementPost[];
   replies: AdminPsychologistEngagementReply[];
@@ -452,45 +465,52 @@ const buildCommunityItems = (input: {
     AdminPsychologistStatisticsDTO["community"]["communities"][number]
   >();
 
-  for (const membership of input.memberships) {
-    communities.set(membership.community.id, {
-      color: membership.community.visual_primary_color,
-      id: membership.community.id,
-      member_since: membership.createdAt,
-      name: membership.community.name,
-      posts: 0,
-      replies: 0,
-      slug: membership.community.slug,
-    });
-  }
+  const ensureItem = (
+    community: AdminPsychologistEngagementPost["community"],
+  ): AdminPsychologistStatisticsDTO["community"]["communities"][number] => {
+    const current = communities.get(community.id);
+    if (current) return current;
 
-  for (const post of input.posts) {
-    const current = communities.get(post.community.id) ?? {
-      color: post.community.visual_primary_color,
-      id: post.community.id,
-      member_since: null,
-      name: post.community.name,
-      posts: 0,
-      replies: 0,
-      slug: post.community.slug,
-    };
-    current.posts += 1;
-    communities.set(current.id, current);
-  }
-
-  for (const reply of input.replies) {
-    const community = reply.post.community;
-    const current = communities.get(community.id) ?? {
+    const next = {
+      avatar_url: community.avatar_url,
       color: community.visual_primary_color,
       id: community.id,
       member_since: null,
       name: community.name,
       posts: 0,
+      ranking: null,
       replies: 0,
       slug: community.slug,
     };
+
+    communities.set(community.id, next);
+
+    return next;
+  };
+
+  for (const membership of input.memberships) {
+    const current = ensureItem(membership.community);
+    current.member_since = earlierDate(current.member_since, membership.createdAt);
+  }
+
+  for (const post of input.allPosts) {
+    const current = ensureItem(post.community);
+    current.member_since = earlierDate(current.member_since, post.createdAt);
+  }
+
+  for (const reply of input.allReplies) {
+    const current = ensureItem(reply.post.community);
+    current.member_since = earlierDate(current.member_since, reply.createdAt);
+  }
+
+  for (const post of input.posts) {
+    const current = ensureItem(post.community);
+    current.posts += 1;
+  }
+
+  for (const reply of input.replies) {
+    const current = ensureItem(reply.post.community);
     current.replies += 1;
-    communities.set(current.id, current);
   }
 
   return [...communities.values()].sort((left, right) => {
@@ -502,6 +522,112 @@ const buildCommunityItems = (input: {
   });
 };
 
+const withCommunityRankings = async (input: {
+  communities: AdminPsychologistStatisticsDTO["community"]["communities"];
+  psychologistId: string;
+  repository: AdminPsychologistEngagementRepository;
+}): Promise<AdminPsychologistStatisticsDTO["community"]["communities"]> => {
+  if (input.communities.length === 0) return input.communities;
+
+  const eligibleMentorIds = await input.repository.listTopMentorEligiblePsychologistIds();
+  if (!eligibleMentorIds.includes(input.psychologistId)) {
+    return input.communities.map((community) => ({ ...community, ranking: null }));
+  }
+
+  const rankingsByCommunityId = new Map<
+    string,
+    NonNullable<AdminPsychologistStatisticsDTO["community"]["communities"][number]["ranking"]>
+  >();
+
+  await Promise.all(
+    input.communities.map(async (community) => {
+      const rankingSignals = await input.repository.getCommunityMentorRankingSignals(community.id, [
+        ...eligibleMentorIds,
+      ]);
+      const ranking = rankingSignals.get(input.psychologistId);
+
+      if (ranking) rankingsByCommunityId.set(community.id, ranking);
+    }),
+  );
+
+  return input.communities.map((community) => ({
+    ...community,
+    ranking: rankingsByCommunityId.get(community.id) ?? null,
+  }));
+};
+
+const normalizeStatisticsQuery = (query: AdminPsychologistEngagementQuery = {}) => ({
+  community: query.community?.trim() || "all",
+  from: query.from,
+  period: query.period,
+  to: query.to,
+});
+
+const matchesCommunityFilter = (community: { id: string; slug: string }, communityFilter: string) =>
+  communityFilter === "all" ||
+  community.id === communityFilter ||
+  community.slug === communityFilter;
+
+const filterPostsByCommunity = (
+  posts: AdminPsychologistEngagementPost[],
+  communityFilter: string,
+) =>
+  communityFilter === "all"
+    ? posts
+    : posts.filter((post) => matchesCommunityFilter(post.community, communityFilter));
+
+const filterRepliesByCommunity = (
+  replies: AdminPsychologistEngagementReply[],
+  communityFilter: string,
+) =>
+  communityFilter === "all"
+    ? replies
+    : replies.filter((reply) => matchesCommunityFilter(reply.post.community, communityFilter));
+
+const buildCommunityRankingMetric = (
+  communityFilter: string,
+  communities: AdminPsychologistStatisticsDTO["community"]["communities"],
+) => {
+  if (communityFilter === "all") {
+    return unavailableMetric(
+      "ranking",
+      "Ranking do psicólogo",
+      "community_mentor_ranking",
+      "Selecione uma comunidade específica para ver a posição do psicólogo.",
+    );
+  }
+
+  const selectedCommunity = communities.find((community) =>
+    matchesCommunityFilter(community, communityFilter),
+  );
+
+  if (!selectedCommunity) {
+    return unavailableMetric(
+      "ranking",
+      "Ranking do psicólogo",
+      "community_mentor_ranking",
+      "O psicólogo não possui participação real nesta comunidade.",
+    );
+  }
+
+  if (!selectedCommunity.ranking) {
+    return unavailableMetric(
+      "ranking",
+      "Ranking do psicólogo",
+      "community_mentor_ranking",
+      "Sem posição real no ranking desta comunidade.",
+    );
+  }
+
+  return metric({
+    id: "ranking",
+    label: "Ranking do psicólogo",
+    source: "community_mentor_ranking",
+    unit: "position",
+    value: selectedCommunity.ranking.position,
+  });
+};
+
 const notFound = () => ({
   status: 404,
   ...error("not_found", { model: "psychologist" }),
@@ -510,11 +636,12 @@ const notFound = () => ({
 export const showAdminPsychologistStatistics = async (
   data: IAdminPsychologistStatisticsDTO,
 ): Promise<Resolve> => {
+  const query = normalizeStatisticsQuery(data.q ?? {});
   const repository = new AdminPsychologistEngagementRepository();
   const profile = await repository.findPsychologist(data.p.id);
   if (!profile) return notFound();
 
-  const period = resolvePeriod(data.q ?? {}, profile.user.createdAt);
+  const period = resolvePeriod(query, profile.user.createdAt);
   if (!period.success) return { status: 400, ...error(period.code, {}) };
 
   const userId = profile.user.id;
@@ -522,15 +649,19 @@ export const showAdminPsychologistStatistics = async (
     profileViews,
     whatsappClicks,
     favorites,
+    reviews,
     searchResults,
     videoSessions,
     previousProfileViews,
     previousWhatsappClicks,
     previousFavorites,
+    previousReviews,
     previousSearchResults,
     previousVideoSessions,
     posts,
     replies,
+    allPosts,
+    allReplies,
     previousPosts,
     previousReplies,
     memberships,
@@ -538,24 +669,32 @@ export const showAdminPsychologistStatistics = async (
     repository.listProfileViews(userId, period.current.start, period.current.end),
     repository.listWhatsappClicks(userId, period.current.start, period.current.end),
     repository.listFavorites(userId, period.current.start, period.current.end),
+    repository.listReviews(userId, period.current.start, period.current.end),
     repository.listSearchResultImpressions(userId, period.current.start, period.current.end),
     repository.listVideoSessions(userId, period.current.start, period.current.end),
     repository.listProfileViews(userId, period.previous.start, period.previous.end),
     repository.listWhatsappClicks(userId, period.previous.start, period.previous.end),
     repository.listFavorites(userId, period.previous.start, period.previous.end),
+    repository.listReviews(userId, period.previous.start, period.previous.end),
     repository.listSearchResultImpressions(userId, period.previous.start, period.previous.end),
     repository.listVideoSessions(userId, period.previous.start, period.previous.end),
     repository.listAuthoredPosts(userId, period.current.start, period.current.end),
     repository.listAuthoredReplies(userId, period.current.start, period.current.end),
+    repository.listAuthoredPosts(userId),
+    repository.listAuthoredReplies(userId),
     repository.listAuthoredPosts(userId, period.previous.start, period.previous.end),
     repository.listAuthoredReplies(userId, period.previous.start, period.previous.end),
     repository.listCommunities(userId),
   ]);
 
-  const postIds = posts.map((post) => post.id);
-  const replyIds = replies.map((reply) => reply.id);
-  const previousPostIds = previousPosts.map((post) => post.id);
-  const previousReplyIds = previousReplies.map((reply) => reply.id);
+  const communityPosts = filterPostsByCommunity(posts, query.community);
+  const communityReplies = filterRepliesByCommunity(replies, query.community);
+  const previousCommunityPosts = filterPostsByCommunity(previousPosts, query.community);
+  const previousCommunityReplies = filterRepliesByCommunity(previousReplies, query.community);
+  const postIds = communityPosts.map((post) => post.id);
+  const replyIds = communityReplies.map((reply) => reply.id);
+  const previousPostIds = previousCommunityPosts.map((post) => post.id);
+  const previousReplyIds = previousCommunityReplies.map((reply) => reply.id);
   const [
     postSaves,
     replySaves,
@@ -605,7 +744,7 @@ export const showAdminPsychologistStatistics = async (
   const sharesCount = postShares.length + replyShares.length;
   const previousSharesCount = previousPostShares.length + previousReplyShares.length;
   const unavailable: AdminPsychologistAvailabilityMetric[] = [];
-  const series = buildSeries({
+  const businessSeries = buildSeries({
     commentsReceived,
     favorites,
     labels: period.labels,
@@ -615,12 +754,36 @@ export const showAdminPsychologistStatistics = async (
     posts,
     profileViews,
     replies,
+    reviews,
     replyShares,
     replySaves,
     replyVotes,
     searchResults,
     whatsappClicks,
   });
+  const communitySeries = buildSeries({
+    commentsReceived,
+    favorites: [],
+    labels: period.labels,
+    postShares,
+    postSaves,
+    postVotes,
+    posts: communityPosts,
+    profileViews: [],
+    replies: communityReplies,
+    reviews: [],
+    replyShares,
+    replySaves,
+    replyVotes,
+    searchResults: [],
+    whatsappClicks: [],
+  });
+  const communityItems = await withCommunityRankings({
+    communities: buildCommunityItems({ allPosts, allReplies, memberships, posts, replies }),
+    psychologistId: userId,
+    repository,
+  });
+  const communityRankingMetric = buildCommunityRankingMetric(query.community, communityItems);
 
   const response: AdminPsychologistStatisticsDTO = {
     business: {
@@ -655,6 +818,13 @@ export const showAdminPsychologistStatistics = async (
           value: favorites.length,
         }),
         metric({
+          comparison: buildComparison(reviews.length, previousReviews.length, period.period),
+          id: "reviews",
+          label: "Avaliações",
+          source: "professional_review",
+          value: reviews.length,
+        }),
+        metric({
           comparison: buildComparison(
             searchResults.length,
             previousSearchResults.length,
@@ -666,23 +836,31 @@ export const showAdminPsychologistStatistics = async (
           value: searchResults.length,
         }),
       ],
-      series,
+      series: businessSeries,
     },
     community: {
       cards: [
         metric({
-          comparison: buildComparison(posts.length, previousPosts.length, period.period),
+          comparison: buildComparison(
+            communityPosts.length,
+            previousCommunityPosts.length,
+            period.period,
+          ),
           id: "posts",
           label: "Posts",
           source: "community_post.author_id",
-          value: posts.length,
+          value: communityPosts.length,
         }),
         metric({
-          comparison: buildComparison(replies.length, previousReplies.length, period.period),
+          comparison: buildComparison(
+            communityReplies.length,
+            previousCommunityReplies.length,
+            period.period,
+          ),
           id: "replies",
           label: "Respostas",
           source: "post_reply.author_id",
-          value: replies.length,
+          value: communityReplies.length,
         }),
         metric({
           comparison: buildComparison(upvotesCount, previousUpvotesCount, period.period),
@@ -723,12 +901,14 @@ export const showAdminPsychologistStatistics = async (
           source: "post_reply em posts do psicólogo",
           value: commentsReceived.length,
         }),
+        communityRankingMetric,
       ],
-      communities: buildCommunityItems({ memberships, posts, replies }),
-      series,
+      communities: communityItems,
+      series: communitySeries,
     },
     period: period.period,
-    source: "profile_events+community_activity+video_sessions+search_impressions",
+    source:
+      "profile_events+community_activity+video_sessions+search_impressions+professional_review",
     unavailable,
     video: buildVideo(profile, videoSessions, previousVideoSessions, period.period),
   };

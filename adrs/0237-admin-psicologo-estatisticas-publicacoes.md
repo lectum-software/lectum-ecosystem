@@ -1,4 +1,4 @@
-﻿# ADR-0237: Estatísticas e publicações reais do psicólogo no Admin
+# ADR-0237: Estatísticas e publicações reais do psicólogo no Admin
 
 ## Status
 
@@ -131,6 +131,33 @@ Decisão complementar:
 
 Consequência: o endpoint faz leituras adicionais das mesmas fontes persistidas no período anterior, sem tabela nova, sem mock e sem estimativa. O Admin ganha leitura comparativa coerente com o protótipo, mantendo a interação existente de ligar/desligar séries.
 
+## Emenda 2026-07-12 — comunidades com avatar e ranking no Admin
+
+O bloco **Comunidades em que participa** da aba Admin **Estatísticas** passa a exibir a comunidade como linha operacional, alinhada ao protótipo local da TASK-57:
+
+- `community.avatar_url` é retornado pelo contrato Admin e renderizado com `next/image` quando a URL é renderizável, incluindo os ícones públicos `/community/icons/*` servidos pelo backend;
+- o nome exibido vem diretamente de `community.name`, sem derivação por slug, fallback decorativo ou dado inventado;
+- `community_member.createdAt` permanece a fonte de **Membro desde**;
+- a coluna **Ranking** usa o sinal derivado existente de ranking de mentores por comunidade, calculado no backend a partir de posts, respostas, votos, comentários recebidos, salvamentos, compartilhamentos persistidos e penalidade por posts removidos.
+
+Quando o psicólogo não é elegível ao ranking de Top Mentores ou não possui sinal real suficiente para entrar no ranking derivado da comunidade, a UI exibe **Sem ranking**. A leitura não materializa snapshot, não cria tabela nova e não estima posição. A UI exibe somente `Top #N`, sem pontuação auxiliar, para evitar confundir score técnico com posição real.
+
+
+## Emenda 2026-07-12 - filtro por comunidade e contador de ranking
+
+A secao **Estatisticas de comunidade** passa a aceitar um filtro explicito de comunidade com valor padrao **Todas**.
+
+Decisao complementar:
+
+- Ampliar o contrato real `GET /api/admin/private/psychologists/:id/statistics` com o query param opcional `community`, aceitando `community.id` ou `community.slug`.
+- Recalcular os cards e a serie temporal de comunidade apenas com posts/respostas da comunidade selecionada quando o filtro for diferente de **Todas**.
+- Manter a lista de comunidades reais do psicologo no mesmo contrato para popular o seletor e filtrar a tabela localmente, sem endpoint paralelo.
+- Adicionar o card **Ranking do psicologo** como metrica de posicao (`unit=position`) baseada no ranking real/derivado de mentores por comunidade ja usado no bloco de comunidades.
+- Quando **Todas** estiver selecionado, o ranking nao e agregado nem estimado: a UI informa que e necessario escolher uma comunidade especifica.
+- Quando a comunidade selecionada nao tiver posicao real para o psicologo, retornar indisponibilidade honesta, sem materializar snapshot, seed ou mock.
+
+Consequencia: o Admin consegue alternar a leitura entre visao consolidada e visao por comunidade, preservando fontes reais e evitando inventar um ranking agregado sem regra de produto.
+
 ## Validação
 
 - `pnpm --dir backend check`
@@ -205,9 +232,53 @@ Validação do refinamento visual dos cards/comparativos:
 - `pnpm --dir admin build`
 - Smoke HTTP local em `/psicologos/test-id?tab=estatisticas`.
 
+Validação da emenda de comunidades com avatar e ranking:
+
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check`
+- Smoke HTTP local em `/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=estatisticas`.
+- Chamada direta do service `showAdminPsychologistStatistics` confirmou retorno seguro de `avatar_url`, `name`, `member_since` e `ranking` para comunidades reais do psicólogo.
+
+Validação do refinamento posterior:
+
+- `pnpm --dir backend check`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- Smoke HTTP local `200` em `/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=estatisticas`.
+- Chamada direta do service confirmou que comunidade real de catálogo retorna `avatar_url` `/community/icons/*`, `name` persistido e posição real de Top Mentor; para psicólogo local ligado apenas a comunidades temporárias/layout, a API preserva os nomes/avatares nulos persistidos e não inventa dados.
+- `pnpm --dir backend build` ficou bloqueado por erros TypeScript preexistentes no módulo Admin de denúncias/feedback, fora deste escopo.
+
+
+
+Validacao da emenda de filtro por comunidade e ranking:
+
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check`
+- `pnpm --dir backend db:migrate`
+- `pnpm --dir backend exec prisma migrate status`
+- Service direto `showAdminPsychologistStatistics` com `community=all` e com comunidade real selecionada confirmou ranking indisponivel de forma honesta em **Todas** e recalculo dos contadores para a comunidade filtrada.
+- Smoke HTTP local confirmou Admin `/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=estatisticas` com status 200 e API Admin protegida com 401 sem sessao.
+
 ## Limitações da execução
 
 - Builder/Quick Copy não estava disponível como ferramenta no ambiente; a implementação visual foi guiada pelos PNGs locais:
   - `_product/proto/admin/Psicólogos/Detalhes do psicólogo/Estatísticas.png`;
   - `_product/proto/admin/Psicólogos/Detalhes do psicólogo/Publicações.png`.
 - Não foi criado tracking novo nem seed artificial para completar métricas ausentes.
+
+## Complemento 2026-07-12 — Marco histórico de participação em comunidade
+
+Decisão: o campo exibido como **Membro desde** no Admin representa o primeiro marco histórico real de participação do usuário na comunidade. Esse marco nasce no follow/entrada explícita ou, quando não houver vínculo anterior, na primeira postagem/resposta feita na comunidade. Uma vez criado, `community_member.createdAt` não deve ser recalculado por novas interações.
+
+Consequências:
+
+- criação de post/resposta passa a garantir `community_member` real na mesma transação;
+- vínculos existentes preservam `createdAt` mesmo quando precisam ser reativados por compatibilidade legada;
+- a leitura administrativa usa a menor data real entre vínculo, primeiro post e primeira resposta para corrigir bases legadas sem mock;
+- uma migration de dados faz backfill de vínculos faltantes a partir de atividade histórica e recalcula `members_count`.

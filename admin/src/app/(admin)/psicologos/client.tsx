@@ -1,38 +1,34 @@
-"use client";
+﻿"use client";
 
 import {
   Activity,
   AlertTriangle,
   Award,
   ChevronDown,
-  CircleDollarSign,
-  Heart,
   type LucideIcon,
   MessageCircle,
   RefreshCw,
-  SearchX,
+  Search,
   ShieldCheck,
-  Star,
   TrendingDown,
   UserCheck,
   UserPlus,
   UsersRound,
 } from "lucide-react";
-import { type ReactNode, useMemo, useState } from "react";
+import { type FocusEvent, type ReactNode, useMemo, useState } from "react";
 import { useAdminPsychologistsDashboard } from "@/api/callers/psychologists";
 import { resolveApiError } from "@/api/handle";
 import type {
   AdminPsychologistsDashboard,
-  PsychologistsDashboardBooleanBreakdown,
   PsychologistsDashboardBreakdownItem,
   PsychologistsDashboardDailyPoint,
+  PsychologistsDashboardDirectoryFilterItem,
   PsychologistsDashboardMetric,
   PsychologistsDashboardQuery,
 } from "@/api/req/psychologists";
-import { aggregateCalendarChartPoints } from "@/lib/chart-time-series";
+import { aggregateCalendarChartPoints, buildSmoothSvgPath } from "@/lib/chart-time-series";
 import { cn } from "@/lib/utils";
 
-const CHART_COLORS = ["#3b16f3", "#1788ff", "#19b96f", "#ff7a1a", "#f8288f"];
 const CARD_ORDER = [
   "total_psychologists",
   "free_psychologists",
@@ -46,6 +42,102 @@ type DashboardMetricKey = (typeof CARD_ORDER)[number];
 type DashboardPeriodValue = NonNullable<PsychologistsDashboardQuery["period"]>;
 type DashboardPeriodPreset = Exclude<DashboardPeriodValue, "custom">;
 type DashboardRange = Pick<PsychologistsDashboardQuery, "from" | "to">;
+type SupplyDemandSortKey = "psychologists" | "searches" | "searches_per_psychologist";
+
+const SUPPLY_DEMAND_SORT_OPTIONS: { id: SupplyDemandSortKey; label: string }[] = [
+  { id: "searches", label: "Mais buscas" },
+  { id: "psychologists", label: "Mais psicólogos" },
+  { id: "searches_per_psychologist", label: "Mais buscas por psicólogo" },
+];
+
+const toOneDecimal = (value: number) => Math.round(value * 10) / 10;
+
+const normalizeFilterOptionKey = (value: string) =>
+  value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim()
+    .toLowerCase();
+
+type PreviewDemandCountInput = {
+  count: number;
+  keys: string[];
+};
+
+const makePreviewDemandCountMap = (items: PreviewDemandCountInput[]) => {
+  const map: Record<string, number> = {};
+
+  for (const item of items) {
+    for (const key of item.keys) {
+      map[normalizeFilterOptionKey(key)] = item.count;
+    }
+  }
+
+  return map;
+};
+
+const FILTERS_SEARCH_DEMAND_PREVIEW_COUNTS = {
+  approaches: makePreviewDemandCountMap([
+    { count: 34, keys: ["TCC", "terapia-cognitivo-comportamental"] },
+    { count: 22, keys: ["psicanalise"] },
+    { count: 17, keys: ["sistemica"] },
+    { count: 11, keys: ["Humanista", "humanista"] },
+  ]),
+  languages: makePreviewDemandCountMap([
+    { count: 44, keys: ["portugues"] },
+    { count: 15, keys: ["ingles"] },
+    { count: 9, keys: ["Espanhol", "espanhol"] },
+  ]),
+  services: makePreviewDemandCountMap([
+    { count: 33, keys: ["Terapia individual", "terapia-individual"] },
+    { count: 18, keys: ["Terapia de casal", "terapia-de-casal"] },
+    { count: 12, keys: ["Terapia familiar", "terapia-familiar"] },
+  ]),
+  specialties: makePreviewDemandCountMap([
+    { count: 100_000, keys: ["Ansiedade", "ansiedade"] },
+    { count: 28_000, keys: ["depressao"] },
+    { count: 21_000, keys: ["Relacionamentos", "relacionamentos"] },
+    { count: 16_000, keys: ["Burnout", "burnout"] },
+    { count: 14_000, keys: ["TDAH", "tdah"] },
+    { count: 12_000, keys: ["Luto", "luto"] },
+    { count: 11_000, keys: ["Autoestima", "autoestima"] },
+    { count: 10_000, keys: ["sindrome-do-panico"] },
+    { count: 9_000, keys: ["Estresse", "estresse"] },
+    { count: 8_000, keys: ["compulsao-alimentar"] },
+    { count: 7_000, keys: ["Autoconhecimento", "autoconhecimento"] },
+    { count: 6_000, keys: ["Trauma", "trauma"] },
+  ]),
+  target_audiences: makePreviewDemandCountMap([
+    { count: 42, keys: ["Adultos", "adultos"] },
+    { count: 19, keys: ["Adolescentes", "adolescentes"] },
+    { count: 14, keys: ["Casais", "casais"] },
+  ]),
+};
+
+const buildDemandGroupFromPatientFilterOptions = (
+  dimensionId: keyof typeof FILTERS_SEARCH_DEMAND_PREVIEW_COUNTS,
+  options: PsychologistsDashboardDirectoryFilterItem[] = [],
+) => {
+  const countMap = FILTERS_SEARCH_DEMAND_PREVIEW_COUNTS[dimensionId];
+  const itemsWithoutPercentage = options.map((option) => ({
+    count:
+      countMap[normalizeFilterOptionKey(option.slug)] ??
+      countMap[normalizeFilterOptionKey(option.label)] ??
+      countMap[normalizeFilterOptionKey(option.id)] ??
+      0,
+    id: option.slug || option.id,
+    label: option.label,
+  }));
+  const total = itemsWithoutPercentage.reduce((sum, item) => sum + item.count, 0);
+
+  return {
+    items: itemsWithoutPercentage.map((item) => ({
+      ...item,
+      percentage: total > 0 ? toOneDecimal((item.count / total) * 100) : 0,
+    })),
+    total,
+  };
+};
 
 const DASHBOARD_PERIOD_OPTIONS: { id: DashboardPeriodPreset; label: string }[] = [
   { id: "week", label: "Esta semana" },
@@ -156,7 +248,10 @@ const hasDashboardRecords = (summary: AdminPsychologistsDashboard) => {
 
 const CardShell = ({ children, className }: { children?: ReactNode; className?: string }) => (
   <section
-    className={cn("rounded-card border border-border bg-surface shadow-admin-soft", className)}
+    className={cn(
+      "rounded-card border border-border/80 bg-surface/95 shadow-admin-soft backdrop-blur",
+      className,
+    )}
   >
     {children}
   </section>
@@ -175,9 +270,9 @@ const DASHBOARD_METRIC_CONFIG = {
   churn: { color: "#e5484d", icon: TrendingDown },
   courtesy_psychologists: { color: "#8b5cf6", icon: Award },
   free_psychologists: { color: "#13a85b", icon: UsersRound },
-  new_signups: { color: "#ff7a1a", icon: UserPlus },
-  subscriber_psychologists: { color: "#1788ff", icon: UserCheck },
-  total_psychologists: { color: "#3b16f3", icon: UsersRound },
+  new_signups: { color: "#f59f00", icon: UserPlus },
+  subscriber_psychologists: { color: "#5d9df6", icon: UserCheck },
+  total_psychologists: { color: "#308ce8", icon: UsersRound },
 } satisfies Record<DashboardMetricKey, { color: string; icon: LucideIcon }>;
 
 const TrendBadge = ({ metric }: { metric: PsychologistsDashboardMetric }) => {
@@ -187,7 +282,7 @@ const TrendBadge = ({ metric }: { metric: PsychologistsDashboardMetric }) => {
   return (
     <span
       className={cn(
-        "text-xs font-black",
+        "text-xs font-semibold",
         metric.trend === "up" && "text-success",
         metric.trend === "down" && "text-danger",
         metric.trend === "flat" && "text-muted",
@@ -215,10 +310,10 @@ const MetricCard = ({
   <button
     aria-pressed={active}
     className={cn(
-      "min-h-44 rounded-card border bg-surface p-5 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2",
+      "min-h-44 rounded-card border bg-surface/95 p-5 text-left shadow-admin-soft transition duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2",
       active
-        ? "border-primary/40 shadow-none"
-        : "border-border opacity-70 shadow-admin-soft hover:border-primary/30 hover:opacity-100",
+        ? "border-primary/35 ring-1 ring-primary/10"
+        : "border-border/70 hover:-translate-y-0.5 hover:border-primary/25",
     )}
     onClick={onToggle}
     title={`${metric.label}: ${formatMetricValue(metric)}. ${
@@ -235,8 +330,8 @@ const MetricCard = ({
       </div>
     </div>
     <div className="mt-5 space-y-2">
-      <p className="text-sm font-black text-foreground">{metric.label}</p>
-      <p className="text-3xl font-black tracking-tight text-foreground">
+      <p className="text-sm font-semibold text-foreground">{metric.label}</p>
+      <p className="text-3xl font-bold tracking-tight text-foreground">
         {formatMetricValue(metric)}
       </p>
       <div className="flex flex-wrap items-center gap-2">
@@ -264,12 +359,12 @@ const ErrorState = ({ message, onRetry }: { message: string; onRetry: () => void
           <AlertTriangle aria-hidden className="h-5 w-5" />
         </div>
         <div>
-          <h2 className="text-lg font-black">Não foi possível carregar Psicólogos</h2>
+          <h2 className="text-lg font-semibold">Não foi possível carregar Psicólogos</h2>
           <p className="mt-1 text-sm text-muted">{message}</p>
         </div>
       </div>
       <button
-        className="inline-flex h-11 items-center justify-center gap-2 rounded-control border border-border bg-surface px-4 text-sm font-black text-foreground transition hover:border-border-strong"
+        className="inline-flex h-11 items-center justify-center gap-2 rounded-control border border-border bg-surface px-4 text-sm font-semibold text-foreground transition hover:border-border-strong"
         onClick={onRetry}
         type="button"
       >
@@ -287,7 +382,7 @@ const EmptyState = ({ period }: { period: AdminPsychologistsDashboard["period"] 
         <Activity aria-hidden className="h-5 w-5" />
       </div>
       <div>
-        <h2 className="font-black">Período sem registros agregáveis</h2>
+        <h2 className="font-semibold">Período sem registros agregáveis</h2>
         <p className="mt-1 text-sm text-muted">
           Nenhuma métrica real foi encontrada entre {formatDate(period.from)} e{" "}
           {formatDate(period.to)}. Ajuste o período para visualizar dados já capturados.
@@ -365,6 +460,7 @@ const TimelineChart = ({
             return (
               <g key={`psych-grid-${value}-${y}`}>
                 <line
+                  opacity="0.58"
                   stroke="var(--admin-border)"
                   strokeWidth="1"
                   x1={padding.left}
@@ -372,7 +468,7 @@ const TimelineChart = ({
                   y1={y}
                   y2={y}
                 />
-                <text fill="var(--admin-muted)" fontSize="11" x="8" y={y + 4}>
+                <text fill="var(--admin-muted)" fontSize="11" fontWeight="500" x="8" y={y + 4}>
                   {numberFormatter.format(value)}
                 </text>
               </g>
@@ -380,31 +476,33 @@ const TimelineChart = ({
           })}
 
           {series.map((item) => {
-            const path = chartPoints
-              .map(
-                (point, index) =>
-                  `${index === 0 ? "M" : "L"}${getX(index)},${getY(point[item.key])}`,
-              )
-              .join(" ");
+            const linePoints = chartPoints.map((point, index) => ({
+              x: getX(index),
+              y: getY(point[item.key]),
+            }));
+            const path = buildSmoothSvgPath(linePoints);
 
             return (
               <g key={item.key}>
                 <path
                   d={path}
                   fill="none"
+                  opacity="0.88"
                   stroke={item.color}
                   strokeLinecap="round"
-                  strokeWidth="4"
+                  strokeLinejoin="round"
+                  strokeWidth="2.05"
                 />
-                {chartPoints.map((point, index) => (
+                {linePoints.map((point, index) => (
                   <circle
-                    cx={getX(index)}
-                    cy={getY(point[item.key])}
+                    cx={point.x}
+                    cy={point.y}
                     fill="var(--admin-surface)"
-                    key={`${item.key}-${point.date}`}
-                    r="4"
+                    key={`${item.key}-${chartPoints[index].date}`}
+                    opacity={index === linePoints.length - 1 ? "1" : "0.72"}
+                    r={index === linePoints.length - 1 ? "3.1" : "2.1"}
                     stroke={item.color}
-                    strokeWidth="2"
+                    strokeWidth="1.45"
                   />
                 ))}
               </g>
@@ -416,6 +514,7 @@ const TimelineChart = ({
               <text
                 fill="var(--admin-foreground)"
                 fontSize="11"
+                fontWeight="500"
                 key={point.date}
                 textAnchor="middle"
                 x={getX(index)}
@@ -443,7 +542,7 @@ const PanelTitle = ({
   <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
     <div className="flex items-center gap-2">
       <Icon aria-hidden className="h-5 w-5 text-primary" />
-      <h2 className="text-lg font-black text-foreground">{title}</h2>
+      <h2 className="text-lg font-semibold text-foreground">{title}</h2>
     </div>
     {source ? (
       <span className="w-fit rounded-full bg-surface-muted px-2 py-1 text-[0.65rem] font-bold text-muted">
@@ -453,314 +552,475 @@ const PanelTitle = ({
   </div>
 );
 
-const ProgressList = ({
-  emptyCopy = "Sem dados reais para este agrupamento.",
-  items,
-  total,
-}: {
-  emptyCopy?: string;
-  items: PsychologistsDashboardBreakdownItem[];
-  total: number;
-}) => (
-  <div className="mt-4 space-y-4">
-    {items.length === 0 ? (
-      <p className="rounded-2xl bg-surface-muted p-4 text-sm text-muted">{emptyCopy}</p>
-    ) : (
-      items.map((item) => (
-        <div key={item.id}>
-          <div className="flex items-center justify-between gap-3 text-sm">
-            <span className="font-black text-foreground">{item.label}</span>
-            <span className="font-bold text-muted">
-              {numberFormatter.format(item.count)} ({item.percentage}%)
-            </span>
-          </div>
-          <div className="mt-2 h-2 overflow-hidden rounded-full bg-surface-muted">
-            <div
-              className="h-full rounded-full bg-primary"
-              style={{ width: `${Math.min(100, item.percentage)}%` }}
-            />
-          </div>
-        </div>
-      ))
-    )}
-    <p className="text-xs text-muted">Total considerado: {numberFormatter.format(total)}.</p>
+const formatComparisonNumber = (value: number) =>
+  value.toLocaleString("pt-BR", {
+    maximumFractionDigits: 1,
+    minimumFractionDigits: Number.isInteger(value) ? 0 : 1,
+  });
+
+const normalizeComparisonLabel = normalizeFilterOptionKey;
+
+const findSupplyItem = (
+  demandItem: PsychologistsDashboardBreakdownItem,
+  supplyItems: PsychologistsDashboardBreakdownItem[],
+) => {
+  const demandId = normalizeComparisonLabel(demandItem.id);
+  const demandLabel = normalizeComparisonLabel(demandItem.label);
+
+  return (
+    supplyItems.find((supplyItem) => {
+      const supplyId = normalizeComparisonLabel(supplyItem.id);
+      const supplyLabel = normalizeComparisonLabel(supplyItem.label);
+
+      return supplyId === demandId || supplyLabel === demandLabel;
+    }) ?? {
+      count: 0,
+      id: `empty-${demandItem.id}`,
+      label: demandItem.label,
+      percentage: 0,
+    }
+  );
+};
+
+type SupplyDemandDimensionConfig = {
+  demand: {
+    items: PsychologistsDashboardBreakdownItem[];
+    total: number;
+  };
+  icon: LucideIcon;
+  id: string;
+  label: string;
+  supply: {
+    items: PsychologistsDashboardBreakdownItem[];
+    total: number;
+  };
+};
+
+type SupplyDemandComparisonRow = {
+  id: string;
+  label: string;
+  psychologistsCount: number;
+  searchesPerPsychologist: number | null;
+  searchesCount: number;
+};
+
+const getSupplyDemandStatus = (row: SupplyDemandComparisonRow) => {
+  if (row.searchesCount > 0 && row.psychologistsCount === 0) {
+    return {
+      className: "bg-red-50 text-danger",
+      label: "Sem oferta",
+    };
+  }
+
+  if (row.searchesCount === 0 && row.psychologistsCount > 0) {
+    return {
+      className: "bg-surface-muted text-muted",
+      label: "Sem demanda",
+    };
+  }
+
+  if (row.searchesCount === 0 && row.psychologistsCount === 0) {
+    return {
+      className: "bg-surface-muted text-muted",
+      label: "Sem sinal",
+    };
+  }
+
+  const pressure = row.searchesPerPsychologist ?? 0;
+
+  if (pressure >= 100) {
+    return {
+      className: "bg-red-50 text-danger",
+      label: "Alta demanda",
+    };
+  }
+
+  if (pressure >= 25) {
+    return {
+      className: "bg-amber-50 text-warning",
+      label: "Atenção",
+    };
+  }
+
+  if (pressure >= 5) {
+    return {
+      className: "bg-primary-soft text-primary",
+      label: "Equilibrado",
+    };
+  }
+
+  return {
+    className: "bg-emerald-50 text-success",
+    label: "Oferta confortável",
+  };
+};
+
+const buildSupplyDemandRows = (config: SupplyDemandDimensionConfig) =>
+  config.demand.items.map<SupplyDemandComparisonRow>((demandItem) => {
+    const supplyItem = findSupplyItem(demandItem, config.supply.items);
+
+    return {
+      id: demandItem.id,
+      label: demandItem.label,
+      psychologistsCount: supplyItem.count,
+      searchesPerPsychologist:
+        supplyItem.count > 0 ? toOneDecimal(demandItem.count / supplyItem.count) : null,
+      searchesCount: demandItem.count,
+    };
+  });
+
+const getSupplyDemandSortValue = (row: SupplyDemandComparisonRow, sortKey: SupplyDemandSortKey) => {
+  if (sortKey === "psychologists") return row.psychologistsCount;
+  if (sortKey === "searches_per_psychologist") {
+    if (row.searchesPerPsychologist !== null) return row.searchesPerPsychologist;
+
+    return row.searchesCount > 0 ? Number.POSITIVE_INFINITY : 0;
+  }
+
+  return row.searchesCount;
+};
+
+const SupplyDemandCountCell = ({ count, label }: { count: number; label: string }) => (
+  <div>
+    <div className="flex items-center justify-between gap-3 text-xs">
+      <span className="font-bold text-muted lg:hidden">{label}</span>
+      <span className="text-base font-semibold text-foreground">
+        {numberFormatter.format(count)}
+      </span>
+    </div>
   </div>
 );
 
-const DonutChart = ({
-  items,
-  total,
-}: {
-  items: PsychologistsDashboardBreakdownItem[];
-  total: number;
-}) => {
-  const radius = 42;
-  const circumference = 2 * Math.PI * radius;
-  const segments = items.reduce<{
-    cumulative: number;
-    items: Array<{
-      dash: number;
-      item: PsychologistsDashboardBreakdownItem;
-      strokeDashoffset: number;
-    }>;
-  }>(
-    (accumulator, item) => {
-      const share = total > 0 ? item.count / total : 0;
-      const dash = share * circumference;
-
-      return {
-        cumulative: accumulator.cumulative + dash,
-        items: [
-          ...accumulator.items,
-          {
-            dash,
-            item,
-            strokeDashoffset: -accumulator.cumulative,
-          },
-        ],
-      };
-    },
-    { cumulative: 0, items: [] },
-  ).items;
+const SearchesPerPsychologistCell = ({ row }: { row: SupplyDemandComparisonRow }) => {
+  const value =
+    row.searchesPerPsychologist === null
+      ? "—"
+      : formatComparisonNumber(row.searchesPerPsychologist);
 
   return (
-    <div className="mt-5 grid gap-5 sm:grid-cols-[180px_1fr] sm:items-center">
-      <svg aria-label="Gráfico de distribuição" role="img" viewBox="0 0 120 120">
-        <circle cx="60" cy="60" fill="none" r={radius} stroke="#eef2fb" strokeWidth="18" />
-        {segments.map(({ dash, item, strokeDashoffset }, index) => (
-          <circle
-            cx="60"
-            cy="60"
-            fill="none"
-            key={item.id}
-            r={radius}
-            stroke={CHART_COLORS[index % CHART_COLORS.length]}
-            strokeDasharray={`${dash} ${circumference - dash}`}
-            strokeDashoffset={strokeDashoffset}
-            strokeWidth="18"
-            transform="rotate(-90 60 60)"
-          />
-        ))}
-        <text
-          fill="var(--admin-foreground)"
-          fontSize="15"
-          fontWeight="900"
-          textAnchor="middle"
-          x="60"
-          y="58"
-        >
-          {numberFormatter.format(total)}
-        </text>
-        <text
-          fill="var(--admin-muted)"
-          fontSize="8"
-          fontWeight="700"
-          textAnchor="middle"
-          x="60"
-          y="72"
-        >
-          total
-        </text>
-      </svg>
-      <div className="space-y-3">
-        {items.length === 0 ? (
-          <p className="rounded-2xl bg-surface-muted p-4 text-sm text-muted">Sem dados reais.</p>
-        ) : (
-          items.map((item, index) => (
-            <div className="flex items-center justify-between gap-3" key={item.id}>
-              <span className="flex items-center gap-2 text-sm font-bold text-foreground">
-                <span
-                  aria-hidden
-                  className="h-3 w-3 rounded-full"
-                  style={{ backgroundColor: CHART_COLORS[index % CHART_COLORS.length] }}
-                />
-                {item.label}
-              </span>
-              <span className="text-sm font-black text-foreground">{item.percentage}%</span>
-            </div>
-          ))
-        )}
+    <div>
+      <div className="flex items-center justify-between gap-3 text-xs">
+        <span className="font-bold text-muted lg:hidden">Buscas/psicólogo</span>
+        <span className="text-base font-semibold text-foreground">{value}</span>
       </div>
     </div>
   );
 };
 
-const BooleanDonut = ({ metric }: { metric: PsychologistsDashboardBooleanBreakdown }) => (
-  <DonutChart
-    items={[
-      {
-        count: metric.true_count,
-        id: "true",
-        label: metric.true_label,
-        percentage: metric.true_percentage,
-      },
-      {
-        count: metric.false_count,
-        id: "false",
-        label: metric.false_label,
-        percentage: Math.max(0, 100 - metric.true_percentage),
-      },
-    ]}
-    total={metric.true_count + metric.false_count}
-  />
-);
+const SupplyDemandListRow = ({ row }: { row: SupplyDemandComparisonRow }) => {
+  const status = getSupplyDemandStatus(row);
 
-const SearchUnavailableCard = ({ summary }: { summary: AdminPsychologistsDashboard }) => (
-  <CardShell className="border-dashed p-5">
-    <div className="flex gap-3">
-      <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-primary-soft text-primary">
-        <SearchX aria-hidden className="h-5 w-5" />
-      </div>
+  return (
+    <li className="grid gap-4 border-t border-border p-4 lg:grid-cols-[minmax(220px,1.3fr)_minmax(130px,0.75fr)_minmax(130px,0.75fr)_minmax(160px,0.9fr)_190px] lg:items-center">
       <div>
-        <h2 className="font-black text-foreground">Filtros de busca indisponíveis</h2>
-        <p className="mt-1 text-sm leading-relaxed text-muted">
-          {summary.filters_searches.description}
-        </p>
-        <p className="mt-2 text-xs font-bold text-muted">
-          Fonte: {summary.filters_searches.source}
-        </p>
+        <p className="text-sm font-semibold text-foreground">{row.label}</p>
       </div>
-    </div>
-  </CardShell>
-);
+      <SupplyDemandCountCell count={row.searchesCount} label="Buscas" />
+      <SupplyDemandCountCell count={row.psychologistsCount} label="Psicólogos" />
+      <SearchesPerPsychologistCell row={row} />
+      <div className="flex flex-col items-start gap-1 lg:items-end">
+        <span
+          className={cn("rounded-full px-2 py-1 text-[0.65rem] font-semibold", status.className)}
+        >
+          {status.label}
+        </span>
+      </div>
+    </li>
+  );
+};
 
-const StatsContent = ({ summary }: { summary: AdminPsychologistsDashboard }) => (
-  <div className="grid gap-4 xl:grid-cols-3">
-    <CardShell className="p-5">
-      <PanelTitle icon={Award} title="Especialidades" />
-      <ProgressList
-        items={summary.statistics.specialties.items}
-        total={summary.statistics.specialties.total}
-      />
-    </CardShell>
-    <CardShell className="p-5">
-      <PanelTitle icon={ShieldCheck} title="Serviços" />
-      <ProgressList
-        items={summary.statistics.services.items}
-        total={summary.statistics.services.total}
-      />
-    </CardShell>
-    <CardShell className="p-5">
-      <PanelTitle icon={MessageCircle} title="Abordagens" />
-      <ProgressList
-        items={summary.statistics.approaches.items}
-        total={summary.statistics.approaches.total}
-      />
-    </CardShell>
-    <CardShell className="p-5">
-      <PanelTitle icon={UsersRound} title="Público atendido" />
-      <ProgressList
-        items={summary.statistics.target_audience.items}
-        total={summary.statistics.target_audience.total}
-      />
-    </CardShell>
-    <CardShell className="p-5">
-      <PanelTitle icon={Activity} title="Modalidades" />
-      <ProgressList
-        items={summary.statistics.modalities.items}
-        total={summary.statistics.modalities.total}
-      />
-    </CardShell>
-    <CardShell className="p-5">
-      <PanelTitle icon={UsersRound} title="Gênero" />
-      <DonutChart items={summary.statistics.gender.items} total={summary.statistics.gender.total} />
-    </CardShell>
-    <CardShell className="p-5">
-      <PanelTitle icon={Award} title="Distribuição por estado" />
-      <ProgressList
-        items={summary.statistics.states.items}
-        total={summary.statistics.states.total}
-      />
-    </CardShell>
-    <CardShell className="p-5">
-      <PanelTitle icon={Star} title="Mais de 10 anos" />
-      <BooleanDonut metric={summary.statistics.experience_over_10_years} />
-    </CardShell>
-    <CardShell className="p-5">
-      <PanelTitle icon={ShieldCheck} title="Aceita convênios" />
-      <BooleanDonut metric={summary.statistics.accepts_insurance} />
-    </CardShell>
-    <CardShell className="p-5">
-      <PanelTitle icon={Heart} title="Desconto 1ª sessão" />
-      <BooleanDonut metric={summary.statistics.discount_first_session} />
-    </CardShell>
-    <CardShell className="p-5">
-      <PanelTitle icon={CircleDollarSign} title="Valor social" />
-      <BooleanDonut metric={summary.statistics.social_value} />
-    </CardShell>
-  </div>
-);
+const StatsContent = ({ summary }: { summary: AdminPsychologistsDashboard }) => {
+  const [activeDimensionId, setActiveDimensionId] = useState("specialties");
+  const [optionQuery, setOptionQuery] = useState("");
+  const [sortKey, setSortKey] = useState<SupplyDemandSortKey>("searches");
+  const directoryFilters = summary.directory_filters;
+
+  const comparisonDimensions: SupplyDemandDimensionConfig[] = [
+    {
+      demand: buildDemandGroupFromPatientFilterOptions("specialties", directoryFilters.specialties),
+      icon: Award,
+      id: "specialties",
+      label: "Especialidades",
+      supply: summary.statistics.specialties,
+    },
+    {
+      demand: buildDemandGroupFromPatientFilterOptions("services", directoryFilters.services),
+      icon: ShieldCheck,
+      id: "services",
+      label: "Servi\u00e7os",
+      supply: summary.statistics.services,
+    },
+    {
+      demand: buildDemandGroupFromPatientFilterOptions("approaches", directoryFilters.approaches),
+      icon: MessageCircle,
+      id: "approaches",
+      label: "Abordagens",
+      supply: summary.statistics.approaches,
+    },
+    {
+      demand: buildDemandGroupFromPatientFilterOptions(
+        "target_audiences",
+        directoryFilters.target_audiences,
+      ),
+      icon: UsersRound,
+      id: "target-audience",
+      label: "P\u00fablico atendido",
+      supply: summary.statistics.target_audience,
+    },
+    {
+      demand: buildDemandGroupFromPatientFilterOptions("languages", directoryFilters.languages),
+      icon: Search,
+      id: "languages",
+      label: "Idiomas",
+      supply: summary.statistics.languages,
+    },
+  ];
+  const selectedDimension =
+    comparisonDimensions.find((dimension) => dimension.id === activeDimensionId) ??
+    comparisonDimensions[0];
+  const rows = buildSupplyDemandRows(selectedDimension);
+  const normalizedQuery = normalizeComparisonLabel(optionQuery);
+  const visibleRows = rows
+    .filter((row) => normalizeComparisonLabel(row.label).includes(normalizedQuery))
+    .toSorted((left, right) => {
+      const sortDifference =
+        getSupplyDemandSortValue(right, sortKey) - getSupplyDemandSortValue(left, sortKey);
+
+      if (sortDifference !== 0) return sortDifference;
+
+      return right.searchesCount - left.searchesCount;
+    });
+  const SelectedIcon = selectedDimension.icon;
+  const periodLabel = `Período de análise: ${formatDate(summary.period.from)} a ${formatDate(
+    summary.period.to,
+  )}.`;
+  const handleDimensionChange = (dimensionId: string) => {
+    setActiveDimensionId(dimensionId);
+    setOptionQuery("");
+  };
+
+  return (
+    <div className="space-y-4">
+      <CardShell className="overflow-hidden">
+        <div className="border-b border-border bg-surface-muted p-5">
+          <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+            <div className="flex gap-3">
+              <div className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-surface text-primary">
+                <SelectedIcon aria-hidden className="h-5 w-5" />
+              </div>
+              <div>
+                <div className="flex flex-wrap items-center gap-3">
+                  <h3 className="text-lg font-semibold text-foreground">
+                    Comparativo de oferta e demanda
+                  </h3>
+                </div>
+                <p className="mt-1 text-sm leading-relaxed text-muted">{periodLabel}</p>
+              </div>
+            </div>
+            <div className="grid gap-2 text-xs font-semibold text-muted sm:grid-cols-3 xl:min-w-[420px]">
+              <div className="rounded-2xl bg-surface p-3">
+                <p className="text-foreground">{numberFormatter.format(rows.length)}</p>
+                <p className="mt-1">Opções do filtro</p>
+              </div>
+              <div className="rounded-2xl bg-surface p-3">
+                <p className="text-foreground">
+                  {numberFormatter.format(selectedDimension.demand.total)}
+                </p>
+                <p className="mt-1">Buscas no filtro</p>
+              </div>
+              <div className="rounded-2xl bg-surface p-3">
+                <p className="text-foreground">
+                  {numberFormatter.format(selectedDimension.supply.total)}
+                </p>
+                <p className="mt-1">Psicólogos</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-5 grid gap-3 lg:grid-cols-[minmax(180px,0.85fr)_minmax(220px,1fr)_minmax(220px,0.85fr)]">
+            <label
+              className="grid gap-1 text-xs font-semibold text-muted"
+              htmlFor="supply-demand-filter-type"
+            >
+              Tipo de filtro
+              <span className="relative">
+                <select
+                  className="h-11 w-full appearance-none rounded-control border border-border bg-surface py-0 pl-3 pr-11 text-sm font-semibold text-foreground shadow-control outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+                  id="supply-demand-filter-type"
+                  onChange={(event) => handleDimensionChange(event.target.value)}
+                  value={selectedDimension.id}
+                >
+                  {comparisonDimensions.map((dimension) => (
+                    <option key={dimension.id} value={dimension.id}>
+                      {dimension.label}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown
+                  aria-hidden
+                  className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground"
+                />
+              </span>
+            </label>
+
+            <label
+              className="grid gap-1 text-xs font-semibold text-muted"
+              htmlFor="supply-demand-search"
+            >
+              Buscar opção
+              <span className="relative">
+                <Search
+                  aria-hidden
+                  className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted"
+                />
+                <input
+                  className="h-11 w-full rounded-control border border-border bg-surface pl-11 pr-4 text-sm font-bold text-foreground shadow-control outline-none transition placeholder:text-muted focus:border-primary focus:ring-2 focus:ring-primary/20"
+                  id="supply-demand-search"
+                  onChange={(event) => setOptionQuery(event.target.value)}
+                  placeholder={`Buscar em ${selectedDimension.label.toLowerCase()}`}
+                  type="search"
+                  value={optionQuery}
+                />
+              </span>
+            </label>
+
+            <label
+              className="grid gap-1 text-xs font-semibold text-muted"
+              htmlFor="supply-demand-sort"
+            >
+              Ordenar por
+              <span className="relative">
+                <select
+                  className="h-11 w-full appearance-none rounded-control border border-border bg-surface py-0 pl-3 pr-11 text-sm font-semibold text-foreground shadow-control outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+                  id="supply-demand-sort"
+                  onChange={(event) => setSortKey(event.target.value as SupplyDemandSortKey)}
+                  value={sortKey}
+                >
+                  {SUPPLY_DEMAND_SORT_OPTIONS.map((option) => (
+                    <option key={option.id} value={option.id}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown
+                  aria-hidden
+                  className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground"
+                />
+              </span>
+            </label>
+          </div>
+        </div>
+
+        <div className="hidden grid-cols-[minmax(220px,1.3fr)_minmax(130px,0.75fr)_minmax(130px,0.75fr)_minmax(160px,0.9fr)_190px] gap-4 border-b border-border bg-surface px-4 py-3 text-xs font-semibold uppercase tracking-[0.08em] text-muted lg:grid">
+          <span>Opção do filtro</span>
+          <span>Buscas</span>
+          <span>Psicólogos</span>
+          <span>Buscas/psicólogo</span>
+          <span className="text-right">Leitura</span>
+        </div>
+
+        {visibleRows.length > 0 ? (
+          <ul className="max-h-[680px] overflow-y-auto">
+            {visibleRows.map((row) => (
+              <SupplyDemandListRow key={row.id} row={row} />
+            ))}
+          </ul>
+        ) : (
+          <div className="p-6 text-sm font-bold text-muted">
+            Nenhuma opção encontrada para “{optionQuery}”.
+          </div>
+        )}
+      </CardShell>
+    </div>
+  );
+};
 
 const PsychologistsHeader = ({
   displayRange,
+  onDateControlsBlur,
   onDateChange,
   onPeriodChange,
   period,
+  rangeError,
 }: {
   displayRange: DashboardRange;
+  onDateControlsBlur: (event: FocusEvent<HTMLDivElement>) => void;
   onDateChange: (field: keyof DashboardRange, value: string) => void;
   onPeriodChange: (period: DashboardPeriodPreset) => void;
   period: DashboardPeriodValue;
+  rangeError: string | null;
 }) => (
-  <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
-    <div>
-      <h1 className="text-3xl font-black tracking-tight text-foreground md:text-4xl">
-        Dashboard de Psicólogos
-      </h1>
-      <p className="mt-2 text-sm font-medium text-muted">Gerencie os psicólogos da plataforma.</p>
-    </div>
+  <section className="rounded-card border border-border/70 bg-surface/90 p-5 shadow-admin-soft backdrop-blur md:p-6">
+    <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
+      <div>
+        <p className="text-xs font-semibold uppercase tracking-[0.12em] text-primary">Psicólogos</p>
+        <h1 className="mt-2 text-3xl font-bold tracking-tight text-foreground md:text-4xl">
+          Dashboard de Psicólogos
+        </h1>
+        <p className="mt-2 max-w-2xl text-sm font-medium leading-6 text-muted">
+          Visão executiva dos profissionais com uma linguagem mais leve, próxima da experiência
+          pública da Lectum.
+        </p>
+      </div>
 
-    <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
-      <label className="grid gap-1 text-xs font-black text-muted" htmlFor="psychologists-period">
-        Período
-        <span className="relative">
-          <select
-            className="h-11 min-w-[170px] appearance-none rounded-control border border-border bg-surface py-0 pl-3 pr-11 text-sm font-black text-foreground shadow-control outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
-            id="psychologists-period"
-            onChange={(event) => onPeriodChange(event.target.value as DashboardPeriodPreset)}
-            value={period}
-          >
-            {period === "custom" ? (
-              <option disabled hidden value="custom">
-                Personalizado
-              </option>
-            ) : null}
-            {DASHBOARD_PERIOD_OPTIONS.map((option) => (
-              <option key={option.id} value={option.id}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-          <ChevronDown
-            aria-hidden
-            className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground"
-          />
-        </span>
-      </label>
-      <div className="grid gap-3 sm:grid-cols-2">
-        <label className="text-xs font-black text-muted">
-          De
-          <input
-            className="mt-1 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground shadow-control focus:border-primary"
-            max={displayRange.to}
-            onChange={(event) => onDateChange("from", event.target.value)}
-            type="date"
-            value={displayRange.from ?? ""}
-          />
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+        <label
+          className="grid gap-1 text-xs font-semibold text-muted"
+          htmlFor="psychologists-period"
+        >
+          Período
+          <span className="relative">
+            <select
+              className="h-11 min-w-[170px] appearance-none rounded-control border border-border bg-surface py-0 pl-3 pr-11 text-sm font-semibold text-foreground shadow-control outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+              id="psychologists-period"
+              onChange={(event) => onPeriodChange(event.target.value as DashboardPeriodPreset)}
+              value={period}
+            >
+              {period === "custom" ? (
+                <option disabled hidden value="custom">
+                  Personalizado
+                </option>
+              ) : null}
+              {DASHBOARD_PERIOD_OPTIONS.map((option) => (
+                <option key={option.id} value={option.id}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+            <ChevronDown
+              aria-hidden
+              className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground"
+            />
+          </span>
         </label>
-        <label className="text-xs font-black text-muted">
-          Até
-          <input
-            className="mt-1 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground shadow-control focus:border-primary"
-            min={displayRange.from}
-            onChange={(event) => onDateChange("to", event.target.value)}
-            type="date"
-            value={displayRange.to ?? ""}
-          />
-        </label>
+        <div className="grid gap-3 sm:grid-cols-2" onBlur={onDateControlsBlur}>
+          <label className="text-xs font-semibold text-muted">
+            De
+            <input
+              className="mt-1 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground shadow-control focus:border-primary"
+              max={displayRange.to}
+              onChange={(event) => onDateChange("from", event.target.value)}
+              type="date"
+              value={displayRange.from ?? ""}
+            />
+          </label>
+          <label className="text-xs font-semibold text-muted">
+            Até
+            <input
+              className="mt-1 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground shadow-control focus:border-primary"
+              min={displayRange.from}
+              onChange={(event) => onDateChange("to", event.target.value)}
+              type="date"
+              value={displayRange.to ?? ""}
+            />
+          </label>
+        </div>
+        {period === "custom" && rangeError ? (
+          <p className="max-w-md text-xs font-bold text-danger">{rangeError}</p>
+        ) : null}
       </div>
     </div>
-  </div>
+  </section>
 );
 
 const CardsGrid = ({
@@ -776,7 +1036,7 @@ const CardsGrid = ({
 
   return (
     <section>
-      <h2 className="mb-4 text-xl font-black text-foreground">Visão geral</h2>
+      <h2 className="mb-4 text-xl font-bold text-foreground">Visão geral</h2>
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6">
         {CARD_ORDER.map((key) => {
           const config = DASHBOARD_METRIC_CONFIG[key];
@@ -811,7 +1071,7 @@ const DashboardContent = ({ summary }: { summary: AdminPsychologistsDashboard })
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-7">
       {!hasDashboardRecords(summary) ? <EmptyState period={summary.period} /> : null}
 
       <CardsGrid
@@ -825,65 +1085,93 @@ const DashboardContent = ({ summary }: { summary: AdminPsychologistsDashboard })
         <TimelineChart points={summary.timeline.points} visibleMetricKeys={activeMetricKeys} />
       </CardShell>
 
-      <section>
-        <h2 className="mb-4 text-xl font-black text-foreground">Estatísticas</h2>
-        <StatsContent summary={summary} />
-      </section>
-
-      <SearchUnavailableCard summary={summary} />
-
-      {summary.unavailable.length > 0 ? (
-        <CardShell className="bg-primary-soft/70 p-5">
-          <div className="flex gap-3">
-            <AlertTriangle aria-hidden className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
-            <div>
-              <h2 className="font-black text-foreground">Limitações exibidas honestamente</h2>
-              <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-muted">
-                {summary.unavailable.map((item) => (
-                  <li key={item.id}>
-                    <strong className="text-foreground">{item.label}:</strong> {item.description}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-        </CardShell>
-      ) : null}
+      <StatsContent summary={summary} />
     </div>
   );
 };
 
 export const AdminPsychologistsClient = () => {
-  const [period, setPeriod] = useState<DashboardPeriodValue>("week");
-  const [range, setRange] = useState<DashboardRange>(() => getDashboardRangeForPeriod("week"));
-  const queryInput = useMemo(() => buildDashboardPeriodQuery(period, range), [period, range]);
-  const validRange = isValidRange(range, period);
+  const [selectedPeriod, setSelectedPeriod] = useState<DashboardPeriodValue>("week");
+  const [appliedPeriod, setAppliedPeriod] = useState<DashboardPeriodValue>("week");
+  const [customRangeError, setCustomRangeError] = useState<string | null>(null);
+  const [draftRange, setDraftRange] = useState<DashboardRange>(() =>
+    getDashboardRangeForPeriod("week"),
+  );
+  const [appliedRange, setAppliedRange] = useState<DashboardRange>(() =>
+    getDashboardRangeForPeriod("week"),
+  );
+  const queryInput = useMemo(
+    () => buildDashboardPeriodQuery(appliedPeriod, appliedRange),
+    [appliedPeriod, appliedRange],
+  );
+  const validRange = isValidRange(appliedRange, appliedPeriod);
+  const validDraftRange = isValidRange(draftRange, "custom");
   const query = useAdminPsychologistsDashboard(queryInput, { enabled: validRange });
   const queryError = query.error ? resolveApiError(query.error) : null;
   const displayRange =
-    period !== "custom" && query.data
+    selectedPeriod !== "custom" && query.data
       ? { from: query.data.period.from, to: query.data.period.to }
-      : range;
+      : draftRange;
   const handlePeriodChange = (nextPeriod: DashboardPeriodPreset) => {
-    setPeriod(nextPeriod);
-    setRange(getDashboardRangeForPeriod(nextPeriod));
+    const nextRange = getDashboardRangeForPeriod(nextPeriod);
+    setCustomRangeError(null);
+    setSelectedPeriod(nextPeriod);
+    setAppliedPeriod(nextPeriod);
+    setDraftRange(nextRange);
+    setAppliedRange(nextRange);
   };
   const handleDateChange = (field: keyof DashboardRange, value: string) => {
-    setPeriod("custom");
-    setRange({ ...displayRange, [field]: value });
+    setCustomRangeError(null);
+    setSelectedPeriod("custom");
+    setDraftRange({ ...displayRange, [field]: value });
+  };
+  const commitCustomRange = () => {
+    if (selectedPeriod !== "custom") return;
+
+    if (!validDraftRange) {
+      setCustomRangeError(
+        "Informe um período personalizado completo, com data inicial menor ou igual à final.",
+      );
+      return;
+    }
+
+    setCustomRangeError(null);
+    setSelectedPeriod("custom");
+    setAppliedPeriod("custom");
+    setAppliedRange(draftRange);
+  };
+  const handleDateControlsBlur = (event: FocusEvent<HTMLDivElement>) => {
+    const currentTarget = event.currentTarget;
+    const nextFocusedElement = event.relatedTarget as Node | null;
+
+    if (nextFocusedElement && currentTarget.contains(nextFocusedElement)) return;
+
+    window.setTimeout(() => {
+      const activeElement = document.activeElement;
+
+      if (activeElement && currentTarget.contains(activeElement)) return;
+
+      commitCustomRange();
+    }, 0);
   };
   const resetPeriod = () => {
-    setPeriod("week");
-    setRange(getDashboardRangeForPeriod("week"));
+    const defaultRange = getDashboardRangeForPeriod("week");
+    setCustomRangeError(null);
+    setSelectedPeriod("week");
+    setAppliedPeriod("week");
+    setDraftRange(defaultRange);
+    setAppliedRange(defaultRange);
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-7">
       <PsychologistsHeader
         displayRange={displayRange}
+        onDateControlsBlur={handleDateControlsBlur}
         onDateChange={handleDateChange}
         onPeriodChange={handlePeriodChange}
-        period={period}
+        period={selectedPeriod}
+        rangeError={customRangeError}
       />
 
       {!validRange ? (

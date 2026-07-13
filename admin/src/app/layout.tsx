@@ -1,8 +1,15 @@
 import type { Metadata, Viewport } from "next";
+import { Manrope } from "next/font/google";
 import { Toaster } from "sonner";
 import "./globals.css";
 import { AdminAuthProvider } from "@/providers/admin-auth";
 import { QueryProvider } from "@/providers/query";
+
+const manrope = Manrope({
+  variable: "--font-manrope",
+  subsets: ["latin"],
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: "Lectum Admin",
@@ -18,7 +25,7 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="pt-BR">
-      <body>
+      <body className={`${manrope.variable} antialiased`}>
         <QueryProvider>
           <AdminAuthProvider>{children}</AdminAuthProvider>
         </QueryProvider>

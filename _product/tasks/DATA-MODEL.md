@@ -464,6 +464,8 @@ Backfill canônico TASK-52 para comunidades existentes: `Respeito e empatia`, `S
 | `user_id` | `String` | |
 | `@@unique([community_id, user_id])`, `@@index([user_id])` | | |
 
+Complemento 2026-07-12: `community_member.createdAt` é o marco histórico fixo **Membro desde**. O vínculo nasce quando o usuário segue/entra na comunidade ou quando faz a primeira participação real nela por post/resposta sem vínculo anterior. Interações posteriores não recalculam essa data. Se uma base legada tiver post/resposta anterior ao vínculo, o backfill e a leitura administrativa devem preservar a menor data real de participação.
+
 `community_post` (TASK-23/24/26/28; PRD §9, fluxograma 19.5):
 
 | Campo | Tipo | Notas |

@@ -1,7 +1,10 @@
 import type { Prisma } from "@/external/generated/prisma/client";
 import prisma from "@/infra/database/prisma";
 import { activeProfessionalEntitlementWhere } from "@/utils/subscription-entitlement";
-import type { AdminPsychologistsDashboardDateRange } from "../DTOs/IAdminPsychologistsDashboardDTO";
+import type {
+  AdminPsychologistsDashboardDateRange,
+  AdminPsychologistsDashboardDirectoryFilterItem,
+} from "../DTOs/IAdminPsychologistsDashboardDTO";
 import type { IAdminPsychologistsDashboardRepository } from "./interfaces/IAdminPsychologistsDashboardRepository";
 
 const eventCreatedAtWhere = (range: AdminPsychologistsDashboardDateRange) => ({
@@ -14,6 +17,45 @@ const catalogSelect = {
   name: true,
   slug: true,
 } satisfies Prisma.specialtySelect;
+
+const directoryCategorySelect = {
+  id: true,
+  name: true,
+  position: true,
+  slug: true,
+} satisfies Prisma.specialty_categorySelect;
+
+const directorySpecialtySelect = {
+  category: {
+    select: directoryCategorySelect,
+  },
+  category_id: true,
+  id: true,
+  name: true,
+  position: true,
+  slug: true,
+} satisfies Prisma.specialtySelect;
+
+const directoryCatalogSelect = {
+  id: true,
+  name: true,
+  position: true,
+  slug: true,
+};
+
+const catalogOrderBy = () => [{ position: "asc" as const }, { name: "asc" as const }];
+
+const toDirectoryFilterItem = (item: {
+  id: string;
+  name: string;
+  position: number | null;
+  slug: string;
+}): AdminPsychologistsDashboardDirectoryFilterItem => ({
+  id: item.id,
+  label: item.name,
+  position: item.position,
+  slug: item.slug,
+});
 
 const profileBaseSelect = {
   accepts_insurance: true,
@@ -187,6 +229,69 @@ const publicDirectoryWhere = {
 export class AdminPsychologistsDashboardRepository
   implements IAdminPsychologistsDashboardRepository
 {
+  async listDirectoryFilters() {
+    const [specialties, services, approaches, languages, targetAudiences] = await Promise.all([
+      prisma.specialty.findMany({
+        orderBy: [{ category: { position: "asc" } }, { position: "asc" }, { name: "asc" }],
+        select: directorySpecialtySelect,
+        where: {
+          active: true,
+          category: {
+            active: true,
+            deleted: false,
+          },
+          deleted: false,
+        },
+      }),
+      prisma.service.findMany({
+        orderBy: catalogOrderBy(),
+        select: directoryCatalogSelect,
+        where: {
+          active: true,
+          deleted: false,
+        },
+      }),
+      prisma.approach.findMany({
+        orderBy: catalogOrderBy(),
+        select: directoryCatalogSelect,
+        where: {
+          active: true,
+          deleted: false,
+        },
+      }),
+      prisma.profile_catalog_option.findMany({
+        orderBy: catalogOrderBy(),
+        select: directoryCatalogSelect,
+        where: {
+          active: true,
+          deleted: false,
+          type: "language",
+        },
+      }),
+      prisma.profile_catalog_option.findMany({
+        orderBy: catalogOrderBy(),
+        select: directoryCatalogSelect,
+        where: {
+          active: true,
+          deleted: false,
+          type: "target_audience",
+        },
+      }),
+    ]);
+
+    return {
+      approaches: approaches.map(toDirectoryFilterItem),
+      languages: languages.map(toDirectoryFilterItem),
+      services: services.map(toDirectoryFilterItem),
+      specialties: specialties.map((item) => ({
+        ...toDirectoryFilterItem(item),
+        category_id: item.category_id,
+        category_label: item.category?.name ?? null,
+      })),
+      target_audiences: targetAudiences.map(toDirectoryFilterItem),
+    };
+  }
+
   async listPsychologistProfiles() {
     return prisma.psychologist_profile.findMany({
       orderBy: {

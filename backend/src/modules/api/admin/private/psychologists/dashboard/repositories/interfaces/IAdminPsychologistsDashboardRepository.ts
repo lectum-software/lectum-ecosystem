@@ -1,5 +1,8 @@
 import type { Prisma } from "@/external/generated/prisma/client";
-import type { AdminPsychologistsDashboardDateRange } from "../../DTOs/IAdminPsychologistsDashboardDTO";
+import type {
+  AdminPsychologistsDashboardDateRange,
+  AdminPsychologistsDashboardDirectoryFilters,
+} from "../../DTOs/IAdminPsychologistsDashboardDTO";
 
 export type AdminPsychologistSubscriptionRecord = {
   createdAt: Date;
@@ -98,6 +101,7 @@ export interface IAdminPsychologistsDashboardRepository {
   listProfileViews(
     range: AdminPsychologistsDashboardDateRange,
   ): Promise<AdminPsychologistEventRecord[]>;
+  listDirectoryFilters(): Promise<AdminPsychologistsDashboardDirectoryFilters>;
   listPsychologistProfiles(): Promise<AdminPsychologistProfileRecord[]>;
   listPublicRankingCandidates(): Promise<AdminPsychologistRankingCandidateRecord[]>;
   listPublishedReviews(

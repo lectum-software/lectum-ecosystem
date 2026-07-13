@@ -18,6 +18,11 @@ export type CalendarChartPoint<K extends string> = Record<K, number> & {
   tooltipLabel: string;
 };
 
+export type SvgChartPoint = {
+  x: number;
+  y: number;
+};
+
 type AggregateCalendarChartOptions<K extends string> = {
   /**
    * Curto o suficiente para leitura por dia; acima disso o gráfico é consolidado por mês.
@@ -187,4 +192,68 @@ export const aggregateCalendarChartPoints = <
   }
 
   return [...bucketMap.values()];
+};
+
+const formatSvgCoordinate = (value: number) => {
+  if (!Number.isFinite(value)) return "0";
+
+  return Number(value.toFixed(2)).toString();
+};
+
+const getSvgControlPoint = (
+  current: SvgChartPoint,
+  previous: SvgChartPoint | undefined,
+  next: SvgChartPoint | undefined,
+  reverse: boolean,
+) => {
+  const smoothing = 0.18;
+  const previousPoint = previous ?? current;
+  const nextPoint = next ?? current;
+  const length = Math.hypot(nextPoint.x - previousPoint.x, nextPoint.y - previousPoint.y);
+  const angle =
+    Math.atan2(nextPoint.y - previousPoint.y, nextPoint.x - previousPoint.x) +
+    (reverse ? Math.PI : 0);
+
+  return {
+    x: current.x + Math.cos(angle) * length * smoothing,
+    y: current.y + Math.sin(angle) * length * smoothing,
+  };
+};
+
+export const buildSmoothSvgPath = (points: readonly SvgChartPoint[]) => {
+  if (points.length === 0) return "";
+
+  const firstPoint = points[0];
+  const minX = Math.min(...points.map((point) => point.x));
+  const maxX = Math.max(...points.map((point) => point.x));
+  const minY = Math.min(...points.map((point) => point.y));
+  const maxY = Math.max(...points.map((point) => point.y));
+  const clampPoint = (point: SvgChartPoint) => ({
+    x: Math.min(maxX, Math.max(minX, point.x)),
+    y: Math.min(maxY, Math.max(minY, point.y)),
+  });
+
+  if (points.length === 1) {
+    return `M${formatSvgCoordinate(firstPoint.x)},${formatSvgCoordinate(firstPoint.y)}`;
+  }
+
+  return points.reduce((path, point, index, allPoints) => {
+    if (index === 0) {
+      return `M${formatSvgCoordinate(point.x)},${formatSvgCoordinate(point.y)}`;
+    }
+
+    const previousPoint = allPoints[index - 1];
+    const startControlPoint = clampPoint(
+      getSvgControlPoint(previousPoint, allPoints[index - 2], point, false),
+    );
+    const endControlPoint = clampPoint(
+      getSvgControlPoint(point, previousPoint, allPoints[index + 1], true),
+    );
+
+    return `${path} C${formatSvgCoordinate(startControlPoint.x)},${formatSvgCoordinate(
+      startControlPoint.y,
+    )} ${formatSvgCoordinate(endControlPoint.x)},${formatSvgCoordinate(
+      endControlPoint.y,
+    )} ${formatSvgCoordinate(point.x)},${formatSvgCoordinate(point.y)}`;
+  }, "");
 };

@@ -17,7 +17,7 @@ import {
   TrendingUp,
   Users,
 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { type FocusEventHandler, useMemo } from "react";
 import { toast } from "sonner";
 import { useAdminTrafficExport, useAdminTrafficSummary } from "@/api/callers/traffic";
 import { resolveApiError } from "@/api/handle";
@@ -29,6 +29,7 @@ import type {
   TrafficRankingItem,
   TrafficSummaryQuery,
 } from "@/api/req/traffic";
+import { useDateRangeCommitOnBlur } from "@/hooks/use-date-range-commit-on-blur";
 import { cn } from "@/lib/utils";
 
 const QUICK_RANGES = [7, 30, 90] as const;
@@ -564,13 +565,19 @@ const LocationPanel = ({ locations }: { locations: AdminTrafficSummary["location
 
 const TrafficHeader = ({
   isExporting,
+  onDateChange,
+  onDateControlsBlur,
   onExport,
   range,
+  rangeError,
   setRange,
 }: {
   isExporting: boolean;
+  onDateChange: (field: "from" | "to", value: string) => void;
+  onDateControlsBlur: FocusEventHandler<HTMLDivElement>;
   onExport: () => void;
   range: TrafficSummaryQuery;
+  rangeError: string | null;
   setRange: (range: TrafficSummaryQuery) => void;
 }) => (
   <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
@@ -582,13 +589,13 @@ const TrafficHeader = ({
     </div>
 
     <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
-      <div className="grid gap-3 sm:grid-cols-2">
+      <div className="grid gap-3 sm:grid-cols-2" onBlur={onDateControlsBlur}>
         <label className="text-xs font-black text-muted">
           De
           <input
             className="mt-1 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground shadow-control focus:border-primary"
             max={range.to}
-            onChange={(event) => setRange({ ...range, from: event.target.value })}
+            onChange={(event) => onDateChange("from", event.target.value)}
             type="date"
             value={range.from}
           />
@@ -598,7 +605,7 @@ const TrafficHeader = ({
           <input
             className="mt-1 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground shadow-control focus:border-primary"
             min={range.from}
-            onChange={(event) => setRange({ ...range, to: event.target.value })}
+            onChange={(event) => onDateChange("to", event.target.value)}
             type="date"
             value={range.to}
           />
@@ -629,6 +636,7 @@ const TrafficHeader = ({
         )}
         Exportar relatório
       </button>
+      {rangeError ? <p className="max-w-md text-xs font-bold text-danger">{rangeError}</p> : null}
     </div>
   </div>
 );
@@ -746,20 +754,30 @@ const TrafficContent = ({ summary }: { summary: AdminTrafficSummary }) => (
 );
 
 export const AdminTrafficClient = () => {
-  const [range, setRange] = useState<TrafficSummaryQuery>(() => getQuickRange(30));
-  const validRange = isValidRange(range);
-  const query = useAdminTrafficSummary(range, { enabled: validRange });
+  const {
+    appliedRange,
+    applyRange,
+    draftRange,
+    handleDateChange,
+    handleDateControlsBlur,
+    rangeError,
+  } = useDateRangeCommitOnBlur<TrafficSummaryQuery>({
+    initialRange: () => getQuickRange(30),
+    isValidRange,
+  });
+  const validRange = isValidRange(appliedRange);
+  const query = useAdminTrafficSummary(appliedRange, { enabled: validRange });
   const exportMutation = useAdminTrafficExport();
   const queryError = query.error ? resolveApiError(query.error) : null;
   const periodCopy = useMemo(() => {
-    if (!range.from || !range.to) return "Selecione um período válido";
+    if (!appliedRange.from || !appliedRange.to) return "Selecione um período válido";
 
-    return `${formatDate(range.from)} — ${formatDate(range.to)}`;
-  }, [range]);
+    return `${formatDate(appliedRange.from)} — ${formatDate(appliedRange.to)}`;
+  }, [appliedRange]);
 
   const handleExport = async () => {
     try {
-      const result = await exportMutation.mutateAsync(range);
+      const result = await exportMutation.mutateAsync(appliedRange);
       downloadBlob(result.blob, result.filename);
       toast.success("Exportação real de tráfego gerada com sucesso.");
     } catch (error) {
@@ -771,9 +789,12 @@ export const AdminTrafficClient = () => {
     <div className="space-y-6">
       <TrafficHeader
         isExporting={exportMutation.isPending}
+        onDateChange={handleDateChange}
+        onDateControlsBlur={handleDateControlsBlur}
         onExport={() => void handleExport()}
-        range={range}
-        setRange={setRange}
+        range={draftRange}
+        rangeError={rangeError}
+        setRange={applyRange}
       />
 
       <div className="flex flex-wrap items-center gap-2 text-sm text-muted">
@@ -786,7 +807,7 @@ export const AdminTrafficClient = () => {
       {!validRange ? (
         <ErrorState
           message="A data inicial precisa ser menor ou igual à data final."
-          onRetry={() => setRange(getQuickRange(30))}
+          onRetry={() => applyRange(getQuickRange(30))}
         />
       ) : null}
 

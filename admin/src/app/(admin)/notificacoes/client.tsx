@@ -24,7 +24,7 @@ import {
   UsersRound,
   X,
 } from "lucide-react";
-import { type ReactNode, useEffect, useMemo, useState } from "react";
+import { type FocusEventHandler, type ReactNode, useEffect, useMemo, useState } from "react";
 import { type Control, FormProvider, useController, useForm, useWatch } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -52,6 +52,7 @@ import {
   type AdminNotificationPushStatus,
 } from "@/api/req/notifications";
 import { InputController, SelectController, TextareaController } from "@/components/controllers";
+import { useDateRangeCommitOnBlur } from "@/hooks/use-date-range-commit-on-blur";
 import { cn } from "@/lib/utils";
 
 const QUICK_RANGES = [7, 30, 90] as const;
@@ -99,6 +100,15 @@ const getQuickRange = (days: number) => {
   const from = new Date(today);
   from.setDate(today.getDate() - (days - 1));
   return { from: toInputDate(from), to: toInputDate(today) };
+};
+const dateFromInput = (value: string) => {
+  const [year, month, day] = value.split("-").map(Number);
+  return new Date(year, month - 1, day, 12, 0, 0, 0);
+};
+const isValidRange = (range: { from?: string; to?: string }) => {
+  if (!range.from || !range.to) return false;
+
+  return dateFromInput(range.from) <= dateFromInput(range.to);
 };
 const toInputDateTime = (value?: string | null) => {
   if (!value) return "";
@@ -267,12 +277,18 @@ const MetricsGrid = ({ metrics }: { metrics: AdminNotificationMetrics }) => {
 };
 
 const Header = ({
+  onDateChange,
+  onDateControlsBlur,
   onNew,
   range,
+  rangeError,
   setRange,
 }: {
+  onDateChange: (field: "from" | "to", value: string) => void;
+  onDateControlsBlur: FocusEventHandler<HTMLDivElement>;
   onNew: () => void;
   range: { from: string; to: string };
+  rangeError: string | null;
   setRange: (range: { from: string; to: string }) => void;
 }) => (
   <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
@@ -287,26 +303,28 @@ const Header = ({
     </div>
     <div className="flex flex-col gap-3 xl:items-end">
       <div className="grid gap-3 sm:grid-cols-[1fr_1fr_auto]">
-        <label className="text-xs font-black text-muted">
-          De
-          <input
-            className="mt-1 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground shadow-control focus:border-primary"
-            max={range.to}
-            onChange={(event) => setRange({ ...range, from: event.target.value })}
-            type="date"
-            value={range.from}
-          />
-        </label>
-        <label className="text-xs font-black text-muted">
-          Até
-          <input
-            className="mt-1 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground shadow-control focus:border-primary"
-            min={range.from}
-            onChange={(event) => setRange({ ...range, to: event.target.value })}
-            type="date"
-            value={range.to}
-          />
-        </label>
+        <div className="contents" onBlur={onDateControlsBlur}>
+          <label className="text-xs font-black text-muted">
+            De
+            <input
+              className="mt-1 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground shadow-control focus:border-primary"
+              max={range.to}
+              onChange={(event) => onDateChange("from", event.target.value)}
+              type="date"
+              value={range.from}
+            />
+          </label>
+          <label className="text-xs font-black text-muted">
+            Até
+            <input
+              className="mt-1 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground shadow-control focus:border-primary"
+              min={range.from}
+              onChange={(event) => onDateChange("to", event.target.value)}
+              type="date"
+              value={range.to}
+            />
+          </label>
+        </div>
         <button
           className="inline-flex h-11 items-center justify-center gap-2 self-end rounded-control bg-primary px-4 text-sm font-black text-white shadow-admin-soft transition hover:bg-primary-hover"
           onClick={onNew}
@@ -328,6 +346,7 @@ const Header = ({
           </button>
         ))}
       </div>
+      {rangeError ? <p className="text-xs font-bold text-danger">{rangeError}</p> : null}
     </div>
   </div>
 );
@@ -1027,7 +1046,6 @@ const NewNotificationModal = ({
 };
 
 export const AdminNotificationsClient = () => {
-  const [range, setRange] = useState(getQuickRange(30));
   const [tab, setTab] = useState("all");
   const [filters, setFilters] = useState<NotificationsFilters>({
     audience: "all",
@@ -1040,43 +1058,54 @@ export const AdminNotificationsClient = () => {
   const [editing, setEditing] = useState<AdminNotificationCampaign | null>(null);
   const [details, setDetails] = useState<AdminNotificationCampaign | null>(null);
   const currentTab = TABS.find((item) => item.value === tab) ?? TABS[0];
+  const resetPagination = () => {
+    setPage(1);
+    setLogsPage(1);
+  };
+  const {
+    appliedRange,
+    applyRange,
+    draftRange,
+    handleDateChange,
+    handleDateControlsBlur,
+    rangeError,
+  } = useDateRangeCommitOnBlur({
+    initialRange: () => getQuickRange(30),
+    isValidRange,
+    onApply: resetPagination,
+  });
   const campaignQuery = useMemo(
     () => ({
       audience: filters.audience === "all" ? undefined : filters.audience,
       channel: filters.channel === "all" ? undefined : filters.channel,
-      from: range.from,
+      from: appliedRange.from,
       limit: CAMPAIGN_LIMIT,
       page,
       q: filters.q.trim() || undefined,
       status: currentTab.status,
-      to: range.to,
+      to: appliedRange.to,
     }),
-    [currentTab.status, filters, page, range],
+    [appliedRange, currentTab.status, filters, page],
   );
   const logsQuery = useMemo(
     () => ({
       channel: filters.channel === "all" ? undefined : filters.channel,
-      from: range.from,
+      from: appliedRange.from,
       limit: LOGS_LIMIT,
       page: logsPage,
-      to: range.to,
+      to: appliedRange.to,
     }),
-    [filters.channel, logsPage, range],
+    [appliedRange, filters.channel, logsPage],
   );
-  const metrics = useAdminNotificationMetrics(range);
+  const metrics = useAdminNotificationMetrics(appliedRange);
   const campaigns = useAdminNotificationCampaigns(campaignQuery);
   const logs = useAdminNotificationAutomaticLogs(logsQuery);
   const push = useAdminNotificationPushStatus();
   const cancelCampaign = useAdminNotificationCancelCampaign();
   const firstError = metrics.error || campaigns.error || logs.error || push.error;
 
-  const resetPagination = () => {
-    setPage(1);
-    setLogsPage(1);
-  };
   const updateRange = (nextRange: { from: string; to: string }) => {
-    setRange(nextRange);
-    resetPagination();
+    applyRange(nextRange);
   };
   const updateFilters = (nextFilters: NotificationsFilters) => {
     setFilters(nextFilters);
@@ -1104,7 +1133,10 @@ export const AdminNotificationsClient = () => {
           setEditing(null);
           setModalOpen(true);
         }}
-        range={range}
+        onDateChange={handleDateChange}
+        onDateControlsBlur={handleDateControlsBlur}
+        range={draftRange}
+        rangeError={rangeError}
         setRange={updateRange}
       />
       {firstError ? (
@@ -1184,7 +1216,7 @@ export const AdminNotificationsClient = () => {
         </span>
         <span>
           <CalendarDays aria-hidden className="mr-1 inline h-4 w-4" />
-          {formatDate(range.from)} — {formatDate(range.to)}
+          {formatDate(appliedRange.from)} — {formatDate(appliedRange.to)}
         </span>
       </div>
       {modalOpen ? (

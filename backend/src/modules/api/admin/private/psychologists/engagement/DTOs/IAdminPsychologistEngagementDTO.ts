@@ -1,6 +1,7 @@
 ﻿import type { Request } from "express";
 
 export type AdminPsychologistEngagementQuery = {
+  community?: string;
   from?: string;
   period?: "all" | "custom" | "month" | "week" | "year";
   to?: string;
@@ -30,7 +31,7 @@ export type AdminPsychologistAvailabilityMetric = {
   id: string;
   label: string;
   source: string;
-  unit: "count" | "percentage" | "seconds";
+  unit: "count" | "percentage" | "position" | "seconds";
   unavailable_reason: string | null;
   value: number | null;
 };
@@ -53,6 +54,7 @@ export type AdminPsychologistStatisticsSeriesPoint = {
   favorites: number;
   profile_views: number;
   replies: number;
+  reviews: number;
   saves: number;
   search_results: number;
   shares: number;
@@ -82,11 +84,16 @@ export type AdminPsychologistStatisticsVideo = {
 };
 
 export type AdminPsychologistStatisticsCommunityItem = {
+  avatar_url: string | null;
   color: string | null;
   id: string;
   member_since: Date | null;
   name: string;
   posts: number;
+  ranking: {
+    position: number;
+    score: number;
+  } | null;
   replies: number;
   slug: string;
 };
@@ -102,7 +109,7 @@ export type AdminPsychologistStatisticsDTO = {
     series: AdminPsychologistStatisticsSeriesPoint[];
   };
   period: AdminPsychologistStatisticsPeriod;
-  source: "profile_events+community_activity+video_sessions+search_impressions";
+  source: "profile_events+community_activity+video_sessions+search_impressions+professional_review";
   unavailable: AdminPsychologistAvailabilityMetric[];
   video: AdminPsychologistStatisticsVideo;
 };

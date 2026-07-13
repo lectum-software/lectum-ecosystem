@@ -44,7 +44,14 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
-import { type ReactNode, type SVGProps, useEffect, useMemo, useState } from "react";
+import {
+  type FocusEvent,
+  type ReactNode,
+  type SVGProps,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import { FormProvider, type SubmitHandler, useForm, useWatch } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -97,7 +104,7 @@ import type {
   AdminPsychologistStatisticsQuery,
 } from "@/api/req/psychologists";
 import { InputController, SelectController, TextareaController } from "@/components/controllers";
-import { aggregateCalendarChartPoints, type CalendarChartPoint } from "@/lib/chart-time-series";
+import { aggregateCalendarChartPoints, buildSmoothSvgPath } from "@/lib/chart-time-series";
 import { cn } from "@/lib/utils";
 
 const numberFormatter = new Intl.NumberFormat("pt-BR");
@@ -121,17 +128,17 @@ const timeFormatter = new Intl.DateTimeFormat("pt-BR", {
 });
 const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
 const publicFrontendUrl = process.env.NEXT_PUBLIC_FRONTEND_URL || "http://localhost:3000";
-const publicMediaPathPrefixes = ["/public/files/"] as const;
+const publicMediaPathPrefixes = ["/public/files/", "/community/icons/"] as const;
 
 const TABS = [
   { id: "geral", label: "Geral", ready: true },
   { id: "perfil", label: "Perfil e cadastro", ready: true },
-  { id: "plano", label: "Plano e pagamentos", ready: true },
+  { id: "plano", label: "Assinatura", ready: true },
   { id: "estatisticas", label: "Estatísticas", ready: true },
   { id: "publicacoes", label: "Publicações", ready: true },
   { id: "avaliacoes", label: "Avaliações", ready: true },
-  { id: "atividades", label: "Atividades", ready: true },
   { id: "denuncias", label: "Denúncias", ready: true },
+  { id: "atividades", label: "Atividades", ready: true },
   { id: "conta", label: "Conta", ready: true },
 ] as const satisfies readonly {
   id: string;
@@ -345,6 +352,7 @@ const GENERAL_METRIC_LABELS: Record<string, string> = {
 };
 
 type StatisticsSeriesPoint = AdminPsychologistStatistics["business"]["series"][number];
+type StatisticsCommunityItem = AdminPsychologistStatistics["community"]["communities"][number];
 type StatisticsSeriesMetricKey = Exclude<keyof StatisticsSeriesPoint, "date">;
 type StatisticsChartMetric = {
   dotRadius: number;
@@ -395,6 +403,18 @@ const BUSINESS_CHART_METRICS = [
     shortLabel: "Favoritos",
     strokeClassName: "stroke-pink-500",
     swatchClassName: "bg-pink-500",
+  },
+  {
+    dotRadius: 3.2,
+    id: "reviews",
+    icon: Star,
+    iconClassName: "text-amber-500",
+    iconToneClassName: "bg-amber-50",
+    key: "reviews",
+    label: "Avaliações",
+    shortLabel: "Avaliações",
+    strokeClassName: "stroke-amber-500",
+    swatchClassName: "bg-amber-500",
   },
   {
     dotRadius: 3,
@@ -501,7 +521,6 @@ type BusinessChartMetric = (typeof BUSINESS_CHART_METRICS)[number];
 type BusinessChartMetricId = BusinessChartMetric["id"];
 type CommunityChartMetric = (typeof COMMUNITY_CHART_METRICS)[number];
 type CommunityChartMetricId = CommunityChartMetric["id"];
-type BusinessChartPoint = CalendarChartPoint<StatisticsSeriesMetricKey>;
 type StatisticsPeriodValue = NonNullable<AdminPsychologistStatisticsQuery["period"]>;
 type StatisticsPeriodPreset = Exclude<StatisticsPeriodValue, "custom">;
 type StatisticsCustomRange = Pick<AdminPsychologistStatisticsQuery, "from" | "to">;
@@ -510,6 +529,7 @@ const BUSINESS_SERIES_METRIC_KEYS = [
   "comments_received",
   "favorites",
   "profile_views",
+  "reviews",
   "replies",
   "saves",
   "search_results",
@@ -527,7 +547,7 @@ const STATISTICS_PERIOD_OPTIONS: { id: StatisticsPeriodPreset; label: string }[]
   { id: "all", label: "Todo o período" },
 ];
 
-const CARD = "rounded-card border border-border bg-surface shadow-admin-soft";
+const CARD = "rounded-card border border-border/80 bg-surface/95 shadow-admin-soft backdrop-blur";
 const COURTESY_GRANT_CONFIRMATION = "CONCEDER CORTESIA";
 
 const courtesyDetailsSchema = z.object({
@@ -987,20 +1007,35 @@ const buildStatisticsPeriodQuery = (
 ): AdminPsychologistStatisticsQuery =>
   period === "custom" ? { from: customRange.from, period, to: customRange.to } : { period };
 
+const statisticsDateFromInput = (value: string) => {
+  const [year, month, day] = value.split("-").map(Number);
+  return new Date(year, month - 1, day, 12, 0, 0, 0);
+};
+
+const isValidStatisticsRange = (range: StatisticsCustomRange) => {
+  if (!range.from || !range.to) return false;
+
+  return statisticsDateFromInput(range.from) <= statisticsDateFromInput(range.to);
+};
+
 type StatisticsPeriodControlsProps = {
   idPrefix: string;
+  onDateControlsBlur: (event: FocusEvent<HTMLDivElement>) => void;
   onDateChange: (field: keyof StatisticsCustomRange, value: string) => void;
   onPeriodChange: (period: StatisticsPeriodPreset) => void;
   period: StatisticsPeriodValue;
   range: StatisticsCustomRange;
+  rangeError: string | null;
 };
 
 const StatisticsPeriodControls = ({
   idPrefix,
+  onDateControlsBlur,
   onDateChange,
   onPeriodChange,
   period,
   range,
+  rangeError,
 }: StatisticsPeriodControlsProps) => (
   <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
     <label className="grid gap-1 text-xs font-black text-muted" htmlFor={`${idPrefix}-period`}>
@@ -1030,7 +1065,7 @@ const StatisticsPeriodControls = ({
       </span>
     </label>
 
-    <div className="grid gap-2 sm:grid-cols-2">
+    <div className="grid gap-2 sm:grid-cols-2" onBlur={onDateControlsBlur}>
       <label className="grid gap-1 text-xs font-black text-muted" htmlFor={`${idPrefix}-from`}>
         De
         <input
@@ -1052,6 +1087,7 @@ const StatisticsPeriodControls = ({
         />
       </label>
     </div>
+    {rangeError ? <p className="max-w-md text-xs font-bold text-danger">{rangeError}</p> : null}
   </div>
 );
 
@@ -1322,7 +1358,7 @@ const formatMetricValue = (metric: AdminPsychologistDetailMetric) => {
       minimumFractionDigits: 1,
     });
   }
-  if (metric.unit === "position") return `#${numberFormatter.format(metric.value)}`;
+  if (metric.unit === "position") return `Top #${numberFormatter.format(metric.value)}`;
 
   return numberFormatter.format(metric.value);
 };
@@ -1346,6 +1382,7 @@ const formatEngagementMetricValue = (metric: AdminPsychologistEngagementMetric) 
     })}%`;
   }
   if (metric.unit === "seconds") return `${numberFormatter.format(metric.value)}s`;
+  if (metric.unit === "position") return `#${numberFormatter.format(metric.value)}`;
 
   return numberFormatter.format(metric.value);
 };
@@ -1437,7 +1474,7 @@ const Avatar = ({ name, src }: { name: string; src: string | null }) => {
 
   if (!imageSrc) {
     return (
-      <span className="grid h-24 w-24 shrink-0 place-items-center rounded-full bg-primary-soft text-2xl font-black text-primary md:h-28 md:w-28">
+      <span className="grid h-24 w-24 shrink-0 place-items-center rounded-full bg-primary-soft text-2xl font-extrabold text-primary md:h-28 md:w-28">
         {initials(name)}
       </span>
     );
@@ -1456,14 +1493,62 @@ const Avatar = ({ name, src }: { name: string; src: string | null }) => {
   );
 };
 
+const CommunityAvatar = ({
+  color,
+  name,
+  src,
+}: {
+  color: string | null;
+  name: string;
+  src: string | null;
+}) => {
+  const imageSrc = renderableImageSrc(src);
+
+  if (!imageSrc) {
+    return (
+      <span
+        aria-hidden
+        className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl border border-border bg-primary-soft text-xs font-black text-primary"
+        style={color ? { borderColor: color } : undefined}
+      >
+        {initials(name).slice(0, 2)}
+      </span>
+    );
+  }
+
+  return (
+    <Image
+      alt={`Avatar da comunidade ${name}`}
+      className="h-12 w-12 shrink-0 rounded-2xl object-cover"
+      height={48}
+      src={imageSrc}
+      unoptimized={isPublicAdminMediaSrc(imageSrc)}
+      width={48}
+    />
+  );
+};
+
+const CommunityRankingBadge = ({ ranking }: { ranking: StatisticsCommunityItem["ranking"] }) => {
+  if (!ranking) {
+    return <Badge className="w-fit bg-surface-muted text-muted">Sem ranking</Badge>;
+  }
+
+  return (
+    <Badge className="w-fit gap-1 bg-primary-soft text-primary">
+      <Trophy aria-hidden className="h-3.5 w-3.5" />
+      Top #{numberFormatter.format(ranking.position)}
+    </Badge>
+  );
+};
+
 const IconCircle = ({ icon: Icon }: { icon: LucideIcon }) => (
-  <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-primary-soft text-primary">
+  <span className="grid h-11 w-11 shrink-0 place-items-center rounded-[18px] bg-primary-soft text-primary ring-1 ring-primary/10">
     <Icon aria-hidden className="h-5 w-5" />
   </span>
 );
 
 const MetricIconCircle = ({ icon: Icon, metricId }: { icon: LucideIcon; metricId: string }) => (
-  <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-primary-soft text-primary">
+  <span className="grid h-11 w-11 shrink-0 place-items-center rounded-[18px] bg-primary-soft text-primary ring-1 ring-primary/10">
     {metricId === "whatsapp_clicks" ? (
       <WhatsAppIcon aria-hidden className="h-5 w-5" />
     ) : (
@@ -1516,12 +1601,12 @@ const DetailHeader = ({ detail, tab }: { detail: AdminPsychologistDetail; tab: A
 
   return (
     <CardShell className="overflow-hidden">
-      <div className="flex flex-col gap-5 p-5 md:flex-row md:items-start md:justify-between md:p-6">
+      <div className="flex flex-col gap-5 p-5 md:flex-row md:items-start md:justify-between md:p-7">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
           <Avatar name={header.name} src={header.avatar} />
           <div>
             <div className="flex flex-wrap items-center gap-2">
-              <h1 className="text-3xl font-black tracking-tight text-foreground md:text-4xl">
+              <h1 className="text-3xl font-extrabold tracking-tight text-foreground md:text-4xl">
                 {header.name}
               </h1>
               {header.verified ? (
@@ -1553,7 +1638,7 @@ const DetailHeader = ({ detail, tab }: { detail: AdminPsychologistDetail; tab: A
         </div>
         <div className="flex flex-col gap-2 sm:flex-row md:flex-col xl:flex-row">
           <a
-            className="inline-flex h-11 items-center justify-center gap-2 rounded-control border border-primary bg-surface px-4 text-sm font-black text-primary transition hover:bg-primary-soft"
+            className="inline-flex h-11 items-center justify-center gap-2 rounded-full border border-primary/45 bg-surface px-5 text-sm font-black text-primary shadow-control transition hover:bg-primary-soft"
             href={toPublicHref(header.public_profile_url)}
             rel="noreferrer"
             target="_blank"
@@ -1564,13 +1649,13 @@ const DetailHeader = ({ detail, tab }: { detail: AdminPsychologistDetail; tab: A
         </div>
       </div>
 
-      <div className="overflow-x-auto border-t border-border px-3">
-        <nav aria-label="Abas do detalhe do psicólogo" className="flex min-w-max gap-1">
+      <div className="overflow-x-auto border-t border-border bg-surface-muted/40 px-3">
+        <nav aria-label="Abas do detalhe do psicólogo" className="flex min-w-max gap-1 py-1">
           {TABS.map((item) => {
             const active = item.id === tab;
             const showRegistryAlert = item.id === "perfil" && showProfileRegistryAlert;
             const className = cn(
-              "relative inline-flex min-h-14 items-center justify-center gap-2 px-3 text-sm font-black transition",
+              "relative inline-flex min-h-12 items-center justify-center gap-2 rounded-full px-3.5 text-sm font-black transition",
               active ? "text-primary" : "text-foreground hover:text-primary",
               !item.ready && "cursor-not-allowed text-muted hover:text-muted",
             );
@@ -1615,7 +1700,7 @@ const DetailHeader = ({ detail, tab }: { detail: AdminPsychologistDetail; tab: A
                   />
                 ) : null}
                 {active ? (
-                  <span className="absolute inset-x-3 bottom-0 h-1 rounded-t-full bg-primary" />
+                  <span className="absolute inset-x-4 bottom-1 h-1 rounded-full bg-primary" />
                 ) : null}
               </Link>
             );
@@ -1630,10 +1715,10 @@ const MetricCard = ({ metric }: { metric: AdminPsychologistDetailMetric }) => {
   const Icon = METRIC_ICONS[metric.id] ?? Trophy;
 
   return (
-    <div className="rounded-2xl border border-border bg-surface p-4">
+    <div className="rounded-card border border-border/75 bg-surface/95 p-4 shadow-admin-soft">
       <MetricIconCircle icon={Icon} metricId={metric.id} />
-      <p className="mt-4 text-sm font-black text-muted">{formatMetricLabel(metric)}</p>
-      <p className="mt-2 text-3xl font-black text-foreground">{formatMetricValue(metric)}</p>
+      <p className="mt-4 text-sm font-extrabold text-muted">{formatMetricLabel(metric)}</p>
+      <p className="mt-2 text-3xl font-extrabold text-foreground">{formatMetricValue(metric)}</p>
     </div>
   );
 };
@@ -1821,8 +1906,8 @@ const GeneralTab = ({ detail }: { detail: AdminPsychologistDetail }) => {
 };
 
 const FieldRow = ({ label, value }: { label: string; value: ReactNode }) => (
-  <div className="grid gap-1 border-b border-border py-3 last:border-0 sm:grid-cols-[190px_1fr]">
-    <dt className="text-sm font-black text-muted">{label}</dt>
+  <div className="grid gap-1 border-b border-border/80 py-3 last:border-0 sm:grid-cols-[190px_1fr]">
+    <dt className="text-sm font-extrabold text-muted">{label}</dt>
     <dd className="text-sm font-bold text-foreground">{value}</dd>
   </div>
 );
@@ -1842,7 +1927,7 @@ const InfoCard = ({
     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       <div className="flex items-center gap-3">
         <IconCircle icon={Icon} />
-        <h2 className="text-lg font-black text-foreground">{title}</h2>
+        <h2 className="text-lg font-extrabold text-foreground">{title}</h2>
       </div>
       {action ? <div className="w-full sm:w-auto">{action}</div> : null}
     </div>
@@ -1960,10 +2045,10 @@ const StatisticsMetricToggleCard = ({
     <button
       aria-pressed={active}
       className={cn(
-        "min-w-0 overflow-hidden rounded-2xl border-2 p-3 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2",
+        "min-w-0 overflow-hidden rounded-card border p-4 text-left shadow-admin-soft transition duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2",
         active
-          ? "border-primary bg-primary-soft/10 shadow-none"
-          : "border-border/80 bg-surface hover:border-primary/40 hover:bg-primary-soft/20",
+          ? "border-primary/35 bg-surface ring-1 ring-primary/10"
+          : "border-border/75 bg-surface/95 hover:-translate-y-0.5 hover:border-primary/25",
         !metric.available && "cursor-not-allowed bg-surface-muted opacity-60 hover:border-border",
       )}
       disabled={!metric.available}
@@ -1990,15 +2075,15 @@ const StatisticsMetricToggleCard = ({
           </span>
         </span>
         <span className="mt-4 block min-w-0 max-w-full">
-          <span className="block max-w-full break-words text-xs font-black leading-snug text-foreground">
+          <span className="block max-w-full break-words text-xs font-extrabold leading-snug text-foreground">
             {metric.label}
           </span>
-          <span className="mt-2 block text-2xl font-black leading-none text-foreground">
+          <span className="mt-2 block text-2xl font-extrabold leading-none text-foreground">
             {displayValue}
           </span>
         </span>
       </span>
-      {metric.available ? (
+      {metric.available && metric.comparison ? (
         <MetricComparisonLine className="mt-3" comparison={metric.comparison} />
       ) : metric.unavailable_reason ? (
         <span className="mt-3 block text-xs font-bold text-muted">{metric.unavailable_reason}</span>
@@ -2010,9 +2095,58 @@ const StatisticsMetricToggleCard = ({
   );
 };
 
+const StatisticsStaticMetricCard = ({
+  icon: Icon,
+  iconClassName,
+  iconToneClassName,
+  metric,
+}: {
+  icon: LucideIcon;
+  iconClassName: string;
+  iconToneClassName: string;
+  metric: AdminPsychologistEngagementMetric;
+}) => {
+  const displayValue = metric.available ? formatEngagementMetricValue(metric) : "—";
+
+  return (
+    <div
+      className={cn(
+        "min-w-0 overflow-hidden rounded-card border border-primary/35 bg-surface p-4 text-left shadow-admin-soft ring-1 ring-primary/10",
+        !metric.available && "border-border/75 bg-surface-muted opacity-80 ring-0",
+      )}
+      title={`${metric.label}: ${displayValue}. ${
+        metric.available ? "Métrica real" : "Indisponível"
+      }`}
+    >
+      <span
+        className={cn(
+          "grid h-10 w-10 shrink-0 place-items-center rounded-full",
+          iconToneClassName,
+          iconClassName,
+        )}
+      >
+        <Icon aria-hidden className="h-5 w-5" />
+      </span>
+      <span className="mt-4 block min-w-0 max-w-full">
+        <span className="block max-w-full break-words text-xs font-extrabold leading-snug text-foreground">
+          {metric.label}
+        </span>
+        <span className="mt-2 block text-2xl font-extrabold leading-none text-foreground">
+          {displayValue}
+        </span>
+      </span>
+      {metric.available ? (
+        <MetricComparisonLine className="mt-3" comparison={metric.comparison} />
+      ) : metric.unavailable_reason ? (
+        <span className="mt-3 block text-xs font-bold text-muted">{metric.unavailable_reason}</span>
+      ) : null}
+    </div>
+  );
+};
+
 const aggregateStatisticsChartPoints = (
   points: AdminPsychologistStatistics["business"]["series"],
-): BusinessChartPoint[] => aggregateCalendarChartPoints(points, BUSINESS_SERIES_METRIC_KEYS);
+) => aggregateCalendarChartPoints(points, BUSINESS_SERIES_METRIC_KEYS);
 
 const StatisticsSeriesChart = ({
   keys,
@@ -2059,7 +2193,7 @@ const StatisticsSeriesChart = ({
   );
 
   return (
-    <div className="mt-4 w-full overflow-x-auto rounded-2xl bg-surface-muted p-4">
+    <div className="mt-4 w-full overflow-x-auto rounded-[1.5rem] border border-border/70 bg-surface p-4">
       <div className="mx-auto w-full min-w-[760px] max-w-[1120px]">
         <svg
           aria-label="Evolução do período por contador selecionado"
@@ -2078,6 +2212,7 @@ const StatisticsSeriesChart = ({
               <g key={`business-grid-${value}-${y}`}>
                 <line
                   className="stroke-border"
+                  opacity="0.44"
                   strokeDasharray={value === 0 ? "0" : "4 6"}
                   strokeWidth="1"
                   x1={padding.left}
@@ -2086,7 +2221,7 @@ const StatisticsSeriesChart = ({
                   y2={y}
                 />
                 <text
-                  className="fill-muted text-[10px] font-black"
+                  className="fill-muted text-[10px] font-medium"
                   dominantBaseline="middle"
                   textAnchor="end"
                   x={padding.left - 8}
@@ -2098,18 +2233,20 @@ const StatisticsSeriesChart = ({
             );
           })}
           {keys.map((item) => {
-            const linePoints = chartPoints
-              .map((point, index) => `${xFor(index)},${yFor(Number(point[item.key] ?? 0))}`)
-              .join(" ");
+            const linePoints = chartPoints.map((point, index) => ({
+              x: xFor(index),
+              y: yFor(Number(point[item.key] ?? 0)),
+            }));
+            const linePath = buildSmoothSvgPath(linePoints);
 
             return (
-              <polyline
+              <path
                 className={cn("fill-none opacity-90", item.strokeClassName)}
+                d={linePath}
                 key={item.id}
-                points={linePoints}
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                strokeWidth="3"
+                strokeWidth="2.05"
               />
             );
           })}
@@ -2119,12 +2256,13 @@ const StatisticsSeriesChart = ({
 
               return (
                 <circle
-                  className={cn("fill-surface-muted", item.strokeClassName)}
+                  className={cn("fill-surface", item.strokeClassName)}
                   cx={xFor(index)}
                   cy={yFor(value)}
                   key={`${item.id}-${point.date}`}
-                  r={item.dotRadius}
-                  strokeWidth="2"
+                  opacity={index === chartPoints.length - 1 ? "1" : "0.72"}
+                  r={index === chartPoints.length - 1 ? "3.1" : "2.1"}
+                  strokeWidth="1.45"
                 >
                   <title>
                     {point.tooltipLabel} · {item.label}: {numberFormatter.format(value)}
@@ -2201,7 +2339,7 @@ const VideoRetentionLineChart = ({
   const fallbackY = padding.top + innerHeight;
   const linePath =
     points.length > 0
-      ? points.map((point, index) => `${index === 0 ? "M" : "L"} ${point.x} ${point.y}`).join(" ")
+      ? buildSmoothSvgPath(points)
       : `M ${padding.left} ${fallbackY} L ${chartWidth - padding.right} ${fallbackY}`;
   const firstPoint = points[0] ?? { x: padding.left, y: fallbackY };
   const lastPoint = points.at(-1) ?? { x: chartWidth - padding.right, y: fallbackY };
@@ -2226,7 +2364,7 @@ const VideoRetentionLineChart = ({
       : padding.left + (playbackPositionPercent / 100) * innerWidth;
 
   return (
-    <div className="h-[clamp(190px,12vw,220px)]">
+    <div className="h-[clamp(220px,18vw,280px)]">
       <svg
         aria-label="Gráfico de retenção do vídeo de apresentação"
         className="block h-full min-h-0 w-full"
@@ -2247,7 +2385,7 @@ const VideoRetentionLineChart = ({
 
           return (
             <text
-              className="fill-muted text-[10px] font-black"
+              className="fill-muted text-[10px] font-medium"
               dominantBaseline="middle"
               key={label}
               x={padding.left - 12}
@@ -2264,7 +2402,7 @@ const VideoRetentionLineChart = ({
           fill="none"
           strokeLinecap="round"
           strokeLinejoin="round"
-          strokeWidth="3"
+          strokeWidth="2.4"
         />
         {playbackX === null ? null : (
           <g>
@@ -2273,13 +2411,18 @@ const VideoRetentionLineChart = ({
               opacity="0.72"
               strokeDasharray="4 5"
               strokeLinecap="round"
-              strokeWidth="2"
+              strokeWidth="1.7"
               x1={playbackX}
               x2={playbackX}
               y1={padding.top}
               y2={padding.top + innerHeight}
             />
-            <circle className="fill-primary" cx={playbackX} cy={padding.top + innerHeight} r="4" />
+            <circle
+              className="fill-primary"
+              cx={playbackX}
+              cy={padding.top + innerHeight}
+              r="3.2"
+            />
           </g>
         )}
         {xAxisLabels.map((bucket) => {
@@ -2288,7 +2431,7 @@ const VideoRetentionLineChart = ({
 
           return (
             <text
-              className="fill-muted text-[10px] font-black"
+              className="fill-muted text-[10px] font-medium"
               key={bucket.label}
               textAnchor="middle"
               x={x}
@@ -2312,7 +2455,7 @@ const VideoSummaryMetric = ({
   label: string;
   value: string;
 }) => (
-  <div className="min-w-0">
+  <div className="min-w-0 rounded-2xl border border-border/70 bg-surface-muted/50 p-3">
     <p className="text-xs font-black text-muted">{label}</p>
     <p className="mt-1 text-2xl font-black leading-none text-foreground">{value}</p>
     <MetricComparisonLine className="mt-2" comparison={comparison} />
@@ -2352,52 +2495,54 @@ const StatisticsVideoCard = ({
         Análises do vídeo de apresentação
       </h2>
 
-      <div className="mt-4 grid gap-x-5 gap-y-4 md:grid-cols-[minmax(136px,158px)_minmax(0,1fr)] md:items-start 2xl:grid-cols-[minmax(150px,158px)_minmax(0,1fr)]">
-        <div className="mx-auto aspect-[4/5] h-[clamp(190px,12vw,220px)] max-w-full overflow-hidden rounded-[1.25rem] border border-border bg-black md:mx-0">
-          {videoSrc ? (
-            <>
-              {/* biome-ignore lint/a11y/useMediaCaption: o backend ainda não expõe arquivo de legenda para o vídeo do perfil. */}
-              <video
-                aria-label={`Miniplayer do vídeo de apresentação de ${detail.header.name}`}
-                className="h-full w-full bg-black object-cover"
-                controls
-                onDurationChange={(event) => updateVideoDuration(event.currentTarget.duration)}
-                onLoadedMetadata={(event) => {
-                  updateVideoDuration(event.currentTarget.duration);
-                  updateVideoCurrentTime(event.currentTarget.currentTime);
-                }}
-                onSeeked={(event) => updateVideoCurrentTime(event.currentTarget.currentTime)}
-                onTimeUpdate={(event) => updateVideoCurrentTime(event.currentTarget.currentTime)}
-                playsInline
-                poster={cover || undefined}
-                preload="metadata"
-                src={videoSrc}
-              />
-            </>
-          ) : (
-            <div className="grid h-full place-items-center bg-surface-muted p-4 text-center">
-              {cover ? (
-                <div className="relative h-full w-full overflow-hidden rounded-2xl">
-                  <Image
-                    alt={`Capa do vídeo de apresentação de ${detail.header.name}`}
-                    className="object-cover"
-                    fill
-                    sizes="(min-width: 1536px) 180px, 160px"
-                    src={cover}
-                    unoptimized={isPublicAdminMediaSrc(cover)}
-                  />
-                </div>
-              ) : (
-                <div className="grid gap-2 text-primary">
-                  <Video aria-hidden className="mx-auto h-10 w-10" />
-                  <span className="text-xs font-black text-muted">Nenhum vídeo cadastrado</span>
-                </div>
-              )}
-            </div>
-          )}
+      <div className="mt-4 grid gap-4 xl:grid-cols-[minmax(150px,190px)_minmax(0,1fr)_minmax(220px,280px)] xl:items-stretch">
+        <div className="order-1 min-w-0">
+          <div className="mx-auto aspect-[9/16] w-full max-w-[176px] overflow-hidden rounded-[1.35rem] border border-border bg-black shadow-sm xl:mx-0 xl:max-w-[190px]">
+            {videoSrc ? (
+              <>
+                {/* biome-ignore lint/a11y/useMediaCaption: o backend ainda não expõe arquivo de legenda para o vídeo do perfil. */}
+                <video
+                  aria-label={`Miniplayer do vídeo de apresentação de ${detail.header.name}`}
+                  className="h-full w-full bg-black object-cover"
+                  controls
+                  onDurationChange={(event) => updateVideoDuration(event.currentTarget.duration)}
+                  onLoadedMetadata={(event) => {
+                    updateVideoDuration(event.currentTarget.duration);
+                    updateVideoCurrentTime(event.currentTarget.currentTime);
+                  }}
+                  onSeeked={(event) => updateVideoCurrentTime(event.currentTarget.currentTime)}
+                  onTimeUpdate={(event) => updateVideoCurrentTime(event.currentTarget.currentTime)}
+                  playsInline
+                  poster={cover || undefined}
+                  preload="metadata"
+                  src={videoSrc}
+                />
+              </>
+            ) : (
+              <div className="grid h-full place-items-center bg-surface-muted p-4 text-center">
+                {cover ? (
+                  <div className="relative h-full w-full overflow-hidden rounded-2xl">
+                    <Image
+                      alt={`Capa do vídeo de apresentação de ${detail.header.name}`}
+                      className="object-cover"
+                      fill
+                      sizes="(min-width: 1280px) 190px, 176px"
+                      src={cover}
+                      unoptimized={isPublicAdminMediaSrc(cover)}
+                    />
+                  </div>
+                ) : (
+                  <div className="grid gap-2 text-primary">
+                    <Video aria-hidden className="mx-auto h-10 w-10" />
+                    <span className="text-xs font-black text-muted">Nenhum vídeo cadastrado</span>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
         </div>
 
-        <div className="min-w-0">
+        <div className="order-3 min-w-0 rounded-[1.5rem] border border-border/70 bg-surface-muted/40 p-3 sm:p-4 xl:order-2">
           <VideoRetentionLineChart
             currentTimeSeconds={videoCurrentTimeSeconds}
             durationSeconds={videoDurationSeconds}
@@ -2405,26 +2550,28 @@ const StatisticsVideoCard = ({
           />
         </div>
 
-        <div className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-3 md:col-span-2">
-          <VideoSummaryMetric
-            comparison={video.comparisons.sessions}
-            label="Visualizações"
-            value={numberFormatter.format(video.metrics.sessions)}
-          />
-          <VideoSummaryMetric
-            comparison={video.comparisons.replay_rate_percent}
-            label="Taxa de replays"
-            value={`${video.metrics.replay_rate_percent.toLocaleString("pt-BR", {
-              maximumFractionDigits: 1,
-            })}%`}
-          />
-          <VideoSummaryMetric
-            comparison={video.comparisons.average_retention_percent}
-            label="Retenção média"
-            value={`${video.metrics.average_retention_percent.toLocaleString("pt-BR", {
-              maximumFractionDigits: 1,
-            })}%`}
-          />
+        <div className="order-2 min-w-0 xl:order-3">
+          <div className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-3 xl:grid-cols-1">
+            <VideoSummaryMetric
+              comparison={video.comparisons.sessions}
+              label="Visualizações"
+              value={numberFormatter.format(video.metrics.sessions)}
+            />
+            <VideoSummaryMetric
+              comparison={video.comparisons.replay_rate_percent}
+              label="Taxa de replays"
+              value={`${video.metrics.replay_rate_percent.toLocaleString("pt-BR", {
+                maximumFractionDigits: 1,
+              })}%`}
+            />
+            <VideoSummaryMetric
+              comparison={video.comparisons.average_retention_percent}
+              label="Retenção média"
+              value={`${video.metrics.average_retention_percent.toLocaleString("pt-BR", {
+                maximumFractionDigits: 1,
+              })}%`}
+            />
+          </div>
         </div>
       </div>
     </CardShell>
@@ -2432,23 +2579,58 @@ const StatisticsVideoCard = ({
 };
 
 const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: string }) => {
-  const [businessStatisticsPeriod, setBusinessStatisticsPeriod] =
+  const [businessStatisticsSelectedPeriod, setBusinessStatisticsSelectedPeriod] =
     useState<StatisticsPeriodValue>("week");
-  const [businessStatisticsRange, setBusinessStatisticsRange] = useState<StatisticsCustomRange>(
-    () => getStatisticsRangeForPeriod("week", detail.header.created_at),
-  );
-  const [communityStatisticsPeriod, setCommunityStatisticsPeriod] =
+  const [businessStatisticsAppliedPeriod, setBusinessStatisticsAppliedPeriod] =
     useState<StatisticsPeriodValue>("week");
-  const [communityStatisticsRange, setCommunityStatisticsRange] = useState<StatisticsCustomRange>(
-    () => getStatisticsRangeForPeriod("week", detail.header.created_at),
+  const [businessStatisticsDraftRange, setBusinessStatisticsDraftRange] =
+    useState<StatisticsCustomRange>(() =>
+      getStatisticsRangeForPeriod("week", detail.header.created_at),
+    );
+  const [businessStatisticsAppliedRange, setBusinessStatisticsAppliedRange] =
+    useState<StatisticsCustomRange>(() =>
+      getStatisticsRangeForPeriod("week", detail.header.created_at),
+    );
+  const [businessStatisticsRangeError, setBusinessStatisticsRangeError] = useState<string | null>(
+    null,
   );
+  const [communityStatisticsSelectedPeriod, setCommunityStatisticsSelectedPeriod] =
+    useState<StatisticsPeriodValue>("week");
+  const [communityStatisticsAppliedPeriod, setCommunityStatisticsAppliedPeriod] =
+    useState<StatisticsPeriodValue>("week");
+  const [communityStatisticsDraftRange, setCommunityStatisticsDraftRange] =
+    useState<StatisticsCustomRange>(() =>
+      getStatisticsRangeForPeriod("week", detail.header.created_at),
+    );
+  const [communityStatisticsAppliedRange, setCommunityStatisticsAppliedRange] =
+    useState<StatisticsCustomRange>(() =>
+      getStatisticsRangeForPeriod("week", detail.header.created_at),
+    );
+  const [communityStatisticsRangeError, setCommunityStatisticsRangeError] = useState<string | null>(
+    null,
+  );
+  const [communityStatisticsSelectedCommunity, setCommunityStatisticsSelectedCommunity] =
+    useState("all");
   const businessStatisticsPeriodQuery = useMemo(
-    () => buildStatisticsPeriodQuery(businessStatisticsPeriod, businessStatisticsRange),
-    [businessStatisticsPeriod, businessStatisticsRange],
+    () =>
+      buildStatisticsPeriodQuery(businessStatisticsAppliedPeriod, businessStatisticsAppliedRange),
+    [businessStatisticsAppliedPeriod, businessStatisticsAppliedRange],
   );
   const communityStatisticsPeriodQuery = useMemo(
-    () => buildStatisticsPeriodQuery(communityStatisticsPeriod, communityStatisticsRange),
-    [communityStatisticsPeriod, communityStatisticsRange],
+    () => ({
+      ...buildStatisticsPeriodQuery(
+        communityStatisticsAppliedPeriod,
+        communityStatisticsAppliedRange,
+      ),
+      ...(communityStatisticsSelectedCommunity !== "all"
+        ? { community: communityStatisticsSelectedCommunity }
+        : {}),
+    }),
+    [
+      communityStatisticsAppliedPeriod,
+      communityStatisticsAppliedRange,
+      communityStatisticsSelectedCommunity,
+    ],
   );
   const businessStatisticsQuery = useAdminPsychologistStatistics(id, businessStatisticsPeriodQuery);
   const communityStatisticsQuery = useAdminPsychologistStatistics(
@@ -2499,36 +2681,98 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: st
   const isCommunityRefreshing =
     communityStatisticsQuery.isFetching && Boolean(communityStatisticsQuery.data);
   const handleBusinessStatisticsPeriodChange = (period: StatisticsPeriodPreset) => {
-    setBusinessStatisticsPeriod(period);
-    setBusinessStatisticsRange(getStatisticsRangeForPeriod(period, detail.header.created_at));
+    const nextRange = getStatisticsRangeForPeriod(period, detail.header.created_at);
+    setBusinessStatisticsRangeError(null);
+    setBusinessStatisticsSelectedPeriod(period);
+    setBusinessStatisticsAppliedPeriod(period);
+    setBusinessStatisticsDraftRange(nextRange);
+    setBusinessStatisticsAppliedRange(nextRange);
   };
   const handleBusinessStatisticsDateChange = (
     field: keyof StatisticsCustomRange,
     value: string,
   ) => {
-    if (!value) return;
-
-    setBusinessStatisticsPeriod("custom");
-    setBusinessStatisticsRange((current) => ({
+    setBusinessStatisticsRangeError(null);
+    setBusinessStatisticsSelectedPeriod("custom");
+    setBusinessStatisticsDraftRange((current) => ({
       ...current,
       [field]: value,
     }));
   };
+  const commitBusinessStatisticsRange = () => {
+    if (businessStatisticsSelectedPeriod !== "custom") return;
+
+    if (!isValidStatisticsRange(businessStatisticsDraftRange)) {
+      setBusinessStatisticsRangeError(
+        "Informe um período personalizado completo, com data inicial menor ou igual à final.",
+      );
+      return;
+    }
+
+    setBusinessStatisticsRangeError(null);
+    setBusinessStatisticsAppliedPeriod("custom");
+    setBusinessStatisticsAppliedRange(businessStatisticsDraftRange);
+  };
+  const handleBusinessStatisticsDateControlsBlur = (event: FocusEvent<HTMLDivElement>) => {
+    const currentTarget = event.currentTarget;
+    const nextFocusedElement = event.relatedTarget as Node | null;
+
+    if (nextFocusedElement && currentTarget.contains(nextFocusedElement)) return;
+
+    window.setTimeout(() => {
+      const activeElement = document.activeElement;
+
+      if (activeElement && currentTarget.contains(activeElement)) return;
+
+      commitBusinessStatisticsRange();
+    }, 0);
+  };
   const handleCommunityStatisticsPeriodChange = (period: StatisticsPeriodPreset) => {
-    setCommunityStatisticsPeriod(period);
-    setCommunityStatisticsRange(getStatisticsRangeForPeriod(period, detail.header.created_at));
+    const nextRange = getStatisticsRangeForPeriod(period, detail.header.created_at);
+    setCommunityStatisticsRangeError(null);
+    setCommunityStatisticsSelectedPeriod(period);
+    setCommunityStatisticsAppliedPeriod(period);
+    setCommunityStatisticsDraftRange(nextRange);
+    setCommunityStatisticsAppliedRange(nextRange);
   };
   const handleCommunityStatisticsDateChange = (
     field: keyof StatisticsCustomRange,
     value: string,
   ) => {
-    if (!value) return;
-
-    setCommunityStatisticsPeriod("custom");
-    setCommunityStatisticsRange((current) => ({
+    setCommunityStatisticsRangeError(null);
+    setCommunityStatisticsSelectedPeriod("custom");
+    setCommunityStatisticsDraftRange((current) => ({
       ...current,
       [field]: value,
     }));
+  };
+  const commitCommunityStatisticsRange = () => {
+    if (communityStatisticsSelectedPeriod !== "custom") return;
+
+    if (!isValidStatisticsRange(communityStatisticsDraftRange)) {
+      setCommunityStatisticsRangeError(
+        "Informe um período personalizado completo, com data inicial menor ou igual à final.",
+      );
+      return;
+    }
+
+    setCommunityStatisticsRangeError(null);
+    setCommunityStatisticsAppliedPeriod("custom");
+    setCommunityStatisticsAppliedRange(communityStatisticsDraftRange);
+  };
+  const handleCommunityStatisticsDateControlsBlur = (event: FocusEvent<HTMLDivElement>) => {
+    const currentTarget = event.currentTarget;
+    const nextFocusedElement = event.relatedTarget as Node | null;
+
+    if (nextFocusedElement && currentTarget.contains(nextFocusedElement)) return;
+
+    window.setTimeout(() => {
+      const activeElement = document.activeElement;
+
+      if (activeElement && currentTarget.contains(activeElement)) return;
+
+      commitCommunityStatisticsRange();
+    }, 0);
   };
 
   if (isInitialStatisticsLoading) {
@@ -2590,6 +2834,22 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: st
 
     return metric ? [{ config, metric }] : [];
   });
+  const communityRankingMetric = communityMetricMap.get("ranking");
+  const communityFilterOptions = [
+    { id: "all", label: "Todas" },
+    ...communityStatistics.community.communities.map((community) => ({
+      id: community.id,
+      label: community.name,
+    })),
+  ];
+  const filteredCommunityRows =
+    communityStatisticsSelectedCommunity === "all"
+      ? communityStatistics.community.communities
+      : communityStatistics.community.communities.filter(
+          (community) =>
+            community.id === communityStatisticsSelectedCommunity ||
+            community.slug === communityStatisticsSelectedCommunity,
+        );
   const visibleBusinessChartKeys = businessCards
     .filter(
       ({ config, metric }) => visibleBusinessMetricIds.includes(config.id) && metric.available,
@@ -2641,19 +2901,18 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: st
         </div>
         <StatisticsPeriodControls
           idPrefix="business-statistics"
+          onDateControlsBlur={handleBusinessStatisticsDateControlsBlur}
           onDateChange={handleBusinessStatisticsDateChange}
           onPeriodChange={handleBusinessStatisticsPeriodChange}
-          period={businessStatisticsPeriod}
-          range={businessStatisticsRange}
+          period={businessStatisticsSelectedPeriod}
+          range={businessStatisticsDraftRange}
+          rangeError={businessStatisticsRangeError}
         />
       </div>
 
-      <section
-        aria-busy={isBusinessRefreshing}
-        className="grid items-stretch gap-5 xl:grid-cols-[minmax(0,1.12fr)_minmax(440px,0.88fr)]"
-      >
-        <CardShell className="min-w-0 p-5 xl:h-full">
-          <fieldset className="grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-2 2xl:grid-cols-4">
+      <section aria-busy={isBusinessRefreshing} className="grid gap-5">
+        <CardShell className="min-w-0 p-5">
+          <fieldset className="grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-5">
             <legend className="sr-only">Contadores exibidos no gráfico</legend>
             {businessCards.map(({ config, metric }) => (
               <StatisticsMetricToggleCard
@@ -2672,11 +2931,7 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: st
           />
         </CardShell>
 
-        <StatisticsVideoCard
-          className="xl:self-start"
-          detail={detail}
-          statistics={businessStatistics}
-        />
+        <StatisticsVideoCard detail={detail} statistics={businessStatistics} />
       </section>
 
       <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
@@ -2689,19 +2944,47 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: st
             </span>
           ) : null}
         </div>
-        <StatisticsPeriodControls
-          idPrefix="community-statistics"
-          onDateChange={handleCommunityStatisticsDateChange}
-          onPeriodChange={handleCommunityStatisticsPeriodChange}
-          period={communityStatisticsPeriod}
-          range={communityStatisticsRange}
-        />
+        <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-end lg:justify-end">
+          <label
+            className="grid gap-1 text-xs font-black text-muted"
+            htmlFor="community-statistics-community"
+          >
+            Comunidade
+            <span className="relative">
+              <select
+                className="h-10 min-w-[210px] appearance-none rounded-2xl border border-border bg-surface py-0 pl-3 pr-11 text-sm font-black text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+                id="community-statistics-community"
+                onChange={(event) => setCommunityStatisticsSelectedCommunity(event.target.value)}
+                value={communityStatisticsSelectedCommunity}
+              >
+                {communityFilterOptions.map((option) => (
+                  <option key={option.id} value={option.id}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown
+                aria-hidden
+                className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground"
+              />
+            </span>
+          </label>
+          <StatisticsPeriodControls
+            idPrefix="community-statistics"
+            onDateControlsBlur={handleCommunityStatisticsDateControlsBlur}
+            onDateChange={handleCommunityStatisticsDateChange}
+            onPeriodChange={handleCommunityStatisticsPeriodChange}
+            period={communityStatisticsSelectedPeriod}
+            range={communityStatisticsDraftRange}
+            rangeError={communityStatisticsRangeError}
+          />
+        </div>
       </div>
 
       <section aria-busy={isCommunityRefreshing} className="grid gap-5">
         <CardShell className="p-5">
-          <fieldset className="grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4 2xl:grid-cols-7">
-            <legend className="sr-only">Contadores de comunidade exibidos no gráfico</legend>
+          <fieldset className="grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-4">
+            <legend className="sr-only">Contadores de comunidade</legend>
             {communityCards.map(({ config, metric }) => (
               <StatisticsMetricToggleCard
                 active={visibleCommunityMetricIds.includes(config.id) && metric.available}
@@ -2711,6 +2994,14 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: st
                 onToggle={() => toggleCommunityMetric(config.id)}
               />
             ))}
+            {communityRankingMetric ? (
+              <StatisticsStaticMetricCard
+                icon={Trophy}
+                iconClassName="text-amber-500"
+                iconToneClassName="bg-amber-50"
+                metric={communityRankingMetric}
+              />
+            ) : null}
           </fieldset>
 
           <StatisticsSeriesChart
@@ -2721,36 +3012,74 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: st
 
         <CardShell className="p-5">
           <h2 className="text-xl font-black text-foreground">Comunidades em que participa</h2>
-          {communityStatistics.community.communities.length === 0 ? (
+          {filteredCommunityRows.length === 0 ? (
             <p className="mt-4 rounded-2xl bg-surface-muted p-4 text-sm font-bold text-muted">
-              Nenhuma participação real em comunidade foi encontrada.
+              Nenhuma participação real foi encontrada para o filtro de comunidade selecionado.
             </p>
           ) : (
-            <div className="mt-4 divide-y divide-border">
-              {communityStatistics.community.communities.map((community) => (
-                <div className="grid gap-3 py-4 sm:grid-cols-[1fr_auto]" key={community.id}>
-                  <div>
-                    <p className="flex items-center gap-2 font-black text-foreground">
-                      <span
-                        className="h-3 w-3 rounded-full bg-primary"
-                        style={community.color ? { backgroundColor: community.color } : undefined}
+            <div className="mt-4">
+              <div className="hidden border-b border-border px-1 pb-3 text-xs font-black uppercase tracking-[0.12em] text-muted md:grid md:grid-cols-[minmax(360px,1fr)_repeat(4,minmax(140px,1fr))] md:items-center md:gap-8">
+                <span>Comunidade</span>
+                <span className="text-center">Membro desde</span>
+                <span className="text-center">Posts</span>
+                <span className="text-center">Respostas</span>
+                <span className="text-center">Ranking</span>
+              </div>
+              <div className="divide-y divide-border">
+                {filteredCommunityRows.map((community) => (
+                  <div
+                    className="grid gap-4 py-4 md:grid-cols-[minmax(360px,1fr)_repeat(4,minmax(140px,1fr))] md:items-center md:gap-8"
+                    key={community.id}
+                  >
+                    <div className="flex min-w-0 items-center gap-3">
+                      <CommunityAvatar
+                        color={community.color}
+                        name={community.name}
+                        src={community.avatar_url}
                       />
-                      {community.name}
-                    </p>
-                    <p className="mt-1 text-xs font-bold text-muted">
-                      Membro desde {formatDate(community.member_since)}
-                    </p>
+                      <div className="min-w-0">
+                        <p className="truncate font-black text-foreground" title={community.name}>
+                          {community.name}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div>
+                      <span className="block text-xs font-black uppercase tracking-[0.12em] text-muted md:hidden">
+                        Membro desde
+                      </span>
+                      <span className="mt-1 block text-sm font-black text-foreground md:mt-0 md:text-center">
+                        {formatDate(community.member_since)}
+                      </span>
+                    </div>
+
+                    <div>
+                      <span className="block text-xs font-black uppercase tracking-[0.12em] text-muted md:hidden">
+                        Posts
+                      </span>
+                      <span className="mt-1 block text-sm font-black text-foreground md:mt-0 md:text-center">
+                        {numberFormatter.format(community.posts)}
+                      </span>
+                    </div>
+
+                    <div>
+                      <span className="block text-xs font-black uppercase tracking-[0.12em] text-muted md:hidden">
+                        Respostas
+                      </span>
+                      <span className="mt-1 block text-sm font-black text-foreground md:mt-0 md:text-center">
+                        {numberFormatter.format(community.replies)}
+                      </span>
+                    </div>
+
+                    <div className="md:flex md:justify-center">
+                      <span className="mb-1 block text-xs font-black uppercase tracking-[0.12em] text-muted md:hidden">
+                        Ranking
+                      </span>
+                      <CommunityRankingBadge ranking={community.ranking} />
+                    </div>
                   </div>
-                  <div className="flex gap-2 text-xs font-black">
-                    <Badge className="bg-surface-muted text-muted">
-                      {numberFormatter.format(community.posts)} posts
-                    </Badge>
-                    <Badge className="bg-surface-muted text-muted">
-                      {numberFormatter.format(community.replies)} respostas
-                    </Badge>
-                  </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           )}
         </CardShell>
@@ -3087,7 +3416,7 @@ const ratingStarValues = [1, 2, 3, 4, 5] as const;
 const RatingStars = ({ rating, size = "h-4 w-4" }: { rating: number; size?: string }) => (
   <span
     aria-label={`${rating} de 5 estrelas`}
-    className="inline-flex items-center gap-0.5"
+    className="inline-flex items-center gap-1"
     role="img"
   >
     {ratingStarValues.map((star) => (
@@ -3120,7 +3449,7 @@ const SmallAvatar = ({ name, src }: { name: string; src: string | null }) => {
   }
 
   return (
-    <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-primary-soft text-sm font-black text-primary">
+    <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-primary-soft text-sm font-semibold text-primary">
       {initials(name)}
     </span>
   );
@@ -3128,16 +3457,14 @@ const SmallAvatar = ({ name, src }: { name: string; src: string | null }) => {
 
 const ReviewsTab = ({ id }: { id: string }) => {
   const [rating, setRating] = useState("all");
-  const [status, setStatus] = useState("all");
   const [page, setPage] = useState(1);
   const queryInput = useMemo<AdminPsychologistReviewsQuery>(
     () => ({
       limit: 5,
       page,
       rating: rating === "all" ? undefined : Number(rating),
-      status: status === "all" ? undefined : status,
     }),
-    [page, rating, status],
+    [page, rating],
   );
   const query = useAdminPsychologistReviews(id, queryInput);
   const errorMessage = query.error ? resolveApiError(query.error) : null;
@@ -3150,160 +3477,135 @@ const ReviewsTab = ({ id }: { id: string }) => {
 
   const reviews = query.data;
   const maxDistribution = Math.max(1, ...reviews.summary.distribution.map((item) => item.count));
+  const ratingFilterLabel =
+    rating === "all" ? null : `${rating} estrela${rating === "1" ? "" : "s"}`;
 
   return (
     <div className="space-y-5" data-psychologist-detail-tab="avaliacoes">
-      <div className="rounded-2xl border border-primary/20 bg-primary-soft p-4 text-sm font-bold text-muted">
-        Avaliações são somente leitura no Admin. Não há ação de editar, excluir, aprovar, reprovar
-        ou responder por aqui.
-      </div>
-
-      <section className="grid gap-5 xl:grid-cols-[0.8fr_1.2fr]">
-        <CardShell className="p-5">
-          <h2 className="text-lg font-black text-foreground">Avaliação geral</h2>
-          <div className="mt-5 flex flex-col gap-4 sm:flex-row sm:items-center">
-            <div>
-              <p className="text-6xl font-black text-foreground">
-                {reviews.summary.rating_avg.toLocaleString("pt-BR", {
-                  maximumFractionDigits: 1,
-                  minimumFractionDigits: 1,
-                })}
-              </p>
-              <RatingStars rating={reviews.summary.rating_avg} size="h-6 w-6" />
-              <p className="mt-2 text-sm font-bold text-muted">
-                {numberFormatter.format(reviews.summary.rating_count)} avaliações reais
-              </p>
+      <CardShell className="p-5 sm:p-6">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">
+              leitura consolidada
+            </p>
+            <h2 className="mt-2 text-xl font-semibold tracking-[-0.02em] text-foreground">
+              Avaliação geral
+            </h2>
+          </div>
+          {ratingFilterLabel ? (
+            <button
+              className="self-start rounded-full bg-primary-soft px-3 py-2 text-xs font-semibold text-primary transition hover:bg-primary/10 sm:self-auto"
+              onClick={() => {
+                setRating("all");
+                setPage(1);
+              }}
+              type="button"
+            >
+              Ver todas as avaliações
+            </button>
+          ) : null}
+        </div>
+        <div className="mt-6 grid gap-6 lg:grid-cols-[160px_1fr] lg:items-center">
+          <div className="rounded-[1.5rem] border border-border/70 bg-surface-muted/50 p-5">
+            <p className="text-6xl font-semibold tracking-[-0.06em] text-foreground">
+              {reviews.summary.rating_avg.toLocaleString("pt-BR", {
+                maximumFractionDigits: 1,
+                minimumFractionDigits: 1,
+              })}
+            </p>
+            <div className="mt-2">
+              <RatingStars rating={reviews.summary.rating_avg} size="h-5 w-5" />
             </div>
-            <div className="w-full flex-1 space-y-3">
-              {reviews.summary.distribution.map((item) => (
-                <div
-                  className="grid grid-cols-[76px_1fr_44px] items-center gap-3"
+            <p className="mt-3 text-sm font-medium leading-5 text-muted">
+              {numberFormatter.format(reviews.summary.rating_count)} avaliações reais
+            </p>
+          </div>
+          <div className="w-full space-y-1.5">
+            {reviews.summary.distribution.map((item) => {
+              const isSelected = rating === String(item.rating);
+
+              return (
+                <button
+                  aria-pressed={isSelected}
+                  className={cn(
+                    "grid w-full grid-cols-[88px_1fr_36px] items-center gap-3 rounded-2xl px-2.5 py-2 text-left transition hover:bg-primary-soft focus:outline-none focus:ring-2 focus:ring-primary/30 sm:grid-cols-[104px_1fr_40px]",
+                    isSelected ? "bg-primary-soft" : "bg-transparent",
+                  )}
                   key={item.rating}
+                  onClick={() => {
+                    setRating(isSelected ? "all" : String(item.rating));
+                    setPage(1);
+                  }}
+                  type="button"
                 >
-                  <span className="text-sm font-black text-foreground">{item.rating} estrelas</span>
-                  <span className="h-2 overflow-hidden rounded-full bg-surface-muted">
+                  <span className="whitespace-nowrap text-sm font-semibold text-foreground">
+                    {item.rating} estrelas
+                  </span>
+                  <span className="h-1.5 overflow-hidden rounded-full bg-surface-muted">
                     <span
-                      className="block h-full rounded-full bg-primary"
+                      className="block h-full rounded-full bg-primary/90"
                       style={{ width: `${(item.count / maxDistribution) * 100}%` }}
                     />
                   </span>
-                  <span className="text-right text-sm font-black text-muted">
+                  <span className="text-right text-sm font-semibold text-muted">
                     {numberFormatter.format(item.count)}
                   </span>
-                </div>
-              ))}
-            </div>
+                </button>
+              );
+            })}
           </div>
-        </CardShell>
-
-        <CardShell className="p-5">
-          <h2 className="text-lg font-black text-foreground">Status reais</h2>
-          {reviews.summary.statuses.length === 0 ? (
-            <p className="mt-3 rounded-2xl bg-surface-muted p-4 text-sm font-bold text-muted">
-              Nenhuma avaliação real encontrada para este psicólogo.
-            </p>
-          ) : (
-            <div className="mt-4 grid gap-3 sm:grid-cols-2">
-              {reviews.summary.statuses.map((item) => (
-                <div
-                  className="rounded-2xl border border-border bg-surface-muted/50 p-4"
-                  key={item.id}
-                >
-                  <p className="text-sm font-black text-muted">{item.label}</p>
-                  <p className="mt-2 text-3xl font-black text-foreground">
-                    {numberFormatter.format(item.count)}
-                  </p>
-                </div>
-              ))}
-            </div>
-          )}
-        </CardShell>
-      </section>
-
-      <CardShell className="p-4">
-        <div className="grid gap-3 md:grid-cols-[1fr_1fr_auto] md:items-end">
-          <label className="block text-sm font-black text-muted">
-            Nota
-            <select
-              className="mt-2 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground"
-              onChange={(event) => {
-                setRating(event.target.value);
-                setPage(1);
-              }}
-              value={rating}
-            >
-              {reviews.filters.ratings.map((option) => (
-                <option key={option.id} value={option.id}>
-                  {option.label} ({numberFormatter.format(option.count)})
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="block text-sm font-black text-muted">
-            Status
-            <select
-              className="mt-2 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground"
-              onChange={(event) => {
-                setStatus(event.target.value);
-                setPage(1);
-              }}
-              value={status}
-            >
-              {reviews.filters.statuses.map((option) => (
-                <option key={option.id} value={option.id}>
-                  {option.label} ({numberFormatter.format(option.count)})
-                </option>
-              ))}
-            </select>
-          </label>
-          <Badge className="h-11 justify-center bg-primary-soft px-4 text-primary">
-            {reviews.active_filters_count} filtros ativos
-          </Badge>
         </div>
       </CardShell>
 
       <CardShell className="overflow-hidden">
-        <div className="flex flex-col gap-2 border-b border-border p-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-3 border-b border-border p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
           <div>
-            <h2 className="text-xl font-black text-foreground">Avaliações e depoimentos</h2>
-            <p className="mt-1 text-sm text-muted">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">
+              depoimentos reais
+            </p>
+            <h2 className="mt-2 text-xl font-semibold tracking-[-0.02em] text-foreground">
+              Avaliações e depoimentos
+            </h2>
+            <p className="mt-1 text-sm font-medium leading-6 text-muted">
               Mostrando {numberFormatter.format(reviews.data.length)} de{" "}
-              {numberFormatter.format(reviews.count)} avaliações filtradas.
+              {numberFormatter.format(reviews.count)} avaliações
+              {ratingFilterLabel ? ` com ${ratingFilterLabel}` : " filtradas"}.
             </p>
           </div>
-          <Badge className="bg-primary-soft text-primary">Somente leitura</Badge>
+          <Badge className="bg-primary-soft text-primary font-semibold">Somente leitura</Badge>
         </div>
 
         {reviews.data.length === 0 ? (
-          <p className="p-5 text-sm font-bold text-muted">
+          <p className="p-5 text-sm font-medium text-muted">
             Nenhuma avaliação real encontrada para os filtros atuais.
           </p>
         ) : (
           <div className="divide-y divide-border">
             {reviews.data.map((item: AdminPsychologistReviewItem) => (
-              <article className="p-4" key={item.id}>
-                <div className="flex gap-3">
+              <article className="p-5 sm:p-6" key={item.id}>
+                <div className="flex gap-4">
                   <SmallAvatar name={item.author.name} src={item.author.avatar} />
                   <div className="min-w-0 flex-1">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <h3 className="font-black text-foreground">{item.author.name}</h3>
-                      <span className="text-xs font-bold text-muted">
+                    <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
+                      <h3 className="text-base font-semibold tracking-[-0.01em] text-foreground">
+                        {item.author.name}
+                      </h3>
+                      <span className="text-xs font-medium text-muted">
                         {formatDate(item.created_at)}
                       </span>
-                      <Badge className="bg-surface-muted text-muted">{item.status_label}</Badge>
                     </div>
                     <div className="mt-1">
                       <RatingStars rating={item.rating} />
                     </div>
-                    <p className="mt-3 text-sm font-bold leading-6 text-foreground">
+                    <p className="mt-3 text-[15px] font-medium leading-7 text-foreground">
                       {item.comment || "Avaliação sem comentário textual."}
                     </p>
                     {item.response ? (
-                      <div className="mt-4 rounded-2xl bg-primary-soft p-4">
-                        <p className="text-xs font-black uppercase tracking-wide text-primary">
+                      <div className="mt-4 rounded-2xl border border-primary/10 bg-primary-soft/70 p-4">
+                        <p className="text-xs font-semibold uppercase tracking-[0.14em] text-primary">
                           Resposta do psicólogo · {formatDate(item.responded_at)}
                         </p>
-                        <p className="mt-2 text-sm font-bold leading-6 text-foreground">
+                        <p className="mt-2 text-sm font-medium leading-6 text-foreground">
                           {item.response}
                         </p>
                       </div>
@@ -6830,7 +7132,7 @@ const Content = ({
   id: string;
   tab: ActiveTab;
 }) => (
-  <main className="space-y-5" data-psychologist-detail-id={id}>
+  <main className="space-y-7" data-psychologist-detail-id={id}>
     <DetailHeader detail={detail} tab={tab} />
 
     {tab === "perfil" ? (
@@ -6873,7 +7175,7 @@ export const AdminPsychologistDetailClient = ({ id }: { id: string }) => {
   const errorMessage = query.error ? resolveApiError(query.error) : null;
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-7">
       {query.isLoading ? <LoadingState /> : null}
       {query.isError && errorMessage ? (
         <ErrorState message={errorMessage} onRetry={() => void query.refetch()} />

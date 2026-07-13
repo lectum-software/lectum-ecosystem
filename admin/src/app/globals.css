@@ -25,7 +25,63 @@
   --admin-shadow-control: 0 1px 2px rgb(6 16 74 / 4%);
   --admin-radius-card: 22px;
   --admin-radius-control: 16px;
-  --admin-font-sans: Inter, Manrope, Arial, Helvetica, sans-serif;
+  --admin-font-sans: var(--font-manrope), Inter, Arial, Helvetica, sans-serif;
+}
+
+.admin-premium-pilot {
+  --admin-background: #f8fbff;
+  --admin-foreground: #061a3a;
+  --admin-primary: #308ce8;
+  --admin-primary-hover: #1978d0;
+  --admin-primary-soft: #eaf5ff;
+  --admin-surface: #ffffff;
+  --admin-surface-muted: #f3f8ff;
+  --admin-border: #dce8f5;
+  --admin-border-strong: #bfd3ea;
+  --admin-muted: #5e718f;
+  --admin-subtle: #8fa3bf;
+  --admin-sidebar: #ffffff;
+  --admin-sidebar-foreground: #0a2346;
+  --admin-sidebar-muted: #627493;
+  --admin-sidebar-active: #eaf5ff;
+  --admin-overlay: rgb(11 31 55 / 46%);
+  --admin-shadow: 0 1px 2px rgb(11 31 55 / 4%), 0 16px 36px rgb(27 78 122 / 4%);
+  --admin-shadow-soft: 0 1px 2px rgb(11 31 55 / 3%);
+  --admin-shadow-control: 0 1px 2px rgb(11 31 55 / 3%);
+  --admin-radius-card: 28px;
+  --admin-radius-control: 18px;
+  font-synthesis-weight: none;
+  letter-spacing: -0.003em;
+}
+
+.admin-premium-pilot :where(.shadow-admin, .shadow-admin-soft) {
+  box-shadow: var(--admin-shadow-soft);
+}
+
+.admin-premium-pilot :where(.shadow-control) {
+  box-shadow: var(--admin-shadow-control);
+}
+
+.admin-premium-pilot :where(.font-black, .font-extrabold) {
+  font-weight: 650;
+}
+
+.admin-premium-pilot :where(.font-bold) {
+  font-weight: 600;
+}
+
+.admin-premium-pilot :where(h1, h2, h3) {
+  text-wrap: balance;
+  letter-spacing: -0.026em;
+}
+
+.admin-premium-pilot :where(.uppercase) {
+  letter-spacing: 0.1em;
+}
+
+.admin-premium-pilot :where(svg text) {
+  font-weight: 500;
+  letter-spacing: 0;
 }
 
 @theme inline {

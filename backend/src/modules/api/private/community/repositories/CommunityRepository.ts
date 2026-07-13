@@ -1,5 +1,6 @@
 import type { Prisma } from "@/external/generated/prisma/client";
 import prisma, { type ORM } from "@/infra/database/prisma";
+import { ensureCommunityMembership } from "@/utils/community-membership";
 import { getCommunityMentorRankingSignals } from "@/utils/community-mentor-ranking";
 import { getPostIdsWithPsychologistReplies } from "@/utils/community-post-replies";
 import { getMutedPostIds } from "@/utils/post-notification-mute";
@@ -2311,28 +2312,36 @@ export class CommunityRepository implements ICommunityRepository {
     const isPsychologist = data.auth.role === "psicologo";
     const mediaItems = data.b.mediaItems ?? [];
     const firstMediaItem = mediaItems[0];
-    const post = await prisma.community_post.create({
-      data: {
-        community_id: community.id,
-        author_id: data.auth.id!,
-        title: data.b.title.trim(),
-        content: data.b.content.trim(),
-        media_url: firstMediaItem?.mediaUrl.trim() || data.b.mediaUrl?.trim() || null,
-        media_type: firstMediaItem ? "image" : data.b.mediaType || null,
-        media_items:
-          mediaItems.length > 0
-            ? {
-                create: mediaItems.map((mediaItem, index) => ({
-                  media_url: mediaItem.mediaUrl.trim(),
-                  media_type: "image",
-                  position: typeof mediaItem.position === "number" ? mediaItem.position : index,
-                })),
-              }
-            : undefined,
-        anonymous: isPsychologist ? false : data.b.anonymous === true,
-        status: "publicado",
-      },
-      select: postSelect,
+    const post = await prisma.$transaction(async (transaction) => {
+      await ensureCommunityMembership({
+        client: transaction,
+        communityId: community.id,
+        userId: data.auth.id!,
+      });
+
+      return transaction.community_post.create({
+        data: {
+          community_id: community.id,
+          author_id: data.auth.id!,
+          title: data.b.title.trim(),
+          content: data.b.content.trim(),
+          media_url: firstMediaItem?.mediaUrl.trim() || data.b.mediaUrl?.trim() || null,
+          media_type: firstMediaItem ? "image" : data.b.mediaType || null,
+          media_items:
+            mediaItems.length > 0
+              ? {
+                  create: mediaItems.map((mediaItem, index) => ({
+                    media_url: mediaItem.mediaUrl.trim(),
+                    media_type: "image",
+                    position: typeof mediaItem.position === "number" ? mediaItem.position : index,
+                  })),
+                }
+              : undefined,
+          anonymous: isPsychologist ? false : data.b.anonymous === true,
+          status: "publicado",
+        },
+        select: postSelect,
+      });
     });
 
     return toPostResponse(post);
@@ -2349,60 +2358,13 @@ export class CommunityRepository implements ICommunityRepository {
 
     if (!community) return null;
 
-    const existing = await prisma.community_member.findUnique({
-      where: {
-        community_id_user_id: {
-          community_id: community.id,
-          user_id: data.auth.id!,
-        },
-      },
-      select: {
-        deleted: true,
-      },
-    });
-
-    const membership = await prisma.$transaction(async (transaction) => {
-      const item = existing
-        ? await transaction.community_member.update({
-            where: {
-              community_id_user_id: {
-                community_id: community.id,
-                user_id: data.auth.id!,
-              },
-            },
-            data: {
-              deleted: false,
-              deletedAt: null,
-            },
-            select: {
-              createdAt: true,
-            },
-          })
-        : await transaction.community_member.create({
-            data: {
-              community_id: community.id,
-              user_id: data.auth.id!,
-            },
-            select: {
-              createdAt: true,
-            },
-          });
-
-      if (!existing || existing.deleted) {
-        await transaction.community.update({
-          where: {
-            id: community.id,
-          },
-          data: {
-            members_count: {
-              increment: 1,
-            },
-          },
-        });
-      }
-
-      return item;
-    });
+    const membership = await prisma.$transaction((transaction) =>
+      ensureCommunityMembership({
+        client: transaction,
+        communityId: community.id,
+        userId: data.auth.id!,
+      }),
+    );
 
     const postsCount = await prisma.community_post.count({
       where: {

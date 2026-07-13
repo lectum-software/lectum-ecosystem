@@ -143,3 +143,35 @@ Exibir estatísticas de negócio/comunidade e publicações do psicólogo com da
 - Removido o rótulo visível **Retenção do vídeo** da seção de vídeo, preservando somente o gráfico.
 - Os comparativos passaram a exibir datas no formato curto `dd/mm - dd/mm`, sem ano, para reduzir ruído visual.
 - Validações executadas em worktree limpo com apenas esta correção aplicada: `pnpm --dir admin check`, `pnpm --dir admin build` e smoke HTTP local em `/psicologos/test-id?tab=estatisticas`.
+
+### Complemento comunidades em 2026-07-12
+
+- O bloco **Comunidades em que participa** da aba **Estatísticas** passou a exibir avatar real de `community.avatar_url`, nome real de `community.name`, coluna **Membro desde** baseada em `community_member.createdAt` e coluna **Ranking** derivada do ranking real de mentores por comunidade.
+- A UI foi reestruturada em layout mobile-first: em ~390px cada comunidade fica empilhada com rótulos por campo; no desktop a leitura vira grade com colunas **Comunidade**, **Membro desde**, **Posts**, **Respostas** e **Ranking**.
+- O ranking exibe somente a posição `Top #N` do psicólogo no ranking real de Top Mentores da comunidade; quando o psicólogo não é elegível ou não há sinal persistido suficiente, mostra **Sem ranking**, sem estimativa ou mock.
+- O helper de ranking de mentores foi alinhado para considerar compartilhamentos persistidos (`post_share`) na pontuação derivada usada como sinal de ranking.
+- Ajuste posterior: o Admin passou a resolver `/community/icons/*` pelo backend para exibir os avatares reais do catálogo de comunidades, e o layout desktop ganhou mais espaçamento entre **Posts**, **Respostas** e **Ranking**.
+- Não houve alteração de Prisma schema ou migrations; `pnpm --dir backend db:migrate` não foi necessário.
+- Builder/Quick Copy não estava disponível como ferramenta callable no ambiente; foram usados o PNG local `_product/proto/admin/Psicólogos/Detalhes do psicólogo/Estatísticas.png` e o recorte enviado pelo usuário.
+- Validações executadas: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check`, smoke HTTP em `http://localhost:3002/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=estatisticas` e chamada direta do service `showAdminPsychologistStatistics` para confirmar `avatar_url`, `name`, `member_since` e `ranking` no contrato.
+- Validação do ajuste posterior: `pnpm --dir backend check`, `pnpm --dir admin check`, `pnpm --dir admin build`, smoke HTTP local `200` em `/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=estatisticas` e chamada direta do service confirmando avatar/nome reais em comunidade de catálogo; `pnpm --dir backend build` ficou bloqueado por erros TypeScript preexistentes no módulo Admin de denúncias/feedback.
+
+### Complemento regra de Membro desde em 2026-07-12
+
+- A regra de produto de **Membro desde** foi consolidada como data histórica fixa: a primeira vez que o usuário segue/entra na comunidade ou a primeira participação real por post/resposta quando ainda não havia vínculo.
+- Posts e respostas agora garantem a criação/reativação do `community_member` real na mesma transação, sem recalcular `createdAt` quando o vínculo já existe.
+- A leitura Admin usa a menor data real entre `community_member.createdAt`, primeiro post e primeira resposta do psicólogo na comunidade, cobrindo bases legadas sem inventar data.
+- Migration de dados criada para backfill de `community_member` a partir de posts/respostas já existentes e recálculo de `community.members_count`.
+
+
+### Complemento filtro de comunidade e ranking em 2026-07-12
+
+- A secao **Estatisticas de comunidade** ganhou filtro de **Comunidade** com valor padrao **Todas**, sem alterar os filtros independentes de periodo/data de negocio e comunidade.
+- O endpoint real `GET /api/admin/private/psychologists/:id/statistics` passou a aceitar `community` opcional para recalcular posts, respostas, votos, salvamentos, compartilhamentos, comentarios recebidos e serie temporal apenas da comunidade selecionada.
+- O contador **Ranking do psicologo** foi adicionado aos cards da secao: com **Todas** selecionado, a UI informa que e preciso escolher uma comunidade especifica; com comunidade selecionada, exibe a posicao real `#N` quando houver ranking de mentor persistido/derivado e mostra indisponibilidade honesta quando nao houver posicao.
+- A lista **Comunidades em que participa** respeita o filtro selecionado na UI, mantendo dados reais de avatar, nome, membro desde, posts, respostas e ranking, sem estimativa ou mock.
+- Nao houve alteracao em Prisma schema ou migrations nesta correcao; a migration ja presente no workspace pertence ao complemento anterior de backfill de membros.
+- Builder/Quick Copy nao estava disponivel como ferramenta callable no ambiente; foram usados o PNG local `_product/proto/admin/Psicologos/Detalhes do psicologo/Estatisticas.png` e o recorte atual fornecido pelo usuario.
+- Validacoes executadas para este complemento: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check`, `pnpm --dir backend db:migrate` e `pnpm --dir backend exec prisma migrate status`.
+- Validacao funcional direta do service `showAdminPsychologistStatistics`: com `community=all`, o card `ranking` retornou indisponibilidade honesta; com uma comunidade real selecionada, os contadores de comunidade foram recalculados para a comunidade filtrada sem expor dados sensiveis.
+- Smoke HTTP local: Admin `/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=estatisticas` retornou 200; API Admin sem sessao retornou 401, preservando autenticacao real.

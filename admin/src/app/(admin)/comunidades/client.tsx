@@ -15,7 +15,7 @@ import {
   UsersRound,
 } from "lucide-react";
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { type FocusEventHandler, useMemo } from "react";
 import { useAdminCommunitiesDashboard } from "@/api/callers/communities";
 import { resolveApiError } from "@/api/handle";
 import type {
@@ -27,6 +27,7 @@ import type {
   CommunitiesDashboardRecentPost,
   CommunitiesDashboardTopCommunity,
 } from "@/api/req/communities";
+import { useDateRangeCommitOnBlur } from "@/hooks/use-date-range-commit-on-blur";
 import { aggregateCalendarChartPoints } from "@/lib/chart-time-series";
 import { cn } from "@/lib/utils";
 
@@ -216,11 +217,17 @@ const EmptyState = ({ period }: { period: AdminCommunitiesDashboard["period"] })
 
 const CommunitiesHeader = ({
   isLoading,
+  onDateChange,
+  onDateControlsBlur,
   range,
+  rangeError,
   setRange,
 }: {
   isLoading: boolean;
+  onDateChange: (field: "from" | "to", value: string) => void;
+  onDateControlsBlur: FocusEventHandler<HTMLDivElement>;
   range: CommunitiesDashboardQuery;
+  rangeError: string | null;
   setRange: (range: CommunitiesDashboardQuery) => void;
 }) => (
   <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
@@ -234,13 +241,13 @@ const CommunitiesHeader = ({
     </div>
 
     <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
-      <div className="grid gap-3 sm:grid-cols-2">
+      <div className="grid gap-3 sm:grid-cols-2" onBlur={onDateControlsBlur}>
         <label className="text-xs font-black text-muted">
           De
           <input
             className="mt-1 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground shadow-control focus:border-primary"
             max={range.to}
-            onChange={(event) => setRange({ ...range, from: event.target.value })}
+            onChange={(event) => onDateChange("from", event.target.value)}
             type="date"
             value={range.from}
           />
@@ -250,7 +257,7 @@ const CommunitiesHeader = ({
           <input
             className="mt-1 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground shadow-control focus:border-primary"
             min={range.from}
-            onChange={(event) => setRange({ ...range, to: event.target.value })}
+            onChange={(event) => onDateChange("to", event.target.value)}
             type="date"
             value={range.to}
           />
@@ -269,6 +276,7 @@ const CommunitiesHeader = ({
           </button>
         ))}
       </div>
+      {rangeError ? <p className="max-w-md text-xs font-bold text-danger">{rangeError}</p> : null}
     </div>
   </div>
 );
@@ -766,19 +774,36 @@ const DashboardContent = ({ summary }: { summary: AdminCommunitiesDashboard }) =
 };
 
 export const AdminCommunitiesClient = () => {
-  const [range, setRange] = useState<CommunitiesDashboardQuery>(() => getQuickRange(7));
-  const validRange = isValidRange(range);
-  const query = useAdminCommunitiesDashboard(range, { enabled: validRange });
+  const {
+    appliedRange,
+    applyRange,
+    draftRange,
+    handleDateChange,
+    handleDateControlsBlur,
+    rangeError,
+  } = useDateRangeCommitOnBlur<CommunitiesDashboardQuery>({
+    initialRange: () => getQuickRange(7),
+    isValidRange,
+  });
+  const validRange = isValidRange(appliedRange);
+  const query = useAdminCommunitiesDashboard(appliedRange, { enabled: validRange });
   const queryError = query.error ? resolveApiError(query.error) : null;
   const periodCopy = useMemo(() => {
-    if (!range.from || !range.to) return "Selecione um período válido";
+    if (!appliedRange.from || !appliedRange.to) return "Selecione um período válido";
 
-    return `${formatDate(range.from)} — ${formatDate(range.to)}`;
-  }, [range]);
+    return `${formatDate(appliedRange.from)} — ${formatDate(appliedRange.to)}`;
+  }, [appliedRange]);
 
   return (
     <div className="space-y-6">
-      <CommunitiesHeader isLoading={query.isFetching} range={range} setRange={setRange} />
+      <CommunitiesHeader
+        isLoading={query.isFetching}
+        onDateChange={handleDateChange}
+        onDateControlsBlur={handleDateControlsBlur}
+        range={draftRange}
+        rangeError={rangeError}
+        setRange={applyRange}
+      />
 
       <div className="flex flex-wrap items-center gap-2 text-sm text-muted">
         <CalendarDays aria-hidden className="h-4 w-4" />
@@ -791,7 +816,7 @@ export const AdminCommunitiesClient = () => {
       {!validRange ? (
         <ErrorState
           message="A data inicial precisa ser menor ou igual à data final."
-          onRetry={() => setRange(getQuickRange(7))}
+          onRetry={() => applyRange(getQuickRange(7))}
         />
       ) : null}
 

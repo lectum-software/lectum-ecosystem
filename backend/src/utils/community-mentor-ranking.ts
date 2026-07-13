@@ -4,6 +4,7 @@ import prisma from "@/infra/database/prisma";
 const TOP_MENTOR_UPVOTE_WEIGHT = 5;
 const TOP_MENTOR_DOWNVOTE_WEIGHT = 3;
 const TOP_MENTOR_COMMENT_WEIGHT = 2;
+const TOP_MENTOR_SHARE_WEIGHT = 4;
 const TOP_MENTOR_SAVE_WEIGHT = 3;
 const TOP_MENTOR_POST_WEIGHT = 1;
 const TOP_MENTOR_REPLY_WEIGHT = 1;
@@ -19,6 +20,7 @@ type TopMentorMutableMetrics = {
   removed_posts_penalty: number;
   replies_published: number;
   saves_received: number;
+  shares_received: number;
   upvotes_received: number;
 };
 
@@ -36,6 +38,7 @@ const emptyTopMentorMetrics = (): TopMentorMutableMetrics => ({
   removed_posts_penalty: 0,
   replies_published: 0,
   saves_received: 0,
+  shares_received: 0,
   upvotes_received: 0,
 });
 
@@ -47,6 +50,7 @@ const topMentorScore = (metrics: TopMentorMutableMetrics) => {
   const positivePoints =
     metrics.upvotes_received * TOP_MENTOR_UPVOTE_WEIGHT +
     metrics.comments_received * TOP_MENTOR_COMMENT_WEIGHT +
+    metrics.shares_received * TOP_MENTOR_SHARE_WEIGHT +
     metrics.saves_received * TOP_MENTOR_SAVE_WEIGHT +
     metrics.posts_published * TOP_MENTOR_POST_WEIGHT +
     metrics.replies_published * TOP_MENTOR_REPLY_WEIGHT +
@@ -62,6 +66,7 @@ const hasTopMentorRankingSignal = (metrics: TopMentorMutableMetrics) => {
     metrics.upvotes_received > 0 ||
     metrics.downvotes_received > 0 ||
     metrics.comments_received > 0 ||
+    metrics.shares_received > 0 ||
     metrics.saves_received > 0 ||
     metrics.posts_published > 0 ||
     metrics.replies_published > 0 ||
@@ -93,6 +98,8 @@ export const getCommunityMentorRankingSignals = async (
     postCommentsReceived,
     replyCommentsReceived,
     postSaves,
+    postShares,
+    replyShares,
     removedPostParticipation,
     postActivityDays,
     replyActivityDays,
@@ -237,6 +244,47 @@ export const getCommunityMentorRankingSignals = async (
         },
       },
     }),
+    prisma.post_share.findMany({
+      where: {
+        deleted: false,
+        reply_id: null,
+        post: {
+          ...publishedPostFilter,
+          author_id: {
+            in: uniqueMentorIds,
+          },
+        },
+      },
+      select: {
+        post: {
+          select: {
+            author_id: true,
+          },
+        },
+      },
+    }),
+    prisma.post_share.findMany({
+      where: {
+        deleted: false,
+        reply_id: {
+          not: null,
+        },
+        reply: {
+          deleted: false,
+          author_id: {
+            in: uniqueMentorIds,
+          },
+          post: publishedPostFilter,
+        },
+      },
+      select: {
+        reply: {
+          select: {
+            author_id: true,
+          },
+        },
+      },
+    }),
     prisma.community_post.groupBy({
       by: ["author_id"],
       where: {
@@ -339,6 +387,18 @@ export const getCommunityMentorRankingSignals = async (
     }
   }
 
+  for (const share of postShares) {
+    if (share.post?.author_id) {
+      getMetrics(share.post.author_id).shares_received += 1;
+    }
+  }
+
+  for (const share of replyShares) {
+    if (share.reply?.author_id) {
+      getMetrics(share.reply.author_id).shares_received += 1;
+    }
+  }
+
   for (const item of removedPostParticipation) {
     const metrics = getMetrics(item.author_id);
     metrics.removed_posts = item._count.author_id;
@@ -373,6 +433,9 @@ export const getCommunityMentorRankingSignals = async (
 
       const commentDiff = b.metrics.comments_received - a.metrics.comments_received;
       if (commentDiff !== 0) return commentDiff;
+
+      const shareDiff = b.metrics.shares_received - a.metrics.shares_received;
+      if (shareDiff !== 0) return shareDiff;
 
       const saveDiff = b.metrics.saves_received - a.metrics.saves_received;
       if (saveDiff !== 0) return saveDiff;
