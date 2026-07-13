@@ -21,6 +21,7 @@ Também já existia auditoria administrativa genérica da TASK-67 via `admin_act
 - No frontend do usuário, respeitar `need_reset=true` redirecionando para `/app/account/need-reset` e usando `POST /api/private/auth/need_reset`.
 - Correção pós-validação em 2026-07-11: cadastro/autenticação Google-only não deve definir nem manter `need_reset=true`, porque isso força a criação indevida de senha local. `has_password` continua significando exclusivamente `Boolean(user.password)` para uma senha local realmente existente.
 - Correção visual em 2026-07-13: a aba **Atividades** do detalhe do psicólogo deixou de renderizar a faixa explicativa, a linha de filtros/período/exportação e os cards de indisponibilidade "Histórico anterior à auditoria administrativa" e "Eventos brutos de pagamento"; os rótulos textuais do feed foram normalizados para PT-BR sem mojibake.
+- Correção visual complementar em 2026-07-13: a lista de eventos da aba **Atividades** passou a mostrar somente a tag principal do tipo de atividade, sem o selo "Fontes reais" nem linhas de fonte técnica por item, e reutiliza o ícone proprietário de WhatsApp já usado na Lectum para eventos de clique.
 
 ## Consequências
 
@@ -28,6 +29,7 @@ Também já existia auditoria administrativa genérica da TASK-67 via `admin_act
 - Alteração de e-mail, senha temporária e encerramento explícito removem `user_token` do psicólogo afetado, sem invalidar a sessão do Admin executor.
 - A aba Atividades passa a exibir eventos de Conta e acesso sem expor senha, hash, códigos de confirmação, recovery code, JWT ou tokens.
 - A aba Atividades mantém os filtros e eventos reais, mas reduz a redundância visual removendo avisos auxiliares que não eram ações nem eventos do psicólogo.
+- A lista de eventos fica mais direta para suporte operacional, preservando o contrato real de atividades sem expor fonte técnica desnecessária na UI.
 - Ambientes sem SMTP configurado bloqueiam envios com retorno honesto; a operação não é marcada como enviada falsamente.
 - Builder/Quick Copy não estava disponível no ambiente; a UI seguiu os padrões das imagens locais das abas Geral, Denúncias e Atividades.
 - Contas criadas somente com Google passam a permanecer como `provider="google"`, `password=null` e `need_reset=false`; se uma conta Google-only antiga ainda tiver `need_reset=true` sem senha local, a hidratação corrige o flag para evitar exigir criação de senha local.
@@ -46,5 +48,6 @@ TASK-68 - Conta e acesso do psicólogo no Admin.
 - `pnpm --dir frontend build`
 - `pnpm check`
 - Correção 2026-07-13: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check`, smoke HTTP local `GET /psicologos/[id]?tab=atividades` com status 200 e verificação estática de ausência dos blocos removidos.
+- Correção complementar 2026-07-13: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check`, smoke HTTP local `GET /psicologos/[id]?tab=atividades` com status 200 e verificação estática de ausência do selo, fontes por item e tag de área.
 - `GET /api/admin/private/psychologists/test-id/account` sem sessão retornou 401, confirmando proteção Admin.
 - Browser local/headless 390px para rotas `/psicologos/[id]?tab=conta` e `/app/account/need-reset` com limitação de sessão autenticada real.

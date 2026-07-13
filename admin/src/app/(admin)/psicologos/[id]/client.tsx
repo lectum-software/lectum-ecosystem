@@ -4450,7 +4450,8 @@ const resolveActivityPeriod = (preset: string, customFrom: string, customTo: str
   };
 };
 
-const activityIcon = (item: AdminPsychologistActivityItem): LucideIcon => {
+const activityIcon = (item: AdminPsychologistActivityItem): LucideIcon | typeof WhatsAppIcon => {
+  if (item.type.id === "whatsapp_click") return WhatsAppIcon;
   if (item.area.id === "financeiro") return Wallet;
   if (item.area.id === "atendimento") return MessageCircle;
   if (item.area.id === "avaliacoes") return Star;
@@ -4461,20 +4462,6 @@ const activityIcon = (item: AdminPsychologistActivityItem): LucideIcon => {
   if (item.type.id.includes("post")) return FileText;
 
   return UserRound;
-};
-
-const areaTone = (area: string) => {
-  const tones: Record<string, string> = {
-    atendimento: "bg-emerald-50 text-success",
-    avaliacoes: "bg-yellow-50 text-yellow-700",
-    comunidade: "bg-blue-50 text-blue-700",
-    conta: "bg-primary-soft text-primary",
-    denuncias: "bg-red-50 text-danger",
-    financeiro: "bg-primary-soft text-primary",
-    perfil: "bg-surface-muted text-muted",
-  };
-
-  return tones[area] ?? "bg-surface-muted text-muted";
 };
 
 const ActivitiesTab = ({ id }: { id: string }) => {
@@ -4622,7 +4609,6 @@ const ActivitiesTab = ({ id }: { id: string }) => {
               {numberFormatter.format(activities.count)} eventos principais filtrados.
             </p>
           </div>
-          <Badge className="bg-primary-soft text-primary">Fontes reais</Badge>
         </div>
 
         {activities.data.length === 0 ? (
@@ -4645,13 +4631,11 @@ const ActivitiesTab = ({ id }: { id: string }) => {
                     </span>
                     <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
-                        <Badge className={areaTone(item.area.id)}>{item.area.label}</Badge>
                         <Badge className="bg-surface-muted text-muted">{item.type.label}</Badge>
                       </div>
                       <p className="mt-2 text-sm font-bold leading-6 text-foreground">
                         {item.description}
                       </p>
-                      <p className="mt-1 text-xs font-bold text-muted">Fonte: {item.source}</p>
                       {item.detail_url ? (
                         <a
                           className="mt-3 inline-flex items-center gap-1 text-xs font-black text-primary"
@@ -4666,7 +4650,7 @@ const ActivitiesTab = ({ id }: { id: string }) => {
                     </div>
                   </div>
                   <div className="rounded-2xl bg-surface-muted p-3 text-sm">
-                    <p className="font-black text-muted">Usuário/ator</p>
+                    <p className="font-black text-muted">Usuário</p>
                     <p className="mt-1 font-black text-foreground">
                       {item.actor?.name || "Não informado"}
                     </p>
