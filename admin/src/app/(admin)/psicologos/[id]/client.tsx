@@ -5569,27 +5569,27 @@ const RegistryVerificationDialog = ({
   const dialog = (
     <div
       aria-modal="true"
-      className="fixed inset-0 z-50 flex items-end justify-center bg-foreground/40 p-0 sm:items-center sm:p-4"
+      className="admin-premium-pilot fixed inset-0 z-50 flex items-end justify-center bg-overlay p-0 backdrop-blur-[2px] sm:items-center sm:p-5"
       role="dialog"
     >
-      <div className="max-h-[92vh] w-full overflow-y-auto rounded-t-[28px] border border-border bg-surface p-5 shadow-admin-soft sm:max-w-2xl sm:rounded-[28px]">
+      <div className="w-full rounded-t-[32px] border border-border bg-surface p-5 shadow-admin sm:max-w-[54rem] sm:rounded-[32px] sm:p-7">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <p className="text-xs font-black uppercase tracking-[0.2em] text-primary">
+            <p className="text-xs font-black uppercase tracking-[0.14em] text-primary">
               Verificação profissional
             </p>
-            <h3 className="mt-1 text-xl font-black text-foreground">{title}</h3>
+            <h3 className="mt-1 text-2xl font-black text-foreground">{title}</h3>
           </div>
           <button
             aria-label="Fechar"
-            className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-border text-muted transition hover:bg-surface-muted"
+            className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-border bg-surface text-muted shadow-control transition hover:bg-surface-muted"
             onClick={onClose}
             type="button"
           >
             <X aria-hidden className="h-4 w-4" />
           </button>
         </div>
-        <div className="mt-5">{children}</div>
+        <div className="mt-6">{children}</div>
       </div>
     </div>
   );
@@ -5744,6 +5744,12 @@ const RegistrySaveIdentityForm = ({
     form.reset({ confirmation: "" });
   }, [form]);
 
+  const registrySummaryItems = [
+    { label: "Regional CRP", value: formatNullable(identityDraft.regional_crp) },
+    { label: "Nº CRP", value: formatNullable(identityDraft.crp) },
+    { label: "Data de inscrição", value: formatDateOnly(identityDraft.crp_registration_date) },
+  ];
+
   const onSubmit: SubmitHandler<RegistrySaveFormValues> = async (values) => {
     try {
       await mutation.mutateAsync({
@@ -5759,40 +5765,61 @@ const RegistrySaveIdentityForm = ({
 
   return (
     <FormProvider {...form}>
-      <form className="space-y-4" noValidate onSubmit={form.handleSubmit(onSubmit)}>
-        <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm font-bold leading-6 text-muted">
-          <p className="font-black text-foreground">
-            Confirme antes de salvar a alteração do registro profissional.
-          </p>
-          <div className="mt-3 grid gap-2 rounded-2xl bg-surface/80 p-3">
-            <FieldRow label="Regional CRP" value={identityDraft.regional_crp} />
-            <FieldRow label="Nº CRP" value={identityDraft.crp} />
-            <FieldRow
-              label="Data de inscrição"
-              value={formatNullable(identityDraft.crp_registration_date)}
-            />
+      <form className="grid gap-4" noValidate onSubmit={form.handleSubmit(onSubmit)}>
+        <div className="rounded-[28px] border border-primary/20 bg-primary-soft/70 p-4 text-sm font-bold leading-6 text-muted sm:p-5">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <p className="text-xs font-black uppercase tracking-[0.12em] text-primary">
+                Registro editado
+              </p>
+              <p className="mt-1 text-base font-black text-foreground">
+                Confirme antes de salvar a alteração do registro profissional.
+              </p>
+            </div>
+            <span className="inline-flex w-fit items-center rounded-full border border-primary/15 bg-surface px-3 py-1 text-xs font-black text-primary shadow-control">
+              Ação sensível
+            </span>
           </div>
+
+          <div className="mt-4 grid gap-2 sm:grid-cols-3">
+            {registrySummaryItems.map((item) => (
+              <div
+                className="rounded-[20px] border border-border/80 bg-surface p-4 shadow-control"
+                key={item.label}
+              >
+                <p className="text-xs font-black uppercase tracking-[0.08em] text-muted">
+                  {item.label}
+                </p>
+                <p className="mt-2 break-words text-base font-black text-foreground">
+                  {item.value}
+                </p>
+              </div>
+            ))}
+          </div>
+
           <p className="mt-3">
             Esta ação altera os dados públicos do conselho sem aprovar, rejeitar ou revalidar
             automaticamente o CRP. Digite <strong>{confirmationText}</strong> para continuar.
           </p>
         </div>
-        <InputController<RegistrySaveFormValues>
-          autoComplete="off"
-          disabled={mutation.isPending}
-          label="Confirmação forte"
-          name="confirmation"
-          placeholder={`Digite ${confirmationText}`}
-          required
-        />
-        <button
-          className="inline-flex h-12 w-full items-center justify-center gap-2 whitespace-nowrap rounded-control bg-primary px-4 text-sm font-black text-white transition hover:bg-primary-hover disabled:cursor-not-allowed disabled:bg-surface-muted disabled:text-muted"
-          disabled={mutation.isPending}
-          type="submit"
-        >
-          {mutation.isPending ? <Loader2 aria-hidden className="h-4 w-4 animate-spin" /> : null}
-          Salvar registro
-        </button>
+        <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_220px] sm:items-start">
+          <InputController<RegistrySaveFormValues>
+            autoComplete="off"
+            disabled={mutation.isPending}
+            label="Confirmação forte"
+            name="confirmation"
+            placeholder={`Digite ${confirmationText}`}
+            required
+          />
+          <button
+            className="inline-flex h-12 w-full items-center justify-center gap-2 whitespace-nowrap rounded-control bg-primary px-4 text-sm font-black text-white shadow-control transition hover:bg-primary-hover disabled:cursor-not-allowed disabled:bg-surface-muted disabled:text-muted sm:mt-7"
+            disabled={mutation.isPending}
+            type="submit"
+          >
+            {mutation.isPending ? <Loader2 aria-hidden className="h-4 w-4 animate-spin" /> : null}
+            Salvar registro
+          </button>
+        </div>
       </form>
     </FormProvider>
   );

@@ -245,3 +245,9 @@ como "Ativo" e `found=false` como "Inativo", em vez de "Encontrado" e
 A decisao alinha a leitura operacional do Admin com o estado apresentado no topo
 do Registro profissional. O historico, fonte, data, CRP e responsavel da
 tentativa continuam preservados no item.
+
+## Complemento 2026-07-13: layout piloto na confirmacao forte
+
+A modal global de confirmacao forte para "Salvar registro" passa a carregar a classe `admin-premium-pilot` no proprio portal para preservar tokens, pesos e paleta do piloto mesmo fora da arvore do shell Admin. A rolagem interna foi removida e o conteudo foi reorganizado em um resumo compacto dos dados do CRP seguido da confirmacao forte e da acao principal.
+
+A data de inscricao exibida no resumo da confirmacao usa o mesmo formatter de data apenas-dia do Admin, apresentando `dd/mm/aaaa` em vez do valor tecnico `aaaa-mm-dd` usado pelo campo `type="date"`.

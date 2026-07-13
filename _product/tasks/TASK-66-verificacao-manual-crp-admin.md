@@ -377,3 +377,10 @@ Se o schema atual não suportar auditoria mínima sem `raw`, usar `raw` com shap
 - A confirmacao forte de **Salvar registro** passou a ser renderizada por portal no `document.body`, escapando do card/coluna sticky de Registro profissional.
 - O comportamento visual esperado e modal global na tela principal, preservando a edicao inline dos campos do registro no card e mantendo a exigencia `SALVAR REGISTRO` antes da persistencia real.
 - Validacoes do ajuste: `pnpm --dir admin check`, `pnpm --dir admin build` e smoke HTTP local em `/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=perfil` retornando 200. Validacao visual autenticada do modal segue dependente de sessao Admin real no navegador do usuario.
+
+### Ajuste de layout da confirmacao forte do registro 2026-07-13
+
+- A modal global de **Salvar registro** passou a usar os tokens do piloto Admin (`admin-premium-pilot`) mesmo renderizada por portal no `document.body`.
+- A rolagem interna da modal foi removida; o conteudo ficou mais compacto, com resumo dos dados em cards e campo de confirmacao/acao alinhados ao layout piloto.
+- A Data de inscricao exibida na confirmacao forte agora usa formato `dd/mm/aaaa`, evitando mostrar o valor tecnico `aaaa-mm-dd` do input.
+- Validacoes do ajuste: `pnpm --dir admin check`, `pnpm --dir admin build` e smoke HTTP local em `/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=perfil` retornando 200. Validacao visual autenticada do modal segue dependente de sessao Admin real no navegador do usuario.
