@@ -207,3 +207,17 @@ Regras anti-recriaÃ§Ã£o:
 - Validacao em browser local usou Chrome DevTools Protocol com app frontend temporario em `http://localhost:3100`, navegou com UTM entre `/psychologists` e `/community`, confirmou registros reais no banco e removeu dados transitorios.
 - Validacao em browser autenticado definiu cookie de token real transitorio, navegou em `/psychologists` e confirmou `user_id` associado no `page_view_event`, sem query sensivel persistida.
 - Migrations aplicadas com `pnpm --dir backend db:migrate`; apos a criacao da migration, o comando foi reexecutado e confirmou schema em sincronia.
+
+## Ajuste complementar 2026-07-14 - Duração ativa por visibilidade
+
+- Pedido do usuário: ao minimizar o navegador no mobile, a duração não deve continuar correndo; ao voltar para a mesma rota, a medição deve retomar sem exigir navegação/reload.
+- O `PageViewTracker` global passou a acumular apenas segmentos visíveis do pageview atual, pausando em `visibilitychange=hidden`/`pagehide` e retomando em `visibilitychange=visible` para todos os visitantes autenticados ou anônimos.
+- A atualização continua best-effort via endpoint real `/api/public/analytics/page-view/:id/duration`, sem tracking de terceiros, sem payload sensível e sem evento artificial retroativo.
+- O backend segue recebendo `duration_seconds` acumulado e idempotente por pageview; não houve alteração em Prisma schema, migrations ou packages.
+
+### Validação complementar executada
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- O ajuste não altera Prisma schema/migrations; `db:migrate` não foi necessário.

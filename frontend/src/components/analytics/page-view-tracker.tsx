@@ -17,10 +17,11 @@ const REFERRER_SENT_KEY = "lectum:analytics:initial-referrer-sent";
 type UtmKey = (typeof UTM_KEYS)[number];
 type SessionAttribution = Partial<Record<UtmKey, string>>;
 type CurrentPageView = {
+  accumulatedVisibleMs: number;
+  activeStartedAt: number | null;
   id: string;
   visitorId: string;
   sessionId: string;
-  startedAt: number;
 };
 
 type NavigatorWithStandalone = Navigator & { standalone?: boolean };
@@ -116,13 +117,27 @@ export const PageViewTracker = () => {
   const { mutateAsync: trackImportantAction } = useImportantActionTracking();
   const currentRef = useRef<CurrentPageView | null>(null);
   const lastRouteKeyRef = useRef<string | null>(null);
+  const lastHiddenAtRef = useRef<number | null>(null);
 
-  const flushCurrentDuration = useCallback((keepalive: boolean) => {
+  const flushCurrentDuration = useCallback((keepalive: boolean, finalize: boolean) => {
     const current = currentRef.current;
     if (!current) return;
 
-    currentRef.current = null;
-    const durationSeconds = Math.max(0, Math.round((Date.now() - current.startedAt) / 1000));
+    const now = Date.now();
+    const activeSegmentMs = current.activeStartedAt
+      ? Math.max(0, now - current.activeStartedAt)
+      : 0;
+    const accumulatedVisibleMs = current.accumulatedVisibleMs + activeSegmentMs;
+
+    currentRef.current = finalize
+      ? null
+      : {
+          ...current,
+          accumulatedVisibleMs,
+          activeStartedAt: null,
+        };
+
+    const durationSeconds = Math.max(0, Math.round(accumulatedVisibleMs / 1000));
     if (durationSeconds <= 0) return;
 
     const body = {
@@ -165,7 +180,7 @@ export const PageViewTracker = () => {
     if (typeof window === "undefined") return;
     if (lastRouteKeyRef.current === routeKey) return;
 
-    flushCurrentDuration(false);
+    flushCurrentDuration(false, true);
     lastRouteKeyRef.current = routeKey;
 
     const identity = getOrCreateAnalyticsIdentity();
@@ -188,12 +203,24 @@ export const PageViewTracker = () => {
       .then((response) => {
         if (!response.id || lastRouteKeyRef.current !== requestKey) return;
 
+        const hiddenAt = lastHiddenAtRef.current;
+        const hiddenBeforeResponse = document.visibilityState === "hidden";
+        const accumulatedVisibleMs =
+          hiddenBeforeResponse && hiddenAt !== null && hiddenAt >= startedAt
+            ? Math.max(0, hiddenAt - startedAt)
+            : 0;
+
         currentRef.current = {
+          accumulatedVisibleMs,
+          activeStartedAt: hiddenBeforeResponse ? null : startedAt,
           id: response.id,
           sessionId: identity.sessionId,
-          startedAt,
           visitorId: identity.visitorId,
         };
+
+        if (hiddenBeforeResponse) {
+          flushCurrentDuration(true, false);
+        }
       })
       .catch(() => {
         // Analytics must fail silently.
@@ -203,10 +230,26 @@ export const PageViewTracker = () => {
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (document.visibilityState === "hidden") {
-        flushCurrentDuration(true);
+        lastHiddenAtRef.current = Date.now();
+        flushCurrentDuration(true, false);
+        return;
+      }
+
+      if (document.visibilityState === "visible") {
+        lastHiddenAtRef.current = null;
+        const current = currentRef.current;
+        if (!current || current.activeStartedAt !== null) return;
+
+        currentRef.current = {
+          ...current,
+          activeStartedAt: Date.now(),
+        };
       }
     };
-    const handlePageHide = () => flushCurrentDuration(true);
+    const handlePageHide = () => {
+      lastHiddenAtRef.current = Date.now();
+      flushCurrentDuration(true, false);
+    };
     const handleAppInstalled = () => trackPwaAction("pwa_installed");
     const handlePromptAccepted = () => trackPwaAction("pwa_install_prompt_accepted");
 
@@ -220,7 +263,7 @@ export const PageViewTracker = () => {
       window.removeEventListener("pagehide", handlePageHide);
       window.removeEventListener("appinstalled", handleAppInstalled);
       window.removeEventListener("lectum:pwa-install-prompt-accepted", handlePromptAccepted);
-      flushCurrentDuration(true);
+      flushCurrentDuration(true, true);
     };
   }, [flushCurrentDuration, trackPwaAction]);
 

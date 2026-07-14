@@ -64,6 +64,13 @@ const latestLocationSelect = {
   user_id: true,
 } satisfies Prisma.visitor_locationSelect;
 
+const patientPageViewSelect = {
+  duration_seconds: true,
+  id: true,
+  session_id: true,
+  visitor_id: true,
+} satisfies Prisma.page_view_eventSelect;
+
 const recentPatientSelect = {
   active: true,
   avatar: true,
@@ -218,6 +225,10 @@ export type AdminPatientLocationRecord = Prisma.visitor_locationGetPayload<{
   select: typeof latestLocationSelect;
 }>;
 
+export type AdminPatientPageViewRecord = Prisma.page_view_eventGetPayload<{
+  select: typeof patientPageViewSelect;
+}>;
+
 export class AdminPatientsDashboardRepository {
   async listPatientSnapshots(): Promise<AdminPatientSnapshotRecord[]> {
     return prisma.user.findMany({
@@ -254,6 +265,28 @@ export class AdminPatientsDashboardRepository {
       select: latestLocationSelect,
       where: {
         deleted: false,
+        user_id: {
+          not: null,
+        },
+        user: {
+          deleted: false,
+          role: "paciente",
+        },
+      },
+    });
+  }
+
+  async listPatientPageViews(
+    range: AdminPatientsDashboardDateRange,
+  ): Promise<AdminPatientPageViewRecord[]> {
+    return prisma.page_view_event.findMany({
+      orderBy: {
+        occurred_at: "asc",
+      },
+      select: patientPageViewSelect,
+      where: {
+        deleted: false,
+        occurred_at: rangeWhere(range),
         user_id: {
           not: null,
         },

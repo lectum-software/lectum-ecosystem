@@ -88,6 +88,14 @@ export type AdminPatientsDashboardUnavailableMetric = {
   source: string;
 };
 
+export type AdminPatientsDashboardPlatformUsage = {
+  average_duration_seconds: number | null;
+  duration_unavailable_reason: string | null;
+  pageviews_count: number;
+  sessions_count: number;
+  source: "page_view_event";
+};
+
 export type AdminPatientsDashboardSummary = {
   cards: {
     active_patients: AdminPatientsDashboardMetric;
@@ -120,6 +128,7 @@ export type AdminPatientsDashboardSummary = {
     total: number;
   };
   period: AdminPatientsDashboardPeriod;
+  platform_usage: AdminPatientsDashboardPlatformUsage;
   recent_patients: {
     items: AdminPatientsDashboardRecentPatient[];
     source: "user+patient_profile+visitor_location+community_activity";

@@ -13,6 +13,7 @@ import type {
 } from "../DTOs/IAdminPatientsDashboardDTO";
 import {
   type AdminPatientLocationRecord,
+  type AdminPatientPageViewRecord,
   type AdminPatientRecentRecord,
   type AdminPatientSnapshotRecord,
   AdminPatientsDashboardRepository,
@@ -21,6 +22,7 @@ import {
 const DEFAULT_PERIOD_DAYS = 7;
 const MAX_PERIOD_DAYS = 90;
 const MS_PER_DAY = 86_400_000;
+const DURATION_RELIABILITY_THRESHOLD = 0.5;
 
 type PatientsPeriodResolution = {
   current: AdminPatientsDashboardDateRange;
@@ -178,6 +180,8 @@ const resolvePeriod = (query: AdminPatientsDashboardQuery): PeriodResult => {
 };
 
 const roundPercent = (value: number) => Math.round(value * 10) / 10;
+
+const roundOneDecimal = (value: number) => Math.round(value * 10) / 10;
 
 const percentageChange = (current: number, previous: number) => {
   if (previous === 0) return current === 0 ? 0 : null;
@@ -377,6 +381,35 @@ const buildLocations = (locations: AdminPatientLocationRecord[]) => {
   };
 };
 
+const buildPlatformUsage = (pageViews: AdminPatientPageViewRecord[]) => {
+  const durations = pageViews
+    .map((view) => view.duration_seconds)
+    .filter(
+      (value): value is number => typeof value === "number" && Number.isFinite(value) && value > 0,
+    );
+  const durationCoverage = pageViews.length > 0 ? durations.length / pageViews.length : 0;
+  const averageDuration =
+    durationCoverage >= DURATION_RELIABILITY_THRESHOLD && durations.length > 0
+      ? roundOneDecimal(durations.reduce((sum, value) => sum + value, 0) / durations.length)
+      : null;
+  const sessionKeys = new Set(
+    pageViews.map((view) => `${view.visitor_id}:${view.session_id}`).filter(Boolean),
+  );
+
+  return {
+    average_duration_seconds: averageDuration,
+    duration_unavailable_reason:
+      pageViews.length === 0
+        ? "Sem pageviews autenticados de pacientes no período."
+        : averageDuration === null
+          ? "Duração indisponível: menos de 50% dos pageviews de pacientes têm duration_seconds confiável."
+          : null,
+    pageviews_count: pageViews.length,
+    sessions_count: sessionKeys.size,
+    source: "page_view_event" as const,
+  };
+};
+
 const snippet = (text: string | null | undefined, fallback: string) => {
   const normalized = text?.replace(/\s+/g, " ").trim();
   if (!normalized) return fallback;
@@ -506,10 +539,11 @@ export const buildPatientsDashboard = async (
 
   const repository = new AdminPatientsDashboardRepository();
   const { current, labels, period, previous } = resolvedPeriod.period;
-  const [patients, recentPatients, locations] = await Promise.all([
+  const [patients, recentPatients, locations, patientPageViews] = await Promise.all([
     repository.listPatientSnapshots(),
     repository.listRecentPatients(5),
     repository.listLocations(),
+    repository.listPatientPageViews(current),
   ]);
 
   const previousPatients = patients.filter((patient) => createdUntil(patient, previous.end));
@@ -520,6 +554,7 @@ export const buildPatientsDashboard = async (
   const previousActivePatients = previousPatients.filter((patient) => patient.active);
   const previousInactivePatients = previousPatients.filter((patient) => !patient.active);
   const locationSummary = buildLocations(locations);
+  const platformUsage = buildPlatformUsage(patientPageViews);
 
   const summary: AdminPatientsDashboardSummary = {
     cards: {
@@ -559,6 +594,7 @@ export const buildPatientsDashboard = async (
     coverage_notes: [
       "Status ativo/inativo representa o estado da conta em user.active, não engajamento recente.",
       "Atividade recente usa eventos reais de comunidade, reações e salvamentos já persistidos.",
+      "Tempo médio do paciente usa pageviews autenticados first-party e ignora períodos em que o app fica oculto/minimizado quando o navegador envia eventos de visibilidade.",
       "Localização usa apenas dados agregados e coarse de visitor_location; coordenadas, IP e endereço não são retornados.",
     ],
     demographics: buildDemographics(patients),
@@ -568,6 +604,7 @@ export const buildPatientsDashboard = async (
     },
     locations: locationSummary,
     period,
+    platform_usage: platformUsage,
     recent_patients: {
       items: recentPatients.map(mapRecentPatient),
       source: "user+patient_profile+visitor_location+community_activity",
@@ -578,6 +615,16 @@ export const buildPatientsDashboard = async (
       source: "user.createdAt+user.active",
     },
     unavailable: [
+      ...(platformUsage.duration_unavailable_reason
+        ? [
+            {
+              description: platformUsage.duration_unavailable_reason,
+              id: "patient_average_duration",
+              label: "Tempo médio do paciente",
+              source: platformUsage.source,
+            },
+          ]
+        : []),
       ...(locationSummary.total === 0
         ? [
             {

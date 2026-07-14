@@ -54,3 +54,9 @@ O schema atual jÃ¡ possui fontes reais para contas de pacientes (`user.role="pac
 - Builder/Quick Copy nÃ£o estava disponÃ­vel como ferramenta no ambiente; a implementaÃ§Ã£o visual foi guiada pelo PNG local `_product/proto/admin/Pacientes/Pacientes - Dashboard.png`.
 - NÃ£o foi criada exportaÃ§Ã£o de pacientes porque nÃ£o hÃ¡ endpoint real neste escopo.
 - NÃ£o foi executada migration Prisma porque a task nÃ£o alterou `backend/prisma/schema.prisma` nem `backend/prisma/migrations`.
+
+## Complemento 2026-07-14 - Tempo médio do paciente por pageview autenticado
+
+O dashboard Admin de pacientes passa a exibir **Tempo médio do paciente** a partir de `page_view_event.duration_seconds` filtrado por `user.role="paciente"` e pelo período selecionado. A métrica usa apenas pageviews autenticados, não inclui navegação anônima nem dados de conteúdo, e só é exibida quando ao menos 50% dos pageviews do recorte possuem duração positiva. Caso contrário, o contrato retorna motivo de indisponibilidade.
+
+A decisão mantém a V1 sem retenção/cohort retention: o novo dado mede permanência média por pageview confiável, não retenção, engajamento clínico ou sessão terapêutica. Não há alteração de schema, migration, package ou exportação.

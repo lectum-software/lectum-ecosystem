@@ -181,3 +181,25 @@ Frontend esperado:
 ## ADR
 
 - ADR-0240: Dashboard Admin de pacientes com dados agregados e sem retenÃ§Ã£o V1.
+
+## Ajuste complementar 2026-07-14 - Tempo médio do paciente
+
+- Pedido do usuário: além do tempo médio dos psicólogos, medir também o tempo médio de uso dos pacientes.
+- O dashboard Admin de Pacientes passou a retornar e exibir `platform_usage.average_duration_seconds`, calculado somente a partir de `page_view_event` autenticado de usuários `role="paciente"` no período selecionado.
+- A métrica usa a mesma regra de confiabilidade aplicada ao uso de psicólogos: só exibe média quando pelo menos 50% dos pageviews de pacientes possuem `duration_seconds` positivo; caso contrário, mostra indisponibilidade honesta.
+- A coleta de duração foi ajustada no tracker global da TASK-49 para pausar quando o navegador fica oculto/minimizado e retomar ao voltar, sem contar tempo em background quando o browser informa visibilidade.
+- Não foram criados mocks, backfill artificial, endpoints paralelos, schema Prisma, migrations ou packages novos.
+- Referência visual: `_product/proto/admin/Pacientes/Pacientes - Dashboard.png`; não há protótipo específico para este novo card e Builder/Quick Copy não está exposto como ferramenta direta neste ambiente.
+
+### Validação complementar executada
+
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check`
+- Serviço local `buildPatientsDashboard({})` retornou `platform_usage` real com `average_duration_seconds=null`, `duration_unavailable_reason="Sem pageviews autenticados de pacientes no período."`, `pageviews_count=0` e `sessions_count=0` na base local, sem criar dados artificiais.
+- `GET /api/admin/private/patients/dashboard` sem sessão Admin retornou `401`.
+- `GET http://localhost:3002/pacientes` retornou `200` no servidor Admin local.

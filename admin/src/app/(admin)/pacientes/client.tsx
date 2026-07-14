@@ -4,6 +4,7 @@ import {
   Activity,
   AlertTriangle,
   CalendarDays,
+  Clock,
   Eye,
   Loader2,
   type LucideIcon,
@@ -78,6 +79,18 @@ const formatDateTime = (value: string) =>
     dateStyle: "short",
     timeStyle: "short",
   }).format(new Date(value));
+
+const formatDuration = (value: number | null) => {
+  if (value === null || !Number.isFinite(value) || value <= 0) return "Indisponível";
+
+  const totalSeconds = Math.round(value);
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+
+  if (minutes <= 0) return `${seconds}s`;
+
+  return `${minutes}min ${String(seconds).padStart(2, "0")}s`;
+};
 
 const formatChange = (value: number | null) => {
   if (value === null) return "sem base anterior";
@@ -156,11 +169,46 @@ const MetricCard = ({
   </CardShell>
 );
 
+const PatientAverageDurationCard = ({ summary }: { summary: AdminPatientsDashboard }) => {
+  const usage = summary.platform_usage;
+
+  return (
+    <CardShell className="min-h-40 p-5">
+      <div className="flex items-start justify-between gap-3">
+        <div className="grid h-12 w-12 place-items-center rounded-full bg-primary-soft text-primary">
+          <Clock aria-hidden className="h-5 w-5" />
+        </div>
+        <span className="rounded-full bg-surface-muted px-2 py-1 text-[0.65rem] font-bold text-muted">
+          {usage.source}
+        </span>
+      </div>
+      <div className="mt-5 space-y-2">
+        <p className="text-sm font-black text-foreground">Tempo médio do paciente</p>
+        <p className="text-3xl font-black tracking-tight text-foreground">
+          {formatDuration(usage.average_duration_seconds)}
+        </p>
+        <p className="text-xs leading-relaxed text-muted">
+          Média por pageview autenticado de pacientes no período, sem contar tempo em que o app fica
+          oculto/minimizado quando o navegador informa visibilidade.
+        </p>
+        <p className="text-xs font-bold text-subtle">
+          {numberFormatter.format(usage.pageviews_count)} pageviews ·{" "}
+          {numberFormatter.format(usage.sessions_count)} sessões
+        </p>
+        {usage.duration_unavailable_reason ? (
+          <p className="text-xs font-bold text-muted">{usage.duration_unavailable_reason}</p>
+        ) : null}
+      </div>
+    </CardShell>
+  );
+};
+
 const LoadingGrid = () => (
-  <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+  <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
     {CARD_ORDER.map((key) => (
       <CardShell className="h-40 animate-pulse bg-surface-muted" key={`patients-${key}`} />
     ))}
+    <CardShell className="h-40 animate-pulse bg-surface-muted" />
   </div>
 );
 
@@ -280,10 +328,11 @@ const CardsGrid = ({ summary }: { summary: AdminPatientsDashboard }) => {
   return (
     <section>
       <h2 className="mb-4 text-xl font-black text-foreground">Estatísticas</h2>
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
         {CARD_ORDER.map((key) => (
           <MetricCard key={key} metric={summary.cards[key]} {...config[key]} />
         ))}
+        <PatientAverageDurationCard summary={summary} />
       </div>
     </section>
   );
