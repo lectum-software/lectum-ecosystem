@@ -45,6 +45,12 @@ const parseUserRole = (role: unknown): UserRole | undefined => {
   return allowedUserRoles.includes(role as UserRole) ? (role as UserRole) : undefined;
 };
 
+const inactiveUserResponse = () => ({
+  status: 400,
+  ...error("auth_inactive", {}),
+  type: 3,
+});
+
 const resolveGoogleProfessionalNameParts = (profile: Profile) => {
   const fallback = splitProfessionalNameFallback(profile.displayName);
   const profileJson = (profile._json ?? {}) as {
@@ -205,6 +211,10 @@ passport.use(
             });
           }
 
+          if (!linkedUser.active) {
+            return done(null, inactiveUserResponse());
+          }
+
           const profileUpdate: { avatar?: string | null; name?: string; provider?: string } = {
             provider: "google",
           };
@@ -323,6 +333,10 @@ passport.use(
             });
           }
 
+          if (!reauthUser.active) {
+            return done(null, inactiveUserResponse());
+          }
+
           const now = new Date();
           await prisma.user_background.create({
             data: {
@@ -382,6 +396,10 @@ passport.use(
             },
           });
         } else {
+          if (!user.active) {
+            return done(null, inactiveUserResponse());
+          }
+
           const profileUpdate: { name?: string; avatar?: string | null; provider?: string } = {};
 
           const userGoogleName = googleNameForRole(user.role);
@@ -439,6 +457,10 @@ passport.use(
             ...error("not_found", {}),
             type: 3,
           });
+
+        if (!user.active) {
+          return done(null, inactiveUserResponse());
+        }
 
         user = await repo.hidrate(user, device_id);
 

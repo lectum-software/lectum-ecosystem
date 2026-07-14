@@ -2,11 +2,14 @@
 import adminAuth from "../../../middlewares/_auth";
 import {
   changeEmail,
+  deactivateAccount,
+  deleteAccount,
   revokeSessions,
   sendEmailConfirmation,
   sendPasswordReset,
   setTemporaryPassword,
   show,
+  suspendAccount,
 } from "./use-cases/controller";
 import {
   changeEmailValidator,
@@ -28,6 +31,9 @@ routes.post(
   setTemporaryPasswordValidator,
   setTemporaryPassword,
 );
+routes.post("/:id/account/suspend", revokeSessionsValidator, suspendAccount);
+routes.post("/:id/account/deactivate", revokeSessionsValidator, deactivateAccount);
+routes.post("/:id/account/delete", revokeSessionsValidator, deleteAccount);
 routes.post("/:id/account/revoke-sessions", revokeSessionsValidator, revokeSessions);
 
 export default routes;

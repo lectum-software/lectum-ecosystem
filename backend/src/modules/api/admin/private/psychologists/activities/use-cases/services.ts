@@ -35,10 +35,13 @@ const AREA_LABELS: Record<AdminPsychologistActivityArea, string> = {
 
 const TYPE_LABELS: Record<AdminPsychologistActivityType, string> = {
   account_created: "Conta criada",
+  account_deactivated: "Conta desativada",
+  account_deleted: "Conta excluída",
   account_email_changed: "E-mail da conta alterado",
   account_email_confirmation_sent: "Confirma\u00e7\u00e3o de e-mail reenviada",
   account_password_reset_sent: "Link de redefini\u00e7\u00e3o enviado",
   account_sessions_revoked: "Sess\u00f5es encerradas",
+  account_suspended: "Conta suspensa",
   account_temporary_password_set: "Senha tempor\u00e1ria definida",
   admin_personal_data_updated: "Dados pessoais atualizados",
   admin_professional_data_updated: "Dados profissionais atualizados",
@@ -273,12 +276,15 @@ const adminLogType = (action: string): AdminPsychologistActivityType | null => {
   if (action === "psychologist_account_email_confirmation_sent") {
     return "account_email_confirmation_sent";
   }
+  if (action === "psychologist_account_deactivated") return "account_deactivated";
+  if (action === "psychologist_account_deleted") return "account_deleted";
   if (action === "psychologist_account_password_reset_sent") {
     return "account_password_reset_sent";
   }
   if (action === "psychologist_account_temporary_password_set") {
     return "account_temporary_password_set";
   }
+  if (action === "psychologist_account_suspended") return "account_suspended";
   if (action === "psychologist_account_sessions_revoked") return "account_sessions_revoked";
   if (action === "psychologist_report_review_started") return "report_review_started";
   if (action === "psychologist_report_dismissed") return "report_dismissed";
@@ -292,8 +298,11 @@ const adminAccountActionLabel = (action: string) => {
   const labels: Record<string, string> = {
     psychologist_account_email_changed: "alterou o e-mail da conta",
     psychologist_account_email_confirmation_sent: "reenviou a confirma\u00e7\u00e3o de e-mail",
+    psychologist_account_deactivated: "desativou a conta do psicólogo",
+    psychologist_account_deleted: "excluiu a conta do psicólogo",
     psychologist_account_password_reset_sent: "enviou link de redefini\u00e7\u00e3o de senha",
     psychologist_account_sessions_revoked: "encerrou as sess\u00f5es do psic\u00f3logo",
+    psychologist_account_suspended: "suspendeu a conta do psicólogo",
     psychologist_account_temporary_password_set: "definiu senha tempor\u00e1ria",
   };
 

@@ -675,6 +675,8 @@ export interface user {
   password?: string | null;
   password_confirm?: string | null;
   active?: boolean | null;
+  account_status?: "active" | "suspended" | "deactivated" | "deleted" | string | null;
+  account_status_changed_at?: Date | null;
   need_reset?: boolean | null;
   confirmed?: boolean | null;
   confirmed_date?: Date | null;

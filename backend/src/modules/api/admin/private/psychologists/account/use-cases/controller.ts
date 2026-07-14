@@ -2,11 +2,14 @@
 import { error500, send } from "@/helpers/return";
 import {
   changeAdminPsychologistAccountEmail,
+  deactivateAdminPsychologistAccount,
+  deleteAdminPsychologistAccount,
   revokeAdminPsychologistAccountSessions,
   sendAdminPsychologistAccountEmailConfirmation,
   sendAdminPsychologistAccountPasswordReset,
   setAdminPsychologistAccountTemporaryPassword,
   showAdminPsychologistAccount,
+  suspendAdminPsychologistAccount,
 } from "./services";
 
 export const show = async (req: Request, res: Response) => {
@@ -66,6 +69,42 @@ export const setTemporaryPassword = async (req: Request, res: Response) => {
     return send(res, resolve);
   } catch (err) {
     return error500(res, "admin_psychologist_account_set_temporary_password", err);
+  }
+};
+
+export const suspendAccount = async (req: Request, res: Response) => {
+  try {
+    const resolve = await suspendAdminPsychologistAccount(
+      req as unknown as Parameters<typeof suspendAdminPsychologistAccount>[0],
+    );
+
+    return send(res, resolve);
+  } catch (err) {
+    return error500(res, "admin_psychologist_account_suspend", err);
+  }
+};
+
+export const deactivateAccount = async (req: Request, res: Response) => {
+  try {
+    const resolve = await deactivateAdminPsychologistAccount(
+      req as unknown as Parameters<typeof deactivateAdminPsychologistAccount>[0],
+    );
+
+    return send(res, resolve);
+  } catch (err) {
+    return error500(res, "admin_psychologist_account_deactivate", err);
+  }
+};
+
+export const deleteAccount = async (req: Request, res: Response) => {
+  try {
+    const resolve = await deleteAdminPsychologistAccount(
+      req as unknown as Parameters<typeof deleteAdminPsychologistAccount>[0],
+    );
+
+    return send(res, resolve);
+  } catch (err) {
+    return error500(res, "admin_psychologist_account_delete", err);
   }
 };
 

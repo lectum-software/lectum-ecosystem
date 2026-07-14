@@ -569,16 +569,25 @@ export type AdminPsychologistUpdateProfessionalDataInput = {
 
 export type AdminPsychologistAccount = {
   active: boolean;
+  account_status: "active" | "deactivated" | "deleted" | "suspended";
+  account_status_changed_at: string | null;
+  account_status_label: string;
   capabilities: {
     can_change_email: boolean;
+    can_deactivate_account: boolean;
+    can_delete_account: boolean;
     can_send_email_confirmation: boolean;
     can_send_password_reset: boolean;
     can_set_temporary_password: boolean;
+    can_suspend_account: boolean;
     can_revoke_sessions: boolean;
   };
   confirmed: boolean;
   confirmed_at: string | null;
   created_at: string;
+  delete_blocked_reason: string | null;
+  deleted: boolean;
+  deleted_at: string | null;
   email: string;
   has_password: boolean;
   last_access_at: string | null;
@@ -611,6 +620,16 @@ export type AdminPsychologistSetTemporaryPasswordInput = AdminPsychologistAccoun
 
 export type AdminPsychologistRevokeSessionsInput = AdminPsychologistAccountReasonInput & {
   confirmation: string;
+};
+
+export type AdminPsychologistAccountStatusActionInput = AdminPsychologistAccountReasonInput & {
+  confirmation: string;
+};
+
+export type AdminPsychologistAccountDeleteResponse = {
+  deleted: true;
+  id: string;
+  source: "user+psychologist_profile+admin_activity_log";
 };
 
 export type AdminPsychologistBillingPaymentHistoryItem = {
@@ -1439,6 +1458,42 @@ export const revokeAdminPsychologistAccountSessions = async (
 ) => {
   const response = await adminApi.post<ApiResponse<AdminPsychologistAccount>>(
     `/api/admin/private/psychologists/${encodeURIComponent(id)}/account/revoke-sessions`,
+    input,
+  );
+
+  return resolveApiData(response.data);
+};
+
+export const suspendAdminPsychologistAccount = async (
+  id: string,
+  input: AdminPsychologistAccountStatusActionInput,
+) => {
+  const response = await adminApi.post<ApiResponse<AdminPsychologistAccount>>(
+    `/api/admin/private/psychologists/${encodeURIComponent(id)}/account/suspend`,
+    input,
+  );
+
+  return resolveApiData(response.data);
+};
+
+export const deactivateAdminPsychologistAccount = async (
+  id: string,
+  input: AdminPsychologistAccountStatusActionInput,
+) => {
+  const response = await adminApi.post<ApiResponse<AdminPsychologistAccount>>(
+    `/api/admin/private/psychologists/${encodeURIComponent(id)}/account/deactivate`,
+    input,
+  );
+
+  return resolveApiData(response.data);
+};
+
+export const deleteAdminPsychologistAccount = async (
+  id: string,
+  input: AdminPsychologistAccountStatusActionInput,
+) => {
+  const response = await adminApi.post<ApiResponse<AdminPsychologistAccountDeleteResponse>>(
+    `/api/admin/private/psychologists/${encodeURIComponent(id)}/account/delete`,
     input,
   );
 

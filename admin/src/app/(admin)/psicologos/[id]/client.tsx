@@ -43,7 +43,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname, useSearchParams } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
   type FocusEvent,
   type ReactNode,
@@ -62,6 +62,8 @@ import {
   useAdminPsychologistApproveRegistryVerification,
   useAdminPsychologistBilling,
   useAdminPsychologistChangeAccountEmail,
+  useAdminPsychologistDeactivateAccount,
+  useAdminPsychologistDeleteAccount,
   useAdminPsychologistDetail,
   useAdminPsychologistGrantCourtesy,
   useAdminPsychologistPublications,
@@ -76,6 +78,7 @@ import {
   useAdminPsychologistSendPasswordReset,
   useAdminPsychologistSetTemporaryPassword,
   useAdminPsychologistStatistics,
+  useAdminPsychologistSuspendAccount,
   useAdminPsychologistUpdatePersonalData,
   useAdminPsychologistUpdateProfessionalData,
   useAdminPsychologistUpdateRegistryIdentity,
@@ -789,10 +792,30 @@ const accountRevokeSessionsSchema = accountReasonSchema
     }
   });
 
+const createAccountStatusActionSchema = (confirmationText: string) =>
+  accountReasonSchema
+    .extend({
+      confirmation: z.string(),
+    })
+    .superRefine((values, ctx) => {
+      if (values.confirmation.trim().toUpperCase() !== confirmationText) {
+        ctx.addIssue({
+          code: "custom",
+          message: `Digite ${confirmationText} para confirmar.`,
+          path: ["confirmation"],
+        });
+      }
+    });
+
+const accountSuspendSchema = createAccountStatusActionSchema("SUSPENDER CONTA");
+const accountDeactivateSchema = createAccountStatusActionSchema("DESATIVAR CONTA");
+const accountDeleteSchema = createAccountStatusActionSchema("EXCLUIR CONTA");
+
 type AccountReasonFormValues = z.infer<typeof accountReasonSchema>;
 type AccountChangeEmailFormValues = z.infer<typeof accountChangeEmailSchema>;
 type AccountTemporaryPasswordFormValues = z.infer<typeof accountTemporaryPasswordSchema>;
 type AccountRevokeSessionsFormValues = z.infer<typeof accountRevokeSessionsSchema>;
+type AccountStatusActionFormValues = z.infer<typeof accountSuspendSchema>;
 
 const REPORT_DISMISS_CONFIRMATION = "DENUNCIA IMPROCEDENTE";
 const REPORT_UPHOLD_CONFIRMATION = "DENUNCIA PROCEDENTE";
@@ -4873,6 +4896,13 @@ const AccountUnavailableNotice = ({ children }: { children: ReactNode }) => (
   </div>
 );
 
+const ACCOUNT_STATUS_BADGE_CLASS: Record<AdminPsychologistAccount["account_status"], string> = {
+  active: "bg-primary-soft text-primary",
+  deactivated: "bg-surface-muted text-muted",
+  deleted: "bg-danger/10 text-danger",
+  suspended: "bg-danger/10 text-danger",
+};
+
 const AccountSummaryCard = ({ account }: { account: AdminPsychologistAccount }) => (
   <InfoCard icon={ShieldCheck} title="Resumo da conta">
     <dl className="divide-y divide-border">
@@ -4895,10 +4925,15 @@ const AccountSummaryCard = ({ account }: { account: AdminPsychologistAccount }) 
       />
       <FieldRow
         label="Status da conta"
-        value={booleanBadge(account.active, {
-          false: "Inativa",
-          true: "Ativa",
-        })}
+        value={
+          <Badge className={ACCOUNT_STATUS_BADGE_CLASS[account.account_status]}>
+            {account.account_status_label}
+          </Badge>
+        }
+      />
+      <FieldRow
+        label="Status alterado em"
+        value={formatDateTime(account.account_status_changed_at)}
       />
       <FieldRow
         label="Troca obrigatória"
@@ -5292,7 +5327,175 @@ const AccountRevokeSessionsForm = ({
   );
 };
 
+type AccountStatusActionKind = "deactivate" | "delete" | "suspend";
+
+const ACCOUNT_STATUS_ACTION_CONFIG: Record<
+  AccountStatusActionKind,
+  {
+    blockedMessage: string;
+    buttonClassName: string;
+    buttonLabel: string;
+    canRun: (account: AdminPsychologistAccount) => boolean;
+    confirmation: string;
+    description: string;
+    icon: LucideIcon;
+    schema: typeof accountSuspendSchema;
+    successMessage: string;
+    title: string;
+  }
+> = {
+  deactivate: {
+    blockedMessage: "A conta já está desativada ou não pode receber esta ação.",
+    buttonClassName:
+      "border border-border bg-surface px-4 text-foreground hover:border-primary hover:text-primary",
+    buttonLabel: "Desativar conta",
+    canRun: (account) => account.capabilities.can_deactivate_account,
+    confirmation: "DESATIVAR CONTA",
+    description:
+      "Ação administrativa reversível por decisão futura: bloqueia login, encerra sessões e remove o perfil da descoberta pública.",
+    icon: X,
+    schema: accountDeactivateSchema,
+    successMessage: "Conta desativada e sessões encerradas.",
+    title: "Desativar conta",
+  },
+  delete: {
+    blockedMessage: "Exclusão indisponível para esta conta no estado atual.",
+    buttonClassName: "bg-danger px-4 text-white hover:bg-danger/90",
+    buttonLabel: "Excluir conta",
+    canRun: (account) => account.capabilities.can_delete_account,
+    confirmation: "EXCLUIR CONTA",
+    description:
+      "Ação permanente: aplica soft delete, anonimiza dados da conta, remove o perfil público e encerra sessões. Não cancela cobrança ativa em gateway.",
+    icon: AlertTriangle,
+    schema: accountDeleteSchema,
+    successMessage: "Conta excluída. Retornando para a lista de psicólogos.",
+    title: "Excluir conta",
+  },
+  suspend: {
+    blockedMessage: "A conta já está suspensa ou não pode receber esta ação.",
+    buttonClassName: "bg-danger px-4 text-white hover:bg-danger/90",
+    buttonLabel: "Suspender conta",
+    canRun: (account) => account.capabilities.can_suspend_account,
+    confirmation: "SUSPENDER CONTA",
+    description:
+      "Ação punitiva/operacional: bloqueia login, encerra sessões e remove o perfil da descoberta pública sem apagar dados.",
+    icon: Lock,
+    schema: accountSuspendSchema,
+    successMessage: "Conta suspensa e sessões encerradas.",
+    title: "Suspender conta",
+  },
+};
+
+const AccountStatusActionForm = ({
+  account,
+  id,
+  kind,
+  onDeleted,
+}: {
+  account: AdminPsychologistAccount;
+  id: string;
+  kind: AccountStatusActionKind;
+  onDeleted?: () => void;
+}) => {
+  const config = ACCOUNT_STATUS_ACTION_CONFIG[kind];
+  const suspendMutation = useAdminPsychologistSuspendAccount(id);
+  const deactivateMutation = useAdminPsychologistDeactivateAccount(id);
+  const deleteMutation = useAdminPsychologistDeleteAccount(id);
+  const mutation =
+    kind === "suspend"
+      ? suspendMutation
+      : kind === "deactivate"
+        ? deactivateMutation
+        : deleteMutation;
+  const form = useForm<AccountStatusActionFormValues>({
+    defaultValues: {
+      confirmation: "",
+      reason: "",
+    },
+    mode: "onSubmit",
+    resolver: zodResolver(config.schema),
+  });
+  const allowed = config.canRun(account);
+  const disabled = !allowed || mutation.isPending;
+  const Icon = config.icon;
+
+  const onSubmit: SubmitHandler<AccountStatusActionFormValues> = async (values) => {
+    try {
+      await mutation.mutateAsync({
+        confirmation: values.confirmation.trim().toUpperCase(),
+        reason: values.reason.trim(),
+      });
+      form.reset();
+      toast.success(config.successMessage);
+      if (kind === "delete") {
+        onDeleted?.();
+      }
+    } catch (error) {
+      toast.error(resolveApiError(error));
+    }
+  };
+
+  return (
+    <div className="rounded-3xl border border-border bg-surface p-4">
+      <div className="flex items-start gap-3">
+        <IconCircle icon={Icon} />
+        <div>
+          <h3 className="text-base font-black text-foreground">{config.title}</h3>
+          <p className="mt-1 text-sm font-bold leading-6 text-muted">{config.description}</p>
+        </div>
+      </div>
+
+      {!allowed ? (
+        <div className="mt-4">
+          <AccountUnavailableNotice>
+            {kind === "delete" && account.delete_blocked_reason
+              ? account.delete_blocked_reason
+              : config.blockedMessage}
+          </AccountUnavailableNotice>
+        </div>
+      ) : null}
+
+      <FormProvider {...form}>
+        <form className="mt-4 grid gap-3" noValidate onSubmit={form.handleSubmit(onSubmit)}>
+          <TextareaController<AccountStatusActionFormValues>
+            disabled={disabled}
+            label="Motivo/observação interna"
+            name="reason"
+            placeholder="Registre a justificativa administrativa da ação."
+            required
+            rows={3}
+          />
+          <InputController<AccountStatusActionFormValues>
+            autoComplete="off"
+            disabled={disabled}
+            label="Confirmação forte"
+            name="confirmation"
+            placeholder={config.confirmation}
+            required
+          />
+          <button
+            className={cn(
+              "inline-flex h-12 w-full items-center justify-center gap-2 rounded-control text-sm font-black transition disabled:cursor-not-allowed disabled:border-border disabled:bg-surface-muted disabled:text-muted",
+              config.buttonClassName,
+            )}
+            disabled={disabled}
+            type="submit"
+          >
+            {mutation.isPending ? (
+              <Loader2 aria-hidden className="h-4 w-4 animate-spin" />
+            ) : (
+              <Icon aria-hidden className="h-4 w-4" />
+            )}
+            {config.buttonLabel}
+          </button>
+        </form>
+      </FormProvider>
+    </div>
+  );
+};
+
 const AccountTab = ({ id }: { id: string }) => {
+  const router = useRouter();
   const query = useAdminPsychologistAccount(id);
   const errorMessage = query.error ? resolveApiError(query.error) : null;
 
@@ -5341,6 +5544,45 @@ const AccountTab = ({ id }: { id: string }) => {
           </div>
         </InfoCard>
       </div>
+
+      <InfoCard icon={AlertTriangle} title="Ações da conta">
+        <div className="grid gap-5">
+          <div className="rounded-2xl border border-border bg-surface-muted p-4 text-sm font-bold leading-6 text-muted">
+            Suspender e desativar são ações de bloqueio operacional: encerram sessões, impedem login
+            e tiram o perfil da descoberta pública sem apagar dados. Excluir aplica soft delete e
+            anonimização; se houver cobrança vinculada ao gateway, regularize a assinatura antes de
+            continuar.
+          </div>
+          <dl className="divide-y divide-border">
+            <FieldRow
+              label="Status atual"
+              value={
+                <Badge className={ACCOUNT_STATUS_BADGE_CLASS[account.account_status]}>
+                  {account.account_status_label}
+                </Badge>
+              }
+            />
+            <FieldRow
+              label="Última alteração de status"
+              value={formatDateTime(account.account_status_changed_at)}
+            />
+            <FieldRow
+              label="Bloqueio para exclusão"
+              value={account.delete_blocked_reason || "Nenhum bloqueio operacional identificado"}
+            />
+          </dl>
+          <div className="grid gap-4 lg:grid-cols-3">
+            <AccountStatusActionForm account={account} id={id} kind="suspend" />
+            <AccountStatusActionForm account={account} id={id} kind="deactivate" />
+            <AccountStatusActionForm
+              account={account}
+              id={id}
+              kind="delete"
+              onDeleted={() => router.push("/psicologos/lista")}
+            />
+          </div>
+        </div>
+      </InfoCard>
 
       <div className="grid gap-5 xl:grid-cols-2">
         <InfoCard icon={KeyRound} title="Senha e recuperação">

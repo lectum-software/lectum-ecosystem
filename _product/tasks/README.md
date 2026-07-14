@@ -17,7 +17,7 @@ Cada task é auto-suficiente e deve ser executada isoladamente por uma IA usando
 - A referência visual ativa é Builder Quick Copy + imagens exportadas em `_product/proto`.
 - O Builder está autenticado no espaço `Lectum` e o Quick Copy foi validado via `builder.io code`.
 - Existem 62 JPEGs exportados em `_product/proto`: 61 telas de produto e 1 ícone isolado.
-- A fila operacional agora possui 78 tasks: `TASK-00` a `TASK-72`, incluindo complementos `TASK-18A`, `TASK-29A`/`TASK-29B` e `TASK-31A` a `TASK-31C`.
+- A fila operacional agora possui 79 tasks: `TASK-00` a `TASK-73`, incluindo complementos `TASK-18A`, `TASK-29A`/`TASK-29B` e `TASK-31A` a `TASK-31C`.
 
 ## Inventário visual ativo
 
@@ -153,6 +153,7 @@ ou cortesia manual.
 | 70 | [TASK-70 - Resolução administrativa de denúncias recebidas](TASK-70-resolucao-denuncias-recebidas-admin.md) | Completed | 23, 24, 26, 45, 46, 55, 58, 59, 67 |
 | 71 | [TASK-71 - Abas administrativas da comunidade, conteúdo e ranking completo](TASK-71-admin-comunidade-abas-conteudo-ranking.md) | Completed | 23, 24, 26, 27, 45, 46, 51, 52, 67, 70 |
 | 72 | [TASK-72 - Métricas de conversão e uso da plataforma por psicólogos no Admin](TASK-72-metricas-conversao-uso-plataforma-psicologos-admin.md) | Completed | 09, 31, 32, 33, 45, 46, 47, 49, 53, 55, 56, 57, 62 |
+| 73 | [TASK-73 - Ações administrativas de conta do psicólogo](TASK-73-acoes-conta-psicologo-admin.md) | Completed | 45, 46, 55, 68 |
 
 ## Ordem operacional recomendada sem bloqueios
 
@@ -197,6 +198,7 @@ Esta secao e a fila pratica para continuar o MVP sem bater nas tasks bloqueadas 
 35. [TASK-68 - Conta e acesso do psicólogo no Admin](TASK-68-conta-acesso-psicologo-admin.md) foi adicionada em 2026-07-11 para centralizar suporte de conta após Denúncias, incluindo alteração administrativa de e-mail, reenvio de confirmação, link de redefinição e senha temporária auditada para contas com login por e-mail e senha.
 36. [TASK-71 - Abas administrativas da comunidade, conteúdo e ranking completo](TASK-71-admin-comunidade-abas-conteudo-ranking.md) foi adicionada em 2026-07-13 para organizar o detalhe de comunidade em abas contextuais, permitir moderação auditada de posts/comentários e listar ranking completo de psicólogos participantes.
 37. [TASK-72 - Métricas de conversão e uso da plataforma por psicólogos no Admin](TASK-72-metricas-conversao-uso-plataforma-psicologos-admin.md) foi adicionada em 2026-07-13 para medir conversão de cadastro até primeira assinatura paga, modo de cadastro Google/e-mail e uso first-party da plataforma por psicólogos no dashboard e no detalhe administrativo.
+38. [TASK-73 - Ações administrativas de conta do psicólogo](TASK-73-acoes-conta-psicologo-admin.md) foi adicionada em 2026-07-14 para incluir, na aba **Conta** do detalhe administrativo do psicólogo, as ações auditadas **Suspender conta**, **Desativar conta** e **Excluir conta**, sem criar a opção rejeitada de restrição parcial.
 
 ### 1A. Trilha Admin planejada
 
@@ -228,6 +230,7 @@ Execute uma por vez, sempre validando, marcando critérios, ADR e commit/push:
 24. [TASK-68 - Conta e acesso do psicólogo no Admin](TASK-68-conta-acesso-psicologo-admin.md)
 25. [TASK-71 - Abas administrativas da comunidade, conteúdo e ranking completo](TASK-71-admin-comunidade-abas-conteudo-ranking.md)
 26. [TASK-72 - Métricas de conversão e uso da plataforma por psicólogos no Admin](TASK-72-metricas-conversao-uso-plataforma-psicologos-admin.md)
+27. [TASK-73 - Ações administrativas de conta do psicólogo](TASK-73-acoes-conta-psicologo-admin.md)
 
 ### 1. Trilha executavel agora apos TASK-10
 

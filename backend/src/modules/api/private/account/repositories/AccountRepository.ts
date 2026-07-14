@@ -19,6 +19,16 @@ const markDeleted = (now: Date) => ({
   deletedAt: now,
 });
 
+type AccountDeletionAdminAudit = {
+  adminId: string;
+  changedFields: string[];
+  metadata: Prisma.InputJsonObject;
+  reason: string;
+  safeAfter: Prisma.InputJsonObject;
+  safeBefore: Prisma.InputJsonObject;
+  targetId: string;
+};
+
 const recalculatePsychologistRating = async (
   tx: Prisma.TransactionClient,
   psychologistId: string,
@@ -212,7 +222,7 @@ export class AccountRepository implements IAccountRepository {
     return Boolean(reauth);
   }
 
-  async deleteOwnAccount(user: user): Promise<void> {
+  async deleteOwnAccount(user: user, adminAudit?: AccountDeletionAdminAudit): Promise<void> {
     const userId = user.id!;
     const now = new Date();
     const anonymizedEmail = `deleted-${userId}@deleted.lectum.local`;
@@ -272,6 +282,8 @@ export class AccountRepository implements IAccountRepository {
         },
         data: {
           active: false,
+          account_status: "deleted",
+          account_status_changed_at: now,
           avatar: null,
           confirm_code: null,
           confirm_date: null,
@@ -306,6 +318,28 @@ export class AccountRepository implements IAccountRepository {
           }),
         },
       });
+
+      if (adminAudit) {
+        await tx.admin_activity_log.create({
+          data: {
+            action: "psychologist_account_deleted",
+            admin_id: adminAudit.adminId,
+            area: "conta_e_acesso",
+            changed_fields: adminAudit.changedFields as Prisma.InputJsonValue,
+            domain: "psychologist_account",
+            metadata: adminAudit.metadata,
+            reason: adminAudit.reason,
+            safe_after: adminAudit.safeAfter,
+            safe_before: adminAudit.safeBefore,
+            source: "admin_panel",
+            target_id: adminAudit.targetId,
+            target_type: "psychologist",
+          },
+          select: {
+            id: true,
+          },
+        });
+      }
 
       await tx.user_token.deleteMany({
         where: {

@@ -3,16 +3,20 @@ import type { Resolve } from "@/helpers/return";
 import { error, msg } from "@/helpers/translate";
 import { confirmEmailSend } from "@/modules/api/config/nodemailer/messages/confirm";
 import { recoveryEmailSend } from "@/modules/api/config/nodemailer/messages/recovery";
+import { AccountRepository } from "@/modules/api/private/account/repositories/AccountRepository";
 import { code } from "@/utils/code";
 import { encrypt } from "@/utils/crypt";
 import { encrypt as encryptBcrypt } from "@/utils/crypt/bcrypt";
 import type {
+  AdminPsychologistAccountDeleteDTO,
   AdminPsychologistAccountDTO,
+  AdminPsychologistAccountStatus,
   IAdminPsychologistAccountChangeEmailDTO,
   IAdminPsychologistAccountReasonDTO,
   IAdminPsychologistAccountRevokeSessionsDTO,
   IAdminPsychologistAccountSetTemporaryPasswordDTO,
   IAdminPsychologistAccountShowDTO,
+  IAdminPsychologistAccountStatusActionDTO,
 } from "../DTOs/IAdminPsychologistAccountDTO";
 import {
   type AdminPsychologistAccountAudit,
@@ -21,8 +25,18 @@ import {
 } from "../repositories/AdminPsychologistAccountRepository";
 
 const CHANGE_EMAIL_CONFIRMATION = "ALTERAR EMAIL";
+const DEACTIVATE_ACCOUNT_CONFIRMATION = "DESATIVAR CONTA";
+const DELETE_ACCOUNT_CONFIRMATION = "EXCLUIR CONTA";
 const TEMP_PASSWORD_CONFIRMATION = "ALTERAR SENHA";
 const REVOKE_SESSIONS_CONFIRMATION = "ENCERRAR SESSOES";
+const SUSPEND_ACCOUNT_CONFIRMATION = "SUSPENDER CONTA";
+
+const ACCOUNT_STATUS_LABELS: Record<AdminPsychologistAccountStatus, string> = {
+  active: "Ativa",
+  deactivated: "Desativada",
+  deleted: "Excluída",
+  suspended: "Suspensa",
+};
 
 const normalizeEmail = (value: string) => value.trim().toLowerCase();
 
@@ -82,25 +96,75 @@ const passwordSupportUnavailable = () => ({
   ...error("admin_psychologist_account_password_support_unavailable", {}),
 });
 
+const accountAlreadyDeleted = () => ({
+  status: 410,
+  ...error("admin_psychologist_account_already_deleted", {}),
+});
+
+const invalidStatusTransition = () => ({
+  status: 400,
+  ...error("admin_psychologist_account_status_transition_invalid", {}),
+});
+
+const normalizeAccountStatus = (
+  user: AdminPsychologistAccountRecord["user"],
+): AdminPsychologistAccountStatus => {
+  if (user.deleted) return "deleted";
+
+  const status = user.account_status;
+  if (status === "active" || status === "suspended" || status === "deactivated") {
+    return status;
+  }
+
+  return user.active ? "active" : "deactivated";
+};
+
+const findDeleteBlockingSubscription = (profile: AdminPsychologistAccountRecord) =>
+  profile.subscriptions.find((subscription) => {
+    const hasGatewayBilling =
+      subscription.source === "mercadopago" ||
+      Boolean(subscription.gateway) ||
+      Boolean(subscription.gateway_subscription_id);
+
+    return subscription.status === "inadimplente" || hasGatewayBilling;
+  }) ?? null;
+
+const deleteBlockedReason = (profile: AdminPsychologistAccountRecord) =>
+  findDeleteBlockingSubscription(profile)
+    ? "Há assinatura paga vinculada ao gateway ou pagamento em aberto. Cancele ou regularize a cobrança antes de excluir."
+    : null;
+
 const buildAccountDto = (profile: AdminPsychologistAccountRecord): AdminPsychologistAccountDTO => {
   const user = profile.user;
   const hasPassword = Boolean(user.password);
   const activeTokens = user.user_tokens;
   const deviceIds = new Set(activeTokens.map((token) => token.device_id).filter(Boolean));
   const lastAccess = latestAccessAt(activeTokens);
+  const accountStatus = normalizeAccountStatus(user);
+  const deleted = accountStatus === "deleted";
+  const blockedReason = deleteBlockedReason(profile);
 
   return {
     active: Boolean(user.active),
+    account_status: accountStatus,
+    account_status_changed_at: user.account_status_changed_at,
+    account_status_label: ACCOUNT_STATUS_LABELS[accountStatus],
     capabilities: {
-      can_change_email: hasPassword,
-      can_send_email_confirmation: Boolean(user.email && !user.confirmed),
-      can_send_password_reset: hasPassword,
-      can_set_temporary_password: hasPassword,
-      can_revoke_sessions: activeTokens.length > 0,
+      can_change_email: hasPassword && !deleted,
+      can_deactivate_account: !deleted && accountStatus !== "deactivated",
+      can_delete_account: !deleted && !blockedReason,
+      can_send_email_confirmation: Boolean(user.email && !user.confirmed && !deleted),
+      can_send_password_reset: hasPassword && !deleted,
+      can_set_temporary_password: hasPassword && !deleted,
+      can_suspend_account: !deleted && accountStatus !== "suspended",
+      can_revoke_sessions: activeTokens.length > 0 && !deleted,
     },
     confirmed: Boolean(user.confirmed),
     confirmed_at: user.confirmed_date,
     created_at: user.createdAt,
+    delete_blocked_reason: blockedReason,
+    deleted: Boolean(user.deleted),
+    deleted_at: user.deletedAt,
     email: user.email,
     has_password: hasPassword,
     last_access_at: lastAccess,
@@ -143,6 +207,46 @@ const createAudit = ({
   safeBefore,
   targetId,
 });
+
+const createStatusAudit = ({
+  action,
+  adminId,
+  nextStatus,
+  profile,
+  reason,
+}: {
+  action: Extract<
+    AdminPsychologistAccountAudit["action"],
+    "psychologist_account_deactivated" | "psychologist_account_suspended"
+  >;
+  adminId: string;
+  nextStatus: AdminPsychologistAccountStatus;
+  profile: AdminPsychologistAccountRecord;
+  reason: string;
+}): AdminPsychologistAccountAudit => {
+  const currentStatus = normalizeAccountStatus(profile.user);
+
+  return createAudit({
+    action,
+    adminId,
+    changedFields: ["Status da conta", "Sessões"],
+    metadata: {
+      previous_status: currentStatus,
+      revoked_sessions_count: profile.user.user_tokens.length,
+      status: nextStatus,
+    },
+    reason,
+    safeAfter: {
+      Sessões: "Encerradas",
+      "Status da conta": ACCOUNT_STATUS_LABELS[nextStatus],
+    },
+    safeBefore: {
+      Sessões: `${profile.user.user_tokens.length} ativa(s)`,
+      "Status da conta": ACCOUNT_STATUS_LABELS[currentStatus],
+    },
+    targetId: profile.user.id,
+  });
+};
 
 const generateRecoveryCode = async (email: string) => {
   const encrypted = await encryptBcrypt(`${email}${v4()}${Date.now()}`);
@@ -412,6 +516,146 @@ export const setAdminPsychologistAccountTemporaryPassword = async (
   });
 
   return accountResponse(data.p.id, "admin_psychologist_account_temporary_password_set");
+};
+
+const changeAccountStatus = async ({
+  action,
+  accountStatus,
+  confirmation,
+  data,
+  invalidConfirmationKey,
+  messageKey,
+}: {
+  accountStatus: "deactivated" | "suspended";
+  action: Extract<
+    AdminPsychologistAccountAudit["action"],
+    "psychologist_account_deactivated" | "psychologist_account_suspended"
+  >;
+  confirmation: string;
+  data: IAdminPsychologistAccountStatusActionDTO;
+  invalidConfirmationKey: string;
+  messageKey: string;
+}): Promise<Resolve> => {
+  const admin = data.admin;
+  if (!admin?.id) return adminRequired();
+
+  const { profile, repository } = await loadAccount(data.p.id);
+  if (!profile) return profileNotFound();
+
+  const currentStatus = normalizeAccountStatus(profile.user);
+  if (currentStatus === "deleted") return accountAlreadyDeleted();
+  if (currentStatus === accountStatus) return invalidStatusTransition();
+
+  if (data.b.confirmation.trim().toUpperCase() !== confirmation) {
+    return {
+      status: 400,
+      ...error(invalidConfirmationKey, {}),
+    };
+  }
+
+  await repository.updateAccountStatus({
+    accountStatus,
+    audit: createStatusAudit({
+      action,
+      adminId: admin.id,
+      nextStatus: accountStatus,
+      profile,
+      reason: data.b.reason,
+    }),
+    userId: profile.user.id,
+  });
+
+  return accountResponse(data.p.id, messageKey);
+};
+
+export const suspendAdminPsychologistAccount = async (
+  data: IAdminPsychologistAccountStatusActionDTO,
+): Promise<Resolve> =>
+  changeAccountStatus({
+    accountStatus: "suspended",
+    action: "psychologist_account_suspended",
+    confirmation: SUSPEND_ACCOUNT_CONFIRMATION,
+    data,
+    invalidConfirmationKey: "admin_psychologist_account_suspend_confirmation_invalid",
+    messageKey: "admin_psychologist_account_suspended",
+  });
+
+export const deactivateAdminPsychologistAccount = async (
+  data: IAdminPsychologistAccountStatusActionDTO,
+): Promise<Resolve> =>
+  changeAccountStatus({
+    accountStatus: "deactivated",
+    action: "psychologist_account_deactivated",
+    confirmation: DEACTIVATE_ACCOUNT_CONFIRMATION,
+    data,
+    invalidConfirmationKey: "admin_psychologist_account_deactivate_confirmation_invalid",
+    messageKey: "admin_psychologist_account_deactivated",
+  });
+
+export const deleteAdminPsychologistAccount = async (
+  data: IAdminPsychologistAccountStatusActionDTO,
+): Promise<Resolve> => {
+  const admin = data.admin;
+  if (!admin?.id) return adminRequired();
+
+  const { profile } = await loadAccount(data.p.id);
+  if (!profile) return profileNotFound();
+
+  const currentStatus = normalizeAccountStatus(profile.user);
+  if (currentStatus === "deleted") return accountAlreadyDeleted();
+
+  if (data.b.confirmation.trim().toUpperCase() !== DELETE_ACCOUNT_CONFIRMATION) {
+    return {
+      status: 400,
+      ...error("admin_psychologist_account_delete_confirmation_invalid", {}),
+    };
+  }
+
+  const blockingSubscription = findDeleteBlockingSubscription(profile);
+  if (blockingSubscription) {
+    return {
+      status: 409,
+      ...error("account_delete_active_subscription", {}),
+    };
+  }
+
+  const accountRepository = new AccountRepository();
+
+  await accountRepository.deleteOwnAccount(profile.user, {
+    adminId: admin.id,
+    changedFields: ["Status da conta", "Dados da conta", "Sessões", "Perfil público"],
+    metadata: {
+      deletion_mode: "soft_delete_anonymization",
+      previous_status: currentStatus,
+      revoked_sessions_count: profile.user.user_tokens.length,
+      status: "deleted",
+    },
+    reason: data.b.reason,
+    safeAfter: {
+      "Dados da conta": "Anonimizados",
+      "Perfil público": "Removido",
+      Sessões: "Encerradas",
+      "Status da conta": ACCOUNT_STATUS_LABELS.deleted,
+    },
+    safeBefore: {
+      "E-mail da conta": maskEmail(profile.user.email),
+      Sessões: `${profile.user.user_tokens.length} ativa(s)`,
+      "Status da conta": ACCOUNT_STATUS_LABELS[currentStatus],
+    },
+    targetId: profile.user.id,
+  });
+
+  const response: AdminPsychologistAccountDeleteDTO = {
+    deleted: true,
+    id: profile.user.id,
+    source: "user+psychologist_profile+admin_activity_log",
+  };
+
+  return {
+    status: 200,
+    ...msg("admin_psychologist_account_deleted", {}),
+    data: response,
+  };
 };
 
 export const revokeAdminPsychologistAccountSessions = async (

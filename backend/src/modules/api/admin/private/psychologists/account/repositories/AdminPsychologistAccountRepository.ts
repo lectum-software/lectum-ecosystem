@@ -9,13 +9,35 @@ const accountTokenSelect = {
 
 const accountProfileSelect = {
   id: true,
+  subscriptions: {
+    orderBy: {
+      createdAt: "desc" as const,
+    },
+    select: {
+      gateway: true,
+      gateway_subscription_id: true,
+      id: true,
+      source: true,
+      status: true,
+    },
+    where: {
+      deleted: false,
+      status: {
+        in: ["ativa", "inadimplente"],
+      },
+    },
+  },
   user_id: true,
   user: {
     select: {
       active: true,
+      account_status: true,
+      account_status_changed_at: true,
       confirmed: true,
       confirmed_date: true,
       createdAt: true,
+      deleted: true,
+      deletedAt: true,
       email: true,
       id: true,
       name: true,
@@ -49,8 +71,11 @@ export type AdminPsychologistAccountAudit = {
   action:
     | "psychologist_account_email_changed"
     | "psychologist_account_email_confirmation_sent"
+    | "psychologist_account_deactivated"
+    | "psychologist_account_deleted"
     | "psychologist_account_password_reset_sent"
     | "psychologist_account_temporary_password_set"
+    | "psychologist_account_suspended"
     | "psychologist_account_sessions_revoked";
   adminId: string;
   changedFields: string[];
@@ -183,6 +208,32 @@ export class AdminPsychologistAccountRepository {
 
   async revokeSessions(input: { audit: AdminPsychologistAccountAudit; userId: string }) {
     return prisma.$transaction(async (tx) => {
+      await tx.user_token.deleteMany({
+        where: {
+          user_id: input.userId,
+        },
+      });
+
+      await this.createAuditLog(tx, input.audit);
+    });
+  }
+
+  async updateAccountStatus(input: {
+    accountStatus: "deactivated" | "suspended";
+    audit: AdminPsychologistAccountAudit;
+    userId: string;
+  }) {
+    return prisma.$transaction(async (tx) => {
+      await tx.user.update({
+        data: {
+          account_status: input.accountStatus,
+          account_status_changed_at: new Date(),
+          active: false,
+        },
+        select: { id: true },
+        where: { id: input.userId },
+      });
+
       await tx.user_token.deleteMany({
         where: {
           user_id: input.userId,

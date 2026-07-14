@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { adminCommunitiesKeys, adminDashboardKeys, adminPsychologistsKeys } from "@/api/cache/keys";
 import {
   type AdminPsychologistAccountReasonInput,
+  type AdminPsychologistAccountStatusActionInput,
   type AdminPsychologistActivitiesQuery,
   type AdminPsychologistApproveRegistryVerificationInput,
   type AdminPsychologistChangeEmailInput,
@@ -19,6 +20,8 @@ import {
   type AdminPsychologistUpdateRegistryIdentityInput,
   approveAdminPsychologistRegistryVerification,
   changeAdminPsychologistAccountEmail,
+  deactivateAdminPsychologistAccount,
+  deleteAdminPsychologistAccount,
   getAdminPsychologistAccount,
   getAdminPsychologistActivities,
   getAdminPsychologistBilling,
@@ -40,6 +43,7 @@ import {
   sendAdminPsychologistAccountEmailConfirmation,
   sendAdminPsychologistAccountPasswordReset,
   setAdminPsychologistAccountTemporaryPassword,
+  suspendAdminPsychologistAccount,
   updateAdminPsychologistPersonalData,
   updateAdminPsychologistProfessionalData,
   updateAdminPsychologistRegistryIdentity,
@@ -262,6 +266,41 @@ export const useAdminPsychologistRevokeSessions = (id: string) => {
     mutationFn: (input: AdminPsychologistRevokeSessionsInput) =>
       revokeAdminPsychologistAccountSessions(id, input),
     onSuccess: () => invalidatePsychologistAccount(queryClient, id),
+  });
+};
+
+export const useAdminPsychologistSuspendAccount = (id: string) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (input: AdminPsychologistAccountStatusActionInput) =>
+      suspendAdminPsychologistAccount(id, input),
+    onSuccess: () => invalidatePsychologistAccount(queryClient, id),
+  });
+};
+
+export const useAdminPsychologistDeactivateAccount = (id: string) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (input: AdminPsychologistAccountStatusActionInput) =>
+      deactivateAdminPsychologistAccount(id, input),
+    onSuccess: () => invalidatePsychologistAccount(queryClient, id),
+  });
+};
+
+export const useAdminPsychologistDeleteAccount = (id: string) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (input: AdminPsychologistAccountStatusActionInput) =>
+      deleteAdminPsychologistAccount(id, input),
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: adminPsychologistsKeys.all }),
+        queryClient.invalidateQueries({ queryKey: adminDashboardKeys.all }),
+      ]);
+    },
   });
 };
 

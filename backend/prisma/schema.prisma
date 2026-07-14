@@ -24,6 +24,8 @@ model user {
   password                                String?
   password_confirm                        String?
   active                                  Boolean                       @default(true)
+  account_status                          String                        @default("active") @map("account_status")
+  account_status_changed_at               DateTime?                     @map("account_status_changed_at")
   need_reset                              Boolean                       @default(false)
   confirmed                               Boolean                       @default(false)
   confirmed_date                          DateTime?
@@ -82,6 +84,7 @@ model user {
 
   @@index([email, deleted])
   @@index([active, deleted])
+  @@index([account_status, deleted])
   @@index([role, deleted])
   @@map("users")
 }

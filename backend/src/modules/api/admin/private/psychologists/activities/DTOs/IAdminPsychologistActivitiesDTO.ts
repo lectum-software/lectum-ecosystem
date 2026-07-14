@@ -27,12 +27,15 @@ export type AdminPsychologistActivityArea =
 
 export type AdminPsychologistActivityType =
   | "account_created"
+  | "account_deactivated"
+  | "account_deleted"
   | "admin_personal_data_updated"
   | "admin_professional_data_updated"
   | "account_email_changed"
   | "account_email_confirmation_sent"
   | "account_password_reset_sent"
   | "account_sessions_revoked"
+  | "account_suspended"
   | "account_temporary_password_set"
   | "post_created"
   | "post_saved"
