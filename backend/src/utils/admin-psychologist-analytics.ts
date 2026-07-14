@@ -254,7 +254,7 @@ const PAGE_KIND_LABELS: Record<string, string> = {
   home: "Início",
   login: "Login",
   psychologist_profile: "Perfil",
-  psychologists: "Diretório",
+  psychologists: "Psicólogos",
   signup: "Cadastro",
 };
 
@@ -265,7 +265,7 @@ export const platformPageLabel = (
   const segments = path.split("/").filter(Boolean);
   const joined = segments.join("/");
 
-  if (joined.includes("publication") || joined.includes("post")) return "Publicações";
+  if (joined.includes("publication") || joined.includes("post")) return "Posts";
   if (joined.includes("community")) return "Comunidades";
   if (joined.includes("billing") || joined.includes("checkout") || joined.includes("plan")) {
     return "Plano";
