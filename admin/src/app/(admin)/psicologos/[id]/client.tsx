@@ -1805,7 +1805,7 @@ const SubscriptionCard = ({
 
 const registryResponsibleLabel = (registry: AdminPsychologistRegistryVerification) => {
   const actor = registry.summary.latest_manual_admin;
-  if (actor?.name) return actor.name;
+  if (actor?.name) return formatGrantedByName(actor.name);
   if (registry.summary.source === "api_automatica") return "Via API automática";
   if (registry.summary.source === "admin_grant" || registry.summary.source === "manual_admin") {
     return "Admin Lectum";

@@ -557,3 +557,10 @@ Regras de cálculo:
 - Não houve alteração em Prisma schema, migrations, endpoints, dados persistidos ou packages.
 - ADR criado: `adrs/0268-orquestracao-local-admin-pnpm-dev.md`.
 - Validação executada: `node --check scripts/dev.mjs`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke local `GET http://localhost:3002/dashboard` retornando 200.
+
+## Ajuste complementar 2026-07-14 - Responsável do registro profissional sem e-mail/id
+
+- Pedido do usuário: no card **Situação atual** do registro profissional, o campo **Responsável** deve exibir somente `Admin Lectum`.
+- A UI Admin passou a reaproveitar a sanitização já usada em **Concedida por**, removendo e-mail e identificador entre parênteses do ator manual/cortesia antes de renderizar o responsável.
+- O ajuste é exclusivamente visual, mobile-first, sem endpoint novo, sem alteração de Prisma/migrations, packages, dados persistidos ou regra de domínio.
+- Validação executada: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke local `GET http://localhost:3002/psicologos/cmrqztri7000tn0uh1q4n8vxf` retornando 200.
