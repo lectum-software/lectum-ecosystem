@@ -211,6 +211,8 @@ passport.use(
             });
           }
 
+          linkedUser = await repo.reactivateExpiredSuspension(linkedUser);
+
           if (!linkedUser.active) {
             return done(null, inactiveUserResponse());
           }
@@ -333,6 +335,8 @@ passport.use(
             });
           }
 
+          reauthUser = await repo.reactivateExpiredSuspension(reauthUser);
+
           if (!reauthUser.active) {
             return done(null, inactiveUserResponse());
           }
@@ -396,6 +400,8 @@ passport.use(
             },
           });
         } else {
+          user = await repo.reactivateExpiredSuspension(user);
+
           if (!user.active) {
             return done(null, inactiveUserResponse());
           }

@@ -18,6 +18,7 @@ export type AdminPsychologistAccountDTO = {
   active: boolean;
   account_status: AdminPsychologistAccountStatus;
   account_status_changed_at: Date | null;
+  account_status_expires_at: Date | null;
   account_status_label: string;
   capabilities: AdminPsychologistAccountCapabilities;
   confirmed: boolean;
@@ -87,6 +88,7 @@ export type IAdminPsychologistAccountRevokeSessionsDTO = Request & {
   b: {
     confirmation: string;
     reason: string;
+    suspension_duration_days?: number;
   };
   p: {
     id: string;

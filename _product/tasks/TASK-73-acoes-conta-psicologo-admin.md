@@ -78,6 +78,7 @@ Permitir que um Admin autenticado execute ações reais e auditadas de suspensã
 - [x] Restrição parcial não foi implementada.
 - [x] As ações usam endpoints Admin privados reais e protegidos por autenticação Admin.
 - [x] Suspensão grava `account_status="suspended"`, `active=false`, encerra sessões e audita a ação.
+- [x] Suspensão exige seleção de prazo em lista suspensa com valores finitos e persistidos.
 - [x] Desativação grava `account_status="deactivated"`, `active=false`, encerra sessões e audita a ação.
 - [x] Exclusão reutiliza soft delete/anonymization real, grava `account_status="deleted"`, encerra sessões e audita a ação.
 - [x] Exclusão fica bloqueada quando houver assinatura paga vinculada a gateway ou inadimplência operacional.
@@ -104,6 +105,14 @@ Permitir que um Admin autenticado execute ações reais e auditadas de suspensã
 - A UI da aba **Conta** recebeu card mobile-first de ações sensíveis, com motivo, confirmação forte e estados de bloqueio.
 - Builder/Quick Copy não estava acessível no ambiente; a execução usou o padrão visual da aba **Conta** já implementada, as imagens locais registradas em `PROTO-INVENTORY.md` e a captura compartilhada pelo usuário.
 
+## Complemento TASK-73B - Prazo de suspensão
+
+- A ação **Suspender conta** recebeu lista suspensa obrigatória de prazo: 1, 7, 15, 30, 60 ou 90 dias.
+- O backend persiste o vencimento em `user.account_status_expires_at` e registra prazo/duração na auditoria administrativa.
+- Suspensão continua encerrando sessões e bloqueando login até o vencimento.
+- Ao vencer, a conta é reativada de forma preguiçosa no próximo login real ou na leitura administrativa da aba **Conta**; tokens encerrados pela suspensão não são restaurados.
+- Desativação e exclusão limpam `account_status_expires_at`.
+
 ## Validação executada
 
 - `pnpm --dir backend db:migrate`
@@ -112,6 +121,16 @@ Permitir que um Admin autenticado execute ações reais e auditadas de suspensã
 - `pnpm --dir admin check`
 - `pnpm --dir admin build`
 - `pnpm check`
+- Complemento TASK-73B:
+  - `pnpm --dir backend db:migrate`
+  - `pnpm --dir backend check`
+  - `pnpm --dir backend build`
+  - `pnpm --dir admin check`
+  - `pnpm --dir admin build`
+  - `pnpm check`
+  - `node -e "JSON.parse(require('fs').readFileSync('backend/locales/pt/translation.json','utf8'))"`
+  - Smoke HTTP local em `/psicologos/cmrgrztri7000tn0uh1q4n8vxf?tab=conta` retornando 200.
+  - Smoke HTTP local sem sessão em `/account/suspend` com `suspension_duration_days=7` retornando 401.
 - `node -e "JSON.parse(require('fs').readFileSync('backend/locales/pt/translation.json','utf8'))"`
 - Smoke HTTP local:
   - `GET http://localhost:3002/psicologos/cmrgrztri7000tn0uh1q4n8vxf?tab=conta` retornou 200.

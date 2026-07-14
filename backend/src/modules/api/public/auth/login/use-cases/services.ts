@@ -31,7 +31,7 @@ export default async (data: ILoginDTO): Promise<Resolve> => {
   const auth = await credentials<user>(data.b.email, data.b.password, device.id);
 
   if (!auth.user) return auth;
-  const user = auth.user;
+  const user = await _LOGIN.reactivateExpiredSuspension(auth.user);
 
   if (!user.active)
     return {

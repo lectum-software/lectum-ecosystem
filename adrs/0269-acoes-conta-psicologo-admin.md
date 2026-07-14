@@ -56,3 +56,17 @@ O modelo já possuía `user.active`, `user.deleted`/`deleted_at`, `user_token` e
 ## Pendências
 
 - Reativação administrativa e eventual cancelamento operacional de gateway devem virar tasks próprias se o produto decidir implementá-los.
+
+## Complemento 2026-07-14 - Prazo de suspensão
+
+A suspensão administrativa passa a ser sempre temporária e exige seleção de prazo em lista fechada: 1, 7, 15, 30, 60 ou 90 dias. O prazo escolhido é persistido em `user.account_status_expires_at` e entra na auditoria da ação junto da duração em dias.
+
+Decisão operacional:
+
+- suspensão mantém `active=false`, `account_status="suspended"` e sessões encerradas até `account_status_expires_at`;
+- desativação e exclusão limpam `account_status_expires_at`;
+- ao vencer, a conta é reativada de forma preguiçosa no próximo login real ou na leitura administrativa da aba **Conta**;
+- tokens removidos no ato da suspensão não são restaurados; o psicólogo precisa criar nova sessão;
+- JWTs antigos não usam a rotina de expiração preguiçosa para não desfazer o efeito de encerramento de sessões.
+
+Alternativa rejeitada: manter o prazo apenas como metadado de auditoria. Isso foi descartado porque a seleção de prazo precisa ter efeito operacional real.

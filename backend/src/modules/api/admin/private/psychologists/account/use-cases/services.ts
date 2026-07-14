@@ -4,6 +4,11 @@ import { error, msg } from "@/helpers/translate";
 import { confirmEmailSend } from "@/modules/api/config/nodemailer/messages/confirm";
 import { recoveryEmailSend } from "@/modules/api/config/nodemailer/messages/recovery";
 import { AccountRepository } from "@/modules/api/private/account/repositories/AccountRepository";
+import {
+  isSuspensionExpired,
+  isValidSuspensionDurationDays,
+  suspensionExpiresAtFromDays,
+} from "@/utils/account-status";
 import { code } from "@/utils/code";
 import { encrypt } from "@/utils/crypt";
 import { encrypt as encryptBcrypt } from "@/utils/crypt/bcrypt";
@@ -106,6 +111,11 @@ const invalidStatusTransition = () => ({
   ...error("admin_psychologist_account_status_transition_invalid", {}),
 });
 
+const invalidSuspensionDuration = () => ({
+  status: 400,
+  ...error("admin_psychologist_account_suspension_duration_invalid", {}),
+});
+
 const normalizeAccountStatus = (
   user: AdminPsychologistAccountRecord["user"],
 ): AdminPsychologistAccountStatus => {
@@ -148,6 +158,7 @@ const buildAccountDto = (profile: AdminPsychologistAccountRecord): AdminPsycholo
     active: Boolean(user.active),
     account_status: accountStatus,
     account_status_changed_at: user.account_status_changed_at,
+    account_status_expires_at: user.account_status_expires_at,
     account_status_label: ACCOUNT_STATUS_LABELS[accountStatus],
     capabilities: {
       can_change_email: hasPassword && !deleted,
@@ -183,7 +194,12 @@ const buildAccountDto = (profile: AdminPsychologistAccountRecord): AdminPsycholo
 
 const loadAccount = async (id: string) => {
   const repository = new AdminPsychologistAccountRepository();
-  const profile = await repository.findPsychologist(id);
+  let profile = await repository.findPsychologist(id);
+
+  if (profile && isSuspensionExpired(profile.user)) {
+    await repository.activateExpiredSuspension(profile.user.id);
+    profile = await repository.findPsychologist(id);
+  }
 
   return { profile, repository };
 };
@@ -214,6 +230,8 @@ const createStatusAudit = ({
   nextStatus,
   profile,
   reason,
+  suspensionDurationDays,
+  suspensionExpiresAt,
 }: {
   action: Extract<
     AdminPsychologistAccountAudit["action"],
@@ -223,26 +241,49 @@ const createStatusAudit = ({
   nextStatus: AdminPsychologistAccountStatus;
   profile: AdminPsychologistAccountRecord;
   reason: string;
+  suspensionDurationDays?: number;
+  suspensionExpiresAt?: Date | null;
 }): AdminPsychologistAccountAudit => {
   const currentStatus = normalizeAccountStatus(profile.user);
+  const hasSuspensionDeadline = nextStatus === "suspended" && suspensionExpiresAt;
 
   return createAudit({
     action,
     adminId,
-    changedFields: ["Status da conta", "Sessões"],
+    changedFields: [
+      "Status da conta",
+      ...(hasSuspensionDeadline ? ["Prazo da suspensão"] : []),
+      "Sessões",
+    ],
     metadata: {
       previous_status: currentStatus,
       revoked_sessions_count: profile.user.user_tokens.length,
       status: nextStatus,
+      ...(hasSuspensionDeadline
+        ? {
+            suspension_duration_days: suspensionDurationDays,
+            suspension_expires_at: suspensionExpiresAt.toISOString(),
+          }
+        : {}),
     },
     reason,
     safeAfter: {
       Sessões: "Encerradas",
       "Status da conta": ACCOUNT_STATUS_LABELS[nextStatus],
+      ...(hasSuspensionDeadline
+        ? {
+            "Prazo da suspensão": suspensionExpiresAt.toISOString(),
+          }
+        : {}),
     },
     safeBefore: {
       Sessões: `${profile.user.user_tokens.length} ativa(s)`,
       "Status da conta": ACCOUNT_STATUS_LABELS[currentStatus],
+      ...(profile.user.account_status_expires_at
+        ? {
+            "Prazo da suspensão": profile.user.account_status_expires_at.toISOString(),
+          }
+        : {}),
     },
     targetId: profile.user.id,
   });
@@ -520,6 +561,7 @@ export const setAdminPsychologistAccountTemporaryPassword = async (
 
 const changeAccountStatus = async ({
   action,
+  accountStatusExpiresAt,
   accountStatus,
   confirmation,
   data,
@@ -527,6 +569,7 @@ const changeAccountStatus = async ({
   messageKey,
 }: {
   accountStatus: "deactivated" | "suspended";
+  accountStatusExpiresAt?: Date | null;
   action: Extract<
     AdminPsychologistAccountAudit["action"],
     "psychologist_account_deactivated" | "psychologist_account_suspended"
@@ -555,12 +598,15 @@ const changeAccountStatus = async ({
 
   await repository.updateAccountStatus({
     accountStatus,
+    accountStatusExpiresAt: accountStatusExpiresAt ?? null,
     audit: createStatusAudit({
       action,
       adminId: admin.id,
       nextStatus: accountStatus,
       profile,
       reason: data.b.reason,
+      suspensionDurationDays: data.b.suspension_duration_days,
+      suspensionExpiresAt: accountStatusExpiresAt,
     }),
     userId: profile.user.id,
   });
@@ -570,8 +616,12 @@ const changeAccountStatus = async ({
 
 export const suspendAdminPsychologistAccount = async (
   data: IAdminPsychologistAccountStatusActionDTO,
-): Promise<Resolve> =>
-  changeAccountStatus({
+): Promise<Resolve> => {
+  const durationDays = Number(data.b.suspension_duration_days);
+  if (!isValidSuspensionDurationDays(durationDays)) return invalidSuspensionDuration();
+
+  return changeAccountStatus({
+    accountStatusExpiresAt: suspensionExpiresAtFromDays(durationDays),
     accountStatus: "suspended",
     action: "psychologist_account_suspended",
     confirmation: SUSPEND_ACCOUNT_CONFIRMATION,
@@ -579,6 +629,7 @@ export const suspendAdminPsychologistAccount = async (
     invalidConfirmationKey: "admin_psychologist_account_suspend_confirmation_invalid",
     messageKey: "admin_psychologist_account_suspended",
   });
+};
 
 export const deactivateAdminPsychologistAccount = async (
   data: IAdminPsychologistAccountStatusActionDTO,

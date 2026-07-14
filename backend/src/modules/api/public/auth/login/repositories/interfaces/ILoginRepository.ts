@@ -11,6 +11,7 @@ import type { IUpdateDTO } from "../../DTOs/IUpdateDTO";
 export interface ILoginRepository {
   hidrate: (data: user, device_id: string) => Promise<user>;
   findByEmail: (data: IFindByEmailDTO) => Promise<user | null>;
+  reactivateExpiredSuspension: (data: user) => Promise<user>;
   update: (data: IUpdateDTO) => Promise<user | null>;
   store: (data: IStoreDTO) => Promise<user | null>;
   tokenByDevice: (where: ITokenByDeviceDTO) => Promise<user_token | null>;

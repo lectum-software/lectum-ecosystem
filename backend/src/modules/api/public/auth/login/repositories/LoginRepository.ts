@@ -8,6 +8,7 @@ import type { user, user_token } from "@/interfaces/objects";
 import { generateToken } from "@/modules/api/middlewares/_auth/utils/generateToken";
 //
 import { loginInclude } from "@/query/login";
+import { isSuspensionExpired } from "@/utils/account-status";
 import { log } from "@/utils/logs";
 import { sanitizeSensitiveData } from "@/utils/sanitize-sensitive";
 import type { IFindByEmailDTO } from "../DTOs/IFindByEmailDTO";
@@ -104,6 +105,27 @@ export class LoginRepository implements ILoginRepository {
         ...loginInclude(),
       },
     });
+    return res;
+  }
+
+  async reactivateExpiredSuspension(data: user): Promise<user> {
+    if (!isSuspensionExpired(data)) return data;
+
+    const res = await this.repository.update({
+      data: {
+        account_status: "active",
+        account_status_changed_at: new Date(),
+        account_status_expires_at: null,
+        active: true,
+      },
+      include: {
+        user_tokens: this.tokens,
+        //
+        ...loginInclude(),
+      },
+      where: { id: data.id! },
+    });
+
     return res;
   }
 

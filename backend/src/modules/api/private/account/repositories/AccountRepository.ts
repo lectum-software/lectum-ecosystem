@@ -284,6 +284,7 @@ export class AccountRepository implements IAccountRepository {
           active: false,
           account_status: "deleted",
           account_status_changed_at: now,
+          account_status_expires_at: null,
           avatar: null,
           confirm_code: null,
           confirm_date: null,

@@ -792,10 +792,29 @@ const accountRevokeSessionsSchema = accountReasonSchema
     }
   });
 
-const createAccountStatusActionSchema = (confirmationText: string) =>
+const SUSPENSION_DURATION_VALUES = ["1", "7", "15", "30", "60", "90"] as const;
+
+const SUSPENSION_DURATION_OPTIONS = [
+  { label: "1 dia", value: "1" },
+  { label: "7 dias", value: "7" },
+  { label: "15 dias", value: "15" },
+  { label: "30 dias", value: "30" },
+  { label: "60 dias", value: "60" },
+  { label: "90 dias", value: "90" },
+];
+
+const createAccountStatusActionSchema = (
+  confirmationText: string,
+  requireSuspensionDuration = false,
+) =>
   accountReasonSchema
     .extend({
       confirmation: z.string(),
+      suspension_duration_days: requireSuspensionDuration
+        ? z.enum(SUSPENSION_DURATION_VALUES, {
+            message: "Selecione o prazo da suspensão.",
+          })
+        : z.string().optional(),
     })
     .superRefine((values, ctx) => {
       if (values.confirmation.trim().toUpperCase() !== confirmationText) {
@@ -807,7 +826,7 @@ const createAccountStatusActionSchema = (confirmationText: string) =>
       }
     });
 
-const accountSuspendSchema = createAccountStatusActionSchema("SUSPENDER CONTA");
+const accountSuspendSchema = createAccountStatusActionSchema("SUSPENDER CONTA", true);
 const accountDeactivateSchema = createAccountStatusActionSchema("DESATIVAR CONTA");
 const accountDeleteSchema = createAccountStatusActionSchema("EXCLUIR CONTA");
 
@@ -4935,6 +4954,9 @@ const AccountSummaryCard = ({ account }: { account: AdminPsychologistAccount }) 
         label="Status alterado em"
         value={formatDateTime(account.account_status_changed_at)}
       />
+      {account.account_status === "suspended" ? (
+        <FieldRow label="Suspensa até" value={formatDateTime(account.account_status_expires_at)} />
+      ) : null}
       <FieldRow
         label="Troca obrigatória"
         value={booleanBadge(account.need_reset, {
@@ -5378,7 +5400,7 @@ const ACCOUNT_STATUS_ACTION_CONFIG: Record<
     canRun: (account) => account.capabilities.can_suspend_account,
     confirmation: "SUSPENDER CONTA",
     description:
-      "Ação punitiva/operacional: bloqueia login, encerra sessões e remove o perfil da descoberta pública sem apagar dados.",
+      "Ação punitiva/operacional temporária: bloqueia login, encerra sessões e remove o perfil da descoberta pública sem apagar dados.",
     icon: Lock,
     schema: accountSuspendSchema,
     successMessage: "Conta suspensa e sessões encerradas.",
@@ -5411,6 +5433,7 @@ const AccountStatusActionForm = ({
     defaultValues: {
       confirmation: "",
       reason: "",
+      suspension_duration_days: "30",
     },
     mode: "onSubmit",
     resolver: zodResolver(config.schema),
@@ -5421,10 +5444,22 @@ const AccountStatusActionForm = ({
 
   const onSubmit: SubmitHandler<AccountStatusActionFormValues> = async (values) => {
     try {
-      await mutation.mutateAsync({
+      const payload = {
         confirmation: values.confirmation.trim().toUpperCase(),
         reason: values.reason.trim(),
-      });
+      };
+
+      if (kind === "suspend") {
+        await suspendMutation.mutateAsync({
+          ...payload,
+          suspension_duration_days: Number(values.suspension_duration_days),
+        });
+      } else if (kind === "deactivate") {
+        await deactivateMutation.mutateAsync(payload);
+      } else {
+        await deleteMutation.mutateAsync(payload);
+      }
+
       form.reset();
       toast.success(config.successMessage);
       if (kind === "delete") {
@@ -5457,6 +5492,15 @@ const AccountStatusActionForm = ({
 
       <FormProvider {...form}>
         <form className="mt-4 grid gap-3" noValidate onSubmit={form.handleSubmit(onSubmit)}>
+          {kind === "suspend" ? (
+            <SelectController<AccountStatusActionFormValues>
+              disabled={disabled}
+              label="Prazo da suspensão"
+              name="suspension_duration_days"
+              options={SUSPENSION_DURATION_OPTIONS}
+              required
+            />
+          ) : null}
           <TextareaController<AccountStatusActionFormValues>
             disabled={disabled}
             label="Motivo/observação interna"
@@ -5566,6 +5610,12 @@ const AccountTab = ({ id }: { id: string }) => {
               label="Última alteração de status"
               value={formatDateTime(account.account_status_changed_at)}
             />
+            {account.account_status === "suspended" ? (
+              <FieldRow
+                label="Suspensa até"
+                value={formatDateTime(account.account_status_expires_at)}
+              />
+            ) : null}
             <FieldRow
               label="Bloqueio para exclusão"
               value={account.delete_blocked_reason || "Nenhum bloqueio operacional identificado"}

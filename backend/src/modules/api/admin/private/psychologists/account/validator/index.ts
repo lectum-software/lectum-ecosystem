@@ -25,6 +25,15 @@ const confirmationField = (key = "confirmation") =>
     max: 40,
   }) satisfies NonNullable<IValidatorRequest["body"]>[number];
 
+const suspensionDurationField = {
+  key: "suspension_duration_days",
+  coerse: "number",
+  method: "numeric",
+  int: true,
+  min: 1,
+  max: 90,
+} satisfies NonNullable<IValidatorRequest["body"]>[number];
+
 export const showAccountSchema: IValidatorRequest = {
   params: [psychologistParam],
 };
@@ -62,8 +71,14 @@ export const revokeSessionsSchema: IValidatorRequest = {
   body: [reasonField, confirmationField()],
 };
 
+export const suspendAccountSchema: IValidatorRequest = {
+  params: [psychologistParam],
+  body: [reasonField, confirmationField(), suspensionDurationField],
+};
+
 export const showAccountValidator = validator(showAccountSchema);
 export const changeEmailValidator = validator(changeEmailSchema);
 export const reasonOnlyValidator = validator(reasonOnlySchema);
 export const setTemporaryPasswordValidator = validator(setTemporaryPasswordSchema);
 export const revokeSessionsValidator = validator(revokeSessionsSchema);
+export const suspendAccountValidator = validator(suspendAccountSchema);

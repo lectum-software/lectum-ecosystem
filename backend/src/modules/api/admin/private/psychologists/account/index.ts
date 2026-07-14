@@ -17,6 +17,7 @@ import {
   revokeSessionsValidator,
   setTemporaryPasswordValidator,
   showAccountValidator,
+  suspendAccountValidator,
 } from "./validator";
 
 const routes = Router();
@@ -31,7 +32,7 @@ routes.post(
   setTemporaryPasswordValidator,
   setTemporaryPassword,
 );
-routes.post("/:id/account/suspend", revokeSessionsValidator, suspendAccount);
+routes.post("/:id/account/suspend", suspendAccountValidator, suspendAccount);
 routes.post("/:id/account/deactivate", revokeSessionsValidator, deactivateAccount);
 routes.post("/:id/account/delete", revokeSessionsValidator, deleteAccount);
 routes.post("/:id/account/revoke-sessions", revokeSessionsValidator, revokeSessions);

@@ -156,6 +156,7 @@
     "admin_psychologist_account_revoke_sessions_confirmation_invalid": "Digite ENCERRAR SESSOES para confirmar o encerramento das sess?es.",
     "admin_psychologist_account_status_transition_invalid": "A conta ja esta neste status administrativo.",
     "admin_psychologist_account_suspend_confirmation_invalid": "Digite SUSPENDER CONTA para confirmar a suspensao administrativa da conta.",
+    "admin_psychologist_account_suspension_duration_invalid": "Selecione um prazo de suspensao valido.",
     "admin_psychologist_account_temporary_password_confirmation_invalid": "Digite ALTERAR SENHA para confirmar a senha tempor?ria.",
     "admin_psychologist_report_dismiss_confirmation_invalid": "Digite DENUNCIA IMPROCEDENTE para resolver a denúncia como improcedente.",
     "admin_psychologist_report_invalid_status": "Esta denúncia não está em um status que permita esta ação.",

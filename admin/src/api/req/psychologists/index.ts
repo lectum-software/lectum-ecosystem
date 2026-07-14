@@ -569,6 +569,7 @@ export type AdminPsychologistUpdateProfessionalDataInput = {
 
 export type AdminPsychologistAccount = {
   active: boolean;
+  account_status_expires_at: string | null;
   account_status: "active" | "deactivated" | "deleted" | "suspended";
   account_status_changed_at: string | null;
   account_status_label: string;
@@ -624,6 +625,7 @@ export type AdminPsychologistRevokeSessionsInput = AdminPsychologistAccountReaso
 
 export type AdminPsychologistAccountStatusActionInput = AdminPsychologistAccountReasonInput & {
   confirmation: string;
+  suspension_duration_days?: number;
 };
 
 export type AdminPsychologistAccountDeleteResponse = {

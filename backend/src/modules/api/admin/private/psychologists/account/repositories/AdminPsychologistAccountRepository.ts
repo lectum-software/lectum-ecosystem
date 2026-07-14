@@ -33,6 +33,7 @@ const accountProfileSelect = {
       active: true,
       account_status: true,
       account_status_changed_at: true,
+      account_status_expires_at: true,
       confirmed: true,
       confirmed_date: true,
       createdAt: true,
@@ -220,6 +221,7 @@ export class AdminPsychologistAccountRepository {
 
   async updateAccountStatus(input: {
     accountStatus: "deactivated" | "suspended";
+    accountStatusExpiresAt?: Date | null;
     audit: AdminPsychologistAccountAudit;
     userId: string;
   }) {
@@ -228,6 +230,7 @@ export class AdminPsychologistAccountRepository {
         data: {
           account_status: input.accountStatus,
           account_status_changed_at: new Date(),
+          account_status_expires_at: input.accountStatusExpiresAt ?? null,
           active: false,
         },
         select: { id: true },
@@ -241,6 +244,25 @@ export class AdminPsychologistAccountRepository {
       });
 
       await this.createAuditLog(tx, input.audit);
+    });
+  }
+
+  async activateExpiredSuspension(userId: string) {
+    await prisma.user.updateMany({
+      data: {
+        account_status: "active",
+        account_status_changed_at: new Date(),
+        account_status_expires_at: null,
+        active: true,
+      },
+      where: {
+        id: userId,
+        account_status: "suspended",
+        account_status_expires_at: {
+          lte: new Date(),
+        },
+        deleted: false,
+      },
     });
   }
 
