@@ -47,3 +47,7 @@ A Lectum não intermedia consultas, sessões clínicas, mensagens ou conversas p
 - `pnpm check`
 - Smoke HTTP local em `/psicologos`, `/psicologos/test-id`, `/psicologos/test-id?tab=estatisticas`.
 - Smoke HTTP local dos endpoints Admin privados sem sessão retornando 401.
+
+## Complemento 2026-07-14
+
+O campo individual `time_to_first_paid_subscription.label` é a fonte única de exibição do `Tempo até assinatura` no detalhe do psicólogo. Além do card **Dados da assinatura** da aba Geral, a aba **Assinatura** também reutiliza esse mesmo campo no card **Plano atual**, evitando recálculo no frontend e mantendo o comportamento de plano gratuito/cortesia sem contar como assinatura paga.

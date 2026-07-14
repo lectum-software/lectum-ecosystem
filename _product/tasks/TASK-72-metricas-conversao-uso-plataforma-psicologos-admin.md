@@ -462,3 +462,10 @@ Regras de cálculo:
   - `GET http://localhost:3002/psicologos/test-id?tab=estatisticas` retornou 200.
 - Verificação estática: ausência de `<img>` cru e ausência da categoria `Google + senha local` nos arquivos alterados do Admin.
 - Validação autenticada com dados reais depende de sessão Admin e base local com psicólogos/assinaturas/pageviews reais; sem sessão, a guarda Admin foi validada sem mock.
+
+## Ajuste complementar 2026-07-14 - Tempo até assinatura na aba Assinatura
+
+- Pedido do usuário: dentro de detalhes do psicólogo, na aba **Assinatura**, o bloco **Plano atual** também deve exibir a linha `Tempo até assinatura`.
+- A UI Admin passou a reutilizar o campo real `detail.general.subscription.time_to_first_paid_subscription.label`, já calculado pela TASK-72, no card `Plano atual` da aba `?tab=plano`.
+- A linha foi posicionada entre `Inicio` e `Próxima renovação`/`Fim`, mantendo a leitura mobile-first do bloco e sem alterar endpoint, schema Prisma, migrations, packages ou regra de domínio.
+- Builder/Quick Copy não está exposto como ferramenta no ambiente; a referência visual usada foi o PNG local `_product/proto/admin/Psicólogos/Detalhes do psicólogo/Plano e pagamentos.png` e a captura enviada pelo usuário.

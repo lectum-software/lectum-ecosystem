@@ -5304,7 +5304,13 @@ const BillingLoadingState = () => (
 const isCurrentCourtesyPlan = (billing: AdminPsychologistBilling) =>
   billing.plan.is_courtesy || billing.plan.source === "admin_grant" || billing.courtesy.can_revoke;
 
-const CurrentPlanCard = ({ billing }: { billing: AdminPsychologistBilling }) => {
+const CurrentPlanCard = ({
+  billing,
+  detail,
+}: {
+  billing: AdminPsychologistBilling;
+  detail: AdminPsychologistDetail;
+}) => {
   const plan = billing.plan;
   const isCourtesy = isCurrentCourtesyPlan(billing);
   const planTitle = isCourtesy ? "Plano de cortesia" : plan.plan_name || "Sem plano ativo";
@@ -5334,6 +5340,10 @@ const CurrentPlanCard = ({ billing }: { billing: AdminPsychologistBilling }) => 
 
       <dl className="mt-5 divide-y divide-border text-sm">
         <FieldRow label="Inicio" value={formatDate(plan.started_at)} />
+        <FieldRow
+          label="Tempo até assinatura"
+          value={detail.general.subscription.time_to_first_paid_subscription.label}
+        />
         <FieldRow label={planEndLabel} value={planEndValue} />
         {hasSubscription ? (
           <>
@@ -5806,7 +5816,7 @@ const CourtesyActionCard = ({ billing, id }: { billing: AdminPsychologistBilling
     <CourtesyGrantForm billing={billing} id={id} />
   );
 
-const PlanBillingTab = ({ id }: { detail: AdminPsychologistDetail; id: string }) => {
+const PlanBillingTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: string }) => {
   const query = useAdminPsychologistBilling(id);
   const errorMessage = query.error ? resolveApiError(query.error) : null;
 
@@ -5824,7 +5834,7 @@ const PlanBillingTab = ({ id }: { detail: AdminPsychologistDetail; id: string })
   return (
     <div className="space-y-5" data-psychologist-detail-tab="plano">
       <div className="grid gap-5 xl:grid-cols-2">
-        <CurrentPlanCard billing={query.data} />
+        <CurrentPlanCard billing={query.data} detail={detail} />
         {showActiveCourtesy ? (
           <ActiveCourtesyCard billing={query.data} id={id} />
         ) : showCourtesyBesidePlan ? (
