@@ -109,7 +109,7 @@ export const usePsychologistsFilterForm = ({
   const filterFieldClassName = "col-span-2";
   const filterCompactSelectClassName = "col-span-1 min-w-0";
   const filterSelectInputClassName =
-    "h-12 rounded-2xl border-border/80 bg-surface-muted pr-11 text-sm shadow-none";
+    "h-12 rounded-2xl border-border/80 bg-surface pr-11 text-sm font-semibold text-foreground shadow-sm shadow-border/30 hover:border-primary/30 focus:border-primary focus:ring-4 focus:ring-primary/10 disabled:bg-surface-muted disabled:text-muted disabled:shadow-none disabled:[&>span]:text-muted [&>span]:text-foreground";
 
   const fields = useMemo<Field<PsychologistsFilterForm>[]>(
     () => [
@@ -123,7 +123,7 @@ export const usePsychologistsFilterForm = ({
         onChangeCallback: (value) => onSearchChange?.(String(value ?? "")),
         after: searchSuggestionsSlot,
         inputClassName:
-          "h-12 rounded-2xl border-border/80 bg-surface-muted text-sm shadow-none placeholder:text-subtle",
+          "h-12 rounded-2xl border-border/80 bg-surface text-sm text-foreground shadow-sm shadow-border/30 placeholder:text-muted hover:border-primary/30 focus:border-primary focus:ring-4 focus:ring-primary/10 disabled:bg-surface-muted disabled:text-muted disabled:shadow-none",
       },
       {
         name: "specialty",
