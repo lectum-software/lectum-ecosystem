@@ -151,6 +151,26 @@ export class AdminPsychologistEngagementRepository {
     });
   }
 
+  async listPublicProfilePageViews(userId: string, from: Date, to: Date) {
+    return prisma.page_view_event.findMany({
+      orderBy: {
+        occurred_at: "asc",
+      },
+      select: {
+        occurred_at: true,
+        session_id: true,
+        traffic_source: true,
+      },
+      where: {
+        deleted: false,
+        occurred_at: { gte: from, lte: to },
+        page_kind: "psychologist_profile",
+        target_id: userId,
+        target_type: "psychologist",
+      },
+    });
+  }
+
   async listSearchResultImpressions(psychologistId: string, from: Date, to: Date) {
     return prisma.profile_view_event.findMany({
       where: {

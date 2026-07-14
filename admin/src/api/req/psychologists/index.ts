@@ -842,6 +842,26 @@ export type AdminPsychologistStatistics = {
     unavailable_reason: string | null;
   };
   source: "profile_events+community_activity+video_sessions+search_impressions+professional_review+page_view_event";
+  traffic_sources: {
+    attribution_unavailable_reason: string | null;
+    description: string;
+    source: "page_view_event.traffic_source+target_type=psychologist";
+    sources: {
+      badge: "primary_source" | null;
+      conversion_rate: number | null;
+      description: string;
+      id: string;
+      label: string;
+      percentage: number;
+      profile_views: number;
+      sessions: number;
+      whatsapp_clicks: number | null;
+    }[];
+    total_profile_views: number;
+    total_sessions: number;
+    unavailable_reason: string | null;
+    updated_at: string | null;
+  };
   unavailable: AdminPsychologistEngagementMetric[];
   video: {
     available: boolean;

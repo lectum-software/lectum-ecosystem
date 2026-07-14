@@ -476,3 +476,11 @@ Regras de cálculo:
 - A UI Admin passou a aplicar fundo cinza via tokens (`bg-border/50`) e remover sombra dos cards desmarcados, mantendo os cards selecionados com fundo de superfície, sombra e anel primário.
 - O ajuste é exclusivamente visual, mobile-first e reutiliza os componentes existentes `MetricCard` e `StatisticsMetricToggleCard`; não altera endpoints, schema Prisma, migrations, packages, dados ou regras de domínio.
 - Builder/Quick Copy não está exposto como ferramenta no ambiente; a referência visual usada foi a captura enviada pelo usuário e os padrões locais em `_product/proto/admin/Psicólogos`.
+
+## Ajuste complementar 2026-07-14 - Origem do tráfego na aba Estatísticas
+
+- Pedido do usuário: replicar, no painel Admin em `/psicologos/[id]?tab=estatisticas`, a tabela **Origem do tráfego** existente nos analytics do psicólogo do site público.
+- A aba **Estatísticas** passou a exibir o bloco entre **Análises do vídeo de apresentação** e **Uso da plataforma**, mantendo layout mobile-first e colunas `Fonte`, `Visualizações de perfil`, `WhatsApp` e `Conversão`.
+- A origem usa somente eventos reais `page_view_event` do perfil público (`target_type="psychologist"` e `page_kind="psychologist_profile"`), agrupados por `traffic_source`.
+- Como `contact_request` ainda não persiste origem/sessão para atribuir WhatsApp por canal, os campos `WhatsApp` e `Conversão` ficam indisponíveis por origem com copy honesta; não foram criados mocks, zeros falsos ou inferências não rastreáveis.
+- Não houve alteração em Prisma schema, migrations ou packages.

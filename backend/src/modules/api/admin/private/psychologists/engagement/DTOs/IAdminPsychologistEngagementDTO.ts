@@ -126,6 +126,29 @@ export type AdminPsychologistPlatformUsage = {
   unavailable_reason: string | null;
 };
 
+export type AdminPsychologistTrafficSourceItem = {
+  badge: "primary_source" | null;
+  conversion_rate: number | null;
+  description: string;
+  id: string;
+  label: string;
+  percentage: number;
+  profile_views: number;
+  sessions: number;
+  whatsapp_clicks: number | null;
+};
+
+export type AdminPsychologistTrafficSources = {
+  attribution_unavailable_reason: string | null;
+  description: string;
+  source: "page_view_event.traffic_source+target_type=psychologist";
+  sources: AdminPsychologistTrafficSourceItem[];
+  total_profile_views: number;
+  total_sessions: number;
+  unavailable_reason: string | null;
+  updated_at: Date | null;
+};
+
 export type AdminPsychologistStatisticsDTO = {
   business: {
     cards: AdminPsychologistAvailabilityMetric[];
@@ -139,6 +162,7 @@ export type AdminPsychologistStatisticsDTO = {
   period: AdminPsychologistStatisticsPeriod;
   platform_usage: AdminPsychologistPlatformUsage;
   source: "profile_events+community_activity+video_sessions+search_impressions+professional_review+page_view_event";
+  traffic_sources: AdminPsychologistTrafficSources;
   unavailable: AdminPsychologistAvailabilityMetric[];
   video: AdminPsychologistStatisticsVideo;
 };
