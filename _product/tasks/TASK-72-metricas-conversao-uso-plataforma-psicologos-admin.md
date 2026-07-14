@@ -532,3 +532,11 @@ Regras de cálculo:
 - Não houve alteração em Prisma schema, migrations ou packages.
 - Validação executada: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build` e validação do snapshot staged do Admin.
 - Validação adicional executada: `pnpm check`.
+
+## Ajuste complementar 2026-07-14 - Espaçamento da coluna Rank na lista
+
+- Pedido do usuário: adicionar uma pequena margem à esquerda da coluna de ranking na lista administrativa de psicólogos, pois os números estavam muito colados na borda.
+- A tabela desktop de `/psicologos/lista` passou a usar `pl-3 pr-2` no cabeçalho e nas células da coluna `Rank`, mantendo o layout mobile-first sem alterar dados, endpoints, schema Prisma, migrations ou packages.
+- O ajuste é exclusivamente visual e segue os tokens/componentes existentes do Admin.
+- Não houve decisão arquitetural nova; ADR não foi necessário.
+- Validação executada: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke local `GET http://localhost:3002/psicologos/lista` retornando 200.

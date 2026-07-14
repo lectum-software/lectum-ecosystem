@@ -720,7 +720,7 @@ const PsychologistsTable = ({
         </colgroup>
         <thead className="border-b border-border bg-surface-muted/70 text-xs text-muted">
           <tr>
-            <th className="px-2 py-4 font-semibold">Rank</th>
+            <th className="py-4 pl-3 pr-2 font-semibold">Rank</th>
             <th className="px-2 py-4 font-semibold">Psicólogo</th>
             <th className="px-2 py-4 font-semibold">Data de cadastro</th>
             <th className="px-2 py-4 font-semibold">Plano</th>
@@ -750,7 +750,7 @@ const PsychologistsTable = ({
                 }}
                 tabIndex={0}
               >
-                <td className="whitespace-nowrap px-2 py-4 text-lg font-semibold text-primary">
+                <td className="whitespace-nowrap py-4 pl-3 pr-2 text-lg font-semibold text-primary">
                   {item.ranking_position ? `#${item.ranking_position}` : "—"}
                 </td>
                 <td className="px-2 py-4">
