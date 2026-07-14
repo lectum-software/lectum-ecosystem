@@ -41,9 +41,13 @@ function parseEnvFile(filePath) {
 
 const backendEnv = parseEnvFile("backend/.env");
 const frontendEnv = parseEnvFile("frontend/.env");
+const adminEnv = new Map([
+  ...parseEnvFile("admin/.env"),
+  ...parseEnvFile("admin/.env.local"),
+]);
 
 function envValue(key) {
-  return process.env[key] ?? backendEnv.get(key) ?? frontendEnv.get(key);
+  return process.env[key] ?? backendEnv.get(key) ?? frontendEnv.get(key) ?? adminEnv.get(key);
 }
 
 function parseBoolean(value, fallback = false) {
@@ -196,6 +200,9 @@ function startProxyServer({ backendPort, frontendPort, proxyPort, publicUrl }) {
 const backendPort = parsePort(envValue("PORT"), 3001);
 const defaultFrontendPort = backendPort === 3000 ? 3002 : 3000;
 const frontendPort = parsePort(envValue("FRONTEND_PORT"), defaultFrontendPort);
+const adminEnabled = parseBoolean(envValue("DEV_ADMIN_ENABLED"), true);
+const defaultAdminPort = backendPort === 3002 || frontendPort === 3002 ? 3003 : 3002;
+const adminPort = parsePort(envValue("ADMIN_PORT"), defaultAdminPort);
 const tunnelEnabled = parseBoolean(envValue("DEV_TUNNEL_ENABLED"), false);
 const tunnelProvider = (envValue("DEV_TUNNEL_PROVIDER") || "cloudflared").trim().toLowerCase();
 const tunnelProxyPort = parsePort(envValue("DEV_TUNNEL_PROXY_PORT"), 3005);
@@ -225,6 +232,24 @@ const apps = [
     url: `http://localhost:${frontendPort}`,
   },
 ];
+
+if (adminEnabled) {
+  apps.push({
+    name: "admin",
+    command: pnpmCommand,
+    commandArgs: pnpmArgs([
+      "--dir",
+      "admin",
+      "exec",
+      "next",
+      "dev",
+      "--webpack",
+      "--port",
+      String(adminPort),
+    ]),
+    url: `http://localhost:${adminPort}`,
+  });
+}
 
 if (tunnelEnabled) {
   assertSupportedTunnelProvider(tunnelProvider);
@@ -279,6 +304,10 @@ const portChecks = [
   assertPortIsFree(backendPort, "Backend"),
   assertPortIsFree(frontendPort, "Frontend"),
 ];
+
+if (adminEnabled) {
+  portChecks.push(assertPortIsFree(adminPort, "Admin"));
+}
 
 if (tunnelEnabled) {
   portChecks.push(assertPortIsFree(tunnelProxyPort, "Dev tunnel proxy"));

@@ -26,6 +26,14 @@ pnpm --dir admin dev
 
 URL local: `http://localhost:3002`.
 
+Também é possível subir backend, frontend e Admin juntos pela raiz:
+
+```bash
+pnpm dev
+```
+
+Nesse modo, `ADMIN_PORT` controla a porta do Admin e o padrão continua sendo `3002`.
+
 ## Observações
 
 - O token e o storage do Admin usam o prefixo `lectum.admin.*`, separado do site/app principal.

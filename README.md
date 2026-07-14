@@ -13,7 +13,10 @@ O comando sobe:
 
 - backend em `PORT` definido em `backend/.env` (padrão `3001`);
 - frontend em `FRONTEND_PORT` definido em `backend/.env` (padrão `3000`);
+- admin em `ADMIN_PORT` definido no ambiente ou em `admin/.env.local` (padrão `3002`);
 - opcionalmente, um tunnel Cloudflare ou ngrok quando `DEV_TUNNEL_ENABLED=1`.
+
+Para rodar só backend + frontend sem o painel administrativo, defina `DEV_ADMIN_ENABLED=0`.
 
 ## Tunnel local para integrações externas
 

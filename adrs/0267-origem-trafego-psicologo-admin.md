@@ -40,3 +40,9 @@ Como `contact_request` ainda não persiste sessão/origem do clique no WhatsApp,
 A tabela agregada **Origem do tráfego** deve aparecer imediatamente após o gráfico de **Visão geral** no dashboard Admin de psicólogos. Em seguida vem o **Comparativo oferta e demanda**, deixando os demais blocos de conversão, modo de cadastro e uso da plataforma para a sequência posterior.
 
 A decisão é de hierarquia visual: primeiro leitura executiva temporal, depois canais de aquisição, depois desequilíbrios de oferta/demanda e, por fim, demais diagnósticos. Não altera dados, contratos ou regras de atribuição.
+
+## Complemento 2026-07-14 - Estado visual sem visitas e WhatsApp zerado
+
+Por decisão de produto, o Admin deixa de renderizar a faixa `Nenhuma visita a perfil público de psicólogo com origem de tráfego foi registrada no período.` no bloco **Origem do tráfego**. A tabela permanece visível com a taxonomia fixa de fontes e contadores reais de visualizações de perfil, inclusive quando todos estão zerados.
+
+Quando `whatsapp_clicks` vier `null` por ausência de atribuição first-party persistida, a UI Admin exibe `0` na coluna **WhatsApp** para manter a leitura numérica solicitada. Essa decisão é apenas de apresentação: o contrato backend continua preservando `null`, não cria inferência de origem para cliques de WhatsApp, não altera dados persistidos e não reintroduz a coluna/taxa de conversão.

@@ -6,13 +6,15 @@
   "scripts": {
     "prepare": "lefthook install",
     "run": "pnpm dev",
-    "check": "pnpm check:frontend && pnpm check:backend",
+    "check": "pnpm check:frontend && pnpm check:backend && pnpm check:admin",
     "check:frontend": "pnpm --dir frontend check",
     "check:backend": "pnpm --dir backend check",
+    "check:admin": "pnpm --dir admin check",
     "commitlint": "commitlint",
     "dev": "node scripts/dev.mjs",
     "dev:frontend": "pnpm --dir frontend exec next dev --webpack --port 3000",
-    "dev:backend": "pnpm --dir backend dev"
+    "dev:backend": "pnpm --dir backend dev",
+    "dev:admin": "pnpm --dir admin dev"
   },
   "devDependencies": {
     "@commitlint/cli": "^21.0.2",

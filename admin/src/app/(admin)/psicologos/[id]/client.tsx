@@ -2833,7 +2833,7 @@ const StatisticsVideoCard = ({
 };
 
 const formatTrafficNullableCount = (value: number | null) =>
-  value === null ? "\u2014" : numberFormatter.format(value);
+  numberFormatter.format(typeof value === "number" ? value : 0);
 
 const PsychologistTrafficSourcesCard = ({
   statistics,
@@ -2866,83 +2866,75 @@ const PsychologistTrafficSourcesCard = ({
         ) : null}
       </div>
 
-      {traffic.unavailable_reason ? (
-        <p className="mt-5 rounded-2xl border border-dashed border-border bg-surface-muted p-4 text-sm font-bold leading-6 text-muted">
-          {traffic.unavailable_reason}
+      {!traffic.unavailable_reason && traffic.attribution_unavailable_reason ? (
+        <p className="mt-5 rounded-2xl border border-dashed border-primary/20 bg-primary-soft/30 p-4 text-sm font-bold leading-6 text-muted">
+          {traffic.attribution_unavailable_reason}
         </p>
-      ) : (
-        <>
-          {traffic.attribution_unavailable_reason ? (
-            <p className="mt-5 rounded-2xl border border-dashed border-primary/20 bg-primary-soft/30 p-4 text-sm font-bold leading-6 text-muted">
-              {traffic.attribution_unavailable_reason}
-            </p>
-          ) : null}
+      ) : null}
 
-          <div className="mt-5 hidden overflow-hidden rounded-[1.35rem] border border-border/70 md:block">
-            <div className="grid grid-cols-[minmax(0,1.25fr)_minmax(110px,0.75fr)_minmax(92px,0.55fr)] gap-3 border-border border-b bg-surface-muted px-4 py-3 text-[0.7rem] font-black uppercase tracking-[0.1em] text-subtle">
-              <span>{"Fonte"}</span>
-              <span className="text-center">{"Visualiza\u00e7\u00f5es de perfil"}</span>
-              <span className="text-center">{"WhatsApp"}</span>
+      <div className="mt-5 hidden overflow-hidden rounded-[1.35rem] border border-border/70 md:block">
+        <div className="grid grid-cols-[minmax(0,1.25fr)_minmax(110px,0.75fr)_minmax(92px,0.55fr)] gap-3 border-border border-b bg-surface-muted px-4 py-3 text-[0.7rem] font-black uppercase tracking-[0.1em] text-subtle">
+          <span>{"Fonte"}</span>
+          <span className="text-center">{"Visualiza\u00e7\u00f5es de perfil"}</span>
+          <span className="text-center">{"WhatsApp"}</span>
+        </div>
+        <div className="divide-y divide-border">
+          {traffic.sources.map((source) => (
+            <div
+              className="grid grid-cols-[minmax(0,1.25fr)_minmax(110px,0.75fr)_minmax(92px,0.55fr)] items-center gap-3 px-4 py-4"
+              key={source.id}
+            >
+              <div className="min-w-0">
+                <div className="flex min-w-0 flex-wrap items-center gap-2">
+                  <p className="truncate text-sm font-black text-foreground">{source.label}</p>
+                  {source.badge === "primary_source" ? (
+                    <Badge className="bg-primary-soft text-primary">{"Principal origem"}</Badge>
+                  ) : null}
+                </div>
+                <p className="mt-1 line-clamp-2 text-xs leading-5 text-muted">
+                  {source.description}
+                </p>
+              </div>
+              <p className="text-center text-lg font-black text-foreground">
+                {numberFormatter.format(source.profile_views)}
+              </p>
+              <p className="text-center text-lg font-black text-foreground">
+                {formatTrafficNullableCount(source.whatsapp_clicks)}
+              </p>
             </div>
-            <div className="divide-y divide-border">
-              {traffic.sources.map((source) => (
-                <div
-                  className="grid grid-cols-[minmax(0,1.25fr)_minmax(110px,0.75fr)_minmax(92px,0.55fr)] items-center gap-3 px-4 py-4"
-                  key={source.id}
-                >
-                  <div className="min-w-0">
-                    <div className="flex min-w-0 flex-wrap items-center gap-2">
-                      <p className="truncate text-sm font-black text-foreground">{source.label}</p>
-                      {source.badge === "primary_source" ? (
-                        <Badge className="bg-primary-soft text-primary">{"Principal origem"}</Badge>
-                      ) : null}
-                    </div>
-                    <p className="mt-1 line-clamp-2 text-xs leading-5 text-muted">
-                      {source.description}
-                    </p>
-                  </div>
-                  <p className="text-center text-lg font-black text-foreground">
-                    {numberFormatter.format(source.profile_views)}
-                  </p>
-                  <p className="text-center text-lg font-black text-foreground">
-                    {formatTrafficNullableCount(source.whatsapp_clicks)}
-                  </p>
+          ))}
+        </div>
+      </div>
+
+      <div className="mt-5 grid gap-3 md:hidden">
+        {traffic.sources.map((source) => (
+          <article
+            className="rounded-[1.35rem] border border-border/70 bg-surface-muted p-4"
+            key={source.id}
+          >
+            <div className="min-w-0">
+              <div className="flex min-w-0 flex-wrap items-center gap-2">
+                <h3 className="text-sm font-black text-foreground">{source.label}</h3>
+                {source.badge === "primary_source" ? (
+                  <Badge className="bg-primary-soft text-primary">{"Principal origem"}</Badge>
+                ) : null}
+              </div>
+              <p className="mt-1 text-xs leading-5 text-muted">{source.description}</p>
+            </div>
+            <div className="mt-4 grid grid-cols-2 gap-2">
+              {[
+                ["Perfil", numberFormatter.format(source.profile_views)],
+                ["WhatsApp", formatTrafficNullableCount(source.whatsapp_clicks)],
+              ].map(([label, value]) => (
+                <div className="rounded-2xl bg-surface p-3" key={label}>
+                  <p className="text-[0.68rem] font-black text-muted">{label}</p>
+                  <p className="mt-1 text-base font-black text-foreground">{value}</p>
                 </div>
               ))}
             </div>
-          </div>
-
-          <div className="mt-5 grid gap-3 md:hidden">
-            {traffic.sources.map((source) => (
-              <article
-                className="rounded-[1.35rem] border border-border/70 bg-surface-muted p-4"
-                key={source.id}
-              >
-                <div className="min-w-0">
-                  <div className="flex min-w-0 flex-wrap items-center gap-2">
-                    <h3 className="text-sm font-black text-foreground">{source.label}</h3>
-                    {source.badge === "primary_source" ? (
-                      <Badge className="bg-primary-soft text-primary">{"Principal origem"}</Badge>
-                    ) : null}
-                  </div>
-                  <p className="mt-1 text-xs leading-5 text-muted">{source.description}</p>
-                </div>
-                <div className="mt-4 grid grid-cols-2 gap-2">
-                  {[
-                    ["Perfil", numberFormatter.format(source.profile_views)],
-                    ["WhatsApp", formatTrafficNullableCount(source.whatsapp_clicks)],
-                  ].map(([label, value]) => (
-                    <div className="rounded-2xl bg-surface p-3" key={label}>
-                      <p className="text-[0.68rem] font-black text-muted">{label}</p>
-                      <p className="mt-1 text-base font-black text-foreground">{value}</p>
-                    </div>
-                  ))}
-                </div>
-              </article>
-            ))}
-          </div>
-        </>
-      )}
+          </article>
+        ))}
+      </div>
     </CardShell>
   );
 };

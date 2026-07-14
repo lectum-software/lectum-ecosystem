@@ -201,6 +201,12 @@ const formatDate = (value: string) =>
     month: "short",
   }).format(dateFromInput(value));
 
+const formatSelectedPeriod = (period: AdminPsychologistsDashboard["period"]) => {
+  if (!period.from || !period.to) return `Período: ${period.label}`;
+
+  return `Período: ${period.label} · ${formatDate(period.from)} a ${formatDate(period.to)}`;
+};
+
 const formatChange = (value: number | null) => {
   if (value === null) return "sem base anterior";
   if (value === 0) return "0%";
@@ -238,7 +244,7 @@ const formatSecondsMetric = (value: number | null) => {
 };
 
 const formatNullableCount = (value: number | null) =>
-  typeof value === "number" ? numberFormatter.format(value) : "\u2014";
+  numberFormatter.format(typeof value === "number" ? value : 0);
 
 const isValidRange = (range: DashboardRange, period: DashboardPeriodValue) => {
   if (period !== "custom") return true;
@@ -487,9 +493,9 @@ const TimelineChart = ({
   points: PsychologistsDashboardDailyPoint[];
   visibleMetricKeys: DashboardMetricKey[];
 }) => {
-  const width = 760;
-  const height = 300;
-  const padding = { bottom: 44, left: 50, right: 20, top: 24 };
+  const width = 1120;
+  const height = 280;
+  const padding = { bottom: 28, left: 42, right: 28, top: 28 };
   const series = visibleMetricKeys.map((key) => ({
     color: DASHBOARD_METRIC_CONFIG[key].color,
     key,
@@ -527,21 +533,28 @@ const TimelineChart = ({
   const chartWidth = width - padding.left - padding.right;
   const chartHeight = height - padding.top - padding.bottom;
   const getX = (index: number) =>
-    chartPoints.length <= 1
-      ? width / 2
-      : padding.left + (index * chartWidth) / (chartPoints.length - 1);
+    padding.left +
+    (chartPoints.length <= 1 ? chartWidth / 2 : (index * chartWidth) / (chartPoints.length - 1));
   const getY = (value: number) => padding.top + chartHeight - (value / maxValue) * chartHeight;
   const gridValues = [0, 0.25, 0.5, 0.75, 1].map((ratio) => Math.round(maxValue * ratio));
   const labelStep = Math.max(1, Math.ceil(chartPoints.length / 8));
+  const dateLabels = chartPoints.flatMap((point, index) =>
+    index % labelStep === 0 || index === chartPoints.length - 1
+      ? [{ date: point.date, label: point.chartLabel }]
+      : [],
+  );
 
   return (
-    <figure className="mt-5 overflow-hidden">
-      <div className="overflow-x-auto">
+    <figure className="mt-4 w-full overflow-x-auto rounded-[1.5rem] border border-border/70 bg-surface p-4">
+      <div className="mx-auto w-full min-w-[760px] max-w-[1120px]">
         <svg
           aria-label="Gráfico temporal dos contadores de psicólogos"
-          className="min-w-[680px]"
+          className="block h-auto w-full"
+          height={height}
+          preserveAspectRatio="xMidYMid meet"
           role="img"
           viewBox={`0 0 ${width} ${height}`}
+          width={width}
         >
           {gridValues.map((value) => {
             const y = getY(value);
@@ -596,23 +609,17 @@ const TimelineChart = ({
               </g>
             );
           })}
-
-          {chartPoints.map((point, index) =>
-            index % labelStep === 0 || index === chartPoints.length - 1 ? (
-              <text
-                fill="var(--admin-foreground)"
-                fontSize="11"
-                fontWeight="500"
-                key={point.date}
-                textAnchor="middle"
-                x={getX(index)}
-                y={height - 12}
-              >
-                {point.chartLabel}
-              </text>
-            ) : null,
-          )}
         </svg>
+        <div
+          className="mt-1 grid gap-1"
+          style={{ gridTemplateColumns: `repeat(${dateLabels.length}, 1fr)` }}
+        >
+          {dateLabels.map(({ date, label }) => (
+            <span className="min-w-0 text-center text-[10px] font-bold text-subtle" key={date}>
+              {label}
+            </span>
+          ))}
+        </div>
       </div>
     </figure>
   );
@@ -844,29 +851,48 @@ const MiniBar = ({
 const ConversionAndUsageBlocks = ({ summary }: { summary: AdminPsychologistsDashboard }) => {
   const conversion = summary.conversion;
   const platformUsage = summary.platform_usage;
+  const selectedPeriodLabel = formatSelectedPeriod(summary.period);
 
   return (
     <section className="grid gap-5 xl:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)]">
       <CardShell className="p-5">
-        <PanelTitle icon={TrendingDown} title="Conversão até assinatura" />
-        <p className="mt-2 text-sm font-bold leading-6 text-muted">
-          Coorte de cadastro: {formatDate(conversion.cohort_from)} a{" "}
-          {formatDate(conversion.cohort_to)}. Plano gratuito e cortesia não contam como assinatura
-          paga.
-        </p>
+        <PanelTitle icon={TrendingDown} title="Conversão do cadastro até assinatura" />
+        <p className="mt-2 text-sm font-bold leading-6 text-muted">{selectedPeriodLabel}</p>
         <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {[
-            ["Cadastros", numberFormatter.format(conversion.registered_count)],
-            ["Assinaram", numberFormatter.format(conversion.converted_paid_count)],
-            ["Taxa paga", formatNullablePercentage(conversion.conversion_rate)],
-            ["Média", formatDaysMetric(conversion.average_days)],
-            ["Mediana", formatDaysMetric(conversion.median_days)],
-            ["P75", formatDaysMetric(conversion.p75_days)],
-            ["P90", formatDaysMetric(conversion.p90_days)],
-          ].map(([label, value]) => (
+            {
+              label: "Cadastros",
+              value: numberFormatter.format(conversion.registered_count),
+            },
+            {
+              label: "Assinaram",
+              value: numberFormatter.format(conversion.converted_paid_count),
+            },
+            {
+              label: "Taxa paga",
+              value: formatNullablePercentage(conversion.conversion_rate),
+            },
+            { label: "Média", value: formatDaysMetric(conversion.average_days) },
+            { label: "Mediana", value: formatDaysMetric(conversion.median_days) },
+            {
+              description: "75% assinam até esse prazo",
+              label: "P75",
+              value: formatDaysMetric(conversion.p75_days),
+            },
+            {
+              description: "90% assinam até esse prazo",
+              label: "P90",
+              value: formatDaysMetric(conversion.p90_days),
+            },
+          ].map(({ description, label, value }) => (
             <div className="rounded-2xl bg-surface-muted p-3" key={label}>
               <p className="text-xs font-black text-muted">{label}</p>
               <p className="mt-1 text-xl font-black text-foreground">{value}</p>
+              {description ? (
+                <p className="mt-1 text-[0.68rem] font-bold leading-snug text-subtle">
+                  {description}
+                </p>
+              ) : null}
             </div>
           ))}
         </div>
@@ -920,10 +946,7 @@ const ConversionAndUsageBlocks = ({ summary }: { summary: AdminPsychologistsDash
       <div className="grid gap-5">
         <CardShell className="p-5">
           <PanelTitle icon={UserPlus} title="Modo de cadastro" />
-          <p className="mt-2 text-sm font-bold leading-6 text-muted">
-            Cadastro é tratado como Google ou E-mail e senha. Não existe categoria Google + senha
-            local.
-          </p>
+          <p className="mt-2 text-sm font-bold leading-6 text-muted">{selectedPeriodLabel}</p>
           <div className="mt-5 space-y-4">
             {summary.signup_method.items.map((item) => (
               <MiniBar
@@ -946,10 +969,7 @@ const ConversionAndUsageBlocks = ({ summary }: { summary: AdminPsychologistsDash
 
         <CardShell className="p-5">
           <PanelTitle icon={Activity} title="Uso da plataforma" />
-          <p className="mt-2 text-sm font-bold leading-6 text-muted">
-            Uso autenticado da plataforma Lectum por psicólogos no período. Não inclui consultas,
-            sessões clínicas, mensagens ou WhatsApp.
-          </p>
+          <p className="mt-2 text-sm font-bold leading-6 text-muted">{selectedPeriodLabel}</p>
           <div className="mt-5 grid gap-3 sm:grid-cols-2">
             {[
               ["Ativos", numberFormatter.format(platformUsage.active_psychologists_count)],
@@ -1060,9 +1080,7 @@ const StatsContent = ({ summary }: { summary: AdminPsychologistsDashboard }) => 
       return right.searchesCount - left.searchesCount;
     });
   const SelectedIcon = selectedDimension.icon;
-  const periodLabel = `Período de análise: ${formatDate(summary.period.from)} a ${formatDate(
-    summary.period.to,
-  )}.`;
+  const periodLabel = formatSelectedPeriod(summary.period);
   const handleDimensionChange = (dimensionId: string) => {
     setActiveDimensionId(dimensionId);
     setOptionQuery("");
@@ -1227,8 +1245,7 @@ const PsychologistsHeader = ({
           Dashboard de Psicólogos
         </h1>
         <p className="mt-2 max-w-2xl text-sm font-medium leading-6 text-muted">
-          Visão executiva dos profissionais com uma linguagem mais leve, próxima da experiência
-          pública da Lectum.
+          Análise global dos psicólogos da plataforma.
         </p>
       </div>
 
@@ -1304,25 +1321,23 @@ const CardsGrid = ({
   const cards = summary.cards;
 
   return (
-    <section>
-      <h2 className="mb-4 text-xl font-bold text-foreground">Visão geral</h2>
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
-        {CARD_ORDER.map((key) => {
-          const config = DASHBOARD_METRIC_CONFIG[key];
+    <fieldset className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
+      <legend className="sr-only">Contadores exibidos no gráfico da visão geral</legend>
+      {CARD_ORDER.map((key) => {
+        const config = DASHBOARD_METRIC_CONFIG[key];
 
-          return (
-            <MetricCard
-              active={activeMetricKeys.includes(key)}
-              key={key}
-              metric={cards[key]}
-              onToggle={() => onToggleMetric(key)}
-              totalPsychologists={cards.total_psychologists.value}
-              {...config}
-            />
-          );
-        })}
-      </div>
-    </section>
+        return (
+          <MetricCard
+            active={activeMetricKeys.includes(key)}
+            key={key}
+            metric={cards[key]}
+            onToggle={() => onToggleMetric(key)}
+            totalPsychologists={cards.total_psychologists.value}
+            {...config}
+          />
+        );
+      })}
+    </fieldset>
   );
 };
 
@@ -1343,12 +1358,6 @@ const DashboardTrafficSourcesCard = ({ summary }: { summary: AdminPsychologistsD
           {formatDate(summary.period.to)}
         </p>
       </div>
-
-      {traffic.unavailable_reason ? (
-        <p className="mt-5 rounded-2xl border border-dashed border-border bg-surface-muted p-4 text-sm font-bold leading-6 text-muted">
-          {traffic.unavailable_reason}
-        </p>
-      ) : null}
 
       <div className="mt-5 hidden overflow-hidden rounded-[1.35rem] border border-border/70 md:block">
         <div className="grid grid-cols-[minmax(0,1.25fr)_minmax(110px,0.75fr)_minmax(92px,0.55fr)] gap-3 border-border border-b bg-surface-muted px-4 py-3 text-[0.7rem] font-black uppercase tracking-[0.1em] text-subtle">
@@ -1439,18 +1448,18 @@ const DashboardContent = ({ summary }: { summary: AdminPsychologistsDashboard })
     <div className="space-y-7">
       {!hasDashboardRecords(summary) ? <EmptyState period={summary.period} /> : null}
 
-      <CardsGrid
-        activeMetricKeys={activeMetricKeys}
-        onToggleMetric={toggleMetric}
-        summary={summary}
-      />
-
-      <CardShell className="p-5">
-        <PanelTitle icon={Activity} title="Evolução no período" />
-        <TimelineChart points={summary.timeline.points} visibleMetricKeys={activeMetricKeys} />
-      </CardShell>
-
-      <DashboardTrafficSourcesCard summary={summary} />
+      <section className="space-y-4">
+        <h2 className="text-xl font-bold text-foreground">Visão geral</h2>
+        <CardShell className="min-w-0 p-5">
+          <CardsGrid
+            activeMetricKeys={activeMetricKeys}
+            onToggleMetric={toggleMetric}
+            summary={summary}
+          />
+          <TimelineChart points={summary.timeline.points} visibleMetricKeys={activeMetricKeys} />
+        </CardShell>
+        <DashboardTrafficSourcesCard summary={summary} />
+      </section>
 
       <StatsContent summary={summary} />
 

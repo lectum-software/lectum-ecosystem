@@ -540,3 +540,20 @@ Regras de cálculo:
 - O ajuste é exclusivamente visual e segue os tokens/componentes existentes do Admin.
 - Não houve decisão arquitetural nova; ADR não foi necessário.
 - Validação executada: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke local `GET http://localhost:3002/psicologos/lista` retornando 200.
+
+## Ajuste complementar 2026-07-14 - Origem do tráfego sem faixa e WhatsApp zerado
+
+- Pedido do usuário: remover a faixa `Nenhuma visita a perfil público de psicólogo com origem de tráfego foi registrada no período.` e exibir `0` na coluna **WhatsApp** quando não houver número atribuído.
+- A UI Admin deixou de renderizar `traffic_sources.unavailable_reason` nos blocos **Origem do tráfego** do dashboard agregado e do detalhe do psicólogo, mantendo a tabela mobile-first sempre visível com a taxonomia fixa de fontes.
+- `whatsapp_clicks=null` continua preservado no contrato backend, mas a apresentação Admin agora formata a coluna **WhatsApp** como `0` para leitura numérica; não houve mock, inferência de origem, endpoint novo, alteração de Prisma/migrations, packages ou dados persistidos.
+- ADR atualizado: `adrs/0267-origem-trafego-psicologo-admin.md`.
+- Validação executada: `pnpm --dir admin check`, `pnpm --dir admin build` e `next start` local com `GET http://localhost:3002/psicologos` retornando 200.
+
+## Ajuste complementar 2026-07-14 - Admin no orquestrador local
+
+- Pedido do usuário: corrigir `localhost:3002/dashboard` com conexão recusada no ambiente local.
+- O orquestrador raiz `pnpm dev` passou a iniciar o Admin como aplicação separada em `ADMIN_PORT` (padrão `3002`), além de backend e frontend; `DEV_ADMIN_ENABLED=0` desativa o Admin quando necessário.
+- O `pnpm check` raiz passou a validar também `pnpm --dir admin check`, evitando concluir alterações administrativas sem Biome, ESLint e TypeScript do Admin.
+- Não houve alteração em Prisma schema, migrations, endpoints, dados persistidos ou packages.
+- ADR criado: `adrs/0268-orquestracao-local-admin-pnpm-dev.md`.
+- Validação executada: `node --check scripts/dev.mjs`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke local `GET http://localhost:3002/dashboard` retornando 200.
