@@ -490,3 +490,10 @@ Regras de cálculo:
 - Pedido do usuário: remover do dashboard Admin de psicólogos a faixa `Nenhum psicólogo da coorte realizou assinatura paga real.` exibida no bloco **Conversão do cadastro até assinatura**.
 - A UI Admin deixou de renderizar `conversion.unavailable_reason` nesse card, mantendo os KPIs e buckets com seus estados `Indisponível`/0 reais e preservando o contrato backend para usos futuros.
 - O ajuste é exclusivamente visual, mobile-first, sem mocks, sem endpoint novo, sem alteração de Prisma/migrations e sem mudança nas regras de cálculo da TASK-72.
+
+## Ajuste complementar 2026-07-14 - Origem do tráfego sem coluna de conversão
+
+- Pedido do usuário: ocultar a coluna **Conversão** na tabela **Origem do tráfego**.
+- A coluna foi ocultada tanto no analytics público do psicólogo quanto na aba **Estatísticas** do painel Admin, mantendo `Fonte`, `Visualizações de perfil` e `WhatsApp` como métricas independentes.
+- Decisão de produto: o clique no WhatsApp pode ocorrer sem visualização do perfil, por exemplo em vídeo da página de psicólogos, publicações da comunidade, favoritos ou link direto; portanto `WhatsApp / visualizações de perfil` não é um denominador confiável e poderia ultrapassar 100%.
+- O ajuste é visual/semântico, mobile-first, sem mocks, sem endpoint novo, sem alteração de Prisma/migrations e sem mudança nos dados persistidos.

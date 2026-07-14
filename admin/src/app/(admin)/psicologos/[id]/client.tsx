@@ -2835,9 +2835,6 @@ const StatisticsVideoCard = ({
 const formatTrafficNullableCount = (value: number | null) =>
   value === null ? "\u2014" : numberFormatter.format(value);
 
-const formatTrafficConversion = (value: number | null) =>
-  value === null ? "\u2014" : `${value.toLocaleString("pt-BR")}%`;
-
 const PsychologistTrafficSourcesCard = ({
   statistics,
 }: {
@@ -2860,7 +2857,6 @@ const PsychologistTrafficSourcesCard = ({
             {statistics.period.label} {"\u00b7"} {formatDateOnly(statistics.period.from)} a{" "}
             {formatDateOnly(statistics.period.to)}
           </p>
-          <p className="mt-2 max-w-3xl text-sm leading-6 text-muted">{traffic.description}</p>
         </div>
         {traffic.updated_at ? (
           <Badge className="bg-surface-muted text-muted">
@@ -2883,46 +2879,37 @@ const PsychologistTrafficSourcesCard = ({
           ) : null}
 
           <div className="mt-5 hidden overflow-hidden rounded-[1.35rem] border border-border/70 md:block">
-            <div className="grid grid-cols-[minmax(0,1.25fr)_minmax(110px,0.75fr)_minmax(92px,0.55fr)_minmax(92px,0.55fr)] gap-3 border-border border-b bg-surface-muted px-4 py-3 text-[0.7rem] font-black uppercase tracking-[0.1em] text-subtle">
+            <div className="grid grid-cols-[minmax(0,1.25fr)_minmax(110px,0.75fr)_minmax(92px,0.55fr)] gap-3 border-border border-b bg-surface-muted px-4 py-3 text-[0.7rem] font-black uppercase tracking-[0.1em] text-subtle">
               <span>{"Fonte"}</span>
-              <span>{"Visualiza\u00e7\u00f5es de perfil"}</span>
-              <span>{"WhatsApp"}</span>
-              <span>{"Convers\u00e3o"}</span>
+              <span className="text-center">{"Visualiza\u00e7\u00f5es de perfil"}</span>
+              <span className="text-center">{"WhatsApp"}</span>
             </div>
             <div className="divide-y divide-border">
               {traffic.sources.map((source) => (
                 <div
-                  className="grid grid-cols-[minmax(0,1.25fr)_minmax(110px,0.75fr)_minmax(92px,0.55fr)_minmax(92px,0.55fr)] items-center gap-3 px-4 py-4"
+                  className="grid grid-cols-[minmax(0,1.25fr)_minmax(110px,0.75fr)_minmax(92px,0.55fr)] items-center gap-3 px-4 py-4"
                   key={source.id}
                 >
-                  <div className="flex min-w-0 items-center gap-3">
-                    <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-primary-soft text-primary">
-                      <Globe2 aria-hidden className="h-4 w-4" />
-                    </span>
-                    <div className="min-w-0">
-                      <div className="flex min-w-0 flex-wrap items-center gap-2">
-                        <p className="truncate text-sm font-black text-foreground">
-                          {source.label}
-                        </p>
-                        {source.badge === "primary_source" ? (
-                          <Badge className="bg-primary-soft text-primary">
-                            {"Principal origem"}
-                          </Badge>
-                        ) : null}
-                      </div>
-                      <p className="mt-1 line-clamp-2 text-xs leading-5 text-muted">
-                        {source.description}
+                  <div className="min-w-0">
+                    <div className="flex min-w-0 flex-wrap items-center gap-2">
+                      <p className="truncate text-sm font-black text-foreground">
+                        {source.label}
                       </p>
+                      {source.badge === "primary_source" ? (
+                        <Badge className="bg-primary-soft text-primary">
+                          {"Principal origem"}
+                        </Badge>
+                      ) : null}
                     </div>
+                    <p className="mt-1 line-clamp-2 text-xs leading-5 text-muted">
+                      {source.description}
+                    </p>
                   </div>
-                  <p className="text-lg font-black text-foreground">
+                  <p className="text-center text-lg font-black text-foreground">
                     {numberFormatter.format(source.profile_views)}
                   </p>
-                  <p className="text-lg font-black text-foreground">
+                  <p className="text-center text-lg font-black text-foreground">
                     {formatTrafficNullableCount(source.whatsapp_clicks)}
-                  </p>
-                  <p className="text-lg font-black text-foreground">
-                    {formatTrafficConversion(source.conversion_rate)}
                   </p>
                 </div>
               ))}
@@ -2935,25 +2922,19 @@ const PsychologistTrafficSourcesCard = ({
                 className="rounded-[1.35rem] border border-border/70 bg-surface-muted p-4"
                 key={source.id}
               >
-                <div className="flex min-w-0 items-start gap-3">
-                  <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-surface text-primary">
-                    <Globe2 aria-hidden className="h-5 w-5" />
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex min-w-0 flex-wrap items-center gap-2">
-                      <h3 className="text-sm font-black text-foreground">{source.label}</h3>
-                      {source.badge === "primary_source" ? (
-                        <Badge className="bg-primary-soft text-primary">{"Principal origem"}</Badge>
-                      ) : null}
-                    </div>
-                    <p className="mt-1 text-xs leading-5 text-muted">{source.description}</p>
+                <div className="min-w-0">
+                  <div className="flex min-w-0 flex-wrap items-center gap-2">
+                    <h3 className="text-sm font-black text-foreground">{source.label}</h3>
+                    {source.badge === "primary_source" ? (
+                      <Badge className="bg-primary-soft text-primary">{"Principal origem"}</Badge>
+                    ) : null}
                   </div>
+                  <p className="mt-1 text-xs leading-5 text-muted">{source.description}</p>
                 </div>
-                <div className="mt-4 grid grid-cols-3 gap-2">
+                <div className="mt-4 grid grid-cols-2 gap-2">
                   {[
                     ["Perfil", numberFormatter.format(source.profile_views)],
                     ["WhatsApp", formatTrafficNullableCount(source.whatsapp_clicks)],
-                    ["Convers\u00e3o", formatTrafficConversion(source.conversion_rate)],
                   ].map(([label, value]) => (
                     <div className="rounded-2xl bg-surface p-3" key={label}>
                       <p className="text-[0.68rem] font-black text-muted">{label}</p>

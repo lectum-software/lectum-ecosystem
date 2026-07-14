@@ -1077,8 +1077,7 @@ const PresentationVideoAnalyticsSection = ({
 };
 
 type TrafficSourceWithDisplay = PsychologistAnalyticsTrafficSource & {
-  displayBadge: "best_conversion" | "primary_source" | null;
-  progress: number;
+  displayBadge: "primary_source" | null;
 };
 
 const TRAFFIC_SOURCE_ORDER: Record<PsychologistAnalyticsTrafficSource["id"], number> = {
@@ -1097,30 +1096,15 @@ const toTrafficSourceDisplay = (
     (a, b) =>
       b.profile_views - a.profile_views || TRAFFIC_SOURCE_ORDER[a.id] - TRAFFIC_SOURCE_ORDER[b.id],
   );
-  const highestConversion = Math.max(...orderedSources.map((source) => source.conversion_rate));
   const highestViews = Math.max(...orderedSources.map((source) => source.profile_views));
-  const bestConversion = orderedSources.find(
-    (source) => source.profile_views > 0 && source.conversion_rate === highestConversion,
-  );
   const primarySource = orderedSources.find(
     (source) => source.profile_views > 0 && source.profile_views === highestViews,
   );
 
-  return orderedSources.map((source) => {
-    const hasPositiveConversion = Boolean(bestConversion && bestConversion.conversion_rate > 0);
-    const displayBadge =
-      hasPositiveConversion && source.id === bestConversion?.id
-        ? "best_conversion"
-        : !hasPositiveConversion && primarySource && source.id === primarySource.id
-          ? "primary_source"
-          : source.badge;
-
-    return {
-      ...source,
-      displayBadge,
-      progress: clampPercent(source.conversion_rate),
-    };
-  });
+  return orderedSources.map((source) => ({
+    ...source,
+    displayBadge: primarySource && source.id === primarySource.id ? "primary_source" : null,
+  }));
 };
 
 const TrafficBadge = ({ type }: { type: TrafficSourceWithDisplay["displayBadge"] }) => {
@@ -1128,7 +1112,7 @@ const TrafficBadge = ({ type }: { type: TrafficSourceWithDisplay["displayBadge"]
 
   return (
     <span className="inline-flex items-center rounded-full border border-primary/10 bg-primary-soft px-2 py-1 text-[0.68rem] font-extrabold uppercase tracking-[0.08em] text-primary">
-      {type === "best_conversion" ? "Melhor conversão" : "Principal origem"}
+      Principal origem
     </span>
   );
 };
@@ -1163,11 +1147,10 @@ const TrafficSourceSection = ({
       </div>
 
       <div className="hidden overflow-hidden rounded-[22px] border border-primary/10 bg-surface md:block">
-        <div className="grid grid-cols-[minmax(0,1.25fr)_minmax(92px,0.8fr)_minmax(92px,0.75fr)_minmax(86px,0.7fr)] gap-3 border-border border-b bg-surface-muted px-4 py-3 text-[0.7rem] font-black uppercase tracking-[0.1em] text-subtle">
+        <div className="grid grid-cols-[minmax(0,1.25fr)_minmax(92px,0.8fr)_minmax(92px,0.75fr)] gap-3 border-border border-b bg-surface-muted px-4 py-3 text-[0.7rem] font-black uppercase tracking-[0.1em] text-subtle">
           <span>Fonte</span>
           <span>Visualizações de perfil</span>
           <span>WhatsApp</span>
-          <span>Conversão</span>
         </div>
         <div className="divide-y divide-border">
           {sources.map((source) => {
@@ -1175,7 +1158,7 @@ const TrafficSourceSection = ({
 
             return (
               <div
-                className="grid grid-cols-[minmax(0,1.25fr)_minmax(92px,0.8fr)_minmax(92px,0.75fr)_minmax(86px,0.7fr)] items-center gap-3 px-4 py-4"
+                className="grid grid-cols-[minmax(0,1.25fr)_minmax(92px,0.8fr)_minmax(92px,0.75fr)] items-center gap-3 px-4 py-4"
                 key={source.id}
               >
                 <div className="flex min-w-0 items-center gap-3">
@@ -1209,14 +1192,6 @@ const TrafficSourceSection = ({
                   )}
                 >
                   {toCount(source.whatsapp_clicks)}
-                </p>
-                <p
-                  className={cn(
-                    "text-lg font-black tracking-[-0.04em] text-foreground",
-                    locked && "select-none blur-[5px]",
-                  )}
-                >
-                  {source.conversion_rate}%
                 </p>
               </div>
             );
@@ -1258,28 +1233,11 @@ const TrafficSourceSection = ({
                         </div>
                       </div>
                       <div className="flex shrink-0 items-center gap-2">
-                        <span
-                          className={cn(
-                            "text-base font-black text-foreground",
-                            locked && "select-none blur-[5px]",
-                          )}
-                        >
-                          {source.conversion_rate}%
-                        </span>
                         <ChevronDown
                           className={cn("h-4 w-4 text-subtle transition", expanded && "rotate-180")}
                           aria-hidden
                         />
                       </div>
-                    </div>
-                    <div className="mt-3 h-2 overflow-hidden rounded-full bg-surface">
-                      <div
-                        className={cn(
-                          "h-full rounded-full bg-primary transition-all",
-                          locked && "blur-[3px]",
-                        )}
-                        style={{ width: `${source.progress}%` }}
-                      />
                     </div>
                   </div>
                 </div>
@@ -1300,12 +1258,6 @@ const TrafficSourceSection = ({
                         {toCount(source.whatsapp_clicks)}
                       </span>{" "}
                       cliques no WhatsApp
-                    </p>
-                    <p className={cn(locked && "select-none blur-[5px]")}>
-                      <span className="font-extrabold text-foreground">
-                        {source.conversion_rate}%
-                      </span>{" "}
-                      conversão
                     </p>
                   </div>
                 </div>
