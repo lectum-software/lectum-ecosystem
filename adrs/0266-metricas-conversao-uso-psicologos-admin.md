@@ -55,3 +55,7 @@ O campo individual `time_to_first_paid_subscription.label` é a fonte única de 
 ## Complemento 2026-07-14 - Legibilidade dos seletores de gráfico
 
 Os cards que controlam séries de gráficos no dashboard e na aba **Estatísticas** devem diferenciar claramente estado ativo e inativo. O estado inativo usa fundo cinza por token (`bg-border/50`) e sem sombra, enquanto o ativo mantém superfície branca, sombra e destaque primário. A decisão é visual, não altera contratos de API nem regras de cálculo das métricas.
+
+## Complemento 2026-07-14 - Faixa agregada de ausência de conversão
+
+O dashboard Admin de psicólogos não deve exibir uma faixa textual adicional quando a coorte não possui assinatura paga real. A indisponibilidade segue representada pelos próprios KPIs e buckets do bloco de conversão, enquanto `conversion.unavailable_reason` permanece no contrato backend para rastreabilidade e possíveis consumidores futuros. A decisão é apenas de apresentação e não altera cálculo, privacidade, schema Prisma ou endpoints.

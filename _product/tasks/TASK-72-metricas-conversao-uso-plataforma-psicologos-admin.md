@@ -484,3 +484,9 @@ Regras de cálculo:
 - A origem usa somente eventos reais `page_view_event` do perfil público (`target_type="psychologist"` e `page_kind="psychologist_profile"`), agrupados por `traffic_source`.
 - Como `contact_request` ainda não persiste origem/sessão para atribuir WhatsApp por canal, os campos `WhatsApp` e `Conversão` ficam indisponíveis por origem com copy honesta; não foram criados mocks, zeros falsos ou inferências não rastreáveis.
 - Não houve alteração em Prisma schema, migrations ou packages.
+
+## Ajuste complementar 2026-07-14 - Remoção da faixa sem assinatura paga
+
+- Pedido do usuário: remover do dashboard Admin de psicólogos a faixa `Nenhum psicólogo da coorte realizou assinatura paga real.` exibida no bloco **Conversão do cadastro até assinatura**.
+- A UI Admin deixou de renderizar `conversion.unavailable_reason` nesse card, mantendo os KPIs e buckets com seus estados `Indisponível`/0 reais e preservando o contrato backend para usos futuros.
+- O ajuste é exclusivamente visual, mobile-first, sem mocks, sem endpoint novo, sem alteração de Prisma/migrations e sem mudança nas regras de cálculo da TASK-72.

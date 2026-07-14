@@ -867,11 +867,6 @@ const ConversionAndUsageBlocks = ({ summary }: { summary: AdminPsychologistsDash
             </div>
           ))}
         </div>
-        {conversion.unavailable_reason ? (
-          <p className="mt-4 rounded-2xl border border-dashed border-border bg-surface-muted p-3 text-sm font-bold text-muted">
-            {conversion.unavailable_reason}
-          </p>
-        ) : null}
         <div className="mt-5 grid gap-3 md:grid-cols-2">
           <div className="rounded-2xl border border-border/70 p-4">
             <h3 className="text-sm font-black text-foreground">Distribuição por prazo</h3>
