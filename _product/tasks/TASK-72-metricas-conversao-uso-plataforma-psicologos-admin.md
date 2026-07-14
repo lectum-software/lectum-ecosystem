@@ -513,3 +513,12 @@ Regras de cálculo:
 - A UI Admin foi reordenada sem alterar endpoints, contratos, cálculos, schema Prisma, migrations, packages ou dados persistidos.
 - O ajuste é exclusivamente visual e preserva a leitura mobile-first dos blocos existentes.
 - Validação executada: `pnpm --dir admin check` e `pnpm --dir admin build`.
+
+## Ajuste complementar 2026-07-14 - Instalação PWA no uso da plataforma
+
+- Pedido do usuário: no dashboard Admin de psicólogos, junto aos gráficos/blocos de **Uso da plataforma**, exibir o percentual de psicólogos que instalaram o PWA.
+- O backend passa a somar eventos reais `important_action_event` com `action_type="pwa_installed"` no período selecionado, somente para usuários autenticados `role="psicologo"`, e calcula o percentual sobre os psicólogos elegíveis do dashboard.
+- A UI Admin adiciona o KPI `PWA instalado` dentro do card **Uso da plataforma**, preservando a leitura mobile-first e sem criar gráfico, endpoint paralelo ou dados de exemplo.
+- A métrica mede instalação registrada por evento first-party no período; não representa estado atual instalado nem desinstalação.
+- Não houve alteração em Prisma schema, migrations ou packages.
+- Validação executada: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, validação do snapshot staged do Admin e `pnpm check`.

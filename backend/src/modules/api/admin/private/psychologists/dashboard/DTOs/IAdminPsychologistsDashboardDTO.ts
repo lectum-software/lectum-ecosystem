@@ -235,7 +235,9 @@ export type AdminPsychologistsDashboardPlatformUsage = {
   average_sessions: number | null;
   duration_unavailable_reason: string | null;
   eligible_psychologists_count: number;
-  source: "page_view_event";
+  pwa_installed_psychologists_count: number;
+  pwa_installed_psychologists_rate: number | null;
+  source: "page_view_event+important_action_event";
   series: AdminPsychologistsDashboardPlatformUsageSeriesPoint[];
   top_pages: AdminPsychologistsDashboardPlatformUsageTopPage[];
   unavailable_reason: string | null;

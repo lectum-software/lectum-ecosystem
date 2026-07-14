@@ -954,6 +954,10 @@ const ConversionAndUsageBlocks = ({ summary }: { summary: AdminPsychologistsDash
             {[
               ["Ativos", numberFormatter.format(platformUsage.active_psychologists_count)],
               ["Taxa ativa", formatNullablePercentage(platformUsage.active_psychologists_rate)],
+              [
+                "PWA instalado",
+                formatNullablePercentage(platformUsage.pwa_installed_psychologists_rate),
+              ],
               ["Dias médios", formatDaysMetric(platformUsage.average_access_days)],
               ["Sessões médias", formatDecimalMetric(platformUsage.average_sessions)],
               ["Tempo médio", formatSecondsMetric(platformUsage.average_duration_seconds)],

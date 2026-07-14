@@ -391,6 +391,31 @@ export class AdminPsychologistsDashboardRepository
     });
   }
 
+  async listPlatformPwaInstallActions(range: AdminPsychologistsDashboardDateRange) {
+    return prisma.important_action_event.findMany({
+      orderBy: {
+        occurred_at: "asc",
+      },
+      select: {
+        occurred_at: true,
+        user_id: true,
+      },
+      where: {
+        action_type: "pwa_installed",
+        deleted: false,
+        occurred_at: eventCreatedAtWhere(range),
+        user_id: {
+          not: null,
+        },
+        user: {
+          active: true,
+          deleted: false,
+          role: "psicologo",
+        },
+      },
+    });
+  }
+
   async listPublicProfilePageViews(
     range: AdminPsychologistsDashboardDateRange,
     psychologistIds: string[],

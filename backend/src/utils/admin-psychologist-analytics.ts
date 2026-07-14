@@ -436,10 +436,17 @@ export const summarizePlatformUsage = (params: {
   eligiblePsychologistsCount?: number;
   labels?: string[];
   pageViews: AdminPsychologistAnalyticsPageView[];
+  pwaInstalledUserIds?: string[];
 }) => {
-  const { eligiblePsychologistsCount = 0, labels = [], pageViews } = params;
+  const {
+    eligiblePsychologistsCount = 0,
+    labels = [],
+    pageViews,
+    pwaInstalledUserIds = [],
+  } = params;
   const viewsWithUser = pageViews.filter((view) => view.user_id);
   const users = new Set(viewsWithUser.map((view) => view.user_id as string));
+  const pwaInstalledUsers = new Set(pwaInstalledUserIds.filter(Boolean));
   const sessionsByUser = new Map<string, Set<string>>();
   const daysByUser = new Map<string, Set<string>>();
   const pageCounts = new Map<string, number>();
@@ -505,6 +512,11 @@ export const summarizePlatformUsage = (params: {
         : averageDuration === null
           ? "Duração indisponível: menos de 50% dos pageviews têm duration_seconds confiável."
           : null,
+    pwa_installed_psychologists_count: pwaInstalledUsers.size,
+    pwa_installed_psychologists_rate:
+      eligiblePsychologistsCount > 0
+        ? roundOneDecimal((pwaInstalledUsers.size / eligiblePsychologistsCount) * 100)
+        : null,
     series: labels.map((label) => {
       const point = seriesMap.get(label);
 

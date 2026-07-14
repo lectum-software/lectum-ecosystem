@@ -59,3 +59,9 @@ Os cards que controlam séries de gráficos no dashboard e na aba **Estatística
 ## Complemento 2026-07-14 - Faixa agregada de ausência de conversão
 
 O dashboard Admin de psicólogos não deve exibir uma faixa textual adicional quando a coorte não possui assinatura paga real. A indisponibilidade segue representada pelos próprios KPIs e buckets do bloco de conversão, enquanto `conversion.unavailable_reason` permanece no contrato backend para rastreabilidade e possíveis consumidores futuros. A decisão é apenas de apresentação e não altera cálculo, privacidade, schema Prisma ou endpoints.
+
+## Complemento 2026-07-14 - Instalação PWA no uso da plataforma
+
+O bloco **Uso da plataforma** do dashboard Admin de psicólogos passa a incluir o percentual de psicólogos com evento real `important_action_event.action_type="pwa_installed"` no período selecionado. A métrica considera apenas eventos autenticados de usuários `role="psicologo"` e usa como denominador os psicólogos elegíveis do dashboard no recorte. Ela mede instalação registrada por analytics first-party, não estado atual instalado nem desinstalação, e não cria backfill ou dados artificiais.
+
+Validação complementar: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, validação do snapshot staged do Admin e `pnpm check`.

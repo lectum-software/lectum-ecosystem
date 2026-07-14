@@ -774,11 +774,13 @@ export const buildPsychologistsDashboard = async (
   const { current, labels, period, previous } = resolvedPeriod.period;
 
   const psychologistUserIds = profiles.map((profile) => profile.user.id);
-  const [rankingCandidates, platformPageViews, publicProfilePageViews] = await Promise.all([
-    repository.listPublicRankingCandidates(),
-    repository.listPlatformPageViews(current),
-    repository.listPublicProfilePageViews(current, psychologistUserIds),
-  ]);
+  const [rankingCandidates, platformPageViews, platformPwaInstalls, publicProfilePageViews] =
+    await Promise.all([
+      repository.listPublicRankingCandidates(),
+      repository.listPlatformPageViews(current),
+      repository.listPlatformPwaInstallActions(current),
+      repository.listPublicProfilePageViews(current, psychologistUserIds),
+    ]);
 
   const currentProfiles = profiles.filter((profile) => profileCreatedUntil(profile, current.end));
   const previousProfiles = profiles.filter((profile) => profileCreatedUntil(profile, previous.end));
@@ -814,6 +816,9 @@ export const buildPsychologistsDashboard = async (
     eligiblePsychologistsCount: currentProfiles.length,
     labels,
     pageViews: platformPageViews,
+    pwaInstalledUserIds: platformPwaInstalls.flatMap((event) =>
+      event.user_id ? [event.user_id] : [],
+    ),
   });
   const trafficSources = summarizePsychologistTrafficOrigins(publicProfilePageViews);
 
@@ -901,7 +906,7 @@ export const buildPsychologistsDashboard = async (
     platform_usage: {
       ...platformUsage,
       eligible_psychologists_count: currentProfiles.length,
-      source: "page_view_event",
+      source: "page_view_event+important_action_event",
     },
     psychologists: {
       items: buildPsychologistsList(profiles, current.end),
