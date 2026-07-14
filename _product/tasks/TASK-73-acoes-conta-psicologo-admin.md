@@ -120,6 +120,12 @@ Permitir que um Admin autenticado execute ações reais e auditadas de suspensã
 - A mudança preserva os formulários, endpoints reais, validações, auditoria e comportamento mobile-first já implementados.
 - A decisão reduz exposição antecipada de ações destrutivas, mantendo-as acessíveis como último bloco da tela.
 
+## Complemento TASK-73D - Remoção de copy operacional redundante
+
+- Pedido do usuário: remover a faixa explicativa `Suspender e desativar são...` do card **Ações da conta** e remover a linha `Fonte` de **Sessões e segurança**.
+- A UI Admin foi ajustada sem alterar formulários, endpoints, contratos, auditoria, schema Prisma, migrations, packages ou dados persistidos.
+- O ajuste é exclusivamente visual/copy, mobile-first, e não cria decisão arquitetural nova; ADR não foi necessário.
+
 ## Validação executada
 
 - `pnpm --dir backend db:migrate`
@@ -144,6 +150,12 @@ Permitir que um Admin autenticado execute ações reais e auditadas de suspensã
   - `pnpm check`
   - Smoke HTTP local em `/psicologos/cmrgrztri7000tn0uh1q4n8vxf?tab=conta` retornando 200.
   - Validação estática confirmou a ordem **E-mail da conta** → **Senha e recuperação** → **Sessões e segurança** → **Ações da conta**.
+- Complemento TASK-73D:
+  - `pnpm --dir admin check`
+  - `pnpm --dir admin build`
+  - `pnpm check`
+  - Smoke HTTP local em `/psicologos/cmrqztri7000tn0uh1q4n8vxf?tab=conta` retornando 200.
+  - Validação estática confirmou ausência da faixa `Suspender e desativar são...` e da linha `Fonte`.
 - `node -e "JSON.parse(require('fs').readFileSync('backend/locales/pt/translation.json','utf8'))"`
 - Smoke HTTP local:
   - `GET http://localhost:3002/psicologos/cmrgrztri7000tn0uh1q4n8vxf?tab=conta` retornou 200.

@@ -5622,7 +5622,6 @@ const AccountTab = ({ id }: { id: string }) => {
                 label="Última sessão"
                 value={formatDateTime(account.sessions.last_access_at)}
               />
-              <FieldRow label="Fonte" value={account.sessions.source} />
             </dl>
             <AccountRevokeSessionsForm account={account} id={id} />
           </div>
@@ -5631,12 +5630,6 @@ const AccountTab = ({ id }: { id: string }) => {
 
       <InfoCard icon={AlertTriangle} title="Ações da conta">
         <div className="grid gap-5">
-          <div className="rounded-2xl border border-border bg-surface-muted p-4 text-sm font-bold leading-6 text-muted">
-            Suspender e desativar são ações de bloqueio operacional: encerram sessões, impedem login
-            e tiram o perfil da descoberta pública sem apagar dados. Excluir aplica soft delete e
-            anonimização; se houver cobrança vinculada ao gateway, regularize a assinatura antes de
-            continuar.
-          </div>
           <dl className="divide-y divide-border">
             <FieldRow
               label="Status atual"
