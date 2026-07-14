@@ -51,3 +51,7 @@ A Lectum não intermedia consultas, sessões clínicas, mensagens ou conversas p
 ## Complemento 2026-07-14
 
 O campo individual `time_to_first_paid_subscription.label` é a fonte única de exibição do `Tempo até assinatura` no detalhe do psicólogo. Além do card **Dados da assinatura** da aba Geral, a aba **Assinatura** também reutiliza esse mesmo campo no card **Plano atual**, evitando recálculo no frontend e mantendo o comportamento de plano gratuito/cortesia sem contar como assinatura paga.
+
+## Complemento 2026-07-14 - Legibilidade dos seletores de gráfico
+
+Os cards que controlam séries de gráficos no dashboard e na aba **Estatísticas** devem diferenciar claramente estado ativo e inativo. O estado inativo usa fundo cinza por token (`bg-border/50`) e sem sombra, enquanto o ativo mantém superfície branca, sombra e destaque primário. A decisão é visual, não altera contratos de API nem regras de cálculo das métricas.

@@ -469,3 +469,10 @@ Regras de cálculo:
 - A UI Admin passou a reutilizar o campo real `detail.general.subscription.time_to_first_paid_subscription.label`, já calculado pela TASK-72, no card `Plano atual` da aba `?tab=plano`.
 - A linha foi posicionada entre `Inicio` e `Próxima renovação`/`Fim`, mantendo a leitura mobile-first do bloco e sem alterar endpoint, schema Prisma, migrations, packages ou regra de domínio.
 - Builder/Quick Copy não está exposto como ferramenta no ambiente; a referência visual usada foi o PNG local `_product/proto/admin/Psicólogos/Detalhes do psicólogo/Plano e pagamentos.png` e a captura enviada pelo usuário.
+
+## Ajuste complementar 2026-07-14 - Estados inativos dos cards de gráfico
+
+- Pedido do usuário: na **Visão geral** do dashboard de psicólogos e nos cards selecionáveis dos gráficos da aba **Estatísticas**, o estado desmarcado precisava ficar visualmente inativo.
+- A UI Admin passou a aplicar fundo cinza via tokens (`bg-border/50`) e remover sombra dos cards desmarcados, mantendo os cards selecionados com fundo de superfície, sombra e anel primário.
+- O ajuste é exclusivamente visual, mobile-first e reutiliza os componentes existentes `MetricCard` e `StatisticsMetricToggleCard`; não altera endpoints, schema Prisma, migrations, packages, dados ou regras de domínio.
+- Builder/Quick Copy não está exposto como ferramenta no ambiente; a referência visual usada foi a captura enviada pelo usuário e os padrões locais em `_product/proto/admin/Psicólogos`.

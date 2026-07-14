@@ -2149,11 +2149,12 @@ const StatisticsMetricToggleCard = ({
     <button
       aria-pressed={active}
       className={cn(
-        "min-w-0 overflow-hidden rounded-card border p-4 text-left shadow-admin-soft transition duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2",
+        "min-w-0 overflow-hidden rounded-card border p-4 text-left transition duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2",
         active
-          ? "border-primary/35 bg-surface ring-1 ring-primary/10"
-          : "border-border/75 bg-surface/95 hover:-translate-y-0.5 hover:border-primary/25",
-        !metric.available && "cursor-not-allowed bg-surface-muted opacity-60 hover:border-border",
+          ? "border-primary/35 bg-surface shadow-admin-soft ring-1 ring-primary/10"
+          : "border-border/80 bg-border/50 shadow-none hover:-translate-y-0.5 hover:border-primary/25 hover:bg-border/60",
+        !metric.available &&
+          "cursor-not-allowed border-border bg-surface-muted opacity-60 shadow-none hover:border-border",
       )}
       disabled={!metric.available}
       onClick={onToggle}

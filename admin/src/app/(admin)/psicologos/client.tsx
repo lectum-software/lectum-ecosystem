@@ -379,10 +379,10 @@ const MetricCard = ({
     <button
       aria-pressed={active}
       className={cn(
-        "min-h-[8.75rem] min-w-0 rounded-card border bg-surface/95 p-3 text-left shadow-admin-soft transition duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 md:p-4 xl:min-h-[8.25rem] xl:p-3",
+        "min-h-[8.75rem] min-w-0 rounded-card border p-3 text-left transition duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 md:p-4 xl:min-h-[8.25rem] xl:p-3",
         active
-          ? "border-primary/35 ring-1 ring-primary/10"
-          : "border-border/70 hover:-translate-y-0.5 hover:border-primary/25",
+          ? "border-primary/35 bg-surface shadow-admin-soft ring-1 ring-primary/10"
+          : "border-border/80 bg-border/50 shadow-none hover:-translate-y-0.5 hover:border-primary/25 hover:bg-border/60",
       )}
       onClick={onToggle}
       title={`${metric.label}: ${formattedValue}. ${
