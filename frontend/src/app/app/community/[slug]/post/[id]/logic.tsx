@@ -1370,7 +1370,7 @@ const ReplyCard = ({
     >
       {hasTreeContinuation ? (
         <span
-          className="pointer-events-none absolute top-10 bottom-0 left-4 z-0 w-0.5 -translate-x-1/2 rounded-full bg-border-strong sm:left-[1.125rem]"
+          className="pointer-events-none absolute top-10 bottom-0 left-4 z-0 w-[1.5px] -translate-x-1/2 rounded-full bg-border-strong sm:left-[1.125rem]"
           aria-hidden="true"
         />
       ) : null}
@@ -1565,7 +1565,7 @@ const ReplyCard = ({
                   stroke="currentColor"
                   strokeLinecap="round"
                   strokeLinejoin="round"
-                  strokeWidth={2.25}
+                  strokeWidth={1.5}
                   vectorEffect="non-scaling-stroke"
                 />
               </svg>
