@@ -522,3 +522,13 @@ Regras de cálculo:
 - A métrica mede instalação registrada por evento first-party no período; não representa estado atual instalado nem desinstalação.
 - Não houve alteração em Prisma schema, migrations ou packages.
 - Validação executada: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, validação do snapshot staged do Admin e `pnpm check`.
+
+## Ajuste complementar 2026-07-14 - PWA instalado no uso individual
+
+- Pedido do usuário: dentro do detalhe administrativo do psicólogo, na aba **Estatísticas**, o bloco **Uso da plataforma** deve informar se o psicólogo instalou o PWA.
+- O backend de `GET /api/admin/private/psychologists/:id/statistics` passa a consultar o primeiro evento real `important_action_event` com `action_type="pwa_installed"` do psicólogo, independentemente do período selecionado, por se tratar de uma adoção registrada e não de navegação recorrente.
+- A UI Admin adiciona o KPI `PWA instalado` ao bloco **Uso da plataforma**, exibindo `Sim` quando há instalação registrada e `Não registrado` quando não há evento first-party persistido.
+- A métrica não representa estado atual instalado nem desinstalação; ela indica somente existência de evento real registrado, sem mock, backfill ou inferência.
+- Não houve alteração em Prisma schema, migrations ou packages.
+- Validação executada: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build` e validação do snapshot staged do Admin.
+- Validação adicional executada: `pnpm check`.

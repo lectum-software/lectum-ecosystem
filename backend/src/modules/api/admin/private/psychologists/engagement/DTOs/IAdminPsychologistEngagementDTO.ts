@@ -120,8 +120,10 @@ export type AdminPsychologistPlatformUsage = {
   last_access_at: Date | null;
   period_from: string;
   period_to: string;
+  pwa_installation_recorded: boolean;
+  pwa_installed_at: Date | null;
   sessions_count: number;
-  source: "page_view_event";
+  source: "page_view_event+important_action_event";
   top_pages: AdminPsychologistPlatformUsageTopPage[];
   unavailable_reason: string | null;
 };
@@ -161,7 +163,7 @@ export type AdminPsychologistStatisticsDTO = {
   };
   period: AdminPsychologistStatisticsPeriod;
   platform_usage: AdminPsychologistPlatformUsage;
-  source: "profile_events+community_activity+video_sessions+search_impressions+professional_review+page_view_event";
+  source: "profile_events+community_activity+video_sessions+search_impressions+professional_review+page_view_event+important_action_event";
   traffic_sources: AdminPsychologistTrafficSources;
   unavailable: AdminPsychologistAvailabilityMetric[];
   video: AdminPsychologistStatisticsVideo;

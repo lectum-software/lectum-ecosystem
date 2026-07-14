@@ -2892,13 +2892,9 @@ const PsychologistTrafficSourcesCard = ({
                 >
                   <div className="min-w-0">
                     <div className="flex min-w-0 flex-wrap items-center gap-2">
-                      <p className="truncate text-sm font-black text-foreground">
-                        {source.label}
-                      </p>
+                      <p className="truncate text-sm font-black text-foreground">{source.label}</p>
                       {source.badge === "primary_source" ? (
-                        <Badge className="bg-primary-soft text-primary">
-                          {"Principal origem"}
-                        </Badge>
+                        <Badge className="bg-primary-soft text-primary">{"Principal origem"}</Badge>
                       ) : null}
                     </div>
                     <p className="mt-1 line-clamp-2 text-xs leading-5 text-muted">
@@ -2970,12 +2966,13 @@ const PsychologistPlatformUsageCard = ({
         </div>
       </div>
 
-      <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
         {[
           ["Último acesso", formatDateTime(usage.last_access_at)],
           ["Dias com acesso", numberFormatter.format(usage.access_days_count)],
           ["Sessões", numberFormatter.format(usage.sessions_count)],
           ["Tempo médio", formatPlatformDuration(usage.average_duration_seconds)],
+          ["PWA instalado", usage.pwa_installation_recorded ? "Sim" : "Não registrado"],
         ].map(([label, value]) => (
           <div className="rounded-2xl bg-surface-muted p-3" key={label}>
             <p className="text-xs font-black text-muted">{label}</p>

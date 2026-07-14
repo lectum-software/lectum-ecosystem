@@ -785,6 +785,7 @@ export const showAdminPsychologistStatistics = async (
     previousReplies,
     memberships,
     platformPageViews,
+    pwaInstallAction,
     trafficPageViews,
   ] = await Promise.all([
     repository.listProfileViews(userId, period.current.start, period.current.end),
@@ -807,6 +808,7 @@ export const showAdminPsychologistStatistics = async (
     repository.listAuthoredReplies(userId, period.previous.start, period.previous.end),
     repository.listCommunities(userId),
     repository.listPlatformPageViews(userId, period.current.start, period.current.end),
+    repository.findPwaInstallAction(userId),
     repository.listPublicProfilePageViews(userId, period.current.start, period.current.end),
   ]);
 
@@ -927,8 +929,10 @@ export const showAdminPsychologistStatistics = async (
         : null,
     period_from: period.period.from,
     period_to: period.period.to,
+    pwa_installation_recorded: Boolean(pwaInstallAction),
+    pwa_installed_at: pwaInstallAction?.occurred_at ?? null,
     sessions_count: new Set(platformPageViews.map((view) => view.session_id)).size,
-    source: "page_view_event" as const,
+    source: "page_view_event+important_action_event" as const,
     top_pages: platformUsageSummary.top_pages,
     unavailable_reason: platformUsageSummary.unavailable_reason,
   };
@@ -1058,7 +1062,7 @@ export const showAdminPsychologistStatistics = async (
     period: period.period,
     platform_usage: platformUsage,
     source:
-      "profile_events+community_activity+video_sessions+search_impressions+professional_review+page_view_event",
+      "profile_events+community_activity+video_sessions+search_impressions+professional_review+page_view_event+important_action_event",
     traffic_sources: trafficSources,
     unavailable,
     video: buildVideo(profile, videoSessions, previousVideoSessions, period.period),

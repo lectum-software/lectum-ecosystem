@@ -151,6 +151,27 @@ export class AdminPsychologistEngagementRepository {
     });
   }
 
+  async findPwaInstallAction(userId: string) {
+    return prisma.important_action_event.findFirst({
+      orderBy: {
+        occurred_at: "asc",
+      },
+      select: {
+        occurred_at: true,
+      },
+      where: {
+        action_type: "pwa_installed",
+        deleted: false,
+        user_id: userId,
+        user: {
+          active: true,
+          deleted: false,
+          role: "psicologo",
+        },
+      },
+    });
+  }
+
   async listPublicProfilePageViews(userId: string, from: Date, to: Date) {
     return prisma.page_view_event.findMany({
       orderBy: {

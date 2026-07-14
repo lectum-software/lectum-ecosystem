@@ -856,8 +856,10 @@ export type AdminPsychologistStatistics = {
     last_access_at: string | null;
     period_from: string;
     period_to: string;
+    pwa_installation_recorded: boolean;
+    pwa_installed_at: string | null;
     sessions_count: number;
-    source: "page_view_event";
+    source: "page_view_event+important_action_event";
     top_pages: {
       count: number;
       label: string;
@@ -865,7 +867,7 @@ export type AdminPsychologistStatistics = {
     }[];
     unavailable_reason: string | null;
   };
-  source: "profile_events+community_activity+video_sessions+search_impressions+professional_review+page_view_event";
+  source: "profile_events+community_activity+video_sessions+search_impressions+professional_review+page_view_event+important_action_event";
   traffic_sources: {
     attribution_unavailable_reason: string | null;
     description: string;

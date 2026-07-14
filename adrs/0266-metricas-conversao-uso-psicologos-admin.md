@@ -65,3 +65,11 @@ O dashboard Admin de psicólogos não deve exibir uma faixa textual adicional qu
 O bloco **Uso da plataforma** do dashboard Admin de psicólogos passa a incluir o percentual de psicólogos com evento real `important_action_event.action_type="pwa_installed"` no período selecionado. A métrica considera apenas eventos autenticados de usuários `role="psicologo"` e usa como denominador os psicólogos elegíveis do dashboard no recorte. Ela mede instalação registrada por analytics first-party, não estado atual instalado nem desinstalação, e não cria backfill ou dados artificiais.
 
 Validação complementar: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, validação do snapshot staged do Admin e `pnpm check`.
+
+## Complemento 2026-07-14 - PWA instalado no uso individual
+
+A aba **Estatísticas** do detalhe administrativo do psicólogo passa a exibir, no bloco **Uso da plataforma**, se há evento real `important_action_event.action_type="pwa_installed"` para aquele psicólogo. A consulta individual não fica limitada ao período selecionado, porque instalação PWA é uma adoção registrada e não uma métrica recorrente de navegação do recorte. A UI mostra `Sim` quando há evento e `Não registrado` quando não há evento persistido; isso não afirma estado atual instalado nem captura desinstalação.
+
+Validação complementar: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build` e validação do snapshot staged do Admin.
+
+Validação adicional: `pnpm check`.
