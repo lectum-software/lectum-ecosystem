@@ -1448,9 +1448,9 @@ const DashboardContent = ({ summary }: { summary: AdminPsychologistsDashboard })
 
       <DashboardTrafficSourcesCard summary={summary} />
 
-      <ConversionAndUsageBlocks summary={summary} />
-
       <StatsContent summary={summary} />
+
+      <ConversionAndUsageBlocks summary={summary} />
     </div>
   );
 };

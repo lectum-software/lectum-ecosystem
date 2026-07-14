@@ -506,3 +506,10 @@ Regras de cálculo:
 - `WhatsApp` por origem permanece `—` enquanto `contact_request` não persistir origem/sessão do CTA; não houve inferência artificial nem mock.
 - Não houve alteração em Prisma schema, migrations ou packages.
 - Validação executada: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build` e `pnpm check`.
+
+## Ajuste complementar 2026-07-14 - Ordem dos blocos no dashboard de psicólogos
+
+- Pedido do usuário: ajustar a ordem do dashboard Admin de psicólogos para exibir primeiro o gráfico de **Visão geral**, depois a tabela **Origem do tráfego**, depois o **Comparativo oferta e demanda** e, por fim, os demais gráficos/blocos.
+- A UI Admin foi reordenada sem alterar endpoints, contratos, cálculos, schema Prisma, migrations, packages ou dados persistidos.
+- O ajuste é exclusivamente visual e preserva a leitura mobile-first dos blocos existentes.
+- Validação executada: `pnpm --dir admin check` e `pnpm --dir admin build`.

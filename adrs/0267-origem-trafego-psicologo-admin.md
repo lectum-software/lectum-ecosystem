@@ -34,3 +34,9 @@ O dashboard Admin de psicólogos também passa a exibir **Origem do tráfego** l
 Para manter a mesma taxonomia do analytics público do psicólogo, `page_view_event.traffic_source` é consolidado nas cinco fontes de produto: `Explorar`, `Busca e filtros`, `Comunidades`, `Link direto` e `Favoritos`. Fontes técnicas sem dimensão específica persistida são mapeadas de forma conservadora: `lectum_community` entra em `Comunidades`, navegação interna de perfis/lista entra em `Explorar`, e acessos externos/diretos entram em `Link direto`. `Busca e filtros` e `Favoritos` permanecem com zero quando não há evento first-party específico para essas dimensões, sem inferência artificial.
 
 Como `contact_request` ainda não persiste sessão/origem do clique no WhatsApp, a coluna **WhatsApp** por fonte continua indisponível (`—`) na tabela agregada. Essa coluna só deve receber números por fonte quando a origem do CTA for persistida no evento real de contato.
+
+## Complemento 2026-07-14 - Ordem de leitura no dashboard agregado
+
+A tabela agregada **Origem do tráfego** deve aparecer imediatamente após o gráfico de **Visão geral** no dashboard Admin de psicólogos. Em seguida vem o **Comparativo oferta e demanda**, deixando os demais blocos de conversão, modo de cadastro e uso da plataforma para a sequência posterior.
+
+A decisão é de hierarquia visual: primeiro leitura executiva temporal, depois canais de aquisição, depois desequilíbrios de oferta/demanda e, por fim, demais diagnósticos. Não altera dados, contratos ou regras de atribuição.
