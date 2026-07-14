@@ -497,3 +497,12 @@ Regras de cálculo:
 - A coluna foi ocultada tanto no analytics público do psicólogo quanto na aba **Estatísticas** do painel Admin, mantendo `Fonte`, `Visualizações de perfil` e `WhatsApp` como métricas independentes.
 - Decisão de produto: o clique no WhatsApp pode ocorrer sem visualização do perfil, por exemplo em vídeo da página de psicólogos, publicações da comunidade, favoritos ou link direto; portanto `WhatsApp / visualizações de perfil` não é um denominador confiável e poderia ultrapassar 100%.
 - O ajuste é visual/semântico, mobile-first, sem mocks, sem endpoint novo, sem alteração de Prisma/migrations e sem mudança nos dados persistidos.
+
+## Ajuste complementar 2026-07-14 - Origem do tráfego agregada no dashboard
+
+- Pedido do usuário: inserir, no dashboard Admin de psicólogos, logo após o gráfico de **Visão geral**, uma tabela **Origem do tráfego** agregada para todos os psicólogos da plataforma.
+- O backend passa a retornar `traffic_sources` no endpoint `GET /api/admin/private/psychologists/dashboard`, somando `page_view_event` reais de perfis públicos (`page_kind="psychologist_profile"`, `target_type="psychologist"`) dos psicólogos da base no período selecionado.
+- A UI Admin renderiza a mesma taxonomia do analytics público do psicólogo: `Explorar`, `Busca e filtros`, `Comunidades`, `Link direto` e `Favoritos`, com colunas `Fonte`, `Visualizações de perfil` e `WhatsApp`, sem coluna de conversão.
+- `WhatsApp` por origem permanece `—` enquanto `contact_request` não persistir origem/sessão do CTA; não houve inferência artificial nem mock.
+- Não houve alteração em Prisma schema, migrations ou packages.
+- Validação executada: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build` e `pnpm check`.

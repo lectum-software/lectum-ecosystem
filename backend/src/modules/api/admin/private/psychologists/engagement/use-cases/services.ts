@@ -1,6 +1,9 @@
 ﻿import type { Resolve } from "@/helpers/return";
 import { error, msg } from "@/helpers/translate";
-import { summarizePlatformUsage } from "@/utils/admin-psychologist-analytics";
+import {
+  summarizePlatformUsage,
+  summarizePsychologistTrafficOrigins,
+} from "@/utils/admin-psychologist-analytics";
 import type {
   AdminPsychologistAvailabilityMetric,
   AdminPsychologistEngagementQuery,
@@ -550,99 +553,15 @@ const buildVideo = (
   };
 };
 
-const trafficSourceLabels: Record<string, string> = {
-  direct: "Direto",
-  google: "Google Pesquisa",
-  instagram: "Instagram",
-  lectum_billing: "Lectum Billing",
-  lectum_community: "Comunidades",
-  lectum_internal: "Lectum interno",
-  lectum_profile: "Perfis Lectum",
-  whatsapp: "WhatsApp",
-};
-
-const trafficSourceDescriptions: Record<string, string> = {
-  direct: "Acessos sem origem externa identificada ou por URL digitada/favorito do navegador.",
-  google: "Acessos vindos de busca orgânica do Google.",
-  instagram: "Acessos vindos do Instagram.",
-  lectum_billing: "Acessos originados em fluxos internos de assinatura da Lectum.",
-  lectum_community: "Acessos originados em comunidades e posts da Lectum.",
-  lectum_internal: "Acessos originados em navegação interna da Lectum.",
-  lectum_profile: "Acessos originados em outros perfis ou páginas de psicólogos da Lectum.",
-  whatsapp: "Acessos originados por links compartilhados no WhatsApp.",
-};
-
-const labelFromTrafficSource = (source: string) =>
-  trafficSourceLabels[source] ?? source.replace(/_/g, " ");
-
-const descriptionFromTrafficSource = (source: string) =>
-  trafficSourceDescriptions[source] ?? "Origem first-party registrada para visitas ao perfil.";
-
 const buildTrafficSources = (
   pageViews: PublicProfilePageViews,
 ): AdminPsychologistStatisticsDTO["traffic_sources"] => {
-  const totalProfileViews = pageViews.length;
-  const groups = new Map<
-    string,
-    {
-      profileViews: number;
-      sessions: Set<string>;
-    }
-  >();
-
-  for (const pageView of pageViews) {
-    const source = pageView.traffic_source || "direct";
-    const current = groups.get(source) ?? {
-      profileViews: 0,
-      sessions: new Set<string>(),
-    };
-    current.profileViews += 1;
-    current.sessions.add(pageView.session_id);
-    groups.set(source, current);
-  }
-
-  const totalSessions = new Set(pageViews.map((pageView) => pageView.session_id)).size;
-  const maxProfileViews = Math.max(0, ...[...groups.values()].map((group) => group.profileViews));
-  const updatedAt =
-    pageViews.length > 0
-      ? pageViews.reduce<Date | null>(
-          (latest, pageView) =>
-            !latest || pageView.occurred_at > latest ? pageView.occurred_at : latest,
-          null,
-        )
-      : null;
+  const summary = summarizePsychologistTrafficOrigins(pageViews);
 
   return {
-    attribution_unavailable_reason:
-      "Cliques no WhatsApp e conversão por origem ainda não têm atribuição first-party persistida; a tabela exibe visualizações reais do perfil por origem.",
-    description:
-      "Origem first-party das visitas ao perfil público do psicólogo no período selecionado.",
+    ...summary,
+    description: "Entenda quais canais levam pacientes até o perfil público do psicólogo.",
     source: "page_view_event.traffic_source+target_type=psychologist",
-    sources: [...groups.entries()]
-      .map(([id, group]) => ({
-        badge:
-          group.profileViews > 0 && group.profileViews === maxProfileViews
-            ? ("primary_source" as const)
-            : null,
-        conversion_rate: null,
-        description: descriptionFromTrafficSource(id),
-        id,
-        label: labelFromTrafficSource(id),
-        percentage:
-          totalProfileViews > 0 ? roundPercent((group.profileViews / totalProfileViews) * 100) : 0,
-        profile_views: group.profileViews,
-        sessions: group.sessions.size,
-        whatsapp_clicks: null,
-      }))
-      .sort((left, right) => right.profile_views - left.profile_views)
-      .slice(0, 8),
-    total_profile_views: totalProfileViews,
-    total_sessions: totalSessions,
-    unavailable_reason:
-      totalProfileViews > 0
-        ? null
-        : "Nenhuma visita ao perfil público com origem de tráfego foi registrada no período.",
-    updated_at: updatedAt,
   };
 };
 

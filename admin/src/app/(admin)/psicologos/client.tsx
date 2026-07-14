@@ -237,6 +237,9 @@ const formatSecondsMetric = (value: number | null) => {
   return `${minutes}min ${String(remainder).padStart(2, "0")}s`;
 };
 
+const formatNullableCount = (value: number | null) =>
+  typeof value === "number" ? numberFormatter.format(value) : "\u2014";
+
 const isValidRange = (range: DashboardRange, period: DashboardPeriodValue) => {
   if (period !== "custom") return true;
   if (!range.from || !range.to) return false;
@@ -1319,6 +1322,101 @@ const CardsGrid = ({
   );
 };
 
+const DashboardTrafficSourcesCard = ({ summary }: { summary: AdminPsychologistsDashboard }) => {
+  const traffic = summary.traffic_sources;
+
+  return (
+    <CardShell className="p-5">
+      <div className="min-w-0">
+        <p className="text-xs font-black uppercase tracking-[0.16em] text-primary">
+          Origem do tráfego
+        </p>
+        <h3 className="mt-2 text-lg font-black text-foreground">
+          Canais que levam pacientes até os perfis
+        </h3>
+        <p className="mt-1 text-sm font-bold leading-6 text-muted">
+          Período: {summary.period.label} · {formatDate(summary.period.from)} a{" "}
+          {formatDate(summary.period.to)}
+        </p>
+      </div>
+
+      {traffic.unavailable_reason ? (
+        <p className="mt-5 rounded-2xl border border-dashed border-border bg-surface-muted p-4 text-sm font-bold leading-6 text-muted">
+          {traffic.unavailable_reason}
+        </p>
+      ) : null}
+
+      <div className="mt-5 hidden overflow-hidden rounded-[1.35rem] border border-border/70 md:block">
+        <div className="grid grid-cols-[minmax(0,1.25fr)_minmax(110px,0.75fr)_minmax(92px,0.55fr)] gap-3 border-border border-b bg-surface-muted px-4 py-3 text-[0.7rem] font-black uppercase tracking-[0.1em] text-subtle">
+          <span>Fonte</span>
+          <span className="text-center">Visualizações de perfil</span>
+          <span className="text-center">WhatsApp</span>
+        </div>
+        <div className="divide-y divide-border">
+          {traffic.sources.map((source) => (
+            <div
+              className="grid grid-cols-[minmax(0,1.25fr)_minmax(110px,0.75fr)_minmax(92px,0.55fr)] items-center gap-3 px-4 py-4"
+              key={source.id}
+            >
+              <div className="min-w-0">
+                <div className="flex min-w-0 flex-wrap items-center gap-2">
+                  <p className="truncate text-sm font-black text-foreground">{source.label}</p>
+                  {source.badge === "primary_source" ? (
+                    <span className="rounded-full bg-primary-soft px-2 py-1 text-[0.68rem] font-black text-primary">
+                      Principal origem
+                    </span>
+                  ) : null}
+                </div>
+                <p className="mt-1 line-clamp-2 text-xs leading-5 text-muted">
+                  {source.description}
+                </p>
+              </div>
+              <p className="text-center text-lg font-black text-foreground">
+                {numberFormatter.format(source.profile_views)}
+              </p>
+              <p className="text-center text-lg font-black text-foreground">
+                {formatNullableCount(source.whatsapp_clicks)}
+              </p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="mt-5 grid gap-3 md:hidden">
+        {traffic.sources.map((source) => (
+          <article
+            className="rounded-[1.35rem] border border-border/70 bg-surface-muted p-4"
+            key={source.id}
+          >
+            <div className="min-w-0">
+              <div className="flex min-w-0 flex-wrap items-center gap-2">
+                <h4 className="text-sm font-black text-foreground">{source.label}</h4>
+                {source.badge === "primary_source" ? (
+                  <span className="rounded-full bg-primary-soft px-2 py-1 text-[0.68rem] font-black text-primary">
+                    Principal origem
+                  </span>
+                ) : null}
+              </div>
+              <p className="mt-1 text-xs leading-5 text-muted">{source.description}</p>
+            </div>
+            <div className="mt-4 grid grid-cols-2 gap-2">
+              {[
+                ["Perfil", numberFormatter.format(source.profile_views)],
+                ["WhatsApp", formatNullableCount(source.whatsapp_clicks)],
+              ].map(([label, value]) => (
+                <div className="rounded-2xl bg-surface p-3" key={label}>
+                  <p className="text-[0.68rem] font-black text-muted">{label}</p>
+                  <p className="mt-1 text-base font-black text-foreground">{value}</p>
+                </div>
+              ))}
+            </div>
+          </article>
+        ))}
+      </div>
+    </CardShell>
+  );
+};
+
 const DashboardContent = ({ summary }: { summary: AdminPsychologistsDashboard }) => {
   const [visibleMetricKeys, setVisibleMetricKeys] = useState<DashboardMetricKey[]>(() => [
     ...CARD_ORDER,
@@ -1347,6 +1445,8 @@ const DashboardContent = ({ summary }: { summary: AdminPsychologistsDashboard })
         <PanelTitle icon={Activity} title="Evolução no período" />
         <TimelineChart points={summary.timeline.points} visibleMetricKeys={activeMetricKeys} />
       </CardShell>
+
+      <DashboardTrafficSourcesCard summary={summary} />
 
       <ConversionAndUsageBlocks summary={summary} />
 

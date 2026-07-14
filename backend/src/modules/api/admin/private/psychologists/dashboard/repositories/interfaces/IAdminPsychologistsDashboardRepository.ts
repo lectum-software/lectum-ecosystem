@@ -110,6 +110,12 @@ export type AdminPsychologistPlatformPageViewRecord = {
   user_id: string | null;
 };
 
+export type AdminPsychologistPublicProfilePageViewRecord = {
+  occurred_at: Date;
+  session_id: string;
+  traffic_source: string | null;
+};
+
 export interface IAdminPsychologistsDashboardRepository {
   listProfileViews(
     range: AdminPsychologistsDashboardDateRange,
@@ -118,6 +124,10 @@ export interface IAdminPsychologistsDashboardRepository {
   listPlatformPageViews(
     range: AdminPsychologistsDashboardDateRange,
   ): Promise<AdminPsychologistPlatformPageViewRecord[]>;
+  listPublicProfilePageViews(
+    range: AdminPsychologistsDashboardDateRange,
+    psychologistIds: string[],
+  ): Promise<AdminPsychologistPublicProfilePageViewRecord[]>;
   listPsychologistProfiles(): Promise<AdminPsychologistProfileRecord[]>;
   listPublicRankingCandidates(): Promise<AdminPsychologistRankingCandidateRecord[]>;
   listPublishedReviews(

@@ -8,6 +8,7 @@ import {
   signupMethodLabel,
   summarizeConversionCohort,
   summarizePlatformUsage,
+  summarizePsychologistTrafficOrigins,
 } from "@/utils/admin-psychologist-analytics";
 import { crpExperienceYears } from "@/utils/professional-experience";
 import { rankPsychologistCandidates } from "@/utils/psychologist-public-ranking";
@@ -772,9 +773,11 @@ export const buildPsychologistsDashboard = async (
 
   const { current, labels, period, previous } = resolvedPeriod.period;
 
-  const [rankingCandidates, platformPageViews] = await Promise.all([
+  const psychologistUserIds = profiles.map((profile) => profile.user.id);
+  const [rankingCandidates, platformPageViews, publicProfilePageViews] = await Promise.all([
     repository.listPublicRankingCandidates(),
     repository.listPlatformPageViews(current),
+    repository.listPublicProfilePageViews(current, psychologistUserIds),
   ]);
 
   const currentProfiles = profiles.filter((profile) => profileCreatedUntil(profile, current.end));
@@ -812,6 +815,7 @@ export const buildPsychologistsDashboard = async (
     labels,
     pageViews: platformPageViews,
   });
+  const trafficSources = summarizePsychologistTrafficOrigins(publicProfilePageViews);
 
   const summary: AdminPsychologistsDashboardSummary = {
     cards: {
@@ -929,6 +933,10 @@ export const buildPsychologistsDashboard = async (
       }),
       source: "user+professional_subscription",
     },
+    traffic_sources: {
+      ...trafficSources,
+      source: "page_view_event.traffic_source+target_type=psychologist",
+    },
     unavailable: [
       {
         description:
@@ -937,6 +945,17 @@ export const buildPsychologistsDashboard = async (
         label: "Filtros mais buscados",
         source: "not_tracked",
       },
+      ...(trafficSources.unavailable_reason
+        ? [
+            {
+              description:
+                "Origem do tráfego agregada depende de page_view_event do perfil público dos psicólogos no período selecionado.",
+              id: "traffic_sources",
+              label: "Origem do tráfego",
+              source: "page_view_event",
+            },
+          ]
+        : []),
       ...(currentChurn.denominator === 0
         ? [
             {

@@ -391,6 +391,34 @@ export class AdminPsychologistsDashboardRepository
     });
   }
 
+  async listPublicProfilePageViews(
+    range: AdminPsychologistsDashboardDateRange,
+    psychologistIds: string[],
+  ) {
+    const uniquePsychologistIds = [...new Set(psychologistIds.filter(Boolean))];
+    if (uniquePsychologistIds.length === 0) return [];
+
+    return prisma.page_view_event.findMany({
+      orderBy: {
+        occurred_at: "asc",
+      },
+      select: {
+        occurred_at: true,
+        session_id: true,
+        traffic_source: true,
+      },
+      where: {
+        deleted: false,
+        occurred_at: eventCreatedAtWhere(range),
+        page_kind: "psychologist_profile",
+        target_id: {
+          in: uniquePsychologistIds,
+        },
+        target_type: "psychologist",
+      },
+    });
+  }
+
   async listProfileViews(range: AdminPsychologistsDashboardDateRange) {
     return prisma.profile_view_event.findMany({
       where: {

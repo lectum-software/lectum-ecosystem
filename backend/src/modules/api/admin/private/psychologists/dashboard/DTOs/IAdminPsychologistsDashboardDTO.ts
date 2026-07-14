@@ -241,6 +241,28 @@ export type AdminPsychologistsDashboardPlatformUsage = {
   unavailable_reason: string | null;
 };
 
+export type AdminPsychologistsDashboardTrafficSourceItem = {
+  badge: "primary_source" | null;
+  description: string;
+  id: "communities" | "direct_link" | "explore" | "favorites" | "search_filters";
+  label: string;
+  percentage: number;
+  profile_views: number;
+  sessions: number;
+  whatsapp_clicks: number | null;
+};
+
+export type AdminPsychologistsDashboardTrafficSources = {
+  attribution_unavailable_reason: string | null;
+  description: string;
+  source: "page_view_event.traffic_source+target_type=psychologist";
+  sources: AdminPsychologistsDashboardTrafficSourceItem[];
+  total_profile_views: number;
+  total_sessions: number;
+  unavailable_reason: string | null;
+  updated_at: Date | null;
+};
+
 export type AdminPsychologistsDashboardSummary = {
   cards: {
     churn: AdminPsychologistsDashboardMetric;
@@ -277,6 +299,7 @@ export type AdminPsychologistsDashboardSummary = {
     points: AdminPsychologistsDashboardDailyPoint[];
     source: "user+professional_subscription";
   };
+  traffic_sources: AdminPsychologistsDashboardTrafficSources;
   unavailable: AdminPsychologistsDashboardUnavailableMetric[];
 };
 
