@@ -86,6 +86,7 @@ Permitir que um Admin autenticado execute ações reais e auditadas de suspensã
 - [x] A aba **Atividades** lista eventos de suspensão, desativação e exclusão sem expor segredos.
 - [x] Formulários usam React Hook Form, Zod e controllers existentes.
 - [x] UI mobile-first segue o padrão visual da aba **Conta** existente.
+- [x] O card **Ações da conta** fica no final da aba **Conta**, após blocos informativos e de segurança.
 - [x] Nenhum `<img>` cru foi usado.
 - [x] Nenhum pacote novo foi instalado.
 - [x] Prisma migration foi criada e `pnpm --dir backend db:migrate` foi executado sem reset destrutivo.
@@ -113,6 +114,12 @@ Permitir que um Admin autenticado execute ações reais e auditadas de suspensã
 - Ao vencer, a conta é reativada de forma preguiçosa no próximo login real ou na leitura administrativa da aba **Conta**; tokens encerrados pela suspensão não são restaurados.
 - Desativação e exclusão limpam `account_status_expires_at`.
 
+## Complemento TASK-73C - Posição das ações da conta
+
+- O card **Ações da conta** foi movido para o final da aba **Conta** no Admin, depois de **Senha e recuperação** e **Sessões e segurança**.
+- A mudança preserva os formulários, endpoints reais, validações, auditoria e comportamento mobile-first já implementados.
+- A decisão reduz exposição antecipada de ações destrutivas, mantendo-as acessíveis como último bloco da tela.
+
 ## Validação executada
 
 - `pnpm --dir backend db:migrate`
@@ -131,6 +138,12 @@ Permitir que um Admin autenticado execute ações reais e auditadas de suspensã
   - `node -e "JSON.parse(require('fs').readFileSync('backend/locales/pt/translation.json','utf8'))"`
   - Smoke HTTP local em `/psicologos/cmrgrztri7000tn0uh1q4n8vxf?tab=conta` retornando 200.
   - Smoke HTTP local sem sessão em `/account/suspend` com `suspension_duration_days=7` retornando 401.
+- Complemento TASK-73C:
+  - `pnpm --dir admin check`
+  - `pnpm --dir admin build`
+  - `pnpm check`
+  - Smoke HTTP local em `/psicologos/cmrgrztri7000tn0uh1q4n8vxf?tab=conta` retornando 200.
+  - Validação estática confirmou a ordem **E-mail da conta** → **Senha e recuperação** → **Sessões e segurança** → **Ações da conta**.
 - `node -e "JSON.parse(require('fs').readFileSync('backend/locales/pt/translation.json','utf8'))"`
 - Smoke HTTP local:
   - `GET http://localhost:3002/psicologos/cmrgrztri7000tn0uh1q4n8vxf?tab=conta` retornou 200.

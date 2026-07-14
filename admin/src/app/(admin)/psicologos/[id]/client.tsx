@@ -5589,6 +5589,46 @@ const AccountTab = ({ id }: { id: string }) => {
         </InfoCard>
       </div>
 
+      <div className="grid gap-5 xl:grid-cols-2">
+        <InfoCard icon={KeyRound} title="Senha e recuperação">
+          <div className="grid gap-5">
+            <div>
+              <h3 className="mb-2 text-sm font-black text-foreground">
+                Ação preferencial: link de redefinição
+              </h3>
+              <AccountPasswordResetForm account={account} id={id} />
+            </div>
+            <div>
+              <h3 className="mb-2 text-sm font-black text-foreground">
+                Suporte excepcional: senha temporária
+              </h3>
+              <AccountTemporaryPasswordForm account={account} id={id} />
+            </div>
+          </div>
+        </InfoCard>
+
+        <InfoCard icon={ShieldCheck} title="Sessões e segurança">
+          <div className="grid gap-4">
+            <dl className="divide-y divide-border">
+              <FieldRow
+                label="Sessões ativas"
+                value={numberFormatter.format(account.sessions.active_count)}
+              />
+              <FieldRow
+                label="Dispositivos"
+                value={numberFormatter.format(account.sessions.devices_count)}
+              />
+              <FieldRow
+                label="Última sessão"
+                value={formatDateTime(account.sessions.last_access_at)}
+              />
+              <FieldRow label="Fonte" value={account.sessions.source} />
+            </dl>
+            <AccountRevokeSessionsForm account={account} id={id} />
+          </div>
+        </InfoCard>
+      </div>
+
       <InfoCard icon={AlertTriangle} title="Ações da conta">
         <div className="grid gap-5">
           <div className="rounded-2xl border border-border bg-surface-muted p-4 text-sm font-bold leading-6 text-muted">
@@ -5633,46 +5673,6 @@ const AccountTab = ({ id }: { id: string }) => {
           </div>
         </div>
       </InfoCard>
-
-      <div className="grid gap-5 xl:grid-cols-2">
-        <InfoCard icon={KeyRound} title="Senha e recuperação">
-          <div className="grid gap-5">
-            <div>
-              <h3 className="mb-2 text-sm font-black text-foreground">
-                Ação preferencial: link de redefinição
-              </h3>
-              <AccountPasswordResetForm account={account} id={id} />
-            </div>
-            <div>
-              <h3 className="mb-2 text-sm font-black text-foreground">
-                Suporte excepcional: senha temporária
-              </h3>
-              <AccountTemporaryPasswordForm account={account} id={id} />
-            </div>
-          </div>
-        </InfoCard>
-
-        <InfoCard icon={ShieldCheck} title="Sessões e segurança">
-          <div className="grid gap-4">
-            <dl className="divide-y divide-border">
-              <FieldRow
-                label="Sessões ativas"
-                value={numberFormatter.format(account.sessions.active_count)}
-              />
-              <FieldRow
-                label="Dispositivos"
-                value={numberFormatter.format(account.sessions.devices_count)}
-              />
-              <FieldRow
-                label="Última sessão"
-                value={formatDateTime(account.sessions.last_access_at)}
-              />
-              <FieldRow label="Fonte" value={account.sessions.source} />
-            </dl>
-            <AccountRevokeSessionsForm account={account} id={id} />
-          </div>
-        </InfoCard>
-      </div>
     </div>
   );
 };

@@ -70,3 +70,9 @@ Decisão operacional:
 - JWTs antigos não usam a rotina de expiração preguiçosa para não desfazer o efeito de encerramento de sessões.
 
 Alternativa rejeitada: manter o prazo apenas como metadado de auditoria. Isso foi descartado porque a seleção de prazo precisa ter efeito operacional real.
+
+## Complemento 2026-07-14 - Posição do card de ações
+
+O card **Ações da conta** fica no final da aba **Conta**, depois dos blocos de e-mail, senha/recuperação e sessões/segurança.
+
+Essa posição mantém as ações sensíveis disponíveis para o Admin, mas reduz a exposição imediata de comandos punitivos/destrutivos ao abrir a aba, favorecendo leitura prévia do estado e dos controles de suporte antes da decisão operacional.
