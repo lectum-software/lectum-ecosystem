@@ -36,6 +36,63 @@ export const adminCommunitySelect = {
   visual_text_color: true,
 } satisfies Prisma.communitySelect;
 
+const adminCommunityListSelect = {
+  avatar_url: true,
+  category: true,
+  createdAt: true,
+  description: true,
+  id: true,
+  members_count: true,
+  name: true,
+  slug: true,
+  updatedAt: true,
+  visual_primary_color: true,
+  members: {
+    where: {
+      deleted: false,
+    },
+    select: {
+      id: true,
+    },
+  },
+  posts: {
+    where: {
+      deleted: false,
+    },
+    select: {
+      createdAt: true,
+      id: true,
+      replies_count: true,
+      reports: {
+        where: {
+          deleted: false,
+        },
+        select: {
+          id: true,
+        },
+      },
+      replies: {
+        where: {
+          deleted: false,
+        },
+        select: {
+          createdAt: true,
+          id: true,
+          reports: {
+            where: {
+              deleted: false,
+            },
+            select: {
+              id: true,
+            },
+          },
+        },
+      },
+      status: true,
+    },
+  },
+} satisfies Prisma.communitySelect;
+
 export const adminCommunityRuleSelect = {
   active: true,
   createdAt: true,
@@ -215,6 +272,9 @@ const dateWhere = (from: Date, to: Date) => ({ gte: from, lte: to });
 export type AdminCommunityRecord = Prisma.communityGetPayload<{
   select: typeof adminCommunitySelect;
 }>;
+export type AdminCommunityListRecord = Prisma.communityGetPayload<{
+  select: typeof adminCommunityListSelect;
+}>;
 export type AdminCommunityRuleRecord = Prisma.community_ruleGetPayload<{
   select: typeof adminCommunityRuleSelect;
 }>;
@@ -326,6 +386,16 @@ export class AdminCommunityManageRepository {
         OR: [{ id: idOrSlug }, { slug: idOrSlug }],
       },
       select: adminCommunitySelect,
+    });
+  }
+
+  async listCommunities() {
+    return prisma.community.findMany({
+      orderBy: [{ name: "asc" }, { id: "asc" }],
+      select: adminCommunityListSelect,
+      where: {
+        deleted: false,
+      },
     });
   }
 

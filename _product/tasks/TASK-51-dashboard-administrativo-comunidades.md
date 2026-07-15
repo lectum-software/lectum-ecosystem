@@ -199,3 +199,36 @@ Regras de UI obrigatórias:
 - `pnpm check`: sem erros.
 - Smoke API: endpoint retornou periodo, cards, series, breakdown de posts de pacientes, alertas, posts recentes e principais comunidades com dados reais existentes.
 - Browser local: login admin real, abertura de `/comunidades`, troca de periodo disponivel, validacao mobile (~390px), tablet (768px), desktop e abertura de detalhe `/comunidades/[slug]`.
+
+## Execucao complementar: lista administrativa de comunidades (2026-07-15)
+
+- Pedido do usuario: criar uma pagina de **Lista de Comunidades** no Admin seguindo o modelo da lista administrativa de psicologos.
+- Backend Admin: o modulo existente de comunidades passou a expor `GET /api/admin/private/communities`, protegido por auth Admin, com busca, categoria, ordenacao e paginacao sobre dados reais.
+- A resposta usa `community`, `community_member`, `community_post`, `post_reply` e `post_report` para compor membros, posts, comentarios, denuncias, atividade e ultima atividade, sem mocks, seeds ou endpoint simulado.
+- Frontend Admin: criada a rota estatica `/comunidades/lista`, com busca em URL, filtro de categoria, ordenacao, paginacao, estados loading/erro/vazio e tabela/lista mobile-first que abre o detalhe real `/comunidades/[slug]`.
+- O submenu lateral **Comunidades > Lista de Comunidades** passou a apontar para `/comunidades/lista`; **Visao geral** permanece em `/comunidades`.
+- A acao **Ver todas** de **Principais comunidades** no dashboard agora navega para a lista real.
+- Builder/Quick Copy `vcp://quickcopy/vcp-24aaa2941d814e5b90572bc93ae50e2a` nao esta exposto como ferramenta callable neste ambiente; referencias usadas: `_product/proto/admin/Comunidades/Comunidades - Dashboard.png` e o modelo de `_product/proto/admin/Psicólogos/Psicólogos- Lista.png`.
+- Nao houve alteracao em `backend/prisma/schema.prisma`, migrations ou packages; `pnpm --dir backend db:migrate` nao se aplica.
+- ADR criado: `adrs/0271-lista-admin-comunidades-rota-real.md`.
+
+### Criterios complementares
+
+- [x] `/comunidades/lista` existe como rota Admin protegida pelo shell/autenticacao administrativa.
+- [x] A lista usa endpoint real `GET /api/admin/private/communities`.
+- [x] Busca, filtro de categoria, ordenacao e paginacao usam URL/search params.
+- [x] As metricas por linha sao derivadas de dados reais de comunidades, membros, posts, respostas e denuncias.
+- [x] Clicar em uma comunidade abre o detalhe administrativo existente.
+- [x] O submenu lateral de Comunidades aponta para a rota real da lista.
+- [x] Nenhum mock, dado fake permanente, endpoint simulado, package novo ou alteracao de Prisma/migration foi usado.
+
+### Validacao complementar
+
+- `pnpm --dir backend check`
+- `pnpm --dir admin check`
+- `pnpm --dir backend build`
+- `pnpm --dir admin build`
+- `pnpm check`
+- Smoke service real: `listCommunities({ page: 1, limit: 2, sort: "name" })` retornou `status=200`, `count=7`, `items=2`.
+- Smoke local: `GET http://localhost:3002/comunidades/lista` retornou `200`.
+- Smoke de protecao: `GET http://localhost:3001/api/admin/private/communities?page=1&limit=2` sem token retornou `401`.

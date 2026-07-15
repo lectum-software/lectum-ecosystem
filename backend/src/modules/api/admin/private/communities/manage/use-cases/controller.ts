@@ -4,6 +4,7 @@ import {
   createRule as createRuleService,
   deleteRule as deleteRuleService,
   listActivities as listActivitiesService,
+  listCommunities as listCommunitiesService,
   listContent as listContentService,
   listRanking as listRankingService,
   listReports as listReportsService,
@@ -14,6 +15,18 @@ import {
   updateRule as updateRuleService,
   uploadCommunityAvatar as uploadCommunityAvatarService,
 } from "./services";
+
+export const list = async (req: Request, res: Response) => {
+  try {
+    const resolve = await listCommunitiesService(
+      req as unknown as Parameters<typeof listCommunitiesService>[0],
+    );
+
+    return send(res, resolve);
+  } catch (err) {
+    return error500(res, "admin_communities_list", err);
+  }
+};
 
 export const show = async (req: Request, res: Response) => {
   try {

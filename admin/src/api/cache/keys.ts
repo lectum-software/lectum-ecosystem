@@ -1,4 +1,5 @@
 import type {
+  AdminCommunitiesListQuery,
   AdminCommunityActivitiesQuery,
   AdminCommunityContentQuery,
   AdminCommunityRankingQuery,
@@ -175,6 +176,14 @@ const normalizeCommunityActivities = (input: AdminCommunityActivitiesQuery) => (
   type: input.type || "all",
 });
 
+const normalizeCommunitiesList = (input: AdminCommunitiesListQuery) => ({
+  category: input.category || "all",
+  limit: input.limit || 12,
+  page: input.page || 1,
+  q: input.q || "",
+  sort: input.sort || "name",
+});
+
 export const adminDashboardKeys = {
   all: ["admin", "dashboard"] as const,
   summary: (input: DashboardSummaryQuery) =>
@@ -196,6 +205,8 @@ export const adminCommunitiesKeys = {
   dashboard: (input: CommunitiesDashboardQuery) =>
     [...adminCommunitiesKeys.all, "dashboard", normalizeRange(input)] as const,
   detail: (id: string) => [...adminCommunitiesKeys.all, "detail", id] as const,
+  list: (input: AdminCommunitiesListQuery) =>
+    [...adminCommunitiesKeys.all, "list", normalizeCommunitiesList(input)] as const,
   ranking: (id: string, input: AdminCommunityRankingQuery) =>
     [...adminCommunitiesKeys.all, "ranking", id, normalizeCommunityRanking(input)] as const,
   reports: (id: string, input: AdminCommunityReportsQuery) =>

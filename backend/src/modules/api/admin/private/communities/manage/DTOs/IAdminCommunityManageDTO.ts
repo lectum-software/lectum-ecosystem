@@ -14,6 +14,13 @@ export type AdminCommunityPaginationQuery = {
   q?: string;
 };
 
+export type AdminCommunitiesListSort = "activity" | "members" | "name" | "posts" | "recent";
+
+export type AdminCommunitiesListQuery = AdminCommunityPaginationQuery & {
+  category?: string;
+  sort?: AdminCommunitiesListSort;
+};
+
 export type AdminCommunityContentQuery = AdminCommunityPaginationQuery & {
   status?: "all" | "published" | "removed";
   type?: "all" | "comments" | "posts";
@@ -310,6 +317,51 @@ export type AdminCommunityRulesResponseDTO = {
 export type AdminCommunityAvatarResponseDTO = {
   avatar_url: string;
   community: AdminCommunityIdentity;
+};
+
+export type AdminCommunitiesListFilterOptionDTO = {
+  count: number;
+  id: string;
+  label: string;
+};
+
+export type AdminCommunitiesListItemDTO = {
+  activity_count: number;
+  avatar_url: string | null;
+  category: string | null;
+  comments_count: number;
+  created_at: Date;
+  description: string | null;
+  detail_url: string;
+  id: string;
+  last_activity_at: Date | null;
+  members_count: number;
+  name: string;
+  posts_count: number;
+  reports_count: number;
+  slug: string;
+  updated_at: Date;
+  visual_primary_color: string | null;
+};
+
+export type AdminCommunitiesListDTO = {
+  active_filters_count: number;
+  count: number;
+  data: AdminCommunitiesListItemDTO[];
+  filters: {
+    categories: AdminCommunitiesListFilterOptionDTO[];
+  };
+  page: number;
+  pages: number;
+  per_page: number;
+  sort: AdminCommunitiesListSort;
+  source: "community+community_member+community_post+post_reply+post_report";
+};
+
+export type IAdminCommunitiesListDTO = Request & {
+  q: AdminCommunitiesListQuery;
+  admin?: admin;
+  auth?: admin;
 };
 
 export type IAdminCommunityShowDTO = Request & {

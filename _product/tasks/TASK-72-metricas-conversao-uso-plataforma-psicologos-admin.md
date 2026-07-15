@@ -574,6 +574,7 @@ Regras de cálculo:
 - Não houve decisão arquitetural nova; ADR não foi necessário.
 - Builder/Quick Copy não está exposto como ferramenta no ambiente; a referência visual usada foi a captura enviada pelo usuário e o padrão local do menu Admin.
 - Validação executada: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke local `GET http://localhost:3002/comunidades`/`GET http://localhost:3002/comunidades#lista-de-comunidades` retornando 200.
+- Atualizacao posterior em 2026-07-15: a lista de comunidades deixou de apontar para a ancora do dashboard e passou a usar a rota real /comunidades/lista, registrada na execucao complementar da TASK-51 e no ADR adrs/0271-lista-admin-comunidades-rota-real.md.
 
 ## Ajuste complementar 2026-07-15 - Margem nas setas dos dropdowns do detalhe
 

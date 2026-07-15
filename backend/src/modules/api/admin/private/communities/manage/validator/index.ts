@@ -63,6 +63,26 @@ export const showSchema: IValidatorRequest = {
   params: [communityParam],
 };
 
+export const listSchema: IValidatorRequest = {
+  query: [
+    ...paginationQuery,
+    {
+      key: "category",
+      coerse: "string",
+      method: "string",
+      max: 80,
+      optional: true,
+    },
+    {
+      key: "sort",
+      coerse: "string",
+      method: "string",
+      max: 20,
+      optional: true,
+    },
+  ],
+};
+
 export const updateSchema: IValidatorRequest = {
   params: [communityParam],
   body: [
@@ -263,6 +283,7 @@ export const removeContentSchema: IValidatorRequest = {
 };
 
 export const showValidator = validator(showSchema);
+export const listValidator = validator(listSchema);
 export const updateValidator = validator(updateSchema);
 export const avatarValidator = validator(showSchema);
 export const ruleValidator = validator(ruleSchema);

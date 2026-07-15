@@ -738,7 +738,12 @@ const TopCommunitiesTable = ({
           <h2 className="text-lg font-black text-foreground">Principais comunidades</h2>
           <p className="mt-1 text-xs font-bold text-muted">ranking por atividade real no período</p>
         </div>
-        <span className="text-xs font-black text-primary">Ver todas</span>
+        <Link
+          className="text-xs font-black text-primary transition hover:text-primary-hover"
+          href="/comunidades/lista"
+        >
+          Ver todas
+        </Link>
       </div>
 
       {communities.length === 0 ? (

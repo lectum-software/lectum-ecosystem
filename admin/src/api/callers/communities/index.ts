@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { adminCommunitiesKeys } from "@/api/cache/keys";
 import {
+  type AdminCommunitiesListQuery,
   type AdminCommunityActivitiesQuery,
   type AdminCommunityContentQuery,
   type AdminCommunityRankingQuery,
@@ -12,6 +13,7 @@ import {
   createAdminCommunityRule,
   deleteAdminCommunityRule,
   getAdminCommunitiesDashboard,
+  getAdminCommunitiesList,
   getAdminCommunityActivities,
   getAdminCommunityContent,
   getAdminCommunityDetail,
@@ -31,6 +33,16 @@ export const useAdminCommunitiesDashboard = (
     enabled: options.enabled ?? true,
     queryFn: () => getAdminCommunitiesDashboard(input),
     queryKey: adminCommunitiesKeys.dashboard(input),
+  });
+
+export const useAdminCommunitiesList = (
+  input: AdminCommunitiesListQuery,
+  options: { enabled?: boolean } = {},
+) =>
+  useQuery({
+    enabled: options.enabled ?? true,
+    queryFn: () => getAdminCommunitiesList(input),
+    queryKey: adminCommunitiesKeys.list(input),
   });
 
 export const useAdminCommunityDetail = (id: string, options: { enabled?: boolean } = {}) =>

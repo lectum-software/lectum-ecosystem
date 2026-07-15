@@ -244,6 +244,52 @@ export type AdminCommunityPaginationQuery = {
   q?: string;
 };
 
+export type AdminCommunitiesListSort = "activity" | "members" | "name" | "posts" | "recent";
+
+export type AdminCommunitiesListQuery = AdminCommunityPaginationQuery & {
+  category?: string;
+  sort?: AdminCommunitiesListSort;
+};
+
+export type AdminCommunitiesListFilterOption = {
+  count: number;
+  id: string;
+  label: string;
+};
+
+export type AdminCommunitiesListItem = {
+  activity_count: number;
+  avatar_url: string | null;
+  category: string | null;
+  comments_count: number;
+  created_at: string;
+  description: string | null;
+  detail_url: string;
+  id: string;
+  last_activity_at: string | null;
+  members_count: number;
+  name: string;
+  posts_count: number;
+  reports_count: number;
+  slug: string;
+  updated_at: string;
+  visual_primary_color: string | null;
+};
+
+export type AdminCommunitiesList = {
+  active_filters_count: number;
+  count: number;
+  data: AdminCommunitiesListItem[];
+  filters: {
+    categories: AdminCommunitiesListFilterOption[];
+  };
+  page: number;
+  pages: number;
+  per_page: number;
+  sort: AdminCommunitiesListSort;
+  source: "community+community_member+community_post+post_reply+post_report";
+};
+
 export type AdminCommunityContentQuery = AdminCommunityPaginationQuery & {
   status?: "all" | "published" | "removed";
   type?: "all" | "comments" | "posts";
@@ -472,6 +518,17 @@ export const getAdminCommunitiesDashboard = async (input: CommunitiesDashboardQu
     "/api/admin/private/communities/dashboard",
     {
       params: cleanParams(input),
+    },
+  );
+
+  return resolveApiData(response.data);
+};
+
+export const getAdminCommunitiesList = async (input: AdminCommunitiesListQuery = {}) => {
+  const response = await adminApi.get<ApiResponse<AdminCommunitiesList>>(
+    "/api/admin/private/communities",
+    {
+      params: cleanPaginationParams(input),
     },
   );
 

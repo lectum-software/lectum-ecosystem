@@ -8,6 +8,7 @@ import {
   content,
   createRule,
   deleteRule,
+  list,
   ranking,
   removeContent,
   reports,
@@ -21,6 +22,7 @@ import {
   avatarValidator,
   contentValidator,
   deleteRuleValidator,
+  listValidator,
   rankingValidator,
   removeContentValidator,
   reportsValidator,
@@ -33,6 +35,7 @@ import {
 const routes = Router();
 
 routes.use(adminAuth);
+routes.get("/", listValidator, list);
 routes.get("/:id", showValidator, show);
 routes.put("/:id", updateValidator, update);
 routes.get("/:id/content", contentValidator, content);

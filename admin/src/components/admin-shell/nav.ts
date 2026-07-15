@@ -19,7 +19,7 @@ export const adminNavItems = [
     icon: MessageCircleMore,
     children: [
       { label: "Visão geral", href: "/comunidades" },
-      { label: "Lista de Comunidades", href: "/comunidades#lista-de-comunidades" },
+      { label: "Lista de Comunidades", href: "/comunidades/lista" },
     ],
   },
   { label: "Moderação", href: "/moderacao", icon: ShieldAlert, badge: "moderation" },

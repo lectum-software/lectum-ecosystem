@@ -2,6 +2,9 @@
 import { error, msg } from "@/helpers/translate";
 import { buildProfessionalFullDisplayName } from "@/utils/professional-name";
 import type {
+  AdminCommunitiesListItemDTO,
+  AdminCommunitiesListQuery,
+  AdminCommunitiesListSort,
   AdminCommunityActivitiesDTO,
   AdminCommunityActivityItemDTO,
   AdminCommunityContentDTO,
@@ -18,6 +21,7 @@ import type {
   AdminCommunityRuleBody,
   AdminCommunityRuleDTO,
   AdminCommunityUpdateBody,
+  IAdminCommunitiesListDTO,
   IAdminCommunityActivitiesDTO,
   IAdminCommunityAvatarDTO,
   IAdminCommunityContentDTO,
@@ -32,6 +36,7 @@ import {
   type AdminCommunityActivityRecord,
   type AdminCommunityContentPostRecord,
   type AdminCommunityContentReplyRecord,
+  type AdminCommunityListRecord,
   AdminCommunityManageRepository,
   type AdminCommunityMemberRecord,
   type AdminCommunityMentorMetrics,
@@ -49,6 +54,13 @@ const DEFAULT_PAGE = 1;
 const DEFAULT_PAGE_SIZE = 10;
 const MAX_PAGE_SIZE = 50;
 const REMOVE_CONTENT_CONFIRMATION = "REMOVER CONTEUDO";
+const COMMUNITY_LIST_SORTS = new Set<AdminCommunitiesListSort>([
+  "activity",
+  "members",
+  "name",
+  "posts",
+  "recent",
+]);
 
 const addDays = (date: Date, days: number) => {
   const next = new Date(date);
@@ -102,6 +114,21 @@ const paginate = <T>(items: T[], page: number, limit: number) => {
     per_page: limit,
   };
 };
+const normalizeNullableText = (value?: string | null) => {
+  const normalized = value?.trim();
+
+  return normalized || null;
+};
+const normalizeComparableText = (value?: string | null) =>
+  (value ?? "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
+const normalizeCommunityListSort = (sort?: string | null): AdminCommunitiesListSort =>
+  sort && COMMUNITY_LIST_SORTS.has(sort as AdminCommunitiesListSort)
+    ? (sort as AdminCommunitiesListSort)
+    : "name";
 const percentageChange = (current: number, previous: number) => {
   if (previous === 0) return current === 0 ? 0 : null;
 
@@ -146,6 +173,122 @@ const mapCommunity = (community: AdminCommunityRecord): AdminCommunityIdentity =
   visual_soft_color: community.visual_soft_color,
   visual_text_color: community.visual_text_color,
 });
+
+const maxDate = (dates: Date[]) => {
+  if (dates.length === 0) return null;
+
+  return dates.reduce((latest, date) => (date > latest ? date : latest), dates[0]);
+};
+
+const mapCommunityListItem = (community: AdminCommunityListRecord): AdminCommunitiesListItemDTO => {
+  const publishedPosts = community.posts.filter((post) => post.status === "publicado");
+  const comments = publishedPosts.flatMap((post) => post.replies);
+  const reportsCount = community.posts.reduce(
+    (total, post) =>
+      total +
+      post.reports.length +
+      post.replies.reduce((replyTotal, reply) => replyTotal + reply.reports.length, 0),
+    0,
+  );
+  const lastActivityAt = maxDate([
+    community.createdAt,
+    ...publishedPosts.map((post) => post.createdAt),
+    ...comments.map((comment) => comment.createdAt),
+  ]);
+  const membersCount = Math.max(community.members.length, community.members_count);
+  const postsCount = publishedPosts.length;
+  const commentsCount = comments.length;
+
+  return {
+    activity_count: postsCount + commentsCount,
+    avatar_url: community.avatar_url,
+    category: normalizeNullableText(community.category),
+    comments_count: commentsCount,
+    created_at: community.createdAt,
+    description: community.description,
+    detail_url: `/comunidades/${community.slug}`,
+    id: community.id,
+    last_activity_at: lastActivityAt,
+    members_count: membersCount,
+    name: community.name,
+    posts_count: postsCount,
+    reports_count: reportsCount,
+    slug: community.slug,
+    updated_at: community.updatedAt,
+    visual_primary_color: community.visual_primary_color,
+  };
+};
+
+const communityListMatchesSearch = (item: AdminCommunitiesListItemDTO, search: string) => {
+  if (!search) return true;
+
+  return [item.name, item.slug, item.description, item.category]
+    .filter(Boolean)
+    .some((value) => normalizeComparableText(value).includes(search));
+};
+
+const categoryMatches = (item: AdminCommunitiesListItemDTO, category: string | null) => {
+  if (!category) return true;
+
+  return normalizeComparableText(item.category) === normalizeComparableText(category);
+};
+
+const buildCommunityCategoryFilters = (items: AdminCommunitiesListItemDTO[]) => {
+  const counts = new Map<string, { count: number; label: string }>();
+
+  for (const item of items) {
+    const label = normalizeNullableText(item.category);
+    if (!label) continue;
+
+    const id = normalizeComparableText(label);
+    const current = counts.get(id) ?? { count: 0, label };
+    current.count += 1;
+    counts.set(id, current);
+  }
+
+  return [...counts.entries()]
+    .map(([id, value]) => ({ count: value.count, id, label: value.label }))
+    .sort((left, right) => left.label.localeCompare(right.label, "pt-BR"));
+};
+
+const sortCommunityListItems = (
+  items: AdminCommunitiesListItemDTO[],
+  sort: AdminCommunitiesListSort,
+) =>
+  [...items].sort((left, right) => {
+    if (sort === "members") {
+      return (
+        right.members_count - left.members_count ||
+        left.name.localeCompare(right.name, "pt-BR") ||
+        left.id.localeCompare(right.id)
+      );
+    }
+
+    if (sort === "posts") {
+      return (
+        right.posts_count - left.posts_count ||
+        left.name.localeCompare(right.name, "pt-BR") ||
+        left.id.localeCompare(right.id)
+      );
+    }
+
+    if (sort === "activity") {
+      return (
+        right.activity_count - left.activity_count ||
+        right.reports_count - left.reports_count ||
+        left.name.localeCompare(right.name, "pt-BR") ||
+        left.id.localeCompare(right.id)
+      );
+    }
+
+    if (sort === "recent") {
+      return (
+        right.created_at.getTime() - left.created_at.getTime() || left.id.localeCompare(right.id)
+      );
+    }
+
+    return left.name.localeCompare(right.name, "pt-BR") || left.id.localeCompare(right.id);
+  });
 
 const mapRule = (rule: AdminCommunityRuleRecord): AdminCommunityRuleDTO => ({
   active: rule.active,
@@ -425,12 +568,6 @@ const buildRankingPeriod = () => {
   };
 };
 
-const normalizeNullableText = (value: string | null | undefined) => {
-  const normalized = value?.trim();
-
-  return normalized ? normalized : null;
-};
-
 const normalizeColor = (value: string | null | undefined) => {
   const normalized = normalizeNullableText(value);
   if (!normalized) return null;
@@ -592,6 +729,51 @@ const notFound = () => ({
   status: 404,
   ...error("not_found", { model: "community" }),
 });
+
+export const listCommunities = async (data: IAdminCommunitiesListDTO): Promise<Resolve> => {
+  const query: AdminCommunitiesListQuery = data.q ?? {};
+  if (query.sort && !COMMUNITY_LIST_SORTS.has(query.sort)) {
+    return {
+      status: 400,
+      ...error("invalid_structure", {}),
+    };
+  }
+
+  const repository = new AdminCommunityManageRepository();
+  const search = normalizeComparableText(query.q);
+  const sort = normalizeCommunityListSort(query.sort);
+  const page = normalizePage(query.page);
+  const limit = normalizeLimit(query.limit);
+  const category = normalizeNullableText(query.category);
+  const normalizedCategory =
+    category && normalizeComparableText(category) !== "all" ? category : null;
+
+  const records = await repository.listCommunities();
+  const allItems = records.map(mapCommunityListItem);
+  const filteredItems = allItems.filter(
+    (item) => communityListMatchesSearch(item, search) && categoryMatches(item, normalizedCategory),
+  );
+  const paginated = paginate(sortCommunityListItems(filteredItems, sort), page, limit);
+  const activeFiltersCount = [search, normalizedCategory].filter(Boolean).length;
+
+  return {
+    status: 200,
+    ...msg("index", {}),
+    data: {
+      active_filters_count: activeFiltersCount,
+      count: paginated.count,
+      data: paginated.data,
+      filters: {
+        categories: buildCommunityCategoryFilters(allItems),
+      },
+      page: paginated.page,
+      pages: paginated.pages,
+      per_page: paginated.per_page,
+      sort,
+      source: "community+community_member+community_post+post_reply+post_report",
+    },
+  };
+};
 
 export const showCommunity = async (data: IAdminCommunityShowDTO): Promise<Resolve> => {
   const repository = new AdminCommunityManageRepository();
