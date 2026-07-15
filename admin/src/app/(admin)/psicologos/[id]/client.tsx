@@ -4374,6 +4374,37 @@ const ReportUpholdForm = ({
   );
 };
 
+const DetailFilterSelect = ({
+  children,
+  className,
+  label,
+  onChange,
+  value,
+}: {
+  children: ReactNode;
+  className?: string;
+  label: string;
+  onChange: (value: string) => void;
+  value: string;
+}) => (
+  <label className={cn("block text-sm font-black text-muted", className)}>
+    {label}
+    <span className="relative mt-2 block">
+      <select
+        className="h-11 w-full appearance-none rounded-control border border-border bg-surface py-0 pl-3 pr-14 text-sm font-bold text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+        onChange={(event) => onChange(event.target.value)}
+        value={value}
+      >
+        {children}
+      </select>
+      <ChevronDown
+        aria-hidden
+        className="pointer-events-none absolute right-5 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground"
+      />
+    </span>
+  </label>
+);
+
 const ReportsTab = ({ id }: { id: string }) => {
   const [selectedPeriod, setSelectedPeriod] = useState<ReportPeriodValue>("90d");
   const [appliedRange, setAppliedRange] = useState<ReportDateRange>(() =>
@@ -4478,61 +4509,52 @@ const ReportsTab = ({ id }: { id: string }) => {
 
       <CardShell className="p-4">
         <div className="grid gap-3 lg:grid-cols-[1fr_1fr_1fr_2fr] lg:items-end">
-          <label className="block text-sm font-black text-muted">
-            Tipo
-            <select
-              className="mt-2 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground"
-              onChange={(event) => {
-                setType(event.target.value as AdminPsychologistReportsQuery["type"]);
-                setPage(1);
-              }}
-              value={type}
-            >
-              {reports.filters.types.map((option) => (
-                <option key={option.id} value={option.id}>
-                  {option.label} ({numberFormatter.format(option.count)})
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="block text-sm font-black text-muted">
-            Status
-            <select
-              className="mt-2 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground"
-              onChange={(event) => {
-                setStatus(event.target.value as AdminPsychologistReportsQuery["status"]);
-                setPage(1);
-              }}
-              value={status}
-            >
-              {reports.filters.statuses.map((option) => (
-                <option key={option.id} value={option.id}>
-                  {option.label} ({numberFormatter.format(option.count)})
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="block text-sm font-black text-muted">
-            Período
-            <select
-              className="mt-2 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground"
-              onChange={(event) => {
-                handleReportPeriodChange(event.target.value as ReportPeriodPreset);
-              }}
-              value={selectedPeriod}
-            >
-              {selectedPeriod === "custom" ? (
-                <option disabled hidden value="custom">
-                  Personalizado
-                </option>
-              ) : null}
-              {REPORT_PERIOD_OPTIONS.map((option) => (
-                <option key={option.id} value={option.id}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-          </label>
+          <DetailFilterSelect
+            label="Tipo"
+            onChange={(nextValue) => {
+              setType(nextValue as AdminPsychologistReportsQuery["type"]);
+              setPage(1);
+            }}
+            value={type ?? "all"}
+          >
+            {reports.filters.types.map((option) => (
+              <option key={option.id} value={option.id}>
+                {option.label} ({numberFormatter.format(option.count)})
+              </option>
+            ))}
+          </DetailFilterSelect>
+          <DetailFilterSelect
+            label="Status"
+            onChange={(nextValue) => {
+              setStatus(nextValue as AdminPsychologistReportsQuery["status"]);
+              setPage(1);
+            }}
+            value={status ?? "all"}
+          >
+            {reports.filters.statuses.map((option) => (
+              <option key={option.id} value={option.id}>
+                {option.label} ({numberFormatter.format(option.count)})
+              </option>
+            ))}
+          </DetailFilterSelect>
+          <DetailFilterSelect
+            label="Período"
+            onChange={(nextValue) => {
+              handleReportPeriodChange(nextValue as ReportPeriodPreset);
+            }}
+            value={selectedPeriod}
+          >
+            {selectedPeriod === "custom" ? (
+              <option disabled hidden value="custom">
+                Personalizado
+              </option>
+            ) : null}
+            {REPORT_PERIOD_OPTIONS.map((option) => (
+              <option key={option.id} value={option.id}>
+                {option.label}
+              </option>
+            ))}
+          </DetailFilterSelect>
           <div className="grid gap-3 sm:grid-cols-2" onBlur={handleReportDateControlsBlur}>
             <label className="block text-sm font-black text-muted">
               De
@@ -4742,57 +4764,51 @@ const ActivitiesTab = ({ id }: { id: string }) => {
     <div className="space-y-5" data-psychologist-detail-tab="atividades">
       <CardShell className="p-4">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-end">
-          <label className="block flex-1 text-sm font-black text-muted">
-            Período
-            <select
-              className="mt-2 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground"
-              onChange={(event) => {
-                setPeriod(event.target.value);
-                setPage(1);
-              }}
-              value={period}
-            >
-              <option value="all">Todo histórico registrado</option>
-              <option value="30d">Últimos 30 dias</option>
-              <option value="90d">Últimos 90 dias</option>
-              <option value="180d">Últimos 180 dias</option>
-              <option value="custom">Personalizado</option>
-            </select>
-          </label>
-          <label className="block flex-1 text-sm font-black text-muted">
-            Área
-            <select
-              className="mt-2 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground"
-              onChange={(event) => {
-                setArea(event.target.value);
-                setPage(1);
-              }}
-              value={area}
-            >
-              {activities.filters.areas.map((option) => (
-                <option key={option.id} value={option.id}>
-                  {option.label} ({numberFormatter.format(option.count)})
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="block flex-1 text-sm font-black text-muted">
-            Tipo de atividade
-            <select
-              className="mt-2 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground"
-              onChange={(event) => {
-                setType(event.target.value);
-                setPage(1);
-              }}
-              value={type}
-            >
-              {activities.filters.types.map((option) => (
-                <option key={option.id} value={option.id}>
-                  {option.label} ({numberFormatter.format(option.count)})
-                </option>
-              ))}
-            </select>
-          </label>
+          <DetailFilterSelect
+            className="flex-1"
+            label="Período"
+            onChange={(nextValue) => {
+              setPeriod(nextValue);
+              setPage(1);
+            }}
+            value={period}
+          >
+            <option value="all">Todo histórico registrado</option>
+            <option value="30d">Últimos 30 dias</option>
+            <option value="90d">Últimos 90 dias</option>
+            <option value="180d">Últimos 180 dias</option>
+            <option value="custom">Personalizado</option>
+          </DetailFilterSelect>
+          <DetailFilterSelect
+            className="flex-1"
+            label="Área"
+            onChange={(nextValue) => {
+              setArea(nextValue);
+              setPage(1);
+            }}
+            value={area}
+          >
+            {activities.filters.areas.map((option) => (
+              <option key={option.id} value={option.id}>
+                {option.label} ({numberFormatter.format(option.count)})
+              </option>
+            ))}
+          </DetailFilterSelect>
+          <DetailFilterSelect
+            className="flex-1"
+            label="Tipo de atividade"
+            onChange={(nextValue) => {
+              setType(nextValue);
+              setPage(1);
+            }}
+            value={type}
+          >
+            {activities.filters.types.map((option) => (
+              <option key={option.id} value={option.id}>
+                {option.label} ({numberFormatter.format(option.count)})
+              </option>
+            ))}
+          </DetailFilterSelect>
           <label className="block flex-1 text-sm font-black text-muted">
             Buscar
             <span className="mt-2 flex h-11 items-center rounded-control border border-border bg-surface px-3">

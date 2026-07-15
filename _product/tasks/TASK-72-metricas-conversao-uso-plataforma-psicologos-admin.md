@@ -564,3 +564,11 @@ Regras de cálculo:
 - A UI Admin passou a reaproveitar a sanitização já usada em **Concedida por**, removendo e-mail e identificador entre parênteses do ator manual/cortesia antes de renderizar o responsável.
 - O ajuste é exclusivamente visual, mobile-first, sem endpoint novo, sem alteração de Prisma/migrations, packages, dados persistidos ou regra de domínio.
 - Validação executada: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke local `GET http://localhost:3002/psicologos/cmrqztri7000tn0uh1q4n8vxf` retornando 200.
+
+## Ajuste complementar 2026-07-15 - Margem nas setas dos dropdowns do detalhe
+
+- Pedido do usuário: adicionar margem à direita nas setas de dropdown dos filtros das abas **Denúncias** e **Atividades** em `/psicologos/[id]`.
+- A UI Admin passou a usar um seletor visual compartilhado com `appearance-none`, `pr-14` e `ChevronDown` posicionado em `right-5`, afastando a seta da borda sem alterar os valores, filtros, endpoints ou dados persistidos.
+- O ajuste é exclusivamente visual, mobile-first, sem endpoint novo, sem alteração de Prisma/migrations, packages, dados persistidos ou regra de domínio.
+- Não houve decisão arquitetural nova; ADR não foi necessário.
+- Validação executada: `pnpm --dir admin check`, `pnpm --dir admin build` e smoke local `GET http://localhost:3002/psicologos/cmrqztri7000tn0uh1q4n8vxf?tab=denuncias`/`?tab=atividades` retornando 200.
