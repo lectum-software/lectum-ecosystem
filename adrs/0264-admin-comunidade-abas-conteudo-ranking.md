@@ -67,3 +67,19 @@ e uma prévia segura do conteúdo de origem para comentários/respostas, sem arm
 
 Consequência: a moderação contextual consegue diferenciar rapidamente autoria e natureza do conteúdo, ver mídia
 publicada e entender a origem de comentários/respostas sem abrir a página pública em outra aba.
+
+## Atualização 2026-07-15: miniplayer vertical e contexto antes da resposta
+
+Na aba **Conteúdo**, vídeos publicados devem ser interativos no próprio card administrativo, não apenas uma imagem com
+ícone de play. A miniatura de vídeo passa a ser um miniplayer com controles nativos do navegador e proporção 9:16,
+alinhada ao formato vertical usado nas publicações com vídeo-resposta.
+
+A prévia do conteúdo de origem para comentários/respostas também passa a ser renderizada antes do texto da
+resposta/comentário. A decisão favorece leitura "contexto primeiro" durante a moderação: o Admin vê o post/comentário
+respondido antes de analisar o conteúdo derivado.
+
+Consequências:
+
+- vídeos usam `<video controls>` no Admin, sem overlay que impeça o play;
+- imagens continuam sendo renderizadas com `next/image`;
+- a mudança é apenas de apresentação e não altera contrato persistido, schema Prisma, endpoint ou dados de produção.

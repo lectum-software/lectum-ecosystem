@@ -153,3 +153,14 @@ Regras:
 - Builder/Quick Copy não está exposto como ferramenta callable no ambiente; a referência visual usada foi a captura enviada pelo usuário, `_product/proto/admin/Comunidades/Comunidades - Detalhes.png` e o padrão local do Admin/site público.
 - ADR atualizado: `adrs/0264-admin-comunidade-abas-conteudo-ranking.md`.
 - Validação executada: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke local `GET http://localhost:3002/comunidades/tdah?tab=conteudo` retornando 200.
+
+## Ajuste complementar 2026-07-15 - Miniplayer e ordem da prévia de origem
+
+- Pedido do usuário: a mídia de vídeo exibida na aba **Conteúdo** precisa funcionar como miniplayer, manter proporção vertical 9:16 e a prévia do conteúdo de origem deve aparecer acima da resposta/comentário.
+- A UI Admin passou a renderizar vídeos publicados com `<video controls>` diretamente no card, sem overlay que bloqueie interação, e com container mobile-first em `aspect-[9/16]`.
+- Imagens continuam usando `next/image`; não foi introduzido `<img>` cru.
+- A prévia de origem agora é exibida antes do título/texto do comentário ou resposta, preservando primeiro o contexto do conteúdo respondido.
+- Não houve package novo, mock, schema Prisma/migration, endpoint paralelo ou alteração de dados persistidos.
+- Builder/Quick Copy não está exposto como ferramenta callable no ambiente; a referência visual usada foi a captura enviada pelo usuário e o padrão local do Admin/site público.
+- ADR atualizado: `adrs/0264-admin-comunidade-abas-conteudo-ranking.md`.
+- Validação executada: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke local `GET http://localhost:3002/comunidades/tdah?tab=conteudo` retornando 200.

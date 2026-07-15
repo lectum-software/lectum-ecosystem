@@ -12,7 +12,6 @@ import {
   Image as ImageIcon,
   Loader2,
   MessageCircle,
-  Play,
   Plus,
   RefreshCw,
   Save,
@@ -1604,13 +1603,18 @@ const ContentMediaThumbnail = ({ item }: { item: AdminCommunityContentItem }) =>
   if (!item.media) return null;
 
   const mediaType = item.media.media_type.toLowerCase();
+  const isVideo = mediaType === "video";
   const imageSrc = mediaType === "image" ? renderableImageSrc(item.media.media_url) : null;
-  const videoSrc = mediaType === "video" ? resolveAdminMediaUrl(item.media.media_url) : null;
-  const mediaLabel =
-    mediaType === "video" ? "Miniatura de vídeo publicado" : "Miniatura de imagem publicada";
+  const videoSrc = isVideo ? resolveAdminMediaUrl(item.media.media_url) : null;
+  const mediaLabel = isVideo ? "Miniplayer de vídeo publicado" : "Miniatura de imagem publicada";
 
   return (
-    <div className="relative h-24 w-full overflow-hidden rounded-2xl border border-border bg-surface-muted sm:h-28 sm:w-28">
+    <div
+      className={cn(
+        "relative w-full overflow-hidden rounded-2xl border border-border bg-surface-muted",
+        isVideo ? "aspect-[9/16] max-w-40 sm:w-28 sm:max-w-none" : "h-24 sm:h-28 sm:w-28",
+      )}
+    >
       {imageSrc ? (
         <Image
           alt={mediaLabel}
@@ -1622,19 +1626,15 @@ const ContentMediaThumbnail = ({ item }: { item: AdminCommunityContentItem }) =>
         />
       ) : null}
       {!imageSrc && videoSrc ? (
-        <>
-          <video
-            aria-label={mediaLabel}
-            className="h-full w-full object-cover"
-            muted
-            playsInline
-            preload="metadata"
-            src={videoSrc}
-          />
-          <span className="absolute inset-0 grid place-items-center bg-foreground/25 text-white">
-            <Play className="h-7 w-7 fill-current" />
-          </span>
-        </>
+        <video
+          aria-label={mediaLabel}
+          className="h-full w-full object-cover"
+          controls
+          muted
+          playsInline
+          preload="metadata"
+          src={videoSrc}
+        />
       ) : null}
       {!imageSrc && !videoSrc ? (
         <div className="grid h-full place-items-center gap-1 p-3 text-center text-xs font-black text-muted">
@@ -1689,11 +1689,11 @@ const ContentItemCard = ({
             </span>
             <span className="text-xs font-bold text-muted">{formatDateTime(item.created_at)}</span>
           </div>
+          <ContentOriginPreview item={item} />
           <h3 className="mt-3 text-base font-black text-foreground">
             {item.title || item.parent_post_title || "Comentário sem título"}
           </h3>
           <p className="mt-2 text-sm leading-6 text-muted">{item.excerpt || "Sem texto."}</p>
-          <ContentOriginPreview item={item} />
           <p className="mt-2 text-xs font-bold text-muted">
             Autor: {item.author.name} ({item.author.role})
           </p>
