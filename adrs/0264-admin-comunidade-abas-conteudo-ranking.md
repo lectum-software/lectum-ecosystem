@@ -110,3 +110,12 @@ origem, alinhando o miniplayer à altura da resposta.
 Consequência: a moderação vê origem e resposta como blocos distintos, sem duplicar título do post original e sem
 deslocar a mídia para a altura do contexto. A mudança permanece apenas visual e não altera contrato de API nem
 persistência.
+
+## Atualização 2026-07-15: linha de autor com nome e selo
+
+A linha de autoria dos cards da aba **Conteúdo** deixa de exibir o papel do usuário entre parênteses. Para reduzir ruído
+visual, o card mostra somente o nome do autor e, quando `author.verified` for verdadeiro, um selo `verificado` com
+ícone.
+
+Consequência: a natureza do conteúdo continua explícita na badge operacional do card, enquanto a autoria fica focada em
+identificação nominal e verificação profissional, sem repetir `paciente`/`psicologo` em parênteses.

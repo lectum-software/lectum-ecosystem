@@ -1760,9 +1760,15 @@ const ContentItemBody = ({ item }: { item: AdminCommunityContentItem }) => {
 };
 
 const ContentAuthorLine = ({ item }: { item: AdminCommunityContentItem }) => (
-  <p className="mt-2 text-xs font-bold text-muted">
-    Autor: {item.author.name} ({item.author.role})
-  </p>
+  <div className="mt-2 inline-flex flex-wrap items-center gap-1.5 text-xs font-bold text-muted">
+    <span>{item.author.name}</span>
+    {item.author.verified ? (
+      <span className="inline-flex items-center gap-1 rounded-full bg-primary-soft px-2 py-0.5 text-[11px] font-black text-primary">
+        <ShieldCheck aria-hidden className="h-3 w-3" />
+        verificado
+      </span>
+    ) : null}
+  </div>
 );
 
 const ContentItemMain = ({ item }: { item: AdminCommunityContentItem }) => {

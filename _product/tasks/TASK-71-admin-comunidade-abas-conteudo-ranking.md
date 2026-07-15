@@ -184,3 +184,12 @@ Regras:
 - Builder/Quick Copy não está exposto como ferramenta callable no ambiente; a referência visual usada foi a captura enviada pelo usuário e o padrão local do Admin/site público.
 - ADR atualizado: `adrs/0264-admin-comunidade-abas-conteudo-ranking.md`.
 - Validação executada para os ajustes de layout/miniplayer: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke local `GET http://localhost:3002/comunidades/tdah?tab=conteudo` retornando 200.
+
+## Ajuste complementar 2026-07-15 - Autor sem papel entre parênteses
+
+- Pedido do usuário: na linha de autor da aba **Conteúdo**, exibir apenas o nome e o selo de verificado quando houver, sem papel entre parênteses.
+- A UI Admin removeu `Autor:`/papel do usuário da linha visual e passou a mostrar `author.name` com selo `verificado` derivado de `author.verified`.
+- Não houve package novo, mock, schema Prisma/migration, endpoint paralelo ou alteração de dados persistidos.
+- Builder/Quick Copy não está exposto como ferramenta callable no ambiente; a referência visual usada foi a captura enviada pelo usuário e o padrão local do Admin/site público.
+- ADR atualizado: `adrs/0264-admin-comunidade-abas-conteudo-ranking.md`.
+- Validação executada: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke local `GET http://localhost:3002/comunidades/tdah?tab=conteudo` retornando 200.
