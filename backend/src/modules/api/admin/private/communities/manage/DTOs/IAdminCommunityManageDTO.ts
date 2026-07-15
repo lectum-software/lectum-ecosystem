@@ -1,4 +1,4 @@
-﻿import type { Request } from "express";
+import type { Request } from "express";
 import type { admin } from "@/interfaces/objects";
 
 export type AdminCommunityManageParams = {
@@ -22,8 +22,18 @@ export type AdminCommunitiesListQuery = AdminCommunityPaginationQuery & {
 };
 
 export type AdminCommunityContentQuery = AdminCommunityPaginationQuery & {
+  period?: "30d" | "7d" | "90d" | "all";
   status?: "all" | "published" | "removed";
-  type?: "all" | "comments" | "posts";
+  type?:
+    | "all"
+    | "anonymous_post"
+    | "comments"
+    | "patient_comment"
+    | "posts"
+    | "unverified_psychologist_post"
+    | "unverified_psychologist_reply"
+    | "verified_psychologist_post"
+    | "verified_psychologist_reply";
 };
 
 export type AdminCommunityRankingQuery = AdminCommunityPaginationQuery & {
@@ -169,6 +179,7 @@ export type AdminCommunityContentItemDTO = {
     verified: boolean;
   };
   content_kind:
+    | "anonymous_post"
     | "patient_comment"
     | "patient_post"
     | "unverified_psychologist_post"

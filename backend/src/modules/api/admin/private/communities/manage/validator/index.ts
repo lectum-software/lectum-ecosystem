@@ -292,6 +292,13 @@ export const contentSchema: IValidatorRequest = {
       max: 20,
       optional: true,
     },
+    {
+      key: "period",
+      coerse: "string",
+      method: "string",
+      max: 20,
+      optional: true,
+    },
   ],
 };
 

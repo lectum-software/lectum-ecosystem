@@ -1,4 +1,4 @@
-﻿import type { Resolve } from "@/helpers/return";
+import type { Resolve } from "@/helpers/return";
 import { error, msg } from "@/helpers/translate";
 import { deriveCommunityVisualColorFields, isCommunityHexColor } from "@/utils/community-visual";
 import { buildProfessionalFullDisplayName } from "@/utils/professional-name";
@@ -11,6 +11,7 @@ import type {
   AdminCommunityActivityItemDTO,
   AdminCommunityContentDTO,
   AdminCommunityContentItemDTO,
+  AdminCommunityContentQuery,
   AdminCommunityCreateBody,
   AdminCommunityDetailDTO,
   AdminCommunityIdentity,
@@ -327,6 +328,7 @@ type AdminCommunityContentAuthor =
 type AdminCommunityContentKind = AdminCommunityContentItemDTO["content_kind"];
 
 const contentKindLabels: Record<AdminCommunityContentKind, string> = {
+  anonymous_post: "Post anônimo",
   patient_comment: "Comentário de paciente",
   patient_post: "Post de paciente",
   unverified_psychologist_post: "Post de psicólogo não verificado",
@@ -341,7 +343,9 @@ const isContentAuthorVerified = (author: AdminCommunityContentAuthor) =>
 const contentKindFor = (
   type: AdminCommunityContentItemDTO["type"],
   author: AdminCommunityContentAuthor,
+  anonymous = false,
 ): AdminCommunityContentKind => {
+  if (anonymous && type === "post") return "anonymous_post";
   if (author.role !== "psicologo") return type === "post" ? "patient_post" : "patient_comment";
 
   const verified = isContentAuthorVerified(author);
@@ -400,7 +404,7 @@ const mapPostContent = (
   community: AdminCommunityRecord,
   post: AdminCommunityContentPostRecord,
 ): AdminCommunityContentItemDTO => {
-  const contentKind = contentKindFor("post", post.author);
+  const contentKind = contentKindFor("post", post.author, post.anonymous);
   const anonymous = post.anonymous && post.author.role !== "psicologo";
 
   return {
@@ -504,6 +508,36 @@ const contentMatchesSearch = (item: AdminCommunityContentItemDTO, search: string
   ]
     .filter(Boolean)
     .some((value) => value?.toLowerCase().includes(search));
+};
+
+const contentMatchesType = (
+  item: AdminCommunityContentItemDTO,
+  type: NonNullable<AdminCommunityContentQuery["type"]>,
+) => {
+  if (type === "all") return true;
+  if (type === "posts") return item.type === "post";
+  if (type === "comments") return item.type === "comment";
+
+  return item.content_kind === type;
+};
+
+const contentMatchesPeriod = (
+  item: AdminCommunityContentItemDTO,
+  period: NonNullable<AdminCommunityContentQuery["period"]>,
+) => {
+  if (period === "all") return true;
+
+  const daysByPeriod: Record<"30d" | "7d" | "90d", number> = {
+    "7d": 7,
+    "30d": 30,
+    "90d": 90,
+  };
+  const days = daysByPeriod[period as keyof typeof daysByPeriod];
+  if (!days) return true;
+
+  const from = startOfDay(addDays(new Date(), -(days - 1)));
+
+  return item.created_at >= from;
 };
 
 const contentSafeBefore = (item: AdminCommunityContentItemDTO) => ({
@@ -1144,20 +1178,17 @@ export const listContent = async (data: IAdminCommunityContentDTO): Promise<Reso
   if (!community) return notFound();
 
   const queryType = data.q.type ?? "all";
+  const queryPeriod = data.q.period ?? "all";
   const queryStatus = data.q.status ?? "all";
   const search = normalizeSearch(data.q.q);
   const page = normalizePage(data.q.page);
   const limit = normalizeLimit(data.q.limit);
   const { posts, replies } = await repository.listContent(community.id);
-  const postItems =
-    queryType === "all" || queryType === "posts"
-      ? posts.map((post) => mapPostContent(community, post))
-      : [];
-  const replyItems =
-    queryType === "all" || queryType === "comments"
-      ? replies.map((reply) => mapReplyContent(community, reply))
-      : [];
+  const postItems = posts.map((post) => mapPostContent(community, post));
+  const replyItems = replies.map((reply) => mapReplyContent(community, reply));
   const items = [...postItems, ...replyItems]
+    .filter((item) => contentMatchesType(item, queryType))
+    .filter((item) => contentMatchesPeriod(item, queryPeriod))
     .filter((item) => queryStatus === "all" || item.status === queryStatus)
     .filter((item) => contentMatchesSearch(item, search))
     .sort((left, right) => right.created_at.getTime() - left.created_at.getTime());

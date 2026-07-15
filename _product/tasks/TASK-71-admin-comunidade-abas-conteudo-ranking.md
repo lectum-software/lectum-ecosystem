@@ -204,27 +204,40 @@ Regras:
 - ADR atualizado: `adrs/0264-admin-comunidade-abas-conteudo-ranking.md`.
 - ValidaÃ§Ã£o executada: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke local `GET http://localhost:3002/comunidades/tdah?tab=conteudo` retornando 200.
 
-## Ajuste complementar 2026-07-15 - Identidade do autor acima da mídia e papel por gênero
+## Ajuste complementar 2026-07-15 - Identidade do autor acima da mï¿½dia e papel por gï¿½nero
 
-- Pedido do usuário: na aba **Conteúdo**, posicionar a identificação do autor acima do vídeo e do texto, com foto de perfil, nome, selo azul quando houver e o papel abaixo do nome; em seguida, substituir `Psicólogo/Psicóloga` por `Psicólogo` ou `Psicóloga` conforme o gênero cadastrado do psicólogo.
-- A UI Admin passou a renderizar um bloco de autoria antes do grid de mídia/texto, usando `next/image` para avatar, fallback de iniciais, nome truncável, selo visual azul de verificado e linha de papel abaixo.
-- O contrato de conteúdo administrativo passou a expor `author.gender` para autores psicólogos, derivado de `psychologist_profile.gender`; pacientes e autores anônimos continuam com `gender=null`.
-- O rótulo do papel usa `Psicóloga` quando `gender="feminino"` e `Psicólogo` nos demais casos de psicólogo; pacientes continuam como `Paciente`.
-- Não houve package novo, mock, schema Prisma/migration, endpoint paralelo ou alteração de persistência; apenas select/DTO do endpoint real e apresentação no Admin.
-- Builder/Quick Copy não está exposto como ferramenta callable no ambiente; a referência visual usada foi a captura enviada pelo usuário e o padrão local do Admin/site público.
+- Pedido do usuï¿½rio: na aba **Conteï¿½do**, posicionar a identificaï¿½ï¿½o do autor acima do vï¿½deo e do texto, com foto de perfil, nome, selo azul quando houver e o papel abaixo do nome; em seguida, substituir `Psicï¿½logo/Psicï¿½loga` por `Psicï¿½logo` ou `Psicï¿½loga` conforme o gï¿½nero cadastrado do psicï¿½logo.
+- A UI Admin passou a renderizar um bloco de autoria antes do grid de mï¿½dia/texto, usando `next/image` para avatar, fallback de iniciais, nome truncï¿½vel, selo visual azul de verificado e linha de papel abaixo.
+- O contrato de conteï¿½do administrativo passou a expor `author.gender` para autores psicï¿½logos, derivado de `psychologist_profile.gender`; pacientes e autores anï¿½nimos continuam com `gender=null`.
+- O rï¿½tulo do papel usa `Psicï¿½loga` quando `gender="feminino"` e `Psicï¿½logo` nos demais casos de psicï¿½logo; pacientes continuam como `Paciente`.
+- Nï¿½o houve package novo, mock, schema Prisma/migration, endpoint paralelo ou alteraï¿½ï¿½o de persistï¿½ncia; apenas select/DTO do endpoint real e apresentaï¿½ï¿½o no Admin.
+- Builder/Quick Copy nï¿½o estï¿½ exposto como ferramenta callable no ambiente; a referï¿½ncia visual usada foi a captura enviada pelo usuï¿½rio e o padrï¿½o local do Admin/site pï¿½blico.
 - ADR atualizado: `adrs/0264-admin-comunidade-abas-conteudo-ranking.md`.
-- Validação executada para este ajuste: `pnpm --dir backend check`, `pnpm --dir admin check`, `pnpm --dir backend build`, `pnpm --dir admin build`, `pnpm check` e smoke local `GET http://localhost:3002/comunidades/tdah?tab=conteudo` retornando 200.
+- Validaï¿½ï¿½o executada para este ajuste: `pnpm --dir backend check`, `pnpm --dir admin check`, `pnpm --dir backend build`, `pnpm --dir admin build`, `pnpm check` e smoke local `GET http://localhost:3002/comunidades/tdah?tab=conteudo` retornando 200.
 
-- Validação executada: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm --dir frontend check`, `pnpm check` e smoke local `GET http://localhost:3002/comunidades/tdah?tab=conteudo` retornando 200.
+- Validaï¿½ï¿½o executada: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm --dir frontend check`, `pnpm check` e smoke local `GET http://localhost:3002/comunidades/tdah?tab=conteudo` retornando 200.
 
-## Ajuste complementar 2026-07-15 - Nome real em post anônimo no Admin
+## Ajuste complementar 2026-07-15 - Nome real em post anï¿½nimo no Admin
 
-- Pedido do usuário: quando um item da aba **Conteúdo** for um post anônimo, o painel administrativo deve exibir o nome real do paciente e informar que o post foi feito anonimamente.
-- O contrato de conteúdo administrativo passou a expor `author.anonymous` para diferenciar anonimato público de identidade administrativa, sem substituir `author.role` por `anonymous`.
-- Posts anônimos de pacientes agora retornam `author.name` com o nome real do paciente para o Admin; o card mostra o papel `Paciente` e o marcador `Post feito anonimamente` abaixo do nome.
-- Comentários/respostas e posts de psicólogos retornam `author.anonymous=false`; a regra de anonimato continua restrita ao post anônimo de paciente.
-- A remoção administrativa auditada agora preserva `author_anonymous` no snapshot seguro usado pela rotina de remoção.
-- Não houve package novo, mock, schema Prisma/migration, endpoint paralelo ou alteração de persistência; apenas contrato derivado do endpoint real e apresentação no Admin.
-- Builder/Quick Copy não está exposto como ferramenta callable no ambiente; a referência visual usada foi a captura enviada pelo usuário e o padrão local do Admin/site público.
+- Pedido do usuï¿½rio: quando um item da aba **Conteï¿½do** for um post anï¿½nimo, o painel administrativo deve exibir o nome real do paciente e informar que o post foi feito anonimamente.
+- O contrato de conteï¿½do administrativo passou a expor `author.anonymous` para diferenciar anonimato pï¿½blico de identidade administrativa, sem substituir `author.role` por `anonymous`.
+- Posts anï¿½nimos de pacientes agora retornam `author.name` com o nome real do paciente para o Admin; o card mostra o papel `Paciente` e o marcador `Post feito anonimamente` abaixo do nome.
+- Comentï¿½rios/respostas e posts de psicï¿½logos retornam `author.anonymous=false`; a regra de anonimato continua restrita ao post anï¿½nimo de paciente.
+- A remoï¿½ï¿½o administrativa auditada agora preserva `author_anonymous` no snapshot seguro usado pela rotina de remoï¿½ï¿½o.
+- Nï¿½o houve package novo, mock, schema Prisma/migration, endpoint paralelo ou alteraï¿½ï¿½o de persistï¿½ncia; apenas contrato derivado do endpoint real e apresentaï¿½ï¿½o no Admin.
+- Builder/Quick Copy nï¿½o estï¿½ exposto como ferramenta callable no ambiente; a referï¿½ncia visual usada foi a captura enviada pelo usuï¿½rio e o padrï¿½o local do Admin/site pï¿½blico.
 - ADR atualizado: `adrs/0264-admin-comunidade-abas-conteudo-ranking.md`.
-- Validação executada: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke local `GET http://localhost:3002/comunidades/tdah?tab=conteudo` retornando 200.
+- Validaï¿½ï¿½o executada: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke local `GET http://localhost:3002/comunidades/tdah?tab=conteudo` retornando 200.
+
+
+## Ajuste complementar 2026-07-15 - Filtros da aba ConteÃºdo acima da listagem
+
+- Pedido do usuÃ¡rio: na aba **ConteÃºdo** de /comunidades/[slug], mover o bloco de filtros para cima da listagem de publicaÃ§Ãµes, trocar o filtro de tipo para opÃ§Ãµes operacionais especÃ­ficas e remover o filtro de status.
+- A UI Admin passou a renderizar um card de filtros separado, antes do card **ConteÃºdo da comunidade**, com **Buscar**, **Tipo** e **PerÃ­odo**, mantendo layout mobile-first.
+- O filtro **Tipo** agora expÃµe Posts de psicÃ³logo verificado, Posts de psicÃ³logo nÃ£o verificado, Respostas de psicÃ³logo verificado, Respostas de psicÃ³logo nÃ£o verificado, ComentÃ¡rios de pacientes e Posts anÃ´nimos, alÃ©m de Todos os tipos.
+- O filtro de status deixou de ser exibido na interface; itens removidos continuam marcados a partir do status real retornado pela API.
+- O backend passou a aceitar filtro por content_kind real e perÃ­odo (Todo o perÃ­odo, Ãšltimos 7 dias, Ãšltimos 30 dias, Ãšltimos 90 dias) aplicado sobre created_at.
+- Posts anÃ´nimos passaram a ter classificaÃ§Ã£o operacional prÃ³pria (nonymous_post) derivada de community_post.anonymous, sem alterar schema Prisma ou persistÃªncia.
+- NÃ£o houve package novo, mock, schema Prisma/migration, endpoint paralelo ou alteraÃ§Ã£o destrutiva de dados.
+- ADR atualizado: drs/0264-admin-comunidade-abas-conteudo-ranking.md.
+- ValidaÃ§Ã£o executada: pnpm --dir backend check, pnpm --dir backend build, pnpm --dir admin check, pnpm --dir admin build, pnpm check e smoke local GET http://localhost:3002/comunidades/tdah?tab=conteudo retornando 200.

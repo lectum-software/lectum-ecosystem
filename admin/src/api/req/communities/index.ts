@@ -1,4 +1,4 @@
-﻿import { adminApi } from "@/api/client";
+import { adminApi } from "@/api/client";
 import { resolveApiData } from "@/api/handle";
 import type { ApiResponse } from "@/api/types";
 
@@ -291,8 +291,16 @@ export type AdminCommunitiesList = {
 };
 
 export type AdminCommunityContentQuery = AdminCommunityPaginationQuery & {
+  period?: "30d" | "7d" | "90d" | "all";
   status?: "all" | "published" | "removed";
-  type?: "all" | "comments" | "posts";
+  type?:
+    | "all"
+    | "anonymous_post"
+    | "patient_comment"
+    | "unverified_psychologist_post"
+    | "unverified_psychologist_reply"
+    | "verified_psychologist_post"
+    | "verified_psychologist_reply";
 };
 
 export type AdminCommunityContentItem = {
@@ -306,6 +314,7 @@ export type AdminCommunityContentItem = {
     verified: boolean;
   };
   content_kind:
+    | "anonymous_post"
     | "patient_comment"
     | "patient_post"
     | "unverified_psychologist_post"

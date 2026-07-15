@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -151,6 +151,29 @@ const communityTabs = [
 ] as const;
 
 type CommunityTab = (typeof communityTabs)[number]["id"];
+
+const contentTypeOptions = [
+  { id: "all", label: "Todos os tipos" },
+  { id: "verified_psychologist_post", label: "Posts de psicólogo verificado" },
+  { id: "unverified_psychologist_post", label: "Posts de psicólogo não verificado" },
+  { id: "verified_psychologist_reply", label: "Respostas de psicólogo verificado" },
+  { id: "unverified_psychologist_reply", label: "Respostas de psicólogo não verificado" },
+  { id: "patient_comment", label: "Comentários de pacientes" },
+  { id: "anonymous_post", label: "Posts anônimos" },
+] as const satisfies ReadonlyArray<{
+  id: NonNullable<AdminCommunityContentQuery["type"]>;
+  label: string;
+}>;
+
+const contentPeriodOptions = [
+  { id: "all", label: "Todo o período" },
+  { id: "7d", label: "Últimos 7 dias" },
+  { id: "30d", label: "Últimos 30 dias" },
+  { id: "90d", label: "Últimos 90 dias" },
+] as const satisfies ReadonlyArray<{
+  id: NonNullable<AdminCommunityContentQuery["period"]>;
+  label: string;
+}>;
 
 const parseCommunityTab = (value: string | null): CommunityTab =>
   communityTabs.some((tab) => tab.id === value) ? (value as CommunityTab) : "geral";
@@ -1915,8 +1938,8 @@ const ContentTab = ({ slug }: { slug: string }) => {
   const [query, setQuery] = useState<AdminCommunityContentQuery>({
     limit: 10,
     page: 1,
+    period: "all",
     q: "",
-    status: "all",
     type: "all",
   });
   const [selected, setSelected] = useState<AdminCommunityContentItem | null>(null);
@@ -1928,52 +1951,72 @@ const ContentTab = ({ slug }: { slug: string }) => {
   };
 
   return (
-    <section className={cn(cardClass, "p-5")}>
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <h2 className="text-lg font-black text-foreground">Conteúdo da comunidade</h2>
-          <p className="mt-1 text-sm text-muted">
-            Posts e comentários reais, com remoção administrativa auditada e sem mock.
-          </p>
+    <div className="space-y-5">
+      <section className={cn(cardClass, "p-5")}>
+        <div className="grid gap-3 lg:grid-cols-[1.5fr_1fr_0.85fr]">
+          <label className="block text-sm font-black text-muted">
+            Buscar
+            <span className="mt-2 flex h-11 items-center gap-2 rounded-control border border-border bg-surface px-3">
+              <Search aria-hidden className="h-4 w-4 text-muted" />
+              <input
+                className="w-full bg-transparent text-sm font-bold text-foreground outline-none placeholder:text-subtle"
+                onChange={(event) => updateQuery({ q: event.target.value })}
+                placeholder="Texto, título ou autor"
+                type="search"
+                value={query.q ?? ""}
+              />
+            </span>
+          </label>
+          <label className="block text-sm font-black text-muted" htmlFor="community-content-type">
+            Tipo
+            <select
+              className="mt-2 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground"
+              id="community-content-type"
+              onChange={(event) =>
+                updateQuery({ type: event.target.value as AdminCommunityContentQuery["type"] })
+              }
+              value={query.type ?? "all"}
+            >
+              {contentTypeOptions.map((option) => (
+                <option key={option.id} value={option.id}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="block text-sm font-black text-muted" htmlFor="community-content-period">
+            Período
+            <select
+              className="mt-2 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground"
+              id="community-content-period"
+              onChange={(event) =>
+                updateQuery({ period: event.target.value as AdminCommunityContentQuery["period"] })
+              }
+              value={query.period ?? "all"}
+            >
+              {contentPeriodOptions.map((option) => (
+                <option key={option.id} value={option.id}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </label>
         </div>
-        <StatusBadge tone="muted">
-          {numberFormatter.format(result.data?.count ?? 0)} itens
-        </StatusBadge>
-      </div>
-      <div className="mt-5 grid gap-3 lg:grid-cols-[1fr_auto_auto]">
-        <label className="relative block">
-          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
-          <input
-            className="h-11 w-full rounded-control border border-border bg-surface pl-10 pr-3 text-sm font-bold outline-none transition focus:border-primary"
-            onChange={(event) => updateQuery({ q: event.target.value })}
-            placeholder="Buscar por texto, título ou autor"
-            value={query.q ?? ""}
-          />
-        </label>
-        <select
-          className="h-11 rounded-control border border-border bg-surface px-3 text-sm font-bold"
-          onChange={(event) =>
-            updateQuery({ type: event.target.value as AdminCommunityContentQuery["type"] })
-          }
-          value={query.type}
-        >
-          <option value="all">Todos os tipos</option>
-          <option value="posts">Posts</option>
-          <option value="comments">Comentários</option>
-        </select>
-        <select
-          className="h-11 rounded-control border border-border bg-surface px-3 text-sm font-bold"
-          onChange={(event) =>
-            updateQuery({ status: event.target.value as AdminCommunityContentQuery["status"] })
-          }
-          value={query.status}
-        >
-          <option value="all">Todos os status</option>
-          <option value="published">Publicados</option>
-          <option value="removed">Removidos</option>
-        </select>
-      </div>
-      <div className="mt-5 space-y-3">
+      </section>
+
+      <section className={cn(cardClass, "p-5")}>
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <h2 className="text-lg font-black text-foreground">Conteúdo da comunidade</h2>
+            <p className="mt-1 text-sm text-muted">
+              Posts e comentários reais, com remoção administrativa auditada e sem mock.
+            </p>
+          </div>
+          <StatusBadge tone="muted">
+            {numberFormatter.format(result.data?.count ?? 0)} itens
+          </StatusBadge>
+        </div>
+        <div className="mt-5 space-y-3">
         <QueryStatus
           error={result.error}
           loading={result.isLoading}
@@ -2003,7 +2046,8 @@ const ContentTab = ({ slug }: { slug: string }) => {
           />
         </div>
       ) : null}
-    </section>
+      </section>
+    </div>
   );
 };
 
@@ -2161,8 +2205,8 @@ const ReportsTab = ({ slug }: { slug: string }) => {
   const [query, setQuery] = useState<AdminCommunityReportsQuery>({
     limit: 10,
     page: 1,
+    period: "all",
     q: "",
-    status: "all",
     type: "all",
   });
   const result = useAdminCommunityReports(slug, query);

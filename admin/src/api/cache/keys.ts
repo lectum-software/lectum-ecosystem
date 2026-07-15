@@ -149,6 +149,7 @@ const normalizeModerationEvents = (input: AdminModerationEventsQuery) => ({
 const normalizeCommunityContent = (input: AdminCommunityContentQuery) => ({
   limit: input.limit || 10,
   page: input.page || 1,
+  period: input.period || "all",
   q: input.q || "",
   status: input.status || "all",
   type: input.type || "all",
