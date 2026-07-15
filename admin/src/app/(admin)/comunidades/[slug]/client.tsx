@@ -126,6 +126,8 @@ const cardClass = "rounded-card border border-border bg-surface shadow-admin-sof
 
 const formatDate = (value: string) => dateFormatter.format(new Date(value));
 const formatDateTime = (value: string) => dateTimeFormatter.format(new Date(value));
+const formatCountLabel = (value: number, singular: string, plural: string) =>
+  `${numberFormatter.format(value)} ${value === 1 ? singular : plural}`;
 const formatChange = (value: number | null) => {
   if (value === null) return "sem base";
   if (value === 0) return "0%";
@@ -410,7 +412,13 @@ const PerformanceSection = ({ detail }: { detail: AdminCommunityDetail }) => {
   );
 };
 
-const CommunityHeader = ({ community }: { community: AdminCommunityIdentity }) => (
+const CommunityHeader = ({
+  community,
+  postsCount,
+}: {
+  community: AdminCommunityIdentity;
+  postsCount: number;
+}) => (
   <div className="overflow-hidden">
     <div className="flex flex-col gap-5 p-5 md:flex-row md:items-start md:justify-between md:p-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
@@ -449,8 +457,8 @@ const CommunityHeader = ({ community }: { community: AdminCommunityIdentity }) =
           </p>
           <div className="mt-3 flex flex-wrap gap-3 text-xs font-bold text-muted">
             <span>Criada em {formatDate(community.created_at)}</span>
-            <span>ID: {community.id}</span>
-            <span>Slug: {community.slug}</span>
+            <span>{formatCountLabel(community.members_count, "seguidor", "seguidores")}</span>
+            <span>{formatCountLabel(postsCount, "post", "posts")}</span>
           </div>
         </div>
       </div>
@@ -1762,7 +1770,7 @@ const DetailContent = ({
 }) => (
   <div className="space-y-5">
     <section className={cn(cardClass, "overflow-hidden")}>
-      <CommunityHeader community={detail.community} />
+      <CommunityHeader community={detail.community} postsCount={detail.summary.posts_count} />
       <CommunityTabs activeTab={activeTab} pathname={pathname} />
     </section>
 
