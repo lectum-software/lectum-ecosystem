@@ -40,7 +40,18 @@ const SidebarContent = ({
 }: SidebarContentProps) => {
   const pathname = usePathname();
   const { admin, logout } = useAdminAuth();
-  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({});
+  const activeGroupHref = useMemo(
+    () =>
+      adminNavItems.find((item) => "children" in item && isNavPathActive(pathname, item.href))
+        ?.href ?? null,
+    [pathname],
+  );
+  const [openGroupOverride, setOpenGroupOverride] = useState<{
+    pathname: string;
+    href: string | null;
+  } | null>(null);
+  const openGroupHref =
+    openGroupOverride?.pathname === pathname ? openGroupOverride.href : activeGroupHref;
   const moderationSummary = useAdminModerationSummary();
   const moderationPendingTotal = moderationSummary.data?.pending_total ?? 0;
   const adminName = admin?.name || "Admin Lectum";
@@ -88,7 +99,7 @@ const SidebarContent = ({
               "badge" in item && item.badge === "moderation" && moderationPendingTotal > 0;
 
             if ("children" in item) {
-              const isOpen = openGroups[item.href] ?? isActive;
+              const isOpen = openGroupHref === item.href;
               const groupId = `admin-nav-${item.href.replaceAll("/", "-")}`;
 
               return (
@@ -110,18 +121,17 @@ const SidebarContent = ({
                     )}
                     onClick={() => {
                       if (collapsed) {
-                        setOpenGroups((current) => ({
-                          ...current,
-                          [item.href]: true,
-                        }));
+                        setOpenGroupOverride({ pathname, href: item.href });
                         onRequestExpand?.();
                         return;
                       }
 
-                      setOpenGroups((current) => ({
-                        ...current,
-                        [item.href]: !(current[item.href] ?? isActive),
-                      }));
+                      setOpenGroupOverride((current) => {
+                        const currentHref =
+                          current?.pathname === pathname ? current.href : activeGroupHref;
+
+                        return { pathname, href: currentHref === item.href ? null : item.href };
+                      });
                     }}
                     title={collapsed ? item.label : undefined}
                     type="button"
@@ -165,7 +175,10 @@ const SidebarContent = ({
                             )}
                             href={child.href}
                             key={child.href}
-                            onClick={onNavigate}
+                            onClick={() => {
+                              setOpenGroupOverride({ pathname, href: item.href });
+                              onNavigate?.();
+                            }}
                           >
                             {child.label}
                           </Link>
@@ -193,7 +206,10 @@ const SidebarContent = ({
                 )}
                 href={item.href}
                 key={item.href}
-                onClick={onNavigate}
+                onClick={() => {
+                  setOpenGroupOverride({ pathname, href: null });
+                  onNavigate?.();
+                }}
                 title={collapsed ? item.label : undefined}
               >
                 <Icon aria-hidden className="h-5 w-5 shrink-0" />

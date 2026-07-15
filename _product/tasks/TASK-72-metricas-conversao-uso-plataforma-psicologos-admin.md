@@ -583,3 +583,13 @@ Regras de cálculo:
 - O ajuste é exclusivamente visual, mobile-first, sem endpoint novo, sem alteração de Prisma/migrations, packages, dados persistidos ou regra de domínio.
 - Não houve decisão arquitetural nova; ADR não foi necessário.
 - Validação executada: `pnpm --dir admin check`, `pnpm --dir admin build` e smoke local `GET http://localhost:3002/psicologos/cmrqztri7000tn0uh1q4n8vxf?tab=denuncias`/`?tab=atividades` retornando 200.
+
+## Ajuste complementar 2026-07-15 - Fechamento exclusivo dos submenus do Admin
+
+- Pedido do usuário: no menu lateral do painel Admin, ao selecionar uma opção, fechar automaticamente o dropdown/submenu de outra opção que estivesse aberta anteriormente.
+- O menu lateral passou a controlar os grupos expansíveis como accordion exclusivo: ao abrir **Comunidades**, **Psicólogos** fecha; ao abrir **Psicólogos**, **Comunidades** fecha; ao selecionar item sem submenu, nenhum submenu permanece aberto.
+- A rota ativa continua abrindo o grupo correspondente por padrão, e a navegação mobile mantém o fechamento do drawer existente.
+- O ajuste é exclusivamente visual/navegacional, mobile-first, sem endpoint novo, sem alteração de Prisma/migrations, packages, dados persistidos ou regra de domínio.
+- Não houve decisão arquitetural nova; ADR não foi necessário.
+- Builder/Quick Copy não está exposto como ferramenta no ambiente; a referência visual usada foi a captura enviada pelo usuário e o padrão local do menu Admin.
+- Validação executada: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke local `GET http://localhost:3002/comunidades/lista` retornando 200.
