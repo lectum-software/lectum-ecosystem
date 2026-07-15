@@ -593,3 +593,16 @@ Regras de cálculo:
 - Não houve decisão arquitetural nova; ADR não foi necessário.
 - Builder/Quick Copy não está exposto como ferramenta no ambiente; a referência visual usada foi a captura enviada pelo usuário e o padrão local do menu Admin.
 - Validação executada: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke local `GET http://localhost:3002/comunidades/lista` retornando 200.
+
+## Ajuste complementar 2026-07-15 - Detalhe de comunidades alinhado ao detalhe de psicólogos
+
+- Pedido do usuário: no detalhe Admin de comunidades, alinhar o menu de opções ao modelo do detalhe de psicólogos, corrigir textos corrompidos, remover linhas/blocos redundantes e simplificar a edição do avatar.
+- A UI Admin de `/comunidades/[slug]` passou a usar abas sem ícones com indicador inferior arredondado, seguindo o padrão visual do detalhe de psicólogos.
+- O cabeçalho removeu a ação `Editar comunidade` e passou a exibir somente `Ver comunidade`, apontando para a rota pública real `/community/[slug]`.
+- A linha superior `Voltar para comunidades`/`Ver no site`, o texto `Nome, descrição, avatar e cores editáveis...` e o bloco **Informações da comunidade** foram removidos da aba **Dados**.
+- A edição do avatar foi simplificada para exibir apenas o avatar acima do campo de nome, com ícone de edição sobreposto e mantendo o upload real existente.
+- Textos corrompidos em `community.description` foram reparados por migration condicional, sem sobrescrever dados corretos ou edições administrativas sem sinais de encoding quebrado.
+- Não houve package novo, endpoint novo, mock ou alteração de contrato de API.
+- ADR criado: `adrs/0272-detalhe-admin-comunidade-identidade-textos.md`.
+- `pnpm --dir backend db:migrate` foi executado; a chamada CLI excedeu o limite de 120s do executor, mas a migration foi aplicada e registrada em `_prisma_migrations`. `pnpm --dir backend exec prisma migrate status` confirmou o banco atualizado.
+- Validação executada: consulta real sem descrições `�`/`??` em `community`, `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke local `GET http://localhost:3002/comunidades/ansiedade-em-equilibrio?tab=dados`/`GET http://localhost:3002/comunidades/ansiedade-em-equilibrio` retornando 200.

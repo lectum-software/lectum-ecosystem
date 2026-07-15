@@ -4,16 +4,10 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import {
   AlertTriangle,
   ArrowDown,
-  ArrowLeft,
   ArrowUp,
-  BarChart3,
   CalendarDays,
   Edit3,
   Eye,
-  FileText,
-  Flag,
-  History,
-  ImagePlus,
   Loader2,
   MessageCircle,
   Plus,
@@ -115,12 +109,12 @@ type RuleFormValues = z.infer<typeof ruleFormSchema>;
 type RemoveContentFormValues = z.infer<typeof removeContentFormSchema>;
 
 const communityTabs = [
-  { icon: BarChart3, id: "geral", label: "Geral" },
-  { icon: Edit3, id: "dados", label: "Dados" },
-  { icon: FileText, id: "conteudo", label: "Conteúdo" },
-  { icon: Star, id: "ranking", label: "Ranking" },
-  { icon: Flag, id: "denuncias", label: "Denúncias" },
-  { icon: History, id: "atividades", label: "Atividades" },
+  { id: "geral", label: "Geral" },
+  { id: "dados", label: "Dados" },
+  { id: "conteudo", label: "Conteúdo" },
+  { id: "ranking", label: "Ranking" },
+  { id: "denuncias", label: "Denúncias" },
+  { id: "atividades", label: "Atividades" },
 ] as const;
 
 type CommunityTab = (typeof communityTabs)[number]["id"];
@@ -461,11 +455,13 @@ const CommunityHeader = ({ community }: { community: AdminCommunityIdentity }) =
         </div>
       </div>
       <Link
-        className="inline-flex h-11 items-center justify-center gap-2 rounded-control border border-border bg-surface px-4 text-sm font-black text-foreground transition hover:border-primary hover:text-primary"
-        href={`/comunidades/${community.slug}?tab=dados`}
+        className="inline-flex h-11 items-center justify-center gap-2 rounded-full border border-primary/45 bg-surface px-5 text-sm font-black text-primary shadow-control transition hover:bg-primary-soft"
+        href={`/community/${community.slug}`}
+        rel="noreferrer"
+        target="_blank"
       >
-        <Edit3 aria-hidden className="h-4 w-4" />
-        Editar comunidade
+        <Eye aria-hidden className="h-4 w-4" />
+        Ver comunidade
       </Link>
     </div>
   </div>
@@ -519,40 +515,57 @@ const CommunityEditForm = ({
 
   return (
     <section className={cn(cardClass, "p-5")}>
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <h2 className="text-lg font-black text-foreground">Editar identidade da comunidade</h2>
-          <p className="mt-1 text-sm text-muted">
-            Nome, descrição, avatar e cores editáveis. Status e permissões avançadas ficam fora da
-            V1.
-          </p>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <input
-            accept="image/jpeg,image/png,image/webp"
-            className="sr-only"
-            onChange={onAvatarChange}
-            ref={fileRef}
-            type="file"
-          />
-          <button
-            className="inline-flex h-11 items-center justify-center gap-2 rounded-control border border-border bg-surface px-4 text-sm font-black text-foreground transition hover:border-primary hover:text-primary"
-            disabled={avatarMutation.isPending}
-            onClick={() => fileRef.current?.click()}
-            type="button"
-          >
-            {avatarMutation.isPending ? (
-              <Loader2 aria-hidden className="h-4 w-4 animate-spin" />
-            ) : (
-              <ImagePlus aria-hidden className="h-4 w-4" />
-            )}
-            Enviar avatar
-          </button>
-        </div>
-      </div>
+      <h2 className="text-lg font-black text-foreground">Editar identidade da comunidade</h2>
 
       <FormProvider {...form}>
         <form className="mt-5 grid gap-4" noValidate onSubmit={form.handleSubmit(onSubmit)}>
+          <div className="flex justify-start">
+            <input
+              accept="image/jpeg,image/png,image/webp"
+              className="sr-only"
+              onChange={onAvatarChange}
+              ref={fileRef}
+              type="file"
+            />
+            <button
+              aria-label="Editar avatar da comunidade"
+              className="relative h-32 w-32 rounded-[1.85rem] outline-none transition focus-visible:ring-4 focus-visible:ring-primary-soft disabled:cursor-not-allowed disabled:opacity-70"
+              disabled={avatarMutation.isPending}
+              onClick={() => fileRef.current?.click()}
+              type="button"
+            >
+              <span
+                className="relative grid h-32 w-32 place-items-center overflow-hidden rounded-[1.85rem] text-3xl font-black text-white ring-4 ring-primary-soft"
+                style={{
+                  background: community.visual_gradient_color
+                    ? `linear-gradient(135deg, ${community.visual_primary_color || "#3300ff"}, ${
+                        community.visual_gradient_color
+                      })`
+                    : community.visual_primary_color || "#3300ff",
+                }}
+              >
+                {community.avatar_url ? (
+                  <Image
+                    alt={`Avatar da comunidade ${community.name}`}
+                    className="object-cover"
+                    fill
+                    sizes="128px"
+                    src={community.avatar_url}
+                    unoptimized
+                  />
+                ) : (
+                  initials(community.name)
+                )}
+              </span>
+              <span className="absolute right-1 bottom-1 z-10 grid h-9 w-9 place-items-center rounded-full bg-primary text-white ring-4 ring-surface shadow-admin-soft transition">
+                {avatarMutation.isPending ? (
+                  <Loader2 aria-hidden className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Edit3 aria-hidden className="h-4 w-4" />
+                )}
+              </span>
+            </button>
+          </div>
           <InputController<CommunityFormValues>
             label="Nome da comunidade"
             name="name"
@@ -621,28 +634,6 @@ const CommunityEditForm = ({
     </section>
   );
 };
-
-const CommunityInfoCard = ({ community }: { community: AdminCommunityIdentity }) => (
-  <section className={cn(cardClass, "p-5")}>
-    <h2 className="text-lg font-black text-foreground">Informações da comunidade</h2>
-    <dl className="mt-4 divide-y divide-border text-sm">
-      {[
-        ["Nome", community.name],
-        ["Descrição", community.description || "Sem descrição"],
-        ["Categoria", community.category || "Sem categoria"],
-        ["Cor principal", community.visual_primary_color || "Não definida"],
-        ["Cor suave", community.visual_soft_color || "Não definida"],
-        ["Cor do texto", community.visual_text_color || "Não definida"],
-        ["Status", "Ativa (somente informativo na V1)"],
-      ].map(([label, value]) => (
-        <div className="grid gap-2 py-3 sm:grid-cols-[160px_1fr]" key={label}>
-          <dt className="font-black text-muted">{label}</dt>
-          <dd className="font-bold text-foreground">{value}</dd>
-        </div>
-      ))}
-    </dl>
-  </section>
-);
 
 const TopMentorsCard = ({ mentors }: { mentors: AdminCommunityTopMentor[] }) => (
   <section className={cn(cardClass, "p-5")}>
@@ -1073,26 +1064,26 @@ const RulesManager = ({ id, rules }: { id: string; rules: AdminCommunityRule[] }
 const CommunityTabs = ({ activeTab, pathname }: { activeTab: CommunityTab; pathname: string }) => (
   <nav
     aria-label="Abas da comunidade"
-    className="overflow-x-auto border-t border-border bg-surface px-4 sm:px-6"
+    className="overflow-x-auto border-t border-border bg-surface-muted/40 px-3"
   >
-    <div className="flex min-w-max gap-6">
+    <div className="flex min-w-max gap-1 py-1">
       {communityTabs.map((tab) => {
-        const Icon = tab.icon;
         const active = tab.id === activeTab;
 
         return (
           <Link
+            aria-current={active ? "page" : undefined}
             className={cn(
-              "inline-flex items-center gap-2 border-b-4 px-1 py-4 text-sm font-black transition",
-              active
-                ? "border-primary text-primary"
-                : "border-transparent text-foreground hover:text-primary",
+              "relative inline-flex min-h-12 items-center justify-center gap-2 rounded-full px-3.5 text-sm font-black transition",
+              active ? "text-primary" : "text-foreground hover:text-primary",
             )}
-            href={`${pathname}?tab=${tab.id}`}
+            href={tab.id === "geral" ? pathname : `${pathname}?tab=${tab.id}`}
             key={tab.id}
           >
-            <Icon aria-hidden className="h-4 w-4" />
-            {tab.label}
+            <span>{tab.label}</span>
+            {active ? (
+              <span className="absolute inset-x-4 bottom-1 h-1 rounded-full bg-primary" />
+            ) : null}
           </Link>
         );
       })}
@@ -1770,21 +1761,6 @@ const DetailContent = ({
   slug: string;
 }) => (
   <div className="space-y-5">
-    <div className="flex flex-wrap items-center justify-between gap-2 text-sm font-bold text-muted">
-      <Link className="inline-flex items-center gap-2 text-primary" href="/comunidades">
-        <ArrowLeft aria-hidden className="h-4 w-4" />
-        Voltar para comunidades
-      </Link>
-      <Link
-        className="inline-flex items-center gap-2 rounded-control border border-border bg-surface px-3 py-2 text-xs font-black text-muted transition hover:border-primary hover:text-primary"
-        href={`/community/${detail.community.slug}`}
-        target="_blank"
-      >
-        <Eye aria-hidden className="h-4 w-4" />
-        Ver no site
-      </Link>
-    </div>
-
     <section className={cn(cardClass, "overflow-hidden")}>
       <CommunityHeader community={detail.community} />
       <CommunityTabs activeTab={activeTab} pathname={pathname} />
@@ -1804,12 +1780,9 @@ const DetailContent = ({
     ) : null}
 
     {activeTab === "dados" ? (
-      <div className="grid gap-5 2xl:grid-cols-[1fr_0.9fr]">
-        <div className="space-y-5">
-          <CommunityEditForm community={detail.community} id={slug} onDone={() => undefined} />
-          <RulesManager id={slug} rules={detail.rules} />
-        </div>
-        <CommunityInfoCard community={detail.community} />
+      <div className="space-y-5">
+        <CommunityEditForm community={detail.community} id={slug} onDone={() => undefined} />
+        <RulesManager id={slug} rules={detail.rules} />
       </div>
     ) : null}
 
