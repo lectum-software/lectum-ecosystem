@@ -347,3 +347,33 @@ Regras de UI obrigatórias:
 - `pnpm check`
 - Smoke local em `next start` do Admin: `GET http://localhost:3102/comunidades/lista` retornou 200.
 - Smoke de protecao Admin real: `GET http://localhost:3001/api/admin/private/communities?page=1&limit=2` sem token retornou 401.
+
+## Correcao complementar: botao e criacao real de comunidades (2026-07-15)
+
+- Pedido do usuario: adicionar no header de `/comunidades/lista` um botao para **Criar nova comunidade**.
+- O header da lista recebeu o botao mobile-first **Criar nova comunidade**, navegando para a rota Admin real `/comunidades/nova`.
+- Para nao criar botao quebrado nem mockado, foi implementado o fluxo real de criacao com `POST /api/admin/private/communities`, protegido por auth Admin, reutilizando o modulo existente de comunidades.
+- O formulario de criacao usa React Hook Form, Zod e controllers do Admin para nome, slug opcional, categoria, descricao e cores visuais; apos sucesso, redireciona para o detalhe administrativo da comunidade criada.
+- O backend gera slug deterministico a partir do nome quando o slug nao e informado e rejeita conflitos reais com `community.slug`.
+- Como o schema atual de `community` nao possui status/draft, comunidades criadas pelo Admin ficam disponiveis no catalogo publico imediatamente; avatar e regras seguem editaveis no detalhe.
+- Nao houve alteracao em `backend/prisma/schema.prisma`, migrations ou packages; `pnpm --dir backend db:migrate` nao se aplica.
+- ADR atualizado: `adrs/0271-lista-admin-comunidades-rota-real.md`.
+
+### Criterios deste ajuste
+
+- [x] Header de `/comunidades/lista` exibe o botao **Criar nova comunidade**.
+- [x] O botao navega para uma rota Admin real, sem 404 nem mock.
+- [x] A criacao usa endpoint Admin privado real e persiste em `community`.
+- [x] O formulario usa React Hook Form, Zod e controllers do Admin.
+- [x] Nenhum package novo, mock, dado fake, schema Prisma ou migration foi usado.
+
+### Validacao deste ajuste
+
+- `pnpm --dir backend check`
+- `pnpm --dir admin check`
+- `pnpm --dir backend build`
+- `pnpm --dir admin build`
+- `pnpm check`
+- Smoke local em `next start` do Admin: `GET http://localhost:3102/comunidades/lista` retornou 200.
+- Smoke local em `next start` do Admin: `GET http://localhost:3102/comunidades/nova` retornou 200.
+- Smoke de protecao Admin real: `POST http://localhost:3001/api/admin/private/communities` sem token retornou 401.

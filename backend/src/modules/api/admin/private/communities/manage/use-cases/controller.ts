@@ -1,6 +1,7 @@
 import type { NextFunction, Request, Response } from "express";
 import { error500, send } from "@/helpers/return";
 import {
+  createCommunity as createCommunityService,
   createRule as createRuleService,
   deleteRule as deleteRuleService,
   listActivities as listActivitiesService,
@@ -37,6 +38,18 @@ export const show = async (req: Request, res: Response) => {
     return send(res, resolve);
   } catch (err) {
     return error500(res, "admin_community_show", err);
+  }
+};
+
+export const create = async (req: Request, res: Response) => {
+  try {
+    const resolve = await createCommunityService(
+      req as unknown as Parameters<typeof createCommunityService>[0],
+    );
+
+    return send(res, resolve);
+  } catch (err) {
+    return error500(res, "admin_community_create", err);
   }
 };
 

@@ -25,7 +25,7 @@ O menu Admin de Comunidades passou a ter os submenus **Visão geral** e **Lista 
 ## Consequências
 
 - O submenu **Lista de Comunidades** agora navega para uma listagem real e paginada, em vez de uma âncora do dashboard.
-- A lista é read-only e direciona a operação para o detalhe existente da comunidade; criação, edição em massa e exportação continuam fora do escopo.
+- A lista direciona a operação para o detalhe existente da comunidade e, a partir do ajuste de 2026-07-15, oferece criação individual real; edição em massa e exportação continuam fora do escopo.
 - A agregação no service é suficiente para a V1 operacional; se o volume crescer, pode ser otimizada em task futura com agregações SQL/groupBy específicas.
 - Builder/Quick Copy não esteve disponível como ferramenta callable no ambiente; a UI usou a referência local `_product/proto/admin/Comunidades/Comunidades - Dashboard.png` e o modelo já implementado de `_product/proto/admin/Psicólogos/Psicólogos- Lista.png`.
 
@@ -53,3 +53,11 @@ Validacoes adicionais do ajuste: `pnpm --dir admin check`, `pnpm --dir backend c
 A coluna **Ultima atividade** foi removida da lista; o contrato pode continuar retornando `last_activity_at`, mas a tabela/card nao exibem essa metrica. A coluna de denuncias passou a representar somente denuncias pendentes reais, com filtro `status="pendente"` no backend. A coluna **Acoes** adotou o mesmo padrao da lista de psicologos: link para detalhe administrativo e link externo para a comunidade publica em `/community/[slug]`.
 
 Validacoes adicionais do ajuste de acoes/denuncias pendentes: `pnpm --dir admin check`, `pnpm --dir backend check`, `pnpm --dir admin build`, `pnpm --dir backend build`, `pnpm check`, smoke local `GET http://localhost:3102/comunidades/lista` = 200 e smoke sem token em `GET http://localhost:3001/api/admin/private/communities?page=1&limit=2` = 401.
+
+## Atualizacao 2026-07-15: botao e fluxo real de criacao
+
+O header de `/comunidades/lista` recebeu o botao **Criar nova comunidade**, apontando para a rota Admin real `/comunidades/nova`. Para evitar uma acao visual quebrada ou mockada, a rota cria comunidades via `POST /api/admin/private/communities`, protegido por auth Admin, usando o modelo `community` existente sem alterar Prisma schema/migrations.
+
+A criacao aceita nome, slug opcional, categoria, descricao e cores visuais. Quando o slug nao e informado, o service gera um slug deterministico a partir do nome e rejeita conflito real com `community.slug`. Como o schema atual nao possui status/draft para comunidades, a comunidade criada fica disponivel no catalogo publico imediatamente; avatar e regras seguem editaveis no detalhe administrativo existente.
+
+Validacoes adicionais do ajuste de criacao: `pnpm --dir backend check`, `pnpm --dir admin check`, `pnpm --dir backend build`, `pnpm --dir admin build`, `pnpm check`, smoke local `GET http://localhost:3102/comunidades/lista` = 200, `GET http://localhost:3102/comunidades/nova` = 200 e smoke sem token em `POST http://localhost:3001/api/admin/private/communities` = 401.

@@ -50,6 +50,12 @@ export type AdminCommunityUpdateBody = {
   visual_gradient_color?: string | null;
 };
 
+export type AdminCommunityCreateBody = AdminCommunityUpdateBody & {
+  category?: string | null;
+  name: string;
+  slug?: string | null;
+};
+
 export type AdminCommunityRuleBody = {
   title: string;
   description: string;
@@ -409,6 +415,12 @@ export type IAdminCommunityRemoveContentDTO = Request & {
 export type IAdminCommunityUpdateDTO = Request & {
   p: AdminCommunityManageParams;
   b: AdminCommunityUpdateBody;
+  admin?: admin;
+  auth?: admin;
+};
+
+export type IAdminCommunityCreateDTO = Request & {
+  b: AdminCommunityCreateBody;
   admin?: admin;
   auth?: admin;
 };

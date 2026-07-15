@@ -480,6 +480,11 @@ export type AdminCommunityUpdateInput = {
   visual_text_color?: string | null;
 };
 
+export type AdminCommunityCreateInput = AdminCommunityUpdateInput & {
+  category?: string | null;
+  slug?: string | null;
+};
+
 export type AdminCommunityRuleInput = {
   active?: boolean;
   description: string;
@@ -538,6 +543,15 @@ export const getAdminCommunitiesList = async (input: AdminCommunitiesListQuery =
 export const getAdminCommunityDetail = async (id: string) => {
   const response = await adminApi.get<ApiResponse<AdminCommunityDetail>>(
     `/api/admin/private/communities/${encodeURIComponent(id)}`,
+  );
+
+  return resolveApiData(response.data);
+};
+
+export const createAdminCommunity = async (input: AdminCommunityCreateInput) => {
+  const response = await adminApi.post<ApiResponse<AdminCommunityIdentity>>(
+    "/api/admin/private/communities",
+    input,
   );
 
   return resolveApiData(response.data);

@@ -5,6 +5,7 @@ import {
   verifiedProfessionalProfileWhere,
 } from "@/utils/subscription-entitlement";
 import type {
+  AdminCommunityCreateBody,
   AdminCommunityRuleBody,
   AdminCommunityUpdateBody,
 } from "../DTOs/IAdminCommunityManageDTO";
@@ -401,6 +402,23 @@ export class AdminCommunityManageRepository {
       where: {
         deleted: false,
       },
+    });
+  }
+
+  async createCommunity(data: AdminCommunityCreateBody & { slug: string }) {
+    return prisma.community.create({
+      data: {
+        category: data.category,
+        description: data.description,
+        name: data.name,
+        slug: data.slug,
+        visual_gradient_color: data.visual_gradient_color,
+        visual_primary_color: data.visual_primary_color,
+        visual_primary_dark_color: data.visual_primary_dark_color,
+        visual_soft_color: data.visual_soft_color,
+        visual_text_color: data.visual_text_color,
+      },
+      select: adminCommunitySelect,
     });
   }
 

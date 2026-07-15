@@ -6,6 +6,7 @@ import {
   authorizeAvatarUpload,
   avatar,
   content,
+  create,
   createRule,
   deleteRule,
   list,
@@ -21,6 +22,7 @@ import {
   activitiesValidator,
   avatarValidator,
   contentValidator,
+  createValidator,
   deleteRuleValidator,
   listValidator,
   rankingValidator,
@@ -35,6 +37,7 @@ import {
 const routes = Router();
 
 routes.use(adminAuth);
+routes.post("/", createValidator, create);
 routes.get("/", listValidator, list);
 routes.get("/:id", showValidator, show);
 routes.put("/:id", updateValidator, update);

@@ -1,4 +1,5 @@
-﻿import type {
+import type {
+  AdminCommunityCreateBody,
   AdminCommunityRuleBody,
   AdminCommunityUpdateBody,
 } from "../../DTOs/IAdminCommunityManageDTO";
@@ -8,6 +9,7 @@ export interface IAdminCommunityManageRepository {
   countComments(communityId: string): Promise<number>;
   countPopularPosts(communityId: string): Promise<number>;
   countPublishedPosts(communityId: string): Promise<number>;
+  createCommunity(data: AdminCommunityCreateBody & { slug: string }): Promise<unknown>;
   findCommunity(idOrSlug: string): Promise<unknown | null>;
   listPerformance(communityId: string, from: Date, to: Date): Promise<unknown>;
   listPopularPosts(communityId: string): Promise<unknown[]>;

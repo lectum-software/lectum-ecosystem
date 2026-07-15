@@ -4,12 +4,14 @@ import {
   type AdminCommunitiesListQuery,
   type AdminCommunityActivitiesQuery,
   type AdminCommunityContentQuery,
+  type AdminCommunityCreateInput,
   type AdminCommunityRankingQuery,
   type AdminCommunityRemoveContentInput,
   type AdminCommunityReportsQuery,
   type AdminCommunityRuleInput,
   type AdminCommunityUpdateInput,
   type CommunitiesDashboardQuery,
+  createAdminCommunity,
   createAdminCommunityRule,
   deleteAdminCommunityRule,
   getAdminCommunitiesDashboard,
@@ -102,6 +104,20 @@ const invalidateCommunity = async (queryClient: ReturnType<typeof useQueryClient
     queryClient.invalidateQueries({ queryKey: adminCommunitiesKeys.detail(id) }),
     queryClient.invalidateQueries({ queryKey: adminCommunitiesKeys.rules(id) }),
   ]);
+};
+
+export const useAdminCommunityCreate = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (input: AdminCommunityCreateInput) => createAdminCommunity(input),
+    onSuccess: (community) =>
+      Promise.all([
+        queryClient.invalidateQueries({ queryKey: adminCommunitiesKeys.all }),
+        queryClient.invalidateQueries({ queryKey: adminCommunitiesKeys.detail(community.id) }),
+        queryClient.invalidateQueries({ queryKey: adminCommunitiesKeys.detail(community.slug) }),
+      ]),
+  });
 };
 
 export const useAdminCommunityUpdate = (id: string) => {

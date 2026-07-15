@@ -83,6 +83,88 @@ export const listSchema: IValidatorRequest = {
   ],
 };
 
+export const createSchema: IValidatorRequest = {
+  body: [
+    {
+      key: "name",
+      coerse: "string",
+      method: "string",
+      min: 2,
+      max: 120,
+    },
+    {
+      key: "slug",
+      coerse: "string",
+      method: "string",
+      min: 1,
+      max: 100,
+      nullable: true,
+      optional: true,
+    },
+    {
+      key: "description",
+      coerse: "string",
+      method: "string",
+      max: 500,
+      nullable: true,
+      optional: true,
+    },
+    {
+      key: "category",
+      coerse: "string",
+      method: "string",
+      max: 80,
+      nullable: true,
+      optional: true,
+    },
+    {
+      key: "visual_primary_color",
+      coerse: "string",
+      method: "string",
+      min: 7,
+      max: 7,
+      nullable: true,
+      optional: true,
+    },
+    {
+      key: "visual_primary_dark_color",
+      coerse: "string",
+      method: "string",
+      min: 7,
+      max: 7,
+      nullable: true,
+      optional: true,
+    },
+    {
+      key: "visual_soft_color",
+      coerse: "string",
+      method: "string",
+      min: 7,
+      max: 7,
+      nullable: true,
+      optional: true,
+    },
+    {
+      key: "visual_text_color",
+      coerse: "string",
+      method: "string",
+      min: 7,
+      max: 7,
+      nullable: true,
+      optional: true,
+    },
+    {
+      key: "visual_gradient_color",
+      coerse: "string",
+      method: "string",
+      min: 7,
+      max: 7,
+      nullable: true,
+      optional: true,
+    },
+  ],
+};
+
 export const updateSchema: IValidatorRequest = {
   params: [communityParam],
   body: [
@@ -284,6 +366,7 @@ export const removeContentSchema: IValidatorRequest = {
 
 export const showValidator = validator(showSchema);
 export const listValidator = validator(listSchema);
+export const createValidator = validator(createSchema);
 export const updateValidator = validator(updateSchema);
 export const avatarValidator = validator(showSchema);
 export const ruleValidator = validator(ruleSchema);

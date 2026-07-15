@@ -9,6 +9,7 @@ import type {
   AdminCommunityActivityItemDTO,
   AdminCommunityContentDTO,
   AdminCommunityContentItemDTO,
+  AdminCommunityCreateBody,
   AdminCommunityDetailDTO,
   AdminCommunityIdentity,
   AdminCommunityPerformanceMetricDTO,
@@ -25,6 +26,7 @@ import type {
   IAdminCommunityActivitiesDTO,
   IAdminCommunityAvatarDTO,
   IAdminCommunityContentDTO,
+  IAdminCommunityCreateDTO,
   IAdminCommunityRankingDTO,
   IAdminCommunityRemoveContentDTO,
   IAdminCommunityReportsDTO,
@@ -579,6 +581,27 @@ const normalizeColor = (value: string | null | undefined) => {
   return normalized.toUpperCase();
 };
 
+const normalizeCommunitySlug = (value?: string | null) =>
+  normalizeComparableText(value)
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 100)
+    .replace(/^-+|-+$/g, "");
+
+const normalizeCommunityCreate = (
+  body: AdminCommunityCreateBody,
+): AdminCommunityCreateBody & { slug: string } => ({
+  category: normalizeNullableText(body.category),
+  description: normalizeNullableText(body.description),
+  name: body.name.trim(),
+  slug: normalizeCommunitySlug(body.slug || body.name),
+  visual_gradient_color: normalizeColor(body.visual_gradient_color),
+  visual_primary_color: normalizeColor(body.visual_primary_color),
+  visual_primary_dark_color: normalizeColor(body.visual_primary_dark_color),
+  visual_soft_color: normalizeColor(body.visual_soft_color),
+  visual_text_color: normalizeColor(body.visual_text_color),
+});
+
 const normalizeCommunityUpdate = (body: AdminCommunityUpdateBody): AdminCommunityUpdateBody => ({
   description: normalizeNullableText(body.description),
   name: body.name?.trim(),
@@ -854,6 +877,41 @@ export const showCommunity = async (data: IAdminCommunityShowDTO): Promise<Resol
     status: 200,
     ...msg("index", {}),
     data: result,
+  };
+};
+
+export const createCommunity = async (data: IAdminCommunityCreateDTO): Promise<Resolve> => {
+  const repository = new AdminCommunityManageRepository();
+  const body = normalizeCommunityCreate(data.b);
+
+  if (!body.slug) {
+    return {
+      status: 400,
+      ...error("invalid_structure", {}),
+    };
+  }
+
+  if (invalidColor(body)) {
+    return {
+      status: 422,
+      ...error("invalid", { model: "community" }),
+    };
+  }
+
+  const existing = await repository.findCommunity(body.slug);
+  if (existing) {
+    return {
+      status: 409,
+      ...error("unique", { property: "slug" }),
+    };
+  }
+
+  const created = await repository.createCommunity(body);
+
+  return {
+    status: 201,
+    ...msg("created", { model: "community" }),
+    data: mapCommunity(created as AdminCommunityRecord),
   };
 };
 
