@@ -1831,7 +1831,7 @@ const CommunityRulesCard = ({ rules }: { rules: CommunityDetail["rules"] }) => {
           <span className="block text-sm font-black text-foreground">Regras da comunidade</span>
           <span className="block text-xs font-semibold text-muted">
             {sortedRules.length > 0
-              ? `${sortedRules.length} regras ativas cadastradas para este espaço.`
+              ? "Comunidade mediada por psicólogos e moderada pela equipe Lectum."
               : "Nenhuma regra ativa cadastrada para este espaço."}
           </span>
         </span>
