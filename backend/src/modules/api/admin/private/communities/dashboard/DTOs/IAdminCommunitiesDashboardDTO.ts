@@ -80,6 +80,21 @@ export type AdminCommunitiesDashboardPriorityAlert = {
   target_type: string;
 };
 
+export type AdminCommunitiesDashboardModerationAlert = {
+  categories: string[];
+  community_name: string | null;
+  community_slug: string | null;
+  content_excerpt: string;
+  created_at: Date;
+  decision: string;
+  id: string;
+  reason_code: string;
+  severity: string;
+  status: string;
+  target_id: string | null;
+  target_type: string;
+};
+
 export type AdminCommunitiesDashboardRecentPost = {
   anonymous: boolean;
   author_name: string;
@@ -126,6 +141,12 @@ export type AdminCommunitiesDashboardSummary = {
     items: AdminCommunitiesDashboardPriorityAlert[];
     source: "post_report.status=pendente";
     total: number;
+  };
+  moderation_alerts: {
+    items: AdminCommunitiesDashboardModerationAlert[];
+    source: "content_moderation_event.status=pending|reviewing";
+    total: number;
+    urgent_total: number;
   };
   recent_posts: {
     items: AdminCommunitiesDashboardRecentPost[];

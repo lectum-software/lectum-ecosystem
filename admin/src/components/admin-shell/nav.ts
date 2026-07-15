@@ -6,6 +6,7 @@ import {
   LayoutGrid,
   MessageCircleMore,
   Settings,
+  ShieldAlert,
   UsersRound,
 } from "lucide-react";
 
@@ -13,6 +14,7 @@ export const adminNavItems = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutGrid },
   { label: "Tráfego", href: "/trafego", icon: ChartNoAxesCombined },
   { label: "Comunidades", href: "/comunidades", icon: MessageCircleMore },
+  { label: "Moderação", href: "/moderacao", icon: ShieldAlert, badge: "moderation" },
   {
     label: "Psicólogos",
     href: "/psicologos",

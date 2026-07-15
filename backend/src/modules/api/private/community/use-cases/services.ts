@@ -1,6 +1,11 @@
 import { error, msg } from "@/helpers/translate";
 import { notifyNewCommunityPost } from "@/main/notification/domain-events";
 import { canAttachCommunityMedia } from "@/utils/community-media-entitlement";
+import { type ModerationResult, moderatePatientText } from "@/utils/content-moderation";
+import {
+  findModerationCommunityBySlug,
+  recordContentModerationEvent,
+} from "@/utils/content-moderation-events";
 import type {
   ICommunityCreatePostDTO,
   ICommunityFeedDTO,
@@ -151,6 +156,16 @@ const postMediaNotAllowed = () => ({
   ...error("community_post_media_professional_plan", {}),
 });
 
+const moderationError = (result: ModerationResult) => ({
+  status: 422,
+  ...error(
+    result.decision === "safety_hold"
+      ? "content_moderation_safety_hold"
+      : "content_moderation_blocked",
+    {},
+  ),
+});
+
 const MAX_POST_CAROUSEL_IMAGES = 10;
 
 type PostMediaItemInput = {
@@ -242,6 +257,44 @@ export const createPost = async (data: ICommunityCreatePostDTO) => {
     };
   }
 
+  const repository = new CommunityRepository();
+  const trimmedTitle = data.b.title.trim();
+  const trimmedContent = data.b.content.trim();
+  let moderation: ModerationResult | null = null;
+  let moderationCommunity: Awaited<ReturnType<typeof findModerationCommunityBySlug>> | null = null;
+
+  if (data.auth.role === "paciente") {
+    moderationCommunity = await findModerationCommunityBySlug(data.p.slug);
+    if (!moderationCommunity) {
+      return {
+        status: 404,
+        ...error("not_found", {
+          model: "community",
+        }),
+      };
+    }
+
+    moderation = moderatePatientText({
+      authorRole: data.auth.role,
+      content: trimmedContent,
+      targetType: "post",
+      title: trimmedTitle,
+    });
+
+    if (moderation.decision === "block" || moderation.decision === "safety_hold") {
+      await recordContentModerationEvent({
+        authorId: data.auth.id,
+        communityId: moderationCommunity.id,
+        content: trimmedContent,
+        result: moderation,
+        targetType: "submitted_post",
+        title: trimmedTitle,
+      });
+
+      return moderationError(moderation);
+    }
+  }
+
   const mediaUrl = data.b.mediaUrl?.trim() || undefined;
   const mediaType = normalizePostMediaType(data.b.mediaType);
   const rawRequestedMediaItems = data.b.mediaItems ?? [];
@@ -292,12 +345,11 @@ export const createPost = async (data: ICommunityCreatePostDTO) => {
     if (!canAttachMedia) return postMediaNotAllowed();
   }
 
-  const repository = new CommunityRepository();
   const res = await repository.createPost({
     ...data,
     b: {
-      title: data.b.title.trim(),
-      content: data.b.content.trim(),
+      title: trimmedTitle,
+      content: trimmedContent,
       mediaType: nextMediaType ?? undefined,
       mediaUrl: nextMediaUrl,
       mediaItems: normalizedMediaItems,
@@ -312,6 +364,18 @@ export const createPost = async (data: ICommunityCreatePostDTO) => {
         model: "community",
       }),
     };
+  }
+
+  if (moderation?.decision === "allow_sensitive") {
+    await recordContentModerationEvent({
+      authorId: data.auth.id,
+      communityId: res.community.id,
+      content: trimmedContent,
+      result: moderation,
+      targetId: res.id,
+      targetType: "community_post",
+      title: trimmedTitle,
+    });
   }
 
   await notifyNewCommunityPost({

@@ -72,6 +72,23 @@ export type PendingReportRecord = {
   };
 };
 
+export type ModerationEventRecord = {
+  categories: unknown;
+  community: {
+    name: string;
+    slug: string;
+  } | null;
+  content_excerpt: string;
+  createdAt: Date;
+  decision: string;
+  id: string;
+  reason_code: string;
+  severity: string;
+  status: string;
+  target_id: string | null;
+  target_type: string;
+};
+
 export type CommunityRecord = {
   id: string;
   members_count: number;
@@ -87,10 +104,15 @@ export type CommunityMemberRecord = {
 
 export interface IAdminCommunitiesDashboardRepository {
   countPendingReports(range: AdminCommunitiesDashboardDateRange): Promise<number>;
+  countPendingModerationEvents(range: AdminCommunitiesDashboardDateRange): Promise<number>;
+  countUrgentModerationEvents(range: AdminCommunitiesDashboardDateRange): Promise<number>;
   listCommunities(): Promise<CommunityRecord[]>;
   listCommunityMembers(): Promise<CommunityMemberRecord[]>;
   listCommunityPosts(range: AdminCommunitiesDashboardDateRange): Promise<CommunityPostRecord[]>;
   listMemberActivity(range: AdminCommunitiesDashboardDateRange): Promise<MemberActivityRecord[]>;
   listPendingReports(range: AdminCommunitiesDashboardDateRange): Promise<PendingReportRecord[]>;
+  listPendingModerationEvents(
+    range: AdminCommunitiesDashboardDateRange,
+  ): Promise<ModerationEventRecord[]>;
   listPostReplies(range: AdminCommunitiesDashboardDateRange): Promise<PostReplyRecord[]>;
 }

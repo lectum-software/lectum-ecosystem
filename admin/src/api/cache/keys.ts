@@ -7,6 +7,7 @@ import type {
 } from "@/api/req/communities";
 import type { DashboardSummaryQuery } from "@/api/req/dashboard";
 import type { FinanceDashboardQuery } from "@/api/req/finance";
+import type { AdminModerationEventsQuery } from "@/api/req/moderation";
 import type {
   AdminNotificationCampaignsQuery,
   AdminNotificationLogsQuery,
@@ -130,6 +131,20 @@ const normalizeNotificationLogs = (input: AdminNotificationLogsQuery) => ({
   trigger_key: input.trigger_key || "",
 });
 
+const normalizeModerationEvents = (input: AdminModerationEventsQuery) => ({
+  category: input.category || "all",
+  community: input.community || "all",
+  decision: input.decision || "all",
+  from: input.from || "default",
+  limit: input.limit || 10,
+  page: input.page || 1,
+  q: input.q || "",
+  severity: input.severity || "all",
+  status: input.status || "all",
+  targetType: input.targetType || "all",
+  to: input.to || "default",
+});
+
 const normalizeCommunityContent = (input: AdminCommunityContentQuery) => ({
   limit: input.limit || 10,
   page: input.page || 1,
@@ -249,6 +264,14 @@ export const adminNotificationsKeys = {
   metrics: (input: AdminNotificationsRangeQuery) =>
     [...adminNotificationsKeys.all, "metrics", normalizeNotificationsRange(input)] as const,
   pushStatus: () => [...adminNotificationsKeys.all, "push-status"] as const,
+};
+
+export const adminModerationKeys = {
+  all: ["admin", "moderation"] as const,
+  detail: (id: string) => [...adminModerationKeys.all, "detail", id] as const,
+  events: (input: AdminModerationEventsQuery) =>
+    [...adminModerationKeys.all, "events", normalizeModerationEvents(input)] as const,
+  summary: () => [...adminModerationKeys.all, "summary"] as const,
 };
 
 export const adminSettingsKeys = {

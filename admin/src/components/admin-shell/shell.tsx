@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { PropsWithChildren } from "react";
 import { useMemo, useState } from "react";
+import { useAdminModerationSummary } from "@/api/callers/moderation";
 import { setSidebarCollapsed } from "@/lib/storage";
 import { cn } from "@/lib/utils";
 import { useAdminAuth } from "@/providers/admin-auth";
@@ -29,6 +30,8 @@ const SidebarContent = ({
   const pathname = usePathname();
   const { admin, logout } = useAdminAuth();
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({});
+  const moderationSummary = useAdminModerationSummary();
+  const moderationPendingTotal = moderationSummary.data?.pending_total ?? 0;
   const adminName = admin?.name || "Admin Lectum";
   const initials = useMemo(() => {
     const names = adminName.split(" ").filter(Boolean);
@@ -70,6 +73,8 @@ const SidebarContent = ({
           {adminNavItems.map((item) => {
             const Icon = item.icon;
             const isActive = isNavPathActive(pathname, item.href);
+            const showModerationBadge =
+              "badge" in item && item.badge === "moderation" && moderationPendingTotal > 0;
 
             if ("children" in item) {
               const isOpen = openGroups[item.href] ?? isActive;
@@ -162,7 +167,7 @@ const SidebarContent = ({
               <Link
                 aria-current={isActive ? "page" : undefined}
                 className={cn(
-                  "flex min-h-12 items-center gap-3 rounded-2xl px-3 text-sm font-bold transition",
+                  "relative flex min-h-12 items-center gap-3 rounded-2xl px-3 text-sm font-bold transition",
                   premiumPilot
                     ? "text-sidebar-muted hover:bg-sidebar-active hover:text-primary focus-visible:outline-primary"
                     : "text-sidebar-muted hover:bg-sidebar-active/45 hover:text-sidebar-foreground focus-visible:outline-white",
@@ -179,6 +184,23 @@ const SidebarContent = ({
               >
                 <Icon aria-hidden className="h-5 w-5 shrink-0" />
                 <span className={cn("truncate", collapsed && "sr-only")}>{item.label}</span>
+                {showModerationBadge ? (
+                  <span
+                    aria-hidden="true"
+                    className={cn(
+                      "ml-auto inline-flex h-6 min-w-6 items-center justify-center rounded-full bg-danger px-2 text-[0.68rem] font-black text-white shadow-admin-soft",
+                      collapsed && "absolute -right-1 top-1 ml-0 h-5 min-w-5 px-1 text-[0.62rem]",
+                    )}
+                    title={`${moderationPendingTotal} eventos pendentes`}
+                  >
+                    {moderationPendingTotal > 99 ? "99+" : moderationPendingTotal}
+                  </span>
+                ) : null}
+                {showModerationBadge ? (
+                  <span className="sr-only">
+                    {moderationPendingTotal} eventos de moderação pendentes
+                  </span>
+                ) : null}
               </Link>
             );
           })}

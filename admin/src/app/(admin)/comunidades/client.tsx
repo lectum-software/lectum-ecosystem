@@ -22,6 +22,7 @@ import type {
   AdminCommunitiesDashboard,
   CommunitiesDashboardActivitySeries,
   CommunitiesDashboardMetric,
+  CommunitiesDashboardModerationAlert,
   CommunitiesDashboardPriorityAlert,
   CommunitiesDashboardQuery,
   CommunitiesDashboardRecentPost,
@@ -92,6 +93,7 @@ const hasPeriodRecords = (summary: AdminCommunitiesDashboard) => {
     hasCards ||
     hasActivity ||
     summary.patient_posts_breakdown.total > 0 ||
+    summary.moderation_alerts.total > 0 ||
     summary.priority_alerts.total > 0 ||
     summary.recent_posts.total > 0 ||
     summary.top_communities.items.length > 0
@@ -549,6 +551,97 @@ const PriorityAlerts = ({
   );
 };
 
+const MODERATION_DECISION_LABELS: Record<string, string> = {
+  allow_sensitive: "Sensível publicado",
+  block: "Bloqueado",
+  safety_hold: "Segurado por segurança",
+};
+
+const MODERATION_SEVERITY_CLASSES: Record<string, string> = {
+  high: "bg-red-50 text-danger",
+  low: "bg-surface-muted text-muted",
+  medium: "bg-orange-50 text-orange-600",
+  urgent: "bg-red-600 text-white",
+};
+
+const ModerationAlerts = ({
+  alerts,
+  total,
+  urgentTotal,
+}: {
+  alerts: CommunitiesDashboardModerationAlert[];
+  total: number;
+  urgentTotal: number;
+}) => (
+  <CardShell className="p-5">
+    <div className="flex items-center justify-between gap-3">
+      <div>
+        <h2 className="text-lg font-black text-foreground">Moderação automática</h2>
+        <p className="mt-1 text-xs font-bold text-muted">
+          {numberFormatter.format(total)} evento(s) pendentes ·{" "}
+          {numberFormatter.format(urgentTotal)} urgente(s)
+        </p>
+      </div>
+      <ShieldAlert aria-hidden className="h-5 w-5 text-danger" />
+    </div>
+
+    <div className="mt-5 space-y-3">
+      {alerts.length === 0 ? (
+        <p className="rounded-2xl bg-surface-muted p-4 text-sm text-muted">
+          Nenhum evento automático pendente foi encontrado neste período.
+        </p>
+      ) : (
+        alerts.map((alert) => (
+          <article
+            className="rounded-2xl border border-orange-100 bg-orange-50/35 p-4"
+            key={alert.id}
+          >
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <h3 className="text-sm font-black text-foreground">
+                  {MODERATION_DECISION_LABELS[alert.decision] ?? alert.decision}
+                </h3>
+                <p className="mt-1 line-clamp-2 text-xs font-bold text-muted">
+                  {alert.content_excerpt}
+                </p>
+              </div>
+              <span
+                className={cn(
+                  "rounded-full px-2 py-1 text-[0.65rem] font-black uppercase",
+                  MODERATION_SEVERITY_CLASSES[alert.severity] ?? "bg-surface-muted text-muted",
+                )}
+              >
+                {alert.severity}
+              </span>
+            </div>
+            {alert.community_name ? (
+              <p className="mt-3 text-xs text-muted">Comunidade: {alert.community_name}</p>
+            ) : null}
+            <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+              <p className="text-xs font-black text-foreground">
+                {formatDateTime(alert.created_at)}
+              </p>
+              <Link
+                className="text-xs font-black text-primary transition hover:text-primary-hover"
+                href={`/moderacao?event=${encodeURIComponent(alert.id)}`}
+              >
+                Abrir evento
+              </Link>
+            </div>
+          </article>
+        ))
+      )}
+    </div>
+
+    <Link
+      className="mt-4 inline-flex h-10 w-full items-center justify-center rounded-control border border-border bg-surface px-4 text-sm font-black text-foreground transition hover:border-primary hover:text-primary"
+      href="/moderacao"
+    >
+      Ver central de moderação
+    </Link>
+  </CardShell>
+);
+
 const RecentPostsTable = ({ posts }: { posts: CommunitiesDashboardRecentPost[] }) => (
   <CardShell className="p-5">
     <div className="flex items-center justify-between gap-3">
@@ -746,10 +839,17 @@ const DashboardContent = ({ summary }: { summary: AdminCommunitiesDashboard }) =
           <TopCommunitiesTable communities={summary.top_communities.items} />
         </div>
 
-        <PriorityAlerts
-          alerts={summary.priority_alerts.items}
-          total={summary.priority_alerts.total}
-        />
+        <div className="space-y-5">
+          <PriorityAlerts
+            alerts={summary.priority_alerts.items}
+            total={summary.priority_alerts.total}
+          />
+          <ModerationAlerts
+            alerts={summary.moderation_alerts.items}
+            total={summary.moderation_alerts.total}
+            urgentTotal={summary.moderation_alerts.urgent_total}
+          />
+        </div>
       </div>
 
       {summary.unavailable.length > 0 ? (

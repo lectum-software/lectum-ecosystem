@@ -71,6 +71,7 @@ model user {
   post_reply_saves                        post_reply_save[]             @relation("post_reply_save_user")
   post_notification_mutes                 post_notification_mute[]      @relation("post_notification_mute_user")
   post_reports                            post_report[]                 @relation("post_report_reporter")
+  content_moderation_events               content_moderation_event[]    @relation("content_moderation_event_author")
   notification_subscriptions              notification_subscription[]   @relation("notification_subscription_user")
   notification_deliveries                 notification_delivery[]       @relation("notification_delivery_user")
   visitor_locations                       visitor_location[]            @relation("visitor_location_user")
@@ -112,6 +113,7 @@ model admin {
   admin_tokens           admin_token[]                 @relation("admin_token_admin")
   activity_logs          admin_activity_log[]          @relation("admin_activity_log_admin")
   notification_campaigns admin_notification_campaign[] @relation("admin_notification_campaign_admin")
+  moderation_reviews     content_moderation_event[]    @relation("content_moderation_event_admin")
 
   @@index([email, deleted])
   @@index([active, deleted])
@@ -533,6 +535,7 @@ model profile_catalog_option {
   @@index([type, active, deleted, position])
   @@map("profile_catalog_options")
 }
+
 model psychologist_specialty {
   id              String    @id @default(cuid())
   deleted         Boolean   @default(false)
@@ -810,25 +813,26 @@ model professional_review {
 }
 
 model community {
-  id                        String             @id @default(cuid())
-  deleted                   Boolean            @default(false)
-  deletedAt                 DateTime?          @map("deleted_at")
-  updatedAt                 DateTime           @default(now()) @updatedAt @map("updated_at")
-  createdAt                 DateTime           @default(now()) @map("created_at")
+  id                        String                     @id @default(cuid())
+  deleted                   Boolean                    @default(false)
+  deletedAt                 DateTime?                  @map("deleted_at")
+  updatedAt                 DateTime                   @default(now()) @updatedAt @map("updated_at")
+  createdAt                 DateTime                   @default(now()) @map("created_at")
   name                      String
-  slug                      String             @unique
+  slug                      String                     @unique
   description               String?
   category                  String?
-  members_count             Int                @default(0)
-  avatar_url                String?            @map("avatar_url")
-  visual_primary_color      String?            @map("visual_primary_color")
-  visual_primary_dark_color String?            @map("visual_primary_dark_color")
-  visual_soft_color         String?            @map("visual_soft_color")
-  visual_text_color         String?            @map("visual_text_color")
-  visual_gradient_color     String?            @map("visual_gradient_color")
-  members                   community_member[] @relation("community_member_community")
-  posts                     community_post[]   @relation("community_post_community")
-  rules                     community_rule[]   @relation("community_rule_community")
+  members_count             Int                        @default(0)
+  avatar_url                String?                    @map("avatar_url")
+  visual_primary_color      String?                    @map("visual_primary_color")
+  visual_primary_dark_color String?                    @map("visual_primary_dark_color")
+  visual_soft_color         String?                    @map("visual_soft_color")
+  visual_text_color         String?                    @map("visual_text_color")
+  visual_gradient_color     String?                    @map("visual_gradient_color")
+  members                   community_member[]         @relation("community_member_community")
+  posts                     community_post[]           @relation("community_post_community")
+  rules                     community_rule[]           @relation("community_rule_community")
+  moderation_events         content_moderation_event[] @relation("content_moderation_event_community")
 
   @@index([slug])
   @@index([category, deleted])
@@ -1084,6 +1088,41 @@ model post_report {
   @@index([status, createdAt])
   @@index([reporter_id, createdAt])
   @@map("post_reports")
+}
+
+model content_moderation_event {
+  id                   String     @id @default(cuid())
+  deleted              Boolean    @default(false)
+  deletedAt            DateTime?  @map("deleted_at")
+  updatedAt            DateTime   @default(now()) @updatedAt @map("updated_at")
+  createdAt            DateTime   @default(now()) @map("created_at")
+  target_type          String     @map("target_type")
+  target_id            String?    @map("target_id")
+  community_id         String?    @map("community_id")
+  author_id            String     @map("author_id")
+  decision             String
+  categories           Json
+  severity             String
+  status               String     @default("pending")
+  reason_code          String     @map("reason_code")
+  matched_rules        Json?      @map("matched_rules")
+  title_snapshot       String?    @map("title_snapshot")
+  content_excerpt      String     @map("content_excerpt")
+  content_snapshot     String?    @map("content_snapshot")
+  reviewed_by_admin_id String?    @map("reviewed_by_admin_id")
+  reviewed_at          DateTime?  @map("reviewed_at")
+  resolved_at          DateTime?  @map("resolved_at")
+  admin_note           String?    @map("admin_note")
+  community            community? @relation("content_moderation_event_community", fields: [community_id], references: [id], onDelete: SetNull)
+  author               user       @relation("content_moderation_event_author", fields: [author_id], references: [id], onDelete: Cascade)
+  reviewed_by_admin    admin?     @relation("content_moderation_event_admin", fields: [reviewed_by_admin_id], references: [id], onDelete: SetNull)
+
+  @@index([status, severity, createdAt])
+  @@index([decision, createdAt])
+  @@index([target_type, target_id])
+  @@index([community_id, createdAt])
+  @@index([author_id, createdAt])
+  @@map("content_moderation_events")
 }
 
 model notification_subscription {

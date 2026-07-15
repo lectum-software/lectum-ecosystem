@@ -163,7 +163,11 @@
     "admin_psychologist_report_uphold_confirmation_invalid": "Digite DENUNCIA PROCEDENTE para resolver a denúncia como procedente.",
     "admin_community_content_remove_confirmation_invalid": "Digite REMOVER CONTEUDO para confirmar a remoção administrativa do conteúdo.",
     "admin_community_content_remove_unavailable": "Este conteúdo já está removido ou indisponível.",
-    "admin_community_content_target_invalid": "Conteúdo da comunidade não encontrado para moderação."
+    "admin_community_content_target_invalid": "Conteúdo da comunidade não encontrado para moderação.",
+    "content_moderation_blocked": "N?o foi poss?vel publicar este conte?do. Remova links, convites externos ou trechos que violem as diretrizes da comunidade.",
+    "content_moderation_safety_hold": "Seu conte?do n?o foi publicado por seguran?a. Se voc? estiver em risco imediato, procure uma pessoa de confian?a ou um servi?o de emerg?ncia local. A Lectum n?o realiza atendimento de emerg?ncia.",
+    "admin_moderation_event_not_found": "Evento de modera??o n?o encontrado.",
+    "admin_moderation_event_resolve_note_required": "Informe uma nota administrativa para resolver o evento de modera??o."
   },
   "message": {
     "store": "dado criado",
@@ -262,7 +266,9 @@
     "admin_psychologist_report_dismissed": "Denúncia resolvida como improcedente.",
     "admin_psychologist_report_review_started": "Denúncia marcada como em análise.",
     "admin_psychologist_report_upheld": "Denúncia resolvida como procedente.",
-    "admin_community_content_removed": "Conteúdo removido com auditoria administrativa."
+    "admin_community_content_removed": "Conteúdo removido com auditoria administrativa.",
+    "admin_moderation_event_reviewed": "Evento de modera??o marcado como em revis?o.",
+    "admin_moderation_event_resolved": "Evento de modera??o resolvido com auditoria administrativa."
   },
   "gender": {
     "o": "o"
@@ -303,7 +309,8 @@
     "page_view_event": "pageview",
     "important_action_event": "evento importante",
     "admin_notification_campaign": "campanha administrativa de notifica??o",
-    "notification_delivery": "entrega de notifica??o"
+    "notification_delivery": "entrega de notifica??o",
+    "content_moderation_event": "evento de modera??o de conte?do"
   },
   "property": {
     "email": "email",

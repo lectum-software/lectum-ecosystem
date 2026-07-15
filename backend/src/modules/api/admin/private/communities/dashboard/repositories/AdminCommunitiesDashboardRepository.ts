@@ -21,6 +21,31 @@ export class AdminCommunitiesDashboardRepository implements IAdminCommunitiesDas
     });
   }
 
+  async countPendingModerationEvents(range: AdminCommunitiesDashboardDateRange): Promise<number> {
+    return prisma.content_moderation_event.count({
+      where: {
+        createdAt: createdAtWhere(range),
+        deleted: false,
+        status: {
+          in: ["pending", "reviewing"],
+        },
+      },
+    });
+  }
+
+  async countUrgentModerationEvents(range: AdminCommunitiesDashboardDateRange): Promise<number> {
+    return prisma.content_moderation_event.count({
+      where: {
+        createdAt: createdAtWhere(range),
+        deleted: false,
+        severity: "urgent",
+        status: {
+          in: ["pending", "reviewing"],
+        },
+      },
+    });
+  }
+
   async listCommunities() {
     return prisma.community.findMany({
       orderBy: [{ members_count: "desc" }, { name: "asc" }],
@@ -267,6 +292,38 @@ export class AdminCommunitiesDashboardRepository implements IAdminCommunitiesDas
         reporter: {
           select: {
             role: true,
+          },
+        },
+      },
+    });
+  }
+
+  async listPendingModerationEvents(range: AdminCommunitiesDashboardDateRange) {
+    return prisma.content_moderation_event.findMany({
+      orderBy: [{ severity: "desc" }, { createdAt: "desc" }, { id: "desc" }],
+      take: 10,
+      where: {
+        createdAt: createdAtWhere(range),
+        deleted: false,
+        status: {
+          in: ["pending", "reviewing"],
+        },
+      },
+      select: {
+        categories: true,
+        content_excerpt: true,
+        createdAt: true,
+        decision: true,
+        id: true,
+        reason_code: true,
+        severity: true,
+        status: true,
+        target_id: true,
+        target_type: true,
+        community: {
+          select: {
+            name: true,
+            slug: true,
           },
         },
       },

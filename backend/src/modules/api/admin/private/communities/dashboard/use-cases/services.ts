@@ -4,6 +4,7 @@ import type {
   AdminCommunitiesDashboardActivitySeries,
   AdminCommunitiesDashboardDateRange,
   AdminCommunitiesDashboardMetric,
+  AdminCommunitiesDashboardModerationAlert,
   AdminCommunitiesDashboardPeriod,
   AdminCommunitiesDashboardPriorityAlert,
   AdminCommunitiesDashboardQuery,
@@ -19,6 +20,7 @@ import type {
   CommunityPostRecord,
   CommunityRecord,
   MemberActivityRecord,
+  ModerationEventRecord,
   PendingReportRecord,
   PostReplyRecord,
 } from "../repositories/interfaces/IAdminCommunitiesDashboardRepository";
@@ -377,6 +379,40 @@ const buildPriorityAlerts = (reports: PendingReportRecord[], total: number) => (
   total,
 });
 
+const toStringArray = (value: unknown): string[] => {
+  if (!Array.isArray(value)) return [];
+
+  return value.filter((item): item is string => typeof item === "string");
+};
+
+const buildModerationAlerts = (
+  events: ModerationEventRecord[],
+  total: number,
+  urgentTotal: number,
+) => {
+  const items: AdminCommunitiesDashboardModerationAlert[] = events.slice(0, 5).map((event) => ({
+    categories: toStringArray(event.categories),
+    community_name: event.community?.name ?? null,
+    community_slug: event.community?.slug ?? null,
+    content_excerpt: event.content_excerpt,
+    created_at: event.createdAt,
+    decision: event.decision,
+    id: event.id,
+    reason_code: event.reason_code,
+    severity: event.severity,
+    status: event.status,
+    target_id: event.target_id,
+    target_type: event.target_type,
+  }));
+
+  return {
+    items,
+    source: "content_moderation_event.status=pending|reviewing" as const,
+    total,
+    urgent_total: urgentTotal,
+  };
+};
+
 const publicAuthorName = (post: CommunityPostRecord) => {
   if (post.anonymous && roleIsPatient(post.author.role)) return "Paciente anônimo";
 
@@ -491,6 +527,9 @@ export const buildCommunitiesDashboard = async (
     pendingReportsTotal,
     previousPendingReportsTotal,
     pendingReports,
+    pendingModerationEventsTotal,
+    urgentModerationEventsTotal,
+    pendingModerationEvents,
     communities,
   ] = await Promise.all([
     repository.listCommunityPosts(current),
@@ -503,6 +542,9 @@ export const buildCommunitiesDashboard = async (
     repository.countPendingReports(current),
     repository.countPendingReports(previous),
     repository.listPendingReports(current),
+    repository.countPendingModerationEvents(current),
+    repository.countUrgentModerationEvents(current),
+    repository.listPendingModerationEvents(current),
     repository.listCommunities(),
   ]);
 
@@ -575,6 +617,11 @@ export const buildCommunitiesDashboard = async (
     patient_posts_breakdown: buildPatientPostsBreakdown(posts),
     period,
     priority_alerts: buildPriorityAlerts(pendingReports, pendingReportsTotal),
+    moderation_alerts: buildModerationAlerts(
+      pendingModerationEvents,
+      pendingModerationEventsTotal,
+      urgentModerationEventsTotal,
+    ),
     recent_posts: buildRecentPosts(posts),
     top_communities: buildTopCommunities(
       communities,
@@ -592,6 +639,17 @@ export const buildCommunitiesDashboard = async (
               id: "priority_alerts_empty",
               label: "Alertas de prioridade",
               source: "post_report.status=pendente",
+            },
+          ]
+        : []),
+      ...(pendingModerationEventsTotal === 0
+        ? [
+            {
+              description:
+                "Sem content_moderation_event pendente no período atual; alertas automáticos aparecem vazios sem simular risco.",
+              id: "moderation_alerts_empty",
+              label: "Alertas automáticos de moderação",
+              source: "content_moderation_event.status=pending|reviewing",
             },
           ]
         : []),

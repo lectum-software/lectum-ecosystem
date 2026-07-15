@@ -113,6 +113,7 @@ const createReplyPageRange = (page: number) =>
   Array.from({ length: Math.max(1, page) }, (_, index) => index + 1);
 
 type ApiErrorData = {
+  code?: string;
   error?: string;
   message?: string;
   status?: number;
@@ -130,6 +131,10 @@ type ReplyTarget = {
 type ReplyTargetItem = NonNullable<ReplyTarget>;
 type ReplyTargetMap = Record<string, ReplyTargetItem>;
 const EMPTY_REPLY_TARGETS: ReplyTargetMap = {};
+const MODERATION_BLOCKED_MESSAGE =
+  "Não foi possível publicar este conteúdo. Remova links, convites externos ou trechos que violem as diretrizes da comunidade.";
+const MODERATION_SAFETY_MESSAGE =
+  "Seu conteúdo não foi publicado por segurança. Se você estiver em risco imediato, procure uma pessoa de confiança ou um serviço de emergência local. A Lectum não realiza atendimento de emergência.";
 
 type ReportTarget = { type: "post" } | { reply: PostReply; type: "reply" } | null;
 
@@ -406,6 +411,15 @@ const resolveReplyError = (error: unknown) => {
     apiError?.data?.error ||
     apiError?.data?.message ||
     (error instanceof Error ? error.message : "");
+  const code = apiError?.data?.code;
+
+  if (code === "content_moderation_safety_hold") {
+    return rawMessage || MODERATION_SAFETY_MESSAGE;
+  }
+
+  if (code === "content_moderation_blocked") {
+    return rawMessage || MODERATION_BLOCKED_MESSAGE;
+  }
 
   return rawMessage || "Não foi possível publicar sua resposta agora.";
 };

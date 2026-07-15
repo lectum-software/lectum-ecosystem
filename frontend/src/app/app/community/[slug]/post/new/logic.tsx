@@ -36,6 +36,7 @@ import {
 } from "./use-form";
 
 type ApiErrorData = {
+  code?: string;
   error?: string;
   message?: string;
   status?: number;
@@ -50,6 +51,11 @@ type CreatePostErrorResolution = {
   message: string;
 };
 
+const MODERATION_BLOCKED_MESSAGE =
+  "Não foi possível publicar este conteúdo. Remova links, convites externos ou trechos que violem as diretrizes da comunidade.";
+const MODERATION_SAFETY_MESSAGE =
+  "Seu conteúdo não foi publicado por segurança. Se você estiver em risco imediato, procure uma pessoa de confiança ou um serviço de emergência local. A Lectum não realiza atendimento de emergência.";
+
 const normalizeParam = (value: string | string[] | undefined) => {
   if (Array.isArray(value)) return value[0];
 
@@ -62,7 +68,22 @@ const resolveCreatePostError = (error: unknown): CreatePostErrorResolution => {
     apiError?.data?.error ||
     apiError?.data?.message ||
     (error instanceof Error ? error.message : "");
+  const code = apiError?.data?.code;
   const normalized = rawMessage.toLowerCase();
+
+  if (code === "content_moderation_safety_hold") {
+    return {
+      field: "content",
+      message: rawMessage || MODERATION_SAFETY_MESSAGE,
+    };
+  }
+
+  if (code === "content_moderation_blocked") {
+    return {
+      field: "content",
+      message: rawMessage || MODERATION_BLOCKED_MESSAGE,
+    };
+  }
 
   if (normalized.includes("comunidade") || normalized.includes("community")) {
     return {

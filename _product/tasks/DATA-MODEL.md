@@ -563,6 +563,28 @@ Acompanhamento de comentarios do usuario em `GET /api/private/posts/mine?type=re
 
 Complemento 2026-06-29: o painel administrativo ainda e reservado/futuro e nao deve ser criado na audiencia `user`; a preparacao desta etapa e persistir denuncias com alvo normalizado e unicidade transacional para que uma futura audiencia admin consiga listar/tria-las sem migrar dados historicos.
 
+`content_moderation_event` / `content_moderation_events` (TASK-74, modera??o textual determin?stica de pacientes):
+
+| Campo | Tipo | Notas |
+|---|---|---|
+| `target_type` | `String` | `"community_post" | "post_reply" | "submitted_post" | "submitted_reply"`; submiss?es bloqueadas n?o t?m conte?do p?blico persistido |
+| `target_id` | `String?` | id de `community_post`/`post_reply` quando `allow_sensitive`; `null` quando bloqueado antes da publica??o |
+| `community_id` | `String?` | FK opcional para `community`, `onDelete: SetNull` |
+| `author_id` | `String` | FK para `user`; V1 aplica regras autom?ticas apenas quando `user.role="paciente"` |
+| `decision` | `String` | `"allow_sensitive" | "block" | "safety_hold"`; `allow` n?o gera evento |
+| `categories` | `Json` | lista de categorias internas: `external_link`, `sexual_health`, `explicit_sexual`, `minor_sexual_risk`, `self_harm_suicide`, `abuse_violence`, `spam_scam`, `other` |
+| `severity` | `String` | `"low" | "medium" | "high" | "urgent"`; `safety_hold` usa `urgent` |
+| `status` | `String @default("pending")` | `"pending" | "reviewing" | "resolved"` para fila Admin |
+| `reason_code` | `String` | c?digo interno da regra determin?stica, sem publicar lista completa de bypass |
+| `matched_rules` | `Json?` | nomes internos de regras para revis?o Admin, n?o exibidos ao paciente |
+| `title_snapshot` | `String?` | t?tulo original enviado, quando houver |
+| `content_excerpt` | `String` | trecho seguro para listas Admin |
+| `content_snapshot` | `String?` | snapshot completo restrito ao detalhe Admin autenticado |
+| `reviewed_by_admin_id`, `reviewed_at`, `resolved_at`, `admin_note` | `String?` / `DateTime?` | auditoria operacional de revis?o/resolu??o; a??es criam `admin_activity_log` |
+| `@@index([status, severity, createdAt])`, `@@index([decision, createdAt])`, `@@index([target_type, target_id])`, `@@index([community_id, createdAt])`, `@@index([author_id, createdAt])` | | consultas da central Admin e dashboard de comunidades |
+
+Contratos TASK-74: `POST /api/private/community/:slug/posts` e `POST /api/private/posts/:id/replies` classificam texto de pacientes antes da persist?ncia. `allow_sensitive` publica e cria evento pendente; `block`/`safety_hold` n?o cria `community_post`/`post_reply` e retorna erro 422 com mensagem p?blica conservadora. URLs/dom?nios digitados por pacientes s?o bloqueados mesmo que a UI renderize texto puro. Endpoints Admin privados: `GET /api/admin/private/moderation/summary`, `GET /events`, `GET /events/:id`, `POST /events/:id/review` e `POST /events/:id/resolve`.
+
 `post_save` (TASK-28, "Posts Salvos"):
 
 | Campo | Tipo | Notas |
