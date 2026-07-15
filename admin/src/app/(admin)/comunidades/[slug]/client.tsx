@@ -86,7 +86,6 @@ const communityFormSchema = z.object({
 
 const ruleFormSchema = z.object({
   description: z.string().trim().min(3, "Informe a descrição.").max(500, "Use até 500 caracteres."),
-  title: z.string().trim().min(2, "Informe o título.").max(120, "Use até 120 caracteres."),
 });
 
 const removeContentFormSchema = z.object({
@@ -103,6 +102,7 @@ const removeContentFormSchema = z.object({
 type CommunityFormValues = z.infer<typeof communityFormSchema>;
 type RuleFormValues = z.infer<typeof ruleFormSchema>;
 type RemoveContentFormValues = z.infer<typeof removeContentFormSchema>;
+const RULE_DND_MIME = "application/x-lectum-community-rule-id";
 
 const communityTabs = [
   { id: "geral", label: "Geral" },
@@ -915,6 +915,7 @@ const RulesManager = ({ id, rules }: { id: string; rules: AdminCommunityRule[] }
   const [draggedRuleId, setDraggedRuleId] = useState<string | null>(null);
   const [dropTargetRuleId, setDropTargetRuleId] = useState<string | null>(null);
   const [editingRuleId, setEditingRuleId] = useState<string | null>(null);
+  const draggedRuleIdRef = useRef<string | null>(null);
   const createMutation = useAdminCommunityCreateRule(id);
   const updateMutation = useAdminCommunityUpdateRule(id);
   const deleteMutation = useAdminCommunityDeleteRule(id);
@@ -999,12 +1000,15 @@ const RulesManager = ({ id, rules }: { id: string; rules: AdminCommunityRule[] }
     }
   };
   const handleDragStart = (event: DragEvent<HTMLElement>, ruleId: string) => {
+    draggedRuleIdRef.current = ruleId;
     setDraggedRuleId(ruleId);
     event.dataTransfer.effectAllowed = "move";
+    event.dataTransfer.setData(RULE_DND_MIME, ruleId);
     event.dataTransfer.setData("text/plain", ruleId);
   };
-  const handleDragOver = (event: DragEvent<HTMLElement>, ruleId: string) => {
-    if (!draggedRuleId || draggedRuleId === ruleId || updateMutation.isPending) return;
+  const handleDragTarget = (event: DragEvent<HTMLElement>, ruleId: string) => {
+    const sourceRuleId = draggedRuleIdRef.current ?? draggedRuleId;
+    if (!sourceRuleId || sourceRuleId === ruleId || updateMutation.isPending) return;
 
     event.preventDefault();
     event.dataTransfer.dropEffect = "move";
@@ -1017,7 +1021,12 @@ const RulesManager = ({ id, rules }: { id: string; rules: AdminCommunityRule[] }
   };
   const handleDrop = (event: DragEvent<HTMLElement>, targetRuleId: string) => {
     event.preventDefault();
-    const sourceRuleId = event.dataTransfer.getData("text/plain") || draggedRuleId;
+    const sourceRuleId =
+      event.dataTransfer.getData(RULE_DND_MIME) ||
+      event.dataTransfer.getData("text/plain") ||
+      draggedRuleIdRef.current ||
+      draggedRuleId;
+    draggedRuleIdRef.current = null;
     setDraggedRuleId(null);
     setDropTargetRuleId(null);
 
@@ -1025,6 +1034,7 @@ const RulesManager = ({ id, rules }: { id: string; rules: AdminCommunityRule[] }
     void reorderRules(sourceRuleId, targetRuleId);
   };
   const handleDragEnd = () => {
+    draggedRuleIdRef.current = null;
     setDraggedRuleId(null);
     setDropTargetRuleId(null);
   };
@@ -1067,8 +1077,9 @@ const RulesManager = ({ id, rules }: { id: string; rules: AdminCommunityRule[] }
                   draggable={!isEditing && !updateMutation.isPending}
                   key={rule.id}
                   onDragEnd={handleDragEnd}
+                  onDragEnter={(event) => handleDragTarget(event, rule.id)}
                   onDragLeave={(event) => handleDragLeave(event, rule.id)}
-                  onDragOver={(event) => handleDragOver(event, rule.id)}
+                  onDragOver={(event) => handleDragTarget(event, rule.id)}
                   onDragStart={(event) => handleDragStart(event, rule.id)}
                   onDrop={(event) => handleDrop(event, rule.id)}
                 >

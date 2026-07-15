@@ -628,3 +628,14 @@ Regras de cálculo:
 - Builder/Quick Copy nao esta exposto como ferramenta no ambiente; a referencia visual usada foi a captura enviada pelo usuario e o padrao local do Admin.
 - ADR criado: `adrs/0274-regras-comunidade-descritivas-arrastaveis.md`.
 - Validacao executada: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check`, `pnpm --dir backend build` e smoke local `GET http://localhost:3002/comunidades/ansiedade-em-equilibrio?tab=dados`/`GET http://localhost:3000/community/ansiedade-em-equilibrio` retornando 200.
+
+## Ajuste complementar 2026-07-15 - Correcao do arraste das regras
+
+- Pedido do usuario: corrigir o arraste de posicao das regras na aba **Dados** de `/comunidades/[slug]`.
+- O Admin passou a manter a regra de origem do drag tambem em `useRef` e em um MIME proprio no `dataTransfer`, evitando depender apenas da atualizacao assincrona de estado do React antes de `dragenter`/`dragover` liberar o drop.
+- O handler de destino agora e compartilhado por `dragenter` e `dragover`, mantendo `preventDefault` consistente para permitir soltar sobre outro card.
+- O schema do formulario visual de regra foi alinhado ao modelo com um unico campo exibido (`description`); o `title` segue derivado internamente apenas no payload real por compatibilidade com o backend.
+- Nao houve package novo, mock, schema Prisma/migration, endpoint paralelo ou alteracao de dados persistidos.
+- Builder/Quick Copy nao esta exposto como ferramenta no ambiente; a referencia visual usada foi a captura enviada pelo usuario e o padrao local do Admin.
+- ADR atualizado: `adrs/0274-regras-comunidade-descritivas-arrastaveis.md`.
+- Validacao executada: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke local `GET http://localhost:3002/comunidades/depressao?tab=dados` retornando 200.

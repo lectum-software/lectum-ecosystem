@@ -23,6 +23,7 @@ O bloco **Regras da comunidade** no Admin exibia titulo, tag de status, botoes d
 - Nao houve package novo, mock, schema Prisma/migration ou endpoint paralelo.
 - O campo `title` permanece no payload para compatibilidade ate que o contrato backend seja simplificado em uma task propria.
 - HTML Drag and Drop atende o painel desktop atual; uma experiencia touch dedicada pode ser adicionada no futuro se o uso mobile de ordenacao for priorizado.
+- Atualizacao em 2026-07-15: o drag passou a guardar a regra de origem tambem em `useRef` e em um MIME proprio do `dataTransfer`, evitando depender apenas do ciclo assincrono de estado do React entre `dragstart`, `dragenter` e `drop`. O formulario visual continua tendo somente `description`; `title` segue derivado internamente no payload.
 
 ## Validacao
 
