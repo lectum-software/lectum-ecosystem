@@ -245,3 +245,16 @@ Regras de UI obrigatórias:
 - `pnpm --dir admin check`
 - `pnpm --dir admin build`
 - Smoke local `GET http://localhost:3002/comunidades/lista` e `GET http://localhost:3002/psicologos/lista`.
+
+## Correcao complementar: remover anel da busca na lista de comunidades (2026-07-15)
+
+- Pedido do usuario: o anel de foco ainda cortava a lateral esquerda da barra de pesquisa; remover o anel e manter somente a borda azul interna ao selecionar o campo.
+- A busca de `/comunidades/lista` removeu as classes de `focus:ring-*` e manteve `focus:border-primary`, sem alterar layout, dados, endpoint, filtros ou paginacao.
+- O mesmo ajuste foi aplicado em `/psicologos/lista` para manter consistencia visual entre listas Admin.
+- Nao houve alteracao de backend, Prisma/migrations, packages ou contratos de API.
+
+### Validacao complementar
+
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- Smoke local `GET http://localhost:3002/comunidades/lista` e `GET http://localhost:3002/psicologos/lista`.

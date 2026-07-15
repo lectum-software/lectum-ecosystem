@@ -546,7 +546,7 @@ const SearchBox = ({ onSearch, value }: { onSearch: (value: string) => void; val
         className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-subtle"
       />
       <input
-        className="h-full w-full appearance-none rounded-full border border-border bg-surface py-0 pl-10 pr-4 text-sm font-bold text-foreground shadow-control outline-none transition placeholder:text-subtle focus:border-primary focus:ring-2 focus:ring-primary/15 focus:ring-inset"
+        className="h-full w-full appearance-none rounded-full border border-border bg-surface py-0 pl-10 pr-4 text-sm font-bold text-foreground shadow-control outline-none transition placeholder:text-subtle focus:border-primary"
         onChange={(event) => setDraft(event.target.value)}
         placeholder="Nome, e-mail ou CRP..."
         type="search"

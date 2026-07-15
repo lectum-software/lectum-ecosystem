@@ -397,3 +397,16 @@ Frontend esperado:
 - `pnpm --dir admin check`
 - `pnpm --dir admin build`
 - Smoke local `GET http://localhost:3002/psicologos/lista` e `GET http://localhost:3002/comunidades/lista`.
+
+## Correcao complementar: remover anel da busca nas listas Admin (2026-07-15)
+
+- Pedido do usuario: o anel de foco ainda cortava a lateral esquerda da barra de pesquisa; remover o anel e manter somente a borda azul interna ao selecionar o campo.
+- A busca de `/psicologos/lista` removeu as classes de `focus:ring-*` e manteve `focus:border-primary`, sem alterar layout, dados, endpoint, filtros ou paginacao.
+- O mesmo ajuste foi aplicado em `/comunidades/lista` para manter consistencia visual entre listas Admin.
+- Nao houve alteracao de backend, Prisma/migrations, packages ou contratos de API.
+
+### Validacao complementar
+
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- Smoke local `GET http://localhost:3002/psicologos/lista` e `GET http://localhost:3002/comunidades/lista`.
