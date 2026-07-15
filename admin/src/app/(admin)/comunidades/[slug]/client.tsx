@@ -23,7 +23,7 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
-import { type ChangeEvent, type DragEvent, useEffect, useMemo, useRef, useState } from "react";
+import { type ChangeEvent, type PointerEvent, useEffect, useMemo, useRef, useState } from "react";
 import { FormProvider, useForm, useWatch } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -102,7 +102,30 @@ const removeContentFormSchema = z.object({
 type CommunityFormValues = z.infer<typeof communityFormSchema>;
 type RuleFormValues = z.infer<typeof ruleFormSchema>;
 type RemoveContentFormValues = z.infer<typeof removeContentFormSchema>;
-const RULE_DND_MIME = "application/x-lectum-community-rule-id";
+type RuleDragMetric = {
+  bottom: number;
+  height: number;
+  id: string;
+  top: number;
+};
+
+type RuleDragSession = {
+  draggedSlotSize: number;
+  metrics: RuleDragMetric[];
+  pointerId: number;
+  sourceIndex: number;
+  sourceRuleId: string;
+  startClientY: number;
+};
+
+type RuleDragState = {
+  draggedSlotSize: number;
+  offsetY: number;
+  sourceIndex: number;
+  sourceRuleId: string;
+  targetIndex: number;
+};
+
 
 const communityTabs = [
   { id: "geral", label: "Geral" },
@@ -189,6 +212,55 @@ const existingRulePayload = (
   position,
   title: rule.title.trim() || deriveRuleTitle(rule.description),
 });
+
+const isRuleDragBlockedTarget = (target: EventTarget | null) => {
+  if (!(target instanceof Element)) return false;
+
+  return Boolean(
+    target.closest("button, a, input, textarea, select, label, [contenteditable='true']"),
+  );
+};
+
+const isRuleDragHandleTarget = (target: EventTarget | null) =>
+  target instanceof Element && Boolean(target.closest("[data-rule-drag-handle='true']"));
+
+const measureRuleCards = (container: HTMLDivElement | null): RuleDragMetric[] =>
+  Array.from(container?.querySelectorAll<HTMLElement>("[data-rule-card='true']") ?? [])
+    .map((element) => {
+      const rect = element.getBoundingClientRect();
+
+      return {
+        bottom: rect.bottom,
+        height: rect.height,
+        id: element.dataset.ruleId ?? "",
+        top: rect.top,
+      };
+    })
+    .filter((metric) => metric.id);
+
+const resolveRuleSlotSize = (metrics: RuleDragMetric[], sourceIndex: number) => {
+  const sourceMetric = metrics[sourceIndex];
+  if (!sourceMetric) return 0;
+
+  const nextMetric = metrics[sourceIndex + 1];
+  const previousMetric = metrics[sourceIndex - 1];
+  const nextGap = nextMetric ? nextMetric.top - sourceMetric.bottom : null;
+  const previousGap = previousMetric ? sourceMetric.top - previousMetric.bottom : null;
+  const gap = [nextGap, previousGap].find((value) => typeof value === "number" && value > 0) ?? 12;
+
+  return sourceMetric.height + gap;
+};
+
+const resolveRuleTargetIndex = (clientY: number, session: RuleDragSession) => {
+  const metricsWithoutDragged = session.metrics.filter(
+    (metric) => metric.id !== session.sourceRuleId,
+  );
+  const beforeMetricIndex = metricsWithoutDragged.findIndex(
+    (metric) => clientY < metric.top + metric.height / 2,
+  );
+
+  return beforeMetricIndex >= 0 ? beforeMetricIndex : metricsWithoutDragged.length;
+};
 
 const StatusBadge = ({
   children,
@@ -912,10 +984,12 @@ const RuleCreateModal = ({
 
 const RulesManager = ({ id, rules }: { id: string; rules: AdminCommunityRule[] }) => {
   const [createModalOpen, setCreateModalOpen] = useState(false);
-  const [draggedRuleId, setDraggedRuleId] = useState<string | null>(null);
-  const [dropTargetRuleId, setDropTargetRuleId] = useState<string | null>(null);
+  const [dragState, setDragState] = useState<RuleDragState | null>(null);
   const [editingRuleId, setEditingRuleId] = useState<string | null>(null);
-  const draggedRuleIdRef = useRef<string | null>(null);
+  const [optimisticRuleOrderIds, setOptimisticRuleOrderIds] = useState<string[] | null>(null);
+  const dragSessionRef = useRef<RuleDragSession | null>(null);
+  const dragStateRef = useRef<RuleDragState | null>(null);
+  const rulesListRef = useRef<HTMLDivElement | null>(null);
   const createMutation = useAdminCommunityCreateRule(id);
   const updateMutation = useAdminCommunityUpdateRule(id);
   const deleteMutation = useAdminCommunityDeleteRule(id);
@@ -929,8 +1003,25 @@ const RulesManager = ({ id, rules }: { id: string; rules: AdminCommunityRule[] }
       ),
     [rules],
   );
+  const orderedRules = useMemo(() => {
+    if (!optimisticRuleOrderIds) return sortedRules;
+
+    const rulesById = new Map(sortedRules.map((rule) => [rule.id, rule]));
+    const ordered = optimisticRuleOrderIds
+      .map((ruleId) => rulesById.get(ruleId))
+      .filter((rule): rule is AdminCommunityRule => Boolean(rule));
+    const orderedIds = new Set(ordered.map((rule) => rule.id));
+    const missingRules = sortedRules.filter((rule) => !orderedIds.has(rule.id));
+
+    return [...ordered, ...missingRules];
+  }, [optimisticRuleOrderIds, sortedRules]);
   const nextPosition =
     sortedRules.length > 0 ? Math.max(...sortedRules.map((rule) => rule.position)) + 1 : 0;
+
+  const updateRuleDragState = (nextState: RuleDragState | null) => {
+    dragStateRef.current = nextState;
+    setDragState(nextState);
+  };
 
   const updateRule = async (rule: AdminCommunityRule, input: AdminCommunityRuleInput) => {
     try {
@@ -963,27 +1054,27 @@ const RulesManager = ({ id, rules }: { id: string; rules: AdminCommunityRule[] }
       toast.error(resolveApiError(error));
     }
   };
-  const reorderRules = async (sourceRuleId: string, targetRuleId: string) => {
-    if (sourceRuleId === targetRuleId) return;
-
-    const currentOrder = [...sortedRules];
+  const reorderRules = async (sourceRuleId: string, targetIndex: number) => {
+    const currentOrder = [...orderedRules];
     const sourceIndex = currentOrder.findIndex((rule) => rule.id === sourceRuleId);
     if (sourceIndex < 0) return;
 
     const [draggedRule] = currentOrder.splice(sourceIndex, 1);
     if (!draggedRule) return;
 
-    const targetIndex = currentOrder.findIndex((rule) => rule.id === targetRuleId);
-    if (targetIndex < 0) return;
+    const boundedTargetIndex = Math.max(0, Math.min(targetIndex, currentOrder.length));
+    currentOrder.splice(boundedTargetIndex, 0, draggedRule);
 
-    currentOrder.splice(targetIndex, 0, draggedRule);
+    if (currentOrder.every((rule, index) => rule.id === orderedRules[index]?.id)) return;
 
-    const orderedPositions = sortedRules.map((rule) => rule.position);
+    const orderedPositions = sortedRules.map((_, index) => index);
     const updates = currentOrder
       .map((rule, index) => ({ position: orderedPositions[index] ?? index, rule }))
       .filter(({ position, rule }) => rule.position !== position);
 
     if (updates.length === 0) return;
+
+    setOptimisticRuleOrderIds(currentOrder.map((rule) => rule.id));
 
     try {
       await Promise.all(
@@ -996,47 +1087,113 @@ const RulesManager = ({ id, rules }: { id: string; rules: AdminCommunityRule[] }
       );
       toast.success("Ordem das regras atualizada.");
     } catch (error) {
+      setOptimisticRuleOrderIds(null);
       toast.error(resolveApiError(error));
     }
   };
-  const handleDragStart = (event: DragEvent<HTMLElement>, ruleId: string) => {
-    draggedRuleIdRef.current = ruleId;
-    setDraggedRuleId(ruleId);
-    event.dataTransfer.effectAllowed = "move";
-    event.dataTransfer.setData(RULE_DND_MIME, ruleId);
-    event.dataTransfer.setData("text/plain", ruleId);
-  };
-  const handleDragTarget = (event: DragEvent<HTMLElement>, ruleId: string) => {
-    const sourceRuleId = draggedRuleIdRef.current ?? draggedRuleId;
-    if (!sourceRuleId || sourceRuleId === ruleId || updateMutation.isPending) return;
+  const handlePointerDown = (
+    event: PointerEvent<HTMLElement>,
+    ruleId: string,
+    sourceIndex: number,
+  ) => {
+    if (editingRuleId || updateMutation.isPending) return;
+    if (event.pointerType === "mouse" && event.button !== 0) return;
+    if (isRuleDragBlockedTarget(event.target)) return;
+    if (event.pointerType !== "mouse" && !isRuleDragHandleTarget(event.target)) return;
 
-    event.preventDefault();
-    event.dataTransfer.dropEffect = "move";
-    setDropTargetRuleId(ruleId);
-  };
-  const handleDragLeave = (event: DragEvent<HTMLElement>, ruleId: string) => {
-    const relatedTarget = event.relatedTarget;
-    if (relatedTarget instanceof Node && event.currentTarget.contains(relatedTarget)) return;
-    if (dropTargetRuleId === ruleId) setDropTargetRuleId(null);
-  };
-  const handleDrop = (event: DragEvent<HTMLElement>, targetRuleId: string) => {
-    event.preventDefault();
-    const sourceRuleId =
-      event.dataTransfer.getData(RULE_DND_MIME) ||
-      event.dataTransfer.getData("text/plain") ||
-      draggedRuleIdRef.current ||
-      draggedRuleId;
-    draggedRuleIdRef.current = null;
-    setDraggedRuleId(null);
-    setDropTargetRuleId(null);
+    const metrics = measureRuleCards(rulesListRef.current);
+    const metricSourceIndex = metrics.findIndex((metric) => metric.id === ruleId);
+    const resolvedSourceIndex = metricSourceIndex >= 0 ? metricSourceIndex : sourceIndex;
+    const draggedSlotSize = resolveRuleSlotSize(metrics, resolvedSourceIndex);
 
-    if (!sourceRuleId || updateMutation.isPending) return;
-    void reorderRules(sourceRuleId, targetRuleId);
+    if (metrics.length < 2 || draggedSlotSize <= 0) return;
+
+    const nextState = {
+      draggedSlotSize,
+      offsetY: 0,
+      sourceIndex: resolvedSourceIndex,
+      sourceRuleId: ruleId,
+      targetIndex: resolvedSourceIndex,
+    };
+
+    dragSessionRef.current = {
+      draggedSlotSize,
+      metrics,
+      pointerId: event.pointerId,
+      sourceIndex: resolvedSourceIndex,
+      sourceRuleId: ruleId,
+      startClientY: event.clientY,
+    };
+    updateRuleDragState(nextState);
+    event.currentTarget.setPointerCapture(event.pointerId);
+    event.preventDefault();
   };
-  const handleDragEnd = () => {
-    draggedRuleIdRef.current = null;
-    setDraggedRuleId(null);
-    setDropTargetRuleId(null);
+  const handlePointerMove = (event: PointerEvent<HTMLElement>, ruleId: string) => {
+    const session = dragSessionRef.current;
+    if (!session || session.pointerId !== event.pointerId || session.sourceRuleId !== ruleId)
+      return;
+
+    const nextState = {
+      draggedSlotSize: session.draggedSlotSize,
+      offsetY: event.clientY - session.startClientY,
+      sourceIndex: session.sourceIndex,
+      sourceRuleId: session.sourceRuleId,
+      targetIndex: resolveRuleTargetIndex(event.clientY, session),
+    };
+
+    updateRuleDragState(nextState);
+    event.preventDefault();
+  };
+  const handlePointerEnd = (event: PointerEvent<HTMLElement>, ruleId: string) => {
+    const session = dragSessionRef.current;
+    if (!session || session.pointerId !== event.pointerId || session.sourceRuleId !== ruleId)
+      return;
+
+    const targetIndex = dragStateRef.current?.targetIndex ?? session.sourceIndex;
+
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+
+    dragSessionRef.current = null;
+    updateRuleDragState(null);
+    event.preventDefault();
+
+    if (targetIndex !== session.sourceIndex && !updateMutation.isPending) {
+      void reorderRules(session.sourceRuleId, targetIndex);
+    }
+  };
+  const cancelPointerDrag = (event: PointerEvent<HTMLElement>, ruleId: string) => {
+    const session = dragSessionRef.current;
+    if (!session || session.pointerId !== event.pointerId || session.sourceRuleId !== ruleId)
+      return;
+
+    dragSessionRef.current = null;
+    updateRuleDragState(null);
+  };
+  const resolveRuleTransform = (ruleId: string, index: number) => {
+    if (!dragState) return undefined;
+    if (ruleId === dragState.sourceRuleId) {
+      return `translate3d(0, ${dragState.offsetY}px, 0)`;
+    }
+
+    if (
+      dragState.targetIndex > dragState.sourceIndex &&
+      index > dragState.sourceIndex &&
+      index <= dragState.targetIndex
+    ) {
+      return `translate3d(0, -${dragState.draggedSlotSize}px, 0)`;
+    }
+
+    if (
+      dragState.targetIndex < dragState.sourceIndex &&
+      index >= dragState.targetIndex &&
+      index < dragState.sourceIndex
+    ) {
+      return `translate3d(0, ${dragState.draggedSlotSize}px, 0)`;
+    }
+
+    return undefined;
   };
 
   return (
@@ -1057,31 +1214,37 @@ const RulesManager = ({ id, rules }: { id: string; rules: AdminCommunityRule[] }
           {formatCountLabel(sortedRules.length, "regra exibida", "regras exibidas")} na comunidade.
         </p>
 
-        <div className="mt-5 space-y-3">
-          {sortedRules.length === 0 ? (
+        <div className="mt-5 space-y-3" ref={rulesListRef}>
+          {orderedRules.length === 0 ? (
             <p className="rounded-2xl bg-surface-muted p-4 text-sm text-muted">
               Nenhuma regra cadastrada para esta comunidade.
             </p>
           ) : (
-            sortedRules.map((rule, index) => {
+            orderedRules.map((rule, index) => {
               const isEditing = editingRuleId === rule.id;
-              const isDropTarget = dropTargetRuleId === rule.id && draggedRuleId !== rule.id;
+              const isDragging = dragState?.sourceRuleId === rule.id;
+              const transform = resolveRuleTransform(rule.id, index);
 
               return (
                 <article
+                  aria-grabbed={isDragging}
                   className={cn(
-                    "rounded-2xl border border-border bg-surface p-4 transition",
-                    !isEditing && "cursor-grab active:cursor-grabbing",
-                    isDropTarget && "border-primary bg-primary-soft/40",
+                    "rounded-2xl border border-border bg-surface p-4 will-change-transform",
+                    isDragging
+                      ? "relative z-20 cursor-grabbing select-none border-primary bg-primary-soft/50 shadow-admin-soft ring-2 ring-primary/20"
+                      : "transition-[transform,border-color,background-color,box-shadow] duration-200 ease-out",
+                    !isEditing && !dragState && "cursor-grab",
+                    !isEditing && dragState && !isDragging && "pointer-events-none",
                   )}
-                  draggable={!isEditing && !updateMutation.isPending}
+                  data-rule-card="true"
+                  data-rule-id={rule.id}
                   key={rule.id}
-                  onDragEnd={handleDragEnd}
-                  onDragEnter={(event) => handleDragTarget(event, rule.id)}
-                  onDragLeave={(event) => handleDragLeave(event, rule.id)}
-                  onDragOver={(event) => handleDragTarget(event, rule.id)}
-                  onDragStart={(event) => handleDragStart(event, rule.id)}
-                  onDrop={(event) => handleDrop(event, rule.id)}
+                  onLostPointerCapture={(event) => cancelPointerDrag(event, rule.id)}
+                  onPointerCancel={(event) => cancelPointerDrag(event, rule.id)}
+                  onPointerDown={(event) => handlePointerDown(event, rule.id, index)}
+                  onPointerMove={(event) => handlePointerMove(event, rule.id)}
+                  onPointerUp={(event) => handlePointerEnd(event, rule.id)}
+                  style={transform ? { transform } : undefined}
                 >
                   {isEditing ? (
                     <RuleEditForm
@@ -1096,7 +1259,11 @@ const RulesManager = ({ id, rules }: { id: string; rules: AdminCommunityRule[] }
                         <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-primary-soft text-xs font-black text-primary">
                           {index + 1}
                         </span>
-                        <GripVertical aria-hidden className="mt-1.5 h-5 w-5 shrink-0 text-muted" />
+                        <GripVertical
+                          aria-hidden
+                          className="mt-1.5 h-5 w-5 shrink-0 touch-none text-muted"
+                          data-rule-drag-handle="true"
+                        />
                         <p className="min-w-0 text-sm leading-6 text-muted">{rule.description}</p>
                       </div>
                       <div className="flex flex-wrap gap-2 xl:justify-end">

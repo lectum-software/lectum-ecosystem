@@ -639,3 +639,13 @@ Regras de cálculo:
 - Builder/Quick Copy nao esta exposto como ferramenta no ambiente; a referencia visual usada foi a captura enviada pelo usuario e o padrao local do Admin.
 - ADR atualizado: `adrs/0274-regras-comunidade-descritivas-arrastaveis.md`.
 - Validacao executada: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke local `GET http://localhost:3002/comunidades/depressao?tab=dados` retornando 200.
+
+## Ajuste complementar 2026-07-15 - Arraste animado das regras
+
+- Pedido do usuario: o arraste das regras continuava sem funcionar e deveria exibir animacao dos demais blocos se movendo para cima ou para baixo conforme o posicionamento do bloco arrastado.
+- O Admin substituiu o HTML Drag and Drop nativo por Pointer Events no card da regra, mantendo inicio por mouse no card e por toque no icone de arraste para nao bloquear scroll mobile.
+- Durante o arraste, o card ativo acompanha o ponteiro com `transform` e `z-index`, enquanto os cards intermediarios recebem `translateY` com transicao para mostrar a reorganizacao antes de soltar.
+- Ao soltar, a ordem final e aplicada de forma otimista na UI e persistida pelos endpoints reais existentes de atualizacao de regra, normalizando `position` para a sequencia visual atual.
+- Nao houve package novo, mock, schema Prisma/migration, endpoint paralelo ou alteracao de contrato.
+- ADR atualizado: `adrs/0274-regras-comunidade-descritivas-arrastaveis.md`.
+- Validacao executada: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke local `GET http://localhost:3002/comunidades/tdah?tab=dados` retornando 200.
