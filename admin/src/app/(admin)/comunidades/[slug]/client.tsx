@@ -1816,7 +1816,14 @@ const ContentAuthorIdentity = ({
           <span className="truncate text-sm font-black text-foreground">{item.author.name}</span>
           {item.author.verified ? <VerifiedBadgeIcon aria-label="Perfil verificado" /> : null}
         </div>
-        <p className="text-xs font-bold text-muted">{roleLabel}</p>
+        <div className="mt-0.5 flex flex-wrap items-center gap-1.5 text-xs font-bold text-muted">
+          <span>{roleLabel}</span>
+          {item.author.anonymous ? (
+            <span className="rounded-full bg-primary-soft px-2 py-0.5 font-black text-primary">
+              Post feito anonimamente
+            </span>
+          ) : null}
+        </div>
       </div>
     </div>
   );

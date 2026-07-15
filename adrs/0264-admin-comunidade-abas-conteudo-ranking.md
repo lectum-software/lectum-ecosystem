@@ -141,3 +141,13 @@ Validação desta atualização: `pnpm --dir backend check`, `pnpm --dir admin check
 
 
 Validação desta atualização: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm --dir frontend check`, `pnpm check` e smoke local `GET http://localhost:3002/comunidades/tdah?tab=conteudo` retornando 200.
+
+## Atualização 2026-07-15: identidade administrativa em post anônimo
+
+A aba **Conteúdo** do Admin passa a tratar anonimato como uma propriedade explícita do autor no contrato administrativo (`author.anonymous`), sem mascarar o nome nem trocar o papel real do autor. Para posts anônimos de pacientes, o backend privado retorna o nome real do paciente ao Admin e mantém `author.role` como `paciente`; a UI sinaliza o contexto público com o marcador `Post feito anonimamente` abaixo do nome.
+
+A decisão separa privacidade pública de necessidade operacional administrativa: pacientes continuam anônimos no site público, enquanto administradores conseguem identificar o autor real para moderação e auditoria. O snapshot usado na remoção administrativa também registra `author_anonymous` para preservar o estado de anonimato do conteúdo removido.
+
+Consequência: não há novo endpoint, mock, schema Prisma ou alteração de persistência; a mudança fica restrita ao DTO derivado de dados reais e à apresentação no Admin.
+
+Validação desta atualização: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke local `GET http://localhost:3002/comunidades/tdah?tab=conteudo` retornando 200.

@@ -216,3 +216,15 @@ Regras:
 - Validação executada para este ajuste: `pnpm --dir backend check`, `pnpm --dir admin check`, `pnpm --dir backend build`, `pnpm --dir admin build`, `pnpm check` e smoke local `GET http://localhost:3002/comunidades/tdah?tab=conteudo` retornando 200.
 
 - Validação executada: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm --dir frontend check`, `pnpm check` e smoke local `GET http://localhost:3002/comunidades/tdah?tab=conteudo` retornando 200.
+
+## Ajuste complementar 2026-07-15 - Nome real em post anônimo no Admin
+
+- Pedido do usuário: quando um item da aba **Conteúdo** for um post anônimo, o painel administrativo deve exibir o nome real do paciente e informar que o post foi feito anonimamente.
+- O contrato de conteúdo administrativo passou a expor `author.anonymous` para diferenciar anonimato público de identidade administrativa, sem substituir `author.role` por `anonymous`.
+- Posts anônimos de pacientes agora retornam `author.name` com o nome real do paciente para o Admin; o card mostra o papel `Paciente` e o marcador `Post feito anonimamente` abaixo do nome.
+- Comentários/respostas e posts de psicólogos retornam `author.anonymous=false`; a regra de anonimato continua restrita ao post anônimo de paciente.
+- A remoção administrativa auditada agora preserva `author_anonymous` no snapshot seguro usado pela rotina de remoção.
+- Não houve package novo, mock, schema Prisma/migration, endpoint paralelo ou alteração de persistência; apenas contrato derivado do endpoint real e apresentação no Admin.
+- Builder/Quick Copy não está exposto como ferramenta callable no ambiente; a referência visual usada foi a captura enviada pelo usuário e o padrão local do Admin/site público.
+- ADR atualizado: `adrs/0264-admin-comunidade-abas-conteudo-ranking.md`.
+- Validação executada: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke local `GET http://localhost:3002/comunidades/tdah?tab=conteudo` retornando 200.

@@ -160,6 +160,7 @@ export type AdminCommunityDetailDTO = {
 
 export type AdminCommunityContentItemDTO = {
   author: {
+    anonymous: boolean;
     avatar: string | null;
     gender: string | null;
     id: string;

@@ -352,8 +352,7 @@ const contentKindFor = (
   return verified ? "verified_psychologist_reply" : "unverified_psychologist_reply";
 };
 
-const contentAuthorName = (author: AdminCommunityContentAuthor, anonymous = false) => {
-  if (anonymous && author.role !== "psicologo") return "Paciente anônimo";
+const contentAuthorName = (author: AdminCommunityContentAuthor) => {
   if (author.role !== "psicologo") return author.name;
 
   return buildProfessionalFullDisplayName({
@@ -402,14 +401,16 @@ const mapPostContent = (
   post: AdminCommunityContentPostRecord,
 ): AdminCommunityContentItemDTO => {
   const contentKind = contentKindFor("post", post.author);
+  const anonymous = post.anonymous && post.author.role !== "psicologo";
 
   return {
     author: {
+      anonymous,
       avatar: post.author.avatar,
       gender: contentAuthorGender(post.author),
       id: post.author.id,
-      name: contentAuthorName(post.author, post.anonymous),
-      role: post.anonymous ? "anonymous" : post.author.role,
+      name: contentAuthorName(post.author),
+      role: post.author.role,
       verified: isContentAuthorVerified(post.author),
     },
     content_id: post.id,
@@ -457,6 +458,7 @@ const mapReplyContent = (
 
   return {
     author: {
+      anonymous: false,
       avatar: reply.author.avatar,
       gender: contentAuthorGender(reply.author),
       id: reply.author.id,
@@ -505,6 +507,7 @@ const contentMatchesSearch = (item: AdminCommunityContentItemDTO, search: string
 };
 
 const contentSafeBefore = (item: AdminCommunityContentItemDTO) => ({
+  author_anonymous: item.author.anonymous,
   author_role: item.author.role,
   content_id: item.content_id,
   content_type: item.type,

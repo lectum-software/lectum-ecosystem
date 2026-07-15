@@ -297,6 +297,7 @@ export type AdminCommunityContentQuery = AdminCommunityPaginationQuery & {
 
 export type AdminCommunityContentItem = {
   author: {
+    anonymous: boolean;
     avatar: string | null;
     gender: string | null;
     id: string;
