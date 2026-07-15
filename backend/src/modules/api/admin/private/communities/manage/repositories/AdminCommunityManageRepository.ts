@@ -117,6 +117,7 @@ const adminContentAuthorSelect = {
     select: {
       cfp_verified_at: true,
       crp_status: true,
+      gender: true,
       professional_first_name: true,
       professional_last_name: true,
       subscriptions: {

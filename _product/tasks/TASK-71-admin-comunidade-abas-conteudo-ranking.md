@@ -203,3 +203,16 @@ Regras:
 - Builder/Quick Copy nÃ£o estÃ¡ exposto como ferramenta callable no ambiente; a referÃªncia visual usada foi a captura enviada pelo usuÃ¡rio e o padrÃ£o local do Admin/site pÃºblico.
 - ADR atualizado: `adrs/0264-admin-comunidade-abas-conteudo-ranking.md`.
 - ValidaÃ§Ã£o executada: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke local `GET http://localhost:3002/comunidades/tdah?tab=conteudo` retornando 200.
+
+## Ajuste complementar 2026-07-15 - Identidade do autor acima da mídia e papel por gênero
+
+- Pedido do usuário: na aba **Conteúdo**, posicionar a identificação do autor acima do vídeo e do texto, com foto de perfil, nome, selo azul quando houver e o papel abaixo do nome; em seguida, substituir `Psicólogo/Psicóloga` por `Psicólogo` ou `Psicóloga` conforme o gênero cadastrado do psicólogo.
+- A UI Admin passou a renderizar um bloco de autoria antes do grid de mídia/texto, usando `next/image` para avatar, fallback de iniciais, nome truncável, selo visual azul de verificado e linha de papel abaixo.
+- O contrato de conteúdo administrativo passou a expor `author.gender` para autores psicólogos, derivado de `psychologist_profile.gender`; pacientes e autores anônimos continuam com `gender=null`.
+- O rótulo do papel usa `Psicóloga` quando `gender="feminino"` e `Psicólogo` nos demais casos de psicólogo; pacientes continuam como `Paciente`.
+- Não houve package novo, mock, schema Prisma/migration, endpoint paralelo ou alteração de persistência; apenas select/DTO do endpoint real e apresentação no Admin.
+- Builder/Quick Copy não está exposto como ferramenta callable no ambiente; a referência visual usada foi a captura enviada pelo usuário e o padrão local do Admin/site público.
+- ADR atualizado: `adrs/0264-admin-comunidade-abas-conteudo-ranking.md`.
+- Validação executada para este ajuste: `pnpm --dir backend check`, `pnpm --dir admin check`, `pnpm --dir backend build`, `pnpm --dir admin build`, `pnpm check` e smoke local `GET http://localhost:3002/comunidades/tdah?tab=conteudo` retornando 200.
+
+- Validação executada: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm --dir frontend check`, `pnpm check` e smoke local `GET http://localhost:3002/comunidades/tdah?tab=conteudo` retornando 200.

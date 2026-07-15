@@ -128,3 +128,16 @@ foi reproduzido localmente no card administrativo, mantendo equivalÃªncia visual
 
 ConsequÃªncia: o Admin fica visualmente alinhado Ã  experiÃªncia pÃºblica da Lectum e evita duplicar texto de status na
 linha de autor; a regra continua derivada de `author.verified`.
+
+## Atualização 2026-07-15: identidade de autor antes da mídia e papel por gênero
+
+O card administrativo da aba **Conteúdo** passa a apresentar a identidade do autor como bloco próprio antes do conteúdo publicado. O bloco reúne avatar, nome, selo azul de verificado quando aplicável e o papel do autor em uma segunda linha, antes do grid que contém mídia e texto.
+
+Para psicólogos, o backend agora inclui `author.gender` no contrato de conteúdo administrativo, derivado de `psychologist_profile.gender` no mesmo select real usado para nome profissional e verificação. O Admin usa esse campo para exibir `Psicóloga` quando o gênero cadastrado é `feminino` e `Psicólogo` nos demais casos de autor psicólogo. Pacientes e autores anônimos continuam sem gênero exposto nesse contrato e exibem `Paciente`.
+
+Consequência: a autoria fica visualmente mais próxima do padrão do feed público, evita repetir o papel em parênteses e remove o rótulo ambíguo `Psicólogo/Psicóloga`, sem inferir gênero por nome, sem alterar schema Prisma e sem criar endpoint paralelo.
+
+Validação desta atualização: `pnpm --dir backend check`, `pnpm --dir admin check`, `pnpm --dir backend build`, `pnpm --dir admin build`, `pnpm check` e smoke local `GET http://localhost:3002/comunidades/tdah?tab=conteudo` retornando 200.
+
+
+Validação desta atualização: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm --dir frontend check`, `pnpm check` e smoke local `GET http://localhost:3002/comunidades/tdah?tab=conteudo` retornando 200.

@@ -1753,18 +1753,16 @@ const ContentItemBody = ({ item }: { item: AdminCommunityContentItem }) => {
 
   if (item.type === "post") {
     return (
-      <>
-        <h3 className="mt-3 text-base font-black text-foreground">
-          {item.title || "Post sem título"}
-        </h3>
+      <div className="min-w-0">
+        <h3 className="text-base font-black text-foreground">{item.title || "Post sem título"}</h3>
         <p className="mt-2 text-sm leading-6 text-muted">{hasText ? item.excerpt : "Sem texto."}</p>
-      </>
+      </div>
     );
   }
 
   if (!hasText) return null;
 
-  return <p className="mt-3 text-sm leading-6 text-muted">{item.excerpt}</p>;
+  return <p className="text-sm leading-6 text-muted">{item.excerpt}</p>;
 };
 
 const VerifiedBadgeIcon = ({ className, ...props }: SVGProps<SVGSVGElement>) => (
@@ -1783,26 +1781,63 @@ const VerifiedBadgeIcon = ({ className, ...props }: SVGProps<SVGSVGElement>) => 
   </svg>
 );
 
-const ContentAuthorLine = ({ item }: { item: AdminCommunityContentItem }) => (
-  <div className="mt-2 inline-flex flex-wrap items-center gap-1.5 text-xs font-bold text-muted">
-    <span>{item.author.name}</span>
-    {item.author.verified ? <VerifiedBadgeIcon aria-label="Perfil verificado" /> : null}
-  </div>
-);
+const psychologistRoleLabel = (gender?: string | null) =>
+  gender?.trim().toLowerCase() === "feminino" ? "Psicóloga" : "Psicólogo";
+
+const ContentAuthorIdentity = ({
+  className,
+  item,
+}: {
+  className?: string;
+  item: AdminCommunityContentItem;
+}) => {
+  const avatarSrc = renderableImageSrc(item.author.avatar);
+  const roleLabel =
+    item.author.role === "psicologo" ? psychologistRoleLabel(item.author.gender) : "Paciente";
+
+  return (
+    <div className={cn("flex min-w-0 items-center gap-3", className)}>
+      <div className="relative grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-full border border-border bg-primary-soft text-xs font-black text-primary">
+        {avatarSrc ? (
+          <Image
+            alt={`Foto de perfil de ${item.author.name}`}
+            className="object-cover"
+            fill
+            sizes="40px"
+            src={avatarSrc}
+            unoptimized={isAdminPublicMediaUrl(item.author.avatar)}
+          />
+        ) : (
+          initials(item.author.name)
+        )}
+      </div>
+      <div className="min-w-0">
+        <div className="flex min-w-0 items-center gap-1.5">
+          <span className="truncate text-sm font-black text-foreground">{item.author.name}</span>
+          {item.author.verified ? <VerifiedBadgeIcon aria-label="Perfil verificado" /> : null}
+        </div>
+        <p className="text-xs font-bold text-muted">{roleLabel}</p>
+      </div>
+    </div>
+  );
+};
 
 const ContentItemMain = ({ item }: { item: AdminCommunityContentItem }) => {
-  const mediaTextGridClass = cn("grid min-w-0 gap-3", item.media && "sm:grid-cols-[112px_1fr]");
+  const mediaTextGridClass = cn(
+    "mt-3 grid min-w-0 gap-3",
+    item.media && "sm:grid-cols-[112px_1fr]",
+  );
 
   if (item.type === "comment") {
     return (
       <div className="min-w-0">
         <ContentItemHeader item={item} />
         <ContentOriginPreview item={item} />
-        <div className={cn("mt-3", mediaTextGridClass)}>
+        <ContentAuthorIdentity className="mt-3" item={item} />
+        <div className={mediaTextGridClass}>
           <ContentMediaThumbnail item={item} />
           <div className="min-w-0">
             <ContentItemBody item={item} />
-            <ContentAuthorLine item={item} />
           </div>
         </div>
       </div>
@@ -1810,12 +1845,12 @@ const ContentItemMain = ({ item }: { item: AdminCommunityContentItem }) => {
   }
 
   return (
-    <div className={cn("grid min-w-0 gap-3", item.media && "sm:grid-cols-[112px_1fr]")}>
-      <ContentMediaThumbnail item={item} />
-      <div className="min-w-0">
-        <ContentItemHeader item={item} />
+    <div className="min-w-0">
+      <ContentItemHeader item={item} />
+      <ContentAuthorIdentity className="mt-3" item={item} />
+      <div className={mediaTextGridClass}>
+        <ContentMediaThumbnail item={item} />
         <ContentItemBody item={item} />
-        <ContentAuthorLine item={item} />
       </div>
     </div>
   );

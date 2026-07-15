@@ -363,6 +363,9 @@ const contentAuthorName = (author: AdminCommunityContentAuthor, anonymous = fals
   });
 };
 
+const contentAuthorGender = (author: AdminCommunityContentAuthor) =>
+  author.role === "psicologo" ? (author.psychologist_profile?.gender ?? null) : null;
+
 const contentMedia = (
   mediaUrl?: string | null,
   mediaType?: string | null,
@@ -403,6 +406,7 @@ const mapPostContent = (
   return {
     author: {
       avatar: post.author.avatar,
+      gender: contentAuthorGender(post.author),
       id: post.author.id,
       name: contentAuthorName(post.author, post.anonymous),
       role: post.anonymous ? "anonymous" : post.author.role,
@@ -454,6 +458,7 @@ const mapReplyContent = (
   return {
     author: {
       avatar: reply.author.avatar,
+      gender: contentAuthorGender(reply.author),
       id: reply.author.id,
       name: contentAuthorName(reply.author),
       role: reply.author.role,
