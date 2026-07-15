@@ -384,3 +384,16 @@ Frontend esperado:
 - Browser local/headless/CDP com admin temporario real removido ao final:
   - desktop `1440x1000`: **Perfil** e **Registro profissional** ficaram em linhas separadas, com mesma largura/coluna de **Plano** e `document.documentElement.scrollWidth=1440`;
   - mobile base `390x844`: **Perfil** e **Registro profissional** ficaram em linhas separadas, com mesma largura/coluna de **Plano** e `document.documentElement.scrollWidth=390`.
+
+## Correcao complementar: foco da busca nas listas Admin (2026-07-15)
+
+- Pedido do usuario: ao selecionar a barra de pesquisa em `/psicologos/lista`, a borda esquerda do campo ficava visualmente cortada.
+- A busca da lista passou a usar `focus:ring-inset`, mantendo o anel de foco dentro do proprio controle arredondado e evitando corte lateral pelo layout.
+- O mesmo ajuste foi aplicado na busca de `/comunidades/lista`, que reutiliza o mesmo padrao visual.
+- Nao houve alteracao de backend, Prisma/migrations, packages, dados, filtros, paginacao ou contratos de API.
+
+### Validacao complementar
+
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- Smoke local `GET http://localhost:3002/psicologos/lista` e `GET http://localhost:3002/comunidades/lista`.

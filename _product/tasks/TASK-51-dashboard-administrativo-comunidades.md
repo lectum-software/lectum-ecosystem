@@ -232,3 +232,16 @@ Regras de UI obrigatórias:
 - Smoke service real: `listCommunities({ page: 1, limit: 2, sort: "name" })` retornou `status=200`, `count=7`, `items=2`.
 - Smoke local: `GET http://localhost:3002/comunidades/lista` retornou `200`.
 - Smoke de protecao: `GET http://localhost:3001/api/admin/private/communities?page=1&limit=2` sem token retornou `401`.
+
+## Correcao complementar: foco da busca na lista de comunidades (2026-07-15)
+
+- Pedido do usuario: ao selecionar a barra de pesquisa nas listas Admin, a borda esquerda do campo ficava visualmente cortada.
+- A busca de `/comunidades/lista` passou a usar `focus:ring-inset`, mantendo o anel de foco dentro do controle arredondado e evitando corte lateral.
+- O mesmo ajuste foi aplicado na busca de `/psicologos/lista`, que usa o mesmo padrao visual.
+- Nao houve alteracao de backend, Prisma/migrations, packages, dados, filtros, paginacao ou contratos de API.
+
+### Validacao complementar
+
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- Smoke local `GET http://localhost:3002/comunidades/lista` e `GET http://localhost:3002/psicologos/lista`.
