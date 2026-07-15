@@ -26,6 +26,12 @@ const isNavPathActive = (pathname: string, href: string) => {
   return pathname === hrefPath || pathname.startsWith(`${hrefPath}/`);
 };
 
+const isPremiumPilotPath = (pathname: string) =>
+  pathname === "/psicologos" ||
+  pathname.startsWith("/psicologos/") ||
+  pathname === "/comunidades" ||
+  pathname.startsWith("/comunidades/");
+
 const SidebarContent = ({
   collapsed,
   onNavigate,
@@ -257,7 +263,7 @@ export const AdminShell = ({ children }: PropsWithChildren) => {
   const [collapsed, setCollapsed] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const pathname = usePathname();
-  const premiumPilot = pathname === "/psicologos" || pathname.startsWith("/psicologos/");
+  const premiumPilot = isPremiumPilotPath(pathname);
 
   const toggleCollapsed = () => {
     setCollapsed((current) => {
