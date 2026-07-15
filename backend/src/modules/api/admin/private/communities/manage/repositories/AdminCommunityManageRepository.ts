@@ -52,6 +52,7 @@ const adminCommunityListSelect = {
       deleted: false,
     },
     select: {
+      createdAt: true,
       id: true,
     },
   },
@@ -66,8 +67,10 @@ const adminCommunityListSelect = {
       reports: {
         where: {
           deleted: false,
+          status: "pendente",
         },
         select: {
+          createdAt: true,
           id: true,
         },
       },
@@ -81,8 +84,10 @@ const adminCommunityListSelect = {
           reports: {
             where: {
               deleted: false,
+              status: "pendente",
             },
             select: {
+              createdAt: true,
               id: true,
             },
           },

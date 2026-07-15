@@ -4,16 +4,16 @@ import {
   AlertTriangle,
   ChevronLeft,
   ChevronRight,
+  ExternalLink,
   Eye,
-  FileText,
+  Filter,
   Flag,
   MessageCircleMore,
-  MessageSquareText,
   RefreshCw,
   Search,
-  UsersRound,
 } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { type ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import { useAdminCommunitiesList } from "@/api/callers/communities";
@@ -27,20 +27,16 @@ import { cn } from "@/lib/utils";
 
 const SORT_OPTIONS: Array<{ id: AdminCommunitiesListSort; label: string }> = [
   { id: "name", label: "Nome" },
-  { id: "members", label: "Mais membros" },
+  { id: "members", label: "Mais seguidores" },
   { id: "posts", label: "Mais posts" },
   { id: "activity", label: "Mais atividade" },
   { id: "recent", label: "Cadastro recente" },
 ];
 
 const numberFormatter = new Intl.NumberFormat("pt-BR");
-const dateFormatter = new Intl.DateTimeFormat("pt-BR", {
-  day: "2-digit",
-  month: "2-digit",
-  timeZone: "America/Sao_Paulo",
-  year: "numeric",
-});
 const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+const publicFrontendUrl = process.env.NEXT_PUBLIC_FRONTEND_URL || "http://localhost:3000";
+const publicMediaPathPrefixes = ["/public/files/", "/community/icons/"] as const;
 const listSorts = new Set(SORT_OPTIONS.map((item) => item.id));
 const LOADING_ROWS = ["loading-1", "loading-2", "loading-3", "loading-4", "loading-5", "loading-6"];
 const SEARCH_DEBOUNCE_MS = 350;
@@ -67,7 +63,6 @@ const parseQuery = (params: URLSearchParams): AdminCommunitiesListQuery => {
   const sort = params.get("sort") as AdminCommunitiesListSort | null;
 
   return {
-    category: params.get("category") || undefined,
     limit: Math.min(50, parsePositiveNumber(params.get("limit"), 12)),
     page: parsePositiveNumber(params.get("page"), 1),
     q: params.get("q") || undefined,
@@ -75,27 +70,75 @@ const parseQuery = (params: URLSearchParams): AdminCommunitiesListQuery => {
   };
 };
 
-const canRenderImage = (src: string | null) => {
-  if (!src) return false;
-  if (src.startsWith("/")) return true;
+const isPublicMediaPath = (pathname: string) =>
+  publicMediaPathPrefixes.some((prefix) => pathname.startsWith(prefix));
+
+const resolveAdminMediaUrl = (src?: string | null) => {
+  const value = src?.trim();
+  if (!value) return null;
+
+  const apiBase = apiUrl.replace(/\/$/, "");
 
   try {
-    const url = new URL(src);
-    const apiHost = new URL(apiUrl).hostname;
+    const parsed = new URL(value, apiBase);
+    if (isPublicMediaPath(parsed.pathname)) {
+      return `${apiBase}${parsed.pathname}${parsed.search}`;
+    }
+    if (value.startsWith("http")) return value;
+    return value.startsWith("/") ? value : `${apiBase}/${value}`;
+  } catch {
+    if (publicMediaPathPrefixes.some((prefix) => value.startsWith(prefix))) {
+      return `${apiBase}${value}`;
+    }
+    return value.startsWith("/") || value.startsWith("http") ? value : null;
+  }
+};
 
-    return ["localhost", "127.0.0.1", apiHost].includes(url.hostname);
+const allowedRemoteImageHosts = () => {
+  const hosts = new Set(["localhost", "127.0.0.1", "lh3.googleusercontent.com"]);
+
+  for (const candidate of [
+    apiUrl,
+    ...(process.env.NEXT_PUBLIC_IMAGE_REMOTE_HOSTS?.split(",") ?? []),
+  ]) {
+    const normalized = candidate.trim();
+    if (!normalized) continue;
+
+    try {
+      const url = new URL(normalized.includes("://") ? normalized : `https://${normalized}`);
+      if (url.hostname) hosts.add(url.hostname);
+    } catch {
+      // Entradas invalidas de env nao devem quebrar a renderizacao da lista.
+    }
+  }
+
+  return hosts;
+};
+
+const canRenderImage = (src: string | null) => {
+  const resolved = resolveAdminMediaUrl(src);
+  if (!resolved) return false;
+  if (resolved.startsWith("/")) return true;
+
+  try {
+    const url = new URL(resolved);
+
+    return allowedRemoteImageHosts().has(url.hostname);
   } catch {
     return false;
   }
 };
 
-const formatDate = (value: string | null) => {
-  if (!value) return "—";
+const renderableImageSrc = (src: string | null) => {
+  const resolved = resolveAdminMediaUrl(src);
 
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "—";
+  return resolved && canRenderImage(resolved) ? resolved : null;
+};
 
-  return dateFormatter.format(date);
+const toPublicHref = (path: string) => {
+  if (/^https?:\/\//.test(path)) return path;
+
+  return `${publicFrontendUrl.replace(/\/$/, "")}${path}`;
 };
 
 const SearchBox = ({ onSearch, value }: { onSearch: (value: string) => void; value?: string }) => {
@@ -138,13 +181,15 @@ const SearchBox = ({ onSearch, value }: { onSearch: (value: string) => void; val
 };
 
 const CommunityAvatar = ({ item }: { item: AdminCommunitiesListItem }) => {
-  if (canRenderImage(item.avatar_url)) {
+  const imageSrc = renderableImageSrc(item.avatar_url);
+
+  if (imageSrc) {
     return (
       <Image
-        alt=""
+        alt={`Avatar da comunidade ${item.name}`}
         className="h-12 w-12 rounded-2xl border border-border object-cover"
         height={48}
-        src={item.avatar_url || ""}
+        src={imageSrc}
         width={48}
       />
     );
@@ -183,28 +228,32 @@ const CommunitySummary = ({ item }: { item: AdminCommunitiesListItem }) => (
     <CommunityAvatar item={item} />
     <div className="min-w-0">
       <p className="truncate font-semibold text-foreground">{item.name}</p>
-      <p className="truncate text-xs font-bold text-muted" title={`/${item.slug}`}>
-        /{item.slug}
-      </p>
-      {item.description ? (
-        <p className="mt-1 line-clamp-1 text-xs font-medium text-muted" title={item.description}>
-          {item.description}
-        </p>
-      ) : null}
     </div>
   </div>
 );
 
 const RowActions = ({ item }: { item: AdminCommunitiesListItem }) => (
   <div className="flex shrink-0 items-center justify-center gap-1.5">
-    <button
+    <Link
       className="grid h-8 w-8 place-items-center rounded-full border border-border bg-surface text-foreground shadow-control transition hover:border-primary hover:text-primary"
+      href={item.detail_url}
+      onClick={(event) => event.stopPropagation()}
       title="Abrir detalhe administrativo"
-      type="button"
     >
       <Eye aria-hidden className="h-4 w-4" />
       <span className="sr-only">Abrir detalhe administrativo de {item.name}</span>
-    </button>
+    </Link>
+    <a
+      className="grid h-8 w-8 place-items-center rounded-full border border-border bg-surface text-foreground shadow-control transition hover:border-primary hover:text-primary"
+      href={toPublicHref(`/community/${encodeURIComponent(item.slug)}`)}
+      onClick={(event) => event.stopPropagation()}
+      rel="noreferrer"
+      target="_blank"
+      title="Abrir comunidade pública"
+    >
+      <ExternalLink aria-hidden className="h-4 w-4" />
+      <span className="sr-only">Abrir comunidade pública {item.name}</span>
+    </a>
   </div>
 );
 
@@ -229,29 +278,32 @@ const CommunityCard = ({
     </div>
 
     <div className="mt-4 flex flex-wrap gap-2">
-      <CompactBadge tone={item.category ? "primary" : "neutral"}>
-        {item.category || "Sem categoria"}
-      </CompactBadge>
       {item.reports_count > 0 ? (
         <CompactBadge tone="danger">
-          {numberFormatter.format(item.reports_count)} denúncias
+          {numberFormatter.format(item.reports_count)} denúncias pendentes
         </CompactBadge>
       ) : (
-        <CompactBadge tone="success">Sem denúncias</CompactBadge>
+        <CompactBadge tone="success">Sem denúncias pendentes</CompactBadge>
       )}
     </div>
 
-    <dl className="mt-4 grid grid-cols-2 gap-2 text-xs text-muted">
+    <dl className="mt-4 grid grid-cols-3 gap-2 text-xs text-muted">
       <div className="rounded-2xl bg-surface-muted px-3 py-2">
-        <dt>Membros</dt>
+        <dt>Seguidores</dt>
         <dd className="mt-1 text-sm font-semibold text-foreground">
           {numberFormatter.format(item.members_count)}
         </dd>
       </div>
       <div className="rounded-2xl bg-surface-muted px-3 py-2">
-        <dt>Atividade</dt>
+        <dt>Posts</dt>
         <dd className="mt-1 text-sm font-semibold text-foreground">
-          {numberFormatter.format(item.activity_count)}
+          {numberFormatter.format(item.posts_count)}
+        </dd>
+      </div>
+      <div className="rounded-2xl bg-surface-muted px-3 py-2">
+        <dt>Comentários</dt>
+        <dd className="mt-1 text-sm font-semibold text-foreground">
+          {numberFormatter.format(item.comments_count)}
         </dd>
       </div>
     </dl>
@@ -276,24 +328,20 @@ const CommunitiesTable = ({
       <table className="w-full table-fixed text-left text-sm">
         <caption className="sr-only">Lista administrativa de comunidades</caption>
         <colgroup>
-          <col className="w-[30%]" />
-          <col className="w-[14%]" />
-          <col className="w-[10%]" />
-          <col className="w-[10%]" />
+          <col className="w-[39%]" />
           <col className="w-[12%]" />
           <col className="w-[10%]" />
-          <col className="w-[10%]" />
-          <col className="w-[4%]" />
+          <col className="w-[14%]" />
+          <col className="w-[17%]" />
+          <col className="w-[8%]" />
         </colgroup>
         <thead className="border-b border-border bg-surface-muted/70 text-xs text-muted">
           <tr>
             <th className="py-4 pl-4 pr-2 font-semibold">Comunidade</th>
-            <th className="px-2 py-4 font-semibold">Categoria</th>
-            <th className="px-2 py-4 font-semibold">Membros</th>
+            <th className="px-2 py-4 font-semibold">Seguidores</th>
             <th className="px-2 py-4 font-semibold">Posts</th>
             <th className="px-2 py-4 font-semibold">Comentários</th>
-            <th className="px-2 py-4 font-semibold">Denúncias</th>
-            <th className="px-2 py-4 font-semibold">Atividade</th>
+            <th className="px-2 py-4 font-semibold">Denúncias pendentes</th>
             <th className="px-2 py-4 text-center font-semibold">Ações</th>
           </tr>
         </thead>
@@ -316,11 +364,6 @@ const CommunitiesTable = ({
               <td className="py-4 pl-4 pr-2">
                 <CommunitySummary item={item} />
               </td>
-              <td className="whitespace-nowrap px-2 py-3">
-                <CompactBadge tone={item.category ? "primary" : "neutral"}>
-                  {item.category || "Sem categoria"}
-                </CompactBadge>
-              </td>
               <td className="whitespace-nowrap px-2 py-3 font-semibold text-foreground">
                 {numberFormatter.format(item.members_count)}
               </td>
@@ -340,14 +383,6 @@ const CommunitiesTable = ({
                   <Flag aria-hidden className="h-4 w-4" />
                   {numberFormatter.format(item.reports_count)}
                 </span>
-              </td>
-              <td className="whitespace-nowrap px-2 py-3">
-                <p className="font-semibold text-foreground">
-                  {numberFormatter.format(item.activity_count)}
-                </p>
-                <p className="text-xs font-medium text-muted">
-                  {formatDate(item.last_activity_at)}
-                </p>
               </td>
               <td className="px-2 py-3 text-center">
                 <RowActions item={item} />
@@ -492,6 +527,16 @@ export const AdminCommunitiesListClient = () => {
   const listQuery = useAdminCommunitiesList(query);
   const queryError = listQuery.error ? resolveApiError(listQuery.error) : null;
 
+  useEffect(() => {
+    if (!searchParams.has("category")) return;
+
+    const params = new URLSearchParams(searchString);
+    params.delete("category");
+    const next = params.toString();
+
+    router.replace(next ? `${pathname}?${next}` : pathname, { scroll: false });
+  }, [pathname, router, searchParams, searchString]);
+
   const replaceParams = (
     updates: Partial<Record<keyof AdminCommunitiesListQuery, string | number | null>>,
     options: { resetPage?: boolean } = { resetPage: true },
@@ -506,6 +551,7 @@ export const AdminCommunitiesListClient = () => {
       }
     }
 
+    params.delete("category");
     if (options.resetPage !== false) params.delete("page");
     const next = params.toString();
     router.replace(next ? `${pathname}?${next}` : pathname, { scroll: false });
@@ -515,7 +561,6 @@ export const AdminCommunitiesListClient = () => {
   const items = summary?.data ?? [];
   const pages = summary?.pages ?? 1;
   const page = Math.min(query.page ?? 1, pages);
-  const categories = summary?.filters.categories ?? [];
 
   return (
     <div className="min-w-0 max-w-full space-y-7 overflow-x-clip">
@@ -563,29 +608,8 @@ export const AdminCommunitiesListClient = () => {
                 />
               </span>
             </label>
-            <label className="flex min-w-0 flex-col gap-1 text-xs font-semibold text-muted sm:min-w-[220px]">
-              Categoria
-              <span className="relative block">
-                <select
-                  className="h-12 w-full min-w-0 appearance-none rounded-full border border-border bg-surface py-0 pl-4 pr-12 text-sm font-bold text-foreground shadow-control outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/15"
-                  onChange={(event) => replaceParams({ category: event.target.value || null })}
-                  value={query.category || ""}
-                >
-                  <option value="">Todas as categorias</option>
-                  {categories.map((category) => (
-                    <option key={category.id} value={category.id}>
-                      {category.label} ({numberFormatter.format(category.count)})
-                    </option>
-                  ))}
-                </select>
-                <ChevronRight
-                  aria-hidden
-                  className="pointer-events-none absolute right-5 top-1/2 h-4 w-4 -translate-y-1/2 rotate-90 text-foreground"
-                />
-              </span>
-            </label>
             <div className="inline-flex h-12 items-center justify-center gap-2 rounded-full border border-border bg-surface px-4 text-sm font-semibold text-foreground shadow-control">
-              <MessageCircleMore aria-hidden className="h-4 w-4" />
+              <Filter aria-hidden className="h-4 w-4" />
               Filtros ativos
               <span className="rounded-full bg-primary-soft px-2 py-0.5 text-xs text-primary">
                 {summary?.active_filters_count ?? 0}
@@ -595,24 +619,10 @@ export const AdminCommunitiesListClient = () => {
         </div>
 
         <CardShell className="overflow-hidden">
-          <div className="grid gap-3 border-b border-border px-4 py-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
+          <div className="border-b border-border px-4 py-4">
             <p className="text-sm font-semibold text-foreground">
               {summary ? numberFormatter.format(summary.count) : "—"} comunidades encontradas
             </p>
-            <div className="flex flex-wrap gap-2 text-xs font-semibold text-muted">
-              <span className="inline-flex items-center gap-1 rounded-full bg-surface-muted px-2.5 py-1">
-                <UsersRound aria-hidden className="h-3.5 w-3.5" />
-                Membros
-              </span>
-              <span className="inline-flex items-center gap-1 rounded-full bg-surface-muted px-2.5 py-1">
-                <FileText aria-hidden className="h-3.5 w-3.5" />
-                Posts
-              </span>
-              <span className="inline-flex items-center gap-1 rounded-full bg-surface-muted px-2.5 py-1">
-                <MessageSquareText aria-hidden className="h-3.5 w-3.5" />
-                Comentários
-              </span>
-            </div>
           </div>
 
           <div className="p-4 lg:p-0">

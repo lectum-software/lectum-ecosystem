@@ -182,6 +182,7 @@ const maxDate = (dates: Date[]) => {
 
 const mapCommunityListItem = (community: AdminCommunityListRecord): AdminCommunitiesListItemDTO => {
   const publishedPosts = community.posts.filter((post) => post.status === "publicado");
+  const allReplies = community.posts.flatMap((post) => post.replies);
   const comments = publishedPosts.flatMap((post) => post.replies);
   const reportsCount = community.posts.reduce(
     (total, post) =>
@@ -192,8 +193,11 @@ const mapCommunityListItem = (community: AdminCommunityListRecord): AdminCommuni
   );
   const lastActivityAt = maxDate([
     community.createdAt,
-    ...publishedPosts.map((post) => post.createdAt),
-    ...comments.map((comment) => comment.createdAt),
+    ...community.members.map((member) => member.createdAt),
+    ...community.posts.map((post) => post.createdAt),
+    ...community.posts.flatMap((post) => post.reports.map((report) => report.createdAt)),
+    ...allReplies.map((comment) => comment.createdAt),
+    ...allReplies.flatMap((comment) => comment.reports.map((report) => report.createdAt)),
   ]);
   const membersCount = Math.max(community.members.length, community.members_count);
   const postsCount = publishedPosts.length;

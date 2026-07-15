@@ -203,9 +203,9 @@ Regras de UI obrigatórias:
 ## Execucao complementar: lista administrativa de comunidades (2026-07-15)
 
 - Pedido do usuario: criar uma pagina de **Lista de Comunidades** no Admin seguindo o modelo da lista administrativa de psicologos.
-- Backend Admin: o modulo existente de comunidades passou a expor `GET /api/admin/private/communities`, protegido por auth Admin, com busca, categoria, ordenacao e paginacao sobre dados reais.
+- Backend Admin: o modulo existente de comunidades passou a expor `GET /api/admin/private/communities`, protegido por auth Admin, com busca, ordenacao e paginacao sobre dados reais; o filtro de categoria foi removido em ajuste posterior.
 - A resposta usa `community`, `community_member`, `community_post`, `post_reply` e `post_report` para compor membros, posts, comentarios, denuncias, atividade e ultima atividade, sem mocks, seeds ou endpoint simulado.
-- Frontend Admin: criada a rota estatica `/comunidades/lista`, com busca em URL, filtro de categoria, ordenacao, paginacao, estados loading/erro/vazio e tabela/lista mobile-first que abre o detalhe real `/comunidades/[slug]`.
+- Frontend Admin: criada a rota estatica `/comunidades/lista`, com busca em URL, ordenacao, paginacao, estados loading/erro/vazio e tabela/lista mobile-first que abre o detalhe real `/comunidades/[slug]`; o filtro visual de categoria foi removido em ajuste posterior.
 - O submenu lateral **Comunidades > Lista de Comunidades** passou a apontar para `/comunidades/lista`; **Visao geral** permanece em `/comunidades`.
 - A acao **Ver todas** de **Principais comunidades** no dashboard agora navega para a lista real.
 - Builder/Quick Copy `vcp://quickcopy/vcp-24aaa2941d814e5b90572bc93ae50e2a` nao esta exposto como ferramenta callable neste ambiente; referencias usadas: `_product/proto/admin/Comunidades/Comunidades - Dashboard.png` e o modelo de `_product/proto/admin/Psicólogos/Psicólogos- Lista.png`.
@@ -216,7 +216,7 @@ Regras de UI obrigatórias:
 
 - [x] `/comunidades/lista` existe como rota Admin protegida pelo shell/autenticacao administrativa.
 - [x] A lista usa endpoint real `GET /api/admin/private/communities`.
-- [x] Busca, filtro de categoria, ordenacao e paginacao usam URL/search params.
+- [x] Busca, ordenacao e paginacao usam URL/search params; filtro de categoria removido da lista.
 - [x] As metricas por linha sao derivadas de dados reais de comunidades, membros, posts, respostas e denuncias.
 - [x] Clicar em uma comunidade abre o detalhe administrativo existente.
 - [x] O submenu lateral de Comunidades aponta para a rota real da lista.
@@ -287,3 +287,63 @@ Regras de UI obrigatórias:
 - `pnpm --dir admin build`
 - `pnpm check`
 - Smoke local `GET http://localhost:3002/comunidades` retornou 200.
+
+## Correcao complementar: refinamento da lista administrativa de comunidades (2026-07-15)
+
+- Pedido do usuario: ajustar a lista em `/comunidades/lista` removendo o filtro/coluna de categoria, simplificando a primeira coluna, corrigindo avatar e alterando labels operacionais.
+- A UI Admin removeu o seletor de categoria e passa a limpar `category` de URLs antigas, mantendo busca, ordenacao e paginacao reais.
+- O icone do chip **Filtros ativos** foi trocado para `Filter` do `lucide-react`.
+- As tags de legenda **Membros**, **Posts** e **Comentarios** foram removidas do cabecalho da tabela.
+- A coluna **Categoria** foi removida da tabela desktop e o card mobile tambem deixou de exibir o badge de categoria.
+- A coluna **Membros** passou a se chamar **Seguidores**; o dado continua vindo de `community_member` real, com fallback existente para `community.members_count`.
+- A coluna **Atividade** foi inicialmente trocada para **Ultima atividade**, mas o ajuste seguinte removeu essa coluna da tabela; o contrato ainda pode retornar `last_activity_at` sem exibicao na lista.
+- O avatar da primeira coluna agora resolve caminhos publicos do backend (`/public/files/...`) contra `NEXT_PUBLIC_API_URL`, evitando imagem quebrada no Admin local, e continua usando `next/image`.
+- A primeira coluna exibe somente o nome da comunidade; slug e descricao foram removidos abaixo do nome.
+- Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente; a referencia visual usada foi a captura enviada pelo usuario e o padrao local da lista Admin.
+- Nao houve alteracao em `backend/prisma/schema.prisma`, migrations ou packages; `pnpm --dir backend db:migrate` nao se aplica.
+- ADR atualizado: `adrs/0271-lista-admin-comunidades-rota-real.md`.
+
+### Criterios deste ajuste
+
+- [x] Filtro de categoria removido da lista e de URLs antigas da tela.
+- [x] Chip **Filtros ativos** usa icone de filtro.
+- [x] Tags **Membros**, **Posts** e **Comentarios** removidas.
+- [x] Coluna **Categoria** removida da tabela.
+- [x] Coluna **Membros** renomeada para **Seguidores**.
+- [x] Coluna **Ultima atividade** removida da apresentacao da lista no ajuste seguinte.
+- [x] Avatar da comunidade corrigido sem uso de `<img>` cru.
+- [x] Slug e descricao removidos da primeira coluna.
+
+### Validacao deste ajuste
+
+- `pnpm --dir admin check`
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir admin build`
+- `pnpm check`
+- Smoke local em `next start` do Admin: `GET http://localhost:3102/comunidades/lista` retornou 200.
+- Smoke de protecao Admin real: `GET http://localhost:3001/api/admin/private/communities?page=1&limit=2` sem token retornou 401.
+
+## Correcao complementar: acoes e denuncias pendentes na lista de comunidades (2026-07-15)
+
+- Pedido do usuario: remover a coluna **Ultima atividade**, renomear **Denuncias** para **Denuncias pendentes** e deixar **Acoes** como na lista de psicologos.
+- A tabela desktop deixou de renderizar a coluna **Ultima atividade**; o card mobile tambem nao exibe mais essa metrica.
+- A coluna passou a se chamar **Denuncias pendentes** e o backend da lista agora conta apenas `post_report.status="pendente"` em posts e comentarios da comunidade.
+- A coluna **Acoes** passou a ter dois atalhos: visualizar detalhe administrativo e abrir a comunidade publica em `/community/[slug]` no site publico, em nova aba.
+- Nao houve alteracao em `backend/prisma/schema.prisma`, migrations ou packages; `pnpm --dir backend db:migrate` nao se aplica.
+
+### Criterios deste ajuste
+
+- [x] Coluna **Ultima atividade** removida.
+- [x] Coluna **Denuncias** renomeada para **Denuncias pendentes** e alimentada por denuncias pendentes reais.
+- [x] Coluna **Acoes** exibe icone de visualizar e icone para abrir a comunidade publica, seguindo o padrao da lista de psicologos.
+
+### Validacao deste ajuste
+
+- `pnpm --dir admin check`
+- `pnpm --dir backend check`
+- `pnpm --dir admin build`
+- `pnpm --dir backend build`
+- `pnpm check`
+- Smoke local em `next start` do Admin: `GET http://localhost:3102/comunidades/lista` retornou 200.
+- Smoke de protecao Admin real: `GET http://localhost:3001/api/admin/private/communities?page=1&limit=2` sem token retornou 401.

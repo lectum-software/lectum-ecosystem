@@ -17,9 +17,9 @@ O menu Admin de Comunidades passou a ter os submenus **Visão geral** e **Lista 
   - membros ativos a partir de `community_member` real, com fallback seguro para `community.members_count`;
   - posts publicados de `community_post.status="publicado"`;
   - comentários de `post_reply` em posts publicados;
-  - denúncias de `post_report` em posts/respostas da comunidade;
-  - atividade como posts + comentários e última atividade por criação de comunidade/post/comentário.
-- Manter busca, categoria, ordenação e paginação em URL/search params, seguindo o padrão da lista administrativa de psicólogos.
+  - denúncias pendentes (`post_report.status="pendente"`) em posts/respostas da comunidade;
+  - atividade como posts + comentários e última atividade por criação da comunidade, entrada de seguidores, posts publicados, comentários e denúncias.
+- Manter busca, ordenação e paginação em URL/search params, seguindo o padrão da lista administrativa de psicólogos; o filtro visual de categoria foi removido em 2026-07-15.
 - Não alterar Prisma schema/migrations nem instalar pacotes.
 
 ## Consequências
@@ -39,3 +39,17 @@ O menu Admin de Comunidades passou a ter os submenus **Visão geral** e **Lista 
 - Smoke service real: `listCommunities({ page: 1, limit: 2, sort: "name" })` retornou `status=200`, `count=7`, `items=2`.
 - Smoke local: `GET http://localhost:3002/comunidades/lista` retornou `200`.
 - Smoke de proteção: `GET http://localhost:3001/api/admin/private/communities?page=1&limit=2` sem token retornou `401`.
+
+## Atualizacao 2026-07-15: refinamento visual da lista
+
+A lista `/comunidades/lista` foi ajustada para priorizar leitura operacional direta: sem filtro/coluna de categoria, sem badges de legenda no cabecalho e com primeira coluna contendo apenas avatar e nome. O rótulo **Membros** passou a **Seguidores** somente na apresentacao, mantendo a fonte real `community_member`/`community.members_count`.
+
+`last_activity_at` passou a representar a ultima atividade real conhecida da comunidade considerando criacao da comunidade, entrada de seguidores, posts publicados, comentarios e denuncias. Caminhos publicos de avatar retornados como `/public/files/...` sao resolvidos no Admin contra `NEXT_PUBLIC_API_URL`, mantendo `next/image` e evitando imagens quebradas quando o backend local roda em porta separada.
+
+Validacoes adicionais do ajuste: `pnpm --dir admin check`, `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin build`, `pnpm check`, smoke local `GET http://localhost:3102/comunidades/lista` = 200 e smoke sem token em `GET http://localhost:3001/api/admin/private/communities?page=1&limit=2` = 401.
+
+## Atualizacao 2026-07-15: acoes e denuncias pendentes
+
+A coluna **Ultima atividade** foi removida da lista; o contrato pode continuar retornando `last_activity_at`, mas a tabela/card nao exibem essa metrica. A coluna de denuncias passou a representar somente denuncias pendentes reais, com filtro `status="pendente"` no backend. A coluna **Acoes** adotou o mesmo padrao da lista de psicologos: link para detalhe administrativo e link externo para a comunidade publica em `/community/[slug]`.
+
+Validacoes adicionais do ajuste de acoes/denuncias pendentes: `pnpm --dir admin check`, `pnpm --dir backend check`, `pnpm --dir admin build`, `pnpm --dir backend build`, `pnpm check`, smoke local `GET http://localhost:3102/comunidades/lista` = 200 e smoke sem token em `GET http://localhost:3001/api/admin/private/communities?page=1&limit=2` = 401.
