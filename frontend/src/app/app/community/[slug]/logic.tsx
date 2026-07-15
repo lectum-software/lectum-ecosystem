@@ -1749,8 +1749,7 @@ const CommunityRulesCard = ({ rules }: { rules: CommunityDetail["rules"] }) => {
   const sortedRules = useMemo(
     () =>
       [...rules].sort(
-        (left, right) =>
-          left.position - right.position || left.title.localeCompare(right.title, "pt-BR"),
+        (left, right) => left.position - right.position || left.id.localeCompare(right.id),
       ),
     [rules],
   );
@@ -1801,10 +1800,7 @@ const CommunityRulesCard = ({ rules }: { rules: CommunityDetail["rules"] }) => {
               {sortedRules.map((rule) => (
                 <li className="flex gap-2" key={rule.id}>
                   <ListChecks className="mt-1 h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
-                  <span>
-                    <strong className="text-foreground">{rule.title}: </strong>
-                    {rule.description}
-                  </span>
+                  <span>{rule.description}</span>
                 </li>
               ))}
             </ul>

@@ -8,6 +8,7 @@ import {
   CalendarDays,
   Edit3,
   Eye,
+  GripVertical,
   Loader2,
   MessageCircle,
   Plus,
@@ -16,15 +17,13 @@ import {
   Search,
   ShieldCheck,
   Star,
-  ToggleLeft,
-  ToggleRight,
   Trash2,
   Users,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
-import { type ChangeEvent, useEffect, useMemo, useRef, useState } from "react";
+import { type ChangeEvent, type DragEvent, useEffect, useMemo, useRef, useState } from "react";
 import { FormProvider, useForm, useWatch } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -164,6 +163,13 @@ const toCommunityPayload = (values: CommunityFormValues): AdminCommunityUpdateIn
   visual_primary_color: nullableColor(values.visual_primary_color),
 });
 
+const deriveRuleTitle = (description: string) => {
+  const normalized = description.trim().replace(/\s+/g, " ");
+  const title = normalized.slice(0, 80).trim();
+
+  return title.length >= 2 ? title : "Regra da comunidade";
+};
+
 const toRulePayload = (
   values: RuleFormValues,
   rule?: Pick<AdminCommunityRule, "active" | "position">,
@@ -171,7 +177,17 @@ const toRulePayload = (
   active: rule?.active ?? true,
   description: values.description.trim(),
   position: rule?.position ?? 0,
-  title: values.title.trim(),
+  title: deriveRuleTitle(values.description),
+});
+
+const existingRulePayload = (
+  rule: AdminCommunityRule,
+  position = rule.position,
+): AdminCommunityRuleInput => ({
+  active: rule.active,
+  description: rule.description,
+  position,
+  title: rule.title.trim() || deriveRuleTitle(rule.description),
 });
 
 const StatusBadge = ({
@@ -772,7 +788,6 @@ const RuleEditForm = ({
   const form = useForm<RuleFormValues>({
     defaultValues: {
       description: rule.description,
-      title: rule.title,
     },
     resolver: zodResolver(ruleFormSchema),
   });
@@ -784,9 +799,8 @@ const RuleEditForm = ({
         noValidate
         onSubmit={form.handleSubmit((values) => void onSubmit(values))}
       >
-        <InputController<RuleFormValues> label="Título" name="title" required />
         <TextareaController<RuleFormValues>
-          label="Descrição"
+          label="Texto da regra"
           name="description"
           required
           rows={3}
@@ -812,62 +826,94 @@ const RuleEditForm = ({
   );
 };
 
-const RuleCreateForm = ({
+const RuleCreateModal = ({
   disabled,
   nextPosition,
+  onClose,
   onSubmit,
+  open,
 }: {
   disabled: boolean;
   nextPosition: number;
-  onSubmit: (input: AdminCommunityRuleInput) => Promise<void>;
+  onClose: () => void;
+  onSubmit: (input: AdminCommunityRuleInput) => Promise<boolean>;
+  open: boolean;
 }) => {
   const form = useForm<RuleFormValues>({
     defaultValues: {
       description: "",
-      title: "",
     },
     resolver: zodResolver(ruleFormSchema),
   });
 
+  useEffect(() => {
+    if (!open) {
+      form.reset({ description: "" });
+    }
+  }, [form, open]);
+
+  if (!open) return null;
+
   return (
-    <FormProvider {...form}>
-      <form
-        className="mt-4 grid gap-3 rounded-2xl border border-dashed border-border p-3"
-        noValidate
-        onSubmit={form.handleSubmit(async (values) => {
-          await onSubmit({ ...toRulePayload(values), position: nextPosition });
-          form.reset();
-        })}
-      >
-        <div className="grid gap-3 md:grid-cols-[1fr_2fr_auto] md:items-start">
-          <InputController<RuleFormValues>
-            label="Nova regra"
-            name="title"
-            placeholder="Título"
-            required
-          />
-          <TextareaController<RuleFormValues>
-            label="Descrição"
-            name="description"
-            placeholder="Texto exibido dentro da comunidade"
-            required
-            rows={2}
-          />
-          <button
-            className="mt-7 inline-flex h-12 items-center justify-center gap-2 rounded-control bg-primary px-4 text-sm font-black text-white disabled:opacity-70"
-            disabled={disabled}
-            type="submit"
-          >
-            <Plus aria-hidden className="h-4 w-4" />
-            Adicionar
-          </button>
-        </div>
-      </form>
-    </FormProvider>
+    <div
+      aria-modal="true"
+      className="fixed inset-0 z-50 grid place-items-center bg-slate-950/40 p-4 backdrop-blur-sm"
+      role="dialog"
+    >
+      <FormProvider {...form}>
+        <form
+          className="w-full max-w-xl rounded-card border border-border bg-surface p-5 shadow-admin-soft"
+          noValidate
+          onSubmit={form.handleSubmit(async (values) => {
+            const created = await onSubmit({ ...toRulePayload(values), position: nextPosition });
+            if (created) {
+              form.reset({ description: "" });
+              onClose();
+            }
+          })}
+        >
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <h3 className="text-lg font-black text-foreground">Criar nova regra</h3>
+              <p className="mt-1 text-sm text-muted">Informe o texto exibido na comunidade.</p>
+            </div>
+          </div>
+          <div className="mt-4">
+            <TextareaController<RuleFormValues>
+              label="Texto da regra"
+              name="description"
+              placeholder="Digite a regra da comunidade"
+              required
+              rows={4}
+            />
+          </div>
+          <div className="mt-5 flex flex-col gap-2 sm:flex-row sm:justify-end">
+            <button
+              className="h-10 rounded-control border border-border bg-surface px-4 text-sm font-black"
+              disabled={disabled}
+              onClick={onClose}
+              type="button"
+            >
+              Cancelar
+            </button>
+            <button
+              className="h-10 rounded-control bg-primary px-4 text-sm font-black text-white disabled:opacity-70"
+              disabled={disabled}
+              type="submit"
+            >
+              Criar regra
+            </button>
+          </div>
+        </form>
+      </FormProvider>
+    </div>
   );
 };
 
 const RulesManager = ({ id, rules }: { id: string; rules: AdminCommunityRule[] }) => {
+  const [createModalOpen, setCreateModalOpen] = useState(false);
+  const [draggedRuleId, setDraggedRuleId] = useState<string | null>(null);
+  const [dropTargetRuleId, setDropTargetRuleId] = useState<string | null>(null);
   const [editingRuleId, setEditingRuleId] = useState<string | null>(null);
   const createMutation = useAdminCommunityCreateRule(id);
   const updateMutation = useAdminCommunityUpdateRule(id);
@@ -876,7 +922,9 @@ const RulesManager = ({ id, rules }: { id: string; rules: AdminCommunityRule[] }
     () =>
       [...rules].sort(
         (left, right) =>
-          left.position - right.position || left.title.localeCompare(right.title, "pt-BR"),
+          left.position - right.position ||
+          new Date(left.created_at).getTime() - new Date(right.created_at).getTime() ||
+          left.id.localeCompare(right.id),
       ),
     [rules],
   );
@@ -896,12 +944,16 @@ const RulesManager = ({ id, rules }: { id: string; rules: AdminCommunityRule[] }
     try {
       await createMutation.mutateAsync(input);
       toast.success("Regra adicionada.");
+
+      return true;
     } catch (error) {
       toast.error(resolveApiError(error));
+
+      return false;
     }
   };
   const deleteRule = async (rule: AdminCommunityRule) => {
-    if (!window.confirm(`Remover a regra "${rule.title}"?`)) return;
+    if (!window.confirm("Remover esta regra?")) return;
 
     try {
       await deleteMutation.mutateAsync(rule.id);
@@ -910,166 +962,170 @@ const RulesManager = ({ id, rules }: { id: string; rules: AdminCommunityRule[] }
       toast.error(resolveApiError(error));
     }
   };
-  const moveRule = async (rule: AdminCommunityRule, direction: -1 | 1) => {
-    const index = sortedRules.findIndex((item) => item.id === rule.id);
-    const target = sortedRules[index + direction];
-    if (!target) return;
+  const reorderRules = async (sourceRuleId: string, targetRuleId: string) => {
+    if (sourceRuleId === targetRuleId) return;
+
+    const currentOrder = [...sortedRules];
+    const sourceIndex = currentOrder.findIndex((rule) => rule.id === sourceRuleId);
+    if (sourceIndex < 0) return;
+
+    const [draggedRule] = currentOrder.splice(sourceIndex, 1);
+    if (!draggedRule) return;
+
+    const targetIndex = currentOrder.findIndex((rule) => rule.id === targetRuleId);
+    if (targetIndex < 0) return;
+
+    currentOrder.splice(targetIndex, 0, draggedRule);
+
+    const orderedPositions = sortedRules.map((rule) => rule.position);
+    const updates = currentOrder
+      .map((rule, index) => ({ position: orderedPositions[index] ?? index, rule }))
+      .filter(({ position, rule }) => rule.position !== position);
+
+    if (updates.length === 0) return;
 
     try {
-      await Promise.all([
-        updateMutation.mutateAsync({
-          input: toRulePayload(
-            { description: rule.description, title: rule.title },
-            {
-              active: rule.active,
-              position: target.position,
-            },
-          ),
-          ruleId: rule.id,
-        }),
-        updateMutation.mutateAsync({
-          input: toRulePayload(
-            { description: target.description, title: target.title },
-            {
-              active: target.active,
-              position: rule.position,
-            },
-          ),
-          ruleId: target.id,
-        }),
-      ]);
+      await Promise.all(
+        updates.map(({ position, rule }) =>
+          updateMutation.mutateAsync({
+            input: existingRulePayload(rule, position),
+            ruleId: rule.id,
+          }),
+        ),
+      );
       toast.success("Ordem das regras atualizada.");
     } catch (error) {
       toast.error(resolveApiError(error));
     }
   };
-  const toggleRule = async (rule: AdminCommunityRule) => {
-    await updateRule(
-      rule,
-      toRulePayload(
-        { description: rule.description, title: rule.title },
-        {
-          active: !rule.active,
-          position: rule.position,
-        },
-      ),
-    );
+  const handleDragStart = (event: DragEvent<HTMLElement>, ruleId: string) => {
+    setDraggedRuleId(ruleId);
+    event.dataTransfer.effectAllowed = "move";
+    event.dataTransfer.setData("text/plain", ruleId);
+  };
+  const handleDragOver = (event: DragEvent<HTMLElement>, ruleId: string) => {
+    if (!draggedRuleId || draggedRuleId === ruleId || updateMutation.isPending) return;
+
+    event.preventDefault();
+    event.dataTransfer.dropEffect = "move";
+    setDropTargetRuleId(ruleId);
+  };
+  const handleDragLeave = (event: DragEvent<HTMLElement>, ruleId: string) => {
+    const relatedTarget = event.relatedTarget;
+    if (relatedTarget instanceof Node && event.currentTarget.contains(relatedTarget)) return;
+    if (dropTargetRuleId === ruleId) setDropTargetRuleId(null);
+  };
+  const handleDrop = (event: DragEvent<HTMLElement>, targetRuleId: string) => {
+    event.preventDefault();
+    const sourceRuleId = event.dataTransfer.getData("text/plain") || draggedRuleId;
+    setDraggedRuleId(null);
+    setDropTargetRuleId(null);
+
+    if (!sourceRuleId || updateMutation.isPending) return;
+    void reorderRules(sourceRuleId, targetRuleId);
+  };
+  const handleDragEnd = () => {
+    setDraggedRuleId(null);
+    setDropTargetRuleId(null);
   };
 
   return (
-    <section className={cn(cardClass, "p-5")}>
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-        <div>
+    <>
+      <section className={cn(cardClass, "p-5")}>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
           <h2 className="text-lg font-black text-foreground">Regras da comunidade</h2>
-          <p className="mt-1 text-sm text-muted">
-            Textos exibidos dentro da comunidade. Alterações são persistidas no backend.
-          </p>
+          <button
+            className="inline-flex h-11 items-center justify-center gap-2 rounded-control bg-primary px-4 text-sm font-black text-white shadow-sm transition hover:bg-primary/90 sm:ml-auto"
+            onClick={() => setCreateModalOpen(true)}
+            type="button"
+          >
+            <Plus aria-hidden className="h-4 w-4" />
+            Criar nova regra
+          </button>
         </div>
-        <StatusBadge tone="muted">{numberFormatter.format(sortedRules.length)} regras</StatusBadge>
-      </div>
+        <p className="mt-2 text-sm text-muted">
+          {formatCountLabel(sortedRules.length, "regra exibida", "regras exibidas")} na comunidade.
+        </p>
 
-      <div className="mt-5 space-y-3">
-        {sortedRules.length === 0 ? (
-          <p className="rounded-2xl bg-surface-muted p-4 text-sm text-muted">
-            Nenhuma regra cadastrada para esta comunidade.
-          </p>
-        ) : (
-          sortedRules.map((rule, index) => (
-            <article
-              className={cn(
-                "rounded-2xl border p-4",
-                rule.active
-                  ? "border-border bg-surface"
-                  : "border-border bg-surface-muted opacity-75",
-              )}
-              key={rule.id}
-            >
-              {editingRuleId === rule.id ? (
-                <RuleEditForm
-                  disabled={updateMutation.isPending}
-                  onCancel={() => setEditingRuleId(null)}
-                  onSubmit={(values) => updateRule(rule, toRulePayload(values, rule))}
-                  rule={rule}
-                />
-              ) : (
-                <div className="grid gap-4 xl:grid-cols-[1fr_auto]">
-                  <div className="flex gap-3">
-                    <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-primary-soft text-xs font-black text-primary">
-                      {index + 1}
-                    </span>
-                    <div>
-                      <div className="flex flex-wrap items-center gap-2">
-                        <h3 className="font-black text-foreground">{rule.title}</h3>
-                        <StatusBadge tone={rule.active ? "green" : "muted"}>
-                          {rule.active ? "Ativa" : "Inativa"}
-                        </StatusBadge>
-                      </div>
-                      <p className="mt-1 text-sm leading-6 text-muted">{rule.description}</p>
-                    </div>
-                  </div>
-                  <div className="flex flex-wrap gap-2 xl:justify-end">
-                    <button
-                      aria-label={`Subir regra ${rule.title}`}
-                      className="grid h-10 w-10 place-items-center rounded-xl border border-border text-muted transition hover:border-primary hover:text-primary disabled:opacity-40"
-                      disabled={index === 0 || updateMutation.isPending}
-                      onClick={() => void moveRule(rule, -1)}
-                      type="button"
-                    >
-                      <ArrowUp aria-hidden className="h-4 w-4" />
-                    </button>
-                    <button
-                      aria-label={`Descer regra ${rule.title}`}
-                      className="grid h-10 w-10 place-items-center rounded-xl border border-border text-muted transition hover:border-primary hover:text-primary disabled:opacity-40"
-                      disabled={index === sortedRules.length - 1 || updateMutation.isPending}
-                      onClick={() => void moveRule(rule, 1)}
-                      type="button"
-                    >
-                      <ArrowDown aria-hidden className="h-4 w-4" />
-                    </button>
-                    <button
-                      className="inline-flex h-10 items-center gap-2 rounded-xl border border-border px-3 text-xs font-black text-muted transition hover:border-primary hover:text-primary"
+        <div className="mt-5 space-y-3">
+          {sortedRules.length === 0 ? (
+            <p className="rounded-2xl bg-surface-muted p-4 text-sm text-muted">
+              Nenhuma regra cadastrada para esta comunidade.
+            </p>
+          ) : (
+            sortedRules.map((rule, index) => {
+              const isEditing = editingRuleId === rule.id;
+              const isDropTarget = dropTargetRuleId === rule.id && draggedRuleId !== rule.id;
+
+              return (
+                <article
+                  className={cn(
+                    "rounded-2xl border border-border bg-surface p-4 transition",
+                    !isEditing && "cursor-grab active:cursor-grabbing",
+                    isDropTarget && "border-primary bg-primary-soft/40",
+                  )}
+                  draggable={!isEditing && !updateMutation.isPending}
+                  key={rule.id}
+                  onDragEnd={handleDragEnd}
+                  onDragLeave={(event) => handleDragLeave(event, rule.id)}
+                  onDragOver={(event) => handleDragOver(event, rule.id)}
+                  onDragStart={(event) => handleDragStart(event, rule.id)}
+                  onDrop={(event) => handleDrop(event, rule.id)}
+                >
+                  {isEditing ? (
+                    <RuleEditForm
                       disabled={updateMutation.isPending}
-                      onClick={() => void toggleRule(rule)}
-                      type="button"
-                    >
-                      {rule.active ? (
-                        <ToggleRight aria-hidden className="h-4 w-4" />
-                      ) : (
-                        <ToggleLeft aria-hidden className="h-4 w-4" />
-                      )}
-                      {rule.active ? "Desativar" : "Ativar"}
-                    </button>
-                    <button
-                      className="inline-flex h-10 items-center gap-2 rounded-xl border border-border px-3 text-xs font-black text-muted transition hover:border-primary hover:text-primary"
-                      onClick={() => setEditingRuleId(rule.id)}
-                      type="button"
-                    >
-                      <Edit3 aria-hidden className="h-4 w-4" />
-                      Editar
-                    </button>
-                    <button
-                      className="inline-flex h-10 items-center gap-2 rounded-xl border border-red-100 px-3 text-xs font-black text-danger transition hover:bg-red-50"
-                      disabled={deleteMutation.isPending}
-                      onClick={() => void deleteRule(rule)}
-                      type="button"
-                    >
-                      <Trash2 aria-hidden className="h-4 w-4" />
-                      Remover
-                    </button>
-                  </div>
-                </div>
-              )}
-            </article>
-          ))
-        )}
-      </div>
+                      onCancel={() => setEditingRuleId(null)}
+                      onSubmit={(values) => updateRule(rule, toRulePayload(values, rule))}
+                      rule={rule}
+                    />
+                  ) : (
+                    <div className="grid gap-4 xl:grid-cols-[1fr_auto] xl:items-center">
+                      <div className="flex min-w-0 items-start gap-3">
+                        <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-primary-soft text-xs font-black text-primary">
+                          {index + 1}
+                        </span>
+                        <GripVertical aria-hidden className="mt-1.5 h-5 w-5 shrink-0 text-muted" />
+                        <p className="min-w-0 text-sm leading-6 text-muted">{rule.description}</p>
+                      </div>
+                      <div className="flex flex-wrap gap-2 xl:justify-end">
+                        <button
+                          aria-label="Editar regra"
+                          className="grid h-10 w-10 place-items-center rounded-xl border border-border text-muted transition hover:border-primary hover:text-primary"
+                          onClick={() => setEditingRuleId(rule.id)}
+                          title="Editar regra"
+                          type="button"
+                        >
+                          <Edit3 aria-hidden className="h-4 w-4" />
+                        </button>
+                        <button
+                          aria-label="Remover regra"
+                          className="grid h-10 w-10 place-items-center rounded-xl border border-red-100 text-danger transition hover:bg-red-50"
+                          disabled={deleteMutation.isPending}
+                          onClick={() => void deleteRule(rule)}
+                          title="Remover regra"
+                          type="button"
+                        >
+                          <Trash2 aria-hidden className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </article>
+              );
+            })
+          )}
+        </div>
+      </section>
 
-      <RuleCreateForm
+      <RuleCreateModal
         disabled={createMutation.isPending}
         nextPosition={nextPosition}
+        onClose={() => setCreateModalOpen(false)}
         onSubmit={createRule}
+        open={createModalOpen}
       />
-    </section>
+    </>
   );
 };
 

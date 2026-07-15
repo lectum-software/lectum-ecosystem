@@ -616,3 +616,15 @@ Regras de cálculo:
 - Nao houve package novo, schema Prisma/migration, mock, endpoint paralelo ou alteracao em dados persistidos alem do proximo salvamento real da comunidade.
 - ADR criado: `adrs/0273-cor-unica-identidade-visual-comunidades.md`.
 - Validacao executada: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e smoke local `GET http://localhost:3002/comunidades/ansiedade-em-equilibrio?tab=dados`/`GET http://localhost:3002/comunidades/nova`/`GET http://localhost:3000/community/ansiedade-em-equilibrio` retornando 200.
+
+## Ajuste complementar 2026-07-15 - Regras da comunidade descritivas e arrastaveis
+
+- Pedido do usuario: remover titulo/status/acoes de ativacao e formulario inline das regras, exibir apenas a descricao, permitir reordenacao por arrastar, criar nova regra via modal e refletir o mesmo modelo sem titulo no site publico.
+- O Admin passou a exibir `N regras exibidas na comunidade.` no texto auxiliar, sem a tag de contagem, com o botao `Criar nova regra` alinhado a direita do cabecalho.
+- A criacao/edicao de regra usa um unico campo de texto com React Hook Form/Zod/controllers; o `title` continua sendo gerado internamente a partir da descricao apenas para compatibilidade com o contrato real do backend.
+- A ordenacao dos cards usa HTML Drag and Drop e persiste `position` pelos endpoints reais existentes; editar/remover usam botoes icon-only com rotulos acessiveis.
+- O site publico de comunidade renderiza somente a descricao das regras, ordenada por `position`, sem titulo no texto visivel.
+- Nao houve package novo, mock, schema Prisma/migration ou endpoint paralelo.
+- Builder/Quick Copy nao esta exposto como ferramenta no ambiente; a referencia visual usada foi a captura enviada pelo usuario e o padrao local do Admin.
+- ADR criado: `adrs/0274-regras-comunidade-descritivas-arrastaveis.md`.
+- Validacao executada: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check`, `pnpm --dir backend build` e smoke local `GET http://localhost:3002/comunidades/ansiedade-em-equilibrio?tab=dados`/`GET http://localhost:3000/community/ansiedade-em-equilibrio` retornando 200.
