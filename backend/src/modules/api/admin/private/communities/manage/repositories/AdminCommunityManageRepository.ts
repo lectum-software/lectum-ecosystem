@@ -113,6 +113,21 @@ const adminContentAuthorSelect = {
   avatar: true,
   id: true,
   name: true,
+  psychologist_profile: {
+    select: {
+      cfp_verified_at: true,
+      crp_status: true,
+      professional_first_name: true,
+      professional_last_name: true,
+      subscriptions: {
+        where: activeProfessionalEntitlementWhere(),
+        select: {
+          id: true,
+          source: true,
+        },
+      },
+    },
+  },
   role: true,
 } satisfies Prisma.userSelect;
 
@@ -127,6 +142,20 @@ const adminCommunityContentPostSelect = {
   deletedAt: true,
   downvotes_count: true,
   id: true,
+  media_items: {
+    orderBy: [{ position: "asc" }, { createdAt: "asc" }, { id: "asc" }],
+    select: {
+      id: true,
+      media_type: true,
+      media_url: true,
+      position: true,
+    },
+    where: {
+      deleted: false,
+    },
+  },
+  media_type: true,
+  media_url: true,
   replies_count: true,
   reports: {
     where: {
@@ -156,9 +185,19 @@ const adminCommunityContentReplySelect = {
   post_id: true,
   post: {
     select: {
+      content: true,
       deleted: true,
       id: true,
       status: true,
+      title: true,
+    },
+  },
+  media_type: true,
+  media_url: true,
+  parent_reply: {
+    select: {
+      content: true,
+      id: true,
       title: true,
     },
   },

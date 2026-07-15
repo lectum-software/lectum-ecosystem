@@ -46,3 +46,24 @@ Também foi definido que o ranking de mentores da comunidade, no Admin, precisa 
 - `pnpm --dir admin build`
 - `pnpm check`
 - `pnpm --dir frontend build`
+
+## Atualização 2026-07-15: contexto operacional do conteúdo
+
+O card da aba **Conteúdo** passa a priorizar o tipo operacional do item em vez do status publicado. A tag verde
+`Publicado` foi removida; somente itens removidos mantêm marcação de status, enquanto conteúdos ativos exibem a
+classificação de autoria/forma:
+
+- post de paciente;
+- comentário de paciente;
+- post de psicólogo verificado;
+- resposta de psicólogo verificado;
+- post de psicólogo não verificado;
+- resposta de psicólogo não verificado.
+
+A classificação é derivada no backend a partir de `user.role`, do tipo de entidade real (`community_post` ou
+`post_reply`) e do mesmo critério de verificação profissional usado no produto público
+(`isVerifiedProfessionalEntitlement`). O contrato também expõe a primeira mídia publicada do conteúdo, quando existir,
+e uma prévia segura do conteúdo de origem para comentários/respostas, sem armazenar dado novo nem criar mock.
+
+Consequência: a moderação contextual consegue diferenciar rapidamente autoria e natureza do conteúdo, ver mídia
+publicada e entender a origem de comentários/respostas sem abrir a página pública em outra aba.

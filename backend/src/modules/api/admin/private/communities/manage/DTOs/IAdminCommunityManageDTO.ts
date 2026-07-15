@@ -164,11 +164,24 @@ export type AdminCommunityContentItemDTO = {
     id: string;
     name: string;
     role: string;
+    verified: boolean;
   };
+  content_kind:
+    | "patient_comment"
+    | "patient_post"
+    | "unverified_psychologist_post"
+    | "unverified_psychologist_reply"
+    | "verified_psychologist_post"
+    | "verified_psychologist_reply";
+  content_kind_label: string;
   content_id: string;
   created_at: Date;
   deleted_at: Date | null;
   excerpt: string;
+  media: {
+    media_type: string;
+    media_url: string;
+  } | null;
   metrics: {
     comments_count: number;
     downvotes_count: number;
@@ -176,6 +189,12 @@ export type AdminCommunityContentItemDTO = {
     saves_count: number;
     upvotes_count: number;
   };
+  origin_preview: {
+    excerpt: string;
+    label: string;
+    title: string | null;
+    type: "comment" | "post";
+  } | null;
   parent_post_title: string | null;
   post_id: string;
   public_url: string;

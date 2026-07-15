@@ -141,3 +141,15 @@ Regras:
   - `http://localhost:3002/comunidades/ansiedade-em-equilibrio?tab=conteudo` retornou 200;
   - `http://localhost:3002/comunidades/ansiedade-em-equilibrio?tab=ranking` retornou 200.
 - Smoke HTTP dos novos endpoints Admin privados não foi executado porque o backend local não estava em execução em `localhost:3001`; contratos e proteção foram validados por typecheck/build/check. Mutação real de remoção não foi disparada sem sessão Admin e sem intenção explícita de alterar conteúdo real.
+
+## Ajuste complementar 2026-07-15 - Contexto do conteúdo na aba Conteúdo
+
+- Pedido do usuário: na aba **Conteúdo** do detalhe administrativo de comunidade, remover a tag verde `Publicado`, informar se o item é post/comentário de paciente ou post/resposta de psicólogo verificado/não verificado, exibir miniatura quando houver mídia e mostrar prévia do conteúdo de origem em comentários/respostas.
+- O backend de `GET /api/admin/private/communities/:id/content` passou a retornar classificação operacional derivada de dados reais (`community_post`, `post_reply`, `user.role` e verificação profissional real), primeira mídia publicada e `origin_preview` para itens de comentário/resposta.
+- A UI Admin removeu a tag verde `Publicado`; conteúdos ativos exibem a classificação de autoria/forma e itens removidos continuam marcados como `Removido`.
+- A miniatura usa `next/image` para imagens e `<video>` somente para mídia de vídeo, sem `<img>` cru; URLs públicas de arquivos são resolvidas contra `NEXT_PUBLIC_API_URL`.
+- A prévia de origem segue o padrão visual da página pública **Minhas respostas**, usando o post original para comentários diretos e o comentário de origem para respostas.
+- Não houve package novo, mock, schema Prisma/migration, endpoint paralelo ou alteração de dados persistidos.
+- Builder/Quick Copy não está exposto como ferramenta callable no ambiente; a referência visual usada foi a captura enviada pelo usuário, `_product/proto/admin/Comunidades/Comunidades - Detalhes.png` e o padrão local do Admin/site público.
+- ADR atualizado: `adrs/0264-admin-comunidade-abas-conteudo-ranking.md`.
+- Validação executada: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke local `GET http://localhost:3002/comunidades/tdah?tab=conteudo` retornando 200.

@@ -9,8 +9,10 @@ import {
   Edit3,
   Eye,
   GripVertical,
+  Image as ImageIcon,
   Loader2,
   MessageCircle,
+  Play,
   Plus,
   RefreshCw,
   Save,
@@ -72,6 +74,9 @@ const dateTimeFormatter = new Intl.DateTimeFormat("pt-BR", {
   dateStyle: "short",
   timeStyle: "short",
 });
+const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+const publicFrontendUrl = process.env.NEXT_PUBLIC_FRONTEND_URL || "http://localhost:3000";
+const publicMediaPathPrefixes = ["/public/files/", "/community/icons/"] as const;
 const hexColor = /^#[0-9A-Fa-f]{6}$/;
 const colorSchema = z
   .string()
@@ -102,6 +107,7 @@ const removeContentFormSchema = z.object({
 type CommunityFormValues = z.infer<typeof communityFormSchema>;
 type RuleFormValues = z.infer<typeof ruleFormSchema>;
 type RemoveContentFormValues = z.infer<typeof removeContentFormSchema>;
+
 type RuleDragMetric = {
   bottom: number;
   height: number;
@@ -126,7 +132,6 @@ type RuleDragState = {
   targetIndex: number;
 };
 
-
 const communityTabs = [
   { id: "geral", label: "Geral" },
   { id: "dados", label: "Dados" },
@@ -140,6 +145,90 @@ type CommunityTab = (typeof communityTabs)[number]["id"];
 
 const parseCommunityTab = (value: string | null): CommunityTab =>
   communityTabs.some((tab) => tab.id === value) ? (value as CommunityTab) : "geral";
+
+const isPublicMediaPath = (pathname: string) =>
+  publicMediaPathPrefixes.some((prefix) => pathname.startsWith(prefix));
+
+const resolveAdminMediaUrl = (src?: string | null) => {
+  const value = src?.trim();
+  if (!value) return null;
+
+  const apiBase = apiUrl.replace(/\/$/, "");
+
+  try {
+    const parsed = new URL(value, apiBase);
+    if (isPublicMediaPath(parsed.pathname)) {
+      return `${apiBase}${parsed.pathname}${parsed.search}`;
+    }
+    if (value.startsWith("http")) return value;
+    return value.startsWith("/") ? value : `${apiBase}/${value}`;
+  } catch {
+    if (publicMediaPathPrefixes.some((prefix) => value.startsWith(prefix))) {
+      return `${apiBase}${value}`;
+    }
+    return value.startsWith("/") || value.startsWith("http") ? value : null;
+  }
+};
+
+const allowedRemoteImageHosts = () => {
+  const hosts = new Set(["localhost", "127.0.0.1", "lh3.googleusercontent.com"]);
+
+  for (const candidate of [
+    apiUrl,
+    ...(process.env.NEXT_PUBLIC_IMAGE_REMOTE_HOSTS?.split(",") ?? []),
+  ]) {
+    const normalized = candidate.trim();
+    if (!normalized) continue;
+
+    try {
+      const url = new URL(normalized.includes("://") ? normalized : `https://${normalized}`);
+      if (url.hostname) hosts.add(url.hostname);
+    } catch {
+      // Entradas inválidas de env não devem quebrar a renderização administrativa.
+    }
+  }
+
+  return hosts;
+};
+
+const canRenderImage = (src: string | null) => {
+  const resolved = resolveAdminMediaUrl(src);
+  if (!resolved) return false;
+  if (resolved.startsWith("/")) return true;
+
+  try {
+    const url = new URL(resolved);
+
+    return allowedRemoteImageHosts().has(url.hostname);
+  } catch {
+    return false;
+  }
+};
+
+const renderableImageSrc = (src: string | null) => {
+  const resolved = resolveAdminMediaUrl(src);
+
+  return resolved && canRenderImage(resolved) ? resolved : null;
+};
+
+const isAdminPublicMediaUrl = (src?: string | null) => {
+  const resolved = resolveAdminMediaUrl(src);
+  if (!resolved) return false;
+
+  try {
+    return isPublicMediaPath(new URL(resolved).pathname);
+  } catch {
+    return publicMediaPathPrefixes.some(
+      (prefix) => resolved.startsWith(prefix) || resolved.includes(prefix),
+    );
+  }
+};
+
+const toPublicHref = (path: string) => {
+  if (/^https?:\/\//.test(path)) return path;
+
+  return `${publicFrontendUrl.replace(/\/$/, "")}${path}`;
+};
 
 const cardClass = "rounded-card border border-border bg-surface shadow-admin-soft";
 
@@ -1485,6 +1574,72 @@ const RemoveContentForm = ({
   );
 };
 
+const ContentMediaThumbnail = ({ item }: { item: AdminCommunityContentItem }) => {
+  if (!item.media) return null;
+
+  const mediaType = item.media.media_type.toLowerCase();
+  const imageSrc = mediaType === "image" ? renderableImageSrc(item.media.media_url) : null;
+  const videoSrc = mediaType === "video" ? resolveAdminMediaUrl(item.media.media_url) : null;
+  const mediaLabel =
+    mediaType === "video" ? "Miniatura de vídeo publicado" : "Miniatura de imagem publicada";
+
+  return (
+    <div className="relative h-24 w-full overflow-hidden rounded-2xl border border-border bg-surface-muted sm:h-28 sm:w-28">
+      {imageSrc ? (
+        <Image
+          alt={mediaLabel}
+          className="object-cover"
+          fill
+          sizes="112px"
+          src={imageSrc}
+          unoptimized={isAdminPublicMediaUrl(item.media.media_url)}
+        />
+      ) : null}
+      {!imageSrc && videoSrc ? (
+        <>
+          <video
+            aria-label={mediaLabel}
+            className="h-full w-full object-cover"
+            muted
+            playsInline
+            preload="metadata"
+            src={videoSrc}
+          />
+          <span className="absolute inset-0 grid place-items-center bg-foreground/25 text-white">
+            <Play className="h-7 w-7 fill-current" />
+          </span>
+        </>
+      ) : null}
+      {!imageSrc && !videoSrc ? (
+        <div className="grid h-full place-items-center gap-1 p-3 text-center text-xs font-black text-muted">
+          <ImageIcon className="mx-auto h-5 w-5" />
+          <span>Mídia publicada</span>
+        </div>
+      ) : null}
+    </div>
+  );
+};
+
+const ContentOriginPreview = ({ item }: { item: AdminCommunityContentItem }) => {
+  if (!item.origin_preview) return null;
+
+  const origin = item.origin_preview;
+
+  return (
+    <blockquote className="mt-3 overflow-hidden rounded-2xl border border-primary/10 bg-primary-soft/40 px-4 py-3">
+      <p className="text-[11px] font-black uppercase tracking-[0.08em] text-primary">
+        {origin.label}
+      </p>
+      {origin.title ? (
+        <p className="mt-1 line-clamp-1 text-xs font-black text-foreground">{origin.title}</p>
+      ) : null}
+      <p className="mt-1 line-clamp-2 text-xs font-semibold leading-5 text-muted">
+        {origin.excerpt || "Sem texto."}
+      </p>
+    </blockquote>
+  );
+};
+
 const ContentItemCard = ({
   item,
   selected,
@@ -1498,23 +1653,25 @@ const ContentItemCard = ({
 }) => (
   <article className="rounded-2xl border border-border bg-surface p-4">
     <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-      <div>
-        <div className="flex flex-wrap items-center gap-2">
-          <StatusBadge tone={item.status === "published" ? "green" : "muted"}>
-            {item.status === "published" ? "Publicado" : "Removido"}
-          </StatusBadge>
-          <span className="rounded-full bg-surface-muted px-2.5 py-1 text-xs font-black text-muted">
-            {item.type === "post" ? "Post" : "Comentário"}
-          </span>
-          <span className="text-xs font-bold text-muted">{formatDateTime(item.created_at)}</span>
+      <div className={cn("grid min-w-0 flex-1 gap-3", item.media && "sm:grid-cols-[112px_1fr]")}>
+        <ContentMediaThumbnail item={item} />
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-2">
+            {item.status === "removed" ? <StatusBadge tone="muted">Removido</StatusBadge> : null}
+            <span className="rounded-full bg-surface-muted px-2.5 py-1 text-xs font-black text-muted">
+              {item.content_kind_label}
+            </span>
+            <span className="text-xs font-bold text-muted">{formatDateTime(item.created_at)}</span>
+          </div>
+          <h3 className="mt-3 text-base font-black text-foreground">
+            {item.title || item.parent_post_title || "Comentário sem título"}
+          </h3>
+          <p className="mt-2 text-sm leading-6 text-muted">{item.excerpt || "Sem texto."}</p>
+          <ContentOriginPreview item={item} />
+          <p className="mt-2 text-xs font-bold text-muted">
+            Autor: {item.author.name} ({item.author.role})
+          </p>
         </div>
-        <h3 className="mt-3 text-base font-black text-foreground">
-          {item.title || item.parent_post_title || "Comentário sem título"}
-        </h3>
-        <p className="mt-2 text-sm leading-6 text-muted">{item.excerpt || "Sem texto."}</p>
-        <p className="mt-2 text-xs font-bold text-muted">
-          Autor: {item.author.name} ({item.author.role})
-        </p>
       </div>
       <div className="grid gap-2 text-xs font-bold text-muted sm:grid-cols-5 lg:min-w-[360px]">
         <span>{numberFormatter.format(item.metrics.upvotes_count)} upvotes</span>
@@ -1527,7 +1684,7 @@ const ContentItemCard = ({
     <div className="mt-4 flex flex-wrap gap-2">
       <Link
         className="inline-flex h-10 items-center justify-center gap-2 rounded-control border border-border px-3 text-xs font-black text-foreground transition hover:border-primary hover:text-primary"
-        href={item.public_url}
+        href={toPublicHref(item.public_url)}
         target="_blank"
       >
         <Eye className="h-4 w-4" />

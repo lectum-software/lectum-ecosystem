@@ -2,6 +2,7 @@
 import { error, msg } from "@/helpers/translate";
 import { deriveCommunityVisualColorFields, isCommunityHexColor } from "@/utils/community-visual";
 import { buildProfessionalFullDisplayName } from "@/utils/professional-name";
+import { isVerifiedProfessionalEntitlement } from "@/utils/subscription-entitlement";
 import type {
   AdminCommunitiesListItemDTO,
   AdminCommunitiesListQuery,
@@ -320,68 +321,180 @@ const contentIsRemoved = (
   return item.deleted || item.post.deleted || item.post.status === "removido";
 };
 
+type AdminCommunityContentAuthor =
+  | AdminCommunityContentPostRecord["author"]
+  | AdminCommunityContentReplyRecord["author"];
+type AdminCommunityContentKind = AdminCommunityContentItemDTO["content_kind"];
+
+const contentKindLabels: Record<AdminCommunityContentKind, string> = {
+  patient_comment: "Comentário de paciente",
+  patient_post: "Post de paciente",
+  unverified_psychologist_post: "Post de psicólogo não verificado",
+  unverified_psychologist_reply: "Resposta de psicólogo não verificado",
+  verified_psychologist_post: "Post de psicólogo verificado",
+  verified_psychologist_reply: "Resposta de psicólogo verificado",
+};
+
+const isContentAuthorVerified = (author: AdminCommunityContentAuthor) =>
+  author.role === "psicologo" && isVerifiedProfessionalEntitlement(author.psychologist_profile);
+
+const contentKindFor = (
+  type: AdminCommunityContentItemDTO["type"],
+  author: AdminCommunityContentAuthor,
+): AdminCommunityContentKind => {
+  if (author.role !== "psicologo") return type === "post" ? "patient_post" : "patient_comment";
+
+  const verified = isContentAuthorVerified(author);
+  if (type === "post") {
+    return verified ? "verified_psychologist_post" : "unverified_psychologist_post";
+  }
+
+  return verified ? "verified_psychologist_reply" : "unverified_psychologist_reply";
+};
+
+const contentAuthorName = (author: AdminCommunityContentAuthor, anonymous = false) => {
+  if (anonymous && author.role !== "psicologo") return "Paciente anônimo";
+  if (author.role !== "psicologo") return author.name;
+
+  return buildProfessionalFullDisplayName({
+    fallbackName: author.name,
+    firstName: author.psychologist_profile?.professional_first_name,
+    lastName: author.psychologist_profile?.professional_last_name,
+  });
+};
+
+const contentMedia = (
+  mediaUrl?: string | null,
+  mediaType?: string | null,
+): AdminCommunityContentItemDTO["media"] => {
+  if (!mediaUrl || !mediaType) return null;
+
+  return {
+    media_type: mediaType,
+    media_url: mediaUrl,
+  };
+};
+
+const postMedia = (post: AdminCommunityContentPostRecord) => {
+  const firstMedia = post.media_items[0];
+
+  return contentMedia(
+    firstMedia?.media_url ?? post.media_url,
+    firstMedia?.media_type ?? post.media_type,
+  );
+};
+
+const replyPublicUrl = (
+  community: AdminCommunityRecord,
+  reply: AdminCommunityContentReplyRecord,
+) =>
+  reply.parent_reply_id
+    ? `/community/${community.slug}/post/${reply.post_id}/thread/${reply.parent_reply_id}#reply-${reply.id}`
+    : `/community/${community.slug}/post/${reply.post_id}?focusReplyId=${encodeURIComponent(
+        reply.id,
+      )}#reply-${reply.id}`;
+
 const mapPostContent = (
   community: AdminCommunityRecord,
   post: AdminCommunityContentPostRecord,
-): AdminCommunityContentItemDTO => ({
-  author: {
-    avatar: post.author.avatar,
-    id: post.author.id,
-    name: post.anonymous ? "Paciente anônimo" : post.author.name,
-    role: post.anonymous ? "anonymous" : post.author.role,
-  },
-  content_id: post.id,
-  created_at: post.createdAt,
-  deleted_at: post.deletedAt,
-  excerpt: excerpt(post.content),
-  metrics: {
-    comments_count: post.replies_count,
-    downvotes_count: post.downvotes_count,
-    reports_count: post.reports.length,
-    saves_count: post.saves_count,
-    upvotes_count: post.upvotes_count,
-  },
-  parent_post_title: null,
-  post_id: post.id,
-  public_url: `/community/${community.slug}/post/${post.id}`,
-  status: contentIsRemoved(post) ? "removed" : "published",
-  title: post.title,
-  type: "post",
-});
+): AdminCommunityContentItemDTO => {
+  const contentKind = contentKindFor("post", post.author);
+
+  return {
+    author: {
+      avatar: post.author.avatar,
+      id: post.author.id,
+      name: contentAuthorName(post.author, post.anonymous),
+      role: post.anonymous ? "anonymous" : post.author.role,
+      verified: isContentAuthorVerified(post.author),
+    },
+    content_id: post.id,
+    content_kind: contentKind,
+    content_kind_label: contentKindLabels[contentKind],
+    created_at: post.createdAt,
+    deleted_at: post.deletedAt,
+    excerpt: excerpt(post.content),
+    media: postMedia(post),
+    metrics: {
+      comments_count: post.replies_count,
+      downvotes_count: post.downvotes_count,
+      reports_count: post.reports.length,
+      saves_count: post.saves_count,
+      upvotes_count: post.upvotes_count,
+    },
+    origin_preview: null,
+    parent_post_title: null,
+    post_id: post.id,
+    public_url: `/community/${community.slug}/post/${post.id}`,
+    status: contentIsRemoved(post) ? "removed" : "published",
+    title: post.title,
+    type: "post",
+  };
+};
 
 const mapReplyContent = (
   community: AdminCommunityRecord,
   reply: AdminCommunityContentReplyRecord,
-): AdminCommunityContentItemDTO => ({
-  author: {
-    avatar: reply.author.avatar,
-    id: reply.author.id,
-    name: reply.author.name,
-    role: reply.author.role,
-  },
-  content_id: reply.id,
-  created_at: reply.createdAt,
-  deleted_at: reply.deletedAt,
-  excerpt: excerpt(reply.content),
-  metrics: {
-    comments_count: 0,
-    downvotes_count: reply.downvotes_count,
-    reports_count: reply.reports.length,
-    saves_count: reply.saves.length,
-    upvotes_count: reply.upvotes_count,
-  },
-  parent_post_title: reply.post.title,
-  post_id: reply.post_id,
-  public_url: `/community/${community.slug}/post/${reply.post_id}`,
-  status: contentIsRemoved(reply) ? "removed" : "published",
-  title: reply.title,
-  type: "comment",
-});
+): AdminCommunityContentItemDTO => {
+  const contentKind = contentKindFor("comment", reply.author);
+  const originPreview: AdminCommunityContentItemDTO["origin_preview"] = reply.parent_reply_id
+    ? {
+        excerpt: excerpt(reply.parent_reply?.content),
+        label: "Comentário de origem",
+        title: reply.parent_reply?.title ?? null,
+        type: "comment",
+      }
+    : {
+        excerpt: excerpt(reply.post.content),
+        label: "Post de origem",
+        title: reply.post.title,
+        type: "post",
+      };
+
+  return {
+    author: {
+      avatar: reply.author.avatar,
+      id: reply.author.id,
+      name: contentAuthorName(reply.author),
+      role: reply.author.role,
+      verified: isContentAuthorVerified(reply.author),
+    },
+    content_id: reply.id,
+    content_kind: contentKind,
+    content_kind_label: contentKindLabels[contentKind],
+    created_at: reply.createdAt,
+    deleted_at: reply.deletedAt,
+    excerpt: excerpt(reply.content),
+    media: contentMedia(reply.media_url, reply.media_type),
+    metrics: {
+      comments_count: 0,
+      downvotes_count: reply.downvotes_count,
+      reports_count: reply.reports.length,
+      saves_count: reply.saves.length,
+      upvotes_count: reply.upvotes_count,
+    },
+    origin_preview: originPreview,
+    parent_post_title: reply.post.title,
+    post_id: reply.post_id,
+    public_url: replyPublicUrl(community, reply),
+    status: contentIsRemoved(reply) ? "removed" : "published",
+    title: reply.title,
+    type: "comment",
+  };
+};
 
 const contentMatchesSearch = (item: AdminCommunityContentItemDTO, search: string) => {
   if (!search) return true;
 
-  return [item.title, item.excerpt, item.parent_post_title, item.author.name]
+  return [
+    item.title,
+    item.excerpt,
+    item.parent_post_title,
+    item.author.name,
+    item.content_kind_label,
+    item.origin_preview?.title,
+    item.origin_preview?.excerpt,
+  ]
     .filter(Boolean)
     .some((value) => value?.toLowerCase().includes(search));
 };
