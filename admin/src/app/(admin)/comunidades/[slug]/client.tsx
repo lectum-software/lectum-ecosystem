@@ -5,6 +5,7 @@ import {
   AlertTriangle,
   ArrowDown,
   ArrowUp,
+  Bookmark,
   CalendarDays,
   Edit3,
   Eye,
@@ -12,6 +13,7 @@ import {
   Image as ImageIcon,
   Loader2,
   MessageCircle,
+  Play,
   Plus,
   RefreshCw,
   Save,
@@ -1625,22 +1627,57 @@ const ContentMediaThumbnail = ({ item }: { item: AdminCommunityContentItem }) =>
           unoptimized={isAdminPublicMediaUrl(item.media.media_url)}
         />
       ) : null}
-      {!imageSrc && videoSrc ? (
-        <video
-          aria-label={mediaLabel}
-          className="h-full w-full object-cover"
-          controls
-          muted
-          playsInline
-          preload="metadata"
-          src={videoSrc}
-        />
-      ) : null}
+      {!imageSrc && videoSrc ? <ContentVideoMiniplayer label={mediaLabel} src={videoSrc} /> : null}
       {!imageSrc && !videoSrc ? (
         <div className="grid h-full place-items-center gap-1 p-3 text-center text-xs font-black text-muted">
           <ImageIcon className="mx-auto h-5 w-5" />
           <span>Mídia publicada</span>
         </div>
+      ) : null}
+    </div>
+  );
+};
+
+const ContentVideoMiniplayer = ({ label, src }: { label: string; src: string }) => {
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+
+  const playVideo = () => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    if (video.paused) {
+      void video.play();
+      return;
+    }
+
+    video.pause();
+  };
+
+  return (
+    <div className="relative h-full w-full">
+      <video
+        aria-label={label}
+        className="h-full w-full object-cover"
+        controls
+        muted
+        onEnded={() => setIsPlaying(false)}
+        onPause={() => setIsPlaying(false)}
+        onPlay={() => setIsPlaying(true)}
+        playsInline
+        preload="metadata"
+        ref={videoRef}
+        src={src}
+      />
+      {!isPlaying ? (
+        <button
+          aria-label="Reproduzir vídeo publicado"
+          className="absolute left-1/2 top-1/2 inline-flex h-11 w-11 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-foreground/70 text-background shadow-sm transition hover:bg-foreground"
+          onClick={playVideo}
+          type="button"
+        >
+          <Play aria-hidden className="h-5 w-5 fill-current" />
+        </button>
       ) : null}
     </div>
   );
@@ -1666,6 +1703,99 @@ const ContentOriginPreview = ({ item }: { item: AdminCommunityContentItem }) => 
   );
 };
 
+const ContentMetrics = ({ item }: { item: AdminCommunityContentItem }) => (
+  <div className="mt-4 border-t border-border pt-3">
+    <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-xs font-bold text-muted">
+      <span className="inline-flex items-center gap-1.5">
+        <ArrowUp aria-hidden className="h-4 w-4" />
+        {numberFormatter.format(item.metrics.upvotes_count)} upvotes
+      </span>
+      <span className="inline-flex items-center gap-1.5">
+        <ArrowDown aria-hidden className="h-4 w-4" />
+        {numberFormatter.format(item.metrics.downvotes_count)} downvotes
+      </span>
+      <span className="inline-flex items-center gap-1.5">
+        <MessageCircle aria-hidden className="h-4 w-4" />
+        {numberFormatter.format(item.metrics.comments_count)} comentários
+      </span>
+      <span className="inline-flex items-center gap-1.5">
+        <Bookmark aria-hidden className="h-4 w-4" />
+        {numberFormatter.format(item.metrics.saves_count)} salvos
+      </span>
+      <span className="inline-flex items-center gap-1.5">
+        <AlertTriangle aria-hidden className="h-4 w-4" />
+        {numberFormatter.format(item.metrics.reports_count)} denúncias
+      </span>
+    </div>
+  </div>
+);
+
+const ContentItemHeader = ({ item }: { item: AdminCommunityContentItem }) => (
+  <div className="flex flex-wrap items-center gap-2">
+    {item.status === "removed" ? <StatusBadge tone="muted">Removido</StatusBadge> : null}
+    <span className="rounded-full bg-surface-muted px-2.5 py-1 text-xs font-black text-muted">
+      {item.content_kind_label}
+    </span>
+    <span className="text-xs font-bold text-muted">{formatDateTime(item.created_at)}</span>
+  </div>
+);
+
+const ContentItemBody = ({ item }: { item: AdminCommunityContentItem }) => {
+  const hasText = item.excerpt.trim().length > 0;
+
+  if (item.type === "post") {
+    return (
+      <>
+        <h3 className="mt-3 text-base font-black text-foreground">
+          {item.title || "Post sem título"}
+        </h3>
+        <p className="mt-2 text-sm leading-6 text-muted">{hasText ? item.excerpt : "Sem texto."}</p>
+      </>
+    );
+  }
+
+  if (!hasText) return null;
+
+  return <p className="mt-3 text-sm leading-6 text-muted">{item.excerpt}</p>;
+};
+
+const ContentAuthorLine = ({ item }: { item: AdminCommunityContentItem }) => (
+  <p className="mt-2 text-xs font-bold text-muted">
+    Autor: {item.author.name} ({item.author.role})
+  </p>
+);
+
+const ContentItemMain = ({ item }: { item: AdminCommunityContentItem }) => {
+  const mediaTextGridClass = cn("grid min-w-0 gap-3", item.media && "sm:grid-cols-[112px_1fr]");
+
+  if (item.type === "comment") {
+    return (
+      <div className="min-w-0">
+        <ContentItemHeader item={item} />
+        <ContentOriginPreview item={item} />
+        <div className={cn("mt-3", mediaTextGridClass)}>
+          <ContentMediaThumbnail item={item} />
+          <div className="min-w-0">
+            <ContentItemBody item={item} />
+            <ContentAuthorLine item={item} />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className={cn("grid min-w-0 gap-3", item.media && "sm:grid-cols-[112px_1fr]")}>
+      <ContentMediaThumbnail item={item} />
+      <div className="min-w-0">
+        <ContentItemHeader item={item} />
+        <ContentItemBody item={item} />
+        <ContentAuthorLine item={item} />
+      </div>
+    </div>
+  );
+};
+
 const ContentItemCard = ({
   item,
   selected,
@@ -1678,55 +1808,36 @@ const ContentItemCard = ({
   slug: string;
 }) => (
   <article className="rounded-2xl border border-border bg-surface p-4">
-    <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-      <div className={cn("grid min-w-0 flex-1 gap-3", item.media && "sm:grid-cols-[112px_1fr]")}>
-        <ContentMediaThumbnail item={item} />
-        <div className="min-w-0">
-          <div className="flex flex-wrap items-center gap-2">
-            {item.status === "removed" ? <StatusBadge tone="muted">Removido</StatusBadge> : null}
-            <span className="rounded-full bg-surface-muted px-2.5 py-1 text-xs font-black text-muted">
-              {item.content_kind_label}
-            </span>
-            <span className="text-xs font-bold text-muted">{formatDateTime(item.created_at)}</span>
-          </div>
-          <ContentOriginPreview item={item} />
-          <h3 className="mt-3 text-base font-black text-foreground">
-            {item.title || item.parent_post_title || "Comentário sem título"}
-          </h3>
-          <p className="mt-2 text-sm leading-6 text-muted">{item.excerpt || "Sem texto."}</p>
-          <p className="mt-2 text-xs font-bold text-muted">
-            Autor: {item.author.name} ({item.author.role})
-          </p>
-        </div>
-      </div>
-      <div className="grid gap-2 text-xs font-bold text-muted sm:grid-cols-5 lg:min-w-[360px]">
-        <span>{numberFormatter.format(item.metrics.upvotes_count)} upvotes</span>
-        <span>{numberFormatter.format(item.metrics.downvotes_count)} downvotes</span>
-        <span>{numberFormatter.format(item.metrics.comments_count)} comentários</span>
-        <span>{numberFormatter.format(item.metrics.saves_count)} salvos</span>
-        <span>{numberFormatter.format(item.metrics.reports_count)} denúncias</span>
-      </div>
-    </div>
-    <div className="mt-4 flex flex-wrap gap-2">
-      <Link
-        className="inline-flex h-10 items-center justify-center gap-2 rounded-control border border-border px-3 text-xs font-black text-foreground transition hover:border-primary hover:text-primary"
-        href={toPublicHref(item.public_url)}
-        target="_blank"
-      >
-        <Eye className="h-4 w-4" />
-        Ver no site
-      </Link>
-      {item.status === "published" ? (
-        <button
-          className="inline-flex h-10 items-center justify-center gap-2 rounded-control border border-red-100 px-3 text-xs font-black text-danger transition hover:bg-red-50"
-          onClick={() => setSelected(selected ? null : item)}
-          type="button"
+    <div className="grid gap-3 lg:grid-cols-[1fr_auto] lg:items-start">
+      <ContentItemMain item={item} />
+      <div className="flex justify-end gap-2 lg:flex-col">
+        <Link
+          aria-label="Ver conteúdo no site"
+          className="inline-flex h-10 w-10 items-center justify-center rounded-control border border-border text-foreground transition hover:border-primary hover:text-primary"
+          href={toPublicHref(item.public_url)}
+          rel="noreferrer"
+          target="_blank"
+          title="Ver no site"
         >
-          <Trash2 className="h-4 w-4" />
-          {selected ? "Fechar remoção" : "Remover"}
-        </button>
-      ) : null}
+          <Eye aria-hidden className="h-4 w-4" />
+          <span className="sr-only">Ver no site</span>
+        </Link>
+        {item.status === "published" ? (
+          <button
+            aria-label={selected ? "Fechar exclusão" : "Excluir conteúdo"}
+            aria-pressed={selected}
+            className="inline-flex h-10 w-10 items-center justify-center rounded-control border border-danger/20 text-danger transition hover:bg-danger/10"
+            onClick={() => setSelected(selected ? null : item)}
+            title={selected ? "Fechar exclusão" : "Excluir"}
+            type="button"
+          >
+            <Trash2 aria-hidden className="h-4 w-4" />
+            <span className="sr-only">{selected ? "Fechar exclusão" : "Excluir"}</span>
+          </button>
+        ) : null}
+      </div>
     </div>
+    <ContentMetrics item={item} />
     {selected ? (
       <RemoveContentForm item={item} onCancel={() => setSelected(null)} slug={slug} />
     ) : null}

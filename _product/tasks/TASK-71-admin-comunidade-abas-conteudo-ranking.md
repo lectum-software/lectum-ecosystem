@@ -164,3 +164,23 @@ Regras:
 - Builder/Quick Copy não está exposto como ferramenta callable no ambiente; a referência visual usada foi a captura enviada pelo usuário e o padrão local do Admin/site público.
 - ADR atualizado: `adrs/0264-admin-comunidade-abas-conteudo-ranking.md`.
 - Validação executada: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke local `GET http://localhost:3002/comunidades/tdah?tab=conteudo` retornando 200.
+
+## Ajuste complementar 2026-07-15 - Ações laterais e métricas abaixo de divisor
+
+- Pedido do usuário: na aba **Conteúdo**, separar as métricas do conteúdo por uma linha horizontal e mover as opções de visualização/exclusão para a coluna direita, exibindo somente ícones.
+- A UI Admin passou a renderizar ações em coluna lateral no desktop, com botões icon-only acessíveis via `aria-label`, `title` e texto `sr-only`.
+- As métricas de upvotes, downvotes, comentários, salvos e denúncias agora ficam abaixo de um divisor (`border-t`) no rodapé do card, seguindo a leitura visual do site público.
+- Não houve package novo, mock, schema Prisma/migration, endpoint paralelo ou alteração de dados persistidos.
+- Builder/Quick Copy não está exposto como ferramenta callable no ambiente; a referência visual usada foi a captura enviada pelo usuário e o padrão local do Admin/site público.
+- ADR atualizado: `adrs/0264-admin-comunidade-abas-conteudo-ranking.md`.
+
+## Ajuste complementar 2026-07-15 - Play explícito e mídia alinhada à resposta
+
+- Pedido do usuário: adicionar botão de play no miniplayer, não repetir o título do post de origem no corpo da resposta de psicólogo e alinhar o miniplayer à altura da resposta, não à altura do post original.
+- O miniplayer de vídeo agora mantém controles nativos e adiciona botão central de play que dispara `video.play()` no próprio card.
+- Comentários/respostas deixam de renderizar título; exibem somente o texto próprio quando existir, preservando a prévia do conteúdo de origem acima como contexto separado.
+- Em comentários/respostas, a prévia de origem fica acima do grid de mídia/texto; a miniatura/miniplayer passa a alinhar com o corpo da resposta.
+- Não houve package novo, mock, schema Prisma/migration, endpoint paralelo ou alteração de dados persistidos.
+- Builder/Quick Copy não está exposto como ferramenta callable no ambiente; a referência visual usada foi a captura enviada pelo usuário e o padrão local do Admin/site público.
+- ADR atualizado: `adrs/0264-admin-comunidade-abas-conteudo-ranking.md`.
+- Validação executada para os ajustes de layout/miniplayer: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke local `GET http://localhost:3002/comunidades/tdah?tab=conteudo` retornando 200.

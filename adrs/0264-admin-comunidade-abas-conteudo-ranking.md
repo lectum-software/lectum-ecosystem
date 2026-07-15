@@ -83,3 +83,30 @@ Consequências:
 - vídeos usam `<video controls>` no Admin, sem overlay que impeça o play;
 - imagens continuam sendo renderizadas com `next/image`;
 - a mudança é apenas de apresentação e não altera contrato persistido, schema Prisma, endpoint ou dados de produção.
+
+## Atualização 2026-07-15: ações icon-only e métricas no rodapé do card
+
+O card administrativo da aba **Conteúdo** passa a separar ações de moderação/visualização das métricas de engajamento.
+As ações de abrir no site e excluir/remover ficam em uma coluna lateral à direita no desktop, exibindo somente ícones
+visíveis e preservando acessibilidade por `aria-label`, `title` e texto oculto para leitores de tela.
+
+As métricas de upvotes, downvotes, comentários, salvos e denúncias passam para o rodapé do card, abaixo de uma linha
+horizontal. A decisão alinha a leitura ao padrão do site público, reduz competição visual com título, mídia e prévia de
+origem e mantém as métricas como informação secundária de suporte à moderação.
+
+Consequência: a mudança é somente de apresentação no Admin; não altera contrato, persistência, schema Prisma nem regra
+de remoção auditada.
+
+## Atualização 2026-07-15: miniplayer com play explícito e resposta sem título de origem
+
+O miniplayer de vídeo da aba **Conteúdo** passa a exibir um botão central de play além dos controles nativos do
+navegador. O botão aciona o próprio elemento `<video>`, mantendo a reprodução no card administrativo.
+
+Para comentários/respostas, o card separa a prévia de origem do conteúdo próprio: a prévia continua acima como contexto
+do post/comentário respondido, mas o corpo da resposta não repete mais o título do post de origem. A resposta exibe
+apenas seu texto, quando existir, e a mídia publicada. O grid de mídia/texto passa a ser renderizado abaixo da prévia de
+origem, alinhando o miniplayer à altura da resposta.
+
+Consequência: a moderação vê origem e resposta como blocos distintos, sem duplicar título do post original e sem
+deslocar a mídia para a altura do contexto. A mudança permanece apenas visual e não altera contrato de API nem
+persistência.
