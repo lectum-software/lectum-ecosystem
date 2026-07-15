@@ -241,3 +241,14 @@ Regras:
 - Não houve package novo, mock, schema Prisma/migration, endpoint paralelo ou alteração destrutiva de dados.
 - ADR atualizado: drs/0264-admin-comunidade-abas-conteudo-ranking.md.
 - Validação executada: pnpm --dir backend check, pnpm --dir backend build, pnpm --dir admin check, pnpm --dir admin build, pnpm check e smoke local GET http://localhost:3002/comunidades/tdah?tab=conteudo retornando 200.
+
+## Ajuste complementar 2026-07-15 - Fullscreen 9:16 no miniplayer
+
+- Pedido do usuario: quando o miniplayer de video for ampliado/tela cheia, manter o formato vertical 9:16 na tela.
+- A UI Admin passou a aplicar uma classe dedicada ao elemento `<video>` do miniplayer e regras globais para `:fullscreen`/`:-webkit-full-screen` com largura/altura maximizadas dentro da proporcao 9:16.
+- A ampliacao usa fundo preto, centralizacao por `margin:auto` e `object-fit: cover` para preservar a mesma composicao vertical do miniplayer, inclusive quando o arquivo de video tiver metadados em paisagem.
+- Durante a validacao, a aba **Denuncias** deixou de inicializar `period="all"`, pois esse filtro pertence apenas a **Conteudo** e quebrava o typecheck do Admin.
+- Nao houve package novo, mock, schema Prisma/migration, endpoint paralelo ou alteracao de persistencia; apenas CSS/apresentacao no Admin e correcao de tipo da query local.
+- Builder/Quick Copy nao esta exposto como ferramenta callable no ambiente; a referencia visual usada foi a captura enviada pelo usuario e o padrao local do Admin/site publico.
+- ADR atualizado: `adrs/0264-admin-comunidade-abas-conteudo-ranking.md`.
+- Validacao executada: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke local `GET http://localhost:3002/comunidades/autocuidado-em-pratica?tab=conteudo` retornando 200.

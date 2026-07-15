@@ -1689,7 +1689,7 @@ const ContentVideoMiniplayer = ({ label, src }: { label: string; src: string }) 
     <div className="relative h-full w-full">
       <video
         aria-label={label}
-        className="h-full w-full object-cover"
+        className="admin-community-video-player h-full w-full object-cover"
         controls
         muted
         onEnded={() => setIsPlaying(false)}
@@ -2017,35 +2017,35 @@ const ContentTab = ({ slug }: { slug: string }) => {
           </StatusBadge>
         </div>
         <div className="mt-5 space-y-3">
-        <QueryStatus
-          error={result.error}
-          loading={result.isLoading}
-          onRetry={() => void result.refetch()}
-        />
-        {result.data?.data.length === 0 ? (
-          <p className="rounded-2xl bg-surface-muted p-4 text-sm text-muted">
-            Nenhum conteúdo encontrado com os filtros atuais.
-          </p>
-        ) : null}
-        {result.data?.data.map((item) => (
-          <ContentItemCard
-            item={item}
-            key={`${item.type}-${item.content_id}`}
-            selected={selected?.content_id === item.content_id}
-            setSelected={setSelected}
-            slug={slug}
+          <QueryStatus
+            error={result.error}
+            loading={result.isLoading}
+            onRetry={() => void result.refetch()}
           />
-        ))}
-      </div>
-      {result.data ? (
-        <div className="mt-5">
-          <PaginationControls
-            page={result.data.page}
-            pages={result.data.pages}
-            setPage={(page) => updateQuery({ page })}
-          />
+          {result.data?.data.length === 0 ? (
+            <p className="rounded-2xl bg-surface-muted p-4 text-sm text-muted">
+              Nenhum conteúdo encontrado com os filtros atuais.
+            </p>
+          ) : null}
+          {result.data?.data.map((item) => (
+            <ContentItemCard
+              item={item}
+              key={`${item.type}-${item.content_id}`}
+              selected={selected?.content_id === item.content_id}
+              setSelected={setSelected}
+              slug={slug}
+            />
+          ))}
         </div>
-      ) : null}
+        {result.data ? (
+          <div className="mt-5">
+            <PaginationControls
+              page={result.data.page}
+              pages={result.data.pages}
+              setPage={(page) => updateQuery({ page })}
+            />
+          </div>
+        ) : null}
       </section>
     </div>
   );
@@ -2205,7 +2205,6 @@ const ReportsTab = ({ slug }: { slug: string }) => {
   const [query, setQuery] = useState<AdminCommunityReportsQuery>({
     limit: 10,
     page: 1,
-    period: "all",
     q: "",
     type: "all",
   });

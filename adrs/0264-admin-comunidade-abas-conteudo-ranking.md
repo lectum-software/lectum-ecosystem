@@ -164,3 +164,15 @@ O filtro **Tipo** passa a usar classificações derivadas de dados reais do item
 Para sustentar Posts anônimos, o backend classifica community_post.anonymous=true como nonymous_post, sem coluna nova e sem alterar a regra de autoria persistida. O filtro de **Período** usa presets simples sobre created_at (ll, 7d, 30d, 90d).
 
 Validação desta atualização: pnpm --dir backend check, pnpm --dir backend build, pnpm --dir admin check, pnpm --dir admin build, pnpm check e smoke local GET http://localhost:3002/comunidades/tdah?tab=conteudo retornando 200.
+
+## Atualizacao 2026-07-15: fullscreen vertical no miniplayer administrativo
+
+O miniplayer de video da aba **Conteudo** passa a ter regra explicita para o modo fullscreen nativo do navegador. O elemento `<video>` recebe uma classe dedicada e, ao entrar em `:fullscreen` ou `:-webkit-full-screen`, fica centralizado em fundo preto com dimensoes calculadas para caber na viewport sem sair da proporcao 9:16.
+
+A decisao preserva a mesma leitura vertical do card ampliado, evitando que videos-resposta sejam esticados ou apresentados em paisagem na tela cheia. Foi mantido `object-fit: cover` para que videos com metadados paisagem ainda sigam a composicao vertical usada no miniplayer.
+
+Tambem foi removido `period="all"` da query inicial da aba **Denuncias**, porque esse filtro pertence ao contrato de **Conteudo**. A remocao evita regressao de typecheck sem alterar API ou comportamento visual da aba de denuncias.
+
+Consequencia: a mudanca e apenas visual/CSS no Admin, com correcao local de tipo; nao altera API, persistencia, schema Prisma, dependencias ou fluxo de upload/reproducao.
+
+Validacao desta atualizacao: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke local `GET http://localhost:3002/comunidades/autocuidado-em-pratica?tab=conteudo` retornando 200.
