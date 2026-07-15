@@ -731,72 +731,74 @@ const TopCommunitiesTable = ({
 }: {
   communities: CommunitiesDashboardTopCommunity[];
 }) => (
-  <CardShell className="p-5">
-    <div className="flex items-center justify-between gap-3">
-      <div>
-        <h2 className="text-lg font-black text-foreground">Principais comunidades</h2>
-        <p className="mt-1 text-xs font-bold text-muted">ranking por atividade real no período</p>
+  <div className="scroll-mt-6" id="lista-de-comunidades">
+    <CardShell className="p-5">
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <h2 className="text-lg font-black text-foreground">Principais comunidades</h2>
+          <p className="mt-1 text-xs font-bold text-muted">ranking por atividade real no período</p>
+        </div>
+        <span className="text-xs font-black text-primary">Ver todas</span>
       </div>
-      <span className="text-xs font-black text-primary">Ver todas</span>
-    </div>
 
-    {communities.length === 0 ? (
-      <p className="mt-5 rounded-2xl bg-surface-muted p-4 text-sm text-muted">
-        Nenhuma comunidade real cadastrada foi encontrada.
-      </p>
-    ) : (
-      <div className="mt-5 overflow-x-auto">
-        <table className="w-full min-w-[620px] border-separate border-spacing-0 text-left text-sm">
-          <thead className="text-xs text-muted">
-            <tr>
-              <th className="border-b border-border py-3 pr-4 font-black">Comunidade</th>
-              <th className="border-b border-border px-4 py-3 font-black">Seguidores</th>
-              <th className="border-b border-border px-4 py-3 font-black">Posts</th>
-              <th className="border-b border-border py-3 pl-4 text-right font-black">Ações</th>
-            </tr>
-          </thead>
-          <tbody>
-            {communities.map((community) => (
-              <tr key={community.id}>
-                <td className="border-b border-border py-4 pr-4">
-                  <div className="flex items-center gap-3">
-                    <span
-                      aria-hidden
-                      className="grid h-9 w-9 place-items-center rounded-xl text-white"
-                      style={{ backgroundColor: community.visual_primary_color || "#3b16f3" }}
-                    >
-                      <UsersRound className="h-4 w-4" />
-                    </span>
-                    <div>
-                      <p className="font-black text-foreground">{community.name}</p>
-                      <p className="text-xs text-muted">
-                        {community.activity_count} ações no período
-                      </p>
-                    </div>
-                  </div>
-                </td>
-                <td className="border-b border-border px-4 py-4 font-black">
-                  {numberFormatter.format(community.members_count)}
-                </td>
-                <td className="border-b border-border px-4 py-4 font-black">
-                  {numberFormatter.format(community.posts_count)}
-                </td>
-                <td className="border-b border-border py-4 pl-4 text-right">
-                  <Link
-                    aria-label={`Abrir detalhes de ${community.name}`}
-                    className="inline-grid h-9 w-9 place-items-center rounded-xl border border-border text-primary transition hover:border-primary"
-                    href={`/comunidades/${community.slug}`}
-                  >
-                    <Eye aria-hidden className="h-4 w-4" />
-                  </Link>
-                </td>
+      {communities.length === 0 ? (
+        <p className="mt-5 rounded-2xl bg-surface-muted p-4 text-sm text-muted">
+          Nenhuma comunidade real cadastrada foi encontrada.
+        </p>
+      ) : (
+        <div className="mt-5 overflow-x-auto">
+          <table className="w-full min-w-[620px] border-separate border-spacing-0 text-left text-sm">
+            <thead className="text-xs text-muted">
+              <tr>
+                <th className="border-b border-border py-3 pr-4 font-black">Comunidade</th>
+                <th className="border-b border-border px-4 py-3 font-black">Seguidores</th>
+                <th className="border-b border-border px-4 py-3 font-black">Posts</th>
+                <th className="border-b border-border py-3 pl-4 text-right font-black">Ações</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    )}
-  </CardShell>
+            </thead>
+            <tbody>
+              {communities.map((community) => (
+                <tr key={community.id}>
+                  <td className="border-b border-border py-4 pr-4">
+                    <div className="flex items-center gap-3">
+                      <span
+                        aria-hidden
+                        className="grid h-9 w-9 place-items-center rounded-xl text-white"
+                        style={{ backgroundColor: community.visual_primary_color || "#3b16f3" }}
+                      >
+                        <UsersRound className="h-4 w-4" />
+                      </span>
+                      <div>
+                        <p className="font-black text-foreground">{community.name}</p>
+                        <p className="text-xs text-muted">
+                          {community.activity_count} ações no período
+                        </p>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="border-b border-border px-4 py-4 font-black">
+                    {numberFormatter.format(community.members_count)}
+                  </td>
+                  <td className="border-b border-border px-4 py-4 font-black">
+                    {numberFormatter.format(community.posts_count)}
+                  </td>
+                  <td className="border-b border-border py-4 pl-4 text-right">
+                    <Link
+                      aria-label={`Abrir detalhes de ${community.name}`}
+                      className="inline-grid h-9 w-9 place-items-center rounded-xl border border-border text-primary transition hover:border-primary"
+                      href={`/comunidades/${community.slug}`}
+                    >
+                      <Eye aria-hidden className="h-4 w-4" />
+                    </Link>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </CardShell>
+  </div>
 );
 
 const DashboardContent = ({ summary }: { summary: AdminCommunitiesDashboard }) => {

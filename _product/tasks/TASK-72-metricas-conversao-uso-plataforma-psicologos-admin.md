@@ -565,6 +565,16 @@ Regras de cálculo:
 - O ajuste é exclusivamente visual, mobile-first, sem endpoint novo, sem alteração de Prisma/migrations, packages, dados persistidos ou regra de domínio.
 - Validação executada: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke local `GET http://localhost:3002/psicologos/cmrqztri7000tn0uh1q4n8vxf` retornando 200.
 
+## Ajuste complementar 2026-07-15 - Submenus de Psicólogos e Comunidades no Admin
+
+- Pedido do usuário: no menu lateral do Admin, renomear o submenu de **Psicólogos** de `Dashboard` para `Visão geral` e transformar **Comunidades** em grupo expansível com `Visão geral` e `Lista de Comunidades`.
+- O menu lateral passou a renderizar **Comunidades** com a mesma estrutura visual de submenus usada em **Psicólogos**.
+- O item `Lista de Comunidades` aponta para a seção real de comunidades já exibida na visão geral (`/comunidades#lista-de-comunidades`), evitando criar rota, endpoint ou dados paralelos fora do escopo do pedido.
+- O ajuste é exclusivamente visual/navegacional, mobile-first, sem mocks, sem endpoint novo, sem alteração de Prisma/migrations, packages, dados persistidos ou regra de domínio.
+- Não houve decisão arquitetural nova; ADR não foi necessário.
+- Builder/Quick Copy não está exposto como ferramenta no ambiente; a referência visual usada foi a captura enviada pelo usuário e o padrão local do menu Admin.
+- Validação executada: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke local `GET http://localhost:3002/comunidades`/`GET http://localhost:3002/comunidades#lista-de-comunidades` retornando 200.
+
 ## Ajuste complementar 2026-07-15 - Margem nas setas dos dropdowns do detalhe
 
 - Pedido do usuário: adicionar margem à direita nas setas de dropdown dos filtros das abas **Denúncias** e **Atividades** em `/psicologos/[id]`.

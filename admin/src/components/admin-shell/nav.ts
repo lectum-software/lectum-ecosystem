@@ -13,14 +13,22 @@ import {
 export const adminNavItems = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutGrid },
   { label: "Tráfego", href: "/trafego", icon: ChartNoAxesCombined },
-  { label: "Comunidades", href: "/comunidades", icon: MessageCircleMore },
+  {
+    label: "Comunidades",
+    href: "/comunidades",
+    icon: MessageCircleMore,
+    children: [
+      { label: "Visão geral", href: "/comunidades" },
+      { label: "Lista de Comunidades", href: "/comunidades#lista-de-comunidades" },
+    ],
+  },
   { label: "Moderação", href: "/moderacao", icon: ShieldAlert, badge: "moderation" },
   {
     label: "Psicólogos",
     href: "/psicologos",
     icon: UsersRound,
     children: [
-      { label: "Dashboard", href: "/psicologos" },
+      { label: "Visão geral", href: "/psicologos" },
       { label: "Lista de Psicólogos", href: "/psicologos/lista" },
     ],
   },

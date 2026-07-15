@@ -18,8 +18,13 @@ type SidebarContentProps = {
   premiumPilot?: boolean;
 };
 
-const isNavPathActive = (pathname: string, href: string) =>
-  pathname === href || pathname.startsWith(`${href}/`);
+const hrefPathname = (href: string) => href.split("?")[0].split("#")[0];
+
+const isNavPathActive = (pathname: string, href: string) => {
+  const hrefPath = hrefPathname(href);
+
+  return pathname === hrefPath || pathname.startsWith(`${hrefPath}/`);
+};
 
 const SidebarContent = ({
   collapsed,
@@ -132,9 +137,12 @@ const SidebarContent = ({
                   {isOpen && !collapsed ? (
                     <div className="mt-1 space-y-1 pl-8" id={groupId}>
                       {item.children.map((child) => {
+                        const childHrefPath = hrefPathname(child.href);
                         const childIsActive =
-                          pathname === child.href ||
-                          (child.href !== item.href && pathname.startsWith(`${child.href}/`));
+                          !child.href.includes("#") &&
+                          (pathname === childHrefPath ||
+                            (childHrefPath !== item.href &&
+                              pathname.startsWith(`${childHrefPath}/`)));
 
                         return (
                           <Link
