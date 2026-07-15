@@ -2,10 +2,9 @@
 
 import {
   AlertTriangle,
-  CalendarDays,
+  ChevronDown,
   Eye,
   Flag,
-  Loader2,
   type LucideIcon,
   MessageCircle,
   MoreHorizontal,
@@ -15,7 +14,7 @@ import {
   UsersRound,
 } from "lucide-react";
 import Link from "next/link";
-import { type FocusEventHandler, useMemo } from "react";
+import { type FocusEventHandler, useState } from "react";
 import { useAdminCommunitiesDashboard } from "@/api/callers/communities";
 import { resolveApiError } from "@/api/handle";
 import type {
@@ -32,7 +31,16 @@ import { useDateRangeCommitOnBlur } from "@/hooks/use-date-range-commit-on-blur"
 import { aggregateCalendarChartPoints } from "@/lib/chart-time-series";
 import { cn } from "@/lib/utils";
 
-const QUICK_RANGES = [7, 30, 90] as const;
+const MAX_COMMUNITY_DASHBOARD_DAYS = 90;
+const COMMUNITY_DASHBOARD_PERIOD_OPTIONS = [
+  { id: "week", label: "Esta semana" },
+  { id: "month", label: "Este mês" },
+  { id: "last_90_days", label: "Últimos 90 dias" },
+] as const;
+
+type CommunityDashboardPeriodPreset = (typeof COMMUNITY_DASHBOARD_PERIOD_OPTIONS)[number]["id"];
+type CommunityDashboardPeriodValue = CommunityDashboardPeriodPreset | "custom";
+
 const numberFormatter = new Intl.NumberFormat("pt-BR");
 
 const pad = (value: number) => String(value).padStart(2, "0");
@@ -53,6 +61,33 @@ const getQuickRange = (days: number): CommunitiesDashboardQuery => {
     from: toInputDate(from),
     to: toInputDate(today),
   };
+};
+
+const startOfCurrentWeek = () => {
+  const date = new Date();
+  const day = date.getDay();
+  const diff = day === 0 ? -6 : 1 - day;
+  date.setDate(date.getDate() + diff);
+
+  return date;
+};
+
+const startOfCurrentMonth = () => {
+  const date = new Date();
+  date.setDate(1);
+
+  return date;
+};
+
+const getCommunityDashboardRangeForPeriod = (
+  period: CommunityDashboardPeriodPreset,
+): CommunitiesDashboardQuery => {
+  const today = toInputDate(new Date());
+
+  if (period === "last_90_days") return getQuickRange(MAX_COMMUNITY_DASHBOARD_DAYS);
+  if (period === "month") return { from: toInputDate(startOfCurrentMonth()), to: today };
+
+  return { from: toInputDate(startOfCurrentWeek()), to: today };
 };
 
 const formatDate = (value: string) =>
@@ -80,7 +115,11 @@ const formatChange = (value: number | null) => {
 const isValidRange = (range: CommunitiesDashboardQuery) => {
   if (!range.from || !range.to) return false;
 
-  return dateFromInput(range.from) <= dateFromInput(range.to);
+  const from = dateFromInput(range.from);
+  const to = dateFromInput(range.to);
+  const days = Math.floor((to.getTime() - from.getTime()) / 86_400_000) + 1;
+
+  return from <= to && days <= MAX_COMMUNITY_DASHBOARD_DAYS;
 };
 
 const hasPeriodRecords = (summary: AdminCommunitiesDashboard) => {
@@ -218,69 +257,91 @@ const EmptyState = ({ period }: { period: AdminCommunitiesDashboard["period"] })
 );
 
 const CommunitiesHeader = ({
-  isLoading,
+  displayRange,
   onDateChange,
   onDateControlsBlur,
-  range,
+  onPeriodChange,
+  period,
   rangeError,
-  setRange,
 }: {
-  isLoading: boolean;
+  displayRange: CommunitiesDashboardQuery;
   onDateChange: (field: "from" | "to", value: string) => void;
   onDateControlsBlur: FocusEventHandler<HTMLDivElement>;
-  range: CommunitiesDashboardQuery;
+  onPeriodChange: (period: CommunityDashboardPeriodPreset) => void;
+  period: CommunityDashboardPeriodValue;
   rangeError: string | null;
-  setRange: (range: CommunitiesDashboardQuery) => void;
 }) => (
-  <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
-    <div>
-      <h1 className="text-3xl font-black tracking-tight text-foreground md:text-4xl">
-        Comunidades
-      </h1>
-      <p className="mt-2 text-sm font-medium text-muted">
-        Acompanhe a atividade e o engajamento das comunidades.
-      </p>
-    </div>
+  <section className="rounded-card border border-border/70 bg-surface/90 p-5 shadow-admin-soft backdrop-blur md:p-6">
+    <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
+      <div>
+        <p className="text-xs font-semibold uppercase tracking-[0.12em] text-primary">
+          Comunidades
+        </p>
+        <h1 className="mt-2 text-3xl font-bold tracking-tight text-foreground md:text-4xl">
+          Dashboard de Comunidades
+        </h1>
+        <p className="mt-2 max-w-2xl text-sm font-medium leading-6 text-muted">
+          Acompanhe a atividade e o engajamento das comunidades.
+        </p>
+      </div>
 
-    <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
-      <div className="grid gap-3 sm:grid-cols-2" onBlur={onDateControlsBlur}>
-        <label className="text-xs font-black text-muted">
-          De
-          <input
-            className="mt-1 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground shadow-control focus:border-primary"
-            max={range.to}
-            onChange={(event) => onDateChange("from", event.target.value)}
-            type="date"
-            value={range.from}
-          />
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+        <label className="grid gap-1 text-xs font-semibold text-muted" htmlFor="communities-period">
+          Período
+          <span className="relative">
+            <select
+              className="h-11 min-w-[170px] appearance-none rounded-control border border-border bg-surface py-0 pl-3 pr-11 text-sm font-semibold text-foreground shadow-control outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+              id="communities-period"
+              onChange={(event) =>
+                onPeriodChange(event.target.value as CommunityDashboardPeriodPreset)
+              }
+              value={period}
+            >
+              {period === "custom" ? (
+                <option disabled hidden value="custom">
+                  Personalizado
+                </option>
+              ) : null}
+              {COMMUNITY_DASHBOARD_PERIOD_OPTIONS.map((option) => (
+                <option key={option.id} value={option.id}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+            <ChevronDown
+              aria-hidden
+              className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground"
+            />
+          </span>
         </label>
-        <label className="text-xs font-black text-muted">
-          Até
-          <input
-            className="mt-1 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground shadow-control focus:border-primary"
-            min={range.from}
-            onChange={(event) => onDateChange("to", event.target.value)}
-            type="date"
-            value={range.to}
-          />
-        </label>
+        <div className="grid gap-3 sm:grid-cols-2" onBlur={onDateControlsBlur}>
+          <label className="text-xs font-semibold text-muted">
+            De
+            <input
+              className="mt-1 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground shadow-control focus:border-primary"
+              max={displayRange.to}
+              onChange={(event) => onDateChange("from", event.target.value)}
+              type="date"
+              value={displayRange.from ?? ""}
+            />
+          </label>
+          <label className="text-xs font-semibold text-muted">
+            Até
+            <input
+              className="mt-1 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground shadow-control focus:border-primary"
+              min={displayRange.from}
+              onChange={(event) => onDateChange("to", event.target.value)}
+              type="date"
+              value={displayRange.to ?? ""}
+            />
+          </label>
+        </div>
+        {period === "custom" && rangeError ? (
+          <p className="max-w-md text-xs font-bold text-danger">{rangeError}</p>
+        ) : null}
       </div>
-      <div className="flex flex-wrap gap-2 sm:w-44">
-        {QUICK_RANGES.map((days) => (
-          <button
-            className="h-9 rounded-full border border-border bg-surface px-3 text-xs font-black text-muted transition hover:border-primary hover:text-primary"
-            disabled={isLoading}
-            key={days}
-            onClick={() => setRange(getQuickRange(days))}
-            type="button"
-          >
-            {days} dias
-          </button>
-        ))}
-      </div>
-      {rangeError ? <p className="max-w-md text-xs font-bold text-danger">{rangeError}</p> : null}
     </div>
-  </div>
+  </section>
 );
 
 const LineChart = ({ series }: { series: CommunitiesDashboardActivitySeries[] }) => {
@@ -813,18 +874,21 @@ const DashboardContent = ({ summary }: { summary: AdminCommunitiesDashboard }) =
     <div className="space-y-5">
       {noRecords ? <EmptyState period={summary.period} /> : null}
 
-      <section
-        aria-labelledby="activity-title"
-        className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5"
-      >
-        <h2 className="sr-only" id="activity-title">
-          Atividade nas comunidades
+      <section aria-labelledby="activity-title" className="space-y-4">
+        <h2 className="text-xl font-bold text-foreground" id="activity-title">
+          Visão geral
         </h2>
-        <MetricCard icon={ShieldAlert} metric={summary.cards.psychologist_posts} tone="purple" />
-        <MetricCard icon={Users} metric={summary.cards.patient_posts} tone="blue" />
-        <MetricCard icon={MessageCircle} metric={summary.cards.psychologist_replies} tone="green" />
-        <MetricCard icon={MessageCircle} metric={summary.cards.patient_comments} tone="orange" />
-        <MetricCard icon={UsersRound} metric={summary.cards.active_members} tone="pink" />
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+          <MetricCard icon={ShieldAlert} metric={summary.cards.psychologist_posts} tone="purple" />
+          <MetricCard icon={Users} metric={summary.cards.patient_posts} tone="blue" />
+          <MetricCard
+            icon={MessageCircle}
+            metric={summary.cards.psychologist_replies}
+            tone="green"
+          />
+          <MetricCard icon={MessageCircle} metric={summary.cards.patient_comments} tone="orange" />
+          <MetricCard icon={UsersRound} metric={summary.cards.active_members} tone="pink" />
+        </div>
       </section>
 
       <div className="grid gap-5 xl:grid-cols-[1fr_340px]">
@@ -881,49 +945,47 @@ const DashboardContent = ({ summary }: { summary: AdminCommunitiesDashboard }) =
 };
 
 export const AdminCommunitiesClient = () => {
+  const [selectedPeriod, setSelectedPeriod] = useState<CommunityDashboardPeriodValue>("week");
   const {
     appliedRange,
     applyRange,
     draftRange,
-    handleDateChange,
+    handleDateChange: handleDraftDateChange,
     handleDateControlsBlur,
     rangeError,
   } = useDateRangeCommitOnBlur<CommunitiesDashboardQuery>({
-    initialRange: () => getQuickRange(7),
+    errorMessage:
+      "Informe um período personalizado completo, de até 90 dias, com data inicial menor ou igual à final.",
+    initialRange: () => getCommunityDashboardRangeForPeriod("week"),
     isValidRange,
   });
   const validRange = isValidRange(appliedRange);
   const query = useAdminCommunitiesDashboard(appliedRange, { enabled: validRange });
   const queryError = query.error ? resolveApiError(query.error) : null;
-  const periodCopy = useMemo(() => {
-    if (!appliedRange.from || !appliedRange.to) return "Selecione um período válido";
-
-    return `${formatDate(appliedRange.from)} — ${formatDate(appliedRange.to)}`;
-  }, [appliedRange]);
+  const handlePeriodChange = (nextPeriod: CommunityDashboardPeriodPreset) => {
+    setSelectedPeriod(nextPeriod);
+    applyRange(getCommunityDashboardRangeForPeriod(nextPeriod));
+  };
+  const handleDateChange = (field: "from" | "to", value: string) => {
+    setSelectedPeriod("custom");
+    handleDraftDateChange(field, value);
+  };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-7">
       <CommunitiesHeader
-        isLoading={query.isFetching}
+        displayRange={draftRange}
         onDateChange={handleDateChange}
         onDateControlsBlur={handleDateControlsBlur}
-        range={draftRange}
+        onPeriodChange={handlePeriodChange}
+        period={selectedPeriod}
         rangeError={rangeError}
-        setRange={applyRange}
       />
-
-      <div className="flex flex-wrap items-center gap-2 text-sm text-muted">
-        <CalendarDays aria-hidden className="h-4 w-4" />
-        <span className="font-bold">Período consultado:</span>
-        <span>{periodCopy}</span>
-        {query.data ? <span>({query.data.period.days} dias)</span> : null}
-        {query.isFetching ? <Loader2 aria-hidden className="h-4 w-4 animate-spin" /> : null}
-      </div>
 
       {!validRange ? (
         <ErrorState
-          message="A data inicial precisa ser menor ou igual à data final."
-          onRetry={() => applyRange(getQuickRange(7))}
+          message="Selecione um período válido de até 90 dias."
+          onRetry={() => handlePeriodChange("week")}
         />
       ) : null}
 

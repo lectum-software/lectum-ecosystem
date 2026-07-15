@@ -271,3 +271,19 @@ Regras de UI obrigatórias:
 - `pnpm --dir admin check`
 - `pnpm --dir admin build`
 - Smoke local `GET http://localhost:3002/comunidades`, `GET http://localhost:3002/comunidades/lista` e `GET http://localhost:3002/psicologos/lista`.
+
+## Correcao complementar: header do dashboard de comunidades (2026-07-15)
+
+- Pedido do usuario: fazer o header do dashboard de comunidades seguir o modelo visual do header do dashboard de psicologos.
+- O header de `/comunidades` passou a usar card com borda/sombra, label superior, titulo **Dashboard de Comunidades**, subtitulo e filtros `Periodo`, `De` e `Ate` no mesmo padrao mobile-first de `/psicologos`.
+- Os chips rapidos `7 dias`, `30 dias` e `90 dias` foram substituidos por um seletor de periodo com `Esta semana`, `Este mes` e `Ultimos 90 dias`; datas manuais continuam ativando estado personalizado e respeitam o limite real de 90 dias do endpoint.
+- A linha separada **Periodo consultado** foi removida do topo da pagina para alinhar a hierarquia visual ao dashboard de psicologos; os cards de indicadores agora entram sob o titulo **Visao geral**.
+- Nao houve alteracao de backend, endpoint, Prisma/migrations, packages, dados persistidos ou regra de agregacao.
+- Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente; a referencia visual usada foi a captura enviada pelo usuario e o padrao local de `_product/proto/admin/Psicólogos/Psicólogos - Dashboard.png`.
+
+### Validacao complementar
+
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check`
+- Smoke local `GET http://localhost:3002/comunidades` retornou 200.
