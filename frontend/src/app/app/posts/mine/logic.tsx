@@ -316,7 +316,6 @@ const ReplyItemCard = ({
   if (!reply) return null;
 
   const replyHref = focusedReplyHref(item.post, reply.id);
-  const isDirectPostComment = !reply.parent_reply_id;
   const hasReplyMedia = Boolean(reply.media_url && reply.media_type);
   const hasReplyText = Boolean(reply.content.trim());
   const hasVerifiedProfessionalReply = Boolean(reply.has_verified_professional_reply);
@@ -416,6 +415,7 @@ const ReplyItemCard = ({
     event.preventDefault();
     openReply();
   };
+  const originPostExcerpt = item.post.content.trim() || "Sem texto.";
 
   return (
     <article
@@ -449,23 +449,13 @@ const ReplyItemCard = ({
         />
       </div>
 
-      {reply.parent_content || isDirectPostComment ? (
-        <blockquote className="relative z-10 overflow-hidden rounded-[20px] border border-primary/10 bg-[linear-gradient(135deg,rgb(239_246_255_/_78%),rgb(248_250_252_/_92%))] px-4 py-3.5 pl-5 shadow-[inset_0_1px_0_rgb(255_255_255_/_70%)]">
-          <span
-            className="absolute top-3 bottom-3 left-2 w-0.5 rounded-full bg-primary/45"
-            aria-hidden="true"
-          />
-          {reply.parent_content ? (
-            <p className="line-clamp-2 text-xs font-medium leading-5 text-muted">
-              &ldquo;{reply.parent_content}&rdquo;
-            </p>
-          ) : (
-            <p className="line-clamp-2 text-xs font-black leading-5 text-foreground">
-              {item.post.title}
-            </p>
-          )}
-        </blockquote>
-      ) : null}
+      <blockquote className="relative z-10 overflow-hidden rounded-2xl border border-primary/10 bg-primary-soft/40 px-4 py-3">
+        <p className="text-[11px] font-black tracking-[0.08em] text-primary">POST DE ORIGEM</p>
+        <p className="mt-1 line-clamp-1 text-xs font-black text-foreground">{item.post.title}</p>
+        <p className="mt-1 line-clamp-2 text-xs font-semibold leading-5 text-muted">
+          {originPostExcerpt}
+        </p>
+      </blockquote>
 
       <div className="relative z-10 grid gap-2">
         {reply.title ? <h2 className="text-lg font-black text-foreground">{reply.title}</h2> : null}
