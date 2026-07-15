@@ -455,11 +455,14 @@ const CommunityHeader = ({
           <p className="mt-2 max-w-3xl text-sm leading-6 text-muted">
             {community.description || "Comunidade sem descrição cadastrada."}
           </p>
-          <div className="mt-3 flex flex-wrap gap-3 text-xs font-bold text-muted">
-            <span>Criada em {formatDate(community.created_at)}</span>
-            <span>{formatCountLabel(community.members_count, "seguidor", "seguidores")}</span>
-            <span>{formatCountLabel(postsCount, "post", "posts")}</span>
-          </div>
+          <p className="mt-3 text-xs font-bold text-muted">
+            <span className="font-black">Criada em</span>{" "}
+            <span>
+              {formatDate(community.created_at)} •{" "}
+              {formatCountLabel(community.members_count, "seguidor", "seguidores")}
+            </span>{" "}
+            <span aria-hidden>•</span> <span>{formatCountLabel(postsCount, "post", "posts")}</span>
+          </p>
         </div>
       </div>
       <Link
