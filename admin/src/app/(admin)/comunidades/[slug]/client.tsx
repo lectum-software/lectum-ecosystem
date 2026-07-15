@@ -1076,8 +1076,10 @@ const RulesManager = ({ id, rules }: { id: string; rules: AdminCommunityRule[] }
   const [dragState, setDragState] = useState<RuleDragState | null>(null);
   const [editingRuleId, setEditingRuleId] = useState<string | null>(null);
   const [optimisticRuleOrderIds, setOptimisticRuleOrderIds] = useState<string[] | null>(null);
+  const optimisticRuleOrderIdsRef = useRef<string[] | null>(null);
   const dragSessionRef = useRef<RuleDragSession | null>(null);
   const dragStateRef = useRef<RuleDragState | null>(null);
+  const ruleOrderPersistenceRef = useRef<Promise<void>>(Promise.resolve());
   const rulesListRef = useRef<HTMLDivElement | null>(null);
   const createMutation = useAdminCommunityCreateRule(id);
   const updateMutation = useAdminCommunityUpdateRule(id);
@@ -1110,6 +1112,23 @@ const RulesManager = ({ id, rules }: { id: string; rules: AdminCommunityRule[] }
   const updateRuleDragState = (nextState: RuleDragState | null) => {
     dragStateRef.current = nextState;
     setDragState(nextState);
+  };
+  const updateOptimisticRuleOrder = (ruleOrderIds: string[] | null) => {
+    optimisticRuleOrderIdsRef.current = ruleOrderIds;
+    setOptimisticRuleOrderIds(ruleOrderIds);
+  };
+  const resolveCurrentRuleOrder = () => {
+    const ruleOrderIds = optimisticRuleOrderIdsRef.current;
+    if (!ruleOrderIds) return [...sortedRules];
+
+    const rulesById = new Map(sortedRules.map((rule) => [rule.id, rule]));
+    const currentOrder = ruleOrderIds
+      .map((ruleId) => rulesById.get(ruleId))
+      .filter((rule): rule is AdminCommunityRule => Boolean(rule));
+    const currentOrderIds = new Set(currentOrder.map((rule) => rule.id));
+    const missingRules = sortedRules.filter((rule) => !currentOrderIds.has(rule.id));
+
+    return [...currentOrder, ...missingRules];
   };
 
   const updateRule = async (rule: AdminCommunityRule, input: AdminCommunityRuleInput) => {
@@ -1144,7 +1163,7 @@ const RulesManager = ({ id, rules }: { id: string; rules: AdminCommunityRule[] }
     }
   };
   const reorderRules = async (sourceRuleId: string, targetIndex: number) => {
-    const currentOrder = [...orderedRules];
+    const currentOrder = resolveCurrentRuleOrder();
     const sourceIndex = currentOrder.findIndex((rule) => rule.id === sourceRuleId);
     if (sourceIndex < 0) return;
 
@@ -1163,9 +1182,9 @@ const RulesManager = ({ id, rules }: { id: string; rules: AdminCommunityRule[] }
 
     if (updates.length === 0) return;
 
-    setOptimisticRuleOrderIds(currentOrder.map((rule) => rule.id));
+    updateOptimisticRuleOrder(currentOrder.map((rule) => rule.id));
 
-    try {
+    const persistOrder = async () => {
       await Promise.all(
         updates.map(({ position, rule }) =>
           updateMutation.mutateAsync({
@@ -1174,9 +1193,16 @@ const RulesManager = ({ id, rules }: { id: string; rules: AdminCommunityRule[] }
           }),
         ),
       );
+    };
+
+    const persistence = ruleOrderPersistenceRef.current.then(persistOrder, persistOrder);
+    ruleOrderPersistenceRef.current = persistence.catch(() => undefined);
+
+    try {
+      await persistence;
       toast.success("Ordem das regras atualizada.");
     } catch (error) {
-      setOptimisticRuleOrderIds(null);
+      updateOptimisticRuleOrder(null);
       toast.error(resolveApiError(error));
     }
   };
@@ -1185,7 +1211,7 @@ const RulesManager = ({ id, rules }: { id: string; rules: AdminCommunityRule[] }
     ruleId: string,
     sourceIndex: number,
   ) => {
-    if (editingRuleId || updateMutation.isPending) return;
+    if (editingRuleId) return;
     if (event.pointerType === "mouse" && event.button !== 0) return;
     if (isRuleDragBlockedTarget(event.target)) return;
     if (event.pointerType !== "mouse" && !isRuleDragHandleTarget(event.target)) return;
@@ -1248,7 +1274,7 @@ const RulesManager = ({ id, rules }: { id: string; rules: AdminCommunityRule[] }
     updateRuleDragState(null);
     event.preventDefault();
 
-    if (targetIndex !== session.sourceIndex && !updateMutation.isPending) {
+    if (targetIndex !== session.sourceIndex) {
       void reorderRules(session.sourceRuleId, targetIndex);
     }
   };

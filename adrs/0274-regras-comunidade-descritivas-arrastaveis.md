@@ -25,6 +25,7 @@ O bloco **Regras da comunidade** no Admin exibia titulo, tag de status, botoes d
 - HTML Drag and Drop atende o painel desktop atual; uma experiencia touch dedicada pode ser adicionada no futuro se o uso mobile de ordenacao for priorizado.
 - Atualizacao em 2026-07-15: o drag passou a guardar a regra de origem tambem em `useRef` e em um MIME proprio do `dataTransfer`, evitando depender apenas do ciclo assincrono de estado do React entre `dragstart`, `dragenter` e `drop`. O formulario visual continua tendo somente `description`; `title` segue derivado internamente no payload.
 - Atualizacao posterior em 2026-07-15: a ordenacao deixou de depender do HTML Drag and Drop nativo e passou a usar Pointer Events com preview por `transform`. Durante o arraste, o card arrastado acompanha o ponteiro e os cards intermediarios se deslocam para cima ou para baixo antes do drop; ao soltar, a nova ordem e persistida nos endpoints reais existentes.
+- Atualizacao adicional em 2026-07-15: o proximo arraste nao fica mais bloqueado pela mutation ainda pendente do drop anterior. A UI mantem a ordem otimista e serializa a persistencia em uma fila local de promises, preservando chamadas reais e evitando bloquear interacao sequencial rapida.
 
 ## Validacao
 
@@ -37,3 +38,4 @@ O bloco **Regras da comunidade** no Admin exibia titulo, tag de status, botoes d
 - Smoke local: `GET http://localhost:3002/comunidades/ansiedade-em-equilibrio?tab=dados` retornou 200.
 - Smoke local: `GET http://localhost:3000/community/ansiedade-em-equilibrio` retornou 200.
 - Validacao complementar do drag por Pointer Events: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke local `GET http://localhost:3002/comunidades/tdah?tab=dados` retornou 200.
+- Validacao complementar do arraste sequencial: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke local `GET http://localhost:3002/comunidades/tdah?tab=dados` retornou 200.

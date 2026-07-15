@@ -649,3 +649,13 @@ Regras de cálculo:
 - Nao houve package novo, mock, schema Prisma/migration, endpoint paralelo ou alteracao de contrato.
 - ADR atualizado: `adrs/0274-regras-comunidade-descritivas-arrastaveis.md`.
 - Validacao executada: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke local `GET http://localhost:3002/comunidades/tdah?tab=dados` retornando 200.
+
+## Ajuste complementar 2026-07-15 - Arraste sequencial das regras
+
+- Pedido do usuario: apos um arraste bem-sucedido, tentar arrastar outro bloco logo em seguida ainda ficava bloqueado.
+- O inicio de um novo drag deixou de depender de `updateMutation.isPending`; a ordem otimista ja aplicada na UI passa a ser a fonte do proximo arraste.
+- A persistencia dos drops foi serializada em uma fila local de promises, mantendo chamadas reais aos endpoints existentes sem bloquear interacoes sequenciais rapidas.
+- Em caso de erro na persistencia, a ordem otimista e revertida e o erro real da API continua sendo exibido em toast.
+- Nao houve package novo, mock, schema Prisma/migration, endpoint paralelo ou alteracao de contrato.
+- ADR atualizado: `adrs/0274-regras-comunidade-descritivas-arrastaveis.md`.
+- Validacao executada: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke local `GET http://localhost:3002/comunidades/tdah?tab=dados` retornando 200.
