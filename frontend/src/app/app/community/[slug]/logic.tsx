@@ -258,6 +258,12 @@ const rgbToHex = ({ b, g, r }: RgbColor) => {
   return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
 };
 
+const mixRgb = (source: RgbColor, target: RgbColor, sourceWeight: number): RgbColor => ({
+  b: target.b + (source.b - target.b) * sourceWeight,
+  g: target.g + (source.g - target.g) * sourceWeight,
+  r: target.r + (source.r - target.r) * sourceWeight,
+});
+
 const rgbToHsl = ({ b, g, r }: RgbColor): HslColor => {
   const red = r / 255;
   const green = g / 255;
@@ -289,80 +295,20 @@ const rgbToHsl = ({ b, g, r }: RgbColor): HslColor => {
   };
 };
 
-const hslToRgb = ({ h, l, s }: HslColor): RgbColor => {
-  const hue = ((h % 360) + 360) % 360;
-  const chroma = (1 - Math.abs(2 * l - 1)) * s;
-  const x = chroma * (1 - Math.abs(((hue / 60) % 2) - 1));
-  const match = l - chroma / 2;
-
-  let red = 0;
-  let green = 0;
-  let blue = 0;
-
-  if (hue < 60) {
-    red = chroma;
-    green = x;
-  } else if (hue < 120) {
-    red = x;
-    green = chroma;
-  } else if (hue < 180) {
-    green = chroma;
-    blue = x;
-  } else if (hue < 240) {
-    green = x;
-    blue = chroma;
-  } else if (hue < 300) {
-    red = x;
-    blue = chroma;
-  } else {
-    red = chroma;
-    blue = x;
-  }
-
-  return {
-    r: (red + match) * 255,
-    g: (green + match) * 255,
-    b: (blue + match) * 255,
-  };
-};
-
 const paletteFromRgb = (rgb: RgbColor): CommunityVisualPalette => {
-  const hsl = rgbToHsl(rgb);
-  const saturation = clampNumber(hsl.s * 0.82, 0.36, 0.62);
-  const lightness = clampNumber(hsl.l * 0.92, 0.34, 0.46);
-  const coverSaturation = clampNumber(hsl.s * 0.78, 0.46, 0.78);
-  const primary = { h: hsl.h, s: saturation, l: lightness };
-  const coverStart = {
-    h: hsl.h,
-    l: 0.84,
-    s: clampNumber(coverSaturation * 0.78, 0.38, 0.62),
-  };
-  const coverDepth = {
-    h: hsl.h,
-    l: 0.75,
-    s: clampNumber(coverSaturation * 0.92, 0.42, 0.72),
-  };
-  const coverEnd = {
-    h: hsl.h,
-    l: 0.66,
-    s: coverSaturation,
-  };
+  const black = { b: 0, g: 0, r: 0 };
+  const white = { b: 255, g: 255, r: 255 };
+  const primaryDarkColor = rgbToHex(mixRgb(rgb, black, 0.58));
 
   return {
-    coverDepthColor: rgbToHex(hslToRgb(coverDepth)),
-    coverEndColor: rgbToHex(hslToRgb(coverEnd)),
-    coverStartColor: rgbToHex(hslToRgb(coverStart)),
-    primaryColor: rgbToHex(hslToRgb(primary)),
-    primaryDarkColor: rgbToHex(
-      hslToRgb({ ...primary, l: clampNumber(lightness - 0.16, 0.22, 0.36) }),
-    ),
-    softColor: rgbToHex(
-      hslToRgb({ ...primary, s: clampNumber(saturation * 0.55, 0.32, 0.5), l: 0.92 }),
-    ),
-    textColor: rgbToHex(hslToRgb({ ...primary, s: clampNumber(saturation, 0.54, 0.82), l: 0.36 })),
-    gradientColor: rgbToHex(
-      hslToRgb({ ...primary, s: clampNumber(saturation * 0.42, 0.24, 0.4), l: 0.88 }),
-    ),
+    coverDepthColor: rgbToHex(mixRgb(rgb, white, 0.28)),
+    coverEndColor: rgbToHex(mixRgb(rgb, white, 0.4)),
+    coverStartColor: rgbToHex(mixRgb(rgb, white, 0.18)),
+    primaryColor: rgbToHex(rgb),
+    primaryDarkColor,
+    softColor: rgbToHex(mixRgb(rgb, white, 0.12)),
+    textColor: primaryDarkColor,
+    gradientColor: rgbToHex(mixRgb(rgb, white, 0.28)),
   };
 };
 
@@ -380,12 +326,10 @@ const resolveStoredCommunityPalette = (
     coverEndColor: derivedPalette.coverEndColor,
     coverStartColor: derivedPalette.coverStartColor,
     primaryColor,
-    primaryDarkColor:
-      normalizeHexColor(community.visual_primary_dark_color) ?? derivedPalette.primaryDarkColor,
-    softColor: normalizeHexColor(community.visual_soft_color) ?? derivedPalette.softColor,
-    textColor: normalizeHexColor(community.visual_text_color) ?? derivedPalette.textColor,
-    gradientColor:
-      normalizeHexColor(community.visual_gradient_color) ?? derivedPalette.gradientColor,
+    primaryDarkColor: derivedPalette.primaryDarkColor,
+    softColor: derivedPalette.softColor,
+    textColor: derivedPalette.textColor,
+    gradientColor: derivedPalette.gradientColor,
   };
 };
 

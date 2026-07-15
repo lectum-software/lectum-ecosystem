@@ -606,3 +606,13 @@ Regras de cálculo:
 - ADR criado: `adrs/0272-detalhe-admin-comunidade-identidade-textos.md`.
 - `pnpm --dir backend db:migrate` foi executado; a chamada CLI excedeu o limite de 120s do executor, mas a migration foi aplicada e registrada em `_prisma_migrations`. `pnpm --dir backend exec prisma migrate status` confirmou o banco atualizado.
 - Validação executada: consulta real sem descrições `�`/`??` em `community`, `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke local `GET http://localhost:3002/comunidades/ansiedade-em-equilibrio?tab=dados`/`GET http://localhost:3002/comunidades/ansiedade-em-equilibrio` retornando 200.
+
+## Ajuste complementar 2026-07-15 - Cor unica da comunidade
+
+- Pedido do usuario: simplificar a configuracao visual da comunidade para uma unica cor, usando a cor principal do avatar em uma versao mais suave no header publico.
+- O Admin passou a exibir apenas o campo `Cor da comunidade` nas telas de criacao e edicao, com previa do header suave derivado automaticamente.
+- O backend continua preservando os campos existentes de tons derivados por compatibilidade, mas agora calcula `visual_primary_dark_color`, `visual_soft_color`, `visual_text_color` e `visual_gradient_color` a partir de `visual_primary_color`; eles deixam de ser configuracoes independentes.
+- A tela publica de comunidade ignora overrides antigos de tons derivados e passa a montar o header sempre com tons suaves derivados de uma unica cor principal, incluindo fallback por avatar quando nao houver cor persistida.
+- Nao houve package novo, schema Prisma/migration, mock, endpoint paralelo ou alteracao em dados persistidos alem do proximo salvamento real da comunidade.
+- ADR criado: `adrs/0273-cor-unica-identidade-visual-comunidades.md`.
+- Validacao executada: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e smoke local `GET http://localhost:3002/comunidades/ansiedade-em-equilibrio?tab=dados`/`GET http://localhost:3002/comunidades/nova`/`GET http://localhost:3000/community/ansiedade-em-equilibrio` retornando 200.

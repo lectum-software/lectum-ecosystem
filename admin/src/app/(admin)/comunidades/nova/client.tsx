@@ -4,14 +4,15 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { ArrowLeft, Loader2, MessageCircleMore, Save } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import type { ReactNode } from "react";
-import { FormProvider, useForm } from "react-hook-form";
+import { type ReactNode, useMemo } from "react";
+import { FormProvider, useForm, useWatch } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 import { useAdminCommunityCreate } from "@/api/callers/communities";
 import { resolveApiError } from "@/api/handle";
 import type { AdminCommunityCreateInput } from "@/api/req/communities";
 import { InputController, TextareaController } from "@/components/controllers";
+import { communityHeaderBackground, deriveCommunityVisualPalette } from "@/lib/community-visual";
 import { cn } from "@/lib/utils";
 
 const hexColor = /^#[0-9A-Fa-f]{6}$/;
@@ -39,11 +40,7 @@ const communityCreateSchema = z.object({
       (value) => value.length === 0 || slugPattern.test(value),
       "Use apenas letras minúsculas, números e hífens.",
     ),
-  visual_gradient_color: optionalColor,
   visual_primary_color: optionalColor,
-  visual_primary_dark_color: optionalColor,
-  visual_soft_color: optionalColor,
-  visual_text_color: optionalColor,
 });
 
 type CommunityCreateFormValues = z.infer<typeof communityCreateSchema>;
@@ -53,11 +50,7 @@ const defaultValues: CommunityCreateFormValues = {
   description: "",
   name: "",
   slug: "",
-  visual_gradient_color: "",
   visual_primary_color: "",
-  visual_primary_dark_color: "",
-  visual_soft_color: "",
-  visual_text_color: "",
 };
 
 const nullableText = (value: string) => value.trim() || null;
@@ -68,11 +61,7 @@ const toPayload = (values: CommunityCreateFormValues): AdminCommunityCreateInput
   description: nullableText(values.description),
   name: values.name.trim(),
   slug: optionalText(values.slug),
-  visual_gradient_color: nullableText(values.visual_gradient_color),
   visual_primary_color: nullableText(values.visual_primary_color),
-  visual_primary_dark_color: nullableText(values.visual_primary_dark_color),
-  visual_soft_color: nullableText(values.visual_soft_color),
-  visual_text_color: nullableText(values.visual_text_color),
 });
 
 const cardClass =
@@ -90,6 +79,14 @@ export const AdminCommunityCreateClient = () => {
     mode: "onSubmit",
     resolver: zodResolver(communityCreateSchema),
   });
+  const selectedPrimaryColor = useWatch({
+    control: form.control,
+    name: "visual_primary_color",
+  });
+  const selectedPalette = useMemo(
+    () => deriveCommunityVisualPalette(selectedPrimaryColor),
+    [selectedPrimaryColor],
+  );
 
   const onSubmit = async (values: CommunityCreateFormValues) => {
     try {
@@ -178,39 +175,50 @@ export const AdminCommunityCreateClient = () => {
             <div className="rounded-[1.5rem] border border-border bg-surface-muted/50 p-4">
               <h3 className="text-sm font-bold text-foreground">Identidade visual opcional</h3>
               <p className="mt-1 text-xs font-medium leading-5 text-muted">
-                Use cores em hexadecimal para alinhar a comunidade ao padrão visual público.
+                Informe apenas a cor principal. A Lectum gera automaticamente o header suave, textos
+                e tons de apoio a partir dessa cor.
               </p>
-              <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-5">
-                <InputController<CommunityCreateFormValues>
-                  disabled={createMutation.isPending}
-                  label="Cor principal"
-                  name="visual_primary_color"
-                  placeholder="#3300FF"
-                />
-                <InputController<CommunityCreateFormValues>
-                  disabled={createMutation.isPending}
-                  label="Cor escura"
-                  name="visual_primary_dark_color"
-                  placeholder="#06104A"
-                />
-                <InputController<CommunityCreateFormValues>
-                  disabled={createMutation.isPending}
-                  label="Cor suave"
-                  name="visual_soft_color"
-                  placeholder="#EEF4FF"
-                />
-                <InputController<CommunityCreateFormValues>
-                  disabled={createMutation.isPending}
-                  label="Cor do texto"
-                  name="visual_text_color"
-                  placeholder="#06104A"
-                />
-                <InputController<CommunityCreateFormValues>
-                  disabled={createMutation.isPending}
-                  label="Cor do gradiente"
-                  name="visual_gradient_color"
-                  placeholder="#7B61FF"
-                />
+              <div className="mt-4 grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(260px,0.75fr)]">
+                <div>
+                  <InputController<CommunityCreateFormValues>
+                    disabled={createMutation.isPending}
+                    label="Cor da comunidade"
+                    name="visual_primary_color"
+                    placeholder="#FF8A2A"
+                  />
+                  <p className="-mt-4 text-xs font-medium leading-5 text-muted">
+                    Deixe em branco para usar o azul padrao ate o avatar real definir a identidade
+                    visual.
+                  </p>
+                </div>
+                <div
+                  className="overflow-hidden rounded-[1.35rem] border border-border shadow-control"
+                  style={{
+                    background: communityHeaderBackground(selectedPrimaryColor),
+                  }}
+                >
+                  <div className="flex min-h-24 items-end gap-3 p-4">
+                    <span
+                      className="grid h-14 w-14 place-items-center rounded-[1.1rem] text-xs font-black text-white ring-4 ring-white/80"
+                      style={{
+                        background: selectedPalette.primaryColor,
+                      }}
+                    >
+                      CO
+                    </span>
+                    <div>
+                      <p
+                        className="text-sm font-black"
+                        style={{
+                          color: selectedPalette.textColor,
+                        }}
+                      >
+                        Previa do header
+                      </p>
+                      <p className="text-xs font-bold text-muted">tom suave derivado da cor</p>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
 

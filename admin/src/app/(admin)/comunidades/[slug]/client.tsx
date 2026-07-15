@@ -62,6 +62,7 @@ import type {
 } from "@/api/req/communities";
 import { InputController, TextareaController } from "@/components/controllers";
 import { aggregateCalendarChartPoints } from "@/lib/chart-time-series";
+import { communityHeaderBackground, deriveCommunityVisualPalette } from "@/lib/community-visual";
 import { cn } from "@/lib/utils";
 
 const numberFormatter = new Intl.NumberFormat("pt-BR");
@@ -81,11 +82,7 @@ const colorSchema = z
 const communityFormSchema = z.object({
   description: z.string().trim().max(500, "Use até 500 caracteres.").optional(),
   name: z.string().trim().min(2, "Informe o nome.").max(120, "Use até 120 caracteres."),
-  visual_gradient_color: colorSchema,
   visual_primary_color: colorSchema,
-  visual_primary_dark_color: colorSchema,
-  visual_soft_color: colorSchema,
-  visual_text_color: colorSchema,
 });
 
 const ruleFormSchema = z.object({
@@ -158,21 +155,13 @@ const nullableColor = (value?: string | null) => {
 const defaultCommunityValues = (community: AdminCommunityIdentity): CommunityFormValues => ({
   description: community.description ?? "",
   name: community.name,
-  visual_gradient_color: colorValue(community.visual_gradient_color),
   visual_primary_color: colorValue(community.visual_primary_color),
-  visual_primary_dark_color: colorValue(community.visual_primary_dark_color),
-  visual_soft_color: colorValue(community.visual_soft_color),
-  visual_text_color: colorValue(community.visual_text_color),
 });
 
 const toCommunityPayload = (values: CommunityFormValues): AdminCommunityUpdateInput => ({
   description: nullableText(values.description),
   name: values.name.trim(),
-  visual_gradient_color: nullableColor(values.visual_gradient_color),
   visual_primary_color: nullableColor(values.visual_primary_color),
-  visual_primary_dark_color: nullableColor(values.visual_primary_dark_color),
-  visual_soft_color: nullableColor(values.visual_soft_color),
-  visual_text_color: nullableColor(values.visual_text_color),
 });
 
 const toRulePayload = (
@@ -425,11 +414,7 @@ const CommunityHeader = ({
         <div
           className="relative grid h-24 w-24 shrink-0 place-items-center overflow-hidden rounded-[1.6rem] text-2xl font-black text-white"
           style={{
-            background: community.visual_gradient_color
-              ? `linear-gradient(135deg, ${community.visual_primary_color || "#3300ff"}, ${
-                  community.visual_gradient_color
-                })`
-              : community.visual_primary_color || "#3300ff",
+            background: deriveCommunityVisualPalette(community.visual_primary_color).primaryColor,
           }}
         >
           {community.avatar_url ? (
@@ -500,7 +485,14 @@ const CommunityEditForm = ({
     form.reset(defaultCommunityValues(community));
   }, [community, form]);
 
-  const selectedColors = useWatch({ control: form.control });
+  const selectedPrimaryColor = useWatch({
+    control: form.control,
+    name: "visual_primary_color",
+  });
+  const selectedPalette = useMemo(
+    () => deriveCommunityVisualPalette(selectedPrimaryColor || community.visual_primary_color),
+    [community.visual_primary_color, selectedPrimaryColor],
+  );
   const onSubmit = async (values: CommunityFormValues) => {
     try {
       await updateMutation.mutateAsync(toCommunityPayload(values));
@@ -548,11 +540,7 @@ const CommunityEditForm = ({
               <span
                 className="relative grid h-32 w-32 place-items-center overflow-hidden rounded-[1.85rem] text-3xl font-black text-white ring-4 ring-primary-soft"
                 style={{
-                  background: community.visual_gradient_color
-                    ? `linear-gradient(135deg, ${community.visual_primary_color || "#3300ff"}, ${
-                        community.visual_gradient_color
-                      })`
-                    : community.visual_primary_color || "#3300ff",
+                  background: selectedPalette.primaryColor,
                 }}
               >
                 {community.avatar_url ? (
@@ -589,35 +577,48 @@ const CommunityEditForm = ({
             placeholder="Descreva o objetivo da comunidade"
             rows={4}
           />
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
-            {(
-              [
-                ["visual_primary_color", "Cor principal"],
-                ["visual_primary_dark_color", "Cor escura"],
-                ["visual_soft_color", "Cor suave"],
-                ["visual_text_color", "Cor do texto"],
-                ["visual_gradient_color", "Cor do gradiente"],
-              ] as const
-            ).map(([name, label]) => (
-              <div className="space-y-2" key={name}>
+          <div className="rounded-[1.5rem] border border-border bg-surface-muted/45 p-4">
+            <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(260px,0.75fr)]">
+              <div>
                 <InputController<CommunityFormValues>
-                  label={label}
-                  name={name}
-                  placeholder="#3300FF"
+                  label="Cor da comunidade"
+                  name="visual_primary_color"
+                  placeholder="#FF8A2A"
                 />
-                <span
-                  aria-hidden
-                  className="block h-3 rounded-full border border-border"
-                  style={{
-                    backgroundColor: hexColor.test(
-                      selectedColors[name as keyof CommunityFormValues] || "",
-                    )
-                      ? selectedColors[name as keyof CommunityFormValues]
-                      : "#f4f6ff",
-                  }}
-                />
+                <p className="-mt-4 text-xs font-medium leading-5 text-muted">
+                  Configure apenas a cor principal. Header, tons suaves, texto e chips sao gerados
+                  automaticamente a partir dela para manter contraste e consistencia.
+                </p>
               </div>
-            ))}
+              <div
+                className="overflow-hidden rounded-[1.35rem] border border-border shadow-control"
+                style={{
+                  background: communityHeaderBackground(selectedPrimaryColor),
+                }}
+              >
+                <div className="flex min-h-24 items-end gap-3 p-4">
+                  <span
+                    className="grid h-14 w-14 place-items-center rounded-[1.1rem] text-xs font-black text-white ring-4 ring-white/80"
+                    style={{
+                      background: selectedPalette.primaryColor,
+                    }}
+                  >
+                    {initials(community.name)}
+                  </span>
+                  <div>
+                    <p
+                      className="text-sm font-black"
+                      style={{
+                        color: selectedPalette.textColor,
+                      }}
+                    >
+                      Previa do header
+                    </p>
+                    <p className="text-xs font-bold text-muted">tom suave derivado da cor</p>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
           <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
             <button

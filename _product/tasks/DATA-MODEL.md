@@ -433,6 +433,8 @@ Regra vigente revalidada em 2026-06-26: qualquer usuário autenticado pode criar
 | `visual_gradient_color` | `String?` | variação clara usada como apoio radial próximo ao avatar |
 | `@@index([slug])`, `@@index([category, deleted])` | | |
 
+Complemento 2026-07-15: a configuracao administrativa de identidade visual passa a expor somente `visual_primary_color` como campo editavel. `visual_primary_dark_color`, `visual_soft_color`, `visual_text_color` e `visual_gradient_color` permanecem no schema como campos derivados/cacheaveis por compatibilidade com contratos existentes, mas nao sao mais configuracoes independentes. O backend deriva esses tons a partir de `visual_primary_color`, e a UI publica usa o mesmo principio para o header suave da comunidade.
+
 Governança: comunidades são criadas/curadas apenas por administradores da plataforma em fluxo administrativo futuro; usuários finais não têm endpoint de criação direta. Usuários podem apenas registrar `community_suggestion`, que fica pendente para análise da equipe. Moderadores de comunidades também serão administradores da plataforma, não usuários comuns ou mentores.
 
 Complemento TASK-52 (2026-07-09): regras exibidas dentro da comunidade deixam de ser hardcoded e passam a ser persistidas em `community_rule`, editáveis somente pelo Admin.

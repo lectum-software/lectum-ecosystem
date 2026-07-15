@@ -1,5 +1,6 @@
 ﻿import type { Resolve } from "@/helpers/return";
 import { error, msg } from "@/helpers/translate";
+import { deriveCommunityVisualColorFields, isCommunityHexColor } from "@/utils/community-visual";
 import { buildProfessionalFullDisplayName } from "@/utils/professional-name";
 import type {
   AdminCommunitiesListItemDTO,
@@ -51,7 +52,6 @@ import {
 } from "../repositories/AdminCommunityManageRepository";
 
 const DETAIL_PERIOD_DAYS = 30;
-const HEX_COLOR = /^#[0-9A-Fa-f]{6}$/;
 const DEFAULT_PAGE = 1;
 const DEFAULT_PAGE_SIZE = 10;
 const MAX_PAGE_SIZE = 50;
@@ -574,13 +574,6 @@ const buildRankingPeriod = () => {
   };
 };
 
-const normalizeColor = (value: string | null | undefined) => {
-  const normalized = normalizeNullableText(value);
-  if (!normalized) return null;
-
-  return normalized.toUpperCase();
-};
-
 const normalizeCommunitySlug = (value?: string | null) =>
   normalizeComparableText(value)
     .replace(/[^a-z0-9]+/g, "-")
@@ -595,31 +588,26 @@ const normalizeCommunityCreate = (
   description: normalizeNullableText(body.description),
   name: body.name.trim(),
   slug: normalizeCommunitySlug(body.slug || body.name),
-  visual_gradient_color: normalizeColor(body.visual_gradient_color),
-  visual_primary_color: normalizeColor(body.visual_primary_color),
-  visual_primary_dark_color: normalizeColor(body.visual_primary_dark_color),
-  visual_soft_color: normalizeColor(body.visual_soft_color),
-  visual_text_color: normalizeColor(body.visual_text_color),
+  ...deriveCommunityVisualColorFields(body.visual_primary_color),
 });
 
-const normalizeCommunityUpdate = (body: AdminCommunityUpdateBody): AdminCommunityUpdateBody => ({
-  description: normalizeNullableText(body.description),
-  name: body.name?.trim(),
-  visual_gradient_color: normalizeColor(body.visual_gradient_color),
-  visual_primary_color: normalizeColor(body.visual_primary_color),
-  visual_primary_dark_color: normalizeColor(body.visual_primary_dark_color),
-  visual_soft_color: normalizeColor(body.visual_soft_color),
-  visual_text_color: normalizeColor(body.visual_text_color),
-});
+const hasOwn = <T extends object>(object: T, key: keyof T) => Object.hasOwn(object, key);
+
+const normalizeCommunityUpdate = (body: AdminCommunityUpdateBody): AdminCommunityUpdateBody => {
+  const normalized: AdminCommunityUpdateBody = {
+    description: normalizeNullableText(body.description),
+    name: body.name?.trim(),
+  };
+
+  if (hasOwn(body, "visual_primary_color")) {
+    Object.assign(normalized, deriveCommunityVisualColorFields(body.visual_primary_color));
+  }
+
+  return normalized;
+};
 
 const invalidColor = (body: AdminCommunityUpdateBody) =>
-  [
-    body.visual_primary_color,
-    body.visual_primary_dark_color,
-    body.visual_soft_color,
-    body.visual_text_color,
-    body.visual_gradient_color,
-  ].some((value) => value !== null && value !== undefined && !HEX_COLOR.test(value));
+  hasOwn(body, "visual_primary_color") && !isCommunityHexColor(body.visual_primary_color);
 
 const normalizeRuleBody = (body: AdminCommunityRuleBody): Required<AdminCommunityRuleBody> => ({
   active: body.active ?? true,

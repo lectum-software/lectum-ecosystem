@@ -473,11 +473,7 @@ export type AdminCommunityActivities = {
 export type AdminCommunityUpdateInput = {
   description?: string | null;
   name: string;
-  visual_gradient_color?: string | null;
   visual_primary_color?: string | null;
-  visual_primary_dark_color?: string | null;
-  visual_soft_color?: string | null;
-  visual_text_color?: string | null;
 };
 
 export type AdminCommunityCreateInput = AdminCommunityUpdateInput & {
