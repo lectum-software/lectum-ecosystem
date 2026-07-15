@@ -193,3 +193,13 @@ Regras:
 - Builder/Quick Copy não está exposto como ferramenta callable no ambiente; a referência visual usada foi a captura enviada pelo usuário e o padrão local do Admin/site público.
 - ADR atualizado: `adrs/0264-admin-comunidade-abas-conteudo-ranking.md`.
 - Validação executada: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke local `GET http://localhost:3002/comunidades/tdah?tab=conteudo` retornando 200.
+
+## Ajuste complementar 2026-07-15 - Selo azul visual no autor
+
+- Pedido do usuário: substituir a tag textual `verificado` pelo selo azul já usado na Lectum.
+- A UI Admin passou a usar o mesmo SVG do selo azul de perfil verificado existente no app principal (`frontend/src/components/ui/verified-badge.tsx`), sem texto de tag.
+- Como Admin e frontend são aplicações separadas em produção, o SVG foi reproduzido localmente no componente do card, sem criar import cross-app ou package compartilhado.
+- Não houve package novo, mock, schema Prisma/migration, endpoint paralelo ou alteração de dados persistidos.
+- Builder/Quick Copy não está exposto como ferramenta callable no ambiente; a referência visual usada foi a captura enviada pelo usuário e o padrão local do Admin/site público.
+- ADR atualizado: `adrs/0264-admin-comunidade-abas-conteudo-ranking.md`.
+- Validação executada: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke local `GET http://localhost:3002/comunidades/tdah?tab=conteudo` retornando 200.

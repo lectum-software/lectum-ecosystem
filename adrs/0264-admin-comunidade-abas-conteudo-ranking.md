@@ -119,3 +119,12 @@ visual, o card mostra somente o nome do autor e, quando `author.verified` for ve
 
 Consequência: a natureza do conteúdo continua explícita na badge operacional do card, enquanto a autoria fica focada em
 identificação nominal e verificação profissional, sem repetir `paciente`/`psicologo` em parênteses.
+
+## Atualização 2026-07-15: selo azul compartilhado visualmente
+
+A autoria verificada na aba **Conteúdo** passa a usar o selo azul de perfil verificado já adotado no app principal,
+em vez de uma tag textual `verificado`. Como o Admin e o frontend devem permanecer aplicações separadas, o SVG do selo
+foi reproduzido localmente no card administrativo, mantendo equivalência visual sem criar importação entre apps.
+
+Consequência: o Admin fica visualmente alinhado à experiência pública da Lectum e evita duplicar texto de status na
+linha de autor; a regra continua derivada de `author.verified`.

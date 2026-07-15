@@ -26,7 +26,15 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
-import { type ChangeEvent, type PointerEvent, useEffect, useMemo, useRef, useState } from "react";
+import {
+  type ChangeEvent,
+  type PointerEvent,
+  type SVGProps,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { FormProvider, useForm, useWatch } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -1759,15 +1767,26 @@ const ContentItemBody = ({ item }: { item: AdminCommunityContentItem }) => {
   return <p className="mt-3 text-sm leading-6 text-muted">{item.excerpt}</p>;
 };
 
+const VerifiedBadgeIcon = ({ className, ...props }: SVGProps<SVGSVGElement>) => (
+  <svg
+    className={cn("h-4 w-4 shrink-0 text-primary", className)}
+    fill="none"
+    viewBox="0 0 30 28"
+    xmlns="http://www.w3.org/2000/svg"
+    {...props}
+  >
+    <title>Perfil verificado</title>
+    <path
+      d="M10.3636 28L7.77273 23.7333L2.86364 22.6667L3.34091 17.7333L0 14L3.34091 10.2667L2.86364 5.33333L7.77273 4.26667L10.3636 0L15 1.93333L19.6364 0L22.2273 4.26667L27.1364 5.33333L26.6591 10.2667L30 14L26.6591 17.7333L27.1364 22.6667L22.2273 23.7333L19.6364 28L15 26.0667L10.3636 28ZM13.5682 18.7333L21.2727 11.2L19.3636 9.26667L13.5682 14.9333L10.6364 12.1333L8.72727 14L13.5682 18.7333Z"
+      fill="currentColor"
+    />
+  </svg>
+);
+
 const ContentAuthorLine = ({ item }: { item: AdminCommunityContentItem }) => (
   <div className="mt-2 inline-flex flex-wrap items-center gap-1.5 text-xs font-bold text-muted">
     <span>{item.author.name}</span>
-    {item.author.verified ? (
-      <span className="inline-flex items-center gap-1 rounded-full bg-primary-soft px-2 py-0.5 text-[11px] font-black text-primary">
-        <ShieldCheck aria-hidden className="h-3 w-3" />
-        verificado
-      </span>
-    ) : null}
+    {item.author.verified ? <VerifiedBadgeIcon aria-label="Perfil verificado" /> : null}
   </div>
 );
 
