@@ -490,20 +490,25 @@ const PresentationVideoMetricCard = ({
   const Icon = videoMetricIcons[metric.id];
 
   return (
-    <article className="flex min-h-[132px] min-w-0 flex-col rounded-[20px] border border-primary/10 bg-surface p-3 shadow-[var(--lectum-shadow-soft)] sm:min-h-[150px] sm:rounded-[22px] sm:p-4">
-      <span className="grid h-9 w-9 place-items-center rounded-full bg-primary-soft text-primary sm:h-10 sm:w-10">
-        <Icon className="h-[18px] w-[18px] sm:h-5 sm:w-5" aria-hidden />
-      </span>
-      <h3 className="mt-3 min-h-10 break-words text-[0.78rem] font-extrabold leading-5 text-muted sm:mt-4 sm:text-sm">
-        {metric.label}
-      </h3>
+    <article className="grid min-w-0 gap-2 rounded-[18px] border border-primary/10 bg-surface-muted/70 p-3">
+      <div className="flex min-w-0 items-center gap-2">
+        <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-primary-soft text-primary">
+          <Icon className="h-4 w-4" aria-hidden />
+        </span>
+        <h3 className="min-w-0 text-[0.76rem] font-extrabold leading-4 text-muted">
+          {metric.label}
+        </h3>
+      </div>
       <p
         className={cn(
-          "mt-auto pt-2 text-2xl font-black leading-none tracking-[-0.05em] text-foreground sm:text-[1.75rem]",
+          "text-2xl font-black leading-none tracking-[-0.05em] text-foreground",
           locked && "select-none blur-[5px]",
         )}
       >
         {formatVideoMetricValue(metric)}
+      </p>
+      <p className="line-clamp-2 text-[0.68rem] font-semibold leading-4 text-subtle">
+        {metric.description}
       </p>
     </article>
   );
@@ -1119,13 +1124,7 @@ const PresentationVideoAnalyticsSection = ({
         </div>
       </div>
 
-      <div className="grid min-w-0 grid-cols-2 gap-3">
-        {presentationVideoCards.map((metric) => (
-          <PresentationVideoMetricCard key={metric.id} locked={locked} metric={metric} />
-        ))}
-      </div>
-
-      <article className="grid min-w-0 gap-4 rounded-[26px] border border-primary/10 bg-primary-soft/55 p-4 md:grid-cols-[minmax(160px,220px)_1fr] md:items-center md:p-5">
+      <article className="grid min-w-0 gap-4 rounded-[26px] border border-primary/10 bg-primary-soft/55 p-4 md:grid-cols-[minmax(160px,220px)_1fr] md:items-start md:p-5">
         <div className="min-w-0">
           <p className="text-xs font-black uppercase tracking-[0.14em] text-primary">
             Retenção do vídeo
@@ -1144,24 +1143,6 @@ const PresentationVideoAnalyticsSection = ({
             </span>
             .
           </p>
-          <div className="mt-4 rounded-2xl border border-primary/10 bg-surface px-3 py-3 text-sm leading-6 text-muted">
-            <span
-              className={cn(
-                "inline-flex rounded-full border border-primary/10 bg-primary-soft px-2.5 py-1 text-[0.68rem] font-black uppercase tracking-[0.1em] text-primary",
-                locked && "select-none blur-[4px]",
-              )}
-            >
-              {retentionHealth.label}
-            </span>
-            <p
-              className={cn(
-                "mt-2 font-semibold leading-5 text-muted",
-                locked && "select-none blur-[4px]",
-              )}
-            >
-              {retentionHealth.description}
-            </p>
-          </div>
           {!videoSrc ? (
             <p className="mt-3 rounded-2xl border border-primary/10 bg-surface px-3 py-2 text-xs font-semibold leading-5 text-muted">
               Envie um vídeo de apresentação para ativar a análise de retenção.
@@ -1199,16 +1180,40 @@ const PresentationVideoAnalyticsSection = ({
           <div className="grid min-w-0 gap-3 rounded-[22px] border border-primary/10 bg-surface p-3">
             <div className="min-w-0">
               <p className="text-xs font-black uppercase tracking-[0.14em] text-primary">
-                Ações geradas pelo vídeo
+                Consumo e ações do vídeo
               </p>
               <p className="mt-1 text-xs font-semibold leading-5 text-muted">
-                Interações reais iniciadas nos controles do vídeo de apresentação.
+                Visualizações, replays e interações reais iniciadas no vídeo de apresentação.
               </p>
             </div>
-            <div className="grid min-w-0 grid-cols-2 gap-2 lg:grid-cols-4">
+            <div className="grid min-w-0 grid-cols-2 gap-2 lg:grid-cols-3">
+              {presentationVideoCards.map((metric) => (
+                <PresentationVideoMetricCard key={metric.id} locked={locked} metric={metric} />
+              ))}
               {presentationVideoActionMetrics.map((metric) => (
                 <PresentationVideoActionCard key={metric.id} locked={locked} metric={metric} />
               ))}
+            </div>
+            <div className="rounded-2xl border border-primary/10 bg-primary-soft/55 px-3 py-3 text-sm leading-6 text-muted">
+              <p className="text-[0.68rem] font-black uppercase tracking-[0.12em] text-primary">
+                Diagnóstico
+              </p>
+              <span
+                className={cn(
+                  "mt-2 inline-flex rounded-full border border-primary/10 bg-surface px-2.5 py-1 text-[0.68rem] font-black uppercase tracking-[0.1em] text-primary",
+                  locked && "select-none blur-[4px]",
+                )}
+              >
+                {retentionHealth.label}
+              </span>
+              <p
+                className={cn(
+                  "mt-2 font-semibold leading-5 text-muted",
+                  locked && "select-none blur-[4px]",
+                )}
+              >
+                {retentionHealth.description}
+              </p>
             </div>
           </div>
         </div>

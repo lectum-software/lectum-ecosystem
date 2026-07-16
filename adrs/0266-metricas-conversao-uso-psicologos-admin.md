@@ -113,3 +113,11 @@ O analytics privado do psicologo (`/app/professional/analytics`) passa a reutili
 A decisao mantem a separacao entre consumo do video e conversoes/interacoes: sessoes, replay e retencao continuam vindo de `profile_video_watch_session`; acoes geradas pelo video vem de `important_action_event`, sem inferencia por URL, sem backfill e sem misturar com `contact_request` ou favoritos globais. No analytics do proprio psicologo, autoacoes autenticadas do profissional sao excluidas para manter a leitura orientada a visitantes.
 
 A curva de retencao tambem passa a exibir o eixo X em tempo do video (`0:00`, meio e fim) usando a duracao real do player/API quando disponivel. A mudanca e somente de apresentacao quando nao houver duracao, preservando estado honesto sem dados artificiais.
+
+## Complemento 2026-07-16 - Agrupamento de consumo, acoes e diagnostico no analytics do psicologo
+
+No analytics privado do psicologo, os indicadores de consumo do video (`Visualizacoes` e `Taxa de replays`) devem ficar junto das acoes atribuidas ao video, em vez de ocuparem cards isolados no topo da secao. A UI passa a usar um unico bloco **Consumo e acoes do video** abaixo do player/grafico, com grid mobile-first para consumo e conversoes/interacoes.
+
+O diagnostico de retencao fica abaixo desse grid para funcionar como conclusao da leitura das metricas. A decisao e exclusivamente de hierarquia visual: nao altera fonte de dados, contrato de API, regra de calculo, schema Prisma ou tracking first-party.
+
+Validacao complementar 2026-07-16: `pnpm --dir frontend check`, `pnpm --dir frontend build` e smoke HTTP local `GET http://localhost:3000/app/professional/analytics` retornando 307 pelo guard privado.

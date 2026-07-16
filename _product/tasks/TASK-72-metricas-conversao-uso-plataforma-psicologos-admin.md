@@ -747,3 +747,13 @@ Regras de cálculo:
 - ADR novo nao foi necessario por nao haver decisao arquitetural, integracao ou regra de dominio nova.
 - Validacao executada: `pnpm --dir admin check`, `pnpm --dir admin build` e smoke HTTP local `GET http://localhost:3002/comunidades/relacionamentos-com-proposito?tab=ranking` retornando 200.
 - `pnpm check` foi executado, mas falhou por alteracoes paralelas nao relacionadas em `backend/src/modules/api/private/psychologist/analytics/*` e `frontend/src/app/app/professional/analytics/logic.tsx`, fora deste ajuste.
+
+## Ajuste complementar 2026-07-16 - Consumo, acoes e diagnostico do video no analytics do psicologo
+
+- Pedido do usuario: aproximar os numeros de visualizacoes/replays das acoes geradas pelo video e colocar o diagnostico abaixo das metricas.
+- O card de `/app/professional/analytics` deixou de exibir Visualizacoes e Taxa de replays como cards isolados no topo da secao de video.
+- As metricas de consumo do video agora ficam no mesmo bloco **Consumo e acoes do video** das acoes atribuidas: Acesso ao perfil, Favoritado, Cliques no WhatsApp e Compartilhamento.
+- O diagnostico de retencao (`Aguardando dados`, `Bom desempenho`, `Ponto de atencao` ou `Precisa melhorar`) passou a ficar abaixo do grid de metricas/acoes, mantendo a leitura como conclusao do bloco.
+- Nao houve package novo, mock, schema Prisma/migration, endpoint novo ou alteracao de contrato de API.
+- Builder/Quick Copy nao esta exposto como ferramenta no ambiente; a referencia visual usada foi a captura enviada pelo usuario e o padrao local de `Meus Analytics - Psicologo`.
+- Validacao executada: `pnpm --dir frontend check`, `pnpm --dir frontend build` e smoke HTTP local `GET http://localhost:3000/app/professional/analytics` retornando 307 pelo guard privado.
