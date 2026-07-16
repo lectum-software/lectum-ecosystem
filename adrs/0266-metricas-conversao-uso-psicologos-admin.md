@@ -153,3 +153,11 @@ No analytics privado do psicologo, em telas medias e maiores, o card de video e 
 O grafico pode escalar em largura e altura a partir de md, enquanto o video permanece em largura controlada para preservar proporcao vertical. O painel **Consumo e acoes do video** continua abaixo do card de video/grafico, mantendo metricas, acoes e diagnostico agrupados. A decisao e exclusivamente visual e nao altera dados, contrato de API, tracking first-party, schema Prisma ou packages.
 
 Validacao complementar 2026-07-16: `pnpm --dir frontend check`, `pnpm --dir frontend build` e smoke HTTP local `GET http://localhost:3000/app/professional/analytics` retornando 307 pelo guard privado.
+
+## Complemento 2026-07-16 - Alinhamento numerico da origem do trafego
+
+No analytics privado do psicologo, a tabela desktop **Origem do trafego** deve centralizar os valores numericos nas colunas **Visualizacoes de perfil** e **WhatsApp**, mantendo a coluna **Fonte** com leitura textual alinhada a esquerda.
+
+A decisao melhora a comparacao vertical dos numeros em telas maiores sem alterar dados, contrato de API, tracking first-party, schema Prisma ou packages. No mobile, a visualizacao continua em cards para preservar legibilidade.
+
+Validacao complementar 2026-07-16: `pnpm --dir frontend check`, `pnpm --dir frontend build` e smoke HTTP local `GET http://localhost:3000/app/professional/analytics` retornando 307 pelo guard privado.

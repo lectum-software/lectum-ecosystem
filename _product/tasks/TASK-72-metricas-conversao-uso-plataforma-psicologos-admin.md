@@ -796,3 +796,11 @@ Regras de cálculo:
 - Nao houve package novo, mock, schema Prisma/migration, endpoint novo ou alteracao de contrato de API.
 - Builder/Quick Copy nao esta exposto como ferramenta no ambiente; a referencia visual usada foi a captura enviada pelo usuario.
 - Validacao executada: `pnpm --dir frontend check`, `pnpm --dir frontend build` e smoke HTTP local `GET http://localhost:3000/app/professional/analytics` retornando 307 pelo guard privado.
+
+## Ajuste complementar 2026-07-16 - Numeros centralizados na tabela de origem do trafego
+
+- Pedido do usuario: centralizar os numeros nas colunas da tabela **Origem do trafego** em `/app/professional/analytics`.
+- As colunas numericas de desktop (**Visualizacoes de perfil** e **WhatsApp**) agora alinham cabecalho e valores ao centro, mantendo a primeira coluna textual alinhada a esquerda.
+- O ajuste e exclusivamente visual, mobile-first e nao altera dados, contrato de API, tracking first-party, schema Prisma/migration ou packages.
+- Builder/Quick Copy nao esta exposto como ferramenta no ambiente; a referencia visual usada foi a captura enviada pelo usuario.
+- Validacao executada: `pnpm --dir frontend check`, `pnpm --dir frontend build` e smoke HTTP local `GET http://localhost:3000/app/professional/analytics` retornando 307 pelo guard privado.
