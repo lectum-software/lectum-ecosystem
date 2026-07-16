@@ -378,12 +378,22 @@ Validacao desta atualizacao: `pnpm --dir admin check`, `pnpm --dir backend check
 
 Os controles de periodo da aba **Estatisticas** da comunidade passam a viver no cabecalho de **Estatisticas de pessoas** e **Estatisticas de conteudo**, alinhados a direita do titulo em telas amplas e empilhados no mobile.
 
-A decisao preserva uma unica query contextual para os dois blocos: qualquer alteracao em **Periodo**, **De** ou **Ate** atualiza a mesma serie temporal e os mesmos contadores segmentados para pessoas e conteudo. Nao ha novo endpoint, contrato semantico, schema Prisma, migration, dependencia ou mock.
+A decisao inicial preservava uma unica query contextual para os dois blocos. O ajuste seguinte substitui essa estrategia por estado e consultas independentes por bloco, mantendo o mesmo endpoint real e sem criar contrato paralelo.
 
 ## Atualizacao 2026-07-16: filtros de Estatisticas sem container destacado
 
 Os filtros de periodo dos blocos **Estatisticas de pessoas** e **Estatisticas de conteudo** permanecem no cabecalho direito, mas deixam de exibir o resumo textual do periodo e deixam de ter container com fundo destacado atras dos campos.
 
-A decisao e puramente visual: a mesma query e os mesmos parametros continuam alimentando os dois blocos; nao ha novo endpoint, contrato semantico, schema Prisma, migration, dependencia ou mock.
+A decisao deste ajuste e puramente visual no formato dos campos. O ajuste seguinte separa estado e query por bloco para evitar recarregamento cruzado; nao ha novo endpoint, contrato semantico, schema Prisma, migration, dependencia ou mock.
 
 Validacao desta atualizacao: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm check`, smoke local da rota Admin de Estatisticas retornando 200 e smoke sem sessao Admin do endpoint de estatisticas retornando 401.
+
+## Atualizacao 2026-07-16: periodo independente por bloco de Estatisticas
+
+A aba **Estatisticas** do detalhe administrativo de comunidade passa a manter estado de periodo, intervalo customizado e consulta React Query independentes para **Estatisticas de pessoas** e **Estatisticas de conteudo**.
+
+A decisao reutiliza o mesmo endpoint real `GET /api/admin/private/communities/:id/statistics`, protegido por Admin, mas instancia duas assinaturas de consulta no cliente com chaves de cache derivadas dos parametros de cada bloco. Assim, ao alterar **Periodo**, **De** ou **Ate** em um bloco, somente seus contadores e seu grafico entram em carregamento/atualizacao; o outro bloco preserva filtros, dados e serie temporal ate que seu proprio filtro seja alterado.
+
+Consequencia: a interacao fica mais localizada e consistente com o modelo de estatisticas de psicologos, sem recarregar a pagina inteira, sem endpoint paralelo, sem novo contrato semantico, schema Prisma, migration, dependencia, mock ou persistencia adicional.
+
+Validacao desta atualizacao: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check`, smoke local da rota Admin de Estatisticas retornando 200 e smoke sem sessao Admin do endpoint de estatisticas retornando 401.

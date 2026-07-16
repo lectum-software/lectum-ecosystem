@@ -430,7 +430,7 @@ Regras:
 
 - Pedido do usuario: em **Estatisticas de pessoas** e **Estatisticas de conteudo**, posicionar o filtro de data a direita do titulo do bloco.
 - A UI Admin removeu o card de periodo separado do topo e passou a renderizar os mesmos controles reais de **Periodo**, **De** e **Ate** no cabecalho de cada bloco de estatisticas, alinhados a direita em desktop e empilhados no mobile.
-- Os dois blocos compartilham a mesma consulta real de estatisticas da comunidade; alterar o periodo em qualquer bloco atualiza pessoas e conteudo juntos, sem criar endpoint paralelo, package, schema Prisma/migration ou mock.
+- A primeira versao dos filtros no cabecalho compartilhava a mesma consulta real de estatisticas da comunidade; o ajuste complementar seguinte substitui esse comportamento por consultas independentes por bloco para que a troca de periodo nao recarregue o outro bloco.
 - Builder/Quick Copy nao esta exposto como ferramenta callable no ambiente; a referencia visual usada foi a captura enviada pelo usuario e o padrao local da aba **Estatisticas** de psicologos.
 
 ## Ajuste complementar 2026-07-16 - Filtros sem resumo textual nem fundo destacado
@@ -439,3 +439,12 @@ Regras:
 - A UI Admin manteve os filtros no cabecalho direito de **Estatisticas de pessoas** e **Estatisticas de conteudo**, mas sem renderizar a linha de resumo textual do periodo e sem card/fundo destacado envolvendo os campos.
 - O ajuste e exclusivamente visual, sem endpoint novo, contrato semantico, schema Prisma/migration, package, mock ou alteracao de persistencia.
 - Validacao executada para o ajuste dos filtros: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm check`, smoke local `GET http://localhost:3002/comunidades/relacionamentos-com-proposito?tab=estatisticas` retornando 200 e smoke sem sessao Admin de `GET /api/admin/private/communities/relacionamentos-com-proposito/statistics?period=month` retornando 401.
+
+## Ajuste complementar 2026-07-16 - Periodos independentes nos blocos de Estatisticas
+
+- Pedido do usuario: ao clicar para alterar o periodo de um bloco de estatisticas, recarregar somente os contadores e o grafico daquele bloco, sem recarregar a pagina inteira nem o outro bloco.
+- A UI Admin passou a manter estado de periodo, intervalo customizado e query React Query independentes para **Estatisticas de pessoas** e **Estatisticas de conteudo**.
+- Cada bloco continua usando o endpoint real `GET /api/admin/private/communities/:id/statistics`, mas com chave de cache propria conforme seus parametros de periodo.
+- Durante uma troca de periodo, apenas o bloco afetado exibe carregamento/atualizacao e recalcula seus contadores e grafico; o outro bloco preserva filtros, contadores e serie temporal atuais.
+- Nao houve endpoint paralelo, package novo, schema Prisma/migration, mock, seed ou alteracao de persistencia.
+- Validacao executada: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check`, smoke local `GET http://localhost:3002/comunidades/relacionamentos-com-proposito?tab=estatisticas` retornando 200 e smoke sem sessao Admin de `GET /api/admin/private/communities/relacionamentos-com-proposito/statistics?period=month` retornando 401.

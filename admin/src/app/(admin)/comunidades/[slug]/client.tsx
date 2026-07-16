@@ -3585,6 +3585,92 @@ type CommunityStatisticsDateFilterProps = {
   selectedPeriod: StatisticsPeriodValue;
 };
 
+const useCommunityStatisticsDateFilterState = (createdAt: string) => {
+  const [selectedPeriod, setSelectedPeriod] = useState<StatisticsPeriodValue>("month");
+  const initialRange = useMemo(() => getStatisticsRangeForPeriod("month", createdAt), [createdAt]);
+  const [draftRange, setDraftRange] = useState<Required<StatisticsCustomRange>>(initialRange);
+  const [appliedRange, setAppliedRange] = useState<Required<StatisticsCustomRange>>(initialRange);
+  const [rangeError, setRangeError] = useState<string | null>(null);
+  const queryInput = useMemo<AdminCommunityStatisticsQuery>(
+    () => ({
+      period: selectedPeriod,
+      ...(selectedPeriod === "custom" ? appliedRange : {}),
+    }),
+    [appliedRange, selectedPeriod],
+  );
+
+  const handlePeriodChange = useCallback(
+    (period: StatisticsPeriodValue) => {
+      setSelectedPeriod(period);
+      if (period !== "custom") {
+        const nextRange = getStatisticsRangeForPeriod(period as StatisticsPeriodPreset, createdAt);
+        setDraftRange(nextRange);
+        setAppliedRange(nextRange);
+        setRangeError(null);
+      }
+    },
+    [createdAt],
+  );
+
+  const handleDateChange = useCallback(
+    (field: keyof StatisticsCustomRange, value: string) => {
+      const nextRange = { ...draftRange, [field]: value };
+      setDraftRange(nextRange);
+      setSelectedPeriod("custom");
+    },
+    [draftRange],
+  );
+
+  const commitRange = useCallback(() => {
+    if (!isValidContentRange(draftRange)) {
+      setRangeError(
+        "Informe um período personalizado completo, com data inicial menor ou igual à final.",
+      );
+      return;
+    }
+
+    setRangeError(null);
+    setAppliedRange(draftRange);
+  }, [draftRange]);
+
+  const handleDateControlsBlur = useCallback(
+    (event: { currentTarget: HTMLDivElement; relatedTarget: EventTarget | null }) => {
+      const currentTarget = event.currentTarget;
+      const nextFocusedElement = event.relatedTarget as Node | null;
+
+      if (nextFocusedElement && currentTarget.contains(nextFocusedElement)) return;
+
+      window.setTimeout(() => {
+        const activeElement = document.activeElement;
+        if (activeElement && currentTarget.contains(activeElement)) return;
+        commitRange();
+      }, 0);
+    },
+    [commitRange],
+  );
+
+  const dateFilters = useMemo<CommunityStatisticsDateFilterProps>(
+    () => ({
+      draftRange,
+      onDateChange: handleDateChange,
+      onDateControlsBlur: handleDateControlsBlur,
+      onPeriodChange: handlePeriodChange,
+      rangeError,
+      selectedPeriod,
+    }),
+    [
+      draftRange,
+      handleDateChange,
+      handleDateControlsBlur,
+      handlePeriodChange,
+      rangeError,
+      selectedPeriod,
+    ],
+  );
+
+  return { dateFilters, queryInput };
+};
+
 const communityStatisticsMetricAggregations = {
   followers_patients: "last",
   followers_psychologists: "last",
@@ -4006,138 +4092,105 @@ const CommunityStatisticsDateFilters = ({
 const CommunityStatisticsSegment = ({
   dateFilters,
   description,
+  error,
+  isFetching,
+  isLoading,
   metrics,
   onToggleMetric,
+  onRetry,
   points,
   title,
   visibleMetricIds,
 }: {
   dateFilters: CommunityStatisticsDateFilterProps;
   description: string;
+  error: unknown;
+  isFetching: boolean;
+  isLoading: boolean;
   metrics: CommunityStatisticsMetricItem[];
   onToggleMetric: (metricId: string) => void;
+  onRetry: () => void;
   points: AdminCommunityStatisticsDailyPoint[];
   title: string;
   visibleMetricIds: string[];
 }) => {
   const visibleMetrics = metrics.filter((metric) => visibleMetricIds.includes(metric.id));
+  const hasStatistics = metrics.length > 0;
+  const hasStatus = isLoading || Boolean(error);
 
   return (
-    <section className={cn(cardClass, "min-w-0 p-5")}>
+    <section aria-busy={isLoading || isFetching} className={cn(cardClass, "min-w-0 p-5")}>
       <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-start">
         <div className="min-w-0">
-          <h3 className="text-lg font-black text-foreground">{title}</h3>
+          <div className="flex flex-wrap items-center gap-2">
+            <h3 className="text-lg font-black text-foreground">{title}</h3>
+            {isFetching && !isLoading ? (
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary-soft px-2.5 py-1 text-[11px] font-black text-primary">
+                <Loader2 aria-hidden className="h-3.5 w-3.5 animate-spin" />
+                Atualizando
+              </span>
+            ) : null}
+          </div>
           <p className="mt-1 text-xs font-bold leading-5 text-muted">{description}</p>
         </div>
         <CommunityStatisticsDateFilters {...dateFilters} />
       </div>
-      <fieldset className="mt-5 grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6">
-        <legend className="sr-only">Contadores exibidos no gráfico de {title}</legend>
-        {metrics.map((metric) => (
-          <CommunityStatisticsMetricToggleCard
-            active={visibleMetricIds.includes(metric.id)}
-            key={metric.id}
-            metric={metric}
-            onToggle={() => onToggleMetric(metric.id)}
-          />
-        ))}
-      </fieldset>
-      <CommunityStatisticsSeriesChart metrics={visibleMetrics} points={points} />
+      {hasStatus ? (
+        <div className="mt-5">
+          <QueryStatus error={error} loading={isLoading} onRetry={onRetry} />
+        </div>
+      ) : null}
+      {hasStatistics ? (
+        <>
+          <fieldset className="mt-5 grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6">
+            <legend className="sr-only">Contadores exibidos no gráfico de {title}</legend>
+            {metrics.map((metric) => (
+              <CommunityStatisticsMetricToggleCard
+                active={visibleMetricIds.includes(metric.id)}
+                key={metric.id}
+                metric={metric}
+                onToggle={() => onToggleMetric(metric.id)}
+              />
+            ))}
+          </fieldset>
+          <CommunityStatisticsSeriesChart metrics={visibleMetrics} points={points} />
+        </>
+      ) : null}
     </section>
   );
 };
 
 const StatisticsTab = ({ createdAt, slug }: { createdAt: string; slug: string }) => {
-  const [selectedPeriod, setSelectedPeriod] = useState<StatisticsPeriodValue>("month");
-  const initialRange = useMemo(() => getStatisticsRangeForPeriod("month", createdAt), [createdAt]);
-  const [draftRange, setDraftRange] = useState<Required<StatisticsCustomRange>>(initialRange);
-  const [appliedRange, setAppliedRange] = useState<Required<StatisticsCustomRange>>(initialRange);
-  const [rangeError, setRangeError] = useState<string | null>(null);
-  const queryInput = useMemo<AdminCommunityStatisticsQuery>(
-    () => ({
-      period: selectedPeriod,
-      ...(selectedPeriod === "custom" ? appliedRange : {}),
-    }),
-    [appliedRange, selectedPeriod],
-  );
-  const result = useAdminCommunityStatistics(slug, queryInput);
-  const statistics = result.data;
-  const handlePeriodChange = (period: StatisticsPeriodValue) => {
-    setSelectedPeriod(period);
-    if (period !== "custom") {
-      const nextRange = getStatisticsRangeForPeriod(period as StatisticsPeriodPreset, createdAt);
-      setDraftRange(nextRange);
-      setAppliedRange(nextRange);
-      setRangeError(null);
-    }
-  };
-  const handleDateChange = (field: keyof StatisticsCustomRange, value: string) => {
-    const nextRange = { ...draftRange, [field]: value };
-    setDraftRange(nextRange);
-    setSelectedPeriod("custom");
-  };
-  const commitRange = () => {
-    if (!isValidContentRange(draftRange)) {
-      setRangeError(
-        "Informe um período personalizado completo, com data inicial menor ou igual à final.",
-      );
-      return;
-    }
-
-    setRangeError(null);
-    setAppliedRange(draftRange);
-  };
-  const handleDateControlsBlur = (event: {
-    currentTarget: HTMLDivElement;
-    relatedTarget: EventTarget | null;
-  }) => {
-    const currentTarget = event.currentTarget;
-    const nextFocusedElement = event.relatedTarget as Node | null;
-
-    if (nextFocusedElement && currentTarget.contains(nextFocusedElement)) return;
-
-    window.setTimeout(() => {
-      const activeElement = document.activeElement;
-      if (activeElement && currentTarget.contains(activeElement)) return;
-      commitRange();
-    }, 0);
-  };
-  const dateFilters: CommunityStatisticsDateFilterProps = {
-    draftRange,
-    onDateChange: handleDateChange,
-    onDateControlsBlur: handleDateControlsBlur,
-    onPeriodChange: handlePeriodChange,
-    rangeError,
-    selectedPeriod,
-  };
-
   return (
     <div className="space-y-5" data-community-detail-tab="estatisticas">
-      <QueryStatus
-        error={result.error}
-        loading={result.isLoading}
-        onRetry={() => void result.refetch()}
-      />
-
-      {statistics ? <StatisticsContent dateFilters={dateFilters} statistics={statistics} /> : null}
+      <StatisticsContent createdAt={createdAt} slug={slug} />
     </div>
   );
 };
 
-const StatisticsContent = ({
-  dateFilters,
-  statistics,
-}: {
-  dateFilters: CommunityStatisticsDateFilterProps;
-  statistics: AdminCommunityStatistics;
-}) => {
+const StatisticsContent = ({ createdAt, slug }: { createdAt: string; slug: string }) => {
+  const peopleDateState = useCommunityStatisticsDateFilterState(createdAt);
+  const contentDateState = useCommunityStatisticsDateFilterState(createdAt);
+  const peopleResult = useAdminCommunityStatistics(slug, peopleDateState.queryInput);
+  const contentResult = useAdminCommunityStatistics(slug, contentDateState.queryInput);
+  const peopleStatistics = peopleResult.data;
+  const contentStatistics = contentResult.data;
   const peopleMetrics = useMemo(
-    () => buildCommunityStatisticsMetricItems(statistics, COMMUNITY_PEOPLE_STATISTICS_METRICS),
-    [statistics],
+    () =>
+      peopleStatistics
+        ? buildCommunityStatisticsMetricItems(peopleStatistics, COMMUNITY_PEOPLE_STATISTICS_METRICS)
+        : [],
+    [peopleStatistics],
   );
   const contentMetrics = useMemo(
-    () => buildCommunityStatisticsMetricItems(statistics, COMMUNITY_CONTENT_STATISTICS_METRICS),
-    [statistics],
+    () =>
+      contentStatistics
+        ? buildCommunityStatisticsMetricItems(
+            contentStatistics,
+            COMMUNITY_CONTENT_STATISTICS_METRICS,
+          )
+        : [],
+    [contentStatistics],
   );
   const [visiblePeopleMetricIds, setVisiblePeopleMetricIds] = useState<string[]>(() =>
     COMMUNITY_PEOPLE_STATISTICS_METRICS.map((metric) => metric.id),
@@ -4155,20 +4208,28 @@ const StatisticsContent = ({
   return (
     <div className="space-y-5">
       <CommunityStatisticsSegment
-        dateFilters={dateFilters}
+        dateFilters={peopleDateState.dateFilters}
         description="Clique nos contadores para exibir ou esconder a curva correspondente no gráfico. Seguidores usam o acumulado do período; demais métricas usam eventos reais por dia."
+        error={peopleResult.error}
+        isFetching={peopleResult.isFetching}
+        isLoading={peopleResult.isLoading}
         metrics={peopleMetrics}
         onToggleMetric={togglePeopleMetric}
-        points={statistics.charts.daily}
+        onRetry={() => void peopleResult.refetch()}
+        points={peopleStatistics?.charts.daily ?? []}
         title="Estatísticas de pessoas"
         visibleMetricIds={visiblePeopleMetricIds}
       />
       <CommunityStatisticsSegment
-        dateFilters={dateFilters}
+        dateFilters={contentDateState.dateFilters}
         description="Clique nos contadores para comparar somente as curvas de conteúdo que deseja acompanhar."
+        error={contentResult.error}
+        isFetching={contentResult.isFetching}
+        isLoading={contentResult.isLoading}
         metrics={contentMetrics}
         onToggleMetric={toggleContentMetric}
-        points={statistics.charts.daily}
+        onRetry={() => void contentResult.refetch()}
+        points={contentStatistics?.charts.daily ?? []}
         title="Estatísticas de conteúdo"
         visibleMetricIds={visibleContentMetricIds}
       />
