@@ -289,3 +289,15 @@ Regras:
 - Builder/Quick Copy nao esta exposto como ferramenta callable no ambiente; a referencia visual usada foi a captura enviada pelo usuario, o padrao da aba Publicacoes do detalhe de psicologo e o padrao local do Admin.
 - ADR atualizado: `adrs/0264-admin-comunidade-abas-conteudo-ranking.md`.
 - Validacao executada: `pnpm --dir backend check`, `pnpm --dir admin check`, `pnpm --dir backend build`, `pnpm --dir admin build`, `pnpm check` e smoke local `GET http://localhost:3002/comunidades/autocuidado-em-pratica?tab=conteudo` retornando 200.
+
+
+## Ajuste complementar 2026-07-15 - Ordem e exibicao contextual das metricas
+
+- Pedido do usuario: na aba **Conteudo**, colocar **Visualizacoes** na primeira posicao, trocar o icone de cliques WhatsApp pelo icone de WhatsApp ja usado na Lectum e ocultar a metrica em conteudos de paciente.
+- A UI Admin passou a renderizar **Visualizacoes** como primeira metrica no rodape do card, antes de votos, comentarios, salvos, compartilhamentos, cliques WhatsApp e denuncias.
+- O icone de cliques WhatsApp foi reproduzido localmente a partir do SVG ja usado na Lectum, sem criar import entre Admin e frontend, pois as apps devem permanecer separadas em producao.
+- A metrica `whatsapp_clicks_count` agora aparece somente quando `author.role === "psicologo"`; posts, comentarios e posts anonimos de pacientes nao exibem essa metrica porque nao possuem CTA de WhatsApp.
+- Nao houve package novo, mock, schema Prisma/migration, endpoint paralelo ou alteracao de persistencia; o ajuste e apenas de apresentacao contextual no Admin.
+- Builder/Quick Copy nao esta exposto como ferramenta callable no ambiente; a referencia visual usada foi a captura enviada pelo usuario e o padrao local da Lectum/Admin.
+- ADR atualizado: `adrs/0264-admin-comunidade-abas-conteudo-ranking.md`.
+- Validacao executada: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke local `GET http://localhost:3002/comunidades/autocuidado-em-pratica?tab=conteudo` retornando 200.

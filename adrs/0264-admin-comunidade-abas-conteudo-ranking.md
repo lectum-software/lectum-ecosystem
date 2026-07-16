@@ -214,3 +214,16 @@ Consequencias:
 - datas editadas mudam automaticamente o periodo para **Personalizado**;
 - o endpoint real passa a validar intervalo customizado antes de filtrar `created_at`;
 - nao ha nova tabela, migration, dependencia ou dado artificial.
+
+
+## Atualizacao 2026-07-15: metricas ordenadas por alcance e WhatsApp contextual
+
+A aba **Conteudo** do detalhe administrativo de comunidade passa a priorizar **Visualizacoes** como primeira metrica do card, porque ela representa alcance bruto antes das interacoes derivadas como votos, comentarios, salvos e compartilhamentos.
+
+A metrica de cliques no WhatsApp continua usando `whatsapp_clicks_count` do contrato real, mas agora e renderizada somente para conteudos de psicologos (`author.role === "psicologo"`). Conteudos de paciente, incluindo comentarios e posts anonimos, nao possuem CTA de WhatsApp no produto e portanto nao devem expor essa metrica na UI administrativa.
+
+Para manter consistencia visual com a Lectum sem acoplar apps separadas, o Admin reproduz localmente o SVG de WhatsApp ja usado no app principal em vez de importar codigo do frontend.
+
+Consequencia: a mudanca e apenas de apresentacao; nao altera API, schema Prisma, persistencia, eventos first-party, dependencias ou regras de captura das metricas.
+
+Validacao desta atualizacao: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke local `GET http://localhost:3002/comunidades/autocuidado-em-pratica?tab=conteudo` retornando 200.
