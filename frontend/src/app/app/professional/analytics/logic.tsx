@@ -1311,7 +1311,7 @@ const TrafficSourceSection = ({
       <div className="hidden overflow-hidden rounded-[22px] border border-primary/10 bg-surface md:block">
         <div className="grid grid-cols-[minmax(0,1.25fr)_minmax(92px,0.8fr)_minmax(92px,0.75fr)] gap-3 border-border border-b bg-surface-muted px-4 py-3 text-[0.7rem] font-black uppercase tracking-[0.1em] text-subtle">
           <span>Fonte</span>
-          <span className="text-center">Visualizações de perfil</span>
+          <span className="text-center">PERFIL</span>
           <span className="text-center">WhatsApp</span>
         </div>
         <div className="divide-y divide-border">

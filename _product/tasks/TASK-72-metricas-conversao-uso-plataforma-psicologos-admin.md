@@ -812,3 +812,11 @@ Regras de cálculo:
 - O ajuste e exclusivamente textual, sem alterar dados, contrato de API, tracking first-party, schema Prisma/migration ou packages.
 - Builder/Quick Copy nao esta exposto como ferramenta no ambiente; a referencia visual usada foi a captura enviada pelo usuario.
 - Validacao executada: `pnpm --dir frontend check`, `pnpm --dir frontend build` e smoke HTTP local `GET http://localhost:3000/app/professional/analytics` retornando 307 pelo guard privado.
+
+## Ajuste complementar 2026-07-16 - Cabecalho Perfil na tabela de trafego
+
+- Pedido do usuario: na tabela **Origem do trafego** em `/app/professional/analytics`, alterar o cabecalho `Visualizacoes de perfil` para `PERFIL`.
+- O cabecalho da coluna numerica de acessos ao perfil agora usa a copy compacta **PERFIL**, preservando os mesmos valores reais de `profile_view_event`.
+- O ajuste e exclusivamente textual/visual, sem alterar dados, contrato de API, tracking first-party, schema Prisma/migration ou packages.
+- Builder/Quick Copy nao esta exposto como ferramenta no ambiente; a referencia visual usada foi a captura enviada pelo usuario.
+- Validacao executada: `pnpm --dir frontend check`, `pnpm --dir frontend build` e smoke HTTP local `GET http://localhost:3000/app/professional/analytics` retornando 307 pelo guard privado.

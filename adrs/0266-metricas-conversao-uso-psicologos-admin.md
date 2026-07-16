@@ -169,3 +169,11 @@ No analytics privado do psicologo, o card de `profile_view_event` deve usar a co
 A decisao e apenas textual: a fonte de dados, a metrica, o contrato de API, o tracking first-party, o schema Prisma e os packages permanecem inalterados.
 
 Validacao complementar 2026-07-16: `pnpm --dir frontend check`, `pnpm --dir frontend build` e smoke HTTP local `GET http://localhost:3000/app/professional/analytics` retornando 307 pelo guard privado.
+
+## Complemento 2026-07-16 - Cabecalho compacto Perfil na origem do trafego
+
+No analytics privado do psicologo, a tabela desktop **Origem do trafego** deve usar o cabecalho compacto **PERFIL** para a coluna de acessos ao perfil, em vez de **Visualizacoes de perfil**.
+
+A decisao reduz largura e ruido visual no cabecalho da tabela sem alterar a fonte real (`profile_view_event`), os valores exibidos, o contrato de API, o tracking first-party, o schema Prisma ou packages.
+
+Validacao complementar 2026-07-16: `pnpm --dir frontend check`, `pnpm --dir frontend build` e smoke HTTP local `GET http://localhost:3000/app/professional/analytics` retornando 307 pelo guard privado.
