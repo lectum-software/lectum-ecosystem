@@ -28,3 +28,10 @@ A aba **Denúncias** do detalhe administrativo do psicólogo existia como leitur
 - Registros legados em `post_report.status="em_analise"` continuam resolvíveis diretamente como pendentes, sem migração de schema.
 - A remoção de cópias auxiliares e badges de filtro reduz ruído operacional; a data continua auditável pelo contrato/API, mas não é repetida na UI.
 - A validação local não dispara mutações reais sem autorização explícita sobre uma denúncia específica; endpoints protegidos, contratos, builds e checks validam a implementação.
+
+## Atualização 2026-07-16 - Lista premium no detalhe do psicólogo
+
+- A aba **Denúncias** do detalhe administrativo do psicólogo passou a reutilizar o layout compacto da lista premium de denúncias da comunidade.
+- O contrato de `GET /api/admin/private/psychologists/:id/reports` foi estendido com `content.body`, `content.media` e `reported_by.name`, usando dados reais de `post_report`, `community_post`, `community_post_media`, `post_reply` e `user`.
+- A tag principal do card no detalhe do psicólogo exibe a comunidade do conteúdo denunciado, substituindo a tag de autoria usada na comunidade.
+- Mídias de posts/respostas denunciados são exibidas abaixo do texto do conteúdo, preservando o padrão de leitura compacto e sem criar endpoint paralelo, schema novo ou mock.
