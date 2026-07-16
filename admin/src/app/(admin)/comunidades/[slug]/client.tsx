@@ -3885,17 +3885,6 @@ const COMMUNITY_PEOPLE_STATISTICS_METRICS = [
 
 const COMMUNITY_CONTENT_STATISTICS_METRICS = [
   {
-    dotClassName: "bg-primary",
-    getValue: (statistics: AdminCommunityStatistics) => statistics.counters.posts.psychologists,
-    icon: MessageCircle,
-    iconClassName: "text-primary",
-    iconToneClassName: "bg-primary-soft",
-    id: "psychologist_posts",
-    key: "psychologist_posts",
-    label: "Postagens de Psicólogos",
-    strokeClassName: "stroke-primary",
-  },
-  {
     dotClassName: "bg-success",
     getValue: (statistics: AdminCommunityStatistics) => statistics.counters.posts.patients,
     icon: MessageCircle,
@@ -3905,6 +3894,17 @@ const COMMUNITY_CONTENT_STATISTICS_METRICS = [
     key: "patient_posts",
     label: "Postagens de pacientes",
     strokeClassName: "stroke-success",
+  },
+  {
+    dotClassName: "bg-primary",
+    getValue: (statistics: AdminCommunityStatistics) => statistics.counters.posts.psychologists,
+    icon: MessageCircle,
+    iconClassName: "text-primary",
+    iconToneClassName: "bg-primary-soft",
+    id: "psychologist_posts",
+    key: "psychologist_posts",
+    label: "Postagens de Psicólogos",
+    strokeClassName: "stroke-primary",
   },
   {
     dotClassName: "bg-warning",
