@@ -727,3 +727,14 @@ Regras de cálculo:
 - O ajuste e exclusivamente visual, mobile-first, sem endpoint novo, mock, package, schema Prisma/migration ou alteracao de contrato.
 - Builder/Quick Copy nao esta exposto como ferramenta no ambiente; a referencia visual usada foi a captura enviada pelo usuario e o padrao local da aba **Conteudo** em comunidades.
 - Validacao executada: `pnpm --dir admin check`, `pnpm --dir admin build` e smoke HTTP local `GET http://localhost:3002/psicologos/cmrqztri7000tn0uh1q4n8vxf?tab=publicacoes` retornando 200.
+
+## Ajuste complementar 2026-07-16 - Ranking administrativo de comunidade compacto
+
+- Pedido do usuario: na aba **Ranking** do detalhe Admin de comunidade, remover a formula inferior, trocar a tag textual `verificado` pelo selo visual Lectum, normalizar o CRP abaixo do nome no formato compacto `00/0000`, exibir somente o score nas metricas e aproximar `Novo no ranking` do score.
+- A UI Admin de `/comunidades/[slug]?tab=ranking` passou a reutilizar o `VerifiedBadgeIcon`, removeu posts/respostas/upvotes da area de metricas e moveu a tendencia do ranking para o bloco do score.
+- A formatacao visual do CRP e feita somente no frontend do Admin, sem alterar contrato de API ou dados persistidos; valores sem CRP continuam exibindo estado honesto.
+- O ajuste e exclusivamente visual, mobile-first, sem endpoint novo, mock, package, schema Prisma/migration ou alteracao de contrato.
+- Builder/Quick Copy nao esta exposto como ferramenta no ambiente; a referencia visual usada foi a captura enviada pelo usuario e o padrao local do Admin.
+- ADR novo nao foi necessario por nao haver decisao arquitetural, integracao ou regra de dominio nova.
+- Validacao executada: `pnpm --dir admin check`, `pnpm --dir admin build` e smoke HTTP local `GET http://localhost:3002/comunidades/relacionamentos-com-proposito?tab=ranking` retornando 200.
+- `pnpm check` foi executado, mas falhou por alteracoes paralelas nao relacionadas em `backend/src/modules/api/private/psychologist/analytics/*` e `frontend/src/app/app/professional/analytics/logic.tsx`, fora deste ajuste.

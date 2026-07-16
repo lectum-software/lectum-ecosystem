@@ -23,7 +23,6 @@ import {
   Save,
   Search,
   Share2,
-  ShieldCheck,
   Star,
   Trash2,
   Users,
@@ -2041,6 +2040,66 @@ const VerifiedBadgeIcon = ({ className, ...props }: SVGProps<SVGSVGElement>) => 
   </svg>
 );
 
+const crpRegionByUf: Record<string, string> = {
+  AC: "20",
+  AL: "15",
+  AM: "20",
+  AP: "10",
+  BA: "03",
+  CE: "11",
+  DF: "01",
+  ES: "16",
+  GO: "09",
+  MA: "22",
+  MG: "04",
+  MS: "14",
+  MT: "18",
+  PA: "10",
+  PB: "13",
+  PE: "02",
+  PI: "21",
+  PR: "08",
+  RJ: "05",
+  RN: "17",
+  RO: "20",
+  RR: "20",
+  RS: "07",
+  SC: "12",
+  SE: "19",
+  SP: "06",
+  TO: "23",
+};
+
+const formatRankingCrp = (crp: string | null) => {
+  const value = crp?.trim();
+
+  if (!value) return null;
+
+  const normalized = value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toUpperCase();
+  const slashIndex = normalized.lastIndexOf("/");
+  const regionSource = slashIndex >= 0 ? normalized.slice(0, slashIndex) : normalized;
+  const registrationSource = slashIndex >= 0 ? normalized.slice(slashIndex + 1) : normalized;
+  const regionDigits = regionSource.match(/\d{1,2}/)?.[0];
+  const regionUf = regionSource.match(/\b[A-Z]{2}\b/)?.[0];
+  const fallbackRegionDigits = normalized.match(/\d{1,2}/)?.[0];
+  const region = (
+    regionDigits ??
+    (regionUf ? crpRegionByUf[regionUf] : null) ??
+    fallbackRegionDigits
+  )
+    ?.padStart(2, "0")
+    .slice(-2);
+  const registrationDigits = registrationSource.replace(/\D/g, "");
+  const registration = (registrationDigits.replace(/^0+/, "") || "0").padStart(4, "0").slice(-4);
+
+  if (!region || !registrationDigits) return null;
+
+  return `${region}/${registration}`;
+};
+
 const psychologistRoleLabel = (gender?: string | null) =>
   gender?.trim().toLowerCase() === "feminino" ? "Psicóloga" : "Psicólogo";
 
@@ -2391,7 +2450,7 @@ const RankingTrend = ({ item }: { item: AdminCommunityRankingItem }) => {
       </span>
     );
   }
-  if (item.trend === "new") return <span className="text-primary">novo no ranking</span>;
+  if (item.trend === "new") return <span className="text-primary">Novo no ranking</span>;
 
   return <span className="text-muted">estável</span>;
 };
@@ -2440,86 +2499,69 @@ const RankingTab = ({ slug }: { slug: string }) => {
             Nenhum psicólogo participante encontrado.
           </p>
         ) : null}
-        {result.data?.data.map((item) => (
-          <article
-            className="grid gap-4 rounded-2xl border border-border bg-surface p-4 xl:grid-cols-[1fr_auto]"
-            key={item.mentor.id}
-          >
-            <div className="flex gap-3">
-              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-primary-soft text-sm font-black text-primary">
-                #{item.position}
-              </span>
-              <div className="relative grid h-12 w-12 shrink-0 place-items-center overflow-hidden rounded-full bg-surface-muted text-xs font-black text-primary">
-                {item.mentor.avatar ? (
-                  <Image
-                    alt={`Avatar de ${item.mentor.name}`}
-                    className="object-cover"
-                    fill
-                    sizes="48px"
-                    src={item.mentor.avatar}
-                    unoptimized
-                  />
-                ) : (
-                  initials(item.mentor.name)
-                )}
-              </div>
-              <div>
-                <div className="flex flex-wrap items-center gap-2">
-                  <h3 className="font-black text-foreground">{item.mentor.name}</h3>
-                  {item.mentor.verified ? (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-primary-soft px-2 py-1 text-xs font-black text-primary">
-                      <ShieldCheck className="h-3 w-3" />
-                      verificado
-                    </span>
-                  ) : null}
+        {result.data?.data.map((item) => {
+          const formattedCrp = formatRankingCrp(item.mentor.crp);
+
+          return (
+            <article
+              className="grid gap-4 rounded-2xl border border-border bg-surface p-4 xl:grid-cols-[1fr_auto] xl:items-center"
+              key={item.mentor.id}
+            >
+              <div className="flex gap-3">
+                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-primary-soft text-sm font-black text-primary">
+                  #{item.position}
+                </span>
+                <div className="relative grid h-12 w-12 shrink-0 place-items-center overflow-hidden rounded-full bg-surface-muted text-xs font-black text-primary">
+                  {item.mentor.avatar ? (
+                    <Image
+                      alt={`Avatar de ${item.mentor.name}`}
+                      className="object-cover"
+                      fill
+                      sizes="48px"
+                      src={item.mentor.avatar}
+                      unoptimized
+                    />
+                  ) : (
+                    initials(item.mentor.name)
+                  )}
                 </div>
-                <p className="mt-1 text-xs text-muted">{item.mentor.crp || "CRP não informado"}</p>
-                <p className="mt-2 text-xs font-black">
-                  <RankingTrend item={item} />
-                  {item.previous_position ? ` · antes #${item.previous_position}` : ""}
-                </p>
+                <div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h3 className="font-black text-foreground">{item.mentor.name}</h3>
+                    {item.mentor.verified ? (
+                      <VerifiedBadgeIcon aria-label="Perfil verificado" className="h-4 w-4" />
+                    ) : null}
+                  </div>
+                  <p className="mt-1 text-xs text-muted">
+                    {formattedCrp ? `CRP ${formattedCrp}` : "CRP não informado"}
+                  </p>
+                </div>
               </div>
-            </div>
-            <div className="grid grid-cols-2 gap-3 text-xs sm:grid-cols-4 xl:min-w-[460px]">
-              <span>
-                <strong className="block text-lg text-foreground">
-                  {numberFormatter.format(item.score)}
-                </strong>
-                Score
-              </span>
-              <span>
-                <strong className="block text-lg text-foreground">
-                  {numberFormatter.format(item.metrics.posts_published)}
-                </strong>
-                Posts
-              </span>
-              <span>
-                <strong className="block text-lg text-foreground">
-                  {numberFormatter.format(item.metrics.replies_published)}
-                </strong>
-                Respostas
-              </span>
-              <span>
-                <strong className="block text-lg text-foreground">
-                  {numberFormatter.format(item.metrics.upvotes_received)}
-                </strong>
-                Upvotes
-              </span>
-            </div>
-          </article>
-        ))}
+              <div className="flex flex-wrap items-center gap-3 text-xs xl:min-w-[220px] xl:justify-end">
+                <span className="min-w-[72px]">
+                  <strong className="block text-2xl text-foreground">
+                    {numberFormatter.format(item.score)}
+                  </strong>
+                  <span className="font-bold text-muted">Score</span>
+                </span>
+                <span className="font-black">
+                  <RankingTrend item={item} />
+                  {item.previous_position ? (
+                    <span className="ml-1 text-muted">· antes #{item.previous_position}</span>
+                  ) : null}
+                </span>
+              </div>
+            </article>
+          );
+        })}
       </div>
       {result.data ? (
-        <div className="mt-5 space-y-3">
+        <div className="mt-5">
           <PaginationControls
             page={result.data.page}
             pages={result.data.pages}
             setPage={(page) => updateQuery({ page })}
           />
-          <p className="text-xs leading-5 text-muted">
-            Fórmula:{" "}
-            {String(result.data.formula.description ?? "pontuação de mentoria da comunidade")}
-          </p>
         </div>
       ) : null}
     </section>
