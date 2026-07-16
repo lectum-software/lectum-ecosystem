@@ -80,3 +80,11 @@ Validação adicional: `pnpm check`.
 Os CTAs de WhatsApp exibidos em posts e respostas de comunidade passam a registrar tambem um evento first-party `important_action_event.action_type="whatsapp_click"` com `target_type`/`target_id` do conteudo. Esse evento e uma camada de atribuicao de UI para metricas de conteudo, nao substitui `contact_request` como fonte de contato por psicologo.
 
 A decisao evita inferir origem a partir de `contact_request`, pois esse registro nao persiste post/resposta de origem. Clicks historicos sem alvo permanecem nao atribuidos e continuam fora das metricas por conteudo. Nao ha coleta de mensagens de WhatsApp nem alteracao de schema Prisma.
+
+## Complemento 2026-07-16 - Ações atribuídas ao vídeo de apresentação
+
+A análise administrativa do vídeo de apresentação passa a contabilizar ações first-party disparadas a partir do vídeo/feed de psicólogos: acesso ao perfil, favoritar, clique no WhatsApp e compartilhamento. A fonte é `important_action_event` com `target_type="psychologist"` e `target_id` do psicólogo, usando action types específicos (`psychologist_video_profile_access`, `psychologist_video_favorite`, `psychologist_video_whatsapp_click`, `psychologist_video_share`) para não misturar com pageviews, favoritos, `contact_request` ou compartilhamentos de posts de comunidade.
+
+Esses eventos complementam `profile_video_watch_session`: retenção e visualizações continuam vindo das sessões de vídeo; as novas conversões/interações do vídeo vêm de `important_action_event`. Não há backfill histórico nem inferência por URL ou sessão. O card Admin pode exibir zero real até que as novas ações sejam registradas em produção.
+
+Validacao complementar 2026-07-16: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke local `GET http://localhost:3002/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=estatisticas` retornando 200.

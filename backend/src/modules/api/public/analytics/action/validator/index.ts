@@ -7,7 +7,15 @@ const trackingIdSchema = z
   .min(8)
   .max(128)
   .regex(/^[a-zA-Z0-9._:-]+$/);
-const actionTypeSchema = z.enum(["pwa_install_prompt_accepted", "pwa_installed", "whatsapp_click"]);
+const actionTypeSchema = z.enum([
+  "psychologist_video_favorite",
+  "psychologist_video_profile_access",
+  "psychologist_video_share",
+  "psychologist_video_whatsapp_click",
+  "pwa_install_prompt_accepted",
+  "pwa_installed",
+  "whatsapp_click",
+]);
 const displayModeSchema = z.enum(["browser", "standalone", "fullscreen", "minimal-ui", "unknown"]);
 const occurredAtSchema = z.string().trim().datetime({ offset: true });
 const pathSchema = z.string().trim().min(1).max(2048);

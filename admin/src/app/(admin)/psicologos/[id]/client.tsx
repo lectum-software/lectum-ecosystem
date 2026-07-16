@@ -2847,7 +2847,7 @@ const StatisticsVideoCard = ({
         </div>
 
         <div className="order-2 min-w-0 xl:order-3">
-          <div className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-3 xl:grid-cols-1">
+          <div className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-1">
             <VideoSummaryMetric
               comparison={video.comparisons.sessions}
               label="Visualizações"
@@ -2866,6 +2866,26 @@ const StatisticsVideoCard = ({
               value={`${video.metrics.average_retention_percent.toLocaleString("pt-BR", {
                 maximumFractionDigits: 1,
               })}%`}
+            />
+            <VideoSummaryMetric
+              comparison={video.comparisons.favorites_from_video}
+              label="Favoritados pelo vídeo"
+              value={numberFormatter.format(video.metrics.favorites_from_video)}
+            />
+            <VideoSummaryMetric
+              comparison={video.comparisons.profile_accesses_from_video}
+              label="Acessos ao perfil"
+              value={numberFormatter.format(video.metrics.profile_accesses_from_video)}
+            />
+            <VideoSummaryMetric
+              comparison={video.comparisons.whatsapp_clicks_from_video}
+              label="Cliques no WhatsApp"
+              value={numberFormatter.format(video.metrics.whatsapp_clicks_from_video)}
+            />
+            <VideoSummaryMetric
+              comparison={video.comparisons.shares_from_video}
+              label="Compartilhamentos"
+              value={numberFormatter.format(video.metrics.shares_from_video)}
             />
           </div>
         </div>

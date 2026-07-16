@@ -668,3 +668,14 @@ Regras de cálculo:
 - Eventos historicos sem alvo continuam nao atribuidos; nao houve backfill, inferencia por URL ou mock.
 - Nao ha captura de conversa, mensagem, agenda ou dado clinico: o evento registra somente o click first-party, sessao/visitante e alvo de conteudo.
 - Validacao complementar: `pnpm --dir backend check`, `pnpm --dir frontend check`, `pnpm --dir admin check`, `pnpm --dir backend build`, `pnpm --dir frontend build`, `pnpm --dir admin build` e `pnpm check`.
+
+
+## Ajuste complementar 2026-07-16 - Ações atribuídas ao vídeo de apresentação
+
+- Pedido do usuário: na aba **Estatísticas** do detalhe Admin do psicólogo, dentro de **Análises do vídeo de apresentação**, adicionar as quantidades de favoritados, acessos ao perfil, cliques no WhatsApp e compartilhamentos originados no vídeo.
+- O frontend público da listagem de psicólogos passou a emitir eventos first-party reais em `important_action_event` para ações do rail/área do vídeo: `psychologist_video_profile_access`, `psychologist_video_favorite`, `psychologist_video_whatsapp_click` e `psychologist_video_share`, sempre com `target_type="psychologist"` e `target_id` do psicólogo.
+- O backend de `GET /api/admin/private/psychologists/:id/statistics` passou a somar esses eventos no período selecionado e adicioná-los ao contrato `video.metrics` com comparativos reais do período anterior.
+- A UI Admin exibe os novos cards no bloco de vídeo, mantendo layout mobile-first e sem inferir histórico anterior ao tracking.
+- Não houve package novo, mock, schema Prisma/migration, backfill artificial ou captura de conversa/mensagem do WhatsApp; os números começam a refletir somente eventos persistidos após a implantação.
+- Builder/Quick Copy nao esta exposto como ferramenta no ambiente; a referencia visual usada foi a captura enviada pelo usuario e o padrao local do Admin.
+- Validacao executada: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke local `GET http://localhost:3002/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=estatisticas` retornando 200.

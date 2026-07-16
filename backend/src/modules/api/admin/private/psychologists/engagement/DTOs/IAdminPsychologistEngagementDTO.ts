@@ -67,8 +67,12 @@ export type AdminPsychologistStatisticsVideo = {
   available: boolean;
   comparisons: {
     average_retention_percent: AdminPsychologistMetricComparison;
+    favorites_from_video: AdminPsychologistMetricComparison;
+    profile_accesses_from_video: AdminPsychologistMetricComparison;
     replay_rate_percent: AdminPsychologistMetricComparison;
+    shares_from_video: AdminPsychologistMetricComparison;
     sessions: AdminPsychologistMetricComparison;
+    whatsapp_clicks_from_video: AdminPsychologistMetricComparison;
   };
   cover_url: string | null;
   duration_seconds: number | null;
@@ -83,11 +87,15 @@ export type AdminPsychologistStatisticsVideo = {
     average_watch_seconds: number;
     average_retention_percent: number;
     completions: number;
+    favorites_from_video: number;
+    profile_accesses_from_video: number;
     replay_rate_percent: number;
     sessions: number;
+    shares_from_video: number;
+    whatsapp_clicks_from_video: number;
   };
   retention: { label: string; percentage: number; position_percent: number }[];
-  source: "profile_video_watch_session";
+  source: "profile_video_watch_session+important_action_event";
   unavailable_reason: string | null;
   video_url: string | null;
 };

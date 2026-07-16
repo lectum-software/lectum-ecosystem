@@ -807,7 +807,7 @@ Adicionado na TASK-49 para sustentar a aba Admin Tráfego sem integração de te
 | Campo | Tipo | Notas |
 |---|---|---|
 | `visitor_id`, `session_id`, `user_id` | | Mesma regra de `page_view_event`. |
-| `action_type` | `String` | V1 aceita eventos reais de PWA: `pwa_install_prompt_accepted` e `pwa_installed`. |
+| `action_type` | `String` | V1 aceita eventos reais de PWA (`pwa_install_prompt_accepted`, `pwa_installed`), clique de WhatsApp (`whatsapp_click`) e ações atribuídas ao vídeo de apresentação do feed de psicólogos (`psychologist_video_profile_access`, `psychologist_video_favorite`, `psychologist_video_whatsapp_click`, `psychologist_video_share`). |
 | `path`, `page_kind`, `target_type`, `target_id`, `display_mode`, `occurred_at` | | Contexto mínimo para futuras agregações. |
 
 Ambos seguem soft delete, relação opcional com `user` por `onDelete: SetNull` e índices por período, sessão, visitante, usuário e dimensões de agregação.

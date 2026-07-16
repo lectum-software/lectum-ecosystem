@@ -7,7 +7,7 @@ import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useImportantActionTracking } from "@/api/callers/analytics";
 import { useDirectoryPsychologistContactClick } from "@/api/callers/directory";
-import type { DisplayMode } from "@/api/req/analytics";
+import type { DisplayMode, ImportantActionTrackingRequest } from "@/api/req/analytics";
 import { getOrCreateAnalyticsIdentity } from "@/components/analytics/storage";
 import { useProgressiveConversion } from "@/components/conversion/progressive-conversion-provider";
 import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
@@ -46,6 +46,7 @@ type PsychologistWhatsAppRedirectButtonProps = Omit<
   "children" | "type"
 > & {
   children: ReactNode;
+  importantActionType?: ImportantActionTrackingRequest["action_type"];
   psychologist: PsychologistWhatsAppIdentity;
   stopPropagation?: boolean;
   trackingContext?: PsychologistWhatsAppTrackingContext;
@@ -277,6 +278,7 @@ export const PsychologistWhatsAppRedirectButton = ({
   children,
   className,
   disabled,
+  importantActionType = "whatsapp_click",
   onClick,
   psychologist,
   stopPropagation = false,
@@ -335,7 +337,7 @@ export const PsychologistWhatsAppRedirectButton = ({
     if (analyticsIdentity) {
       void importantActionTracking
         .mutateAsync({
-          action_type: "whatsapp_click",
+          action_type: importantActionType,
           display_mode: getDisplayMode(),
           occurred_at: new Date().toISOString(),
           page_kind: trackingContext?.pageKind,

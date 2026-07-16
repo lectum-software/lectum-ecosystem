@@ -110,7 +110,14 @@ export type PageViewDurationResponse = {
 export type ImportantActionTrackingRequest = {
   visitor_id: string;
   session_id: string;
-  action_type: "pwa_install_prompt_accepted" | "pwa_installed" | "whatsapp_click";
+  action_type:
+    | "psychologist_video_favorite"
+    | "psychologist_video_profile_access"
+    | "psychologist_video_share"
+    | "psychologist_video_whatsapp_click"
+    | "pwa_install_prompt_accepted"
+    | "pwa_installed"
+    | "whatsapp_click";
   path?: string;
   page_kind?: string;
   target_id?: string;

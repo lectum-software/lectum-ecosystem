@@ -82,6 +82,15 @@ const replySelect = {
 const PROFILE_PAGE_SOURCE = "profile_page";
 const SEARCH_RESULT_SOURCE = "search_result";
 
+export const PROFILE_VIDEO_ACTION_TYPES = [
+  "psychologist_video_favorite",
+  "psychologist_video_profile_access",
+  "psychologist_video_share",
+  "psychologist_video_whatsapp_click",
+] as const;
+
+export type ProfileVideoActionType = (typeof PROFILE_VIDEO_ACTION_TYPES)[number];
+
 export type AdminPsychologistEngagementProfile = Prisma.psychologist_profileGetPayload<{
   select: typeof psychologistSelect;
 }>;
@@ -263,6 +272,22 @@ export class AdminPsychologistEngagementRepository {
         video_url: true,
         viewer_id: true,
         watched_seconds: true,
+      },
+    });
+  }
+
+  async listVideoActionEvents(psychologistId: string, from: Date, to: Date) {
+    return prisma.important_action_event.findMany({
+      where: {
+        action_type: { in: [...PROFILE_VIDEO_ACTION_TYPES] },
+        deleted: false,
+        occurred_at: { gte: from, lte: to },
+        target_id: psychologistId,
+        target_type: "psychologist",
+      },
+      select: {
+        action_type: true,
+        occurred_at: true,
       },
     });
   }

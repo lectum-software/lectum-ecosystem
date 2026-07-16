@@ -43,6 +43,7 @@ import {
 } from "react";
 import { createPortal } from "react-dom";
 import { useAccount } from "@/api/callers/account";
+import { useImportantActionTracking } from "@/api/callers/analytics";
 import {
   useDirectoryPsychologistSearchImpression,
   useDirectoryPsychologists,
@@ -55,6 +56,8 @@ import type {
   DirectoryPsychologistsQuery,
   DirectoryPsychologistVideoWatchPayload,
 } from "@/api/generator/types/directory";
+import type { DisplayMode, ImportantActionTrackingRequest } from "@/api/req/analytics";
+import { getOrCreateAnalyticsIdentity } from "@/components/analytics/storage";
 import { useProgressiveConversion } from "@/components/conversion/progressive-conversion-provider";
 import { PsychologistWhatsAppRedirectButton } from "@/components/psychologists/psychologist-whatsapp-redirect-button";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -94,6 +97,8 @@ type ApiErrorData = {
 type ApiError = Error & {
   data?: ApiErrorData;
 };
+
+type NavigatorWithStandalone = Navigator & { standalone?: boolean };
 
 const PAGE_LIMIT = 20;
 
@@ -608,6 +613,29 @@ const PsychologistFilterSearchSuggestions = ({
 
 const getReadableVideoDuration = (video: HTMLVideoElement) =>
   Number.isFinite(video.duration) && video.duration > 0 ? video.duration : 0;
+
+const getDisplayMode = (): DisplayMode => {
+  if (typeof window === "undefined") return "unknown";
+
+  const navigatorWithStandalone = window.navigator as NavigatorWithStandalone;
+  if (window.matchMedia("(display-mode: fullscreen)").matches) return "fullscreen";
+  if (window.matchMedia("(display-mode: minimal-ui)").matches) return "minimal-ui";
+  if (
+    window.matchMedia("(display-mode: standalone)").matches ||
+    navigatorWithStandalone.standalone === true
+  ) {
+    return "standalone";
+  }
+  if (window.matchMedia("(display-mode: browser)").matches) return "browser";
+
+  return "unknown";
+};
+
+const currentAnalyticsPath = () => {
+  if (typeof window === "undefined") return "/";
+
+  return `${window.location.pathname || "/"}${window.location.search || ""}`;
+};
 
 const resetVideoElementToStart = (video: HTMLVideoElement) => {
   video.pause();
@@ -1147,6 +1175,7 @@ export const PsychologistsLogic = () => {
   const { favoritePsychologist, unfavoritePsychologist } = usePatient({
     enableProfile: false,
   });
+  const videoActionTracking = useImportantActionTracking();
 
   const deferredFilterModalSearchDraft = useDeferredValue(filterModalSearchDraft);
   const liveFilterValues = useMemo(
@@ -1282,6 +1311,30 @@ export const PsychologistsLogic = () => {
     filterSuggestionsDirectory.isFetching,
     handleFilterSuggestionSelect,
   ]);
+
+  const trackPresentationVideoAction = useCallback(
+    (actionType: ImportantActionTrackingRequest["action_type"], psychologistId: string) => {
+      const analyticsIdentity = getOrCreateAnalyticsIdentity();
+      if (!analyticsIdentity) return;
+
+      void videoActionTracking
+        .mutateAsync({
+          action_type: actionType,
+          display_mode: getDisplayMode(),
+          occurred_at: new Date().toISOString(),
+          page_kind: "psychologists",
+          path: currentAnalyticsPath(),
+          session_id: analyticsIdentity.sessionId,
+          target_id: psychologistId,
+          target_type: "psychologist",
+          visitor_id: analyticsIdentity.visitorId,
+        })
+        .catch(() => {
+          // Analytics first-party não deve bloquear navegação ou interação do vídeo.
+        });
+    },
+    [videoActionTracking],
+  );
 
   const filters = usePsychologistsFilterForm({
     filters: response?.filters,
@@ -2109,9 +2162,10 @@ export const PsychologistsLogic = () => {
       event.preventDefault?.();
       event.stopPropagation();
 
+      trackPresentationVideoAction("psychologist_video_profile_access", psychologistId);
       router.push(`/psychologists/${psychologistId}`);
     },
-    [router],
+    [router, trackPresentationVideoAction],
   );
 
   const cancelPendingVideoGestureTimers = useCallback(() => {
@@ -2744,7 +2798,10 @@ export const PsychologistsLogic = () => {
       if (nextFavorited) {
         favoritePsychologist.mutate(psychologistId, {
           onError: clearFavoriteOverride,
-          onSuccess: clearFavoriteOverride,
+          onSuccess: () => {
+            clearFavoriteOverride();
+            trackPresentationVideoAction("psychologist_video_favorite", psychologistId);
+          },
         });
         return;
       }
@@ -2760,6 +2817,7 @@ export const PsychologistsLogic = () => {
       favoritePsychologist,
       currentUserId,
       isMobileSearchFocusMode,
+      trackPresentationVideoAction,
       unfavoritePsychologist,
     ],
   );
@@ -2807,11 +2865,13 @@ export const PsychologistsLogic = () => {
             text: psychologist.headline || "Perfis de Psicólogos na Lectum",
             url,
           });
+          trackPresentationVideoAction("psychologist_video_share", psychologist.id);
           return;
         }
 
         if (url) {
           await navigator.clipboard.writeText(url);
+          trackPresentationVideoAction("psychologist_video_share", psychologist.id);
           setShareFeedback(true);
           window.setTimeout(() => setShareFeedback(false), 1800);
         }
@@ -2819,7 +2879,7 @@ export const PsychologistsLogic = () => {
         setIsSharing(false);
       }
     },
-    [isSharing],
+    [isSharing, trackPresentationVideoAction],
   );
 
   const runVideoAreaSingleTapAction = useCallback(() => {
@@ -4786,6 +4846,7 @@ export const PsychologistsLogic = () => {
                                       data-psychologists-tip-target={
                                         isActiveSlide ? "whatsapp" : undefined
                                       }
+                                      importantActionType="psychologist_video_whatsapp_click"
                                       onClick={handleWhatsappInteraction}
                                       psychologist={{
                                         avatar: psychologist.avatar,
@@ -4802,6 +4863,11 @@ export const PsychologistsLogic = () => {
                                       }}
                                       stopPropagation
                                       tabIndex={slideShouldHideChrome ? -1 : undefined}
+                                      trackingContext={{
+                                        pageKind: "psychologists",
+                                        targetId: psychologist.id,
+                                        targetType: "psychologist",
+                                      }}
                                       style={{
                                         width: `${metrics.actionHitSize}px`,
                                         height: `${metrics.actionHitSize}px`,
@@ -5235,6 +5301,7 @@ export const PsychologistsLogic = () => {
                         data-psychologists-tip-target={
                           isDesktopActionRailHidden ? undefined : "whatsapp"
                         }
+                        importantActionType="psychologist_video_whatsapp_click"
                         onClick={handleWhatsappInteraction}
                         psychologist={{
                           avatar: desktopActionPsychologist.avatar,
@@ -5251,6 +5318,11 @@ export const PsychologistsLogic = () => {
                         }}
                         stopPropagation
                         tabIndex={isDesktopActionRailHidden ? -1 : undefined}
+                        trackingContext={{
+                          pageKind: "psychologists",
+                          targetId: desktopActionPsychologist.id,
+                          targetType: "psychologist",
+                        }}
                       >
                         <WhatsAppIcon
                           aria-hidden="true"

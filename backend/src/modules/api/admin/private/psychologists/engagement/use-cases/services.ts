@@ -21,6 +21,8 @@ import {
   type AdminPsychologistEngagementPost,
   type AdminPsychologistEngagementReply,
   AdminPsychologistEngagementRepository,
+  PROFILE_VIDEO_ACTION_TYPES,
+  type ProfileVideoActionType,
 } from "../repositories/AdminPsychologistEngagementRepository";
 
 const DEFAULT_PERIOD_DAYS = 30;
@@ -352,9 +354,32 @@ type VideoSessions = Awaited<
   ReturnType<AdminPsychologistEngagementRepository["listVideoSessions"]>
 >;
 
+type VideoActionEvents = Awaited<
+  ReturnType<AdminPsychologistEngagementRepository["listVideoActionEvents"]>
+>;
+
 type PublicProfilePageViews = Awaited<
   ReturnType<AdminPsychologistEngagementRepository["listPublicProfilePageViews"]>
 >;
+
+const countVideoActionEvents = (actions: VideoActionEvents) => {
+  const counts = new Map<ProfileVideoActionType, number>(
+    PROFILE_VIDEO_ACTION_TYPES.map((actionType) => [actionType, 0]),
+  );
+
+  for (const action of actions) {
+    const actionType = action.action_type as ProfileVideoActionType;
+    if (!counts.has(actionType)) continue;
+    counts.set(actionType, (counts.get(actionType) ?? 0) + 1);
+  }
+
+  return {
+    favorites_from_video: counts.get("psychologist_video_favorite") ?? 0,
+    profile_accesses_from_video: counts.get("psychologist_video_profile_access") ?? 0,
+    shares_from_video: counts.get("psychologist_video_share") ?? 0,
+    whatsapp_clicks_from_video: counts.get("psychologist_video_whatsapp_click") ?? 0,
+  };
+};
 
 const videoPercentage = (value: number, total: number) => {
   if (total <= 0) return 0;
@@ -508,6 +533,8 @@ const buildVideo = (
   },
   sessions: VideoSessions,
   previousSessions: VideoSessions,
+  actions: VideoActionEvents,
+  previousActions: VideoActionEvents,
   period: AdminPsychologistStatisticsPeriod,
 ): AdminPsychologistStatisticsDTO["video"] => {
   const currentVideoSessions = filterCurrentPresentationVideoSessions(sessions, profile);
@@ -518,6 +545,8 @@ const buildVideo = (
   const total = currentVideoSessions.length;
   const metrics = buildVideoMetrics(currentVideoSessions);
   const previousMetrics = buildVideoMetrics(previousCurrentVideoSessions);
+  const actionMetrics = countVideoActionEvents(actions);
+  const previousActionMetrics = countVideoActionEvents(previousActions);
   const retention = buildVideoRetention(currentVideoSessions);
   const retentionDropoff = buildVideoRetentionDropoff(
     retention,
@@ -534,19 +563,42 @@ const buildVideo = (
         previousMetrics.average_retention_percent,
         period,
       ),
+      favorites_from_video: buildComparison(
+        actionMetrics.favorites_from_video,
+        previousActionMetrics.favorites_from_video,
+        period,
+      ),
+      profile_accesses_from_video: buildComparison(
+        actionMetrics.profile_accesses_from_video,
+        previousActionMetrics.profile_accesses_from_video,
+        period,
+      ),
       replay_rate_percent: buildComparison(
         metrics.replay_rate_percent,
         previousMetrics.replay_rate_percent,
         period,
       ),
+      shares_from_video: buildComparison(
+        actionMetrics.shares_from_video,
+        previousActionMetrics.shares_from_video,
+        period,
+      ),
       sessions: buildComparison(metrics.sessions, previousMetrics.sessions, period),
+      whatsapp_clicks_from_video: buildComparison(
+        actionMetrics.whatsapp_clicks_from_video,
+        previousActionMetrics.whatsapp_clicks_from_video,
+        period,
+      ),
     },
     cover_url: profile.video_cover_url ?? profile.cover_image_url,
     duration_seconds: durationSeconds,
-    metrics: metricValues,
+    metrics: {
+      ...metricValues,
+      ...actionMetrics,
+    },
     retention,
     retention_dropoff: retentionDropoff,
-    source: "profile_video_watch_session",
+    source: "profile_video_watch_session+important_action_event",
     unavailable_reason:
       total > 0 ? null : "Nenhuma sessão real de vídeo foi registrada no período.",
     video_url: profile.video_url,
@@ -771,12 +823,14 @@ export const showAdminPsychologistStatistics = async (
     reviews,
     searchResults,
     videoSessions,
+    videoActionEvents,
     previousProfileViews,
     previousWhatsappClicks,
     previousFavorites,
     previousReviews,
     previousSearchResults,
     previousVideoSessions,
+    previousVideoActionEvents,
     posts,
     replies,
     allPosts,
@@ -794,12 +848,14 @@ export const showAdminPsychologistStatistics = async (
     repository.listReviews(userId, period.current.start, period.current.end),
     repository.listSearchResultImpressions(userId, period.current.start, period.current.end),
     repository.listVideoSessions(userId, period.current.start, period.current.end),
+    repository.listVideoActionEvents(userId, period.current.start, period.current.end),
     repository.listProfileViews(userId, period.previous.start, period.previous.end),
     repository.listWhatsappClicks(userId, period.previous.start, period.previous.end),
     repository.listFavorites(userId, period.previous.start, period.previous.end),
     repository.listReviews(userId, period.previous.start, period.previous.end),
     repository.listSearchResultImpressions(userId, period.previous.start, period.previous.end),
     repository.listVideoSessions(userId, period.previous.start, period.previous.end),
+    repository.listVideoActionEvents(userId, period.previous.start, period.previous.end),
     repository.listAuthoredPosts(userId, period.current.start, period.current.end),
     repository.listAuthoredReplies(userId, period.current.start, period.current.end),
     repository.listAuthoredPosts(userId),
@@ -1065,7 +1121,14 @@ export const showAdminPsychologistStatistics = async (
       "profile_events+community_activity+video_sessions+search_impressions+professional_review+page_view_event+important_action_event",
     traffic_sources: trafficSources,
     unavailable,
-    video: buildVideo(profile, videoSessions, previousVideoSessions, period.period),
+    video: buildVideo(
+      profile,
+      videoSessions,
+      previousVideoSessions,
+      videoActionEvents,
+      previousVideoActionEvents,
+      period.period,
+    ),
   };
 
   return {

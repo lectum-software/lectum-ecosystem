@@ -2,6 +2,10 @@
 import type { AnalyticsDisplayMode } from "../../helpers/tracking";
 
 export type ImportantActionType =
+  | "psychologist_video_favorite"
+  | "psychologist_video_profile_access"
+  | "psychologist_video_share"
+  | "psychologist_video_whatsapp_click"
   | "pwa_install_prompt_accepted"
   | "pwa_installed"
   | "whatsapp_click";
