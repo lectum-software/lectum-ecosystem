@@ -3562,7 +3562,7 @@ const ActivitiesTab = ({ slug }: { slug: string }) => {
   const activities = result.data;
   const activityItems = activities?.data ?? [];
   const areaOptions = activities?.filters.areas ?? [
-    { count: 0, id: "all", label: "Todas as ?reas" },
+    { count: 0, id: "all", label: "Todas as áreas" },
   ];
   const typeOptions = activities?.filters.types ?? [
     { count: 0, id: "all", label: "Todos os tipos" },
@@ -3574,22 +3574,22 @@ const ActivitiesTab = ({ slug }: { slug: string }) => {
         <div className="flex flex-col gap-3 lg:flex-row lg:items-end">
           <CommunityReportFilterSelect
             className="flex-1"
-            label="Per?odo"
+            label="Período"
             onChange={(nextValue) => {
               setPeriod(nextValue as ActivityPeriodValue);
               setPage(1);
             }}
             value={period}
           >
-            <option value="all">Todo hist?rico registrado</option>
-            <option value="30d">?ltimos 30 dias</option>
-            <option value="90d">?ltimos 90 dias</option>
-            <option value="180d">?ltimos 180 dias</option>
+            <option value="all">Todo histórico registrado</option>
+            <option value="30d">Últimos 30 dias</option>
+            <option value="90d">Últimos 90 dias</option>
+            <option value="180d">Últimos 180 dias</option>
             <option value="custom">Personalizado</option>
           </CommunityReportFilterSelect>
           <CommunityReportFilterSelect
             className="flex-1"
-            label="?rea"
+            label="Área"
             onChange={(nextValue) => {
               setArea(nextValue);
               setPage(1);
@@ -3627,7 +3627,7 @@ const ActivitiesTab = ({ slug }: { slug: string }) => {
                   setQ(event.target.value);
                   setPage(1);
                 }}
-                placeholder="Buscar por descri??o..."
+                placeholder="Buscar por descrição..."
                 value={q}
               />
             </span>
@@ -3649,7 +3649,7 @@ const ActivitiesTab = ({ slug }: { slug: string }) => {
               />
             </label>
             <label className="block text-sm font-black text-muted">
-              At?
+              Até
               <input
                 className="mt-2 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground"
                 onChange={(event) => {
@@ -3697,9 +3697,9 @@ const ActivitiesTab = ({ slug }: { slug: string }) => {
               <thead className="border-b border-border text-xs text-muted">
                 <tr>
                   <th className="py-3 pr-3 pl-4 font-black">Data</th>
-                  <th className="px-3 py-3 font-black">A??o</th>
-                  <th className="px-3 py-3 font-black">Descri??o</th>
-                  <th className="py-3 pr-4 pl-3 font-black">Usu?rio</th>
+                  <th className="px-3 py-3 font-black">Ação</th>
+                  <th className="px-3 py-3 font-black">Descrição</th>
+                  <th className="py-3 pr-4 pl-3 font-black">Usuário</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
@@ -3716,12 +3716,12 @@ const ActivitiesTab = ({ slug }: { slug: string }) => {
                       <span
                         className={cn("block", activity.reason ? "mt-1 text-xs font-bold" : "")}
                       >
-                        ?rea: {activity.area} ? Origem: Painel administrativo
+                        Área: {activity.area} · Origem: Painel administrativo
                       </span>
                     </td>
                     <td className="py-3 pr-4 pl-3">
                       <span className="block font-black text-foreground">
-                        {activity.actor || "N?o informado"}
+                        {activity.actor || "Não informado"}
                       </span>
                       <span className="mt-1 block text-xs font-bold text-muted">Admin</span>
                     </td>

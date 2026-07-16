@@ -381,3 +381,11 @@ Regras:
 - Builder/Quick Copy nao esta exposto como ferramenta callable no ambiente; a referencia visual usada foi a captura enviada pelo usuario e o padrao local da aba **Dados** do Admin.
 - ADR atualizado: `adrs/0264-admin-comunidade-abas-conteudo-ranking.md`.
 - Validacao executada: `pnpm --dir backend db:migrate --name community_active_status` (apos restaurar migration local, **Already in sync**), `pnpm --dir backend check`, `pnpm --dir admin check`, `pnpm --dir backend build`, `pnpm --dir admin build`, `pnpm check`, smoke HTTP local `GET http://localhost:3002/comunidades/relacionamentos-com-proposito?tab=dados` retornando 200 e smoke HTTP sem sessao Admin em `PATCH /api/admin/private/communities/relacionamentos-com-proposito/status` retornando 401.
+
+## Ajuste complementar 2026-07-16 - Correcao de acentuacao nas Atividades
+
+- Pedido do usuario: corrigir textos corrompidos na aba **Atividades** da comunidade apos a inclusao dos filtros.
+- Foram restaurados os textos acentuados em labels, placeholders, cabecalhos da tabela, fallback de ator e metadados de area/origem: **Periodo**, **Area**, **Todo historico registrado**, **Ultimos**, **Descricao**, **Acao**, **Usuario**, **Ate** e **Nao informado**.
+- O backend tambem voltou a enviar labels acentuados em `period.label` e no filtro **Todas as areas**.
+- Nao houve alteracao de regra de negocio, endpoint, schema Prisma/migration, package ou persistencia.
+- Validacao executada: `pnpm --dir admin check`, `pnpm --dir backend check`, `pnpm --dir admin build`, `pnpm --dir backend build`, `pnpm check` e smoke HTTP local `GET http://127.0.0.1:3012/comunidades/relacionamentos-com-proposito?tab=atividades` retornando 200.

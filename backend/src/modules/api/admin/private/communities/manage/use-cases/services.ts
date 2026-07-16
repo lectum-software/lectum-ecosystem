@@ -1189,7 +1189,7 @@ const resolveActivityPeriod = (
       current: { end: null, start: null },
       period: {
         from: null,
-        label: "Todo hist?rico registrado",
+        label: "Todo histórico registrado",
         max_days: null,
         timezone: "server-local",
         to: null,
@@ -1218,7 +1218,7 @@ const resolveActivityPeriod = (
     current: { end, start },
     period: {
       from: dateKey(start),
-      label: "Per?odo filtrado",
+      label: "Período filtrado",
       max_days: MAX_ACTIVITY_PERIOD_DAYS,
       timezone: "server-local",
       to: dateKey(end),
@@ -1279,7 +1279,7 @@ const activityFiltersFromActivities = (
     .sort((left, right) => left.label.localeCompare(right.label, "pt-BR"));
 
   return {
-    areas: [{ count: activities.length, id: "all", label: "Todas as ?reas" }, ...areas],
+    areas: [{ count: activities.length, id: "all", label: "Todas as áreas" }, ...areas],
     types: [{ count: activities.length, id: "all", label: "Todos os tipos" }, ...types],
   };
 };

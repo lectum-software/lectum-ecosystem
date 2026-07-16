@@ -308,3 +308,11 @@ Consultas publicas de comunidades, feed/posts, posts salvos, publicacoes no perf
 Consequencia: ha migration Prisma para adicionar `active`, `deactivated_at` e indices de leitura publica; a operacao fica reversivel e auditavel, sem apagar dados nem criar endpoint simulado.
 
 Validacao desta atualizacao: `pnpm --dir backend db:migrate --name community_active_status`, `pnpm --dir backend check`, `pnpm --dir admin check`, `pnpm --dir backend build`, `pnpm --dir admin build`, `pnpm check`, smoke local da aba Dados retornando 200 e smoke sem sessao Admin do endpoint de status retornando 401.
+
+## Atualizacao 2026-07-16: acentuacao dos filtros de atividades
+
+Os textos adicionados nos filtros e na tabela de **Atividades** da comunidade devem permanecer em UTF-8 correto. A correcao restaura acentos de labels e placeholders no Admin e nas labels retornadas pelo endpoint de activities, sem alterar a regra de filtros ou o contrato semantico.
+
+Consequencia: a experiencia visual volta a ficar consistente em portugues brasileiro e o contrato continua usando os mesmos campos `filters`, `period` e `active_filters_count`.
+
+Validacao desta atualizacao: `pnpm --dir admin check`, `pnpm --dir backend check`, `pnpm --dir admin build`, `pnpm --dir backend build`, `pnpm check` e smoke local `GET http://127.0.0.1:3012/comunidades/relacionamentos-com-proposito?tab=atividades` retornando 200.
