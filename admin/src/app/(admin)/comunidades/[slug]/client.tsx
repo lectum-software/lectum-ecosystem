@@ -3532,6 +3532,42 @@ const ReportsTab = ({ slug }: { slug: string }) => {
   );
 };
 
+const communityActivityAreaLabels: Record<string, string> = {
+  comunidade: "Comunidade",
+  conteudo: "Conteúdo",
+  dados: "Dados",
+  denuncias: "Denúncias",
+  identidade_visual: "Identidade visual",
+  moderacao: "Moderação",
+  regras: "Regras",
+};
+
+const normalizeCommunityActivityKey = (value: string) =>
+  value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "");
+
+const formatCommunityActivityAreaLabel = (area: string) =>
+  communityActivityAreaLabels[normalizeCommunityActivityKey(area)] || area;
+
+const restoreCommunityActivityText = (value: string) =>
+  value
+    .replace(/Todas as \?reas/g, "Todas as áreas")
+    .replace(/Todo hist\?rico registrado/g, "Todo histórico registrado")
+    .replace(/Per\?odo filtrado/g, "Período filtrado")
+    .replace(/\?ltimos/g, "Últimos")
+    .replace(/descri\?\?o/g, "descrição")
+    .replace(/Descri\?\?o/g, "Descrição")
+    .replace(/Usu\?rio/g, "Usuário")
+    .replace(/A\?\?o/g, "Ação")
+    .replace(/N\?o/g, "Não")
+    .replace(/\?rea/g, "Área")
+    .replace(/Denuncia/g, "Denúncia")
+    .replace(/denuncia/g, "denúncia");
+
 const ActivitiesTab = ({ slug }: { slug: string }) => {
   const [period, setPeriod] = useState<ActivityPeriodValue>("all");
   const [customFrom, setCustomFrom] = useState("");
@@ -3595,7 +3631,7 @@ const ActivitiesTab = ({ slug }: { slug: string }) => {
           >
             {areaOptions.map((option) => (
               <option key={option.id} value={option.id}>
-                {option.label} ({numberFormatter.format(option.count)})
+                {`${formatCommunityActivityAreaLabel(restoreCommunityActivityText(option.label))} (${numberFormatter.format(option.count)})`}
               </option>
             ))}
           </CommunityReportFilterSelect>
@@ -3610,7 +3646,7 @@ const ActivitiesTab = ({ slug }: { slug: string }) => {
           >
             {typeOptions.map((option) => (
               <option key={option.id} value={option.id}>
-                {option.label} ({numberFormatter.format(option.count)})
+                {`${restoreCommunityActivityText(option.label)} (${numberFormatter.format(option.count)})`}
               </option>
             ))}
           </CommunityReportFilterSelect>
@@ -3690,7 +3726,13 @@ const ActivitiesTab = ({ slug }: { slug: string }) => {
 
         {activityItems.length > 0 ? (
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[720px] text-left text-sm">
+            <table className="w-full min-w-[820px] table-fixed text-left text-sm">
+              <colgroup>
+                <col className="w-40" />
+                <col className="w-48" />
+                <col />
+                <col className="w-52" />
+              </colgroup>
               <thead className="border-b border-border text-xs text-muted">
                 <tr>
                   <th className="py-3 pr-3 pl-4 font-black">Data</th>
@@ -3703,9 +3745,11 @@ const ActivitiesTab = ({ slug }: { slug: string }) => {
                 {activityItems.map((activity: AdminCommunityActivityItem) => (
                   <tr key={activity.id}>
                     <td className="py-3 pr-3 pl-4 font-bold text-muted">
-                      {formatDateTime(activity.created_at)}
+                      {formatActivityDateTime(activity.created_at)}
                     </td>
-                    <td className="px-3 py-3 font-black text-foreground">{activity.summary}</td>
+                    <td className="px-3 py-3 font-black text-foreground">
+                      {restoreCommunityActivityText(activity.summary)}
+                    </td>
                     <td className="px-3 py-3 text-muted">
                       {activity.reason ? (
                         <span className="block">Motivo: {activity.reason}</span>
@@ -3713,7 +3757,8 @@ const ActivitiesTab = ({ slug }: { slug: string }) => {
                       <span
                         className={cn("block", activity.reason ? "mt-1 text-xs font-bold" : "")}
                       >
-                        Área: {activity.area} · Origem: Painel administrativo
+                        Área: {formatCommunityActivityAreaLabel(activity.area)} · Origem: Painel
+                        administrativo
                       </span>
                     </td>
                     <td className="py-3 pr-4 pl-3">
