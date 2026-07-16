@@ -1362,7 +1362,7 @@ const DashboardTrafficSourcesCard = ({ summary }: { summary: AdminPsychologistsD
       <div className="mt-5 hidden overflow-hidden rounded-[1.35rem] border border-border/70 md:block">
         <div className="grid grid-cols-[minmax(0,1.25fr)_minmax(110px,0.75fr)_minmax(92px,0.55fr)] gap-3 border-border border-b bg-surface-muted px-4 py-3 text-[0.7rem] font-black uppercase tracking-[0.1em] text-subtle">
           <span>Fonte</span>
-          <span className="text-center">Visualizações de perfil</span>
+          <span className="text-center">Perfil</span>
           <span className="text-center">WhatsApp</span>
         </div>
         <div className="divide-y divide-border">

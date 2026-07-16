@@ -3161,16 +3161,10 @@ const PsychologistTrafficSourcesCard = ({
         {periodControls}
       </div>
 
-      {!traffic.unavailable_reason && traffic.attribution_unavailable_reason ? (
-        <p className="mt-5 rounded-2xl border border-dashed border-primary/20 bg-primary-soft/30 p-4 text-sm font-bold leading-6 text-muted">
-          {traffic.attribution_unavailable_reason}
-        </p>
-      ) : null}
-
       <div className="mt-5 hidden overflow-hidden rounded-[1.35rem] border border-border/70 md:block">
         <div className="grid grid-cols-[minmax(0,1.25fr)_minmax(110px,0.75fr)_minmax(92px,0.55fr)] gap-3 border-border border-b bg-surface-muted px-4 py-3 text-[0.7rem] font-black uppercase tracking-[0.1em] text-subtle">
           <span>{"Fonte"}</span>
-          <span className="text-center">{"Visualiza\u00e7\u00f5es de perfil"}</span>
+          <span className="text-center">{"Perfil"}</span>
           <span className="text-center">{"WhatsApp"}</span>
         </div>
         <div className="divide-y divide-border">

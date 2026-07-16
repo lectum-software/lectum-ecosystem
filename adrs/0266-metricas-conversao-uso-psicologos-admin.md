@@ -229,3 +229,11 @@ Validacao complementar 2026-07-16: `pnpm --dir backend check`, `pnpm --dir backe
 No detalhe administrativo do psicólogo, o card **Ranking do psicólogo** em **Estatísticas de comunidade** deve orientar o Admin com uma copy curta quando o filtro está em **Todas**: `Selecione uma comunidade`. A decisão é apenas textual e evita quebra visual no card estreito; os cálculos, filtros, endpoint, contrato de API, schema Prisma, migrations e packages permanecem inalterados.
 
 Validação complementar 2026-07-16: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm check` e smoke HTTP local `GET http://localhost:3002/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=estatisticas` retornando 200.
+
+## Complemento 2026-07-16 - Origem do trafego Admin sem faixa auxiliar
+
+No detalhe administrativo do psicologo, o bloco **Origem do trafego** deve priorizar a tabela de canais e remover a faixa auxiliar sobre indisponibilidade de atribuicao dos cliques de WhatsApp por origem. A informacao permanece no contrato backend para usos futuros, mas a UI do detalhe nao a exibe nesse bloco.
+
+A coluna de acessos ao perfil na tabela desktop deve usar a copy compacta **Perfil** em vez de **Visualizacoes de perfil** no detalhe e no dashboard administrativo de psicologos. A decisao e apenas textual/visual: os valores, a fonte real (`profile_view_event`), os filtros de periodo, o endpoint `GET /api/admin/private/psychologists/:id/statistics`, os contratos, o tracking first-party, o schema Prisma, migrations e packages permanecem inalterados.
+
+Validacao complementar 2026-07-16: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke HTTP local `GET http://localhost:3002/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=estatisticas` retornando 200.

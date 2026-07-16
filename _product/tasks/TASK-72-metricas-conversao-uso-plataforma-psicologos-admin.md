@@ -876,3 +876,12 @@ Regras de cálculo:
 - Pedido do usuário: quando o filtro de comunidade estiver em **Todas**, a copy do card **Ranking do psicólogo** deve ser apenas `Selecione uma comunidade`.
 - O backend Admin passou a retornar a mensagem curta no estado indisponível de ranking agregado, mantendo o mesmo endpoint real `GET /api/admin/private/psychologists/:id/statistics` e sem alterar contrato, fonte de dados, schema Prisma/migration, package ou UI estrutural.
 - Validação executada: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm check` e smoke HTTP local em `/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=estatisticas` retornando 200.
+
+## Ajuste complementar 2026-07-16 - Origem do trafego Admin sem faixa auxiliar
+
+- Pedido do usuario: em **Origem do trafego** no Admin, remover a faixa informativa `Cliques no WhatsApp por origem...` e alterar a coluna `Visualizacoes de perfil` para `Perfil`.
+- O detalhe administrativo do psicologo deixou de renderizar a faixa auxiliar de atribuicao first-party indisponivel, preservando a tabela com dados reais e estados existentes do endpoint.
+- A coluna desktop de acessos ao perfil agora usa a copy compacta **Perfil** no detalhe e no dashboard administrativo de psicologos, mantendo os mesmos valores reais de `profile_view_event`.
+- O ajuste e exclusivamente textual/visual, mobile-first, sem endpoint novo, mock, package, schema Prisma/migration, alteracao de contrato de API ou persistencia.
+- Builder/Quick Copy nao esta exposto como ferramenta callable no ambiente; a referencia usada foi a captura enviada pelo usuario e os padroes ja consolidados do Admin.
+- Validacao executada: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke HTTP local `GET http://localhost:3002/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=estatisticas` retornando 200.
