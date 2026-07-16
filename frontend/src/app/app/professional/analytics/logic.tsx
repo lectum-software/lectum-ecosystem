@@ -1342,7 +1342,7 @@ const TrafficSourceSection = ({
           return (
             <article
               className={cn(
-                "overflow-hidden rounded-[22px] border border-primary/10 bg-surface-muted shadow-[var(--lectum-shadow-soft)]",
+                "overflow-hidden rounded-[22px] border border-primary/10 bg-surface-muted",
                 source.displayBadge && "border-primary/25 bg-primary-soft/35",
               )}
               key={source.id}
