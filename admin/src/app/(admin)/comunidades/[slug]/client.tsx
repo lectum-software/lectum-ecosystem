@@ -1790,8 +1790,8 @@ const CommunityStatusControl = ({
                 Disponibilidade da comunidade
               </h2>
               <p className="mt-2 max-w-3xl text-sm leading-6 text-muted">
-                Desative a comunidade quando ela precisar sair do produto sem apagar conteudo,
-                regras, seguidores ou historico administrativo.
+                Desativar comunidade sem apagar conteúdo, regras, seguidores ou histórico
+                administrativo.
               </p>
               <div className="mt-3 flex flex-wrap items-center gap-2 text-xs font-bold text-muted">
                 <StatusBadge tone={community.active ? "green" : "muted"}>
