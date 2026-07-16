@@ -322,3 +322,13 @@ Regras:
 - ADR atualizado: `adrs/0264-admin-comunidade-abas-conteudo-ranking.md`.
 - Validacao executada: `pnpm --dir admin exec biome check "src/app/(admin)/comunidades/[slug]/client.tsx"`, `pnpm --dir admin build` e smoke local `GET http://localhost:3002/comunidades/autocuidado-em-pratica?tab=conteudo` retornando 200.
 - Observacao de validacao: `pnpm --dir admin check` completo nao concluiu porque ha pendencias preexistentes nao relacionadas em `admin/src/app/(admin)/psicologos/[id]/client.tsx` (imports/variaveis nao usados na arvore de trabalho antes deste ajuste).
+
+
+## Ajuste complementar 2026-07-16 - Tabela na aba Atividades da comunidade
+
+- Pedido do usuário: na aba **Atividades** do detalhe administrativo de comunidade, usar o mesmo modelo de layout da aba **Atividades** do detalhe administrativo de psicólogos.
+- A UI Admin de `/comunidades/[slug]?tab=atividades` deixou de renderizar eventos como cards soltos e passou a usar um card de busca seguido de uma tabela responsiva com colunas **Data**, **Ação**, **Descrição** e **Usuário**.
+- A tabela preserva dados reais já retornados por `admin_activity_log`: data do evento, resumo, motivo quando houver, área, origem do painel administrativo e ator real com papel **Admin**.
+- O ajuste é exclusivamente visual, mobile-first, sem endpoint novo, mock, package, schema Prisma/migration ou alteração de contrato.
+- Builder/Quick Copy não está exposto como ferramenta callable no ambiente; a referência visual usada foi a captura enviada pelo usuário e o padrão local da aba **Atividades** de psicólogos.
+- Validação executada: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke HTTP local `GET http://localhost:3002/comunidades/relacionamentos-com-proposito?tab=atividades` retornando 200. A validação visual por controle direto de browser não foi concluída porque este ambiente não expõe ferramenta de automação/inspeção de navegador.

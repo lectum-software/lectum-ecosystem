@@ -2661,72 +2661,112 @@ const ReportsTab = ({ slug }: { slug: string }) => {
 
 const ActivitiesTab = ({ slug }: { slug: string }) => {
   const [query, setQuery] = useState<AdminCommunityActivitiesQuery>({
-    limit: 10,
+    limit: 8,
     page: 1,
     q: "",
-    type: "all",
   });
   const result = useAdminCommunityActivities(slug, query);
   const updateQuery = (patch: Partial<AdminCommunityActivitiesQuery>) =>
     setQuery((current) => ({ ...current, ...patch, page: patch.page ?? 1 }));
+  const activities = result.data;
+  const activityItems = activities?.data ?? [];
 
   return (
-    <section className={cn(cardClass, "p-5")}>
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <h2 className="text-lg font-black text-foreground">Atividades administrativas</h2>
-          <p className="mt-1 text-sm text-muted">
-            Eventos auditados no painel administrativo para esta comunidade.
-          </p>
+    <div className="space-y-5" data-community-detail-tab="atividades">
+      <section className={cn(cardClass, "p-4")}>
+        <label className="block text-sm font-black text-muted">
+          Buscar
+          <span className="mt-2 flex h-11 items-center rounded-control border border-border bg-surface px-3">
+            <Search aria-hidden className="h-4 w-4 shrink-0 text-muted" />
+            <input
+              className="h-full min-w-0 flex-1 bg-transparent px-2 text-sm font-bold text-foreground outline-none placeholder:text-muted"
+              onChange={(event) => updateQuery({ q: event.target.value })}
+              placeholder="Buscar por descrição..."
+              value={query.q ?? ""}
+            />
+          </span>
+        </label>
+      </section>
+
+      <section className={cn(cardClass, "overflow-hidden")}>
+        <div className="flex flex-col gap-2 border-b border-border p-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h2 className="text-xl font-black text-foreground">Atividades administrativas</h2>
+            <p className="mt-1 text-sm text-muted">
+              Mostrando {numberFormatter.format(activityItems.length)} de{" "}
+              {numberFormatter.format(activities?.count ?? 0)} eventos principais filtrados.
+            </p>
+          </div>
         </div>
-        <StatusBadge tone="muted">
-          {numberFormatter.format(result.data?.count ?? 0)} eventos
-        </StatusBadge>
-      </div>
-      <input
-        className="mt-5 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold"
-        onChange={(event) => updateQuery({ q: event.target.value })}
-        placeholder="Buscar atividade"
-        value={query.q ?? ""}
-      />
-      <div className="mt-5 space-y-3">
-        <QueryStatus
-          error={result.error}
-          loading={result.isLoading}
-          onRetry={() => void result.refetch()}
-        />
-        {result.data?.data.length === 0 ? (
-          <p className="rounded-2xl bg-surface-muted p-4 text-sm text-muted">
-            Nenhuma atividade administrativa registrada para esta comunidade.
+
+        {result.isLoading || result.error ? (
+          <div className="p-4">
+            <QueryStatus
+              error={result.error}
+              loading={result.isLoading}
+              onRetry={() => void result.refetch()}
+            />
+          </div>
+        ) : null}
+
+        {activities && activityItems.length === 0 ? (
+          <p className="p-5 text-sm font-bold text-muted">
+            Nenhuma atividade administrativa registrada para os filtros atuais.
           </p>
         ) : null}
-        {result.data?.data.map((activity: AdminCommunityActivityItem) => (
-          <article className="rounded-2xl border border-border p-4" key={activity.id}>
-            <div className="flex flex-wrap items-center gap-2 text-xs font-bold text-muted">
-              <span>{formatDateTime(activity.created_at)}</span>
-              <span>Área: {activity.area}</span>
-              <span>Origem: Painel administrativo</span>
-            </div>
-            <h3 className="mt-2 font-black text-foreground">{activity.summary}</h3>
-            <p className="mt-1 text-sm text-muted">Ator: {activity.actor}</p>
-            {activity.reason ? (
-              <p className="mt-2 rounded-2xl bg-surface-muted p-3 text-sm text-muted">
-                Motivo: {activity.reason}
-              </p>
-            ) : null}
-          </article>
-        ))}
-      </div>
-      {result.data ? (
-        <div className="mt-5">
-          <PaginationControls
-            page={result.data.page}
-            pages={result.data.pages}
-            setPage={(page) => updateQuery({ page })}
-          />
-        </div>
-      ) : null}
-    </section>
+
+        {activityItems.length > 0 ? (
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[720px] text-left text-sm">
+              <thead className="border-b border-border text-xs text-muted">
+                <tr>
+                  <th className="py-3 pr-3 pl-4 font-black">Data</th>
+                  <th className="px-3 py-3 font-black">Ação</th>
+                  <th className="px-3 py-3 font-black">Descrição</th>
+                  <th className="py-3 pr-4 pl-3 font-black">Usuário</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {activityItems.map((activity: AdminCommunityActivityItem) => (
+                  <tr key={activity.id}>
+                    <td className="py-3 pr-3 pl-4 font-bold text-muted">
+                      {formatDateTime(activity.created_at)}
+                    </td>
+                    <td className="px-3 py-3 font-black text-foreground">{activity.summary}</td>
+                    <td className="px-3 py-3 text-muted">
+                      {activity.reason ? (
+                        <span className="block">Motivo: {activity.reason}</span>
+                      ) : null}
+                      <span
+                        className={cn("block", activity.reason ? "mt-1 text-xs font-bold" : "")}
+                      >
+                        Área: {activity.area} · Origem: Painel administrativo
+                      </span>
+                    </td>
+                    <td className="py-3 pr-4 pl-3">
+                      <span className="block font-black text-foreground">
+                        {activity.actor || "Não informado"}
+                      </span>
+                      <span className="mt-1 block text-xs font-bold text-muted">Admin</span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : null}
+
+        {activities ? (
+          <div className="border-t border-border p-4">
+            <PaginationControls
+              page={activities.page}
+              pages={activities.pages}
+              setPage={(page) => updateQuery({ page })}
+            />
+          </div>
+        ) : null}
+      </section>
+    </div>
   );
 };
 

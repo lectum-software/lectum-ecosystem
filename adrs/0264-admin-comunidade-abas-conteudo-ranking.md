@@ -249,3 +249,14 @@ A decisao remove a leitura antiga `Pagina X de Y` com botoes textuais grandes `A
 Consequencia: a mudanca e exclusivamente visual no Admin, sem novo endpoint, schema Prisma, migration, dependencia, mock ou alteracao de persistencia.
 
 Validacao desta atualizacao: `pnpm --dir admin exec biome check "src/app/(admin)/comunidades/[slug]/client.tsx"`, `pnpm --dir admin build` e smoke local `GET http://localhost:3002/comunidades/autocuidado-em-pratica?tab=conteudo` retornando 200. O `pnpm --dir admin check` completo ficou bloqueado por pendencias preexistentes em `admin/src/app/(admin)/psicologos/[id]/client.tsx`, fora do escopo desta decisao.
+
+
+## Atualização 2026-07-16: atividades administrativas em tabela
+
+A aba **Atividades** do detalhe administrativo de comunidade passa a seguir o mesmo padrão visual da aba **Atividades** do detalhe administrativo de psicólogos: controles em card próprio e listagem em tabela responsiva com cabeçalho, linhas separadas e paginação no rodapé.
+
+A decisão é manter a fonte real `admin_activity_log` e apenas reorganizar sua apresentação. A coluna **Descrição** concentra motivo, área e origem administrativa; a coluna **Usuário** apresenta o ator real do log e identifica o papel como Admin.
+
+Consequência: a leitura operacional fica consistente entre comunidades e psicólogos, sem alterar endpoint, contrato, schema Prisma, persistência, dependências ou regras de auditoria.
+
+Validação desta atualização: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke local `GET http://localhost:3002/comunidades/relacionamentos-com-proposito?tab=atividades` retornando 200.
