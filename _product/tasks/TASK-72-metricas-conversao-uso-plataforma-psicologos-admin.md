@@ -813,6 +813,16 @@ Regras de cálculo:
 - Builder/Quick Copy nao esta exposto como ferramenta no ambiente; a referencia visual usada foi a captura enviada pelo usuario.
 - Validacao executada: `pnpm --dir frontend check`, `pnpm --dir frontend build` e smoke HTTP local `GET http://localhost:3000/app/professional/analytics` retornando 307 pelo guard privado.
 
+## Ajuste complementar 2026-07-16 - Lista compacta de denuncias da comunidade
+
+- Pedido do usuario: remover o bloco **Fila de triagem** e deixar a lista de conteudos denunciados da comunidade mais enxuta.
+- A aba **Denuncias** em `/comunidades/[slug]?tab=denuncias` agora renderiza cada conteudo denunciado em um card compacto com tag do tipo/autoria, quantidade de denuncias, data da ultima denuncia, conteudo denunciado, historico de denunciantes com nome/data/motivo e acoes diretas **Improcedente** e **Procedente**.
+- O painel lateral de status/contadores por item foi removido; itens ja encerrados exibem somente o status terminal no rodape.
+- O ajuste e exclusivamente visual, mobile-first, sem novo endpoint, mock, package, schema Prisma/migration ou alteracao de contrato.
+- Builder/Quick Copy nao esta exposto como ferramenta no ambiente; a referencia visual usada foi a captura enviada pelo usuario e o padrao local do Admin premium.
+- ADR atualizado: `adrs/0264-admin-comunidade-abas-conteudo-ranking.md`.
+- Validacao executada: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke HTTP local `GET http://localhost:3002/comunidades/relacionamentos-com-proposito?tab=denuncias` retornando 200.
+
 ## Ajuste complementar 2026-07-16 - Cabecalho Perfil na tabela de trafego
 
 - Pedido do usuario: na tabela **Origem do trafego** em `/app/professional/analytics`, alterar o cabecalho `Visualizacoes de perfil` para `PERFIL`.

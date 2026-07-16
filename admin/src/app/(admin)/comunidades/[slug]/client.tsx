@@ -96,6 +96,10 @@ const dateTimeFormatter = new Intl.DateTimeFormat("pt-BR", {
   dateStyle: "short",
   timeStyle: "short",
 });
+const timeFormatter = new Intl.DateTimeFormat("pt-BR", {
+  hour: "2-digit",
+  minute: "2-digit",
+});
 const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
 const publicFrontendUrl = process.env.NEXT_PUBLIC_FRONTEND_URL || "http://localhost:3000";
 const publicMediaPathPrefixes = ["/public/files/", "/community/icons/"] as const;
@@ -313,6 +317,12 @@ const cardClass = "rounded-card border border-border bg-surface shadow-admin-sof
 
 const formatDate = (value: string) => dateFormatter.format(new Date(value));
 const formatDateTime = (value: string) => dateTimeFormatter.format(new Date(value));
+const formatActivityDateTime = (value: string) => {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "Não informado";
+
+  return `${dateFormatter.format(date)} às ${timeFormatter.format(date)}`;
+};
 const toDateInputValue = (date: Date) => {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, "0");
@@ -2971,15 +2981,25 @@ const CommunityReportStatusBadge = ({
   group: AdminCommunityReportItem["status_group"];
   label: string;
 }) => {
+  const Icon =
+    group === "upheld" ? ShieldCheck : group === "dismissed" ? CheckCircle2 : AlertTriangle;
   const className =
     group === "upheld"
-      ? "bg-red-50 text-danger"
+      ? "border-danger/20 bg-danger/10 text-danger"
       : group === "dismissed"
-        ? "bg-emerald-50 text-success"
-        : "bg-yellow-50 text-yellow-700";
+        ? "border-success/20 bg-success/10 text-success"
+        : "border-warning/20 bg-warning/10 text-warning";
 
   return (
-    <span className={cn("rounded-full px-2.5 py-1 text-xs font-black", className)}>{label}</span>
+    <span
+      className={cn(
+        "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-black",
+        className,
+      )}
+    >
+      <Icon aria-hidden className="h-3.5 w-3.5" />
+      {label}
+    </span>
   );
 };
 
@@ -3028,6 +3048,154 @@ const CommunityReportMedia = ({ report }: { report: AdminCommunityReportItem }) 
     </div>
   );
 };
+
+const communityReportTitle = (report: AdminCommunityReportItem) =>
+  report.content.title || (report.content.type === "post" ? "Post sem título" : "Comentário");
+
+const CommunityReportReporterHistory = ({ report }: { report: AdminCommunityReportItem }) => (
+  <section className="mt-5 border-t border-border/70 pt-5">
+    <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+      <h4 className="text-sm font-black text-foreground">Histórico de denunciantes</h4>
+      <span className="text-xs font-black text-primary">
+        {numberFormatter.format(report.reporters.length)} registro(s)
+      </span>
+    </div>
+
+    <div className="mt-3 divide-y divide-border/70 overflow-hidden rounded-[22px] border border-border/70 bg-surface-muted/45">
+      {report.reporters.map((reporter) => (
+        <article
+          className="grid gap-2 p-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-start"
+          key={reporter.id}
+        >
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="font-black text-foreground">{reporter.reporter.name}</span>
+              <StatusBadge tone="muted">{reporter.reporter.label}</StatusBadge>
+            </div>
+            <p className="mt-2 text-sm font-bold text-foreground">
+              Motivo: {reporter.reason_label}
+            </p>
+            {reporter.description ? (
+              <p className="mt-1 line-clamp-2 text-sm leading-6 text-muted">
+                {reporter.description}
+              </p>
+            ) : null}
+          </div>
+          <span className="inline-flex shrink-0 items-center gap-1.5 text-xs font-bold text-muted">
+            <CalendarDays aria-hidden className="h-3.5 w-3.5" />
+            {formatDateTime(reporter.created_at)}
+          </span>
+        </article>
+      ))}
+    </div>
+  </section>
+);
+
+const CommunityReportActions = ({
+  onResolve,
+  report,
+}: {
+  onResolve: (resolution: "dismissed" | "upheld") => void;
+  report: AdminCommunityReportItem;
+}) => {
+  const hasResolutionActions =
+    report.capabilities.can_resolve_dismissed || report.capabilities.can_resolve_upheld;
+
+  if (!hasResolutionActions) {
+    return (
+      <div className="mt-5 flex flex-wrap items-center justify-end gap-2 border-t border-border/70 pt-4">
+        <span className="text-xs font-bold text-muted">Denúncia já encerrada:</span>
+        <CommunityReportStatusBadge group={report.status_group} label={report.status_label} />
+      </div>
+    );
+  }
+
+  return (
+    <div className="mt-5 flex flex-col gap-2 border-t border-border/70 pt-4 sm:flex-row sm:justify-end">
+      {report.capabilities.can_resolve_dismissed ? (
+        <button
+          className="inline-flex min-h-11 items-center justify-center gap-2 rounded-control border border-success/30 bg-success/10 px-4 py-2 text-xs font-black text-success transition hover:bg-success/15"
+          onClick={() => onResolve("dismissed")}
+          type="button"
+        >
+          <CheckCircle2 aria-hidden className="h-4 w-4" />
+          Improcedente
+        </button>
+      ) : null}
+      {report.capabilities.can_resolve_upheld ? (
+        <button
+          className="inline-flex min-h-11 items-center justify-center gap-2 rounded-control border border-danger/30 bg-danger/10 px-4 py-2 text-xs font-black text-danger transition hover:bg-danger/15"
+          onClick={() => onResolve("upheld")}
+          type="button"
+        >
+          <ShieldCheck aria-hidden className="h-4 w-4" />
+          Procedente
+        </button>
+      ) : null}
+    </div>
+  );
+};
+
+const CommunityReportListItem = ({
+  report,
+  setResolveState,
+}: {
+  report: AdminCommunityReportItem;
+  setResolveState: (state: CommunityReportResolveState) => void;
+}) => (
+  <article className="rounded-card border border-border/75 bg-surface/95 p-4 shadow-admin-soft md:p-5">
+    <div className="flex flex-wrap items-center gap-2">
+      <StatusBadge tone="muted">{report.content.content_kind_label}</StatusBadge>
+      <span className="inline-flex items-center gap-1.5 rounded-full bg-primary-soft px-2.5 py-1 text-xs font-black text-primary">
+        <AlertTriangle aria-hidden className="h-3.5 w-3.5" />
+        {numberFormatter.format(report.report_count)} denúncia(s)
+      </span>
+      <span className="inline-flex items-center gap-1.5 text-xs font-bold text-muted">
+        <CalendarDays aria-hidden className="h-3.5 w-3.5" />
+        Última em {formatDateTime(report.last_reported_at)}
+      </span>
+    </div>
+
+    <section className="mt-4">
+      <p className="text-[0.68rem] font-black uppercase tracking-wide text-muted">
+        Conteúdo denunciado
+      </p>
+      <h3 className="mt-1 text-lg font-black text-foreground">{communityReportTitle(report)}</h3>
+      <div className="mt-3 grid gap-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-start">
+        <div className="min-w-0 whitespace-pre-wrap rounded-[22px] border border-border/70 bg-surface-muted/45 p-4 text-sm font-bold leading-6 text-foreground">
+          {report.content.body || report.content.excerpt || "Conteúdo sem texto disponível."}
+        </div>
+        {report.content.media ? (
+          <div className="lg:w-48">
+            <CommunityReportMedia report={report} />
+          </div>
+        ) : null}
+      </div>
+      {!report.content.available ? (
+        <p className="mt-3 rounded-2xl border border-danger/15 bg-danger/10 p-3 text-xs font-bold leading-5 text-danger">
+          {report.content.unavailable_reason || "Conteúdo removido ou indisponível."}
+        </p>
+      ) : null}
+      {report.content.public_url ? (
+        <Link
+          className="mt-3 inline-flex items-center gap-2 text-xs font-black text-primary hover:underline"
+          href={toPublicHref(report.content.public_url)}
+          rel="noreferrer"
+          target="_blank"
+        >
+          <Eye aria-hidden className="h-4 w-4" />
+          Ver conteúdo público
+        </Link>
+      ) : null}
+    </section>
+
+    <CommunityReportReporterHistory report={report} />
+    <CommunityReportActions
+      onResolve={(resolution) => setResolveState({ report, resolution })}
+      report={report}
+    />
+  </article>
+);
 
 const CommunityReportResolveDialog = ({
   onClose,
@@ -3317,204 +3485,33 @@ const ReportsTab = ({ slug }: { slug: string }) => {
         {rangeError ? <p className="mt-3 text-xs font-bold text-danger">{rangeError}</p> : null}
       </section>
 
-      <section className={cn(cardClass, "overflow-hidden")}>
-        <div className="flex flex-col gap-2 border-b border-border p-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h2 className="text-xl font-black text-foreground">Denuncias da comunidade</h2>
-            <p className="mt-1 text-sm text-muted">
-              Mostrando {numberFormatter.format(reportItems.length)} de{" "}
-              {numberFormatter.format(result.data?.count ?? 0)} conteudos denunciados filtrados.
-            </p>
-          </div>
-          <StatusBadge tone="muted">Moderacao auditada</StatusBadge>
-        </div>
-
-        <div className="p-4">
-          <QueryStatus
-            error={result.error}
-            loading={result.isLoading}
-            onRetry={() => void result.refetch()}
-          />
-        </div>
+      <section className="space-y-4" aria-label="Denúncias da comunidade">
+        <QueryStatus
+          error={result.error}
+          loading={result.isLoading}
+          onRetry={() => void result.refetch()}
+        />
 
         {reportItems.length === 0 && !result.isLoading ? (
-          <p className="px-4 pb-5 text-sm font-bold text-muted">
-            Nenhuma denuncia real encontrada para os filtros atuais.
-          </p>
+          <div className={cn(cardClass, "p-6 text-sm font-bold text-muted")}>
+            Nenhuma denúncia real encontrada para os filtros atuais.
+          </div>
         ) : null}
 
         {reportItems.length > 0 ? (
-          <div className="divide-y divide-border">
+          <div className="space-y-4">
             {reportItems.map((report: AdminCommunityReportItem) => (
-              <article className="grid gap-5 p-4 xl:grid-cols-[1fr_280px]" key={report.id}>
-                <div className="min-w-0">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <StatusBadge tone="muted">{report.content.content_kind_label}</StatusBadge>
-                    <CommunityReportStatusBadge
-                      group={report.status_group}
-                      label={report.status_label}
-                    />
-                    <span className="rounded-full bg-primary-soft px-2.5 py-1 text-xs font-black text-primary">
-                      {numberFormatter.format(report.report_count)} denuncia(s)
-                    </span>
-                    <span className="text-xs font-bold text-muted">
-                      Ultima denuncia em {formatDateTime(report.last_reported_at)}
-                    </span>
-                  </div>
-
-                  <div className="mt-4 grid gap-4 lg:grid-cols-[minmax(0,1fr)_220px] lg:items-start">
-                    <div className="min-w-0">
-                      <p className="text-xs font-black uppercase tracking-wide text-muted">
-                        Conteudo denunciado
-                      </p>
-                      <h3 className="mt-1 text-lg font-black text-foreground">
-                        {report.content.title ||
-                          (report.content.type === "post" ? "Post sem titulo" : "Comentario")}
-                      </h3>
-                      <div className="mt-3 whitespace-pre-wrap rounded-2xl border border-border bg-surface-muted p-4 text-sm font-bold leading-6 text-foreground">
-                        {report.content.body ||
-                          report.content.excerpt ||
-                          "Conteudo sem texto disponivel."}
-                      </div>
-                      {!report.content.available ? (
-                        <p className="mt-2 text-xs font-bold text-danger">
-                          {report.content.unavailable_reason ||
-                            "Conteudo removido ou indisponivel."}
-                        </p>
-                      ) : null}
-                      {report.content.public_url ? (
-                        <Link
-                          className="mt-3 inline-flex items-center gap-2 text-xs font-black text-primary hover:underline"
-                          href={toPublicHref(report.content.public_url)}
-                          rel="noreferrer"
-                          target="_blank"
-                        >
-                          <Eye aria-hidden className="h-4 w-4" />
-                          Ver conteudo publico
-                        </Link>
-                      ) : null}
-                    </div>
-                    <CommunityReportMedia report={report} />
-                  </div>
-
-                  <div className="mt-4 rounded-2xl border border-border bg-surface p-4">
-                    <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
-                      <div>
-                        <p className="text-sm font-black text-foreground">Denunciantes</p>
-                        <p className="text-xs font-bold text-muted">
-                          Relacao de todas as denuncias recebidas para este conteudo.
-                        </p>
-                      </div>
-                      <span className="text-xs font-black text-primary">
-                        {numberFormatter.format(report.reporters.length)} registro(s)
-                      </span>
-                    </div>
-                    <div className="mt-3 grid gap-3">
-                      {report.reporters.map((reporter) => (
-                        <div
-                          className="rounded-2xl border border-border bg-surface-muted p-3"
-                          key={reporter.id}
-                        >
-                          <div className="flex flex-wrap items-center gap-2">
-                            <span className="font-black text-foreground">
-                              {reporter.reporter.name}
-                            </span>
-                            <StatusBadge tone="muted">{reporter.reporter.label}</StatusBadge>
-                            <CommunityReportStatusBadge
-                              group={reporter.status_group}
-                              label={reporter.status_label}
-                            />
-                            <span className="text-xs font-bold text-muted">
-                              {formatDateTime(reporter.created_at)}
-                            </span>
-                          </div>
-                          <p className="mt-2 text-sm font-black text-foreground">
-                            {reporter.reason_label}
-                          </p>
-                          {reporter.description ? (
-                            <p className="mt-1 text-sm leading-6 text-muted">
-                              {reporter.description}
-                            </p>
-                          ) : null}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-
-                <aside className="rounded-2xl bg-surface-muted p-4 text-sm xl:sticky xl:top-4 xl:self-start">
-                  <dl className="grid gap-4">
-                    <div>
-                      <dt className="font-black text-muted">Quantidade</dt>
-                      <dd className="mt-1 text-2xl font-black text-foreground">
-                        {numberFormatter.format(report.report_count)}
-                      </dd>
-                    </div>
-                    <div className="grid grid-cols-3 gap-2 border-t border-border pt-4 text-center">
-                      <div>
-                        <dt className="text-xs font-black text-muted">Pend.</dt>
-                        <dd className="font-black text-foreground">
-                          {numberFormatter.format(report.status_counts.pending)}
-                        </dd>
-                      </div>
-                      <div>
-                        <dt className="text-xs font-black text-muted">Proc.</dt>
-                        <dd className="font-black text-foreground">
-                          {numberFormatter.format(report.status_counts.upheld)}
-                        </dd>
-                      </div>
-                      <div>
-                        <dt className="text-xs font-black text-muted">Improc.</dt>
-                        <dd className="font-black text-foreground">
-                          {numberFormatter.format(report.status_counts.dismissed)}
-                        </dd>
-                      </div>
-                    </div>
-                    <div className="border-t border-border pt-4">
-                      <dt className="font-black text-muted">Tipo</dt>
-                      <dd className="mt-1 font-black text-foreground">
-                        {report.content.content_kind_label}
-                      </dd>
-                    </div>
-                    <div>
-                      <dt className="font-black text-muted">Status do grupo</dt>
-                      <dd className="mt-1 font-black text-foreground">{report.status_label}</dd>
-                    </div>
-                  </dl>
-
-                  {report.capabilities.can_resolve_dismissed ||
-                  report.capabilities.can_resolve_upheld ? (
-                    <div className="mt-4 grid gap-2 border-t border-border pt-4">
-                      <button
-                        className="inline-flex h-10 items-center justify-center gap-2 rounded-control border border-success/30 bg-success/10 px-3 text-xs font-black text-success transition hover:bg-success/15"
-                        onClick={() => setResolveState({ report, resolution: "dismissed" })}
-                        type="button"
-                      >
-                        <CheckCircle2 aria-hidden className="h-4 w-4" />
-                        Marcar improcedente
-                      </button>
-                      <button
-                        className="inline-flex h-10 items-center justify-center gap-2 rounded-control border border-danger/30 bg-danger/10 px-3 text-xs font-black text-danger transition hover:bg-danger/15"
-                        onClick={() => setResolveState({ report, resolution: "upheld" })}
-                        type="button"
-                      >
-                        <ShieldCheck aria-hidden className="h-4 w-4" />
-                        Marcar procedente
-                      </button>
-                    </div>
-                  ) : (
-                    <p className="mt-4 border-t border-border pt-4 text-xs font-bold text-muted">
-                      Este conteudo nao possui denuncias pendentes para resolucao.
-                    </p>
-                  )}
-                </aside>
-              </article>
+              <CommunityReportListItem
+                key={report.id}
+                report={report}
+                setResolveState={setResolveState}
+              />
             ))}
           </div>
         ) : null}
 
         {result.data ? (
-          <div className="border-t border-border p-4">
+          <div className={cn(cardClass, "p-4")}>
             <PaginationControls
               page={result.data.page}
               pages={result.data.pages}

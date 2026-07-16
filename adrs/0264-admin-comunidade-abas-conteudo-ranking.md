@@ -287,6 +287,21 @@ Consequencia: a triagem comunitaria fica consistente com a resolucao de denuncia
 
 Validacao desta atualizacao: `pnpm --dir backend check`, `pnpm --dir admin check`, `pnpm --dir backend build`, `pnpm --dir admin build`, `pnpm check`, smoke local da rota Admin de denuncias retornando 200 e smoke sem sessao Admin do endpoint de resolucao retornando 401.
 
+## Atualizacao 2026-07-16: denuncias da comunidade em cards compactos
+
+A lista de conteudos denunciados da aba **Denuncias** deixa de usar um bloco introdutorio separado de "Fila de triagem" e remove o painel lateral de status/contadores por item. O card de cada conteudo passa a concentrar somente a informacao operacional necessaria para triagem:
+
+- tipo/autoria do conteudo denunciado;
+- quantidade de denuncias recebidas;
+- data da ultima denuncia;
+- conteudo denunciado;
+- historico de denunciantes com nome, data e motivo;
+- acoes diretas **Improcedente** e **Procedente** quando ainda houver pendencias.
+
+A decisao preserva as mesmas fontes reais (`post_report`, `community_post`, `post_reply`) e o mesmo endpoint de resolucao auditada. A mudanca e exclusivamente visual, mobile-first, sem novo contrato, endpoint, schema Prisma, migration, package, mock ou backfill.
+
+Validacao desta atualizacao: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke local `GET http://localhost:3002/comunidades/relacionamentos-com-proposito?tab=denuncias` retornando 200.
+
 ## Atualizacao 2026-07-16: filtros operacionais nas atividades da comunidade
 
 A aba **Atividades** do detalhe administrativo de comunidade passa a compartilhar o mesmo modelo operacional da aba **Atividades** do detalhe administrativo de psicologos: card de filtros por periodo, area, tipo de atividade e busca textual, seguido pela tabela auditavel.
