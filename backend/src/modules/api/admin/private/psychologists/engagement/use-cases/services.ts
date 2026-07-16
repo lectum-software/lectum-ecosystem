@@ -770,7 +770,7 @@ const buildCommunityRankingMetric = (
       "ranking",
       "Ranking do psicólogo",
       "community_mentor_ranking",
-      "Selecione uma comunidade específica para ver a posição do psicólogo.",
+      "Selecione uma comunidade",
     );
   }
 

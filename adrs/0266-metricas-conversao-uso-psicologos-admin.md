@@ -223,3 +223,9 @@ A UI posiciona o seletor de ordenacao no cabecalho do card de resultados, na mes
 Nao ha endpoint paralelo, schema Prisma, migration, package novo, mock, backfill ou dado materializado.
 
 Validacao complementar 2026-07-16: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check`, validacao direta dos services com scores em ordem decrescente (`community 200 [83,17,2,2,2]`, `publications 200 [6,2,0]`) e smoke HTTP local para `/comunidades/relacionamentos-com-proposito?tab=conteudo` e `/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=publicacoes` retornando 200.
+
+## Complemento 2026-07-16 - Copy curta no ranking agregado de comunidade
+
+No detalhe administrativo do psicólogo, o card **Ranking do psicólogo** em **Estatísticas de comunidade** deve orientar o Admin com uma copy curta quando o filtro está em **Todas**: `Selecione uma comunidade`. A decisão é apenas textual e evita quebra visual no card estreito; os cálculos, filtros, endpoint, contrato de API, schema Prisma, migrations e packages permanecem inalterados.
+
+Validação complementar 2026-07-16: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm check` e smoke HTTP local `GET http://localhost:3002/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=estatisticas` retornando 200.

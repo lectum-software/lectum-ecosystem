@@ -870,3 +870,9 @@ Regras de cálculo:
 - Builder/Quick Copy nao esta exposto como ferramenta callable no ambiente; a referencia visual usada foi a captura enviada pelo usuario e os padroes locais do Admin.
 - ADR atualizado: `adrs/0266-metricas-conversao-uso-psicologos-admin.md`.
 - Validacao executada: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check`, validacao direta dos services com scores em ordem decrescente (`community 200 [83,17,2,2,2]`, `publications 200 [6,2,0]`) e smoke HTTP local `GET http://localhost:3002/comunidades/relacionamentos-com-proposito?tab=conteudo` / `GET http://localhost:3002/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=publicacoes` retornando 200.
+
+## Ajuste complementar 2026-07-16 - Copy curta no ranking de comunidade
+
+- Pedido do usuário: quando o filtro de comunidade estiver em **Todas**, a copy do card **Ranking do psicólogo** deve ser apenas `Selecione uma comunidade`.
+- O backend Admin passou a retornar a mensagem curta no estado indisponível de ranking agregado, mantendo o mesmo endpoint real `GET /api/admin/private/psychologists/:id/statistics` e sem alterar contrato, fonte de dados, schema Prisma/migration, package ou UI estrutural.
+- Validação executada: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm check` e smoke HTTP local em `/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=estatisticas` retornando 200.
