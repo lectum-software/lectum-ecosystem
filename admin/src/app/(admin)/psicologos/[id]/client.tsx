@@ -1111,6 +1111,83 @@ const isValidStatisticsRange = (range: StatisticsCustomRange) => {
   return statisticsDateFromInput(range.from) <= statisticsDateFromInput(range.to);
 };
 
+const STATISTICS_CUSTOM_RANGE_ERROR =
+  "Informe um período personalizado completo, com data inicial menor ou igual à final.";
+
+const useStatisticsPeriodFilter = (createdAt?: string | null) => {
+  const [selectedPeriod, setSelectedPeriod] = useState<StatisticsPeriodValue>("week");
+  const [appliedPeriod, setAppliedPeriod] = useState<StatisticsPeriodValue>("week");
+  const [draftRange, setDraftRange] = useState<StatisticsCustomRange>(() =>
+    getStatisticsRangeForPeriod("week", createdAt),
+  );
+  const [appliedRange, setAppliedRange] = useState<StatisticsCustomRange>(() =>
+    getStatisticsRangeForPeriod("week", createdAt),
+  );
+  const [rangeError, setRangeError] = useState<string | null>(null);
+  const periodQuery = useMemo(
+    () => buildStatisticsPeriodQuery(appliedPeriod, appliedRange),
+    [appliedPeriod, appliedRange],
+  );
+  const handlePeriodChange = useCallback(
+    (period: StatisticsPeriodPreset) => {
+      const nextRange = getStatisticsRangeForPeriod(period, createdAt);
+      setRangeError(null);
+      setSelectedPeriod(period);
+      setAppliedPeriod(period);
+      setDraftRange(nextRange);
+      setAppliedRange(nextRange);
+    },
+    [createdAt],
+  );
+  const handleDateChange = useCallback((field: keyof StatisticsCustomRange, value: string) => {
+    setRangeError(null);
+    setSelectedPeriod("custom");
+    setDraftRange((current) => ({
+      ...current,
+      [field]: value,
+    }));
+  }, []);
+  const commitRange = useCallback(() => {
+    if (selectedPeriod !== "custom") return;
+
+    if (!isValidStatisticsRange(draftRange)) {
+      setRangeError(STATISTICS_CUSTOM_RANGE_ERROR);
+      return;
+    }
+
+    setRangeError(null);
+    setAppliedPeriod("custom");
+    setAppliedRange(draftRange);
+  }, [draftRange, selectedPeriod]);
+  const handleDateControlsBlur = useCallback(
+    (event: FocusEvent<HTMLDivElement>) => {
+      const currentTarget = event.currentTarget;
+      const nextFocusedElement = event.relatedTarget as Node | null;
+
+      if (nextFocusedElement && currentTarget.contains(nextFocusedElement)) return;
+
+      window.setTimeout(() => {
+        const activeElement = document.activeElement;
+
+        if (activeElement && currentTarget.contains(activeElement)) return;
+
+        commitRange();
+      }, 0);
+    },
+    [commitRange],
+  );
+
+  return {
+    draftRange,
+    handleDateChange,
+    handleDateControlsBlur,
+    handlePeriodChange,
+    periodQuery,
+    rangeError,
+    selectedPeriod,
+  };
+};
+
 type StatisticsPeriodControlsProps = {
   className?: string;
   idPrefix: string;
@@ -2520,8 +2597,31 @@ type VideoRetentionCurvePoint = {
 const ADMIN_RETENTION_CHART_WIDTH = 300;
 const ADMIN_RETENTION_CHART_TOP = 12;
 const ADMIN_RETENTION_CHART_BOTTOM = 116;
+const ADMIN_RETENTION_CHART_AXIS_LABEL_Y = 144;
 const ADMIN_RETENTION_CHART_LEFT_PADDING = 18;
 const ADMIN_RETENTION_CHART_RIGHT_PADDING = 58;
+
+const buildVideoRetentionAxisTicks = (durationSeconds?: number | null) => {
+  if (!durationSeconds || !Number.isFinite(durationSeconds) || durationSeconds <= 0) {
+    return [
+      { id: "start", label: "0:00", positionPercent: 0 },
+      { id: "end", label: "Fim", positionPercent: 100 },
+    ];
+  }
+
+  const totalSeconds = Math.max(1, Math.round(durationSeconds));
+  const tickCount = totalSeconds <= 60 ? 3 : totalSeconds <= 300 ? 4 : 5;
+
+  return Array.from({ length: tickCount }, (_, index) => {
+    const positionPercent = (index / (tickCount - 1)) * 100;
+
+    return {
+      id: String(index),
+      label: formatVideoAxisTime(positionPercent, durationSeconds),
+      positionPercent,
+    };
+  });
+};
 
 const toVideoRetentionChartPoint = (positionPercent: number, percentage: number) => {
   const x =
@@ -2659,18 +2759,19 @@ const VideoRetentionLineChart = ({
   const playbackPoint = toVideoRetentionChartPoint(playbackPositionPercent, 0);
   const progressX =
     durationSeconds && durationSeconds > 0 ? playbackPoint.x : ADMIN_RETENTION_CHART_LEFT_PADDING;
+  const axisTicks = buildVideoRetentionAxisTicks(durationSeconds);
 
   return (
     <div className="grid min-w-0 gap-3">
       <div className="relative w-full overflow-hidden rounded-[22px] bg-transparent px-1 py-2 text-left">
         <svg
           aria-label="Curva estimada de retenção do vídeo de apresentação"
-          className="mx-auto h-[clamp(170px,18vw,230px)] w-full max-w-[620px] overflow-visible text-subtle"
+          className="mx-auto h-[clamp(185px,19vw,245px)] w-full max-w-[620px] overflow-visible text-subtle"
           preserveAspectRatio="xMidYMid meet"
           role="img"
-          viewBox="0 0 300 130"
+          viewBox="0 0 300 150"
         >
-          <title>Curva contínua estimada de retenção de 100% a 0%</title>
+          <title>Curva contínua estimada de retenção por minuto do vídeo</title>
           <defs>
             <linearGradient id="admin-video-retention-gradient" x1="0" x2="1" y1="0" y2="0">
               <stop offset="0%" stopColor="var(--admin-primary)" />
@@ -2770,6 +2871,32 @@ const VideoRetentionLineChart = ({
             strokeWidth="1.5"
             vectorEffect="non-scaling-stroke"
           />
+          {axisTicks.map((tick) => {
+            const tickPoint = toVideoRetentionChartPoint(tick.positionPercent, 0);
+
+            return (
+              <g key={tick.id}>
+                <line
+                  className="stroke-border"
+                  strokeWidth="1"
+                  vectorEffect="non-scaling-stroke"
+                  x1={tickPoint.x}
+                  x2={tickPoint.x}
+                  y1="122"
+                  y2="128"
+                />
+                <text
+                  className="fill-subtle text-[8px] font-black"
+                  dominantBaseline="middle"
+                  textAnchor="middle"
+                  x={tickPoint.x}
+                  y={ADMIN_RETENTION_CHART_AXIS_LABEL_Y}
+                >
+                  {tick.label}
+                </text>
+              </g>
+            );
+          })}
         </svg>
         <span className="pointer-events-none absolute right-5 top-4 rounded-full bg-surface/95 px-1.5 py-0.5 text-[0.65rem] font-extrabold leading-none text-subtle shadow-sm">
           100%
@@ -2822,10 +2949,14 @@ const VideoSummaryMetric = ({
 const StatisticsVideoCard = ({
   className,
   detail,
+  isRefreshing = false,
+  periodControls,
   statistics,
 }: {
   className?: string;
   detail: AdminPsychologistDetail;
+  isRefreshing?: boolean;
+  periodControls: ReactNode;
   statistics: AdminPsychologistStatistics;
 }) => {
   const video = statistics.video;
@@ -2848,13 +2979,25 @@ const StatisticsVideoCard = ({
 
   return (
     <CardShell className={cn("flex flex-col p-4 sm:p-5", className)}>
-      <h2 className="text-lg font-black leading-tight text-foreground">
-        Análises do vídeo de apresentação
-      </h2>
-      <p className="mt-1 text-sm font-bold text-muted">
-        Período: {statistics.period.label} · {formatDateOnly(statistics.period.from)} a{" "}
-        {formatDateOnly(statistics.period.to)}
-      </p>
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-start">
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-2">
+            <h2 className="text-lg font-black leading-tight text-foreground">
+              Análises do vídeo de apresentação
+            </h2>
+            {isRefreshing ? (
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary-soft px-2.5 py-1 text-[11px] font-black text-primary">
+                <Loader2 aria-hidden className="h-3.5 w-3.5 animate-spin" />
+                Atualizando
+              </span>
+            ) : null}
+          </div>
+          <p className="mt-1 text-sm font-bold leading-6 text-muted">
+            Consumo, retenção e interações atribuídas ao vídeo de apresentação no período.
+          </p>
+        </div>
+        {periodControls}
+      </div>
 
       <div className="mt-4 grid gap-4 xl:grid-cols-[minmax(150px,190px)_minmax(0,1fr)_minmax(220px,280px)] xl:items-stretch">
         <div className="order-1 min-w-0">
@@ -2983,34 +3126,39 @@ const formatTrafficNullableCount = (value: number | null) =>
   numberFormatter.format(typeof value === "number" ? value : 0);
 
 const PsychologistTrafficSourcesCard = ({
+  isRefreshing = false,
+  periodControls,
   statistics,
 }: {
+  isRefreshing?: boolean;
+  periodControls: ReactNode;
   statistics: AdminPsychologistStatistics;
 }) => {
   const traffic = statistics.traffic_sources;
 
   return (
     <CardShell className="p-5">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-start">
         <div className="min-w-0">
-          <p className="text-xs font-black uppercase tracking-[0.16em] text-primary">
-            {"Origem do tr\u00e1fego"}
-          </p>
-          <h2 className="mt-2 text-lg font-black text-foreground">
-            {"Canais que levam pacientes at\u00e9 o perfil"}
-          </h2>
+          <div className="flex flex-wrap items-center gap-2">
+            <h2 className="text-lg font-black text-foreground">Origem do tráfego</h2>
+            {traffic.updated_at ? (
+              <Badge className="bg-surface-muted text-muted">
+                Atualizado em {formatDateOnly(traffic.updated_at)}
+              </Badge>
+            ) : null}
+            {isRefreshing ? (
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary-soft px-2.5 py-1 text-[11px] font-black text-primary">
+                <Loader2 aria-hidden className="h-3.5 w-3.5 animate-spin" />
+                Atualizando
+              </span>
+            ) : null}
+          </div>
           <p className="mt-1 text-sm font-bold leading-6 text-muted">
-            {"Per\u00edodo: "}
-            {statistics.period.label} {"\u00b7"} {formatDateOnly(statistics.period.from)} a{" "}
-            {formatDateOnly(statistics.period.to)}
+            Canais que levam pacientes até o perfil público e ao WhatsApp do psicólogo.
           </p>
         </div>
-        {traffic.updated_at ? (
-          <Badge className="bg-surface-muted text-muted">
-            {"Atualizado em "}
-            {formatDateOnly(traffic.updated_at)}
-          </Badge>
-        ) : null}
+        {periodControls}
       </div>
 
       {!traffic.unavailable_reason && traffic.attribution_unavailable_reason ? (
@@ -3087,22 +3235,34 @@ const PsychologistTrafficSourcesCard = ({
 };
 
 const PsychologistPlatformUsageCard = ({
+  isRefreshing = false,
+  periodControls,
   statistics,
 }: {
+  isRefreshing?: boolean;
+  periodControls: ReactNode;
   statistics: AdminPsychologistStatistics;
 }) => {
   const usage = statistics.platform_usage;
 
   return (
     <CardShell className="p-5">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <h2 className="text-lg font-black text-foreground">Uso da plataforma</h2>
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-start">
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-2">
+            <h2 className="text-lg font-black text-foreground">Uso da plataforma</h2>
+            {isRefreshing ? (
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary-soft px-2.5 py-1 text-[11px] font-black text-primary">
+                <Loader2 aria-hidden className="h-3.5 w-3.5 animate-spin" />
+                Atualizando
+              </span>
+            ) : null}
+          </div>
           <p className="mt-1 text-sm font-bold leading-6 text-muted">
-            Período: {statistics.period.label} · {formatDateOnly(usage.period_from)} a{" "}
-            {formatDateOnly(usage.period_to)}
+            Acessos, sessões, duração média e instalação PWA do psicólogo no período.
           </p>
         </div>
+        {periodControls}
       </div>
 
       <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
@@ -3158,64 +3318,49 @@ const PsychologistPlatformUsageCard = ({
 };
 
 const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: string }) => {
-  const [businessStatisticsSelectedPeriod, setBusinessStatisticsSelectedPeriod] =
-    useState<StatisticsPeriodValue>("week");
-  const [businessStatisticsAppliedPeriod, setBusinessStatisticsAppliedPeriod] =
-    useState<StatisticsPeriodValue>("week");
-  const [businessStatisticsDraftRange, setBusinessStatisticsDraftRange] =
-    useState<StatisticsCustomRange>(() =>
-      getStatisticsRangeForPeriod("week", detail.header.created_at),
-    );
-  const [businessStatisticsAppliedRange, setBusinessStatisticsAppliedRange] =
-    useState<StatisticsCustomRange>(() =>
-      getStatisticsRangeForPeriod("week", detail.header.created_at),
-    );
-  const [businessStatisticsRangeError, setBusinessStatisticsRangeError] = useState<string | null>(
-    null,
-  );
-  const [communityStatisticsSelectedPeriod, setCommunityStatisticsSelectedPeriod] =
-    useState<StatisticsPeriodValue>("week");
-  const [communityStatisticsAppliedPeriod, setCommunityStatisticsAppliedPeriod] =
-    useState<StatisticsPeriodValue>("week");
-  const [communityStatisticsDraftRange, setCommunityStatisticsDraftRange] =
-    useState<StatisticsCustomRange>(() =>
-      getStatisticsRangeForPeriod("week", detail.header.created_at),
-    );
-  const [communityStatisticsAppliedRange, setCommunityStatisticsAppliedRange] =
-    useState<StatisticsCustomRange>(() =>
-      getStatisticsRangeForPeriod("week", detail.header.created_at),
-    );
-  const [communityStatisticsRangeError, setCommunityStatisticsRangeError] = useState<string | null>(
-    null,
-  );
+  const businessStatisticsFilter = useStatisticsPeriodFilter(detail.header.created_at);
+  const videoStatisticsFilter = useStatisticsPeriodFilter(detail.header.created_at);
+  const trafficStatisticsFilter = useStatisticsPeriodFilter(detail.header.created_at);
+  const platformStatisticsFilter = useStatisticsPeriodFilter(detail.header.created_at);
+  const communityStatisticsFilter = useStatisticsPeriodFilter(detail.header.created_at);
   const [communityStatisticsSelectedCommunity, setCommunityStatisticsSelectedCommunity] =
     useState("all");
-  const businessStatisticsPeriodQuery = useMemo(
-    () =>
-      buildStatisticsPeriodQuery(businessStatisticsAppliedPeriod, businessStatisticsAppliedRange),
-    [businessStatisticsAppliedPeriod, businessStatisticsAppliedRange],
-  );
   const communityStatisticsPeriodQuery = useMemo(
     () => ({
-      ...buildStatisticsPeriodQuery(
-        communityStatisticsAppliedPeriod,
-        communityStatisticsAppliedRange,
-      ),
+      ...communityStatisticsFilter.periodQuery,
       ...(communityStatisticsSelectedCommunity !== "all"
         ? { community: communityStatisticsSelectedCommunity }
         : {}),
     }),
-    [
-      communityStatisticsAppliedPeriod,
-      communityStatisticsAppliedRange,
-      communityStatisticsSelectedCommunity,
-    ],
+    [communityStatisticsFilter.periodQuery, communityStatisticsSelectedCommunity],
   );
-  const businessStatisticsQuery = useAdminPsychologistStatistics(id, businessStatisticsPeriodQuery);
+  const businessStatisticsQuery = useAdminPsychologistStatistics(
+    id,
+    businessStatisticsFilter.periodQuery,
+  );
+  const videoStatisticsQuery = useAdminPsychologistStatistics(
+    id,
+    videoStatisticsFilter.periodQuery,
+  );
+  const trafficStatisticsQuery = useAdminPsychologistStatistics(
+    id,
+    trafficStatisticsFilter.periodQuery,
+  );
+  const platformStatisticsQuery = useAdminPsychologistStatistics(
+    id,
+    platformStatisticsFilter.periodQuery,
+  );
   const communityStatisticsQuery = useAdminPsychologistStatistics(
     id,
     communityStatisticsPeriodQuery,
   );
+  const statisticsQueries = [
+    businessStatisticsQuery,
+    videoStatisticsQuery,
+    trafficStatisticsQuery,
+    platformStatisticsQuery,
+    communityStatisticsQuery,
+  ] as const;
   const [visibleBusinessMetricIds, setVisibleBusinessMetricIds] = useState<BusinessChartMetricId[]>(
     () => BUSINESS_CHART_METRICS.map((item) => item.id),
   );
@@ -3246,150 +3391,52 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: st
 
     return ids.length > 0 ? ids : COMMUNITY_CHART_METRICS.map((item) => item.id);
   }, [communityStatisticsQuery.data?.community.cards]);
-  const businessStatisticsErrorMessage = businessStatisticsQuery.error
-    ? resolveApiError(businessStatisticsQuery.error)
-    : null;
-  const communityStatisticsErrorMessage = communityStatisticsQuery.error
-    ? resolveApiError(communityStatisticsQuery.error)
-    : null;
-  const isInitialStatisticsLoading =
-    (businessStatisticsQuery.isLoading && !businessStatisticsQuery.data) ||
-    (communityStatisticsQuery.isLoading && !communityStatisticsQuery.data);
+  const isInitialStatisticsLoading = statisticsQueries.some(
+    (query) => query.isLoading && !query.data,
+  );
+  const initialStatisticsErrorMessage = statisticsQueries.reduce<string | null>(
+    (message, query) =>
+      message ||
+      (!query.data && query.isError && query.error ? resolveApiError(query.error) : null),
+    null,
+  );
   const isBusinessRefreshing =
     businessStatisticsQuery.isFetching && Boolean(businessStatisticsQuery.data);
+  const isVideoRefreshing = videoStatisticsQuery.isFetching && Boolean(videoStatisticsQuery.data);
+  const isTrafficRefreshing =
+    trafficStatisticsQuery.isFetching && Boolean(trafficStatisticsQuery.data);
+  const isPlatformRefreshing =
+    platformStatisticsQuery.isFetching && Boolean(platformStatisticsQuery.data);
   const isCommunityRefreshing =
     communityStatisticsQuery.isFetching && Boolean(communityStatisticsQuery.data);
-  const handleBusinessStatisticsPeriodChange = (period: StatisticsPeriodPreset) => {
-    const nextRange = getStatisticsRangeForPeriod(period, detail.header.created_at);
-    setBusinessStatisticsRangeError(null);
-    setBusinessStatisticsSelectedPeriod(period);
-    setBusinessStatisticsAppliedPeriod(period);
-    setBusinessStatisticsDraftRange(nextRange);
-    setBusinessStatisticsAppliedRange(nextRange);
-  };
-  const handleBusinessStatisticsDateChange = (
-    field: keyof StatisticsCustomRange,
-    value: string,
-  ) => {
-    setBusinessStatisticsRangeError(null);
-    setBusinessStatisticsSelectedPeriod("custom");
-    setBusinessStatisticsDraftRange((current) => ({
-      ...current,
-      [field]: value,
-    }));
-  };
-  const commitBusinessStatisticsRange = () => {
-    if (businessStatisticsSelectedPeriod !== "custom") return;
-
-    if (!isValidStatisticsRange(businessStatisticsDraftRange)) {
-      setBusinessStatisticsRangeError(
-        "Informe um período personalizado completo, com data inicial menor ou igual à final.",
-      );
-      return;
-    }
-
-    setBusinessStatisticsRangeError(null);
-    setBusinessStatisticsAppliedPeriod("custom");
-    setBusinessStatisticsAppliedRange(businessStatisticsDraftRange);
-  };
-  const handleBusinessStatisticsDateControlsBlur = (event: FocusEvent<HTMLDivElement>) => {
-    const currentTarget = event.currentTarget;
-    const nextFocusedElement = event.relatedTarget as Node | null;
-
-    if (nextFocusedElement && currentTarget.contains(nextFocusedElement)) return;
-
-    window.setTimeout(() => {
-      const activeElement = document.activeElement;
-
-      if (activeElement && currentTarget.contains(activeElement)) return;
-
-      commitBusinessStatisticsRange();
-    }, 0);
-  };
-  const handleCommunityStatisticsPeriodChange = (period: StatisticsPeriodPreset) => {
-    const nextRange = getStatisticsRangeForPeriod(period, detail.header.created_at);
-    setCommunityStatisticsRangeError(null);
-    setCommunityStatisticsSelectedPeriod(period);
-    setCommunityStatisticsAppliedPeriod(period);
-    setCommunityStatisticsDraftRange(nextRange);
-    setCommunityStatisticsAppliedRange(nextRange);
-  };
-  const handleCommunityStatisticsDateChange = (
-    field: keyof StatisticsCustomRange,
-    value: string,
-  ) => {
-    setCommunityStatisticsRangeError(null);
-    setCommunityStatisticsSelectedPeriod("custom");
-    setCommunityStatisticsDraftRange((current) => ({
-      ...current,
-      [field]: value,
-    }));
-  };
-  const commitCommunityStatisticsRange = () => {
-    if (communityStatisticsSelectedPeriod !== "custom") return;
-
-    if (!isValidStatisticsRange(communityStatisticsDraftRange)) {
-      setCommunityStatisticsRangeError(
-        "Informe um período personalizado completo, com data inicial menor ou igual à final.",
-      );
-      return;
-    }
-
-    setCommunityStatisticsRangeError(null);
-    setCommunityStatisticsAppliedPeriod("custom");
-    setCommunityStatisticsAppliedRange(communityStatisticsDraftRange);
-  };
-  const handleCommunityStatisticsDateControlsBlur = (event: FocusEvent<HTMLDivElement>) => {
-    const currentTarget = event.currentTarget;
-    const nextFocusedElement = event.relatedTarget as Node | null;
-
-    if (nextFocusedElement && currentTarget.contains(nextFocusedElement)) return;
-
-    window.setTimeout(() => {
-      const activeElement = document.activeElement;
-
-      if (activeElement && currentTarget.contains(activeElement)) return;
-
-      commitCommunityStatisticsRange();
-    }, 0);
+  const refetchStatisticsQueries = () => {
+    statisticsQueries.forEach((query) => {
+      void query.refetch();
+    });
   };
 
   if (isInitialStatisticsLoading) {
     return <EngagementLoadingState />;
   }
-  if (
-    businessStatisticsQuery.isError &&
-    businessStatisticsErrorMessage &&
-    !businessStatisticsQuery.data
-  ) {
+  if (initialStatisticsErrorMessage) {
     return (
-      <ErrorState
-        message={businessStatisticsErrorMessage}
-        onRetry={() => {
-          void businessStatisticsQuery.refetch();
-          void communityStatisticsQuery.refetch();
-        }}
-      />
+      <ErrorState message={initialStatisticsErrorMessage} onRetry={refetchStatisticsQueries} />
     );
   }
   if (
-    communityStatisticsQuery.isError &&
-    communityStatisticsErrorMessage &&
+    !businessStatisticsQuery.data ||
+    !videoStatisticsQuery.data ||
+    !trafficStatisticsQuery.data ||
+    !platformStatisticsQuery.data ||
     !communityStatisticsQuery.data
   ) {
-    return (
-      <ErrorState
-        message={communityStatisticsErrorMessage}
-        onRetry={() => {
-          void businessStatisticsQuery.refetch();
-          void communityStatisticsQuery.refetch();
-        }}
-      />
-    );
+    return null;
   }
-  if (!businessStatisticsQuery.data || !communityStatisticsQuery.data) return null;
 
   const businessStatistics = businessStatisticsQuery.data;
+  const videoStatistics = videoStatisticsQuery.data;
+  const trafficStatistics = trafficStatisticsQuery.data;
+  const platformStatistics = platformStatisticsQuery.data;
   const communityStatistics = communityStatisticsQuery.data;
   const businessMetricMap = new Map(
     businessStatistics.business.cards.map((metric) => [metric.id, metric]),
@@ -3474,12 +3521,12 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: st
             </div>
             <StatisticsPeriodControls
               idPrefix="business-statistics"
-              onDateControlsBlur={handleBusinessStatisticsDateControlsBlur}
-              onDateChange={handleBusinessStatisticsDateChange}
-              onPeriodChange={handleBusinessStatisticsPeriodChange}
-              period={businessStatisticsSelectedPeriod}
-              range={businessStatisticsDraftRange}
-              rangeError={businessStatisticsRangeError}
+              onDateControlsBlur={businessStatisticsFilter.handleDateControlsBlur}
+              onDateChange={businessStatisticsFilter.handleDateChange}
+              onPeriodChange={businessStatisticsFilter.handlePeriodChange}
+              period={businessStatisticsFilter.selectedPeriod}
+              range={businessStatisticsFilter.draftRange}
+              rangeError={businessStatisticsFilter.rangeError}
             />
           </div>
 
@@ -3502,11 +3549,54 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: st
           />
         </CardShell>
 
-        <StatisticsVideoCard detail={detail} statistics={businessStatistics} />
+        <StatisticsVideoCard
+          detail={detail}
+          isRefreshing={isVideoRefreshing}
+          periodControls={
+            <StatisticsPeriodControls
+              idPrefix="video-statistics"
+              onDateControlsBlur={videoStatisticsFilter.handleDateControlsBlur}
+              onDateChange={videoStatisticsFilter.handleDateChange}
+              onPeriodChange={videoStatisticsFilter.handlePeriodChange}
+              period={videoStatisticsFilter.selectedPeriod}
+              range={videoStatisticsFilter.draftRange}
+              rangeError={videoStatisticsFilter.rangeError}
+            />
+          }
+          statistics={videoStatistics}
+        />
 
-        <PsychologistTrafficSourcesCard statistics={businessStatistics} />
+        <PsychologistTrafficSourcesCard
+          isRefreshing={isTrafficRefreshing}
+          periodControls={
+            <StatisticsPeriodControls
+              idPrefix="traffic-statistics"
+              onDateControlsBlur={trafficStatisticsFilter.handleDateControlsBlur}
+              onDateChange={trafficStatisticsFilter.handleDateChange}
+              onPeriodChange={trafficStatisticsFilter.handlePeriodChange}
+              period={trafficStatisticsFilter.selectedPeriod}
+              range={trafficStatisticsFilter.draftRange}
+              rangeError={trafficStatisticsFilter.rangeError}
+            />
+          }
+          statistics={trafficStatistics}
+        />
 
-        <PsychologistPlatformUsageCard statistics={businessStatistics} />
+        <PsychologistPlatformUsageCard
+          isRefreshing={isPlatformRefreshing}
+          periodControls={
+            <StatisticsPeriodControls
+              idPrefix="platform-statistics"
+              onDateControlsBlur={platformStatisticsFilter.handleDateControlsBlur}
+              onDateChange={platformStatisticsFilter.handleDateChange}
+              onPeriodChange={platformStatisticsFilter.handlePeriodChange}
+              period={platformStatisticsFilter.selectedPeriod}
+              range={platformStatisticsFilter.draftRange}
+              rangeError={platformStatisticsFilter.rangeError}
+            />
+          }
+          statistics={platformStatistics}
+        />
       </section>
 
       <section aria-busy={isCommunityRefreshing} className="grid gap-5">
@@ -3557,12 +3647,12 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: st
                   </span>
                 </label>
               }
-              onDateControlsBlur={handleCommunityStatisticsDateControlsBlur}
-              onDateChange={handleCommunityStatisticsDateChange}
-              onPeriodChange={handleCommunityStatisticsPeriodChange}
-              period={communityStatisticsSelectedPeriod}
-              range={communityStatisticsDraftRange}
-              rangeError={communityStatisticsRangeError}
+              onDateControlsBlur={communityStatisticsFilter.handleDateControlsBlur}
+              onDateChange={communityStatisticsFilter.handleDateChange}
+              onPeriodChange={communityStatisticsFilter.handlePeriodChange}
+              period={communityStatisticsFilter.selectedPeriod}
+              range={communityStatisticsFilter.draftRange}
+              rangeError={communityStatisticsFilter.rangeError}
             />
           </div>
 

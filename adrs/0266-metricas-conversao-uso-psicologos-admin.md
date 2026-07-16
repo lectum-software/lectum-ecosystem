@@ -209,9 +209,8 @@ O grafico de retencao do video no Admin passa a exibir marcadores de tempo no ei
 
 Nao ha mudanca de fonte de dados, contrato de API, schema Prisma, migration, package, tracking first-party ou persistencia adicional.
 
-Validacao complementar 2026-07-16: `pnpm --dir admin check`, `pnpm --dir admin build` e smoke HTTP local `GET http://localhost:3002/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=estatisticas` retornando 200.
+Validacao complementar 2026-07-16: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke HTTP local `GET http://localhost:3002/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=estatisticas` retornando 200.
 
-`pnpm check` foi executado, mas ficou bloqueado por alteracao local nao relacionada em `admin/src/app/(admin)/comunidades/[slug]/client.tsx` (`TS2339: Property 'author' does not exist on type ...`).
 
 ## Complemento 2026-07-16 - Ordenacao por engajamento nas listas de conteudo
 

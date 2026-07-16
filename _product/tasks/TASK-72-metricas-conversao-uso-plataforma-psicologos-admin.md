@@ -857,8 +857,7 @@ Regras de cálculo:
 - Os blocos de negocio, video, trafego, uso da plataforma e comunidade passaram a usar filtros de periodo independentes via React Query, preservando `placeholderData` para atualizar apenas o bloco alterado sem recarregar a pagina inteira.
 - O endpoint real `GET /api/admin/private/psychologists/:id/statistics` continua sendo a unica fonte; nao houve endpoint paralelo, mock, dado fake, schema Prisma/migration, package novo ou alteracao de contrato.
 - Builder/Quick Copy nao esta exposto como ferramenta callable no ambiente; a referencia visual usada foi a captura enviada pelo usuario e o padrao ja consolidado dos cards de estatisticas.
-- Validacao executada: `pnpm --dir admin check`, `pnpm --dir admin build` e smoke HTTP local `GET http://localhost:3002/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=estatisticas` retornando 200.
-- `pnpm check` foi executado, mas ficou bloqueado por alteracao local nao relacionada em `admin/src/app/(admin)/comunidades/[slug]/client.tsx` (`TS2339: Property 'author' does not exist on type ...`).
+- Validacao executada: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke HTTP local `GET http://localhost:3002/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=estatisticas` retornando 200.
 
 ## Ajuste complementar 2026-07-16 - Ordenacao por engajamento em conteudo administrativo
 
