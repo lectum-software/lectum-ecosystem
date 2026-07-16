@@ -605,7 +605,7 @@ const PresentationVideoInsightsPanel = ({
         Visualizações, replays e interações reais iniciadas no vídeo de apresentação.
       </p>
     </div>
-    <div className="grid min-w-0 grid-cols-2 gap-2">
+    <div className="grid min-w-0 grid-cols-2 gap-2 md:grid-cols-3 xl:grid-cols-6">
       {metrics.map((metric) => (
         <PresentationVideoMetricCard key={metric.id} locked={locked} metric={metric} />
       ))}
@@ -1173,7 +1173,7 @@ const PresentationVideoAnalyticsSection = ({
       </div>
 
       <article className="grid min-w-0 gap-4 rounded-[26px] border border-primary/10 bg-primary-soft/55 p-4 md:grid-cols-[minmax(220px,0.8fr)_minmax(0,1.2fr)] md:items-start md:p-5">
-        <div className="grid min-w-0 gap-4 md:content-start">
+        <div className="min-w-0">
           <div className="min-w-0">
             <p className="text-xs font-black uppercase tracking-[0.14em] text-primary">
               Retenção do vídeo
@@ -1198,13 +1198,6 @@ const PresentationVideoAnalyticsSection = ({
               </p>
             ) : null}
           </div>
-          <PresentationVideoInsightsPanel
-            actions={presentationVideoActionMetrics}
-            className="hidden md:grid"
-            locked={locked}
-            metrics={presentationVideoCards}
-            retentionHealth={retentionHealth}
-          />
         </div>
 
         <div className="grid min-w-0 gap-4 rounded-[26px] border border-primary/10 bg-surface/90 p-3 shadow-[var(--lectum-shadow-soft)] md:p-4">
@@ -1236,7 +1229,7 @@ const PresentationVideoAnalyticsSection = ({
         </div>
         <PresentationVideoInsightsPanel
           actions={presentationVideoActionMetrics}
-          className="md:hidden"
+          className="md:col-span-2"
           locked={locked}
           metrics={presentationVideoCards}
           retentionHealth={retentionHealth}

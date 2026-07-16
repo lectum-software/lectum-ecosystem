@@ -137,3 +137,11 @@ No analytics privado do psicologo, o bloco de video deve aproveitar melhor telas
 A decisao reduz o vazio visual que aparecia abaixo do resumo de retencao em telas largas e mantem a regra de hierarquia definida anteriormente: visualizacoes, taxa de replays e acoes atribuidas ficam agrupadas, e o diagnostico continua abaixo dos contadores. Nao ha mudanca de fonte de dados, contrato de API, schema Prisma, tracking first-party ou package.
 
 Validacao complementar 2026-07-16: `pnpm --dir frontend check`, `pnpm --dir frontend build` e smoke HTTP local `GET http://localhost:3000/app/professional/analytics` retornando 307 pelo guard privado.
+
+## Complemento 2026-07-16 - Consumo e acoes abaixo do bloco de video
+
+No analytics privado do psicologo, o painel **Consumo e acoes do video** deve ficar abaixo do bloco de video, nao na coluna de contexto da retencao. A composicao final mantem o topo em duas areas em telas medias e maiores: resumo de retencao a esquerda e player/grafico a direita. O painel de consumo, acoes e diagnostico entra logo abaixo, com largura total da secao e grid responsivo de contadores.
+
+A decisao atende a hierarquia visual solicitada: primeiro o usuario ve o video e a curva de retencao; em seguida ve visualizacoes, replay, conversoes/interacoes atribuidas e diagnostico. Nao ha mudanca de fonte de dados, contrato de API, schema Prisma, tracking first-party ou package.
+
+Validacao complementar 2026-07-16: `pnpm --dir frontend check`, `pnpm --dir frontend build` e smoke HTTP local `GET http://localhost:3000/app/professional/analytics` retornando 307 pelo guard privado.
