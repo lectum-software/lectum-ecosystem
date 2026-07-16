@@ -81,6 +81,7 @@ export type AdminPsychologistReportsCard = {
 export type AdminPsychologistReportItem = {
   content: {
     available: boolean;
+    body: string;
     community: {
       id: string;
       name: string;
@@ -88,6 +89,10 @@ export type AdminPsychologistReportItem = {
     };
     excerpt: string;
     id: string;
+    media: {
+      media_type: string;
+      media_url: string;
+    } | null;
     public_url: string | null;
     title: string;
     type: "post" | "reply";
@@ -109,6 +114,7 @@ export type AdminPsychologistReportItem = {
   reason_label: string;
   reported_by: {
     label: string;
+    name: string;
     role: string;
   };
   status: string;

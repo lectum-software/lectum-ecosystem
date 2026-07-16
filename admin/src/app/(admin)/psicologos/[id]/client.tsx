@@ -8,6 +8,7 @@ import {
   BarChart3,
   Bookmark,
   BookOpen,
+  CalendarDays,
   CheckCircle2,
   ChevronDown,
   ChevronLeft,
@@ -4653,6 +4654,194 @@ type ReportModerationState = {
   report: AdminPsychologistReportItem;
 } | null;
 
+const psychologistReportTitle = (report: AdminPsychologistReportItem) => {
+  if (report.content.type === "post") return report.content.title;
+
+  return report.content.title || "Comentário";
+};
+
+const PsychologistReportMedia = ({ report }: { report: AdminPsychologistReportItem }) => {
+  if (!report.content.media) return null;
+
+  const src = report.content.media.media_url;
+  const mediaType = report.content.media.media_type.toLowerCase();
+  const isVideo = mediaType.startsWith("video") || /\.(mp4|webm|mov|m4v)$/i.test(src);
+  const looksLikeImage = mediaType.startsWith("image") || /\.(png|jpe?g|webp|gif)$/i.test(src);
+  const imageSrc = !isVideo ? renderableImageSrc(src) : null;
+  const videoSrc = isVideo ? resolveAdminMediaUrl(src) : null;
+  const mediaLabel = isVideo ? "Miniplayer de vídeo denunciado" : "Miniatura de mídia denunciada";
+
+  return (
+    <div
+      className={cn(
+        "relative w-full overflow-hidden rounded-2xl border border-border bg-surface-muted",
+        isVideo ? "aspect-[9/16] max-w-40" : "h-32 max-w-72",
+      )}
+    >
+      {imageSrc && looksLikeImage ? (
+        <Image
+          alt={mediaLabel}
+          className="object-cover"
+          fill
+          sizes="288px"
+          src={imageSrc}
+          unoptimized={isPublicAdminMediaSrc(imageSrc)}
+        />
+      ) : null}
+      {videoSrc ? <PublicationVideoMiniplayer label={mediaLabel} src={videoSrc} /> : null}
+      {!imageSrc && !videoSrc ? (
+        <div className="grid h-full place-items-center gap-1 p-3 text-center text-xs font-black text-muted">
+          <FileText aria-hidden className="mx-auto h-5 w-5" />
+          <span>Mídia denunciada</span>
+        </div>
+      ) : null}
+    </div>
+  );
+};
+
+const PsychologistReportReporterHistory = ({ report }: { report: AdminPsychologistReportItem }) => (
+  <section className="mt-5 border-t border-border/70 pt-4">
+    <h4 className="text-sm font-black text-foreground">Histórico de denunciantes</h4>
+    <div className="mt-3 divide-y divide-border/70">
+      <article
+        className="py-2 text-sm"
+        title={
+          report.reported_by.name +
+          " · " +
+          formatDateTime(report.created_at) +
+          " · Motivo: " +
+          report.reason_label +
+          (report.description ? " · " + report.description : "")
+        }
+      >
+        <div className="flex min-w-0 flex-wrap items-center gap-2">
+          <Badge className="bg-surface-muted text-muted">{report.reported_by.label}</Badge>
+          <span className="shrink-0 font-normal text-foreground">{report.reported_by.name}</span>
+          <span className="inline-flex shrink-0 items-center gap-1 text-xs font-bold text-muted">
+            <CalendarDays aria-hidden className="h-3.5 w-3.5" />
+            {formatDateTime(report.created_at)}
+          </span>
+          <span aria-hidden className="shrink-0 text-muted/70">
+            ·
+          </span>
+          <span className="min-w-0 truncate font-bold text-foreground">
+            Motivo: {report.reason_label}
+          </span>
+        </div>
+        {report.description ? (
+          <p className="mt-1 line-clamp-2 text-sm leading-5 text-muted">{report.description}</p>
+        ) : null}
+      </article>
+    </div>
+  </section>
+);
+
+const PsychologistReportActions = ({
+  onResolve,
+  report,
+}: {
+  onResolve: (action: ReportModerationAction) => void;
+  report: AdminPsychologistReportItem;
+}) => {
+  const hasResolutionActions =
+    report.capabilities.can_resolve_dismissed || report.capabilities.can_resolve_upheld;
+
+  if (!hasResolutionActions) {
+    return (
+      <div className="mt-5 flex flex-wrap items-center justify-end gap-2 border-t border-border/70 pt-4">
+        <span className="text-xs font-bold text-muted">Denúncia já encerrada:</span>
+        <ReportStatusBadge group={report.status_group} label={report.status_label} />
+      </div>
+    );
+  }
+
+  return (
+    <div className="mt-5 flex flex-col gap-2 border-t border-border/70 pt-4 sm:flex-row sm:justify-end">
+      {report.capabilities.can_resolve_dismissed ? (
+        <button
+          className="inline-flex min-h-11 items-center justify-center gap-2 rounded-control border border-success/30 bg-success/10 px-4 py-2 text-xs font-black text-success transition hover:bg-success/15"
+          onClick={() => onResolve("dismiss")}
+          type="button"
+        >
+          <CheckCircle2 aria-hidden className="h-4 w-4" />
+          Improcedente
+        </button>
+      ) : null}
+      {report.capabilities.can_resolve_upheld ? (
+        <button
+          className="inline-flex min-h-11 items-center justify-center gap-2 rounded-control border border-danger/30 bg-danger/10 px-4 py-2 text-xs font-black text-danger transition hover:bg-danger/15"
+          onClick={() => onResolve("uphold")}
+          type="button"
+        >
+          <ShieldCheck aria-hidden className="h-4 w-4" />
+          Procedente
+        </button>
+      ) : null}
+    </div>
+  );
+};
+
+const PsychologistReportListItem = ({
+  onResolve,
+  report,
+}: {
+  onResolve: (state: ReportModerationState) => void;
+  report: AdminPsychologistReportItem;
+}) => (
+  <article className="rounded-card border border-border/75 bg-surface/95 p-4 shadow-admin-soft md:p-5">
+    <div className="flex items-start justify-between gap-3">
+      <div className="flex flex-wrap items-center gap-2">
+        <Badge className="bg-surface-muted text-muted">{report.content.community.name}</Badge>
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-primary-soft px-2.5 py-1 text-xs font-black text-primary">
+          <AlertTriangle aria-hidden className="h-3.5 w-3.5" />1 denúncia
+        </span>
+        <span className="inline-flex items-center gap-1.5 text-xs font-bold text-muted">
+          <CalendarDays aria-hidden className="h-3.5 w-3.5" />
+          Última em {formatDateTime(report.created_at)}
+        </span>
+      </div>
+      {report.content.available && report.content.public_url ? (
+        <Link
+          aria-label="Ver conteúdo público"
+          className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-foreground/75 transition hover:text-foreground"
+          href={toPublicHref(report.content.public_url)}
+          rel="noreferrer"
+          target="_blank"
+          title="Ver conteúdo público"
+        >
+          <Eye aria-hidden className="h-4 w-4" />
+        </Link>
+      ) : null}
+    </div>
+    <section className="mt-4">
+      <p className="text-[0.68rem] font-black uppercase tracking-wide text-muted">
+        Conteúdo denunciado
+      </p>
+      <h3 className="mt-1 text-lg font-black text-foreground">{psychologistReportTitle(report)}</h3>
+      <div className="mt-3 space-y-4">
+        <div className="min-w-0 whitespace-pre-wrap text-sm font-bold leading-6 text-foreground">
+          {report.content.body || report.content.excerpt || "Conteúdo sem texto disponível."}
+        </div>
+        {report.content.media ? (
+          <div className="max-w-72">
+            <PsychologistReportMedia report={report} />
+          </div>
+        ) : null}
+      </div>
+      {!report.content.available ? (
+        <p className="mt-3 rounded-2xl border border-danger/15 bg-danger/10 p-3 text-xs font-bold leading-5 text-danger">
+          {report.content.unavailable_reason || "Conteúdo removido ou indisponível."}
+        </p>
+      ) : null}
+    </section>
+    <PsychologistReportReporterHistory report={report} />
+    <PsychologistReportActions
+      onResolve={(action) => onResolve({ action, report })}
+      report={report}
+    />
+  </article>
+);
+
 const ReportModerationDialog = ({
   id,
   onClose,
@@ -5102,122 +5291,27 @@ const ReportsTab = ({ id }: { id: string }) => {
         {rangeError ? <p className="mt-3 text-xs font-bold text-danger">{rangeError}</p> : null}
       </CardShell>
 
-      <CardShell className="overflow-hidden">
-        <div className="flex flex-col gap-2 border-b border-border p-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h2 className="text-xl font-black text-foreground">Denúncias recebidas</h2>
-            <p className="mt-1 text-sm text-muted">
-              Mostrando {numberFormatter.format(reports.data.length)} de{" "}
-              {numberFormatter.format(reports.count)} denúncias filtradas.
-            </p>
-          </div>
-          <Badge className="bg-primary-soft text-primary">Moderação auditada</Badge>
-        </div>
-
+      <section className="space-y-4" aria-label="Denúncias recebidas">
         {reports.data.length === 0 ? (
-          <p className="p-5 text-sm font-bold text-muted">
-            Nenhuma denúncia real encontrada para os filtros atuais.
-          </p>
+          <CardShell className="p-5">
+            <p className="text-sm font-bold text-muted">
+              Nenhuma denúncia real encontrada para os filtros atuais.
+            </p>
+          </CardShell>
         ) : (
-          <div className="divide-y divide-border">
-            {reports.data.map((item: AdminPsychologistReportItem) => (
-              <article className="grid gap-4 p-4 xl:grid-cols-[1fr_220px]" key={item.id}>
-                <div className="flex gap-3">
-                  <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-orange-50 text-orange-700">
-                    <AlertTriangle aria-hidden className="h-5 w-5" />
-                  </span>
-                  <div className="min-w-0">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <Badge className="bg-surface-muted text-muted">
-                        {item.content.type === "post" ? "Post" : "Resposta"}
-                      </Badge>
-                      <ReportStatusBadge group={item.status_group} label={item.status_label} />
-                      <span className="text-xs font-bold text-muted">
-                        {formatDateTime(item.created_at)}
-                      </span>
-                    </div>
-                    <h3 className="mt-2 font-black text-foreground">{item.content.title}</h3>
-                    <p className="mt-1 text-sm font-bold leading-6 text-muted">
-                      {item.content.excerpt}
-                    </p>
-                    <p className="mt-2 text-sm font-black text-foreground">
-                      Motivo: {item.reason_label}
-                    </p>
-                    {item.description ? (
-                      <p className="mt-1 text-sm font-bold leading-6 text-muted">
-                        Descrição: {item.description}
-                      </p>
-                    ) : null}
-                    {item.content.available && item.content.public_url ? (
-                      <a
-                        className="mt-3 inline-flex items-center gap-1 text-xs font-black text-primary"
-                        href={toPublicHref(item.content.public_url)}
-                        rel="noreferrer"
-                        target="_blank"
-                      >
-                        Ver detalhes
-                        <ExternalLink aria-hidden className="h-3.5 w-3.5" />
-                      </a>
-                    ) : (
-                      <p className="mt-3 rounded-2xl bg-surface-muted p-3 text-xs font-bold leading-5 text-muted">
-                        {item.content.unavailable_reason ??
-                          "Conteúdo indisponível nas listagens públicas."}
-                      </p>
-                    )}
-                  </div>
-                </div>
-                <dl className="rounded-2xl bg-surface-muted p-4 text-sm">
-                  <div>
-                    <dt className="font-black text-muted">Denunciado por</dt>
-                    <dd className="mt-1 font-black text-foreground">{item.reported_by.label}</dd>
-                  </div>
-                  <div className="mt-4">
-                    <dt className="font-black text-muted">Comunidade</dt>
-                    <dd className="mt-1 font-black text-foreground">
-                      {item.content.community.name}
-                    </dd>
-                  </div>
-                  <div className="mt-4 border-t border-border pt-4">
-                    <dt className="font-black text-muted">Moderação</dt>
-                    <dd className="mt-3 grid gap-2">
-                      {item.capabilities.can_resolve_dismissed ? (
-                        <button
-                          className="inline-flex min-h-10 items-center justify-center gap-2 rounded-control border border-success/30 bg-emerald-50 px-3 py-2 text-xs font-black text-success transition hover:bg-emerald-100"
-                          onClick={() => setModerationState({ action: "dismiss", report: item })}
-                          type="button"
-                        >
-                          <CheckCircle2 aria-hidden className="h-4 w-4" />
-                          Improcedente
-                        </button>
-                      ) : null}
-                      {item.capabilities.can_resolve_upheld ? (
-                        <button
-                          className="inline-flex min-h-10 items-center justify-center gap-2 rounded-control border border-danger/30 bg-red-50 px-3 py-2 text-xs font-black text-danger transition hover:bg-red-100"
-                          onClick={() => setModerationState({ action: "uphold", report: item })}
-                          type="button"
-                        >
-                          <ShieldCheck aria-hidden className="h-4 w-4" />
-                          Procedente
-                        </button>
-                      ) : null}
-                      {!item.capabilities.can_resolve_dismissed &&
-                      !item.capabilities.can_resolve_upheld ? (
-                        <span className="rounded-2xl bg-surface px-3 py-2 text-xs font-bold text-muted">
-                          Denúncia já encerrada.
-                        </span>
-                      ) : null}
-                    </dd>
-                  </div>
-                </dl>
-              </article>
-            ))}
-          </div>
+          reports.data.map((item: AdminPsychologistReportItem) => (
+            <PsychologistReportListItem
+              key={item.id}
+              onResolve={setModerationState}
+              report={item}
+            />
+          ))
         )}
 
-        <div className="border-t border-border p-4">
+        <CardShell className="p-4">
           <PublicationsPagination page={reports.page} pages={reports.pages} setPage={setPage} />
-        </div>
-      </CardShell>
+        </CardShell>
+      </section>
 
       {moderationState ? (
         <ReportModerationDialog

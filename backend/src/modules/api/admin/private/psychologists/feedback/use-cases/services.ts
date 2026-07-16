@@ -427,6 +427,28 @@ const reportTitle = (report: AdminPsychologistReportRecord) => {
 const reportContent = (report: AdminPsychologistReportRecord) =>
   report.reply ? report.reply.content : report.post.content;
 
+const reportMedia = (report: AdminPsychologistReportRecord) => {
+  if (report.reply) {
+    if (!report.reply.media_url || !report.reply.media_type) return null;
+
+    return {
+      media_type: report.reply.media_type,
+      media_url: report.reply.media_url,
+    };
+  }
+
+  const firstMedia = report.post.media_items[0];
+  const mediaUrl = firstMedia?.media_url ?? report.post.media_url;
+  const mediaType = firstMedia?.media_type ?? report.post.media_type;
+
+  if (!mediaUrl || !mediaType) return null;
+
+  return {
+    media_type: mediaType,
+    media_url: mediaUrl,
+  };
+};
+
 const reportTargetId = (report: AdminPsychologistReportRecord) =>
   report.reply ? report.reply.id : report.post.id;
 
@@ -465,9 +487,11 @@ const toReportItem = (report: AdminPsychologistReportRecord): AdminPsychologistR
     },
     content: {
       available,
+      body: reportContent(report),
       community: safeCommunity(report),
       excerpt: excerpt(reportContent(report)),
       id: reportTargetId(report),
+      media: reportMedia(report),
       public_url: reportPublicUrl(report),
       title: reportTitle(report),
       type,
@@ -484,6 +508,7 @@ const toReportItem = (report: AdminPsychologistReportRecord): AdminPsychologistR
     reason_label: reasonLabel(report.reason),
     reported_by: {
       label: roleLabel(report.reporter.role),
+      name: report.reporter.name,
       role: report.reporter.role,
     },
     status: report.status,

@@ -58,6 +58,20 @@ const reportSelect = {
       deleted: true,
       deletedAt: true,
       id: true,
+      media_items: {
+        orderBy: [{ position: "asc" }, { createdAt: "asc" }, { id: "asc" }],
+        select: {
+          id: true,
+          media_type: true,
+          media_url: true,
+          position: true,
+        },
+        where: {
+          deleted: false,
+        },
+      },
+      media_type: true,
+      media_url: true,
       replies_count: true,
       status: true,
       title: true,
@@ -73,6 +87,8 @@ const reportSelect = {
       deleted: true,
       deletedAt: true,
       id: true,
+      media_type: true,
+      media_url: true,
       parent_reply_id: true,
       post_id: true,
       title: true,
@@ -93,6 +109,7 @@ const reportSelect = {
   },
   reporter: {
     select: {
+      name: true,
       role: true,
     },
   },
