@@ -312,3 +312,13 @@ Regras:
 - Builder/Quick Copy nao esta exposto como ferramenta callable no ambiente; a referencia visual usada foi a captura enviada pelo usuario e o padrao local do Admin/site publico.
 - ADR atualizado: `adrs/0264-admin-comunidade-abas-conteudo-ranking.md`.
 - Validacao executada: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke local `GET http://localhost:3002/comunidades/autocuidado-em-pratica?tab=conteudo` retornando 200.
+
+## Ajuste complementar 2026-07-16 - Paginacao padrao no Conteudo
+
+- Pedido do usuario: na aba **Conteudo** do detalhe administrativo de comunidade, trocar a barra de navegacao de paginas para o formato padrao do painel, igual ao usado na aba **Publicacoes** do detalhe de psicologo.
+- O componente compartilhado de paginacao do detalhe de comunidade deixou de exibir o texto `Pagina X de Y` com botoes grandes `Anterior`/`Proxima` e passou a renderizar controles centralizados com setas icon-only, pagina atual destacada e janela de ate 5 paginas.
+- A mudanca e mobile-first e preserva a paginacao real ja retornada pela API; nao houve endpoint novo, mock, schema Prisma/migration, package novo ou alteracao de persistencia.
+- Builder/Quick Copy nao esta exposto como ferramenta callable no ambiente; a referencia visual usada foi a captura enviada pelo usuario e o padrao local da aba **Publicacoes** do detalhe de psicologo.
+- ADR atualizado: `adrs/0264-admin-comunidade-abas-conteudo-ranking.md`.
+- Validacao executada: `pnpm --dir admin exec biome check "src/app/(admin)/comunidades/[slug]/client.tsx"`, `pnpm --dir admin build` e smoke local `GET http://localhost:3002/comunidades/autocuidado-em-pratica?tab=conteudo` retornando 200.
+- Observacao de validacao: `pnpm --dir admin check` completo nao concluiu porque ha pendencias preexistentes nao relacionadas em `admin/src/app/(admin)/psicologos/[id]/client.tsx` (imports/variaveis nao usados na arvore de trabalho antes deste ajuste).

@@ -8,6 +8,8 @@ import {
   Bookmark,
   CalendarDays,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   Edit3,
   Eye,
   GripVertical,
@@ -1553,31 +1555,57 @@ const PaginationControls = ({
   page: number;
   pages: number;
   setPage: (page: number) => void;
-}) => (
-  <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-    <p className="text-xs font-bold text-muted">
-      Página {numberFormatter.format(page)} de {numberFormatter.format(pages)}
-    </p>
-    <div className="flex gap-2">
+}) => {
+  const safePages = Math.max(1, pages);
+  const currentPage = Math.min(Math.max(1, page), safePages);
+  const start = Math.min(Math.max(currentPage - 2, 1), Math.max(safePages - 4, 1));
+
+  return (
+    <div className="flex flex-wrap items-center justify-center gap-2">
       <button
-        className="h-10 rounded-control border border-border bg-surface px-4 text-xs font-black text-foreground disabled:opacity-40"
-        disabled={page <= 1}
-        onClick={() => setPage(page - 1)}
+        aria-label="Página anterior"
+        className="grid h-10 w-10 place-items-center rounded-control border border-border bg-surface text-foreground disabled:opacity-40"
+        disabled={currentPage <= 1}
+        onClick={() => setPage(Math.max(1, currentPage - 1))}
+        title="Página anterior"
         type="button"
       >
-        Anterior
+        <ChevronLeft aria-hidden className="h-4 w-4" />
       </button>
+      {Array.from({ length: Math.min(5, safePages) }, (_, index) => {
+        const itemPage = start + index;
+        if (itemPage > safePages) return null;
+
+        return (
+          <button
+            aria-current={itemPage === currentPage ? "page" : undefined}
+            className={cn(
+              "h-10 min-w-10 rounded-control border px-3 text-sm font-black",
+              itemPage === currentPage
+                ? "border-primary bg-primary text-white"
+                : "border-border bg-surface text-foreground",
+            )}
+            key={itemPage}
+            onClick={() => setPage(itemPage)}
+            type="button"
+          >
+            {numberFormatter.format(itemPage)}
+          </button>
+        );
+      })}
       <button
-        className="h-10 rounded-control border border-border bg-surface px-4 text-xs font-black text-foreground disabled:opacity-40"
-        disabled={page >= pages}
-        onClick={() => setPage(page + 1)}
+        aria-label="Próxima página"
+        className="grid h-10 w-10 place-items-center rounded-control border border-border bg-surface text-foreground disabled:opacity-40"
+        disabled={currentPage >= safePages}
+        onClick={() => setPage(Math.min(safePages, currentPage + 1))}
+        title="Próxima página"
         type="button"
       >
-        Próxima
+        <ChevronRight aria-hidden className="h-4 w-4" />
       </button>
     </div>
-  </div>
-);
+  );
+};
 
 const QueryStatus = ({
   error,
@@ -1909,26 +1937,6 @@ const ContentVideoMiniplayer = ({ label, src }: { label: string; src: string }) 
   );
 };
 
-const ContentOriginPreview = ({ item }: { item: AdminCommunityContentItem }) => {
-  if (!item.origin_preview) return null;
-
-  const origin = item.origin_preview;
-
-  return (
-    <blockquote className="mt-3 overflow-hidden rounded-2xl border border-primary/10 bg-primary-soft/40 px-4 py-3">
-      <p className="text-[11px] font-black uppercase tracking-[0.08em] text-primary">
-        {origin.label}
-      </p>
-      {origin.title ? (
-        <p className="mt-1 line-clamp-1 text-xs font-black text-foreground">{origin.title}</p>
-      ) : null}
-      <p className="mt-1 line-clamp-2 text-xs font-semibold leading-5 text-muted">
-        {origin.excerpt || "Sem texto."}
-      </p>
-    </blockquote>
-  );
-};
-
 const WhatsAppIcon = ({ className, ...props }: SVGProps<SVGSVGElement>) => (
   <svg
     className={cn("h-4 w-4 shrink-0", className)}
@@ -2091,7 +2099,6 @@ const ContentItemMain = ({ item }: { item: AdminCommunityContentItem }) => {
     return (
       <div className="min-w-0">
         <ContentItemHeader item={item} />
-        <ContentOriginPreview item={item} />
         <ContentAuthorIdentity className="mt-3" item={item} />
         <div className={mediaTextGridClass}>
           <ContentMediaThumbnail item={item} />

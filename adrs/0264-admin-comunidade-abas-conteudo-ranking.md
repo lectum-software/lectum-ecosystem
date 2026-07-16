@@ -239,3 +239,13 @@ O tempo atual do video e preservado entre o miniplayer e o overlay ampliado. Se 
 Consequencia: a correcao fica isolada na apresentacao do Admin, sem novo endpoint, dependencia, schema Prisma, migration ou alteracao de persistencia. O trade-off e substituir o botao nativo de fullscreen por uma acao visual propria, mais controlavel e consistente para videos verticais.
 
 Validacao desta atualizacao: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke local `GET http://localhost:3002/comunidades/autocuidado-em-pratica?tab=conteudo` retornando 200.
+
+## Atualizacao 2026-07-16: paginacao padrao no conteudo administrativo de comunidade
+
+A navegacao de paginas usada no detalhe administrativo de comunidade passa a seguir o mesmo padrao visual da aba **Publicacoes** do detalhe administrativo de psicologo: controles centralizados, setas icon-only e pagina atual destacada como botao primario.
+
+A decisao remove a leitura antiga `Pagina X de Y` com botoes textuais grandes `Anterior`/`Proxima`, que destoava do restante do painel. O componente preserva a fonte real de paginacao retornada pelos endpoints e limita a janela visual a ate 5 paginas para manter a barra compacta em mobile e desktop.
+
+Consequencia: a mudanca e exclusivamente visual no Admin, sem novo endpoint, schema Prisma, migration, dependencia, mock ou alteracao de persistencia.
+
+Validacao desta atualizacao: `pnpm --dir admin exec biome check "src/app/(admin)/comunidades/[slug]/client.tsx"`, `pnpm --dir admin build` e smoke local `GET http://localhost:3002/comunidades/autocuidado-em-pratica?tab=conteudo` retornando 200. O `pnpm --dir admin check` completo ficou bloqueado por pendencias preexistentes em `admin/src/app/(admin)/psicologos/[id]/client.tsx`, fora do escopo desta decisao.
