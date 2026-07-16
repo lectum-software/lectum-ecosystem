@@ -1754,7 +1754,7 @@ const CommunityStatusControl = ({
         active: false,
         cta: "Desativar comunidade",
         description:
-          "A comunidade deixa de aparecer no produto para pacientes e psicologos. O Admin continua exibindo a comunidade para auditoria e reativacao.",
+          "A comunidade deixa de aparecer publicamente mas continua sendo exibida no painel administrativo para auditoria e reativação.",
         expectedConfirmation: COMMUNITY_DEACTIVATE_CONFIRMATION,
         title: "Desativar comunidade",
       }
