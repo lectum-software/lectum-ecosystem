@@ -849,3 +849,13 @@ Regras de cálculo:
 - O ajuste é exclusivamente textual/visual, mobile-first, sem endpoint novo, mock, package, schema Prisma/migration, alteração de contrato de API ou persistência.
 - Builder/Quick Copy não está exposto como ferramenta callable no ambiente; a referência usada foi a solicitação textual do usuário e o layout já consolidado do Admin.
 - Validação executada: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke HTTP local `GET http://localhost:3002/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=estatisticas` retornando 200.
+
+## Ajuste complementar 2026-07-16 - Filtros independentes em video, trafego e uso no Admin
+
+- Pedido do usuario: na aba **Estatisticas** do detalhe administrativo do psicologo, adicionar minutos no eixo X do grafico de retencao do video e dar filtros de data proprios para **Analises do video de apresentacao**, **Origem do trafego** e **Uso da plataforma**.
+- O grafico de retencao do Admin agora exibe marcadores de tempo no eixo X: inicio, meio e fim quando ha duracao real do video; sem duracao, exibe `0:00` e `Fim`.
+- Os blocos de negocio, video, trafego, uso da plataforma e comunidade passaram a usar filtros de periodo independentes via React Query, preservando `placeholderData` para atualizar apenas o bloco alterado sem recarregar a pagina inteira.
+- O endpoint real `GET /api/admin/private/psychologists/:id/statistics` continua sendo a unica fonte; nao houve endpoint paralelo, mock, dado fake, schema Prisma/migration, package novo ou alteracao de contrato.
+- Builder/Quick Copy nao esta exposto como ferramenta callable no ambiente; a referencia visual usada foi a captura enviada pelo usuario e o padrao ja consolidado dos cards de estatisticas.
+- Validacao executada: `pnpm --dir admin check`, `pnpm --dir admin build` e smoke HTTP local `GET http://localhost:3002/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=estatisticas` retornando 200.
+- `pnpm check` foi executado, mas ficou bloqueado por alteracao local nao relacionada em `admin/src/app/(admin)/comunidades/[slug]/client.tsx` (`TS2339: Property 'author' does not exist on type ...`).

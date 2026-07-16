@@ -556,6 +556,14 @@ const PUBLICATIONS_PERIOD_OPTIONS: { id: PublicationsPeriodValue; label: string 
   { id: "custom", label: "Personalizado" },
 ];
 
+type PublicationSortValue = NonNullable<AdminPsychologistPublicationsQuery["sort"]>;
+
+const PUBLICATIONS_SORT_OPTIONS: { id: PublicationSortValue; label: string }[] = [
+  { id: "engagement", label: "Mais engajados" },
+  { id: "recent", label: "Mais recentes" },
+  { id: "oldest", label: "Mais antigos" },
+];
+
 const CARD = "rounded-card border border-border/80 bg-surface/95 shadow-admin-soft backdrop-blur";
 const COURTESY_GRANT_CONFIRMATION = "CONCEDER CORTESIA";
 
@@ -4151,6 +4159,7 @@ const PublicationsTab = ({ createdAt, id }: { createdAt: string; id: string }) =
   const [q, setQ] = useState("");
   const [community, setCommunity] = useState("all");
   const [type, setType] = useState<AdminPsychologistPublicationsQuery["type"]>("all");
+  const [sort, setSort] = useState<PublicationSortValue>("engagement");
   const [selectedPeriod, setSelectedPeriod] = useState<PublicationsPeriodValue>("all");
   const [appliedPeriod, setAppliedPeriod] = useState<PublicationsPeriodValue>("all");
   const [draftRange, setDraftRange] = useState<PublicationsCustomRange>(() =>
@@ -4173,10 +4182,11 @@ const PublicationsTab = ({ createdAt, id }: { createdAt: string; id: string }) =
       page,
       period: appliedPeriod,
       q: q || undefined,
+      sort,
       to: appliedPeriod === "custom" ? appliedRange.to : undefined,
       type,
     }),
-    [appliedPeriod, appliedRange.from, appliedRange.to, community, page, q, type],
+    [appliedPeriod, appliedRange.from, appliedRange.to, community, page, q, sort, type],
   );
   const query = useAdminPsychologistPublications(id, queryInput);
   const errorMessage = query.error ? resolveApiError(query.error) : null;
@@ -4342,6 +4352,31 @@ const PublicationsTab = ({ createdAt, id }: { createdAt: string; id: string }) =
               {numberFormatter.format(publications.count)} registros.
             </p>
           </div>
+          <label
+            className="relative flex h-11 w-full items-center gap-2 rounded-control border border-border bg-surface px-3 pr-10 text-xs font-black text-muted sm:w-64"
+            htmlFor="publications-sort"
+          >
+            <span className="shrink-0">Ordenar</span>
+            <select
+              className="min-w-0 flex-1 appearance-none bg-transparent text-sm font-bold text-foreground outline-none"
+              id="publications-sort"
+              onChange={(event) => {
+                setSort(event.target.value as PublicationSortValue);
+                resetToFirstPage();
+              }}
+              value={sort}
+            >
+              {PUBLICATIONS_SORT_OPTIONS.map((option) => (
+                <option key={option.id} value={option.id}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+            <ChevronDown
+              aria-hidden
+              className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted"
+            />
+          </label>
         </div>
 
         <div className="mt-5 space-y-3">
@@ -4696,9 +4731,43 @@ type ReportModerationState = {
 } | null;
 
 const psychologistReportTitle = (report: AdminPsychologistReportItem) => {
-  if (report.content.type === "post") return report.content.title;
+  if (report.content.type === "post") return report.content.title?.trim() || "Post sem título";
 
-  return report.content.title || "Comentário";
+  const title = report.content.title?.trim();
+  const normalizedTitle = title?.toLowerCase();
+
+  return normalizedTitle && !["comentário", "comentario"].includes(normalizedTitle) ? title : null;
+};
+
+const PsychologistReportContentAuthor = ({ report }: { report: AdminPsychologistReportItem }) => {
+  const avatarSrc = renderableImageSrc(report.content.author.avatar);
+
+  return (
+    <div className="mt-2 flex min-w-0 items-center gap-2.5">
+      <div className="relative grid h-9 w-9 shrink-0 place-items-center overflow-hidden rounded-full border border-border bg-primary-soft text-xs font-black text-primary">
+        {avatarSrc ? (
+          <Image
+            alt={`Foto de perfil de ${report.content.author.name}`}
+            className="object-cover"
+            fill
+            sizes="36px"
+            src={avatarSrc}
+            unoptimized={isPublicAdminMediaSrc(avatarSrc)}
+          />
+        ) : (
+          initials(report.content.author.name)
+        )}
+      </div>
+      <div className="min-w-0">
+        <span className="block truncate text-sm font-bold text-foreground">
+          {report.content.author.name}
+        </span>
+        <span className="block text-xs font-bold text-muted">
+          {report.content.author.role_label}
+        </span>
+      </div>
+    </div>
+  );
 };
 
 const PsychologistReportMedia = ({ report }: { report: AdminPsychologistReportItem }) => {
@@ -4789,7 +4858,7 @@ const PsychologistReportActions = ({
         <ReportStatusBadge group={report.status_group} label={report.status_label} />
         {report.capabilities.can_review_resolution ? (
           <button
-            className="inline-flex min-h-9 items-center justify-center gap-2 rounded-control border border-border bg-surface px-3 py-1.5 text-xs font-black text-foreground transition hover:bg-surface-muted"
+            className="inline-flex min-h-9 items-center justify-center gap-1.5 rounded-full border border-border/80 bg-surface px-3.5 py-1.5 text-xs font-bold text-foreground/85 shadow-sm transition hover:border-primary/30 hover:bg-primary-soft/40 hover:text-primary"
             onClick={() => onResolve("review")}
             type="button"
           >
@@ -4805,21 +4874,21 @@ const PsychologistReportActions = ({
     <div className="mt-5 flex flex-col gap-2 border-t border-border/70 pt-4 sm:flex-row sm:justify-end">
       {report.capabilities.can_resolve_dismissed ? (
         <button
-          className="inline-flex min-h-11 items-center justify-center gap-2 rounded-control border border-success/30 bg-success/10 px-4 py-2 text-xs font-black text-success transition hover:bg-success/15"
+          className="inline-flex min-h-9 items-center justify-center gap-1.5 rounded-full border border-success/25 bg-success/5 px-3.5 py-1.5 text-xs font-bold text-success shadow-sm transition hover:border-success/40 hover:bg-success/10"
           onClick={() => onResolve("dismiss")}
           type="button"
         >
-          <CheckCircle2 aria-hidden className="h-4 w-4" />
+          <CheckCircle2 aria-hidden className="h-3.5 w-3.5" />
           Improcedente
         </button>
       ) : null}
       {report.capabilities.can_resolve_upheld ? (
         <button
-          className="inline-flex min-h-11 items-center justify-center gap-2 rounded-control border border-danger/30 bg-danger/10 px-4 py-2 text-xs font-black text-danger transition hover:bg-danger/15"
+          className="inline-flex min-h-9 items-center justify-center gap-1.5 rounded-full border border-danger/25 bg-danger/5 px-3.5 py-1.5 text-xs font-bold text-danger shadow-sm transition hover:border-danger/40 hover:bg-danger/10"
           onClick={() => onResolve("uphold")}
           type="button"
         >
-          <ShieldCheck aria-hidden className="h-4 w-4" />
+          <ShieldCheck aria-hidden className="h-3.5 w-3.5" />
           Procedente
         </button>
       ) : null}
@@ -4833,61 +4902,66 @@ const PsychologistReportListItem = ({
 }: {
   onResolve: (state: ReportModerationState) => void;
   report: AdminPsychologistReportItem;
-}) => (
-  <article className="rounded-card border border-border/75 bg-surface/95 p-4 shadow-admin-soft md:p-5">
-    <div className="flex items-start justify-between gap-3">
-      <div className="flex flex-wrap items-center gap-2">
-        <Badge className="bg-surface-muted text-muted">{report.content.community.name}</Badge>
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-primary-soft px-2.5 py-1 text-xs font-black text-primary">
-          <AlertTriangle aria-hidden className="h-3.5 w-3.5" />1 denúncia
-        </span>
-        <ReportStatusBadge group={report.status_group} label={report.status_label} />
-        <span className="inline-flex items-center gap-1.5 text-xs font-bold text-muted">
-          <CalendarDays aria-hidden className="h-3.5 w-3.5" />
-          Última em {formatDateTime(report.created_at)}
-        </span>
-      </div>
-      {report.content.available && report.content.public_url ? (
-        <Link
-          aria-label="Ver conteúdo público"
-          className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-foreground/75 transition hover:text-foreground"
-          href={toPublicHref(report.content.public_url)}
-          rel="noreferrer"
-          target="_blank"
-          title="Ver conteúdo público"
-        >
-          <Eye aria-hidden className="h-4 w-4" />
-        </Link>
-      ) : null}
-    </div>
-    <section className="mt-4">
-      <p className="text-[0.68rem] font-black uppercase tracking-wide text-muted">
-        Conteúdo denunciado
-      </p>
-      <h3 className="mt-1 text-lg font-black text-foreground">{psychologistReportTitle(report)}</h3>
-      <div className="mt-3 space-y-4">
-        <div className="min-w-0 whitespace-pre-wrap text-sm font-bold leading-6 text-foreground">
-          {report.content.body || report.content.excerpt || "Conteúdo sem texto disponível."}
+}) => {
+  const title = psychologistReportTitle(report);
+
+  return (
+    <article className="rounded-card border border-border/75 bg-surface/95 p-4 shadow-admin-soft md:p-5">
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex flex-wrap items-center gap-2">
+          <Badge className="bg-surface-muted text-muted">{report.content.community.name}</Badge>
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-primary-soft px-2.5 py-1 text-xs font-black text-primary">
+            <AlertTriangle aria-hidden className="h-3.5 w-3.5" />1 denúncia
+          </span>
+          <ReportStatusBadge group={report.status_group} label={report.status_label} />
+          <span className="inline-flex items-center gap-1.5 text-xs font-bold text-muted">
+            <CalendarDays aria-hidden className="h-3.5 w-3.5" />
+            Última em {formatDateTime(report.created_at)}
+          </span>
         </div>
-        {report.content.media ? (
-          <div className="max-w-72">
-            <PsychologistReportMedia report={report} />
-          </div>
+        {report.content.available && report.content.public_url ? (
+          <Link
+            aria-label="Ver conteúdo público"
+            className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-foreground/75 transition hover:text-foreground"
+            href={toPublicHref(report.content.public_url)}
+            rel="noreferrer"
+            target="_blank"
+            title="Ver conteúdo público"
+          >
+            <Eye aria-hidden className="h-4 w-4" />
+          </Link>
         ) : null}
       </div>
-      {!report.content.available ? (
-        <p className="mt-3 rounded-2xl border border-danger/15 bg-danger/10 p-3 text-xs font-bold leading-5 text-danger">
-          {report.content.unavailable_reason || "Conteúdo removido ou indisponível."}
+      <section className="mt-4">
+        <p className="text-[0.68rem] font-black uppercase tracking-wide text-muted">
+          Conteúdo denunciado
         </p>
-      ) : null}
-    </section>
-    <PsychologistReportReporterHistory report={report} />
-    <PsychologistReportActions
-      onResolve={(action) => onResolve({ action, report })}
-      report={report}
-    />
-  </article>
-);
+        <PsychologistReportContentAuthor report={report} />
+        {title ? <h3 className="mt-3 text-lg font-black text-foreground">{title}</h3> : null}
+        <div className="mt-3 space-y-4">
+          <div className="min-w-0 whitespace-pre-wrap text-sm font-bold leading-6 text-foreground">
+            {report.content.body || report.content.excerpt || "Conteúdo sem texto disponível."}
+          </div>
+          {report.content.media ? (
+            <div className="max-w-72">
+              <PsychologistReportMedia report={report} />
+            </div>
+          ) : null}
+        </div>
+        {!report.content.available ? (
+          <p className="mt-3 rounded-2xl border border-danger/15 bg-danger/10 p-3 text-xs font-bold leading-5 text-danger">
+            {report.content.unavailable_reason || "Conteúdo removido ou indisponível."}
+          </p>
+        ) : null}
+      </section>
+      <PsychologistReportReporterHistory report={report} />
+      <PsychologistReportActions
+        onResolve={(action) => onResolve({ action, report })}
+        report={report}
+      />
+    </article>
+  );
+};
 
 const ReportModerationDialog = ({
   id,

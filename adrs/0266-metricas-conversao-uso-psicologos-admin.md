@@ -198,3 +198,17 @@ Os blocos **Estatísticas de negócio** e **Estatísticas de comunidade** no det
 A decisão é exclusivamente textual e de hierarquia de leitura: os contadores continuam clicáveis e os gráficos, filtros, endpoints, contratos e fontes first-party reais permanecem inalterados.
 
 Validação complementar 2026-07-16: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke HTTP local `GET http://localhost:3002/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=estatisticas` retornando 200.
+
+## Complemento 2026-07-16 - Filtros independentes em blocos adicionais do detalhe Admin
+
+Os blocos **Analises do video de apresentacao**, **Origem do trafego** e **Uso da plataforma** no detalhe administrativo do psicologo devem ter filtros de periodo proprios, independentes dos filtros de **Estatisticas de negocio** e **Estatisticas de comunidade**.
+
+A decisao preserva o contrato existente: cada bloco usa o mesmo endpoint real `GET /api/admin/private/psychologists/:id/statistics`, mas com uma query React Query propria para o periodo selecionado. Com `placeholderData`, a troca de periodo mantem o bloco visivel e atualiza somente os contadores/grafico relacionados ao bloco alterado, sem estado global de pagina ou reload completo.
+
+O grafico de retencao do video no Admin passa a exibir marcadores de tempo no eixo X derivados da duracao real do video quando disponivel. Na ausencia de metadados de duracao, o fallback permanece honesto com `0:00` e `Fim`, sem estimar tempo inexistente.
+
+Nao ha mudanca de fonte de dados, contrato de API, schema Prisma, migration, package, tracking first-party ou persistencia adicional.
+
+Validacao complementar 2026-07-16: `pnpm --dir admin check`, `pnpm --dir admin build` e smoke HTTP local `GET http://localhost:3002/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=estatisticas` retornando 200.
+
+`pnpm check` foi executado, mas ficou bloqueado por alteracao local nao relacionada em `admin/src/app/(admin)/comunidades/[slug]/client.tsx` (`TS2339: Property 'author' does not exist on type ...`).
