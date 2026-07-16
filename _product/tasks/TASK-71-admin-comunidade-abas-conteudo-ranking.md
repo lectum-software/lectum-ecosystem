@@ -399,3 +399,16 @@ Regras:
 - Builder/Quick Copy nao esta exposto como ferramenta callable no ambiente; a referencia visual usada foi a captura enviada pelo usuario e o padrao local da aba **Atividades** de psicologos.
 - ADR atualizado: `adrs/0264-admin-comunidade-abas-conteudo-ranking.md`.
 - Validacao executada: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke HTTP local `GET http://127.0.0.1:3012/comunidades/relacionamentos-com-proposito?tab=atividades` retornando 200.
+
+## Ajuste complementar 2026-07-16 - Aba Estatisticas da comunidade
+
+- Pedido do usuario: criar uma aba de estatisticas da comunidade com contadores e graficos para seguidores, usuarios ativos, postagens por perfil/verificacao, respostas/comentarios por perfil/verificacao, denuncias, posts anonimos e novos usuarios ativos no periodo.
+- O Admin de `/comunidades/[slug]?tab=estatisticas` agora possui aba propria **Estatisticas**, mobile-first, com filtros de periodo (**Esta semana**, **Este mes**, **Este ano**, **Todo o periodo** e **Personalizado**), cards de contadores e graficos responsivos/sem dependencia nova.
+- Foi adicionado o endpoint real `GET /api/admin/private/communities/:id/statistics`, protegido por autenticacao Admin e implementado dentro do modulo existente de comunidades, sem criar dashboard paralelo.
+- As metricas usam somente fontes reais: `community_member`, `community_post`, `post_reply`, `post_report` e `page_view_event` autenticado; psicologos verificados usam a regra canonica de entitlement/verificacao ja existente.
+- Usuarios ativos sao usuarios autenticados que seguiram, publicaram, responderam/comentaram ou acessaram a comunidade/conteudos no periodo; novos usuarios ativos sao aqueles cuja primeira atividade real nessa comunidade ocorreu no periodo.
+- Posts de pacientes respondidos por psicologos verificados sao contados quando o post de paciente do periodo recebeu ao menos uma resposta de psicologo verificado ate o fim do periodo.
+- Nao houve package novo, mock, seed, backfill artificial, schema Prisma/migration ou captura de mensagens/consultas/WhatsApp.
+- Builder/Quick Copy nao esta exposto como ferramenta callable no ambiente; a referencia visual usada foi a captura enviada pelo usuario, `_product/proto/admin/Comunidades/Comunidades - Detalhes.png` e o padrao local do Admin.
+- ADR atualizado: `adrs/0264-admin-comunidade-abas-conteudo-ranking.md`.
+- Validacao executada: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check`, smoke local `GET http://localhost:3002/comunidades/relacionamentos-com-proposito?tab=estatisticas` retornando 200 e smoke sem sessao Admin de `GET /api/admin/private/communities/relacionamentos-com-proposito/statistics?period=month` retornando 401.

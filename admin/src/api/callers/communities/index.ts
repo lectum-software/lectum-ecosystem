@@ -10,6 +10,7 @@ import {
   type AdminCommunityReportsQuery,
   type AdminCommunityResolveReportsInput,
   type AdminCommunityRuleInput,
+  type AdminCommunityStatisticsQuery,
   type AdminCommunityStatusInput,
   type AdminCommunityUpdateInput,
   type CommunitiesDashboardQuery,
@@ -23,6 +24,7 @@ import {
   getAdminCommunityDetail,
   getAdminCommunityRanking,
   getAdminCommunityReports,
+  getAdminCommunityStatistics,
   removeAdminCommunityContent,
   resolveAdminCommunityReports,
   updateAdminCommunity,
@@ -100,6 +102,17 @@ export const useAdminCommunityActivities = (
     enabled: (options.enabled ?? true) && Boolean(id),
     queryFn: () => getAdminCommunityActivities(id, input),
     queryKey: adminCommunitiesKeys.activities(id, input),
+  });
+
+export const useAdminCommunityStatistics = (
+  id: string,
+  input: AdminCommunityStatisticsQuery,
+  options: { enabled?: boolean } = {},
+) =>
+  useQuery({
+    enabled: (options.enabled ?? true) && Boolean(id),
+    queryFn: () => getAdminCommunityStatistics(id, input),
+    queryKey: adminCommunitiesKeys.statistics(id, input),
   });
 
 const invalidateCommunity = async (queryClient: ReturnType<typeof useQueryClient>, id: string) => {

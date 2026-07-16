@@ -312,6 +312,85 @@ const adminCommunityActivitySelect = {
   source: true,
 } satisfies Prisma.admin_activity_logSelect;
 
+const adminCommunityStatisticsUserSelect = {
+  active: true,
+  deleted: true,
+  id: true,
+  psychologist_profile: {
+    select: {
+      cfp_verified_at: true,
+      crp_status: true,
+      subscriptions: {
+        where: activeProfessionalEntitlementWhere(),
+        select: {
+          id: true,
+          source: true,
+        },
+      },
+    },
+  },
+  role: true,
+} satisfies Prisma.userSelect;
+
+const adminCommunityStatisticsMemberSelect = {
+  createdAt: true,
+  user: {
+    select: adminCommunityStatisticsUserSelect,
+  },
+  user_id: true,
+} satisfies Prisma.community_memberSelect;
+
+const adminCommunityStatisticsPostSelect = {
+  anonymous: true,
+  author: {
+    select: adminCommunityStatisticsUserSelect,
+  },
+  author_id: true,
+  createdAt: true,
+  id: true,
+  replies: {
+    where: {
+      deleted: false,
+    },
+    select: {
+      author: {
+        select: adminCommunityStatisticsUserSelect,
+      },
+      author_id: true,
+      createdAt: true,
+      id: true,
+    },
+  },
+} satisfies Prisma.community_postSelect;
+
+const adminCommunityStatisticsReplySelect = {
+  author: {
+    select: adminCommunityStatisticsUserSelect,
+  },
+  author_id: true,
+  createdAt: true,
+  id: true,
+  post_id: true,
+} satisfies Prisma.post_replySelect;
+
+const adminCommunityStatisticsReportSelect = {
+  createdAt: true,
+  id: true,
+} satisfies Prisma.post_reportSelect;
+
+const adminCommunityStatisticsPageViewSelect = {
+  occurred_at: true,
+  user: {
+    select: {
+      active: true,
+      deleted: true,
+      id: true,
+      role: true,
+    },
+  },
+  user_id: true,
+} satisfies Prisma.page_view_eventSelect;
+
 const adminCommunityMemberSelect = {
   createdAt: true,
   user: {
@@ -364,6 +443,21 @@ export type AdminCommunityReportRecord = Prisma.post_reportGetPayload<{
 }>;
 export type AdminCommunityActivityRecord = Prisma.admin_activity_logGetPayload<{
   select: typeof adminCommunityActivitySelect;
+}>;
+export type AdminCommunityStatisticsMemberRecord = Prisma.community_memberGetPayload<{
+  select: typeof adminCommunityStatisticsMemberSelect;
+}>;
+export type AdminCommunityStatisticsPostRecord = Prisma.community_postGetPayload<{
+  select: typeof adminCommunityStatisticsPostSelect;
+}>;
+export type AdminCommunityStatisticsReplyRecord = Prisma.post_replyGetPayload<{
+  select: typeof adminCommunityStatisticsReplySelect;
+}>;
+export type AdminCommunityStatisticsReportRecord = Prisma.post_reportGetPayload<{
+  select: typeof adminCommunityStatisticsReportSelect;
+}>;
+export type AdminCommunityStatisticsPageViewRecord = Prisma.page_view_eventGetPayload<{
+  select: typeof adminCommunityStatisticsPageViewSelect;
 }>;
 export type AdminCommunityMemberRecord = Prisma.community_memberGetPayload<{
   select: typeof adminCommunityMemberSelect;
@@ -1531,6 +1625,144 @@ export class AdminCommunityManageRepository {
         existingReportsCount: existingReports.length,
       };
     });
+  }
+
+  async listStatisticsDataset(communityId: string, communitySlug: string, to: Date) {
+    const membersPromise = prisma.community_member.findMany({
+      orderBy: [{ createdAt: "asc" }, { id: "asc" }],
+      select: adminCommunityStatisticsMemberSelect,
+      where: {
+        community_id: communityId,
+        deleted: false,
+        user: {
+          active: true,
+          deleted: false,
+          role: {
+            in: ["paciente", "psicologo"],
+          },
+        },
+      },
+    });
+    const postsPromise = prisma.community_post.findMany({
+      orderBy: [{ createdAt: "asc" }, { id: "asc" }],
+      select: adminCommunityStatisticsPostSelect,
+      where: {
+        community_id: communityId,
+        createdAt: {
+          lte: to,
+        },
+        deleted: false,
+        status: "publicado",
+      },
+    });
+    const repliesPromise = prisma.post_reply.findMany({
+      orderBy: [{ createdAt: "asc" }, { id: "asc" }],
+      select: adminCommunityStatisticsReplySelect,
+      where: {
+        createdAt: {
+          lte: to,
+        },
+        deleted: false,
+        post: {
+          community_id: communityId,
+          deleted: false,
+          status: "publicado",
+        },
+      },
+    });
+    const reportsPromise = prisma.post_report.findMany({
+      orderBy: [{ createdAt: "asc" }, { id: "asc" }],
+      select: adminCommunityStatisticsReportSelect,
+      where: {
+        createdAt: {
+          lte: to,
+        },
+        deleted: false,
+        OR: [
+          {
+            post: {
+              community_id: communityId,
+            },
+          },
+          {
+            reply: {
+              post: {
+                community_id: communityId,
+              },
+            },
+          },
+        ],
+      },
+    });
+
+    const [members, posts, replies, reports] = await Promise.all([
+      membersPromise,
+      postsPromise,
+      repliesPromise,
+      reportsPromise,
+    ]);
+    const postIds = posts.map((post) => post.id);
+    const replyIds = replies.map((reply) => reply.id);
+    const pageViewTargets: Prisma.page_view_eventWhereInput[] = [
+      {
+        target_id: {
+          in: [communityId, communitySlug],
+        },
+        target_type: "community",
+      },
+    ];
+
+    if (postIds.length > 0) {
+      pageViewTargets.push({
+        target_id: {
+          in: postIds,
+        },
+        target_type: {
+          in: ["community_post", "post"],
+        },
+      });
+    }
+
+    if (replyIds.length > 0) {
+      pageViewTargets.push({
+        target_id: {
+          in: replyIds,
+        },
+        target_type: {
+          in: ["post_reply", "reply"],
+        },
+      });
+    }
+
+    const pageViews = await prisma.page_view_event.findMany({
+      orderBy: [{ occurred_at: "asc" }, { id: "asc" }],
+      select: adminCommunityStatisticsPageViewSelect,
+      where: {
+        deleted: false,
+        occurred_at: {
+          lte: to,
+        },
+        user: {
+          active: true,
+          deleted: false,
+          role: {
+            in: ["paciente", "psicologo"],
+          },
+        },
+        user_id: {
+          not: null,
+        },
+        OR: pageViewTargets,
+      },
+    });
+
+    return {
+      members,
+      pageViews,
+      posts,
+      replies,
+      reports,
+    };
   }
 
   async listActivities(communityId: string) {

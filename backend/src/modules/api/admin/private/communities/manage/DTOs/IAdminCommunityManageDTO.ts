@@ -76,6 +76,12 @@ export type AdminCommunityActivitiesQuery = AdminCommunityPaginationQuery & {
   type?: string;
 };
 
+export type AdminCommunityStatisticsQuery = {
+  from?: string;
+  period?: "all" | "custom" | "month" | "week" | "year";
+  to?: string;
+};
+
 export type AdminCommunityUpdateBody = {
   name?: string;
   description?: string | null;
@@ -484,6 +490,86 @@ export type AdminCommunityActivitiesDTO = {
   source: "admin_activity_log";
 };
 
+export type AdminCommunityStatisticsSplitDTO = {
+  id: string;
+  label: string;
+  source: string;
+  value: number;
+};
+
+export type AdminCommunityStatisticsDailyPointDTO = {
+  active_users: number;
+  anonymous_posts: number;
+  date: string;
+  new_active_users: number;
+  posts: number;
+  replies: number;
+  reports: number;
+};
+
+export type AdminCommunityStatisticsDTO = {
+  charts: {
+    active_users_split: AdminCommunityStatisticsSplitDTO[];
+    daily: AdminCommunityStatisticsDailyPointDTO[];
+    followers_split: AdminCommunityStatisticsSplitDTO[];
+    posts_by_author: AdminCommunityStatisticsSplitDTO[];
+    replies_by_author: AdminCommunityStatisticsSplitDTO[];
+  };
+  community: Pick<AdminCommunityIdentity, "id" | "name" | "slug">;
+  counters: {
+    active_users: {
+      patients: number;
+      psychologists: number;
+      source: "community_member+community_post+post_reply+page_view_event";
+      total: number;
+    };
+    anonymous_posts: {
+      source: "community_post.anonymous";
+      total: number;
+    };
+    followers: {
+      patients: number;
+      psychologists: number;
+      source: "community_member";
+      total: number;
+    };
+    new_active_users: {
+      patients: number;
+      psychologists: number;
+      source: "first_activity:community_member+community_post+post_reply+page_view_event";
+      total: number;
+    };
+    posts: {
+      patients: number;
+      patient_posts_answered_by_verified_psychologists: number;
+      source: "community_post+post_reply";
+      total: number;
+      unverified_psychologists: number;
+      verified_psychologists: number;
+    };
+    replies: {
+      patient_comments: number;
+      source: "post_reply";
+      total: number;
+      unverified_psychologists: number;
+      verified_psychologists: number;
+    };
+    reports: {
+      source: "post_report";
+      total: number;
+    };
+  };
+  period: {
+    days: number;
+    from: string;
+    label: string;
+    max_days: number;
+    timezone: "server-local";
+    to: string;
+  };
+  source: "community_member+community_post+post_reply+post_report+page_view_event";
+};
+
 export type AdminCommunityRemoveContentDTO = {
   affected_reports_count: number;
   affected_replies_count: number;
@@ -589,6 +675,13 @@ export type IAdminCommunityReportsDTO = Request & {
 export type IAdminCommunityActivitiesDTO = Request & {
   p: AdminCommunityManageParams;
   q: AdminCommunityActivitiesQuery;
+  admin?: admin;
+  auth?: admin;
+};
+
+export type IAdminCommunityStatisticsDTO = Request & {
+  p: AdminCommunityManageParams;
+  q: AdminCommunityStatisticsQuery;
   admin?: admin;
   auth?: admin;
 };

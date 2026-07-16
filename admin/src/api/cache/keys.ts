@@ -4,6 +4,7 @@ import type {
   AdminCommunityContentQuery,
   AdminCommunityRankingQuery,
   AdminCommunityReportsQuery,
+  AdminCommunityStatisticsQuery,
   CommunitiesDashboardQuery,
 } from "@/api/req/communities";
 import type { DashboardSummaryQuery } from "@/api/req/dashboard";
@@ -182,6 +183,12 @@ const normalizeCommunityActivities = (input: AdminCommunityActivitiesQuery) => (
   type: input.type || "all",
 });
 
+const normalizeCommunityStatistics = (input: AdminCommunityStatisticsQuery) => ({
+  from: input.from || "default",
+  period: input.period || "month",
+  to: input.to || "default",
+});
+
 const normalizeCommunitiesList = (input: AdminCommunitiesListQuery) => ({
   category: input.category || "all",
   limit: input.limit || 12,
@@ -218,6 +225,8 @@ export const adminCommunitiesKeys = {
   reports: (id: string, input: AdminCommunityReportsQuery) =>
     [...adminCommunitiesKeys.all, "reports", id, normalizeCommunityReports(input)] as const,
   rules: (id: string) => [...adminCommunitiesKeys.all, "rules", id] as const,
+  statistics: (id: string, input: AdminCommunityStatisticsQuery) =>
+    [...adminCommunitiesKeys.all, "statistics", id, normalizeCommunityStatistics(input)] as const,
 };
 
 export const adminFinanceKeys = {

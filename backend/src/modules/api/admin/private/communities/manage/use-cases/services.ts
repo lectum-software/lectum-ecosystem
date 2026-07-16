@@ -27,6 +27,8 @@ import type {
   AdminCommunityResolveReportsDTO,
   AdminCommunityRuleBody,
   AdminCommunityRuleDTO,
+  AdminCommunityStatisticsDTO,
+  AdminCommunityStatisticsQuery,
   AdminCommunityStatusBody,
   AdminCommunityUpdateBody,
   IAdminCommunitiesListDTO,
@@ -40,6 +42,7 @@ import type {
   IAdminCommunityResolveReportsDTO,
   IAdminCommunityRuleDTO,
   IAdminCommunityShowDTO,
+  IAdminCommunityStatisticsDTO,
   IAdminCommunityStatusDTO,
   IAdminCommunityUpdateDTO,
 } from "../DTOs/IAdminCommunityManageDTO";
@@ -67,6 +70,7 @@ const MAX_PAGE_SIZE = 50;
 const DEFAULT_REPORT_PERIOD_DAYS = 90;
 const MAX_ACTIVITY_PERIOD_DAYS = 365;
 const MAX_REPORT_PERIOD_DAYS = 180;
+const MAX_STATISTICS_PERIOD_DAYS = 3660;
 const MS_PER_DAY = 86_400_000;
 const REMOVE_CONTENT_CONFIRMATION = "REMOVER CONTEUDO";
 const DISMISS_REPORT_CONFIRMATION = "DENUNCIA IMPROCEDENTE";
@@ -691,6 +695,82 @@ const contentMatchesPeriod = (item: AdminCommunityContentItemDTO, range: Content
   if (!range.start || !range.end) return true;
 
   return item.created_at >= range.start && item.created_at <= range.end;
+};
+
+type StatisticsPeriodRange = { end: Date; start: Date };
+type StatisticsPeriodResult =
+  | {
+      current: StatisticsPeriodRange;
+      period: AdminCommunityStatisticsDTO["period"];
+      success: true;
+    }
+  | { code: string; success: false };
+
+const statisticsPeriodLabel: Record<
+  NonNullable<AdminCommunityStatisticsQuery["period"]>,
+  string
+> = {
+  all: "Todo o per\u00edodo",
+  custom: "Per\u00edodo personalizado",
+  month: "Este m\u00eas",
+  week: "Esta semana",
+  year: "Este ano",
+};
+
+const resolveStatisticsPeriod = (
+  query: AdminCommunityStatisticsQuery = {},
+  communityCreatedAt: Date,
+): StatisticsPeriodResult => {
+  const hasCustomFrom = Boolean(query.from);
+  const hasCustomTo = Boolean(query.to);
+  const preset = query.period || (hasCustomFrom || hasCustomTo ? "custom" : "month");
+  const today = new Date();
+  let start: Date;
+  let end = endOfDay(today);
+
+  if (preset === "custom") {
+    if (!hasCustomFrom || !hasCustomTo) {
+      return { success: false, code: "invalid_analytics_date_range" };
+    }
+
+    const customStart = parseDateOnly(query.from, "start");
+    const customEnd = parseDateOnly(query.to, "end");
+
+    if (!customStart || !customEnd || customStart > customEnd) {
+      return { success: false, code: "invalid_analytics_date_range" };
+    }
+
+    start = customStart;
+    end = customEnd;
+  } else if (preset === "week") {
+    start = startOfWeek(today);
+  } else if (preset === "month") {
+    start = startOfMonth(today);
+  } else if (preset === "year") {
+    start = startOfYear(today);
+  } else if (preset === "all") {
+    start = startOfDay(communityCreatedAt);
+  } else {
+    return { success: false, code: "invalid_analytics_date_range" };
+  }
+
+  const days = daysBetweenInclusive(start, end);
+  if (days < 1 || days > MAX_STATISTICS_PERIOD_DAYS) {
+    return { success: false, code: "invalid_analytics_date_range" };
+  }
+
+  return {
+    current: { end, start },
+    period: {
+      days,
+      from: dateKey(start),
+      label: statisticsPeriodLabel[preset],
+      max_days: MAX_STATISTICS_PERIOD_DAYS,
+      timezone: "server-local",
+      to: dateKey(end),
+    },
+    success: true,
+  };
 };
 
 type ReportPeriodRange = { end: Date; start: Date };
@@ -1489,6 +1569,286 @@ const buildPoints = (
   );
 };
 
+type CommunityStatisticsRole = "paciente" | "psicologo";
+type CommunityStatisticsUser = {
+  active?: boolean | null;
+  deleted?: boolean | null;
+  id?: string | null;
+  psychologist_profile?: Parameters<typeof isVerifiedProfessionalEntitlement>[0] | null;
+  role?: string | null;
+};
+type CommunityStatisticsActivity = {
+  date: Date;
+  role: CommunityStatisticsRole;
+  userId: string;
+};
+type StatisticsDataset = Awaited<
+  ReturnType<AdminCommunityManageRepository["listStatisticsDataset"]>
+>;
+
+const statisticsRole = (user?: CommunityStatisticsUser | null): CommunityStatisticsRole | null => {
+  if (!user || user.deleted || user.active === false) return null;
+  if (user.role === "paciente" || user.role === "psicologo") return user.role;
+
+  return null;
+};
+
+const isVerifiedStatisticsPsychologist = (user?: CommunityStatisticsUser | null) =>
+  user?.role === "psicologo" && isVerifiedProfessionalEntitlement(user.psychologist_profile);
+
+const isInStatisticsPeriod = (date: Date, period: StatisticsPeriodRange) =>
+  date >= period.start && date <= period.end;
+
+const statisticsRoleCounters = (items: Array<{ role: CommunityStatisticsRole }>) => {
+  const patients = items.filter((item) => item.role === "paciente").length;
+  const psychologists = items.filter((item) => item.role === "psicologo").length;
+
+  return {
+    patients,
+    psychologists,
+    total: patients + psychologists,
+  };
+};
+
+const statisticsSplit = (
+  source: string,
+  items: Array<{ id: string; label: string; value: number }>,
+): AdminCommunityStatisticsDTO["charts"]["followers_split"] =>
+  items.map((item) => ({ ...item, source }));
+
+const emptyStatisticsDailyPoint = (
+  date: string,
+): AdminCommunityStatisticsDTO["charts"]["daily"][number] => ({
+  active_users: 0,
+  anonymous_posts: 0,
+  date,
+  new_active_users: 0,
+  posts: 0,
+  replies: 0,
+  reports: 0,
+});
+
+const statisticsDateLabels = (period: StatisticsPeriodRange) => {
+  const labels: string[] = [];
+  const cursor = startOfDay(period.start);
+
+  while (cursor <= period.end) {
+    labels.push(dateKey(cursor));
+    cursor.setDate(cursor.getDate() + 1);
+  }
+
+  return labels;
+};
+
+const buildCommunityStatistics = (
+  dataset: StatisticsDataset,
+  period: StatisticsPeriodRange,
+): Omit<AdminCommunityStatisticsDTO, "community" | "period" | "source"> => {
+  const periodPosts = dataset.posts.filter((post) => isInStatisticsPeriod(post.createdAt, period));
+  const periodReplies = dataset.replies.filter((reply) =>
+    isInStatisticsPeriod(reply.createdAt, period),
+  );
+  const periodReports = dataset.reports.filter((report) =>
+    isInStatisticsPeriod(report.createdAt, period),
+  );
+  const followerRoles = dataset.members
+    .map((member) => statisticsRole(member.user))
+    .filter((role): role is CommunityStatisticsRole => Boolean(role))
+    .map((role) => ({ role }));
+  const followers = statisticsRoleCounters(followerRoles);
+  const patientPosts = periodPosts.filter((post) => statisticsRole(post.author) === "paciente");
+  const psychologistPosts = periodPosts.filter(
+    (post) => statisticsRole(post.author) === "psicologo",
+  );
+  const verifiedPsychologistPostCount = psychologistPosts.filter((post) =>
+    isVerifiedStatisticsPsychologist(post.author),
+  ).length;
+  const anonymousPostCount = periodPosts.filter((post) => post.anonymous).length;
+  const patientComments = periodReplies.filter(
+    (reply) => statisticsRole(reply.author) === "paciente",
+  );
+  const psychologistReplies = periodReplies.filter(
+    (reply) => statisticsRole(reply.author) === "psicologo",
+  );
+  const verifiedPsychologistReplyCount = psychologistReplies.filter((reply) =>
+    isVerifiedStatisticsPsychologist(reply.author),
+  ).length;
+  const patientPostsAnsweredByVerifiedPsychologists = patientPosts.filter((post) =>
+    post.replies.some(
+      (reply) => reply.createdAt <= period.end && isVerifiedStatisticsPsychologist(reply.author),
+    ),
+  ).length;
+  const activityItems: CommunityStatisticsActivity[] = [];
+
+  for (const member of dataset.members) {
+    const role = statisticsRole(member.user);
+    if (role) activityItems.push({ date: member.createdAt, role, userId: member.user_id });
+  }
+  for (const post of dataset.posts) {
+    const role = statisticsRole(post.author);
+    if (role) activityItems.push({ date: post.createdAt, role, userId: post.author_id });
+  }
+  for (const reply of dataset.replies) {
+    const role = statisticsRole(reply.author);
+    if (role) activityItems.push({ date: reply.createdAt, role, userId: reply.author_id });
+  }
+  for (const pageView of dataset.pageViews) {
+    const role = statisticsRole(pageView.user);
+    if (role && pageView.user_id) {
+      activityItems.push({ date: pageView.occurred_at, role, userId: pageView.user_id });
+    }
+  }
+
+  const activeByUser = new Map<string, { role: CommunityStatisticsRole }>();
+  const firstActivityByUser = new Map<
+    string,
+    { date: Date; role: CommunityStatisticsRole; userId: string }
+  >();
+  const daily = new Map(
+    statisticsDateLabels(period).map((label) => [label, emptyStatisticsDailyPoint(label)]),
+  );
+  const dailyActiveUsers = new Map<string, Set<string>>();
+  const dailyNewUsers = new Map<string, Set<string>>();
+
+  for (const activity of activityItems) {
+    const currentFirst = firstActivityByUser.get(activity.userId);
+    if (!currentFirst || activity.date < currentFirst.date) {
+      firstActivityByUser.set(activity.userId, activity);
+    }
+    if (!isInStatisticsPeriod(activity.date, period)) continue;
+    activeByUser.set(activity.userId, { role: activity.role });
+    const key = dateKey(activity.date);
+    if (!dailyActiveUsers.has(key)) dailyActiveUsers.set(key, new Set());
+    dailyActiveUsers.get(key)?.add(activity.userId);
+  }
+
+  const newActiveUsers = [...firstActivityByUser.values()].filter((item) =>
+    isInStatisticsPeriod(item.date, period),
+  );
+  for (const item of newActiveUsers) {
+    const key = dateKey(item.date);
+    if (!dailyNewUsers.has(key)) dailyNewUsers.set(key, new Set());
+    dailyNewUsers.get(key)?.add(item.userId);
+  }
+
+  for (const post of periodPosts) {
+    const point = daily.get(dateKey(post.createdAt));
+    if (point) {
+      point.posts += 1;
+      if (post.anonymous) point.anonymous_posts += 1;
+    }
+  }
+  for (const reply of periodReplies) {
+    const point = daily.get(dateKey(reply.createdAt));
+    if (point) point.replies += 1;
+  }
+  for (const report of periodReports) {
+    const point = daily.get(dateKey(report.createdAt));
+    if (point) point.reports += 1;
+  }
+  for (const [key, users] of dailyActiveUsers) {
+    const point = daily.get(key);
+    if (point) point.active_users = users.size;
+  }
+  for (const [key, users] of dailyNewUsers) {
+    const point = daily.get(key);
+    if (point) point.new_active_users = users.size;
+  }
+
+  const activeUsers = statisticsRoleCounters([...activeByUser.values()]);
+  const newActiveUserCounters = statisticsRoleCounters(newActiveUsers);
+
+  return {
+    charts: {
+      active_users_split: statisticsSplit(
+        "community_member+community_post+post_reply+page_view_event",
+        [
+          { id: "patients", label: "Pacientes", value: activeUsers.patients },
+          { id: "psychologists", label: "Psic\u00f3logos", value: activeUsers.psychologists },
+        ],
+      ),
+      daily: [...daily.values()],
+      followers_split: statisticsSplit("community_member", [
+        { id: "patients", label: "Pacientes", value: followers.patients },
+        { id: "psychologists", label: "Psic\u00f3logos", value: followers.psychologists },
+      ]),
+      posts_by_author: statisticsSplit("community_post+post_reply", [
+        { id: "patients", label: "Pacientes", value: patientPosts.length },
+        {
+          id: "verified_psychologists",
+          label: "Psic\u00f3logos verificados",
+          value: verifiedPsychologistPostCount,
+        },
+        {
+          id: "unverified_psychologists",
+          label: "Psic\u00f3logos n\u00e3o verificados",
+          value: psychologistPosts.length - verifiedPsychologistPostCount,
+        },
+        {
+          id: "patient_posts_answered_by_verified_psychologists",
+          label: "Posts de pacientes respondidos por verificados",
+          value: patientPostsAnsweredByVerifiedPsychologists,
+        },
+      ]),
+      replies_by_author: statisticsSplit("post_reply", [
+        {
+          id: "verified_psychologists",
+          label: "Psic\u00f3logos verificados",
+          value: verifiedPsychologistReplyCount,
+        },
+        {
+          id: "unverified_psychologists",
+          label: "Psic\u00f3logos n\u00e3o verificados",
+          value: psychologistReplies.length - verifiedPsychologistReplyCount,
+        },
+        {
+          id: "patient_comments",
+          label: "Coment\u00e1rios de pacientes",
+          value: patientComments.length,
+        },
+      ]),
+    },
+    counters: {
+      active_users: {
+        ...activeUsers,
+        source: "community_member+community_post+post_reply+page_view_event",
+      },
+      anonymous_posts: {
+        source: "community_post.anonymous",
+        total: anonymousPostCount,
+      },
+      followers: {
+        ...followers,
+        source: "community_member",
+      },
+      new_active_users: {
+        ...newActiveUserCounters,
+        source: "first_activity:community_member+community_post+post_reply+page_view_event",
+      },
+      posts: {
+        patients: patientPosts.length,
+        patient_posts_answered_by_verified_psychologists:
+          patientPostsAnsweredByVerifiedPsychologists,
+        source: "community_post+post_reply",
+        total: periodPosts.length,
+        unverified_psychologists: psychologistPosts.length - verifiedPsychologistPostCount,
+        verified_psychologists: verifiedPsychologistPostCount,
+      },
+      replies: {
+        patient_comments: patientComments.length,
+        source: "post_reply",
+        total: periodReplies.length,
+        unverified_psychologists: psychologistReplies.length - verifiedPsychologistReplyCount,
+        verified_psychologists: verifiedPsychologistReplyCount,
+      },
+      reports: {
+        source: "post_report",
+        total: periodReports.length,
+      },
+    },
+  };
+};
+
 const buildMentors = (
   replies: Awaited<ReturnType<AdminCommunityManageRepository["listTopMentors"]>>,
 ) => {
@@ -1692,6 +2052,34 @@ export const showCommunity = async (data: IAdminCommunityShowDTO): Promise<Resol
     status: 200,
     ...msg("index", {}),
     data: result,
+  };
+};
+
+export const showStatistics = async (data: IAdminCommunityStatisticsDTO): Promise<Resolve> => {
+  const repository = new AdminCommunityManageRepository();
+  const community = await findCommunityOrNotFound(repository, data.p.id);
+  if (!community) return notFound();
+
+  const period = resolveStatisticsPeriod(data.q ?? {}, community.createdAt);
+  if (!period.success) return { status: 400, ...error(period.code, {}) };
+
+  const dataset = await repository.listStatisticsDataset(
+    community.id,
+    community.slug,
+    period.current.end,
+  );
+  const statistics = buildCommunityStatistics(dataset, period.current);
+  const payload: AdminCommunityStatisticsDTO = {
+    ...statistics,
+    community: communitySummary(community),
+    period: period.period,
+    source: "community_member+community_post+post_reply+post_report+page_view_event",
+  };
+
+  return {
+    status: 200,
+    ...msg("index", {}),
+    data: payload,
   };
 };
 

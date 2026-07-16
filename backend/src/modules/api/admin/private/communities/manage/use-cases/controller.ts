@@ -13,6 +13,7 @@ import {
   removeContent as removeContentService,
   resolveReports as resolveReportsService,
   showCommunity as showCommunityService,
+  showStatistics as showStatisticsService,
   updateCommunity as updateCommunityService,
   updateCommunityStatus as updateCommunityStatusService,
   updateRule as updateRuleService,
@@ -40,6 +41,18 @@ export const show = async (req: Request, res: Response) => {
     return send(res, resolve);
   } catch (err) {
     return error500(res, "admin_community_show", err);
+  }
+};
+
+export const statistics = async (req: Request, res: Response) => {
+  try {
+    const resolve = await showStatisticsService(
+      req as unknown as Parameters<typeof showStatisticsService>[0],
+    );
+
+    return send(res, resolve);
+  } catch (err) {
+    return error500(res, "admin_community_statistics", err);
   }
 };
 

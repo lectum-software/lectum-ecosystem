@@ -2,9 +2,11 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
+  Activity,
   AlertTriangle,
   ArrowDown,
   ArrowUp,
+  BarChart3,
   Bookmark,
   CalendarDays,
   CheckCircle2,
@@ -27,6 +29,7 @@ import {
   ShieldCheck,
   Star,
   Trash2,
+  UserPlus,
   Users,
   X,
 } from "lucide-react";
@@ -58,6 +61,7 @@ import {
   useAdminCommunityRemoveContent,
   useAdminCommunityReports,
   useAdminCommunityResolveReports,
+  useAdminCommunityStatistics,
   useAdminCommunityStatusUpdate,
   useAdminCommunityUpdate,
   useAdminCommunityUpdateRule,
@@ -79,12 +83,16 @@ import type {
   AdminCommunityReportsQuery,
   AdminCommunityRule,
   AdminCommunityRuleInput,
+  AdminCommunityStatistics,
+  AdminCommunityStatisticsDailyPoint,
+  AdminCommunityStatisticsQuery,
+  AdminCommunityStatisticsSplit,
   AdminCommunityStatusInput,
   AdminCommunityTopMentor,
   AdminCommunityUpdateInput,
 } from "@/api/req/communities";
 import { InputController, TextareaController } from "@/components/controllers";
-import { aggregateCalendarChartPoints } from "@/lib/chart-time-series";
+import { aggregateCalendarChartPoints, buildSmoothSvgPath } from "@/lib/chart-time-series";
 import { communityHeaderBackground, deriveCommunityVisualPalette } from "@/lib/community-visual";
 import { cn } from "@/lib/utils";
 
@@ -189,6 +197,7 @@ type RuleDragState = {
 
 const communityTabs = [
   { id: "geral", label: "Geral" },
+  { id: "estatisticas", label: "Estatísticas" },
   { id: "dados", label: "Dados" },
   { id: "conteudo", label: "Conteúdo" },
   { id: "ranking", label: "Ranking" },
@@ -214,6 +223,9 @@ const contentTypeOptions = [
 type ContentPeriodValue = NonNullable<AdminCommunityContentQuery["period"]>;
 type ContentPeriodPreset = Exclude<ContentPeriodValue, "custom">;
 type ContentCustomRange = Pick<AdminCommunityContentQuery, "from" | "to">;
+type StatisticsPeriodValue = NonNullable<AdminCommunityStatisticsQuery["period"]>;
+type StatisticsPeriodPreset = Exclude<StatisticsPeriodValue, "custom">;
+type StatisticsCustomRange = Pick<AdminCommunityStatisticsQuery, "from" | "to">;
 
 const contentPeriodOptions = [
   { id: "week", label: "Esta semana" },
@@ -223,6 +235,11 @@ const contentPeriodOptions = [
   { id: "custom", label: "Personalizado" },
 ] as const satisfies ReadonlyArray<{
   id: ContentPeriodValue;
+  label: string;
+}>;
+
+const statisticsPeriodOptions = contentPeriodOptions satisfies ReadonlyArray<{
+  id: StatisticsPeriodValue;
   label: string;
 }>;
 
@@ -364,6 +381,10 @@ const getContentRangeForPeriod = (
 
   return { from: toDateInputValue(startOfCurrentWeek()), to: today };
 };
+const getStatisticsRangeForPeriod = (
+  period: StatisticsPeriodPreset,
+  createdAt?: string | null,
+): Required<StatisticsCustomRange> => getContentRangeForPeriod(period, createdAt);
 const contentDateFromInput = (value: string) => {
   const [year, month, day] = value.split("-").map(Number);
   return new Date(year, month - 1, day, 12, 0, 0, 0);
@@ -3530,6 +3551,440 @@ const ReportsTab = ({ slug }: { slug: string }) => {
   );
 };
 
+const statisticsCounterDescription = (items: Array<{ label: string; value: number }>) =>
+  items.map((item) => `${item.label}: ${numberFormatter.format(item.value)}`).join(" · ");
+
+const CommunityStatisticsCounterCard = ({
+  description,
+  icon: Icon,
+  label,
+  value,
+}: {
+  description: string;
+  icon: React.ComponentType<{ "aria-hidden"?: boolean; className?: string }>;
+  label: string;
+  value: number;
+}) => (
+  <div className="rounded-2xl border border-border bg-surface p-4">
+    <div className="flex items-start justify-between gap-3">
+      <div>
+        <p className="text-xs font-black uppercase tracking-[0.12em] text-muted">{label}</p>
+        <p className="mt-3 text-3xl font-black text-foreground">{numberFormatter.format(value)}</p>
+      </div>
+      <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-primary-soft text-primary">
+        <Icon aria-hidden className="h-5 w-5" />
+      </span>
+    </div>
+    <p className="mt-3 text-xs font-bold leading-5 text-muted">{description}</p>
+  </div>
+);
+
+const CommunityStatisticsDistributionChart = ({
+  items,
+  title,
+}: {
+  items: AdminCommunityStatisticsSplit[];
+  title: string;
+}) => {
+  const maxValue = Math.max(1, ...items.map((item) => item.value));
+  const total = items.reduce((sum, item) => sum + item.value, 0);
+
+  return (
+    <section className={cn(cardClass, "p-5")}>
+      <div>
+        <h3 className="text-lg font-black text-foreground">{title}</h3>
+        <p className="mt-1 text-xs font-bold text-muted">
+          Total do gráfico: {numberFormatter.format(total)} registros reais.
+        </p>
+      </div>
+      <div className="mt-5 space-y-4">
+        {items.map((item) => {
+          const width = item.value === 0 ? "0%" : `${Math.max(4, (item.value / maxValue) * 100)}%`;
+
+          return (
+            <div key={item.id}>
+              <div className="flex items-center justify-between gap-3 text-sm">
+                <span className="font-black text-foreground">{item.label}</span>
+                <span className="font-black text-muted">{numberFormatter.format(item.value)}</span>
+              </div>
+              <div className="mt-2 h-3 overflow-hidden rounded-full bg-surface-muted">
+                <div className="h-full rounded-full bg-primary" style={{ width }} />
+              </div>
+            </div>
+          );
+        })}
+      </div>
+      <p className="sr-only">
+        {title}:{" "}
+        {items.map((item) => `${item.label} com ${numberFormatter.format(item.value)}`).join(", ")}.
+      </p>
+    </section>
+  );
+};
+
+const CommunityStatisticsTrendChart = ({
+  points,
+}: {
+  points: AdminCommunityStatisticsDailyPoint[];
+}) => {
+  const chartPoints = aggregateCalendarChartPoints(
+    points,
+    ["active_users", "new_active_users", "posts", "replies", "reports", "anonymous_posts"] as const,
+    { dayThreshold: 45 },
+  );
+  const width = 840;
+  const height = 300;
+  const padding = { bottom: 42, left: 48, right: 20, top: 20 };
+  const maxValue = Math.max(
+    1,
+    ...chartPoints.flatMap((point) => [
+      point.active_users,
+      point.new_active_users,
+      point.posts,
+      point.replies,
+      point.reports,
+      point.anonymous_posts,
+    ]),
+  );
+  const chartWidth = width - padding.left - padding.right;
+  const chartHeight = height - padding.top - padding.bottom;
+  const getX = (index: number) =>
+    chartPoints.length <= 1
+      ? width / 2
+      : padding.left + (index * chartWidth) / (chartPoints.length - 1);
+  const getY = (value: number) => padding.top + chartHeight - (value / maxValue) * chartHeight;
+  const series = [
+    { color: "#2563eb", key: "active_users", label: "Usuários ativos" },
+    { color: "#13a85b", key: "new_active_users", label: "Novos ativos" },
+    { color: "#3300ff", key: "posts", label: "Posts" },
+    { color: "#2f8cff", key: "replies", label: "Respostas/comentários" },
+    { color: "#e5484d", key: "reports", label: "Denúncias" },
+    { color: "#f59e0b", key: "anonymous_posts", label: "Posts anônimos" },
+  ] as const;
+  const labelStep = Math.max(1, Math.ceil(chartPoints.length / 8));
+
+  return (
+    <section className={cn(cardClass, "p-5")}>
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <h3 className="text-lg font-black text-foreground">Evolução no período</h3>
+          <p className="mt-1 text-xs font-bold text-muted">
+            Dados reais de seguidores, conteúdo, denúncias e acessos autenticados.
+          </p>
+        </div>
+        <span className="inline-flex items-center gap-2 text-xs font-black text-muted">
+          <CalendarDays aria-hidden className="h-4 w-4" />
+          série temporal
+        </span>
+      </div>
+      <div className="mt-5 overflow-x-auto">
+        <svg
+          aria-label="Gráfico de evolução das estatísticas da comunidade"
+          className="min-w-[760px]"
+          role="img"
+          viewBox={`0 0 ${width} ${height}`}
+        >
+          {[0, 0.25, 0.5, 0.75, 1].map((ratio) => {
+            const value = Math.round(maxValue * ratio);
+            const y = getY(value);
+            return (
+              <g key={`grid-${value}`}>
+                <line
+                  stroke="#e8edf7"
+                  strokeWidth="1"
+                  x1={padding.left}
+                  x2={width - padding.right}
+                  y1={y}
+                  y2={y}
+                />
+                <text fill="#55618a" fontSize="11" x="8" y={y + 4}>
+                  {numberFormatter.format(value)}
+                </text>
+              </g>
+            );
+          })}
+          {series.map((item) => {
+            const path = buildSmoothSvgPath(
+              chartPoints.map((point, index) => ({
+                x: getX(index),
+                y: getY(point[item.key]),
+              })),
+            );
+
+            return (
+              <path
+                d={path}
+                fill="none"
+                key={item.key}
+                stroke={item.color}
+                strokeLinecap="round"
+                strokeWidth="3"
+              />
+            );
+          })}
+          {chartPoints
+            .filter((_, index) => index % labelStep === 0 || index === chartPoints.length - 1)
+            .map((point, index, filteredPoints) => {
+              const originalIndex = chartPoints.findIndex((item) => item.date === point.date);
+              const textAnchor =
+                index === 0 ? "start" : index === filteredPoints.length - 1 ? "end" : "middle";
+
+              return (
+                <text
+                  fill="#06104a"
+                  fontSize="11"
+                  key={point.date}
+                  textAnchor={textAnchor}
+                  x={getX(originalIndex)}
+                  y={height - 12}
+                >
+                  {point.chartLabel}
+                </text>
+              );
+            })}
+        </svg>
+      </div>
+      <div className="mt-4 flex flex-wrap gap-3">
+        {series.map((item) => (
+          <span
+            className="inline-flex items-center gap-2 text-xs font-bold text-muted"
+            key={item.key}
+          >
+            <span
+              aria-hidden
+              className="h-3 w-3 rounded-full"
+              style={{ backgroundColor: item.color }}
+            />
+            {item.label}
+          </span>
+        ))}
+      </div>
+      <p className="sr-only">
+        Evolução no período com {numberFormatter.format(points.length)} pontos diários retornados
+        pela API.
+      </p>
+    </section>
+  );
+};
+
+const StatisticsTab = ({ createdAt, slug }: { createdAt: string; slug: string }) => {
+  const [selectedPeriod, setSelectedPeriod] = useState<StatisticsPeriodValue>("month");
+  const initialRange = useMemo(() => getStatisticsRangeForPeriod("month", createdAt), [createdAt]);
+  const [draftRange, setDraftRange] = useState<Required<StatisticsCustomRange>>(initialRange);
+  const [appliedRange, setAppliedRange] = useState<Required<StatisticsCustomRange>>(initialRange);
+  const [rangeError, setRangeError] = useState<string | null>(null);
+  const queryInput = useMemo<AdminCommunityStatisticsQuery>(
+    () => ({
+      period: selectedPeriod,
+      ...(selectedPeriod === "custom" ? appliedRange : {}),
+    }),
+    [appliedRange, selectedPeriod],
+  );
+  const result = useAdminCommunityStatistics(slug, queryInput);
+  const statistics = result.data;
+  const handlePeriodChange = (period: StatisticsPeriodValue) => {
+    setSelectedPeriod(period);
+    if (period !== "custom") {
+      const nextRange = getStatisticsRangeForPeriod(period as StatisticsPeriodPreset, createdAt);
+      setDraftRange(nextRange);
+      setAppliedRange(nextRange);
+      setRangeError(null);
+    }
+  };
+  const handleDateChange = (field: keyof StatisticsCustomRange, value: string) => {
+    const nextRange = { ...draftRange, [field]: value };
+    setDraftRange(nextRange);
+    setSelectedPeriod("custom");
+  };
+  const commitRange = () => {
+    if (!isValidContentRange(draftRange)) {
+      setRangeError(
+        "Informe um período personalizado completo, com data inicial menor ou igual à final.",
+      );
+      return;
+    }
+
+    setRangeError(null);
+    setAppliedRange(draftRange);
+  };
+  const handleDateControlsBlur = (event: {
+    currentTarget: HTMLDivElement;
+    relatedTarget: EventTarget | null;
+  }) => {
+    const currentTarget = event.currentTarget;
+    const nextFocusedElement = event.relatedTarget as Node | null;
+
+    if (nextFocusedElement && currentTarget.contains(nextFocusedElement)) return;
+
+    window.setTimeout(() => {
+      const activeElement = document.activeElement;
+      if (activeElement && currentTarget.contains(activeElement)) return;
+      commitRange();
+    }, 0);
+  };
+
+  return (
+    <div className="space-y-5" data-community-detail-tab="estatisticas">
+      <section className={cn(cardClass, "p-4")}>
+        <div className="grid gap-3 lg:grid-cols-[1fr_1fr_1fr] lg:items-end">
+          <CommunityReportFilterSelect
+            label="Período"
+            onChange={(value) => handlePeriodChange(value as StatisticsPeriodValue)}
+            value={selectedPeriod}
+          >
+            {statisticsPeriodOptions.map((option) => (
+              <option key={option.id} value={option.id}>
+                {option.label}
+              </option>
+            ))}
+          </CommunityReportFilterSelect>
+          <div className="grid gap-3 sm:grid-cols-2 lg:col-span-2" onBlur={handleDateControlsBlur}>
+            <label className="block text-sm font-black text-muted">
+              De
+              <input
+                className="mt-2 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground"
+                max={draftRange.to}
+                onChange={(event) => handleDateChange("from", event.target.value)}
+                type="date"
+                value={draftRange.from}
+              />
+            </label>
+            <label className="block text-sm font-black text-muted">
+              Até
+              <input
+                className="mt-2 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground"
+                min={draftRange.from}
+                onChange={(event) => handleDateChange("to", event.target.value)}
+                type="date"
+                value={draftRange.to}
+              />
+            </label>
+          </div>
+        </div>
+        {rangeError ? <p className="mt-3 text-xs font-bold text-danger">{rangeError}</p> : null}
+        {statistics ? (
+          <p className="mt-3 text-xs font-bold text-muted">
+            {statistics.period.label}: {formatDate(statistics.period.from)} até{" "}
+            {formatDate(statistics.period.to)} · {numberFormatter.format(statistics.period.days)}{" "}
+            dias.
+          </p>
+        ) : null}
+      </section>
+
+      <QueryStatus
+        error={result.error}
+        loading={result.isLoading}
+        onRetry={() => void result.refetch()}
+      />
+
+      {statistics ? <StatisticsContent statistics={statistics} /> : null}
+    </div>
+  );
+};
+
+const StatisticsContent = ({ statistics }: { statistics: AdminCommunityStatistics }) => {
+  const counters = statistics.counters;
+
+  return (
+    <div className="space-y-5">
+      <section className="grid gap-4 sm:grid-cols-2 2xl:grid-cols-4">
+        <CommunityStatisticsCounterCard
+          description={statisticsCounterDescription([
+            { label: "Psicólogos", value: counters.followers.psychologists },
+            { label: "Pacientes", value: counters.followers.patients },
+          ])}
+          icon={Users}
+          label="Total de seguidores"
+          value={counters.followers.total}
+        />
+        <CommunityStatisticsCounterCard
+          description={statisticsCounterDescription([
+            { label: "Psicólogos", value: counters.active_users.psychologists },
+            { label: "Pacientes", value: counters.active_users.patients },
+          ])}
+          icon={Activity}
+          label="Usuários ativos"
+          value={counters.active_users.total}
+        />
+        <CommunityStatisticsCounterCard
+          description={statisticsCounterDescription([
+            { label: "Psicólogos verificados", value: counters.posts.verified_psychologists },
+            {
+              label: "Psicólogos não verificados",
+              value: counters.posts.unverified_psychologists,
+            },
+            { label: "Pacientes", value: counters.posts.patients },
+          ])}
+          icon={MessageCircle}
+          label="Postagens"
+          value={counters.posts.total}
+        />
+        <CommunityStatisticsCounterCard
+          description={statisticsCounterDescription([
+            { label: "Psicólogos verificados", value: counters.replies.verified_psychologists },
+            {
+              label: "Psicólogos não verificados",
+              value: counters.replies.unverified_psychologists,
+            },
+            { label: "Pacientes", value: counters.replies.patient_comments },
+          ])}
+          icon={MessageCircle}
+          label="Respostas e comentários"
+          value={counters.replies.total}
+        />
+        <CommunityStatisticsCounterCard
+          description="Total de denúncias reais recebidas por posts e respostas da comunidade no período."
+          icon={AlertTriangle}
+          label="Denúncias"
+          value={counters.reports.total}
+        />
+        <CommunityStatisticsCounterCard
+          description="Posts publicados com anonimato público habilitado no período."
+          icon={ShieldCheck}
+          label="Posts anônimos"
+          value={counters.anonymous_posts.total}
+        />
+        <CommunityStatisticsCounterCard
+          description={statisticsCounterDescription([
+            { label: "Psicólogos", value: counters.new_active_users.psychologists },
+            { label: "Pacientes", value: counters.new_active_users.patients },
+          ])}
+          icon={UserPlus}
+          label="Novos usuários ativos"
+          value={counters.new_active_users.total}
+        />
+        <CommunityStatisticsCounterCard
+          description="Posts de pacientes que receberam ao menos uma resposta de psicólogo verificado até o fim do período."
+          icon={BarChart3}
+          label="Pacientes respondidos"
+          value={counters.posts.patient_posts_answered_by_verified_psychologists}
+        />
+      </section>
+
+      <div className="grid gap-5 xl:grid-cols-2">
+        <CommunityStatisticsDistributionChart
+          items={statistics.charts.followers_split}
+          title="Seguidores por perfil"
+        />
+        <CommunityStatisticsDistributionChart
+          items={statistics.charts.active_users_split}
+          title="Usuários ativos por perfil"
+        />
+        <CommunityStatisticsDistributionChart
+          items={statistics.charts.posts_by_author}
+          title="Postagens por autoria"
+        />
+        <CommunityStatisticsDistributionChart
+          items={statistics.charts.replies_by_author}
+          title="Respostas e comentários por autoria"
+        />
+      </div>
+
+      <CommunityStatisticsTrendChart points={statistics.charts.daily} />
+    </div>
+  );
+};
+
 const communityActivityAreaLabels: Record<string, string> = {
   comunidade: "Comunidade",
   conteudo: "Conteúdo",
@@ -3837,6 +4292,10 @@ const DetailContent = ({
           <TopMentorsCard mentors={detail.top_mentors} />
         </div>
       </>
+    ) : null}
+
+    {activeTab === "estatisticas" ? (
+      <StatisticsTab createdAt={detail.community.created_at} slug={slug} />
     ) : null}
 
     {activeTab === "dados" ? (

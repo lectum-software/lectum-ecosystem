@@ -591,6 +591,12 @@ export type AdminCommunityActivitiesQuery = AdminCommunityPaginationQuery & {
   type?: string;
 };
 
+export type AdminCommunityStatisticsQuery = {
+  from?: string;
+  period?: "all" | "custom" | "month" | "week" | "year";
+  to?: string;
+};
+
 export type AdminCommunityActivityItem = {
   action: string;
   actor: string;
@@ -632,6 +638,86 @@ export type AdminCommunityActivities = {
   source: "admin_activity_log";
 };
 
+export type AdminCommunityStatisticsSplit = {
+  id: string;
+  label: string;
+  source: string;
+  value: number;
+};
+
+export type AdminCommunityStatisticsDailyPoint = {
+  active_users: number;
+  anonymous_posts: number;
+  date: string;
+  new_active_users: number;
+  posts: number;
+  replies: number;
+  reports: number;
+};
+
+export type AdminCommunityStatistics = {
+  charts: {
+    active_users_split: AdminCommunityStatisticsSplit[];
+    daily: AdminCommunityStatisticsDailyPoint[];
+    followers_split: AdminCommunityStatisticsSplit[];
+    posts_by_author: AdminCommunityStatisticsSplit[];
+    replies_by_author: AdminCommunityStatisticsSplit[];
+  };
+  community: Pick<AdminCommunityIdentity, "id" | "name" | "slug">;
+  counters: {
+    active_users: {
+      patients: number;
+      psychologists: number;
+      source: "community_member+community_post+post_reply+page_view_event";
+      total: number;
+    };
+    anonymous_posts: {
+      source: "community_post.anonymous";
+      total: number;
+    };
+    followers: {
+      patients: number;
+      psychologists: number;
+      source: "community_member";
+      total: number;
+    };
+    new_active_users: {
+      patients: number;
+      psychologists: number;
+      source: "first_activity:community_member+community_post+post_reply+page_view_event";
+      total: number;
+    };
+    posts: {
+      patients: number;
+      patient_posts_answered_by_verified_psychologists: number;
+      source: "community_post+post_reply";
+      total: number;
+      unverified_psychologists: number;
+      verified_psychologists: number;
+    };
+    replies: {
+      patient_comments: number;
+      source: "post_reply";
+      total: number;
+      unverified_psychologists: number;
+      verified_psychologists: number;
+    };
+    reports: {
+      source: "post_report";
+      total: number;
+    };
+  };
+  period: {
+    days: number;
+    from: string;
+    label: string;
+    max_days: number;
+    timezone: "server-local";
+    to: string;
+  };
+  source: "community_member+community_post+post_reply+post_report+page_view_event";
+};
+
 export type AdminCommunityUpdateInput = {
   description?: string | null;
   name: string;
@@ -671,15 +757,25 @@ const cleanParams = (input: CommunitiesDashboardQuery) => ({
   ...(input.to ? { to: input.to } : {}),
 });
 
-const cleanPaginationParams = <T extends AdminCommunityPaginationQuery>(input: T = {} as T) => ({
-  ...(input.limit ? { limit: input.limit } : {}),
-  ...(input.page ? { page: input.page } : {}),
-  ...(input.q ? { q: input.q } : {}),
-  ...Object.fromEntries(
-    Object.entries(input as Record<string, unknown>).filter(
-      ([key, value]) => !["limit", "page", "q"].includes(key) && value !== undefined,
+const cleanPaginationParams = <T extends object>(input: T = {} as T) => {
+  const params = input as Record<string, unknown>;
+
+  return {
+    ...(params.limit ? { limit: params.limit } : {}),
+    ...(params.page ? { page: params.page } : {}),
+    ...(params.q ? { q: params.q } : {}),
+    ...Object.fromEntries(
+      Object.entries(params).filter(
+        ([key, value]) => !["limit", "page", "q"].includes(key) && value !== undefined,
+      ),
     ),
-  ),
+  };
+};
+
+const cleanStatisticsParams = (input: AdminCommunityStatisticsQuery) => ({
+  ...(input.period ? { period: input.period } : {}),
+  ...(input.from ? { from: input.from } : {}),
+  ...(input.to ? { to: input.to } : {}),
 });
 
 export const getAdminCommunitiesDashboard = async (input: CommunitiesDashboardQuery) => {
@@ -794,6 +890,20 @@ export const getAdminCommunityActivities = async (
     `/api/admin/private/communities/${encodeURIComponent(id)}/activities`,
     {
       params: cleanPaginationParams(input),
+    },
+  );
+
+  return resolveApiData(response.data);
+};
+
+export const getAdminCommunityStatistics = async (
+  id: string,
+  input: AdminCommunityStatisticsQuery,
+) => {
+  const response = await adminApi.get<ApiResponse<AdminCommunityStatistics>>(
+    `/api/admin/private/communities/${encodeURIComponent(id)}/statistics`,
+    {
+      params: cleanStatisticsParams(input),
     },
   );
 

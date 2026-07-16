@@ -16,6 +16,7 @@ import {
   resolveReports,
   rules,
   show,
+  statistics,
   status,
   update,
   updateRule,
@@ -33,6 +34,7 @@ import {
   resolveReportsValidator,
   ruleValidator,
   showValidator,
+  statisticsValidator,
   statusValidator,
   updateRuleValidator,
   updateValidator,
@@ -46,6 +48,7 @@ routes.get("/", listValidator, list);
 routes.get("/:id", showValidator, show);
 routes.put("/:id", updateValidator, update);
 routes.patch("/:id/status", statusValidator, status);
+routes.get("/:id/statistics", statisticsValidator, statistics);
 routes.get("/:id/content", contentValidator, content);
 routes.post("/:id/content/:targetType/:targetId/remove", removeContentValidator, removeContent);
 routes.get("/:id/ranking", rankingValidator, ranking);

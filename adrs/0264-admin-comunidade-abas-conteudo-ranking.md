@@ -341,3 +341,23 @@ A decisao preserva a auditoria real em `admin_activity_log`: area e origem conti
 Consequencia: a mudanca e exclusivamente visual no Admin, sem novo endpoint, contrato semantico, schema Prisma, migration, dependencia, mock ou alteracao de persistencia.
 
 Validacao desta atualizacao: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke local `GET http://127.0.0.1:3012/comunidades/relacionamentos-com-proposito?tab=atividades` retornando 200.
+
+## Atualizacao 2026-07-16: aba Estatisticas da comunidade
+
+O detalhe administrativo de comunidade passa a ter a aba **Estatisticas** entre **Geral** e **Dados**, com leitura agregada e graficos simples baseados em fontes first-party reais da propria comunidade.
+
+A decisao e usar um endpoint contextual novo, `GET /api/admin/private/communities/:id/statistics`, dentro do modulo existente de comunidades, em vez de criar uma tela global ou um dashboard paralelo. O contrato consolida:
+
+- seguidores por perfil a partir de `community_member`;
+- usuarios ativos e novos usuarios ativos a partir da primeira/atual atividade real em `community_member`, `community_post`, `post_reply` e `page_view_event` autenticado;
+- postagens por psicologo verificado, psicologo nao verificado e paciente;
+- posts de pacientes respondidos por psicologos verificados;
+- respostas/comentarios por psicologo verificado, psicologo nao verificado e paciente;
+- denuncias em `post_report`;
+- posts anonimos por `community_post.anonymous`.
+
+Psicologo verificado continua usando a regra canonica `isVerifiedProfessionalEntitlement`/entitlement profissional ativo, sem criar status paralelo. Usuarios ativos representam atividade real dentro da comunidade no periodo filtrado, nao consulta clinica, conversa, atendimento ou dado externo ao produto. Pageviews anonimos nao entram na quebra por perfil.
+
+Consequencia: o Admin ganha estatisticas operacionais por comunidade sem schema novo, migration, dependencia de graficos ou backfill artificial. Periodos usam presets semana/mes/ano/todo historico/personalizado e os graficos tem alternativa textual acessivel.
+
+Validacao desta atualizacao: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check`, smoke local `GET http://localhost:3002/comunidades/relacionamentos-com-proposito?tab=estatisticas` retornando 200 e smoke sem sessao Admin de `GET /api/admin/private/communities/relacionamentos-com-proposito/statistics?period=month` retornando 401.
