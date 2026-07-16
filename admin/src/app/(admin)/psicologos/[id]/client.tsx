@@ -4705,14 +4705,9 @@ const PsychologistReportReporterHistory = ({ report }: { report: AdminPsychologi
     <div className="mt-3 divide-y divide-border/70">
       <article
         className="py-2 text-sm"
-        title={
-          report.reported_by.name +
-          " · " +
-          formatDateTime(report.created_at) +
-          " · Motivo: " +
-          report.reason_label +
-          (report.description ? " · " + report.description : "")
-        }
+        title={`${report.reported_by.name} · ${formatDateTime(report.created_at)} · Motivo: ${
+          report.reason_label
+        }${report.description ? ` · ${report.description}` : ""}`}
       >
         <div className="flex min-w-0 flex-wrap items-center gap-2">
           <Badge className="bg-surface-muted text-muted">{report.reported_by.label}</Badge>
@@ -4795,6 +4790,7 @@ const PsychologistReportListItem = ({
         <span className="inline-flex items-center gap-1.5 rounded-full bg-primary-soft px-2.5 py-1 text-xs font-black text-primary">
           <AlertTriangle aria-hidden className="h-3.5 w-3.5" />1 denúncia
         </span>
+        <ReportStatusBadge group={report.status_group} label={report.status_label} />
         <span className="inline-flex items-center gap-1.5 text-xs font-bold text-muted">
           <CalendarDays aria-hidden className="h-3.5 w-3.5" />
           Última em {formatDateTime(report.created_at)}

@@ -3168,6 +3168,7 @@ const CommunityReportListItem = ({
           <AlertTriangle aria-hidden className="h-3.5 w-3.5" />
           {numberFormatter.format(report.report_count)} denúncia(s)
         </span>
+        <CommunityReportStatusBadge group={report.status_group} label={report.status_label} />
         <span className="inline-flex items-center gap-1.5 text-xs font-bold text-muted">
           <CalendarDays aria-hidden className="h-3.5 w-3.5" />
           Última em {formatDateTime(report.last_reported_at)}
