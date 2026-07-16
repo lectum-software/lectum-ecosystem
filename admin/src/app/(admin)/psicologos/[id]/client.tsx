@@ -2737,18 +2737,27 @@ const VideoRetentionLineChart = ({
 };
 
 const VideoSummaryMetric = ({
+  compact = false,
   comparison,
   label,
   value,
 }: {
+  compact?: boolean;
   comparison: NonNullable<AdminPsychologistEngagementMetric["comparison"]>;
   label: string;
   value: string;
 }) => (
   <div className="min-w-0 rounded-2xl border border-border/70 bg-surface-muted/50 p-3">
     <p className="text-xs font-black text-muted">{label}</p>
-    <p className="mt-1 text-2xl font-black leading-none text-foreground">{value}</p>
-    <MetricComparisonLine className="mt-2" comparison={comparison} />
+    <p
+      className={cn(
+        "mt-1 font-black leading-none text-foreground",
+        compact ? "text-xl" : "text-2xl",
+      )}
+    >
+      {value}
+    </p>
+    <MetricComparisonLine className={compact ? "mt-1.5" : "mt-2"} comparison={comparison} />
   </div>
 );
 
@@ -2847,7 +2856,7 @@ const StatisticsVideoCard = ({
         </div>
 
         <div className="order-2 min-w-0 xl:order-3">
-          <div className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-1">
+          <div className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-3 xl:grid-cols-1">
             <VideoSummaryMetric
               comparison={video.comparisons.sessions}
               label="Visualizações"
@@ -2867,27 +2876,45 @@ const StatisticsVideoCard = ({
                 maximumFractionDigits: 1,
               })}%`}
             />
-            <VideoSummaryMetric
-              comparison={video.comparisons.favorites_from_video}
-              label="Favoritados pelo vídeo"
-              value={numberFormatter.format(video.metrics.favorites_from_video)}
-            />
-            <VideoSummaryMetric
-              comparison={video.comparisons.profile_accesses_from_video}
-              label="Acessos ao perfil"
-              value={numberFormatter.format(video.metrics.profile_accesses_from_video)}
-            />
-            <VideoSummaryMetric
-              comparison={video.comparisons.whatsapp_clicks_from_video}
-              label="Cliques no WhatsApp"
-              value={numberFormatter.format(video.metrics.whatsapp_clicks_from_video)}
-            />
-            <VideoSummaryMetric
-              comparison={video.comparisons.shares_from_video}
-              label="Compartilhamentos"
-              value={numberFormatter.format(video.metrics.shares_from_video)}
-            />
           </div>
+        </div>
+      </div>
+
+      <div className="mt-4 rounded-[1.25rem] border border-border/70 bg-surface-muted/30 p-3 sm:p-4">
+        <div>
+          <p className="text-xs font-black uppercase tracking-[0.18em] text-primary">
+            Ações geradas pelo vídeo
+          </p>
+          <p className="mt-1 text-sm font-bold text-muted">
+            Interações atribuídas ao vídeo de apresentação no período selecionado.
+          </p>
+        </div>
+
+        <div className="mt-3 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <VideoSummaryMetric
+            compact
+            comparison={video.comparisons.favorites_from_video}
+            label="Favoritados pelo vídeo"
+            value={numberFormatter.format(video.metrics.favorites_from_video)}
+          />
+          <VideoSummaryMetric
+            compact
+            comparison={video.comparisons.profile_accesses_from_video}
+            label="Acessos ao perfil"
+            value={numberFormatter.format(video.metrics.profile_accesses_from_video)}
+          />
+          <VideoSummaryMetric
+            compact
+            comparison={video.comparisons.whatsapp_clicks_from_video}
+            label="Cliques no WhatsApp"
+            value={numberFormatter.format(video.metrics.whatsapp_clicks_from_video)}
+          />
+          <VideoSummaryMetric
+            compact
+            comparison={video.comparisons.shares_from_video}
+            label="Compartilhamentos"
+            value={numberFormatter.format(video.metrics.shares_from_video)}
+          />
         </div>
       </div>
     </CardShell>

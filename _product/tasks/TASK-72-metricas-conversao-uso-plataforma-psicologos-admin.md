@@ -679,3 +679,14 @@ Regras de cálculo:
 - Não houve package novo, mock, schema Prisma/migration, backfill artificial ou captura de conversa/mensagem do WhatsApp; os números começam a refletir somente eventos persistidos após a implantação.
 - Builder/Quick Copy nao esta exposto como ferramenta no ambiente; a referencia visual usada foi a captura enviada pelo usuario e o padrao local do Admin.
 - Validacao executada: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke local `GET http://localhost:3002/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=estatisticas` retornando 200.
+
+
+## Ajuste complementar 2026-07-16 - Layout compacto das acoes do video de apresentacao
+
+- Pedido do usuario: melhorar a formatacao dos novos indicadores do bloco **Analises do video de apresentacao**, que ficaram empilhados na lateral e aumentaram demais a altura do card.
+- A coluna lateral voltou a concentrar apenas as metricas de consumo do video: visualizacoes, taxa de replays e retencao media.
+- As acoes geradas pelo video agora ficam em uma secao propria abaixo do video/grafico, com grid mobile-first 2x2 em telas medias e 4 colunas no desktop.
+- A decisao separa leitura de performance do video de conversoes/interacoes originadas pelo video, reduzindo vazio visual e preservando os mesmos dados reais ja retornados pela API.
+- Nao houve package novo, mock, schema Prisma/migration ou alteracao de contrato de API.
+- Builder/Quick Copy nao esta exposto como ferramenta no ambiente; a referencia visual usada foi a captura enviada pelo usuario e o padrao local do Admin.
+- Validacao executada: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke local `GET http://localhost:3002/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=estatisticas` retornando 200.

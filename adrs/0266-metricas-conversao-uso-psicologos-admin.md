@@ -88,3 +88,10 @@ A análise administrativa do vídeo de apresentação passa a contabilizar açõ
 Esses eventos complementam `profile_video_watch_session`: retenção e visualizações continuam vindo das sessões de vídeo; as novas conversões/interações do vídeo vêm de `important_action_event`. Não há backfill histórico nem inferência por URL ou sessão. O card Admin pode exibir zero real até que as novas ações sejam registradas em produção.
 
 Validacao complementar 2026-07-16: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke local `GET http://localhost:3002/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=estatisticas` retornando 200.
+
+
+## Complemento 2026-07-16 - Separacao visual entre consumo e acoes do video
+
+O bloco Admin de video de apresentacao deve separar metricas de consumo do video das acoes atribuidas ao video. Visualizacoes, replay e retencao permanecem na coluna lateral do grafico; favoritar, acessar perfil, clicar no WhatsApp e compartilhar ficam em uma secao horizontal compacta abaixo. A decisao melhora escaneabilidade, evita uma lateral excessivamente alta e nao altera fonte de dados, contrato de API ou regra de calculo.
+
+Validacao complementar de layout 2026-07-16: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke local `GET http://localhost:3002/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=estatisticas` retornando 200.
