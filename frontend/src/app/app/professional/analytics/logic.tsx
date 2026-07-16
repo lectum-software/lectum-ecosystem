@@ -490,32 +490,26 @@ const PresentationVideoMetricCard = ({
   const Icon = videoMetricIcons[metric.id];
 
   return (
-    <article className="grid min-w-0 gap-2 rounded-[18px] border border-primary/10 bg-surface-muted/70 p-3">
-      <div className="flex min-w-0 items-center gap-2">
-        <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-primary-soft text-primary">
-          <Icon className="h-4 w-4" aria-hidden />
-        </span>
-        <h3 className="min-w-0 text-[0.76rem] font-extrabold leading-4 text-muted">
-          {metric.label}
-        </h3>
-      </div>
+    <article className="flex min-h-[112px] min-w-0 flex-col rounded-[18px] border border-primary/10 bg-surface-muted/70 p-3">
+      <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-primary-soft text-primary">
+        <Icon className="h-4 w-4" aria-hidden />
+      </span>
+      <h3 className="mt-2 min-h-8 min-w-0 break-words text-[0.76rem] font-extrabold leading-4 text-muted">
+        {metric.label}
+      </h3>
       <p
         className={cn(
-          "text-2xl font-black leading-none tracking-[-0.05em] text-foreground",
+          "mt-auto pt-2 text-2xl font-black leading-none tracking-[-0.05em] text-foreground",
           locked && "select-none blur-[5px]",
         )}
       >
         {formatVideoMetricValue(metric)}
-      </p>
-      <p className="line-clamp-2 text-[0.68rem] font-semibold leading-4 text-subtle">
-        {metric.description}
       </p>
     </article>
   );
 };
 
 type PresentationVideoActionMetric = {
-  description: string;
   icon: AnalyticsCardIcon;
   id:
     | "profile_accesses_from_video"
@@ -534,28 +528,24 @@ const getPresentationVideoActionMetrics = (
     icon: Eye,
     label: "Acesso ao perfil",
     value: video?.metrics.profile_accesses_from_video ?? 0,
-    description: "Toques em Perfil a partir do vídeo.",
   },
   {
     id: "favorites_from_video",
     icon: Heart,
     label: "Favoritado",
     value: video?.metrics.favorites_from_video ?? 0,
-    description: "Favoritos gerados na área do vídeo.",
   },
   {
     id: "whatsapp_clicks_from_video",
     icon: WhatsAppIcon,
     label: "Cliques no WhatsApp",
     value: video?.metrics.whatsapp_clicks_from_video ?? 0,
-    description: "Conversas iniciadas pelo CTA do vídeo.",
   },
   {
     id: "shares_from_video",
     icon: Share2,
     label: "Compartilhamento",
     value: video?.metrics.shares_from_video ?? 0,
-    description: "Compartilhamentos acionados no vídeo.",
   },
 ];
 
@@ -569,22 +559,21 @@ const PresentationVideoActionCard = ({
   const Icon = metric.icon;
 
   return (
-    <article className="grid min-w-0 gap-2 rounded-[18px] border border-primary/10 bg-surface-muted/70 p-3">
-      <div className="flex min-w-0 items-center gap-2">
-        <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-primary-soft text-primary">
-          <Icon className="h-4 w-4" aria-hidden />
-        </span>
-        <p className="min-w-0 text-[0.76rem] font-extrabold leading-4 text-muted">{metric.label}</p>
-      </div>
+    <article className="flex min-h-[112px] min-w-0 flex-col rounded-[18px] border border-primary/10 bg-surface-muted/70 p-3">
+      <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-primary-soft text-primary">
+        <Icon className="h-4 w-4" aria-hidden />
+      </span>
+      <p className="mt-2 min-h-8 min-w-0 break-words text-[0.76rem] font-extrabold leading-4 text-muted">
+        {metric.label}
+      </p>
       <p
         className={cn(
-          "text-2xl font-black leading-none tracking-[-0.05em] text-foreground",
+          "mt-auto pt-2 text-2xl font-black leading-none tracking-[-0.05em] text-foreground",
           locked && "select-none blur-[5px]",
         )}
       >
         {toCount(metric.value)}
       </p>
-      <p className="text-[0.68rem] font-semibold leading-4 text-subtle">{metric.description}</p>
     </article>
   );
 };

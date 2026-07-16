@@ -757,3 +757,12 @@ Regras de cálculo:
 - Nao houve package novo, mock, schema Prisma/migration, endpoint novo ou alteracao de contrato de API.
 - Builder/Quick Copy nao esta exposto como ferramenta no ambiente; a referencia visual usada foi a captura enviada pelo usuario e o padrao local de `Meus Analytics - Psicologo`.
 - Validacao executada: `pnpm --dir frontend check`, `pnpm --dir frontend build` e smoke HTTP local `GET http://localhost:3000/app/professional/analytics` retornando 307 pelo guard privado.
+
+## Ajuste complementar 2026-07-16 - Contadores compactos do video no analytics do psicologo
+
+- Pedido do usuario: colocar o titulo de cada contador abaixo do icone e remover os textos descritivos internos dos contadores.
+- Os cards de **Consumo e acoes do video** agora seguem hierarquia compacta: icone, titulo e valor, sem descricao auxiliar dentro de cada contador.
+- A mudanca reduz ruído visual no mobile e preserva o texto explicativo geral do bloco e o diagnostico abaixo das metricas.
+- Nao houve package novo, mock, schema Prisma/migration, endpoint novo ou alteracao de contrato de API.
+- Builder/Quick Copy nao esta exposto como ferramenta no ambiente; a referencia visual usada foi a captura enviada pelo usuario.
+- Validacao executada: `pnpm --dir frontend check`, `pnpm --dir frontend build` e smoke HTTP local `GET http://localhost:3000/app/professional/analytics` retornando 307 pelo guard privado.

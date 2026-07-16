@@ -121,3 +121,11 @@ No analytics privado do psicologo, os indicadores de consumo do video (`Visualiz
 O diagnostico de retencao fica abaixo desse grid para funcionar como conclusao da leitura das metricas. A decisao e exclusivamente de hierarquia visual: nao altera fonte de dados, contrato de API, regra de calculo, schema Prisma ou tracking first-party.
 
 Validacao complementar 2026-07-16: `pnpm --dir frontend check`, `pnpm --dir frontend build` e smoke HTTP local `GET http://localhost:3000/app/professional/analytics` retornando 307 pelo guard privado.
+
+## Complemento 2026-07-16 - Contadores compactos no analytics do psicologo
+
+Os contadores do bloco **Consumo e acoes do video** no analytics privado do psicologo devem priorizar escaneabilidade mobile: icone no topo, titulo imediatamente abaixo do icone e valor em destaque, sem texto descritivo dentro de cada card. A descricao geral do bloco e o diagnostico de retencao continuam fora dos contadores.
+
+A decisao e exclusivamente visual e nao altera fonte de dados, contrato de API, regra de calculo, schema Prisma ou tracking first-party.
+
+Validacao complementar 2026-07-16: `pnpm --dir frontend check`, `pnpm --dir frontend build` e smoke HTTP local `GET http://localhost:3000/app/professional/analytics` retornando 307 pelo guard privado.
