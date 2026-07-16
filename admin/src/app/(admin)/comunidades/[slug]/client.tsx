@@ -168,13 +168,18 @@ const contentTypeOptions = [
   label: string;
 }>;
 
+type ContentPeriodValue = NonNullable<AdminCommunityContentQuery["period"]>;
+type ContentPeriodPreset = Exclude<ContentPeriodValue, "custom">;
+type ContentCustomRange = Pick<AdminCommunityContentQuery, "from" | "to">;
+
 const contentPeriodOptions = [
+  { id: "week", label: "Esta semana" },
+  { id: "month", label: "Este mês" },
+  { id: "year", label: "Este ano" },
   { id: "all", label: "Todo o período" },
-  { id: "7d", label: "Últimos 7 dias" },
-  { id: "30d", label: "Últimos 30 dias" },
-  { id: "90d", label: "Últimos 90 dias" },
+  { id: "custom", label: "Personalizado" },
 ] as const satisfies ReadonlyArray<{
-  id: NonNullable<AdminCommunityContentQuery["period"]>;
+  id: ContentPeriodValue;
   label: string;
 }>;
 
@@ -269,6 +274,56 @@ const cardClass = "rounded-card border border-border bg-surface shadow-admin-sof
 
 const formatDate = (value: string) => dateFormatter.format(new Date(value));
 const formatDateTime = (value: string) => dateTimeFormatter.format(new Date(value));
+const toDateInputValue = (date: Date) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+};
+const startOfCurrentWeek = () => {
+  const date = new Date();
+  const day = date.getDay();
+  const diff = day === 0 ? -6 : 1 - day;
+  date.setDate(date.getDate() + diff);
+
+  return date;
+};
+const startOfCurrentMonth = () => {
+  const date = new Date();
+  date.setDate(1);
+
+  return date;
+};
+const startOfCurrentYear = () => new Date(new Date().getFullYear(), 0, 1);
+const dateInputValueFromString = (value?: string | null) => {
+  if (!value) return toDateInputValue(new Date());
+
+  const date = new Date(value);
+
+  return Number.isNaN(date.getTime()) ? toDateInputValue(new Date()) : toDateInputValue(date);
+};
+const getContentRangeForPeriod = (
+  period: ContentPeriodPreset,
+  createdAt?: string | null,
+): Required<ContentCustomRange> => {
+  const today = toDateInputValue(new Date());
+
+  if (period === "month") return { from: toDateInputValue(startOfCurrentMonth()), to: today };
+  if (period === "year") return { from: toDateInputValue(startOfCurrentYear()), to: today };
+  if (period === "all") return { from: dateInputValueFromString(createdAt), to: today };
+
+  return { from: toDateInputValue(startOfCurrentWeek()), to: today };
+};
+const contentDateFromInput = (value: string) => {
+  const [year, month, day] = value.split("-").map(Number);
+  return new Date(year, month - 1, day, 12, 0, 0, 0);
+};
+const isValidContentRange = (range: ContentCustomRange) => {
+  if (!range.from || !range.to) return false;
+
+  return contentDateFromInput(range.from) <= contentDateFromInput(range.to);
+};
 const formatCountLabel = (value: number, singular: string, plural: string) =>
   `${numberFormatter.format(value)} ${value === 1 ? singular : plural}`;
 const formatChange = (value: number | null) => {
@@ -1949,26 +2004,86 @@ const ContentItemCard = ({
   </article>
 );
 
-const ContentTab = ({ slug }: { slug: string }) => {
-  const [query, setQuery] = useState<AdminCommunityContentQuery>({
+type ContentBaseQuery = Pick<AdminCommunityContentQuery, "limit" | "page" | "q" | "type">;
+
+const ContentTab = ({ createdAt, slug }: { createdAt: string; slug: string }) => {
+  const [query, setQuery] = useState<ContentBaseQuery>({
     limit: 10,
     page: 1,
-    period: "all",
     q: "",
     type: "all",
   });
+  const [selectedPeriod, setSelectedPeriod] = useState<ContentPeriodValue>("all");
+  const [appliedPeriod, setAppliedPeriod] = useState<ContentPeriodValue>("all");
+  const [draftRange, setDraftRange] = useState<ContentCustomRange>(() =>
+    getContentRangeForPeriod("all", createdAt),
+  );
+  const [appliedRange, setAppliedRange] = useState<ContentCustomRange>(() =>
+    getContentRangeForPeriod("all", createdAt),
+  );
+  const [rangeError, setRangeError] = useState<string | null>(null);
   const [selected, setSelected] = useState<AdminCommunityContentItem | null>(null);
-  const result = useAdminCommunityContent(slug, query);
+  const contentQueryInput = useMemo<AdminCommunityContentQuery>(
+    () => ({
+      ...query,
+      from: appliedPeriod === "custom" ? appliedRange.from : undefined,
+      period: appliedPeriod,
+      to: appliedPeriod === "custom" ? appliedRange.to : undefined,
+    }),
+    [appliedPeriod, appliedRange.from, appliedRange.to, query],
+  );
+  const result = useAdminCommunityContent(slug, contentQueryInput);
 
-  const updateQuery = (patch: Partial<AdminCommunityContentQuery>) => {
+  const updateQuery = (patch: Partial<ContentBaseQuery>) => {
     setSelected(null);
     setQuery((current) => ({ ...current, ...patch, page: patch.page ?? 1 }));
+  };
+  const handlePeriodChange = (period: ContentPeriodValue) => {
+    setSelectedPeriod(period);
+    setRangeError(null);
+    updateQuery({});
+
+    if (period === "custom") {
+      if (!isValidContentRange(draftRange)) {
+        setRangeError(
+          "Informe um período personalizado completo, com data inicial menor ou igual à final.",
+        );
+        return;
+      }
+
+      setAppliedPeriod("custom");
+      setAppliedRange(draftRange);
+      return;
+    }
+
+    const nextRange = getContentRangeForPeriod(period, createdAt);
+    setDraftRange(nextRange);
+    setAppliedRange(nextRange);
+    setAppliedPeriod(period);
+  };
+  const handleCustomDateChange = (field: keyof ContentCustomRange, value: string) => {
+    const nextRange = { ...draftRange, [field]: value };
+
+    setSelectedPeriod("custom");
+    setDraftRange(nextRange);
+    updateQuery({});
+
+    if (!isValidContentRange(nextRange)) {
+      setRangeError(
+        "Informe um período personalizado completo, com data inicial menor ou igual à final.",
+      );
+      return;
+    }
+
+    setRangeError(null);
+    setAppliedPeriod("custom");
+    setAppliedRange(nextRange);
   };
 
   return (
     <div className="space-y-5">
       <section className={cn(cardClass, "p-5")}>
-        <div className="grid gap-3 lg:grid-cols-[1.5fr_1fr_0.85fr]">
+        <div className="grid gap-3 lg:grid-cols-[1.35fr_0.95fr_0.85fr_0.65fr_0.65fr]">
           <label className="block text-sm font-black text-muted">
             Buscar
             <span className="mt-2 flex h-11 items-center gap-2 rounded-control border border-border bg-surface px-3">
@@ -2011,12 +2126,8 @@ const ContentTab = ({ slug }: { slug: string }) => {
               <select
                 className="h-11 w-full appearance-none rounded-control border border-border bg-surface px-3 pr-12 text-sm font-bold text-foreground"
                 id="community-content-period"
-                onChange={(event) =>
-                  updateQuery({
-                    period: event.target.value as AdminCommunityContentQuery["period"],
-                  })
-                }
-                value={query.period ?? "all"}
+                onChange={(event) => handlePeriodChange(event.target.value as ContentPeriodValue)}
+                value={selectedPeriod}
               >
                 {contentPeriodOptions.map((option) => (
                   <option key={option.id} value={option.id}>
@@ -2030,7 +2141,30 @@ const ContentTab = ({ slug }: { slug: string }) => {
               />
             </span>
           </label>
+          <label className="block text-sm font-black text-muted" htmlFor="community-content-from">
+            De
+            <input
+              className="mt-2 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground"
+              id="community-content-from"
+              max={draftRange.to}
+              onChange={(event) => handleCustomDateChange("from", event.target.value)}
+              type="date"
+              value={draftRange.from ?? ""}
+            />
+          </label>
+          <label className="block text-sm font-black text-muted" htmlFor="community-content-to">
+            Até
+            <input
+              className="mt-2 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground"
+              id="community-content-to"
+              min={draftRange.from}
+              onChange={(event) => handleCustomDateChange("to", event.target.value)}
+              type="date"
+              value={draftRange.to ?? ""}
+            />
+          </label>
         </div>
+        {rangeError ? <p className="mt-3 text-xs font-bold text-danger">{rangeError}</p> : null}
       </section>
 
       <section className={cn(cardClass, "p-5")}>
@@ -2461,7 +2595,9 @@ const DetailContent = ({
       </div>
     ) : null}
 
-    {activeTab === "conteudo" ? <ContentTab slug={slug} /> : null}
+    {activeTab === "conteudo" ? (
+      <ContentTab createdAt={detail.community.created_at} slug={slug} />
+    ) : null}
     {activeTab === "ranking" ? <RankingTab slug={slug} /> : null}
     {activeTab === "denuncias" ? <ReportsTab slug={slug} /> : null}
     {activeTab === "atividades" ? <ActivitiesTab slug={slug} /> : null}

@@ -56,7 +56,9 @@ import {
 const DETAIL_PERIOD_DAYS = 30;
 const DEFAULT_PAGE = 1;
 const DEFAULT_PAGE_SIZE = 10;
+const MAX_CONTENT_PERIOD_DAYS = 3660;
 const MAX_PAGE_SIZE = 50;
+const MS_PER_DAY = 86_400_000;
 const REMOVE_CONTENT_CONFIRMATION = "REMOVER CONTEUDO";
 const COMMUNITY_LIST_SORTS = new Set<AdminCommunitiesListSort>([
   "activity",
@@ -82,6 +84,38 @@ const endOfDay = (date: Date) => {
   const next = new Date(date);
   next.setHours(23, 59, 59, 999);
   return next;
+};
+
+const startOfWeek = (date: Date) => {
+  const next = startOfDay(date);
+  const day = next.getDay();
+  const diff = day === 0 ? -6 : 1 - day;
+
+  return addDays(next, diff);
+};
+
+const startOfMonth = (date: Date) => startOfDay(new Date(date.getFullYear(), date.getMonth(), 1));
+const startOfYear = (date: Date) => startOfDay(new Date(date.getFullYear(), 0, 1));
+
+const parseDateOnly = (value: string | undefined, boundary: "end" | "start") => {
+  if (!value || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return null;
+
+  const [year, month, day] = value.split("-").map(Number);
+  const date = new Date(year, month - 1, day);
+
+  if (Number.isNaN(date.getTime())) return null;
+  if (date.getFullYear() !== year || date.getMonth() !== month - 1 || date.getDate() !== day) {
+    return null;
+  }
+
+  return boundary === "start" ? startOfDay(date) : endOfDay(date);
+};
+
+const daysBetweenInclusive = (from: Date, to: Date) => {
+  const start = startOfDay(from).getTime();
+  const end = startOfDay(to).getTime();
+
+  return Math.floor((end - start) / MS_PER_DAY) + 1;
 };
 
 const pad = (value: number) => String(value).padStart(2, "0");
@@ -576,23 +610,65 @@ const contentMatchesType = (
   return item.content_kind === type;
 };
 
-const contentMatchesPeriod = (
-  item: AdminCommunityContentItemDTO,
-  period: NonNullable<AdminCommunityContentQuery["period"]>,
-) => {
-  if (period === "all") return true;
+type ContentPeriodRange = { end: Date | null; start: Date | null };
+type ContentPeriodResult =
+  | { range: ContentPeriodRange; success: true }
+  | { code: string; success: false };
 
-  const daysByPeriod: Record<"30d" | "7d" | "90d", number> = {
-    "7d": 7,
-    "30d": 30,
-    "90d": 90,
-  };
-  const days = daysByPeriod[period as keyof typeof daysByPeriod];
-  if (!days) return true;
+const resolveContentPeriod = (query: AdminCommunityContentQuery): ContentPeriodResult => {
+  const hasCustomFrom = Boolean(query.from);
+  const hasCustomTo = Boolean(query.to);
+  const preset = query.period || (hasCustomFrom || hasCustomTo ? "custom" : "all");
 
-  const from = startOfDay(addDays(new Date(), -(days - 1)));
+  if (preset === "all") {
+    return { success: true, range: { end: null, start: null } };
+  }
 
-  return item.created_at >= from;
+  let start: Date;
+  let end: Date;
+
+  if (preset === "custom") {
+    if (!hasCustomFrom || !hasCustomTo) {
+      return { success: false, code: "invalid_analytics_date_range" };
+    }
+
+    const customStart = parseDateOnly(query.from, "start");
+    const customEnd = parseDateOnly(query.to, "end");
+
+    if (!customStart || !customEnd || customStart > customEnd) {
+      return { success: false, code: "invalid_analytics_date_range" };
+    }
+
+    start = customStart;
+    end = customEnd;
+  } else if (preset === "week") {
+    const today = new Date();
+    start = startOfWeek(today);
+    end = endOfDay(today);
+  } else if (preset === "month") {
+    const today = new Date();
+    start = startOfMonth(today);
+    end = endOfDay(today);
+  } else if (preset === "year") {
+    const today = new Date();
+    start = startOfYear(today);
+    end = endOfDay(today);
+  } else {
+    return { success: false, code: "invalid_analytics_date_range" };
+  }
+
+  const days = daysBetweenInclusive(start, end);
+  if (days < 1 || days > MAX_CONTENT_PERIOD_DAYS) {
+    return { success: false, code: "invalid_analytics_date_range" };
+  }
+
+  return { success: true, range: { end, start } };
+};
+
+const contentMatchesPeriod = (item: AdminCommunityContentItemDTO, range: ContentPeriodRange) => {
+  if (!range.start || !range.end) return true;
+
+  return item.created_at >= range.start && item.created_at <= range.end;
 };
 
 const buildContentMetricsMaps = async (
@@ -1253,7 +1329,9 @@ export const listContent = async (data: IAdminCommunityContentDTO): Promise<Reso
   if (!community) return notFound();
 
   const queryType = data.q.type ?? "all";
-  const queryPeriod = data.q.period ?? "all";
+  const queryPeriod = resolveContentPeriod(data.q);
+  if (!queryPeriod.success) return { status: 400, ...error(queryPeriod.code, {}) };
+
   const queryStatus = data.q.status ?? "all";
   const search = normalizeSearch(data.q.q);
   const page = normalizePage(data.q.page);
@@ -1268,7 +1346,7 @@ export const listContent = async (data: IAdminCommunityContentDTO): Promise<Reso
   const replyItems = replies.map((reply) => mapReplyContent(community, reply, metrics));
   const items = [...postItems, ...replyItems]
     .filter((item) => contentMatchesType(item, queryType))
-    .filter((item) => contentMatchesPeriod(item, queryPeriod))
+    .filter((item) => contentMatchesPeriod(item, queryPeriod.range))
     .filter((item) => queryStatus === "all" || item.status === queryStatus)
     .filter((item) => contentMatchesSearch(item, search))
     .sort((left, right) => right.created_at.getTime() - left.created_at.getTime());

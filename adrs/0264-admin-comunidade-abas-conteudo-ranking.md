@@ -200,3 +200,17 @@ Consequencias:
 - views e WhatsApp de respostas dependem de eventos com alvo explicito e podem iniciar em zero ate que novos eventos sejam capturados;
 - clicks historicos de WhatsApp sem origem de conteudo nao sao redistribuidos por inferencia;
 - a remocao administrativa continua auditada pelo fluxo existente e nao ha alteracao de schema Prisma, migration ou package.
+
+
+## Atualizacao 2026-07-15: filtro de periodo com datas fixas no Conteudo
+
+A aba **Conteudo** do detalhe administrativo de comunidade passa a usar os mesmos presets operacionais da aba **Publicacoes** do detalhe de psicologo: **Esta semana**, **Este mes**, **Este ano**, **Todo o periodo** e **Personalizado**.
+
+A decisao e manter os campos **De** e **Ate** sempre visiveis para dar previsibilidade ao recorte ativo. Presets atualizam o rascunho das datas no frontend, mas somente `period=custom` envia `from`/`to` como filtro efetivo. `period=all` permanece sem limite de data no backend para preservar o significado de todo o historico da comunidade.
+
+Consequencias:
+
+- a UI fica consistente com filtros de publicacoes do psicologo;
+- datas editadas mudam automaticamente o periodo para **Personalizado**;
+- o endpoint real passa a validar intervalo customizado antes de filtrar `created_at`;
+- nao ha nova tabela, migration, dependencia ou dado artificial.

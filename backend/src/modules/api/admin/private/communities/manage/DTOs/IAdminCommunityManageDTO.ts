@@ -22,8 +22,10 @@ export type AdminCommunitiesListQuery = AdminCommunityPaginationQuery & {
 };
 
 export type AdminCommunityContentQuery = AdminCommunityPaginationQuery & {
-  period?: "30d" | "7d" | "90d" | "all";
+  from?: string;
+  period?: "all" | "custom" | "month" | "week" | "year";
   status?: "all" | "published" | "removed";
+  to?: string;
   type?:
     | "all"
     | "anonymous_post"

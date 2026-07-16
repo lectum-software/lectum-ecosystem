@@ -276,3 +276,16 @@ Regras:
 - Builder/Quick Copy nao esta exposto como ferramenta callable no ambiente; a referencia visual usada foi a captura enviada pelo usuario e o padrao local do Admin/site publico.
 - ADR atualizado: `adrs/0264-admin-comunidade-abas-conteudo-ranking.md` e complemento em `adrs/0266-metricas-conversao-uso-psicologos-admin.md`.
 - Validacao executada: `pnpm --dir backend check`, `pnpm --dir frontend check`, `pnpm --dir admin check`, `pnpm --dir backend build`, `pnpm --dir frontend build`, `pnpm --dir admin build`, `pnpm check` e smoke local `GET http://localhost:3002/comunidades/autocuidado-em-pratica?tab=conteudo`/`GET http://localhost:3000/community/autocuidado-em-pratica` retornando 200.
+
+
+## Ajuste complementar 2026-07-15 - Periodo personalizado fixo no Conteudo
+
+- Pedido do usuario: na aba **Conteudo**, trocar as opcoes de periodo para **Esta semana**, **Este mes**, **Este ano**, **Todo o periodo** e **Personalizado**, mantendo os campos **De** e **Ate** sempre visiveis.
+- A UI Admin agora exibe Buscar, Tipo, Periodo, De e Ate no card de filtros, com layout mobile-first e os campos de data fixos mesmo quando o periodo selecionado nao e personalizado.
+- A selecao de periodo preenche as datas de referencia: semana atual, mes atual, ano atual ou do cadastro da comunidade ate hoje; ao editar De/Ate, o filtro muda para **Personalizado**.
+- O backend de `GET /api/admin/private/communities/:id/content` passou a aceitar `period=week|month|year|all|custom` e `from`/`to` para periodo personalizado, filtrando por `created_at` real dos posts/respostas.
+- `Todo o periodo` continua sem limitar o resultado no backend; os campos De/Ate sao referencia visual e ponto de partida para customizacao.
+- Nao houve package novo, mock, schema Prisma/migration, endpoint paralelo ou alteracao destrutiva de dados.
+- Builder/Quick Copy nao esta exposto como ferramenta callable no ambiente; a referencia visual usada foi a captura enviada pelo usuario, o padrao da aba Publicacoes do detalhe de psicologo e o padrao local do Admin.
+- ADR atualizado: `adrs/0264-admin-comunidade-abas-conteudo-ranking.md`.
+- Validacao executada: `pnpm --dir backend check`, `pnpm --dir admin check`, `pnpm --dir backend build`, `pnpm --dir admin build`, `pnpm check` e smoke local `GET http://localhost:3002/comunidades/autocuidado-em-pratica?tab=conteudo` retornando 200.
