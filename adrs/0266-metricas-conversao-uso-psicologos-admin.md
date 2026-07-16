@@ -161,3 +161,11 @@ No analytics privado do psicologo, a tabela desktop **Origem do trafego** deve c
 A decisao melhora a comparacao vertical dos numeros em telas maiores sem alterar dados, contrato de API, tracking first-party, schema Prisma ou packages. No mobile, a visualizacao continua em cards para preservar legibilidade.
 
 Validacao complementar 2026-07-16: `pnpm --dir frontend check`, `pnpm --dir frontend build` e smoke HTTP local `GET http://localhost:3000/app/professional/analytics` retornando 307 pelo guard privado.
+
+## Complemento 2026-07-16 - Copy de acesso ao perfil
+
+No analytics privado do psicologo, o card de `profile_view_event` deve usar a copy **Acesso ao perfil** em vez de **Aberturas de perfil** para ficar consistente com as demais referencias do produto ao mesmo comportamento.
+
+A decisao e apenas textual: a fonte de dados, a metrica, o contrato de API, o tracking first-party, o schema Prisma e os packages permanecem inalterados.
+
+Validacao complementar 2026-07-16: `pnpm --dir frontend check`, `pnpm --dir frontend build` e smoke HTTP local `GET http://localhost:3000/app/professional/analytics` retornando 307 pelo guard privado.

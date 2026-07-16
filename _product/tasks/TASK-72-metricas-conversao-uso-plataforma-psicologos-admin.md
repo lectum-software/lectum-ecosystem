@@ -804,3 +804,11 @@ Regras de cálculo:
 - O ajuste e exclusivamente visual, mobile-first e nao altera dados, contrato de API, tracking first-party, schema Prisma/migration ou packages.
 - Builder/Quick Copy nao esta exposto como ferramenta no ambiente; a referencia visual usada foi a captura enviada pelo usuario.
 - Validacao executada: `pnpm --dir frontend check`, `pnpm --dir frontend build` e smoke HTTP local `GET http://localhost:3000/app/professional/analytics` retornando 307 pelo guard privado.
+
+## Ajuste complementar 2026-07-16 - Copy de acesso ao perfil nos analytics
+
+- Pedido do usuario: alterar o texto `Abertura de perfil` para `Acesso ao perfil` em `/app/professional/analytics`.
+- O card de metricas principais de perfil passa a usar a copy **Acesso ao perfil**, mantendo a mesma fonte real `profile_view_event`.
+- O ajuste e exclusivamente textual, sem alterar dados, contrato de API, tracking first-party, schema Prisma/migration ou packages.
+- Builder/Quick Copy nao esta exposto como ferramenta no ambiente; a referencia visual usada foi a captura enviada pelo usuario.
+- Validacao executada: `pnpm --dir frontend check`, `pnpm --dir frontend build` e smoke HTTP local `GET http://localhost:3000/app/professional/analytics` retornando 307 pelo guard privado.

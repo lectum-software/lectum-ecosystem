@@ -142,7 +142,7 @@ const metricCards = (data?: PsychologistAnalyticsResponse): AnalyticsCardView[] 
   {
     id: "profile_views",
     icon: Eye,
-    label: "Aberturas de perfil",
+    label: "Acesso ao perfil",
     value: toCount(data?.metrics.profile_views),
     source: "profile_view_event",
   },
