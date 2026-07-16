@@ -39,6 +39,20 @@ const communitySelect = {
   slug: true,
 } satisfies Prisma.communitySelect;
 
+const reportAuthorSelect = {
+  avatar: true,
+  id: true,
+  name: true,
+  psychologist_profile: {
+    select: {
+      gender: true,
+      professional_first_name: true,
+      professional_last_name: true,
+    },
+  },
+  role: true,
+} satisfies Prisma.userSelect;
+
 const reportSelect = {
   createdAt: true,
   deleted: true,
@@ -53,6 +67,9 @@ const reportSelect = {
   target_type: true,
   post: {
     select: {
+      author: {
+        select: reportAuthorSelect,
+      },
       author_id: true,
       content: true,
       deleted: true,
@@ -82,6 +99,9 @@ const reportSelect = {
   },
   reply: {
     select: {
+      author: {
+        select: reportAuthorSelect,
+      },
       author_id: true,
       content: true,
       deleted: true,

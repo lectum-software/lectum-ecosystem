@@ -1,5 +1,6 @@
-﻿import type { Resolve } from "@/helpers/return";
+import type { Resolve } from "@/helpers/return";
 import { error, msg } from "@/helpers/translate";
+import { buildProfessionalFullDisplayName } from "@/utils/professional-name";
 import type {
   AdminPsychologistReportActionDTO,
   AdminPsychologistReportItem,
@@ -448,6 +449,31 @@ const reportTitle = (report: AdminPsychologistReportRecord) => {
 const reportContent = (report: AdminPsychologistReportRecord) =>
   report.reply ? report.reply.content : report.post.content;
 
+type AdminPsychologistReportAuthor =
+  | AdminPsychologistReportRecord["post"]["author"]
+  | NonNullable<AdminPsychologistReportRecord["reply"]>["author"];
+
+const reportAuthor = (report: AdminPsychologistReportRecord): AdminPsychologistReportAuthor =>
+  report.reply ? report.reply.author : report.post.author;
+
+const reportAuthorName = (author: AdminPsychologistReportAuthor) => {
+  if (author.role !== "psicologo") return author.name;
+
+  return buildProfessionalFullDisplayName({
+    fallbackName: author.name,
+    firstName: author.psychologist_profile?.professional_first_name,
+    lastName: author.psychologist_profile?.professional_last_name,
+  });
+};
+
+const reportAuthorRoleLabel = (author: AdminPsychologistReportAuthor) => {
+  if (author.role !== "psicologo") return roleLabel(author.role);
+
+  return author.psychologist_profile?.gender?.trim().toLowerCase() === "feminino"
+    ? "Psicóloga"
+    : "Psicólogo";
+};
+
 const reportMedia = (report: AdminPsychologistReportRecord) => {
   if (report.reply) {
     if (!report.reply.media_url || !report.reply.media_type) return null;
@@ -499,6 +525,7 @@ const toReportItem = (report: AdminPsychologistReportRecord): AdminPsychologistR
   const statusGroup = reportStatusGroup(report.status);
   const available = reportContentAvailable(report);
   const resolves = canResolve(report.status);
+  const author = reportAuthor(report);
 
   return {
     capabilities: {
@@ -508,6 +535,13 @@ const toReportItem = (report: AdminPsychologistReportRecord): AdminPsychologistR
       can_resolve_upheld: resolves,
     },
     content: {
+      author: {
+        avatar: author.avatar,
+        id: author.id,
+        name: reportAuthorName(author),
+        role: author.role,
+        role_label: reportAuthorRoleLabel(author),
+      },
       available,
       body: reportContent(report),
       community: safeCommunity(report),

@@ -80,6 +80,13 @@ export type AdminPsychologistReportsCard = {
 
 export type AdminPsychologistReportItem = {
   content: {
+    author: {
+      avatar: string | null;
+      id: string;
+      name: string;
+      role: string;
+      role_label: string;
+    };
     available: boolean;
     body: string;
     community: {

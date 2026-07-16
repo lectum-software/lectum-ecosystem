@@ -45,3 +45,11 @@ A revisão reutiliza `post_report.status` e `admin_activity_log`, sem criar tabe
 Conteúdo removido por decisão procedente não é restaurado automaticamente quando a decisão é revista; restauração de conteúdo deve continuar sendo ação explícita futura, para evitar reexposição acidental.
 
 Consequência: o Admin ganha correção operacional reversível e auditável sem schema Prisma, migration, endpoint simulado, mock ou package novo.
+
+## Atualização 2026-07-16: identidade do autor e ações refinadas nos cards
+
+As listas de denúncias em comunidades e no detalhe administrativo do psicólogo passam a incluir `content.author` no contrato de listagem, com avatar, nome, papel técnico e `role_label` derivado de `user.role` e `psychologist_profile.gender` quando aplicável. A decisão evita endpoint paralelo e usa as relações reais já consultadas em `post_report`, `community_post`, `post_reply`, `user` e `psychologist_profile`.
+
+A UI mostra essa identidade abaixo do rótulo **Conteúdo denunciado**, oculta títulos genéricos de comentário/resposta e mantém mídia abaixo do texto. Os botões de decisão foram mantidos como ações diretas auditadas, mas com tratamento visual mais leve para reduzir peso operacional sem alterar permissões, confirmação forte ou auditoria.
+
+Consequência: moderadores têm contexto de autoria antes de decidir, sem duplicar dados, sem mock, sem package novo e sem migration Prisma.

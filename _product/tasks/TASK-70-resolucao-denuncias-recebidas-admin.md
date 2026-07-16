@@ -409,3 +409,12 @@ Regras:
 - A revis�o registra nova auditoria em `admin_activity_log` sem apagar a decis�o anterior; conte�do removido n�o � restaurado automaticamente.
 - Comunidades revisam o grupo de den�ncias do mesmo conte�do; detalhe do psic�logo revisa a den�ncia selecionada.
 - N�o houve schema Prisma/migration, package novo, mock, endpoint simulado ou tabela nova.
+
+
+## Ajuste complementar 2026-07-16 - Identidade do autor nos cards de denúncias
+
+- Pedido do usuário: refinar botões de decisão, remover o título genérico **Comentário** quando o denunciado é um comentário/resposta e exibir a identificação do autor do conteúdo denunciado.
+- Cards de denúncias em comunidades e no detalhe do psicólogo agora mostram foto, nome e identificação do autor (**Paciente**, **Psicólogo** ou **Psicóloga**) logo abaixo do rótulo **Conteúdo denunciado**.
+- Títulos genéricos de comentários são ocultados para deixar a leitura direta no texto denunciado.
+- Botões **Improcedente**, **Procedente** e **Revisar decisão** foram reduzidos e suavizados visualmente, mantendo contraste, ícones e ações reais.
+- O contrato das APIs de denúncias foi estendido com `content.author`, usando relações reais de `user`/`psychologist_profile`; não houve mock, package novo, schema Prisma ou migration.
