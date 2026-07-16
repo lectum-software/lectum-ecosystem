@@ -16,6 +16,12 @@ const RATING_PRIOR_COUNT = 5;
 const RATING_PRIOR_SCORE = 0.8;
 const RECENCY_WINDOW_DAYS = 90;
 const CONTROLLED_RANDOMIZATION_RANGE = 0.08;
+const SEARCH_RESULT_SOURCE = "search_result";
+
+const PROFESSIONAL_COLD_START_MIN_DAYS = 30;
+const PROFESSIONAL_COLD_START_MIN_SEARCH_IMPRESSIONS = 500;
+const PROFESSIONAL_COLD_START_MIN_QUALIFIED_VIDEO_VIEWS = 30;
+const PROFESSIONAL_COLD_START_RESERVED_SLOT_RATIO = 0.3;
 
 export const psychologistPublicRankingWeights = {
   video: 0.25,
@@ -59,7 +65,10 @@ type RankingContext = {
   favoriteCounts: Map<string, number>;
   latestActivityAt: Map<string, Date>;
   now: Date;
+  professionalStartDates: Map<string, Date>;
+  qualifiedVideoViewsSinceProfessionalStart: Map<string, number>;
   seedDate: string;
+  searchImpressionsSinceProfessionalStart: Map<string, number>;
   videoStats: Map<string, VideoRankingStats>;
   viewerId: string | null;
   whatsappClickCounts: Map<string, number>;
@@ -86,7 +95,12 @@ export type PsychologistRankingCandidate = {
   professional_address_state: string | null;
   rating_avg: number;
   rating_count: number;
-  subscriptions: { id: string; source?: string | null }[];
+  subscriptions: {
+    createdAt?: Date | string | null;
+    grant_started_at?: Date | string | null;
+    id?: string | null;
+    source?: string | null;
+  }[];
   target_audience: Prisma.JsonValue | null;
   updatedAt: Date;
   user: {
@@ -114,8 +128,14 @@ export type PsychologistRankingComponents = {
 export type PsychologistRanking = {
   baseScore: number;
   components: PsychologistRankingComponents;
+  isProfessionalColdStart: boolean;
   isVerified: boolean;
   score: number;
+};
+
+type RankedPsychologistCandidate<T extends PsychologistRankingCandidate> = {
+  item: T;
+  ranking: PsychologistRanking;
 };
 
 const clampScore = (value: number) => {
@@ -281,6 +301,42 @@ const pickLatestDate = (...dates: Array<Date | null | undefined>) =>
     return latest;
   }, null);
 
+const parseDate = (value?: Date | string | null) => {
+  if (!value) return null;
+  if (value instanceof Date) return Number.isNaN(value.getTime()) ? null : value;
+
+  const parsed = new Date(value);
+
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+};
+
+const getProfessionalStartDate = (candidate: PsychologistRankingCandidate) =>
+  candidate.subscriptions.reduce<Date | null>((earliest, subscription) => {
+    const startedAt = parseDate(subscription.grant_started_at) ?? parseDate(subscription.createdAt);
+
+    if (!startedAt) return earliest;
+    if (!earliest || startedAt < earliest) return startedAt;
+
+    return earliest;
+  }, null);
+
+const countSearchImpressionsSinceStart = (
+  impressions: Array<{ createdAt: Date; psychologist_id: string }>,
+  professionalStartDates: Map<string, Date>,
+) => {
+  const counts = new Map<string, number>();
+
+  for (const impression of impressions) {
+    const startedAt = professionalStartDates.get(impression.psychologist_id);
+
+    if (!startedAt || impression.createdAt < startedAt) continue;
+
+    counts.set(impression.psychologist_id, (counts.get(impression.psychologist_id) ?? 0) + 1);
+  }
+
+  return counts;
+};
+
 const mergeLatestActivity = (
   map: Map<string, Date>,
   psychologistId: string,
@@ -298,127 +354,176 @@ const mapGroupCounts = (groups: CountGroup[]) =>
   new Map(groups.map((group) => [group.psychologist_id, group._count._all]));
 
 const getRankingContext = async (
-  psychologistIds: string[],
-  currentVideos: Array<{ psychologistId: string; videoUrl: string | null }>,
+  candidates: PsychologistRankingCandidate[],
   viewerId: string | null,
 ): Promise<RankingContext> => {
   const now = new Date();
   const latestActivityAt = new Map<string, Date>();
+  const psychologistIds = candidates.map((item) => item.user.id);
+  const professionalStartDates = new Map(
+    candidates
+      .map((item) => [item.user.id, getProfessionalStartDate(item)] as const)
+      .filter((entry): entry is readonly [string, Date] => Boolean(entry[1])),
+  );
+  const earliestProfessionalStart = [...professionalStartDates.values()].reduce<Date | null>(
+    (earliest, startedAt) => {
+      if (!earliest || startedAt < earliest) return startedAt;
+
+      return earliest;
+    },
+    null,
+  );
 
   if (psychologistIds.length === 0) {
     return {
       favoriteCounts: new Map(),
       latestActivityAt,
       now,
+      professionalStartDates,
+      qualifiedVideoViewsSinceProfessionalStart: new Map(),
       seedDate: now.toISOString().slice(0, 10),
+      searchImpressionsSinceProfessionalStart: new Map(),
       videoStats: new Map(),
       viewerId,
       whatsappClickCounts: new Map(),
     };
   }
 
-  const [favoriteGroups, whatsappGroups, reviewGroups, videoSessions] = await Promise.all([
-    prisma.psychologist_favorite.groupBy({
-      by: ["psychologist_id"],
-      where: {
-        deleted: false,
-        psychologist_id: {
-          in: psychologistIds,
-        },
-      },
-      _count: {
-        _all: true,
-      },
-      _max: {
-        createdAt: true,
-      },
-    }),
-    prisma.contact_request.groupBy({
-      by: ["psychologist_id"],
-      where: {
-        channel: "whatsapp",
-        deleted: false,
-        psychologist_id: {
-          in: psychologistIds,
-        },
-      },
-      _count: {
-        _all: true,
-      },
-      _max: {
-        createdAt: true,
-      },
-    }),
-    prisma.professional_review.groupBy({
-      by: ["psychologist_id"],
-      where: {
-        deleted: false,
-        psychologist_id: {
-          in: psychologistIds,
-        },
-        status: "publicada",
-      },
-      _count: {
-        _all: true,
-      },
-      _max: {
-        createdAt: true,
-      },
-    }),
-    prisma.profile_video_watch_session.findMany({
-      where: {
-        deleted: false,
-        psychologist_id: {
-          in: psychologistIds,
-        },
-        OR: [
-          {
-            watched_seconds: {
-              gt: 0,
-            },
+  const [favoriteGroups, whatsappGroups, reviewGroups, videoSessions, searchImpressions] =
+    await Promise.all([
+      prisma.psychologist_favorite.groupBy({
+        by: ["psychologist_id"],
+        where: {
+          deleted: false,
+          psychologist_id: {
+            in: psychologistIds,
           },
-          {
-            max_position_seconds: {
-              gt: 0,
-            },
+        },
+        _count: {
+          _all: true,
+        },
+        _max: {
+          createdAt: true,
+        },
+      }),
+      prisma.contact_request.groupBy({
+        by: ["psychologist_id"],
+        where: {
+          channel: "whatsapp",
+          deleted: false,
+          psychologist_id: {
+            in: psychologistIds,
           },
-        ],
-      },
-      select: {
-        completed: true,
-        createdAt: true,
-        duration_seconds: true,
-        last_event_at: true,
-        max_position_seconds: true,
-        milestone_100: true,
-        psychologist_id: true,
-        video_url: true,
-        watched_seconds: true,
-      },
-    }),
-  ]);
+        },
+        _count: {
+          _all: true,
+        },
+        _max: {
+          createdAt: true,
+        },
+      }),
+      prisma.professional_review.groupBy({
+        by: ["psychologist_id"],
+        where: {
+          deleted: false,
+          psychologist_id: {
+            in: psychologistIds,
+          },
+          status: "publicada",
+        },
+        _count: {
+          _all: true,
+        },
+        _max: {
+          createdAt: true,
+        },
+      }),
+      prisma.profile_video_watch_session.findMany({
+        where: {
+          deleted: false,
+          psychologist_id: {
+            in: psychologistIds,
+          },
+          OR: [
+            {
+              watched_seconds: {
+                gt: 0,
+              },
+            },
+            {
+              max_position_seconds: {
+                gt: 0,
+              },
+            },
+          ],
+        },
+        select: {
+          completed: true,
+          createdAt: true,
+          duration_seconds: true,
+          last_event_at: true,
+          max_position_seconds: true,
+          milestone_100: true,
+          psychologist_id: true,
+          video_url: true,
+          watched_seconds: true,
+        },
+      }),
+      earliestProfessionalStart
+        ? prisma.profile_view_event.findMany({
+            where: {
+              createdAt: {
+                gte: earliestProfessionalStart,
+              },
+              deleted: false,
+              psychologist_id: {
+                in: psychologistIds,
+              },
+              source: SEARCH_RESULT_SOURCE,
+            },
+            select: {
+              createdAt: true,
+              psychologist_id: true,
+            },
+          })
+        : Promise.resolve([]),
+    ]);
 
   for (const group of [...favoriteGroups, ...whatsappGroups, ...reviewGroups]) {
     mergeLatestActivity(latestActivityAt, group.psychologist_id, group._max?.createdAt);
   }
 
   const sessionsByPsychologist = new Map<string, VideoWatchSessionForRanking[]>();
+  const qualifiedVideoViewsSinceProfessionalStart = new Map<string, number>();
 
   for (const session of videoSessions) {
     const sessions = sessionsByPsychologist.get(session.psychologist_id) ?? [];
     sessions.push(session);
     sessionsByPsychologist.set(session.psychologist_id, sessions);
     mergeLatestActivity(latestActivityAt, session.psychologist_id, session.last_event_at);
+
+    const professionalStartedAt = professionalStartDates.get(session.psychologist_id);
+
+    if (
+      professionalStartedAt &&
+      session.createdAt >= professionalStartedAt &&
+      isQualifiedVideoView(session)
+    ) {
+      qualifiedVideoViewsSinceProfessionalStart.set(
+        session.psychologist_id,
+        (qualifiedVideoViewsSinceProfessionalStart.get(session.psychologist_id) ?? 0) + 1,
+      );
+    }
   }
 
   const videoStats = new Map<string, VideoRankingStats>();
 
-  for (const currentVideo of currentVideos) {
+  for (const candidate of candidates) {
     videoStats.set(
-      currentVideo.psychologistId,
+      candidate.user.id,
       calculateVideoScoreWithLearningWindow(
-        currentVideo.videoUrl,
-        sessionsByPsychologist.get(currentVideo.psychologistId) ?? [],
+        candidate.video_url,
+        sessionsByPsychologist.get(candidate.user.id) ?? [],
       ),
     );
   }
@@ -427,7 +532,13 @@ const getRankingContext = async (
     favoriteCounts: mapGroupCounts(favoriteGroups),
     latestActivityAt,
     now,
+    professionalStartDates,
+    qualifiedVideoViewsSinceProfessionalStart,
     seedDate: now.toISOString().slice(0, 10),
+    searchImpressionsSinceProfessionalStart: countSearchImpressionsSinceStart(
+      searchImpressions,
+      professionalStartDates,
+    ),
     videoStats,
     viewerId,
     whatsappClickCounts: mapGroupCounts(whatsappGroups),
@@ -447,6 +558,23 @@ const calculateRanking = (
   };
   const favoriteCount = context.favoriteCounts.get(psychologistId) ?? 0;
   const whatsappClicks = context.whatsappClickCounts.get(psychologistId) ?? 0;
+  const professionalStartedAt = context.professionalStartDates.get(psychologistId) ?? null;
+  const daysSinceProfessionalStart = professionalStartedAt
+    ? Math.max(0, (context.now.getTime() - professionalStartedAt.getTime()) / MS_PER_DAY)
+    : null;
+  const professionalSearchImpressions =
+    context.searchImpressionsSinceProfessionalStart.get(psychologistId) ?? 0;
+  const professionalQualifiedVideoViews =
+    context.qualifiedVideoViewsSinceProfessionalStart.get(psychologistId) ?? 0;
+  const hasProfessionalColdStartExposure =
+    professionalSearchImpressions >= PROFESSIONAL_COLD_START_MIN_SEARCH_IMPRESSIONS ||
+    professionalQualifiedVideoViews >= PROFESSIONAL_COLD_START_MIN_QUALIFIED_VIDEO_VIEWS;
+  const hasCompletedProfessionalColdStart =
+    daysSinceProfessionalStart !== null &&
+    daysSinceProfessionalStart >= PROFESSIONAL_COLD_START_MIN_DAYS &&
+    hasProfessionalColdStartExposure;
+  const isProfessionalColdStart =
+    isVerified && Boolean(professionalStartedAt) && !hasCompletedProfessionalColdStart;
   const components: PsychologistRankingComponents = {
     completeness: calculateCompletenessScore(candidate),
     favorites: scoreByTarget(favoriteCount, FAVORITES_SCORE_TARGET),
@@ -479,50 +607,100 @@ const calculateRanking = (
   return {
     baseScore: clampScore(baseScore),
     components,
+    isProfessionalColdStart,
     isVerified,
     score: clampScore(baseScore * multiplier),
   };
+};
+
+const compareRankedPsychologistCandidates = <T extends PsychologistRankingCandidate>(
+  a: RankedPsychologistCandidate<T>,
+  b: RankedPsychologistCandidate<T>,
+) => {
+  if (a.ranking.isVerified !== b.ranking.isVerified) {
+    return Number(b.ranking.isVerified) - Number(a.ranking.isVerified);
+  }
+
+  if (b.ranking.score !== a.ranking.score) {
+    return b.ranking.score - a.ranking.score;
+  }
+
+  if (b.ranking.baseScore !== a.ranking.baseScore) {
+    return b.ranking.baseScore - a.ranking.baseScore;
+  }
+
+  if (b.item.rating_count !== a.item.rating_count) {
+    return b.item.rating_count - a.item.rating_count;
+  }
+
+  if (b.item.rating_avg !== a.item.rating_avg) {
+    return b.item.rating_avg - a.item.rating_avg;
+  }
+
+  return b.item.createdAt.getTime() - a.item.createdAt.getTime();
+};
+
+const applyProfessionalColdStartReservation = <T extends PsychologistRankingCandidate>(
+  verifiedCandidates: Array<RankedPsychologistCandidate<T>>,
+) => {
+  const coldStartCandidates = verifiedCandidates
+    .filter(({ ranking }) => ranking.isProfessionalColdStart)
+    .sort(compareRankedPsychologistCandidates);
+  const establishedCandidates = verifiedCandidates
+    .filter(({ ranking }) => !ranking.isProfessionalColdStart)
+    .sort(compareRankedPsychologistCandidates);
+
+  if (coldStartCandidates.length === 0 || establishedCandidates.length === 0) {
+    return [...establishedCandidates, ...coldStartCandidates];
+  }
+
+  const ranked: Array<RankedPsychologistCandidate<T>> = [];
+  let coldStartIndex = 0;
+  let establishedIndex = 0;
+
+  while (
+    coldStartIndex < coldStartCandidates.length ||
+    establishedIndex < establishedCandidates.length
+  ) {
+    const nextPosition = ranked.length + 1;
+    const reservedColdStartSlots = Math.floor(
+      nextPosition * PROFESSIONAL_COLD_START_RESERVED_SLOT_RATIO,
+    );
+    const shouldUseColdStartSlot =
+      coldStartIndex < coldStartCandidates.length && coldStartIndex < reservedColdStartSlots;
+
+    if (shouldUseColdStartSlot || establishedIndex >= establishedCandidates.length) {
+      ranked.push(coldStartCandidates[coldStartIndex]);
+      coldStartIndex += 1;
+      continue;
+    }
+
+    ranked.push(establishedCandidates[establishedIndex]);
+    establishedIndex += 1;
+  }
+
+  return ranked;
 };
 
 export const rankPsychologistCandidates = async <T extends PsychologistRankingCandidate>(
   candidates: T[],
   viewerId: string | null,
 ) => {
-  const context = await getRankingContext(
-    candidates.map((item) => item.user.id),
-    candidates.map((item) => ({
-      psychologistId: item.user.id,
-      videoUrl: item.video_url,
-    })),
-    viewerId,
-  );
+  const context = await getRankingContext(candidates, viewerId);
 
-  return candidates
-    .map((item) => ({
-      item,
-      ranking: calculateRanking(item, context),
-    }))
-    .sort((a, b) => {
-      if (a.ranking.isVerified !== b.ranking.isVerified) {
-        return Number(b.ranking.isVerified) - Number(a.ranking.isVerified);
-      }
+  const rankedCandidates = candidates
+    .map(
+      (item): RankedPsychologistCandidate<T> => ({
+        item,
+        ranking: calculateRanking(item, context),
+      }),
+    )
+    .sort(compareRankedPsychologistCandidates);
+  const verifiedCandidates = rankedCandidates.filter(({ ranking }) => ranking.isVerified);
+  const unverifiedCandidates = rankedCandidates.filter(({ ranking }) => !ranking.isVerified);
 
-      if (b.ranking.score !== a.ranking.score) {
-        return b.ranking.score - a.ranking.score;
-      }
-
-      if (b.ranking.baseScore !== a.ranking.baseScore) {
-        return b.ranking.baseScore - a.ranking.baseScore;
-      }
-
-      if (b.item.rating_count !== a.item.rating_count) {
-        return b.item.rating_count - a.item.rating_count;
-      }
-
-      if (b.item.rating_avg !== a.item.rating_avg) {
-        return b.item.rating_avg - a.item.rating_avg;
-      }
-
-      return b.item.createdAt.getTime() - a.item.createdAt.getTime();
-    });
+  return [
+    ...applyProfessionalColdStartReservation(verifiedCandidates),
+    ...unverifiedCandidates.sort(compareRankedPsychologistCandidates),
+  ];
 };

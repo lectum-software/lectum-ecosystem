@@ -261,7 +261,10 @@ export class AdminPsychologistsListRepository implements IAdminPsychologistsList
         ...profileBaseSelect,
         subscriptions: {
           where: activeProfessionalEntitlementWhere(),
+          orderBy: [{ grant_started_at: "asc" }, { createdAt: "asc" }],
           select: {
+            createdAt: true,
+            grant_started_at: true,
             id: true,
             source: true,
           },

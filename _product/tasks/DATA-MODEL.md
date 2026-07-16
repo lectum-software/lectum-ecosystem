@@ -352,6 +352,9 @@ usando `source="profile_page"` e todas as metricas de visualizacao de perfil dev
 impressao de resultado com visita ao perfil. Impressoes de busca nao disparam notificacao `visualizacao_perfil` e tambem
 nao contabilizam autoimpressao do proprio psicologo.
 
+Complemento 2026-07-16: as impressoes `source="search_result"` tambem alimentam a regra de cold start do ranking publico de psicologos. Para psicologos com assinatura profissional/cortesia ativa, a exposicao minima e contada desde `professional_subscription.grant_started_at ?? professional_subscription.createdAt`; o profissional permanece como novato ate ter pelo menos 30 dias de camada profissional e 500 impressoes de busca/listagem ou 30 visualizacoes qualificadas de video. Nao ha backfill, estimativa ou evento simulado para essa regra.
+
+
 `profile_video_watch_session` (analytics do vídeo de apresentação, extensão da TASK-20):
 
 | Campo | Tipo | Notas |

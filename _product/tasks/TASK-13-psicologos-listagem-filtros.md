@@ -1590,3 +1590,27 @@ Validacoes do complemento:
 - `pnpm check`
 - Browser local via Chrome/CDP em `http://localhost:3000/app/professional/profile/setup`, viewport mobile `390x844`, com usuario
   temporario real removido ao final: a pagina renderizou o botao `Psicologia Organizacional e do Trabalho` em Servicos.
+
+## Execucao complementar: cold start profissional no ranking publico (2026-07-16)
+
+- Pedido do usuario: evitar que psicologos recem-chegados ao Plano Profissional ou cortesia fiquem sem visibilidade quando a base ja tiver psicologos consolidados com score historico.
+- O ranking compartilhado `backend/src/utils/psychologist-public-ranking.ts` passou a marcar psicologos verificados com assinatura/cortesia ativa como cold start profissional usando `professional_subscription.grant_started_at ?? professional_subscription.createdAt` como inicio da camada.
+- A saida do cold start exige **30 dias ou mais** desde o inicio profissional **e** pelo menos `500` impressoes reais de listagem (`profile_view_event.source="search_result"`) ou `30` visualizacoes qualificadas de video desde esse inicio. Se passar de 30 dias sem exposicao suficiente, o psicologo continua protegido.
+- A camada verificada reserva `30%` dos slots para psicologos em cold start, intercalando-os com profissionais consolidados por score; psicologos nao verificados continuam abaixo de todos os verificados.
+- A regra cobre tanto assinaturas pagas quanto cortesia administrativa, sem criar campo novo do Mercado Pago, sem migration, sem mock, sem seed, sem backfill e sem alterar contrato publico da resposta.
+- ADR atualizado: `adrs/0125-ranking-psicologos-video-learning.md`; `DATA-MODEL.md` documentou o uso de impressoes `search_result` na regra.
+
+Criterios complementares:
+
+- [x] Psicologos profissionais/cortesia novos entram em cold start pela data da assinatura/cortesia ativa, nao pela data de publicacao do perfil.
+- [x] Psicologo permanece protegido apos 30 dias quando ainda nao recebeu 500 impressoes ou 30 visualizacoes qualificadas.
+- [x] Reserva de exposicao usa 30% dos slots da camada verificada e nao permite nao verificados ultrapassarem verificados.
+- [x] Nenhum mock, dado fake, package novo, schema/migration ou campo Mercado Pago novo foi usado.
+
+Validacoes do complemento:
+
+- `pnpm --dir backend exec biome check --write src/utils/psychologist-public-ranking.ts src/modules/api/private/directory/psychologists/repositories/IndexRepository.ts src/modules/api/admin/private/psychologists/detail/repositories/AdminPsychologistDetailRepository.ts src/modules/api/admin/private/psychologists/dashboard/repositories/AdminPsychologistsDashboardRepository.ts src/modules/api/admin/private/psychologists/list/repositories/AdminPsychologistsListRepository.ts`
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm check`
+- `git diff --check`

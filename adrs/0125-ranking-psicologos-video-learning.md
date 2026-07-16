@@ -76,7 +76,7 @@ A visualização qualificada é uma sessão com pelo menos 3 segundos assistidos
 
 #### WhatsApp
 
-Como ainda não existe uma fonte persistida de impressão de perfil (`profile_view_event`/impressão de feed), a taxa de WhatsApp usa a alternativa prevista no PDF: cliques WhatsApp / visualizações qualificadas do vídeo.
+Embora `profile_view_event.source="search_result"` ja exista para contagem de impressoes de resultado e cold start, o componente de WhatsApp ainda usa a alternativa prevista no PDF nesta versao: cliques WhatsApp / visualizacoes qualificadas do video.
 
 Para evitar explosões por baixo volume, a taxa recebe smoothing bayesiano simples. Quando uma fonte real de impressões for criada, o denominador deve migrar para impressões reais do psicólogo no feed.
 
@@ -106,6 +106,19 @@ A randomização é aplicada apenas dentro da camada de verificação, sem permi
 
 Penalizações por repetição de exposição, ignorados rapidamente e vistos várias vezes pelo mesmo usuário ainda dependem de fonte persistida de impressão/skip do feed. Não foram simuladas.
 
+### Cold start profissional e reserva de exposicao (2026-07-16)
+
+Para evitar efeito rich-get-richer apos a base amadurecer, o ranking passa a proteger psicologos recem-chegados a camada profissional/verificada. A regra nao usa campo novo do Mercado Pago e tambem cobre cortesia administrativa:
+
+- a data de entrada na camada profissional e derivada da assinatura profissional ativa mais antiga: `professional_subscription.grant_started_at ?? professional_subscription.createdAt`;
+- o psicologo e considerado em cold start enquanto nao cumprir simultaneamente: pelo menos 30 dias desde a entrada profissional **e** exposicao minima real;
+- exposicao minima real e `profile_view_event.source="search_result" >= 500` desde a entrada profissional **ou** `profile_video_watch_session` com visualizacao qualificada `>= 30` desde a entrada profissional;
+- se passar de 30 dias sem 500 impressoes nem 30 visualizacoes qualificadas, o psicologo continua protegido como novato;
+- a camada verificada reserva 30% dos slots para psicologos em cold start, intercalando-os com profissionais consolidados por score;
+- a reserva nunca permite que psicologos nao verificados ultrapassem a camada verificada.
+
+A regra usa somente eventos persistidos reais, sem mock, backfill artificial ou estimativa de exposicao.
+
 ### Separação de versões de vídeo
 
 O frontend passou a gerar `session_key` de analytics incluindo a versão do vídeo, derivada da URL atual. Assim, quando o psicólogo troca o vídeo, novas sessões são gravadas separadamente.
@@ -118,6 +131,7 @@ O Analytics do psicólogo passou a calcular a seção de vídeo usando apenas se
 
 - O ranking deixa de depender apenas de nota média, quantidade de avaliações e data de criação.
 - Profissionais com assinatura/cortesia ativa permanecem sempre acima dos demais.
+- Psicologos recem-chegados a camada profissional/cortesia recebem reserva de exposicao de 30% dentro da camada verificada ate cumprirem tempo e exposicao minimos reais.
 - Trocar o vídeo não derruba imediatamente o profissional: o novo vídeo entra em aprendizado e herda proteção temporária do histórico anterior.
 - Um vídeo novo que performa melhor passa a melhorar o componente de vídeo conforme acumula visualizações qualificadas.
 - Um vídeo novo que performa pior reduz o componente de vídeo gradualmente, sem queda brusca inicial.
@@ -130,5 +144,13 @@ O Analytics do psicólogo passou a calcular a seção de vídeo usando apenas se
 - `pnpm --dir frontend check`
 - `pnpm --dir backend build`
 - `pnpm --dir frontend build`
+- `pnpm check`
+- `git diff --check`
+
+Complemento 2026-07-16:
+
+- `pnpm --dir backend exec biome check --write src/utils/psychologist-public-ranking.ts src/modules/api/private/directory/psychologists/repositories/IndexRepository.ts src/modules/api/admin/private/psychologists/detail/repositories/AdminPsychologistDetailRepository.ts src/modules/api/admin/private/psychologists/dashboard/repositories/AdminPsychologistsDashboardRepository.ts src/modules/api/admin/private/psychologists/list/repositories/AdminPsychologistsListRepository.ts`
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
 - `pnpm check`
 - `git diff --check`
