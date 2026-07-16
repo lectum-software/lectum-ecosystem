@@ -3080,27 +3080,29 @@ const CommunityReportReporterHistory = ({ report }: { report: AdminCommunityRepo
     <div className="mt-3 divide-y divide-border/70">
       {report.reporters.map((reporter) => (
         <article
-          className="flex min-w-0 items-center gap-2 py-2 text-sm"
+          className="py-2 text-sm"
           key={reporter.id}
           title={`${reporter.reporter.name} · ${formatDateTime(reporter.created_at)} · Motivo: ${reporter.reason_label}${
             reporter.description ? ` · ${reporter.description}` : ""
           }`}
         >
-          <span className="shrink-0 font-black text-foreground">{reporter.reporter.name}</span>
-          <StatusBadge tone="muted">{reporter.reporter.label}</StatusBadge>
-          <span className="inline-flex shrink-0 items-center gap-1 text-xs font-bold text-muted">
-            <CalendarDays aria-hidden className="h-3.5 w-3.5" />
-            {formatDateTime(reporter.created_at)}
-          </span>
-          <span aria-hidden className="shrink-0 text-muted/70">
-            ·
-          </span>
-          <span className="min-w-0 truncate font-bold text-foreground">
-            Motivo: {reporter.reason_label}
-            {reporter.description ? (
-              <span className="font-medium text-muted"> — {reporter.description}</span>
-            ) : null}
-          </span>
+          <div className="flex min-w-0 flex-wrap items-center gap-2">
+            <StatusBadge tone="muted">{reporter.reporter.label}</StatusBadge>
+            <span className="shrink-0 font-normal text-foreground">{reporter.reporter.name}</span>
+            <span className="inline-flex shrink-0 items-center gap-1 text-xs font-bold text-muted">
+              <CalendarDays aria-hidden className="h-3.5 w-3.5" />
+              {formatDateTime(reporter.created_at)}
+            </span>
+            <span aria-hidden className="shrink-0 text-muted/70">
+              ·
+            </span>
+            <span className="min-w-0 truncate font-bold text-foreground">
+              Motivo: {reporter.reason_label}
+            </span>
+          </div>
+          {reporter.description ? (
+            <p className="mt-1 line-clamp-2 text-sm leading-5 text-muted">{reporter.description}</p>
+          ) : null}
         </article>
       ))}
     </div>
@@ -3175,7 +3177,7 @@ const CommunityReportListItem = ({
       {report.content.public_url ? (
         <Link
           aria-label="Ver conteúdo público"
-          className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-primary/20 bg-primary-soft text-primary transition hover:border-primary/35 hover:bg-primary-soft/80"
+          className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-foreground/75 transition hover:text-foreground"
           href={toPublicHref(report.content.public_url)}
           rel="noreferrer"
           target="_blank"
