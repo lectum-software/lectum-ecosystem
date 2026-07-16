@@ -4858,11 +4858,11 @@ const PsychologistReportActions = ({
         <ReportStatusBadge group={report.status_group} label={report.status_label} />
         {report.capabilities.can_review_resolution ? (
           <button
-            className="inline-flex min-h-9 items-center justify-center gap-1.5 rounded-full border border-border/80 bg-surface px-3.5 py-1.5 text-xs font-bold text-foreground/85 shadow-sm transition hover:border-primary/30 hover:bg-primary-soft/40 hover:text-primary"
+            className="inline-flex min-h-8 items-center justify-center gap-1.5 rounded-full border border-border/60 bg-transparent px-3 py-1 text-xs font-semibold text-muted transition hover:border-primary/25 hover:bg-primary-soft/35 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20"
             onClick={() => onResolve("review")}
             type="button"
           >
-            <RefreshCw aria-hidden className="h-3.5 w-3.5" />
+            <RefreshCw aria-hidden className="h-3 w-3" />
             Revisar decisão
           </button>
         ) : null}
@@ -4871,24 +4871,24 @@ const PsychologistReportActions = ({
   }
 
   return (
-    <div className="mt-5 flex flex-col gap-2 border-t border-border/70 pt-4 sm:flex-row sm:justify-end">
+    <div className="mt-5 flex flex-wrap justify-end gap-2 border-t border-border/70 pt-4">
       {report.capabilities.can_resolve_dismissed ? (
         <button
-          className="inline-flex min-h-9 items-center justify-center gap-1.5 rounded-full border border-success/25 bg-success/5 px-3.5 py-1.5 text-xs font-bold text-success shadow-sm transition hover:border-success/40 hover:bg-success/10"
+          className="inline-flex min-h-8 items-center justify-center gap-1.5 rounded-full border border-success/20 bg-transparent px-3 py-1 text-xs font-semibold text-success transition hover:border-success/35 hover:bg-success/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-success/15"
           onClick={() => onResolve("dismiss")}
           type="button"
         >
-          <CheckCircle2 aria-hidden className="h-3.5 w-3.5" />
+          <CheckCircle2 aria-hidden className="h-3 w-3" />
           Improcedente
         </button>
       ) : null}
       {report.capabilities.can_resolve_upheld ? (
         <button
-          className="inline-flex min-h-9 items-center justify-center gap-1.5 rounded-full border border-danger/25 bg-danger/5 px-3.5 py-1.5 text-xs font-bold text-danger shadow-sm transition hover:border-danger/40 hover:bg-danger/10"
+          className="inline-flex min-h-8 items-center justify-center gap-1.5 rounded-full border border-danger/20 bg-transparent px-3 py-1 text-xs font-semibold text-danger transition hover:border-danger/35 hover:bg-danger/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-danger/15"
           onClick={() => onResolve("uphold")}
           type="button"
         >
-          <ShieldCheck aria-hidden className="h-3.5 w-3.5" />
+          <ShieldCheck aria-hidden className="h-3 w-3" />
           Procedente
         </button>
       ) : null}
