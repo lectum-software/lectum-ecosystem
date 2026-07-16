@@ -227,3 +227,15 @@ Para manter consistencia visual com a Lectum sem acoplar apps separadas, o Admin
 Consequencia: a mudanca e apenas de apresentacao; nao altera API, schema Prisma, persistencia, eventos first-party, dependencias ou regras de captura das metricas.
 
 Validacao desta atualizacao: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke local `GET http://localhost:3002/comunidades/autocuidado-em-pratica?tab=conteudo` retornando 200.
+
+## Atualizacao 2026-07-15: fullscreen custom para video 9:16
+
+A regra CSS aplicada diretamente ao `video:fullscreen` nao foi suficiente no Chrome: ao usar o fullscreen nativo dos controles, o navegador continuava expandindo o elemento para a viewport em paisagem e esticando a composicao visual.
+
+A decisao agora e tratar a ampliacao do miniplayer administrativo como fluxo proprio da UI: o card exibe um botao de ampliar e abre um container fullscreen/fixed com fundo preto. O elemento de video fica dentro desse container, centralizado e dimensionado por `aspect-ratio: 9 / 16`, com largura e altura limitadas pela viewport. O fullscreen nativo do video foi ocultado via `controlsList="nofullscreen"` para evitar o caminho que estica a midia.
+
+O tempo atual do video e preservado entre o miniplayer e o overlay ampliado. Se a API de fullscreen do navegador falhar, o overlay fixed ainda apresenta a mesma experiencia 9:16 dentro da pagina.
+
+Consequencia: a correcao fica isolada na apresentacao do Admin, sem novo endpoint, dependencia, schema Prisma, migration ou alteracao de persistencia. O trade-off e substituir o botao nativo de fullscreen por uma acao visual propria, mais controlavel e consistente para videos verticais.
+
+Validacao desta atualizacao: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke local `GET http://localhost:3002/comunidades/autocuidado-em-pratica?tab=conteudo` retornando 200.

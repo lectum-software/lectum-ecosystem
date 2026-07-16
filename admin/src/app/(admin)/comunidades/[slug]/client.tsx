@@ -13,6 +13,7 @@ import {
   GripVertical,
   Image as ImageIcon,
   Loader2,
+  Maximize2,
   MessageCircle,
   Play,
   Plus,
@@ -24,6 +25,7 @@ import {
   Star,
   Trash2,
   Users,
+  X,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -32,11 +34,13 @@ import {
   type ChangeEvent,
   type PointerEvent,
   type SVGProps,
+  useCallback,
   useEffect,
   useMemo,
   useRef,
   useState,
 } from "react";
+import { flushSync } from "react-dom";
 import { FormProvider, useForm, useWatch } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -1727,8 +1731,19 @@ const ContentMediaThumbnail = ({ item }: { item: AdminCommunityContentItem }) =>
 };
 
 const ContentVideoMiniplayer = ({ label, src }: { label: string; src: string }) => {
+  const expandedVideoRef = useRef<HTMLVideoElement | null>(null);
+  const fullscreenContainerRef = useRef<HTMLDivElement | null>(null);
+  const videoTimeRef = useRef(0);
   const videoRef = useRef<HTMLVideoElement | null>(null);
+  const [isExpanded, setIsExpanded] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
+
+  const syncInlineVideoTime = useCallback((time: number) => {
+    videoTimeRef.current = time;
+    const video = videoRef.current;
+    if (!video || !Number.isFinite(time)) return;
+    video.currentTime = time;
+  }, []);
 
   const playVideo = () => {
     const video = videoRef.current;
@@ -1742,16 +1757,95 @@ const ContentVideoMiniplayer = ({ label, src }: { label: string; src: string }) 
     video.pause();
   };
 
+  const openExpandedVideo = () => {
+    const video = videoRef.current;
+    if (video) {
+      videoTimeRef.current = video.currentTime;
+      video.pause();
+    }
+
+    flushSync(() => {
+      setIsExpanded(true);
+    });
+
+    const container = fullscreenContainerRef.current;
+    if (container?.requestFullscreen) {
+      void container.requestFullscreen().catch(() => undefined);
+    }
+  };
+
+  const closeExpandedVideo = useCallback(() => {
+    const expandedVideo = expandedVideoRef.current;
+    if (expandedVideo) {
+      syncInlineVideoTime(expandedVideo.currentTime);
+      expandedVideo.pause();
+    }
+
+    if (document.fullscreenElement) {
+      void document.exitFullscreen().catch(() => undefined);
+    }
+
+    setIsExpanded(false);
+  }, [syncInlineVideoTime]);
+
+  useEffect(() => {
+    if (!isExpanded) return;
+
+    const expandedVideo = expandedVideoRef.current;
+
+    const syncExpandedVideo = () => {
+      const currentTime = videoTimeRef.current;
+      if (expandedVideo && Number.isFinite(currentTime)) {
+        expandedVideo.currentTime = currentTime;
+        void expandedVideo.play().catch(() => undefined);
+      }
+    };
+
+    const handleFullscreenChange = () => {
+      if (document.fullscreenElement) return;
+
+      const currentTime = expandedVideoRef.current?.currentTime ?? videoTimeRef.current;
+      syncInlineVideoTime(currentTime);
+      setIsExpanded(false);
+    };
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape" && !document.fullscreenElement) {
+        closeExpandedVideo();
+      }
+    };
+
+    if (expandedVideo?.readyState) {
+      syncExpandedVideo();
+    } else {
+      expandedVideo?.addEventListener("loadedmetadata", syncExpandedVideo, { once: true });
+    }
+
+    document.addEventListener("fullscreenchange", handleFullscreenChange);
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      expandedVideo?.removeEventListener("loadedmetadata", syncExpandedVideo);
+      document.removeEventListener("fullscreenchange", handleFullscreenChange);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [closeExpandedVideo, isExpanded, syncInlineVideoTime]);
+
   return (
-    <div className="relative h-full w-full">
+    <div className="relative h-full w-full bg-black">
       <video
         aria-label={label}
         className="admin-community-video-player h-full w-full object-cover"
         controls
+        controlsList="nofullscreen noremoteplayback"
+        disablePictureInPicture
         muted
         onEnded={() => setIsPlaying(false)}
         onPause={() => setIsPlaying(false)}
         onPlay={() => setIsPlaying(true)}
+        onTimeUpdate={(event) => {
+          videoTimeRef.current = event.currentTarget.currentTime;
+        }}
         playsInline
         preload="metadata"
         ref={videoRef}
@@ -1766,6 +1860,50 @@ const ContentVideoMiniplayer = ({ label, src }: { label: string; src: string }) 
         >
           <Play aria-hidden className="h-5 w-5 fill-current" />
         </button>
+      ) : null}
+      <button
+        aria-label="Ampliar vídeo publicado em 9:16"
+        className="absolute right-2 top-2 inline-flex h-8 w-8 items-center justify-center rounded-full bg-foreground/70 text-background shadow-sm transition hover:bg-foreground"
+        onClick={openExpandedVideo}
+        title="Ampliar vídeo"
+        type="button"
+      >
+        <Maximize2 aria-hidden className="h-4 w-4" />
+      </button>
+      {isExpanded ? (
+        <div
+          aria-label="Vídeo ampliado em 9:16"
+          aria-modal="true"
+          className="fixed inset-0 z-[9999] grid place-items-center bg-black p-4"
+          ref={fullscreenContainerRef}
+          role="dialog"
+        >
+          <button
+            aria-label="Fechar vídeo ampliado"
+            className="absolute right-4 top-4 z-10 inline-flex h-10 w-10 items-center justify-center rounded-full bg-white/15 text-white shadow-sm transition hover:bg-white/25"
+            onClick={closeExpandedVideo}
+            title="Fechar"
+            type="button"
+          >
+            <X aria-hidden className="h-5 w-5" />
+          </button>
+          <video
+            aria-label={`${label} ampliado`}
+            className="admin-community-video-expanded object-cover"
+            controls
+            controlsList="nofullscreen noremoteplayback"
+            disablePictureInPicture
+            muted
+            onEnded={() => closeExpandedVideo()}
+            onTimeUpdate={(event) => {
+              videoTimeRef.current = event.currentTarget.currentTime;
+            }}
+            playsInline
+            preload="metadata"
+            ref={expandedVideoRef}
+            src={src}
+          />
+        </div>
       ) : null}
     </div>
   );

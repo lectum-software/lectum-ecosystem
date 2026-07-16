@@ -301,3 +301,14 @@ Regras:
 - Builder/Quick Copy nao esta exposto como ferramenta callable no ambiente; a referencia visual usada foi a captura enviada pelo usuario e o padrao local da Lectum/Admin.
 - ADR atualizado: `adrs/0264-admin-comunidade-abas-conteudo-ranking.md`.
 - Validacao executada: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke local `GET http://localhost:3002/comunidades/autocuidado-em-pratica?tab=conteudo` retornando 200.
+
+## Ajuste complementar 2026-07-15 - Fullscreen custom 9:16 no miniplayer
+
+- Pedido do usuario: o miniplayer ampliado ainda estava esticando no fullscreen nativo do navegador.
+- A UI Admin deixou de depender do fullscreen nativo do proprio elemento `<video>` para ampliacao principal e passou a usar um overlay customizado com botao de ampliar dedicado.
+- O botao de ampliar abre um container fullscreen/fixed com fundo preto e video filho dimensionado por `aspect-ratio: 9 / 16`, evitando que o Chrome estique o video em paisagem.
+- Os controles nativos do miniplayer continuam disponiveis para play/pause/progresso, mas o fullscreen nativo do video foi ocultado com `controlsList="nofullscreen"`; a ampliacao suportada e a do botao customizado.
+- O tempo de reproducao e sincronizado entre miniplayer e overlay ampliado ao abrir/fechar, sem criar endpoint, mock, schema Prisma/migration, package novo ou alteracao de persistencia.
+- Builder/Quick Copy nao esta exposto como ferramenta callable no ambiente; a referencia visual usada foi a captura enviada pelo usuario e o padrao local do Admin/site publico.
+- ADR atualizado: `adrs/0264-admin-comunidade-abas-conteudo-ranking.md`.
+- Validacao executada: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke local `GET http://localhost:3002/comunidades/autocuidado-em-pratica?tab=conteudo` retornando 200.
