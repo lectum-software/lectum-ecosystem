@@ -145,3 +145,11 @@ No analytics privado do psicologo, o painel **Consumo e acoes do video** deve fi
 A decisao atende a hierarquia visual solicitada: primeiro o usuario ve o video e a curva de retencao; em seguida ve visualizacoes, replay, conversoes/interacoes atribuidas e diagnostico. Nao ha mudanca de fonte de dados, contrato de API, schema Prisma, tracking first-party ou package.
 
 Validacao complementar 2026-07-16: `pnpm --dir frontend check`, `pnpm --dir frontend build` e smoke HTTP local `GET http://localhost:3000/app/professional/analytics` retornando 307 pelo guard privado.
+
+## Complemento 2026-07-16 - Video e grafico abaixo do resumo de retencao
+
+No analytics privado do psicologo, em telas medias e maiores, o card de video e grafico de retencao deve ficar abaixo do resumo textual de retencao, e nao ao lado dele. Essa composicao aumenta a area horizontal disponivel para o grafico e melhora sua legibilidade sem alterar a ordem mobile-first.
+
+O grafico pode escalar em largura e altura a partir de md, enquanto o video permanece em largura controlada para preservar proporcao vertical. O painel **Consumo e acoes do video** continua abaixo do card de video/grafico, mantendo metricas, acoes e diagnostico agrupados. A decisao e exclusivamente visual e nao altera dados, contrato de API, tracking first-party, schema Prisma ou packages.
+
+Validacao complementar 2026-07-16: `pnpm --dir frontend check`, `pnpm --dir frontend build` e smoke HTTP local `GET http://localhost:3000/app/professional/analytics` retornando 307 pelo guard privado.

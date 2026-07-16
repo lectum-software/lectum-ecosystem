@@ -786,3 +786,13 @@ Regras de cálculo:
 - Nao houve package novo, mock, schema Prisma/migration, endpoint novo ou alteracao de contrato de API.
 - Builder/Quick Copy nao esta exposto como ferramenta no ambiente; a referencia visual usada foi a captura enviada pelo usuario.
 - Validacao executada: `pnpm --dir frontend check`, `pnpm --dir frontend build` e smoke HTTP local `GET http://localhost:3000/app/professional/analytics` retornando 307 pelo guard privado.
+
+## Ajuste complementar 2026-07-16 - Video e grafico abaixo do texto de retencao
+
+- Pedido do usuario: em telas maiores, colocar o bloco de video e grafico de retencao abaixo do texto `Em media, os visitantes assistiram...` para melhorar a visualizacao do grafico.
+- A secao de `/app/professional/analytics` deixou de posicionar o resumo de retencao e o card de video lado a lado em md+; o card de video/grafico agora vem logo abaixo do texto de retencao.
+- O grafico de retencao ganhou mais largura e altura em telas md+, removendo o limite visual que o deixava pequeno dentro da coluna lateral.
+- O painel **Consumo e acoes do video** permanece abaixo do card de video/grafico e mantem os contadores agrupados com o diagnostico abaixo.
+- Nao houve package novo, mock, schema Prisma/migration, endpoint novo ou alteracao de contrato de API.
+- Builder/Quick Copy nao esta exposto como ferramenta no ambiente; a referencia visual usada foi a captura enviada pelo usuario.
+- Validacao executada: `pnpm --dir frontend check`, `pnpm --dir frontend build` e smoke HTTP local `GET http://localhost:3000/app/professional/analytics` retornando 307 pelo guard privado.

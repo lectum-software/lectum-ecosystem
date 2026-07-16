@@ -809,7 +809,7 @@ const RetentionChart = ({
       >
         <svg
           aria-label="Curva estimada de retenção do vídeo"
-          className="mx-auto h-40 w-full max-w-[320px] overflow-visible text-subtle"
+          className="mx-auto h-40 w-full max-w-[320px] overflow-visible text-subtle md:h-56 md:max-w-none"
           preserveAspectRatio="xMidYMid meet"
           role="img"
           viewBox="0 0 300 150"
@@ -1172,7 +1172,7 @@ const PresentationVideoAnalyticsSection = ({
         </div>
       </div>
 
-      <article className="grid min-w-0 gap-4 rounded-[26px] border border-primary/10 bg-primary-soft/55 p-4 md:grid-cols-[minmax(220px,0.8fr)_minmax(0,1.2fr)] md:items-start md:p-5">
+      <article className="grid min-w-0 gap-4 rounded-[26px] border border-primary/10 bg-primary-soft/55 p-4 md:p-5">
         <div className="min-w-0">
           <div className="min-w-0">
             <p className="text-xs font-black uppercase tracking-[0.14em] text-primary">
@@ -1201,10 +1201,10 @@ const PresentationVideoAnalyticsSection = ({
         </div>
 
         <div className="grid min-w-0 gap-4 rounded-[26px] border border-primary/10 bg-surface/90 p-3 shadow-[var(--lectum-shadow-soft)] md:p-4">
-          <div className="grid min-w-0 gap-4 md:grid-cols-[minmax(130px,190px)_1fr] md:items-center">
+          <div className="grid min-w-0 gap-4 md:grid-cols-[minmax(150px,220px)_minmax(0,1fr)] md:items-center">
             {videoSrc ? (
               <VerticalVideoPlayer
-                className="mx-auto w-full max-w-[190px] rounded-[22px] border-0 shadow-[var(--lectum-shadow-soft)]"
+                className="mx-auto w-full max-w-[190px] rounded-[22px] border-0 shadow-[var(--lectum-shadow-soft)] md:max-w-[220px]"
                 controlsVariant="minimal"
                 onVideoElementReady={handleVideoElementReady}
                 poster={videoCoverSrc}
@@ -1212,7 +1212,7 @@ const PresentationVideoAnalyticsSection = ({
                 title="Vídeo de apresentação"
               />
             ) : (
-              <div className="mx-auto grid aspect-[9/16] w-full max-w-[190px] place-items-center rounded-[22px] border border-dashed border-primary/20 bg-surface text-center text-sm font-bold text-muted">
+              <div className="mx-auto grid aspect-[9/16] w-full max-w-[190px] place-items-center rounded-[22px] border border-dashed border-primary/20 bg-surface text-center text-sm font-bold text-muted md:max-w-[220px]">
                 Sem vídeo
               </div>
             )}
@@ -1229,7 +1229,6 @@ const PresentationVideoAnalyticsSection = ({
         </div>
         <PresentationVideoInsightsPanel
           actions={presentationVideoActionMetrics}
-          className="md:col-span-2"
           locked={locked}
           metrics={presentationVideoCards}
           retentionHealth={retentionHealth}
