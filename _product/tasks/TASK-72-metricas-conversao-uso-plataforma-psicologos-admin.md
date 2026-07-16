@@ -719,3 +719,11 @@ Regras de cálculo:
 - O ajuste e exclusivamente visual, mobile-first, sem endpoint novo, mock, package, schema Prisma/migration ou alteracao de contrato.
 - Builder/Quick Copy nao esta exposto como ferramenta no ambiente; a referencia visual usada foi a captura enviada pelo usuario.
 - Validacao executada: `pnpm --dir admin check`, `pnpm --dir admin build` e smoke HTTP local `GET http://localhost:3002/psicologos/cmrqztri7000tn0uh1q4n8vxf?tab=publicacoes` retornando 200.
+
+## Ajuste complementar 2026-07-16 - Controles de video nas publicacoes do psicologo
+
+- Pedido do usuario: nos videos da lista de posts do psicologo, adicionar botao de play e expandir igual aos posts da comunidade.
+- A UI Admin da aba **Publicacoes** agora usa um miniplayer para midias de video com botao central de reproducao e acao de ampliar em 9:16, preservando o tempo do video entre inline e expandido, no mesmo modelo visual usado em **Conteudo da comunidade**.
+- O ajuste e exclusivamente visual, mobile-first, sem endpoint novo, mock, package, schema Prisma/migration ou alteracao de contrato.
+- Builder/Quick Copy nao esta exposto como ferramenta no ambiente; a referencia visual usada foi a captura enviada pelo usuario e o padrao local da aba **Conteudo** em comunidades.
+- Validacao executada: `pnpm --dir admin check`, `pnpm --dir admin build` e smoke HTTP local `GET http://localhost:3002/psicologos/cmrqztri7000tn0uh1q4n8vxf?tab=publicacoes` retornando 200.
