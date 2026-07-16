@@ -167,7 +167,11 @@
     "content_moderation_blocked": "N?o foi poss?vel publicar este conte?do. Remova links, convites externos ou trechos que violem as diretrizes da comunidade.",
     "content_moderation_safety_hold": "Seu conte?do n?o foi publicado por seguran?a. Se voc? estiver em risco imediato, procure uma pessoa de confian?a ou um servi?o de emerg?ncia local. A Lectum n?o realiza atendimento de emerg?ncia.",
     "admin_moderation_event_not_found": "Evento de modera??o n?o encontrado.",
-    "admin_moderation_event_resolve_note_required": "Informe uma nota administrativa para resolver o evento de modera??o."
+    "admin_moderation_event_resolve_note_required": "Informe uma nota administrativa para resolver o evento de modera??o.",
+    "admin_community_report_dismiss_confirmation_invalid": "Digite DENUNCIA IMPROCEDENTE para resolver a denuncia como improcedente.",
+    "admin_community_report_invalid_status": "Esta denuncia nao possui pendencias que permitam esta acao.",
+    "admin_community_report_invalid_target": "Conteudo denunciado nao encontrado nesta comunidade.",
+    "admin_community_report_uphold_confirmation_invalid": "Digite DENUNCIA PROCEDENTE para resolver a denuncia como procedente."
   },
   "message": {
     "store": "dado criado",
@@ -268,7 +272,9 @@
     "admin_psychologist_report_upheld": "Denúncia resolvida como procedente.",
     "admin_community_content_removed": "Conteúdo removido com auditoria administrativa.",
     "admin_moderation_event_reviewed": "Evento de modera??o marcado como em revis?o.",
-    "admin_moderation_event_resolved": "Evento de modera??o resolvido com auditoria administrativa."
+    "admin_moderation_event_resolved": "Evento de modera??o resolvido com auditoria administrativa.",
+    "admin_community_report_dismissed": "Denuncia resolvida como improcedente.",
+    "admin_community_report_upheld": "Denuncia resolvida como procedente."
   },
   "gender": {
     "o": "o"

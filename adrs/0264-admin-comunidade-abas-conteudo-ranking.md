@@ -272,3 +272,17 @@ O filtro de tipo usa categorias operacionais para denuncia: post/resposta de psi
 Consequencia: a tela ganha leitura agregada e filtros consistentes sem nova tabela, migration, package, mock ou endpoint paralelo. O contrato de reports da comunidade foi expandido com `cards`, `filters`, `period`, `content_kind`, `status_group` e labels de apresentacao, mantendo `source="post_report+community_post+post_reply"`.
 
 Validacao desta atualizacao: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check`, smoke local `GET http://localhost:3002/comunidades/relacionamentos-com-proposito?tab=denuncias` retornando 200 e smoke sem sessao Admin do endpoint de reports retornando 401. A validacao visual autenticada por browser ficou limitada pela ausencia de sessao Admin no Chrome headless local.
+
+## Atualizacao 2026-07-16: denuncias agrupadas por conteudo
+
+A aba **Denuncias** do detalhe administrativo de comunidade passa a agrupar `post_report` por alvo canonico (`target_type`/`target_id`, com fallback para `post_id`/`reply_id`). Assim, quando mais de um usuario denuncia o mesmo post ou comentario, a UI exibe o conteudo denunciado uma unica vez e lista todos os denunciantes relacionados.
+
+O contrato de reports agora retorna o conteudo completo necessario para moderacao: texto integral, titulo quando existir, midia principal de post ou resposta, URL publica quando o conteudo ainda esta disponivel, contagem total de denuncias do alvo, contadores por status e lista de denunciantes com motivo, descricao, data e status individual.
+
+A ordenacao padrao dos grupos e `report_count desc` e, em empate, ultima denuncia mais recente primeiro. Os cards superiores continuam contando denuncias reais, enquanto a listagem pagina grupos de conteudo denunciado.
+
+A decisao de moderacao na aba de comunidade adiciona duas acoes terminalmente auditadas para grupos com pendencias: **Marcar improcedente** atualiza denuncias pendentes/em_analise do mesmo conteudo para `rejeitada`; **Marcar procedente** atualiza para `resolvida`. Essas acoes nao removem o conteudo; remocao continua pertencendo a aba **Conteudo**. A auditoria usa `admin_activity_log` com area `denuncias`, acoes `community_report_dismissed`/`community_report_upheld`, motivo obrigatorio e snapshots seguros sem payload bruto.
+
+Consequencia: a triagem comunitaria fica consistente com a resolucao de denuncias de psicologos, sem criar tabela nova, migration, dependencia, mock ou endpoint paralelo. O trade-off e que um mesmo grupo pode aparecer em filtros diferentes se possuir denuncias terminais e pendentes no mesmo periodo; isso preserva a relacao completa dos denunciantes do alvo.
+
+Validacao desta atualizacao: `pnpm --dir backend check`, `pnpm --dir admin check`, `pnpm --dir backend build`, `pnpm --dir admin build`, `pnpm check`, smoke local da rota Admin de denuncias retornando 200 e smoke sem sessao Admin do endpoint de resolucao retornando 401.

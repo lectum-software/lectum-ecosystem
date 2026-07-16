@@ -57,6 +57,7 @@ import {
   useAdminCommunityRanking,
   useAdminCommunityRemoveContent,
   useAdminCommunityReports,
+  useAdminCommunityResolveReports,
   useAdminCommunityUpdate,
   useAdminCommunityUpdateRule,
 } from "@/api/callers/communities";
@@ -123,9 +124,22 @@ const removeContentFormSchema = z.object({
   reason: z.string().trim().min(3, "Informe o motivo.").max(500, "Use até 500 caracteres."),
 });
 
+const communityReportResolveSchema = (expectedConfirmation: string) =>
+  z.object({
+    confirmation: z
+      .string()
+      .trim()
+      .refine(
+        (value) => value.toUpperCase() === expectedConfirmation,
+        `Digite ${expectedConfirmation} para confirmar.`,
+      ),
+    reason: z.string().trim().min(3, "Informe o motivo.").max(500, "Use ate 500 caracteres."),
+  });
+
 type CommunityFormValues = z.infer<typeof communityFormSchema>;
 type RuleFormValues = z.infer<typeof ruleFormSchema>;
 type RemoveContentFormValues = z.infer<typeof removeContentFormSchema>;
+type CommunityReportResolveFormValues = z.infer<ReturnType<typeof communityReportResolveSchema>>;
 
 type RuleDragMetric = {
   bottom: number;
@@ -480,12 +494,14 @@ const StatusBadge = ({
   tone,
 }: {
   children: React.ReactNode;
-  tone: "green" | "muted";
+  tone: "danger" | "green" | "muted";
 }) => (
   <span
     className={cn(
       "inline-flex items-center rounded-full px-2.5 py-1 text-xs font-black",
-      tone === "green" ? "bg-emerald-50 text-success" : "bg-surface-muted text-muted",
+      tone === "green" && "bg-success/10 text-success",
+      tone === "danger" && "bg-danger/10 text-danger",
+      tone === "muted" && "bg-surface-muted text-muted",
     )}
   >
     {children}
@@ -2648,16 +2664,18 @@ const CommunityReportMetricCard = ({ card }: { card: CommunityReportCard }) => {
 
 const CommunityReportFilterSelect = ({
   children,
+  className,
   label,
   onChange,
   value,
 }: {
   children: React.ReactNode;
+  className?: string;
   label: string;
   onChange: (value: string) => void;
   value: string;
 }) => (
-  <label className="block text-sm font-black text-muted">
+  <label className={cn("block text-sm font-black text-muted", className)}>
     {label}
     <span className="relative mt-2 block">
       <select
@@ -2694,6 +2712,187 @@ const CommunityReportStatusBadge = ({
   );
 };
 
+const COMMUNITY_REPORT_DISMISS_CONFIRMATION = "DENUNCIA IMPROCEDENTE";
+const COMMUNITY_REPORT_UPHOLD_CONFIRMATION = "DENUNCIA PROCEDENTE";
+
+type CommunityReportResolveState = {
+  report: AdminCommunityReportItem;
+  resolution: "dismissed" | "upheld";
+} | null;
+
+const CommunityReportMedia = ({ report }: { report: AdminCommunityReportItem }) => {
+  if (!report.content.media) return null;
+
+  const mediaType = report.content.media.media_type.toLowerCase();
+  const imageSrc =
+    mediaType === "image" ? renderableImageSrc(report.content.media.media_url) : null;
+  const videoSrc =
+    mediaType === "video" ? resolveAdminMediaUrl(report.content.media.media_url) : null;
+  const label = mediaType === "video" ? "Midia de video denunciada" : "Midia de imagem denunciada";
+
+  return (
+    <div
+      className={cn(
+        "relative w-full overflow-hidden rounded-2xl border border-border bg-surface-muted",
+        mediaType === "video" ? "aspect-[9/16] max-w-48" : "min-h-44",
+      )}
+    >
+      {imageSrc ? (
+        <Image
+          alt={label}
+          className="object-cover"
+          fill
+          sizes="(min-width: 1024px) 220px, 100vw"
+          src={imageSrc}
+          unoptimized={isAdminPublicMediaUrl(report.content.media.media_url)}
+        />
+      ) : null}
+      {!imageSrc && videoSrc ? <ContentVideoMiniplayer label={label} src={videoSrc} /> : null}
+      {!imageSrc && !videoSrc ? (
+        <div className="grid h-32 place-items-center gap-1 p-4 text-center text-xs font-black text-muted">
+          <ImageIcon aria-hidden className="mx-auto h-5 w-5" />
+          <span>Midia do conteudo denunciado</span>
+        </div>
+      ) : null}
+    </div>
+  );
+};
+
+const CommunityReportResolveDialog = ({
+  onClose,
+  slug,
+  state,
+}: {
+  onClose: () => void;
+  slug: string;
+  state: NonNullable<CommunityReportResolveState>;
+}) => {
+  const expectedConfirmation =
+    state.resolution === "dismissed"
+      ? COMMUNITY_REPORT_DISMISS_CONFIRMATION
+      : COMMUNITY_REPORT_UPHOLD_CONFIRMATION;
+  const mutation = useAdminCommunityResolveReports(slug);
+  const form = useForm<CommunityReportResolveFormValues>({
+    defaultValues: {
+      confirmation: "",
+      reason: "",
+    },
+    mode: "onSubmit",
+    resolver: zodResolver(communityReportResolveSchema(expectedConfirmation)),
+  });
+
+  const onSubmit = async (values: CommunityReportResolveFormValues) => {
+    try {
+      await mutation.mutateAsync({
+        input: {
+          confirmation: values.confirmation,
+          reason: values.reason.trim(),
+          resolution: state.resolution,
+        },
+        targetId: state.report.content.id,
+        targetType: state.report.content.type,
+      });
+      toast.success(
+        state.resolution === "dismissed"
+          ? "Denuncia marcada como improcedente."
+          : "Denuncia marcada como procedente.",
+      );
+      form.reset();
+      onClose();
+    } catch (error) {
+      toast.error(resolveApiError(error));
+    }
+  };
+
+  return (
+    <div
+      className="fixed inset-0 z-50 grid place-items-center bg-foreground/40 p-4"
+      role="presentation"
+    >
+      <FormProvider {...form}>
+        <form
+          aria-modal="true"
+          className="w-full max-w-xl rounded-[28px] border border-border bg-surface p-5 shadow-xl"
+          noValidate
+          onSubmit={form.handleSubmit(onSubmit)}
+          role="dialog"
+        >
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="text-xs font-black uppercase tracking-wide text-primary">
+                Resolucao de denuncias
+              </p>
+              <h3 className="mt-1 text-xl font-black text-foreground">
+                Marcar como {state.resolution === "dismissed" ? "improcedente" : "procedente"}
+              </h3>
+              <p className="mt-2 text-sm leading-6 text-muted">
+                A decisao atualiza todas as denuncias pendentes deste mesmo conteudo e registra
+                auditoria. O conteudo nao sera removido por esta acao.
+              </p>
+            </div>
+            <button
+              aria-label="Fechar"
+              className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-border text-muted"
+              onClick={onClose}
+              type="button"
+            >
+              <X aria-hidden className="h-4 w-4" />
+            </button>
+          </div>
+
+          <div className="mt-4 rounded-2xl bg-surface-muted p-3 text-sm font-bold text-muted">
+            {state.report.content.title ? (
+              <p className="text-foreground">{state.report.content.title}</p>
+            ) : null}
+            <p className="mt-1 line-clamp-3">
+              {state.report.content.excerpt || "Conteudo sem texto."}
+            </p>
+            <p className="mt-2 text-xs">
+              {numberFormatter.format(state.report.report_count)} denuncia(s) recebida(s)
+            </p>
+          </div>
+
+          <div className="mt-4 grid gap-3">
+            <TextareaController<CommunityReportResolveFormValues>
+              label="Motivo interno obrigatorio"
+              name="reason"
+              required
+              rows={3}
+            />
+            <InputController<CommunityReportResolveFormValues>
+              label="Confirmacao forte"
+              name="confirmation"
+              placeholder={expectedConfirmation}
+              required
+            />
+          </div>
+
+          <div className="mt-5 flex flex-col gap-2 sm:flex-row sm:justify-end">
+            <button
+              className="h-10 rounded-control border border-border bg-surface px-4 text-xs font-black text-foreground"
+              onClick={onClose}
+              type="button"
+            >
+              Cancelar
+            </button>
+            <button
+              className={cn(
+                "inline-flex h-10 items-center justify-center gap-2 rounded-control px-4 text-xs font-black text-white disabled:opacity-70",
+                state.resolution === "dismissed" ? "bg-success" : "bg-danger",
+              )}
+              disabled={mutation.isPending}
+              type="submit"
+            >
+              {mutation.isPending ? <Loader2 aria-hidden className="h-4 w-4 animate-spin" /> : null}
+              Confirmar decisao
+            </button>
+          </div>
+        </form>
+      </FormProvider>
+    </div>
+  );
+};
+
 const ReportsTab = ({ slug }: { slug: string }) => {
   const [selectedPeriod, setSelectedPeriod] = useState<ReportPeriodValue>("90d");
   const [appliedRange, setAppliedRange] = useState<ReportDateRange>(() =>
@@ -2706,6 +2905,7 @@ const ReportsTab = ({ slug }: { slug: string }) => {
   const [type, setType] = useState<CommunityReportFilterType>("all");
   const [status, setStatus] = useState<AdminCommunityReportsQuery["status"]>("all");
   const [page, setPage] = useState(1);
+  const [resolveState, setResolveState] = useState<CommunityReportResolveState>(null);
   const queryInput = useMemo<AdminCommunityReportsQuery>(
     () => ({
       ...appliedRange,
@@ -2718,6 +2918,7 @@ const ReportsTab = ({ slug }: { slug: string }) => {
   );
   const result = useAdminCommunityReports(slug, queryInput);
   const reportCards = result.data?.cards ?? emptyCommunityReportCards;
+  const reportItems = result.data?.data ?? [];
   const typeOptions = result.data?.filters.types ?? communityReportTypeFallback;
   const statusOptions = result.data?.filters.statuses ?? communityReportStatusFallback;
 
@@ -2848,13 +3049,13 @@ const ReportsTab = ({ slug }: { slug: string }) => {
       <section className={cn(cardClass, "overflow-hidden")}>
         <div className="flex flex-col gap-2 border-b border-border p-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h2 className="text-xl font-black text-foreground">Denúncias da comunidade</h2>
+            <h2 className="text-xl font-black text-foreground">Denuncias da comunidade</h2>
             <p className="mt-1 text-sm text-muted">
-              Mostrando {numberFormatter.format(result.data?.data.length ?? 0)} de{" "}
-              {numberFormatter.format(result.data?.count ?? 0)} denúncias filtradas.
+              Mostrando {numberFormatter.format(reportItems.length)} de{" "}
+              {numberFormatter.format(result.data?.count ?? 0)} conteudos denunciados filtrados.
             </p>
           </div>
-          <StatusBadge tone="muted">Moderação auditada</StatusBadge>
+          <StatusBadge tone="muted">Moderacao auditada</StatusBadge>
         </div>
 
         <div className="p-4">
@@ -2865,59 +3066,181 @@ const ReportsTab = ({ slug }: { slug: string }) => {
           />
         </div>
 
-        {result.data?.data.length === 0 ? (
+        {reportItems.length === 0 && !result.isLoading ? (
           <p className="px-4 pb-5 text-sm font-bold text-muted">
-            Nenhuma denúncia real encontrada para os filtros atuais.
+            Nenhuma denuncia real encontrada para os filtros atuais.
           </p>
-        ) : (
+        ) : null}
+
+        {reportItems.length > 0 ? (
           <div className="divide-y divide-border">
-            {result.data?.data.map((report: AdminCommunityReportItem) => (
-              <article className="grid gap-4 p-4 xl:grid-cols-[1fr_220px]" key={report.id}>
-                <div className="flex gap-3">
-                  <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-orange-50 text-orange-700">
-                    <AlertTriangle aria-hidden className="h-5 w-5" />
-                  </span>
-                  <div className="min-w-0">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <StatusBadge tone="muted">{report.content.content_kind_label}</StatusBadge>
-                      <CommunityReportStatusBadge
-                        group={report.status_group}
-                        label={report.status_label}
-                      />
-                      <span className="text-xs font-bold text-muted">
-                        {formatDateTime(report.created_at)}
+            {reportItems.map((report: AdminCommunityReportItem) => (
+              <article className="grid gap-5 p-4 xl:grid-cols-[1fr_280px]" key={report.id}>
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <StatusBadge tone="muted">{report.content.content_kind_label}</StatusBadge>
+                    <CommunityReportStatusBadge
+                      group={report.status_group}
+                      label={report.status_label}
+                    />
+                    <span className="rounded-full bg-primary-soft px-2.5 py-1 text-xs font-black text-primary">
+                      {numberFormatter.format(report.report_count)} denuncia(s)
+                    </span>
+                    <span className="text-xs font-bold text-muted">
+                      Ultima denuncia em {formatDateTime(report.last_reported_at)}
+                    </span>
+                  </div>
+
+                  <div className="mt-4 grid gap-4 lg:grid-cols-[minmax(0,1fr)_220px] lg:items-start">
+                    <div className="min-w-0">
+                      <p className="text-xs font-black uppercase tracking-wide text-muted">
+                        Conteudo denunciado
+                      </p>
+                      <h3 className="mt-1 text-lg font-black text-foreground">
+                        {report.content.title ||
+                          (report.content.type === "post" ? "Post sem titulo" : "Comentario")}
+                      </h3>
+                      <div className="mt-3 whitespace-pre-wrap rounded-2xl border border-border bg-surface-muted p-4 text-sm font-bold leading-6 text-foreground">
+                        {report.content.body ||
+                          report.content.excerpt ||
+                          "Conteudo sem texto disponivel."}
+                      </div>
+                      {!report.content.available ? (
+                        <p className="mt-2 text-xs font-bold text-danger">
+                          {report.content.unavailable_reason ||
+                            "Conteudo removido ou indisponivel."}
+                        </p>
+                      ) : null}
+                      {report.content.public_url ? (
+                        <Link
+                          className="mt-3 inline-flex items-center gap-2 text-xs font-black text-primary hover:underline"
+                          href={toPublicHref(report.content.public_url)}
+                          rel="noreferrer"
+                          target="_blank"
+                        >
+                          <Eye aria-hidden className="h-4 w-4" />
+                          Ver conteudo publico
+                        </Link>
+                      ) : null}
+                    </div>
+                    <CommunityReportMedia report={report} />
+                  </div>
+
+                  <div className="mt-4 rounded-2xl border border-border bg-surface p-4">
+                    <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+                      <div>
+                        <p className="text-sm font-black text-foreground">Denunciantes</p>
+                        <p className="text-xs font-bold text-muted">
+                          Relacao de todas as denuncias recebidas para este conteudo.
+                        </p>
+                      </div>
+                      <span className="text-xs font-black text-primary">
+                        {numberFormatter.format(report.reporters.length)} registro(s)
                       </span>
                     </div>
-                    <h3 className="mt-2 font-black text-foreground">{report.reason_label}</h3>
-                    <p className="mt-1 text-sm font-bold leading-6 text-muted">
-                      {report.description || report.content.excerpt || "Sem descrição."}
-                    </p>
-                    <p className="mt-2 text-xs font-bold text-muted">
-                      Conteúdo: {report.content.type === "post" ? "post" : "comentário"} ·{" "}
-                      {report.content.available ? "disponível" : "removido/indisponível"}
-                    </p>
+                    <div className="mt-3 grid gap-3">
+                      {report.reporters.map((reporter) => (
+                        <div
+                          className="rounded-2xl border border-border bg-surface-muted p-3"
+                          key={reporter.id}
+                        >
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span className="font-black text-foreground">
+                              {reporter.reporter.name}
+                            </span>
+                            <StatusBadge tone="muted">{reporter.reporter.label}</StatusBadge>
+                            <CommunityReportStatusBadge
+                              group={reporter.status_group}
+                              label={reporter.status_label}
+                            />
+                            <span className="text-xs font-bold text-muted">
+                              {formatDateTime(reporter.created_at)}
+                            </span>
+                          </div>
+                          <p className="mt-2 text-sm font-black text-foreground">
+                            {reporter.reason_label}
+                          </p>
+                          {reporter.description ? (
+                            <p className="mt-1 text-sm leading-6 text-muted">
+                              {reporter.description}
+                            </p>
+                          ) : null}
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </div>
-                <dl className="rounded-2xl bg-surface-muted p-4 text-sm">
-                  <div>
-                    <dt className="font-black text-muted">Denunciado por</dt>
-                    <dd className="mt-1 font-black text-foreground">{report.reported_by.label}</dd>
-                  </div>
-                  <div className="mt-4">
-                    <dt className="font-black text-muted">Status</dt>
-                    <dd className="mt-1 font-black text-foreground">{report.status_label}</dd>
-                  </div>
-                  <div className="mt-4 border-t border-border pt-4">
-                    <dt className="font-black text-muted">Tipo</dt>
-                    <dd className="mt-1 font-black text-foreground">
-                      {report.content.content_kind_label}
-                    </dd>
-                  </div>
-                </dl>
+
+                <aside className="rounded-2xl bg-surface-muted p-4 text-sm xl:sticky xl:top-4 xl:self-start">
+                  <dl className="grid gap-4">
+                    <div>
+                      <dt className="font-black text-muted">Quantidade</dt>
+                      <dd className="mt-1 text-2xl font-black text-foreground">
+                        {numberFormatter.format(report.report_count)}
+                      </dd>
+                    </div>
+                    <div className="grid grid-cols-3 gap-2 border-t border-border pt-4 text-center">
+                      <div>
+                        <dt className="text-xs font-black text-muted">Pend.</dt>
+                        <dd className="font-black text-foreground">
+                          {numberFormatter.format(report.status_counts.pending)}
+                        </dd>
+                      </div>
+                      <div>
+                        <dt className="text-xs font-black text-muted">Proc.</dt>
+                        <dd className="font-black text-foreground">
+                          {numberFormatter.format(report.status_counts.upheld)}
+                        </dd>
+                      </div>
+                      <div>
+                        <dt className="text-xs font-black text-muted">Improc.</dt>
+                        <dd className="font-black text-foreground">
+                          {numberFormatter.format(report.status_counts.dismissed)}
+                        </dd>
+                      </div>
+                    </div>
+                    <div className="border-t border-border pt-4">
+                      <dt className="font-black text-muted">Tipo</dt>
+                      <dd className="mt-1 font-black text-foreground">
+                        {report.content.content_kind_label}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="font-black text-muted">Status do grupo</dt>
+                      <dd className="mt-1 font-black text-foreground">{report.status_label}</dd>
+                    </div>
+                  </dl>
+
+                  {report.capabilities.can_resolve_dismissed ||
+                  report.capabilities.can_resolve_upheld ? (
+                    <div className="mt-4 grid gap-2 border-t border-border pt-4">
+                      <button
+                        className="inline-flex h-10 items-center justify-center gap-2 rounded-control border border-success/30 bg-success/10 px-3 text-xs font-black text-success transition hover:bg-success/15"
+                        onClick={() => setResolveState({ report, resolution: "dismissed" })}
+                        type="button"
+                      >
+                        <CheckCircle2 aria-hidden className="h-4 w-4" />
+                        Marcar improcedente
+                      </button>
+                      <button
+                        className="inline-flex h-10 items-center justify-center gap-2 rounded-control border border-danger/30 bg-danger/10 px-3 text-xs font-black text-danger transition hover:bg-danger/15"
+                        onClick={() => setResolveState({ report, resolution: "upheld" })}
+                        type="button"
+                      >
+                        <ShieldCheck aria-hidden className="h-4 w-4" />
+                        Marcar procedente
+                      </button>
+                    </div>
+                  ) : (
+                    <p className="mt-4 border-t border-border pt-4 text-xs font-bold text-muted">
+                      Este conteudo nao possui denuncias pendentes para resolucao.
+                    </p>
+                  )}
+                </aside>
               </article>
             ))}
           </div>
-        )}
+        ) : null}
 
         {result.data ? (
           <div className="border-t border-border p-4">
@@ -2929,6 +3252,14 @@ const ReportsTab = ({ slug }: { slug: string }) => {
           </div>
         ) : null}
       </section>
+
+      {resolveState ? (
+        <CommunityReportResolveDialog
+          onClose={() => setResolveState(null)}
+          slug={slug}
+          state={resolveState}
+        />
+      ) : null}
     </div>
   );
 };

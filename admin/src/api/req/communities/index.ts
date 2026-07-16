@@ -379,6 +379,12 @@ export type AdminCommunityRemoveContentResult = {
   type: "comment" | "post";
 };
 
+export type AdminCommunityResolveReportsInput = {
+  confirmation: string;
+  reason: string;
+  resolution: "dismissed" | "upheld";
+};
+
 export type AdminCommunityRankingQuery = AdminCommunityPaginationQuery & {
   period?: "30d";
 };
@@ -463,8 +469,13 @@ export type AdminCommunityReportsQuery = AdminCommunityPaginationQuery & {
 };
 
 export type AdminCommunityReportItem = {
+  capabilities: {
+    can_resolve_dismissed: boolean;
+    can_resolve_upheld: boolean;
+  };
   content: {
     available: boolean;
+    body: string;
     content_kind:
       | "patient_comment"
       | "patient_post"
@@ -475,13 +486,38 @@ export type AdminCommunityReportItem = {
     content_kind_label: string;
     excerpt: string;
     id: string;
+    media: {
+      media_type: string;
+      media_url: string;
+    } | null;
     post_id: string;
+    public_url: string | null;
     title: string | null;
     type: "comment" | "post";
+    unavailable_reason: string | null;
   };
   created_at: string;
   description: string | null;
+  first_reported_at: string;
   id: string;
+  last_reported_at: string;
+  report_count: number;
+  reporters: {
+    created_at: string;
+    description: string | null;
+    id: string;
+    reason: string;
+    reason_label: string;
+    reporter: {
+      id: string;
+      label: string;
+      name: string;
+      role: string;
+    };
+    status: string;
+    status_group: "dismissed" | "pending" | "upheld";
+    status_label: string;
+  }[];
   reason: string;
   reason_label: string;
   reported_by: {
@@ -489,6 +525,11 @@ export type AdminCommunityReportItem = {
     role: string;
   };
   status: string;
+  status_counts: {
+    dismissed: number;
+    pending: number;
+    upheld: number;
+  };
   status_group: "dismissed" | "pending" | "upheld";
   status_label: string;
 };
@@ -528,6 +569,15 @@ export type AdminCommunityReports = {
     to: string;
   };
   source: "post_report+community_post+post_reply";
+};
+
+export type AdminCommunityResolveReportsResult = {
+  affected_reports_count: number;
+  content_id: string;
+  post_id: string;
+  report: AdminCommunityReportItem;
+  resolution: "dismissed" | "upheld";
+  type: "comment" | "post";
 };
 
 export type AdminCommunityActivitiesQuery = AdminCommunityPaginationQuery & {
@@ -659,6 +709,22 @@ export const removeAdminCommunityContent = async (
     `/api/admin/private/communities/${encodeURIComponent(id)}/content/${encodeURIComponent(
       targetType,
     )}/${encodeURIComponent(targetId)}/remove`,
+    input,
+  );
+
+  return resolveApiData(response.data);
+};
+
+export const resolveAdminCommunityReports = async (
+  id: string,
+  targetType: "comment" | "post",
+  targetId: string,
+  input: AdminCommunityResolveReportsInput,
+) => {
+  const response = await adminApi.post<ApiResponse<AdminCommunityResolveReportsResult>>(
+    `/api/admin/private/communities/${encodeURIComponent(id)}/reports/${encodeURIComponent(
+      targetType,
+    )}/${encodeURIComponent(targetId)}/resolve`,
     input,
   );
 

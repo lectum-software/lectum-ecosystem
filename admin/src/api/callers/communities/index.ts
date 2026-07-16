@@ -8,6 +8,7 @@ import {
   type AdminCommunityRankingQuery,
   type AdminCommunityRemoveContentInput,
   type AdminCommunityReportsQuery,
+  type AdminCommunityResolveReportsInput,
   type AdminCommunityRuleInput,
   type AdminCommunityUpdateInput,
   type CommunitiesDashboardQuery,
@@ -22,6 +23,7 @@ import {
   getAdminCommunityRanking,
   getAdminCommunityReports,
   removeAdminCommunityContent,
+  resolveAdminCommunityReports,
   updateAdminCommunity,
   updateAdminCommunityRule,
   uploadAdminCommunityAvatar,
@@ -180,5 +182,26 @@ export const useAdminCommunityRemoveContent = (id: string) => {
       targetType: "comment" | "post";
     }) => removeAdminCommunityContent(id, targetType, targetId, input),
     onSuccess: () => invalidateCommunity(queryClient, id),
+  });
+};
+
+export const useAdminCommunityResolveReports = (id: string) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      input,
+      targetId,
+      targetType,
+    }: {
+      input: AdminCommunityResolveReportsInput;
+      targetId: string;
+      targetType: "comment" | "post";
+    }) => resolveAdminCommunityReports(id, targetType, targetId, input),
+    onSuccess: () =>
+      Promise.all([
+        queryClient.invalidateQueries({ queryKey: adminCommunitiesKeys.all }),
+        queryClient.invalidateQueries({ queryKey: adminCommunitiesKeys.detail(id) }),
+      ]),
   });
 };

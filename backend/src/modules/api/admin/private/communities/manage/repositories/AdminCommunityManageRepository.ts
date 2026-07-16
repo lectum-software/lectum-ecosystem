@@ -243,6 +243,20 @@ const adminCommunityReportSelect = {
       content: true,
       deleted: true,
       id: true,
+      media_items: {
+        orderBy: [{ position: "asc" }, { createdAt: "asc" }, { id: "asc" }],
+        select: {
+          id: true,
+          media_type: true,
+          media_url: true,
+          position: true,
+        },
+        where: {
+          deleted: false,
+        },
+      },
+      media_type: true,
+      media_url: true,
       status: true,
       title: true,
     },
@@ -255,6 +269,9 @@ const adminCommunityReportSelect = {
       content: true,
       deleted: true,
       id: true,
+      media_type: true,
+      media_url: true,
+      parent_reply_id: true,
       post_id: true,
       title: true,
       post: {
@@ -268,9 +285,7 @@ const adminCommunityReportSelect = {
     },
   },
   reporter: {
-    select: {
-      role: true,
-    },
+    select: adminContentAuthorSelect,
   },
 } satisfies Prisma.post_reportSelect;
 
@@ -1379,6 +1394,96 @@ export class AdminCommunityManageRepository {
           },
         ],
       },
+    });
+  }
+
+  async resolveReportsForTarget(input: {
+    adminId: string;
+    communityId: string;
+    reason: string;
+    resolution: "dismissed" | "upheld";
+    safeBefore: Prisma.InputJsonObject;
+    targetId: string;
+    targetType: "comment" | "post" | "reply";
+  }) {
+    const targetType = input.targetType === "post" ? "post" : "reply";
+    const targetWhere: Prisma.post_reportWhereInput =
+      targetType === "post"
+        ? {
+            OR: [
+              { post_id: input.targetId, reply_id: null },
+              { target_id: input.targetId, target_type: "post" },
+            ],
+            post: {
+              community_id: input.communityId,
+            },
+          }
+        : {
+            OR: [{ reply_id: input.targetId }, { target_id: input.targetId, target_type: "reply" }],
+            reply: {
+              post: {
+                community_id: input.communityId,
+              },
+            },
+          };
+    const status = input.resolution === "dismissed" ? "rejeitada" : "resolvida";
+
+    return prisma.$transaction(async (transaction) => {
+      const existingReports = await transaction.post_report.findMany({
+        select: {
+          id: true,
+          post_id: true,
+          reply_id: true,
+          status: true,
+        },
+        where: {
+          deleted: false,
+          ...targetWhere,
+        },
+      });
+      if (existingReports.length === 0) return null;
+
+      const affectedReports = await transaction.post_report.updateMany({
+        data: {
+          status,
+        },
+        where: {
+          deleted: false,
+          ...targetWhere,
+          status: {
+            in: activeReportStatuses,
+          },
+        },
+      });
+
+      await this.createContentActivityLog(transaction, {
+        action:
+          input.resolution === "dismissed"
+            ? "community_report_dismissed"
+            : "community_report_upheld",
+        adminId: input.adminId,
+        area: "denuncias",
+        changedFields: ["post_report.status"],
+        communityId: input.communityId,
+        metadata: {
+          affected_reports_count: affectedReports.count,
+          content_id: input.targetId,
+          content_type: targetType === "post" ? "post" : "comment",
+          existing_reports_count: existingReports.length,
+          post_id: existingReports[0]?.post_id ?? null,
+          resolution: input.resolution,
+        },
+        reason: input.reason,
+        safeAfter: {
+          status,
+        },
+        safeBefore: input.safeBefore,
+      });
+
+      return {
+        affectedReportsCount: affectedReports.count,
+        existingReportsCount: existingReports.length,
+      };
     });
   }
 

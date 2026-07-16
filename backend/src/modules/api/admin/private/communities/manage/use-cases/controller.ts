@@ -11,6 +11,7 @@ import {
   listReports as listReportsService,
   listRules as listRulesService,
   removeContent as removeContentService,
+  resolveReports as resolveReportsService,
   showCommunity as showCommunityService,
   updateCommunity as updateCommunityService,
   updateRule as updateRuleService,
@@ -184,6 +185,18 @@ export const reports = async (req: Request, res: Response) => {
     return send(res, resolve);
   } catch (err) {
     return error500(res, "admin_community_reports", err);
+  }
+};
+
+export const resolveReports = async (req: Request, res: Response) => {
+  try {
+    const resolve = await resolveReportsService(
+      req as unknown as Parameters<typeof resolveReportsService>[0],
+    );
+
+    return send(res, resolve);
+  } catch (err) {
+    return error500(res, "admin_community_reports_resolve", err);
   }
 };
 

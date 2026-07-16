@@ -102,6 +102,12 @@ export type AdminCommunityRemoveContentBody = {
   reason: string;
 };
 
+export type AdminCommunityResolveReportsBody = {
+  confirmation: string;
+  reason: string;
+  resolution: "dismissed" | "upheld";
+};
+
 export type AdminCommunityIdentity = {
   avatar_url: string | null;
   category: string | null;
@@ -319,8 +325,13 @@ export type AdminCommunityRankingDTO = {
 };
 
 export type AdminCommunityReportItemDTO = {
+  capabilities: {
+    can_resolve_dismissed: boolean;
+    can_resolve_upheld: boolean;
+  };
   content: {
     available: boolean;
+    body: string;
     content_kind:
       | "patient_comment"
       | "patient_post"
@@ -331,13 +342,38 @@ export type AdminCommunityReportItemDTO = {
     content_kind_label: string;
     excerpt: string;
     id: string;
+    media: {
+      media_type: string;
+      media_url: string;
+    } | null;
     post_id: string;
+    public_url: string | null;
     title: string | null;
     type: "comment" | "post";
+    unavailable_reason: string | null;
   };
   created_at: Date;
   description: string | null;
+  first_reported_at: Date;
   id: string;
+  last_reported_at: Date;
+  report_count: number;
+  reporters: {
+    created_at: Date;
+    description: string | null;
+    id: string;
+    reason: string;
+    reason_label: string;
+    reporter: {
+      id: string;
+      label: string;
+      name: string;
+      role: string;
+    };
+    status: string;
+    status_group: "dismissed" | "pending" | "upheld";
+    status_label: string;
+  }[];
   reason: string;
   reason_label: string;
   reported_by: {
@@ -345,6 +381,11 @@ export type AdminCommunityReportItemDTO = {
     role: string;
   };
   status: string;
+  status_counts: {
+    dismissed: number;
+    pending: number;
+    upheld: number;
+  };
   status_group: "dismissed" | "pending" | "upheld";
   status_label: string;
 };
@@ -419,6 +460,15 @@ export type AdminCommunityRemoveContentDTO = {
   affected_replies_count: number;
   content_id: string;
   post_id: string;
+  type: "comment" | "post";
+};
+
+export type AdminCommunityResolveReportsDTO = {
+  affected_reports_count: number;
+  content_id: string;
+  post_id: string;
+  report: AdminCommunityReportItemDTO;
+  resolution: "dismissed" | "upheld";
   type: "comment" | "post";
 };
 
@@ -515,6 +565,13 @@ export type IAdminCommunityActivitiesDTO = Request & {
 export type IAdminCommunityRemoveContentDTO = Request & {
   p: AdminCommunityManageParams;
   b: AdminCommunityRemoveContentBody;
+  admin?: admin;
+  auth?: admin;
+};
+
+export type IAdminCommunityResolveReportsDTO = Request & {
+  p: AdminCommunityManageParams;
+  b: AdminCommunityResolveReportsBody;
   admin?: admin;
   auth?: admin;
 };

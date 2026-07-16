@@ -23,6 +23,7 @@ import type {
   AdminCommunityReportItemDTO,
   AdminCommunityReportsDTO,
   AdminCommunityReportsQuery,
+  AdminCommunityResolveReportsDTO,
   AdminCommunityRuleBody,
   AdminCommunityRuleDTO,
   AdminCommunityUpdateBody,
@@ -34,6 +35,7 @@ import type {
   IAdminCommunityRankingDTO,
   IAdminCommunityRemoveContentDTO,
   IAdminCommunityReportsDTO,
+  IAdminCommunityResolveReportsDTO,
   IAdminCommunityRuleDTO,
   IAdminCommunityShowDTO,
   IAdminCommunityUpdateDTO,
@@ -63,6 +65,8 @@ const DEFAULT_REPORT_PERIOD_DAYS = 90;
 const MAX_REPORT_PERIOD_DAYS = 180;
 const MS_PER_DAY = 86_400_000;
 const REMOVE_CONTENT_CONFIRMATION = "REMOVER CONTEUDO";
+const DISMISS_REPORT_CONFIRMATION = "DENUNCIA IMPROCEDENTE";
+const UPHOLD_REPORT_CONFIRMATION = "DENUNCIA PROCEDENTE";
 const COMMUNITY_LIST_SORTS = new Set<AdminCommunitiesListSort>([
   "activity",
   "members",
@@ -401,7 +405,8 @@ type AdminCommunityContentAuthor =
   | AdminCommunityContentPostRecord["author"]
   | AdminCommunityContentReplyRecord["author"]
   | NonNullable<AdminCommunityReportRecord["post"]>["author"]
-  | NonNullable<AdminCommunityReportRecord["reply"]>["author"];
+  | NonNullable<AdminCommunityReportRecord["reply"]>["author"]
+  | AdminCommunityReportRecord["reporter"];
 type AdminCommunityContentKind = AdminCommunityContentItemDTO["content_kind"];
 type AdminCommunityReportContentKind = AdminCommunityReportItemDTO["content"]["content_kind"];
 type AdminCommunityReportStatusGroup = AdminCommunityReportItemDTO["status_group"];
@@ -748,12 +753,56 @@ const reportContentKindFor = (
   return verified ? "verified_psychologist_reply" : "unverified_psychologist_reply";
 };
 
+const reportPostMedia = (post: NonNullable<AdminCommunityReportRecord["post"]>) => {
+  const firstMedia = post.media_items[0];
+
+  return contentMedia(
+    firstMedia?.media_url ?? post.media_url,
+    firstMedia?.media_type ?? post.media_type,
+  );
+};
+
+const reportPublicUrl = (
+  community: AdminCommunityRecord,
+  type: AdminCommunityReportItemDTO["content"]["type"],
+  postId: string | null | undefined,
+  contentId: string | null | undefined,
+  parentReplyId: string | null | undefined,
+) => {
+  if (!postId || !contentId) return null;
+  if (type === "post") return `/community/${community.slug}/post/${postId}`;
+
+  if (parentReplyId) {
+    return (
+      "/community/" +
+      community.slug +
+      "/post/" +
+      postId +
+      "/thread/" +
+      parentReplyId +
+      "#reply-" +
+      contentId
+    );
+  }
+
+  return (
+    "/community/" +
+    community.slug +
+    "/post/" +
+    postId +
+    "?focusReplyId=" +
+    encodeURIComponent(contentId) +
+    "#reply-" +
+    contentId
+  );
+};
+
 const resolveReportsPeriod = (query: AdminCommunityReportsQuery = {}): ReportPeriodResult => {
   const hasCustomFrom = Boolean(query.from);
   const hasCustomTo = Boolean(query.to);
   let start: Date;
   let end: Date;
-  let label = "Últimos 90 dias";
+  let label = "Ultimos 90 dias";
 
   if (hasCustomFrom || hasCustomTo) {
     if (!hasCustomFrom || !hasCustomTo) {
@@ -769,7 +818,7 @@ const resolveReportsPeriod = (query: AdminCommunityReportsQuery = {}): ReportPer
 
     start = customStart;
     end = customEnd;
-    label = "Período personalizado";
+    label = "Periodo personalizado";
   } else {
     const today = new Date();
     end = endOfDay(today);
@@ -818,6 +867,108 @@ const reportMatchesType = (
   return item.content.content_kind === type;
 };
 
+const reportStatusLabelFromGroup = (group: AdminCommunityReportStatusGroup) => {
+  const labels: Record<AdminCommunityReportStatusGroup, string> = {
+    dismissed: "Improcedente",
+    pending: "Pendente",
+    upheld: "Procedente",
+  };
+
+  return labels[group];
+};
+
+const reportGroupStatusFromCounts = (
+  counts: AdminCommunityReportItemDTO["status_counts"],
+): AdminCommunityReportStatusGroup => {
+  if (counts.pending > 0) return "pending";
+  if (counts.upheld >= counts.dismissed && counts.upheld > 0) return "upheld";
+
+  return "dismissed";
+};
+
+const refreshReportGroupDerivedFields = (item: AdminCommunityReportItemDTO) => {
+  item.reporters.sort((a, b) => b.created_at.getTime() - a.created_at.getTime());
+  item.report_count = item.reporters.length;
+  item.first_reported_at = item.reporters.reduce(
+    (oldest, reporter) => (reporter.created_at < oldest ? reporter.created_at : oldest),
+    item.reporters[0]?.created_at ?? item.first_reported_at,
+  );
+  item.last_reported_at = item.reporters.reduce(
+    (latest, reporter) => (reporter.created_at > latest ? reporter.created_at : latest),
+    item.reporters[0]?.created_at ?? item.last_reported_at,
+  );
+  item.created_at = item.last_reported_at;
+  item.status_group = reportGroupStatusFromCounts(item.status_counts);
+  item.status_label = reportStatusLabelFromGroup(item.status_group);
+  item.status = item.status_group;
+  item.capabilities = {
+    can_resolve_dismissed: item.status_counts.pending > 0,
+    can_resolve_upheld: item.status_counts.pending > 0,
+  };
+  item.reported_by = {
+    label:
+      item.report_count === 1
+        ? (item.reporters[0]?.reporter.label ?? "Usuario")
+        : `${item.report_count} denunciantes`,
+    role: item.report_count === 1 ? (item.reporters[0]?.reporter.role ?? "unknown") : "multiple",
+  };
+
+  return item;
+};
+
+const mergeReportGroup = (
+  current: AdminCommunityReportItemDTO,
+  next: AdminCommunityReportItemDTO,
+) => {
+  current.reporters.push(...next.reporters);
+  current.status_counts.dismissed += next.status_counts.dismissed;
+  current.status_counts.pending += next.status_counts.pending;
+  current.status_counts.upheld += next.status_counts.upheld;
+
+  return refreshReportGroupDerivedFields(current);
+};
+
+const groupReportsByContent = (items: AdminCommunityReportItemDTO[]) => {
+  const groups = new Map<string, AdminCommunityReportItemDTO>();
+
+  for (const item of items) {
+    const key = `${item.content.type}:${item.content.id}`;
+    const current = groups.get(key);
+    if (!current) {
+      groups.set(key, refreshReportGroupDerivedFields({ ...item, id: key }));
+      continue;
+    }
+
+    mergeReportGroup(current, item);
+  }
+
+  return [...groups.values()].sort((a, b) => {
+    if (b.report_count !== a.report_count) return b.report_count - a.report_count;
+
+    return b.last_reported_at.getTime() - a.last_reported_at.getTime();
+  });
+};
+
+const reportGroupMatchesStatus = (
+  item: AdminCommunityReportItemDTO,
+  status: "all" | AdminCommunityReportStatusGroup,
+) => {
+  if (status === "all") return true;
+
+  return item.status_counts[status] > 0;
+};
+
+const reportGroupSafeBefore = (item: AdminCommunityReportItemDTO) => ({
+  content_id: item.content.id,
+  content_type: item.content.type,
+  excerpt: item.content.excerpt,
+  post_id: item.content.post_id,
+  report_count: item.report_count,
+  status_counts: item.status_counts,
+  status_group: item.status_group,
+  title: item.content.title,
+});
+
 const buildContentMetricsMaps = async (
   repository: AdminCommunityManageRepository,
   postIds: string[],
@@ -849,11 +1000,23 @@ const contentSafeBefore = (item: AdminCommunityContentItemDTO) => ({
   title: item.title,
 });
 
-const mapReport = (report: AdminCommunityReportRecord): AdminCommunityReportItemDTO => {
-  const isReply = Boolean(report.reply_id && report.reply);
-  const target = isReply ? report.reply : report.post;
-  const postId = isReply ? report.reply?.post_id : report.post_id;
-  const contentType = isReply ? "comment" : "post";
+const mapReport = (
+  community: AdminCommunityRecord,
+  report: AdminCommunityReportRecord,
+): AdminCommunityReportItemDTO => {
+  const isReply = report.target_type === "reply" || Boolean(report.reply_id);
+  const replyTarget = isReply ? report.reply : null;
+  const postTarget = isReply ? null : report.post;
+  const target = replyTarget ?? postTarget;
+  const resolvedPostId = isReply
+    ? (replyTarget?.post_id ?? report.post_id)
+    : (postTarget?.id ?? report.post_id);
+  const postId = resolvedPostId ?? report.post_id ?? report.id;
+  const resolvedContentId = isReply
+    ? (replyTarget?.id ?? report.reply_id ?? report.target_id)
+    : (postTarget?.id ?? report.post_id ?? report.target_id);
+  const contentId = resolvedContentId ?? report.id;
+  const contentType: AdminCommunityReportItemDTO["content"]["type"] = isReply ? "comment" : "post";
   const author = target?.author;
   const contentKind = author
     ? reportContentKindFor(contentType, author)
@@ -863,34 +1026,81 @@ const mapReport = (report: AdminCommunityReportRecord): AdminCommunityReportItem
   const statusGroup = reportStatusGroup(report.status);
   const available = Boolean(
     isReply
-      ? report.reply &&
-          !report.reply.deleted &&
-          !report.reply.post.deleted &&
-          report.reply.post.status === "publicado"
-      : report.post && !report.post.deleted && report.post.status === "publicado",
+      ? replyTarget &&
+          !replyTarget.deleted &&
+          !replyTarget.post.deleted &&
+          replyTarget.post.status === "publicado"
+      : postTarget && !postTarget.deleted && postTarget.status === "publicado",
   );
-
-  return {
-    content: {
-      available,
-      content_kind: contentKind,
-      content_kind_label: contentKindLabels[contentKind],
-      excerpt: excerpt(target?.content),
-      id: target?.id ?? report.target_id,
-      post_id: postId ?? report.post_id,
-      title: target?.title ?? null,
-      type: contentType,
-    },
+  const reporterName = contentAuthorName(report.reporter);
+  const reporter: AdminCommunityReportItemDTO["reporters"][number] = {
     created_at: report.createdAt,
     description: report.description,
     id: report.id,
     reason: report.reason,
     reason_label: reportReasonLabel(report.reason),
-    reported_by: {
+    reporter: {
+      id: report.reporter.id,
       label: reporterRoleLabel(report.reporter.role),
+      name: reporterName,
       role: report.reporter.role,
     },
     status: report.status,
+    status_group: statusGroup,
+    status_label: reportStatusLabel(report.status),
+  };
+  const statusCounts = {
+    dismissed: statusGroup === "dismissed" ? 1 : 0,
+    pending: statusGroup === "pending" ? 1 : 0,
+    upheld: statusGroup === "upheld" ? 1 : 0,
+  };
+
+  return {
+    capabilities: {
+      can_resolve_dismissed: statusGroup === "pending",
+      can_resolve_upheld: statusGroup === "pending",
+    },
+    content: {
+      available,
+      body: target?.content ?? "",
+      content_kind: contentKind,
+      content_kind_label: contentKindLabels[contentKind],
+      excerpt: excerpt(target?.content),
+      id: contentId,
+      media: replyTarget
+        ? contentMedia(replyTarget.media_url, replyTarget.media_type)
+        : postTarget
+          ? reportPostMedia(postTarget)
+          : null,
+      post_id: postId,
+      public_url: available
+        ? reportPublicUrl(
+            community,
+            contentType,
+            postId,
+            contentId,
+            replyTarget?.parent_reply_id ?? null,
+          )
+        : null,
+      title: target?.title ?? null,
+      type: contentType,
+      unavailable_reason: available ? null : "Conteudo removido ou indisponivel",
+    },
+    created_at: report.createdAt,
+    description: report.description,
+    first_reported_at: report.createdAt,
+    id: report.id,
+    last_reported_at: report.createdAt,
+    report_count: 1,
+    reporters: [reporter],
+    reason: report.reason,
+    reason_label: reportReasonLabel(report.reason),
+    reported_by: {
+      label: reporter.reporter.label,
+      role: reporter.reporter.role,
+    },
+    status: report.status,
+    status_counts: statusCounts,
     status_group: statusGroup,
     status_label: reportStatusLabel(report.status),
   };
@@ -905,15 +1115,30 @@ const reportMatchesSearch = (item: AdminCommunityReportItemDTO, search: string) 
     item.description,
     item.content.title,
     item.content.excerpt,
+    item.content.body,
     item.content.content_kind_label,
     item.reported_by.label,
     item.status_label,
+    ...item.reporters.flatMap((reporter) => [
+      reporter.reason,
+      reporter.reason_label,
+      reporter.description,
+      reporter.reporter.name,
+      reporter.reporter.label,
+      reporter.status_label,
+    ]),
   ]
     .filter(Boolean)
     .some((value) => value?.toLowerCase().includes(search));
 };
 
 const activitySummary = (activity: AdminCommunityActivityRecord) => {
+  if (activity.action === "community_report_dismissed") {
+    return "Denuncia marcada como improcedente";
+  }
+  if (activity.action === "community_report_upheld") {
+    return "Denuncia marcada como procedente";
+  }
   if (activity.action === "community_content_removed") return "Conteúdo removido";
   if (activity.action.includes("rule")) return "Regra da comunidade alterada";
   if (activity.action.includes("avatar")) return "Avatar da comunidade alterado";
@@ -1753,11 +1978,10 @@ export const listReports = async (data: IAdminCommunityReportsDTO): Promise<Reso
   if (!period.success) return { status: 400, ...error(period.code, {}) };
 
   const items = (await repository.listReports(community.id))
-    .map(mapReport)
+    .map((report) => mapReport(community, report))
     .filter((item) => reportMatchesPeriod(item, period.current));
-  const reports = items
-    .filter((item) => status === "all" || item.status_group === status)
-    .filter((item) => reportMatchesType(item, type))
+  const reports = groupReportsByContent(items.filter((item) => reportMatchesType(item, type)))
+    .filter((item) => reportGroupMatchesStatus(item, status))
     .filter((item) => reportMatchesSearch(item, search));
   const countByStatus = (statusGroup: AdminCommunityReportStatusGroup) =>
     items.filter((item) => item.status_group === statusGroup).length;
@@ -1832,6 +2056,115 @@ export const listReports = async (data: IAdminCommunityReportsDTO): Promise<Reso
   return {
     status: 200,
     ...msg("index", {}),
+    data: payload,
+  };
+};
+
+export const resolveReports = async (data: IAdminCommunityResolveReportsDTO): Promise<Resolve> => {
+  const admin = data.admin ?? data.auth;
+  if (!admin?.id) {
+    return {
+      status: 401,
+      ...error("token_not_authorized", {}),
+    };
+  }
+
+  const repository = new AdminCommunityManageRepository();
+  const community = await findCommunityOrNotFound(repository, data.p.id);
+  if (!community) return notFound();
+
+  const targetType = data.p.targetType === "reply" ? "comment" : data.p.targetType;
+  if (targetType !== "post" && targetType !== "comment") {
+    return {
+      status: 400,
+      ...error("admin_community_report_invalid_target", {}),
+    };
+  }
+
+  if (data.b.resolution !== "dismissed" && data.b.resolution !== "upheld") {
+    return {
+      status: 400,
+      ...error("admin_community_report_invalid_status", {}),
+    };
+  }
+
+  const expectedConfirmation =
+    data.b.resolution === "dismissed" ? DISMISS_REPORT_CONFIRMATION : UPHOLD_REPORT_CONFIRMATION;
+  if (data.b.confirmation.trim().toUpperCase() !== expectedConfirmation) {
+    return {
+      status: 400,
+      ...error(
+        data.b.resolution === "dismissed"
+          ? "admin_community_report_dismiss_confirmation_invalid"
+          : "admin_community_report_uphold_confirmation_invalid",
+        {},
+      ),
+    };
+  }
+
+  const currentGroups = groupReportsByContent(
+    (await repository.listReports(community.id)).map((report) => mapReport(community, report)),
+  );
+  const targetGroup = currentGroups.find(
+    (item) => item.content.type === targetType && item.content.id === data.p.targetId,
+  );
+  if (!targetGroup) {
+    return {
+      status: 404,
+      ...error("admin_community_report_invalid_target", {}),
+    };
+  }
+  if (
+    (data.b.resolution === "dismissed" && !targetGroup.capabilities.can_resolve_dismissed) ||
+    (data.b.resolution === "upheld" && !targetGroup.capabilities.can_resolve_upheld)
+  ) {
+    return {
+      status: 409,
+      ...error("admin_community_report_invalid_status", {}),
+    };
+  }
+
+  const resolved = await repository.resolveReportsForTarget({
+    adminId: admin.id,
+    communityId: community.id,
+    reason: data.b.reason,
+    resolution: data.b.resolution,
+    safeBefore: reportGroupSafeBefore(targetGroup),
+    targetId: targetGroup.content.id,
+    targetType: targetGroup.content.type,
+  });
+  if (!resolved) {
+    return {
+      status: 404,
+      ...error("admin_community_report_invalid_target", {}),
+    };
+  }
+
+  const updatedGroup =
+    groupReportsByContent(
+      (await repository.listReports(community.id)).map((report) => mapReport(community, report)),
+    ).find(
+      (item) =>
+        item.content.type === targetGroup.content.type &&
+        item.content.id === targetGroup.content.id,
+    ) ?? targetGroup;
+  const payload: AdminCommunityResolveReportsDTO = {
+    affected_reports_count: resolved.affectedReportsCount,
+    content_id: targetGroup.content.id,
+    post_id: targetGroup.content.post_id,
+    report: updatedGroup,
+    resolution: data.b.resolution,
+    type: targetGroup.content.type,
+  };
+
+  return {
+    status: 200,
+    ...msg(
+      data.b.resolution === "dismissed"
+        ? "admin_community_report_dismissed"
+        : "admin_community_report_upheld",
+      {},
+    ),
     data: payload,
   };
 };
