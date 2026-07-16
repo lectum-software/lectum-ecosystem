@@ -226,6 +226,7 @@ const contentTypeOptions = [
 type ContentPeriodValue = NonNullable<AdminCommunityContentQuery["period"]>;
 type ContentPeriodPreset = Exclude<ContentPeriodValue, "custom">;
 type ContentCustomRange = Pick<AdminCommunityContentQuery, "from" | "to">;
+type ContentSortValue = NonNullable<AdminCommunityContentQuery["sort"]>;
 type StatisticsPeriodValue = NonNullable<AdminCommunityStatisticsQuery["period"]>;
 type StatisticsPeriodPreset = Exclude<StatisticsPeriodValue, "custom">;
 type StatisticsCustomRange = Pick<AdminCommunityStatisticsQuery, "from" | "to">;
@@ -238,6 +239,15 @@ const contentPeriodOptions = [
   { id: "custom", label: "Personalizado" },
 ] as const satisfies ReadonlyArray<{
   id: ContentPeriodValue;
+  label: string;
+}>;
+
+const contentSortOptions = [
+  { id: "engagement", label: "Mais engajados" },
+  { id: "recent", label: "Mais recentes" },
+  { id: "oldest", label: "Mais antigos" },
+] as const satisfies ReadonlyArray<{
+  id: ContentSortValue;
   label: string;
 }>;
 
@@ -2580,13 +2590,14 @@ const ContentItemCard = ({
   </article>
 );
 
-type ContentBaseQuery = Pick<AdminCommunityContentQuery, "limit" | "page" | "q" | "type">;
+type ContentBaseQuery = Pick<AdminCommunityContentQuery, "limit" | "page" | "q" | "sort" | "type">;
 
 const ContentTab = ({ createdAt, slug }: { createdAt: string; slug: string }) => {
   const [query, setQuery] = useState<ContentBaseQuery>({
     limit: 10,
     page: 1,
     q: "",
+    sort: "engagement",
     type: "all",
   });
   const [selectedPeriod, setSelectedPeriod] = useState<ContentPeriodValue>("all");
@@ -2744,12 +2755,36 @@ const ContentTab = ({ createdAt, slug }: { createdAt: string; slug: string }) =>
       </section>
 
       <section className={cn(cardClass, "p-5")}>
-        <div>
-          <h2 className="text-lg font-black text-foreground">Conteúdo da comunidade</h2>
-          <p className="mt-1 text-sm text-muted">
-            Mostrando {numberFormatter.format(result.data?.data.length ?? 0)} de{" "}
-            {numberFormatter.format(result.data?.count ?? 0)} registros.
-          </p>
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h2 className="text-lg font-black text-foreground">Conteúdo da comunidade</h2>
+            <p className="mt-1 text-sm text-muted">
+              Mostrando {numberFormatter.format(result.data?.data.length ?? 0)} de{" "}
+              {numberFormatter.format(result.data?.count ?? 0)} registros.
+            </p>
+          </div>
+          <label
+            className="relative flex h-11 w-full items-center gap-2 rounded-control border border-border bg-surface px-3 pr-10 text-xs font-black text-muted sm:w-64"
+            htmlFor="community-content-sort"
+          >
+            <span className="shrink-0">Ordenar</span>
+            <select
+              className="min-w-0 flex-1 appearance-none bg-transparent text-sm font-bold text-foreground outline-none"
+              id="community-content-sort"
+              onChange={(event) => updateQuery({ sort: event.target.value as ContentSortValue })}
+              value={query.sort ?? "engagement"}
+            >
+              {contentSortOptions.map((option) => (
+                <option key={option.id} value={option.id}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+            <ChevronDown
+              aria-hidden
+              className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted"
+            />
+          </label>
         </div>
         <div className="mt-5 space-y-3">
           <QueryStatus
