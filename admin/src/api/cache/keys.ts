@@ -163,10 +163,12 @@ const normalizeCommunityRanking = (input: AdminCommunityRankingQuery) => ({
 });
 
 const normalizeCommunityReports = (input: AdminCommunityReportsQuery) => ({
+  from: input.from || "default",
   limit: input.limit || 10,
   page: input.page || 1,
   q: input.q || "",
   status: input.status || "all",
+  to: input.to || "default",
   type: input.type || "all",
 });
 

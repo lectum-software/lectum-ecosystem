@@ -449,13 +449,30 @@ export type AdminCommunityRanking = {
 };
 
 export type AdminCommunityReportsQuery = AdminCommunityPaginationQuery & {
-  status?: "all" | "em_analise" | "pendente" | "rejeitada" | "resolvida";
-  type?: "all" | "comment" | "post" | "reply";
+  from?: string;
+  status?: "all" | "dismissed" | "pending" | "upheld";
+  to?: string;
+  type?:
+    | "all"
+    | "patient_comment"
+    | "patient_post"
+    | "unverified_psychologist_post"
+    | "unverified_psychologist_reply"
+    | "verified_psychologist_post"
+    | "verified_psychologist_reply";
 };
 
 export type AdminCommunityReportItem = {
   content: {
     available: boolean;
+    content_kind:
+      | "patient_comment"
+      | "patient_post"
+      | "unverified_psychologist_post"
+      | "unverified_psychologist_reply"
+      | "verified_psychologist_post"
+      | "verified_psychologist_reply";
+    content_kind_label: string;
     excerpt: string;
     id: string;
     post_id: string;
@@ -466,18 +483,51 @@ export type AdminCommunityReportItem = {
   description: string | null;
   id: string;
   reason: string;
-  reporter_role: string;
+  reason_label: string;
+  reported_by: {
+    label: string;
+    role: string;
+  };
   status: string;
+  status_group: "dismissed" | "pending" | "upheld";
+  status_label: string;
 };
 
 export type AdminCommunityReports = {
+  active_filters_count: number;
+  cards: {
+    id: "dismissed" | "pending" | "total" | "upheld";
+    label: string;
+    source: "post_report";
+    value: number;
+  }[];
   community: Pick<AdminCommunityIdentity, "id" | "name" | "slug">;
   count: number;
   data: AdminCommunityReportItem[];
+  filters: {
+    statuses: {
+      count: number;
+      id: "all" | "dismissed" | "pending" | "upheld";
+      label: string;
+    }[];
+    types: {
+      count: number;
+      id: NonNullable<AdminCommunityReportsQuery["type"]>;
+      label: string;
+    }[];
+  };
   page: number;
   pages: number;
   per_page: number;
-  source: "post_report";
+  period: {
+    days: number;
+    from: string;
+    label: string;
+    max_days: number;
+    timezone: "server-local";
+    to: string;
+  };
+  source: "post_report+community_post+post_reply";
 };
 
 export type AdminCommunityActivitiesQuery = AdminCommunityPaginationQuery & {

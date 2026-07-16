@@ -22,6 +22,7 @@ import type {
   AdminCommunityRemoveContentDTO,
   AdminCommunityReportItemDTO,
   AdminCommunityReportsDTO,
+  AdminCommunityReportsQuery,
   AdminCommunityRuleBody,
   AdminCommunityRuleDTO,
   AdminCommunityUpdateBody,
@@ -58,6 +59,8 @@ const DEFAULT_PAGE = 1;
 const DEFAULT_PAGE_SIZE = 10;
 const MAX_CONTENT_PERIOD_DAYS = 3660;
 const MAX_PAGE_SIZE = 50;
+const DEFAULT_REPORT_PERIOD_DAYS = 90;
+const MAX_REPORT_PERIOD_DAYS = 180;
 const MS_PER_DAY = 86_400_000;
 const REMOVE_CONTENT_CONFIRMATION = "REMOVER CONTEUDO";
 const COMMUNITY_LIST_SORTS = new Set<AdminCommunitiesListSort>([
@@ -396,8 +399,12 @@ const contentIsRemoved = (
 
 type AdminCommunityContentAuthor =
   | AdminCommunityContentPostRecord["author"]
-  | AdminCommunityContentReplyRecord["author"];
+  | AdminCommunityContentReplyRecord["author"]
+  | NonNullable<AdminCommunityReportRecord["post"]>["author"]
+  | NonNullable<AdminCommunityReportRecord["reply"]>["author"];
 type AdminCommunityContentKind = AdminCommunityContentItemDTO["content_kind"];
+type AdminCommunityReportContentKind = AdminCommunityReportItemDTO["content"]["content_kind"];
+type AdminCommunityReportStatusGroup = AdminCommunityReportItemDTO["status_group"];
 
 const contentKindLabels: Record<AdminCommunityContentKind, string> = {
   anonymous_post: "Post anônimo",
@@ -671,6 +678,146 @@ const contentMatchesPeriod = (item: AdminCommunityContentItemDTO, range: Content
   return item.created_at >= range.start && item.created_at <= range.end;
 };
 
+type ReportPeriodRange = { end: Date; start: Date };
+type ReportPeriodResult =
+  | {
+      current: ReportPeriodRange;
+      period: AdminCommunityReportsDTO["period"];
+      success: true;
+    }
+  | { code: string; success: false };
+
+const reportStatusGroup = (status: string): AdminCommunityReportStatusGroup => {
+  const normalized = normalizeComparableText(status).replace(/_/g, " ");
+
+  if (["pendente", "pending", "em analise", "in review"].includes(normalized)) return "pending";
+  if (["improcedente", "rejeitada", "rejeitado", "dismissed", "rejected"].includes(normalized)) {
+    return "dismissed";
+  }
+  if (
+    ["procedente", "resolvida", "resolvido", "aprovada", "aprovado", "upheld"].includes(normalized)
+  ) {
+    return "upheld";
+  }
+
+  return "pending";
+};
+
+const reportStatusLabel = (status: string) => {
+  const labels: Record<AdminCommunityReportStatusGroup, string> = {
+    dismissed: "Improcedente",
+    pending: "Pendente",
+    upheld: "Procedente",
+  };
+
+  return labels[reportStatusGroup(status)];
+};
+
+const reportReasonLabel = (reason: string) => {
+  const labels: Record<string, string> = {
+    abuse: "Abuso ou desrespeito",
+    other: "Outro motivo",
+    privacy: "Dados pessoais ou privacidade",
+    self_harm: "Autolesão ou risco",
+    spam: "Spam",
+  };
+
+  return labels[reason] ?? reason;
+};
+
+const reporterRoleLabel = (role: string) => {
+  const labels: Record<string, string> = {
+    paciente: "Paciente",
+    psicologo: "Psicólogo",
+  };
+
+  return labels[role] ?? "Usuário";
+};
+
+const reportContentKindFor = (
+  type: AdminCommunityReportItemDTO["content"]["type"],
+  author: AdminCommunityContentAuthor,
+): AdminCommunityReportContentKind => {
+  if (author.role !== "psicologo") return type === "post" ? "patient_post" : "patient_comment";
+
+  const verified = isContentAuthorVerified(author);
+  if (type === "post") {
+    return verified ? "verified_psychologist_post" : "unverified_psychologist_post";
+  }
+
+  return verified ? "verified_psychologist_reply" : "unverified_psychologist_reply";
+};
+
+const resolveReportsPeriod = (query: AdminCommunityReportsQuery = {}): ReportPeriodResult => {
+  const hasCustomFrom = Boolean(query.from);
+  const hasCustomTo = Boolean(query.to);
+  let start: Date;
+  let end: Date;
+  let label = "Últimos 90 dias";
+
+  if (hasCustomFrom || hasCustomTo) {
+    if (!hasCustomFrom || !hasCustomTo) {
+      return { success: false, code: "invalid_analytics_date_range" };
+    }
+
+    const customStart = parseDateOnly(query.from, "start");
+    const customEnd = parseDateOnly(query.to, "end");
+
+    if (!customStart || !customEnd || customStart > customEnd) {
+      return { success: false, code: "invalid_analytics_date_range" };
+    }
+
+    start = customStart;
+    end = customEnd;
+    label = "Período personalizado";
+  } else {
+    const today = new Date();
+    end = endOfDay(today);
+    start = startOfDay(addDays(today, -(DEFAULT_REPORT_PERIOD_DAYS - 1)));
+  }
+
+  const days = daysBetweenInclusive(start, end);
+  if (days < 1 || days > MAX_REPORT_PERIOD_DAYS) {
+    return { success: false, code: "invalid_analytics_date_range" };
+  }
+
+  return {
+    current: { end, start },
+    period: {
+      days,
+      from: dateKey(start),
+      label,
+      max_days: MAX_REPORT_PERIOD_DAYS,
+      timezone: "server-local",
+      to: dateKey(end),
+    },
+    success: true,
+  };
+};
+
+const reportMatchesPeriod = (item: AdminCommunityReportItemDTO, range: ReportPeriodRange) =>
+  item.created_at >= range.start && item.created_at <= range.end;
+
+const normalizeReportStatusQuery = (
+  status?: AdminCommunityReportsQuery["status"],
+): "all" | AdminCommunityReportStatusGroup => {
+  if (!status || status === "all") return "all";
+  if (status === "pending" || status === "dismissed" || status === "upheld") return status;
+
+  return reportStatusGroup(status);
+};
+
+const reportMatchesType = (
+  item: AdminCommunityReportItemDTO,
+  type: NonNullable<AdminCommunityReportsQuery["type"]>,
+) => {
+  if (type === "all") return true;
+  if (type === "post") return item.content.type === "post";
+  if (type === "comment" || type === "reply") return item.content.type === "comment";
+
+  return item.content.content_kind === type;
+};
+
 const buildContentMetricsMaps = async (
   repository: AdminCommunityManageRepository,
   postIds: string[],
@@ -706,6 +853,14 @@ const mapReport = (report: AdminCommunityReportRecord): AdminCommunityReportItem
   const isReply = Boolean(report.reply_id && report.reply);
   const target = isReply ? report.reply : report.post;
   const postId = isReply ? report.reply?.post_id : report.post_id;
+  const contentType = isReply ? "comment" : "post";
+  const author = target?.author;
+  const contentKind = author
+    ? reportContentKindFor(contentType, author)
+    : contentType === "post"
+      ? "patient_post"
+      : "patient_comment";
+  const statusGroup = reportStatusGroup(report.status);
   const available = Boolean(
     isReply
       ? report.reply &&
@@ -718,25 +873,42 @@ const mapReport = (report: AdminCommunityReportRecord): AdminCommunityReportItem
   return {
     content: {
       available,
+      content_kind: contentKind,
+      content_kind_label: contentKindLabels[contentKind],
       excerpt: excerpt(target?.content),
       id: target?.id ?? report.target_id,
       post_id: postId ?? report.post_id,
       title: target?.title ?? null,
-      type: isReply ? "comment" : "post",
+      type: contentType,
     },
     created_at: report.createdAt,
     description: report.description,
     id: report.id,
     reason: report.reason,
-    reporter_role: report.reporter.role,
+    reason_label: reportReasonLabel(report.reason),
+    reported_by: {
+      label: reporterRoleLabel(report.reporter.role),
+      role: report.reporter.role,
+    },
     status: report.status,
+    status_group: statusGroup,
+    status_label: reportStatusLabel(report.status),
   };
 };
 
 const reportMatchesSearch = (item: AdminCommunityReportItemDTO, search: string) => {
   if (!search) return true;
 
-  return [item.reason, item.description, item.content.title, item.content.excerpt]
+  return [
+    item.reason,
+    item.reason_label,
+    item.description,
+    item.content.title,
+    item.content.excerpt,
+    item.content.content_kind_label,
+    item.reported_by.label,
+    item.status_label,
+  ]
     .filter(Boolean)
     .some((value) => value?.toLowerCase().includes(search));
 };
@@ -1575,22 +1747,86 @@ export const listReports = async (data: IAdminCommunityReportsDTO): Promise<Reso
   const page = normalizePage(data.q.page);
   const limit = normalizeLimit(data.q.limit);
   const search = normalizeSearch(data.q.q);
-  const status = data.q.status ?? "all";
+  const status = normalizeReportStatusQuery(data.q.status);
   const type = data.q.type ?? "all";
-  const reports = (await repository.listReports(community.id))
+  const period = resolveReportsPeriod(data.q);
+  if (!period.success) return { status: 400, ...error(period.code, {}) };
+
+  const items = (await repository.listReports(community.id))
     .map(mapReport)
-    .filter((item) => status === "all" || item.status === status)
-    .filter((item) => type === "all" || item.content.type === (type === "reply" ? "comment" : type))
+    .filter((item) => reportMatchesPeriod(item, period.current));
+  const reports = items
+    .filter((item) => status === "all" || item.status_group === status)
+    .filter((item) => reportMatchesType(item, type))
     .filter((item) => reportMatchesSearch(item, search));
+  const countByStatus = (statusGroup: AdminCommunityReportStatusGroup) =>
+    items.filter((item) => item.status_group === statusGroup).length;
+  const countByType = (contentKind: AdminCommunityReportContentKind) =>
+    items.filter((item) => item.content.content_kind === contentKind).length;
   const paginated = paginate(reports, page, limit);
   const payload: AdminCommunityReportsDTO = {
+    active_filters_count: [
+      type !== "all" ? type : "",
+      status !== "all" ? status : "",
+      data.q.from && data.q.to ? "period" : "",
+      search ? "q" : "",
+    ].filter(Boolean).length,
+    cards: [
+      { id: "total", label: "Total de denúncias", source: "post_report", value: items.length },
+      { id: "pending", label: "Pendentes", source: "post_report", value: countByStatus("pending") },
+      { id: "upheld", label: "Procedentes", source: "post_report", value: countByStatus("upheld") },
+      {
+        id: "dismissed",
+        label: "Improcedentes",
+        source: "post_report",
+        value: countByStatus("dismissed"),
+      },
+    ],
     community: communitySummary(community),
     count: paginated.count,
     data: paginated.data,
+    filters: {
+      statuses: [
+        { count: items.length, id: "all", label: "Todos os status" },
+        { count: countByStatus("pending"), id: "pending", label: "Pendentes" },
+        { count: countByStatus("upheld"), id: "upheld", label: "Procedentes" },
+        { count: countByStatus("dismissed"), id: "dismissed", label: "Improcedentes" },
+      ],
+      types: [
+        { count: items.length, id: "all", label: "Todos" },
+        {
+          count: countByType("verified_psychologist_post"),
+          id: "verified_psychologist_post",
+          label: "Post de psicólogo verificado",
+        },
+        {
+          count: countByType("unverified_psychologist_post"),
+          id: "unverified_psychologist_post",
+          label: "Post de psicólogo não verificado",
+        },
+        {
+          count: countByType("verified_psychologist_reply"),
+          id: "verified_psychologist_reply",
+          label: "Resposta de psicólogo verificado",
+        },
+        {
+          count: countByType("unverified_psychologist_reply"),
+          id: "unverified_psychologist_reply",
+          label: "Resposta de psicólogo não verificado",
+        },
+        { count: countByType("patient_post"), id: "patient_post", label: "Post de paciente" },
+        {
+          count: countByType("patient_comment"),
+          id: "patient_comment",
+          label: "Comentário de paciente",
+        },
+      ],
+    },
     page: paginated.page,
     pages: paginated.pages,
     per_page: paginated.per_page,
-    source: "post_report",
+    period: period.period,
+    source: "post_report+community_post+post_reply",
   };
 
   return {

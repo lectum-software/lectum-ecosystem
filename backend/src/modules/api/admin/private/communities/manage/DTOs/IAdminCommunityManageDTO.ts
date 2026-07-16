@@ -43,8 +43,30 @@ export type AdminCommunityRankingQuery = AdminCommunityPaginationQuery & {
 };
 
 export type AdminCommunityReportsQuery = AdminCommunityPaginationQuery & {
-  status?: "all" | "em_analise" | "pendente" | "rejeitada" | "resolvida";
-  type?: "all" | "comment" | "post" | "reply";
+  from?: string;
+  status?:
+    | "all"
+    | "dismissed"
+    | "em_analise"
+    | "pending"
+    | "pendente"
+    | "rejeitada"
+    | "resolvida"
+    | "upheld"
+    | string;
+  to?: string;
+  type?:
+    | "all"
+    | "comment"
+    | "patient_comment"
+    | "patient_post"
+    | "post"
+    | "reply"
+    | "unverified_psychologist_post"
+    | "unverified_psychologist_reply"
+    | "verified_psychologist_post"
+    | "verified_psychologist_reply"
+    | string;
 };
 
 export type AdminCommunityActivitiesQuery = AdminCommunityPaginationQuery & {
@@ -299,6 +321,14 @@ export type AdminCommunityRankingDTO = {
 export type AdminCommunityReportItemDTO = {
   content: {
     available: boolean;
+    content_kind:
+      | "patient_comment"
+      | "patient_post"
+      | "unverified_psychologist_post"
+      | "unverified_psychologist_reply"
+      | "verified_psychologist_post"
+      | "verified_psychologist_reply";
+    content_kind_label: string;
     excerpt: string;
     id: string;
     post_id: string;
@@ -309,18 +339,58 @@ export type AdminCommunityReportItemDTO = {
   description: string | null;
   id: string;
   reason: string;
-  reporter_role: string;
+  reason_label: string;
+  reported_by: {
+    label: string;
+    role: string;
+  };
   status: string;
+  status_group: "dismissed" | "pending" | "upheld";
+  status_label: string;
 };
 
 export type AdminCommunityReportsDTO = {
+  active_filters_count: number;
+  cards: {
+    id: "dismissed" | "pending" | "total" | "upheld";
+    label: string;
+    source: "post_report";
+    value: number;
+  }[];
   community: Pick<AdminCommunityIdentity, "id" | "name" | "slug">;
   count: number;
   data: AdminCommunityReportItemDTO[];
+  filters: {
+    statuses: {
+      count: number;
+      id: "all" | "dismissed" | "pending" | "upheld";
+      label: string;
+    }[];
+    types: {
+      count: number;
+      id:
+        | "all"
+        | "patient_comment"
+        | "patient_post"
+        | "unverified_psychologist_post"
+        | "unverified_psychologist_reply"
+        | "verified_psychologist_post"
+        | "verified_psychologist_reply";
+      label: string;
+    }[];
+  };
   page: number;
   pages: number;
   per_page: number;
-  source: "post_report";
+  period: {
+    days: number;
+    from: string;
+    label: string;
+    max_days: number;
+    timezone: "server-local";
+    to: string;
+  };
+  source: "post_report+community_post+post_reply";
 };
 
 export type AdminCommunityActivityItemDTO = {

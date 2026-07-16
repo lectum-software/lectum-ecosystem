@@ -186,6 +186,9 @@ const adminCommunityContentReplySelect = {
   post_id: true,
   post: {
     select: {
+      author: {
+        select: adminContentAuthorSelect,
+      },
       content: true,
       deleted: true,
       id: true,
@@ -234,6 +237,9 @@ const adminCommunityReportSelect = {
   target_type: true,
   post: {
     select: {
+      author: {
+        select: adminContentAuthorSelect,
+      },
       content: true,
       deleted: true,
       id: true,
@@ -243,6 +249,9 @@ const adminCommunityReportSelect = {
   },
   reply: {
     select: {
+      author: {
+        select: adminContentAuthorSelect,
+      },
       content: true,
       deleted: true,
       id: true,

@@ -7,6 +7,7 @@ import {
   ArrowUp,
   Bookmark,
   CalendarDays,
+  CheckCircle2,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
@@ -23,6 +24,7 @@ import {
   Save,
   Search,
   Share2,
+  ShieldCheck,
   Star,
   Trash2,
   Users,
@@ -71,6 +73,7 @@ import type {
   AdminCommunityRankingItem,
   AdminCommunityRankingQuery,
   AdminCommunityReportItem,
+  AdminCommunityReports,
   AdminCommunityReportsQuery,
   AdminCommunityRule,
   AdminCommunityRuleInput,
@@ -324,6 +327,33 @@ const contentDateFromInput = (value: string) => {
   return new Date(year, month - 1, day, 12, 0, 0, 0);
 };
 const isValidContentRange = (range: ContentCustomRange) => {
+  if (!range.from || !range.to) return false;
+
+  return contentDateFromInput(range.from) <= contentDateFromInput(range.to);
+};
+type ReportPeriodValue = "30d" | "90d" | "180d" | "custom";
+type ReportPeriodPreset = Exclude<ReportPeriodValue, "custom">;
+type ReportDateRange = {
+  from: string;
+  to: string;
+};
+const reportPeriodOptions: { id: ReportPeriodPreset; label: string }[] = [
+  { id: "30d", label: "Últimos 30 dias" },
+  { id: "90d", label: "Últimos 90 dias" },
+  { id: "180d", label: "Últimos 180 dias" },
+];
+const getReportRangeForPeriod = (period: ReportPeriodPreset): ReportDateRange => {
+  const days = period === "30d" ? 30 : period === "180d" ? 180 : 90;
+  const to = new Date();
+  const from = new Date();
+  from.setDate(to.getDate() - (days - 1));
+
+  return {
+    from: toDateInputValue(from),
+    to: toDateInputValue(to),
+  };
+};
+const isValidReportRange = (range: ReportDateRange) => {
   if (!range.from || !range.to) return false;
 
   return contentDateFromInput(range.from) <= contentDateFromInput(range.to);
@@ -2568,94 +2598,338 @@ const RankingTab = ({ slug }: { slug: string }) => {
   );
 };
 
-const ReportsTab = ({ slug }: { slug: string }) => {
-  const [query, setQuery] = useState<AdminCommunityReportsQuery>({
-    limit: 10,
-    page: 1,
-    q: "",
-    type: "all",
-  });
-  const result = useAdminCommunityReports(slug, query);
-  const updateQuery = (patch: Partial<AdminCommunityReportsQuery>) =>
-    setQuery((current) => ({ ...current, ...patch, page: patch.page ?? 1 }));
+type CommunityReportCard = AdminCommunityReports["cards"][number];
+type CommunityReportFilterType = NonNullable<AdminCommunityReportsQuery["type"]>;
+
+const emptyCommunityReportCards: CommunityReportCard[] = [
+  { id: "total", label: "Total de denúncias", source: "post_report", value: 0 },
+  { id: "pending", label: "Pendentes", source: "post_report", value: 0 },
+  { id: "upheld", label: "Procedentes", source: "post_report", value: 0 },
+  { id: "dismissed", label: "Improcedentes", source: "post_report", value: 0 },
+];
+
+const communityReportTypeFallback: AdminCommunityReports["filters"]["types"] = [
+  { count: 0, id: "all", label: "Todos" },
+  { count: 0, id: "verified_psychologist_post", label: "Post de psicólogo verificado" },
+  { count: 0, id: "unverified_psychologist_post", label: "Post de psicólogo não verificado" },
+  { count: 0, id: "verified_psychologist_reply", label: "Resposta de psicólogo verificado" },
+  { count: 0, id: "unverified_psychologist_reply", label: "Resposta de psicólogo não verificado" },
+  { count: 0, id: "patient_post", label: "Post de paciente" },
+  { count: 0, id: "patient_comment", label: "Comentário de paciente" },
+];
+
+const communityReportStatusFallback: AdminCommunityReports["filters"]["statuses"] = [
+  { count: 0, id: "all", label: "Todos os status" },
+  { count: 0, id: "pending", label: "Pendentes" },
+  { count: 0, id: "upheld", label: "Procedentes" },
+  { count: 0, id: "dismissed", label: "Improcedentes" },
+];
+
+const CommunityReportMetricCard = ({ card }: { card: CommunityReportCard }) => {
+  const Icon =
+    card.id === "dismissed" ? CheckCircle2 : card.id === "upheld" ? ShieldCheck : AlertTriangle;
 
   return (
     <section className={cn(cardClass, "p-5")}>
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+      <div className="flex items-start justify-between gap-4">
         <div>
-          <h2 className="text-lg font-black text-foreground">Denúncias da comunidade</h2>
-          <p className="mt-1 text-sm text-muted">
-            Denúncias reais vinculadas a posts e comentários desta comunidade.
+          <p className="text-sm font-black text-foreground">{card.label}</p>
+          <p className="mt-5 text-4xl font-black text-foreground">
+            {numberFormatter.format(card.value)}
           </p>
         </div>
-        <StatusBadge tone="muted">
-          {numberFormatter.format(result.data?.count ?? 0)} denúncias
-        </StatusBadge>
+        <span className="grid h-11 w-11 shrink-0 place-items-center rounded-[18px] bg-primary-soft text-primary ring-1 ring-primary/10">
+          <Icon aria-hidden className="h-5 w-5" />
+        </span>
       </div>
-      <div className="mt-5 grid gap-3 lg:grid-cols-[1fr_auto]">
-        <input
-          className="h-11 rounded-control border border-border bg-surface px-3 text-sm font-bold"
-          onChange={(event) => updateQuery({ q: event.target.value })}
-          placeholder="Buscar denúncia"
-          value={query.q ?? ""}
-        />
-        <select
-          className="h-11 rounded-control border border-border bg-surface px-3 text-sm font-bold"
-          onChange={(event) =>
-            updateQuery({ status: event.target.value as AdminCommunityReportsQuery["status"] })
-          }
-          value={query.status}
-        >
-          <option value="all">Todos os status</option>
-          <option value="pendente">Pendentes</option>
-          <option value="em_analise">Em análise</option>
-          <option value="resolvida">Resolvidas</option>
-          <option value="rejeitada">Rejeitadas</option>
-        </select>
-      </div>
-      <div className="mt-5 space-y-3">
-        <QueryStatus
-          error={result.error}
-          loading={result.isLoading}
-          onRetry={() => void result.refetch()}
-        />
-        {result.data?.data.length === 0 ? (
-          <p className="rounded-2xl bg-surface-muted p-4 text-sm text-muted">
-            Nenhuma denúncia encontrada para esta comunidade.
-          </p>
-        ) : null}
-        {result.data?.data.map((report: AdminCommunityReportItem) => (
-          <article className="rounded-2xl border border-border p-4" key={report.id}>
-            <div className="flex flex-wrap items-center gap-2">
-              <StatusBadge tone={report.status === "pendente" ? "green" : "muted"}>
-                {report.status}
-              </StatusBadge>
-              <span className="text-xs font-bold text-muted">
-                {formatDateTime(report.created_at)}
-              </span>
-              <span className="text-xs font-bold text-muted">Reporter: {report.reporter_role}</span>
-            </div>
-            <h3 className="mt-3 font-black text-foreground">{report.reason}</h3>
-            <p className="mt-2 text-sm text-muted">
-              {report.description || report.content.excerpt || "Sem descrição."}
-            </p>
-            <p className="mt-2 text-xs font-bold text-muted">
-              Conteúdo: {report.content.type === "post" ? "post" : "comentário"} ·{" "}
-              {report.content.available ? "disponível" : "removido/indisponível"}
-            </p>
-          </article>
+    </section>
+  );
+};
+
+const CommunityReportFilterSelect = ({
+  children,
+  label,
+  onChange,
+  value,
+}: {
+  children: React.ReactNode;
+  label: string;
+  onChange: (value: string) => void;
+  value: string;
+}) => (
+  <label className="block text-sm font-black text-muted">
+    {label}
+    <span className="relative mt-2 block">
+      <select
+        className="h-11 w-full appearance-none rounded-control border border-border bg-surface py-0 pl-3 pr-14 text-sm font-bold text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+        onChange={(event) => onChange(event.target.value)}
+        value={value}
+      >
+        {children}
+      </select>
+      <ChevronDown
+        aria-hidden
+        className="pointer-events-none absolute right-5 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground"
+      />
+    </span>
+  </label>
+);
+
+const CommunityReportStatusBadge = ({
+  group,
+  label,
+}: {
+  group: AdminCommunityReportItem["status_group"];
+  label: string;
+}) => {
+  const className =
+    group === "upheld"
+      ? "bg-red-50 text-danger"
+      : group === "dismissed"
+        ? "bg-emerald-50 text-success"
+        : "bg-yellow-50 text-yellow-700";
+
+  return (
+    <span className={cn("rounded-full px-2.5 py-1 text-xs font-black", className)}>{label}</span>
+  );
+};
+
+const ReportsTab = ({ slug }: { slug: string }) => {
+  const [selectedPeriod, setSelectedPeriod] = useState<ReportPeriodValue>("90d");
+  const [appliedRange, setAppliedRange] = useState<ReportDateRange>(() =>
+    getReportRangeForPeriod("90d"),
+  );
+  const [draftRange, setDraftRange] = useState<ReportDateRange>(() =>
+    getReportRangeForPeriod("90d"),
+  );
+  const [rangeError, setRangeError] = useState<string | null>(null);
+  const [type, setType] = useState<CommunityReportFilterType>("all");
+  const [status, setStatus] = useState<AdminCommunityReportsQuery["status"]>("all");
+  const [page, setPage] = useState(1);
+  const queryInput = useMemo<AdminCommunityReportsQuery>(
+    () => ({
+      ...appliedRange,
+      limit: 10,
+      page,
+      status,
+      type,
+    }),
+    [appliedRange, page, status, type],
+  );
+  const result = useAdminCommunityReports(slug, queryInput);
+  const reportCards = result.data?.cards ?? emptyCommunityReportCards;
+  const typeOptions = result.data?.filters.types ?? communityReportTypeFallback;
+  const statusOptions = result.data?.filters.statuses ?? communityReportStatusFallback;
+
+  const handlePeriodChange = (value: ReportPeriodPreset) => {
+    const nextRange = getReportRangeForPeriod(value);
+
+    setRangeError(null);
+    setSelectedPeriod(value);
+    setDraftRange(nextRange);
+    setAppliedRange(nextRange);
+    setPage(1);
+  };
+  const handleDateChange = (field: keyof ReportDateRange, value: string) => {
+    setRangeError(null);
+    setSelectedPeriod("custom");
+    setDraftRange((current) => ({ ...current, [field]: value }));
+  };
+  const commitRange = () => {
+    if (!isValidReportRange(draftRange)) {
+      setRangeError(
+        "Informe um período personalizado completo, com data inicial menor ou igual à final.",
+      );
+      return;
+    }
+
+    setRangeError(null);
+    setAppliedRange(draftRange);
+    setPage(1);
+  };
+  const handleDateControlsBlur = (event: {
+    currentTarget: HTMLDivElement;
+    relatedTarget: EventTarget | null;
+  }) => {
+    const currentTarget = event.currentTarget;
+    const nextFocusedElement = event.relatedTarget as Node | null;
+
+    if (nextFocusedElement && currentTarget.contains(nextFocusedElement)) return;
+
+    window.setTimeout(() => {
+      const activeElement = document.activeElement;
+
+      if (activeElement && currentTarget.contains(activeElement)) return;
+
+      commitRange();
+    }, 0);
+  };
+
+  return (
+    <div className="space-y-5">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        {reportCards.map((card) => (
+          <CommunityReportMetricCard card={card} key={card.id} />
         ))}
       </div>
-      {result.data ? (
-        <div className="mt-5">
-          <PaginationControls
-            page={result.data.page}
-            pages={result.data.pages}
-            setPage={(page) => updateQuery({ page })}
+
+      <section className={cn(cardClass, "p-4")}>
+        <div className="grid gap-3 lg:grid-cols-[1fr_1fr_1fr_2fr] lg:items-end">
+          <CommunityReportFilterSelect
+            label="Tipo"
+            onChange={(value) => {
+              setType(value as CommunityReportFilterType);
+              setPage(1);
+            }}
+            value={type}
+          >
+            {typeOptions.map((option) => (
+              <option key={option.id} value={option.id}>
+                {option.label} ({numberFormatter.format(option.count)})
+              </option>
+            ))}
+          </CommunityReportFilterSelect>
+          <CommunityReportFilterSelect
+            label="Status"
+            onChange={(value) => {
+              setStatus(value as AdminCommunityReportsQuery["status"]);
+              setPage(1);
+            }}
+            value={status ?? "all"}
+          >
+            {statusOptions.map((option) => (
+              <option key={option.id} value={option.id}>
+                {option.label} ({numberFormatter.format(option.count)})
+              </option>
+            ))}
+          </CommunityReportFilterSelect>
+          <CommunityReportFilterSelect
+            label="Período"
+            onChange={(value) => handlePeriodChange(value as ReportPeriodPreset)}
+            value={selectedPeriod}
+          >
+            {selectedPeriod === "custom" ? (
+              <option disabled hidden value="custom">
+                Personalizado
+              </option>
+            ) : null}
+            {reportPeriodOptions.map((option) => (
+              <option key={option.id} value={option.id}>
+                {option.label}
+              </option>
+            ))}
+          </CommunityReportFilterSelect>
+          <div className="grid gap-3 sm:grid-cols-2" onBlur={handleDateControlsBlur}>
+            <label className="block text-sm font-black text-muted">
+              De
+              <input
+                className="mt-2 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground"
+                max={draftRange.to}
+                onChange={(event) => handleDateChange("from", event.target.value)}
+                type="date"
+                value={draftRange.from}
+              />
+            </label>
+            <label className="block text-sm font-black text-muted">
+              Até
+              <input
+                className="mt-2 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground"
+                min={draftRange.from}
+                onChange={(event) => handleDateChange("to", event.target.value)}
+                type="date"
+                value={draftRange.to}
+              />
+            </label>
+          </div>
+        </div>
+        {rangeError ? <p className="mt-3 text-xs font-bold text-danger">{rangeError}</p> : null}
+      </section>
+
+      <section className={cn(cardClass, "overflow-hidden")}>
+        <div className="flex flex-col gap-2 border-b border-border p-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h2 className="text-xl font-black text-foreground">Denúncias da comunidade</h2>
+            <p className="mt-1 text-sm text-muted">
+              Mostrando {numberFormatter.format(result.data?.data.length ?? 0)} de{" "}
+              {numberFormatter.format(result.data?.count ?? 0)} denúncias filtradas.
+            </p>
+          </div>
+          <StatusBadge tone="muted">Moderação auditada</StatusBadge>
+        </div>
+
+        <div className="p-4">
+          <QueryStatus
+            error={result.error}
+            loading={result.isLoading}
+            onRetry={() => void result.refetch()}
           />
         </div>
-      ) : null}
-    </section>
+
+        {result.data?.data.length === 0 ? (
+          <p className="px-4 pb-5 text-sm font-bold text-muted">
+            Nenhuma denúncia real encontrada para os filtros atuais.
+          </p>
+        ) : (
+          <div className="divide-y divide-border">
+            {result.data?.data.map((report: AdminCommunityReportItem) => (
+              <article className="grid gap-4 p-4 xl:grid-cols-[1fr_220px]" key={report.id}>
+                <div className="flex gap-3">
+                  <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-orange-50 text-orange-700">
+                    <AlertTriangle aria-hidden className="h-5 w-5" />
+                  </span>
+                  <div className="min-w-0">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <StatusBadge tone="muted">{report.content.content_kind_label}</StatusBadge>
+                      <CommunityReportStatusBadge
+                        group={report.status_group}
+                        label={report.status_label}
+                      />
+                      <span className="text-xs font-bold text-muted">
+                        {formatDateTime(report.created_at)}
+                      </span>
+                    </div>
+                    <h3 className="mt-2 font-black text-foreground">{report.reason_label}</h3>
+                    <p className="mt-1 text-sm font-bold leading-6 text-muted">
+                      {report.description || report.content.excerpt || "Sem descrição."}
+                    </p>
+                    <p className="mt-2 text-xs font-bold text-muted">
+                      Conteúdo: {report.content.type === "post" ? "post" : "comentário"} ·{" "}
+                      {report.content.available ? "disponível" : "removido/indisponível"}
+                    </p>
+                  </div>
+                </div>
+                <dl className="rounded-2xl bg-surface-muted p-4 text-sm">
+                  <div>
+                    <dt className="font-black text-muted">Denunciado por</dt>
+                    <dd className="mt-1 font-black text-foreground">{report.reported_by.label}</dd>
+                  </div>
+                  <div className="mt-4">
+                    <dt className="font-black text-muted">Status</dt>
+                    <dd className="mt-1 font-black text-foreground">{report.status_label}</dd>
+                  </div>
+                  <div className="mt-4 border-t border-border pt-4">
+                    <dt className="font-black text-muted">Tipo</dt>
+                    <dd className="mt-1 font-black text-foreground">
+                      {report.content.content_kind_label}
+                    </dd>
+                  </div>
+                </dl>
+              </article>
+            ))}
+          </div>
+        )}
+
+        {result.data ? (
+          <div className="border-t border-border p-4">
+            <PaginationControls
+              page={result.data.page}
+              pages={result.data.pages}
+              setPage={setPage}
+            />
+          </div>
+        ) : null}
+      </section>
+    </div>
   );
 };
 

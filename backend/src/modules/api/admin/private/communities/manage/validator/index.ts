@@ -348,6 +348,20 @@ export const reportsSchema: IValidatorRequest = {
       max: 30,
       optional: true,
     },
+    {
+      key: "from",
+      coerse: "string",
+      method: "string",
+      max: 10,
+      optional: true,
+    },
+    {
+      key: "to",
+      coerse: "string",
+      method: "string",
+      max: 10,
+      optional: true,
+    },
   ],
 };
 

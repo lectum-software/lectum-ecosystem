@@ -332,3 +332,15 @@ Regras:
 - O ajuste é exclusivamente visual, mobile-first, sem endpoint novo, mock, package, schema Prisma/migration ou alteração de contrato.
 - Builder/Quick Copy não está exposto como ferramenta callable no ambiente; a referência visual usada foi a captura enviada pelo usuário e o padrão local da aba **Atividades** de psicólogos.
 - Validação executada: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke HTTP local `GET http://localhost:3002/comunidades/relacionamentos-com-proposito?tab=atividades` retornando 200. A validação visual por controle direto de browser não foi concluída porque este ambiente não expõe ferramenta de automação/inspeção de navegador.
+
+## Ajuste complementar 2026-07-16 - Metricas e filtros na aba Denuncias
+
+- Pedido do usuario: na aba **Denuncias** do detalhe administrativo de comunidade, adicionar contadores superiores com total, pendentes, procedentes e improcedentes, alem de bloco de filtros por **Tipo**, **Status**, **Periodo**, **De** e **Ate**.
+- O endpoint real `GET /api/admin/private/communities/:id/reports` passou a retornar `cards`, `filters`, `period`, `status_group`, `status_label` e `content_kind` derivados de `post_report`, `community_post`, `post_reply`, `user.role` e verificacao profissional real, sem mock ou endpoint paralelo.
+- O status `em_analise` legado continua agrupado como **Pendente**; `resolvida` aparece como **Procedente** e `rejeitada` como **Improcedente**, mantendo a mesma semantica operacional ja usada em denuncias de psicologos.
+- O filtro **Tipo** diferencia post/resposta de psicologo verificado ou nao verificado, post de paciente e comentario de paciente. Posts anonimos de paciente entram como **Post de paciente** neste contexto de denuncias.
+- A UI Admin passou a renderizar cards mobile-first e filtros no mesmo padrao visual da aba **Denuncias** do detalhe administrativo de psicologos, com periodo padrao de 90 dias e datas sempre visiveis.
+- Nao houve package novo, mock, schema Prisma/migration ou alteracao de persistencia.
+- Builder/Quick Copy nao esta exposto como ferramenta callable no ambiente; a referencia visual usada foi a captura enviada pelo usuario e o padrao local da aba **Denuncias** de psicologos.
+- ADR atualizado: `adrs/0264-admin-comunidade-abas-conteudo-ranking.md`.
+- Validacao executada: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check`, smoke HTTP local `GET http://localhost:3002/comunidades/relacionamentos-com-proposito?tab=denuncias` retornando 200 e smoke HTTP sem sessao Admin em `GET /api/admin/private/communities/relacionamentos-com-proposito/reports?...` retornando 401. A validacao visual autenticada por browser nao foi concluida porque o ambiente headless nao possui sessao Admin; em headless, a rota redirecionou para login apos carregar.

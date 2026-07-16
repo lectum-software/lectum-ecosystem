@@ -260,3 +260,15 @@ A decisão é manter a fonte real `admin_activity_log` e apenas reorganizar sua 
 Consequência: a leitura operacional fica consistente entre comunidades e psicólogos, sem alterar endpoint, contrato, schema Prisma, persistência, dependências ou regras de auditoria.
 
 Validação desta atualização: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke local `GET http://localhost:3002/comunidades/relacionamentos-com-proposito?tab=atividades` retornando 200.
+
+## Atualizacao 2026-07-16: metricas e filtros nas denuncias da comunidade
+
+A aba **Denuncias** do detalhe administrativo de comunidade passa a usar o mesmo modelo operacional da aba **Denuncias** do detalhe administrativo de psicologos para triagem: cards superiores de total, pendentes, procedentes e improcedentes, seguidos de filtros por tipo de conteudo, status e periodo.
+
+A decisao e derivar a classificacao no backend privado a partir das entidades reais: `post_report`, `community_post`, `post_reply`, `user.role` e verificacao profissional via regra existente de entitlement. O status bruto continua preservado no item, mas a UI usa `status_group` e `status_label`: `pendente`/`em_analise` como **Pendente**, `resolvida` como **Procedente** e `rejeitada` como **Improcedente**.
+
+O filtro de tipo usa categorias operacionais para denuncia: post/resposta de psicologo verificado, post/resposta de psicologo nao verificado, post de paciente e comentario de paciente. Neste contexto, posts anonimos de paciente sao tratados como **Post de paciente**, pois a aba de denuncias precisa segmentar autoria/forma sem criar uma categoria paralela de anonimato.
+
+Consequencia: a tela ganha leitura agregada e filtros consistentes sem nova tabela, migration, package, mock ou endpoint paralelo. O contrato de reports da comunidade foi expandido com `cards`, `filters`, `period`, `content_kind`, `status_group` e labels de apresentacao, mantendo `source="post_report+community_post+post_reply"`.
+
+Validacao desta atualizacao: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check`, smoke local `GET http://localhost:3002/comunidades/relacionamentos-com-proposito?tab=denuncias` retornando 200 e smoke sem sessao Admin do endpoint de reports retornando 401. A validacao visual autenticada por browser ficou limitada pela ausencia de sessao Admin no Chrome headless local.
