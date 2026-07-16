@@ -3441,7 +3441,8 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: st
                 ) : null}
               </div>
               <p className="mt-1 text-xs font-bold leading-5 text-muted">
-                Clique nos contadores para exibir ou esconder a curva correspondente no gráfico.
+                Visão do desempenho comercial do psicólogo na plataforma, incluindo descoberta,
+                interesse e intenção de contato.
               </p>
             </div>
             <StatisticsPeriodControls
@@ -3495,7 +3496,7 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: st
                 ) : null}
               </div>
               <p className="mt-1 text-xs font-bold leading-5 text-muted">
-                Clique nos contadores para exibir ou esconder a curva correspondente no gráfico.
+                Indicadores de contribuição, engajamento e posição do psicólogo nas comunidades.
               </p>
             </div>
             <StatisticsPeriodControls

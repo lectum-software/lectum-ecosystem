@@ -187,3 +187,14 @@ A decisao e exclusivamente de hierarquia e consistencia visual. As consultas Rea
 Consequencia: a leitura do Admin fica consistente entre estatisticas de comunidades e de psicologos, com melhor comportamento mobile-first e sem criar endpoint paralelo, novo contrato, schema Prisma, migration, package, mock ou persistencia adicional.
 
 Validacao complementar 2026-07-16: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke HTTP local `GET http://localhost:3002/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=estatisticas` retornando 200.
+
+## Complemento 2026-07-16 - Copy contextual dos blocos de estatísticas
+
+Os blocos **Estatísticas de negócio** e **Estatísticas de comunidade** no detalhe administrativo do psicólogo devem usar descrições orientadas ao conteúdo analisado, e não uma instrução genérica de interação com o gráfico.
+
+- Negócio: `Visão do desempenho comercial do psicólogo na plataforma, incluindo descoberta, interesse e intenção de contato.`
+- Comunidade: `Indicadores de contribuição, engajamento e posição do psicólogo nas comunidades.`
+
+A decisão é exclusivamente textual e de hierarquia de leitura: os contadores continuam clicáveis e os gráficos, filtros, endpoints, contratos e fontes first-party reais permanecem inalterados.
+
+Validação complementar 2026-07-16: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke HTTP local `GET http://localhost:3002/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=estatisticas` retornando 200.

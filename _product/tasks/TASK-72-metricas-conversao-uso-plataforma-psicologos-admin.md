@@ -840,3 +840,12 @@ Regras de cálculo:
 - Nao houve endpoint novo, mock, package, schema Prisma/migration ou alteracao de persistencia.
 - Builder/Quick Copy nao esta exposto como ferramenta callable no ambiente; a referencia visual usada foi a captura enviada pelo usuario e o layout atual de **Estatisticas de pessoas** no painel de comunidade.
 - Validacao executada: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke HTTP local `GET http://localhost:3002/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=estatisticas` retornando 200.
+
+## Ajuste complementar 2026-07-16 - Copy contextual dos blocos de estatísticas do psicólogo
+
+- Pedido do usuário: substituir o texto genérico abaixo dos títulos dos blocos **Estatísticas de negócio** e **Estatísticas de comunidade** por descrições relacionadas ao conteúdo analisado.
+- **Estatísticas de negócio** passa a exibir: `Visão do desempenho comercial do psicólogo na plataforma, incluindo descoberta, interesse e intenção de contato.`
+- **Estatísticas de comunidade** passa a exibir: `Indicadores de contribuição, engajamento e posição do psicólogo nas comunidades.`
+- O ajuste é exclusivamente textual/visual, mobile-first, sem endpoint novo, mock, package, schema Prisma/migration, alteração de contrato de API ou persistência.
+- Builder/Quick Copy não está exposto como ferramenta callable no ambiente; a referência usada foi a solicitação textual do usuário e o layout já consolidado do Admin.
+- Validação executada: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke HTTP local `GET http://localhost:3002/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=estatisticas` retornando 200.
