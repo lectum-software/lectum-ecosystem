@@ -14,6 +14,7 @@ import {
   PlayCircle,
   Repeat2,
   Search,
+  Share2,
   Star,
   TrendingDown,
   UsersRound,
@@ -508,6 +509,81 @@ const PresentationVideoMetricCard = ({
   );
 };
 
+type PresentationVideoActionMetric = {
+  description: string;
+  icon: AnalyticsCardIcon;
+  id:
+    | "profile_accesses_from_video"
+    | "favorites_from_video"
+    | "whatsapp_clicks_from_video"
+    | "shares_from_video";
+  label: string;
+  value: number;
+};
+
+const getPresentationVideoActionMetrics = (
+  video?: PsychologistAnalyticsPresentationVideo,
+): PresentationVideoActionMetric[] => [
+  {
+    id: "profile_accesses_from_video",
+    icon: Eye,
+    label: "Acesso ao perfil",
+    value: video?.metrics.profile_accesses_from_video ?? 0,
+    description: "Toques em Perfil a partir do vídeo.",
+  },
+  {
+    id: "favorites_from_video",
+    icon: Heart,
+    label: "Favoritado",
+    value: video?.metrics.favorites_from_video ?? 0,
+    description: "Favoritos gerados na área do vídeo.",
+  },
+  {
+    id: "whatsapp_clicks_from_video",
+    icon: WhatsAppIcon,
+    label: "Cliques no WhatsApp",
+    value: video?.metrics.whatsapp_clicks_from_video ?? 0,
+    description: "Conversas iniciadas pelo CTA do vídeo.",
+  },
+  {
+    id: "shares_from_video",
+    icon: Share2,
+    label: "Compartilhamento",
+    value: video?.metrics.shares_from_video ?? 0,
+    description: "Compartilhamentos acionados no vídeo.",
+  },
+];
+
+const PresentationVideoActionCard = ({
+  locked,
+  metric,
+}: {
+  locked?: boolean;
+  metric: PresentationVideoActionMetric;
+}) => {
+  const Icon = metric.icon;
+
+  return (
+    <article className="grid min-w-0 gap-2 rounded-[18px] border border-primary/10 bg-surface-muted/70 p-3">
+      <div className="flex min-w-0 items-center gap-2">
+        <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-primary-soft text-primary">
+          <Icon className="h-4 w-4" aria-hidden />
+        </span>
+        <p className="min-w-0 text-[0.76rem] font-extrabold leading-4 text-muted">{metric.label}</p>
+      </div>
+      <p
+        className={cn(
+          "text-2xl font-black leading-none tracking-[-0.05em] text-foreground",
+          locked && "select-none blur-[5px]",
+        )}
+      >
+        {toCount(metric.value)}
+      </p>
+      <p className="text-[0.68rem] font-semibold leading-4 text-subtle">{metric.description}</p>
+    </article>
+  );
+};
+
 type RetentionChartProps = {
   currentTimeSeconds?: number;
   durationSeconds?: number | null;
@@ -523,6 +599,7 @@ const RETENTION_CHART_TOP = 12;
 const RETENTION_CHART_BOTTOM = 116;
 const RETENTION_CHART_LEFT_PADDING = 18;
 const RETENTION_CHART_RIGHT_PADDING = 58;
+const RETENTION_CHART_AXIS_LABEL_Y = 144;
 
 const toChartPoint = (milestone: number, rate: number) => {
   const x =
@@ -534,6 +611,20 @@ const toChartPoint = (milestone: number, rate: number) => {
     ((100 - clampPercent(rate)) / 100) * (RETENTION_CHART_BOTTOM - RETENTION_CHART_TOP);
 
   return { x, y };
+};
+
+const buildRetentionAxisTicks = (durationSeconds?: number | null) => {
+  if (!durationSeconds || durationSeconds <= 0) {
+    return [
+      { label: "0:00", milestone: 0 },
+      { label: "Fim", milestone: 100 },
+    ];
+  }
+
+  return [0, 50, 100].map((milestone) => ({
+    label: formatSeconds((durationSeconds * milestone) / 100),
+    milestone,
+  }));
 };
 
 type RetentionCurvePoint = {
@@ -638,6 +729,7 @@ const RetentionChart = ({
     ? clampPercent((Math.max(0, currentTimeSeconds) / durationSeconds) * 100)
     : 0;
   const currentPoint = toChartPoint(currentPercent, 0);
+  const axisTicks = buildRetentionAxisTicks(durationSeconds);
   const canSeek = Boolean(onSeek && !locked && durationSeconds && durationSeconds > 0);
 
   const handleSeekFromChart = (event: ReactMouseEvent<HTMLButtonElement>) => {
@@ -664,12 +756,12 @@ const RetentionChart = ({
       >
         <svg
           aria-label="Curva estimada de retenção do vídeo"
-          className="mx-auto h-36 w-full max-w-[320px] overflow-visible text-subtle"
+          className="mx-auto h-40 w-full max-w-[320px] overflow-visible text-subtle"
           preserveAspectRatio="xMidYMid meet"
           role="img"
-          viewBox="0 0 300 130"
+          viewBox="0 0 300 150"
         >
-          <title>Curva contínua estimada de retenção de 100% a 0%</title>
+          <title>Curva contínua estimada de retenção por minuto do vídeo</title>
           <defs>
             <linearGradient id="presentation-video-retention-gradient" x1="0" x2="1" y1="0" y2="0">
               <stop offset="0%" stopColor="rgb(46, 143, 230)" />
@@ -774,6 +866,36 @@ const RetentionChart = ({
             strokeWidth="1.5"
             vectorEffect="non-scaling-stroke"
           />
+          {axisTicks.map((tick) => {
+            const tickPoint = toChartPoint(tick.milestone, 0);
+            const textAnchor =
+              tick.milestone <= 0 ? "start" : tick.milestone >= 100 ? "end" : "middle";
+
+            return (
+              <g key={tick.milestone}>
+                <line
+                  stroke="currentColor"
+                  strokeOpacity="0.45"
+                  strokeWidth="0.8"
+                  vectorEffect="non-scaling-stroke"
+                  x1={tickPoint.x}
+                  x2={tickPoint.x}
+                  y1="125"
+                  y2="130"
+                />
+                <text
+                  fill="currentColor"
+                  fontSize="9"
+                  fontWeight="800"
+                  textAnchor={textAnchor}
+                  x={tickPoint.x}
+                  y={RETENTION_CHART_AXIS_LABEL_Y}
+                >
+                  {tick.label}
+                </text>
+              </g>
+            );
+          })}
         </svg>
         <span className="pointer-events-none absolute right-5 top-4 rounded-full bg-surface/95 px-1.5 py-0.5 text-[0.65rem] font-extrabold leading-none text-subtle shadow-sm">
           100%
@@ -901,6 +1023,7 @@ const PresentationVideoAnalyticsSection = ({
     views: video?.metrics.views ?? 0,
   });
   const presentationVideoCards = getPresentationVideoCards(video);
+  const presentationVideoActionMetrics = getPresentationVideoActionMetrics(video);
 
   const handleVideoElementReady = useCallback((element: HTMLVideoElement | null) => {
     cleanupVideoListenersRef.current?.();
@@ -1046,30 +1169,48 @@ const PresentationVideoAnalyticsSection = ({
           ) : null}
         </div>
 
-        <div className="grid min-w-0 gap-4 rounded-[26px] border border-primary/10 bg-surface/90 p-3 shadow-[var(--lectum-shadow-soft)] md:grid-cols-[minmax(130px,190px)_1fr] md:items-center md:p-4">
-          {videoSrc ? (
-            <VerticalVideoPlayer
-              className="mx-auto w-full max-w-[190px] rounded-[22px] border-0 shadow-[var(--lectum-shadow-soft)]"
-              controlsVariant="minimal"
-              onVideoElementReady={handleVideoElementReady}
-              poster={videoCoverSrc}
-              src={videoSrc}
-              title="Vídeo de apresentação"
+        <div className="grid min-w-0 gap-4 rounded-[26px] border border-primary/10 bg-surface/90 p-3 shadow-[var(--lectum-shadow-soft)] md:p-4">
+          <div className="grid min-w-0 gap-4 md:grid-cols-[minmax(130px,190px)_1fr] md:items-center">
+            {videoSrc ? (
+              <VerticalVideoPlayer
+                className="mx-auto w-full max-w-[190px] rounded-[22px] border-0 shadow-[var(--lectum-shadow-soft)]"
+                controlsVariant="minimal"
+                onVideoElementReady={handleVideoElementReady}
+                poster={videoCoverSrc}
+                src={videoSrc}
+                title="Vídeo de apresentação"
+              />
+            ) : (
+              <div className="mx-auto grid aspect-[9/16] w-full max-w-[190px] place-items-center rounded-[22px] border border-dashed border-primary/20 bg-surface text-center text-sm font-bold text-muted">
+                Sem vídeo
+              </div>
+            )}
+            <RetentionChart
+              currentTimeSeconds={currentVideoTime}
+              dropoff={video?.retention.dropoff}
+              durationSeconds={durationSeconds}
+              locked={locked}
+              onSeek={handleSeekRetention}
+              points={video?.retention.points ?? []}
+              views={video?.metrics.views ?? 0}
             />
-          ) : (
-            <div className="mx-auto grid aspect-[9/16] w-full max-w-[190px] place-items-center rounded-[22px] border border-dashed border-primary/20 bg-surface text-center text-sm font-bold text-muted">
-              Sem vídeo
+          </div>
+
+          <div className="grid min-w-0 gap-3 rounded-[22px] border border-primary/10 bg-surface p-3">
+            <div className="min-w-0">
+              <p className="text-xs font-black uppercase tracking-[0.14em] text-primary">
+                Ações geradas pelo vídeo
+              </p>
+              <p className="mt-1 text-xs font-semibold leading-5 text-muted">
+                Interações reais iniciadas nos controles do vídeo de apresentação.
+              </p>
             </div>
-          )}
-          <RetentionChart
-            currentTimeSeconds={currentVideoTime}
-            dropoff={video?.retention.dropoff}
-            durationSeconds={durationSeconds}
-            locked={locked}
-            onSeek={handleSeekRetention}
-            points={video?.retention.points ?? []}
-            views={video?.metrics.views ?? 0}
-          />
+            <div className="grid min-w-0 grid-cols-2 gap-2 lg:grid-cols-4">
+              {presentationVideoActionMetrics.map((metric) => (
+                <PresentationVideoActionCard key={metric.id} locked={locked} metric={metric} />
+              ))}
+            </div>
+          </div>
         </div>
       </article>
     </section>

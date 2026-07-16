@@ -105,3 +105,11 @@ Para exclusao administrativa, a UI reutiliza o endpoint real de moderacao de con
 As metricas por publicacao seguem o mesmo conjunto visual da aba **Conteudo** de comunidades: visualizacoes, upvotes, downvotes, comentarios, salvos, compartilhamentos, cliques WhatsApp e denuncias. As novas fontes por item sao `post_report`, `important_action_event.action_type="whatsapp_click"` com `target_type` de post/resposta, e `page_view_event` com alvo de post/resposta quando houver tracking first-party. Eventos historicos sem alvo continuam fora dos totais por conteudo; nao ha backfill ou inferencia por URL.
 
 Validacao complementar 2026-07-16: `pnpm --dir admin check`, `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin build`, `pnpm check` e smoke HTTP local em `/psicologos/cmrqztri7000tn0uh1q4n8vxf?tab=publicacoes` retornando 200.
+
+## Complemento 2026-07-16 - Acoes do video no analytics do psicologo
+
+O analytics privado do psicologo (`/app/professional/analytics`) passa a reutilizar os mesmos eventos first-party especificos do video de apresentacao que ja alimentam a leitura administrativa: `psychologist_video_profile_access`, `psychologist_video_favorite`, `psychologist_video_whatsapp_click` e `psychologist_video_share` em `important_action_event` com `target_type="psychologist"` e `target_id` do profissional.
+
+A decisao mantem a separacao entre consumo do video e conversoes/interacoes: sessoes, replay e retencao continuam vindo de `profile_video_watch_session`; acoes geradas pelo video vem de `important_action_event`, sem inferencia por URL, sem backfill e sem misturar com `contact_request` ou favoritos globais. No analytics do proprio psicologo, autoacoes autenticadas do profissional sao excluidas para manter a leitura orientada a visitantes.
+
+A curva de retencao tambem passa a exibir o eixo X em tempo do video (`0:00`, meio e fim) usando a duracao real do player/API quando disponivel. A mudanca e somente de apresentacao quando nao houver duracao, preservando estado honesto sem dados artificiais.

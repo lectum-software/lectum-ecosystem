@@ -728,6 +728,15 @@ Regras de cálculo:
 - Builder/Quick Copy nao esta exposto como ferramenta no ambiente; a referencia visual usada foi a captura enviada pelo usuario e o padrao local da aba **Conteudo** em comunidades.
 - Validacao executada: `pnpm --dir admin check`, `pnpm --dir admin build` e smoke HTTP local `GET http://localhost:3002/psicologos/cmrqztri7000tn0uh1q4n8vxf?tab=publicacoes` retornando 200.
 
+## Ajuste complementar 2026-07-16 - Analytics do psicologo com eixo em minutos e acoes do video
+
+- Pedido do usuario: em `/app/professional/analytics`, adicionar o minuto do video no eixo X do grafico de retencao e exibir abaixo do video as acoes geradas por ele: Acesso ao perfil, Favoritado, Cliques no WhatsApp e Compartilhamento.
+- O endpoint real `GET /api/private/psychologist/analytics` passou a somar `important_action_event` com `target_type="psychologist"`, `target_id` do psicologo e action types do video (`psychologist_video_profile_access`, `psychologist_video_favorite`, `psychologist_video_whatsapp_click`, `psychologist_video_share`), excluindo autoacoes do proprio psicologo quando autenticadas.
+- O frontend mantem visualizacoes/replays/retencao como metricas de consumo do video e separa as acoes atribuidas em uma secao 2x2 mobile-first abaixo do player/grafico.
+- O grafico de retencao passou a exibir ticks de tempo em `0:00`, meio do video e fim do video quando a duracao real esta disponivel pelo player/API; sem duracao, mantem estado honesto.
+- Nao houve package novo, mock, schema Prisma/migration, backfill artificial ou captura de conversa/mensagem do WhatsApp.
+- Builder/Quick Copy nao esta exposto como ferramenta no ambiente; a referencia visual usada foi a captura enviada pelo usuario e o padrao local de `Meus Analytics - Psicologo`.
+
 ## Ajuste complementar 2026-07-16 - Ranking administrativo de comunidade compacto
 
 - Pedido do usuario: na aba **Ranking** do detalhe Admin de comunidade, remover a formula inferior, trocar a tag textual `verificado` pelo selo visual Lectum, normalizar o CRP abaixo do nome no formato compacto `00/0000`, exibir somente o score nas metricas e aproximar `Novo no ranking` do score.

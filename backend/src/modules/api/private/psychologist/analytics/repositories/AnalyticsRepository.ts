@@ -14,6 +14,14 @@ import type {
 import type { IPsychologistAnalyticsRepository } from "./interfaces/IAnalyticsRepository";
 
 const RETENTION_BUCKETS = Array.from({ length: 20 }, (_, index) => (index + 1) * 5);
+const PROFILE_VIDEO_ACTION_TYPES = [
+  "psychologist_video_favorite",
+  "psychologist_video_profile_access",
+  "psychologist_video_share",
+  "psychologist_video_whatsapp_click",
+] as const;
+
+type ProfileVideoActionType = (typeof PROFILE_VIDEO_ACTION_TYPES)[number];
 
 const trafficSourceDefinitions: Array<
   Pick<PsychologistAnalyticsTrafficSource, "description" | "id" | "label">
@@ -187,6 +195,33 @@ const toPresentationVideoCards = (
   },
 ];
 
+const countVideoActionEvents = (
+  actions: Array<{ action_type: string; occurred_at: Date }>,
+): Pick<
+  PsychologistAnalyticsPresentationVideo["metrics"],
+  | "favorites_from_video"
+  | "profile_accesses_from_video"
+  | "shares_from_video"
+  | "whatsapp_clicks_from_video"
+> => {
+  const counts = new Map<ProfileVideoActionType, number>(
+    PROFILE_VIDEO_ACTION_TYPES.map((actionType) => [actionType, 0]),
+  );
+
+  for (const action of actions) {
+    const actionType = action.action_type as ProfileVideoActionType;
+    if (!counts.has(actionType)) continue;
+    counts.set(actionType, (counts.get(actionType) ?? 0) + 1);
+  }
+
+  return {
+    favorites_from_video: counts.get("psychologist_video_favorite") ?? 0,
+    profile_accesses_from_video: counts.get("psychologist_video_profile_access") ?? 0,
+    shares_from_video: counts.get("psychologist_video_share") ?? 0,
+    whatsapp_clicks_from_video: counts.get("psychologist_video_whatsapp_click") ?? 0,
+  };
+};
+
 export class PsychologistAnalyticsRepository implements IPsychologistAnalyticsRepository {
   async hasProfessionalEntitlement(userId: string): Promise<boolean> {
     const profile = await prisma.psychologist_profile.findFirst({
@@ -223,6 +258,7 @@ export class PsychologistAnalyticsRepository implements IPsychologistAnalyticsRe
       profile,
       postsAggregate,
       presentationVideoSessions,
+      presentationVideoActionEvents,
     ] = await Promise.all([
       prisma.profile_view_event.count({
         where: {
@@ -342,6 +378,29 @@ export class PsychologistAnalyticsRepository implements IPsychologistAnalyticsRe
           last_event_at: true,
         },
       }),
+      prisma.important_action_event.findMany({
+        where: {
+          action_type: { in: [...PROFILE_VIDEO_ACTION_TYPES] },
+          deleted: false,
+          occurred_at: createdAtWindow,
+          target_id: userId,
+          target_type: "psychologist",
+          OR: [
+            {
+              user_id: null,
+            },
+            {
+              user_id: {
+                not: userId,
+              },
+            },
+          ],
+        },
+        select: {
+          action_type: true,
+          occurred_at: true,
+        },
+      }),
     ]);
     const currentPresentationVideoSessions = profile?.video_url
       ? presentationVideoSessions.filter((session) => session.video_url === profile.video_url)
@@ -390,10 +449,12 @@ export class PsychologistAnalyticsRepository implements IPsychologistAnalyticsRe
         (max, session) => Math.max(max, session.duration_seconds),
         0,
       ) || null;
+    const actionMetrics = countVideoActionEvents(presentationVideoActionEvents);
     const latestVideoEventAt =
-      currentPresentationVideoSessions
-        .map((session) => session.last_event_at)
-        .sort((a, b) => b.getTime() - a.getTime())[0] ?? null;
+      [
+        ...currentPresentationVideoSessions.map((session) => session.last_event_at),
+        ...presentationVideoActionEvents.map((action) => action.occurred_at),
+      ].sort((a, b) => b.getTime() - a.getTime())[0] ?? null;
     const retentionPoints: PsychologistAnalyticsPresentationVideoRetentionPoint[] =
       RETENTION_BUCKETS.map((bucket) => {
         const viewers = sessionRetentionBuckets.filter((buckets) => buckets.has(bucket)).length;
@@ -447,6 +508,7 @@ export class PsychologistAnalyticsRepository implements IPsychologistAnalyticsRe
       completion_rate: percentage(completedViews, videoViews),
       replay_rate: percentage(replayedViews, videoViews),
       abandonment_rate: videoViews > 0 ? percentage(videoViews - completedViews, videoViews) : 0,
+      ...actionMetrics,
     };
     const presentationVideo: PsychologistAnalyticsPresentationVideo = {
       updated_at: latestVideoEventAt,

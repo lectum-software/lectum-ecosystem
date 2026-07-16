@@ -97,6 +97,10 @@ export type PsychologistAnalyticsPresentationVideo = {
     completion_rate: number;
     replay_rate: number;
     abandonment_rate: number;
+    profile_accesses_from_video: number;
+    favorites_from_video: number;
+    whatsapp_clicks_from_video: number;
+    shares_from_video: number;
   };
   cards: PsychologistAnalyticsPresentationVideoMetric[];
   retention: {
