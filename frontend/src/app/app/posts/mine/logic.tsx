@@ -291,11 +291,13 @@ const ReplyItemCard = ({
   item,
   onChanged,
   onShare,
+  showProfessionalAnsweredBadge,
 }: {
   interactionCopy: InteractionCopy;
   item: UserPostListItem;
   onChanged?: () => void;
   onShare: (post: PostListPost, replyId: string) => void;
+  showProfessionalAnsweredBadge: boolean;
 }) => {
   const router = useRouter();
   const reply = item.reply;
@@ -318,7 +320,8 @@ const ReplyItemCard = ({
   const replyHref = focusedReplyHref(item.post, reply.id);
   const hasReplyMedia = Boolean(reply.media_url && reply.media_type);
   const hasReplyText = Boolean(reply.content.trim());
-  const hasVerifiedProfessionalReply = Boolean(reply.has_verified_professional_reply);
+  const hasVerifiedProfessionalReply =
+    showProfessionalAnsweredBadge && Boolean(reply.has_verified_professional_reply);
   const isPsychologistReply = reply.author.role === "psicologo";
   const voteState =
     voteOverride?.replyId === reply.id
@@ -744,6 +747,7 @@ export const MyPostsLogic = () => {
                     key={item.id}
                     onChanged={handleReplyChanged}
                     onShare={sharePost}
+                    showProfessionalAnsweredBadge={!isPsychologist}
                   />
                 ) : (
                   <CommunityPostCard
@@ -755,7 +759,7 @@ export const MyPostsLogic = () => {
                     desktopPlainLinks
                     headerExtra={
                       <div className="flex shrink-0 items-center gap-2">
-                        {item.post.highlighted_professional_reply ? (
+                        {!isPsychologist && item.post.highlighted_professional_reply ? (
                           <ProfessionalAnsweredBadge className="hidden sm:inline-flex" />
                         ) : null}
                         <PostOwnerActionMenu
@@ -772,6 +776,7 @@ export const MyPostsLogic = () => {
                     openPostOnCardClick
                     post={item.post}
                     showAuthorHeader={false}
+                    showHighlightedProfessionalReply={!isPsychologist}
                     showProfessionalEngagementCounters
                     showWhatsappCta={false}
                   />

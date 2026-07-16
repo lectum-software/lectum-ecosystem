@@ -455,3 +455,14 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - `git diff --check`
 - Smoke HTTP local: `http://127.0.0.1:3000/app/posts/saved` retornou 200.
 - Chrome headless mobile `390x844` foi executado contra `/app/posts/saved`, mas sem sessao autenticada persistida o ambiente headless nao permitiu comparacao autenticada; a verificacao visual ficou baseada no reuso da apresentacao do feed e nas imagens locais.
+
+## Ajuste complementar em 2026-07-16 - indicadores de acolhimento apenas para pacientes
+
+- Pedido direto de produto: quando a conta autenticada e de psicologo, `/app/posts/mine` nao deve exibir `Respondido por psicologo verificado`, resposta profissional em destaque ou indicadores equivalentes de acolhimento. Esses sinais existem para pacientes identificarem que foram acolhidos por um profissional.
+- Frontend: a rota passou a ocultar `ProfessionalAnsweredBadge` em posts e respostas quando `sessionUser.role === "psicologo"` e a chamar `CommunityPostCard` com `showHighlightedProfessionalReply={false}` nesse contexto.
+- O comportamento de pacientes foi preservado: posts/comentarios de pacientes continuam podendo exibir indicadores de resposta profissional verificada e resposta em destaque quando existirem dados reais.
+- Nao houve alteracao de backend, schema Prisma, endpoints, DTOs, packages, votos, salvos, compartilhamento ou dados persistidos.
+- Referencias visuais consultadas: `_product/proto/Meus Posts - Psicologo.jpg` e `_product/proto/Meus Posts - Paciente.jpg`; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
+- Validacoes executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check`, `git diff --check` e browser local mobile `390x844` em `/app/posts/mine`.
+- ADR atualizado: `adrs/0072-meus-posts-e-posts-salvos.md`.
+- Browser headless sem sessao persistida redirecionou para `/auth/login?callbackUrl=/app/posts/mine`; a regra autenticada foi validada por codigo, referencias locais e reuso do papel real da sessao.

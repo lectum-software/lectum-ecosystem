@@ -500,3 +500,50 @@ A tela `/app/posts/saved` ja exibia `highlighted_professional_reply`, mas o card
 - `git diff --check`
 - Smoke HTTP local em `/app/posts/saved` retornou 200.
 - Chrome headless mobile `390x844` sem sessao autenticada nao permitiu comparacao autenticada; a decisao visual foi validada pelo reuso da apresentacao do feed e pelas referencias locais `Posts Salvos`/`Feed Comunidade`.
+
+## Complemento 2026-07-16: indicadores de acolhimento apenas para pacientes em Meus posts
+
+### Contexto
+
+A rota `/app/posts/mine` e compartilhada por pacientes e psicologos. O card de posts exibia o chip
+`Respondido por psicologo verificado` sempre que `highlighted_professional_reply` existia, inclusive
+para contas de psicologo. O mesmo conceito tambem podia aparecer na aba de respostas por meio de
+`has_verified_professional_reply`.
+
+Esses indicadores sao sinais de acolhimento para pacientes: comunicam que uma duvida/relato recebeu
+atencao profissional. Para psicologos, a finalidade e diferente: a tela lista publicacoes e respostas
+do proprio profissional, e o destaque de acolhimento por outro psicologo gera ruido e interpretacao
+equivocada.
+
+### Decisao
+
+- Em `/app/posts/mine`, quando `sessionUser.role === "psicologo"`, ocultar o chip
+  `Respondido por psicologo verificado` nos cards de posts.
+- Na mesma condicao, passar `showHighlightedProfessionalReply={false}` para `CommunityPostCard`,
+  impedindo a renderizacao da resposta profissional em destaque dentro dos posts do psicologo.
+- Na aba de respostas/comentarios da mesma rota, ocultar `ProfessionalAnsweredBadge` para contas de
+  psicologo, mesmo que o backend retorne `has_verified_professional_reply`.
+- Manter o comportamento para pacientes, pois o indicador segue sendo parte da experiencia de
+  acolhimento e acompanhamento.
+
+### Consequencias
+
+- A alteracao e apenas de apresentacao no frontend; nao muda contrato, endpoint, schema Prisma,
+  migration, permissao, votos, salvos, compartilhamento ou dados persistidos.
+- O backend pode continuar retornando `highlighted_professional_reply` e
+  `has_verified_professional_reply` para reuso em outros contextos, mas `/app/posts/mine` decide a
+  exibicao conforme o papel da sessao.
+- A referencia visual de `Meus Posts - Psicologo` permanece sem tags de acolhimento no topo do card,
+  enquanto `Meus Posts - Paciente` preserva a resposta profissional destacada.
+
+### Validacao
+
+- `_product/proto/Meus Posts - Psicologo.jpg` e `_product/proto/Meus Posts - Paciente.jpg`
+  consultados como referencia visual local; Builder/Quick Copy nao esta exposto como ferramenta
+  callable neste ambiente.
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- `git diff --check`
+- Browser local mobile `390x844` em `/app/posts/mine`.
+- Browser headless sem sessao persistida redirecionou para `/auth/login?callbackUrl=/app/posts/mine`; a regra autenticada foi validada por codigo, referencias locais e reuso do papel real da sessao.
