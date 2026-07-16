@@ -6,7 +6,6 @@ import {
   AlertTriangle,
   ArrowDown,
   ArrowUp,
-  BarChart3,
   Bookmark,
   CalendarDays,
   CheckCircle2,
@@ -18,6 +17,7 @@ import {
   GripVertical,
   Image as ImageIcon,
   Loader2,
+  type LucideIcon,
   Maximize2,
   MessageCircle,
   Play,
@@ -86,7 +86,6 @@ import type {
   AdminCommunityStatistics,
   AdminCommunityStatisticsDailyPoint,
   AdminCommunityStatisticsQuery,
-  AdminCommunityStatisticsSplit,
   AdminCommunityStatusInput,
   AdminCommunityTopMentor,
   AdminCommunityUpdateInput,
@@ -197,8 +196,8 @@ type RuleDragState = {
 
 const communityTabs = [
   { id: "geral", label: "Geral" },
-  { id: "estatisticas", label: "Estatísticas" },
   { id: "dados", label: "Dados" },
+  { id: "estatisticas", label: "Estatísticas" },
   { id: "conteudo", label: "Conteúdo" },
   { id: "ranking", label: "Ranking" },
   { id: "denuncias", label: "Denúncias" },
@@ -3193,12 +3192,12 @@ const CommunityReportListItem = ({
         Conteúdo denunciado
       </p>
       <h3 className="mt-1 text-lg font-black text-foreground">{communityReportTitle(report)}</h3>
-      <div className="mt-3 grid gap-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-start">
+      <div className="mt-3 space-y-4">
         <div className="min-w-0 whitespace-pre-wrap text-sm font-bold leading-6 text-foreground">
           {report.content.body || report.content.excerpt || "Conteúdo sem texto disponível."}
         </div>
         {report.content.media ? (
-          <div className="lg:w-48">
+          <div className="max-w-72">
             <CommunityReportMedia report={report} />
           </div>
         ) : null}
@@ -3553,218 +3552,496 @@ const ReportsTab = ({ slug }: { slug: string }) => {
   );
 };
 
-const statisticsCounterDescription = (items: Array<{ label: string; value: number }>) =>
-  items.map((item) => `${item.label}: ${numberFormatter.format(item.value)}`).join(" · ");
+type CommunityStatisticsDailyMetricKey = Exclude<keyof AdminCommunityStatisticsDailyPoint, "date">;
 
-const CommunityStatisticsCounterCard = ({
-  description,
-  icon: Icon,
-  label,
-  value,
-}: {
-  description: string;
-  icon: React.ComponentType<{ "aria-hidden"?: boolean; className?: string }>;
+type CommunityStatisticsMetricAggregation = "last" | "sum";
+
+type CommunityStatisticsMetricConfig = {
+  dotClassName: string;
+  getValue: (statistics: AdminCommunityStatistics) => number;
+  icon: LucideIcon;
+  iconClassName: string;
+  iconToneClassName: string;
+  id: string;
+  key: CommunityStatisticsDailyMetricKey;
   label: string;
-  value: number;
-}) => (
-  <div className="rounded-2xl border border-border bg-surface p-4">
-    <div className="flex items-start justify-between gap-3">
-      <div>
-        <p className="text-xs font-black uppercase tracking-[0.12em] text-muted">{label}</p>
-        <p className="mt-3 text-3xl font-black text-foreground">{numberFormatter.format(value)}</p>
-      </div>
-      <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-primary-soft text-primary">
-        <Icon aria-hidden className="h-5 w-5" />
-      </span>
-    </div>
-    <p className="mt-3 text-xs font-bold leading-5 text-muted">{description}</p>
-  </div>
-);
+  strokeClassName: string;
+};
 
-const CommunityStatisticsDistributionChart = ({
-  items,
-  title,
+type CommunityStatisticsMetricItem = CommunityStatisticsMetricConfig & {
+  value: number;
+};
+
+type CommunityStatisticsDateFilterProps = {
+  draftRange: Required<StatisticsCustomRange>;
+  onDateChange: (field: keyof StatisticsCustomRange, value: string) => void;
+  onDateControlsBlur: (event: {
+    currentTarget: HTMLDivElement;
+    relatedTarget: EventTarget | null;
+  }) => void;
+  onPeriodChange: (period: StatisticsPeriodValue) => void;
+  rangeError: string | null;
+  selectedPeriod: StatisticsPeriodValue;
+};
+
+const communityStatisticsMetricAggregations = {
+  followers_patients: "last",
+  followers_psychologists: "last",
+} as const satisfies Partial<
+  Record<CommunityStatisticsDailyMetricKey, CommunityStatisticsMetricAggregation>
+>;
+
+const COMMUNITY_PEOPLE_STATISTICS_METRICS = [
+  {
+    dotClassName: "bg-primary",
+    getValue: (statistics: AdminCommunityStatistics) => statistics.counters.followers.psychologists,
+    icon: Users,
+    iconClassName: "text-primary",
+    iconToneClassName: "bg-primary-soft",
+    id: "followers_psychologists",
+    key: "followers_psychologists",
+    label: "Psicólogos seguidores",
+    strokeClassName: "stroke-primary",
+  },
+  {
+    dotClassName: "bg-success",
+    getValue: (statistics: AdminCommunityStatistics) => statistics.counters.followers.patients,
+    icon: Users,
+    iconClassName: "text-success",
+    iconToneClassName: "bg-success/10",
+    id: "followers_patients",
+    key: "followers_patients",
+    label: "Pacientes seguidores",
+    strokeClassName: "stroke-success",
+  },
+  {
+    dotClassName: "bg-warning",
+    getValue: (statistics: AdminCommunityStatistics) =>
+      statistics.counters.active_users.psychologists,
+    icon: Activity,
+    iconClassName: "text-warning",
+    iconToneClassName: "bg-warning/10",
+    id: "active_psychologists",
+    key: "active_psychologists",
+    label: "Psicólogos ativos",
+    strokeClassName: "stroke-warning",
+  },
+  {
+    dotClassName: "bg-danger",
+    getValue: (statistics: AdminCommunityStatistics) => statistics.counters.active_users.patients,
+    icon: Activity,
+    iconClassName: "text-danger",
+    iconToneClassName: "bg-danger/10",
+    id: "active_patients",
+    key: "active_patients",
+    label: "Pacientes ativos",
+    strokeClassName: "stroke-danger",
+  },
+  {
+    dotClassName: "bg-muted",
+    getValue: (statistics: AdminCommunityStatistics) =>
+      statistics.counters.new_active_users.patients,
+    icon: UserPlus,
+    iconClassName: "text-muted",
+    iconToneClassName: "bg-surface-muted",
+    id: "new_active_patients",
+    key: "new_active_patients",
+    label: "Novos pacientes ativos",
+    strokeClassName: "stroke-muted",
+  },
+  {
+    dotClassName: "bg-subtle",
+    getValue: (statistics: AdminCommunityStatistics) =>
+      statistics.counters.new_active_users.psychologists,
+    icon: UserPlus,
+    iconClassName: "text-subtle",
+    iconToneClassName: "bg-surface-muted",
+    id: "new_active_psychologists",
+    key: "new_active_psychologists",
+    label: "Novos psicólogos ativos",
+    strokeClassName: "stroke-subtle",
+  },
+] as const satisfies readonly CommunityStatisticsMetricConfig[];
+
+const COMMUNITY_CONTENT_STATISTICS_METRICS = [
+  {
+    dotClassName: "bg-primary",
+    getValue: (statistics: AdminCommunityStatistics) => statistics.counters.posts.psychologists,
+    icon: MessageCircle,
+    iconClassName: "text-primary",
+    iconToneClassName: "bg-primary-soft",
+    id: "psychologist_posts",
+    key: "psychologist_posts",
+    label: "Postagens de Psicólogos",
+    strokeClassName: "stroke-primary",
+  },
+  {
+    dotClassName: "bg-success",
+    getValue: (statistics: AdminCommunityStatistics) => statistics.counters.posts.patients,
+    icon: MessageCircle,
+    iconClassName: "text-success",
+    iconToneClassName: "bg-success/10",
+    id: "patient_posts",
+    key: "patient_posts",
+    label: "Postagens de pacientes",
+    strokeClassName: "stroke-success",
+  },
+  {
+    dotClassName: "bg-warning",
+    getValue: (statistics: AdminCommunityStatistics) =>
+      statistics.counters.replies.verified_psychologists,
+    icon: ShieldCheck,
+    iconClassName: "text-warning",
+    iconToneClassName: "bg-warning/10",
+    id: "verified_psychologist_replies",
+    key: "verified_psychologist_replies",
+    label: "Respostas de psicólogos verificados",
+    strokeClassName: "stroke-warning",
+  },
+  {
+    dotClassName: "bg-danger",
+    getValue: (statistics: AdminCommunityStatistics) =>
+      statistics.counters.replies.unverified_psychologists,
+    icon: MessageCircle,
+    iconClassName: "text-danger",
+    iconToneClassName: "bg-danger/10",
+    id: "unverified_psychologist_replies",
+    key: "unverified_psychologist_replies",
+    label: "Respostas de psicólogos não verificados",
+    strokeClassName: "stroke-danger",
+  },
+  {
+    dotClassName: "bg-muted",
+    getValue: (statistics: AdminCommunityStatistics) =>
+      statistics.counters.replies.patient_comments,
+    icon: MessageCircle,
+    iconClassName: "text-muted",
+    iconToneClassName: "bg-surface-muted",
+    id: "patient_comments",
+    key: "patient_comments",
+    label: "Comentários de pacientes",
+    strokeClassName: "stroke-muted",
+  },
+  {
+    dotClassName: "bg-subtle",
+    getValue: (statistics: AdminCommunityStatistics) => statistics.counters.reports.total,
+    icon: AlertTriangle,
+    iconClassName: "text-subtle",
+    iconToneClassName: "bg-surface-muted",
+    id: "reports",
+    key: "reports",
+    label: "Denúncias",
+    strokeClassName: "stroke-subtle",
+  },
+] as const satisfies readonly CommunityStatisticsMetricConfig[];
+
+const communityStatisticsMetricValue = (
+  statistics: AdminCommunityStatistics,
+  config: CommunityStatisticsMetricConfig,
+) => Math.max(0, Number(config.getValue(statistics) ?? 0));
+
+const buildCommunityStatisticsMetricItems = (
+  statistics: AdminCommunityStatistics,
+  configs: readonly CommunityStatisticsMetricConfig[],
+): CommunityStatisticsMetricItem[] =>
+  configs.map((config) => ({
+    ...config,
+    value: communityStatisticsMetricValue(statistics, config),
+  }));
+
+const toggleCommunityStatisticsMetricIds = (current: string[], metricId: string) => {
+  if (!current.includes(metricId)) return [...current, metricId];
+  if (current.length <= 1) return current;
+
+  return current.filter((item) => item !== metricId);
+};
+
+const CommunityStatisticsMetricToggleCard = ({
+  active,
+  metric,
+  onToggle,
 }: {
-  items: AdminCommunityStatisticsSplit[];
-  title: string;
+  active: boolean;
+  metric: CommunityStatisticsMetricItem;
+  onToggle: () => void;
 }) => {
-  const maxValue = Math.max(1, ...items.map((item) => item.value));
-  const total = items.reduce((sum, item) => sum + item.value, 0);
+  const Icon = metric.icon;
+  const formattedValue = numberFormatter.format(metric.value);
 
   return (
-    <section className={cn(cardClass, "p-5")}>
-      <div>
-        <h3 className="text-lg font-black text-foreground">{title}</h3>
-        <p className="mt-1 text-xs font-bold text-muted">
-          Total do gráfico: {numberFormatter.format(total)} registros reais.
-        </p>
-      </div>
-      <div className="mt-5 space-y-4">
-        {items.map((item) => {
-          const width = item.value === 0 ? "0%" : `${Math.max(4, (item.value / maxValue) * 100)}%`;
-
-          return (
-            <div key={item.id}>
-              <div className="flex items-center justify-between gap-3 text-sm">
-                <span className="font-black text-foreground">{item.label}</span>
-                <span className="font-black text-muted">{numberFormatter.format(item.value)}</span>
-              </div>
-              <div className="mt-2 h-3 overflow-hidden rounded-full bg-surface-muted">
-                <div className="h-full rounded-full bg-primary" style={{ width }} />
-              </div>
-            </div>
-          );
-        })}
-      </div>
-      <p className="sr-only">
-        {title}:{" "}
-        {items.map((item) => `${item.label} com ${numberFormatter.format(item.value)}`).join(", ")}.
-      </p>
-    </section>
+    <button
+      aria-pressed={active}
+      className={cn(
+        "min-w-0 overflow-hidden rounded-card border p-4 text-left transition duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2",
+        active
+          ? "border-primary/35 bg-surface shadow-admin-soft ring-1 ring-primary/10"
+          : "border-border/80 bg-border/50 shadow-none hover:-translate-y-0.5 hover:border-primary/25 hover:bg-border/60",
+      )}
+      onClick={onToggle}
+      title={
+        metric.label +
+        ": " +
+        formattedValue +
+        ". " +
+        (active ? "Visível no gráfico" : "Oculto no gráfico")
+      }
+      type="button"
+    >
+      <span
+        className={cn(
+          "grid h-10 w-10 shrink-0 place-items-center rounded-full",
+          metric.iconToneClassName,
+          metric.iconClassName,
+        )}
+      >
+        <Icon aria-hidden className="h-5 w-5" />
+      </span>
+      <span className="mt-4 block min-w-0 max-w-full">
+        <span className="block max-w-full break-words text-xs font-extrabold leading-snug text-foreground">
+          {metric.label}
+        </span>
+        <span className="mt-2 block text-2xl font-extrabold leading-none text-foreground">
+          {formattedValue}
+        </span>
+      </span>
+      <span className="sr-only">{active ? "visível no gráfico" : "oculto no gráfico"}</span>
+    </button>
   );
 };
 
-const CommunityStatisticsTrendChart = ({
+const CommunityStatisticsSeriesChart = ({
+  metrics,
   points,
 }: {
+  metrics: readonly CommunityStatisticsMetricItem[];
   points: AdminCommunityStatisticsDailyPoint[];
 }) => {
-  const chartPoints = aggregateCalendarChartPoints(
-    points,
-    ["active_users", "new_active_users", "posts", "replies", "reports", "anonymous_posts"] as const,
-    { dayThreshold: 45 },
-  );
-  const width = 840;
-  const height = 300;
-  const padding = { bottom: 42, left: 48, right: 20, top: 20 };
-  const maxValue = Math.max(
+  if (metrics.length === 0) {
+    return (
+      <div className="mt-5 rounded-2xl border border-dashed border-border bg-surface-muted p-6 text-sm font-bold text-muted">
+        Selecione pelo menos um contador para visualizar a evolução.
+      </div>
+    );
+  }
+  if (points.length === 0) {
+    return (
+      <div className="mt-5 rounded-2xl border border-dashed border-border bg-surface-muted p-6 text-sm font-bold text-muted">
+        Nenhum ponto real de evolução foi encontrado para o período.
+      </div>
+    );
+  }
+
+  const metricKeys = metrics.map((metric) => metric.key);
+  const chartPoints = aggregateCalendarChartPoints(points, metricKeys, {
+    dayThreshold: 45,
+    metricAggregations: communityStatisticsMetricAggregations,
+  });
+  const chartWidth = 1120;
+  const chartHeight = 280;
+  const padding = { bottom: 28, left: 42, right: 28, top: 28 };
+  const innerWidth = chartWidth - padding.left - padding.right;
+  const innerHeight = chartHeight - padding.top - padding.bottom;
+  const max = Math.max(
     1,
-    ...chartPoints.flatMap((point) => [
-      point.active_users,
-      point.new_active_users,
-      point.posts,
-      point.replies,
-      point.reports,
-      point.anonymous_posts,
-    ]),
+    ...chartPoints.flatMap((point) => metrics.map((metric) => Number(point[metric.key] ?? 0))),
   );
-  const chartWidth = width - padding.left - padding.right;
-  const chartHeight = height - padding.top - padding.bottom;
-  const getX = (index: number) =>
-    chartPoints.length <= 1
-      ? width / 2
-      : padding.left + (index * chartWidth) / (chartPoints.length - 1);
-  const getY = (value: number) => padding.top + chartHeight - (value / maxValue) * chartHeight;
-  const series = [
-    { color: "#2563eb", key: "active_users", label: "Usuários ativos" },
-    { color: "#13a85b", key: "new_active_users", label: "Novos ativos" },
-    { color: "#3300ff", key: "posts", label: "Posts" },
-    { color: "#2f8cff", key: "replies", label: "Respostas/comentários" },
-    { color: "#e5484d", key: "reports", label: "Denúncias" },
-    { color: "#f59e0b", key: "anonymous_posts", label: "Posts anônimos" },
-  ] as const;
+  const xFor = (index: number) =>
+    padding.left +
+    (chartPoints.length <= 1 ? innerWidth / 2 : (index / (chartPoints.length - 1)) * innerWidth);
+  const yFor = (value: number) => padding.top + innerHeight - (value / max) * innerHeight;
+  const gridValues = [0, 0.25, 0.5, 0.75, 1].map((ratio) => ({
+    id: String(ratio),
+    value: Math.round(max * ratio),
+  }));
   const labelStep = Math.max(1, Math.ceil(chartPoints.length / 8));
+  const dateLabels = chartPoints.flatMap((point, index) =>
+    index % labelStep === 0 || index === chartPoints.length - 1
+      ? [{ date: point.date, label: point.chartLabel }]
+      : [],
+  );
 
   return (
-    <section className={cn(cardClass, "p-5")}>
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <h3 className="text-lg font-black text-foreground">Evolução no período</h3>
-          <p className="mt-1 text-xs font-bold text-muted">
-            Dados reais de seguidores, conteúdo, denúncias e acessos autenticados.
-          </p>
-        </div>
-        <span className="inline-flex items-center gap-2 text-xs font-black text-muted">
-          <CalendarDays aria-hidden className="h-4 w-4" />
-          série temporal
-        </span>
-      </div>
-      <div className="mt-5 overflow-x-auto">
+    <div className="mt-4 w-full overflow-x-auto rounded-[1.5rem] border border-border/70 bg-surface p-4">
+      <div className="mx-auto w-full min-w-[760px] max-w-[1120px]">
         <svg
-          aria-label="Gráfico de evolução das estatísticas da comunidade"
-          className="min-w-[760px]"
+          aria-label="Evolução do período por contador selecionado"
+          className="block h-auto w-full"
+          height={chartHeight}
+          preserveAspectRatio="xMidYMid meet"
           role="img"
-          viewBox={`0 0 ${width} ${height}`}
+          viewBox={`0 0 ${chartWidth} ${chartHeight}`}
+          width={chartWidth}
         >
-          {[0, 0.25, 0.5, 0.75, 1].map((ratio) => {
-            const value = Math.round(maxValue * ratio);
-            const y = getY(value);
+          <title>Evolução do período</title>
+          {gridValues.map(({ id, value }) => {
+            const y = yFor(value);
+
             return (
-              <g key={`grid-${value}`}>
+              <g key={`community-statistics-grid-${id}`}>
                 <line
-                  stroke="#e8edf7"
+                  className="stroke-border"
+                  opacity="0.44"
+                  strokeDasharray={value === 0 ? "0" : "4 6"}
                   strokeWidth="1"
                   x1={padding.left}
-                  x2={width - padding.right}
+                  x2={chartWidth - padding.right}
                   y1={y}
                   y2={y}
                 />
-                <text fill="#55618a" fontSize="11" x="8" y={y + 4}>
+                <text
+                  className="fill-muted text-[10px] font-medium"
+                  dominantBaseline="middle"
+                  textAnchor="end"
+                  x={padding.left - 8}
+                  y={y}
+                >
                   {numberFormatter.format(value)}
                 </text>
               </g>
             );
           })}
-          {series.map((item) => {
-            const path = buildSmoothSvgPath(
-              chartPoints.map((point, index) => ({
-                x: getX(index),
-                y: getY(point[item.key]),
-              })),
-            );
+          {metrics.map((metric) => {
+            const linePoints = chartPoints.map((point, index) => ({
+              x: xFor(index),
+              y: yFor(Number(point[metric.key] ?? 0)),
+            }));
+            const linePath = buildSmoothSvgPath(linePoints);
 
             return (
               <path
-                d={path}
-                fill="none"
-                key={item.key}
-                stroke={item.color}
+                className={cn("fill-none opacity-90", metric.strokeClassName)}
+                d={linePath}
+                key={metric.id}
                 strokeLinecap="round"
-                strokeWidth="3"
+                strokeLinejoin="round"
+                strokeWidth="2.05"
               />
             );
           })}
-          {chartPoints
-            .filter((_, index) => index % labelStep === 0 || index === chartPoints.length - 1)
-            .map((point, index, filteredPoints) => {
-              const originalIndex = chartPoints.findIndex((item) => item.date === point.date);
-              const textAnchor =
-                index === 0 ? "start" : index === filteredPoints.length - 1 ? "end" : "middle";
+          {metrics.map((metric) =>
+            chartPoints.map((point, index) => {
+              const value = Number(point[metric.key] ?? 0);
 
               return (
-                <text
-                  fill="#06104a"
-                  fontSize="11"
-                  key={point.date}
-                  textAnchor={textAnchor}
-                  x={getX(originalIndex)}
-                  y={height - 12}
+                <circle
+                  className={cn("fill-surface", metric.strokeClassName)}
+                  cx={xFor(index)}
+                  cy={yFor(value)}
+                  key={`${metric.id}-${point.date}`}
+                  opacity={index === chartPoints.length - 1 ? "1" : "0.72"}
+                  r={index === chartPoints.length - 1 ? "3.1" : "2.1"}
+                  strokeWidth="1.45"
                 >
-                  {point.chartLabel}
-                </text>
+                  <title>
+                    {point.tooltipLabel} · {metric.label}: {numberFormatter.format(value)}
+                  </title>
+                </circle>
               );
-            })}
+            }),
+          )}
         </svg>
+        <div
+          className="mt-1 grid gap-1"
+          style={{ gridTemplateColumns: `repeat(${dateLabels.length}, 1fr)` }}
+        >
+          {dateLabels.map(({ date, label }) => (
+            <span className="min-w-0 text-center text-[10px] font-bold text-subtle" key={date}>
+              {label}
+            </span>
+          ))}
+        </div>
       </div>
-      <div className="mt-4 flex flex-wrap gap-3">
-        {series.map((item) => (
-          <span
-            className="inline-flex items-center gap-2 text-xs font-bold text-muted"
-            key={item.key}
-          >
-            <span
-              aria-hidden
-              className="h-3 w-3 rounded-full"
-              style={{ backgroundColor: item.color }}
-            />
-            {item.label}
-          </span>
+    </div>
+  );
+};
+
+const CommunityStatisticsDateFilters = ({
+  draftRange,
+  onDateChange,
+  onDateControlsBlur,
+  onPeriodChange,
+  rangeError,
+  selectedPeriod,
+}: CommunityStatisticsDateFilterProps) => (
+  <div className="w-full lg:w-[min(720px,52vw)]" onBlur={onDateControlsBlur}>
+    <div className="grid gap-2 sm:grid-cols-3">
+      <CommunityReportFilterSelect
+        className="text-xs"
+        label="Período"
+        onChange={(value) => onPeriodChange(value as StatisticsPeriodValue)}
+        value={selectedPeriod}
+      >
+        {statisticsPeriodOptions.map((option) => (
+          <option key={option.id} value={option.id}>
+            {option.label}
+          </option>
         ))}
+      </CommunityReportFilterSelect>
+      <label className="block text-xs font-black text-muted">
+        De
+        <input
+          className="mt-2 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground"
+          max={draftRange.to}
+          onChange={(event) => onDateChange("from", event.target.value)}
+          type="date"
+          value={draftRange.from}
+        />
+      </label>
+      <label className="block text-xs font-black text-muted">
+        Até
+        <input
+          className="mt-2 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground"
+          min={draftRange.from}
+          onChange={(event) => onDateChange("to", event.target.value)}
+          type="date"
+          value={draftRange.to}
+        />
+      </label>
+    </div>
+    {rangeError ? <p className="mt-2 text-xs font-bold text-danger">{rangeError}</p> : null}
+  </div>
+);
+
+const CommunityStatisticsSegment = ({
+  dateFilters,
+  description,
+  metrics,
+  onToggleMetric,
+  points,
+  title,
+  visibleMetricIds,
+}: {
+  dateFilters: CommunityStatisticsDateFilterProps;
+  description: string;
+  metrics: CommunityStatisticsMetricItem[];
+  onToggleMetric: (metricId: string) => void;
+  points: AdminCommunityStatisticsDailyPoint[];
+  title: string;
+  visibleMetricIds: string[];
+}) => {
+  const visibleMetrics = metrics.filter((metric) => visibleMetricIds.includes(metric.id));
+
+  return (
+    <section className={cn(cardClass, "min-w-0 p-5")}>
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-start">
+        <div className="min-w-0">
+          <h3 className="text-lg font-black text-foreground">{title}</h3>
+          <p className="mt-1 text-xs font-bold leading-5 text-muted">{description}</p>
+        </div>
+        <CommunityStatisticsDateFilters {...dateFilters} />
       </div>
-      <p className="sr-only">
-        Evolução no período com {numberFormatter.format(points.length)} pontos diários retornados
-        pela API.
-      </p>
+      <fieldset className="mt-5 grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6">
+        <legend className="sr-only">Contadores exibidos no gráfico de {title}</legend>
+        {metrics.map((metric) => (
+          <CommunityStatisticsMetricToggleCard
+            active={visibleMetricIds.includes(metric.id)}
+            key={metric.id}
+            metric={metric}
+            onToggle={() => onToggleMetric(metric.id)}
+          />
+        ))}
+      </fieldset>
+      <CommunityStatisticsSeriesChart metrics={visibleMetrics} points={points} />
     </section>
   );
 };
@@ -3824,165 +4101,76 @@ const StatisticsTab = ({ createdAt, slug }: { createdAt: string; slug: string })
       commitRange();
     }, 0);
   };
+  const dateFilters: CommunityStatisticsDateFilterProps = {
+    draftRange,
+    onDateChange: handleDateChange,
+    onDateControlsBlur: handleDateControlsBlur,
+    onPeriodChange: handlePeriodChange,
+    rangeError,
+    selectedPeriod,
+  };
 
   return (
     <div className="space-y-5" data-community-detail-tab="estatisticas">
-      <section className={cn(cardClass, "p-4")}>
-        <div className="grid gap-3 lg:grid-cols-[1fr_1fr_1fr] lg:items-end">
-          <CommunityReportFilterSelect
-            label="Período"
-            onChange={(value) => handlePeriodChange(value as StatisticsPeriodValue)}
-            value={selectedPeriod}
-          >
-            {statisticsPeriodOptions.map((option) => (
-              <option key={option.id} value={option.id}>
-                {option.label}
-              </option>
-            ))}
-          </CommunityReportFilterSelect>
-          <div className="grid gap-3 sm:grid-cols-2 lg:col-span-2" onBlur={handleDateControlsBlur}>
-            <label className="block text-sm font-black text-muted">
-              De
-              <input
-                className="mt-2 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground"
-                max={draftRange.to}
-                onChange={(event) => handleDateChange("from", event.target.value)}
-                type="date"
-                value={draftRange.from}
-              />
-            </label>
-            <label className="block text-sm font-black text-muted">
-              Até
-              <input
-                className="mt-2 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground"
-                min={draftRange.from}
-                onChange={(event) => handleDateChange("to", event.target.value)}
-                type="date"
-                value={draftRange.to}
-              />
-            </label>
-          </div>
-        </div>
-        {rangeError ? <p className="mt-3 text-xs font-bold text-danger">{rangeError}</p> : null}
-        {statistics ? (
-          <p className="mt-3 text-xs font-bold text-muted">
-            {statistics.period.label}: {formatDate(statistics.period.from)} até{" "}
-            {formatDate(statistics.period.to)} · {numberFormatter.format(statistics.period.days)}{" "}
-            dias.
-          </p>
-        ) : null}
-      </section>
-
       <QueryStatus
         error={result.error}
         loading={result.isLoading}
         onRetry={() => void result.refetch()}
       />
 
-      {statistics ? <StatisticsContent statistics={statistics} /> : null}
+      {statistics ? <StatisticsContent dateFilters={dateFilters} statistics={statistics} /> : null}
     </div>
   );
 };
 
-const StatisticsContent = ({ statistics }: { statistics: AdminCommunityStatistics }) => {
-  const counters = statistics.counters;
+const StatisticsContent = ({
+  dateFilters,
+  statistics,
+}: {
+  dateFilters: CommunityStatisticsDateFilterProps;
+  statistics: AdminCommunityStatistics;
+}) => {
+  const peopleMetrics = useMemo(
+    () => buildCommunityStatisticsMetricItems(statistics, COMMUNITY_PEOPLE_STATISTICS_METRICS),
+    [statistics],
+  );
+  const contentMetrics = useMemo(
+    () => buildCommunityStatisticsMetricItems(statistics, COMMUNITY_CONTENT_STATISTICS_METRICS),
+    [statistics],
+  );
+  const [visiblePeopleMetricIds, setVisiblePeopleMetricIds] = useState<string[]>(() =>
+    COMMUNITY_PEOPLE_STATISTICS_METRICS.map((metric) => metric.id),
+  );
+  const [visibleContentMetricIds, setVisibleContentMetricIds] = useState<string[]>(() =>
+    COMMUNITY_CONTENT_STATISTICS_METRICS.map((metric) => metric.id),
+  );
+  const togglePeopleMetric = useCallback((metricId: string) => {
+    setVisiblePeopleMetricIds((current) => toggleCommunityStatisticsMetricIds(current, metricId));
+  }, []);
+  const toggleContentMetric = useCallback((metricId: string) => {
+    setVisibleContentMetricIds((current) => toggleCommunityStatisticsMetricIds(current, metricId));
+  }, []);
 
   return (
     <div className="space-y-5">
-      <section className="grid gap-4 sm:grid-cols-2 2xl:grid-cols-4">
-        <CommunityStatisticsCounterCard
-          description={statisticsCounterDescription([
-            { label: "Psicólogos", value: counters.followers.psychologists },
-            { label: "Pacientes", value: counters.followers.patients },
-          ])}
-          icon={Users}
-          label="Total de seguidores"
-          value={counters.followers.total}
-        />
-        <CommunityStatisticsCounterCard
-          description={statisticsCounterDescription([
-            { label: "Psicólogos", value: counters.active_users.psychologists },
-            { label: "Pacientes", value: counters.active_users.patients },
-          ])}
-          icon={Activity}
-          label="Usuários ativos"
-          value={counters.active_users.total}
-        />
-        <CommunityStatisticsCounterCard
-          description={statisticsCounterDescription([
-            { label: "Psicólogos verificados", value: counters.posts.verified_psychologists },
-            {
-              label: "Psicólogos não verificados",
-              value: counters.posts.unverified_psychologists,
-            },
-            { label: "Pacientes", value: counters.posts.patients },
-          ])}
-          icon={MessageCircle}
-          label="Postagens"
-          value={counters.posts.total}
-        />
-        <CommunityStatisticsCounterCard
-          description={statisticsCounterDescription([
-            { label: "Psicólogos verificados", value: counters.replies.verified_psychologists },
-            {
-              label: "Psicólogos não verificados",
-              value: counters.replies.unverified_psychologists,
-            },
-            { label: "Pacientes", value: counters.replies.patient_comments },
-          ])}
-          icon={MessageCircle}
-          label="Respostas e comentários"
-          value={counters.replies.total}
-        />
-        <CommunityStatisticsCounterCard
-          description="Total de denúncias reais recebidas por posts e respostas da comunidade no período."
-          icon={AlertTriangle}
-          label="Denúncias"
-          value={counters.reports.total}
-        />
-        <CommunityStatisticsCounterCard
-          description="Posts publicados com anonimato público habilitado no período."
-          icon={ShieldCheck}
-          label="Posts anônimos"
-          value={counters.anonymous_posts.total}
-        />
-        <CommunityStatisticsCounterCard
-          description={statisticsCounterDescription([
-            { label: "Psicólogos", value: counters.new_active_users.psychologists },
-            { label: "Pacientes", value: counters.new_active_users.patients },
-          ])}
-          icon={UserPlus}
-          label="Novos usuários ativos"
-          value={counters.new_active_users.total}
-        />
-        <CommunityStatisticsCounterCard
-          description="Posts de pacientes que receberam ao menos uma resposta de psicólogo verificado até o fim do período."
-          icon={BarChart3}
-          label="Pacientes respondidos"
-          value={counters.posts.patient_posts_answered_by_verified_psychologists}
-        />
-      </section>
-
-      <div className="grid gap-5 xl:grid-cols-2">
-        <CommunityStatisticsDistributionChart
-          items={statistics.charts.followers_split}
-          title="Seguidores por perfil"
-        />
-        <CommunityStatisticsDistributionChart
-          items={statistics.charts.active_users_split}
-          title="Usuários ativos por perfil"
-        />
-        <CommunityStatisticsDistributionChart
-          items={statistics.charts.posts_by_author}
-          title="Postagens por autoria"
-        />
-        <CommunityStatisticsDistributionChart
-          items={statistics.charts.replies_by_author}
-          title="Respostas e comentários por autoria"
-        />
-      </div>
-
-      <CommunityStatisticsTrendChart points={statistics.charts.daily} />
+      <CommunityStatisticsSegment
+        dateFilters={dateFilters}
+        description="Clique nos contadores para exibir ou esconder a curva correspondente no gráfico. Seguidores usam o acumulado do período; demais métricas usam eventos reais por dia."
+        metrics={peopleMetrics}
+        onToggleMetric={togglePeopleMetric}
+        points={statistics.charts.daily}
+        title="Estatísticas de pessoas"
+        visibleMetricIds={visiblePeopleMetricIds}
+      />
+      <CommunityStatisticsSegment
+        dateFilters={dateFilters}
+        description="Clique nos contadores para comparar somente as curvas de conteúdo que deseja acompanhar."
+        metrics={contentMetrics}
+        onToggleMetric={toggleContentMetric}
+        points={statistics.charts.daily}
+        title="Estatísticas de conteúdo"
+        visibleMetricIds={visibleContentMetricIds}
+      />
     </div>
   );
 };

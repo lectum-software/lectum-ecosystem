@@ -1619,14 +1619,52 @@ const statisticsSplit = (
 const emptyStatisticsDailyPoint = (
   date: string,
 ): AdminCommunityStatisticsDTO["charts"]["daily"][number] => ({
+  active_patients: 0,
+  active_psychologists: 0,
   active_users: 0,
   anonymous_posts: 0,
   date,
+  followers_patients: 0,
+  followers_psychologists: 0,
+  new_active_patients: 0,
+  new_active_psychologists: 0,
   new_active_users: 0,
+  patient_comments: 0,
+  patient_posts: 0,
   posts: 0,
+  psychologist_posts: 0,
   replies: 0,
   reports: 0,
+  unverified_psychologist_replies: 0,
+  verified_psychologist_replies: 0,
 });
+
+const statisticsDailyRoleSet = (
+  map: Map<
+    string,
+    {
+      patients: Set<string>;
+      psychologists: Set<string>;
+    }
+  >,
+  key: string,
+) => {
+  const existing = map.get(key);
+  if (existing) return existing;
+  const next = {
+    patients: new Set<string>(),
+    psychologists: new Set<string>(),
+  };
+  map.set(key, next);
+
+  return next;
+};
+
+const statisticsDateKeyEnd = (key: string) => {
+  const [year, month, day] = key.split("-").map(Number);
+
+  return endOfDay(new Date(year, month - 1, day));
+};
 
 const statisticsDateLabels = (period: StatisticsPeriodRange) => {
   const labels: string[] = [];
@@ -1651,10 +1689,12 @@ const buildCommunityStatistics = (
   const periodReports = dataset.reports.filter((report) =>
     isInStatisticsPeriod(report.createdAt, period),
   );
-  const followerRoles = dataset.members
-    .map((member) => statisticsRole(member.user))
-    .filter((role): role is CommunityStatisticsRole => Boolean(role))
-    .map((role) => ({ role }));
+  const followerItems = dataset.members.flatMap((member) => {
+    const role = statisticsRole(member.user);
+
+    return role ? [{ date: member.createdAt, role }] : [];
+  });
+  const followerRoles = followerItems.map((item) => ({ role: item.role }));
   const followers = statisticsRoleCounters(followerRoles);
   const patientPosts = periodPosts.filter((post) => statisticsRole(post.author) === "paciente");
   const psychologistPosts = periodPosts.filter(
@@ -1707,8 +1747,20 @@ const buildCommunityStatistics = (
   const daily = new Map(
     statisticsDateLabels(period).map((label) => [label, emptyStatisticsDailyPoint(label)]),
   );
-  const dailyActiveUsers = new Map<string, Set<string>>();
-  const dailyNewUsers = new Map<string, Set<string>>();
+  const dailyActiveUsers = new Map<
+    string,
+    {
+      patients: Set<string>;
+      psychologists: Set<string>;
+    }
+  >();
+  const dailyNewUsers = new Map<
+    string,
+    {
+      patients: Set<string>;
+      psychologists: Set<string>;
+    }
+  >();
 
   for (const activity of activityItems) {
     const currentFirst = firstActivityByUser.get(activity.userId);
@@ -1718,8 +1770,12 @@ const buildCommunityStatistics = (
     if (!isInStatisticsPeriod(activity.date, period)) continue;
     activeByUser.set(activity.userId, { role: activity.role });
     const key = dateKey(activity.date);
-    if (!dailyActiveUsers.has(key)) dailyActiveUsers.set(key, new Set());
-    dailyActiveUsers.get(key)?.add(activity.userId);
+    const roleSet = statisticsDailyRoleSet(dailyActiveUsers, key);
+    if (activity.role === "paciente") {
+      roleSet.patients.add(activity.userId);
+    } else {
+      roleSet.psychologists.add(activity.userId);
+    }
   }
 
   const newActiveUsers = [...firstActivityByUser.values()].filter((item) =>
@@ -1727,20 +1783,48 @@ const buildCommunityStatistics = (
   );
   for (const item of newActiveUsers) {
     const key = dateKey(item.date);
-    if (!dailyNewUsers.has(key)) dailyNewUsers.set(key, new Set());
-    dailyNewUsers.get(key)?.add(item.userId);
+    const roleSet = statisticsDailyRoleSet(dailyNewUsers, key);
+    if (item.role === "paciente") {
+      roleSet.patients.add(item.userId);
+    } else {
+      roleSet.psychologists.add(item.userId);
+    }
+  }
+
+  for (const [key, point] of daily) {
+    const dayEnd = statisticsDateKeyEnd(key);
+    point.followers_patients = followerItems.filter(
+      (item) => item.role === "paciente" && item.date <= dayEnd,
+    ).length;
+    point.followers_psychologists = followerItems.filter(
+      (item) => item.role === "psicologo" && item.date <= dayEnd,
+    ).length;
   }
 
   for (const post of periodPosts) {
     const point = daily.get(dateKey(post.createdAt));
     if (point) {
       point.posts += 1;
+      if (statisticsRole(post.author) === "paciente") {
+        point.patient_posts += 1;
+      } else if (statisticsRole(post.author) === "psicologo") {
+        point.psychologist_posts += 1;
+      }
       if (post.anonymous) point.anonymous_posts += 1;
     }
   }
   for (const reply of periodReplies) {
     const point = daily.get(dateKey(reply.createdAt));
-    if (point) point.replies += 1;
+    if (point) {
+      point.replies += 1;
+      if (statisticsRole(reply.author) === "paciente") {
+        point.patient_comments += 1;
+      } else if (isVerifiedStatisticsPsychologist(reply.author)) {
+        point.verified_psychologist_replies += 1;
+      } else if (statisticsRole(reply.author) === "psicologo") {
+        point.unverified_psychologist_replies += 1;
+      }
+    }
   }
   for (const report of periodReports) {
     const point = daily.get(dateKey(report.createdAt));
@@ -1748,11 +1832,19 @@ const buildCommunityStatistics = (
   }
   for (const [key, users] of dailyActiveUsers) {
     const point = daily.get(key);
-    if (point) point.active_users = users.size;
+    if (point) {
+      point.active_patients = users.patients.size;
+      point.active_psychologists = users.psychologists.size;
+      point.active_users = users.patients.size + users.psychologists.size;
+    }
   }
   for (const [key, users] of dailyNewUsers) {
     const point = daily.get(key);
-    if (point) point.new_active_users = users.size;
+    if (point) {
+      point.new_active_patients = users.patients.size;
+      point.new_active_psychologists = users.psychologists.size;
+      point.new_active_users = users.patients.size + users.psychologists.size;
+    }
   }
 
   const activeUsers = statisticsRoleCounters([...activeByUser.values()]);
@@ -1829,6 +1921,7 @@ const buildCommunityStatistics = (
         patients: patientPosts.length,
         patient_posts_answered_by_verified_psychologists:
           patientPostsAnsweredByVerifiedPsychologists,
+        psychologists: psychologistPosts.length,
         source: "community_post+post_reply",
         total: periodPosts.length,
         unverified_psychologists: psychologistPosts.length - verifiedPsychologistPostCount,

@@ -412,3 +412,30 @@ Regras:
 - Builder/Quick Copy nao esta exposto como ferramenta callable no ambiente; a referencia visual usada foi a captura enviada pelo usuario, `_product/proto/admin/Comunidades/Comunidades - Detalhes.png` e o padrao local do Admin.
 - ADR atualizado: `adrs/0264-admin-comunidade-abas-conteudo-ranking.md`.
 - Validacao executada: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check`, smoke local `GET http://localhost:3002/comunidades/relacionamentos-com-proposito?tab=estatisticas` retornando 200 e smoke sem sessao Admin de `GET /api/admin/private/communities/relacionamentos-com-proposito/statistics?period=month` retornando 401.
+
+## Ajuste complementar 2026-07-16 - Segmentacao de Estatisticas da comunidade
+
+- Pedido do usuario: mover a aba **Estatisticas** para depois de **Dados** e separar a leitura em **Estatisticas de pessoas** e **Estatisticas de conteudo**, seguindo o modelo de cards que exibem/ocultam curvas no grafico usado no detalhe de psicologos.
+- A navegacao do detalhe Admin da comunidade agora ordena as abas como **Geral**, **Dados**, **Estatisticas**, **Conteudo**, **Ranking**, **Denuncias** e **Atividades**.
+- A aba **Estatisticas** foi reorganizada em dois blocos mobile-first com contadores clicaveis e graficos SVG sem dependencia nova: pessoas e conteudo.
+- **Estatisticas de pessoas** exibe somente Psicologos seguidores, Pacientes seguidores, Psicologos ativos, Pacientes ativos, Novos pacientes ativos e Novos psicologos ativos.
+- **Estatisticas de conteudo** exibe somente Postagens de psicologos, Postagens de pacientes, Respostas de psicologos verificados, Respostas de psicologos nao verificados, Comentarios de pacientes e Denuncias.
+- O endpoint real de estatisticas passou a retornar pontos diarios segmentados por papel/verificacao para alimentar as curvas de cada contador; as fontes continuam sendo `community_member`, `community_post`, `post_reply`, `post_report` e `page_view_event` autenticado.
+- Nao houve package novo, mock, seed, schema Prisma/migration, endpoint paralelo ou alteracao destrutiva de dados.
+- Builder/Quick Copy nao esta exposto como ferramenta callable no ambiente; a referencia visual usada foi a captura enviada pelo usuario, `_product/proto/admin/Comunidades/Comunidades - Detalhes.png` e o modelo local da aba **Estatisticas** de psicologos.
+- ADR atualizado: `adrs/0264-admin-comunidade-abas-conteudo-ranking.md`.
+- Validacao executada: `pnpm --dir admin check`, `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin build`, `pnpm check`, smoke local `GET http://localhost:3002/comunidades/relacionamentos-com-proposito?tab=estatisticas` retornando 200 e smoke sem sessao Admin de `GET /api/admin/private/communities/relacionamentos-com-proposito/statistics?period=month` retornando 401.
+
+## Ajuste complementar 2026-07-16 - Filtro de data nos blocos de Estatisticas
+
+- Pedido do usuario: em **Estatisticas de pessoas** e **Estatisticas de conteudo**, posicionar o filtro de data a direita do titulo do bloco.
+- A UI Admin removeu o card de periodo separado do topo e passou a renderizar os mesmos controles reais de **Periodo**, **De** e **Ate** no cabecalho de cada bloco de estatisticas, alinhados a direita em desktop e empilhados no mobile.
+- Os dois blocos compartilham a mesma consulta real de estatisticas da comunidade; alterar o periodo em qualquer bloco atualiza pessoas e conteudo juntos, sem criar endpoint paralelo, package, schema Prisma/migration ou mock.
+- Builder/Quick Copy nao esta exposto como ferramenta callable no ambiente; a referencia visual usada foi a captura enviada pelo usuario e o padrao local da aba **Estatisticas** de psicologos.
+
+## Ajuste complementar 2026-07-16 - Filtros sem resumo textual nem fundo destacado
+
+- Pedido do usuario: remover o texto de resumo do periodo dentro dos blocos de estatisticas e remover o fundo azul atras dos campos de data.
+- A UI Admin manteve os filtros no cabecalho direito de **Estatisticas de pessoas** e **Estatisticas de conteudo**, mas sem renderizar a linha de resumo textual do periodo e sem card/fundo destacado envolvendo os campos.
+- O ajuste e exclusivamente visual, sem endpoint novo, contrato semantico, schema Prisma/migration, package, mock ou alteracao de persistencia.
+- Validacao executada para o ajuste dos filtros: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm check`, smoke local `GET http://localhost:3002/comunidades/relacionamentos-com-proposito?tab=estatisticas` retornando 200 e smoke sem sessao Admin de `GET /api/admin/private/communities/relacionamentos-com-proposito/statistics?period=month` retornando 401.

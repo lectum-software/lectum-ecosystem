@@ -498,13 +498,24 @@ export type AdminCommunityStatisticsSplitDTO = {
 };
 
 export type AdminCommunityStatisticsDailyPointDTO = {
+  active_patients: number;
+  active_psychologists: number;
   active_users: number;
   anonymous_posts: number;
   date: string;
+  followers_patients: number;
+  followers_psychologists: number;
+  new_active_patients: number;
+  new_active_psychologists: number;
   new_active_users: number;
+  patient_comments: number;
+  patient_posts: number;
   posts: number;
+  psychologist_posts: number;
   replies: number;
   reports: number;
+  unverified_psychologist_replies: number;
+  verified_psychologist_replies: number;
 };
 
 export type AdminCommunityStatisticsDTO = {
@@ -542,6 +553,7 @@ export type AdminCommunityStatisticsDTO = {
     posts: {
       patients: number;
       patient_posts_answered_by_verified_psychologists: number;
+      psychologists: number;
       source: "community_post+post_reply";
       total: number;
       unverified_psychologists: number;

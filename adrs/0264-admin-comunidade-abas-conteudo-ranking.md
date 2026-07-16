@@ -361,3 +361,29 @@ Psicologo verificado continua usando a regra canonica `isVerifiedProfessionalEnt
 Consequencia: o Admin ganha estatisticas operacionais por comunidade sem schema novo, migration, dependencia de graficos ou backfill artificial. Periodos usam presets semana/mes/ano/todo historico/personalizado e os graficos tem alternativa textual acessivel.
 
 Validacao desta atualizacao: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check`, smoke local `GET http://localhost:3002/comunidades/relacionamentos-com-proposito?tab=estatisticas` retornando 200 e smoke sem sessao Admin de `GET /api/admin/private/communities/relacionamentos-com-proposito/statistics?period=month` retornando 401.
+
+## Atualizacao 2026-07-16: segmentacao da aba Estatisticas da comunidade
+
+A aba **Estatisticas** do detalhe administrativo de comunidade passa a ficar depois de **Dados** na navegacao e deixa de apresentar uma grade generica de totais. A leitura fica segmentada em dois blocos operacionais: **Estatisticas de pessoas** e **Estatisticas de conteudo**.
+
+A decisao e seguir o padrao mental ja usado em **Estatisticas** do detalhe administrativo de psicologos: cada contador e tambem um controle de legenda, permitindo exibir ou ocultar sua curva no grafico do periodo. Para isso, o contrato de `GET /api/admin/private/communities/:id/statistics` foi expandido com pontos diarios segmentados por papel/verificacao, preservando os contadores agregados existentes para compatibilidade.
+
+A segmentacao de pessoas considera seguidores atuais por papel, usuarios ativos reais no periodo e novos usuarios cuja primeira atividade real na comunidade ocorreu no periodo. A segmentacao de conteudo considera postagens por papel, respostas de psicologos verificados/nao verificados, comentarios de pacientes e denuncias. Fontes permanecem first-party e reais: `community_member`, `community_post`, `post_reply`, `post_report` e `page_view_event` autenticado.
+
+Consequencia: a UI ganha comparacao visual por curva sem dependencia de biblioteca de graficos, sem schema novo, migration, backfill ou mock. Posts anonimos e pacientes respondidos por verificados continuam disponiveis no contrato anterior, mas deixam de ser cards visiveis nesta segmentacao por pedido de produto.
+
+Validacao desta atualizacao: `pnpm --dir admin check`, `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin build`, `pnpm check`, smoke local da rota Admin de Estatisticas retornando 200 e smoke sem sessao Admin do endpoint de estatisticas retornando 401.
+
+## Atualizacao 2026-07-16: filtros de periodo dentro dos blocos de Estatisticas
+
+Os controles de periodo da aba **Estatisticas** da comunidade passam a viver no cabecalho de **Estatisticas de pessoas** e **Estatisticas de conteudo**, alinhados a direita do titulo em telas amplas e empilhados no mobile.
+
+A decisao preserva uma unica query contextual para os dois blocos: qualquer alteracao em **Periodo**, **De** ou **Ate** atualiza a mesma serie temporal e os mesmos contadores segmentados para pessoas e conteudo. Nao ha novo endpoint, contrato semantico, schema Prisma, migration, dependencia ou mock.
+
+## Atualizacao 2026-07-16: filtros de Estatisticas sem container destacado
+
+Os filtros de periodo dos blocos **Estatisticas de pessoas** e **Estatisticas de conteudo** permanecem no cabecalho direito, mas deixam de exibir o resumo textual do periodo e deixam de ter container com fundo destacado atras dos campos.
+
+A decisao e puramente visual: a mesma query e os mesmos parametros continuam alimentando os dois blocos; nao ha novo endpoint, contrato semantico, schema Prisma, migration, dependencia ou mock.
+
+Validacao desta atualizacao: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm check`, smoke local da rota Admin de Estatisticas retornando 200 e smoke sem sessao Admin do endpoint de estatisticas retornando 401.
