@@ -186,3 +186,17 @@ O badge separado de total foi removido para evitar duplicidade visual no cabecal
 Consequencia: a mudanca e apenas visual no Admin; nao altera API, persistencia, schema Prisma, dependencias, paginacao nem filtros reais.
 
 Validacao desta atualizacao: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke local `GET http://localhost:3002/comunidades/autocuidado-em-pratica?tab=conteudo` retornando 200.
+
+
+## Atualizacao 2026-07-15: metricas de compartilhamento, visualizacao e WhatsApp por conteudo
+
+A aba **Conteudo** do detalhe administrativo de comunidade passa a mostrar, no rodape de cada card, tres metricas adicionais de alcance: compartilhamentos, visualizacoes e cliques no WhatsApp.
+
+A decisao e manter as metricas no mesmo contrato real do endpoint de conteudo, sem agregador materializado novo: compartilhamentos usam `post_share`, visualizacoes usam `page_view_event` e cliques de WhatsApp usam `important_action_event` quando o evento possui `action_type="whatsapp_click"` e alvo explicito de post ou resposta.
+
+Consequencias:
+
+- views de posts ja podem refletir pageviews existentes em `community_post`/`post`;
+- views e WhatsApp de respostas dependem de eventos com alvo explicito e podem iniciar em zero ate que novos eventos sejam capturados;
+- clicks historicos de WhatsApp sem origem de conteudo nao sao redistribuidos por inferencia;
+- a remocao administrativa continua auditada pelo fluxo existente e nao ha alteracao de schema Prisma, migration ou package.

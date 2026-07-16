@@ -14,11 +14,13 @@ import {
   Image as ImageIcon,
   Loader2,
   MessageCircle,
+  MousePointerClick,
   Play,
   Plus,
   RefreshCw,
   Save,
   Search,
+  Share2,
   ShieldCheck,
   Star,
   Trash2,
@@ -1753,6 +1755,18 @@ const ContentMetrics = ({ item }: { item: AdminCommunityContentItem }) => (
       <span className="inline-flex items-center gap-1.5">
         <Bookmark aria-hidden className="h-4 w-4" />
         {numberFormatter.format(item.metrics.saves_count)} salvos
+      </span>
+      <span className="inline-flex items-center gap-1.5">
+        <Share2 aria-hidden className="h-4 w-4" />
+        {numberFormatter.format(item.metrics.shares_count)} compartilhamentos
+      </span>
+      <span className="inline-flex items-center gap-1.5">
+        <Eye aria-hidden className="h-4 w-4" />
+        {numberFormatter.format(item.metrics.views_count)} visualizações
+      </span>
+      <span className="inline-flex items-center gap-1.5">
+        <MousePointerClick aria-hidden className="h-4 w-4" />
+        {numberFormatter.format(item.metrics.whatsapp_clicks_count)} cliques WhatsApp
       </span>
       <span className="inline-flex items-center gap-1.5">
         <AlertTriangle aria-hidden className="h-4 w-4" />

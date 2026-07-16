@@ -118,6 +118,44 @@ const paginate = <T>(items: T[], page: number, limit: number) => {
     per_page: limit,
   };
 };
+const groupCountMap = <T extends { _count: { _all: number } }>(
+  items: T[],
+  getKey: (item: T) => string | null,
+) => {
+  const map = new Map<string, number>();
+
+  for (const item of items) {
+    const key = getKey(item);
+    if (!key) continue;
+    map.set(key, item._count._all);
+  }
+
+  return map;
+};
+const contentTargetKey = (type: "post" | "reply", id: string) => `${type}:${id}`;
+const canonicalContentTargetType = (type?: string | null): "post" | "reply" | null => {
+  if (type === "post" || type === "community_post") return "post";
+  if (type === "reply" || type === "post_reply") return "reply";
+
+  return null;
+};
+const groupContentTargetCountMap = <
+  T extends { _count: { _all: number }; target_id: string | null; target_type: string | null },
+>(
+  items: T[],
+) => {
+  const map = new Map<string, number>();
+
+  for (const item of items) {
+    const targetType = canonicalContentTargetType(item.target_type);
+    if (!targetType || !item.target_id) continue;
+
+    const key = contentTargetKey(targetType, item.target_id);
+    map.set(key, (map.get(key) ?? 0) + item._count._all);
+  }
+
+  return map;
+};
 const normalizeNullableText = (value?: string | null) => {
   const normalized = value?.trim();
 
@@ -400,12 +438,21 @@ const replyPublicUrl = (
         reply.id,
       )}#reply-${reply.id}`;
 
+type ContentMetricsMaps = {
+  postSharesByPost?: Map<string, number>;
+  replySharesByReply?: Map<string, number>;
+  viewsByTarget?: Map<string, number>;
+  whatsappClicksByTarget?: Map<string, number>;
+};
+
 const mapPostContent = (
   community: AdminCommunityRecord,
   post: AdminCommunityContentPostRecord,
+  metrics: ContentMetricsMaps = {},
 ): AdminCommunityContentItemDTO => {
   const contentKind = contentKindFor("post", post.author, post.anonymous);
   const anonymous = post.anonymous && post.author.role !== "psicologo";
+  const targetKey = contentTargetKey("post", post.id);
 
   return {
     author: {
@@ -429,7 +476,10 @@ const mapPostContent = (
       downvotes_count: post.downvotes_count,
       reports_count: post.reports.length,
       saves_count: post.saves_count,
+      shares_count: metrics.postSharesByPost?.get(post.id) ?? 0,
       upvotes_count: post.upvotes_count,
+      views_count: metrics.viewsByTarget?.get(targetKey) ?? 0,
+      whatsapp_clicks_count: metrics.whatsappClicksByTarget?.get(targetKey) ?? 0,
     },
     origin_preview: null,
     parent_post_title: null,
@@ -444,8 +494,10 @@ const mapPostContent = (
 const mapReplyContent = (
   community: AdminCommunityRecord,
   reply: AdminCommunityContentReplyRecord,
+  metrics: ContentMetricsMaps = {},
 ): AdminCommunityContentItemDTO => {
   const contentKind = contentKindFor("comment", reply.author);
+  const targetKey = contentTargetKey("reply", reply.id);
   const originPreview: AdminCommunityContentItemDTO["origin_preview"] = reply.parent_reply_id
     ? {
         excerpt: excerpt(reply.parent_reply?.content),
@@ -482,7 +534,10 @@ const mapReplyContent = (
       downvotes_count: reply.downvotes_count,
       reports_count: reply.reports.length,
       saves_count: reply.saves.length,
+      shares_count: metrics.replySharesByReply?.get(reply.id) ?? 0,
       upvotes_count: reply.upvotes_count,
+      views_count: metrics.viewsByTarget?.get(targetKey) ?? 0,
+      whatsapp_clicks_count: metrics.whatsappClicksByTarget?.get(targetKey) ?? 0,
     },
     origin_preview: originPreview,
     parent_post_title: reply.post.title,
@@ -538,6 +593,26 @@ const contentMatchesPeriod = (
   const from = startOfDay(addDays(new Date(), -(days - 1)));
 
   return item.created_at >= from;
+};
+
+const buildContentMetricsMaps = async (
+  repository: AdminCommunityManageRepository,
+  postIds: string[],
+  replyIds: string[],
+): Promise<ContentMetricsMaps> => {
+  const [postShares, replyShares, contentViews, whatsappClicks] = await Promise.all([
+    repository.countContentPostShares(postIds),
+    repository.countContentReplyShares(replyIds),
+    repository.countContentViews(postIds, replyIds),
+    repository.countContentWhatsappClicks(postIds, replyIds),
+  ]);
+
+  return {
+    postSharesByPost: groupCountMap(postShares, (item) => item.post_id),
+    replySharesByReply: groupCountMap(replyShares, (item) => item.reply_id),
+    viewsByTarget: groupContentTargetCountMap(contentViews),
+    whatsappClicksByTarget: groupContentTargetCountMap(whatsappClicks),
+  };
 };
 
 const contentSafeBefore = (item: AdminCommunityContentItemDTO) => ({
@@ -1184,8 +1259,13 @@ export const listContent = async (data: IAdminCommunityContentDTO): Promise<Reso
   const page = normalizePage(data.q.page);
   const limit = normalizeLimit(data.q.limit);
   const { posts, replies } = await repository.listContent(community.id);
-  const postItems = posts.map((post) => mapPostContent(community, post));
-  const replyItems = replies.map((reply) => mapReplyContent(community, reply));
+  const metrics = await buildContentMetricsMaps(
+    repository,
+    posts.map((post) => post.id),
+    replies.map((reply) => reply.id),
+  );
+  const postItems = posts.map((post) => mapPostContent(community, post, metrics));
+  const replyItems = replies.map((reply) => mapReplyContent(community, reply, metrics));
   const items = [...postItems, ...replyItems]
     .filter((item) => contentMatchesType(item, queryType))
     .filter((item) => contentMatchesPeriod(item, queryPeriod))
@@ -1200,7 +1280,7 @@ export const listContent = async (data: IAdminCommunityContentDTO): Promise<Reso
     page: result.page,
     pages: result.pages,
     per_page: result.per_page,
-    source: "community_post+post_reply",
+    source: "community_post+post_reply+post_share+page_view_event+important_action_event",
   };
 
   return {
@@ -1246,7 +1326,11 @@ export const removeContent = async (data: IAdminCommunityRemoveContentDTO): Prom
         ...error("admin_community_content_target_invalid", {}),
       };
     }
-    const item = mapPostContent(community, post);
+    const item = mapPostContent(
+      community,
+      post,
+      await buildContentMetricsMaps(repository, [post.id], []),
+    );
     if (item.status === "removed") {
       return {
         status: 409,
@@ -1283,7 +1367,11 @@ export const removeContent = async (data: IAdminCommunityRemoveContentDTO): Prom
       ...error("admin_community_content_target_invalid", {}),
     };
   }
-  const item = mapReplyContent(community, reply);
+  const item = mapReplyContent(
+    community,
+    reply,
+    await buildContentMetricsMaps(repository, [], [reply.id]),
+  );
   if (item.status === "removed") {
     return {
       status: 409,

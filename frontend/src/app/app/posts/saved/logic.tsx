@@ -320,6 +320,12 @@ const SavedReplyCard = ({
       attached={Boolean(reply.media_url)}
       psychologist={toCommunityWhatsAppIdentity(reply.author)}
       stopPropagation
+      trackingContext={{
+        pageKind: "community_post",
+        path: replyLink,
+        targetId: reply.id,
+        targetType: "post_reply",
+      }}
     />
   ) : null;
   const openSavedReply = () => router.push(replyLink);

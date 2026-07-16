@@ -7,10 +7,17 @@ const trackingIdSchema = z
   .min(8)
   .max(128)
   .regex(/^[a-zA-Z0-9._:-]+$/);
-const actionTypeSchema = z.enum(["pwa_install_prompt_accepted", "pwa_installed"]);
+const actionTypeSchema = z.enum(["pwa_install_prompt_accepted", "pwa_installed", "whatsapp_click"]);
 const displayModeSchema = z.enum(["browser", "standalone", "fullscreen", "minimal-ui", "unknown"]);
 const occurredAtSchema = z.string().trim().datetime({ offset: true });
 const pathSchema = z.string().trim().min(1).max(2048);
+const targetLabelSchema = z
+  .string()
+  .trim()
+  .min(1)
+  .max(64)
+  .regex(/^[a-z0-9_:-]+$/);
+const targetIdSchema = z.string().trim().min(1).max(128);
 
 export const schema: IValidatorRequest = {
   params: [],
@@ -40,6 +47,27 @@ export const schema: IValidatorRequest = {
       coerse: "string",
       optional: true,
       custom: pathSchema,
+    },
+    {
+      key: "page_kind",
+      method: "string",
+      coerse: "string",
+      optional: true,
+      custom: targetLabelSchema,
+    },
+    {
+      key: "target_id",
+      method: "string",
+      coerse: "string",
+      optional: true,
+      custom: targetIdSchema,
+    },
+    {
+      key: "target_type",
+      method: "string",
+      coerse: "string",
+      optional: true,
+      custom: targetLabelSchema,
     },
     {
       key: "display_mode",

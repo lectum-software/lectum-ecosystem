@@ -728,6 +728,92 @@ export class AdminCommunityManageRepository {
     return { posts, replies };
   }
 
+  async countContentPostShares(postIds: string[]) {
+    if (postIds.length === 0) return [];
+
+    return prisma.post_share.groupBy({
+      by: ["post_id"],
+      where: {
+        deleted: false,
+        post_id: { in: postIds },
+        reply_id: null,
+      },
+      _count: { _all: true },
+    });
+  }
+
+  async countContentReplyShares(replyIds: string[]) {
+    if (replyIds.length === 0) return [];
+
+    return prisma.post_share.groupBy({
+      by: ["reply_id"],
+      where: {
+        deleted: false,
+        reply_id: { in: replyIds },
+      },
+      _count: { _all: true },
+    });
+  }
+
+  async countContentViews(postIds: string[], replyIds: string[]) {
+    const targets: Prisma.page_view_eventWhereInput[] = [];
+
+    if (postIds.length > 0) {
+      targets.push({
+        target_id: { in: postIds },
+        target_type: { in: ["post", "community_post"] },
+      });
+    }
+
+    if (replyIds.length > 0) {
+      targets.push({
+        target_id: { in: replyIds },
+        target_type: { in: ["reply", "post_reply"] },
+      });
+    }
+
+    if (targets.length === 0) return [];
+
+    return prisma.page_view_event.groupBy({
+      by: ["target_type", "target_id"],
+      where: {
+        deleted: false,
+        OR: targets,
+      },
+      _count: { _all: true },
+    });
+  }
+
+  async countContentWhatsappClicks(postIds: string[], replyIds: string[]) {
+    const targets: Prisma.important_action_eventWhereInput[] = [];
+
+    if (postIds.length > 0) {
+      targets.push({
+        target_id: { in: postIds },
+        target_type: { in: ["post", "community_post"] },
+      });
+    }
+
+    if (replyIds.length > 0) {
+      targets.push({
+        target_id: { in: replyIds },
+        target_type: { in: ["reply", "post_reply"] },
+      });
+    }
+
+    if (targets.length === 0) return [];
+
+    return prisma.important_action_event.groupBy({
+      by: ["target_type", "target_id"],
+      where: {
+        action_type: "whatsapp_click",
+        deleted: false,
+        OR: targets,
+      },
+      _count: { _all: true },
+    });
+  }
+
   async findPostContent(communityId: string, postId: string) {
     return prisma.community_post.findFirst({
       select: adminCommunityContentPostSelect,

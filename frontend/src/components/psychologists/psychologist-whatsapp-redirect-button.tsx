@@ -5,7 +5,10 @@ import Image from "next/image";
 import type { ButtonHTMLAttributes, MouseEvent, ReactNode } from "react";
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { useImportantActionTracking } from "@/api/callers/analytics";
 import { useDirectoryPsychologistContactClick } from "@/api/callers/directory";
+import type { DisplayMode } from "@/api/req/analytics";
+import { getOrCreateAnalyticsIdentity } from "@/components/analytics/storage";
 import { useProgressiveConversion } from "@/components/conversion/progressive-conversion-provider";
 import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 import { cn } from "@/lib/utils";
@@ -31,6 +34,13 @@ export type PsychologistWhatsAppIdentity = {
   whatsappUrl?: string | null;
 };
 
+export type PsychologistWhatsAppTrackingContext = {
+  pageKind?: string;
+  path?: string;
+  targetId?: string | null;
+  targetType?: string | null;
+};
+
 type PsychologistWhatsAppRedirectButtonProps = Omit<
   ButtonHTMLAttributes<HTMLButtonElement>,
   "children" | "type"
@@ -38,6 +48,7 @@ type PsychologistWhatsAppRedirectButtonProps = Omit<
   children: ReactNode;
   psychologist: PsychologistWhatsAppIdentity;
   stopPropagation?: boolean;
+  trackingContext?: PsychologistWhatsAppTrackingContext;
 };
 
 type PsychologistWhatsAppButtonContentProps = {
@@ -55,7 +66,34 @@ type PsychologistWhatsAppRedirectModalProps = {
   redirectUrl?: string | null;
 };
 
+type NavigatorWithStandalone = Navigator & { standalone?: boolean };
+
 const delay = (ms: number) => new Promise<null>((resolve) => window.setTimeout(resolve, ms, null));
+
+const getDisplayMode = (): DisplayMode => {
+  if (typeof window === "undefined") return "unknown";
+
+  const navigatorWithStandalone = window.navigator as NavigatorWithStandalone;
+  if (window.matchMedia("(display-mode: fullscreen)").matches) return "fullscreen";
+  if (window.matchMedia("(display-mode: minimal-ui)").matches) return "minimal-ui";
+
+  if (
+    window.matchMedia("(display-mode: standalone)").matches ||
+    navigatorWithStandalone.standalone === true
+  ) {
+    return "standalone";
+  }
+
+  if (window.matchMedia("(display-mode: browser)").matches) return "browser";
+
+  return "unknown";
+};
+
+const currentAnalyticsPath = () => {
+  if (typeof window === "undefined") return "/";
+
+  return `${window.location.pathname || "/"}${window.location.search || ""}`;
+};
 
 const preserveFallbackWhatsAppText = (fallbackUrl: string, trackedUrl?: string | null) => {
   if (!trackedUrl) return fallbackUrl;
@@ -242,6 +280,7 @@ export const PsychologistWhatsAppRedirectButton = ({
   onClick,
   psychologist,
   stopPropagation = false,
+  trackingContext,
   ...props
 }: PsychologistWhatsAppRedirectButtonProps) => {
   const [isTransitionOpen, setIsTransitionOpen] = useState(false);
@@ -249,6 +288,7 @@ export const PsychologistWhatsAppRedirectButton = ({
   const [redirectUrl, setRedirectUrl] = useState(psychologist.whatsappUrl ?? "");
   const timersRef = useRef<number[]>([]);
   const tracking = useDirectoryPsychologistContactClick(psychologist.id);
+  const importantActionTracking = useImportantActionTracking();
   const conversion = useProgressiveConversion();
 
   useEffect(() => {
@@ -291,6 +331,25 @@ export const PsychologistWhatsAppRedirectButton = ({
     setTimer(() => setManualFallbackVisible(true), WHATSAPP_REDIRECT_FALLBACK_VISIBLE_DELAY_MS);
 
     const startedAt = performance.now();
+    const analyticsIdentity = getOrCreateAnalyticsIdentity();
+    if (analyticsIdentity) {
+      void importantActionTracking
+        .mutateAsync({
+          action_type: "whatsapp_click",
+          display_mode: getDisplayMode(),
+          occurred_at: new Date().toISOString(),
+          page_kind: trackingContext?.pageKind,
+          path: trackingContext?.path ?? currentAnalyticsPath(),
+          session_id: analyticsIdentity.sessionId,
+          target_id: trackingContext?.targetId ?? undefined,
+          target_type: trackingContext?.targetType ?? undefined,
+          visitor_id: analyticsIdentity.visitorId,
+        })
+        .catch(() => {
+          // Analytics must never block the WhatsApp redirect.
+        });
+    }
+
     const trackedUrlPromise = tracking
       .mutateAsync()
       .then((data) => preserveFallbackWhatsAppText(fallbackUrl, data.whatsapp_url))

@@ -263,3 +263,16 @@ Regras:
 - Builder/Quick Copy nao esta exposto como ferramenta callable no ambiente; a referencia visual usada foi a captura enviada pelo usuario e o padrao local do Admin.
 - ADR atualizado: `adrs/0264-admin-comunidade-abas-conteudo-ranking.md`.
 - Validacao executada: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke local `GET http://localhost:3002/comunidades/autocuidado-em-pratica?tab=conteudo` retornando 200.
+
+
+## Ajuste complementar 2026-07-15 - Metricas de alcance no conteudo publicado
+
+- Pedido do usuario: na aba **Conteudo**, adicionar quantidade de compartilhamentos, visualizacoes e cliques no botao de WhatsApp nas metricas de cada conteudo publicado.
+- O contrato de `GET /api/admin/private/communities/:id/content` passou a retornar `shares_count`, `views_count` e `whatsapp_clicks_count` em cada item, alem das metricas ja existentes.
+- `shares_count` vem de `post_share`; `views_count` vem de `page_view_event`; `whatsapp_clicks_count` vem de `important_action_event.action_type="whatsapp_click"` com alvo explicito de post ou resposta.
+- O frontend publico passou a registrar `whatsapp_click` first-party nos CTAs de WhatsApp de posts/respostas de comunidade, com `target_type` e `target_id`; clicks historicos sem alvo permanecem nao atribuidos, sem backfill ou mock.
+- A UI Admin renderiza as novas metricas no rodape do card, abaixo do divisor, junto de upvotes, downvotes, comentarios, salvos e denuncias.
+- Nao houve package novo, schema Prisma/migration, endpoint paralelo, mock ou alteracao destrutiva de dados.
+- Builder/Quick Copy nao esta exposto como ferramenta callable no ambiente; a referencia visual usada foi a captura enviada pelo usuario e o padrao local do Admin/site publico.
+- ADR atualizado: `adrs/0264-admin-comunidade-abas-conteudo-ranking.md` e complemento em `adrs/0266-metricas-conversao-uso-psicologos-admin.md`.
+- Validacao executada: `pnpm --dir backend check`, `pnpm --dir frontend check`, `pnpm --dir admin check`, `pnpm --dir backend build`, `pnpm --dir frontend build`, `pnpm --dir admin build`, `pnpm check` e smoke local `GET http://localhost:3002/comunidades/autocuidado-em-pratica?tab=conteudo`/`GET http://localhost:3000/community/autocuidado-em-pratica` retornando 200.

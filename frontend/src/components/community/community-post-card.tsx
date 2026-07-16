@@ -400,6 +400,12 @@ const ProfessionalReplyPreview = ({
         attached={Boolean(reply.media_url)}
         className={cn(!reply.media_url && !isFeedPresentation && "mt-3")}
         psychologist={toCommunityWhatsAppIdentity(reply.author)}
+        trackingContext={{
+          pageKind: "community_post",
+          path: postHref,
+          targetId: reply.id,
+          targetType: "post_reply",
+        }}
       />
     ) : null;
 
@@ -640,12 +646,21 @@ export const CommunityPostCard = ({
   const psychologistProfileHref = isPsychologistPost
     ? `/psychologists/${displayAuthor.id}`
     : undefined;
+  const whatsappTrackingTarget =
+    isReplyContribution && primaryReply
+      ? { targetId: primaryReply.id, targetType: "post_reply" }
+      : { targetId: post.id, targetType: "community_post" };
   const authorWhatsappCta =
     showWhatsappCta && isPsychologistPost && displayAuthor.whatsapp_url ? (
       <CommunityWhatsAppCta
         attached={Boolean(shouldShowPostCarousel || displayMediaUrl)}
         psychologist={toCommunityWhatsAppIdentity(displayAuthor)}
         stopPropagation
+        trackingContext={{
+          pageKind: "community_post",
+          path: postDetailHref(post, focusedReplyId),
+          ...whatsappTrackingTarget,
+        }}
       />
     ) : null;
   const voteMutation = useVotePost(post.id);

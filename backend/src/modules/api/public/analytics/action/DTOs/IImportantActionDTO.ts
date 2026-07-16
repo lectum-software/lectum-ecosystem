@@ -1,7 +1,10 @@
 ﻿import type { important_action_event } from "@/interfaces/objects";
 import type { AnalyticsDisplayMode } from "../../helpers/tracking";
 
-export type ImportantActionType = "pwa_install_prompt_accepted" | "pwa_installed";
+export type ImportantActionType =
+  | "pwa_install_prompt_accepted"
+  | "pwa_installed"
+  | "whatsapp_click";
 
 export interface IImportantActionDTO {
   p: Record<string, never>;
@@ -11,6 +14,9 @@ export interface IImportantActionDTO {
     session_id: string;
     action_type: ImportantActionType;
     path?: string;
+    page_kind?: string;
+    target_id?: string;
+    target_type?: string;
     display_mode?: AnalyticsDisplayMode;
     occurred_at?: string;
   };

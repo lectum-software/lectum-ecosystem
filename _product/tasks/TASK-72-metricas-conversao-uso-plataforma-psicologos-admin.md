@@ -659,3 +659,12 @@ Regras de cálculo:
 - Nao houve package novo, mock, schema Prisma/migration, endpoint paralelo ou alteracao de contrato.
 - ADR atualizado: `adrs/0274-regras-comunidade-descritivas-arrastaveis.md`.
 - Validacao executada: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke local `GET http://localhost:3002/comunidades/tdah?tab=dados` retornando 200.
+
+
+## Ajuste complementar 2026-07-15 - Atribuicao first-party de WhatsApp em conteudo de comunidade
+
+- Para atender as metricas de conteudo publicado no Admin de comunidades, os CTAs de WhatsApp em posts/respostas agora emitem `important_action_event.action_type="whatsapp_click"` com `target_type` e `target_id` explicitos.
+- A decisao preserva a regra da TASK-72: `contact_request` continua sendo a fonte de contato por psicologo, mas nao e usado para atribuir click a um conteudo especifico porque nao guarda origem/post/resposta.
+- Eventos historicos sem alvo continuam nao atribuidos; nao houve backfill, inferencia por URL ou mock.
+- Nao ha captura de conversa, mensagem, agenda ou dado clinico: o evento registra somente o click first-party, sessao/visitante e alvo de conteudo.
+- Validacao complementar: `pnpm --dir backend check`, `pnpm --dir frontend check`, `pnpm --dir admin check`, `pnpm --dir backend build`, `pnpm --dir frontend build`, `pnpm --dir admin build` e `pnpm check`.

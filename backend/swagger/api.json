@@ -4236,6 +4236,12 @@
                     "required": false,
                     "type": "string"
                   },
+                  "page_kind": {
+                    "description": "Parâmetro page_kind do body.",
+                    "nullable": false,
+                    "required": false,
+                    "type": "string"
+                  },
                   "path": {
                     "description": "Parâmetro path do body.",
                     "nullable": false,
@@ -4246,6 +4252,18 @@
                     "description": "Parâmetro session_id do body.",
                     "nullable": false,
                     "required": true,
+                    "type": "string"
+                  },
+                  "target_id": {
+                    "description": "Parâmetro target_id do body.",
+                    "nullable": false,
+                    "required": false,
+                    "type": "string"
+                  },
+                  "target_type": {
+                    "description": "Parâmetro target_type do body.",
+                    "nullable": false,
+                    "required": false,
                     "type": "string"
                   },
                   "visitor_id": {

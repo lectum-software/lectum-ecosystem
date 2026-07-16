@@ -73,3 +73,10 @@ A aba **Estatísticas** do detalhe administrativo do psicólogo passa a exibir, 
 Validação complementar: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build` e validação do snapshot staged do Admin.
 
 Validação adicional: `pnpm check`.
+
+
+## Complemento 2026-07-15 - Click de WhatsApp atribuido a conteudo
+
+Os CTAs de WhatsApp exibidos em posts e respostas de comunidade passam a registrar tambem um evento first-party `important_action_event.action_type="whatsapp_click"` com `target_type`/`target_id` do conteudo. Esse evento e uma camada de atribuicao de UI para metricas de conteudo, nao substitui `contact_request` como fonte de contato por psicologo.
+
+A decisao evita inferir origem a partir de `contact_request`, pois esse registro nao persiste post/resposta de origem. Clicks historicos sem alvo permanecem nao atribuidos e continuam fora das metricas por conteudo. Nao ha coleta de mensagens de WhatsApp nem alteracao de schema Prisma.

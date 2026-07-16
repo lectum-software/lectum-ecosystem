@@ -1211,6 +1211,12 @@ const ProfessionalReplyPreview = ({ post }: { post: CommunityPost }) => {
       attached={Boolean(reply.media_url)}
       psychologist={toCommunityWhatsAppIdentity(reply.author)}
       stopPropagation
+      trackingContext={{
+        pageKind: "community_post",
+        path: postHref,
+        targetId: reply.id,
+        targetType: "post_reply",
+      }}
     />
   ) : null;
 
@@ -1313,6 +1319,12 @@ const PostCard = ({
         attached={hasPostMedia}
         psychologist={toCommunityWhatsAppIdentity(post.author)}
         stopPropagation
+        trackingContext={{
+          pageKind: "community_post",
+          path: postDetailHref,
+          targetId: post.id,
+          targetType: "community_post",
+        }}
       />
     ) : null;
 

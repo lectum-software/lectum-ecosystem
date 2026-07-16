@@ -20,7 +20,18 @@ export const store = async (req: Request) => {
   const visitorId = data.b.visitor_id;
   const sessionId = data.b.session_id;
   const path = data.b.path ? sanitizePath(data.b.path) : null;
-  const target = derivePageTarget(path || "/");
+  const derivedTarget = derivePageTarget(path || "/");
+  const explicitTargetType = data.b.target_type?.trim() || null;
+  const explicitTargetId = data.b.target_id?.trim() || null;
+  const explicitPageKind = data.b.page_kind?.trim() || null;
+  const pageKind =
+    explicitPageKind ||
+    (explicitTargetType &&
+    ["community_post", "post_reply", "post", "reply"].includes(explicitTargetType)
+      ? "community_post"
+      : derivedTarget.pageKind);
+  const targetType = explicitTargetType ?? derivedTarget.targetType;
+  const targetId = explicitTargetId ?? derivedTarget.targetId;
 
   if (userId) {
     await Promise.all([
@@ -37,9 +48,9 @@ export const store = async (req: Request) => {
     userId,
     actionType: data.b.action_type,
     path,
-    pageKind: target.pageKind,
-    targetType: target.targetType,
-    targetId: target.targetId,
+    pageKind,
+    targetType,
+    targetId,
     displayMode: normalizeDisplayMode(data.b.display_mode),
     occurredAt: normalizeOccurredAt(data.b.occurred_at),
   });
@@ -52,7 +63,7 @@ export const store = async (req: Request) => {
     user_id: userId,
     action_type: data.b.action_type,
     path: event.path ?? null,
-    page_kind: event.page_kind ?? target.pageKind,
+    page_kind: event.page_kind ?? pageKind,
     target_type: event.target_type ?? null,
     target_id: event.target_id ?? null,
     display_mode: normalizeDisplayMode(event.display_mode),

@@ -826,6 +826,12 @@ const PostBody = ({ post }: { post: PostDetail }) => {
       attached={Boolean(shouldShowPostCarousel || displayMediaUrl)}
       psychologist={toCommunityWhatsAppIdentity(post.author)}
       stopPropagation
+      trackingContext={{
+        pageKind: "community_post",
+        path: `/community/${post.community.slug}/post/${post.id}`,
+        targetId: post.id,
+        targetType: "community_post",
+      }}
     />
   ) : null;
 
@@ -1374,6 +1380,11 @@ const ReplyCard = ({
         attached={hasReplyMedia}
         psychologist={toCommunityWhatsAppIdentity(reply.author)}
         stopPropagation
+        trackingContext={{
+          pageKind: "community_post",
+          targetId: reply.id,
+          targetType: "post_reply",
+        }}
       />
     ) : null;
 

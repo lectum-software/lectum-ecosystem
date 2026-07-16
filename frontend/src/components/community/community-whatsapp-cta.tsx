@@ -6,6 +6,7 @@ import {
   PsychologistWhatsAppButtonContent,
   type PsychologistWhatsAppIdentity,
   PsychologistWhatsAppRedirectButton,
+  type PsychologistWhatsAppTrackingContext,
 } from "@/components/psychologists/psychologist-whatsapp-redirect-button";
 import { cn } from "@/lib/utils";
 import { normalizeProfessionalDisplayName } from "@/utils/professional-name";
@@ -25,6 +26,7 @@ type CommunityWhatsAppCtaProps = {
   className?: string;
   psychologist: PsychologistWhatsAppIdentity;
   stopPropagation?: boolean;
+  trackingContext?: PsychologistWhatsAppTrackingContext;
 };
 
 const WHATSAPP_CTA_FORWARD_ICON_SRC =
@@ -47,6 +49,7 @@ export const CommunityWhatsAppCta = ({
   className,
   psychologist,
   stopPropagation = false,
+  trackingContext,
 }: CommunityWhatsAppCtaProps) => {
   const headingLabel = "WhatsApp";
   const actionLabel = `Fale com ${getPsychologistWhatsappDisplayName(psychologist)}`;
@@ -63,6 +66,7 @@ export const CommunityWhatsAppCta = ({
       data-post-card-ignore-click="true"
       psychologist={psychologist}
       stopPropagation={stopPropagation}
+      trackingContext={trackingContext}
     >
       <span className="min-w-0 max-w-full overflow-visible whitespace-nowrap text-[12px] font-medium leading-[1.35] text-[#64748B] dark:text-muted">
         {headingLabel}

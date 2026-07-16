@@ -335,7 +335,10 @@ export type AdminCommunityContentItem = {
     downvotes_count: number;
     reports_count: number;
     saves_count: number;
+    shares_count: number;
     upvotes_count: number;
+    views_count: number;
+    whatsapp_clicks_count: number;
   };
   origin_preview: {
     excerpt: string;
@@ -358,7 +361,7 @@ export type AdminCommunityContent = {
   page: number;
   pages: number;
   per_page: number;
-  source: "community_post+post_reply";
+  source: "community_post+post_reply+post_share+page_view_event+important_action_event";
 };
 
 export type AdminCommunityRemoveContentInput = {
