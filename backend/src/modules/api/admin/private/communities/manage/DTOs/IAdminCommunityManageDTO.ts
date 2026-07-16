@@ -70,6 +70,9 @@ export type AdminCommunityReportsQuery = AdminCommunityPaginationQuery & {
 };
 
 export type AdminCommunityActivitiesQuery = AdminCommunityPaginationQuery & {
+  area?: string;
+  from?: string;
+  to?: string;
   type?: string;
 };
 
@@ -445,13 +448,31 @@ export type AdminCommunityActivityItemDTO = {
   summary: string;
 };
 
+export type AdminCommunityActivitiesFilterOptionDTO = {
+  count: number;
+  id: string;
+  label: string;
+};
+
 export type AdminCommunityActivitiesDTO = {
+  active_filters_count: number;
   community: Pick<AdminCommunityIdentity, "id" | "name" | "slug">;
   count: number;
   data: AdminCommunityActivityItemDTO[];
+  filters: {
+    areas: AdminCommunityActivitiesFilterOptionDTO[];
+    types: AdminCommunityActivitiesFilterOptionDTO[];
+  };
   page: number;
   pages: number;
   per_page: number;
+  period: {
+    from: string | null;
+    label: string;
+    max_days: number | null;
+    timezone: "server-local";
+    to: string | null;
+  };
   source: "admin_activity_log";
 };
 

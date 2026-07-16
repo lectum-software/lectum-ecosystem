@@ -173,9 +173,12 @@ const normalizeCommunityReports = (input: AdminCommunityReportsQuery) => ({
 });
 
 const normalizeCommunityActivities = (input: AdminCommunityActivitiesQuery) => ({
+  area: input.area || "all",
+  from: input.from || "default",
   limit: input.limit || 10,
   page: input.page || 1,
   q: input.q || "",
+  to: input.to || "default",
   type: input.type || "all",
 });
 

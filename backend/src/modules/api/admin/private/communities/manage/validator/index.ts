@@ -370,10 +370,31 @@ export const activitiesSchema: IValidatorRequest = {
   query: [
     ...paginationQuery,
     {
+      key: "area",
+      coerse: "string",
+      method: "string",
+      max: 80,
+      optional: true,
+    },
+    {
       key: "type",
       coerse: "string",
       method: "string",
       max: 80,
+      optional: true,
+    },
+    {
+      key: "from",
+      coerse: "string",
+      method: "string",
+      max: 10,
+      optional: true,
+    },
+    {
+      key: "to",
+      coerse: "string",
+      method: "string",
+      max: 10,
       optional: true,
     },
   ],

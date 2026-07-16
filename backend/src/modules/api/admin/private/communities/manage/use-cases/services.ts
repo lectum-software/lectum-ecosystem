@@ -8,6 +8,7 @@ import type {
   AdminCommunitiesListQuery,
   AdminCommunitiesListSort,
   AdminCommunityActivitiesDTO,
+  AdminCommunityActivitiesFilterOptionDTO,
   AdminCommunityActivityItemDTO,
   AdminCommunityContentDTO,
   AdminCommunityContentItemDTO,
@@ -62,6 +63,7 @@ const DEFAULT_PAGE_SIZE = 10;
 const MAX_CONTENT_PERIOD_DAYS = 3660;
 const MAX_PAGE_SIZE = 50;
 const DEFAULT_REPORT_PERIOD_DAYS = 90;
+const MAX_ACTIVITY_PERIOD_DAYS = 365;
 const MAX_REPORT_PERIOD_DAYS = 180;
 const MS_PER_DAY = 86_400_000;
 const REMOVE_CONTENT_CONFIRMATION = "REMOVER CONTEUDO";
@@ -1158,12 +1160,118 @@ const mapActivity = (activity: AdminCommunityActivityRecord): AdminCommunityActi
   summary: activitySummary(activity),
 });
 
-const activityMatchesSearch = (item: AdminCommunityActivityItemDTO, search: string) => {
-  if (!search) return true;
+type ActivityPeriodResult =
+  | {
+      current: { end: Date | null; start: Date | null };
+      period: AdminCommunityActivitiesDTO["period"];
+      success: true;
+    }
+  | { code: string; success: false };
+
+const resolveActivityPeriod = (
+  query: { from?: string; to?: string } = {},
+): ActivityPeriodResult => {
+  const hasCustomFrom = Boolean(query.from);
+  const hasCustomTo = Boolean(query.to);
+
+  if (!hasCustomFrom && !hasCustomTo) {
+    return {
+      current: { end: null, start: null },
+      period: {
+        from: null,
+        label: "Todo hist?rico registrado",
+        max_days: null,
+        timezone: "server-local",
+        to: null,
+      },
+      success: true,
+    };
+  }
+
+  if (!hasCustomFrom || !hasCustomTo) {
+    return { success: false, code: "invalid_analytics_date_range" };
+  }
+
+  const start = parseDateOnly(query.from, "start");
+  const end = parseDateOnly(query.to, "end");
+
+  if (!start || !end || start > end) {
+    return { success: false, code: "invalid_analytics_date_range" };
+  }
+
+  const days = daysBetweenInclusive(start, end);
+  if (days < 1 || days > MAX_ACTIVITY_PERIOD_DAYS) {
+    return { success: false, code: "invalid_analytics_date_range" };
+  }
+
+  return {
+    current: { end, start },
+    period: {
+      from: dateKey(start),
+      label: "Per?odo filtrado",
+      max_days: MAX_ACTIVITY_PERIOD_DAYS,
+      timezone: "server-local",
+      to: dateKey(end),
+    },
+    success: true,
+  };
+};
+
+const activityAreaId = (area: string) =>
+  normalizeComparableText(area)
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "") || "sem_area";
+
+const activityMatchesPeriod = (
+  item: AdminCommunityActivityItemDTO,
+  period: { end: Date | null; start: Date | null },
+) => {
+  if (!period.start || !period.end) return true;
+
+  return item.created_at >= period.start && item.created_at <= period.end;
+};
+
+const activityMatchesQuery = (
+  item: AdminCommunityActivityItemDTO,
+  query: { area: string; q: string; type: string },
+) => {
+  if (query.area !== "all" && activityAreaId(item.area) !== query.area) return false;
+  if (query.type !== "all" && item.action !== query.type) return false;
+  if (!query.q) return true;
 
   return [item.action, item.summary, item.reason, item.actor, item.area]
     .filter(Boolean)
-    .some((value) => value?.toLowerCase().includes(search));
+    .some((value) => normalizeComparableText(value).includes(normalizeComparableText(query.q)));
+};
+
+const activityFiltersFromActivities = (
+  activities: AdminCommunityActivityItemDTO[],
+): AdminCommunityActivitiesDTO["filters"] => {
+  const areaCounts = new Map<string, { count: number; label: string }>();
+  const typeCounts = new Map<string, { count: number; label: string }>();
+
+  for (const item of activities) {
+    const areaId = activityAreaId(item.area);
+    const currentArea = areaCounts.get(areaId) ?? { count: 0, label: item.area };
+    currentArea.count += 1;
+    areaCounts.set(areaId, currentArea);
+
+    const currentType = typeCounts.get(item.action) ?? { count: 0, label: item.summary };
+    currentType.count += 1;
+    typeCounts.set(item.action, currentType);
+  }
+
+  const areas: AdminCommunityActivitiesFilterOptionDTO[] = [...areaCounts.entries()]
+    .map(([id, option]) => ({ count: option.count, id, label: option.label }))
+    .sort((left, right) => left.label.localeCompare(right.label, "pt-BR"));
+  const types: AdminCommunityActivitiesFilterOptionDTO[] = [...typeCounts.entries()]
+    .map(([id, option]) => ({ count: option.count, id, label: option.label }))
+    .sort((left, right) => left.label.localeCompare(right.label, "pt-BR"));
+
+  return {
+    areas: [{ count: activities.length, id: "all", label: "Todas as ?reas" }, ...areas],
+    types: [{ count: activities.length, id: "all", label: "Todos os tipos" }, ...types],
+  };
 };
 
 const mentorDisplayName = (member: AdminCommunityMemberRecord) =>
@@ -2177,19 +2285,34 @@ export const listActivities = async (data: IAdminCommunityActivitiesDTO): Promis
   const page = normalizePage(data.q.page);
   const limit = normalizeLimit(data.q.limit);
   const search = normalizeSearch(data.q.q);
+  const area = data.q.area?.trim() || "all";
   const type = data.q.type ?? "all";
+  const period = resolveActivityPeriod({ from: data.q.from, to: data.q.to });
+  if (!period.success) return { status: 400, ...error(period.code, {}) };
+
   const activities = (await repository.listActivities(community.id))
     .map(mapActivity)
-    .filter((item) => type === "all" || item.action === type)
-    .filter((item) => activityMatchesSearch(item, search));
-  const paginated = paginate(activities, page, limit);
+    .filter((item) => activityMatchesPeriod(item, period.current));
+  const filters = activityFiltersFromActivities(activities);
+  const filteredActivities = activities.filter((item) =>
+    activityMatchesQuery(item, { area, q: search, type }),
+  );
+  const paginated = paginate(filteredActivities, page, limit);
   const payload: AdminCommunityActivitiesDTO = {
+    active_filters_count: [
+      area !== "all" ? area : "",
+      type !== "all" ? type : "",
+      search,
+      data.q.from && data.q.to ? "period" : "",
+    ].filter(Boolean).length,
     community: communitySummary(community),
     count: paginated.count,
     data: paginated.data,
+    filters,
     page: paginated.page,
     pages: paginated.pages,
     per_page: paginated.per_page,
+    period: period.period,
     source: "admin_activity_log",
   };
 

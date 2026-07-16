@@ -286,3 +286,13 @@ A decisao de moderacao na aba de comunidade adiciona duas acoes terminalmente au
 Consequencia: a triagem comunitaria fica consistente com a resolucao de denuncias de psicologos, sem criar tabela nova, migration, dependencia, mock ou endpoint paralelo. O trade-off e que um mesmo grupo pode aparecer em filtros diferentes se possuir denuncias terminais e pendentes no mesmo periodo; isso preserva a relacao completa dos denunciantes do alvo.
 
 Validacao desta atualizacao: `pnpm --dir backend check`, `pnpm --dir admin check`, `pnpm --dir backend build`, `pnpm --dir admin build`, `pnpm check`, smoke local da rota Admin de denuncias retornando 200 e smoke sem sessao Admin do endpoint de resolucao retornando 401.
+
+## Atualizacao 2026-07-16: filtros operacionais nas atividades da comunidade
+
+A aba **Atividades** do detalhe administrativo de comunidade passa a compartilhar o mesmo modelo operacional da aba **Atividades** do detalhe administrativo de psicologos: card de filtros por periodo, area, tipo de atividade e busca textual, seguido pela tabela auditavel.
+
+A decisao e calcular opcoes de **Area** e **Tipo de atividade** a partir do proprio `admin_activity_log` retornado para a comunidade, apos o recorte de periodo. O backend aceita `from`/`to` somente quando ambos sao enviados e limita o intervalo customizado a 365 dias, evitando consultas amplas acidentais sem remover a opcao **Todo historico registrado**.
+
+Consequencia: comunidades e psicologos usam o mesmo padrao visual e mental para auditoria de atividades. O contrato de activities da comunidade foi expandido com `filters`, `period` e `active_filters_count`, mantendo `source="admin_activity_log"` e sem nova tabela, migration, package, mock ou endpoint paralelo.
+
+Validacao desta atualizacao: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke local `GET http://127.0.0.1:3012/comunidades/relacionamentos-com-proposito?tab=atividades` retornando 200 em worktree isolada por alteracoes concorrentes na arvore principal.

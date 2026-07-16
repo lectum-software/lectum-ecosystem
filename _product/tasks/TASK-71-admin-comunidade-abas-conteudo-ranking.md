@@ -357,3 +357,14 @@ Regras:
 - Builder/Quick Copy nao esta exposto como ferramenta callable no ambiente; a referencia visual usada foi a captura enviada pelo usuario, `_product/proto/admin/Comunidades/Comunidades - Detalhes.png` e o padrao local da aba **Denuncias** de psicologos.
 - ADR atualizado: `adrs/0264-admin-comunidade-abas-conteudo-ranking.md`.
 - Validacao executada: `pnpm --dir backend check`, `pnpm --dir admin check`, `pnpm --dir backend build`, `pnpm --dir admin build`, `pnpm check`, smoke HTTP local `GET http://localhost:3002/comunidades/relacionamentos-com-proposito?tab=denuncias` retornando 200 e smoke HTTP sem sessao Admin em `POST /api/admin/private/communities/relacionamentos-com-proposito/reports/post/smoke/resolve` retornando 401.
+
+## Ajuste complementar 2026-07-16 - Bloco de filtros na aba Atividades da comunidade
+
+- Pedido do usuario: na aba **Atividades** do detalhe administrativo de comunidade, adicionar o mesmo bloco de acoes/filtros usado na aba **Atividades** do detalhe administrativo de psicologos.
+- A UI Admin agora renderiza, antes da tabela, filtros mobile-first por **Periodo**, **Area**, **Tipo de atividade** e **Buscar**, com o mesmo layout flex/responsivo e campos **De/Ate** quando o periodo personalizado e selecionado.
+- O endpoint real `GET /api/admin/private/communities/:id/activities` passou a aceitar `area`, `type`, `from`, `to` e `q`, retornando tambem `filters`, `period` e `active_filters_count` derivados de `admin_activity_log` real, sem mock ou endpoint paralelo.
+- O filtro de periodo usa intervalo maximo de 365 dias quando datas customizadas sao enviadas; sem datas, a resposta permanece em **Todo historico registrado**.
+- Nao houve package novo, schema Prisma/migration, seed ou alteracao destrutiva de dados.
+- Builder/Quick Copy nao esta exposto como ferramenta callable no ambiente; a referencia visual usada foi a captura enviada pelo usuario e o padrao local da aba **Atividades** de psicologos.
+- ADR atualizado: `adrs/0264-admin-comunidade-abas-conteudo-ranking.md`.
+- Validacao executada em worktree isolada por alteracoes concorrentes na arvore principal: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke HTTP local `GET http://127.0.0.1:3012/comunidades/relacionamentos-com-proposito?tab=atividades` retornando 200.

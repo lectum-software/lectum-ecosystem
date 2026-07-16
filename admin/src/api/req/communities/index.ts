@@ -581,6 +581,9 @@ export type AdminCommunityResolveReportsResult = {
 };
 
 export type AdminCommunityActivitiesQuery = AdminCommunityPaginationQuery & {
+  area?: string;
+  from?: string;
+  to?: string;
   type?: string;
 };
 
@@ -596,12 +599,32 @@ export type AdminCommunityActivityItem = {
 };
 
 export type AdminCommunityActivities = {
+  active_filters_count: number;
   community: Pick<AdminCommunityIdentity, "id" | "name" | "slug">;
   count: number;
   data: AdminCommunityActivityItem[];
+  filters: {
+    areas: {
+      count: number;
+      id: string;
+      label: string;
+    }[];
+    types: {
+      count: number;
+      id: string;
+      label: string;
+    }[];
+  };
   page: number;
   pages: number;
   per_page: number;
+  period: {
+    from: string | null;
+    label: string;
+    max_days: number | null;
+    timezone: "server-local";
+    to: string | null;
+  };
   source: "admin_activity_log";
 };
 

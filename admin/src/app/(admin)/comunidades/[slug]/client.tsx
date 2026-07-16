@@ -372,6 +372,27 @@ const isValidReportRange = (range: ReportDateRange) => {
 
   return contentDateFromInput(range.from) <= contentDateFromInput(range.to);
 };
+type ActivityPeriodValue = "30d" | "90d" | "180d" | "all" | "custom";
+const resolveCommunityActivityPeriod = (
+  preset: ActivityPeriodValue,
+  customFrom: string,
+  customTo: string,
+) => {
+  if (preset === "all") return {};
+  if (preset === "custom") {
+    return customFrom && customTo ? { from: customFrom, to: customTo } : {};
+  }
+
+  const days = preset === "30d" ? 30 : preset === "180d" ? 180 : 90;
+  const to = new Date();
+  const from = new Date();
+  from.setDate(to.getDate() - (days - 1));
+
+  return {
+    from: toDateInputValue(from),
+    to: toDateInputValue(to),
+  };
+};
 const formatCountLabel = (value: number, singular: string, plural: string) =>
   `${numberFormatter.format(value)} ${value === 1 ? singular : plural}`;
 const formatChange = (value: number | null) => {
@@ -3265,32 +3286,132 @@ const ReportsTab = ({ slug }: { slug: string }) => {
 };
 
 const ActivitiesTab = ({ slug }: { slug: string }) => {
-  const [query, setQuery] = useState<AdminCommunityActivitiesQuery>({
-    limit: 8,
-    page: 1,
-    q: "",
-  });
-  const result = useAdminCommunityActivities(slug, query);
-  const updateQuery = (patch: Partial<AdminCommunityActivitiesQuery>) =>
-    setQuery((current) => ({ ...current, ...patch, page: patch.page ?? 1 }));
+  const [period, setPeriod] = useState<ActivityPeriodValue>("all");
+  const [customFrom, setCustomFrom] = useState("");
+  const [customTo, setCustomTo] = useState("");
+  const [area, setArea] = useState("all");
+  const [type, setType] = useState("all");
+  const [q, setQ] = useState("");
+  const [page, setPage] = useState(1);
+  const periodRange = useMemo(
+    () => resolveCommunityActivityPeriod(period, customFrom, customTo),
+    [customFrom, customTo, period],
+  );
+  const queryInput = useMemo<AdminCommunityActivitiesQuery>(
+    () => ({
+      ...periodRange,
+      area,
+      limit: 8,
+      page,
+      q: q.trim() || undefined,
+      type,
+    }),
+    [area, page, periodRange, q, type],
+  );
+  const result = useAdminCommunityActivities(slug, queryInput);
   const activities = result.data;
   const activityItems = activities?.data ?? [];
+  const areaOptions = activities?.filters.areas ?? [
+    { count: 0, id: "all", label: "Todas as ?reas" },
+  ];
+  const typeOptions = activities?.filters.types ?? [
+    { count: 0, id: "all", label: "Todos os tipos" },
+  ];
 
   return (
     <div className="space-y-5" data-community-detail-tab="atividades">
       <section className={cn(cardClass, "p-4")}>
-        <label className="block text-sm font-black text-muted">
-          Buscar
-          <span className="mt-2 flex h-11 items-center rounded-control border border-border bg-surface px-3">
-            <Search aria-hidden className="h-4 w-4 shrink-0 text-muted" />
-            <input
-              className="h-full min-w-0 flex-1 bg-transparent px-2 text-sm font-bold text-foreground outline-none placeholder:text-muted"
-              onChange={(event) => updateQuery({ q: event.target.value })}
-              placeholder="Buscar por descrição..."
-              value={query.q ?? ""}
-            />
-          </span>
-        </label>
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-end">
+          <CommunityReportFilterSelect
+            className="flex-1"
+            label="Per?odo"
+            onChange={(nextValue) => {
+              setPeriod(nextValue as ActivityPeriodValue);
+              setPage(1);
+            }}
+            value={period}
+          >
+            <option value="all">Todo hist?rico registrado</option>
+            <option value="30d">?ltimos 30 dias</option>
+            <option value="90d">?ltimos 90 dias</option>
+            <option value="180d">?ltimos 180 dias</option>
+            <option value="custom">Personalizado</option>
+          </CommunityReportFilterSelect>
+          <CommunityReportFilterSelect
+            className="flex-1"
+            label="?rea"
+            onChange={(nextValue) => {
+              setArea(nextValue);
+              setPage(1);
+            }}
+            value={area}
+          >
+            {areaOptions.map((option) => (
+              <option key={option.id} value={option.id}>
+                {option.label} ({numberFormatter.format(option.count)})
+              </option>
+            ))}
+          </CommunityReportFilterSelect>
+          <CommunityReportFilterSelect
+            className="flex-1"
+            label="Tipo de atividade"
+            onChange={(nextValue) => {
+              setType(nextValue);
+              setPage(1);
+            }}
+            value={type}
+          >
+            {typeOptions.map((option) => (
+              <option key={option.id} value={option.id}>
+                {option.label} ({numberFormatter.format(option.count)})
+              </option>
+            ))}
+          </CommunityReportFilterSelect>
+          <label className="block flex-1 text-sm font-black text-muted">
+            Buscar
+            <span className="mt-2 flex h-11 items-center rounded-control border border-border bg-surface px-3">
+              <Search aria-hidden className="h-4 w-4 shrink-0 text-muted" />
+              <input
+                className="h-full min-w-0 flex-1 bg-transparent px-2 text-sm font-bold text-foreground outline-none placeholder:text-muted"
+                onChange={(event) => {
+                  setQ(event.target.value);
+                  setPage(1);
+                }}
+                placeholder="Buscar por descri??o..."
+                value={q}
+              />
+            </span>
+          </label>
+        </div>
+
+        {period === "custom" ? (
+          <div className="mt-3 grid gap-3 sm:grid-cols-2">
+            <label className="block text-sm font-black text-muted">
+              De
+              <input
+                className="mt-2 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground"
+                onChange={(event) => {
+                  setCustomFrom(event.target.value);
+                  setPage(1);
+                }}
+                type="date"
+                value={customFrom}
+              />
+            </label>
+            <label className="block text-sm font-black text-muted">
+              At?
+              <input
+                className="mt-2 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground"
+                onChange={(event) => {
+                  setCustomTo(event.target.value);
+                  setPage(1);
+                }}
+                type="date"
+                value={customTo}
+              />
+            </label>
+          </div>
+        ) : null}
       </section>
 
       <section className={cn(cardClass, "overflow-hidden")}>
@@ -3326,9 +3447,9 @@ const ActivitiesTab = ({ slug }: { slug: string }) => {
               <thead className="border-b border-border text-xs text-muted">
                 <tr>
                   <th className="py-3 pr-3 pl-4 font-black">Data</th>
-                  <th className="px-3 py-3 font-black">Ação</th>
-                  <th className="px-3 py-3 font-black">Descrição</th>
-                  <th className="py-3 pr-4 pl-3 font-black">Usuário</th>
+                  <th className="px-3 py-3 font-black">A??o</th>
+                  <th className="px-3 py-3 font-black">Descri??o</th>
+                  <th className="py-3 pr-4 pl-3 font-black">Usu?rio</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
@@ -3345,12 +3466,12 @@ const ActivitiesTab = ({ slug }: { slug: string }) => {
                       <span
                         className={cn("block", activity.reason ? "mt-1 text-xs font-bold" : "")}
                       >
-                        Área: {activity.area} · Origem: Painel administrativo
+                        ?rea: {activity.area} ? Origem: Painel administrativo
                       </span>
                     </td>
                     <td className="py-3 pr-4 pl-3">
                       <span className="block font-black text-foreground">
-                        {activity.actor || "Não informado"}
+                        {activity.actor || "N?o informado"}
                       </span>
                       <span className="mt-1 block text-xs font-bold text-muted">Admin</span>
                     </td>
@@ -3363,18 +3484,13 @@ const ActivitiesTab = ({ slug }: { slug: string }) => {
 
         {activities ? (
           <div className="border-t border-border p-4">
-            <PaginationControls
-              page={activities.page}
-              pages={activities.pages}
-              setPage={(page) => updateQuery({ page })}
-            />
+            <PaginationControls page={activities.page} pages={activities.pages} setPage={setPage} />
           </div>
         ) : null}
       </section>
     </div>
   );
 };
-
 const LoadingState = () => (
   <div className="space-y-5">
     <div className={cn(cardClass, "h-48 animate-pulse bg-surface-muted")} />
