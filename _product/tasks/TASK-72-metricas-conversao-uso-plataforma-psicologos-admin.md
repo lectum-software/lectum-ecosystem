@@ -830,3 +830,13 @@ Regras de cálculo:
 - O ajuste e exclusivamente textual/visual, sem alterar dados, contrato de API, tracking first-party, schema Prisma/migration ou packages.
 - Builder/Quick Copy nao esta exposto como ferramenta no ambiente; a referencia visual usada foi a captura enviada pelo usuario.
 - Validacao executada: `pnpm --dir frontend check`, `pnpm --dir frontend build` e smoke HTTP local `GET http://localhost:3000/app/professional/analytics` retornando 307 pelo guard privado.
+
+## Ajuste complementar 2026-07-16 - Layout dos blocos de estatisticas do psicologo
+
+- Pedido do usuario: dentro de **Detalhes do psicologo > Estatisticas**, alinhar os blocos **Estatisticas de negocio** e **Estatisticas de comunidade** ao layout de **Estatisticas de pessoas** do painel de comunidade.
+- A UI Admin passou a renderizar titulo, descricao, indicador **Atualizando** e filtros diretamente dentro do card de cada bloco, com filtros alinhados a direita em telas amplas e empilhados no mobile.
+- Os contadores clicaveis e os graficos de serie temporal permanecem dentro do mesmo card, com grid responsivo mobile-first semelhante ao bloco de comunidade.
+- **Estatisticas de comunidade** manteve o filtro real de comunidade junto dos filtros de periodo, sem alterar query, endpoint, contrato ou fontes de dados.
+- Nao houve endpoint novo, mock, package, schema Prisma/migration ou alteracao de persistencia.
+- Builder/Quick Copy nao esta exposto como ferramenta callable no ambiente; a referencia visual usada foi a captura enviada pelo usuario e o layout atual de **Estatisticas de pessoas** no painel de comunidade.
+- Validacao executada: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke HTTP local `GET http://localhost:3002/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=estatisticas` retornando 200.

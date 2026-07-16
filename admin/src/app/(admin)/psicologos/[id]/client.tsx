@@ -1085,7 +1085,9 @@ const isValidStatisticsRange = (range: StatisticsCustomRange) => {
 };
 
 type StatisticsPeriodControlsProps = {
+  className?: string;
   idPrefix: string;
+  leadingControl?: ReactNode;
   onDateControlsBlur: (event: FocusEvent<HTMLDivElement>) => void;
   onDateChange: (field: keyof StatisticsCustomRange, value: string) => void;
   onPeriodChange: (period: StatisticsPeriodPreset) => void;
@@ -1095,7 +1097,9 @@ type StatisticsPeriodControlsProps = {
 };
 
 const StatisticsPeriodControls = ({
+  className,
   idPrefix,
+  leadingControl,
   onDateControlsBlur,
   onDateChange,
   onPeriodChange,
@@ -1103,49 +1107,50 @@ const StatisticsPeriodControls = ({
   range,
   rangeError,
 }: StatisticsPeriodControlsProps) => (
-  <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
-    <label className="grid gap-1 text-xs font-black text-muted" htmlFor={`${idPrefix}-period`}>
-      Período
-      <span className="relative">
-        <select
-          className="h-10 min-w-[170px] appearance-none rounded-2xl border border-border bg-surface py-0 pl-3 pr-11 text-sm font-black text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
-          id={`${idPrefix}-period`}
-          onChange={(event) => onPeriodChange(event.target.value as StatisticsPeriodPreset)}
-          value={period}
-        >
-          {period === "custom" ? (
-            <option disabled hidden value="custom">
-              Personalizado
-            </option>
-          ) : null}
-          {STATISTICS_PERIOD_OPTIONS.map((option) => (
-            <option key={option.id} value={option.id}>
-              {option.label}
-            </option>
-          ))}
-        </select>
-        <ChevronDown
-          aria-hidden
-          className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground"
-        />
-      </span>
-    </label>
+  <div className={cn("w-full lg:w-[min(720px,52vw)]", className)} onBlur={onDateControlsBlur}>
+    <div className={cn("grid gap-2 sm:grid-cols-3", leadingControl && "lg:grid-cols-4")}>
+      {leadingControl}
+      <label className="block text-xs font-black text-muted" htmlFor={`${idPrefix}-period`}>
+        Período
+        <span className="relative mt-2 block">
+          <select
+            className="h-11 w-full appearance-none rounded-control border border-border bg-surface py-0 pl-3 pr-11 text-sm font-black text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+            id={`${idPrefix}-period`}
+            onChange={(event) => onPeriodChange(event.target.value as StatisticsPeriodPreset)}
+            value={period}
+          >
+            {period === "custom" ? (
+              <option disabled hidden value="custom">
+                Personalizado
+              </option>
+            ) : null}
+            {STATISTICS_PERIOD_OPTIONS.map((option) => (
+              <option key={option.id} value={option.id}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+          <ChevronDown
+            aria-hidden
+            className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground"
+          />
+        </span>
+      </label>
 
-    <div className="grid gap-2 sm:grid-cols-2" onBlur={onDateControlsBlur}>
-      <label className="grid gap-1 text-xs font-black text-muted" htmlFor={`${idPrefix}-from`}>
+      <label className="block text-xs font-black text-muted" htmlFor={`${idPrefix}-from`}>
         De
         <input
-          className="h-10 rounded-2xl border border-border bg-surface px-3 text-sm font-black text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+          className="mt-2 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-black text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
           id={`${idPrefix}-from`}
           onChange={(event) => onDateChange("from", event.target.value)}
           type="date"
           value={range.from ?? ""}
         />
       </label>
-      <label className="grid gap-1 text-xs font-black text-muted" htmlFor={`${idPrefix}-to`}>
+      <label className="block text-xs font-black text-muted" htmlFor={`${idPrefix}-to`}>
         Até
         <input
-          className="h-10 rounded-2xl border border-border bg-surface px-3 text-sm font-black text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+          className="mt-2 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-black text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
           id={`${idPrefix}-to`}
           onChange={(event) => onDateChange("to", event.target.value)}
           type="date"
@@ -1153,10 +1158,11 @@ const StatisticsPeriodControls = ({
         />
       </label>
     </div>
-    {rangeError ? <p className="max-w-md text-xs font-bold text-danger">{rangeError}</p> : null}
+    {rangeError ? (
+      <p className="mt-2 max-w-md text-xs font-bold text-danger">{rangeError}</p>
+    ) : null}
   </div>
 );
-
 const formatDateTime = (value?: string | null) => {
   if (!value) return "Não informado";
 
@@ -3421,30 +3427,35 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: st
 
   return (
     <div className="space-y-5" data-psychologist-detail-tab="estatisticas">
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
-        <div className="flex flex-wrap items-center gap-2">
-          <h2 className="text-xl font-black text-foreground">Estatísticas de negócio</h2>
-          {isBusinessRefreshing ? (
-            <span className="inline-flex items-center gap-1 rounded-full bg-primary-soft px-2.5 py-1 text-xs font-black text-primary">
-              <Loader2 aria-hidden className="h-3.5 w-3.5 animate-spin" />
-              Atualizando
-            </span>
-          ) : null}
-        </div>
-        <StatisticsPeriodControls
-          idPrefix="business-statistics"
-          onDateControlsBlur={handleBusinessStatisticsDateControlsBlur}
-          onDateChange={handleBusinessStatisticsDateChange}
-          onPeriodChange={handleBusinessStatisticsPeriodChange}
-          period={businessStatisticsSelectedPeriod}
-          range={businessStatisticsDraftRange}
-          rangeError={businessStatisticsRangeError}
-        />
-      </div>
-
       <section aria-busy={isBusinessRefreshing} className="grid gap-5">
         <CardShell className="min-w-0 p-5">
-          <fieldset className="grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-5">
+          <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-start">
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-2">
+                <h2 className="text-lg font-black text-foreground">Estatísticas de negócio</h2>
+                {isBusinessRefreshing ? (
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary-soft px-2.5 py-1 text-[11px] font-black text-primary">
+                    <Loader2 aria-hidden className="h-3.5 w-3.5 animate-spin" />
+                    Atualizando
+                  </span>
+                ) : null}
+              </div>
+              <p className="mt-1 text-xs font-bold leading-5 text-muted">
+                Clique nos contadores para exibir ou esconder a curva correspondente no gráfico.
+              </p>
+            </div>
+            <StatisticsPeriodControls
+              idPrefix="business-statistics"
+              onDateControlsBlur={handleBusinessStatisticsDateControlsBlur}
+              onDateChange={handleBusinessStatisticsDateChange}
+              onPeriodChange={handleBusinessStatisticsPeriodChange}
+              period={businessStatisticsSelectedPeriod}
+              range={businessStatisticsDraftRange}
+              rangeError={businessStatisticsRangeError}
+            />
+          </div>
+
+          <fieldset className="mt-5 grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-5">
             <legend className="sr-only">Contadores exibidos no gráfico</legend>
             {businessCards.map(({ config, metric }) => (
               <StatisticsMetricToggleCard
@@ -3470,63 +3481,64 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: st
         <PsychologistPlatformUsageCard statistics={businessStatistics} />
       </section>
 
-      <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-start">
-        <div className="relative min-h-16 min-w-0">
-          <h2 className="text-xl font-black text-foreground">Estatísticas de comunidade</h2>
-          <span
-            aria-hidden={!isCommunityRefreshing}
-            className={cn(
-              "absolute left-0 top-8 inline-flex items-center gap-1 rounded-full bg-primary-soft px-2.5 py-1 text-xs font-black text-primary transition-opacity duration-150",
-              isCommunityRefreshing ? "opacity-100" : "pointer-events-none opacity-0",
-            )}
-          >
-            <Loader2
-              aria-hidden
-              className={cn("h-3.5 w-3.5", isCommunityRefreshing ? "animate-spin" : "")}
-            />
-            Atualizando
-          </span>
-        </div>
-        <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-end lg:flex-nowrap lg:justify-end">
-          <label
-            className="grid gap-1 text-xs font-black text-muted"
-            htmlFor="community-statistics-community"
-          >
-            Comunidade
-            <span className="relative">
-              <select
-                className="h-10 min-w-[210px] appearance-none rounded-2xl border border-border bg-surface py-0 pl-3 pr-11 text-sm font-black text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
-                id="community-statistics-community"
-                onChange={(event) => setCommunityStatisticsSelectedCommunity(event.target.value)}
-                value={communityStatisticsSelectedCommunity}
-              >
-                {communityFilterOptions.map((option) => (
-                  <option key={option.id} value={option.id}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-              <ChevronDown
-                aria-hidden
-                className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground"
-              />
-            </span>
-          </label>
-          <StatisticsPeriodControls
-            idPrefix="community-statistics"
-            onDateControlsBlur={handleCommunityStatisticsDateControlsBlur}
-            onDateChange={handleCommunityStatisticsDateChange}
-            onPeriodChange={handleCommunityStatisticsPeriodChange}
-            period={communityStatisticsSelectedPeriod}
-            range={communityStatisticsDraftRange}
-            rangeError={communityStatisticsRangeError}
-          />
-        </div>
-      </div>
-
       <section aria-busy={isCommunityRefreshing} className="grid gap-5">
-        <CardShell className="p-5">
-          <fieldset className="grid min-w-0 grid-cols-8 gap-2">
+        <CardShell className="min-w-0 p-5">
+          <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-start">
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-2">
+                <h2 className="text-lg font-black text-foreground">Estatísticas de comunidade</h2>
+                {isCommunityRefreshing ? (
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary-soft px-2.5 py-1 text-[11px] font-black text-primary">
+                    <Loader2 aria-hidden className="h-3.5 w-3.5 animate-spin" />
+                    Atualizando
+                  </span>
+                ) : null}
+              </div>
+              <p className="mt-1 text-xs font-bold leading-5 text-muted">
+                Clique nos contadores para exibir ou esconder a curva correspondente no gráfico.
+              </p>
+            </div>
+            <StatisticsPeriodControls
+              className="xl:w-[min(920px,62vw)]"
+              idPrefix="community-statistics"
+              leadingControl={
+                <label
+                  className="block text-xs font-black text-muted"
+                  htmlFor="community-statistics-community"
+                >
+                  Comunidade
+                  <span className="relative mt-2 block">
+                    <select
+                      className="h-11 w-full appearance-none rounded-control border border-border bg-surface py-0 pl-3 pr-11 text-sm font-black text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+                      id="community-statistics-community"
+                      onChange={(event) =>
+                        setCommunityStatisticsSelectedCommunity(event.target.value)
+                      }
+                      value={communityStatisticsSelectedCommunity}
+                    >
+                      {communityFilterOptions.map((option) => (
+                        <option key={option.id} value={option.id}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                    <ChevronDown
+                      aria-hidden
+                      className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground"
+                    />
+                  </span>
+                </label>
+              }
+              onDateControlsBlur={handleCommunityStatisticsDateControlsBlur}
+              onDateChange={handleCommunityStatisticsDateChange}
+              onPeriodChange={handleCommunityStatisticsPeriodChange}
+              period={communityStatisticsSelectedPeriod}
+              range={communityStatisticsDraftRange}
+              rangeError={communityStatisticsRangeError}
+            />
+          </div>
+
+          <fieldset className="mt-5 grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-4 2xl:grid-cols-8">
             <legend className="sr-only">Contadores de comunidade</legend>
             {communityCards.map(({ config, metric }) => (
               <StatisticsMetricToggleCard

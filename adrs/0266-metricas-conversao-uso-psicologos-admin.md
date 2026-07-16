@@ -177,3 +177,13 @@ No analytics privado do psicologo, a tabela desktop **Origem do trafego** deve u
 A decisao reduz largura e ruido visual no cabecalho da tabela sem alterar a fonte real (`profile_view_event`), os valores exibidos, o contrato de API, o tracking first-party, o schema Prisma ou packages.
 
 Validacao complementar 2026-07-16: `pnpm --dir frontend check`, `pnpm --dir frontend build` e smoke HTTP local `GET http://localhost:3000/app/professional/analytics` retornando 307 pelo guard privado.
+
+## Complemento 2026-07-16 - Layout dos blocos de estatisticas no detalhe Admin
+
+A aba **Estatisticas** do detalhe administrativo do psicologo passa a usar, nos blocos **Estatisticas de negocio** e **Estatisticas de comunidade**, a mesma composicao visual consolidada no detalhe de comunidade: card unico com cabecalho interno, descricao curta, filtros no lado direito em desktop, contadores clicaveis e grafico de serie temporal no mesmo bloco.
+
+A decisao e exclusivamente de hierarquia e consistencia visual. As consultas React Query, os endpoints `GET /api/admin/private/psychologists/:id/statistics`, os filtros de periodo/comunidade e as fontes first-party reais permanecem inalterados. O filtro de comunidade continua disponivel apenas no bloco de comunidade e fica agrupado aos filtros de periodo.
+
+Consequencia: a leitura do Admin fica consistente entre estatisticas de comunidades e de psicologos, com melhor comportamento mobile-first e sem criar endpoint paralelo, novo contrato, schema Prisma, migration, package, mock ou persistencia adicional.
+
+Validacao complementar 2026-07-16: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke HTTP local `GET http://localhost:3002/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=estatisticas` retornando 200.
