@@ -3345,81 +3345,83 @@ const CommunityReportResolveDialog = ({
 
   return (
     <div
-      className="fixed inset-0 z-50 grid place-items-center bg-foreground/40 p-4"
+      className="fixed inset-0 z-50 flex items-end justify-center overflow-y-auto bg-foreground/40 p-0 sm:items-center sm:p-4"
       role="presentation"
     >
       <FormProvider {...form}>
         <form
           aria-modal="true"
-          className="w-full max-w-xl rounded-[28px] border border-border bg-surface p-5 shadow-xl"
+          className="flex max-h-[calc(100dvh-0.75rem)] w-full max-w-xl flex-col overflow-hidden rounded-t-[28px] border border-border bg-surface shadow-xl sm:max-h-[92dvh] sm:rounded-[28px]"
           noValidate
           onSubmit={form.handleSubmit(onSubmit)}
           role="dialog"
         >
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <p className="text-xs font-black uppercase tracking-wide text-primary">
-                {isReview ? "Revisão de decisão" : "Resolucao de denuncias"}
+          <div className="min-h-0 flex-1 overflow-y-auto p-5">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="text-xs font-black uppercase tracking-wide text-primary">
+                  {isReview ? "Revisão de decisão" : "Resolucao de denuncias"}
+                </p>
+                <h3 className="mt-1 text-xl font-black text-foreground">
+                  {isReview
+                    ? "Revisar decisão encerrada"
+                    : `Marcar como ${
+                        state.resolution === "dismissed" ? "improcedente" : "procedente"
+                      }`}
+                </h3>
+                <p className="mt-2 text-sm leading-6 text-muted">
+                  {isReview
+                    ? "A revisão altera o status das denúncias deste conteúdo e registra auditoria sem apagar a decisão anterior. Conteúdo removido não será restaurado automaticamente."
+                    : "A decisao atualiza todas as denuncias pendentes deste mesmo conteudo e registra auditoria. O conteudo nao sera removido por esta acao."}
+                </p>
+              </div>
+              <button
+                aria-label="Fechar"
+                className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-border text-muted"
+                onClick={onClose}
+                type="button"
+              >
+                <X aria-hidden className="h-4 w-4" />
+              </button>
+            </div>
+
+            <div className="mt-4 rounded-2xl bg-surface-muted p-3 text-sm font-bold text-muted">
+              {state.report.content.title ? (
+                <p className="text-foreground">{state.report.content.title}</p>
+              ) : null}
+              <p className="mt-1 line-clamp-3">
+                {state.report.content.excerpt || "Conteudo sem texto."}
               </p>
-              <h3 className="mt-1 text-xl font-black text-foreground">
-                {isReview
-                  ? "Revisar decisão encerrada"
-                  : `Marcar como ${
-                      state.resolution === "dismissed" ? "improcedente" : "procedente"
-                    }`}
-              </h3>
-              <p className="mt-2 text-sm leading-6 text-muted">
-                {isReview
-                  ? "A revisão altera o status das denúncias deste conteúdo e registra auditoria sem apagar a decisão anterior. Conteúdo removido não será restaurado automaticamente."
-                  : "A decisao atualiza todas as denuncias pendentes deste mesmo conteudo e registra auditoria. O conteudo nao sera removido por esta acao."}
+              <p className="mt-2 text-xs">
+                {numberFormatter.format(state.report.report_count)} denuncia(s) recebida(s)
               </p>
             </div>
-            <button
-              aria-label="Fechar"
-              className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-border text-muted"
-              onClick={onClose}
-              type="button"
-            >
-              <X aria-hidden className="h-4 w-4" />
-            </button>
-          </div>
 
-          <div className="mt-4 rounded-2xl bg-surface-muted p-3 text-sm font-bold text-muted">
-            {state.report.content.title ? (
-              <p className="text-foreground">{state.report.content.title}</p>
-            ) : null}
-            <p className="mt-1 line-clamp-3">
-              {state.report.content.excerpt || "Conteudo sem texto."}
-            </p>
-            <p className="mt-2 text-xs">
-              {numberFormatter.format(state.report.report_count)} denuncia(s) recebida(s)
-            </p>
-          </div>
-
-          <div className="mt-4 grid gap-3">
-            {isReview ? (
-              <SelectController<CommunityReportResolveFormValues>
-                label="Novo status"
-                name="resolution"
-                options={reviewResolutionOptions}
+            <div className="mt-4 grid gap-3">
+              {isReview ? (
+                <SelectController<CommunityReportResolveFormValues>
+                  label="Novo status"
+                  name="resolution"
+                  options={reviewResolutionOptions}
+                  required
+                />
+              ) : null}
+              <TextareaController<CommunityReportResolveFormValues>
+                label="Motivo interno obrigatorio"
+                name="reason"
+                required
+                rows={3}
+              />
+              <InputController<CommunityReportResolveFormValues>
+                label="Confirmacao forte"
+                name="confirmation"
+                placeholder={expectedConfirmation}
                 required
               />
-            ) : null}
-            <TextareaController<CommunityReportResolveFormValues>
-              label="Motivo interno obrigatorio"
-              name="reason"
-              required
-              rows={3}
-            />
-            <InputController<CommunityReportResolveFormValues>
-              label="Confirmacao forte"
-              name="confirmation"
-              placeholder={expectedConfirmation}
-              required
-            />
+            </div>
           </div>
 
-          <div className="mt-5 flex flex-col gap-2 sm:flex-row sm:justify-end">
+          <div className="flex shrink-0 flex-col gap-2 border-t border-border/70 bg-surface p-4 sm:flex-row sm:justify-end">
             <button
               className="h-10 rounded-control border border-border bg-surface px-4 text-xs font-black text-foreground"
               onClick={onClose}
