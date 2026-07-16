@@ -4895,7 +4895,7 @@ const PsychologistReportMedia = ({ report }: { report: AdminPsychologistReportIt
 
 const PsychologistReportReporterHistory = ({ report }: { report: AdminPsychologistReportItem }) => (
   <section className="mt-5 border-t border-border/70 pt-4">
-    <h4 className="text-sm font-black text-foreground">Histórico de denunciantes</h4>
+    <h4 className="text-sm font-black text-foreground">Histórico de denúncias</h4>
     <div className="mt-3 divide-y divide-border/70">
       <article
         className="py-2 text-sm"

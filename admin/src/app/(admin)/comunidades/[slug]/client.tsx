@@ -3128,7 +3128,7 @@ const CommunityReportContentAuthor = ({ report }: { report: AdminCommunityReport
 
 const CommunityReportReporterHistory = ({ report }: { report: AdminCommunityReportItem }) => (
   <section className="mt-5 border-t border-border/70 pt-5">
-    <h4 className="text-sm font-black text-foreground">Histórico de denunciantes</h4>
+    <h4 className="text-sm font-black text-foreground">Histórico de denúncias</h4>
 
     <div className="mt-3 divide-y divide-border/70">
       {report.reporters.map((reporter) => (
