@@ -28,6 +28,12 @@ import {
 const DEFAULT_PERIOD_DAYS = 30;
 const MAX_PERIOD_DAYS = 3660;
 const MS_PER_DAY = 86_400_000;
+type AdminPsychologistPublicationsSort = NonNullable<AdminPsychologistPublicationsQuery["sort"]>;
+const PSYCHOLOGIST_PUBLICATIONS_SORTS = new Set<AdminPsychologistPublicationsSort>([
+  "engagement",
+  "oldest",
+  "recent",
+]);
 
 const pad = (value: number) => String(value).padStart(2, "0");
 const toDateKey = (date: Date) =>
@@ -1145,9 +1151,43 @@ const normalizePublicationQuery = (query: AdminPsychologistPublicationsQuery = {
   page: Math.max(Number(query.page || 1), 1),
   period: query.period,
   q: query.q?.trim() || "",
+  sort: query.sort && PSYCHOLOGIST_PUBLICATIONS_SORTS.has(query.sort) ? query.sort : "engagement",
   to: query.to,
   type: query.type === "post" || query.type === "reply" ? query.type : "all",
 });
+
+const publicationEngagementScore = (item: AdminPsychologistPublicationItem) =>
+  (item.metrics.views.value ?? 0) +
+  (item.metrics.upvotes.value ?? 0) +
+  (item.metrics.downvotes.value ?? 0) +
+  (item.metrics.comments.value ?? 0) +
+  (item.metrics.saves.value ?? 0) +
+  (item.metrics.shares.value ?? 0) +
+  (item.metrics.whatsapp_clicks.value ?? 0);
+
+const comparePublicationsByRecent = (
+  left: AdminPsychologistPublicationItem,
+  right: AdminPsychologistPublicationItem,
+) => right.created_at.getTime() - left.created_at.getTime() || left.id.localeCompare(right.id);
+
+const sortPublications = (
+  items: AdminPsychologistPublicationItem[],
+  sort: AdminPsychologistPublicationsSort,
+) =>
+  [...items].sort((left, right) => {
+    if (sort === "oldest") {
+      return (
+        left.created_at.getTime() - right.created_at.getTime() || left.id.localeCompare(right.id)
+      );
+    }
+
+    if (sort === "recent") return comparePublicationsByRecent(left, right);
+
+    return (
+      publicationEngagementScore(right) - publicationEngagementScore(left) ||
+      comparePublicationsByRecent(left, right)
+    );
+  });
 
 const filterPublication = (
   item: AdminPsychologistPublicationItem,
@@ -1399,9 +1439,12 @@ export const showAdminPsychologistPublications = async (
         replyWhatsappClicksByReply,
       }),
     ),
-  ].sort((left, right) => right.created_at.getTime() - left.created_at.getTime());
+  ];
 
-  const filtered = allItems.filter((item) => filterPublication(item, query));
+  const filtered = sortPublications(
+    allItems.filter((item) => filterPublication(item, query)),
+    query.sort,
+  );
   const count = filtered.length;
   const pages = Math.max(1, Math.ceil(count / query.limit));
   const page = Math.min(query.page, pages);
@@ -1485,6 +1528,7 @@ export const showAdminPsychologistPublications = async (
       query.community !== "all" ? query.community : "",
       query.type !== "all" ? query.type : "",
       (query.period && query.period !== "all") || (query.from && query.to) ? "period" : "",
+      query.sort !== "engagement" ? "sort" : "",
     ].filter(Boolean).length,
     count,
     data: dataSlice,

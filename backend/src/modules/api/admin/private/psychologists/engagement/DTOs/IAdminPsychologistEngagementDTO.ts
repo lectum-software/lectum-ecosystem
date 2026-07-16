@@ -12,6 +12,7 @@ export type AdminPsychologistPublicationsQuery = AdminPsychologistEngagementQuer
   limit?: number;
   page?: number;
   q?: string;
+  sort?: "engagement" | "oldest" | "recent";
   type?: "all" | "post" | "reply";
 };
 

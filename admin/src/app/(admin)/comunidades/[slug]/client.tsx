@@ -3083,8 +3083,48 @@ const CommunityReportMedia = ({ report }: { report: AdminCommunityReportItem }) 
   );
 };
 
-const communityReportTitle = (report: AdminCommunityReportItem) =>
-  report.content.title || (report.content.type === "post" ? "Post sem título" : "Comentário");
+const communityReportTitle = (report: AdminCommunityReportItem) => {
+  if (report.content.type === "comment") {
+    const title = report.content.title?.trim();
+    const normalizedTitle = title?.toLowerCase();
+
+    return normalizedTitle && !["comentário", "comentario"].includes(normalizedTitle)
+      ? title
+      : null;
+  }
+
+  return report.content.title?.trim() || "Post sem título";
+};
+
+const CommunityReportContentAuthor = ({ report }: { report: AdminCommunityReportItem }) => {
+  const author = report.content.author;
+  if (!author) return null;
+
+  const avatarSrc = renderableImageSrc(author.avatar);
+
+  return (
+    <div className="mt-2 flex min-w-0 items-center gap-2.5">
+      <div className="relative grid h-9 w-9 shrink-0 place-items-center overflow-hidden rounded-full border border-border bg-primary-soft text-xs font-black text-primary">
+        {avatarSrc ? (
+          <Image
+            alt={`Foto de perfil de ${author.name}`}
+            className="object-cover"
+            fill
+            sizes="36px"
+            src={avatarSrc}
+            unoptimized={isAdminPublicMediaUrl(author.avatar)}
+          />
+        ) : (
+          initials(author.name)
+        )}
+      </div>
+      <div className="min-w-0">
+        <span className="block truncate text-sm font-bold text-foreground">{author.name}</span>
+        <span className="block text-xs font-bold text-muted">{author.role_label}</span>
+      </div>
+    </div>
+  );
+};
 
 const CommunityReportReporterHistory = ({ report }: { report: AdminCommunityReportItem }) => (
   <section className="mt-5 border-t border-border/70 pt-5">
@@ -3139,7 +3179,7 @@ const CommunityReportActions = ({
         <CommunityReportStatusBadge group={report.status_group} label={report.status_label} />
         {report.capabilities.can_review_resolution ? (
           <button
-            className="inline-flex min-h-9 items-center justify-center gap-2 rounded-control border border-border bg-surface px-3 py-1.5 text-xs font-black text-foreground transition hover:bg-surface-muted"
+            className="inline-flex min-h-9 items-center justify-center gap-1.5 rounded-full border border-border/80 bg-surface px-3.5 py-1.5 text-xs font-bold text-foreground/85 shadow-sm transition hover:border-primary/30 hover:bg-primary-soft/40 hover:text-primary"
             onClick={() => onResolve("pending")}
             type="button"
           >
@@ -3155,21 +3195,21 @@ const CommunityReportActions = ({
     <div className="mt-5 flex flex-col gap-2 border-t border-border/70 pt-4 sm:flex-row sm:justify-end">
       {report.capabilities.can_resolve_dismissed ? (
         <button
-          className="inline-flex min-h-11 items-center justify-center gap-2 rounded-control border border-success/30 bg-success/10 px-4 py-2 text-xs font-black text-success transition hover:bg-success/15"
+          className="inline-flex min-h-9 items-center justify-center gap-1.5 rounded-full border border-success/25 bg-success/5 px-3.5 py-1.5 text-xs font-bold text-success shadow-sm transition hover:border-success/40 hover:bg-success/10"
           onClick={() => onResolve("dismissed")}
           type="button"
         >
-          <CheckCircle2 aria-hidden className="h-4 w-4" />
+          <CheckCircle2 aria-hidden className="h-3.5 w-3.5" />
           Improcedente
         </button>
       ) : null}
       {report.capabilities.can_resolve_upheld ? (
         <button
-          className="inline-flex min-h-11 items-center justify-center gap-2 rounded-control border border-danger/30 bg-danger/10 px-4 py-2 text-xs font-black text-danger transition hover:bg-danger/15"
+          className="inline-flex min-h-9 items-center justify-center gap-1.5 rounded-full border border-danger/25 bg-danger/5 px-3.5 py-1.5 text-xs font-bold text-danger shadow-sm transition hover:border-danger/40 hover:bg-danger/10"
           onClick={() => onResolve("upheld")}
           type="button"
         >
-          <ShieldCheck aria-hidden className="h-4 w-4" />
+          <ShieldCheck aria-hidden className="h-3.5 w-3.5" />
           Procedente
         </button>
       ) : null}
@@ -3183,64 +3223,69 @@ const CommunityReportListItem = ({
 }: {
   report: AdminCommunityReportItem;
   setResolveState: (state: CommunityReportResolveState) => void;
-}) => (
-  <article className="rounded-card border border-border/75 bg-surface/95 p-4 shadow-admin-soft md:p-5">
-    <div className="flex items-start justify-between gap-3">
-      <div className="flex flex-wrap items-center gap-2">
-        <StatusBadge tone="muted">{report.content.content_kind_label}</StatusBadge>
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-primary-soft px-2.5 py-1 text-xs font-black text-primary">
-          <AlertTriangle aria-hidden className="h-3.5 w-3.5" />
-          {numberFormatter.format(report.report_count)} denúncia(s)
-        </span>
-        <CommunityReportStatusBadge group={report.status_group} label={report.status_label} />
-        <span className="inline-flex items-center gap-1.5 text-xs font-bold text-muted">
-          <CalendarDays aria-hidden className="h-3.5 w-3.5" />
-          Última em {formatDateTime(report.last_reported_at)}
-        </span>
-      </div>
-      {report.content.public_url ? (
-        <Link
-          aria-label="Ver conteúdo público"
-          className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-foreground/75 transition hover:text-foreground"
-          href={toPublicHref(report.content.public_url)}
-          rel="noreferrer"
-          target="_blank"
-          title="Ver conteúdo público"
-        >
-          <Eye aria-hidden className="h-4 w-4" />
-        </Link>
-      ) : null}
-    </div>
+}) => {
+  const title = communityReportTitle(report);
 
-    <section className="mt-4">
-      <p className="text-[0.68rem] font-black uppercase tracking-wide text-muted">
-        Conteúdo denunciado
-      </p>
-      <h3 className="mt-1 text-lg font-black text-foreground">{communityReportTitle(report)}</h3>
-      <div className="mt-3 space-y-4">
-        <div className="min-w-0 whitespace-pre-wrap text-sm font-bold leading-6 text-foreground">
-          {report.content.body || report.content.excerpt || "Conteúdo sem texto disponível."}
+  return (
+    <article className="rounded-card border border-border/75 bg-surface/95 p-4 shadow-admin-soft md:p-5">
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex flex-wrap items-center gap-2">
+          <StatusBadge tone="muted">{report.content.content_kind_label}</StatusBadge>
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-primary-soft px-2.5 py-1 text-xs font-black text-primary">
+            <AlertTriangle aria-hidden className="h-3.5 w-3.5" />
+            {numberFormatter.format(report.report_count)} denúncia(s)
+          </span>
+          <CommunityReportStatusBadge group={report.status_group} label={report.status_label} />
+          <span className="inline-flex items-center gap-1.5 text-xs font-bold text-muted">
+            <CalendarDays aria-hidden className="h-3.5 w-3.5" />
+            Última em {formatDateTime(report.last_reported_at)}
+          </span>
         </div>
-        {report.content.media ? (
-          <div className="max-w-72">
-            <CommunityReportMedia report={report} />
-          </div>
+        {report.content.public_url ? (
+          <Link
+            aria-label="Ver conteúdo público"
+            className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-foreground/75 transition hover:text-foreground"
+            href={toPublicHref(report.content.public_url)}
+            rel="noreferrer"
+            target="_blank"
+            title="Ver conteúdo público"
+          >
+            <Eye aria-hidden className="h-4 w-4" />
+          </Link>
         ) : null}
       </div>
-      {!report.content.available ? (
-        <p className="mt-3 rounded-2xl border border-danger/15 bg-danger/10 p-3 text-xs font-bold leading-5 text-danger">
-          {report.content.unavailable_reason || "Conteúdo removido ou indisponível."}
-        </p>
-      ) : null}
-    </section>
 
-    <CommunityReportReporterHistory report={report} />
-    <CommunityReportActions
-      onResolve={(resolution) => setResolveState({ report, resolution })}
-      report={report}
-    />
-  </article>
-);
+      <section className="mt-4">
+        <p className="text-[0.68rem] font-black uppercase tracking-wide text-muted">
+          Conteúdo denunciado
+        </p>
+        <CommunityReportContentAuthor report={report} />
+        {title ? <h3 className="mt-3 text-lg font-black text-foreground">{title}</h3> : null}
+        <div className="mt-3 space-y-4">
+          <div className="min-w-0 whitespace-pre-wrap text-sm font-bold leading-6 text-foreground">
+            {report.content.body || report.content.excerpt || "Conteúdo sem texto disponível."}
+          </div>
+          {report.content.media ? (
+            <div className="max-w-72">
+              <CommunityReportMedia report={report} />
+            </div>
+          ) : null}
+        </div>
+        {!report.content.available ? (
+          <p className="mt-3 rounded-2xl border border-danger/15 bg-danger/10 p-3 text-xs font-bold leading-5 text-danger">
+            {report.content.unavailable_reason || "Conteúdo removido ou indisponível."}
+          </p>
+        ) : null}
+      </section>
+
+      <CommunityReportReporterHistory report={report} />
+      <CommunityReportActions
+        onResolve={(resolution) => setResolveState({ report, resolution })}
+        report={report}
+      />
+    </article>
+  );
+};
 
 const CommunityReportResolveDialog = ({
   onClose,

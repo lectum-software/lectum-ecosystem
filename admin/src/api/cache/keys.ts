@@ -69,7 +69,9 @@ const normalizePsychologistPublications = (input: AdminPsychologistPublicationsQ
   from: input.from || "default",
   limit: input.limit || 5,
   page: input.page || 1,
+  period: input.period || "all",
   q: input.q || "",
+  sort: input.sort || "engagement",
   to: input.to || "default",
   type: input.type || "all",
 });
@@ -148,11 +150,14 @@ const normalizeModerationEvents = (input: AdminModerationEventsQuery) => ({
 });
 
 const normalizeCommunityContent = (input: AdminCommunityContentQuery) => ({
+  from: input.from || "default",
   limit: input.limit || 10,
   page: input.page || 1,
   period: input.period || "all",
   q: input.q || "",
+  sort: input.sort || "engagement",
   status: input.status || "all",
+  to: input.to || "default",
   type: input.type || "all",
 });
 

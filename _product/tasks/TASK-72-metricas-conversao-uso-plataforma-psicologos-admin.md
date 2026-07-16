@@ -859,3 +859,15 @@ Regras de cálculo:
 - Builder/Quick Copy nao esta exposto como ferramenta callable no ambiente; a referencia visual usada foi a captura enviada pelo usuario e o padrao ja consolidado dos cards de estatisticas.
 - Validacao executada: `pnpm --dir admin check`, `pnpm --dir admin build` e smoke HTTP local `GET http://localhost:3002/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=estatisticas` retornando 200.
 - `pnpm check` foi executado, mas ficou bloqueado por alteracao local nao relacionada em `admin/src/app/(admin)/comunidades/[slug]/client.tsx` (`TS2339: Property 'author' does not exist on type ...`).
+
+## Ajuste complementar 2026-07-16 - Ordenacao por engajamento em conteudo administrativo
+
+- Pedido do usuario: nas listas **Conteudo da comunidade** e **Publicacoes** do psicologo, adicionar um filtro de ordenacao na mesma linha do titulo, mantendo **Mais engajados** como padrao.
+- Os endpoints reais `GET /api/admin/private/communities/:id/content` e `GET /api/admin/private/psychologists/:id/publications` passam a aceitar `sort=engagement|recent|oldest`; o padrao e `engagement`.
+- O score de engajamento usa metricas reais ja exibidas no card: visualizacoes, upvotes, downvotes, comentarios, salvos, compartilhamentos e cliques WhatsApp. Denuncias ficam fora do score por serem sinal de moderacao, nao de engajamento.
+- A ordenacao e aplicada no backend antes da paginacao, evitando ordenar apenas a pagina visivel no Admin.
+- A UI Admin mantem layout mobile-first: o seletor empilha no mobile e fica na linha do titulo em telas maiores.
+- Nao houve package novo, mock, endpoint paralelo, schema Prisma/migration ou dado artificial.
+- Builder/Quick Copy nao esta exposto como ferramenta callable no ambiente; a referencia visual usada foi a captura enviada pelo usuario e os padroes locais do Admin.
+- ADR atualizado: `adrs/0266-metricas-conversao-uso-psicologos-admin.md`.
+- Validacao executada: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check`, validacao direta dos services com scores em ordem decrescente (`community 200 [83,17,2,2,2]`, `publications 200 [6,2,0]`) e smoke HTTP local `GET http://localhost:3002/comunidades/relacionamentos-com-proposito?tab=conteudo` / `GET http://localhost:3002/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=publicacoes` retornando 200.

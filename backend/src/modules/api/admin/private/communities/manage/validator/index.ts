@@ -332,6 +332,13 @@ export const contentSchema: IValidatorRequest = {
       optional: true,
     },
     {
+      key: "sort",
+      coerse: "string",
+      method: "string",
+      max: 20,
+      optional: true,
+    },
+    {
       key: "to",
       coerse: "string",
       method: "string",

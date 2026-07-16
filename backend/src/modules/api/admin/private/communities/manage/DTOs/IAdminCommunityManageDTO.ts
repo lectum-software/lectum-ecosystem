@@ -24,6 +24,7 @@ export type AdminCommunitiesListQuery = AdminCommunityPaginationQuery & {
 export type AdminCommunityContentQuery = AdminCommunityPaginationQuery & {
   from?: string;
   period?: "all" | "custom" | "month" | "week" | "year";
+  sort?: "engagement" | "oldest" | "recent";
   status?: "all" | "published" | "removed";
   to?: string;
   type?:
@@ -348,6 +349,13 @@ export type AdminCommunityReportItemDTO = {
     can_resolve_upheld: boolean;
   };
   content: {
+    author: {
+      avatar: string | null;
+      id: string;
+      name: string;
+      role: string;
+      role_label: string;
+    } | null;
     available: boolean;
     body: string;
     content_kind:

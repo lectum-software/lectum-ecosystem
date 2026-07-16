@@ -212,3 +212,15 @@ Nao ha mudanca de fonte de dados, contrato de API, schema Prisma, migration, pac
 Validacao complementar 2026-07-16: `pnpm --dir admin check`, `pnpm --dir admin build` e smoke HTTP local `GET http://localhost:3002/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=estatisticas` retornando 200.
 
 `pnpm check` foi executado, mas ficou bloqueado por alteracao local nao relacionada em `admin/src/app/(admin)/comunidades/[slug]/client.tsx` (`TS2339: Property 'author' does not exist on type ...`).
+
+## Complemento 2026-07-16 - Ordenacao por engajamento nas listas de conteudo
+
+As listas administrativas **Conteudo da comunidade** e **Publicacoes** do psicologo passam a usar `sort=engagement` como ordenacao padrao, aplicada no backend antes da paginacao.
+
+O score de engajamento soma sinais reais ja exibidos nos cards: visualizacoes, upvotes, downvotes, comentarios, salvamentos, compartilhamentos e cliques WhatsApp. Denuncias ficam fora do score porque representam sinal de moderacao, nao de engajamento, e continuam visiveis nos cards e fluxos de triagem.
+
+A UI posiciona o seletor de ordenacao no cabecalho do card de resultados, na mesma linha do titulo em telas amplas e empilhado no mobile. As opcoes adicionais sao **Mais recentes** e **Mais antigos**, com desempate por recencia e identificador para manter estabilidade.
+
+Nao ha endpoint paralelo, schema Prisma, migration, package novo, mock, backfill ou dado materializado.
+
+Validacao complementar 2026-07-16: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check`, validacao direta dos services com scores em ordem decrescente (`community 200 [83,17,2,2,2]`, `publications 200 [6,2,0]`) e smoke HTTP local para `/comunidades/relacionamentos-com-proposito?tab=conteudo` e `/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=publicacoes` retornando 200.

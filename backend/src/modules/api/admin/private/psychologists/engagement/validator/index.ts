@@ -43,6 +43,7 @@ export const publicationsSchema: IValidatorRequest = {
       optional: true,
     },
     { key: "q", coerse: "string", method: "string", max: 120, optional: true },
+    { key: "sort", coerse: "string", method: "string", max: 20, optional: true },
     { key: "type", coerse: "string", method: "string", max: 20, optional: true },
   ],
 };

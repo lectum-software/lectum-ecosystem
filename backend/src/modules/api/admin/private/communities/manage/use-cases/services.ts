@@ -78,6 +78,12 @@ const DISMISS_REPORT_CONFIRMATION = "DENUNCIA IMPROCEDENTE";
 const UPHOLD_REPORT_CONFIRMATION = "DENUNCIA PROCEDENTE";
 const REVIEW_REPORT_CONFIRMATION = "REVISAR DECISAO";
 const DEACTIVATE_COMMUNITY_CONFIRMATION = "DESATIVAR COMUNIDADE";
+type AdminCommunityContentSort = NonNullable<AdminCommunityContentQuery["sort"]>;
+const COMMUNITY_CONTENT_SORTS = new Set<AdminCommunityContentSort>([
+  "engagement",
+  "oldest",
+  "recent",
+]);
 const REACTIVATE_COMMUNITY_CONFIRMATION = "REATIVAR COMUNIDADE";
 const COMMUNITY_LIST_SORTS = new Set<AdminCommunitiesListSort>([
   "activity",
@@ -470,6 +476,14 @@ const contentAuthorName = (author: AdminCommunityContentAuthor) => {
 const contentAuthorGender = (author: AdminCommunityContentAuthor) =>
   author.role === "psicologo" ? (author.psychologist_profile?.gender ?? null) : null;
 
+const contentAuthorRoleLabel = (author: AdminCommunityContentAuthor) => {
+  if (author.role !== "psicologo") return "Paciente";
+
+  return contentAuthorGender(author)?.trim().toLowerCase() === "feminino"
+    ? "Psicóloga"
+    : "Psicólogo";
+};
+
 const contentMedia = (
   mediaUrl?: string | null,
   mediaType?: string | null,
@@ -699,6 +713,47 @@ const contentMatchesPeriod = (item: AdminCommunityContentItemDTO, range: Content
 
   return item.created_at >= range.start && item.created_at <= range.end;
 };
+
+const normalizeCommunityContentSort = (sort?: string | null): AdminCommunityContentSort =>
+  sort && COMMUNITY_CONTENT_SORTS.has(sort as AdminCommunityContentSort)
+    ? (sort as AdminCommunityContentSort)
+    : "engagement";
+
+const communityContentEngagementScore = (item: AdminCommunityContentItemDTO) =>
+  item.metrics.views_count +
+  item.metrics.upvotes_count +
+  item.metrics.downvotes_count +
+  item.metrics.comments_count +
+  item.metrics.saves_count +
+  item.metrics.shares_count +
+  item.metrics.whatsapp_clicks_count;
+
+const compareCommunityContentByRecent = (
+  left: AdminCommunityContentItemDTO,
+  right: AdminCommunityContentItemDTO,
+) =>
+  right.created_at.getTime() - left.created_at.getTime() ||
+  left.content_id.localeCompare(right.content_id);
+
+const sortCommunityContentItems = (
+  items: AdminCommunityContentItemDTO[],
+  sort: AdminCommunityContentSort,
+) =>
+  [...items].sort((left, right) => {
+    if (sort === "oldest") {
+      return (
+        left.created_at.getTime() - right.created_at.getTime() ||
+        left.content_id.localeCompare(right.content_id)
+      );
+    }
+
+    if (sort === "recent") return compareCommunityContentByRecent(left, right);
+
+    return (
+      communityContentEngagementScore(right) - communityContentEngagementScore(left) ||
+      compareCommunityContentByRecent(left, right)
+    );
+  });
 
 type StatisticsPeriodRange = { end: Date; start: Date };
 type StatisticsPeriodResult =
@@ -1174,6 +1229,15 @@ const mapReport = (
       can_resolve_upheld: statusGroup === "pending",
     },
     content: {
+      author: author
+        ? {
+            avatar: author.avatar,
+            id: author.id,
+            name: contentAuthorName(author),
+            role: author.role,
+            role_label: contentAuthorRoleLabel(author),
+          }
+        : null,
       available,
       body: target?.content ?? "",
       content_kind: contentKind,
@@ -2406,6 +2470,7 @@ export const listContent = async (data: IAdminCommunityContentDTO): Promise<Reso
   if (!queryPeriod.success) return { status: 400, ...error(queryPeriod.code, {}) };
 
   const queryStatus = data.q.status ?? "all";
+  const querySort = normalizeCommunityContentSort(data.q.sort);
   const search = normalizeSearch(data.q.q);
   const page = normalizePage(data.q.page);
   const limit = normalizeLimit(data.q.limit);
@@ -2421,9 +2486,9 @@ export const listContent = async (data: IAdminCommunityContentDTO): Promise<Reso
     .filter((item) => contentMatchesType(item, queryType))
     .filter((item) => contentMatchesPeriod(item, queryPeriod.range))
     .filter((item) => queryStatus === "all" || item.status === queryStatus)
-    .filter((item) => contentMatchesSearch(item, search))
-    .sort((left, right) => right.created_at.getTime() - left.created_at.getTime());
-  const result = paginate(items, page, limit);
+    .filter((item) => contentMatchesSearch(item, search));
+  const sortedItems = sortCommunityContentItems(items, querySort);
+  const result = paginate(sortedItems, page, limit);
   const payload: AdminCommunityContentDTO = {
     community: communitySummary(community),
     count: result.count,

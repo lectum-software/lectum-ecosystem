@@ -1013,6 +1013,7 @@ export type AdminPsychologistPublicationsQuery = {
   page?: number;
   period?: AdminPsychologistStatisticsPeriodFilter;
   q?: string;
+  sort?: "engagement" | "oldest" | "recent";
   to?: string;
   type?: "all" | "post" | "reply";
 };
@@ -1097,6 +1098,13 @@ export type AdminPsychologistReportsQuery = {
 
 export type AdminPsychologistReportItem = {
   content: {
+    author: {
+      avatar: string | null;
+      id: string;
+      name: string;
+      role: string;
+      role_label: string;
+    };
     available: boolean;
     body: string;
     community: {
@@ -1325,6 +1333,7 @@ const cleanPublicationsParams = (input: AdminPsychologistPublicationsQuery) => (
   ...(input.page ? { page: input.page } : {}),
   ...(input.period ? { period: input.period } : {}),
   ...(input.q ? { q: input.q } : {}),
+  ...(input.sort ? { sort: input.sort } : {}),
   ...(input.to ? { to: input.to } : {}),
   ...(input.type ? { type: input.type } : {}),
 });
