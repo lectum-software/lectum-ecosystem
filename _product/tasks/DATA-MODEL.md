@@ -425,6 +425,8 @@ Regra vigente revalidada em 2026-06-26: qualquer usuário autenticado pode criar
 |---|---|---|
 | `name` | `String` | |
 | `slug` | `String @unique` | namespace canônico (ver "Convenção de rotas") |
+| `active` | `Boolean @default(true)` | controla disponibilidade publica sem apagar conteudo, seguidores ou auditoria |
+| `deactivated_at` | `DateTime?` | data da ultima desativacao administrativa; volta a `null` na reativacao |
 | `description` | `String?` | |
 | `category` | `String?` | categoria de curadoria; categorias persistidas do catálogo ativo: `Ansiedade`, `Relacionamentos`, `Autocuidado`, `Depressão`, `TDAH`. Nomes públicos revalidados em 2026-07-01: `Ansiedade em Equilíbrio`, `Relacionamentos com Propósito`, `Autocuidado em Pequenos Passos`, `Depressão: Redescobrindo a Vida`, `TDAH: Encontrando seu Ritmo`. `Mulheres em Foco` e `Luto e Ressignificação` foram removidas das listas públicas por soft delete. |
 | `members_count` | `Int @default(0)` | denormalizado para o card |
@@ -434,7 +436,9 @@ Regra vigente revalidada em 2026-06-26: qualquer usuário autenticado pode criar
 | `visual_soft_color` | `String?` | variação clara da cor principal para fundo do avatar/chips |
 | `visual_text_color` | `String?` | cor de texto/initials com contraste sobre `visual_soft_color` |
 | `visual_gradient_color` | `String?` | variação clara usada como apoio radial próximo ao avatar |
-| `@@index([slug])`, `@@index([category, deleted])` | | |
+| `@@index([slug])`, `@@index([slug, active, deleted])`, `@@index([active, deleted])`, `@@index([category, deleted])` | | leitura publica filtrada por disponibilidade e gestao admin |
+
+Complemento 2026-07-16: a desativacao administrativa de comunidades usa `community.active=false` e `deactivated_at`, nao soft delete. Consultas publicas de comunidades, posts, salvamentos, publicacoes de psicologos e ranking publico passam a filtrar `active=true`; o Admin continua listando a comunidade para auditoria e reativacao. A acao e auditada em `admin_activity_log` com area `dados` e acoes `community_deactivated`/`community_reactivated`.
 
 Complemento 2026-07-15: a configuracao administrativa de identidade visual passa a expor somente `visual_primary_color` como campo editavel. `visual_primary_dark_color`, `visual_soft_color`, `visual_text_color` e `visual_gradient_color` permanecem no schema como campos derivados/cacheaveis por compatibilidade com contratos existentes, mas nao sao mais configuracoes independentes. O backend deriva esses tons a partir de `visual_primary_color`, e a UI publica usa o mesmo principio para o header suave da comunidade.
 

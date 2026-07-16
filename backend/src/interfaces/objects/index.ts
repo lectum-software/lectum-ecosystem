@@ -398,6 +398,8 @@ export interface community {
   createdAt?: Date | null;
   name?: string | null;
   slug?: string | null;
+  active?: boolean | null;
+  deactivatedAt?: Date | null;
   description?: string | null;
   category?: string | null;
   members_count?: number | null;

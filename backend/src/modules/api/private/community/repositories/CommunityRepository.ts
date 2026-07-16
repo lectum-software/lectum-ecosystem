@@ -864,6 +864,10 @@ const getFollowedCommunityIds = async (userId: string | undefined, communityIds:
       community_id: {
         in: communityIds,
       },
+      community: {
+        active: true,
+        deleted: false,
+      },
     },
     select: {
       community_id: true,
@@ -1339,6 +1343,7 @@ export class CommunityRepository implements ICommunityRepository {
     const community = await this.repository.findFirst({
       where: {
         slug,
+        active: true,
         deleted: false,
       },
       select: {
@@ -1359,6 +1364,7 @@ export class CommunityRepository implements ICommunityRepository {
     todayStart.setHours(0, 0, 0, 0);
 
     const where: Prisma.communityWhereInput = {
+      active: true,
       deleted: false,
       members:
         scope === "following"
@@ -1402,6 +1408,7 @@ export class CommunityRepository implements ICommunityRepository {
       user_id: userId || "__missing_user__",
       deleted: false,
       community: {
+        active: true,
         deleted: false,
       },
     };
@@ -1412,6 +1419,7 @@ export class CommunityRepository implements ICommunityRepository {
         gte: todayStart,
       },
       community: {
+        active: true,
         deleted: false,
         members: {
           some: {
@@ -1433,6 +1441,7 @@ export class CommunityRepository implements ICommunityRepository {
       this.repository.count({ where }),
       this.repository.findMany({
         where: {
+          active: true,
           deleted: false,
           category: {
             not: null,
@@ -1537,6 +1546,7 @@ export class CommunityRepository implements ICommunityRepository {
     const community = await this.repository.findFirst({
       where: {
         slug: data.p.slug,
+        active: true,
         deleted: false,
       },
       select: communitySelect,
@@ -1619,6 +1629,7 @@ export class CommunityRepository implements ICommunityRepository {
       deleted: false,
       status: "publicado",
       community: {
+        active: true,
         deleted: false,
         slug: communitySlug || undefined,
         members: communityMemberFilter,
@@ -1630,6 +1641,7 @@ export class CommunityRepository implements ICommunityRepository {
       user_id: followerUserId || "__missing_user__",
       deleted: false,
       community: {
+        active: true,
         deleted: false,
       },
     };
@@ -1710,6 +1722,7 @@ export class CommunityRepository implements ICommunityRepository {
       ? await this.repository.findFirst({
           where: {
             slug: communitySlug,
+            active: true,
             deleted: false,
           },
           select: communitySelect,
@@ -1754,6 +1767,7 @@ export class CommunityRepository implements ICommunityRepository {
     }
 
     const communityFilter: Prisma.communityWhereInput = {
+      active: true,
       deleted: false,
       slug: communitySlug || undefined,
     };
@@ -2225,6 +2239,7 @@ export class CommunityRepository implements ICommunityRepository {
     const community = await this.repository.findFirst({
       where: {
         slug: data.p.slug,
+        active: true,
         deleted: false,
       },
       select: communitySelect,
@@ -2300,6 +2315,7 @@ export class CommunityRepository implements ICommunityRepository {
     const community = await this.repository.findFirst({
       where: {
         slug: data.p.slug,
+        active: true,
         deleted: false,
       },
       select: {
@@ -2351,6 +2367,7 @@ export class CommunityRepository implements ICommunityRepository {
     const community = await this.repository.findFirst({
       where: {
         slug: data.p.slug,
+        active: true,
         deleted: false,
       },
       select: communitySelect,
@@ -2391,6 +2408,7 @@ export class CommunityRepository implements ICommunityRepository {
     const community = await this.repository.findFirst({
       where: {
         slug: data.p.slug,
+        active: true,
         deleted: false,
       },
       select: communitySelect,

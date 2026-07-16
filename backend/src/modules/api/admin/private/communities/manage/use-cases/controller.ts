@@ -14,6 +14,7 @@ import {
   resolveReports as resolveReportsService,
   showCommunity as showCommunityService,
   updateCommunity as updateCommunityService,
+  updateCommunityStatus as updateCommunityStatusService,
   updateRule as updateRuleService,
   uploadCommunityAvatar as uploadCommunityAvatarService,
 } from "./services";
@@ -63,6 +64,18 @@ export const update = async (req: Request, res: Response) => {
     return send(res, resolve);
   } catch (err) {
     return error500(res, "admin_community_update", err);
+  }
+};
+
+export const status = async (req: Request, res: Response) => {
+  try {
+    const resolve = await updateCommunityStatusService(
+      req as unknown as Parameters<typeof updateCommunityStatusService>[0],
+    );
+
+    return send(res, resolve);
+  } catch (err) {
+    return error500(res, "admin_community_status", err);
   }
 };
 

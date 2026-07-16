@@ -952,6 +952,7 @@ const getProfileTopMentorCommunities = async (
     }),
     prisma.community.findMany({
       where: {
+        active: true,
         deleted: false,
         OR: [
           {
@@ -1263,6 +1264,7 @@ export class ProfileRepository implements IProfileRepository {
       deleted: false,
       status: "publicado",
       community: {
+        active: true,
         deleted: false,
       },
     };
@@ -1273,6 +1275,7 @@ export class ProfileRepository implements IProfileRepository {
         deleted: false,
         status: "publicado",
         community: {
+          active: true,
           deleted: false,
         },
       },

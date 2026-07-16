@@ -111,10 +111,18 @@ export type AdminCommunityResolveReportsBody = {
   resolution: "dismissed" | "upheld";
 };
 
+export type AdminCommunityStatusBody = {
+  active: boolean;
+  confirmation: string;
+  reason: string;
+};
+
 export type AdminCommunityIdentity = {
+  active: boolean;
   avatar_url: string | null;
   category: string | null;
   created_at: Date;
+  deactivated_at: Date | null;
   description: string | null;
   id: string;
   members_count: number;
@@ -510,11 +518,13 @@ export type AdminCommunitiesListFilterOptionDTO = {
 };
 
 export type AdminCommunitiesListItemDTO = {
+  active: boolean;
   activity_count: number;
   avatar_url: string | null;
   category: string | null;
   comments_count: number;
   created_at: Date;
+  deactivated_at: Date | null;
   description: string | null;
   detail_url: string;
   id: string;
@@ -593,6 +603,13 @@ export type IAdminCommunityRemoveContentDTO = Request & {
 export type IAdminCommunityResolveReportsDTO = Request & {
   p: AdminCommunityManageParams;
   b: AdminCommunityResolveReportsBody;
+  admin?: admin;
+  auth?: admin;
+};
+
+export type IAdminCommunityStatusDTO = Request & {
+  p: AdminCommunityManageParams;
+  b: AdminCommunityStatusBody;
   admin?: admin;
   auth?: admin;
 };

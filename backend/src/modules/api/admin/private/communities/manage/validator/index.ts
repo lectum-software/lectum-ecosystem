@@ -231,6 +231,31 @@ export const updateSchema: IValidatorRequest = {
   ],
 };
 
+export const statusSchema: IValidatorRequest = {
+  params: [communityParam],
+  body: [
+    {
+      key: "active",
+      coerse: "boolean",
+      method: "boolean",
+    },
+    {
+      key: "reason",
+      coerse: "string",
+      method: "string",
+      min: 3,
+      max: 500,
+    },
+    {
+      key: "confirmation",
+      coerse: "string",
+      method: "string",
+      min: 3,
+      max: 80,
+    },
+  ],
+};
+
 export const ruleSchema: IValidatorRequest = {
   params: [communityParam],
   body: [
@@ -451,6 +476,7 @@ export const showValidator = validator(showSchema);
 export const listValidator = validator(listSchema);
 export const createValidator = validator(createSchema);
 export const updateValidator = validator(updateSchema);
+export const statusValidator = validator(statusSchema);
 export const avatarValidator = validator(showSchema);
 export const ruleValidator = validator(ruleSchema);
 export const updateRuleValidator = validator(updateRuleSchema);

@@ -296,3 +296,15 @@ A decisao e calcular opcoes de **Area** e **Tipo de atividade** a partir do prop
 Consequencia: comunidades e psicologos usam o mesmo padrao visual e mental para auditoria de atividades. O contrato de activities da comunidade foi expandido com `filters`, `period` e `active_filters_count`, mantendo `source="admin_activity_log"` e sem nova tabela, migration, package, mock ou endpoint paralelo.
 
 Validacao desta atualizacao: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke local `GET http://127.0.0.1:3012/comunidades/relacionamentos-com-proposito?tab=atividades` retornando 200 em worktree isolada por alteracoes concorrentes na arvore principal.
+
+## Atualizacao 2026-07-16: desativacao administrativa de comunidade
+
+A aba **Dados** do detalhe administrativo de comunidade passa a concentrar tambem o controle de disponibilidade da comunidade, logo apos **Regras da comunidade**. A decisao e tratar desativacao como status operacional (`community.active=false` e `deactivated_at`) em vez de soft delete, preservando posts, comentarios, seguidores, regras e historico administrativo.
+
+A acao exige motivo interno e confirmacao forte (`DESATIVAR COMUNIDADE` ou `REATIVAR COMUNIDADE`) e grava auditoria em `admin_activity_log` com dominio `communities`, area `dados`, origem `admin_panel`, acoes `community_deactivated`/`community_reactivated` e snapshots seguros de `active`/`deactivated_at`.
+
+Consultas publicas de comunidades, feed/posts, posts salvos, publicacoes no perfil de psicologos e ranking publico passam a filtrar `community.active=true`. O Admin continua encontrando comunidades inativas para revisao e reativacao.
+
+Consequencia: ha migration Prisma para adicionar `active`, `deactivated_at` e indices de leitura publica; a operacao fica reversivel e auditavel, sem apagar dados nem criar endpoint simulado.
+
+Validacao desta atualizacao: `pnpm --dir backend db:migrate --name community_active_status`, `pnpm --dir backend check`, `pnpm --dir admin check`, `pnpm --dir backend build`, `pnpm --dir admin build`, `pnpm check`, smoke local da aba Dados retornando 200 e smoke sem sessao Admin do endpoint de status retornando 401.

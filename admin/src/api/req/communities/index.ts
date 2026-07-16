@@ -149,9 +149,11 @@ export type AdminCommunitiesDashboard = {
 };
 
 export type AdminCommunityIdentity = {
+  active: boolean;
   avatar_url: string | null;
   category: string | null;
   created_at: string;
+  deactivated_at: string | null;
   description: string | null;
   id: string;
   members_count: number;
@@ -258,11 +260,13 @@ export type AdminCommunitiesListFilterOption = {
 };
 
 export type AdminCommunitiesListItem = {
+  active: boolean;
   activity_count: number;
   avatar_url: string | null;
   category: string | null;
   comments_count: number;
   created_at: string;
+  deactivated_at: string | null;
   description: string | null;
   detail_url: string;
   id: string;
@@ -634,6 +638,12 @@ export type AdminCommunityUpdateInput = {
   visual_primary_color?: string | null;
 };
 
+export type AdminCommunityStatusInput = {
+  active: boolean;
+  confirmation: string;
+  reason: string;
+};
+
 export type AdminCommunityCreateInput = AdminCommunityUpdateInput & {
   category?: string | null;
   slug?: string | null;
@@ -793,6 +803,15 @@ export const getAdminCommunityActivities = async (
 export const updateAdminCommunity = async (id: string, input: AdminCommunityUpdateInput) => {
   const response = await adminApi.put<ApiResponse<AdminCommunityIdentity>>(
     `/api/admin/private/communities/${encodeURIComponent(id)}`,
+    input,
+  );
+
+  return resolveApiData(response.data);
+};
+
+export const updateAdminCommunityStatus = async (id: string, input: AdminCommunityStatusInput) => {
+  const response = await adminApi.patch<ApiResponse<AdminCommunityIdentity>>(
+    `/api/admin/private/communities/${encodeURIComponent(id)}/status`,
     input,
   );
 

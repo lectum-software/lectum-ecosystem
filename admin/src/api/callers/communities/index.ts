@@ -10,6 +10,7 @@ import {
   type AdminCommunityReportsQuery,
   type AdminCommunityResolveReportsInput,
   type AdminCommunityRuleInput,
+  type AdminCommunityStatusInput,
   type AdminCommunityUpdateInput,
   type CommunitiesDashboardQuery,
   createAdminCommunity,
@@ -26,6 +27,7 @@ import {
   resolveAdminCommunityReports,
   updateAdminCommunity,
   updateAdminCommunityRule,
+  updateAdminCommunityStatus,
   uploadAdminCommunityAvatar,
 } from "@/api/req/communities";
 
@@ -127,6 +129,15 @@ export const useAdminCommunityUpdate = (id: string) => {
 
   return useMutation({
     mutationFn: (input: AdminCommunityUpdateInput) => updateAdminCommunity(id, input),
+    onSuccess: () => invalidateCommunity(queryClient, id),
+  });
+};
+
+export const useAdminCommunityStatusUpdate = (id: string) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (input: AdminCommunityStatusInput) => updateAdminCommunityStatus(id, input),
     onSuccess: () => invalidateCommunity(queryClient, id),
   });
 };

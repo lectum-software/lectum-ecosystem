@@ -27,6 +27,7 @@ import type {
   AdminCommunityResolveReportsDTO,
   AdminCommunityRuleBody,
   AdminCommunityRuleDTO,
+  AdminCommunityStatusBody,
   AdminCommunityUpdateBody,
   IAdminCommunitiesListDTO,
   IAdminCommunityActivitiesDTO,
@@ -39,6 +40,7 @@ import type {
   IAdminCommunityResolveReportsDTO,
   IAdminCommunityRuleDTO,
   IAdminCommunityShowDTO,
+  IAdminCommunityStatusDTO,
   IAdminCommunityUpdateDTO,
 } from "../DTOs/IAdminCommunityManageDTO";
 import {
@@ -69,6 +71,8 @@ const MS_PER_DAY = 86_400_000;
 const REMOVE_CONTENT_CONFIRMATION = "REMOVER CONTEUDO";
 const DISMISS_REPORT_CONFIRMATION = "DENUNCIA IMPROCEDENTE";
 const UPHOLD_REPORT_CONFIRMATION = "DENUNCIA PROCEDENTE";
+const DEACTIVATE_COMMUNITY_CONFIRMATION = "DESATIVAR COMUNIDADE";
+const REACTIVATE_COMMUNITY_CONFIRMATION = "REATIVAR COMUNIDADE";
 const COMMUNITY_LIST_SORTS = new Set<AdminCommunitiesListSort>([
   "activity",
   "members",
@@ -244,9 +248,11 @@ const metric = (
 };
 
 const mapCommunity = (community: AdminCommunityRecord): AdminCommunityIdentity => ({
+  active: community.active,
   avatar_url: community.avatar_url,
   category: community.category,
   created_at: community.createdAt,
+  deactivated_at: community.deactivatedAt,
   description: community.description,
   id: community.id,
   members_count: community.members_count,
@@ -289,11 +295,13 @@ const mapCommunityListItem = (community: AdminCommunityListRecord): AdminCommuni
   const commentsCount = comments.length;
 
   return {
+    active: community.active,
     activity_count: postsCount + commentsCount,
     avatar_url: community.avatar_url,
     category: normalizeNullableText(community.category),
     comments_count: commentsCount,
     created_at: community.createdAt,
+    deactivated_at: community.deactivatedAt,
     description: community.description,
     detail_url: `/comunidades/${community.slug}`,
     id: community.id,
@@ -1142,6 +1150,8 @@ const activitySummary = (activity: AdminCommunityActivityRecord) => {
     return "Denuncia marcada como procedente";
   }
   if (activity.action === "community_content_removed") return "Conteúdo removido";
+  if (activity.action === "community_deactivated") return "Comunidade desativada";
+  if (activity.action === "community_reactivated") return "Comunidade reativada";
   if (activity.action.includes("rule")) return "Regra da comunidade alterada";
   if (activity.action.includes("avatar")) return "Avatar da comunidade alterado";
   if (activity.action.includes("update")) return "Dados da comunidade alterados";
@@ -1425,6 +1435,12 @@ const normalizeRuleBody = (body: AdminCommunityRuleBody): Required<AdminCommunit
   description: body.description.trim(),
   position: typeof body.position === "number" ? body.position : 0,
   title: body.title.trim(),
+});
+
+const normalizeCommunityStatus = (body: AdminCommunityStatusBody): AdminCommunityStatusBody => ({
+  active: body.active,
+  confirmation: body.confirmation.trim().toUpperCase(),
+  reason: body.reason.trim(),
 });
 
 const resolvePeriod = () => {
@@ -1728,6 +1744,51 @@ export const updateCommunity = async (data: IAdminCommunityUpdateDTO): Promise<R
   }
 
   const updated = await repository.updateCommunity(community.id, body);
+
+  return {
+    status: 200,
+    ...msg("updated", { model: "community" }),
+    data: mapCommunity(updated),
+  };
+};
+
+export const updateCommunityStatus = async (data: IAdminCommunityStatusDTO): Promise<Resolve> => {
+  const admin = data.admin ?? data.auth;
+  if (!admin?.id) {
+    return {
+      status: 401,
+      ...error("token_not_authorized", {}),
+    };
+  }
+
+  const repository = new AdminCommunityManageRepository();
+  const community = await findCommunityOrNotFound(repository, data.p.id);
+  if (!community) return notFound();
+
+  const body = normalizeCommunityStatus(data.b);
+  const expectedConfirmation = body.active
+    ? REACTIVATE_COMMUNITY_CONFIRMATION
+    : DEACTIVATE_COMMUNITY_CONFIRMATION;
+
+  if (body.confirmation !== expectedConfirmation) {
+    return {
+      status: 400,
+      ...error("invalid_structure", {}),
+    };
+  }
+
+  if (community.active === body.active) {
+    return {
+      status: 200,
+      ...msg("updated", { model: "community" }),
+      data: mapCommunity(community),
+    };
+  }
+
+  const updated = await repository.updateCommunityStatus(community, {
+    ...body,
+    adminId: admin.id,
+  });
 
   return {
     status: 200,

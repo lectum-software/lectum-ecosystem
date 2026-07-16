@@ -7,6 +7,7 @@ import {
 import type {
   AdminCommunityCreateBody,
   AdminCommunityRuleBody,
+  AdminCommunityStatusBody,
   AdminCommunityUpdateBody,
 } from "../DTOs/IAdminCommunityManageDTO";
 
@@ -22,9 +23,11 @@ const TOP_MENTOR_ACTIVE_DAY_WEIGHT = 1;
 const TOP_MENTOR_REMOVED_POST_PENALTY_STEP = 30;
 
 export const adminCommunitySelect = {
+  active: true,
   avatar_url: true,
   category: true,
   createdAt: true,
+  deactivatedAt: true,
   description: true,
   id: true,
   members_count: true,
@@ -38,9 +41,11 @@ export const adminCommunitySelect = {
 } satisfies Prisma.communitySelect;
 
 const adminCommunityListSelect = {
+  active: true,
   avatar_url: true,
   category: true,
   createdAt: true,
+  deactivatedAt: true,
   description: true,
   id: true,
   members_count: true,
@@ -491,6 +496,47 @@ export class AdminCommunityManageRepository {
       where: { id: communityId },
       data,
       select: adminCommunitySelect,
+    });
+  }
+
+  async updateCommunityStatus(
+    community: Pick<AdminCommunityRecord, "active" | "deactivatedAt" | "id" | "name" | "slug">,
+    data: AdminCommunityStatusBody & { adminId: string },
+  ) {
+    return prisma.$transaction(async (transaction) => {
+      const updated = await transaction.community.update({
+        where: { id: community.id },
+        data: {
+          active: data.active,
+          deactivatedAt: data.active ? null : new Date(),
+        },
+        select: adminCommunitySelect,
+      });
+
+      await this.createContentActivityLog(transaction, {
+        action: data.active ? "community_reactivated" : "community_deactivated",
+        adminId: data.adminId,
+        area: "dados",
+        changedFields: ["community.active", "community.deactivated_at"],
+        communityId: community.id,
+        metadata: {
+          community_name: community.name,
+          community_slug: community.slug,
+          next_active: updated.active,
+          previous_active: community.active,
+        },
+        reason: data.reason,
+        safeAfter: {
+          active: updated.active,
+          deactivated_at: updated.deactivatedAt?.toISOString() ?? null,
+        },
+        safeBefore: {
+          active: community.active,
+          deactivated_at: community.deactivatedAt?.toISOString() ?? null,
+        },
+      });
+
+      return updated;
     });
   }
 

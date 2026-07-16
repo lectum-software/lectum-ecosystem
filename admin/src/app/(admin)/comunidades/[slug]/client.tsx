@@ -58,6 +58,7 @@ import {
   useAdminCommunityRemoveContent,
   useAdminCommunityReports,
   useAdminCommunityResolveReports,
+  useAdminCommunityStatusUpdate,
   useAdminCommunityUpdate,
   useAdminCommunityUpdateRule,
 } from "@/api/callers/communities";
@@ -78,6 +79,7 @@ import type {
   AdminCommunityReportsQuery,
   AdminCommunityRule,
   AdminCommunityRuleInput,
+  AdminCommunityStatusInput,
   AdminCommunityTopMentor,
   AdminCommunityUpdateInput,
 } from "@/api/req/communities";
@@ -113,6 +115,9 @@ const ruleFormSchema = z.object({
   description: z.string().trim().min(3, "Informe a descrição.").max(500, "Use até 500 caracteres."),
 });
 
+const COMMUNITY_DEACTIVATE_CONFIRMATION = "DESATIVAR COMUNIDADE";
+const COMMUNITY_REACTIVATE_CONFIRMATION = "REATIVAR COMUNIDADE";
+
 const removeContentFormSchema = z.object({
   confirmation: z
     .string()
@@ -123,6 +128,18 @@ const removeContentFormSchema = z.object({
     ),
   reason: z.string().trim().min(3, "Informe o motivo.").max(500, "Use até 500 caracteres."),
 });
+
+const communityStatusFormSchema = (expectedConfirmation: string) =>
+  z.object({
+    confirmation: z
+      .string()
+      .trim()
+      .refine(
+        (value) => value.toUpperCase() === expectedConfirmation,
+        `Digite ${expectedConfirmation} para confirmar.`,
+      ),
+    reason: z.string().trim().min(3, "Informe o motivo.").max(500, "Use ate 500 caracteres."),
+  });
 
 const communityReportResolveSchema = (expectedConfirmation: string) =>
   z.object({
@@ -139,6 +156,7 @@ const communityReportResolveSchema = (expectedConfirmation: string) =>
 type CommunityFormValues = z.infer<typeof communityFormSchema>;
 type RuleFormValues = z.infer<typeof ruleFormSchema>;
 type RemoveContentFormValues = z.infer<typeof removeContentFormSchema>;
+type CommunityStatusFormValues = z.infer<ReturnType<typeof communityStatusFormSchema>>;
 type CommunityReportResolveFormValues = z.infer<ReturnType<typeof communityReportResolveSchema>>;
 
 type RuleDragMetric = {
@@ -773,7 +791,9 @@ const CommunityHeader = ({
             <h1 className="text-3xl font-black tracking-tight text-foreground md:text-4xl">
               {community.name}
             </h1>
-            <StatusBadge tone="green">Ativa</StatusBadge>
+            <StatusBadge tone={community.active ? "green" : "muted"}>
+              {community.active ? "Ativa" : "Inativa"}
+            </StatusBadge>
           </div>
           <p className="mt-2 max-w-3xl text-sm leading-6 text-muted">
             {community.description || "Comunidade sem descrição cadastrada."}
@@ -788,15 +808,22 @@ const CommunityHeader = ({
           </p>
         </div>
       </div>
-      <Link
-        className="inline-flex h-11 items-center justify-center gap-2 rounded-full border border-primary/45 bg-surface px-5 text-sm font-black text-primary shadow-control transition hover:bg-primary-soft"
-        href={`/community/${community.slug}`}
-        rel="noreferrer"
-        target="_blank"
-      >
-        <Eye aria-hidden className="h-4 w-4" />
-        Ver comunidade
-      </Link>
+      {community.active ? (
+        <Link
+          className="inline-flex h-11 items-center justify-center gap-2 rounded-full border border-primary/45 bg-surface px-5 text-sm font-black text-primary shadow-control transition hover:bg-primary-soft"
+          href={`/community/${community.slug}`}
+          rel="noreferrer"
+          target="_blank"
+        >
+          <Eye aria-hidden className="h-4 w-4" />
+          Ver comunidade
+        </Link>
+      ) : (
+        <span className="inline-flex h-11 items-center justify-center gap-2 rounded-full border border-border bg-surface-muted px-5 text-sm font-black text-muted">
+          <Eye aria-hidden className="h-4 w-4" />
+          Comunidade desativada
+        </span>
+      )}
     </div>
   </div>
 );
@@ -1579,6 +1606,229 @@ const RulesManager = ({ id, rules }: { id: string; rules: AdminCommunityRule[] }
         onSubmit={createRule}
         open={createModalOpen}
       />
+    </>
+  );
+};
+
+type CommunityStatusDialogState = {
+  active: boolean;
+  cta: string;
+  description: string;
+  expectedConfirmation: string;
+  title: string;
+};
+
+const CommunityStatusDialog = ({
+  community,
+  id,
+  onClose,
+  state,
+}: {
+  community: AdminCommunityIdentity;
+  id: string;
+  onClose: () => void;
+  state: CommunityStatusDialogState;
+}) => {
+  const mutation = useAdminCommunityStatusUpdate(id);
+  const form = useForm<CommunityStatusFormValues>({
+    defaultValues: {
+      confirmation: "",
+      reason: "",
+    },
+    mode: "onSubmit",
+    resolver: zodResolver(communityStatusFormSchema(state.expectedConfirmation)),
+  });
+
+  const onSubmit = async (values: CommunityStatusFormValues) => {
+    const input: AdminCommunityStatusInput = {
+      active: state.active,
+      confirmation: values.confirmation.trim().toUpperCase(),
+      reason: values.reason.trim(),
+    };
+
+    try {
+      await mutation.mutateAsync(input);
+      toast.success(state.active ? "Comunidade reativada." : "Comunidade desativada.");
+      form.reset();
+      onClose();
+    } catch (error) {
+      toast.error(resolveApiError(error));
+    }
+  };
+
+  return (
+    <div
+      className="fixed inset-0 z-50 grid place-items-center bg-foreground/40 p-4"
+      role="presentation"
+    >
+      <FormProvider {...form}>
+        <form
+          aria-modal="true"
+          className="w-full max-w-xl rounded-[28px] border border-border bg-surface p-5 shadow-xl"
+          noValidate
+          onSubmit={form.handleSubmit(onSubmit)}
+          role="dialog"
+        >
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="text-xs font-black uppercase tracking-wide text-primary">
+                Controle de disponibilidade
+              </p>
+              <h3 className="mt-1 text-xl font-black text-foreground">{state.title}</h3>
+              <p className="mt-2 text-sm leading-6 text-muted">{state.description}</p>
+            </div>
+            <button
+              aria-label="Fechar"
+              className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-border text-muted"
+              onClick={onClose}
+              type="button"
+            >
+              <X aria-hidden className="h-4 w-4" />
+            </button>
+          </div>
+
+          <div className="mt-4 rounded-2xl bg-surface-muted p-3 text-sm font-bold text-muted">
+            <p className="text-foreground">{community.name}</p>
+            <p className="mt-1">
+              Esta acao altera a disponibilidade publica da comunidade e fica registrada na aba
+              Atividades.
+            </p>
+            <p className="mt-2 text-xs">
+              Digite{" "}
+              <span className="font-black text-foreground">{state.expectedConfirmation}</span> para
+              confirmar.
+            </p>
+          </div>
+
+          <div className="mt-4 grid gap-3">
+            <TextareaController<CommunityStatusFormValues>
+              label="Motivo interno obrigatorio"
+              name="reason"
+              required
+              rows={3}
+            />
+            <InputController<CommunityStatusFormValues>
+              label="Confirmacao forte"
+              name="confirmation"
+              placeholder={state.expectedConfirmation}
+              required
+            />
+          </div>
+
+          <div className="mt-5 flex flex-col gap-2 sm:flex-row sm:justify-end">
+            <button
+              className="h-10 rounded-control border border-border bg-surface px-4 text-xs font-black text-foreground"
+              onClick={onClose}
+              type="button"
+            >
+              Cancelar
+            </button>
+            <button
+              className={cn(
+                "inline-flex h-10 items-center justify-center gap-2 rounded-control px-4 text-xs font-black text-white disabled:opacity-70",
+                state.active ? "bg-primary" : "bg-red-600",
+              )}
+              disabled={mutation.isPending}
+              type="submit"
+            >
+              {mutation.isPending ? <Loader2 aria-hidden className="h-4 w-4 animate-spin" /> : null}
+              {state.cta}
+            </button>
+          </div>
+        </form>
+      </FormProvider>
+    </div>
+  );
+};
+
+const CommunityStatusControl = ({
+  community,
+  id,
+}: {
+  community: AdminCommunityIdentity;
+  id: string;
+}) => {
+  const [dialogState, setDialogState] = useState<CommunityStatusDialogState | null>(null);
+  const nextState: CommunityStatusDialogState = community.active
+    ? {
+        active: false,
+        cta: "Desativar comunidade",
+        description:
+          "A comunidade deixa de aparecer no produto para pacientes e psicologos. O Admin continua exibindo a comunidade para auditoria e reativacao.",
+        expectedConfirmation: COMMUNITY_DEACTIVATE_CONFIRMATION,
+        title: "Desativar comunidade",
+      }
+    : {
+        active: true,
+        cta: "Reativar comunidade",
+        description:
+          "A comunidade volta a ficar disponivel no produto para pacientes e psicologos, preservando conteudos e seguidores existentes.",
+        expectedConfirmation: COMMUNITY_REACTIVATE_CONFIRMATION,
+        title: "Reativar comunidade",
+      };
+
+  return (
+    <>
+      <section className={cn(cardClass, "p-5")}>
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+          <div className="flex gap-3">
+            <div
+              className={cn(
+                "grid h-11 w-11 shrink-0 place-items-center rounded-full",
+                community.active ? "bg-primary-soft text-primary" : "bg-red-50 text-danger",
+              )}
+            >
+              {community.active ? (
+                <CheckCircle2 aria-hidden className="h-5 w-5" />
+              ) : (
+                <AlertTriangle aria-hidden className="h-5 w-5" />
+              )}
+            </div>
+            <div>
+              <p className="text-xs font-black uppercase tracking-wide text-muted">Zona de risco</p>
+              <h2 className="mt-1 text-lg font-black text-foreground">
+                Disponibilidade da comunidade
+              </h2>
+              <p className="mt-2 max-w-3xl text-sm leading-6 text-muted">
+                Desative a comunidade quando ela precisar sair do produto sem apagar conteudo,
+                regras, seguidores ou historico administrativo.
+              </p>
+              <div className="mt-3 flex flex-wrap items-center gap-2 text-xs font-bold text-muted">
+                <StatusBadge tone={community.active ? "green" : "muted"}>
+                  {community.active ? "Ativa" : "Inativa"}
+                </StatusBadge>
+                {community.deactivated_at ? (
+                  <span>Desativada em {formatDate(community.deactivated_at)}</span>
+                ) : null}
+              </div>
+            </div>
+          </div>
+          <button
+            className={cn(
+              "inline-flex h-11 items-center justify-center gap-2 rounded-control px-4 text-sm font-black text-white shadow-sm transition disabled:opacity-70 lg:shrink-0",
+              community.active ? "bg-red-600 hover:bg-red-700" : "bg-primary hover:bg-primary/90",
+            )}
+            onClick={() => setDialogState(nextState)}
+            type="button"
+          >
+            {community.active ? (
+              <AlertTriangle aria-hidden className="h-4 w-4" />
+            ) : (
+              <CheckCircle2 aria-hidden className="h-4 w-4" />
+            )}
+            {community.active ? "Desativar comunidade" : "Reativar comunidade"}
+          </button>
+        </div>
+      </section>
+
+      {dialogState ? (
+        <CommunityStatusDialog
+          community={community}
+          id={id}
+          onClose={() => setDialogState(null)}
+          state={dialogState}
+        />
+      ) : null}
     </>
   );
 };
@@ -3561,6 +3811,7 @@ const DetailContent = ({
       <div className="space-y-5">
         <CommunityEditForm community={detail.community} id={slug} onDone={() => undefined} />
         <RulesManager id={slug} rules={detail.rules} />
+        <CommunityStatusControl community={detail.community} id={slug} />
       </div>
     ) : null}
 

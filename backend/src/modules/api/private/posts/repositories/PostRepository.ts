@@ -827,6 +827,7 @@ const findPublishedPost = (id: string) => {
       deleted: false,
       status: "publicado",
       community: {
+        active: true,
         deleted: false,
       },
     },
@@ -858,6 +859,7 @@ const findPublishedReply = (postId: string, replyId: string) => {
         deleted: false,
         status: "publicado",
         community: {
+          active: true,
           deleted: false,
         },
       },
@@ -1028,6 +1030,7 @@ export class PostRepository implements IPostRepository {
               author_id: data.auth.id!,
               deleted: false,
               community: {
+                active: true,
                 deleted: false,
               },
             },
@@ -1043,6 +1046,7 @@ export class PostRepository implements IPostRepository {
               author_id: data.auth.id!,
               deleted: false,
               community: {
+                active: true,
                 deleted: false,
               },
             },
@@ -1057,6 +1061,7 @@ export class PostRepository implements IPostRepository {
                 deleted: false,
                 status: "publicado",
                 community: {
+                  active: true,
                   deleted: false,
                 },
               },
@@ -1133,6 +1138,7 @@ export class PostRepository implements IPostRepository {
                 deleted: false,
                 status: "publicado",
                 community: {
+                  active: true,
                   deleted: false,
                 },
               },
@@ -1329,6 +1335,7 @@ export class PostRepository implements IPostRepository {
         deleted: false,
         status: "publicado",
         community: {
+          active: true,
           deleted: false,
         },
       },
@@ -1342,6 +1349,7 @@ export class PostRepository implements IPostRepository {
           deleted: false,
           status: "publicado",
           community: {
+            active: true,
             deleted: false,
           },
         },
@@ -1579,6 +1587,7 @@ export class PostRepository implements IPostRepository {
         deleted: false,
         status: "publicado",
         community: {
+          active: true,
           deleted: false,
         },
       },

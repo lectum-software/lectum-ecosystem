@@ -820,6 +820,8 @@ model community {
   createdAt                 DateTime                   @default(now()) @map("created_at")
   name                      String
   slug                      String                     @unique
+  active                    Boolean                    @default(true)
+  deactivatedAt             DateTime?                  @map("deactivated_at")
   description               String?
   category                  String?
   members_count             Int                        @default(0)
@@ -835,6 +837,8 @@ model community {
   moderation_events         content_moderation_event[] @relation("content_moderation_event_community")
 
   @@index([slug])
+  @@index([slug, active, deleted])
+  @@index([active, deleted])
   @@index([category, deleted])
   @@map("communities")
 }

@@ -368,3 +368,16 @@ Regras:
 - Builder/Quick Copy nao esta exposto como ferramenta callable no ambiente; a referencia visual usada foi a captura enviada pelo usuario e o padrao local da aba **Atividades** de psicologos.
 - ADR atualizado: `adrs/0264-admin-comunidade-abas-conteudo-ranking.md`.
 - Validacao executada em worktree isolada por alteracoes concorrentes na arvore principal: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke HTTP local `GET http://127.0.0.1:3012/comunidades/relacionamentos-com-proposito?tab=atividades` retornando 200.
+
+## Ajuste complementar 2026-07-16 - Desativacao de comunidade na aba Dados
+
+- Pedido do usuario: adicionar no painel Admin uma opcao para desativar a comunidade, posicionada ao final da aba **Dados**, depois de **Regras da comunidade**.
+- A UI Admin de `/comunidades/[slug]?tab=dados` passou a exibir o card **Disponibilidade da comunidade** apos o gerenciador real de regras, com status Ativa/Inativa, data de desativacao quando existir e acao de desativar/reativar.
+- A acao usa modal com motivo obrigatorio e confirmacao forte (`DESATIVAR COMUNIDADE`/`REATIVAR COMUNIDADE`) usando React Hook Form, Zod e controllers do projeto.
+- O backend adicionou `PATCH /api/admin/private/communities/:id/status`, persistindo `community.active` e `community.deactivated_at` e auditando em `admin_activity_log` com area `dados`.
+- Consultas publicas de comunidades, feed/posts, posts salvos, publicacoes de perfil e ranking publico passam a esconder comunidades inativas com `active=true`; o Admin continua podendo abrir e reativar a comunidade.
+- Foi criada/reconstituida a migration `20260716150139_community_active_status`; `pnpm --dir backend db:migrate --name community_active_status` ficou **Already in sync** apos restaurar a migration local que ja constava aplicada no banco de desenvolvimento.
+- Nao houve package novo, mock, reset/destruicao de banco ou endpoint paralelo.
+- Builder/Quick Copy nao esta exposto como ferramenta callable no ambiente; a referencia visual usada foi a captura enviada pelo usuario e o padrao local da aba **Dados** do Admin.
+- ADR atualizado: `adrs/0264-admin-comunidade-abas-conteudo-ranking.md`.
+- Validacao executada: `pnpm --dir backend db:migrate --name community_active_status` (apos restaurar migration local, **Already in sync**), `pnpm --dir backend check`, `pnpm --dir admin check`, `pnpm --dir backend build`, `pnpm --dir admin build`, `pnpm check`, smoke HTTP local `GET http://localhost:3002/comunidades/relacionamentos-com-proposito?tab=dados` retornando 200 e smoke HTTP sem sessao Admin em `PATCH /api/admin/private/communities/relacionamentos-com-proposito/status` retornando 401.
