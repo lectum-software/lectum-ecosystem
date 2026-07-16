@@ -1174,11 +1174,13 @@ const mapPostPublication = (
     postSavesByPost: Map<string, number>;
     postSharesByPost: Map<string, number>;
     postViewsByPost: Map<string, number>;
+    postWhatsappClicksByPost: Map<string, number>;
   },
 ): AdminPsychologistPublicationItem => {
   const views = maps.postViewsByPost.get(post.id) ?? 0;
   return {
     community: {
+      avatar_url: post.community.avatar_url,
       color: post.community.visual_primary_color,
       id: post.community.id,
       name: post.community.name,
@@ -1200,6 +1202,12 @@ const mapPostPublication = (
         label: "Downvotes",
         source: "community_post.downvotes_count/post_vote",
         value: post.downvotes_count,
+      }),
+      reports: metric({
+        id: "reports",
+        label: "Denúncias",
+        source: "post_report.post_id",
+        value: post.reports.length,
       }),
       saves: metric({
         id: "saves",
@@ -1225,6 +1233,12 @@ const mapPostPublication = (
         source: "page_view_event.target_type=post/community_post",
         value: views,
       }),
+      whatsapp_clicks: metric({
+        id: "whatsapp_clicks",
+        label: "Cliques WhatsApp",
+        source: "important_action_event.action_type=whatsapp_click+target_type=post/community_post",
+        value: maps.postWhatsappClicksByPost.get(post.id) ?? 0,
+      }),
     },
     public_url: `/community/${post.community.slug}/post/${post.id}`,
     source: "community_post",
@@ -1239,9 +1253,12 @@ const mapReplyPublication = (
     replyChildrenByReply: Map<string, number>;
     replySavesByReply: Map<string, number>;
     replySharesByReply: Map<string, number>;
+    replyViewsByReply: Map<string, number>;
+    replyWhatsappClicksByReply: Map<string, number>;
   },
 ): AdminPsychologistPublicationItem => ({
   community: {
+    avatar_url: reply.post.community.avatar_url,
     color: reply.post.community.visual_primary_color,
     id: reply.post.community.id,
     name: reply.post.community.name,
@@ -1264,6 +1281,12 @@ const mapReplyPublication = (
       source: "post_reply.downvotes_count/post_vote",
       value: reply.downvotes_count,
     }),
+    reports: metric({
+      id: "reports",
+      label: "Denúncias",
+      source: "post_report.reply_id",
+      value: reply.reports.length,
+    }),
     saves: metric({
       id: "saves",
       label: "Salvamentos",
@@ -1282,12 +1305,18 @@ const mapReplyPublication = (
       source: "post_reply.upvotes_count/post_vote",
       value: reply.upvotes_count,
     }),
-    views: unavailableMetric(
-      "views",
-      "Visualizações",
-      "not_tracked_for_reply",
-      "O tracking atual de page_view_event não atribui visualizações a respostas individuais.",
-    ),
+    views: metric({
+      id: "views",
+      label: "Visualizações",
+      source: "page_view_event.target_type=reply/post_reply",
+      value: maps.replyViewsByReply.get(reply.id) ?? 0,
+    }),
+    whatsapp_clicks: metric({
+      id: "whatsapp_clicks",
+      label: "Cliques WhatsApp",
+      source: "important_action_event.action_type=whatsapp_click+target_type=reply/post_reply",
+      value: maps.replyWhatsappClicksByReply.get(reply.id) ?? 0,
+    }),
   },
   public_url: `/community/${reply.post.community.slug}/post/${reply.post.id}/thread/${reply.id}`,
   source: "post_reply",
@@ -1323,6 +1352,9 @@ export const showAdminPsychologistPublications = async (
     postShares,
     replyShares,
     postViews,
+    replyViews,
+    postWhatsappClicks,
+    replyWhatsappClicks,
     replyChildren,
   ] = await Promise.all([
     repository.listPostSaves(postIds),
@@ -1331,6 +1363,9 @@ export const showAdminPsychologistPublications = async (
     repository.countPostShares(postIds),
     repository.countReplyShares(replyIds),
     repository.countPostViews(postIds),
+    repository.countReplyViews(replyIds),
+    repository.countPostWhatsappClicks(postIds),
+    repository.countReplyWhatsappClicks(replyIds),
     repository.countReplyChildren(replyIds),
   ]);
 
@@ -1340,6 +1375,9 @@ export const showAdminPsychologistPublications = async (
   const postSharesByPost = groupCountMap(postShares, (item) => item.post_id);
   const replySharesByReply = groupCountMap(replyShares, (item) => item.reply_id);
   const postViewsByPost = groupCountMap(postViews, (item) => item.target_id);
+  const replyViewsByReply = groupCountMap(replyViews, (item) => item.target_id);
+  const postWhatsappClicksByPost = groupCountMap(postWhatsappClicks, (item) => item.target_id);
+  const replyWhatsappClicksByReply = groupCountMap(replyWhatsappClicks, (item) => item.target_id);
   const replyChildrenByReply = groupCountMap(replyChildren, (item) => item.parent_reply_id);
 
   const allItems = [
@@ -1349,6 +1387,7 @@ export const showAdminPsychologistPublications = async (
         postSavesByPost,
         postSharesByPost,
         postViewsByPost,
+        postWhatsappClicksByPost,
       }),
     ),
     ...replies.map((reply) =>
@@ -1356,6 +1395,8 @@ export const showAdminPsychologistPublications = async (
         replyChildrenByReply,
         replySavesByReply,
         replySharesByReply,
+        replyViewsByReply,
+        replyWhatsappClicksByReply,
       }),
     ),
   ].sort((left, right) => right.created_at.getTime() - left.created_at.getTime());
@@ -1423,15 +1464,20 @@ export const showAdminPsychologistPublications = async (
       source: "post_share",
       value: sum(allItems.map((item) => item.metrics.shares.value ?? 0)),
     }),
+    metric({
+      id: "whatsapp_clicks",
+      label: "Cliques WhatsApp",
+      source: "important_action_event.action_type=whatsapp_click",
+      value: sum(allItems.map((item) => item.metrics.whatsapp_clicks.value ?? 0)),
+    }),
+    metric({
+      id: "reports",
+      label: "Denúncias",
+      source: "post_report",
+      value: sum(allItems.map((item) => item.metrics.reports.value ?? 0)),
+    }),
   ];
-  const unavailable = [
-    unavailableMetric(
-      "reply_views",
-      "Visualizações de respostas",
-      "not_tracked_for_reply",
-      "O tracking atual registra page_view_event para posts, mas não para respostas individuais.",
-    ),
-  ];
+  const unavailable: AdminPsychologistPublicationsDTO["unavailable"] = [];
 
   const response: AdminPsychologistPublicationsDTO = {
     active_filters_count: [
@@ -1457,7 +1503,7 @@ export const showAdminPsychologistPublications = async (
     per_page: query.limit,
     period: period.period,
     source:
-      "community_post+post_reply+post_vote+post_save+post_reply_save+post_share+page_view_event",
+      "community_post+post_reply+post_vote+post_save+post_reply_save+post_share+page_view_event+important_action_event+post_report",
     totals: { cards },
     unavailable,
   };

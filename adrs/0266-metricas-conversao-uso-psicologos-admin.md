@@ -95,3 +95,13 @@ Validacao complementar 2026-07-16: `pnpm --dir backend check`, `pnpm --dir backe
 O bloco Admin de video de apresentacao deve separar metricas de consumo do video das acoes atribuidas ao video. Visualizacoes, replay e retencao permanecem na coluna lateral do grafico; favoritar, acessar perfil, clicar no WhatsApp e compartilhar ficam em uma secao horizontal compacta abaixo. A decisao melhora escaneabilidade, evita uma lateral excessivamente alta e nao altera fonte de dados, contrato de API ou regra de calculo.
 
 Validacao complementar de layout 2026-07-16: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke local `GET http://localhost:3002/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=estatisticas` retornando 200.
+
+## Complemento 2026-07-16 - Publicacoes do psicologo com remocao e metricas de conteudo
+
+A aba **Publicacoes** do detalhe administrativo do psicologo deve tratar cada item como conteudo real de comunidade: a identidade exibida no card e a comunidade (avatar e nome), enquanto a autoria do psicologo fica implícita pelo contexto da pagina. A lista nao deve exibir a tag `Somente leitura` nem o subtitulo redundante `Comunidade` abaixo do nome.
+
+Para exclusao administrativa, a UI reutiliza o endpoint real de moderacao de conteudo de comunidade. Posts do contrato do psicologo sao enviados como `post`; respostas sao mapeadas para `comment`, preservando auditoria, confirmacao forte e motivo interno via formulario existente com React Hook Form/Zod/controllers. Nao foi criado endpoint paralelo de exclusao por psicologo.
+
+As metricas por publicacao seguem o mesmo conjunto visual da aba **Conteudo** de comunidades: visualizacoes, upvotes, downvotes, comentarios, salvos, compartilhamentos, cliques WhatsApp e denuncias. As novas fontes por item sao `post_report`, `important_action_event.action_type="whatsapp_click"` com `target_type` de post/resposta, e `page_view_event` com alvo de post/resposta quando houver tracking first-party. Eventos historicos sem alvo continuam fora dos totais por conteudo; nao ha backfill ou inferencia por URL.
+
+Validacao complementar 2026-07-16: `pnpm --dir admin check`, `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin build`, `pnpm check` e smoke HTTP local em `/psicologos/cmrqztri7000tn0uh1q4n8vxf?tab=publicacoes` retornando 200.

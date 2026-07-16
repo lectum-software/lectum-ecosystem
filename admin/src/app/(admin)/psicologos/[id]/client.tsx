@@ -35,6 +35,7 @@ import {
   Share2,
   ShieldCheck,
   Star,
+  Trash2,
   Trophy,
   UserRound,
   Video,
@@ -56,6 +57,7 @@ import { createPortal } from "react-dom";
 import { FormProvider, type SubmitHandler, useForm, useWatch } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
+import { useAdminCommunityRemoveContent } from "@/api/callers/communities";
 import {
   useAdminPsychologistAccount,
   useAdminPsychologistActivities,
@@ -872,6 +874,24 @@ const reportUpholdSchema = accountReasonSchema
 
 type ReportDismissFormValues = z.infer<typeof reportDismissSchema>;
 type ReportUpholdFormValues = z.infer<typeof reportUpholdSchema>;
+
+const PUBLICATION_REMOVE_CONFIRMATION = "REMOVER CONTEUDO";
+
+const publicationRemoveSchema = accountReasonSchema
+  .extend({
+    confirmation: z.string(),
+  })
+  .superRefine((values, ctx) => {
+    if (values.confirmation.trim().toUpperCase() !== PUBLICATION_REMOVE_CONFIRMATION) {
+      ctx.addIssue({
+        code: "custom",
+        message: `Digite ${PUBLICATION_REMOVE_CONFIRMATION} para confirmar.`,
+        path: ["confirmation"],
+      });
+    }
+  });
+
+type PublicationRemoveFormValues = z.infer<typeof publicationRemoveSchema>;
 
 const toPublicHref = (url: string) => {
   if (/^https?:\/\//.test(url)) return url;
@@ -3532,43 +3552,107 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: st
   );
 };
 
-const publicationMetricIcon: Record<keyof AdminPsychologistPublicationItem["metrics"], LucideIcon> =
-  {
-    comments: MessageCircle,
-    downvotes: ArrowDown,
-    saves: Bookmark,
-    shares: Share2,
-    upvotes: ArrowUp,
-    views: Eye,
-  };
+const PublicationWhatsAppIcon = ({ className, ...props }: SVGProps<SVGSVGElement>) => (
+  <svg
+    className={cn("h-4 w-4 shrink-0", className)}
+    fill="none"
+    viewBox="0 0 20 20"
+    xmlns="http://www.w3.org/2000/svg"
+    {...props}
+  >
+    <title>WhatsApp</title>
+    <path
+      d="M14.56 11.985C14.3125 11.8608 13.095 11.2625 12.8683 11.1791C12.6408 11.0966 12.4758 11.0558 12.31 11.3041C12.1458 11.5516 11.6708 12.1091 11.5267 12.2741C11.3825 12.44 11.2375 12.46 10.99 12.3366C10.7425 12.2116 9.94417 11.9508 8.99833 11.1075C8.2625 10.4508 7.765 9.63997 7.62083 9.39164C7.47667 9.14414 7.60583 9.00997 7.72917 8.88664C7.84083 8.77581 7.9775 8.59747 8.10083 8.45331C8.225 8.30831 8.26583 8.20497 8.34917 8.03914C8.43167 7.87414 8.39083 7.72997 8.32833 7.60581C8.26583 7.48247 7.77083 6.26247 7.565 5.76664C7.36333 5.28414 7.15917 5.34997 7.0075 5.34164C6.86333 5.33497 6.69833 5.33331 6.5325 5.33331C6.3675 5.33331 6.09917 5.39497 5.8725 5.64331C5.64583 5.89081 5.00583 6.48997 5.00583 7.70914C5.00583 8.92747 5.89333 10.105 6.01667 10.2708C6.14083 10.4358 7.76333 12.9375 10.2475 14.01C10.8383 14.265 11.2992 14.4175 11.6592 14.5308C12.2525 14.72 12.7925 14.6933 13.2183 14.6291C13.6942 14.5583 14.6833 14.03 14.89 13.4516C15.0967 12.8733 15.0967 12.3775 15.0342 12.2741C14.9725 12.1708 14.8075 12.1091 14.5592 11.985H14.56ZM10.0417 18.1541H10.0383C8.56314 18.1543 7.11507 17.7576 5.84583 17.0058L5.545 16.8275L2.4275 17.6458L3.25917 14.6058L3.06333 14.2941C2.2387 12.981 1.80245 11.4614 1.805 9.91081C1.80583 5.36914 5.50167 1.67414 10.045 1.67414C12.245 1.67414 14.3133 2.53247 15.8683 4.08914C17.418 5.63201 18.2861 7.7307 18.2792 9.91747C18.2767 14.4591 14.5817 18.1541 10.0417 18.1541ZM17.0525 2.90664C15.1979 1.03979 12.6731 -0.00695713 10.0417 -2.68403e-05C4.50917 -2.68403e-05 0.00833333 4.49414 0.005 10.0208C0.005 11.7875 0.455 13.5141 1.31417 15.0275L0 20L5.0975 18.6625C6.5981 19.5304 8.30145 19.9864 10.035 19.9841H10.0392C15.57 19.9841 20.0708 15.4916 20.0742 9.96581C20.0929 7.30066 19.0317 4.7415 17.1325 2.87164L17.0525 2.90664Z"
+      fill="currentColor"
+    />
+  </svg>
+);
+
+const publicationMetricOrder: (keyof AdminPsychologistPublicationItem["metrics"])[] = [
+  "views",
+  "upvotes",
+  "downvotes",
+  "comments",
+  "saves",
+  "shares",
+  "whatsapp_clicks",
+  "reports",
+];
+
+const publicationMetricIcon: Partial<
+  Record<keyof AdminPsychologistPublicationItem["metrics"], LucideIcon>
+> = {
+  comments: MessageCircle,
+  downvotes: ArrowDown,
+  reports: AlertTriangle,
+  saves: Bookmark,
+  shares: Share2,
+  upvotes: ArrowUp,
+  views: Eye,
+};
+
+const publicationMetricLabel: Record<keyof AdminPsychologistPublicationItem["metrics"], string> = {
+  comments: "comentários",
+  downvotes: "downvotes",
+  reports: "denúncias",
+  saves: "salvos",
+  shares: "compartilhamentos",
+  upvotes: "upvotes",
+  views: "visualizações",
+  whatsapp_clicks: "cliques WhatsApp",
+};
 
 const PublicationMedia = ({ item }: { item: AdminPsychologistPublicationItem }) => {
-  const src = item.media?.url ?? null;
-  const imageSrc = renderableImageSrc(src);
-  const looksLikeImage =
-    item.media?.type?.startsWith("image") || /\.(png|jpe?g|webp|gif)$/i.test(src ?? "");
+  if (!item.media) return null;
 
-  if (imageSrc && looksLikeImage) {
-    return (
-      <Image
-        alt={`Mídia da publicação ${item.title}`}
-        className="h-14 w-14 rounded-2xl object-cover"
-        height={56}
-        src={imageSrc}
-        unoptimized={isPublicAdminMediaSrc(imageSrc)}
-        width={56}
-      />
-    );
-  }
+  const src = item.media.url;
+  const mediaType = item.media.type?.toLowerCase() ?? "";
+  const isVideo = mediaType.startsWith("video") || /\.(mp4|webm|mov|m4v)$/i.test(src ?? "");
+  const imageSrc = !isVideo ? renderableImageSrc(src) : null;
+  const videoSrc = isVideo ? resolveAdminMediaUrl(src) : null;
+  const looksLikeImage =
+    mediaType.startsWith("image") || /\.(png|jpe?g|webp|gif)$/i.test(src ?? "");
+  const mediaLabel = isVideo ? "Miniplayer de vídeo publicado" : "Miniatura de mídia publicada";
 
   return (
-    <span className="grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-primary-soft text-primary">
-      {item.type === "post" ? (
-        <FileText aria-hidden className="h-6 w-6" />
-      ) : (
-        <MessageCircle aria-hidden className="h-6 w-6" />
+    <div
+      className={cn(
+        "relative w-full overflow-hidden rounded-2xl border border-border bg-surface-muted",
+        isVideo ? "aspect-[9/16] max-w-40 sm:w-28 sm:max-w-none" : "h-24 sm:h-28 sm:w-28",
       )}
-    </span>
+    >
+      {imageSrc && looksLikeImage ? (
+        <Image
+          alt={mediaLabel}
+          className="object-cover"
+          fill
+          sizes="112px"
+          src={imageSrc}
+          unoptimized={isPublicAdminMediaSrc(imageSrc)}
+        />
+      ) : null}
+      {videoSrc ? (
+        <video
+          aria-label={mediaLabel}
+          className="h-full w-full object-cover"
+          controls
+          muted
+          playsInline
+          preload="metadata"
+          src={videoSrc}
+        />
+      ) : null}
+      {!imageSrc && !videoSrc ? (
+        <div className="grid h-full place-items-center gap-1 p-3 text-center text-xs font-black text-muted">
+          {item.type === "post" ? (
+            <FileText aria-hidden className="mx-auto h-5 w-5" />
+          ) : (
+            <MessageCircle aria-hidden className="mx-auto h-5 w-5" />
+          )}
+          <span>Mídia publicada</span>
+        </div>
+      ) : null}
+    </div>
   );
 };
 
@@ -3576,15 +3660,204 @@ const PublicationMetric = ({ metric }: { metric: AdminPsychologistPublicationMet
   const Icon =
     publicationMetricIcon[metric.id as keyof AdminPsychologistPublicationItem["metrics"]] ??
     BarChart3;
+  const label =
+    publicationMetricLabel[metric.id as keyof AdminPsychologistPublicationItem["metrics"]] ??
+    metric.label.toLowerCase();
+  const displayValue = formatEngagementMetricValue(metric);
 
   return (
     <span
-      className="inline-flex items-center gap-1 rounded-full bg-surface-muted px-2 py-1 text-xs font-black text-muted"
+      className="inline-flex items-center gap-1.5"
       title={metric.available ? metric.source : (metric.unavailable_reason ?? metric.source)}
     >
-      <Icon aria-hidden className="h-3.5 w-3.5" />
-      {formatEngagementMetricValue(metric)}
+      {metric.id === "whatsapp_clicks" ? (
+        <PublicationWhatsAppIcon aria-hidden />
+      ) : (
+        <Icon aria-hidden className="h-4 w-4" />
+      )}
+      {metric.available ? `${displayValue} ${label}` : `${label}: ${displayValue}`}
     </span>
+  );
+};
+
+const PublicationItemHeader = ({ item }: { item: AdminPsychologistPublicationItem }) => (
+  <div className="flex flex-wrap items-center gap-2">
+    <Badge className="bg-surface-muted text-muted">
+      {item.type === "post" ? "Post" : "Resposta"}
+    </Badge>
+    <span className="text-xs font-bold text-muted">{formatDateTime(item.created_at)}</span>
+  </div>
+);
+
+const PublicationCommunityIdentity = ({
+  className,
+  item,
+}: {
+  className?: string;
+  item: AdminPsychologistPublicationItem;
+}) => {
+  const avatarSrc = renderableImageSrc(item.community.avatar_url);
+  const fallbackStyle =
+    !avatarSrc && item.community.color ? { backgroundColor: item.community.color } : undefined;
+
+  return (
+    <div className={cn("flex min-w-0 items-center gap-3", className)}>
+      <div
+        className={cn(
+          "relative grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-full border border-border text-xs font-black",
+          avatarSrc ? "bg-surface-muted text-primary" : "bg-primary-soft text-primary",
+          fallbackStyle ? "text-white" : null,
+        )}
+        style={fallbackStyle}
+      >
+        {avatarSrc ? (
+          <Image
+            alt={`Avatar da comunidade ${item.community.name}`}
+            className="object-cover"
+            fill
+            sizes="40px"
+            src={avatarSrc}
+            unoptimized={isPublicAdminMediaSrc(avatarSrc)}
+          />
+        ) : (
+          initials(item.community.name)
+        )}
+      </div>
+      <div className="min-w-0">
+        <span className="block truncate text-sm font-black text-foreground">
+          {item.community.name}
+        </span>
+      </div>
+    </div>
+  );
+};
+
+const PublicationItemBody = ({ item }: { item: AdminPsychologistPublicationItem }) => {
+  const hasText = item.excerpt.trim().length > 0;
+
+  return (
+    <div className="min-w-0">
+      <h3 className="text-base font-black text-foreground">{item.title}</h3>
+      <p className="mt-2 text-sm leading-6 text-muted">{hasText ? item.excerpt : "Sem texto."}</p>
+    </div>
+  );
+};
+
+const PublicationItemMain = ({ item }: { item: AdminPsychologistPublicationItem }) => {
+  const mediaTextGridClass = cn(
+    "mt-3 grid min-w-0 gap-3",
+    item.media && "sm:grid-cols-[112px_1fr]",
+  );
+
+  return (
+    <div className="min-w-0">
+      <PublicationItemHeader item={item} />
+      <PublicationCommunityIdentity className="mt-3" item={item} />
+      <div className={mediaTextGridClass}>
+        <PublicationMedia item={item} />
+        <PublicationItemBody item={item} />
+      </div>
+    </div>
+  );
+};
+
+const PublicationMetrics = ({ item }: { item: AdminPsychologistPublicationItem }) => (
+  <div className="mt-4 border-t border-border pt-3">
+    <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-xs font-bold text-muted">
+      {publicationMetricOrder.map((metricId) => {
+        const metric = item.metrics[metricId];
+
+        return <PublicationMetric key={metric.id} metric={metric} />;
+      })}
+    </div>
+  </div>
+);
+
+const publicationRemovalTargetType = (item: AdminPsychologistPublicationItem) =>
+  item.type === "post" ? "post" : "comment";
+
+const PublicationRemoveForm = ({
+  item,
+  onCancel,
+  onRemoved,
+}: {
+  item: AdminPsychologistPublicationItem;
+  onCancel: () => void;
+  onRemoved: () => void;
+}) => {
+  const mutation = useAdminCommunityRemoveContent(item.community.slug);
+  const form = useForm<PublicationRemoveFormValues>({
+    defaultValues: {
+      confirmation: "",
+      reason: "",
+    },
+    mode: "onSubmit",
+    resolver: zodResolver(publicationRemoveSchema),
+  });
+
+  const onSubmit = async (values: PublicationRemoveFormValues) => {
+    try {
+      await mutation.mutateAsync({
+        input: {
+          confirmation: values.confirmation,
+          reason: values.reason.trim(),
+        },
+        targetId: item.id,
+        targetType: publicationRemovalTargetType(item),
+      });
+      toast.success("Publicação removida com auditoria administrativa.");
+      form.reset();
+      onRemoved();
+    } catch (error) {
+      toast.error(resolveApiError(error));
+    }
+  };
+
+  return (
+    <FormProvider {...form}>
+      <form
+        className="mt-3 grid gap-3 rounded-2xl border border-red-100 bg-red-50 p-3"
+        noValidate
+        onSubmit={form.handleSubmit(onSubmit)}
+      >
+        <div>
+          <p className="text-sm font-black text-danger">Remoção administrativa de publicação</p>
+          <p className="mt-1 text-xs leading-5 text-danger">
+            A ação remove o {item.type === "post" ? "post" : "comentário"} na comunidade{" "}
+            {item.community.name} e registra auditoria real.
+          </p>
+        </div>
+        <TextareaController<PublicationRemoveFormValues>
+          label="Motivo interno obrigatório"
+          name="reason"
+          required
+          rows={3}
+        />
+        <InputController<PublicationRemoveFormValues>
+          label="Confirmação forte"
+          name="confirmation"
+          placeholder={PUBLICATION_REMOVE_CONFIRMATION}
+          required
+        />
+        <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
+          <button
+            className="h-10 rounded-control border border-border bg-surface px-4 text-xs font-black text-foreground"
+            onClick={onCancel}
+            type="button"
+          >
+            Cancelar
+          </button>
+          <button
+            className="inline-flex h-10 items-center justify-center gap-2 rounded-control bg-danger px-4 text-xs font-black text-white disabled:opacity-70"
+            disabled={mutation.isPending}
+            type="submit"
+          >
+            {mutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+            Remover publicação
+          </button>
+        </div>
+      </form>
+    </FormProvider>
   );
 };
 
@@ -3679,6 +3952,9 @@ const PublicationsTab = ({ createdAt, id }: { createdAt: string; id: string }) =
   );
   const [rangeError, setRangeError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
+  const [selectedRemoval, setSelectedRemoval] = useState<AdminPsychologistPublicationItem | null>(
+    null,
+  );
   const customRangeIsValid = isValidStatisticsRange(draftRange);
   const queryInput = useMemo<AdminPsychologistPublicationsQuery>(
     () => ({
@@ -3695,10 +3971,19 @@ const PublicationsTab = ({ createdAt, id }: { createdAt: string; id: string }) =
   );
   const query = useAdminPsychologistPublications(id, queryInput);
   const errorMessage = query.error ? resolveApiError(query.error) : null;
+  const closeRemoval = () => setSelectedRemoval(null);
+  const resetToFirstPage = () => {
+    closeRemoval();
+    setPage(1);
+  };
+  const handlePageChange = (nextPage: number) => {
+    closeRemoval();
+    setPage(nextPage);
+  };
   const handlePeriodChange = (period: PublicationsPeriodValue) => {
     setSelectedPeriod(period);
     setRangeError(null);
-    setPage(1);
+    resetToFirstPage();
 
     if (period === "custom") {
       if (!customRangeIsValid) {
@@ -3724,7 +4009,7 @@ const PublicationsTab = ({ createdAt, id }: { createdAt: string; id: string }) =
 
     setSelectedPeriod("custom");
     setDraftRange(nextRange);
-    setPage(1);
+    resetToFirstPage();
 
     if (!isValidStatisticsRange(nextRange)) {
       setRangeError(
@@ -3758,7 +4043,7 @@ const PublicationsTab = ({ createdAt, id }: { createdAt: string; id: string }) =
                 className="w-full bg-transparent text-sm font-bold text-foreground outline-none placeholder:text-subtle"
                 onChange={(event) => {
                   setQ(event.target.value);
-                  setPage(1);
+                  resetToFirstPage();
                 }}
                 placeholder="Título ou conteúdo"
                 type="search"
@@ -3772,7 +4057,7 @@ const PublicationsTab = ({ createdAt, id }: { createdAt: string; id: string }) =
               id="publications-community"
               onChange={(value) => {
                 setCommunity(value);
-                setPage(1);
+                resetToFirstPage();
               }}
               value={community}
             >
@@ -3790,7 +4075,7 @@ const PublicationsTab = ({ createdAt, id }: { createdAt: string; id: string }) =
               id="publications-type"
               onChange={(value) => {
                 setType(value as AdminPsychologistPublicationsQuery["type"]);
-                setPage(1);
+                resetToFirstPage();
               }}
               value={type ?? "all"}
             >
@@ -3839,8 +4124,8 @@ const PublicationsTab = ({ createdAt, id }: { createdAt: string; id: string }) =
         {rangeError ? <p className="mt-3 text-xs font-bold text-danger">{rangeError}</p> : null}
       </CardShell>
 
-      <CardShell className="overflow-hidden">
-        <div className="flex flex-col gap-2 border-b border-border p-4 sm:flex-row sm:items-center sm:justify-between">
+      <CardShell className="p-5">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h2 className="text-xl font-black text-foreground">Publicações</h2>
             <p className="mt-1 text-sm text-muted">
@@ -3848,59 +4133,72 @@ const PublicationsTab = ({ createdAt, id }: { createdAt: string; id: string }) =
               {numberFormatter.format(publications.count)} registros.
             </p>
           </div>
-          <Badge className="bg-primary-soft text-primary">Somente leitura</Badge>
         </div>
 
-        {publications.data.length === 0 ? (
-          <p className="p-5 text-sm font-bold text-muted">
-            Nenhuma publicação real encontrada para os filtros atuais.
-          </p>
-        ) : (
-          <div className="divide-y divide-border">
-            {publications.data.map((item) => (
+        <div className="mt-5 space-y-3">
+          {publications.data.length === 0 ? (
+            <p className="rounded-2xl bg-surface-muted p-4 text-sm font-bold text-muted">
+              Nenhuma publicação real encontrada para os filtros atuais.
+            </p>
+          ) : null}
+          {publications.data.map((item) => {
+            const selected = selectedRemoval?.id === item.id && selectedRemoval.type === item.type;
+
+            return (
               <article
-                className="grid gap-4 p-4 lg:grid-cols-[1fr_auto]"
+                className="rounded-2xl border border-border bg-surface p-4"
                 key={`${item.type}-${item.id}`}
               >
-                <div className="flex gap-3">
-                  <PublicationMedia item={item} />
-                  <div>
-                    <div className="flex flex-wrap items-center gap-2">
-                      <Badge className="bg-primary-soft text-primary">
-                        {item.type === "post" ? "Post" : "Resposta"}
-                      </Badge>
-                      <span className="text-xs font-bold text-muted">
-                        {item.community.name} · {formatDateTime(item.created_at)}
-                      </span>
-                    </div>
-                    <h3 className="mt-2 font-black text-foreground">{item.title}</h3>
-                    <p className="mt-1 text-sm font-bold leading-6 text-muted">{item.excerpt}</p>
-                    <a
-                      className="mt-2 inline-flex items-center gap-1 text-xs font-black text-primary"
+                <div className="grid gap-3 lg:grid-cols-[1fr_auto] lg:items-start">
+                  <PublicationItemMain item={item} />
+                  <div className="flex justify-end gap-2 lg:flex-col">
+                    <Link
+                      aria-label="Ver publicação no site"
+                      className="inline-flex h-10 w-10 items-center justify-center rounded-control border border-border text-foreground transition hover:border-primary hover:text-primary"
                       href={toPublicHref(item.public_url)}
                       rel="noreferrer"
                       target="_blank"
+                      title="Ver no site"
                     >
-                      Ver no site público
-                      <ExternalLink aria-hidden className="h-3.5 w-3.5" />
-                    </a>
+                      <Eye aria-hidden className="h-4 w-4" />
+                      <span className="sr-only">Ver no site</span>
+                    </Link>
+                    <button
+                      aria-label={selected ? "Fechar exclusão" : "Excluir publicação"}
+                      aria-pressed={selected}
+                      className="inline-flex h-10 w-10 items-center justify-center rounded-control border border-danger/20 text-danger transition hover:bg-danger/10"
+                      onClick={() => setSelectedRemoval(selected ? null : item)}
+                      title={selected ? "Fechar exclusão" : "Excluir"}
+                      type="button"
+                    >
+                      <Trash2 aria-hidden className="h-4 w-4" />
+                      <span className="sr-only">
+                        {selected ? "Fechar exclusão" : "Excluir publicação"}
+                      </span>
+                    </button>
                   </div>
                 </div>
-                <div className="flex flex-wrap items-center gap-2 lg:max-w-md lg:justify-end">
-                  {Object.values(item.metrics).map((metric) => (
-                    <PublicationMetric key={metric.id} metric={metric} />
-                  ))}
-                </div>
+                <PublicationMetrics item={item} />
+                {selected ? (
+                  <PublicationRemoveForm
+                    item={item}
+                    onCancel={closeRemoval}
+                    onRemoved={() => {
+                      closeRemoval();
+                      void query.refetch();
+                    }}
+                  />
+                ) : null}
               </article>
-            ))}
-          </div>
-        )}
+            );
+          })}
+        </div>
 
-        <div className="border-t border-border p-4">
+        <div className="mt-5">
           <PublicationsPagination
             page={publications.page}
             pages={publications.pages}
-            setPage={setPage}
+            setPage={handlePageChange}
           />
         </div>
       </CardShell>

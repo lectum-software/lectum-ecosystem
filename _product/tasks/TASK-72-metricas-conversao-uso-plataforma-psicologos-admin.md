@@ -669,7 +669,6 @@ Regras de cálculo:
 - Nao ha captura de conversa, mensagem, agenda ou dado clinico: o evento registra somente o click first-party, sessao/visitante e alvo de conteudo.
 - Validacao complementar: `pnpm --dir backend check`, `pnpm --dir frontend check`, `pnpm --dir admin check`, `pnpm --dir backend build`, `pnpm --dir frontend build`, `pnpm --dir admin build` e `pnpm check`.
 
-
 ## Ajuste complementar 2026-07-16 - Ações atribuídas ao vídeo de apresentação
 
 - Pedido do usuário: na aba **Estatísticas** do detalhe Admin do psicólogo, dentro de **Análises do vídeo de apresentação**, adicionar as quantidades de favoritados, acessos ao perfil, cliques no WhatsApp e compartilhamentos originados no vídeo.
@@ -681,6 +680,17 @@ Regras de cálculo:
 - Validacao executada: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke local `GET http://localhost:3002/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=estatisticas` retornando 200.
 
 
+## Ajuste complementar 2026-07-16 - Layout de publicacoes do psicologo por comunidade
+
+- Pedido do usuario: na aba **Publicacoes** do detalhe administrativo do psicologo, renderizar os posts no mesmo modelo visual da lista de conteudo da comunidade.
+- A lista passou a usar cards mobile-first com cabecalho de tipo/data, midia em miniatura, corpo textual, acao de visualizacao e barra inferior de metricas.
+- Como todos os itens da aba pertencem ao mesmo psicologo, a identidade do autor foi substituida pela identidade da comunidade, com avatar real quando disponivel, nome e fallback por iniciais/cor da comunidade.
+- O contrato de `GET /api/admin/private/psychologists/:id/publications` passou a expor `community.avatar_url`, usando campo ja selecionado da comunidade, sem alterar schema Prisma, migrations, endpoints ou packages.
+- Builder/Quick Copy nao esta exposto como ferramenta no ambiente; a referencia visual usada foi a captura enviada pelo usuario e o padrao local da aba **Conteudo** em comunidades.
+- Validacao executada: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir frontend check`, `pnpm check` e smoke local `GET http://localhost:3002/psicologos/cmrqztri7000tn0uh1q4n8vxf?tab=publicacoes` retornando 200.
+- Validacao visual via browser local nao foi concluida por falta de ferramenta de controle de navegador neste ambiente; a referencia visual usada foi a captura enviada pelo usuario.
+
+
 ## Ajuste complementar 2026-07-16 - Layout compacto das acoes do video de apresentacao
 
 - Pedido do usuario: melhorar a formatacao dos novos indicadores do bloco **Analises do video de apresentacao**, que ficaram empilhados na lateral e aumentaram demais a altura do card.
@@ -690,3 +700,14 @@ Regras de cálculo:
 - Nao houve package novo, mock, schema Prisma/migration ou alteracao de contrato de API.
 - Builder/Quick Copy nao esta exposto como ferramenta no ambiente; a referencia visual usada foi a captura enviada pelo usuario e o padrao local do Admin.
 - Validacao executada: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke local `GET http://localhost:3002/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=estatisticas` retornando 200.
+
+## Ajuste complementar 2026-07-16 - Acoes e metricas completas nas publicacoes do psicologo
+
+- Pedido do usuario: na aba **Publicacoes** do detalhe administrativo do psicologo, adicionar exclusao de post, igualar a barra de metricas ao modelo de posts da comunidade, remover a tag `Somente leitura` e remover o texto `Comunidade` abaixo do nome da comunidade.
+- O Admin agora exibe botao de exclusao em cada card e reutiliza o endpoint real de remocao de conteudo de comunidade, mapeando posts para `post` e respostas para `comment`, com formulario auditado usando React Hook Form, Zod e controllers existentes.
+- A barra inferior passou a seguir o mesmo conjunto e ordem da aba **Conteudo** da comunidade: visualizacoes, upvotes, downvotes, comentarios, salvos, compartilhamentos, cliques WhatsApp e denuncias.
+- O contrato de `GET /api/admin/private/psychologists/:id/publications` passou a expor metricas por item de `post_report`, `important_action_event.action_type="whatsapp_click"` e `page_view_event` tambem para respostas quando houver tracking first-party, sem backfill, inferencia por URL ou mock.
+- A identidade renderizada no card permanece sendo a comunidade, com avatar e nome, mas sem subtitulo redundante `Comunidade`; a tag `Somente leitura` foi removida do cabecalho da lista.
+- Nao houve alteracao de schema Prisma, migrations, packages ou endpoints paralelos.
+- Builder/Quick Copy nao esta exposto como ferramenta no ambiente; a referencia visual usada foi a captura enviada pelo usuario e o padrao local da aba **Conteudo** em comunidades.
+- Validacao executada: `pnpm --dir admin check`, `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin build`, `pnpm check` e smoke HTTP local `GET http://localhost:3002/psicologos/cmrqztri7000tn0uh1q4n8vxf?tab=publicacoes` retornando 200.

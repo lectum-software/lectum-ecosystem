@@ -977,6 +977,7 @@ export type AdminPsychologistPublicationMetric = AdminPsychologistEngagementMetr
 
 export type AdminPsychologistPublicationItem = {
   community: {
+    avatar_url: string | null;
     color: string | null;
     id: string;
     name: string;
@@ -992,10 +993,12 @@ export type AdminPsychologistPublicationItem = {
   metrics: {
     comments: AdminPsychologistPublicationMetric;
     downvotes: AdminPsychologistPublicationMetric;
+    reports: AdminPsychologistPublicationMetric;
     saves: AdminPsychologistPublicationMetric;
     shares: AdminPsychologistPublicationMetric;
     upvotes: AdminPsychologistPublicationMetric;
     views: AdminPsychologistPublicationMetric;
+    whatsapp_clicks: AdminPsychologistPublicationMetric;
   };
   public_url: string;
   source: "community_post" | "post_reply";
@@ -1026,7 +1029,7 @@ export type AdminPsychologistPublications = {
   pages: number;
   per_page: number;
   period: AdminPsychologistStatistics["period"];
-  source: "community_post+post_reply+post_vote+post_save+post_reply_save+post_share+page_view_event";
+  source: "community_post+post_reply+post_vote+post_save+post_reply_save+post_share+page_view_event+important_action_event+post_report";
   totals: {
     cards: AdminPsychologistEngagementMetric[];
   };

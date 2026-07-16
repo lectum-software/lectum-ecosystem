@@ -36,6 +36,14 @@ const postSelect = {
   media_type: true,
   media_url: true,
   replies_count: true,
+  reports: {
+    where: {
+      deleted: false,
+    },
+    select: {
+      id: true,
+    },
+  },
   saves_count: true,
   title: true,
   upvotes_count: true,
@@ -66,6 +74,14 @@ const replySelect = {
   media_type: true,
   media_url: true,
   parent_reply_id: true,
+  reports: {
+    where: {
+      deleted: false,
+    },
+    select: {
+      id: true,
+    },
+  },
   title: true,
   upvotes_count: true,
   post: {
@@ -465,6 +481,50 @@ export class AdminPsychologistEngagementRepository {
         deleted: false,
         target_id: { in: postIds },
         target_type: { in: ["post", "community_post"] },
+      },
+      _count: { _all: true },
+    });
+  }
+
+  async countReplyViews(replyIds: string[]) {
+    if (replyIds.length === 0) return [];
+
+    return prisma.page_view_event.groupBy({
+      by: ["target_id"],
+      where: {
+        deleted: false,
+        target_id: { in: replyIds },
+        target_type: { in: ["reply", "post_reply"] },
+      },
+      _count: { _all: true },
+    });
+  }
+
+  async countPostWhatsappClicks(postIds: string[]) {
+    if (postIds.length === 0) return [];
+
+    return prisma.important_action_event.groupBy({
+      by: ["target_id"],
+      where: {
+        action_type: "whatsapp_click",
+        deleted: false,
+        target_id: { in: postIds },
+        target_type: { in: ["post", "community_post"] },
+      },
+      _count: { _all: true },
+    });
+  }
+
+  async countReplyWhatsappClicks(replyIds: string[]) {
+    if (replyIds.length === 0) return [];
+
+    return prisma.important_action_event.groupBy({
+      by: ["target_id"],
+      where: {
+        action_type: "whatsapp_click",
+        deleted: false,
+        target_id: { in: replyIds },
+        target_type: { in: ["reply", "post_reply"] },
       },
       _count: { _all: true },
     });
