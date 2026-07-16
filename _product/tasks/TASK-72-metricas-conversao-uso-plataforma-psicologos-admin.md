@@ -766,3 +766,13 @@ Regras de cálculo:
 - Nao houve package novo, mock, schema Prisma/migration, endpoint novo ou alteracao de contrato de API.
 - Builder/Quick Copy nao esta exposto como ferramenta no ambiente; a referencia visual usada foi a captura enviada pelo usuario.
 - Validacao executada: `pnpm --dir frontend check`, `pnpm --dir frontend build` e smoke HTTP local `GET http://localhost:3000/app/professional/analytics` retornando 307 pelo guard privado.
+
+## Ajuste complementar 2026-07-16 - Aproveitamento responsivo do bloco de video
+
+- Pedido do usuario: em telas maiores, melhorar o aproveitamento visual do bloco de consumo e retencao do video em /app/professional/analytics.
+- Em telas md+, o painel **Consumo e acoes do video** passou para a coluna de contexto da retencao, abaixo do resumo **Onde seu publico permanece**, ocupando o espaco lateral que ficava vazio.
+- O card de midia a direita fica focado no player e no grafico de retencao; no mobile, a ordem continua vertical com o painel de consumo/acoes abaixo do player e do grafico.
+- A hierarquia acordada foi preservada: metricas e acoes ficam juntas, com o diagnostico abaixo dos contadores.
+- Nao houve package novo, mock, schema Prisma/migration, endpoint novo ou alteracao de contrato de API.
+- Builder/Quick Copy nao esta exposto como ferramenta no ambiente; a referencia visual usada foi a captura enviada pelo usuario.
+- Validacao executada: `pnpm --dir frontend check`, `pnpm --dir frontend build` e smoke HTTP local `GET http://localhost:3000/app/professional/analytics` retornando 307 pelo guard privado.

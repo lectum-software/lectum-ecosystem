@@ -578,6 +578,65 @@ const PresentationVideoActionCard = ({
   );
 };
 
+const PresentationVideoInsightsPanel = ({
+  actions,
+  className,
+  locked,
+  metrics,
+  retentionHealth,
+}: {
+  actions: PresentationVideoActionMetric[];
+  className?: string;
+  locked?: boolean;
+  metrics: PsychologistAnalyticsPresentationVideoMetric[];
+  retentionHealth: { description: string; label: string };
+}) => (
+  <div
+    className={cn(
+      "grid min-w-0 gap-3 rounded-[22px] border border-primary/10 bg-surface p-3",
+      className,
+    )}
+  >
+    <div className="min-w-0">
+      <p className="text-xs font-black uppercase tracking-[0.14em] text-primary">
+        Consumo e ações do vídeo
+      </p>
+      <p className="mt-1 text-xs font-semibold leading-5 text-muted">
+        Visualizações, replays e interações reais iniciadas no vídeo de apresentação.
+      </p>
+    </div>
+    <div className="grid min-w-0 grid-cols-2 gap-2">
+      {metrics.map((metric) => (
+        <PresentationVideoMetricCard key={metric.id} locked={locked} metric={metric} />
+      ))}
+      {actions.map((metric) => (
+        <PresentationVideoActionCard key={metric.id} locked={locked} metric={metric} />
+      ))}
+    </div>
+    <div className="rounded-2xl border border-primary/10 bg-primary-soft/55 px-3 py-3 text-sm leading-6 text-muted">
+      <p className="text-[0.68rem] font-black uppercase tracking-[0.12em] text-primary">
+        Diagnóstico
+      </p>
+      <span
+        className={cn(
+          "mt-2 inline-flex rounded-full border border-primary/10 bg-surface px-2.5 py-1 text-[0.68rem] font-black uppercase tracking-[0.1em] text-primary",
+          locked && "select-none blur-[4px]",
+        )}
+      >
+        {retentionHealth.label}
+      </span>
+      <p
+        className={cn(
+          "mt-2 font-semibold leading-5 text-muted",
+          locked && "select-none blur-[4px]",
+        )}
+      >
+        {retentionHealth.description}
+      </p>
+    </div>
+  </div>
+);
+
 type RetentionChartProps = {
   currentTimeSeconds?: number;
   durationSeconds?: number | null;
@@ -1113,30 +1172,39 @@ const PresentationVideoAnalyticsSection = ({
         </div>
       </div>
 
-      <article className="grid min-w-0 gap-4 rounded-[26px] border border-primary/10 bg-primary-soft/55 p-4 md:grid-cols-[minmax(160px,220px)_1fr] md:items-start md:p-5">
-        <div className="min-w-0">
-          <p className="text-xs font-black uppercase tracking-[0.14em] text-primary">
-            Retenção do vídeo
-          </p>
-          <h3 className="mt-2 text-lg font-extrabold text-foreground">
-            Onde seu público permanece
-          </h3>
-          <p className="mt-2 text-sm leading-6 text-muted">
-            Em média, os visitantes assistiram{" "}
-            <span className={cn("font-extrabold text-foreground", locked && "blur-[4px]")}>
-              {averageRetention}% do vídeo
-            </span>
-            {", cerca de "}
-            <span className={cn("font-extrabold text-foreground", locked && "blur-[4px]")}>
-              {formatSeconds(averageWatchSeconds)}
-            </span>
-            .
-          </p>
-          {!videoSrc ? (
-            <p className="mt-3 rounded-2xl border border-primary/10 bg-surface px-3 py-2 text-xs font-semibold leading-5 text-muted">
-              Envie um vídeo de apresentação para ativar a análise de retenção.
+      <article className="grid min-w-0 gap-4 rounded-[26px] border border-primary/10 bg-primary-soft/55 p-4 md:grid-cols-[minmax(220px,0.8fr)_minmax(0,1.2fr)] md:items-start md:p-5">
+        <div className="grid min-w-0 gap-4 md:content-start">
+          <div className="min-w-0">
+            <p className="text-xs font-black uppercase tracking-[0.14em] text-primary">
+              Retenção do vídeo
             </p>
-          ) : null}
+            <h3 className="mt-2 text-lg font-extrabold text-foreground">
+              Onde seu público permanece
+            </h3>
+            <p className="mt-2 text-sm leading-6 text-muted">
+              Em média, os visitantes assistiram{" "}
+              <span className={cn("font-extrabold text-foreground", locked && "blur-[4px]")}>
+                {averageRetention}% do vídeo
+              </span>
+              {", cerca de "}
+              <span className={cn("font-extrabold text-foreground", locked && "blur-[4px]")}>
+                {formatSeconds(averageWatchSeconds)}
+              </span>
+              .
+            </p>
+            {!videoSrc ? (
+              <p className="mt-3 rounded-2xl border border-primary/10 bg-surface px-3 py-2 text-xs font-semibold leading-5 text-muted">
+                Envie um vídeo de apresentação para ativar a análise de retenção.
+              </p>
+            ) : null}
+          </div>
+          <PresentationVideoInsightsPanel
+            actions={presentationVideoActionMetrics}
+            className="hidden md:grid"
+            locked={locked}
+            metrics={presentationVideoCards}
+            retentionHealth={retentionHealth}
+          />
         </div>
 
         <div className="grid min-w-0 gap-4 rounded-[26px] border border-primary/10 bg-surface/90 p-3 shadow-[var(--lectum-shadow-soft)] md:p-4">
@@ -1165,47 +1233,14 @@ const PresentationVideoAnalyticsSection = ({
               views={video?.metrics.views ?? 0}
             />
           </div>
-
-          <div className="grid min-w-0 gap-3 rounded-[22px] border border-primary/10 bg-surface p-3">
-            <div className="min-w-0">
-              <p className="text-xs font-black uppercase tracking-[0.14em] text-primary">
-                Consumo e ações do vídeo
-              </p>
-              <p className="mt-1 text-xs font-semibold leading-5 text-muted">
-                Visualizações, replays e interações reais iniciadas no vídeo de apresentação.
-              </p>
-            </div>
-            <div className="grid min-w-0 grid-cols-2 gap-2 lg:grid-cols-3">
-              {presentationVideoCards.map((metric) => (
-                <PresentationVideoMetricCard key={metric.id} locked={locked} metric={metric} />
-              ))}
-              {presentationVideoActionMetrics.map((metric) => (
-                <PresentationVideoActionCard key={metric.id} locked={locked} metric={metric} />
-              ))}
-            </div>
-            <div className="rounded-2xl border border-primary/10 bg-primary-soft/55 px-3 py-3 text-sm leading-6 text-muted">
-              <p className="text-[0.68rem] font-black uppercase tracking-[0.12em] text-primary">
-                Diagnóstico
-              </p>
-              <span
-                className={cn(
-                  "mt-2 inline-flex rounded-full border border-primary/10 bg-surface px-2.5 py-1 text-[0.68rem] font-black uppercase tracking-[0.1em] text-primary",
-                  locked && "select-none blur-[4px]",
-                )}
-              >
-                {retentionHealth.label}
-              </span>
-              <p
-                className={cn(
-                  "mt-2 font-semibold leading-5 text-muted",
-                  locked && "select-none blur-[4px]",
-                )}
-              >
-                {retentionHealth.description}
-              </p>
-            </div>
-          </div>
         </div>
+        <PresentationVideoInsightsPanel
+          actions={presentationVideoActionMetrics}
+          className="md:hidden"
+          locked={locked}
+          metrics={presentationVideoCards}
+          retentionHealth={retentionHealth}
+        />
       </article>
     </section>
   );

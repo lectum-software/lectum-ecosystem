@@ -129,3 +129,11 @@ Os contadores do bloco **Consumo e acoes do video** no analytics privado do psic
 A decisao e exclusivamente visual e nao altera fonte de dados, contrato de API, regra de calculo, schema Prisma ou tracking first-party.
 
 Validacao complementar 2026-07-16: `pnpm --dir frontend check`, `pnpm --dir frontend build` e smoke HTTP local `GET http://localhost:3000/app/professional/analytics` retornando 307 pelo guard privado.
+
+## Complemento 2026-07-16 - Aproveitamento responsivo do bloco de video
+
+No analytics privado do psicologo, o bloco de video deve aproveitar melhor telas medias e maiores sem alterar a ordem mobile-first. A partir de md, o painel **Consumo e acoes do video** fica na coluna de contexto da retencao, logo abaixo do resumo textual, enquanto o card de midia a direita permanece dedicado ao player e ao grafico de retencao.
+
+A decisao reduz o vazio visual que aparecia abaixo do resumo de retencao em telas largas e mantem a regra de hierarquia definida anteriormente: visualizacoes, taxa de replays e acoes atribuidas ficam agrupadas, e o diagnostico continua abaixo dos contadores. Nao ha mudanca de fonte de dados, contrato de API, schema Prisma, tracking first-party ou package.
+
+Validacao complementar 2026-07-16: `pnpm --dir frontend check`, `pnpm --dir frontend build` e smoke HTTP local `GET http://localhost:3000/app/professional/analytics` retornando 307 pelo guard privado.
