@@ -400,3 +400,12 @@ Regras:
   - `pnpm check`
   - `rg` confirmou ausÃªncia da faixa "DenÃºncias relacionadas...", da linha "PerÃ­odo consultado" e do chip `reports.active_filters_count` na aba **DenÃºncias**.
 - Browser local/headless em 390px e desktop para `http://localhost:3002/psicologos/test-id?tab=denuncias` confirmou rota/guard Admin sem quebrar o deep link, redirecionando para login por ausÃªncia de sessÃ£o no contexto headless.
+
+## Ajuste complementar 2026-07-16 - Revisão auditada de denúncias encerradas
+
+- Pedido do usuário: permitir alterar/revogar o status de denúncias já encerradas.
+- Denúncias encerradas em comunidade e no detalhe do psicólogo agora exibem a ação **Revisar decisão**.
+- A revisão exige motivo obrigatório, confirmação forte `REVISAR DECISAO` e escolha de novo status: **Pendente**, **Improcedente** ou **Procedente**.
+- A revisão registra nova auditoria em `admin_activity_log` sem apagar a decisão anterior; conteúdo removido não é restaurado automaticamente.
+- Comunidades revisam o grupo de denúncias do mesmo conteúdo; detalhe do psicólogo revisa a denúncia selecionada.
+- Não houve schema Prisma/migration, package novo, mock, endpoint simulado ou tabela nova.

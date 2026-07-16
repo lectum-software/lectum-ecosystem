@@ -46,6 +46,7 @@ export type AdminPsychologistActivityType =
   | "reply_saved"
   | "report_received"
   | "report_content_removed"
+  | "report_decision_reviewed"
   | "report_dismissed"
   | "report_review_started"
   | "report_upheld"

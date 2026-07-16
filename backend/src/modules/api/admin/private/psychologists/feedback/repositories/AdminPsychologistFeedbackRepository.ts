@@ -130,6 +130,7 @@ export type AdminPsychologistReportRecord = Prisma.post_reportGetPayload<{
 export type AdminPsychologistReportAudit = {
   action:
     | "psychologist_report_content_removed"
+    | "psychologist_report_decision_reviewed"
     | "psychologist_report_dismissed"
     | "psychologist_report_upheld";
   adminId: string;
@@ -275,6 +276,33 @@ export class AdminPsychologistFeedbackRepository {
       const report = await transaction.post_report.update({
         data: {
           status: "rejeitada",
+        },
+        select: reportSelect,
+        where: {
+          id: input.report.id,
+        },
+      });
+
+      await this.createAuditLog(transaction, input.audit);
+
+      return {
+        affectedReportsCount: 1,
+        contentAlreadyUnavailable: !reportContentIsAvailable(input.report),
+        contentRemoved: false,
+        report,
+      };
+    });
+  }
+
+  async reviseResolution(input: {
+    audit: AdminPsychologistReportAudit;
+    report: AdminPsychologistReportRecord;
+    status: "pendente" | "rejeitada" | "resolvida";
+  }): Promise<AdminPsychologistReportMutationResult> {
+    return prisma.$transaction(async (transaction) => {
+      const report = await transaction.post_report.update({
+        data: {
+          status: input.status,
         },
         select: reportSelect,
         where: {

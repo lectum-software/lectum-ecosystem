@@ -35,3 +35,13 @@ A aba **Denúncias** do detalhe administrativo do psicólogo existia como leitur
 - O contrato de `GET /api/admin/private/psychologists/:id/reports` foi estendido com `content.body`, `content.media` e `reported_by.name`, usando dados reais de `post_report`, `community_post`, `community_post_media`, `post_reply` e `user`.
 - A tag principal do card no detalhe do psicólogo exibe a comunidade do conteúdo denunciado, substituindo a tag de autoria usada na comunidade.
 - Mídias de posts/respostas denunciados são exibidas abaixo do texto do conteúdo, preservando o padrão de leitura compacto e sem criar endpoint paralelo, schema novo ou mock.
+
+## Atualização 2026-07-16: revisão auditada de decisão encerrada
+
+Denúncias já encerradas passam a aceitar uma revisão administrativa explícita, em vez de reaproveitar silenciosamente o fluxo inicial de resolução. A UI mostra **Revisar decisão** para estados terminais e exige novo status, motivo interno e confirmação forte `REVISAR DECISAO`.
+
+A revisão reutiliza `post_report.status` e `admin_activity_log`, sem criar tabela de moderação paralela: `pendente` reabre a análise, `rejeitada` mantém improcedência e `resolvida` mantém procedência. O log usa ações `community_report_decision_reviewed` e `psychologist_report_decision_reviewed`, com `safe_before`, `safe_after`, `previous_resolution`, `resolution` e `review=true`.
+
+Conteúdo removido por decisão procedente não é restaurado automaticamente quando a decisão é revista; restauração de conteúdo deve continuar sendo ação explícita futura, para evitar reexposição acidental.
+
+Consequência: o Admin ganha correção operacional reversível e auditável sem schema Prisma, migration, endpoint simulado, mock ou package novo.

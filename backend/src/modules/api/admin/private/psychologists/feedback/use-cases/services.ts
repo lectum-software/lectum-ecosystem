@@ -31,6 +31,7 @@ const MAX_REPORT_PERIOD_DAYS = 180;
 const MS_PER_DAY = 86_400_000;
 const DISMISS_REPORT_CONFIRMATION = "DENUNCIA IMPROCEDENTE";
 const UPHOLD_REPORT_CONFIRMATION = "DENUNCIA PROCEDENTE";
+const REVIEW_REPORT_CONFIRMATION = "REVISAR DECISAO";
 
 const pad = (value: number) => String(value).padStart(2, "0");
 const toDateKey = (date: Date) =>
@@ -412,6 +413,26 @@ const canResolve = (status: string) => {
   return group === "pending";
 };
 
+const reportStatusFromResolution = (
+  resolution: AdminPsychologistReportResolveBody["resolution"],
+) => {
+  if (resolution === "dismissed") return "rejeitada";
+  if (resolution === "upheld") return "resolvida";
+  if (resolution === "pending") return "pendente";
+
+  return null;
+};
+
+const reportStatusLabelFromResolution = (
+  resolution: AdminPsychologistReportResolveBody["resolution"],
+) => {
+  if (resolution === "dismissed") return "Improcedente";
+  if (resolution === "upheld") return "Procedente";
+  if (resolution === "pending") return "Pendente";
+
+  return resolution;
+};
+
 const reportCommunity = (report: AdminPsychologistReportRecord) =>
   report.reply ? report.reply.post.community : report.post.community;
 
@@ -481,6 +502,7 @@ const toReportItem = (report: AdminPsychologistReportRecord): AdminPsychologistR
 
   return {
     capabilities: {
+      can_review_resolution: !resolves,
       can_remove_content: resolves && available,
       can_resolve_dismissed: resolves,
       can_resolve_upheld: resolves,
@@ -671,7 +693,51 @@ export const resolveAdminPsychologistReport = async (
   const { profile, report, repository } = await loadReport(data.p.id, data.p.reportId);
   if (!profile) return notFound();
   if (!report) return reportNotFound();
-  if (!canResolve(report.status)) return invalidReportStatus();
+
+  const requestedStatus = reportStatusFromResolution(data.b.resolution);
+  if (!requestedStatus) return invalidReportStatus();
+
+  const isRevision = !canResolve(report.status);
+  if (isRevision) {
+    const currentGroup = reportStatusGroup(report.status);
+    if (currentGroup === data.b.resolution) return invalidReportStatus();
+    if (data.b.confirmation.trim().toUpperCase() !== REVIEW_REPORT_CONFIRMATION) {
+      return {
+        status: 400,
+        ...error("admin_psychologist_report_review_confirmation_invalid", {}),
+      };
+    }
+
+    const result = await repository.reviseResolution({
+      audit: createReportAudit({
+        action: "psychologist_report_decision_reviewed",
+        adminId: admin.id,
+        changedFields: ["Status da denuncia"],
+        metadata: {
+          previous_resolution: currentGroup,
+          resolution: data.b.resolution,
+          review: true,
+        },
+        reason: data.b.reason.trim(),
+        report,
+        safeAfter: {
+          "Status da denuncia": reportStatusLabelFromResolution(data.b.resolution),
+          ...safeTargetSummary(report),
+        },
+        targetId: profile.user.id,
+      }),
+      report,
+      status: requestedStatus,
+    });
+
+    return {
+      status: 200,
+      ...msg("admin_psychologist_report_decision_reviewed", {}),
+      data: reportActionResponse(result),
+    };
+  }
+
+  if (data.b.resolution === "pending") return invalidReportStatus();
 
   if (data.b.resolution === "dismissed") {
     if (!dismissConfirmationIsValid(data.b)) {

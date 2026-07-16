@@ -845,6 +845,7 @@ type AccountStatusActionFormValues = z.infer<typeof accountSuspendSchema>;
 
 const REPORT_DISMISS_CONFIRMATION = "DENUNCIA IMPROCEDENTE";
 const REPORT_UPHOLD_CONFIRMATION = "DENUNCIA PROCEDENTE";
+const REPORT_REVIEW_CONFIRMATION = "REVISAR DECISAO";
 
 const reportDismissSchema = accountReasonSchema
   .extend({
@@ -877,7 +878,25 @@ const reportUpholdSchema = accountReasonSchema
     }
   });
 
+const reportReviewSchema = accountReasonSchema
+  .extend({
+    confirmation: z.string(),
+    resolution: z.enum(["dismissed", "pending", "upheld"], {
+      message: "Selecione o novo status.",
+    }),
+  })
+  .superRefine((values, ctx) => {
+    if (values.confirmation.trim().toUpperCase() !== REPORT_REVIEW_CONFIRMATION) {
+      ctx.addIssue({
+        code: "custom",
+        message: `Digite ${REPORT_REVIEW_CONFIRMATION} para confirmar.`,
+        path: ["confirmation"],
+      });
+    }
+  });
+
 type ReportDismissFormValues = z.infer<typeof reportDismissSchema>;
+type ReportReviewFormValues = z.infer<typeof reportReviewSchema>;
 type ReportUpholdFormValues = z.infer<typeof reportUpholdSchema>;
 
 const PUBLICATION_REMOVE_CONFIRMATION = "REMOVER CONTEUDO";
@@ -4661,7 +4680,16 @@ const ReportStatusBadge = ({ group, label }: { group: string; label: string }) =
   return <Badge className={className}>{label}</Badge>;
 };
 
-type ReportModerationAction = "dismiss" | "uphold";
+type ReportResolutionValue = "dismissed" | "pending" | "upheld";
+const reportReviewResolutionOptions: { label: string; value: ReportResolutionValue }[] = [
+  { label: "Pendente", value: "pending" },
+  { label: "Improcedente", value: "dismissed" },
+  { label: "Procedente", value: "upheld" },
+];
+const reportReviewResolutionLabel = (resolution: ReportResolutionValue) =>
+  reportReviewResolutionOptions.find((option) => option.value === resolution)?.label ?? "Pendente";
+
+type ReportModerationAction = "dismiss" | "review" | "uphold";
 type ReportModerationState = {
   action: ReportModerationAction;
   report: AdminPsychologistReportItem;
@@ -4759,6 +4787,16 @@ const PsychologistReportActions = ({
       <div className="mt-5 flex flex-wrap items-center justify-end gap-2 border-t border-border/70 pt-4">
         <span className="text-xs font-bold text-muted">Denúncia já encerrada:</span>
         <ReportStatusBadge group={report.status_group} label={report.status_label} />
+        {report.capabilities.can_review_resolution ? (
+          <button
+            className="inline-flex min-h-9 items-center justify-center gap-2 rounded-control border border-border bg-surface px-3 py-1.5 text-xs font-black text-foreground transition hover:bg-surface-muted"
+            onClick={() => onResolve("review")}
+            type="button"
+          >
+            <RefreshCw aria-hidden className="h-3.5 w-3.5" />
+            Revisar decisão
+          </button>
+        ) : null}
       </div>
     );
   }
@@ -4861,7 +4899,11 @@ const ReportModerationDialog = ({
   state: NonNullable<ReportModerationState>;
 }) => {
   const title =
-    state.action === "dismiss" ? "Resolver como improcedente" : "Resolver como procedente";
+    state.action === "dismiss"
+      ? "Resolver como improcedente"
+      : state.action === "uphold"
+        ? "Resolver como procedente"
+        : "Revisar decisão encerrada";
 
   return (
     <div
@@ -4893,8 +4935,10 @@ const ReportModerationDialog = ({
         <div className="mt-5">
           {state.action === "dismiss" ? (
             <ReportDismissForm id={id} onClose={onClose} report={state.report} />
-          ) : (
+          ) : state.action === "uphold" ? (
             <ReportUpholdForm id={id} onClose={onClose} report={state.report} />
+          ) : (
+            <ReportReviewForm id={id} onClose={onClose} report={state.report} />
           )}
         </div>
       </div>
@@ -5086,6 +5130,108 @@ const ReportUpholdForm = ({
               <ShieldCheck aria-hidden className="h-4 w-4" />
             )}
             Resolver como procedente
+          </button>
+        </div>
+      </form>
+    </FormProvider>
+  );
+};
+
+const ReportReviewForm = ({
+  id,
+  onClose,
+  report,
+}: {
+  id: string;
+  onClose: () => void;
+  report: AdminPsychologistReportItem;
+}) => {
+  const mutation = useAdminPsychologistResolveReport(id);
+  const resolutionOptions = reportReviewResolutionOptions.filter(
+    (option) => option.value !== report.status_group,
+  );
+  const form = useForm<ReportReviewFormValues>({
+    defaultValues: {
+      confirmation: "",
+      reason: "",
+      resolution: "pending",
+    },
+    mode: "onSubmit",
+    resolver: zodResolver(reportReviewSchema),
+  });
+
+  const onSubmit: SubmitHandler<ReportReviewFormValues> = async (values) => {
+    try {
+      await mutation.mutateAsync({
+        input: {
+          confirmation: values.confirmation.trim().toUpperCase(),
+          reason: values.reason.trim(),
+          resolution: values.resolution,
+        },
+        reportId: report.id,
+      });
+      form.reset();
+      toast.success(
+        `Decisão da denúncia revisada para ${reportReviewResolutionLabel(
+          values.resolution,
+        ).toLowerCase()}.`,
+      );
+      onClose();
+    } catch (error) {
+      toast.error(resolveApiError(error));
+    }
+  };
+
+  return (
+    <FormProvider {...form}>
+      <form className="grid gap-3" noValidate onSubmit={form.handleSubmit(onSubmit)}>
+        <div className="rounded-2xl border border-blue-200 bg-blue-50 p-3 text-sm font-bold leading-6 text-blue-900">
+          A revisão altera apenas o status da denúncia e registra uma nova auditoria. Conteúdo
+          removido não será restaurado automaticamente.
+        </div>
+        <SelectController<ReportReviewFormValues>
+          disabled={mutation.isPending}
+          label="Novo status"
+          name="resolution"
+          options={resolutionOptions}
+          required
+        />
+        <TextareaController<ReportReviewFormValues>
+          disabled={mutation.isPending}
+          label="Motivo da revisão"
+          name="reason"
+          placeholder="Explique por que a decisão encerrada está sendo revista."
+          required
+          rows={4}
+        />
+        <InputController<ReportReviewFormValues>
+          autoComplete="off"
+          disabled={mutation.isPending}
+          label="Confirmação forte"
+          name="confirmation"
+          placeholder={REPORT_REVIEW_CONFIRMATION}
+          required
+        />
+        <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+          <button
+            className="inline-flex h-12 items-center justify-center rounded-control border border-border px-4 text-sm font-black text-muted transition hover:bg-surface-muted"
+            disabled={mutation.isPending}
+            onClick={onClose}
+            type="button"
+          >
+            Cancelar
+          </button>
+          <button
+            className="inline-flex h-12 items-center justify-center gap-2 rounded-control bg-primary px-4 text-sm font-black text-white transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:bg-surface-muted disabled:text-muted"
+            disabled={mutation.isPending}
+            type="submit"
+          >
+            {mutation.isPending ? (
+              <Loader2 aria-hidden className="h-4 w-4 animate-spin" />
+            ) : (
+              <RefreshCw aria-hidden className="h-4 w-4" />
+            )}
+            Confirmar revisão
           </button>
         </div>
       </form>

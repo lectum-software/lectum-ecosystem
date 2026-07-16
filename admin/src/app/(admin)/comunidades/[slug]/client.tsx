@@ -81,6 +81,7 @@ import type {
   AdminCommunityReportItem,
   AdminCommunityReports,
   AdminCommunityReportsQuery,
+  AdminCommunityResolveReportsInput,
   AdminCommunityRule,
   AdminCommunityRuleInput,
   AdminCommunityStatistics,
@@ -90,7 +91,7 @@ import type {
   AdminCommunityTopMentor,
   AdminCommunityUpdateInput,
 } from "@/api/req/communities";
-import { InputController, TextareaController } from "@/components/controllers";
+import { InputController, SelectController, TextareaController } from "@/components/controllers";
 import { aggregateCalendarChartPoints, buildSmoothSvgPath } from "@/lib/chart-time-series";
 import { communityHeaderBackground, deriveCommunityVisualPalette } from "@/lib/community-visual";
 import { cn } from "@/lib/utils";
@@ -162,6 +163,9 @@ const communityReportResolveSchema = (expectedConfirmation: string) =>
         `Digite ${expectedConfirmation} para confirmar.`,
       ),
     reason: z.string().trim().min(3, "Informe o motivo.").max(500, "Use ate 500 caracteres."),
+    resolution: z.enum(["dismissed", "pending", "upheld"], {
+      message: "Selecione o novo status.",
+    }),
   });
 
 type CommunityFormValues = z.infer<typeof communityFormSchema>;
@@ -3025,10 +3029,20 @@ const CommunityReportStatusBadge = ({
 
 const COMMUNITY_REPORT_DISMISS_CONFIRMATION = "DENUNCIA IMPROCEDENTE";
 const COMMUNITY_REPORT_UPHOLD_CONFIRMATION = "DENUNCIA PROCEDENTE";
+const COMMUNITY_REPORT_REVIEW_CONFIRMATION = "REVISAR DECISAO";
+type CommunityReportResolution = AdminCommunityResolveReportsInput["resolution"];
+const communityReportResolutionOptions: { label: string; value: CommunityReportResolution }[] = [
+  { label: "Pendente", value: "pending" },
+  { label: "Improcedente", value: "dismissed" },
+  { label: "Procedente", value: "upheld" },
+];
+const communityReportResolutionLabel = (resolution: CommunityReportResolution) =>
+  communityReportResolutionOptions.find((option) => option.value === resolution)?.label ??
+  "Pendente";
 
 type CommunityReportResolveState = {
   report: AdminCommunityReportItem;
-  resolution: "dismissed" | "upheld";
+  resolution: CommunityReportResolution;
 } | null;
 
 const CommunityReportMedia = ({ report }: { report: AdminCommunityReportItem }) => {
@@ -3112,7 +3126,7 @@ const CommunityReportActions = ({
   onResolve,
   report,
 }: {
-  onResolve: (resolution: "dismissed" | "upheld") => void;
+  onResolve: (resolution: CommunityReportResolution) => void;
   report: AdminCommunityReportItem;
 }) => {
   const hasResolutionActions =
@@ -3123,6 +3137,16 @@ const CommunityReportActions = ({
       <div className="mt-5 flex flex-wrap items-center justify-end gap-2 border-t border-border/70 pt-4">
         <span className="text-xs font-bold text-muted">Denúncia já encerrada:</span>
         <CommunityReportStatusBadge group={report.status_group} label={report.status_label} />
+        {report.capabilities.can_review_resolution ? (
+          <button
+            className="inline-flex min-h-9 items-center justify-center gap-2 rounded-control border border-border bg-surface px-3 py-1.5 text-xs font-black text-foreground transition hover:bg-surface-muted"
+            onClick={() => onResolve("pending")}
+            type="button"
+          >
+            <RefreshCw aria-hidden className="h-3.5 w-3.5" />
+            Revisar decisão
+          </button>
+        ) : null}
       </div>
     );
   }
@@ -3227,15 +3251,21 @@ const CommunityReportResolveDialog = ({
   slug: string;
   state: NonNullable<CommunityReportResolveState>;
 }) => {
-  const expectedConfirmation =
-    state.resolution === "dismissed"
+  const isReview = state.report.status_group !== "pending";
+  const expectedConfirmation = isReview
+    ? COMMUNITY_REPORT_REVIEW_CONFIRMATION
+    : state.resolution === "dismissed"
       ? COMMUNITY_REPORT_DISMISS_CONFIRMATION
       : COMMUNITY_REPORT_UPHOLD_CONFIRMATION;
+  const reviewResolutionOptions = communityReportResolutionOptions.filter(
+    (option) => option.value !== state.report.status_group,
+  );
   const mutation = useAdminCommunityResolveReports(slug);
   const form = useForm<CommunityReportResolveFormValues>({
     defaultValues: {
       confirmation: "",
       reason: "",
+      resolution: state.resolution,
     },
     mode: "onSubmit",
     resolver: zodResolver(communityReportResolveSchema(expectedConfirmation)),
@@ -3247,15 +3277,19 @@ const CommunityReportResolveDialog = ({
         input: {
           confirmation: values.confirmation,
           reason: values.reason.trim(),
-          resolution: state.resolution,
+          resolution: values.resolution,
         },
         targetId: state.report.content.id,
         targetType: state.report.content.type,
       });
       toast.success(
-        state.resolution === "dismissed"
-          ? "Denuncia marcada como improcedente."
-          : "Denuncia marcada como procedente.",
+        isReview
+          ? `Decisão da denúncia revisada para ${communityReportResolutionLabel(
+              values.resolution,
+            ).toLowerCase()}.`
+          : values.resolution === "dismissed"
+            ? "Denuncia marcada como improcedente."
+            : "Denuncia marcada como procedente.",
       );
       form.reset();
       onClose();
@@ -3280,14 +3314,19 @@ const CommunityReportResolveDialog = ({
           <div className="flex items-start justify-between gap-4">
             <div>
               <p className="text-xs font-black uppercase tracking-wide text-primary">
-                Resolucao de denuncias
+                {isReview ? "Revisão de decisão" : "Resolucao de denuncias"}
               </p>
               <h3 className="mt-1 text-xl font-black text-foreground">
-                Marcar como {state.resolution === "dismissed" ? "improcedente" : "procedente"}
+                {isReview
+                  ? "Revisar decisão encerrada"
+                  : `Marcar como ${
+                      state.resolution === "dismissed" ? "improcedente" : "procedente"
+                    }`}
               </h3>
               <p className="mt-2 text-sm leading-6 text-muted">
-                A decisao atualiza todas as denuncias pendentes deste mesmo conteudo e registra
-                auditoria. O conteudo nao sera removido por esta acao.
+                {isReview
+                  ? "A revisão altera o status das denúncias deste conteúdo e registra auditoria sem apagar a decisão anterior. Conteúdo removido não será restaurado automaticamente."
+                  : "A decisao atualiza todas as denuncias pendentes deste mesmo conteudo e registra auditoria. O conteudo nao sera removido por esta acao."}
               </p>
             </div>
             <button
@@ -3313,6 +3352,14 @@ const CommunityReportResolveDialog = ({
           </div>
 
           <div className="mt-4 grid gap-3">
+            {isReview ? (
+              <SelectController<CommunityReportResolveFormValues>
+                label="Novo status"
+                name="resolution"
+                options={reviewResolutionOptions}
+                required
+              />
+            ) : null}
             <TextareaController<CommunityReportResolveFormValues>
               label="Motivo interno obrigatorio"
               name="reason"
@@ -3338,13 +3385,17 @@ const CommunityReportResolveDialog = ({
             <button
               className={cn(
                 "inline-flex h-10 items-center justify-center gap-2 rounded-control px-4 text-xs font-black text-white disabled:opacity-70",
-                state.resolution === "dismissed" ? "bg-success" : "bg-danger",
+                isReview
+                  ? "bg-primary"
+                  : state.resolution === "dismissed"
+                    ? "bg-success"
+                    : "bg-danger",
               )}
               disabled={mutation.isPending}
               type="submit"
             >
               {mutation.isPending ? <Loader2 aria-hidden className="h-4 w-4 animate-spin" /> : null}
-              Confirmar decisao
+              {isReview ? "Confirmar revisão" : "Confirmar decisao"}
             </button>
           </div>
         </form>

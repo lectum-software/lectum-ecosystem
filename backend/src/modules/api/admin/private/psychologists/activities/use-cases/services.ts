@@ -54,6 +54,7 @@ const TYPE_LABELS: Record<AdminPsychologistActivityType, string> = {
   reply_saved: "Resposta salva",
   report_received: "Denúncia recebida",
   report_content_removed: "Den\u00fancia procedente com conte\u00fado removido",
+  report_decision_reviewed: "Decis\u00e3o de den\u00fancia revisada",
   report_dismissed: "Den\u00fancia improcedente",
   report_review_started: "Den\u00fancia em an\u00e1lise",
   report_upheld: "Den\u00fancia procedente",
@@ -287,6 +288,7 @@ const adminLogType = (action: string): AdminPsychologistActivityType | null => {
   if (action === "psychologist_account_suspended") return "account_suspended";
   if (action === "psychologist_account_sessions_revoked") return "account_sessions_revoked";
   if (action === "psychologist_report_review_started") return "report_review_started";
+  if (action === "psychologist_report_decision_reviewed") return "report_decision_reviewed";
   if (action === "psychologist_report_dismissed") return "report_dismissed";
   if (action === "psychologist_report_upheld") return "report_upheld";
   if (action === "psychologist_report_content_removed") return "report_content_removed";
@@ -313,6 +315,7 @@ const adminReportActionLabel = (action: string) => {
   const labels: Record<string, string> = {
     psychologist_report_content_removed:
       "resolveu a den\u00fancia como procedente e removeu o conte\u00fado",
+    psychologist_report_decision_reviewed: "revisou a decis\u00e3o da den\u00fancia",
     psychologist_report_dismissed: "resolveu a den\u00fancia como improcedente",
     psychologist_report_review_started: "colocou a den\u00fancia em an\u00e1lise",
     psychologist_report_upheld: "resolveu a den\u00fancia como procedente",

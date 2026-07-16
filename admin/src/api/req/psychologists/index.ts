@@ -1116,6 +1116,7 @@ export type AdminPsychologistReportItem = {
     unavailable_reason: string | null;
   };
   capabilities: {
+    can_review_resolution: boolean;
     can_remove_content: boolean;
     can_resolve_dismissed: boolean;
     can_resolve_upheld: boolean;
@@ -1173,7 +1174,7 @@ export type AdminPsychologistReportResolveInput = {
   confirmation: string;
   measure?: "none" | "remove_content";
   reason: string;
-  resolution: "dismissed" | "upheld";
+  resolution: "dismissed" | "pending" | "upheld";
 };
 
 export type AdminPsychologistReportActionResponse = {

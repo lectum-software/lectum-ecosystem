@@ -1540,8 +1540,10 @@ export class AdminCommunityManageRepository {
   async resolveReportsForTarget(input: {
     adminId: string;
     communityId: string;
+    previousResolution: "dismissed" | "pending" | "upheld";
     reason: string;
-    resolution: "dismissed" | "upheld";
+    resolution: "dismissed" | "pending" | "upheld";
+    review: boolean;
     safeBefore: Prisma.InputJsonObject;
     targetId: string;
     targetType: "comment" | "post" | "reply";
@@ -1566,7 +1568,12 @@ export class AdminCommunityManageRepository {
               },
             },
           };
-    const status = input.resolution === "dismissed" ? "rejeitada" : "resolvida";
+    const status =
+      input.resolution === "dismissed"
+        ? "rejeitada"
+        : input.resolution === "upheld"
+          ? "resolvida"
+          : "pendente";
 
     return prisma.$transaction(async (transaction) => {
       const existingReports = await transaction.post_report.findMany({
@@ -1590,15 +1597,24 @@ export class AdminCommunityManageRepository {
         where: {
           deleted: false,
           ...targetWhere,
-          status: {
-            in: activeReportStatuses,
-          },
+          ...(input.review
+            ? {
+                status: {
+                  not: status,
+                },
+              }
+            : {
+                status: {
+                  in: activeReportStatuses,
+                },
+              }),
         },
       });
 
       await this.createContentActivityLog(transaction, {
-        action:
-          input.resolution === "dismissed"
+        action: input.review
+          ? "community_report_decision_reviewed"
+          : input.resolution === "dismissed"
             ? "community_report_dismissed"
             : "community_report_upheld",
         adminId: input.adminId,
@@ -1611,11 +1627,14 @@ export class AdminCommunityManageRepository {
           content_type: targetType === "post" ? "post" : "comment",
           existing_reports_count: existingReports.length,
           post_id: existingReports[0]?.post_id ?? null,
+          previous_resolution: input.previousResolution,
           resolution: input.resolution,
+          review: input.review,
         },
         reason: input.reason,
         safeAfter: {
           status,
+          status_group: input.resolution,
         },
         safeBefore: input.safeBefore,
       });

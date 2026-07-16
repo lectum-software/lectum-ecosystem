@@ -24,6 +24,7 @@ import type {
   AdminCommunityReportItemDTO,
   AdminCommunityReportsDTO,
   AdminCommunityReportsQuery,
+  AdminCommunityResolveReportsBody,
   AdminCommunityResolveReportsDTO,
   AdminCommunityRuleBody,
   AdminCommunityRuleDTO,
@@ -75,6 +76,7 @@ const MS_PER_DAY = 86_400_000;
 const REMOVE_CONTENT_CONFIRMATION = "REMOVER CONTEUDO";
 const DISMISS_REPORT_CONFIRMATION = "DENUNCIA IMPROCEDENTE";
 const UPHOLD_REPORT_CONFIRMATION = "DENUNCIA PROCEDENTE";
+const REVIEW_REPORT_CONFIRMATION = "REVISAR DECISAO";
 const DEACTIVATE_COMMUNITY_CONFIRMATION = "DESATIVAR COMUNIDADE";
 const REACTIVATE_COMMUNITY_CONFIRMATION = "REATIVAR COMUNIDADE";
 const COMMUNITY_LIST_SORTS = new Set<AdminCommunitiesListSort>([
@@ -424,6 +426,7 @@ type AdminCommunityContentAuthor =
 type AdminCommunityContentKind = AdminCommunityContentItemDTO["content_kind"];
 type AdminCommunityReportContentKind = AdminCommunityReportItemDTO["content"]["content_kind"];
 type AdminCommunityReportStatusGroup = AdminCommunityReportItemDTO["status_group"];
+type AdminCommunityReportResolution = AdminCommunityResolveReportsBody["resolution"];
 
 const contentKindLabels: Record<AdminCommunityContentKind, string> = {
   anonymous_post: "Post anônimo",
@@ -967,6 +970,24 @@ const reportStatusLabelFromGroup = (group: AdminCommunityReportStatusGroup) => {
   return labels[group];
 };
 
+const reportConfirmationForResolution = (resolution: AdminCommunityReportResolution) => {
+  if (resolution === "dismissed") return DISMISS_REPORT_CONFIRMATION;
+  if (resolution === "upheld") return UPHOLD_REPORT_CONFIRMATION;
+
+  return REVIEW_REPORT_CONFIRMATION;
+};
+
+const reportResolutionMessageKey = (
+  resolution: AdminCommunityReportResolution,
+  revision: boolean,
+) => {
+  if (revision) return "admin_community_report_decision_reviewed";
+
+  return resolution === "dismissed"
+    ? "admin_community_report_dismissed"
+    : "admin_community_report_upheld";
+};
+
 const reportGroupStatusFromCounts = (
   counts: AdminCommunityReportItemDTO["status_counts"],
 ): AdminCommunityReportStatusGroup => {
@@ -992,6 +1013,7 @@ const refreshReportGroupDerivedFields = (item: AdminCommunityReportItemDTO) => {
   item.status_label = reportStatusLabelFromGroup(item.status_group);
   item.status = item.status_group;
   item.capabilities = {
+    can_review_resolution: item.status_counts.pending === 0,
     can_resolve_dismissed: item.status_counts.pending > 0,
     can_resolve_upheld: item.status_counts.pending > 0,
   };
@@ -1147,6 +1169,7 @@ const mapReport = (
 
   return {
     capabilities: {
+      can_review_resolution: statusGroup !== "pending",
       can_resolve_dismissed: statusGroup === "pending",
       can_resolve_upheld: statusGroup === "pending",
     },
@@ -1228,6 +1251,9 @@ const activitySummary = (activity: AdminCommunityActivityRecord) => {
   }
   if (activity.action === "community_report_upheld") {
     return "Denuncia marcada como procedente";
+  }
+  if (activity.action === "community_report_decision_reviewed") {
+    return "Decisao da denuncia revisada";
   }
   if (activity.action === "community_content_removed") return "Conteúdo removido";
   if (activity.action === "community_deactivated") return "Comunidade desativada";
@@ -2731,24 +2757,14 @@ export const resolveReports = async (data: IAdminCommunityResolveReportsDTO): Pr
     };
   }
 
-  if (data.b.resolution !== "dismissed" && data.b.resolution !== "upheld") {
+  if (
+    data.b.resolution !== "dismissed" &&
+    data.b.resolution !== "pending" &&
+    data.b.resolution !== "upheld"
+  ) {
     return {
       status: 400,
       ...error("admin_community_report_invalid_status", {}),
-    };
-  }
-
-  const expectedConfirmation =
-    data.b.resolution === "dismissed" ? DISMISS_REPORT_CONFIRMATION : UPHOLD_REPORT_CONFIRMATION;
-  if (data.b.confirmation.trim().toUpperCase() !== expectedConfirmation) {
-    return {
-      status: 400,
-      ...error(
-        data.b.resolution === "dismissed"
-          ? "admin_community_report_dismiss_confirmation_invalid"
-          : "admin_community_report_uphold_confirmation_invalid",
-        {},
-      ),
     };
   }
 
@@ -2764,9 +2780,39 @@ export const resolveReports = async (data: IAdminCommunityResolveReportsDTO): Pr
       ...error("admin_community_report_invalid_target", {}),
     };
   }
+
+  const isRevision = targetGroup.status_group !== "pending";
   if (
-    (data.b.resolution === "dismissed" && !targetGroup.capabilities.can_resolve_dismissed) ||
-    (data.b.resolution === "upheld" && !targetGroup.capabilities.can_resolve_upheld)
+    (!isRevision && data.b.resolution === "pending") ||
+    (isRevision && targetGroup.status_group === data.b.resolution)
+  ) {
+    return {
+      status: 409,
+      ...error("admin_community_report_invalid_status", {}),
+    };
+  }
+
+  const expectedConfirmation = isRevision
+    ? REVIEW_REPORT_CONFIRMATION
+    : reportConfirmationForResolution(data.b.resolution);
+  if (data.b.confirmation.trim().toUpperCase() !== expectedConfirmation) {
+    return {
+      status: 400,
+      ...error(
+        isRevision
+          ? "admin_community_report_review_confirmation_invalid"
+          : data.b.resolution === "dismissed"
+            ? "admin_community_report_dismiss_confirmation_invalid"
+            : "admin_community_report_uphold_confirmation_invalid",
+        {},
+      ),
+    };
+  }
+
+  if (
+    !isRevision &&
+    ((data.b.resolution === "dismissed" && !targetGroup.capabilities.can_resolve_dismissed) ||
+      (data.b.resolution === "upheld" && !targetGroup.capabilities.can_resolve_upheld))
   ) {
     return {
       status: 409,
@@ -2777,7 +2823,9 @@ export const resolveReports = async (data: IAdminCommunityResolveReportsDTO): Pr
   const resolved = await repository.resolveReportsForTarget({
     adminId: admin.id,
     communityId: community.id,
+    previousResolution: targetGroup.status_group,
     reason: data.b.reason,
+    review: isRevision,
     resolution: data.b.resolution,
     safeBefore: reportGroupSafeBefore(targetGroup),
     targetId: targetGroup.content.id,
@@ -2809,12 +2857,7 @@ export const resolveReports = async (data: IAdminCommunityResolveReportsDTO): Pr
 
   return {
     status: 200,
-    ...msg(
-      data.b.resolution === "dismissed"
-        ? "admin_community_report_dismissed"
-        : "admin_community_report_upheld",
-      {},
-    ),
+    ...msg(reportResolutionMessageKey(data.b.resolution, isRevision), {}),
     data: payload,
   };
 };

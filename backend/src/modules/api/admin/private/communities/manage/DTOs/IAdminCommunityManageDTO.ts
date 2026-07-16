@@ -114,7 +114,7 @@ export type AdminCommunityRemoveContentBody = {
 export type AdminCommunityResolveReportsBody = {
   confirmation: string;
   reason: string;
-  resolution: "dismissed" | "upheld";
+  resolution: "dismissed" | "pending" | "upheld";
 };
 
 export type AdminCommunityStatusBody = {
@@ -343,6 +343,7 @@ export type AdminCommunityRankingDTO = {
 
 export type AdminCommunityReportItemDTO = {
   capabilities: {
+    can_review_resolution: boolean;
     can_resolve_dismissed: boolean;
     can_resolve_upheld: boolean;
   };
@@ -595,7 +596,7 @@ export type AdminCommunityResolveReportsDTO = {
   content_id: string;
   post_id: string;
   report: AdminCommunityReportItemDTO;
-  resolution: "dismissed" | "upheld";
+  resolution: "dismissed" | "pending" | "upheld";
   type: "comment" | "post";
 };
 

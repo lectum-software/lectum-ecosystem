@@ -386,7 +386,7 @@ export type AdminCommunityRemoveContentResult = {
 export type AdminCommunityResolveReportsInput = {
   confirmation: string;
   reason: string;
-  resolution: "dismissed" | "upheld";
+  resolution: "dismissed" | "pending" | "upheld";
 };
 
 export type AdminCommunityRankingQuery = AdminCommunityPaginationQuery & {
@@ -474,6 +474,7 @@ export type AdminCommunityReportsQuery = AdminCommunityPaginationQuery & {
 
 export type AdminCommunityReportItem = {
   capabilities: {
+    can_review_resolution: boolean;
     can_resolve_dismissed: boolean;
     can_resolve_upheld: boolean;
   };
@@ -580,7 +581,7 @@ export type AdminCommunityResolveReportsResult = {
   content_id: string;
   post_id: string;
   report: AdminCommunityReportItem;
-  resolution: "dismissed" | "upheld";
+  resolution: "dismissed" | "pending" | "upheld";
   type: "comment" | "post";
 };
 
