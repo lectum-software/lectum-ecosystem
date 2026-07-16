@@ -5394,7 +5394,13 @@ const ActivitiesTab = ({ id }: { id: string }) => {
           </p>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[720px] text-left text-sm">
+            <table className="w-full min-w-[820px] table-fixed text-left text-sm">
+              <colgroup>
+                <col className="w-40" />
+                <col className="w-48" />
+                <col />
+                <col className="w-52" />
+              </colgroup>
               <thead className="border-b border-border text-xs text-muted">
                 <tr>
                   <th className="py-3 pr-3 pl-4 font-black">Data</th>
