@@ -389,3 +389,13 @@ Regras:
 - O backend tambem voltou a enviar labels acentuados em `period.label` e no filtro **Todas as areas**.
 - Nao houve alteracao de regra de negocio, endpoint, schema Prisma/migration, package ou persistencia.
 - Validacao executada: `pnpm --dir admin check`, `pnpm --dir backend check`, `pnpm --dir admin build`, `pnpm --dir backend build`, `pnpm check` e smoke HTTP local `GET http://127.0.0.1:3012/comunidades/relacionamentos-com-proposito?tab=atividades` retornando 200.
+
+## Ajuste complementar 2026-07-16 - Descricao limpa nas Atividades
+
+- Pedido do usuario: na coluna **Descricao** da aba **Atividades** da comunidade, remover os prefixos **Motivo**, **Area** e **Origem**.
+- A tabela administrativa agora exibe somente o texto descritivo do evento (`activity.reason`) na coluna **Descricao**, com fallback **Sem descricao registrada.** quando o log nao possuir motivo.
+- O filtro por **Area** e os dados reais de auditoria continuam preservados no contrato e nas opcoes de filtro; a mudanca e apenas de apresentacao da linha.
+- Nao houve endpoint novo, schema Prisma/migration, package, mock ou alteracao de persistencia.
+- Builder/Quick Copy nao esta exposto como ferramenta callable no ambiente; a referencia visual usada foi a captura enviada pelo usuario e o padrao local da aba **Atividades** de psicologos.
+- ADR atualizado: `adrs/0264-admin-comunidade-abas-conteudo-ranking.md`.
+- Validacao executada: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke HTTP local `GET http://127.0.0.1:3012/comunidades/relacionamentos-com-proposito?tab=atividades` retornando 200.

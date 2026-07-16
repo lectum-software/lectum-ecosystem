@@ -331,3 +331,13 @@ Os textos adicionados nos filtros e na tabela de **Atividades** da comunidade de
 Consequencia: a experiencia visual volta a ficar consistente em portugues brasileiro e o contrato continua usando os mesmos campos `filters`, `period` e `active_filters_count`.
 
 Validacao desta atualizacao: `pnpm --dir admin check`, `pnpm --dir backend check`, `pnpm --dir admin build`, `pnpm --dir backend build`, `pnpm check` e smoke local `GET http://127.0.0.1:3012/comunidades/relacionamentos-com-proposito?tab=atividades` retornando 200.
+
+## Atualizacao 2026-07-16: descricao limpa na tabela de atividades
+
+A coluna **Descricao** da aba **Atividades** do detalhe administrativo de comunidade passa a exibir somente o texto descritivo do evento administrativo. Os prefixos visuais **Motivo**, **Area** e **Origem** foram removidos da celula para reduzir ruido e alinhar a leitura ao pedido operacional.
+
+A decisao preserva a auditoria real em `admin_activity_log`: area e origem continuam disponiveis no contrato e nos filtros, mas deixam de ser repetidas em cada linha da descricao. Quando o log nao tiver motivo, a UI mostra **Sem descricao registrada.**
+
+Consequencia: a mudanca e exclusivamente visual no Admin, sem novo endpoint, contrato semantico, schema Prisma, migration, dependencia, mock ou alteracao de persistencia.
+
+Validacao desta atualizacao: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke local `GET http://127.0.0.1:3012/comunidades/relacionamentos-com-proposito?tab=atividades` retornando 200.

@@ -3751,15 +3751,7 @@ const ActivitiesTab = ({ slug }: { slug: string }) => {
                       {restoreCommunityActivityText(activity.summary)}
                     </td>
                     <td className="px-3 py-3 text-muted">
-                      {activity.reason ? (
-                        <span className="block">Motivo: {activity.reason}</span>
-                      ) : null}
-                      <span
-                        className={cn("block", activity.reason ? "mt-1 text-xs font-bold" : "")}
-                      >
-                        Área: {formatCommunityActivityAreaLabel(activity.area)} · Origem: Painel
-                        administrativo
-                      </span>
+                      {activity.reason || "Sem descrição registrada."}
                     </td>
                     <td className="py-3 pr-4 pl-3">
                       <span className="block font-black text-foreground">
