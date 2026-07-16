@@ -711,3 +711,11 @@ Regras de cálculo:
 - Nao houve alteracao de schema Prisma, migrations, packages ou endpoints paralelos.
 - Builder/Quick Copy nao esta exposto como ferramenta no ambiente; a referencia visual usada foi a captura enviada pelo usuario e o padrao local da aba **Conteudo** em comunidades.
 - Validacao executada: `pnpm --dir admin check`, `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin build`, `pnpm check` e smoke HTTP local `GET http://localhost:3002/psicologos/cmrqztri7000tn0uh1q4n8vxf?tab=publicacoes` retornando 200.
+
+## Ajuste complementar 2026-07-16 - Respostas sem titulo de post na aba Publicacoes
+
+- Pedido do usuario: quando a publicacao listada for uma resposta, remover a linha `Resposta em...` do card.
+- A UI Admin da aba **Publicacoes** agora renderiza titulo apenas para itens do tipo `post`; respostas exibem somente o conteudo da resposta abaixo da identidade da comunidade.
+- O ajuste e exclusivamente visual, mobile-first, sem endpoint novo, mock, package, schema Prisma/migration ou alteracao de contrato.
+- Builder/Quick Copy nao esta exposto como ferramenta no ambiente; a referencia visual usada foi a captura enviada pelo usuario.
+- Validacao executada: `pnpm --dir admin check`, `pnpm --dir admin build` e smoke HTTP local `GET http://localhost:3002/psicologos/cmrqztri7000tn0uh1q4n8vxf?tab=publicacoes` retornando 200.

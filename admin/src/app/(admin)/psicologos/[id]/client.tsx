@@ -3734,11 +3734,14 @@ const PublicationCommunityIdentity = ({
 
 const PublicationItemBody = ({ item }: { item: AdminPsychologistPublicationItem }) => {
   const hasText = item.excerpt.trim().length > 0;
+  const showTitle = item.type === "post";
 
   return (
     <div className="min-w-0">
-      <h3 className="text-base font-black text-foreground">{item.title}</h3>
-      <p className="mt-2 text-sm leading-6 text-muted">{hasText ? item.excerpt : "Sem texto."}</p>
+      {showTitle ? <h3 className="text-base font-black text-foreground">{item.title}</h3> : null}
+      <p className={cn("text-sm leading-6 text-muted", showTitle && "mt-2")}>
+        {hasText ? item.excerpt : "Sem texto."}
+      </p>
     </div>
   );
 };
