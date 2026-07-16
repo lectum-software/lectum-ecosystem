@@ -176,3 +176,13 @@ Tambem foi removido `period="all"` da query inicial da aba **Denuncias**, porque
 Consequencia: a mudanca e apenas visual/CSS no Admin, com correcao local de tipo; nao altera API, persistencia, schema Prisma, dependencias ou fluxo de upload/reproducao.
 
 Validacao desta atualizacao: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke local `GET http://localhost:3002/comunidades/autocuidado-em-pratica?tab=conteudo` retornando 200.
+
+## Atualizacao 2026-07-15: contagem da listagem e chevrons dos filtros de conteudo
+
+A aba **Conteudo** do detalhe de comunidade passa a apresentar a contagem operacional como texto de listagem: `Mostrando X de X registros.`, com `X` visivel derivado do tamanho da pagina retornada pela API e o total derivado de `count`.
+
+O badge separado de total foi removido para evitar duplicidade visual no cabecalho da listagem. Os dropdowns **Tipo** e **Periodo** passam a esconder a seta nativa e renderizar `ChevronDown` com espacamento explicito a direita, mantendo o select nativo e sem dependencia nova.
+
+Consequencia: a mudanca e apenas visual no Admin; nao altera API, persistencia, schema Prisma, dependencias, paginacao nem filtros reais.
+
+Validacao desta atualizacao: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke local `GET http://localhost:3002/comunidades/autocuidado-em-pratica?tab=conteudo` retornando 200.

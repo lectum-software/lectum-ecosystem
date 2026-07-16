@@ -7,6 +7,7 @@ import {
   ArrowUp,
   Bookmark,
   CalendarDays,
+  ChevronDown,
   Edit3,
   Eye,
   GripVertical,
@@ -1969,52 +1970,62 @@ const ContentTab = ({ slug }: { slug: string }) => {
           </label>
           <label className="block text-sm font-black text-muted" htmlFor="community-content-type">
             Tipo
-            <select
-              className="mt-2 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground"
-              id="community-content-type"
-              onChange={(event) =>
-                updateQuery({ type: event.target.value as AdminCommunityContentQuery["type"] })
-              }
-              value={query.type ?? "all"}
-            >
-              {contentTypeOptions.map((option) => (
-                <option key={option.id} value={option.id}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
+            <span className="relative mt-2 block">
+              <select
+                className="h-11 w-full appearance-none rounded-control border border-border bg-surface px-3 pr-12 text-sm font-bold text-foreground"
+                id="community-content-type"
+                onChange={(event) =>
+                  updateQuery({ type: event.target.value as AdminCommunityContentQuery["type"] })
+                }
+                value={query.type ?? "all"}
+              >
+                {contentTypeOptions.map((option) => (
+                  <option key={option.id} value={option.id}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown
+                aria-hidden
+                className="pointer-events-none absolute right-5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted"
+              />
+            </span>
           </label>
           <label className="block text-sm font-black text-muted" htmlFor="community-content-period">
             Período
-            <select
-              className="mt-2 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground"
-              id="community-content-period"
-              onChange={(event) =>
-                updateQuery({ period: event.target.value as AdminCommunityContentQuery["period"] })
-              }
-              value={query.period ?? "all"}
-            >
-              {contentPeriodOptions.map((option) => (
-                <option key={option.id} value={option.id}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
+            <span className="relative mt-2 block">
+              <select
+                className="h-11 w-full appearance-none rounded-control border border-border bg-surface px-3 pr-12 text-sm font-bold text-foreground"
+                id="community-content-period"
+                onChange={(event) =>
+                  updateQuery({
+                    period: event.target.value as AdminCommunityContentQuery["period"],
+                  })
+                }
+                value={query.period ?? "all"}
+              >
+                {contentPeriodOptions.map((option) => (
+                  <option key={option.id} value={option.id}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown
+                aria-hidden
+                className="pointer-events-none absolute right-5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted"
+              />
+            </span>
           </label>
         </div>
       </section>
 
       <section className={cn(cardClass, "p-5")}>
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-          <div>
-            <h2 className="text-lg font-black text-foreground">Conteúdo da comunidade</h2>
-            <p className="mt-1 text-sm text-muted">
-              Posts e comentários reais, com remoção administrativa auditada e sem mock.
-            </p>
-          </div>
-          <StatusBadge tone="muted">
-            {numberFormatter.format(result.data?.count ?? 0)} itens
-          </StatusBadge>
+        <div>
+          <h2 className="text-lg font-black text-foreground">Conteúdo da comunidade</h2>
+          <p className="mt-1 text-sm text-muted">
+            Mostrando {numberFormatter.format(result.data?.data.length ?? 0)} de{" "}
+            {numberFormatter.format(result.data?.count ?? 0)} registros.
+          </p>
         </div>
         <div className="mt-5 space-y-3">
           <QueryStatus

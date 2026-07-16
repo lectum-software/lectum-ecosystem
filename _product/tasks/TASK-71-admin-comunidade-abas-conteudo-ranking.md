@@ -252,3 +252,14 @@ Regras:
 - Builder/Quick Copy nao esta exposto como ferramenta callable no ambiente; a referencia visual usada foi a captura enviada pelo usuario e o padrao local do Admin/site publico.
 - ADR atualizado: `adrs/0264-admin-comunidade-abas-conteudo-ranking.md`.
 - Validacao executada: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke local `GET http://localhost:3002/comunidades/autocuidado-em-pratica?tab=conteudo` retornando 200.
+
+## Ajuste complementar 2026-07-15 - Contagem da listagem e setas dos filtros
+
+- Pedido do usuario: trocar a descricao estatica por "Mostrando X de X registros.", remover a tag de contagem "13 itens" e afastar as setas dos dropdowns.
+- A UI Admin da aba **Conteudo** agora calcula a contagem visivel a partir de `result.data.data.length` e o total a partir de `result.data.count`, mantendo a lista/paginacao real da API.
+- O badge de total no cabecalho da listagem foi removido; a informacao fica apenas na descricao "Mostrando X de X registros.".
+- Os selects **Tipo** e **Periodo** usam `appearance-none`, `ChevronDown` do `lucide-react` e `right-5`/`pr-12` para dar margem visual a seta sem package novo.
+- Nao houve package novo, mock, schema Prisma/migration, endpoint paralelo ou alteracao de persistencia; apenas apresentacao no Admin.
+- Builder/Quick Copy nao esta exposto como ferramenta callable no ambiente; a referencia visual usada foi a captura enviada pelo usuario e o padrao local do Admin.
+- ADR atualizado: `adrs/0264-admin-comunidade-abas-conteudo-ranking.md`.
+- Validacao executada: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke local `GET http://localhost:3002/comunidades/autocuidado-em-pratica?tab=conteudo` retornando 200.
