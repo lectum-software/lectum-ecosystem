@@ -3054,36 +3054,31 @@ const communityReportTitle = (report: AdminCommunityReportItem) =>
 
 const CommunityReportReporterHistory = ({ report }: { report: AdminCommunityReportItem }) => (
   <section className="mt-5 border-t border-border/70 pt-5">
-    <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
-      <h4 className="text-sm font-black text-foreground">Histórico de denunciantes</h4>
-      <span className="text-xs font-black text-primary">
-        {numberFormatter.format(report.reporters.length)} registro(s)
-      </span>
-    </div>
+    <h4 className="text-sm font-black text-foreground">Histórico de denunciantes</h4>
 
-    <div className="mt-3 divide-y divide-border/70 overflow-hidden rounded-[22px] border border-border/70 bg-surface-muted/45">
+    <div className="mt-3 divide-y divide-border/70">
       {report.reporters.map((reporter) => (
         <article
-          className="grid gap-2 p-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-start"
+          className="flex min-w-0 items-center gap-2 py-2 text-sm"
           key={reporter.id}
+          title={`${reporter.reporter.name} · ${formatDateTime(reporter.created_at)} · Motivo: ${reporter.reason_label}${
+            reporter.description ? ` · ${reporter.description}` : ""
+          }`}
         >
-          <div className="min-w-0">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="font-black text-foreground">{reporter.reporter.name}</span>
-              <StatusBadge tone="muted">{reporter.reporter.label}</StatusBadge>
-            </div>
-            <p className="mt-2 text-sm font-bold text-foreground">
-              Motivo: {reporter.reason_label}
-            </p>
-            {reporter.description ? (
-              <p className="mt-1 line-clamp-2 text-sm leading-6 text-muted">
-                {reporter.description}
-              </p>
-            ) : null}
-          </div>
-          <span className="inline-flex shrink-0 items-center gap-1.5 text-xs font-bold text-muted">
+          <span className="shrink-0 font-black text-foreground">{reporter.reporter.name}</span>
+          <StatusBadge tone="muted">{reporter.reporter.label}</StatusBadge>
+          <span className="inline-flex shrink-0 items-center gap-1 text-xs font-bold text-muted">
             <CalendarDays aria-hidden className="h-3.5 w-3.5" />
             {formatDateTime(reporter.created_at)}
+          </span>
+          <span aria-hidden className="shrink-0 text-muted/70">
+            ·
+          </span>
+          <span className="min-w-0 truncate font-bold text-foreground">
+            Motivo: {reporter.reason_label}
+            {reporter.description ? (
+              <span className="font-medium text-muted"> — {reporter.description}</span>
+            ) : null}
           </span>
         </article>
       ))}
@@ -3144,16 +3139,30 @@ const CommunityReportListItem = ({
   setResolveState: (state: CommunityReportResolveState) => void;
 }) => (
   <article className="rounded-card border border-border/75 bg-surface/95 p-4 shadow-admin-soft md:p-5">
-    <div className="flex flex-wrap items-center gap-2">
-      <StatusBadge tone="muted">{report.content.content_kind_label}</StatusBadge>
-      <span className="inline-flex items-center gap-1.5 rounded-full bg-primary-soft px-2.5 py-1 text-xs font-black text-primary">
-        <AlertTriangle aria-hidden className="h-3.5 w-3.5" />
-        {numberFormatter.format(report.report_count)} denúncia(s)
-      </span>
-      <span className="inline-flex items-center gap-1.5 text-xs font-bold text-muted">
-        <CalendarDays aria-hidden className="h-3.5 w-3.5" />
-        Última em {formatDateTime(report.last_reported_at)}
-      </span>
+    <div className="flex items-start justify-between gap-3">
+      <div className="flex flex-wrap items-center gap-2">
+        <StatusBadge tone="muted">{report.content.content_kind_label}</StatusBadge>
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-primary-soft px-2.5 py-1 text-xs font-black text-primary">
+          <AlertTriangle aria-hidden className="h-3.5 w-3.5" />
+          {numberFormatter.format(report.report_count)} denúncia(s)
+        </span>
+        <span className="inline-flex items-center gap-1.5 text-xs font-bold text-muted">
+          <CalendarDays aria-hidden className="h-3.5 w-3.5" />
+          Última em {formatDateTime(report.last_reported_at)}
+        </span>
+      </div>
+      {report.content.public_url ? (
+        <Link
+          aria-label="Ver conteúdo público"
+          className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-primary/20 bg-primary-soft text-primary transition hover:border-primary/35 hover:bg-primary-soft/80"
+          href={toPublicHref(report.content.public_url)}
+          rel="noreferrer"
+          target="_blank"
+          title="Ver conteúdo público"
+        >
+          <Eye aria-hidden className="h-4 w-4" />
+        </Link>
+      ) : null}
     </div>
 
     <section className="mt-4">
@@ -3162,7 +3171,7 @@ const CommunityReportListItem = ({
       </p>
       <h3 className="mt-1 text-lg font-black text-foreground">{communityReportTitle(report)}</h3>
       <div className="mt-3 grid gap-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-start">
-        <div className="min-w-0 whitespace-pre-wrap rounded-[22px] border border-border/70 bg-surface-muted/45 p-4 text-sm font-bold leading-6 text-foreground">
+        <div className="min-w-0 whitespace-pre-wrap text-sm font-bold leading-6 text-foreground">
           {report.content.body || report.content.excerpt || "Conteúdo sem texto disponível."}
         </div>
         {report.content.media ? (
@@ -3175,17 +3184,6 @@ const CommunityReportListItem = ({
         <p className="mt-3 rounded-2xl border border-danger/15 bg-danger/10 p-3 text-xs font-bold leading-5 text-danger">
           {report.content.unavailable_reason || "Conteúdo removido ou indisponível."}
         </p>
-      ) : null}
-      {report.content.public_url ? (
-        <Link
-          className="mt-3 inline-flex items-center gap-2 text-xs font-black text-primary hover:underline"
-          href={toPublicHref(report.content.public_url)}
-          rel="noreferrer"
-          target="_blank"
-        >
-          <Eye aria-hidden className="h-4 w-4" />
-          Ver conteúdo público
-        </Link>
       ) : null}
     </section>
 
