@@ -6,6 +6,8 @@ import {
   ArrowUp,
   Bookmark,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   Eye,
   FileText,
   type LucideIcon,
@@ -18,7 +20,7 @@ import {
   UsersRound,
 } from "lucide-react";
 import Link from "next/link";
-import { type FocusEventHandler, useState } from "react";
+import { type FocusEventHandler, useCallback, useRef, useState } from "react";
 import { useAdminCommunitiesDashboard } from "@/api/callers/communities";
 import { resolveApiError } from "@/api/handle";
 import type {
@@ -31,7 +33,7 @@ import type {
   CommunitiesDashboardTopCommunity,
 } from "@/api/req/communities";
 import { useDateRangeCommitOnBlur } from "@/hooks/use-date-range-commit-on-blur";
-import { aggregateCalendarChartPoints } from "@/lib/chart-time-series";
+import { aggregateCalendarChartPoints, buildSmoothSvgPath } from "@/lib/chart-time-series";
 import { cn } from "@/lib/utils";
 
 const MAX_COMMUNITY_DASHBOARD_DAYS = 90;
@@ -45,6 +47,10 @@ type CommunityDashboardPeriodPreset = (typeof COMMUNITY_DASHBOARD_PERIOD_OPTIONS
 type CommunityDashboardPeriodValue = CommunityDashboardPeriodPreset | "custom";
 
 const numberFormatter = new Intl.NumberFormat("pt-BR");
+const percentageFormatter = new Intl.NumberFormat("pt-BR", {
+  maximumFractionDigits: 1,
+  minimumFractionDigits: 0,
+});
 type DashboardStatisticDailyKey = Exclude<keyof CommunitiesDashboardStatisticsDailyPoint, "date">;
 type DashboardStatisticMetricId =
   | "active_patients"
@@ -77,7 +83,7 @@ type DashboardStatisticMetricConfig = {
 
 type DashboardStatisticMetricItem = DashboardStatisticMetricConfig & {
   changePercent: number | null;
-  details?: Array<{ label: string; value: number }>;
+  details?: Array<{ label: string; percentage: number; value: number }>;
   previousValue: number;
   value: number;
 };
@@ -344,6 +350,9 @@ const dashboardStatisticPercentageChange = (current: number, previous: number) =
   return roundDashboardStatisticPercent(((current - previous) / previous) * 100);
 };
 
+const dashboardStatisticPercentage = (value: number, total: number) =>
+  total <= 0 ? 0 : roundDashboardStatisticPercent((value / total) * 100);
+
 const dashboardStatisticValue = (
   statistics: CommunitiesDashboardGlobalStatistics,
   id: DashboardStatisticMetricId,
@@ -389,10 +398,19 @@ const dashboardStatisticValue = (
 const patientPostDetails = (statistics: CommunitiesDashboardGlobalStatistics) => {
   const anonymous = statistics.counters.anonymous_posts.total;
   const identified = Math.max(0, statistics.counters.posts.patients - anonymous);
+  const total = statistics.counters.posts.patients;
 
   return [
-    { label: "Anônimos", value: anonymous },
-    { label: "Identificados", value: identified },
+    {
+      label: "Anônimos",
+      percentage: dashboardStatisticPercentage(anonymous, total),
+      value: anonymous,
+    },
+    {
+      label: "Identificados",
+      percentage: dashboardStatisticPercentage(identified, total),
+      value: identified,
+    },
   ];
 };
 
@@ -753,74 +771,180 @@ const DashboardStatisticCard = ({
   selected: boolean;
 }) => {
   const Icon = item.icon;
+  const formattedValue = numberFormatter.format(item.value);
+  const detailTitle = item.details
+    ?.map(
+      (detail) =>
+        `${detail.label}: ${numberFormatter.format(detail.value)} (${percentageFormatter.format(
+          detail.percentage,
+        )}%)`,
+    )
+    .join(". ");
 
   return (
     <button
       aria-pressed={selected}
       className={cn(
-        "min-w-0 rounded-[26px] border p-4 text-left transition",
-        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30",
+        "h-full w-full min-w-0 overflow-hidden rounded-card border p-4 text-left transition duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2",
         selected
-          ? "border-primary/45 bg-primary-soft/30 shadow-admin-soft"
-          : "border-border bg-surface hover:border-primary/40",
+          ? "border-primary/35 bg-surface shadow-admin-soft ring-1 ring-primary/10"
+          : "border-border/80 bg-border/50 shadow-none hover:-translate-y-0.5 hover:border-primary/25 hover:bg-border/60",
       )}
       onClick={() => onToggle(item.id)}
+      title={`${item.label}: ${formattedValue}. ${formatChange(
+        item.changePercent,
+      )} vs. ${previousLabel}. ${detailTitle ? `${detailTitle}. ` : ""}${
+        selected ? "Visível no gráfico" : "Oculto no gráfico"
+      }`}
       type="button"
     >
-      <div className="flex items-start gap-3">
-        <span
-          className={cn(
-            "grid h-10 w-10 shrink-0 place-items-center rounded-full",
-            dashboardStatisticToneClasses[item.tone],
-          )}
-        >
-          <Icon aria-hidden className="h-5 w-5" />
+      <span
+        className={cn(
+          "grid h-10 w-10 shrink-0 place-items-center rounded-full",
+          dashboardStatisticToneClasses[item.tone],
+        )}
+      >
+        <Icon aria-hidden className="h-5 w-5" />
+      </span>
+      <span className="mt-4 block min-w-0 max-w-full">
+        <span className="block max-w-full break-words text-xs font-extrabold leading-snug text-foreground">
+          {item.label}
         </span>
-        <span className="min-w-0">
-          <span className="block text-sm font-black leading-snug text-foreground">
-            {item.label}
+        <span className="mt-2 block text-2xl font-extrabold leading-none text-foreground">
+          {formattedValue}
+        </span>
+        <span className="mt-3 block text-xs leading-5">
+          <span
+            className={cn(
+              "font-extrabold",
+              item.changePercent === null
+                ? "text-muted"
+                : item.changePercent > 0
+                  ? "text-success"
+                  : item.changePercent < 0
+                    ? "text-danger"
+                    : "text-muted",
+            )}
+          >
+            {formatChange(item.changePercent)}
           </span>
-          <span className="mt-2 block text-3xl font-black tracking-tight text-foreground">
-            {numberFormatter.format(item.value)}
-          </span>
+          <span className="ml-1 font-bold text-muted">vs. {previousLabel}</span>
         </span>
-      </div>
 
-      <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
-        <span
-          className={cn(
-            "font-black",
-            item.changePercent === null
-              ? "text-muted"
-              : item.changePercent > 0
-                ? "text-success"
-                : item.changePercent < 0
-                  ? "text-danger"
-                  : "text-muted",
-          )}
-        >
-          {formatChange(item.changePercent)}
-        </span>
-        <span className="font-bold text-muted">vs. {previousLabel}</span>
-      </div>
-      <p className="mt-3 text-xs leading-relaxed text-muted">{item.description}</p>
-
-      {item.details?.length ? (
-        <div className="mt-3 space-y-1">
-          {item.details.map((detail) => (
-            <div
-              className="flex items-center justify-between gap-2 rounded-full bg-surface-muted px-3 py-1 text-xs font-black text-muted"
-              key={detail.label}
-            >
-              <span className="truncate">{detail.label}</span>
-              <span className="shrink-0 text-foreground">
-                {numberFormatter.format(detail.value)}
+        {item.details?.length ? (
+          <span className="mt-3 grid gap-1">
+            {item.details.map((detail) => (
+              <span
+                className="flex items-center justify-between gap-2 rounded-full bg-surface-muted px-2 py-1 text-[11px] font-extrabold leading-none text-muted"
+                key={detail.label}
+              >
+                <span className="truncate">{detail.label}</span>
+                <span className="shrink-0 text-foreground">
+                  {`${numberFormatter.format(detail.value)} (${percentageFormatter.format(
+                    detail.percentage,
+                  )}%)`}
+                </span>
               </span>
+            ))}
+          </span>
+        ) : null}
+      </span>
+      <span className="sr-only">{selected ? "visível no gráfico" : "oculto no gráfico"}</span>
+    </button>
+  );
+};
+
+const DashboardStatisticsMetricGrid = ({
+  metrics,
+  onToggleMetric,
+  previousLabel,
+  title,
+  visibleMetricIds,
+}: {
+  metrics: DashboardStatisticMetricItem[];
+  onToggleMetric: (metricId: DashboardStatisticMetricId) => void;
+  previousLabel: string;
+  title: string;
+  visibleMetricIds: DashboardStatisticMetricId[];
+}) => (
+  <fieldset className="mt-5 grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-6">
+    <legend className="sr-only">Contadores exibidos no gráfico de {title}</legend>
+    {metrics.map((metric) => (
+      <DashboardStatisticCard
+        item={metric}
+        key={metric.id}
+        onToggle={onToggleMetric}
+        previousLabel={previousLabel}
+        selected={visibleMetricIds.includes(metric.id)}
+      />
+    ))}
+  </fieldset>
+);
+
+const DashboardStatisticsMetricCarousel = ({
+  metrics,
+  onToggleMetric,
+  previousLabel,
+  title,
+  visibleMetricIds,
+}: {
+  metrics: DashboardStatisticMetricItem[];
+  onToggleMetric: (metricId: DashboardStatisticMetricId) => void;
+  previousLabel: string;
+  title: string;
+  visibleMetricIds: DashboardStatisticMetricId[];
+}) => {
+  const scrollerRef = useRef<HTMLDivElement>(null);
+  const scrollMetrics = useCallback((direction: -1 | 1) => {
+    const scroller = scrollerRef.current;
+    if (!scroller) return;
+
+    scroller.scrollBy({
+      behavior: "smooth",
+      left: direction * Math.max(260, scroller.clientWidth * 0.82),
+    });
+  }, []);
+
+  return (
+    <fieldset className="mt-5 min-w-0">
+      <legend className="sr-only">Contadores exibidos no gráfico de {title}</legend>
+      <div className="relative min-w-0 px-11 sm:px-12">
+        <button
+          aria-label={`Rolar contadores de ${title} para a esquerda`}
+          className="absolute left-0 top-1/2 z-10 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-full border border-border bg-surface text-muted shadow-sm transition hover:border-primary/35 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
+          onClick={() => scrollMetrics(-1)}
+          type="button"
+        >
+          <ChevronLeft aria-hidden className="h-4 w-4" />
+        </button>
+        <div
+          className="flex min-w-0 snap-x snap-mandatory gap-2 overflow-x-auto scroll-smooth pb-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          ref={scrollerRef}
+        >
+          {metrics.map((metric) => (
+            <div
+              className="flex w-full shrink-0 snap-start sm:w-[calc((100%_-_0.5rem)/2)] lg:w-[calc((100%_-_1rem)/3)] 2xl:w-[calc((100%_-_2.5rem)/6)]"
+              key={metric.id}
+            >
+              <DashboardStatisticCard
+                item={metric}
+                onToggle={onToggleMetric}
+                previousLabel={previousLabel}
+                selected={visibleMetricIds.includes(metric.id)}
+              />
             </div>
           ))}
         </div>
-      ) : null}
-    </button>
+        <button
+          aria-label={`Rolar contadores de ${title} para a direita`}
+          className="absolute right-0 top-1/2 z-10 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-full border border-primary/25 bg-primary-soft text-primary shadow-sm transition hover:border-primary/45 hover:bg-primary-soft/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
+          onClick={() => scrollMetrics(1)}
+          type="button"
+        >
+          <ChevronRight aria-hidden className="h-4 w-4" />
+        </button>
+      </div>
+    </fieldset>
   );
 };
 
@@ -831,157 +955,149 @@ const DashboardStatisticsLineChart = ({
   items: DashboardStatisticMetricItem[];
   points: CommunitiesDashboardStatisticsDailyPoint[];
 }) => {
-  const width = 1120;
-  const height = 330;
-  const padding = { bottom: 46, left: 52, right: 24, top: 24 };
+  if (items.length === 0) {
+    return (
+      <div className="mt-5 rounded-2xl border border-dashed border-border bg-surface-muted p-6 text-sm font-bold text-muted">
+        Selecione pelo menos um contador para visualizar a evolução.
+      </div>
+    );
+  }
+  if (points.length === 0) {
+    return (
+      <div className="mt-5 rounded-2xl border border-dashed border-border bg-surface-muted p-6 text-sm font-bold text-muted">
+        Nenhum ponto real de evolução foi encontrado para o período.
+      </div>
+    );
+  }
+
+  const chartWidth = 1120;
+  const chartHeight = 280;
+  const padding = { bottom: 28, left: 42, right: 28, top: 28 };
+  const innerWidth = chartWidth - padding.left - padding.right;
+  const innerHeight = chartHeight - padding.top - padding.bottom;
   const metricKeys = items.map((item) => item.key);
-  const chartPoints =
-    metricKeys.length > 0
-      ? aggregateCalendarChartPoints(points, metricKeys, {
-          metricAggregations: DASHBOARD_STATISTIC_METRIC_AGGREGATIONS,
-        })
-      : [];
-  const maxValue = Math.max(
+  const chartPoints = aggregateCalendarChartPoints(points, metricKeys, {
+    dayThreshold: 45,
+    metricAggregations: DASHBOARD_STATISTIC_METRIC_AGGREGATIONS,
+  });
+  const max = Math.max(
     1,
     ...items.flatMap((item) => chartPoints.map((point) => Number(point[item.key] ?? 0))),
   );
-  const chartWidth = width - padding.left - padding.right;
-  const chartHeight = height - padding.top - padding.bottom;
-  const getX = (index: number) =>
-    chartPoints.length <= 1
-      ? width / 2
-      : padding.left + (index * chartWidth) / (chartPoints.length - 1);
-  const getY = (value: number) => padding.top + chartHeight - (value / maxValue) * chartHeight;
-  const gridValues = [
-    ...new Set([0, 0.25, 0.5, 0.75, 1].map((ratio) => Math.round(maxValue * ratio))),
-  ];
+  const xFor = (index: number) =>
+    padding.left +
+    (chartPoints.length <= 1 ? innerWidth / 2 : (index / (chartPoints.length - 1)) * innerWidth);
+  const yFor = (value: number) => padding.top + innerHeight - (value / max) * innerHeight;
+  const gridValues = [0, 0.25, 0.5, 0.75, 1].map((ratio) => ({
+    id: String(ratio),
+    value: Math.round(max * ratio),
+  }));
   const labelStep = Math.max(1, Math.ceil(chartPoints.length / 8));
+  const dateLabels = chartPoints.flatMap((point, index) =>
+    index % labelStep === 0 || index === chartPoints.length - 1
+      ? [{ date: point.date, label: point.chartLabel }]
+      : [],
+  );
 
   return (
-    <div className="mt-5 min-w-0 overflow-hidden rounded-[26px] border border-border bg-surface p-3 sm:p-5">
-      {items.length === 0 ? (
-        <p className="rounded-2xl bg-surface-muted p-4 text-sm text-muted">
-          Selecione ao menos uma métrica para visualizar o gráfico.
-        </p>
-      ) : (
-        <>
-          <div className="flex flex-wrap gap-3">
-            {items.map((item) => (
-              <span className="flex items-center gap-2 text-xs font-bold text-muted" key={item.id}>
-                <span
-                  aria-hidden
-                  className="h-3 w-3 rounded-full"
-                  style={{ backgroundColor: item.color }}
+    <div className="mt-4 w-full overflow-x-auto rounded-[1.5rem] border border-border/70 bg-surface p-4">
+      <div className="mx-auto w-full min-w-[760px] max-w-[1120px]">
+        <svg
+          aria-label="Evolução do período por contador selecionado"
+          className="block h-auto w-full"
+          height={chartHeight}
+          preserveAspectRatio="xMidYMid meet"
+          role="img"
+          viewBox={`0 0 ${chartWidth} ${chartHeight}`}
+          width={chartWidth}
+        >
+          <title>Evolução do período</title>
+          {gridValues.map(({ id, value }) => {
+            const y = yFor(value);
+
+            return (
+              <g key={`dashboard-statistics-grid-${id}`}>
+                <line
+                  className="stroke-border"
+                  opacity="0.44"
+                  strokeDasharray={value === 0 ? "0" : "4 6"}
+                  strokeWidth="1"
+                  x1={padding.left}
+                  x2={chartWidth - padding.right}
+                  y1={y}
+                  y2={y}
                 />
-                {item.label}
-              </span>
-            ))}
-          </div>
-          <div className="mt-3 min-w-0 overflow-hidden">
-            <svg
-              aria-label="Gráfico de estatísticas globais das comunidades por dia"
-              className="block h-auto w-full"
-              role="img"
-              viewBox={`0 0 ${width} ${height}`}
-            >
-              {gridValues.map((value) => {
-                const y = getY(value);
+                <text
+                  className="fill-muted text-[10px] font-medium"
+                  dominantBaseline="middle"
+                  textAnchor="end"
+                  x={padding.left - 8}
+                  y={y}
+                >
+                  {numberFormatter.format(value)}
+                </text>
+              </g>
+            );
+          })}
+          {items.map((item) => {
+            const linePoints = chartPoints.map((point, index) => ({
+              x: xFor(index),
+              y: yFor(Number(point[item.key] ?? 0)),
+            }));
+            const linePath = buildSmoothSvgPath(linePoints);
 
-                return (
-                  <g key={`global-grid-${value}-${y}`}>
-                    <line
-                      stroke="#e8edf7"
-                      strokeDasharray="6 8"
-                      strokeWidth="1"
-                      x1={padding.left}
-                      x2={width - padding.right}
-                      y1={y}
-                      y2={y}
-                    />
-                    <text fill="#657094" fontSize="11" x="10" y={y + 4}>
-                      {numberFormatter.format(value)}
-                    </text>
-                  </g>
-                );
-              })}
+            return (
+              <path
+                d={linePath}
+                fill="none"
+                key={item.id}
+                stroke={item.color}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2.05"
+              />
+            );
+          })}
+          {items.map((item) =>
+            chartPoints.map((point, index) => {
+              const value = Number(point[item.key] ?? 0);
 
-              {items.map((item) => {
-                const path = chartPoints
-                  .map((point, index) => {
-                    const value = Number(point[item.key] ?? 0);
-
-                    return `${index === 0 ? "M" : "L"}${getX(index)},${getY(value)}`;
-                  })
-                  .join(" ");
-
-                return (
-                  <g key={item.id}>
-                    <path
-                      d={path}
-                      fill="none"
-                      stroke={item.color}
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="4"
-                    />
-                    {chartPoints.map((point, index) => (
-                      <circle
-                        cx={getX(index)}
-                        cy={getY(Number(point[item.key] ?? 0))}
-                        fill="#fff"
-                        key={`${item.id}-${point.date}`}
-                        r="3.5"
-                        stroke={item.color}
-                        strokeWidth="2.5"
-                      />
-                    ))}
-                  </g>
-                );
-              })}
-
-              {chartPoints.map((point, index) =>
-                index % labelStep === 0 || index === chartPoints.length - 1 ? (
-                  <text
-                    fill="#657094"
-                    fontSize="11"
-                    key={point.date}
-                    textAnchor="middle"
-                    x={getX(index)}
-                    y={height - 12}
-                  >
-                    {point.chartLabel}
-                  </text>
-                ) : null,
-              )}
-            </svg>
-          </div>
-          <details className="mt-3 rounded-2xl bg-surface-muted p-3 text-xs text-muted">
-            <summary className="cursor-pointer font-black text-foreground">
-              Resumo textual do gráfico
-            </summary>
-            <div className="mt-2 grid gap-2 sm:grid-cols-2">
-              {items.map((item) => (
-                <div key={item.id}>
-                  <p className="font-black text-foreground">{item.label}</p>
-                  <p>
-                    {chartPoints
-                      .map(
-                        (point) =>
-                          `${point.tooltipLabel}: ${numberFormatter.format(Number(point[item.key] ?? 0))}`,
-                      )
-                      .join("; ")}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </details>
-        </>
-      )}
+              return (
+                <circle
+                  cx={xFor(index)}
+                  cy={yFor(value)}
+                  fill="#ffffff"
+                  key={`${item.id}-${point.date}`}
+                  opacity={index === chartPoints.length - 1 ? "1" : "0.72"}
+                  r={index === chartPoints.length - 1 ? "3.1" : "2.1"}
+                  stroke={item.color}
+                  strokeWidth="1.45"
+                >
+                  <title>
+                    {point.tooltipLabel} · {item.label}: {numberFormatter.format(value)}
+                  </title>
+                </circle>
+              );
+            }),
+          )}
+        </svg>
+        <div
+          className="mt-1 grid gap-1"
+          style={{ gridTemplateColumns: `repeat(${dateLabels.length}, 1fr)` }}
+        >
+          {dateLabels.map(({ date, label }) => (
+            <span className="min-w-0 text-center text-[10px] font-bold text-subtle" key={date}>
+              {label}
+            </span>
+          ))}
+        </div>
+      </div>
     </div>
   );
 };
 
 const DashboardStatisticsSection = ({
+  counterLayout = "grid",
   description,
   metrics,
   onToggleMetric,
@@ -990,6 +1106,7 @@ const DashboardStatisticsSection = ({
   title,
   visibleMetricIds,
 }: {
+  counterLayout?: "carousel" | "grid";
   description: string;
   metrics: DashboardStatisticMetricItem[];
   onToggleMetric: (id: DashboardStatisticMetricId) => void;
@@ -1006,17 +1123,23 @@ const DashboardStatisticsSection = ({
         <h2 className="text-lg font-black text-foreground">{title}</h2>
         <p className="mt-1 text-sm font-medium text-muted">{description}</p>
       </div>
-      <div className="mt-5 grid min-w-0 gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-6">
-        {metrics.map((item) => (
-          <DashboardStatisticCard
-            item={item}
-            key={item.id}
-            onToggle={onToggleMetric}
-            previousLabel={previousLabel}
-            selected={visibleMetricIds.includes(item.id)}
-          />
-        ))}
-      </div>
+      {counterLayout === "grid" ? (
+        <DashboardStatisticsMetricGrid
+          metrics={metrics}
+          onToggleMetric={onToggleMetric}
+          previousLabel={previousLabel}
+          title={title}
+          visibleMetricIds={visibleMetricIds}
+        />
+      ) : (
+        <DashboardStatisticsMetricCarousel
+          metrics={metrics}
+          onToggleMetric={onToggleMetric}
+          previousLabel={previousLabel}
+          title={title}
+          visibleMetricIds={visibleMetricIds}
+        />
+      )}
       <DashboardStatisticsLineChart items={visibleMetrics} points={points} />
     </CardShell>
   );
@@ -1403,6 +1526,7 @@ const DashboardContent = ({ summary }: { summary: AdminCommunitiesDashboard }) =
       {noRecords ? <EmptyState period={summary.period} /> : null}
 
       <DashboardStatisticsSection
+        counterLayout="grid"
         description="Visão geral de psicólogos e pacientes em todas as comunidades."
         metrics={peopleMetrics}
         onToggleMetric={togglePeopleMetric}
@@ -1413,6 +1537,7 @@ const DashboardContent = ({ summary }: { summary: AdminCommunitiesDashboard }) =
       />
 
       <DashboardStatisticsSection
+        counterLayout="carousel"
         description="Conteúdo e engajamento agregados de todas as comunidades."
         metrics={contentMetrics}
         onToggleMetric={toggleContentMetric}

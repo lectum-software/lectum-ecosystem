@@ -1,4 +1,4 @@
-﻿# ADR-0231: Agregacoes administrativas de comunidades sem moderacao V1
+# ADR-0231: Agregacoes administrativas de comunidades sem moderacao V1
 
 ## Status
 
@@ -72,6 +72,7 @@ As estatisticas globais usam somente dados persistidos existentes: `community_me
 A UI renderiza cards selecionaveis e grafico SVG/CSS proprio, sem pacote de charts e sem rolagem horizontal global. Os blocos laterais de alertas removidos no ajuste anterior continuam fora do dashboard; denuncias e moderacao seguem em fluxos dedicados.
 
 Consequencias: o contrato do dashboard fica maior, mas evita requests extras e garante que filtros de periodo e comparacao com periodo anterior sejam consistentes entre cards, graficos e os demais indicadores da pagina. Nao houve schema Prisma, migration, pacote novo, mock ou seed.
+
 ## Atualizacao 2026-07-17: remocao dos cards legados de visao geral
 
 Apos a inclusao dos blocos globais de **Estatisticas de pessoas** e **Estatisticas de conteudo**, os cinco cards legados do topo do dashboard (`psychologist_posts`, `patient_posts`, `psychologist_replies`, `patient_comments` e `active_members`) passaram a duplicar informacao e alongar a pagina antes das estatisticas principais.
@@ -79,3 +80,11 @@ Apos a inclusao dos blocos globais de **Estatisticas de pessoas** e **Estatistic
 A decisao e remover a renderizacao desses cards do dashboard `/comunidades`, mantendo os dados no contrato atual do endpoint para compatibilidade e para nao alterar agregacoes existentes nesta correcao visual. A visao principal da pagina passa a iniciar pelos blocos globais de estatisticas.
 
 Consequencia: a interface fica mais direta e com menor redundancia visual, sem mudanca de backend, schema Prisma, migration, pacote novo, mock ou seed.
+
+## Atualizacao 2026-07-17: paridade visual dos blocos globais com o detalhe da comunidade
+
+Os blocos globais de estatisticas do dashboard `/comunidades` devem seguir o mesmo padrao de interacao visual da aba de estatisticas do detalhe da comunidade para reduzir divergencia entre visao geral e visao por comunidade.
+
+A decisao e manter os mesmos dados globais ja expostos por `global_statistics`, mas renderizar os contadores como toggles selecionados por default, sem descricao individual nos cards. O bloco de pessoas usa grid, enquanto o bloco de conteudo usa carrossel horizontal com botoes laterais, seguindo o comportamento existente no detalhe. O grafico tambem passa a usar linhas suavizadas e area isolada, mantendo os pontos e titulos acessiveis.
+
+Consequencia: ha maior consistencia visual e menos redundancia textual, sem alterar backend, contrato persistido, Prisma, pacotes ou regras de agregacao. A rolagem horizontal permanece restrita aos componentes interativos que exigem esse comportamento, evitando overflow global da pagina.

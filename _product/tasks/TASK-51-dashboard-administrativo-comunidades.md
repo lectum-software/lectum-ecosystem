@@ -484,3 +484,31 @@ Regras de UI obrigatórias:
 - `pnpm --dir admin build`
 - `pnpm check`
 - Smoke local `GET http://localhost:3002/comunidades` retornou 200.
+
+## Correcao complementar: alinhar blocos globais ao layout de estatisticas do detalhe (2026-07-17)
+
+- Pedido do usuario: no dashboard geral `/comunidades`, fazer os blocos de contadores + grafico seguirem o mesmo layout dos blocos **Estatisticas de pessoas** e **Estatisticas de conteudo** da aba de estatisticas do detalhe da comunidade.
+- Os cards globais agora usam o mesmo padrao visual dos cards do detalhe: contadores selecionaveis marcados por default, icone no topo, label, valor, comparacao com periodo anterior e sem texto descritivo dentro do card.
+- O grafico global passou a usar o mesmo padrao visual do detalhe, com linhas suavizadas, area de grafico isolada e pontos com `title` acessivel por serie.
+- O bloco **Estatisticas de pessoas** permanece em grid, como no detalhe da comunidade.
+- O bloco **Estatisticas de conteudo** passou a renderizar os contadores em carrossel horizontal com botoes laterais, como no detalhe da comunidade.
+- Nao houve alteracao de backend, endpoint, Prisma schema/migrations, packages, dados ou regras de agregacao.
+- O ajuste permanece mobile-first e a rolagem horizontal fica restrita ao carrossel/grafico, sem criar overflow global da pagina.
+- Builder/Quick Copy `vcp://quickcopy/vcp-24aaa2941d814e5b90572bc93ae50e2a` nao esta exposto como ferramenta callable neste ambiente; referencias usadas: capturas enviadas pelo usuario e implementacao existente de `/comunidades/[slug]?tab=estatisticas`.
+- ADR atualizado: `adrs/0231-admin-comunidades-dashboard-agregacoes.md`.
+
+### Criterios deste ajuste
+
+- [x] Cards de estatisticas globais iniciam selecionados por default.
+- [x] Cards de estatisticas globais nao exibem texto de descricao individual.
+- [x] **Estatisticas de pessoas** usa grid de contadores como no detalhe da comunidade.
+- [x] **Estatisticas de conteudo** usa carrossel horizontal de contadores como no detalhe da comunidade.
+- [x] O grafico dos blocos globais segue o mesmo padrao visual base do detalhe da comunidade.
+- [x] Nenhum mock, dado fake permanente, endpoint simulado, package novo, schema Prisma ou migration foi usado.
+
+### Validacao deste ajuste
+
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check`
+- Smoke local `GET http://localhost:3002/comunidades` retornou 200.
