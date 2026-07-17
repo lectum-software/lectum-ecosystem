@@ -159,6 +159,15 @@ export type AdminCommunitySummaryDTO = {
   popular_posts_count: number;
 };
 
+export type AdminCommunityHighlightCountersDTO = {
+  patient_comments_count: number;
+  patient_posts_count: number;
+  psychologist_posts_count: number;
+  psychologist_replies_count: number;
+  reports_count: number;
+  source: "community_post+post_reply+post_report";
+};
+
 export type AdminCommunityTodaySummaryDTO = {
   new_active_patients_count: number;
   new_active_psychologists_count: number;
@@ -226,6 +235,7 @@ export type AdminCommunityPopularPostDTO = {
 
 export type AdminCommunityDetailDTO = {
   community: AdminCommunityIdentity;
+  highlight_counters: AdminCommunityHighlightCountersDTO;
   performance: {
     days: number;
     metrics: {

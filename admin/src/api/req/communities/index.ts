@@ -183,6 +183,15 @@ export type AdminCommunitySummary = {
   posts_count: number;
 };
 
+export type AdminCommunityHighlightCounters = {
+  patient_comments_count: number;
+  patient_posts_count: number;
+  psychologist_posts_count: number;
+  psychologist_replies_count: number;
+  reports_count: number;
+  source: "community_post+post_reply+post_report";
+};
+
 export type AdminCommunityTodaySummary = {
   new_active_patients_count: number;
   new_active_psychologists_count: number;
@@ -250,6 +259,7 @@ export type AdminCommunityPopularPost = {
 
 export type AdminCommunityDetail = {
   community: AdminCommunityIdentity;
+  highlight_counters: AdminCommunityHighlightCounters;
   performance: {
     days: number;
     metrics: {

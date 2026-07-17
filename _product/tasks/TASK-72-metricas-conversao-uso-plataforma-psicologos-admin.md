@@ -928,6 +928,27 @@ Regras de cálculo:
 - ADR atualizado: `adrs/0264-admin-comunidade-abas-conteudo-ranking.md`.
 - Validacao executada: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm check` e smoke HTTP local `GET http://localhost:3002/comunidades/relacionamentos-com-proposito?tab=estatisticas` retornando 200.
 
+## Ajuste complementar 2026-07-17 - Contadores de destaque na aba Geral da comunidade
+
+- Pedido do usuario: na aba geral da comunidade, adicionar contadores de destaque como os da aba geral do detalhe de psicologos, com **Posts de pacientes**, **Posts de Psicologos**, **Respostas de psicologos**, **Comentarios de pacientes** e **Denuncias**.
+- A aba **Geral** de `/comunidades/[slug]` agora renderiza uma grade mobile-first de cinco cards no topo da aba, antes do resumo diario e da fila de urgencias.
+- O endpoint real `GET /api/admin/private/communities/:id` foi expandido com `highlight_counters`, calculado a partir de `community_post`, `post_reply` e `post_report`, sem endpoint paralelo nem mock.
+- Os contadores sao historicos da comunidade; o recorte diario permanece no bloco **Resumo da comunidade hoje** e a analise por periodo permanece na aba **Estatisticas**.
+- Nao houve package novo, schema Prisma/migration, seed, backfill artificial, dados estimados ou uso de `<img>`.
+- Builder/Quick Copy nao esta exposto como ferramenta callable no ambiente; a referencia visual usada foi a captura enviada pelo usuario e o padrao local da aba **Geral** do detalhe administrativo de psicologos.
+- ADR atualizado: `adrs/0264-admin-comunidade-abas-conteudo-ranking.md`.
+- Validacao executada: `pnpm --dir backend check`, `pnpm --dir admin check`, `pnpm --dir backend build`, `pnpm --dir admin build`, `pnpm check` e smoke HTTP local `GET http://localhost:3002/comunidades/relacionamentos-com-proposito` retornando 200.
+
+## Ajuste complementar 2026-07-17 - Carrossel somente em Estatisticas de conteudo
+
+- Pedido do usuario: os contadores de **Estatisticas de pessoas** devem ficar inteiros na largura util da tela, sem scroll horizontal; somente **Estatisticas de conteudo** deve ter carrossel horizontal, sem barra de rolagem visivel, mantendo os cards do mesmo tamanho dos contadores de pessoas, sem o texto "Contadores" e com setas junto aos cards sem encobrir os contadores selecionaveis.
+- A UI Admin agora usa grade responsiva para **Estatisticas de pessoas** (`1/2/3/6` colunas conforme breakpoint), eliminando scroll horizontal nesse bloco.
+- **Estatisticas de conteudo** permanece em carrossel horizontal por ter mais contadores, mas os cards usam as mesmas larguras responsivas dos contadores de pessoas.
+- A barra horizontal nativa foi ocultada; a seta de retorno fica em uma coluna lateral junto ao primeiro card visivel e a seta de avanco fica em uma coluna lateral junto ao ultimo card visivel, em vez de ficarem acima ou sobre os contadores.
+- O ajuste e exclusivamente visual/mobile-first, sem endpoint novo, mock, package, schema Prisma/migration ou alteracao de persistencia.
+- Builder/Quick Copy nao esta exposto como ferramenta callable no ambiente; a referencia usada foi o pedido do usuario e o padrao local dos contadores do Admin.
+- ADR atualizado: `adrs/0264-admin-comunidade-abas-conteudo-ranking.md`.
+- Validacao executada: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke HTTP local `GET http://localhost:3002/comunidades/relacionamentos-com-proposito?tab=estatisticas` retornando 200.
 
 ## Ajuste complementar 2026-07-16 - Opção Hoje nos filtros de período do Admin
 

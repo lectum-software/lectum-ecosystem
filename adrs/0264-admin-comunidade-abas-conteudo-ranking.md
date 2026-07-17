@@ -438,6 +438,49 @@ Consequencia: cada bloco de estatisticas passa a usar uma consulta adicional ape
 
 Validacao complementar 2026-07-16: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm check` e smoke HTTP local `GET http://localhost:3002/comunidades/relacionamentos-com-proposito?tab=estatisticas` retornando 200.
 
+## Atualizacao 2026-07-17: contadores de destaque na aba Geral da comunidade
+
+A aba **Geral** do detalhe administrativo de comunidade passa a iniciar com uma grade de cinco contadores de destaque,
+seguindo o mesmo padrao visual dos cards principais da aba **Geral** do detalhe administrativo de psicologos.
+
+Os contadores exibidos sao:
+
+- posts de pacientes;
+- posts de psicologos;
+- respostas de psicologos;
+- comentarios de pacientes;
+- denuncias.
+
+A decisao e expor estes contadores como leitura historica da comunidade, calculada pelo mesmo endpoint real
+`GET /api/admin/private/communities/:id`. O contrato foi expandido com `highlight_counters`, derivado do dataset
+first-party ja usado pela aba de estatisticas (`community_post`, `post_reply` e `post_report`) e sem criar endpoint
+paralelo, schema Prisma, migration, dependencia, mock ou backfill.
+
+Consequencia: o Admin ganha uma leitura imediata dos principais volumes de conteudo/moderacao antes do resumo diario e
+das urgencias, preservando a aba **Estatisticas** para analises por periodo e graficos.
+
+Validacao complementar 2026-07-17: `pnpm --dir backend check`, `pnpm --dir admin check`,
+`pnpm --dir backend build`, `pnpm --dir admin build`, `pnpm check` e smoke HTTP local
+`GET http://localhost:3002/comunidades/relacionamentos-com-proposito` retornando 200.
+
+## Atualizacao 2026-07-17: carrossel apenas em Estatisticas de conteudo
+
+Os contadores de **Estatisticas de pessoas** devem ocupar a largura util em grade responsiva, sem rolagem horizontal. A
+decisao e reservar o carrossel horizontal somente para **Estatisticas de conteudo**, porque esse bloco tem mais
+contadores e pode precisar de navegacao progressiva.
+
+O carrossel de conteudo passa a ocultar a barra horizontal nativa e a posicionar as setas em colunas laterais, junto ao
+primeiro e ao ultimo card visiveis, sem encobrir os contadores selecionaveis e sem rotulo visual redundante acima dos
+cards. Os cards do carrossel usam as mesmas larguras responsivas dos cards de pessoas: 1 coluna no mobile, 2 em `sm`, 3
+em `lg` e 6 em `2xl`, preservando tamanho visual consistente entre os dois blocos.
+
+Consequencia: pessoas ficam inteiras na tela e conteudo mantem navegacao horizontal sem poluir a interface com barra de
+rolagem visivel.
+
+Validacao complementar 2026-07-17: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke HTTP local
+`GET http://localhost:3002/comunidades/relacionamentos-com-proposito?tab=estatisticas` retornando 200.
+
+
 
 ## Atualizacao 2026-07-16: engajamento geral e carrossel nos contadores de conteudo
 

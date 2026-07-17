@@ -624,6 +624,77 @@ const StatusBadge = ({
   </span>
 );
 
+type CommunityHighlightCounterItem = {
+  icon: LucideIcon;
+  id: string;
+  label: string;
+  value: number;
+};
+
+const buildCommunityHighlightCounterItems = (
+  detail: AdminCommunityDetail,
+): CommunityHighlightCounterItem[] => [
+  {
+    icon: FileText,
+    id: "patient_posts",
+    label: "Posts de pacientes",
+    value: detail.highlight_counters.patient_posts_count,
+  },
+  {
+    icon: Brain,
+    id: "psychologist_posts",
+    label: "Posts de Psicólogos",
+    value: detail.highlight_counters.psychologist_posts_count,
+  },
+  {
+    icon: Reply,
+    id: "psychologist_replies",
+    label: "Respostas de psicólogos",
+    value: detail.highlight_counters.psychologist_replies_count,
+  },
+  {
+    icon: MessageCircle,
+    id: "patient_comments",
+    label: "Comentários de pacientes",
+    value: detail.highlight_counters.patient_comments_count,
+  },
+  {
+    icon: AlertTriangle,
+    id: "reports",
+    label: "Denúncias",
+    value: detail.highlight_counters.reports_count,
+  },
+];
+
+const CommunityHighlightCounterCard = ({ item }: { item: CommunityHighlightCounterItem }) => (
+  <div className="rounded-card border border-border/75 bg-surface/95 p-4 shadow-admin-soft">
+    <span className="grid h-11 w-11 shrink-0 place-items-center rounded-[18px] bg-primary-soft text-primary ring-1 ring-primary/10">
+      <item.icon aria-hidden className="h-5 w-5" />
+    </span>
+    <p className="mt-4 text-sm font-extrabold text-muted">{item.label}</p>
+    <p className="mt-2 text-3xl font-extrabold text-foreground">
+      {numberFormatter.format(item.value)}
+    </p>
+  </div>
+);
+
+const CommunityHighlightCounters = ({ detail }: { detail: AdminCommunityDetail }) => {
+  const items = buildCommunityHighlightCounterItems(detail);
+
+  return (
+    <section aria-labelledby="community-highlight-counters-title">
+      <h2 className="sr-only" id="community-highlight-counters-title">
+        Contadores de destaque da comunidade
+      </h2>
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+        {items.map((item) => (
+          <CommunityHighlightCounterCard item={item} key={item.id} />
+        ))}
+      </div>
+    </section>
+  );
+};
+
 const latestCommunityPostsQuery = {
   limit: 10,
   page: 1,
@@ -797,15 +868,9 @@ const buildCommunityUrgentItems = (
   const pendingReportsDescription =
     pendingReports > 0
       ? "Revisar " +
-        formatCountLabel(
-          pendingReports,
-          "conteúdo denunciado",
-          "conteúdos denunciados",
-        ) +
+        formatCountLabel(pendingReports, "conteúdo denunciado", "conteúdos denunciados") +
         " ainda sem decisão." +
-        (lastReportedAt
-          ? ` Última denúncia pendente em ${formatDateTime(lastReportedAt)}.`
-          : "")
+        (lastReportedAt ? ` Última denúncia pendente em ${formatDateTime(lastReportedAt)}.` : "")
       : "Nenhuma denúncia pendente para decisão.";
 
   return [
@@ -4399,12 +4464,15 @@ const CommunityStatisticsMetricCarousel = ({
   return (
     <fieldset className="mt-5 min-w-0">
       <legend className="sr-only">Contadores exibidos no gráfico de {title}</legend>
-      <div className="mb-2 flex items-center gap-3">
-        <span className="text-[11px] font-black uppercase tracking-[0.16em] text-subtle">
-          Contadores
-        </span>
-      </div>
-      <div className="relative min-w-0">
+      <div className="grid min-w-0 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2">
+        <button
+          aria-label={`Rolar contadores de ${title} para a esquerda`}
+          className="grid h-9 w-9 place-items-center rounded-full border border-border bg-surface text-muted shadow-sm transition hover:border-primary/35 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
+          onClick={() => scrollMetrics(-1)}
+          type="button"
+        >
+          <ChevronLeft aria-hidden className="h-4 w-4" />
+        </button>
         <div
           className="flex min-w-0 snap-x snap-mandatory gap-2 overflow-x-auto scroll-smooth pb-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
           ref={scrollerRef}
@@ -4422,24 +4490,14 @@ const CommunityStatisticsMetricCarousel = ({
             </div>
           ))}
         </div>
-        <div className="pointer-events-none absolute inset-y-0 right-0 flex w-24 items-center justify-end gap-1.5 bg-gradient-to-l from-surface via-surface/90 to-transparent pr-2">
-          <button
-            aria-label={`Rolar contadores de ${title} para a esquerda`}
-            className="pointer-events-auto grid h-9 w-9 place-items-center rounded-full border border-border bg-surface text-muted shadow-sm transition hover:border-primary/35 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
-            onClick={() => scrollMetrics(-1)}
-            type="button"
-          >
-            <ChevronLeft aria-hidden className="h-4 w-4" />
-          </button>
-          <button
-            aria-label={`Rolar contadores de ${title} para a direita`}
-            className="pointer-events-auto grid h-9 w-9 place-items-center rounded-full border border-primary/25 bg-primary-soft text-primary shadow-sm transition hover:border-primary/45 hover:bg-primary-soft/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
-            onClick={() => scrollMetrics(1)}
-            type="button"
-          >
-            <ChevronRight aria-hidden className="h-4 w-4" />
-          </button>
-        </div>
+        <button
+          aria-label={`Rolar contadores de ${title} para a direita`}
+          className="grid h-9 w-9 place-items-center rounded-full border border-primary/25 bg-primary-soft text-primary shadow-sm transition hover:border-primary/45 hover:bg-primary-soft/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
+          onClick={() => scrollMetrics(1)}
+          type="button"
+        >
+          <ChevronRight aria-hidden className="h-4 w-4" />
+        </button>
       </div>
     </fieldset>
   );
@@ -5138,6 +5196,7 @@ const DetailContent = ({
 
     {activeTab === "geral" ? (
       <>
+        <CommunityHighlightCounters detail={detail} />
         <div className="grid gap-5 2xl:grid-cols-[1.15fr_1fr]">
           <LatestCommunityPostsSection pathname={pathname} slug={slug} />
           <UrgentThingsSection detail={detail} pathname={pathname} />

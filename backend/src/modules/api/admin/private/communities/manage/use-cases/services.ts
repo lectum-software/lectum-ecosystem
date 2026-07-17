@@ -15,6 +15,7 @@ import type {
   AdminCommunityContentQuery,
   AdminCommunityCreateBody,
   AdminCommunityDetailDTO,
+  AdminCommunityHighlightCountersDTO,
   AdminCommunityIdentity,
   AdminCommunityPerformanceMetricDTO,
   AdminCommunityPerformancePointDTO,
@@ -2129,6 +2130,24 @@ const buildCommunityTodaySummary = (
   };
 };
 
+const buildCommunityHighlightCounters = (
+  dataset: StatisticsDataset,
+): AdminCommunityHighlightCountersDTO => ({
+  patient_comments_count: dataset.replies.filter(
+    (reply) => statisticsRole(reply.author) === "paciente",
+  ).length,
+  patient_posts_count: dataset.posts.filter((post) => statisticsRole(post.author) === "paciente")
+    .length,
+  psychologist_posts_count: dataset.posts.filter(
+    (post) => statisticsRole(post.author) === "psicologo",
+  ).length,
+  psychologist_replies_count: dataset.replies.filter(
+    (reply) => statisticsRole(reply.author) === "psicologo",
+  ).length,
+  reports_count: dataset.reports.length,
+  source: "community_post+post_reply+post_report",
+});
+
 const latestReportDate = (items: AdminCommunityReportItemDTO[]) =>
   items.reduce<Date | null>(
     (latest, item) => (!latest || item.last_reported_at > latest ? item.last_reported_at : latest),
@@ -2328,6 +2347,7 @@ export const showCommunity = async (data: IAdminCommunityShowDTO): Promise<Resol
 
   const result: AdminCommunityDetailDTO = {
     community: mapCommunity(community),
+    highlight_counters: buildCommunityHighlightCounters(statisticsDataset),
     performance: {
       days: DETAIL_PERIOD_DAYS,
       metrics: {
