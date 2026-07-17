@@ -591,3 +591,11 @@ Os cards vermelhos do bloco **Denuncias pendentes** na aba **Geral** deixam de e
 A decisao reduz repeticao visual e mantém somente a tag de tipo do conteudo denunciado no card compacto. A aba **Denuncias** continua exibindo status detalhado para triagem operacional.
 
 Consequencia: a mudanca e apenas apresentacional, sem novo endpoint, schema Prisma/migration, dependencia, mock ou alteracao de persistencia.
+
+## Atualizacao 2026-07-17: visualizacoes nos ultimos posts
+
+A tabela **Ultimos posts** da aba **Geral** passa a incluir a coluna **Visualizacoes** antes de **Comentarios**, usando `metrics.views_count` do contrato real de conteudo ja consumido no Admin.
+
+O botao **Ver todos** do bloco passa a ter fundo transparente no estado padrao, mantendo borda e texto de acao para preservar hierarquia visual sem competir com a lista.
+
+Consequencia: a mudanca e apenas apresentacional, sem novo endpoint, schema Prisma/migration, dependencia, mock ou alteracao de persistencia.

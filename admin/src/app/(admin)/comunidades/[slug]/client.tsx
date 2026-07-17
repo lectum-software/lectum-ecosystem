@@ -758,6 +758,17 @@ const LatestCommunityPostRow = ({ item }: { item: AdminCommunityContentItem }) =
           rel="noreferrer"
           target="_blank"
         >
+          {numberFormatter.format(item.metrics.views_count)}
+        </Link>
+      </td>
+      <td className="border-b border-border text-center font-black text-foreground">
+        <Link
+          aria-label={`Abrir post ${title}`}
+          className="block px-4 py-4 text-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
+          href={postHref}
+          rel="noreferrer"
+          target="_blank"
+        >
           {numberFormatter.format(item.metrics.comments_count)}
         </Link>
       </td>
@@ -767,16 +778,18 @@ const LatestCommunityPostRow = ({ item }: { item: AdminCommunityContentItem }) =
 
 const LatestCommunityPostsTable = ({ children }: { children: React.ReactNode }) => (
   <div className="mt-4 overflow-x-auto">
-    <table className="w-full min-w-[760px] border-separate border-spacing-0 text-left text-sm">
+    <table className="w-full min-w-[820px] border-separate border-spacing-0 text-left text-sm">
       <colgroup>
-        <col className="w-[48%]" />
-        <col className="w-[34%]" />
-        <col className="w-[18%]" />
+        <col className="w-[44%]" />
+        <col className="w-[30%]" />
+        <col className="w-[13%]" />
+        <col className="w-[13%]" />
       </colgroup>
       <thead className="text-xs text-muted">
         <tr>
           <th className="border-b border-border py-3 pr-4 font-black">Post</th>
           <th className="border-b border-border px-4 py-3 font-black">Autor</th>
+          <th className="border-b border-border px-4 py-3 text-center font-black">Visualizações</th>
           <th className="border-b border-border px-4 py-3 text-center font-black">Comentários</th>
         </tr>
       </thead>
@@ -797,7 +810,7 @@ const LatestCommunityPostsSection = ({ pathname, slug }: { pathname: string; slu
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h2 className="text-lg font-black text-foreground">Últimos posts</h2>
         <Link
-          className="inline-flex h-9 w-fit items-center gap-2 rounded-full border border-primary/15 bg-primary-soft px-3.5 text-xs font-black text-primary shadow-control transition hover:border-primary/30 hover:bg-primary hover:text-white"
+          className="inline-flex h-9 w-fit items-center gap-2 rounded-full border border-primary/20 bg-transparent px-3.5 text-xs font-black text-primary transition hover:border-primary/35 hover:bg-primary-soft"
           href={communityTabHref(pathname, "conteudo")}
         >
           Ver todos
@@ -818,6 +831,9 @@ const LatestCommunityPostsSection = ({ pathname, slug }: { pathname: string; slu
                   <span className="h-10 w-10 rounded-full bg-surface-muted" />
                   <span className="h-8 w-36 rounded-full bg-surface-muted" />
                 </span>
+              </td>
+              <td className="border-b border-border px-4 py-4">
+                <span className="mx-auto block h-3 w-10 rounded-full bg-surface-muted" />
               </td>
               <td className="border-b border-border px-4 py-4">
                 <span className="mx-auto block h-3 w-10 rounded-full bg-surface-muted" />

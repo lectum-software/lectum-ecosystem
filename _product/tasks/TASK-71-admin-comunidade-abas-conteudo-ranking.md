@@ -540,3 +540,10 @@ Regras:
 - Pedido do usuário: nos cards vermelhos do bloco **Denúncias pendentes**, remover a tag **Pendente**.
 - A UI Admin mantém somente a tag de tipo do conteúdo denunciado, como **Post de paciente** ou **Comentário de paciente**, já que o contexto da seção informa que todos os itens estão pendentes.
 - O ajuste é exclusivamente visual/apresentacional, sem endpoint novo, schema Prisma/migration, package, mock ou alteração de persistência.
+
+## Ajuste complementar 2026-07-17 - Últimos posts com visualizações
+
+- Pedido do usuário: em **Últimos posts**, deixar o botão **Ver todos** com fundo transparente e adicionar uma coluna **Visualizações** antes de **Comentários**.
+- A UI Admin passou a renderizar as colunas **Post**, **Autor**, **Visualizações** e **Comentários**, usando `metrics.views_count` do contrato real já consumido pela aba **Conteúdo**.
+- O botão **Ver todos** mantém o link para a aba **Conteúdo**, mas sem preenchimento de fundo no estado padrão; o skeleton foi alinhado à nova coluna.
+- O ajuste é exclusivamente visual/apresentacional, sem endpoint novo, schema Prisma/migration, package, mock ou alteração de persistência.
