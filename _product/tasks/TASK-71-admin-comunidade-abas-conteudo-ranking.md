@@ -534,3 +534,9 @@ Regras:
 - A UI Admin removeu a coluna separada **Data e hora** e passou a renderizar a data/hora na coluna **Post**, logo abaixo do título, mantendo autor e comentários nas demais colunas.
 - O skeleton de carregamento foi alinhado ao novo formato da tabela e cada célula do post continua clicável para o `public_url` real.
 - O ajuste é exclusivamente visual/apresentacional, sem endpoint novo, schema Prisma/migration, package, mock ou alteração de persistência.
+
+## Ajuste complementar 2026-07-17 - Cards de denúncias pendentes sem tag Pendente
+
+- Pedido do usuário: nos cards vermelhos do bloco **Denúncias pendentes**, remover a tag **Pendente**.
+- A UI Admin mantém somente a tag de tipo do conteúdo denunciado, como **Post de paciente** ou **Comentário de paciente**, já que o contexto da seção informa que todos os itens estão pendentes.
+- O ajuste é exclusivamente visual/apresentacional, sem endpoint novo, schema Prisma/migration, package, mock ou alteração de persistência.

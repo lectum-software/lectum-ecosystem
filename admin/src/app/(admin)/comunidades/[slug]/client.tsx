@@ -898,9 +898,6 @@ const PendingCommunityReportCard = ({
           </span>
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="rounded-full bg-danger/10 px-2 py-0.5 text-[11px] font-black text-danger">
-                {report.status_label}
-              </span>
               <span className="rounded-full bg-surface px-2 py-0.5 text-[11px] font-black text-muted">
                 {report.content.content_kind_label}
               </span>

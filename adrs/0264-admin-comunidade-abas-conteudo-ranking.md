@@ -583,3 +583,11 @@ A lista **Ultimos posts** da aba **Geral** passa a exibir a data/hora abaixo do 
 A decisao deixa a tabela mais enxuta e prioriza titulo, autor e comentarios como colunas principais, preservando o link real do post em cada celula e alinhando o skeleton ao novo layout.
 
 Consequencia: a mudanca e apenas visual, sem novo endpoint, schema Prisma/migration, dependencia, mock ou alteracao de persistencia.
+
+## Atualizacao 2026-07-17: cards de denuncias pendentes sem tag Pendente
+
+Os cards vermelhos do bloco **Denuncias pendentes** na aba **Geral** deixam de exibir a tag **Pendente**. O status ja esta implicito pelo titulo da secao e pelo fato de a lista usar apenas denuncias ainda sem decisao.
+
+A decisao reduz repeticao visual e mantém somente a tag de tipo do conteudo denunciado no card compacto. A aba **Denuncias** continua exibindo status detalhado para triagem operacional.
+
+Consequencia: a mudanca e apenas apresentacional, sem novo endpoint, schema Prisma/migration, dependencia, mock ou alteracao de persistencia.
