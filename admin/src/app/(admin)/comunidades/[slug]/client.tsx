@@ -252,7 +252,7 @@ const contentPeriodOptions = [
 }>;
 
 const contentSortOptions = [
-  { id: "engagement", label: "Mais engajados" },
+  { id: "engagement", label: "Mais populares" },
   { id: "recent", label: "Mais recentes" },
   { id: "oldest", label: "Mais antigos" },
 ] as const satisfies ReadonlyArray<{

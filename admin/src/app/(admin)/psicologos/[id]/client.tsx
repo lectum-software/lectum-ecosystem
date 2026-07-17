@@ -561,7 +561,7 @@ const PUBLICATIONS_PERIOD_OPTIONS: { id: PublicationsPeriodValue; label: string 
 type PublicationSortValue = NonNullable<AdminPsychologistPublicationsQuery["sort"]>;
 
 const PUBLICATIONS_SORT_OPTIONS: { id: PublicationSortValue; label: string }[] = [
-  { id: "engagement", label: "Mais engajados" },
+  { id: "engagement", label: "Mais populares" },
   { id: "recent", label: "Mais recentes" },
   { id: "oldest", label: "Mais antigos" },
 ];
