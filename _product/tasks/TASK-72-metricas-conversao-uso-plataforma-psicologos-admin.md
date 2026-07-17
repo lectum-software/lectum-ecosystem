@@ -950,3 +950,14 @@ Regras de cálculo:
 - Builder/Quick Copy nao esta exposto como ferramenta callable no ambiente; a referencia visual usada foi a captura enviada pelo usuario e os padroes locais dos contadores da aba **Estatisticas**.
 - ADR atualizado: `adrs/0264-admin-comunidade-abas-conteudo-ranking.md`.
 - Validacao executada: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke HTTP local `GET http://localhost:3002/comunidades/relacionamentos-com-proposito?tab=estatisticas` retornando 200.
+
+
+## Ajuste complementar 2026-07-17 - Conteúdo dos blocos da aba Geral da comunidade
+
+- Pedido do usuário: substituir não só os títulos, mas também o conteúdo dos blocos **Resumo da comunidade hoje** e **Coisas mais urgentes**.
+- O bloco **Últimos posts na comunidade** passou a consumir o endpoint real de conteúdo da comunidade com ordenação recente, exibindo posts publicados, autor, data e métricas de comentários/denúncias.
+- O bloco **Denúncias pendentes** agora mostra somente a fila real de conteúdos denunciados ainda sem decisão, removendo os cards de atividades do dia que pertenciam à fila de urgências anterior.
+- Não houve endpoint novo, mock, package, schema Prisma/migration, seed, backfill ou alteração de persistência; a UI reutiliza React Query e contratos reais já existentes.
+- Builder/Quick Copy não está exposto como ferramenta callable no ambiente; a referência visual usada foi a captura enviada pelo usuário e o padrão local da aba **Geral**.
+- ADR atualizado: `adrs/0264-admin-comunidade-abas-conteudo-ranking.md`.
+- Validação executada: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke HTTP local `GET http://localhost:3002/comunidades/relacionamentos-com-proposito` retornando 200.

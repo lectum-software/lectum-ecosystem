@@ -450,3 +450,16 @@ Como o bloco passa a ter mais opcoes do que cabem confortavelmente no grid, os c
 Consequencia: o Admin ganha leitura unificada de producao, moderacao e engajamento geral da comunidade sem endpoint paralelo, schema Prisma/migration, dependencia nova, mock, seed ou backfill. O custo adicional fica restrito a consultas agregaveis sobre tabelas first-party ja existentes dentro do dataset de estatisticas.
 
 Validacao complementar 2026-07-16: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke HTTP local `GET http://localhost:3002/comunidades/relacionamentos-com-proposito?tab=estatisticas` retornando 200.
+
+
+## Atualização 2026-07-17: conteúdo dos blocos da aba Geral
+
+A aba **Geral** do detalhe administrativo de comunidade passa a separar claramente leitura de publicações recentes e triagem de moderação.
+
+A decisão é trocar o antigo resumo diário por **Últimos posts na comunidade**, usando o endpoint real de conteúdo com ordenação recente e filtragem para posts publicados. A chamada permanece local ao cliente Admin e reutiliza React Query, sem endpoint paralelo, mock ou contrato novo.
+
+O bloco de urgências passa a ser **Denúncias pendentes** e fica restrito ao `urgent_summary.pending_reports_count` e à data da última denúncia pendente, removendo sinais de atividade do dia que não representam diretamente fila de decisão.
+
+Consequência: a aba Geral entrega conteúdo recente e pendências de moderação com fontes reais já existentes, sem schema Prisma/migration, dependência nova, seed, backfill ou dados artificiais.
+
+Validação complementar 2026-07-17: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke HTTP local `GET http://localhost:3002/comunidades/relacionamentos-com-proposito` retornando 200.

@@ -30,7 +30,6 @@ import {
   Share2,
   ShieldCheck,
   Trash2,
-  UserPlus,
   Users,
   X,
 } from "lucide-react";
@@ -88,7 +87,6 @@ import type {
   AdminCommunityStatisticsDailyPoint,
   AdminCommunityStatisticsQuery,
   AdminCommunityStatusInput,
-  AdminCommunityTodaySummary,
   AdminCommunityTopMentor,
   AdminCommunityUpdateInput,
 } from "@/api/req/communities";
@@ -626,119 +624,119 @@ const StatusBadge = ({
   </span>
 );
 
-type CommunityTodaySummaryCardItem = {
-  icon: LucideIcon;
-  iconClassName: string;
-  iconToneClassName: string;
-  label: string;
-  value: number;
+const latestCommunityPostsQuery = {
+  limit: 10,
+  page: 1,
+  period: "all",
+  sort: "recent",
+  status: "published",
+  type: "all",
+} as const satisfies AdminCommunityContentQuery;
+const latestCommunityPostSkeletonKeys = ["first", "second", "third", "fourth"] as const;
+
+const latestPostTitle = (item: AdminCommunityContentItem) => {
+  const title = item.title?.trim();
+  if (title) return title;
+
+  const excerptText = item.excerpt.trim();
+  if (excerptText) return excerptText;
+
+  return "Post sem título";
 };
 
-const buildCommunityTodaySummaryItems = (
-  summary: AdminCommunityTodaySummary,
-): CommunityTodaySummaryCardItem[] => [
-  {
-    icon: Users,
-    iconClassName: "text-primary",
-    iconToneClassName: "bg-primary-soft",
-    label: "Novos pacientes ativos",
-    value: summary.new_active_patients_count,
-  },
-  {
-    icon: Brain,
-    iconClassName: "text-primary",
-    iconToneClassName: "bg-primary-soft",
-    label: "Novos psic\u00f3logos ativos",
-    value: summary.new_active_psychologists_count,
-  },
-  {
-    icon: UserPlus,
-    iconClassName: "text-success",
-    iconToneClassName: "bg-success/10",
-    label: "Novos psic\u00f3logos seguidores",
-    value: summary.new_psychologist_followers_count,
-  },
-  {
-    icon: UserPlus,
-    iconClassName: "text-success",
-    iconToneClassName: "bg-success/10",
-    label: "Novos pacientes seguidores",
-    value: summary.new_patient_followers_count,
-  },
-  {
-    icon: FileText,
-    iconClassName: "text-warning",
-    iconToneClassName: "bg-warning/10",
-    label: "Posts de psic\u00f3logos",
-    value: summary.psychologist_posts_count,
-  },
-  {
-    icon: FileText,
-    iconClassName: "text-warning",
-    iconToneClassName: "bg-warning/10",
-    label: "Posts de pacientes",
-    value: summary.patient_posts_count,
-  },
-  {
-    icon: Reply,
-    iconClassName: "text-primary",
-    iconToneClassName: "bg-primary-soft",
-    label: "Respostas de psic\u00f3logos verificados",
-    value: summary.verified_psychologist_replies_count,
-  },
-  {
-    icon: Reply,
-    iconClassName: "text-muted",
-    iconToneClassName: "bg-surface-muted",
-    label: "Respostas de psic\u00f3logos n\u00e3o verificados",
-    value: summary.unverified_psychologist_replies_count,
-  },
-  {
-    icon: MessageCircle,
-    iconClassName: "text-danger",
-    iconToneClassName: "bg-danger/10",
-    label: "Coment\u00e1rios de pacientes",
-    value: summary.patient_comments_count,
-  },
-];
+const LatestCommunityPostCard = ({
+  item,
+  pathname,
+}: {
+  item: AdminCommunityContentItem;
+  pathname: string;
+}) => {
+  const title = latestPostTitle(item);
+  const authorName = item.author.anonymous ? "Autor anônimo" : item.author.name;
+  const body = item.excerpt.trim() || "Sem texto disponível.";
 
-const SummaryCards = ({ detail }: { detail: AdminCommunityDetail }) => {
-  const items = buildCommunityTodaySummaryItems(detail.today_summary);
+  return (
+    <Link
+      aria-label={`Abrir aba Conteúdo para revisar o post ${title}`}
+      className="group block rounded-[24px] border border-border/80 bg-surface-muted/55 p-4 transition hover:-translate-y-0.5 hover:border-primary/30 hover:bg-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
+      href={communityTabHref(pathname, "conteudo")}
+    >
+      <div className="flex flex-wrap items-center gap-2 text-[11px] font-black uppercase tracking-[0.12em] text-subtle">
+        <span>{item.content_kind_label}</span>
+        <span aria-hidden>•</span>
+        <span>{formatDateTime(item.created_at)}</span>
+      </div>
+      <h3 className="mt-2 line-clamp-2 text-base font-black text-foreground">{title}</h3>
+      <p className="mt-2 line-clamp-3 text-sm leading-6 text-muted">{body}</p>
+      <div className="mt-4 flex flex-wrap items-center gap-3 text-xs font-bold text-muted">
+        <span>{authorName}</span>
+        <span aria-hidden>•</span>
+        <span>{formatCountLabel(item.metrics.comments_count, "comentário", "comentários")}</span>
+        <span>{formatCountLabel(item.metrics.reports_count, "denúncia", "denúncias")}</span>
+      </div>
+      <span className="mt-4 inline-flex items-center gap-1 text-xs font-black text-primary transition group-hover:translate-x-0.5">
+        Ver em Conteúdo
+        <ChevronRight aria-hidden className="h-3.5 w-3.5" />
+      </span>
+    </Link>
+  );
+};
+
+const LatestCommunityPostsSection = ({ pathname, slug }: { pathname: string; slug: string }) => {
+  const result = useAdminCommunityContent(slug, latestCommunityPostsQuery);
+  const latestPosts = useMemo(
+    () => (result.data?.data ?? []).filter((item) => item.type === "post").slice(0, 4),
+    [result.data?.data],
+  );
 
   return (
     <section className={cn(cardClass, "p-5")}>
       <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h2 className="text-lg font-black text-foreground">Resumo da comunidade hoje</h2>
+          <h2 className="text-lg font-black text-foreground">Últimos posts na comunidade</h2>
           <p className="mt-1 text-xs font-bold text-muted">
-            Indicadores do dia corrente no fuso do servidor, calculados com dados reais da
-            comunidade.
+            Posts publicados mais recentemente, carregados de dados reais da comunidade.
           </p>
         </div>
-        <span className="inline-flex w-fit items-center gap-2 rounded-full border border-border bg-surface-muted px-3 py-1 text-xs font-black text-muted">
-          <CalendarDays aria-hidden className="h-4 w-4" />
-          {detail.today_summary.period.label}
-        </span>
+        <Link
+          className="inline-flex w-fit items-center gap-2 rounded-full border border-border bg-surface-muted px-3 py-1 text-xs font-black text-muted transition hover:border-primary/30 hover:text-primary"
+          href={communityTabHref(pathname, "conteudo")}
+        >
+          Ver todos
+          <ChevronRight aria-hidden className="h-4 w-4" />
+        </Link>
       </div>
-      <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-        {items.map((item) => (
-          <div className="rounded-2xl border border-border bg-surface-muted p-4" key={item.label}>
+
+      {result.isLoading ? (
+        <div className="mt-5 grid gap-3 sm:grid-cols-2">
+          {latestCommunityPostSkeletonKeys.map((key) => (
             <div
-              className={cn(
-                "grid h-11 w-11 place-items-center rounded-full",
-                item.iconToneClassName,
-                item.iconClassName,
-              )}
-            >
-              <item.icon aria-hidden className="h-5 w-5" />
-            </div>
-            <p className="mt-4 text-3xl font-black text-foreground">
-              {numberFormatter.format(item.value)}
-            </p>
-            <p className="mt-1 text-sm font-bold leading-snug text-muted">{item.label}</p>
-          </div>
-        ))}
-      </div>
+              className="h-40 animate-pulse rounded-[24px] border border-border/70 bg-surface-muted"
+              key={key}
+            />
+          ))}
+        </div>
+      ) : null}
+
+      {result.isError ? (
+        <p className="mt-5 rounded-2xl bg-surface-muted p-4 text-sm font-bold text-muted">
+          Não foi possível carregar os últimos posts agora.
+        </p>
+      ) : null}
+
+      {!result.isLoading && !result.isError && latestPosts.length === 0 ? (
+        <p className="mt-5 rounded-2xl bg-surface-muted p-4 text-sm font-bold text-muted">
+          Nenhum post publicado real foi encontrado nesta comunidade.
+        </p>
+      ) : null}
+
+      {latestPosts.length > 0 ? (
+        <div className="mt-5 grid gap-3 sm:grid-cols-2">
+          {latestPosts.map((item) => (
+            <LatestCommunityPostCard item={item} key={item.content_id} pathname={pathname} />
+          ))}
+        </div>
+      ) : null}
     </section>
   );
 };
@@ -795,74 +793,31 @@ const buildCommunityUrgentItems = (
   pathname: string,
 ): CommunityUrgentItem[] => {
   const pendingReports = detail.urgent_summary.pending_reports_count;
-  const pendingReportsDescription = detail.urgent_summary.pending_reports_last_reported_at
-    ? "\u00daltima den\u00fancia pendente em " +
-      formatDateTime(detail.urgent_summary.pending_reports_last_reported_at) +
-      "."
-    : "Nenhuma den\u00fancia pendente para decis\u00e3o.";
-  const unverifiedReplies = detail.today_summary.unverified_psychologist_replies_count;
-  const patientPosts = detail.today_summary.patient_posts_count;
-  const patientComments = detail.today_summary.patient_comments_count;
+  const lastReportedAt = detail.urgent_summary.pending_reports_last_reported_at;
+  const pendingReportsDescription =
+    pendingReports > 0
+      ? "Revisar " +
+        formatCountLabel(
+          pendingReports,
+          "conteúdo denunciado",
+          "conteúdos denunciados",
+        ) +
+        " ainda sem decisão." +
+        (lastReportedAt
+          ? ` Última denúncia pendente em ${formatDateTime(lastReportedAt)}.`
+          : "")
+      : "Nenhuma denúncia pendente para decisão.";
 
   return [
     {
-      description:
-        pendingReports > 0
-          ? "Revisar " +
-            formatCountLabel(
-              pendingReports,
-              "conte\u00fado denunciado",
-              "conte\u00fados denunciados",
-            ) +
-            " ainda sem decis\u00e3o. " +
-            pendingReportsDescription
-          : pendingReportsDescription,
+      description: pendingReportsDescription,
       href: communityTabHref(pathname, "denuncias"),
       icon: AlertTriangle,
       id: "pending_reports",
-      label: "Den\u00fancias pendentes",
-      priority: pendingReports > 0 ? "Cr\u00edtico" : "OK",
+      label: pendingReports > 0 ? "Conteúdos denunciados" : "Sem denúncias pendentes",
+      priority: pendingReports > 0 ? "Crítico" : "OK",
       tone: pendingReports > 0 ? "danger" : "muted",
       value: pendingReports,
-    },
-    {
-      description:
-        unverifiedReplies > 0
-          ? "Revisar respostas publicadas hoje por psic\u00f3logos ainda n\u00e3o verificados."
-          : "Nenhuma resposta de psic\u00f3logo n\u00e3o verificado hoje.",
-      href: communityTabHref(pathname, "conteudo"),
-      icon: Reply,
-      id: "unverified_replies_today",
-      label: "Respostas n\u00e3o verificadas hoje",
-      priority: unverifiedReplies > 0 ? "Alta" : "OK",
-      tone: unverifiedReplies > 0 ? "warning" : "muted",
-      value: unverifiedReplies,
-    },
-    {
-      description:
-        patientPosts > 0
-          ? "Priorizar posts de pacientes publicados hoje que podem precisar de resposta verificada."
-          : "Nenhum post de paciente publicado hoje.",
-      href: communityTabHref(pathname, "conteudo"),
-      icon: FileText,
-      id: "patient_posts_today",
-      label: "Posts de pacientes hoje",
-      priority: patientPosts > 0 ? "Alta" : "OK",
-      tone: patientPosts > 0 ? "primary" : "muted",
-      value: patientPosts,
-    },
-    {
-      description:
-        patientComments > 0
-          ? "Acompanhar coment\u00e1rios de pacientes publicados hoje nos posts da comunidade."
-          : "Nenhum coment\u00e1rio de paciente publicado hoje.",
-      href: communityTabHref(pathname, "conteudo"),
-      icon: MessageCircle,
-      id: "patient_comments_today",
-      label: "Coment\u00e1rios de pacientes hoje",
-      priority: patientComments > 0 ? "Acompanhar" : "OK",
-      tone: patientComments > 0 ? "success" : "muted",
-      value: patientComments,
     },
   ];
 };
@@ -881,9 +836,9 @@ const UrgentThingsSection = ({
     <section className={cn(cardClass, "p-5")}>
       <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h2 className="text-lg font-black text-foreground">Coisas mais urgentes</h2>
+          <h2 className="text-lg font-black text-foreground">Denúncias pendentes</h2>
           <p className="mt-1 text-xs font-bold text-muted">
-            {"Fila operacional com o que merece aten\u00e7\u00e3o primeiro nesta comunidade."}
+            Conteúdos denunciados que ainda precisam de decisão nesta comunidade.
           </p>
         </div>
         <span
@@ -896,8 +851,8 @@ const UrgentThingsSection = ({
         >
           <AlertTriangle aria-hidden className="h-4 w-4" />
           {urgentSignals > 0
-            ? formatCountLabel(urgentSignals, "sinal", "sinais")
-            : "Sem urg\u00eancias"}
+            ? formatCountLabel(urgentSignals, "pendente", "pendentes")
+            : "Sem denúncias"}
         </span>
       </div>
       <div className="mt-5 grid gap-3">
@@ -5184,7 +5139,7 @@ const DetailContent = ({
     {activeTab === "geral" ? (
       <>
         <div className="grid gap-5 2xl:grid-cols-[1.15fr_1fr]">
-          <SummaryCards detail={detail} />
+          <LatestCommunityPostsSection pathname={pathname} slug={slug} />
           <UrgentThingsSection detail={detail} pathname={pathname} />
         </div>
         <div className="grid gap-5 2xl:grid-cols-[1.1fr_0.9fr]">
