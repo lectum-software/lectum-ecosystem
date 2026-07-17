@@ -21,6 +21,7 @@ import {
   type LucideIcon,
   Maximize2,
   MessageCircle,
+  Newspaper,
   Play,
   Plus,
   RefreshCw,
@@ -662,7 +663,7 @@ const buildCommunityHighlightCounterItems = (
     value: detail.highlight_counters.patient_posts_count,
   },
   {
-    icon: Brain,
+    icon: Newspaper,
     id: "psychologist_posts",
     label: "Posts de Psicólogos",
     value: detail.highlight_counters.psychologist_posts_count,
