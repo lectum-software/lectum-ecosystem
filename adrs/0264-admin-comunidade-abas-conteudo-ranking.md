@@ -551,3 +551,19 @@ A lista de denuncias pendentes na aba **Geral** passa a omitir a linha de motivo
 O badge superior da secao tambem passa de `N denuncias pendentes` para `N denuncias`, mantendo o contexto no titulo **Denuncias pendentes** e evitando repeticao textual.
 
 Consequencia: a alteracao e apenas apresentacional, sem novo endpoint, schema Prisma/migration, dependencia, mock ou mudanca de persistencia.
+
+## Atualizacao 2026-07-17: Ultimos posts sem previa de descricao
+
+A tabela **Ultimos posts** da aba **Geral** passa a omitir a previa textual do post. A coluna **Post** mostra somente o titulo, limitado visualmente a duas linhas para manter a linha compacta sem reintroduzir bloco de descricao.
+
+A coluna **Comentarios** passa a centralizar o valor numerico, incluindo o estado skeleton. As celulas continuam abrindo o `public_url` real do post em nova aba.
+
+Consequencia: a alteracao e apenas visual no Admin, sem endpoint novo, contrato de API, schema Prisma/migration, dependencia, mock ou alteracao de persistencia.
+
+## Atualizacao 2026-07-17: cards de denuncias pendentes sem metadados secundarios
+
+A lista de denuncias pendentes na aba **Geral** passa a omitir as linhas **Denunciante**, **Autor** e **Recebida em** dentro de cada card. Esses dados continuam preservados no contrato e seguem disponiveis na aba **Denuncias**, onde a triagem detalhada ocorre.
+
+A decisao deixa o resumo da aba Geral mais compacto: cada card mostra status, tipo do conteudo, titulo e previa do conteudo denunciado, com link para a aba operacional de denuncias.
+
+Consequencia: a mudanca e apenas apresentacional, sem novo endpoint, schema Prisma/migration, dependencia, mock ou alteracao de persistencia.

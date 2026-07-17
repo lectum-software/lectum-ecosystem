@@ -718,7 +718,6 @@ const latestPostTitle = (item: AdminCommunityContentItem) => {
 
 const LatestCommunityPostRow = ({ item }: { item: AdminCommunityContentItem }) => {
   const title = latestPostTitle(item);
-  const body = item.excerpt.trim() || "Sem texto disponível.";
   const postHref = toPublicHref(item.public_url);
 
   return (
@@ -731,11 +730,8 @@ const LatestCommunityPostRow = ({ item }: { item: AdminCommunityContentItem }) =
           rel="noreferrer"
           target="_blank"
         >
-          <span className="block line-clamp-1 font-black text-foreground group-hover:text-primary">
+          <span className="block line-clamp-2 font-black text-foreground group-hover:text-primary">
             {title}
-          </span>
-          <span className="mt-1 block line-clamp-2 max-w-[26rem] text-sm font-bold leading-5 text-muted">
-            {body}
           </span>
         </Link>
       </td>
@@ -750,10 +746,10 @@ const LatestCommunityPostRow = ({ item }: { item: AdminCommunityContentItem }) =
           <ContentAuthorIdentity item={item} />
         </Link>
       </td>
-      <td className="border-b border-border font-black text-foreground">
+      <td className="border-b border-border text-center font-black text-foreground">
         <Link
           aria-label={`Abrir post ${title}`}
-          className="block px-4 py-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
+          className="block px-4 py-4 text-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
           href={postHref}
           rel="noreferrer"
           target="_blank"
@@ -792,7 +788,7 @@ const LatestCommunityPostsTable = ({ children }: { children: React.ReactNode }) 
         <tr>
           <th className="border-b border-border py-3 pr-4 font-black">Post</th>
           <th className="border-b border-border px-4 py-3 font-black">Autor</th>
-          <th className="border-b border-border px-4 py-3 font-black">Comentários</th>
+          <th className="border-b border-border px-4 py-3 text-center font-black">Comentários</th>
           <th className="border-b border-border px-4 py-3 font-black">Data e hora</th>
         </tr>
       </thead>
@@ -827,7 +823,6 @@ const LatestCommunityPostsSection = ({ pathname, slug }: { pathname: string; slu
             <tr className="animate-pulse" key={key}>
               <td className="border-b border-border py-4 pr-4">
                 <span className="block h-4 w-3/4 rounded-full bg-surface-muted" />
-                <span className="mt-2 block h-3 w-full rounded-full bg-surface-muted" />
               </td>
               <td className="border-b border-border px-4 py-4">
                 <span className="flex items-center gap-3">
@@ -836,7 +831,7 @@ const LatestCommunityPostsSection = ({ pathname, slug }: { pathname: string; slu
                 </span>
               </td>
               <td className="border-b border-border px-4 py-4">
-                <span className="block h-3 w-10 rounded-full bg-surface-muted" />
+                <span className="mx-auto block h-3 w-10 rounded-full bg-surface-muted" />
               </td>
               <td className="border-b border-border px-4 py-4">
                 <span className="block h-3 w-28 rounded-full bg-surface-muted" />

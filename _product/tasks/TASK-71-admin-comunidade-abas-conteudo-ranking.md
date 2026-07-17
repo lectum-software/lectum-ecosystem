@@ -507,3 +507,17 @@ Regras:
 - Builder/Quick Copy nao esta exposto como ferramenta callable no ambiente; a referencia usada foi a captura enviada pelo usuario e o padrao local de **Posts mais populares**.
 - ADR atualizado: `adrs/0264-admin-comunidade-abas-conteudo-ranking.md`.
 - Validacao executada: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm --dir backend build`, `pnpm check` e smoke HTTP local `GET http://localhost:3002/comunidades/relacionamentos-com-proposito` retornando 200.
+
+## Ajuste complementar 2026-07-17 - Ultimos posts sem previa
+
+- Pedido do usuario: em **Ultimos posts**, remover a previa de descricao e centralizar o numero da coluna **Comentarios**.
+- A UI Admin passou a exibir somente o titulo do post na coluna **Post**, com limite visual de duas linhas para preservar a tabela enxuta.
+- O numero de comentarios e o skeleton da coluna foram centralizados, mantendo cada celula da linha clicavel para o `public_url` real do post.
+- O ajuste e exclusivamente apresentacional, sem endpoint novo, schema Prisma/migration, package, mock ou alteracao de persistencia.
+- ADR atualizado: `adrs/0264-admin-comunidade-abas-conteudo-ranking.md`.
+
+## Ajuste complementar 2026-07-17 - Cards de denúncias pendentes sem metadados secundários
+
+- Pedido do usuário: no card de denúncia pendente da aba **Geral**, remover as linhas **Denunciante**, **Autor** e **Recebida em**.
+- A UI Admin mantém status, tipo do conteúdo, título e prévia do conteúdo denunciado; os metadados completos continuam disponíveis na aba **Denúncias**.
+- O ajuste é exclusivamente visual/apresentacional, sem endpoint novo, schema Prisma/migration, package, mock ou alteração de persistência.
