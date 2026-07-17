@@ -1052,6 +1052,7 @@ Regras de cálculo:
 
 - Pedido do usuario: no painel de **Estatisticas** do detalhe administrativo do psicologo, usar nos contadores o mesmo layout de carrossel horizontal com setas de navegacao das **Estatisticas de conteudo** da comunidade.
 - Os contadores de **Estatisticas de negocio** e **Estatisticas de comunidade** agora usam scroller horizontal com snap, gutters internos e setas laterais, mantendo o card **Ranking do psicologo** como primeiro item estatico e os demais contadores clicaveis para controlar o grafico.
+- A barra horizontal global observada apos o ajuste era causada pelo overflow do novo carrossel/itens internos escapando do nivel da aba; a contencao horizontal foi aplicada no root da aba, nos cards e no fieldset do carrossel, preservando apenas a rolagem interna controlada pelas setas.
 - O ajuste e exclusivamente visual/mobile-first, sem endpoint novo, mock, package, schema Prisma/migration, seed, backfill ou alteracao de persistencia.
 - Builder/Quick Copy nao esta exposto como ferramenta callable no ambiente; a referencia usada foi a captura enviada pelo usuario e o padrao local do carrossel de **Estatisticas de conteudo** da comunidade.
 - ADR atualizado: `adrs/0266-metricas-conversao-uso-psicologos-admin.md`.

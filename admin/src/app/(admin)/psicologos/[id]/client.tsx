@@ -2448,9 +2448,9 @@ const StatisticsMetricCarousel = ({
   }, []);
 
   return (
-    <fieldset className="mt-5 min-w-0">
+    <fieldset className="mt-5 min-w-0 max-w-full overflow-x-clip">
       <legend className="sr-only">Contadores exibidos no gráfico de {title}</legend>
-      <div className="relative min-w-0 px-11 sm:px-12">
+      <div className="relative min-w-0 max-w-full px-11 sm:px-12">
         <button
           aria-label={`Rolar contadores de ${title} para a esquerda`}
           className="absolute left-0 top-1/2 z-10 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-full border border-border bg-surface text-muted shadow-sm transition hover:border-primary/35 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
@@ -3553,9 +3553,12 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: st
   };
 
   return (
-    <div className="space-y-5" data-psychologist-detail-tab="estatisticas">
-      <section aria-busy={isBusinessRefreshing} className="grid gap-5">
-        <CardShell className="min-w-0 p-5">
+    <div
+      className="max-w-full space-y-5 overflow-x-clip"
+      data-psychologist-detail-tab="estatisticas"
+    >
+      <section aria-busy={isBusinessRefreshing} className="grid max-w-full gap-5 overflow-x-clip">
+        <CardShell className="min-w-0 max-w-full overflow-x-clip p-5">
           <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-start">
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2">
@@ -3654,8 +3657,8 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: st
         />
       </section>
 
-      <section aria-busy={isCommunityRefreshing} className="grid gap-5">
-        <CardShell className="min-w-0 p-5">
+      <section aria-busy={isCommunityRefreshing} className="grid max-w-full gap-5 overflow-x-clip">
+        <CardShell className="min-w-0 max-w-full overflow-x-clip p-5">
           <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-start">
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2">

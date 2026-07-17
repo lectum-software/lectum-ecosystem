@@ -252,4 +252,6 @@ No detalhe administrativo do psicologo, os contadores dos blocos **Estatisticas 
 
 O card **Ranking do psicologo** permanece estatico e como primeiro item do carrossel de comunidade; os demais cards continuam sendo controles de series do grafico. A decisao e exclusivamente de consistencia visual/mobile-first e nao altera endpoints, contratos, calculos, fontes first-party, schema Prisma, migrations, packages ou persistencia.
 
+A barra de rolagem horizontal global apos a introducao do carrossel indica que o overflow interno nao estava contido no nivel da aba/card. A contencao horizontal deve ficar no root da aba, nos cards de estatisticas e no fieldset do carrossel (`overflow-x-clip` + `max-w-full`/`min-w-0`), enquanto o unico overflow intencional continua sendo o scroller interno controlado pelas setas.
+
 Validacao complementar 2026-07-17: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke HTTP local `GET http://localhost:3002/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=estatisticas` retornando 200.
