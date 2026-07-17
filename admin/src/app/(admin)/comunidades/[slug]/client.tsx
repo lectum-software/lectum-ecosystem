@@ -106,6 +106,10 @@ const percentageFormatter = new Intl.NumberFormat("pt-BR", {
 const dateFormatter = new Intl.DateTimeFormat("pt-BR", {
   dateStyle: "short",
 });
+const dayMonthFormatter = new Intl.DateTimeFormat("pt-BR", {
+  day: "2-digit",
+  month: "2-digit",
+});
 const dateTimeFormatter = new Intl.DateTimeFormat("pt-BR", {
   dateStyle: "short",
   timeStyle: "short",
@@ -262,6 +266,12 @@ const statisticsPeriodOptions = contentPeriodOptions satisfies ReadonlyArray<{
   label: string;
 }>;
 
+const disabledCommunityStatisticsComparisonQuery = {
+  from: "",
+  period: "custom",
+  to: "",
+} satisfies AdminCommunityStatisticsQuery;
+
 const parseCommunityTab = (value: string | null): CommunityTab =>
   communityTabs.some((tab) => tab.id === value) ? (value as CommunityTab) : "geral";
 
@@ -413,6 +423,32 @@ const isValidContentRange = (range: ContentCustomRange) => {
 
   return contentDateFromInput(range.from) <= contentDateFromInput(range.to);
 };
+const daysBetweenDateInputValues = (from: string, to: string) => {
+  const start = contentDateFromInput(from);
+  const end = contentDateFromInput(to);
+
+  return Math.floor((end.getTime() - start.getTime()) / 86_400_000) + 1;
+};
+const addDaysToDateInputValue = (value: string, days: number) => {
+  const date = contentDateFromInput(value);
+  date.setDate(date.getDate() + days);
+
+  return toDateInputValue(date);
+};
+const buildPreviousStatisticsRange = (
+  range: Required<StatisticsCustomRange>,
+): Required<StatisticsCustomRange> | null => {
+  if (!isValidContentRange(range)) return null;
+
+  const days = daysBetweenDateInputValues(range.from, range.to);
+  if (days < 1) return null;
+
+  const previousTo = addDaysToDateInputValue(range.from, -1);
+  const previousFrom = addDaysToDateInputValue(previousTo, -(days - 1));
+
+  return { from: previousFrom, to: previousTo };
+};
+const formatDayMonth = (value: string) => dayMonthFormatter.format(contentDateFromInput(value));
 type ReportPeriodValue = "30d" | "90d" | "180d" | "custom";
 type ReportPeriodPreset = Exclude<ReportPeriodValue, "custom">;
 type ReportDateRange = {
@@ -3780,6 +3816,16 @@ type CommunityStatisticsMetricDetail = {
   value: number;
 };
 
+type CommunityStatisticsMetricTrend = "down" | "flat" | "unavailable" | "up";
+
+type CommunityStatisticsMetricComparison = {
+  change_percent: number | null;
+  previous_from: string;
+  previous_to: string;
+  previous_value: number;
+  trend: CommunityStatisticsMetricTrend;
+};
+
 type CommunityStatisticsMetricConfig = {
   dotClassName: string;
   getDetails?: (statistics: AdminCommunityStatistics) => CommunityStatisticsMetricDetail[];
@@ -3794,6 +3840,7 @@ type CommunityStatisticsMetricConfig = {
 };
 
 type CommunityStatisticsMetricItem = CommunityStatisticsMetricConfig & {
+  comparison?: CommunityStatisticsMetricComparison;
   details?: CommunityStatisticsMetricDetail[];
   value: number;
 };
@@ -3822,6 +3869,14 @@ const useCommunityStatisticsDateFilterState = (createdAt: string) => {
       ...(selectedPeriod === "custom" ? appliedRange : {}),
     }),
     [appliedRange, selectedPeriod],
+  );
+  const comparisonRange = useMemo(
+    () => (selectedPeriod === "all" ? null : buildPreviousStatisticsRange(appliedRange)),
+    [appliedRange, selectedPeriod],
+  );
+  const comparisonQueryInput = useMemo<AdminCommunityStatisticsQuery | null>(
+    () => (comparisonRange ? { ...comparisonRange, period: "custom" } : null),
+    [comparisonRange],
   );
 
   const handlePeriodChange = useCallback(
@@ -3893,7 +3948,7 @@ const useCommunityStatisticsDateFilterState = (createdAt: string) => {
     ],
   );
 
-  return { dateFilters, queryInput };
+  return { comparisonQueryInput, dateFilters, queryInput };
 };
 
 const communityStatisticsMetricAggregations = {
@@ -3908,6 +3963,30 @@ const safeCommunityStatisticCount = (value: number | null | undefined) =>
 
 const communityStatisticPercentage = (value: number, total: number) =>
   total > 0 ? (value / total) * 100 : 0;
+
+const roundCommunityStatisticPercent = (value: number) => Math.round(value * 10) / 10;
+
+const communityStatisticPercentageChange = (current: number, previous: number) => {
+  if (previous === 0) return current === 0 ? 0 : null;
+
+  return roundCommunityStatisticPercent(((current - previous) / previous) * 100);
+};
+
+const buildCommunityStatisticsMetricComparison = (
+  currentValue: number,
+  previousValue: number,
+  previousPeriod: AdminCommunityStatistics["period"],
+): CommunityStatisticsMetricComparison => {
+  const change = communityStatisticPercentageChange(currentValue, previousValue);
+
+  return {
+    change_percent: change,
+    previous_from: previousPeriod.from,
+    previous_to: previousPeriod.to,
+    previous_value: previousValue,
+    trend: change === null ? "unavailable" : change > 0 ? "up" : change < 0 ? "down" : "flat",
+  };
+};
 
 const buildPatientPostsBreakdown = (
   statistics: AdminCommunityStatistics,
@@ -4088,18 +4167,73 @@ const communityStatisticsMetricValue = (
 const buildCommunityStatisticsMetricItems = (
   statistics: AdminCommunityStatistics,
   configs: readonly CommunityStatisticsMetricConfig[],
+  previousStatistics?: AdminCommunityStatistics,
 ): CommunityStatisticsMetricItem[] =>
-  configs.map((config) => ({
-    ...config,
-    details: config.getDetails?.(statistics),
-    value: communityStatisticsMetricValue(statistics, config),
-  }));
+  configs.map((config) => {
+    const value = communityStatisticsMetricValue(statistics, config);
+    const previousValue =
+      previousStatistics && communityStatisticsMetricValue(previousStatistics, config);
+
+    return {
+      ...config,
+      comparison: previousStatistics
+        ? buildCommunityStatisticsMetricComparison(
+            value,
+            previousValue ?? 0,
+            previousStatistics.period,
+          )
+        : undefined,
+      details: config.getDetails?.(statistics),
+      value,
+    };
+  });
+
+const formatCommunityStatisticsComparisonChange = (value: number | null) => {
+  if (value === null) return "sem base anterior";
+  if (value === 0) return "0%";
+
+  return `${value > 0 ? "+" : ""}${value.toLocaleString("pt-BR", {
+    maximumFractionDigits: 1,
+    minimumFractionDigits: 0,
+  })}%`;
+};
+
+const formatCommunityStatisticsPreviousPeriod = (comparison: CommunityStatisticsMetricComparison) =>
+  `${formatDayMonth(comparison.previous_from)} - ${formatDayMonth(comparison.previous_to)}`;
 
 const toggleCommunityStatisticsMetricIds = (current: string[], metricId: string) => {
   if (!current.includes(metricId)) return [...current, metricId];
   if (current.length <= 1) return current;
 
   return current.filter((item) => item !== metricId);
+};
+
+const CommunityStatisticsMetricComparisonLine = ({
+  comparison,
+}: {
+  comparison: CommunityStatisticsMetricComparison;
+}) => {
+  const hasArrow = comparison.trend === "up" || comparison.trend === "down";
+  const TrendIcon = comparison.trend === "down" ? ArrowDown : ArrowUp;
+
+  return (
+    <span className="mt-3 flex min-w-0 max-w-full flex-wrap items-center gap-1.5 text-[0.68rem]">
+      <span
+        className={cn(
+          "inline-flex items-center gap-1 font-black",
+          comparison.trend === "up" && "text-success",
+          comparison.trend === "down" && "text-danger",
+          (comparison.trend === "flat" || comparison.trend === "unavailable") && "text-muted",
+        )}
+      >
+        {hasArrow ? <TrendIcon aria-hidden className="h-3 w-3" /> : null}
+        {formatCommunityStatisticsComparisonChange(comparison.change_percent)}
+      </span>
+      <span className="min-w-0 break-words font-bold text-muted">
+        vs. {formatCommunityStatisticsPreviousPeriod(comparison)}
+      </span>
+    </span>
+  );
 };
 
 const CommunityStatisticsMetricToggleCard = ({
@@ -4121,6 +4255,11 @@ const CommunityStatisticsMetricToggleCard = ({
         )}%)`,
     )
     .join(". ");
+  const comparisonTitle = metric.comparison
+    ? `${formatCommunityStatisticsComparisonChange(
+        metric.comparison.change_percent,
+      )} vs. ${formatCommunityStatisticsPreviousPeriod(metric.comparison)}`
+    : null;
 
   return (
     <button
@@ -4137,6 +4276,7 @@ const CommunityStatisticsMetricToggleCard = ({
         ": " +
         formattedValue +
         ". " +
+        (comparisonTitle ? `${comparisonTitle}. ` : "") +
         (detailTitle ? `${detailTitle}. ` : "") +
         (active ? "Visível no gráfico" : "Oculto no gráfico")
       }
@@ -4158,6 +4298,9 @@ const CommunityStatisticsMetricToggleCard = ({
         <span className="mt-2 block text-2xl font-extrabold leading-none text-foreground">
           {formattedValue}
         </span>
+        {metric.comparison ? (
+          <CommunityStatisticsMetricComparisonLine comparison={metric.comparison} />
+        ) : null}
         {metric.details?.length ? (
           <span className="mt-3 grid gap-1">
             {metric.details.map((detail) => (
@@ -4458,14 +4601,30 @@ const StatisticsContent = ({ createdAt, slug }: { createdAt: string; slug: strin
   const contentDateState = useCommunityStatisticsDateFilterState(createdAt);
   const peopleResult = useAdminCommunityStatistics(slug, peopleDateState.queryInput);
   const contentResult = useAdminCommunityStatistics(slug, contentDateState.queryInput);
+  const peopleComparisonResult = useAdminCommunityStatistics(
+    slug,
+    peopleDateState.comparisonQueryInput ?? disabledCommunityStatisticsComparisonQuery,
+    { enabled: Boolean(peopleDateState.comparisonQueryInput) },
+  );
+  const contentComparisonResult = useAdminCommunityStatistics(
+    slug,
+    contentDateState.comparisonQueryInput ?? disabledCommunityStatisticsComparisonQuery,
+    { enabled: Boolean(contentDateState.comparisonQueryInput) },
+  );
   const peopleStatistics = peopleResult.data;
   const contentStatistics = contentResult.data;
+  const peopleComparisonStatistics = peopleComparisonResult.data;
+  const contentComparisonStatistics = contentComparisonResult.data;
   const peopleMetrics = useMemo(
     () =>
       peopleStatistics
-        ? buildCommunityStatisticsMetricItems(peopleStatistics, COMMUNITY_PEOPLE_STATISTICS_METRICS)
+        ? buildCommunityStatisticsMetricItems(
+            peopleStatistics,
+            COMMUNITY_PEOPLE_STATISTICS_METRICS,
+            peopleComparisonStatistics,
+          )
         : [],
-    [peopleStatistics],
+    [peopleComparisonStatistics, peopleStatistics],
   );
   const contentMetrics = useMemo(
     () =>
@@ -4473,9 +4632,10 @@ const StatisticsContent = ({ createdAt, slug }: { createdAt: string; slug: strin
         ? buildCommunityStatisticsMetricItems(
             contentStatistics,
             COMMUNITY_CONTENT_STATISTICS_METRICS,
+            contentComparisonStatistics,
           )
         : [],
-    [contentStatistics],
+    [contentComparisonStatistics, contentStatistics],
   );
   const [visiblePeopleMetricIds, setVisiblePeopleMetricIds] = useState<string[]>(() =>
     COMMUNITY_PEOPLE_STATISTICS_METRICS.map((metric) => metric.id),
@@ -4496,11 +4656,14 @@ const StatisticsContent = ({ createdAt, slug }: { createdAt: string; slug: strin
         dateFilters={peopleDateState.dateFilters}
         description="Visão geral de psicólogos e pacientes da comunidade."
         error={peopleResult.error}
-        isFetching={peopleResult.isFetching}
+        isFetching={peopleResult.isFetching || peopleComparisonResult.isFetching}
         isLoading={peopleResult.isLoading}
         metrics={peopleMetrics}
         onToggleMetric={togglePeopleMetric}
-        onRetry={() => void peopleResult.refetch()}
+        onRetry={() => {
+          void peopleResult.refetch();
+          if (peopleDateState.comparisonQueryInput) void peopleComparisonResult.refetch();
+        }}
         points={peopleStatistics?.charts.daily ?? []}
         title="Estatísticas de pessoas"
         visibleMetricIds={visiblePeopleMetricIds}
@@ -4509,11 +4672,14 @@ const StatisticsContent = ({ createdAt, slug }: { createdAt: string; slug: strin
         dateFilters={contentDateState.dateFilters}
         description="Visão geral do conteúdo e engajamento da comunidade."
         error={contentResult.error}
-        isFetching={contentResult.isFetching}
+        isFetching={contentResult.isFetching || contentComparisonResult.isFetching}
         isLoading={contentResult.isLoading}
         metrics={contentMetrics}
         onToggleMetric={toggleContentMetric}
-        onRetry={() => void contentResult.refetch()}
+        onRetry={() => {
+          void contentResult.refetch();
+          if (contentDateState.comparisonQueryInput) void contentComparisonResult.refetch();
+        }}
         points={contentStatistics?.charts.daily ?? []}
         title="Estatísticas de conteúdo"
         visibleMetricIds={visibleContentMetricIds}

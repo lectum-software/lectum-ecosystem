@@ -905,3 +905,14 @@ Regras de cálculo:
 - Builder/Quick Copy nao esta exposto como ferramenta callable no ambiente; a referencia visual usada foi a captura enviada pelo usuario e o padrao local do Admin.
 - ADR atualizado: `adrs/0264-admin-comunidade-abas-conteudo-ranking.md`.
 - Validacao executada: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke HTTP local `GET http://localhost:3002/comunidades/relacionamentos-com-proposito` retornando 200.
+
+## Ajuste complementar 2026-07-16 - Comparativo de periodo nos contadores da comunidade
+
+- Pedido do usuario: nos contadores da aba **Estatisticas** da comunidade, adicionar comparativo com o periodo anterior, igual ao padrao dos contadores em detalhes do psicologo.
+- Os cards de **Estatisticas de pessoas** e **Estatisticas de conteudo** agora calculam o intervalo anterior com a mesma duracao do filtro aplicado e consultam o endpoint real `GET /api/admin/private/communities/:id/statistics` com `period=custom` para obter a base comparativa.
+- Cada contador exibe variacao percentual, direcao visual e label `vs. DD/MM - DD/MM`; quando a base anterior e zero e o periodo atual tem valor, a UI mostra `sem base anterior`, evitando percentual artificial.
+- A quebra de posts anonimos/identificados permanece no card de posts de pacientes e o comparativo usa o total real do contador.
+- Nao houve endpoint novo, mock, package, schema Prisma/migration, backfill ou alteracao de persistencia; a solucao reutiliza React Query e o contrato de estatisticas ja existente.
+- Builder/Quick Copy nao esta exposto como ferramenta callable no ambiente; a referencia visual usada foi a captura enviada pelo usuario e o padrao ja consolidado dos contadores do detalhe administrativo do psicologo.
+- ADR atualizado: `adrs/0264-admin-comunidade-abas-conteudo-ranking.md`.
+- Validacao executada: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm check` e smoke HTTP local `GET http://localhost:3002/comunidades/relacionamentos-com-proposito?tab=estatisticas` retornando 200.

@@ -415,3 +415,15 @@ O contrato real de `GET /api/admin/private/communities/:id` foi expandido com `t
 Consequencia: a aba Geral ganha leitura diaria sem consulta paralela no cliente, sem schema Prisma/migration, sem package novo, sem mock, sem backfill e sem alterar o detalhe historico usado pelo cabecalho. A UI permanece mobile-first com cards empilhados em telas pequenas e grid progressivo em telas maiores.
 
 Validacao complementar 2026-07-16: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke HTTP local `GET http://localhost:3002/comunidades/relacionamentos-com-proposito` retornando 200.
+
+## Atualizacao 2026-07-16: comparativo de periodo nos contadores de Estatisticas da comunidade
+
+Os contadores dos blocos **Estatisticas de pessoas** e **Estatisticas de conteudo** passam a exibir comparativo contra o periodo imediatamente anterior, seguindo o padrao visual ja usado nos contadores do detalhe administrativo do psicologo.
+
+A decisao e manter o endpoint existente `GET /api/admin/private/communities/:id/statistics` como fonte unica de dados e fazer, no cliente Admin, uma segunda consulta React Query por bloco com `period=custom`, `from` e `to` calculados a partir da duracao do filtro atual. Assim, o comparativo reutiliza o contrato real de estatisticas, sem endpoint paralelo, sem schema novo, sem migration, sem package novo e sem mock.
+
+A regra de variacao segue a semantica do detalhe de psicologo: quando existe base anterior, mostra a variacao percentual e a direcao; quando o valor anterior e zero e o atual e maior que zero, mostra **sem base anterior** em vez de criar um percentual artificial. O preset **Todo o periodo** nao exibe comparativo porque nao ha recorte anterior equivalente confiavel.
+
+Consequencia: cada bloco de estatisticas passa a usar uma consulta adicional apenas quando ha periodo comparavel. A interacao permanece localizada por bloco, preservando filtros independentes, a quebra de posts anonimos/identificados e as curvas existentes.
+
+Validacao complementar 2026-07-16: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm check` e smoke HTTP local `GET http://localhost:3002/comunidades/relacionamentos-com-proposito?tab=estatisticas` retornando 200.
