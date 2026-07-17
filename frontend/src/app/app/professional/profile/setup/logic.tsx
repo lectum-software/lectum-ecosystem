@@ -1900,7 +1900,7 @@ export const ProfessionalProfileSetupLogic = () => {
 
                     {videoSrc ? (
                       <VerticalVideoPlayer
-                        className="mt-4 w-full rounded-2xl md:mx-auto md:max-w-[390px] md:rounded-[22px]"
+                        className="mx-auto mt-4 w-full max-w-[224px] rounded-2xl sm:max-w-[260px] md:max-w-[300px] md:rounded-[22px]"
                         poster={videoCoverSrc || undefined}
                         src={videoSrc}
                         title="Pré-visualização do vídeo de apresentação"
