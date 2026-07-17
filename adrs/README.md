@@ -135,3 +135,4 @@ Formato recomendado:
 - [ADR-0257 - Nome profissional separado do psicólogo para WhatsApp](0257-nome-profissional-psicologo-whatsapp.md) - Accepted
 - [ADR-0262 - Resolução administrativa auditada de denúncias recebidas](0262-resolucao-admin-denuncias-recebidas.md) - Accepted
 - [ADR-0265 - Hidratação assíncrona de socket como best-effort](0265-socket-hidratacao-assincrona-best-effort.md) - Accepted
+- [ADR-0275 - Opção Hoje nos filtros de período do Admin](0275-periodo-hoje-filtros-admin.md) - Accepted

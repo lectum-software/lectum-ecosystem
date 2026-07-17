@@ -23,7 +23,7 @@ export type AdminCommunitiesListQuery = AdminCommunityPaginationQuery & {
 
 export type AdminCommunityContentQuery = AdminCommunityPaginationQuery & {
   from?: string;
-  period?: "all" | "custom" | "month" | "week" | "year";
+  period?: "all" | "custom" | "month" | "today" | "week" | "year";
   sort?: "engagement" | "oldest" | "recent";
   status?: "all" | "published" | "removed";
   to?: string;
@@ -79,7 +79,7 @@ export type AdminCommunityActivitiesQuery = AdminCommunityPaginationQuery & {
 
 export type AdminCommunityStatisticsQuery = {
   from?: string;
-  period?: "all" | "custom" | "month" | "week" | "year";
+  period?: "all" | "custom" | "month" | "today" | "week" | "year";
   to?: string;
 };
 

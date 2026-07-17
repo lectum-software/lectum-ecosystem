@@ -929,6 +929,17 @@ Regras de cálculo:
 - Validacao executada: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm check` e smoke HTTP local `GET http://localhost:3002/comunidades/relacionamentos-com-proposito?tab=estatisticas` retornando 200.
 
 
+## Ajuste complementar 2026-07-16 - Opção Hoje nos filtros de período do Admin
+
+- Pedido do usuário: em todos os seletores de período do painel Admin que exibem **Esta semana**, **Este mês**, **Este ano** e **Todo o período**, adicionar **Hoje** na primeira posição, mantendo **Esta semana** como default.
+- Os seletores afetados no Admin agora exibem **Hoje** antes de **Esta semana** e aplicam `period=today` como intervalo do dia corrente quando selecionado.
+- O default aplicado nos seletores afetados permanece/foi padronizado para **Esta semana**, evitando que a nova primeira opção altere a consulta inicial.
+- O backend Admin passou a aceitar `today` nos contratos reais de dashboard/estatísticas/publicações de psicólogos e estatísticas/conteúdo de comunidades, calculando o período do início ao fim do dia local.
+- Não houve package novo, mock, seed, endpoint paralelo, schema Prisma/migration ou alteração de persistência.
+- Builder/Quick Copy não está exposto como ferramenta callable no ambiente; a referência visual usada foi a captura enviada pelo usuário e o padrão local dos filtros Admin.
+- ADR criado: `adrs/0275-periodo-hoje-filtros-admin.md`.
+- Validação executada: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm check` e smoke HTTP local em `/comunidades/relacionamentos-com-proposito?tab=estatisticas`, `/psicologos` e `/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=estatisticas` retornando 200.
+
 ## Ajuste complementar 2026-07-16 - Engajamento geral no conteudo da comunidade
 
 - Pedido do usuario: nas **Estatisticas de conteudo** da comunidade, adicionar contadores gerais de **Upvotes**, **Downvotes**, **Salvamentos**, **Cliques WhatsApp** e **Acesso ao perfil**, mantendo os demais indicadores disponiveis em um carrossel horizontal com seta.

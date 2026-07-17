@@ -686,6 +686,10 @@ const resolveContentPeriod = (query: AdminCommunityContentQuery): ContentPeriodR
 
     start = customStart;
     end = customEnd;
+  } else if (preset === "today") {
+    const today = new Date();
+    start = startOfDay(today);
+    end = endOfDay(today);
   } else if (preset === "week") {
     const today = new Date();
     start = startOfWeek(today);
@@ -773,6 +777,7 @@ const statisticsPeriodLabel: Record<
   all: "Todo o per\u00edodo",
   custom: "Per\u00edodo personalizado",
   month: "Este m\u00eas",
+  today: "Hoje",
   week: "Esta semana",
   year: "Este ano",
 };
@@ -802,6 +807,8 @@ const resolveStatisticsPeriod = (
 
     start = customStart;
     end = customEnd;
+  } else if (preset === "today") {
+    start = startOfDay(today);
   } else if (preset === "week") {
     start = startOfWeek(today);
   } else if (preset === "month") {
