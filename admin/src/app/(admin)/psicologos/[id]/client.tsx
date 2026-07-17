@@ -1218,7 +1218,7 @@ const StatisticsPeriodControls = ({
         Período
         <span className="relative mt-2 block">
           <select
-            className="h-11 w-full appearance-none rounded-control border border-border bg-surface py-0 pl-3 pr-11 text-sm font-black text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+            className="h-11 w-full appearance-none rounded-control border border-border bg-surface py-0 pl-3 pr-11 text-sm font-bold text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
             id={`${idPrefix}-period`}
             onChange={(event) => onPeriodChange(event.target.value as StatisticsPeriodPreset)}
             value={period}
@@ -1244,7 +1244,7 @@ const StatisticsPeriodControls = ({
       <label className="block text-xs font-black text-muted" htmlFor={`${idPrefix}-from`}>
         De
         <input
-          className="mt-2 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-black text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+          className="mt-2 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
           id={`${idPrefix}-from`}
           onChange={(event) => onDateChange("from", event.target.value)}
           type="date"
@@ -1254,7 +1254,7 @@ const StatisticsPeriodControls = ({
       <label className="block text-xs font-black text-muted" htmlFor={`${idPrefix}-to`}>
         Até
         <input
-          className="mt-2 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-black text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+          className="mt-2 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
           id={`${idPrefix}-to`}
           onChange={(event) => onDateChange("to", event.target.value)}
           type="date"
