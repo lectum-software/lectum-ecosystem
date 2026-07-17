@@ -3083,12 +3083,16 @@ const ContentTab = ({ createdAt, slug }: { createdAt: string; slug: string }) =>
             </p>
           </div>
           <label
-            className="relative flex h-11 w-full items-center gap-2 rounded-control border border-border bg-surface px-3 pr-10 text-xs font-black text-muted sm:w-64"
+            className="relative flex h-11 w-full cursor-pointer items-center gap-2 rounded-control border border-border bg-surface px-3 pr-10 text-xs font-black text-muted transition focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 sm:w-64"
             htmlFor="community-content-sort"
           >
             <span className="shrink-0">Ordenar</span>
+            <span className="min-w-0 flex-1 truncate text-sm font-bold text-foreground">
+              {contentSortOptions.find((option) => option.id === (query.sort ?? "engagement"))
+                ?.label ?? "Mais populares"}
+            </span>
             <select
-              className="min-w-0 flex-1 appearance-none bg-transparent text-sm font-bold text-foreground outline-none"
+              className="absolute inset-0 h-full w-full cursor-pointer appearance-none rounded-control bg-transparent opacity-0 outline-none"
               id="community-content-sort"
               onChange={(event) => updateQuery({ sort: event.target.value as ContentSortValue })}
               value={query.sort ?? "engagement"}
