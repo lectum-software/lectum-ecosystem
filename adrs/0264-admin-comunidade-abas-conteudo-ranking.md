@@ -685,3 +685,11 @@ Os blocos **Denuncias pendentes** e **Top mentores** devem funcionar como uma co
 A decisao e manter a grade de 5 colunas no desktop largo, mas empilhar a coluna lateral em um unico container `2xl:col-span-2 2xl:row-span-2` com `space-y-4`, enquanto a coluna esquerda (`2xl:col-span-3`) contem **Ultimos posts** e **Posts mais populares**. Assim, a altura dos cards de posts nao cria um vao entre denuncias e ranking.
 
 Consequencia: a coluna lateral fica compacta e alinhada aos dois ultimos contadores, sem endpoint novo, schema Prisma/migration, dependencia, mock ou alteracao de persistencia.
+
+## Atualizacao 2026-07-17: titulos iconizados no resumo da aba Geral
+
+Os blocos **Ultimos posts**, **Posts mais populares**, **Denuncias pendentes** e **Top mentores** devem ter leitura visual imediata no resumo da aba **Geral**.
+
+A decisao e reutilizar icones `lucide-react` ja disponiveis no Admin em um titulo compacto com icone circular azul claro, sem criar novo componente de design system fora do arquivo da tela. A tag neutra **Sem denuncias** deixa de aparecer no cabecalho de **Denuncias pendentes**; quando nao ha fila, o estado vazio continua sendo comunicado pelo card **Sem denuncias pendentes** dentro da secao.
+
+Consequencia: o ajuste melhora escaneabilidade e reduz redundancia visual no estado vazio, sem endpoint novo, schema Prisma/migration, dependencia, mock ou alteracao de persistencia.

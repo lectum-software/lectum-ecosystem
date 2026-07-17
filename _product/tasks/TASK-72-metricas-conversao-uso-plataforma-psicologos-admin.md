@@ -1062,6 +1062,16 @@ Regras de cálculo:
 - ADR atualizado: `adrs/0264-admin-comunidade-abas-conteudo-ranking.md`.
 - Validacao executada: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke HTTP local `GET http://localhost:3002/comunidades/autocuidado-em-pratica` retornando 200.
 
+## Ajuste complementar 2026-07-17 - Ícones nos blocos da aba Geral
+
+- Pedido do usuário: remover a tag **Sem denúncias** do cabeçalho de **Denúncias pendentes** e adicionar ícones junto aos títulos dos blocos **Últimos posts**, **Posts mais populares**, **Denúncias pendentes** e **Top mentores**.
+- O cabeçalho de **Denúncias pendentes** agora exibe o badge apenas quando existe contagem real de denúncias pendentes; no estado vazio, permanece somente o card informativo **Sem denúncias pendentes**.
+- Os quatro blocos usam um título compacto com ícone em círculo azul claro, reutilizando `lucide-react` já disponível no Admin sem instalar package novo.
+- O ajuste é exclusivamente visual/mobile-first, sem endpoint novo, mock, package, schema Prisma/migration ou alteração de persistência.
+- Builder/Quick Copy não está exposto como ferramenta callable no ambiente; a referência usada foi a captura enviada pelo usuário e o padrão local da aba **Geral**.
+- ADR atualizado: `adrs/0264-admin-comunidade-abas-conteudo-ranking.md`.
+- Validação executada: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke HTTP local `GET http://localhost:3002/comunidades/autocuidado-em-pratica` retornando 200.
+
 ## Ajuste complementar 2026-07-17 - Ranking do psicologo como primeiro contador
 
 - Pedido do usuario: em **Estatisticas de comunidade** no detalhe administrativo do psicologo, colocar o contador **Ranking do psicologo** na primeira posicao.

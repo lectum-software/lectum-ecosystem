@@ -381,6 +381,15 @@ const toPublicHref = (path: string) => {
 
 const cardClass = "rounded-card border border-border bg-surface shadow-admin-soft";
 
+const SummaryBlockTitle = ({ icon: Icon, title }: { icon: LucideIcon; title: string }) => (
+  <h2 className="inline-flex min-w-0 items-center gap-2 text-lg font-black text-foreground">
+    <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-primary-soft text-primary ring-1 ring-primary/10">
+      <Icon aria-hidden className="h-4 w-4" />
+    </span>
+    <span className="truncate">{title}</span>
+  </h2>
+);
+
 const formatDate = (value: string) => dateFormatter.format(new Date(value));
 const formatDateTime = (value: string) => dateTimeFormatter.format(new Date(value));
 const formatActivityDateTime = (value: string) => {
@@ -829,7 +838,7 @@ const LatestCommunityPostsSection = ({ pathname, slug }: { pathname: string; slu
   return (
     <section className={cn(cardClass, "p-5")}>
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <h2 className="text-lg font-black text-foreground">Últimos posts</h2>
+        <SummaryBlockTitle icon={Newspaper} title="Últimos posts" />
         <Link
           className="inline-flex h-9 w-fit items-center gap-2 rounded-full border border-primary/20 bg-transparent px-3.5 text-xs font-black text-primary transition hover:border-primary/35 hover:bg-primary-soft"
           href={latestCommunityPostsContentHref(pathname)}
@@ -1044,22 +1053,13 @@ const UrgentThingsSection = ({
   return (
     <section className={cn(cardClass, "p-5")}>
       <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <h2 className="text-lg font-black text-foreground">Denúncias pendentes</h2>
-        </div>
-        <span
-          className={cn(
-            "inline-flex w-fit shrink-0 items-center gap-2 whitespace-nowrap rounded-full border px-3 py-1 text-xs font-black",
-            pendingReportsCount > 0
-              ? "border-danger/30 bg-danger/10 text-danger"
-              : "border-border bg-surface-muted text-muted",
-          )}
-        >
-          <AlertTriangle aria-hidden className="h-4 w-4 shrink-0" />
-          {pendingReportsCount > 0
-            ? formatCountLabel(pendingReportsCount, "denúncia", "denúncias")
-            : "Sem denúncias"}
-        </span>
+        <SummaryBlockTitle icon={AlertTriangle} title="Denúncias pendentes" />
+        {pendingReportsCount > 0 ? (
+          <span className="inline-flex w-fit shrink-0 items-center gap-2 whitespace-nowrap rounded-full border border-danger/30 bg-danger/10 px-3 py-1 text-xs font-black text-danger">
+            <AlertTriangle aria-hidden className="h-4 w-4 shrink-0" />
+            {formatCountLabel(pendingReportsCount, "denúncia", "denúncias")}
+          </span>
+        ) : null}
       </div>
       {pendingReports.length > 0 ? (
         <div className="mt-5 grid gap-3">
@@ -1396,7 +1396,7 @@ const TopMentorsCard = ({ slug }: { slug: string }) => {
 
   return (
     <section className={cn(cardClass, "min-w-0 overflow-hidden p-5")}>
-      <h2 className="text-lg font-black text-foreground">Top mentores</h2>
+      <SummaryBlockTitle icon={ShieldCheck} title="Top mentores" />
       {showQueryStatus ? (
         <div className="mt-4">
           <QueryStatus
@@ -1433,7 +1433,7 @@ const PopularPostsCard = ({
 }) => (
   <section className={cn(cardClass, "p-5")}>
     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-      <h2 className="text-lg font-black text-foreground">Posts mais populares</h2>
+      <SummaryBlockTitle icon={ArrowUp} title="Posts mais populares" />
       <Link
         className="inline-flex h-9 w-fit items-center gap-2 rounded-full border border-primary/20 bg-transparent px-3.5 text-xs font-black text-primary transition hover:border-primary/35 hover:bg-primary-soft"
         href={communityTabHref(pathname, "conteudo")}
