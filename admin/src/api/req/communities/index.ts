@@ -212,9 +212,35 @@ export type AdminCommunityTodaySummary = {
   verified_psychologist_replies_count: number;
 };
 
+export type AdminCommunityUrgentPendingReport = {
+  content: {
+    author: {
+      name: string;
+      role_label: string;
+    } | null;
+    available: boolean;
+    content_kind_label: string;
+    excerpt: string;
+    id: string;
+    title: string | null;
+    type: "comment" | "post";
+    unavailable_reason: string | null;
+  };
+  created_at: string;
+  id: string;
+  reason_label: string;
+  reporter: {
+    label: string;
+    name: string;
+    role: string;
+  };
+  status_label: string;
+};
+
 export type AdminCommunityUrgentSummary = {
   pending_reports_count: number;
   pending_reports_last_reported_at: string | null;
+  pending_reports: AdminCommunityUrgentPendingReport[];
   source: "post_report";
 };
 

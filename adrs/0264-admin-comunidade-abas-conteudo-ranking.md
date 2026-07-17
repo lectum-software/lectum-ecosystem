@@ -518,3 +518,36 @@ A aba e os cards de estatisticas tambem passam a reforcar `min-w-0` e contencao 
 Consequencia: **Estatisticas de pessoas** continua inteira em grade, **Estatisticas de conteudo** continua navegavel por carrossel sem barra nativa visivel, e a pagina deixa de exibir scrollbar horizontal global.
 
 Validacao complementar 2026-07-17: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check`, smoke HTTP local `GET http://localhost:3002/comunidades/relacionamentos-com-proposito?tab=estatisticas` retornando 200 e inspecao headless autenticada em 1920px confirmando `documentElement.scrollWidth === documentElement.clientWidth`.
+
+## Atualizacao 2026-07-17: denuncias pendentes individuais na aba Geral
+
+O bloco **Denuncias pendentes** da aba **Geral** deixa de exibir um unico card agregado de **Conteudos denunciados**. A decisao e listar cada denuncia pendente individualmente no proprio resumo operacional da comunidade, usando dados reais de `post_report` ja carregados no endpoint de detalhe.
+
+O contrato `urgent_summary` passa a expor `pending_reports`, uma lista compacta de denuncias pendentes com conteudo denunciado, autor do conteudo, denunciante, motivo e data de recebimento. `pending_reports_count` passa a contar denuncias individuais pendentes, nao apenas grupos de conteudo, para que o badge da secao corresponda aos itens visiveis.
+
+Consequencia: o Admin ve imediatamente quais denuncias precisam de decisao sem abrir primeiro um bloco agregado. A triagem detalhada e as acoes continuam na aba **Denuncias**; a aba Geral apenas aponta para ela com uma lista acionavel. Nao ha endpoint paralelo, schema Prisma/migration, package novo, mock, seed ou alteracao destrutiva de dados.
+
+## Atualizacao 2026-07-17: Ultimos posts no padrao de Posts populares
+
+A lista **Ultimos posts** da aba **Geral** passa a usar o mesmo modelo tabular compacto de **Posts mais populares**, em
+vez de cards/blocos. A decisao e manter a leitura operacional simples: coluna **Post** com titulo e previa de ate duas
+linhas, coluna **Autor** com avatar/nome/selo/papel, coluna **Comentarios** e coluna **Data e hora**.
+
+O titulo do bloco foi encurtado para **Ultimos posts**, sem subtitulo explicativo, e o botao **Ver todos** continua como
+atalho para a aba **Conteudo**. As linhas da tabela abrem o `public_url` real do post em nova aba, preservando o contexto
+do Admin.
+
+Consequencia: a aba Geral fica mais enxuta e consistente com a lista de posts populares, sem endpoint novo, contrato de
+API, schema Prisma/migration, dependencia, mock ou dados artificiais.
+
+Validacao complementar 2026-07-17: `pnpm --dir admin check`, `pnpm --dir admin build`,
+`pnpm --dir backend build`, `pnpm check` e smoke HTTP local
+`GET http://localhost:3002/comunidades/relacionamentos-com-proposito` retornando 200.
+
+## Atualizacao 2026-07-17: copy compacta nos cards de denuncias pendentes
+
+A lista de denuncias pendentes na aba **Geral** passa a omitir a linha de motivo dentro de cada card. A motivacao permanece disponivel no contrato e na aba **Denuncias**, onde a triagem detalhada acontece, mas o resumo da aba Geral deve ficar mais escaneavel.
+
+O badge superior da secao tambem passa de `N denuncias pendentes` para `N denuncias`, mantendo o contexto no titulo **Denuncias pendentes** e evitando repeticao textual.
+
+Consequencia: a alteracao e apenas apresentacional, sem novo endpoint, schema Prisma/migration, dependencia, mock ou mudanca de persistencia.

@@ -89,6 +89,7 @@ import type {
   AdminCommunityStatusInput,
   AdminCommunityTopMentor,
   AdminCommunityUpdateInput,
+  AdminCommunityUrgentPendingReport,
 } from "@/api/req/communities";
 import { InputController, SelectController, TextareaController } from "@/components/controllers";
 import { aggregateCalendarChartPoints, buildSmoothSvgPath } from "@/lib/chart-time-series";
@@ -715,43 +716,90 @@ const latestPostTitle = (item: AdminCommunityContentItem) => {
   return "Post sem título";
 };
 
-const LatestCommunityPostCard = ({
-  item,
-  pathname,
-}: {
-  item: AdminCommunityContentItem;
-  pathname: string;
-}) => {
+const LatestCommunityPostRow = ({ item }: { item: AdminCommunityContentItem }) => {
   const title = latestPostTitle(item);
-  const authorName = item.author.anonymous ? "Autor anônimo" : item.author.name;
   const body = item.excerpt.trim() || "Sem texto disponível.";
+  const postHref = toPublicHref(item.public_url);
 
   return (
-    <Link
-      aria-label={`Abrir aba Conteúdo para revisar o post ${title}`}
-      className="group block rounded-[24px] border border-border/80 bg-surface-muted/55 p-4 transition hover:-translate-y-0.5 hover:border-primary/30 hover:bg-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
-      href={communityTabHref(pathname, "conteudo")}
-    >
-      <div className="flex flex-wrap items-center gap-2 text-[11px] font-black uppercase tracking-[0.12em] text-subtle">
-        <span>{item.content_kind_label}</span>
-        <span aria-hidden>•</span>
-        <span>{formatDateTime(item.created_at)}</span>
-      </div>
-      <h3 className="mt-2 line-clamp-2 text-base font-black text-foreground">{title}</h3>
-      <p className="mt-2 line-clamp-3 text-sm leading-6 text-muted">{body}</p>
-      <div className="mt-4 flex flex-wrap items-center gap-3 text-xs font-bold text-muted">
-        <span>{authorName}</span>
-        <span aria-hidden>•</span>
-        <span>{formatCountLabel(item.metrics.comments_count, "comentário", "comentários")}</span>
-        <span>{formatCountLabel(item.metrics.reports_count, "denúncia", "denúncias")}</span>
-      </div>
-      <span className="mt-4 inline-flex items-center gap-1 text-xs font-black text-primary transition group-hover:translate-x-0.5">
-        Ver em Conteúdo
-        <ChevronRight aria-hidden className="h-3.5 w-3.5" />
-      </span>
-    </Link>
+    <tr className="group align-top transition hover:bg-surface-muted/50">
+      <td className="border-b border-border">
+        <Link
+          aria-label={`Abrir post ${title}`}
+          className="block py-4 pr-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
+          href={postHref}
+          rel="noreferrer"
+          target="_blank"
+        >
+          <span className="block line-clamp-1 font-black text-foreground group-hover:text-primary">
+            {title}
+          </span>
+          <span className="mt-1 block line-clamp-2 max-w-[26rem] text-sm font-bold leading-5 text-muted">
+            {body}
+          </span>
+        </Link>
+      </td>
+      <td className="border-b border-border">
+        <Link
+          aria-label={`Abrir post ${title}`}
+          className="block px-4 py-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
+          href={postHref}
+          rel="noreferrer"
+          target="_blank"
+        >
+          <ContentAuthorIdentity item={item} />
+        </Link>
+      </td>
+      <td className="border-b border-border font-black text-foreground">
+        <Link
+          aria-label={`Abrir post ${title}`}
+          className="block px-4 py-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
+          href={postHref}
+          rel="noreferrer"
+          target="_blank"
+        >
+          {numberFormatter.format(item.metrics.comments_count)}
+        </Link>
+      </td>
+      <td className="border-b border-border text-sm font-bold text-muted">
+        <Link
+          aria-label={`Abrir post ${title}`}
+          className="block px-4 py-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
+          href={postHref}
+          rel="noreferrer"
+          target="_blank"
+        >
+          <span className="inline-flex items-center gap-1.5">
+            <CalendarDays aria-hidden className="h-3.5 w-3.5" />
+            <time dateTime={item.created_at}>{formatDateTime(item.created_at)}</time>
+          </span>
+        </Link>
+      </td>
+    </tr>
   );
 };
+
+const LatestCommunityPostsTable = ({ children }: { children: React.ReactNode }) => (
+  <div className="mt-4 overflow-x-auto">
+    <table className="w-full min-w-[760px] border-separate border-spacing-0 text-left text-sm">
+      <colgroup>
+        <col className="w-[38%]" />
+        <col className="w-[30%]" />
+        <col className="w-[14%]" />
+        <col className="w-[18%]" />
+      </colgroup>
+      <thead className="text-xs text-muted">
+        <tr>
+          <th className="border-b border-border py-3 pr-4 font-black">Post</th>
+          <th className="border-b border-border px-4 py-3 font-black">Autor</th>
+          <th className="border-b border-border px-4 py-3 font-black">Comentários</th>
+          <th className="border-b border-border px-4 py-3 font-black">Data e hora</th>
+        </tr>
+      </thead>
+      <tbody>{children}</tbody>
+    </table>
+  </div>
+);
 
 const LatestCommunityPostsSection = ({ pathname, slug }: { pathname: string; slug: string }) => {
   const result = useAdminCommunityContent(slug, latestCommunityPostsQuery);
@@ -762,31 +810,40 @@ const LatestCommunityPostsSection = ({ pathname, slug }: { pathname: string; slu
 
   return (
     <section className={cn(cardClass, "p-5")}>
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <h2 className="text-lg font-black text-foreground">Últimos posts na comunidade</h2>
-          <p className="mt-1 text-xs font-bold text-muted">
-            Posts publicados mais recentemente, carregados de dados reais da comunidade.
-          </p>
-        </div>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <h2 className="text-lg font-black text-foreground">Últimos posts</h2>
         <Link
-          className="inline-flex w-fit items-center gap-2 rounded-full border border-border bg-surface-muted px-3 py-1 text-xs font-black text-muted transition hover:border-primary/30 hover:text-primary"
+          className="inline-flex h-9 w-fit items-center gap-2 rounded-full border border-primary/15 bg-primary-soft px-3.5 text-xs font-black text-primary shadow-control transition hover:border-primary/30 hover:bg-primary hover:text-white"
           href={communityTabHref(pathname, "conteudo")}
         >
           Ver todos
-          <ChevronRight aria-hidden className="h-4 w-4" />
+          <ChevronRight aria-hidden className="h-3.5 w-3.5" />
         </Link>
       </div>
 
       {result.isLoading ? (
-        <div className="mt-5 grid gap-3 sm:grid-cols-2">
+        <LatestCommunityPostsTable>
           {latestCommunityPostSkeletonKeys.map((key) => (
-            <div
-              className="h-40 animate-pulse rounded-[24px] border border-border/70 bg-surface-muted"
-              key={key}
-            />
+            <tr className="animate-pulse" key={key}>
+              <td className="border-b border-border py-4 pr-4">
+                <span className="block h-4 w-3/4 rounded-full bg-surface-muted" />
+                <span className="mt-2 block h-3 w-full rounded-full bg-surface-muted" />
+              </td>
+              <td className="border-b border-border px-4 py-4">
+                <span className="flex items-center gap-3">
+                  <span className="h-10 w-10 rounded-full bg-surface-muted" />
+                  <span className="h-8 w-36 rounded-full bg-surface-muted" />
+                </span>
+              </td>
+              <td className="border-b border-border px-4 py-4">
+                <span className="block h-3 w-10 rounded-full bg-surface-muted" />
+              </td>
+              <td className="border-b border-border px-4 py-4">
+                <span className="block h-3 w-28 rounded-full bg-surface-muted" />
+              </td>
+            </tr>
           ))}
-        </div>
+        </LatestCommunityPostsTable>
       ) : null}
 
       {result.isError ? (
@@ -802,89 +859,90 @@ const LatestCommunityPostsSection = ({ pathname, slug }: { pathname: string; slu
       ) : null}
 
       {latestPosts.length > 0 ? (
-        <div className="mt-5 grid gap-3 sm:grid-cols-2">
+        <LatestCommunityPostsTable>
           {latestPosts.map((item) => (
-            <LatestCommunityPostCard item={item} key={item.content_id} pathname={pathname} />
+            <LatestCommunityPostRow item={item} key={item.content_id} />
           ))}
-        </div>
+        </LatestCommunityPostsTable>
       ) : null}
     </section>
   );
 };
 
-type CommunityUrgentTone = "danger" | "muted" | "primary" | "success" | "warning";
-
-type CommunityUrgentItem = {
-  description: string;
-  href: string;
-  icon: LucideIcon;
-  id: string;
-  label: string;
-  priority: string;
-  tone: CommunityUrgentTone;
-  value: number;
-};
-
 const communityTabHref = (pathname: string, tab: CommunityTab) =>
   tab === "geral" ? pathname : `${pathname}?tab=${tab}`;
 
-const urgentToneClasses: Record<
-  CommunityUrgentTone,
-  { badge: string; card: string; icon: string }
-> = {
-  danger: {
-    badge: "bg-danger/10 text-danger",
-    card: "border-danger/30 bg-danger/5 hover:border-danger/50",
-    icon: "bg-danger/10 text-danger",
-  },
-  muted: {
-    badge: "bg-surface-muted text-muted",
-    card: "border-border bg-surface-muted hover:border-primary/30",
-    icon: "bg-surface text-muted",
-  },
-  primary: {
-    badge: "bg-primary-soft text-primary",
-    card: "border-primary/20 bg-primary-soft/50 hover:border-primary/40",
-    icon: "bg-primary-soft text-primary",
-  },
-  success: {
-    badge: "bg-success/10 text-success",
-    card: "border-success/20 bg-success/5 hover:border-success/40",
-    icon: "bg-success/10 text-success",
-  },
-  warning: {
-    badge: "bg-warning/10 text-warning",
-    card: "border-warning/30 bg-warning/5 hover:border-warning/50",
-    icon: "bg-warning/10 text-warning",
-  },
+const pendingCommunityReportTitle = (report: AdminCommunityUrgentPendingReport) => {
+  if (report.content.type === "comment") {
+    return report.content.title?.trim() || "Comentário denunciado";
+  }
+
+  return report.content.title?.trim() || "Post denunciado";
 };
 
-const buildCommunityUrgentItems = (
-  detail: AdminCommunityDetail,
-  pathname: string,
-): CommunityUrgentItem[] => {
-  const pendingReports = detail.urgent_summary.pending_reports_count;
-  const lastReportedAt = detail.urgent_summary.pending_reports_last_reported_at;
-  const pendingReportsDescription =
-    pendingReports > 0
-      ? "Revisar " +
-        formatCountLabel(pendingReports, "conteúdo denunciado", "conteúdos denunciados") +
-        " ainda sem decisão." +
-        (lastReportedAt ? ` Última denúncia pendente em ${formatDateTime(lastReportedAt)}.` : "")
-      : "Nenhuma denúncia pendente para decisão.";
+const PendingCommunityReportCard = ({
+  pathname,
+  report,
+}: {
+  pathname: string;
+  report: AdminCommunityUrgentPendingReport;
+}) => {
+  const title = pendingCommunityReportTitle(report);
+  const excerpt = report.content.excerpt.trim() || "Conteúdo sem texto disponível.";
+  const authorLabel = report.content.author
+    ? `${report.content.author.name} · ${report.content.author.role_label}`
+    : "Autor não identificado";
 
-  return [
-    {
-      description: pendingReportsDescription,
-      href: communityTabHref(pathname, "denuncias"),
-      icon: AlertTriangle,
-      id: "pending_reports",
-      label: pendingReports > 0 ? "Conteúdos denunciados" : "Sem denúncias pendentes",
-      priority: pendingReports > 0 ? "Crítico" : "OK",
-      tone: pendingReports > 0 ? "danger" : "muted",
-      value: pendingReports,
-    },
-  ];
+  return (
+    <Link
+      aria-label={`Abrir aba Denúncias para revisar denúncia pendente: ${title}`}
+      className="group block rounded-2xl border border-danger/30 bg-danger/5 p-4 transition hover:border-danger/50 hover:bg-danger/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-danger/25"
+      href={communityTabHref(pathname, "denuncias")}
+    >
+      <article className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="flex min-w-0 gap-3">
+          <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-danger/10 text-danger">
+            <AlertTriangle aria-hidden className="h-5 w-5" />
+          </span>
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="rounded-full bg-danger/10 px-2 py-0.5 text-[11px] font-black text-danger">
+                {report.status_label}
+              </span>
+              <span className="rounded-full bg-surface px-2 py-0.5 text-[11px] font-black text-muted">
+                {report.content.content_kind_label}
+              </span>
+              {!report.content.available ? (
+                <span className="rounded-full bg-warning/10 px-2 py-0.5 text-[11px] font-black text-warning">
+                  Conteúdo indisponível
+                </span>
+              ) : null}
+            </div>
+            <h3 className="mt-2 line-clamp-2 text-sm font-black text-foreground group-hover:text-danger">
+              {title}
+            </h3>
+            <p className="mt-1 line-clamp-2 text-xs font-bold leading-5 text-muted">{excerpt}</p>
+            <div className="mt-3 flex flex-wrap gap-x-3 gap-y-1 text-[11px] font-bold text-muted">
+              <span>
+                Denunciante: {report.reporter.name} · {report.reporter.label}
+              </span>
+              <span>Autor: {authorLabel}</span>
+              <span>Recebida em {formatDateTime(report.created_at)}</span>
+            </div>
+            {!report.content.available && report.content.unavailable_reason ? (
+              <p className="mt-2 text-[11px] font-bold text-warning">
+                {report.content.unavailable_reason}
+              </p>
+            ) : null}
+          </div>
+        </div>
+        <ChevronRight
+          aria-hidden
+          className="hidden h-5 w-5 shrink-0 text-muted transition group-hover:translate-x-0.5 group-hover:text-danger sm:mt-7 sm:block"
+        />
+      </article>
+    </Link>
+  );
 };
 
 const UrgentThingsSection = ({
@@ -894,8 +952,8 @@ const UrgentThingsSection = ({
   detail: AdminCommunityDetail;
   pathname: string;
 }) => {
-  const items = buildCommunityUrgentItems(detail, pathname);
-  const urgentSignals = items.reduce((total, item) => total + item.value, 0);
+  const pendingReports = detail.urgent_summary.pending_reports ?? [];
+  const pendingReportsCount = detail.urgent_summary.pending_reports_count;
 
   return (
     <section className={cn(cardClass, "p-5")}>
@@ -909,68 +967,38 @@ const UrgentThingsSection = ({
         <span
           className={cn(
             "inline-flex w-fit items-center gap-2 rounded-full border px-3 py-1 text-xs font-black",
-            urgentSignals > 0
+            pendingReportsCount > 0
               ? "border-danger/30 bg-danger/10 text-danger"
               : "border-border bg-surface-muted text-muted",
           )}
         >
           <AlertTriangle aria-hidden className="h-4 w-4" />
-          {urgentSignals > 0
-            ? formatCountLabel(urgentSignals, "pendente", "pendentes")
+          {pendingReportsCount > 0
+            ? formatCountLabel(pendingReportsCount, "denúncia", "denúncias")
             : "Sem denúncias"}
         </span>
       </div>
-      <div className="mt-5 grid gap-3">
-        {items.map((item) => {
-          const Icon = item.icon;
-          const tone = urgentToneClasses[item.tone];
-
-          return (
-            <Link
-              aria-label={`${item.label}: ${numberFormatter.format(item.value)}. ${item.description}`}
-              className={cn(
-                "group flex flex-col gap-3 rounded-2xl border p-4 transition sm:flex-row sm:items-center sm:justify-between",
-                tone.card,
-              )}
-              href={item.href}
-              key={item.id}
-            >
-              <span className="flex min-w-0 items-start gap-3">
-                <span
-                  className={cn(
-                    "grid h-11 w-11 shrink-0 place-items-center rounded-full",
-                    tone.icon,
-                  )}
-                >
-                  <Icon aria-hidden className="h-5 w-5" />
-                </span>
-                <span className="min-w-0">
-                  <span className="flex flex-wrap items-center gap-2">
-                    <span className="text-sm font-black text-foreground">{item.label}</span>
-                    <span
-                      className={cn("rounded-full px-2 py-0.5 text-[11px] font-black", tone.badge)}
-                    >
-                      {item.priority}
-                    </span>
-                  </span>
-                  <span className="mt-1 block text-xs font-bold leading-relaxed text-muted">
-                    {item.description}
-                  </span>
-                </span>
-              </span>
-              <span className="flex items-center justify-between gap-3 sm:justify-end">
-                <span className="text-3xl font-black leading-none text-foreground">
-                  {numberFormatter.format(item.value)}
-                </span>
-                <ChevronRight
-                  aria-hidden
-                  className="h-5 w-5 shrink-0 text-muted transition group-hover:translate-x-0.5 group-hover:text-primary"
-                />
-              </span>
-            </Link>
-          );
-        })}
-      </div>
+      {pendingReports.length > 0 ? (
+        <div className="mt-5 grid gap-3">
+          {pendingReports.map((report) => (
+            <PendingCommunityReportCard key={report.id} pathname={pathname} report={report} />
+          ))}
+        </div>
+      ) : (
+        <div className="mt-5 rounded-2xl border border-border bg-surface-muted p-4">
+          <div className="flex items-start gap-3">
+            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-surface text-muted">
+              <AlertTriangle aria-hidden className="h-5 w-5" />
+            </span>
+            <div>
+              <h3 className="text-sm font-black text-foreground">Sem denúncias pendentes</h3>
+              <p className="mt-1 text-xs font-bold leading-5 text-muted">
+                Nenhuma denúncia ainda precisa de decisão nesta comunidade.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   );
 };

@@ -1,4 +1,4 @@
-# TASK-71: Abas administrativas da comunidade, conteúdo e ranking completo
+﻿# TASK-71: Abas administrativas da comunidade, conteúdo e ranking completo
 
 ## Metadata
 
@@ -152,6 +152,7 @@ Regras:
 - Não houve package novo, mock, schema Prisma/migration, endpoint paralelo ou alteração de dados persistidos.
 - Builder/Quick Copy não está exposto como ferramenta callable no ambiente; a referência visual usada foi a captura enviada pelo usuário, `_product/proto/admin/Comunidades/Comunidades - Detalhes.png` e o padrão local do Admin/site público.
 - ADR atualizado: `adrs/0264-admin-comunidade-abas-conteudo-ranking.md`.
+
 - Validação executada: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke local `GET http://localhost:3002/comunidades/tdah?tab=conteudo` retornando 200.
 
 ## Ajuste complementar 2026-07-15 - Miniplayer e ordem da prévia de origem
@@ -481,3 +482,28 @@ Regras:
 - Builder/Quick Copy nao esta exposto como ferramenta callable no ambiente; a referencia usada foi a captura enviada pelo usuario e validacao local autenticada.
 - ADR atualizado: `adrs/0264-admin-comunidade-abas-conteudo-ranking.md`.
 - Validacao executada: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check`, smoke HTTP local `GET http://localhost:3002/comunidades/relacionamentos-com-proposito?tab=estatisticas` retornando 200 e inspecao headless autenticada em 1920px confirmando `documentElement.scrollWidth === documentElement.clientWidth`.
+
+## Ajuste complementar 2026-07-17 - Denúncias pendentes listadas individualmente na aba Geral
+
+- Pedido do usuário: no bloco **Denúncias pendentes** da aba **Geral** do detalhe administrativo de comunidade, substituir o único card agregado **Conteúdos denunciados** por uma lista em que cada denúncia pendente aparece separadamente.
+- O endpoint real `GET /api/admin/private/communities/:id` agora expõe `urgent_summary.pending_reports` com denúncias pendentes individuais derivadas de `post_report`, incluindo conteúdo denunciado, autor do conteúdo, denunciante, motivo e data de recebimento.
+- `urgent_summary.pending_reports_count` passa a refletir a quantidade de denúncias pendentes individuais, não apenas a quantidade de conteúdos agrupados, para alinhar o badge da seção com os itens listados.
+- A UI Admin renderiza cards mobile-first por denúncia pendente, com link para a aba **Denúncias**, sem criar endpoint paralelo, mock, package novo, schema Prisma/migration, seed ou alteração destrutiva de dados.
+- Builder/Quick Copy não está exposto como ferramenta callable no ambiente; a referência usada foi a captura enviada pelo usuário e o padrão local do Admin.
+- ADR atualizado: `adrs/0264-admin-comunidade-abas-conteudo-ranking.md`.
+
+### Ajuste complementar 2026-07-17 - Copy compacta nos cards de denúncias pendentes
+
+- Pedido do usuário: remover a linha **Motivo** dos cards de denúncias pendentes e trocar o badge superior de `N denúncias pendentes` para `N denúncias`.
+- A UI Admin mantém o contrato real com motivo disponível para a aba **Denúncias**, mas a aba **Geral** exibe somente status, tipo do conteúdo, denunciante, autor e data de recebimento para reduzir ruído visual.
+- O ajuste é exclusivamente apresentacional, sem endpoint novo, schema Prisma/migration, package, mock ou alteração de persistência.
+## Ajuste complementar 2026-07-17 - Ultimos posts alinhados a Posts populares
+
+- Pedido do usuario: em **Ultimos posts** da aba **Geral**, seguir o layout da lista **Posts mais populares**, encurtar o titulo, remover a descricao, refinar **Ver todos**, reduzir a coluna **Post**, adicionar **Comentarios** e tornar cada linha clicavel para abrir o post.
+- A UI Admin passou a renderizar os ultimos posts em tabela mobile-first com colunas **Post**, **Autor**, **Comentarios** e **Data e hora**, usando o mesmo endpoint real de conteudo ja existente e sem contrato novo.
+- A coluna **Post** ficou mais compacta e a previa da descricao permanece limitada a duas linhas com ellipsis visual (`line-clamp-2`).
+- Cada celula da linha abre o `public_url` real do post em nova aba, mantendo a navegacao administrativa preservada; **Ver todos** continua levando para a aba **Conteudo**.
+- O bloco manteve foto, nome, selo e papel do autor via componente existente, sem `<img>` cru, mock, package novo, schema Prisma/migration, endpoint paralelo ou alteracao de persistencia.
+- Builder/Quick Copy nao esta exposto como ferramenta callable no ambiente; a referencia usada foi a captura enviada pelo usuario e o padrao local de **Posts mais populares**.
+- ADR atualizado: `adrs/0264-admin-comunidade-abas-conteudo-ranking.md`.
+- Validacao executada: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm --dir backend build`, `pnpm check` e smoke HTTP local `GET http://localhost:3002/comunidades/relacionamentos-com-proposito` retornando 200.

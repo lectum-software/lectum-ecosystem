@@ -188,9 +188,35 @@ export type AdminCommunityTodaySummaryDTO = {
   verified_psychologist_replies_count: number;
 };
 
+export type AdminCommunityUrgentPendingReportDTO = {
+  content: {
+    author: {
+      name: string;
+      role_label: string;
+    } | null;
+    available: boolean;
+    content_kind_label: string;
+    excerpt: string;
+    id: string;
+    title: string | null;
+    type: "comment" | "post";
+    unavailable_reason: string | null;
+  };
+  created_at: Date;
+  id: string;
+  reason_label: string;
+  reporter: {
+    label: string;
+    name: string;
+    role: string;
+  };
+  status_label: string;
+};
+
 export type AdminCommunityUrgentSummaryDTO = {
   pending_reports_count: number;
   pending_reports_last_reported_at: Date | null;
+  pending_reports: AdminCommunityUrgentPendingReportDTO[];
   source: "post_report";
 };
 

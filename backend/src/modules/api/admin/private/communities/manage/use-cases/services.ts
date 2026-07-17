@@ -34,6 +34,7 @@ import type {
   AdminCommunityStatusBody,
   AdminCommunityTodaySummaryDTO,
   AdminCommunityUpdateBody,
+  AdminCommunityUrgentPendingReportDTO,
   AdminCommunityUrgentSummaryDTO,
   IAdminCommunitiesListDTO,
   IAdminCommunityActivitiesDTO,
@@ -2154,17 +2155,52 @@ const latestReportDate = (items: AdminCommunityReportItemDTO[]) =>
     null,
   );
 
+const mapUrgentPendingReport = (
+  item: AdminCommunityReportItemDTO,
+): AdminCommunityUrgentPendingReportDTO => {
+  const reporter = item.reporters[0];
+
+  return {
+    content: {
+      author: item.content.author
+        ? {
+            name: item.content.author.name,
+            role_label: item.content.author.role_label,
+          }
+        : null,
+      available: item.content.available,
+      content_kind_label: item.content.content_kind_label,
+      excerpt: item.content.excerpt,
+      id: item.content.id,
+      title: item.content.title,
+      type: item.content.type,
+      unavailable_reason: item.content.unavailable_reason,
+    },
+    created_at: item.created_at,
+    id: item.id,
+    reason_label: item.reason_label,
+    reporter: {
+      label: reporter?.reporter.label ?? item.reported_by.label,
+      name: reporter?.reporter.name ?? "Usuário não informado",
+      role: reporter?.reporter.role ?? item.reported_by.role,
+    },
+    status_label: item.status_label,
+  };
+};
+
 const buildCommunityUrgentSummary = (
   community: AdminCommunityRecord,
   reports: AdminCommunityReportRecord[],
 ): AdminCommunityUrgentSummaryDTO => {
-  const pendingReports = groupReportsByContent(
-    reports.map((report) => mapReport(community, report)),
-  ).filter((item) => item.status_group === "pending");
+  const pendingReports = reports
+    .map((report) => mapReport(community, report))
+    .filter((item) => item.status_group === "pending")
+    .sort((a, b) => b.created_at.getTime() - a.created_at.getTime());
 
   return {
     pending_reports_count: pendingReports.length,
     pending_reports_last_reported_at: latestReportDate(pendingReports),
+    pending_reports: pendingReports.map(mapUrgentPendingReport),
     source: "post_report",
   };
 };
