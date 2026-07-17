@@ -237,3 +237,11 @@ No detalhe administrativo do psicologo, o bloco **Origem do trafego** deve prior
 A coluna de acessos ao perfil na tabela desktop deve usar a copy compacta **Perfil** em vez de **Visualizacoes de perfil** no detalhe e no dashboard administrativo de psicologos. A decisao e apenas textual/visual: os valores, a fonte real (`profile_view_event`), os filtros de periodo, o endpoint `GET /api/admin/private/psychologists/:id/statistics`, os contratos, o tracking first-party, o schema Prisma, migrations e packages permanecem inalterados.
 
 Validacao complementar 2026-07-16: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke HTTP local `GET http://localhost:3002/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=estatisticas` retornando 200.
+
+## Complemento 2026-07-17 - Ranking como primeiro contador de comunidade
+
+No detalhe administrativo do psicologo, o card **Ranking do psicologo** deve ser o primeiro contador do bloco **Estatisticas de comunidade**. Ele permanece como card estatico, fora do controle de series temporais, enquanto os demais contadores continuam clicaveis para ligar/desligar linhas do grafico.
+
+A decisao e exclusivamente de hierarquia visual/mobile-first: prioriza a posicao operacional do psicologo na comunidade antes dos volumes de posts, respostas e engajamento, sem alterar endpoint, contrato de API, regra de calculo, schema Prisma, migrations, packages ou persistencia.
+
+Validacao complementar 2026-07-17: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke HTTP local `GET http://localhost:3002/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=estatisticas` retornando 200.

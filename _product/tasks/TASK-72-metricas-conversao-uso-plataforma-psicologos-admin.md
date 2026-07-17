@@ -1031,3 +1031,12 @@ Regras de cálculo:
 - Builder/Quick Copy nao esta exposto como ferramenta callable no ambiente; a referencia usada foi a captura enviada pelo usuario e o comportamento esperado do CTA.
 - ADR atualizado: `adrs/0264-admin-comunidade-abas-conteudo-ranking.md`.
 - Validacao executada: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke HTTP local `GET http://localhost:3002/comunidades/relacionamentos-com-proposito?tab=conteudo&contentType=posts&contentSort=recent&contentPeriod=all` retornando 200.
+
+## Ajuste complementar 2026-07-17 - Ranking do psicologo como primeiro contador
+
+- Pedido do usuario: em **Estatisticas de comunidade** no detalhe administrativo do psicologo, colocar o contador **Ranking do psicologo** na primeira posicao.
+- A UI Admin agora renderiza o card estatico de ranking antes dos contadores clicaveis de posts, respostas e engajamento, mantendo o grafico temporal baseado apenas nas metricas com serie.
+- O ajuste e exclusivamente visual/mobile-first, sem endpoint novo, mock, package, schema Prisma/migration, seed, backfill ou alteracao de persistencia.
+- Builder/Quick Copy nao esta exposto como ferramenta callable no ambiente; a referencia usada foi a captura enviada pelo usuario e o padrao local da aba **Estatisticas**.
+- ADR atualizado: `adrs/0266-metricas-conversao-uso-psicologos-admin.md`.
+- Validacao executada: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke HTTP local `GET http://localhost:3002/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=estatisticas` retornando 200.

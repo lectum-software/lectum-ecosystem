@@ -3655,6 +3655,14 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: st
 
           <fieldset className="mt-5 grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-4 2xl:grid-cols-8">
             <legend className="sr-only">Contadores de comunidade</legend>
+            {communityRankingMetric ? (
+              <StatisticsStaticMetricCard
+                icon={Trophy}
+                iconClassName="text-amber-500"
+                iconToneClassName="bg-amber-50"
+                metric={communityRankingMetric}
+              />
+            ) : null}
             {communityCards.map(({ config, metric }) => (
               <StatisticsMetricToggleCard
                 active={visibleCommunityMetricIds.includes(config.id) && metric.available}
@@ -3664,14 +3672,6 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: st
                 onToggle={() => toggleCommunityMetric(config.id)}
               />
             ))}
-            {communityRankingMetric ? (
-              <StatisticsStaticMetricCard
-                icon={Trophy}
-                iconClassName="text-amber-500"
-                iconToneClassName="bg-amber-50"
-                metric={communityRankingMetric}
-              />
-            ) : null}
           </fieldset>
 
           <StatisticsSeriesChart
