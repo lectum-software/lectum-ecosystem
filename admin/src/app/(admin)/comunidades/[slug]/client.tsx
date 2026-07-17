@@ -4192,6 +4192,66 @@ const COMMUNITY_CONTENT_STATISTICS_METRICS = [
     label: "Denúncias",
     strokeClassName: "stroke-subtle",
   },
+  {
+    dotClassName: "bg-success",
+    getValue: (statistics: AdminCommunityStatistics) =>
+      statistics.counters.content_engagement.upvotes,
+    icon: ArrowUp,
+    iconClassName: "text-success",
+    iconToneClassName: "bg-success/10",
+    id: "upvotes",
+    key: "upvotes",
+    label: "Upvotes",
+    strokeClassName: "stroke-success",
+  },
+  {
+    dotClassName: "bg-danger",
+    getValue: (statistics: AdminCommunityStatistics) =>
+      statistics.counters.content_engagement.downvotes,
+    icon: ArrowDown,
+    iconClassName: "text-danger",
+    iconToneClassName: "bg-danger/10",
+    id: "downvotes",
+    key: "downvotes",
+    label: "Downvotes",
+    strokeClassName: "stroke-danger",
+  },
+  {
+    dotClassName: "bg-warning",
+    getValue: (statistics: AdminCommunityStatistics) =>
+      statistics.counters.content_engagement.saves,
+    icon: Bookmark,
+    iconClassName: "text-warning",
+    iconToneClassName: "bg-warning/10",
+    id: "saves",
+    key: "saves",
+    label: "Salvamentos",
+    strokeClassName: "stroke-warning",
+  },
+  {
+    dotClassName: "bg-primary",
+    getValue: (statistics: AdminCommunityStatistics) =>
+      statistics.counters.content_engagement.whatsapp_clicks,
+    icon: MessageCircle,
+    iconClassName: "text-primary",
+    iconToneClassName: "bg-primary-soft",
+    id: "whatsapp_clicks",
+    key: "whatsapp_clicks",
+    label: "Cliques WhatsApp",
+    strokeClassName: "stroke-primary",
+  },
+  {
+    dotClassName: "bg-muted",
+    getValue: (statistics: AdminCommunityStatistics) =>
+      statistics.counters.content_engagement.profile_accesses,
+    icon: Eye,
+    iconClassName: "text-muted",
+    iconToneClassName: "bg-surface-muted",
+    id: "profile_accesses",
+    key: "profile_accesses",
+    label: "Acesso ao perfil",
+    strokeClassName: "stroke-muted",
+  },
 ] as const satisfies readonly CommunityStatisticsMetricConfig[];
 
 const communityStatisticsMetricValue = (
@@ -4300,7 +4360,7 @@ const CommunityStatisticsMetricToggleCard = ({
     <button
       aria-pressed={active}
       className={cn(
-        "min-w-0 overflow-hidden rounded-card border p-4 text-left transition duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2",
+        "h-full w-full min-w-0 overflow-hidden rounded-card border p-4 text-left transition duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2",
         active
           ? "border-primary/35 bg-surface shadow-admin-soft ring-1 ring-primary/10"
           : "border-border/80 bg-border/50 shadow-none hover:-translate-y-0.5 hover:border-primary/25 hover:bg-border/60",
@@ -4358,6 +4418,101 @@ const CommunityStatisticsMetricToggleCard = ({
     </button>
   );
 };
+
+const CommunityStatisticsMetricCarousel = ({
+  metrics,
+  onToggleMetric,
+  title,
+  visibleMetricIds,
+}: {
+  metrics: CommunityStatisticsMetricItem[];
+  onToggleMetric: (metricId: string) => void;
+  title: string;
+  visibleMetricIds: string[];
+}) => {
+  const scrollerRef = useRef<HTMLDivElement>(null);
+  const scrollMetrics = useCallback((direction: -1 | 1) => {
+    const scroller = scrollerRef.current;
+    if (!scroller) return;
+
+    scroller.scrollBy({
+      behavior: "smooth",
+      left: direction * Math.max(260, scroller.clientWidth * 0.82),
+    });
+  }, []);
+
+  return (
+    <fieldset className="mt-5 min-w-0">
+      <legend className="sr-only">Contadores exibidos no gráfico de {title}</legend>
+      <div className="mb-2 flex items-center gap-3">
+        <span className="text-[11px] font-black uppercase tracking-[0.16em] text-subtle">
+          Contadores
+        </span>
+      </div>
+      <div className="relative min-w-0">
+        <div
+          className="flex min-w-0 snap-x snap-mandatory gap-2 overflow-x-auto scroll-smooth pb-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          ref={scrollerRef}
+        >
+          {metrics.map((metric) => (
+            <div
+              className="flex w-full shrink-0 snap-start sm:w-[calc((100%_-_0.5rem)/2)] lg:w-[calc((100%_-_1rem)/3)] 2xl:w-[calc((100%_-_2.5rem)/6)]"
+              key={metric.id}
+            >
+              <CommunityStatisticsMetricToggleCard
+                active={visibleMetricIds.includes(metric.id)}
+                metric={metric}
+                onToggle={() => onToggleMetric(metric.id)}
+              />
+            </div>
+          ))}
+        </div>
+        <div className="pointer-events-none absolute inset-y-0 right-0 flex w-24 items-center justify-end gap-1.5 bg-gradient-to-l from-surface via-surface/90 to-transparent pr-2">
+          <button
+            aria-label={`Rolar contadores de ${title} para a esquerda`}
+            className="pointer-events-auto grid h-9 w-9 place-items-center rounded-full border border-border bg-surface text-muted shadow-sm transition hover:border-primary/35 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
+            onClick={() => scrollMetrics(-1)}
+            type="button"
+          >
+            <ChevronLeft aria-hidden className="h-4 w-4" />
+          </button>
+          <button
+            aria-label={`Rolar contadores de ${title} para a direita`}
+            className="pointer-events-auto grid h-9 w-9 place-items-center rounded-full border border-primary/25 bg-primary-soft text-primary shadow-sm transition hover:border-primary/45 hover:bg-primary-soft/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
+            onClick={() => scrollMetrics(1)}
+            type="button"
+          >
+            <ChevronRight aria-hidden className="h-4 w-4" />
+          </button>
+        </div>
+      </div>
+    </fieldset>
+  );
+};
+
+const CommunityStatisticsMetricGrid = ({
+  metrics,
+  onToggleMetric,
+  title,
+  visibleMetricIds,
+}: {
+  metrics: CommunityStatisticsMetricItem[];
+  onToggleMetric: (metricId: string) => void;
+  title: string;
+  visibleMetricIds: string[];
+}) => (
+  <fieldset className="mt-5 grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-6">
+    <legend className="sr-only">Contadores exibidos no gráfico de {title}</legend>
+    {metrics.map((metric) => (
+      <CommunityStatisticsMetricToggleCard
+        active={visibleMetricIds.includes(metric.id)}
+        key={metric.id}
+        metric={metric}
+        onToggle={() => onToggleMetric(metric.id)}
+      />
+    ))}
+  </fieldset>
+);
 
 const CommunityStatisticsSeriesChart = ({
   metrics,
@@ -4553,6 +4708,7 @@ const CommunityStatisticsDateFilters = ({
 );
 
 const CommunityStatisticsSegment = ({
+  counterLayout = "carousel",
   dateFilters,
   description,
   error,
@@ -4565,6 +4721,7 @@ const CommunityStatisticsSegment = ({
   title,
   visibleMetricIds,
 }: {
+  counterLayout?: "carousel" | "grid";
   dateFilters: CommunityStatisticsDateFilterProps;
   description: string;
   error: unknown;
@@ -4605,17 +4762,21 @@ const CommunityStatisticsSegment = ({
       ) : null}
       {hasStatistics ? (
         <>
-          <fieldset className="mt-5 grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6">
-            <legend className="sr-only">Contadores exibidos no gráfico de {title}</legend>
-            {metrics.map((metric) => (
-              <CommunityStatisticsMetricToggleCard
-                active={visibleMetricIds.includes(metric.id)}
-                key={metric.id}
-                metric={metric}
-                onToggle={() => onToggleMetric(metric.id)}
-              />
-            ))}
-          </fieldset>
+          {counterLayout === "grid" ? (
+            <CommunityStatisticsMetricGrid
+              metrics={metrics}
+              onToggleMetric={onToggleMetric}
+              title={title}
+              visibleMetricIds={visibleMetricIds}
+            />
+          ) : (
+            <CommunityStatisticsMetricCarousel
+              metrics={metrics}
+              onToggleMetric={onToggleMetric}
+              title={title}
+              visibleMetricIds={visibleMetricIds}
+            />
+          )}
           <CommunityStatisticsSeriesChart metrics={visibleMetrics} points={points} />
         </>
       ) : null}
@@ -4688,6 +4849,7 @@ const StatisticsContent = ({ createdAt, slug }: { createdAt: string; slug: strin
   return (
     <div className="space-y-5">
       <CommunityStatisticsSegment
+        counterLayout="grid"
         dateFilters={peopleDateState.dateFilters}
         description="Visão geral de psicólogos e pacientes da comunidade."
         error={peopleResult.error}
