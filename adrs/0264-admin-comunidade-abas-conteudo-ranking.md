@@ -567,3 +567,19 @@ A lista de denuncias pendentes na aba **Geral** passa a omitir as linhas **Denun
 A decisao deixa o resumo da aba Geral mais compacto: cada card mostra status, tipo do conteudo, titulo e previa do conteudo denunciado, com link para a aba operacional de denuncias.
 
 Consequencia: a mudanca e apenas apresentacional, sem novo endpoint, schema Prisma/migration, dependencia, mock ou alteracao de persistencia.
+
+## Atualizacao 2026-07-17: badge de denuncias pendentes sem quebra de linha
+
+O badge de contagem do bloco **Denuncias pendentes** na aba **Geral** passa a impedir quebra de linha no texto `N denuncias`.
+
+A decisao e tratar o badge como item compacto (`whitespace-nowrap` e `shrink-0`), preservando o contexto no titulo da secao e evitando que o numero fique visualmente separado da palavra em larguras intermediarias.
+
+Consequencia: a mudanca e apenas visual, sem novo endpoint, schema Prisma/migration, dependencia, mock ou alteracao de persistencia.
+
+## Atualizacao 2026-07-17: data dos ultimos posts abaixo do titulo
+
+A lista **Ultimos posts** da aba **Geral** passa a exibir a data/hora abaixo do titulo do post, dentro da coluna **Post**, em vez de manter uma coluna separada **Data e hora**.
+
+A decisao deixa a tabela mais enxuta e prioriza titulo, autor e comentarios como colunas principais, preservando o link real do post em cada celula e alinhando o skeleton ao novo layout.
+
+Consequencia: a mudanca e apenas visual, sem novo endpoint, schema Prisma/migration, dependencia, mock ou alteracao de persistencia.

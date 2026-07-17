@@ -521,3 +521,16 @@ Regras:
 - Pedido do usuário: no card de denúncia pendente da aba **Geral**, remover as linhas **Denunciante**, **Autor** e **Recebida em**.
 - A UI Admin mantém status, tipo do conteúdo, título e prévia do conteúdo denunciado; os metadados completos continuam disponíveis na aba **Denúncias**.
 - O ajuste é exclusivamente visual/apresentacional, sem endpoint novo, schema Prisma/migration, package, mock ou alteração de persistência.
+
+## Ajuste complementar 2026-07-17 - Badge de denúncias em uma linha
+
+- Pedido do usuário: manter a tag `N denúncias` do bloco **Denúncias pendentes** em apenas uma linha.
+- A UI Admin passou a aplicar `whitespace-nowrap` e `shrink-0` no badge, preservando o texto compacto sem quebra visual.
+- O ajuste é exclusivamente visual/apresentacional, sem endpoint novo, schema Prisma/migration, package, mock ou alteração de persistência.
+
+## Ajuste complementar 2026-07-17 - Data dos últimos posts abaixo do título
+
+- Pedido do usuário: em **Últimos posts**, colocar **data e hora** abaixo do título do post.
+- A UI Admin removeu a coluna separada **Data e hora** e passou a renderizar a data/hora na coluna **Post**, logo abaixo do título, mantendo autor e comentários nas demais colunas.
+- O skeleton de carregamento foi alinhado ao novo formato da tabela e cada célula do post continua clicável para o `public_url` real.
+- O ajuste é exclusivamente visual/apresentacional, sem endpoint novo, schema Prisma/migration, package, mock ou alteração de persistência.

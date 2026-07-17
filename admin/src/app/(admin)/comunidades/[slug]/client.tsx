@@ -951,13 +951,13 @@ const UrgentThingsSection = ({
         </div>
         <span
           className={cn(
-            "inline-flex w-fit items-center gap-2 rounded-full border px-3 py-1 text-xs font-black",
+            "inline-flex w-fit shrink-0 items-center gap-2 whitespace-nowrap rounded-full border px-3 py-1 text-xs font-black",
             pendingReportsCount > 0
               ? "border-danger/30 bg-danger/10 text-danger"
               : "border-border bg-surface-muted text-muted",
           )}
         >
-          <AlertTriangle aria-hidden className="h-4 w-4" />
+          <AlertTriangle aria-hidden className="h-4 w-4 shrink-0" />
           {pendingReportsCount > 0
             ? formatCountLabel(pendingReportsCount, "denúncia", "denúncias")
             : "Sem denúncias"}
