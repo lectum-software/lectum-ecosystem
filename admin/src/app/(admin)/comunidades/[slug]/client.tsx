@@ -884,9 +884,6 @@ const PendingCommunityReportCard = ({
 }) => {
   const title = pendingCommunityReportTitle(report);
   const excerpt = report.content.excerpt.trim() || "Conteúdo sem texto disponível.";
-  const authorLabel = report.content.author
-    ? `${report.content.author.name} · ${report.content.author.role_label}`
-    : "Autor não identificado";
 
   return (
     <Link
@@ -917,13 +914,6 @@ const PendingCommunityReportCard = ({
               {title}
             </h3>
             <p className="mt-1 line-clamp-2 text-xs font-bold leading-5 text-muted">{excerpt}</p>
-            <div className="mt-3 flex flex-wrap gap-x-3 gap-y-1 text-[11px] font-bold text-muted">
-              <span>
-                Denunciante: {report.reporter.name} · {report.reporter.label}
-              </span>
-              <span>Autor: {authorLabel}</span>
-              <span>Recebida em {formatDateTime(report.created_at)}</span>
-            </div>
             {!report.content.available && report.content.unavailable_reason ? (
               <p className="mt-2 text-[11px] font-bold text-warning">
                 {report.content.unavailable_reason}
