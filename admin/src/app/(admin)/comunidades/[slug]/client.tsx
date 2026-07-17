@@ -733,6 +733,10 @@ const LatestCommunityPostRow = ({ item }: { item: AdminCommunityContentItem }) =
           <span className="block line-clamp-2 font-black text-foreground group-hover:text-primary">
             {title}
           </span>
+          <span className="mt-1.5 inline-flex items-center gap-1.5 text-xs font-bold text-muted">
+            <CalendarDays aria-hidden className="h-3.5 w-3.5 shrink-0" />
+            <time dateTime={item.created_at}>{formatDateTime(item.created_at)}</time>
+          </span>
         </Link>
       </td>
       <td className="border-b border-border">
@@ -757,20 +761,6 @@ const LatestCommunityPostRow = ({ item }: { item: AdminCommunityContentItem }) =
           {numberFormatter.format(item.metrics.comments_count)}
         </Link>
       </td>
-      <td className="border-b border-border text-sm font-bold text-muted">
-        <Link
-          aria-label={`Abrir post ${title}`}
-          className="block px-4 py-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
-          href={postHref}
-          rel="noreferrer"
-          target="_blank"
-        >
-          <span className="inline-flex items-center gap-1.5">
-            <CalendarDays aria-hidden className="h-3.5 w-3.5" />
-            <time dateTime={item.created_at}>{formatDateTime(item.created_at)}</time>
-          </span>
-        </Link>
-      </td>
     </tr>
   );
 };
@@ -779,9 +769,8 @@ const LatestCommunityPostsTable = ({ children }: { children: React.ReactNode }) 
   <div className="mt-4 overflow-x-auto">
     <table className="w-full min-w-[760px] border-separate border-spacing-0 text-left text-sm">
       <colgroup>
-        <col className="w-[38%]" />
-        <col className="w-[30%]" />
-        <col className="w-[14%]" />
+        <col className="w-[48%]" />
+        <col className="w-[34%]" />
         <col className="w-[18%]" />
       </colgroup>
       <thead className="text-xs text-muted">
@@ -789,7 +778,6 @@ const LatestCommunityPostsTable = ({ children }: { children: React.ReactNode }) 
           <th className="border-b border-border py-3 pr-4 font-black">Post</th>
           <th className="border-b border-border px-4 py-3 font-black">Autor</th>
           <th className="border-b border-border px-4 py-3 text-center font-black">Comentários</th>
-          <th className="border-b border-border px-4 py-3 font-black">Data e hora</th>
         </tr>
       </thead>
       <tbody>{children}</tbody>
@@ -823,6 +811,7 @@ const LatestCommunityPostsSection = ({ pathname, slug }: { pathname: string; slu
             <tr className="animate-pulse" key={key}>
               <td className="border-b border-border py-4 pr-4">
                 <span className="block h-4 w-3/4 rounded-full bg-surface-muted" />
+                <span className="mt-2 block h-3 w-28 rounded-full bg-surface-muted" />
               </td>
               <td className="border-b border-border px-4 py-4">
                 <span className="flex items-center gap-3">
@@ -832,9 +821,6 @@ const LatestCommunityPostsSection = ({ pathname, slug }: { pathname: string; slu
               </td>
               <td className="border-b border-border px-4 py-4">
                 <span className="mx-auto block h-3 w-10 rounded-full bg-surface-muted" />
-              </td>
-              <td className="border-b border-border px-4 py-4">
-                <span className="block h-3 w-28 rounded-full bg-surface-muted" />
               </td>
             </tr>
           ))}
