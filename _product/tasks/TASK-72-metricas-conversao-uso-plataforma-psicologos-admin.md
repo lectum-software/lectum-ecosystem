@@ -1021,3 +1021,13 @@ Regras de cálculo:
 - Builder/Quick Copy nao esta exposto como ferramenta callable no ambiente; a referencia usada foi a captura enviada pelo usuario e o padrao local das tabelas da aba **Geral**.
 - ADR atualizado: `adrs/0264-admin-comunidade-abas-conteudo-ranking.md`.
 - Validacao executada: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke HTTP local `GET http://localhost:3002/comunidades/relacionamentos-com-proposito` retornando 200.
+
+## Ajuste complementar 2026-07-17 - Ver todos de Ultimos posts filtrado por recentes
+
+- Pedido do usuario: no bloco **Ultimos posts**, o botao **Ver todos** deve abrir a listagem de conteudo filtrada em posts mais recentes.
+- O link agora abre a aba **Conteudo** com `contentType=posts`, `contentSort=recent` e `contentPeriod=all`, preservando a listagem real e mostrando todos os posts da comunidade em ordem recente.
+- A aba **Conteudo** passou a aceitar os parametros de URL do resumo como estado inicial dos filtros, exibindo **Todos os posts**, **Mais recentes** e **Todo o periodo** ao chegar pelo CTA.
+- Nao houve endpoint novo, mock, package, schema Prisma/migration ou alteracao de persistencia.
+- Builder/Quick Copy nao esta exposto como ferramenta callable no ambiente; a referencia usada foi a captura enviada pelo usuario e o comportamento esperado do CTA.
+- ADR atualizado: `adrs/0264-admin-comunidade-abas-conteudo-ranking.md`.
+- Validacao executada: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke HTTP local `GET http://localhost:3002/comunidades/relacionamentos-com-proposito?tab=conteudo&contentType=posts&contentSort=recent&contentPeriod=all` retornando 200.

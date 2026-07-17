@@ -378,7 +378,9 @@ export type AdminCommunityContentQuery = AdminCommunityPaginationQuery & {
   type?:
     | "all"
     | "anonymous_post"
+    | "comments"
     | "patient_comment"
+    | "posts"
     | "unverified_psychologist_post"
     | "unverified_psychologist_reply"
     | "verified_psychologist_post"

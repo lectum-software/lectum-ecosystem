@@ -643,3 +643,11 @@ A decisao e expandir `popular_posts` com `author` contendo avatar, nome profissi
 Os campos `author_name` e `author_role` permanecem no contrato para compatibilidade, mas agora sao derivados do autor normalizado. A UI reutiliza o mesmo componente de identidade de autor para as duas tabelas.
 
 Consequencia: a mudanca usa dados reais ja relacionados ao post popular, sem endpoint novo, schema Prisma/migration, dependencia, mock, seed, backfill ou persistencia adicional.
+
+## Atualizacao 2026-07-17: CTA Ver todos dos ultimos posts preserva filtro operacional
+
+O botao **Ver todos** do bloco **Ultimos posts** da aba **Geral** passa a abrir a aba **Conteudo** ja filtrada para a listagem equivalente: tipo `posts`, ordenacao `recent` e periodo `all`.
+
+A decisao e usar parametros de URL especificos do conteudo (`contentType`, `contentSort`, `contentPeriod`) como estado inicial da aba, sem criar endpoint ou estado global paralelo. A navegacao continua no detalhe da comunidade e a listagem segue consumindo `GET /api/admin/private/communities/:id/content` com os filtros reais.
+
+Consequencia: o CTA leva o Admin diretamente para a listagem de posts mais recentes, mantendo possibilidade de alterar filtros manualmente depois, sem mock, dependencia, schema Prisma/migration ou persistencia adicional.

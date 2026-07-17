@@ -220,6 +220,7 @@ type CommunityTab = (typeof communityTabs)[number]["id"];
 
 const contentTypeOptions = [
   { id: "all", label: "Todos os tipos" },
+  { id: "posts", label: "Todos os posts" },
   { id: "verified_psychologist_post", label: "Posts de psicólogo verificado" },
   { id: "unverified_psychologist_post", label: "Posts de psicólogo não verificado" },
   { id: "verified_psychologist_reply", label: "Respostas de psicólogo verificado" },
@@ -259,6 +260,25 @@ const contentSortOptions = [
   id: ContentSortValue;
   label: string;
 }>;
+
+const contentTypeValues = contentTypeOptions.map((option) => option.id) as readonly string[];
+const contentSortValues = contentSortOptions.map((option) => option.id) as readonly string[];
+const contentPeriodPresetValues = ["today", "week", "month", "year", "all"] as const;
+
+const parseContentTypeParam = (
+  value: string | null,
+): NonNullable<AdminCommunityContentQuery["type"]> =>
+  value && contentTypeValues.includes(value)
+    ? (value as NonNullable<AdminCommunityContentQuery["type"]>)
+    : "all";
+
+const parseContentSortParam = (value: string | null): ContentSortValue =>
+  value && contentSortValues.includes(value) ? (value as ContentSortValue) : "engagement";
+
+const parseContentPeriodParam = (value: string | null): ContentPeriodPreset =>
+  contentPeriodPresetValues.includes(value as ContentPeriodPreset)
+    ? (value as ContentPeriodPreset)
+    : "week";
 
 const statisticsPeriodOptions = contentPeriodOptions satisfies ReadonlyArray<{
   id: StatisticsPeriodValue;
@@ -811,7 +831,7 @@ const LatestCommunityPostsSection = ({ pathname, slug }: { pathname: string; slu
         <h2 className="text-lg font-black text-foreground">Últimos posts</h2>
         <Link
           className="inline-flex h-9 w-fit items-center gap-2 rounded-full border border-primary/20 bg-transparent px-3.5 text-xs font-black text-primary transition hover:border-primary/35 hover:bg-primary-soft"
-          href={communityTabHref(pathname, "conteudo")}
+          href={latestCommunityPostsContentHref(pathname)}
         >
           Ver todos
           <ChevronRight aria-hidden className="h-3.5 w-3.5" />
@@ -868,6 +888,17 @@ const LatestCommunityPostsSection = ({ pathname, slug }: { pathname: string; slu
 
 const communityTabHref = (pathname: string, tab: CommunityTab) =>
   tab === "geral" ? pathname : `${pathname}?tab=${tab}`;
+
+const latestCommunityPostsContentHref = (pathname: string) => {
+  const params = new URLSearchParams({
+    contentPeriod: "all",
+    contentSort: "recent",
+    contentType: "posts",
+    tab: "conteudo",
+  });
+
+  return `${pathname}?${params.toString()}`;
+};
 
 const PopularPostRow = ({
   communitySlug,
@@ -2877,21 +2908,25 @@ const ContentItemCard = ({
 type ContentBaseQuery = Pick<AdminCommunityContentQuery, "limit" | "page" | "q" | "sort" | "type">;
 
 const ContentTab = ({ createdAt, slug }: { createdAt: string; slug: string }) => {
+  const searchParams = useSearchParams();
+  const initialSort = parseContentSortParam(searchParams.get("contentSort"));
+  const initialType = parseContentTypeParam(searchParams.get("contentType"));
+  const initialPeriod = parseContentPeriodParam(searchParams.get("contentPeriod"));
+  const initialRange = useMemo(
+    () => getContentRangeForPeriod(initialPeriod, createdAt),
+    [createdAt, initialPeriod],
+  );
   const [query, setQuery] = useState<ContentBaseQuery>({
     limit: 10,
     page: 1,
     q: "",
-    sort: "engagement",
-    type: "all",
+    sort: initialSort,
+    type: initialType,
   });
-  const [selectedPeriod, setSelectedPeriod] = useState<ContentPeriodValue>("week");
-  const [appliedPeriod, setAppliedPeriod] = useState<ContentPeriodValue>("week");
-  const [draftRange, setDraftRange] = useState<ContentCustomRange>(() =>
-    getContentRangeForPeriod("week", createdAt),
-  );
-  const [appliedRange, setAppliedRange] = useState<ContentCustomRange>(() =>
-    getContentRangeForPeriod("week", createdAt),
-  );
+  const [selectedPeriod, setSelectedPeriod] = useState<ContentPeriodValue>(initialPeriod);
+  const [appliedPeriod, setAppliedPeriod] = useState<ContentPeriodValue>(initialPeriod);
+  const [draftRange, setDraftRange] = useState<ContentCustomRange>(initialRange);
+  const [appliedRange, setAppliedRange] = useState<ContentCustomRange>(initialRange);
   const [rangeError, setRangeError] = useState<string | null>(null);
   const [selected, setSelected] = useState<AdminCommunityContentItem | null>(null);
   const contentQueryInput = useMemo<AdminCommunityContentQuery>(
