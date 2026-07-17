@@ -13,7 +13,6 @@ import {
   MoreHorizontal,
   RefreshCw,
   Reply,
-  ShieldAlert,
   UserRound,
   Users,
   UsersRound,
@@ -26,7 +25,6 @@ import type {
   AdminCommunitiesDashboard,
   CommunitiesDashboardActivitySeries,
   CommunitiesDashboardGlobalStatistics,
-  CommunitiesDashboardMetric,
   CommunitiesDashboardQuery,
   CommunitiesDashboardRecentPost,
   CommunitiesDashboardStatisticsDailyPoint,
@@ -478,69 +476,10 @@ const CardShell = ({ children, className }: { children?: React.ReactNode; classN
   </section>
 );
 
-const toneClasses = {
-  blue: "bg-blue-50 text-blue-600",
-  green: "bg-emerald-50 text-emerald-600",
-  orange: "bg-orange-50 text-orange-600",
-  pink: "bg-pink-50 text-pink-600",
-  purple: "bg-primary-soft text-primary",
-};
-
-const TrendBadge = ({ metric }: { metric: CommunitiesDashboardMetric }) => {
-  if (metric.unavailable)
-    return <span className="text-xs font-bold text-warning">Indisponível</span>;
-
-  return (
-    <span
-      className={cn(
-        "text-xs font-black",
-        metric.trend === "up" && "text-success",
-        metric.trend === "down" && "text-danger",
-        metric.trend === "flat" && "text-muted",
-        metric.trend === "unavailable" && "text-muted",
-      )}
-    >
-      {formatChange(metric.change_percent)}
-    </span>
-  );
-};
-
-const MetricCard = ({
-  icon: Icon,
-  metric,
-  tone,
-}: {
-  icon: LucideIcon;
-  metric: CommunitiesDashboardMetric;
-  tone: keyof typeof toneClasses;
-}) => (
-  <CardShell className="min-h-40 p-4 sm:p-5">
-    <div className="flex items-start justify-between gap-3">
-      <div className={cn("grid h-11 w-11 place-items-center rounded-full", toneClasses[tone])}>
-        <Icon aria-hidden className="h-5 w-5" />
-      </div>
-      <span className="rounded-full bg-surface-muted px-2 py-1 text-[0.65rem] font-bold text-muted">
-        real
-      </span>
-    </div>
-    <div className="mt-5 space-y-2">
-      <p className="text-sm font-black text-foreground">{metric.label}</p>
-      <p className="text-3xl font-black tracking-tight text-foreground">
-        {numberFormatter.format(metric.value)}
-      </p>
-      <div className="flex flex-wrap items-center gap-2">
-        <TrendBadge metric={metric} />
-        <span className="text-xs font-medium text-muted">vs. período anterior</span>
-      </div>
-      <p className="text-xs leading-relaxed text-muted">{metric.description}</p>
-    </div>
-  </CardShell>
-);
-
 const LoadingGrid = () => (
-  <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
-    {["a", "b", "c", "d", "e"].map((key) => (
-      <CardShell className="h-40 animate-pulse bg-surface-muted" key={key} />
+  <div className="grid gap-5">
+    {["people", "content"].map((key) => (
+      <CardShell className="h-80 animate-pulse bg-surface-muted" key={key} />
     ))}
   </div>
 );
@@ -1462,23 +1401,6 @@ const DashboardContent = ({ summary }: { summary: AdminCommunitiesDashboard }) =
   return (
     <div className="min-w-0 space-y-5 overflow-x-hidden">
       {noRecords ? <EmptyState period={summary.period} /> : null}
-
-      <section aria-labelledby="activity-title" className="min-w-0 space-y-4">
-        <h2 className="text-xl font-bold text-foreground" id="activity-title">
-          Visão geral
-        </h2>
-        <div className="grid min-w-0 gap-4 sm:grid-cols-2 xl:grid-cols-5">
-          <MetricCard icon={ShieldAlert} metric={summary.cards.psychologist_posts} tone="purple" />
-          <MetricCard icon={Users} metric={summary.cards.patient_posts} tone="blue" />
-          <MetricCard
-            icon={MessageCircle}
-            metric={summary.cards.psychologist_replies}
-            tone="green"
-          />
-          <MetricCard icon={MessageCircle} metric={summary.cards.patient_comments} tone="orange" />
-          <MetricCard icon={UsersRound} metric={summary.cards.active_members} tone="pink" />
-        </div>
-      </section>
 
       <DashboardStatisticsSection
         description="Visão geral de psicólogos e pacientes em todas as comunidades."

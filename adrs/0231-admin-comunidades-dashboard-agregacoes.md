@@ -72,3 +72,10 @@ As estatisticas globais usam somente dados persistidos existentes: `community_me
 A UI renderiza cards selecionaveis e grafico SVG/CSS proprio, sem pacote de charts e sem rolagem horizontal global. Os blocos laterais de alertas removidos no ajuste anterior continuam fora do dashboard; denuncias e moderacao seguem em fluxos dedicados.
 
 Consequencias: o contrato do dashboard fica maior, mas evita requests extras e garante que filtros de periodo e comparacao com periodo anterior sejam consistentes entre cards, graficos e os demais indicadores da pagina. Nao houve schema Prisma, migration, pacote novo, mock ou seed.
+## Atualizacao 2026-07-17: remocao dos cards legados de visao geral
+
+Apos a inclusao dos blocos globais de **Estatisticas de pessoas** e **Estatisticas de conteudo**, os cinco cards legados do topo do dashboard (`psychologist_posts`, `patient_posts`, `psychologist_replies`, `patient_comments` e `active_members`) passaram a duplicar informacao e alongar a pagina antes das estatisticas principais.
+
+A decisao e remover a renderizacao desses cards do dashboard `/comunidades`, mantendo os dados no contrato atual do endpoint para compatibilidade e para nao alterar agregacoes existentes nesta correcao visual. A visao principal da pagina passa a iniciar pelos blocos globais de estatisticas.
+
+Consequencia: a interface fica mais direta e com menor redundancia visual, sem mudanca de backend, schema Prisma, migration, pacote novo, mock ou seed.

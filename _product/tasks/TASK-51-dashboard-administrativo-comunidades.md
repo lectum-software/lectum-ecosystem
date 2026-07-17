@@ -459,3 +459,28 @@ Regras de UI obrigatórias:
 - `pnpm check`
 - Smoke service real: `buildCommunitiesDashboard({ from: "2026-07-13", to: "2026-07-17" })` retornou `status=200`, `has_global_statistics=true`, `daily_points=5`.
 - Smoke local `GET http://localhost:3002/comunidades` retornou 200.
+
+## Correcao complementar: remover contadores legados do dashboard geral (2026-07-17)
+
+- Pedido do usuario: remover os contadores antigos **Postagens de psicologos**, **Postagens de pacientes**, **Respostas de psicologos**, **Comentarios de pacientes** e **Membros ativos** do topo de `/comunidades`.
+- A UI deixou de renderizar a secao antiga **Visao geral** com os cinco cards legados, mantendo os blocos novos de **Estatisticas de pessoas** e **Estatisticas de conteudo** como a visao principal do dashboard.
+- Nao houve alteracao de backend, endpoint, Prisma schema/migrations, packages, dados ou regras de agregacao.
+- O ajuste permanece mobile-first, sem `<img>` cru e sem rolagem horizontal global.
+- Builder/Quick Copy `vcp://quickcopy/vcp-24aaa2941d814e5b90572bc93ae50e2a` nao esta exposto como ferramenta callable neste ambiente; referencia usada: captura enviada pelo usuario.
+- ADR atualizado: `adrs/0231-admin-comunidades-dashboard-agregacoes.md`.
+
+### Criterios deste ajuste
+
+- [x] O dashboard `/comunidades` nao renderiza mais o card **Postagens de psicologos**.
+- [x] O dashboard `/comunidades` nao renderiza mais o card **Postagens de pacientes**.
+- [x] O dashboard `/comunidades` nao renderiza mais o card **Respostas de psicologos**.
+- [x] O dashboard `/comunidades` nao renderiza mais o card **Comentarios de pacientes**.
+- [x] O dashboard `/comunidades` nao renderiza mais o card **Membros ativos**.
+- [x] Os blocos de estatisticas globais permanecem visiveis e responsivos.
+
+### Validacao deste ajuste
+
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check`
+- Smoke local `GET http://localhost:3002/comunidades` retornou 200.
