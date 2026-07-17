@@ -470,3 +470,14 @@ Regras:
 - Builder/Quick Copy nao esta exposto como ferramenta callable no ambiente; a referencia usada foi o pedido do usuario e o padrao local dos contadores do Admin.
 - ADR atualizado: `adrs/0264-admin-comunidade-abas-conteudo-ranking.md`.
 - Validacao executada: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke HTTP local `GET http://localhost:3002/comunidades/relacionamentos-com-proposito?tab=estatisticas` retornando 200.
+
+## Ajuste complementar 2026-07-17 - Contencao de overflow horizontal em Estatisticas
+
+- Pedido do usuario: explicar/remover a barra de rolagem horizontal visivel na tela de **Estatisticas** da comunidade.
+- A causa era o overflow produzido pelo carrossel de **Estatisticas de conteudo**: os cards mantinham largura interna rolavel e as setas participavam do fluxo lateral, permitindo que o excedente fosse considerado pela pagina em vez de ficar contido no componente.
+- O carrossel agora reserva gutters internos para as setas com posicionamento absoluto dentro da largura util, preservando a navegacao junto ao primeiro/ultimo card sem encobrir os contadores selecionaveis.
+- A aba e os cards de estatisticas passaram a declarar `min-w-0` e contencao horizontal local, mantendo somente o scroller interno do carrossel e impedindo barra horizontal global da pagina.
+- O ajuste e exclusivamente visual/mobile-first, sem endpoint novo, mock, package, schema Prisma/migration ou alteracao de persistencia.
+- Builder/Quick Copy nao esta exposto como ferramenta callable no ambiente; a referencia usada foi a captura enviada pelo usuario e validacao local autenticada.
+- ADR atualizado: `adrs/0264-admin-comunidade-abas-conteudo-ranking.md`.
+- Validacao executada: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check`, smoke HTTP local `GET http://localhost:3002/comunidades/relacionamentos-com-proposito?tab=estatisticas` retornando 200 e inspecao headless autenticada em 1920px confirmando `documentElement.scrollWidth === documentElement.clientWidth`.

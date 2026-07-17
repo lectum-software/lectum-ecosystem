@@ -506,3 +506,15 @@ O bloco de urgências passa a ser **Denúncias pendentes** e fica restrito ao `u
 Consequência: a aba Geral entrega conteúdo recente e pendências de moderação com fontes reais já existentes, sem schema Prisma/migration, dependência nova, seed, backfill ou dados artificiais.
 
 Validação complementar 2026-07-17: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke HTTP local `GET http://localhost:3002/comunidades/relacionamentos-com-proposito` retornando 200.
+
+## Atualizacao 2026-07-17: contencao de overflow horizontal em Estatisticas da comunidade
+
+A barra horizontal global observada na aba **Estatisticas** vinha do overflow do carrossel de **Estatisticas de conteudo**. O scroller precisa continuar maior que a area visivel para revelar todos os contadores, mas esse excedente deve ficar contido no proprio componente, nao no documento.
+
+A decisao e manter somente o carrossel de conteudo com overflow horizontal interno e oculto, reposicionando as setas em gutters internos absolutos dentro da largura util. Assim, as setas continuam junto ao primeiro e ao ultimo card visiveis, sem encobrir os contadores selecionaveis e sem somar largura extra ao fluxo da pagina.
+
+A aba e os cards de estatisticas tambem passam a reforcar `min-w-0` e contencao horizontal local. Essa contencao preserva o scroller interno do carrossel e os graficos responsivos, mas impede que qualquer excedente do bloco gere rolagem horizontal no `document`.
+
+Consequencia: **Estatisticas de pessoas** continua inteira em grade, **Estatisticas de conteudo** continua navegavel por carrossel sem barra nativa visivel, e a pagina deixa de exibir scrollbar horizontal global.
+
+Validacao complementar 2026-07-17: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check`, smoke HTTP local `GET http://localhost:3002/comunidades/relacionamentos-com-proposito?tab=estatisticas` retornando 200 e inspecao headless autenticada em 1920px confirmando `documentElement.scrollWidth === documentElement.clientWidth`.

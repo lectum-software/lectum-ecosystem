@@ -4464,10 +4464,10 @@ const CommunityStatisticsMetricCarousel = ({
   return (
     <fieldset className="mt-5 min-w-0">
       <legend className="sr-only">Contadores exibidos no gráfico de {title}</legend>
-      <div className="grid min-w-0 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2">
+      <div className="relative min-w-0 px-11 sm:px-12">
         <button
           aria-label={`Rolar contadores de ${title} para a esquerda`}
-          className="grid h-9 w-9 place-items-center rounded-full border border-border bg-surface text-muted shadow-sm transition hover:border-primary/35 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
+          className="absolute left-0 top-1/2 z-10 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-full border border-border bg-surface text-muted shadow-sm transition hover:border-primary/35 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
           onClick={() => scrollMetrics(-1)}
           type="button"
         >
@@ -4492,7 +4492,7 @@ const CommunityStatisticsMetricCarousel = ({
         </div>
         <button
           aria-label={`Rolar contadores de ${title} para a direita`}
-          className="grid h-9 w-9 place-items-center rounded-full border border-primary/25 bg-primary-soft text-primary shadow-sm transition hover:border-primary/45 hover:bg-primary-soft/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
+          className="absolute right-0 top-1/2 z-10 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-full border border-primary/25 bg-primary-soft text-primary shadow-sm transition hover:border-primary/45 hover:bg-primary-soft/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
           onClick={() => scrollMetrics(1)}
           type="button"
         >
@@ -4752,7 +4752,10 @@ const CommunityStatisticsSegment = ({
   const hasStatus = isLoading || Boolean(error);
 
   return (
-    <section aria-busy={isLoading || isFetching} className={cn(cardClass, "min-w-0 p-5")}>
+    <section
+      aria-busy={isLoading || isFetching}
+      className={cn(cardClass, "min-w-0 overflow-x-clip p-5")}
+    >
       <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-start">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
@@ -4799,7 +4802,7 @@ const CommunityStatisticsSegment = ({
 
 const StatisticsTab = ({ createdAt, slug }: { createdAt: string; slug: string }) => {
   return (
-    <div className="space-y-5" data-community-detail-tab="estatisticas">
+    <div className="min-w-0 overflow-x-clip space-y-5" data-community-detail-tab="estatisticas">
       <StatisticsContent createdAt={createdAt} slug={slug} />
     </div>
   );
@@ -4860,7 +4863,7 @@ const StatisticsContent = ({ createdAt, slug }: { createdAt: string; slug: strin
   }, []);
 
   return (
-    <div className="space-y-5">
+    <div className="min-w-0 space-y-5">
       <CommunityStatisticsSegment
         counterLayout="grid"
         dateFilters={peopleDateState.dateFilters}
