@@ -4,7 +4,6 @@ import {
   AlertTriangle,
   ChevronDown,
   Eye,
-  Flag,
   type LucideIcon,
   MessageCircle,
   MoreHorizontal,
@@ -21,8 +20,6 @@ import type {
   AdminCommunitiesDashboard,
   CommunitiesDashboardActivitySeries,
   CommunitiesDashboardMetric,
-  CommunitiesDashboardModerationAlert,
-  CommunitiesDashboardPriorityAlert,
   CommunitiesDashboardQuery,
   CommunitiesDashboardRecentPost,
   CommunitiesDashboardTopCommunity,
@@ -132,8 +129,6 @@ const hasPeriodRecords = (summary: AdminCommunitiesDashboard) => {
     hasCards ||
     hasActivity ||
     summary.patient_posts_breakdown.total > 0 ||
-    summary.moderation_alerts.total > 0 ||
-    summary.priority_alerts.total > 0 ||
     summary.recent_posts.total > 0 ||
     summary.top_communities.items.length > 0
   );
@@ -141,7 +136,10 @@ const hasPeriodRecords = (summary: AdminCommunitiesDashboard) => {
 
 const CardShell = ({ children, className }: { children?: React.ReactNode; className?: string }) => (
   <section
-    className={cn("rounded-card border border-border bg-surface shadow-admin-soft", className)}
+    className={cn(
+      "min-w-0 rounded-card border border-border bg-surface shadow-admin-soft",
+      className,
+    )}
   >
     {children}
   </section>
@@ -366,7 +364,7 @@ const LineChart = ({ series }: { series: CommunitiesDashboardActivitySeries[] })
   const labelStep = Math.max(1, Math.ceil(labels.length / 8));
 
   return (
-    <figure className="mt-5 overflow-hidden">
+    <figure className="mt-5 min-w-0 overflow-hidden">
       <div className="flex flex-wrap gap-3">
         {chartSeries.map((item) => (
           <span className="flex items-center gap-2 text-xs font-bold text-muted" key={item.id}>
@@ -379,10 +377,10 @@ const LineChart = ({ series }: { series: CommunitiesDashboardActivitySeries[] })
           </span>
         ))}
       </div>
-      <div className="mt-3 overflow-x-auto">
+      <div className="mt-3 min-w-0 overflow-hidden">
         <svg
           aria-label="Gráfico de atividade real nas comunidades por dia"
-          className="min-w-[680px]"
+          className="h-auto w-full"
           role="img"
           viewBox={`0 0 ${width} ${height}`}
         >
@@ -548,161 +546,6 @@ const PatientPostsDonut = ({
   );
 };
 
-const PriorityAlerts = ({
-  alerts,
-  total,
-}: {
-  alerts: CommunitiesDashboardPriorityAlert[];
-  total: number;
-}) => {
-  const severityClasses: Record<CommunitiesDashboardPriorityAlert["severity"], string> = {
-    alta: "bg-red-50 text-danger",
-    baixa: "bg-surface-muted text-muted",
-    media: "bg-orange-50 text-orange-600",
-  };
-
-  return (
-    <CardShell className="p-5 xl:row-span-2">
-      <div className="flex items-center justify-between gap-3">
-        <div>
-          <h2 className="text-lg font-black text-foreground">Alertas de prioridade</h2>
-          <p className="mt-1 text-xs font-bold text-muted">
-            {numberFormatter.format(total)} denúncias pendentes reais
-          </p>
-        </div>
-        <Flag aria-hidden className="h-5 w-5 text-danger" />
-      </div>
-
-      <div className="mt-5 space-y-3">
-        {alerts.length === 0 ? (
-          <p className="rounded-2xl bg-surface-muted p-4 text-sm text-muted">
-            Nenhuma denúncia pendente real foi encontrada neste período.
-          </p>
-        ) : (
-          alerts.map((alert) => (
-            <article className="rounded-2xl border border-red-100 bg-red-50/35 p-4" key={alert.id}>
-              <div className="flex items-start justify-between gap-3">
-                <div className="flex gap-3">
-                  <Flag aria-hidden className="mt-0.5 h-5 w-5 shrink-0 text-danger" />
-                  <div>
-                    <h3 className="text-sm font-black text-foreground">{alert.reason}</h3>
-                    <p className="mt-1 text-xs font-bold text-muted">{alert.target_title}</p>
-                  </div>
-                </div>
-                <span
-                  className={cn(
-                    "rounded-full px-2 py-1 text-[0.65rem] font-black capitalize",
-                    severityClasses[alert.severity],
-                  )}
-                >
-                  {alert.severity}
-                </span>
-              </div>
-              {alert.community_name ? (
-                <p className="mt-3 text-xs text-muted">Comunidade: {alert.community_name}</p>
-              ) : null}
-              <p className="mt-2 text-xs font-black text-foreground">
-                {formatDateTime(alert.created_at)}
-              </p>
-            </article>
-          ))
-        )}
-      </div>
-    </CardShell>
-  );
-};
-
-const MODERATION_DECISION_LABELS: Record<string, string> = {
-  allow_sensitive: "Sensível publicado",
-  block: "Bloqueado",
-  safety_hold: "Segurado por segurança",
-};
-
-const MODERATION_SEVERITY_CLASSES: Record<string, string> = {
-  high: "bg-red-50 text-danger",
-  low: "bg-surface-muted text-muted",
-  medium: "bg-orange-50 text-orange-600",
-  urgent: "bg-red-600 text-white",
-};
-
-const ModerationAlerts = ({
-  alerts,
-  total,
-  urgentTotal,
-}: {
-  alerts: CommunitiesDashboardModerationAlert[];
-  total: number;
-  urgentTotal: number;
-}) => (
-  <CardShell className="p-5">
-    <div className="flex items-center justify-between gap-3">
-      <div>
-        <h2 className="text-lg font-black text-foreground">Moderação automática</h2>
-        <p className="mt-1 text-xs font-bold text-muted">
-          {numberFormatter.format(total)} evento(s) pendentes ·{" "}
-          {numberFormatter.format(urgentTotal)} urgente(s)
-        </p>
-      </div>
-      <ShieldAlert aria-hidden className="h-5 w-5 text-danger" />
-    </div>
-
-    <div className="mt-5 space-y-3">
-      {alerts.length === 0 ? (
-        <p className="rounded-2xl bg-surface-muted p-4 text-sm text-muted">
-          Nenhum evento automático pendente foi encontrado neste período.
-        </p>
-      ) : (
-        alerts.map((alert) => (
-          <article
-            className="rounded-2xl border border-orange-100 bg-orange-50/35 p-4"
-            key={alert.id}
-          >
-            <div className="flex items-start justify-between gap-3">
-              <div className="min-w-0">
-                <h3 className="text-sm font-black text-foreground">
-                  {MODERATION_DECISION_LABELS[alert.decision] ?? alert.decision}
-                </h3>
-                <p className="mt-1 line-clamp-2 text-xs font-bold text-muted">
-                  {alert.content_excerpt}
-                </p>
-              </div>
-              <span
-                className={cn(
-                  "rounded-full px-2 py-1 text-[0.65rem] font-black uppercase",
-                  MODERATION_SEVERITY_CLASSES[alert.severity] ?? "bg-surface-muted text-muted",
-                )}
-              >
-                {alert.severity}
-              </span>
-            </div>
-            {alert.community_name ? (
-              <p className="mt-3 text-xs text-muted">Comunidade: {alert.community_name}</p>
-            ) : null}
-            <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-              <p className="text-xs font-black text-foreground">
-                {formatDateTime(alert.created_at)}
-              </p>
-              <Link
-                className="text-xs font-black text-primary transition hover:text-primary-hover"
-                href={`/moderacao?event=${encodeURIComponent(alert.id)}`}
-              >
-                Abrir evento
-              </Link>
-            </div>
-          </article>
-        ))
-      )}
-    </div>
-
-    <Link
-      className="mt-4 inline-flex h-10 w-full items-center justify-center rounded-control border border-border bg-surface px-4 text-sm font-black text-foreground transition hover:border-primary hover:text-primary"
-      href="/moderacao"
-    >
-      Ver central de moderação
-    </Link>
-  </CardShell>
-);
-
 const RecentPostsTable = ({ posts }: { posts: CommunitiesDashboardRecentPost[] }) => (
   <CardShell className="p-5">
     <div className="flex items-center justify-between gap-3">
@@ -718,71 +561,113 @@ const RecentPostsTable = ({ posts }: { posts: CommunitiesDashboardRecentPost[] }
         Nenhuma postagem real encontrada no período.
       </p>
     ) : (
-      <div className="mt-5 overflow-x-auto">
-        <table className="w-full min-w-[760px] border-separate border-spacing-0 text-left text-sm">
-          <thead className="text-xs text-muted">
-            <tr>
-              <th className="border-b border-border py-3 pr-4 font-black">Título</th>
-              <th className="border-b border-border px-4 py-3 font-black">Autor</th>
-              <th className="border-b border-border px-4 py-3 font-black">Discussão</th>
-              <th className="border-b border-border px-4 py-3 font-black">Comentários</th>
-              <th className="border-b border-border py-3 pl-4 text-right font-black">Ações</th>
-            </tr>
-          </thead>
-          <tbody>
-            {posts.map((post) => (
-              <tr key={post.id}>
-                <td className="border-b border-border py-4 pr-4 align-top">
-                  <p className="font-black text-foreground">{post.title}</p>
+      <>
+        <div className="mt-5 grid gap-3 md:hidden">
+          {posts.map((post) => (
+            <article
+              className="rounded-2xl border border-border bg-surface-muted p-4"
+              key={post.id}
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="truncate font-black text-foreground">{post.title}</p>
                   <p className="mt-1 text-xs text-muted">
                     {post.community_name} · {formatDateTime(post.created_at)}
                   </p>
-                </td>
-                <td className="border-b border-border px-4 py-4 align-top">
-                  <p className="font-bold text-foreground">{post.author_name}</p>
-                  <p className="text-xs capitalize text-muted">{post.author_role}</p>
-                </td>
-                <td className="border-b border-border px-4 py-4 align-top">
-                  <span
-                    className={cn(
-                      "rounded-full px-2 py-1 text-xs font-black",
-                      post.discussion_status === "iniciada"
-                        ? "bg-emerald-50 text-success"
-                        : "bg-red-50 text-danger",
-                    )}
-                  >
-                    {post.discussion_status === "iniciada" ? "Iniciada" : "Não iniciada"}
-                  </span>
-                </td>
-                <td className="border-b border-border px-4 py-4 align-top">
-                  <span className="inline-flex items-center gap-2 font-black text-foreground">
-                    <MessageCircle aria-hidden className="h-4 w-4 text-primary" />
-                    {numberFormatter.format(post.comments_count)}
-                  </span>
-                </td>
-                <td className="border-b border-border py-4 pl-4 text-right align-top">
-                  <div className="inline-flex gap-2">
-                    <Link
-                      aria-label={`Abrir comunidade ${post.community_name}`}
-                      className="grid h-9 w-9 place-items-center rounded-xl border border-border text-primary transition hover:border-primary"
-                      href={`/comunidades/${post.community_slug}`}
-                    >
-                      <Eye aria-hidden className="h-4 w-4" />
-                    </Link>
-                    <button
-                      aria-label="Mais ações indisponíveis nesta versão"
-                      className="grid h-9 w-9 place-items-center rounded-xl border border-border text-muted"
-                      type="button"
-                    >
-                      <MoreHorizontal aria-hidden className="h-4 w-4" />
-                    </button>
-                  </div>
-                </td>
+                </div>
+                <Link
+                  aria-label={`Abrir comunidade ${post.community_name}`}
+                  className="grid h-9 w-9 shrink-0 place-items-center rounded-xl border border-border bg-surface text-primary transition hover:border-primary"
+                  href={`/comunidades/${post.community_slug}`}
+                >
+                  <Eye aria-hidden className="h-4 w-4" />
+                </Link>
+              </div>
+              <div className="mt-3 grid gap-2 text-xs text-muted">
+                <p>
+                  <strong className="text-foreground">Autor:</strong> {post.author_name} ·{" "}
+                  <span className="capitalize">{post.author_role}</span>
+                </p>
+                <p>
+                  <strong className="text-foreground">Discussão:</strong>{" "}
+                  {post.discussion_status === "iniciada" ? "Iniciada" : "Não iniciada"}
+                </p>
+                <p>
+                  <strong className="text-foreground">Comentários:</strong>{" "}
+                  {numberFormatter.format(post.comments_count)}
+                </p>
+              </div>
+            </article>
+          ))}
+        </div>
+        <div className="mt-5 hidden min-w-0 overflow-hidden md:block">
+          <table className="w-full table-fixed border-separate border-spacing-0 text-left text-sm">
+            <thead className="text-xs text-muted">
+              <tr>
+                <th className="w-[38%] border-b border-border py-3 pr-3 font-black">Título</th>
+                <th className="w-[22%] border-b border-border px-3 py-3 font-black">Autor</th>
+                <th className="w-[16%] border-b border-border px-3 py-3 font-black">Discussão</th>
+                <th className="w-[14%] border-b border-border px-3 py-3 font-black">Comentários</th>
+                <th className="w-[10%] border-b border-border py-3 pl-3 text-right font-black">
+                  Ações
+                </th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody>
+              {posts.map((post) => (
+                <tr key={post.id}>
+                  <td className="min-w-0 border-b border-border py-4 pr-3 align-top">
+                    <p className="truncate font-black text-foreground">{post.title}</p>
+                    <p className="mt-1 truncate text-xs text-muted">
+                      {post.community_name} · {formatDateTime(post.created_at)}
+                    </p>
+                  </td>
+                  <td className="min-w-0 border-b border-border px-3 py-4 align-top">
+                    <p className="truncate font-bold text-foreground">{post.author_name}</p>
+                    <p className="truncate text-xs capitalize text-muted">{post.author_role}</p>
+                  </td>
+                  <td className="border-b border-border px-3 py-4 align-top">
+                    <span
+                      className={cn(
+                        "inline-flex max-w-full rounded-full px-2 py-1 text-xs font-black",
+                        post.discussion_status === "iniciada"
+                          ? "bg-emerald-50 text-success"
+                          : "bg-red-50 text-danger",
+                      )}
+                    >
+                      {post.discussion_status === "iniciada" ? "Iniciada" : "Não iniciada"}
+                    </span>
+                  </td>
+                  <td className="border-b border-border px-3 py-4 align-top">
+                    <span className="inline-flex items-center gap-2 font-black text-foreground">
+                      <MessageCircle aria-hidden className="h-4 w-4 text-primary" />
+                      {numberFormatter.format(post.comments_count)}
+                    </span>
+                  </td>
+                  <td className="border-b border-border py-4 pl-3 text-right align-top">
+                    <div className="inline-flex gap-2">
+                      <Link
+                        aria-label={`Abrir comunidade ${post.community_name}`}
+                        className="grid h-9 w-9 place-items-center rounded-xl border border-border text-primary transition hover:border-primary"
+                        href={`/comunidades/${post.community_slug}`}
+                      >
+                        <Eye aria-hidden className="h-4 w-4" />
+                      </Link>
+                      <button
+                        aria-label="Mais ações indisponíveis nesta versão"
+                        className="grid h-9 w-9 place-items-center rounded-xl border border-border text-muted"
+                        type="button"
+                      >
+                        <MoreHorizontal aria-hidden className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </>
     )}
   </CardShell>
 );
@@ -812,56 +697,111 @@ const TopCommunitiesTable = ({
           Nenhuma comunidade real cadastrada foi encontrada.
         </p>
       ) : (
-        <div className="mt-5 overflow-x-auto">
-          <table className="w-full min-w-[620px] border-separate border-spacing-0 text-left text-sm">
-            <thead className="text-xs text-muted">
-              <tr>
-                <th className="border-b border-border py-3 pr-4 font-black">Comunidade</th>
-                <th className="border-b border-border px-4 py-3 font-black">Seguidores</th>
-                <th className="border-b border-border px-4 py-3 font-black">Posts</th>
-                <th className="border-b border-border py-3 pl-4 text-right font-black">Ações</th>
-              </tr>
-            </thead>
-            <tbody>
-              {communities.map((community) => (
-                <tr key={community.id}>
-                  <td className="border-b border-border py-4 pr-4">
-                    <div className="flex items-center gap-3">
-                      <span
-                        aria-hidden
-                        className="grid h-9 w-9 place-items-center rounded-xl text-white"
-                        style={{ backgroundColor: community.visual_primary_color || "#3b16f3" }}
-                      >
-                        <UsersRound className="h-4 w-4" />
-                      </span>
-                      <div>
-                        <p className="font-black text-foreground">{community.name}</p>
-                        <p className="text-xs text-muted">
-                          {community.activity_count} ações no período
-                        </p>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="border-b border-border px-4 py-4 font-black">
-                    {numberFormatter.format(community.members_count)}
-                  </td>
-                  <td className="border-b border-border px-4 py-4 font-black">
-                    {numberFormatter.format(community.posts_count)}
-                  </td>
-                  <td className="border-b border-border py-4 pl-4 text-right">
-                    <Link
-                      aria-label={`Abrir detalhes de ${community.name}`}
-                      className="inline-grid h-9 w-9 place-items-center rounded-xl border border-border text-primary transition hover:border-primary"
-                      href={`/comunidades/${community.slug}`}
+        <>
+          <div className="mt-5 grid gap-3 md:hidden">
+            {communities.map((community) => (
+              <article
+                className="rounded-2xl border border-border bg-surface-muted p-4"
+                key={community.id}
+              >
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex min-w-0 items-center gap-3">
+                    <span
+                      aria-hidden
+                      className="grid h-9 w-9 shrink-0 place-items-center rounded-xl text-white"
+                      style={{ backgroundColor: community.visual_primary_color || "#3b16f3" }}
                     >
-                      <Eye aria-hidden className="h-4 w-4" />
-                    </Link>
-                  </td>
+                      <UsersRound className="h-4 w-4" />
+                    </span>
+                    <div className="min-w-0">
+                      <p className="truncate font-black text-foreground">{community.name}</p>
+                      <p className="text-xs text-muted">
+                        {community.activity_count} ações no período
+                      </p>
+                    </div>
+                  </div>
+                  <Link
+                    aria-label={`Abrir detalhes de ${community.name}`}
+                    className="inline-grid h-9 w-9 shrink-0 place-items-center rounded-xl border border-border bg-surface text-primary transition hover:border-primary"
+                    href={`/comunidades/${community.slug}`}
+                  >
+                    <Eye aria-hidden className="h-4 w-4" />
+                  </Link>
+                </div>
+                <div className="mt-3 grid grid-cols-2 gap-3 text-xs">
+                  <p className="rounded-xl bg-surface p-3">
+                    <span className="block text-muted">Seguidores</span>
+                    <strong className="text-sm text-foreground">
+                      {numberFormatter.format(community.members_count)}
+                    </strong>
+                  </p>
+                  <p className="rounded-xl bg-surface p-3">
+                    <span className="block text-muted">Posts</span>
+                    <strong className="text-sm text-foreground">
+                      {numberFormatter.format(community.posts_count)}
+                    </strong>
+                  </p>
+                </div>
+              </article>
+            ))}
+          </div>
+          <div className="mt-5 hidden min-w-0 overflow-hidden md:block">
+            <table className="w-full table-fixed border-separate border-spacing-0 text-left text-sm">
+              <thead className="text-xs text-muted">
+                <tr>
+                  <th className="w-[58%] border-b border-border py-3 pr-3 font-black">
+                    Comunidade
+                  </th>
+                  <th className="w-[16%] border-b border-border px-3 py-3 font-black">
+                    Seguidores
+                  </th>
+                  <th className="w-[14%] border-b border-border px-3 py-3 font-black">Posts</th>
+                  <th className="w-[12%] border-b border-border py-3 pl-3 text-right font-black">
+                    Ações
+                  </th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {communities.map((community) => (
+                  <tr key={community.id}>
+                    <td className="border-b border-border py-4 pr-4">
+                      <div className="flex items-center gap-3">
+                        <span
+                          aria-hidden
+                          className="grid h-9 w-9 place-items-center rounded-xl text-white"
+                          style={{ backgroundColor: community.visual_primary_color || "#3b16f3" }}
+                        >
+                          <UsersRound className="h-4 w-4" />
+                        </span>
+                        <div className="min-w-0">
+                          <p className="truncate font-black text-foreground">{community.name}</p>
+                          <p className="truncate text-xs text-muted">
+                            {community.activity_count} ações no período
+                          </p>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="border-b border-border px-3 py-4 font-black">
+                      {numberFormatter.format(community.members_count)}
+                    </td>
+                    <td className="border-b border-border px-3 py-4 font-black">
+                      {numberFormatter.format(community.posts_count)}
+                    </td>
+                    <td className="border-b border-border py-4 pl-3 text-right">
+                      <Link
+                        aria-label={`Abrir detalhes de ${community.name}`}
+                        className="inline-grid h-9 w-9 place-items-center rounded-xl border border-border text-primary transition hover:border-primary"
+                        href={`/comunidades/${community.slug}`}
+                      >
+                        <Eye aria-hidden className="h-4 w-4" />
+                      </Link>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
       )}
     </CardShell>
   </div>
@@ -871,14 +811,14 @@ const DashboardContent = ({ summary }: { summary: AdminCommunitiesDashboard }) =
   const noRecords = !hasPeriodRecords(summary);
 
   return (
-    <div className="space-y-5">
+    <div className="min-w-0 space-y-5 overflow-x-hidden">
       {noRecords ? <EmptyState period={summary.period} /> : null}
 
-      <section aria-labelledby="activity-title" className="space-y-4">
+      <section aria-labelledby="activity-title" className="min-w-0 space-y-4">
         <h2 className="text-xl font-bold text-foreground" id="activity-title">
           Visão geral
         </h2>
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+        <div className="grid min-w-0 gap-4 sm:grid-cols-2 xl:grid-cols-5">
           <MetricCard icon={ShieldAlert} metric={summary.cards.psychologist_posts} tone="purple" />
           <MetricCard icon={Users} metric={summary.cards.patient_posts} tone="blue" />
           <MetricCard
@@ -891,36 +831,22 @@ const DashboardContent = ({ summary }: { summary: AdminCommunitiesDashboard }) =
         </div>
       </section>
 
-      <div className="grid gap-5 xl:grid-cols-[1fr_340px]">
-        <div className="space-y-5">
-          <div className="grid gap-5 2xl:grid-cols-[1fr_320px]">
-            <CardShell className="p-5">
-              <div>
-                <h2 className="text-lg font-black text-foreground">Atividade nas comunidades</h2>
-                <p className="mt-1 text-xs font-bold text-muted">
-                  community_post + post_reply, segmentado por papel do autor
-                </p>
-              </div>
-              <LineChart series={summary.activity_series} />
-            </CardShell>
-            <PatientPostsDonut breakdown={summary.patient_posts_breakdown} />
-          </div>
-
-          <RecentPostsTable posts={summary.recent_posts.items} />
-          <TopCommunitiesTable communities={summary.top_communities.items} />
+      <div className="min-w-0 space-y-5">
+        <div className="grid min-w-0 gap-5 2xl:grid-cols-[minmax(0,1fr)_minmax(260px,320px)]">
+          <CardShell className="p-5">
+            <div>
+              <h2 className="text-lg font-black text-foreground">Atividade nas comunidades</h2>
+              <p className="mt-1 text-xs font-bold text-muted">
+                community_post + post_reply, segmentado por papel do autor
+              </p>
+            </div>
+            <LineChart series={summary.activity_series} />
+          </CardShell>
+          <PatientPostsDonut breakdown={summary.patient_posts_breakdown} />
         </div>
 
-        <div className="space-y-5">
-          <PriorityAlerts
-            alerts={summary.priority_alerts.items}
-            total={summary.priority_alerts.total}
-          />
-          <ModerationAlerts
-            alerts={summary.moderation_alerts.items}
-            total={summary.moderation_alerts.total}
-            urgentTotal={summary.moderation_alerts.urgent_total}
-          />
-        </div>
+        <RecentPostsTable posts={summary.recent_posts.items} />
+        <TopCommunitiesTable communities={summary.top_communities.items} />
       </div>
 
       {summary.unavailable.length > 0 ? (
@@ -972,7 +898,7 @@ export const AdminCommunitiesClient = () => {
   };
 
   return (
-    <div className="space-y-7">
+    <div className="min-w-0 overflow-x-hidden space-y-7">
       <CommunitiesHeader
         displayRange={draftRange}
         onDateChange={handleDateChange}

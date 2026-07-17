@@ -401,3 +401,30 @@ Regras de UI obrigatórias:
 - `pnpm --dir admin check`
 - `pnpm --dir admin build`
 - Browser local/headless autenticado em `http://localhost:3002/comunidades/lista?sort=name&limit=8`: controles presentes, busca `fontWeight=500`/`fontSize=14px`, seletor de ordenacao `fontWeight=500`/`fontSize=14px`, chip **Filtros ativos** `fontWeight=500`/`fontSize=14px`, contador `fontWeight=500` e sem overflow horizontal de viewport.
+
+## Correcao complementar: remocao dos blocos laterais e overflow do dashboard (2026-07-17)
+
+- Pedido do usuario: remover do dashboard `/comunidades` os blocos **Alertas de prioridade** e **Moderacao automatica**, alem de remover a rolagem horizontal global da pagina.
+- A UI do dashboard deixou de renderizar a coluna lateral de alertas, mantendo denuncias e eventos automaticos nas rotas/listas operacionais existentes.
+- O layout principal passou a usar uma unica coluna de conteudo com grafico, posts de pacientes, postagens recentes e principais comunidades, com contencao `min-w-0`/`overflow-x-hidden`.
+- O grafico de atividade agora escala para a largura util do card em vez de exigir largura minima rolavel.
+- As tabelas **Postagens mais recentes** e **Principais comunidades** deixaram de depender de `min-width` com rolagem horizontal; no mobile usam cards empilhados e no desktop usam `table-fixed` com truncamento.
+- Nao houve alteracao de backend, endpoints, Prisma schema/migrations, packages, dados ou regra de agregacao.
+- Builder/Quick Copy `vcp://quickcopy/vcp-24aaa2941d814e5b90572bc93ae50e2a` nao esta exposto como ferramenta callable neste ambiente; a referencia visual usada foi a captura enviada pelo usuario e o padrao local do Admin.
+- ADR atualizado: `adrs/0231-admin-comunidades-dashboard-agregacoes.md`.
+
+### Criterios deste ajuste
+
+- [x] O dashboard `/comunidades` nao renderiza mais **Alertas de prioridade**.
+- [x] O dashboard `/comunidades` nao renderiza mais **Moderacao automatica**.
+- [x] A pagina evita overflow horizontal global com contencao local do layout.
+- [x] Grafico e tabelas se ajustam a largura disponivel sem barra horizontal nativa da pagina.
+- [x] O ajuste permanece mobile-first e nao usa `<img>` cru.
+- [x] Nenhum mock, dado fake permanente, endpoint simulado, package novo, schema Prisma ou migration foi usado.
+
+### Validacao deste ajuste
+
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check`
+- Smoke local `GET http://localhost:3002/comunidades` retornou 200.

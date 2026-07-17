@@ -54,3 +54,11 @@ O Builder/Quick Copy ativo `vcp://quickcopy/vcp-24aaa2941d814e5b90572bc93ae50e2a
 ## Task relacionada
 
 - TASK-51
+
+## Atualizacao 2026-07-17: dashboard sem coluna lateral de alertas
+
+O dashboard `/comunidades` deve caber na largura util da tela sem rolagem horizontal global. A coluna lateral com **Alertas de prioridade** e **Moderacao automatica** estava competindo por largura com grafico e tabelas, gerando overflow em desktop.
+
+A decisao e remover esses dois blocos do dashboard de visao geral, mantendo a operacao de denuncias e moderacao automatica nas experiencias dedicadas existentes. O dashboard de comunidades passa a priorizar atividade, distribuicao de posts de pacientes, postagens recentes e principais comunidades.
+
+Consequencia: a tela fica mais enxuta e responsiva. O grafico escala dentro do card, tabelas usam apresentacao mobile-first em cards no mobile e `table-fixed` no desktop, e a contencao `min-w-0`/`overflow-x-hidden` fica local ao dashboard. Nao ha alteracao de endpoint, schema Prisma, migration, dependencia, mock ou regra de agregacao.
