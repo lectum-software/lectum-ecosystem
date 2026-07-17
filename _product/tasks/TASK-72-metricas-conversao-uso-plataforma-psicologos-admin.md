@@ -1015,8 +1015,14 @@ Regras de cálculo:
 
 - Pedido do usuário: manter a largura do bloco **Top mentores** fixa e aplicar ellipsis no nome do psicólogo quando necessário.
 - A UI Admin passou a travar o grid lateral com `minmax(0, ...)`, conter overflow no card e truncar o nome do mentor com `truncate`, preservando o selo e o CRP sem criar rolagem horizontal global.
-- Após refinamento do usuário, as colunas laterais **Denúncias pendentes** e **Top mentores** voltaram a uma proporção mais estreita (`minmax(0,0.9fr)`), deixando **Últimos posts** e **Posts mais populares** com mais largura útil.
+- Após refinamento do usuário, as colunas laterais **Denúncias pendentes** e **Top mentores** voltaram a uma proporção mais estreita, deixando **Últimos posts** e **Posts mais populares** com mais largura útil.
 - O ajuste é exclusivamente visual/mobile-first, sem endpoint novo, mock, package, schema Prisma/migration ou alteração de persistência.
+
+### Ajuste complementar 2026-07-17 - Blocos laterais alinhados aos contadores
+
+- Pedido do usuário: os blocos **Denúncias pendentes** e **Top mentores** devem ficar alinhados às margens dos contadores **Comentários de pacientes** e **Denúncias**.
+- A aba **Geral** passou a usar uma grade de 5 colunas nas duas linhas de blocos principais: **Últimos posts**/**Posts mais populares** ocupam 3 colunas e os blocos laterais ocupam 2 colunas, espelhando a linha de contadores.
+- O ajuste mantém mais largura útil para as tabelas da esquerda e alinha a coluna lateral com os dois últimos contadores, sem endpoint novo, mock, package, schema Prisma/migration ou alteração de persistência.
 
 ## Ajuste complementar 2026-07-17 - Autor consistente em Ultimos posts e Posts mais populares
 
@@ -1038,6 +1044,13 @@ Regras de cálculo:
 - Builder/Quick Copy nao esta exposto como ferramenta callable no ambiente; a referencia usada foi a captura enviada pelo usuario e o comportamento esperado do CTA.
 - ADR atualizado: `adrs/0264-admin-comunidade-abas-conteudo-ranking.md`.
 - Validacao executada: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke HTTP local `GET http://localhost:3002/comunidades/relacionamentos-com-proposito?tab=conteudo&contentType=posts&contentSort=recent&contentPeriod=all` retornando 200.
+
+## Ajuste complementar 2026-07-17 - Tabelas da aba Geral sem rolagem horizontal
+
+- Pedido do usuário: as tabelas **Últimos posts** e **Posts mais populares** devem exibir todas as colunas sem necessidade de rolagem horizontal.
+- As tabelas deixaram de usar `min-w-[820px]` e `overflow-x-auto`; agora usam `table-fixed`, largura total do bloco, colunas percentuais e padding horizontal menor nas colunas de métricas.
+- A identidade do autor recebeu contenção com `min-w-0`/`truncate`, evitando que nomes longos empurrem as colunas de **Visualizações**, **Upvotes** e **Comentários** para fora do card.
+- O ajuste é exclusivamente visual/mobile-first, sem endpoint novo, mock, package, schema Prisma/migration ou alteração de persistência.
 
 ## Ajuste complementar 2026-07-17 - Ranking do psicologo como primeiro contador
 

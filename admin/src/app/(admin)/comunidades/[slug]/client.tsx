@@ -763,7 +763,7 @@ const LatestCommunityPostRow = ({ item }: { item: AdminCommunityContentItem }) =
       <td className="border-b border-border">
         <Link
           aria-label={`Abrir post ${title}`}
-          className="block px-4 py-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
+          className="block px-3 py-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
           href={postHref}
           rel="noreferrer"
           target="_blank"
@@ -774,7 +774,7 @@ const LatestCommunityPostRow = ({ item }: { item: AdminCommunityContentItem }) =
       <td className="border-b border-border text-center font-black text-foreground">
         <Link
           aria-label={`Abrir post ${title}`}
-          className="block px-4 py-4 text-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
+          className="block px-2 py-4 text-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
           href={postHref}
           rel="noreferrer"
           target="_blank"
@@ -785,7 +785,7 @@ const LatestCommunityPostRow = ({ item }: { item: AdminCommunityContentItem }) =
       <td className="border-b border-border text-center font-black text-foreground">
         <Link
           aria-label={`Abrir post ${title}`}
-          className="block px-4 py-4 text-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
+          className="block px-2 py-4 text-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
           href={postHref}
           rel="noreferrer"
           target="_blank"
@@ -798,20 +798,20 @@ const LatestCommunityPostRow = ({ item }: { item: AdminCommunityContentItem }) =
 };
 
 const LatestCommunityPostsTable = ({ children }: { children: React.ReactNode }) => (
-  <div className="mt-4 overflow-x-auto">
-    <table className="w-full min-w-[820px] border-separate border-spacing-0 text-left text-sm">
+  <div className="mt-4 overflow-hidden">
+    <table className="w-full table-fixed border-separate border-spacing-0 text-left text-sm">
       <colgroup>
-        <col className="w-[44%]" />
-        <col className="w-[30%]" />
-        <col className="w-[13%]" />
-        <col className="w-[13%]" />
+        <col className="w-[42%]" />
+        <col className="w-[34%]" />
+        <col className="w-[12%]" />
+        <col className="w-[12%]" />
       </colgroup>
       <thead className="text-xs text-muted">
         <tr>
           <th className="border-b border-border py-3 pr-4 font-black">Post</th>
-          <th className="border-b border-border px-4 py-3 font-black">Autor</th>
-          <th className="border-b border-border px-4 py-3 text-center font-black">Visualizações</th>
-          <th className="border-b border-border px-4 py-3 text-center font-black">Comentários</th>
+          <th className="border-b border-border px-3 py-3 font-black">Autor</th>
+          <th className="border-b border-border px-2 py-3 text-center font-black">Visualizações</th>
+          <th className="border-b border-border px-2 py-3 text-center font-black">Comentários</th>
         </tr>
       </thead>
       <tbody>{children}</tbody>
@@ -847,16 +847,16 @@ const LatestCommunityPostsSection = ({ pathname, slug }: { pathname: string; slu
                 <span className="block h-4 w-3/4 rounded-full bg-surface-muted" />
                 <span className="mt-2 block h-3 w-28 rounded-full bg-surface-muted" />
               </td>
-              <td className="border-b border-border px-4 py-4">
+              <td className="border-b border-border px-3 py-4">
                 <span className="flex items-center gap-3">
                   <span className="h-10 w-10 rounded-full bg-surface-muted" />
                   <span className="h-8 w-36 rounded-full bg-surface-muted" />
                 </span>
               </td>
-              <td className="border-b border-border px-4 py-4">
+              <td className="border-b border-border px-2 py-4">
                 <span className="mx-auto block h-3 w-10 rounded-full bg-surface-muted" />
               </td>
-              <td className="border-b border-border px-4 py-4">
+              <td className="border-b border-border px-2 py-4">
                 <span className="mx-auto block h-3 w-10 rounded-full bg-surface-muted" />
               </td>
             </tr>
@@ -933,7 +933,7 @@ const PopularPostRow = ({
       <td className="border-b border-border">
         <Link
           aria-label={`Abrir post ${title}`}
-          className="block px-4 py-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
+          className="block px-3 py-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
           href={postHref}
           rel="noreferrer"
           target="_blank"
@@ -944,7 +944,7 @@ const PopularPostRow = ({
       <td className="border-b border-border text-center font-black text-foreground">
         <Link
           aria-label={`Abrir post ${title}`}
-          className="block px-4 py-4 text-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
+          className="block px-2 py-4 text-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
           href={postHref}
           rel="noreferrer"
           target="_blank"
@@ -955,7 +955,7 @@ const PopularPostRow = ({
       <td className="border-b border-border text-center font-black text-foreground">
         <Link
           aria-label={`Abrir post ${title}`}
-          className="block px-4 py-4 text-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
+          className="block px-2 py-4 text-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
           href={postHref}
           rel="noreferrer"
           target="_blank"
@@ -1447,20 +1447,20 @@ const PopularPostsCard = ({
         Nenhum post publicado real foi encontrado nesta comunidade.
       </p>
     ) : (
-      <div className="mt-4 overflow-x-auto">
-        <table className="w-full min-w-[820px] border-separate border-spacing-0 text-left text-sm">
+      <div className="mt-4 overflow-hidden">
+        <table className="w-full table-fixed border-separate border-spacing-0 text-left text-sm">
           <colgroup>
-            <col className="w-[44%]" />
-            <col className="w-[30%]" />
-            <col className="w-[13%]" />
-            <col className="w-[13%]" />
+            <col className="w-[42%]" />
+            <col className="w-[34%]" />
+            <col className="w-[12%]" />
+            <col className="w-[12%]" />
           </colgroup>
           <thead className="text-xs text-muted">
             <tr>
               <th className="border-b border-border py-3 pr-4 font-black">Post</th>
-              <th className="border-b border-border px-4 py-3 font-black">Autor</th>
-              <th className="border-b border-border px-4 py-3 text-center font-black">Upvotes</th>
-              <th className="border-b border-border px-4 py-3 text-center font-black">
+              <th className="border-b border-border px-3 py-3 font-black">Autor</th>
+              <th className="border-b border-border px-2 py-3 text-center font-black">Upvotes</th>
+              <th className="border-b border-border px-2 py-3 text-center font-black">
                 Comentários
               </th>
             </tr>
@@ -2799,9 +2799,11 @@ const AuthorIdentity = ({
           initials(author.name)
         )}
       </div>
-      <div className="min-w-0">
+      <div className="min-w-0 flex-1">
         <div className="flex min-w-0 items-center gap-1.5">
-          <span className="truncate text-sm font-black text-foreground">{author.name}</span>
+          <span className="min-w-0 flex-1 truncate text-sm font-black text-foreground">
+            {author.name}
+          </span>
           {author.verified ? <VerifiedBadgeIcon aria-label="Perfil verificado" /> : null}
         </div>
         <div className="mt-0.5 flex flex-wrap items-center gap-1.5 text-xs font-bold text-muted">
@@ -5350,17 +5352,25 @@ const DetailContent = ({
     {activeTab === "geral" ? (
       <>
         <CommunityHighlightCounters detail={detail} />
-        <div className="grid min-w-0 gap-5 2xl:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
-          <LatestCommunityPostsSection pathname={pathname} slug={slug} />
-          <UrgentThingsSection detail={detail} pathname={pathname} />
+        <div className="grid min-w-0 gap-4 2xl:grid-cols-5">
+          <div className="min-w-0 2xl:col-span-3">
+            <LatestCommunityPostsSection pathname={pathname} slug={slug} />
+          </div>
+          <div className="min-w-0 2xl:col-span-2">
+            <UrgentThingsSection detail={detail} pathname={pathname} />
+          </div>
         </div>
-        <div className="grid min-w-0 gap-5 2xl:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
-          <PopularPostsCard
-            communitySlug={detail.community.slug}
-            pathname={pathname}
-            posts={detail.popular_posts}
-          />
-          <TopMentorsCard slug={slug} />
+        <div className="grid min-w-0 gap-4 2xl:grid-cols-5">
+          <div className="min-w-0 2xl:col-span-3">
+            <PopularPostsCard
+              communitySlug={detail.community.slug}
+              pathname={pathname}
+              posts={detail.popular_posts}
+            />
+          </div>
+          <div className="min-w-0 2xl:col-span-2">
+            <TopMentorsCard slug={slug} />
+          </div>
         </div>
       </>
     ) : null}

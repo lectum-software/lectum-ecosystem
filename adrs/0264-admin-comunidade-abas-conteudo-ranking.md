@@ -640,9 +640,17 @@ O bloco **Top mentores** deve manter a largura da coluna lateral mesmo quando no
 
 A decisao e combinar tracks de grid com `minmax(0, ...)`, `min-w-0` nos containers flex/grid e `truncate` no nome do mentor. Assim, o nome recebe ellipsis dentro do card, o selo de verificacao e o CRP permanecem visiveis e o bloco nao aumenta a largura da pagina nem gera barra horizontal global.
 
-Depois do refinamento visual, as linhas da aba **Geral** usam a proporcao `minmax(0,1.1fr) minmax(0,0.9fr)`, mantendo **Denuncias pendentes** e **Top mentores** mais estreitos para devolver area util a **Ultimos posts** e **Posts mais populares**.
+Depois do refinamento visual, as linhas da aba **Geral** deixam a coluna lateral mais estreita, mantendo **Denuncias pendentes** e **Top mentores** contidos para devolver area util a **Ultimos posts** e **Posts mais populares**.
 
 Consequencia: a mudanca e apenas apresentacional, sem endpoint novo, schema Prisma/migration, dependencia, mock ou alteracao de persistencia.
+
+## Atualizacao 2026-07-17: blocos laterais alinhados aos contadores
+
+Os blocos **Denuncias pendentes** e **Top mentores** devem alinhar com as margens dos contadores **Comentarios de pacientes** e **Denuncias**, que ocupam os dois ultimos cards da grade de contadores.
+
+A decisao e renderizar as duas linhas principais da aba **Geral** em uma grade de 5 colunas no desktop largo: **Ultimos posts** e **Posts mais populares** ocupam 3 colunas, enquanto **Denuncias pendentes** e **Top mentores** ocupam 2 colunas. Isso replica a distribuicao da linha de contadores e preserva mais largura para as tabelas da esquerda.
+
+Consequencia: o alinhamento visual fica consistente entre contadores e blocos operacionais, sem endpoint novo, schema Prisma/migration, dependencia, mock ou alteracao de persistencia.
 
 ## Atualizacao 2026-07-17: identidade de autor normalizada em posts populares
 
@@ -661,3 +669,11 @@ O botao **Ver todos** do bloco **Ultimos posts** da aba **Geral** passa a abrir 
 A decisao e usar parametros de URL especificos do conteudo (`contentType`, `contentSort`, `contentPeriod`) como estado inicial da aba, sem criar endpoint ou estado global paralelo. A navegacao continua no detalhe da comunidade e a listagem segue consumindo `GET /api/admin/private/communities/:id/content` com os filtros reais.
 
 Consequencia: o CTA leva o Admin diretamente para a listagem de posts mais recentes, mantendo possibilidade de alterar filtros manualmente depois, sem mock, dependencia, schema Prisma/migration ou persistencia adicional.
+
+## Atualizacao 2026-07-17: tabelas do resumo sem scroll horizontal
+
+As tabelas **Ultimos posts** e **Posts mais populares** da aba **Geral** devem exibir as quatro colunas visiveis dentro da largura do card, sem scroller horizontal interno.
+
+A decisao e remover o `min-w` fixo das tabelas, trocar `overflow-x-auto` por contencao local, usar `table-fixed` com colunas percentuais e reduzir o padding das colunas de metricas. A identidade do autor tambem passa a usar `min-w-0` e `truncate` para impedir que nomes longos empurrem **Visualizacoes**, **Upvotes** ou **Comentarios** para fora do bloco.
+
+Consequencia: a area esquerda da aba Geral continua mais larga que os blocos laterais, mas as tabelas passam a caber integralmente no card. A mudanca e apenas apresentacional, sem endpoint novo, schema Prisma/migration, dependencia, mock ou alteracao de persistencia.
