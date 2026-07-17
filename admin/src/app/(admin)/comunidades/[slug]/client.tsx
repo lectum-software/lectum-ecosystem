@@ -869,6 +869,95 @@ const LatestCommunityPostsSection = ({ pathname, slug }: { pathname: string; slu
 const communityTabHref = (pathname: string, tab: CommunityTab) =>
   tab === "geral" ? pathname : `${pathname}?tab=${tab}`;
 
+const popularPostAuthorRoleLabel = (role: string) => {
+  const normalized = role.trim().toLowerCase();
+
+  if (normalized === "psicologo") return "Psicólogo";
+  if (normalized === "paciente") return "Paciente";
+
+  return role.trim() || "Autor";
+};
+
+const PopularPostAuthorIdentity = ({ post }: { post: AdminCommunityPopularPost }) => (
+  <div className="flex min-w-0 items-center gap-3">
+    <div className="grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-full border border-border bg-primary-soft text-xs font-black text-primary">
+      {initials(post.author_name)}
+    </div>
+    <div className="min-w-0">
+      <span className="block truncate text-sm font-black text-foreground">{post.author_name}</span>
+      <span className="mt-0.5 block text-xs font-bold text-muted">
+        {popularPostAuthorRoleLabel(post.author_role)}
+      </span>
+    </div>
+  </div>
+);
+
+const PopularPostRow = ({
+  communitySlug,
+  post,
+}: {
+  communitySlug: string;
+  post: AdminCommunityPopularPost;
+}) => {
+  const postHref = toPublicHref(`/community/${communitySlug}/post/${post.id}`);
+  const title = post.title.trim() || "Post sem título";
+
+  return (
+    <tr className="group align-top transition hover:bg-surface-muted/50">
+      <td className="border-b border-border">
+        <Link
+          aria-label={`Abrir post ${title}`}
+          className="block py-4 pr-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
+          href={postHref}
+          rel="noreferrer"
+          target="_blank"
+        >
+          <span className="block line-clamp-2 font-black text-foreground group-hover:text-primary">
+            {title}
+          </span>
+          <span className="mt-1.5 inline-flex items-center gap-1.5 text-xs font-bold text-muted">
+            <CalendarDays aria-hidden className="h-3.5 w-3.5 shrink-0" />
+            <time dateTime={post.created_at}>{formatDateTime(post.created_at)}</time>
+          </span>
+        </Link>
+      </td>
+      <td className="border-b border-border">
+        <Link
+          aria-label={`Abrir post ${title}`}
+          className="block px-4 py-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
+          href={postHref}
+          rel="noreferrer"
+          target="_blank"
+        >
+          <PopularPostAuthorIdentity post={post} />
+        </Link>
+      </td>
+      <td className="border-b border-border text-center font-black text-foreground">
+        <Link
+          aria-label={`Abrir post ${title}`}
+          className="block px-4 py-4 text-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
+          href={postHref}
+          rel="noreferrer"
+          target="_blank"
+        >
+          {numberFormatter.format(post.upvotes_count)}
+        </Link>
+      </td>
+      <td className="border-b border-border text-center font-black text-foreground">
+        <Link
+          aria-label={`Abrir post ${title}`}
+          className="block px-4 py-4 text-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
+          href={postHref}
+          rel="noreferrer"
+          target="_blank"
+        >
+          {numberFormatter.format(post.comments_count)}
+        </Link>
+      </td>
+    </tr>
+  );
+};
+
 const pendingCommunityReportPrimaryText = (report: AdminCommunityUrgentPendingReport) => {
   if (report.content.type === "comment") {
     return report.content.excerpt.trim() || "Comentário sem texto disponível.";
@@ -1307,45 +1396,52 @@ const TopMentorsCard = ({ mentors }: { mentors: AdminCommunityTopMentor[] }) => 
   </section>
 );
 
-const PopularPostsCard = ({ posts }: { posts: AdminCommunityPopularPost[] }) => (
+const PopularPostsCard = ({
+  communitySlug,
+  pathname,
+  posts,
+}: {
+  communitySlug: string;
+  pathname: string;
+  posts: AdminCommunityPopularPost[];
+}) => (
   <section className={cn(cardClass, "p-5")}>
-    <h2 className="text-lg font-black text-foreground">Posts mais populares</h2>
+    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <h2 className="text-lg font-black text-foreground">Posts mais populares</h2>
+      <Link
+        className="inline-flex h-9 w-fit items-center gap-2 rounded-full border border-primary/20 bg-transparent px-3.5 text-xs font-black text-primary transition hover:border-primary/35 hover:bg-primary-soft"
+        href={communityTabHref(pathname, "conteudo")}
+      >
+        Ver todos
+        <ChevronRight aria-hidden className="h-3.5 w-3.5" />
+      </Link>
+    </div>
     {posts.length === 0 ? (
       <p className="mt-4 rounded-2xl bg-surface-muted p-4 text-sm text-muted">
         Nenhum post publicado real foi encontrado nesta comunidade.
       </p>
     ) : (
       <div className="mt-4 overflow-x-auto">
-        <table className="w-full min-w-[760px] border-separate border-spacing-0 text-left text-sm">
+        <table className="w-full min-w-[820px] border-separate border-spacing-0 text-left text-sm">
+          <colgroup>
+            <col className="w-[44%]" />
+            <col className="w-[30%]" />
+            <col className="w-[13%]" />
+            <col className="w-[13%]" />
+          </colgroup>
           <thead className="text-xs text-muted">
             <tr>
               <th className="border-b border-border py-3 pr-4 font-black">Post</th>
               <th className="border-b border-border px-4 py-3 font-black">Autor</th>
-              <th className="border-b border-border px-4 py-3 font-black">Upvotes</th>
-              <th className="border-b border-border px-4 py-3 font-black">Comentários</th>
-              <th className="border-b border-border px-4 py-3 font-black">Data</th>
+              <th className="border-b border-border px-4 py-3 text-center font-black">Upvotes</th>
+              <th className="border-b border-border px-4 py-3 text-center font-black">
+                Comentários
+              </th>
             </tr>
           </thead>
           <tbody>
             {posts.map((post) => (
-              <tr key={post.id}>
-                <td className="border-b border-border py-4 pr-4 font-black text-foreground">
-                  {post.title}
-                </td>
-                <td className="border-b border-border px-4 py-4">
-                  <p className="font-bold text-foreground">{post.author_name}</p>
-                  <p className="text-xs capitalize text-muted">{post.author_role}</p>
-                </td>
-                <td className="border-b border-border px-4 py-4 font-black">
-                  {numberFormatter.format(post.upvotes_count)}
-                </td>
-                <td className="border-b border-border px-4 py-4 font-black">
-                  {numberFormatter.format(post.comments_count)}
-                </td>
-                <td className="border-b border-border px-4 py-4">
-                  {formatDateTime(post.created_at)}
-                </td>
-              </tr>
+              <PopularPostRow communitySlug={communitySlug} key={post.id} post={post} />
             ))}
           </tbody>
         </table>
@@ -5218,7 +5314,11 @@ const DetailContent = ({
           <UrgentThingsSection detail={detail} pathname={pathname} />
         </div>
         <div className="grid gap-5 2xl:grid-cols-[1.1fr_0.9fr]">
-          <PopularPostsCard posts={detail.popular_posts} />
+          <PopularPostsCard
+            communitySlug={detail.community.slug}
+            pathname={pathname}
+            posts={detail.popular_posts}
+          />
           <TopMentorsCard mentors={detail.top_mentors} />
         </div>
       </>

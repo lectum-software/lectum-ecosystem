@@ -607,3 +607,11 @@ Os cards vermelhos do bloco **Denuncias pendentes** na aba **Geral** deixam de e
 A decisao diferencia a apresentacao por tipo de alvo: denuncias de post exibem somente o titulo do post; denuncias de comentario exibem somente o texto do comentario, truncado em ate duas linhas e com peso visual de descricao, nao de titulo. A tag de tipo de conteudo permanece como contexto minimo e a aba **Denuncias** continua concentrando a triagem completa.
 
 Consequencia: a mudanca e apenas apresentacional, sem novo endpoint, schema Prisma/migration, dependencia, mock ou alteracao de persistencia.
+
+## Atualizacao 2026-07-17: posts populares alinhados a ultimos posts
+
+O bloco **Posts mais populares** da aba **Geral** passa a usar o mesmo padrao visual de **Ultimos posts**: header com botao **Ver todos**, tabela com post, autor e metricas centralizadas, e data/hora abaixo do titulo do post.
+
+A diferenca entre os blocos fica restrita a metrica principal: **Ultimos posts** exibe **Visualizacoes** enquanto **Posts mais populares** exibe **Upvotes**. As linhas de posts populares passam a abrir o post publico real por `/community/{slug}/post/{id}`, usando os dados reais de `popular_posts`.
+
+Consequencia: a mudanca e apenas apresentacional, sem novo endpoint, schema Prisma/migration, dependencia, mock ou alteracao de persistencia.

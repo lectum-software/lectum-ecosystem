@@ -554,3 +554,10 @@ Regras:
 - A UI Admin passa a renderizar o texto primario conforme o tipo do alvo: posts usam apenas o titulo do post; comentarios usam apenas o texto do comentario, limitado visualmente a duas linhas com ellipsis.
 - Comentarios denunciados usam peso visual de descricao (text-xs, font-bold, text-muted), sem hierarquia de titulo, enquanto posts preservam o peso de titulo do card.
 - O ajuste e exclusivamente visual/apresentacional, sem endpoint novo, schema Prisma/migration, package, mock ou alteracao de persistencia.
+
+## Ajuste complementar 2026-07-17 - Posts populares alinhados a ultimos posts
+
+- Pedido do usuario: fazer o bloco **Posts mais populares** seguir o mesmo layout de **Ultimos posts**, trocando apenas **Visualizacoes** por **Upvotes**.
+- A UI Admin passou a renderizar **Posts mais populares** com header e botao **Ver todos** iguais ao bloco de ultimos posts, tabela com colunas **Post**, **Autor**, **Upvotes** e **Comentarios**, data/hora abaixo do titulo e metricas centralizadas.
+- Cada celula da linha abre o post publico real via `/community/{slug}/post/{id}`, preservando a navegacao administrativa e usando apenas dados reais do contrato `popular_posts`.
+- O ajuste e exclusivamente visual/apresentacional, sem endpoint novo, schema Prisma/migration, package, mock ou alteracao de persistencia.
