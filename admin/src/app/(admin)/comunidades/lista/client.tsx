@@ -164,14 +164,14 @@ const SearchBox = ({ onSearch, value }: { onSearch: (value: string) => void; val
   }, [draft, value]);
 
   return (
-    <label className="relative block h-12 w-full min-w-0">
+    <label className="relative block h-12 w-full min-w-0 text-sm font-medium text-foreground">
       <span className="sr-only">Buscar comunidade por nome, slug ou descrição</span>
       <Search
         aria-hidden
         className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-subtle"
       />
       <input
-        className="h-full w-full appearance-none rounded-full border border-border bg-surface py-0 pl-10 pr-4 text-sm font-bold text-foreground shadow-control outline-none transition placeholder:text-subtle focus:border-primary"
+        className="h-full w-full appearance-none rounded-full border border-border bg-surface py-0 pl-10 pr-4 text-sm font-medium text-foreground shadow-control outline-none transition placeholder:text-subtle focus:border-primary"
         onChange={(event) => setDraft(event.target.value)}
         placeholder="Nome, slug ou descrição..."
         type="search"
@@ -593,12 +593,12 @@ export const AdminCommunitiesListClient = () => {
           <div className="min-w-0 xl:w-full xl:max-w-[560px]">
             <SearchBox onSearch={(value) => replaceParams({ q: value || null })} value={query.q} />
           </div>
-          <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-end xl:flex-nowrap xl:justify-end">
-            <label className="flex min-w-0 flex-col gap-1 text-xs font-semibold text-muted sm:min-w-[220px]">
+          <div className="flex min-w-0 flex-col gap-2 text-sm font-medium text-foreground sm:flex-row sm:flex-wrap sm:items-end xl:flex-nowrap xl:justify-end">
+            <label className="flex min-w-0 flex-col gap-1 text-xs font-medium text-muted sm:min-w-[220px]">
               Ordenar por
-              <span className="relative block">
+              <span className="relative block text-sm font-medium text-foreground">
                 <select
-                  className="h-12 w-full min-w-0 appearance-none rounded-full border border-border bg-surface py-0 pl-4 pr-12 text-sm font-bold text-foreground shadow-control outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/15"
+                  className="h-12 w-full min-w-0 appearance-none rounded-full border border-border bg-surface py-0 pl-4 pr-12 text-sm font-medium text-foreground shadow-control outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/15"
                   onChange={(event) =>
                     replaceParams({ sort: event.target.value as AdminCommunitiesListSort })
                   }
@@ -616,10 +616,10 @@ export const AdminCommunitiesListClient = () => {
                 />
               </span>
             </label>
-            <div className="inline-flex h-12 items-center justify-center gap-2 rounded-full border border-border bg-surface px-4 text-sm font-semibold text-foreground shadow-control">
+            <div className="inline-flex h-12 items-center justify-center gap-2 rounded-full border border-border bg-surface px-4 text-sm font-medium text-foreground shadow-control">
               <Filter aria-hidden className="h-4 w-4" />
               Filtros ativos
-              <span className="rounded-full bg-primary-soft px-2 py-0.5 text-xs text-primary">
+              <span className="rounded-full bg-primary-soft px-2 py-0.5 text-xs font-medium text-primary">
                 {summary?.active_filters_count ?? 0}
               </span>
             </div>

@@ -61,3 +61,11 @@ O header de `/comunidades/lista` recebeu o botao **Criar nova comunidade**, apon
 A criacao aceita nome, slug opcional, categoria, descricao e cores visuais. Quando o slug nao e informado, o service gera um slug deterministico a partir do nome e rejeita conflito real com `community.slug`. Como o schema atual nao possui status/draft para comunidades, a comunidade criada fica disponivel no catalogo publico imediatamente; avatar e regras seguem editaveis no detalhe administrativo existente.
 
 Validacoes adicionais do ajuste de criacao: `pnpm --dir backend check`, `pnpm --dir admin check`, `pnpm --dir backend build`, `pnpm --dir admin build`, `pnpm check`, smoke local `GET http://localhost:3102/comunidades/lista` = 200, `GET http://localhost:3102/comunidades/nova` = 200 e smoke sem token em `POST http://localhost:3001/api/admin/private/communities` = 401.
+
+## Atualizacao 2026-07-17: tipografia dos controles da lista
+
+Os controles principais de `/comunidades/lista` (**busca**, **Ordenar por** e **Filtros ativos**) passam a declarar `text-sm font-medium` no controle e no ancestral que efetivamente governa a heranca. O label **Ordenar por** fica em `text-xs font-medium` e o contador do chip tambem usa peso medio.
+
+A decisao replica o padrao aplicado na lista administrativa de psicologos e evita que `button,input,textarea,select { font: inherit; }` faca os controles herdarem pesos fortes de wrappers antigos. Nao ha novo componente, package, contrato de API, filtro, ordenacao, paginacao, schema Prisma ou migration.
+
+Validacoes adicionais do ajuste tipografico: `pnpm --dir admin exec biome format --write "src/app/(admin)/comunidades/lista/client.tsx"`, `pnpm --dir admin check`, `pnpm --dir admin build` e browser local/headless autenticado em `http://localhost:3002/comunidades/lista?sort=name&limit=8`, confirmando busca `fontWeight=500`/`fontSize=14px`, seletor `fontWeight=500`/`fontSize=14px`, chip **Filtros ativos** `fontWeight=500`/`fontSize=14px`, contador `fontWeight=500` e ausencia de overflow horizontal de viewport.

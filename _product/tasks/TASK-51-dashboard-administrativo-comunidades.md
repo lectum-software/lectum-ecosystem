@@ -377,3 +377,27 @@ Regras de UI obrigatórias:
 - Smoke local em `next start` do Admin: `GET http://localhost:3102/comunidades/lista` retornou 200.
 - Smoke local em `next start` do Admin: `GET http://localhost:3102/comunidades/nova` retornou 200.
 - Smoke de protecao Admin real: `POST http://localhost:3001/api/admin/private/communities` sem token retornou 401.
+
+## Correcao complementar: tipografia dos controles da lista de comunidades (2026-07-17)
+
+- Pedido do usuario: padronizar tambem a fonte textual da barra de pesquisa e filtros da lista de comunidades, alinhando `/comunidades/lista` ao padrao Lectum ja aplicado em `/psicologos/lista`.
+- A busca, o seletor **Ordenar por**, o chip **Filtros ativos** e o contador passaram a declarar `text-sm font-medium`/`text-xs font-medium` no elemento e no ancestral correto. Isso e necessario porque o Admin define `button,input,textarea,select { font: inherit; }`, entao controles de formulario herdam tamanho/peso do container.
+- O label **Ordenar por** permanece discreto em `text-xs font-medium`, enquanto o texto selecionado, o placeholder da busca, o chip **Filtros ativos** e o contador usam peso medio consistente.
+- Nao houve alteracao em backend, endpoints, Prisma schema/migrations, packages, dados, filtros, ordenacao ou paginacao.
+- Builder/Quick Copy `vcp://quickcopy/vcp-24aaa2941d814e5b90572bc93ae50e2a` nao esta exposto como ferramenta callable neste ambiente; referencias usadas: captura enviada pelo usuario, `_product/proto/admin/Comunidades/Comunidades - Dashboard.png` e o padrao local de `_product/proto/admin/Psicólogos/Psicólogos- Lista.png`.
+- ADR atualizado: `adrs/0271-lista-admin-comunidades-rota-real.md`.
+
+### Criterios deste ajuste
+
+- [x] A barra de pesquisa de `/comunidades/lista` usa texto `14px` com peso medio.
+- [x] O seletor **Ordenar por** usa texto `14px` com peso medio e label `12px` discreto.
+- [x] O chip **Filtros ativos** e o contador usam peso medio alinhado aos controles.
+- [x] O ajuste permanece mobile-first e nao introduz overflow horizontal no desktop validado.
+- [x] Nenhum mock, dado fake, endpoint simulado, package novo, schema Prisma ou migration foi usado.
+
+### Validacao deste ajuste
+
+- `pnpm --dir admin exec biome format --write "src/app/(admin)/comunidades/lista/client.tsx"`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- Browser local/headless autenticado em `http://localhost:3002/comunidades/lista?sort=name&limit=8`: controles presentes, busca `fontWeight=500`/`fontSize=14px`, seletor de ordenacao `fontWeight=500`/`fontSize=14px`, chip **Filtros ativos** `fontWeight=500`/`fontSize=14px`, contador `fontWeight=500` e sem overflow horizontal de viewport.
