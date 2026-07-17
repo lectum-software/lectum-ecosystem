@@ -108,6 +108,110 @@ export type CommunitiesDashboardUnavailableMetric = {
   source: string;
 };
 
+export type CommunitiesDashboardStatisticsSplit = {
+  id: string;
+  label: string;
+  source: string;
+  value: number;
+};
+
+export type CommunitiesDashboardStatisticsDailyPoint = {
+  active_patients: number;
+  active_psychologists: number;
+  active_users: number;
+  anonymous_posts: number;
+  date: string;
+  downvotes: number;
+  followers_patients: number;
+  followers_psychologists: number;
+  profile_accesses: number;
+  new_active_patients: number;
+  new_active_psychologists: number;
+  new_active_users: number;
+  patient_comments: number;
+  patient_posts: number;
+  posts: number;
+  psychologist_posts: number;
+  replies: number;
+  reports: number;
+  saves: number;
+  unverified_psychologist_replies: number;
+  upvotes: number;
+  verified_psychologist_replies: number;
+  whatsapp_clicks: number;
+};
+
+export type CommunitiesDashboardGlobalStatistics = {
+  charts: {
+    active_users_split: CommunitiesDashboardStatisticsSplit[];
+    daily: CommunitiesDashboardStatisticsDailyPoint[];
+    followers_split: CommunitiesDashboardStatisticsSplit[];
+    posts_by_author: CommunitiesDashboardStatisticsSplit[];
+    replies_by_author: CommunitiesDashboardStatisticsSplit[];
+  };
+  counters: {
+    active_users: {
+      patients: number;
+      psychologists: number;
+      source: "community_member+community_post+post_reply+page_view_event";
+      total: number;
+    };
+    anonymous_posts: {
+      source: "community_post.anonymous";
+      total: number;
+    };
+    content_engagement: {
+      downvotes: number;
+      profile_accesses: number;
+      saves: number;
+      source: "post_vote+post_save+post_reply_save+important_action_event+page_view_event";
+      upvotes: number;
+      whatsapp_clicks: number;
+    };
+    followers: {
+      patients: number;
+      psychologists: number;
+      source: "community_member";
+      total: number;
+    };
+    new_active_users: {
+      patients: number;
+      psychologists: number;
+      source: "first_activity:community_member+community_post+post_reply+page_view_event";
+      total: number;
+    };
+    posts: {
+      patients: number;
+      patient_posts_answered_by_verified_psychologists: number;
+      psychologists: number;
+      source: "community_post+post_reply";
+      total: number;
+      unverified_psychologists: number;
+      verified_psychologists: number;
+    };
+    replies: {
+      patient_comments: number;
+      source: "post_reply";
+      total: number;
+      unverified_psychologists: number;
+      verified_psychologists: number;
+    };
+    reports: {
+      source: "post_report";
+      total: number;
+    };
+  };
+  period: {
+    days: number;
+    from: string;
+    label: string;
+    max_days: number;
+    timezone: "server-local";
+    to: string;
+  };
+  source: "community_member+community_post+post_reply+post_report+post_vote+post_save+post_reply_save+page_view_event+important_action_event";
+};
+
 export type AdminCommunitiesDashboard = {
   activity_series: CommunitiesDashboardActivitySeries[];
   cards: {
@@ -116,6 +220,10 @@ export type AdminCommunitiesDashboard = {
     patient_posts: CommunitiesDashboardMetric;
     psychologist_posts: CommunitiesDashboardMetric;
     psychologist_replies: CommunitiesDashboardMetric;
+  };
+  global_statistics: {
+    current: CommunitiesDashboardGlobalStatistics;
+    previous: CommunitiesDashboardGlobalStatistics;
   };
   patient_posts_breakdown: {
     anonymous: { count: number; percentage: number };

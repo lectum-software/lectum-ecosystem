@@ -2,13 +2,19 @@
 
 import {
   AlertTriangle,
+  ArrowDown,
+  ArrowUp,
+  Bookmark,
   ChevronDown,
   Eye,
+  FileText,
   type LucideIcon,
   MessageCircle,
   MoreHorizontal,
   RefreshCw,
+  Reply,
   ShieldAlert,
+  UserRound,
   Users,
   UsersRound,
 } from "lucide-react";
@@ -19,9 +25,11 @@ import { resolveApiError } from "@/api/handle";
 import type {
   AdminCommunitiesDashboard,
   CommunitiesDashboardActivitySeries,
+  CommunitiesDashboardGlobalStatistics,
   CommunitiesDashboardMetric,
   CommunitiesDashboardQuery,
   CommunitiesDashboardRecentPost,
+  CommunitiesDashboardStatisticsDailyPoint,
   CommunitiesDashboardTopCommunity,
 } from "@/api/req/communities";
 import { useDateRangeCommitOnBlur } from "@/hooks/use-date-range-commit-on-blur";
@@ -39,6 +47,218 @@ type CommunityDashboardPeriodPreset = (typeof COMMUNITY_DASHBOARD_PERIOD_OPTIONS
 type CommunityDashboardPeriodValue = CommunityDashboardPeriodPreset | "custom";
 
 const numberFormatter = new Intl.NumberFormat("pt-BR");
+type DashboardStatisticDailyKey = Exclude<keyof CommunitiesDashboardStatisticsDailyPoint, "date">;
+type DashboardStatisticMetricId =
+  | "active_patients"
+  | "active_psychologists"
+  | "downvotes"
+  | "followers_patients"
+  | "followers_psychologists"
+  | "new_active_patients"
+  | "new_active_psychologists"
+  | "patient_comments"
+  | "patient_posts"
+  | "profile_accesses"
+  | "psychologist_posts"
+  | "reports"
+  | "saves"
+  | "unverified_psychologist_replies"
+  | "upvotes"
+  | "verified_psychologist_replies"
+  | "whatsapp_clicks";
+
+type DashboardStatisticMetricConfig = {
+  color: string;
+  description: string;
+  icon: LucideIcon;
+  id: DashboardStatisticMetricId;
+  key: DashboardStatisticDailyKey;
+  label: string;
+  tone: keyof typeof dashboardStatisticToneClasses;
+};
+
+type DashboardStatisticMetricItem = DashboardStatisticMetricConfig & {
+  changePercent: number | null;
+  details?: Array<{ label: string; value: number }>;
+  previousValue: number;
+  value: number;
+};
+
+const dashboardStatisticToneClasses = {
+  blue: "bg-blue-50 text-blue-600",
+  gray: "bg-slate-100 text-slate-600",
+  green: "bg-emerald-50 text-emerald-600",
+  orange: "bg-orange-50 text-orange-600",
+  pink: "bg-red-50 text-red-500",
+  purple: "bg-primary-soft text-primary",
+  yellow: "bg-amber-50 text-amber-600",
+};
+
+const DASHBOARD_STATISTIC_METRIC_AGGREGATIONS: Partial<
+  Record<DashboardStatisticDailyKey, "last" | "sum">
+> = {
+  followers_patients: "last",
+  followers_psychologists: "last",
+};
+
+const DASHBOARD_PEOPLE_STATISTICS_METRICS: DashboardStatisticMetricConfig[] = [
+  {
+    color: "#2f8cff",
+    description: "Psicólogos únicos seguindo ao menos uma comunidade.",
+    icon: UserRound,
+    id: "followers_psychologists",
+    key: "followers_psychologists",
+    label: "Psicólogos seguidores",
+    tone: "blue",
+  },
+  {
+    color: "#12b76a",
+    description: "Pacientes únicos seguindo ao menos uma comunidade.",
+    icon: UsersRound,
+    id: "followers_patients",
+    key: "followers_patients",
+    label: "Pacientes seguidores",
+    tone: "green",
+  },
+  {
+    color: "#f59e0b",
+    description: "Psicólogos únicos com atividade real no período.",
+    icon: UserRound,
+    id: "active_psychologists",
+    key: "active_psychologists",
+    label: "Psicólogos ativos",
+    tone: "yellow",
+  },
+  {
+    color: "#ef4444",
+    description: "Pacientes únicos com atividade real no período.",
+    icon: UsersRound,
+    id: "active_patients",
+    key: "active_patients",
+    label: "Pacientes ativos",
+    tone: "pink",
+  },
+  {
+    color: "#657094",
+    description: "Pacientes cuja primeira atividade ocorreu no período.",
+    icon: Users,
+    id: "new_active_patients",
+    key: "new_active_patients",
+    label: "Novos pacientes ativos",
+    tone: "gray",
+  },
+  {
+    color: "#8aa0c6",
+    description: "Psicólogos cuja primeira atividade ocorreu no período.",
+    icon: UserRound,
+    id: "new_active_psychologists",
+    key: "new_active_psychologists",
+    label: "Novos psicólogos ativos",
+    tone: "gray",
+  },
+];
+
+const DASHBOARD_CONTENT_STATISTICS_METRICS: DashboardStatisticMetricConfig[] = [
+  {
+    color: "#12b76a",
+    description: "Posts publicados por pacientes em todas as comunidades.",
+    icon: FileText,
+    id: "patient_posts",
+    key: "patient_posts",
+    label: "Postagens de pacientes",
+    tone: "green",
+  },
+  {
+    color: "#2f8cff",
+    description: "Posts publicados por psicólogos em todas as comunidades.",
+    icon: FileText,
+    id: "psychologist_posts",
+    key: "psychologist_posts",
+    label: "Postagens de psicólogos",
+    tone: "blue",
+  },
+  {
+    color: "#f59e0b",
+    description: "Respostas de psicólogos verificados em posts.",
+    icon: Reply,
+    id: "verified_psychologist_replies",
+    key: "verified_psychologist_replies",
+    label: "Respostas de psicólogos verificados",
+    tone: "yellow",
+  },
+  {
+    color: "#ef4444",
+    description: "Respostas de psicólogos ainda não verificados.",
+    icon: Reply,
+    id: "unverified_psychologist_replies",
+    key: "unverified_psychologist_replies",
+    label: "Respostas de psicólogos não verificados",
+    tone: "pink",
+  },
+  {
+    color: "#657094",
+    description: "Comentários criados por pacientes no período.",
+    icon: MessageCircle,
+    id: "patient_comments",
+    key: "patient_comments",
+    label: "Comentários de pacientes",
+    tone: "gray",
+  },
+  {
+    color: "#8aa0c6",
+    description: "Denúncias registradas contra posts ou comentários.",
+    icon: AlertTriangle,
+    id: "reports",
+    key: "reports",
+    label: "Denúncias",
+    tone: "gray",
+  },
+  {
+    color: "#0ea5e9",
+    description: "Votos positivos em posts e respostas.",
+    icon: ArrowUp,
+    id: "upvotes",
+    key: "upvotes",
+    label: "Votos positivos",
+    tone: "blue",
+  },
+  {
+    color: "#f97316",
+    description: "Votos negativos em posts e respostas.",
+    icon: ArrowDown,
+    id: "downvotes",
+    key: "downvotes",
+    label: "Votos negativos",
+    tone: "orange",
+  },
+  {
+    color: "#6f42ff",
+    description: "Salvamentos de posts e respostas.",
+    icon: Bookmark,
+    id: "saves",
+    key: "saves",
+    label: "Salvamentos",
+    tone: "purple",
+  },
+  {
+    color: "#22c55e",
+    description: "Cliques de WhatsApp originados em conteúdos das comunidades.",
+    icon: MessageCircle,
+    id: "whatsapp_clicks",
+    key: "whatsapp_clicks",
+    label: "Cliques WhatsApp",
+    tone: "green",
+  },
+  {
+    color: "#94a3b8",
+    description: "Acessos a perfis de psicólogos relacionados às comunidades.",
+    icon: Eye,
+    id: "profile_accesses",
+    key: "profile_accesses",
+    label: "Acessos a perfis",
+    tone: "gray",
+  },
+];
 
 const pad = (value: number) => String(value).padStart(2, "0");
 const toInputDate = (date: Date) =>
@@ -109,6 +329,118 @@ const formatChange = (value: number | null) => {
   })}%`;
 };
 
+const formatShortRange = (from: string, to: string) => {
+  const formatter = new Intl.DateTimeFormat("pt-BR", {
+    day: "2-digit",
+    month: "2-digit",
+  });
+
+  return `${formatter.format(dateFromInput(from))} - ${formatter.format(dateFromInput(to))}`;
+};
+
+const roundDashboardStatisticPercent = (value: number) => Math.round(value * 10) / 10;
+
+const dashboardStatisticPercentageChange = (current: number, previous: number) => {
+  if (previous === 0) return current === 0 ? 0 : null;
+
+  return roundDashboardStatisticPercent(((current - previous) / previous) * 100);
+};
+
+const dashboardStatisticValue = (
+  statistics: CommunitiesDashboardGlobalStatistics,
+  id: DashboardStatisticMetricId,
+) => {
+  switch (id) {
+    case "active_patients":
+      return statistics.counters.active_users.patients;
+    case "active_psychologists":
+      return statistics.counters.active_users.psychologists;
+    case "downvotes":
+      return statistics.counters.content_engagement.downvotes;
+    case "followers_patients":
+      return statistics.counters.followers.patients;
+    case "followers_psychologists":
+      return statistics.counters.followers.psychologists;
+    case "new_active_patients":
+      return statistics.counters.new_active_users.patients;
+    case "new_active_psychologists":
+      return statistics.counters.new_active_users.psychologists;
+    case "patient_comments":
+      return statistics.counters.replies.patient_comments;
+    case "patient_posts":
+      return statistics.counters.posts.patients;
+    case "profile_accesses":
+      return statistics.counters.content_engagement.profile_accesses;
+    case "psychologist_posts":
+      return statistics.counters.posts.psychologists;
+    case "reports":
+      return statistics.counters.reports.total;
+    case "saves":
+      return statistics.counters.content_engagement.saves;
+    case "unverified_psychologist_replies":
+      return statistics.counters.replies.unverified_psychologists;
+    case "upvotes":
+      return statistics.counters.content_engagement.upvotes;
+    case "verified_psychologist_replies":
+      return statistics.counters.replies.verified_psychologists;
+    case "whatsapp_clicks":
+      return statistics.counters.content_engagement.whatsapp_clicks;
+  }
+};
+
+const patientPostDetails = (statistics: CommunitiesDashboardGlobalStatistics) => {
+  const anonymous = statistics.counters.anonymous_posts.total;
+  const identified = Math.max(0, statistics.counters.posts.patients - anonymous);
+
+  return [
+    { label: "Anônimos", value: anonymous },
+    { label: "Identificados", value: identified },
+  ];
+};
+
+const buildDashboardStatisticMetricItems = (
+  current: CommunitiesDashboardGlobalStatistics,
+  previous: CommunitiesDashboardGlobalStatistics,
+  configs: DashboardStatisticMetricConfig[],
+): DashboardStatisticMetricItem[] =>
+  configs.map((config) => {
+    const value = dashboardStatisticValue(current, config.id);
+    const previousValue = dashboardStatisticValue(previous, config.id);
+
+    return {
+      ...config,
+      changePercent: dashboardStatisticPercentageChange(value, previousValue),
+      details: config.id === "patient_posts" ? patientPostDetails(current) : undefined,
+      previousValue,
+      value,
+    };
+  });
+
+const totalDashboardStatisticValue = (statistics: CommunitiesDashboardGlobalStatistics) =>
+  statistics.charts.daily.reduce(
+    (total, point) =>
+      total +
+      point.active_patients +
+      point.active_psychologists +
+      point.anonymous_posts +
+      point.downvotes +
+      point.followers_patients +
+      point.followers_psychologists +
+      point.new_active_patients +
+      point.new_active_psychologists +
+      point.patient_comments +
+      point.patient_posts +
+      point.profile_accesses +
+      point.psychologist_posts +
+      point.reports +
+      point.saves +
+      point.unverified_psychologist_replies +
+      point.upvotes +
+      point.verified_psychologist_replies +
+      point.whatsapp_clicks,
+    0,
+  );
+
 const isValidRange = (range: CommunitiesDashboardQuery) => {
   if (!range.from || !range.to) return false;
 
@@ -128,6 +460,7 @@ const hasPeriodRecords = (summary: AdminCommunitiesDashboard) => {
   return (
     hasCards ||
     hasActivity ||
+    totalDashboardStatisticValue(summary.global_statistics.current) > 0 ||
     summary.patient_posts_breakdown.total > 0 ||
     summary.recent_posts.total > 0 ||
     summary.top_communities.items.length > 0
@@ -466,6 +799,287 @@ const LineChart = ({ series }: { series: CommunitiesDashboardActivitySeries[] })
         </div>
       </details>
     </figure>
+  );
+};
+
+const DashboardStatisticCard = ({
+  item,
+  onToggle,
+  previousLabel,
+  selected,
+}: {
+  item: DashboardStatisticMetricItem;
+  onToggle: (id: DashboardStatisticMetricId) => void;
+  previousLabel: string;
+  selected: boolean;
+}) => {
+  const Icon = item.icon;
+
+  return (
+    <button
+      aria-pressed={selected}
+      className={cn(
+        "min-w-0 rounded-[26px] border p-4 text-left transition",
+        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30",
+        selected
+          ? "border-primary/45 bg-primary-soft/30 shadow-admin-soft"
+          : "border-border bg-surface hover:border-primary/40",
+      )}
+      onClick={() => onToggle(item.id)}
+      type="button"
+    >
+      <div className="flex items-start gap-3">
+        <span
+          className={cn(
+            "grid h-10 w-10 shrink-0 place-items-center rounded-full",
+            dashboardStatisticToneClasses[item.tone],
+          )}
+        >
+          <Icon aria-hidden className="h-5 w-5" />
+        </span>
+        <span className="min-w-0">
+          <span className="block text-sm font-black leading-snug text-foreground">
+            {item.label}
+          </span>
+          <span className="mt-2 block text-3xl font-black tracking-tight text-foreground">
+            {numberFormatter.format(item.value)}
+          </span>
+        </span>
+      </div>
+
+      <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
+        <span
+          className={cn(
+            "font-black",
+            item.changePercent === null
+              ? "text-muted"
+              : item.changePercent > 0
+                ? "text-success"
+                : item.changePercent < 0
+                  ? "text-danger"
+                  : "text-muted",
+          )}
+        >
+          {formatChange(item.changePercent)}
+        </span>
+        <span className="font-bold text-muted">vs. {previousLabel}</span>
+      </div>
+      <p className="mt-3 text-xs leading-relaxed text-muted">{item.description}</p>
+
+      {item.details?.length ? (
+        <div className="mt-3 space-y-1">
+          {item.details.map((detail) => (
+            <div
+              className="flex items-center justify-between gap-2 rounded-full bg-surface-muted px-3 py-1 text-xs font-black text-muted"
+              key={detail.label}
+            >
+              <span className="truncate">{detail.label}</span>
+              <span className="shrink-0 text-foreground">
+                {numberFormatter.format(detail.value)}
+              </span>
+            </div>
+          ))}
+        </div>
+      ) : null}
+    </button>
+  );
+};
+
+const DashboardStatisticsLineChart = ({
+  items,
+  points,
+}: {
+  items: DashboardStatisticMetricItem[];
+  points: CommunitiesDashboardStatisticsDailyPoint[];
+}) => {
+  const width = 1120;
+  const height = 330;
+  const padding = { bottom: 46, left: 52, right: 24, top: 24 };
+  const metricKeys = items.map((item) => item.key);
+  const chartPoints =
+    metricKeys.length > 0
+      ? aggregateCalendarChartPoints(points, metricKeys, {
+          metricAggregations: DASHBOARD_STATISTIC_METRIC_AGGREGATIONS,
+        })
+      : [];
+  const maxValue = Math.max(
+    1,
+    ...items.flatMap((item) => chartPoints.map((point) => Number(point[item.key] ?? 0))),
+  );
+  const chartWidth = width - padding.left - padding.right;
+  const chartHeight = height - padding.top - padding.bottom;
+  const getX = (index: number) =>
+    chartPoints.length <= 1
+      ? width / 2
+      : padding.left + (index * chartWidth) / (chartPoints.length - 1);
+  const getY = (value: number) => padding.top + chartHeight - (value / maxValue) * chartHeight;
+  const gridValues = [
+    ...new Set([0, 0.25, 0.5, 0.75, 1].map((ratio) => Math.round(maxValue * ratio))),
+  ];
+  const labelStep = Math.max(1, Math.ceil(chartPoints.length / 8));
+
+  return (
+    <div className="mt-5 min-w-0 overflow-hidden rounded-[26px] border border-border bg-surface p-3 sm:p-5">
+      {items.length === 0 ? (
+        <p className="rounded-2xl bg-surface-muted p-4 text-sm text-muted">
+          Selecione ao menos uma métrica para visualizar o gráfico.
+        </p>
+      ) : (
+        <>
+          <div className="flex flex-wrap gap-3">
+            {items.map((item) => (
+              <span className="flex items-center gap-2 text-xs font-bold text-muted" key={item.id}>
+                <span
+                  aria-hidden
+                  className="h-3 w-3 rounded-full"
+                  style={{ backgroundColor: item.color }}
+                />
+                {item.label}
+              </span>
+            ))}
+          </div>
+          <div className="mt-3 min-w-0 overflow-hidden">
+            <svg
+              aria-label="Gráfico de estatísticas globais das comunidades por dia"
+              className="block h-auto w-full"
+              role="img"
+              viewBox={`0 0 ${width} ${height}`}
+            >
+              {gridValues.map((value) => {
+                const y = getY(value);
+
+                return (
+                  <g key={`global-grid-${value}-${y}`}>
+                    <line
+                      stroke="#e8edf7"
+                      strokeDasharray="6 8"
+                      strokeWidth="1"
+                      x1={padding.left}
+                      x2={width - padding.right}
+                      y1={y}
+                      y2={y}
+                    />
+                    <text fill="#657094" fontSize="11" x="10" y={y + 4}>
+                      {numberFormatter.format(value)}
+                    </text>
+                  </g>
+                );
+              })}
+
+              {items.map((item) => {
+                const path = chartPoints
+                  .map((point, index) => {
+                    const value = Number(point[item.key] ?? 0);
+
+                    return `${index === 0 ? "M" : "L"}${getX(index)},${getY(value)}`;
+                  })
+                  .join(" ");
+
+                return (
+                  <g key={item.id}>
+                    <path
+                      d={path}
+                      fill="none"
+                      stroke={item.color}
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="4"
+                    />
+                    {chartPoints.map((point, index) => (
+                      <circle
+                        cx={getX(index)}
+                        cy={getY(Number(point[item.key] ?? 0))}
+                        fill="#fff"
+                        key={`${item.id}-${point.date}`}
+                        r="3.5"
+                        stroke={item.color}
+                        strokeWidth="2.5"
+                      />
+                    ))}
+                  </g>
+                );
+              })}
+
+              {chartPoints.map((point, index) =>
+                index % labelStep === 0 || index === chartPoints.length - 1 ? (
+                  <text
+                    fill="#657094"
+                    fontSize="11"
+                    key={point.date}
+                    textAnchor="middle"
+                    x={getX(index)}
+                    y={height - 12}
+                  >
+                    {point.chartLabel}
+                  </text>
+                ) : null,
+              )}
+            </svg>
+          </div>
+          <details className="mt-3 rounded-2xl bg-surface-muted p-3 text-xs text-muted">
+            <summary className="cursor-pointer font-black text-foreground">
+              Resumo textual do gráfico
+            </summary>
+            <div className="mt-2 grid gap-2 sm:grid-cols-2">
+              {items.map((item) => (
+                <div key={item.id}>
+                  <p className="font-black text-foreground">{item.label}</p>
+                  <p>
+                    {chartPoints
+                      .map(
+                        (point) =>
+                          `${point.tooltipLabel}: ${numberFormatter.format(Number(point[item.key] ?? 0))}`,
+                      )
+                      .join("; ")}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </details>
+        </>
+      )}
+    </div>
+  );
+};
+
+const DashboardStatisticsSection = ({
+  description,
+  metrics,
+  onToggleMetric,
+  points,
+  previousLabel,
+  title,
+  visibleMetricIds,
+}: {
+  description: string;
+  metrics: DashboardStatisticMetricItem[];
+  onToggleMetric: (id: DashboardStatisticMetricId) => void;
+  points: CommunitiesDashboardStatisticsDailyPoint[];
+  previousLabel: string;
+  title: string;
+  visibleMetricIds: DashboardStatisticMetricId[];
+}) => {
+  const visibleMetrics = metrics.filter((item) => visibleMetricIds.includes(item.id));
+
+  return (
+    <CardShell className="p-5 sm:p-6">
+      <div>
+        <h2 className="text-lg font-black text-foreground">{title}</h2>
+        <p className="mt-1 text-sm font-medium text-muted">{description}</p>
+      </div>
+      <div className="mt-5 grid min-w-0 gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-6">
+        {metrics.map((item) => (
+          <DashboardStatisticCard
+            item={item}
+            key={item.id}
+            onToggle={onToggleMetric}
+            previousLabel={previousLabel}
+            selected={visibleMetricIds.includes(item.id)}
+          />
+        ))}
+      </div>
+      <DashboardStatisticsLineChart items={visibleMetrics} points={points} />
+    </CardShell>
   );
 };
 
@@ -809,6 +1423,41 @@ const TopCommunitiesTable = ({
 
 const DashboardContent = ({ summary }: { summary: AdminCommunitiesDashboard }) => {
   const noRecords = !hasPeriodRecords(summary);
+  const [visiblePeopleMetricIds, setVisiblePeopleMetricIds] = useState<
+    DashboardStatisticMetricId[]
+  >(() => DASHBOARD_PEOPLE_STATISTICS_METRICS.map((item) => item.id));
+  const [visibleContentMetricIds, setVisibleContentMetricIds] = useState<
+    DashboardStatisticMetricId[]
+  >(() => DASHBOARD_CONTENT_STATISTICS_METRICS.map((item) => item.id));
+  const previousLabel = formatShortRange(summary.period.previous_from, summary.period.previous_to);
+  const peopleMetrics = buildDashboardStatisticMetricItems(
+    summary.global_statistics.current,
+    summary.global_statistics.previous,
+    DASHBOARD_PEOPLE_STATISTICS_METRICS,
+  );
+  const contentMetrics = buildDashboardStatisticMetricItems(
+    summary.global_statistics.current,
+    summary.global_statistics.previous,
+    DASHBOARD_CONTENT_STATISTICS_METRICS,
+  );
+  const togglePeopleMetric = (id: DashboardStatisticMetricId) => {
+    setVisiblePeopleMetricIds((current) =>
+      current.includes(id)
+        ? current.length > 1
+          ? current.filter((item) => item !== id)
+          : current
+        : [...current, id],
+    );
+  };
+  const toggleContentMetric = (id: DashboardStatisticMetricId) => {
+    setVisibleContentMetricIds((current) =>
+      current.includes(id)
+        ? current.length > 1
+          ? current.filter((item) => item !== id)
+          : current
+        : [...current, id],
+    );
+  };
 
   return (
     <div className="min-w-0 space-y-5 overflow-x-hidden">
@@ -830,6 +1479,26 @@ const DashboardContent = ({ summary }: { summary: AdminCommunitiesDashboard }) =
           <MetricCard icon={UsersRound} metric={summary.cards.active_members} tone="pink" />
         </div>
       </section>
+
+      <DashboardStatisticsSection
+        description="Visão geral de psicólogos e pacientes em todas as comunidades."
+        metrics={peopleMetrics}
+        onToggleMetric={togglePeopleMetric}
+        points={summary.global_statistics.current.charts.daily}
+        previousLabel={previousLabel}
+        title="Estatísticas de pessoas"
+        visibleMetricIds={visiblePeopleMetricIds}
+      />
+
+      <DashboardStatisticsSection
+        description="Conteúdo e engajamento agregados de todas as comunidades."
+        metrics={contentMetrics}
+        onToggleMetric={toggleContentMetric}
+        points={summary.global_statistics.current.charts.daily}
+        previousLabel={previousLabel}
+        title="Estatísticas de conteúdo"
+        visibleMetricIds={visibleContentMetricIds}
+      />
 
       <div className="min-w-0 space-y-5">
         <div className="grid min-w-0 gap-5 2xl:grid-cols-[minmax(0,1fr)_minmax(260px,320px)]">

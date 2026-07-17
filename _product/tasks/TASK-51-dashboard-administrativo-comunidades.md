@@ -428,3 +428,34 @@ Regras de UI obrigatórias:
 - `pnpm --dir admin build`
 - `pnpm check`
 - Smoke local `GET http://localhost:3002/comunidades` retornou 200.
+
+## Execucao complementar: estatisticas globais de pessoas e conteudo (2026-07-17)
+
+- Pedido do usuario: no dashboard geral `/comunidades`, adicionar blocos com contadores e graficos de **Estatisticas de pessoas** e **Estatisticas de conteudo**, equivalentes aos blocos da aba de estatisticas de uma comunidade, mas agregados para todas as comunidades.
+- Backend Admin: o endpoint real `GET /api/admin/private/communities/dashboard` passou a retornar `global_statistics.current` e `global_statistics.previous`, calculados sobre todas as comunidades ativas a partir de `community_member`, `community_post`, `post_reply`, `post_report`, `post_vote`, `post_save`, `post_reply_save`, `page_view_event` e `important_action_event`.
+- As estatisticas de pessoas contam seguidores por usuario unico em ao menos uma comunidade, usuarios ativos no periodo e novos usuarios ativos por primeira atividade real, segmentados entre pacientes e psicologos.
+- As estatisticas de conteudo agregam posts de pacientes/psicologos, respostas de psicologos verificados/nao verificados, comentarios de pacientes, denuncias, votos, salvamentos, cliques de WhatsApp e acessos a perfis relacionados.
+- Frontend Admin: `/comunidades` agora renderiza os dois blocos com cards selecionaveis e grafico SVG responsivo, sem pacote novo e sem rolagem horizontal global.
+- O layout permanece mobile-first, sem `<img>` cru e sem reinstalar os blocos removidos de **Alertas de prioridade** e **Moderacao automatica**.
+- Nao houve alteracao em `backend/prisma/schema.prisma`, migrations ou packages; `pnpm --dir backend db:migrate` nao se aplica.
+- Builder/Quick Copy `vcp://quickcopy/vcp-24aaa2941d814e5b90572bc93ae50e2a` nao esta exposto como ferramenta callable neste ambiente; referencias usadas: capturas enviadas pelo usuario e os prototipos locais de Comunidades.
+- ADR atualizado: `adrs/0231-admin-comunidades-dashboard-agregacoes.md`.
+
+### Criterios deste ajuste
+
+- [x] O dashboard geral de comunidades exibe **Estatisticas de pessoas** agregadas para todas as comunidades.
+- [x] O dashboard geral de comunidades exibe **Estatisticas de conteudo** agregadas para todas as comunidades.
+- [x] Cada bloco possui contadores reais e grafico temporal SVG com alternativa textual.
+- [x] A comparacao usa o periodo anterior equivalente, sem simular base quando ela nao existe.
+- [x] A pagina continua sem rolagem horizontal global.
+- [x] Nenhum mock, dado fake permanente, endpoint simulado, package novo, schema Prisma ou migration foi usado.
+
+### Validacao deste ajuste
+
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check`
+- Smoke service real: `buildCommunitiesDashboard({ from: "2026-07-13", to: "2026-07-17" })` retornou `status=200`, `has_global_statistics=true`, `daily_points=5`.
+- Smoke local `GET http://localhost:3002/comunidades` retornou 200.

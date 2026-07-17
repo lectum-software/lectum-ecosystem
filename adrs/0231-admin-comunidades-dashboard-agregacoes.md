@@ -62,3 +62,13 @@ O dashboard `/comunidades` deve caber na largura util da tela sem rolagem horizo
 A decisao e remover esses dois blocos do dashboard de visao geral, mantendo a operacao de denuncias e moderacao automatica nas experiencias dedicadas existentes. O dashboard de comunidades passa a priorizar atividade, distribuicao de posts de pacientes, postagens recentes e principais comunidades.
 
 Consequencia: a tela fica mais enxuta e responsiva. O grafico escala dentro do card, tabelas usam apresentacao mobile-first em cards no mobile e `table-fixed` no desktop, e a contencao `min-w-0`/`overflow-x-hidden` fica local ao dashboard. Nao ha alteracao de endpoint, schema Prisma, migration, dependencia, mock ou regra de agregacao.
+
+## Atualizacao 2026-07-17: estatisticas globais de pessoas e conteudo
+
+O dashboard geral de comunidades passa a reutilizar o conceito dos blocos de estatisticas da aba de uma comunidade, mas com agregacao global sobre todas as comunidades ativas. A decisao e expor no contrato do dashboard os objetos `global_statistics.current` e `global_statistics.previous`, mantendo o endpoint unico da visao geral em vez de criar uma rota paralela apenas para cards e graficos.
+
+As estatisticas globais usam somente dados persistidos existentes: `community_member`, `community_post`, `post_reply`, `post_report`, `post_vote`, `post_save`, `post_reply_save`, `page_view_event` e `important_action_event`. Para o bloco de pessoas, seguidores sao contados por usuario unico que segue ao menos uma comunidade, evitando inflar a metrica quando a mesma pessoa participa de varias comunidades; atividade e novos ativos tambem sao por usuario unico no periodo. Para conteudo, as contagens permanecem agregadas por evento/conteudo real.
+
+A UI renderiza cards selecionaveis e grafico SVG/CSS proprio, sem pacote de charts e sem rolagem horizontal global. Os blocos laterais de alertas removidos no ajuste anterior continuam fora do dashboard; denuncias e moderacao seguem em fluxos dedicados.
+
+Consequencias: o contrato do dashboard fica maior, mas evita requests extras e garante que filtros de periodo e comparacao com periodo anterior sejam consistentes entre cards, graficos e os demais indicadores da pagina. Nao houve schema Prisma, migration, pacote novo, mock ou seed.
