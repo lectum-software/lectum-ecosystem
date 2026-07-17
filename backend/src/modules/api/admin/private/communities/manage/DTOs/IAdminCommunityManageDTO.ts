@@ -179,6 +179,12 @@ export type AdminCommunityTodaySummaryDTO = {
   verified_psychologist_replies_count: number;
 };
 
+export type AdminCommunityUrgentSummaryDTO = {
+  pending_reports_count: number;
+  pending_reports_last_reported_at: Date | null;
+  source: "post_report";
+};
+
 export type AdminCommunityPerformancePointDTO = {
   date: string;
   comments: number;
@@ -235,6 +241,7 @@ export type AdminCommunityDetailDTO = {
   summary: AdminCommunitySummaryDTO;
   today_summary: AdminCommunityTodaySummaryDTO;
   top_mentors: AdminCommunityTopMentorDTO[];
+  urgent_summary: AdminCommunityUrgentSummaryDTO;
 };
 
 export type AdminCommunityContentItemDTO = {

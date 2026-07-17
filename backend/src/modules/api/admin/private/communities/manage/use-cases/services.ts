@@ -33,6 +33,7 @@ import type {
   AdminCommunityStatusBody,
   AdminCommunityTodaySummaryDTO,
   AdminCommunityUpdateBody,
+  AdminCommunityUrgentSummaryDTO,
   IAdminCommunitiesListDTO,
   IAdminCommunityActivitiesDTO,
   IAdminCommunityAvatarDTO,
@@ -2069,6 +2070,27 @@ const buildCommunityTodaySummary = (
   };
 };
 
+const latestReportDate = (items: AdminCommunityReportItemDTO[]) =>
+  items.reduce<Date | null>(
+    (latest, item) => (!latest || item.last_reported_at > latest ? item.last_reported_at : latest),
+    null,
+  );
+
+const buildCommunityUrgentSummary = (
+  community: AdminCommunityRecord,
+  reports: AdminCommunityReportRecord[],
+): AdminCommunityUrgentSummaryDTO => {
+  const pendingReports = groupReportsByContent(
+    reports.map((report) => mapReport(community, report)),
+  ).filter((item) => item.status_group === "pending");
+
+  return {
+    pending_reports_count: pendingReports.length,
+    pending_reports_last_reported_at: latestReportDate(pendingReports),
+    source: "post_report",
+  };
+};
+
 const buildMentors = (
   replies: Awaited<ReturnType<AdminCommunityManageRepository["listTopMentors"]>>,
 ) => {
@@ -2218,6 +2240,7 @@ export const showCommunity = async (data: IAdminCommunityShowDTO): Promise<Resol
     topMentorReplies,
     popularPosts,
     statisticsDataset,
+    reports,
   ] = await Promise.all([
     repository.listRules(community.id, true),
     repository.countPublishedPosts(community.id),
@@ -2228,6 +2251,7 @@ export const showCommunity = async (data: IAdminCommunityShowDTO): Promise<Resol
     repository.listTopMentors(community.id, period.current.from, period.current.to),
     repository.listPopularPosts(community.id),
     repository.listStatisticsDataset(community.id, community.slug, todayPeriod.end),
+    repository.listReports(community.id),
   ]);
 
   const currentTotals = {
@@ -2274,6 +2298,7 @@ export const showCommunity = async (data: IAdminCommunityShowDTO): Promise<Resol
     },
     today_summary: buildCommunityTodaySummary(statisticsDataset, todayPeriod),
     top_mentors: buildMentors(topMentorReplies),
+    urgent_summary: buildCommunityUrgentSummary(community, reports),
   };
 
   return {
