@@ -993,3 +993,14 @@ Regras de cálculo:
 - Builder/Quick Copy nao esta exposto como ferramenta callable no ambiente; a referencia usada foi a captura enviada pelo usuario e validacao local autenticada.
 - ADR atualizado: `adrs/0264-admin-comunidade-abas-conteudo-ranking.md`.
 - Validacao executada: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check`, smoke HTTP local `GET http://localhost:3002/comunidades/relacionamentos-com-proposito?tab=estatisticas` retornando 200 e inspecao headless autenticada em 1920px confirmando `documentElement.scrollWidth === documentElement.clientWidth`.
+
+## Ajuste complementar 2026-07-17 - Top 3 mentores na aba Geral da comunidade
+
+- Pedido do usuário: no bloco **Top mentores**, encurtar o título, exibir a lista de top 3 mentores e deixar o bloco com a mesma largura do bloco **Denúncias pendentes**.
+- A UI Admin passou a buscar o endpoint real de ranking da comunidade (`GET /api/admin/private/communities/:id/ranking`) com `limit=3`, reutilizando o mesmo score da aba **Ranking** em vez de depender apenas de respostas elegíveis do resumo antigo.
+- O bloco agora mostra posição, avatar, nome, verificação, CRP, score, respostas e upvotes dos três primeiros mentores, mantendo estado de loading/erro real via React Query.
+- O grid da segunda linha da aba **Geral** foi alinhado ao grid da linha de **Últimos posts**/**Denúncias pendentes** (`2xl:grid-cols-[1.15fr_1fr]`), para que **Top mentores** tenha a mesma largura de **Denúncias pendentes**.
+- Não houve endpoint novo, mock, package, schema Prisma/migration, seed, backfill ou alteração de persistência.
+- Builder/Quick Copy não está exposto como ferramenta callable no ambiente; a referência usada foi a captura enviada pelo usuário e o padrão local do Admin.
+- ADR atualizado: `adrs/0264-admin-comunidade-abas-conteudo-ranking.md`.
+- Validação executada: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke HTTP local `GET http://localhost:3002/comunidades/relacionamentos-com-proposito` retornando 200.

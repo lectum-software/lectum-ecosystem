@@ -615,3 +615,13 @@ O bloco **Posts mais populares** da aba **Geral** passa a usar o mesmo padrao vi
 A diferenca entre os blocos fica restrita a metrica principal: **Ultimos posts** exibe **Visualizacoes** enquanto **Posts mais populares** exibe **Upvotes**. As linhas de posts populares passam a abrir o post publico real por `/community/{slug}/post/{id}`, usando os dados reais de `popular_posts`.
 
 Consequencia: a mudanca e apenas apresentacional, sem novo endpoint, schema Prisma/migration, dependencia, mock ou alteracao de persistencia.
+
+## Atualizacao 2026-07-17: Top 3 mentores no resumo da aba Geral
+
+O bloco lateral da aba **Geral** passa a se chamar **Top mentores** e a exibir os tres primeiros itens do ranking real da comunidade.
+
+A decisao e reutilizar o endpoint de ranking ja existente (`GET /api/admin/private/communities/:id/ranking`) com `limit=3`, mantendo a mesma formula de score e a mesma base da aba **Ranking**. Isso evita que o resumo fique vazio quando nao houver respostas elegiveis no recorte antigo, mas ainda houver psicologos participantes ranqueados pela regra oficial da comunidade.
+
+Visualmente, o bloco passa a listar posicao, avatar, nome, verificacao, CRP, score, respostas e upvotes dos tres primeiros mentores. O grid da segunda linha da aba **Geral** adota a mesma proporcao da linha **Ultimos posts**/**Denuncias pendentes** (`2xl:grid-cols-[1.15fr_1fr]`), garantindo que **Top mentores** tenha a mesma largura de **Denuncias pendentes**.
+
+Consequencia: a mudanca reutiliza contrato real e React Query, sem endpoint novo, schema Prisma/migration, dependencia, mock, seed, backfill ou alteracao de persistencia.

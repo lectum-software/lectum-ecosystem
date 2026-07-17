@@ -87,7 +87,6 @@ import type {
   AdminCommunityStatisticsDailyPoint,
   AdminCommunityStatisticsQuery,
   AdminCommunityStatusInput,
-  AdminCommunityTopMentor,
   AdminCommunityUpdateInput,
   AdminCommunityUrgentPendingReport,
 } from "@/api/req/communities";
@@ -1332,69 +1331,106 @@ const CommunityEditForm = ({
   );
 };
 
-const TopMentorsCard = ({ mentors }: { mentors: AdminCommunityTopMentor[] }) => (
-  <section className={cn(cardClass, "p-5")}>
-    <h2 className="text-lg font-black text-foreground">Top mentores da comunidade</h2>
-    {mentors.length === 0 ? (
-      <p className="mt-4 rounded-2xl bg-surface-muted p-4 text-sm text-muted">
-        Nenhuma resposta de psicólogo elegível foi encontrada nos últimos 30 dias.
-      </p>
-    ) : (
-      <div className="mt-4 space-y-3">
-        {mentors.map((mentor) => (
-          <div
-            className="grid gap-3 rounded-2xl border border-border p-3 sm:grid-cols-[1fr_auto]"
-            key={mentor.id}
-          >
-            <div className="flex items-center gap-3">
-              <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-primary-soft text-xs font-black text-primary">
-                #{mentor.position}
-              </span>
-              <div className="relative grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-full bg-surface-muted text-xs font-black text-primary">
-                {mentor.avatar ? (
-                  <Image
-                    alt={`Avatar de ${mentor.name}`}
-                    className="object-cover"
-                    fill
-                    sizes="40px"
-                    src={mentor.avatar}
-                    unoptimized
-                  />
-                ) : (
-                  initials(mentor.name)
-                )}
-              </div>
-              <div>
-                <p className="font-black text-foreground">{mentor.name}</p>
-                <p className="text-xs text-muted">{mentor.crp || "CRP não informado"}</p>
-              </div>
-            </div>
-            <div className="grid grid-cols-3 gap-3 text-right text-xs">
-              <span>
-                <strong className="block text-base text-foreground">
-                  {numberFormatter.format(mentor.replies_count)}
-                </strong>
-                Respostas
-              </span>
-              <span>
-                <strong className="block text-base text-foreground">
-                  {numberFormatter.format(mentor.upvotes_count)}
-                </strong>
-                Upvotes
-              </span>
-              <span>
-                <strong className="block text-base text-foreground">
-                  {mentor.rating_avg.toLocaleString("pt-BR", { maximumFractionDigits: 1 })}
-                </strong>
-                Avaliação
-              </span>
-            </div>
+const TopMentorRow = ({ item }: { item: AdminCommunityRankingItem }) => {
+  const formattedCrp = formatRankingCrp(item.mentor.crp);
+
+  return (
+    <article className="grid gap-3 rounded-2xl border border-border p-3 sm:grid-cols-[1fr_auto]">
+      <div className="flex items-center gap-3">
+        <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-primary-soft text-xs font-black text-primary">
+          #{item.position}
+        </span>
+        <div className="relative grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-full bg-surface-muted text-xs font-black text-primary">
+          {item.mentor.avatar ? (
+            <Image
+              alt={`Avatar de ${item.mentor.name}`}
+              className="object-cover"
+              fill
+              sizes="40px"
+              src={item.mentor.avatar}
+              unoptimized
+            />
+          ) : (
+            initials(item.mentor.name)
+          )}
+        </div>
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-1.5">
+            <p className="truncate font-black text-foreground">{item.mentor.name}</p>
+            {item.mentor.verified ? (
+              <VerifiedBadgeIcon aria-label="Perfil verificado" className="h-4 w-4" />
+            ) : null}
           </div>
-        ))}
+          <p className="text-xs text-muted">
+            {formattedCrp ? `CRP ${formattedCrp}` : "CRP não informado"}
+          </p>
+        </div>
       </div>
-    )}
-  </section>
-);
+      <div className="grid grid-cols-3 gap-3 text-right text-xs">
+        <span>
+          <strong className="block text-base text-foreground">
+            {numberFormatter.format(item.score)}
+          </strong>
+          Score
+        </span>
+        <span>
+          <strong className="block text-base text-foreground">
+            {numberFormatter.format(item.metrics.replies_published)}
+          </strong>
+          Respostas
+        </span>
+        <span>
+          <strong className="block text-base text-foreground">
+            {numberFormatter.format(item.metrics.upvotes_received)}
+          </strong>
+          Upvotes
+        </span>
+      </div>
+    </article>
+  );
+};
+
+const TopMentorsCard = ({ slug }: { slug: string }) => {
+  const topMentorsQuery = useMemo<AdminCommunityRankingQuery>(
+    () => ({
+      limit: 3,
+      page: 1,
+      period: "30d",
+      q: "",
+    }),
+    [],
+  );
+  const ranking = useAdminCommunityRanking(slug, topMentorsQuery);
+  const mentors = (ranking.data?.data ?? []).slice(0, 3);
+  const showQueryStatus = ranking.isLoading || Boolean(ranking.error);
+
+  return (
+    <section className={cn(cardClass, "p-5")}>
+      <h2 className="text-lg font-black text-foreground">Top mentores</h2>
+      {showQueryStatus ? (
+        <div className="mt-4">
+          <QueryStatus
+            error={ranking.error}
+            loading={ranking.isLoading}
+            onRetry={() => void ranking.refetch()}
+          />
+        </div>
+      ) : null}
+      {!ranking.isLoading && !ranking.error && mentors.length === 0 ? (
+        <p className="mt-4 rounded-2xl bg-surface-muted p-4 text-sm text-muted">
+          Nenhum psicólogo participante foi encontrado nesta comunidade.
+        </p>
+      ) : null}
+      {mentors.length > 0 ? (
+        <div className="mt-4 space-y-3">
+          {mentors.map((mentor) => (
+            <TopMentorRow item={mentor} key={mentor.mentor.id} />
+          ))}
+        </div>
+      ) : null}
+    </section>
+  );
+};
 
 const PopularPostsCard = ({
   communitySlug,
@@ -5313,13 +5349,13 @@ const DetailContent = ({
           <LatestCommunityPostsSection pathname={pathname} slug={slug} />
           <UrgentThingsSection detail={detail} pathname={pathname} />
         </div>
-        <div className="grid gap-5 2xl:grid-cols-[1.1fr_0.9fr]">
+        <div className="grid gap-5 2xl:grid-cols-[1.15fr_1fr]">
           <PopularPostsCard
             communitySlug={detail.community.slug}
             pathname={pathname}
             posts={detail.popular_posts}
           />
-          <TopMentorsCard mentors={detail.top_mentors} />
+          <TopMentorsCard slug={slug} />
         </div>
       </>
     ) : null}
