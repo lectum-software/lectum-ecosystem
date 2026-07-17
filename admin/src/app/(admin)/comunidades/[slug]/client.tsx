@@ -6,7 +6,6 @@ import {
   ArrowDown,
   ArrowUp,
   Bookmark,
-  Brain,
   CalendarDays,
   CheckCircle2,
   ChevronDown,
@@ -31,6 +30,7 @@ import {
   Share2,
   ShieldCheck,
   Trash2,
+  UserRound,
   Users,
   X,
 } from "lucide-react";
@@ -4223,7 +4223,7 @@ const COMMUNITY_PEOPLE_STATISTICS_METRICS = [
   {
     dotClassName: "bg-primary",
     getValue: (statistics: AdminCommunityStatistics) => statistics.counters.followers.psychologists,
-    icon: Brain,
+    icon: UserRound,
     iconClassName: "text-primary",
     iconToneClassName: "bg-primary-soft",
     id: "followers_psychologists",
@@ -4246,7 +4246,7 @@ const COMMUNITY_PEOPLE_STATISTICS_METRICS = [
     dotClassName: "bg-warning",
     getValue: (statistics: AdminCommunityStatistics) =>
       statistics.counters.active_users.psychologists,
-    icon: Brain,
+    icon: UserRound,
     iconClassName: "text-warning",
     iconToneClassName: "bg-warning/10",
     id: "active_psychologists",
@@ -4281,7 +4281,7 @@ const COMMUNITY_PEOPLE_STATISTICS_METRICS = [
     dotClassName: "bg-subtle",
     getValue: (statistics: AdminCommunityStatistics) =>
       statistics.counters.new_active_users.psychologists,
-    icon: Brain,
+    icon: UserRound,
     iconClassName: "text-subtle",
     iconToneClassName: "bg-surface-muted",
     id: "new_active_psychologists",
