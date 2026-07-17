@@ -2329,7 +2329,7 @@ const StatisticsMetricToggleCard = ({
     <button
       aria-pressed={active}
       className={cn(
-        "min-w-0 overflow-hidden rounded-card border p-4 text-left transition duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2",
+        "h-full w-full min-w-0 overflow-hidden rounded-card border p-4 text-left transition duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2",
         active
           ? "border-primary/35 bg-surface shadow-admin-soft ring-1 ring-primary/10"
           : "border-border/80 bg-border/50 shadow-none hover:-translate-y-0.5 hover:border-primary/25 hover:bg-border/60",
@@ -2396,7 +2396,7 @@ const StatisticsStaticMetricCard = ({
   return (
     <div
       className={cn(
-        "min-w-0 overflow-hidden rounded-card border border-primary/35 bg-surface p-4 text-left shadow-admin-soft ring-1 ring-primary/10",
+        "h-full w-full min-w-0 overflow-hidden rounded-card border border-primary/35 bg-surface p-4 text-left shadow-admin-soft ring-1 ring-primary/10",
         !metric.available && "border-border/75 bg-surface-muted opacity-80 ring-0",
       )}
       title={`${metric.label}: ${displayValue}. ${
@@ -2426,6 +2426,62 @@ const StatisticsStaticMetricCard = ({
         <span className="mt-3 block text-xs font-bold text-muted">{metric.unavailable_reason}</span>
       ) : null}
     </div>
+  );
+};
+
+const StatisticsMetricCarousel = ({
+  items,
+  title,
+}: {
+  items: { content: ReactNode; id: string }[];
+  title: string;
+}) => {
+  const scrollerRef = useRef<HTMLDivElement>(null);
+  const scrollMetrics = useCallback((direction: -1 | 1) => {
+    const scroller = scrollerRef.current;
+    if (!scroller) return;
+
+    scroller.scrollBy({
+      behavior: "smooth",
+      left: direction * Math.max(260, scroller.clientWidth * 0.82),
+    });
+  }, []);
+
+  return (
+    <fieldset className="mt-5 min-w-0">
+      <legend className="sr-only">Contadores exibidos no gráfico de {title}</legend>
+      <div className="relative min-w-0 px-11 sm:px-12">
+        <button
+          aria-label={`Rolar contadores de ${title} para a esquerda`}
+          className="absolute left-0 top-1/2 z-10 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-full border border-border bg-surface text-muted shadow-sm transition hover:border-primary/35 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
+          onClick={() => scrollMetrics(-1)}
+          type="button"
+        >
+          <ChevronLeft aria-hidden className="h-4 w-4" />
+        </button>
+        <div
+          className="flex min-w-0 snap-x snap-mandatory gap-2 overflow-x-auto scroll-smooth pb-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          ref={scrollerRef}
+        >
+          {items.map((item) => (
+            <div
+              className="flex w-full shrink-0 snap-start sm:w-[calc((100%_-_0.5rem)/2)] lg:w-[calc((100%_-_1rem)/3)] 2xl:w-[calc((100%_-_2.5rem)/6)]"
+              key={item.id}
+            >
+              {item.content}
+            </div>
+          ))}
+        </div>
+        <button
+          aria-label={`Rolar contadores de ${title} para a direita`}
+          className="absolute right-0 top-1/2 z-10 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-full border border-primary/25 bg-primary-soft text-primary shadow-sm transition hover:border-primary/45 hover:bg-primary-soft/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
+          onClick={() => scrollMetrics(1)}
+          type="button"
+        >
+          <ChevronRight aria-hidden className="h-4 w-4" />
+        </button>
+      </div>
+    </fieldset>
   );
 };
 
@@ -3527,18 +3583,20 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: st
             />
           </div>
 
-          <fieldset className="mt-5 grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-5">
-            <legend className="sr-only">Contadores exibidos no gráfico</legend>
-            {businessCards.map(({ config, metric }) => (
-              <StatisticsMetricToggleCard
-                active={visibleBusinessMetricIds.includes(config.id) && metric.available}
-                config={config}
-                key={config.id}
-                metric={metric}
-                onToggle={() => toggleBusinessMetric(config.id)}
-              />
-            ))}
-          </fieldset>
+          <StatisticsMetricCarousel
+            items={businessCards.map(({ config, metric }) => ({
+              content: (
+                <StatisticsMetricToggleCard
+                  active={visibleBusinessMetricIds.includes(config.id) && metric.available}
+                  config={config}
+                  metric={metric}
+                  onToggle={() => toggleBusinessMetric(config.id)}
+                />
+              ),
+              id: config.id,
+            }))}
+            title="estatísticas de negócio"
+          />
 
           <StatisticsSeriesChart
             keys={visibleBusinessChartKeys}
@@ -3653,26 +3711,37 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: st
             />
           </div>
 
-          <fieldset className="mt-5 grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-4 2xl:grid-cols-8">
-            <legend className="sr-only">Contadores de comunidade</legend>
-            {communityRankingMetric ? (
-              <StatisticsStaticMetricCard
-                icon={Trophy}
-                iconClassName="text-amber-500"
-                iconToneClassName="bg-amber-50"
-                metric={communityRankingMetric}
-              />
-            ) : null}
-            {communityCards.map(({ config, metric }) => (
-              <StatisticsMetricToggleCard
-                active={visibleCommunityMetricIds.includes(config.id) && metric.available}
-                config={config}
-                key={config.id}
-                metric={metric}
-                onToggle={() => toggleCommunityMetric(config.id)}
-              />
-            ))}
-          </fieldset>
+          <StatisticsMetricCarousel
+            items={[
+              ...(communityRankingMetric
+                ? [
+                    {
+                      content: (
+                        <StatisticsStaticMetricCard
+                          icon={Trophy}
+                          iconClassName="text-amber-500"
+                          iconToneClassName="bg-amber-50"
+                          metric={communityRankingMetric}
+                        />
+                      ),
+                      id: "ranking",
+                    },
+                  ]
+                : []),
+              ...communityCards.map(({ config, metric }) => ({
+                content: (
+                  <StatisticsMetricToggleCard
+                    active={visibleCommunityMetricIds.includes(config.id) && metric.available}
+                    config={config}
+                    metric={metric}
+                    onToggle={() => toggleCommunityMetric(config.id)}
+                  />
+                ),
+                id: config.id,
+              })),
+            ]}
+            title="estatísticas de comunidade"
+          />
 
           <StatisticsSeriesChart
             keys={visibleCommunityChartKeys}

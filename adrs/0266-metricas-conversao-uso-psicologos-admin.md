@@ -245,3 +245,11 @@ No detalhe administrativo do psicologo, o card **Ranking do psicologo** deve ser
 A decisao e exclusivamente de hierarquia visual/mobile-first: prioriza a posicao operacional do psicologo na comunidade antes dos volumes de posts, respostas e engajamento, sem alterar endpoint, contrato de API, regra de calculo, schema Prisma, migrations, packages ou persistencia.
 
 Validacao complementar 2026-07-17: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke HTTP local `GET http://localhost:3002/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=estatisticas` retornando 200.
+
+## Complemento 2026-07-17 - Carrossel dos contadores do painel Estatisticas
+
+No detalhe administrativo do psicologo, os contadores dos blocos **Estatisticas de negocio** e **Estatisticas de comunidade** devem usar o mesmo padrao de carrossel horizontal adotado nas **Estatisticas de conteudo** da comunidade: rolagem com snap, scrollbar nativa oculta e setas laterais dentro da largura util do card.
+
+O card **Ranking do psicologo** permanece estatico e como primeiro item do carrossel de comunidade; os demais cards continuam sendo controles de series do grafico. A decisao e exclusivamente de consistencia visual/mobile-first e nao altera endpoints, contratos, calculos, fontes first-party, schema Prisma, migrations, packages ou persistencia.
+
+Validacao complementar 2026-07-17: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke HTTP local `GET http://localhost:3002/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=estatisticas` retornando 200.
