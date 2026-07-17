@@ -18,15 +18,16 @@ A referência visual consultada foi `_product/proto/Editar Perfil - Psicólogo.j
 
 - Reduzir somente o miniplayer da edição do perfil profissional, sem alterar o componente global `VerticalVideoPlayer` nem outras telas que o usam.
 - Manter a proporção nativa 9:16 do `VerticalVideoPlayer` (`aspect-[9/16]`).
-- Adotar sizing mobile-first e progressivo: `max-w-[224px]` na base, `sm:max-w-[260px]` e `md:max-w-[300px]`.
-- Centralizar o player com `mx-auto` para preservar a hierarquia dentro do card de apresentação.
+- Preservar o sizing mobile original (`w-full`) para não reduzir a visualização em telas pequenas.
+- Reduzir apenas a largura a partir de `md`, trocando o limite desktop/tablet de `md:max-w-[390px]` para `md:max-w-[300px]`.
+- Centralizar o player apenas a partir de `md` com `md:mx-auto`, preservando a hierarquia dentro do card de apresentação no desktop.
 - Não criar package, endpoint, mock, dado fake ou alteração de schema.
 
 ## Consequências
 
 - O vídeo permanece vertical 9:16, mas ocupa menos altura na edição do perfil.
 - O ajuste é isolado na rota de autogestão do psicólogo e não reduz o player do perfil público ou das métricas.
-- Em telas muito estreitas, a largura máxima menor mantém o player legível sem voltar a ocupar toda a coluna.
+- Em telas mobile, a visualização continua ocupando a largura disponível como antes.
 
 ## Validação
 

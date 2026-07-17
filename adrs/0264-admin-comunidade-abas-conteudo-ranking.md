@@ -634,6 +634,16 @@ A decisao e manter o bloco lateral como lista de identidade e posicao dos mentor
 
 Consequencia: a mudanca reduz ruido visual e evita sobreposicao em larguras laterais, sem endpoint novo, schema Prisma/migration, dependencia, mock ou alteracao de persistencia.
 
+## Atualizacao 2026-07-17: Top mentores com largura contida
+
+O bloco **Top mentores** deve manter a largura da coluna lateral mesmo quando nomes profissionais forem longos.
+
+A decisao e combinar tracks de grid com `minmax(0, ...)`, `min-w-0` nos containers flex/grid e `truncate` no nome do mentor. Assim, o nome recebe ellipsis dentro do card, o selo de verificacao e o CRP permanecem visiveis e o bloco nao aumenta a largura da pagina nem gera barra horizontal global.
+
+Depois do refinamento visual, as linhas da aba **Geral** usam a proporcao `minmax(0,1.1fr) minmax(0,0.9fr)`, mantendo **Denuncias pendentes** e **Top mentores** mais estreitos para devolver area util a **Ultimos posts** e **Posts mais populares**.
+
+Consequencia: a mudanca e apenas apresentacional, sem endpoint novo, schema Prisma/migration, dependencia, mock ou alteracao de persistencia.
+
 ## Atualizacao 2026-07-17: identidade de autor normalizada em posts populares
 
 A tabela **Posts mais populares** da aba **Geral** passa a receber e renderizar o mesmo objeto de autor normalizado usado pela lista **Ultimos posts**.

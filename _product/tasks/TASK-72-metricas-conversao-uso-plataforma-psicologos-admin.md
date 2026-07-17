@@ -1011,6 +1011,13 @@ Regras de cálculo:
 - A UI Admin manteve o top 3 vindo do ranking real, mas cada linha agora exibe somente posição, avatar, nome, selo de verificação e CRP, reduzindo ruído e evitando sobreposição visual no bloco lateral.
 - O ajuste é exclusivamente apresentacional/mobile-first, sem endpoint novo, mock, package, schema Prisma/migration ou alteração de persistência.
 
+### Ajuste complementar 2026-07-17 - Top mentores com largura fixa e ellipsis
+
+- Pedido do usuário: manter a largura do bloco **Top mentores** fixa e aplicar ellipsis no nome do psicólogo quando necessário.
+- A UI Admin passou a travar o grid lateral com `minmax(0, ...)`, conter overflow no card e truncar o nome do mentor com `truncate`, preservando o selo e o CRP sem criar rolagem horizontal global.
+- Após refinamento do usuário, as colunas laterais **Denúncias pendentes** e **Top mentores** voltaram a uma proporção mais estreita (`minmax(0,0.9fr)`), deixando **Últimos posts** e **Posts mais populares** com mais largura útil.
+- O ajuste é exclusivamente visual/mobile-first, sem endpoint novo, mock, package, schema Prisma/migration ou alteração de persistência.
+
 ## Ajuste complementar 2026-07-17 - Autor consistente em Ultimos posts e Posts mais populares
 
 - Pedido do usuario: manter nas duas tabelas o mesmo formato de identificacao da psicologa Thais Bruni: nome `Thais Bruni`, selo de verificacao, papel `Psicologa` e iniciais `TB`.

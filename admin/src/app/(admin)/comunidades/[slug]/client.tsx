@@ -1345,8 +1345,8 @@ const TopMentorRow = ({ item }: { item: AdminCommunityRankingItem }) => {
   const formattedCrp = formatRankingCrp(item.mentor.crp);
 
   return (
-    <article className="rounded-2xl border border-border p-3">
-      <div className="flex items-center gap-3">
+    <article className="w-full max-w-full overflow-hidden rounded-2xl border border-border p-3">
+      <div className="flex min-w-0 items-center gap-3">
         <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-primary-soft text-xs font-black text-primary">
           #{item.position}
         </span>
@@ -1364,9 +1364,9 @@ const TopMentorRow = ({ item }: { item: AdminCommunityRankingItem }) => {
             initials(item.mentor.name)
           )}
         </div>
-        <div className="min-w-0">
-          <div className="flex flex-wrap items-center gap-1.5">
-            <p className="truncate font-black text-foreground">{item.mentor.name}</p>
+        <div className="min-w-0 flex-1">
+          <div className="flex min-w-0 items-center gap-1.5">
+            <p className="min-w-0 flex-1 truncate font-black text-foreground">{item.mentor.name}</p>
             {item.mentor.verified ? (
               <VerifiedBadgeIcon aria-label="Perfil verificado" className="h-4 w-4" />
             ) : null}
@@ -1395,7 +1395,7 @@ const TopMentorsCard = ({ slug }: { slug: string }) => {
   const showQueryStatus = ranking.isLoading || Boolean(ranking.error);
 
   return (
-    <section className={cn(cardClass, "p-5")}>
+    <section className={cn(cardClass, "min-w-0 overflow-hidden p-5")}>
       <h2 className="text-lg font-black text-foreground">Top mentores</h2>
       {showQueryStatus ? (
         <div className="mt-4">
@@ -5350,11 +5350,11 @@ const DetailContent = ({
     {activeTab === "geral" ? (
       <>
         <CommunityHighlightCounters detail={detail} />
-        <div className="grid gap-5 2xl:grid-cols-[1.15fr_1fr]">
+        <div className="grid min-w-0 gap-5 2xl:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
           <LatestCommunityPostsSection pathname={pathname} slug={slug} />
           <UrgentThingsSection detail={detail} pathname={pathname} />
         </div>
-        <div className="grid gap-5 2xl:grid-cols-[1.15fr_1fr]">
+        <div className="grid min-w-0 gap-5 2xl:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
           <PopularPostsCard
             communitySlug={detail.community.slug}
             pathname={pathname}
