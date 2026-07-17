@@ -1767,7 +1767,7 @@ const DetailHeader = ({
                 <VerifiedBadgeIcon aria-label="Perfil verificado" className="h-6 w-6" />
               ) : null}
             </div>
-            <div className="mt-2 flex flex-wrap items-center gap-2 text-sm font-black text-muted">
+            <div className="mt-2 flex flex-wrap items-center gap-2 text-sm font-semibold text-muted">
               <span>{getPsychologistTitle(detail.profile.professional.gender)}</span>
               <span aria-hidden>•</span>
               <span>{formatAdminHeaderCrp(detail)}</span>
