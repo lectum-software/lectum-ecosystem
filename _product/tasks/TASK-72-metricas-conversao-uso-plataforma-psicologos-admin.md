@@ -1072,6 +1072,16 @@ Regras de cálculo:
 - ADR atualizado: `adrs/0264-admin-comunidade-abas-conteudo-ranking.md`.
 - Validação executada: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke HTTP local `GET http://localhost:3002/comunidades/autocuidado-em-pratica` retornando 200.
 
+## Ajuste complementar 2026-07-17 - Selo verificado junto ao nome
+
+- Pedido do usuário: manter o selo de verificado colado ao nome do psicólogo, pois em **Marina Rocha** o selo aparecia afastado.
+- A identidade de autor das tabelas **Últimos posts** e **Posts mais populares** e as linhas de **Top mentores** deixaram de expandir o nome com `flex-1`; agora o nome trunca pelo próprio conteúdo e o selo permanece imediatamente ao lado.
+- O ajuste preserva ellipsis em nomes longos, sem empurrar colunas de métricas nem criar overflow horizontal.
+- O ajuste é exclusivamente visual/mobile-first, sem endpoint novo, mock, package, schema Prisma/migration ou alteração de persistência.
+- Builder/Quick Copy não está exposto como ferramenta callable no ambiente; a referência usada foi a captura enviada pelo usuário e o padrão local da aba **Geral**.
+- ADR atualizado: `adrs/0264-admin-comunidade-abas-conteudo-ranking.md`.
+- Validação executada: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke HTTP local `GET http://localhost:3002/comunidades/autocuidado-em-pratica` retornando 200.
+
 ## Ajuste complementar 2026-07-17 - Ranking do psicologo como primeiro contador
 
 - Pedido do usuario: em **Estatisticas de comunidade** no detalhe administrativo do psicologo, colocar o contador **Ranking do psicologo** na primeira posicao.

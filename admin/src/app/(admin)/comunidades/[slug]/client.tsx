@@ -1366,7 +1366,7 @@ const TopMentorRow = ({ item }: { item: AdminCommunityRankingItem }) => {
         </div>
         <div className="min-w-0 flex-1">
           <div className="flex min-w-0 items-center gap-1.5">
-            <p className="min-w-0 flex-1 truncate font-black text-foreground">{item.mentor.name}</p>
+            <p className="min-w-0 truncate font-black text-foreground">{item.mentor.name}</p>
             {item.mentor.verified ? (
               <VerifiedBadgeIcon aria-label="Perfil verificado" className="h-4 w-4" />
             ) : null}
@@ -2801,9 +2801,7 @@ const AuthorIdentity = ({
       </div>
       <div className="min-w-0 flex-1">
         <div className="flex min-w-0 items-center gap-1.5">
-          <span className="min-w-0 flex-1 truncate text-sm font-black text-foreground">
-            {author.name}
-          </span>
+          <span className="min-w-0 truncate text-sm font-black text-foreground">{author.name}</span>
           {author.verified ? <VerifiedBadgeIcon aria-label="Perfil verificado" /> : null}
         </div>
         <div className="mt-0.5 flex flex-wrap items-center gap-1.5 text-xs font-bold text-muted">

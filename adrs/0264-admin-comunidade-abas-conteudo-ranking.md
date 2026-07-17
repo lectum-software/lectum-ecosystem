@@ -693,3 +693,11 @@ Os blocos **Ultimos posts**, **Posts mais populares**, **Denuncias pendentes** e
 A decisao e reutilizar icones `lucide-react` ja disponiveis no Admin em um titulo compacto com icone circular azul claro, sem criar novo componente de design system fora do arquivo da tela. A tag neutra **Sem denuncias** deixa de aparecer no cabecalho de **Denuncias pendentes**; quando nao ha fila, o estado vazio continua sendo comunicado pelo card **Sem denuncias pendentes** dentro da secao.
 
 Consequencia: o ajuste melhora escaneabilidade e reduz redundancia visual no estado vazio, sem endpoint novo, schema Prisma/migration, dependencia, mock ou alteracao de persistencia.
+
+## Atualizacao 2026-07-17: selo verificado junto ao nome no resumo
+
+O selo de perfil verificado deve ser parte da identidade textual do psicologo, nao um elemento alinhado ao fim da celula ou do card.
+
+A decisao e remover o crescimento `flex-1` do texto do nome nas identidades compactas das tabelas **Ultimos posts**/**Posts mais populares** e nas linhas de **Top mentores**. O nome continua com `truncate`, mas ocupa apenas o espaco necessario ate o limite disponivel; o selo permanece imediatamente ao lado do nome.
+
+Consequencia: nomes curtos como **Marina Rocha** exibem o selo colado ao nome, e nomes longos continuam recebendo ellipsis sem criar overflow horizontal, sem endpoint novo, schema Prisma/migration, dependencia, mock ou alteracao de persistencia.
