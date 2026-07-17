@@ -34,6 +34,7 @@ Builder/Quick Copy `vcp://quickcopy/vcp-24aaa2941d814e5b90572bc93ae50e2a` não e
 
 - Complemento administrativo de filtros em 2026-07-12: apos validacao de uso no painel, a modal deixou de repetir a busca textual por nome/CRP e removeu **Somente verificados** para reduzir redundancia com a busca principal e com a coluna de registro. Foram adicionados filtros operacionais de **Plano** (`professional`/Assinante, `courtesy`/Cortesia, `free`/Gratuito), **Perfil** (`profile_status=active|inactive`) e **Registro profissional** (`registry_status=active|pending`). A decisao preserva a busca textual na area principal, limpa parametros legados `verified`, `status` e `experience` ao aplicar/limpar filtros, e usa apenas sinais reais ja existentes no contrato/lista.
 - Complemento visual em 2026-07-12: **Perfil** e **Registro profissional** passam a ocupar linhas completas e separadas no drawer de filtros, em vez de dividir a mesma linha em desktop. A decisao melhora leitura operacional e preserva os mesmos parametros reais `profile_status` e `registry_status`, sem alterar backend ou contrato de API.
+- Complemento visual em 2026-07-17: os controles principais da lista (**busca**, **Ordenar por** e **Filtros ativos**) passam a declarar tipografia no container/ancestral correto (`text-sm font-medium` para controles e `text-xs font-medium` para o label), porque a regra global do Admin `button,input,textarea,select { font: inherit; }` faz esses elementos herdarem tamanho/peso do pai. A decisao evita pesos fortes nos controles e alinha a leitura ao padrao Lectum sem criar componente novo nem alterar contrato.
 
 ## Consequências
 
@@ -52,6 +53,7 @@ Builder/Quick Copy `vcp://quickcopy/vcp-24aaa2941d814e5b90572bc93ae50e2a` não e
 
 - O drawer deixa de ser uma copia literal da descoberta publica e passa a equilibrar criterios publicos com filtros administrativos pedidos para a operacao. O custo e manter semantica especifica no backend para `plan=professional|courtesy|free`, aceita por refletir os mesmos labels exibidos na tabela.
 - O drawer fica mais alto, mas reduz ambiguidade entre status do perfil e status do registro profissional ao evitar dois selects administrativos lado a lado.
+- A area de controles fica visualmente mais leve e consistente. O custo e lembrar que, no Admin, tipografia de `input`, `select` e `button` deve ser definida no ancestral quando a intencao for herdar o padrao do controle.
 
 ## Validação
 
@@ -76,6 +78,7 @@ Builder/Quick Copy `vcp://quickcopy/vcp-24aaa2941d814e5b90572bc93ae50e2a` não e
 
 - Revalidacao de filtros administrativos em 2026-07-12: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check`, smoke API autenticado em `GET /api/admin/private/psychologists?plan=professional&profile_status=active&registry_status=pending` retornando `200` e `active_filters_count=3`; browser local/headless/CDP com admin temporario real validou desktop `1440x1000` e mobile `390x844` com novos campos/opcoes, sem **Pesquisa**, **Buscar por nome ou CRP** e **Somente verificados**, e sem overflow horizontal.
 - Revalidacao visual de layout em 2026-07-12: `pnpm --dir admin exec biome format --write "src/app/(admin)/psicologos/lista/client.tsx"`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e browser local/headless/CDP com admin temporario real removido ao final. Desktop `1440x1000` e mobile `390x844` validaram **Perfil** e **Registro profissional** em linhas separadas, ambos com a mesma largura/coluna de **Plano** e sem overflow horizontal de viewport.
+- Revalidacao tipografica em 2026-07-17: `pnpm --dir admin exec biome format --write "src/app/(admin)/psicologos/lista/client.tsx"`, `pnpm --dir admin check`, `pnpm --dir admin build` e browser local/headless autenticado em `http://localhost:3002/psicologos/lista?sort=relevance&limit=8`. O CDP confirmou busca `fontWeight=500`/`fontSize=14px`, seletor de ordenacao `fontWeight=500`/`fontSize=14px`, botao **Filtros ativos** `fontWeight=500`/`fontSize=14px`, contador `fontWeight=500`, controles presentes e sem overflow horizontal de viewport.
 
 ## Pendências
 

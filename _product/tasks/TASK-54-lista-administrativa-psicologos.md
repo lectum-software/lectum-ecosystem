@@ -410,3 +410,25 @@ Frontend esperado:
 - `pnpm --dir admin check`
 - `pnpm --dir admin build`
 - Smoke local `GET http://localhost:3002/psicologos/lista` e `GET http://localhost:3002/comunidades/lista`.
+
+## Ajuste complementar: tipografia dos controles principais (2026-07-17)
+
+- Pedido do usuario: padronizar as fontes textuais da barra de pesquisa, filtro de ordenacao e botao **Filtros ativos** conforme o padrao visual da Lectum.
+- Frontend Admin: em `/psicologos/lista`, os controles principais agora usam `text-sm` e `font-medium` herdados no container correto, garantindo que `input`, `select` e `button` respeitem o mesmo peso/tamanho mesmo com a regra global `button,input,textarea,select { font: inherit; }`.
+- O label **Ordenar por** foi mantido discreto em `text-xs font-medium`; o texto selecionado, o placeholder da busca, o botao **Filtros ativos** e o contador usam peso medio consistente.
+- Nao houve alteracao de backend, Prisma/migrations, packages, dados, filtros, ordenacao, paginacao ou contratos de API.
+- Referencia visual mantida: `_product/proto/admin/Psicólogos/Psicólogos- Lista.png` e captura enviada pelo usuario; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
+
+### Criterios complementares
+
+- [x] A barra de pesquisa usa texto/placeholder em `14px` e peso medio.
+- [x] O seletor de ordenacao usa texto em `14px`, peso medio, e label compacto em peso medio.
+- [x] O botao **Filtros ativos** e o contador usam peso medio alinhado aos controles.
+- [x] Nenhum backend, Prisma/migrations ou package foi alterado.
+
+### Validacao complementar
+
+- `pnpm --dir admin exec biome format --write "src/app/(admin)/psicologos/lista/client.tsx"`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- Browser local/headless autenticado em `http://localhost:3002/psicologos/lista?sort=relevance&limit=8`: controles presentes, busca `fontWeight=500`/`fontSize=14px`, seletor `fontWeight=500`/`fontSize=14px`, botao **Filtros ativos** `fontWeight=500`/`fontSize=14px`, contador `fontWeight=500` e sem overflow horizontal de viewport.
