@@ -5356,20 +5356,16 @@ const DetailContent = ({
           <div className="min-w-0 2xl:col-span-3">
             <LatestCommunityPostsSection pathname={pathname} slug={slug} />
           </div>
-          <div className="min-w-0 2xl:col-span-2">
+          <div className="min-w-0 space-y-4 2xl:col-span-2 2xl:row-span-2">
             <UrgentThingsSection detail={detail} pathname={pathname} />
+            <TopMentorsCard slug={slug} />
           </div>
-        </div>
-        <div className="grid min-w-0 gap-4 2xl:grid-cols-5">
           <div className="min-w-0 2xl:col-span-3">
             <PopularPostsCard
               communitySlug={detail.community.slug}
               pathname={pathname}
               posts={detail.popular_posts}
             />
-          </div>
-          <div className="min-w-0 2xl:col-span-2">
-            <TopMentorsCard slug={slug} />
           </div>
         </div>
       </>

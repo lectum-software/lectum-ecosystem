@@ -1052,6 +1052,16 @@ Regras de cálculo:
 - A identidade do autor recebeu contenção com `min-w-0`/`truncate`, evitando que nomes longos empurrem as colunas de **Visualizações**, **Upvotes** e **Comentários** para fora do card.
 - O ajuste é exclusivamente visual/mobile-first, sem endpoint novo, mock, package, schema Prisma/migration ou alteração de persistência.
 
+## Ajuste complementar 2026-07-17 - Top mentores logo abaixo de denuncias pendentes
+
+- Pedido do usuario: manter o bloco **Top mentores** logo abaixo do bloco **Denuncias pendentes**, sem tanto espacamento.
+- A aba **Geral** passou a usar uma unica grade principal em 5 colunas no desktop largo: a coluna esquerda empilha **Ultimos posts** e **Posts mais populares** em 3 colunas, enquanto a coluna lateral empilha **Denuncias pendentes** e **Top mentores** em 2 colunas com `space-y-4`.
+- O ajuste preserva o alinhamento da coluna lateral com os dois ultimos contadores e impede que a altura das tabelas da esquerda abra um vao entre denuncias e ranking.
+- O ajuste e exclusivamente visual/mobile-first, sem endpoint novo, mock, package, schema Prisma/migration ou alteracao de persistencia.
+- Builder/Quick Copy nao esta exposto como ferramenta callable no ambiente; a referencia usada foi a captura enviada pelo usuario e o padrao local da aba **Geral**.
+- ADR atualizado: `adrs/0264-admin-comunidade-abas-conteudo-ranking.md`.
+- Validacao executada: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke HTTP local `GET http://localhost:3002/comunidades/autocuidado-em-pratica` retornando 200.
+
 ## Ajuste complementar 2026-07-17 - Ranking do psicologo como primeiro contador
 
 - Pedido do usuario: em **Estatisticas de comunidade** no detalhe administrativo do psicologo, colocar o contador **Ranking do psicologo** na primeira posicao.

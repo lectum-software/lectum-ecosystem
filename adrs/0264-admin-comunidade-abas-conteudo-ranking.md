@@ -677,3 +677,11 @@ As tabelas **Ultimos posts** e **Posts mais populares** da aba **Geral** devem e
 A decisao e remover o `min-w` fixo das tabelas, trocar `overflow-x-auto` por contencao local, usar `table-fixed` com colunas percentuais e reduzir o padding das colunas de metricas. A identidade do autor tambem passa a usar `min-w-0` e `truncate` para impedir que nomes longos empurrem **Visualizacoes**, **Upvotes** ou **Comentarios** para fora do bloco.
 
 Consequencia: a area esquerda da aba Geral continua mais larga que os blocos laterais, mas as tabelas passam a caber integralmente no card. A mudanca e apenas apresentacional, sem endpoint novo, schema Prisma/migration, dependencia, mock ou alteracao de persistencia.
+
+## Atualizacao 2026-07-17: coluna lateral compacta na aba Geral
+
+Os blocos **Denuncias pendentes** e **Top mentores** devem funcionar como uma coluna operacional unica no resumo da aba **Geral**.
+
+A decisao e manter a grade de 5 colunas no desktop largo, mas empilhar a coluna lateral em um unico container `2xl:col-span-2 2xl:row-span-2` com `space-y-4`, enquanto a coluna esquerda (`2xl:col-span-3`) contem **Ultimos posts** e **Posts mais populares**. Assim, a altura dos cards de posts nao cria um vao entre denuncias e ranking.
+
+Consequencia: a coluna lateral fica compacta e alinhada aos dois ultimos contadores, sem endpoint novo, schema Prisma/migration, dependencia, mock ou alteracao de persistencia.
