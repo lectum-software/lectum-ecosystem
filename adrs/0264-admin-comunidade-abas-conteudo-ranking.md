@@ -405,3 +405,13 @@ A aba **Estatisticas** do detalhe administrativo de comunidade passa a mostrar, 
 A iconografia dos contadores tambem fica agrupada por conceito para reduzir ruido visual: psicologos usam o icone `Brain` como referencia a saude mental, pacientes usam `Users`, postagens usam `FileText` (icone de post ja usado na Lectum) e respostas de psicologos usam `Reply` (seta de resposta ja usada na Lectum). As descricoes dos blocos foram trocadas por copies de visao geral, mantendo os contadores clicaveis e as curvas existentes.
 
 Validacao complementar 2026-07-16: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke HTTP local `GET http://localhost:3002/comunidades/relacionamentos-com-proposito?tab=estatisticas` retornando 200.
+
+## Atualizacao 2026-07-16: resumo diario operacional da comunidade
+
+O card **Resumo da comunidade** da aba Geral passa a ser **Resumo da comunidade hoje** e deixa de repetir totais historicos. A decisao de produto e usar um recorte diario operacional com os indicadores pedidos pelo Admin: novos pacientes ativos, novos psicologos ativos, novos psicologos seguidores, novos pacientes seguidores, posts de psicologos, posts de pacientes, respostas de psicologos verificados, respostas de psicologos nao verificados e comentarios de pacientes.
+
+O contrato real de `GET /api/admin/private/communities/:id` foi expandido com `today_summary`, calculado no backend a partir das mesmas fontes first-party ja auditadas para estatisticas da comunidade: `community_member`, `community_post`, `post_reply` e `page_view_event` autenticado. Seguidores novos usam `community_member.createdAt` dentro do dia corrente no fuso do servidor; novos usuarios ativos continuam representando a primeira atividade real do usuario na comunidade, sem contar Admin e sem criar evento artificial.
+
+Consequencia: a aba Geral ganha leitura diaria sem consulta paralela no cliente, sem schema Prisma/migration, sem package novo, sem mock, sem backfill e sem alterar o detalhe historico usado pelo cabecalho. A UI permanece mobile-first com cards empilhados em telas pequenas e grid progressivo em telas maiores.
+
+Validacao complementar 2026-07-16: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke HTTP local `GET http://localhost:3002/comunidades/relacionamentos-com-proposito` retornando 200.

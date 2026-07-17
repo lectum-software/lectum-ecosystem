@@ -31,6 +31,7 @@ import type {
   AdminCommunityStatisticsDTO,
   AdminCommunityStatisticsQuery,
   AdminCommunityStatusBody,
+  AdminCommunityTodaySummaryDTO,
   AdminCommunityUpdateBody,
   IAdminCommunitiesListDTO,
   IAdminCommunityActivitiesDTO,
@@ -2032,6 +2033,42 @@ const buildCommunityStatistics = (
   };
 };
 
+const buildCommunityTodaySummary = (
+  dataset: StatisticsDataset,
+  period: StatisticsPeriodRange,
+): AdminCommunityTodaySummaryDTO => {
+  const statistics = buildCommunityStatistics(dataset, period);
+  const newFollowers = statisticsRoleCounters(
+    dataset.members.flatMap((member) => {
+      if (!isInStatisticsPeriod(member.createdAt, period)) return [];
+
+      const role = statisticsRole(member.user);
+
+      return role ? [{ role }] : [];
+    }),
+  );
+
+  return {
+    new_active_patients_count: statistics.counters.new_active_users.patients,
+    new_active_psychologists_count: statistics.counters.new_active_users.psychologists,
+    new_patient_followers_count: newFollowers.patients,
+    new_psychologist_followers_count: newFollowers.psychologists,
+    patient_comments_count: statistics.counters.replies.patient_comments,
+    patient_posts_count: statistics.counters.posts.patients,
+    period: {
+      date: dateKey(period.start),
+      from: dateKey(period.start),
+      label: "Hoje",
+      timezone: "server-local",
+      to: dateKey(period.end),
+    },
+    psychologist_posts_count: statistics.counters.posts.psychologists,
+    source: "community_member+community_post+post_reply+page_view_event",
+    unverified_psychologist_replies_count: statistics.counters.replies.unverified_psychologists,
+    verified_psychologist_replies_count: statistics.counters.replies.verified_psychologists,
+  };
+};
+
 const buildMentors = (
   replies: Awaited<ReturnType<AdminCommunityManageRepository["listTopMentors"]>>,
 ) => {
@@ -2166,6 +2203,11 @@ export const showCommunity = async (data: IAdminCommunityShowDTO): Promise<Resol
   if (!community) return notFound();
 
   const period = resolvePeriod();
+  const today = new Date();
+  const todayPeriod = {
+    end: endOfDay(today),
+    start: startOfDay(today),
+  };
   const [
     rules,
     postsCount,
@@ -2175,6 +2217,7 @@ export const showCommunity = async (data: IAdminCommunityShowDTO): Promise<Resol
     previousPerformance,
     topMentorReplies,
     popularPosts,
+    statisticsDataset,
   ] = await Promise.all([
     repository.listRules(community.id, true),
     repository.countPublishedPosts(community.id),
@@ -2184,6 +2227,7 @@ export const showCommunity = async (data: IAdminCommunityShowDTO): Promise<Resol
     repository.listPerformance(community.id, period.previous.from, period.previous.to),
     repository.listTopMentors(community.id, period.current.from, period.current.to),
     repository.listPopularPosts(community.id),
+    repository.listStatisticsDataset(community.id, community.slug, todayPeriod.end),
   ]);
 
   const currentTotals = {
@@ -2228,6 +2272,7 @@ export const showCommunity = async (data: IAdminCommunityShowDTO): Promise<Resol
       popular_posts_count: popularPostsCount,
       posts_count: postsCount,
     },
+    today_summary: buildCommunityTodaySummary(statisticsDataset, todayPeriod),
     top_mentors: buildMentors(topMentorReplies),
   };
 

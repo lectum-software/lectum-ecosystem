@@ -894,3 +894,14 @@ Regras de cálculo:
 - O ajuste e exclusivamente visual/apresentacional, mobile-first, sem endpoint novo, mock, package, schema Prisma/migration ou alteracao de persistencia.
 - Builder/Quick Copy nao esta exposto como ferramenta callable no ambiente; a referencia usada foi a captura enviada pelo usuario e o padrao local da aba **Estatisticas** da comunidade.
 - Validacao executada: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke HTTP local `GET http://localhost:3002/comunidades/relacionamentos-com-proposito?tab=estatisticas` retornando 200.
+
+## Ajuste complementar 2026-07-16 - Resumo diario da comunidade no Admin
+
+- Pedido do usuario: fazer o **Resumo da comunidade** com indicadores de hoje: Novos pacientes ativos, Novos psicologos ativos, Novos psicologos seguidores, Novos pacientes seguidores, Posts de psicologos, Posts de pacientes, Respostas de psicologos verificados, Respostas de psicologos nao verificados e Comentarios de pacientes.
+- O endpoint real `GET /api/admin/private/communities/:id` foi expandido com `today_summary`, calculado no backend a partir de `community_member`, `community_post`, `post_reply` e `page_view_event` autenticado, sem criar endpoint paralelo nem usar mock.
+- Seguidores novos usam entrada real em `community_member.createdAt` no dia corrente; novos ativos usam a primeira atividade real do usuario na comunidade, preservando a semantica ja usada em Estatisticas.
+- A aba Geral do detalhe de comunidade agora renderiza **Resumo da comunidade hoje** com nove cards mobile-first e grid progressivo em telas maiores.
+- Nao houve package novo, schema Prisma/migration, dado artificial, seed, backfill ou uso de `<img>`.
+- Builder/Quick Copy nao esta exposto como ferramenta callable no ambiente; a referencia visual usada foi a captura enviada pelo usuario e o padrao local do Admin.
+- ADR atualizado: `adrs/0264-admin-comunidade-abas-conteudo-ranking.md`.
+- Validacao executada: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke HTTP local `GET http://localhost:3002/comunidades/relacionamentos-com-proposito` retornando 200.

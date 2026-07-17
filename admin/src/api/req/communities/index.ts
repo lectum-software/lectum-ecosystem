@@ -183,6 +183,26 @@ export type AdminCommunitySummary = {
   posts_count: number;
 };
 
+export type AdminCommunityTodaySummary = {
+  new_active_patients_count: number;
+  new_active_psychologists_count: number;
+  new_patient_followers_count: number;
+  new_psychologist_followers_count: number;
+  patient_comments_count: number;
+  patient_posts_count: number;
+  period: {
+    date: string;
+    from: string;
+    label: string;
+    timezone: "server-local";
+    to: string;
+  };
+  psychologist_posts_count: number;
+  source: "community_member+community_post+post_reply+page_view_event";
+  unverified_psychologist_replies_count: number;
+  verified_psychologist_replies_count: number;
+};
+
 export type AdminCommunityPerformanceMetric = {
   change_percent: number | null;
   label: string;
@@ -237,6 +257,7 @@ export type AdminCommunityDetail = {
   popular_posts: AdminCommunityPopularPost[];
   rules: AdminCommunityRule[];
   summary: AdminCommunitySummary;
+  today_summary: AdminCommunityTodaySummary;
   top_mentors: AdminCommunityTopMentor[];
 };
 

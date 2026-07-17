@@ -29,8 +29,8 @@ import {
   Search,
   Share2,
   ShieldCheck,
-  Star,
   Trash2,
+  UserPlus,
   Users,
   X,
 } from "lucide-react";
@@ -89,6 +89,7 @@ import type {
   AdminCommunityStatisticsDailyPoint,
   AdminCommunityStatisticsQuery,
   AdminCommunityStatusInput,
+  AdminCommunityTodaySummary,
   AdminCommunityTopMentor,
   AdminCommunityUpdateInput,
 } from "@/api/req/communities";
@@ -622,45 +623,122 @@ const MetricCard = ({
   </div>
 );
 
-const SummaryCards = ({ detail }: { detail: AdminCommunityDetail }) => (
-  <section className={cn(cardClass, "p-5")}>
-    <h2 className="text-lg font-black text-foreground">Resumo da comunidade</h2>
-    <div className="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-      {[
-        {
-          icon: Users,
-          label: "Membros",
-          value: detail.summary.members_count,
-        },
-        {
-          icon: MessageCircle,
-          label: "Posts",
-          value: detail.summary.posts_count,
-        },
-        {
-          icon: MessageCircle,
-          label: "Comentários",
-          value: detail.summary.comments_count,
-        },
-        {
-          icon: Star,
-          label: "Posts populares",
-          value: detail.summary.popular_posts_count,
-        },
-      ].map((item) => (
-        <div className="rounded-2xl border border-border bg-surface-muted p-4" key={item.label}>
-          <div className="grid h-11 w-11 place-items-center rounded-full bg-primary-soft text-primary">
-            <item.icon aria-hidden className="h-5 w-5" />
-          </div>
-          <p className="mt-4 text-3xl font-black text-foreground">
-            {numberFormatter.format(item.value)}
+type CommunityTodaySummaryCardItem = {
+  icon: LucideIcon;
+  iconClassName: string;
+  iconToneClassName: string;
+  label: string;
+  value: number;
+};
+
+const buildCommunityTodaySummaryItems = (
+  summary: AdminCommunityTodaySummary,
+): CommunityTodaySummaryCardItem[] => [
+  {
+    icon: Users,
+    iconClassName: "text-primary",
+    iconToneClassName: "bg-primary-soft",
+    label: "Novos pacientes ativos",
+    value: summary.new_active_patients_count,
+  },
+  {
+    icon: Brain,
+    iconClassName: "text-primary",
+    iconToneClassName: "bg-primary-soft",
+    label: "Novos psic\u00f3logos ativos",
+    value: summary.new_active_psychologists_count,
+  },
+  {
+    icon: UserPlus,
+    iconClassName: "text-success",
+    iconToneClassName: "bg-success/10",
+    label: "Novos psic\u00f3logos seguidores",
+    value: summary.new_psychologist_followers_count,
+  },
+  {
+    icon: UserPlus,
+    iconClassName: "text-success",
+    iconToneClassName: "bg-success/10",
+    label: "Novos pacientes seguidores",
+    value: summary.new_patient_followers_count,
+  },
+  {
+    icon: FileText,
+    iconClassName: "text-warning",
+    iconToneClassName: "bg-warning/10",
+    label: "Posts de psic\u00f3logos",
+    value: summary.psychologist_posts_count,
+  },
+  {
+    icon: FileText,
+    iconClassName: "text-warning",
+    iconToneClassName: "bg-warning/10",
+    label: "Posts de pacientes",
+    value: summary.patient_posts_count,
+  },
+  {
+    icon: Reply,
+    iconClassName: "text-primary",
+    iconToneClassName: "bg-primary-soft",
+    label: "Respostas de psic\u00f3logos verificados",
+    value: summary.verified_psychologist_replies_count,
+  },
+  {
+    icon: Reply,
+    iconClassName: "text-muted",
+    iconToneClassName: "bg-surface-muted",
+    label: "Respostas de psic\u00f3logos n\u00e3o verificados",
+    value: summary.unverified_psychologist_replies_count,
+  },
+  {
+    icon: MessageCircle,
+    iconClassName: "text-danger",
+    iconToneClassName: "bg-danger/10",
+    label: "Coment\u00e1rios de pacientes",
+    value: summary.patient_comments_count,
+  },
+];
+
+const SummaryCards = ({ detail }: { detail: AdminCommunityDetail }) => {
+  const items = buildCommunityTodaySummaryItems(detail.today_summary);
+
+  return (
+    <section className={cn(cardClass, "p-5")}>
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <h2 className="text-lg font-black text-foreground">Resumo da comunidade hoje</h2>
+          <p className="mt-1 text-xs font-bold text-muted">
+            Indicadores do dia corrente no fuso do servidor, calculados com dados reais da
+            comunidade.
           </p>
-          <p className="mt-1 text-sm font-bold text-muted">{item.label}</p>
         </div>
-      ))}
-    </div>
-  </section>
-);
+        <span className="inline-flex w-fit items-center gap-2 rounded-full border border-border bg-surface-muted px-3 py-1 text-xs font-black text-muted">
+          <CalendarDays aria-hidden className="h-4 w-4" />
+          {detail.today_summary.period.label}
+        </span>
+      </div>
+      <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+        {items.map((item) => (
+          <div className="rounded-2xl border border-border bg-surface-muted p-4" key={item.label}>
+            <div
+              className={cn(
+                "grid h-11 w-11 place-items-center rounded-full",
+                item.iconToneClassName,
+                item.iconClassName,
+              )}
+            >
+              <item.icon aria-hidden className="h-5 w-5" />
+            </div>
+            <p className="mt-4 text-3xl font-black text-foreground">
+              {numberFormatter.format(item.value)}
+            </p>
+            <p className="mt-1 text-sm font-bold leading-snug text-muted">{item.label}</p>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+};
 
 const PerformanceSection = ({ detail }: { detail: AdminCommunityDetail }) => {
   const points = detail.performance.points;
