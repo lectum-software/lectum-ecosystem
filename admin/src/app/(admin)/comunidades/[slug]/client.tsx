@@ -70,6 +70,7 @@ import { resolveApiError } from "@/api/handle";
 import type {
   AdminCommunityActivitiesQuery,
   AdminCommunityActivityItem,
+  AdminCommunityContentAuthor,
   AdminCommunityContentItem,
   AdminCommunityContentQuery,
   AdminCommunityDetail,
@@ -868,29 +869,6 @@ const LatestCommunityPostsSection = ({ pathname, slug }: { pathname: string; slu
 const communityTabHref = (pathname: string, tab: CommunityTab) =>
   tab === "geral" ? pathname : `${pathname}?tab=${tab}`;
 
-const popularPostAuthorRoleLabel = (role: string) => {
-  const normalized = role.trim().toLowerCase();
-
-  if (normalized === "psicologo") return "Psicólogo";
-  if (normalized === "paciente") return "Paciente";
-
-  return role.trim() || "Autor";
-};
-
-const PopularPostAuthorIdentity = ({ post }: { post: AdminCommunityPopularPost }) => (
-  <div className="flex min-w-0 items-center gap-3">
-    <div className="grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-full border border-border bg-primary-soft text-xs font-black text-primary">
-      {initials(post.author_name)}
-    </div>
-    <div className="min-w-0">
-      <span className="block truncate text-sm font-black text-foreground">{post.author_name}</span>
-      <span className="mt-0.5 block text-xs font-bold text-muted">
-        {popularPostAuthorRoleLabel(post.author_role)}
-      </span>
-    </div>
-  </div>
-);
-
 const PopularPostRow = ({
   communitySlug,
   post,
@@ -928,7 +906,7 @@ const PopularPostRow = ({
           rel="noreferrer"
           target="_blank"
         >
-          <PopularPostAuthorIdentity post={post} />
+          <AuthorIdentity author={post.author} />
         </Link>
       </td>
       <td className="border-b border-border text-center font-black text-foreground">
@@ -2783,41 +2761,40 @@ const formatRankingCrp = (crp: string | null) => {
 const psychologistRoleLabel = (gender?: string | null) =>
   gender?.trim().toLowerCase() === "feminino" ? "Psicóloga" : "Psicólogo";
 
-const ContentAuthorIdentity = ({
+const AuthorIdentity = ({
+  author,
   className,
-  item,
 }: {
+  author: AdminCommunityContentAuthor;
   className?: string;
-  item: AdminCommunityContentItem;
 }) => {
-  const avatarSrc = renderableImageSrc(item.author.avatar);
-  const roleLabel =
-    item.author.role === "psicologo" ? psychologistRoleLabel(item.author.gender) : "Paciente";
+  const avatarSrc = renderableImageSrc(author.avatar);
+  const roleLabel = author.role === "psicologo" ? psychologistRoleLabel(author.gender) : "Paciente";
 
   return (
     <div className={cn("flex min-w-0 items-center gap-3", className)}>
       <div className="relative grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-full border border-border bg-primary-soft text-xs font-black text-primary">
         {avatarSrc ? (
           <Image
-            alt={`Foto de perfil de ${item.author.name}`}
+            alt={`Foto de perfil de ${author.name}`}
             className="object-cover"
             fill
             sizes="40px"
             src={avatarSrc}
-            unoptimized={isAdminPublicMediaUrl(item.author.avatar)}
+            unoptimized={isAdminPublicMediaUrl(author.avatar)}
           />
         ) : (
-          initials(item.author.name)
+          initials(author.name)
         )}
       </div>
       <div className="min-w-0">
         <div className="flex min-w-0 items-center gap-1.5">
-          <span className="truncate text-sm font-black text-foreground">{item.author.name}</span>
-          {item.author.verified ? <VerifiedBadgeIcon aria-label="Perfil verificado" /> : null}
+          <span className="truncate text-sm font-black text-foreground">{author.name}</span>
+          {author.verified ? <VerifiedBadgeIcon aria-label="Perfil verificado" /> : null}
         </div>
         <div className="mt-0.5 flex flex-wrap items-center gap-1.5 text-xs font-bold text-muted">
           <span>{roleLabel}</span>
-          {item.author.anonymous ? (
+          {author.anonymous ? (
             <span className="rounded-full bg-primary-soft px-2 py-0.5 font-black text-primary">
               Post feito anonimamente
             </span>
@@ -2827,6 +2804,14 @@ const ContentAuthorIdentity = ({
     </div>
   );
 };
+
+const ContentAuthorIdentity = ({
+  className,
+  item,
+}: {
+  className?: string;
+  item: AdminCommunityContentItem;
+}) => <AuthorIdentity author={item.author} className={className} />;
 
 const ContentItemMain = ({ item }: { item: AdminCommunityContentItem }) => {
   const mediaTextGridClass = cn(

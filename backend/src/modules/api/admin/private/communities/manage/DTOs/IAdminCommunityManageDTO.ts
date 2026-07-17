@@ -248,7 +248,18 @@ export type AdminCommunityTopMentorDTO = {
   verified: boolean;
 };
 
+export type AdminCommunityContentAuthorDTO = {
+  anonymous: boolean;
+  avatar: string | null;
+  gender: string | null;
+  id: string;
+  name: string;
+  role: string;
+  verified: boolean;
+};
+
 export type AdminCommunityPopularPostDTO = {
+  author: AdminCommunityContentAuthorDTO;
   author_name: string;
   author_role: string;
   comments_count: number;
@@ -281,15 +292,7 @@ export type AdminCommunityDetailDTO = {
 };
 
 export type AdminCommunityContentItemDTO = {
-  author: {
-    anonymous: boolean;
-    avatar: string | null;
-    gender: string | null;
-    id: string;
-    name: string;
-    role: string;
-    verified: boolean;
-  };
+  author: AdminCommunityContentAuthorDTO;
   content_kind:
     | "anonymous_post"
     | "patient_comment"

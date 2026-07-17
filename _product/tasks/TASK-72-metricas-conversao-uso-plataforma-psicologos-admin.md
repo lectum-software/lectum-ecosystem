@@ -1004,3 +1004,14 @@ Regras de cálculo:
 - Builder/Quick Copy não está exposto como ferramenta callable no ambiente; a referência usada foi a captura enviada pelo usuário e o padrão local do Admin.
 - ADR atualizado: `adrs/0264-admin-comunidade-abas-conteudo-ranking.md`.
 - Validação executada: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke HTTP local `GET http://localhost:3002/comunidades/relacionamentos-com-proposito` retornando 200.
+
+## Ajuste complementar 2026-07-17 - Autor consistente em Ultimos posts e Posts mais populares
+
+- Pedido do usuario: manter nas duas tabelas o mesmo formato de identificacao da psicologa Thais Bruni: nome `Thais Bruni`, selo de verificacao, papel `Psicologa` e iniciais `TB`.
+- O contrato real de `popular_posts` no detalhe da comunidade agora inclui o objeto `author` normalizado com avatar, iniciais/nome, genero, papel, anonimato e verificacao, usando a mesma regra dos itens de conteudo.
+- A UI Admin passou a reutilizar o mesmo componente de identidade de autor nas tabelas **Ultimos posts** e **Posts mais populares**, evitando prefixos inconsistentes como `Psicologa Thais Bruni` ou papel sem genero.
+- Os campos legados `author_name` e `author_role` foram preservados no contrato de posts populares para compatibilidade, mas passam a ser derivados do autor normalizado.
+- Nao houve package novo, schema Prisma/migration, seed, backfill artificial ou mock; a origem continua sendo `community_post.author` e `psychologist_profile` reais.
+- Builder/Quick Copy nao esta exposto como ferramenta callable no ambiente; a referencia usada foi a captura enviada pelo usuario e o padrao local das tabelas da aba **Geral**.
+- ADR atualizado: `adrs/0264-admin-comunidade-abas-conteudo-ranking.md`.
+- Validacao executada: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke HTTP local `GET http://localhost:3002/comunidades/relacionamentos-com-proposito` retornando 200.

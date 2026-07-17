@@ -272,7 +272,18 @@ export type AdminCommunityTopMentor = {
   verified: boolean;
 };
 
+export type AdminCommunityContentAuthor = {
+  anonymous: boolean;
+  avatar: string | null;
+  gender: string | null;
+  id: string;
+  name: string;
+  role: string;
+  verified: boolean;
+};
+
 export type AdminCommunityPopularPost = {
+  author: AdminCommunityContentAuthor;
   author_name: string;
   author_role: string;
   comments_count: number;
@@ -375,15 +386,7 @@ export type AdminCommunityContentQuery = AdminCommunityPaginationQuery & {
 };
 
 export type AdminCommunityContentItem = {
-  author: {
-    anonymous: boolean;
-    avatar: string | null;
-    gender: string | null;
-    id: string;
-    name: string;
-    role: string;
-    verified: boolean;
-  };
+  author: AdminCommunityContentAuthor;
   content_kind:
     | "anonymous_post"
     | "patient_comment"

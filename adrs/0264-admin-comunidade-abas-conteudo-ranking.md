@@ -625,3 +625,13 @@ A decisao e reutilizar o endpoint de ranking ja existente (`GET /api/admin/priva
 Visualmente, o bloco passa a listar posicao, avatar, nome, verificacao, CRP, score, respostas e upvotes dos tres primeiros mentores. O grid da segunda linha da aba **Geral** adota a mesma proporcao da linha **Ultimos posts**/**Denuncias pendentes** (`2xl:grid-cols-[1.15fr_1fr]`), garantindo que **Top mentores** tenha a mesma largura de **Denuncias pendentes**.
 
 Consequencia: a mudanca reutiliza contrato real e React Query, sem endpoint novo, schema Prisma/migration, dependencia, mock, seed, backfill ou alteracao de persistencia.
+
+## Atualizacao 2026-07-17: identidade de autor normalizada em posts populares
+
+A tabela **Posts mais populares** da aba **Geral** passa a receber e renderizar o mesmo objeto de autor normalizado usado pela lista **Ultimos posts**.
+
+A decisao e expandir `popular_posts` com `author` contendo avatar, nome profissional, genero, papel, anonimato e verificacao calculados a partir de `community_post.author` e `psychologist_profile`. Assim, psicologas verificadas aparecem nas duas tabelas como `Thais Bruni` + selo + `Psicologa` + iniciais `TB`, sem prefixar `Psicologa` no nome e sem perder o genero do papel.
+
+Os campos `author_name` e `author_role` permanecem no contrato para compatibilidade, mas agora sao derivados do autor normalizado. A UI reutiliza o mesmo componente de identidade de autor para as duas tabelas.
+
+Consequencia: a mudanca usa dados reais ja relacionados ao post popular, sem endpoint novo, schema Prisma/migration, dependencia, mock, seed, backfill ou persistencia adicional.

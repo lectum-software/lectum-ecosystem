@@ -758,6 +758,7 @@ export class AdminCommunityManageRepository {
         { createdAt: "desc" },
       ],
       select: {
+        anonymous: true,
         createdAt: true,
         id: true,
         replies_count: true,
@@ -765,10 +766,7 @@ export class AdminCommunityManageRepository {
         title: true,
         upvotes_count: true,
         author: {
-          select: {
-            name: true,
-            role: true,
-          },
+          select: adminContentAuthorSelect,
         },
       },
     });

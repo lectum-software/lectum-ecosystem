@@ -488,6 +488,19 @@ const contentAuthorRoleLabel = (author: AdminCommunityContentAuthor) => {
     : "Psicólogo";
 };
 
+const mapContentAuthor = (
+  author: AdminCommunityContentAuthor,
+  anonymous = false,
+): AdminCommunityContentItemDTO["author"] => ({
+  anonymous,
+  avatar: author.avatar,
+  gender: contentAuthorGender(author),
+  id: author.id,
+  name: contentAuthorName(author),
+  role: author.role,
+  verified: isContentAuthorVerified(author),
+});
+
 const contentMedia = (
   mediaUrl?: string | null,
   mediaType?: string | null,
@@ -536,15 +549,7 @@ const mapPostContent = (
   const targetKey = contentTargetKey("post", post.id);
 
   return {
-    author: {
-      anonymous,
-      avatar: post.author.avatar,
-      gender: contentAuthorGender(post.author),
-      id: post.author.id,
-      name: contentAuthorName(post.author),
-      role: post.author.role,
-      verified: isContentAuthorVerified(post.author),
-    },
+    author: mapContentAuthor(post.author, anonymous),
     content_id: post.id,
     content_kind: contentKind,
     content_kind_label: contentKindLabels[contentKind],
@@ -594,15 +599,7 @@ const mapReplyContent = (
       };
 
   return {
-    author: {
-      anonymous: false,
-      avatar: reply.author.avatar,
-      gender: contentAuthorGender(reply.author),
-      id: reply.author.id,
-      name: contentAuthorName(reply.author),
-      role: reply.author.role,
-      verified: isContentAuthorVerified(reply.author),
-    },
+    author: mapContentAuthor(reply.author),
     content_id: reply.id,
     content_kind: contentKind,
     content_kind_label: contentKindLabels[contentKind],
@@ -2394,16 +2391,22 @@ export const showCommunity = async (data: IAdminCommunityShowDTO): Promise<Resol
       },
       points: buildPoints(currentPerformance),
     },
-    popular_posts: popularPosts.map((post) => ({
-      author_name: post.author.name,
-      author_role: post.author.role,
-      comments_count: post.replies_count,
-      created_at: post.createdAt,
-      id: post.id,
-      saves_count: post.saves_count,
-      title: post.title,
-      upvotes_count: post.upvotes_count,
-    })),
+    popular_posts: popularPosts.map((post) => {
+      const anonymous = post.anonymous && post.author.role !== "psicologo";
+      const author = mapContentAuthor(post.author, anonymous);
+
+      return {
+        author,
+        author_name: author.name,
+        author_role: author.role,
+        comments_count: post.replies_count,
+        created_at: post.createdAt,
+        id: post.id,
+        saves_count: post.saves_count,
+        title: post.title,
+        upvotes_count: post.upvotes_count,
+      };
+    }),
     rules: rules.map(mapRule),
     summary: {
       comments_count: commentsCount,
