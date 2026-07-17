@@ -599,3 +599,11 @@ A tabela **Ultimos posts** da aba **Geral** passa a incluir a coluna **Visualiza
 O botao **Ver todos** do bloco passa a ter fundo transparente no estado padrao, mantendo borda e texto de acao para preservar hierarquia visual sem competir com a lista.
 
 Consequencia: a mudanca e apenas apresentacional, sem novo endpoint, schema Prisma/migration, dependencia, mock ou alteracao de persistencia.
+
+## Atualizacao 2026-07-17: cards de denuncias pendentes com conteudo direto
+
+Os cards vermelhos do bloco **Denuncias pendentes** na aba **Geral** deixam de exibir a copy auxiliar da secao e passam a priorizar diretamente o conteudo denunciado.
+
+A decisao diferencia a apresentacao por tipo de alvo: denuncias de post exibem somente o titulo do post; denuncias de comentario exibem somente o texto do comentario, truncado em ate duas linhas e com peso visual de descricao, nao de titulo. A tag de tipo de conteudo permanece como contexto minimo e a aba **Denuncias** continua concentrando a triagem completa.
+
+Consequencia: a mudanca e apenas apresentacional, sem novo endpoint, schema Prisma/migration, dependencia, mock ou alteracao de persistencia.

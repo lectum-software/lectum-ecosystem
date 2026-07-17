@@ -869,9 +869,9 @@ const LatestCommunityPostsSection = ({ pathname, slug }: { pathname: string; slu
 const communityTabHref = (pathname: string, tab: CommunityTab) =>
   tab === "geral" ? pathname : `${pathname}?tab=${tab}`;
 
-const pendingCommunityReportTitle = (report: AdminCommunityUrgentPendingReport) => {
+const pendingCommunityReportPrimaryText = (report: AdminCommunityUrgentPendingReport) => {
   if (report.content.type === "comment") {
-    return report.content.title?.trim() || "Comentário denunciado";
+    return report.content.excerpt.trim() || "Comentário sem texto disponível.";
   }
 
   return report.content.title?.trim() || "Post denunciado";
@@ -884,12 +884,11 @@ const PendingCommunityReportCard = ({
   pathname: string;
   report: AdminCommunityUrgentPendingReport;
 }) => {
-  const title = pendingCommunityReportTitle(report);
-  const excerpt = report.content.excerpt.trim() || "Conteúdo sem texto disponível.";
+  const primaryText = pendingCommunityReportPrimaryText(report);
 
   return (
     <Link
-      aria-label={`Abrir aba Denúncias para revisar denúncia pendente: ${title}`}
+      aria-label={`Abrir aba Denúncias para revisar denúncia pendente: ${primaryText}`}
       className="group block rounded-2xl border border-danger/30 bg-danger/5 p-4 transition hover:border-danger/50 hover:bg-danger/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-danger/25"
       href={communityTabHref(pathname, "denuncias")}
     >
@@ -909,10 +908,15 @@ const PendingCommunityReportCard = ({
                 </span>
               ) : null}
             </div>
-            <h3 className="mt-2 line-clamp-2 text-sm font-black text-foreground group-hover:text-danger">
-              {title}
-            </h3>
-            <p className="mt-1 line-clamp-2 text-xs font-bold leading-5 text-muted">{excerpt}</p>
+            {report.content.type === "comment" ? (
+              <p className="mt-2 line-clamp-2 text-xs font-bold leading-5 text-muted">
+                {primaryText}
+              </p>
+            ) : (
+              <h3 className="mt-2 line-clamp-2 text-sm font-black leading-5 text-foreground group-hover:text-danger">
+                {primaryText}
+              </h3>
+            )}
             {!report.content.available && report.content.unavailable_reason ? (
               <p className="mt-2 text-[11px] font-bold text-warning">
                 {report.content.unavailable_reason}
@@ -944,9 +948,6 @@ const UrgentThingsSection = ({
       <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h2 className="text-lg font-black text-foreground">Denúncias pendentes</h2>
-          <p className="mt-1 text-xs font-bold text-muted">
-            Conteúdos denunciados que ainda precisam de decisão nesta comunidade.
-          </p>
         </div>
         <span
           className={cn(

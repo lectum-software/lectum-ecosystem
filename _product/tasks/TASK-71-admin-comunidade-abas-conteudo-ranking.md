@@ -547,3 +547,10 @@ Regras:
 - A UI Admin passou a renderizar as colunas **Post**, **Autor**, **Visualizações** e **Comentários**, usando `metrics.views_count` do contrato real já consumido pela aba **Conteúdo**.
 - O botão **Ver todos** mantém o link para a aba **Conteúdo**, mas sem preenchimento de fundo no estado padrão; o skeleton foi alinhado à nova coluna.
 - O ajuste é exclusivamente visual/apresentacional, sem endpoint novo, schema Prisma/migration, package, mock ou alteração de persistência.
+
+## Ajuste complementar 2026-07-17 - Cards de denuncias pendentes com conteudo direto
+
+- Pedido do usuario: no bloco **Denuncias pendentes**, remover a copy de apoio abaixo do titulo, mostrar somente o titulo quando a denuncia for de post e, quando for comentario, remover o titulo generico **Comentario denunciado**.
+- A UI Admin passa a renderizar o texto primario conforme o tipo do alvo: posts usam apenas o titulo do post; comentarios usam apenas o texto do comentario, limitado visualmente a duas linhas com ellipsis.
+- Comentarios denunciados usam peso visual de descricao (text-xs, font-bold, text-muted), sem hierarquia de titulo, enquanto posts preservam o peso de titulo do card.
+- O ajuste e exclusivamente visual/apresentacional, sem endpoint novo, schema Prisma/migration, package, mock ou alteracao de persistencia.
