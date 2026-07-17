@@ -626,6 +626,14 @@ Visualmente, o bloco passa a listar posicao, avatar, nome, verificacao, CRP, sco
 
 Consequencia: a mudanca reutiliza contrato real e React Query, sem endpoint novo, schema Prisma/migration, dependencia, mock, seed, backfill ou alteracao de persistencia.
 
+## Atualizacao 2026-07-17: Top mentores sem metricas laterais
+
+O bloco **Top mentores** continua usando o ranking real com `limit=3`, mas deixa de exibir as metricas laterais **Score**, **Respostas** e **Upvotes** no resumo da aba **Geral**.
+
+A decisao e manter o bloco lateral como lista de identidade e posicao dos mentores, exibindo somente posicao, avatar, nome, verificacao e CRP. As metricas detalhadas permanecem na aba **Ranking**, que e o local apropriado para leitura analitica.
+
+Consequencia: a mudanca reduz ruido visual e evita sobreposicao em larguras laterais, sem endpoint novo, schema Prisma/migration, dependencia, mock ou alteracao de persistencia.
+
 ## Atualizacao 2026-07-17: identidade de autor normalizada em posts populares
 
 A tabela **Posts mais populares** da aba **Geral** passa a receber e renderizar o mesmo objeto de autor normalizado usado pela lista **Ultimos posts**.

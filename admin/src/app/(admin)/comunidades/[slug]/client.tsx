@@ -1313,7 +1313,7 @@ const TopMentorRow = ({ item }: { item: AdminCommunityRankingItem }) => {
   const formattedCrp = formatRankingCrp(item.mentor.crp);
 
   return (
-    <article className="grid gap-3 rounded-2xl border border-border p-3 sm:grid-cols-[1fr_auto]">
+    <article className="rounded-2xl border border-border p-3">
       <div className="flex items-center gap-3">
         <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-primary-soft text-xs font-black text-primary">
           #{item.position}
@@ -1343,26 +1343,6 @@ const TopMentorRow = ({ item }: { item: AdminCommunityRankingItem }) => {
             {formattedCrp ? `CRP ${formattedCrp}` : "CRP não informado"}
           </p>
         </div>
-      </div>
-      <div className="grid grid-cols-3 gap-3 text-right text-xs">
-        <span>
-          <strong className="block text-base text-foreground">
-            {numberFormatter.format(item.score)}
-          </strong>
-          Score
-        </span>
-        <span>
-          <strong className="block text-base text-foreground">
-            {numberFormatter.format(item.metrics.replies_published)}
-          </strong>
-          Respostas
-        </span>
-        <span>
-          <strong className="block text-base text-foreground">
-            {numberFormatter.format(item.metrics.upvotes_received)}
-          </strong>
-          Upvotes
-        </span>
       </div>
     </article>
   );

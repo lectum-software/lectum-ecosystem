@@ -1005,6 +1005,12 @@ Regras de cálculo:
 - ADR atualizado: `adrs/0264-admin-comunidade-abas-conteudo-ranking.md`.
 - Validação executada: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke HTTP local `GET http://localhost:3002/comunidades/relacionamentos-com-proposito` retornando 200.
 
+### Ajuste complementar 2026-07-17 - Top mentores sem colunas de métricas
+
+- Pedido do usuário: remover as colunas **Score**, **Respostas** e **Upvotes** do bloco **Top mentores**.
+- A UI Admin manteve o top 3 vindo do ranking real, mas cada linha agora exibe somente posição, avatar, nome, selo de verificação e CRP, reduzindo ruído e evitando sobreposição visual no bloco lateral.
+- O ajuste é exclusivamente apresentacional/mobile-first, sem endpoint novo, mock, package, schema Prisma/migration ou alteração de persistência.
+
 ## Ajuste complementar 2026-07-17 - Autor consistente em Ultimos posts e Posts mais populares
 
 - Pedido do usuario: manter nas duas tabelas o mesmo formato de identificacao da psicologa Thais Bruni: nome `Thais Bruni`, selo de verificacao, papel `Psicologa` e iniciais `TB`.
