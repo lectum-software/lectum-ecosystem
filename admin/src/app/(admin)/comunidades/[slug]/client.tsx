@@ -75,7 +75,6 @@ import type {
   AdminCommunityContentQuery,
   AdminCommunityDetail,
   AdminCommunityIdentity,
-  AdminCommunityPerformanceMetric,
   AdminCommunityPopularPost,
   AdminCommunityRankingItem,
   AdminCommunityRankingQuery,
@@ -499,14 +498,6 @@ const resolveCommunityActivityPeriod = (
 };
 const formatCountLabel = (value: number, singular: string, plural: string) =>
   `${numberFormatter.format(value)} ${value === 1 ? singular : plural}`;
-const formatChange = (value: number | null) => {
-  if (value === null) return "sem base";
-  if (value === 0) return "0%";
-
-  return `${value > 0 ? "+" : ""}${value.toLocaleString("pt-BR", {
-    maximumFractionDigits: 1,
-  })}%`;
-};
 const initials = (value: string) =>
   value
     .split(" ")
@@ -633,32 +624,6 @@ const StatusBadge = ({
   </span>
 );
 
-const MetricCard = ({
-  label,
-  metric,
-}: {
-  label: string;
-  metric: AdminCommunityPerformanceMetric;
-}) => (
-  <div className="rounded-2xl border border-border bg-surface p-4">
-    <p className="text-xs font-black text-muted">{label}</p>
-    <p className="mt-3 text-2xl font-black text-foreground">
-      {numberFormatter.format(metric.value)}
-    </p>
-    <p
-      className={cn(
-        "mt-2 text-xs font-black",
-        metric.trend === "up" && "text-success",
-        metric.trend === "down" && "text-danger",
-        metric.trend === "flat" && "text-muted",
-        metric.trend === "unavailable" && "text-warning",
-      )}
-    >
-      {formatChange(metric.change_percent)} vs. período anterior
-    </p>
-  </div>
-);
-
 type CommunityTodaySummaryCardItem = {
   icon: LucideIcon;
   iconClassName: string;
@@ -776,145 +741,213 @@ const SummaryCards = ({ detail }: { detail: AdminCommunityDetail }) => {
   );
 };
 
-const PerformanceSection = ({ detail }: { detail: AdminCommunityDetail }) => {
-  const points = detail.performance.points;
-  const chartPoints = aggregateCalendarChartPoints(points, [
-    "comments",
-    "members",
-    "posts",
-    "reports",
-  ] as const);
-  const width = 760;
-  const height = 260;
-  const padding = { bottom: 38, left: 48, right: 20, top: 20 };
-  const maxValue = Math.max(
-    1,
-    ...chartPoints.flatMap((point) => [point.posts, point.comments, point.members, point.reports]),
-  );
-  const chartWidth = width - padding.left - padding.right;
-  const chartHeight = height - padding.top - padding.bottom;
-  const getX = (index: number) =>
-    chartPoints.length <= 1
-      ? width / 2
-      : padding.left + (index * chartWidth) / (chartPoints.length - 1);
-  const getY = (value: number) => padding.top + chartHeight - (value / maxValue) * chartHeight;
-  const series = [
+type CommunityUrgentTone = "danger" | "muted" | "primary" | "success" | "warning";
+
+type CommunityUrgentItem = {
+  description: string;
+  href: string;
+  icon: LucideIcon;
+  id: string;
+  label: string;
+  priority: string;
+  tone: CommunityUrgentTone;
+  value: number;
+};
+
+const communityTabHref = (pathname: string, tab: CommunityTab) =>
+  tab === "geral" ? pathname : `${pathname}?tab=${tab}`;
+
+const urgentToneClasses: Record<
+  CommunityUrgentTone,
+  { badge: string; card: string; icon: string }
+> = {
+  danger: {
+    badge: "bg-danger/10 text-danger",
+    card: "border-danger/30 bg-danger/5 hover:border-danger/50",
+    icon: "bg-danger/10 text-danger",
+  },
+  muted: {
+    badge: "bg-surface-muted text-muted",
+    card: "border-border bg-surface-muted hover:border-primary/30",
+    icon: "bg-surface text-muted",
+  },
+  primary: {
+    badge: "bg-primary-soft text-primary",
+    card: "border-primary/20 bg-primary-soft/50 hover:border-primary/40",
+    icon: "bg-primary-soft text-primary",
+  },
+  success: {
+    badge: "bg-success/10 text-success",
+    card: "border-success/20 bg-success/5 hover:border-success/40",
+    icon: "bg-success/10 text-success",
+  },
+  warning: {
+    badge: "bg-warning/10 text-warning",
+    card: "border-warning/30 bg-warning/5 hover:border-warning/50",
+    icon: "bg-warning/10 text-warning",
+  },
+};
+
+const buildCommunityUrgentItems = (
+  detail: AdminCommunityDetail,
+  pathname: string,
+): CommunityUrgentItem[] => {
+  const pendingReports = detail.urgent_summary.pending_reports_count;
+  const pendingReportsDescription = detail.urgent_summary.pending_reports_last_reported_at
+    ? "\u00daltima den\u00fancia pendente em " +
+      formatDateTime(detail.urgent_summary.pending_reports_last_reported_at) +
+      "."
+    : "Nenhuma den\u00fancia pendente para decis\u00e3o.";
+  const unverifiedReplies = detail.today_summary.unverified_psychologist_replies_count;
+  const patientPosts = detail.today_summary.patient_posts_count;
+  const patientComments = detail.today_summary.patient_comments_count;
+
+  return [
     {
-      color: "#3300ff",
-      key: "posts",
-      label: "Posts",
+      description:
+        pendingReports > 0
+          ? "Revisar " +
+            formatCountLabel(
+              pendingReports,
+              "conte\u00fado denunciado",
+              "conte\u00fados denunciados",
+            ) +
+            " ainda sem decis\u00e3o. " +
+            pendingReportsDescription
+          : pendingReportsDescription,
+      href: communityTabHref(pathname, "denuncias"),
+      icon: AlertTriangle,
+      id: "pending_reports",
+      label: "Den\u00fancias pendentes",
+      priority: pendingReports > 0 ? "Cr\u00edtico" : "OK",
+      tone: pendingReports > 0 ? "danger" : "muted",
+      value: pendingReports,
     },
     {
-      color: "#2f8cff",
-      key: "comments",
-      label: "Comentários",
+      description:
+        unverifiedReplies > 0
+          ? "Revisar respostas publicadas hoje por psic\u00f3logos ainda n\u00e3o verificados."
+          : "Nenhuma resposta de psic\u00f3logo n\u00e3o verificado hoje.",
+      href: communityTabHref(pathname, "conteudo"),
+      icon: Reply,
+      id: "unverified_replies_today",
+      label: "Respostas n\u00e3o verificadas hoje",
+      priority: unverifiedReplies > 0 ? "Alta" : "OK",
+      tone: unverifiedReplies > 0 ? "warning" : "muted",
+      value: unverifiedReplies,
     },
     {
-      color: "#13a85b",
-      key: "members",
-      label: "Novos membros",
+      description:
+        patientPosts > 0
+          ? "Priorizar posts de pacientes publicados hoje que podem precisar de resposta verificada."
+          : "Nenhum post de paciente publicado hoje.",
+      href: communityTabHref(pathname, "conteudo"),
+      icon: FileText,
+      id: "patient_posts_today",
+      label: "Posts de pacientes hoje",
+      priority: patientPosts > 0 ? "Alta" : "OK",
+      tone: patientPosts > 0 ? "primary" : "muted",
+      value: patientPosts,
     },
     {
-      color: "#e5484d",
-      key: "reports",
-      label: "Denúncias",
+      description:
+        patientComments > 0
+          ? "Acompanhar coment\u00e1rios de pacientes publicados hoje nos posts da comunidade."
+          : "Nenhum coment\u00e1rio de paciente publicado hoje.",
+      href: communityTabHref(pathname, "conteudo"),
+      icon: MessageCircle,
+      id: "patient_comments_today",
+      label: "Coment\u00e1rios de pacientes hoje",
+      priority: patientComments > 0 ? "Acompanhar" : "OK",
+      tone: patientComments > 0 ? "success" : "muted",
+      value: patientComments,
     },
-  ] as const;
-  const labelStep = Math.max(1, Math.ceil(chartPoints.length / 8));
+  ];
+};
+
+const UrgentThingsSection = ({
+  detail,
+  pathname,
+}: {
+  detail: AdminCommunityDetail;
+  pathname: string;
+}) => {
+  const items = buildCommunityUrgentItems(detail, pathname);
+  const urgentSignals = items.reduce((total, item) => total + item.value, 0);
 
   return (
     <section className={cn(cardClass, "p-5")}>
       <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h2 className="text-lg font-black text-foreground">Desempenho</h2>
-          <p className="text-xs font-bold text-muted">Últimos {detail.performance.days} dias</p>
+          <h2 className="text-lg font-black text-foreground">Coisas mais urgentes</h2>
+          <p className="mt-1 text-xs font-bold text-muted">
+            {"Fila operacional com o que merece aten\u00e7\u00e3o primeiro nesta comunidade."}
+          </p>
         </div>
-        <span className="inline-flex items-center gap-2 text-xs font-black text-muted">
-          <CalendarDays aria-hidden className="h-4 w-4" />
-          período real
+        <span
+          className={cn(
+            "inline-flex w-fit items-center gap-2 rounded-full border px-3 py-1 text-xs font-black",
+            urgentSignals > 0
+              ? "border-danger/30 bg-danger/10 text-danger"
+              : "border-border bg-surface-muted text-muted",
+          )}
+        >
+          <AlertTriangle aria-hidden className="h-4 w-4" />
+          {urgentSignals > 0
+            ? formatCountLabel(urgentSignals, "sinal", "sinais")
+            : "Sem urg\u00eancias"}
         </span>
       </div>
-      <div className="mt-5 overflow-x-auto">
-        <svg
-          aria-label="Gráfico de desempenho da comunidade nos últimos 30 dias"
-          className="min-w-[680px]"
-          role="img"
-          viewBox={`0 0 ${width} ${height}`}
-        >
-          {[0, 0.25, 0.5, 0.75, 1].map((ratio) => {
-            const value = Math.round(maxValue * ratio);
-            const y = getY(value);
-            return (
-              <g key={`grid-${value}`}>
-                <line
-                  stroke="#e8edf7"
-                  strokeWidth="1"
-                  x1={padding.left}
-                  x2={width - padding.right}
-                  y1={y}
-                  y2={y}
-                />
-                <text fill="#55618a" fontSize="11" x="8" y={y + 4}>
-                  {numberFormatter.format(value)}
-                </text>
-              </g>
-            );
-          })}
-          {series.map((item) => {
-            const path = chartPoints
-              .map(
-                (point, index) =>
-                  `${index === 0 ? "M" : "L"}${getX(index)},${getY(point[item.key])}`,
-              )
-              .join(" ");
+      <div className="mt-5 grid gap-3">
+        {items.map((item) => {
+          const Icon = item.icon;
+          const tone = urgentToneClasses[item.tone];
 
-            return (
-              <path
-                d={path}
-                fill="none"
-                key={item.label}
-                stroke={item.color}
-                strokeLinecap="round"
-                strokeWidth="3"
-              />
-            );
-          })}
-          {chartPoints
-            .filter((_, index) => index % labelStep === 0 || index === chartPoints.length - 1)
-            .map((point) => (
-              <text
-                fill="#06104a"
-                fontSize="11"
-                key={point.date}
-                textAnchor="middle"
-                x={getX(chartPoints.findIndex((item) => item.date === point.date))}
-                y={height - 10}
-              >
-                {point.chartLabel}
-              </text>
-            ))}
-        </svg>
-      </div>
-      <div className="mt-4 flex flex-wrap gap-3">
-        {series.map((item) => (
-          <span
-            className="inline-flex items-center gap-2 text-xs font-bold text-muted"
-            key={item.label}
-          >
-            <span
-              aria-hidden
-              className="h-3 w-3 rounded-full"
-              style={{ backgroundColor: item.color }}
-            />
-            {item.label}
-          </span>
-        ))}
-      </div>
-      <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <MetricCard label="Novos membros" metric={detail.performance.metrics.new_members} />
-        <MetricCard label="Novos posts" metric={detail.performance.metrics.new_posts} />
-        <MetricCard label="Comentários" metric={detail.performance.metrics.comments} />
-        <MetricCard label="Denúncias" metric={detail.performance.metrics.reports} />
+          return (
+            <Link
+              aria-label={`${item.label}: ${numberFormatter.format(item.value)}. ${item.description}`}
+              className={cn(
+                "group flex flex-col gap-3 rounded-2xl border p-4 transition sm:flex-row sm:items-center sm:justify-between",
+                tone.card,
+              )}
+              href={item.href}
+              key={item.id}
+            >
+              <span className="flex min-w-0 items-start gap-3">
+                <span
+                  className={cn(
+                    "grid h-11 w-11 shrink-0 place-items-center rounded-full",
+                    tone.icon,
+                  )}
+                >
+                  <Icon aria-hidden className="h-5 w-5" />
+                </span>
+                <span className="min-w-0">
+                  <span className="flex flex-wrap items-center gap-2">
+                    <span className="text-sm font-black text-foreground">{item.label}</span>
+                    <span
+                      className={cn("rounded-full px-2 py-0.5 text-[11px] font-black", tone.badge)}
+                    >
+                      {item.priority}
+                    </span>
+                  </span>
+                  <span className="mt-1 block text-xs font-bold leading-relaxed text-muted">
+                    {item.description}
+                  </span>
+                </span>
+              </span>
+              <span className="flex items-center justify-between gap-3 sm:justify-end">
+                <span className="text-3xl font-black leading-none text-foreground">
+                  {numberFormatter.format(item.value)}
+                </span>
+                <ChevronRight
+                  aria-hidden
+                  className="h-5 w-5 shrink-0 text-muted transition group-hover:translate-x-0.5 group-hover:text-primary"
+                />
+              </span>
+            </Link>
+          );
+        })}
       </div>
     </section>
   );
@@ -4988,7 +5021,7 @@ const DetailContent = ({
       <>
         <div className="grid gap-5 2xl:grid-cols-[1.15fr_1fr]">
           <SummaryCards detail={detail} />
-          <PerformanceSection detail={detail} />
+          <UrgentThingsSection detail={detail} pathname={pathname} />
         </div>
         <div className="grid gap-5 2xl:grid-cols-[1.1fr_0.9fr]">
           <PopularPostsCard posts={detail.popular_posts} />

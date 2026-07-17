@@ -906,6 +906,17 @@ Regras de cálculo:
 - ADR atualizado: `adrs/0264-admin-comunidade-abas-conteudo-ranking.md`.
 - Validacao executada: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke HTTP local `GET http://localhost:3002/comunidades/relacionamentos-com-proposito` retornando 200.
 
+## Ajuste complementar 2026-07-16 - Coisas urgentes na comunidade Admin
+
+- Pedido do usuario: remover o grafico de **Desempenho** da aba Geral do detalhe administrativo de comunidade e adicionar um bloco de coisas mais urgentes.
+- A aba Geral agora troca o grafico historico de desempenho por **Coisas mais urgentes**, uma fila operacional mobile-first com links para as abas de Denuncias e Conteudo.
+- O endpoint real `GET /api/admin/private/communities/:id` foi expandido com `urgent_summary`, calculado a partir de `post_report` agrupado por conteudo denunciado, sem criar endpoint paralelo.
+- A fila tambem reaproveita o `today_summary` real para destacar respostas de psicologos nao verificados, posts de pacientes e comentarios de pacientes publicados hoje.
+- Nao houve package novo, mock, dado artificial, schema Prisma/migration, seed ou backfill.
+- Builder/Quick Copy nao esta exposto como ferramenta callable no ambiente; a referencia visual usada foi a captura enviada pelo usuario e o padrao local do Admin.
+- ADR atualizado: `adrs/0264-admin-comunidade-abas-conteudo-ranking.md`.
+- Validacao executada: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke HTTP local `GET http://localhost:3002/comunidades/relacionamentos-com-proposito` retornando 200.
+
 ## Ajuste complementar 2026-07-16 - Comparativo de periodo nos contadores da comunidade
 
 - Pedido do usuario: nos contadores da aba **Estatisticas** da comunidade, adicionar comparativo com o periodo anterior, igual ao padrao dos contadores em detalhes do psicologo.

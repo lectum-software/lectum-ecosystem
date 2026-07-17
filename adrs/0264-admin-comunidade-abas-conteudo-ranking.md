@@ -416,6 +416,16 @@ Consequencia: a aba Geral ganha leitura diaria sem consulta paralela no cliente,
 
 Validacao complementar 2026-07-16: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke HTTP local `GET http://localhost:3002/comunidades/relacionamentos-com-proposito` retornando 200.
 
+## Atualizacao 2026-07-16: urgencias na aba Geral da comunidade
+
+A aba Geral do detalhe administrativo de comunidade deixa de priorizar o grafico historico de **Desempenho** e passa a destacar **Coisas mais urgentes**. A decisao e transformar o espaco lateral em uma fila operacional de triagem, com links diretos para **Denuncias** e **Conteudo**, porque o resumo diario ja atende a leitura de volume do dia.
+
+O contrato real de `GET /api/admin/private/communities/:id` foi expandido com `urgent_summary`, derivado de `post_report` agrupado por conteudo e filtrado para itens pendentes. A UI combina esse resumo com o `today_summary` existente para sinalizar respostas de psicologos nao verificados, posts de pacientes e comentarios de pacientes do dia corrente.
+
+Consequencia: a decisao preserva fontes first-party reais, nao cria dashboard paralelo, nao cria endpoint adicional, nao altera schema Prisma/migration e nao usa mocks. A leitura da aba Geral fica mais acionavel para moderacao e acompanhamento sem remover as estatisticas historicas da aba **Estatisticas**.
+
+Validacao complementar 2026-07-16: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke HTTP local `GET http://localhost:3002/comunidades/relacionamentos-com-proposito` retornando 200.
+
 ## Atualizacao 2026-07-16: comparativo de periodo nos contadores de Estatisticas da comunidade
 
 Os contadores dos blocos **Estatisticas de pessoas** e **Estatisticas de conteudo** passam a exibir comparativo contra o periodo imediatamente anterior, seguindo o padrao visual ja usado nos contadores do detalhe administrativo do psicologo.

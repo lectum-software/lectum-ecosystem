@@ -203,6 +203,12 @@ export type AdminCommunityTodaySummary = {
   verified_psychologist_replies_count: number;
 };
 
+export type AdminCommunityUrgentSummary = {
+  pending_reports_count: number;
+  pending_reports_last_reported_at: string | null;
+  source: "post_report";
+};
+
 export type AdminCommunityPerformanceMetric = {
   change_percent: number | null;
   label: string;
@@ -259,6 +265,7 @@ export type AdminCommunityDetail = {
   summary: AdminCommunitySummary;
   today_summary: AdminCommunityTodaySummary;
   top_mentors: AdminCommunityTopMentor[];
+  urgent_summary: AdminCommunityUrgentSummary;
 };
 
 export type AdminCommunityPaginationQuery = {
