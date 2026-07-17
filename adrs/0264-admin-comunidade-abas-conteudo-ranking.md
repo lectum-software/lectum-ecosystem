@@ -397,3 +397,11 @@ A decisao reutiliza o mesmo endpoint real `GET /api/admin/private/communities/:i
 Consequencia: a interacao fica mais localizada e consistente com o modelo de estatisticas de psicologos, sem recarregar a pagina inteira, sem endpoint paralelo, sem novo contrato semantico, schema Prisma, migration, dependencia, mock ou persistencia adicional.
 
 Validacao desta atualizacao: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check`, smoke local da rota Admin de Estatisticas retornando 200 e smoke sem sessao Admin do endpoint de estatisticas retornando 401.
+
+## Atualizacao 2026-07-16: contadores e iconografia das Estatisticas de comunidade
+
+A aba **Estatisticas** do detalhe administrativo de comunidade passa a mostrar, no contador **Postagens de pacientes**, a quebra operacional de posts anonimos e identificados com quantidade e percentual sobre o total de posts de pacientes do periodo. A UI deriva a quebra do contrato real existente (`counters.posts.patients` e `counters.anonymous_posts.total`), sem novo endpoint, schema, migration, package, mock ou backfill.
+
+A iconografia dos contadores tambem fica agrupada por conceito para reduzir ruido visual: psicologos usam o icone `Brain` como referencia a saude mental, pacientes usam `Users`, postagens usam `FileText` (icone de post ja usado na Lectum) e respostas de psicologos usam `Reply` (seta de resposta ja usada na Lectum). As descricoes dos blocos foram trocadas por copies de visao geral, mantendo os contadores clicaveis e as curvas existentes.
+
+Validacao complementar 2026-07-16: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke HTTP local `GET http://localhost:3002/comunidades/relacionamentos-com-proposito?tab=estatisticas` retornando 200.

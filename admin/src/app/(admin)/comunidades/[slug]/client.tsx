@@ -2,11 +2,11 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
-  Activity,
   AlertTriangle,
   ArrowDown,
   ArrowUp,
   Bookmark,
+  Brain,
   CalendarDays,
   CheckCircle2,
   ChevronDown,
@@ -14,6 +14,7 @@ import {
   ChevronRight,
   Edit3,
   Eye,
+  FileText,
   GripVertical,
   Image as ImageIcon,
   Loader2,
@@ -23,13 +24,13 @@ import {
   Play,
   Plus,
   RefreshCw,
+  Reply,
   Save,
   Search,
   Share2,
   ShieldCheck,
   Star,
   Trash2,
-  UserPlus,
   Users,
   X,
 } from "lucide-react";
@@ -97,6 +98,10 @@ import { communityHeaderBackground, deriveCommunityVisualPalette } from "@/lib/c
 import { cn } from "@/lib/utils";
 
 const numberFormatter = new Intl.NumberFormat("pt-BR");
+const percentageFormatter = new Intl.NumberFormat("pt-BR", {
+  maximumFractionDigits: 1,
+  minimumFractionDigits: 0,
+});
 const dateFormatter = new Intl.DateTimeFormat("pt-BR", {
   dateStyle: "short",
 });
@@ -3690,8 +3695,16 @@ type CommunityStatisticsDailyMetricKey = Exclude<keyof AdminCommunityStatisticsD
 
 type CommunityStatisticsMetricAggregation = "last" | "sum";
 
+type CommunityStatisticsMetricDetail = {
+  id: string;
+  label: string;
+  percentage: number;
+  value: number;
+};
+
 type CommunityStatisticsMetricConfig = {
   dotClassName: string;
+  getDetails?: (statistics: AdminCommunityStatistics) => CommunityStatisticsMetricDetail[];
   getValue: (statistics: AdminCommunityStatistics) => number;
   icon: LucideIcon;
   iconClassName: string;
@@ -3703,6 +3716,7 @@ type CommunityStatisticsMetricConfig = {
 };
 
 type CommunityStatisticsMetricItem = CommunityStatisticsMetricConfig & {
+  details?: CommunityStatisticsMetricDetail[];
   value: number;
 };
 
@@ -3811,11 +3825,43 @@ const communityStatisticsMetricAggregations = {
   Record<CommunityStatisticsDailyMetricKey, CommunityStatisticsMetricAggregation>
 >;
 
+const safeCommunityStatisticCount = (value: number | null | undefined) =>
+  Math.max(0, Number(value ?? 0));
+
+const communityStatisticPercentage = (value: number, total: number) =>
+  total > 0 ? (value / total) * 100 : 0;
+
+const buildPatientPostsBreakdown = (
+  statistics: AdminCommunityStatistics,
+): CommunityStatisticsMetricDetail[] => {
+  const total = safeCommunityStatisticCount(statistics.counters.posts.patients);
+  const anonymous = Math.min(
+    total,
+    safeCommunityStatisticCount(statistics.counters.anonymous_posts.total),
+  );
+  const identified = Math.max(0, total - anonymous);
+
+  return [
+    {
+      id: "anonymous",
+      label: "Anônimos",
+      percentage: communityStatisticPercentage(anonymous, total),
+      value: anonymous,
+    },
+    {
+      id: "identified",
+      label: "Identificados",
+      percentage: communityStatisticPercentage(identified, total),
+      value: identified,
+    },
+  ];
+};
+
 const COMMUNITY_PEOPLE_STATISTICS_METRICS = [
   {
     dotClassName: "bg-primary",
     getValue: (statistics: AdminCommunityStatistics) => statistics.counters.followers.psychologists,
-    icon: Users,
+    icon: Brain,
     iconClassName: "text-primary",
     iconToneClassName: "bg-primary-soft",
     id: "followers_psychologists",
@@ -3838,7 +3884,7 @@ const COMMUNITY_PEOPLE_STATISTICS_METRICS = [
     dotClassName: "bg-warning",
     getValue: (statistics: AdminCommunityStatistics) =>
       statistics.counters.active_users.psychologists,
-    icon: Activity,
+    icon: Brain,
     iconClassName: "text-warning",
     iconToneClassName: "bg-warning/10",
     id: "active_psychologists",
@@ -3849,7 +3895,7 @@ const COMMUNITY_PEOPLE_STATISTICS_METRICS = [
   {
     dotClassName: "bg-danger",
     getValue: (statistics: AdminCommunityStatistics) => statistics.counters.active_users.patients,
-    icon: Activity,
+    icon: Users,
     iconClassName: "text-danger",
     iconToneClassName: "bg-danger/10",
     id: "active_patients",
@@ -3861,7 +3907,7 @@ const COMMUNITY_PEOPLE_STATISTICS_METRICS = [
     dotClassName: "bg-muted",
     getValue: (statistics: AdminCommunityStatistics) =>
       statistics.counters.new_active_users.patients,
-    icon: UserPlus,
+    icon: Users,
     iconClassName: "text-muted",
     iconToneClassName: "bg-surface-muted",
     id: "new_active_patients",
@@ -3873,7 +3919,7 @@ const COMMUNITY_PEOPLE_STATISTICS_METRICS = [
     dotClassName: "bg-subtle",
     getValue: (statistics: AdminCommunityStatistics) =>
       statistics.counters.new_active_users.psychologists,
-    icon: UserPlus,
+    icon: Brain,
     iconClassName: "text-subtle",
     iconToneClassName: "bg-surface-muted",
     id: "new_active_psychologists",
@@ -3886,8 +3932,9 @@ const COMMUNITY_PEOPLE_STATISTICS_METRICS = [
 const COMMUNITY_CONTENT_STATISTICS_METRICS = [
   {
     dotClassName: "bg-success",
+    getDetails: buildPatientPostsBreakdown,
     getValue: (statistics: AdminCommunityStatistics) => statistics.counters.posts.patients,
-    icon: MessageCircle,
+    icon: FileText,
     iconClassName: "text-success",
     iconToneClassName: "bg-success/10",
     id: "patient_posts",
@@ -3898,7 +3945,7 @@ const COMMUNITY_CONTENT_STATISTICS_METRICS = [
   {
     dotClassName: "bg-primary",
     getValue: (statistics: AdminCommunityStatistics) => statistics.counters.posts.psychologists,
-    icon: MessageCircle,
+    icon: FileText,
     iconClassName: "text-primary",
     iconToneClassName: "bg-primary-soft",
     id: "psychologist_posts",
@@ -3910,7 +3957,7 @@ const COMMUNITY_CONTENT_STATISTICS_METRICS = [
     dotClassName: "bg-warning",
     getValue: (statistics: AdminCommunityStatistics) =>
       statistics.counters.replies.verified_psychologists,
-    icon: ShieldCheck,
+    icon: Reply,
     iconClassName: "text-warning",
     iconToneClassName: "bg-warning/10",
     id: "verified_psychologist_replies",
@@ -3922,7 +3969,7 @@ const COMMUNITY_CONTENT_STATISTICS_METRICS = [
     dotClassName: "bg-danger",
     getValue: (statistics: AdminCommunityStatistics) =>
       statistics.counters.replies.unverified_psychologists,
-    icon: MessageCircle,
+    icon: Reply,
     iconClassName: "text-danger",
     iconToneClassName: "bg-danger/10",
     id: "unverified_psychologist_replies",
@@ -3966,6 +4013,7 @@ const buildCommunityStatisticsMetricItems = (
 ): CommunityStatisticsMetricItem[] =>
   configs.map((config) => ({
     ...config,
+    details: config.getDetails?.(statistics),
     value: communityStatisticsMetricValue(statistics, config),
   }));
 
@@ -3987,6 +4035,14 @@ const CommunityStatisticsMetricToggleCard = ({
 }) => {
   const Icon = metric.icon;
   const formattedValue = numberFormatter.format(metric.value);
+  const detailTitle = metric.details
+    ?.map(
+      (detail) =>
+        `${detail.label}: ${numberFormatter.format(detail.value)} (${percentageFormatter.format(
+          detail.percentage,
+        )}%)`,
+    )
+    .join(". ");
 
   return (
     <button
@@ -4003,6 +4059,7 @@ const CommunityStatisticsMetricToggleCard = ({
         ": " +
         formattedValue +
         ". " +
+        (detailTitle ? `${detailTitle}. ` : "") +
         (active ? "Visível no gráfico" : "Oculto no gráfico")
       }
       type="button"
@@ -4023,6 +4080,23 @@ const CommunityStatisticsMetricToggleCard = ({
         <span className="mt-2 block text-2xl font-extrabold leading-none text-foreground">
           {formattedValue}
         </span>
+        {metric.details?.length ? (
+          <span className="mt-3 grid gap-1">
+            {metric.details.map((detail) => (
+              <span
+                className="flex items-center justify-between gap-2 rounded-full bg-surface-muted px-2 py-1 text-[11px] font-extrabold leading-none text-muted"
+                key={detail.id}
+              >
+                <span>{detail.label}</span>
+                <span className="text-foreground">
+                  {`${numberFormatter.format(detail.value)} (${percentageFormatter.format(
+                    detail.percentage,
+                  )}%)`}
+                </span>
+              </span>
+            ))}
+          </span>
+        ) : null}
       </span>
       <span className="sr-only">{active ? "visível no gráfico" : "oculto no gráfico"}</span>
     </button>
@@ -4342,7 +4416,7 @@ const StatisticsContent = ({ createdAt, slug }: { createdAt: string; slug: strin
     <div className="space-y-5">
       <CommunityStatisticsSegment
         dateFilters={peopleDateState.dateFilters}
-        description="Clique nos contadores para exibir ou esconder a curva correspondente no gráfico. Seguidores usam o acumulado do período; demais métricas usam eventos reais por dia."
+        description="Visão geral de psicólogos e pacientes da comunidade."
         error={peopleResult.error}
         isFetching={peopleResult.isFetching}
         isLoading={peopleResult.isLoading}
@@ -4355,7 +4429,7 @@ const StatisticsContent = ({ createdAt, slug }: { createdAt: string; slug: strin
       />
       <CommunityStatisticsSegment
         dateFilters={contentDateState.dateFilters}
-        description="Clique nos contadores para comparar somente as curvas de conteúdo que deseja acompanhar."
+        description="Visão geral do conteúdo e engajamento da comunidade."
         error={contentResult.error}
         isFetching={contentResult.isFetching}
         isLoading={contentResult.isLoading}

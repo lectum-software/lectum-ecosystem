@@ -885,3 +885,12 @@ Regras de cálculo:
 - O ajuste e exclusivamente textual/visual, mobile-first, sem endpoint novo, mock, package, schema Prisma/migration, alteracao de contrato de API ou persistencia.
 - Builder/Quick Copy nao esta exposto como ferramenta callable no ambiente; a referencia usada foi a captura enviada pelo usuario e os padroes ja consolidados do Admin.
 - Validacao executada: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke HTTP local `GET http://localhost:3002/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=estatisticas` retornando 200.
+
+## Ajuste complementar 2026-07-16 - Contadores da aba Estatisticas de comunidade
+
+- Pedido do usuario: exibir, no contador **Postagens de pacientes**, quantidade e taxa de posts anonimos e identificados; padronizar os icones dos contadores de pessoas/conteudo; e trocar as descricoes dos blocos por `Visao geral de psicologos e pacientes da comunidade.` e `Visao geral do conteudo e engajamento da comunidade.`
+- O Admin agora calcula a quebra do card de posts de pacientes a partir de dados reais ja retornados pelo endpoint de estatisticas da comunidade, usando `counters.posts.patients` como denominador e `counters.anonymous_posts.total` para os posts anonimos.
+- Os icones foram padronizados por grupo: psicologos = `Brain`, pacientes = `Users`, postagens = `FileText` e respostas de psicologos = `Reply`, sem criar asset novo nem usar imagem crua.
+- O ajuste e exclusivamente visual/apresentacional, mobile-first, sem endpoint novo, mock, package, schema Prisma/migration ou alteracao de persistencia.
+- Builder/Quick Copy nao esta exposto como ferramenta callable no ambiente; a referencia usada foi a captura enviada pelo usuario e o padrao local da aba **Estatisticas** da comunidade.
+- Validacao executada: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke HTTP local `GET http://localhost:3002/comunidades/relacionamentos-com-proposito?tab=estatisticas` retornando 200.
