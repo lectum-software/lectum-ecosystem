@@ -540,8 +540,10 @@ export type AdminCommunityStatisticsDailyPointDTO = {
   active_users: number;
   anonymous_posts: number;
   date: string;
+  downvotes: number;
   followers_patients: number;
   followers_psychologists: number;
+  profile_accesses: number;
   new_active_patients: number;
   new_active_psychologists: number;
   new_active_users: number;
@@ -551,8 +553,11 @@ export type AdminCommunityStatisticsDailyPointDTO = {
   psychologist_posts: number;
   replies: number;
   reports: number;
+  saves: number;
   unverified_psychologist_replies: number;
+  upvotes: number;
   verified_psychologist_replies: number;
+  whatsapp_clicks: number;
 };
 
 export type AdminCommunityStatisticsDTO = {
@@ -574,6 +579,14 @@ export type AdminCommunityStatisticsDTO = {
     anonymous_posts: {
       source: "community_post.anonymous";
       total: number;
+    };
+    content_engagement: {
+      downvotes: number;
+      profile_accesses: number;
+      saves: number;
+      source: "post_vote+post_save+post_reply_save+important_action_event+page_view_event";
+      upvotes: number;
+      whatsapp_clicks: number;
     };
     followers: {
       patients: number;
@@ -616,7 +629,7 @@ export type AdminCommunityStatisticsDTO = {
     timezone: "server-local";
     to: string;
   };
-  source: "community_member+community_post+post_reply+post_report+page_view_event";
+  source: "community_member+community_post+post_reply+post_report+post_vote+post_save+post_reply_save+page_view_event+important_action_event";
 };
 
 export type AdminCommunityRemoveContentDTO = {

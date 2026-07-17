@@ -542,6 +542,7 @@ const BUSINESS_SERIES_METRIC_KEYS = [
 ] as const satisfies readonly StatisticsSeriesMetricKey[];
 
 const STATISTICS_PERIOD_OPTIONS: { id: StatisticsPeriodPreset; label: string }[] = [
+  { id: "today", label: "Hoje" },
   { id: "week", label: "Esta semana" },
   { id: "month", label: "Este mês" },
   { id: "year", label: "Este ano" },
@@ -549,6 +550,7 @@ const STATISTICS_PERIOD_OPTIONS: { id: StatisticsPeriodPreset; label: string }[]
 ];
 
 const PUBLICATIONS_PERIOD_OPTIONS: { id: PublicationsPeriodValue; label: string }[] = [
+  { id: "today", label: "Hoje" },
   { id: "week", label: "Esta semana" },
   { id: "month", label: "Este mês" },
   { id: "year", label: "Este ano" },
@@ -1087,6 +1089,7 @@ const getStatisticsRangeForPeriod = (
 ): Required<StatisticsCustomRange> => {
   const today = toDateInputValue(new Date());
 
+  if (period === "today") return { from: today, to: today };
   if (period === "month") return { from: toDateInputValue(startOfCurrentMonth()), to: today };
   if (period === "year") return { from: toDateInputValue(startOfCurrentYear()), to: today };
   if (period === "all") return { from: dateInputValueFromString(createdAt), to: today };
@@ -4244,13 +4247,13 @@ const PublicationsTab = ({ createdAt, id }: { createdAt: string; id: string }) =
   const [community, setCommunity] = useState("all");
   const [type, setType] = useState<AdminPsychologistPublicationsQuery["type"]>("all");
   const [sort, setSort] = useState<PublicationSortValue>("engagement");
-  const [selectedPeriod, setSelectedPeriod] = useState<PublicationsPeriodValue>("all");
-  const [appliedPeriod, setAppliedPeriod] = useState<PublicationsPeriodValue>("all");
+  const [selectedPeriod, setSelectedPeriod] = useState<PublicationsPeriodValue>("week");
+  const [appliedPeriod, setAppliedPeriod] = useState<PublicationsPeriodValue>("week");
   const [draftRange, setDraftRange] = useState<PublicationsCustomRange>(() =>
-    getStatisticsRangeForPeriod("all", createdAt),
+    getStatisticsRangeForPeriod("week", createdAt),
   );
   const [appliedRange, setAppliedRange] = useState<PublicationsCustomRange>(() =>
-    getStatisticsRangeForPeriod("all", createdAt),
+    getStatisticsRangeForPeriod("week", createdAt),
   );
   const [rangeError, setRangeError] = useState<string | null>(null);
   const [page, setPage] = useState(1);

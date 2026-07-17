@@ -3,7 +3,7 @@
 export type AdminPsychologistEngagementQuery = {
   community?: string;
   from?: string;
-  period?: "all" | "custom" | "month" | "week" | "year";
+  period?: "all" | "custom" | "month" | "today" | "week" | "year";
   to?: string;
 };
 

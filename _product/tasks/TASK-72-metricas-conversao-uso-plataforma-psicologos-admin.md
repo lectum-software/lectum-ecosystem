@@ -927,3 +927,15 @@ Regras de cálculo:
 - Builder/Quick Copy nao esta exposto como ferramenta callable no ambiente; a referencia visual usada foi a captura enviada pelo usuario e o padrao ja consolidado dos contadores do detalhe administrativo do psicologo.
 - ADR atualizado: `adrs/0264-admin-comunidade-abas-conteudo-ranking.md`.
 - Validacao executada: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm check` e smoke HTTP local `GET http://localhost:3002/comunidades/relacionamentos-com-proposito?tab=estatisticas` retornando 200.
+
+
+## Ajuste complementar 2026-07-16 - Engajamento geral no conteudo da comunidade
+
+- Pedido do usuario: nas **Estatisticas de conteudo** da comunidade, adicionar contadores gerais de **Upvotes**, **Downvotes**, **Salvamentos**, **Cliques WhatsApp** e **Acesso ao perfil**, mantendo os demais indicadores disponiveis em um carrossel horizontal com seta.
+- O endpoint real `GET /api/admin/private/communities/:id/statistics` foi expandido com `counters.content_engagement` e novos pontos diarios para essas cinco metricas, calculados a partir de `post_vote`, `post_save`, `post_reply_save`, `important_action_event` e `page_view_event`.
+- **Acesso ao perfil** usa `page_view_event` de perfis publicos de psicologos vinculados a comunidade por membro, autoria de post ou autoria de resposta; a origem exata do clique dentro da comunidade nao e inferida quando o evento nao possui essa atribuicao.
+- A UI Admin renderiza os contadores de conteudo em carrossel horizontal mobile-first, com snap scroll, rolagem nativa e botoes de seta para revelar as demais opcoes em telas pequenas e grandes.
+- Nao houve package novo, mock, endpoint paralelo, dado artificial, schema Prisma/migration, backfill ou uso de `<img>`.
+- Builder/Quick Copy nao esta exposto como ferramenta callable no ambiente; a referencia visual usada foi a captura enviada pelo usuario e os padroes locais dos contadores da aba **Estatisticas**.
+- ADR atualizado: `adrs/0264-admin-comunidade-abas-conteudo-ranking.md`.
+- Validacao executada: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke HTTP local `GET http://localhost:3002/comunidades/relacionamentos-com-proposito?tab=estatisticas` retornando 200.

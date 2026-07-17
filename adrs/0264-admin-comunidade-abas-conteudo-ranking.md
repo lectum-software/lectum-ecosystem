@@ -437,3 +437,16 @@ A regra de variacao segue a semantica do detalhe de psicologo: quando existe bas
 Consequencia: cada bloco de estatisticas passa a usar uma consulta adicional apenas quando ha periodo comparavel. A interacao permanece localizada por bloco, preservando filtros independentes, a quebra de posts anonimos/identificados e as curvas existentes.
 
 Validacao complementar 2026-07-16: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm check` e smoke HTTP local `GET http://localhost:3002/comunidades/relacionamentos-com-proposito?tab=estatisticas` retornando 200.
+
+
+## Atualizacao 2026-07-16: engajamento geral e carrossel nos contadores de conteudo
+
+As **Estatisticas de conteudo** do detalhe administrativo de comunidade passam a expor tambem metricas gerais de engajamento: upvotes, downvotes, salvamentos, cliques WhatsApp e acesso ao perfil.
+
+A decisao e manter o endpoint existente `GET /api/admin/private/communities/:id/statistics` como fonte unica e expandir o contrato com `counters.content_engagement` e os pontos diarios correspondentes. Upvotes/downvotes usam `post_vote` em posts e respostas da comunidade; salvamentos usam `post_save` e `post_reply_save`; cliques WhatsApp usam `important_action_event` associado a posts/respostas; acesso ao perfil usa `page_view_event` de perfis de psicologos vinculados a comunidade por membro ou autoria, sem inferir origem quando o evento nao traz atribuicao direta de comunidade.
+
+Como o bloco passa a ter mais opcoes do que cabem confortavelmente no grid, os cards de conteudo foram movidos para um carrossel horizontal mobile-first, com rolagem nativa, snap e botoes de seta. A interacao preserva os toggles existentes das curvas do grafico e evita esconder metricas por quebra de layout.
+
+Consequencia: o Admin ganha leitura unificada de producao, moderacao e engajamento geral da comunidade sem endpoint paralelo, schema Prisma/migration, dependencia nova, mock, seed ou backfill. O custo adicional fica restrito a consultas agregaveis sobre tabelas first-party ja existentes dentro do dataset de estatisticas.
+
+Validacao complementar 2026-07-16: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke HTTP local `GET http://localhost:3002/comunidades/relacionamentos-com-proposito?tab=estatisticas` retornando 200.

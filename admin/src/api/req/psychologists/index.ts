@@ -4,7 +4,7 @@ import type { ApiResponse } from "@/api/types";
 
 export type PsychologistsDashboardQuery = {
   from?: string;
-  period?: "all" | "custom" | "month" | "week" | "year";
+  period?: "all" | "custom" | "month" | "today" | "week" | "year";
   to?: string;
 };
 
@@ -948,7 +948,13 @@ export type AdminPsychologistStatistics = {
   };
 };
 
-export type AdminPsychologistStatisticsPeriodFilter = "all" | "custom" | "month" | "week" | "year";
+export type AdminPsychologistStatisticsPeriodFilter =
+  | "all"
+  | "custom"
+  | "month"
+  | "today"
+  | "week"
+  | "year";
 
 export type AdminPsychologistStatisticsQuery = {
   community?: string;

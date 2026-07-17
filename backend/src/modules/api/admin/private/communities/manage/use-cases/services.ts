@@ -1716,8 +1716,10 @@ const emptyStatisticsDailyPoint = (
   active_users: 0,
   anonymous_posts: 0,
   date,
+  downvotes: 0,
   followers_patients: 0,
   followers_psychologists: 0,
+  profile_accesses: 0,
   new_active_patients: 0,
   new_active_psychologists: 0,
   new_active_users: 0,
@@ -1727,8 +1729,11 @@ const emptyStatisticsDailyPoint = (
   psychologist_posts: 0,
   replies: 0,
   reports: 0,
+  saves: 0,
   unverified_psychologist_replies: 0,
+  upvotes: 0,
   verified_psychologist_replies: 0,
+  whatsapp_clicks: 0,
 });
 
 const statisticsDailyRoleSet = (
@@ -1781,6 +1786,24 @@ const buildCommunityStatistics = (
   const periodReports = dataset.reports.filter((report) =>
     isInStatisticsPeriod(report.createdAt, period),
   );
+  const periodPostVotes = dataset.postVotes.filter((vote) =>
+    isInStatisticsPeriod(vote.createdAt, period),
+  );
+  const periodReplyVotes = dataset.replyVotes.filter((vote) =>
+    isInStatisticsPeriod(vote.createdAt, period),
+  );
+  const periodPostSaves = dataset.postSaves.filter((save) =>
+    isInStatisticsPeriod(save.createdAt, period),
+  );
+  const periodReplySaves = dataset.replySaves.filter((save) =>
+    isInStatisticsPeriod(save.createdAt, period),
+  );
+  const periodWhatsappClicks = dataset.contentWhatsappClicks.filter((event) =>
+    isInStatisticsPeriod(event.occurred_at, period),
+  );
+  const periodProfileAccesses = dataset.profileAccesses.filter((event) =>
+    isInStatisticsPeriod(event.occurred_at, period),
+  );
   const followerItems = dataset.members.flatMap((member) => {
     const role = statisticsRole(member.user);
 
@@ -1805,6 +1828,10 @@ const buildCommunityStatistics = (
   const verifiedPsychologistReplyCount = psychologistReplies.filter((reply) =>
     isVerifiedStatisticsPsychologist(reply.author),
   ).length;
+  const periodVotes = [...periodPostVotes, ...periodReplyVotes];
+  const upvoteCount = periodVotes.filter((vote) => vote.value === 1).length;
+  const downvoteCount = periodVotes.filter((vote) => vote.value === -1).length;
+  const savesCount = periodPostSaves.length + periodReplySaves.length;
   const patientPostsAnsweredByVerifiedPsychologists = patientPosts.filter((post) =>
     post.replies.some(
       (reply) => reply.createdAt <= period.end && isVerifiedStatisticsPsychologist(reply.author),
@@ -1922,6 +1949,23 @@ const buildCommunityStatistics = (
     const point = daily.get(dateKey(report.createdAt));
     if (point) point.reports += 1;
   }
+  for (const vote of periodVotes) {
+    const point = daily.get(dateKey(vote.createdAt));
+    if (point && vote.value === 1) point.upvotes += 1;
+    if (point && vote.value === -1) point.downvotes += 1;
+  }
+  for (const save of [...periodPostSaves, ...periodReplySaves]) {
+    const point = daily.get(dateKey(save.createdAt));
+    if (point) point.saves += 1;
+  }
+  for (const event of periodWhatsappClicks) {
+    const point = daily.get(dateKey(event.occurred_at));
+    if (point) point.whatsapp_clicks += 1;
+  }
+  for (const event of periodProfileAccesses) {
+    const point = daily.get(dateKey(event.occurred_at));
+    if (point) point.profile_accesses += 1;
+  }
   for (const [key, users] of dailyActiveUsers) {
     const point = daily.get(key);
     if (point) {
@@ -2000,6 +2044,14 @@ const buildCommunityStatistics = (
       anonymous_posts: {
         source: "community_post.anonymous",
         total: anonymousPostCount,
+      },
+      content_engagement: {
+        downvotes: downvoteCount,
+        profile_accesses: periodProfileAccesses.length,
+        saves: savesCount,
+        source: "post_vote+post_save+post_reply_save+important_action_event+page_view_event",
+        upvotes: upvoteCount,
+        whatsapp_clicks: periodWhatsappClicks.length,
       },
       followers: {
         ...followers,
@@ -2326,7 +2378,8 @@ export const showStatistics = async (data: IAdminCommunityStatisticsDTO): Promis
     ...statistics,
     community: communitySummary(community),
     period: period.period,
-    source: "community_member+community_post+post_reply+post_report+page_view_event",
+    source:
+      "community_member+community_post+post_reply+post_report+post_vote+post_save+post_reply_save+page_view_event+important_action_event",
   };
 
   return {

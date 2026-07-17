@@ -2,7 +2,7 @@ import type { Request } from "express";
 
 export type AdminPsychologistsDashboardQuery = {
   from?: string;
-  period?: "all" | "custom" | "month" | "week" | "year";
+  period?: "all" | "custom" | "month" | "today" | "week" | "year";
   to?: string;
 };
 

@@ -140,6 +140,7 @@ const buildDemandGroupFromPatientFilterOptions = (
 };
 
 const DASHBOARD_PERIOD_OPTIONS: { id: DashboardPeriodPreset; label: string }[] = [
+  { id: "today", label: "Hoje" },
   { id: "week", label: "Esta semana" },
   { id: "month", label: "Este mês" },
   { id: "year", label: "Este ano" },
@@ -182,6 +183,7 @@ const dateFromInput = (value: string) => {
 const getDashboardRangeForPeriod = (period: DashboardPeriodPreset): DashboardRange => {
   const today = toInputDate(new Date());
 
+  if (period === "today") return { from: today, to: today };
   if (period === "all") return { from: "", to: today };
   if (period === "month") return { from: toInputDate(startOfCurrentMonth()), to: today };
   if (period === "year") return { from: toInputDate(startOfCurrentYear()), to: today };

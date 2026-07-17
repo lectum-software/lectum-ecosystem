@@ -241,6 +241,7 @@ type StatisticsPeriodPreset = Exclude<StatisticsPeriodValue, "custom">;
 type StatisticsCustomRange = Pick<AdminCommunityStatisticsQuery, "from" | "to">;
 
 const contentPeriodOptions = [
+  { id: "today", label: "Hoje" },
   { id: "week", label: "Esta semana" },
   { id: "month", label: "Este mês" },
   { id: "year", label: "Este ano" },
@@ -403,6 +404,7 @@ const getContentRangeForPeriod = (
 ): Required<ContentCustomRange> => {
   const today = toDateInputValue(new Date());
 
+  if (period === "today") return { from: today, to: today };
   if (period === "month") return { from: toDateInputValue(startOfCurrentMonth()), to: today };
   if (period === "year") return { from: toDateInputValue(startOfCurrentYear()), to: today };
   if (period === "all") return { from: dateInputValueFromString(createdAt), to: today };
@@ -2752,13 +2754,13 @@ const ContentTab = ({ createdAt, slug }: { createdAt: string; slug: string }) =>
     sort: "engagement",
     type: "all",
   });
-  const [selectedPeriod, setSelectedPeriod] = useState<ContentPeriodValue>("all");
-  const [appliedPeriod, setAppliedPeriod] = useState<ContentPeriodValue>("all");
+  const [selectedPeriod, setSelectedPeriod] = useState<ContentPeriodValue>("week");
+  const [appliedPeriod, setAppliedPeriod] = useState<ContentPeriodValue>("week");
   const [draftRange, setDraftRange] = useState<ContentCustomRange>(() =>
-    getContentRangeForPeriod("all", createdAt),
+    getContentRangeForPeriod("week", createdAt),
   );
   const [appliedRange, setAppliedRange] = useState<ContentCustomRange>(() =>
-    getContentRangeForPeriod("all", createdAt),
+    getContentRangeForPeriod("week", createdAt),
   );
   const [rangeError, setRangeError] = useState<string | null>(null);
   const [selected, setSelected] = useState<AdminCommunityContentItem | null>(null);
@@ -3891,8 +3893,8 @@ type CommunityStatisticsDateFilterProps = {
 };
 
 const useCommunityStatisticsDateFilterState = (createdAt: string) => {
-  const [selectedPeriod, setSelectedPeriod] = useState<StatisticsPeriodValue>("month");
-  const initialRange = useMemo(() => getStatisticsRangeForPeriod("month", createdAt), [createdAt]);
+  const [selectedPeriod, setSelectedPeriod] = useState<StatisticsPeriodValue>("week");
+  const initialRange = useMemo(() => getStatisticsRangeForPeriod("week", createdAt), [createdAt]);
   const [draftRange, setDraftRange] = useState<Required<StatisticsCustomRange>>(initialRange);
   const [appliedRange, setAppliedRange] = useState<Required<StatisticsCustomRange>>(initialRange);
   const [rangeError, setRangeError] = useState<string | null>(null);

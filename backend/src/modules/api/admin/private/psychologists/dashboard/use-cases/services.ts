@@ -166,6 +166,11 @@ const resolvePeriod = (
     start = customStart;
     end = customEnd;
     label = "Período personalizado";
+  } else if (preset === "today") {
+    const today = new Date();
+    start = startOfDate(today);
+    end = endOfDate(today);
+    label = "Hoje";
   } else if (preset === "week") {
     const today = new Date();
     start = startOfWeek(today);

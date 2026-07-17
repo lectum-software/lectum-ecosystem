@@ -1722,6 +1722,17 @@ export class AdminCommunityManageRepository {
     ]);
     const postIds = posts.map((post) => post.id);
     const replyIds = replies.map((reply) => reply.id);
+    const profileAccessPsychologistIds = [
+      ...new Set([
+        ...members
+          .filter((member) => member.user.role === "psicologo")
+          .map((member) => member.user_id),
+        ...posts.filter((post) => post.author.role === "psicologo").map((post) => post.author_id),
+        ...replies
+          .filter((reply) => reply.author.role === "psicologo")
+          .map((reply) => reply.author_id),
+      ]),
+    ];
     const pageViewTargets: Prisma.page_view_eventWhereInput[] = [
       {
         target_id: {
@@ -1753,33 +1764,184 @@ export class AdminCommunityManageRepository {
       });
     }
 
-    const pageViews = await prisma.page_view_event.findMany({
-      orderBy: [{ occurred_at: "asc" }, { id: "asc" }],
-      select: adminCommunityStatisticsPageViewSelect,
-      where: {
-        deleted: false,
-        occurred_at: {
-          lte: to,
+    const contentActionTargets: Prisma.important_action_eventWhereInput[] = [];
+
+    if (postIds.length > 0) {
+      contentActionTargets.push({
+        target_id: {
+          in: postIds,
         },
-        user: {
-          active: true,
+        target_type: {
+          in: ["community_post", "post"],
+        },
+      });
+    }
+
+    if (replyIds.length > 0) {
+      contentActionTargets.push({
+        target_id: {
+          in: replyIds,
+        },
+        target_type: {
+          in: ["post_reply", "reply"],
+        },
+      });
+    }
+
+    const [
+      pageViews,
+      postVotes,
+      replyVotes,
+      postSaves,
+      replySaves,
+      contentWhatsappClicks,
+      profileAccesses,
+    ] = await Promise.all([
+      prisma.page_view_event.findMany({
+        orderBy: [{ occurred_at: "asc" }, { id: "asc" }],
+        select: adminCommunityStatisticsPageViewSelect,
+        where: {
           deleted: false,
-          role: {
-            in: ["paciente", "psicologo"],
+          occurred_at: {
+            lte: to,
           },
+          user: {
+            active: true,
+            deleted: false,
+            role: {
+              in: ["paciente", "psicologo"],
+            },
+          },
+          user_id: {
+            not: null,
+          },
+          OR: pageViewTargets,
         },
-        user_id: {
-          not: null,
-        },
-        OR: pageViewTargets,
-      },
-    });
+      }),
+      postIds.length > 0
+        ? prisma.post_vote.findMany({
+            orderBy: [{ createdAt: "asc" }, { id: "asc" }],
+            select: {
+              createdAt: true,
+              value: true,
+            },
+            where: {
+              createdAt: {
+                lte: to,
+              },
+              deleted: false,
+              post_id: {
+                in: postIds,
+              },
+              value: {
+                in: [1, -1],
+              },
+            },
+          })
+        : Promise.resolve([]),
+      replyIds.length > 0
+        ? prisma.post_vote.findMany({
+            orderBy: [{ createdAt: "asc" }, { id: "asc" }],
+            select: {
+              createdAt: true,
+              value: true,
+            },
+            where: {
+              createdAt: {
+                lte: to,
+              },
+              deleted: false,
+              reply_id: {
+                in: replyIds,
+              },
+              value: {
+                in: [1, -1],
+              },
+            },
+          })
+        : Promise.resolve([]),
+      postIds.length > 0
+        ? prisma.post_save.findMany({
+            orderBy: [{ createdAt: "asc" }, { id: "asc" }],
+            select: {
+              createdAt: true,
+            },
+            where: {
+              createdAt: {
+                lte: to,
+              },
+              deleted: false,
+              post_id: {
+                in: postIds,
+              },
+            },
+          })
+        : Promise.resolve([]),
+      replyIds.length > 0
+        ? prisma.post_reply_save.findMany({
+            orderBy: [{ createdAt: "asc" }, { id: "asc" }],
+            select: {
+              createdAt: true,
+            },
+            where: {
+              createdAt: {
+                lte: to,
+              },
+              deleted: false,
+              reply_id: {
+                in: replyIds,
+              },
+            },
+          })
+        : Promise.resolve([]),
+      contentActionTargets.length > 0
+        ? prisma.important_action_event.findMany({
+            orderBy: [{ occurred_at: "asc" }, { id: "asc" }],
+            select: {
+              occurred_at: true,
+            },
+            where: {
+              action_type: "whatsapp_click",
+              deleted: false,
+              occurred_at: {
+                lte: to,
+              },
+              OR: contentActionTargets,
+            },
+          })
+        : Promise.resolve([]),
+      profileAccessPsychologistIds.length > 0
+        ? prisma.page_view_event.findMany({
+            orderBy: [{ occurred_at: "asc" }, { id: "asc" }],
+            select: {
+              occurred_at: true,
+            },
+            where: {
+              deleted: false,
+              occurred_at: {
+                lte: to,
+              },
+              page_kind: "psychologist_profile",
+              target_id: {
+                in: profileAccessPsychologistIds,
+              },
+              target_type: "psychologist",
+            },
+          })
+        : Promise.resolve([]),
+    ]);
 
     return {
+      contentWhatsappClicks,
       members,
       pageViews,
       posts,
+      postSaves,
+      postVotes,
+      profileAccesses,
       replies,
+      replySaves,
+      replyVotes,
       reports,
     };
   }
