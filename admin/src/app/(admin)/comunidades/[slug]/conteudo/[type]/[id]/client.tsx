@@ -13,7 +13,6 @@ import {
   Flag,
   Loader2,
   MessageCircle,
-  PhoneCall,
   Play,
   Share2,
   Trash2,
@@ -236,7 +235,10 @@ const contentTitle = (detail: AdminCommunityContentAnalyticsDetail) =>
   detail.content.excerpt.trim() ||
   (detail.content.type === "post" ? "Post sem título" : "Resposta");
 
-const videoAnalyticsCounters = (detail: AdminCommunityContentAnalyticsDetail) => [
+const videoAnalyticsCounters = (
+  detail: AdminCommunityContentAnalyticsDetail,
+  video: NonNullable<AdminCommunityContentAnalyticsDetail["video"]>,
+) => [
   {
     icon: Eye,
     id: "views",
@@ -244,46 +246,10 @@ const videoAnalyticsCounters = (detail: AdminCommunityContentAnalyticsDetail) =>
     value: detail.metrics.views_count,
   },
   {
-    icon: ArrowUp,
-    id: "upvotes",
-    label: "Upvote",
-    value: detail.metrics.upvotes_count,
-  },
-  {
-    icon: ArrowDown,
-    id: "downvotes",
-    label: "Downvote",
-    value: detail.metrics.downvotes_count,
-  },
-  {
-    icon: MessageCircle,
-    id: "comments",
-    label: "Comentários",
-    value: detail.metrics.comments_count,
-  },
-  {
-    icon: Bookmark,
-    id: "saves",
-    label: "Salvos",
-    value: detail.metrics.saves_count,
-  },
-  {
-    icon: Share2,
-    id: "shares",
-    label: "Compartilhamentos",
-    value: detail.metrics.shares_count,
-  },
-  {
-    icon: PhoneCall,
-    id: "whatsapp_clicks",
-    label: "Cliques no WhatsApp",
-    value: detail.metrics.whatsapp_clicks_count,
-  },
-  {
-    icon: Flag,
-    id: "reports",
-    label: "Denúncias",
-    value: detail.metrics.reports_count,
+    icon: Video,
+    id: "plays",
+    label: "Plays",
+    value: video.metrics.plays_count,
   },
 ];
 
@@ -1019,10 +985,6 @@ const VideoAnalyticsSection = ({ detail }: { detail: AdminCommunityContentAnalyt
             Retenção e interações atribuídas ao conteúdo no período selecionado.
           </p>
         </div>
-        <span className="inline-flex w-fit items-center gap-2 rounded-full bg-primary-soft px-3 py-1 text-xs font-black text-primary">
-          <Video aria-hidden className="h-4 w-4" />
-          {formatCount(video.metrics.plays_count)} plays
-        </span>
       </div>
 
       <div className="mt-5 grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(320px,420px)] xl:items-stretch">
@@ -1038,7 +1000,7 @@ const VideoAnalyticsSection = ({ detail }: { detail: AdminCommunityContentAnalyt
         </div>
 
         <div className="grid min-w-0 gap-3 sm:grid-cols-2">
-          {videoAnalyticsCounters(detail).map((metric) => (
+          {videoAnalyticsCounters(detail, video).map((metric) => (
             <article
               className="min-w-0 rounded-2xl border border-border/70 bg-surface-muted/40 p-4"
               key={metric.id}
