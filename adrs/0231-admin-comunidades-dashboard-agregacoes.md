@@ -98,3 +98,11 @@ A decisao e tratar esses dois cards como visualizacao legada depois que os bloco
 O contrato do endpoint `GET /api/admin/private/communities/dashboard` permanece inalterado para compatibilidade e para evitar mudanca de backend desnecessaria em uma correcao apresentacional. A interface passa a sequenciar **Postagens mais recentes** e **Principais comunidades** diretamente apos os blocos globais de estatisticas.
 
 Consequencia: a pagina fica mais curta e menos redundante, sem endpoint novo, schema Prisma/migration, dependencia, mock, seed ou alteracao de regra de agregacao.
+
+## Atualizacao 2026-07-18: remocao do card de metricas indisponiveis
+
+O dashboard geral `/comunidades` deixa de renderizar o bloco **Metricas indisponiveis ou vazias**.
+
+A decisao e remover esse aviso da superficie principal porque, apos a limpeza dos blocos legados e laterais, a pagina deve terminar nas listas operacionais reais (**Postagens mais recentes** e **Principais comunidades**) sem expor mensagens tecnicas de indisponibilidade que nao representam uma acao imediata para o Admin. O contrato `unavailable` permanece no endpoint para compatibilidade e para possivel uso futuro em experiencias mais contextuais.
+
+Consequencia: a tela fica mais enxuta e evita ruído operacional, sem endpoint novo, alteracao de contrato backend obrigatoria, schema Prisma/migration, dependencia, mock, seed ou mudanca nas regras de agregacao.

@@ -1346,24 +1346,6 @@ const DashboardContent = ({ summary }: { summary: AdminCommunitiesDashboard }) =
         <RecentPostsTable posts={summary.recent_posts.items} />
         <TopCommunitiesTable communities={summary.top_communities.items} />
       </div>
-
-      {summary.unavailable.length > 0 ? (
-        <CardShell className="p-4">
-          <div className="flex gap-3">
-            <AlertTriangle aria-hidden className="mt-0.5 h-5 w-5 shrink-0 text-warning" />
-            <div>
-              <h2 className="font-black text-foreground">Métricas indisponíveis ou vazias</h2>
-              <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-muted">
-                {summary.unavailable.map((item) => (
-                  <li key={item.id}>
-                    <strong className="text-foreground">{item.label}:</strong> {item.description}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-        </CardShell>
-      ) : null}
     </div>
   );
 };

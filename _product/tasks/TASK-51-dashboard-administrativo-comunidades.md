@@ -536,3 +536,26 @@ Regras de UI obrigatórias:
 - `pnpm --dir admin build`
 - `pnpm check`
 - Smoke local `GET http://localhost:3002/comunidades` retornou 200.
+
+## Correcao complementar: remocao do bloco de metricas indisponiveis (2026-07-18)
+
+- Pedido do usuario: remover do dashboard `/comunidades` o bloco **Metricas indisponiveis ou vazias**.
+- A UI deixou de renderizar o card de avisos `summary.unavailable`, incluindo a mensagem de alertas automaticos vazios, para manter o dashboard focado nos blocos analiticos e listas operacionais visiveis.
+- O endpoint e o contrato existentes nao foram alterados nesta correcao; `unavailable` continua disponivel para compatibilidade e possivel uso futuro, mas sem exposicao no dashboard geral.
+- O ajuste permanece mobile-first, sem `<img>` cru, sem package novo e sem alteracao em `backend/prisma/schema.prisma` ou migrations.
+- Builder/Quick Copy `vcp://quickcopy/vcp-24aaa2941d814e5b90572bc93ae50e2a` nao esta exposto como ferramenta callable neste ambiente; referencia usada: captura enviada pelo usuario e implementacao existente de `/comunidades`.
+- ADR atualizado: `adrs/0231-admin-comunidades-dashboard-agregacoes.md`.
+
+### Criterios deste ajuste
+
+- [x] O dashboard `/comunidades` nao renderiza mais o bloco **Metricas indisponiveis ou vazias**.
+- [x] **Principais comunidades** passa a ser o ultimo bloco visual da pagina quando nao houver outros elementos abaixo.
+- [x] O contrato `unavailable` nao foi removido do backend, evitando quebra de compatibilidade.
+- [x] Nenhum mock, dado fake permanente, endpoint simulado, package novo, schema Prisma ou migration foi usado.
+
+### Validacao deste ajuste
+
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check`
+- Smoke local `GET http://localhost:3002/comunidades` retornou 200.
