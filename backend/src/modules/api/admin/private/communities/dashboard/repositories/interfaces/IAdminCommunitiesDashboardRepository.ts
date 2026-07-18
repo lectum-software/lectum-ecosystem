@@ -3,8 +3,20 @@
 export type CommunityPostRecord = {
   anonymous: boolean;
   author: {
+    avatar: string | null;
     id: string;
     name: string;
+    psychologist_profile: {
+      cfp_verified_at: Date | null;
+      crp_status: string | null;
+      gender: string | null;
+      professional_first_name: string | null;
+      professional_last_name: string | null;
+      subscriptions: Array<{
+        id: string;
+        source: string;
+      }>;
+    } | null;
     role: string;
   };
   author_id: string;

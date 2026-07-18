@@ -610,3 +610,34 @@ Regras de UI obrigatórias:
 - `pnpm --dir admin build`
 - `pnpm check`
 - Smoke local `GET http://localhost:3002/comunidades` retornou 200.
+
+## Correcao complementar: autores e link publico em posts populares (2026-07-18)
+
+- Pedido do usuario: no bloco **Posts mais populares** do dashboard `/comunidades`, exibir foto de perfil e selo de verificado na identificacao do autor quando houver, remover as colunas **Salvos** e **Acoes**, e fazer o clique na linha abrir o post original no site publico.
+- O endpoint `GET /api/admin/private/communities/dashboard` agora retorna, em cada item de `popular_posts`, o objeto `author` normalizado com avatar, nome exibivel, genero, papel, anonimato e verificacao real do psicologo. Os campos legados `author_name` e `author_role` foram preservados para compatibilidade.
+- A regra de verificacao usa dados reais de `psychologist_profile` e assinatura profissional ativa/cortesia conforme helper existente; pacientes anonimos continuam sem avatar e com identificacao anonima.
+- A UI Admin renderiza autor com `next/image`, iniciais como fallback e selo de verificado colado ao nome, sem usar `<img>` cru.
+- A tabela desktop de **Posts mais populares** agora exibe somente **Titulo**, **Autor**, **Upvotes** e **Comentarios**; o card mobile tambem remove **Salvos**.
+- Todas as celulas da linha desktop e o card mobile apontam para `NEXT_PUBLIC_FRONTEND_URL + /community/{slug}/post/{id}`, abrindo o post publico original em nova aba.
+- Nao houve package novo, schema Prisma, migration, seed, endpoint paralelo, mock ou dado fake permanente.
+- Builder/Quick Copy `vcp://quickcopy/vcp-24aaa2941d814e5b90572bc93ae50e2a` nao esta exposto como ferramenta callable neste ambiente; referencias usadas: captura enviada pelo usuario, padrao existente de `/comunidades` e `_product/proto/admin/Comunidades/Comunidades - Dashboard.png`.
+- ADR atualizado: `adrs/0231-admin-comunidades-dashboard-agregacoes.md`.
+
+### Criterios deste ajuste
+
+- [x] A identificacao do autor em **Posts mais populares** exibe foto de perfil quando houver.
+- [x] O selo de verificado aparece junto ao nome quando o autor psicologo possui verificacao real.
+- [x] A coluna/card de **Salvos** nao e mais exibida nesse bloco.
+- [x] A coluna **Acoes** nao e mais exibida nesse bloco.
+- [x] O clique em qualquer celula da linha desktop e no card mobile abre o post original no site publico.
+- [x] Nenhum mock, dado fake permanente, endpoint simulado, package novo, schema Prisma ou migration foi usado.
+
+### Validacao deste ajuste
+
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check`
+- Smoke local `GET http://localhost:3002/comunidades` retornou 200.
+- Smoke direto do service real `buildCommunitiesDashboard({ period: "week" })` retornou `status=200`, `popular_posts.items[0].author` com avatar/verificacao e URL publica `/community/{slug}/post/{id}`.

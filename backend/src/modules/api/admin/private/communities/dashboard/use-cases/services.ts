@@ -1,5 +1,6 @@
 ﻿import type { Resolve } from "@/helpers/return";
 import { error, msg } from "@/helpers/translate";
+import { buildProfessionalFullDisplayName } from "@/utils/professional-name";
 import { isVerifiedProfessionalEntitlement } from "@/utils/subscription-entitlement";
 import type {
   AdminCommunitiesDashboardActivitySeries,
@@ -864,26 +865,56 @@ const buildModerationAlerts = (
   };
 };
 
-const publicAuthorName = (post: CommunityPostRecord) => {
+const postAuthorName = (post: CommunityPostRecord) => {
   if (post.anonymous && roleIsPatient(post.author.role)) return "Paciente anônimo";
+  if (!roleIsPsychologist(post.author.role)) return post.author.name;
 
-  return post.author.name;
+  return buildProfessionalFullDisplayName({
+    fallbackName: post.author.name,
+    firstName: post.author.psychologist_profile?.professional_first_name,
+    lastName: post.author.psychologist_profile?.professional_last_name,
+  });
+};
+
+const postAuthorGender = (post: CommunityPostRecord) =>
+  roleIsPsychologist(post.author.role) ? (post.author.psychologist_profile?.gender ?? null) : null;
+
+const mapPostAuthor = (post: CommunityPostRecord) => {
+  const anonymous = post.anonymous && roleIsPatient(post.author.role);
+
+  return {
+    anonymous,
+    avatar: anonymous ? null : post.author.avatar,
+    gender: anonymous ? null : postAuthorGender(post),
+    id: anonymous ? `anonymous:${post.id}` : post.author.id,
+    name: postAuthorName(post),
+    role: post.author.role,
+    verified:
+      !anonymous &&
+      roleIsPsychologist(post.author.role) &&
+      isVerifiedProfessionalEntitlement(post.author.psychologist_profile),
+  };
 };
 
 const buildRecentPosts = (posts: CommunityPostRecord[]) => {
-  const items: AdminCommunitiesDashboardRecentPost[] = posts.slice(0, 5).map((post) => ({
-    anonymous: post.anonymous,
-    author_name: publicAuthorName(post),
-    author_role: post.author.role,
-    comments_count: post.replies_count,
-    community_id: post.community.id,
-    community_name: post.community.name,
-    community_slug: post.community.slug,
-    created_at: post.createdAt,
-    discussion_status: post.replies_count > 0 ? "iniciada" : "nao_iniciada",
-    id: post.id,
-    title: post.title,
-  }));
+  const items: AdminCommunitiesDashboardRecentPost[] = posts.slice(0, 5).map((post) => {
+    const author = mapPostAuthor(post);
+
+    return {
+      anonymous: post.anonymous,
+      author,
+      author_name: author.name,
+      author_role: author.role,
+      comments_count: post.replies_count,
+      community_id: post.community.id,
+      community_name: post.community.name,
+      community_slug: post.community.slug,
+      created_at: post.createdAt,
+      discussion_status: post.replies_count > 0 ? "iniciada" : "nao_iniciada",
+      id: post.id,
+      title: post.title,
+    };
+  });
 
   return {
     items,
@@ -911,22 +942,27 @@ const buildPopularPosts = (posts: CommunityPostRecord[]) => {
       return right.createdAt.getTime() - left.createdAt.getTime();
     })
     .slice(0, 5)
-    .map((post) => ({
-      anonymous: post.anonymous,
-      author_name: publicAuthorName(post),
-      author_role: post.author.role,
-      comments_count: post.replies_count,
-      community_id: post.community.id,
-      community_name: post.community.name,
-      community_slug: post.community.slug,
-      created_at: post.createdAt,
-      discussion_status: post.replies_count > 0 ? "iniciada" : "nao_iniciada",
-      engagement_score: postEngagementScore(post),
-      id: post.id,
-      saves_count: post.saves_count,
-      title: post.title,
-      upvotes_count: post.upvotes_count,
-    }));
+    .map((post) => {
+      const author = mapPostAuthor(post);
+
+      return {
+        anonymous: post.anonymous,
+        author,
+        author_name: author.name,
+        author_role: author.role,
+        comments_count: post.replies_count,
+        community_id: post.community.id,
+        community_name: post.community.name,
+        community_slug: post.community.slug,
+        created_at: post.createdAt,
+        discussion_status: post.replies_count > 0 ? "iniciada" : "nao_iniciada",
+        engagement_score: postEngagementScore(post),
+        id: post.id,
+        saves_count: post.saves_count,
+        title: post.title,
+        upvotes_count: post.upvotes_count,
+      };
+    });
 
   return {
     items,

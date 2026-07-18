@@ -19,8 +19,9 @@ import {
   Users,
   UsersRound,
 } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
-import { type FocusEventHandler, useCallback, useRef, useState } from "react";
+import { type FocusEventHandler, type SVGProps, useCallback, useRef, useState } from "react";
 import { useAdminCommunitiesDashboard } from "@/api/callers/communities";
 import { resolveApiError } from "@/api/handle";
 import type {
@@ -51,6 +52,9 @@ const percentageFormatter = new Intl.NumberFormat("pt-BR", {
   maximumFractionDigits: 1,
   minimumFractionDigits: 0,
 });
+const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+const publicFrontendUrl = process.env.NEXT_PUBLIC_FRONTEND_URL || "http://localhost:3000";
+const publicMediaPathPrefixes = ["/public/files/", "/community/icons/"] as const;
 type DashboardStatisticDailyKey = Exclude<keyof CommunitiesDashboardStatisticsDailyPoint, "date">;
 type DashboardStatisticMetricId =
   | "active_patients"
@@ -356,6 +360,154 @@ const getCommunityDashboardPeriodLabel = (period: CommunityDashboardPeriodValue)
 const BlockPeriodLabel = ({ children }: { children: string }) => (
   <p className="mt-1 text-sm font-bold leading-6 text-muted">{children}</p>
 );
+
+const isPublicMediaPath = (pathname: string) =>
+  publicMediaPathPrefixes.some((prefix) => pathname.startsWith(prefix));
+
+const resolveAdminMediaUrl = (src?: string | null) => {
+  const value = src?.trim();
+  if (!value) return null;
+
+  const apiBase = apiUrl.replace(/\/$/, "");
+
+  try {
+    const parsed = new URL(value, apiBase);
+    if (isPublicMediaPath(parsed.pathname)) {
+      return `${apiBase}${parsed.pathname}${parsed.search}`;
+    }
+    if (value.startsWith("http")) return value;
+    return value.startsWith("/") ? value : `${apiBase}/${value}`;
+  } catch {
+    if (publicMediaPathPrefixes.some((prefix) => value.startsWith(prefix))) {
+      return `${apiBase}${value}`;
+    }
+    return value.startsWith("/") || value.startsWith("http") ? value : null;
+  }
+};
+
+const allowedRemoteImageHosts = () => {
+  const hosts = new Set(["localhost", "127.0.0.1", "lh3.googleusercontent.com"]);
+
+  for (const candidate of [
+    apiUrl,
+    ...(process.env.NEXT_PUBLIC_IMAGE_REMOTE_HOSTS?.split(",") ?? []),
+  ]) {
+    const normalized = candidate.trim();
+    if (!normalized) continue;
+
+    try {
+      const url = new URL(normalized.includes("://") ? normalized : `https://${normalized}`);
+      if (url.hostname) hosts.add(url.hostname);
+    } catch {
+      // Entradas inválidas de env não devem quebrar a renderização administrativa.
+    }
+  }
+
+  return hosts;
+};
+
+const canRenderImage = (src: string | null) => {
+  const resolved = resolveAdminMediaUrl(src);
+  if (!resolved) return false;
+  if (resolved.startsWith("/")) return true;
+
+  try {
+    const url = new URL(resolved);
+
+    return allowedRemoteImageHosts().has(url.hostname);
+  } catch {
+    return false;
+  }
+};
+
+const renderableImageSrc = (src: string | null) => {
+  const resolved = resolveAdminMediaUrl(src);
+
+  return resolved && canRenderImage(resolved) ? resolved : null;
+};
+
+const isAdminPublicMediaUrl = (src?: string | null) => {
+  const resolved = resolveAdminMediaUrl(src);
+  if (!resolved) return false;
+
+  try {
+    return isPublicMediaPath(new URL(resolved).pathname);
+  } catch {
+    return publicMediaPathPrefixes.some(
+      (prefix) => resolved.startsWith(prefix) || resolved.includes(prefix),
+    );
+  }
+};
+
+const toPublicHref = (path: string) => {
+  if (/^https?:\/\//.test(path)) return path;
+
+  return `${publicFrontendUrl.replace(/\/$/, "")}${path}`;
+};
+
+const popularPostPublicHref = (post: CommunitiesDashboardPopularPost) =>
+  toPublicHref(`/community/${post.community_slug}/post/${post.id}`);
+
+const initials = (value: string) =>
+  value
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase())
+    .join("") || "AU";
+
+const psychologistRoleLabel = (gender?: string | null) =>
+  gender?.trim().toLowerCase() === "feminino" ? "Psicóloga" : "Psicólogo";
+
+const dashboardAuthorRoleLabel = (author: CommunitiesDashboardPopularPost["author"]) =>
+  author.role === "psicologo" ? psychologistRoleLabel(author.gender) : "Paciente";
+
+const VerifiedBadgeIcon = ({ className, ...props }: SVGProps<SVGSVGElement>) => (
+  <svg
+    className={cn("h-4 w-4 shrink-0 text-primary", className)}
+    fill="none"
+    viewBox="0 0 30 28"
+    xmlns="http://www.w3.org/2000/svg"
+    {...props}
+  >
+    <title>Perfil verificado</title>
+    <path
+      d="M10.3636 28L7.77273 23.7333L2.86364 22.6667L3.34091 17.7333L0 14L3.34091 10.2667L2.86364 5.33333L7.77273 4.26667L10.3636 0L15 1.93333L19.6364 0L22.2273 4.26667L27.1364 5.33333L26.6591 10.2667L30 14L26.6591 17.7333L27.1364 22.6667L22.2273 23.7333L19.6364 28L15 26.0667L10.3636 28ZM13.5682 18.7333L21.2727 11.2L19.3636 9.26667L13.5682 14.9333L10.6364 12.1333L8.72727 14L13.5682 18.7333Z"
+      fill="currentColor"
+    />
+  </svg>
+);
+
+const PopularPostAuthorIdentity = ({ post }: { post: CommunitiesDashboardPopularPost }) => {
+  const author = post.author;
+  const avatarSrc = renderableImageSrc(author.avatar);
+
+  return (
+    <div className="flex min-w-0 items-center gap-3">
+      <div className="relative grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-full border border-border bg-primary-soft text-xs font-black text-primary">
+        {avatarSrc ? (
+          <Image
+            alt={`Foto de perfil de ${author.name}`}
+            className="object-cover"
+            fill
+            sizes="40px"
+            src={avatarSrc}
+            unoptimized={isAdminPublicMediaUrl(author.avatar)}
+          />
+        ) : (
+          initials(author.name)
+        )}
+      </div>
+      <div className="min-w-0 flex-1">
+        <div className="flex min-w-0 items-center gap-1.5">
+          <span className="min-w-0 truncate font-bold text-foreground">{author.name}</span>
+          {author.verified ? <VerifiedBadgeIcon aria-label="Perfil verificado" /> : null}
+        </div>
+        <p className="truncate text-xs font-bold text-muted">{dashboardAuthorRoleLabel(author)}</p>
+      </div>
+    </div>
+  );
+};
 
 const roundDashboardStatisticPercent = (value: number) => Math.round(value * 10) / 10;
 
@@ -1172,135 +1324,156 @@ const PopularPostsTable = ({
 }: {
   periodLabel: string;
   posts: CommunitiesDashboardPopularPost[];
-}) => (
-  <CardShell className="p-5">
-    <div className="flex items-center justify-between gap-3">
-      <div>
-        <h2 className="text-lg font-black text-foreground">Posts mais populares</h2>
-        <BlockPeriodLabel>{periodLabel}</BlockPeriodLabel>
+}) => {
+  return (
+    <CardShell className="p-5">
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <h2 className="text-lg font-black text-foreground">Posts mais populares</h2>
+          <BlockPeriodLabel>{periodLabel}</BlockPeriodLabel>
+        </div>
+        <span className="text-xs font-black text-primary">Ver todas</span>
       </div>
-      <span className="text-xs font-black text-primary">Ver todas</span>
-    </div>
 
-    {posts.length === 0 ? (
-      <p className="mt-5 rounded-2xl bg-surface-muted p-4 text-sm text-muted">
-        Nenhum post popular real encontrado no período.
-      </p>
-    ) : (
-      <>
-        <div className="mt-5 grid gap-3 md:hidden">
-          {posts.map((post) => (
-            <article
-              className="rounded-2xl border border-border bg-surface-muted p-4"
-              key={post.id}
-            >
-              <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0">
-                  <p className="truncate font-black text-foreground">{post.title}</p>
-                  <p className="mt-1 text-xs text-muted">
-                    {post.community_name} · {formatDateTime(post.created_at)}
-                  </p>
-                </div>
+      {posts.length === 0 ? (
+        <p className="mt-5 rounded-2xl bg-surface-muted p-4 text-sm text-muted">
+          Nenhum post popular real encontrado no período.
+        </p>
+      ) : (
+        <>
+          <div className="mt-5 grid gap-3 md:hidden">
+            {posts.map((post) => {
+              const href = popularPostPublicHref(post);
+              const title = post.title.trim() || "Post sem título";
+
+              return (
                 <Link
-                  aria-label={`Abrir comunidade ${post.community_name}`}
-                  className="grid h-9 w-9 shrink-0 place-items-center rounded-xl border border-border bg-surface text-primary transition hover:border-primary"
-                  href={`/comunidades/${post.community_slug}`}
+                  aria-label={`Abrir post ${title} no site público`}
+                  className="block rounded-2xl border border-border bg-surface-muted p-4 transition hover:border-primary/30 hover:bg-primary-soft/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
+                  href={href}
+                  key={post.id}
+                  rel="noreferrer"
+                  target="_blank"
                 >
-                  <Eye aria-hidden className="h-4 w-4" />
+                  <article>
+                    <div className="min-w-0">
+                      <p className="truncate font-black text-foreground">{title}</p>
+                      <p className="mt-1 text-xs text-muted">
+                        {post.community_name} · {formatDateTime(post.created_at)}
+                      </p>
+                    </div>
+                    <div className="mt-3">
+                      <PopularPostAuthorIdentity post={post} />
+                    </div>
+                    <div className="mt-3 grid grid-cols-2 gap-2 text-xs text-muted">
+                      <p className="rounded-xl bg-surface p-3">
+                        <span className="block">Upvotes</span>
+                        <strong className="inline-flex items-center gap-1.5 text-sm text-foreground">
+                          <ArrowUp aria-hidden className="h-3.5 w-3.5 text-primary" />
+                          {numberFormatter.format(post.upvotes_count)}
+                        </strong>
+                      </p>
+                      <p className="rounded-xl bg-surface p-3">
+                        <span className="block">Comentários</span>
+                        <strong className="inline-flex items-center gap-1.5 text-sm text-foreground">
+                          <MessageCircle aria-hidden className="h-3.5 w-3.5 text-primary" />
+                          {numberFormatter.format(post.comments_count)}
+                        </strong>
+                      </p>
+                    </div>
+                  </article>
                 </Link>
-              </div>
-              <div className="mt-3 grid gap-2 text-xs text-muted">
-                <p>
-                  <strong className="text-foreground">Autor:</strong> {post.author_name} ·{" "}
-                  <span className="capitalize">{post.author_role}</span>
-                </p>
-                <div className="grid grid-cols-3 gap-2">
-                  <p className="rounded-xl bg-surface p-3">
-                    <span className="block">Upvotes</span>
-                    <strong className="text-sm text-foreground">
-                      {numberFormatter.format(post.upvotes_count)}
-                    </strong>
-                  </p>
-                  <p className="rounded-xl bg-surface p-3">
-                    <span className="block">Comentários</span>
-                    <strong className="text-sm text-foreground">
-                      {numberFormatter.format(post.comments_count)}
-                    </strong>
-                  </p>
-                  <p className="rounded-xl bg-surface p-3">
-                    <span className="block">Salvos</span>
-                    <strong className="text-sm text-foreground">
-                      {numberFormatter.format(post.saves_count)}
-                    </strong>
-                  </p>
-                </div>
-              </div>
-            </article>
-          ))}
-        </div>
-        <div className="mt-5 hidden min-w-0 overflow-hidden md:block">
-          <table className="w-full table-fixed border-separate border-spacing-0 text-left text-sm">
-            <thead className="text-xs text-muted">
-              <tr>
-                <th className="w-[34%] border-b border-border py-3 pr-3 font-black">Título</th>
-                <th className="w-[22%] border-b border-border px-3 py-3 font-black">Autor</th>
-                <th className="w-[12%] border-b border-border px-3 py-3 font-black">Upvotes</th>
-                <th className="w-[14%] border-b border-border px-3 py-3 font-black">Comentários</th>
-                <th className="w-[10%] border-b border-border px-3 py-3 font-black">Salvos</th>
-                <th className="w-[8%] border-b border-border py-3 pl-3 text-right font-black">
-                  Ações
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {posts.map((post) => (
-                <tr key={post.id}>
-                  <td className="min-w-0 border-b border-border py-4 pr-3 align-top">
-                    <p className="truncate font-black text-foreground">{post.title}</p>
-                    <p className="mt-1 truncate text-xs text-muted">
-                      {post.community_name} · {formatDateTime(post.created_at)}
-                    </p>
-                  </td>
-                  <td className="min-w-0 border-b border-border px-3 py-4 align-top">
-                    <p className="truncate font-bold text-foreground">{post.author_name}</p>
-                    <p className="truncate text-xs capitalize text-muted">{post.author_role}</p>
-                  </td>
-                  <td className="border-b border-border px-3 py-4 align-top">
-                    <span className="inline-flex items-center gap-2 font-black text-foreground">
-                      <ArrowUp aria-hidden className="h-4 w-4 text-primary" />
-                      {numberFormatter.format(post.upvotes_count)}
-                    </span>
-                  </td>
-                  <td className="border-b border-border px-3 py-4 align-top">
-                    <span className="inline-flex items-center gap-2 font-black text-foreground">
-                      <MessageCircle aria-hidden className="h-4 w-4 text-primary" />
-                      {numberFormatter.format(post.comments_count)}
-                    </span>
-                  </td>
-                  <td className="border-b border-border px-3 py-4 align-top">
-                    <span className="inline-flex items-center gap-2 font-black text-foreground">
-                      <Bookmark aria-hidden className="h-4 w-4 text-primary" />
-                      {numberFormatter.format(post.saves_count)}
-                    </span>
-                  </td>
-                  <td className="border-b border-border py-4 pl-3 text-right align-top">
-                    <Link
-                      aria-label={`Abrir comunidade ${post.community_name}`}
-                      className="inline-grid h-9 w-9 place-items-center rounded-xl border border-border text-primary transition hover:border-primary"
-                      href={`/comunidades/${post.community_slug}`}
-                    >
-                      <Eye aria-hidden className="h-4 w-4" />
-                    </Link>
-                  </td>
+              );
+            })}
+          </div>
+          <div className="mt-5 hidden min-w-0 overflow-hidden md:block">
+            <table className="w-full table-fixed border-separate border-spacing-0 text-left text-sm">
+              <thead className="text-xs text-muted">
+                <tr>
+                  <th className="w-[42%] border-b border-border py-3 pr-3 font-black">Título</th>
+                  <th className="w-[32%] border-b border-border px-3 py-3 font-black">Autor</th>
+                  <th className="w-[13%] border-b border-border px-3 py-3 font-black">Upvotes</th>
+                  <th className="w-[13%] border-b border-border px-3 py-3 font-black">
+                    Comentários
+                  </th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </>
-    )}
-  </CardShell>
-);
+              </thead>
+              <tbody>
+                {posts.map((post) => {
+                  const href = popularPostPublicHref(post);
+                  const title = post.title.trim() || "Post sem título";
+
+                  return (
+                    <tr
+                      className="group cursor-pointer align-top transition hover:bg-surface-muted/50"
+                      key={post.id}
+                    >
+                      <td className="min-w-0 border-b border-border align-top">
+                        <Link
+                          aria-label={`Abrir post ${title} no site público`}
+                          className="block py-4 pr-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
+                          href={href}
+                          rel="noreferrer"
+                          target="_blank"
+                        >
+                          <p className="truncate font-black text-foreground group-hover:text-primary">
+                            {title}
+                          </p>
+                          <p className="mt-1 truncate text-xs text-muted">
+                            {post.community_name} · {formatDateTime(post.created_at)}
+                          </p>
+                        </Link>
+                      </td>
+                      <td className="min-w-0 border-b border-border align-top">
+                        <Link
+                          aria-label={`Abrir post ${title} no site público`}
+                          className="block px-3 py-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
+                          href={href}
+                          rel="noreferrer"
+                          target="_blank"
+                        >
+                          <PopularPostAuthorIdentity post={post} />
+                        </Link>
+                      </td>
+                      <td className="border-b border-border align-top">
+                        <Link
+                          aria-label={`Abrir post ${title} no site público`}
+                          className="block px-3 py-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
+                          href={href}
+                          rel="noreferrer"
+                          target="_blank"
+                        >
+                          <span className="inline-flex items-center gap-2 font-black text-foreground">
+                            <ArrowUp aria-hidden className="h-4 w-4 text-primary" />
+                            {numberFormatter.format(post.upvotes_count)}
+                          </span>
+                        </Link>
+                      </td>
+                      <td className="border-b border-border align-top">
+                        <Link
+                          aria-label={`Abrir post ${title} no site público`}
+                          className="block px-3 py-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
+                          href={href}
+                          rel="noreferrer"
+                          target="_blank"
+                        >
+                          <span className="inline-flex items-center gap-2 font-black text-foreground">
+                            <MessageCircle aria-hidden className="h-4 w-4 text-primary" />
+                            {numberFormatter.format(post.comments_count)}
+                          </span>
+                        </Link>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </>
+      )}
+    </CardShell>
+  );
+};
 
 const TopCommunitiesTable = ({
   communities,

@@ -124,3 +124,13 @@ A decisao e ampliar o contrato do endpoint existente `GET /api/admin/private/com
 A UI mantem o bloco mobile-first, com cards no mobile e tabela no desktop, e exibe somente a linha de periodo abaixo do titulo, mantendo consistencia com os blocos ajustados anteriormente. A sequencia da pagina passa a ser: estatisticas globais, **Postagens mais recentes**, **Posts mais populares** e **Principais comunidades**.
 
 Consequencia: o Admin ganha uma leitura global de conteudo com maior interacao no periodo sem package novo, endpoint novo, schema Prisma/migration, mock, seed ou nova regra persistida. A fonte de verdade continua sendo a agregacao backend do dashboard.
+
+## Atualizacao 2026-07-18: identificacao e navegacao dos posts populares
+
+O bloco **Posts mais populares** da visao geral `/comunidades` passa a tratar cada linha como atalho para o post original no site publico.
+
+A decisao e manter o endpoint unico do dashboard, ampliando o item de `popular_posts` com o mesmo objeto de autor normalizado usado em conteudos da comunidade: nome exibivel, papel, genero, avatar e flag de verificacao derivada de `psychologist_profile`/assinatura profissional real. Para pacientes anonimos, o autor continua sem avatar e com identificacao anonima, preservando a regra visual ja existente.
+
+A UI remove as colunas **Salvos** e **Acoes** dessa tabela porque elas competiam por largura e duplicavam a navegacao para comunidade. O ranking continua podendo usar `saves_count` no backend como criterio de ordenacao/desempate, mas esse contador deixa de ser exibido nesse bloco resumido. Todas as celulas da linha e o card mobile apontam para `NEXT_PUBLIC_FRONTEND_URL + /community/{slug}/post/{id}`, abrindo o conteudo publico original.
+
+Consequencia: a leitura do autor fica consistente com foto e selo quando houver, a tabela fica mais enxuta e a acao primaria vira abrir o post publico, sem endpoint novo, package, schema Prisma/migration, mock, seed ou alteracao de regra persistida.

@@ -199,8 +199,19 @@ export type AdminCommunitiesDashboardModerationAlert = {
   target_type: string;
 };
 
+export type AdminCommunitiesDashboardPostAuthor = {
+  anonymous: boolean;
+  avatar: string | null;
+  gender: string | null;
+  id: string;
+  name: string;
+  role: string;
+  verified: boolean;
+};
+
 export type AdminCommunitiesDashboardRecentPost = {
   anonymous: boolean;
+  author: AdminCommunitiesDashboardPostAuthor;
   author_name: string;
   author_role: string;
   comments_count: number;

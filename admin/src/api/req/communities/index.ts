@@ -77,8 +77,11 @@ export type CommunitiesDashboardModerationAlert = {
   target_type: string;
 };
 
+export type CommunitiesDashboardPostAuthor = AdminCommunityContentAuthor;
+
 export type CommunitiesDashboardRecentPost = {
   anonymous: boolean;
+  author: CommunitiesDashboardPostAuthor;
   author_name: string;
   author_role: string;
   comments_count: number;

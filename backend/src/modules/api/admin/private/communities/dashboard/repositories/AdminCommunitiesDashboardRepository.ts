@@ -192,8 +192,25 @@ export class AdminCommunitiesDashboardRepository implements IAdminCommunitiesDas
         upvotes_count: true,
         author: {
           select: {
+            avatar: true,
             id: true,
             name: true,
+            psychologist_profile: {
+              select: {
+                cfp_verified_at: true,
+                crp_status: true,
+                gender: true,
+                professional_first_name: true,
+                professional_last_name: true,
+                subscriptions: {
+                  where: activeProfessionalEntitlementWhere(),
+                  select: {
+                    id: true,
+                    source: true,
+                  },
+                },
+              },
+            },
             role: true,
           },
         },
