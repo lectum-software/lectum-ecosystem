@@ -1100,3 +1100,13 @@ Regras de cálculo:
 - Builder/Quick Copy nao esta exposto como ferramenta callable no ambiente; a referencia usada foi a captura enviada pelo usuario e o padrao local do carrossel de **Estatisticas de conteudo** da comunidade.
 - ADR atualizado: `adrs/0266-metricas-conversao-uso-psicologos-admin.md`.
 - Validacao executada: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke HTTP local `GET http://localhost:3002/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=estatisticas` retornando 200.
+
+## Ajuste complementar 2026-07-18 - CORS do login Admin com Accept-Language
+
+- Pedido do usuario: corrigir o toast **Nao foi possivel conectar ao backend** exibido no login Admin em `http://localhost:3002/login`.
+- Diagnostico: o Admin envia `Accept-Language: pt-BR` junto de `Content-Type` e `x-device`; como o backend nao liberava `Accept-Language` em `Access-Control-Allow-Headers`, o navegador podia bloquear a preflight CORS antes da resposta real da API.
+- Correcao: o CORS do backend passou a permitir explicitamente `Accept-Language`, preservando a separacao das apps (`admin` em 3002 e backend em 3001) e as mensagens PT-BR reais do backend.
+- Nao houve mock, package novo, endpoint novo, schema Prisma/migration, seed ou alteracao de persistencia.
+- Builder/Quick Copy nao se aplica: ajuste tecnico de integracao/CORS, validado por preflight HTTP e browser headless local.
+- ADR atualizado: `adrs/0226-admin-app-separado-shell.md`.
+- Validacao executada: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm check`, `OPTIONS http://localhost:3001/api/admin/public/auth/login` com `Access-Control-Request-Headers=accept-language,content-type,x-device` retornando `204` e browser headless a partir de `localhost:3002` recebendo resposta real `403 auth_incorrect` em vez de erro de rede/CORS.

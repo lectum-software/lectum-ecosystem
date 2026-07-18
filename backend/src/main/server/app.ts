@@ -67,6 +67,7 @@ server.use(
     allowedHeaders: [
       "Content-Type",
       "Authorization",
+      "Accept-Language",
       "X-Requested-With",
       "Accept",
       "Origin",

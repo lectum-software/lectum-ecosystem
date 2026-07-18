@@ -26,6 +26,9 @@ A referência visual ativa para esta etapa foi `_product/proto/admin/Dashboard.p
   - `POST /api/admin/private/auth/logout`.
 - Armazenar sessão administrativa com prefixo `lectum.admin.*`, separado do storage/cookie do frontend de pacientes/psicólogos.
 - Enviar `x-device` no client Admin com fingerprint local prefixado por `admin-` e fallback persistido em `lectum.admin.device`.
+- Permitir explicitamente `Accept-Language` no CORS do backend, pois o Admin envia esse header
+  nas chamadas cross-origin `localhost:3002 -> localhost:3001` para manter mensagens PT-BR sem
+  transformar falha de preflight em erro genérico de conexão no navegador.
 - Entregar shell mobile-first com sidebar escura, drawer em telas pequenas, recolher/expandir no desktop e placeholders honestos sem métricas fake até as tasks específicas.
 
 ## Consequências
@@ -34,6 +37,7 @@ A referência visual ativa para esta etapa foi `_product/proto/admin/Dashboard.p
 - Existe duplicação controlada de pequenas fundações de API/formulário no `admin/`, justificada pela separação obrigatória entre aplicações.
 - As próximas telas administrativas podem reutilizar o shell e a autenticação já criados, conectando dados reais nas tasks de cada domínio.
 - Como não há mocks, o teste completo de login exige um administrador real criado via `pnpm --dir backend admin:bootstrap`.
+- O contrato CORS local/produção precisa acompanhar os headers usados pelos clients separados; caso contrário, o browser bloqueia a request antes de o backend retornar erros reais de autenticação.
 
 ## Validação
 
