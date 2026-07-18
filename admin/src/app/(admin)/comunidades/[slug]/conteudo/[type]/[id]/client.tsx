@@ -13,9 +13,9 @@ import {
   Flag,
   Loader2,
   MessageCircle,
+  PhoneCall,
   Play,
   Share2,
-  ShieldCheck,
   Trash2,
   Video,
 } from "lucide-react";
@@ -129,15 +129,6 @@ const formatDateTime = (value?: string | null) => {
   return dateTimeFormatter.format(date);
 };
 
-const formatDuration = (seconds: number | null) => {
-  if (seconds === null) return "—";
-  if (seconds < 60) return `${seconds}s`;
-  const minutes = Math.floor(seconds / 60);
-  const remaining = String(seconds % 60).padStart(2, "0");
-
-  return `${minutes}:${remaining}`;
-};
-
 const normalizeTargetType = (value: string): ContentDetailTargetType | null => {
   if (value === "post" || value === "comment" || value === "reply") return value;
 
@@ -245,7 +236,7 @@ const contentTitle = (detail: AdminCommunityContentAnalyticsDetail) =>
   detail.content.excerpt.trim() ||
   (detail.content.type === "post" ? "Post sem título" : "Resposta");
 
-const metricCards = (detail: AdminCommunityContentAnalyticsDetail) => [
+const videoAnalyticsCounters = (detail: AdminCommunityContentAnalyticsDetail) => [
   {
     icon: Eye,
     id: "views",
@@ -255,25 +246,25 @@ const metricCards = (detail: AdminCommunityContentAnalyticsDetail) => [
   {
     icon: ArrowUp,
     id: "upvotes",
-    label: "Upvotes",
+    label: "Upvote",
     value: detail.metrics.upvotes_count,
   },
   {
     icon: ArrowDown,
     id: "downvotes",
-    label: "Downvotes",
+    label: "Downvote",
     value: detail.metrics.downvotes_count,
   },
   {
     icon: MessageCircle,
     id: "comments",
-    label: detail.content.type === "post" ? "Comentários" : "Respostas geradas",
+    label: "Comentários",
     value: detail.metrics.comments_count,
   },
   {
     icon: Bookmark,
     id: "saves",
-    label: "Salvamentos",
+    label: "Salvos",
     value: detail.metrics.saves_count,
   },
   {
@@ -283,16 +274,16 @@ const metricCards = (detail: AdminCommunityContentAnalyticsDetail) => [
     value: detail.metrics.shares_count,
   },
   {
+    icon: PhoneCall,
+    id: "whatsapp_clicks",
+    label: "Cliques no WhatsApp",
+    value: detail.metrics.whatsapp_clicks_count,
+  },
+  {
     icon: Flag,
     id: "reports",
     label: "Denúncias",
     value: detail.metrics.reports_count,
-  },
-  {
-    icon: ShieldCheck,
-    id: "moderation",
-    label: "Moderação",
-    value: detail.metrics.moderation_events_count,
   },
 ];
 
@@ -596,26 +587,393 @@ const PreviewSection = ({ detail }: { detail: AdminCommunityContentAnalyticsDeta
   );
 };
 
-const StatCards = ({ detail }: { detail: AdminCommunityContentAnalyticsDetail }) => (
-  <section aria-labelledby="content-detail-stats-title">
-    <h2 className="sr-only" id="content-detail-stats-title">
-      Estatísticas principais do conteúdo
-    </h2>
-    <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-      {metricCards(detail).map((metric) => (
-        <article className={cn(cardClass, "p-4")} key={metric.id}>
-          <span className="grid h-11 w-11 place-items-center rounded-[18px] bg-primary-soft text-primary">
-            <metric.icon aria-hidden className="h-5 w-5" />
+type ContentVideoAnalytics = NonNullable<AdminCommunityContentAnalyticsDetail["video"]>;
+type ContentVideoRetentionCurvePoint = ContentVideoAnalytics["retention"][number];
+
+const CONTENT_RETENTION_CHART_WIDTH = 300;
+const CONTENT_RETENTION_CHART_TOP = 12;
+const CONTENT_RETENTION_CHART_BOTTOM = 116;
+const CONTENT_RETENTION_CHART_AXIS_LABEL_Y = 144;
+const CONTENT_RETENTION_CHART_LEFT_PADDING = 18;
+const CONTENT_RETENTION_CHART_RIGHT_PADDING = 58;
+
+const clampVideoPercent = (value: number) => Math.min(100, Math.max(0, value));
+
+const formatVideoAxisTime = (positionPercent: number, durationSeconds?: number | null) => {
+  if (!durationSeconds || !Number.isFinite(durationSeconds) || durationSeconds <= 0) {
+    return positionPercent === 0 ? "0:00" : "Fim";
+  }
+
+  const clampedPosition = clampVideoPercent(positionPercent);
+  const totalSeconds = Math.round((clampedPosition / 100) * durationSeconds);
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+
+  if (hours > 0) {
+    return `${hours}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+  }
+
+  return `${minutes}:${String(seconds).padStart(2, "0")}`;
+};
+
+const buildContentVideoRetentionAxisTicks = (durationSeconds?: number | null) => {
+  if (!durationSeconds || !Number.isFinite(durationSeconds) || durationSeconds <= 0) {
+    return [
+      { id: "start", label: "0:00", positionPercent: 0 },
+      { id: "end", label: "Fim", positionPercent: 100 },
+    ];
+  }
+
+  const totalSeconds = Math.max(1, Math.round(durationSeconds));
+  const tickCount = totalSeconds <= 60 ? 3 : totalSeconds <= 300 ? 4 : 5;
+
+  return Array.from({ length: tickCount }, (_, index) => {
+    const positionPercent = (index / (tickCount - 1)) * 100;
+
+    return {
+      id: String(index),
+      label: formatVideoAxisTime(positionPercent, durationSeconds),
+      positionPercent,
+    };
+  });
+};
+
+const toContentVideoRetentionChartPoint = (positionPercent: number, percentage: number) => {
+  const x =
+    CONTENT_RETENTION_CHART_LEFT_PADDING +
+    (clampVideoPercent(positionPercent) / 100) *
+      (CONTENT_RETENTION_CHART_WIDTH -
+        CONTENT_RETENTION_CHART_LEFT_PADDING -
+        CONTENT_RETENTION_CHART_RIGHT_PADDING);
+  const y =
+    CONTENT_RETENTION_CHART_TOP +
+    ((100 - clampVideoPercent(percentage)) / 100) *
+      (CONTENT_RETENTION_CHART_BOTTOM - CONTENT_RETENTION_CHART_TOP);
+
+  return { x, y };
+};
+
+const buildContentVideoRetentionCurvePoints = (
+  video: ContentVideoAnalytics,
+): ContentVideoRetentionCurvePoint[] => {
+  if (video.metrics.plays_count <= 0) {
+    return [
+      { label: "0%", percentage: 0, position_percent: 0 },
+      { label: "100%", percentage: 0, position_percent: 100 },
+    ];
+  }
+
+  const points = video.retention
+    .map((point) => ({
+      label: point.label,
+      percentage: clampVideoPercent(point.percentage),
+      position_percent: clampVideoPercent(point.position_percent),
+    }))
+    .sort((left, right) => left.position_percent - right.position_percent);
+  const firstPoint = points[0];
+  const lastPoint = points[points.length - 1];
+
+  if (!firstPoint || firstPoint.position_percent > 0) {
+    points.unshift({ label: "0%", percentage: 100, position_percent: 0 });
+  }
+
+  if (!lastPoint || lastPoint.position_percent < 100) {
+    points.push({
+      label: "100%",
+      percentage: clampVideoPercent(video.metrics.completion_rate),
+      position_percent: 100,
+    });
+  }
+
+  return points;
+};
+
+const buildSmoothContentVideoRetentionPath = (points: ContentVideoRetentionCurvePoint[]) => {
+  if (points.length === 0) return "";
+
+  const chartPoints = points.map((point) =>
+    toContentVideoRetentionChartPoint(point.position_percent, point.percentage),
+  );
+  const firstPoint = chartPoints[0];
+  if (!firstPoint) return "";
+  let path = `M ${firstPoint.x.toFixed(2)} ${firstPoint.y.toFixed(2)}`;
+
+  if (chartPoints.length === 1) return path;
+
+  if (chartPoints.length === 2) {
+    const lastPoint = chartPoints[1];
+    if (!lastPoint) return path;
+
+    const control1X = firstPoint.x + (lastPoint.x - firstPoint.x) * 0.42;
+    const control2X = firstPoint.x + (lastPoint.x - firstPoint.x) * 0.78;
+
+    return `${path} C ${control1X.toFixed(2)} ${firstPoint.y.toFixed(
+      2,
+    )}, ${control2X.toFixed(2)} ${lastPoint.y.toFixed(2)}, ${lastPoint.x.toFixed(
+      2,
+    )} ${lastPoint.y.toFixed(2)}`;
+  }
+
+  for (let index = 1; index < chartPoints.length - 1; index += 1) {
+    const point = chartPoints[index];
+    const nextPoint = chartPoints[index + 1];
+
+    if (!point || !nextPoint) continue;
+
+    const midX = (point.x + nextPoint.x) / 2;
+    const midY = (point.y + nextPoint.y) / 2;
+
+    path += ` Q ${point.x.toFixed(2)} ${point.y.toFixed(2)}, ${midX.toFixed(2)} ${midY.toFixed(2)}`;
+  }
+
+  const penultimatePoint = chartPoints[chartPoints.length - 2];
+  const lastPoint = chartPoints[chartPoints.length - 1];
+
+  if (penultimatePoint && lastPoint) {
+    path += ` Q ${penultimatePoint.x.toFixed(2)} ${penultimatePoint.y.toFixed(
+      2,
+    )}, ${lastPoint.x.toFixed(2)} ${lastPoint.y.toFixed(2)}`;
+  }
+
+  return path;
+};
+
+const ContentVideoRetentionChart = ({ video }: { video: ContentVideoAnalytics }) => {
+  const chartPoints = buildContentVideoRetentionCurvePoints(video);
+  const smoothPath = buildSmoothContentVideoRetentionPath(chartPoints);
+  const firstChartPoint = chartPoints[0] ?? { label: "0%", percentage: 0, position_percent: 0 };
+  const lastChartPoint = chartPoints[chartPoints.length - 1] ?? {
+    label: "100%",
+    percentage: 0,
+    position_percent: 100,
+  };
+  const firstAreaPoint = toContentVideoRetentionChartPoint(
+    firstChartPoint.position_percent,
+    firstChartPoint.percentage,
+  );
+  const lastAreaPoint = toContentVideoRetentionChartPoint(
+    lastChartPoint.position_percent,
+    lastChartPoint.percentage,
+  );
+  const areaPath = smoothPath
+    ? `${smoothPath} L ${lastAreaPoint.x.toFixed(
+        2,
+      )} ${CONTENT_RETENTION_CHART_BOTTOM} L ${firstAreaPoint.x.toFixed(
+        2,
+      )} ${CONTENT_RETENTION_CHART_BOTTOM} Z`
+    : "";
+  const axisTicks = buildContentVideoRetentionAxisTicks(video.metrics.duration_seconds);
+
+  return (
+    <div className="grid min-w-0 gap-3">
+      <div className="relative w-full overflow-hidden rounded-[22px] bg-transparent px-1 py-2 text-left">
+        <svg
+          aria-label="Curva de retenção real do vídeo do conteúdo"
+          className="mx-auto h-[clamp(185px,24vw,245px)] w-full max-w-[620px] overflow-visible text-subtle"
+          preserveAspectRatio="xMidYMid meet"
+          role="img"
+          viewBox="0 0 300 150"
+        >
+          <title>Curva de retenção por trecho assistido do vídeo</title>
+          <defs>
+            <linearGradient id="content-video-retention-gradient" x1="0" x2="1" y1="0" y2="0">
+              <stop offset="0%" stopColor="var(--admin-primary)" />
+              <stop offset="100%" stopColor="var(--admin-primary-hover)" />
+            </linearGradient>
+            <linearGradient id="content-video-retention-fill" x1="0" x2="0" y1="0" y2="1">
+              <stop offset="0%" stopColor="var(--admin-primary)" stopOpacity="0.16" />
+              <stop offset="100%" stopColor="var(--admin-primary)" stopOpacity="0" />
+            </linearGradient>
+            <filter
+              colorInterpolationFilters="sRGB"
+              height="160%"
+              id="content-video-retention-shadow"
+              width="160%"
+              x="-30%"
+              y="-30%"
+            >
+              <feDropShadow
+                dx="0"
+                dy="2"
+                floodColor="var(--admin-primary)"
+                floodOpacity="0.14"
+                stdDeviation="1.4"
+              />
+            </filter>
+          </defs>
+          <line
+            stroke="currentColor"
+            strokeDasharray="3 6"
+            strokeOpacity="0.42"
+            strokeWidth="0.8"
+            vectorEffect="non-scaling-stroke"
+            x1={CONTENT_RETENTION_CHART_LEFT_PADDING}
+            x2={CONTENT_RETENTION_CHART_WIDTH - CONTENT_RETENTION_CHART_RIGHT_PADDING + 4}
+            y1="12"
+            y2="12"
+          />
+          <line
+            stroke="currentColor"
+            strokeDasharray="3 6"
+            strokeOpacity="0.42"
+            strokeWidth="0.8"
+            vectorEffect="non-scaling-stroke"
+            x1={CONTENT_RETENTION_CHART_LEFT_PADDING}
+            x2={CONTENT_RETENTION_CHART_WIDTH - CONTENT_RETENTION_CHART_RIGHT_PADDING + 4}
+            y1="64"
+            y2="64"
+          />
+          {areaPath ? <path d={areaPath} fill="url(#content-video-retention-fill)" /> : null}
+          {smoothPath ? (
+            <path
+              d={smoothPath}
+              fill="none"
+              filter="url(#content-video-retention-shadow)"
+              stroke="url(#content-video-retention-gradient)"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2.4"
+              vectorEffect="non-scaling-stroke"
+            />
+          ) : null}
+          <line
+            className="stroke-border"
+            strokeLinecap="round"
+            strokeWidth="3.4"
+            vectorEffect="non-scaling-stroke"
+            x1={CONTENT_RETENTION_CHART_LEFT_PADDING}
+            x2={CONTENT_RETENTION_CHART_WIDTH - CONTENT_RETENTION_CHART_RIGHT_PADDING + 4}
+            y1="122"
+            y2="122"
+          />
+          <line
+            stroke="var(--admin-primary)"
+            strokeLinecap="round"
+            strokeWidth="3.4"
+            vectorEffect="non-scaling-stroke"
+            x1={CONTENT_RETENTION_CHART_LEFT_PADDING}
+            x2={CONTENT_RETENTION_CHART_LEFT_PADDING}
+            y1="122"
+            y2="122"
+          />
+          <circle
+            className="fill-surface stroke-border"
+            cx={CONTENT_RETENTION_CHART_LEFT_PADDING}
+            cy="122"
+            r="6.5"
+            strokeWidth="1.5"
+            vectorEffect="non-scaling-stroke"
+          />
+          {axisTicks.map((tick) => {
+            const tickPoint = toContentVideoRetentionChartPoint(tick.positionPercent, 0);
+
+            return (
+              <g key={tick.id}>
+                <line
+                  className="stroke-border"
+                  strokeWidth="1"
+                  vectorEffect="non-scaling-stroke"
+                  x1={tickPoint.x}
+                  x2={tickPoint.x}
+                  y1="122"
+                  y2="128"
+                />
+                <text
+                  className="fill-subtle text-[8px] font-black"
+                  dominantBaseline="middle"
+                  textAnchor="middle"
+                  x={tickPoint.x}
+                  y={CONTENT_RETENTION_CHART_AXIS_LABEL_Y}
+                >
+                  {tick.label}
+                </text>
+              </g>
+            );
+          })}
+        </svg>
+        <span className="pointer-events-none absolute right-5 top-4 rounded-full bg-surface/95 px-1.5 py-0.5 text-[0.65rem] font-extrabold leading-none text-subtle shadow-sm">
+          100%
+        </span>
+        <span className="pointer-events-none absolute right-5 top-1/2 -translate-y-1/2 rounded-full bg-surface/95 px-1.5 py-0.5 text-[0.65rem] font-extrabold leading-none text-subtle shadow-sm">
+          50%
+        </span>
+      </div>
+
+      {video.retention_dropoff ? (
+        <div className="rounded-2xl border border-border/70 bg-surface px-3 py-3 text-left text-xs leading-5 text-muted">
+          <span className="block font-black text-foreground">Maior queda</span>
+          <span>
+            {video.retention_dropoff.from_label} → {video.retention_dropoff.to_label} (
+            {formatPercent(video.retention_dropoff.rate_drop)} de queda).
           </span>
-          <p className="mt-4 text-xs font-black uppercase tracking-[0.14em] text-muted">
-            {metric.label}
-          </p>
-          <p className="mt-2 text-3xl font-black text-foreground">{formatCount(metric.value)}</p>
-        </article>
-      ))}
+        </div>
+      ) : null}
     </div>
-  </section>
-);
+  );
+};
+
+const VideoAnalyticsSection = ({ detail }: { detail: AdminCommunityContentAnalyticsDetail }) => {
+  const video = detail.video;
+  if (!video) return null;
+
+  return (
+    <section
+      className={cn(cardClass, "p-5")}
+      aria-labelledby="content-detail-video-analytics-title"
+    >
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <h2
+            className="text-xl font-black text-foreground"
+            id="content-detail-video-analytics-title"
+          >
+            Análises do vídeo
+          </h2>
+          <p className="mt-1 text-sm font-bold text-muted">
+            Retenção e interações atribuídas ao conteúdo no período selecionado.
+          </p>
+        </div>
+        <span className="inline-flex w-fit items-center gap-2 rounded-full bg-primary-soft px-3 py-1 text-xs font-black text-primary">
+          <Video aria-hidden className="h-4 w-4" />
+          {formatCount(video.metrics.plays_count)} plays
+        </span>
+      </div>
+
+      <div className="mt-5 grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(320px,420px)] xl:items-stretch">
+        <div className="min-w-0 rounded-[1.5rem] border border-border/70 bg-surface-muted/40 p-3 sm:p-4">
+          {!video.available ? (
+            <p className="rounded-2xl border border-border/70 bg-surface px-4 py-5 text-sm font-bold leading-6 text-muted">
+              {video.unavailable_reason ||
+                "Retenção indisponível - a coleta começa a partir dos próximos acessos ao vídeo."}
+            </p>
+          ) : (
+            <ContentVideoRetentionChart video={video} />
+          )}
+        </div>
+
+        <div className="grid min-w-0 gap-3 sm:grid-cols-2">
+          {videoAnalyticsCounters(detail).map((metric) => (
+            <article
+              className="min-w-0 rounded-2xl border border-border/70 bg-surface-muted/40 p-4"
+              key={metric.id}
+            >
+              <span className="grid h-10 w-10 place-items-center rounded-[16px] bg-primary-soft text-primary">
+                <metric.icon aria-hidden className="h-5 w-5" />
+              </span>
+              <p className="mt-3 text-[11px] font-black uppercase tracking-[0.14em] text-muted">
+                {metric.label}
+              </p>
+              <p className="mt-2 text-2xl font-black text-foreground">
+                {formatCount(metric.value)}
+              </p>
+            </article>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+};
 
 const seriesConfigs = [
   { color: "#2F8CFF", key: "views", label: "Visualizações" },
@@ -757,100 +1115,6 @@ const EvolutionChart = ({ detail }: { detail: AdminCommunityContentAnalyticsDeta
               ))}
             </ul>
           </div>
-        </>
-      )}
-    </section>
-  );
-};
-
-const VideoRetentionSection = ({ detail }: { detail: AdminCommunityContentAnalyticsDetail }) => {
-  const video = detail.video;
-  if (!video) return null;
-
-  return (
-    <section className={cn(cardClass, "p-5")} aria-labelledby="content-detail-retention-title">
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <h2 className="text-xl font-black text-foreground" id="content-detail-retention-title">
-            Retenção de vídeo
-          </h2>
-          <p className="mt-1 text-sm font-bold text-muted [overflow-wrap:anywhere]">
-            Fonte real: {video.source}
-          </p>
-        </div>
-        <span className="inline-flex w-fit items-center gap-2 rounded-full bg-primary-soft px-3 py-1 text-xs font-black text-primary">
-          <Video aria-hidden className="h-4 w-4" />
-          {formatCount(video.metrics.plays_count)} plays
-        </span>
-      </div>
-      {!video.available ? (
-        <p className="mt-5 rounded-2xl bg-surface-muted p-4 text-sm font-bold text-muted">
-          {video.unavailable_reason ||
-            "Retenção indisponível - a coleta começa a partir dos próximos acessos ao vídeo."}
-        </p>
-      ) : (
-        <>
-          <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
-            <p className="rounded-2xl bg-surface-muted p-4">
-              <span className="block text-xs font-black text-muted">Conclusões</span>
-              <strong className="mt-1 block text-2xl font-black text-foreground">
-                {formatCount(video.metrics.completed_count)}
-              </strong>
-            </p>
-            <p className="rounded-2xl bg-surface-muted p-4">
-              <span className="block text-xs font-black text-muted">Taxa de conclusão</span>
-              <strong className="mt-1 block text-2xl font-black text-foreground">
-                {formatPercent(video.metrics.completion_rate)}
-              </strong>
-            </p>
-            <p className="rounded-2xl bg-surface-muted p-4">
-              <span className="block text-xs font-black text-muted">Replays</span>
-              <strong className="mt-1 block text-2xl font-black text-foreground">
-                {formatCount(video.metrics.replay_count)}
-              </strong>
-            </p>
-            <p className="rounded-2xl bg-surface-muted p-4">
-              <span className="block text-xs font-black text-muted">Tempo médio</span>
-              <strong className="mt-1 block text-2xl font-black text-foreground">
-                {formatDuration(video.metrics.average_watched_seconds)}
-              </strong>
-            </p>
-            <p className="rounded-2xl bg-surface-muted p-4">
-              <span className="block text-xs font-black text-muted">Retenção média</span>
-              <strong className="mt-1 block text-2xl font-black text-foreground">
-                {formatPercent(video.metrics.average_retention_percent)}
-              </strong>
-            </p>
-          </div>
-          <div className="mt-5 overflow-hidden rounded-[24px] border border-border bg-surface-muted p-3">
-            <svg
-              aria-label="Gráfico de retenção de vídeo por percentual alcançado"
-              className="h-64 w-full overflow-visible"
-              preserveAspectRatio="none"
-              role="img"
-              viewBox="0 0 100 100"
-            >
-              <title>Retenção do vídeo do conteúdo</title>
-              <polyline
-                fill="none"
-                points={video.retention
-                  .map((point) => `${point.position_percent},${100 - point.percentage}`)
-                  .join(" ")}
-                stroke="#2F8CFF"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2.2"
-                vectorEffect="non-scaling-stroke"
-              />
-            </svg>
-          </div>
-          {video.retention_dropoff ? (
-            <p className="mt-4 rounded-2xl bg-surface-muted p-4 text-sm font-bold text-muted">
-              Maior queda: {video.retention_dropoff.from_label} → {video.retention_dropoff.to_label}{" "}
-              ({formatPercent(video.retention_dropoff.rate_drop)}
-              ).
-            </p>
-          ) : null}
         </>
       )}
     </section>
@@ -1198,9 +1462,8 @@ export const AdminCommunityContentDetailClient = ({
             rangeError={rangeError}
           />
           <PreviewSection detail={detail} />
-          <StatCards detail={detail} />
+          <VideoAnalyticsSection detail={detail} />
           <EvolutionChart detail={detail} />
-          <VideoRetentionSection detail={detail} />
           <ModerationSection detail={detail} />
           <RemovalSection
             detail={detail}
