@@ -1357,6 +1357,10 @@ const buildContentVideoAnalytics = (
   const replayCount = sessions.reduce((total, session) => total + session.replay_count, 0);
   const durationSeconds =
     sessions.reduce((max, session) => Math.max(max, session.duration_seconds), 0) || null;
+  const totalWatchedSeconds = sessions.reduce(
+    (total, session) => total + session.watched_seconds,
+    0,
+  );
   const watchedSessions = sessions.filter((session) => session.watched_seconds > 0);
   const averageWatchedSeconds =
     watchedSessions.length > 0
@@ -1419,6 +1423,8 @@ const buildContentVideoAnalytics = (
       duration_seconds: durationSeconds,
       plays_count: playsCount,
       replay_count: replayCount,
+      replay_rate_percent: playsCount > 0 ? roundPercent((replayCount / playsCount) * 100) : 0,
+      total_watched_seconds: totalWatchedSeconds,
     },
     retention,
     retention_dropoff: available ? retentionDropoff : null,

@@ -7,14 +7,18 @@ import {
   ArrowUp,
   Bookmark,
   CalendarDays,
+  CheckCircle2,
   ChevronDown,
+  Clock3,
   Eye,
   FileText,
   Flag,
   Loader2,
   MessageCircle,
   Play,
+  RotateCcw,
   Share2,
+  Timer,
   Trash2,
   Video,
 } from "lucide-react";
@@ -117,8 +121,26 @@ const removalFormSchema = z.object({
 type RemovalFormValues = z.infer<typeof removalFormSchema>;
 
 const formatCount = (value: number) => numberFormatter.format(value);
-const formatPercent = (value: number | null) =>
-  value === null ? "—" : `${percentageFormatter.format(value)}%`;
+const formatPercent = (value?: number | null) =>
+  typeof value !== "number" || !Number.isFinite(value)
+    ? "—"
+    : `${percentageFormatter.format(value)}%`;
+const formatRatioPercent = (value: number, total: number) =>
+  total > 0 ? formatPercent((value / total) * 100) : "0%";
+const formatPlaybackDuration = (seconds?: number | null) => {
+  if (typeof seconds !== "number" || !Number.isFinite(seconds)) return "—";
+  if (seconds < 60) return `${seconds}s`;
+
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  const remainingSeconds = seconds % 60;
+
+  if (hours > 0) {
+    return `${hours}h ${String(minutes).padStart(2, "0")}m`;
+  }
+
+  return `${minutes}m ${String(remainingSeconds).padStart(2, "0")}s`;
+};
 
 const formatDateTime = (value?: string | null) => {
   if (!value) return "—";
@@ -243,13 +265,43 @@ const videoAnalyticsCounters = (
     icon: Eye,
     id: "views",
     label: "Visualizações",
-    value: detail.metrics.views_count,
+    value: formatCount(detail.metrics.views_count),
   },
   {
     icon: Video,
     id: "plays",
     label: "Plays",
-    value: video.metrics.plays_count,
+    caption: `${formatRatioPercent(video.metrics.plays_count, detail.metrics.views_count)} das visualizações`,
+    value: formatCount(video.metrics.plays_count),
+  },
+  {
+    icon: Timer,
+    id: "total_watched_seconds",
+    label: "Tempo total de reprodução",
+    value: formatPlaybackDuration(video.metrics.total_watched_seconds),
+  },
+  {
+    icon: Clock3,
+    id: "average_watched_seconds",
+    label: "Tempo médio de reprodução",
+    caption:
+      video.metrics.average_retention_percent === null
+        ? "Sem retenção suficiente"
+        : `${formatPercent(video.metrics.average_retention_percent)} do vídeo`,
+    value: formatPlaybackDuration(video.metrics.average_watched_seconds),
+  },
+  {
+    icon: CheckCircle2,
+    id: "completion_rate",
+    label: "Taxa que assistiu completo",
+    value: formatPercent(video.metrics.completion_rate),
+  },
+  {
+    icon: RotateCcw,
+    id: "replay_rate_percent",
+    label: "Taxa de replay",
+    caption: `${formatCount(video.metrics.replay_count)} replays`,
+    value: formatPercent(video.metrics.replay_rate_percent),
   },
 ];
 
@@ -1011,9 +1063,10 @@ const VideoAnalyticsSection = ({ detail }: { detail: AdminCommunityContentAnalyt
               <p className="mt-3 text-[11px] font-black uppercase tracking-[0.14em] text-muted">
                 {metric.label}
               </p>
-              <p className="mt-2 text-2xl font-black text-foreground">
-                {formatCount(metric.value)}
-              </p>
+              <p className="mt-2 text-2xl font-black text-foreground">{metric.value}</p>
+              {"caption" in metric && metric.caption ? (
+                <p className="mt-1 text-xs font-bold leading-5 text-muted">{metric.caption}</p>
+              ) : null}
             </article>
           ))}
         </div>

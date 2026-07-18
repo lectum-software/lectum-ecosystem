@@ -645,6 +645,8 @@ export type AdminCommunityContentAnalyticsDetail = {
       duration_seconds: number | null;
       plays_count: number;
       replay_count: number;
+      replay_rate_percent: number;
+      total_watched_seconds: number;
     };
     retention: {
       label: string;
