@@ -559,3 +559,27 @@ Regras de UI obrigatórias:
 - `pnpm --dir admin build`
 - `pnpm check`
 - Smoke local `GET http://localhost:3002/comunidades` retornou 200.
+
+## Correcao complementar: periodo abaixo dos titulos dos blocos (2026-07-18)
+
+- Pedido do usuario: abaixo dos titulos dos blocos do dashboard `/comunidades` (por exemplo **Estatisticas de pessoas** e **Estatisticas de conteudo**), exibir o periodo no mesmo padrao visual usado no Admin de Psicologos.
+- A UI agora exibe somente `Periodo: {opcao selecionada} · {data inicial} a {data final}` abaixo dos titulos dos blocos filtrados por periodo: **Estatisticas de pessoas**, **Estatisticas de conteudo**, **Postagens mais recentes** e **Principais comunidades**.
+- As descricoes auxiliares que ficavam imediatamente abaixo desses titulos foram removidas para que a linha abaixo do titulo contenha apenas o periodo, conforme o padrao solicitado.
+- O periodo usa o preset selecionado no front (`Esta semana`, `Este mes`, `Ultimos 90 dias` ou `Personalizado`) e as datas reais retornadas pelo endpoint, sem alterar contrato de API, regra de agregacao ou persistencia.
+- O ajuste permanece mobile-first, sem `<img>` cru, sem package novo e sem alteracao em `backend/prisma/schema.prisma` ou migrations.
+- Builder/Quick Copy `vcp://quickcopy/vcp-24aaa2941d814e5b90572bc93ae50e2a` nao esta exposto como ferramenta callable neste ambiente; referencias usadas: captura enviada pelo usuario, padrao local de `/psicologos` e `_product/proto/admin/Comunidades/Comunidades - Dashboard.png`.
+- ADR atualizado: `adrs/0231-admin-comunidades-dashboard-agregacoes.md`.
+
+### Criterios deste ajuste
+
+- [x] Os blocos filtrados por periodo no dashboard `/comunidades` exibem a linha de periodo logo abaixo do titulo.
+- [x] A linha segue o padrao `Periodo: {preset} · {data inicial} a {data final}` usado no Admin de Psicologos.
+- [x] Abaixo dos titulos dos blocos nao ha descricao auxiliar concorrendo com o periodo.
+- [x] Nenhum mock, dado fake permanente, endpoint simulado, package novo, schema Prisma ou migration foi usado.
+
+### Validacao deste ajuste
+
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check`
+- Smoke local `GET http://localhost:3002/comunidades` retornou 200.

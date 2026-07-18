@@ -106,3 +106,11 @@ O dashboard geral `/comunidades` deixa de renderizar o bloco **Metricas indispon
 A decisao e remover esse aviso da superficie principal porque, apos a limpeza dos blocos legados e laterais, a pagina deve terminar nas listas operacionais reais (**Postagens mais recentes** e **Principais comunidades**) sem expor mensagens tecnicas de indisponibilidade que nao representam uma acao imediata para o Admin. O contrato `unavailable` permanece no endpoint para compatibilidade e para possivel uso futuro em experiencias mais contextuais.
 
 Consequencia: a tela fica mais enxuta e evita ruído operacional, sem endpoint novo, alteracao de contrato backend obrigatoria, schema Prisma/migration, dependencia, mock, seed ou mudanca nas regras de agregacao.
+
+## Atualizacao 2026-07-18: periodo como unico texto abaixo dos titulos dos blocos
+
+O dashboard geral `/comunidades` passa a exibir o contexto de periodo imediatamente abaixo dos titulos dos blocos filtrados por periodo, seguindo o padrao visual ja aplicado no Admin de Psicologos: `Periodo: {preset} Â· {data inicial} a {data final}`.
+
+A decisao e remover, nessa posicao, descricoes tecnicas ou auxiliares como fontes de dados e textos explicativos gerais. Para **Estatisticas de pessoas**, **Estatisticas de conteudo**, **Postagens mais recentes** e **Principais comunidades**, a linha imediatamente abaixo do titulo deve conter somente o periodo selecionado. O preset e resolvido no frontend a partir do seletor visivel, enquanto as datas continuam vindo do periodo real retornado por `GET /api/admin/private/communities/dashboard`.
+
+Consequencia: a leitura do filtro aplicado fica consistente com `/psicologos` e mais clara para o Admin, sem endpoint novo, alteracao de contrato, schema Prisma/migration, dependencia, mock, seed ou mudanca nas regras de agregacao.

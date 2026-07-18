@@ -341,6 +341,21 @@ const formatShortRange = (from: string, to: string) => {
   return `${formatter.format(dateFromInput(from))} - ${formatter.format(dateFromInput(to))}`;
 };
 
+const formatSelectedPeriod = (
+  period: Pick<AdminCommunitiesDashboard["period"], "from" | "to">,
+  label: string,
+) => `Período: ${label} · ${formatDate(period.from)} a ${formatDate(period.to)}`;
+
+const getCommunityDashboardPeriodLabel = (period: CommunityDashboardPeriodValue) =>
+  period === "custom"
+    ? "Personalizado"
+    : (COMMUNITY_DASHBOARD_PERIOD_OPTIONS.find((option) => option.id === period)?.label ??
+      "Período selecionado");
+
+const BlockPeriodLabel = ({ children }: { children: string }) => (
+  <p className="mt-1 text-sm font-bold leading-6 text-muted">{children}</p>
+);
+
 const roundDashboardStatisticPercent = (value: number) => Math.round(value * 10) / 10;
 
 const dashboardStatisticPercentageChange = (current: number, previous: number) => {
@@ -970,18 +985,18 @@ const DashboardStatisticsLineChart = ({
 
 const DashboardStatisticsSection = ({
   counterLayout = "grid",
-  description,
   metrics,
   onToggleMetric,
   points,
+  periodLabel,
   previousLabel,
   title,
   visibleMetricIds,
 }: {
   counterLayout?: "carousel" | "grid";
-  description: string;
   metrics: DashboardStatisticMetricItem[];
   onToggleMetric: (id: DashboardStatisticMetricId) => void;
+  periodLabel: string;
   points: CommunitiesDashboardStatisticsDailyPoint[];
   previousLabel: string;
   title: string;
@@ -993,7 +1008,7 @@ const DashboardStatisticsSection = ({
     <CardShell className="p-5 sm:p-6">
       <div>
         <h2 className="text-lg font-black text-foreground">{title}</h2>
-        <p className="mt-1 text-sm font-medium text-muted">{description}</p>
+        <BlockPeriodLabel>{periodLabel}</BlockPeriodLabel>
       </div>
       {counterLayout === "grid" ? (
         <DashboardStatisticsMetricGrid
@@ -1017,12 +1032,18 @@ const DashboardStatisticsSection = ({
   );
 };
 
-const RecentPostsTable = ({ posts }: { posts: CommunitiesDashboardRecentPost[] }) => (
+const RecentPostsTable = ({
+  periodLabel,
+  posts,
+}: {
+  periodLabel: string;
+  posts: CommunitiesDashboardRecentPost[];
+}) => (
   <CardShell className="p-5">
     <div className="flex items-center justify-between gap-3">
       <div>
         <h2 className="text-lg font-black text-foreground">Postagens mais recentes</h2>
-        <p className="mt-1 text-xs font-bold text-muted">community_post + post_reply</p>
+        <BlockPeriodLabel>{periodLabel}</BlockPeriodLabel>
       </div>
       <span className="text-xs font-black text-primary">Ver todas</span>
     </div>
@@ -1145,15 +1166,17 @@ const RecentPostsTable = ({ posts }: { posts: CommunitiesDashboardRecentPost[] }
 
 const TopCommunitiesTable = ({
   communities,
+  periodLabel,
 }: {
   communities: CommunitiesDashboardTopCommunity[];
+  periodLabel: string;
 }) => (
   <div className="scroll-mt-6" id="lista-de-comunidades">
     <CardShell className="p-5">
       <div className="flex items-center justify-between gap-3">
         <div>
           <h2 className="text-lg font-black text-foreground">Principais comunidades</h2>
-          <p className="mt-1 text-xs font-bold text-muted">ranking por atividade real no período</p>
+          <BlockPeriodLabel>{periodLabel}</BlockPeriodLabel>
         </div>
         <Link
           className="text-xs font-black text-primary transition hover:text-primary-hover"
@@ -1278,7 +1301,13 @@ const TopCommunitiesTable = ({
   </div>
 );
 
-const DashboardContent = ({ summary }: { summary: AdminCommunitiesDashboard }) => {
+const DashboardContent = ({
+  periodLabel,
+  summary,
+}: {
+  periodLabel: string;
+  summary: AdminCommunitiesDashboard;
+}) => {
   const noRecords = !hasPeriodRecords(summary);
   const [visiblePeopleMetricIds, setVisiblePeopleMetricIds] = useState<
     DashboardStatisticMetricId[]
@@ -1322,9 +1351,9 @@ const DashboardContent = ({ summary }: { summary: AdminCommunitiesDashboard }) =
 
       <DashboardStatisticsSection
         counterLayout="grid"
-        description="Visão geral de psicólogos e pacientes em todas as comunidades."
         metrics={peopleMetrics}
         onToggleMetric={togglePeopleMetric}
+        periodLabel={periodLabel}
         points={summary.global_statistics.current.charts.daily}
         previousLabel={previousLabel}
         title="Estatísticas de pessoas"
@@ -1333,9 +1362,9 @@ const DashboardContent = ({ summary }: { summary: AdminCommunitiesDashboard }) =
 
       <DashboardStatisticsSection
         counterLayout="carousel"
-        description="Conteúdo e engajamento agregados de todas as comunidades."
         metrics={contentMetrics}
         onToggleMetric={toggleContentMetric}
+        periodLabel={periodLabel}
         points={summary.global_statistics.current.charts.daily}
         previousLabel={previousLabel}
         title="Estatísticas de conteúdo"
@@ -1343,8 +1372,11 @@ const DashboardContent = ({ summary }: { summary: AdminCommunitiesDashboard }) =
       />
 
       <div className="min-w-0 space-y-5">
-        <RecentPostsTable posts={summary.recent_posts.items} />
-        <TopCommunitiesTable communities={summary.top_communities.items} />
+        <RecentPostsTable periodLabel={periodLabel} posts={summary.recent_posts.items} />
+        <TopCommunitiesTable
+          communities={summary.top_communities.items}
+          periodLabel={periodLabel}
+        />
       </div>
     </div>
   );
@@ -1401,7 +1433,15 @@ export const AdminCommunitiesClient = () => {
         <ErrorState message={queryError} onRetry={() => void query.refetch()} />
       ) : null}
 
-      {validRange && query.data ? <DashboardContent summary={query.data} /> : null}
+      {validRange && query.data ? (
+        <DashboardContent
+          periodLabel={formatSelectedPeriod(
+            query.data.period,
+            getCommunityDashboardPeriodLabel(selectedPeriod),
+          )}
+          summary={query.data}
+        />
+      ) : null}
     </div>
   );
 };
