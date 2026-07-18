@@ -205,3 +205,12 @@ Exibir estatísticas de negócio/comunidade e publicações do psicólogo com da
 - Não houve alteração de contrato backend, dados, Prisma schema ou migrations; `pnpm --dir backend db:migrate` não foi necessário.
 - Builder/Quick Copy não estava disponível como ferramenta callable no ambiente; foram usados o PNG local `_product/proto/admin/Psicólogos/Detalhes do psicólogo/Estatísticas.png` e o recorte atual enviado pelo usuário.
 - Validações executadas para este ajuste: `pnpm --dir admin check`, `pnpm check`, `pnpm --dir admin build` e browser local/headless via Chrome/CDP em `/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=estatisticas`, confirmando `0` setas em **Estatísticas de negócio** e preservação das setas opcionais em **Estatísticas de comunidade**.
+
+### Ajuste de largura útil dos contadores de negócio em 2026-07-18
+
+- Os cards/KPIs da seção **Estatísticas de negócio** passaram a usar uma largura desktop específica para 5 colunas, consumindo a largura útil do bloco depois da remoção das setas laterais.
+- O comportamento mobile-first foi preservado: 1 card por vez em telas estreitas, 2 colunas em `sm`, 3 colunas em `lg` e 5 colunas apenas em `xl+`.
+- O componente compartilhado de contadores recebeu classe opcional por item; o layout padrão continua inalterado para outros carrosséis, incluindo **Estatísticas de comunidade**.
+- Não houve alteração de contrato backend, dados, Prisma schema ou migrations; `pnpm --dir backend db:migrate` não foi necessário.
+- Builder/Quick Copy não estava disponível como ferramenta callable no ambiente; foram usados o PNG local `_product/proto/admin/Psicólogos/Detalhes do psicólogo/Estatísticas.png` e o recorte atual enviado pelo usuário.
+- Validações executadas para este ajuste: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e browser local/headless via Chrome/CDP em `/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=estatisticas`, confirmando 5 cards visíveis em **Estatísticas de negócio**, sem setas, com a última borda alinhada à largura útil da seção.

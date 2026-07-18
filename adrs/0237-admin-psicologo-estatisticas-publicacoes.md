@@ -355,3 +355,15 @@ Decisão complementar:
 - Preservar a navegação opcional para outras seções que ainda possam precisar de controle manual de rolagem.
 
 Consequência: a área de negócio fica mais limpa e alinhada ao recorte visual/protótipo, sem alterar fonte de dados, contrato backend ou tracking.
+
+## Emenda 2026-07-18 - largura útil dos contadores de negócio
+
+A seção **Estatísticas de negócio** deve aproveitar a largura útil disponível no desktop com os 5 cards/KPIs principais em uma única linha sem reservar uma sexta coluna vazia depois da remoção das setas laterais.
+
+Decisão complementar:
+
+- Manter o componente compartilhado de contadores com layout padrão para demais seções.
+- Permitir classe responsiva opcional por item quando uma seção tiver quantidade fixa de KPIs e precisar de dimensionamento próprio.
+- Aplicar o dimensionamento de 5 colunas apenas em **Estatísticas de negócio**, preservando 1/2/3 colunas em breakpoints menores e rolagem por gesto no mobile.
+
+Consequência: os contadores de negócio ocupam melhor o espaço visual disponível sem alterar dados, contrato backend, tracking, acessibilidade dos botões de KPI ou o comportamento das estatísticas de comunidade.

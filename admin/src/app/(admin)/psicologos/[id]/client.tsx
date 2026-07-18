@@ -2414,12 +2414,20 @@ const StatisticsStaticMetricCard = ({
   );
 };
 
+const defaultStatisticsMetricItemClassName =
+  "flex w-full shrink-0 snap-start sm:w-[calc((100%_-_0.5rem)/2)] lg:w-[calc((100%_-_1rem)/3)] 2xl:w-[calc((100%_-_2.5rem)/6)]";
+
+const businessStatisticsMetricItemClassName =
+  "flex w-full shrink-0 snap-start sm:w-[calc((100%_-_0.5rem)/2)] lg:w-[calc((100%_-_1rem)/3)] xl:w-[calc((100%_-_2rem)/5)]";
+
 const StatisticsMetricCarousel = ({
   items,
+  itemClassName = defaultStatisticsMetricItemClassName,
   showNavigation = true,
   title,
 }: {
   items: { content: ReactNode; id: string }[];
+  itemClassName?: string;
   showNavigation?: boolean;
   title: string;
 }) => {
@@ -2455,10 +2463,7 @@ const StatisticsMetricCarousel = ({
           ref={scrollerRef}
         >
           {items.map((item) => (
-            <div
-              className="flex w-full shrink-0 snap-start sm:w-[calc((100%_-_0.5rem)/2)] lg:w-[calc((100%_-_1rem)/3)] 2xl:w-[calc((100%_-_2.5rem)/6)]"
-              key={item.id}
-            >
+            <div className={itemClassName} key={item.id}>
               {item.content}
             </div>
           ))}
@@ -3580,6 +3585,7 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: st
           </div>
 
           <StatisticsMetricCarousel
+            itemClassName={businessStatisticsMetricItemClassName}
             items={businessCards.map(({ config, metric }) => ({
               content: (
                 <StatisticsMetricToggleCard
