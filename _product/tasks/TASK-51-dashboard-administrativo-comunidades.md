@@ -512,3 +512,27 @@ Regras de UI obrigatórias:
 - `pnpm --dir admin build`
 - `pnpm check`
 - Smoke local `GET http://localhost:3002/comunidades` retornou 200.
+
+## Correcao complementar: remocao dos blocos redundantes de atividade e posts de pacientes (2026-07-18)
+
+- Pedido do usuario: remover do dashboard `/comunidades` os blocos **Atividade nas comunidades** e **Posts de pacientes**.
+- A UI deixou de renderizar o grafico legado de atividade segmentado por papel do autor e o donut/lista de posts anonimos vs identificados.
+- As informacoes de conteudo permanecem cobertas pelos blocos globais de **Estatisticas de conteudo**, incluindo posts de pacientes e a quebra anonimos/identificados no proprio contador de postagens de pacientes, evitando duplicidade visual.
+- O endpoint e o contrato existentes nao foram alterados nesta correcao para preservar compatibilidade com agregacoes ja consumidas e evitar mudanca desnecessaria de backend.
+- O ajuste permanece mobile-first, sem `<img>` cru, sem package novo e sem alteracao em `backend/prisma/schema.prisma` ou migrations.
+- Builder/Quick Copy `vcp://quickcopy/vcp-24aaa2941d814e5b90572bc93ae50e2a` nao esta exposto como ferramenta callable neste ambiente; referencia usada: captura enviada pelo usuario e implementacao existente de `/comunidades`.
+- ADR atualizado: `adrs/0231-admin-comunidades-dashboard-agregacoes.md`.
+
+### Criterios deste ajuste
+
+- [x] O dashboard `/comunidades` nao renderiza mais o bloco **Atividade nas comunidades**.
+- [x] O dashboard `/comunidades` nao renderiza mais o bloco **Posts de pacientes**.
+- [x] **Postagens mais recentes** e **Principais comunidades** sobem diretamente apos os blocos globais de estatisticas.
+- [x] Nenhum mock, dado fake permanente, endpoint simulado, package novo, schema Prisma ou migration foi usado.
+
+### Validacao deste ajuste
+
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check`
+- Smoke local `GET http://localhost:3002/comunidades` retornou 200.

@@ -88,3 +88,13 @@ Os blocos globais de estatisticas do dashboard `/comunidades` devem seguir o mes
 A decisao e manter os mesmos dados globais ja expostos por `global_statistics`, mas renderizar os contadores como toggles selecionados por default, sem descricao individual nos cards. O bloco de pessoas usa grid, enquanto o bloco de conteudo usa carrossel horizontal com botoes laterais, seguindo o comportamento existente no detalhe. O grafico tambem passa a usar linhas suavizadas e area isolada, mantendo os pontos e titulos acessiveis.
 
 Consequencia: ha maior consistencia visual e menos redundancia textual, sem alterar backend, contrato persistido, Prisma, pacotes ou regras de agregacao. A rolagem horizontal permanece restrita aos componentes interativos que exigem esse comportamento, evitando overflow global da pagina.
+
+## Atualizacao 2026-07-18: remocao dos blocos legados de atividade e posts de pacientes
+
+O dashboard geral `/comunidades` deixa de renderizar os blocos **Atividade nas comunidades** e **Posts de pacientes**.
+
+A decisao e tratar esses dois cards como visualizacao legada depois que os blocos globais de **Estatisticas de pessoas** e **Estatisticas de conteudo** passaram a concentrar a leitura analitica principal. O grafico legado de atividade duplicava a evolucao temporal de conteudo, enquanto o donut de posts de pacientes duplicava a quebra anonimos/identificados ja exposta no contador de postagens de pacientes dentro de **Estatisticas de conteudo**.
+
+O contrato do endpoint `GET /api/admin/private/communities/dashboard` permanece inalterado para compatibilidade e para evitar mudanca de backend desnecessaria em uma correcao apresentacional. A interface passa a sequenciar **Postagens mais recentes** e **Principais comunidades** diretamente apos os blocos globais de estatisticas.
+
+Consequencia: a pagina fica mais curta e menos redundante, sem endpoint novo, schema Prisma/migration, dependencia, mock, seed ou alteracao de regra de agregacao.

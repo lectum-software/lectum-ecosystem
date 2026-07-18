@@ -25,7 +25,6 @@ import { useAdminCommunitiesDashboard } from "@/api/callers/communities";
 import { resolveApiError } from "@/api/handle";
 import type {
   AdminCommunitiesDashboard,
-  CommunitiesDashboardActivitySeries,
   CommunitiesDashboardGlobalStatistics,
   CommunitiesDashboardQuery,
   CommunitiesDashboardRecentPost,
@@ -632,133 +631,6 @@ const CommunitiesHeader = ({
   </section>
 );
 
-const LineChart = ({ series }: { series: CommunitiesDashboardActivitySeries[] }) => {
-  const width = 760;
-  const height = 300;
-  const padding = { bottom: 44, left: 48, right: 20, top: 24 };
-  const chartSeries = series.map((item) => ({
-    ...item,
-    points: aggregateCalendarChartPoints(item.points, ["value"] as const),
-  }));
-  const labels = chartSeries[0]?.points ?? [];
-  const maxValue = Math.max(
-    1,
-    ...chartSeries.flatMap((item) => item.points.map((point) => point.value)),
-  );
-  const chartWidth = width - padding.left - padding.right;
-  const chartHeight = height - padding.top - padding.bottom;
-  const getX = (index: number) =>
-    labels.length <= 1 ? width / 2 : padding.left + (index * chartWidth) / (labels.length - 1);
-  const getY = (value: number) => padding.top + chartHeight - (value / maxValue) * chartHeight;
-  const gridValues = [0, 0.25, 0.5, 0.75, 1].map((ratio) => Math.round(maxValue * ratio));
-  const labelStep = Math.max(1, Math.ceil(labels.length / 8));
-
-  return (
-    <figure className="mt-5 min-w-0 overflow-hidden">
-      <div className="flex flex-wrap gap-3">
-        {chartSeries.map((item) => (
-          <span className="flex items-center gap-2 text-xs font-bold text-muted" key={item.id}>
-            <span
-              aria-hidden
-              className="h-3 w-3 rounded-full"
-              style={{ backgroundColor: item.color }}
-            />
-            {item.label}
-          </span>
-        ))}
-      </div>
-      <div className="mt-3 min-w-0 overflow-hidden">
-        <svg
-          aria-label="Gráfico de atividade real nas comunidades por dia"
-          className="h-auto w-full"
-          role="img"
-          viewBox={`0 0 ${width} ${height}`}
-        >
-          {gridValues.map((value) => {
-            const y = getY(value);
-            return (
-              <g key={`grid-${value}-${y}`}>
-                <line
-                  stroke="#e8edf7"
-                  strokeWidth="1"
-                  x1={padding.left}
-                  x2={width - padding.right}
-                  y1={y}
-                  y2={y}
-                />
-                <text fill="#657094" fontSize="11" x="8" y={y + 4}>
-                  {numberFormatter.format(value)}
-                </text>
-              </g>
-            );
-          })}
-
-          {chartSeries.map((item) => {
-            const path = item.points
-              .map(
-                (point, index) => `${index === 0 ? "M" : "L"}${getX(index)},${getY(point.value)}`,
-              )
-              .join(" ");
-
-            return (
-              <g key={item.id}>
-                <path
-                  d={path}
-                  fill="none"
-                  stroke={item.color}
-                  strokeLinecap="round"
-                  strokeWidth="4"
-                />
-                {item.points.map((point, index) => (
-                  <circle
-                    cx={getX(index)}
-                    cy={getY(point.value)}
-                    fill="#fff"
-                    key={`${item.id}-${point.date}`}
-                    r="4"
-                    stroke={item.color}
-                    strokeWidth="3"
-                  />
-                ))}
-              </g>
-            );
-          })}
-
-          {labels.map((point, index) =>
-            index % labelStep === 0 || index === labels.length - 1 ? (
-              <text
-                fill="#06104a"
-                fontSize="11"
-                key={point.date}
-                textAnchor="middle"
-                x={getX(index)}
-                y={height - 12}
-              >
-                {point.chartLabel}
-              </text>
-            ) : null,
-          )}
-        </svg>
-      </div>
-      <details className="mt-3 rounded-2xl bg-surface-muted p-3 text-xs text-muted">
-        <summary className="cursor-pointer font-black text-foreground">
-          Resumo textual do gráfico
-        </summary>
-        <div className="mt-2 grid gap-2 sm:grid-cols-2">
-          {chartSeries.map((item) => (
-            <div key={item.id}>
-              <p className="font-black text-foreground">{item.label}</p>
-              <p>
-                {item.points.map((point) => `${point.tooltipLabel}: ${point.value}`).join("; ")}
-              </p>
-            </div>
-          ))}
-        </div>
-      </details>
-    </figure>
-  );
-};
-
 const DashboardStatisticCard = ({
   item,
   onToggle,
@@ -1145,83 +1017,6 @@ const DashboardStatisticsSection = ({
   );
 };
 
-const PatientPostsDonut = ({
-  breakdown,
-}: {
-  breakdown: AdminCommunitiesDashboard["patient_posts_breakdown"];
-}) => {
-  const circumference = 2 * Math.PI * 42;
-  const anonymousDash = (breakdown.anonymous.percentage / 100) * circumference;
-  const identifiedDash = (breakdown.identified.percentage / 100) * circumference;
-
-  return (
-    <CardShell className="p-5">
-      <div className="flex items-center justify-between gap-3">
-        <div>
-          <h2 className="text-lg font-black text-foreground">Posts de pacientes</h2>
-          <p className="mt-1 text-xs font-bold text-muted">{breakdown.source}</p>
-        </div>
-        <span className="rounded-full bg-surface-muted px-2 py-1 text-xs font-black text-muted">
-          Total {numberFormatter.format(breakdown.total)}
-        </span>
-      </div>
-
-      <div className="mt-5 grid gap-5 sm:grid-cols-[180px_1fr] sm:items-center">
-        <svg aria-label="Posts anônimos e identificados" role="img" viewBox="0 0 120 120">
-          <circle cx="60" cy="60" fill="none" r="42" stroke="#eef2fb" strokeWidth="18" />
-          <circle
-            cx="60"
-            cy="60"
-            fill="none"
-            r="42"
-            stroke="#2f8cff"
-            strokeDasharray={`${anonymousDash} ${circumference - anonymousDash}`}
-            strokeWidth="18"
-            transform="rotate(-90 60 60)"
-          />
-          <circle
-            cx="60"
-            cy="60"
-            fill="none"
-            r="42"
-            stroke="#6f42ff"
-            strokeDasharray={`${identifiedDash} ${circumference - identifiedDash}`}
-            strokeDashoffset={-anonymousDash}
-            strokeWidth="18"
-            transform="rotate(-90 60 60)"
-          />
-          <text fill="#06104a" fontSize="12" fontWeight="900" textAnchor="middle" x="60" y="56">
-            Total
-          </text>
-          <text fill="#06104a" fontSize="16" fontWeight="900" textAnchor="middle" x="60" y="74">
-            {numberFormatter.format(breakdown.total)}
-          </text>
-        </svg>
-        <div className="space-y-4">
-          <div className="flex items-center justify-between gap-3">
-            <span className="flex items-center gap-2 text-sm font-bold">
-              <span className="h-3 w-3 rounded-full bg-[#2f8cff]" /> Anônimos
-            </span>
-            <span className="text-sm font-black">
-              {breakdown.anonymous.percentage}% ({numberFormatter.format(breakdown.anonymous.count)}
-              )
-            </span>
-          </div>
-          <div className="flex items-center justify-between gap-3">
-            <span className="flex items-center gap-2 text-sm font-bold">
-              <span className="h-3 w-3 rounded-full bg-[#6f42ff]" /> Identificados
-            </span>
-            <span className="text-sm font-black">
-              {breakdown.identified.percentage}% (
-              {numberFormatter.format(breakdown.identified.count)})
-            </span>
-          </div>
-        </div>
-      </div>
-    </CardShell>
-  );
-};
-
 const RecentPostsTable = ({ posts }: { posts: CommunitiesDashboardRecentPost[] }) => (
   <CardShell className="p-5">
     <div className="flex items-center justify-between gap-3">
@@ -1548,19 +1343,6 @@ const DashboardContent = ({ summary }: { summary: AdminCommunitiesDashboard }) =
       />
 
       <div className="min-w-0 space-y-5">
-        <div className="grid min-w-0 gap-5 2xl:grid-cols-[minmax(0,1fr)_minmax(260px,320px)]">
-          <CardShell className="p-5">
-            <div>
-              <h2 className="text-lg font-black text-foreground">Atividade nas comunidades</h2>
-              <p className="mt-1 text-xs font-bold text-muted">
-                community_post + post_reply, segmentado por papel do autor
-              </p>
-            </div>
-            <LineChart series={summary.activity_series} />
-          </CardShell>
-          <PatientPostsDonut breakdown={summary.patient_posts_breakdown} />
-        </div>
-
         <RecentPostsTable posts={summary.recent_posts.items} />
         <TopCommunitiesTable communities={summary.top_communities.items} />
       </div>
