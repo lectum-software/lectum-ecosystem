@@ -40,3 +40,16 @@ A regra do projeto proíbe mocks para concluir uma task. Além disso, a TASK-53 
 - `pnpm --dir frontend build` (primeira tentativa bloqueada por lock de outro `next build`; segunda tentativa concluída sem erros)
 - `pnpm check`
 - Browser local headless com Chrome em `http://localhost:3002/psicologos`, confirmando carregamento da rota Admin/Next; validação visual autenticada depende da sessão Admin real do operador.
+
+
+## Atualização em 2026-07-18: paridade com filtros públicos do paciente
+
+Após validação visual no Admin, foi corrigida a fonte das opções estáticas do comparativo para espelhar exatamente as opções disponíveis no formulário público do paciente:
+
+- **Modalidades** usa apenas `Online` e `Presencial`, iguais ao site público. `Híbrido` não é opção pública e, portanto, não é renderizado como linha própria no comparativo.
+- Como o diretório público trata `hibrido` como compatível com `online` e `presencial`, a oferta Admin de `Online` inclui perfis `online` + `hibrido`, e a oferta de `Presencial` inclui perfis `presencial` + `hibrido`.
+- **Estado** usa os mesmos rótulos públicos (`Acre`, `São Paulo`, etc.), sem sufixo `(UF)`, preservando o ID da UF para matching.
+- **Gênero**, **Raça** e **Religião** seguem as opções públicas filtradas sem `Prefiro não informar`.
+- Dimensões com catálogo/lista controlada ignoram eventos históricos ou inválidos cujo `target_id` não exista na lista pública atual; **Cidade** continua sendo derivada de buscas reais e filtrada por mais de 10 buscas.
+
+Validações adicionais: verificação Node local de paridade entre arrays públicos e Admin; `pnpm --dir backend check`; `pnpm --dir backend build`; `pnpm --dir admin check`; `pnpm --dir admin build`; `pnpm check`; smoke HTTP local em `/psicologos` com status 200.

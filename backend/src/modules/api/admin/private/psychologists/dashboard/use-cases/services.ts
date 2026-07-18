@@ -47,13 +47,6 @@ const DIRECTORY_FILTER_SEARCH_ACTION_SOURCE =
   "important_action_event.action_type=psychologist_directory_filter_search";
 const CITY_FILTER_MINIMUM_SEARCHES = 10;
 
-const MODALITY_LABELS: Record<string, string> = {
-  hibrido: "Híbrido",
-  hybrid: "Híbrido",
-  online: "Online",
-  presencial: "Presencial",
-};
-
 const GENDER_LABELS: Record<string, string> = {
   feminina: "Feminino",
   feminino: "Feminino",
@@ -63,8 +56,8 @@ const GENDER_LABELS: Record<string, string> = {
   masculina: "Masculino",
   masculino: "Masculino",
   mulher: "Feminino",
-  nao_binario: "Outro",
-  não_binário: "Outro",
+  nao_binario: "Não binário",
+  não_binário: "Não binário",
   outro: "Outro",
   other: "Outro",
 };
@@ -634,6 +627,8 @@ const buildFilterSearchDimension = (params: {
     if (!normalizedTarget) continue;
 
     const option = optionLookup.get(normalizedTarget);
+    if (params.options && !option) continue;
+
     const id = option?.slug || option?.id || normalizedTarget;
     const current = itemsById.get(id);
 
@@ -758,6 +753,42 @@ const jsonStringArray = (value: AdminPsychologistProfileRecord["target_audience"
   return value.map((item) => String(item).trim()).filter(Boolean);
 };
 
+const profileMatchesPatientModality = (
+  profile: AdminPsychologistProfileRecord,
+  modality: "online" | "presencial",
+) => {
+  const key = normalizeKey(profile.modality ?? "");
+
+  if (modality === "online") return key === "online" || key === "hibrido" || key === "hybrid";
+
+  return key === "presencial" || key === "hibrido" || key === "hybrid";
+};
+
+const buildPatientModalityBreakdown = (
+  profiles: AdminPsychologistProfileRecord[],
+): AdminPsychologistsDashboardBreakdownItem[] => {
+  const total = profiles.length;
+
+  return [
+    {
+      count: profiles.filter((profile) => profileMatchesPatientModality(profile, "online")).length,
+      id: "online",
+      label: "Online",
+      percentage: 0,
+    },
+    {
+      count: profiles.filter((profile) => profileMatchesPatientModality(profile, "presencial"))
+        .length,
+      id: "presencial",
+      label: "Presencial",
+      percentage: 0,
+    },
+  ].map((item) => ({
+    ...item,
+    percentage: safePercentage(item.count, total),
+  }));
+};
+
 const isAvailableToday = (profile: AdminPsychologistProfileRecord) =>
   jsonStringArray(profile.available_days).includes(currentWeekdayValue());
 
@@ -821,7 +852,6 @@ const buildStatistics = (profiles: AdminPsychologistProfileRecord[], date: Date)
   const approaches = new Map<string, { count: number; label: string }>();
   const targetAudience = new Map<string, { count: number; label: string }>();
   const languages = new Map<string, { count: number; label: string }>();
-  const modalities = new Map<string, { count: number; label: string }>();
   const gender = new Map<string, { count: number; label: string }>();
   const raceColors = new Map<string, { count: number; label: string }>();
   const religions = new Map<string, { count: number; label: string }>();
@@ -846,11 +876,6 @@ const buildStatistics = (profiles: AdminPsychologistProfileRecord[], date: Date)
 
     for (const language of jsonStringArray(profile.languages)) {
       addMapCount(languages, normalizeKey(language), language);
-    }
-
-    if (profile.modality?.trim()) {
-      const key = normalizeKey(profile.modality);
-      addMapCount(modalities, key, MODALITY_LABELS[key] ?? profile.modality.trim());
     }
 
     if (profile.gender?.trim()) {
@@ -926,7 +951,7 @@ const buildStatistics = (profiles: AdminPsychologistProfileRecord[], date: Date)
       total,
     },
     modalities: {
-      items: buildBreakdown(modalities, total),
+      items: buildPatientModalityBreakdown(profiles),
       source: "psychologist_profile.modality" as const,
       total,
     },

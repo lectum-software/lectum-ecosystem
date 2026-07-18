@@ -241,3 +241,14 @@ Packages usados:
 - Referência visual local mantida: `_product/proto/admin/Psicólogos/Psicólogos - Dashboard.png`; Builder/Quick Copy não estava disponível como ferramenta callable no ambiente.
 - Validações desta correção: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm --dir frontend check`, `pnpm --dir frontend build` e `pnpm check`.
 - Browser local headless em `http://localhost:3002/psicologos` confirmou carregamento da rota Admin/Next; validação visual autenticada continua dependente de sessão Admin real no navegador do operador.
+
+
+### Correção dados em 2026-07-18 - opções iguais ao filtro público do paciente
+
+- Pedido do usuário: todas as opções exibidas no **Comparativo de oferta e demanda** devem ser exatamente as mesmas opções disponíveis para pacientes no site público.
+- **Modalidades** passou a listar somente **Online** e **Presencial**, iguais a `PATIENT_MODALITY_FILTER_OPTIONS` em `frontend/src/app/app/psychologists/use-form.tsx`; **Híbrido** continua sendo valor interno de perfil, mas não aparece como opção porque o paciente não vê esse filtro.
+- Para manter a mesma semântica do diretório público, a oferta de **Online** conta perfis `online` e `hibrido`, e a oferta de **Presencial** conta perfis `presencial` e `hibrido`, espelhando `buildModalityWhere` do backend público.
+- **Estado**, **Gênero**, **Raça** e **Religião** foram alinhados às opções públicas usadas pelo formulário do paciente; estados exibem o mesmo rótulo público sem sufixo de UF, mantendo o ID da UF para matching.
+- A agregação de demanda agora descarta eventos com `target_id` fora das opções públicas controladas quando a dimensão possui catálogo/lista de opções; **Cidade** permanece a exceção operacional, listando apenas cidades realmente buscadas com mais de 10 buscas.
+- Não houve alteração de Prisma schema, migration, seed, mock, pacote novo ou fonte paralela de dados.
+- Validações desta correção: verificação Node local comparando arrays públicos e Admin (`modalities`, `states`, `genders`, `race_colors`, `religions`), `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke HTTP local em `http://localhost:3002/psicologos` retornando 200.
