@@ -6,7 +6,6 @@ import {
   ArrowDown,
   ArrowUp,
   Bookmark,
-  CalendarDays,
   CheckCircle2,
   ChevronDown,
   Clock3,
@@ -61,7 +60,6 @@ type ContentDetailTargetType = "comment" | "post" | "reply";
 type ContentDetailPeriodValue = NonNullable<AdminCommunityContentDetailQuery["period"]>;
 type ContentDetailPeriodPreset = Exclude<ContentDetailPeriodValue, "custom">;
 type ContentDetailDateRange = Required<Pick<AdminCommunityContentDetailQuery, "from" | "to">>;
-type SeriesPoint = AdminCommunityContentAnalyticsDetail["series"][number];
 
 const CONTENT_DETAIL_PERIOD_OPTIONS = [
   { id: "today", label: "Hoje" },
@@ -155,11 +153,6 @@ const normalizeTargetType = (value: string): ContentDetailTargetType | null => {
 
   return null;
 };
-
-const detailHref = (slug: string, type: string, id: string) =>
-  `/comunidades/${encodeURIComponent(slug)}/conteudo/${encodeURIComponent(
-    type,
-  )}/${encodeURIComponent(id)}`;
 
 const isPublicMediaPath = (pathname: string) =>
   publicMediaPathPrefixes.some((prefix) => pathname.startsWith(prefix));
@@ -1075,152 +1068,6 @@ const VideoAnalyticsSection = ({ detail }: { detail: AdminCommunityContentAnalyt
   );
 };
 
-const seriesConfigs = [
-  { color: "#2F8CFF", key: "views", label: "Visualizações" },
-  { color: "#12B76A", key: "upvotes", label: "Upvotes" },
-  { color: "#EF4444", key: "downvotes", label: "Downvotes" },
-  { color: "#8B5CF6", key: "comments", label: "Comentários" },
-  { color: "#F59E0B", key: "saves", label: "Salvamentos" },
-  { color: "#0EA5E9", key: "shares", label: "Compartilhamentos" },
-  { color: "#10B981", key: "whatsapp_clicks", label: "Cliques WhatsApp" },
-  { color: "#64748B", key: "reports", label: "Denúncias" },
-] as const satisfies ReadonlyArray<{
-  color: string;
-  key: Exclude<keyof SeriesPoint, "date">;
-  label: string;
-}>;
-
-const seriesPointValue = (point: SeriesPoint, key: (typeof seriesConfigs)[number]["key"]) =>
-  point[key];
-
-const buildPolyline = (
-  points: SeriesPoint[],
-  key: (typeof seriesConfigs)[number]["key"],
-  maxValue: number,
-) =>
-  points
-    .map((point, index) => {
-      const x = points.length <= 1 ? 0 : (index / (points.length - 1)) * 100;
-      const y = 100 - (seriesPointValue(point, key) / maxValue) * 100;
-
-      return `${x.toFixed(2)},${y.toFixed(2)}`;
-    })
-    .join(" ");
-
-const EvolutionChart = ({ detail }: { detail: AdminCommunityContentAnalyticsDetail }) => {
-  const points = detail.series;
-  const maxValue = Math.max(
-    1,
-    ...points.flatMap((point) =>
-      seriesConfigs.map((config) => seriesPointValue(point, config.key)),
-    ),
-  );
-  const totalEvents = points.reduce(
-    (total, point) =>
-      total +
-      point.views +
-      point.upvotes +
-      point.downvotes +
-      point.comments +
-      point.saves +
-      point.shares +
-      point.whatsapp_clicks +
-      point.reports,
-    0,
-  );
-  const latestPoints = points.slice(-7);
-
-  return (
-    <section className={cn(cardClass, "p-5")} aria-labelledby="content-detail-chart-title">
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <h2 className="text-xl font-black text-foreground" id="content-detail-chart-title">
-            Evolução por período
-          </h2>
-          <p className="mt-1 text-sm font-bold text-muted">
-            {detail.period.label} · {detail.period.from} a {detail.period.to}
-          </p>
-        </div>
-        <span className="inline-flex w-fit items-center gap-2 rounded-full bg-primary-soft px-3 py-1 text-xs font-black text-primary">
-          <CalendarDays aria-hidden className="h-4 w-4" />
-          {formatCount(points.length)} pontos
-        </span>
-      </div>
-      {totalEvents === 0 ? (
-        <p className="mt-5 rounded-2xl bg-surface-muted p-4 text-sm font-bold text-muted">
-          Nenhuma interação real encontrada neste período. O gráfico permanece vazio sem simular
-          tendência.
-        </p>
-      ) : (
-        <>
-          <div className="mt-5 overflow-hidden rounded-[24px] border border-border bg-surface-muted p-3">
-            <svg
-              aria-label="Gráfico com evolução diária de visualizações, votos, comentários, salvamentos, compartilhamentos e denúncias"
-              className="h-72 w-full overflow-visible"
-              preserveAspectRatio="none"
-              role="img"
-              viewBox="0 0 100 100"
-            >
-              <title>Evolução diária do conteúdo</title>
-              {[0, 25, 50, 75, 100].map((line) => (
-                <line
-                  key={line}
-                  stroke="currentColor"
-                  strokeDasharray="2 2"
-                  strokeWidth="0.25"
-                  className="text-border"
-                  x1="0"
-                  x2="100"
-                  y1={line}
-                  y2={line}
-                />
-              ))}
-              {seriesConfigs.map((config) => (
-                <polyline
-                  fill="none"
-                  key={config.key}
-                  points={buildPolyline(points, config.key, maxValue)}
-                  stroke={config.color}
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="1.8"
-                  vectorEffect="non-scaling-stroke"
-                />
-              ))}
-            </svg>
-          </div>
-          <div className="mt-4 flex flex-wrap gap-2 text-xs font-black">
-            {seriesConfigs.map((config) => (
-              <span
-                className="inline-flex items-center gap-2 rounded-full border border-border bg-surface px-3 py-1 text-muted"
-                key={config.key}
-              >
-                <span
-                  aria-hidden
-                  className="h-2.5 w-2.5 rounded-full"
-                  style={{ backgroundColor: config.color }}
-                />
-                {config.label}
-              </span>
-            ))}
-          </div>
-          <div className="mt-5 rounded-2xl bg-surface-muted p-4">
-            <p className="text-sm font-black text-foreground">Alternativa textual</p>
-            <ul className="mt-3 grid gap-2 text-xs font-bold text-muted sm:grid-cols-2">
-              {latestPoints.map((point) => (
-                <li key={point.date}>
-                  {point.date}: {formatCount(point.views)} views, {formatCount(point.upvotes)} up,
-                  {formatCount(point.comments)} comentários, {formatCount(point.reports)} denúncias.
-                </li>
-              ))}
-            </ul>
-          </div>
-        </>
-      )}
-    </section>
-  );
-};
-
 const ModerationSection = ({ detail }: { detail: AdminCommunityContentAnalyticsDetail }) => (
   <section className={cn(cardClass, "p-5")} aria-labelledby="content-detail-moderation-title">
     <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
@@ -1304,37 +1151,6 @@ const ModerationSection = ({ detail }: { detail: AdminCommunityContentAnalyticsD
         )}
       </div>
     </div>
-  </section>
-);
-
-const OperationalMetadata = ({ detail }: { detail: AdminCommunityContentAnalyticsDetail }) => (
-  <section className={cn(cardClass, "p-5")} aria-labelledby="content-detail-metadata-title">
-    <h2 className="text-xl font-black text-foreground" id="content-detail-metadata-title">
-      Metadados operacionais
-    </h2>
-    <dl className="mt-4 grid gap-3 text-sm sm:grid-cols-2 xl:grid-cols-4">
-      {[
-        ["Comunidade", detail.community.name],
-        ["Autor", detail.author.name],
-        ["Publicado em", formatDateTime(detail.content.created_at)],
-        ["Editado em", formatDateTime(detail.content.edited_at)],
-        ["Removido em", formatDateTime(detail.content.deleted_at)],
-        ["Post ID", detail.content.post_id],
-        ["Conteúdo ID", detail.content.id],
-        ["Período", detail.period.label],
-      ].map(([label, value]) => (
-        <div className="rounded-2xl bg-surface-muted p-4" key={label}>
-          <dt className="text-xs font-black uppercase tracking-[0.14em] text-muted">{label}</dt>
-          <dd className="mt-1 break-words font-bold text-foreground [overflow-wrap:anywhere]">
-            {value}
-          </dd>
-        </div>
-      ))}
-    </dl>
-    <p className="mt-4 rounded-2xl bg-primary-soft p-4 text-sm font-bold text-primary">
-      Retenção de vídeo não tem backfill: vídeos publicados antes da coleta começam vazios e passam
-      a aparecer conforme novos acessos reais forem registrados.
-    </p>
   </section>
 );
 
@@ -1563,17 +1379,12 @@ export const AdminCommunityContentDetailClient = ({
           />
           <PreviewSection detail={detail} />
           <VideoAnalyticsSection detail={detail} />
-          <EvolutionChart detail={detail} />
           <ModerationSection detail={detail} />
           <RemovalSection
             detail={detail}
             onRemoved={() => void detailQuery.refetch()}
             slug={slug}
           />
-          <OperationalMetadata detail={detail} />
-          <p className="max-w-full text-xs font-bold text-muted [overflow-wrap:anywhere]">
-            Rota atual: {detailHref(slug, normalizedType, contentId)}
-          </p>
         </>
       ) : null}
     </main>
