@@ -53,7 +53,8 @@ const dateTimeFormatter = new Intl.DateTimeFormat("pt-BR", {
 const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
 const publicFrontendUrl = process.env.NEXT_PUBLIC_FRONTEND_URL || "http://localhost:3000";
 const publicMediaPathPrefixes = ["/public/files/", "/community/icons/"] as const;
-const cardClass = "rounded-card border border-border bg-surface/95 shadow-admin-soft";
+const cardClass =
+  "min-w-0 max-w-full rounded-card border border-border bg-surface/95 shadow-admin-soft";
 
 type ContentDetailPeriodValue = NonNullable<AdminCommunityContentDetailQuery["period"]>;
 type ContentDetailTargetType = "comment" | "post" | "reply";
@@ -226,6 +227,16 @@ const contentTitle = (detail: AdminCommunityContentAnalyticsDetail) =>
   detail.content.title?.trim() ||
   detail.content.excerpt.trim() ||
   (detail.content.type === "post" ? "Post sem título" : "Resposta");
+
+const sourceParts = (source: string) =>
+  Array.from(
+    new Set(
+      source
+        .split("+")
+        .map((part) => part.trim())
+        .filter(Boolean),
+    ),
+  );
 
 const metricCards = (detail: AdminCommunityContentAnalyticsDetail) => [
   {
@@ -421,6 +432,7 @@ const HeaderSection = ({
   slug: string;
 }) => {
   const title = contentTitle(detail);
+  const sources = sourceParts(detail.source);
 
   return (
     <section className={cn(cardClass, "p-5")}>
@@ -464,9 +476,23 @@ const HeaderSection = ({
           <h1 className="mt-3 max-w-4xl text-2xl font-black leading-tight tracking-[-0.03em] text-foreground sm:text-3xl">
             {title}
           </h1>
-          <p className="mt-2 text-sm font-bold text-muted">
-            Publicado em {formatDateTime(detail.content.created_at)} · fonte: {detail.source}
-          </p>
+          <div className="mt-2 flex min-w-0 flex-wrap items-center gap-1.5 text-sm font-bold text-muted">
+            <span>Publicado em {formatDateTime(detail.content.created_at)}</span>
+            {sources.length > 0 ? (
+              <>
+                <span aria-hidden>·</span>
+                <span>fontes:</span>
+                {sources.map((source) => (
+                  <span
+                    className="max-w-full rounded-full bg-surface-muted px-2 py-0.5 text-xs font-black text-muted [overflow-wrap:anywhere]"
+                    key={source}
+                  >
+                    {source}
+                  </span>
+                ))}
+              </>
+            ) : null}
+          </div>
         </div>
         <div className="flex flex-col gap-2 sm:flex-row lg:flex-col">
           <Link
@@ -509,7 +535,7 @@ const ContentVideoPreview = ({ label, src }: { label: string; src: string }) => 
   };
 
   return (
-    <div className="relative aspect-[9/16] w-full max-w-[320px] overflow-hidden rounded-[24px] border border-border bg-black">
+    <div className="relative mx-auto aspect-[9/16] w-full max-w-[320px] overflow-hidden rounded-[24px] border border-border bg-black">
       {/* biome-ignore lint/a11y/useMediaCaption: o backend ainda não expõe arquivo de legenda para vídeos de conteúdo da comunidade. */}
       <video
         aria-label={label}
@@ -573,7 +599,12 @@ const ContentMediaPreview = ({ detail }: { detail: AdminCommunityContentAnalytic
 };
 
 const PreviewSection = ({ detail }: { detail: AdminCommunityContentAnalyticsDetail }) => (
-  <section className={cn(cardClass, "grid gap-5 p-5 xl:grid-cols-[minmax(0,1fr)_360px]")}>
+  <section
+    className={cn(
+      cardClass,
+      "grid min-w-0 max-w-full gap-5 p-5 xl:grid-cols-[minmax(0,1fr)_minmax(0,320px)]",
+    )}
+  >
     <div className="min-w-0">
       <div className="flex flex-wrap items-center gap-2 text-xs font-black text-muted">
         <FileText aria-hidden className="h-4 w-4" />
@@ -589,16 +620,16 @@ const PreviewSection = ({ detail }: { detail: AdminCommunityContentAnalyticsDeta
           <p className="text-xs font-black uppercase tracking-[0.18em] text-muted">
             {detail.content.origin_preview.label}
           </p>
-          <p className="mt-2 text-sm font-black text-foreground">
+          <p className="mt-2 text-sm font-black text-foreground [overflow-wrap:anywhere]">
             {detail.content.origin_preview.title || "Sem título"}
           </p>
-          <p className="mt-1 line-clamp-3 text-sm leading-6 text-muted">
+          <p className="mt-1 line-clamp-3 text-sm leading-6 text-muted [overflow-wrap:anywhere]">
             {detail.content.origin_preview.excerpt || "Sem trecho disponível."}
           </p>
         </div>
       ) : null}
       <div className="mt-5 rounded-2xl bg-surface-muted p-4">
-        <p className="whitespace-pre-line text-sm leading-6 text-foreground">
+        <p className="whitespace-pre-line text-sm leading-6 text-foreground [overflow-wrap:anywhere]">
           {detail.content.body || detail.content.excerpt || "Sem texto disponível."}
         </p>
       </div>
@@ -785,7 +816,9 @@ const VideoRetentionSection = ({ detail }: { detail: AdminCommunityContentAnalyt
           <h2 className="text-xl font-black text-foreground" id="content-detail-retention-title">
             Retenção de vídeo
           </h2>
-          <p className="mt-1 text-sm font-bold text-muted">Fonte real: {video.source}</p>
+          <p className="mt-1 text-sm font-bold text-muted [overflow-wrap:anywhere]">
+            Fonte real: {video.source}
+          </p>
         </div>
         <span className="inline-flex w-fit items-center gap-2 rounded-full bg-primary-soft px-3 py-1 text-xs font-black text-primary">
           <Video aria-hidden className="h-4 w-4" />
@@ -902,9 +935,11 @@ const ModerationSection = ({ detail }: { detail: AdminCommunityContentAnalyticsD
                   </span>
                   <span className="text-xs font-bold text-muted">{report.reason_label}</span>
                 </div>
-                <p className="mt-2 text-sm font-bold text-foreground">{report.reported_by.label}</p>
+                <p className="mt-2 text-sm font-bold text-foreground [overflow-wrap:anywhere]">
+                  {report.reported_by.label}
+                </p>
                 {report.description ? (
-                  <p className="mt-1 line-clamp-3 text-xs leading-5 text-muted">
+                  <p className="mt-1 line-clamp-3 text-xs leading-5 text-muted [overflow-wrap:anywhere]">
                     {report.description}
                   </p>
                 ) : null}
@@ -932,8 +967,10 @@ const ModerationSection = ({ detail }: { detail: AdminCommunityContentAnalyticsD
                   </span>
                   <span className="text-xs font-bold text-muted">{event.severity}</span>
                 </div>
-                <p className="mt-2 text-sm font-black text-foreground">{event.reason_code}</p>
-                <p className="mt-1 line-clamp-3 text-xs leading-5 text-muted">
+                <p className="mt-2 text-sm font-black text-foreground [overflow-wrap:anywhere]">
+                  {event.reason_code}
+                </p>
+                <p className="mt-1 line-clamp-3 text-xs leading-5 text-muted [overflow-wrap:anywhere]">
                   {event.content_excerpt}
                 </p>
                 <p className="mt-2 text-[11px] font-bold text-muted">
@@ -966,7 +1003,9 @@ const OperationalMetadata = ({ detail }: { detail: AdminCommunityContentAnalytic
       ].map(([label, value]) => (
         <div className="rounded-2xl bg-surface-muted p-4" key={label}>
           <dt className="text-xs font-black uppercase tracking-[0.14em] text-muted">{label}</dt>
-          <dd className="mt-1 break-words font-bold text-foreground">{value}</dd>
+          <dd className="mt-1 break-words font-bold text-foreground [overflow-wrap:anywhere]">
+            {value}
+          </dd>
         </div>
       ))}
     </dl>
@@ -1149,7 +1188,7 @@ export const AdminCommunityContentDetailClient = ({
 
   if (!normalizedType) {
     return (
-      <main className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+      <main className="mx-auto min-w-0 w-full max-w-7xl overflow-x-hidden px-4 py-6 sm:px-6 lg:px-8">
         <div className={cn(cardClass, "p-5")}>
           <AlertTriangle className="h-6 w-6 text-danger" aria-hidden />
           <h1 className="mt-3 text-xl font-black text-foreground">Tipo de conteúdo inválido</h1>
@@ -1160,7 +1199,7 @@ export const AdminCommunityContentDetailClient = ({
   }
 
   return (
-    <main className="mx-auto grid w-full max-w-7xl gap-5 px-4 py-6 sm:px-6 lg:px-8">
+    <main className="mx-auto grid min-w-0 w-full max-w-7xl gap-5 overflow-x-hidden px-4 py-6 sm:px-6 lg:px-8">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <Link
           className="inline-flex w-fit items-center gap-2 rounded-control border border-border bg-surface px-4 py-2 text-xs font-black text-foreground transition hover:border-primary hover:text-primary"
@@ -1223,7 +1262,7 @@ export const AdminCommunityContentDetailClient = ({
             slug={slug}
           />
           <OperationalMetadata detail={detail} />
-          <p className="text-xs font-bold text-muted">
+          <p className="max-w-full text-xs font-bold text-muted [overflow-wrap:anywhere]">
             Rota atual: {detailHref(slug, normalizedType, contentId)}
           </p>
         </>
