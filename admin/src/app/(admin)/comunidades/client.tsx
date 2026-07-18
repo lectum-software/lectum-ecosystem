@@ -4,6 +4,7 @@ import {
   AlertTriangle,
   ArrowDown,
   ArrowUp,
+  BarChart3,
   Bookmark,
   ChevronDown,
   ChevronLeft,
@@ -516,6 +517,66 @@ const DashboardPostAuthorIdentity = ({ author }: { author: CommunitiesDashboardP
         </div>
         <p className="truncate text-xs font-bold text-muted">{dashboardAuthorRoleLabel(author)}</p>
       </div>
+    </div>
+  );
+};
+
+const DashboardPostActions = ({
+  layout,
+  post,
+}: {
+  layout: "icons" | "labels";
+  post: Pick<CommunitiesDashboardRecentPost, "community_slug" | "id" | "title">;
+}) => {
+  const publicHref = communityPostPublicHref(post);
+  const adminHref = communityPostAdminDetailHref(post);
+  const title = post.title.trim() || "Post sem título";
+
+  if (layout === "icons") {
+    return (
+      <div className="flex shrink-0 items-center justify-center gap-1.5">
+        <Link
+          aria-label={`Abrir post ${title} no site público`}
+          className="grid h-9 w-9 place-items-center rounded-full border border-border bg-surface text-foreground shadow-control transition hover:border-primary hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
+          href={publicHref}
+          rel="noreferrer"
+          target="_blank"
+          title="Abrir público"
+        >
+          <Eye aria-hidden className="h-4 w-4" />
+          <span className="sr-only">Abrir post {title} no site público</span>
+        </Link>
+        <Link
+          aria-label={`Ver analytics do post ${title} no Admin`}
+          className="grid h-9 w-9 place-items-center rounded-full border border-primary/30 bg-surface text-primary shadow-control transition hover:bg-primary-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
+          href={adminHref}
+          title="Analytics"
+        >
+          <BarChart3 aria-hidden className="h-4 w-4" />
+          <span className="sr-only">Ver analytics do post {title} no Admin</span>
+        </Link>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-wrap gap-2 text-xs font-black">
+      <Link
+        className="inline-flex items-center gap-1.5 rounded-full border border-border bg-surface px-3 py-2 text-primary transition hover:bg-primary-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
+        href={publicHref}
+        rel="noreferrer"
+        target="_blank"
+      >
+        <Eye aria-hidden className="h-3.5 w-3.5" />
+        Abrir público
+      </Link>
+      <Link
+        className="inline-flex items-center gap-1.5 rounded-full bg-primary px-3 py-2 text-white transition hover:bg-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
+        href={adminHref}
+      >
+        <BarChart3 aria-hidden className="h-3.5 w-3.5" />
+        Analytics
+      </Link>
     </div>
   );
 };
@@ -1215,8 +1276,6 @@ const RecentPostsTable = ({ posts }: { posts: CommunitiesDashboardRecentPost[] }
         <>
           <div className="mt-5 grid gap-3 md:hidden">
             {posts.map((post) => {
-              const href = communityPostPublicHref(post);
-              const adminHref = communityPostAdminDetailHref(post);
               const title = post.title.trim() || "Post sem título";
 
               return (
@@ -1249,117 +1308,74 @@ const RecentPostsTable = ({ posts }: { posts: CommunitiesDashboardRecentPost[] }
                       </strong>
                     </p>
                   </div>
-                  <div className="mt-3 flex flex-wrap gap-2 text-xs font-black">
-                    <Link
-                      className="inline-flex items-center gap-1.5 rounded-full bg-primary px-3 py-2 text-white transition hover:bg-primary-hover"
-                      href={adminHref}
-                    >
-                      <FileText aria-hidden className="h-3.5 w-3.5" />
-                      Ver detalhe Admin
-                    </Link>
-                    <Link
-                      className="inline-flex items-center gap-1.5 rounded-full border border-border bg-surface px-3 py-2 text-primary transition hover:bg-primary-soft"
-                      href={href}
-                      rel="noreferrer"
-                      target="_blank"
-                    >
-                      <Eye aria-hidden className="h-3.5 w-3.5" />
-                      Abrir público
-                    </Link>
+                  <div className="mt-3">
+                    <DashboardPostActions layout="labels" post={post} />
                   </div>
                 </article>
               );
             })}
           </div>
           <div className="mt-5 hidden min-w-0 overflow-hidden md:block">
-            <table className="w-full table-fixed border-separate border-spacing-0 text-left text-sm">
+            <table className="w-full max-w-full table-fixed border-separate border-spacing-0 text-left text-sm">
+              <colgroup>
+                <col className="w-[22%]" />
+                <col className="w-[26%]" />
+                <col className="w-[8%]" />
+                <col className="w-[8%]" />
+                <col className="w-[36%]" />
+              </colgroup>
               <thead className="text-xs text-muted">
                 <tr>
-                  <th className="w-[42%] border-b border-border py-3 pr-3 font-black">Título</th>
-                  <th className="w-[32%] border-b border-border px-3 py-3 font-black">Autor</th>
-                  <th className="w-[13%] border-b border-border px-3 py-3 font-black">
+                  <th className="border-b border-border py-3 pr-3 font-black">Título</th>
+                  <th className="border-b border-border px-3 py-3 font-black">Autor</th>
+                  <th className="border-b border-border px-3 py-3 text-center font-black">
                     Visualizações
                   </th>
-                  <th className="w-[13%] border-b border-border px-3 py-3 font-black">
+                  <th className="border-b border-border px-3 py-3 text-center font-black">
                     Comentários
                   </th>
+                  <th className="border-b border-border py-3 pl-3 text-center font-black">Ações</th>
                 </tr>
               </thead>
               <tbody>
                 {posts.map((post) => {
-                  const href = communityPostPublicHref(post);
-                  const adminHref = communityPostAdminDetailHref(post);
                   const title = post.title.trim() || "Post sem título";
 
                   return (
-                    <tr
-                      className="group cursor-pointer align-top transition hover:bg-surface-muted/50"
-                      key={post.id}
-                    >
+                    <tr className="align-top transition hover:bg-surface-muted/50" key={post.id}>
                       <td className="min-w-0 border-b border-border align-top">
                         <div className="min-w-0 py-4 pr-3">
                           <p className="truncate font-black text-foreground">{title}</p>
                           <p className="mt-1 truncate text-xs text-muted">
                             {post.community_name} · {formatDateTime(post.created_at)}
                           </p>
-                          <div className="mt-2 flex flex-wrap gap-2 text-xs font-black">
-                            <Link
-                              className="inline-flex items-center gap-1.5 text-primary transition hover:text-primary-hover"
-                              href={adminHref}
-                            >
-                              <FileText aria-hidden className="h-3.5 w-3.5" />
-                              Ver detalhe Admin
-                            </Link>
-                            <Link
-                              className="inline-flex items-center gap-1.5 text-muted transition hover:text-primary"
-                              href={href}
-                              rel="noreferrer"
-                              target="_blank"
-                            >
-                              <Eye aria-hidden className="h-3.5 w-3.5" />
-                              Abrir público
-                            </Link>
-                          </div>
                         </div>
                       </td>
                       <td className="min-w-0 border-b border-border align-top">
-                        <Link
-                          aria-label={`Abrir post ${title} no site público`}
-                          className="block min-w-0 px-3 py-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
-                          href={href}
-                          rel="noreferrer"
-                          target="_blank"
-                        >
+                        <div className="block min-w-0 px-3 py-4">
                           <DashboardPostAuthorIdentity author={post.author} />
-                        </Link>
+                        </div>
                       </td>
-                      <td className="border-b border-border align-top">
-                        <Link
-                          aria-label={`Abrir post ${title} no site público`}
-                          className="block px-3 py-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
-                          href={href}
-                          rel="noreferrer"
-                          target="_blank"
-                        >
+                      <td className="border-b border-border text-center align-top">
+                        <div className="px-3 py-4">
                           <span className="inline-flex items-center gap-2 font-black text-foreground">
                             <Eye aria-hidden className="h-4 w-4 text-primary" />
                             {numberFormatter.format(post.views_count)}
                           </span>
-                        </Link>
+                        </div>
                       </td>
-                      <td className="border-b border-border align-top">
-                        <Link
-                          aria-label={`Abrir post ${title} no site público`}
-                          className="block px-3 py-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
-                          href={href}
-                          rel="noreferrer"
-                          target="_blank"
-                        >
+                      <td className="border-b border-border text-center align-top">
+                        <div className="px-3 py-4">
                           <span className="inline-flex items-center gap-2 font-black text-foreground">
                             <MessageCircle aria-hidden className="h-4 w-4 text-primary" />
                             {numberFormatter.format(post.comments_count)}
                           </span>
-                        </Link>
+                        </div>
+                      </td>
+                      <td className="border-b border-border align-top">
+                        <div className="py-4 pl-3">
+                          <DashboardPostActions layout="icons" post={post} />
+                        </div>
                       </td>
                     </tr>
                   );
@@ -1390,8 +1406,6 @@ const PopularPostsTable = ({ posts }: { posts: CommunitiesDashboardPopularPost[]
         <>
           <div className="mt-5 grid gap-3 md:hidden">
             {posts.map((post) => {
-              const href = communityPostPublicHref(post);
-              const adminHref = communityPostAdminDetailHref(post);
               const title = post.title.trim() || "Post sem título";
 
               return (
@@ -1424,117 +1438,74 @@ const PopularPostsTable = ({ posts }: { posts: CommunitiesDashboardPopularPost[]
                       </strong>
                     </p>
                   </div>
-                  <div className="mt-3 flex flex-wrap gap-2 text-xs font-black">
-                    <Link
-                      className="inline-flex items-center gap-1.5 rounded-full bg-primary px-3 py-2 text-white transition hover:bg-primary-hover"
-                      href={adminHref}
-                    >
-                      <FileText aria-hidden className="h-3.5 w-3.5" />
-                      Ver detalhe Admin
-                    </Link>
-                    <Link
-                      className="inline-flex items-center gap-1.5 rounded-full border border-border bg-surface px-3 py-2 text-primary transition hover:bg-primary-soft"
-                      href={href}
-                      rel="noreferrer"
-                      target="_blank"
-                    >
-                      <Eye aria-hidden className="h-3.5 w-3.5" />
-                      Abrir público
-                    </Link>
+                  <div className="mt-3">
+                    <DashboardPostActions layout="labels" post={post} />
                   </div>
                 </article>
               );
             })}
           </div>
           <div className="mt-5 hidden min-w-0 overflow-hidden md:block">
-            <table className="w-full table-fixed border-separate border-spacing-0 text-left text-sm">
+            <table className="w-full max-w-full table-fixed border-separate border-spacing-0 text-left text-sm">
+              <colgroup>
+                <col className="w-[22%]" />
+                <col className="w-[26%]" />
+                <col className="w-[8%]" />
+                <col className="w-[8%]" />
+                <col className="w-[36%]" />
+              </colgroup>
               <thead className="text-xs text-muted">
                 <tr>
-                  <th className="w-[42%] border-b border-border py-3 pr-3 font-black">Título</th>
-                  <th className="w-[32%] border-b border-border px-3 py-3 font-black">Autor</th>
-                  <th className="w-[13%] border-b border-border px-3 py-3 font-black">Upvotes</th>
-                  <th className="w-[13%] border-b border-border px-3 py-3 font-black">
+                  <th className="border-b border-border py-3 pr-3 font-black">Título</th>
+                  <th className="border-b border-border px-3 py-3 font-black">Autor</th>
+                  <th className="border-b border-border px-3 py-3 text-center font-black">
+                    Upvotes
+                  </th>
+                  <th className="border-b border-border px-3 py-3 text-center font-black">
                     Comentários
                   </th>
+                  <th className="border-b border-border py-3 pl-3 text-center font-black">Ações</th>
                 </tr>
               </thead>
               <tbody>
                 {posts.map((post) => {
-                  const href = communityPostPublicHref(post);
-                  const adminHref = communityPostAdminDetailHref(post);
                   const title = post.title.trim() || "Post sem título";
 
                   return (
-                    <tr
-                      className="group cursor-pointer align-top transition hover:bg-surface-muted/50"
-                      key={post.id}
-                    >
+                    <tr className="align-top transition hover:bg-surface-muted/50" key={post.id}>
                       <td className="min-w-0 border-b border-border align-top">
                         <div className="py-4 pr-3">
-                          <p className="truncate font-black text-foreground group-hover:text-primary">
-                            {title}
-                          </p>
+                          <p className="truncate font-black text-foreground">{title}</p>
                           <p className="mt-1 truncate text-xs text-muted">
                             {post.community_name} · {formatDateTime(post.created_at)}
                           </p>
-                          <div className="mt-2 flex flex-wrap gap-2 text-xs font-black">
-                            <Link
-                              className="inline-flex items-center gap-1.5 text-primary transition hover:text-primary-hover"
-                              href={adminHref}
-                            >
-                              <FileText aria-hidden className="h-3.5 w-3.5" />
-                              Ver detalhe Admin
-                            </Link>
-                            <Link
-                              className="inline-flex items-center gap-1.5 text-muted transition hover:text-primary"
-                              href={href}
-                              rel="noreferrer"
-                              target="_blank"
-                            >
-                              <Eye aria-hidden className="h-3.5 w-3.5" />
-                              Abrir público
-                            </Link>
-                          </div>
                         </div>
                       </td>
                       <td className="min-w-0 border-b border-border align-top">
-                        <Link
-                          aria-label={`Abrir post ${title} no site público`}
-                          className="block px-3 py-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
-                          href={href}
-                          rel="noreferrer"
-                          target="_blank"
-                        >
+                        <div className="block px-3 py-4">
                           <DashboardPostAuthorIdentity author={post.author} />
-                        </Link>
+                        </div>
                       </td>
-                      <td className="border-b border-border align-top">
-                        <Link
-                          aria-label={`Abrir post ${title} no site público`}
-                          className="block px-3 py-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
-                          href={href}
-                          rel="noreferrer"
-                          target="_blank"
-                        >
+                      <td className="border-b border-border text-center align-top">
+                        <div className="px-3 py-4">
                           <span className="inline-flex items-center gap-2 font-black text-foreground">
                             <ArrowUp aria-hidden className="h-4 w-4 text-primary" />
                             {numberFormatter.format(post.upvotes_count)}
                           </span>
-                        </Link>
+                        </div>
                       </td>
-                      <td className="border-b border-border align-top">
-                        <Link
-                          aria-label={`Abrir post ${title} no site público`}
-                          className="block px-3 py-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
-                          href={href}
-                          rel="noreferrer"
-                          target="_blank"
-                        >
+                      <td className="border-b border-border text-center align-top">
+                        <div className="px-3 py-4">
                           <span className="inline-flex items-center gap-2 font-black text-foreground">
                             <MessageCircle aria-hidden className="h-4 w-4 text-primary" />
                             {numberFormatter.format(post.comments_count)}
                           </span>
-                        </Link>
+                        </div>
+                      </td>
+                      <td className="border-b border-border align-top">
+                        <div className="py-4 pl-3">
+                          <DashboardPostActions layout="icons" post={post} />
+                        </div>
                       </td>
                     </tr>
                   );

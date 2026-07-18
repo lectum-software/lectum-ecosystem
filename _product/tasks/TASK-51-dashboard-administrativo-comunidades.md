@@ -697,3 +697,30 @@ Regras de UI obrigatórias:
 - `pnpm --dir backend check`
 - `pnpm --dir backend build`
 - `pnpm check` foi executado, mas ficou bloqueado por alteracoes nao relacionadas ja presentes em `backend/src/modules/api/admin/private/communities/manage/*`, `backend/prisma/schema.prisma` e arquivos da TASK-75 em andamento; o erro reportado foi de imports/formatacao nao usados nesses arquivos fora do escopo deste ajuste.
+
+## Correcao complementar: coluna de acoes em postagens recentes e populares (2026-07-18)
+
+- Pedido do usuario: no dashboard de comunidades, nos blocos **Postagens mais recentes** e **Posts mais populares**, adicionar uma coluna de acoes com botoes para ver o conteudo publico e seus analytics.
+- Frontend Admin: as tabelas desktop desses dois blocos agora exibem a coluna **Acoes** com botoes compactos para **Abrir publico** e **Analytics**.
+- O botao publico abre `NEXT_PUBLIC_FRONTEND_URL + /community/{slug}/post/{id}` em nova aba; o botao de analytics abre a rota Admin existente `/comunidades/{slug}/conteudo/post/{id}`.
+- No mobile, os cards mantem a mesma decisao como botoes textuais, preservando a abordagem mobile-first sem criar coluna artificial em telas estreitas.
+- Nao houve alteracao de backend, endpoint, contrato, `backend/prisma/schema.prisma`, migrations, packages, seed, mock ou dado fake permanente.
+- Builder/Quick Copy `vcp://quickcopy/vcp-24aaa2941d814e5b90572bc93ae50e2a` nao esta exposto como ferramenta callable neste ambiente; referencias usadas: captura enviada pelo usuario, `_product/proto/admin/Comunidades/Comunidades - Dashboard.png` e padroes Admin existentes.
+- ADR atualizado: `adrs/0231-admin-comunidades-dashboard-agregacoes.md`.
+
+### Criterios deste ajuste
+
+- [x] **Postagens mais recentes** exibe coluna desktop **Acoes**.
+- [x] **Posts mais populares** exibe coluna desktop **Acoes**.
+- [x] Cada linha possui botao para abrir o post publico real em nova aba.
+- [x] Cada linha possui botao para abrir o detalhe de analytics Admin do post.
+- [x] A apresentacao mobile mantem botoes equivalentes dentro dos cards.
+- [x] Nenhum mock, dado fake permanente, endpoint simulado, package novo, schema Prisma ou migration foi usado.
+
+### Validacao deste ajuste
+
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check`
+- Smoke HTTP local: `GET http://localhost:3002/comunidades`, `GET http://localhost:3002/comunidades/autocuidado-em-pratica/conteudo/post/cmrmg709v000yt0uh8x55eqae` e `GET http://localhost:3000/community/autocuidado-em-pratica/post/cmrmg709v000yt0uh8x55eqae` retornaram 200.
+- Browser local validado no Chrome em `http://localhost:3002/comunidades`: os blocos de posts exibiram botoes de publico e analytics na coluna de acoes.

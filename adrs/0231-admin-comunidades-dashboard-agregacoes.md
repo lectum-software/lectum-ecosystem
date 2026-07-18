@@ -152,3 +152,11 @@ O seletor de periodo do dashboard geral `/comunidades` deve ter a mesma lista us
 A decisao e estender o contrato existente `GET /api/admin/private/communities/dashboard` para aceitar `period=today|week|month|year|all|custom`, preservando compatibilidade com `from`/`to` legados como periodo personalizado. No frontend, `custom` nao e uma opcao fixa do dropdown: ele e selecionado automaticamente quando datas manuais sao editadas. O periodo inicial continua sendo **Esta semana**. Para **Todo o periodo**, o backend resolve a data inicial a partir do primeiro registro real relevante do dashboard de comunidades, incluindo comunidades, membros, posts, respostas, votos, salvamentos, compartilhamentos, pageviews, cliques e moderacao; se nao houver registros, volta ao intervalo operacional padrao.
 
 O limite tecnico foi alinhado aos demais dashboards analiticos longos do Admin (`max_days=3660`) para permitir **Este ano** e **Todo o periodo** sem reintroduzir o preset antigo **Ultimos 90 dias**. Nao houve alteracao de schema Prisma, migration, pacote, mock, seed ou endpoint paralelo.
+
+## Atualizacao 2026-07-18: coluna dedicada de acoes nos posts do dashboard
+
+Os blocos **Postagens mais recentes** e **Posts mais populares** do dashboard geral `/comunidades` voltam a ter uma coluna explicita **Acoes** na tabela desktop, agora com dois botoes compactos e sem misturar a navegacao dentro da coluna de titulo.
+
+A decisao e diferenciar os dois destinos operacionais: **Abrir publico** usa a URL canonica `NEXT_PUBLIC_FRONTEND_URL + /community/{slug}/post/{id}` em nova aba; **Analytics** usa a rota Admin contextual `/comunidades/{slug}/conteudo/post/{id}` criada na TASK-75. No mobile, a mesma decisao aparece como botoes com texto dentro do card, preservando a abordagem mobile-first e evitando linha inteira clicavel com destino ambiguo.
+
+Consequencia: o Admin ganha leitura mais clara e consistente com listas administrativas, com acoes acessiveis por `aria-label`, sem alterar endpoint, contrato backend, schema Prisma, migration, pacote, mock, seed ou regra de agregacao.
