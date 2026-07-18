@@ -203,3 +203,20 @@ Frontend esperado:
 - Serviço local `buildPatientsDashboard({})` retornou `platform_usage` real com `average_duration_seconds=null`, `duration_unavailable_reason="Sem pageviews autenticados de pacientes no período."`, `pageviews_count=0` e `sessions_count=0` na base local, sem criar dados artificiais.
 - `GET /api/admin/private/patients/dashboard` sem sessão Admin retornou `401`.
 - `GET http://localhost:3002/pacientes` retornou `200` no servidor Admin local.
+
+## Ajuste complementar 2026-07-18 - Layout piloto premium em Pacientes
+
+- Pedido do usuário: aplicar o layout piloto premium nas páginas de pacientes do Admin.
+- O dashboard `/pacientes` passou a entrar no escopo visual `admin-premium-pilot`, compartilhando a sidebar clara, tokens azuis Lectum, cards com borda sutil e tipografia mais leve do piloto já usado em Psicólogos/Comunidades.
+- A área principal foi reorganizada em um card **Visão Geral**, reunindo contadores e gráfico temporal com curvas SVG suaves, strokes/markers mais finos e plot com superfície limpa.
+- A tabela desktop da lista resumida deixou de depender de largura mínima fixa e mantém cards mobile, evitando scrollbar horizontal na leitura de desktop.
+- Não houve alteração de backend, endpoint, contrato, query, schema Prisma, migration, package, seed, mock, dados sensíveis ou regras de exportação/retenção.
+- Builder/Quick Copy não está exposto como ferramenta callable no ambiente; a referência auditável continua sendo `_product/proto/admin/Pacientes/Pacientes - Dashboard.png` e o ADR do piloto visual foi atualizado em `adrs/0263-admin-psicologos-piloto-premium.md`.
+
+### Validação complementar executada
+
+- `pnpm --dir admin exec biome check --write "src/components/admin-shell/shell.tsx" "src/app/(admin)/pacientes/client.tsx" "src/app/(admin)/pacientes/[id]/client.tsx"`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check`
+- Smoke HTTP local: `GET http://localhost:3002/pacientes` retornou `200`.

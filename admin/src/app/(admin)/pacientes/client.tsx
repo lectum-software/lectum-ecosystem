@@ -29,7 +29,7 @@ import type {
   PatientsDashboardRecentPatient,
 } from "@/api/req/patients";
 import { useDateRangeCommitOnBlur } from "@/hooks/use-date-range-commit-on-blur";
-import { aggregateCalendarChartPoints } from "@/lib/chart-time-series";
+import { aggregateCalendarChartPoints, buildSmoothSvgPath } from "@/lib/chart-time-series";
 import { cn } from "@/lib/utils";
 
 const QUICK_RANGES = [7, 30, 90] as const;
@@ -110,7 +110,10 @@ const isValidRange = (range: PatientsDashboardQuery) => {
 
 const CardShell = ({ children, className }: { children?: React.ReactNode; className?: string }) => (
   <section
-    className={cn("rounded-card border border-border bg-surface shadow-admin-soft", className)}
+    className={cn(
+      "rounded-card border border-border/80 bg-surface/95 shadow-admin-soft backdrop-blur",
+      className,
+    )}
   >
     {children}
   </section>
@@ -126,7 +129,7 @@ const toneClasses = {
 const TrendBadge = ({ metric }: { metric: PatientsDashboardMetric }) => (
   <span
     className={cn(
-      "text-xs font-black",
+      "text-xs font-semibold",
       metric.trend === "up" && "text-success",
       metric.trend === "down" && "text-danger",
       metric.trend === "flat" && "text-muted",
@@ -146,18 +149,18 @@ const MetricCard = ({
   metric: PatientsDashboardMetric;
   tone: keyof typeof toneClasses;
 }) => (
-  <CardShell className="min-h-40 p-5">
+  <CardShell className="min-h-[8.75rem] p-4">
     <div className="flex items-start justify-between gap-3">
-      <div className={cn("grid h-12 w-12 place-items-center rounded-full", toneClasses[tone])}>
-        <Icon aria-hidden className="h-5 w-5" />
+      <div className={cn("grid h-10 w-10 place-items-center rounded-full", toneClasses[tone])}>
+        <Icon aria-hidden className="h-4 w-4" />
       </div>
       <span className="rounded-full bg-surface-muted px-2 py-1 text-[0.65rem] font-bold text-muted">
         {metric.source}
       </span>
     </div>
-    <div className="mt-5 space-y-2">
-      <p className="text-sm font-black text-foreground">{metric.label}</p>
-      <p className="text-3xl font-black tracking-tight text-foreground">
+    <div className="mt-4 space-y-1.5">
+      <p className="text-sm font-semibold text-foreground">{metric.label}</p>
+      <p className="text-3xl font-bold tracking-tight text-foreground">
         {numberFormatter.format(metric.value)}
       </p>
       <div className="flex flex-wrap items-center gap-2">
@@ -173,18 +176,18 @@ const PatientAverageDurationCard = ({ summary }: { summary: AdminPatientsDashboa
   const usage = summary.platform_usage;
 
   return (
-    <CardShell className="min-h-40 p-5">
+    <CardShell className="min-h-[8.75rem] p-4">
       <div className="flex items-start justify-between gap-3">
-        <div className="grid h-12 w-12 place-items-center rounded-full bg-primary-soft text-primary">
-          <Clock aria-hidden className="h-5 w-5" />
+        <div className="grid h-10 w-10 place-items-center rounded-full bg-primary-soft text-primary">
+          <Clock aria-hidden className="h-4 w-4" />
         </div>
         <span className="rounded-full bg-surface-muted px-2 py-1 text-[0.65rem] font-bold text-muted">
           {usage.source}
         </span>
       </div>
-      <div className="mt-5 space-y-2">
-        <p className="text-sm font-black text-foreground">Tempo médio do paciente</p>
-        <p className="text-3xl font-black tracking-tight text-foreground">
+      <div className="mt-4 space-y-1.5">
+        <p className="text-sm font-semibold text-foreground">Tempo médio do paciente</p>
+        <p className="text-3xl font-bold tracking-tight text-foreground">
           {formatDuration(usage.average_duration_seconds)}
         </p>
         <p className="text-xs leading-relaxed text-muted">
@@ -206,9 +209,9 @@ const PatientAverageDurationCard = ({ summary }: { summary: AdminPatientsDashboa
 const LoadingGrid = () => (
   <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
     {CARD_ORDER.map((key) => (
-      <CardShell className="h-40 animate-pulse bg-surface-muted" key={`patients-${key}`} />
+      <CardShell className="h-[8.75rem] animate-pulse bg-surface-muted" key={`patients-${key}`} />
     ))}
-    <CardShell className="h-40 animate-pulse bg-surface-muted" />
+    <CardShell className="h-[8.75rem] animate-pulse bg-surface-muted" />
   </div>
 );
 
@@ -266,52 +269,57 @@ const PatientsHeader = ({
   rangeError: string | null;
   setRange: (range: PatientsDashboardQuery) => void;
 }) => (
-  <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
-    <div>
-      <h1 className="text-3xl font-black tracking-tight text-foreground md:text-4xl">Pacientes</h1>
-      <p className="mt-2 text-sm font-medium text-muted">
-        Gerencie crescimento, status de conta e acompanhamento básico dos pacientes da plataforma.
-      </p>
-    </div>
+  <section className="rounded-card border border-border/70 bg-surface/90 p-5 shadow-admin-soft backdrop-blur md:p-6">
+    <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
+      <div>
+        <p className="text-xs font-semibold uppercase tracking-[0.12em] text-primary">Pacientes</p>
+        <h1 className="mt-2 text-3xl font-bold tracking-tight text-foreground md:text-4xl">
+          Dashboard de Pacientes
+        </h1>
+        <p className="mt-2 max-w-2xl text-sm font-medium leading-6 text-muted">
+          Gerencie crescimento, status de conta e acompanhamento básico dos pacientes da plataforma.
+        </p>
+      </div>
 
-    <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
-      <div className="grid gap-3 sm:grid-cols-2" onBlur={onDateControlsBlur}>
-        <label className="text-xs font-black text-muted">
-          De
-          <input
-            className="mt-1 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground shadow-control focus:border-primary"
-            max={range.to}
-            onChange={(event) => onDateChange("from", event.target.value)}
-            type="date"
-            value={range.from}
-          />
-        </label>
-        <label className="text-xs font-black text-muted">
-          Até
-          <input
-            className="mt-1 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground shadow-control focus:border-primary"
-            min={range.from}
-            onChange={(event) => onDateChange("to", event.target.value)}
-            type="date"
-            value={range.to}
-          />
-        </label>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+        <div className="grid gap-3 sm:grid-cols-2" onBlur={onDateControlsBlur}>
+          <label className="text-xs font-semibold text-muted">
+            De
+            <input
+              className="mt-1 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground shadow-control focus:border-primary"
+              max={range.to}
+              onChange={(event) => onDateChange("from", event.target.value)}
+              type="date"
+              value={range.from}
+            />
+          </label>
+          <label className="text-xs font-semibold text-muted">
+            Até
+            <input
+              className="mt-1 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground shadow-control focus:border-primary"
+              min={range.from}
+              onChange={(event) => onDateChange("to", event.target.value)}
+              type="date"
+              value={range.to}
+            />
+          </label>
+        </div>
+        <div className="flex flex-wrap gap-2 sm:w-44">
+          {QUICK_RANGES.map((days) => (
+            <button
+              className="h-9 rounded-full border border-border bg-surface px-3 text-xs font-black text-muted transition hover:border-primary hover:text-primary"
+              key={days}
+              onClick={() => setRange(getQuickRange(days))}
+              type="button"
+            >
+              {days} dias
+            </button>
+          ))}
+        </div>
+        {rangeError ? <p className="max-w-md text-xs font-bold text-danger">{rangeError}</p> : null}
       </div>
-      <div className="flex flex-wrap gap-2 sm:w-44">
-        {QUICK_RANGES.map((days) => (
-          <button
-            className="h-9 rounded-full border border-border bg-surface px-3 text-xs font-black text-muted transition hover:border-primary hover:text-primary"
-            key={days}
-            onClick={() => setRange(getQuickRange(days))}
-            type="button"
-          >
-            {days} dias
-          </button>
-        ))}
-      </div>
-      {rangeError ? <p className="max-w-md text-xs font-bold text-danger">{rangeError}</p> : null}
     </div>
-  </div>
+  </section>
 );
 
 const CardsGrid = ({ summary }: { summary: AdminPatientsDashboard }) => {
@@ -326,22 +334,19 @@ const CardsGrid = ({ summary }: { summary: AdminPatientsDashboard }) => {
   };
 
   return (
-    <section>
-      <h2 className="mb-4 text-xl font-black text-foreground">Estatísticas</h2>
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
-        {CARD_ORDER.map((key) => (
-          <MetricCard key={key} metric={summary.cards[key]} {...config[key]} />
-        ))}
-        <PatientAverageDurationCard summary={summary} />
-      </div>
-    </section>
+    <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+      {CARD_ORDER.map((key) => (
+        <MetricCard key={key} metric={summary.cards[key]} {...config[key]} />
+      ))}
+      <PatientAverageDurationCard summary={summary} />
+    </div>
   );
 };
 
 const TimelineChart = ({ points }: { points: PatientsDashboardDailyPoint[] }) => {
-  const width = 760;
-  const height = 320;
-  const padding = { bottom: 48, left: 54, right: 24, top: 24 };
+  const width = 980;
+  const height = 280;
+  const padding = { bottom: 28, left: 48, right: 28, top: 28 };
   const series = [
     { color: CHART_COLORS[0], key: "total_patients", label: "Total de pacientes" },
     { color: CHART_COLORS[1], key: "active_patients", label: "Pacientes ativos" },
@@ -359,6 +364,15 @@ const TimelineChart = ({ points }: { points: PatientsDashboardDailyPoint[] }) =>
       },
     },
   );
+
+  if (chartPoints.length === 0) {
+    return (
+      <div className="mt-5 rounded-2xl border border-dashed border-border bg-surface-muted p-6 text-sm font-bold text-muted">
+        Nenhum ponto real de evolução foi encontrado para o período.
+      </div>
+    );
+  }
+
   const maxValue = Math.max(
     1,
     ...chartPoints.flatMap((point) => series.map((item) => point[item.key])),
@@ -366,99 +380,106 @@ const TimelineChart = ({ points }: { points: PatientsDashboardDailyPoint[] }) =>
   const chartWidth = width - padding.left - padding.right;
   const chartHeight = height - padding.top - padding.bottom;
   const getX = (index: number) =>
-    chartPoints.length <= 1
-      ? width / 2
-      : padding.left + (index * chartWidth) / (chartPoints.length - 1);
+    padding.left +
+    (chartPoints.length <= 1 ? chartWidth / 2 : (index * chartWidth) / (chartPoints.length - 1));
   const getY = (value: number) => padding.top + chartHeight - (value / maxValue) * chartHeight;
   const gridValues = [0, 0.25, 0.5, 0.75, 1].map((ratio) => Math.round(maxValue * ratio));
   const labelStep = Math.max(1, Math.ceil(chartPoints.length / 8));
+  const dateLabels = chartPoints.flatMap((point, index) =>
+    index % labelStep === 0 || index === chartPoints.length - 1
+      ? [{ date: point.date, label: point.chartLabel }]
+      : [],
+  );
 
   return (
     <figure className="mt-5 overflow-hidden">
       <div className="mb-4 flex flex-wrap gap-3">
         {series.map((item) => (
           <span
-            className="inline-flex items-center gap-2 text-xs font-black text-muted"
+            className="inline-flex items-center gap-2 text-xs font-semibold text-muted"
             key={item.key}
           >
-            <span className="h-3 w-3 rounded-full" style={{ backgroundColor: item.color }} />
+            <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: item.color }} />
             {item.label}
           </span>
         ))}
       </div>
-      <div className="overflow-x-auto">
-        <svg
-          aria-label="Gráfico temporal de pacientes"
-          className="min-w-[680px]"
-          role="img"
-          viewBox={`0 0 ${width} ${height}`}
-        >
-          {gridValues.map((value) => {
-            const y = getY(value);
-            return (
-              <g key={`patients-grid-${value}-${y}`}>
-                <line
-                  stroke="var(--admin-border)"
-                  strokeWidth="1"
-                  x1={padding.left}
-                  x2={width - padding.right}
-                  y1={y}
-                  y2={y}
-                />
-                <text fill="var(--admin-muted)" fontSize="11" x="8" y={y + 4}>
-                  {numberFormatter.format(value)}
-                </text>
-              </g>
-            );
-          })}
-
-          {series.map((item) => {
-            const path = chartPoints
-              .map(
-                (point, index) =>
-                  `${index === 0 ? "M" : "L"}${getX(index)},${getY(point[item.key])}`,
-              )
-              .join(" ");
-
-            return (
-              <g key={item.key}>
-                <path
-                  d={path}
-                  fill="none"
-                  stroke={item.color}
-                  strokeLinecap="round"
-                  strokeWidth="3.5"
-                />
-                {chartPoints.map((point, index) => (
-                  <circle
-                    cx={getX(index)}
-                    cy={getY(point[item.key])}
-                    fill="var(--admin-surface)"
-                    key={`${item.key}-${point.date}`}
-                    r="4.5"
-                    stroke={item.color}
-                    strokeWidth="2.5"
+      <div className="w-full overflow-x-auto rounded-[1.5rem] border border-border/70 bg-surface p-4">
+        <div className="mx-auto w-full min-w-[720px] max-w-[980px]">
+          <svg
+            aria-label="Gráfico temporal de pacientes"
+            className="block h-auto w-full"
+            height={height}
+            preserveAspectRatio="xMidYMid meet"
+            role="img"
+            viewBox={`0 0 ${width} ${height}`}
+            width={width}
+          >
+            {gridValues.map((value) => {
+              const y = getY(value);
+              return (
+                <g key={`patients-grid-${value}-${y}`}>
+                  <line
+                    opacity="0.58"
+                    stroke="var(--admin-border)"
+                    strokeWidth="1"
+                    x1={padding.left}
+                    x2={width - padding.right}
+                    y1={y}
+                    y2={y}
                   />
-                ))}
-              </g>
-            );
-          })}
+                  <text fill="var(--admin-muted)" fontSize="11" fontWeight="500" x="8" y={y + 4}>
+                    {numberFormatter.format(value)}
+                  </text>
+                </g>
+              );
+            })}
 
-          {chartPoints.map((point, index) =>
-            index % labelStep === 0 || index === chartPoints.length - 1 ? (
-              <text
-                fill="var(--admin-foreground)"
-                fontSize="11"
-                key={point.date}
-                textAnchor="middle"
-                x={getX(index)}
-                y={height - 14}
-              >
-                {point.chartLabel}
-              </text>
-            ) : null,
-          )}
-        </svg>
+            {series.map((item) => {
+              const linePoints = chartPoints.map((point, index) => ({
+                x: getX(index),
+                y: getY(point[item.key]),
+              }));
+              const path = buildSmoothSvgPath(linePoints);
+
+              return (
+                <g key={item.key}>
+                  <path
+                    d={path}
+                    fill="none"
+                    opacity="0.88"
+                    stroke={item.color}
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2.05"
+                  />
+                  {linePoints.map((point, index) => (
+                    <circle
+                      cx={point.x}
+                      cy={point.y}
+                      fill="var(--admin-surface)"
+                      key={`${item.key}-${chartPoints[index].date}`}
+                      opacity={index === linePoints.length - 1 ? "1" : "0.72"}
+                      r={index === linePoints.length - 1 ? "3.1" : "2.1"}
+                      stroke={item.color}
+                      strokeWidth="1.45"
+                    />
+                  ))}
+                </g>
+              );
+            })}
+          </svg>
+          <div
+            className="mt-1 grid gap-1"
+            style={{ gridTemplateColumns: `repeat(${dateLabels.length}, 1fr)` }}
+          >
+            {dateLabels.map(({ date, label }) => (
+              <span className="min-w-0 text-center text-[10px] font-bold text-subtle" key={date}>
+                {label}
+              </span>
+            ))}
+          </div>
+        </div>
       </div>
       <details className="mt-3 rounded-2xl bg-surface-muted p-3 text-xs text-muted">
         <summary className="cursor-pointer font-black text-foreground">
@@ -580,9 +601,17 @@ const RecentPatients = ({ summary }: { summary: AdminPatientsDashboard }) => (
       ))}
     </div>
 
-    <div className="hidden overflow-x-auto lg:block">
-      <table className="w-full min-w-[880px] text-left text-sm">
+    <div className="hidden overflow-hidden lg:block">
+      <table className="w-full table-fixed text-left text-sm">
         <caption className="sr-only">Lista resumida de pacientes administrativos</caption>
+        <colgroup>
+          <col className="w-[25%]" />
+          <col className="w-[12%]" />
+          <col className="w-[17%]" />
+          <col className="w-[16%]" />
+          <col className="w-[22%]" />
+          <col className="w-[8%]" />
+        </colgroup>
         <thead className="text-xs text-muted">
           <tr>
             <th className="px-5 py-3 font-black">Paciente</th>
@@ -608,16 +637,16 @@ const RecentPatients = ({ summary }: { summary: AdminPatientsDashboard }) => (
               <td className="px-5 py-4">
                 <StatusBadge item={item} />
               </td>
-              <td className="px-5 py-4 text-muted">
+              <td className="truncate px-5 py-4 text-muted">
                 {[item.city, item.state, item.country].filter(Boolean).join(", ") ||
                   "Não capturada"}
               </td>
-              <td className="px-5 py-4 text-muted">{formatDateTime(item.created_at)}</td>
+              <td className="truncate px-5 py-4 text-muted">{formatDateTime(item.created_at)}</td>
               <td className="px-5 py-4">
-                <p className="font-bold text-foreground">
+                <p className="truncate font-bold text-foreground">
                   {item.recent_activity?.label || "Cadastro realizado"}
                 </p>
-                <p className="text-xs text-muted">
+                <p className="truncate text-xs text-muted">
                   {item.recent_activity
                     ? formatDateTime(item.recent_activity.occurred_at)
                     : formatDateTime(item.created_at)}
@@ -850,23 +879,26 @@ const CoverageNotes = ({ summary }: { summary: AdminPatientsDashboard }) => (
 );
 
 const DashboardContent = ({ summary }: { summary: AdminPatientsDashboard }) => (
-  <div className="space-y-6">
+  <div className="space-y-7">
     {summary.cards.new_signups.value === 0 ? <EmptyState period={summary.period} /> : null}
 
-    <CardsGrid summary={summary} />
-
-    <CardShell className="p-5">
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+    <CardShell className="min-w-0 p-5">
+      <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h2 className="text-xl font-black text-foreground">Evolução no período</h2>
-          <p className="mt-1 text-sm text-muted">
-            Linha temporal baseada em cadastro de usuários e status atual da conta.
+          <h2 className="text-xl font-bold text-foreground">Visão Geral</h2>
+          <p className="mt-1 text-sm font-bold leading-6 text-muted">
+            {summary.period.label} · {formatDate(summary.period.from)} a{" "}
+            {formatDate(summary.period.to)}
           </p>
         </div>
         <span className="w-fit rounded-full bg-surface-muted px-2 py-1 text-[0.65rem] font-bold text-muted">
           {summary.series.source}
         </span>
       </div>
+      <CardsGrid summary={summary} />
+      <p className="mt-5 text-sm text-muted">
+        Linha temporal baseada em cadastro de usuários e status atual da conta.
+      </p>
       <TimelineChart points={summary.series.points} />
     </CardShell>
 

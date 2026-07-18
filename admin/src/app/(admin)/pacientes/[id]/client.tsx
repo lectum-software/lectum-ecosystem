@@ -32,7 +32,7 @@ import type {
   PatientsDetailQuery,
 } from "@/api/req/patients";
 import { useDateRangeCommitOnBlur } from "@/hooks/use-date-range-commit-on-blur";
-import { aggregateCalendarChartPoints } from "@/lib/chart-time-series";
+import { aggregateCalendarChartPoints, buildSmoothSvgPath } from "@/lib/chart-time-series";
 import { cn } from "@/lib/utils";
 
 const QUICK_RANGES = [7, 30, 90] as const;
@@ -56,7 +56,7 @@ const activityIcons: Record<PatientsDetailActivity["type"], LucideIcon> = {
 };
 const seriesConfig = [
   { color: "var(--admin-primary)", key: "posts_created", label: "Posts" },
-  { color: "var(--admin-info)", key: "comments_created", label: "Comentários" },
+  { color: "#5d9df6", key: "comments_created", label: "Comentários" },
   { color: "var(--admin-success)", key: "upvotes_received", label: "Upvotes recebidos" },
   { color: "var(--admin-danger)", key: "downvotes_received", label: "Downvotes recebidos" },
   { color: "var(--admin-warning)", key: "responses_received", label: "Respostas recebidas" },
@@ -112,7 +112,10 @@ const initialsFromName = (name: string) =>
 
 const CardShell = ({ children, className }: { children?: React.ReactNode; className?: string }) => (
   <section
-    className={cn("rounded-card border border-border bg-surface shadow-admin-soft", className)}
+    className={cn(
+      "rounded-card border border-border/80 bg-surface/95 shadow-admin-soft backdrop-blur",
+      className,
+    )}
   >
     {children}
   </section>
@@ -142,7 +145,7 @@ const Avatar = ({ name, src }: { name: string; src: string | null }) => {
 const TrendBadge = ({ metric }: { metric: PatientsDetailMetric }) => (
   <span
     className={cn(
-      "text-xs font-black",
+      "text-xs font-semibold",
       metric.trend === "up" && "text-success",
       metric.trend === "down" && "text-danger",
       ["flat", "unavailable"].includes(metric.trend) && "text-muted",
@@ -155,18 +158,18 @@ const TrendBadge = ({ metric }: { metric: PatientsDetailMetric }) => (
 const MetricCard = ({ metric }: { metric: PatientsDetailMetric }) => {
   const Icon = metricIcons[metric.id];
   return (
-    <CardShell className="p-5">
+    <CardShell className="min-h-[8.75rem] p-4">
       <div className="flex items-start justify-between gap-3">
-        <div className="grid h-12 w-12 place-items-center rounded-full bg-primary-soft text-primary">
-          <Icon aria-hidden className="h-5 w-5" />
+        <div className="grid h-10 w-10 place-items-center rounded-full bg-primary-soft text-primary">
+          <Icon aria-hidden className="h-4 w-4" />
         </div>
         <span className="rounded-full bg-surface-muted px-2 py-1 text-[0.65rem] font-bold text-muted">
           fonte real
         </span>
       </div>
-      <div className="mt-5 space-y-2">
-        <p className="text-sm font-black text-foreground">{metric.label}</p>
-        <p className="text-3xl font-black tracking-tight text-foreground">
+      <div className="mt-4 space-y-1.5">
+        <p className="text-sm font-semibold text-foreground">{metric.label}</p>
+        <p className="text-3xl font-bold tracking-tight text-foreground">
           {numberFormatter.format(metric.value)}
         </p>
         <div className="flex flex-wrap items-center gap-2">
@@ -216,9 +219,9 @@ const PeriodFilters = ({
   rangeError: string | null;
   setRange: (range: PatientsDetailQuery) => void;
 }) => (
-  <div className="flex flex-col gap-3 rounded-card border border-border bg-surface p-4 shadow-admin-soft sm:flex-row sm:items-end sm:justify-between">
+  <div className="flex flex-col gap-3 rounded-card border border-border/70 bg-surface/90 p-4 shadow-admin-soft backdrop-blur sm:flex-row sm:items-end sm:justify-between">
     <div className="grid gap-3 sm:grid-cols-2" onBlur={onDateControlsBlur}>
-      <label className="text-xs font-black text-muted">
+      <label className="text-xs font-semibold text-muted">
         De
         <input
           className="mt-1 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground shadow-control focus:border-primary"
@@ -228,7 +231,7 @@ const PeriodFilters = ({
           value={range.from}
         />
       </label>
-      <label className="text-xs font-black text-muted">
+      <label className="text-xs font-semibold text-muted">
         Até
         <input
           className="mt-1 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground shadow-control focus:border-primary"
@@ -316,9 +319,9 @@ const Header = ({ detail }: { detail: AdminPatientDetail }) => {
   );
 };
 const EngagementChart = ({ detail }: { detail: AdminPatientDetail }) => {
-  const width = 820;
-  const height = 320;
-  const padding = { bottom: 46, left: 46, right: 24, top: 24 };
+  const width = 980;
+  const height = 280;
+  const padding = { bottom: 28, left: 48, right: 28, top: 28 };
   const points = detail.series.points;
   const chartPoints = aggregateCalendarChartPoints(points, [
     "comments_created",
@@ -327,6 +330,30 @@ const EngagementChart = ({ detail }: { detail: AdminPatientDetail }) => {
     "responses_received",
     "upvotes_received",
   ] as const);
+
+  if (chartPoints.length === 0) {
+    return (
+      <CardShell className="p-5">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <h2 className="text-xl font-black text-foreground">Estatísticas de engajamento</h2>
+            <p className="mt-1 text-sm text-muted">
+              Nenhum ponto real de engajamento foi encontrado para o período selecionado.
+            </p>
+          </div>
+          <span className="w-fit rounded-full bg-surface-muted px-2 py-1 text-[0.65rem] font-bold text-muted">
+            {detail.period.timezone}
+          </span>
+        </div>
+        <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+          {detail.metrics.map((metric) => (
+            <MetricCard key={metric.id} metric={metric} />
+          ))}
+        </div>
+      </CardShell>
+    );
+  }
+
   const maxValue = Math.max(
     1,
     ...chartPoints.flatMap((point) => seriesConfig.map((item) => point[item.key])),
@@ -334,11 +361,16 @@ const EngagementChart = ({ detail }: { detail: AdminPatientDetail }) => {
   const chartWidth = width - padding.left - padding.right;
   const chartHeight = height - padding.top - padding.bottom;
   const getX = (index: number) =>
-    chartPoints.length <= 1
-      ? width / 2
-      : padding.left + (index * chartWidth) / (chartPoints.length - 1);
+    padding.left +
+    (chartPoints.length <= 1 ? chartWidth / 2 : (index * chartWidth) / (chartPoints.length - 1));
   const getY = (value: number) => padding.top + chartHeight - (value / maxValue) * chartHeight;
+  const gridValues = [0, 0.25, 0.5, 0.75, 1].map((ratio) => Math.round(maxValue * ratio));
   const labelStep = Math.max(1, Math.ceil(chartPoints.length / 8));
+  const dateLabels = chartPoints.flatMap((point, index) =>
+    index % labelStep === 0 || index === chartPoints.length - 1
+      ? [{ date: point.date, label: point.chartLabel }]
+      : [],
+  );
 
   return (
     <CardShell className="p-5">
@@ -353,7 +385,7 @@ const EngagementChart = ({ detail }: { detail: AdminPatientDetail }) => {
           {detail.period.timezone}
         </span>
       </div>
-      <div className="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+      <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
         {detail.metrics.map((metric) => (
           <MetricCard key={metric.id} metric={metric} />
         ))}
@@ -362,85 +394,88 @@ const EngagementChart = ({ detail }: { detail: AdminPatientDetail }) => {
         <div className="mb-4 flex flex-wrap gap-3">
           {seriesConfig.map((item) => (
             <span
-              className="inline-flex items-center gap-2 text-xs font-black text-muted"
+              className="inline-flex items-center gap-2 text-xs font-semibold text-muted"
               key={item.key}
             >
-              <span className="h-3 w-3 rounded-full" style={{ backgroundColor: item.color }} />
+              <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: item.color }} />
               {item.label}
             </span>
           ))}
         </div>
-        <div className="overflow-x-auto">
-          <svg
-            aria-label="Gráfico de engajamento do paciente"
-            className="min-w-[720px]"
-            role="img"
-            viewBox={`0 0 ${width} ${height}`}
-          >
-            {[0, 0.25, 0.5, 0.75, 1].map((ratio) => {
-              const value = Math.round(maxValue * ratio);
-              const y = getY(value);
-              return (
-                <g key={`grid-${ratio}`}>
-                  <line
-                    stroke="var(--admin-border)"
-                    strokeWidth="1"
-                    x1={padding.left}
-                    x2={width - padding.right}
-                    y1={y}
-                    y2={y}
-                  />
-                  <text fill="var(--admin-muted)" fontSize="11" x="8" y={y + 4}>
-                    {numberFormatter.format(value)}
-                  </text>
-                </g>
-              );
-            })}
-            {seriesConfig.map((item) => {
-              const path = chartPoints
-                .map(
-                  (point, index) =>
-                    `${index === 0 ? "M" : "L"}${getX(index)},${getY(point[item.key])}`,
-                )
-                .join(" ");
-              return (
-                <g key={item.key}>
-                  <path
-                    d={path}
-                    fill="none"
-                    stroke={item.color}
-                    strokeLinecap="round"
-                    strokeWidth="3"
-                  />
-                  {chartPoints.map((point, index) => (
-                    <circle
-                      cx={getX(index)}
-                      cy={getY(point[item.key])}
-                      fill="var(--admin-surface)"
-                      key={`${item.key}-${point.date}`}
-                      r="4"
-                      stroke={item.color}
-                      strokeWidth="2"
+        <div className="w-full overflow-x-auto rounded-[1.5rem] border border-border/70 bg-surface p-4">
+          <div className="mx-auto w-full min-w-[720px] max-w-[980px]">
+            <svg
+              aria-label="Gráfico de engajamento do paciente"
+              className="block h-auto w-full"
+              height={height}
+              preserveAspectRatio="xMidYMid meet"
+              role="img"
+              viewBox={`0 0 ${width} ${height}`}
+              width={width}
+            >
+              {gridValues.map((value) => {
+                const y = getY(value);
+                return (
+                  <g key={`grid-${value}-${y}`}>
+                    <line
+                      opacity="0.58"
+                      stroke="var(--admin-border)"
+                      strokeWidth="1"
+                      x1={padding.left}
+                      x2={width - padding.right}
+                      y1={y}
+                      y2={y}
                     />
-                  ))}
-                </g>
-              );
-            })}
-            {chartPoints.map((point, index) =>
-              index % labelStep === 0 || index === chartPoints.length - 1 ? (
-                <text
-                  fill="var(--admin-foreground)"
-                  fontSize="11"
-                  key={point.date}
-                  textAnchor="middle"
-                  x={getX(index)}
-                  y={height - 14}
-                >
-                  {point.chartLabel}
-                </text>
-              ) : null,
-            )}
-          </svg>
+                    <text fill="var(--admin-muted)" fontSize="11" fontWeight="500" x="8" y={y + 4}>
+                      {numberFormatter.format(value)}
+                    </text>
+                  </g>
+                );
+              })}
+              {seriesConfig.map((item) => {
+                const linePoints = chartPoints.map((point, index) => ({
+                  x: getX(index),
+                  y: getY(point[item.key]),
+                }));
+                const path = buildSmoothSvgPath(linePoints);
+                return (
+                  <g key={item.key}>
+                    <path
+                      d={path}
+                      fill="none"
+                      opacity="0.88"
+                      stroke={item.color}
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2.05"
+                    />
+                    {linePoints.map((point, index) => (
+                      <circle
+                        cx={point.x}
+                        cy={point.y}
+                        fill="var(--admin-surface)"
+                        key={`${item.key}-${chartPoints[index].date}`}
+                        opacity={index === linePoints.length - 1 ? "1" : "0.72"}
+                        r={index === linePoints.length - 1 ? "3.1" : "2.1"}
+                        stroke={item.color}
+                        strokeWidth="1.45"
+                      />
+                    ))}
+                  </g>
+                );
+              })}
+            </svg>
+            <div
+              className="mt-1 grid gap-1"
+              style={{ gridTemplateColumns: `repeat(${dateLabels.length}, 1fr)` }}
+            >
+              {dateLabels.map(({ date, label }) => (
+                <span className="min-w-0 text-center text-[10px] font-bold text-subtle" key={date}>
+                  {label}
+                </span>
+              ))}
+            </div>
+          </div>
         </div>
       </figure>
     </CardShell>
@@ -664,33 +699,38 @@ export const AdminPatientDetailClient = ({ id }: { id: string }) => {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-        <div>
-          <Link
-            className="inline-flex h-11 items-center gap-2 rounded-control border border-border bg-surface px-4 text-sm font-black text-primary shadow-control transition hover:border-primary"
-            href="/pacientes"
-          >
-            <ArrowLeft aria-hidden className="h-4 w-4" />
-            Voltar para pacientes
-          </Link>
-          <div className="mt-5">
-            <p className="text-xs font-black uppercase tracking-[0.24em] text-primary">TASK-61</p>
-            <h1 className="mt-2 text-3xl font-black tracking-tight text-foreground md:text-4xl">
-              Detalhe administrativo do paciente
-            </h1>
-            <p className="mt-2 text-sm font-medium text-muted">
-              Visão somente leitura com engajamento, comunidades e horários a partir de dados reais.
-            </p>
+      <section className="rounded-card border border-border/70 bg-surface/90 p-5 shadow-admin-soft backdrop-blur md:p-6">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+          <div>
+            <Link
+              className="inline-flex h-11 items-center gap-2 rounded-control border border-border bg-surface px-4 text-sm font-black text-primary shadow-control transition hover:border-primary"
+              href="/pacientes"
+            >
+              <ArrowLeft aria-hidden className="h-4 w-4" />
+              Voltar para pacientes
+            </Link>
+            <div className="mt-5">
+              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-primary">
+                TASK-61
+              </p>
+              <h1 className="mt-2 text-3xl font-bold tracking-tight text-foreground md:text-4xl">
+                Detalhe administrativo do paciente
+              </h1>
+              <p className="mt-2 text-sm font-medium text-muted">
+                Visão somente leitura com engajamento, comunidades e horários a partir de dados
+                reais.
+              </p>
+            </div>
           </div>
+          <PeriodFilters
+            onDateChange={handleDateChange}
+            onDateControlsBlur={handleDateControlsBlur}
+            range={draftRange}
+            rangeError={rangeError}
+            setRange={applyRange}
+          />
         </div>
-        <PeriodFilters
-          onDateChange={handleDateChange}
-          onDateControlsBlur={handleDateControlsBlur}
-          range={draftRange}
-          rangeError={rangeError}
-          setRange={applyRange}
-        />
-      </div>
+      </section>
       <div className="flex flex-wrap items-center gap-2 text-sm text-muted">
         <CalendarDays aria-hidden className="h-4 w-4" />
         <span className="font-bold">Período consultado:</span>
@@ -706,7 +746,7 @@ export const AdminPatientDetailClient = ({ id }: { id: string }) => {
       {validRange && query.isLoading ? (
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           {LOADING_PLACEHOLDERS.map((placeholder) => (
-            <CardShell className="h-40 animate-pulse bg-surface-muted" key={placeholder} />
+            <CardShell className="h-[8.75rem] animate-pulse bg-surface-muted" key={placeholder} />
           ))}
         </div>
       ) : null}

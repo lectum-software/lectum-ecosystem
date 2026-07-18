@@ -193,6 +193,30 @@ Validacao deste refinamento:
 - `pnpm --dir admin build`
 - Smoke HTTP local: `GET http://localhost:3002/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=avaliacoes` retornou 200.
 
+## Expansao 2026-07-18: Pacientes no piloto premium
+
+Por pedido direto de produto, o escopo `admin-premium-pilot` deixa de cobrir apenas Psicologos/Comunidades e passa a incluir tambem `/pacientes` e `/pacientes/:id`.
+
+Decisoes:
+
+- Aplicar o mesmo escopo visual premium no shell Admin para dashboard e detalhe de Pacientes.
+- Manter endpoints, contratos, calculos, privacidade e regras read-only de Pacientes intactos.
+- Reorganizar o dashboard de Pacientes em um card de **Visao Geral** com contadores e grafico juntos, seguindo a linguagem do piloto ja validado em Psicologos.
+- Trocar os graficos SVG de Pacientes para curvas suaves com `buildSmoothSvgPath`, strokes/markers mais finos e area de plot limpa com borda sutil.
+- Remover a largura minima fixa da tabela desktop resumida de Pacientes, mantendo cards mobile e evitando scrollbar horizontal na leitura desktop.
+- Corrigir a cor da serie **Comentarios** do detalhe de paciente para um valor definido, evitando `var(--admin-info)` inexistente.
+
+Consequencia: Pacientes passa a participar do piloto visual premium sem criar design system paralelo, sem package novo, sem schema/migration, sem mock e sem alteracao de dados sensiveis.
+
+Validacao desta expansao:
+
+- `pnpm --dir admin exec biome check --write "src/components/admin-shell/shell.tsx" "src/app/(admin)/pacientes/client.tsx" "src/app/(admin)/pacientes/[id]/client.tsx"`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check`
+- Smoke HTTP local: `GET http://localhost:3002/pacientes` retornou 200.
+- Smoke HTTP local: `GET http://localhost:3002/pacientes/demo-patient-reviewer-01` retornou 200.
+
 ## Pendências
 
 - Validar a aceitação visual com o fundador antes de criar a task de replicação para as demais telas.

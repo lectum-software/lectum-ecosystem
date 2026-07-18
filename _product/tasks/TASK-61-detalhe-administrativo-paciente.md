@@ -201,3 +201,21 @@ Frontend esperado:
 ## ADR
 
 - ADR-0241 â€” Detalhe Admin de paciente somente leitura e dados pessoais mÃ­nimos.
+
+## Ajuste complementar 2026-07-18 - Layout piloto premium no detalhe
+
+- Pedido do usuário: aplicar o layout piloto premium nas páginas de pacientes do Admin.
+- A rota `/pacientes/[id]` passou a entrar no escopo visual `admin-premium-pilot`, preservando a tela somente leitura e todos os dados reais existentes.
+- O cabeçalho operacional e os filtros passaram a usar superfície/borda/sombra do piloto; os cards de métricas foram compactados com pesos tipográficos mais leves.
+- O gráfico de engajamento passou a usar curvas SVG suaves com `buildSmoothSvgPath`, strokes/markers mais finos e plot limpo com borda sutil.
+- A série **Comentários** deixou de depender de `var(--admin-info)` inexistente e passou a usar cor real definida no componente.
+- Não houve alteração de backend, endpoint, contrato, query, schema Prisma, migration, package, seed, mock, dados sensíveis ou ações administrativas de paciente.
+- Builder/Quick Copy não está exposto como ferramenta callable no ambiente; a referência auditável continua sendo `_product/proto/admin/Pacientes/Pacientes - Detalhes.png` e o ADR do piloto visual foi atualizado em `adrs/0263-admin-psicologos-piloto-premium.md`.
+
+### Validação complementar executada
+
+- `pnpm --dir admin exec biome check --write "src/components/admin-shell/shell.tsx" "src/app/(admin)/pacientes/client.tsx" "src/app/(admin)/pacientes/[id]/client.tsx"`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check`
+- Smoke HTTP local: `GET http://localhost:3002/pacientes/demo-patient-reviewer-01` retornou `200`.
