@@ -4,11 +4,9 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import {
   AlertTriangle,
   ArrowDown,
-  ArrowLeft,
   ArrowUp,
   Bookmark,
   CalendarDays,
-  ExternalLink,
   Eye,
   FileText,
   Flag,
@@ -21,8 +19,7 @@ import {
   Video,
 } from "lucide-react";
 import Image from "next/image";
-import Link from "next/link";
-import { type SVGProps, useRef, useState } from "react";
+import { type FocusEventHandler, type SVGProps, useMemo, useRef, useState } from "react";
 import { FormProvider, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -34,8 +31,10 @@ import { resolveApiError } from "@/api/handle";
 import type {
   AdminCommunityContentAnalyticsDetail,
   AdminCommunityContentAuthor,
+  AdminCommunityContentDetailQuery,
 } from "@/api/req/communities";
 import { InputController, TextareaController } from "@/components/controllers";
+import { useDateRangeCommitOnBlur } from "@/hooks/use-date-range-commit-on-blur";
 import { cn } from "@/lib/utils";
 
 const numberFormatter = new Intl.NumberFormat("pt-BR");
@@ -48,14 +47,24 @@ const dateTimeFormatter = new Intl.DateTimeFormat("pt-BR", {
   timeStyle: "short",
 });
 const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
-const publicFrontendUrl = process.env.NEXT_PUBLIC_FRONTEND_URL || "http://localhost:3000";
 const publicMediaPathPrefixes = ["/public/files/", "/community/icons/"] as const;
 const cardClass =
   "min-w-0 max-w-full rounded-card border border-border bg-surface/95 shadow-admin-soft";
 
 type ContentDetailTargetType = "comment" | "post" | "reply";
+type ContentDetailDateRange = Required<Pick<AdminCommunityContentDetailQuery, "from" | "to">>;
 type SeriesPoint = AdminCommunityContentAnalyticsDetail["series"][number];
-const allTimeContentDetailQuery = { period: "all" } as const;
+
+const pad = (value: number) => String(value).padStart(2, "0");
+const toInputDate = (date: Date) =>
+  `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+const startOfCurrentMonth = () => new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+const defaultContentDetailRange = (): ContentDetailDateRange => ({
+  from: toInputDate(startOfCurrentMonth()),
+  to: toInputDate(new Date()),
+});
+const isValidDateRange = (range: ContentDetailDateRange) =>
+  Boolean(range.from && range.to && range.from <= range.to);
 
 const removalFormSchema = z.object({
   confirmation: z
@@ -179,12 +188,6 @@ const isAdminPublicMediaUrl = (src?: string | null) => {
   }
 };
 
-const toPublicHref = (path: string) => {
-  if (/^https?:\/\//.test(path)) return path;
-
-  return `${publicFrontendUrl.replace(/\/$/, "")}${path}`;
-};
-
 const initials = (value: string) =>
   value
     .split(" ")
@@ -193,23 +196,10 @@ const initials = (value: string) =>
     .map((part) => part[0]?.toUpperCase())
     .join("") || "AU";
 
-const statusLabel = (status: AdminCommunityContentAnalyticsDetail["content"]["status"]) =>
-  status === "published" ? "Publicado" : "Removido";
-
 const contentTitle = (detail: AdminCommunityContentAnalyticsDetail) =>
   detail.content.title?.trim() ||
   detail.content.excerpt.trim() ||
   (detail.content.type === "post" ? "Post sem título" : "Resposta");
-
-const sourceParts = (source: string) =>
-  Array.from(
-    new Set(
-      source
-        .split("+")
-        .map((part) => part.trim())
-        .filter(Boolean),
-    ),
-  );
 
 const metricCards = (detail: AdminCommunityContentAnalyticsDetail) => [
   {
@@ -328,98 +318,65 @@ const AuthorIdentity = ({
 
 const HeaderSection = ({
   detail,
-  slug,
+  onDateChange,
+  onDateControlsBlur,
+  range,
+  rangeError,
 }: {
   detail: AdminCommunityContentAnalyticsDetail;
-  slug: string;
-}) => {
-  const title = contentTitle(detail);
-  const sources = sourceParts(detail.source);
-
-  return (
-    <section className={cn(cardClass, "p-5")}>
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-        <div className="min-w-0">
-          <nav className="flex flex-wrap items-center gap-2 text-xs font-black text-muted">
-            <Link className="hover:text-primary" href="/comunidades">
-              Comunidades
-            </Link>
-            <span aria-hidden>›</span>
-            <Link className="hover:text-primary" href={`/comunidades/${slug}`}>
-              {detail.community.name}
-            </Link>
-            <span aria-hidden>›</span>
-            <Link className="hover:text-primary" href={`/comunidades/${slug}?tab=conteudo`}>
-              Conteúdo
-            </Link>
-            <span aria-hidden>›</span>
-            <span>Detalhe</span>
-          </nav>
-          <div className="mt-4 flex flex-wrap items-center gap-2">
-            <span className="rounded-full bg-primary-soft px-3 py-1 text-xs font-black text-primary">
-              {detail.content.content_kind_label}
-            </span>
-            <span
-              className={cn(
-                "rounded-full px-3 py-1 text-xs font-black",
-                detail.content.status === "published"
-                  ? "bg-success/10 text-success"
-                  : "bg-danger/10 text-danger",
-              )}
-            >
-              {statusLabel(detail.content.status)}
-            </span>
-            {detail.content.media?.media_type.toLowerCase() === "video" ? (
-              <span className="rounded-full bg-surface-muted px-3 py-1 text-xs font-black text-muted">
-                Vídeo
-              </span>
-            ) : null}
-          </div>
-          <h1 className="mt-3 max-w-4xl text-2xl font-black leading-tight tracking-[-0.03em] text-foreground sm:text-3xl">
-            {title}
-          </h1>
-          <div className="mt-2 flex min-w-0 flex-wrap items-center gap-1.5 text-sm font-bold text-muted">
-            <span>Publicado em {formatDateTime(detail.content.created_at)}</span>
-            {sources.length > 0 ? (
-              <>
-                <span aria-hidden>·</span>
-                <span>fontes:</span>
-                {sources.map((source) => (
-                  <span
-                    className="max-w-full rounded-full bg-surface-muted px-2 py-0.5 text-xs font-black text-muted [overflow-wrap:anywhere]"
-                    key={source}
-                  >
-                    {source}
-                  </span>
-                ))}
-              </>
-            ) : null}
-          </div>
+  onDateChange: (field: "from" | "to", value: string) => void;
+  onDateControlsBlur: FocusEventHandler<HTMLDivElement>;
+  range: ContentDetailDateRange;
+  rangeError: string | null;
+}) => (
+  <section className={cn(cardClass, "p-5")}>
+    <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
+      <div className="min-w-0">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="rounded-full bg-primary-soft px-3 py-1 text-xs font-black text-primary">
+            {detail.content.content_kind_label}
+          </span>
+          <span className="max-w-full rounded-full bg-surface-muted px-3 py-1 text-xs font-black text-muted [overflow-wrap:anywhere]">
+            {detail.community.name}
+          </span>
         </div>
-        <div className="flex flex-col gap-2 sm:flex-row lg:flex-col">
-          <Link
-            className="inline-flex h-10 items-center justify-center gap-2 rounded-control border border-border bg-surface px-4 text-xs font-black text-foreground transition hover:border-primary hover:text-primary"
-            href={`/comunidades/${slug}?tab=conteudo`}
-          >
-            <ArrowLeft aria-hidden className="h-4 w-4" />
-            Voltar ao Conteúdo
-          </Link>
-          {detail.content.public_url ? (
-            <Link
-              className="inline-flex h-10 items-center justify-center gap-2 rounded-control bg-primary px-4 text-xs font-black text-white transition hover:bg-primary/90"
-              href={toPublicHref(detail.content.public_url)}
-              rel="noreferrer"
-              target="_blank"
-            >
-              <ExternalLink aria-hidden className="h-4 w-4" />
-              Abrir público
-            </Link>
-          ) : null}
-        </div>
+        <h1 className="mt-3 max-w-4xl text-2xl font-black leading-tight tracking-[-0.03em] text-foreground sm:text-3xl">
+          Detalhes do post de vídeo
+        </h1>
+        <p className="mt-2 text-sm font-bold text-muted">
+          Publicado em {formatDateTime(detail.content.created_at)}
+        </p>
       </div>
-    </section>
-  );
-};
+      <div className="min-w-0">
+        <div className="grid gap-3 sm:grid-cols-2" onBlur={onDateControlsBlur}>
+          <label className="text-xs font-black text-muted" htmlFor="content-detail-filter-from">
+            De
+            <input
+              className="mt-1 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground shadow-control focus:border-primary"
+              id="content-detail-filter-from"
+              max={range.to}
+              onChange={(event) => onDateChange("from", event.target.value)}
+              type="date"
+              value={range.from}
+            />
+          </label>
+          <label className="text-xs font-black text-muted" htmlFor="content-detail-filter-to">
+            Até
+            <input
+              className="mt-1 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground shadow-control focus:border-primary"
+              id="content-detail-filter-to"
+              min={range.from}
+              onChange={(event) => onDateChange("to", event.target.value)}
+              type="date"
+              value={range.to}
+            />
+          </label>
+        </div>
+        {rangeError ? <p className="mt-2 text-xs font-bold text-danger">{rangeError}</p> : null}
+      </div>
+    </div>
+  </section>
+);
 
 const ContentVideoPreview = ({ label, src }: { label: string; src: string }) => {
   const videoRef = useRef<HTMLVideoElement | null>(null);
@@ -1063,13 +1020,26 @@ export const AdminCommunityContentDetailClient = ({
   slug: string;
 }) => {
   const normalizedType = normalizeTargetType(contentType);
+  const { appliedRange, draftRange, handleDateChange, handleDateControlsBlur, rangeError } =
+    useDateRangeCommitOnBlur<ContentDetailDateRange>({
+      initialRange: defaultContentDetailRange,
+      isValidRange: isValidDateRange,
+    });
+  const queryInput = useMemo<AdminCommunityContentDetailQuery>(
+    () => ({
+      from: appliedRange.from,
+      period: "custom",
+      to: appliedRange.to,
+    }),
+    [appliedRange.from, appliedRange.to],
+  );
   const detailQuery = useAdminCommunityContentDetail(
     slug,
     normalizedType ?? "post",
     contentId,
-    allTimeContentDetailQuery,
+    queryInput,
     {
-      enabled: Boolean(normalizedType),
+      enabled: Boolean(normalizedType && isValidDateRange(appliedRange)),
     },
   );
   const detail = detailQuery.data;
@@ -1107,7 +1077,13 @@ export const AdminCommunityContentDetailClient = ({
 
       {detail ? (
         <>
-          <HeaderSection detail={detail} slug={slug} />
+          <HeaderSection
+            detail={detail}
+            onDateChange={handleDateChange}
+            onDateControlsBlur={handleDateControlsBlur}
+            range={draftRange}
+            rangeError={rangeError}
+          />
           <PreviewSection detail={detail} />
           <StatCards detail={detail} />
           <EvolutionChart detail={detail} />
