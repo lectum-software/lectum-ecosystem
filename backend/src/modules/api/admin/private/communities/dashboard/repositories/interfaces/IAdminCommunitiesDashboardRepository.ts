@@ -54,6 +54,14 @@ export type MemberActivityRecord = {
   user_id: string;
 };
 
+export type PostViewCountRecord = {
+  _count: {
+    _all: number;
+  };
+  target_id: string | null;
+  target_type: string | null;
+};
+
 export type PendingReportRecord = {
   createdAt: Date;
   description: string | null;
@@ -122,11 +130,15 @@ export interface IAdminCommunitiesDashboardRepository {
   countUrgentModerationEvents(range: AdminCommunitiesDashboardDateRange): Promise<number>;
   listCommunities(): Promise<CommunityRecord[]>;
   listCommunityMembers(): Promise<CommunityMemberRecord[]>;
-  listCommunityPosts(range: AdminCommunitiesDashboardDateRange): Promise<CommunityPostRecord[]>;
-  listMemberActivity(range: AdminCommunitiesDashboardDateRange): Promise<MemberActivityRecord[]>;
+  listCommunityPosts(range?: AdminCommunitiesDashboardDateRange): Promise<CommunityPostRecord[]>;
+  listMemberActivity(range?: AdminCommunitiesDashboardDateRange): Promise<MemberActivityRecord[]>;
   listPendingReports(range: AdminCommunitiesDashboardDateRange): Promise<PendingReportRecord[]>;
   listPendingModerationEvents(
     range: AdminCommunitiesDashboardDateRange,
   ): Promise<ModerationEventRecord[]>;
-  listPostReplies(range: AdminCommunitiesDashboardDateRange): Promise<PostReplyRecord[]>;
+  listPostReplies(range?: AdminCommunitiesDashboardDateRange): Promise<PostReplyRecord[]>;
+  countPostViews(
+    postIds: string[],
+    range?: AdminCommunitiesDashboardDateRange,
+  ): Promise<PostViewCountRecord[]>;
 }

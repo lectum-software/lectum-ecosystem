@@ -1110,3 +1110,14 @@ Regras de cálculo:
 - Builder/Quick Copy nao se aplica: ajuste tecnico de integracao/CORS, validado por preflight HTTP e browser headless local.
 - ADR atualizado: `adrs/0226-admin-app-separado-shell.md`.
 - Validacao executada: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm check`, `OPTIONS http://localhost:3001/api/admin/public/auth/login` com `Access-Control-Request-Headers=accept-language,content-type,x-device` retornando `204` e browser headless a partir de `localhost:3002` recebendo resposta real `403 auth_incorrect` em vez de erro de rede/CORS.
+
+
+## Ajuste complementar 2026-07-18 - Blocos do dashboard de comunidades em todo o per?odo
+
+- Pedido do usu?rio: **Postagens mais recentes**, **Posts mais populares** e **Principais comunidades** no dashboard administrativo de comunidades n?o devem ser filtrados pelo per?odo selecionado; devem ser fixos de **todo o per?odo**.
+- O backend agora mant?m os contadores, s?ries, estat?sticas de pessoas/conte?do, alertas e modera??o usando o per?odo selecionado, mas busca posts recentes, posts populares, visualiza??es desses posts e ranking de comunidades sem recorte temporal.
+- A UI Admin passou a exibir `Per?odo: Todo o per?odo` nesses tr?s blocos e ajustou as c?pias de estado vazio/atividade para n?o mencionar o per?odo selecionado.
+- N?o houve package novo, mock, endpoint paralelo, schema Prisma/migration, seed, backfill ou altera??o de persist?ncia; a origem continua sendo `community`, `community_member`, `community_post`, `post_reply`, `post_vote`, `post_save` e `page_view_event` reais.
+- Builder/Quick Copy n?o est? exposto como ferramenta callable no ambiente; a refer?ncia usada foi a captura enviada pelo usu?rio e o padr?o local do dashboard Admin de comunidades.
+- ADR atualizado: `adrs/0264-admin-comunidade-abas-conteudo-ranking.md`.
+- Valida??o executada: `pnpm --dir backend check`, `pnpm --dir admin check`, `pnpm --dir backend build`, `pnpm --dir admin build`, `pnpm check`, smoke service real `buildCommunitiesDashboard({ from: "2026-07-13", to: "2026-07-18" })` retornando `status=200` com listas preenchidas e smoke HTTP local `GET http://localhost:3002/comunidades` retornando 200.

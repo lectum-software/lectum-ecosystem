@@ -27,6 +27,7 @@ import type {
   ModerationEventRecord,
   PendingReportRecord,
   PostReplyRecord,
+  PostViewCountRecord,
 } from "../repositories/interfaces/IAdminCommunitiesDashboardRepository";
 
 const DEFAULT_PERIOD_DAYS = 7;
@@ -896,7 +897,23 @@ const mapPostAuthor = (post: CommunityPostRecord) => {
   };
 };
 
-const buildRecentPosts = (posts: CommunityPostRecord[]) => {
+const groupPostViewCounts = (items: PostViewCountRecord[]) => {
+  const countByPost = new Map<string, number>();
+
+  for (const item of items) {
+    if (!item.target_id) continue;
+    if (item.target_type !== "community_post" && item.target_type !== "post") continue;
+
+    countByPost.set(item.target_id, (countByPost.get(item.target_id) ?? 0) + item._count._all);
+  }
+
+  return countByPost;
+};
+
+const buildRecentPosts = (
+  posts: CommunityPostRecord[],
+  postViewsByPost: ReadonlyMap<string, number>,
+) => {
   const items: AdminCommunitiesDashboardRecentPost[] = posts.slice(0, 5).map((post) => {
     const author = mapPostAuthor(post);
 
@@ -913,12 +930,13 @@ const buildRecentPosts = (posts: CommunityPostRecord[]) => {
       discussion_status: post.replies_count > 0 ? "iniciada" : "nao_iniciada",
       id: post.id,
       title: post.title,
+      views_count: postViewsByPost.get(post.id) ?? 0,
     };
   });
 
   return {
     items,
-    source: "community_post" as const,
+    source: "community_post+page_view_event" as const,
     total: posts.length,
   };
 };
@@ -926,7 +944,10 @@ const buildRecentPosts = (posts: CommunityPostRecord[]) => {
 const postEngagementScore = (post: CommunityPostRecord) =>
   post.upvotes_count + post.replies_count + post.saves_count;
 
-const buildPopularPosts = (posts: CommunityPostRecord[]) => {
+const buildPopularPosts = (
+  posts: CommunityPostRecord[],
+  postViewsByPost: ReadonlyMap<string, number>,
+) => {
   const items: AdminCommunitiesDashboardPopularPost[] = [...posts]
     .sort((left, right) => {
       if (right.upvotes_count !== left.upvotes_count) {
@@ -961,12 +982,13 @@ const buildPopularPosts = (posts: CommunityPostRecord[]) => {
         saves_count: post.saves_count,
         title: post.title,
         upvotes_count: post.upvotes_count,
+        views_count: postViewsByPost.get(post.id) ?? 0,
       };
     });
 
   return {
     items,
-    source: "community_post+post_reply+post_vote+post_save" as const,
+    source: "community_post+post_reply+post_vote+post_save+page_view_event" as const,
     total: posts.length,
   };
 };
@@ -1048,10 +1070,13 @@ export const buildCommunitiesDashboard = async (
 
   const [
     posts,
+    allTimePosts,
     previousPosts,
     replies,
+    allTimeReplies,
     previousReplies,
     members,
+    allTimeMemberActivity,
     currentMemberActivity,
     previousMemberActivity,
     pendingReportsTotal,
@@ -1064,10 +1089,13 @@ export const buildCommunitiesDashboard = async (
     globalStatisticsDataset,
   ] = await Promise.all([
     repository.listCommunityPosts(current),
+    repository.listCommunityPosts(),
     repository.listCommunityPosts(previous),
     repository.listPostReplies(current),
+    repository.listPostReplies(),
     repository.listPostReplies(previous),
     repository.listCommunityMembers(),
+    repository.listMemberActivity(),
     repository.listMemberActivity(current),
     repository.listMemberActivity(previous),
     repository.countPendingReports(current),
@@ -1079,6 +1107,10 @@ export const buildCommunitiesDashboard = async (
     repository.listCommunities(),
     repository.listGlobalStatisticsDataset(current.end),
   ]);
+
+  const postViewsByPost = groupPostViewCounts(
+    await repository.countPostViews(allTimePosts.map((post) => post.id)),
+  );
 
   const psychologistPosts = posts.filter((post) => roleIsPsychologist(post.author.role)).length;
   const previousPsychologistPosts = previousPosts.filter((post) =>
@@ -1162,14 +1194,14 @@ export const buildCommunitiesDashboard = async (
       pendingModerationEventsTotal,
       urgentModerationEventsTotal,
     ),
-    popular_posts: buildPopularPosts(posts),
-    recent_posts: buildRecentPosts(posts),
+    popular_posts: buildPopularPosts(allTimePosts, postViewsByPost),
+    recent_posts: buildRecentPosts(allTimePosts, postViewsByPost),
     top_communities: buildTopCommunities(
       communities,
       members,
-      posts,
-      replies,
-      currentMemberActivity,
+      allTimePosts,
+      allTimeReplies,
+      allTimeMemberActivity,
     ),
     unavailable: [
       ...(pendingReportsTotal === 0 && previousPendingReportsTotal === 0

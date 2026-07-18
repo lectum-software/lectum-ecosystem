@@ -701,3 +701,12 @@ O selo de perfil verificado deve ser parte da identidade textual do psicologo, n
 A decisao e remover o crescimento `flex-1` do texto do nome nas identidades compactas das tabelas **Ultimos posts**/**Posts mais populares** e nas linhas de **Top mentores**. O nome continua com `truncate`, mas ocupa apenas o espaco necessario ate o limite disponivel; o selo permanece imediatamente ao lado do nome.
 
 Consequencia: nomes curtos como **Marina Rocha** exibem o selo colado ao nome, e nomes longos continuam recebendo ellipsis sem criar overflow horizontal, sem endpoint novo, schema Prisma/migration, dependencia, mock ou alteracao de persistencia.
+
+
+## Atualizacao 2026-07-18: blocos globais no dashboard de comunidades
+
+Os blocos **Postagens mais recentes**, **Posts mais populares** e **Principais comunidades** do dashboard administrativo de comunidades devem ser independentes do filtro de periodo do painel.
+
+A decisao e manter o periodo selecionado somente para contadores, graficos, estatisticas de pessoas/conteudo, alertas e moderacao. Os tres blocos operacionais passam a usar todo o historico real: posts recentes ordenados por `community_post.createdAt`, posts populares ordenados por engajamento acumulado e comunidades ordenadas por atividade acumulada, seguidores e nome. As visualizacoes exibidas nos posts tambem usam `page_view_event` sem recorte temporal nesses blocos.
+
+Consequencia: mudar **Esta semana**, **Este mes** ou intervalo customizado continua atualizando as metricas temporais, mas nao altera a lista fixa de posts recentes, posts populares e comunidades principais. A UI explicita `Periodo: Todo o periodo` nesses blocos para evitar leitura equivocada, sem endpoint novo, schema Prisma/migration, dependencia, mock, seed, backfill ou persistencia adicional.

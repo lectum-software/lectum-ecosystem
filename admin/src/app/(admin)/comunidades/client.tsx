@@ -12,7 +12,6 @@ import {
   FileText,
   type LucideIcon,
   MessageCircle,
-  MoreHorizontal,
   RefreshCw,
   Reply,
   UserRound,
@@ -28,6 +27,7 @@ import type {
   AdminCommunitiesDashboard,
   CommunitiesDashboardGlobalStatistics,
   CommunitiesDashboardPopularPost,
+  CommunitiesDashboardPostAuthor,
   CommunitiesDashboardQuery,
   CommunitiesDashboardRecentPost,
   CommunitiesDashboardStatisticsDailyPoint,
@@ -351,6 +351,8 @@ const formatSelectedPeriod = (
   label: string,
 ) => `Período: ${label} · ${formatDate(period.from)} a ${formatDate(period.to)}`;
 
+const ALL_PERIOD_BLOCK_LABEL = "Período: Todo o período";
+
 const getCommunityDashboardPeriodLabel = (period: CommunityDashboardPeriodValue) =>
   period === "custom"
     ? "Personalizado"
@@ -445,8 +447,9 @@ const toPublicHref = (path: string) => {
   return `${publicFrontendUrl.replace(/\/$/, "")}${path}`;
 };
 
-const popularPostPublicHref = (post: CommunitiesDashboardPopularPost) =>
-  toPublicHref(`/community/${post.community_slug}/post/${post.id}`);
+const communityPostPublicHref = (
+  post: Pick<CommunitiesDashboardRecentPost, "community_slug" | "id">,
+) => toPublicHref(`/community/${post.community_slug}/post/${post.id}`);
 
 const initials = (value: string) =>
   value
@@ -478,8 +481,7 @@ const VerifiedBadgeIcon = ({ className, ...props }: SVGProps<SVGSVGElement>) => 
   </svg>
 );
 
-const PopularPostAuthorIdentity = ({ post }: { post: CommunitiesDashboardPopularPost }) => {
-  const author = post.author;
+const DashboardPostAuthorIdentity = ({ author }: { author: CommunitiesDashboardPostAuthor }) => {
   const avatarSrc = renderableImageSrc(author.avatar);
 
   return (
@@ -1186,164 +1188,174 @@ const DashboardStatisticsSection = ({
   );
 };
 
-const RecentPostsTable = ({
-  periodLabel,
-  posts,
-}: {
-  periodLabel: string;
-  posts: CommunitiesDashboardRecentPost[];
-}) => (
-  <CardShell className="p-5">
-    <div className="flex items-center justify-between gap-3">
-      <div>
-        <h2 className="text-lg font-black text-foreground">Postagens mais recentes</h2>
-        <BlockPeriodLabel>{periodLabel}</BlockPeriodLabel>
-      </div>
-      <span className="text-xs font-black text-primary">Ver todas</span>
-    </div>
-
-    {posts.length === 0 ? (
-      <p className="mt-5 rounded-2xl bg-surface-muted p-4 text-sm text-muted">
-        Nenhuma postagem real encontrada no período.
-      </p>
-    ) : (
-      <>
-        <div className="mt-5 grid gap-3 md:hidden">
-          {posts.map((post) => (
-            <article
-              className="rounded-2xl border border-border bg-surface-muted p-4"
-              key={post.id}
-            >
-              <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0">
-                  <p className="truncate font-black text-foreground">{post.title}</p>
-                  <p className="mt-1 text-xs text-muted">
-                    {post.community_name} · {formatDateTime(post.created_at)}
-                  </p>
-                </div>
-                <Link
-                  aria-label={`Abrir comunidade ${post.community_name}`}
-                  className="grid h-9 w-9 shrink-0 place-items-center rounded-xl border border-border bg-surface text-primary transition hover:border-primary"
-                  href={`/comunidades/${post.community_slug}`}
-                >
-                  <Eye aria-hidden className="h-4 w-4" />
-                </Link>
-              </div>
-              <div className="mt-3 grid gap-2 text-xs text-muted">
-                <p>
-                  <strong className="text-foreground">Autor:</strong> {post.author_name} ·{" "}
-                  <span className="capitalize">{post.author_role}</span>
-                </p>
-                <p>
-                  <strong className="text-foreground">Discussão:</strong>{" "}
-                  {post.discussion_status === "iniciada" ? "Iniciada" : "Não iniciada"}
-                </p>
-                <p>
-                  <strong className="text-foreground">Comentários:</strong>{" "}
-                  {numberFormatter.format(post.comments_count)}
-                </p>
-              </div>
-            </article>
-          ))}
-        </div>
-        <div className="mt-5 hidden min-w-0 overflow-hidden md:block">
-          <table className="w-full table-fixed border-separate border-spacing-0 text-left text-sm">
-            <thead className="text-xs text-muted">
-              <tr>
-                <th className="w-[38%] border-b border-border py-3 pr-3 font-black">Título</th>
-                <th className="w-[22%] border-b border-border px-3 py-3 font-black">Autor</th>
-                <th className="w-[16%] border-b border-border px-3 py-3 font-black">Discussão</th>
-                <th className="w-[14%] border-b border-border px-3 py-3 font-black">Comentários</th>
-                <th className="w-[10%] border-b border-border py-3 pl-3 text-right font-black">
-                  Ações
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {posts.map((post) => (
-                <tr key={post.id}>
-                  <td className="min-w-0 border-b border-border py-4 pr-3 align-top">
-                    <p className="truncate font-black text-foreground">{post.title}</p>
-                    <p className="mt-1 truncate text-xs text-muted">
-                      {post.community_name} · {formatDateTime(post.created_at)}
-                    </p>
-                  </td>
-                  <td className="min-w-0 border-b border-border px-3 py-4 align-top">
-                    <p className="truncate font-bold text-foreground">{post.author_name}</p>
-                    <p className="truncate text-xs capitalize text-muted">{post.author_role}</p>
-                  </td>
-                  <td className="border-b border-border px-3 py-4 align-top">
-                    <span
-                      className={cn(
-                        "inline-flex max-w-full rounded-full px-2 py-1 text-xs font-black",
-                        post.discussion_status === "iniciada"
-                          ? "bg-emerald-50 text-success"
-                          : "bg-red-50 text-danger",
-                      )}
-                    >
-                      {post.discussion_status === "iniciada" ? "Iniciada" : "Não iniciada"}
-                    </span>
-                  </td>
-                  <td className="border-b border-border px-3 py-4 align-top">
-                    <span className="inline-flex items-center gap-2 font-black text-foreground">
-                      <MessageCircle aria-hidden className="h-4 w-4 text-primary" />
-                      {numberFormatter.format(post.comments_count)}
-                    </span>
-                  </td>
-                  <td className="border-b border-border py-4 pl-3 text-right align-top">
-                    <div className="inline-flex gap-2">
-                      <Link
-                        aria-label={`Abrir comunidade ${post.community_name}`}
-                        className="grid h-9 w-9 place-items-center rounded-xl border border-border text-primary transition hover:border-primary"
-                        href={`/comunidades/${post.community_slug}`}
-                      >
-                        <Eye aria-hidden className="h-4 w-4" />
-                      </Link>
-                      <button
-                        aria-label="Mais ações indisponíveis nesta versão"
-                        className="grid h-9 w-9 place-items-center rounded-xl border border-border text-muted"
-                        type="button"
-                      >
-                        <MoreHorizontal aria-hidden className="h-4 w-4" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </>
-    )}
-  </CardShell>
-);
-
-const PopularPostsTable = ({
-  periodLabel,
-  posts,
-}: {
-  periodLabel: string;
-  posts: CommunitiesDashboardPopularPost[];
-}) => {
+const RecentPostsTable = ({ posts }: { posts: CommunitiesDashboardRecentPost[] }) => {
   return (
     <CardShell className="p-5">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <h2 className="text-lg font-black text-foreground">Posts mais populares</h2>
-          <BlockPeriodLabel>{periodLabel}</BlockPeriodLabel>
+          <h2 className="text-lg font-black text-foreground">Postagens mais recentes</h2>
+          <BlockPeriodLabel>{ALL_PERIOD_BLOCK_LABEL}</BlockPeriodLabel>
         </div>
         <span className="text-xs font-black text-primary">Ver todas</span>
       </div>
 
       {posts.length === 0 ? (
         <p className="mt-5 rounded-2xl bg-surface-muted p-4 text-sm text-muted">
-          Nenhum post popular real encontrado no período.
+          Nenhuma postagem real encontrada em todo o período.
         </p>
       ) : (
         <>
           <div className="mt-5 grid gap-3 md:hidden">
             {posts.map((post) => {
-              const href = popularPostPublicHref(post);
+              const href = communityPostPublicHref(post);
+              const title = post.title.trim() || "Post sem título";
+
+              return (
+                <Link
+                  aria-label={`Abrir post ${title} no site público`}
+                  className="block rounded-2xl border border-border bg-surface-muted p-4 transition hover:border-primary/30 hover:bg-primary-soft/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
+                  href={href}
+                  key={post.id}
+                  rel="noreferrer"
+                  target="_blank"
+                >
+                  <div className="min-w-0">
+                    <p className="truncate font-black text-foreground">{title}</p>
+                    <p className="mt-1 text-xs text-muted">
+                      {post.community_name} · {formatDateTime(post.created_at)}
+                    </p>
+                  </div>
+                  <div className="mt-3">
+                    <DashboardPostAuthorIdentity author={post.author} />
+                  </div>
+                  <div className="mt-3 grid grid-cols-2 gap-2 text-xs text-muted">
+                    <p className="rounded-xl bg-surface p-3">
+                      <span className="block">Visualizações</span>
+                      <strong className="inline-flex items-center gap-1.5 text-sm text-foreground">
+                        <Eye aria-hidden className="h-3.5 w-3.5 text-primary" />
+                        {numberFormatter.format(post.views_count)}
+                      </strong>
+                    </p>
+                    <p className="rounded-xl bg-surface p-3">
+                      <span className="block">Comentários</span>
+                      <strong className="inline-flex items-center gap-1.5 text-sm text-foreground">
+                        <MessageCircle aria-hidden className="h-3.5 w-3.5 text-primary" />
+                        {numberFormatter.format(post.comments_count)}
+                      </strong>
+                    </p>
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+          <div className="mt-5 hidden min-w-0 overflow-hidden md:block">
+            <table className="w-full table-fixed border-separate border-spacing-0 text-left text-sm">
+              <thead className="text-xs text-muted">
+                <tr>
+                  <th className="w-[42%] border-b border-border py-3 pr-3 font-black">Título</th>
+                  <th className="w-[32%] border-b border-border px-3 py-3 font-black">Autor</th>
+                  <th className="w-[13%] border-b border-border px-3 py-3 font-black">
+                    Visualizações
+                  </th>
+                  <th className="w-[13%] border-b border-border px-3 py-3 font-black">
+                    Comentários
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {posts.map((post) => {
+                  const href = communityPostPublicHref(post);
+                  const title = post.title.trim() || "Post sem título";
+
+                  return (
+                    <tr
+                      className="group cursor-pointer align-top transition hover:bg-surface-muted/50"
+                      key={post.id}
+                    >
+                      <td className="min-w-0 border-b border-border align-top">
+                        <Link
+                          aria-label={`Abrir post ${title} no site público`}
+                          className="block min-w-0 py-4 pr-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
+                          href={href}
+                          rel="noreferrer"
+                          target="_blank"
+                        >
+                          <p className="truncate font-black text-foreground">{title}</p>
+                          <p className="mt-1 truncate text-xs text-muted">
+                            {post.community_name} · {formatDateTime(post.created_at)}
+                          </p>
+                        </Link>
+                      </td>
+                      <td className="min-w-0 border-b border-border align-top">
+                        <Link
+                          aria-label={`Abrir post ${title} no site público`}
+                          className="block min-w-0 px-3 py-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
+                          href={href}
+                          rel="noreferrer"
+                          target="_blank"
+                        >
+                          <DashboardPostAuthorIdentity author={post.author} />
+                        </Link>
+                      </td>
+                      <td className="border-b border-border align-top">
+                        <Link
+                          aria-label={`Abrir post ${title} no site público`}
+                          className="block px-3 py-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
+                          href={href}
+                          rel="noreferrer"
+                          target="_blank"
+                        >
+                          <span className="inline-flex items-center gap-2 font-black text-foreground">
+                            <Eye aria-hidden className="h-4 w-4 text-primary" />
+                            {numberFormatter.format(post.views_count)}
+                          </span>
+                        </Link>
+                      </td>
+                      <td className="border-b border-border align-top">
+                        <Link
+                          aria-label={`Abrir post ${title} no site público`}
+                          className="block px-3 py-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
+                          href={href}
+                          rel="noreferrer"
+                          target="_blank"
+                        >
+                          <span className="inline-flex items-center gap-2 font-black text-foreground">
+                            <MessageCircle aria-hidden className="h-4 w-4 text-primary" />
+                            {numberFormatter.format(post.comments_count)}
+                          </span>
+                        </Link>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </>
+      )}
+    </CardShell>
+  );
+};
+const PopularPostsTable = ({ posts }: { posts: CommunitiesDashboardPopularPost[] }) => {
+  return (
+    <CardShell className="p-5">
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <h2 className="text-lg font-black text-foreground">Posts mais populares</h2>
+          <BlockPeriodLabel>{ALL_PERIOD_BLOCK_LABEL}</BlockPeriodLabel>
+        </div>
+        <span className="text-xs font-black text-primary">Ver todas</span>
+      </div>
+
+      {posts.length === 0 ? (
+        <p className="mt-5 rounded-2xl bg-surface-muted p-4 text-sm text-muted">
+          Nenhum post popular real encontrado em todo o período.
+        </p>
+      ) : (
+        <>
+          <div className="mt-5 grid gap-3 md:hidden">
+            {posts.map((post) => {
+              const href = communityPostPublicHref(post);
               const title = post.title.trim() || "Post sem título";
 
               return (
@@ -1363,7 +1375,7 @@ const PopularPostsTable = ({
                       </p>
                     </div>
                     <div className="mt-3">
-                      <PopularPostAuthorIdentity post={post} />
+                      <DashboardPostAuthorIdentity author={post.author} />
                     </div>
                     <div className="mt-3 grid grid-cols-2 gap-2 text-xs text-muted">
                       <p className="rounded-xl bg-surface p-3">
@@ -1400,7 +1412,7 @@ const PopularPostsTable = ({
               </thead>
               <tbody>
                 {posts.map((post) => {
-                  const href = popularPostPublicHref(post);
+                  const href = communityPostPublicHref(post);
                   const title = post.title.trim() || "Post sem título";
 
                   return (
@@ -1432,7 +1444,7 @@ const PopularPostsTable = ({
                           rel="noreferrer"
                           target="_blank"
                         >
-                          <PopularPostAuthorIdentity post={post} />
+                          <DashboardPostAuthorIdentity author={post.author} />
                         </Link>
                       </td>
                       <td className="border-b border-border align-top">
@@ -1477,17 +1489,15 @@ const PopularPostsTable = ({
 
 const TopCommunitiesTable = ({
   communities,
-  periodLabel,
 }: {
   communities: CommunitiesDashboardTopCommunity[];
-  periodLabel: string;
 }) => (
   <div className="scroll-mt-6" id="lista-de-comunidades">
     <CardShell className="p-5">
       <div className="flex items-center justify-between gap-3">
         <div>
           <h2 className="text-lg font-black text-foreground">Principais comunidades</h2>
-          <BlockPeriodLabel>{periodLabel}</BlockPeriodLabel>
+          <BlockPeriodLabel>{ALL_PERIOD_BLOCK_LABEL}</BlockPeriodLabel>
         </div>
         <Link
           className="text-xs font-black text-primary transition hover:text-primary-hover"
@@ -1521,7 +1531,7 @@ const TopCommunitiesTable = ({
                     <div className="min-w-0">
                       <p className="truncate font-black text-foreground">{community.name}</p>
                       <p className="text-xs text-muted">
-                        {community.activity_count} ações no período
+                        {community.activity_count} ações em todo o período
                       </p>
                     </div>
                   </div>
@@ -1581,7 +1591,7 @@ const TopCommunitiesTable = ({
                         <div className="min-w-0">
                           <p className="truncate font-black text-foreground">{community.name}</p>
                           <p className="truncate text-xs text-muted">
-                            {community.activity_count} ações no período
+                            {community.activity_count} ações em todo o período
                           </p>
                         </div>
                       </div>
@@ -1683,12 +1693,9 @@ const DashboardContent = ({
       />
 
       <div className="min-w-0 space-y-5">
-        <RecentPostsTable periodLabel={periodLabel} posts={summary.recent_posts.items} />
-        <PopularPostsTable periodLabel={periodLabel} posts={summary.popular_posts.items} />
-        <TopCommunitiesTable
-          communities={summary.top_communities.items}
-          periodLabel={periodLabel}
-        />
+        <RecentPostsTable posts={summary.recent_posts.items} />
+        <PopularPostsTable posts={summary.popular_posts.items} />
+        <TopCommunitiesTable communities={summary.top_communities.items} />
       </div>
     </div>
   );

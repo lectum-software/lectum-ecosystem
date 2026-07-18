@@ -641,3 +641,33 @@ Regras de UI obrigatórias:
 - `pnpm check`
 - Smoke local `GET http://localhost:3002/comunidades` retornou 200.
 - Smoke direto do service real `buildCommunitiesDashboard({ period: "week" })` retornou `status=200`, `popular_posts.items[0].author` com avatar/verificacao e URL publica `/community/{slug}/post/{id}`.
+
+## Correcao complementar: autores, visualizacoes e link publico em postagens recentes (2026-07-18)
+
+- Pedido do usuario: em **Postagens mais recentes**, exibir foto de perfil e selo de verificado na identificacao do autor quando houver, remover a coluna **Acoes** e qualquer exposicao de **Salvos**, fazer o clique na linha abrir o post original no site publico e substituir **Discussao** por **Visualizacoes**.
+- Backend Admin: `recent_posts.items` agora inclui `views_count` derivado de `page_view_event` real em todo o periodo para os alvos `community_post`/`post`, sem mocks ou contadores simulados.
+- Frontend Admin: a secao renderiza autor com avatar via `next/image`, fallback por iniciais e selo de verificado real; mobile e desktop abrem `NEXT_PUBLIC_FRONTEND_URL + /community/{slug}/post/{id}` em nova aba.
+- A tabela desktop de **Postagens mais recentes** agora exibe somente **Titulo**, **Autor**, **Visualizacoes** e **Comentarios**.
+- Nao houve alteracao em `backend/prisma/schema.prisma` ou `backend/prisma/migrations`; `pnpm --dir backend db:migrate` nao se aplica.
+- Builder/Quick Copy `vcp://quickcopy/vcp-24aaa2941d814e5b90572bc93ae50e2a` nao esta exposto como ferramenta callable neste ambiente; referencias usadas: captura enviada pelo usuario e `_product/proto/admin/Comunidades/Comunidades - Dashboard.png`.
+- ADR atualizado: `adrs/0231-admin-comunidades-dashboard-agregacoes.md`.
+
+### Criterios deste ajuste
+
+- [x] A identificacao do autor em **Postagens mais recentes** exibe foto de perfil quando houver.
+- [x] O selo de verificado aparece junto ao nome quando o autor psicologo possui verificacao real.
+- [x] A coluna **Salvos** nao e exibida nesse bloco.
+- [x] A coluna **Acoes** nao e exibida nesse bloco.
+- [x] O clique em qualquer celula da linha desktop e no card mobile abre o post original no site publico.
+- [x] A coluna **Discussao** foi substituida por **Visualizacoes** com dado real de `page_view_event`.
+- [x] Nenhum mock, dado fake permanente, endpoint simulado, package novo, schema Prisma ou migration foi usado.
+
+### Validacao deste ajuste
+
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check`
+- Smoke service real `buildCommunitiesDashboard({})` retornou `status=200`, `recent_posts.items[0].author`, `views_count`, listas globais fixas e URL publica `/community/{slug}/post/{id}`.
+- Smoke local `GET http://localhost:3002/comunidades` retornou 200.

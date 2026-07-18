@@ -222,6 +222,7 @@ export type AdminCommunitiesDashboardRecentPost = {
   discussion_status: "iniciada" | "nao_iniciada";
   id: string;
   title: string;
+  views_count: number;
 };
 
 export type AdminCommunitiesDashboardPopularPost = AdminCommunitiesDashboardRecentPost & {
@@ -275,12 +276,12 @@ export type AdminCommunitiesDashboardSummary = {
   };
   recent_posts: {
     items: AdminCommunitiesDashboardRecentPost[];
-    source: "community_post";
+    source: "community_post+page_view_event";
     total: number;
   };
   popular_posts: {
     items: AdminCommunitiesDashboardPopularPost[];
-    source: "community_post+post_reply+post_vote+post_save";
+    source: "community_post+post_reply+post_vote+post_save+page_view_event";
     total: number;
   };
   top_communities: {

@@ -11,6 +11,10 @@ const createdAtWhere = (range: AdminCommunitiesDashboardDateRange) => ({
   gte: range.start,
   lte: range.end,
 });
+const optionalCreatedAtWhere = (range?: AdminCommunitiesDashboardDateRange) =>
+  range ? { createdAt: createdAtWhere(range) } : {};
+const optionalOccurredAtWhere = (range?: AdminCommunitiesDashboardDateRange) =>
+  range ? { occurred_at: createdAtWhere(range) } : {};
 const dashboardStatisticsUserSelect = {
   active: true,
   deleted: true,
@@ -161,13 +165,13 @@ export class AdminCommunitiesDashboardRepository implements IAdminCommunitiesDas
     });
   }
 
-  async listCommunityPosts(range: AdminCommunitiesDashboardDateRange) {
+  async listCommunityPosts(range?: AdminCommunitiesDashboardDateRange) {
     return prisma.community_post.findMany({
       orderBy: {
         createdAt: "desc",
       },
       where: {
-        createdAt: createdAtWhere(range),
+        ...optionalCreatedAtWhere(range),
         deleted: false,
         status: "publicado",
         author: {
@@ -225,11 +229,30 @@ export class AdminCommunitiesDashboardRepository implements IAdminCommunitiesDas
     });
   }
 
-  async listMemberActivity(range: AdminCommunitiesDashboardDateRange) {
+  async countPostViews(postIds: string[], range?: AdminCommunitiesDashboardDateRange) {
+    if (postIds.length === 0) return [];
+
+    return prisma.page_view_event.groupBy({
+      by: ["target_type", "target_id"],
+      where: {
+        deleted: false,
+        ...optionalOccurredAtWhere(range),
+        target_id: {
+          in: postIds,
+        },
+        target_type: {
+          in: ["community_post", "post"],
+        },
+      },
+      _count: { _all: true },
+    });
+  }
+
+  async listMemberActivity(range?: AdminCommunitiesDashboardDateRange) {
     const [posts, replies, votes, saves] = await Promise.all([
       prisma.community_post.findMany({
         where: {
-          createdAt: createdAtWhere(range),
+          ...optionalCreatedAtWhere(range),
           deleted: false,
           status: "publicado",
           author: {
@@ -247,7 +270,7 @@ export class AdminCommunitiesDashboardRepository implements IAdminCommunitiesDas
       }),
       prisma.post_reply.findMany({
         where: {
-          createdAt: createdAtWhere(range),
+          ...optionalCreatedAtWhere(range),
           deleted: false,
           author: {
             active: true,
@@ -272,7 +295,7 @@ export class AdminCommunitiesDashboardRepository implements IAdminCommunitiesDas
       }),
       prisma.post_vote.findMany({
         where: {
-          createdAt: createdAtWhere(range),
+          ...optionalCreatedAtWhere(range),
           deleted: false,
           user: {
             active: true,
@@ -299,7 +322,7 @@ export class AdminCommunitiesDashboardRepository implements IAdminCommunitiesDas
       }),
       prisma.post_save.findMany({
         where: {
-          createdAt: createdAtWhere(range),
+          ...optionalCreatedAtWhere(range),
           deleted: false,
           user: {
             active: true,
@@ -756,10 +779,10 @@ export class AdminCommunitiesDashboardRepository implements IAdminCommunitiesDas
     });
   }
 
-  async listPostReplies(range: AdminCommunitiesDashboardDateRange) {
+  async listPostReplies(range?: AdminCommunitiesDashboardDateRange) {
     return prisma.post_reply.findMany({
       where: {
-        createdAt: createdAtWhere(range),
+        ...optionalCreatedAtWhere(range),
         deleted: false,
         author: {
           active: true,

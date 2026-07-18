@@ -105,7 +105,7 @@ O dashboard geral `/comunidades` deixa de renderizar o bloco **Metricas indispon
 
 A decisao e remover esse aviso da superficie principal porque, apos a limpeza dos blocos legados e laterais, a pagina deve terminar nas listas operacionais reais (**Postagens mais recentes** e **Principais comunidades**) sem expor mensagens tecnicas de indisponibilidade que nao representam uma acao imediata para o Admin. O contrato `unavailable` permanece no endpoint para compatibilidade e para possivel uso futuro em experiencias mais contextuais.
 
-Consequencia: a tela fica mais enxuta e evita ruído operacional, sem endpoint novo, alteracao de contrato backend obrigatoria, schema Prisma/migration, dependencia, mock, seed ou mudanca nas regras de agregacao.
+Consequencia: a tela fica mais enxuta e evita ruï¿½do operacional, sem endpoint novo, alteracao de contrato backend obrigatoria, schema Prisma/migration, dependencia, mock, seed ou mudanca nas regras de agregacao.
 
 ## Atualizacao 2026-07-18: periodo como unico texto abaixo dos titulos dos blocos
 
@@ -134,3 +134,13 @@ A decisao e manter o endpoint unico do dashboard, ampliando o item de `popular_p
 A UI remove as colunas **Salvos** e **Acoes** dessa tabela porque elas competiam por largura e duplicavam a navegacao para comunidade. O ranking continua podendo usar `saves_count` no backend como criterio de ordenacao/desempate, mas esse contador deixa de ser exibido nesse bloco resumido. Todas as celulas da linha e o card mobile apontam para `NEXT_PUBLIC_FRONTEND_URL + /community/{slug}/post/{id}`, abrindo o conteudo publico original.
 
 Consequencia: a leitura do autor fica consistente com foto e selo quando houver, a tabela fica mais enxuta e a acao primaria vira abrir o post publico, sem endpoint novo, package, schema Prisma/migration, mock, seed ou alteracao de regra persistida.
+
+## Atualizacao 2026-07-18: postagens recentes com autor, visualizacoes e link publico
+
+- Pedido do usuario: no bloco **Postagens mais recentes** do dashboard `/comunidades`, exibir foto de perfil e selo de verificado na identificacao do autor quando houver, remover a coluna **Acoes** e qualquer exposicao de **Salvos**, fazer o clique na linha abrir o post publico original e substituir **Discussao** por **Visualizacoes**.
+- O contrato `recent_posts` passou a expor `views_count`, calculado a partir de `page_view_event` real para o post em todo o periodo quando usado no dashboard fixo, aceitando os aliases `target_type="community_post"` e `target_type="post"`.
+- A identificacao do autor reutiliza o objeto `author` ja normalizado pelo backend com avatar, anonimato, genero, papel e verificacao real de psicologo. O frontend renderiza a imagem com `next/image`, iniciais como fallback e selo de verificado somente quando `author.verified=true`.
+- A UI desktop agora mostra somente **Titulo**, **Autor**, **Visualizacoes** e **Comentarios**; no mobile o card inteiro abre o post publico em nova aba.
+- A URL publica segue a convencao canonica da TASK-40: `NEXT_PUBLIC_FRONTEND_URL + /community/{slug}/post/{id}`.
+- Nao houve package novo, schema Prisma, migration, endpoint paralelo, seed, mock ou dado fake permanente.
+- Builder/Quick Copy `vcp://quickcopy/vcp-24aaa2941d814e5b90572bc93ae50e2a` nao esta exposto como ferramenta callable neste ambiente; referencias usadas: captura enviada pelo usuario e `_product/proto/admin/Comunidades/Comunidades - Dashboard.png`.
