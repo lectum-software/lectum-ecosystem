@@ -856,6 +856,9 @@ const PostBody = ({ post }: { post: PostDetail }) => {
       ) : (
         <CommunityMediaBlock
           alt={post.title}
+          analyticsTarget={
+            displayMediaType === "video" ? { targetId: post.id, targetType: "post" } : undefined
+          }
           className="mt-3"
           footer={authorWhatsappCta && displayMediaUrl ? authorWhatsappCta : undefined}
           mediaType={displayMediaType}
@@ -990,6 +993,9 @@ const ThreadOriginalPostCard = ({ post }: { post: PostDetail }) => {
         ) : (
           <CommunityMediaBlock
             alt={post.title}
+            analyticsTarget={
+              displayMediaType === "video" ? { targetId: post.id, targetType: "post" } : undefined
+            }
             className="mt-3"
             mediaType={displayMediaType}
             mediaUrl={displayMediaUrl}
@@ -1477,6 +1483,11 @@ const ReplyCard = ({
           <div data-comment-collapse-ignore="true">
             <CommunityMediaBlock
               alt="Mídia da resposta"
+              analyticsTarget={
+                reply.media_type === "video"
+                  ? { targetId: reply.id, targetType: "reply" }
+                  : undefined
+              }
               className="mt-3"
               footer={hasReplyMedia ? replyWhatsappCta : undefined}
               mediaType={reply.media_type}

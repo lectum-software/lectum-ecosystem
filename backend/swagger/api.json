@@ -4301,6 +4301,114 @@
         ]
       }
     },
+    "/api/public/analytics/content-video-watch": {
+      "post": {
+        "tags": [
+          "[API] - ANALYTICS (Public)"
+        ],
+        "description": "Endpoint (Public)",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "properties": {
+                  "completed": {
+                    "description": "Parâmetro completed do body.",
+                    "nullable": false,
+                    "required": false,
+                    "type": "string"
+                  },
+                  "duration_seconds": {
+                    "description": "Parâmetro duration_seconds do body.",
+                    "nullable": true,
+                    "required": false,
+                    "type": "string"
+                  },
+                  "max_position_seconds": {
+                    "description": "Parâmetro max_position_seconds do body.",
+                    "nullable": true,
+                    "required": false,
+                    "type": "string"
+                  },
+                  "replay_count": {
+                    "description": "Parâmetro replay_count do body.",
+                    "nullable": true,
+                    "required": false,
+                    "type": "string"
+                  },
+                  "retention_buckets": {
+                    "description": "Parâmetro retention_buckets do body.",
+                    "nullable": true,
+                    "required": false,
+                    "type": "string"
+                  },
+                  "session_id": {
+                    "description": "Parâmetro session_id do body.",
+                    "nullable": false,
+                    "required": true,
+                    "type": "string"
+                  },
+                  "target_id": {
+                    "description": "Parâmetro target_id do body.",
+                    "nullable": false,
+                    "required": true,
+                    "type": "string"
+                  },
+                  "target_type": {
+                    "description": "Parâmetro target_type do body.",
+                    "nullable": false,
+                    "required": true,
+                    "type": "string"
+                  },
+                  "video_url": {
+                    "description": "Parâmetro video_url do body.",
+                    "nullable": true,
+                    "required": false,
+                    "type": "string"
+                  },
+                  "visitor_id": {
+                    "description": "Parâmetro visitor_id do body.",
+                    "nullable": false,
+                    "required": true,
+                    "type": "string"
+                  },
+                  "watched_seconds": {
+                    "description": "Parâmetro watched_seconds do body.",
+                    "nullable": true,
+                    "required": false,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "visitor_id",
+                  "session_id",
+                  "target_type",
+                  "target_id"
+                ],
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful operation"
+          },
+          "400": {
+            "description": "Validation error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "deviceHeader": []
+          }
+        ]
+      }
+    },
     "/api/public/analytics/location-capture": {
       "post": {
         "tags": [

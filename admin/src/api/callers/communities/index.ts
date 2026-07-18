@@ -3,6 +3,7 @@ import { adminCommunitiesKeys } from "@/api/cache/keys";
 import {
   type AdminCommunitiesListQuery,
   type AdminCommunityActivitiesQuery,
+  type AdminCommunityContentDetailQuery,
   type AdminCommunityContentQuery,
   type AdminCommunityCreateInput,
   type AdminCommunityRankingQuery,
@@ -21,6 +22,7 @@ import {
   getAdminCommunitiesList,
   getAdminCommunityActivities,
   getAdminCommunityContent,
+  getAdminCommunityContentDetail,
   getAdminCommunityDetail,
   getAdminCommunityRanking,
   getAdminCommunityReports,
@@ -69,6 +71,19 @@ export const useAdminCommunityContent = (
     enabled: (options.enabled ?? true) && Boolean(id),
     queryFn: () => getAdminCommunityContent(id, input),
     queryKey: adminCommunitiesKeys.content(id, input),
+  });
+
+export const useAdminCommunityContentDetail = (
+  id: string,
+  targetType: "comment" | "post" | "reply",
+  targetId: string,
+  input: AdminCommunityContentDetailQuery,
+  options: { enabled?: boolean } = {},
+) =>
+  useQuery({
+    enabled: (options.enabled ?? true) && Boolean(id && targetId),
+    queryFn: () => getAdminCommunityContentDetail(id, targetType, targetId, input),
+    queryKey: adminCommunitiesKeys.contentDetail(id, targetType, targetId, input),
   });
 
 export const useAdminCommunityRanking = (

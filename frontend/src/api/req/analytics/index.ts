@@ -1,5 +1,6 @@
 ﻿import { callEndpoint } from "@/api/generator";
 import { handleReq } from "@/api/handle";
+import { getToken } from "@/hooks/cookies/token";
 
 export type LocationCaptureRequest = {
   visitor_id: string;
@@ -141,6 +142,34 @@ export type ImportantActionTrackingResponse = {
   display_mode: DisplayMode;
 };
 
+export type ContentVideoWatchTargetType = "post" | "reply";
+
+export type ContentVideoWatchTrackingRequest = {
+  visitor_id: string;
+  session_id: string;
+  target_type: ContentVideoWatchTargetType;
+  target_id: string;
+  video_url?: string | null;
+  duration_seconds?: number | null;
+  watched_seconds?: number | null;
+  max_position_seconds?: number | null;
+  replay_count?: number | null;
+  completed?: boolean;
+  retention_buckets?: number[];
+};
+
+export type ContentVideoWatchTrackingResponse = {
+  tracked: boolean;
+  id: string | null;
+  visitor_id: string;
+  session_id: string;
+  user_id: string | null;
+  target_type: ContentVideoWatchTargetType;
+  target_id: string;
+  completed: boolean;
+  skipped_reason?: "self_view" | null;
+};
+
 export const trackPageView = async (body: PageViewTrackingRequest) => {
   const handle = callEndpoint({
     route: "/api/public/analytics/page-view",
@@ -184,6 +213,20 @@ export const trackImportantAction = async (body: ImportantActionTrackingRequest)
   });
 };
 
+export const trackContentVideoWatch = async (body: ContentVideoWatchTrackingRequest) => {
+  const handle = callEndpoint({
+    route: "/api/public/analytics/content-video-watch",
+    method: "POST",
+    body,
+  });
+
+  return handleReq<ContentVideoWatchTrackingResponse>({
+    ...handle,
+    hideError: true,
+    signOutOnUnauthorized: false,
+  });
+};
+
 export const sendPageViewDurationBeacon = (id: string, body: PageViewDurationRequest) => {
   if (typeof window === "undefined") return false;
 
@@ -196,6 +239,32 @@ export const sendPageViewDurationBeacon = (id: string, body: PageViewDurationReq
       body: payload,
       headers: {
         "Content-Type": "application/json",
+      },
+      keepalive: true,
+      method: "POST",
+    });
+
+    return true;
+  } catch {
+    return false;
+  }
+};
+export const sendContentVideoWatchBeacon = (body: ContentVideoWatchTrackingRequest) => {
+  if (typeof window === "undefined") return false;
+
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+  const url = `${apiUrl}/api/public/analytics/content-video-watch`;
+  const token = getToken();
+  const payload = JSON.stringify(body);
+
+  try {
+    void fetch(url, {
+      body: payload,
+      credentials: "include",
+      headers: {
+        "Accept-Language": "pt",
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
       keepalive: true,
       method: "POST",

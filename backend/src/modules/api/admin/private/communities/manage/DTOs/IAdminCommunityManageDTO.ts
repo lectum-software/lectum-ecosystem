@@ -39,6 +39,12 @@ export type AdminCommunityContentQuery = AdminCommunityPaginationQuery & {
     | "verified_psychologist_reply";
 };
 
+export type AdminCommunityContentDetailQuery = {
+  from?: string;
+  period?: "all" | "custom" | "month" | "today" | "week" | "year";
+  to?: string;
+};
+
 export type AdminCommunityRankingQuery = AdminCommunityPaginationQuery & {
   period?: "30d";
 };
@@ -342,6 +348,97 @@ export type AdminCommunityContentDTO = {
   pages: number;
   per_page: number;
   source: "community_post+post_reply+post_share+page_view_event+important_action_event";
+};
+
+export type AdminCommunityContentAnalyticsDetailDTO = {
+  author: AdminCommunityContentAuthorDTO & {
+    role_label: string;
+  };
+  community: Pick<AdminCommunityIdentity, "id" | "name" | "slug">;
+  content: {
+    body: string;
+    content_kind: AdminCommunityContentItemDTO["content_kind"];
+    content_kind_label: string;
+    created_at: Date;
+    deleted_at: Date | null;
+    edited_at: Date | null;
+    excerpt: string;
+    id: string;
+    media: {
+      cover_url: string | null;
+      duration_seconds: number | null;
+      media_type: string;
+      media_url: string;
+    } | null;
+    origin_preview: AdminCommunityContentItemDTO["origin_preview"];
+    parent_post_title: string | null;
+    post_id: string;
+    public_url: string | null;
+    status: "published" | "removed";
+    title: string | null;
+    type: "comment" | "post";
+  };
+  metrics: AdminCommunityContentItemDTO["metrics"] & {
+    moderation_events_count: number;
+  };
+  moderation: {
+    events: {
+      categories: unknown;
+      content_excerpt: string;
+      created_at: Date;
+      decision: string;
+      id: string;
+      reason_code: string;
+      reviewed_at: Date | null;
+      severity: string;
+      status: string;
+    }[];
+    reports: AdminCommunityReportItemDTO[];
+  };
+  period: {
+    days: number | null;
+    from: string | null;
+    label: string;
+    max_days: number;
+    timezone: "server-local";
+    to: string | null;
+  };
+  series: {
+    comments: number;
+    date: string;
+    downvotes: number;
+    reports: number;
+    saves: number;
+    shares: number;
+    upvotes: number;
+    views: number;
+    whatsapp_clicks: number;
+  }[];
+  source: "community_post+post_reply+post_vote+post_save+post_reply_save+post_share+page_view_event+important_action_event+post_report+content_moderation_event+content_video_watch_session";
+  video: null | {
+    available: boolean;
+    metrics: {
+      average_retention_percent: number | null;
+      average_watched_seconds: number | null;
+      completed_count: number;
+      completion_rate: number;
+      duration_seconds: number | null;
+      plays_count: number;
+      replay_count: number;
+    };
+    retention: {
+      label: string;
+      percentage: number;
+      position_percent: number;
+    }[];
+    retention_dropoff: {
+      from_label: string;
+      rate_drop: number;
+      to_label: string;
+    } | null;
+    source: "content_video_watch_session";
+    unavailable_reason: string | null;
+  };
 };
 
 export type AdminCommunityRankingItemDTO = {
@@ -755,6 +852,13 @@ export type IAdminCommunityShowDTO = Request & {
 export type IAdminCommunityContentDTO = Request & {
   p: AdminCommunityManageParams;
   q: AdminCommunityContentQuery;
+  admin?: admin;
+  auth?: admin;
+};
+
+export type IAdminCommunityContentDetailDTO = Request & {
+  p: AdminCommunityManageParams;
+  q: AdminCommunityContentDetailQuery;
   admin?: admin;
   auth?: admin;
 };

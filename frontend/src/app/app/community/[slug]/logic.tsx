@@ -1168,6 +1168,9 @@ const PostMedia = ({ footer, post }: { footer?: ReactNode; post: CommunityPost }
   return (
     <CommunityMediaBlock
       alt={post.title}
+      analyticsTarget={
+        displayMediaType === "video" ? { targetId: post.id, targetType: "post" } : undefined
+      }
       footer={footer}
       mediaType={displayMediaType}
       mediaUrl={displayMediaUrl}
@@ -1188,6 +1191,9 @@ const ProfessionalReplyMedia = ({
   return (
     <CommunityMediaBlock
       alt="Mídia da resposta profissional"
+      analyticsTarget={
+        reply.media_type === "video" ? { targetId: reply.id, targetType: "reply" } : undefined
+      }
       footer={footer}
       mediaType={reply.media_type}
       mediaUrl={reply.media_url}

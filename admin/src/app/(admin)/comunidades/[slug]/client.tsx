@@ -746,9 +746,16 @@ const latestPostTitle = (item: AdminCommunityContentItem) => {
   return "Post sem título";
 };
 
-const LatestCommunityPostRow = ({ item }: { item: AdminCommunityContentItem }) => {
+const LatestCommunityPostRow = ({
+  item,
+  slug,
+}: {
+  item: AdminCommunityContentItem;
+  slug: string;
+}) => {
   const title = latestPostTitle(item);
   const postHref = toPublicHref(item.public_url);
+  const detailHref = adminContentDetailHref(slug, item);
 
   return (
     <tr className="group align-top transition hover:bg-surface-muted/50">
@@ -767,6 +774,12 @@ const LatestCommunityPostRow = ({ item }: { item: AdminCommunityContentItem }) =
             <CalendarDays aria-hidden className="h-3.5 w-3.5 shrink-0" />
             <time dateTime={item.created_at}>{formatDateTime(item.created_at)}</time>
           </span>
+        </Link>
+        <Link
+          className="mb-3 inline-flex text-xs font-black text-primary hover:underline"
+          href={detailHref}
+        >
+          Ver detalhe Admin
         </Link>
       </td>
       <td className="border-b border-border">
@@ -888,7 +901,7 @@ const LatestCommunityPostsSection = ({ pathname, slug }: { pathname: string; slu
       {latestPosts.length > 0 ? (
         <LatestCommunityPostsTable>
           {latestPosts.map((item) => (
-            <LatestCommunityPostRow item={item} key={item.content_id} />
+            <LatestCommunityPostRow item={item} key={item.content_id} slug={slug} />
           ))}
         </LatestCommunityPostsTable>
       ) : null}
@@ -909,6 +922,14 @@ const latestCommunityPostsContentHref = (pathname: string) => {
 
   return `${pathname}?${params.toString()}`;
 };
+
+const adminContentDetailHref = (
+  slug: string,
+  item: Pick<AdminCommunityContentItem, "content_id" | "type">,
+) =>
+  `/comunidades/${encodeURIComponent(slug)}/conteudo/${encodeURIComponent(
+    item.type,
+  )}/${encodeURIComponent(item.content_id)}`;
 
 const PopularPostRow = ({
   communitySlug,
@@ -2874,6 +2895,15 @@ const ContentItemCard = ({
       <ContentItemMain item={item} />
       <div className="flex justify-end gap-2 lg:flex-col">
         <Link
+          aria-label="Ver detalhe anal?tico no Admin"
+          className="inline-flex h-10 w-10 items-center justify-center rounded-control border border-primary/20 text-primary transition hover:bg-primary-soft"
+          href={adminContentDetailHref(slug, item)}
+          title="Detalhe anal?tico"
+        >
+          <FileText aria-hidden className="h-4 w-4" />
+          <span className="sr-only">Detalhe anal?tico</span>
+        </Link>
+        <Link
           aria-label="Ver conteúdo no site"
           className="inline-flex h-10 w-10 items-center justify-center rounded-control border border-border text-foreground transition hover:border-primary hover:text-primary"
           href={toPublicHref(item.public_url)}
@@ -3579,11 +3609,16 @@ const CommunityReportActions = ({
 const CommunityReportListItem = ({
   report,
   setResolveState,
+  slug,
 }: {
   report: AdminCommunityReportItem;
   setResolveState: (state: CommunityReportResolveState) => void;
+  slug: string;
 }) => {
   const title = communityReportTitle(report);
+  const detailHref = `/comunidades/${encodeURIComponent(slug)}/conteudo/${encodeURIComponent(
+    report.content.type,
+  )}/${encodeURIComponent(report.content.id)}`;
 
   return (
     <article className="rounded-card border border-border/75 bg-surface/95 p-4 shadow-admin-soft md:p-5">
@@ -3600,18 +3635,28 @@ const CommunityReportListItem = ({
             Última em {formatDateTime(report.last_reported_at)}
           </span>
         </div>
-        {report.content.public_url ? (
+        <div className="flex shrink-0 items-center gap-1">
           <Link
-            aria-label="Ver conteúdo público"
-            className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-foreground/75 transition hover:text-foreground"
-            href={toPublicHref(report.content.public_url)}
-            rel="noreferrer"
-            target="_blank"
-            title="Ver conteúdo público"
+            aria-label="Ver detalhe analítico do conteúdo denunciado"
+            className="grid h-9 w-9 place-items-center rounded-full text-primary transition hover:bg-primary-soft"
+            href={detailHref}
+            title="Detalhe analítico"
           >
-            <Eye aria-hidden className="h-4 w-4" />
+            <FileText aria-hidden className="h-4 w-4" />
           </Link>
-        ) : null}
+          {report.content.public_url ? (
+            <Link
+              aria-label="Ver conteúdo público"
+              className="grid h-9 w-9 place-items-center rounded-full text-foreground/75 transition hover:text-foreground"
+              href={toPublicHref(report.content.public_url)}
+              rel="noreferrer"
+              target="_blank"
+              title="Ver conteúdo público"
+            >
+              <Eye aria-hidden className="h-4 w-4" />
+            </Link>
+          ) : null}
+        </div>
       </div>
 
       <section className="mt-4">
@@ -3983,6 +4028,7 @@ const ReportsTab = ({ slug }: { slug: string }) => {
                 key={report.id}
                 report={report}
                 setResolveState={setResolveState}
+                slug={slug}
               />
             ))}
           </div>

@@ -6,6 +6,7 @@ import {
   authorizeAvatarUpload,
   avatar,
   content,
+  contentDetail,
   create,
   createRule,
   deleteRule,
@@ -24,6 +25,7 @@ import {
 import {
   activitiesValidator,
   avatarValidator,
+  contentDetailValidator,
   contentValidator,
   createValidator,
   deleteRuleValidator,
@@ -50,6 +52,7 @@ routes.put("/:id", updateValidator, update);
 routes.patch("/:id/status", statusValidator, status);
 routes.get("/:id/statistics", statisticsValidator, statistics);
 routes.get("/:id/content", contentValidator, content);
+routes.get("/:id/content/:targetType/:targetId/detail", contentDetailValidator, contentDetail);
 routes.post("/:id/content/:targetType/:targetId/remove", removeContentValidator, removeContent);
 routes.get("/:id/ranking", rankingValidator, ranking);
 routes.post("/:id/reports/:targetType/:targetId/resolve", resolveReportsValidator, resolveReports);

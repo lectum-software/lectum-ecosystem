@@ -355,8 +355,6 @@ const formatSelectedPeriod = (
   label: string,
 ) => `Período: ${label} · ${formatDate(period.from)} a ${formatDate(period.to)}`;
 
-const ALL_PERIOD_BLOCK_LABEL = "Período: Todo o período";
-
 const getCommunityDashboardPeriodLabel = (period: CommunityDashboardPeriodValue) =>
   period === "custom"
     ? "Personalizado"
@@ -454,6 +452,13 @@ const toPublicHref = (path: string) => {
 const communityPostPublicHref = (
   post: Pick<CommunitiesDashboardRecentPost, "community_slug" | "id">,
 ) => toPublicHref(`/community/${post.community_slug}/post/${post.id}`);
+
+const communityPostAdminDetailHref = (
+  post: Pick<CommunitiesDashboardRecentPost, "community_slug" | "id">,
+) =>
+  `/comunidades/${encodeURIComponent(post.community_slug)}/conteudo/post/${encodeURIComponent(
+    post.id,
+  )}`;
 
 const initials = (value: string) =>
   value
@@ -1198,7 +1203,6 @@ const RecentPostsTable = ({ posts }: { posts: CommunitiesDashboardRecentPost[] }
       <div className="flex items-center justify-between gap-3">
         <div>
           <h2 className="text-lg font-black text-foreground">Postagens mais recentes</h2>
-          <BlockPeriodLabel>{ALL_PERIOD_BLOCK_LABEL}</BlockPeriodLabel>
         </div>
         <span className="text-xs font-black text-primary">Ver todas</span>
       </div>
@@ -1212,16 +1216,13 @@ const RecentPostsTable = ({ posts }: { posts: CommunitiesDashboardRecentPost[] }
           <div className="mt-5 grid gap-3 md:hidden">
             {posts.map((post) => {
               const href = communityPostPublicHref(post);
+              const adminHref = communityPostAdminDetailHref(post);
               const title = post.title.trim() || "Post sem título";
 
               return (
-                <Link
-                  aria-label={`Abrir post ${title} no site público`}
-                  className="block rounded-2xl border border-border bg-surface-muted p-4 transition hover:border-primary/30 hover:bg-primary-soft/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
-                  href={href}
+                <article
+                  className="rounded-2xl border border-border bg-surface-muted p-4 transition hover:border-primary/30 hover:bg-primary-soft/40"
                   key={post.id}
-                  rel="noreferrer"
-                  target="_blank"
                 >
                   <div className="min-w-0">
                     <p className="truncate font-black text-foreground">{title}</p>
@@ -1248,7 +1249,25 @@ const RecentPostsTable = ({ posts }: { posts: CommunitiesDashboardRecentPost[] }
                       </strong>
                     </p>
                   </div>
-                </Link>
+                  <div className="mt-3 flex flex-wrap gap-2 text-xs font-black">
+                    <Link
+                      className="inline-flex items-center gap-1.5 rounded-full bg-primary px-3 py-2 text-white transition hover:bg-primary-hover"
+                      href={adminHref}
+                    >
+                      <FileText aria-hidden className="h-3.5 w-3.5" />
+                      Ver detalhe Admin
+                    </Link>
+                    <Link
+                      className="inline-flex items-center gap-1.5 rounded-full border border-border bg-surface px-3 py-2 text-primary transition hover:bg-primary-soft"
+                      href={href}
+                      rel="noreferrer"
+                      target="_blank"
+                    >
+                      <Eye aria-hidden className="h-3.5 w-3.5" />
+                      Abrir público
+                    </Link>
+                  </div>
+                </article>
               );
             })}
           </div>
@@ -1269,6 +1288,7 @@ const RecentPostsTable = ({ posts }: { posts: CommunitiesDashboardRecentPost[] }
               <tbody>
                 {posts.map((post) => {
                   const href = communityPostPublicHref(post);
+                  const adminHref = communityPostAdminDetailHref(post);
                   const title = post.title.trim() || "Post sem título";
 
                   return (
@@ -1277,18 +1297,30 @@ const RecentPostsTable = ({ posts }: { posts: CommunitiesDashboardRecentPost[] }
                       key={post.id}
                     >
                       <td className="min-w-0 border-b border-border align-top">
-                        <Link
-                          aria-label={`Abrir post ${title} no site público`}
-                          className="block min-w-0 py-4 pr-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
-                          href={href}
-                          rel="noreferrer"
-                          target="_blank"
-                        >
+                        <div className="min-w-0 py-4 pr-3">
                           <p className="truncate font-black text-foreground">{title}</p>
                           <p className="mt-1 truncate text-xs text-muted">
                             {post.community_name} · {formatDateTime(post.created_at)}
                           </p>
-                        </Link>
+                          <div className="mt-2 flex flex-wrap gap-2 text-xs font-black">
+                            <Link
+                              className="inline-flex items-center gap-1.5 text-primary transition hover:text-primary-hover"
+                              href={adminHref}
+                            >
+                              <FileText aria-hidden className="h-3.5 w-3.5" />
+                              Ver detalhe Admin
+                            </Link>
+                            <Link
+                              className="inline-flex items-center gap-1.5 text-muted transition hover:text-primary"
+                              href={href}
+                              rel="noreferrer"
+                              target="_blank"
+                            >
+                              <Eye aria-hidden className="h-3.5 w-3.5" />
+                              Abrir público
+                            </Link>
+                          </div>
+                        </div>
                       </td>
                       <td className="min-w-0 border-b border-border align-top">
                         <Link
@@ -1346,7 +1378,6 @@ const PopularPostsTable = ({ posts }: { posts: CommunitiesDashboardPopularPost[]
       <div className="flex items-center justify-between gap-3">
         <div>
           <h2 className="text-lg font-black text-foreground">Posts mais populares</h2>
-          <BlockPeriodLabel>{ALL_PERIOD_BLOCK_LABEL}</BlockPeriodLabel>
         </div>
         <span className="text-xs font-black text-primary">Ver todas</span>
       </div>
@@ -1360,45 +1391,58 @@ const PopularPostsTable = ({ posts }: { posts: CommunitiesDashboardPopularPost[]
           <div className="mt-5 grid gap-3 md:hidden">
             {posts.map((post) => {
               const href = communityPostPublicHref(post);
+              const adminHref = communityPostAdminDetailHref(post);
               const title = post.title.trim() || "Post sem título";
 
               return (
-                <Link
-                  aria-label={`Abrir post ${title} no site público`}
-                  className="block rounded-2xl border border-border bg-surface-muted p-4 transition hover:border-primary/30 hover:bg-primary-soft/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
-                  href={href}
+                <article
+                  className="rounded-2xl border border-border bg-surface-muted p-4 transition hover:border-primary/30 hover:bg-primary-soft/40"
                   key={post.id}
-                  rel="noreferrer"
-                  target="_blank"
                 >
-                  <article>
-                    <div className="min-w-0">
-                      <p className="truncate font-black text-foreground">{title}</p>
-                      <p className="mt-1 text-xs text-muted">
-                        {post.community_name} · {formatDateTime(post.created_at)}
-                      </p>
-                    </div>
-                    <div className="mt-3">
-                      <DashboardPostAuthorIdentity author={post.author} />
-                    </div>
-                    <div className="mt-3 grid grid-cols-2 gap-2 text-xs text-muted">
-                      <p className="rounded-xl bg-surface p-3">
-                        <span className="block">Upvotes</span>
-                        <strong className="inline-flex items-center gap-1.5 text-sm text-foreground">
-                          <ArrowUp aria-hidden className="h-3.5 w-3.5 text-primary" />
-                          {numberFormatter.format(post.upvotes_count)}
-                        </strong>
-                      </p>
-                      <p className="rounded-xl bg-surface p-3">
-                        <span className="block">Comentários</span>
-                        <strong className="inline-flex items-center gap-1.5 text-sm text-foreground">
-                          <MessageCircle aria-hidden className="h-3.5 w-3.5 text-primary" />
-                          {numberFormatter.format(post.comments_count)}
-                        </strong>
-                      </p>
-                    </div>
-                  </article>
-                </Link>
+                  <div className="min-w-0">
+                    <p className="truncate font-black text-foreground">{title}</p>
+                    <p className="mt-1 text-xs text-muted">
+                      {post.community_name} · {formatDateTime(post.created_at)}
+                    </p>
+                  </div>
+                  <div className="mt-3">
+                    <DashboardPostAuthorIdentity author={post.author} />
+                  </div>
+                  <div className="mt-3 grid grid-cols-2 gap-2 text-xs text-muted">
+                    <p className="rounded-xl bg-surface p-3">
+                      <span className="block">Upvotes</span>
+                      <strong className="inline-flex items-center gap-1.5 text-sm text-foreground">
+                        <ArrowUp aria-hidden className="h-3.5 w-3.5 text-primary" />
+                        {numberFormatter.format(post.upvotes_count)}
+                      </strong>
+                    </p>
+                    <p className="rounded-xl bg-surface p-3">
+                      <span className="block">Comentários</span>
+                      <strong className="inline-flex items-center gap-1.5 text-sm text-foreground">
+                        <MessageCircle aria-hidden className="h-3.5 w-3.5 text-primary" />
+                        {numberFormatter.format(post.comments_count)}
+                      </strong>
+                    </p>
+                  </div>
+                  <div className="mt-3 flex flex-wrap gap-2 text-xs font-black">
+                    <Link
+                      className="inline-flex items-center gap-1.5 rounded-full bg-primary px-3 py-2 text-white transition hover:bg-primary-hover"
+                      href={adminHref}
+                    >
+                      <FileText aria-hidden className="h-3.5 w-3.5" />
+                      Ver detalhe Admin
+                    </Link>
+                    <Link
+                      className="inline-flex items-center gap-1.5 rounded-full border border-border bg-surface px-3 py-2 text-primary transition hover:bg-primary-soft"
+                      href={href}
+                      rel="noreferrer"
+                      target="_blank"
+                    >
+                      <Eye aria-hidden className="h-3.5 w-3.5" />
+                      Abrir público
+                    </Link>
+                  </div>
+                </article>
               );
             })}
           </div>
@@ -1417,6 +1461,7 @@ const PopularPostsTable = ({ posts }: { posts: CommunitiesDashboardPopularPost[]
               <tbody>
                 {posts.map((post) => {
                   const href = communityPostPublicHref(post);
+                  const adminHref = communityPostAdminDetailHref(post);
                   const title = post.title.trim() || "Post sem título";
 
                   return (
@@ -1425,20 +1470,32 @@ const PopularPostsTable = ({ posts }: { posts: CommunitiesDashboardPopularPost[]
                       key={post.id}
                     >
                       <td className="min-w-0 border-b border-border align-top">
-                        <Link
-                          aria-label={`Abrir post ${title} no site público`}
-                          className="block py-4 pr-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
-                          href={href}
-                          rel="noreferrer"
-                          target="_blank"
-                        >
+                        <div className="py-4 pr-3">
                           <p className="truncate font-black text-foreground group-hover:text-primary">
                             {title}
                           </p>
                           <p className="mt-1 truncate text-xs text-muted">
                             {post.community_name} · {formatDateTime(post.created_at)}
                           </p>
-                        </Link>
+                          <div className="mt-2 flex flex-wrap gap-2 text-xs font-black">
+                            <Link
+                              className="inline-flex items-center gap-1.5 text-primary transition hover:text-primary-hover"
+                              href={adminHref}
+                            >
+                              <FileText aria-hidden className="h-3.5 w-3.5" />
+                              Ver detalhe Admin
+                            </Link>
+                            <Link
+                              className="inline-flex items-center gap-1.5 text-muted transition hover:text-primary"
+                              href={href}
+                              rel="noreferrer"
+                              target="_blank"
+                            >
+                              <Eye aria-hidden className="h-3.5 w-3.5" />
+                              Abrir público
+                            </Link>
+                          </div>
+                        </div>
                       </td>
                       <td className="min-w-0 border-b border-border align-top">
                         <Link
@@ -1501,7 +1558,6 @@ const TopCommunitiesTable = ({
       <div className="flex items-center justify-between gap-3">
         <div>
           <h2 className="text-lg font-black text-foreground">Principais comunidades</h2>
-          <BlockPeriodLabel>{ALL_PERIOD_BLOCK_LABEL}</BlockPeriodLabel>
         </div>
         <Link
           className="text-xs font-black text-primary transition hover:text-primary-hover"

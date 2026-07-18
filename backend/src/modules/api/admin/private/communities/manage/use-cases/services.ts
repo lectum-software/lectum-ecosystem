@@ -10,6 +10,8 @@ import type {
   AdminCommunityActivitiesDTO,
   AdminCommunityActivitiesFilterOptionDTO,
   AdminCommunityActivityItemDTO,
+  AdminCommunityContentAnalyticsDetailDTO,
+  AdminCommunityContentDetailQuery,
   AdminCommunityContentDTO,
   AdminCommunityContentItemDTO,
   AdminCommunityContentQuery,
@@ -39,6 +41,7 @@ import type {
   IAdminCommunitiesListDTO,
   IAdminCommunityActivitiesDTO,
   IAdminCommunityAvatarDTO,
+  IAdminCommunityContentDetailDTO,
   IAdminCommunityContentDTO,
   IAdminCommunityCreateDTO,
   IAdminCommunityRankingDTO,
@@ -55,6 +58,7 @@ import {
   type AdminCommunityActivityRecord,
   type AdminCommunityContentPostRecord,
   type AdminCommunityContentReplyRecord,
+  type AdminCommunityContentVideoWatchRecord,
   type AdminCommunityListRecord,
   AdminCommunityManageRepository,
   type AdminCommunityMemberRecord,
@@ -713,6 +717,84 @@ const resolveContentPeriod = (query: AdminCommunityContentQuery): ContentPeriodR
   return { success: true, range: { end, start } };
 };
 
+const contentDetailPeriodLabel: Record<
+  NonNullable<AdminCommunityContentDetailQuery["period"]>,
+  string
+> = {
+  all: "Todo o período",
+  custom: "Período personalizado",
+  month: "Este mês",
+  today: "Hoje",
+  week: "Esta semana",
+  year: "Este ano",
+};
+
+type ContentDetailPeriodResult =
+  | {
+      period: AdminCommunityContentAnalyticsDetailDTO["period"];
+      range: { end: Date; start: Date };
+      success: true;
+    }
+  | { code: string; success: false };
+
+const resolveContentDetailPeriod = (
+  query: AdminCommunityContentDetailQuery,
+  contentCreatedAt: Date,
+): ContentDetailPeriodResult => {
+  const hasCustomFrom = Boolean(query.from);
+  const hasCustomTo = Boolean(query.to);
+  const preset = query.period || (hasCustomFrom || hasCustomTo ? "custom" : "month");
+  const today = new Date();
+  let start: Date;
+  let end = endOfDay(today);
+
+  if (preset === "custom") {
+    if (!hasCustomFrom || !hasCustomTo) {
+      return { success: false, code: "invalid_analytics_date_range" };
+    }
+
+    const customStart = parseDateOnly(query.from, "start");
+    const customEnd = parseDateOnly(query.to, "end");
+
+    if (!customStart || !customEnd || customStart > customEnd) {
+      return { success: false, code: "invalid_analytics_date_range" };
+    }
+
+    start = customStart;
+    end = customEnd;
+  } else if (preset === "today") {
+    start = startOfDay(today);
+  } else if (preset === "week") {
+    start = startOfWeek(today);
+  } else if (preset === "month") {
+    start = startOfMonth(today);
+  } else if (preset === "year") {
+    start = startOfYear(today);
+  } else if (preset === "all") {
+    start = startOfDay(contentCreatedAt);
+  } else {
+    return { success: false, code: "invalid_analytics_date_range" };
+  }
+
+  const days = daysBetweenInclusive(start, end);
+  if (days < 1 || days > MAX_CONTENT_PERIOD_DAYS) {
+    return { success: false, code: "invalid_analytics_date_range" };
+  }
+
+  return {
+    period: {
+      days,
+      from: dateKey(start),
+      label: contentDetailPeriodLabel[preset],
+      max_days: MAX_CONTENT_PERIOD_DAYS,
+      timezone: "server-local",
+      to: dateKey(end),
+    },
+    range: { end, start },
+    success: true,
+  };
+};
+
 const contentMatchesPeriod = (item: AdminCommunityContentItemDTO, range: ContentPeriodRange) => {
   if (!range.start || !range.end) return true;
 
@@ -1162,6 +1244,235 @@ const buildContentMetricsMaps = async (
     viewsByTarget: groupContentTargetCountMap(contentViews),
     whatsappClicksByTarget: groupContentTargetCountMap(whatsappClicks),
   };
+};
+
+type ContentDetailSeriesPoint = AdminCommunityContentAnalyticsDetailDTO["series"][number];
+type ContentVideoDropoff = NonNullable<
+  AdminCommunityContentAnalyticsDetailDTO["video"]
+>["retention_dropoff"];
+
+const buildEmptyContentDetailSeries = (range: { end: Date; start: Date }) => {
+  const points: ContentDetailSeriesPoint[] = [];
+  let cursor = startOfDay(range.start);
+  const end = startOfDay(range.end);
+
+  while (cursor <= end) {
+    points.push({
+      comments: 0,
+      date: dateKey(cursor),
+      downvotes: 0,
+      reports: 0,
+      saves: 0,
+      shares: 0,
+      upvotes: 0,
+      views: 0,
+      whatsapp_clicks: 0,
+    });
+    cursor = addDays(cursor, 1);
+  }
+
+  return points;
+};
+
+const incrementContentDetailSeries = (
+  pointByDate: Map<string, ContentDetailSeriesPoint>,
+  date: Date,
+  key: Exclude<keyof ContentDetailSeriesPoint, "date">,
+  amount = 1,
+) => {
+  const point = pointByDate.get(dateKey(date));
+  if (!point) return;
+
+  point[key] += amount;
+};
+
+const isDateInRange = (date: Date, range: { end: Date; start: Date }) =>
+  date >= range.start && date <= range.end;
+
+const replyDescendantIds = (
+  rootReplyId: string,
+  replies: Array<{ id: string; parent_reply_id: string | null }>,
+) => {
+  const childrenByParent = new Map<string, string[]>();
+  for (const reply of replies) {
+    if (!reply.parent_reply_id) continue;
+    const children = childrenByParent.get(reply.parent_reply_id) ?? [];
+    children.push(reply.id);
+    childrenByParent.set(reply.parent_reply_id, children);
+  }
+
+  const ids = new Set<string>();
+  const stack = [rootReplyId];
+  while (stack.length > 0) {
+    const current = stack.pop();
+    if (!current || ids.has(current)) continue;
+    ids.add(current);
+    for (const child of childrenByParent.get(current) ?? []) stack.push(child);
+  }
+
+  ids.delete(rootReplyId);
+
+  return ids;
+};
+
+const normalizeRetentionBuckets = (
+  value: AdminCommunityContentVideoWatchRecord["retention_buckets"],
+) =>
+  Array.isArray(value)
+    ? value.filter(
+        (bucket): bucket is number =>
+          typeof bucket === "number" && Number.isFinite(bucket) && bucket >= 0 && bucket <= 100,
+      )
+    : [];
+
+const sessionReachedRetention = (
+  session: AdminCommunityContentVideoWatchRecord,
+  threshold: number,
+) => {
+  if (threshold <= 0) return true;
+  const buckets = normalizeRetentionBuckets(session.retention_buckets);
+  if (buckets.some((bucket) => bucket >= threshold)) return true;
+  if (threshold <= 25 && session.milestone_25) return true;
+  if (threshold <= 50 && session.milestone_50) return true;
+  if (threshold <= 75 && session.milestone_75) return true;
+  if (threshold <= 100 && (session.milestone_100 || session.completed)) return true;
+
+  if (session.duration_seconds > 0) {
+    return (session.max_position_seconds / session.duration_seconds) * 100 >= threshold;
+  }
+
+  return false;
+};
+
+const buildContentVideoAnalytics = (
+  hasVideo: boolean,
+  sessions: AdminCommunityContentVideoWatchRecord[],
+): AdminCommunityContentAnalyticsDetailDTO["video"] => {
+  if (!hasVideo) return null;
+
+  const playsCount = sessions.length;
+  const completedCount = sessions.filter(
+    (session) => session.completed || session.milestone_100,
+  ).length;
+  const replayCount = sessions.reduce((total, session) => total + session.replay_count, 0);
+  const durationSeconds =
+    sessions.reduce((max, session) => Math.max(max, session.duration_seconds), 0) || null;
+  const watchedSessions = sessions.filter((session) => session.watched_seconds > 0);
+  const averageWatchedSeconds =
+    watchedSessions.length > 0
+      ? Math.round(
+          watchedSessions.reduce((total, session) => total + session.watched_seconds, 0) /
+            watchedSessions.length,
+        )
+      : null;
+  const retentionEligibleSessions = sessions.filter((session) => session.duration_seconds > 0);
+  const averageRetentionPercent =
+    retentionEligibleSessions.length > 0
+      ? roundPercent(
+          retentionEligibleSessions.reduce((total, session) => {
+            const watchedPercent =
+              (Math.min(session.watched_seconds, session.duration_seconds) /
+                session.duration_seconds) *
+              100;
+
+            return total + Math.min(100, watchedPercent);
+          }, 0) / retentionEligibleSessions.length,
+        )
+      : null;
+  const available = playsCount > 0 && retentionEligibleSessions.length > 0;
+  const retention = available
+    ? Array.from({ length: 21 }, (_, index) => index * 5).map((positionPercent) => {
+        const reached = sessions.filter((session) =>
+          sessionReachedRetention(session, positionPercent),
+        ).length;
+
+        return {
+          label: `${positionPercent}%`,
+          percentage: roundPercent((reached / playsCount) * 100),
+          position_percent: positionPercent,
+        };
+      })
+    : [];
+  const retentionDropoff = retention.reduce<ContentVideoDropoff>((drop, point, index) => {
+    if (index === 0) return drop;
+    const previous = retention[index - 1];
+    if (!previous) return drop;
+    const rateDrop = roundPercent(Math.max(0, previous.percentage - point.percentage));
+    if (!drop || rateDrop > drop.rate_drop) {
+      return {
+        from_label: previous.label,
+        rate_drop: rateDrop,
+        to_label: point.label,
+      };
+    }
+
+    return drop;
+  }, null);
+
+  return {
+    available,
+    metrics: {
+      average_retention_percent: averageRetentionPercent,
+      average_watched_seconds: averageWatchedSeconds,
+      completed_count: completedCount,
+      completion_rate: playsCount > 0 ? roundPercent((completedCount / playsCount) * 100) : 0,
+      duration_seconds: durationSeconds,
+      plays_count: playsCount,
+      replay_count: replayCount,
+    },
+    retention,
+    retention_dropoff: available ? retentionDropoff : null,
+    source: "content_video_watch_session",
+    unavailable_reason: available
+      ? null
+      : "Retenção indisponível - a coleta começa a partir dos próximos acessos ao vídeo.",
+  };
+};
+
+const buildContentDetailSeries = (
+  dataset: Awaited<ReturnType<AdminCommunityManageRepository["listContentDetailDataset"]>>,
+  range: { end: Date; start: Date },
+  targetType: "post" | "reply",
+  targetId: string,
+) => {
+  const series = buildEmptyContentDetailSeries(range);
+  const pointByDate = new Map(series.map((point) => [point.date, point]));
+  const descendantIds =
+    targetType === "reply" ? replyDescendantIds(targetId, dataset.comments) : null;
+  const comments =
+    targetType === "reply"
+      ? dataset.comments.filter(
+          (comment) => descendantIds?.has(comment.id) && isDateInRange(comment.createdAt, range),
+        )
+      : dataset.comments;
+
+  for (const event of dataset.pageViews) {
+    incrementContentDetailSeries(pointByDate, event.occurred_at, "views");
+  }
+  for (const vote of dataset.votes) {
+    incrementContentDetailSeries(
+      pointByDate,
+      vote.createdAt,
+      vote.value === 1 ? "upvotes" : "downvotes",
+    );
+  }
+  for (const comment of comments) {
+    incrementContentDetailSeries(pointByDate, comment.createdAt, "comments");
+  }
+  for (const save of dataset.saves) {
+    incrementContentDetailSeries(pointByDate, save.createdAt, "saves");
+  }
+  for (const share of dataset.shares) {
+    incrementContentDetailSeries(pointByDate, share.createdAt, "shares");
+  }
+  for (const click of dataset.whatsappClicks) {
+    incrementContentDetailSeries(pointByDate, click.occurred_at, "whatsapp_clicks");
+  }
+  for (const report of dataset.reports) {
+    incrementContentDetailSeries(pointByDate, report.createdAt, "reports");
+  }
+
+  return { comments, series };
 };
 
 const contentSafeBefore = (item: AdminCommunityContentItemDTO) => ({
@@ -2691,6 +3002,141 @@ export const listContent = async (data: IAdminCommunityContentDTO): Promise<Reso
   return {
     status: 200,
     ...msg("index", {}),
+    data: payload,
+  };
+};
+
+export const showContentDetail = async (
+  data: IAdminCommunityContentDetailDTO,
+): Promise<Resolve> => {
+  const repository = new AdminCommunityManageRepository();
+  const community = await findCommunityOrNotFound(repository, data.p.id);
+  if (!community) return notFound();
+
+  const targetType = data.p.targetType === "reply" ? "comment" : data.p.targetType;
+  if (targetType !== "post" && targetType !== "comment") {
+    return {
+      status: 400,
+      ...error("admin_community_content_target_invalid", {}),
+    };
+  }
+
+  const targetId = data.p.targetId ?? "";
+  const canonicalTargetType = targetType === "post" ? "post" : "reply";
+  const contentRecord =
+    canonicalTargetType === "post"
+      ? await repository.findPostContent(community.id, targetId)
+      : await repository.findReplyContent(community.id, targetId);
+
+  if (!contentRecord) {
+    return {
+      status: 404,
+      ...error("admin_community_content_target_invalid", {}),
+    };
+  }
+
+  const item =
+    canonicalTargetType === "post"
+      ? mapPostContent(
+          community,
+          contentRecord as AdminCommunityContentPostRecord,
+          await buildContentMetricsMaps(repository, [contentRecord.id], []),
+        )
+      : mapReplyContent(
+          community,
+          contentRecord as AdminCommunityContentReplyRecord,
+          await buildContentMetricsMaps(repository, [], [contentRecord.id]),
+        );
+  const contentCreatedAt = contentRecord.createdAt;
+  const period = resolveContentDetailPeriod(data.q ?? {}, contentCreatedAt);
+  if (!period.success) return { status: 400, ...error(period.code, {}) };
+
+  const dataset = await repository.listContentDetailDataset({
+    communityId: community.id,
+    from: period.range.start,
+    postId: item.post_id,
+    targetId: item.content_id,
+    targetType: canonicalTargetType,
+    to: period.range.end,
+  });
+  const { comments, series } = buildContentDetailSeries(
+    dataset,
+    period.range,
+    canonicalTargetType,
+    item.content_id,
+  );
+  const reports = dataset.reports.map((report) => mapReport(community, report));
+  const moderationEvents = dataset.moderationEvents.map((event) => ({
+    categories: event.categories,
+    content_excerpt: event.content_excerpt,
+    created_at: event.createdAt,
+    decision: event.decision,
+    id: event.id,
+    reason_code: event.reason_code,
+    reviewed_at: event.reviewed_at,
+    severity: event.severity,
+    status: event.status,
+  }));
+  const sourceRecord = contentRecord as
+    | AdminCommunityContentPostRecord
+    | AdminCommunityContentReplyRecord;
+  const hasVideo = item.media?.media_type.toLowerCase() === "video";
+  const payload: AdminCommunityContentAnalyticsDetailDTO = {
+    author: {
+      ...item.author,
+      role_label: contentAuthorRoleLabel(sourceRecord.author),
+    },
+    community: communitySummary(community),
+    content: {
+      body: excerpt(sourceRecord.content, 4000),
+      content_kind: item.content_kind,
+      content_kind_label: item.content_kind_label,
+      created_at: item.created_at,
+      deleted_at: item.deleted_at,
+      edited_at: sourceRecord.edited_at,
+      excerpt: item.excerpt,
+      id: item.content_id,
+      media: item.media
+        ? {
+            cover_url: null,
+            duration_seconds: null,
+            media_type: item.media.media_type,
+            media_url: item.media.media_url,
+          }
+        : null,
+      origin_preview: item.origin_preview,
+      parent_post_title: item.parent_post_title,
+      post_id: item.post_id,
+      public_url: item.status === "published" ? item.public_url : null,
+      status: item.status,
+      title: item.title,
+      type: item.type,
+    },
+    metrics: {
+      comments_count: comments.length,
+      downvotes_count: dataset.votes.filter((vote) => vote.value === -1).length,
+      moderation_events_count: moderationEvents.length,
+      reports_count: reports.length,
+      saves_count: dataset.saves.length,
+      shares_count: dataset.shares.length,
+      upvotes_count: dataset.votes.filter((vote) => vote.value === 1).length,
+      views_count: dataset.pageViews.length,
+      whatsapp_clicks_count: dataset.whatsappClicks.length,
+    },
+    moderation: {
+      events: moderationEvents,
+      reports,
+    },
+    period: period.period,
+    series,
+    source:
+      "community_post+post_reply+post_vote+post_save+post_reply_save+post_share+page_view_event+important_action_event+post_report+content_moderation_event+content_video_watch_session",
+    video: buildContentVideoAnalytics(hasVideo, dataset.videoWatchSessions),
+  };
+
+  return {
+    status: 200,
+    ...msg("show", {}),
     data: payload,
   };
 };

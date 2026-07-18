@@ -233,11 +233,13 @@ const SavedReplyMedia = ({
   footer,
   mediaType,
   mediaUrl,
+  replyId,
   title,
 }: {
   footer?: ReactNode;
   mediaType: string | null;
   mediaUrl: string | null;
+  replyId: string;
   title: string;
 }) => {
   if (!mediaUrl) return null;
@@ -245,6 +247,9 @@ const SavedReplyMedia = ({
   return (
     <CommunityMediaBlock
       alt={title}
+      analyticsTarget={
+        mediaType === "video" ? { targetId: replyId, targetType: "reply" } : undefined
+      }
       footer={footer}
       mediaType={mediaType}
       mediaUrl={mediaUrl}
@@ -385,6 +390,7 @@ const SavedReplyCard = ({
           footer={reply.media_url ? professionalWhatsappCta : undefined}
           mediaType={reply.media_type}
           mediaUrl={reply.media_url}
+          replyId={reply.id}
           title={reply.title ?? "Mídia da resposta salva"}
         />
 

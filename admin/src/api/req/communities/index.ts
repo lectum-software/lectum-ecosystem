@@ -511,6 +511,12 @@ export type AdminCommunityContentQuery = AdminCommunityPaginationQuery & {
     | "verified_psychologist_reply";
 };
 
+export type AdminCommunityContentDetailQuery = {
+  from?: string;
+  period?: "all" | "custom" | "month" | "today" | "week" | "year";
+  to?: string;
+};
+
 export type AdminCommunityContentItem = {
   author: AdminCommunityContentAuthor;
   content_kind:
@@ -562,6 +568,97 @@ export type AdminCommunityContent = {
   pages: number;
   per_page: number;
   source: "community_post+post_reply+post_share+page_view_event+important_action_event";
+};
+
+export type AdminCommunityContentAnalyticsDetail = {
+  author: AdminCommunityContentAuthor & {
+    role_label: string;
+  };
+  community: Pick<AdminCommunityIdentity, "id" | "name" | "slug">;
+  content: {
+    body: string;
+    content_kind: AdminCommunityContentItem["content_kind"];
+    content_kind_label: string;
+    created_at: string;
+    deleted_at: string | null;
+    edited_at: string | null;
+    excerpt: string;
+    id: string;
+    media: {
+      cover_url: string | null;
+      duration_seconds: number | null;
+      media_type: string;
+      media_url: string;
+    } | null;
+    origin_preview: AdminCommunityContentItem["origin_preview"];
+    parent_post_title: string | null;
+    post_id: string;
+    public_url: string | null;
+    status: "published" | "removed";
+    title: string | null;
+    type: "comment" | "post";
+  };
+  metrics: AdminCommunityContentItem["metrics"] & {
+    moderation_events_count: number;
+  };
+  moderation: {
+    events: {
+      categories: unknown;
+      content_excerpt: string;
+      created_at: string;
+      decision: string;
+      id: string;
+      reason_code: string;
+      reviewed_at: string | null;
+      severity: string;
+      status: string;
+    }[];
+    reports: AdminCommunityReportItem[];
+  };
+  period: {
+    days: number | null;
+    from: string | null;
+    label: string;
+    max_days: number;
+    timezone: "server-local";
+    to: string | null;
+  };
+  series: {
+    comments: number;
+    date: string;
+    downvotes: number;
+    reports: number;
+    saves: number;
+    shares: number;
+    upvotes: number;
+    views: number;
+    whatsapp_clicks: number;
+  }[];
+  source: "community_post+post_reply+post_vote+post_save+post_reply_save+post_share+page_view_event+important_action_event+post_report+content_moderation_event+content_video_watch_session";
+  video: null | {
+    available: boolean;
+    metrics: {
+      average_retention_percent: number | null;
+      average_watched_seconds: number | null;
+      completed_count: number;
+      completion_rate: number;
+      duration_seconds: number | null;
+      plays_count: number;
+      replay_count: number;
+    };
+    retention: {
+      label: string;
+      percentage: number;
+      position_percent: number;
+    }[];
+    retention_dropoff: {
+      from_label: string;
+      rate_drop: number;
+      to_label: string;
+    } | null;
+    source: "content_video_watch_session";
+    unavailable_reason: string | null;
+  };
 };
 
 export type AdminCommunityRemoveContentInput = {
@@ -1006,6 +1103,12 @@ const cleanStatisticsParams = (input: AdminCommunityStatisticsQuery) => ({
   ...(input.to ? { to: input.to } : {}),
 });
 
+const cleanContentDetailParams = (input: AdminCommunityContentDetailQuery) => ({
+  ...(input.period ? { period: input.period } : {}),
+  ...(input.from ? { from: input.from } : {}),
+  ...(input.to ? { to: input.to } : {}),
+});
+
 export const getAdminCommunitiesDashboard = async (input: CommunitiesDashboardQuery) => {
   const response = await adminApi.get<ApiResponse<AdminCommunitiesDashboard>>(
     "/api/admin/private/communities/dashboard",
@@ -1050,6 +1153,24 @@ export const getAdminCommunityContent = async (id: string, input: AdminCommunity
     `/api/admin/private/communities/${encodeURIComponent(id)}/content`,
     {
       params: cleanPaginationParams(input),
+    },
+  );
+
+  return resolveApiData(response.data);
+};
+
+export const getAdminCommunityContentDetail = async (
+  id: string,
+  targetType: "comment" | "post" | "reply",
+  targetId: string,
+  input: AdminCommunityContentDetailQuery,
+) => {
+  const response = await adminApi.get<ApiResponse<AdminCommunityContentAnalyticsDetail>>(
+    `/api/admin/private/communities/${encodeURIComponent(id)}/content/${encodeURIComponent(
+      targetType,
+    )}/${encodeURIComponent(targetId)}/detail`,
+    {
+      params: cleanContentDetailParams(input),
     },
   );
 

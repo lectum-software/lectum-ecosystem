@@ -155,7 +155,7 @@ ou cortesia manual.
 | 72 | [TASK-72 - Métricas de conversão e uso da plataforma por psicólogos no Admin](TASK-72-metricas-conversao-uso-plataforma-psicologos-admin.md) | Completed | 09, 31, 32, 33, 45, 46, 47, 49, 53, 55, 56, 57, 62 |
 | 73 | [TASK-73 - Ações administrativas de conta do psicólogo](TASK-73-acoes-conta-psicologo-admin.md) | Completed | 45, 46, 55, 68 |
 | 74 | [TASK-74 - Moderação textual simples e alertas Admin para conteúdo sensível de pacientes](TASK-74-moderacao-textual-alertas-admin-conteudo-sensivel-pacientes.md) | Completed | 24, 26, 45, 46, 51, 63, 64, 70, 71 |
-| 75 | [TASK-75 - Detalhe analítico administrativo de conteúdo e retenção de vídeo](TASK-75-detalhe-analytics-conteudo-admin.md) | Pending | 23, 24, 26, 40, 42, 45, 46, 49, 51, 57, 71, 72, 74 |
+| 75 | [TASK-75 - Detalhe analítico administrativo de conteúdo e retenção de vídeo](TASK-75-detalhe-analytics-conteudo-admin.md) | Completed | 23, 24, 26, 40, 42, 45, 46, 49, 51, 57, 71, 72, 74 |
 
 ## Ordem operacional recomendada sem bloqueios
 

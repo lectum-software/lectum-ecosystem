@@ -474,6 +474,11 @@ const ProfessionalReplyPreview = ({
           {reply.media_url ? (
             <CommunityMediaBlock
               alt="Mídia da resposta profissional"
+              analyticsTarget={
+                reply.media_type === "video"
+                  ? { targetId: reply.id, targetType: "reply" }
+                  : undefined
+              }
               className="mt-3"
               footer={whatsappCta}
               mediaType={reply.media_type}
@@ -563,6 +568,9 @@ const ProfessionalReplyPreview = ({
       {reply.media_url ? (
         <CommunityMediaBlock
           alt={reply.title ?? "Mídia da resposta profissional"}
+          analyticsTarget={
+            reply.media_type === "video" ? { targetId: reply.id, targetType: "reply" } : undefined
+          }
           className="mt-3"
           footer={whatsappCta}
           mediaType={reply.media_type}
@@ -1036,6 +1044,9 @@ export const CommunityPostCard = ({
         ) : (
           <CommunityMediaBlock
             alt={displayTitle ?? "Mídia da publicação"}
+            analyticsTarget={
+              displayMediaType === "video" ? { targetId: post.id, targetType: "post" } : undefined
+            }
             footer={authorWhatsappCta && displayMediaUrl ? authorWhatsappCta : undefined}
             mediaType={displayMediaType}
             mediaUrl={displayMediaUrl}

@@ -348,6 +348,33 @@ export const contentSchema: IValidatorRequest = {
   ],
 };
 
+export const contentDetailSchema: IValidatorRequest = {
+  params: [communityParam, targetTypeParam, targetIdParam],
+  query: [
+    {
+      key: "period",
+      coerse: "string",
+      method: "string",
+      max: 20,
+      optional: true,
+    },
+    {
+      key: "from",
+      coerse: "string",
+      method: "string",
+      max: 10,
+      optional: true,
+    },
+    {
+      key: "to",
+      coerse: "string",
+      method: "string",
+      max: 10,
+      optional: true,
+    },
+  ],
+};
+
 export const rankingSchema: IValidatorRequest = {
   params: [communityParam],
   query: [
@@ -516,6 +543,7 @@ export const ruleValidator = validator(ruleSchema);
 export const updateRuleValidator = validator(updateRuleSchema);
 export const deleteRuleValidator = validator(deleteRuleSchema);
 export const contentValidator = validator(contentSchema);
+export const contentDetailValidator = validator(contentDetailSchema);
 export const rankingValidator = validator(rankingSchema);
 export const reportsValidator = validator(reportsSchema);
 export const activitiesValidator = validator(activitiesSchema);

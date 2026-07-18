@@ -469,6 +469,11 @@ const ReplyItemCard = ({
           <div data-post-card-ignore-click="true">
             <CommunityMediaBlock
               alt={reply.title ?? `Mídia da ${interactionCopy.singular}`}
+              analyticsTarget={
+                reply.media_type === "video"
+                  ? { targetId: reply.id, targetType: "reply" }
+                  : undefined
+              }
               className={cn(hasReplyText ? "mt-1" : undefined)}
               mediaType={reply.media_type}
               mediaUrl={reply.media_url}

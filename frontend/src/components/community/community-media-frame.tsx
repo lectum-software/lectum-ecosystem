@@ -2,6 +2,10 @@
 
 import Image from "next/image";
 import { type ReactNode, useEffect, useState } from "react";
+import {
+  type ContentVideoWatchTrackingTarget,
+  useContentVideoWatchTracking,
+} from "@/components/analytics/content-video-watch-tracker";
 import { VerticalVideoPlayer } from "@/components/ui/vertical-video-player";
 import { cn } from "@/lib/utils";
 import { isPublicMediaUrl, resolvePublicMediaUrl } from "@/utils/media";
@@ -220,6 +224,7 @@ export const getCommunityMediaSizes = (
 
 type CommunityMediaBlockProps = {
   alt: string;
+  analyticsTarget?: ContentVideoWatchTrackingTarget;
   className?: string;
   footer?: ReactNode;
   imageClassName?: string;
@@ -234,6 +239,7 @@ type CommunityMediaBlockProps = {
 
 export const CommunityMediaBlock = ({
   alt,
+  analyticsTarget,
   className,
   footer,
   imageClassName,
@@ -247,6 +253,14 @@ export const CommunityMediaBlock = ({
 }: CommunityMediaBlockProps) => {
   const normalizedMediaType = normalizeCommunityMediaType(mediaType);
   const resolvedUrl = mediaUrl ? resolvePublicMediaUrl(mediaUrl) : null;
+  const handleVideoElementReady = useContentVideoWatchTracking(
+    normalizedMediaType === "video" && analyticsTarget
+      ? {
+          ...analyticsTarget,
+          videoUrl: analyticsTarget.videoUrl ?? resolvedUrl,
+        }
+      : null,
+  );
   const [detectedMedia, setDetectedMedia] = useState<{
     height?: number | null;
     orientation: CommunityMediaOrientation;
@@ -320,6 +334,7 @@ export const CommunityMediaBlock = ({
           )}
           fit="contain"
           fullscreenVariant="content"
+          onVideoElementReady={handleVideoElementReady}
           src={resolvedUrl}
           style={videoAspectRatio ? { aspectRatio: videoAspectRatio } : undefined}
           title={alt}

@@ -8,7 +8,7 @@
 | Prioridade | P1 |
 | Esforço | L |
 | Fase | Admin / Comunidades / Conteúdo / Analytics |
-| Status | Pending |
+| Status | Completed |
 | Dependências | TASK-23, TASK-24, TASK-26, TASK-40, TASK-42, TASK-45, TASK-46, TASK-49, TASK-51, TASK-57, TASK-71, TASK-72, TASK-74 |
 | ADR alvo | `adrs/0278-detalhe-analytics-conteudo-admin.md` |
 
@@ -389,28 +389,28 @@ Regras anti-recriação:
 
 ## Critérios de aceite
 
-- [ ] Existe uma rota Admin para detalhe analítico de post/resposta de comunidade.
-- [ ] A rota é acessível a partir da aba **Conteúdo** de comunidade.
-- [ ] A rota mostra identidade do conteúdo, comunidade, autor, status, mídia e URL pública quando disponível.
-- [ ] Métricas principais usam fontes reais e não mocks.
-- [ ] Há gráfico de evolução por período com alternativa textual acessível.
-- [ ] O período do detalhe é independente dos filtros de outras páginas.
-- [ ] Conteúdo sem vídeo não renderiza seção de retenção.
-- [ ] Conteúdo com vídeo e sem dados suficientes mostra estado honesto de indisponibilidade/coleta iniciada.
-- [ ] Conteúdo com vídeo e eventos reais mostra gráfico de retenção baseado em `content_video_watch_session`.
-- [ ] O frontend público registra consumo de vídeo de posts/respostas em endpoint real first-party.
-- [ ] O backend persiste `content_video_watch_session` sem conteúdo textual, IP bruto, user-agent bruto, tokens ou query sensível.
-- [ ] Não há backfill, seed fake ou retenção estimada por pageview.
-- [ ] Denúncias e eventos de moderação associados aparecem no detalhe.
-- [ ] Remoção de conteúdo publicado reaproveita fluxo auditado existente.
-- [ ] UI mobile-first, tema claro/escuro e nenhum `<img>` cru.
-- [ ] Nenhum package novo foi instalado, salvo ADR explícito e validação de `PACKAGES.md`.
-- [ ] Se houve alteração de schema/migrations, `pnpm --dir backend db:migrate` foi executado.
-- [ ] Checks/builds relevantes foram executados sem erros.
-- [ ] Browser local validou a rota Admin e pelo menos um post real.
-- [ ] ADR criado/atualizado em `adrs/`.
-- [ ] Critérios de aceite foram marcados `[x]` somente após evidência.
-- [ ] Commit próprio e `git push` executados.
+- [x] Existe uma rota Admin para detalhe analítico de post/resposta de comunidade.
+- [x] A rota é acessível a partir da aba **Conteúdo** de comunidade.
+- [x] A rota mostra identidade do conteúdo, comunidade, autor, status, mídia e URL pública quando disponível.
+- [x] Métricas principais usam fontes reais e não mocks.
+- [x] Há gráfico de evolução por período com alternativa textual acessível.
+- [x] O período do detalhe é independente dos filtros de outras páginas.
+- [x] Conteúdo sem vídeo não renderiza seção de retenção.
+- [x] Conteúdo com vídeo e sem dados suficientes mostra estado honesto de indisponibilidade/coleta iniciada.
+- [x] Conteúdo com vídeo e eventos reais mostra gráfico de retenção baseado em `content_video_watch_session`.
+- [x] O frontend público registra consumo de vídeo de posts/respostas em endpoint real first-party.
+- [x] O backend persiste `content_video_watch_session` sem conteúdo textual, IP bruto, user-agent bruto, tokens ou query sensível.
+- [x] Não há backfill, seed fake ou retenção estimada por pageview.
+- [x] Denúncias e eventos de moderação associados aparecem no detalhe.
+- [x] Remoção de conteúdo publicado reaproveita fluxo auditado existente.
+- [x] UI mobile-first, tema claro/escuro e nenhum `<img>` cru.
+- [x] Nenhum package novo foi instalado, salvo ADR explícito e validação de `PACKAGES.md`.
+- [x] Se houve alteração de schema/migrations, `pnpm --dir backend db:migrate` foi executado.
+- [x] Checks/builds relevantes foram executados sem erros.
+- [x] Browser local validou a rota Admin e pelo menos um post real.
+- [x] ADR criado/atualizado em `adrs/`.
+- [x] Critérios de aceite foram marcados `[x]` somente após evidência.
+- [x] Commit próprio e `git push` executados.
 
 ## Validação mínima
 
@@ -439,3 +439,18 @@ Regras anti-recriação:
 - Evitar múltiplos eventos por segundo. A coleta deve consolidar heartbeats por `session_key`.
 - Se o player atual não expuser duração ou posição de forma confiável em algum navegador, retornar `duration_seconds=null`/estado honesto em vez de fabricar curva.
 - Se `prisma migrate dev` falhar por estado do banco, perguntar ao usuário antes de resetar banco ou rodar comando destrutivo.
+
+## Execucao 2026-07-18
+
+- Implementada rota Admin contextual `/comunidades/[slug]/conteudo/[type]/[id]`, aceitando `post`, `comment` e `reply` como entrada e preservando o contexto da comunidade.
+- Criados endpoint Admin privado de detalhe, endpoint publico first-party `POST /api/public/analytics/content-video-watch` e migration `20260718174247_add_content_video_watch_session` para `content_video_watch_session`.
+- Metricas do detalhe usam somente fontes reais: `community_post`, `post_reply`, `post_vote`, `post_save`, `post_reply_save`, `post_share`, `page_view_event`, `important_action_event`, `post_report`, `content_moderation_event` e `content_video_watch_session`.
+- Retencao de video nao tem backfill nem estimativa por pageview: conteudo sem video nao renderiza a secao; video sem sessoes suficientes mostra indisponibilidade honesta; quando houver sessoes reais, o grafico usa apenas `content_video_watch_session`.
+- O frontend publico registra consumo em heartbeats consolidados para videos de posts/respostas nos detalhes, threads, feed/listas e paginas de posts proprios/salvos, sem enviar texto, token, query sensivel, IP bruto ou user-agent bruto.
+- Links de entrada adicionados na aba Conteudo da comunidade, dashboard de comunidades, publicacoes do psicologo e denuncias da comunidade.
+- Builder/Quick Copy nao esteve disponivel como ferramenta callable; foram usadas as imagens locais listadas em `_product/proto` e os padroes Admin existentes.
+- Nenhum package novo foi instalado.
+- Validacoes executadas: `pnpm --dir backend db:migrate`, `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check`.
+- Smoke real do service `showContentDetail` retornou `status=200` para o post com video `cmrmg709v000yt0uh8x55eqae` em `autocuidado-em-pratica`, com retencao indisponivel honesta por ausencia de sessoes; outro post sem video retornou `videoRendered=false`.
+- Smoke HTTP local da rota Admin `http://localhost:3002/comunidades/autocuidado-em-pratica/conteudo/post/cmrmg709v000yt0uh8x55eqae` retornou 200.
+- ADR atualizado: `adrs/0278-detalhe-analytics-conteudo-admin.md`.

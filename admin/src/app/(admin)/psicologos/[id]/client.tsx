@@ -933,6 +933,11 @@ const toPublicHref = (url: string) => {
   return `${publicFrontendUrl.replace(/\/$/, "")}${url}`;
 };
 
+const publicationAdminDetailHref = (item: AdminPsychologistPublicationItem) =>
+  `/comunidades/${encodeURIComponent(item.community.slug)}/conteudo/${encodeURIComponent(
+    item.type,
+  )}/${encodeURIComponent(item.id)}`;
+
 const isPublicMediaPath = (pathname: string) =>
   publicMediaPathPrefixes.some((prefix) => pathname.startsWith(prefix));
 
@@ -4550,6 +4555,7 @@ const PublicationsTab = ({ createdAt, id }: { createdAt: string; id: string }) =
           ) : null}
           {publications.data.map((item) => {
             const selected = selectedRemoval?.id === item.id && selectedRemoval.type === item.type;
+            const adminDetailHref = publicationAdminDetailHref(item);
 
             return (
               <article
@@ -4559,6 +4565,15 @@ const PublicationsTab = ({ createdAt, id }: { createdAt: string; id: string }) =
                 <div className="grid gap-3 lg:grid-cols-[1fr_auto] lg:items-start">
                   <PublicationItemMain item={item} />
                   <div className="flex justify-end gap-2 lg:flex-col">
+                    <Link
+                      aria-label="Ver detalhe analítico da publicação no Admin"
+                      className="inline-flex h-10 w-10 items-center justify-center rounded-control border border-primary/30 text-primary transition hover:bg-primary-soft"
+                      href={adminDetailHref}
+                      title="Detalhe analítico"
+                    >
+                      <FileText aria-hidden className="h-4 w-4" />
+                      <span className="sr-only">Detalhe analítico</span>
+                    </Link>
                     <Link
                       aria-label="Ver publicação no site"
                       className="inline-flex h-10 w-10 items-center justify-center rounded-control border border-border text-foreground transition hover:border-primary hover:text-primary"
