@@ -461,6 +461,12 @@ const communityPostAdminDetailHref = (
     post.id,
   )}`;
 
+const communityPublicHref = (community: Pick<CommunitiesDashboardTopCommunity, "slug">) =>
+  toPublicHref(`/community/${encodeURIComponent(community.slug)}`);
+
+const communityAdminDetailHref = (community: Pick<CommunitiesDashboardTopCommunity, "slug">) =>
+  `/comunidades/${encodeURIComponent(community.slug)}`;
+
 const initials = (value: string) =>
   value
     .split(" ")
@@ -576,6 +582,65 @@ const DashboardPostActions = ({
       >
         <BarChart3 aria-hidden className="h-3.5 w-3.5" />
         Analytics
+      </Link>
+    </div>
+  );
+};
+
+const TopCommunityActions = ({
+  community,
+  layout,
+}: {
+  community: Pick<CommunitiesDashboardTopCommunity, "name" | "slug">;
+  layout: "icons" | "labels";
+}) => {
+  const publicHref = communityPublicHref(community);
+  const detailHref = communityAdminDetailHref(community);
+
+  if (layout === "icons") {
+    return (
+      <div className="flex shrink-0 items-center justify-center gap-1.5">
+        <Link
+          aria-label={`Abrir comunidade ${community.name} no site público`}
+          className="grid h-9 w-9 place-items-center rounded-full border border-border bg-surface text-foreground shadow-control transition hover:border-primary hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
+          href={publicHref}
+          rel="noreferrer"
+          target="_blank"
+          title="Abrir público"
+        >
+          <Eye aria-hidden className="h-4 w-4" />
+          <span className="sr-only">Abrir comunidade {community.name} no site público</span>
+        </Link>
+        <Link
+          aria-label={`Abrir detalhes administrativos de ${community.name}`}
+          className="grid h-9 w-9 place-items-center rounded-full border border-primary/30 bg-surface text-primary shadow-control transition hover:bg-primary-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
+          href={detailHref}
+          title="Detalhes da comunidade"
+        >
+          <BarChart3 aria-hidden className="h-4 w-4" />
+          <span className="sr-only">Abrir detalhes administrativos de {community.name}</span>
+        </Link>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-wrap gap-2 text-xs font-black">
+      <Link
+        className="inline-flex items-center gap-1.5 rounded-full border border-border bg-surface px-3 py-2 text-primary transition hover:bg-primary-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
+        href={publicHref}
+        rel="noreferrer"
+        target="_blank"
+      >
+        <Eye aria-hidden className="h-3.5 w-3.5" />
+        Abrir público
+      </Link>
+      <Link
+        className="inline-flex items-center gap-1.5 rounded-full bg-primary px-3 py-2 text-white transition hover:bg-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
+        href={detailHref}
+      >
+        <BarChart3 aria-hidden className="h-3.5 w-3.5" />
+        Detalhes
       </Link>
     </div>
   );
@@ -1547,7 +1612,7 @@ const TopCommunitiesTable = ({
           <div className="mt-5 grid gap-3 md:hidden">
             {communities.map((community) => (
               <article
-                className="rounded-2xl border border-border bg-surface-muted p-4"
+                className="rounded-2xl border border-border bg-surface-muted p-4 transition hover:border-primary/30 hover:bg-primary-soft/40"
                 key={community.id}
               >
                 <div className="flex items-center justify-between gap-3">
@@ -1566,13 +1631,7 @@ const TopCommunitiesTable = ({
                       </p>
                     </div>
                   </div>
-                  <Link
-                    aria-label={`Abrir detalhes de ${community.name}`}
-                    className="inline-grid h-9 w-9 shrink-0 place-items-center rounded-xl border border-border bg-surface text-primary transition hover:border-primary"
-                    href={`/comunidades/${community.slug}`}
-                  >
-                    <Eye aria-hidden className="h-4 w-4" />
-                  </Link>
+                  <TopCommunityActions community={community} layout="icons" />
                 </div>
                 <div className="mt-3 grid grid-cols-2 gap-3 text-xs">
                   <p className="rounded-xl bg-surface p-3">
@@ -1592,24 +1651,26 @@ const TopCommunitiesTable = ({
             ))}
           </div>
           <div className="mt-5 hidden min-w-0 overflow-hidden md:block">
-            <table className="w-full table-fixed border-separate border-spacing-0 text-left text-sm">
+            <table className="w-full max-w-full table-fixed border-separate border-spacing-0 text-left text-sm">
+              <colgroup>
+                <col className="w-[48%]" />
+                <col className="w-[8%]" />
+                <col className="w-[8%]" />
+                <col className="w-[36%]" />
+              </colgroup>
               <thead className="text-xs text-muted">
                 <tr>
-                  <th className="w-[58%] border-b border-border py-3 pr-3 font-black">
-                    Comunidade
-                  </th>
-                  <th className="w-[16%] border-b border-border px-3 py-3 font-black">
+                  <th className="border-b border-border py-3 pr-3 font-black">Comunidade</th>
+                  <th className="border-b border-border px-3 py-3 text-center font-black">
                     Seguidores
                   </th>
-                  <th className="w-[14%] border-b border-border px-3 py-3 font-black">Posts</th>
-                  <th className="w-[12%] border-b border-border py-3 pl-3 text-right font-black">
-                    Ações
-                  </th>
+                  <th className="border-b border-border px-3 py-3 text-center font-black">Posts</th>
+                  <th className="border-b border-border py-3 pl-3 text-center font-black">Ações</th>
                 </tr>
               </thead>
               <tbody>
                 {communities.map((community) => (
-                  <tr key={community.id}>
+                  <tr className="align-top transition hover:bg-surface-muted/50" key={community.id}>
                     <td className="border-b border-border py-4 pr-4">
                       <div className="flex items-center gap-3">
                         <span
@@ -1627,20 +1688,14 @@ const TopCommunitiesTable = ({
                         </div>
                       </div>
                     </td>
-                    <td className="border-b border-border px-3 py-4 font-black">
+                    <td className="border-b border-border px-3 py-4 text-center font-black">
                       {numberFormatter.format(community.members_count)}
                     </td>
-                    <td className="border-b border-border px-3 py-4 font-black">
+                    <td className="border-b border-border px-3 py-4 text-center font-black">
                       {numberFormatter.format(community.posts_count)}
                     </td>
-                    <td className="border-b border-border py-4 pl-3 text-right">
-                      <Link
-                        aria-label={`Abrir detalhes de ${community.name}`}
-                        className="inline-grid h-9 w-9 place-items-center rounded-xl border border-border text-primary transition hover:border-primary"
-                        href={`/comunidades/${community.slug}`}
-                      >
-                        <Eye aria-hidden className="h-4 w-4" />
-                      </Link>
+                    <td className="border-b border-border py-4 pl-3 text-center">
+                      <TopCommunityActions community={community} layout="icons" />
                     </td>
                   </tr>
                 ))}

@@ -160,3 +160,13 @@ Os blocos **Postagens mais recentes** e **Posts mais populares** do dashboard ge
 A decisao e diferenciar os dois destinos operacionais: **Abrir publico** usa a URL canonica `NEXT_PUBLIC_FRONTEND_URL + /community/{slug}/post/{id}` em nova aba; **Analytics** usa a rota Admin contextual `/comunidades/{slug}/conteudo/post/{id}` criada na TASK-75. No mobile, a mesma decisao aparece como botoes com texto dentro do card, preservando a abordagem mobile-first e evitando linha inteira clicavel com destino ambiguo.
 
 Consequencia: o Admin ganha leitura mais clara e consistente com listas administrativas, com acoes acessiveis por `aria-label`, sem alterar endpoint, contrato backend, schema Prisma, migration, pacote, mock, seed ou regra de agregacao.
+
+## Atualizacao 2026-07-18: paridade de acoes e alinhamento em principais comunidades
+
+O bloco **Principais comunidades** da visao geral `/comunidades` passa a seguir o mesmo comportamento visual das tabelas de posts recentes e populares: hover suave nas linhas/cards, coluna de acoes explicita e grid de colunas alinhado aos blocos acima.
+
+A decisao e manter os dados existentes de `top_communities`, sem alterar o endpoint, e tratar a acao primaria de leitura publica separada da acao administrativa. **Abrir publico** usa a URL canonica `NEXT_PUBLIC_FRONTEND_URL + /community/{slug}` em nova aba; **Detalhes** usa a rota Admin `/comunidades/{slug}`. O icone de detalhes usa `BarChart3`, o mesmo sinal visual das acoes de estatisticas/analytics das tabelas anteriores, para manter consistencia operacional.
+
+No desktop, a tabela usa `colgroup` `48% / 8% / 8% / 36%`: a coluna **Comunidade** ocupa o espaco equivalente a titulo+autor das tabelas de posts, enquanto **Seguidores**, **Posts** e **Acoes** alinham com as colunas numericas e de acoes acima. No mobile, os botoes permanecem no card para preservar a abordagem mobile-first.
+
+Consequencia: o bloco final do dashboard fica consistente com os demais blocos operacionais, sem endpoint novo, contrato backend, schema Prisma, migration, pacote, mock, seed ou mudanca de regra de agregacao.

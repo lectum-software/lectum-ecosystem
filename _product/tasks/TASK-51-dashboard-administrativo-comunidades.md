@@ -724,3 +724,30 @@ Regras de UI obrigatórias:
 - `pnpm check`
 - Smoke HTTP local: `GET http://localhost:3002/comunidades`, `GET http://localhost:3002/comunidades/autocuidado-em-pratica/conteudo/post/cmrmg709v000yt0uh8x55eqae` e `GET http://localhost:3000/community/autocuidado-em-pratica/post/cmrmg709v000yt0uh8x55eqae` retornaram 200.
 - Browser local validado no Chrome em `http://localhost:3002/comunidades`: os blocos de posts exibiram botoes de publico e analytics na coluna de acoes.
+
+## Correcao complementar: hover e acoes em principais comunidades (2026-07-18)
+
+- Pedido do usuario: em **Principais comunidades**, aplicar hover nas linhas como nas tabelas de posts recentes/populares, adicionar acao de detalhes e alinhar as colunas ao grid visual das tabelas acima.
+- Frontend Admin: os cards mobile e as linhas desktop de **Principais comunidades** agora usam hover com borda/fundo suave, mantendo tokens do app Admin e abordagem mobile-first.
+- A coluna **Acoes** passou a exibir dois botoes compactos: **Abrir publico** (`/community/[slug]` no site publico) e **Detalhes** (`/comunidades/[slug]` no Admin).
+- O icone de **Detalhes** usa o mesmo `BarChart3` das acoes analiticas/estatisticas das tabelas anteriores, conforme ajuste visual solicitado.
+- A tabela desktop de **Principais comunidades** passou a usar `colgroup` `48% / 8% / 8% / 36%`, alinhando **Seguidores**, **Posts** e **Acoes** com as colunas numericas e de acoes dos blocos acima.
+- Nao houve alteracao de backend, endpoint, contrato, `backend/prisma/schema.prisma`, migrations, packages, seed, mock ou dado fake permanente.
+- Builder/Quick Copy `vcp://quickcopy/vcp-24aaa2941d814e5b90572bc93ae50e2a` nao esta exposto como ferramenta callable neste ambiente; referencias usadas: captura enviada pelo usuario, `_product/proto/admin/Comunidades/Comunidades - Dashboard.png` e padroes Admin existentes.
+- ADR atualizado: `adrs/0231-admin-comunidades-dashboard-agregacoes.md`.
+
+### Criterios deste ajuste
+
+- [x] **Principais comunidades** aplica hover em cards mobile e linhas desktop.
+- [x] A coluna **Acoes** exibe botao para abrir a comunidade publica real em nova aba.
+- [x] A coluna **Acoes** exibe botao para abrir os detalhes administrativos da comunidade.
+- [x] O botao de detalhes usa o icone `BarChart3`, igual ao icone de estatisticas/analytics das tabelas anteriores.
+- [x] As colunas desktop de **Principais comunidades** ficam alinhadas ao grid das tabelas de posts acima.
+- [x] Nenhum mock, dado fake permanente, endpoint simulado, package novo, schema Prisma ou migration foi usado.
+
+### Validacao deste ajuste
+
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check`
+- Smoke HTTP local: `GET http://localhost:3002/comunidades` retornou 200.
