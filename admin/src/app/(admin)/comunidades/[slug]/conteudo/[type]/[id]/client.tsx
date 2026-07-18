@@ -20,6 +20,7 @@ import {
   Video,
 } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 import { type FocusEventHandler, type SVGProps, useMemo, useRef, useState } from "react";
 import { FormProvider, useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -48,6 +49,7 @@ const dateTimeFormatter = new Intl.DateTimeFormat("pt-BR", {
   timeStyle: "short",
 });
 const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+const publicFrontendUrl = process.env.NEXT_PUBLIC_FRONTEND_URL || "http://localhost:3000";
 const publicMediaPathPrefixes = ["/public/files/", "/community/icons/"] as const;
 const cardClass =
   "min-w-0 max-w-full rounded-card border border-border bg-surface/95 shadow-admin-soft";
@@ -222,6 +224,12 @@ const isAdminPublicMediaUrl = (src?: string | null) => {
       (prefix) => resolved.startsWith(prefix) || resolved.includes(prefix),
     );
   }
+};
+
+const toPublicHref = (path: string) => {
+  if (/^https?:\/\//.test(path)) return path;
+
+  return `${publicFrontendUrl.replace(/\/$/, "")}${path}`;
 };
 
 const initials = (value: string) =>
@@ -462,7 +470,7 @@ const ContentVideoPreview = ({ label, src }: { label: string; src: string }) => 
   };
 
   return (
-    <div className="relative mx-auto aspect-[9/16] w-full max-w-[320px] overflow-hidden rounded-[24px] border border-border bg-black">
+    <div className="relative mx-auto aspect-[9/16] w-full max-w-[220px] overflow-hidden rounded-[20px] border border-border bg-black xl:ml-0 xl:mr-auto">
       {/* biome-ignore lint/a11y/useMediaCaption: o backend ainda não expõe arquivo de legenda para vídeos de conteúdo da comunidade. */}
       <video
         aria-label={label}
@@ -481,11 +489,11 @@ const ContentVideoPreview = ({ label, src }: { label: string; src: string }) => 
       {!isPlaying ? (
         <button
           aria-label="Reproduzir vídeo do conteúdo"
-          className="absolute left-1/2 top-1/2 inline-flex h-12 w-12 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-foreground shadow-sm transition hover:bg-white"
+          className="absolute left-1/2 top-1/2 inline-flex h-10 w-10 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-foreground shadow-sm transition hover:bg-white"
           onClick={togglePlayback}
           type="button"
         >
-          <Play aria-hidden className="h-5 w-5 fill-current" />
+          <Play aria-hidden className="h-4 w-4 fill-current" />
         </button>
       ) : null}
     </div>
@@ -502,7 +510,7 @@ const ContentMediaPreview = ({ detail }: { detail: AdminCommunityContentAnalytic
 
   if (imageSrc) {
     return (
-      <div className="relative h-72 w-full overflow-hidden rounded-[24px] border border-border bg-surface-muted sm:h-96">
+      <div className="relative h-56 w-full overflow-hidden rounded-[20px] border border-border bg-surface-muted sm:h-64">
         <Image
           alt={`Mídia de ${contentTitle(detail)}`}
           className="object-contain"
@@ -525,45 +533,68 @@ const ContentMediaPreview = ({ detail }: { detail: AdminCommunityContentAnalytic
   );
 };
 
-const PreviewSection = ({ detail }: { detail: AdminCommunityContentAnalyticsDetail }) => (
-  <section
-    className={cn(
-      cardClass,
-      "grid min-w-0 max-w-full gap-5 p-5 xl:grid-cols-[minmax(0,1fr)_minmax(0,320px)]",
-    )}
-  >
-    <div className="min-w-0">
-      <div className="flex flex-wrap items-center gap-2 text-xs font-black text-muted">
-        <FileText aria-hidden className="h-4 w-4" />
-        <span>{detail.content.type === "post" ? "Post" : "Resposta/comentário"}</span>
-        <span aria-hidden>·</span>
-        <span>{detail.community.name}</span>
-      </div>
-      <div className="mt-4">
-        <AuthorIdentity author={detail.author} />
-      </div>
-      {detail.content.origin_preview ? (
-        <div className="mt-4 rounded-2xl border border-border bg-surface-muted p-4">
-          <p className="text-xs font-black uppercase tracking-[0.18em] text-muted">
-            {detail.content.origin_preview.label}
-          </p>
-          <p className="mt-2 text-sm font-black text-foreground [overflow-wrap:anywhere]">
-            {detail.content.origin_preview.title || "Sem título"}
-          </p>
-          <p className="mt-1 line-clamp-3 text-sm leading-6 text-muted [overflow-wrap:anywhere]">
-            {detail.content.origin_preview.excerpt || "Sem trecho disponível."}
-          </p>
-        </div>
+const PreviewSection = ({ detail }: { detail: AdminCommunityContentAnalyticsDetail }) => {
+  const publicHref = detail.content.public_url ? toPublicHref(detail.content.public_url) : null;
+
+  return (
+    <section className={cn(cardClass, "relative min-w-0 max-w-full p-5")}>
+      {publicHref ? (
+        <Link
+          aria-label="Visualizar post no site público"
+          className="absolute right-5 top-5 inline-flex h-10 w-10 items-center justify-center rounded-full border border-border bg-surface text-primary shadow-control transition hover:border-primary hover:bg-primary-soft"
+          href={publicHref}
+          rel="noreferrer"
+          target="_blank"
+          title="Visualizar post no site público"
+        >
+          <Eye aria-hidden className="h-5 w-5" />
+        </Link>
       ) : null}
-      <div className="mt-5 rounded-2xl bg-surface-muted p-4">
-        <p className="whitespace-pre-line text-sm leading-6 text-foreground [overflow-wrap:anywhere]">
-          {detail.content.body || detail.content.excerpt || "Sem texto disponível."}
-        </p>
+      <div className="min-w-0">
+        <div className="flex flex-wrap items-center gap-2 pr-12 text-xs font-black text-muted">
+          <FileText aria-hidden className="h-4 w-4" />
+          <span>{detail.content.type === "post" ? "Post" : "Resposta/comentário"}</span>
+          <span aria-hidden>·</span>
+          <span>{detail.community.name}</span>
+        </div>
+        <div className="mt-4">
+          <AuthorIdentity author={detail.author} />
+        </div>
+        <h2 className="mt-5 min-w-0 text-xl font-black leading-tight text-foreground [overflow-wrap:anywhere]">
+          {contentTitle(detail)}
+        </h2>
+        <div className="mt-4 grid min-w-0 gap-5 xl:grid-cols-[minmax(0,240px)_minmax(0,1fr)] xl:items-start">
+          <div className="min-w-0 xl:justify-self-start">
+            <ContentMediaPreview detail={detail} />
+          </div>
+          <div className="min-w-0">
+            {detail.content.origin_preview ? (
+              <div className="rounded-2xl border border-border bg-surface-muted p-4">
+                <p className="text-xs font-black uppercase tracking-[0.18em] text-muted">
+                  {detail.content.origin_preview.label}
+                </p>
+                <p className="mt-2 text-sm font-black text-foreground [overflow-wrap:anywhere]">
+                  {detail.content.origin_preview.title || "Sem título"}
+                </p>
+                <p className="mt-1 line-clamp-3 text-sm leading-6 text-muted [overflow-wrap:anywhere]">
+                  {detail.content.origin_preview.excerpt || "Sem trecho disponível."}
+                </p>
+              </div>
+            ) : null}
+            <p
+              className={cn(
+                "whitespace-pre-line text-sm leading-6 text-foreground [overflow-wrap:anywhere]",
+                detail.content.origin_preview && "mt-5",
+              )}
+            >
+              {detail.content.body || detail.content.excerpt || "Sem texto disponível."}
+            </p>
+          </div>
+        </div>
       </div>
-    </div>
-    <ContentMediaPreview detail={detail} />
-  </section>
-);
+    </section>
+  );
+};
 
 const StatCards = ({ detail }: { detail: AdminCommunityContentAnalyticsDetail }) => (
   <section aria-labelledby="content-detail-stats-title">
