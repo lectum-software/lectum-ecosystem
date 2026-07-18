@@ -7,7 +7,6 @@ import {
   ArrowUp,
   Bookmark,
   CheckCircle2,
-  ChevronDown,
   Clock3,
   Eye,
   FileText,
@@ -23,7 +22,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { type FocusEventHandler, type SVGProps, useMemo, useRef, useState } from "react";
+import { type SVGProps, useRef, useState } from "react";
 import { FormProvider, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -35,10 +34,8 @@ import { resolveApiError } from "@/api/handle";
 import type {
   AdminCommunityContentAnalyticsDetail,
   AdminCommunityContentAuthor,
-  AdminCommunityContentDetailQuery,
 } from "@/api/req/communities";
 import { InputController, TextareaController } from "@/components/controllers";
-import { useDateRangeCommitOnBlur } from "@/hooks/use-date-range-commit-on-blur";
 import { cn } from "@/lib/utils";
 
 const numberFormatter = new Intl.NumberFormat("pt-BR");
@@ -57,53 +54,7 @@ const cardClass =
   "min-w-0 max-w-full rounded-card border border-border bg-surface/95 shadow-admin-soft";
 
 type ContentDetailTargetType = "comment" | "post" | "reply";
-type ContentDetailPeriodValue = NonNullable<AdminCommunityContentDetailQuery["period"]>;
-type ContentDetailPeriodPreset = Exclude<ContentDetailPeriodValue, "custom">;
-type ContentDetailDateRange = Required<Pick<AdminCommunityContentDetailQuery, "from" | "to">>;
-
-const CONTENT_DETAIL_PERIOD_OPTIONS = [
-  { id: "today", label: "Hoje" },
-  { id: "week", label: "Esta semana" },
-  { id: "month", label: "Este mês" },
-  { id: "year", label: "Este ano" },
-  { id: "all", label: "Todo o período" },
-] as const satisfies ReadonlyArray<{
-  id: ContentDetailPeriodPreset;
-  label: string;
-}>;
-
-const pad = (value: number) => String(value).padStart(2, "0");
-const toInputDate = (date: Date) =>
-  `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
-const startOfCurrentWeek = () => {
-  const date = new Date();
-  const day = date.getDay();
-  const diff = day === 0 ? -6 : 1 - day;
-  date.setDate(date.getDate() + diff);
-
-  return date;
-};
-const startOfCurrentMonth = () => new Date(new Date().getFullYear(), new Date().getMonth(), 1);
-const startOfCurrentYear = () => new Date(new Date().getFullYear(), 0, 1);
-const getContentDetailRangeForPeriod = (
-  period: ContentDetailPeriodPreset,
-): ContentDetailDateRange => {
-  const today = toInputDate(new Date());
-
-  if (period === "today") return { from: today, to: today };
-  if (period === "all") return { from: "", to: today };
-  if (period === "month") return { from: toInputDate(startOfCurrentMonth()), to: today };
-  if (period === "year") return { from: toInputDate(startOfCurrentYear()), to: today };
-
-  return { from: toInputDate(startOfCurrentWeek()), to: today };
-};
-const isValidCustomDateRange = (range: ContentDetailDateRange) =>
-  Boolean(range.from && range.to && range.from <= range.to);
-const buildContentDetailPeriodQuery = (
-  period: ContentDetailPeriodValue,
-  range: ContentDetailDateRange,
-): AdminCommunityContentDetailQuery =>
-  period === "custom" ? { from: range.from, period, to: range.to } : { period };
+const CONTENT_DETAIL_QUERY = { period: "all" } as const;
 
 const removalFormSchema = z.object({
   confirmation: z
@@ -429,96 +380,15 @@ const AuthorIdentity = ({
   );
 };
 
-const HeaderSection = ({
-  detail,
-  onDateChange,
-  onDateControlsBlur,
-  onPeriodChange,
-  period,
-  range,
-  rangeError,
-}: {
-  detail: AdminCommunityContentAnalyticsDetail;
-  onDateChange: (field: "from" | "to", value: string) => void;
-  onDateControlsBlur: FocusEventHandler<HTMLDivElement>;
-  onPeriodChange: (period: ContentDetailPeriodPreset) => void;
-  period: ContentDetailPeriodValue;
-  range: ContentDetailDateRange;
-  rangeError: string | null;
-}) => (
+const HeaderSection = ({ detail }: { detail: AdminCommunityContentAnalyticsDetail }) => (
   <section className={cn(cardClass, "p-5")}>
-    <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
-      <div className="min-w-0">
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="rounded-full bg-primary-soft px-3 py-1 text-xs font-black text-primary">
-            {detail.content.content_kind_label}
-          </span>
-          <span className="max-w-full rounded-full bg-surface-muted px-3 py-1 text-xs font-black text-muted [overflow-wrap:anywhere]">
-            {detail.community.name}
-          </span>
-        </div>
-        <h1 className="mt-3 max-w-4xl text-2xl font-black leading-tight tracking-[-0.03em] text-foreground sm:text-3xl">
-          Detalhes do vídeo
-        </h1>
-        <p className="mt-2 text-sm font-bold text-muted">
-          Publicado em {formatDateTime(detail.content.created_at)}
-        </p>
-      </div>
-      <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-end">
-        <label className="grid gap-1 text-xs font-black text-muted" htmlFor="content-detail-period">
-          Período
-          <span className="relative">
-            <select
-              className="h-11 min-w-[170px] appearance-none rounded-control border border-border bg-surface py-0 pl-3 pr-11 text-sm font-semibold text-foreground shadow-control outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
-              id="content-detail-period"
-              onChange={(event) => onPeriodChange(event.target.value as ContentDetailPeriodPreset)}
-              value={period}
-            >
-              {period === "custom" ? (
-                <option disabled hidden value="custom">
-                  Personalizado
-                </option>
-              ) : null}
-              {CONTENT_DETAIL_PERIOD_OPTIONS.map((option) => (
-                <option key={option.id} value={option.id}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-            <ChevronDown
-              aria-hidden
-              className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground"
-            />
-          </span>
-        </label>
-        <div className="grid gap-3 sm:grid-cols-2" onBlur={onDateControlsBlur}>
-          <label className="text-xs font-black text-muted" htmlFor="content-detail-filter-from">
-            De
-            <input
-              className="mt-1 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground shadow-control focus:border-primary"
-              id="content-detail-filter-from"
-              max={range.to || undefined}
-              onChange={(event) => onDateChange("from", event.target.value)}
-              type="date"
-              value={range.from}
-            />
-          </label>
-          <label className="text-xs font-black text-muted" htmlFor="content-detail-filter-to">
-            Até
-            <input
-              className="mt-1 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground shadow-control focus:border-primary"
-              id="content-detail-filter-to"
-              min={range.from || undefined}
-              onChange={(event) => onDateChange("to", event.target.value)}
-              type="date"
-              value={range.to}
-            />
-          </label>
-        </div>
-        {period === "custom" && rangeError ? (
-          <p className="text-xs font-bold text-danger sm:max-w-48">{rangeError}</p>
-        ) : null}
-      </div>
+    <div className="min-w-0">
+      <h1 className="max-w-4xl text-2xl font-black leading-tight tracking-[-0.03em] text-foreground sm:text-3xl">
+        Detalhes do conteúdo
+      </h1>
+      <p className="mt-2 text-sm font-bold text-muted">
+        Publicado em {formatDateTime(detail.content.created_at)}
+      </p>
     </div>
   </section>
 );
@@ -1299,38 +1169,13 @@ export const AdminCommunityContentDetailClient = ({
   slug: string;
 }) => {
   const normalizedType = normalizeTargetType(contentType);
-  const [selectedPeriod, setSelectedPeriod] = useState<ContentDetailPeriodValue>("all");
-  const {
-    appliedRange,
-    applyRange,
-    draftRange,
-    handleDateChange: handleDraftDateChange,
-    handleDateControlsBlur,
-    rangeError,
-  } = useDateRangeCommitOnBlur<ContentDetailDateRange>({
-    initialRange: () => getContentDetailRangeForPeriod("all"),
-    isValidRange: (range) => selectedPeriod !== "custom" || isValidCustomDateRange(range),
-  });
-  const validRange = selectedPeriod !== "custom" || isValidCustomDateRange(appliedRange);
-  const queryInput = useMemo<AdminCommunityContentDetailQuery>(
-    () => buildContentDetailPeriodQuery(selectedPeriod, appliedRange),
-    [appliedRange, selectedPeriod],
-  );
-  const handlePeriodChange = (nextPeriod: ContentDetailPeriodPreset) => {
-    setSelectedPeriod(nextPeriod);
-    applyRange(getContentDetailRangeForPeriod(nextPeriod));
-  };
-  const handleDateChange = (field: "from" | "to", value: string) => {
-    setSelectedPeriod("custom");
-    handleDraftDateChange(field, value);
-  };
   const detailQuery = useAdminCommunityContentDetail(
     slug,
     normalizedType ?? "post",
     contentId,
-    queryInput,
+    CONTENT_DETAIL_QUERY,
     {
-      enabled: Boolean(normalizedType && validRange),
+      enabled: Boolean(normalizedType),
     },
   );
   const detail = detailQuery.data;
@@ -1368,15 +1213,7 @@ export const AdminCommunityContentDetailClient = ({
 
       {detail ? (
         <>
-          <HeaderSection
-            detail={detail}
-            onDateChange={handleDateChange}
-            onDateControlsBlur={handleDateControlsBlur}
-            onPeriodChange={handlePeriodChange}
-            period={selectedPeriod}
-            range={draftRange}
-            rangeError={rangeError}
-          />
+          <HeaderSection detail={detail} />
           <PreviewSection detail={detail} />
           <VideoAnalyticsSection detail={detail} />
           <ModerationSection detail={detail} />
