@@ -26,6 +26,7 @@ import { resolveApiError } from "@/api/handle";
 import type {
   AdminCommunitiesDashboard,
   CommunitiesDashboardGlobalStatistics,
+  CommunitiesDashboardPopularPost,
   CommunitiesDashboardQuery,
   CommunitiesDashboardRecentPost,
   CommunitiesDashboardStatisticsDailyPoint,
@@ -493,6 +494,7 @@ const hasPeriodRecords = (summary: AdminCommunitiesDashboard) => {
     totalDashboardStatisticValue(summary.global_statistics.current) > 0 ||
     summary.patient_posts_breakdown.total > 0 ||
     summary.recent_posts.total > 0 ||
+    summary.popular_posts.total > 0 ||
     summary.top_communities.items.length > 0
   );
 };
@@ -1164,6 +1166,142 @@ const RecentPostsTable = ({
   </CardShell>
 );
 
+const PopularPostsTable = ({
+  periodLabel,
+  posts,
+}: {
+  periodLabel: string;
+  posts: CommunitiesDashboardPopularPost[];
+}) => (
+  <CardShell className="p-5">
+    <div className="flex items-center justify-between gap-3">
+      <div>
+        <h2 className="text-lg font-black text-foreground">Posts mais populares</h2>
+        <BlockPeriodLabel>{periodLabel}</BlockPeriodLabel>
+      </div>
+      <span className="text-xs font-black text-primary">Ver todas</span>
+    </div>
+
+    {posts.length === 0 ? (
+      <p className="mt-5 rounded-2xl bg-surface-muted p-4 text-sm text-muted">
+        Nenhum post popular real encontrado no período.
+      </p>
+    ) : (
+      <>
+        <div className="mt-5 grid gap-3 md:hidden">
+          {posts.map((post) => (
+            <article
+              className="rounded-2xl border border-border bg-surface-muted p-4"
+              key={post.id}
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="truncate font-black text-foreground">{post.title}</p>
+                  <p className="mt-1 text-xs text-muted">
+                    {post.community_name} · {formatDateTime(post.created_at)}
+                  </p>
+                </div>
+                <Link
+                  aria-label={`Abrir comunidade ${post.community_name}`}
+                  className="grid h-9 w-9 shrink-0 place-items-center rounded-xl border border-border bg-surface text-primary transition hover:border-primary"
+                  href={`/comunidades/${post.community_slug}`}
+                >
+                  <Eye aria-hidden className="h-4 w-4" />
+                </Link>
+              </div>
+              <div className="mt-3 grid gap-2 text-xs text-muted">
+                <p>
+                  <strong className="text-foreground">Autor:</strong> {post.author_name} ·{" "}
+                  <span className="capitalize">{post.author_role}</span>
+                </p>
+                <div className="grid grid-cols-3 gap-2">
+                  <p className="rounded-xl bg-surface p-3">
+                    <span className="block">Upvotes</span>
+                    <strong className="text-sm text-foreground">
+                      {numberFormatter.format(post.upvotes_count)}
+                    </strong>
+                  </p>
+                  <p className="rounded-xl bg-surface p-3">
+                    <span className="block">Comentários</span>
+                    <strong className="text-sm text-foreground">
+                      {numberFormatter.format(post.comments_count)}
+                    </strong>
+                  </p>
+                  <p className="rounded-xl bg-surface p-3">
+                    <span className="block">Salvos</span>
+                    <strong className="text-sm text-foreground">
+                      {numberFormatter.format(post.saves_count)}
+                    </strong>
+                  </p>
+                </div>
+              </div>
+            </article>
+          ))}
+        </div>
+        <div className="mt-5 hidden min-w-0 overflow-hidden md:block">
+          <table className="w-full table-fixed border-separate border-spacing-0 text-left text-sm">
+            <thead className="text-xs text-muted">
+              <tr>
+                <th className="w-[34%] border-b border-border py-3 pr-3 font-black">Título</th>
+                <th className="w-[22%] border-b border-border px-3 py-3 font-black">Autor</th>
+                <th className="w-[12%] border-b border-border px-3 py-3 font-black">Upvotes</th>
+                <th className="w-[14%] border-b border-border px-3 py-3 font-black">Comentários</th>
+                <th className="w-[10%] border-b border-border px-3 py-3 font-black">Salvos</th>
+                <th className="w-[8%] border-b border-border py-3 pl-3 text-right font-black">
+                  Ações
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {posts.map((post) => (
+                <tr key={post.id}>
+                  <td className="min-w-0 border-b border-border py-4 pr-3 align-top">
+                    <p className="truncate font-black text-foreground">{post.title}</p>
+                    <p className="mt-1 truncate text-xs text-muted">
+                      {post.community_name} · {formatDateTime(post.created_at)}
+                    </p>
+                  </td>
+                  <td className="min-w-0 border-b border-border px-3 py-4 align-top">
+                    <p className="truncate font-bold text-foreground">{post.author_name}</p>
+                    <p className="truncate text-xs capitalize text-muted">{post.author_role}</p>
+                  </td>
+                  <td className="border-b border-border px-3 py-4 align-top">
+                    <span className="inline-flex items-center gap-2 font-black text-foreground">
+                      <ArrowUp aria-hidden className="h-4 w-4 text-primary" />
+                      {numberFormatter.format(post.upvotes_count)}
+                    </span>
+                  </td>
+                  <td className="border-b border-border px-3 py-4 align-top">
+                    <span className="inline-flex items-center gap-2 font-black text-foreground">
+                      <MessageCircle aria-hidden className="h-4 w-4 text-primary" />
+                      {numberFormatter.format(post.comments_count)}
+                    </span>
+                  </td>
+                  <td className="border-b border-border px-3 py-4 align-top">
+                    <span className="inline-flex items-center gap-2 font-black text-foreground">
+                      <Bookmark aria-hidden className="h-4 w-4 text-primary" />
+                      {numberFormatter.format(post.saves_count)}
+                    </span>
+                  </td>
+                  <td className="border-b border-border py-4 pl-3 text-right align-top">
+                    <Link
+                      aria-label={`Abrir comunidade ${post.community_name}`}
+                      className="inline-grid h-9 w-9 place-items-center rounded-xl border border-border text-primary transition hover:border-primary"
+                      href={`/comunidades/${post.community_slug}`}
+                    >
+                      <Eye aria-hidden className="h-4 w-4" />
+                    </Link>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </>
+    )}
+  </CardShell>
+);
+
 const TopCommunitiesTable = ({
   communities,
   periodLabel,
@@ -1373,6 +1511,7 @@ const DashboardContent = ({
 
       <div className="min-w-0 space-y-5">
         <RecentPostsTable periodLabel={periodLabel} posts={summary.recent_posts.items} />
+        <PopularPostsTable periodLabel={periodLabel} posts={summary.popular_posts.items} />
         <TopCommunitiesTable
           communities={summary.top_communities.items}
           periodLabel={periodLabel}

@@ -18,8 +18,10 @@ export type CommunityPostRecord = {
   createdAt: Date;
   id: string;
   replies_count: number;
+  saves_count: number;
   status: string;
   title: string;
+  upvotes_count: number;
 };
 
 export type PostReplyRecord = {

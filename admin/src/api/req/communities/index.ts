@@ -91,6 +91,12 @@ export type CommunitiesDashboardRecentPost = {
   title: string;
 };
 
+export type CommunitiesDashboardPopularPost = CommunitiesDashboardRecentPost & {
+  engagement_score: number;
+  saves_count: number;
+  upvotes_count: number;
+};
+
 export type CommunitiesDashboardTopCommunity = {
   activity_count: number;
   id: string;
@@ -246,6 +252,11 @@ export type AdminCommunitiesDashboard = {
   recent_posts: {
     items: CommunitiesDashboardRecentPost[];
     source: "community_post";
+    total: number;
+  };
+  popular_posts: {
+    items: CommunitiesDashboardPopularPost[];
+    source: "community_post+post_reply+post_vote+post_save";
     total: number;
   };
   top_communities: {

@@ -186,8 +186,10 @@ export class AdminCommunitiesDashboardRepository implements IAdminCommunitiesDas
         createdAt: true,
         id: true,
         replies_count: true,
+        saves_count: true,
         status: true,
         title: true,
+        upvotes_count: true,
         author: {
           select: {
             id: true,

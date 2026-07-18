@@ -583,3 +583,30 @@ Regras de UI obrigatórias:
 - `pnpm --dir admin build`
 - `pnpm check`
 - Smoke local `GET http://localhost:3002/comunidades` retornou 200.
+
+## Correcao complementar: posts mais populares no dashboard geral (2026-07-18)
+
+- Pedido do usuario: abaixo de **Postagens mais recentes**, adicionar um bloco de **Posts mais populares** no dashboard `/comunidades`.
+- O endpoint `GET /api/admin/private/communities/dashboard` agora expoe `popular_posts` com dados reais de `community_post` e contadores persistidos de interacao (`upvotes_count`, `replies_count`/comentarios e `saves_count`), sem mocks ou endpoint paralelo.
+- A ordenacao do bloco segue o mesmo criterio usado no detalhe da comunidade: mais upvotes, depois comentarios, depois salvamentos e, em empate, posts mais recentes.
+- A UI renderiza o novo bloco imediatamente abaixo de **Postagens mais recentes** e antes de **Principais comunidades**, com a mesma linha de periodo abaixo do titulo e layout mobile-first em cards no mobile e tabela no desktop.
+- Nao houve package novo, schema Prisma, migration, seed ou dado fake permanente. O ajuste apenas amplia o contrato do dashboard e a apresentacao Admin.
+- Builder/Quick Copy `vcp://quickcopy/vcp-24aaa2941d814e5b90572bc93ae50e2a` nao esta exposto como ferramenta callable neste ambiente; referencias usadas: captura enviada pelo usuario, padrao existente de `/comunidades` e `_product/proto/admin/Comunidades/Comunidades - Dashboard.png`.
+- ADR atualizado: `adrs/0231-admin-comunidades-dashboard-agregacoes.md`.
+
+### Criterios deste ajuste
+
+- [x] O dashboard `/comunidades` renderiza o bloco **Posts mais populares** logo abaixo de **Postagens mais recentes**.
+- [x] O bloco usa somente dados reais do endpoint admin, sem mock, seed ou dado fake permanente.
+- [x] A ordenacao considera upvotes, comentarios, salvamentos e recencia como desempate.
+- [x] O bloco exibe o periodo abaixo do titulo no padrao `Periodo: {preset} · {data inicial} a {data final}`.
+- [x] Nenhum package novo, schema Prisma ou migration foi usado.
+
+### Validacao deste ajuste
+
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check`
+- Smoke local `GET http://localhost:3002/comunidades` retornou 200.

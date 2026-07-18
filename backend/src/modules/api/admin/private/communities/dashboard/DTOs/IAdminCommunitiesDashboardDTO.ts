@@ -213,6 +213,12 @@ export type AdminCommunitiesDashboardRecentPost = {
   title: string;
 };
 
+export type AdminCommunitiesDashboardPopularPost = AdminCommunitiesDashboardRecentPost & {
+  engagement_score: number;
+  saves_count: number;
+  upvotes_count: number;
+};
+
 export type AdminCommunitiesDashboardTopCommunity = {
   activity_count: number;
   id: string;
@@ -259,6 +265,11 @@ export type AdminCommunitiesDashboardSummary = {
   recent_posts: {
     items: AdminCommunitiesDashboardRecentPost[];
     source: "community_post";
+    total: number;
+  };
+  popular_posts: {
+    items: AdminCommunitiesDashboardPopularPost[];
+    source: "community_post+post_reply+post_vote+post_save";
     total: number;
   };
   top_communities: {

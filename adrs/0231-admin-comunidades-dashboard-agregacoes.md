@@ -114,3 +114,13 @@ O dashboard geral `/comunidades` passa a exibir o contexto de periodo imediatame
 A decisao e remover, nessa posicao, descricoes tecnicas ou auxiliares como fontes de dados e textos explicativos gerais. Para **Estatisticas de pessoas**, **Estatisticas de conteudo**, **Postagens mais recentes** e **Principais comunidades**, a linha imediatamente abaixo do titulo deve conter somente o periodo selecionado. O preset e resolvido no frontend a partir do seletor visivel, enquanto as datas continuam vindo do periodo real retornado por `GET /api/admin/private/communities/dashboard`.
 
 Consequencia: a leitura do filtro aplicado fica consistente com `/psicologos` e mais clara para o Admin, sem endpoint novo, alteracao de contrato, schema Prisma/migration, dependencia, mock, seed ou mudanca nas regras de agregacao.
+
+## Atualizacao 2026-07-18: posts mais populares na visao geral
+
+O dashboard geral `/comunidades` passa a ter um bloco **Posts mais populares** imediatamente abaixo de **Postagens mais recentes**.
+
+A decisao e ampliar o contrato do endpoint existente `GET /api/admin/private/communities/dashboard` com `popular_posts`, em vez de criar uma rota paralela ou derivar ranking apenas no frontend. O ranking usa os contadores reais ja persistidos em `community_post` (`upvotes_count`, `replies_count` e `saves_count`) e segue a mesma ordem do detalhe da comunidade: upvotes, comentarios, salvamentos e recencia como desempate. O item tambem expoe `engagement_score` como soma desses tres sinais para consumo analitico futuro, sem alterar schema ou recalcular por dados simulados.
+
+A UI mantem o bloco mobile-first, com cards no mobile e tabela no desktop, e exibe somente a linha de periodo abaixo do titulo, mantendo consistencia com os blocos ajustados anteriormente. A sequencia da pagina passa a ser: estatisticas globais, **Postagens mais recentes**, **Posts mais populares** e **Principais comunidades**.
+
+Consequencia: o Admin ganha uma leitura global de conteudo com maior interacao no periodo sem package novo, endpoint novo, schema Prisma/migration, mock, seed ou nova regra persistida. A fonte de verdade continua sendo a agregacao backend do dashboard.

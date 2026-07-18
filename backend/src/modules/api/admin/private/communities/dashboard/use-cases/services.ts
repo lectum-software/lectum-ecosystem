@@ -8,6 +8,7 @@ import type {
   AdminCommunitiesDashboardMetric,
   AdminCommunitiesDashboardModerationAlert,
   AdminCommunitiesDashboardPeriod,
+  AdminCommunitiesDashboardPopularPost,
   AdminCommunitiesDashboardPriorityAlert,
   AdminCommunitiesDashboardQuery,
   AdminCommunitiesDashboardRecentPost,
@@ -891,6 +892,49 @@ const buildRecentPosts = (posts: CommunityPostRecord[]) => {
   };
 };
 
+const postEngagementScore = (post: CommunityPostRecord) =>
+  post.upvotes_count + post.replies_count + post.saves_count;
+
+const buildPopularPosts = (posts: CommunityPostRecord[]) => {
+  const items: AdminCommunitiesDashboardPopularPost[] = [...posts]
+    .sort((left, right) => {
+      if (right.upvotes_count !== left.upvotes_count) {
+        return right.upvotes_count - left.upvotes_count;
+      }
+      if (right.replies_count !== left.replies_count) {
+        return right.replies_count - left.replies_count;
+      }
+      if (right.saves_count !== left.saves_count) {
+        return right.saves_count - left.saves_count;
+      }
+
+      return right.createdAt.getTime() - left.createdAt.getTime();
+    })
+    .slice(0, 5)
+    .map((post) => ({
+      anonymous: post.anonymous,
+      author_name: publicAuthorName(post),
+      author_role: post.author.role,
+      comments_count: post.replies_count,
+      community_id: post.community.id,
+      community_name: post.community.name,
+      community_slug: post.community.slug,
+      created_at: post.createdAt,
+      discussion_status: post.replies_count > 0 ? "iniciada" : "nao_iniciada",
+      engagement_score: postEngagementScore(post),
+      id: post.id,
+      saves_count: post.saves_count,
+      title: post.title,
+      upvotes_count: post.upvotes_count,
+    }));
+
+  return {
+    items,
+    source: "community_post+post_reply+post_vote+post_save" as const,
+    total: posts.length,
+  };
+};
+
 const buildTopCommunities = (
   communities: CommunityRecord[],
   members: CommunityMemberRecord[],
@@ -1082,6 +1126,7 @@ export const buildCommunitiesDashboard = async (
       pendingModerationEventsTotal,
       urgentModerationEventsTotal,
     ),
+    popular_posts: buildPopularPosts(posts),
     recent_posts: buildRecentPosts(posts),
     top_communities: buildTopCommunities(
       communities,
