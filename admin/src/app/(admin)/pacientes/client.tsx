@@ -3,7 +3,7 @@
 import {
   Activity,
   AlertTriangle,
-  CalendarDays,
+  ChevronDown,
   Clock,
   Eye,
   Loader2,
@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { type FocusEventHandler, useMemo } from "react";
+import { type FocusEventHandler, useState } from "react";
 import { useAdminPatientsDashboard } from "@/api/callers/patients";
 import { resolveApiError } from "@/api/handle";
 import type {
@@ -32,13 +32,23 @@ import { useDateRangeCommitOnBlur } from "@/hooks/use-date-range-commit-on-blur"
 import { aggregateCalendarChartPoints, buildSmoothSvgPath } from "@/lib/chart-time-series";
 import { cn } from "@/lib/utils";
 
-const QUICK_RANGES = [7, 30, 90] as const;
 const CARD_ORDER = [
   "total_patients",
   "active_patients",
   "inactive_patients",
   "new_signups",
 ] as const;
+type PatientsDashboardPeriodPreset = "month" | "today" | "week";
+type PatientsDashboardPeriodValue = PatientsDashboardPeriodPreset | "custom";
+
+const PATIENTS_DASHBOARD_PERIOD_OPTIONS: {
+  id: PatientsDashboardPeriodPreset;
+  label: string;
+}[] = [
+  { id: "today", label: "Hoje" },
+  { id: "week", label: "Esta semana" },
+  { id: "month", label: "Este mês" },
+];
 const CHART_COLORS = [
   "var(--admin-primary)",
   "var(--admin-success)",
@@ -57,15 +67,31 @@ const dateFromInput = (value: string) => {
   return new Date(year, month - 1, day, 12, 0, 0, 0);
 };
 
-const getQuickRange = (days: number): PatientsDashboardQuery => {
-  const today = new Date();
-  const from = new Date(today);
-  from.setDate(today.getDate() - (days - 1));
+const startOfCurrentWeek = () => {
+  const date = new Date();
+  const day = date.getDay();
+  const diff = day === 0 ? -6 : 1 - day;
+  date.setDate(date.getDate() + diff);
 
-  return {
-    from: toInputDate(from),
-    to: toInputDate(today),
-  };
+  return date;
+};
+
+const startOfCurrentMonth = () => {
+  const date = new Date();
+  date.setDate(1);
+
+  return date;
+};
+
+const getDashboardRangeForPeriod = (
+  period: PatientsDashboardPeriodPreset,
+): PatientsDashboardQuery => {
+  const today = toInputDate(new Date());
+
+  if (period === "today") return { from: today, to: today };
+  if (period === "month") return { from: toInputDate(startOfCurrentMonth()), to: today };
+
+  return { from: toInputDate(startOfCurrentWeek()), to: today };
 };
 
 const formatDate = (value: string) =>
@@ -257,17 +283,19 @@ const EmptyState = ({ period }: { period: AdminPatientsDashboard["period"] }) =>
 );
 
 const PatientsHeader = ({
+  displayRange,
   onDateChange,
   onDateControlsBlur,
-  range,
+  onPeriodChange,
+  period,
   rangeError,
-  setRange,
 }: {
   onDateChange: (field: "from" | "to", value: string) => void;
   onDateControlsBlur: FocusEventHandler<HTMLDivElement>;
-  range: PatientsDashboardQuery;
+  onPeriodChange: (period: PatientsDashboardPeriodPreset) => void;
+  displayRange: PatientsDashboardQuery;
+  period: PatientsDashboardPeriodValue;
   rangeError: string | null;
-  setRange: (range: PatientsDashboardQuery) => void;
 }) => (
   <section className="rounded-card border border-border/70 bg-surface/90 p-5 shadow-admin-soft backdrop-blur md:p-6">
     <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
@@ -282,41 +310,59 @@ const PatientsHeader = ({
       </div>
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+        <label className="grid gap-1 text-xs font-semibold text-muted" htmlFor="patients-period">
+          Período
+          <span className="relative">
+            <select
+              className="h-11 min-w-[170px] appearance-none rounded-control border border-border bg-surface py-0 pl-3 pr-11 text-sm font-semibold text-foreground shadow-control outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+              id="patients-period"
+              onChange={(event) =>
+                onPeriodChange(event.target.value as PatientsDashboardPeriodPreset)
+              }
+              value={period}
+            >
+              {period === "custom" ? (
+                <option disabled hidden value="custom">
+                  Personalizado
+                </option>
+              ) : null}
+              {PATIENTS_DASHBOARD_PERIOD_OPTIONS.map((option) => (
+                <option key={option.id} value={option.id}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+            <ChevronDown
+              aria-hidden
+              className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground"
+            />
+          </span>
+        </label>
         <div className="grid gap-3 sm:grid-cols-2" onBlur={onDateControlsBlur}>
           <label className="text-xs font-semibold text-muted">
             De
             <input
               className="mt-1 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground shadow-control focus:border-primary"
-              max={range.to}
+              max={displayRange.to}
               onChange={(event) => onDateChange("from", event.target.value)}
               type="date"
-              value={range.from}
+              value={displayRange.from ?? ""}
             />
           </label>
           <label className="text-xs font-semibold text-muted">
             Até
             <input
               className="mt-1 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground shadow-control focus:border-primary"
-              min={range.from}
+              min={displayRange.from}
               onChange={(event) => onDateChange("to", event.target.value)}
               type="date"
-              value={range.to}
+              value={displayRange.to ?? ""}
             />
           </label>
         </div>
-        <div className="flex flex-wrap gap-2 sm:w-44">
-          {QUICK_RANGES.map((days) => (
-            <button
-              className="h-9 rounded-full border border-border bg-surface px-3 text-xs font-black text-muted transition hover:border-primary hover:text-primary"
-              key={days}
-              onClick={() => setRange(getQuickRange(days))}
-              type="button"
-            >
-              {days} dias
-            </button>
-          ))}
-        </div>
-        {rangeError ? <p className="max-w-md text-xs font-bold text-danger">{rangeError}</p> : null}
+        {period === "custom" && rangeError ? (
+          <p className="max-w-md text-xs font-bold text-danger">{rangeError}</p>
+        ) : null}
       </div>
     </div>
   </section>
@@ -909,6 +955,7 @@ const DashboardContent = ({ summary }: { summary: AdminPatientsDashboard }) => (
 );
 
 export const AdminPatientsClient = () => {
+  const [selectedPeriod, setSelectedPeriod] = useState<PatientsDashboardPeriodValue>("week");
   const {
     appliedRange,
     applyRange,
@@ -917,39 +964,39 @@ export const AdminPatientsClient = () => {
     handleDateControlsBlur,
     rangeError,
   } = useDateRangeCommitOnBlur<PatientsDashboardQuery>({
-    initialRange: () => getQuickRange(7),
+    initialRange: () => getDashboardRangeForPeriod("week"),
     isValidRange,
   });
   const validRange = isValidRange(appliedRange);
   const query = useAdminPatientsDashboard(appliedRange, { enabled: validRange });
   const queryError = query.error ? resolveApiError(query.error) : null;
-  const periodCopy = useMemo(() => {
-    if (!appliedRange.from || !appliedRange.to) return "Selecione um período válido";
-
-    return `${formatDate(appliedRange.from)} — ${formatDate(appliedRange.to)}`;
-  }, [appliedRange]);
+  const handlePeriodChange = (nextPeriod: PatientsDashboardPeriodPreset) => {
+    setSelectedPeriod(nextPeriod);
+    applyRange(getDashboardRangeForPeriod(nextPeriod));
+  };
+  const handleCustomDateChange = (field: "from" | "to", value: string) => {
+    setSelectedPeriod("custom");
+    handleDateChange(field, value);
+  };
 
   return (
     <div className="space-y-6">
       <PatientsHeader
-        onDateChange={handleDateChange}
+        displayRange={draftRange}
+        onDateChange={handleCustomDateChange}
         onDateControlsBlur={handleDateControlsBlur}
-        range={draftRange}
+        onPeriodChange={handlePeriodChange}
+        period={selectedPeriod}
         rangeError={rangeError}
-        setRange={applyRange}
       />
-
-      <div className="flex flex-wrap items-center gap-2 text-sm text-muted">
-        <CalendarDays aria-hidden className="h-4 w-4" />
-        <span className="font-bold">Período consultado:</span>
-        <span>{periodCopy}</span>
-        {query.data ? <span>({query.data.period.days} dias)</span> : null}
-      </div>
 
       {!validRange ? (
         <ErrorState
           message="A data inicial precisa ser menor ou igual à data final."
-          onRetry={() => applyRange(getQuickRange(7))}
+          onRetry={() => {
+            setSelectedPeriod("week");
+            applyRange(getDashboardRangeForPeriod("week"));
+          }}
         />
       ) : null}
 

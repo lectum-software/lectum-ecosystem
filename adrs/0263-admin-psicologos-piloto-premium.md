@@ -217,6 +217,27 @@ Validacao desta expansao:
 - Smoke HTTP local: `GET http://localhost:3002/pacientes` retornou 200.
 - Smoke HTTP local: `GET http://localhost:3002/pacientes/demo-patient-reviewer-01` retornou 200.
 
+## Ajuste pos-feedback 2026-07-18: seletor de periodo em Pacientes
+
+Por feedback direto no dashboard de Pacientes, os atalhos em botoes **7 dias**, **30 dias** e **90 dias** foram removidos dos headers de `/pacientes` e `/pacientes/:id`. O filtro passa a usar um seletor **Periodo** com a mesma linguagem visual do dashboard de Psicologos, mantendo os campos de data para intervalo personalizado.
+
+Decisoes:
+
+- Exibir presets suportados pelo contrato atual de Pacientes: **Hoje**, **Esta semana** e **Este mes**.
+- Nao adicionar **Este ano** nem **Todo o periodo** nesta iteracao, porque os endpoints de Pacientes ainda recebem apenas `from`/`to` e validam limite maximo de 90 dias; expor opcoes sem suporte real poderia gerar erro ou semantica falsa.
+- Ao editar manualmente qualquer data, o seletor passa para **Personalizado** e o commit do intervalo continua usando o hook existente `useDateRangeCommitOnBlur`.
+- Remover a linha solta **Periodo consultado:** abaixo dos headers, preservando o resumo de periodo retornado pelo backend dentro dos blocos de conteudo.
+- Nao alterar backend, contratos HTTP, schema Prisma, migrations, packages, seeds ou mocks.
+
+Validacao deste ajuste:
+
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/pacientes/client.tsx" "src/app/(admin)/pacientes/[id]/client.tsx"`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check`
+- Smoke HTTP local: `GET http://localhost:3002/pacientes` retornou 200.
+- Smoke HTTP local: `GET http://localhost:3002/pacientes/demo-patient-reviewer-01` retornou 200.
+
 ## Pendências
 
 - Validar a aceitação visual com o fundador antes de criar a task de replicação para as demais telas.
