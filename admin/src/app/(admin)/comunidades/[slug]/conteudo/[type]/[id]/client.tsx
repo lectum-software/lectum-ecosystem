@@ -18,7 +18,6 @@ import {
   Share2,
   Timer,
   Trash2,
-  Video,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -212,7 +211,7 @@ const videoAnalyticsCounters = (
     value: formatCount(detail.metrics.views_count),
   },
   {
-    icon: Video,
+    icon: Play,
     id: "plays",
     label: "Plays",
     caption: `${formatRatioPercent(video.metrics.plays_count, detail.metrics.views_count)} das visualizações`,
@@ -237,7 +236,7 @@ const videoAnalyticsCounters = (
   {
     icon: CheckCircle2,
     id: "completion_rate",
-    label: "Taxa que assistiu completo",
+    label: "Assistiu ao vídeo completo",
     value: formatPercent(video.metrics.completion_rate),
   },
   {
