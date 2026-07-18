@@ -8,7 +8,6 @@ import {
   ArrowUp,
   Bookmark,
   CalendarDays,
-  ChevronDown,
   ExternalLink,
   Eye,
   FileText,
@@ -16,7 +15,6 @@ import {
   Loader2,
   MessageCircle,
   Play,
-  RefreshCw,
   Share2,
   ShieldCheck,
   Trash2,
@@ -24,7 +22,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { type SVGProps, useMemo, useRef, useState } from "react";
+import { type SVGProps, useRef, useState } from "react";
 import { FormProvider, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -36,7 +34,6 @@ import { resolveApiError } from "@/api/handle";
 import type {
   AdminCommunityContentAnalyticsDetail,
   AdminCommunityContentAuthor,
-  AdminCommunityContentDetailQuery,
 } from "@/api/req/communities";
 import { InputController, TextareaController } from "@/components/controllers";
 import { cn } from "@/lib/utils";
@@ -56,19 +53,9 @@ const publicMediaPathPrefixes = ["/public/files/", "/community/icons/"] as const
 const cardClass =
   "min-w-0 max-w-full rounded-card border border-border bg-surface/95 shadow-admin-soft";
 
-type ContentDetailPeriodValue = NonNullable<AdminCommunityContentDetailQuery["period"]>;
 type ContentDetailTargetType = "comment" | "post" | "reply";
-type ContentDetailRange = Pick<AdminCommunityContentDetailQuery, "from" | "to">;
 type SeriesPoint = AdminCommunityContentAnalyticsDetail["series"][number];
-
-const contentDetailPeriodOptions = [
-  { id: "today", label: "Hoje" },
-  { id: "week", label: "Esta semana" },
-  { id: "month", label: "Este mês" },
-  { id: "year", label: "Este ano" },
-  { id: "all", label: "Todo o período" },
-  { id: "custom", label: "Personalizado" },
-] as const satisfies ReadonlyArray<{ id: ContentDetailPeriodValue; label: string }>;
+const allTimeContentDetailQuery = { period: "all" } as const;
 
 const removalFormSchema = z.object({
   confirmation: z
@@ -102,20 +89,6 @@ const formatDuration = (seconds: number | null) => {
   const remaining = String(seconds % 60).padStart(2, "0");
 
   return `${minutes}:${remaining}`;
-};
-
-const todayDateInput = () => new Date().toISOString().slice(0, 10);
-
-const defaultCustomRange = (): ContentDetailRange => {
-  const today = todayDateInput();
-
-  return { from: today, to: today };
-};
-
-const isValidCustomRange = (range: ContentDetailRange) => {
-  if (!range.from || !range.to) return false;
-
-  return range.from <= range.to;
 };
 
 const normalizeTargetType = (value: string): ContentDetailTargetType | null => {
@@ -352,77 +325,6 @@ const AuthorIdentity = ({
     </div>
   );
 };
-
-const PeriodFilters = ({
-  customRange,
-  disabled,
-  onCustomRangeChange,
-  onPeriodChange,
-  period,
-  rangeError,
-}: {
-  customRange: ContentDetailRange;
-  disabled: boolean;
-  onCustomRangeChange: (range: ContentDetailRange) => void;
-  onPeriodChange: (value: ContentDetailPeriodValue) => void;
-  period: ContentDetailPeriodValue;
-  rangeError: string | null;
-}) => (
-  <section className={cn(cardClass, "p-4 sm:p-5")} aria-labelledby="content-detail-period-title">
-    <div className="grid gap-3 lg:grid-cols-[1fr_0.7fr_0.7fr] lg:items-end">
-      <label className="block text-sm font-black text-muted" htmlFor="content-detail-period">
-        Período independente do detalhe
-        <span className="relative mt-2 block">
-          <select
-            className="h-11 w-full appearance-none rounded-control border border-border bg-surface px-3 pr-12 text-sm font-bold text-foreground disabled:opacity-70"
-            disabled={disabled}
-            id="content-detail-period"
-            onChange={(event) => onPeriodChange(event.target.value as ContentDetailPeriodValue)}
-            value={period}
-          >
-            {contentDetailPeriodOptions.map((option) => (
-              <option key={option.id} value={option.id}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-          <ChevronDown
-            aria-hidden
-            className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted"
-          />
-        </span>
-      </label>
-      <label className="block text-sm font-black text-muted" htmlFor="content-detail-from">
-        De
-        <input
-          className="mt-2 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground disabled:opacity-70"
-          disabled={disabled || period !== "custom"}
-          id="content-detail-from"
-          max={customRange.to}
-          onChange={(event) => onCustomRangeChange({ ...customRange, from: event.target.value })}
-          type="date"
-          value={customRange.from ?? ""}
-        />
-      </label>
-      <label className="block text-sm font-black text-muted" htmlFor="content-detail-to">
-        Até
-        <input
-          className="mt-2 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground disabled:opacity-70"
-          disabled={disabled || period !== "custom"}
-          id="content-detail-to"
-          min={customRange.from}
-          onChange={(event) => onCustomRangeChange({ ...customRange, to: event.target.value })}
-          type="date"
-          value={customRange.to ?? ""}
-        />
-      </label>
-    </div>
-    <p className="mt-3 text-xs font-bold text-muted" id="content-detail-period-title">
-      O filtro recalcula somente esta página e não altera os filtros da aba Conteúdo.
-    </p>
-    {rangeError ? <p className="mt-2 text-xs font-bold text-danger">{rangeError}</p> : null}
-  </section>
-);
 
 const HeaderSection = ({
   detail,
@@ -1161,27 +1063,13 @@ export const AdminCommunityContentDetailClient = ({
   slug: string;
 }) => {
   const normalizedType = normalizeTargetType(contentType);
-  const [period, setPeriod] = useState<ContentDetailPeriodValue>("month");
-  const [customRange, setCustomRange] = useState<ContentDetailRange>(() => defaultCustomRange());
-  const rangeError =
-    period === "custom" && !isValidCustomRange(customRange)
-      ? "Informe um período personalizado completo, com data inicial menor ou igual à final."
-      : null;
-  const queryInput = useMemo<AdminCommunityContentDetailQuery>(
-    () => ({
-      from: period === "custom" ? customRange.from : undefined,
-      period,
-      to: period === "custom" ? customRange.to : undefined,
-    }),
-    [customRange.from, customRange.to, period],
-  );
   const detailQuery = useAdminCommunityContentDetail(
     slug,
     normalizedType ?? "post",
     contentId,
-    queryInput,
+    allTimeContentDetailQuery,
     {
-      enabled: Boolean(normalizedType && !rangeError),
+      enabled: Boolean(normalizedType),
     },
   );
   const detail = detailQuery.data;
@@ -1200,37 +1088,6 @@ export const AdminCommunityContentDetailClient = ({
 
   return (
     <main className="mx-auto grid min-w-0 w-full max-w-7xl gap-5 overflow-x-hidden px-4 py-6 sm:px-6 lg:px-8">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <Link
-          className="inline-flex w-fit items-center gap-2 rounded-control border border-border bg-surface px-4 py-2 text-xs font-black text-foreground transition hover:border-primary hover:text-primary"
-          href={`/comunidades/${slug}?tab=conteudo`}
-        >
-          <ArrowLeft aria-hidden className="h-4 w-4" />
-          Voltar
-        </Link>
-        <button
-          className="inline-flex w-fit items-center gap-2 rounded-control border border-border bg-surface px-4 py-2 text-xs font-black text-foreground transition hover:border-primary hover:text-primary disabled:opacity-70"
-          disabled={detailQuery.isFetching}
-          onClick={() => void detailQuery.refetch()}
-          type="button"
-        >
-          <RefreshCw
-            aria-hidden
-            className={cn("h-4 w-4", detailQuery.isFetching && "animate-spin")}
-          />
-          Atualizar
-        </button>
-      </div>
-
-      <PeriodFilters
-        customRange={customRange}
-        disabled={detailQuery.isFetching}
-        onCustomRangeChange={setCustomRange}
-        onPeriodChange={setPeriod}
-        period={period}
-        rangeError={rangeError}
-      />
-
       {detailQuery.isLoading ? (
         <div className={cn(cardClass, "grid min-h-64 place-items-center p-8")}>
           <span className="inline-flex items-center gap-2 text-sm font-black text-muted">
