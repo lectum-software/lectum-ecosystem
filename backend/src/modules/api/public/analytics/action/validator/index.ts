@@ -8,6 +8,7 @@ const trackingIdSchema = z
   .max(128)
   .regex(/^[a-zA-Z0-9._:-]+$/);
 const actionTypeSchema = z.enum([
+  "psychologist_directory_filter_search",
   "psychologist_video_favorite",
   "psychologist_video_profile_access",
   "psychologist_video_share",

@@ -782,6 +782,66 @@ const FILTER_FEATURE_OPTIONS: FilterFeatureOption[] = [
   },
 ];
 
+const DIRECTORY_FILTER_TRACKING_FIELDS = [
+  { name: "specialty", targetType: "psychologist_filter_specialty" },
+  { name: "service", targetType: "psychologist_filter_service" },
+  { name: "modality", targetType: "psychologist_filter_modality" },
+  { name: "approach", targetType: "psychologist_filter_approach" },
+  { name: "target_audience", targetType: "psychologist_filter_target_audience" },
+  { name: "state", targetType: "psychologist_filter_state" },
+  { name: "city", targetType: "psychologist_filter_city" },
+  { name: "gender", targetType: "psychologist_filter_gender" },
+  { name: "race_color", targetType: "psychologist_filter_race_color" },
+  { name: "religion", targetType: "psychologist_filter_religion" },
+  { name: "language", targetType: "psychologist_filter_language" },
+] as const satisfies ReadonlyArray<{
+  name: keyof PsychologistsFilterForm;
+  targetType: string;
+}>;
+
+const DIRECTORY_FILTER_FEATURE_TRACKING_FIELDS = [
+  "available_today",
+  "verified",
+  "more_experienced",
+  "discount_first_session",
+  "accepts_insurance",
+  "social_value",
+] as const satisfies ReadonlyArray<FilterFeatureKey>;
+
+const normalizeFilterTrackingTargetId = (value: unknown) => {
+  if (typeof value !== "string") return null;
+
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+
+  return trimmed.slice(0, 128);
+};
+
+const buildDirectoryFilterSearchTrackingItems = (values: PsychologistsFilterForm) => {
+  const items: Array<{ targetId: string; targetType: string }> = [];
+
+  for (const field of DIRECTORY_FILTER_TRACKING_FIELDS) {
+    const targetId = normalizeFilterTrackingTargetId(values[field.name]);
+    if (!targetId) continue;
+
+    items.push({
+      targetId,
+      targetType: field.targetType,
+    });
+  }
+
+  for (const feature of DIRECTORY_FILTER_FEATURE_TRACKING_FIELDS) {
+    if (!values[feature]) continue;
+
+    items.push({
+      targetId: feature,
+      targetType: "psychologist_filter_feature",
+    });
+  }
+
+  return items;
+};
+
 const FilterFeatureCard = ({
   checked,
   onToggle,
@@ -1175,7 +1235,7 @@ export const PsychologistsLogic = () => {
   const { favoritePsychologist, unfavoritePsychologist } = usePatient({
     enableProfile: false,
   });
-  const videoActionTracking = useImportantActionTracking();
+  const importantActionTracking = useImportantActionTracking();
 
   const deferredFilterModalSearchDraft = useDeferredValue(filterModalSearchDraft);
   const liveFilterValues = useMemo(
@@ -1317,7 +1377,7 @@ export const PsychologistsLogic = () => {
       const analyticsIdentity = getOrCreateAnalyticsIdentity();
       if (!analyticsIdentity) return;
 
-      void videoActionTracking
+      void importantActionTracking
         .mutateAsync({
           action_type: actionType,
           display_mode: getDisplayMode(),
@@ -1333,7 +1393,40 @@ export const PsychologistsLogic = () => {
           // Analytics first-party não deve bloquear navegação ou interação do vídeo.
         });
     },
-    [videoActionTracking],
+    [importantActionTracking],
+  );
+
+  const trackDirectoryFilterSearch = useCallback(
+    (values: PsychologistsFilterForm) => {
+      const trackingItems = buildDirectoryFilterSearchTrackingItems(values);
+      if (trackingItems.length === 0) return;
+
+      const analyticsIdentity = getOrCreateAnalyticsIdentity();
+      if (!analyticsIdentity) return;
+
+      const basePayload = {
+        action_type: "psychologist_directory_filter_search" as const,
+        display_mode: getDisplayMode(),
+        occurred_at: new Date().toISOString(),
+        page_kind: "psychologists",
+        path: currentAnalyticsPath(),
+        session_id: analyticsIdentity.sessionId,
+        visitor_id: analyticsIdentity.visitorId,
+      };
+
+      for (const item of trackingItems) {
+        void importantActionTracking
+          .mutateAsync({
+            ...basePayload,
+            target_id: item.targetId,
+            target_type: item.targetType,
+          })
+          .catch(() => {
+            // Analytics first-party não deve bloquear a aplicação dos filtros.
+          });
+      }
+    },
+    [importantActionTracking],
   );
 
   const filters = usePsychologistsFilterForm({
@@ -2188,13 +2281,16 @@ export const PsychologistsLogic = () => {
 
   const applyFilterValues = useCallback(
     (values: PsychologistsFilterForm) => {
-      const next = buildFiltersParams(normalizeFormValues(values), 1);
+      const normalizedValues = normalizeFormValues(values);
+      const next = buildFiltersParams(normalizedValues, 1);
+
+      trackDirectoryFilterSearch(normalizedValues);
 
       router.replace(next.toString() ? `/psychologists?${next}` : "/psychologists", {
         scroll: false,
       });
     },
-    [router],
+    [router, trackDirectoryFilterSearch],
   );
 
   const enterSearchMode = useCallback(() => {

@@ -2,6 +2,7 @@
 import type { AnalyticsDisplayMode } from "../../helpers/tracking";
 
 export type ImportantActionType =
+  | "psychologist_directory_filter_search"
   | "psychologist_video_favorite"
   | "psychologist_video_profile_access"
   | "psychologist_video_share"

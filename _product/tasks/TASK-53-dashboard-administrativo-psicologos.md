@@ -229,3 +229,15 @@ Packages usados:
 - O percentual fica com menor peso visual que a contagem, preservando legibilidade mobile-first e mantendo o mesmo tratamento visual em **Churn**.
 - Não houve alteração de contrato backend, Prisma, migrations, mock ou fonte paralela de dados; o cálculo é derivado no Admin a partir dos cards reais já retornados pelo dashboard.
 - Validações desta correção: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke HTTP local em `http://localhost:3002/psicologos` retornando 200.
+
+### Correção UX/dados em 2026-07-18 - comparativo por filtros do diretório
+
+- Pedido do usuário: no dashboard Admin de psicólogos, o seletor **Tipo de filtro** do bloco **Comparativo de oferta e demanda** deve incluir também **Modalidades**, **Estado**, **Cidade**, **Gênero**, **Raça**, **Religião** e **Selos e facilidades**.
+- A demanda do comparativo deixa de depender de contagens hardcoded no frontend e passa a usar eventos first-party reais em `important_action_event` com `action_type="psychologist_directory_filter_search"`, gravados quando filtros do diretório público de psicólogos são aplicados.
+- O evento grava somente tipo de filtro e identificador controlado da opção selecionada (`target_type`/`target_id`), sem texto livre de busca; pesquisas textuais por nome/CRP não entram no comparativo.
+- **Estado** usa a lista completa de UFs brasileiras na tabela, mesmo sem buscas no período, para cumprir a leitura operacional de cobertura geográfica.
+- **Cidade** lista somente opções com mais de 10 buscas reais no período selecionado; abaixo desse corte, a UI mostra estado honesto de ausência de cidades elegíveis.
+- O backend expõe `filters_searches.dimensions` no contrato do dashboard e calcula oferta a partir de perfis reais (`psychologist_profile`, catálogos, endereço, demografia, assinatura/verificação e facilidades), sem migration, seed, backfill, mock ou dado artificial.
+- Referência visual local mantida: `_product/proto/admin/Psicólogos/Psicólogos - Dashboard.png`; Builder/Quick Copy não estava disponível como ferramenta callable no ambiente.
+- Validações desta correção: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm --dir frontend check`, `pnpm --dir frontend build` e `pnpm check`.
+- Browser local headless em `http://localhost:3002/psicologos` confirmou carregamento da rota Admin/Next; validação visual autenticada continua dependente de sessão Admin real no navegador do operador.

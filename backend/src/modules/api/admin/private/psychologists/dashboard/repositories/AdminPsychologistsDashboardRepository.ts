@@ -43,6 +43,79 @@ const directoryCatalogSelect = {
   slug: true,
 };
 
+const STATIC_MODALITY_FILTERS = [
+  { id: "online", label: "Online" },
+  { id: "presencial", label: "Presencial" },
+  { id: "hibrido", label: "Híbrido" },
+] as const;
+
+const STATIC_GENDER_FILTERS = [
+  { id: "feminino", label: "Feminino" },
+  { id: "masculino", label: "Masculino" },
+  { id: "nao_binario", label: "Não binário" },
+  { id: "outro", label: "Outro" },
+] as const;
+
+const STATIC_RACE_COLOR_FILTERS = [
+  { id: "branca", label: "Branca" },
+  { id: "preta", label: "Preta" },
+  { id: "parda", label: "Parda" },
+  { id: "amarela", label: "Amarela" },
+  { id: "indigena", label: "Indígena" },
+] as const;
+
+const STATIC_RELIGION_FILTERS = [
+  { id: "catolica", label: "Católica" },
+  { id: "evangelica", label: "Evangélica" },
+  { id: "espirita", label: "Espírita" },
+  { id: "umbanda_candomble", label: "Umbanda/Candomblé" },
+  { id: "judaica", label: "Judaica" },
+  { id: "islamica", label: "Islâmica" },
+  { id: "budista", label: "Budista" },
+  { id: "sem_religiao", label: "Sem religião" },
+  { id: "ateu_agnostico", label: "Ateu/Agnóstico" },
+  { id: "outra", label: "Outra" },
+] as const;
+
+const STATIC_STATE_FILTERS = [
+  { id: "AC", label: "Acre (AC)" },
+  { id: "AL", label: "Alagoas (AL)" },
+  { id: "AP", label: "Amapá (AP)" },
+  { id: "AM", label: "Amazonas (AM)" },
+  { id: "BA", label: "Bahia (BA)" },
+  { id: "CE", label: "Ceará (CE)" },
+  { id: "DF", label: "Distrito Federal (DF)" },
+  { id: "ES", label: "Espírito Santo (ES)" },
+  { id: "GO", label: "Goiás (GO)" },
+  { id: "MA", label: "Maranhão (MA)" },
+  { id: "MT", label: "Mato Grosso (MT)" },
+  { id: "MS", label: "Mato Grosso do Sul (MS)" },
+  { id: "MG", label: "Minas Gerais (MG)" },
+  { id: "PA", label: "Pará (PA)" },
+  { id: "PB", label: "Paraíba (PB)" },
+  { id: "PR", label: "Paraná (PR)" },
+  { id: "PE", label: "Pernambuco (PE)" },
+  { id: "PI", label: "Piauí (PI)" },
+  { id: "RJ", label: "Rio de Janeiro (RJ)" },
+  { id: "RN", label: "Rio Grande do Norte (RN)" },
+  { id: "RS", label: "Rio Grande do Sul (RS)" },
+  { id: "RO", label: "Rondônia (RO)" },
+  { id: "RR", label: "Roraima (RR)" },
+  { id: "SC", label: "Santa Catarina (SC)" },
+  { id: "SP", label: "São Paulo (SP)" },
+  { id: "SE", label: "Sergipe (SE)" },
+  { id: "TO", label: "Tocantins (TO)" },
+] as const;
+
+const STATIC_FEATURE_FILTERS = [
+  { id: "available_today", label: "Disponível hoje" },
+  { id: "verified", label: "Somente verificados" },
+  { id: "more_experienced", label: "Mais experientes" },
+  { id: "discount_first_session", label: "Desconto na 1ª sessão" },
+  { id: "accepts_insurance", label: "Aceita convênios" },
+  { id: "social_value", label: "Valor social" },
+] as const;
+
 const catalogOrderBy = () => [{ position: "asc" as const }, { name: "asc" as const }];
 
 const toDirectoryFilterItem = (item: {
@@ -55,6 +128,16 @@ const toDirectoryFilterItem = (item: {
   label: item.name,
   position: item.position,
   slug: item.slug,
+});
+
+const toStaticDirectoryFilterItem = (
+  item: { id: string; label: string },
+  position: number,
+): AdminPsychologistsDashboardDirectoryFilterItem => ({
+  id: item.id,
+  label: item.label,
+  position,
+  slug: item.id,
 });
 
 const profileBaseSelect = {
@@ -81,8 +164,11 @@ const profileBaseSelect = {
   professional_address_city: true,
   professional_address_state: true,
   published: true,
+  race_color: true,
   rating_avg: true,
   rating_count: true,
+  religion: true,
+  show_experience_tag: true,
   social_value: true,
   target_audience: true,
   updatedAt: true,
@@ -282,13 +368,19 @@ export class AdminPsychologistsDashboardRepository
 
     return {
       approaches: approaches.map(toDirectoryFilterItem),
+      features: STATIC_FEATURE_FILTERS.map(toStaticDirectoryFilterItem),
+      genders: STATIC_GENDER_FILTERS.map(toStaticDirectoryFilterItem),
       languages: languages.map(toDirectoryFilterItem),
+      modalities: STATIC_MODALITY_FILTERS.map(toStaticDirectoryFilterItem),
+      race_colors: STATIC_RACE_COLOR_FILTERS.map(toStaticDirectoryFilterItem),
+      religions: STATIC_RELIGION_FILTERS.map(toStaticDirectoryFilterItem),
       services: services.map(toDirectoryFilterItem),
       specialties: specialties.map((item) => ({
         ...toDirectoryFilterItem(item),
         category_id: item.category_id,
         category_label: item.category?.name ?? null,
       })),
+      states: STATIC_STATE_FILTERS.map(toStaticDirectoryFilterItem),
       target_audiences: targetAudiences.map(toDirectoryFilterItem),
     };
   }
@@ -415,6 +507,23 @@ export class AdminPsychologistsDashboardRepository
           deleted: false,
           role: "psicologo",
         },
+      },
+    });
+  }
+
+  async listDirectoryFilterSearchActions(range: AdminPsychologistsDashboardDateRange) {
+    return prisma.important_action_event.findMany({
+      orderBy: {
+        occurred_at: "asc",
+      },
+      select: {
+        target_id: true,
+        target_type: true,
+      },
+      where: {
+        action_type: "psychologist_directory_filter_search",
+        deleted: false,
+        occurred_at: eventCreatedAtWhere(range),
       },
     });
   }

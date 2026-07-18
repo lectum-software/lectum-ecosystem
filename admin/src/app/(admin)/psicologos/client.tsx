@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import {
   Activity,
@@ -22,7 +22,6 @@ import type {
   AdminPsychologistsDashboard,
   PsychologistsDashboardBreakdownItem,
   PsychologistsDashboardDailyPoint,
-  PsychologistsDashboardDirectoryFilterItem,
   PsychologistsDashboardMetric,
   PsychologistsDashboardQuery,
 } from "@/api/req/psychologists";
@@ -58,86 +57,6 @@ const normalizeFilterOptionKey = (value: string) =>
     .replace(/[\u0300-\u036f]/g, "")
     .trim()
     .toLowerCase();
-
-type PreviewDemandCountInput = {
-  count: number;
-  keys: string[];
-};
-
-const makePreviewDemandCountMap = (items: PreviewDemandCountInput[]) => {
-  const map: Record<string, number> = {};
-
-  for (const item of items) {
-    for (const key of item.keys) {
-      map[normalizeFilterOptionKey(key)] = item.count;
-    }
-  }
-
-  return map;
-};
-
-const FILTERS_SEARCH_DEMAND_PREVIEW_COUNTS = {
-  approaches: makePreviewDemandCountMap([
-    { count: 34, keys: ["TCC", "terapia-cognitivo-comportamental"] },
-    { count: 22, keys: ["psicanalise"] },
-    { count: 17, keys: ["sistemica"] },
-    { count: 11, keys: ["Humanista", "humanista"] },
-  ]),
-  languages: makePreviewDemandCountMap([
-    { count: 44, keys: ["portugues"] },
-    { count: 15, keys: ["ingles"] },
-    { count: 9, keys: ["Espanhol", "espanhol"] },
-  ]),
-  services: makePreviewDemandCountMap([
-    { count: 33, keys: ["Terapia individual", "terapia-individual"] },
-    { count: 18, keys: ["Terapia de casal", "terapia-de-casal"] },
-    { count: 12, keys: ["Terapia familiar", "terapia-familiar"] },
-  ]),
-  specialties: makePreviewDemandCountMap([
-    { count: 100_000, keys: ["Ansiedade", "ansiedade"] },
-    { count: 28_000, keys: ["depressao"] },
-    { count: 21_000, keys: ["Relacionamentos", "relacionamentos"] },
-    { count: 16_000, keys: ["Burnout", "burnout"] },
-    { count: 14_000, keys: ["TDAH", "tdah"] },
-    { count: 12_000, keys: ["Luto", "luto"] },
-    { count: 11_000, keys: ["Autoestima", "autoestima"] },
-    { count: 10_000, keys: ["sindrome-do-panico"] },
-    { count: 9_000, keys: ["Estresse", "estresse"] },
-    { count: 8_000, keys: ["compulsao-alimentar"] },
-    { count: 7_000, keys: ["Autoconhecimento", "autoconhecimento"] },
-    { count: 6_000, keys: ["Trauma", "trauma"] },
-  ]),
-  target_audiences: makePreviewDemandCountMap([
-    { count: 42, keys: ["Adultos", "adultos"] },
-    { count: 19, keys: ["Adolescentes", "adolescentes"] },
-    { count: 14, keys: ["Casais", "casais"] },
-  ]),
-};
-
-const buildDemandGroupFromPatientFilterOptions = (
-  dimensionId: keyof typeof FILTERS_SEARCH_DEMAND_PREVIEW_COUNTS,
-  options: PsychologistsDashboardDirectoryFilterItem[] = [],
-) => {
-  const countMap = FILTERS_SEARCH_DEMAND_PREVIEW_COUNTS[dimensionId];
-  const itemsWithoutPercentage = options.map((option) => ({
-    count:
-      countMap[normalizeFilterOptionKey(option.slug)] ??
-      countMap[normalizeFilterOptionKey(option.label)] ??
-      countMap[normalizeFilterOptionKey(option.id)] ??
-      0,
-    id: option.slug || option.id,
-    label: option.label,
-  }));
-  const total = itemsWithoutPercentage.reduce((sum, item) => sum + item.count, 0);
-
-  return {
-    items: itemsWithoutPercentage.map((item) => ({
-      ...item,
-      percentage: total > 0 ? toOneDecimal((item.count / total) * 100) : 0,
-    })),
-    total,
-  };
-};
 
 const DASHBOARD_PERIOD_OPTIONS: { id: DashboardPeriodPreset; label: string }[] = [
   { id: "today", label: "Hoje" },
@@ -1024,42 +943,88 @@ const StatsContent = ({ summary }: { summary: AdminPsychologistsDashboard }) => 
   const [activeDimensionId, setActiveDimensionId] = useState("specialties");
   const [optionQuery, setOptionQuery] = useState("");
   const [sortKey, setSortKey] = useState<SupplyDemandSortKey>("searches");
-  const directoryFilters = summary.directory_filters;
+  const filterSearches = summary.filters_searches.dimensions;
 
   const comparisonDimensions: SupplyDemandDimensionConfig[] = [
     {
-      demand: buildDemandGroupFromPatientFilterOptions("specialties", directoryFilters.specialties),
+      demand: filterSearches.specialties,
       icon: Award,
       id: "specialties",
       label: "Especialidades",
       supply: summary.statistics.specialties,
     },
     {
-      demand: buildDemandGroupFromPatientFilterOptions("services", directoryFilters.services),
+      demand: filterSearches.services,
       icon: ShieldCheck,
       id: "services",
       label: "Servi\u00e7os",
       supply: summary.statistics.services,
     },
     {
-      demand: buildDemandGroupFromPatientFilterOptions("approaches", directoryFilters.approaches),
+      demand: filterSearches.approaches,
       icon: MessageCircle,
       id: "approaches",
       label: "Abordagens",
       supply: summary.statistics.approaches,
     },
     {
-      demand: buildDemandGroupFromPatientFilterOptions(
-        "target_audiences",
-        directoryFilters.target_audiences,
-      ),
+      demand: filterSearches.target_audiences,
       icon: UsersRound,
       id: "target-audience",
       label: "P\u00fablico atendido",
       supply: summary.statistics.target_audience,
     },
     {
-      demand: buildDemandGroupFromPatientFilterOptions("languages", directoryFilters.languages),
+      demand: filterSearches.modalities,
+      icon: Activity,
+      id: "modalities",
+      label: "Modalidades",
+      supply: summary.statistics.modalities,
+    },
+    {
+      demand: filterSearches.states,
+      icon: Search,
+      id: "states",
+      label: "Estado",
+      supply: summary.statistics.states,
+    },
+    {
+      demand: filterSearches.cities,
+      icon: Search,
+      id: "cities",
+      label: "Cidade",
+      supply: summary.statistics.cities,
+    },
+    {
+      demand: filterSearches.genders,
+      icon: UserCheck,
+      id: "genders",
+      label: "G\u00eanero",
+      supply: summary.statistics.gender,
+    },
+    {
+      demand: filterSearches.race_colors,
+      icon: UsersRound,
+      id: "race-colors",
+      label: "Ra\u00e7a",
+      supply: summary.statistics.race_colors,
+    },
+    {
+      demand: filterSearches.religions,
+      icon: ShieldCheck,
+      id: "religions",
+      label: "Religi\u00e3o",
+      supply: summary.statistics.religions,
+    },
+    {
+      demand: filterSearches.features,
+      icon: UserCheck,
+      id: "features",
+      label: "Selos e facilidades",
+      supply: summary.statistics.features,
+    },
+    {
+      demand: filterSearches.languages,
       icon: Search,
       id: "languages",
       label: "Idiomas",
@@ -1083,6 +1048,12 @@ const StatsContent = ({ summary }: { summary: AdminPsychologistsDashboard }) => 
     });
   const SelectedIcon = selectedDimension.icon;
   const periodLabel = formatSelectedPeriod(summary.period);
+  const emptyRowsMessage =
+    selectedDimension.id === "cities" && optionQuery.trim().length === 0
+      ? `Nenhuma cidade com mais de ${numberFormatter.format(
+          summary.filters_searches.minimum_city_searches,
+        )} buscas no período selecionado.`
+      : `Nenhuma opção encontrada para “${optionQuery}”.`;
   const handleDimensionChange = (dimensionId: string) => {
     setActiveDimensionId(dimensionId);
     setOptionQuery("");
@@ -1215,9 +1186,7 @@ const StatsContent = ({ summary }: { summary: AdminPsychologistsDashboard }) => 
             ))}
           </ul>
         ) : (
-          <div className="p-6 text-sm font-bold text-muted">
-            Nenhuma opção encontrada para “{optionQuery}”.
-          </div>
+          <div className="p-6 text-sm font-bold text-muted">{emptyRowsMessage}</div>
         )}
       </CardShell>
     </div>

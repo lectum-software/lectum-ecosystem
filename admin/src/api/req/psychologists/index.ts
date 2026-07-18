@@ -135,9 +135,15 @@ export type PsychologistsDashboardDirectoryFilterItem = {
 
 export type PsychologistsDashboardDirectoryFilters = {
   approaches: PsychologistsDashboardDirectoryFilterItem[];
+  features: PsychologistsDashboardDirectoryFilterItem[];
+  genders: PsychologistsDashboardDirectoryFilterItem[];
   languages: PsychologistsDashboardDirectoryFilterItem[];
+  modalities: PsychologistsDashboardDirectoryFilterItem[];
+  race_colors: PsychologistsDashboardDirectoryFilterItem[];
+  religions: PsychologistsDashboardDirectoryFilterItem[];
   services: PsychologistsDashboardDirectoryFilterItem[];
   specialties: PsychologistsDashboardDirectoryFilterItem[];
+  states: PsychologistsDashboardDirectoryFilterItem[];
   target_audiences: PsychologistsDashboardDirectoryFilterItem[];
 };
 
@@ -164,6 +170,16 @@ export type PsychologistsDashboardStatistics = {
     source: "psychologist_profile.gender";
     total: number;
   };
+  cities: {
+    items: PsychologistsDashboardBreakdownItem[];
+    source: "psychologist_profile.professional_address_city";
+    total: number;
+  };
+  features: {
+    items: PsychologistsDashboardBreakdownItem[];
+    source: "psychologist_profile+professional_subscription";
+    total: number;
+  };
   languages: {
     items: PsychologistsDashboardBreakdownItem[];
     source: "psychologist_profile.languages";
@@ -184,6 +200,16 @@ export type PsychologistsDashboardStatistics = {
     source: "psychologist_specialty";
     total: number;
   };
+  race_colors: {
+    items: PsychologistsDashboardBreakdownItem[];
+    source: "psychologist_profile.race_color";
+    total: number;
+  };
+  religions: {
+    items: PsychologistsDashboardBreakdownItem[];
+    source: "psychologist_profile.religion";
+    total: number;
+  };
   social_value: PsychologistsDashboardBooleanBreakdown;
   states: {
     items: PsychologistsDashboardBreakdownItem[];
@@ -195,6 +221,33 @@ export type PsychologistsDashboardStatistics = {
     source: "psychologist_profile.target_audience";
     total: number;
   };
+};
+
+export type PsychologistsDashboardFilterSearchDimension = {
+  items: PsychologistsDashboardBreakdownItem[];
+  source: "important_action_event.action_type=psychologist_directory_filter_search";
+  total: number;
+};
+
+export type PsychologistsDashboardFilterSearches = {
+  available: true;
+  description: string;
+  dimensions: {
+    approaches: PsychologistsDashboardFilterSearchDimension;
+    cities: PsychologistsDashboardFilterSearchDimension;
+    features: PsychologistsDashboardFilterSearchDimension;
+    genders: PsychologistsDashboardFilterSearchDimension;
+    languages: PsychologistsDashboardFilterSearchDimension;
+    modalities: PsychologistsDashboardFilterSearchDimension;
+    race_colors: PsychologistsDashboardFilterSearchDimension;
+    religions: PsychologistsDashboardFilterSearchDimension;
+    services: PsychologistsDashboardFilterSearchDimension;
+    specialties: PsychologistsDashboardFilterSearchDimension;
+    states: PsychologistsDashboardFilterSearchDimension;
+    target_audiences: PsychologistsDashboardFilterSearchDimension;
+  };
+  minimum_city_searches: number;
+  source: "important_action_event.action_type=psychologist_directory_filter_search";
 };
 
 export type PsychologistsDashboardUnavailableMetric = {
@@ -1268,11 +1321,7 @@ export type AdminPsychologistsDashboard = {
   };
   conversion: PsychologistsDashboardConversion;
   conversion_by_signup_method: PsychologistsDashboardConversionBySignupMethodItem[];
-  filters_searches: {
-    available: false;
-    description: string;
-    source: "not_tracked";
-  };
+  filters_searches: PsychologistsDashboardFilterSearches;
   directory_filters: PsychologistsDashboardDirectoryFilters;
   period: PsychologistsDashboardPeriod;
   platform_usage: PsychologistsDashboardPlatformUsage;

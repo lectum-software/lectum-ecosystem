@@ -17,6 +17,10 @@ import type {
   AdminPsychologistsDashboardBreakdownItem,
   AdminPsychologistsDashboardDailyPoint,
   AdminPsychologistsDashboardDateRange,
+  AdminPsychologistsDashboardDirectoryFilterItem,
+  AdminPsychologistsDashboardDirectoryFilters,
+  AdminPsychologistsDashboardFilterSearchDimension,
+  AdminPsychologistsDashboardFilterSearches,
   AdminPsychologistsDashboardMetric,
   AdminPsychologistsDashboardPeriod,
   AdminPsychologistsDashboardPsychologist,
@@ -26,6 +30,7 @@ import type {
 } from "../DTOs/IAdminPsychologistsDashboardDTO";
 import { AdminPsychologistsDashboardRepository } from "../repositories/AdminPsychologistsDashboardRepository";
 import type {
+  AdminPsychologistDirectoryFilterSearchRecord,
   AdminPsychologistProfileRecord,
   AdminPsychologistSubscriptionRecord,
 } from "../repositories/interfaces/IAdminPsychologistsDashboardRepository";
@@ -38,6 +43,9 @@ const COURTESY_SUBSCRIPTION_SOURCE = "admin_grant";
 const STATUS_ACTIVE = "ativa";
 const STATUS_CANCELLED = "cancelada";
 const FREE_PLAN_SLUG = "gratuito";
+const DIRECTORY_FILTER_SEARCH_ACTION_SOURCE =
+  "important_action_event.action_type=psychologist_directory_filter_search";
+const CITY_FILTER_MINIMUM_SEARCHES = 10;
 
 const MODALITY_LABELS: Record<string, string> = {
   hibrido: "Híbrido",
@@ -60,6 +68,54 @@ const GENDER_LABELS: Record<string, string> = {
   outro: "Outro",
   other: "Outro",
 };
+
+const RACE_COLOR_LABELS: Record<string, string> = {
+  amarela: "Amarela",
+  amarelo: "Amarela",
+  branca: "Branca",
+  branco: "Branca",
+  indigena: "Indígena",
+  indígena: "Indígena",
+  parda: "Parda",
+  pardo: "Parda",
+  preta: "Preta",
+  preto: "Preta",
+};
+
+const RELIGION_LABELS: Record<string, string> = {
+  ateu_agnostico: "Ateu/Agnóstico",
+  budista: "Budista",
+  catolica: "Católica",
+  católico: "Católica",
+  catolico: "Católica",
+  evangelica: "Evangélica",
+  evangelico: "Evangélica",
+  espírita: "Espírita",
+  espirita: "Espírita",
+  islamica: "Islâmica",
+  islamico: "Islâmica",
+  judaica: "Judaica",
+  judaico: "Judaica",
+  outra: "Outra",
+  outro: "Outra",
+  sem_religiao: "Sem religião",
+  umbanda_candomble: "Umbanda/Candomblé",
+};
+
+const FILTER_SEARCH_TARGET_TYPES = {
+  approaches: ["psychologist_filter_approach"],
+  cities: ["psychologist_filter_city"],
+  features: ["psychologist_filter_feature"],
+  genders: ["psychologist_filter_gender"],
+  languages: ["psychologist_filter_language"],
+  modalities: ["psychologist_filter_modality"],
+  race_colors: ["psychologist_filter_race_color"],
+  religions: ["psychologist_filter_religion"],
+  services: ["psychologist_filter_service"],
+  specialties: ["psychologist_filter_specialty"],
+  states: ["psychologist_filter_state"],
+  target_audiences: ["psychologist_filter_target_audience"],
+} satisfies Record<string, string[]>;
 
 type PsychologistsPeriodResolution = {
   current: AdminPsychologistsDashboardDateRange;
@@ -287,6 +343,32 @@ const normalizeKey = (value: string) =>
 
 const normalizeName = (name: string) => name.replace(/\s+/g, " ").trim() || "Psicólogo";
 
+const humanizeFilterValue = (value: string) =>
+  value
+    .replace(/[_-]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .replace(/\p{L}+/gu, (word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()) ||
+  value;
+
+const currentWeekdayValue = () => {
+  const weekday = new Intl.DateTimeFormat("pt-BR", {
+    timeZone: "America/Sao_Paulo",
+    weekday: "long",
+  }).format(new Date());
+
+  const normalized = normalizeKey(weekday);
+
+  if (normalized.includes("segunda")) return "segunda";
+  if (normalized.includes("terca")) return "terca";
+  if (normalized.includes("quarta")) return "quarta";
+  if (normalized.includes("quinta")) return "quinta";
+  if (normalized.includes("sexta")) return "sexta";
+  if (normalized.includes("sabado")) return "sabado";
+
+  return "domingo";
+};
+
 const dateInRange = (date: Date, range: AdminPsychologistsDashboardDateRange) =>
   date >= range.start && date <= range.end;
 
@@ -509,6 +591,152 @@ const buildBreakdown = (
   return typeof limit === "number" ? items.slice(0, limit) : items;
 };
 
+const buildOptionLookup = (options: AdminPsychologistsDashboardDirectoryFilterItem[] = []) => {
+  const lookup = new Map<string, AdminPsychologistsDashboardDirectoryFilterItem>();
+
+  for (const option of options) {
+    for (const value of [option.id, option.slug, option.label]) {
+      const key = normalizeKey(value);
+      if (key) lookup.set(key, option);
+    }
+  }
+
+  return lookup;
+};
+
+const buildFilterSearchDimension = (params: {
+  actions: AdminPsychologistDirectoryFilterSearchRecord[];
+  minimumCount?: number;
+  options?: AdminPsychologistsDashboardDirectoryFilterItem[];
+  targetTypes: string[];
+}): AdminPsychologistsDashboardFilterSearchDimension => {
+  const optionLookup = buildOptionLookup(params.options);
+  const itemsById = new Map<string, { count: number; label: string }>();
+  const targetTypes = new Set(params.targetTypes);
+
+  for (const option of params.options ?? []) {
+    const id = option.slug || option.id;
+    if (!id) continue;
+
+    itemsById.set(id, {
+      count: 0,
+      label: option.label,
+    });
+  }
+
+  for (const action of params.actions) {
+    if (!action.target_type || !targetTypes.has(action.target_type)) continue;
+
+    const targetId = action.target_id?.trim();
+    if (!targetId) continue;
+
+    const normalizedTarget = normalizeKey(targetId);
+    if (!normalizedTarget) continue;
+
+    const option = optionLookup.get(normalizedTarget);
+    const id = option?.slug || option?.id || normalizedTarget;
+    const current = itemsById.get(id);
+
+    itemsById.set(id, {
+      count: (current?.count ?? 0) + 1,
+      label: current?.label ?? option?.label ?? humanizeFilterValue(targetId),
+    });
+  }
+
+  const allItems = buildBreakdown(
+    itemsById,
+    [...itemsById.values()].reduce((sum, item) => sum + item.count, 0),
+  );
+  const minimumCount = params.minimumCount;
+  const visibleItems =
+    typeof minimumCount === "number"
+      ? allItems.filter((item) => item.count > minimumCount)
+      : allItems;
+  const total = visibleItems.reduce((sum, item) => sum + item.count, 0);
+
+  return {
+    items: visibleItems.map((item) => ({
+      ...item,
+      percentage: safePercentage(item.count, total),
+    })),
+    source: DIRECTORY_FILTER_SEARCH_ACTION_SOURCE,
+    total,
+  };
+};
+
+const buildFilterSearches = (params: {
+  actions: AdminPsychologistDirectoryFilterSearchRecord[];
+  directoryFilters: AdminPsychologistsDashboardDirectoryFilters;
+}): AdminPsychologistsDashboardFilterSearches => ({
+  available: true,
+  description:
+    "Buscas reais por filtros aplicados no diretório público de psicólogos, capturadas por evento first-party sem texto livre.",
+  dimensions: {
+    approaches: buildFilterSearchDimension({
+      actions: params.actions,
+      options: params.directoryFilters.approaches,
+      targetTypes: FILTER_SEARCH_TARGET_TYPES.approaches,
+    }),
+    cities: buildFilterSearchDimension({
+      actions: params.actions,
+      minimumCount: CITY_FILTER_MINIMUM_SEARCHES,
+      targetTypes: FILTER_SEARCH_TARGET_TYPES.cities,
+    }),
+    features: buildFilterSearchDimension({
+      actions: params.actions,
+      options: params.directoryFilters.features,
+      targetTypes: FILTER_SEARCH_TARGET_TYPES.features,
+    }),
+    genders: buildFilterSearchDimension({
+      actions: params.actions,
+      options: params.directoryFilters.genders,
+      targetTypes: FILTER_SEARCH_TARGET_TYPES.genders,
+    }),
+    languages: buildFilterSearchDimension({
+      actions: params.actions,
+      options: params.directoryFilters.languages,
+      targetTypes: FILTER_SEARCH_TARGET_TYPES.languages,
+    }),
+    modalities: buildFilterSearchDimension({
+      actions: params.actions,
+      options: params.directoryFilters.modalities,
+      targetTypes: FILTER_SEARCH_TARGET_TYPES.modalities,
+    }),
+    race_colors: buildFilterSearchDimension({
+      actions: params.actions,
+      options: params.directoryFilters.race_colors,
+      targetTypes: FILTER_SEARCH_TARGET_TYPES.race_colors,
+    }),
+    religions: buildFilterSearchDimension({
+      actions: params.actions,
+      options: params.directoryFilters.religions,
+      targetTypes: FILTER_SEARCH_TARGET_TYPES.religions,
+    }),
+    services: buildFilterSearchDimension({
+      actions: params.actions,
+      options: params.directoryFilters.services,
+      targetTypes: FILTER_SEARCH_TARGET_TYPES.services,
+    }),
+    specialties: buildFilterSearchDimension({
+      actions: params.actions,
+      options: params.directoryFilters.specialties,
+      targetTypes: FILTER_SEARCH_TARGET_TYPES.specialties,
+    }),
+    states: buildFilterSearchDimension({
+      actions: params.actions,
+      options: params.directoryFilters.states,
+      targetTypes: FILTER_SEARCH_TARGET_TYPES.states,
+    }),
+    target_audiences: buildFilterSearchDimension({
+      actions: params.actions,
+      options: params.directoryFilters.target_audiences,
+      targetTypes: FILTER_SEARCH_TARGET_TYPES.target_audiences,
+    }),
+  },
+  minimum_city_searches: CITY_FILTER_MINIMUM_SEARCHES,
+  source: DIRECTORY_FILTER_SEARCH_ACTION_SOURCE,
+});
+
 const booleanBreakdown = (params: {
   falseLabel?: string;
   source: string;
@@ -530,14 +758,73 @@ const jsonStringArray = (value: AdminPsychologistProfileRecord["target_audience"
   return value.map((item) => String(item).trim()).filter(Boolean);
 };
 
-const buildStatistics = (profiles: AdminPsychologistProfileRecord[]) => {
+const isAvailableToday = (profile: AdminPsychologistProfileRecord) =>
+  jsonStringArray(profile.available_days).includes(currentWeekdayValue());
+
+const isMoreExperienced = (profile: AdminPsychologistProfileRecord) =>
+  profile.show_experience_tag && (crpExperienceYears(profile.crp_registration_date) ?? 0) >= 10;
+
+const buildFeatureBreakdown = (
+  profiles: AdminPsychologistProfileRecord[],
+  date: Date,
+): AdminPsychologistsDashboardBreakdownItem[] => {
+  const total = profiles.length;
+  const items: AdminPsychologistsDashboardBreakdownItem[] = [
+    {
+      count: profiles.filter(isAvailableToday).length,
+      id: "available_today",
+      label: "Disponível hoje",
+      percentage: 0,
+    },
+    {
+      count: profiles.filter((profile) => hasVerifiedEntitlementAt(profile, date)).length,
+      id: "verified",
+      label: "Somente verificados",
+      percentage: 0,
+    },
+    {
+      count: profiles.filter(isMoreExperienced).length,
+      id: "more_experienced",
+      label: "Mais experientes",
+      percentage: 0,
+    },
+    {
+      count: profiles.filter((profile) => profile.discount_first_session).length,
+      id: "discount_first_session",
+      label: "Desconto na 1ª sessão",
+      percentage: 0,
+    },
+    {
+      count: profiles.filter((profile) => profile.accepts_insurance).length,
+      id: "accepts_insurance",
+      label: "Aceita convênios",
+      percentage: 0,
+    },
+    {
+      count: profiles.filter((profile) => profile.social_value).length,
+      id: "social_value",
+      label: "Valor social",
+      percentage: 0,
+    },
+  ];
+
+  return items.map((item) => ({
+    ...item,
+    percentage: safePercentage(item.count, total),
+  }));
+};
+
+const buildStatistics = (profiles: AdminPsychologistProfileRecord[], date: Date) => {
   const services = new Map<string, { count: number; label: string }>();
+  const cities = new Map<string, { count: number; label: string }>();
   const specialties = new Map<string, { count: number; label: string }>();
   const approaches = new Map<string, { count: number; label: string }>();
   const targetAudience = new Map<string, { count: number; label: string }>();
   const languages = new Map<string, { count: number; label: string }>();
   const modalities = new Map<string, { count: number; label: string }>();
   const gender = new Map<string, { count: number; label: string }>();
+  const raceColors = new Map<string, { count: number; label: string }>();
+  const religions = new Map<string, { count: number; label: string }>();
   const states = new Map<string, { count: number; label: string }>();
 
   for (const profile of profiles) {
@@ -571,9 +858,24 @@ const buildStatistics = (profiles: AdminPsychologistProfileRecord[]) => {
       addMapCount(gender, key, GENDER_LABELS[key] ?? profile.gender.trim());
     }
 
+    if (profile.race_color?.trim()) {
+      const key = normalizeKey(profile.race_color);
+      addMapCount(raceColors, key, RACE_COLOR_LABELS[key] ?? profile.race_color.trim());
+    }
+
+    if (profile.religion?.trim()) {
+      const key = normalizeKey(profile.religion);
+      addMapCount(religions, key, RELIGION_LABELS[key] ?? profile.religion.trim());
+    }
+
     if (profile.professional_address_state?.trim()) {
       const state = profile.professional_address_state.trim().toUpperCase();
       addMapCount(states, state, state);
+    }
+
+    if (profile.professional_address_city?.trim()) {
+      const city = profile.professional_address_city.trim();
+      addMapCount(cities, normalizeKey(city), city);
     }
   }
 
@@ -604,8 +906,18 @@ const buildStatistics = (profiles: AdminPsychologistProfileRecord[]) => {
       trueCount: experienceOver10,
     }),
     gender: {
-      items: buildBreakdown(gender, total, 4),
+      items: buildBreakdown(gender, total),
       source: "psychologist_profile.gender" as const,
+      total,
+    },
+    cities: {
+      items: buildBreakdown(cities, total),
+      source: "psychologist_profile.professional_address_city" as const,
+      total,
+    },
+    features: {
+      items: buildFeatureBreakdown(profiles, date),
+      source: "psychologist_profile+professional_subscription" as const,
       total,
     },
     languages: {
@@ -614,7 +926,7 @@ const buildStatistics = (profiles: AdminPsychologistProfileRecord[]) => {
       total,
     },
     modalities: {
-      items: buildBreakdown(modalities, total, 4),
+      items: buildBreakdown(modalities, total),
       source: "psychologist_profile.modality" as const,
       total,
     },
@@ -628,13 +940,23 @@ const buildStatistics = (profiles: AdminPsychologistProfileRecord[]) => {
       source: "psychologist_specialty" as const,
       total,
     },
+    race_colors: {
+      items: buildBreakdown(raceColors, total),
+      source: "psychologist_profile.race_color" as const,
+      total,
+    },
+    religions: {
+      items: buildBreakdown(religions, total),
+      source: "psychologist_profile.religion" as const,
+      total,
+    },
     social_value: booleanBreakdown({
       source: "psychologist_profile.social_value",
       total,
       trueCount: profiles.filter((profile) => profile.social_value).length,
     }),
     states: {
-      items: buildBreakdown(states, total, 6),
+      items: buildBreakdown(states, total),
       source: "psychologist_profile.professional_address_state" as const,
       total,
     },
@@ -779,13 +1101,19 @@ export const buildPsychologistsDashboard = async (
   const { current, labels, period, previous } = resolvedPeriod.period;
 
   const psychologistUserIds = profiles.map((profile) => profile.user.id);
-  const [rankingCandidates, platformPageViews, platformPwaInstalls, publicProfilePageViews] =
-    await Promise.all([
-      repository.listPublicRankingCandidates(),
-      repository.listPlatformPageViews(current),
-      repository.listPlatformPwaInstallActions(current),
-      repository.listPublicProfilePageViews(current, psychologistUserIds),
-    ]);
+  const [
+    directoryFilterSearchActions,
+    rankingCandidates,
+    platformPageViews,
+    platformPwaInstalls,
+    publicProfilePageViews,
+  ] = await Promise.all([
+    repository.listDirectoryFilterSearchActions(current),
+    repository.listPublicRankingCandidates(),
+    repository.listPlatformPageViews(current),
+    repository.listPlatformPwaInstallActions(current),
+    repository.listPublicProfilePageViews(current, psychologistUserIds),
+  ]);
 
   const currentProfiles = profiles.filter((profile) => profileCreatedUntil(profile, current.end));
   const previousProfiles = profiles.filter((profile) => profileCreatedUntil(profile, previous.end));
@@ -900,12 +1228,10 @@ export const buildPsychologistsDashboard = async (
       source: "user.createdAt+professional_subscription+subscription_plan",
     },
     conversion_by_signup_method: buildConversionBySignupMethod(currentNewSignups),
-    filters_searches: {
-      available: false,
-      description:
-        "A plataforma ainda não persiste eventos de busca e filtros do diretório de psicólogos com dimensão de filtro pesquisado.",
-      source: "not_tracked",
-    },
+    filters_searches: buildFilterSearches({
+      actions: directoryFilterSearchActions,
+      directoryFilters,
+    }),
     directory_filters: directoryFilters,
     period,
     platform_usage: {
@@ -935,7 +1261,7 @@ export const buildPsychologistsDashboard = async (
       total: rankedPsychologists.length,
     },
     signup_method: buildSignupMethod(currentNewSignups),
-    statistics: buildStatistics(profiles),
+    statistics: buildStatistics(profiles, current.end),
     timeline: {
       points: buildTimeline({
         labels,
@@ -948,13 +1274,6 @@ export const buildPsychologistsDashboard = async (
       source: "page_view_event.traffic_source+target_type=psychologist",
     },
     unavailable: [
-      {
-        description:
-          "Sem tracking persistido por filtro/termo de busca no diretório público. A seção aparece indisponível em vez de usar dados inventados.",
-        id: "filters_searches",
-        label: "Filtros mais buscados",
-        source: "not_tracked",
-      },
       ...(trafficSources.unavailable_reason
         ? [
             {

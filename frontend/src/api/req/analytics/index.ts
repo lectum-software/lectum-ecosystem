@@ -111,6 +111,7 @@ export type ImportantActionTrackingRequest = {
   visitor_id: string;
   session_id: string;
   action_type:
+    | "psychologist_directory_filter_search"
     | "psychologist_video_favorite"
     | "psychologist_video_profile_access"
     | "psychologist_video_share"

@@ -45,8 +45,11 @@ export type AdminPsychologistProfileRecord = {
   professional_address_city: string | null;
   professional_address_state: string | null;
   published: boolean;
+  race_color: string | null;
   rating_avg: number;
   rating_count: number;
+  religion: string | null;
+  show_experience_tag: boolean;
   social_value: boolean;
   subscriptions: AdminPsychologistSubscriptionRecord[];
   target_audience: Prisma.JsonValue | null;
@@ -121,11 +124,19 @@ export type AdminPsychologistPublicProfilePageViewRecord = {
   traffic_source: string | null;
 };
 
+export type AdminPsychologistDirectoryFilterSearchRecord = {
+  target_id: string | null;
+  target_type: string | null;
+};
+
 export interface IAdminPsychologistsDashboardRepository {
   listProfileViews(
     range: AdminPsychologistsDashboardDateRange,
   ): Promise<AdminPsychologistEventRecord[]>;
   listDirectoryFilters(): Promise<AdminPsychologistsDashboardDirectoryFilters>;
+  listDirectoryFilterSearchActions(
+    range: AdminPsychologistsDashboardDateRange,
+  ): Promise<AdminPsychologistDirectoryFilterSearchRecord[]>;
   listPlatformPageViews(
     range: AdminPsychologistsDashboardDateRange,
   ): Promise<AdminPsychologistPlatformPageViewRecord[]>;

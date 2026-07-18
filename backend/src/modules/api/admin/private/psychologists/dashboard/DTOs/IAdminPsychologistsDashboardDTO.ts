@@ -97,9 +97,15 @@ export type AdminPsychologistsDashboardDirectoryFilterItem = {
 
 export type AdminPsychologistsDashboardDirectoryFilters = {
   approaches: AdminPsychologistsDashboardDirectoryFilterItem[];
+  features: AdminPsychologistsDashboardDirectoryFilterItem[];
+  genders: AdminPsychologistsDashboardDirectoryFilterItem[];
   languages: AdminPsychologistsDashboardDirectoryFilterItem[];
+  modalities: AdminPsychologistsDashboardDirectoryFilterItem[];
+  race_colors: AdminPsychologistsDashboardDirectoryFilterItem[];
+  religions: AdminPsychologistsDashboardDirectoryFilterItem[];
   services: AdminPsychologistsDashboardDirectoryFilterItem[];
   specialties: AdminPsychologistsDashboardDirectoryFilterItem[];
+  states: AdminPsychologistsDashboardDirectoryFilterItem[];
   target_audiences: AdminPsychologistsDashboardDirectoryFilterItem[];
 };
 
@@ -126,6 +132,16 @@ export type AdminPsychologistsDashboardStatistics = {
     source: "psychologist_profile.gender";
     total: number;
   };
+  cities: {
+    items: AdminPsychologistsDashboardBreakdownItem[];
+    source: "psychologist_profile.professional_address_city";
+    total: number;
+  };
+  features: {
+    items: AdminPsychologistsDashboardBreakdownItem[];
+    source: "psychologist_profile+professional_subscription";
+    total: number;
+  };
   languages: {
     items: AdminPsychologistsDashboardBreakdownItem[];
     source: "psychologist_profile.languages";
@@ -146,6 +162,16 @@ export type AdminPsychologistsDashboardStatistics = {
     source: "psychologist_specialty";
     total: number;
   };
+  race_colors: {
+    items: AdminPsychologistsDashboardBreakdownItem[];
+    source: "psychologist_profile.race_color";
+    total: number;
+  };
+  religions: {
+    items: AdminPsychologistsDashboardBreakdownItem[];
+    source: "psychologist_profile.religion";
+    total: number;
+  };
   social_value: AdminPsychologistsDashboardBooleanBreakdown;
   states: {
     items: AdminPsychologistsDashboardBreakdownItem[];
@@ -157,6 +183,33 @@ export type AdminPsychologistsDashboardStatistics = {
     source: "psychologist_profile.target_audience";
     total: number;
   };
+};
+
+export type AdminPsychologistsDashboardFilterSearchDimension = {
+  items: AdminPsychologistsDashboardBreakdownItem[];
+  source: "important_action_event.action_type=psychologist_directory_filter_search";
+  total: number;
+};
+
+export type AdminPsychologistsDashboardFilterSearches = {
+  available: true;
+  description: string;
+  dimensions: {
+    approaches: AdminPsychologistsDashboardFilterSearchDimension;
+    cities: AdminPsychologistsDashboardFilterSearchDimension;
+    features: AdminPsychologistsDashboardFilterSearchDimension;
+    genders: AdminPsychologistsDashboardFilterSearchDimension;
+    languages: AdminPsychologistsDashboardFilterSearchDimension;
+    modalities: AdminPsychologistsDashboardFilterSearchDimension;
+    race_colors: AdminPsychologistsDashboardFilterSearchDimension;
+    religions: AdminPsychologistsDashboardFilterSearchDimension;
+    services: AdminPsychologistsDashboardFilterSearchDimension;
+    specialties: AdminPsychologistsDashboardFilterSearchDimension;
+    states: AdminPsychologistsDashboardFilterSearchDimension;
+    target_audiences: AdminPsychologistsDashboardFilterSearchDimension;
+  };
+  minimum_city_searches: number;
+  source: "important_action_event.action_type=psychologist_directory_filter_search";
 };
 
 export type AdminPsychologistsDashboardUnavailableMetric = {
@@ -276,11 +329,7 @@ export type AdminPsychologistsDashboardSummary = {
   };
   conversion: AdminPsychologistsDashboardConversion;
   conversion_by_signup_method: AdminPsychologistsDashboardConversionBySignupMethodItem[];
-  filters_searches: {
-    available: false;
-    description: string;
-    source: "not_tracked";
-  };
+  filters_searches: AdminPsychologistsDashboardFilterSearches;
   directory_filters: AdminPsychologistsDashboardDirectoryFilters;
   period: AdminPsychologistsDashboardPeriod;
   platform_usage: AdminPsychologistsDashboardPlatformUsage;
