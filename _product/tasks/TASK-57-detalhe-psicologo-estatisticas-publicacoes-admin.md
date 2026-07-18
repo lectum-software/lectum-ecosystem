@@ -197,3 +197,11 @@ Exibir estatísticas de negócio/comunidade e publicações do psicólogo com da
 - Não houve alteração de Prisma schema ou migrations; `pnpm --dir backend db:migrate` não foi necessário.
 - Builder/Quick Copy não estava disponível como ferramenta callable no ambiente; foram usados o PNG local `_product/proto/admin/Psicólogos/Detalhes do psicólogo/Estatísticas.png` e o recorte atual enviado pelo usuário.
 - Validações executadas para este ajuste: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check`, chamada direta do service `showAdminPsychologistStatistics` confirmando 20 pontos de retenção e smoke HTTP local em `/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=estatisticas` retornando 200.
+
+### Ajuste visual das setas em Estatísticas de negócio em 2026-07-18
+
+- As setas laterais de navegação foram removidas apenas do carrossel de cards da seção **Estatísticas de negócio**, pois os cards principais não precisam de controle manual no desktop e continuam navegáveis por rolagem horizontal/gesto em telas menores.
+- O componente compartilhado manteve suporte opcional à navegação por setas para outras seções que ainda possam precisar do controle.
+- Não houve alteração de contrato backend, dados, Prisma schema ou migrations; `pnpm --dir backend db:migrate` não foi necessário.
+- Builder/Quick Copy não estava disponível como ferramenta callable no ambiente; foram usados o PNG local `_product/proto/admin/Psicólogos/Detalhes do psicólogo/Estatísticas.png` e o recorte atual enviado pelo usuário.
+- Validações executadas para este ajuste: `pnpm --dir admin check`, `pnpm check`, `pnpm --dir admin build` e browser local/headless via Chrome/CDP em `/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=estatisticas`, confirmando `0` setas em **Estatísticas de negócio** e preservação das setas opcionais em **Estatísticas de comunidade**.

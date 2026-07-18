@@ -343,3 +343,15 @@ Consequências:
 - vínculos existentes preservam `createdAt` mesmo quando precisam ser reativados por compatibilidade legada;
 - a leitura administrativa usa a menor data real entre vínculo, primeiro post e primeira resposta para corrigir bases legadas sem mock;
 - uma migration de dados faz backfill de vínculos faltantes a partir de atividade histórica e recalcula `members_count`.
+
+## Emenda 2026-07-18 - setas em Estatísticas de negócio
+
+A seção **Estatísticas de negócio** não deve exibir setas laterais de navegação nos cards de KPI. A decisão é manter os cards como controles acessíveis de seleção de séries, mas sem botões externos de rolagem nessa seção, porque o desktop comporta os KPIs principais sem navegação manual e o mobile continua usando rolagem horizontal/gesto.
+
+Decisão complementar:
+
+- Tornar a navegação por setas opcional no componente compartilhado de cards de métricas.
+- Desativar essa navegação apenas em **Estatísticas de negócio**.
+- Preservar a navegação opcional para outras seções que ainda possam precisar de controle manual de rolagem.
+
+Consequência: a área de negócio fica mais limpa e alinhada ao recorte visual/protótipo, sem alterar fonte de dados, contrato backend ou tracking.
