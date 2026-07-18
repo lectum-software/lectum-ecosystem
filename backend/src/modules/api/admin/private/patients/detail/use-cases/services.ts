@@ -19,7 +19,7 @@ import {
 } from "../repositories/AdminPatientDetailRepository";
 
 const DEFAULT_PERIOD_DAYS = 30;
-const MAX_PERIOD_DAYS = 90;
+const MAX_PERIOD_DAYS = 3660;
 const MS_PER_DAY = 86_400_000;
 const TIMEZONE = "America/Sao_Paulo" as const;
 const HEATMAP_DAYS = [
@@ -94,6 +94,19 @@ const startOfDate = (date: Date) => {
   return next;
 };
 
+const startOfWeek = (date: Date) => {
+  const next = startOfDate(date);
+  const day = next.getDay();
+  const diff = day === 0 ? -6 : 1 - day;
+  next.setDate(next.getDate() + diff);
+
+  return next;
+};
+
+const startOfMonth = (date: Date) => new Date(date.getFullYear(), date.getMonth(), 1);
+
+const startOfYear = (date: Date) => new Date(date.getFullYear(), 0, 1);
+
 const endOfDate = (date: Date) => {
   const next = new Date(date);
   next.setHours(23, 59, 59, 999);
@@ -129,15 +142,16 @@ const daysBetweenInclusive = (from: Date, to: Date) => {
 const buildLabels = (from: Date, days: number) =>
   Array.from({ length: days }, (_, index) => toDateKey(addDays(from, index)));
 
-const resolvePeriod = (query: AdminPatientDetailQuery): PeriodResult => {
+const resolvePeriod = (query: AdminPatientDetailQuery, allPeriodStartDate?: Date): PeriodResult => {
   const hasCustomFrom = Boolean(query.from);
   const hasCustomTo = Boolean(query.to);
+  const preset = query.period || (hasCustomFrom || hasCustomTo ? "custom" : null);
 
   let start: Date;
   let end: Date;
-  let label = "Ãšltimos 30 dias";
+  let label = "\u00daltimos 30 dias";
 
-  if (hasCustomFrom || hasCustomTo) {
+  if (preset === "custom") {
     if (!hasCustomFrom || !hasCustomTo) {
       return { success: false, code: "invalid_analytics_date_range" };
     }
@@ -151,7 +165,34 @@ const resolvePeriod = (query: AdminPatientDetailQuery): PeriodResult => {
 
     start = customStart;
     end = customEnd;
-    label = "PerÃ­odo personalizado";
+    label = "Per\u00edodo personalizado";
+  } else if (preset === "today") {
+    const today = new Date();
+    start = startOfDate(today);
+    end = endOfDate(today);
+    label = "Hoje";
+  } else if (preset === "week") {
+    const today = new Date();
+    start = startOfWeek(today);
+    end = endOfDate(today);
+    label = "Esta semana";
+  } else if (preset === "month") {
+    const today = new Date();
+    start = startOfMonth(today);
+    end = endOfDate(today);
+    label = "Este m\u00eas";
+  } else if (preset === "year") {
+    const today = new Date();
+    start = startOfYear(today);
+    end = endOfDate(today);
+    label = "Este ano";
+  } else if (preset === "all") {
+    const today = new Date();
+    start = startOfDate(allPeriodStartDate ?? addDays(today, -(DEFAULT_PERIOD_DAYS - 1)));
+    end = endOfDate(today);
+    label = "Todo o per\u00edodo";
+  } else if (preset) {
+    return { success: false, code: "invalid_analytics_date_range" };
   } else {
     const today = new Date();
     end = endOfDate(today);
@@ -692,17 +733,17 @@ const notFound = () => ({
 });
 
 export const showAdminPatient = async (data: IAdminPatientDetailDTO): Promise<Resolve> => {
-  const resolvedPeriod = resolvePeriod(data.q ?? {});
+  const repository = new AdminPatientDetailRepository();
+  const patient = await repository.findPatient(data.p.id);
+  if (!patient) return notFound();
+
+  const resolvedPeriod = resolvePeriod(data.q ?? {}, patient.createdAt);
   if (!resolvedPeriod.success) {
     return {
       status: 400,
       ...error(resolvedPeriod.code, {}),
     };
   }
-
-  const repository = new AdminPatientDetailRepository();
-  const patient = await repository.findPatient(data.p.id);
-  if (!patient) return notFound();
 
   const { current, labels, period, previous } = resolvedPeriod.period;
   const [currentBundle, previousBundle] = await Promise.all([

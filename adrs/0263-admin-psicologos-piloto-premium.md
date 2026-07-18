@@ -238,6 +238,28 @@ Validacao deste ajuste:
 - Smoke HTTP local: `GET http://localhost:3002/pacientes` retornou 200.
 - Smoke HTTP local: `GET http://localhost:3002/pacientes/demo-patient-reviewer-01` retornou 200.
 
+## Ajuste pos-feedback 2026-07-18: padrao completo de periodo em Pacientes
+
+Novo feedback de produto pediu que o seletor de **Periodo** de Pacientes tivesse as mesmas opcoes das demais paginas do painel Admin. Para nao expor opcoes falsas, o contrato de Pacientes foi ampliado para aceitar `period=today|week|month|year|all|custom` em `/pacientes` e `/pacientes/:id`.
+
+Decisoes:
+
+- Adicionar **Este ano** e **Todo o periodo** aos seletores de `/pacientes` e `/pacientes/:id`, mantendo **Hoje**, **Esta semana**, **Este mes** e **Personalizado**.
+- Alinhar o backend de Pacientes ao padrao de Psicologos, elevando `max_days` para 3660 dias e resolvendo presets no servidor.
+- Em **Todo o periodo**, o dashboard usa o paciente mais antigo carregado de `user.createdAt`; o detalhe usa `user.createdAt` do paciente aberto.
+- Presets enviam somente `period`; intervalo manual envia `period=custom&from=YYYY-MM-DD&to=YYYY-MM-DD`.
+- Manter dados reais e evitar mock/backfill; nao houve mudanca de schema Prisma, migrations ou packages.
+
+Validacao deste ajuste:
+
+- `pnpm --dir admin exec biome check --write "src/api/req/patients/index.ts" "src/app/(admin)/pacientes/client.tsx" "src/app/(admin)/pacientes/[id]/client.tsx"`
+- `pnpm --dir backend exec biome check --write "src/modules/api/admin/private/patients/dashboard/DTOs/IAdminPatientsDashboardDTO.ts" "src/modules/api/admin/private/patients/detail/DTOs/IAdminPatientDetailDTO.ts" "src/modules/api/admin/private/patients/dashboard/validator/index.ts" "src/modules/api/admin/private/patients/detail/validator/index.ts" "src/modules/api/admin/private/patients/dashboard/use-cases/services.ts" "src/modules/api/admin/private/patients/detail/use-cases/services.ts"`
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- Smoke de servico local: `buildPatientsDashboard({ period: "year" })` retornou `200 Este ano 3660`; `buildPatientsDashboard({ period: "all" })` retornou `200 Todo o periodo`; `showAdminPatient(...period: "year")` retornou `200 Este ano 3660`.
+
 ## Pendências
 
 - Validar a aceitação visual com o fundador antes de criar a task de replicação para as demais telas.

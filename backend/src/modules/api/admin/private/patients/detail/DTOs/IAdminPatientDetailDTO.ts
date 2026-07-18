@@ -2,6 +2,7 @@ import type { Request } from "express";
 
 export type AdminPatientDetailQuery = {
   from?: string;
+  period?: "all" | "custom" | "month" | "today" | "week" | "year";
   to?: string;
 };
 

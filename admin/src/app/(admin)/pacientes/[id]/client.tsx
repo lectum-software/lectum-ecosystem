@@ -22,7 +22,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { type FocusEventHandler, useMemo, useState } from "react";
+import { type FocusEvent, useMemo, useState } from "react";
 import { useAdminPatientDetail } from "@/api/callers/patients";
 import { resolveApiError } from "@/api/handle";
 import type {
@@ -31,13 +31,13 @@ import type {
   PatientsDetailMetric,
   PatientsDetailQuery,
 } from "@/api/req/patients";
-import { useDateRangeCommitOnBlur } from "@/hooks/use-date-range-commit-on-blur";
 import { aggregateCalendarChartPoints, buildSmoothSvgPath } from "@/lib/chart-time-series";
 import { cn } from "@/lib/utils";
 
 const LOADING_PLACEHOLDERS = ["profile", "engagement", "activity", "communities"] as const;
-type PatientsDetailPeriodPreset = "month" | "today" | "week";
-type PatientsDetailPeriodValue = PatientsDetailPeriodPreset | "custom";
+type PatientsDetailPeriodValue = NonNullable<PatientsDetailQuery["period"]>;
+type PatientsDetailPeriodPreset = Exclude<PatientsDetailPeriodValue, "custom">;
+type PatientsDetailRange = Pick<PatientsDetailQuery, "from" | "to">;
 
 const PATIENTS_DETAIL_PERIOD_OPTIONS: {
   id: PatientsDetailPeriodPreset;
@@ -46,6 +46,8 @@ const PATIENTS_DETAIL_PERIOD_OPTIONS: {
   { id: "today", label: "Hoje" },
   { id: "week", label: "Esta semana" },
   { id: "month", label: "Este mês" },
+  { id: "year", label: "Este ano" },
+  { id: "all", label: "Todo o período" },
 ];
 const numberFormatter = new Intl.NumberFormat("pt-BR");
 const metricIcons: Record<PatientsDetailMetric["id"], LucideIcon> = {
@@ -96,16 +98,26 @@ const startOfCurrentMonth = () => {
   return date;
 };
 
-const getDetailRangeForPeriod = (period: PatientsDetailPeriodPreset): PatientsDetailQuery => {
+const startOfCurrentYear = () => new Date(new Date().getFullYear(), 0, 1);
+
+const getDetailRangeForPeriod = (period: PatientsDetailPeriodPreset): PatientsDetailRange => {
   const today = toInputDate(new Date());
 
   if (period === "today") return { from: today, to: today };
+  if (period === "all") return { from: "", to: today };
   if (period === "month") return { from: toInputDate(startOfCurrentMonth()), to: today };
+  if (period === "year") return { from: toInputDate(startOfCurrentYear()), to: today };
 
   return { from: toInputDate(startOfCurrentWeek()), to: today };
 };
 
-const isValidRange = (range: PatientsDetailQuery) =>
+const buildDetailPeriodQuery = (
+  period: PatientsDetailPeriodValue,
+  range: PatientsDetailRange,
+): PatientsDetailQuery =>
+  period === "custom" ? { from: range.from, period, to: range.to } : { period };
+
+const isValidRange = (range: PatientsDetailRange) =>
   Boolean(range.from && range.to && dateFromInput(range.from) <= dateFromInput(range.to));
 const formatDateTime = (value: string) =>
   new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeStyle: "short" }).format(
@@ -243,9 +255,9 @@ const PeriodFilters = ({
   rangeError,
 }: {
   onDateChange: (field: "from" | "to", value: string) => void;
-  onDateControlsBlur: FocusEventHandler<HTMLDivElement>;
+  onDateControlsBlur: (event: FocusEvent<HTMLDivElement>) => void;
   onPeriodChange: (period: PatientsDetailPeriodPreset) => void;
-  displayRange: PatientsDetailQuery;
+  displayRange: PatientsDetailRange;
   period: PatientsDetailPeriodValue;
   rangeError: string | null;
 }) => (
@@ -725,27 +737,75 @@ const DetailContent = ({ detail }: { detail: AdminPatientDetail }) => (
 );
 export const AdminPatientDetailClient = ({ id }: { id: string }) => {
   const [selectedPeriod, setSelectedPeriod] = useState<PatientsDetailPeriodValue>("month");
-  const {
-    appliedRange,
-    applyRange,
-    draftRange,
-    handleDateChange,
-    handleDateControlsBlur,
-    rangeError,
-  } = useDateRangeCommitOnBlur<PatientsDetailQuery>({
-    initialRange: () => getDetailRangeForPeriod("month"),
-    isValidRange,
-  });
-  const validRange = isValidRange(appliedRange);
-  const query = useAdminPatientDetail(id, appliedRange, { enabled: validRange });
+  const [appliedPeriod, setAppliedPeriod] = useState<PatientsDetailPeriodValue>("month");
+  const [customRangeError, setCustomRangeError] = useState<string | null>(null);
+  const [draftRange, setDraftRange] = useState<PatientsDetailRange>(() =>
+    getDetailRangeForPeriod("month"),
+  );
+  const [appliedRange, setAppliedRange] = useState<PatientsDetailRange>(() =>
+    getDetailRangeForPeriod("month"),
+  );
+  const queryInput = useMemo(
+    () => buildDetailPeriodQuery(appliedPeriod, appliedRange),
+    [appliedPeriod, appliedRange],
+  );
+  const validRange = appliedPeriod !== "custom" || isValidRange(appliedRange);
+  const validDraftRange = isValidRange(draftRange);
+  const query = useAdminPatientDetail(id, queryInput, { enabled: validRange });
   const queryError = query.error ? resolveApiError(query.error) : null;
+  const displayRange =
+    selectedPeriod !== "custom" && query.data
+      ? { from: query.data.period.from, to: query.data.period.to }
+      : draftRange;
   const handlePeriodChange = (nextPeriod: PatientsDetailPeriodPreset) => {
+    const nextRange = getDetailRangeForPeriod(nextPeriod);
+    setCustomRangeError(null);
     setSelectedPeriod(nextPeriod);
-    applyRange(getDetailRangeForPeriod(nextPeriod));
+    setAppliedPeriod(nextPeriod);
+    setDraftRange(nextRange);
+    setAppliedRange(nextRange);
   };
   const handleCustomDateChange = (field: "from" | "to", value: string) => {
+    setCustomRangeError(null);
     setSelectedPeriod("custom");
-    handleDateChange(field, value);
+    setDraftRange({ ...displayRange, [field]: value });
+  };
+  const commitCustomRange = () => {
+    if (selectedPeriod !== "custom") return;
+
+    if (!validDraftRange) {
+      setCustomRangeError(
+        "Informe um período personalizado completo, com data inicial menor ou igual à final.",
+      );
+      return;
+    }
+
+    setCustomRangeError(null);
+    setSelectedPeriod("custom");
+    setAppliedPeriod("custom");
+    setAppliedRange(draftRange);
+  };
+  const handleDateControlsBlur = (event: FocusEvent<HTMLDivElement>) => {
+    const currentTarget = event.currentTarget;
+    const nextFocusedElement = event.relatedTarget as Node | null;
+
+    if (nextFocusedElement && currentTarget.contains(nextFocusedElement)) return;
+
+    window.setTimeout(() => {
+      const activeElement = document.activeElement;
+
+      if (activeElement && currentTarget.contains(activeElement)) return;
+
+      commitCustomRange();
+    }, 0);
+  };
+  const resetPeriod = () => {
+    const defaultRange = getDetailRangeForPeriod("month");
+    setCustomRangeError(null);
+    setSelectedPeriod("month");
+    setAppliedPeriod("month");
+    setDraftRange(defaultRange);
+    setAppliedRange(defaultRange);
   };
 
   return (
@@ -774,22 +834,19 @@ export const AdminPatientDetailClient = ({ id }: { id: string }) => {
             </div>
           </div>
           <PeriodFilters
-            displayRange={draftRange}
+            displayRange={displayRange}
             onDateChange={handleCustomDateChange}
             onDateControlsBlur={handleDateControlsBlur}
             onPeriodChange={handlePeriodChange}
             period={selectedPeriod}
-            rangeError={rangeError}
+            rangeError={customRangeError}
           />
         </div>
       </section>
       {!validRange ? (
         <ErrorState
           message="A data inicial precisa ser menor ou igual à data final."
-          onRetry={() => {
-            setSelectedPeriod("month");
-            applyRange(getDetailRangeForPeriod("month"));
-          }}
+          onRetry={resetPeriod}
         />
       ) : null}
       {validRange && query.isLoading ? (

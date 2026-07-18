@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { type FocusEventHandler, useState } from "react";
+import { type FocusEvent, useMemo, useState } from "react";
 import { useAdminPatientsDashboard } from "@/api/callers/patients";
 import { resolveApiError } from "@/api/handle";
 import type {
@@ -28,7 +28,6 @@ import type {
   PatientsDashboardQuery,
   PatientsDashboardRecentPatient,
 } from "@/api/req/patients";
-import { useDateRangeCommitOnBlur } from "@/hooks/use-date-range-commit-on-blur";
 import { aggregateCalendarChartPoints, buildSmoothSvgPath } from "@/lib/chart-time-series";
 import { cn } from "@/lib/utils";
 
@@ -38,8 +37,9 @@ const CARD_ORDER = [
   "inactive_patients",
   "new_signups",
 ] as const;
-type PatientsDashboardPeriodPreset = "month" | "today" | "week";
-type PatientsDashboardPeriodValue = PatientsDashboardPeriodPreset | "custom";
+type PatientsDashboardPeriodValue = NonNullable<PatientsDashboardQuery["period"]>;
+type PatientsDashboardPeriodPreset = Exclude<PatientsDashboardPeriodValue, "custom">;
+type PatientsDashboardRange = Pick<PatientsDashboardQuery, "from" | "to">;
 
 const PATIENTS_DASHBOARD_PERIOD_OPTIONS: {
   id: PatientsDashboardPeriodPreset;
@@ -48,6 +48,8 @@ const PATIENTS_DASHBOARD_PERIOD_OPTIONS: {
   { id: "today", label: "Hoje" },
   { id: "week", label: "Esta semana" },
   { id: "month", label: "Este mês" },
+  { id: "year", label: "Este ano" },
+  { id: "all", label: "Todo o período" },
 ];
 const CHART_COLORS = [
   "var(--admin-primary)",
@@ -83,16 +85,26 @@ const startOfCurrentMonth = () => {
   return date;
 };
 
+const startOfCurrentYear = () => new Date(new Date().getFullYear(), 0, 1);
+
 const getDashboardRangeForPeriod = (
   period: PatientsDashboardPeriodPreset,
-): PatientsDashboardQuery => {
+): PatientsDashboardRange => {
   const today = toInputDate(new Date());
 
   if (period === "today") return { from: today, to: today };
+  if (period === "all") return { from: "", to: today };
   if (period === "month") return { from: toInputDate(startOfCurrentMonth()), to: today };
+  if (period === "year") return { from: toInputDate(startOfCurrentYear()), to: today };
 
   return { from: toInputDate(startOfCurrentWeek()), to: today };
 };
+
+const buildDashboardPeriodQuery = (
+  period: PatientsDashboardPeriodValue,
+  range: PatientsDashboardRange,
+): PatientsDashboardQuery =>
+  period === "custom" ? { from: range.from, period, to: range.to } : { period };
 
 const formatDate = (value: string) =>
   new Intl.DateTimeFormat("pt-BR", {
@@ -128,7 +140,7 @@ const formatChange = (value: number | null) => {
   })}%`;
 };
 
-const isValidRange = (range: PatientsDashboardQuery) => {
+const isValidRange = (range: PatientsDashboardRange) => {
   if (!range.from || !range.to) return false;
 
   return dateFromInput(range.from) <= dateFromInput(range.to);
@@ -291,9 +303,9 @@ const PatientsHeader = ({
   rangeError,
 }: {
   onDateChange: (field: "from" | "to", value: string) => void;
-  onDateControlsBlur: FocusEventHandler<HTMLDivElement>;
+  onDateControlsBlur: (event: FocusEvent<HTMLDivElement>) => void;
   onPeriodChange: (period: PatientsDashboardPeriodPreset) => void;
-  displayRange: PatientsDashboardQuery;
+  displayRange: PatientsDashboardRange;
   period: PatientsDashboardPeriodValue;
   rangeError: string | null;
 }) => (
@@ -956,47 +968,92 @@ const DashboardContent = ({ summary }: { summary: AdminPatientsDashboard }) => (
 
 export const AdminPatientsClient = () => {
   const [selectedPeriod, setSelectedPeriod] = useState<PatientsDashboardPeriodValue>("week");
-  const {
-    appliedRange,
-    applyRange,
-    draftRange,
-    handleDateChange,
-    handleDateControlsBlur,
-    rangeError,
-  } = useDateRangeCommitOnBlur<PatientsDashboardQuery>({
-    initialRange: () => getDashboardRangeForPeriod("week"),
-    isValidRange,
-  });
-  const validRange = isValidRange(appliedRange);
-  const query = useAdminPatientsDashboard(appliedRange, { enabled: validRange });
+  const [appliedPeriod, setAppliedPeriod] = useState<PatientsDashboardPeriodValue>("week");
+  const [customRangeError, setCustomRangeError] = useState<string | null>(null);
+  const [draftRange, setDraftRange] = useState<PatientsDashboardRange>(() =>
+    getDashboardRangeForPeriod("week"),
+  );
+  const [appliedRange, setAppliedRange] = useState<PatientsDashboardRange>(() =>
+    getDashboardRangeForPeriod("week"),
+  );
+  const queryInput = useMemo(
+    () => buildDashboardPeriodQuery(appliedPeriod, appliedRange),
+    [appliedPeriod, appliedRange],
+  );
+  const validRange = appliedPeriod !== "custom" || isValidRange(appliedRange);
+  const validDraftRange = isValidRange(draftRange);
+  const query = useAdminPatientsDashboard(queryInput, { enabled: validRange });
   const queryError = query.error ? resolveApiError(query.error) : null;
+  const displayRange =
+    selectedPeriod !== "custom" && query.data
+      ? { from: query.data.period.from, to: query.data.period.to }
+      : draftRange;
   const handlePeriodChange = (nextPeriod: PatientsDashboardPeriodPreset) => {
+    const nextRange = getDashboardRangeForPeriod(nextPeriod);
+    setCustomRangeError(null);
     setSelectedPeriod(nextPeriod);
-    applyRange(getDashboardRangeForPeriod(nextPeriod));
+    setAppliedPeriod(nextPeriod);
+    setDraftRange(nextRange);
+    setAppliedRange(nextRange);
   };
   const handleCustomDateChange = (field: "from" | "to", value: string) => {
+    setCustomRangeError(null);
     setSelectedPeriod("custom");
-    handleDateChange(field, value);
+    setDraftRange({ ...displayRange, [field]: value });
+  };
+  const commitCustomRange = () => {
+    if (selectedPeriod !== "custom") return;
+
+    if (!validDraftRange) {
+      setCustomRangeError(
+        "Informe um período personalizado completo, com data inicial menor ou igual à final.",
+      );
+      return;
+    }
+
+    setCustomRangeError(null);
+    setSelectedPeriod("custom");
+    setAppliedPeriod("custom");
+    setAppliedRange(draftRange);
+  };
+  const handleDateControlsBlur = (event: FocusEvent<HTMLDivElement>) => {
+    const currentTarget = event.currentTarget;
+    const nextFocusedElement = event.relatedTarget as Node | null;
+
+    if (nextFocusedElement && currentTarget.contains(nextFocusedElement)) return;
+
+    window.setTimeout(() => {
+      const activeElement = document.activeElement;
+
+      if (activeElement && currentTarget.contains(activeElement)) return;
+
+      commitCustomRange();
+    }, 0);
+  };
+  const resetPeriod = () => {
+    const defaultRange = getDashboardRangeForPeriod("week");
+    setCustomRangeError(null);
+    setSelectedPeriod("week");
+    setAppliedPeriod("week");
+    setDraftRange(defaultRange);
+    setAppliedRange(defaultRange);
   };
 
   return (
     <div className="space-y-6">
       <PatientsHeader
-        displayRange={draftRange}
+        displayRange={displayRange}
         onDateChange={handleCustomDateChange}
         onDateControlsBlur={handleDateControlsBlur}
         onPeriodChange={handlePeriodChange}
         period={selectedPeriod}
-        rangeError={rangeError}
+        rangeError={customRangeError}
       />
 
       {!validRange ? (
         <ErrorState
           message="A data inicial precisa ser menor ou igual à data final."
-          onRetry={() => {
-            setSelectedPeriod("week");
-            applyRange(getDashboardRangeForPeriod("week"));
-          }}
+          onRetry={resetPeriod}
         />
       ) : null}
 

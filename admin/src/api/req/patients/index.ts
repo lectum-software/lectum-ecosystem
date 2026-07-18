@@ -4,11 +4,13 @@ import type { ApiResponse } from "@/api/types";
 
 export type PatientsDashboardQuery = {
   from?: string;
+  period?: "all" | "custom" | "month" | "today" | "week" | "year";
   to?: string;
 };
 
 export type PatientsDetailQuery = {
   from?: string;
+  period?: "all" | "custom" | "month" | "today" | "week" | "year";
   to?: string;
 };
 
@@ -285,6 +287,7 @@ export type AdminPatientDetail = {
 
 const cleanParams = (input: PatientsDashboardQuery) => ({
   ...(input.from ? { from: input.from } : {}),
+  ...(input.period ? { period: input.period } : {}),
   ...(input.to ? { to: input.to } : {}),
 });
 
