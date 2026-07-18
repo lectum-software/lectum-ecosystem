@@ -260,6 +260,27 @@ Validacao deste ajuste:
 - `pnpm --dir admin build`
 - Smoke de servico local: `buildPatientsDashboard({ period: "year" })` retornou `200 Este ano 3660`; `buildPatientsDashboard({ period: "all" })` retornou `200 Todo o periodo`; `showAdminPatient(...period: "year")` retornou `200 Este ano 3660`.
 
+## Ajuste pos-feedback 2026-07-18: contadores e grafico de Pacientes
+
+Novo feedback de produto pediu que o bloco **Visao Geral** de `/pacientes` seguisse exatamente a leitura dos contadores + grafico do dashboard de Psicologos, removendo o card de **Tempo medio do paciente** desse agrupamento.
+
+Decisoes:
+
+- Exibir na Visao Geral somente metricas agregaveis no grafico temporal: total, ativos, inativos e novos cadastros.
+- Converter os cards de pacientes para botoes acessiveis com `aria-pressed`, estados ativo/inativo e alternancia de series, preservando pelo menos uma serie visivel.
+- Remover legenda separada, resumo textual expansivel e texto auxiliar acima do grafico, porque no padrao de Psicologos os cards funcionam como controle/legenda das series.
+- Manter `platform_usage` no contrato e nas notas de cobertura, mas sem card dentro do bloco de contadores + grafico.
+- Nao alterar backend, contrato HTTP, schema Prisma, migrations, packages ou dados reais.
+
+Validacao deste ajuste:
+
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/pacientes/client.tsx"`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check`
+- Smoke HTTP local: `GET http://localhost:3002/pacientes` retornou 200.
+- Browser local em `http://localhost:3002/pacientes` inspecionado com sessao Admin existente.
+
 ## Pendências
 
 - Validar a aceitação visual com o fundador antes de criar a task de replicação para as demais telas.

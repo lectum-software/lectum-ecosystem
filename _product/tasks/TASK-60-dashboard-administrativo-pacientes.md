@@ -257,3 +257,21 @@ Frontend esperado:
 - `pnpm --dir admin build`
 - Serviço local: `buildPatientsDashboard({ period: "year" })` retornou `200 Este ano 3660`.
 - Serviço local: `buildPatientsDashboard({ period: "all" })` retornou `200 Todo o período`.
+
+## Ajuste pos-feedback 2026-07-18 - Contadores e grafico alinhados a Psicologos
+
+- Pedido do usuario: remover o contador **Tempo medio do paciente** do bloco de grafico e padronizar contadores + grafico conforme o dashboard de Psicologos.
+- O bloco **Visao Geral** de `/pacientes` agora exibe somente os quatro contadores agregaveis no grafico: **Total de pacientes**, **Pacientes ativos**, **Pacientes inativos** e **Novos cadastros**.
+- Os contadores foram convertidos para botoes acessiveis com `aria-pressed`, estados ativo/inativo e alternancia das series visiveis, mantendo pelo menos uma serie ativa como em Psicologos.
+- O grafico temporal passou a usar o mesmo padrao visual de Psicologos: largura/padding compartilhados, legenda removida, series controladas pelos cards e sem resumo textual expansivel dentro do bloco.
+- O dado real de `platform_usage` permanece no payload e nas notas de cobertura quando aplicavel, mas nao e mais exibido como contador dentro da Visao Geral.
+- Nao houve alteracao de backend, contrato HTTP, schema Prisma, migration, package novo, seed, mock ou backfill artificial.
+
+### Validacao complementar executada
+
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/pacientes/client.tsx"`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check`
+- Smoke HTTP local: `GET http://localhost:3002/pacientes` retornou `200`.
+- Browser local em `http://localhost:3002/pacientes` inspecionado visualmente com sessao Admin existente: o bloco Visao Geral nao exibe mais o card de tempo medio e o grafico aparece logo abaixo dos contadores.

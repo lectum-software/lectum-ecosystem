@@ -4,7 +4,6 @@ import {
   Activity,
   AlertTriangle,
   ChevronDown,
-  Clock,
   Eye,
   Loader2,
   type LucideIcon,
@@ -51,12 +50,15 @@ const PATIENTS_DASHBOARD_PERIOD_OPTIONS: {
   { id: "year", label: "Este ano" },
   { id: "all", label: "Todo o período" },
 ];
-const CHART_COLORS = [
-  "var(--admin-primary)",
-  "var(--admin-success)",
-  "var(--admin-muted)",
-  "var(--admin-warning)",
-];
+const CHART_COLORS = ["#308ce8", "#13a85b", "#64748b", "#f59f00"];
+type DashboardMetricKey = (typeof CARD_ORDER)[number];
+
+const DASHBOARD_METRIC_CONFIG: Record<DashboardMetricKey, { color: string; icon: LucideIcon }> = {
+  active_patients: { color: CHART_COLORS[1], icon: UserCheck },
+  inactive_patients: { color: CHART_COLORS[2], icon: UserRound },
+  new_signups: { color: CHART_COLORS[3], icon: UserPlus },
+  total_patients: { color: CHART_COLORS[0], icon: UsersRound },
+};
 
 const numberFormatter = new Intl.NumberFormat("pt-BR");
 
@@ -118,18 +120,6 @@ const formatDateTime = (value: string) =>
     timeStyle: "short",
   }).format(new Date(value));
 
-const formatDuration = (value: number | null) => {
-  if (value === null || !Number.isFinite(value) || value <= 0) return "Indisponível";
-
-  const totalSeconds = Math.round(value);
-  const minutes = Math.floor(totalSeconds / 60);
-  const seconds = totalSeconds % 60;
-
-  if (minutes <= 0) return `${seconds}s`;
-
-  return `${minutes}min ${String(seconds).padStart(2, "0")}s`;
-};
-
 const formatChange = (value: number | null) => {
   if (value === null) return "sem base anterior";
   if (value === 0) return "0%";
@@ -157,99 +147,105 @@ const CardShell = ({ children, className }: { children?: React.ReactNode; classN
   </section>
 );
 
-const toneClasses = {
-  blue: "bg-blue-50 text-blue-700",
-  green: "bg-emerald-50 text-success",
-  orange: "bg-orange-50 text-orange-700",
-  purple: "bg-primary-soft text-primary",
+const hexToRgba = (hex: string, alpha: number) => {
+  const normalized = hex.replace("#", "");
+  const red = Number.parseInt(normalized.slice(0, 2), 16);
+  const green = Number.parseInt(normalized.slice(2, 4), 16);
+  const blue = Number.parseInt(normalized.slice(4, 6), 16);
+
+  return `rgba(${red}, ${green}, ${blue}, ${alpha})`;
 };
 
-const TrendBadge = ({ metric }: { metric: PatientsDashboardMetric }) => (
-  <span
-    className={cn(
-      "text-xs font-semibold",
-      metric.trend === "up" && "text-success",
-      metric.trend === "down" && "text-danger",
-      metric.trend === "flat" && "text-muted",
-      metric.trend === "unavailable" && "text-muted",
-    )}
-  >
-    {formatChange(metric.change_percent)}
-  </span>
-);
-
-const MetricCard = ({
-  icon: Icon,
-  metric,
-  tone,
-}: {
-  icon: LucideIcon;
-  metric: PatientsDashboardMetric;
-  tone: keyof typeof toneClasses;
-}) => (
-  <CardShell className="min-h-[8.75rem] p-4">
-    <div className="flex items-start justify-between gap-3">
-      <div className={cn("grid h-10 w-10 place-items-center rounded-full", toneClasses[tone])}>
-        <Icon aria-hidden className="h-4 w-4" />
-      </div>
-      <span className="rounded-full bg-surface-muted px-2 py-1 text-[0.65rem] font-bold text-muted">
-        {metric.source}
-      </span>
-    </div>
-    <div className="mt-4 space-y-1.5">
-      <p className="text-sm font-semibold text-foreground">{metric.label}</p>
-      <p className="text-3xl font-bold tracking-tight text-foreground">
-        {numberFormatter.format(metric.value)}
-      </p>
-      <div className="flex flex-wrap items-center gap-2">
-        <TrendBadge metric={metric} />
-        <span className="text-xs font-medium text-muted">vs. período anterior</span>
-      </div>
-      <p className="text-xs leading-relaxed text-muted">{metric.description}</p>
-    </div>
-  </CardShell>
-);
-
-const PatientAverageDurationCard = ({ summary }: { summary: AdminPatientsDashboard }) => {
-  const usage = summary.platform_usage;
+const TrendBadge = ({ metric }: { metric: PatientsDashboardMetric }) => {
+  if (metric.unavailable) {
+    return (
+      <span className="whitespace-nowrap text-[0.68rem] font-bold text-warning">Indisponível</span>
+    );
+  }
 
   return (
-    <CardShell className="min-h-[8.75rem] p-4">
+    <span
+      className={cn(
+        "whitespace-nowrap text-[0.68rem] font-semibold",
+        metric.trend === "up" && "text-success",
+        metric.trend === "down" && "text-danger",
+        metric.trend === "flat" && "text-muted",
+        metric.trend === "unavailable" && "text-muted",
+      )}
+    >
+      {formatChange(metric.change_percent)}
+    </span>
+  );
+};
+
+const MetricCard = ({
+  active,
+  color,
+  icon: Icon,
+  metric,
+  onToggle,
+}: {
+  active: boolean;
+  color: string;
+  icon: LucideIcon;
+  metric: PatientsDashboardMetric;
+  onToggle: () => void;
+}) => {
+  const formattedValue = numberFormatter.format(metric.value);
+
+  return (
+    <button
+      aria-pressed={active}
+      className={cn(
+        "min-h-[8.75rem] min-w-0 rounded-card border p-3 text-left transition duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 md:p-4 xl:min-h-[8.25rem] xl:p-3",
+        active
+          ? "border-primary/35 bg-surface shadow-admin-soft ring-1 ring-primary/10"
+          : "border-border/80 bg-border/50 shadow-none hover:-translate-y-0.5 hover:border-primary/25 hover:bg-border/60",
+      )}
+      onClick={onToggle}
+      title={`${metric.label}: ${formattedValue}. ${
+        active ? "Visível no gráfico" : "Oculto no gráfico"
+      }`}
+      type="button"
+    >
       <div className="flex items-start justify-between gap-3">
-        <div className="grid h-10 w-10 place-items-center rounded-full bg-primary-soft text-primary">
-          <Clock aria-hidden className="h-4 w-4" />
+        <div
+          className="grid h-9 w-9 place-items-center rounded-full xl:h-8 xl:w-8"
+          style={{ backgroundColor: hexToRgba(color, 0.1), color }}
+        >
+          <Icon aria-hidden className="h-4 w-4" />
         </div>
-        <span className="rounded-full bg-surface-muted px-2 py-1 text-[0.65rem] font-bold text-muted">
-          {usage.source}
-        </span>
       </div>
-      <div className="mt-4 space-y-1.5">
-        <p className="text-sm font-semibold text-foreground">Tempo médio do paciente</p>
-        <p className="text-3xl font-bold tracking-tight text-foreground">
-          {formatDuration(usage.average_duration_seconds)}
+      <div className="mt-4 min-w-0 space-y-1.5 xl:mt-3">
+        <p
+          className="truncate whitespace-nowrap text-xs font-semibold text-foreground"
+          title={metric.label}
+        >
+          {metric.label}
         </p>
-        <p className="text-xs leading-relaxed text-muted">
-          Média por pageview autenticado de pacientes no período, sem contar tempo em que o app fica
-          oculto/minimizado quando o navegador informa visibilidade.
+        <p className="flex min-w-0 items-baseline gap-1.5 overflow-hidden whitespace-nowrap text-2xl font-bold tracking-tight text-foreground xl:text-[1.65rem]">
+          <span className="min-w-0 truncate">{formattedValue}</span>
         </p>
-        <p className="text-xs font-bold text-subtle">
-          {numberFormatter.format(usage.pageviews_count)} pageviews ·{" "}
-          {numberFormatter.format(usage.sessions_count)} sessões
-        </p>
-        {usage.duration_unavailable_reason ? (
-          <p className="text-xs font-bold text-muted">{usage.duration_unavailable_reason}</p>
-        ) : null}
+        <div className="flex min-w-0 items-center gap-1.5 overflow-hidden whitespace-nowrap">
+          <TrendBadge metric={metric} />
+          <span className="min-w-0 truncate text-[0.68rem] font-medium text-muted">
+            vs. período anterior
+          </span>
+        </div>
+        <span className="sr-only">{active ? "visível no gráfico" : "oculto no gráfico"}</span>
       </div>
-    </CardShell>
+    </button>
   );
 };
 
 const LoadingGrid = () => (
-  <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+  <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
     {CARD_ORDER.map((key) => (
-      <CardShell className="h-[8.75rem] animate-pulse bg-surface-muted" key={`patients-${key}`} />
+      <CardShell
+        className="h-[8.75rem] animate-pulse bg-surface-muted xl:h-[8.25rem]"
+        key={`patients-${key}`}
+      />
     ))}
-    <CardShell className="h-[8.75rem] animate-pulse bg-surface-muted" />
   </div>
 );
 
@@ -380,48 +376,75 @@ const PatientsHeader = ({
   </section>
 );
 
-const CardsGrid = ({ summary }: { summary: AdminPatientsDashboard }) => {
-  const config: Record<
-    (typeof CARD_ORDER)[number],
-    { icon: LucideIcon; tone: keyof typeof toneClasses }
-  > = {
-    active_patients: { icon: UserCheck, tone: "green" },
-    inactive_patients: { icon: UserRound, tone: "blue" },
-    new_signups: { icon: UserPlus, tone: "orange" },
-    total_patients: { icon: UsersRound, tone: "purple" },
-  };
+const CardsGrid = ({
+  activeMetricKeys,
+  onToggleMetric,
+  summary,
+}: {
+  activeMetricKeys: DashboardMetricKey[];
+  onToggleMetric: (key: DashboardMetricKey) => void;
+  summary: AdminPatientsDashboard;
+}) => {
+  const cards = summary.cards;
 
   return (
-    <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
-      {CARD_ORDER.map((key) => (
-        <MetricCard key={key} metric={summary.cards[key]} {...config[key]} />
-      ))}
-      <PatientAverageDurationCard summary={summary} />
-    </div>
+    <fieldset className="grid grid-cols-2 gap-3 md:grid-cols-4">
+      <legend className="sr-only">Contadores exibidos no gráfico da visão geral</legend>
+      {CARD_ORDER.map((key) => {
+        const config = DASHBOARD_METRIC_CONFIG[key];
+
+        return (
+          <MetricCard
+            active={activeMetricKeys.includes(key)}
+            key={key}
+            metric={cards[key]}
+            onToggle={() => onToggleMetric(key)}
+            {...config}
+          />
+        );
+      })}
+    </fieldset>
   );
 };
 
-const TimelineChart = ({ points }: { points: PatientsDashboardDailyPoint[] }) => {
-  const width = 980;
+const TimelineChart = ({
+  points,
+  visibleMetricKeys,
+}: {
+  points: PatientsDashboardDailyPoint[];
+  visibleMetricKeys: DashboardMetricKey[];
+}) => {
+  const width = 1120;
   const height = 280;
-  const padding = { bottom: 28, left: 48, right: 28, top: 28 };
-  const series = [
-    { color: CHART_COLORS[0], key: "total_patients", label: "Total de pacientes" },
-    { color: CHART_COLORS[1], key: "active_patients", label: "Pacientes ativos" },
-    { color: CHART_COLORS[2], key: "inactive_patients", label: "Pacientes inativos" },
-    { color: CHART_COLORS[3], key: "new_signups", label: "Novos cadastros" },
-  ] as const;
-  const chartPoints = aggregateCalendarChartPoints(
-    points,
-    ["active_patients", "inactive_patients", "new_signups", "total_patients"] as const,
-    {
-      metricAggregations: {
-        active_patients: "last",
-        inactive_patients: "last",
-        total_patients: "last",
-      },
+  const padding = { bottom: 28, left: 42, right: 28, top: 28 };
+  const series = visibleMetricKeys.map((key) => ({
+    color: DASHBOARD_METRIC_CONFIG[key].color,
+    key,
+  }));
+
+  if (series.length === 0) {
+    return (
+      <div className="mt-5 rounded-2xl border border-dashed border-border bg-surface-muted p-6 text-sm font-bold text-muted">
+        Selecione pelo menos um contador para visualizar a evolução.
+      </div>
+    );
+  }
+
+  if (points.length === 0) {
+    return (
+      <div className="mt-5 rounded-2xl border border-dashed border-border bg-surface-muted p-6 text-sm font-bold text-muted">
+        Nenhum ponto real de evolução foi encontrado para o período.
+      </div>
+    );
+  }
+
+  const chartPoints = aggregateCalendarChartPoints(points, CARD_ORDER, {
+    metricAggregations: {
+      active_patients: "last",
+      inactive_patients: "last",
+      total_patients: "last",
     },
-  );
+  });
 
   if (chartPoints.length === 0) {
     return (
@@ -450,110 +473,82 @@ const TimelineChart = ({ points }: { points: PatientsDashboardDailyPoint[] }) =>
   );
 
   return (
-    <figure className="mt-5 overflow-hidden">
-      <div className="mb-4 flex flex-wrap gap-3">
-        {series.map((item) => (
-          <span
-            className="inline-flex items-center gap-2 text-xs font-semibold text-muted"
-            key={item.key}
-          >
-            <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: item.color }} />
-            {item.label}
-          </span>
-        ))}
-      </div>
-      <div className="w-full overflow-x-auto rounded-[1.5rem] border border-border/70 bg-surface p-4">
-        <div className="mx-auto w-full min-w-[720px] max-w-[980px]">
-          <svg
-            aria-label="Gráfico temporal de pacientes"
-            className="block h-auto w-full"
-            height={height}
-            preserveAspectRatio="xMidYMid meet"
-            role="img"
-            viewBox={`0 0 ${width} ${height}`}
-            width={width}
-          >
-            {gridValues.map((value) => {
-              const y = getY(value);
-              return (
-                <g key={`patients-grid-${value}-${y}`}>
-                  <line
-                    opacity="0.58"
-                    stroke="var(--admin-border)"
-                    strokeWidth="1"
-                    x1={padding.left}
-                    x2={width - padding.right}
-                    y1={y}
-                    y2={y}
-                  />
-                  <text fill="var(--admin-muted)" fontSize="11" fontWeight="500" x="8" y={y + 4}>
-                    {numberFormatter.format(value)}
-                  </text>
-                </g>
-              );
-            })}
+    <figure className="mt-4 w-full overflow-x-auto rounded-[1.5rem] border border-border/70 bg-surface p-4">
+      <div className="mx-auto w-full min-w-[760px] max-w-[1120px]">
+        <svg
+          aria-label="Gráfico temporal dos contadores de pacientes"
+          className="block h-auto w-full"
+          height={height}
+          preserveAspectRatio="xMidYMid meet"
+          role="img"
+          viewBox={`0 0 ${width} ${height}`}
+          width={width}
+        >
+          {gridValues.map((value) => {
+            const y = getY(value);
+            return (
+              <g key={`patients-grid-${value}-${y}`}>
+                <line
+                  opacity="0.58"
+                  stroke="var(--admin-border)"
+                  strokeWidth="1"
+                  x1={padding.left}
+                  x2={width - padding.right}
+                  y1={y}
+                  y2={y}
+                />
+                <text fill="var(--admin-muted)" fontSize="11" fontWeight="500" x="8" y={y + 4}>
+                  {numberFormatter.format(value)}
+                </text>
+              </g>
+            );
+          })}
 
-            {series.map((item) => {
-              const linePoints = chartPoints.map((point, index) => ({
-                x: getX(index),
-                y: getY(point[item.key]),
-              }));
-              const path = buildSmoothSvgPath(linePoints);
+          {series.map((item) => {
+            const linePoints = chartPoints.map((point, index) => ({
+              x: getX(index),
+              y: getY(point[item.key]),
+            }));
+            const path = buildSmoothSvgPath(linePoints);
 
-              return (
-                <g key={item.key}>
-                  <path
-                    d={path}
-                    fill="none"
-                    opacity="0.88"
+            return (
+              <g key={item.key}>
+                <path
+                  d={path}
+                  fill="none"
+                  opacity="0.88"
+                  stroke={item.color}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2.05"
+                />
+                {linePoints.map((point, index) => (
+                  <circle
+                    cx={point.x}
+                    cy={point.y}
+                    fill="var(--admin-surface)"
+                    key={`${item.key}-${chartPoints[index].date}`}
+                    opacity={index === linePoints.length - 1 ? "1" : "0.72"}
+                    r={index === linePoints.length - 1 ? "3.1" : "2.1"}
                     stroke={item.color}
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2.05"
+                    strokeWidth="1.45"
                   />
-                  {linePoints.map((point, index) => (
-                    <circle
-                      cx={point.x}
-                      cy={point.y}
-                      fill="var(--admin-surface)"
-                      key={`${item.key}-${chartPoints[index].date}`}
-                      opacity={index === linePoints.length - 1 ? "1" : "0.72"}
-                      r={index === linePoints.length - 1 ? "3.1" : "2.1"}
-                      stroke={item.color}
-                      strokeWidth="1.45"
-                    />
-                  ))}
-                </g>
-              );
-            })}
-          </svg>
-          <div
-            className="mt-1 grid gap-1"
-            style={{ gridTemplateColumns: `repeat(${dateLabels.length}, 1fr)` }}
-          >
-            {dateLabels.map(({ date, label }) => (
-              <span className="min-w-0 text-center text-[10px] font-bold text-subtle" key={date}>
-                {label}
-              </span>
-            ))}
-          </div>
-        </div>
-      </div>
-      <details className="mt-3 rounded-2xl bg-surface-muted p-3 text-xs text-muted">
-        <summary className="cursor-pointer font-black text-foreground">
-          Resumo textual do gráfico
-        </summary>
-        <div className="mt-2 grid gap-2 sm:grid-cols-2">
-          {series.map((item) => (
-            <p key={item.key}>
-              <strong className="text-foreground">{item.label}:</strong>{" "}
-              {chartPoints
-                .map((point) => `${point.tooltipLabel}: ${numberFormatter.format(point[item.key])}`)
-                .join("; ")}
-            </p>
+                ))}
+              </g>
+            );
+          })}
+        </svg>
+        <div
+          className="mt-1 grid gap-1"
+          style={{ gridTemplateColumns: `repeat(${dateLabels.length}, 1fr)` }}
+        >
+          {dateLabels.map(({ date, label }) => (
+            <span className="min-w-0 text-center text-[10px] font-bold text-subtle" key={date}>
+              {label}
+            </span>
           ))}
         </div>
-      </details>
+      </div>
     </figure>
   );
 };
@@ -936,35 +931,46 @@ const CoverageNotes = ({ summary }: { summary: AdminPatientsDashboard }) => (
   </CardShell>
 );
 
-const DashboardContent = ({ summary }: { summary: AdminPatientsDashboard }) => (
-  <div className="space-y-7">
-    {summary.cards.new_signups.value === 0 ? <EmptyState period={summary.period} /> : null}
+const DashboardContent = ({ summary }: { summary: AdminPatientsDashboard }) => {
+  const [visibleMetricKeys, setVisibleMetricKeys] = useState<DashboardMetricKey[]>(() => [
+    ...CARD_ORDER,
+  ]);
+  const activeMetricKeys = CARD_ORDER.filter((key) => visibleMetricKeys.includes(key));
+  const toggleMetric = (metricKey: DashboardMetricKey) => {
+    setVisibleMetricKeys((current) => {
+      if (!current.includes(metricKey)) return [...current, metricKey];
 
-    <CardShell className="min-w-0 p-5">
-      <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-        <div>
+      const next = current.filter((item) => item !== metricKey);
+      return next.length > 0 ? next : current;
+    });
+  };
+
+  return (
+    <div className="space-y-7">
+      {summary.cards.new_signups.value === 0 ? <EmptyState period={summary.period} /> : null}
+
+      <CardShell className="min-w-0 p-5">
+        <div className="mb-5 min-w-0">
           <h2 className="text-xl font-bold text-foreground">Visão Geral</h2>
           <p className="mt-1 text-sm font-bold leading-6 text-muted">
             {summary.period.label} · {formatDate(summary.period.from)} a{" "}
             {formatDate(summary.period.to)}
           </p>
         </div>
-        <span className="w-fit rounded-full bg-surface-muted px-2 py-1 text-[0.65rem] font-bold text-muted">
-          {summary.series.source}
-        </span>
-      </div>
-      <CardsGrid summary={summary} />
-      <p className="mt-5 text-sm text-muted">
-        Linha temporal baseada em cadastro de usuários e status atual da conta.
-      </p>
-      <TimelineChart points={summary.series.points} />
-    </CardShell>
+        <CardsGrid
+          activeMetricKeys={activeMetricKeys}
+          onToggleMetric={toggleMetric}
+          summary={summary}
+        />
+        <TimelineChart points={summary.series.points} visibleMetricKeys={activeMetricKeys} />
+      </CardShell>
 
-    <RecentPatients summary={summary} />
-    <Statistics summary={summary} />
-    <CoverageNotes summary={summary} />
-  </div>
-);
+      <RecentPatients summary={summary} />
+      <Statistics summary={summary} />
+      <CoverageNotes summary={summary} />
+    </div>
+  );
+};
 
 export const AdminPatientsClient = () => {
   const [selectedPeriod, setSelectedPeriod] = useState<PatientsDashboardPeriodValue>("week");
