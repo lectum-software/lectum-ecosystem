@@ -671,3 +671,29 @@ Regras de UI obrigatórias:
 - `pnpm check`
 - Smoke service real `buildCommunitiesDashboard({})` retornou `status=200`, `recent_posts.items[0].author`, `views_count`, listas globais fixas e URL publica `/community/{slug}/post/{id}`.
 - Smoke local `GET http://localhost:3002/comunidades` retornou 200.
+
+## Correcao complementar: presets completos no filtro de periodo do dashboard (2026-07-18)
+
+- Pedido do usuario: no dashboard `/comunidades`, o filtro **Periodo** deve ter as mesmas opcoes dos demais paineis: **Hoje**, **Esta semana**, **Este mes**, **Este ano** e **Todo o periodo**; **Personalizado** aparece apenas quando uma data e digitada manualmente.
+- Backend Admin: `GET /api/admin/private/communities/dashboard` passou a aceitar `period=today|week|month|year|all|custom`, mantendo `from`/`to` legados como periodo personalizado.
+- O preset **Todo o periodo** usa como inicio o primeiro registro real relevante das fontes do dashboard de comunidades; se nao houver registros, usa o intervalo operacional padrao, sem backfill ou dado artificial.
+- O preset antigo **Ultimos 90 dias** foi removido da UI e o limite tecnico foi alinhado a janelas longas (`max_days=3660`) para suportar **Este ano** e **Todo o periodo**.
+- O ajuste permanece mobile-first, sem `<img>` cru, sem package novo e sem alteracao em `backend/prisma/schema.prisma` ou migrations.
+- Builder/Quick Copy `vcp://quickcopy/vcp-24aaa2941d814e5b90572bc93ae50e2a` nao esta exposto como ferramenta callable neste ambiente; referencia usada: captura enviada pelo usuario e padroes locais dos filtros Admin.
+- ADR atualizado: `adrs/0231-admin-comunidades-dashboard-agregacoes.md`.
+
+### Criterios deste ajuste
+
+- [x] O seletor de periodo em `/comunidades` exibe **Hoje**, **Esta semana**, **Este mes**, **Este ano** e **Todo o periodo**.
+- [x] O estado **Personalizado** aparece somente quando o Admin digita uma data manual em **De** ou **Ate**.
+- [x] O dashboard consulta o backend por presets reais de periodo, sem mapear **Este ano** ou **Todo o periodo** para **Ultimos 90 dias**.
+- [x] Periodos personalizados continuam usando datas `from`/`to` reais e validacao de intervalo.
+- [x] Nenhum mock, dado fake permanente, endpoint simulado, package novo, schema Prisma ou migration foi usado.
+
+### Validacao deste ajuste
+
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm check` foi executado, mas ficou bloqueado por alteracoes nao relacionadas ja presentes em `backend/src/modules/api/admin/private/communities/manage/*`, `backend/prisma/schema.prisma` e arquivos da TASK-75 em andamento; o erro reportado foi de imports/formatacao nao usados nesses arquivos fora do escopo deste ajuste.

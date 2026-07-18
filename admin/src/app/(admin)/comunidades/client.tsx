@@ -37,15 +37,20 @@ import { useDateRangeCommitOnBlur } from "@/hooks/use-date-range-commit-on-blur"
 import { aggregateCalendarChartPoints, buildSmoothSvgPath } from "@/lib/chart-time-series";
 import { cn } from "@/lib/utils";
 
-const MAX_COMMUNITY_DASHBOARD_DAYS = 90;
+const MAX_COMMUNITY_DASHBOARD_DAYS = 3660;
+type CommunityDashboardPeriodValue = NonNullable<CommunitiesDashboardQuery["period"]>;
+type CommunityDashboardPeriodPreset = Exclude<CommunityDashboardPeriodValue, "custom">;
+
 const COMMUNITY_DASHBOARD_PERIOD_OPTIONS = [
+  { id: "today", label: "Hoje" },
   { id: "week", label: "Esta semana" },
   { id: "month", label: "Este mês" },
-  { id: "last_90_days", label: "Últimos 90 dias" },
-] as const;
-
-type CommunityDashboardPeriodPreset = (typeof COMMUNITY_DASHBOARD_PERIOD_OPTIONS)[number]["id"];
-type CommunityDashboardPeriodValue = CommunityDashboardPeriodPreset | "custom";
+  { id: "year", label: "Este ano" },
+  { id: "all", label: "Todo o período" },
+] as const satisfies ReadonlyArray<{
+  id: CommunityDashboardPeriodPreset;
+  label: string;
+}>;
 
 const numberFormatter = new Intl.NumberFormat("pt-BR");
 const percentageFormatter = new Intl.NumberFormat("pt-BR", {
@@ -277,17 +282,6 @@ const dateFromInput = (value: string) => {
   return new Date(year, month - 1, day, 12, 0, 0, 0);
 };
 
-const getQuickRange = (days: number): CommunitiesDashboardQuery => {
-  const today = new Date();
-  const from = new Date(today);
-  from.setDate(today.getDate() - (days - 1));
-
-  return {
-    from: toInputDate(from),
-    to: toInputDate(today),
-  };
-};
-
 const startOfCurrentWeek = () => {
   const date = new Date();
   const day = date.getDay();
@@ -304,16 +298,26 @@ const startOfCurrentMonth = () => {
   return date;
 };
 
+const startOfCurrentYear = () => new Date(new Date().getFullYear(), 0, 1);
+
 const getCommunityDashboardRangeForPeriod = (
   period: CommunityDashboardPeriodPreset,
 ): CommunitiesDashboardQuery => {
   const today = toInputDate(new Date());
 
-  if (period === "last_90_days") return getQuickRange(MAX_COMMUNITY_DASHBOARD_DAYS);
+  if (period === "today") return { from: today, to: today };
+  if (period === "all") return { from: "", to: today };
   if (period === "month") return { from: toInputDate(startOfCurrentMonth()), to: today };
+  if (period === "year") return { from: toInputDate(startOfCurrentYear()), to: today };
 
   return { from: toInputDate(startOfCurrentWeek()), to: today };
 };
+
+const buildCommunityDashboardPeriodQuery = (
+  period: CommunityDashboardPeriodValue,
+  range: CommunitiesDashboardQuery,
+): CommunitiesDashboardQuery =>
+  period === "custom" ? { from: range.from, period, to: range.to } : { period };
 
 const formatDate = (value: string) =>
   new Intl.DateTimeFormat("pt-BR", {
@@ -626,7 +630,7 @@ const totalDashboardStatisticValue = (statistics: CommunitiesDashboardGlobalStat
     0,
   );
 
-const isValidRange = (range: CommunitiesDashboardQuery) => {
+const isValidCustomRange = (range: CommunitiesDashboardQuery) => {
   if (!range.from || !range.to) return false;
 
   const from = dateFromInput(range.from);
@@ -1712,12 +1716,13 @@ export const AdminCommunitiesClient = () => {
     rangeError,
   } = useDateRangeCommitOnBlur<CommunitiesDashboardQuery>({
     errorMessage:
-      "Informe um período personalizado completo, de até 90 dias, com data inicial menor ou igual à final.",
+      "Informe um período personalizado completo, com data inicial menor ou igual à final.",
     initialRange: () => getCommunityDashboardRangeForPeriod("week"),
-    isValidRange,
+    isValidRange: isValidCustomRange,
   });
-  const validRange = isValidRange(appliedRange);
-  const query = useAdminCommunitiesDashboard(appliedRange, { enabled: validRange });
+  const validRange = selectedPeriod === "custom" ? isValidCustomRange(appliedRange) : true;
+  const queryInput = buildCommunityDashboardPeriodQuery(selectedPeriod, appliedRange);
+  const query = useAdminCommunitiesDashboard(queryInput, { enabled: validRange });
   const queryError = query.error ? resolveApiError(query.error) : null;
   const handlePeriodChange = (nextPeriod: CommunityDashboardPeriodPreset) => {
     setSelectedPeriod(nextPeriod);
@@ -1741,7 +1746,7 @@ export const AdminCommunitiesClient = () => {
 
       {!validRange ? (
         <ErrorState
-          message="Selecione um período válido de até 90 dias."
+          message="Selecione um período válido."
           onRetry={() => handlePeriodChange("week")}
         />
       ) : null}

@@ -18,6 +18,7 @@ export type CommunitiesDashboardMetric = {
 
 export type CommunitiesDashboardQuery = {
   from?: string;
+  period?: "all" | "custom" | "month" | "today" | "week" | "year";
   to?: string;
 };
 
@@ -980,6 +981,7 @@ export type AdminCommunityAvatarResponse = {
 
 const cleanParams = (input: CommunitiesDashboardQuery) => ({
   ...(input.from ? { from: input.from } : {}),
+  ...(input.period ? { period: input.period } : {}),
   ...(input.to ? { to: input.to } : {}),
 });
 

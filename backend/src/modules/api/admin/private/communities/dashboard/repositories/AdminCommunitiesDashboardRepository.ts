@@ -94,7 +94,118 @@ const dashboardStatisticsPageViewSelect = {
   user_id: true,
 } satisfies Prisma.page_view_eventSelect;
 
+const earliestDate = (dates: Array<Date | null | undefined>) =>
+  dates.reduce<Date | null>((earliest, date) => {
+    if (!date) return earliest;
+    if (!earliest || date < earliest) return date;
+
+    return earliest;
+  }, null);
+
 export class AdminCommunitiesDashboardRepository implements IAdminCommunitiesDashboardRepository {
+  async findEarliestDashboardEventDate(): Promise<Date | null> {
+    const [
+      community,
+      member,
+      post,
+      reply,
+      report,
+      postVote,
+      postSave,
+      replySave,
+      postShare,
+      pageView,
+      importantAction,
+      moderationEvent,
+    ] = await Promise.all([
+      prisma.community.findFirst({
+        orderBy: { createdAt: "asc" },
+        select: { createdAt: true },
+        where: { deleted: false },
+      }),
+      prisma.community_member.findFirst({
+        orderBy: { createdAt: "asc" },
+        select: { createdAt: true },
+        where: { deleted: false },
+      }),
+      prisma.community_post.findFirst({
+        orderBy: { createdAt: "asc" },
+        select: { createdAt: true },
+        where: { deleted: false },
+      }),
+      prisma.post_reply.findFirst({
+        orderBy: { createdAt: "asc" },
+        select: { createdAt: true },
+        where: { deleted: false },
+      }),
+      prisma.post_report.findFirst({
+        orderBy: { createdAt: "asc" },
+        select: { createdAt: true },
+        where: { deleted: false },
+      }),
+      prisma.post_vote.findFirst({
+        orderBy: { createdAt: "asc" },
+        select: { createdAt: true },
+        where: { deleted: false },
+      }),
+      prisma.post_save.findFirst({
+        orderBy: { createdAt: "asc" },
+        select: { createdAt: true },
+        where: { deleted: false },
+      }),
+      prisma.post_reply_save.findFirst({
+        orderBy: { createdAt: "asc" },
+        select: { createdAt: true },
+        where: { deleted: false },
+      }),
+      prisma.post_share.findFirst({
+        orderBy: { createdAt: "asc" },
+        select: { createdAt: true },
+        where: { deleted: false },
+      }),
+      prisma.page_view_event.findFirst({
+        orderBy: { occurred_at: "asc" },
+        select: { occurred_at: true },
+        where: {
+          deleted: false,
+          target_type: {
+            in: ["community", "community_post", "post", "post_reply", "reply"],
+          },
+        },
+      }),
+      prisma.important_action_event.findFirst({
+        orderBy: { occurred_at: "asc" },
+        select: { occurred_at: true },
+        where: {
+          deleted: false,
+          target_type: {
+            in: ["community", "community_post", "post", "post_reply", "reply"],
+          },
+        },
+      }),
+      prisma.content_moderation_event.findFirst({
+        orderBy: { createdAt: "asc" },
+        select: { createdAt: true },
+        where: { deleted: false },
+      }),
+    ]);
+
+    return earliestDate([
+      community?.createdAt,
+      member?.createdAt,
+      post?.createdAt,
+      reply?.createdAt,
+      report?.createdAt,
+      postVote?.createdAt,
+      postSave?.createdAt,
+      replySave?.createdAt,
+      postShare?.createdAt,
+      pageView?.occurred_at,
+      importantAction?.occurred_at,
+      moderationEvent?.createdAt,
+    ]);
+  }
+
   async countPendingReports(range: AdminCommunitiesDashboardDateRange): Promise<number> {
     return prisma.post_report.count({
       where: {

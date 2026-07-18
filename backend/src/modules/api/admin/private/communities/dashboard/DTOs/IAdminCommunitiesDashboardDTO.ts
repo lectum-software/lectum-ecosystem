@@ -2,6 +2,7 @@
 
 export type AdminCommunitiesDashboardQuery = {
   from?: string;
+  period?: "all" | "custom" | "month" | "today" | "week" | "year";
   to?: string;
 };
 

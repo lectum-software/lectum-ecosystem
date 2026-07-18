@@ -128,6 +128,7 @@ export interface IAdminCommunitiesDashboardRepository {
   countPendingReports(range: AdminCommunitiesDashboardDateRange): Promise<number>;
   countPendingModerationEvents(range: AdminCommunitiesDashboardDateRange): Promise<number>;
   countUrgentModerationEvents(range: AdminCommunitiesDashboardDateRange): Promise<number>;
+  findEarliestDashboardEventDate(): Promise<Date | null>;
   listCommunities(): Promise<CommunityRecord[]>;
   listCommunityMembers(): Promise<CommunityMemberRecord[]>;
   listCommunityPosts(range?: AdminCommunitiesDashboardDateRange): Promise<CommunityPostRecord[]>;

@@ -31,7 +31,7 @@ import type {
 } from "../repositories/interfaces/IAdminCommunitiesDashboardRepository";
 
 const DEFAULT_PERIOD_DAYS = 7;
-const MAX_PERIOD_DAYS = 90;
+const MAX_PERIOD_DAYS = 3660;
 const SEVERITY_WEIGHTS: Record<AdminCommunitiesDashboardSeverity, number> = {
   alta: 3,
   media: 2,
@@ -74,6 +74,19 @@ const startOfDate = (date: Date) => {
   return next;
 };
 
+const startOfWeek = (date: Date) => {
+  const next = startOfDate(date);
+  const day = next.getDay();
+  const diff = day === 0 ? -6 : 1 - day;
+  next.setDate(next.getDate() + diff);
+
+  return next;
+};
+
+const startOfMonth = (date: Date) => new Date(date.getFullYear(), date.getMonth(), 1);
+
+const startOfYear = (date: Date) => new Date(date.getFullYear(), 0, 1);
+
 const endOfDate = (date: Date) => {
   const next = new Date(date);
   next.setHours(23, 59, 59, 999);
@@ -109,17 +122,22 @@ const daysBetweenInclusive = (from: Date, to: Date) => {
 const buildLabels = (from: Date, days: number) =>
   Array.from({ length: days }, (_, index) => toDateKey(addDays(from, index)));
 
-const resolvePeriod = (query: AdminCommunitiesDashboardQuery): PeriodResult => {
+const resolvePeriod = (
+  query: AdminCommunitiesDashboardQuery,
+  allPeriodStartDate?: Date | null,
+): PeriodResult => {
   const hasCustomFrom = Boolean(query.from);
   const hasCustomTo = Boolean(query.to);
+  const preset = query.period || (hasCustomFrom || hasCustomTo ? "custom" : null);
 
   let start: Date;
   let end: Date;
   let label = "Últimos 7 dias";
 
-  if (hasCustomFrom || hasCustomTo) {
-    if (!hasCustomFrom || !hasCustomTo)
+  if (preset === "custom") {
+    if (!hasCustomFrom || !hasCustomTo) {
       return { success: false, code: "invalid_analytics_date_range" };
+    }
 
     const customStart = parseDateOnly(query.from, "start");
     const customEnd = parseDateOnly(query.to, "end");
@@ -131,6 +149,33 @@ const resolvePeriod = (query: AdminCommunitiesDashboardQuery): PeriodResult => {
     start = customStart;
     end = customEnd;
     label = "Período personalizado";
+  } else if (preset === "today") {
+    const today = new Date();
+    start = startOfDate(today);
+    end = endOfDate(today);
+    label = "Hoje";
+  } else if (preset === "week") {
+    const today = new Date();
+    start = startOfWeek(today);
+    end = endOfDate(today);
+    label = "Esta semana";
+  } else if (preset === "month") {
+    const today = new Date();
+    start = startOfMonth(today);
+    end = endOfDate(today);
+    label = "Este mês";
+  } else if (preset === "year") {
+    const today = new Date();
+    start = startOfYear(today);
+    end = endOfDate(today);
+    label = "Este ano";
+  } else if (preset === "all") {
+    const today = new Date();
+    start = startOfDate(allPeriodStartDate ?? addDays(today, -(DEFAULT_PERIOD_DAYS - 1)));
+    end = endOfDate(today);
+    label = "Todo o período";
+  } else if (preset) {
+    return { success: false, code: "invalid_analytics_date_range" };
   } else {
     const today = new Date();
     end = endOfDate(today);
@@ -1057,7 +1102,11 @@ const buildTopCommunities = (
 export const buildCommunitiesDashboard = async (
   query: AdminCommunitiesDashboardQuery,
 ): Promise<Resolve> => {
-  const resolvedPeriod = resolvePeriod(query ?? {});
+  const repository = new AdminCommunitiesDashboardRepository();
+  const safeQuery = query ?? {};
+  const allPeriodStartDate =
+    safeQuery.period === "all" ? await repository.findEarliestDashboardEventDate() : null;
+  const resolvedPeriod = resolvePeriod(safeQuery, allPeriodStartDate);
   if (!resolvedPeriod.success) {
     return {
       status: 400,
@@ -1065,7 +1114,6 @@ export const buildCommunitiesDashboard = async (
     };
   }
 
-  const repository = new AdminCommunitiesDashboardRepository();
   const { current, labels, period, previous } = resolvedPeriod.period;
 
   const [

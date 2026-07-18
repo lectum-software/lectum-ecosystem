@@ -144,3 +144,11 @@ Consequencia: a leitura do autor fica consistente com foto e selo quando houver,
 - A URL publica segue a convencao canonica da TASK-40: `NEXT_PUBLIC_FRONTEND_URL + /community/{slug}/post/{id}`.
 - Nao houve package novo, schema Prisma, migration, endpoint paralelo, seed, mock ou dado fake permanente.
 - Builder/Quick Copy `vcp://quickcopy/vcp-24aaa2941d814e5b90572bc93ae50e2a` nao esta exposto como ferramenta callable neste ambiente; referencias usadas: captura enviada pelo usuario e `_product/proto/admin/Comunidades/Comunidades - Dashboard.png`.
+
+## Atualizacao 2026-07-18: presets completos no filtro de periodo do dashboard
+
+O seletor de periodo do dashboard geral `/comunidades` deve ter a mesma lista usada nas demais areas analiticas do Admin: **Hoje**, **Esta semana**, **Este mes**, **Este ano** e **Todo o periodo**. O estado **Personalizado** aparece apenas quando o Admin digita manualmente uma data em **De** ou **Ate**.
+
+A decisao e estender o contrato existente `GET /api/admin/private/communities/dashboard` para aceitar `period=today|week|month|year|all|custom`, preservando compatibilidade com `from`/`to` legados como periodo personalizado. No frontend, `custom` nao e uma opcao fixa do dropdown: ele e selecionado automaticamente quando datas manuais sao editadas. O periodo inicial continua sendo **Esta semana**. Para **Todo o periodo**, o backend resolve a data inicial a partir do primeiro registro real relevante do dashboard de comunidades, incluindo comunidades, membros, posts, respostas, votos, salvamentos, compartilhamentos, pageviews, cliques e moderacao; se nao houver registros, volta ao intervalo operacional padrao.
+
+O limite tecnico foi alinhado aos demais dashboards analiticos longos do Admin (`max_days=3660`) para permitir **Este ano** e **Todo o periodo** sem reintroduzir o preset antigo **Ultimos 90 dias**. Nao houve alteracao de schema Prisma, migration, pacote, mock, seed ou endpoint paralelo.
