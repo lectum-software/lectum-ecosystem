@@ -38,7 +38,6 @@ import {
   Share2,
   ShieldCheck,
   Star,
-  Trash2,
   Trophy,
   UserRound,
   Video,
@@ -62,7 +61,6 @@ import { createPortal, flushSync } from "react-dom";
 import { FormProvider, type SubmitHandler, useForm, useWatch } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
-import { useAdminCommunityRemoveContent } from "@/api/callers/communities";
 import {
   useAdminPsychologistAccount,
   useAdminPsychologistActivities,
@@ -908,24 +906,6 @@ const reportReviewSchema = accountReasonSchema
 type ReportDismissFormValues = z.infer<typeof reportDismissSchema>;
 type ReportReviewFormValues = z.infer<typeof reportReviewSchema>;
 type ReportUpholdFormValues = z.infer<typeof reportUpholdSchema>;
-
-const PUBLICATION_REMOVE_CONFIRMATION = "REMOVER CONTEUDO";
-
-const publicationRemoveSchema = accountReasonSchema
-  .extend({
-    confirmation: z.string(),
-  })
-  .superRefine((values, ctx) => {
-    if (values.confirmation.trim().toUpperCase() !== PUBLICATION_REMOVE_CONFIRMATION) {
-      ctx.addIssue({
-        code: "custom",
-        message: `Digite ${PUBLICATION_REMOVE_CONFIRMATION} para confirmar.`,
-        path: ["confirmation"],
-      });
-    }
-  });
-
-type PublicationRemoveFormValues = z.infer<typeof publicationRemoveSchema>;
 
 const toPublicHref = (url: string) => {
   if (/^https?:\/\//.test(url)) return url;
@@ -4058,68 +4038,31 @@ const PublicationMetric = ({ metric }: { metric: AdminPsychologistPublicationMet
   );
 };
 
-const PublicationItemHeader = ({ item }: { item: AdminPsychologistPublicationItem }) => (
-  <div className="flex flex-wrap items-center gap-2">
-    <Badge className="bg-surface-muted text-muted">
-      {item.type === "post" ? "Post" : "Resposta"}
-    </Badge>
-    <span className="text-xs font-bold text-muted">{formatDateTime(item.created_at)}</span>
-  </div>
-);
-
-const PublicationCommunityIdentity = ({
-  className,
-  item,
-}: {
-  className?: string;
-  item: AdminPsychologistPublicationItem;
-}) => {
-  const avatarSrc = renderableImageSrc(item.community.avatar_url);
-  const fallbackStyle =
-    !avatarSrc && item.community.color ? { backgroundColor: item.community.color } : undefined;
+const PublicationItemHeader = ({ item }: { item: AdminPsychologistPublicationItem }) => {
+  const TypeIcon = item.type === "post" ? FileText : MessageCircle;
 
   return (
-    <div className={cn("flex min-w-0 items-center gap-3", className)}>
-      <div
-        className={cn(
-          "relative grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-full border border-border text-xs font-black",
-          avatarSrc ? "bg-surface-muted text-primary" : "bg-primary-soft text-primary",
-          fallbackStyle ? "text-white" : null,
-        )}
-        style={fallbackStyle}
-      >
-        {avatarSrc ? (
-          <Image
-            alt={`Avatar da comunidade ${item.community.name}`}
-            className="object-cover"
-            fill
-            sizes="40px"
-            src={avatarSrc}
-            unoptimized={isPublicAdminMediaSrc(avatarSrc)}
-          />
-        ) : (
-          initials(item.community.name)
-        )}
-      </div>
-      <div className="min-w-0">
-        <span className="block truncate text-sm font-black text-foreground">
-          {item.community.name}
-        </span>
-      </div>
+    <div className="flex flex-wrap items-center gap-2 text-xs text-muted">
+      <TypeIcon aria-hidden className="h-4 w-4 shrink-0" />
+      <span className="font-black">{item.type === "post" ? "Post" : "Resposta"}</span>
+      <span aria-hidden className="font-bold">
+        ·
+      </span>
+      <span className="font-black">{item.community.name}</span>
+      <span aria-hidden className="font-bold">
+        ·
+      </span>
+      <span className="font-bold">{formatDateTime(item.created_at)}</span>
     </div>
   );
 };
 
 const PublicationItemBody = ({ item }: { item: AdminPsychologistPublicationItem }) => {
   const hasText = item.excerpt.trim().length > 0;
-  const showTitle = item.type === "post";
 
   return (
     <div className="min-w-0">
-      {showTitle ? <h3 className="text-base font-black text-foreground">{item.title}</h3> : null}
-      <p className={cn("text-sm leading-6 text-muted", showTitle && "mt-2")}>
-        {hasText ? item.excerpt : "Sem texto."}
-      </p>
+      <p className="text-sm leading-6 text-muted">{hasText ? item.excerpt : "Sem texto."}</p>
     </div>
   );
 };
@@ -4133,7 +4076,9 @@ const PublicationItemMain = ({ item }: { item: AdminPsychologistPublicationItem 
   return (
     <div className="min-w-0">
       <PublicationItemHeader item={item} />
-      <PublicationCommunityIdentity className="mt-3" item={item} />
+      {item.type === "post" ? (
+        <h3 className="mt-4 text-base font-black text-foreground">{item.title}</h3>
+      ) : null}
       <div className={mediaTextGridClass}>
         <PublicationMedia item={item} />
         <PublicationItemBody item={item} />
@@ -4153,94 +4098,6 @@ const PublicationMetrics = ({ item }: { item: AdminPsychologistPublicationItem }
     </div>
   </div>
 );
-
-const publicationRemovalTargetType = (item: AdminPsychologistPublicationItem) =>
-  item.type === "post" ? "post" : "comment";
-
-const PublicationRemoveForm = ({
-  item,
-  onCancel,
-  onRemoved,
-}: {
-  item: AdminPsychologistPublicationItem;
-  onCancel: () => void;
-  onRemoved: () => void;
-}) => {
-  const mutation = useAdminCommunityRemoveContent(item.community.slug);
-  const form = useForm<PublicationRemoveFormValues>({
-    defaultValues: {
-      confirmation: "",
-      reason: "",
-    },
-    mode: "onSubmit",
-    resolver: zodResolver(publicationRemoveSchema),
-  });
-
-  const onSubmit = async (values: PublicationRemoveFormValues) => {
-    try {
-      await mutation.mutateAsync({
-        input: {
-          confirmation: values.confirmation,
-          reason: values.reason.trim(),
-        },
-        targetId: item.id,
-        targetType: publicationRemovalTargetType(item),
-      });
-      toast.success("Publicação removida com auditoria administrativa.");
-      form.reset();
-      onRemoved();
-    } catch (error) {
-      toast.error(resolveApiError(error));
-    }
-  };
-
-  return (
-    <FormProvider {...form}>
-      <form
-        className="mt-3 grid gap-3 rounded-2xl border border-red-100 bg-red-50 p-3"
-        noValidate
-        onSubmit={form.handleSubmit(onSubmit)}
-      >
-        <div>
-          <p className="text-sm font-black text-danger">Remoção administrativa de publicação</p>
-          <p className="mt-1 text-xs leading-5 text-danger">
-            A ação remove o {item.type === "post" ? "post" : "comentário"} na comunidade{" "}
-            {item.community.name} e registra auditoria real.
-          </p>
-        </div>
-        <TextareaController<PublicationRemoveFormValues>
-          label="Motivo interno obrigatório"
-          name="reason"
-          required
-          rows={3}
-        />
-        <InputController<PublicationRemoveFormValues>
-          label="Confirmação forte"
-          name="confirmation"
-          placeholder={PUBLICATION_REMOVE_CONFIRMATION}
-          required
-        />
-        <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
-          <button
-            className="h-10 rounded-control border border-border bg-surface px-4 text-xs font-black text-foreground"
-            onClick={onCancel}
-            type="button"
-          >
-            Cancelar
-          </button>
-          <button
-            className="inline-flex h-10 items-center justify-center gap-2 rounded-control bg-danger px-4 text-xs font-black text-white disabled:opacity-70"
-            disabled={mutation.isPending}
-            type="submit"
-          >
-            {mutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-            Remover publicação
-          </button>
-        </div>
-      </form>
-    </FormProvider>
-  );
-};
 
 const PublicationsPagination = ({
   page,
@@ -4334,9 +4191,6 @@ const PublicationsTab = ({ createdAt, id }: { createdAt: string; id: string }) =
   );
   const [rangeError, setRangeError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
-  const [selectedRemoval, setSelectedRemoval] = useState<AdminPsychologistPublicationItem | null>(
-    null,
-  );
   const customRangeIsValid = isValidStatisticsRange(draftRange);
   const queryInput = useMemo<AdminPsychologistPublicationsQuery>(
     () => ({
@@ -4354,13 +4208,10 @@ const PublicationsTab = ({ createdAt, id }: { createdAt: string; id: string }) =
   );
   const query = useAdminPsychologistPublications(id, queryInput);
   const errorMessage = query.error ? resolveApiError(query.error) : null;
-  const closeRemoval = () => setSelectedRemoval(null);
   const resetToFirstPage = () => {
-    closeRemoval();
     setPage(1);
   };
   const handlePageChange = (nextPage: number) => {
-    closeRemoval();
     setPage(nextPage);
   };
   const handlePeriodChange = (period: PublicationsPeriodValue) => {
@@ -4554,7 +4405,6 @@ const PublicationsTab = ({ createdAt, id }: { createdAt: string; id: string }) =
             </p>
           ) : null}
           {publications.data.map((item) => {
-            const selected = selectedRemoval?.id === item.id && selectedRemoval.type === item.type;
             const adminDetailHref = publicationAdminDetailHref(item);
 
             return (
@@ -4566,13 +4416,13 @@ const PublicationsTab = ({ createdAt, id }: { createdAt: string; id: string }) =
                   <PublicationItemMain item={item} />
                   <div className="flex justify-end gap-2 lg:flex-col">
                     <Link
-                      aria-label="Ver detalhe analítico da publicação no Admin"
+                      aria-label="Ver analytics da publicação no Admin"
                       className="inline-flex h-10 w-10 items-center justify-center rounded-control border border-primary/30 text-primary transition hover:bg-primary-soft"
                       href={adminDetailHref}
-                      title="Detalhe analítico"
+                      title="Analytics"
                     >
-                      <FileText aria-hidden className="h-4 w-4" />
-                      <span className="sr-only">Detalhe analítico</span>
+                      <BarChart3 aria-hidden className="h-4 w-4" />
+                      <span className="sr-only">Analytics</span>
                     </Link>
                     <Link
                       aria-label="Ver publicação no site"
@@ -4585,32 +4435,9 @@ const PublicationsTab = ({ createdAt, id }: { createdAt: string; id: string }) =
                       <Eye aria-hidden className="h-4 w-4" />
                       <span className="sr-only">Ver no site</span>
                     </Link>
-                    <button
-                      aria-label={selected ? "Fechar exclusão" : "Excluir publicação"}
-                      aria-pressed={selected}
-                      className="inline-flex h-10 w-10 items-center justify-center rounded-control border border-danger/20 text-danger transition hover:bg-danger/10"
-                      onClick={() => setSelectedRemoval(selected ? null : item)}
-                      title={selected ? "Fechar exclusão" : "Excluir"}
-                      type="button"
-                    >
-                      <Trash2 aria-hidden className="h-4 w-4" />
-                      <span className="sr-only">
-                        {selected ? "Fechar exclusão" : "Excluir publicação"}
-                      </span>
-                    </button>
                   </div>
                 </div>
                 <PublicationMetrics item={item} />
-                {selected ? (
-                  <PublicationRemoveForm
-                    item={item}
-                    onCancel={closeRemoval}
-                    onRemoved={() => {
-                      closeRemoval();
-                      void query.refetch();
-                    }}
-                  />
-                ) : null}
               </article>
             );
           })}
