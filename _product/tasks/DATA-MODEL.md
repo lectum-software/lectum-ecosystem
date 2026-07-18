@@ -377,6 +377,33 @@ Regra: sessão de vídeo autenticada do próprio psicólogo no próprio perfil (
 persistida nem entrar nas métricas de Analytics. Visitantes anônimos não podem ser associados com segurança ao dono do
 perfil e seguem contabilizados como anônimos.
 
+`content_video_watch_session` (TASK-75, analytics de retenção de vídeo em posts/respostas de comunidade):
+
+| Campo | Tipo | Notas |
+|---|---|---|
+| `target_type` | `String` | `"post"` ou `"reply"`; permite reutilizar a coleta para vídeos no corpo do post e em respostas com mídia. |
+| `target_id` | `String` | ID do alvo canônico de consumo; igual a `post_id` quando `target_type="post"` e igual a `reply_id` quando `target_type="reply"`. |
+| `post_id` | `String?` | FK `community_post.id`; sempre preenchido para alvo `post` e também para respostas quando disponível para agregação por thread. |
+| `reply_id` | `String?` | FK `post_reply.id`; preenchido somente para alvo `reply`. |
+| `community_id` | `String` | FK `community.id`, derivada do post/thread para filtros e dashboards Admin. |
+| `viewer_id` | `String?` | usuário autenticado que assistiu, quando existir; visitantes anônimos ficam nulos. |
+| `visitor_id` | `String` | identificador anônimo estável do visitante, reutilizado da captura pública de analytics. |
+| `session_id` | `String` | identificador da sessão do navegador. |
+| `session_key` | `String` | chave idempotente por alvo+sessão; `@@unique([target_type, target_id, session_key])` consolida heartbeats sem duplicar visualização. |
+| `video_url` | `String?` | URL do vídeo vigente no momento do evento para auditoria básica; não substitui o registro de mídia do conteúdo. |
+| `duration_seconds` | `Int @default(0)` | duração arredondada informada pelo player. |
+| `watched_seconds` | `Int @default(0)` | segundos únicos assistidos na sessão, sem simular tempo não reproduzido. |
+| `max_position_seconds` | `Int @default(0)` | maior posição alcançada no vídeo. |
+| `replay_count` | `Int @default(0)` | quantidade de retornos/replays detectados na mesma sessão. |
+| `completed` | `Boolean @default(false)` | verdadeiro quando o usuário chega ao fim ou ao marco equivalente de 100%. |
+| `milestone_25`, `milestone_50`, `milestone_75`, `milestone_100` | `Boolean @default(false)` | retenção por marcos, suficiente para gráfico agregado sem capturar cada segundo. |
+| `retention_buckets` | `Json?` | lista de buckets internos de 5% alcançados (`[5,10,...,100]`), calculada pelo backend a partir da maior posição/duração. |
+| `last_event_at` | `DateTime @default(now())` | última atualização recebida para exibir recência dos dados. |
+| `@@index([target_type, target_id, createdAt])`, `@@index([community_id, createdAt])`, `@@index([viewer_id, createdAt])`, `@@index([post_id, createdAt])`, `@@index([reply_id, createdAt])`, `@@index([last_event_at])` | | consultas de analytics por conteúdo, comunidade, usuário e recência. |
+| `@@map("content_video_watch_sessions")` | | Tabela nova de analytics first-party para vídeos de conteúdo. |
+
+Regras: `content_video_watch_session` é exclusivo para consumo de mídia de vídeo em posts/respostas de comunidade. Não registra texto do post, comentários, payload de formulário, IP bruto, user-agent bruto, token, query sensível ou conteúdo de WhatsApp. Não há backfill histórico. Autovisualização autenticada do autor do conteúdo deve ser excluída das métricas; a preferência V1 é não persistir essa sessão. Retenção de conteúdo não deve ser inferida de `page_view_event.duration_seconds`.
+
 `visitor_session` (analytics admin, TASK-47):
 
 | Campo | Tipo | Notas |
@@ -866,6 +893,7 @@ Para evitar referência a tabela inexistente, criar nesta ordem (cada uma com su
 5. `notification`/`notification_preference` (TASK-29A).
 6. `profile_view_event` quando analytics/notificacao de visualizacao entrar no escopo (TASK-20/29B).
 7. `subscription_plan`/`professional_subscription`/`billing_address`/`payment_method`/`payment_event` (TASK-31..33) — após TASK-03.
+8. `content_video_watch_session` (TASK-75) depois de TASK-71/TASK-72, para analytics first-party de retenção de vídeo de posts/respostas sem backfill.
 
 ## Complemento 2026-06-26 - mensagens `wa.me` personalizadas
 
