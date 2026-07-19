@@ -232,3 +232,37 @@ Criar o shell de detalhe do psicólogo e as abas Geral e Perfil/Cadastro com dad
 - `pnpm --dir admin build`
 - Smoke HTTP local: `GET http://localhost:3002/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=perfil` retornou `200`.
 - Validacao visual autenticada em browser local nao foi executada por nao haver ferramenta de browser interativa/sessao Admin disponivel no ambiente desta execucao.
+
+## Ajuste complementar 2026-07-19 - status de conta no header
+
+- Pedido direto de produto aplicado no header do detalhe Admin do psicologo.
+- O status solicitado foi esclarecido como status de conta/acesso, nao status publico do perfil.
+- Foi adicionada a quinta opcao de metadado entre WhatsApp e plano, usando o endpoint real `GET /api/admin/private/psychologists/:id/account` via `useAdminPsychologistAccount`.
+- A copy do status usa `confirmed`, `active`, `account_status` e `account_status_label`:
+  - `Conta ativa` quando o e-mail esta confirmado e o login esta liberado;
+  - `E-mail pendente` quando a conta esta ativa, mas o e-mail nao foi confirmado;
+  - `Conta suspensa`/`Conta desativada` quando o status operacional bloqueia login;
+  - `Login bloqueado` como fallback seguro se `active=false`;
+  - `Conta indisponivel` apenas se o endpoint real de conta falhar.
+- A faixa de metadados foi ajustada para manter e-mail, WhatsApp, status da conta, plano e avaliacao em uma unica linha sem wrap; em telas estreitas, a linha rola horizontalmente em vez de criar nova linha.
+- Nao houve alteracao de backend, schema Prisma, migrations, packages ou mocks.
+- ADR atualizado: `adrs/0285-admin-psicologo-header-metadados.md`.
+
+### Criterios do ajuste de status de conta
+
+- [x] Status de conta aparece entre WhatsApp e plano.
+- [x] As cinco opcoes do header ficam em uma unica linha sem wrap.
+- [x] O status usa dados reais do endpoint Admin de conta, sem mock.
+- [x] `Conta ativa` representa e-mail confirmado e login liberado.
+- [x] UI permanece mobile-first com overflow horizontal em largura estreita.
+- [x] Nenhum `<img>` cru foi usado.
+
+### Validacao complementar do status de conta
+
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/psicologos/[id]/client.tsx"`
+- `pnpm --dir admin exec eslint "src/app/(admin)/psicologos/[id]/client.tsx"`
+- `git diff --check -- "admin/src/app/(admin)/psicologos/[id]/client.tsx"`
+- Smoke HTTP local: `GET http://localhost:3002/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=perfil` retornou `200`.
+- `pnpm --dir admin check` foi executado e ficou bloqueado por lint/format preexistente em `admin/src/app/(admin)/comunidades/client.tsx`.
+- `pnpm --dir admin build` foi executado e ficou bloqueado por alteracao local preexistente em `admin/src/app/(admin)/comunidades/client.tsx` (`charts.hourly_activity` fora do contrato TypeScript atual).
+- `pnpm check` foi executado: frontend passou, mas o backend ficou bloqueado por `prisma generate` com `EBUSY` em `backend/src/external/generated/prisma/models`, antes de chegar novamente ao check Admin.

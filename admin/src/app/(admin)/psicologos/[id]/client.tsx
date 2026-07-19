@@ -1313,6 +1313,53 @@ const getHeaderRatingLabel = (header: AdminPsychologistDetail["header"]) => {
   return `${rating} (${numberFormatter.format(header.rating_count)})`;
 };
 
+const getHeaderAccountStatus = (
+  account: AdminPsychologistAccount | undefined,
+  state: { isError: boolean; isLoading: boolean },
+) => {
+  if (!account) {
+    if (state.isError) {
+      return {
+        label: "Conta indisponível",
+        title: "Não foi possível carregar o status real da conta.",
+      };
+    }
+
+    return {
+      label: state.isLoading ? "Conta..." : "Conta indisponível",
+      title: "Carregando status real da conta.",
+    };
+  }
+
+  if (account.account_status !== "active") {
+    const statusLabel = account.account_status_label.toLocaleLowerCase("pt-BR");
+
+    return {
+      label: `Conta ${statusLabel}`,
+      title: "Login bloqueado enquanto a conta não estiver ativa.",
+    };
+  }
+
+  if (!account.active) {
+    return {
+      label: "Login bloqueado",
+      title: "Login bloqueado porque a conta está inativa.",
+    };
+  }
+
+  if (!account.confirmed) {
+    return {
+      label: "E-mail pendente",
+      title: "E-mail ainda não confirmado; a conta não está totalmente liberada.",
+    };
+  }
+
+  return {
+    label: "Conta ativa",
+    title: "E-mail confirmado e login liberado.",
+  };
+};
+
 const needsManualRegistryReview = (detail: AdminPsychologistDetail) => {
   const subscription = detail.general.subscription;
   const hasActiveProfessionalPlan =
@@ -1746,6 +1793,11 @@ const DetailHeader = ({
   const headerPlan = getHeaderPlanLabel(detail);
   const headerRating = getHeaderRatingLabel(header);
   const headerWhatsapp = formatHeaderWhatsappDisplay(detail.profile.personal.phone);
+  const accountStatusQuery = useAdminPsychologistAccount(id);
+  const headerAccountStatus = getHeaderAccountStatus(accountStatusQuery.data, {
+    isError: accountStatusQuery.isError,
+    isLoading: accountStatusQuery.isLoading,
+  });
   const reportsAlertInput = useMemo<AdminPsychologistReportsQuery>(
     () => ({ limit: 1, page: 1, status: "pending", type: "all" }),
     [],
@@ -1773,20 +1825,34 @@ const DetailHeader = ({
               <span aria-hidden>•</span>
               <span>{formatAdminHeaderCrp(detail)}</span>
             </div>
-            <div className="mt-4 flex flex-wrap items-center gap-x-8 gap-y-3 text-sm text-muted xl:gap-x-10">
-              <span className="inline-flex items-center gap-2">
+            <div className="mt-4 flex min-w-0 flex-nowrap items-center gap-x-5 overflow-x-auto text-sm text-muted sm:gap-x-6 md:overflow-visible xl:gap-x-8">
+              <span
+                className="inline-flex min-w-0 max-w-72 shrink items-center gap-2 whitespace-nowrap"
+                title={detail.profile.personal.email}
+              >
                 <Mail aria-hidden className="h-4 w-4 shrink-0 text-primary" />
-                <span className="min-w-0 break-words">{detail.profile.personal.email}</span>
+                <span className="min-w-0 truncate">{detail.profile.personal.email}</span>
               </span>
-              <span className="inline-flex items-center gap-2">
+              <span className="inline-flex shrink-0 items-center gap-2 whitespace-nowrap">
                 <WhatsAppIcon aria-hidden className="h-4 w-4 text-primary" />
                 <span>{headerWhatsapp}</span>
               </span>
-              <span className="inline-flex items-center gap-2">
+              <span
+                aria-busy={accountStatusQuery.isLoading && !accountStatusQuery.data}
+                className="inline-flex shrink-0 items-center gap-2 whitespace-nowrap"
+                title={headerAccountStatus.title}
+              >
+                <UserRound aria-hidden className="h-4 w-4 shrink-0 text-primary" />
+                <span>
+                  <span className="sr-only">Status da conta: </span>
+                  {headerAccountStatus.label}
+                </span>
+              </span>
+              <span className="inline-flex shrink-0 items-center gap-2 whitespace-nowrap">
                 <Wallet aria-hidden className="h-4 w-4 shrink-0 text-primary" />
                 <span>{headerPlan}</span>
               </span>
-              <span className="inline-flex items-center gap-2">
+              <span className="inline-flex shrink-0 items-center gap-2 whitespace-nowrap">
                 <Star aria-hidden className="h-4 w-4 shrink-0 text-primary" />
                 <span>{headerRating}</span>
               </span>
