@@ -866,3 +866,29 @@ Regras de UI obrigatórias:
 - Smoke HTTP local `GET http://localhost:3002/comunidades` retornou 200.
 - `pnpm --dir admin check`: bloqueado por alteracoes preexistentes fora do escopo em `admin/src/app/(admin)/psicologos/[id]/client.tsx` (variaveis nao usadas e formatacao).
 - `pnpm --dir admin build`: bloqueado por erro TypeScript preexistente fora do escopo em `admin/src/app/(admin)/psicologos/[id]/client.tsx` (`maxPeakActivityHourCount` inexistente).
+
+## Ajuste complementar 2026-07-19 - alinhamento das acoes em posts recentes e populares
+
+- Pedido do usuario: em **Postagens mais recentes** e **Posts mais populares**, alinhar a coluna **Acoes** a direita e ajustar o espacamento das demais colunas.
+- Frontend Admin: as duas tabelas desktop reduziram a largura reservada para **Acoes** e redistribuiram o `colgroup` para ampliar **Titulo**, **Autor**, metricas e comentarios.
+- A coluna **Acoes** agora alinha cabecalho e botoes a direita; `DashboardPostActions` passou a usar `inline-flex` no layout de icones para respeitar o alinhamento da celula.
+- O ajuste preserva os cards mobile-first, links reais existentes, tokens visuais do Admin, `next/image` nos avatares e nao altera endpoint, contrato, dados, Prisma/migrations ou packages.
+- Builder/Quick Copy `vcp://quickcopy/vcp-24aaa2941d814e5b90572bc93ae50e2a` nao esta exposto como ferramenta callable neste ambiente; referencias usadas: captura enviada pelo usuario e `_product/proto/admin/Comunidades/Comunidades - Dashboard.png`.
+- ADR nao aplicavel: ajuste visual pontual sem nova decisao arquitetural ou regra de dominio.
+
+### Criterios deste ajuste
+
+- [x] A coluna desktop **Acoes** em **Postagens mais recentes** fica alinhada a direita.
+- [x] A coluna desktop **Acoes** em **Posts mais populares** fica alinhada a direita.
+- [x] As colunas **Titulo**, **Autor**, metricas e **Comentarios** recebem espacamento mais equilibrado.
+- [x] Os botoes existentes de publico e analytics permanecem funcionais.
+- [x] Nenhum mock, dado fake permanente, endpoint simulado, package novo, schema Prisma ou migration foi usado.
+
+### Validacao deste ajuste
+
+- `pnpm --dir admin exec biome check "src/app/(admin)/comunidades/client.tsx"`: sem erros.
+- `pnpm --dir admin exec eslint "src/app/(admin)/comunidades/client.tsx"`: sem erros.
+- `pnpm --dir admin check`: sem erros.
+- `pnpm --dir admin build`: sem erros.
+- `pnpm check`: sem erros.
+- Browser local validado em `http://localhost:3002/comunidades` com sessao admin real via Chrome headless/CDP; os blocos **Postagens mais recentes** e **Posts mais populares** renderizaram com **Acoes** alinhado a direita.

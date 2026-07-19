@@ -598,7 +598,7 @@ const DashboardPostActions = ({
 
   if (layout === "icons") {
     return (
-      <div className="flex shrink-0 items-center justify-center gap-1.5">
+      <div className="inline-flex shrink-0 items-center justify-center gap-1.5">
         <Link
           aria-label={`Abrir post ${title} no site público`}
           className="grid h-9 w-9 place-items-center rounded-full border border-border bg-surface text-foreground shadow-control transition hover:border-primary hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
@@ -1473,11 +1473,11 @@ const RecentPostsTable = ({ posts }: { posts: CommunitiesDashboardRecentPost[] }
           <div className="mt-5 hidden min-w-0 overflow-hidden md:block">
             <table className="w-full max-w-full table-fixed border-separate border-spacing-0 text-left text-sm">
               <colgroup>
-                <col className="w-[22%]" />
-                <col className="w-[26%]" />
-                <col className="w-[8%]" />
-                <col className="w-[8%]" />
-                <col className="w-[36%]" />
+                <col className="w-[28%]" />
+                <col className="w-[28%]" />
+                <col className="w-[11%]" />
+                <col className="w-[13%]" />
+                <col className="w-[20%]" />
               </colgroup>
               <thead className="text-xs text-muted">
                 <tr>
@@ -1489,7 +1489,7 @@ const RecentPostsTable = ({ posts }: { posts: CommunitiesDashboardRecentPost[] }
                   <th className="border-b border-border px-3 py-3 text-center font-black">
                     Comentários
                   </th>
-                  <th className="border-b border-border py-3 pl-3 text-center font-black">Ações</th>
+                  <th className="border-b border-border py-3 pl-3 text-right font-black">Ações</th>
                 </tr>
               </thead>
               <tbody>
@@ -1527,7 +1527,7 @@ const RecentPostsTable = ({ posts }: { posts: CommunitiesDashboardRecentPost[] }
                           </span>
                         </div>
                       </td>
-                      <td className="border-b border-border align-top">
+                      <td className="border-b border-border text-right align-top">
                         <div className="py-4 pl-3">
                           <DashboardPostActions layout="icons" post={post} />
                         </div>
@@ -1603,11 +1603,11 @@ const PopularPostsTable = ({ posts }: { posts: CommunitiesDashboardPopularPost[]
           <div className="mt-5 hidden min-w-0 overflow-hidden md:block">
             <table className="w-full max-w-full table-fixed border-separate border-spacing-0 text-left text-sm">
               <colgroup>
-                <col className="w-[22%]" />
-                <col className="w-[26%]" />
-                <col className="w-[8%]" />
-                <col className="w-[8%]" />
-                <col className="w-[36%]" />
+                <col className="w-[28%]" />
+                <col className="w-[28%]" />
+                <col className="w-[11%]" />
+                <col className="w-[13%]" />
+                <col className="w-[20%]" />
               </colgroup>
               <thead className="text-xs text-muted">
                 <tr>
@@ -1619,7 +1619,7 @@ const PopularPostsTable = ({ posts }: { posts: CommunitiesDashboardPopularPost[]
                   <th className="border-b border-border px-3 py-3 text-center font-black">
                     Comentários
                   </th>
-                  <th className="border-b border-border py-3 pl-3 text-center font-black">Ações</th>
+                  <th className="border-b border-border py-3 pl-3 text-right font-black">Ações</th>
                 </tr>
               </thead>
               <tbody>
@@ -1657,7 +1657,7 @@ const PopularPostsTable = ({ posts }: { posts: CommunitiesDashboardPopularPost[]
                           </span>
                         </div>
                       </td>
-                      <td className="border-b border-border align-top">
+                      <td className="border-b border-border text-right align-top">
                         <div className="py-4 pl-3">
                           <DashboardPostActions layout="icons" post={post} />
                         </div>
