@@ -3595,56 +3595,6 @@ const PsychologistPlatformUsageCard = ({
   statistics: AdminPsychologistStatistics;
 }) => {
   const usage = statistics.platform_usage;
-  const [selectedWeekday, setSelectedWeekday] =
-    useState<PsychologistPlatformHourlyActivitySelection>("all");
-  const platformActivityHours = useMemo(() => {
-    const peakActivityHours = usage.peak_activity_hours ?? [];
-    const activitySource =
-      usage.hourly_activity && usage.hourly_activity.length > 0
-        ? usage.hourly_activity
-        : peakActivityHours;
-    const activityByHour = new Map(activitySource.map((hour) => [hour.hour, hour]));
-
-    return Array.from({ length: 24 }, (_, hour) =>
-      normalizePsychologistPlatformHourlyActivityPoint(activityByHour.get(hour), hour),
-    );
-  }, [usage.hourly_activity, usage.peak_activity_hours]);
-  const platformActivityHoursByWeekday = useMemo(() => {
-    const activityByDay = new Map(
-      (usage.hourly_activity_by_weekday ?? []).map((item) => [item.day, item]),
-    );
-
-    return new Map(
-      psychologistPlatformWeekdayDisplayOrder.map((day) => {
-        const item = activityByDay.get(day);
-        const activityByHour = new Map((item?.hours ?? []).map((hour) => [hour.hour, hour]));
-
-        return [
-          String(day) as PsychologistPlatformHourlyActivitySelection,
-          {
-            day,
-            label: item?.label ?? psychologistPlatformWeekdayLabel(day),
-            points: Array.from({ length: 24 }, (_, hour) =>
-              normalizePsychologistPlatformHourlyActivityPoint(activityByHour.get(hour), hour),
-            ),
-          },
-        ];
-      }),
-    );
-  }, [usage.hourly_activity_by_weekday]);
-  const selectedWeekdayItem =
-    selectedWeekday === "all" ? null : platformActivityHoursByWeekday.get(selectedWeekday);
-  const chartActivityHours = selectedWeekdayItem?.points ?? platformActivityHours;
-  const selectedWeekdayLabel = selectedWeekdayItem?.label ?? "Todos os dias";
-  const totalPlatformActivityHours = platformActivityHours.reduce(
-    (total, hour) => total + hour.total,
-    0,
-  );
-  const chartTotalPlatformActivityHours = chartActivityHours.reduce(
-    (total, hour) => total + hour.total,
-    0,
-  );
-  const maxPlatformActivityHourCount = Math.max(1, ...chartActivityHours.map((hour) => hour.total));
 
   return (
     <CardShell className="p-5">
@@ -3714,126 +3664,194 @@ const PsychologistPlatformUsageCard = ({
               ))}
             </div>
           </section>
+        </div>
+      )}
+    </CardShell>
+  );
+};
 
-          <section>
-            <div>
-              <h3 className="text-sm font-black text-foreground">
-                Hor&aacute;rios de maior atividade
-              </h3>
-              <p className="mt-1 text-xs font-bold leading-5 text-muted">
-                Distribui&ccedil;&atilde;o por hora das atividades reais do psic&oacute;logo no
-                per&iacute;odo.
-              </p>
-            </div>
+const PsychologistPlatformActivityHoursCard = ({
+  isRefreshing = false,
+  periodControls,
+  statistics,
+}: {
+  isRefreshing?: boolean;
+  periodControls: ReactNode;
+  statistics: AdminPsychologistStatistics;
+}) => {
+  const usage = statistics.platform_usage;
+  const [selectedWeekday, setSelectedWeekday] =
+    useState<PsychologistPlatformHourlyActivitySelection>("all");
+  const platformActivityHours = useMemo(() => {
+    const peakActivityHours = usage.peak_activity_hours ?? [];
+    const activitySource =
+      usage.hourly_activity && usage.hourly_activity.length > 0
+        ? usage.hourly_activity
+        : peakActivityHours;
+    const activityByHour = new Map(activitySource.map((hour) => [hour.hour, hour]));
 
-            {totalPlatformActivityHours > 0 ? (
-              <>
-                <div className="mt-3">
-                  <fieldset className="flex flex-wrap gap-2">
-                    <legend className="sr-only">
-                      Selecionar dia da semana do gr&aacute;fico de hor&aacute;rios do
-                      psic&oacute;logo
-                    </legend>
-                    <button
-                      aria-pressed={selectedWeekday === "all"}
-                      className={cn(
-                        "rounded-full border px-3 py-1.5 text-xs font-black transition",
-                        selectedWeekday === "all"
-                          ? "border-primary bg-primary-soft text-primary"
-                          : "border-border bg-surface text-muted hover:border-primary/35 hover:text-primary",
-                      )}
-                      onClick={() => setSelectedWeekday("all")}
-                      type="button"
-                    >
-                      Todos
-                    </button>
-                    {[...platformActivityHoursByWeekday.entries()].map(([id, item]) => (
-                      <button
-                        aria-pressed={selectedWeekday === id}
-                        className={cn(
-                          "rounded-full border px-3 py-1.5 text-xs font-black transition",
-                          selectedWeekday === id
-                            ? "border-primary bg-primary-soft text-primary"
-                            : "border-border bg-surface text-muted hover:border-primary/35 hover:text-primary",
-                        )}
-                        key={id}
-                        onClick={() => setSelectedWeekday(id)}
-                        type="button"
-                      >
-                        {item.label}
-                      </button>
-                    ))}
-                  </fieldset>
+    return Array.from({ length: 24 }, (_, hour) =>
+      normalizePsychologistPlatformHourlyActivityPoint(activityByHour.get(hour), hour),
+    );
+  }, [usage.hourly_activity, usage.peak_activity_hours]);
+  const platformActivityHoursByWeekday = useMemo(() => {
+    const activityByDay = new Map(
+      (usage.hourly_activity_by_weekday ?? []).map((item) => [item.day, item]),
+    );
+
+    return new Map(
+      psychologistPlatformWeekdayDisplayOrder.map((day) => {
+        const item = activityByDay.get(day);
+        const activityByHour = new Map((item?.hours ?? []).map((hour) => [hour.hour, hour]));
+
+        return [
+          String(day) as PsychologistPlatformHourlyActivitySelection,
+          {
+            day,
+            label: item?.label ?? psychologistPlatformWeekdayLabel(day),
+            points: Array.from({ length: 24 }, (_, hour) =>
+              normalizePsychologistPlatformHourlyActivityPoint(activityByHour.get(hour), hour),
+            ),
+          },
+        ];
+      }),
+    );
+  }, [usage.hourly_activity_by_weekday]);
+  const selectedWeekdayItem =
+    selectedWeekday === "all" ? null : platformActivityHoursByWeekday.get(selectedWeekday);
+  const chartActivityHours = selectedWeekdayItem?.points ?? platformActivityHours;
+  const selectedWeekdayLabel = selectedWeekdayItem?.label ?? "Todos os dias";
+  const totalPlatformActivityHours = platformActivityHours.reduce(
+    (total, hour) => total + hour.total,
+    0,
+  );
+  const chartTotalPlatformActivityHours = chartActivityHours.reduce(
+    (total, hour) => total + hour.total,
+    0,
+  );
+  const maxPlatformActivityHourCount = Math.max(1, ...chartActivityHours.map((hour) => hour.total));
+
+  return (
+    <CardShell className="min-w-0 max-w-full overflow-x-clip p-5">
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-start">
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-2">
+            <h2 className="text-lg font-black text-foreground">
+              Hor&aacute;rios de maior atividade
+            </h2>
+            {isRefreshing ? (
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary-soft px-2.5 py-1 text-[11px] font-black text-primary">
+                <Loader2 aria-hidden className="h-3.5 w-3.5 animate-spin" />
+                Atualizando
+              </span>
+            ) : null}
+          </div>
+          <p className="mt-1 text-xs font-bold leading-5 text-muted">
+            Distribui&ccedil;&atilde;o por hora das atividades reais do psic&oacute;logo no
+            per&iacute;odo.
+          </p>
+        </div>
+        {periodControls}
+      </div>
+
+      {totalPlatformActivityHours > 0 ? (
+        <>
+          <div className="mt-5">
+            <fieldset className="flex flex-wrap gap-2">
+              <legend className="sr-only">
+                Selecionar dia da semana do gr&aacute;fico de hor&aacute;rios do psic&oacute;logo
+              </legend>
+              <button
+                aria-pressed={selectedWeekday === "all"}
+                className={cn(
+                  "rounded-full border px-3 py-1.5 text-xs font-black transition",
+                  selectedWeekday === "all"
+                    ? "border-primary bg-primary-soft text-primary"
+                    : "border-border bg-surface text-muted hover:border-primary/35 hover:text-primary",
+                )}
+                onClick={() => setSelectedWeekday("all")}
+                type="button"
+              >
+                Todos
+              </button>
+              {[...platformActivityHoursByWeekday.entries()].map(([id, item]) => (
+                <button
+                  aria-pressed={selectedWeekday === id}
+                  className={cn(
+                    "rounded-full border px-3 py-1.5 text-xs font-black transition",
+                    selectedWeekday === id
+                      ? "border-primary bg-primary-soft text-primary"
+                      : "border-border bg-surface text-muted hover:border-primary/35 hover:text-primary",
+                  )}
+                  key={id}
+                  onClick={() => setSelectedWeekday(id)}
+                  type="button"
+                >
+                  {item.label}
+                </button>
+              ))}
+            </fieldset>
+          </div>
+
+          <div className="mt-5 overflow-x-auto rounded-[1.5rem] border border-border/70 bg-surface p-4">
+            <div className="min-w-[760px]">
+              {chartTotalPlatformActivityHours === 0 ? (
+                <div className="rounded-2xl border border-dashed border-border bg-surface-muted p-6 text-sm font-bold text-muted">
+                  Nenhuma atividade real foi registrada para {selectedWeekdayLabel.toLowerCase()}.
                 </div>
-
-                <div className="mt-5 overflow-x-auto rounded-[1.5rem] border border-border/70 bg-surface p-4">
-                  <div className="min-w-[760px]">
-                    {chartTotalPlatformActivityHours === 0 ? (
-                      <div className="rounded-2xl border border-dashed border-border bg-surface-muted p-6 text-sm font-bold text-muted">
-                        Nenhuma atividade real foi registrada para{" "}
-                        {selectedWeekdayLabel.toLowerCase()}.
-                      </div>
-                    ) : (
-                      <div
-                        aria-label={`Distribuição horária de atividade do psicólogo em ${selectedWeekdayLabel}`}
-                        className="flex h-44 items-end gap-1"
-                        role="img"
-                      >
-                        {chartActivityHours.map((hour) => {
-                          const percentage = (hour.total / maxPlatformActivityHourCount) * 100;
-                          const barHeight = hour.total > 0 ? Math.max(8, percentage) : 2;
-
-                          return (
-                            <div
-                              className="flex min-w-0 flex-1 flex-col items-center justify-end gap-2"
-                              key={hour.hour}
-                            >
-                              <div className="flex h-32 w-full items-end justify-center rounded-t-xl bg-surface-muted px-1">
-                                <span
-                                  className="w-full max-w-[1rem] rounded-t-full bg-primary transition"
-                                  style={{ height: `${barHeight}%` }}
-                                  title={`${hour.label}: ${numberFormatter.format(
-                                    hour.total,
-                                  )} atividades`}
-                                />
-                              </div>
-                              <span className="text-[10px] font-bold text-subtle">
-                                {String(hour.hour).padStart(2, "0")}h
-                              </span>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                <div className="mt-4 flex flex-wrap gap-2">
-                  {psychologistPlatformHourlyActivityBreakdown.map((metric) => {
-                    const value = chartActivityHours.reduce(
-                      (total, hour) => total + hour[metric.key],
-                      0,
-                    );
+              ) : (
+                <div
+                  aria-label={`Distribuição horária de atividade do psicólogo em ${selectedWeekdayLabel}`}
+                  className="flex h-44 items-end gap-1"
+                  role="img"
+                >
+                  {chartActivityHours.map((hour) => {
+                    const percentage = (hour.total / maxPlatformActivityHourCount) * 100;
+                    const barHeight = hour.total > 0 ? Math.max(8, percentage) : 2;
 
                     return (
-                      <span
-                        className="inline-flex items-center gap-1.5 rounded-full border border-border bg-surface-muted px-2.5 py-1 text-[11px] font-bold text-muted"
-                        key={metric.key}
+                      <div
+                        className="flex min-w-0 flex-1 flex-col items-center justify-end gap-2"
+                        key={hour.hour}
                       >
-                        <span className={cn("h-2 w-2 rounded-full", metric.className)} />
-                        {metric.label}: {numberFormatter.format(value)}
-                      </span>
+                        <div className="flex h-32 w-full items-end justify-center rounded-t-xl bg-surface-muted px-1">
+                          <span
+                            className="w-full max-w-[1rem] rounded-t-full bg-primary transition"
+                            style={{ height: `${barHeight}%` }}
+                            title={`${hour.label}: ${numberFormatter.format(hour.total)} atividades`}
+                          />
+                        </div>
+                        <span className="text-[10px] font-bold text-subtle">
+                          {String(hour.hour).padStart(2, "0")}h
+                        </span>
+                      </div>
                     );
                   })}
                 </div>
-              </>
-            ) : (
-              <p className="mt-3 rounded-2xl border border-dashed border-border bg-surface-muted p-4 text-sm font-bold text-muted">
-                Sem hor&aacute;rios de atividade registrados no per&iacute;odo.
-              </p>
-            )}
-          </section>
-        </div>
+              )}
+            </div>
+          </div>
+
+          <div className="mt-4 flex flex-wrap gap-2">
+            {psychologistPlatformHourlyActivityBreakdown.map((metric) => {
+              const value = chartActivityHours.reduce((total, hour) => total + hour[metric.key], 0);
+
+              return (
+                <span
+                  className="inline-flex items-center gap-1.5 rounded-full border border-border bg-surface-muted px-2.5 py-1 text-[11px] font-bold text-muted"
+                  key={metric.key}
+                >
+                  <span className={cn("h-2 w-2 rounded-full", metric.className)} />
+                  {metric.label}: {numberFormatter.format(value)}
+                </span>
+              );
+            })}
+          </div>
+        </>
+      ) : (
+        <p className="mt-5 rounded-2xl border border-dashed border-border bg-surface-muted p-4 text-sm font-bold text-muted">
+          Sem hor&aacute;rios de atividade registrados no per&iacute;odo.
+        </p>
       )}
     </CardShell>
   );
@@ -3845,6 +3863,7 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: st
   const trafficStatisticsFilter = useStatisticsPeriodFilter(detail.header.created_at);
   const platformStatisticsFilter = useStatisticsPeriodFilter(detail.header.created_at);
   const communityStatisticsFilter = useStatisticsPeriodFilter(detail.header.created_at);
+  const activityHoursStatisticsFilter = useStatisticsPeriodFilter(detail.header.created_at);
   const [communityStatisticsSelectedCommunity, setCommunityStatisticsSelectedCommunity] =
     useState("all");
   const communityStatisticsPeriodQuery = useMemo(
@@ -3876,12 +3895,17 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: st
     id,
     communityStatisticsPeriodQuery,
   );
+  const activityHoursStatisticsQuery = useAdminPsychologistStatistics(
+    id,
+    activityHoursStatisticsFilter.periodQuery,
+  );
   const statisticsQueries = [
     businessStatisticsQuery,
     videoStatisticsQuery,
     trafficStatisticsQuery,
     platformStatisticsQuery,
     communityStatisticsQuery,
+    activityHoursStatisticsQuery,
   ] as const;
   const [visibleBusinessMetricIds, setVisibleBusinessMetricIds] = useState<BusinessChartMetricId[]>(
     () => BUSINESS_CHART_METRICS.map((item) => item.id),
@@ -3931,6 +3955,8 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: st
     platformStatisticsQuery.isFetching && Boolean(platformStatisticsQuery.data);
   const isCommunityRefreshing =
     communityStatisticsQuery.isFetching && Boolean(communityStatisticsQuery.data);
+  const isActivityHoursRefreshing =
+    activityHoursStatisticsQuery.isFetching && Boolean(activityHoursStatisticsQuery.data);
   const refetchStatisticsQueries = () => {
     statisticsQueries.forEach((query) => {
       void query.refetch();
@@ -3950,7 +3976,8 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: st
     !videoStatisticsQuery.data ||
     !trafficStatisticsQuery.data ||
     !platformStatisticsQuery.data ||
-    !communityStatisticsQuery.data
+    !communityStatisticsQuery.data ||
+    !activityHoursStatisticsQuery.data
   ) {
     return null;
   }
@@ -3960,6 +3987,7 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: st
   const trafficStatistics = trafficStatisticsQuery.data;
   const platformStatistics = platformStatisticsQuery.data;
   const communityStatistics = communityStatisticsQuery.data;
+  const activityHoursStatistics = activityHoursStatisticsQuery.data;
   const businessMetricMap = new Map(
     businessStatistics.business.cards.map((metric) => [metric.id, metric]),
   );
@@ -4128,7 +4156,10 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: st
         />
       </section>
 
-      <section aria-busy={isCommunityRefreshing} className="grid max-w-full gap-5 overflow-x-clip">
+      <section
+        aria-busy={isCommunityRefreshing || isActivityHoursRefreshing}
+        className="grid max-w-full gap-5 overflow-x-clip"
+      >
         <CardShell className="min-w-0 max-w-full overflow-x-clip p-5">
           <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-start">
             <div className="min-w-0">
@@ -4222,6 +4253,22 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: st
             points={communityStatistics.community.series}
           />
         </CardShell>
+
+        <PsychologistPlatformActivityHoursCard
+          isRefreshing={isActivityHoursRefreshing}
+          periodControls={
+            <StatisticsPeriodControls
+              idPrefix="activity-hours-statistics"
+              onDateControlsBlur={activityHoursStatisticsFilter.handleDateControlsBlur}
+              onDateChange={activityHoursStatisticsFilter.handleDateChange}
+              onPeriodChange={activityHoursStatisticsFilter.handlePeriodChange}
+              period={activityHoursStatisticsFilter.selectedPeriod}
+              range={activityHoursStatisticsFilter.draftRange}
+              rangeError={activityHoursStatisticsFilter.rangeError}
+            />
+          }
+          statistics={activityHoursStatistics}
+        />
       </section>
     </div>
   );

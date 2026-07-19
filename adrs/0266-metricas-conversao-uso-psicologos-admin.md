@@ -283,3 +283,13 @@ O campo legado `peak_activity_hours` permanece como ranking curto de acessos par
 A UI Admin adiciona chips **Todos**, **Seg**, **Ter**, **Qua**, **Qui**, **Sex**, **Sab** e **Dom** acima do grafico, renderiza a legenda completa (**Acessos**, **Posts**, **Respostas**, **Interacoes**, **Denuncias**) e continua sem blocos de **Pico** no detalhe do psicologo. Nao houve schema Prisma, migration, endpoint paralelo, package, mock, seed ou backfill.
 
 Validacao complementar 2026-07-19: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check`, smoke service real confirmando `platform_usage.hourly_activity` com 24 pontos e `hourly_activity_by_weekday` com 7 dias, e browser local/headless via Chrome/CDP em `/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=estatisticas` confirmando 24 barras, chips de dias, legenda completa e ausencia de **Pico**.
+
+## Complemento 2026-07-19 - Bloco horario independente apos estatisticas de comunidade
+
+O grafico **Horarios de maior atividade** do detalhe administrativo do psicologo deixa de ser uma subsecao de **Uso da plataforma** e passa a ser um card proprio abaixo do grafico de **Estatisticas de comunidade**.
+
+A decisao e de hierarquia e independencia analitica: **Uso da plataforma** permanece focado em resumo de acessos, sessoes, duracao, PWA e paginas mais acessadas, enquanto o grafico horario ganha filtro de periodo proprio e uma query React Query propria para o mesmo endpoint real `GET /api/admin/private/psychologists/:id/statistics`.
+
+O contrato backend, as fontes first-party, as regras de calculo e a composicao das categorias (`accesses`, `posts`, `replies`, `engagement`, `reports`, `total`) permanecem inalterados. Nao ha endpoint paralelo, schema Prisma, migration, package, mock, seed, backfill ou persistencia adicional.
+
+Validacao complementar 2026-07-19: `pnpm --dir admin check`, `pnpm --dir admin build` e browser local/headless via Chrome/CDP em `/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=estatisticas` confirmando o bloco separado abaixo de **Estatisticas de comunidade**, filtros proprios, 24 barras, chips de dias, legenda completa e ausencia de **Pico**.

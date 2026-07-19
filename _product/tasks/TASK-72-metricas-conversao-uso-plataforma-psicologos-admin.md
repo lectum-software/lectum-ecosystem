@@ -1152,3 +1152,13 @@ Regras de cálculo:
 - Builder/Quick Copy nao esta exposto como ferramenta callable no ambiente; foram usadas as capturas enviadas pelo usuario e o padrao existente do grafico de **Horarios de maior atividade** das comunidades.
 - ADR atualizado: `adrs/0266-metricas-conversao-uso-psicologos-admin.md`.
 - Validacoes executadas: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check`, smoke service real confirmando `hourly_activity` com 24 pontos e `hourly_activity_by_weekday` com 7 dias, e browser local/headless via Chrome/CDP em `/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=estatisticas` confirmando 24 barras, chips de dias, legenda completa e ausencia de **Pico**.
+
+## Ajuste complementar 2026-07-19 - Bloco separado para horarios de maior atividade
+
+- Pedido do usuario: exibir **Horarios de maior atividade** em um bloco separado, com filtro de periodo proprio, abaixo do grafico de **Estatisticas de comunidade** no detalhe administrativo do psicologo.
+- A UI Admin removeu o grafico horario de dentro de **Uso da plataforma**; esse card volta a concentrar resumo de acesso, sessoes, duracao, PWA e **Paginas mais acessadas**.
+- O novo bloco **Horarios de maior atividade** fica abaixo do card/grafico de **Estatisticas de comunidade** e usa uma query/filtro de periodo independentes, preservando chips de dia da semana, 24 barras horarias e legenda de **Acessos**, **Posts**, **Respostas**, **Interacoes** e **Denuncias**.
+- O ajuste reutiliza o endpoint real `GET /api/admin/private/psychologists/:id/statistics` e o contrato `platform_usage.hourly_activity`/`hourly_activity_by_weekday`; nao houve endpoint paralelo, mock, package, schema Prisma/migration, seed, backfill ou nova persistencia.
+- Builder/Quick Copy nao esta exposto como ferramenta callable no ambiente; foram usadas a captura enviada pelo usuario e a referencia local do grafico de horarios de maior atividade das comunidades.
+- ADR atualizado: `adrs/0266-metricas-conversao-uso-psicologos-admin.md`.
+- Validacoes executadas: `pnpm --dir admin check`, `pnpm --dir admin build` e browser local/headless via Chrome/CDP em `/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=estatisticas` confirmando o bloco separado abaixo de **Estatisticas de comunidade**, filtros proprios, 24 barras, chips de dias, legenda completa e ausencia de **Pico**.
