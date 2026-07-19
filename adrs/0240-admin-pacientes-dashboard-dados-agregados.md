@@ -79,3 +79,17 @@ Decisoes:
 - Se o produto quiser minimizacao tambem no contrato HTTP, uma proxima task deve ajustar DTO/backend/frontend com validacao especifica.
 
 Consequencia: a tela fica mais curta e objetiva, preservando dados reais e sem mock, schema Prisma, migration, endpoint novo ou package novo.
+
+## Complemento 2026-07-19 - Uso da plataforma de pacientes no dashboard
+
+Por feedback direto de produto, o dashboard Admin de pacientes passa a reutilizar a leitura de **Uso da plataforma** criada para Psicologos, mas aplicada somente a usuarios `role="paciente"`.
+
+Decisoes:
+
+- Expandir `platform_usage` em `GET /api/admin/private/patients/dashboard` com pacientes ativos por uso no periodo, taxa ativa, PWA instalado, dias/sessoes medias, tempo medio confiavel, serie diaria e paginas mais acessadas.
+- Usar exclusivamente `page_view_event` autenticado e `important_action_event.action_type="pwa_installed"` reais, sem criar evento fake, seed, backfill ou endpoint paralelo.
+- Calcular taxa ativa contra pacientes elegiveis existentes ate o fim do periodo consultado, mantendo a distincao entre **status da conta** (`user.active`) e **uso da plataforma**.
+- Manter indisponibilidade honesta quando nao houver pageviews autenticados ou duracao confiavel.
+- Alinhar os graficos de **Genero** e **Forma de cadastro** ao layout em pizza com legenda lateral do **Modo de cadastro** dos psicologos, sem package novo.
+
+Consequencia: Pacientes passa a ter a mesma leitura operacional de uso first-party que Psicologos, preservando privacidade e dados reais; nao houve schema Prisma, migration, package novo, mock ou alteracao de dados sensiveis.

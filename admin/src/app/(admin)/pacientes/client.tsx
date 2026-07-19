@@ -13,7 +13,7 @@ import {
   UserRound,
   UsersRound,
 } from "lucide-react";
-import { type FocusEvent, useMemo, useState } from "react";
+import { type FocusEvent, type ReactNode, useMemo, useState } from "react";
 import { useAdminPatientsDashboard } from "@/api/callers/patients";
 import { resolveApiError } from "@/api/handle";
 import type {
@@ -47,6 +47,19 @@ const PATIENTS_DASHBOARD_PERIOD_OPTIONS: {
   { id: "all", label: "Todo o período" },
 ];
 const CHART_COLORS = ["#308ce8", "#13a85b", "#64748b", "#f59f00"];
+const SIGNUP_SOURCE_CHART_COLORS: Record<string, string> = {
+  email_password: "#13a85b",
+  google: "#308ce8",
+};
+const GENDER_CHART_COLORS: Record<string, string> = {
+  feminino: "#13a85b",
+  male: "#64748b",
+  masculina: "#64748b",
+  masculino: "#64748b",
+  nao_binario: "#8b5cf6",
+  nao_informado: "#308ce8",
+  outro: "#f59f00",
+};
 type DashboardMetricKey = (typeof CARD_ORDER)[number];
 
 const DASHBOARD_METRIC_CONFIG: Record<DashboardMetricKey, { color: string; icon: LucideIcon }> = {
@@ -110,6 +123,12 @@ const formatDate = (value: string) =>
     month: "short",
   }).format(dateFromInput(value));
 
+const formatSelectedPeriod = (period: AdminPatientsDashboard["period"]) => {
+  if (!period.from || !period.to) return `Período: ${period.label}`;
+
+  return `Período: ${period.label} · ${formatDate(period.from)} a ${formatDate(period.to)}`;
+};
+
 const formatChange = (value: number | null) => {
   if (value === null) return "sem base anterior";
   if (value === 0) return "0%";
@@ -118,6 +137,32 @@ const formatChange = (value: number | null) => {
     maximumFractionDigits: 1,
     minimumFractionDigits: 0,
   })}%`;
+};
+
+const formatPercentageValue = (value: number) => `${numberFormatter.format(value)}%`;
+
+const formatNullablePercentage = (value: number | null) =>
+  typeof value === "number" ? formatPercentageValue(value) : "Indisponível";
+
+const formatDaysMetric = (value: number | null) => {
+  if (typeof value !== "number") return "Indisponível";
+  if (value === 0) return "Mesmo dia";
+
+  return `${numberFormatter.format(value)} dias`;
+};
+
+const formatDecimalMetric = (value: number | null) =>
+  typeof value === "number" ? numberFormatter.format(value) : "Indisponível";
+
+const formatSecondsMetric = (value: number | null) => {
+  if (typeof value !== "number") return "Indisponível";
+
+  const seconds = Math.round(value);
+  const minutes = Math.floor(seconds / 60);
+  const remainder = seconds % 60;
+  if (minutes <= 0) return `${seconds}s`;
+
+  return `${minutes}min ${String(remainder).padStart(2, "0")}s`;
 };
 
 const isValidRange = (range: PatientsDashboardRange) => {
@@ -131,7 +176,7 @@ const CardShell = ({
   className,
   id,
 }: {
-  children?: React.ReactNode;
+  children?: ReactNode;
   className?: string;
   id?: string;
 }) => (
@@ -144,6 +189,28 @@ const CardShell = ({
   >
     {children}
   </section>
+);
+
+const PanelTitle = ({
+  icon: Icon,
+  source,
+  title,
+}: {
+  icon: LucideIcon;
+  source?: string;
+  title: string;
+}) => (
+  <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+    <div className="flex items-center gap-2">
+      <Icon aria-hidden className="h-5 w-5 text-primary" />
+      <h3 className="text-lg font-black text-foreground">{title}</h3>
+    </div>
+    {source ? (
+      <span className="w-fit rounded-full bg-surface-muted px-2 py-1 text-[0.65rem] font-bold text-muted">
+        {source}
+      </span>
+    ) : null}
+  </div>
 );
 
 const hexToRgba = (hex: string, alpha: number) => {
@@ -552,108 +619,248 @@ const TimelineChart = ({
   );
 };
 
-const DonutChart = ({
+const MiniBar = ({
+  label,
+  percentage,
+  value,
+}: {
+  label: string;
+  percentage: number;
+  value: ReactNode;
+}) => (
+  <div className="space-y-2">
+    <div className="flex items-center justify-between gap-3 text-xs font-black">
+      <span className="text-muted">{label}</span>
+      <span className="text-foreground">{value}</span>
+    </div>
+    <div className="h-2 overflow-hidden rounded-full bg-surface-muted">
+      <div
+        aria-hidden
+        className="h-full rounded-full bg-primary"
+        style={{ width: `${Math.min(100, Math.max(0, percentage))}%` }}
+      />
+    </div>
+  </div>
+);
+
+const getPiePoint = (center: number, radius: number, angleInDegrees: number) => {
+  const angleInRadians = (Math.PI / 180) * angleInDegrees;
+
+  return {
+    x: center + radius * Math.cos(angleInRadians),
+    y: center + radius * Math.sin(angleInRadians),
+  };
+};
+
+const buildPieSlicePath = (
+  center: number,
+  radius: number,
+  startAngle: number,
+  endAngle: number,
+) => {
+  const start = getPiePoint(center, radius, startAngle);
+  const end = getPiePoint(center, radius, endAngle);
+  const largeArcFlag = endAngle - startAngle > 180 ? 1 : 0;
+
+  return [
+    `M ${center} ${center}`,
+    `L ${start.x} ${start.y}`,
+    `A ${radius} ${radius} 0 ${largeArcFlag} 1 ${end.x} ${end.y}`,
+    "Z",
+  ].join(" ");
+};
+
+const PieSlicePercentageLabel = ({
+  color,
+  label,
+  x,
+  y,
+}: {
+  color: string;
+  label: string;
+  x: number;
+  y: number;
+}) => {
+  const width = 39;
+  const height = 16;
+
+  return (
+    <g>
+      <rect
+        fill={hexToRgba(color, 0.86)}
+        height={height}
+        rx={height / 2}
+        width={width}
+        x={x - width / 2}
+        y={y - height / 2}
+      />
+      <text
+        dominantBaseline="middle"
+        fill="white"
+        fontSize="8.5"
+        fontWeight="900"
+        textAnchor="middle"
+        x={x}
+        y={y + 0.25}
+      >
+        {label}
+      </text>
+    </g>
+  );
+};
+
+const BreakdownPieChart = ({
+  colorForItem,
+  countLabel = "cadastro(s)",
+  emptyMessage = "Sem dados reais.",
   items,
   total,
 }: {
+  colorForItem: (item: PatientsDashboardBreakdownItem, index: number) => string;
+  countLabel?: string;
+  emptyMessage?: string;
   items: PatientsDashboardBreakdownItem[];
   total: number;
 }) => {
-  const radius = 42;
-  const circumference = 2 * Math.PI * radius;
+  const center = 60;
+  const radius = 48;
   const segments = items.reduce<{
-    cumulative: number;
+    currentAngle: number;
     items: Array<{
-      dash: number;
+      endAngle: number;
+      index: number;
       item: PatientsDashboardBreakdownItem;
-      strokeDashoffset: number;
+      share: number;
+      startAngle: number;
     }>;
   }>(
-    (accumulator, item) => {
+    (accumulator, item, index) => {
       const share = total > 0 ? item.count / total : 0;
-      const dash = share * circumference;
+      if (share <= 0) return accumulator;
+
+      const startAngle = accumulator.currentAngle;
+      const endAngle = startAngle + share * 360;
 
       return {
-        cumulative: accumulator.cumulative + dash,
-        items: [
-          ...accumulator.items,
-          {
-            dash,
-            item,
-            strokeDashoffset: -accumulator.cumulative,
-          },
-        ],
+        currentAngle: endAngle,
+        items: accumulator.items.concat({
+          endAngle,
+          index,
+          item,
+          share,
+          startAngle,
+        }),
       };
     },
-    { cumulative: 0, items: [] },
+    { currentAngle: -90, items: [] },
   ).items;
+  const ariaLabel =
+    items.length > 0
+      ? `Gráfico de pizza: ${items
+          .map(
+            (item) =>
+              `${item.label}: ${numberFormatter.format(item.count)} ${countLabel}, ${formatPercentageValue(
+                item.percentage,
+              )}`,
+          )
+          .join("; ")}.`
+      : emptyMessage;
 
   return (
-    <div className="mt-5 grid gap-5 sm:grid-cols-[180px_1fr] sm:items-center">
-      <svg aria-label="Gráfico de distribuição" role="img" viewBox="0 0 120 120">
+    <figure className="mt-5 grid gap-5 sm:grid-cols-[minmax(9rem,11rem)_1fr] sm:items-center">
+      <svg
+        aria-label={ariaLabel}
+        className="mx-auto aspect-square w-40 sm:w-44"
+        role="img"
+        viewBox="0 0 120 120"
+      >
         <circle
-          cx="60"
-          cy="60"
-          fill="none"
+          cx={center}
+          cy={center}
+          fill="var(--admin-surface-muted)"
           r={radius}
           stroke="var(--admin-border)"
-          strokeWidth="18"
+          strokeWidth="1"
         />
-        {segments.map(({ dash, item, strokeDashoffset }, index) => (
-          <circle
-            cx="60"
-            cy="60"
-            fill="none"
-            key={item.id}
-            r={radius}
-            stroke={CHART_COLORS[index % CHART_COLORS.length]}
-            strokeDasharray={`${dash} ${circumference - dash}`}
-            strokeDashoffset={strokeDashoffset}
-            strokeWidth="18"
-            transform="rotate(-90 60 60)"
-          />
-        ))}
-        <text
-          fill="var(--admin-foreground)"
-          fontSize="15"
-          fontWeight="900"
-          textAnchor="middle"
-          x="60"
-          y="58"
-        >
-          {numberFormatter.format(total)}
-        </text>
-        <text
-          fill="var(--admin-muted)"
-          fontSize="8"
-          fontWeight="700"
-          textAnchor="middle"
-          x="60"
-          y="72"
-        >
-          total
-        </text>
+        {segments.map((segment) => {
+          const color = colorForItem(segment.item, segment.index);
+          const labelPoint = getPiePoint(
+            center,
+            radius * 0.58,
+            (segment.startAngle + segment.endAngle) / 2,
+          );
+          const percentageLabel = formatPercentageValue(segment.item.percentage);
+
+          if (segment.share >= 0.999) {
+            return (
+              <g key={segment.item.id}>
+                <circle
+                  cx={center}
+                  cy={center}
+                  fill={color}
+                  r={radius}
+                  stroke="var(--admin-surface)"
+                  strokeWidth="1.4"
+                />
+                <PieSlicePercentageLabel
+                  color={color}
+                  label={percentageLabel}
+                  x={center}
+                  y={center}
+                />
+              </g>
+            );
+          }
+
+          return (
+            <g key={segment.item.id}>
+              <path
+                d={buildPieSlicePath(center, radius, segment.startAngle, segment.endAngle)}
+                fill={color}
+                stroke="var(--admin-surface)"
+                strokeWidth="1.4"
+              />
+              {segment.share >= 0.08 ? (
+                <PieSlicePercentageLabel
+                  color={color}
+                  label={percentageLabel}
+                  x={labelPoint.x}
+                  y={labelPoint.y}
+                />
+              ) : null}
+            </g>
+          );
+        })}
       </svg>
-      <div className="space-y-3">
+      <figcaption className="space-y-3">
         {items.length === 0 ? (
-          <p className="rounded-2xl bg-surface-muted p-4 text-sm text-muted">Sem dados reais.</p>
+          <p className="rounded-2xl bg-surface-muted p-4 text-sm font-bold text-muted">
+            {emptyMessage}
+          </p>
         ) : (
           items.map((item, index) => (
-            <div className="flex items-center justify-between gap-3" key={item.id}>
-              <span className="flex items-center gap-2 text-sm font-bold text-foreground">
-                <span
-                  aria-hidden
-                  className="h-3 w-3 rounded-full"
-                  style={{ backgroundColor: CHART_COLORS[index % CHART_COLORS.length] }}
-                />
-                {item.label}
-              </span>
-              <span className="text-sm font-black text-foreground">{item.percentage}%</span>
+            <div className="rounded-2xl bg-surface-muted p-3" key={item.id}>
+              <div className="flex items-center justify-between gap-3">
+                <span className="flex min-w-0 items-center gap-2 text-sm font-black text-foreground">
+                  <span
+                    aria-hidden
+                    className="h-3 w-3 shrink-0 rounded-full"
+                    style={{ backgroundColor: colorForItem(item, index) }}
+                  />
+                  <span className="truncate">{item.label}</span>
+                </span>
+                <span className="text-sm font-black text-foreground">
+                  {formatPercentageValue(item.percentage)}
+                </span>
+              </div>
+              <p className="mt-1 text-xs font-bold text-muted">
+                {numberFormatter.format(item.count)} {countLabel}
+              </p>
             </div>
           ))
         )}
-      </div>
-    </div>
+      </figcaption>
+    </figure>
   );
 };
 
@@ -696,13 +903,13 @@ const Statistics = ({ summary }: { summary: AdminPatientsDashboard }) => (
     <h2 className="mb-4 text-xl font-black text-foreground">Estatísticas simples</h2>
     <div className="grid gap-4 xl:grid-cols-3">
       <CardShell className="p-5">
-        <div className="flex items-center justify-between gap-3">
-          <h3 className="text-lg font-black text-foreground">Gênero</h3>
-          <span className="rounded-full bg-surface-muted px-2 py-1 text-[0.65rem] font-bold text-muted">
-            {summary.demographics.gender.source}
-          </span>
-        </div>
-        <DonutChart
+        <PanelTitle icon={UserRound} source={summary.demographics.gender.source} title="Gênero" />
+        <BreakdownPieChart
+          colorForItem={(item, index) =>
+            GENDER_CHART_COLORS[item.id] ?? CHART_COLORS[index % CHART_COLORS.length]
+          }
+          countLabel="paciente(s)"
+          emptyMessage="Sem dados reais de gênero para pacientes."
           items={summary.demographics.gender.items}
           total={summary.demographics.gender.total}
         />
@@ -720,13 +927,16 @@ const Statistics = ({ summary }: { summary: AdminPatientsDashboard }) => (
         <ProgressList items={summary.locations.states} total={summary.locations.total} />
       </CardShell>
       <CardShell className="p-5">
-        <div className="flex items-center justify-between gap-3">
-          <h3 className="text-lg font-black text-foreground">Forma de cadastro</h3>
-          <span className="rounded-full bg-surface-muted px-2 py-1 text-[0.65rem] font-bold text-muted">
-            {summary.demographics.signup_sources.source}
-          </span>
-        </div>
-        <DonutChart
+        <PanelTitle
+          icon={UserPlus}
+          source={summary.demographics.signup_sources.source}
+          title="Forma de cadastro"
+        />
+        <BreakdownPieChart
+          colorForItem={(item, index) =>
+            SIGNUP_SOURCE_CHART_COLORS[item.id] ?? CHART_COLORS[index % CHART_COLORS.length]
+          }
+          emptyMessage="Sem dados reais de forma de cadastro para pacientes."
           items={summary.demographics.signup_sources.items}
           total={summary.demographics.signup_sources.total}
         />
@@ -734,6 +944,58 @@ const Statistics = ({ summary }: { summary: AdminPatientsDashboard }) => (
     </div>
   </section>
 );
+
+const PlatformUsageCard = ({ summary }: { summary: AdminPatientsDashboard }) => {
+  const platformUsage = summary.platform_usage;
+
+  return (
+    <CardShell className="p-5">
+      <PanelTitle icon={Activity} title="Uso da plataforma" />
+      <p className="mt-2 text-sm font-bold leading-6 text-muted">
+        {formatSelectedPeriod(summary.period)}
+      </p>
+      <div className="mt-5 grid gap-3 sm:grid-cols-2">
+        {[
+          ["Ativos", numberFormatter.format(platformUsage.active_patients_count)],
+          ["Taxa ativa", formatNullablePercentage(platformUsage.active_patients_rate)],
+          ["PWA instalado", formatNullablePercentage(platformUsage.pwa_installed_patients_rate)],
+          ["Dias médios", formatDaysMetric(platformUsage.average_access_days)],
+          ["Sessões médias", formatDecimalMetric(platformUsage.average_sessions)],
+          ["Tempo médio", formatSecondsMetric(platformUsage.average_duration_seconds)],
+        ].map(([label, value]) => (
+          <div className="rounded-2xl bg-surface-muted p-3" key={label}>
+            <p className="text-xs font-black text-muted">{label}</p>
+            <p className="mt-1 text-lg font-black text-foreground">{value}</p>
+          </div>
+        ))}
+      </div>
+      {platformUsage.duration_unavailable_reason ? (
+        <p className="mt-3 text-xs font-bold text-subtle">
+          {platformUsage.duration_unavailable_reason}
+        </p>
+      ) : null}
+      {platformUsage.unavailable_reason ? (
+        <p className="mt-4 rounded-2xl border border-dashed border-border bg-surface-muted p-3 text-sm font-bold text-muted">
+          {platformUsage.unavailable_reason}
+        </p>
+      ) : (
+        <div className="mt-5 space-y-3">
+          <h3 className="text-sm font-black text-foreground">Páginas mais acessadas</h3>
+          {platformUsage.top_pages.map((page) => (
+            <MiniBar
+              key={page.label}
+              label={page.label}
+              percentage={page.percentage}
+              value={`${numberFormatter.format(page.count)} · ${formatPercentageValue(
+                page.percentage,
+              )}`}
+            />
+          ))}
+        </div>
+      )}
+    </CardShell>
+  );
+};
 
 const DashboardContent = ({ summary }: { summary: AdminPatientsDashboard }) => {
   const [visibleMetricKeys, setVisibleMetricKeys] = useState<DashboardMetricKey[]>(() => [
@@ -770,6 +1032,8 @@ const DashboardContent = ({ summary }: { summary: AdminPatientsDashboard }) => {
       </CardShell>
 
       <Statistics summary={summary} />
+
+      <PlatformUsageCard summary={summary} />
     </div>
   );
 };

@@ -313,3 +313,26 @@ Frontend esperado:
 - `pnpm check` foi tentado na validacao final, mas falhou em alteracoes fora do escopo ja presentes/concorrentes em `backend/src/modules/api/admin/private/communities/dashboard/use-cases/services.ts` (organizeImports/formatacao Biome de Comunidades). Nao alterei esse trabalho externo.
 - Smoke HTTP local: `GET http://localhost:3002/pacientes` retornou `200`.
 - Browser local headless em `http://localhost:3002/pacientes` carregou o fluxo protegido/login sem sessao Admin compartilhada; a ausencia dos blocos removidos foi validada no codigo fonte porque a sessao autenticada do navegador do usuario nao e acessivel por esta execucao.
+
+## Ajuste pos-feedback 2026-07-19 - Uso da plataforma e graficos em pizza
+
+- Pedido do usuario: replicar no dashboard `/pacientes` o bloco **Uso da plataforma** existente em Psicologos e alinhar os graficos **Genero** e **Forma de cadastro** ao layout do grafico **Modo de cadastro** dos psicologos.
+- O endpoint `GET /api/admin/private/patients/dashboard` passou a expandir `platform_usage` com usuarios pacientes ativos por uso no periodo, taxa ativa, instalacoes PWA por paciente, dias/sessoes medias, tempo medio confiavel, serie diaria e paginas mais acessadas.
+- As metricas usam somente `page_view_event` autenticado de usuarios `role="paciente"` e `important_action_event.action_type="pwa_installed"` reais; nao houve mock, seed, backfill artificial, endpoint paralelo, schema Prisma, migration ou package novo.
+- A UI `/pacientes` agora renderiza o card **Uso da plataforma** com o mesmo conjunto de contadores e lista de paginas mais acessadas do bloco de Psicologos, usando estados honestos de indisponibilidade quando nao ha pageviews autenticados.
+- Os cards **Genero** e **Forma de cadastro** deixaram o donut com total central e passaram para pizza com rotulos percentuais nas fatias e legenda em cards laterais, seguindo o layout visual de **Modo de cadastro** em `/psicologos`.
+- **Forma de cadastro** preserva apenas as duas categorias de produto ja normalizadas: **E-mail e senha** e **Google**; **Genero** preserva os dados reais de `patient_profile.gender`.
+- Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente; a referencia auditavel continua sendo `_product/proto/admin/Pacientes/Pacientes - Dashboard.png`, complementada pelos screenshots enviados pelo usuario em 2026-07-18/2026-07-19.
+
+### Validacao complementar executada
+
+- `pnpm --dir backend exec biome check --write "src/modules/api/admin/private/patients/dashboard/DTOs/IAdminPatientsDashboardDTO.ts" "src/modules/api/admin/private/patients/dashboard/repositories/AdminPatientsDashboardRepository.ts" "src/modules/api/admin/private/patients/dashboard/use-cases/services.ts"`
+- `pnpm --dir admin exec biome check --write "src/api/req/patients/index.ts" "src/app/(admin)/pacientes/client.tsx"`
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build` foi executado com sucesso apos uma primeira tentativa retornar `Another next build process is already running`.
+- Smoke HTTP local: `GET http://localhost:3002/pacientes` retornou `200`.
+- Smoke HTTP local: `GET http://localhost:3001/api/admin/private/patients/dashboard` sem token Admin retornou `401`.
+- Smoke de servico local `buildPatientsDashboard({ period: "all" })` foi tentado, mas o banco de desenvolvimento recusou nova sessao com `EMAXCONNSESSION max clients reached in session mode`; nao foi resetado nem feita acao destrutiva.
+- `pnpm check` foi executado na validacao final e falhou em alteracao fora do escopo desta execucao: `admin/src/app/(admin)/pacientes/lista/client.tsx` (arquivo de lista de pacientes nao pertencente a este ajuste) com regra `react-hooks/set-state-in-effect`; nao alterei esse trabalho paralelo.

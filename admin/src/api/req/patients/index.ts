@@ -91,11 +91,30 @@ export type PatientsDashboardUnavailableMetric = {
 };
 
 export type PatientsDashboardPlatformUsage = {
+  active_patients_count: number;
+  active_patients_rate: number | null;
+  average_access_days: number | null;
   average_duration_seconds: number | null;
+  average_sessions: number | null;
   duration_unavailable_reason: string | null;
+  eligible_patients_count: number;
   pageviews_count: number;
+  pwa_installed_patients_count: number;
+  pwa_installed_patients_rate: number | null;
+  series: {
+    active_patients: number;
+    date: string;
+    pageviews: number;
+    sessions: number;
+  }[];
   sessions_count: number;
-  source: "page_view_event";
+  source: "page_view_event+important_action_event";
+  top_pages: {
+    count: number;
+    label: string;
+    percentage: number;
+  }[];
+  unavailable_reason: string | null;
 };
 
 export type AdminPatientsDashboard = {

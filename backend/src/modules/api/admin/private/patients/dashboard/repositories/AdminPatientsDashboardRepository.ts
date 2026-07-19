@@ -67,9 +67,19 @@ const latestLocationSelect = {
 const patientPageViewSelect = {
   duration_seconds: true,
   id: true,
+  normalized_path: true,
+  occurred_at: true,
+  page_kind: true,
+  path: true,
   session_id: true,
+  user_id: true,
   visitor_id: true,
 } satisfies Prisma.page_view_eventSelect;
+
+const patientPwaInstallSelect = {
+  occurred_at: true,
+  user_id: true,
+} satisfies Prisma.important_action_eventSelect;
 
 const recentPatientSelect = {
   active: true,
@@ -229,6 +239,10 @@ export type AdminPatientPageViewRecord = Prisma.page_view_eventGetPayload<{
   select: typeof patientPageViewSelect;
 }>;
 
+export type AdminPatientPwaInstallRecord = Prisma.important_action_eventGetPayload<{
+  select: typeof patientPwaInstallSelect;
+}>;
+
 export class AdminPatientsDashboardRepository {
   async listPatientSnapshots(): Promise<AdminPatientSnapshotRecord[]> {
     return prisma.user.findMany({
@@ -285,6 +299,29 @@ export class AdminPatientsDashboardRepository {
       },
       select: patientPageViewSelect,
       where: {
+        deleted: false,
+        occurred_at: rangeWhere(range),
+        user_id: {
+          not: null,
+        },
+        user: {
+          deleted: false,
+          role: "paciente",
+        },
+      },
+    });
+  }
+
+  async listPatientPwaInstallActions(
+    range: AdminPatientsDashboardDateRange,
+  ): Promise<AdminPatientPwaInstallRecord[]> {
+    return prisma.important_action_event.findMany({
+      orderBy: {
+        occurred_at: "asc",
+      },
+      select: patientPwaInstallSelect,
+      where: {
+        action_type: "pwa_installed",
         deleted: false,
         occurred_at: rangeWhere(range),
         user_id: {
