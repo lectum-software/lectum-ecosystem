@@ -27,6 +27,7 @@ import { resolveApiError } from "@/api/handle";
 import type {
   AdminCommunitiesDashboard,
   CommunitiesDashboardGlobalStatistics,
+  CommunitiesDashboardHourlyActivityPoint,
   CommunitiesDashboardPopularPost,
   CommunitiesDashboardPostAuthor,
   CommunitiesDashboardQuery,
@@ -365,6 +366,63 @@ const getCommunityDashboardPeriodLabel = (period: CommunityDashboardPeriodValue)
 const BlockPeriodLabel = ({ children }: { children: string }) => (
   <p className="mt-1 text-sm font-bold leading-6 text-muted">{children}</p>
 );
+
+type DashboardHourlyActivityMetricKey = "accesses" | "engagement" | "posts" | "replies" | "reports";
+
+const dashboardHourlyActivityBreakdown: {
+  className: string;
+  key: DashboardHourlyActivityMetricKey;
+  label: string;
+}[] = [
+  { className: "bg-primary", key: "accesses", label: "Acessos" },
+  { className: "bg-success", key: "posts", label: "Posts" },
+  { className: "bg-warning", key: "replies", label: "Respostas" },
+  { className: "bg-muted", key: "engagement", label: "Interações" },
+  { className: "bg-danger", key: "reports", label: "Denúncias" },
+];
+
+const safeDashboardCount = (value: number | null | undefined) => {
+  const normalized = Number(value ?? 0);
+
+  return Number.isFinite(normalized) ? Math.max(0, normalized) : 0;
+};
+
+const formatCountLabel = (value: number, singular: string, plural: string) =>
+  `${numberFormatter.format(value)} ${value === 1 ? singular : plural}`;
+
+const formatDashboardActivityHourRange = (hour: number) => {
+  const normalizedHour = Math.min(23, Math.max(0, Math.floor(hour)));
+  const label = String(normalizedHour).padStart(2, "0");
+
+  return `${label}:00 - ${label}:59`;
+};
+
+const normalizeDashboardHourlyActivityPoint = (
+  point: Partial<CommunitiesDashboardHourlyActivityPoint> | undefined,
+  hour: number,
+): CommunitiesDashboardHourlyActivityPoint => {
+  const accesses = safeDashboardCount(point?.accesses);
+  const posts = safeDashboardCount(point?.posts);
+  const replies = safeDashboardCount(point?.replies);
+  const engagement = safeDashboardCount(point?.engagement);
+  const reports = safeDashboardCount(point?.reports);
+  const rawTotal = point?.total;
+  const total =
+    rawTotal === undefined || rawTotal === null
+      ? accesses + posts + replies + engagement + reports
+      : safeDashboardCount(rawTotal);
+
+  return {
+    accesses,
+    engagement,
+    hour,
+    label: point?.label || `${String(hour).padStart(2, "0")}:00`,
+    posts,
+    replies,
+    reports,
+    total,
+  };
+};
 
 const isPublicMediaPath = (pathname: string) =>
   publicMediaPathPrefixes.some((prefix) => pathname.startsWith(prefix));
@@ -804,10 +862,14 @@ const hasPeriodRecords = (summary: AdminCommunitiesDashboard) => {
   const hasActivity = summary.activity_series.some((series) =>
     series.points.some((point) => point.value > 0),
   );
+  const hasHourlyActivity = summary.global_statistics.current.charts.hourly_activity.some(
+    (point) => point.total > 0,
+  );
 
   return (
     hasCards ||
     hasActivity ||
+    hasHourlyActivity ||
     totalDashboardStatisticValue(summary.global_statistics.current) > 0 ||
     summary.patient_posts_breakdown.total > 0 ||
     summary.recent_posts.total > 0 ||
@@ -1741,6 +1803,115 @@ const TopCommunitiesTable = ({
   </div>
 );
 
+const CommunitiesPeakActivityHoursCard = ({
+  periodLabel,
+  points,
+}: {
+  periodLabel: string;
+  points: CommunitiesDashboardHourlyActivityPoint[];
+}) => {
+  const byHour = new Map(points.map((point) => [point.hour, point]));
+  const normalizedPoints = Array.from({ length: 24 }, (_, hour) =>
+    normalizeDashboardHourlyActivityPoint(byHour.get(hour), hour),
+  );
+  const totalActivity = normalizedPoints.reduce((total, point) => total + point.total, 0);
+  const maxActivity = Math.max(1, ...normalizedPoints.map((point) => point.total));
+  const topHours = [...normalizedPoints]
+    .filter((point) => point.total > 0)
+    .sort((left, right) => right.total - left.total || left.hour - right.hour)
+    .slice(0, 3);
+
+  return (
+    <CardShell className="h-full p-5">
+      <div>
+        <h2 className="text-lg font-black text-foreground">Horários de maior atividade</h2>
+        <BlockPeriodLabel>{periodLabel}</BlockPeriodLabel>
+      </div>
+
+      {totalActivity === 0 ? (
+        <p className="mt-5 rounded-2xl bg-surface-muted p-4 text-sm font-bold text-muted">
+          Nenhuma atividade real foi registrada por hora no período selecionado.
+        </p>
+      ) : (
+        <>
+          <div className="mt-5 grid gap-3 md:grid-cols-3">
+            {topHours.map((point, index) => (
+              <article
+                className="min-w-0 rounded-2xl border border-border/80 bg-surface-muted p-4"
+                key={point.hour}
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <span className="text-[11px] font-black uppercase tracking-wide text-primary">
+                      #{index + 1} pico
+                    </span>
+                    <h3 className="mt-1 text-base font-black text-foreground">
+                      {formatDashboardActivityHourRange(point.hour)}
+                    </h3>
+                  </div>
+                  <strong className="text-2xl font-black text-foreground">
+                    {numberFormatter.format(point.total)}
+                  </strong>
+                </div>
+                <p className="mt-2 text-[11px] font-bold leading-5 text-muted">
+                  {formatCountLabel(point.accesses, "acesso", "acessos")} |{" "}
+                  {formatCountLabel(point.posts + point.replies, "conteúdo", "conteúdos")} |{" "}
+                  {formatCountLabel(point.engagement, "interação", "interações")} |{" "}
+                  {formatCountLabel(point.reports, "denúncia", "denúncias")}
+                </p>
+              </article>
+            ))}
+          </div>
+
+          <div className="mt-5 overflow-x-auto rounded-2xl border border-border/70 bg-surface p-3">
+            <div
+              aria-label="Distribuição geral de atividades das comunidades por hora"
+              className="flex h-36 min-w-[520px] items-end gap-1"
+              role="img"
+            >
+              {normalizedPoints.map((point) => {
+                const barHeight =
+                  point.total > 0 ? Math.max(8, (point.total / maxActivity) * 100) : 2;
+
+                return (
+                  <div className="flex min-w-0 flex-1 flex-col items-center gap-2" key={point.hour}>
+                    <div className="flex h-28 w-full items-end justify-center rounded-xl bg-surface-muted px-1">
+                      <span
+                        className="w-3 max-w-full rounded-t-full bg-primary"
+                        style={{ height: `${barHeight}%` }}
+                        title={`${point.label}: ${numberFormatter.format(point.total)} atividades`}
+                      />
+                    </div>
+                    <span className="text-[10px] font-black text-subtle">
+                      {String(point.hour).padStart(2, "0")}h
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="mt-4 flex flex-wrap gap-2">
+            {dashboardHourlyActivityBreakdown.map((metric) => {
+              const value = normalizedPoints.reduce((total, point) => total + point[metric.key], 0);
+
+              return (
+                <span
+                  className="inline-flex items-center gap-1.5 rounded-full border border-border bg-surface px-2.5 py-1 text-[11px] font-bold text-muted"
+                  key={metric.key}
+                >
+                  <span className={cn("h-2.5 w-2.5 rounded-full", metric.className)} />
+                  {metric.label}: {numberFormatter.format(value)}
+                </span>
+              );
+            })}
+          </div>
+        </>
+      )}
+    </CardShell>
+  );
+};
+
 const DashboardContent = ({
   periodLabel,
   summary,
@@ -1811,8 +1982,15 @@ const DashboardContent = ({
         visibleMetricIds={visibleContentMetricIds}
       />
 
-      <div className="min-w-0 space-y-5">
+      <div className="grid min-w-0 gap-5 xl:grid-cols-2">
         <TopCommunitiesTable communities={summary.top_communities.items} />
+        <CommunitiesPeakActivityHoursCard
+          periodLabel={periodLabel}
+          points={summary.global_statistics.current.charts.hourly_activity}
+        />
+      </div>
+
+      <div className="min-w-0 space-y-5">
         <RecentPostsTable posts={summary.recent_posts.items} />
         <PopularPostsTable posts={summary.popular_posts.items} />
       </div>

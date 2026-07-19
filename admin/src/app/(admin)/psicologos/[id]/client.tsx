@@ -2052,6 +2052,135 @@ const SubscriptionCard = ({
   );
 };
 
+const getAccountSituationHelperText = (account: AdminPsychologistAccount) => {
+  if (account.account_status !== "active") {
+    return "Login bloqueado enquanto a conta não estiver ativa. Ações completas ficam na aba Conta.";
+  }
+
+  if (!account.active) {
+    return "Login bloqueado porque a conta está inativa. Revise a operação na aba Conta.";
+  }
+
+  if (!account.confirmed) {
+    return "Conta ativa, mas o e-mail ainda precisa ser confirmado para liberar totalmente o acesso.";
+  }
+
+  return "E-mail confirmado e login liberado para operações Lectum.";
+};
+
+const AccountSituationCard = ({ id }: { id: string }) => {
+  const pathname = usePathname();
+  const query = useAdminPsychologistAccount(id);
+  const errorMessage = query.error ? resolveApiError(query.error) : null;
+
+  if (query.isLoading) {
+    return (
+      <CardShell className="p-5">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <h2 className="text-lg font-black text-foreground">Situação da conta</h2>
+            <p className="mt-1 text-sm text-muted">Resumo de acesso e e-mail.</p>
+          </div>
+          <IconCircle icon={UserRound} />
+        </div>
+        <div className="mt-5 h-52 animate-pulse rounded-3xl bg-surface-muted" />
+      </CardShell>
+    );
+  }
+
+  if (query.isError && errorMessage) {
+    return (
+      <CardShell className="p-5">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <h2 className="text-lg font-black text-foreground">Situação da conta</h2>
+            <p className="mt-1 text-sm text-muted">Resumo de acesso e e-mail.</p>
+          </div>
+          <IconCircle icon={AlertTriangle} />
+        </div>
+        <p className="mt-5 rounded-2xl bg-surface-muted p-4 text-sm font-bold leading-6 text-muted">
+          {errorMessage}
+        </p>
+        <button
+          className="mt-5 inline-flex h-11 w-full items-center justify-center gap-2 rounded-control border border-border bg-surface px-4 text-sm font-black text-foreground transition hover:border-primary sm:w-auto"
+          onClick={() => void query.refetch()}
+          type="button"
+        >
+          <RefreshCw aria-hidden className="h-4 w-4" />
+          Tentar novamente
+        </button>
+      </CardShell>
+    );
+  }
+
+  const account = query.data;
+  if (!account) return null;
+
+  const situation = getHeaderAccountStatus(account, { isError: false, isLoading: false });
+  const summaryItems = [
+    {
+      label: "Status do e-mail",
+      value: (
+        <Badge
+          className={
+            account.confirmed ? "bg-emerald-50 text-success" : "bg-orange-50 text-orange-700"
+          }
+        >
+          {account.confirmed ? "Confirmado" : "Pendente"}
+        </Badge>
+      ),
+    },
+    { label: "Método de login", value: account.provider_label },
+    { label: "Último acesso", value: formatDateTime(account.last_access_at) },
+    {
+      label: "Sessões ativas",
+      value: numberFormatter.format(account.sessions.active_count),
+    },
+  ];
+
+  return (
+    <CardShell className="p-5">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h2 className="text-lg font-black text-foreground">Situação da conta</h2>
+          <p className="mt-1 text-sm text-muted">Resumo de acesso e e-mail.</p>
+        </div>
+        <IconCircle icon={UserRound} />
+      </div>
+      <div className="mt-5 rounded-[28px] border border-primary/15 bg-primary-soft/55 p-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <p className="text-xs font-black uppercase tracking-[0.12em] text-primary">
+              Situação atual
+            </p>
+            <p className="mt-1 text-xl font-black text-foreground">{situation.label}</p>
+          </div>
+          <Badge className={ACCOUNT_STATUS_BADGE_CLASS[account.account_status]}>
+            {account.account_status_label}
+          </Badge>
+        </div>
+        <p className="mt-3 text-sm font-bold leading-6 text-muted">
+          {getAccountSituationHelperText(account)}
+        </p>
+      </div>
+      <dl className="mt-4 divide-y divide-border text-sm">
+        {summaryItems.map((item) => (
+          <div className="grid gap-1 py-3 sm:grid-cols-[150px_1fr]" key={item.label}>
+            <dt className="font-black text-muted">{item.label}</dt>
+            <dd className="font-bold text-foreground">{item.value}</dd>
+          </div>
+        ))}
+      </dl>
+      <Link
+        className="mt-4 inline-flex h-11 w-full items-center justify-center gap-2 rounded-control border border-primary/45 bg-surface px-4 text-sm font-black text-primary shadow-control transition hover:bg-primary-soft sm:w-auto"
+        href={`${pathname}?tab=conta`}
+      >
+        Abrir dados da conta
+      </Link>
+    </CardShell>
+  );
+};
+
 const registryResponsibleLabel = (registry: AdminPsychologistRegistryVerification) => {
   const actor = registry.summary.latest_manual_admin;
   if (actor?.name) return formatGrantedByName(actor.name);
@@ -2127,7 +2256,14 @@ const RegistryStatusCard = ({ id }: { id: string }) => {
 
   return (
     <CardShell className="p-5">
-      <div className="rounded-[28px] border border-primary/15 bg-primary-soft/55 p-4">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h2 className="text-lg font-black text-foreground">Situação do registro</h2>
+          <p className="mt-1 text-sm text-muted">Resumo do CRP e da verificação profissional.</p>
+        </div>
+        <IconCircle icon={ShieldCheck} />
+      </div>
+      <div className="mt-5 rounded-[28px] border border-primary/15 bg-primary-soft/55 p-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <p className="text-xs font-black uppercase tracking-[0.12em] text-primary">
@@ -2241,14 +2377,15 @@ const GeneralTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: strin
         </div>
       </section>
 
-      <div className="grid gap-5 xl:grid-cols-[1.1fr_0.9fr]">
+      <div className="grid gap-5 xl:grid-cols-3 xl:items-start">
+        <AccountSituationCard id={id} />
+        <RegistryStatusCard id={id} />
         <SubscriptionCard
           billing={billingQuery.data}
           billingError={billingQuery.isError}
           billingLoading={billingQuery.isLoading}
           detail={detail}
         />
-        <RegistryStatusCard id={id} />
       </div>
 
       <div className="grid gap-5">
@@ -3379,10 +3516,8 @@ const PsychologistPlatformUsageCard = ({
   statistics: AdminPsychologistStatistics;
 }) => {
   const usage = statistics.platform_usage;
-  const maxPeakActivityHourCount = Math.max(
-    0,
-    ...usage.peak_activity_hours.map((hour) => hour.count),
-  );
+  const peakActivityHours = usage.peak_activity_hours ?? [];
+  const maxPeakActivityHourCount = Math.max(0, ...peakActivityHours.map((hour) => hour.count));
 
   return (
     <CardShell className="p-5">
@@ -3428,8 +3563,8 @@ const PsychologistPlatformUsageCard = ({
           {usage.unavailable_reason}
         </p>
       ) : (
-        <div className="mt-5 grid gap-5 xl:grid-cols-[minmax(0,1.15fr)_minmax(280px,0.85fr)]">
-          <section className="min-w-0">
+        <div className="mt-5 space-y-6">
+          <section>
             <h3 className="text-sm font-black text-foreground">Páginas mais acessadas</h3>
             <div className="mt-3 grid gap-3 md:grid-cols-2">
               {usage.top_pages.map((page) => (
@@ -3453,42 +3588,79 @@ const PsychologistPlatformUsageCard = ({
             </div>
           </section>
 
-          <section className="min-w-0">
-            <h3 className="text-sm font-black text-foreground">Horários de maior atividade</h3>
-            <p className="mt-1 text-xs font-bold leading-5 text-muted">
-              Faixas do dia com mais acessos autenticados do psicólogo no período.
-            </p>
-            <div className="mt-3 grid gap-3">
-              {usage.peak_activity_hours.map((hour, index) => (
-                <div className="rounded-2xl border border-border/70 p-3" key={hour.hour}>
-                  <div className="flex items-center justify-between gap-3 text-xs font-black">
-                    <span className="text-muted">{hour.label}</span>
-                    <span className="text-foreground">
-                      {numberFormatter.format(hour.count)} ·{" "}
-                      {hour.percentage.toLocaleString("pt-BR")}%
-                    </span>
-                  </div>
-                  <div className="mt-2 h-2 overflow-hidden rounded-full bg-surface-muted">
-                    <div
-                      aria-hidden
-                      className="h-full rounded-full bg-primary"
-                      style={{
-                        width: `${
-                          maxPeakActivityHourCount > 0
-                            ? Math.max(8, (hour.count / maxPeakActivityHourCount) * 100)
-                            : 0
-                        }%`,
-                      }}
-                    />
-                  </div>
-                  {index === 0 ? (
-                    <p className="mt-2 text-[11px] font-black uppercase tracking-[0.12em] text-primary">
-                      Maior atividade
-                    </p>
-                  ) : null}
-                </div>
-              ))}
+          <section>
+            <div className="flex flex-wrap items-end justify-between gap-3">
+              <div>
+                <h3 className="text-sm font-black text-foreground">Horários de maior atividade</h3>
+                <p className="mt-1 text-xs font-bold leading-5 text-muted">
+                  Faixas do dia com mais acessos autenticados do psicólogo no período.
+                </p>
+              </div>
+              {peakActivityHours[0] ? (
+                <Badge className="bg-primary-soft text-primary">
+                  Pico {peakActivityHours[0].label}
+                </Badge>
+              ) : null}
             </div>
+
+            {peakActivityHours.length > 0 ? (
+              <div
+                aria-label="Gráfico de barras verticais dos horários de maior atividade"
+                className="mt-3 rounded-[28px] border border-border/70 bg-surface p-4"
+                role="img"
+              >
+                <div className="flex h-56 items-end gap-3 border-b border-border/70 pb-3 sm:gap-4">
+                  {peakActivityHours.map((hour, index) => {
+                    const heightPercent =
+                      maxPeakActivityHourCount > 0
+                        ? Math.max(10, (hour.count / maxPeakActivityHourCount) * 100)
+                        : 0;
+
+                    return (
+                      <div
+                        className="flex h-full min-w-0 flex-1 flex-col items-center justify-end gap-2"
+                        key={hour.hour}
+                      >
+                        <div className="text-center text-[11px] font-black leading-4 text-foreground sm:text-xs">
+                          {numberFormatter.format(hour.count)}
+                          <span className="block text-[10px] text-muted">
+                            {hour.percentage.toLocaleString("pt-BR")}%
+                          </span>
+                        </div>
+                        <div className="flex min-h-0 w-full flex-1 items-end justify-center">
+                          <div
+                            aria-hidden
+                            className={cn(
+                              "w-full max-w-20 rounded-t-[1.35rem] transition-all",
+                              index === 0 ? "bg-primary" : "bg-primary/70",
+                            )}
+                            style={{ height: `${heightPercent}%` }}
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+                <div className="mt-3 grid grid-cols-4 gap-3 sm:gap-4">
+                  {peakActivityHours.map((hour, index) => (
+                    <div className="min-w-0 text-center" key={hour.hour}>
+                      <p className="truncate text-[11px] font-black text-muted sm:text-xs">
+                        {hour.label}
+                      </p>
+                      {index === 0 ? (
+                        <p className="mt-1 text-[10px] font-black uppercase tracking-[0.12em] text-primary">
+                          Maior
+                        </p>
+                      ) : null}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <p className="mt-3 rounded-2xl border border-dashed border-border bg-surface-muted p-4 text-sm font-bold text-muted">
+                Sem horários de atividade registrados no período.
+              </p>
+            )}
           </section>
         </div>
       )}

@@ -188,3 +188,13 @@ A decisao e ampliar o item existente de `top_communities` com `accesses_count`, 
 No frontend Admin, a tabela desktop ganha a coluna **Acessos** entre **Posts** e **Acoes**, e os cards mobile exibem o mesmo dado junto de **Seguidores** e **Posts**. O bloco foi reposicionado antes das tabelas de posts, mantendo abordagem mobile-first, `next/image` para avatars e acoes ja existentes.
 
 Consequencia: o Admin passa a enxergar seguidores, posts e acessos reais no ranking de comunidades, com maior destaque para a saude das comunidades antes da leitura de postagens, sem package novo, mock, seed, endpoint novo ou alteracao persistente de banco.
+
+## Atualizacao 2026-07-19: horarios gerais de maior atividade
+
+O dashboard geral `/comunidades` passa a exibir um bloco **Horarios de maior atividade** ao lado de **Principais comunidades** em desktop, com os dois blocos ocupando a mesma largura e empilhando em telas menores para preservar a abordagem mobile-first.
+
+A decisao e ampliar `global_statistics.current.charts` no endpoint existente `GET /api/admin/private/communities/dashboard` com `hourly_activity`, sempre contendo 24 pontos no timezone `server-local` para o periodo filtrado. A agregacao usa somente eventos reais ja consultados pelo dashboard: `page_view_event` para acessos, `community_post` para posts, `post_reply` para respostas, `post_vote`, `post_save`, `post_reply_save`, `important_action_event` de WhatsApp e acessos a perfil como interacoes, e `post_report` para denuncias.
+
+A UI mostra os tres picos gerais do periodo em cards horizontais a partir de telas medias, um grafico compacto de barras por hora e legenda por tipo de evento. O bloco reutiliza o contrato do dashboard e nao cria endpoint paralelo, pacote de graficos, schema Prisma/migration, seed, mock ou backfill.
+
+Consequencia: a operacao passa a enxergar janelas de maior uso global das comunidades diretamente na visao geral, sem sair do dashboard e sem alterar a semantica do ranking de **Principais comunidades**.

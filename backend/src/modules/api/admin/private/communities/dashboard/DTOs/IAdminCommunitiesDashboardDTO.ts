@@ -99,11 +99,23 @@ export type AdminCommunitiesDashboardStatisticsDailyPoint = {
   whatsapp_clicks: number;
 };
 
+export type AdminCommunitiesDashboardHourlyActivityPoint = {
+  accesses: number;
+  engagement: number;
+  hour: number;
+  label: string;
+  posts: number;
+  replies: number;
+  reports: number;
+  total: number;
+};
+
 export type AdminCommunitiesDashboardGlobalStatistics = {
   charts: {
     active_users_split: AdminCommunitiesDashboardStatisticsSplit[];
     daily: AdminCommunitiesDashboardStatisticsDailyPoint[];
     followers_split: AdminCommunitiesDashboardStatisticsSplit[];
+    hourly_activity: AdminCommunitiesDashboardHourlyActivityPoint[];
     posts_by_author: AdminCommunitiesDashboardStatisticsSplit[];
     replies_by_author: AdminCommunitiesDashboardStatisticsSplit[];
   };

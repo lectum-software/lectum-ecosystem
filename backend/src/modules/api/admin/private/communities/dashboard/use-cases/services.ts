@@ -424,6 +424,45 @@ const emptyDashboardStatisticsDailyPoint = (
   whatsapp_clicks: 0,
 });
 
+const emptyDashboardStatisticsHourlyActivityPoint = (
+  hour: number,
+): AdminCommunitiesDashboardGlobalStatistics["charts"]["hourly_activity"][number] => ({
+  accesses: 0,
+  engagement: 0,
+  hour,
+  label: `${String(hour).padStart(2, "0")}:00`,
+  posts: 0,
+  replies: 0,
+  reports: 0,
+  total: 0,
+});
+
+const createDashboardHourlyActivityMap = () =>
+  new Map(
+    Array.from({ length: 24 }, (_, hour) => [
+      hour,
+      emptyDashboardStatisticsHourlyActivityPoint(hour),
+    ]),
+  );
+
+const incrementDashboardHourlyActivity = (
+  hourly: Map<
+    number,
+    AdminCommunitiesDashboardGlobalStatistics["charts"]["hourly_activity"][number]
+  >,
+  date: Date,
+  field: Exclude<
+    keyof AdminCommunitiesDashboardGlobalStatistics["charts"]["hourly_activity"][number],
+    "hour" | "label" | "total"
+  >,
+) => {
+  const point = hourly.get(date.getHours());
+  if (!point) return;
+
+  point[field] += 1;
+  point.total += 1;
+};
+
 const dashboardStatisticsDailyRoleSet = (
   map: Map<
     string,
@@ -496,6 +535,9 @@ const buildDashboardGlobalStatistics = (
     isInDashboardStatisticsPeriod(event.occurred_at, period),
   );
   const periodProfileAccesses = dataset.profileAccesses.filter((event) =>
+    isInDashboardStatisticsPeriod(event.occurred_at, period),
+  );
+  const periodPageViews = dataset.pageViews.filter((event) =>
     isInDashboardStatisticsPeriod(event.occurred_at, period),
   );
   const followerByUser = new Map<string, { date: Date; role: DashboardStatisticsRole }>();
@@ -572,6 +614,7 @@ const buildDashboardGlobalStatistics = (
       emptyDashboardStatisticsDailyPoint(day),
     ]),
   );
+  const hourlyActivity = createDashboardHourlyActivityMap();
   const dailyActiveUsers = new Map<
     string,
     {
@@ -627,6 +670,7 @@ const buildDashboardGlobalStatistics = (
   }
 
   for (const post of periodPosts) {
+    incrementDashboardHourlyActivity(hourlyActivity, post.createdAt, "posts");
     const point = daily.get(toDateKey(post.createdAt));
     if (point) {
       point.posts += 1;
@@ -639,6 +683,7 @@ const buildDashboardGlobalStatistics = (
     }
   }
   for (const reply of periodReplies) {
+    incrementDashboardHourlyActivity(hourlyActivity, reply.createdAt, "replies");
     const point = daily.get(toDateKey(reply.createdAt));
     if (point) {
       point.replies += 1;
@@ -652,25 +697,33 @@ const buildDashboardGlobalStatistics = (
     }
   }
   for (const report of periodReports) {
+    incrementDashboardHourlyActivity(hourlyActivity, report.createdAt, "reports");
     const point = daily.get(toDateKey(report.createdAt));
     if (point) point.reports += 1;
   }
   for (const vote of periodVotes) {
+    incrementDashboardHourlyActivity(hourlyActivity, vote.createdAt, "engagement");
     const point = daily.get(toDateKey(vote.createdAt));
     if (point && vote.value === 1) point.upvotes += 1;
     if (point && vote.value === -1) point.downvotes += 1;
   }
   for (const save of [...periodPostSaves, ...periodReplySaves]) {
+    incrementDashboardHourlyActivity(hourlyActivity, save.createdAt, "engagement");
     const point = daily.get(toDateKey(save.createdAt));
     if (point) point.saves += 1;
   }
   for (const event of periodWhatsappClicks) {
+    incrementDashboardHourlyActivity(hourlyActivity, event.occurred_at, "engagement");
     const point = daily.get(toDateKey(event.occurred_at));
     if (point) point.whatsapp_clicks += 1;
   }
   for (const event of periodProfileAccesses) {
+    incrementDashboardHourlyActivity(hourlyActivity, event.occurred_at, "engagement");
     const point = daily.get(toDateKey(event.occurred_at));
     if (point) point.profile_accesses += 1;
+  }
+  for (const event of periodPageViews) {
+    incrementDashboardHourlyActivity(hourlyActivity, event.occurred_at, "accesses");
   }
   for (const [key, users] of dailyActiveUsers) {
     const point = daily.get(key);
@@ -706,6 +759,7 @@ const buildDashboardGlobalStatistics = (
         { id: "patients", label: "Pacientes", value: followers.patients },
         { id: "psychologists", label: "Psicólogos", value: followers.psychologists },
       ]),
+      hourly_activity: [...hourlyActivity.values()],
       posts_by_author: dashboardStatisticsSplit("community_post+post_reply", [
         { id: "patients", label: "Pacientes", value: patientPosts.length },
         {

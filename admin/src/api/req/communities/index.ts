@@ -154,11 +154,23 @@ export type CommunitiesDashboardStatisticsDailyPoint = {
   whatsapp_clicks: number;
 };
 
+export type CommunitiesDashboardHourlyActivityPoint = {
+  accesses: number;
+  engagement: number;
+  hour: number;
+  label: string;
+  posts: number;
+  replies: number;
+  reports: number;
+  total: number;
+};
+
 export type CommunitiesDashboardGlobalStatistics = {
   charts: {
     active_users_split: CommunitiesDashboardStatisticsSplit[];
     daily: CommunitiesDashboardStatisticsDailyPoint[];
     followers_split: CommunitiesDashboardStatisticsSplit[];
+    hourly_activity: CommunitiesDashboardHourlyActivityPoint[];
     posts_by_author: CommunitiesDashboardStatisticsSplit[];
     replies_by_author: CommunitiesDashboardStatisticsSplit[];
   };

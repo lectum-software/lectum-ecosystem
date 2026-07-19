@@ -807,3 +807,39 @@ Regras de UI obrigatórias:
 - `pnpm check` executou frontend e backend sem erros, mas ficou bloqueado em `pnpm --dir admin check` por formatacao preexistente/fora do escopo em `admin/src/app/(admin)/psicologos/client.tsx`.
 - Smoke service real `buildCommunitiesDashboard({ period: "week" })` retornou `status=200`, `top_communities.source` incluindo `page_view_event` e `top_communities.items[0].accesses_count=1` no banco local.
 - Smoke HTTP local `GET http://localhost:3002/comunidades` retornou 200.
+
+## Ajuste complementar 2026-07-19 - Horários gerais ao lado de Principais comunidades
+
+- Pedido do usuário: no dashboard geral `/comunidades`, adicionar ao lado de **Principais comunidades** um bloco de **Horários de maior atividade** geral das comunidades.
+- Backend Admin: `GET /api/admin/private/communities/dashboard` passou a expor `global_statistics.current.charts.hourly_activity`, com 24 pontos horários calculados no período filtrado a partir de eventos reais de todas as comunidades.
+- A agregação horária usa `page_view_event` como **Acessos**, `community_post` como **Posts**, `post_reply` como **Respostas**, `post_vote`, `post_save`, `post_reply_save`, `important_action_event` de WhatsApp e acessos a perfil como **Interações**, e `post_report` como **Denúncias**.
+- Frontend Admin: **Principais comunidades** e **Horários de maior atividade** agora ficam em um grid responsivo lado a lado em desktop, preservando empilhamento mobile-first em telas estreitas.
+- Os dois blocos usam colunas de mesma largura em desktop para equilibrar a leitura visual da visão geral.
+- O novo bloco exibe os três picos gerais do período em cards lado a lado a partir de telas médias, gráfico compacto por 24 horas e legenda com totais por tipo de evento.
+- Não houve package novo, schema Prisma/migration, seed, backfill artificial, mock, endpoint paralelo ou uso de `<img>` cru.
+- Builder/Quick Copy `vcp://quickcopy/vcp-24aaa2941d814e5b90572bc93ae50e2a` não está exposto como ferramenta callable neste ambiente; referências usadas: captura enviada pelo usuário, `_product/proto/admin/Comunidades/Comunidades - Dashboard.png` e o bloco horário já implementado no detalhe de comunidade.
+- ADR atualizado: `adrs/0231-admin-comunidades-dashboard-agregacoes.md`.
+
+### Critérios deste ajuste
+
+- [x] O dashboard geral `/comunidades` exibe **Horários de maior atividade** ao lado de **Principais comunidades** no desktop.
+- [x] **Principais comunidades** e **Horários de maior atividade** têm a mesma largura quando exibidos lado a lado.
+- [x] O bloco empilha conforme necessário no mobile, sem rolagem horizontal global.
+- [x] Os horários usam dados reais agregados de todas as comunidades no período filtrado.
+- [x] O gráfico mostra 24 horas e os cards mostram os três picos gerais.
+- [x] Os três cards de pico ficam lado a lado na horizontal em telas médias/desktop, preservando empilhamento em mobile estreito.
+- [x] Nenhum mock, dado fake permanente, endpoint simulado, package novo, schema Prisma ou migration foi usado.
+
+### Validação deste ajuste
+
+- `pnpm --dir admin exec biome check "src/app/(admin)/comunidades/client.tsx" "src/api/req/communities/index.ts"`
+- `pnpm --dir backend exec biome check "src/modules/api/admin/private/communities/dashboard/DTOs/IAdminCommunitiesDashboardDTO.ts" "src/modules/api/admin/private/communities/dashboard/use-cases/services.ts"`
+- `pnpm --dir backend exec tsc --noEmit --pretty false`
+- `pnpm --dir admin exec tsc --noEmit --pretty false`
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check`
+- Smoke service real `buildCommunitiesDashboard({ period: "week" })` retornou `status=200`, `hours=24`, `total=169`, pico `15:00:29` e `topCommunities=5` no banco local.
+- Smoke HTTP local `GET http://localhost:3002/comunidades` retornou 200.
