@@ -358,3 +358,26 @@ Frontend esperado:
 - Servico local `listAdminPatients({ limit: 1 })` retornou `status=200`, `count=151`, `items=1` e `source="user+patient_profile+visitor_location"`.
 - Smoke HTTP local: `GET http://localhost:3002/pacientes/lista` retornou `200`.
 - Smoke HTTP local: `GET http://localhost:3001/api/admin/private/patients?limit=1` sem token Admin retornou `401`.
+
+## Ajuste pos-feedback 2026-07-19 - Mapa e ranking de localização de pacientes
+
+- Pedido do usuário: evoluir o card **Localização** com um mapa e listagens de cidades e estados mais acessados.
+- O endpoint `GET /api/admin/private/patients/dashboard` passou a calcular `locations` com capturas reais de `visitor_location` vinculadas a pacientes dentro do período selecionado, em vez de usar apenas a última localização por paciente sem recorte temporal.
+- A UI `/pacientes` agora renderiza um mapa SVG simplificado de UFs brasileiras, sem package novo e sem usar imagem do protótipo como gráfico final.
+- O card também exibe rankings **Top estados** e **Top cidades**, usando apenas agregados reais. Cidades com frequência menor que 2 capturas são agrupadas em **Outras cidades** para reduzir exposição em dado sensível de saúde.
+- Locais fora do Brasil continuam aparecendo nas listagens; o mapa informa quando não há UF brasileira identificada.
+- Não houve schema Prisma, migration, package novo, seed, mock, backfill artificial ou endpoint paralelo.
+- Builder/Quick Copy não está exposto como ferramenta callable neste ambiente; a referência auditável continua sendo `_product/proto/admin/Pacientes/Pacientes - Dashboard.png`, complementada pelos screenshots enviados pelo usuário em 2026-07-18/2026-07-19.
+
+### Validação complementar executada
+
+- `pnpm --dir backend exec biome check --write "src/modules/api/admin/private/patients/dashboard/repositories/AdminPatientsDashboardRepository.ts" "src/modules/api/admin/private/patients/dashboard/use-cases/services.ts"`
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/pacientes/client.tsx"`
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check`
+- Serviço local `buildPatientsDashboard({ period: "all" })` retornou `status=200`, `locations.total=0`, `states=[]` e `cities=[]` na base local atual, sem criar dados artificiais.
+- Smoke HTTP local `GET http://localhost:3002/pacientes` retornou `200`.
+- Browser local headless em `http://localhost:3002/pacientes` carregou o fluxo protegido e exibiu redirecionamento para login por ausência de sessão Admin compartilhada; a validação visual autenticada ficou limitada ao build/código porque não usei nem criei credencial Admin artificial.

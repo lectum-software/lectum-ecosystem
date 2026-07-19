@@ -271,13 +271,16 @@ export class AdminPatientsDashboardRepository {
     });
   }
 
-  async listLocations(): Promise<AdminPatientLocationRecord[]> {
+  async listLocations(
+    range: AdminPatientsDashboardDateRange,
+  ): Promise<AdminPatientLocationRecord[]> {
     return prisma.visitor_location.findMany({
       orderBy: {
         createdAt: "desc",
       },
       select: latestLocationSelect,
       where: {
+        createdAt: rangeWhere(range),
         deleted: false,
         user_id: {
           not: null,

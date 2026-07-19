@@ -334,6 +334,13 @@ const buildBreakdown = (
   total: number,
   limit = 8,
 ): AdminPatientsDashboardBreakdownItem[] => {
+  return buildBreakdownFromGroups(items, total).slice(0, limit);
+};
+
+const buildBreakdownFromGroups = (
+  items: Array<{ id: string; label: string }>,
+  total: number,
+): AdminPatientsDashboardBreakdownItem[] => {
   const counts = new Map<string, { count: number; label: string }>();
 
   for (const item of items) {
@@ -348,6 +355,40 @@ const buildBreakdown = (
       label: item.label,
       percentage: safePercentage(item.count, total),
     }))
+    .sort((left, right) => {
+      if (right.count !== left.count) return right.count - left.count;
+
+      return left.label.localeCompare(right.label, "pt-BR");
+    });
+};
+
+const buildPrivacyAwareCityBreakdown = (
+  items: Array<{ id: string; label: string }>,
+  total: number,
+  limit = 10,
+): AdminPatientsDashboardBreakdownItem[] => {
+  const aggregated = buildBreakdownFromGroups(items, total);
+  const cityPrivacyThreshold = 2;
+  const visible = aggregated.filter(
+    (item) =>
+      item.count >= cityPrivacyThreshold ||
+      item.id.includes("nao_identificado") ||
+      item.label === "Não identificado",
+  );
+  const groupedCount = aggregated
+    .filter((item) => !visible.some((visibleItem) => visibleItem.id === item.id))
+    .reduce((sum, item) => sum + item.count, 0);
+  const withGroupedCities =
+    groupedCount > 0
+      ? visible.concat({
+          count: groupedCount,
+          id: "outras_cidades",
+          label: "Outras cidades",
+          percentage: safePercentage(groupedCount, total),
+        })
+      : visible;
+
+  return withGroupedCities
     .sort((left, right) => {
       if (right.count !== left.count) return right.count - left.count;
 
@@ -409,18 +450,6 @@ const normalizeCountry = (country: string | null) => {
 
 const normalizeLocality = (value: string | null) => value?.trim() || "Não identificado";
 
-const latestLocationsByUser = (locations: AdminPatientLocationRecord[]) => {
-  const latest = new Map<string, AdminPatientLocationRecord>();
-
-  for (const location of locations) {
-    if (!location.user_id) continue;
-    const current = latest.get(location.user_id);
-    if (!current || location.createdAt > current.createdAt) latest.set(location.user_id, location);
-  }
-
-  return [...latest.values()];
-};
-
 const buildLocationBreakdown = (
   locations: AdminPatientLocationRecord[],
   total: number,
@@ -428,29 +457,32 @@ const buildLocationBreakdown = (
 ) => buildBreakdown(locations.map(getGroup), total, 10);
 
 const buildLocations = (locations: AdminPatientLocationRecord[]) => {
-  const latest = latestLocationsByUser(locations);
-  const total = latest.length;
+  const total = locations.length;
 
   return {
-    cities: buildLocationBreakdown(latest, total, (location) => {
-      const city = normalizeLocality(location.city);
-      const state = normalizeLocality(location.state);
-      const country = normalizeCountry(location.country);
-      const label =
-        [city, state, country].filter((item) => item !== "Não identificado").join(", ") || city;
+    cities: buildPrivacyAwareCityBreakdown(
+      locations.map((location) => {
+        const city = normalizeLocality(location.city);
+        const state = normalizeLocality(location.state);
+        const country = normalizeCountry(location.country);
+        const label =
+          [city, state, country].filter((item) => item !== "Não identificado").join(", ") || city;
 
-      return {
-        id: `${city}:${state}:${country}`,
-        label,
-      };
-    }),
-    countries: buildLocationBreakdown(latest, total, (location) => {
+        return {
+          id: `${city}:${state}:${country}`,
+          label,
+        };
+      }),
+      total,
+      10,
+    ),
+    countries: buildLocationBreakdown(locations, total, (location) => {
       const country = normalizeCountry(location.country);
 
       return { id: country, label: country };
     }),
     source: "visitor_location" as const,
-    states: buildLocationBreakdown(latest, total, (location) => {
+    states: buildLocationBreakdown(locations, total, (location) => {
       const state = normalizeLocality(location.state);
       const country = normalizeCountry(location.country);
       const label =
@@ -728,10 +760,9 @@ export const buildPatientsDashboard = async (
   query: AdminPatientsDashboardQuery,
 ): Promise<Resolve> => {
   const repository = new AdminPatientsDashboardRepository();
-  const [patients, recentPatients, locations] = await Promise.all([
+  const [patients, recentPatients] = await Promise.all([
     repository.listPatientSnapshots(),
     repository.listRecentPatients(5),
-    repository.listLocations(),
   ]);
   const resolvedPeriod = resolvePeriod(query ?? {}, getAllPeriodStartDate(patients));
   if (!resolvedPeriod.success) {
@@ -742,7 +773,8 @@ export const buildPatientsDashboard = async (
   }
 
   const { current, labels, period, previous } = resolvedPeriod.period;
-  const [patientPageViews, patientPwaInstalls] = await Promise.all([
+  const [locations, patientPageViews, patientPwaInstalls] = await Promise.all([
+    repository.listLocations(current),
     repository.listPatientPageViews(current),
     repository.listPatientPwaInstallActions(current),
   ]);
@@ -805,7 +837,7 @@ export const buildPatientsDashboard = async (
       "Atividade recente usa eventos reais de comunidade, reações e salvamentos já persistidos.",
       "Uso da plataforma mede somente pageviews autenticados e eventos first-party de instalação PWA de pacientes no período selecionado.",
       "Tempo médio do paciente usa pageviews autenticados first-party e ignora períodos em que o app fica oculto/minimizado quando o navegador envia eventos de visibilidade.",
-      "Localização usa apenas dados agregados e coarse de visitor_location; coordenadas, IP e endereço não são retornados.",
+      "Localização usa apenas capturas agregadas e coarse de visitor_location no período selecionado; cidades com baixa frequência são agrupadas, e coordenadas, IP e endereço não são retornados.",
     ],
     demographics: buildDemographics(patients),
     export: {
@@ -850,7 +882,7 @@ export const buildPatientsDashboard = async (
         ? [
             {
               description:
-                "Nenhuma visitor_location vinculada a pacientes foi encontrada; a seção de localização fica vazia sem inferir endereço.",
+                "Nenhuma visitor_location vinculada a pacientes foi encontrada no período selecionado; a seção de localização fica vazia sem inferir endereço.",
               id: "locations",
               label: "Localização agregada",
               source: "visitor_location",

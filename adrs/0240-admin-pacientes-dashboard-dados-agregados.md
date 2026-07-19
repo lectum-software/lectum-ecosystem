@@ -93,3 +93,17 @@ Decisoes:
 - Alinhar os graficos de **Genero** e **Forma de cadastro** ao layout em pizza com legenda lateral do **Modo de cadastro** dos psicologos, sem package novo.
 
 Consequencia: Pacientes passa a ter a mesma leitura operacional de uso first-party que Psicologos, preservando privacidade e dados reais; nao houve schema Prisma, migration, package novo, mock ou alteracao de dados sensiveis.
+
+## Complemento 2026-07-19 - Localização como mapa e rankings agregados
+
+Por feedback direto de produto, o card **Localização** de `/pacientes` passa a ser uma leitura visual com mapa e rankings, inspirada no padrão de tráfego, mas preservando minimização de dados.
+
+Decisões:
+
+- Calcular localizações de pacientes a partir de capturas reais de `visitor_location` vinculadas a `user.role="paciente"` no período selecionado.
+- Usar `visitor_location` como fonte coarse de acesso/localização agregada; não persistir nem retornar IP, coordenadas, endereço ou localização precisa.
+- Renderizar mapa SVG simplificado de UFs brasileiras no frontend Admin, sem instalar pacote de mapa e sem usar imagem de protótipo como gráfico final.
+- Exibir **Top estados** e **Top cidades** com contagens agregadas. Cidades com frequência menor que 2 capturas são agrupadas em **Outras cidades** para reduzir risco de reidentificação geográfica em contexto de saúde.
+- Manter locais fora do Brasil nas listagens; o mapa informa quando não há UF brasileira identificada.
+
+Consequência: o Admin ganha leitura geográfica mais útil sem ampliar coleta, sem schema Prisma/migration, sem package novo, sem mock e sem backfill artificial.

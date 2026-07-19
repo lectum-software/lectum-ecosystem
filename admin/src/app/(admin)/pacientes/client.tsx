@@ -60,6 +60,105 @@ const GENDER_CHART_COLORS: Record<string, string> = {
   nao_informado: "#308ce8",
   outro: "#f59f00",
 };
+const LOCATION_RANKING_LIMIT = 5;
+const BRAZIL_STATE_CODES = new Set([
+  "AC",
+  "AL",
+  "AM",
+  "AP",
+  "BA",
+  "CE",
+  "DF",
+  "ES",
+  "GO",
+  "MA",
+  "MG",
+  "MS",
+  "MT",
+  "PA",
+  "PB",
+  "PE",
+  "PI",
+  "PR",
+  "RJ",
+  "RN",
+  "RO",
+  "RR",
+  "RS",
+  "SC",
+  "SE",
+  "SP",
+  "TO",
+]);
+const BRAZIL_STATE_NAME_TO_CODE: Record<string, string> = {
+  acre: "AC",
+  alagoas: "AL",
+  amapá: "AP",
+  amapa: "AP",
+  amazonas: "AM",
+  bahia: "BA",
+  ceará: "CE",
+  ceara: "CE",
+  "distrito federal": "DF",
+  "espírito santo": "ES",
+  "espirito santo": "ES",
+  goiás: "GO",
+  goias: "GO",
+  maranhão: "MA",
+  maranhao: "MA",
+  "mato grosso": "MT",
+  "mato grosso do sul": "MS",
+  "minas gerais": "MG",
+  pará: "PA",
+  para: "PA",
+  paraíba: "PB",
+  paraiba: "PB",
+  paraná: "PR",
+  parana: "PR",
+  pernambuco: "PE",
+  piauí: "PI",
+  piaui: "PI",
+  "rio de janeiro": "RJ",
+  "rio grande do norte": "RN",
+  "rio grande do sul": "RS",
+  rondônia: "RO",
+  rondonia: "RO",
+  roraima: "RR",
+  "santa catarina": "SC",
+  "são paulo": "SP",
+  "sao paulo": "SP",
+  sergipe: "SE",
+  tocantins: "TO",
+};
+const BRAZIL_STATE_TILE_LAYOUT = [
+  { code: "RR", x: 2, y: 0 },
+  { code: "AP", x: 6, y: 0 },
+  { code: "AM", x: 1, y: 1 },
+  { code: "PA", x: 4, y: 1 },
+  { code: "MA", x: 7, y: 2 },
+  { code: "AC", x: 0, y: 3 },
+  { code: "RO", x: 1, y: 3 },
+  { code: "MT", x: 3, y: 4 },
+  { code: "TO", x: 5, y: 3 },
+  { code: "PI", x: 7, y: 3 },
+  { code: "CE", x: 8, y: 3 },
+  { code: "RN", x: 9, y: 3 },
+  { code: "PB", x: 9, y: 4 },
+  { code: "PE", x: 8, y: 4 },
+  { code: "AL", x: 9, y: 5 },
+  { code: "SE", x: 9, y: 6 },
+  { code: "BA", x: 7, y: 5 },
+  { code: "MS", x: 3, y: 6 },
+  { code: "GO", x: 5, y: 5 },
+  { code: "DF", x: 6, y: 5 },
+  { code: "MG", x: 6, y: 7 },
+  { code: "ES", x: 8, y: 7 },
+  { code: "RJ", x: 7, y: 8 },
+  { code: "SP", x: 5, y: 8 },
+  { code: "PR", x: 4, y: 9 },
+  { code: "SC", x: 5, y: 10 },
+  { code: "RS", x: 4, y: 11 },
+] as const;
 type DashboardMetricKey = (typeof CARD_ORDER)[number];
 
 const DASHBOARD_METRIC_CONFIG: Record<DashboardMetricKey, { color: string; icon: LucideIcon }> = {
@@ -221,6 +320,34 @@ const hexToRgba = (hex: string, alpha: number) => {
 
   return `rgba(${red}, ${green}, ${blue}, ${alpha})`;
 };
+
+const normalizeLocationLookupKey = (value: string) =>
+  value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+
+const resolveBrazilStateCode = (item: PatientsDashboardBreakdownItem) => {
+  const candidates = [item.id.split(":")[0], item.label.split(",")[0], item.label].map((value) =>
+    value.trim(),
+  );
+
+  for (const candidate of candidates) {
+    const upper = candidate.toUpperCase();
+    if (BRAZIL_STATE_CODES.has(upper)) return upper;
+
+    const normalized = normalizeLocationLookupKey(candidate);
+    const code = BRAZIL_STATE_NAME_TO_CODE[normalized];
+    if (code) return code;
+  }
+
+  return null;
+};
+
+const formatLocationCaptureCount = (count: number) =>
+  `${numberFormatter.format(count)} ${count === 1 ? "captura" : "capturas"}`;
 
 const TrendBadge = ({ metric }: { metric: PatientsDashboardMetric }) => {
   if (metric.unavailable) {
@@ -864,37 +991,170 @@ const BreakdownPieChart = ({
   );
 };
 
-const ProgressList = ({
+const LocationRankingList = ({
+  emptyMessage,
   items,
-  total,
+  title,
 }: {
+  emptyMessage: string;
   items: PatientsDashboardBreakdownItem[];
-  total: number;
+  title: string;
 }) => (
+  <div className="rounded-[1.35rem] border border-border/70 bg-surface p-3">
+    <h4 className="text-xs font-black uppercase tracking-[0.08em] text-muted">{title}</h4>
+    <div className="mt-3 space-y-3">
+      {items.length === 0 ? (
+        <p className="rounded-2xl bg-surface-muted p-3 text-xs font-bold text-muted">
+          {emptyMessage}
+        </p>
+      ) : (
+        items.slice(0, LOCATION_RANKING_LIMIT).map((item, index) => (
+          <div key={item.id}>
+            <div className="flex items-center justify-between gap-3">
+              <span className="flex min-w-0 items-center gap-2 text-sm font-black text-foreground">
+                <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-primary-soft text-[0.68rem] font-black text-primary">
+                  {index + 1}
+                </span>
+                <span className="truncate">{item.label}</span>
+              </span>
+              <span className="whitespace-nowrap text-xs font-black text-foreground">
+                {formatLocationCaptureCount(item.count)}
+              </span>
+            </div>
+            <div className="mt-2 h-2 overflow-hidden rounded-full bg-surface-muted">
+              <div
+                aria-hidden
+                className="h-full rounded-full bg-primary"
+                style={{ width: `${Math.min(100, Math.max(0, item.percentage))}%` }}
+              />
+            </div>
+          </div>
+        ))
+      )}
+    </div>
+  </div>
+);
+
+const BrazilStateTileMap = ({ states }: { states: PatientsDashboardBreakdownItem[] }) => {
+  const statesByCode = new Map<string, PatientsDashboardBreakdownItem>();
+
+  for (const state of states) {
+    const code = resolveBrazilStateCode(state);
+    if (code) statesByCode.set(code, state);
+  }
+
+  const maxCount = Math.max(1, ...[...statesByCode.values()].map((item) => item.count));
+  const highlightedStates = [...statesByCode.values()]
+    .sort((left, right) => right.count - left.count)
+    .slice(0, LOCATION_RANKING_LIMIT)
+    .map((item) => item.label)
+    .join(", ");
+  const ariaLabel = highlightedStates
+    ? `Mapa simplificado do Brasil com destaque para ${highlightedStates}.`
+    : "Mapa simplificado do Brasil sem estados brasileiros identificados no período.";
+
+  return (
+    <figure className="rounded-[1.35rem] border border-border/70 bg-surface-muted p-3">
+      <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+        <h4 className="text-xs font-black uppercase tracking-[0.08em] text-muted">
+          Mapa de estados
+        </h4>
+        <span className="text-[0.68rem] font-bold text-subtle">
+          intensidade por capturas agregadas
+        </span>
+      </div>
+      <svg
+        aria-label={ariaLabel}
+        className="mx-auto mt-3 h-auto max-h-64 w-full max-w-[15rem]"
+        role="img"
+        viewBox="0 0 270 322"
+      >
+        {BRAZIL_STATE_TILE_LAYOUT.map((tile) => {
+          const item = statesByCode.get(tile.code);
+          const intensity = item ? item.count / maxCount : 0;
+          const fill = item ? hexToRgba("#308ce8", 0.18 + intensity * 0.7) : "transparent";
+          const stroke = item ? hexToRgba("#308ce8", 0.78) : "var(--admin-border)";
+          const textFill = intensity > 0.58 ? "white" : "var(--admin-muted)";
+          const x = tile.x * 26 + 4;
+          const y = tile.y * 24 + 4;
+
+          return (
+            <g key={tile.code}>
+              <rect
+                fill={fill}
+                height="21"
+                rx="6"
+                stroke={stroke}
+                strokeWidth={item ? "1.45" : "1"}
+                width="25"
+                x={x}
+                y={y}
+              />
+              <text
+                dominantBaseline="middle"
+                fill={textFill}
+                fontSize="8.5"
+                fontWeight="900"
+                textAnchor="middle"
+                x={x + 12.5}
+                y={y + 10.8}
+              >
+                {tile.code}
+              </text>
+            </g>
+          );
+        })}
+      </svg>
+      <figcaption className="mt-3 space-y-2">
+        <div className="flex items-center gap-2 text-[0.68rem] font-bold text-subtle">
+          <span>Menos</span>
+          <span
+            aria-hidden
+            className="h-2 flex-1 rounded-full"
+            style={{
+              background:
+                "linear-gradient(90deg, rgba(48, 140, 232, 0.16), rgba(48, 140, 232, 0.88))",
+            }}
+          />
+          <span>Mais</span>
+        </div>
+        {statesByCode.size === 0 ? (
+          <p className="text-xs font-bold leading-5 text-muted">
+            Sem estados brasileiros identificados. Locais fora do Brasil continuam nos rankings.
+          </p>
+        ) : null}
+      </figcaption>
+    </figure>
+  );
+};
+
+const LocationOverview = ({ locations }: { locations: AdminPatientsDashboard["locations"] }) => (
   <div className="mt-5 space-y-4">
-    {items.length === 0 ? (
-      <p className="rounded-2xl bg-surface-muted p-4 text-sm text-muted">
-        Nenhuma localização agregada real foi capturada para pacientes.
+    {locations.total === 0 ? (
+      <p className="rounded-2xl bg-surface-muted p-4 text-sm font-bold text-muted">
+        Nenhuma localização agregada real foi capturada para pacientes no período selecionado.
       </p>
     ) : (
-      items.map((item) => (
-        <div key={item.id}>
-          <div className="flex items-center justify-between gap-3 text-sm">
-            <span className="font-black text-foreground">{item.label}</span>
-            <span className="font-bold text-muted">
-              {numberFormatter.format(item.count)} ({item.percentage}%)
-            </span>
-          </div>
-          <div className="mt-2 h-2 overflow-hidden rounded-full bg-surface-muted">
-            <div
-              className="h-full rounded-full bg-primary"
-              style={{ width: `${Math.min(100, item.percentage)}%` }}
-            />
-          </div>
+      <>
+        <BrazilStateTileMap states={locations.states} />
+        <div className="grid gap-3 2xl:grid-cols-2">
+          <LocationRankingList
+            emptyMessage="Nenhum estado real capturado."
+            items={locations.states}
+            title="Top estados"
+          />
+          <LocationRankingList
+            emptyMessage="Nenhuma cidade real capturada."
+            items={locations.cities}
+            title="Top cidades"
+          />
         </div>
-      ))
+        <p className="text-xs font-bold leading-5 text-muted">
+          Total considerado: {formatLocationCaptureCount(locations.total)} de visitor_location.
+          Cidades com frequência muito baixa podem aparecer agrupadas para reduzir exposição.
+        </p>
+      </>
     )}
-    <p className="text-xs text-muted">Total considerado: {numberFormatter.format(total)}.</p>
   </div>
 );
 
@@ -924,7 +1184,7 @@ const Statistics = ({ summary }: { summary: AdminPatientsDashboard }) => (
             {summary.locations.source}
           </span>
         </div>
-        <ProgressList items={summary.locations.states} total={summary.locations.total} />
+        <LocationOverview locations={summary.locations} />
       </CardShell>
       <CardShell className="p-5">
         <PanelTitle
