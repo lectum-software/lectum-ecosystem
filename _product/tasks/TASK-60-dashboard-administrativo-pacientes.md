@@ -471,3 +471,22 @@ Frontend esperado:
 - `pnpm --dir admin build`
 - `pnpm check`
 - Smoke HTTP local: `GET http://localhost:3002/pacientes` retornou `200`.
+
+## Ajuste pos-feedback 2026-07-19 - Localizacao no padrao visual do Wix
+
+- Pedido do usuario: substituir o layout de mapa do card **Localizacao** por uma composicao mais parecida com a referencia do Wix, com mapa amplo, ranking lateral e barra de intensidade.
+- A UI `/pacientes` trocou o cartograma em tiles por um painel estilo analytics: cabecalho interno, mapa grande a esquerda, ranking lateral com barras e legenda inferior de menor/maior volume.
+- O mapa de **Estados** agora usa paths SVG locais de UFs brasileiras derivados de TopoJSON simplificado com licenca MIT, sem instalar package de mapa e sem carregar dado externo em runtime.
+- Foi adicionado alternador **Estados / Paises** para cobrir tambem a leitura de paises mostrada na segunda referencia do Wix; a aba **Paises** agora usa uma malha SVG mundial real (world-atlas 110m/Natural Earth) com paises destacados por intensidade, enquanto o ranking continua exibindo todos os agregados reais recebidos.
+- Rankings de **Top cidades**, **Paises** ou **Top estados** continuam usando `visitor_location` agregado, sem IP, coordenada, endereco, seed, mock ou endpoint novo.
+- A implementacao permanece mobile-first: em telas estreitas o mapa e o ranking empilham; em desktop seguem a composicao lado a lado da referencia.
+- Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente; as referencias usadas foram os screenshots do Wix enviados pelo usuario em 2026-07-19 e `_product/proto/admin/Pacientes/Pacientes - Dashboard.png`.
+
+### Validacao complementar executada
+
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/pacientes/client.tsx" "src/lib/brazil-state-map.ts" "src/lib/world-country-map.ts"`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check`
+- Smoke HTTP local: `GET http://localhost:3002/pacientes` retornou `200`.
+- Preview visual isolado do mapa-mundi foi capturado com Chrome headless local e confirmou mapa continuo, com Brasil destacado sem formas soltas/desconfiguradas. A validacao autenticada completa no browser do Admin segue dependente da sessao local do usuario.

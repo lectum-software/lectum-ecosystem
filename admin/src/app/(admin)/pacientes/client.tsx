@@ -4,6 +4,7 @@ import {
   Activity,
   AlertTriangle,
   ChevronDown,
+  ChevronRight,
   Loader2,
   type LucideIcon,
   MapPin,
@@ -24,8 +25,10 @@ import type {
   PatientsDashboardMetric,
   PatientsDashboardQuery,
 } from "@/api/req/patients";
+import { BRAZIL_STATE_MAP_PATHS } from "@/lib/brazil-state-map";
 import { aggregateCalendarChartPoints, buildSmoothSvgPath } from "@/lib/chart-time-series";
 import { cn } from "@/lib/utils";
+import { WORLD_COUNTRY_MAP_PATHS } from "@/lib/world-country-map";
 
 const CARD_ORDER = [
   "total_patients",
@@ -138,35 +141,6 @@ const BRAZIL_STATE_NAME_TO_CODE: Record<string, string> = {
   sergipe: "SE",
   tocantins: "TO",
 };
-const BRAZIL_STATE_TILE_LAYOUT = [
-  { code: "RR", x: 2, y: 0 },
-  { code: "AP", x: 6, y: 0 },
-  { code: "AM", x: 1, y: 1 },
-  { code: "PA", x: 4, y: 1 },
-  { code: "MA", x: 7, y: 2 },
-  { code: "AC", x: 0, y: 3 },
-  { code: "RO", x: 1, y: 3 },
-  { code: "MT", x: 3, y: 4 },
-  { code: "TO", x: 5, y: 3 },
-  { code: "PI", x: 7, y: 3 },
-  { code: "CE", x: 8, y: 3 },
-  { code: "RN", x: 9, y: 3 },
-  { code: "PB", x: 9, y: 4 },
-  { code: "PE", x: 8, y: 4 },
-  { code: "AL", x: 9, y: 5 },
-  { code: "SE", x: 9, y: 6 },
-  { code: "BA", x: 7, y: 5 },
-  { code: "MS", x: 3, y: 6 },
-  { code: "GO", x: 5, y: 5 },
-  { code: "DF", x: 6, y: 5 },
-  { code: "MG", x: 6, y: 7 },
-  { code: "ES", x: 8, y: 7 },
-  { code: "RJ", x: 7, y: 8 },
-  { code: "SP", x: 5, y: 8 },
-  { code: "PR", x: 4, y: 9 },
-  { code: "SC", x: 5, y: 10 },
-  { code: "RS", x: 4, y: 11 },
-] as const;
 const LOCAL_LOCATION_PREVIEW_HOSTS = new Set(["localhost", "127.0.0.1", "::1"]);
 const LOCAL_PREVIEW_LOCATION_DATA = {
   cities: [
@@ -239,6 +213,45 @@ const LOCAL_PREVIEW_DEVICE_USAGE = {
   total_sessions: 40,
   unavailable_reason: null,
 } satisfies AdminPatientsDashboard["device_usage"];
+type LocationMapScope = "countries" | "states";
+const LOCATION_MAP_SCOPE_LABELS = {
+  countries: "Países",
+  states: "Estados",
+} satisfies Record<LocationMapScope, string>;
+const COUNTRY_WORLD_MAP_ID_BY_KEY: Record<string, string> = {
+  alemanha: "276",
+  argentina: "032",
+  australia: "036",
+  br: "076",
+  brasil: "076",
+  brazil: "076",
+  ca: "124",
+  canada: "124",
+  chile: "152",
+  china: "156",
+  de: "276",
+  "estados unidos": "840",
+  espanha: "724",
+  es: "724",
+  franca: "250",
+  france: "250",
+  germany: "276",
+  india: "356",
+  it: "380",
+  italia: "380",
+  japao: "392",
+  japan: "392",
+  mexico: "484",
+  portugal: "620",
+  pt: "620",
+  "reino unido": "826",
+  uk: "826",
+  "united kingdom": "826",
+  "united states": "840",
+  "united states of america": "840",
+  us: "840",
+  usa: "840",
+};
 type DashboardMetricKey = (typeof CARD_ORDER)[number];
 
 const DASHBOARD_METRIC_CONFIG: Record<DashboardMetricKey, { color: string; icon: LucideIcon }> = {
@@ -1236,6 +1249,89 @@ const DeviceUsagePieChart = ({
   );
 };
 
+const getLocationCountRange = (items: PatientsDashboardBreakdownItem[]) => {
+  const counts = items.filter((item) => item.count > 0).map((item) => item.count);
+
+  if (counts.length === 0) return { max: 0, min: 0 };
+
+  return {
+    max: Math.max(...counts),
+    min: Math.min(...counts),
+  };
+};
+
+const getLocationIntensity = (count: number, min: number, max: number) => {
+  if (count <= 0) return 0;
+  if (max <= min) return 1;
+
+  return (count - min) / (max - min);
+};
+
+const LocationMapLegend = ({ items }: { items: PatientsDashboardBreakdownItem[] }) => {
+  const { max, min } = getLocationCountRange(items);
+
+  return (
+    <div className="flex min-w-0 flex-1 items-center gap-2 text-[0.68rem] font-bold text-muted">
+      <span className="whitespace-nowrap">{numberFormatter.format(min)}</span>
+      <span
+        aria-hidden
+        className="h-2 min-w-24 flex-1 rounded-full"
+        style={{
+          background: "linear-gradient(90deg, rgba(48, 140, 232, 0.18), rgba(48, 140, 232, 0.9))",
+        }}
+      />
+      <span className="whitespace-nowrap">{numberFormatter.format(max)}</span>
+    </div>
+  );
+};
+
+const LocationBarRanking = ({
+  emptyMessage,
+  items,
+  title,
+}: {
+  emptyMessage: string;
+  items: PatientsDashboardBreakdownItem[];
+  title: string;
+}) => {
+  const topItems = items.slice(0, LOCATION_RANKING_LIMIT);
+  const maxCount = Math.max(1, ...topItems.map((item) => item.count));
+
+  return (
+    <div className="min-w-0">
+      <h4 className="text-xs font-black uppercase tracking-[0.08em] text-muted">{title}</h4>
+      <div className="mt-5 space-y-4">
+        {topItems.length === 0 ? (
+          <p className="rounded-2xl bg-surface-muted p-3 text-xs font-bold leading-5 text-muted">
+            {emptyMessage}
+          </p>
+        ) : (
+          topItems.map((item) => (
+            <div className="min-w-0" key={item.id}>
+              <div className="flex items-center justify-between gap-3 text-sm">
+                <span className="flex min-w-0 items-center gap-1.5 font-medium text-foreground">
+                  <span className="min-w-0 truncate">{item.label}</span>
+                  <ChevronRight aria-hidden className="h-3.5 w-3.5 shrink-0 text-primary" />
+                </span>
+                <span className="shrink-0 font-black text-foreground">
+                  {numberFormatter.format(item.count)}
+                </span>
+              </div>
+              <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-border/70">
+                <div
+                  aria-hidden
+                  className="h-full rounded-full bg-primary"
+                  style={{ width: `${Math.max(8, (item.count / maxCount) * 100)}%` }}
+                />
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+    </div>
+  );
+};
+
 const LocationRankingList = ({
   emptyMessage,
   items,
@@ -1245,7 +1341,7 @@ const LocationRankingList = ({
   items: PatientsDashboardBreakdownItem[];
   title: string;
 }) => (
-  <div className="rounded-[1.35rem] border border-border/70 bg-surface p-3">
+  <div className="rounded-[1.35rem] border border-border/70 bg-surface p-4">
     <h4 className="text-xs font-black uppercase tracking-[0.08em] text-muted">{title}</h4>
     <div className="mt-3 space-y-3">
       {items.length === 0 ? (
@@ -1280,7 +1376,7 @@ const LocationRankingList = ({
   </div>
 );
 
-const BrazilStateTileMap = ({ states }: { states: PatientsDashboardBreakdownItem[] }) => {
+const BrazilStateChoroplethMap = ({ states }: { states: PatientsDashboardBreakdownItem[] }) => {
   const statesByCode = new Map<string, PatientsDashboardBreakdownItem>();
 
   for (const state of states) {
@@ -1288,88 +1384,226 @@ const BrazilStateTileMap = ({ states }: { states: PatientsDashboardBreakdownItem
     if (code) statesByCode.set(code, state);
   }
 
-  const maxCount = Math.max(1, ...[...statesByCode.values()].map((item) => item.count));
+  const { max, min } = getLocationCountRange([...statesByCode.values()]);
   const highlightedStates = [...statesByCode.values()]
     .sort((left, right) => right.count - left.count)
     .slice(0, LOCATION_RANKING_LIMIT)
     .map((item) => item.label)
     .join(", ");
   const ariaLabel = highlightedStates
-    ? `Mapa simplificado do Brasil com destaque para ${highlightedStates}.`
-    : "Mapa simplificado do Brasil sem estados brasileiros identificados no período.";
+    ? `Mapa do Brasil por UF com destaque para ${highlightedStates}.`
+    : "Mapa do Brasil sem estados brasileiros identificados no período.";
 
   return (
-    <figure className="rounded-[1.35rem] border border-border/70 bg-surface-muted p-3">
-      <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
-        <h4 className="text-xs font-black uppercase tracking-[0.08em] text-muted">
-          Mapa de estados
-        </h4>
-        <span className="text-[0.68rem] font-bold text-subtle">
-          intensidade por capturas agregadas
-        </span>
-      </div>
+    <figure className="min-w-0">
       <svg
         aria-label={ariaLabel}
-        className="mx-auto mt-3 h-auto max-h-64 w-full max-w-[15rem]"
+        className="mx-auto h-auto max-h-[20rem] w-full max-w-[22rem]"
         role="img"
-        viewBox="0 0 270 322"
+        viewBox="0 0 360 380"
       >
-        {BRAZIL_STATE_TILE_LAYOUT.map((tile) => {
-          const item = statesByCode.get(tile.code);
-          const intensity = item ? item.count / maxCount : 0;
-          const fill = item ? hexToRgba("#308ce8", 0.18 + intensity * 0.7) : "transparent";
-          const stroke = item ? hexToRgba("#308ce8", 0.78) : "var(--admin-border)";
-          const textFill = intensity > 0.58 ? "white" : "var(--admin-muted)";
-          const x = tile.x * 26 + 4;
-          const y = tile.y * 24 + 4;
+        {BRAZIL_STATE_MAP_PATHS.map((statePath) => {
+          const item = statesByCode.get(statePath.code);
+          const intensity = item ? getLocationIntensity(item.count, min, max) : 0;
+          const fill = item
+            ? hexToRgba("#308ce8", 0.28 + intensity * 0.62)
+            : "var(--admin-surface-muted)";
+          const stroke = item ? hexToRgba("#308ce8", 0.74) : "var(--admin-border)";
 
           return (
-            <g key={tile.code}>
-              <rect
-                fill={fill}
-                height="21"
-                rx="6"
-                stroke={stroke}
-                strokeWidth={item ? "1.45" : "1"}
-                width="25"
-                x={x}
-                y={y}
-              />
-              <text
-                dominantBaseline="middle"
-                fill={textFill}
-                fontSize="8.5"
-                fontWeight="900"
-                textAnchor="middle"
-                x={x + 12.5}
-                y={y + 10.8}
-              >
-                {tile.code}
-              </text>
-            </g>
+            <path
+              d={statePath.d}
+              fill={fill}
+              key={statePath.code}
+              stroke={stroke}
+              strokeLinejoin="round"
+              strokeWidth={item ? "1.2" : "0.9"}
+            >
+              <title>
+                {item
+                  ? `${statePath.name}: ${formatLocationCaptureCount(item.count)}`
+                  : `${statePath.name}: sem captura`}
+              </title>
+            </path>
           );
         })}
       </svg>
-      <figcaption className="mt-3 space-y-2">
-        <div className="flex items-center gap-2 text-[0.68rem] font-bold text-subtle">
-          <span>Menos</span>
-          <span
-            aria-hidden
-            className="h-2 flex-1 rounded-full"
-            style={{
-              background:
-                "linear-gradient(90deg, rgba(48, 140, 232, 0.16), rgba(48, 140, 232, 0.88))",
-            }}
-          />
-          <span>Mais</span>
-        </div>
-        {statesByCode.size === 0 ? (
-          <p className="text-xs font-bold leading-5 text-muted">
-            Sem estados brasileiros identificados. Locais fora do Brasil continuam nos rankings.
-          </p>
-        ) : null}
-      </figcaption>
+      {statesByCode.size === 0 ? (
+        <figcaption className="mt-2 text-center text-xs font-bold leading-5 text-muted">
+          Sem estados brasileiros identificados. Locais fora do Brasil continuam nos rankings.
+        </figcaption>
+      ) : null}
     </figure>
+  );
+};
+
+const resolveWorldCountryMapPath = (item: PatientsDashboardBreakdownItem) => {
+  const idParts = item.id.split(":");
+  const candidates = [item.id, idParts[idParts.length - 1], item.label];
+
+  for (const candidate of candidates) {
+    const normalized = normalizeLocationLookupKey(candidate);
+    const mappedId = COUNTRY_WORLD_MAP_ID_BY_KEY[normalized];
+    const mappedCountry = mappedId
+      ? WORLD_COUNTRY_MAP_PATHS.find((country) => country.id === mappedId)
+      : null;
+    if (mappedCountry) return mappedCountry;
+
+    const countryByName = WORLD_COUNTRY_MAP_PATHS.find(
+      (country) => normalizeLocationLookupKey(country.name) === normalized,
+    );
+    if (countryByName) return countryByName;
+  }
+
+  return null;
+};
+
+const WorldCountryMap = ({ countries }: { countries: PatientsDashboardBreakdownItem[] }) => {
+  const { max, min } = getLocationCountRange(countries);
+  const countriesByMapId = new Map<string, PatientsDashboardBreakdownItem>();
+
+  for (const item of countries) {
+    const countryPath = resolveWorldCountryMapPath(item);
+    if (countryPath) countriesByMapId.set(countryPath.id, item);
+  }
+
+  const highlightedCountries = countries
+    .slice(0, LOCATION_RANKING_LIMIT)
+    .map((item) => item.label)
+    .join(", ");
+  const ariaLabel = highlightedCountries
+    ? `Mapa-múndi com destaque para ${highlightedCountries}.`
+    : "Mapa-múndi sem países identificados no período.";
+
+  return (
+    <figure className="min-w-0">
+      <svg
+        aria-label={ariaLabel}
+        className="mx-auto h-auto max-h-[18rem] w-full max-w-[30rem]"
+        role="img"
+        viewBox="0 0 520 270"
+      >
+        {WORLD_COUNTRY_MAP_PATHS.map((country) => {
+          const item = countriesByMapId.get(country.id);
+          const intensity = item ? getLocationIntensity(item.count, min, max) : 0;
+          const fill = item
+            ? hexToRgba("#308ce8", 0.32 + intensity * 0.6)
+            : "var(--admin-surface-muted)";
+          const stroke = item ? hexToRgba("#308ce8", 0.78) : "var(--admin-border)";
+
+          return (
+            <path
+              d={country.d}
+              fill={fill}
+              key={country.id}
+              stroke={stroke}
+              strokeLinejoin="round"
+              strokeWidth={item ? "0.85" : "0.45"}
+            >
+              <title>
+                {item
+                  ? `${country.name}: ${formatLocationCaptureCount(item.count)}`
+                  : `${country.name}: sem captura`}
+              </title>
+            </path>
+          );
+        })}
+      </svg>
+      {countries.length > 0 && countriesByMapId.size === 0 ? (
+        <figcaption className="mt-2 text-center text-xs font-bold leading-5 text-muted">
+          Países não encontrados na malha continuam no ranking agregado.
+        </figcaption>
+      ) : null}
+    </figure>
+  );
+};
+
+const LocationMapScopeToggle = ({
+  hasCountries,
+  hasStates,
+  onScopeChange,
+  scope,
+}: {
+  hasCountries: boolean;
+  hasStates: boolean;
+  onScopeChange: (scope: LocationMapScope) => void;
+  scope: LocationMapScope;
+}) => {
+  const options: LocationMapScope[] = ["states", "countries"];
+
+  return (
+    <fieldset
+      aria-label="Alternar mapa de localização"
+      className="grid grid-cols-2 rounded-full bg-surface-muted p-1 text-xs font-black"
+    >
+      {options.map((option) => {
+        const disabled = option === "states" ? !hasStates : !hasCountries;
+
+        return (
+          <button
+            aria-pressed={scope === option}
+            className={cn(
+              "rounded-full px-3 py-1.5 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-45",
+              scope === option
+                ? "bg-surface text-primary shadow-control"
+                : "text-muted hover:text-foreground",
+            )}
+            disabled={disabled}
+            key={option}
+            onClick={() => onScopeChange(option)}
+            type="button"
+          >
+            {LOCATION_MAP_SCOPE_LABELS[option]}
+          </button>
+        );
+      })}
+    </fieldset>
+  );
+};
+
+const LocationMapPanel = ({
+  countries,
+  onScopeChange,
+  scope,
+  states,
+}: {
+  countries: PatientsDashboardBreakdownItem[];
+  onScopeChange: (scope: LocationMapScope) => void;
+  scope: LocationMapScope;
+  states: PatientsDashboardBreakdownItem[];
+}) => {
+  const activeItems = scope === "states" ? states : countries;
+  const title = scope === "states" ? "Capturas por Estado" : "Capturas por País";
+  const rankingTitle = scope === "states" ? "Estados" : "Países";
+  const emptyMessage =
+    scope === "states" ? "Nenhum estado real capturado." : "Nenhum país real capturado.";
+
+  return (
+    <div className="overflow-hidden rounded-[1.35rem] border border-border/70 bg-surface">
+      <div className="flex flex-col gap-3 border-b border-border/70 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+        <h4 className="text-base font-black text-foreground">{title}</h4>
+        <LocationMapScopeToggle
+          hasCountries={countries.length > 0}
+          hasStates={states.length > 0}
+          onScopeChange={onScopeChange}
+          scope={scope}
+        />
+      </div>
+      <div className="grid gap-5 px-4 py-5 lg:grid-cols-[minmax(0,1.45fr)_minmax(12rem,0.9fr)] lg:items-center">
+        <div className="min-h-[16rem] min-w-0">
+          {scope === "states" ? (
+            <BrazilStateChoroplethMap states={states} />
+          ) : (
+            <WorldCountryMap countries={countries} />
+          )}
+        </div>
+        <LocationBarRanking emptyMessage={emptyMessage} items={activeItems} title={rankingTitle} />
+      </div>
+      <div className="flex flex-col gap-3 px-4 pb-4 sm:flex-row sm:items-center sm:justify-between">
+        <LocationMapLegend items={activeItems} />
+        <span className="text-[0.68rem] font-bold text-subtle">intensidade por agregados</span>
+      </div>
+    </div>
   );
 };
 
@@ -1379,41 +1613,59 @@ const LocationOverview = ({
 }: {
   locations: AdminPatientsDashboard["locations"];
   preview?: boolean;
-}) => (
-  <div className="mt-5 space-y-4">
-    {locations.total === 0 && !preview ? (
-      <p className="rounded-2xl bg-surface-muted p-4 text-sm font-bold text-muted">
-        Nenhuma localização agregada real foi capturada para pacientes no período selecionado.
-      </p>
-    ) : (
-      <>
-        <BrazilStateTileMap states={locations.states} />
-        <div className="grid gap-3 2xl:grid-cols-2">
-          <LocationRankingList
-            emptyMessage="Nenhum estado real capturado."
-            items={locations.states}
-            title="Top estados"
-          />
-          <LocationRankingList
-            emptyMessage="Nenhuma cidade real capturada."
-            items={locations.cities}
-            title="Top cidades"
-          />
-        </div>
-        <p className="text-xs font-bold leading-5 text-muted">
-          {preview ? (
-            <>Total visualizado: {formatLocationCaptureCount(locations.total)}.</>
-          ) : (
-            <>
-              Total considerado: {formatLocationCaptureCount(locations.total)} de visitor_location.
-              Cidades com frequência muito baixa podem aparecer agrupadas para reduzir exposição.
-            </>
-          )}
+}) => {
+  const [preferredScope, setPreferredScope] = useState<LocationMapScope>("states");
+  const hasCountries = locations.countries.length > 0;
+  const hasStates = locations.states.length > 0;
+  const scope =
+    preferredScope === "states" && !hasStates && hasCountries ? "countries" : preferredScope;
+  const secondaryItems = scope === "states" ? locations.countries : locations.states;
+  const secondaryTitle = scope === "states" ? "Países" : "Top estados";
+  const secondaryEmptyMessage =
+    scope === "states" ? "Nenhum país real capturado." : "Nenhum estado real capturado.";
+
+  return (
+    <div className="mt-5 space-y-4">
+      {locations.total === 0 && !preview ? (
+        <p className="rounded-2xl bg-surface-muted p-4 text-sm font-bold text-muted">
+          Nenhuma localização agregada real foi capturada para pacientes no período selecionado.
         </p>
-      </>
-    )}
-  </div>
-);
+      ) : (
+        <>
+          <LocationMapPanel
+            countries={locations.countries}
+            onScopeChange={setPreferredScope}
+            scope={scope}
+            states={locations.states}
+          />
+          <div className="grid gap-3 2xl:grid-cols-2">
+            <LocationRankingList
+              emptyMessage="Nenhuma cidade real capturada."
+              items={locations.cities}
+              title="Top cidades"
+            />
+            <LocationRankingList
+              emptyMessage={secondaryEmptyMessage}
+              items={secondaryItems}
+              title={secondaryTitle}
+            />
+          </div>
+          <p className="text-xs font-bold leading-5 text-muted">
+            {preview ? (
+              <>Preview local: {formatLocationCaptureCount(locations.total)} para validar layout.</>
+            ) : (
+              <>
+                Total considerado: {formatLocationCaptureCount(locations.total)} de
+                visitor_location. Cidades com frequência muito baixa podem aparecer agrupadas para
+                reduzir exposição.
+              </>
+            )}
+          </p>
+        </>
+      )}
+    </div>
+  );
+};
 
 const Statistics = ({
   allowLocalLocationPreview,

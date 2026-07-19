@@ -174,3 +174,17 @@ Decisao:
 - Nao alterar contrato, calculo, backend, schema, migration ou fonte de dados; a mudanca apenas torna a semantica temporal visivel em todos os blocos agregados relevantes.
 
 Consequencia: o Admin passa a deixar explicito que genero, forma de cadastro e localizacao acompanham o periodo selecionado, sem adicionar dados, mocks, packages ou endpoints.
+
+## Complemento 2026-07-19 - Mapa de localizacao no padrao Wix
+
+Por feedback direto de produto, o card **Localizacao** de `/pacientes` passa a abandonar o cartograma de tiles e a usar uma composicao mais proxima dos paineis do Wix: mapa amplo, ranking lateral com barras e legenda inferior de intensidade.
+
+Decisoes:
+
+- Renderizar **Estados** como choropleth SVG de UFs brasileiras, usando paths locais derivados de TopoJSON simplificado com licenca MIT, sem package novo de mapa e sem chamada externa em runtime.
+- Manter a fonte de dados como `visitor_location` agregada/coarse, sem IP, coordenadas, endereco ou localizacao precisa.
+- Adicionar alternador **Estados / Paises** para suportar a leitura de paises da referencia Wix; a aba **Paises** usa malha SVG mundial local derivada de world-atlas 110m/Natural Earth, com paises destacados por intensidade e sem desenho manual aproximado.
+- Preservar rankings de cidades/estados/paises como agregados e manter agrupamento de baixa frequencia definido anteriormente para reduzir risco de reidentificacao geografica.
+- Preferir dados SVG locais a um pacote de mapa nesta iteracao para evitar dependency nova; as fontes cartograficas ficam versionadas em `admin/src/lib/brazil-state-map.ts` e `admin/src/lib/world-country-map.ts`. Se o Admin precisar de drilldown geografico completo no futuro, uma nova task deve avaliar package/licenca/acessibilidade e registrar ADR especifico.
+
+Consequencia: o card fica visualmente mais proximo da referencia de analytics do Wix, segue mobile-first, nao altera contrato/backend/schema/migration e nao amplia a coleta de dados sensiveis.
