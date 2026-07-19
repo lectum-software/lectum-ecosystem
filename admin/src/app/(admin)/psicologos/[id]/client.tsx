@@ -2022,6 +2022,7 @@ const SubscriptionCard = ({
   billingLoading: boolean;
   detail: AdminPsychologistDetail;
 }) => {
+  const pathname = usePathname();
   const subscription = detail.general.subscription;
   const rows: Array<[string, ReactNode]> = [
     ["Plano atual", subscription.plan_name || "Sem plano ativo"],
@@ -2032,7 +2033,7 @@ const SubscriptionCard = ({
   ];
 
   return (
-    <CardShell className="p-5">
+    <CardShell className="flex h-full flex-col p-5">
       <div className="flex items-start justify-between gap-3">
         <div>
           <h2 className="text-lg font-black text-foreground">Dados da assinatura</h2>
@@ -2040,14 +2041,29 @@ const SubscriptionCard = ({
         </div>
         <IconCircle icon={Wallet} />
       </div>
-      <dl className="mt-5 divide-y divide-border text-sm">
+      <dl className="mt-5 flex-1 divide-y divide-border text-sm">
         {rows.map(([label, value]) => (
           <div className="grid gap-1 py-3 sm:grid-cols-[190px_1fr]" key={label}>
-            <dt className="font-black text-muted">{label}</dt>
-            <dd className="font-bold text-foreground">{value}</dd>
+            <dt className={cn("font-black text-muted", label === "LTV" ? "text-primary" : "")}>
+              {label}
+            </dt>
+            <dd
+              className={cn(
+                "font-bold text-foreground",
+                label === "LTV" ? "text-lg font-black text-primary" : "",
+              )}
+            >
+              {value}
+            </dd>
           </div>
         ))}
       </dl>
+      <Link
+        className="mt-4 inline-flex h-11 w-full items-center justify-center gap-2 rounded-control border border-primary/45 bg-surface px-4 text-sm font-black text-primary shadow-control transition hover:bg-primary-soft sm:w-auto"
+        href={`${pathname}?tab=plano`}
+      >
+        Abrir assinatura
+      </Link>
     </CardShell>
   );
 };
@@ -2139,7 +2155,7 @@ const AccountSituationCard = ({ id }: { id: string }) => {
   ];
 
   return (
-    <CardShell className="p-5">
+    <CardShell className="flex h-full flex-col p-5">
       <div className="flex items-start justify-between gap-3">
         <div>
           <h2 className="text-lg font-black text-foreground">Situação da conta</h2>
@@ -2163,7 +2179,7 @@ const AccountSituationCard = ({ id }: { id: string }) => {
           {getAccountSituationHelperText(account)}
         </p>
       </div>
-      <dl className="mt-4 divide-y divide-border text-sm">
+      <dl className="mt-4 flex-1 divide-y divide-border text-sm">
         {summaryItems.map((item) => (
           <div className="grid gap-1 py-3 sm:grid-cols-[150px_1fr]" key={item.label}>
             <dt className="font-black text-muted">{item.label}</dt>
@@ -2180,23 +2196,6 @@ const AccountSituationCard = ({ id }: { id: string }) => {
     </CardShell>
   );
 };
-
-const registryResponsibleLabel = (registry: AdminPsychologistRegistryVerification) => {
-  const actor = registry.summary.latest_manual_admin;
-  if (actor?.name) return formatGrantedByName(actor.name);
-  if (registry.summary.source === "api_automatica") return "Via API automática";
-  if (registry.summary.source === "admin_grant" || registry.summary.source === "manual_admin") {
-    return "Admin Lectum";
-  }
-
-  return "Não informado";
-};
-
-const registryLastUpdate = (registry: AdminPsychologistRegistryVerification) =>
-  registry.summary.latest_manual_checked_at ??
-  registry.summary.cfp_verified_at ??
-  registry.latest_attempts[0]?.checked_at ??
-  null;
 
 const RegistryStatusCard = ({ id }: { id: string }) => {
   const pathname = usePathname();
@@ -2234,8 +2233,6 @@ const RegistryStatusCard = ({ id }: { id: string }) => {
 
   const registry = query.data;
   if (!registry) return null;
-
-  const lastUpdate = registryLastUpdate(registry);
   const summaryItems = [
     { label: "Regional CRP", value: formatNullable(registry.identity.regional_crp) },
     { label: "Nº CRP", value: formatNullable(registry.identity.registration_number) },
@@ -2243,9 +2240,6 @@ const RegistryStatusCard = ({ id }: { id: string }) => {
       label: "Data de inscrição",
       value: formatDateOnly(registry.identity.crp_registration_date),
     },
-    { label: "Origem", value: registry.summary.source_label },
-    { label: "Responsável", value: registryResponsibleLabel(registry) },
-    { label: "Última atualização", value: formatDateTime(lastUpdate) },
   ];
   const helperText =
     registry.summary.status === "aprovado"
@@ -2255,7 +2249,7 @@ const RegistryStatusCard = ({ id }: { id: string }) => {
         : "Resumo somente leitura. Ações do registro ficam concentradas em Perfil e cadastro.";
 
   return (
-    <CardShell className="p-5">
+    <CardShell className="flex h-full flex-col p-5">
       <div className="flex items-start justify-between gap-3">
         <div>
           <h2 className="text-lg font-black text-foreground">Situação do registro</h2>
@@ -2283,7 +2277,7 @@ const RegistryStatusCard = ({ id }: { id: string }) => {
         </div>
         <p className="mt-3 text-sm font-bold leading-6 text-muted">{helperText}</p>
       </div>
-      <dl className="mt-4 divide-y divide-border text-sm">
+      <dl className="mt-4 flex-1 divide-y divide-border text-sm">
         {summaryItems.map((item) => (
           <div className="grid gap-1 py-3 sm:grid-cols-[170px_1fr]" key={item.label}>
             <dt className="font-black text-muted">{item.label}</dt>
@@ -2377,7 +2371,7 @@ const GeneralTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: strin
         </div>
       </section>
 
-      <div className="grid gap-5 xl:grid-cols-3 xl:items-start">
+      <div className="grid items-stretch gap-5 xl:grid-cols-3">
         <AccountSituationCard id={id} />
         <RegistryStatusCard id={id} />
         <SubscriptionCard

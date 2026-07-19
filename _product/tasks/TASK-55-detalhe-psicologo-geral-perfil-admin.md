@@ -294,3 +294,19 @@ Criar o shell de detalhe do psicÃ³logo e as abas Geral e Perfil/Cadastro com dad
 - `pnpm --dir admin build` executado com sucesso apÃ³s uma primeira tentativa bloqueada por outro processo `next build` em andamento.
 - Smoke HTTP local: `GET http://localhost:3002/psicologos/cmrgztri7000tn0uh1q4n8vxf` retornou `200`.
 - `pnpm check` foi executado: frontend e biome backend passaram, mas backend ficou bloqueado em `prisma generate` por `ENOTEMPTY` ao remover `backend/src/external/generated/prisma/models`, fora do escopo deste ajuste Admin/frontend.
+
+## Ajuste complementar 2026-07-19 - refinamento dos cards de situação e assinatura
+
+- Pedido direto de produto aplicado na aba Admin `Geral` do detalhe do psicólogo.
+- No bloco `Situação do registro`, foram removidas as linhas `Origem`, `Responsável` e `Última atualização`, mantendo apenas `Regional CRP`, `Nº CRP` e `Data de inscrição`.
+- No bloco `Dados da assinatura`, o LTV permanece destacado por peso/tamanho/cor do texto, mas sem fundo azul na linha.
+- O botão `Abrir assinatura` foi mantido no card para navegação direta à aba de assinatura.
+- Os cards `Situação da conta`, `Situação do registro` e `Dados da assinatura` passaram a usar altura alinhada na grid desktop, preservando empilhamento mobile-first.
+- Não houve alteração de backend, endpoint, schema Prisma, migrations, packages ou dados persistidos.
+
+### Validação complementar do refinamento dos cards
+
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/psicologos/[id]/client.tsx"`
+- `git diff --check -- "admin/src/app/(admin)/psicologos/[id]/client.tsx"`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`

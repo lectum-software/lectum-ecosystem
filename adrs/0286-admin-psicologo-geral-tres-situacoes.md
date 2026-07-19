@@ -46,3 +46,14 @@ O Builder/Quick Copy ativo nÃ£o estÃ¡ exposto como ferramenta callable neste amb
 ## PendÃªncias
 
 - ValidaÃ§Ã£o visual autenticada interativa no navegador do usuÃ¡rio, caso ele queira conferÃªncia pixel a pixel apÃ³s atualizar a pÃ¡gina.
+
+## Atualização 2026-07-19
+
+Após feedback visual na tela real, o card `Situação do registro` ficou mais enxuto na aba Geral: remove `Origem`, `Responsável` e `Última atualização`, deixando origem/responsável para superfícies mais detalhadas do registro. O card `Dados da assinatura` mantém o LTV em destaque textual, mas sem fundo azul, e os três cards principais usam altura alinhada no desktop com empilhamento mobile-first.
+
+Validações adicionais:
+
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/psicologos/[id]/client.tsx"`
+- `git diff --check -- "admin/src/app/(admin)/psicologos/[id]/client.tsx"`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
