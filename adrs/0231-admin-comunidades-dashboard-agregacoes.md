@@ -178,3 +178,13 @@ O bloco **Principais comunidades** passa a exibir o avatar real de cada comunida
 A decisao e ampliar o item existente de `top_communities` com `avatar_url`, usando o campo persistido em `community` no mesmo endpoint `GET /api/admin/private/communities/dashboard`. A UI resolve o caminho publico do backend com os helpers ja existentes do Admin e renderiza via `next/image`; quando a comunidade ainda nao possui avatar, a apresentacao usa iniciais como fallback honesto, sem asset artificial ou mock.
 
 Consequencia: o ranking final do dashboard fica visualmente alinhado com a identidade editavel da comunidade no Admin e na lista administrativa, sem endpoint novo, schema Prisma/migration, dependencia, seed, mock ou mudanca na regra de ordenacao de `top_communities`.
+
+## Atualizacao 2026-07-19: acessos e prioridade visual em principais comunidades
+
+O bloco **Principais comunidades** da visao geral `/comunidades` passa a aparecer antes de **Postagens mais recentes** para priorizar a leitura operacional de comunidades antes da leitura de conteudo.
+
+A decisao e ampliar o item existente de `top_communities` com `accesses_count`, calculado por `page_view_event.target_type="community"` usando `target_id` igual ao `id` ou ao `slug` real da comunidade. O calculo permanece no endpoint existente `GET /api/admin/private/communities/dashboard`, sem criar rota paralela, sem schema Prisma/migration e sem dado simulado. A ordenacao do ranking continua baseada na atividade existente para nao mudar a semantica de **Principais comunidades** neste ajuste visual; **Acessos** entra como coluna informativa dedicada.
+
+No frontend Admin, a tabela desktop ganha a coluna **Acessos** entre **Posts** e **Acoes**, e os cards mobile exibem o mesmo dado junto de **Seguidores** e **Posts**. O bloco foi reposicionado antes das tabelas de posts, mantendo abordagem mobile-first, `next/image` para avatars e acoes ja existentes.
+
+Consequencia: o Admin passa a enxergar seguidores, posts e acessos reais no ranking de comunidades, com maior destaque para a saude das comunidades antes da leitura de postagens, sem package novo, mock, seed, endpoint novo ou alteracao persistente de banco.

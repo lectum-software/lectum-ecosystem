@@ -1655,7 +1655,7 @@ const TopCommunitiesTable = ({
                   </div>
                   <TopCommunityActions community={community} layout="icons" />
                 </div>
-                <div className="mt-3 grid grid-cols-2 gap-3 text-xs">
+                <div className="mt-3 grid grid-cols-3 gap-3 text-xs">
                   <p className="rounded-xl bg-surface p-3">
                     <span className="block text-muted">Seguidores</span>
                     <strong className="text-sm text-foreground">
@@ -1668,6 +1668,13 @@ const TopCommunitiesTable = ({
                       {numberFormatter.format(community.posts_count)}
                     </strong>
                   </p>
+                  <p className="rounded-xl bg-surface p-3">
+                    <span className="block text-muted">Acessos</span>
+                    <strong className="inline-flex items-center gap-1.5 text-sm text-foreground">
+                      <Eye aria-hidden className="h-3.5 w-3.5 text-primary" />
+                      {numberFormatter.format(community.accesses_count)}
+                    </strong>
+                  </p>
                 </div>
               </article>
             ))}
@@ -1675,7 +1682,8 @@ const TopCommunitiesTable = ({
           <div className="mt-5 hidden min-w-0 overflow-hidden md:block">
             <table className="w-full max-w-full table-fixed border-separate border-spacing-0 text-left text-sm">
               <colgroup>
-                <col className="w-[48%]" />
+                <col className="w-[40%]" />
+                <col className="w-[8%]" />
                 <col className="w-[8%]" />
                 <col className="w-[8%]" />
                 <col className="w-[36%]" />
@@ -1687,6 +1695,9 @@ const TopCommunitiesTable = ({
                     Seguidores
                   </th>
                   <th className="border-b border-border px-3 py-3 text-center font-black">Posts</th>
+                  <th className="border-b border-border px-3 py-3 text-center font-black">
+                    Acessos
+                  </th>
                   <th className="border-b border-border py-3 pl-3 text-center font-black">Ações</th>
                 </tr>
               </thead>
@@ -1709,6 +1720,12 @@ const TopCommunitiesTable = ({
                     </td>
                     <td className="border-b border-border px-3 py-4 text-center font-black">
                       {numberFormatter.format(community.posts_count)}
+                    </td>
+                    <td className="border-b border-border px-3 py-4 text-center font-black">
+                      <span className="inline-flex items-center gap-2">
+                        <Eye aria-hidden className="h-4 w-4 text-primary" />
+                        {numberFormatter.format(community.accesses_count)}
+                      </span>
                     </td>
                     <td className="border-b border-border py-4 pl-3 text-center">
                       <TopCommunityActions community={community} layout="icons" />
@@ -1795,9 +1812,9 @@ const DashboardContent = ({
       />
 
       <div className="min-w-0 space-y-5">
+        <TopCommunitiesTable communities={summary.top_communities.items} />
         <RecentPostsTable posts={summary.recent_posts.items} />
         <PopularPostsTable posts={summary.popular_posts.items} />
-        <TopCommunitiesTable communities={summary.top_communities.items} />
       </div>
     </div>
   );

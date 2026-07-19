@@ -3,6 +3,7 @@ import prisma from "@/infra/database/prisma";
 import { activeProfessionalEntitlementWhere } from "@/utils/subscription-entitlement";
 import type { AdminCommunitiesDashboardDateRange } from "../DTOs/IAdminCommunitiesDashboardDTO";
 import type {
+  CommunityRecord,
   IAdminCommunitiesDashboardRepository,
   MemberActivityRecord,
 } from "./interfaces/IAdminCommunitiesDashboardRepository";
@@ -355,6 +356,30 @@ export class AdminCommunitiesDashboardRepository implements IAdminCommunitiesDas
         target_type: {
           in: ["community_post", "post"],
         },
+      },
+      _count: { _all: true },
+    });
+  }
+
+  async countCommunityViews(
+    communities: CommunityRecord[],
+    range?: AdminCommunitiesDashboardDateRange,
+  ) {
+    if (communities.length === 0) return [];
+
+    const targetIds = [
+      ...new Set(communities.flatMap((community) => [community.id, community.slug])),
+    ];
+
+    return prisma.page_view_event.groupBy({
+      by: ["target_type", "target_id"],
+      where: {
+        deleted: false,
+        ...optionalOccurredAtWhere(range),
+        target_id: {
+          in: targetIds,
+        },
+        target_type: "community",
       },
       _count: { _all: true },
     });

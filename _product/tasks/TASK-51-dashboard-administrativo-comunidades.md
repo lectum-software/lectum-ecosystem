@@ -778,3 +778,32 @@ Regras de UI obrigatórias:
 - `pnpm check`
 - Smoke service real `buildCommunitiesDashboard({ period: "week" })` retornou `status=200`, `top_communities_total=7` e `top_communities.items[0].avatar_url="/community/icons/autocuidado.png"`.
 - Smoke HTTP local: `GET http://localhost:3002/comunidades` retornou 200.
+
+## Correcao complementar: acessos e posicao de principais comunidades (2026-07-19)
+
+- Pedido do usuario: no bloco **Principais comunidades**, adicionar uma coluna **Acessos** e colocar o bloco antes de **Postagens mais recentes**.
+- Backend Admin: `top_communities.items` passou a expor `accesses_count`, calculado a partir de `page_view_event.target_type="community"` com `target_id` real por `id` ou `slug` da comunidade, sem endpoint paralelo ou dado simulado.
+- Frontend Admin: a tabela desktop de **Principais comunidades** ganhou a coluna **Acessos** entre **Posts** e **Acoes**; os cards mobile tambem exibem **Acessos** ao lado de **Seguidores** e **Posts**.
+- A ordem visual do dashboard `/comunidades` agora exibe **Principais comunidades** antes de **Postagens mais recentes** e **Posts mais populares**.
+- A ordenacao do ranking foi preservada por atividade, membros e nome, usando **Acessos** como dado complementar para evitar mudar a semantica do bloco neste ajuste.
+- Nao houve alteracao em `backend/prisma/schema.prisma`, migrations ou packages; `pnpm --dir backend db:migrate` nao se aplica.
+- Builder/Quick Copy `vcp://quickcopy/vcp-24aaa2941d814e5b90572bc93ae50e2a` nao esta exposto como ferramenta callable neste ambiente; referencias usadas: captura enviada pelo usuario e `_product/proto/admin/Comunidades/Comunidades - Dashboard.png`.
+- ADR atualizado: `adrs/0231-admin-comunidades-dashboard-agregacoes.md`.
+
+### Criterios deste ajuste
+
+- [x] **Principais comunidades** exibe coluna desktop **Acessos**.
+- [x] Os cards mobile de **Principais comunidades** exibem **Acessos**.
+- [x] **Acessos** usa dados reais de `page_view_event`, sem mock, seed ou endpoint simulado.
+- [x] O bloco **Principais comunidades** aparece antes de **Postagens mais recentes** no dashboard `/comunidades`.
+- [x] Nenhum package novo, schema Prisma ou migration foi usado.
+
+### Validacao deste ajuste
+
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir admin check` executou sem erros antes de alteracoes paralelas fora do escopo em `admin/src/app/(admin)/psicologos/client.tsx`; a nova execucao ficou bloqueada por formatacao nesse arquivo nao relacionado.
+- `pnpm --dir admin build`
+- `pnpm check` executou frontend e backend sem erros, mas ficou bloqueado em `pnpm --dir admin check` por formatacao preexistente/fora do escopo em `admin/src/app/(admin)/psicologos/client.tsx`.
+- Smoke service real `buildCommunitiesDashboard({ period: "week" })` retornou `status=200`, `top_communities.source` incluindo `page_view_event` e `top_communities.items[0].accesses_count=1` no banco local.
+- Smoke HTTP local `GET http://localhost:3002/comunidades` retornou 200.

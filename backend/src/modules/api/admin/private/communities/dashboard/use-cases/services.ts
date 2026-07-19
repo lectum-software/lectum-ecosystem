@@ -23,6 +23,7 @@ import type {
   CommunityMemberRecord,
   CommunityPostRecord,
   CommunityRecord,
+  CommunityViewCountRecord,
   MemberActivityRecord,
   ModerationEventRecord,
   PendingReportRecord,
@@ -955,6 +956,29 @@ const groupPostViewCounts = (items: PostViewCountRecord[]) => {
   return countByPost;
 };
 
+const groupCommunityViewCounts = (
+  items: CommunityViewCountRecord[],
+  communities: CommunityRecord[],
+) => {
+  const communityIdByTarget = new Map<string, string>();
+  for (const community of communities) {
+    communityIdByTarget.set(community.id, community.id);
+    communityIdByTarget.set(community.slug, community.id);
+  }
+
+  const countByCommunity = new Map<string, number>();
+  for (const item of items) {
+    if (!item.target_id) continue;
+    if (item.target_type !== "community") continue;
+    const communityId = communityIdByTarget.get(item.target_id);
+    if (!communityId) continue;
+
+    countByCommunity.set(communityId, (countByCommunity.get(communityId) ?? 0) + item._count._all);
+  }
+
+  return countByCommunity;
+};
+
 const buildRecentPosts = (
   posts: CommunityPostRecord[],
   postViewsByPost: ReadonlyMap<string, number>,
@@ -1044,6 +1068,7 @@ const buildTopCommunities = (
   posts: CommunityPostRecord[],
   replies: PostReplyRecord[],
   activities: MemberActivityRecord[],
+  communityViewsByCommunity: ReadonlyMap<string, number>,
 ) => {
   const memberCounts = new Map<string, number>();
   for (const member of members) {
@@ -1074,6 +1099,7 @@ const buildTopCommunities = (
         postsCount + (replyCounts.get(community.id) ?? 0) + (activityCounts.get(community.id) ?? 0);
 
       return {
+        accesses_count: communityViewsByCommunity.get(community.id) ?? 0,
         activity_count: activityCount,
         avatar_url: community.avatar_url,
         id: community.id,
@@ -1095,7 +1121,8 @@ const buildTopCommunities = (
 
   return {
     items,
-    source: "community+community_member+community_post+post_reply+post_vote+post_save" as const,
+    source:
+      "community+community_member+community_post+post_reply+post_vote+post_save+page_view_event" as const,
     total: communities.length,
   };
 };
@@ -1159,6 +1186,10 @@ export const buildCommunitiesDashboard = async (
 
   const postViewsByPost = groupPostViewCounts(
     await repository.countPostViews(allTimePosts.map((post) => post.id)),
+  );
+  const communityViewsByCommunity = groupCommunityViewCounts(
+    await repository.countCommunityViews(communities),
+    communities,
   );
 
   const psychologistPosts = posts.filter((post) => roleIsPsychologist(post.author.role)).length;
@@ -1251,6 +1282,7 @@ export const buildCommunitiesDashboard = async (
       allTimePosts,
       allTimeReplies,
       allTimeMemberActivity,
+      communityViewsByCommunity,
     ),
     unavailable: [
       ...(pendingReportsTotal === 0 && previousPendingReportsTotal === 0

@@ -54,13 +54,17 @@ export type MemberActivityRecord = {
   user_id: string;
 };
 
-export type PostViewCountRecord = {
+export type PageViewCountRecord = {
   _count: {
     _all: number;
   };
   target_id: string | null;
   target_type: string | null;
 };
+
+export type CommunityViewCountRecord = PageViewCountRecord;
+
+export type PostViewCountRecord = PageViewCountRecord;
 
 export type PendingReportRecord = {
   createdAt: Date;
@@ -139,6 +143,10 @@ export interface IAdminCommunitiesDashboardRepository {
     range: AdminCommunitiesDashboardDateRange,
   ): Promise<ModerationEventRecord[]>;
   listPostReplies(range?: AdminCommunitiesDashboardDateRange): Promise<PostReplyRecord[]>;
+  countCommunityViews(
+    communities: CommunityRecord[],
+    range?: AdminCommunitiesDashboardDateRange,
+  ): Promise<CommunityViewCountRecord[]>;
   countPostViews(
     postIds: string[],
     range?: AdminCommunitiesDashboardDateRange,

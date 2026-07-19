@@ -233,6 +233,7 @@ export type AdminCommunitiesDashboardPopularPost = AdminCommunitiesDashboardRece
 };
 
 export type AdminCommunitiesDashboardTopCommunity = {
+  accesses_count: number;
   activity_count: number;
   avatar_url: string | null;
   id: string;
@@ -288,7 +289,7 @@ export type AdminCommunitiesDashboardSummary = {
   };
   top_communities: {
     items: AdminCommunitiesDashboardTopCommunity[];
-    source: "community+community_member+community_post+post_reply+post_vote+post_save";
+    source: "community+community_member+community_post+post_reply+post_vote+post_save+page_view_event";
     total: number;
   };
   unavailable: AdminCommunitiesDashboardUnavailableMetric[];
