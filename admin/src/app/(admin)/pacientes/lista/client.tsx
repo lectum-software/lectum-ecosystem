@@ -538,8 +538,7 @@ export const AdminPatientsListClient = () => {
               Lista de pacientes
             </h1>
             <p className="mt-2 max-w-2xl text-sm font-medium leading-6 text-muted">
-              Acesse todos os pacientes cadastrados com dados reais de conta, cadastro e localização
-              agregada quando disponível.
+              Acesse todos os pacientes da plataforma.
             </p>
           </div>
         </div>
