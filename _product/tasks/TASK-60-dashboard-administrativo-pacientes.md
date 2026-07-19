@@ -397,3 +397,26 @@ Frontend esperado:
 - `pnpm --dir admin build`
 - `pnpm check`
 - Smoke HTTP local: `GET http://localhost:3002/pacientes` retornou `200`.
+
+## Ajuste pós-feedback 2026-07-19 - Devices dos pacientes e seção sem título
+
+- Pedido do usuário: remover o título visual **Estatísticas simples** do dashboard `/pacientes` e adicionar gráfico de uso de devices como no dashboard de Psicólogos.
+- A UI de `/pacientes` deixou de renderizar o `<h2>` **Estatísticas simples**; a seção permanece acessível por `aria-label="Estatísticas agregadas de pacientes"` e continua exibindo Gênero, Localização e Forma de cadastro.
+- O endpoint `GET /api/admin/private/patients/dashboard` passou a retornar `device_usage`, agregado exclusivamente de `visitor_session` real vinculada a usuários `role="paciente"`, sem mock, seed, backfill ou endpoint paralelo.
+- O gráfico **Devices dos pacientes** reutiliza o padrão visual do card **Devices dos psicólogos**: pizza SVG, legenda por Desktop/Mobile/Tablet/Não identificado, percentual por sessões e contagem complementar de pacientes únicos por device.
+- O card de devices foi posicionado junto de **Uso da plataforma** em grid mobile-first: empilhado no mobile e em duas colunas no desktop.
+- Não houve alteração de schema Prisma, migration, package novo, dado fake ou fonte externa. Builder/Quick Copy não está exposto como ferramenta callable neste ambiente; as referências usadas foram `_product/proto/admin/Pacientes/Pacientes - Dashboard.png`, `_product/proto/admin/Psicólogos/Psicólogos - Dashboard.png` e os screenshots enviados pelo usuário em 2026-07-19.
+
+### Validação complementar executada
+
+- `pnpm --dir backend exec biome check --write "src/modules/api/admin/private/patients/dashboard/DTOs/IAdminPatientsDashboardDTO.ts" "src/modules/api/admin/private/patients/dashboard/repositories/AdminPatientsDashboardRepository.ts" "src/modules/api/admin/private/patients/dashboard/use-cases/services.ts"`
+- `pnpm --dir admin exec biome check --write "src/api/req/patients/index.ts" "src/app/(admin)/pacientes/client.tsx"`
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check`
+- Serviço local `buildPatientsDashboard({ period: "all" })` retornou `status=200`, `device_usage.total_sessions=0`, `total_active_patients=0` e `unavailable_reason="Sem sessões autenticadas de pacientes no período selecionado."` na base local, sem criar dados artificiais.
+- `GET http://localhost:3001/api/admin/private/patients/dashboard?period=week` sem token Admin retornou `401`.
+- Smoke HTTP local `GET http://localhost:3002/pacientes` retornou `200`.
+- Browser local headless em `http://localhost:3002/pacientes` foi executado com perfil isolado; por não ter sessão Admin real nesse perfil, a validação visual autenticada redirecionou para `/login`. A validação visual autenticada ficou limitada aos screenshots enviados pelo usuário e à inspeção do código/renderização compilada.

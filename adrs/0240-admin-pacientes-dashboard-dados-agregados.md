@@ -114,3 +114,18 @@ Consequ�ncia: o Admin ganha leitura geogr�fica mais �til sem ampliar coleta, sem
 - Motivacao: o usuario precisa validar visualmente o mapa/rankings em localhost antes de haver captura real suficiente em `visitor_location`.
 - Guarda de seguranca: o preview depende do hostname local (`localhost`, `127.0.0.1`, `::1`), mostra badge **exemplo local** e aviso textual; nao altera backend, schema, seed, migration, contrato ou ambiente de producao.
 - Consequencia: a UI deixa claro que os numeros nao sao reais e troca automaticamente para `visitor_location` real assim que existir qualquer captura agregada no periodo.
+
+## Complemento 2026-07-19 - Devices dos pacientes no dashboard
+
+Por feedback direto de produto, o dashboard Admin de pacientes passa a exibir um gráfico **Devices dos pacientes** seguindo o padrão visual já adotado em Psicólogos.
+
+Decisões:
+
+- Adicionar `device_usage` ao contrato `GET /api/admin/private/patients/dashboard`, calculado somente a partir de `visitor_session` real vinculada a usuários `role="paciente"` e não deletados, com sessão intersectando o período selecionado.
+- Calcular percentuais por quantidade de sessões, não por pacientes únicos, porque a pergunta é sobre uso de devices; um mesmo paciente pode usar mais de um device no período.
+- Retornar também `active_patients_count` por device como leitura complementar de pacientes únicos com sessão naquele device.
+- Manter sessões sem tipo confiável em **Não identificado** em vez de ocultá-las.
+- Implementar o gráfico no Admin com SVG/CSS local, sem pacote novo de charts.
+- Remover apenas o título visual **Estatísticas simples** da tela, preservando a seção com `aria-label` para acessibilidade.
+
+Consequência: Pacientes ganha paridade visual com o dashboard de Psicólogos para leitura de devices, sem schema Prisma, migration, package novo, seed, mock, endpoint paralelo ou inferência cross-device.

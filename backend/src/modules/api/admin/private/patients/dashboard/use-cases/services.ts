@@ -3,6 +3,7 @@ import { error, msg } from "@/helpers/translate";
 import type {
   AdminPatientsDashboardBreakdownItem,
   AdminPatientsDashboardDateRange,
+  AdminPatientsDashboardDeviceType,
   AdminPatientsDashboardMetric,
   AdminPatientsDashboardPeriod,
   AdminPatientsDashboardQuery,
@@ -14,6 +15,7 @@ import type {
 import {
   type AdminPatientLocationRecord,
   type AdminPatientPageViewRecord,
+  type AdminPatientPlatformSessionRecord,
   type AdminPatientRecentRecord,
   type AdminPatientSnapshotRecord,
   AdminPatientsDashboardRepository,
@@ -64,6 +66,13 @@ const SIGNUP_SOURCE_OPTIONS = [
 ] as const;
 
 type SignupSource = (typeof SIGNUP_SOURCE_OPTIONS)[number];
+
+const DEVICE_LABELS: Record<AdminPatientsDashboardDeviceType, string> = {
+  desktop: "Desktop",
+  mobile: "Mobile",
+  tablet: "Tablet",
+  unknown: "Não identificado",
+};
 
 const COUNTRY_LABELS: Record<string, string> = {
   AO: "Angola",
@@ -273,6 +282,65 @@ const safePercentage = (value: number, total: number) => {
   if (total <= 0) return 0;
 
   return roundPercent((value / total) * 100);
+};
+
+const normalizeDeviceType = (value: string): AdminPatientsDashboardDeviceType => {
+  const normalized = value.trim().toLowerCase();
+  if (normalized === "desktop" || normalized === "mobile" || normalized === "tablet") {
+    return normalized;
+  }
+
+  return "unknown";
+};
+
+const buildDeviceUsage = (sessions: AdminPatientPlatformSessionRecord[]) => {
+  const counts: Record<AdminPatientsDashboardDeviceType, number> = {
+    desktop: 0,
+    mobile: 0,
+    tablet: 0,
+    unknown: 0,
+  };
+  const activePatientsByDevice = new Map<AdminPatientsDashboardDeviceType, Set<string>>(
+    (Object.keys(counts) as AdminPatientsDashboardDeviceType[]).map((deviceType) => [
+      deviceType,
+      new Set<string>(),
+    ]),
+  );
+
+  for (const session of sessions) {
+    const deviceType = normalizeDeviceType(session.device_type);
+    counts[deviceType] += 1;
+    if (session.user_id) activePatientsByDevice.get(deviceType)?.add(session.user_id);
+  }
+
+  const totalSessions = sessions.length;
+  const totalActivePatients = new Set(
+    sessions
+      .map((session) => session.user_id)
+      .filter((userId): userId is string => Boolean(userId)),
+  ).size;
+
+  return {
+    items: (Object.keys(counts) as AdminPatientsDashboardDeviceType[])
+      .map((deviceType) => ({
+        active_patients_count: activePatientsByDevice.get(deviceType)?.size ?? 0,
+        count: counts[deviceType],
+        device_type: deviceType,
+        id: deviceType,
+        label: DEVICE_LABELS[deviceType],
+        percentage: safePercentage(counts[deviceType], totalSessions),
+      }))
+      .sort((left, right) => {
+        if (right.count !== left.count) return right.count - left.count;
+
+        return left.label.localeCompare(right.label, "pt-BR");
+      }),
+    source: "visitor_session.device_type+user.role=paciente" as const,
+    total_active_patients: totalActivePatients,
+    total_sessions: totalSessions,
+    unavailable_reason:
+      totalSessions === 0 ? "Sem sessões autenticadas de pacientes no período selecionado." : null,
+  };
 };
 
 const normalizeKey = (value: string) =>
@@ -773,11 +841,13 @@ export const buildPatientsDashboard = async (
   }
 
   const { current, labels, period, previous } = resolvedPeriod.period;
-  const [locations, patientPageViews, patientPwaInstalls] = await Promise.all([
-    repository.listLocations(current),
-    repository.listPatientPageViews(current),
-    repository.listPatientPwaInstallActions(current),
-  ]);
+  const [locations, patientPageViews, patientPwaInstalls, patientPlatformSessions] =
+    await Promise.all([
+      repository.listLocations(current),
+      repository.listPatientPageViews(current),
+      repository.listPatientPwaInstallActions(current),
+      repository.listPatientPlatformSessions(current),
+    ]);
 
   const currentPatients = patients.filter((patient) => createdUntil(patient, current.end));
   const previousPatients = patients.filter((patient) => createdUntil(patient, previous.end));
@@ -796,6 +866,7 @@ export const buildPatientsDashboard = async (
       event.user_id ? [event.user_id] : [],
     ),
   });
+  const deviceUsage = buildDeviceUsage(patientPlatformSessions);
 
   const summary: AdminPatientsDashboardSummary = {
     cards: {
@@ -836,10 +907,12 @@ export const buildPatientsDashboard = async (
       "Status ativo/inativo representa o estado da conta em user.active, não engajamento recente.",
       "Atividade recente usa eventos reais de comunidade, reações e salvamentos já persistidos.",
       "Uso da plataforma mede somente pageviews autenticados e eventos first-party de instalação PWA de pacientes no período selecionado.",
+      "Devices dos pacientes usa somente visitor_session autenticada vinculada a user.role=paciente no período selecionado.",
       "Tempo médio do paciente usa pageviews autenticados first-party e ignora períodos em que o app fica oculto/minimizado quando o navegador envia eventos de visibilidade.",
       "Localização usa apenas capturas agregadas e coarse de visitor_location no período selecionado; cidades com baixa frequência são agrupadas, e coordenadas, IP e endereço não são retornados.",
     ],
     demographics: buildDemographics(patients),
+    device_usage: deviceUsage,
     export: {
       available: false,
       reason: "Exportação não exibida porque ainda não existe endpoint real para pacientes.",
@@ -875,6 +948,17 @@ export const buildPatientsDashboard = async (
               id: "platform_usage",
               label: "Uso da plataforma",
               source: "page_view_event",
+            },
+          ]
+        : []),
+      ...(deviceUsage.unavailable_reason
+        ? [
+            {
+              description:
+                "Distribuição de devices dos pacientes depende de visitor_session autenticada com user.role=paciente no período selecionado.",
+              id: "patient_device_usage",
+              label: "Devices dos pacientes",
+              source: "visitor_session",
             },
           ]
         : []),

@@ -116,6 +116,25 @@ export type AdminPatientsDashboardPlatformUsage = {
   unavailable_reason: string | null;
 };
 
+export type AdminPatientsDashboardDeviceType = "desktop" | "mobile" | "tablet" | "unknown";
+
+export type AdminPatientsDashboardDeviceUsageItem = {
+  active_patients_count: number;
+  count: number;
+  device_type: AdminPatientsDashboardDeviceType;
+  id: AdminPatientsDashboardDeviceType;
+  label: string;
+  percentage: number;
+};
+
+export type AdminPatientsDashboardDeviceUsage = {
+  items: AdminPatientsDashboardDeviceUsageItem[];
+  source: "visitor_session.device_type+user.role=paciente";
+  total_active_patients: number;
+  total_sessions: number;
+  unavailable_reason: string | null;
+};
+
 export type AdminPatientsDashboardSummary = {
   cards: {
     active_patients: AdminPatientsDashboardMetric;
@@ -136,6 +155,7 @@ export type AdminPatientsDashboardSummary = {
       total: number;
     };
   };
+  device_usage: AdminPatientsDashboardDeviceUsage;
   export: {
     available: false;
     reason: string;

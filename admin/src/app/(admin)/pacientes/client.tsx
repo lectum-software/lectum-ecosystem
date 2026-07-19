@@ -8,6 +8,7 @@ import {
   type LucideIcon,
   MapPin,
   RefreshCw,
+  Smartphone,
   UserCheck,
   UserPlus,
   UserRound,
@@ -32,6 +33,7 @@ const CARD_ORDER = [
   "inactive_patients",
   "new_signups",
 ] as const;
+type DeviceUsageItem = AdminPatientsDashboard["device_usage"]["items"][number];
 type PatientsDashboardPeriodValue = NonNullable<PatientsDashboardQuery["period"]>;
 type PatientsDashboardPeriodPreset = Exclude<PatientsDashboardPeriodValue, "custom">;
 type PatientsDashboardRange = Pick<PatientsDashboardQuery, "from" | "to">;
@@ -60,6 +62,12 @@ const GENDER_CHART_COLORS: Record<string, string> = {
   nao_informado: "#308ce8",
   outro: "#f59f00",
 };
+const DEVICE_USAGE_CHART_COLORS = {
+  desktop: "#13a85b",
+  mobile: "#308ce8",
+  tablet: "#8b5cf6",
+  unknown: "#94a3b8",
+} satisfies Record<DeviceUsageItem["device_type"], string>;
 const LOCATION_RANKING_LIMIT = 5;
 const BRAZIL_STATE_CODES = new Set([
   "AC",
@@ -1034,6 +1042,160 @@ const BreakdownPieChart = ({
   );
 };
 
+const DeviceUsagePieChart = ({
+  deviceUsage,
+}: {
+  deviceUsage: AdminPatientsDashboard["device_usage"];
+}) => {
+  const center = 60;
+  const radius = 48;
+  const total = Math.max(0, deviceUsage.total_sessions);
+  const visibleItems = deviceUsage.items.filter((item) => item.count > 0);
+  const segments = visibleItems.reduce<{
+    currentAngle: number;
+    items: Array<{
+      endAngle: number;
+      item: DeviceUsageItem;
+      share: number;
+      startAngle: number;
+    }>;
+  }>(
+    (accumulator, item) => {
+      const share = total > 0 ? item.count / total : 0;
+      if (share <= 0) return accumulator;
+
+      const startAngle = accumulator.currentAngle;
+      const endAngle = startAngle + share * 360;
+
+      return {
+        currentAngle: endAngle,
+        items: accumulator.items.concat({
+          endAngle,
+          item,
+          share,
+          startAngle,
+        }),
+      };
+    },
+    { currentAngle: -90, items: [] },
+  ).items;
+
+  if (total === 0) {
+    return (
+      <p className="mt-5 rounded-2xl border border-dashed border-border bg-surface-muted p-4 text-sm font-bold text-muted">
+        {deviceUsage.unavailable_reason ??
+          "Sem sessões autenticadas de pacientes no período selecionado."}
+      </p>
+    );
+  }
+
+  const ariaLabel = `Gráfico de pizza dos devices usados por pacientes: ${deviceUsage.items
+    .map(
+      (item) =>
+        `${item.label}: ${numberFormatter.format(item.count)} sessão(ões), ${formatPercentageValue(
+          item.percentage,
+        )}`,
+    )
+    .join("; ")}.`;
+
+  return (
+    <figure className="mt-5 grid gap-5 sm:grid-cols-[minmax(9rem,11rem)_1fr] sm:items-center">
+      <svg
+        aria-label={ariaLabel}
+        className="mx-auto aspect-square w-40 sm:w-44"
+        role="img"
+        viewBox="0 0 120 120"
+      >
+        <circle
+          cx={center}
+          cy={center}
+          fill="var(--admin-surface-muted)"
+          r={radius}
+          stroke="var(--admin-border)"
+          strokeWidth="1"
+        />
+        {segments.map((segment) => {
+          const color = DEVICE_USAGE_CHART_COLORS[segment.item.device_type];
+          const labelPoint = getPiePoint(
+            center,
+            radius * 0.58,
+            (segment.startAngle + segment.endAngle) / 2,
+          );
+          const percentageLabel = formatPercentageValue(segment.item.percentage);
+
+          if (segment.share >= 0.999) {
+            return (
+              <g key={segment.item.device_type}>
+                <circle
+                  cx={center}
+                  cy={center}
+                  fill={color}
+                  r={radius}
+                  stroke="var(--admin-surface)"
+                  strokeWidth="1.4"
+                />
+                <PieSlicePercentageLabel
+                  color={color}
+                  label={percentageLabel}
+                  x={center}
+                  y={center}
+                />
+              </g>
+            );
+          }
+
+          return (
+            <g key={segment.item.device_type}>
+              <path
+                d={buildPieSlicePath(center, radius, segment.startAngle, segment.endAngle)}
+                fill={color}
+                stroke="var(--admin-surface)"
+                strokeWidth="1.4"
+              />
+              {segment.share >= 0.08 ? (
+                <PieSlicePercentageLabel
+                  color={color}
+                  label={percentageLabel}
+                  x={labelPoint.x}
+                  y={labelPoint.y}
+                />
+              ) : null}
+            </g>
+          );
+        })}
+      </svg>
+      <figcaption className="space-y-3">
+        {deviceUsage.items.map((item) => {
+          const sessionsLabel = item.count === 1 ? "sessão" : "sessões";
+          const patientsLabel = item.active_patients_count === 1 ? "paciente" : "pacientes";
+
+          return (
+            <div className="rounded-2xl bg-surface-muted p-3" key={item.device_type}>
+              <div className="flex items-center justify-between gap-3">
+                <span className="flex min-w-0 items-center gap-2 text-sm font-black text-foreground">
+                  <span
+                    aria-hidden
+                    className="h-3 w-3 shrink-0 rounded-full"
+                    style={{ backgroundColor: DEVICE_USAGE_CHART_COLORS[item.device_type] }}
+                  />
+                  <span className="truncate">{item.label}</span>
+                </span>
+                <span className="text-sm font-black text-foreground">
+                  {formatPercentageValue(item.percentage)}
+                </span>
+              </div>
+              <p className="mt-1 text-xs font-bold text-muted">
+                {numberFormatter.format(item.count)} {sessionsLabel} ·{" "}
+                {numberFormatter.format(item.active_patients_count)} {patientsLabel}
+              </p>
+            </div>
+          );
+        })}
+      </figcaption>
+    </figure>
+  );
+};
+
 const LocationRankingList = ({
   emptyMessage,
   items,
@@ -1234,8 +1396,7 @@ const Statistics = ({
   const locationSourceLabel = showLocationPreview ? "exemplo local" : summary.locations.source;
 
   return (
-    <section>
-      <h2 className="mb-4 text-xl font-black text-foreground">Estatísticas simples</h2>
+    <section aria-label="Estatísticas agregadas de pacientes">
       <div className="grid gap-4 xl:grid-cols-3">
         <CardShell className="p-5">
           <PanelTitle icon={UserRound} source={summary.demographics.gender.source} title="Gênero" />
@@ -1280,6 +1441,16 @@ const Statistics = ({
     </section>
   );
 };
+
+const DeviceUsageCard = ({ summary }: { summary: AdminPatientsDashboard }) => (
+  <CardShell className="p-5">
+    <PanelTitle icon={Smartphone} title="Devices dos pacientes" />
+    <p className="mt-2 text-sm font-bold leading-6 text-muted">
+      {formatSelectedPeriod(summary.period)}
+    </p>
+    <DeviceUsagePieChart deviceUsage={summary.device_usage} />
+  </CardShell>
+);
 
 const PlatformUsageCard = ({ summary }: { summary: AdminPatientsDashboard }) => {
   const platformUsage = summary.platform_usage;
@@ -1375,7 +1546,10 @@ const DashboardContent = ({
 
       <Statistics allowLocalLocationPreview={allowLocalLocationPreview} summary={summary} />
 
-      <PlatformUsageCard summary={summary} />
+      <div className="grid gap-5 xl:grid-cols-2">
+        <DeviceUsageCard summary={summary} />
+        <PlatformUsageCard summary={summary} />
+      </div>
     </div>
   );
 };

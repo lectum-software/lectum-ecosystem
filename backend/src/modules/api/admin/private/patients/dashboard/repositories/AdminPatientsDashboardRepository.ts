@@ -81,6 +81,12 @@ const patientPwaInstallSelect = {
   user_id: true,
 } satisfies Prisma.important_action_eventSelect;
 
+const patientPlatformSessionSelect = {
+  device_type: true,
+  session_id: true,
+  user_id: true,
+} satisfies Prisma.visitor_sessionSelect;
+
 const recentPatientSelect = {
   active: true,
   avatar: true,
@@ -243,6 +249,10 @@ export type AdminPatientPwaInstallRecord = Prisma.important_action_eventGetPaylo
   select: typeof patientPwaInstallSelect;
 }>;
 
+export type AdminPatientPlatformSessionRecord = Prisma.visitor_sessionGetPayload<{
+  select: typeof patientPlatformSessionSelect;
+}>;
+
 export class AdminPatientsDashboardRepository {
   async listPatientSnapshots(): Promise<AdminPatientSnapshotRecord[]> {
     return prisma.user.findMany({
@@ -327,6 +337,33 @@ export class AdminPatientsDashboardRepository {
         action_type: "pwa_installed",
         deleted: false,
         occurred_at: rangeWhere(range),
+        user_id: {
+          not: null,
+        },
+        user: {
+          deleted: false,
+          role: "paciente",
+        },
+      },
+    });
+  }
+
+  async listPatientPlatformSessions(
+    range: AdminPatientsDashboardDateRange,
+  ): Promise<AdminPatientPlatformSessionRecord[]> {
+    return prisma.visitor_session.findMany({
+      orderBy: {
+        last_seen_at: "asc",
+      },
+      select: patientPlatformSessionSelect,
+      where: {
+        deleted: false,
+        first_seen_at: {
+          lte: range.end,
+        },
+        last_seen_at: {
+          gte: range.start,
+        },
         user_id: {
           not: null,
         },
