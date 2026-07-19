@@ -58,10 +58,12 @@ const GENDER_LABELS: Record<string, string> = {
   other: "Outro",
 };
 
-const PROVIDER_LABELS: Record<string, string> = {
-  google: "Google",
-  manual: "E-mail",
-};
+const SIGNUP_SOURCE_OPTIONS = [
+  { id: "email_password", label: "E-mail e senha" },
+  { id: "google", label: "Google" },
+] as const;
+
+type SignupSource = (typeof SIGNUP_SOURCE_OPTIONS)[number];
 
 const COUNTRY_LABELS: Record<string, string> = {
   AO: "Angola",
@@ -282,7 +284,13 @@ const normalizeGender = (value?: string | null) => {
   };
 };
 
-const providerLabel = (provider: string) => PROVIDER_LABELS[provider] ?? provider;
+const signupSourceFromProvider = (provider?: string | null): SignupSource => {
+  const normalized = (provider ?? "").trim().toLowerCase();
+
+  return normalized === "google" ? SIGNUP_SOURCE_OPTIONS[1] : SIGNUP_SOURCE_OPTIONS[0];
+};
+
+const providerLabel = (provider: string) => signupSourceFromProvider(provider).label;
 
 const dateInRange = (date: Date, range: AdminPatientsDashboardDateRange) =>
   date >= range.start && date <= range.end;
@@ -338,6 +346,32 @@ const buildBreakdown = (
     .slice(0, limit);
 };
 
+const buildSignupSourceBreakdown = (
+  patients: AdminPatientSnapshotRecord[],
+): AdminPatientsDashboardBreakdownItem[] => {
+  if (patients.length === 0) return [];
+
+  const counts = new Map<SignupSource["id"], number>(
+    SIGNUP_SOURCE_OPTIONS.map((source) => [source.id, 0] as const),
+  );
+
+  for (const patient of patients) {
+    const source = signupSourceFromProvider(patient.provider);
+    counts.set(source.id, (counts.get(source.id) ?? 0) + 1);
+  }
+
+  return SIGNUP_SOURCE_OPTIONS.map((source) => {
+    const count = counts.get(source.id) ?? 0;
+
+    return {
+      count,
+      id: source.id,
+      label: source.label,
+      percentage: safePercentage(count, patients.length),
+    };
+  });
+};
+
 const buildDemographics = (patients: AdminPatientSnapshotRecord[]) => ({
   gender: {
     items: buildBreakdown(
@@ -349,14 +383,7 @@ const buildDemographics = (patients: AdminPatientSnapshotRecord[]) => ({
     total: patients.length,
   },
   signup_sources: {
-    items: buildBreakdown(
-      patients.map((patient) => ({
-        id: normalizeKey(patient.provider || "manual"),
-        label: providerLabel(patient.provider || "manual"),
-      })),
-      patients.length,
-      5,
-    ),
+    items: buildSignupSourceBreakdown(patients),
     source: "user.provider" as const,
     total: patients.length,
   },

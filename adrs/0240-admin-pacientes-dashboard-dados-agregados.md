@@ -60,3 +60,9 @@ O schema atual jÃ¡ possui fontes reais para contas de pacientes (`user.role="pac
 O dashboard Admin de pacientes passa a exibir **Tempo médio do paciente** a partir de `page_view_event.duration_seconds` filtrado por `user.role="paciente"` e pelo período selecionado. A métrica usa apenas pageviews autenticados, não inclui navegação anônima nem dados de conteúdo, e só é exibida quando ao menos 50% dos pageviews do recorte possuem duração positiva. Caso contrário, o contrato retorna motivo de indisponibilidade.
 
 A decisão mantém a V1 sem retenção/cohort retention: o novo dado mede permanência média por pageview confiável, não retenção, engajamento clínico ou sessão terapêutica. Não há alteração de schema, migration, package ou exportação.
+
+## Complemento 2026-07-19 - Forma de cadastro como categoria de produto
+
+O grafico **Forma de cadastro** do dashboard Admin de pacientes deve representar as duas vias reais do produto: **E-mail e senha** e **Google**. O campo bruto `user.provider` continua sendo a fonte auditavel, mas valores diferentes de `google` nao devem virar categorias visuais do produto; eles sao agrupados em **E-mail e senha** para evitar expor marcadores operacionais/legados como `admin_preview`.
+
+Consequencia: o Admin passa a comparar apenas as duas formas de cadastro esperadas, preservando o provider bruto nos contratos quando necessario para auditoria e sem schema Prisma, migration, endpoint novo, mock, seed ou backfill artificial.

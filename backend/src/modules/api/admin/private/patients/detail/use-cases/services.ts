@@ -67,10 +67,8 @@ type CommunityLike = {
   visual_primary_color: string | null;
 };
 
-const PROVIDER_LABELS: Record<string, string> = {
-  google: "Google",
-  manual: "E-mail",
-};
+const providerLabel = (provider: string) =>
+  provider.trim().toLowerCase() === "google" ? "Google" : "E-mail e senha";
 
 const WEEKDAY_INDEX: Record<string, number> = {
   Fri: 4,
@@ -260,8 +258,6 @@ const metric = (params: {
 };
 
 const normalizeName = (name: string) => name.replace(/\s+/g, " ").trim() || "Paciente";
-
-const providerLabel = (provider: string) => PROVIDER_LABELS[provider] ?? provider;
 
 const snippet = (text: string | null | undefined, fallback: string) => {
   const normalized = text?.replace(/\s+/g, " ").trim();

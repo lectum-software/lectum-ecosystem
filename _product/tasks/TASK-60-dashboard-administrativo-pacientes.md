@@ -275,3 +275,21 @@ Frontend esperado:
 - `pnpm check`
 - Smoke HTTP local: `GET http://localhost:3002/pacientes` retornou `200`.
 - Browser local em `http://localhost:3002/pacientes` inspecionado visualmente com sessao Admin existente: o bloco Visao Geral nao exibe mais o card de tempo medio e o grafico aparece logo abaixo dos contadores.
+
+## Ajuste pos-feedback 2026-07-19 - Forma de cadastro normalizada
+
+- Pedido do usuario: o grafico **Forma de cadastro** deve comparar somente **E-mail e senha** e **Google**.
+- O backend do dashboard `/pacientes` passou a normalizar `user.provider`: `google` aparece como **Google** e qualquer outro valor real de provider e agrupado como **E-mail e senha**, evitando exibir valores operacionais/legados como categoria de produto.
+- A lista/detalhe de paciente continua preservando o `provider` bruto no contrato para auditoria, mas o label exibido ao Admin foi alinhado para **E-mail e senha** ou **Google**.
+- Nao houve alteracao de schema Prisma, migration, package, seed, mock, endpoint novo ou backfill artificial.
+
+### Validacao complementar executada
+
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check`
+- Servico local `buildPatientsDashboard({ period: "all" })` retornou `signup_sources` com **E-mail e senha** (151, 100%) e **Google** (0, 0%), sem `admin_preview` como categoria.
+- Servico local `showAdminPatient(...)` retornou `provider="admin_preview"` preservado e `provider_label="E-mail e senha"`.
+- Browser local headless em `http://localhost:3002/pacientes` com sessao Admin real confirmou **Forma de cadastro**, **E-mail e senha**, **Google** e ausencia de `admin_preview` no texto da tela.

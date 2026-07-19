@@ -43,3 +43,9 @@ A referência visual usada foi `_product/proto/admin/Pacientes/Pacientes - Detal
 - Validação de service com paciente real existente no banco local.
 - Validação HTTP do endpoint sem token retornando `401`.
 - Validação local da rota Admin `/pacientes/demo-patient-reviewer-01` retornando `200` no dev server.
+
+## Atualização 2026-07-19: label de forma de cadastro
+
+O detalhe de paciente continua retornando o `provider` bruto para auditoria, mas o label exibido ao Admin passa a seguir a mesma categoria de produto do dashboard: **Google** quando `user.provider="google"` e **E-mail e senha** para os demais valores reais.
+
+Essa decisão evita expor marcadores operacionais/legados como forma de cadastro ao usuário Admin, sem ampliar dados pessoais, criar endpoint novo, schema Prisma, migration, mock, seed ou backfill.
