@@ -1345,10 +1345,6 @@ const DeviceUsagePieChart = ({
             </div>
           );
         })}
-        <p className="rounded-2xl border border-border/70 bg-surface p-3 text-xs font-bold text-subtle">
-          Percentual por sessões reais de psicólogos autenticados; o mesmo psicólogo pode aparecer
-          em mais de um device.
-        </p>
       </figcaption>
     </figure>
   );

@@ -308,3 +308,11 @@ Packages usados:
 - Não houve alteração de Prisma schema, migration, seed, mock, pacote novo ou fonte paralela de dados.
 - Referência visual local mantida: `_product/proto/admin/Psicólogos/Psicólogos - Dashboard.png`; Builder/Quick Copy não estava disponível como ferramenta callable no ambiente.
 - Validações desta correção: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin build`, `pnpm --dir admin check`, `pnpm check`, execução direta do service com `.env` local via `tsx -r dotenv/config` confirmando `device_usage` real e smoke HTTP local em `http://localhost:3002/psicologos` retornando 200. A primeira tentativa de `pnpm --dir admin check` falhou por cache `.next` stale referenciando rota antiga de pacientes; após o build regenerar tipos do Next, o check passou.
+
+### Correcao UX em 2026-07-19 - remocao da faixa explicativa de devices
+
+- Pedido do usuario: remover a faixa **Percentual por sessoes reais de psicologos autenticados...** do card **Devices dos psicologos**.
+- A UI deixou de renderizar apenas o texto auxiliar inferior do card, mantendo grafico, legenda, percentuais, sessoes e contagem de psicologos por device.
+- Nao houve alteracao de backend, contrato HTTP, calculo, Prisma, migration, seed, mock, package novo ou fonte de dados.
+- Referencia visual local mantida: `_product/proto/admin/Psicologos/Psicologos - Dashboard.png`; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
+- Validacoes desta correcao: `pnpm --dir admin exec biome check "src/app/(admin)/psicologos/client.tsx"`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke HTTP local em `http://localhost:3002/psicologos` retornando 200.

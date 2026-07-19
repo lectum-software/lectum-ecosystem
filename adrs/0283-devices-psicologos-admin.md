@@ -45,3 +45,9 @@ O percentual é calculado por quantidade de sessões, não por usuários únicos
 ## Pendências
 
 - Nenhuma decisão externa.
+
+## Complemento 2026-07-19 - Faixa explicativa removida da UI
+
+- Decisao: remover do card **Devices dos psicologos** a faixa explicativa sobre o denominador por sessoes reais.
+- O calculo e o contrato `device_usage` continuam inalterados: os percentuais seguem baseados em sessoes reais autenticadas de psicologos, e um psicologo pode continuar aparecendo em mais de um device quando houver sessoes reais distintas.
+- Consequencia: a leitura visual do card fica mais limpa, sem reduzir os dados exibidos na legenda ou no grafico.
