@@ -1430,6 +1430,9 @@ const Statistics = ({
       <div className="grid gap-4 xl:grid-cols-3">
         <CardShell className="p-5">
           <PanelTitle icon={UserRound} title="Gênero" />
+          <p className="mt-2 text-sm font-bold leading-6 text-muted">
+            {formatSelectedPeriod(summary.period)}
+          </p>
           <BreakdownPieChart
             colorForItem={(item, index) =>
               GENDER_CHART_COLORS[item.id] ?? CHART_COLORS[index % CHART_COLORS.length]
@@ -1443,6 +1446,9 @@ const Statistics = ({
         <DeviceUsageCard allowLocalDevicePreview={allowLocalLocationPreview} summary={summary} />
         <CardShell className="p-5">
           <PanelTitle icon={UserPlus} title="Forma de cadastro" />
+          <p className="mt-2 text-sm font-bold leading-6 text-muted">
+            {formatSelectedPeriod(summary.period)}
+          </p>
           <BreakdownPieChart
             colorForItem={(item, index) =>
               SIGNUP_SOURCE_CHART_COLORS[item.id] ?? CHART_COLORS[index % CHART_COLORS.length]
@@ -1459,6 +1465,9 @@ const Statistics = ({
             <MapPin aria-hidden className="h-5 w-5 text-primary" />
             <h3 className="text-lg font-black text-foreground">Localização</h3>
           </div>
+          <p className="mt-2 text-sm font-bold leading-6 text-muted">
+            {formatSelectedPeriod(summary.period)}
+          </p>
           <LocationOverview locations={displayLocations} preview={showLocationPreview} />
         </CardShell>
         <PlatformUsageCard summary={summary} />

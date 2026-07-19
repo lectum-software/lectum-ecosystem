@@ -162,3 +162,15 @@ Decisoes:
 - Quando a coorte do periodo nao tiver pacientes, retornar totais zerados e indisponibilidade honesta em vez de reaproveitar distribuicao historica.
 
 Consequencia: o Admin passa a comparar genero, via de cadastro e localizacao dentro do recorte escolhido, sem schema Prisma, migration, package novo, mock, seed, backfill ou endpoint paralelo.
+
+## Complemento 2026-07-19 - Periodo visivel nos blocos agregados de pacientes
+
+Por feedback direto de produto, os blocos agregados de `/pacientes` devem explicitar o recorte temporal logo abaixo do titulo para evitar ambiguidade quando o filtro de periodo muda.
+
+Decisao:
+
+- Reutilizar o helper `formatSelectedPeriod(summary.period)` nos blocos **Genero**, **Forma de cadastro** e **Localizacao**.
+- Manter o mesmo estilo visual usado em **Devices dos pacientes** e **Uso da plataforma**.
+- Nao alterar contrato, calculo, backend, schema, migration ou fonte de dados; a mudanca apenas torna a semantica temporal visivel em todos os blocos agregados relevantes.
+
+Consequencia: o Admin passa a deixar explicito que genero, forma de cadastro e localizacao acompanham o periodo selecionado, sem adicionar dados, mocks, packages ou endpoints.

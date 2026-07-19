@@ -456,3 +456,18 @@ Frontend esperado:
 - `pnpm check`
 - Smoke HTTP local: `GET http://localhost:3001/api/admin/private/patients/dashboard?period=week` sem token Admin retornou `401`.
 - Smoke HTTP local: `GET http://localhost:3002/pacientes` retornou `200`.
+
+## Ajuste pos-feedback 2026-07-19 - Periodo abaixo dos titulos dos blocos
+
+- Pedido do usuario: exibir o periodo selecionado abaixo dos titulos dos blocos **Genero**, **Forma de cadastro** e **Localizacao** no dashboard `/pacientes`.
+- A UI Admin agora reutiliza `formatSelectedPeriod(summary.period)` logo abaixo dos titulos desses tres blocos, alinhando a leitura visual ao padrao ja existente em **Devices dos pacientes** e **Uso da plataforma**.
+- O ajuste e exclusivamente visual no cliente Admin; nao houve alteracao de backend, contrato HTTP, schema Prisma, migration, package novo, seed, mock ou dado artificial.
+- Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente; as referencias usadas foram `_product/proto/admin/Pacientes/Pacientes - Dashboard.png` e o screenshot enviado pelo usuario em 2026-07-19.
+
+### Validacao complementar executada
+
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/pacientes/client.tsx"`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check`
+- Smoke HTTP local: `GET http://localhost:3002/pacientes` retornou `200`.
