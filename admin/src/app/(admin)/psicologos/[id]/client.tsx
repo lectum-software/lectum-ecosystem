@@ -3379,6 +3379,10 @@ const PsychologistPlatformUsageCard = ({
   statistics: AdminPsychologistStatistics;
 }) => {
   const usage = statistics.platform_usage;
+  const maxPeakActivityHourCount = Math.max(
+    0,
+    ...usage.peak_activity_hours.map((hour) => hour.count),
+  );
 
   return (
     <CardShell className="p-5">
@@ -3424,28 +3428,68 @@ const PsychologistPlatformUsageCard = ({
           {usage.unavailable_reason}
         </p>
       ) : (
-        <div className="mt-5">
-          <h3 className="text-sm font-black text-foreground">Páginas mais acessadas</h3>
-          <div className="mt-3 grid gap-3 md:grid-cols-2">
-            {usage.top_pages.map((page) => (
-              <div className="rounded-2xl border border-border/70 p-3" key={page.label}>
-                <div className="flex items-center justify-between gap-3 text-xs font-black">
-                  <span className="text-muted">{page.label}</span>
-                  <span className="text-foreground">
-                    {numberFormatter.format(page.count)} · {page.percentage.toLocaleString("pt-BR")}
-                    %
-                  </span>
+        <div className="mt-5 grid gap-5 xl:grid-cols-[minmax(0,1.15fr)_minmax(280px,0.85fr)]">
+          <section className="min-w-0">
+            <h3 className="text-sm font-black text-foreground">Páginas mais acessadas</h3>
+            <div className="mt-3 grid gap-3 md:grid-cols-2">
+              {usage.top_pages.map((page) => (
+                <div className="rounded-2xl border border-border/70 p-3" key={page.label}>
+                  <div className="flex items-center justify-between gap-3 text-xs font-black">
+                    <span className="text-muted">{page.label}</span>
+                    <span className="text-foreground">
+                      {numberFormatter.format(page.count)} ·{" "}
+                      {page.percentage.toLocaleString("pt-BR")}%
+                    </span>
+                  </div>
+                  <div className="mt-2 h-2 overflow-hidden rounded-full bg-surface-muted">
+                    <div
+                      aria-hidden
+                      className="h-full rounded-full bg-primary"
+                      style={{ width: `${Math.min(100, Math.max(0, page.percentage))}%` }}
+                    />
+                  </div>
                 </div>
-                <div className="mt-2 h-2 overflow-hidden rounded-full bg-surface-muted">
-                  <div
-                    aria-hidden
-                    className="h-full rounded-full bg-primary"
-                    style={{ width: `${Math.min(100, Math.max(0, page.percentage))}%` }}
-                  />
+              ))}
+            </div>
+          </section>
+
+          <section className="min-w-0">
+            <h3 className="text-sm font-black text-foreground">Horários de maior atividade</h3>
+            <p className="mt-1 text-xs font-bold leading-5 text-muted">
+              Faixas do dia com mais acessos autenticados do psicólogo no período.
+            </p>
+            <div className="mt-3 grid gap-3">
+              {usage.peak_activity_hours.map((hour, index) => (
+                <div className="rounded-2xl border border-border/70 p-3" key={hour.hour}>
+                  <div className="flex items-center justify-between gap-3 text-xs font-black">
+                    <span className="text-muted">{hour.label}</span>
+                    <span className="text-foreground">
+                      {numberFormatter.format(hour.count)} ·{" "}
+                      {hour.percentage.toLocaleString("pt-BR")}%
+                    </span>
+                  </div>
+                  <div className="mt-2 h-2 overflow-hidden rounded-full bg-surface-muted">
+                    <div
+                      aria-hidden
+                      className="h-full rounded-full bg-primary"
+                      style={{
+                        width: `${
+                          maxPeakActivityHourCount > 0
+                            ? Math.max(8, (hour.count / maxPeakActivityHourCount) * 100)
+                            : 0
+                        }%`,
+                      }}
+                    />
+                  </div>
+                  {index === 0 ? (
+                    <p className="mt-2 text-[11px] font-black uppercase tracking-[0.12em] text-primary">
+                      Maior atividade
+                    </p>
+                  ) : null}
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          </section>
         </div>
       )}
     </CardShell>

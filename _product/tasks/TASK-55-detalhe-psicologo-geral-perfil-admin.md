@@ -266,3 +266,31 @@ Criar o shell de detalhe do psicólogo e as abas Geral e Perfil/Cadastro com dad
 - `pnpm --dir admin check` foi executado e ficou bloqueado por lint/format preexistente em `admin/src/app/(admin)/comunidades/client.tsx`.
 - `pnpm --dir admin build` foi executado e ficou bloqueado por alteracao local preexistente em `admin/src/app/(admin)/comunidades/client.tsx` (`charts.hourly_activity` fora do contrato TypeScript atual).
 - `pnpm check` foi executado: frontend passou, mas o backend ficou bloqueado por `prisma generate` com `EBUSY` em `backend/src/external/generated/prisma/models`, antes de chegar novamente ao check Admin.
+
+## Ajuste complementar 2026-07-19 - três colunas na aba Geral
+
+- Pedido direto de produto aplicado na aba Admin `Geral` do detalhe do psicólogo.
+- Foi adicionado o bloco `Situação da conta` antes de `Situação do registro` e `Dados da assinatura`.
+- A área de resumos passou a ficar em três colunas no desktop, na ordem solicitada: `Situação da conta` / `Situação do registro` / `Dados da assinatura`.
+- A UI permanece mobile-first: em largura base os cards continuam empilhados e só viram três colunas no breakpoint `xl`.
+- O bloco de conta usa dados reais do endpoint Admin existente `GET /api/admin/private/psychologists/:id/account` via `useAdminPsychologistAccount`, sem mock, endpoint novo, schema Prisma, migration ou package.
+- O bloco de registro foi nomeado visualmente como `Situação do registro`, mantendo as ações completas em `Perfil e cadastro`.
+- Builder/Quick Copy não esteve acessível como ferramenta callable; a referência visual usada foi a captura enviada pelo usuário e o PNG local `_product/proto/admin/Psicólogos/Detalhes do psicólogo/Geral.png`.
+- ADR criado: `adrs/0286-admin-psicologo-geral-tres-situacoes.md`.
+
+### Critérios do ajuste de três colunas
+
+- [x] Aba Geral exibe `Situação da conta`.
+- [x] Aba Geral organiza os três blocos em desktop na ordem `Situação da conta`, `Situação do registro`, `Dados da assinatura`.
+- [x] `Situação da conta` usa dados reais do endpoint Admin de conta, sem mock.
+- [x] UI permanece mobile-first, com cards empilhados em larguras estreitas.
+- [x] Nenhum `<img>` cru foi usado.
+
+### Validação complementar do ajuste de três colunas
+
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/psicologos/[id]/client.tsx"`
+- `pnpm --dir admin exec eslint "src/app/(admin)/psicologos/[id]/client.tsx"`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build` executado com sucesso após uma primeira tentativa bloqueada por outro processo `next build` em andamento.
+- Smoke HTTP local: `GET http://localhost:3002/psicologos/cmrgztri7000tn0uh1q4n8vxf` retornou `200`.
+- `pnpm check` foi executado: frontend e biome backend passaram, mas backend ficou bloqueado em `prisma generate` por `ENOTEMPTY` ao remover `backend/src/external/generated/prisma/models`, fora do escopo deste ajuste Admin/frontend.
