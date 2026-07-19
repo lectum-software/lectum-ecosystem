@@ -317,6 +317,50 @@ export const platformPageLabel = (
   return PAGE_KIND_LABELS[view.page_kind] ?? "Outras páginas";
 };
 
+export type AdminPsychologistPlatformPeakActivityHour = {
+  count: number;
+  hour: number;
+  label: string;
+  percentage: number;
+};
+
+const platformActivityHourLabel = (hour: number) => {
+  const normalizedHour = Math.min(23, Math.max(0, Math.trunc(hour)));
+  const nextHour = (normalizedHour + 1) % 24;
+  const formatHour = (value: number) => String(value).padStart(2, "0");
+
+  return `${formatHour(normalizedHour)}h-${formatHour(nextHour)}h`;
+};
+
+export const summarizePlatformPeakActivityHours = (
+  pageViews: AdminPsychologistAnalyticsPageView[],
+): AdminPsychologistPlatformPeakActivityHour[] => {
+  const viewsWithUser = pageViews.filter((view) => view.user_id);
+  const countsByHour = new Map<number, number>();
+
+  for (const view of viewsWithUser) {
+    const hour = view.occurred_at.getHours();
+    countsByHour.set(hour, (countsByHour.get(hour) ?? 0) + 1);
+  }
+
+  const total = viewsWithUser.length;
+  if (total === 0) return [];
+
+  return [...countsByHour.entries()]
+    .map(([hour, count]) => ({
+      count,
+      hour,
+      label: platformActivityHourLabel(hour),
+      percentage: roundOneDecimal((count / total) * 100),
+    }))
+    .sort((left, right) => {
+      if (right.count !== left.count) return right.count - left.count;
+
+      return left.hour - right.hour;
+    })
+    .slice(0, 4);
+};
+
 export const psychologistTrafficOriginDefinitions: Array<
   Pick<AdminPsychologistTrafficOriginSource, "description" | "id" | "label">
 > = [

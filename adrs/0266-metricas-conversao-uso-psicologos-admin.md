@@ -246,6 +246,12 @@ A decisao e exclusivamente de hierarquia visual/mobile-first: prioriza a posicao
 
 Validacao complementar 2026-07-17: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke HTTP local `GET http://localhost:3002/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=estatisticas` retornando 200.
 
+## Complemento 2026-07-19 - Horários de maior atividade no uso individual
+
+No detalhe administrativo do psicólogo, o bloco **Uso da plataforma** da aba **Estatísticas** deve exibir os horários de maior atividade do psicólogo no período selecionado. A métrica agrupa `page_view_event` autenticado do próprio psicólogo por hora local do servidor e retorna as quatro faixas com mais acessos, com contagem e percentual sobre os pageviews autenticados do recorte.
+
+A decisão mantém a métrica limitada à navegação first-party na Lectum: não infere atendimentos, consultas, mensagens ou atividade no WhatsApp, não cria tracking novo, não faz backfill e não altera schema Prisma. A UI apresenta a informação abaixo de **Páginas mais acessadas** em gráfico de barras verticais, em layout mobile-first e sem paths crus.
+
 ## Complemento 2026-07-17 - Carrossel dos contadores do painel Estatisticas
 
 No detalhe administrativo do psicologo, os contadores dos blocos **Estatisticas de negocio** e **Estatisticas de comunidade** devem usar o mesmo padrao de carrossel horizontal adotado nas **Estatisticas de conteudo** da comunidade: rolagem com snap, scrollbar nativa oculta e setas laterais dentro da largura util do card.

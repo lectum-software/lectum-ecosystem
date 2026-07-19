@@ -949,6 +949,12 @@ export type AdminPsychologistStatistics = {
     last_access_at: string | null;
     period_from: string;
     period_to: string;
+    peak_activity_hours: {
+      count: number;
+      hour: number;
+      label: string;
+      percentage: number;
+    }[];
     pwa_installation_recorded: boolean;
     pwa_installed_at: string | null;
     sessions_count: number;

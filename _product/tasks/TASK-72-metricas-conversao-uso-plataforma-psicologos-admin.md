@@ -1121,3 +1121,13 @@ Regras de cálculo:
 - Builder/Quick Copy n?o est? exposto como ferramenta callable no ambiente; a refer?ncia usada foi a captura enviada pelo usu?rio e o padr?o local do dashboard Admin de comunidades.
 - ADR atualizado: `adrs/0264-admin-comunidade-abas-conteudo-ranking.md`.
 - Valida??o executada: `pnpm --dir backend check`, `pnpm --dir admin check`, `pnpm --dir backend build`, `pnpm --dir admin build`, `pnpm check`, smoke service real `buildCommunitiesDashboard({ from: "2026-07-13", to: "2026-07-18" })` retornando `status=200` com listas preenchidas e smoke HTTP local `GET http://localhost:3002/comunidades` retornando 200.
+
+## Ajuste complementar 2026-07-19 - Horarios de maior atividade no uso individual do psicologo
+
+- Pedido do usuario: em **Uso da plataforma** da aba **Estatisticas** do detalhe administrativo do psicologo, adicionar os horarios de maior atividade do psicologo e posicionar o bloco abaixo de **Paginas mais acessadas** com grafico de barras verticais.
+- O backend passou a retornar `platform_usage.peak_activity_hours` no endpoint real `GET /api/admin/private/psychologists/:id/statistics`, agrupando `page_view_event` autenticado do proprio psicologo por hora local do servidor e retornando as quatro faixas mais ativas com contagem e percentual.
+- A UI Admin exibe o ranking de horarios abaixo de **Paginas mais acessadas**, com grafico de barras verticais mobile-first, sem exibir paths crus e sem inferir atendimentos, mensagens ou atividade fora da Lectum.
+- Nao houve package novo, mock, endpoint paralelo, schema Prisma/migration, seed, backfill ou alteracao de persistencia.
+- Builder/Quick Copy nao esta exposto como ferramenta callable no ambiente; foram usados o PNG local `_product/proto/admin/Psicologos/Detalhes do psicologo/Estatisticas.png` e a captura enviada pelo usuario.
+- ADR atualizado: `adrs/0266-metricas-conversao-uso-psicologos-admin.md`.
+- Validacoes executadas: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check`, API local autenticada confirmando `platform_usage.peak_activity_hours` e browser local/headless via Chrome/CDP em `/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=estatisticas` confirmando o bloco **Horarios de maior atividade** renderizado com barras verticais.

@@ -122,6 +122,13 @@ export type AdminPsychologistPlatformUsageTopPage = {
   percentage: number;
 };
 
+export type AdminPsychologistPlatformUsagePeakActivityHour = {
+  count: number;
+  hour: number;
+  label: string;
+  percentage: number;
+};
+
 export type AdminPsychologistPlatformUsage = {
   access_days_count: number;
   average_duration_seconds: number | null;
@@ -133,6 +140,7 @@ export type AdminPsychologistPlatformUsage = {
   pwa_installed_at: Date | null;
   sessions_count: number;
   source: "page_view_event+important_action_event";
+  peak_activity_hours: AdminPsychologistPlatformUsagePeakActivityHour[];
   top_pages: AdminPsychologistPlatformUsageTopPage[];
   unavailable_reason: string | null;
 };
