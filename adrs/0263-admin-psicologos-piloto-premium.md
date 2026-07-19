@@ -281,6 +281,27 @@ Validacao deste ajuste:
 - Smoke HTTP local: `GET http://localhost:3002/pacientes` retornou 200.
 - Browser local em `http://localhost:3002/pacientes` inspecionado com sessao Admin existente.
 
+## Ajuste pos-feedback 2026-07-19: remocao dos controles superiores de Pacientes
+
+O detalhe `/pacientes/:id` tinha controles superiores redundantes antes do card do paciente: hero com `TASK-61`, botao **Voltar para pacientes** e filtros de **Periodo**, **De** e **Ate**. Depois do feedback visual, a decisao foi iniciar a tela diretamente pelo card de identificacao do paciente.
+
+Decisoes:
+
+- Remover o hero/card superior do detalhe de Pacientes.
+- Remover o botao **Voltar para pacientes** da tela de detalhe.
+- Remover os controles visuais de periodo/data do topo do detalhe.
+- Preservar o card de dados do paciente como primeiro bloco de conteudo da tela.
+- Manter a consulta em dados reais do contrato atual, sem criar mock, fallback artificial ou endpoint novo.
+- Nao alterar backend, contratos, privacidade, schema Prisma, migrations, packages ou dados retornados.
+
+Validacao deste ajuste:
+
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/pacientes/[id]/client.tsx"`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check`
+- Smoke HTTP local: `GET http://localhost:3002/pacientes/demo-patient-reviewer-01` retornou 200.
+
 ## Pendências
 
 - Validar a aceitação visual com o fundador antes de criar a task de replicação para as demais telas.

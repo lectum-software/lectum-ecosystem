@@ -2,9 +2,7 @@
 
 import {
   AlertTriangle,
-  ArrowLeft,
   CheckCircle2,
-  ChevronDown,
   Clock3,
   Heart,
   Loader2,
@@ -21,34 +19,18 @@ import {
   UsersRound,
 } from "lucide-react";
 import Image from "next/image";
-import Link from "next/link";
-import { type FocusEvent, useMemo, useState } from "react";
+import { useMemo } from "react";
 import { useAdminPatientDetail } from "@/api/callers/patients";
 import { resolveApiError } from "@/api/handle";
 import type {
   AdminPatientDetail,
   PatientsDetailActivity,
   PatientsDetailMetric,
-  PatientsDetailQuery,
 } from "@/api/req/patients";
 import { aggregateCalendarChartPoints, buildSmoothSvgPath } from "@/lib/chart-time-series";
 import { cn } from "@/lib/utils";
 
 const LOADING_PLACEHOLDERS = ["profile", "engagement", "activity", "communities"] as const;
-type PatientsDetailPeriodValue = NonNullable<PatientsDetailQuery["period"]>;
-type PatientsDetailPeriodPreset = Exclude<PatientsDetailPeriodValue, "custom">;
-type PatientsDetailRange = Pick<PatientsDetailQuery, "from" | "to">;
-
-const PATIENTS_DETAIL_PERIOD_OPTIONS: {
-  id: PatientsDetailPeriodPreset;
-  label: string;
-}[] = [
-  { id: "today", label: "Hoje" },
-  { id: "week", label: "Esta semana" },
-  { id: "month", label: "Este mês" },
-  { id: "year", label: "Este ano" },
-  { id: "all", label: "Todo o período" },
-];
 const numberFormatter = new Intl.NumberFormat("pt-BR");
 const metricIcons: Record<PatientsDetailMetric["id"], LucideIcon> = {
   comments_created: MessageCircle,
@@ -74,51 +56,6 @@ const seriesConfig = [
   { color: "var(--admin-warning)", key: "responses_received", label: "Respostas recebidas" },
 ] as const;
 
-const pad = (value: number) => String(value).padStart(2, "0");
-const toInputDate = (date: Date) =>
-  `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
-const dateFromInput = (value: string) => {
-  const [year, month, day] = value.split("-").map(Number);
-  return new Date(year, month - 1, day, 12, 0, 0, 0);
-};
-
-const startOfCurrentWeek = () => {
-  const date = new Date();
-  const day = date.getDay();
-  const diff = day === 0 ? -6 : 1 - day;
-  date.setDate(date.getDate() + diff);
-
-  return date;
-};
-
-const startOfCurrentMonth = () => {
-  const date = new Date();
-  date.setDate(1);
-
-  return date;
-};
-
-const startOfCurrentYear = () => new Date(new Date().getFullYear(), 0, 1);
-
-const getDetailRangeForPeriod = (period: PatientsDetailPeriodPreset): PatientsDetailRange => {
-  const today = toInputDate(new Date());
-
-  if (period === "today") return { from: today, to: today };
-  if (period === "all") return { from: "", to: today };
-  if (period === "month") return { from: toInputDate(startOfCurrentMonth()), to: today };
-  if (period === "year") return { from: toInputDate(startOfCurrentYear()), to: today };
-
-  return { from: toInputDate(startOfCurrentWeek()), to: today };
-};
-
-const buildDetailPeriodQuery = (
-  period: PatientsDetailPeriodValue,
-  range: PatientsDetailRange,
-): PatientsDetailQuery =>
-  period === "custom" ? { from: range.from, period, to: range.to } : { period };
-
-const isValidRange = (range: PatientsDetailRange) =>
-  Boolean(range.from && range.to && dateFromInput(range.from) <= dateFromInput(range.to));
 const formatDateTime = (value: string) =>
   new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeStyle: "short" }).format(
     new Date(value),
@@ -244,76 +181,6 @@ const ErrorState = ({ message, onRetry }: { message: string; onRetry: () => void
       </button>
     </div>
   </CardShell>
-);
-
-const PeriodFilters = ({
-  displayRange,
-  onDateChange,
-  onDateControlsBlur,
-  onPeriodChange,
-  period,
-  rangeError,
-}: {
-  onDateChange: (field: "from" | "to", value: string) => void;
-  onDateControlsBlur: (event: FocusEvent<HTMLDivElement>) => void;
-  onPeriodChange: (period: PatientsDetailPeriodPreset) => void;
-  displayRange: PatientsDetailRange;
-  period: PatientsDetailPeriodValue;
-  rangeError: string | null;
-}) => (
-  <div className="flex flex-col gap-3 rounded-card border border-border/70 bg-surface/90 p-4 shadow-admin-soft backdrop-blur sm:flex-row sm:items-end sm:justify-between">
-    <label className="grid gap-1 text-xs font-semibold text-muted" htmlFor="patient-detail-period">
-      Período
-      <span className="relative">
-        <select
-          className="h-11 min-w-[170px] appearance-none rounded-control border border-border bg-surface py-0 pl-3 pr-11 text-sm font-semibold text-foreground shadow-control outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
-          id="patient-detail-period"
-          onChange={(event) => onPeriodChange(event.target.value as PatientsDetailPeriodPreset)}
-          value={period}
-        >
-          {period === "custom" ? (
-            <option disabled hidden value="custom">
-              Personalizado
-            </option>
-          ) : null}
-          {PATIENTS_DETAIL_PERIOD_OPTIONS.map((option) => (
-            <option key={option.id} value={option.id}>
-              {option.label}
-            </option>
-          ))}
-        </select>
-        <ChevronDown
-          aria-hidden
-          className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground"
-        />
-      </span>
-    </label>
-    <div className="grid gap-3 sm:grid-cols-2" onBlur={onDateControlsBlur}>
-      <label className="text-xs font-semibold text-muted">
-        De
-        <input
-          className="mt-1 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground shadow-control focus:border-primary"
-          max={displayRange.to}
-          onChange={(event) => onDateChange("from", event.target.value)}
-          type="date"
-          value={displayRange.from ?? ""}
-        />
-      </label>
-      <label className="text-xs font-semibold text-muted">
-        Até
-        <input
-          className="mt-1 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground shadow-control focus:border-primary"
-          min={displayRange.from}
-          onChange={(event) => onDateChange("to", event.target.value)}
-          type="date"
-          value={displayRange.to ?? ""}
-        />
-      </label>
-    </div>
-    {period === "custom" && rangeError ? (
-      <p className="max-w-md text-xs font-bold text-danger">{rangeError}</p>
-    ) : null}
-  </div>
 );
 
 const Header = ({ detail }: { detail: AdminPatientDetail }) => {
@@ -736,136 +603,28 @@ const DetailContent = ({ detail }: { detail: AdminPatientDetail }) => (
   </div>
 );
 export const AdminPatientDetailClient = ({ id }: { id: string }) => {
-  const [selectedPeriod, setSelectedPeriod] = useState<PatientsDetailPeriodValue>("month");
-  const [appliedPeriod, setAppliedPeriod] = useState<PatientsDetailPeriodValue>("month");
-  const [customRangeError, setCustomRangeError] = useState<string | null>(null);
-  const [draftRange, setDraftRange] = useState<PatientsDetailRange>(() =>
-    getDetailRangeForPeriod("month"),
-  );
-  const [appliedRange, setAppliedRange] = useState<PatientsDetailRange>(() =>
-    getDetailRangeForPeriod("month"),
-  );
-  const queryInput = useMemo(
-    () => buildDetailPeriodQuery(appliedPeriod, appliedRange),
-    [appliedPeriod, appliedRange],
-  );
-  const validRange = appliedPeriod !== "custom" || isValidRange(appliedRange);
-  const validDraftRange = isValidRange(draftRange);
-  const query = useAdminPatientDetail(id, queryInput, { enabled: validRange });
+  const query = useAdminPatientDetail(id, { period: "month" });
   const queryError = query.error ? resolveApiError(query.error) : null;
-  const displayRange =
-    selectedPeriod !== "custom" && query.data
-      ? { from: query.data.period.from, to: query.data.period.to }
-      : draftRange;
-  const handlePeriodChange = (nextPeriod: PatientsDetailPeriodPreset) => {
-    const nextRange = getDetailRangeForPeriod(nextPeriod);
-    setCustomRangeError(null);
-    setSelectedPeriod(nextPeriod);
-    setAppliedPeriod(nextPeriod);
-    setDraftRange(nextRange);
-    setAppliedRange(nextRange);
-  };
-  const handleCustomDateChange = (field: "from" | "to", value: string) => {
-    setCustomRangeError(null);
-    setSelectedPeriod("custom");
-    setDraftRange({ ...displayRange, [field]: value });
-  };
-  const commitCustomRange = () => {
-    if (selectedPeriod !== "custom") return;
-
-    if (!validDraftRange) {
-      setCustomRangeError(
-        "Informe um período personalizado completo, com data inicial menor ou igual à final.",
-      );
-      return;
-    }
-
-    setCustomRangeError(null);
-    setSelectedPeriod("custom");
-    setAppliedPeriod("custom");
-    setAppliedRange(draftRange);
-  };
-  const handleDateControlsBlur = (event: FocusEvent<HTMLDivElement>) => {
-    const currentTarget = event.currentTarget;
-    const nextFocusedElement = event.relatedTarget as Node | null;
-
-    if (nextFocusedElement && currentTarget.contains(nextFocusedElement)) return;
-
-    window.setTimeout(() => {
-      const activeElement = document.activeElement;
-
-      if (activeElement && currentTarget.contains(activeElement)) return;
-
-      commitCustomRange();
-    }, 0);
-  };
-  const resetPeriod = () => {
-    const defaultRange = getDetailRangeForPeriod("month");
-    setCustomRangeError(null);
-    setSelectedPeriod("month");
-    setAppliedPeriod("month");
-    setDraftRange(defaultRange);
-    setAppliedRange(defaultRange);
-  };
 
   return (
     <div className="space-y-6">
-      <section className="rounded-card border border-border/70 bg-surface/90 p-5 shadow-admin-soft backdrop-blur md:p-6">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-          <div>
-            <Link
-              className="inline-flex h-11 items-center gap-2 rounded-control border border-border bg-surface px-4 text-sm font-black text-primary shadow-control transition hover:border-primary"
-              href="/pacientes"
-            >
-              <ArrowLeft aria-hidden className="h-4 w-4" />
-              Voltar para pacientes
-            </Link>
-            <div className="mt-5">
-              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-primary">
-                TASK-61
-              </p>
-              <h1 className="mt-2 text-3xl font-bold tracking-tight text-foreground md:text-4xl">
-                Detalhe administrativo do paciente
-              </h1>
-              <p className="mt-2 text-sm font-medium text-muted">
-                Visão somente leitura com engajamento, comunidades e horários a partir de dados
-                reais.
-              </p>
-            </div>
-          </div>
-          <PeriodFilters
-            displayRange={displayRange}
-            onDateChange={handleCustomDateChange}
-            onDateControlsBlur={handleDateControlsBlur}
-            onPeriodChange={handlePeriodChange}
-            period={selectedPeriod}
-            rangeError={customRangeError}
-          />
-        </div>
-      </section>
-      {!validRange ? (
-        <ErrorState
-          message="A data inicial precisa ser menor ou igual à data final."
-          onRetry={resetPeriod}
-        />
-      ) : null}
-      {validRange && query.isLoading ? (
+      {query.isLoading ? (
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           {LOADING_PLACEHOLDERS.map((placeholder) => (
             <CardShell className="h-[8.75rem] animate-pulse bg-surface-muted" key={placeholder} />
           ))}
         </div>
       ) : null}
-      {validRange && query.isFetching && !query.isLoading ? (
+      {query.isFetching && !query.isLoading ? (
         <p className="inline-flex items-center gap-2 text-sm font-bold text-muted">
           <Loader2 aria-hidden className="h-4 w-4 animate-spin" />
           Atualizando dados reais...
         </p>
       ) : null}
-      {validRange && query.isError && queryError ? (
+      {query.isError && queryError ? (
         <ErrorState message={queryError} onRetry={() => void query.refetch()} />
       ) : null}
-      {validRange && query.data ? <DetailContent detail={query.data} /> : null}
+      {query.data ? <DetailContent detail={query.data} /> : null}
     </div>
   );
 };

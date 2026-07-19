@@ -255,3 +255,18 @@ Frontend esperado:
 - `pnpm --dir admin check`
 - `pnpm --dir admin build`
 - Serviço local: `showAdminPatient({ id: "demo-patient-reviewer-01", period: "year" })` retornou `200 Este ano 3660`.
+
+## Ajuste pos-feedback 2026-07-19 - Remocao dos controles superiores do detalhe
+
+- Pedido do usuario: remover o bloco superior, o botao **Voltar para pacientes** e os filtros de **Periodo**, **De** e **Ate** dentro de `/pacientes/[id]`.
+- A rota agora inicia diretamente pelo card de identificacao do paciente, reduzindo redundancia visual e preservando o layout mobile-first.
+- A consulta permanece usando dados reais do contrato atual, sem expor controles visuais de periodo/data nesta tela.
+- Nao houve alteracao de backend, endpoint, contrato HTTP, schema Prisma, migration, package, seed, mock, dado sensivel ou acao administrativa.
+
+### Validacao complementar executada
+
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/pacientes/[id]/client.tsx"`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check`
+- Smoke HTTP local: `GET http://localhost:3002/pacientes/demo-patient-reviewer-01` retornou `200`.
