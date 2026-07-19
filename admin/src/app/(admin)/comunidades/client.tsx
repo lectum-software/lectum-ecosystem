@@ -657,7 +657,7 @@ const TopCommunityActions = ({
 
   if (layout === "icons") {
     return (
-      <div className="flex shrink-0 items-center justify-center gap-1.5">
+      <div className="inline-flex shrink-0 items-center justify-center gap-1.5">
         <Link
           aria-label={`Abrir comunidade ${community.name} no site público`}
           className="grid h-9 w-9 place-items-center rounded-full border border-border bg-surface text-foreground shadow-control transition hover:border-primary hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
@@ -1744,11 +1744,11 @@ const TopCommunitiesTable = ({
           <div className="mt-5 hidden min-w-0 overflow-hidden md:block">
             <table className="w-full max-w-full table-fixed border-separate border-spacing-0 text-left text-sm">
               <colgroup>
-                <col className="w-[40%]" />
-                <col className="w-[8%]" />
-                <col className="w-[8%]" />
-                <col className="w-[8%]" />
-                <col className="w-[36%]" />
+                <col className="w-[42%]" />
+                <col className="w-[14%]" />
+                <col className="w-[10%]" />
+                <col className="w-[14%]" />
+                <col className="w-[20%]" />
               </colgroup>
               <thead className="text-xs text-muted">
                 <tr>
@@ -1760,7 +1760,7 @@ const TopCommunitiesTable = ({
                   <th className="border-b border-border px-3 py-3 text-center font-black">
                     Acessos
                   </th>
-                  <th className="border-b border-border py-3 pl-3 text-center font-black">Ações</th>
+                  <th className="border-b border-border py-3 pl-3 text-right font-black">Ações</th>
                 </tr>
               </thead>
               <tbody>
@@ -1789,7 +1789,7 @@ const TopCommunitiesTable = ({
                         {numberFormatter.format(community.accesses_count)}
                       </span>
                     </td>
-                    <td className="border-b border-border py-4 pl-3 text-center">
+                    <td className="border-b border-border py-4 pl-3 text-right">
                       <TopCommunityActions community={community} layout="icons" />
                     </td>
                   </tr>

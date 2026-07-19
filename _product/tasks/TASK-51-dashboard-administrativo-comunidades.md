@@ -843,3 +843,26 @@ Regras de UI obrigatórias:
 - `pnpm check`
 - Smoke service real `buildCommunitiesDashboard({ period: "week" })` retornou `status=200`, `hours=24`, `total=169`, pico `15:00:29` e `topCommunities=5` no banco local.
 - Smoke HTTP local `GET http://localhost:3002/comunidades` retornou 200.
+
+## Ajuste complementar 2026-07-19 - alinhamento das acoes em Principais comunidades
+
+- Pedido do usuario: no bloco **Principais comunidades**, alinhar a coluna **Acoes** a direita e ajustar o espacamento entre as demais colunas.
+- Frontend Admin: a tabela desktop redistribui o `colgroup` para dar mais largura as colunas **Seguidores**, **Posts** e **Acessos**, reduzindo a area reservada para **Acoes**.
+- A coluna **Acoes** agora alinha cabecalho e botoes a direita; o container de botoes passou a ser `inline-flex` para respeitar o alinhamento da celula.
+- O ajuste preserva o card mobile-first, os links reais existentes, `next/image`, tokens visuais do Admin e nao altera dados, endpoint, contrato, Prisma/migrations ou packages.
+- ADR nao aplicavel: ajuste visual pontual sem nova decisao arquitetural ou regra de dominio.
+
+### Criterios deste ajuste
+
+- [x] A coluna desktop **Acoes** em **Principais comunidades** fica alinhada a direita.
+- [x] As colunas **Seguidores**, **Posts** e **Acessos** recebem mais espaco e nao comprimem seus labels.
+- [x] Os botoes existentes de publico e detalhe permanecem funcionais.
+- [x] Nenhum mock, dado fake permanente, endpoint simulado, package novo, schema Prisma ou migration foi usado.
+
+### Validacao deste ajuste
+
+- `pnpm --dir admin exec biome check "src/app/(admin)/comunidades/client.tsx"`: sem erros.
+- `pnpm --dir admin exec eslint "src/app/(admin)/comunidades/client.tsx"`: sem erros.
+- Smoke HTTP local `GET http://localhost:3002/comunidades` retornou 200.
+- `pnpm --dir admin check`: bloqueado por alteracoes preexistentes fora do escopo em `admin/src/app/(admin)/psicologos/[id]/client.tsx` (variaveis nao usadas e formatacao).
+- `pnpm --dir admin build`: bloqueado por erro TypeScript preexistente fora do escopo em `admin/src/app/(admin)/psicologos/[id]/client.tsx` (`maxPeakActivityHourCount` inexistente).
