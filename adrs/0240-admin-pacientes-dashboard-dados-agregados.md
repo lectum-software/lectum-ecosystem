@@ -129,3 +129,16 @@ Decisões:
 - Remover apenas o título visual **Estatísticas simples** da tela, preservando a seção com `aria-label` para acessibilidade.
 
 Consequência: Pacientes ganha paridade visual com o dashboard de Psicólogos para leitura de devices, sem schema Prisma, migration, package novo, seed, mock, endpoint paralelo ou inferência cross-device.
+
+## Complemento 2026-07-19 - Ordem dos blocos agregados de pacientes
+
+Por feedback direto de produto, a leitura agregada do dashboard Admin de pacientes deve priorizar comparação rápida na primeira linha e deixar blocos mais densos na segunda linha.
+
+Decisão:
+
+- Renderizar a primeira linha em desktop como **Gênero**, **Devices dos pacientes** e **Forma de cadastro**.
+- Renderizar a segunda linha em desktop como **Localização** e **Uso da plataforma**.
+- Preservar mobile-first: em telas estreitas, os blocos permanecem empilhados na mesma ordem lógica.
+- Manter o contrato `device_usage`, `platform_usage`, localizações e demografia sem alteração; a mudança é apenas de composição visual.
+
+Consequência: o dashboard fica alinhado à ordem solicitada pelo produto sem novos dados, packages, migrations, mocks ou endpoints.

@@ -420,3 +420,18 @@ Frontend esperado:
 - `GET http://localhost:3001/api/admin/private/patients/dashboard?period=week` sem token Admin retornou `401`.
 - Smoke HTTP local `GET http://localhost:3002/pacientes` retornou `200`.
 - Browser local headless em `http://localhost:3002/pacientes` foi executado com perfil isolado; por não ter sessão Admin real nesse perfil, a validação visual autenticada redirecionou para `/login`. A validação visual autenticada ficou limitada aos screenshots enviados pelo usuário e à inspeção do código/renderização compilada.
+
+## Ajuste pós-feedback 2026-07-19 - Ordem dos blocos agregados
+
+- Pedido do usuário: reorganizar o dashboard `/pacientes` para exibir a primeira linha como **Gênero**, **Devices** e **Forma de cadastro**, e a segunda linha como **Localização** e **Uso da plataforma**.
+- A seção agregada agora renderiza um grid mobile-first: todos os cards empilham no mobile, passam para 3 colunas no desktop para **Gênero / Devices / Forma de cadastro** e para 2 colunas no desktop para **Localização / Uso da plataforma**.
+- O ajuste é exclusivamente visual no Admin; não houve alteração de backend, contrato HTTP, schema Prisma, migration, package novo, endpoint novo, seed, mock ou dado artificial.
+- Builder/Quick Copy não está exposto como ferramenta callable neste ambiente; as referências usadas foram os screenshots enviados pelo usuário em 2026-07-19 e `_product/proto/admin/Pacientes/Pacientes - Dashboard.png`.
+
+### Validação complementar executada
+
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/pacientes/client.tsx"`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check`
+- Smoke HTTP local: `GET http://localhost:3002/pacientes` retornou `200`.

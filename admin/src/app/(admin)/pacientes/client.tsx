@@ -1410,18 +1410,7 @@ const Statistics = ({
             total={summary.demographics.gender.total}
           />
         </CardShell>
-        <CardShell className="p-5">
-          <div className="flex items-center justify-between gap-3">
-            <div className="flex items-center gap-2">
-              <MapPin aria-hidden className="h-5 w-5 text-primary" />
-              <h3 className="text-lg font-black text-foreground">Localização</h3>
-            </div>
-            <span className="rounded-full bg-surface-muted px-2 py-1 text-[0.65rem] font-bold text-muted">
-              {locationSourceLabel}
-            </span>
-          </div>
-          <LocationOverview locations={displayLocations} preview={showLocationPreview} />
-        </CardShell>
+        <DeviceUsageCard summary={summary} />
         <CardShell className="p-5">
           <PanelTitle
             icon={UserPlus}
@@ -1437,6 +1426,21 @@ const Statistics = ({
             total={summary.demographics.signup_sources.total}
           />
         </CardShell>
+      </div>
+      <div className="mt-4 grid gap-4 xl:grid-cols-2">
+        <CardShell className="p-5">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <MapPin aria-hidden className="h-5 w-5 text-primary" />
+              <h3 className="text-lg font-black text-foreground">Localização</h3>
+            </div>
+            <span className="rounded-full bg-surface-muted px-2 py-1 text-[0.65rem] font-bold text-muted">
+              {locationSourceLabel}
+            </span>
+          </div>
+          <LocationOverview locations={displayLocations} preview={showLocationPreview} />
+        </CardShell>
+        <PlatformUsageCard summary={summary} />
       </div>
     </section>
   );
@@ -1545,11 +1549,6 @@ const DashboardContent = ({
       </CardShell>
 
       <Statistics allowLocalLocationPreview={allowLocalLocationPreview} summary={summary} />
-
-      <div className="grid gap-5 xl:grid-cols-2">
-        <DeviceUsageCard summary={summary} />
-        <PlatformUsageCard summary={summary} />
-      </div>
     </div>
   );
 };
