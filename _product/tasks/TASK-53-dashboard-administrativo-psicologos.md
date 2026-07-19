@@ -262,3 +262,11 @@ Packages usados:
 - Não houve alteração de Prisma schema, migration, seed, mock, backfill, pacote novo ou fonte paralela de dados.
 - Referência visual local mantida: `_product/proto/admin/Psicólogos/Psicólogos - Dashboard.png`; Builder/Quick Copy não estava disponível como ferramenta callable no ambiente.
 - Validações desta correção: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e smoke HTTP local em `http://localhost:3002/psicologos` retornando 200.
+
+### Correção UX em 2026-07-19 - alinhamento dos números do comparativo
+
+- Pedido do usuário: centralizar os números das colunas **Buscas**, **Psicólogos** e **Buscas/psicólogo** na tabela do bloco **Comparativo de oferta e demanda**.
+- O ajuste é exclusivamente visual no Admin, mantendo o layout mobile-first: no mobile os rótulos continuam à esquerda e os valores à direita; em desktop os valores e cabeçalhos numéricos ficam centralizados nas respectivas colunas.
+- Não houve alteração de contrato backend, Prisma, migration, mock, pacote novo ou fonte de dados.
+- Referência visual local mantida: `_product/proto/admin/Psicólogos/Psicólogos - Dashboard.png`; Builder/Quick Copy não estava disponível como ferramenta callable no ambiente.
+- Validações desta correção: `pnpm --dir admin check`, `pnpm --dir admin build` e smoke HTTP local em `http://localhost:3002/psicologos` retornando 200. A primeira tentativa de build encontrou outro `next build` já em execução; após aguardar o processo encerrar, o build concluiu sem erros.

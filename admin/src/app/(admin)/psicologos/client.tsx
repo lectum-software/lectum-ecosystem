@@ -704,9 +704,9 @@ const getSupplyDemandSortValue = (row: SupplyDemandComparisonRow, sortKey: Suppl
 
 const SupplyDemandCountCell = ({ count, label }: { count: number; label: string }) => (
   <div>
-    <div className="flex items-center justify-between gap-3 text-xs">
+    <div className="flex items-center justify-between gap-3 text-xs lg:justify-center">
       <span className="font-bold text-muted lg:hidden">{label}</span>
-      <span className="text-base font-semibold text-foreground">
+      <span className="text-base font-semibold text-foreground lg:text-center">
         {numberFormatter.format(count)}
       </span>
     </div>
@@ -721,9 +721,9 @@ const SearchesPerPsychologistCell = ({ row }: { row: SupplyDemandComparisonRow }
 
   return (
     <div>
-      <div className="flex items-center justify-between gap-3 text-xs">
+      <div className="flex items-center justify-between gap-3 text-xs lg:justify-center">
         <span className="font-bold text-muted lg:hidden">Buscas/psicólogo</span>
-        <span className="text-base font-semibold text-foreground">{value}</span>
+        <span className="text-base font-semibold text-foreground lg:text-center">{value}</span>
       </div>
     </div>
   );
@@ -1330,9 +1330,9 @@ const StatsContent = ({ summary }: { summary: AdminPsychologistsDashboard }) => 
 
         <div className="hidden grid-cols-[minmax(220px,1.3fr)_minmax(130px,0.75fr)_minmax(130px,0.75fr)_minmax(160px,0.9fr)_190px] gap-4 border-b border-border bg-surface px-4 py-3 text-xs font-semibold uppercase tracking-[0.08em] text-muted lg:grid">
           <span>Opção do filtro</span>
-          <span>Buscas</span>
-          <span>Psicólogos</span>
-          <span>Buscas/psicólogo</span>
+          <span className="text-center">Buscas</span>
+          <span className="text-center">Psicólogos</span>
+          <span className="text-center">Buscas/psicólogo</span>
           <span className="text-right">Leitura</span>
         </div>
 
