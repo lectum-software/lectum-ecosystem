@@ -1050,9 +1050,9 @@ const StatsContent = ({ summary }: { summary: AdminPsychologistsDashboard }) => 
   const periodLabel = formatSelectedPeriod(summary.period);
   const emptyRowsMessage =
     selectedDimension.id === "cities" && optionQuery.trim().length === 0
-      ? `Nenhuma cidade com mais de ${numberFormatter.format(
+      ? `Nenhuma cidade com pelo menos ${numberFormatter.format(
           summary.filters_searches.minimum_city_searches,
-        )} buscas no período selecionado.`
+        )} buscas ou psicólogo cadastrado no período selecionado.`
       : `Nenhuma opção encontrada para “${optionQuery}”.`;
   const handleDimensionChange = (dimensionId: string) => {
     setActiveDimensionId(dimensionId);

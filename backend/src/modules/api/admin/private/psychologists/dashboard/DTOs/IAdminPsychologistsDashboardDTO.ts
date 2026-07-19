@@ -134,7 +134,7 @@ export type AdminPsychologistsDashboardStatistics = {
   };
   cities: {
     items: AdminPsychologistsDashboardBreakdownItem[];
-    source: "psychologist_profile.professional_address_city";
+    source: "psychologist_profile.professional_address_city+professional_address_state";
     total: number;
   };
   features: {

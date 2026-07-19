@@ -172,7 +172,7 @@ export type PsychologistsDashboardStatistics = {
   };
   cities: {
     items: PsychologistsDashboardBreakdownItem[];
-    source: "psychologist_profile.professional_address_city";
+    source: "psychologist_profile.professional_address_city+professional_address_state";
     total: number;
   };
   features: {

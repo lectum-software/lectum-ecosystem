@@ -821,7 +821,11 @@ const buildDirectoryFilterSearchTrackingItems = (values: PsychologistsFilterForm
   const items: Array<{ targetId: string; targetType: string }> = [];
 
   for (const field of DIRECTORY_FILTER_TRACKING_FIELDS) {
-    const targetId = normalizeFilterTrackingTargetId(values[field.name]);
+    const baseTargetId = normalizeFilterTrackingTargetId(values[field.name]);
+    const state = normalizeFilterTrackingTargetId(values.state)?.toUpperCase() ?? null;
+    const targetId =
+      field.name === "city" && baseTargetId && state ? `${baseTargetId}/${state}` : baseTargetId;
+
     if (!targetId) continue;
 
     items.push({

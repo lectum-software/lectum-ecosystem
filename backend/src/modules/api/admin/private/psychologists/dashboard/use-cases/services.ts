@@ -336,6 +336,44 @@ const normalizeKey = (value: string) =>
 
 const normalizeName = (name: string) => name.replace(/\s+/g, " ").trim() || "Psicólogo";
 
+const normalizeStateCode = (value: string | null | undefined) => {
+  const state = value?.trim().toUpperCase();
+
+  return state && /^[A-Z]{2}$/.test(state) ? state : null;
+};
+
+const buildCityStateLabel = (city: string, state: string | null) =>
+  state ? `${city}/${state}` : city;
+
+const buildCityStateId = (city: string, state: string | null) =>
+  normalizeKey(state ? `${city}_${state}` : city);
+
+const parseCityFilterTarget = (value: string) => {
+  const trimmed = value.replace(/\s+/g, " ").trim();
+  const slashIndex = trimmed.lastIndexOf("/");
+
+  if (slashIndex > 0) {
+    const city = trimmed.slice(0, slashIndex).trim();
+    const state = normalizeStateCode(trimmed.slice(slashIndex + 1));
+
+    if (city && state) {
+      return {
+        city,
+        id: buildCityStateId(city, state),
+        label: buildCityStateLabel(city, state),
+        state,
+      };
+    }
+  }
+
+  return {
+    city: trimmed,
+    id: buildCityStateId(trimmed, null),
+    label: trimmed,
+    state: null,
+  };
+};
+
 const humanizeFilterValue = (value: string) =>
   value
     .replace(/[_-]+/g, " ")
@@ -645,8 +683,80 @@ const buildFilterSearchDimension = (params: {
   const minimumCount = params.minimumCount;
   const visibleItems =
     typeof minimumCount === "number"
-      ? allItems.filter((item) => item.count > minimumCount)
+      ? allItems.filter((item) => item.count >= minimumCount)
       : allItems;
+  const total = visibleItems.reduce((sum, item) => sum + item.count, 0);
+
+  return {
+    items: visibleItems.map((item) => ({
+      ...item,
+      percentage: safePercentage(item.count, total),
+    })),
+    source: DIRECTORY_FILTER_SEARCH_ACTION_SOURCE,
+    total,
+  };
+};
+
+const buildCityFilterSearchDimension = (params: {
+  actions: AdminPsychologistDirectoryFilterSearchRecord[];
+  supplyItems: AdminPsychologistsDashboardBreakdownItem[];
+}): AdminPsychologistsDashboardFilterSearchDimension => {
+  const itemsById = new Map<string, { count: number; hasSupply: boolean; label: string }>();
+  const supplyItemsByCity = new Map<string, AdminPsychologistsDashboardBreakdownItem[]>();
+  const targetTypes = new Set(FILTER_SEARCH_TARGET_TYPES.cities);
+
+  for (const item of params.supplyItems) {
+    itemsById.set(item.id, {
+      count: 0,
+      hasSupply: item.count > 0,
+      label: item.label,
+    });
+
+    const city = item.label.split("/")[0]?.trim();
+    const cityKey = city ? normalizeKey(city) : "";
+    if (!cityKey) continue;
+
+    supplyItemsByCity.set(cityKey, [...(supplyItemsByCity.get(cityKey) ?? []), item]);
+  }
+
+  for (const action of params.actions) {
+    if (!action.target_type || !targetTypes.has(action.target_type)) continue;
+
+    const targetId = action.target_id?.trim();
+    if (!targetId) continue;
+
+    const parsed = parseCityFilterTarget(targetId);
+    if (!parsed.city) continue;
+
+    const sameCitySupplyItems = supplyItemsByCity.get(normalizeKey(parsed.city)) ?? [];
+    const matchedSupplyItem = parsed.state
+      ? sameCitySupplyItems.find((item) => item.id === parsed.id)
+      : sameCitySupplyItems.length === 1
+        ? sameCitySupplyItems[0]
+        : null;
+    const id = matchedSupplyItem?.id ?? parsed.id;
+    const current = itemsById.get(id);
+
+    itemsById.set(id, {
+      count: (current?.count ?? 0) + 1,
+      hasSupply: current?.hasSupply ?? Boolean(matchedSupplyItem?.count),
+      label: current?.label ?? matchedSupplyItem?.label ?? parsed.label,
+    });
+  }
+
+  const visibleItems = [...itemsById.entries()]
+    .filter(([, item]) => item.hasSupply || item.count >= CITY_FILTER_MINIMUM_SEARCHES)
+    .map(([id, item]) => ({
+      count: item.count,
+      id,
+      label: item.label,
+      percentage: 0,
+    }))
+    .sort((left, right) => {
+      if (right.count !== left.count) return right.count - left.count;
+
+      return left.label.localeCompare(right.label, "pt-BR");
+    });
   const total = visibleItems.reduce((sum, item) => sum + item.count, 0);
 
   return {
@@ -661,6 +771,7 @@ const buildFilterSearchDimension = (params: {
 
 const buildFilterSearches = (params: {
   actions: AdminPsychologistDirectoryFilterSearchRecord[];
+  citySupplyItems: AdminPsychologistsDashboardBreakdownItem[];
   directoryFilters: AdminPsychologistsDashboardDirectoryFilters;
 }): AdminPsychologistsDashboardFilterSearches => ({
   available: true,
@@ -672,10 +783,9 @@ const buildFilterSearches = (params: {
       options: params.directoryFilters.approaches,
       targetTypes: FILTER_SEARCH_TARGET_TYPES.approaches,
     }),
-    cities: buildFilterSearchDimension({
+    cities: buildCityFilterSearchDimension({
       actions: params.actions,
-      minimumCount: CITY_FILTER_MINIMUM_SEARCHES,
-      targetTypes: FILTER_SEARCH_TARGET_TYPES.cities,
+      supplyItems: params.citySupplyItems,
     }),
     features: buildFilterSearchDimension({
       actions: params.actions,
@@ -900,7 +1010,8 @@ const buildStatistics = (profiles: AdminPsychologistProfileRecord[], date: Date)
 
     if (profile.professional_address_city?.trim()) {
       const city = profile.professional_address_city.trim();
-      addMapCount(cities, normalizeKey(city), city);
+      const state = normalizeStateCode(profile.professional_address_state);
+      addMapCount(cities, buildCityStateId(city, state), buildCityStateLabel(city, state));
     }
   }
 
@@ -937,7 +1048,7 @@ const buildStatistics = (profiles: AdminPsychologistProfileRecord[], date: Date)
     },
     cities: {
       items: buildBreakdown(cities, total),
-      source: "psychologist_profile.professional_address_city" as const,
+      source: "psychologist_profile.professional_address_city+professional_address_state" as const,
       total,
     },
     features: {
@@ -1179,6 +1290,7 @@ export const buildPsychologistsDashboard = async (
     ),
   });
   const trafficSources = summarizePsychologistTrafficOrigins(publicProfilePageViews);
+  const statistics = buildStatistics(profiles, current.end);
 
   const summary: AdminPsychologistsDashboardSummary = {
     cards: {
@@ -1255,6 +1367,7 @@ export const buildPsychologistsDashboard = async (
     conversion_by_signup_method: buildConversionBySignupMethod(currentNewSignups),
     filters_searches: buildFilterSearches({
       actions: directoryFilterSearchActions,
+      citySupplyItems: statistics.cities.items,
       directoryFilters,
     }),
     directory_filters: directoryFilters,
@@ -1286,7 +1399,7 @@ export const buildPsychologistsDashboard = async (
       total: rankedPsychologists.length,
     },
     signup_method: buildSignupMethod(currentNewSignups),
-    statistics: buildStatistics(profiles, current.end),
+    statistics,
     timeline: {
       points: buildTimeline({
         labels,

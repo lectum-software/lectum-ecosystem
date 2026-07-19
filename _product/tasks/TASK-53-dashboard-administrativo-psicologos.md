@@ -236,7 +236,7 @@ Packages usados:
 - A demanda do comparativo deixa de depender de contagens hardcoded no frontend e passa a usar eventos first-party reais em `important_action_event` com `action_type="psychologist_directory_filter_search"`, gravados quando filtros do diretório público de psicólogos são aplicados.
 - O evento grava somente tipo de filtro e identificador controlado da opção selecionada (`target_type`/`target_id`), sem texto livre de busca; pesquisas textuais por nome/CRP não entram no comparativo.
 - **Estado** usa a lista completa de UFs brasileiras na tabela, mesmo sem buscas no período, para cumprir a leitura operacional de cobertura geográfica.
-- **Cidade** lista somente opções com mais de 10 buscas reais no período selecionado; abaixo desse corte, a UI mostra estado honesto de ausência de cidades elegíveis.
+- **Cidade** lista opções com pelo menos 10 buscas reais no período selecionado ou pelo menos um psicólogo cadastrado; abaixo desse corte e sem oferta, a UI mostra estado honesto de ausência de cidades elegíveis.
 - O backend expõe `filters_searches.dimensions` no contrato do dashboard e calcula oferta a partir de perfis reais (`psychologist_profile`, catálogos, endereço, demografia, assinatura/verificação e facilidades), sem migration, seed, backfill, mock ou dado artificial.
 - Referência visual local mantida: `_product/proto/admin/Psicólogos/Psicólogos - Dashboard.png`; Builder/Quick Copy não estava disponível como ferramenta callable no ambiente.
 - Validações desta correção: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm --dir frontend check`, `pnpm --dir frontend build` e `pnpm check`.
@@ -249,6 +249,16 @@ Packages usados:
 - **Modalidades** passou a listar somente **Online** e **Presencial**, iguais a `PATIENT_MODALITY_FILTER_OPTIONS` em `frontend/src/app/app/psychologists/use-form.tsx`; **Híbrido** continua sendo valor interno de perfil, mas não aparece como opção porque o paciente não vê esse filtro.
 - Para manter a mesma semântica do diretório público, a oferta de **Online** conta perfis `online` e `hibrido`, e a oferta de **Presencial** conta perfis `presencial` e `hibrido`, espelhando `buildModalityWhere` do backend público.
 - **Estado**, **Gênero**, **Raça** e **Religião** foram alinhados às opções públicas usadas pelo formulário do paciente; estados exibem o mesmo rótulo público sem sufixo de UF, mantendo o ID da UF para matching.
-- A agregação de demanda agora descarta eventos com `target_id` fora das opções públicas controladas quando a dimensão possui catálogo/lista de opções; **Cidade** permanece a exceção operacional, listando apenas cidades realmente buscadas com mais de 10 buscas.
+- A agregação de demanda agora descarta eventos com `target_id` fora das opções públicas controladas quando a dimensão possui catálogo/lista de opções; **Cidade** combina oferta real cadastrada com buscas reais filtradas por pelo menos 10 buscas quando não houver oferta.
 - Não houve alteração de Prisma schema, migration, seed, mock, pacote novo ou fonte paralela de dados.
 - Validações desta correção: verificação Node local comparando arrays públicos e Admin (`modalities`, `states`, `genders`, `race_colors`, `religions`), `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke HTTP local em `http://localhost:3002/psicologos` retornando 200.
+
+### Correção dados em 2026-07-19 - cidades com oferta ou demanda mínima
+
+- Pedido do usuário: no bloco **Comparativo de oferta e demanda**, ao selecionar **Cidade**, exibir cidades com pelo menos 10 buscas reais no período ou pelo menos um psicólogo cadastrado.
+- As cidades passam a ser rotuladas com a UF no formato `Cidade/UF`, por exemplo `São Paulo/SP`, usando `psychologist_profile.professional_address_city` junto de `professional_address_state`.
+- A oferta de cidades cadastradas entra no comparativo mesmo com zero buscas no período; cidades sem psicólogo só entram ao atingir o corte `>= 10` buscas reais.
+- O tracking first-party do diretório público passa a registrar futuras buscas por cidade como `Cidade/UF` quando houver estado selecionado, preservando compatibilidade com eventos históricos por cidade.
+- Não houve alteração de Prisma schema, migration, seed, mock, backfill, pacote novo ou fonte paralela de dados.
+- Referência visual local mantida: `_product/proto/admin/Psicólogos/Psicólogos - Dashboard.png`; Builder/Quick Copy não estava disponível como ferramenta callable no ambiente.
+- Validações desta correção: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e smoke HTTP local em `http://localhost:3002/psicologos` retornando 200.
