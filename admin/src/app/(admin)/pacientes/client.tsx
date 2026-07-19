@@ -13,7 +13,7 @@ import {
   UserRound,
   UsersRound,
 } from "lucide-react";
-import { type FocusEvent, type ReactNode, useMemo, useState } from "react";
+import { type FocusEvent, type ReactNode, useMemo, useState, useSyncExternalStore } from "react";
 import { useAdminPatientsDashboard } from "@/api/callers/patients";
 import { resolveApiError } from "@/api/handle";
 import type {
@@ -159,6 +159,38 @@ const BRAZIL_STATE_TILE_LAYOUT = [
   { code: "SC", x: 5, y: 10 },
   { code: "RS", x: 4, y: 11 },
 ] as const;
+const LOCAL_LOCATION_PREVIEW_HOSTS = new Set(["localhost", "127.0.0.1", "::1"]);
+const LOCAL_PREVIEW_LOCATION_DATA = {
+  cities: [
+    { count: 9, id: "preview-city:sao-paulo-sp", label: "São Paulo, SP", percentage: 27.3 },
+    {
+      count: 7,
+      id: "preview-city:rio-de-janeiro-rj",
+      label: "Rio de Janeiro, RJ",
+      percentage: 21.2,
+    },
+    {
+      count: 5,
+      id: "preview-city:belo-horizonte-mg",
+      label: "Belo Horizonte, MG",
+      percentage: 15.2,
+    },
+    { count: 4, id: "preview-city:curitiba-pr", label: "Curitiba, PR", percentage: 12.1 },
+    { count: 3, id: "preview-city:porto-alegre-rs", label: "Porto Alegre, RS", percentage: 9.1 },
+    { count: 2, id: "preview-city:campinas-sp", label: "Campinas, SP", percentage: 6.1 },
+    { count: 3, id: "preview-city:outras", label: "Outras cidades", percentage: 9.1 },
+  ],
+  countries: [{ count: 33, id: "preview-country:br", label: "Brasil", percentage: 100 }],
+  source: "visitor_location",
+  states: [
+    { count: 12, id: "SP", label: "SP", percentage: 36.4 },
+    { count: 8, id: "RJ", label: "RJ", percentage: 24.2 },
+    { count: 6, id: "MG", label: "MG", percentage: 18.2 },
+    { count: 4, id: "PR", label: "PR", percentage: 12.1 },
+    { count: 3, id: "RS", label: "RS", percentage: 9.1 },
+  ],
+  total: 33,
+} satisfies AdminPatientsDashboard["locations"];
 type DashboardMetricKey = (typeof CARD_ORDER)[number];
 
 const DASHBOARD_METRIC_CONFIG: Record<DashboardMetricKey, { color: string; icon: LucideIcon }> = {
@@ -348,6 +380,17 @@ const resolveBrazilStateCode = (item: PatientsDashboardBreakdownItem) => {
 
 const formatLocationCaptureCount = (count: number) =>
   `${numberFormatter.format(count)} ${count === 1 ? "captura" : "capturas"}`;
+
+const subscribeToLocationPreviewSnapshot = () => () => undefined;
+const getLocalLocationPreviewSnapshot = () =>
+  typeof window !== "undefined" && LOCAL_LOCATION_PREVIEW_HOSTS.has(window.location.hostname);
+const getServerLocationPreviewSnapshot = () => false;
+const useLocalLocationPreviewEnabled = () =>
+  useSyncExternalStore(
+    subscribeToLocationPreviewSnapshot,
+    getLocalLocationPreviewSnapshot,
+    getServerLocationPreviewSnapshot,
+  );
 
 const TrendBadge = ({ metric }: { metric: PatientsDashboardMetric }) => {
   if (metric.unavailable) {
@@ -1128,14 +1171,26 @@ const BrazilStateTileMap = ({ states }: { states: PatientsDashboardBreakdownItem
   );
 };
 
-const LocationOverview = ({ locations }: { locations: AdminPatientsDashboard["locations"] }) => (
+const LocationOverview = ({
+  locations,
+  preview = false,
+}: {
+  locations: AdminPatientsDashboard["locations"];
+  preview?: boolean;
+}) => (
   <div className="mt-5 space-y-4">
-    {locations.total === 0 ? (
+    {locations.total === 0 && !preview ? (
       <p className="rounded-2xl bg-surface-muted p-4 text-sm font-bold text-muted">
         Nenhuma localização agregada real foi capturada para pacientes no período selecionado.
       </p>
     ) : (
       <>
+        {preview ? (
+          <p className="rounded-2xl border border-amber-200 bg-amber-50 p-3 text-xs font-black leading-5 text-amber-700">
+            Dados de exemplo exibidos apenas no localhost para validar o layout. Não representam
+            pacientes reais.
+          </p>
+        ) : null}
         <BrazilStateTileMap states={locations.states} />
         <div className="grid gap-3 2xl:grid-cols-2">
           <LocationRankingList
@@ -1150,60 +1205,81 @@ const LocationOverview = ({ locations }: { locations: AdminPatientsDashboard["lo
           />
         </div>
         <p className="text-xs font-bold leading-5 text-muted">
-          Total considerado: {formatLocationCaptureCount(locations.total)} de visitor_location.
-          Cidades com frequência muito baixa podem aparecer agrupadas para reduzir exposição.
+          {preview ? (
+            <>
+              Total visualizado: {formatLocationCaptureCount(locations.total)} em dados de exemplo
+              local.
+            </>
+          ) : (
+            <>
+              Total considerado: {formatLocationCaptureCount(locations.total)} de visitor_location.
+              Cidades com frequência muito baixa podem aparecer agrupadas para reduzir exposição.
+            </>
+          )}
         </p>
       </>
     )}
   </div>
 );
 
-const Statistics = ({ summary }: { summary: AdminPatientsDashboard }) => (
-  <section>
-    <h2 className="mb-4 text-xl font-black text-foreground">Estatísticas simples</h2>
-    <div className="grid gap-4 xl:grid-cols-3">
-      <CardShell className="p-5">
-        <PanelTitle icon={UserRound} source={summary.demographics.gender.source} title="Gênero" />
-        <BreakdownPieChart
-          colorForItem={(item, index) =>
-            GENDER_CHART_COLORS[item.id] ?? CHART_COLORS[index % CHART_COLORS.length]
-          }
-          countLabel="paciente(s)"
-          emptyMessage="Sem dados reais de gênero para pacientes."
-          items={summary.demographics.gender.items}
-          total={summary.demographics.gender.total}
-        />
-      </CardShell>
-      <CardShell className="p-5">
-        <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-2">
-            <MapPin aria-hidden className="h-5 w-5 text-primary" />
-            <h3 className="text-lg font-black text-foreground">Localização</h3>
+const Statistics = ({
+  allowLocalLocationPreview,
+  summary,
+}: {
+  allowLocalLocationPreview: boolean;
+  summary: AdminPatientsDashboard;
+}) => {
+  const showLocationPreview = allowLocalLocationPreview && summary.locations.total === 0;
+  const displayLocations = showLocationPreview ? LOCAL_PREVIEW_LOCATION_DATA : summary.locations;
+  const locationSourceLabel = showLocationPreview ? "exemplo local" : summary.locations.source;
+
+  return (
+    <section>
+      <h2 className="mb-4 text-xl font-black text-foreground">Estatísticas simples</h2>
+      <div className="grid gap-4 xl:grid-cols-3">
+        <CardShell className="p-5">
+          <PanelTitle icon={UserRound} source={summary.demographics.gender.source} title="Gênero" />
+          <BreakdownPieChart
+            colorForItem={(item, index) =>
+              GENDER_CHART_COLORS[item.id] ?? CHART_COLORS[index % CHART_COLORS.length]
+            }
+            countLabel="paciente(s)"
+            emptyMessage="Sem dados reais de gênero para pacientes."
+            items={summary.demographics.gender.items}
+            total={summary.demographics.gender.total}
+          />
+        </CardShell>
+        <CardShell className="p-5">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <MapPin aria-hidden className="h-5 w-5 text-primary" />
+              <h3 className="text-lg font-black text-foreground">Localização</h3>
+            </div>
+            <span className="rounded-full bg-surface-muted px-2 py-1 text-[0.65rem] font-bold text-muted">
+              {locationSourceLabel}
+            </span>
           </div>
-          <span className="rounded-full bg-surface-muted px-2 py-1 text-[0.65rem] font-bold text-muted">
-            {summary.locations.source}
-          </span>
-        </div>
-        <LocationOverview locations={summary.locations} />
-      </CardShell>
-      <CardShell className="p-5">
-        <PanelTitle
-          icon={UserPlus}
-          source={summary.demographics.signup_sources.source}
-          title="Forma de cadastro"
-        />
-        <BreakdownPieChart
-          colorForItem={(item, index) =>
-            SIGNUP_SOURCE_CHART_COLORS[item.id] ?? CHART_COLORS[index % CHART_COLORS.length]
-          }
-          emptyMessage="Sem dados reais de forma de cadastro para pacientes."
-          items={summary.demographics.signup_sources.items}
-          total={summary.demographics.signup_sources.total}
-        />
-      </CardShell>
-    </div>
-  </section>
-);
+          <LocationOverview locations={displayLocations} preview={showLocationPreview} />
+        </CardShell>
+        <CardShell className="p-5">
+          <PanelTitle
+            icon={UserPlus}
+            source={summary.demographics.signup_sources.source}
+            title="Forma de cadastro"
+          />
+          <BreakdownPieChart
+            colorForItem={(item, index) =>
+              SIGNUP_SOURCE_CHART_COLORS[item.id] ?? CHART_COLORS[index % CHART_COLORS.length]
+            }
+            emptyMessage="Sem dados reais de forma de cadastro para pacientes."
+            items={summary.demographics.signup_sources.items}
+            total={summary.demographics.signup_sources.total}
+          />
+        </CardShell>
+      </div>
+    </section>
+  );
+};
 
 const PlatformUsageCard = ({ summary }: { summary: AdminPatientsDashboard }) => {
   const platformUsage = summary.platform_usage;
@@ -1257,7 +1333,13 @@ const PlatformUsageCard = ({ summary }: { summary: AdminPatientsDashboard }) => 
   );
 };
 
-const DashboardContent = ({ summary }: { summary: AdminPatientsDashboard }) => {
+const DashboardContent = ({
+  allowLocalLocationPreview,
+  summary,
+}: {
+  allowLocalLocationPreview: boolean;
+  summary: AdminPatientsDashboard;
+}) => {
   const [visibleMetricKeys, setVisibleMetricKeys] = useState<DashboardMetricKey[]>(() => [
     ...CARD_ORDER,
   ]);
@@ -1291,7 +1373,7 @@ const DashboardContent = ({ summary }: { summary: AdminPatientsDashboard }) => {
         <TimelineChart points={summary.series.points} visibleMetricKeys={activeMetricKeys} />
       </CardShell>
 
-      <Statistics summary={summary} />
+      <Statistics allowLocalLocationPreview={allowLocalLocationPreview} summary={summary} />
 
       <PlatformUsageCard summary={summary} />
     </div>
@@ -1299,6 +1381,7 @@ const DashboardContent = ({ summary }: { summary: AdminPatientsDashboard }) => {
 };
 
 export const AdminPatientsClient = () => {
+  const allowLocalLocationPreview = useLocalLocationPreviewEnabled();
   const [selectedPeriod, setSelectedPeriod] = useState<PatientsDashboardPeriodValue>("week");
   const [appliedPeriod, setAppliedPeriod] = useState<PatientsDashboardPeriodValue>("week");
   const [customRangeError, setCustomRangeError] = useState<string | null>(null);
@@ -1402,7 +1485,12 @@ export const AdminPatientsClient = () => {
         <ErrorState message={queryError} onRetry={() => void query.refetch()} />
       ) : null}
 
-      {validRange && query.data ? <DashboardContent summary={query.data} /> : null}
+      {validRange && query.data ? (
+        <DashboardContent
+          allowLocalLocationPreview={allowLocalLocationPreview}
+          summary={query.data}
+        />
+      ) : null}
     </div>
   );
 };

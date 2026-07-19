@@ -381,3 +381,19 @@ Frontend esperado:
 - Serviço local `buildPatientsDashboard({ period: "all" })` retornou `status=200`, `locations.total=0`, `states=[]` e `cities=[]` na base local atual, sem criar dados artificiais.
 - Smoke HTTP local `GET http://localhost:3002/pacientes` retornou `200`.
 - Browser local headless em `http://localhost:3002/pacientes` carregou o fluxo protegido e exibiu redirecionamento para login por ausência de sessão Admin compartilhada; a validação visual autenticada ficou limitada ao build/código porque não usei nem criei credencial Admin artificial.
+
+## Ajuste pos-feedback 2026-07-19 - Preview local de localizacao com dados de exemplo
+
+- Pedido do usuario: como a base local ainda nao possui `visitor_location` de pacientes para preencher o card **Localizacao**, exibir numeros de exemplo apenas para visualizacao do layout.
+- A UI `/pacientes` agora ativa um preview somente quando `window.location.hostname` e `localhost`, `127.0.0.1` ou `::1` e o total real de `summary.locations` e `0`.
+- O preview e renderizado apenas no cliente Admin local, com badge **exemplo local** e aviso explicito de que os dados nao representam pacientes reais.
+- O backend, contrato HTTP, schema Prisma, migrations, seeds, queries reais, fontes de dados e ambiente de producao nao foram alterados. Quando houver localizacao real, o preview deixa de aparecer e o card usa `visitor_location` real.
+- Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente; a referencia visual usada permanece `_product/proto/admin/Pacientes/Pacientes - Dashboard.png`, complementada pelos screenshots enviados pelo usuario.
+
+### Validacao complementar executada
+
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/pacientes/client.tsx"`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check`
+- Smoke HTTP local: `GET http://localhost:3002/pacientes` retornou `200`.

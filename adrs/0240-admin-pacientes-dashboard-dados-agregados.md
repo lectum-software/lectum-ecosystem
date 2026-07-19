@@ -107,3 +107,10 @@ Decisões:
 - Manter locais fora do Brasil nas listagens; o mapa informa quando não há UF brasileira identificada.
 
 Consequência: o Admin ganha leitura geográfica mais útil sem ampliar coleta, sem schema Prisma/migration, sem package novo, sem mock e sem backfill artificial.
+
+## Complemento 2026-07-19 - Preview local de layout para localizacao vazia
+
+- Decisao: permitir dados de exemplo somente no cliente Admin local quando o agregado real de localizacao de pacientes vier vazio (`locations.total=0`).
+- Motivacao: o usuario precisa validar visualmente o mapa/rankings em localhost antes de haver captura real suficiente em `visitor_location`.
+- Guarda de seguranca: o preview depende do hostname local (`localhost`, `127.0.0.1`, `::1`), mostra badge **exemplo local** e aviso textual; nao altera backend, schema, seed, migration, contrato ou ambiente de producao.
+- Consequencia: a UI deixa claro que os numeros nao sao reais e troca automaticamente para `visitor_location` real assim que existir qualquer captura agregada no periodo.
