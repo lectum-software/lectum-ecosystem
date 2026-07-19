@@ -991,7 +991,7 @@ const ConversionAndUsageBlocks = ({ summary }: { summary: AdminPsychologistsDash
   const selectedPeriodLabel = formatSelectedPeriod(summary.period);
 
   return (
-    <section className="grid gap-5 xl:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)]">
+    <section className="grid gap-5">
       <CardShell className="p-5">
         <PanelTitle icon={TrendingDown} title="Conversão do cadastro até assinatura" />
         <p className="mt-2 text-sm font-bold leading-6 text-muted">{selectedPeriodLabel}</p>
@@ -1080,7 +1080,7 @@ const ConversionAndUsageBlocks = ({ summary }: { summary: AdminPsychologistsDash
         </div>
       </CardShell>
 
-      <div className="grid gap-5">
+      <div className="grid gap-5 xl:grid-cols-2">
         <CardShell className="p-5">
           <PanelTitle icon={UserPlus} title="Modo de cadastro" />
           <p className="mt-2 text-sm font-bold leading-6 text-muted">{selectedPeriodLabel}</p>
@@ -1099,7 +1099,7 @@ const ConversionAndUsageBlocks = ({ summary }: { summary: AdminPsychologistsDash
           <DeviceUsagePieChart deviceUsage={summary.device_usage} />
         </CardShell>
 
-        <CardShell className="p-5">
+        <CardShell className="p-5 xl:col-span-2">
           <PanelTitle icon={Activity} title="Uso da plataforma" />
           <p className="mt-2 text-sm font-bold leading-6 text-muted">{selectedPeriodLabel}</p>
           <div className="mt-5 grid gap-3 sm:grid-cols-2">

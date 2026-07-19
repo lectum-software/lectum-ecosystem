@@ -51,3 +51,11 @@ O percentual é calculado por quantidade de sessões, não por usuários únicos
 - Decisao: remover do card **Devices dos psicologos** a faixa explicativa sobre o denominador por sessoes reais.
 - O calculo e o contrato `device_usage` continuam inalterados: os percentuais seguem baseados em sessoes reais autenticadas de psicologos, e um psicologo pode continuar aparecendo em mais de um device quando houver sessoes reais distintas.
 - Consequencia: a leitura visual do card fica mais limpa, sem reduzir os dados exibidos na legenda ou no grafico.
+
+## Complemento 2026-07-19 - Modo de cadastro e Devices abaixo da conversão
+
+Decisão: no dashboard administrativo de psicólogos, o card **Conversão do cadastro até assinatura** deve ocupar uma linha própria. Os cards **Modo de cadastro** e **Devices dos psicólogos** passam a ficar abaixo dele em grid mobile-first, empilhados no mobile e em duas colunas apenas em telas largas.
+
+O bloco **Uso da plataforma** continua no mesmo agrupamento visual, mas aparece depois de **Modo de cadastro** e **Devices dos psicólogos**, ocupando a largura completa no desktop. A mudança reorganiza apenas a hierarquia visual da dashboard, sem alterar contratos, cálculo de devices, fontes first-party, endpoints, schema Prisma, migrations, packages ou persistência.
+
+Validação complementar 2026-07-19: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check`, smoke HTTP local `GET http://localhost:3002/psicologos` retornando 200 e validação headless autenticada em 1365px confirmando `layoutOk=true` para os cards abaixo da conversão.
