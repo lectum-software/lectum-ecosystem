@@ -622,8 +622,10 @@ type SupplyDemandComparisonRow = {
   id: string;
   label: string;
   psychologistsCount: number;
+  psychologistsPercentage: number;
   searchesPerPsychologist: number | null;
   searchesCount: number;
+  searchesPercentage: number;
 };
 
 const getSupplyDemandStatus = (row: SupplyDemandComparisonRow) => {
@@ -685,9 +687,11 @@ const buildSupplyDemandRows = (config: SupplyDemandDimensionConfig) =>
       id: demandItem.id,
       label: demandItem.label,
       psychologistsCount: supplyItem.count,
+      psychologistsPercentage: supplyItem.percentage,
       searchesPerPsychologist:
         supplyItem.count > 0 ? toOneDecimal(demandItem.count / supplyItem.count) : null,
       searchesCount: demandItem.count,
+      searchesPercentage: demandItem.percentage,
     };
   });
 
@@ -702,12 +706,46 @@ const getSupplyDemandSortValue = (row: SupplyDemandComparisonRow, sortKey: Suppl
   return row.searchesCount;
 };
 
-const SupplyDemandCountCell = ({ count, label }: { count: number; label: string }) => (
+const SupplyDemandHeaderCell = ({
+  align = "left",
+  label,
+  total,
+}: {
+  align?: "center" | "left" | "right";
+  label: string;
+  total: number;
+}) => (
+  <span
+    className={cn(
+      "inline-flex items-baseline gap-1",
+      align === "center" && "justify-center text-center",
+      align === "right" && "justify-end text-right",
+    )}
+  >
+    <span>{label}</span>
+    <span className="text-[0.68rem] font-medium tracking-normal text-subtle">
+      ({numberFormatter.format(total)})
+    </span>
+  </span>
+);
+
+const SupplyDemandCountCell = ({
+  count,
+  label,
+  percentage,
+}: {
+  count: number;
+  label: string;
+  percentage: number;
+}) => (
   <div>
     <div className="flex items-center justify-between gap-3 text-xs lg:justify-center">
       <span className="font-bold text-muted lg:hidden">{label}</span>
-      <span className="text-base font-semibold text-foreground lg:text-center">
-        {numberFormatter.format(count)}
+      <span className="inline-flex items-baseline gap-1 text-base font-semibold text-foreground lg:justify-center lg:text-center">
+        <span>{numberFormatter.format(count)}</span>
+        <span className="text-sm font-medium text-muted">
+          ({formatPercentageValue(percentage)})
+        </span>
       </span>
     </div>
   </div>
@@ -737,8 +775,16 @@ const SupplyDemandListRow = ({ row }: { row: SupplyDemandComparisonRow }) => {
       <div>
         <p className="text-sm font-semibold text-foreground">{row.label}</p>
       </div>
-      <SupplyDemandCountCell count={row.searchesCount} label="Buscas" />
-      <SupplyDemandCountCell count={row.psychologistsCount} label="Psicólogos" />
+      <SupplyDemandCountCell
+        count={row.searchesCount}
+        label="Buscas"
+        percentage={row.searchesPercentage}
+      />
+      <SupplyDemandCountCell
+        count={row.psychologistsCount}
+        label="Psicólogos"
+        percentage={row.psychologistsPercentage}
+      />
       <SearchesPerPsychologistCell row={row} />
       <div className="flex flex-col items-start gap-1 lg:items-end">
         <span
@@ -1329,9 +1375,17 @@ const StatsContent = ({ summary }: { summary: AdminPsychologistsDashboard }) => 
         </div>
 
         <div className="hidden grid-cols-[minmax(220px,1.3fr)_minmax(130px,0.75fr)_minmax(130px,0.75fr)_minmax(160px,0.9fr)_190px] gap-4 border-b border-border bg-surface px-4 py-3 text-xs font-semibold uppercase tracking-[0.08em] text-muted lg:grid">
-          <span>Opção do filtro</span>
-          <span className="text-center">Buscas</span>
-          <span className="text-center">Psicólogos</span>
+          <SupplyDemandHeaderCell label="Opções do filtro" total={rows.length} />
+          <SupplyDemandHeaderCell
+            align="center"
+            label="Buscas"
+            total={selectedDimension.demand.total}
+          />
+          <SupplyDemandHeaderCell
+            align="center"
+            label="Psicólogos"
+            total={selectedDimension.supply.total}
+          />
           <span className="text-center">Buscas/psicólogo</span>
           <span className="text-right">Leitura</span>
         </div>

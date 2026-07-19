@@ -270,3 +270,13 @@ Packages usados:
 - Não houve alteração de contrato backend, Prisma, migration, mock, pacote novo ou fonte de dados.
 - Referência visual local mantida: `_product/proto/admin/Psicólogos/Psicólogos - Dashboard.png`; Builder/Quick Copy não estava disponível como ferramenta callable no ambiente.
 - Validações desta correção: `pnpm --dir admin check`, `pnpm --dir admin build` e smoke HTTP local em `http://localhost:3002/psicologos` retornando 200. A primeira tentativa de build encontrou outro `next build` já em execução; após aguardar o processo encerrar, o build concluiu sem erros.
+
+### Correção UX em 2026-07-19 - totais e taxas no comparativo
+
+- Pedido do usuário: nos títulos das colunas **Opções do filtro**, **Buscas** e **Psicólogos**, exibir o total entre parênteses com menor peso visual.
+- Pedido do usuário: nas células das colunas **Buscas** e **Psicólogos**, exibir a taxa entre parênteses com menor peso visual.
+- O total de **Opções do filtro** usa a quantidade de linhas da dimensão selecionada; **Buscas** usa o total real de demanda da dimensão; **Psicólogos** usa o total real de oferta da dimensão.
+- As taxas das linhas reutilizam os percentuais reais já retornados pelo contrato do comparativo para demanda e oferta, sem criar cálculo paralelo ou fonte artificial.
+- Não houve alteração de contrato backend, Prisma, migration, mock, pacote novo ou fonte de dados.
+- Referência visual local mantida: `_product/proto/admin/Psicólogos/Psicólogos - Dashboard.png`; Builder/Quick Copy não estava disponível como ferramenta callable no ambiente.
+- Validações desta correção: `pnpm --dir admin check`, `pnpm --dir admin build` e smoke HTTP local em `http://localhost:3002/psicologos` retornando 200.
