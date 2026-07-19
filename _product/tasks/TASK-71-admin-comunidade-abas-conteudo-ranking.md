@@ -585,3 +585,26 @@ Regras:
 - `pnpm check`
 - Smoke HTTP local `GET http://localhost:3002/comunidades/autocuidado-em-pratica?tab=estatisticas` retornou 200.
 - Chrome headless local abriu a rota e confirmou o guard/shell Admin; sem sessão Admin reutilizável no perfil headless, a validação visual autenticada ficou limitada à captura enviada pelo usuário e ao build/check local.
+
+
+## Ajuste complementar 2026-07-18 - Contador de Acessos na aba Geral
+
+- Pedido do usu?rio: na aba **Geral** do detalhe Admin da comunidade, adicionar o contador **Acessos** na primeira posi??o, antes de **Posts de pacientes**.
+- O endpoint real `GET /api/admin/private/communities/:id` agora inclui `highlight_counters.accesses_count`, calculado pelo total hist?rico de `page_view_event` da comunidade e de seus conte?dos relacionados j? carregados no dataset real da comunidade.
+- A UI Admin renderiza o card **Acessos** como primeiro contador de destaque da aba **Geral** e ajusta a grade mobile-first para 6 contadores no desktop.
+- N?o houve package novo, schema Prisma/migration, seed, backfill artificial, mock, endpoint paralelo ou uso de `<img>` cru.
+- Builder/Quick Copy n?o est? exposto como ferramenta callable no ambiente; a refer?ncia usada foi a captura enviada pelo usu?rio e o padr?o atual da aba **Geral** de comunidades.
+- ADR atualizado: `adrs/0282-contador-acessos-estatisticas-pessoas-comunidade.md`.
+
+### Crit?rio de aceite complementar
+
+- [x] A aba **Geral** exibe o contador **Acessos** na primeira posi??o, antes de **Posts de pacientes**, usando dados reais de `page_view_event`.
+
+### Valida??o executada para este ajuste
+
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check`
+- Smoke HTTP local `GET http://localhost:3002/comunidades/autocuidado-em-pratica` retornou 200.

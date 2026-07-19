@@ -166,12 +166,13 @@ export type AdminCommunitySummaryDTO = {
 };
 
 export type AdminCommunityHighlightCountersDTO = {
+  accesses_count: number;
   patient_comments_count: number;
   patient_posts_count: number;
   psychologist_posts_count: number;
   psychologist_replies_count: number;
   reports_count: number;
-  source: "community_post+post_reply+post_report";
+  source: "community_post+post_reply+post_report+page_view_event";
 };
 
 export type AdminCommunityTodaySummaryDTO = {

@@ -76,6 +76,16 @@ const COUNTRY_LABELS: Record<string, string> = {
   USA: "Estados Unidos",
 };
 
+const PATIENT_PAGE_KIND_LABELS: Record<string, string> = {
+  community: "Comunidades",
+  community_post: "Comunidades",
+  home: "Início",
+  login: "Login",
+  psychologist_profile: "Psicólogos",
+  psychologists: "Psicólogos",
+  signup: "Cadastro",
+};
+
 const addDays = (date: Date, days: number) => {
   const next = new Date(date);
   next.setDate(next.getDate() + days);
@@ -452,32 +462,142 @@ const buildLocations = (locations: AdminPatientLocationRecord[]) => {
   };
 };
 
-const buildPlatformUsage = (pageViews: AdminPatientPageViewRecord[]) => {
-  const durations = pageViews
+const patientPlatformPageLabel = (view: AdminPatientPageViewRecord) => {
+  const path = (view.normalized_path || view.path || "/").split("?")[0] ?? "/";
+  const segments = path.split("/").filter(Boolean);
+  const joined = segments.join("/");
+
+  if (joined.includes("post")) return "Posts";
+  if (joined.includes("community")) return "Comunidades";
+  if (joined.includes("favorite") || joined.includes("favoritos")) return "Favoritos";
+  if (joined.includes("notification") || joined.includes("notificacoes")) return "Notificações";
+  if (
+    joined.includes("settings") ||
+    joined.includes("configuracoes") ||
+    joined.includes("account")
+  ) {
+    return "Configurações";
+  }
+  if (joined.includes("psychologist") || joined.includes("psicologo")) return "Psicólogos";
+  if (joined.includes("profile") || joined.includes("perfil")) return "Perfil";
+  if (joined.startsWith("app")) return "Área do paciente";
+
+  return PATIENT_PAGE_KIND_LABELS[view.page_kind] ?? "Outras páginas";
+};
+
+const buildPlatformUsage = (params: {
+  eligiblePatientsCount: number;
+  labels: string[];
+  pageViews: AdminPatientPageViewRecord[];
+  pwaInstalledUserIds: string[];
+}) => {
+  const { eligiblePatientsCount, labels, pageViews, pwaInstalledUserIds } = params;
+  const viewsWithUser = pageViews.filter((view) => view.user_id);
+  const users = new Set(viewsWithUser.map((view) => view.user_id as string));
+  const pwaInstalledUsers = new Set(pwaInstalledUserIds.filter(Boolean));
+  const sessionsByUser = new Map<string, Set<string>>();
+  const daysByUser = new Map<string, Set<string>>();
+  const pageCounts = new Map<string, number>();
+  const seriesMap = new Map(
+    labels.map((label) => [
+      label,
+      {
+        activeUsers: new Set<string>(),
+        pageviews: 0,
+        sessions: new Set<string>(),
+      },
+    ]),
+  );
+  const durations = viewsWithUser
     .map((view) => view.duration_seconds)
     .filter(
       (value): value is number => typeof value === "number" && Number.isFinite(value) && value > 0,
     );
-  const durationCoverage = pageViews.length > 0 ? durations.length / pageViews.length : 0;
+
+  for (const view of viewsWithUser) {
+    const userId = view.user_id as string;
+    const dateKey = toDateKey(view.occurred_at);
+
+    if (!sessionsByUser.has(userId)) sessionsByUser.set(userId, new Set());
+    sessionsByUser.get(userId)?.add(view.session_id);
+
+    if (!daysByUser.has(userId)) daysByUser.set(userId, new Set());
+    daysByUser.get(userId)?.add(dateKey);
+
+    const pageLabel = patientPlatformPageLabel(view);
+    pageCounts.set(pageLabel, (pageCounts.get(pageLabel) ?? 0) + 1);
+
+    const point = seriesMap.get(dateKey);
+    if (point) {
+      point.activeUsers.add(userId);
+      point.sessions.add(view.session_id);
+      point.pageviews += 1;
+    }
+  }
+
+  const activeCount = users.size;
+  const totalAccessDays = [...daysByUser.values()].reduce((sum, days) => sum + days.size, 0);
+  const totalSessions = [...sessionsByUser.values()].reduce(
+    (sum, sessions) => sum + sessions.size,
+    0,
+  );
+  const durationCoverage = viewsWithUser.length > 0 ? durations.length / viewsWithUser.length : 0;
   const averageDuration =
     durationCoverage >= DURATION_RELIABILITY_THRESHOLD && durations.length > 0
       ? roundOneDecimal(durations.reduce((sum, value) => sum + value, 0) / durations.length)
       : null;
-  const sessionKeys = new Set(
-    pageViews.map((view) => `${view.visitor_id}:${view.session_id}`).filter(Boolean),
-  );
 
   return {
+    active_patients_count: activeCount,
+    active_patients_rate:
+      eligiblePatientsCount > 0
+        ? roundOneDecimal((activeCount / eligiblePatientsCount) * 100)
+        : null,
+    average_access_days: activeCount > 0 ? roundOneDecimal(totalAccessDays / activeCount) : null,
     average_duration_seconds: averageDuration,
+    average_sessions: activeCount > 0 ? roundOneDecimal(totalSessions / activeCount) : null,
     duration_unavailable_reason:
-      pageViews.length === 0
+      viewsWithUser.length === 0
         ? "Sem pageviews autenticados de pacientes no período."
         : averageDuration === null
           ? "Duração indisponível: menos de 50% dos pageviews de pacientes têm duration_seconds confiável."
           : null,
-    pageviews_count: pageViews.length,
-    sessions_count: sessionKeys.size,
-    source: "page_view_event" as const,
+    eligible_patients_count: eligiblePatientsCount,
+    pageviews_count: viewsWithUser.length,
+    pwa_installed_patients_count: pwaInstalledUsers.size,
+    pwa_installed_patients_rate:
+      eligiblePatientsCount > 0
+        ? roundOneDecimal((pwaInstalledUsers.size / eligiblePatientsCount) * 100)
+        : null,
+    series: labels.map((label) => {
+      const point = seriesMap.get(label);
+
+      return {
+        active_patients: point?.activeUsers.size ?? 0,
+        date: label,
+        pageviews: point?.pageviews ?? 0,
+        sessions: point?.sessions.size ?? 0,
+      };
+    }),
+    sessions_count: totalSessions,
+    source: "page_view_event+important_action_event" as const,
+    top_pages: [...pageCounts.entries()]
+      .map(([label, count]) => ({
+        count,
+        label,
+        percentage:
+          viewsWithUser.length > 0 ? roundOneDecimal((count / viewsWithUser.length) * 100) : 0,
+      }))
+      .sort((left, right) => {
+        if (right.count !== left.count) return right.count - left.count;
+
+        return left.label.localeCompare(right.label, "pt-BR");
+      })
+      .slice(0, 6),
+    unavailable_reason:
+      viewsWithUser.length === 0
+        ? "Sem uso autenticado de pacientes no período selecionado."
+        : null,
   };
 };
 
@@ -622,8 +742,12 @@ export const buildPatientsDashboard = async (
   }
 
   const { current, labels, period, previous } = resolvedPeriod.period;
-  const patientPageViews = await repository.listPatientPageViews(current);
+  const [patientPageViews, patientPwaInstalls] = await Promise.all([
+    repository.listPatientPageViews(current),
+    repository.listPatientPwaInstallActions(current),
+  ]);
 
+  const currentPatients = patients.filter((patient) => createdUntil(patient, current.end));
   const previousPatients = patients.filter((patient) => createdUntil(patient, previous.end));
   const currentNewPatients = countNewPatients(patients, current);
   const previousNewPatients = countNewPatients(patients, previous);
@@ -632,7 +756,14 @@ export const buildPatientsDashboard = async (
   const previousActivePatients = previousPatients.filter((patient) => patient.active);
   const previousInactivePatients = previousPatients.filter((patient) => !patient.active);
   const locationSummary = buildLocations(locations);
-  const platformUsage = buildPlatformUsage(patientPageViews);
+  const platformUsage = buildPlatformUsage({
+    eligiblePatientsCount: currentPatients.length,
+    labels,
+    pageViews: patientPageViews,
+    pwaInstalledUserIds: patientPwaInstalls.flatMap((event) =>
+      event.user_id ? [event.user_id] : [],
+    ),
+  });
 
   const summary: AdminPatientsDashboardSummary = {
     cards: {
@@ -672,6 +803,7 @@ export const buildPatientsDashboard = async (
     coverage_notes: [
       "Status ativo/inativo representa o estado da conta em user.active, não engajamento recente.",
       "Atividade recente usa eventos reais de comunidade, reações e salvamentos já persistidos.",
+      "Uso da plataforma mede somente pageviews autenticados e eventos first-party de instalação PWA de pacientes no período selecionado.",
       "Tempo médio do paciente usa pageviews autenticados first-party e ignora períodos em que o app fica oculto/minimizado quando o navegador envia eventos de visibilidade.",
       "Localização usa apenas dados agregados e coarse de visitor_location; coordenadas, IP e endereço não são retornados.",
     ],
@@ -700,6 +832,17 @@ export const buildPatientsDashboard = async (
               id: "patient_average_duration",
               label: "Tempo médio do paciente",
               source: platformUsage.source,
+            },
+          ]
+        : []),
+      ...(platformUsage.unavailable_reason
+        ? [
+            {
+              description:
+                "Uso da plataforma por pacientes depende de page_view_event autenticado no período selecionado.",
+              id: "platform_usage",
+              label: "Uso da plataforma",
+              source: "page_view_event",
             },
           ]
         : []),
