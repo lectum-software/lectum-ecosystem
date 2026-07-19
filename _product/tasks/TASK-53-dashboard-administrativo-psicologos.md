@@ -280,3 +280,11 @@ Packages usados:
 - Não houve alteração de contrato backend, Prisma, migration, mock, pacote novo ou fonte de dados.
 - Referência visual local mantida: `_product/proto/admin/Psicólogos/Psicólogos - Dashboard.png`; Builder/Quick Copy não estava disponível como ferramenta callable no ambiente.
 - Validações desta correção: `pnpm --dir admin check`, `pnpm --dir admin build` e smoke HTTP local em `http://localhost:3002/psicologos` retornando 200.
+
+### Correção UX em 2026-07-19 - remoção dos cards-resumo do comparativo
+
+- Pedido do usuário: remover os três blocos brancos de contadores no topo do **Comparativo de oferta e demanda**: **Opções do filtro**, **Buscas no filtro** e **Psicólogos**.
+- Os totais continuam disponíveis nos títulos das colunas da tabela, evitando redundância visual e preservando a leitura dos dados reais.
+- Não houve alteração de contrato backend, Prisma, migration, mock, pacote novo ou fonte de dados.
+- Referência visual local mantida: `_product/proto/admin/Psicólogos/Psicólogos - Dashboard.png`; Builder/Quick Copy não estava disponível como ferramenta callable no ambiente.
+- Validações desta correção: `pnpm --dir admin check`, `pnpm --dir admin build` e smoke HTTP local em `http://localhost:3002/psicologos` retornando 200.

@@ -1280,24 +1280,6 @@ const StatsContent = ({ summary }: { summary: AdminPsychologistsDashboard }) => 
                 <p className="mt-1 text-sm leading-relaxed text-muted">{periodLabel}</p>
               </div>
             </div>
-            <div className="grid gap-2 text-xs font-semibold text-muted sm:grid-cols-3 xl:min-w-[420px]">
-              <div className="rounded-2xl bg-surface p-3">
-                <p className="text-foreground">{numberFormatter.format(rows.length)}</p>
-                <p className="mt-1">Opções do filtro</p>
-              </div>
-              <div className="rounded-2xl bg-surface p-3">
-                <p className="text-foreground">
-                  {numberFormatter.format(selectedDimension.demand.total)}
-                </p>
-                <p className="mt-1">Buscas no filtro</p>
-              </div>
-              <div className="rounded-2xl bg-surface p-3">
-                <p className="text-foreground">
-                  {numberFormatter.format(selectedDimension.supply.total)}
-                </p>
-                <p className="mt-1">Psicólogos</p>
-              </div>
-            </div>
           </div>
 
           <div className="mt-5 grid gap-3 lg:grid-cols-[minmax(180px,0.85fr)_minmax(220px,1fr)_minmax(220px,0.85fr)]">
