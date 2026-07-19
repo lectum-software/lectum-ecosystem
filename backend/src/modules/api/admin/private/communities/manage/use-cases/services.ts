@@ -2034,6 +2034,7 @@ const statisticsSplit = (
 const emptyStatisticsDailyPoint = (
   date: string,
 ): AdminCommunityStatisticsDTO["charts"]["daily"][number] => ({
+  accesses: 0,
   active_patients: 0,
   active_psychologists: 0,
   active_users: 0,
@@ -2125,6 +2126,9 @@ const buildCommunityStatistics = (
     isInStatisticsPeriod(event.occurred_at, period),
   );
   const periodProfileAccesses = dataset.profileAccesses.filter((event) =>
+    isInStatisticsPeriod(event.occurred_at, period),
+  );
+  const periodPageViews = dataset.pageViews.filter((event) =>
     isInStatisticsPeriod(event.occurred_at, period),
   );
   const followerItems = dataset.members.flatMap((member) => {
@@ -2289,6 +2293,10 @@ const buildCommunityStatistics = (
     const point = daily.get(dateKey(event.occurred_at));
     if (point) point.profile_accesses += 1;
   }
+  for (const event of periodPageViews) {
+    const point = daily.get(dateKey(event.occurred_at));
+    if (point) point.accesses += 1;
+  }
   for (const [key, users] of dailyActiveUsers) {
     const point = daily.get(key);
     if (point) {
@@ -2360,6 +2368,10 @@ const buildCommunityStatistics = (
       ]),
     },
     counters: {
+      accesses: {
+        source: "page_view_event",
+        total: periodPageViews.length,
+      },
       active_users: {
         ...activeUsers,
         source: "community_member+community_post+post_reply+page_view_event",

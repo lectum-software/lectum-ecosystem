@@ -673,6 +673,7 @@ export type AdminCommunityStatisticsSplitDTO = {
 };
 
 export type AdminCommunityStatisticsDailyPointDTO = {
+  accesses: number;
   active_patients: number;
   active_psychologists: number;
   active_users: number;
@@ -708,6 +709,10 @@ export type AdminCommunityStatisticsDTO = {
   };
   community: Pick<AdminCommunityIdentity, "id" | "name" | "slug">;
   counters: {
+    accesses: {
+      source: "page_view_event";
+      total: number;
+    };
     active_users: {
       patients: number;
       psychologists: number;

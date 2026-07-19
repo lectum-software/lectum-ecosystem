@@ -2061,16 +2061,6 @@ export class AdminCommunityManageRepository {
           occurred_at: {
             lte: to,
           },
-          user: {
-            active: true,
-            deleted: false,
-            role: {
-              in: ["paciente", "psicologo"],
-            },
-          },
-          user_id: {
-            not: null,
-          },
           OR: pageViewTargets,
         },
       }),

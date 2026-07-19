@@ -4268,6 +4268,17 @@ const buildPatientPostsBreakdown = (
 const COMMUNITY_PEOPLE_STATISTICS_METRICS = [
   {
     dotClassName: "bg-primary",
+    getValue: (statistics: AdminCommunityStatistics) => statistics.counters.accesses.total,
+    icon: Eye,
+    iconClassName: "text-primary",
+    iconToneClassName: "bg-primary-soft",
+    id: "accesses",
+    key: "accesses",
+    label: "Acessos",
+    strokeClassName: "stroke-primary",
+  },
+  {
+    dotClassName: "bg-primary",
     getValue: (statistics: AdminCommunityStatistics) => statistics.counters.followers.psychologists,
     icon: UserRound,
     iconClassName: "text-primary",
@@ -4710,7 +4721,7 @@ const CommunityStatisticsMetricGrid = ({
   title: string;
   visibleMetricIds: string[];
 }) => (
-  <fieldset className="mt-5 grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-6">
+  <fieldset className="mt-5 grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-7">
     <legend className="sr-only">Contadores exibidos no gráfico de {title}</legend>
     {metrics.map((metric) => (
       <CommunityStatisticsMetricToggleCard

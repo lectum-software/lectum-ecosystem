@@ -561,3 +561,27 @@ Regras:
 - A UI Admin passou a renderizar **Posts mais populares** com header e botao **Ver todos** iguais ao bloco de ultimos posts, tabela com colunas **Post**, **Autor**, **Upvotes** e **Comentarios**, data/hora abaixo do titulo e metricas centralizadas.
 - Cada celula da linha abre o post publico real via `/community/{slug}/post/{id}`, preservando a navegacao administrativa e usando apenas dados reais do contrato `popular_posts`.
 - O ajuste e exclusivamente visual/apresentacional, sem endpoint novo, schema Prisma/migration, package, mock ou alteracao de persistencia.
+
+## Ajuste complementar 2026-07-18 - Contador de Acessos em Estatísticas de pessoas
+
+- Pedido do usuário: em **Estatísticas de pessoas** da aba **Estatísticas** do detalhe Admin da comunidade, adicionar um contador **Acessos** na primeira posição.
+- O endpoint real `GET /api/admin/private/communities/:id/statistics` agora retorna `counters.accesses.total` e `charts.daily[].accesses`, calculados por `page_view_event` do período filtrado para a comunidade e seus conteúdos relacionados.
+- A consulta de `page_view_event` passou a preservar acessos anônimos e autenticados para o contador bruto de acessos; a regra de **usuários ativos** continua restrita a usuários autenticados com papel real `paciente` ou `psicologo`.
+- A UI Admin renderiza o cartão **Acessos** como primeiro contador clicável de **Estatísticas de pessoas** e ajusta a grade mobile-first para acomodar 7 contadores no desktop sem scroll horizontal global.
+- Não houve package novo, schema Prisma/migration, seed, backfill artificial, mock, endpoint paralelo ou uso de `<img>` cru.
+- Builder/Quick Copy não está exposto como ferramenta callable no ambiente; a referência usada foi a captura enviada pelo usuário, `_product/proto/admin/Comunidades/Comunidades - Detalhes.png` e o layout atual da aba **Estatísticas** da comunidade.
+- ADR criado: `adrs/0282-contador-acessos-estatisticas-pessoas-comunidade.md`.
+
+### Critério de aceite complementar
+
+- [x] **Estatísticas de pessoas** exibe o contador **Acessos** na primeira posição, usando dados reais de `page_view_event`.
+
+### Validação executada para este ajuste
+
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check`
+- Smoke HTTP local `GET http://localhost:3002/comunidades/autocuidado-em-pratica?tab=estatisticas` retornou 200.
+- Chrome headless local abriu a rota e confirmou o guard/shell Admin; sem sessão Admin reutilizável no perfil headless, a validação visual autenticada ficou limitada à captura enviada pelo usuário e ao build/check local.
