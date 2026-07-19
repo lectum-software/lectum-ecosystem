@@ -1676,14 +1676,17 @@ const PopularPostsTable = ({ posts }: { posts: CommunitiesDashboardPopularPost[]
 
 const TopCommunitiesTable = ({
   communities,
+  periodLabel,
 }: {
   communities: CommunitiesDashboardTopCommunity[];
+  periodLabel: string;
 }) => (
   <div className="scroll-mt-6" id="lista-de-comunidades">
     <CardShell className="p-5">
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex items-start justify-between gap-3">
         <div>
           <h2 className="text-lg font-black text-foreground">Principais comunidades</h2>
+          <BlockPeriodLabel>{periodLabel}</BlockPeriodLabel>
         </div>
         <Link
           className="text-xs font-black text-primary transition hover:text-primary-hover"
@@ -1695,7 +1698,8 @@ const TopCommunitiesTable = ({
 
       {communities.length === 0 ? (
         <p className="mt-5 rounded-2xl bg-surface-muted p-4 text-sm text-muted">
-          Nenhuma comunidade real cadastrada foi encontrada.
+          Nenhuma comunidade com posts, acessos ou ações reais foi encontrada no período
+          selecionado.
         </p>
       ) : (
         <>
@@ -1711,7 +1715,8 @@ const TopCommunitiesTable = ({
                     <div className="min-w-0">
                       <p className="truncate font-black text-foreground">{community.name}</p>
                       <p className="text-xs text-muted">
-                        {community.activity_count} ações em todo o período
+                        {formatCountLabel(community.activity_count, "atividade", "atividades")} no
+                        período
                       </p>
                     </div>
                   </div>
@@ -1772,7 +1777,8 @@ const TopCommunitiesTable = ({
                         <div className="min-w-0">
                           <p className="truncate font-black text-foreground">{community.name}</p>
                           <p className="truncate text-xs text-muted">
-                            {community.activity_count} ações em todo o período
+                            {formatCountLabel(community.activity_count, "atividade", "atividades")}{" "}
+                            no período
                           </p>
                         </div>
                       </div>
@@ -1983,7 +1989,10 @@ const DashboardContent = ({
       />
 
       <div className="grid min-w-0 gap-5 xl:grid-cols-2">
-        <TopCommunitiesTable communities={summary.top_communities.items} />
+        <TopCommunitiesTable
+          communities={summary.top_communities.items}
+          periodLabel={periodLabel}
+        />
         <CommunitiesPeakActivityHoursCard
           periodLabel={periodLabel}
           points={summary.global_statistics.current.charts.hourly_activity}

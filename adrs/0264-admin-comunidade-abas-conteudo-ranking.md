@@ -710,3 +710,19 @@ Os blocos **Postagens mais recentes**, **Posts mais populares** e **Principais c
 A decisao e manter o periodo selecionado somente para contadores, graficos, estatisticas de pessoas/conteudo, alertas e moderacao. Os tres blocos operacionais passam a usar todo o historico real: posts recentes ordenados por `community_post.createdAt`, posts populares ordenados por engajamento acumulado e comunidades ordenadas por atividade acumulada, seguidores e nome. As visualizacoes exibidas nos posts tambem usam `page_view_event` sem recorte temporal nesses blocos.
 
 Consequencia: mudar **Esta semana**, **Este mes** ou intervalo customizado continua atualizando as metricas temporais, mas nao altera a lista fixa de posts recentes, posts populares e comunidades principais. A UI explicita `Periodo: Todo o periodo` nesses blocos para evitar leitura equivocada, sem endpoint novo, schema Prisma/migration, dependencia, mock, seed, backfill ou persistencia adicional.
+
+## Atualizacao 2026-07-19: excecao para Principais comunidades no dashboard geral
+
+Por decisao posterior de produto registrada na ADR-0231, a independencia de periodo acima deixa de valer para **Principais comunidades** no dashboard geral `/comunidades`.
+
+**Postagens mais recentes** e **Posts mais populares** continuam usando todo o historico real, mas **Principais comunidades** passa a usar o periodo selecionado para `activity_count`, `posts_count` e `accesses_count`, mantendo `members_count` como total atual de seguidores. A UI exibe o periodo do bloco e a copy **acoes no periodo** para evitar confusao com a decisao anterior.
+
+Consequencia: o ranking de comunidades acompanha o mesmo recorte temporal dos graficos e contadores da visao geral, enquanto os dois blocos de posts seguem como listas globais operacionais.
+
+## Atualizacao 2026-07-19: excecao para Principais comunidades lado a lado com horarios
+
+A decisao anterior de manter **Principais comunidades** independente do filtro foi revisada depois que o dashboard geral passou a exibir **Horarios de maior atividade** ao lado desse bloco. Quando os dois cards ficam lado a lado, o Admin interpreta as estatisticas como comparaveis; manter um ranking acumulado ao lado de um grafico filtrado por periodo geraria leitura inconsistente.
+
+A partir desta atualizacao, a excecao e: **Postagens mais recentes** e **Posts mais populares** permanecem historicos/acumulados, mas **Principais comunidades** passa a usar o mesmo periodo do dashboard e o mesmo universo de eventos atribuiveis a comunidades usado por **Horarios de maior atividade**. A UI explicita o periodo nos dois blocos.
+
+Consequencia: a leitura operacional do ranking fica coerente com o grafico horario, sem endpoint novo, schema Prisma/migration, dependencia, mock, seed ou backfill.

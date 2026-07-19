@@ -301,7 +301,7 @@ export type AdminCommunitiesDashboardSummary = {
   };
   top_communities: {
     items: AdminCommunitiesDashboardTopCommunity[];
-    source: "community+community_member+community_post+post_reply+post_vote+post_save+page_view_event";
+    source: "community+community_member+community_post+post_reply+post_report+post_vote+post_save+post_reply_save+page_view_event+important_action_event";
     total: number;
   };
   unavailable: AdminCommunitiesDashboardUnavailableMetric[];

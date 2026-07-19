@@ -198,3 +198,23 @@ A decisao e ampliar `global_statistics.current.charts` no endpoint existente `GE
 A UI mostra os tres picos gerais do periodo em cards horizontais a partir de telas medias, um grafico compacto de barras por hora e legenda por tipo de evento. O bloco reutiliza o contrato do dashboard e nao cria endpoint paralelo, pacote de graficos, schema Prisma/migration, seed, mock ou backfill.
 
 Consequencia: a operacao passa a enxergar janelas de maior uso global das comunidades diretamente na visao geral, sem sair do dashboard e sem alterar a semantica do ranking de **Principais comunidades**.
+
+## Atualizacao 2026-07-19: principais comunidades respeitam o periodo selecionado
+
+O bloco **Principais comunidades** da visao geral `/comunidades` volta a responder ao filtro global de periodo do dashboard, por decisao posterior de produto. Esta atualizacao substitui a parte da decisao de 2026-07-18 que mantinha **Principais comunidades** fixa em todo o historico; **Postagens mais recentes** e **Posts mais populares** continuam independentes do periodo.
+
+A decisao e manter o endpoint unico `GET /api/admin/private/communities/dashboard` e calcular `top_communities` a partir do periodo corrente ja resolvido pelo backend. Para cada comunidade, `posts_count`, `accesses_count` e `activity_count` passam a considerar somente sinais reais dentro do periodo selecionado: `community_post`, `post_reply`, `post_report`, `post_vote`, `post_save`, `post_reply_save`, `page_view_event` e `important_action_event`. Comunidades sem posts, acessos ou acoes no periodo deixam de aparecer no top 5 daquele recorte.
+
+`members_count` permanece como o total atual de seguidores da comunidade, porque representa a base vigente da comunidade e nao novos seguidores no periodo. A ordenacao usa a atividade do periodo, depois acessos do periodo, seguidores totais e nome como desempates. No frontend Admin, o bloco exibe a mesma linha de periodo dos demais cards analiticos e a copy das linhas passa a indicar **acoes no periodo**.
+
+Consequencia: trocar **Hoje**, **Esta semana**, **Este mes**, **Este ano**, **Todo o periodo** ou datas personalizadas altera o ranking de comunidades e seus contadores de posts/acessos/acoes sem criar endpoint paralelo, schema Prisma/migration, dependencia, seed, mock ou backfill artificial.
+
+## Atualizacao 2026-07-19: coerencia entre ranking de comunidades e horarios
+
+O bloco **Principais comunidades** e o bloco **Horarios de maior atividade** ficam lado a lado no dashboard geral e, por isso, suas estatisticas precisam partir do mesmo universo operacional atribuivel a comunidades.
+
+A decisao e calcular `top_communities.items[].activity_count`, `posts_count` e `accesses_count` no mesmo periodo filtrado do dashboard, usando as mesmas fontes atribuiveis a uma comunidade que alimentam o grafico horario: `page_view_event` de comunidade/post/resposta, `community_post`, `post_reply`, `post_report`, `post_vote`, `post_save`, `post_reply_save` e `important_action_event` de WhatsApp em conteudos. Posts e respostas passam a ser contados uma unica vez em `activity_count`, sem somar novamente a mesma acao por meio de `listMemberActivity`.
+
+Acessos a perfil de psicologos permanecem em **Estatisticas de conteudo** como `profile_accesses`, mas deixam de compor `hourly_activity.total` da visao geral porque o evento aponta para um psicologo, nao para uma comunidade unica. Atribuir esse acesso a todas as comunidades do psicologo geraria dupla contagem; escolher uma comunidade por inferencia criaria dado artificial. Consequentemente, o total horario passa a representar apenas atividades com comunidade atribuivel e fica comparavel ao ranking.
+
+Consequencia: **Principais comunidades** exibe atividades e acessos coerentes com **Horarios de maior atividade** para o periodo selecionado, sem endpoint paralelo, schema Prisma/migration, pacote novo, seed, mock ou backfill.

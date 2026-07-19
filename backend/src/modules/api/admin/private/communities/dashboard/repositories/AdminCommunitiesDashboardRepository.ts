@@ -50,6 +50,7 @@ const dashboardStatisticsPostSelect = {
     select: dashboardStatisticsUserSelect,
   },
   author_id: true,
+  community_id: true,
   createdAt: true,
   id: true,
   replies: {
@@ -74,16 +75,37 @@ const dashboardStatisticsReplySelect = {
   author_id: true,
   createdAt: true,
   id: true,
+  post: {
+    select: {
+      community_id: true,
+    },
+  },
   post_id: true,
 } satisfies Prisma.post_replySelect;
 
 const dashboardStatisticsReportSelect = {
   createdAt: true,
   id: true,
+  post: {
+    select: {
+      community_id: true,
+    },
+  },
+  reply: {
+    select: {
+      post: {
+        select: {
+          community_id: true,
+        },
+      },
+    },
+  },
 } satisfies Prisma.post_reportSelect;
 
 const dashboardStatisticsPageViewSelect = {
   occurred_at: true,
+  target_id: true,
+  target_type: true,
   user: {
     select: {
       active: true,
@@ -704,6 +726,7 @@ export class AdminCommunitiesDashboardRepository implements IAdminCommunitiesDas
             orderBy: [{ createdAt: "asc" }, { id: "asc" }],
             select: {
               createdAt: true,
+              post_id: true,
               value: true,
             },
             where: {
@@ -725,6 +748,7 @@ export class AdminCommunitiesDashboardRepository implements IAdminCommunitiesDas
             orderBy: [{ createdAt: "asc" }, { id: "asc" }],
             select: {
               createdAt: true,
+              reply_id: true,
               value: true,
             },
             where: {
@@ -746,6 +770,7 @@ export class AdminCommunitiesDashboardRepository implements IAdminCommunitiesDas
             orderBy: [{ createdAt: "asc" }, { id: "asc" }],
             select: {
               createdAt: true,
+              post_id: true,
             },
             where: {
               createdAt: {
@@ -763,6 +788,7 @@ export class AdminCommunitiesDashboardRepository implements IAdminCommunitiesDas
             orderBy: [{ createdAt: "asc" }, { id: "asc" }],
             select: {
               createdAt: true,
+              reply_id: true,
             },
             where: {
               createdAt: {
@@ -780,6 +806,8 @@ export class AdminCommunitiesDashboardRepository implements IAdminCommunitiesDas
             orderBy: [{ occurred_at: "asc" }, { id: "asc" }],
             select: {
               occurred_at: true,
+              target_id: true,
+              target_type: true,
             },
             where: {
               action_type: "whatsapp_click",

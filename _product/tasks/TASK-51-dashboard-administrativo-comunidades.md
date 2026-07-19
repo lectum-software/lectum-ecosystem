@@ -892,3 +892,62 @@ Regras de UI obrigatórias:
 - `pnpm --dir admin build`: sem erros.
 - `pnpm check`: sem erros.
 - Browser local validado em `http://localhost:3002/comunidades` com sessao admin real via Chrome headless/CDP; os blocos **Postagens mais recentes** e **Posts mais populares** renderizaram com **Acoes** alinhado a direita.
+
+## Ajuste complementar 2026-07-19 - Principais comunidades por periodo
+
+- Pedido do usuario: fazer o bloco **Principais comunidades** ficar de acordo com o periodo selecionado no dashboard geral `/comunidades`.
+- Backend Admin: `top_communities` no endpoint real `GET /api/admin/private/communities/dashboard` passou a usar o periodo corrente ja resolvido pelo dashboard para `activity_count`, `posts_count` e `accesses_count`.
+- A atividade por comunidade e calculada com dados reais de `community_post`, `post_reply`, `post_report`, `post_vote`, `post_save`, `post_reply_save`, `page_view_event` e `important_action_event`; comunidades sem posts, acessos ou acoes no periodo nao entram no top 5 daquele recorte.
+- `members_count` permanece como total atual de seguidores, pois o label **Seguidores** representa a base vigente da comunidade, nao novos seguidores do periodo.
+- Frontend Admin: o bloco agora exibe `Periodo: ...` abaixo do titulo e as linhas/cards mostram `N acoes no periodo`, alinhando a leitura com o filtro global e com o bloco vizinho de horarios.
+- **Postagens mais recentes** e **Posts mais populares** continuam fixos em todo o periodo conforme decisao anterior; este ajuste altera apenas **Principais comunidades**.
+- Nao houve package novo, schema Prisma/migration, seed, backfill artificial, mock, endpoint paralelo ou uso de `<img>` cru.
+- Builder/Quick Copy `vcp://quickcopy/vcp-24aaa2941d814e5b90572bc93ae50e2a` nao esta exposto como ferramenta callable neste ambiente; referencias usadas: captura enviada pelo usuario e `_product/proto/admin/Comunidades/Comunidades - Dashboard.png`.
+- ADR atualizado: `adrs/0231-admin-comunidades-dashboard-agregacoes.md`; nota de compatibilidade adicionada em `adrs/0264-admin-comunidade-abas-conteudo-ranking.md`.
+
+### Criterios deste ajuste
+
+- [x] **Principais comunidades** respeita o periodo selecionado no dashboard geral.
+- [x] `activity_count`, `posts_count` e `accesses_count` usam somente eventos reais do periodo.
+- [x] Comunidades sem posts, acessos ou acoes reais no periodo nao aparecem no top 5 do recorte.
+- [x] O bloco exibe a linha `Periodo: ...` e a copy `acoes no periodo`.
+- [x] **Postagens mais recentes** e **Posts mais populares** permanecem globais/todo o periodo.
+- [x] Nenhum mock, dado fake permanente, endpoint simulado, package novo, schema Prisma ou migration foi usado.
+
+### Validacao deste ajuste
+
+- `pnpm --dir backend check`: sem erros.
+- `pnpm --dir backend build`: sem erros.
+- `pnpm --dir admin check`: sem erros.
+- `pnpm --dir admin build`: sem erros.
+- `pnpm check`: sem erros.
+- Smoke service real `buildCommunitiesDashboard({ period: "week" })` retornou `status=200`, periodo `2026-07-13:2026-07-19`, `topCount=5` e primeira comunidade com `activity=131`, `posts=1`, `accesses=34`; `period: "all"` retornou a mesma comunidade com `activity=156`, `posts=3`, `accesses=34`, evidenciando o recorte por periodo.
+- Browser local/headless via Chrome/CDP em `http://localhost:3002/comunidades` com sessao admin real temporaria validou o bloco **Principais comunidades** com `Periodo: Esta semana · 13 de jul. a 19 de jul.` e linhas como `131 acoes no periodo`.
+
+## Ajuste complementar 2026-07-19 - coerencia entre Principais comunidades e Horarios
+
+- Pedido do usuario: comparar as estatisticas exibidas em **Principais comunidades** e **Horarios de maior atividade** e garantir que os numeros sejam coerentes.
+- Auditoria no banco local em `period=all` encontrou a divergencia: **Horarios de maior atividade** somava acessos a comunidades, posts e respostas, enquanto **Principais comunidades** contabilizava **Acessos** somente por `page_view_event.target_type="community"`; o subtitulo de atividades tambem misturava posts/respostas com `listMemberActivity`, gerando dupla contagem de posts e respostas.
+- Backend Admin: `top_communities.items` agora calcula `activity_count`, `posts_count` e `accesses_count` no mesmo periodo filtrado e com as mesmas fontes atribuiveis a uma comunidade usadas pelo grafico horario: pageviews de comunidade/post/resposta, posts, respostas, denuncias, votos, salvos de posts/respostas e cliques de WhatsApp em conteudos.
+- Backend Admin: acessos a perfil de psicologos continuam disponiveis em **Estatisticas de conteudo**, mas deixam de entrar no `hourly_activity.total` da visao geral porque nao possuem uma comunidade unica atribuivel sem inferencia ou dupla contagem.
+- Frontend Admin: o bloco **Principais comunidades** explicita o mesmo periodo do bloco horario e o subtitulo usa **atividades no periodo**, mantendo a leitura mobile-first.
+- Nenhum mock, seed, endpoint simulado, package novo, schema Prisma ou migration foi usado.
+- Builder/Quick Copy `vcp://quickcopy/vcp-24aaa2941d814e5b90572bc93ae50e2a` nao esta exposto como ferramenta callable neste ambiente; referencias usadas: captura enviada pelo usuario e implementacao existente de `/comunidades`.
+- ADRs atualizados: `adrs/0231-admin-comunidades-dashboard-agregacoes.md` e `adrs/0264-admin-comunidade-abas-conteudo-ranking.md`.
+
+### Criterios deste ajuste
+
+- [x] **Acessos** em **Principais comunidades** usa a mesma base atribuivel por comunidade que alimenta os acessos do grafico horario.
+- [x] `activity_count` em **Principais comunidades** nao duplica posts/respostas via atividade de membro.
+- [x] `hourly_activity.total` deixa de incluir acessos a perfil sem comunidade unica atribuivel.
+- [x] O periodo exibido em **Principais comunidades** e **Horarios de maior atividade** fica alinhado.
+- [x] Nenhum mock, dado fake permanente, endpoint simulado, package novo, schema Prisma ou migration foi usado.
+
+### Validacao deste ajuste
+
+- `pnpm --dir backend exec biome check "src/modules/api/admin/private/communities/dashboard/DTOs/IAdminCommunitiesDashboardDTO.ts" "src/modules/api/admin/private/communities/dashboard/repositories/AdminCommunitiesDashboardRepository.ts" "src/modules/api/admin/private/communities/dashboard/use-cases/services.ts"`
+- `pnpm --dir admin exec biome check "src/api/req/communities/index.ts" "src/app/(admin)/comunidades/client.tsx"`
+- `pnpm --dir backend exec tsc --noEmit --pretty false`
+- `pnpm --dir admin exec tsc --noEmit --pretty false`
+- Smoke service real `buildCommunitiesDashboard({ period: "all" })` retornou totais horarios `accesses=71`, `posts=24`, `replies=80`, `engagement=208`, `reports=12`, `total=395`; as comunidades principais passaram a expor atividades atribuidas por comunidade, com o top 5 somando 356 atividades e o restante das comunidades respondendo pelo complemento do total.
+- Smoke service real nos presets `today`, `week`, `month`, `year` e `all` confirmou que **Principais comunidades** e **Horarios de maior atividade** usam o mesmo recorte de periodo.

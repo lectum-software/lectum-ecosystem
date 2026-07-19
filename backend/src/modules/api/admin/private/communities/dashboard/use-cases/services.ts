@@ -23,7 +23,6 @@ import type {
   CommunityMemberRecord,
   CommunityPostRecord,
   CommunityRecord,
-  CommunityViewCountRecord,
   MemberActivityRecord,
   ModerationEventRecord,
   PendingReportRecord,
@@ -363,6 +362,14 @@ type DashboardStatisticsActivity = {
 type DashboardGlobalStatisticsDataset = Awaited<
   ReturnType<AdminCommunitiesDashboardRepository["listGlobalStatisticsDataset"]>
 >;
+type DashboardTopCommunityActivity = {
+  accesses_count: number;
+  activity_count: number;
+  engagement_count: number;
+  posts_count: number;
+  replies_count: number;
+  reports_count: number;
+};
 
 const dashboardStatisticsRole = (
   user?: DashboardStatisticsUser | null,
@@ -461,6 +468,162 @@ const incrementDashboardHourlyActivity = (
 
   point[field] += 1;
   point.total += 1;
+};
+
+const emptyTopCommunityActivity = (): DashboardTopCommunityActivity => ({
+  accesses_count: 0,
+  activity_count: 0,
+  engagement_count: 0,
+  posts_count: 0,
+  replies_count: 0,
+  reports_count: 0,
+});
+
+const createTopCommunityActivityMap = (communities: CommunityRecord[]) =>
+  new Map(communities.map((community) => [community.id, emptyTopCommunityActivity()]));
+
+const incrementTopCommunityActivity = (
+  map: Map<string, DashboardTopCommunityActivity>,
+  communityId: string | null | undefined,
+  field: Exclude<keyof DashboardTopCommunityActivity, "activity_count">,
+) => {
+  if (!communityId) return;
+  const point = map.get(communityId);
+  if (!point) return;
+
+  point[field] += 1;
+  point.activity_count += 1;
+};
+
+const dashboardTargetCommunityId = (
+  targetType: string | null | undefined,
+  targetId: string | null | undefined,
+  targets: {
+    communityIdByTarget: ReadonlyMap<string, string>;
+    postCommunityIdByTarget: ReadonlyMap<string, string>;
+    replyCommunityIdByTarget: ReadonlyMap<string, string>;
+  },
+) => {
+  if (!targetType || !targetId) return null;
+  if (targetType === "community") return targets.communityIdByTarget.get(targetId) ?? null;
+  if (targetType === "community_post" || targetType === "post") {
+    return targets.postCommunityIdByTarget.get(targetId) ?? null;
+  }
+  if (targetType === "post_reply" || targetType === "reply") {
+    return targets.replyCommunityIdByTarget.get(targetId) ?? null;
+  }
+
+  return null;
+};
+
+const buildTopCommunityActivityByPeriod = (
+  communities: CommunityRecord[],
+  dataset: DashboardGlobalStatisticsDataset,
+  period: AdminCommunitiesDashboardDateRange,
+) => {
+  const activity = createTopCommunityActivityMap(communities);
+  const communityIdByTarget = new Map<string, string>();
+  for (const community of communities) {
+    communityIdByTarget.set(community.id, community.id);
+    communityIdByTarget.set(community.slug, community.id);
+  }
+
+  const postCommunityIdByTarget = new Map(
+    dataset.posts.map((post) => [post.id, post.community_id]),
+  );
+  const replyCommunityIdByTarget = new Map(
+    dataset.replies.map((reply) => [reply.id, reply.post.community_id]),
+  );
+  const targets = {
+    communityIdByTarget,
+    postCommunityIdByTarget,
+    replyCommunityIdByTarget,
+  };
+  const periodPosts = dataset.posts.filter((post) =>
+    isInDashboardStatisticsPeriod(post.createdAt, period),
+  );
+  const periodReplies = dataset.replies.filter((reply) =>
+    isInDashboardStatisticsPeriod(reply.createdAt, period),
+  );
+  const periodReports = dataset.reports.filter((report) =>
+    isInDashboardStatisticsPeriod(report.createdAt, period),
+  );
+  const periodPostVotes = dataset.postVotes.filter((vote) =>
+    isInDashboardStatisticsPeriod(vote.createdAt, period),
+  );
+  const periodReplyVotes = dataset.replyVotes.filter((vote) =>
+    isInDashboardStatisticsPeriod(vote.createdAt, period),
+  );
+  const periodPostSaves = dataset.postSaves.filter((save) =>
+    isInDashboardStatisticsPeriod(save.createdAt, period),
+  );
+  const periodReplySaves = dataset.replySaves.filter((save) =>
+    isInDashboardStatisticsPeriod(save.createdAt, period),
+  );
+  const periodWhatsappClicks = dataset.contentWhatsappClicks.filter((event) =>
+    isInDashboardStatisticsPeriod(event.occurred_at, period),
+  );
+  const periodPageViews = dataset.pageViews.filter((event) =>
+    isInDashboardStatisticsPeriod(event.occurred_at, period),
+  );
+
+  for (const post of periodPosts) {
+    incrementTopCommunityActivity(activity, post.community_id, "posts_count");
+  }
+  for (const reply of periodReplies) {
+    incrementTopCommunityActivity(activity, reply.post.community_id, "replies_count");
+  }
+  for (const report of periodReports) {
+    incrementTopCommunityActivity(
+      activity,
+      report.reply?.post.community_id ?? report.post.community_id,
+      "reports_count",
+    );
+  }
+  for (const vote of periodPostVotes) {
+    incrementTopCommunityActivity(
+      activity,
+      vote.post_id ? postCommunityIdByTarget.get(vote.post_id) : null,
+      "engagement_count",
+    );
+  }
+  for (const vote of periodReplyVotes) {
+    incrementTopCommunityActivity(
+      activity,
+      vote.reply_id ? replyCommunityIdByTarget.get(vote.reply_id) : null,
+      "engagement_count",
+    );
+  }
+  for (const save of periodPostSaves) {
+    incrementTopCommunityActivity(
+      activity,
+      postCommunityIdByTarget.get(save.post_id),
+      "engagement_count",
+    );
+  }
+  for (const save of periodReplySaves) {
+    incrementTopCommunityActivity(
+      activity,
+      replyCommunityIdByTarget.get(save.reply_id),
+      "engagement_count",
+    );
+  }
+  for (const event of periodWhatsappClicks) {
+    incrementTopCommunityActivity(
+      activity,
+      dashboardTargetCommunityId(event.target_type, event.target_id, targets),
+      "engagement_count",
+    );
+  }
+  for (const event of periodPageViews) {
+    incrementTopCommunityActivity(
+      activity,
+      dashboardTargetCommunityId(event.target_type, event.target_id, targets),
+      "accesses_count",
+    );
+  }
+
+  return activity;
 };
 
 const dashboardStatisticsDailyRoleSet = (
@@ -718,7 +881,8 @@ const buildDashboardGlobalStatistics = (
     if (point) point.whatsapp_clicks += 1;
   }
   for (const event of periodProfileAccesses) {
-    incrementDashboardHourlyActivity(hourlyActivity, event.occurred_at, "engagement");
+    // Acessos a perfis permanecem nas estatísticas de conteúdo, mas não entram
+    // no gráfico horário geral porque não têm comunidade única atribuível.
     const point = daily.get(toDateKey(event.occurred_at));
     if (point) point.profile_accesses += 1;
   }
@@ -1010,29 +1174,6 @@ const groupPostViewCounts = (items: PostViewCountRecord[]) => {
   return countByPost;
 };
 
-const groupCommunityViewCounts = (
-  items: CommunityViewCountRecord[],
-  communities: CommunityRecord[],
-) => {
-  const communityIdByTarget = new Map<string, string>();
-  for (const community of communities) {
-    communityIdByTarget.set(community.id, community.id);
-    communityIdByTarget.set(community.slug, community.id);
-  }
-
-  const countByCommunity = new Map<string, number>();
-  for (const item of items) {
-    if (!item.target_id) continue;
-    if (item.target_type !== "community") continue;
-    const communityId = communityIdByTarget.get(item.target_id);
-    if (!communityId) continue;
-
-    countByCommunity.set(communityId, (countByCommunity.get(communityId) ?? 0) + item._count._all);
-  }
-
-  return countByCommunity;
-};
-
 const buildRecentPosts = (
   posts: CommunityPostRecord[],
   postViewsByPost: ReadonlyMap<string, number>,
@@ -1119,54 +1260,41 @@ const buildPopularPosts = (
 const buildTopCommunities = (
   communities: CommunityRecord[],
   members: CommunityMemberRecord[],
-  posts: CommunityPostRecord[],
-  replies: PostReplyRecord[],
-  activities: MemberActivityRecord[],
-  communityViewsByCommunity: ReadonlyMap<string, number>,
+  dataset: DashboardGlobalStatisticsDataset,
+  period: AdminCommunitiesDashboardDateRange,
 ) => {
   const memberCounts = new Map<string, number>();
   for (const member of members) {
     memberCounts.set(member.community_id, (memberCounts.get(member.community_id) ?? 0) + 1);
   }
-
-  const postCounts = new Map<string, number>();
-  for (const post of posts) {
-    postCounts.set(post.community_id, (postCounts.get(post.community_id) ?? 0) + 1);
-  }
-
-  const replyCounts = new Map<string, number>();
-  for (const reply of replies) {
-    replyCounts.set(reply.post.community_id, (replyCounts.get(reply.post.community_id) ?? 0) + 1);
-  }
-
-  const activityCounts = new Map<string, number>();
-  for (const activity of activities) {
-    if (!activity.community_id) continue;
-    activityCounts.set(activity.community_id, (activityCounts.get(activity.community_id) ?? 0) + 1);
-  }
+  const periodActivity = buildTopCommunityActivityByPeriod(communities, dataset, period);
 
   const items: AdminCommunitiesDashboardTopCommunity[] = communities
     .map((community) => {
       const membersCount = memberCounts.get(community.id) ?? community.members_count;
-      const postsCount = postCounts.get(community.id) ?? 0;
-      const activityCount =
-        postsCount + (replyCounts.get(community.id) ?? 0) + (activityCounts.get(community.id) ?? 0);
+      const activity = periodActivity.get(community.id) ?? emptyTopCommunityActivity();
 
       return {
-        accesses_count: communityViewsByCommunity.get(community.id) ?? 0,
-        activity_count: activityCount,
+        accesses_count: activity.accesses_count,
+        activity_count: activity.activity_count,
         avatar_url: community.avatar_url,
         id: community.id,
         members_count: membersCount,
         name: community.name,
-        posts_count: postsCount,
+        posts_count: activity.posts_count,
         slug: community.slug,
         visual_primary_color: community.visual_primary_color,
       };
     })
+    .filter(
+      (community) =>
+        community.activity_count > 0 || community.posts_count > 0 || community.accesses_count > 0,
+    )
     .sort((left, right) => {
       if (right.activity_count !== left.activity_count)
         return right.activity_count - left.activity_count;
+      if (right.accesses_count !== left.accesses_count)
+        return right.accesses_count - left.accesses_count;
       if (right.members_count !== left.members_count)
         return right.members_count - left.members_count;
       return left.name.localeCompare(right.name, "pt-BR");
@@ -1176,7 +1304,7 @@ const buildTopCommunities = (
   return {
     items,
     source:
-      "community+community_member+community_post+post_reply+post_vote+post_save+page_view_event" as const,
+      "community+community_member+community_post+post_reply+post_report+post_vote+post_save+post_reply_save+page_view_event+important_action_event" as const,
     total: communities.length,
   };
 };
@@ -1203,10 +1331,8 @@ export const buildCommunitiesDashboard = async (
     allTimePosts,
     previousPosts,
     replies,
-    allTimeReplies,
     previousReplies,
     members,
-    allTimeMemberActivity,
     currentMemberActivity,
     previousMemberActivity,
     pendingReportsTotal,
@@ -1222,10 +1348,8 @@ export const buildCommunitiesDashboard = async (
     repository.listCommunityPosts(),
     repository.listCommunityPosts(previous),
     repository.listPostReplies(current),
-    repository.listPostReplies(),
     repository.listPostReplies(previous),
     repository.listCommunityMembers(),
-    repository.listMemberActivity(),
     repository.listMemberActivity(current),
     repository.listMemberActivity(previous),
     repository.countPendingReports(current),
@@ -1240,10 +1364,6 @@ export const buildCommunitiesDashboard = async (
 
   const postViewsByPost = groupPostViewCounts(
     await repository.countPostViews(allTimePosts.map((post) => post.id)),
-  );
-  const communityViewsByCommunity = groupCommunityViewCounts(
-    await repository.countCommunityViews(communities),
-    communities,
   );
 
   const psychologistPosts = posts.filter((post) => roleIsPsychologist(post.author.role)).length;
@@ -1330,14 +1450,7 @@ export const buildCommunitiesDashboard = async (
     ),
     popular_posts: buildPopularPosts(allTimePosts, postViewsByPost),
     recent_posts: buildRecentPosts(allTimePosts, postViewsByPost),
-    top_communities: buildTopCommunities(
-      communities,
-      members,
-      allTimePosts,
-      allTimeReplies,
-      allTimeMemberActivity,
-      communityViewsByCommunity,
-    ),
+    top_communities: buildTopCommunities(communities, members, globalStatisticsDataset, current),
     unavailable: [
       ...(pendingReportsTotal === 0 && previousPendingReportsTotal === 0
         ? [
