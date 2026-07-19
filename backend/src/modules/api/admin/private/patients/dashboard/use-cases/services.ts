@@ -375,11 +375,6 @@ const dateInRange = (date: Date, range: AdminPatientsDashboardDateRange) =>
 
 const createdUntil = (patient: AdminPatientSnapshotRecord, date: Date) => patient.createdAt <= date;
 
-const countNewPatients = (
-  patients: AdminPatientSnapshotRecord[],
-  range: AdminPatientsDashboardDateRange,
-) => patients.filter((patient) => dateInRange(patient.createdAt, range)).length;
-
 const buildSeries = (
   patients: AdminPatientSnapshotRecord[],
   labels: string[],
@@ -851,8 +846,14 @@ export const buildPatientsDashboard = async (
 
   const currentPatients = patients.filter((patient) => createdUntil(patient, current.end));
   const previousPatients = patients.filter((patient) => createdUntil(patient, previous.end));
-  const currentNewPatients = countNewPatients(patients, current);
-  const previousNewPatients = countNewPatients(patients, previous);
+  const currentPeriodPatients = patients.filter((patient) =>
+    dateInRange(patient.createdAt, current),
+  );
+  const previousPeriodPatients = patients.filter((patient) =>
+    dateInRange(patient.createdAt, previous),
+  );
+  const currentNewPatients = currentPeriodPatients.length;
+  const previousNewPatients = previousPeriodPatients.length;
   const activePatients = patients.filter((patient) => patient.active);
   const inactivePatients = patients.filter((patient) => !patient.active);
   const previousActivePatients = previousPatients.filter((patient) => patient.active);
@@ -908,10 +909,11 @@ export const buildPatientsDashboard = async (
       "Atividade recente usa eventos reais de comunidade, reações e salvamentos já persistidos.",
       "Uso da plataforma mede somente pageviews autenticados e eventos first-party de instalação PWA de pacientes no período selecionado.",
       "Devices dos pacientes usa somente visitor_session autenticada vinculada a user.role=paciente no período selecionado.",
+      "Gênero e forma de cadastro consideram somente pacientes cadastrados no período selecionado; em Todo o período incluem a base completa.",
       "Tempo médio do paciente usa pageviews autenticados first-party e ignora períodos em que o app fica oculto/minimizado quando o navegador envia eventos de visibilidade.",
       "Localização usa apenas capturas agregadas e coarse de visitor_location no período selecionado; cidades com baixa frequência são agrupadas, e coordenadas, IP e endereço não são retornados.",
     ],
-    demographics: buildDemographics(patients),
+    demographics: buildDemographics(currentPeriodPatients),
     device_usage: deviceUsage,
     export: {
       available: false,
@@ -959,6 +961,17 @@ export const buildPatientsDashboard = async (
               id: "patient_device_usage",
               label: "Devices dos pacientes",
               source: "visitor_session",
+            },
+          ]
+        : []),
+      ...(currentPeriodPatients.length === 0
+        ? [
+            {
+              description:
+                "Nenhum paciente foi cadastrado no período selecionado; gênero e forma de cadastro ficam vazios sem reaproveitar coortes de outros períodos.",
+              id: "patient_period_demographics",
+              label: "Gênero e forma de cadastro",
+              source: "user.createdAt+patient_profile.gender+user.provider",
             },
           ]
         : []),

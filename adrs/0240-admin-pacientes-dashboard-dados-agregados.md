@@ -149,3 +149,16 @@ Consequência: o dashboard fica alinhado à ordem solicitada pelo produto sem no
 - Motivacao: o usuario precisa visualizar a composicao do grafico **Devices dos pacientes** em localhost antes de haver sessoes autenticadas suficientes em `visitor_session`.
 - Guarda de seguranca: o preview depende do hostname local (`localhost`, `127.0.0.1`, `::1`), mostra badge **exemplo local** e aviso textual; nao altera backend, schema, seed, migration, contrato ou ambiente de producao.
 - Consequencia: a UI deixa claro que os numeros nao sao reais e troca automaticamente para `visitor_session` real assim que existir qualquer sessao agregada no periodo.
+
+## Complemento 2026-07-19 - Demografia e forma de cadastro filtradas pelo periodo
+
+Por feedback direto de produto, os blocos **Genero** e **Forma de cadastro** do dashboard Admin de pacientes passam a ter a mesma semantica temporal de **Novos cadastros**: a distribuicao considera somente pacientes criados no periodo selecionado.
+
+Decisoes:
+
+- Usar `user.createdAt` como fronteira temporal de coorte para `demographics.gender` e `demographics.signup_sources`.
+- Manter **Todo o periodo** como base completa real, porque o preset ja resolve o inicio no primeiro cadastro real de paciente.
+- Manter **Localizacao** filtrada por `visitor_location.createdAt` no periodo selecionado, sem misturar coorte de cadastro com capturas geograficas antigas.
+- Quando a coorte do periodo nao tiver pacientes, retornar totais zerados e indisponibilidade honesta em vez de reaproveitar distribuicao historica.
+
+Consequencia: o Admin passa a comparar genero, via de cadastro e localizacao dentro do recorte escolhido, sem schema Prisma, migration, package novo, mock, seed, backfill ou endpoint paralelo.

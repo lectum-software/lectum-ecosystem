@@ -435,3 +435,24 @@ Frontend esperado:
 - `pnpm --dir admin build`
 - `pnpm check`
 - Smoke HTTP local: `GET http://localhost:3002/pacientes` retornou `200`.
+
+## Ajuste pos-feedback 2026-07-19 - Recorte temporal em genero, cadastro e localizacao
+
+- Pedido do usuario: fazer os blocos **Genero**, **Forma de cadastro** e **Localizacao** responderem ao periodo selecionado no dashboard `/pacientes`.
+- O backend `GET /api/admin/private/patients/dashboard` passou a calcular `demographics.gender` e `demographics.signup_sources` somente com pacientes cadastrados dentro do periodo resolvido (`user.createdAt` entre `period.from` e `period.to`).
+- O card **Localizacao** permanece baseado em `visitor_location` real filtrada pelo periodo selecionado, preservando agregacao coarse e sem coordenadas, IP, endereco ou inferencia de localizacao precisa.
+- Em **Todo o periodo**, os blocos voltam a considerar a base completa real, porque o proprio preset resolve o inicio pelo primeiro cadastro real de paciente.
+- Quando nao houver cadastro no periodo, `demographics` retorna total `0` e a UI exibe estado vazio honesto; os dados de outros periodos nao sao reaproveitados.
+- Nao houve schema Prisma, migration, package novo, seed, mock, endpoint paralelo ou alteracao de frontend. Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente; as referencias usadas foram `_product/proto/admin/Pacientes/Pacientes - Dashboard.png` e o screenshot enviado pelo usuario em 2026-07-19.
+
+### Validacao complementar executada
+
+- `pnpm --dir backend exec biome check --write "src/modules/api/admin/private/patients/dashboard/use-cases/services.ts"`
+- Servico local `buildPatientsDashboard({ period: "week" })` retornou `new_signups=52`, `demographics.gender.total=52`, `demographics.signup_sources.total=52` e `locations.total=0` no periodo `2026-07-13` a `2026-07-19`, sem criar dados artificiais.
+- Servico local `buildPatientsDashboard({ period: "all" })` retornou `new_signups=151`, `demographics.gender.total=151` e `demographics.signup_sources.total=151`.
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir admin check`
+- `pnpm check`
+- Smoke HTTP local: `GET http://localhost:3001/api/admin/private/patients/dashboard?period=week` sem token Admin retornou `401`.
+- Smoke HTTP local: `GET http://localhost:3002/pacientes` retornou `200`.
