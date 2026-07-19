@@ -136,12 +136,21 @@ const isValidRange = (range: PatientsDashboardRange) => {
   return dateFromInput(range.from) <= dateFromInput(range.to);
 };
 
-const CardShell = ({ children, className }: { children?: React.ReactNode; className?: string }) => (
+const CardShell = ({
+  children,
+  className,
+  id,
+}: {
+  children?: React.ReactNode;
+  className?: string;
+  id?: string;
+}) => (
   <section
     className={cn(
       "rounded-card border border-border/80 bg-surface/95 shadow-admin-soft backdrop-blur",
       className,
     )}
+    id={id}
   >
     {children}
   </section>
@@ -608,7 +617,7 @@ const StatusBadge = ({ item }: { item: PatientsDashboardRecentPatient }) => (
 );
 
 const RecentPatients = ({ summary }: { summary: AdminPatientsDashboard }) => (
-  <CardShell className="overflow-hidden">
+  <CardShell className="scroll-mt-6 overflow-hidden" id="lista-de-pacientes">
     <div className="flex flex-col gap-2 border-b border-border p-5 sm:flex-row sm:items-center sm:justify-between">
       <div>
         <h2 className="text-xl font-black text-foreground">Lista de pacientes</h2>
