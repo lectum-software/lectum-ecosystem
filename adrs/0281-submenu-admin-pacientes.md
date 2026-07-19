@@ -2,7 +2,7 @@
 
 ## Status
 
-Superseded
+Accepted
 
 ## Task relacionada
 
@@ -56,3 +56,28 @@ Decisoes revisadas:
 - Nao criar rota, endpoint, paginacao, filtros ou dados artificiais para substituir a ancora.
 
 Consequencia: o menu nao aponta para uma secao removida e continua honesto sobre as capacidades reais do Admin de Pacientes.
+
+## Revisao 2026-07-19 - Rota real dedicada para Lista de pacientes
+
+Novo feedback de produto pediu a volta da opção **Lista de pacientes** no submenu de Pacientes. Como a âncora antiga havia sido removida, a navegação foi reativada somente junto de uma rota real dedicada.
+
+Decisões:
+
+- Reabrir **Pacientes** como grupo expansível com **Visão geral** (`/pacientes`) e **Lista de pacientes** (`/pacientes/lista`).
+- Criar a rota Admin `/pacientes/lista` em vez de apontar para uma âncora inexistente.
+- Criar `GET /api/admin/private/patients` com autenticação Admin e dados reais de `user`, `patient_profile` e `visitor_location`.
+- Expor apenas dados operacionais mínimos na lista: nome, e-mail, status ativo/inativo da conta, forma de cadastro normalizada, gênero e localização agregada quando houver fonte real.
+- Manter ações destrutivas, bloqueio, silenciamento, retenção e dados clínicos fora do escopo.
+
+Consequência: o submenu volta a ter a opção pedida sem rota quebrada, mock, seed, package novo, schema Prisma ou migration.
+
+Validação:
+
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check`
+- `listAdminPatients({ limit: 1 })` retornou dados reais (`count=151`, `items=1`).
+- `GET http://localhost:3002/pacientes/lista` retornou `200`.
+- `GET http://localhost:3001/api/admin/private/patients?limit=1` sem token Admin retornou `401`.

@@ -336,3 +336,25 @@ Frontend esperado:
 - Smoke HTTP local: `GET http://localhost:3001/api/admin/private/patients/dashboard` sem token Admin retornou `401`.
 - Smoke de servico local `buildPatientsDashboard({ period: "all" })` foi tentado, mas o banco de desenvolvimento recusou nova sessao com `EMAXCONNSESSION max clients reached in session mode`; nao foi resetado nem feita acao destrutiva.
 - `pnpm check` foi executado na validacao final e falhou em alteracao fora do escopo desta execucao: `admin/src/app/(admin)/pacientes/lista/client.tsx` (arquivo de lista de pacientes nao pertencente a este ajuste) com regra `react-hooks/set-state-in-effect`; nao alterei esse trabalho paralelo.
+
+## Ajuste pos-feedback 2026-07-19 - Submenu com Lista de pacientes real
+
+- Pedido do usuario: no submenu de **Pacientes**, adicionar a opcao **Lista de pacientes**.
+- O menu lateral Admin voltou a tratar **Pacientes** como grupo expansivel com **Visao geral** (`/pacientes`) e **Lista de pacientes** (`/pacientes/lista`).
+- Para evitar rota quebrada ou ancora removida, foi criada a rota real `/pacientes/lista` e o endpoint real `GET /api/admin/private/patients`, protegido por autenticacao Admin.
+- A listagem usa somente dados reais de `user`, `patient_profile` e `visitor_location`, com paginacao, busca simples, status ativo/inativo, forma de cadastro normalizada e link para o detalhe existente do paciente.
+- Nao houve mock, seed, schema Prisma, migration, package novo, acao destrutiva, bloqueio/silenciamento ou dado clinico.
+- Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente; a referencia auditavel segue `_product/proto/admin/Pacientes/Pacientes - Dashboard.png` e o screenshot enviado pelo usuario.
+
+### Validacao complementar executada
+
+- `pnpm --dir backend exec biome check --write "src/main/server/imports/write.ts" "src/modules/api/admin/private/patients/list/DTOs/IAdminPatientsListDTO.ts" "src/modules/api/admin/private/patients/list/repositories/AdminPatientsListRepository.ts" "src/modules/api/admin/private/patients/list/validator/index.ts" "src/modules/api/admin/private/patients/list/use-cases/controller.ts" "src/modules/api/admin/private/patients/list/use-cases/services.ts" "src/modules/api/admin/private/patients/list/index.ts"`
+- `pnpm --dir admin exec biome check --write "src/api/cache/keys.ts" "src/api/req/patients/list.ts" "src/api/callers/patients/list.ts" "src/app/(admin)/pacientes/lista/page.tsx" "src/app/(admin)/pacientes/lista/client.tsx" "src/components/admin-shell/nav.ts"`
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check`
+- Servico local `listAdminPatients({ limit: 1 })` retornou `status=200`, `count=151`, `items=1` e `source="user+patient_profile+visitor_location"`.
+- Smoke HTTP local: `GET http://localhost:3002/pacientes/lista` retornou `200`.
+- Smoke HTTP local: `GET http://localhost:3001/api/admin/private/patients?limit=1` sem token Admin retornou `401`.

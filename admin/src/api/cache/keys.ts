@@ -17,6 +17,7 @@ import type {
   AdminNotificationsRangeQuery,
 } from "@/api/req/notifications";
 import type { PatientsDashboardQuery, PatientsDetailQuery } from "@/api/req/patients";
+import type { PatientsListQuery } from "@/api/req/patients/list";
 import type {
   AdminPsychologistActivitiesQuery,
   AdminPsychologistPublicationsQuery,
@@ -63,6 +64,16 @@ const normalizePsychologistsList = (input: PsychologistsListQuery) => ({
   state: input.state || "all",
   status: input.status || "all",
   target_audience: input.target_audience || "all",
+});
+
+const normalizePatientsList = (input: PatientsListQuery) => ({
+  gender: input.gender || "all",
+  limit: input.limit || 12,
+  page: input.page || 1,
+  provider: input.provider || "all",
+  q: input.q || "",
+  sort: input.sort || "recent",
+  status: input.status || "all",
 });
 
 const normalizePsychologistPublications = (input: AdminPsychologistPublicationsQuery) => ({
@@ -305,6 +316,8 @@ export const adminPatientsKeys = {
     [...adminPatientsKeys.all, "dashboard", normalizeRange(input)] as const,
   detail: (id: string, input: PatientsDetailQuery) =>
     [...adminPatientsKeys.all, "detail", id, normalizeRange(input)] as const,
+  list: (input: PatientsListQuery) =>
+    [...adminPatientsKeys.all, "list", normalizePatientsList(input)] as const,
 };
 
 export const adminNotificationsKeys = {
