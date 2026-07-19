@@ -2460,6 +2460,7 @@ const buildCommunityTodaySummary = (
 const buildCommunityHighlightCounters = (
   dataset: StatisticsDataset,
 ): AdminCommunityHighlightCountersDTO => ({
+  accesses_count: dataset.pageViews.length,
   patient_comments_count: dataset.replies.filter(
     (reply) => statisticsRole(reply.author) === "paciente",
   ).length,
@@ -2472,7 +2473,7 @@ const buildCommunityHighlightCounters = (
     (reply) => statisticsRole(reply.author) === "psicologo",
   ).length,
   reports_count: dataset.reports.length,
-  source: "community_post+post_reply+post_report",
+  source: "community_post+post_reply+post_report+page_view_event",
 });
 
 const latestReportDate = (items: AdminCommunityReportItemDTO[]) =>

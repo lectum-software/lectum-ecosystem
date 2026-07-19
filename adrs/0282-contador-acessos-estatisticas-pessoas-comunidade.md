@@ -40,3 +40,16 @@ A métrica disponível e auditável para acessos é `page_view_event`, já colet
 ## Pendências
 
 - Nenhuma pendência externa.
+
+## Complemento - Aba Geral
+
+A mesma métrica de acessos também passa a alimentar `highlight_counters.accesses_count` no detalhe administrativo da comunidade. Na aba **Geral**, o card **Acessos** aparece antes de **Posts de pacientes** e usa o total histórico de `page_view_event` da comunidade e de seus conteúdos relacionados, sem backfill artificial.
+
+### Validação do complemento Aba Geral
+
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check`
+- Smoke HTTP local `GET http://localhost:3002/comunidades/autocuidado-em-pratica` retornou 200.

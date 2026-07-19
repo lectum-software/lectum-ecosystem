@@ -666,6 +666,12 @@ const buildCommunityHighlightCounterItems = (
   detail: AdminCommunityDetail,
 ): CommunityHighlightCounterItem[] => [
   {
+    icon: Eye,
+    id: "accesses",
+    label: "Acessos",
+    value: detail.highlight_counters.accesses_count,
+  },
+  {
     icon: FileText,
     id: "patient_posts",
     label: "Posts de pacientes",
@@ -717,7 +723,7 @@ const CommunityHighlightCounters = ({ detail }: { detail: AdminCommunityDetail }
       <h2 className="sr-only" id="community-highlight-counters-title">
         Contadores de destaque da comunidade
       </h2>
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-6">
         {items.map((item) => (
           <CommunityHighlightCounterCard item={item} key={item.id} />
         ))}
