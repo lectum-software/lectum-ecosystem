@@ -3397,6 +3397,91 @@ const StatisticsVideoCard = ({
 const formatTrafficNullableCount = (value: number | null) =>
   numberFormatter.format(typeof value === "number" ? value : 0);
 
+type PsychologistPlatformHourlyActivityPoint = NonNullable<
+  AdminPsychologistStatistics["platform_usage"]["hourly_activity"]
+>[number];
+type PsychologistPlatformHourlyActivityMetricKey =
+  | "accesses"
+  | "engagement"
+  | "posts"
+  | "replies"
+  | "reports";
+type PsychologistPlatformHourlyActivitySelection = "all" | `${number}`;
+
+const psychologistPlatformHourlyActivityBreakdown: {
+  className: string;
+  key: PsychologistPlatformHourlyActivityMetricKey;
+  label: string;
+}[] = [
+  { className: "bg-primary", key: "accesses", label: "Acessos" },
+  { className: "bg-success", key: "posts", label: "Posts" },
+  { className: "bg-warning", key: "replies", label: "Respostas" },
+  { className: "bg-muted", key: "engagement", label: "Interações" },
+  { className: "bg-danger", key: "reports", label: "Denúncias" },
+];
+
+const psychologistPlatformWeekdayDisplayOrder = [1, 2, 3, 4, 5, 6, 0] as const;
+
+const psychologistPlatformWeekdayLabel = (day: number) =>
+  day === 0
+    ? "Dom"
+    : day === 1
+      ? "Seg"
+      : day === 2
+        ? "Ter"
+        : day === 3
+          ? "Qua"
+          : day === 4
+            ? "Qui"
+            : day === 5
+              ? "Sex"
+              : "Sáb";
+
+const safePsychologistActivityCount = (value: number | null | undefined) => {
+  const numeric = Number(value ?? 0);
+
+  return Number.isFinite(numeric) && numeric > 0 ? Math.trunc(numeric) : 0;
+};
+
+const formatPsychologistPlatformActivityHourRange = (hour: number) => {
+  const normalizedHour = Math.min(23, Math.max(0, Math.floor(hour)));
+  const nextHour = (normalizedHour + 1) % 24;
+
+  return `${String(normalizedHour).padStart(2, "0")}h-${String(nextHour).padStart(2, "0")}h`;
+};
+
+const normalizePsychologistPlatformHourlyActivityPoint = (
+  point: Partial<PsychologistPlatformHourlyActivityPoint> | undefined,
+  hour: number,
+): PsychologistPlatformHourlyActivityPoint => {
+  const fallbackAccesses = safePsychologistActivityCount(point?.count);
+  const accesses =
+    point?.accesses === undefined || point.accesses === null
+      ? fallbackAccesses
+      : safePsychologistActivityCount(point.accesses);
+  const posts = safePsychologistActivityCount(point?.posts);
+  const replies = safePsychologistActivityCount(point?.replies);
+  const engagement = safePsychologistActivityCount(point?.engagement);
+  const reports = safePsychologistActivityCount(point?.reports);
+  const total =
+    point?.total === undefined || point.total === null
+      ? accesses + posts + replies + engagement + reports
+      : safePsychologistActivityCount(point.total);
+
+  return {
+    accesses,
+    count: total,
+    engagement,
+    hour,
+    label: point?.label || formatPsychologistPlatformActivityHourRange(hour),
+    percentage: point?.percentage ?? 0,
+    posts,
+    replies,
+    reports,
+    total,
+  };
+};
+
 const PsychologistTrafficSourcesCard = ({
   isRefreshing = false,
   periodControls,
@@ -3510,34 +3595,56 @@ const PsychologistPlatformUsageCard = ({
   statistics: AdminPsychologistStatistics;
 }) => {
   const usage = statistics.platform_usage;
-  const peakActivityHours = usage.peak_activity_hours ?? [];
-  const platformActivityHourSource =
-    usage.hourly_activity && usage.hourly_activity.length > 0
-      ? usage.hourly_activity
-      : peakActivityHours;
-  const platformActivityHoursByHour = new Map(
-    platformActivityHourSource.map((hour) => [hour.hour, hour]),
-  );
-  const platformActivityHours = Array.from({ length: 24 }, (_, hour) => {
-    const activityHour = platformActivityHoursByHour.get(hour);
-    const nextHour = (hour + 1) % 24;
-    const fallbackLabel = `${String(hour).padStart(2, "0")}h-${String(nextHour).padStart(2, "0")}h`;
+  const [selectedWeekday, setSelectedWeekday] =
+    useState<PsychologistPlatformHourlyActivitySelection>("all");
+  const platformActivityHours = useMemo(() => {
+    const peakActivityHours = usage.peak_activity_hours ?? [];
+    const activitySource =
+      usage.hourly_activity && usage.hourly_activity.length > 0
+        ? usage.hourly_activity
+        : peakActivityHours;
+    const activityByHour = new Map(activitySource.map((hour) => [hour.hour, hour]));
 
-    return {
-      count: activityHour?.count ?? 0,
-      hour,
-      label: activityHour?.label ?? fallbackLabel,
-      percentage: activityHour?.percentage ?? 0,
-    };
-  });
+    return Array.from({ length: 24 }, (_, hour) =>
+      normalizePsychologistPlatformHourlyActivityPoint(activityByHour.get(hour), hour),
+    );
+  }, [usage.hourly_activity, usage.peak_activity_hours]);
+  const platformActivityHoursByWeekday = useMemo(() => {
+    const activityByDay = new Map(
+      (usage.hourly_activity_by_weekday ?? []).map((item) => [item.day, item]),
+    );
+
+    return new Map(
+      psychologistPlatformWeekdayDisplayOrder.map((day) => {
+        const item = activityByDay.get(day);
+        const activityByHour = new Map((item?.hours ?? []).map((hour) => [hour.hour, hour]));
+
+        return [
+          String(day) as PsychologistPlatformHourlyActivitySelection,
+          {
+            day,
+            label: item?.label ?? psychologistPlatformWeekdayLabel(day),
+            points: Array.from({ length: 24 }, (_, hour) =>
+              normalizePsychologistPlatformHourlyActivityPoint(activityByHour.get(hour), hour),
+            ),
+          },
+        ];
+      }),
+    );
+  }, [usage.hourly_activity_by_weekday]);
+  const selectedWeekdayItem =
+    selectedWeekday === "all" ? null : platformActivityHoursByWeekday.get(selectedWeekday);
+  const chartActivityHours = selectedWeekdayItem?.points ?? platformActivityHours;
+  const selectedWeekdayLabel = selectedWeekdayItem?.label ?? "Todos os dias";
   const totalPlatformActivityHours = platformActivityHours.reduce(
-    (total, hour) => total + hour.count,
+    (total, hour) => total + hour.total,
     0,
   );
-  const maxPlatformActivityHourCount = Math.max(
-    1,
-    ...platformActivityHours.map((hour) => hour.count),
+  const chartTotalPlatformActivityHours = chartActivityHours.reduce(
+    (total, hour) => total + hour.total,
+    0,
   );
+  const maxPlatformActivityHourCount = Math.max(1, ...chartActivityHours.map((hour) => hour.total));
 
   return (
     <CardShell className="p-5">
@@ -3614,58 +3721,110 @@ const PsychologistPlatformUsageCard = ({
                 Hor&aacute;rios de maior atividade
               </h3>
               <p className="mt-1 text-xs font-bold leading-5 text-muted">
-                Distribui&ccedil;&atilde;o por hora dos acessos autenticados do psic&oacute;logo no
+                Distribui&ccedil;&atilde;o por hora das atividades reais do psic&oacute;logo no
                 per&iacute;odo.
               </p>
             </div>
 
             {totalPlatformActivityHours > 0 ? (
               <>
-                <div className="mt-3 overflow-x-auto rounded-[1.5rem] border border-border/70 bg-surface p-4">
-                  <div className="min-w-[760px]">
-                    <div
-                      aria-label="Distribuicao horaria dos acessos autenticados do psicologo"
-                      className="flex h-44 items-end gap-1"
-                      role="img"
+                <div className="mt-3">
+                  <fieldset className="flex flex-wrap gap-2">
+                    <legend className="sr-only">
+                      Selecionar dia da semana do gr&aacute;fico de hor&aacute;rios do
+                      psic&oacute;logo
+                    </legend>
+                    <button
+                      aria-pressed={selectedWeekday === "all"}
+                      className={cn(
+                        "rounded-full border px-3 py-1.5 text-xs font-black transition",
+                        selectedWeekday === "all"
+                          ? "border-primary bg-primary-soft text-primary"
+                          : "border-border bg-surface text-muted hover:border-primary/35 hover:text-primary",
+                      )}
+                      onClick={() => setSelectedWeekday("all")}
+                      type="button"
                     >
-                      {platformActivityHours.map((hour) => {
-                        const percentage = (hour.count / maxPlatformActivityHourCount) * 100;
-                        const barHeight = hour.count > 0 ? Math.max(8, percentage) : 2;
+                      Todos
+                    </button>
+                    {[...platformActivityHoursByWeekday.entries()].map(([id, item]) => (
+                      <button
+                        aria-pressed={selectedWeekday === id}
+                        className={cn(
+                          "rounded-full border px-3 py-1.5 text-xs font-black transition",
+                          selectedWeekday === id
+                            ? "border-primary bg-primary-soft text-primary"
+                            : "border-border bg-surface text-muted hover:border-primary/35 hover:text-primary",
+                        )}
+                        key={id}
+                        onClick={() => setSelectedWeekday(id)}
+                        type="button"
+                      >
+                        {item.label}
+                      </button>
+                    ))}
+                  </fieldset>
+                </div>
 
-                        return (
-                          <div
-                            className="flex min-w-0 flex-1 flex-col items-center justify-end gap-2"
-                            key={hour.hour}
-                          >
-                            <div className="flex h-32 w-full items-end justify-center rounded-t-xl bg-surface-muted px-1">
-                              <span
-                                className="w-full max-w-[1rem] rounded-t-full bg-primary transition"
-                                style={{ height: `${String(barHeight)}%` }}
-                                title={
-                                  hour.label +
-                                  ": " +
-                                  numberFormatter.format(hour.count) +
-                                  " acessos (" +
-                                  hour.percentage.toLocaleString("pt-BR") +
-                                  "%)"
-                                }
-                              />
+                <div className="mt-5 overflow-x-auto rounded-[1.5rem] border border-border/70 bg-surface p-4">
+                  <div className="min-w-[760px]">
+                    {chartTotalPlatformActivityHours === 0 ? (
+                      <div className="rounded-2xl border border-dashed border-border bg-surface-muted p-6 text-sm font-bold text-muted">
+                        Nenhuma atividade real foi registrada para{" "}
+                        {selectedWeekdayLabel.toLowerCase()}.
+                      </div>
+                    ) : (
+                      <div
+                        aria-label={`Distribuição horária de atividade do psicólogo em ${selectedWeekdayLabel}`}
+                        className="flex h-44 items-end gap-1"
+                        role="img"
+                      >
+                        {chartActivityHours.map((hour) => {
+                          const percentage = (hour.total / maxPlatformActivityHourCount) * 100;
+                          const barHeight = hour.total > 0 ? Math.max(8, percentage) : 2;
+
+                          return (
+                            <div
+                              className="flex min-w-0 flex-1 flex-col items-center justify-end gap-2"
+                              key={hour.hour}
+                            >
+                              <div className="flex h-32 w-full items-end justify-center rounded-t-xl bg-surface-muted px-1">
+                                <span
+                                  className="w-full max-w-[1rem] rounded-t-full bg-primary transition"
+                                  style={{ height: `${barHeight}%` }}
+                                  title={`${hour.label}: ${numberFormatter.format(
+                                    hour.total,
+                                  )} atividades`}
+                                />
+                              </div>
+                              <span className="text-[10px] font-bold text-subtle">
+                                {String(hour.hour).padStart(2, "0")}h
+                              </span>
                             </div>
-                            <span className="text-[10px] font-bold text-subtle">
-                              {String(hour.hour).padStart(2, "0")}h
-                            </span>
-                          </div>
-                        );
-                      })}
-                    </div>
+                          );
+                        })}
+                      </div>
+                    )}
                   </div>
                 </div>
 
                 <div className="mt-4 flex flex-wrap gap-2">
-                  <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-surface-muted px-2.5 py-1 text-[11px] font-bold text-muted">
-                    <span className="h-2 w-2 rounded-full bg-primary" />
-                    Acessos: {numberFormatter.format(totalPlatformActivityHours)}
-                  </span>
+                  {psychologistPlatformHourlyActivityBreakdown.map((metric) => {
+                    const value = chartActivityHours.reduce(
+                      (total, hour) => total + hour[metric.key],
+                      0,
+                    );
+
+                    return (
+                      <span
+                        className="inline-flex items-center gap-1.5 rounded-full border border-border bg-surface-muted px-2.5 py-1 text-[11px] font-bold text-muted"
+                        key={metric.key}
+                      >
+                        <span className={cn("h-2 w-2 rounded-full", metric.className)} />
+                        {metric.label}: {numberFormatter.format(value)}
+                      </span>
+                    );
+                  })}
                 </div>
               </>
             ) : (

@@ -947,10 +947,32 @@ export type AdminPsychologistStatistics = {
     average_duration_seconds: number | null;
     duration_unavailable_reason: string | null;
     hourly_activity?: {
+      accesses: number;
       count: number;
+      engagement: number;
       hour: number;
       label: string;
       percentage: number;
+      posts: number;
+      replies: number;
+      reports: number;
+      total: number;
+    }[];
+    hourly_activity_by_weekday?: {
+      day: number;
+      hours: {
+        accesses: number;
+        count: number;
+        engagement: number;
+        hour: number;
+        label: string;
+        percentage: number;
+        posts: number;
+        replies: number;
+        reports: number;
+        total: number;
+      }[];
+      label: string;
     }[];
     last_access_at: string | null;
     period_from: string;
@@ -964,7 +986,7 @@ export type AdminPsychologistStatistics = {
     pwa_installation_recorded: boolean;
     pwa_installed_at: string | null;
     sessions_count: number;
-    source: "page_view_event+important_action_event";
+    source: "page_view_event+important_action_event+community_post+post_reply+post_vote+post_save+post_reply_save+post_share+post_report";
     top_pages: {
       count: number;
       label: string;

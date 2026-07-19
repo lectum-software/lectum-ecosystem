@@ -2,6 +2,7 @@
 import { error, msg } from "@/helpers/translate";
 import {
   summarizePlatformHourlyActivity,
+  summarizePlatformHourlyActivityByWeekday,
   summarizePlatformPeakActivityHours,
   summarizePlatformUsage,
   summarizePsychologistTrafficOrigins,
@@ -897,6 +898,13 @@ export const showAdminPsychologistStatistics = async (
     replyVotes,
     postShares,
     replyShares,
+    platformPostSaves,
+    platformReplySaves,
+    platformPostVotes,
+    platformReplyVotes,
+    platformPostShares,
+    platformReplyShares,
+    platformReports,
     previousPostSaves,
     previousReplySaves,
     previousCommentsReceived,
@@ -912,6 +920,13 @@ export const showAdminPsychologistStatistics = async (
     repository.listReplyVotes(replyIds, period.current.start, period.current.end),
     repository.listPostShareEvents(postIds, period.current.start, period.current.end),
     repository.listReplyShareEvents(replyIds, period.current.start, period.current.end),
+    repository.listPostSavesByUser(userId, period.current.start, period.current.end),
+    repository.listReplySavesByUser(userId, period.current.start, period.current.end),
+    repository.listPostVotesByUser(userId, period.current.start, period.current.end),
+    repository.listReplyVotesByUser(userId, period.current.start, period.current.end),
+    repository.listPostShareEventsByUser(userId, period.current.start, period.current.end),
+    repository.listReplyShareEventsByUser(userId, period.current.start, period.current.end),
+    repository.listReportsByUser(userId, period.current.start, period.current.end),
     repository.listPostSaves(previousPostIds, period.previous.start, period.previous.end),
     repository.listReplySaves(previousReplyIds, period.previous.start, period.previous.end),
     repository.listCommentsReceived(
@@ -982,7 +997,24 @@ export const showAdminPsychologistStatistics = async (
     eligiblePsychologistsCount: 1,
     pageViews: platformPageViews,
   });
-  const platformHourlyActivity = summarizePlatformHourlyActivity(platformPageViews);
+  const platformHourlyActivityInput = {
+    engagementEvents: [
+      ...platformPostSaves,
+      ...platformReplySaves,
+      ...platformPostVotes,
+      ...platformReplyVotes,
+      ...platformPostShares,
+      ...platformReplyShares,
+    ],
+    pageViews: platformPageViews,
+    posts,
+    replies,
+    reportEvents: platformReports,
+  };
+  const platformHourlyActivity = summarizePlatformHourlyActivity(platformHourlyActivityInput);
+  const platformHourlyActivityByWeekday = summarizePlatformHourlyActivityByWeekday(
+    platformHourlyActivityInput,
+  );
   const platformUsage = {
     access_days_count:
       platformPageViews.length > 0
@@ -1002,8 +1034,10 @@ export const showAdminPsychologistStatistics = async (
     pwa_installation_recorded: Boolean(pwaInstallAction),
     pwa_installed_at: pwaInstallAction?.occurred_at ?? null,
     sessions_count: new Set(platformPageViews.map((view) => view.session_id)).size,
-    source: "page_view_event+important_action_event" as const,
+    source:
+      "page_view_event+important_action_event+community_post+post_reply+post_vote+post_save+post_reply_save+post_share+post_report" as const,
     hourly_activity: platformHourlyActivity,
+    hourly_activity_by_weekday: platformHourlyActivityByWeekday,
     peak_activity_hours: summarizePlatformPeakActivityHours(platformPageViews),
     top_pages: platformUsageSummary.top_pages,
     unavailable_reason: platformUsageSummary.unavailable_reason,

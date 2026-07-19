@@ -1141,3 +1141,14 @@ Regras de cálculo:
 - Nao houve package novo, mock, endpoint paralelo, schema Prisma/migration, seed, backfill ou alteracao de persistencia.
 - Builder/Quick Copy nao esta exposto como ferramenta callable no ambiente; foram usadas a captura enviada pelo usuario e o padrao existente do grafico de **Horarios de maior atividade** da aba de comunidades.
 - Validacoes executadas: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check`, API local autenticada confirmando `platform_usage.hourly_activity` com 24 pontos e browser local/headless via Chrome/CDP em `/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=estatisticas` confirmando 24 barras de `00h` a `23h` sem texto de **Pico** no grafico.
+
+## Ajuste complementar 2026-07-19 - Categorias e dias no grafico horario do psicologo
+
+- Pedido do usuario: em **Horarios de maior atividade** do psicologo, adicionar as opcoes **Posts**, **Respostas**, **Interacoes** e **Denuncias** no grafico e tambem as opcoes de dias da semana (**Todos**, **Seg**, **Ter**, **Qua**, **Qui**, **Sex**, **Sab**, **Dom**).
+- O backend estendeu `platform_usage.hourly_activity` e adicionou `platform_usage.hourly_activity_by_weekday`, sempre com 24 faixas horarias por recorte disponivel e breakdown real por `accesses`, `posts`, `replies`, `engagement`, `reports` e `total`.
+- As categorias medem atividade real do psicologo na Lectum: acessos autenticados via `page_view_event.user_id`, posts/respostas autoriais via `community_post` e `post_reply`, interacoes feitas pelo psicologo via votos/salvamentos/compartilhamentos em conteudo de comunidade e denuncias feitas pelo psicologo via `post_report.reporter_id`.
+- A UI Admin passou a renderizar chips de dia da semana acima do grafico e a legenda completa no mesmo padrao visual do grafico de comunidades, mantendo o grafico sem blocos de **Pico** e abaixo de **Paginas mais acessadas**.
+- Nao houve package novo, mock, endpoint paralelo, schema Prisma/migration, seed, backfill ou alteracao de persistencia.
+- Builder/Quick Copy nao esta exposto como ferramenta callable no ambiente; foram usadas as capturas enviadas pelo usuario e o padrao existente do grafico de **Horarios de maior atividade** das comunidades.
+- ADR atualizado: `adrs/0266-metricas-conversao-uso-psicologos-admin.md`.
+- Validacoes executadas: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check`, smoke service real confirmando `hourly_activity` com 24 pontos e `hourly_activity_by_weekday` com 7 dias, e browser local/headless via Chrome/CDP em `/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=estatisticas` confirmando 24 barras, chips de dias, legenda completa e ausencia de **Pico**.

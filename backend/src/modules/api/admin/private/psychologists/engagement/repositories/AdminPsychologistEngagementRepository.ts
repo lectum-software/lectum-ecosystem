@@ -432,6 +432,157 @@ export class AdminPsychologistEngagementRepository {
     });
   }
 
+  async listPostSavesByUser(userId: string, from?: Date, to?: Date) {
+    return prisma.post_save.findMany({
+      orderBy: { createdAt: "asc" },
+      select: { createdAt: true, post_id: true },
+      where: {
+        ...(from && to ? { createdAt: { gte: from, lte: to } } : {}),
+        deleted: false,
+        post: {
+          community: { deleted: false },
+          deleted: false,
+          status: "publicado",
+        },
+        user_id: userId,
+      },
+    });
+  }
+
+  async listReplySavesByUser(userId: string, from?: Date, to?: Date) {
+    return prisma.post_reply_save.findMany({
+      orderBy: { createdAt: "asc" },
+      select: { createdAt: true, reply_id: true },
+      where: {
+        ...(from && to ? { createdAt: { gte: from, lte: to } } : {}),
+        deleted: false,
+        reply: {
+          deleted: false,
+          post: {
+            community: { deleted: false },
+            deleted: false,
+            status: "publicado",
+          },
+        },
+        user_id: userId,
+      },
+    });
+  }
+
+  async listPostVotesByUser(userId: string, from?: Date, to?: Date) {
+    return prisma.post_vote.findMany({
+      orderBy: { createdAt: "asc" },
+      select: { createdAt: true, post_id: true, value: true },
+      where: {
+        ...(from && to ? { createdAt: { gte: from, lte: to } } : {}),
+        deleted: false,
+        post: {
+          community: { deleted: false },
+          deleted: false,
+          status: "publicado",
+        },
+        post_id: { not: null },
+        user_id: userId,
+        value: { in: [1, -1] },
+      },
+    });
+  }
+
+  async listReplyVotesByUser(userId: string, from?: Date, to?: Date) {
+    return prisma.post_vote.findMany({
+      orderBy: { createdAt: "asc" },
+      select: { createdAt: true, reply_id: true, value: true },
+      where: {
+        ...(from && to ? { createdAt: { gte: from, lte: to } } : {}),
+        deleted: false,
+        reply: {
+          deleted: false,
+          post: {
+            community: { deleted: false },
+            deleted: false,
+            status: "publicado",
+          },
+        },
+        reply_id: { not: null },
+        user_id: userId,
+        value: { in: [1, -1] },
+      },
+    });
+  }
+
+  async listPostShareEventsByUser(userId: string, from?: Date, to?: Date) {
+    return prisma.post_share.findMany({
+      orderBy: { createdAt: "asc" },
+      select: { createdAt: true, post_id: true },
+      where: {
+        ...(from && to ? { createdAt: { gte: from, lte: to } } : {}),
+        deleted: false,
+        post: {
+          community: { deleted: false },
+          deleted: false,
+          status: "publicado",
+        },
+        reply_id: null,
+        user_id: userId,
+      },
+    });
+  }
+
+  async listReplyShareEventsByUser(userId: string, from?: Date, to?: Date) {
+    return prisma.post_share.findMany({
+      orderBy: { createdAt: "asc" },
+      select: { createdAt: true, reply_id: true },
+      where: {
+        ...(from && to ? { createdAt: { gte: from, lte: to } } : {}),
+        deleted: false,
+        reply: {
+          deleted: false,
+          post: {
+            community: { deleted: false },
+            deleted: false,
+            status: "publicado",
+          },
+        },
+        reply_id: { not: null },
+        user_id: userId,
+      },
+    });
+  }
+
+  async listReportsByUser(userId: string, from?: Date, to?: Date) {
+    return prisma.post_report.findMany({
+      orderBy: { createdAt: "asc" },
+      select: { createdAt: true, id: true },
+      where: {
+        ...(from && to ? { createdAt: { gte: from, lte: to } } : {}),
+        deleted: false,
+        OR: [
+          {
+            reply_id: null,
+            target_type: "post",
+            post: {
+              community: { deleted: false },
+              deleted: false,
+              status: "publicado",
+            },
+          },
+          {
+            reply_id: { not: null },
+            reply: {
+              deleted: false,
+              post: {
+                community: { deleted: false },
+                deleted: false,
+                status: "publicado",
+              },
+            },
+          },
+        ],
+        reporter_id: userId,
+      },
+    });
+  }
+
   async countReplyChildren(replyIds: string[]) {
     if (replyIds.length === 0) return [];
 

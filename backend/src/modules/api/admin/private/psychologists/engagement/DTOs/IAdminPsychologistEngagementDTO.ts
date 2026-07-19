@@ -129,18 +129,35 @@ export type AdminPsychologistPlatformUsagePeakActivityHour = {
   percentage: number;
 };
 
+export type AdminPsychologistPlatformUsageHourlyActivityPoint =
+  AdminPsychologistPlatformUsagePeakActivityHour & {
+    accesses: number;
+    engagement: number;
+    posts: number;
+    replies: number;
+    reports: number;
+    total: number;
+  };
+
+export type AdminPsychologistPlatformUsageWeekdayHourlyActivity = {
+  day: number;
+  hours: AdminPsychologistPlatformUsageHourlyActivityPoint[];
+  label: string;
+};
+
 export type AdminPsychologistPlatformUsage = {
   access_days_count: number;
   average_duration_seconds: number | null;
   duration_unavailable_reason: string | null;
-  hourly_activity: AdminPsychologistPlatformUsagePeakActivityHour[];
+  hourly_activity: AdminPsychologistPlatformUsageHourlyActivityPoint[];
+  hourly_activity_by_weekday: AdminPsychologistPlatformUsageWeekdayHourlyActivity[];
   last_access_at: Date | null;
   period_from: string;
   period_to: string;
   pwa_installation_recorded: boolean;
   pwa_installed_at: Date | null;
   sessions_count: number;
-  source: "page_view_event+important_action_event";
+  source: "page_view_event+important_action_event+community_post+post_reply+post_vote+post_save+post_reply_save+post_share+post_report";
   peak_activity_hours: AdminPsychologistPlatformUsagePeakActivityHour[];
   top_pages: AdminPsychologistPlatformUsageTopPage[];
   unavailable_reason: string | null;

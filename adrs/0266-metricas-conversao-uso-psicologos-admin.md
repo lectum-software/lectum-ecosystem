@@ -271,3 +271,15 @@ A UI do bloco **Uso da plataforma** renderiza **Horarios de maior atividade** ab
 A decisao permanece restrita a analytics first-party de navegacao na Lectum: nao infere atendimentos, consultas, sessoes clinicas, mensagens ou atividade em WhatsApp; nao cria tracking novo, schema Prisma, migration, package, mock, seed ou backfill.
 
 Validacao complementar 2026-07-19: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check`, API local autenticada confirmando `platform_usage.hourly_activity` com 24 pontos e browser local/headless via Chrome/CDP em `/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=estatisticas` confirmando 24 barras de `00h` a `23h` sem texto de **Pico** no grafico.
+
+## Complemento 2026-07-19 - Categorias e filtro semanal no grafico horario individual
+
+O grafico **Horarios de maior atividade** do bloco **Uso da plataforma** no detalhe administrativo do psicologo passa a usar o mesmo contrato analitico granular do grafico de comunidades: cada ponto horario expoe `accesses`, `posts`, `replies`, `engagement`, `reports` e `total`, e o contrato adiciona `platform_usage.hourly_activity_by_weekday` com os sete dias da semana.
+
+A decisao de dominio para manter o bloco como "uso do psicologo" e contar apenas acoes realizadas pelo proprio psicologo: `page_view_event.user_id` para acessos autenticados, `community_post.author_id` para posts, `post_reply.author_id` para respostas, `post_vote`/`post_save`/`post_reply_save`/`post_share` com `user_id` para interacoes, e `post_report.reporter_id` para denuncias. Interacoes recebidas em conteudos do psicologo continuam pertencendo as metricas de comunidade/publicacoes e nao entram como uso individual.
+
+O campo legado `peak_activity_hours` permanece como ranking curto de acessos para compatibilidade. Em `hourly_activity`, `count` acompanha `total` para compatibilidade de renderizacao, enquanto `accesses` preserva a contagem especifica de acessos. A UI usa `total` para altura das barras e a legenda por categoria para explicar a composicao do total.
+
+A UI Admin adiciona chips **Todos**, **Seg**, **Ter**, **Qua**, **Qui**, **Sex**, **Sab** e **Dom** acima do grafico, renderiza a legenda completa (**Acessos**, **Posts**, **Respostas**, **Interacoes**, **Denuncias**) e continua sem blocos de **Pico** no detalhe do psicologo. Nao houve schema Prisma, migration, endpoint paralelo, package, mock, seed ou backfill.
+
+Validacao complementar 2026-07-19: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check`, smoke service real confirmando `platform_usage.hourly_activity` com 24 pontos e `hourly_activity_by_weekday` com 7 dias, e browser local/headless via Chrome/CDP em `/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=estatisticas` confirmando 24 barras, chips de dias, legenda completa e ausencia de **Pico**.

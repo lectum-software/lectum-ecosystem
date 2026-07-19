@@ -324,6 +324,41 @@ export type AdminPsychologistPlatformPeakActivityHour = {
   percentage: number;
 };
 
+export type AdminPsychologistPlatformHourlyActivityPoint =
+  AdminPsychologistPlatformPeakActivityHour & {
+    accesses: number;
+    engagement: number;
+    posts: number;
+    replies: number;
+    reports: number;
+    total: number;
+  };
+
+export type AdminPsychologistPlatformWeekdayHourlyActivity = {
+  day: number;
+  hours: AdminPsychologistPlatformHourlyActivityPoint[];
+  label: string;
+};
+
+type AdminPsychologistPlatformDateActivity = {
+  createdAt: Date;
+};
+
+type AdminPsychologistPlatformHourlyActivityInput = {
+  engagementEvents: AdminPsychologistPlatformDateActivity[];
+  pageViews: AdminPsychologistAnalyticsPageView[];
+  posts: AdminPsychologistPlatformDateActivity[];
+  replies: AdminPsychologistPlatformDateActivity[];
+  reportEvents: AdminPsychologistPlatformDateActivity[];
+};
+
+type AdminPsychologistPlatformHourlyActivityMetric =
+  | "accesses"
+  | "engagement"
+  | "posts"
+  | "replies"
+  | "reports";
+
 const platformActivityHourLabel = (hour: number) => {
   const normalizedHour = Math.min(23, Math.max(0, Math.trunc(hour)));
   const nextHour = (normalizedHour + 1) % 24;
@@ -332,7 +367,115 @@ const platformActivityHourLabel = (hour: number) => {
   return `${formatHour(normalizedHour)}h-${formatHour(nextHour)}h`;
 };
 
-export const summarizePlatformHourlyActivity = (
+const platformWeekdayLabels = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"] as const;
+
+const emptyPlatformHourlyActivityPoint = (
+  hour: number,
+): AdminPsychologistPlatformHourlyActivityPoint => ({
+  accesses: 0,
+  count: 0,
+  engagement: 0,
+  hour,
+  label: platformActivityHourLabel(hour),
+  percentage: 0,
+  posts: 0,
+  replies: 0,
+  reports: 0,
+  total: 0,
+});
+
+const createPlatformHourlyActivityMap = () =>
+  new Map(Array.from({ length: 24 }, (_, hour) => [hour, emptyPlatformHourlyActivityPoint(hour)]));
+
+const finalizePlatformHourlyActivityMap = (
+  hourly: Map<number, AdminPsychologistPlatformHourlyActivityPoint>,
+  options: { includeEmpty?: boolean } = {},
+) => {
+  const points = [...hourly.values()];
+  const total = points.reduce((sum, point) => sum + point.total, 0);
+  if (total === 0 && !options.includeEmpty) return [];
+
+  return points.map((point) => ({
+    ...point,
+    count: point.total,
+    percentage: total > 0 ? roundOneDecimal((point.total / total) * 100) : 0,
+  }));
+};
+
+const incrementPlatformHourlyActivity = (
+  hourly: Map<number, AdminPsychologistPlatformHourlyActivityPoint>,
+  date: Date,
+  field: AdminPsychologistPlatformHourlyActivityMetric,
+) => {
+  const point = hourly.get(date.getHours());
+  if (!point) return;
+
+  point[field] += 1;
+  point.total += 1;
+};
+
+const incrementPlatformHourlyActivityCollections = (
+  hourly: Map<number, AdminPsychologistPlatformHourlyActivityPoint>,
+  hourlyByWeekday: Map<
+    number,
+    {
+      hours: Map<number, AdminPsychologistPlatformHourlyActivityPoint>;
+      label: string;
+    }
+  >,
+  date: Date,
+  field: AdminPsychologistPlatformHourlyActivityMetric,
+) => {
+  incrementPlatformHourlyActivity(hourly, date, field);
+  const weekday = hourlyByWeekday.get(date.getDay());
+  if (weekday) incrementPlatformHourlyActivity(weekday.hours, date, field);
+};
+
+const buildPlatformHourlyActivityCollections = (
+  input: AdminPsychologistPlatformHourlyActivityInput,
+) => {
+  const hourly = createPlatformHourlyActivityMap();
+  const hourlyByWeekday = new Map(
+    platformWeekdayLabels.map((label, day) => [
+      day,
+      {
+        hours: createPlatformHourlyActivityMap(),
+        label,
+      },
+    ]),
+  );
+
+  for (const view of input.pageViews) {
+    if (!view.user_id) continue;
+    incrementPlatformHourlyActivityCollections(
+      hourly,
+      hourlyByWeekday,
+      view.occurred_at,
+      "accesses",
+    );
+  }
+  for (const post of input.posts) {
+    incrementPlatformHourlyActivityCollections(hourly, hourlyByWeekday, post.createdAt, "posts");
+  }
+  for (const reply of input.replies) {
+    incrementPlatformHourlyActivityCollections(hourly, hourlyByWeekday, reply.createdAt, "replies");
+  }
+  for (const event of input.engagementEvents) {
+    incrementPlatformHourlyActivityCollections(
+      hourly,
+      hourlyByWeekday,
+      event.createdAt,
+      "engagement",
+    );
+  }
+  for (const event of input.reportEvents) {
+    incrementPlatformHourlyActivityCollections(hourly, hourlyByWeekday, event.createdAt, "reports");
+  }
+
+  return { hourly, hourlyByWeekday };
+};
+
+const summarizePlatformAccessHourlyActivity = (
   pageViews: AdminPsychologistAnalyticsPageView[],
 ): AdminPsychologistPlatformPeakActivityHour[] => {
   const viewsWithUser = pageViews.filter((view) => view.user_id);
@@ -354,10 +497,33 @@ export const summarizePlatformHourlyActivity = (
   }));
 };
 
+export const summarizePlatformHourlyActivity = (
+  input: AdminPsychologistPlatformHourlyActivityInput,
+): AdminPsychologistPlatformHourlyActivityPoint[] => {
+  return finalizePlatformHourlyActivityMap(buildPlatformHourlyActivityCollections(input).hourly);
+};
+
+export const summarizePlatformHourlyActivityByWeekday = (
+  input: AdminPsychologistPlatformHourlyActivityInput,
+): AdminPsychologistPlatformWeekdayHourlyActivity[] => {
+  const { hourlyByWeekday } = buildPlatformHourlyActivityCollections(input);
+  const hasActivity = [...hourlyByWeekday.values()].some((item) =>
+    [...item.hours.values()].some((point) => point.total > 0),
+  );
+
+  if (!hasActivity) return [];
+
+  return [...hourlyByWeekday.entries()].map(([day, item]) => ({
+    day,
+    hours: finalizePlatformHourlyActivityMap(item.hours, { includeEmpty: true }),
+    label: item.label,
+  }));
+};
+
 export const summarizePlatformPeakActivityHours = (
   pageViews: AdminPsychologistAnalyticsPageView[],
 ): AdminPsychologistPlatformPeakActivityHour[] => {
-  return summarizePlatformHourlyActivity(pageViews)
+  return summarizePlatformAccessHourlyActivity(pageViews)
     .filter((point) => point.count > 0)
     .sort((left, right) => {
       if (right.count !== left.count) return right.count - left.count;
