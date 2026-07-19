@@ -332,27 +332,33 @@ const platformActivityHourLabel = (hour: number) => {
   return `${formatHour(normalizedHour)}h-${formatHour(nextHour)}h`;
 };
 
-export const summarizePlatformPeakActivityHours = (
+export const summarizePlatformHourlyActivity = (
   pageViews: AdminPsychologistAnalyticsPageView[],
 ): AdminPsychologistPlatformPeakActivityHour[] => {
   const viewsWithUser = pageViews.filter((view) => view.user_id);
-  const countsByHour = new Map<number, number>();
+  const countsByHour = Array.from({ length: 24 }, () => 0);
 
   for (const view of viewsWithUser) {
     const hour = view.occurred_at.getHours();
-    countsByHour.set(hour, (countsByHour.get(hour) ?? 0) + 1);
+    countsByHour[hour] += 1;
   }
 
   const total = viewsWithUser.length;
   if (total === 0) return [];
 
-  return [...countsByHour.entries()]
-    .map(([hour, count]) => ({
-      count,
-      hour,
-      label: platformActivityHourLabel(hour),
-      percentage: roundOneDecimal((count / total) * 100),
-    }))
+  return countsByHour.map((count, hour) => ({
+    count,
+    hour,
+    label: platformActivityHourLabel(hour),
+    percentage: roundOneDecimal((count / total) * 100),
+  }));
+};
+
+export const summarizePlatformPeakActivityHours = (
+  pageViews: AdminPsychologistAnalyticsPageView[],
+): AdminPsychologistPlatformPeakActivityHour[] => {
+  return summarizePlatformHourlyActivity(pageViews)
+    .filter((point) => point.count > 0)
     .sort((left, right) => {
       if (right.count !== left.count) return right.count - left.count;
 

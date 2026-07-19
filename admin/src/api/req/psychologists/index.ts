@@ -946,6 +946,12 @@ export type AdminPsychologistStatistics = {
     access_days_count: number;
     average_duration_seconds: number | null;
     duration_unavailable_reason: string | null;
+    hourly_activity?: {
+      count: number;
+      hour: number;
+      label: string;
+      percentage: number;
+    }[];
     last_access_at: string | null;
     period_from: string;
     period_to: string;

@@ -133,6 +133,7 @@ export type AdminPsychologistPlatformUsage = {
   access_days_count: number;
   average_duration_seconds: number | null;
   duration_unavailable_reason: string | null;
+  hourly_activity: AdminPsychologistPlatformUsagePeakActivityHour[];
   last_access_at: Date | null;
   period_from: string;
   period_to: string;

@@ -1,6 +1,7 @@
 ﻿import type { Resolve } from "@/helpers/return";
 import { error, msg } from "@/helpers/translate";
 import {
+  summarizePlatformHourlyActivity,
   summarizePlatformPeakActivityHours,
   summarizePlatformUsage,
   summarizePsychologistTrafficOrigins,
@@ -981,6 +982,7 @@ export const showAdminPsychologistStatistics = async (
     eligiblePsychologistsCount: 1,
     pageViews: platformPageViews,
   });
+  const platformHourlyActivity = summarizePlatformHourlyActivity(platformPageViews);
   const platformUsage = {
     access_days_count:
       platformPageViews.length > 0
@@ -1001,6 +1003,7 @@ export const showAdminPsychologistStatistics = async (
     pwa_installed_at: pwaInstallAction?.occurred_at ?? null,
     sessions_count: new Set(platformPageViews.map((view) => view.session_id)).size,
     source: "page_view_event+important_action_event" as const,
+    hourly_activity: platformHourlyActivity,
     peak_activity_hours: summarizePlatformPeakActivityHours(platformPageViews),
     top_pages: platformUsageSummary.top_pages,
     unavailable_reason: platformUsageSummary.unavailable_reason,

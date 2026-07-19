@@ -1131,3 +1131,13 @@ Regras de cálculo:
 - Builder/Quick Copy nao esta exposto como ferramenta callable no ambiente; foram usados o PNG local `_product/proto/admin/Psicologos/Detalhes do psicologo/Estatisticas.png` e a captura enviada pelo usuario.
 - ADR atualizado: `adrs/0266-metricas-conversao-uso-psicologos-admin.md`.
 - Validacoes executadas: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check`, API local autenticada confirmando `platform_usage.peak_activity_hours` e browser local/headless via Chrome/CDP em `/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=estatisticas` confirmando o bloco **Horarios de maior atividade** renderizado com barras verticais.
+
+## Ajuste complementar 2026-07-19 - Layout do grafico de horarios do psicologo alinhado a comunidades
+
+- Pedido do usuario: em **Horarios de maior atividade** do psicologo, replicar o layout do grafico de horarios de maior atividade das comunidades, exceto os blocos de **Pico**.
+- O contrato Admin individual agora tambem retorna `platform_usage.hourly_activity` com a distribuicao de 24 horas dos acessos autenticados do psicologo no periodo; `peak_activity_hours` foi preservado como ranking curto de compatibilidade.
+- A UI Admin passou a renderizar o grafico no mesmo padrao visual do grafico de comunidades: 24 colunas horarias em container rolavel no mobile, barras verticais sobre trilhos claros, rotulos `00h` a `23h` e legenda de total de acessos.
+- Os blocos/badges de **Pico** nao sao exibidos nesse grafico do psicologo; o bloco continua abaixo de **Paginas mais acessadas**.
+- Nao houve package novo, mock, endpoint paralelo, schema Prisma/migration, seed, backfill ou alteracao de persistencia.
+- Builder/Quick Copy nao esta exposto como ferramenta callable no ambiente; foram usadas a captura enviada pelo usuario e o padrao existente do grafico de **Horarios de maior atividade** da aba de comunidades.
+- Validacoes executadas: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check`, API local autenticada confirmando `platform_usage.hourly_activity` com 24 pontos e browser local/headless via Chrome/CDP em `/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=estatisticas` confirmando 24 barras de `00h` a `23h` sem texto de **Pico** no grafico.

@@ -3511,7 +3511,33 @@ const PsychologistPlatformUsageCard = ({
 }) => {
   const usage = statistics.platform_usage;
   const peakActivityHours = usage.peak_activity_hours ?? [];
-  const maxPeakActivityHourCount = Math.max(0, ...peakActivityHours.map((hour) => hour.count));
+  const platformActivityHourSource =
+    usage.hourly_activity && usage.hourly_activity.length > 0
+      ? usage.hourly_activity
+      : peakActivityHours;
+  const platformActivityHoursByHour = new Map(
+    platformActivityHourSource.map((hour) => [hour.hour, hour]),
+  );
+  const platformActivityHours = Array.from({ length: 24 }, (_, hour) => {
+    const activityHour = platformActivityHoursByHour.get(hour);
+    const nextHour = (hour + 1) % 24;
+    const fallbackLabel = `${String(hour).padStart(2, "0")}h-${String(nextHour).padStart(2, "0")}h`;
+
+    return {
+      count: activityHour?.count ?? 0,
+      hour,
+      label: activityHour?.label ?? fallbackLabel,
+      percentage: activityHour?.percentage ?? 0,
+    };
+  });
+  const totalPlatformActivityHours = platformActivityHours.reduce(
+    (total, hour) => total + hour.count,
+    0,
+  );
+  const maxPlatformActivityHourCount = Math.max(
+    1,
+    ...platformActivityHours.map((hour) => hour.count),
+  );
 
   return (
     <CardShell className="p-5">
@@ -3583,76 +3609,68 @@ const PsychologistPlatformUsageCard = ({
           </section>
 
           <section>
-            <div className="flex flex-wrap items-end justify-between gap-3">
-              <div>
-                <h3 className="text-sm font-black text-foreground">Horários de maior atividade</h3>
-                <p className="mt-1 text-xs font-bold leading-5 text-muted">
-                  Faixas do dia com mais acessos autenticados do psicólogo no período.
-                </p>
-              </div>
-              {peakActivityHours[0] ? (
-                <Badge className="bg-primary-soft text-primary">
-                  Pico {peakActivityHours[0].label}
-                </Badge>
-              ) : null}
+            <div>
+              <h3 className="text-sm font-black text-foreground">
+                Hor&aacute;rios de maior atividade
+              </h3>
+              <p className="mt-1 text-xs font-bold leading-5 text-muted">
+                Distribui&ccedil;&atilde;o por hora dos acessos autenticados do psic&oacute;logo no
+                per&iacute;odo.
+              </p>
             </div>
 
-            {peakActivityHours.length > 0 ? (
-              <div
-                aria-label="Gráfico de barras verticais dos horários de maior atividade"
-                className="mt-3 rounded-[28px] border border-border/70 bg-surface p-4"
-                role="img"
-              >
-                <div className="flex h-56 items-end gap-3 border-b border-border/70 pb-3 sm:gap-4">
-                  {peakActivityHours.map((hour, index) => {
-                    const heightPercent =
-                      maxPeakActivityHourCount > 0
-                        ? Math.max(10, (hour.count / maxPeakActivityHourCount) * 100)
-                        : 0;
+            {totalPlatformActivityHours > 0 ? (
+              <>
+                <div className="mt-3 overflow-x-auto rounded-[1.5rem] border border-border/70 bg-surface p-4">
+                  <div className="min-w-[760px]">
+                    <div
+                      aria-label="Distribuicao horaria dos acessos autenticados do psicologo"
+                      className="flex h-44 items-end gap-1"
+                      role="img"
+                    >
+                      {platformActivityHours.map((hour) => {
+                        const percentage = (hour.count / maxPlatformActivityHourCount) * 100;
+                        const barHeight = hour.count > 0 ? Math.max(8, percentage) : 2;
 
-                    return (
-                      <div
-                        className="flex h-full min-w-0 flex-1 flex-col items-center justify-end gap-2"
-                        key={hour.hour}
-                      >
-                        <div className="text-center text-[11px] font-black leading-4 text-foreground sm:text-xs">
-                          {numberFormatter.format(hour.count)}
-                          <span className="block text-[10px] text-muted">
-                            {hour.percentage.toLocaleString("pt-BR")}%
-                          </span>
-                        </div>
-                        <div className="flex min-h-0 w-full flex-1 items-end justify-center">
+                        return (
                           <div
-                            aria-hidden
-                            className={cn(
-                              "w-full max-w-20 rounded-t-[1.35rem] transition-all",
-                              index === 0 ? "bg-primary" : "bg-primary/70",
-                            )}
-                            style={{ height: `${heightPercent}%` }}
-                          />
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-                <div className="mt-3 grid grid-cols-4 gap-3 sm:gap-4">
-                  {peakActivityHours.map((hour, index) => (
-                    <div className="min-w-0 text-center" key={hour.hour}>
-                      <p className="truncate text-[11px] font-black text-muted sm:text-xs">
-                        {hour.label}
-                      </p>
-                      {index === 0 ? (
-                        <p className="mt-1 text-[10px] font-black uppercase tracking-[0.12em] text-primary">
-                          Maior
-                        </p>
-                      ) : null}
+                            className="flex min-w-0 flex-1 flex-col items-center justify-end gap-2"
+                            key={hour.hour}
+                          >
+                            <div className="flex h-32 w-full items-end justify-center rounded-t-xl bg-surface-muted px-1">
+                              <span
+                                className="w-full max-w-[1rem] rounded-t-full bg-primary transition"
+                                style={{ height: `${String(barHeight)}%` }}
+                                title={
+                                  hour.label +
+                                  ": " +
+                                  numberFormatter.format(hour.count) +
+                                  " acessos (" +
+                                  hour.percentage.toLocaleString("pt-BR") +
+                                  "%)"
+                                }
+                              />
+                            </div>
+                            <span className="text-[10px] font-bold text-subtle">
+                              {String(hour.hour).padStart(2, "0")}h
+                            </span>
+                          </div>
+                        );
+                      })}
                     </div>
-                  ))}
+                  </div>
                 </div>
-              </div>
+
+                <div className="mt-4 flex flex-wrap gap-2">
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-surface-muted px-2.5 py-1 text-[11px] font-bold text-muted">
+                    <span className="h-2 w-2 rounded-full bg-primary" />
+                    Acessos: {numberFormatter.format(totalPlatformActivityHours)}
+                  </span>
+                </div>
+              </>
             ) : (
               <p className="mt-3 rounded-2xl border border-dashed border-border bg-surface-muted p-4 text-sm font-bold text-muted">
-                Sem horários de atividade registrados no período.
+                Sem hor&aacute;rios de atividade registrados no per&iacute;odo.
               </p>
             )}
           </section>

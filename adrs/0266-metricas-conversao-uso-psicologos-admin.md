@@ -261,3 +261,13 @@ O card **Ranking do psicologo** permanece estatico e como primeiro item do carro
 A barra de rolagem horizontal global apos a introducao do carrossel indica que o overflow interno nao estava contido no nivel da aba/card. A contencao horizontal deve ficar no root da aba, nos cards de estatisticas e no fieldset do carrossel (`overflow-x-clip` + `max-w-full`/`min-w-0`), enquanto o unico overflow intencional continua sendo o scroller interno controlado pelas setas.
 
 Validacao complementar 2026-07-17: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke HTTP local `GET http://localhost:3002/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=estatisticas` retornando 200.
+
+## Complemento 2026-07-19 - Layout do grafico horario individual alinhado a comunidades
+
+O detalhe administrativo do psicologo passa a expor, alem do ranking curto `peak_activity_hours`, a serie `platform_usage.hourly_activity` com as 24 faixas horarias derivadas dos `page_view_event` autenticados do proprio psicologo no periodo selecionado. A serie completa permite que o grafico individual use a mesma leitura visual do grafico de horarios das comunidades sem transformar o ranking de picos em fonte unica de renderizacao.
+
+A UI do bloco **Uso da plataforma** renderiza **Horarios de maior atividade** abaixo de **Paginas mais acessadas** como grafico de 24 barras verticais em container rolavel no mobile, com trilhos claros, rotulos horarios e legenda de total de acessos. Os cards/badges de **Pico** nao sao usados no detalhe do psicologo para evitar duplicar a hierarquia do bloco de comunidades e manter o foco em distribuicao horaria.
+
+A decisao permanece restrita a analytics first-party de navegacao na Lectum: nao infere atendimentos, consultas, sessoes clinicas, mensagens ou atividade em WhatsApp; nao cria tracking novo, schema Prisma, migration, package, mock, seed ou backfill.
+
+Validacao complementar 2026-07-19: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check`, API local autenticada confirmando `platform_usage.hourly_activity` com 24 pontos e browser local/headless via Chrome/CDP em `/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=estatisticas` confirmando 24 barras de `00h` a `23h` sem texto de **Pico** no grafico.
