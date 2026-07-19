@@ -2,7 +2,7 @@
 
 ## Status
 
-Accepted
+Superseded
 
 ## Task relacionada
 
@@ -44,3 +44,15 @@ A seção já existente de lista resumida em `/pacientes` recebeu o id `lista-de
 
 - Nenhuma pendência externa para este ajuste.
 - Possível evolução futura: rota real `/pacientes/lista` com endpoint dedicado, paginação e filtros, se definida em task de produto.
+
+## Revisao 2026-07-19 - Ancora de lista removida
+
+O feedback de produto removeu a **Lista de pacientes** do dashboard `/pacientes`. Como a secao `#lista-de-pacientes` deixou de existir e ainda nao ha uma rota real `/pacientes/lista`, a decisao deste ADR foi superseded.
+
+Decisoes revisadas:
+
+- Remover a entrada **Lista de pacientes** do menu lateral.
+- Voltar **Pacientes** a ser um item direto para `/pacientes`, sem submenu ate existir uma listagem real e dedicada.
+- Nao criar rota, endpoint, paginacao, filtros ou dados artificiais para substituir a ancora.
+
+Consequencia: o menu nao aponta para uma secao removida e continua honesto sobre as capacidades reais do Admin de Pacientes.

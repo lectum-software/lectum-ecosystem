@@ -66,3 +66,16 @@ A decisão mantém a V1 sem retenção/cohort retention: o novo dado mede permanênci
 O grafico **Forma de cadastro** do dashboard Admin de pacientes deve representar as duas vias reais do produto: **E-mail e senha** e **Google**. O campo bruto `user.provider` continua sendo a fonte auditavel, mas valores diferentes de `google` nao devem virar categorias visuais do produto; eles sao agrupados em **E-mail e senha** para evitar expor marcadores operacionais/legados como `admin_preview`.
 
 Consequencia: o Admin passa a comparar apenas as duas formas de cadastro esperadas, preservando o provider bruto nos contratos quando necessario para auditoria e sem schema Prisma, migration, endpoint novo, mock, seed ou backfill artificial.
+
+## Complemento 2026-07-19 - Dashboard sem lista resumida nem cobertura visivel
+
+Por feedback direto de produto, o dashboard Admin de pacientes deve focar somente na leitura agregada: **Visao Geral** e **Estatisticas simples**. A lista resumida de pacientes e o bloco visual **Cobertura dos dados** deixam de ser exibidos em `/pacientes`.
+
+Decisoes:
+
+- Remover a lista resumida da UI do dashboard para reduzir densidade visual e evitar expor nomes/e-mails logo na visao geral.
+- Remover o bloco de cobertura da UI, mantendo as lacunas de dados fora da tela principal nesta iteracao.
+- Nao alterar o endpoint `GET /api/admin/private/patients/dashboard` neste ajuste, para evitar mudanca de contrato sem task dedicada; `recent_patients`, `coverage_notes`, `unavailable` e `export` seguem disponiveis no payload Admin existente.
+- Se o produto quiser minimizacao tambem no contrato HTTP, uma proxima task deve ajustar DTO/backend/frontend com validacao especifica.
+
+Consequencia: a tela fica mais curta e objetiva, preservando dados reais e sem mock, schema Prisma, migration, endpoint novo ou package novo.

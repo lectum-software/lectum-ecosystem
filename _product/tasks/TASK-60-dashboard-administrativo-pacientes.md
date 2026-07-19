@@ -293,3 +293,23 @@ Frontend esperado:
 - Servico local `buildPatientsDashboard({ period: "all" })` retornou `signup_sources` com **E-mail e senha** (151, 100%) e **Google** (0, 0%), sem `admin_preview` como categoria.
 - Servico local `showAdminPatient(...)` retornou `provider="admin_preview"` preservado e `provider_label="E-mail e senha"`.
 - Browser local headless em `http://localhost:3002/pacientes` com sessao Admin real confirmou **Forma de cadastro**, **E-mail e senha**, **Google** e ausencia de `admin_preview` no texto da tela.
+
+
+## Ajuste pos-feedback 2026-07-19 - Remocao da lista e da cobertura no dashboard
+
+- Pedido do usuario: remover do dashboard `/pacientes` a **Lista de pacientes** e o bloco **Cobertura dos dados**.
+- A rota `/pacientes` agora renderiza apenas o header, o bloco **Visao Geral** com contadores/grafico e as **Estatisticas simples** por genero, localizacao agregada e forma de cadastro.
+- A lista resumida deixou de ser renderizada no dashboard em mobile e desktop; a ancora `#lista-de-pacientes` tambem foi removida do menu lateral para evitar navegacao para uma secao inexistente.
+- O submenu de Pacientes foi simplificado para item direto no menu Admin, ja que nao ha rota real `/pacientes/lista` com paginacao/filtros dedicados.
+- O bloco de cobertura deixou de aparecer na UI por decisao de produto. O contrato backend nao foi alterado nesta iteracao; `coverage_notes`, `unavailable`, `export` e `recent_patients` permanecem no payload existente para evitar mudanca de contrato fora do escopo.
+- Nao houve schema Prisma, migration, package novo, endpoint novo, seed, mock ou backfill artificial.
+- Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente; a referencia auditavel continua sendo `_product/proto/admin/Pacientes/Pacientes - Dashboard.png`, complementada pelos screenshots enviados pelo usuario em 2026-07-18.
+
+### Validacao complementar executada
+
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/pacientes/client.tsx" "src/components/admin-shell/nav.ts"`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check` foi tentado na validacao final, mas falhou em alteracoes fora do escopo ja presentes/concorrentes em `backend/src/modules/api/admin/private/communities/dashboard/use-cases/services.ts` (organizeImports/formatacao Biome de Comunidades). Nao alterei esse trabalho externo.
+- Smoke HTTP local: `GET http://localhost:3002/pacientes` retornou `200`.
+- Browser local headless em `http://localhost:3002/pacientes` carregou o fluxo protegido/login sem sessao Admin compartilhada; a ausencia dos blocos removidos foi validada no codigo fonte porque a sessao autenticada do navegador do usuario nao e acessivel por esta execucao.

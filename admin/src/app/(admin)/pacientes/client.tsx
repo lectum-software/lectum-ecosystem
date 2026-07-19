@@ -4,7 +4,6 @@ import {
   Activity,
   AlertTriangle,
   ChevronDown,
-  Eye,
   Loader2,
   type LucideIcon,
   MapPin,
@@ -14,8 +13,6 @@ import {
   UserRound,
   UsersRound,
 } from "lucide-react";
-import Image from "next/image";
-import Link from "next/link";
 import { type FocusEvent, useMemo, useState } from "react";
 import { useAdminPatientsDashboard } from "@/api/callers/patients";
 import { resolveApiError } from "@/api/handle";
@@ -25,7 +22,6 @@ import type {
   PatientsDashboardDailyPoint,
   PatientsDashboardMetric,
   PatientsDashboardQuery,
-  PatientsDashboardRecentPatient,
 } from "@/api/req/patients";
 import { aggregateCalendarChartPoints, buildSmoothSvgPath } from "@/lib/chart-time-series";
 import { cn } from "@/lib/utils";
@@ -113,12 +109,6 @@ const formatDate = (value: string) =>
     day: "2-digit",
     month: "short",
   }).format(dateFromInput(value));
-
-const formatDateTime = (value: string) =>
-  new Intl.DateTimeFormat("pt-BR", {
-    dateStyle: "short",
-    timeStyle: "short",
-  }).format(new Date(value));
 
 const formatChange = (value: number | null) => {
   if (value === null) return "sem base anterior";
@@ -562,179 +552,6 @@ const TimelineChart = ({
   );
 };
 
-const safeAvatarSrc = (src: string | null) => {
-  if (!src) return null;
-  if (src.startsWith("/")) return src;
-
-  try {
-    const url = new URL(src);
-    if (["localhost", "127.0.0.1"].includes(url.hostname)) return src;
-  } catch {
-    return null;
-  }
-
-  return null;
-};
-
-const Avatar = ({ name, src }: { name: string; src: string | null }) => {
-  const initials = name
-    .split(" ")
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0])
-    .join("")
-    .toUpperCase();
-  const imageSrc = safeAvatarSrc(src);
-
-  if (!imageSrc) {
-    return (
-      <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-primary-soft text-sm font-black text-primary">
-        {initials || "PA"}
-      </span>
-    );
-  }
-
-  return (
-    <Image
-      alt={`Foto de ${name}`}
-      className="h-11 w-11 shrink-0 rounded-full object-cover"
-      height={44}
-      src={imageSrc}
-      width={44}
-    />
-  );
-};
-
-const StatusBadge = ({ item }: { item: PatientsDashboardRecentPatient }) => (
-  <span
-    className={cn(
-      "inline-flex rounded-full px-2 py-1 text-xs font-black",
-      item.status === "active" ? "bg-emerald-50 text-success" : "bg-surface-muted text-muted",
-    )}
-  >
-    {item.status_label}
-  </span>
-);
-
-const RecentPatients = ({ summary }: { summary: AdminPatientsDashboard }) => (
-  <CardShell className="scroll-mt-6 overflow-hidden" id="lista-de-pacientes">
-    <div className="flex flex-col gap-2 border-b border-border p-5 sm:flex-row sm:items-center sm:justify-between">
-      <div>
-        <h2 className="text-xl font-black text-foreground">Lista de pacientes</h2>
-        <p className="mt-1 text-sm text-muted">
-          Mostrando {numberFormatter.format(summary.recent_patients.items.length)} de{" "}
-          {numberFormatter.format(summary.recent_patients.total)} pacientes.
-        </p>
-      </div>
-      <span className="w-fit rounded-full bg-surface-muted px-2 py-1 text-[0.65rem] font-bold text-muted">
-        {summary.recent_patients.source}
-      </span>
-    </div>
-
-    <div className="grid gap-3 p-4 lg:hidden">
-      {summary.recent_patients.items.map((item) => (
-        <article className="rounded-2xl border border-border p-4" key={item.id}>
-          <div className="flex items-start gap-3">
-            <Avatar name={item.name} src={item.avatar} />
-            <div className="min-w-0 flex-1">
-              <div className="flex flex-wrap items-center gap-2">
-                <h3 className="truncate font-black text-foreground">{item.name}</h3>
-                <StatusBadge item={item} />
-              </div>
-              <p className="truncate text-xs font-bold text-muted">{item.email}</p>
-              <p className="mt-2 text-sm font-bold text-foreground">
-                {item.recent_activity?.label || "Sem atividade recente além do cadastro"}
-              </p>
-              <p className="text-xs text-muted">
-                {item.recent_activity
-                  ? formatDateTime(item.recent_activity.occurred_at)
-                  : formatDateTime(item.created_at)}
-              </p>
-            </div>
-          </div>
-          <Link
-            className="mt-4 inline-flex h-10 items-center justify-center gap-2 rounded-control border border-border px-3 text-sm font-black text-primary"
-            href={item.detail_url}
-          >
-            <Eye aria-hidden className="h-4 w-4" />
-            Abrir detalhe
-          </Link>
-        </article>
-      ))}
-    </div>
-
-    <div className="hidden overflow-hidden lg:block">
-      <table className="w-full table-fixed text-left text-sm">
-        <caption className="sr-only">Lista resumida de pacientes administrativos</caption>
-        <colgroup>
-          <col className="w-[25%]" />
-          <col className="w-[12%]" />
-          <col className="w-[17%]" />
-          <col className="w-[16%]" />
-          <col className="w-[22%]" />
-          <col className="w-[8%]" />
-        </colgroup>
-        <thead className="text-xs text-muted">
-          <tr>
-            <th className="px-5 py-3 font-black">Paciente</th>
-            <th className="px-5 py-3 font-black">Status</th>
-            <th className="px-5 py-3 font-black">Localização agregada</th>
-            <th className="px-5 py-3 font-black">Cadastro em</th>
-            <th className="px-5 py-3 font-black">Atividade recente</th>
-            <th className="px-5 py-3 font-black">Ações</th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-border">
-          {summary.recent_patients.items.map((item) => (
-            <tr key={item.id}>
-              <td className="px-5 py-4">
-                <div className="flex min-w-0 items-center gap-3">
-                  <Avatar name={item.name} src={item.avatar} />
-                  <div className="min-w-0">
-                    <p className="truncate font-black text-foreground">{item.name}</p>
-                    <p className="truncate text-xs text-muted">{item.email}</p>
-                  </div>
-                </div>
-              </td>
-              <td className="px-5 py-4">
-                <StatusBadge item={item} />
-              </td>
-              <td className="truncate px-5 py-4 text-muted">
-                {[item.city, item.state, item.country].filter(Boolean).join(", ") ||
-                  "Não capturada"}
-              </td>
-              <td className="truncate px-5 py-4 text-muted">{formatDateTime(item.created_at)}</td>
-              <td className="px-5 py-4">
-                <p className="truncate font-bold text-foreground">
-                  {item.recent_activity?.label || "Cadastro realizado"}
-                </p>
-                <p className="truncate text-xs text-muted">
-                  {item.recent_activity
-                    ? formatDateTime(item.recent_activity.occurred_at)
-                    : formatDateTime(item.created_at)}
-                </p>
-              </td>
-              <td className="px-5 py-4">
-                <Link
-                  aria-label={`Abrir detalhe de ${item.name}`}
-                  className="inline-grid h-10 w-10 place-items-center rounded-2xl border border-border text-primary transition hover:border-primary"
-                  href={item.detail_url}
-                >
-                  <Eye aria-hidden className="h-4 w-4" />
-                </Link>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-
-    {summary.recent_patients.items.length === 0 ? (
-      <p className="p-5 text-sm text-muted">Nenhum paciente real encontrado.</p>
-    ) : null}
-  </CardShell>
-);
-
 const DonutChart = ({
   items,
   total,
@@ -918,28 +735,6 @@ const Statistics = ({ summary }: { summary: AdminPatientsDashboard }) => (
   </section>
 );
 
-const CoverageNotes = ({ summary }: { summary: AdminPatientsDashboard }) => (
-  <CardShell className="bg-primary-soft/70 p-5">
-    <div className="flex gap-3">
-      <AlertTriangle aria-hidden className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
-      <div>
-        <h2 className="font-black text-foreground">Cobertura dos dados</h2>
-        <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-muted">
-          {summary.coverage_notes.map((note) => (
-            <li key={note}>{note}</li>
-          ))}
-          <li>{summary.export.reason}</li>
-          {summary.unavailable.map((item) => (
-            <li key={item.id}>
-              <strong className="text-foreground">{item.label}:</strong> {item.description}
-            </li>
-          ))}
-        </ul>
-      </div>
-    </div>
-  </CardShell>
-);
-
 const DashboardContent = ({ summary }: { summary: AdminPatientsDashboard }) => {
   const [visibleMetricKeys, setVisibleMetricKeys] = useState<DashboardMetricKey[]>(() => [
     ...CARD_ORDER,
@@ -974,9 +769,7 @@ const DashboardContent = ({ summary }: { summary: AdminPatientsDashboard }) => {
         <TimelineChart points={summary.series.points} visibleMetricKeys={activeMetricKeys} />
       </CardShell>
 
-      <RecentPatients summary={summary} />
       <Statistics summary={summary} />
-      <CoverageNotes summary={summary} />
     </div>
   );
 };

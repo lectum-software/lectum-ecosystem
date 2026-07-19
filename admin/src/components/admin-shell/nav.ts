@@ -32,15 +32,7 @@ export const adminNavItems = [
       { label: "Lista de Psicólogos", href: "/psicologos/lista" },
     ],
   },
-  {
-    label: "Pacientes",
-    href: "/pacientes",
-    icon: Gauge,
-    children: [
-      { label: "Visão geral", href: "/pacientes" },
-      { label: "Lista de pacientes", href: "/pacientes#lista-de-pacientes" },
-    ],
-  },
+  { label: "Pacientes", href: "/pacientes", icon: Gauge },
   { label: "Financeiro", href: "/financeiro", icon: CircleDollarSign },
   { label: "Notificações", href: "/notificacoes", icon: Bell },
   { label: "Configurações", href: "/configuracoes", icon: Settings },
