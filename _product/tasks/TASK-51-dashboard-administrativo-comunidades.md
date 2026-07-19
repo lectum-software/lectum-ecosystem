@@ -945,9 +945,13 @@ Regras de UI obrigatórias:
 
 ### Validacao deste ajuste
 
-- `pnpm --dir backend exec biome check "src/modules/api/admin/private/communities/dashboard/DTOs/IAdminCommunitiesDashboardDTO.ts" "src/modules/api/admin/private/communities/dashboard/repositories/AdminCommunitiesDashboardRepository.ts" "src/modules/api/admin/private/communities/dashboard/use-cases/services.ts"`
-- `pnpm --dir admin exec biome check "src/api/req/communities/index.ts" "src/app/(admin)/comunidades/client.tsx"`
-- `pnpm --dir backend exec tsc --noEmit --pretty false`
-- `pnpm --dir admin exec tsc --noEmit --pretty false`
+- `pnpm --dir backend exec biome check "src/modules/api/admin/private/communities/dashboard/DTOs/IAdminCommunitiesDashboardDTO.ts" "src/modules/api/admin/private/communities/dashboard/repositories/AdminCommunitiesDashboardRepository.ts" "src/modules/api/admin/private/communities/dashboard/use-cases/services.ts"`: sem erros.
+- `pnpm --dir admin exec biome check "src/api/req/communities/index.ts" "src/app/(admin)/comunidades/client.tsx"`: sem erros.
+- `pnpm --dir backend check`: sem erros.
+- `pnpm --dir backend build`: sem erros.
+- `pnpm --dir admin check`: sem erros.
+- `pnpm --dir admin build`: sem erros apos limpar processo de validacao anterior que mantinha lock do Next build.
+- `pnpm check`: sem erros.
 - Smoke service real `buildCommunitiesDashboard({ period: "all" })` retornou totais horarios `accesses=71`, `posts=24`, `replies=80`, `engagement=208`, `reports=12`, `total=395`; as comunidades principais passaram a expor atividades atribuidas por comunidade, com o top 5 somando 356 atividades e o restante das comunidades respondendo pelo complemento do total.
 - Smoke service real nos presets `today`, `week`, `month`, `year` e `all` confirmou que **Principais comunidades** e **Horarios de maior atividade** usam o mesmo recorte de periodo.
+- Browser local/headless via Chrome/CDP em `http://localhost:3002/comunidades` com sessao admin real temporaria validou os dois blocos lado a lado, sem overflow horizontal global, com **Principais comunidades** exibindo `Periodo: Todo o periodo` e copy `atividades no periodo`.
