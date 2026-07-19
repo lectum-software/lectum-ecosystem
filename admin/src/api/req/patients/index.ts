@@ -287,6 +287,7 @@ export type AdminPatientDetail = {
     email: string;
     gender: string | null;
     id: string;
+    last_access_at: string | null;
     location: {
       captured_at: string;
       city: string | null;

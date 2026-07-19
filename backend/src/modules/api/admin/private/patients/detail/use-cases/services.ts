@@ -611,6 +611,12 @@ const buildHeatmap = (bundle: AdminPatientEngagementBundle) => {
 
 const buildHeader = (patient: AdminPatientDetailRecord): AdminPatientDetailDTO["header"] => {
   const latestLocation = patient.visitor_locations[0] ?? null;
+  const latestToken = patient.user_tokens[0] ?? null;
+  const lastAccessAt = latestToken
+    ? latestToken.updatedAt > latestToken.createdAt
+      ? latestToken.updatedAt
+      : latestToken.createdAt
+    : null;
 
   return {
     active: patient.active,
@@ -619,6 +625,7 @@ const buildHeader = (patient: AdminPatientDetailRecord): AdminPatientDetailDTO["
     email: patient.email,
     gender: patient.patient_profile?.gender ?? null,
     id: patient.id,
+    last_access_at: lastAccessAt,
     location: latestLocation
       ? {
           captured_at: latestLocation.createdAt,
@@ -686,6 +693,7 @@ const buildDetail = (
       "Tela somente leitura: nÃ£o hÃ¡ aÃ§Ãµes de bloquear, silenciar, banir, excluir ou moderar paciente.",
       "Status Ativo/Inativo representa user.active, nÃ£o retenÃ§Ã£o nem engajamento recente.",
       "E-mail Ã© exibido apenas para admin autenticado; telefone, nascimento, bio, IP, coordenadas e endereÃ§o completo sÃ£o omitidos na V1.",
+      "Ãšltimo acesso usa somente metadados reais de sessÃ£o/token do usuÃ¡rio, quando existentes.",
       "LocalizaÃ§Ã£o, quando disponÃ­vel, usa apenas dados coarse de visitor_location.",
     ],
     header: buildHeader(patient),
@@ -708,6 +716,7 @@ const buildDetail = (
         "user.email",
         "user.avatar",
         "user.active",
+        "user_token.createdAt/updatedAt",
         "user.provider",
         "user.createdAt",
         "patient_profile.gender",

@@ -270,3 +270,42 @@ Frontend esperado:
 - `pnpm --dir admin build`
 - `pnpm check`
 - Smoke HTTP local: `GET http://localhost:3002/pacientes/demo-patient-reviewer-01` retornou `200`.
+
+## Ajuste pos-feedback 2026-07-19 - Header do paciente com abas
+
+- Pedido do usuario: fazer o header do detalhe de paciente seguir o layout do header do psicologo.
+- O header de `/pacientes/[id]` passou a exibir o bloco de identidade com hierarquia visual equivalente ao detalhe de Psicologos e menu de abas: **Geral**, **Perfil e cadastro**, **Estatisticas**, **Publicacoes**, **Denuncias**, **Atividades** e **Conta**.
+- As abas usam `?tab=` no App Router e reaproveitam somente dados reais ja retornados pelo contrato atual de paciente.
+- Abas sem contrato dedicado, como **Denuncias**, exibem estado honesto sem simular dados ou acoes.
+- Nao houve alteracao de backend, endpoint, contrato HTTP, schema Prisma, migration, package, seed, mock, dado sensivel ou acao administrativa.
+
+### Validacao complementar executada
+
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/pacientes/[id]/client.tsx"`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- Smoke HTTP local: `GET http://localhost:3002/pacientes/demo-patient-reviewer-01` retornou `200`.
+- Smoke HTTP local: `GET http://localhost:3002/pacientes/demo-patient-reviewer-01?tab=perfil` retornou `200`.
+- `pnpm check` foi tentado, mas falhou em `pnpm --dir backend check` por erros TypeScript preexistentes em módulos backend não alterados nesta execução.
+
+## Ajuste pos-feedback 2026-07-19 - Copy e metadado do header do paciente
+
+- Pedido do usuário: remover o ID do header do detalhe do paciente, reduzir a copy de localização ausente e trocar a linha de cadastro/onboarding pela data/hora de último acesso.
+- O header de `/pacientes/[id]` agora mostra apenas **Paciente** abaixo do nome, sem o identificador visual nessa área.
+- A localização ausente passou de **Localização agregada não capturada** para **Localização não capturada**.
+- O endpoint `GET /api/admin/private/patients/:id` passou a retornar `header.last_access_at` calculado a partir de `user_token.createdAt/updatedAt` real, sem tracking novo, seed, mock ou backfill.
+- Quando não houver token real, a UI exibe estado honesto de informação não capturada pelo formatador existente.
+- Não houve schema Prisma, migration, package novo, ação administrativa ou ampliação de dados sensíveis além do metadado operacional de último acesso aprovado no ADR-0241.
+
+## Ajuste pos-feedback 2026-07-19 - Status da conta no header
+
+- Pedido do usuário: no header do detalhe do paciente, substituir a forma de cadastro pelo status da conta e remover a tag verde **Ativo** ao lado do nome.
+- O header agora mantém o status operacional apenas na linha de metadados como **Status da conta: Ativo/Inativo**, derivado de `user.active` real.
+- A forma de cadastro continua disponível nas abas internas de cadastro/conta, mas não aparece mais no header.
+- Não houve backend novo, schema Prisma, migration, package, seed, mock, tracking, dado sensível ou ação administrativa.
+
+## Ajuste pos-feedback 2026-07-19 - Ordem dos metadados do header
+
+- Pedido do usuário: remover gênero do header, trocar **Status da conta: Ativo** por **Conta ativa** e posicionar o status entre e-mail e localização.
+- O header agora lista e-mail, status da conta e localização, nesta ordem.
+- Gênero permanece somente na aba **Perfil e cadastro**, usando o dado real existente, e não aparece mais no header.

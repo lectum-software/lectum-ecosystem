@@ -118,6 +118,7 @@ export type AdminPatientDetailDTO = {
     email: string;
     gender: string | null;
     id: string;
+    last_access_at: Date | null;
     location: {
       captured_at: Date;
       city: string | null;

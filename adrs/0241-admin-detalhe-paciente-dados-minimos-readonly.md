@@ -49,3 +49,9 @@ A referÃªncia visual usada foi `_product/proto/admin/Pacientes/Pacientes - Detal
 O detalhe de paciente continua retornando o `provider` bruto para auditoria, mas o label exibido ao Admin passa a seguir a mesma categoria de produto do dashboard: **Google** quando `user.provider="google"` e **E-mail e senha** para os demais valores reais.
 
 Essa decisÃ£o evita expor marcadores operacionais/legados como forma de cadastro ao usuÃ¡rio Admin, sem ampliar dados pessoais, criar endpoint novo, schema Prisma, migration, mock, seed ou backfill.
+
+## Atualização 2026-07-19: último acesso no cabeçalho
+
+O cabeçalho do detalhe do paciente passa a exibir **Último acesso** em vez da combinação de data de cadastro e conclusão de onboarding. O valor vem de metadados reais de `user_token.createdAt/updatedAt`, seguindo o padrão já adotado no detalhe administrativo de psicólogos, e retorna `null` quando não existir token confiável.
+
+Essa exposição permanece somente para Admin autenticado, não adiciona tracking, schema Prisma, migration, mock, seed ou backfill e não transforma login em item de atividade recente da V1.

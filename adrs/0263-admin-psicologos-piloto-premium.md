@@ -302,6 +302,28 @@ Validacao deste ajuste:
 - `pnpm check`
 - Smoke HTTP local: `GET http://localhost:3002/pacientes/demo-patient-reviewer-01` retornou 200.
 
+## Ajuste pos-feedback 2026-07-19: header com abas em detalhe de Pacientes
+
+O detalhe `/pacientes/:id` passa a seguir a mesma estrutura de header do detalhe de Psicologos: identidade no bloco superior e navegacao contextual em abas dentro do mesmo card.
+
+Decisoes:
+
+- Aplicar ao paciente o mesmo padrao visual de header usado no detalhe de Psicologos, sem botao de voltar, sem filtros de periodo no topo e sem hero separado.
+- Exibir as abas **Geral**, **Perfil e cadastro**, **Estatisticas**, **Publicacoes**, **Denuncias**, **Atividades** e **Conta**.
+- Usar `?tab=` no App Router para estado da aba ativa, mantendo **Geral** como default.
+- Reaproveitar apenas dados reais ja retornados pelo contrato atual de paciente para preencher as abas.
+- Exibir estado honesto quando uma aba ainda nao tem contrato dedicado, sem simular denuncias, publicacoes completas ou acoes de conta.
+- Nao alterar backend, contratos, privacidade, schema Prisma, migrations, packages ou dados retornados.
+
+Validacao deste ajuste:
+
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/pacientes/[id]/client.tsx"`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- Smoke HTTP local: `GET http://localhost:3002/pacientes/demo-patient-reviewer-01` retornou 200.
+- Smoke HTTP local: `GET http://localhost:3002/pacientes/demo-patient-reviewer-01?tab=perfil` retornou 200.
+- `pnpm check` foi tentado, mas falhou em `pnpm --dir backend check` por erros TypeScript preexistentes em m?dulos backend n?o alterados nesta execu??o.
+
 ## Pendências
 
 - Validar a aceitação visual com o fundador antes de criar a task de replicação para as demais telas.

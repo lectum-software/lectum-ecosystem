@@ -75,6 +75,22 @@ const patientSelect = {
       deleted: false,
     },
   },
+  user_tokens: {
+    orderBy: {
+      updatedAt: "desc" as const,
+    },
+    select: {
+      createdAt: true,
+      updatedAt: true,
+    },
+    take: 1,
+    where: {
+      deleted: false,
+      token: {
+        not: null,
+      },
+    },
+  },
 } satisfies Prisma.userSelect;
 
 export type AdminPatientDetailRecord = Prisma.userGetPayload<{

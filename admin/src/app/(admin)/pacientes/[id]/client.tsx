@@ -19,6 +19,8 @@ import {
   UsersRound,
 } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useMemo } from "react";
 import { useAdminPatientDetail } from "@/api/callers/patients";
 import { resolveApiError } from "@/api/handle";
@@ -31,6 +33,16 @@ import { aggregateCalendarChartPoints, buildSmoothSvgPath } from "@/lib/chart-ti
 import { cn } from "@/lib/utils";
 
 const LOADING_PLACEHOLDERS = ["profile", "engagement", "activity", "communities"] as const;
+const PATIENT_DETAIL_TABS = [
+  { id: "geral", label: "Geral" },
+  { id: "perfil", label: "Perfil e cadastro" },
+  { id: "estatisticas", label: "Estatísticas" },
+  { id: "publicacoes", label: "Publicações" },
+  { id: "denuncias", label: "Denúncias" },
+  { id: "atividades", label: "Atividades" },
+  { id: "conta", label: "Conta" },
+] as const;
+type PatientDetailTab = (typeof PATIENT_DETAIL_TABS)[number]["id"];
 const numberFormatter = new Intl.NumberFormat("pt-BR");
 const metricIcons: Record<PatientsDetailMetric["id"], LucideIcon> = {
   comments_created: MessageCircle,
@@ -56,10 +68,19 @@ const seriesConfig = [
   { color: "var(--admin-warning)", key: "responses_received", label: "Respostas recebidas" },
 ] as const;
 
-const formatDateTime = (value: string) =>
-  new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeStyle: "short" }).format(
-    new Date(value),
-  );
+const formatDateTime = (value?: string | null) => {
+  if (!value) return "N\u00e3o informado";
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "N\u00e3o informado";
+
+  return new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeStyle: "short" }).format(date);
+};
+const formatLastAccess = (value?: string | null) => {
+  if (!value) return "N\u00e3o capturado";
+
+  return formatDateTime(value);
+};
 const formatChange = (value: number | null) => {
   if (value === null) return "sem base anterior";
   if (value === 0) return "0%";
@@ -86,6 +107,14 @@ const initialsFromName = (name: string) =>
     .map((part) => part[0])
     .join("")
     .toUpperCase() || "PA";
+const isPatientDetailTab = (value: string | null): value is PatientDetailTab =>
+  PATIENT_DETAIL_TABS.some((tab) => tab.id === value);
+const patientTabHref = (id: string, tab: PatientDetailTab) =>
+  tab === "geral" ? `/pacientes/${id}` : `/pacientes/${id}?tab=${tab}`;
+const formatNullable = (value: string | null | undefined) => {
+  const normalized = String(value ?? "").trim();
+  return normalized || "N\u00e3o informado";
+};
 
 const CardShell = ({ children, className }: { children?: React.ReactNode; className?: string }) => (
   <section
@@ -183,62 +212,74 @@ const ErrorState = ({ message, onRetry }: { message: string; onRetry: () => void
   </CardShell>
 );
 
-const Header = ({ detail }: { detail: AdminPatientDetail }) => {
+const Header = ({
+  detail,
+  id,
+  tab,
+}: {
+  detail: AdminPatientDetail;
+  id: string;
+  tab: PatientDetailTab;
+}) => {
   const location = detail.header.location
     ? [detail.header.location.city, detail.header.location.state, detail.header.location.country]
         .filter(Boolean)
         .join(", ")
-    : "Localização agregada não capturada";
+    : "Localiza\u00e7\u00e3o n\u00e3o capturada";
   return (
     <CardShell className="overflow-hidden">
-      <div className="flex flex-col gap-5 p-5 sm:p-6 lg:flex-row lg:items-center lg:justify-between">
-        <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
+      <div className="flex flex-col gap-5 p-5 md:flex-row md:items-start md:justify-between md:p-7">
+        <div className="flex flex-col gap-5 sm:flex-1 sm:flex-row sm:items-center">
           <Avatar name={detail.header.name} src={detail.header.avatar} />
           <div className="min-w-0">
-            <div className="flex flex-wrap items-center gap-3">
-              <h1 className="text-3xl font-black tracking-tight text-foreground md:text-4xl">
-                {detail.header.name}
-              </h1>
-              <span
-                className={cn(
-                  "inline-flex rounded-full px-3 py-1 text-xs font-black",
-                  detail.header.status === "active"
-                    ? "bg-emerald-50 text-success"
-                    : "bg-surface-muted text-muted",
-                )}
-              >
-                {detail.header.status_label}
-              </span>
+            <h1 className="text-3xl font-extrabold tracking-tight text-foreground md:text-4xl">
+              {detail.header.name}
+            </h1>
+            <div className="mt-2 flex flex-wrap items-center gap-2 text-sm font-semibold text-muted">
+              <span>Paciente</span>
             </div>
-            <p className="mt-2 text-sm font-black text-foreground">
-              ID do paciente: {detail.header.id}
-            </p>
-            <div className="mt-4 grid gap-3 text-sm text-muted sm:grid-cols-2 xl:grid-cols-4">
+            <div className="mt-4 flex flex-wrap items-center gap-x-8 gap-y-3 text-sm text-muted xl:gap-x-10">
               <span className="inline-flex items-center gap-2">
-                <Mail aria-hidden className="h-4 w-4 text-primary" />
-                {detail.header.email}
+                <Mail aria-hidden className="h-4 w-4 shrink-0 text-primary" />
+                <span className="min-w-0 break-words">{detail.header.email}</span>
               </span>
               <span className="inline-flex items-center gap-2">
-                <UserRound aria-hidden className="h-4 w-4 text-primary" />
-                {detail.header.gender || "Gênero não informado"}
+                <ShieldCheck aria-hidden className="h-4 w-4 shrink-0 text-primary" />
+                <span>{detail.header.status === "active" ? "Conta ativa" : "Conta inativa"}</span>
               </span>
               <span className="inline-flex items-center gap-2">
-                <MapPin aria-hidden className="h-4 w-4 text-primary" />
-                {location}
-              </span>
-              <span className="inline-flex items-center gap-2">
-                <ShieldCheck aria-hidden className="h-4 w-4 text-primary" />
-                Cadastro via {detail.header.provider_label}
+                <MapPin aria-hidden className="h-4 w-4 shrink-0 text-primary" />
+                <span>{location}</span>
               </span>
             </div>
             <p className="mt-3 text-sm text-muted">
-              Cadastro em {formatDateTime(detail.header.created_at)}
-              {detail.header.onboarding_completed_at
-                ? ` · onboarding concluído em ${formatDateTime(detail.header.onboarding_completed_at)}`
-                : " · onboarding sem conclusão registrada"}
+              {"\u00daltimo acesso"}: {formatLastAccess(detail.header.last_access_at)}
             </p>
           </div>
         </div>
+      </div>
+      <div className="overflow-x-auto border-t border-border bg-surface-muted/40 px-3">
+        <nav aria-label="Abas do detalhe do paciente" className="flex min-w-max gap-1 py-1">
+          {PATIENT_DETAIL_TABS.map((item) => {
+            const active = item.id === tab;
+
+            return (
+              <Link
+                className={cn(
+                  "relative inline-flex min-h-12 items-center justify-center rounded-full px-3.5 text-sm font-black transition",
+                  active ? "text-primary" : "text-foreground hover:text-primary",
+                )}
+                href={patientTabHref(id, item.id)}
+                key={item.id}
+              >
+                <span>{item.label}</span>
+                {active ? (
+                  <span className="absolute bottom-1 left-1/2 h-1 w-9 -translate-x-1/2 rounded-full bg-primary" />
+                ) : null}
+              </Link>
+            );
+          })}
+        </nav>
       </div>
     </CardShell>
   );
@@ -407,24 +448,34 @@ const EngagementChart = ({ detail }: { detail: AdminPatientDetail }) => {
   );
 };
 
-const ActivityList = ({ detail }: { detail: AdminPatientDetail }) => (
+const ActivityList = ({
+  detail,
+  description = detail.activities.coverage_note,
+  emptyMessage = "Nenhum evento real foi encontrado para este paciente no per\u00edodo selecionado.",
+  items = detail.activities.items,
+  title = "Atividade recente",
+}: {
+  detail: AdminPatientDetail;
+  description?: string;
+  emptyMessage?: string;
+  items?: PatientsDetailActivity[];
+  title?: string;
+}) => (
   <CardShell className="p-5">
     <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
       <div>
-        <h2 className="text-xl font-black text-foreground">Atividade recente</h2>
-        <p className="mt-1 text-sm text-muted">{detail.activities.coverage_note}</p>
+        <h2 className="text-xl font-black text-foreground">{title}</h2>
+        <p className="mt-1 text-sm text-muted">{description}</p>
       </div>
       <span className="w-fit rounded-full bg-surface-muted px-2 py-1 text-[0.65rem] font-bold text-muted">
         {detail.activities.source}
       </span>
     </div>
     <div className="mt-5 divide-y divide-border">
-      {detail.activities.items.length === 0 ? (
-        <p className="rounded-2xl bg-surface-muted p-4 text-sm text-muted">
-          Nenhum evento real foi encontrado para este paciente no período selecionado.
-        </p>
+      {items.length === 0 ? (
+        <p className="rounded-2xl bg-surface-muted p-4 text-sm text-muted">{emptyMessage}</p>
       ) : (
-        detail.activities.items.map((activity) => {
+        items.map((activity) => {
           const Icon = activityIcons[activity.type];
           return (
             <article className="flex gap-3 py-4" key={activity.id}>
@@ -436,7 +487,7 @@ const ActivityList = ({ detail }: { detail: AdminPatientDetail }) => (
                 <p className="mt-1 text-sm leading-relaxed text-muted">{activity.description}</p>
                 <p className="mt-2 inline-flex items-center gap-2 text-xs font-bold text-muted">
                   <Clock3 aria-hidden className="h-3.5 w-3.5" />
-                  {formatDateTime(activity.occurred_at)} · {activity.source}
+                  {formatDateTime(activity.occurred_at)} - {activity.source}
                 </p>
               </div>
             </article>
@@ -588,9 +639,71 @@ const PrivacyNotes = ({ detail }: { detail: AdminPatientDetail }) => (
   </CardShell>
 );
 
-const DetailContent = ({ detail }: { detail: AdminPatientDetail }) => (
+const FieldRow = ({ label, value }: { label: string; value: React.ReactNode }) => (
+  <div className="border-b border-border py-3 last:border-0">
+    <dt className="text-sm font-black text-muted">{label}</dt>
+    <dd className="mt-1 text-sm font-bold text-foreground">{value}</dd>
+  </div>
+);
+
+const InfoCard = ({ children, title }: { children: React.ReactNode; title: string }) => (
+  <CardShell className="p-5">
+    <h2 className="text-lg font-black text-foreground">{title}</h2>
+    <dl className="mt-4">{children}</dl>
+  </CardShell>
+);
+
+const EmptyTabState = ({ description, title }: { description: string; title: string }) => (
+  <CardShell className="p-6">
+    <div className="flex gap-3">
+      <CheckCircle2 aria-hidden className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
+      <div>
+        <h2 className="text-lg font-black text-foreground">{title}</h2>
+        <p className="mt-2 text-sm leading-6 text-muted">{description}</p>
+      </div>
+    </div>
+  </CardShell>
+);
+
+const ProfileRegistrationTab = ({ detail }: { detail: AdminPatientDetail }) => {
+  const location = detail.header.location;
+
+  return (
+    <div className="grid gap-6 xl:grid-cols-2">
+      <InfoCard title="Perfil do paciente">
+        <FieldRow label="Nome" value={detail.header.name} />
+        <FieldRow label="E-mail" value={detail.header.email} />
+        <FieldRow label="G\u00eanero" value={formatNullable(detail.header.gender)} />
+        <FieldRow
+          label="Localiza\u00e7\u00e3o agregada"
+          value={
+            location
+              ? [location.city, location.state, location.country].filter(Boolean).join(", ") ||
+                "N\u00e3o capturada"
+              : "N\u00e3o capturada"
+          }
+        />
+      </InfoCard>
+      <InfoCard title="Cadastro">
+        <FieldRow label="ID do paciente" value={detail.header.id} />
+        <FieldRow label="Status" value={detail.header.status_label} />
+        <FieldRow label="Cadastro via" value={detail.header.provider_label} />
+        <FieldRow label="Criado em" value={formatDateTime(detail.header.created_at)} />
+        <FieldRow
+          label="Onboarding"
+          value={
+            detail.header.onboarding_completed_at
+              ? formatDateTime(detail.header.onboarding_completed_at)
+              : "Sem conclus\u00e3o registrada"
+          }
+        />
+      </InfoCard>
+    </div>
+  );
+};
+
+const GeneralTab = ({ detail }: { detail: AdminPatientDetail }) => (
   <div className="space-y-6">
-    <Header detail={detail} />
     <EngagementChart detail={detail} />
     <div className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
       <ActivityList detail={detail} />
@@ -602,7 +715,87 @@ const DetailContent = ({ detail }: { detail: AdminPatientDetail }) => (
     <PrivacyNotes detail={detail} />
   </div>
 );
+
+const StatisticsTab = ({ detail }: { detail: AdminPatientDetail }) => (
+  <div className="space-y-6">
+    <EngagementChart detail={detail} />
+    <div className="grid gap-6 xl:grid-cols-2">
+      <Communities detail={detail} />
+      <Heatmap detail={detail} />
+    </div>
+  </div>
+);
+
+const PublicationsTab = ({ detail }: { detail: AdminPatientDetail }) => {
+  const publicationActivities = detail.activities.items.filter(
+    (activity) => activity.type === "post_created",
+  );
+
+  return (
+    <ActivityList
+      description="Publica\u00e7\u00f5es derivadas dos eventos reais de posts criados pelo paciente retornados no contrato atual."
+      detail={detail}
+      emptyMessage="Nenhuma publica\u00e7\u00e3o real foi encontrada para este paciente no per\u00edodo consultado."
+      items={publicationActivities}
+      title="Publica\u00e7\u00f5es"
+    />
+  );
+};
+
+const ReportsTab = () => (
+  <EmptyTabState
+    description="A V1 do detalhe de pacientes n\u00e3o possui contrato dedicado de den\u00fancias nem a\u00e7\u00f5es de modera\u00e7\u00e3o para paciente. Nenhum dado foi simulado nesta aba."
+    title="Den\u00fancias"
+  />
+);
+
+const AccountTab = ({ detail }: { detail: AdminPatientDetail }) => (
+  <div className="grid gap-6 xl:grid-cols-2">
+    <InfoCard title="Conta">
+      <FieldRow label="Status" value={detail.header.status_label} />
+      <FieldRow label="E-mail" value={detail.header.email} />
+      <FieldRow label="Origem de cadastro" value={detail.header.provider_label} />
+      <FieldRow label="Criado em" value={formatDateTime(detail.header.created_at)} />
+    </InfoCard>
+    <EmptyTabState
+      description="N\u00e3o h\u00e1 a\u00e7\u00f5es administrativas destrutivas, bloqueio, silenciamento, banimento ou exclus\u00e3o de paciente na V1."
+      title="A\u00e7\u00f5es de conta"
+    />
+  </div>
+);
+
+const DetailContent = ({
+  detail,
+  id,
+  tab,
+}: {
+  detail: AdminPatientDetail;
+  id: string;
+  tab: PatientDetailTab;
+}) => (
+  <div className="space-y-6">
+    <Header detail={detail} id={id} tab={tab} />
+    {tab === "perfil" ? (
+      <ProfileRegistrationTab detail={detail} />
+    ) : tab === "estatisticas" ? (
+      <StatisticsTab detail={detail} />
+    ) : tab === "publicacoes" ? (
+      <PublicationsTab detail={detail} />
+    ) : tab === "denuncias" ? (
+      <ReportsTab />
+    ) : tab === "atividades" ? (
+      <ActivityList detail={detail} />
+    ) : tab === "conta" ? (
+      <AccountTab detail={detail} />
+    ) : (
+      <GeneralTab detail={detail} />
+    )}
+  </div>
+);
 export const AdminPatientDetailClient = ({ id }: { id: string }) => {
+  const searchParams = useSearchParams();
+  const requestedTab = searchParams.get("tab");
+  const tab: PatientDetailTab = isPatientDetailTab(requestedTab) ? requestedTab : "geral";
   const query = useAdminPatientDetail(id, { period: "month" });
   const queryError = query.error ? resolveApiError(query.error) : null;
 
@@ -624,7 +817,7 @@ export const AdminPatientDetailClient = ({ id }: { id: string }) => {
       {query.isError && queryError ? (
         <ErrorState message={queryError} onRetry={() => void query.refetch()} />
       ) : null}
-      {query.data ? <DetailContent detail={query.data} /> : null}
+      {query.data ? <DetailContent detail={query.data} id={id} tab={tab} /> : null}
     </div>
   );
 };
