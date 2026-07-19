@@ -1505,8 +1505,31 @@ const CardsGrid = ({
   );
 };
 
+const TrafficSourceMetricValue = ({
+  className,
+  percentage,
+  value,
+}: {
+  className?: string;
+  percentage: number;
+  value: ReactNode;
+}) => (
+  <span className={cn("inline-flex items-baseline gap-1 font-black text-foreground", className)}>
+    <span>{value}</span>
+    <span className="text-[0.78em] font-semibold text-muted">
+      ({formatPercentageValue(percentage)})
+    </span>
+  </span>
+);
+
 const DashboardTrafficSourcesCard = ({ summary }: { summary: AdminPsychologistsDashboard }) => {
   const traffic = summary.traffic_sources;
+  const totalWhatsappClicks = traffic.sources.reduce(
+    (total, source) => total + (source.whatsapp_clicks ?? 0),
+    0,
+  );
+  const getWhatsappClicksPercentage = (value: number | null) =>
+    totalWhatsappClicks > 0 ? toOneDecimal(((value ?? 0) / totalWhatsappClicks) * 100) : 0;
 
   return (
     <CardShell className="p-5">
@@ -1548,12 +1571,20 @@ const DashboardTrafficSourcesCard = ({ summary }: { summary: AdminPsychologistsD
                   {source.description}
                 </p>
               </div>
-              <p className="text-center text-lg font-black text-foreground">
-                {numberFormatter.format(source.profile_views)}
-              </p>
-              <p className="text-center text-lg font-black text-foreground">
-                {formatNullableCount(source.whatsapp_clicks)}
-              </p>
+              <div className="flex justify-center text-center">
+                <TrafficSourceMetricValue
+                  className="text-lg"
+                  percentage={source.percentage}
+                  value={numberFormatter.format(source.profile_views)}
+                />
+              </div>
+              <div className="flex justify-center text-center">
+                <TrafficSourceMetricValue
+                  className="text-lg"
+                  percentage={getWhatsappClicksPercentage(source.whatsapp_clicks)}
+                  value={formatNullableCount(source.whatsapp_clicks)}
+                />
+              </div>
             </div>
           ))}
         </div>
@@ -1578,12 +1609,26 @@ const DashboardTrafficSourcesCard = ({ summary }: { summary: AdminPsychologistsD
             </div>
             <div className="mt-4 grid grid-cols-2 gap-2">
               {[
-                ["Perfil", numberFormatter.format(source.profile_views)],
-                ["WhatsApp", formatNullableCount(source.whatsapp_clicks)],
-              ].map(([label, value]) => (
-                <div className="rounded-2xl bg-surface p-3" key={label}>
-                  <p className="text-[0.68rem] font-black text-muted">{label}</p>
-                  <p className="mt-1 text-base font-black text-foreground">{value}</p>
+                {
+                  label: "Perfil",
+                  percentage: source.percentage,
+                  value: numberFormatter.format(source.profile_views),
+                },
+                {
+                  label: "WhatsApp",
+                  percentage: getWhatsappClicksPercentage(source.whatsapp_clicks),
+                  value: formatNullableCount(source.whatsapp_clicks),
+                },
+              ].map((item) => (
+                <div className="rounded-2xl bg-surface p-3" key={item.label}>
+                  <p className="text-[0.68rem] font-black text-muted">{item.label}</p>
+                  <p className="mt-1">
+                    <TrafficSourceMetricValue
+                      className="text-base"
+                      percentage={item.percentage}
+                      value={item.value}
+                    />
+                  </p>
                 </div>
               ))}
             </div>

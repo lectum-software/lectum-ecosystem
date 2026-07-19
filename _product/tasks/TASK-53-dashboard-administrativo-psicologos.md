@@ -288,3 +288,12 @@ Packages usados:
 - Não houve alteração de contrato backend, Prisma, migration, mock, pacote novo ou fonte de dados.
 - Referência visual local mantida: `_product/proto/admin/Psicólogos/Psicólogos - Dashboard.png`; Builder/Quick Copy não estava disponível como ferramenta callable no ambiente.
 - Validações desta correção: `pnpm --dir admin check`, `pnpm --dir admin build` e smoke HTTP local em `http://localhost:3002/psicologos` retornando 200.
+
+### Correção UX em 2026-07-19 - taxas na origem do tráfego
+
+- Pedido do usuário: na tabela **Origem do tráfego**, exibir a taxa em menor peso visual ao lado dos números das colunas **Perfil** e **WhatsApp**.
+- A taxa de **Perfil** reutiliza `source.percentage`, já retornado pelo contrato real de origem do tráfego.
+- A taxa de **WhatsApp** é derivada no Admin a partir da soma real de `whatsapp_clicks` disponível nas fontes retornadas; quando não há cliques atribuídos no contrato, a taxa permanece `0%`.
+- Não houve alteração de contrato backend, Prisma, migration, mock, pacote novo ou fonte de dados.
+- Referência visual local mantida: `_product/proto/admin/Psicólogos/Psicólogos - Dashboard.png`; Builder/Quick Copy não estava disponível como ferramenta callable no ambiente.
+- Validações desta correção: primeira tentativa de `pnpm --dir admin check` atingiu timeout sem resultado; na repetição, `pnpm --dir admin check`, `pnpm --dir admin build` e smoke HTTP local em `http://localhost:3002/psicologos` retornando 200 concluíram sem erros.
