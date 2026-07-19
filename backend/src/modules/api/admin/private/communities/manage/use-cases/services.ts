@@ -2060,6 +2060,61 @@ const emptyStatisticsDailyPoint = (
   whatsapp_clicks: 0,
 });
 
+const emptyStatisticsHourlyActivityPoint = (
+  hour: number,
+): AdminCommunityStatisticsDTO["charts"]["hourly_activity"][number] => ({
+  accesses: 0,
+  engagement: 0,
+  hour,
+  label: `${String(hour).padStart(2, "0")}:00`,
+  posts: 0,
+  replies: 0,
+  reports: 0,
+  total: 0,
+});
+
+const statisticsWeekdayLabels = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "S\u00e1b"] as const;
+
+const createStatisticsHourlyActivityMap = () =>
+  new Map(
+    Array.from({ length: 24 }, (_, hour) => [hour, emptyStatisticsHourlyActivityPoint(hour)]),
+  );
+
+const incrementStatisticsHourlyActivity = (
+  hourly: Map<number, AdminCommunityStatisticsDTO["charts"]["hourly_activity"][number]>,
+  date: Date,
+  field: Exclude<
+    keyof AdminCommunityStatisticsDTO["charts"]["hourly_activity"][number],
+    "hour" | "label" | "total"
+  >,
+) => {
+  const point = hourly.get(date.getHours());
+  if (!point) return;
+
+  point[field] += 1;
+  point.total += 1;
+};
+
+const incrementStatisticsHourlyActivityCollections = (
+  hourly: Map<number, AdminCommunityStatisticsDTO["charts"]["hourly_activity"][number]>,
+  hourlyByWeekday: Map<
+    number,
+    {
+      hours: Map<number, AdminCommunityStatisticsDTO["charts"]["hourly_activity"][number]>;
+      label: string;
+    }
+  >,
+  date: Date,
+  field: Exclude<
+    keyof AdminCommunityStatisticsDTO["charts"]["hourly_activity"][number],
+    "hour" | "label" | "total"
+  >,
+) => {
+  incrementStatisticsHourlyActivity(hourly, date, field);
+  const weekday = hourlyByWeekday.get(date.getDay());
+  if (weekday) incrementStatisticsHourlyActivity(weekday.hours, date, field);
+};
+
 const statisticsDailyRoleSet = (
   map: Map<
     string,
@@ -2193,6 +2248,16 @@ const buildCommunityStatistics = (
   const daily = new Map(
     statisticsDateLabels(period).map((label) => [label, emptyStatisticsDailyPoint(label)]),
   );
+  const hourlyActivity = createStatisticsHourlyActivityMap();
+  const hourlyActivityByWeekday = new Map(
+    statisticsWeekdayLabels.map((label, day) => [
+      day,
+      {
+        hours: createStatisticsHourlyActivityMap(),
+        label,
+      },
+    ]),
+  );
   const dailyActiveUsers = new Map<
     string,
     {
@@ -2249,6 +2314,12 @@ const buildCommunityStatistics = (
 
   for (const post of periodPosts) {
     const point = daily.get(dateKey(post.createdAt));
+    incrementStatisticsHourlyActivityCollections(
+      hourlyActivity,
+      hourlyActivityByWeekday,
+      post.createdAt,
+      "posts",
+    );
     if (point) {
       point.posts += 1;
       if (statisticsRole(post.author) === "paciente") {
@@ -2261,6 +2332,12 @@ const buildCommunityStatistics = (
   }
   for (const reply of periodReplies) {
     const point = daily.get(dateKey(reply.createdAt));
+    incrementStatisticsHourlyActivityCollections(
+      hourlyActivity,
+      hourlyActivityByWeekday,
+      reply.createdAt,
+      "replies",
+    );
     if (point) {
       point.replies += 1;
       if (statisticsRole(reply.author) === "paciente") {
@@ -2274,27 +2351,63 @@ const buildCommunityStatistics = (
   }
   for (const report of periodReports) {
     const point = daily.get(dateKey(report.createdAt));
+    incrementStatisticsHourlyActivityCollections(
+      hourlyActivity,
+      hourlyActivityByWeekday,
+      report.createdAt,
+      "reports",
+    );
     if (point) point.reports += 1;
   }
   for (const vote of periodVotes) {
     const point = daily.get(dateKey(vote.createdAt));
+    incrementStatisticsHourlyActivityCollections(
+      hourlyActivity,
+      hourlyActivityByWeekday,
+      vote.createdAt,
+      "engagement",
+    );
     if (point && vote.value === 1) point.upvotes += 1;
     if (point && vote.value === -1) point.downvotes += 1;
   }
   for (const save of [...periodPostSaves, ...periodReplySaves]) {
     const point = daily.get(dateKey(save.createdAt));
+    incrementStatisticsHourlyActivityCollections(
+      hourlyActivity,
+      hourlyActivityByWeekday,
+      save.createdAt,
+      "engagement",
+    );
     if (point) point.saves += 1;
   }
   for (const event of periodWhatsappClicks) {
     const point = daily.get(dateKey(event.occurred_at));
+    incrementStatisticsHourlyActivityCollections(
+      hourlyActivity,
+      hourlyActivityByWeekday,
+      event.occurred_at,
+      "engagement",
+    );
     if (point) point.whatsapp_clicks += 1;
   }
   for (const event of periodProfileAccesses) {
     const point = daily.get(dateKey(event.occurred_at));
+    incrementStatisticsHourlyActivityCollections(
+      hourlyActivity,
+      hourlyActivityByWeekday,
+      event.occurred_at,
+      "engagement",
+    );
     if (point) point.profile_accesses += 1;
   }
   for (const event of periodPageViews) {
     const point = daily.get(dateKey(event.occurred_at));
+    incrementStatisticsHourlyActivityCollections(
+      hourlyActivity,
+      hourlyActivityByWeekday,
+      event.occurred_at,
+      "accesses",
+    );
     if (point) point.accesses += 1;
   }
   for (const [key, users] of dailyActiveUsers) {
@@ -2331,6 +2444,12 @@ const buildCommunityStatistics = (
         { id: "patients", label: "Pacientes", value: followers.patients },
         { id: "psychologists", label: "Psic\u00f3logos", value: followers.psychologists },
       ]),
+      hourly_activity: [...hourlyActivity.values()],
+      hourly_activity_by_weekday: [...hourlyActivityByWeekday.entries()].map(([day, item]) => ({
+        day,
+        hours: [...item.hours.values()],
+        label: item.label,
+      })),
       posts_by_author: statisticsSplit("community_post+post_reply", [
         { id: "patients", label: "Pacientes", value: patientPosts.length },
         {

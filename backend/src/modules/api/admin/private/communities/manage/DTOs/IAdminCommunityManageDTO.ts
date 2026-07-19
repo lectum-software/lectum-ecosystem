@@ -700,11 +700,30 @@ export type AdminCommunityStatisticsDailyPointDTO = {
   whatsapp_clicks: number;
 };
 
+export type AdminCommunityStatisticsHourlyActivityDTO = {
+  accesses: number;
+  engagement: number;
+  hour: number;
+  label: string;
+  posts: number;
+  replies: number;
+  reports: number;
+  total: number;
+};
+
+export type AdminCommunityStatisticsWeekdayHourlyActivityDTO = {
+  day: number;
+  hours: AdminCommunityStatisticsHourlyActivityDTO[];
+  label: string;
+};
+
 export type AdminCommunityStatisticsDTO = {
   charts: {
     active_users_split: AdminCommunityStatisticsSplitDTO[];
     daily: AdminCommunityStatisticsDailyPointDTO[];
     followers_split: AdminCommunityStatisticsSplitDTO[];
+    hourly_activity: AdminCommunityStatisticsHourlyActivityDTO[];
+    hourly_activity_by_weekday: AdminCommunityStatisticsWeekdayHourlyActivityDTO[];
     posts_by_author: AdminCommunityStatisticsSplitDTO[];
     replies_by_author: AdminCommunityStatisticsSplitDTO[];
   };

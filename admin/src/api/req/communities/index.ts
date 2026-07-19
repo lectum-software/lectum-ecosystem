@@ -976,11 +976,30 @@ export type AdminCommunityStatisticsDailyPoint = {
   whatsapp_clicks: number;
 };
 
+export type AdminCommunityStatisticsHourlyActivity = {
+  accesses: number;
+  engagement: number;
+  hour: number;
+  label: string;
+  posts: number;
+  replies: number;
+  reports: number;
+  total: number;
+};
+
+export type AdminCommunityStatisticsWeekdayHourlyActivity = {
+  day: number;
+  hours: AdminCommunityStatisticsHourlyActivity[];
+  label: string;
+};
+
 export type AdminCommunityStatistics = {
   charts: {
     active_users_split: AdminCommunityStatisticsSplit[];
     daily: AdminCommunityStatisticsDailyPoint[];
     followers_split: AdminCommunityStatisticsSplit[];
+    hourly_activity: AdminCommunityStatisticsHourlyActivity[];
+    hourly_activity_by_weekday: AdminCommunityStatisticsWeekdayHourlyActivity[];
     posts_by_author: AdminCommunityStatisticsSplit[];
     replies_by_author: AdminCommunityStatisticsSplit[];
   };

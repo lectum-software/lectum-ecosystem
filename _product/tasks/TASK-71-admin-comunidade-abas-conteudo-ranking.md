@@ -586,25 +586,80 @@ Regras:
 - Smoke HTTP local `GET http://localhost:3002/comunidades/autocuidado-em-pratica?tab=estatisticas` retornou 200.
 - Chrome headless local abriu a rota e confirmou o guard/shell Admin; sem sessão Admin reutilizável no perfil headless, a validação visual autenticada ficou limitada à captura enviada pelo usuário e ao build/check local.
 
-
 ## Ajuste complementar 2026-07-18 - Contador de Acessos na aba Geral
 
-- Pedido do usu?rio: na aba **Geral** do detalhe Admin da comunidade, adicionar o contador **Acessos** na primeira posi??o, antes de **Posts de pacientes**.
-- O endpoint real `GET /api/admin/private/communities/:id` agora inclui `highlight_counters.accesses_count`, calculado pelo total hist?rico de `page_view_event` da comunidade e de seus conte?dos relacionados j? carregados no dataset real da comunidade.
+- Pedido do usuário: na aba **Geral** do detalhe Admin da comunidade, adicionar o contador **Acessos** na primeira posição, antes de **Posts de pacientes**.
+- O endpoint real `GET /api/admin/private/communities/:id` agora inclui `highlight_counters.accesses_count`, calculado pelo total histórico de `page_view_event` da comunidade e de seus conteúdos relacionados já carregados no dataset real da comunidade.
 - A UI Admin renderiza o card **Acessos** como primeiro contador de destaque da aba **Geral** e ajusta a grade mobile-first para 6 contadores no desktop.
-- N?o houve package novo, schema Prisma/migration, seed, backfill artificial, mock, endpoint paralelo ou uso de `<img>` cru.
-- Builder/Quick Copy n?o est? exposto como ferramenta callable no ambiente; a refer?ncia usada foi a captura enviada pelo usu?rio e o padr?o atual da aba **Geral** de comunidades.
+- Não houve package novo, schema Prisma/migration, seed, backfill artificial, mock, endpoint paralelo ou uso de `<img>` cru.
+- Builder/Quick Copy não está exposto como ferramenta callable no ambiente; a referência usada foi a captura enviada pelo usuário e o padrão atual da aba **Geral** de comunidades.
 - ADR atualizado: `adrs/0282-contador-acessos-estatisticas-pessoas-comunidade.md`.
 
-### Crit?rio de aceite complementar
+### Critério de aceite complementar
 
-- [x] A aba **Geral** exibe o contador **Acessos** na primeira posi??o, antes de **Posts de pacientes**, usando dados reais de `page_view_event`.
+- [x] A aba **Geral** exibe o contador **Acessos** na primeira posição, antes de **Posts de pacientes**, usando dados reais de `page_view_event`.
 
-### Valida??o executada para este ajuste
+### Validação executada para este ajuste
 
 - `pnpm --dir backend check`
 - `pnpm --dir backend build`
 - `pnpm --dir admin check`
 - `pnpm --dir admin build`
-- `pnpm check`
 - Smoke HTTP local `GET http://localhost:3002/comunidades/autocuidado-em-pratica` retornou 200.
+- `pnpm check`
+
+## Ajuste complementar 2026-07-18 - Fallback zero para acessos sem eventos
+
+- Pedido do usuário: quando não houver acessos no card **Acessos** da aba **Geral**, exibir `0` em vez de `NaN`.
+- A UI Admin agora normaliza contadores com valor ausente, nulo, negativo ou não numérico para `0` antes da formatação, incluindo o card **Acessos** da aba **Geral** e os contadores clicáveis da aba **Estatísticas**.
+- O ajuste é defensivo e apresentacional: mantém a fonte real `page_view_event`, não cria mock, seed, endpoint paralelo, schema Prisma/migration ou package novo.
+- Builder/Quick Copy não está exposto como ferramenta callable no ambiente; a referência usada foi a captura enviada pelo usuário e `_product/proto/admin/Comunidades/Comunidades - Detalhes.png`.
+
+### Critério de aceite complementar
+
+- [x] Quando a comunidade não possui eventos reais de acesso ou o campo vem ausente durante atualização/compatibilidade, o Admin exibe `0` no contador **Acessos**, nunca `NaN`.
+
+### Validação executada para este ajuste
+
+- `pnpm --dir admin exec biome check "src/app/(admin)/comunidades/[slug]/client.tsx"`
+- `pnpm --dir admin exec tsc --noEmit --pretty false`
+- Smoke HTTP local `GET http://localhost:3002/comunidades/autocuidado-em-pratica` retornou 200.
+- `pnpm --dir admin check` foi executado como baseline e atingiu timeout após 124s no workspace atual; as validações direcionadas acima passaram sem erros.
+
+## Ajuste complementar 2026-07-19 - Horários de pico por dia da semana
+
+- Pedido do usuário: no bloco **Horários de maior atividade** da aba **Estatísticas** de comunidade, permitir selecionar o gráfico por dia da semana, mantendo os cards de horários de pico como visão geral agregada de todos os dias da semana/período.
+- O endpoint real `GET /api/admin/private/communities/:id/statistics` agora retorna `charts.hourly_activity_by_weekday`, com 7 grupos (`Dom` a `Sáb`) e 24 pontos horários por grupo, calculados das mesmas fontes reais já usadas em `charts.hourly_activity`.
+- A UI Admin adiciona seletor **Todos**, **Seg**, **Ter**, **Qua**, **Qui**, **Sex**, **Sáb** e **Dom** acima do gráfico; a seleção altera somente as barras e o rótulo acessível do gráfico, sem texto auxiliar visível repetindo a seleção.
+- Os três cards de pico continuam usando a agregação geral de `charts.hourly_activity`, somando todos os dias do período próprio de **Horários de maior atividade**.
+- Nos cards de pico, acessos, conteúdos, interações e denúncias são exibidos na mesma linha compacta.
+- O bloco passou a ter filtros próprios de **Período**, **De** e **Até**, independentes dos filtros de pessoas e conteúdo; os picos e o gráfico usam esse período próprio.
+- No filtro próprio de horários, a opção **Hoje** foi removida e o default é **Todo o período**.
+- A copy do bloco foi ajustada para: `Distribuição por hora das atividades na comunidade.`
+- Não houve package novo, schema Prisma/migration, seed, backfill artificial, mock, endpoint paralelo ou uso de `<img>` cru.
+- Builder/Quick Copy não está exposto como ferramenta callable no ambiente; a referência usada foi a captura enviada pelo usuário e o layout atual da aba **Estatísticas** da comunidade.
+- ADR criado/atualizado: `adrs/0284-horarios-maior-atividade-comunidade-admin.md`.
+
+### Critérios de aceite complementares
+
+- [x] O gráfico de **Horários de maior atividade** permite selecionar **Todos** ou um dia da semana.
+- [x] A seleção por dia muda somente o gráfico/legenda; os cards de pico permanecem gerais, agregando todos os dias do período.
+- [x] O bloco não exibe texto auxiliar `Gráfico exibindo...`.
+- [x] Cada card de pico mostra acessos, conteúdos, interações e denúncias na mesma linha.
+- [x] O bloco possui filtro próprio de período/data e não depende do filtro de **Estatísticas de conteúdo**.
+- [x] O filtro próprio do bloco não exibe **Hoje** e inicia em **Todo o período**.
+- [x] A descrição do bloco usa a copy curta definida pelo produto.
+- [x] Os dados por dia da semana são calculados no backend a partir de eventos reais, sem mock ou backfill.
+
+### Validação executada para este ajuste
+
+- `pnpm --dir admin exec biome check "src/app/(admin)/comunidades/[slug]/client.tsx" "src/api/req/communities/index.ts"`
+- `pnpm --dir backend exec biome check "src/modules/api/admin/private/communities/manage/DTOs/IAdminCommunityManageDTO.ts" "src/modules/api/admin/private/communities/manage/use-cases/services.ts"`
+- `pnpm --dir admin exec tsc --noEmit --pretty false`
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check`
+- Smoke real do service `showStatistics` para `autocuidado-em-pratica?period=all`, retornando `status=200`, `period=Todo o período`, `charts.hourly_activity.length=24`, `charts.hourly_activity_by_weekday.length=7`, `firstWeekdayHours=24` e soma total horária igual à soma por dia da semana.
+- Smoke HTTP local `GET http://localhost:3002/comunidades/autocuidado-em-pratica?tab=estatisticas` retornou 200.
