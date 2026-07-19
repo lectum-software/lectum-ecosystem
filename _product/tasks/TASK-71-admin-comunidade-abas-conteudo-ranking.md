@@ -607,3 +607,22 @@ Regras:
 - `pnpm --dir admin build`
 - `pnpm check`
 - Smoke HTTP local `GET http://localhost:3002/comunidades/autocuidado-em-pratica` retornou 200.
+
+
+## Ajuste complementar 2026-07-18 - Fallback zero para acessos sem eventos
+
+- Pedido do usu?rio: quando n?o houver acessos no card **Acessos** da aba **Geral**, exibir `0` em vez de `NaN`.
+- A UI Admin agora normaliza contadores com valor ausente, nulo, negativo ou n?o num?rico para `0` antes da formata??o, incluindo o card **Acessos** da aba **Geral** e os contadores clic?veis da aba **Estat?sticas**.
+- O ajuste ? defensivo e apresentacional: mant?m a fonte real `page_view_event`, n?o cria mock, seed, endpoint paralelo, schema Prisma/migration ou package novo.
+- Builder/Quick Copy n?o est? exposto como ferramenta callable no ambiente; a refer?ncia usada foi a captura enviada pelo usu?rio e `_product/proto/admin/Comunidades/Comunidades - Detalhes.png`.
+
+### Crit?rio de aceite complementar
+
+- [x] Quando a comunidade n?o possui eventos reais de acesso ou o campo vem ausente durante atualiza??o/compatibilidade, o Admin exibe `0` no contador **Acessos**, nunca `NaN`.
+
+### Valida??o executada para este ajuste
+
+- `pnpm --dir admin exec biome check "src/app/(admin)/comunidades/[slug]/client.tsx"`
+- `pnpm --dir admin exec tsc --noEmit --pretty false`
+- Smoke HTTP local `GET http://localhost:3002/comunidades/autocuidado-em-pratica` retornou 200.
+- `pnpm --dir admin check` foi executado como baseline e falhou fora do escopo deste ajuste por arquivos n?o relacionados de pacientes/lista presentes no workspace principal.

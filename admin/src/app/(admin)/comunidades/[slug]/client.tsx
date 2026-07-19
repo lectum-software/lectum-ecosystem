@@ -710,7 +710,7 @@ const CommunityHighlightCounterCard = ({ item }: { item: CommunityHighlightCount
     </span>
     <p className="mt-4 text-sm font-extrabold text-muted">{item.label}</p>
     <p className="mt-2 text-3xl font-extrabold text-foreground">
-      {numberFormatter.format(item.value)}
+      {numberFormatter.format(safeCommunityStatisticCount(item.value))}
     </p>
   </div>
 );
@@ -4215,8 +4215,11 @@ const communityStatisticsMetricAggregations = {
   Record<CommunityStatisticsDailyMetricKey, CommunityStatisticsMetricAggregation>
 >;
 
-const safeCommunityStatisticCount = (value: number | null | undefined) =>
-  Math.max(0, Number(value ?? 0));
+const safeCommunityStatisticCount = (value: number | null | undefined) => {
+  const normalized = Number(value ?? 0);
+
+  return Number.isFinite(normalized) ? Math.max(0, normalized) : 0;
+};
 
 const communityStatisticPercentage = (value: number, total: number) =>
   total > 0 ? (value / total) * 100 : 0;
@@ -4490,7 +4493,7 @@ const COMMUNITY_CONTENT_STATISTICS_METRICS = [
 const communityStatisticsMetricValue = (
   statistics: AdminCommunityStatistics,
   config: CommunityStatisticsMetricConfig,
-) => Math.max(0, Number(config.getValue(statistics) ?? 0));
+) => safeCommunityStatisticCount(config.getValue(statistics));
 
 const buildCommunityStatisticsMetricItems = (
   statistics: AdminCommunityStatistics,

@@ -53,3 +53,10 @@ A mesma métrica de acessos também passa a alimentar `highlight_counters.access
 - `pnpm --dir admin build`
 - `pnpm check`
 - Smoke HTTP local `GET http://localhost:3002/comunidades/autocuidado-em-pratica` retornou 200.
+
+
+## Atualiza??o 2026-07-18: fallback zero em acessos
+
+O card **Acessos** da aba **Geral** e o contador **Acessos** da aba **Estat?sticas** devem exibir `0` quando a contagem real de `page_view_event` n?o existir ou chegar ausente por compatibilidade durante atualiza??o.
+
+A decis?o ? normalizar valores ausentes, n?o num?ricos ou negativos para zero somente na apresenta??o, mantendo a origem real `page_view_event` e sem estimar, fazer backfill ou criar dado artificial.
