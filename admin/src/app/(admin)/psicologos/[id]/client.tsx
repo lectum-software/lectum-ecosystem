@@ -13,7 +13,6 @@ import {
   ChevronDown,
   ChevronLeft,
   ChevronRight,
-  Clock,
   CreditCard,
   ExternalLink,
   Eye,
@@ -1305,6 +1304,15 @@ const getHeaderPlanLabel = (detail: AdminPsychologistDetail) => {
   return detail.header.plan_name || "Sem plano ativo";
 };
 
+const getHeaderRatingLabel = (header: AdminPsychologistDetail["header"]) => {
+  const rating = header.rating_avg.toLocaleString("pt-BR", {
+    maximumFractionDigits: 1,
+    minimumFractionDigits: 1,
+  });
+
+  return `${rating} (${numberFormatter.format(header.rating_count)})`;
+};
+
 const needsManualRegistryReview = (detail: AdminPsychologistDetail) => {
   const subscription = detail.general.subscription;
   const hasActiveProfessionalPlan =
@@ -1413,6 +1421,9 @@ const formatPhoneDisplay = (value?: string | null) => {
 
   return raw;
 };
+
+const formatHeaderWhatsappDisplay = (value?: string | null) =>
+  formatPhoneDisplay(value).replace(/^\+55\s*/, "");
 
 const formatWhatsappInput = (value?: string | null) => {
   const digits = onlyDigits(value).slice(0, 15);
@@ -1731,8 +1742,10 @@ const DetailHeader = ({
 }) => {
   const pathname = usePathname();
   const header = detail.header;
-  const profileStatus = header.active ? PROFILE_STATUS_COPY.active : PROFILE_STATUS_COPY.inactive;
   const showProfileRegistryAlert = needsManualRegistryReview(detail);
+  const headerPlan = getHeaderPlanLabel(detail);
+  const headerRating = getHeaderRatingLabel(header);
+  const headerWhatsapp = formatHeaderWhatsappDisplay(detail.profile.personal.phone);
   const reportsAlertInput = useMemo<AdminPsychologistReportsQuery>(
     () => ({ limit: 1, page: 1, status: "pending", type: "all" }),
     [],
@@ -1744,9 +1757,9 @@ const DetailHeader = ({
   return (
     <CardShell className="overflow-hidden">
       <div className="flex flex-col gap-5 p-5 md:flex-row md:items-start md:justify-between md:p-7">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+        <div className="flex flex-col gap-5 sm:flex-1 sm:flex-row sm:items-center">
           <Avatar name={header.name} src={header.avatar} />
-          <div>
+          <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">
               <h1 className="text-3xl font-extrabold tracking-tight text-foreground md:text-4xl">
                 {header.name}
@@ -1760,20 +1773,25 @@ const DetailHeader = ({
               <span aria-hidden>•</span>
               <span>{formatAdminHeaderCrp(detail)}</span>
             </div>
-            <div className="mt-3 flex flex-wrap gap-2">
-              <Badge className={profileStatus.className}>{profileStatus.label}</Badge>
-              <Badge className="bg-surface-muted text-muted">{getHeaderPlanLabel(detail)}</Badge>
-              <Badge className="bg-amber-50 text-amber-700">
-                <Star aria-hidden className="mr-1 h-3.5 w-3.5 fill-amber-500 text-amber-500" />
-                {header.rating_avg.toLocaleString("pt-BR", {
-                  maximumFractionDigits: 1,
-                  minimumFractionDigits: 1,
-                })}{" "}
-                ({numberFormatter.format(header.rating_count)})
-              </Badge>
+            <div className="mt-4 flex flex-wrap items-center gap-x-8 gap-y-3 text-sm text-muted xl:gap-x-10">
+              <span className="inline-flex items-center gap-2">
+                <Mail aria-hidden className="h-4 w-4 shrink-0 text-primary" />
+                <span className="min-w-0 break-words">{detail.profile.personal.email}</span>
+              </span>
+              <span className="inline-flex items-center gap-2">
+                <WhatsAppIcon aria-hidden className="h-4 w-4 text-primary" />
+                <span>{headerWhatsapp}</span>
+              </span>
+              <span className="inline-flex items-center gap-2">
+                <Wallet aria-hidden className="h-4 w-4 shrink-0 text-primary" />
+                <span>{headerPlan}</span>
+              </span>
+              <span className="inline-flex items-center gap-2">
+                <Star aria-hidden className="h-4 w-4 shrink-0 text-primary" />
+                <span>{headerRating}</span>
+              </span>
             </div>
-            <p className="mt-3 inline-flex items-center gap-2 text-xs font-bold text-muted">
-              <Clock aria-hidden className="h-4 w-4 text-primary" />
+            <p className="mt-3 text-sm text-muted">
               Último acesso: {formatDateTime(header.last_access_at)}
             </p>
           </div>

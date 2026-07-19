@@ -210,3 +210,25 @@ Criar o shell de detalhe do psicólogo e as abas Geral e Perfil/Cadastro com dad
 - `pnpm --dir admin build`
 - `git diff --check -- admin/src/app/(admin)/psicologos/[id]/client.tsx _product/tasks/TASK-55-detalhe-psicologo-geral-perfil-admin.md`
 - Smoke HTTP local em `http://localhost:3002/psicologos/cmrgztri7000tn0uh1q4n8vxf` retornou 200; validação visual autenticada segue dependente da sessão Admin real do navegador do usuário.
+
+## Ajuste complementar 2026-07-19 - header enxuto do psicologo
+
+- Pedido direto de produto aplicado no header do detalhe Admin do psicologo.
+- As tags fortes `Ativo`, `Plano de cortesia` e avaliacao foram substituidas por metadados iconograficos leves.
+- A linha de metadados ficou concentrada em e-mail, WhatsApp sem `+55`, plano e avaliacao.
+- Genero, localizacao, forma de cadastro e data de cadastro foram removidos do header.
+- O WhatsApp usa o `WhatsAppIcon` canonico ja usado na Lectum.
+- A avaliacao usa estrela vazada azul, sem preenchimento.
+- O header mantem somente `Ultimo acesso: ...` como informacao temporal secundaria.
+- A alteracao usa somente dados reais ja retornados por `GET /api/admin/private/psychologists/:id`; nao houve backend, contrato, schema Prisma, migration, package, mock ou seed.
+- UI permanece mobile-first: metadados quebram linha em ~390px e mantem espacamento uniforme em telas maiores.
+- Builder/Quick Copy nao esteve acessivel como ferramenta callable; a referencia visual foi a captura enviada pelo usuario e o componente real de `/pacientes/[id]`.
+- ADR criado: `adrs/0285-admin-psicologo-header-metadados.md`.
+
+### Validacao complementar do header enxuto
+
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/psicologos/[id]/client.tsx"`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- Smoke HTTP local: `GET http://localhost:3002/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=perfil` retornou `200`.
+- Validacao visual autenticada em browser local nao foi executada por nao haver ferramenta de browser interativa/sessao Admin disponivel no ambiente desta execucao.
