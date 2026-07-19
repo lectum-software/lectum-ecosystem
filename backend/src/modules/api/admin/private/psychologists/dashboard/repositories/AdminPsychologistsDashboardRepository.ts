@@ -485,6 +485,36 @@ export class AdminPsychologistsDashboardRepository
     });
   }
 
+  async listPlatformSessions(range: AdminPsychologistsDashboardDateRange) {
+    return prisma.visitor_session.findMany({
+      orderBy: {
+        last_seen_at: "asc",
+      },
+      select: {
+        device_type: true,
+        session_id: true,
+        user_id: true,
+      },
+      where: {
+        deleted: false,
+        first_seen_at: {
+          lte: range.end,
+        },
+        last_seen_at: {
+          gte: range.start,
+        },
+        user_id: {
+          not: null,
+        },
+        user: {
+          active: true,
+          deleted: false,
+          role: "psicologo",
+        },
+      },
+    });
+  }
+
   async listPlatformPwaInstallActions(range: AdminPsychologistsDashboardDateRange) {
     return prisma.important_action_event.findMany({
       orderBy: {

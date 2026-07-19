@@ -116,6 +116,7 @@ Packages usados:
 - [x] UI mobile-first validada em ~390px, tablet e desktop.
 - [x] Nenhum mock, dado fake permanente ou endpoint simulado foi usado.
 - [x] Nenhum `<img>` cru foi usado.
+- [x] Gráfico de percentual de devices usados por psicólogos usa sessões reais autenticadas.
 - [x] `_product/proto/admin/Psicólogos/Psicólogos - Dashboard.png` foi citado como referência visual.
 - [x] Checks/builds relevantes foram executados sem erros.
 - [x] ADR criado ou atualizado se houver decisão relevante.
@@ -297,3 +298,13 @@ Packages usados:
 - Não houve alteração de contrato backend, Prisma, migration, mock, pacote novo ou fonte de dados.
 - Referência visual local mantida: `_product/proto/admin/Psicólogos/Psicólogos - Dashboard.png`; Builder/Quick Copy não estava disponível como ferramenta callable no ambiente.
 - Validações desta correção: primeira tentativa de `pnpm --dir admin check` atingiu timeout sem resultado; na repetição, `pnpm --dir admin check`, `pnpm --dir admin build` e smoke HTTP local em `http://localhost:3002/psicologos` retornando 200 concluíram sem erros.
+
+### Correção UX/dados em 2026-07-19 - gráfico de devices dos psicólogos
+
+- Pedido do usuário: adicionar no dashboard Admin de psicólogos um gráfico com o percentual de devices usados pelos psicólogos, como mobile, tablet, desktop e não identificado.
+- O backend passa a expor `device_usage` em `GET /api/admin/private/psychologists/dashboard`, agregado a partir de `visitor_session.device_type` somente para sessões reais autenticadas com `user.role="psicologo"` e janela `first_seen_at <= fim` / `last_seen_at >= início`.
+- O percentual é calculado sobre o total de sessões reais de psicólogos no período; o mesmo psicólogo pode aparecer em mais de um device quando houver sessões reais em dispositivos distintos.
+- A UI adiciona o card **Devices dos psicólogos** com gráfico de pizza, percentuais nas fatias e legenda com sessões e psicólogos ativos por device; sem sessões no período, mostra estado honesto de indisponibilidade.
+- Não houve alteração de Prisma schema, migration, seed, mock, pacote novo ou fonte paralela de dados.
+- Referência visual local mantida: `_product/proto/admin/Psicólogos/Psicólogos - Dashboard.png`; Builder/Quick Copy não estava disponível como ferramenta callable no ambiente.
+- Validações desta correção: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin build`, `pnpm --dir admin check`, `pnpm check`, execução direta do service com `.env` local via `tsx -r dotenv/config` confirmando `device_usage` real e smoke HTTP local em `http://localhost:3002/psicologos` retornando 200. A primeira tentativa de `pnpm --dir admin check` falhou por cache `.next` stale referenciando rota antiga de pacientes; após o build regenerar tipos do Next, o check passou.

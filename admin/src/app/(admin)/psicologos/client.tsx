@@ -10,6 +10,7 @@ import {
   RefreshCw,
   Search,
   ShieldCheck,
+  Smartphone,
   TrendingDown,
   UserCheck,
   UserPlus,
@@ -41,6 +42,7 @@ type DashboardMetricKey = (typeof CARD_ORDER)[number];
 type DashboardPeriodValue = NonNullable<PsychologistsDashboardQuery["period"]>;
 type DashboardPeriodPreset = Exclude<DashboardPeriodValue, "custom">;
 type DashboardRange = Pick<PsychologistsDashboardQuery, "from" | "to">;
+type DeviceUsageItem = AdminPsychologistsDashboard["device_usage"]["items"][number];
 type SignupMethodItem = AdminPsychologistsDashboard["signup_method"]["items"][number];
 type SupplyDemandSortKey = "psychologists" | "searches" | "searches_per_psychologist";
 
@@ -1092,6 +1094,12 @@ const ConversionAndUsageBlocks = ({ summary }: { summary: AdminPsychologistsDash
         </CardShell>
 
         <CardShell className="p-5">
+          <PanelTitle icon={Smartphone} title="Devices dos psicólogos" />
+          <p className="mt-2 text-sm font-bold leading-6 text-muted">{selectedPeriodLabel}</p>
+          <DeviceUsagePieChart deviceUsage={summary.device_usage} />
+        </CardShell>
+
+        <CardShell className="p-5">
           <PanelTitle icon={Activity} title="Uso da plataforma" />
           <p className="mt-2 text-sm font-bold leading-6 text-muted">{selectedPeriodLabel}</p>
           <div className="mt-5 grid gap-3 sm:grid-cols-2">
@@ -1139,6 +1147,210 @@ const ConversionAndUsageBlocks = ({ summary }: { summary: AdminPsychologistsDash
         </CardShell>
       </div>
     </section>
+  );
+};
+
+const DEVICE_USAGE_CHART_COLORS = {
+  desktop: "#13a85b",
+  mobile: "#308ce8",
+  tablet: "#8b5cf6",
+  unknown: "#94a3b8",
+} satisfies Record<DeviceUsageItem["device_type"], string>;
+
+const DeviceUsagePieChart = ({
+  deviceUsage,
+}: {
+  deviceUsage: AdminPsychologistsDashboard["device_usage"];
+}) => {
+  const center = 60;
+  const radius = 48;
+  const total = Math.max(0, deviceUsage.total_sessions);
+  const visibleItems = deviceUsage.items.filter((item) => item.count > 0);
+  const segments = visibleItems.reduce<{
+    currentAngle: number;
+    items: Array<{
+      endAngle: number;
+      item: DeviceUsageItem;
+      share: number;
+      startAngle: number;
+    }>;
+  }>(
+    (accumulator, item) => {
+      const share = total > 0 ? item.count / total : 0;
+      if (share <= 0) return accumulator;
+
+      const startAngle = accumulator.currentAngle;
+      const endAngle = startAngle + share * 360;
+
+      return {
+        currentAngle: endAngle,
+        items: accumulator.items.concat({
+          endAngle,
+          item,
+          share,
+          startAngle,
+        }),
+      };
+    },
+    { currentAngle: -90, items: [] },
+  ).items;
+  const renderPercentageLabel = ({
+    color,
+    label,
+    x,
+    y,
+  }: {
+    color: string;
+    label: string;
+    x: number;
+    y: number;
+  }) => {
+    const width = 39;
+    const height = 16;
+
+    return (
+      <g>
+        <rect
+          fill={hexToRgba(color, 0.86)}
+          height={height}
+          rx={height / 2}
+          width={width}
+          x={x - width / 2}
+          y={y - height / 2}
+        />
+        <text
+          dominantBaseline="middle"
+          fill="white"
+          fontSize="8.5"
+          fontWeight="900"
+          textAnchor="middle"
+          x={x}
+          y={y + 0.25}
+        >
+          {label}
+        </text>
+      </g>
+    );
+  };
+
+  if (total === 0) {
+    return (
+      <p className="mt-5 rounded-2xl border border-dashed border-border bg-surface-muted p-4 text-sm font-bold text-muted">
+        {deviceUsage.unavailable_reason ??
+          "Sem sessões autenticadas de psicólogos no período selecionado."}
+      </p>
+    );
+  }
+
+  const ariaLabel = `Gráfico de pizza dos devices usados por psicólogos: ${deviceUsage.items
+    .map(
+      (item) =>
+        `${item.label}: ${numberFormatter.format(item.count)} sessão(ões), ${formatPercentageValue(
+          item.percentage,
+        )}`,
+    )
+    .join("; ")}.`;
+
+  return (
+    <figure className="mt-5 grid gap-5 sm:grid-cols-[minmax(9rem,11rem)_1fr] sm:items-center">
+      <svg
+        aria-label={ariaLabel}
+        className="mx-auto aspect-square w-40 sm:w-44"
+        role="img"
+        viewBox="0 0 120 120"
+      >
+        <circle
+          cx={center}
+          cy={center}
+          fill="var(--admin-surface-muted)"
+          r={radius}
+          stroke="var(--admin-border)"
+          strokeWidth="1"
+        />
+        {segments.map((segment) => {
+          const color = DEVICE_USAGE_CHART_COLORS[segment.item.device_type];
+          const labelPoint = getPiePoint(
+            center,
+            radius * 0.58,
+            (segment.startAngle + segment.endAngle) / 2,
+          );
+          const percentageLabel = formatPercentageValue(segment.item.percentage);
+
+          if (segment.share >= 0.999) {
+            return (
+              <g key={segment.item.device_type}>
+                <circle
+                  cx={center}
+                  cy={center}
+                  fill={color}
+                  r={radius}
+                  stroke="var(--admin-surface)"
+                  strokeWidth="1.4"
+                />
+                {renderPercentageLabel({
+                  color,
+                  label: percentageLabel,
+                  x: center,
+                  y: center,
+                })}
+              </g>
+            );
+          }
+
+          return (
+            <g key={segment.item.device_type}>
+              <path
+                d={buildPieSlicePath(center, radius, segment.startAngle, segment.endAngle)}
+                fill={color}
+                stroke="var(--admin-surface)"
+                strokeWidth="1.4"
+              />
+              {segment.share >= 0.08
+                ? renderPercentageLabel({
+                    color,
+                    label: percentageLabel,
+                    x: labelPoint.x,
+                    y: labelPoint.y,
+                  })
+                : null}
+            </g>
+          );
+        })}
+      </svg>
+      <figcaption className="space-y-3">
+        {deviceUsage.items.map((item) => {
+          const sessionsLabel = item.count === 1 ? "sessão" : "sessões";
+          const psychologistsLabel =
+            item.active_psychologists_count === 1 ? "psicólogo" : "psicólogos";
+
+          return (
+            <div className="rounded-2xl bg-surface-muted p-3" key={item.device_type}>
+              <div className="flex items-center justify-between gap-3">
+                <span className="flex min-w-0 items-center gap-2 text-sm font-black text-foreground">
+                  <span
+                    aria-hidden
+                    className="h-3 w-3 shrink-0 rounded-full"
+                    style={{ backgroundColor: DEVICE_USAGE_CHART_COLORS[item.device_type] }}
+                  />
+                  <span className="truncate">{item.label}</span>
+                </span>
+                <span className="text-sm font-black text-foreground">
+                  {formatPercentageValue(item.percentage)}
+                </span>
+              </div>
+              <p className="mt-1 text-xs font-bold text-muted">
+                {numberFormatter.format(item.count)} {sessionsLabel} ·{" "}
+                {numberFormatter.format(item.active_psychologists_count)} {psychologistsLabel}
+              </p>
+            </div>
+          );
+        })}
+        <p className="rounded-2xl border border-border/70 bg-surface p-3 text-xs font-bold text-subtle">
+          Percentual por sessões reais de psicólogos autenticados; o mesmo psicólogo pode aparecer
+          em mais de um device.
+        </p>
+      </figcaption>
+    </figure>
   );
 };
 

@@ -113,6 +113,12 @@ export type AdminPsychologistPlatformPageViewRecord = {
   user_id: string | null;
 };
 
+export type AdminPsychologistPlatformSessionRecord = {
+  device_type: string;
+  session_id: string;
+  user_id: string | null;
+};
+
 export type AdminPsychologistPlatformPwaInstallRecord = {
   occurred_at: Date;
   user_id: string | null;
@@ -140,6 +146,9 @@ export interface IAdminPsychologistsDashboardRepository {
   listPlatformPageViews(
     range: AdminPsychologistsDashboardDateRange,
   ): Promise<AdminPsychologistPlatformPageViewRecord[]>;
+  listPlatformSessions(
+    range: AdminPsychologistsDashboardDateRange,
+  ): Promise<AdminPsychologistPlatformSessionRecord[]>;
   listPlatformPwaInstallActions(
     range: AdminPsychologistsDashboardDateRange,
   ): Promise<AdminPsychologistPlatformPwaInstallRecord[]>;

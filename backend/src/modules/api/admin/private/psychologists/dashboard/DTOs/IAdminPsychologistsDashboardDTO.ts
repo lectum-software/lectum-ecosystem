@@ -296,6 +296,25 @@ export type AdminPsychologistsDashboardPlatformUsage = {
   unavailable_reason: string | null;
 };
 
+export type AdminPsychologistsDashboardDeviceType = "desktop" | "mobile" | "tablet" | "unknown";
+
+export type AdminPsychologistsDashboardDeviceUsageItem = {
+  active_psychologists_count: number;
+  count: number;
+  device_type: AdminPsychologistsDashboardDeviceType;
+  id: AdminPsychologistsDashboardDeviceType;
+  label: string;
+  percentage: number;
+};
+
+export type AdminPsychologistsDashboardDeviceUsage = {
+  items: AdminPsychologistsDashboardDeviceUsageItem[];
+  source: "visitor_session.device_type+user.role=psicologo";
+  total_active_psychologists: number;
+  total_sessions: number;
+  unavailable_reason: string | null;
+};
+
 export type AdminPsychologistsDashboardTrafficSourceItem = {
   badge: "primary_source" | null;
   description: string;
@@ -329,6 +348,7 @@ export type AdminPsychologistsDashboardSummary = {
   };
   conversion: AdminPsychologistsDashboardConversion;
   conversion_by_signup_method: AdminPsychologistsDashboardConversionBySignupMethodItem[];
+  device_usage: AdminPsychologistsDashboardDeviceUsage;
   filters_searches: AdminPsychologistsDashboardFilterSearches;
   directory_filters: AdminPsychologistsDashboardDirectoryFilters;
   period: AdminPsychologistsDashboardPeriod;

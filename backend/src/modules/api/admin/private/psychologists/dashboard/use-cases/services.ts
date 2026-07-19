@@ -17,6 +17,7 @@ import type {
   AdminPsychologistsDashboardBreakdownItem,
   AdminPsychologistsDashboardDailyPoint,
   AdminPsychologistsDashboardDateRange,
+  AdminPsychologistsDashboardDeviceType,
   AdminPsychologistsDashboardDirectoryFilterItem,
   AdminPsychologistsDashboardDirectoryFilters,
   AdminPsychologistsDashboardFilterSearchDimension,
@@ -31,6 +32,7 @@ import type {
 import { AdminPsychologistsDashboardRepository } from "../repositories/AdminPsychologistsDashboardRepository";
 import type {
   AdminPsychologistDirectoryFilterSearchRecord,
+  AdminPsychologistPlatformSessionRecord,
   AdminPsychologistProfileRecord,
   AdminPsychologistSubscriptionRecord,
 } from "../repositories/interfaces/IAdminPsychologistsDashboardRepository";
@@ -46,6 +48,13 @@ const FREE_PLAN_SLUG = "gratuito";
 const DIRECTORY_FILTER_SEARCH_ACTION_SOURCE =
   "important_action_event.action_type=psychologist_directory_filter_search";
 const CITY_FILTER_MINIMUM_SEARCHES = 10;
+
+const DEVICE_LABELS: Record<AdminPsychologistsDashboardDeviceType, string> = {
+  desktop: "Desktop",
+  mobile: "Mobile",
+  tablet: "Tablet",
+  unknown: "Não identificado",
+};
 
 const GENDER_LABELS: Record<string, string> = {
   feminina: "Feminino",
@@ -335,6 +344,67 @@ const normalizeKey = (value: string) =>
     .replace(/^_+|_+$/g, "");
 
 const normalizeName = (name: string) => name.replace(/\s+/g, " ").trim() || "Psicólogo";
+
+const normalizeDeviceType = (value: string): AdminPsychologistsDashboardDeviceType => {
+  const normalized = value.trim().toLowerCase();
+  if (normalized === "desktop" || normalized === "mobile" || normalized === "tablet") {
+    return normalized;
+  }
+
+  return "unknown";
+};
+
+const buildDeviceUsage = (sessions: AdminPsychologistPlatformSessionRecord[]) => {
+  const counts: Record<AdminPsychologistsDashboardDeviceType, number> = {
+    desktop: 0,
+    mobile: 0,
+    tablet: 0,
+    unknown: 0,
+  };
+  const activePsychologistsByDevice = new Map<AdminPsychologistsDashboardDeviceType, Set<string>>(
+    (Object.keys(counts) as AdminPsychologistsDashboardDeviceType[]).map((deviceType) => [
+      deviceType,
+      new Set<string>(),
+    ]),
+  );
+
+  for (const session of sessions) {
+    const deviceType = normalizeDeviceType(session.device_type);
+    counts[deviceType] += 1;
+    if (session.user_id) activePsychologistsByDevice.get(deviceType)?.add(session.user_id);
+  }
+
+  const totalSessions = sessions.length;
+  const totalActivePsychologists = new Set(
+    sessions
+      .map((session) => session.user_id)
+      .filter((userId): userId is string => Boolean(userId)),
+  ).size;
+
+  return {
+    items: (Object.keys(counts) as AdminPsychologistsDashboardDeviceType[])
+      .map((deviceType) => ({
+        active_psychologists_count: activePsychologistsByDevice.get(deviceType)?.size ?? 0,
+        count: counts[deviceType],
+        device_type: deviceType,
+        id: deviceType,
+        label: DEVICE_LABELS[deviceType],
+        percentage: safePercentage(counts[deviceType], totalSessions),
+      }))
+      .sort((left, right) => {
+        if (right.count !== left.count) return right.count - left.count;
+
+        return left.label.localeCompare(right.label, "pt-BR");
+      }),
+    source: "visitor_session.device_type+user.role=psicologo" as const,
+    total_active_psychologists: totalActivePsychologists,
+    total_sessions: totalSessions,
+    unavailable_reason:
+      totalSessions === 0
+        ? "Sem sessões autenticadas de psicólogos com dispositivo identificado no período selecionado."
+        : null,
+  };
+};
 
 const normalizeStateCode = (value: string | null | undefined) => {
   const state = value?.trim().toUpperCase();
@@ -1241,12 +1311,14 @@ export const buildPsychologistsDashboard = async (
     directoryFilterSearchActions,
     rankingCandidates,
     platformPageViews,
+    platformSessions,
     platformPwaInstalls,
     publicProfilePageViews,
   ] = await Promise.all([
     repository.listDirectoryFilterSearchActions(current),
     repository.listPublicRankingCandidates(),
     repository.listPlatformPageViews(current),
+    repository.listPlatformSessions(current),
     repository.listPlatformPwaInstallActions(current),
     repository.listPublicProfilePageViews(current, psychologistUserIds),
   ]);
@@ -1289,6 +1361,7 @@ export const buildPsychologistsDashboard = async (
       event.user_id ? [event.user_id] : [],
     ),
   });
+  const deviceUsage = buildDeviceUsage(platformSessions);
   const trafficSources = summarizePsychologistTrafficOrigins(publicProfilePageViews);
   const statistics = buildStatistics(profiles, current.end);
 
@@ -1365,6 +1438,7 @@ export const buildPsychologistsDashboard = async (
       source: "user.createdAt+professional_subscription+subscription_plan",
     },
     conversion_by_signup_method: buildConversionBySignupMethod(currentNewSignups),
+    device_usage: deviceUsage,
     filters_searches: buildFilterSearches({
       actions: directoryFilterSearchActions,
       citySupplyItems: statistics.cities.items,
@@ -1442,6 +1516,17 @@ export const buildPsychologistsDashboard = async (
               id: "platform_usage",
               label: "Uso da plataforma",
               source: "page_view_event",
+            },
+          ]
+        : []),
+      ...(deviceUsage.unavailable_reason
+        ? [
+            {
+              description:
+                "Distribuição de devices dos psicólogos depende de visitor_session autenticada com user.role=psicologo no período selecionado.",
+              id: "psychologist_device_usage",
+              label: "Devices dos psicólogos",
+              source: "visitor_session",
             },
           ]
         : []),

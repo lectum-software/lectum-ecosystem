@@ -330,6 +330,25 @@ export type PsychologistsDashboardPlatformUsage = {
   unavailable_reason: string | null;
 };
 
+export type PsychologistsDashboardDeviceType = "desktop" | "mobile" | "tablet" | "unknown";
+
+export type PsychologistsDashboardDeviceUsageItem = {
+  active_psychologists_count: number;
+  count: number;
+  device_type: PsychologistsDashboardDeviceType;
+  id: PsychologistsDashboardDeviceType;
+  label: string;
+  percentage: number;
+};
+
+export type PsychologistsDashboardDeviceUsage = {
+  items: PsychologistsDashboardDeviceUsageItem[];
+  source: "visitor_session.device_type+user.role=psicologo";
+  total_active_psychologists: number;
+  total_sessions: number;
+  unavailable_reason: string | null;
+};
+
 export type PsychologistsDashboardTrafficSourceItem = {
   badge: "primary_source" | null;
   description: string;
@@ -1321,6 +1340,7 @@ export type AdminPsychologistsDashboard = {
   };
   conversion: PsychologistsDashboardConversion;
   conversion_by_signup_method: PsychologistsDashboardConversionBySignupMethodItem[];
+  device_usage: PsychologistsDashboardDeviceUsage;
   filters_searches: PsychologistsDashboardFilterSearches;
   directory_filters: PsychologistsDashboardDirectoryFilters;
   period: PsychologistsDashboardPeriod;
