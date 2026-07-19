@@ -2025,7 +2025,7 @@ const SubscriptionCard = ({
   const pathname = usePathname();
   const subscription = detail.general.subscription;
   const rows: Array<[string, ReactNode]> = [
-    ["Plano atual", subscription.plan_name || "Sem plano ativo"],
+    ["Plano atual", getHeaderPlanLabel(detail)],
     ["Início", formatDate(subscription.started_at)],
     ["Tempo até assinatura", subscription.time_to_first_paid_subscription.label],
     ["Próxima renovação", formatSubscriptionRenewal(subscription)],

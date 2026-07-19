@@ -57,3 +57,14 @@ Validações adicionais:
 - `git diff --check -- "admin/src/app/(admin)/psicologos/[id]/client.tsx"`
 - `pnpm --dir admin check`
 - `pnpm --dir admin build`
+
+## Atualização 2026-07-19 - plano de cortesia no resumo
+
+O card `Dados da assinatura` da aba Geral passou a reutilizar a mesma regra visual do header para o plano atual: assinatura administrativa ativa (`source="admin_grant"`) aparece como `Plano de cortesia`. A decisão evita sugerir assinatura paga comum quando o direito profissional vem de cortesia operacional.
+
+Validações adicionais:
+
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/psicologos/[id]/client.tsx"`
+- `git diff --check -- "admin/src/app/(admin)/psicologos/[id]/client.tsx"`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`

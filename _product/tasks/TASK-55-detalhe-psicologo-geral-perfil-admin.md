@@ -310,3 +310,16 @@ Criar o shell de detalhe do psicÃ³logo e as abas Geral e Perfil/Cadastro com dad
 - `git diff --check -- "admin/src/app/(admin)/psicologos/[id]/client.tsx"`
 - `pnpm --dir admin check`
 - `pnpm --dir admin build`
+
+## Ajuste complementar 2026-07-19 - plano de cortesia no resumo de assinatura
+
+- Pedido direto de produto aplicado no card `Dados da assinatura` da aba Admin `Geral`.
+- A linha `Plano atual` passou a usar a mesma regra visual do header: assinatura `source="admin_grant"` ativa com plano profissional é exibida como `Plano de cortesia`, em vez de `Plano Profissional`.
+- A mudança é somente de apresentação no Admin; não altera plano, assinatura, endpoint, schema Prisma, migrations ou dados persistidos.
+
+### Validação complementar do plano de cortesia no resumo
+
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/psicologos/[id]/client.tsx"`
+- `git diff --check -- "admin/src/app/(admin)/psicologos/[id]/client.tsx"`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
