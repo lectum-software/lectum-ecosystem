@@ -41,6 +41,7 @@ type DashboardMetricKey = (typeof CARD_ORDER)[number];
 type DashboardPeriodValue = NonNullable<PsychologistsDashboardQuery["period"]>;
 type DashboardPeriodPreset = Exclude<DashboardPeriodValue, "custom">;
 type DashboardRange = Pick<PsychologistsDashboardQuery, "from" | "to">;
+type SignupMethodItem = AdminPsychologistsDashboard["signup_method"]["items"][number];
 type SupplyDemandSortKey = "psychologists" | "searches" | "searches_per_psychologist";
 
 const SUPPLY_DEMAND_SORT_OPTIONS: { id: SupplyDemandSortKey; label: string }[] = [
@@ -217,6 +218,11 @@ const DASHBOARD_METRIC_CONFIG = {
   subscriber_psychologists: { color: "#5d9df6", icon: UserCheck },
   total_psychologists: { color: "#308ce8", icon: UsersRound },
 } satisfies Record<DashboardMetricKey, { color: string; icon: LucideIcon }>;
+
+const SIGNUP_METHOD_CHART_COLORS = {
+  email_password: "#13a85b",
+  google: "#308ce8",
+} satisfies Record<SignupMethodItem["id"], string>;
 
 const RATE_WITH_COUNT_METRICS = [
   "courtesy_psychologists",
@@ -769,6 +775,168 @@ const MiniBar = ({
   </div>
 );
 
+const getPiePoint = (center: number, radius: number, angleInDegrees: number) => {
+  const angleInRadians = (Math.PI / 180) * angleInDegrees;
+
+  return {
+    x: center + radius * Math.cos(angleInRadians),
+    y: center + radius * Math.sin(angleInRadians),
+  };
+};
+
+const buildPieSlicePath = (
+  center: number,
+  radius: number,
+  startAngle: number,
+  endAngle: number,
+) => {
+  const start = getPiePoint(center, radius, startAngle);
+  const end = getPiePoint(center, radius, endAngle);
+  const largeArcFlag = endAngle - startAngle > 180 ? 1 : 0;
+
+  return [
+    `M ${center} ${center}`,
+    `L ${start.x} ${start.y}`,
+    `A ${radius} ${radius} 0 ${largeArcFlag} 1 ${end.x} ${end.y}`,
+    "Z",
+  ].join(" ");
+};
+
+const SignupMethodPieChart = ({
+  signupMethod,
+}: {
+  signupMethod: AdminPsychologistsDashboard["signup_method"];
+}) => {
+  const center = 60;
+  const radius = 48;
+  const total = Math.max(0, signupMethod.total);
+  const segments = signupMethod.items.reduce<{
+    currentAngle: number;
+    items: Array<{
+      endAngle: number;
+      item: SignupMethodItem;
+      share: number;
+      startAngle: number;
+    }>;
+  }>(
+    (accumulator, item) => {
+      const share = total > 0 ? item.count / total : 0;
+      if (share <= 0) return accumulator;
+
+      const startAngle = accumulator.currentAngle;
+      const endAngle = startAngle + share * 360;
+
+      return {
+        currentAngle: endAngle,
+        items: accumulator.items.concat({
+          endAngle,
+          item,
+          share,
+          startAngle,
+        }),
+      };
+    },
+    { currentAngle: -90, items: [] },
+  ).items;
+  const ariaLabel = `Gráfico de pizza do modo de cadastro: ${signupMethod.items
+    .map(
+      (item) =>
+        `${item.label}: ${numberFormatter.format(item.count)} cadastro(s), ${formatPercentageValue(
+          item.percentage,
+        )}`,
+    )
+    .join("; ")}.`;
+
+  return (
+    <figure className="mt-5 grid gap-5 sm:grid-cols-[minmax(9rem,11rem)_1fr] sm:items-center">
+      <svg
+        aria-label={ariaLabel}
+        className="mx-auto aspect-square w-40 sm:w-44"
+        role="img"
+        viewBox="0 0 120 120"
+      >
+        <circle
+          cx={center}
+          cy={center}
+          fill="var(--admin-surface-muted)"
+          r={radius}
+          stroke="var(--admin-border)"
+          strokeWidth="1"
+        />
+        {segments.map((segment) => {
+          const color = SIGNUP_METHOD_CHART_COLORS[segment.item.id];
+
+          if (segment.share >= 0.999) {
+            return (
+              <circle
+                cx={center}
+                cy={center}
+                fill={color}
+                key={segment.item.id}
+                r={radius}
+                stroke="var(--admin-surface)"
+                strokeWidth="1.4"
+              />
+            );
+          }
+
+          return (
+            <path
+              d={buildPieSlicePath(center, radius, segment.startAngle, segment.endAngle)}
+              fill={color}
+              key={segment.item.id}
+              stroke="var(--admin-surface)"
+              strokeWidth="1.4"
+            />
+          );
+        })}
+        <text
+          fill="var(--admin-foreground)"
+          fontSize="17"
+          fontWeight="900"
+          textAnchor="middle"
+          x={center}
+          y="58"
+        >
+          {numberFormatter.format(total)}
+        </text>
+        <text
+          fill="var(--admin-muted)"
+          fontSize="8"
+          fontWeight="700"
+          textAnchor="middle"
+          x={center}
+          y="73"
+        >
+          cadastros
+        </text>
+      </svg>
+      <figcaption className="space-y-3">
+        {signupMethod.items.map((item) => (
+          <div className="rounded-2xl bg-surface-muted p-3" key={item.id}>
+            <div className="flex items-center justify-between gap-3">
+              <span className="flex min-w-0 items-center gap-2 text-sm font-black text-foreground">
+                <span
+                  aria-hidden
+                  className="h-3 w-3 shrink-0 rounded-full"
+                  style={{ backgroundColor: SIGNUP_METHOD_CHART_COLORS[item.id] }}
+                />
+                <span className="truncate">{item.label}</span>
+              </span>
+              <span className="text-sm font-black text-foreground">
+                {formatPercentageValue(item.percentage)}
+              </span>
+            </div>
+            <p className="mt-1 text-xs font-bold text-muted">
+              {numberFormatter.format(item.count)} cadastro(s)
+            </p>
+          </div>
+        ))}
+      </figcaption>
+    </figure>
+  );
+};
+
 const ConversionAndUsageBlocks = ({ summary }: { summary: AdminPsychologistsDashboard }) => {
   const conversion = summary.conversion;
   const platformUsage = summary.platform_usage;
@@ -868,18 +1036,7 @@ const ConversionAndUsageBlocks = ({ summary }: { summary: AdminPsychologistsDash
         <CardShell className="p-5">
           <PanelTitle icon={UserPlus} title="Modo de cadastro" />
           <p className="mt-2 text-sm font-bold leading-6 text-muted">{selectedPeriodLabel}</p>
-          <div className="mt-5 space-y-4">
-            {summary.signup_method.items.map((item) => (
-              <MiniBar
-                key={item.id}
-                label={item.label}
-                percentage={item.percentage}
-                value={`${numberFormatter.format(item.count)} · ${formatPercentageValue(
-                  item.percentage,
-                )}`}
-              />
-            ))}
-          </div>
+          <SignupMethodPieChart signupMethod={summary.signup_method} />
           {summary.signup_method.unknown_count > 0 ? (
             <p className="mt-4 text-xs font-bold text-subtle">
               {numberFormatter.format(summary.signup_method.unknown_count)} cadastro(s) legado(s)
