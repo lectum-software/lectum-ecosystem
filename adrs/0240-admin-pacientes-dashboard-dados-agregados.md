@@ -142,3 +142,10 @@ Decisão:
 - Manter o contrato `device_usage`, `platform_usage`, localizações e demografia sem alteração; a mudança é apenas de composição visual.
 
 Consequência: o dashboard fica alinhado à ordem solicitada pelo produto sem novos dados, packages, migrations, mocks ou endpoints.
+
+## Complemento 2026-07-19 - Preview local de layout para devices vazios
+
+- Decisao: permitir dados de exemplo somente no cliente Admin local quando o agregado real de devices de pacientes vier vazio (`device_usage.total_sessions=0`).
+- Motivacao: o usuario precisa visualizar a composicao do grafico **Devices dos pacientes** em localhost antes de haver sessoes autenticadas suficientes em `visitor_session`.
+- Guarda de seguranca: o preview depende do hostname local (`localhost`, `127.0.0.1`, `::1`), mostra badge **exemplo local** e aviso textual; nao altera backend, schema, seed, migration, contrato ou ambiente de producao.
+- Consequencia: a UI deixa claro que os numeros nao sao reais e troca automaticamente para `visitor_session` real assim que existir qualquer sessao agregada no periodo.

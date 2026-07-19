@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import {
   Activity,
@@ -199,6 +199,46 @@ const LOCAL_PREVIEW_LOCATION_DATA = {
   ],
   total: 33,
 } satisfies AdminPatientsDashboard["locations"];
+const LOCAL_PREVIEW_DEVICE_USAGE = {
+  items: [
+    {
+      active_patients_count: 19,
+      count: 24,
+      device_type: "mobile",
+      id: "mobile",
+      label: "Mobile",
+      percentage: 60,
+    },
+    {
+      active_patients_count: 8,
+      count: 10,
+      device_type: "desktop",
+      id: "desktop",
+      label: "Desktop",
+      percentage: 25,
+    },
+    {
+      active_patients_count: 4,
+      count: 4,
+      device_type: "tablet",
+      id: "tablet",
+      label: "Tablet",
+      percentage: 10,
+    },
+    {
+      active_patients_count: 2,
+      count: 2,
+      device_type: "unknown",
+      id: "unknown",
+      label: "Não identificado",
+      percentage: 5,
+    },
+  ],
+  source: "visitor_session.device_type+user.role=paciente",
+  total_active_patients: 30,
+  total_sessions: 40,
+  unavailable_reason: null,
+} satisfies AdminPatientsDashboard["device_usage"];
 type DashboardMetricKey = (typeof CARD_ORDER)[number];
 
 const DASHBOARD_METRIC_CONFIG: Record<DashboardMetricKey, { color: string; icon: LucideIcon }> = {
@@ -1044,8 +1084,10 @@ const BreakdownPieChart = ({
 
 const DeviceUsagePieChart = ({
   deviceUsage,
+  preview = false,
 }: {
   deviceUsage: AdminPatientsDashboard["device_usage"];
+  preview?: boolean;
 }) => {
   const center = 60;
   const radius = 48;
@@ -1099,100 +1141,108 @@ const DeviceUsagePieChart = ({
     .join("; ")}.`;
 
   return (
-    <figure className="mt-5 grid gap-5 sm:grid-cols-[minmax(9rem,11rem)_1fr] sm:items-center">
-      <svg
-        aria-label={ariaLabel}
-        className="mx-auto aspect-square w-40 sm:w-44"
-        role="img"
-        viewBox="0 0 120 120"
-      >
-        <circle
-          cx={center}
-          cy={center}
-          fill="var(--admin-surface-muted)"
-          r={radius}
-          stroke="var(--admin-border)"
-          strokeWidth="1"
-        />
-        {segments.map((segment) => {
-          const color = DEVICE_USAGE_CHART_COLORS[segment.item.device_type];
-          const labelPoint = getPiePoint(
-            center,
-            radius * 0.58,
-            (segment.startAngle + segment.endAngle) / 2,
-          );
-          const percentageLabel = formatPercentageValue(segment.item.percentage);
+    <>
+      {preview ? (
+        <p className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 p-3 text-xs font-black leading-5 text-amber-700">
+          Dados de exemplo exibidos apenas no localhost para validar o layout. Não representam
+          sessões ou pacientes reais.
+        </p>
+      ) : null}
+      <figure className="mt-5 grid gap-5 sm:grid-cols-[minmax(9rem,11rem)_1fr] sm:items-center">
+        <svg
+          aria-label={ariaLabel}
+          className="mx-auto aspect-square w-40 sm:w-44"
+          role="img"
+          viewBox="0 0 120 120"
+        >
+          <circle
+            cx={center}
+            cy={center}
+            fill="var(--admin-surface-muted)"
+            r={radius}
+            stroke="var(--admin-border)"
+            strokeWidth="1"
+          />
+          {segments.map((segment) => {
+            const color = DEVICE_USAGE_CHART_COLORS[segment.item.device_type];
+            const labelPoint = getPiePoint(
+              center,
+              radius * 0.58,
+              (segment.startAngle + segment.endAngle) / 2,
+            );
+            const percentageLabel = formatPercentageValue(segment.item.percentage);
 
-          if (segment.share >= 0.999) {
+            if (segment.share >= 0.999) {
+              return (
+                <g key={segment.item.device_type}>
+                  <circle
+                    cx={center}
+                    cy={center}
+                    fill={color}
+                    r={radius}
+                    stroke="var(--admin-surface)"
+                    strokeWidth="1.4"
+                  />
+                  <PieSlicePercentageLabel
+                    color={color}
+                    label={percentageLabel}
+                    x={center}
+                    y={center}
+                  />
+                </g>
+              );
+            }
+
             return (
               <g key={segment.item.device_type}>
-                <circle
-                  cx={center}
-                  cy={center}
+                <path
+                  d={buildPieSlicePath(center, radius, segment.startAngle, segment.endAngle)}
                   fill={color}
-                  r={radius}
                   stroke="var(--admin-surface)"
                   strokeWidth="1.4"
                 />
-                <PieSlicePercentageLabel
-                  color={color}
-                  label={percentageLabel}
-                  x={center}
-                  y={center}
-                />
+                {segment.share >= 0.08 ? (
+                  <PieSlicePercentageLabel
+                    color={color}
+                    label={percentageLabel}
+                    x={labelPoint.x}
+                    y={labelPoint.y}
+                  />
+                ) : null}
               </g>
             );
-          }
+          })}
+        </svg>
+        <figcaption className="space-y-3">
+          {deviceUsage.items.map((item) => {
+            const sessionsLabel = item.count === 1 ? "sessão" : "sessões";
+            const patientsLabel = item.active_patients_count === 1 ? "paciente" : "pacientes";
 
-          return (
-            <g key={segment.item.device_type}>
-              <path
-                d={buildPieSlicePath(center, radius, segment.startAngle, segment.endAngle)}
-                fill={color}
-                stroke="var(--admin-surface)"
-                strokeWidth="1.4"
-              />
-              {segment.share >= 0.08 ? (
-                <PieSlicePercentageLabel
-                  color={color}
-                  label={percentageLabel}
-                  x={labelPoint.x}
-                  y={labelPoint.y}
-                />
-              ) : null}
-            </g>
-          );
-        })}
-      </svg>
-      <figcaption className="space-y-3">
-        {deviceUsage.items.map((item) => {
-          const sessionsLabel = item.count === 1 ? "sessão" : "sessões";
-          const patientsLabel = item.active_patients_count === 1 ? "paciente" : "pacientes";
-
-          return (
-            <div className="rounded-2xl bg-surface-muted p-3" key={item.device_type}>
-              <div className="flex items-center justify-between gap-3">
-                <span className="flex min-w-0 items-center gap-2 text-sm font-black text-foreground">
-                  <span
-                    aria-hidden
-                    className="h-3 w-3 shrink-0 rounded-full"
-                    style={{ backgroundColor: DEVICE_USAGE_CHART_COLORS[item.device_type] }}
-                  />
-                  <span className="truncate">{item.label}</span>
-                </span>
-                <span className="text-sm font-black text-foreground">
-                  {formatPercentageValue(item.percentage)}
-                </span>
+            return (
+              <div className="rounded-2xl bg-surface-muted p-3" key={item.device_type}>
+                <div className="flex items-center justify-between gap-3">
+                  <span className="flex min-w-0 items-center gap-2 text-sm font-black text-foreground">
+                    <span
+                      aria-hidden
+                      className="h-3 w-3 shrink-0 rounded-full"
+                      style={{ backgroundColor: DEVICE_USAGE_CHART_COLORS[item.device_type] }}
+                    />
+                    <span className="truncate">{item.label}</span>
+                  </span>
+                  <span className="text-sm font-black text-foreground">
+                    {formatPercentageValue(item.percentage)}
+                  </span>
+                </div>
+                <p className="mt-1 text-xs font-bold text-muted">
+                  {numberFormatter.format(item.count)} {sessionsLabel} ·{" "}
+                  {numberFormatter.format(item.active_patients_count)} {patientsLabel}
+                </p>
               </div>
-              <p className="mt-1 text-xs font-bold text-muted">
-                {numberFormatter.format(item.count)} {sessionsLabel} ·{" "}
-                {numberFormatter.format(item.active_patients_count)} {patientsLabel}
-              </p>
-            </div>
-          );
-        })}
-      </figcaption>
-    </figure>
+            );
+          })}
+        </figcaption>
+      </figure>
+    </>
   );
 };
 
@@ -1410,7 +1460,7 @@ const Statistics = ({
             total={summary.demographics.gender.total}
           />
         </CardShell>
-        <DeviceUsageCard summary={summary} />
+        <DeviceUsageCard allowLocalDevicePreview={allowLocalLocationPreview} summary={summary} />
         <CardShell className="p-5">
           <PanelTitle
             icon={UserPlus}
@@ -1446,15 +1496,30 @@ const Statistics = ({
   );
 };
 
-const DeviceUsageCard = ({ summary }: { summary: AdminPatientsDashboard }) => (
-  <CardShell className="p-5">
-    <PanelTitle icon={Smartphone} title="Devices dos pacientes" />
-    <p className="mt-2 text-sm font-bold leading-6 text-muted">
-      {formatSelectedPeriod(summary.period)}
-    </p>
-    <DeviceUsagePieChart deviceUsage={summary.device_usage} />
-  </CardShell>
-);
+const DeviceUsageCard = ({
+  allowLocalDevicePreview,
+  summary,
+}: {
+  allowLocalDevicePreview: boolean;
+  summary: AdminPatientsDashboard;
+}) => {
+  const showDevicePreview = allowLocalDevicePreview && summary.device_usage.total_sessions === 0;
+  const deviceUsage = showDevicePreview ? LOCAL_PREVIEW_DEVICE_USAGE : summary.device_usage;
+
+  return (
+    <CardShell className="p-5">
+      <PanelTitle
+        icon={Smartphone}
+        source={showDevicePreview ? "exemplo local" : undefined}
+        title="Devices dos pacientes"
+      />
+      <p className="mt-2 text-sm font-bold leading-6 text-muted">
+        {formatSelectedPeriod(summary.period)}
+      </p>
+      <DeviceUsagePieChart deviceUsage={deviceUsage} preview={showDevicePreview} />
+    </CardShell>
+  );
+};
 
 const PlatformUsageCard = ({ summary }: { summary: AdminPatientsDashboard }) => {
   const platformUsage = summary.platform_usage;
