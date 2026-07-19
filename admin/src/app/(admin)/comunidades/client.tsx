@@ -646,6 +646,34 @@ const TopCommunityActions = ({
   );
 };
 
+const TopCommunityAvatar = ({
+  community,
+}: {
+  community: Pick<CommunitiesDashboardTopCommunity, "avatar_url" | "name">;
+}) => {
+  const avatarSrc = renderableImageSrc(community.avatar_url);
+
+  return (
+    <span
+      aria-hidden
+      className="relative grid h-9 w-9 shrink-0 place-items-center overflow-hidden rounded-xl border border-border bg-primary-soft text-xs font-black text-primary"
+    >
+      {avatarSrc ? (
+        <Image
+          alt=""
+          className="object-cover"
+          fill
+          sizes="36px"
+          src={avatarSrc}
+          unoptimized={isAdminPublicMediaUrl(community.avatar_url)}
+        />
+      ) : (
+        initials(community.name)
+      )}
+    </span>
+  );
+};
+
 const roundDashboardStatisticPercent = (value: number) => Math.round(value * 10) / 10;
 
 const dashboardStatisticPercentageChange = (current: number, previous: number) => {
@@ -1617,13 +1645,7 @@ const TopCommunitiesTable = ({
               >
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex min-w-0 items-center gap-3">
-                    <span
-                      aria-hidden
-                      className="grid h-9 w-9 shrink-0 place-items-center rounded-xl text-white"
-                      style={{ backgroundColor: community.visual_primary_color || "#3b16f3" }}
-                    >
-                      <UsersRound className="h-4 w-4" />
-                    </span>
+                    <TopCommunityAvatar community={community} />
                     <div className="min-w-0">
                       <p className="truncate font-black text-foreground">{community.name}</p>
                       <p className="text-xs text-muted">
@@ -1673,13 +1695,7 @@ const TopCommunitiesTable = ({
                   <tr className="align-top transition hover:bg-surface-muted/50" key={community.id}>
                     <td className="border-b border-border py-4 pr-4">
                       <div className="flex items-center gap-3">
-                        <span
-                          aria-hidden
-                          className="grid h-9 w-9 place-items-center rounded-xl text-white"
-                          style={{ backgroundColor: community.visual_primary_color || "#3b16f3" }}
-                        >
-                          <UsersRound className="h-4 w-4" />
-                        </span>
+                        <TopCommunityAvatar community={community} />
                         <div className="min-w-0">
                           <p className="truncate font-black text-foreground">{community.name}</p>
                           <p className="truncate text-xs text-muted">

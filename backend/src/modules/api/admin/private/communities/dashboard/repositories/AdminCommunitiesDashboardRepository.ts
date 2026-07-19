@@ -248,6 +248,7 @@ export class AdminCommunitiesDashboardRepository implements IAdminCommunitiesDas
         deleted: false,
       },
       select: {
+        avatar_url: true,
         id: true,
         members_count: true,
         name: true,

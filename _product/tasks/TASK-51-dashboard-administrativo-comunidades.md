@@ -751,3 +751,30 @@ Regras de UI obrigatórias:
 - `pnpm --dir admin build`
 - `pnpm check`
 - Smoke HTTP local: `GET http://localhost:3002/comunidades` retornou 200.
+
+## Correcao complementar: avatar em principais comunidades (2026-07-18)
+
+- Pedido do usuario: em **Principais comunidades**, substituir o icone/color block pelo avatar real da comunidade.
+- Backend Admin: `top_communities.items` no endpoint `GET /api/admin/private/communities/dashboard` passou a incluir `avatar_url` vindo do modelo real `community`, sem endpoint paralelo, seed ou dado fake.
+- Frontend Admin: o bloco **Principais comunidades** renderiza o avatar da comunidade com `next/image`, resolvendo arquivos publicos do backend pelo helper local usado no dashboard; quando a comunidade nao possui avatar, usa iniciais como fallback visual honesto.
+- O ajuste preserva layout mobile-first em cards e tabela desktop, acoes existentes, hover e alinhamento de colunas.
+- Nao houve alteracao em `backend/prisma/schema.prisma`, migrations ou packages; `pnpm --dir backend db:migrate` nao se aplica.
+- Builder/Quick Copy `vcp://quickcopy/vcp-24aaa2941d814e5b90572bc93ae50e2a` nao esta exposto como ferramenta callable neste ambiente; referencias usadas: captura enviada pelo usuario e implementacao existente de `/comunidades`.
+- ADR atualizado: `adrs/0231-admin-comunidades-dashboard-agregacoes.md`.
+
+### Criterios deste ajuste
+
+- [x] **Principais comunidades** usa `community.avatar_url` real quando houver.
+- [x] O avatar e renderizado com `next/image`, sem `<img>` cru.
+- [x] Comunidades sem avatar mantem fallback visual por iniciais, sem mock ou asset artificial.
+- [x] Nenhum mock, dado fake permanente, endpoint simulado, package novo, schema Prisma ou migration foi usado.
+
+### Validacao deste ajuste
+
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check`
+- Smoke service real `buildCommunitiesDashboard({ period: "week" })` retornou `status=200`, `top_communities_total=7` e `top_communities.items[0].avatar_url="/community/icons/autocuidado.png"`.
+- Smoke HTTP local: `GET http://localhost:3002/comunidades` retornou 200.

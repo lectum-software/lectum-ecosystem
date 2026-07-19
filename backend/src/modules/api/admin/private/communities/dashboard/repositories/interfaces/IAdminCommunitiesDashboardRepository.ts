@@ -112,6 +112,7 @@ export type ModerationEventRecord = {
 };
 
 export type CommunityRecord = {
+  avatar_url: string | null;
   id: string;
   members_count: number;
   name: string;

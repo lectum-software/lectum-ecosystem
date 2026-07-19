@@ -234,6 +234,7 @@ export type AdminCommunitiesDashboardPopularPost = AdminCommunitiesDashboardRece
 
 export type AdminCommunitiesDashboardTopCommunity = {
   activity_count: number;
+  avatar_url: string | null;
   id: string;
   members_count: number;
   name: string;

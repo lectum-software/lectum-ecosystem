@@ -1075,6 +1075,7 @@ const buildTopCommunities = (
 
       return {
         activity_count: activityCount,
+        avatar_url: community.avatar_url,
         id: community.id,
         members_count: membersCount,
         name: community.name,

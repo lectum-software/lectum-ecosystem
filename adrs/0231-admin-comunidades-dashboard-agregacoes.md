@@ -170,3 +170,11 @@ A decisao e manter os dados existentes de `top_communities`, sem alterar o endpo
 No desktop, a tabela usa `colgroup` `48% / 8% / 8% / 36%`: a coluna **Comunidade** ocupa o espaco equivalente a titulo+autor das tabelas de posts, enquanto **Seguidores**, **Posts** e **Acoes** alinham com as colunas numericas e de acoes acima. No mobile, os botoes permanecem no card para preservar a abordagem mobile-first.
 
 Consequencia: o bloco final do dashboard fica consistente com os demais blocos operacionais, sem endpoint novo, contrato backend, schema Prisma, migration, pacote, mock, seed ou mudanca de regra de agregacao.
+
+## Atualizacao 2026-07-18: avatar real em principais comunidades
+
+O bloco **Principais comunidades** passa a exibir o avatar real de cada comunidade no lugar do bloco colorido com icone generico.
+
+A decisao e ampliar o item existente de `top_communities` com `avatar_url`, usando o campo persistido em `community` no mesmo endpoint `GET /api/admin/private/communities/dashboard`. A UI resolve o caminho publico do backend com os helpers ja existentes do Admin e renderiza via `next/image`; quando a comunidade ainda nao possui avatar, a apresentacao usa iniciais como fallback honesto, sem asset artificial ou mock.
+
+Consequencia: o ranking final do dashboard fica visualmente alinhado com a identidade editavel da comunidade no Admin e na lista administrativa, sem endpoint novo, schema Prisma/migration, dependencia, seed, mock ou mudanca na regra de ordenacao de `top_communities`.
