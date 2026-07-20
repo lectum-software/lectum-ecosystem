@@ -41,6 +41,8 @@ Em 2026-07-20, para avaliação visual local solicitada pelo produto enquanto a 
 
 Em novo ajuste visual de 2026-07-20, a frase-resumo abaixo da barra **Taxa de cobertura por psicólogos verificados** foi removida para reduzir ruído e evitar redundância com os cards. O bloco passou a usar tipografia, ícones, paddings, cards internos e barras maiores, mantendo a estrutura mobile-first e sem alterar dados ou contrato.
 
+Em ajuste de copy de 2026-07-20, a descrição do bloco foi simplificada para **Taxa de resposta qualificada aos posts de pacientes.**, reforçando que a seção mede cobertura qualificada, sem alterar regra de cálculo ou contrato.
+
 A regra operacional de **Aguardando acolhimento** é intencionalmente mais rígida do que “sem qualquer resposta”: um post deixa a fila de acolhimento somente quando recebe resposta de psicólogo verificado. Isso preserva a aba **Oportunidades** dos psicólogos para atuação operacional e mantém esta visão como métrica administrativa agregada.
 
 ## Consequências
@@ -83,6 +85,13 @@ A regra operacional de **Aguardando acolhimento** é intencionalmente mais rígi
   - `pnpm check`;
   - Smoke HTTP local `GET http://localhost:3002/comunidades/ansiedade-em-equilibrio?tab=estatisticas` retornou 200.
 - Refinamento visual posterior em 2026-07-20:
+  - `pnpm --dir admin exec biome check "src/app/(admin)/comunidades/[slug]/client.tsx"`;
+  - `pnpm --dir admin exec tsc --noEmit --pretty false`;
+  - `pnpm --dir admin check`;
+  - `pnpm --dir admin build`;
+  - `pnpm check`;
+  - Smoke HTTP local `GET http://localhost:3002/comunidades/ansiedade-em-equilibrio?tab=estatisticas` retornou 200.
+- Ajuste de copy de 2026-07-20:
   - `pnpm --dir admin exec biome check "src/app/(admin)/comunidades/[slug]/client.tsx"`;
   - `pnpm --dir admin exec tsc --noEmit --pretty false`;
   - `pnpm --dir admin check`;

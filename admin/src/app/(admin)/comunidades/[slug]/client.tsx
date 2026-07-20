@@ -5243,8 +5243,7 @@ const CommunityCareCoverageBlock = ({
             ) : null}
           </div>
           <p className="mt-2 max-w-3xl text-sm font-bold leading-6 text-muted">
-            Visão administrativa da resposta qualificada aos posts de pacientes no período
-            selecionado.
+            Taxa de resposta qualificada aos posts de pacientes.
           </p>
         </div>
         <CommunityStatisticsDateFilters {...dateFilters} />

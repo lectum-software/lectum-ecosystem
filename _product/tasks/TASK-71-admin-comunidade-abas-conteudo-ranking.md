@@ -630,6 +630,26 @@ Regras:
 - Smoke HTTP local `GET http://localhost:3002/comunidades/autocuidado-em-pratica` retornou 200.
 - `pnpm --dir admin check` foi executado como baseline e atingiu timeout após 124s no workspace atual; as validações direcionadas acima passaram sem erros.
 
+## Ajuste complementar 2026-07-20 - Copy curta da Cobertura de acolhimento
+
+- Pedido do usuário: alterar a descrição do bloco **Cobertura de acolhimento** de **Visão administrativa da resposta qualificada aos posts de pacientes no período selecionado.** para **Taxa de resposta qualificada aos posts de pacientes.**
+- A UI Admin recebeu somente o ajuste de copy no bloco, sem alterar layout, dados reais, contrato, endpoint, schema Prisma/migration, package, seed, backfill, persistência ou preview local.
+- Builder/Quick Copy não está exposto como ferramenta callable no ambiente; a referência usada foi a captura enviada pelo usuário e o layout atual da aba **Estatísticas** da comunidade.
+- ADR atualizado: `adrs/0289-cobertura-acolhimento-estatisticas-comunidade-admin.md`.
+
+### Critérios de aceite complementares
+
+- [x] A descrição do bloco **Cobertura de acolhimento** usa a copy **Taxa de resposta qualificada aos posts de pacientes.**
+
+### Validação executada para este ajuste
+
+- `pnpm --dir admin exec biome check "src/app/(admin)/comunidades/[slug]/client.tsx"`
+- `pnpm --dir admin exec tsc --noEmit --pretty false`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check`
+- Smoke HTTP local `GET http://localhost:3002/comunidades/ansiedade-em-equilibrio?tab=estatisticas` retornou 200.
+
 ## Ajuste complementar 2026-07-19 - Horários de pico por dia da semana
 
 - Pedido do usuário: no bloco **Horários de maior atividade** da aba **Estatísticas** de comunidade, permitir selecionar o gráfico por dia da semana, mantendo os cards de horários de pico como visão geral agregada de todos os dias da semana/período.
