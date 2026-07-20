@@ -663,3 +663,57 @@ Regras:
 - `pnpm check`
 - Smoke real do service `showStatistics` para `autocuidado-em-pratica?period=all`, retornando `status=200`, `period=Todo o período`, `charts.hourly_activity.length=24`, `charts.hourly_activity_by_weekday.length=7`, `firstWeekdayHours=24` e soma total horária igual à soma por dia da semana.
 - Smoke HTTP local `GET http://localhost:3002/comunidades/autocuidado-em-pratica?tab=estatisticas` retornou 200.
+
+## Ajuste complementar 2026-07-20 - Ordem dos blocos da aba Estatisticas
+
+- Pedido do usuario: alterar a ordem dos blocos da aba **Estatisticas** do detalhe administrativo de comunidade para **Estatisticas de conteudo**, **Horarios de maior atividade** e **Estatisticas de pessoas**.
+- A UI Admin passou a renderizar primeiro o bloco de conteudo, depois o bloco de horarios e, por fim, o bloco de pessoas, preservando os filtros independentes, contadores, graficos, estados de carregamento e chamadas reais ja existentes.
+- O ajuste e exclusivamente visual/mobile-first, sem endpoint novo, schema Prisma/migration, package, mock, seed, backfill artificial ou alteracao de persistencia.
+- Builder/Quick Copy nao esta exposto como ferramenta callable no ambiente; a referencia usada foi a captura enviada pelo usuario e o layout atual da aba **Estatisticas** de comunidades.
+- ADR atualizado: `adrs/0284-horarios-maior-atividade-comunidade-admin.md`.
+
+### Criterio de aceite complementar
+
+- [x] A aba **Estatisticas** do detalhe Admin de comunidade exibe os blocos na ordem: **Estatisticas de conteudo**, **Horarios de maior atividade** e **Estatisticas de pessoas**.
+
+### Validacao executada para este ajuste
+
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check`
+- Smoke HTTP local `GET http://localhost:3002/comunidades/ansiedade-em-equilibrio?tab=estatisticas` retornou 200.
+
+## Ajuste complementar 2026-07-20 - Cobertura de acolhimento em Estatísticas
+
+- Pedido do usuário: na aba **Estatísticas** do detalhe Admin da comunidade, abaixo de **Estatísticas de conteúdo**, adicionar um bloco **Cobertura de acolhimento** com indicadores administrativos de posts de pacientes anônimos/identificados, resposta por psicólogos verificados e pendências de acolhimento.
+- O endpoint real `GET /api/admin/private/communities/:id/statistics` passou a retornar `counters.care_coverage`, calculado com `community_post` e `post_reply` reais do período selecionado, sem mock, seed ou backfill.
+- A regra de **Aguardando acolhimento** considera posts de pacientes do período que ainda não receberam resposta de psicólogo verificado até o fim do período; posts com respostas comuns continuam pendentes para a métrica qualificada.
+- A UI Admin renderiza o bloco logo abaixo de **Estatísticas de conteúdo**, reutilizando o mesmo período/dados desse bloco e exibindo posts de pacientes, anônimos, identificados, respondidos por psicólogos verificados, aguardando acolhimento, tempo médio até a primeira resposta verificada e barra de taxa de cobertura.
+- O bloco é mobile-first (`grid` 1 coluna na base, evoluindo para 2/3/6 colunas) e não foi exposto ao público nem aos psicólogos.
+- Não houve package novo, schema Prisma/migration, endpoint paralelo, mock, seed, backfill ou uso de `<img>` cru.
+- Builder/Quick Copy não está exposto como ferramenta callable no ambiente; a referência usada foi a captura enviada pelo usuário, `_product/proto/admin/Comunidades/Comunidades - Detalhes.png` e o layout atual da aba **Estatísticas** da comunidade.
+- ADR criado: `adrs/0289-cobertura-acolhimento-estatisticas-comunidade-admin.md`.
+
+### Critérios de aceite complementares
+
+- [x] A aba **Estatísticas** exibe o bloco **Cobertura de acolhimento** imediatamente abaixo de **Estatísticas de conteúdo**.
+- [x] O bloco mostra posts de pacientes, anônimos, identificados, respondidos por psicólogos verificados, aguardando acolhimento e tempo médio até a primeira resposta verificada.
+- [x] **Aguardando acolhimento** usa dados reais e exige resposta de psicólogo verificado para sair da fila qualificada.
+- [x] Os indicadores usam o mesmo período filtrado de **Estatísticas de conteúdo**.
+- [x] A UI permanece mobile-first e não usa `<img>` cru.
+- [x] Nenhum mock, seed, backfill, package novo ou migration foi usado.
+
+### Validação executada para este ajuste
+
+- `pnpm --dir admin exec biome check "src/app/(admin)/comunidades/[slug]/client.tsx" "src/api/req/communities/index.ts"`
+- `pnpm --dir backend exec biome check "src/modules/api/admin/private/communities/manage/DTOs/IAdminCommunityManageDTO.ts" "src/modules/api/admin/private/communities/manage/use-cases/services.ts"`
+- `pnpm --dir admin exec tsc --noEmit --pretty false`
+- `pnpm --dir backend exec tsc --noEmit --pretty false`
+- `pnpm --dir admin check`
+- `pnpm --dir backend check`
+- `pnpm --dir admin build`
+- `pnpm --dir backend build`
+- `pnpm check`
+- Smoke real do service `showStatistics` para `ansiedade-em-equilibrio?period=week`, retornando `status=200`, `period=Esta semana`, `patientPosts=0`, `respondedByVerified=0`, `awaitingVerified=0`, `anyResponse=0` e `avgFirstVerifiedMinutes=null`.
+- Smoke HTTP local `GET http://localhost:3002/comunidades/ansiedade-em-equilibrio?tab=estatisticas` retornou 200.
+- Chrome headless local abriu a rota sem sessão administrativa e confirmou o guard/login; a validação visual autenticada ficou limitada à captura enviada pelo usuário, ao protótipo local e aos checks/builds.

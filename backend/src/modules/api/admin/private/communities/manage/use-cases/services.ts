@@ -2214,11 +2214,37 @@ const buildCommunityStatistics = (
   const upvoteCount = periodVotes.filter((vote) => vote.value === 1).length;
   const downvoteCount = periodVotes.filter((vote) => vote.value === -1).length;
   const savesCount = periodPostSaves.length + periodReplySaves.length;
-  const patientPostsAnsweredByVerifiedPsychologists = patientPosts.filter((post) =>
-    post.replies.some(
-      (reply) => reply.createdAt <= period.end && isVerifiedStatisticsPsychologist(reply.author),
-    ),
+  const patientPostsWithAnyResponse = patientPosts.filter((post) =>
+    post.replies.some((reply) => reply.createdAt <= period.end),
   ).length;
+  const patientPostVerifiedResponseMinutes = patientPosts.flatMap((post) => {
+    const firstVerifiedReply = post.replies
+      .filter(
+        (reply) => reply.createdAt <= period.end && isVerifiedStatisticsPsychologist(reply.author),
+      )
+      .sort((left, right) => left.createdAt.getTime() - right.createdAt.getTime())[0];
+
+    if (!firstVerifiedReply) return [];
+
+    return [
+      Math.max(
+        0,
+        Math.round((firstVerifiedReply.createdAt.getTime() - post.createdAt.getTime()) / 60_000),
+      ),
+    ];
+  });
+  const patientPostsAnsweredByVerifiedPsychologists = patientPostVerifiedResponseMinutes.length;
+  const patientPostsAwaitingVerifiedPsychologistResponse = Math.max(
+    0,
+    patientPosts.length - patientPostsAnsweredByVerifiedPsychologists,
+  );
+  const averageFirstVerifiedResponseMinutes =
+    patientPostVerifiedResponseMinutes.length > 0
+      ? Math.round(
+          patientPostVerifiedResponseMinutes.reduce((total, value) => total + value, 0) /
+            patientPostVerifiedResponseMinutes.length,
+        )
+      : null;
   const activityItems: CommunityStatisticsActivity[] = [];
 
   for (const member of dataset.members) {
@@ -2498,6 +2524,15 @@ const buildCommunityStatistics = (
       anonymous_posts: {
         source: "community_post.anonymous",
         total: anonymousPostCount,
+      },
+      care_coverage: {
+        average_first_verified_response_minutes: averageFirstVerifiedResponseMinutes,
+        patient_posts_awaiting_verified_psychologist_response:
+          patientPostsAwaitingVerifiedPsychologistResponse,
+        patient_posts_responded_by_verified_psychologists:
+          patientPostsAnsweredByVerifiedPsychologists,
+        patient_posts_with_any_response: patientPostsWithAnyResponse,
+        source: "community_post+post_reply",
       },
       content_engagement: {
         downvotes: downvoteCount,

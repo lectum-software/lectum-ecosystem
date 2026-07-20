@@ -1031,6 +1031,13 @@ export type AdminCommunityStatistics = {
       source: "community_post.anonymous";
       total: number;
     };
+    care_coverage: {
+      average_first_verified_response_minutes: number | null;
+      patient_posts_awaiting_verified_psychologist_response: number;
+      patient_posts_responded_by_verified_psychologists: number;
+      patient_posts_with_any_response: number;
+      source: "community_post+post_reply";
+    };
     content_engagement: {
       downvotes: number;
       profile_accesses: number;

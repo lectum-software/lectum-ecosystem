@@ -4245,6 +4245,33 @@ const communityStatisticPercentage = (value: number, total: number) =>
 
 const roundCommunityStatisticPercent = (value: number) => Math.round(value * 10) / 10;
 
+const formatCommunityStatisticPercent = (value: number) =>
+  `${percentageFormatter.format(roundCommunityStatisticPercent(value))}%`;
+
+const formatCommunityCareCoverageDuration = (value: number | null | undefined) => {
+  if (value === null || value === undefined) return "—";
+
+  const minutes = safeCommunityStatisticCount(value);
+
+  if (minutes < 60) return `${numberFormatter.format(minutes)} min`;
+
+  const hours = Math.floor(minutes / 60);
+  const remainingMinutes = minutes % 60;
+
+  if (hours < 24) {
+    return remainingMinutes > 0
+      ? `${numberFormatter.format(hours)}h ${numberFormatter.format(remainingMinutes)}min`
+      : `${numberFormatter.format(hours)}h`;
+  }
+
+  const days = Math.floor(hours / 24);
+  const remainingHours = hours % 24;
+
+  return remainingHours > 0
+    ? `${numberFormatter.format(days)}d ${numberFormatter.format(remainingHours)}h`
+    : `${numberFormatter.format(days)}d`;
+};
+
 const communityStatisticPercentageChange = (current: number, previous: number) => {
   if (previous === 0) return current === 0 ? 0 : null;
 
@@ -5036,6 +5063,212 @@ const CommunityStatisticsSegment = ({
   );
 };
 
+const CommunityCareCoverageBlock = ({
+  error,
+  isFetching,
+  isLoading,
+  onRetry,
+  statistics,
+}: {
+  error: unknown;
+  isFetching: boolean;
+  isLoading: boolean;
+  onRetry: () => void;
+  statistics?: AdminCommunityStatistics;
+}) => {
+  const patientPosts = safeCommunityStatisticCount(statistics?.counters.posts.patients);
+  const anonymousPosts = Math.min(
+    patientPosts,
+    safeCommunityStatisticCount(statistics?.counters.anonymous_posts.total),
+  );
+  const identifiedPosts = Math.max(0, patientPosts - anonymousPosts);
+  const respondedByVerified = Math.min(
+    patientPosts,
+    safeCommunityStatisticCount(
+      statistics?.counters.care_coverage.patient_posts_responded_by_verified_psychologists,
+    ),
+  );
+  const awaitingVerifiedResponse = Math.min(
+    patientPosts,
+    safeCommunityStatisticCount(
+      statistics?.counters.care_coverage.patient_posts_awaiting_verified_psychologist_response,
+    ),
+  );
+  const postsWithAnyResponse = Math.min(
+    patientPosts,
+    safeCommunityStatisticCount(statistics?.counters.care_coverage.patient_posts_with_any_response),
+  );
+  const coverageRate = communityStatisticPercentage(respondedByVerified, patientPosts);
+  const awaitingRate = communityStatisticPercentage(awaitingVerifiedResponse, patientPosts);
+  const anonymousRate = communityStatisticPercentage(anonymousPosts, patientPosts);
+  const identifiedRate = communityStatisticPercentage(identifiedPosts, patientPosts);
+  const hasStatus = isLoading || Boolean(error);
+  const periodLabel = statistics
+    ? `${statistics.period.label} · ${formatDayMonth(statistics.period.from)} - ${formatDayMonth(
+        statistics.period.to,
+      )}`
+    : null;
+  const indicators = [
+    {
+      description: "Base de posts de pacientes no período.",
+      icon: FileText,
+      id: "patient_posts",
+      label: "Posts de pacientes",
+      toneClassName: "bg-success/10 text-success",
+      value: numberFormatter.format(patientPosts),
+    },
+    {
+      description: `${formatCommunityStatisticPercent(anonymousRate)} dos posts de pacientes.`,
+      icon: Users,
+      id: "anonymous_posts",
+      label: "Anônimos",
+      toneClassName: "bg-warning/10 text-warning",
+      value: numberFormatter.format(anonymousPosts),
+    },
+    {
+      description: `${formatCommunityStatisticPercent(identifiedRate)} dos posts de pacientes.`,
+      icon: UserRound,
+      id: "identified_posts",
+      label: "Identificados",
+      toneClassName: "bg-primary-soft text-primary",
+      value: numberFormatter.format(identifiedPosts),
+    },
+    {
+      description: `${formatCommunityStatisticPercent(coverageRate)} de cobertura verificada.`,
+      icon: ShieldCheck,
+      id: "responded_by_verified",
+      label: "Respondidos por psicólogos verificados",
+      toneClassName: "bg-primary-soft text-primary",
+      value: numberFormatter.format(respondedByVerified),
+    },
+    {
+      description:
+        awaitingVerifiedResponse > 0
+          ? `${formatCommunityStatisticPercent(awaitingRate)} ainda sem resposta verificada.`
+          : "Sem pendências de acolhimento verificado.",
+      icon: awaitingVerifiedResponse > 0 ? AlertTriangle : CheckCircle2,
+      id: "awaiting_verified_response",
+      label: "Aguardando acolhimento",
+      toneClassName:
+        awaitingVerifiedResponse > 0 ? "bg-danger/10 text-danger" : "bg-success/10 text-success",
+      value: numberFormatter.format(awaitingVerifiedResponse),
+    },
+    {
+      description:
+        respondedByVerified > 0
+          ? `Média de ${formatCountLabel(respondedByVerified, "post acolhido", "posts acolhidos")}.`
+          : "Sem resposta verificada no período.",
+      icon: Reply,
+      id: "average_first_verified_response",
+      label: "Tempo médio até 1ª resposta",
+      toneClassName: "bg-surface-muted text-muted",
+      value: formatCommunityCareCoverageDuration(
+        statistics?.counters.care_coverage.average_first_verified_response_minutes,
+      ),
+    },
+  ] as const;
+
+  return (
+    <section aria-busy={isLoading || isFetching} className={cn(cardClass, "min-w-0 p-5")}>
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-2">
+            <h3 className="text-lg font-black text-foreground">Cobertura de acolhimento</h3>
+            {isFetching && !isLoading ? (
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary-soft px-2.5 py-1 text-[11px] font-black text-primary">
+                <Loader2 aria-hidden className="h-3.5 w-3.5 animate-spin" />
+                Atualizando
+              </span>
+            ) : null}
+          </div>
+          <p className="mt-1 max-w-3xl text-xs font-bold leading-5 text-muted">
+            Visão administrativa da resposta qualificada aos posts de pacientes no mesmo período de
+            conteúdo.
+          </p>
+        </div>
+        {periodLabel ? (
+          <span className="inline-flex w-fit items-center rounded-full border border-border bg-surface-muted px-3 py-1.5 text-[11px] font-black text-muted">
+            {periodLabel}
+          </span>
+        ) : null}
+      </div>
+
+      {hasStatus ? (
+        <div className="mt-5">
+          <QueryStatus error={error} loading={isLoading} onRetry={onRetry} />
+        </div>
+      ) : null}
+
+      {statistics ? (
+        <>
+          <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6">
+            {indicators.map((indicator) => {
+              const Icon = indicator.icon;
+
+              return (
+                <article
+                  className="min-w-0 rounded-2xl border border-border/80 bg-surface-muted p-4"
+                  key={indicator.id}
+                >
+                  <span
+                    className={cn(
+                      "grid h-10 w-10 place-items-center rounded-full",
+                      indicator.toneClassName,
+                    )}
+                  >
+                    <Icon aria-hidden className="h-5 w-5" />
+                  </span>
+                  <h4 className="mt-4 min-h-10 text-xs font-black leading-snug text-foreground">
+                    {indicator.label}
+                  </h4>
+                  <p className="mt-2 text-2xl font-black leading-none text-foreground">
+                    {indicator.value}
+                  </p>
+                  <p className="mt-3 text-[11px] font-bold leading-5 text-muted">
+                    {indicator.description}
+                  </p>
+                </article>
+              );
+            })}
+          </div>
+
+          <div className="mt-5 rounded-2xl border border-border bg-surface p-4">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <span className="text-xs font-black text-foreground">
+                Taxa de cobertura por psicólogos verificados
+              </span>
+              <span className="text-xs font-black text-primary">
+                {formatCommunityStatisticPercent(coverageRate)}
+              </span>
+            </div>
+            <div
+              aria-label={`Cobertura verificada de ${formatCommunityStatisticPercent(
+                coverageRate,
+              )}`}
+              className="mt-3 h-3 overflow-hidden rounded-full bg-surface-muted"
+              role="img"
+            >
+              <span
+                className="block h-full rounded-full bg-primary"
+                style={{ width: `${Math.min(100, Math.max(0, coverageRate))}%` }}
+              />
+            </div>
+            <p className="mt-3 text-[11px] font-bold leading-5 text-muted">
+              {formatCountLabel(postsWithAnyResponse, "post tem", "posts têm")} alguma resposta;{" "}
+              {formatCountLabel(
+                awaitingVerifiedResponse,
+                "post ainda precisa",
+                "posts ainda precisam",
+              )}{" "}
+              de acolhimento por psicólogo verificado.
+            </p>
+          </div>
+        </>
+      ) : null}
+    </section>
+  );
+};
+
 type CommunityHourlyActivityPoint = AdminCommunityStatistics["charts"]["hourly_activity"][number];
 type CommunityHourlyActivityMetricKey = "accesses" | "engagement" | "posts" | "replies" | "reports";
 type CommunityHourlyActivitySelection = "all" | `${number}`;
@@ -5394,23 +5627,6 @@ const StatisticsContent = ({ createdAt, slug }: { createdAt: string; slug: strin
   return (
     <div className="min-w-0 space-y-5">
       <CommunityStatisticsSegment
-        counterLayout="grid"
-        dateFilters={peopleDateState.dateFilters}
-        description="Visão geral de psicólogos e pacientes da comunidade."
-        error={peopleResult.error}
-        isFetching={peopleResult.isFetching || peopleComparisonResult.isFetching}
-        isLoading={peopleResult.isLoading}
-        metrics={peopleMetrics}
-        onToggleMetric={togglePeopleMetric}
-        onRetry={() => {
-          void peopleResult.refetch();
-          if (peopleDateState.comparisonQueryInput) void peopleComparisonResult.refetch();
-        }}
-        points={peopleStatistics?.charts.daily ?? []}
-        title="Estatísticas de pessoas"
-        visibleMetricIds={visiblePeopleMetricIds}
-      />
-      <CommunityStatisticsSegment
         dateFilters={contentDateState.dateFilters}
         description="Visão geral do conteúdo e engajamento da comunidade."
         error={contentResult.error}
@@ -5426,6 +5642,13 @@ const StatisticsContent = ({ createdAt, slug }: { createdAt: string; slug: strin
         title="Estatísticas de conteúdo"
         visibleMetricIds={visibleContentMetricIds}
       />
+      <CommunityCareCoverageBlock
+        error={contentResult.error}
+        isFetching={contentResult.isFetching}
+        isLoading={contentResult.isLoading}
+        onRetry={() => void contentResult.refetch()}
+        statistics={contentStatistics}
+      />
       <CommunityPeakActivityHoursBlock
         dateFilters={activityHoursDateState.dateFilters}
         error={activityHoursResult.error}
@@ -5433,6 +5656,23 @@ const StatisticsContent = ({ createdAt, slug }: { createdAt: string; slug: strin
         isLoading={activityHoursResult.isLoading}
         onRetry={() => void activityHoursResult.refetch()}
         statistics={activityHoursStatistics}
+      />
+      <CommunityStatisticsSegment
+        counterLayout="grid"
+        dateFilters={peopleDateState.dateFilters}
+        description="Visão geral de psicólogos e pacientes da comunidade."
+        error={peopleResult.error}
+        isFetching={peopleResult.isFetching || peopleComparisonResult.isFetching}
+        isLoading={peopleResult.isLoading}
+        metrics={peopleMetrics}
+        onToggleMetric={togglePeopleMetric}
+        onRetry={() => {
+          void peopleResult.refetch();
+          if (peopleDateState.comparisonQueryInput) void peopleComparisonResult.refetch();
+        }}
+        points={peopleStatistics?.charts.daily ?? []}
+        title="Estatísticas de pessoas"
+        visibleMetricIds={visiblePeopleMetricIds}
       />
     </div>
   );
