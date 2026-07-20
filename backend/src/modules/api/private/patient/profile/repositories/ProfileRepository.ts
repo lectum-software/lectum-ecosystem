@@ -44,7 +44,7 @@ const deletePublicPatientAvatar = async (value?: string | null) => {
       }),
     );
   } catch (_err) {
-    // A troca de foto nÃ£o deve falhar por limpeza assÃ­ncrona de arquivo anterior.
+    // A troca de foto não deve falhar por limpeza assíncrona de arquivo anterior.
   }
 };
 

@@ -465,7 +465,7 @@ const LectumShareVideoDialog = ({ onClose, onShared, target }: LectumShareVideoD
       );
     } catch {
       setError(
-        "NÃ£o foi possÃ­vel gerar o arquivo agora. VocÃª ainda pode copiar o link direto da resposta.",
+        "Não foi possível gerar o arquivo agora. Você ainda pode copiar o link direto da resposta.",
       );
     } finally {
       setPendingAction(null);
@@ -484,7 +484,7 @@ const LectumShareVideoDialog = ({ onClose, onShared, target }: LectumShareVideoD
       onShared("web_share");
       toast.success("Link preparado para enviar no WhatsApp.");
     } catch {
-      setError("NÃƒÂ£o foi possÃƒÂ­vel abrir o WhatsApp agora.");
+      setError("Não foi possível abrir o WhatsApp agora.");
     } finally {
       setPendingAction(null);
     }
@@ -499,7 +499,7 @@ const LectumShareVideoDialog = ({ onClose, onShared, target }: LectumShareVideoD
       onShared("clipboard");
       toast.success("Link copiado.");
     } catch {
-      setError("NÃ£o foi possÃ­vel copiar o link neste navegador.");
+      setError("Não foi possível copiar o link neste navegador.");
     } finally {
       setPendingAction(null);
     }
@@ -515,7 +515,7 @@ const LectumShareVideoDialog = ({ onClose, onShared, target }: LectumShareVideoD
       await copyLectumShareText(target);
       toast.success("Texto copiado para usar como legenda.");
     } catch {
-      setError("NÃ£o foi possÃ­vel copiar o texto neste navegador.");
+      setError("Não foi possível copiar o texto neste navegador.");
     } finally {
       setPendingAction(null);
     }

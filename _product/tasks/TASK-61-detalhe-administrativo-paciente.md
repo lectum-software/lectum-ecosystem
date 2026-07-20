@@ -379,3 +379,25 @@ Frontend esperado:
 - `pnpm check`
 - Smoke HTTP local: `GET http://localhost:3002/pacientes/cmrqsrab5001f1guh2ve5oy90?tab=conta` retornou `200`.
 - Smoke HTTP local sem token: `POST http://localhost:3001/api/admin/private/patients/cmrqsrab5001f1guh2ve5oy90/account/suspend` retornou `401`.
+
+## Ajuste pos-feedback 2026-07-20 - Correção de encoding dos textos
+
+- Pedido do usuário: ajustar textos quebrados exibidos no detalhe administrativo de paciente.
+- Corrigidos literais UTF-8 corrompidos no Admin em `/pacientes/[id]`, incluindo abas, métricas, cards de situação, tabelas, estados vazios e mensagens de formulário.
+- Corrigidos labels/descriptions retornados pelo backend em `GET /api/admin/private/patients/:id`, para que o contrato não entregue copies com mojibake.
+- Corrigidos textos compartilhados do frontend e mensagens operacionais pontuais que apresentavam o mesmo problema de encoding.
+- Não houve alteração de contrato HTTP, schema Prisma, migration, package, seed, mock, endpoint simulado ou regra de domínio.
+- Builder/Quick Copy não está exposto como ferramenta callable no ambiente; a referência auditável foi a captura enviada pelo usuário e o inventário local `_product/tasks/PROTO-INVENTORY.md`.
+- ADR criado: `adrs/0292-correcao-encoding-copy-ui-admin.md`.
+
+### Validação complementar executada
+
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/pacientes/[id]/client.tsx"`
+- `pnpm --dir backend check`
+- `pnpm --dir admin check`
+- `pnpm --dir frontend check`
+- `pnpm --dir backend build`
+- `pnpm --dir admin build`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- Smoke HTTP local: `GET http://localhost:3002/pacientes/cmrqsr926001d1guhoz10yvaz` retornou `200`.

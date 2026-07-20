@@ -4189,7 +4189,7 @@ export const PsychologistsLogic = () => {
                     isActiveSlide &&
                     slideShouldShowVideo &&
                     (isVideoMuted || videoVolume <= 0 || isVideoPaused)
-                      ? `Ativar som e reproduzir vÃ­deo de ${psychologist.name}`
+                      ? `Ativar som e reproduzir vídeo de ${psychologist.name}`
                       : slideIsUiHidden
                         ? `Mostrar interface de ${psychologist.name}`
                         : `Ocultar interface de ${psychologist.name}`;

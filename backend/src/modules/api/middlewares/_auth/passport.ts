@@ -121,7 +121,7 @@ passport.use(
                 : undefined;
           }
         } catch (e) {
-          console.warn("[GOOGLE] Estado OAuth inv?lido ou ausente.", {
+          console.warn("[GOOGLE] Estado OAuth inválido ou ausente.", {
             message: e instanceof Error ? e.message : "unknown",
           });
         }

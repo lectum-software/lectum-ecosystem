@@ -95,7 +95,7 @@ const parseGoogleStateQuery = (state: unknown) => {
       });
     }
   } catch (e) {
-    console.warn("[GOOGLE] Estado OAuth inv?lido ou ausente no callback.", {
+    console.warn("[GOOGLE] Estado OAuth inválido ou ausente no callback.", {
       message: e instanceof Error ? e.message : "unknown",
     });
   }

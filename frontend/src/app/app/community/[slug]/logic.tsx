@@ -2449,7 +2449,7 @@ const CommunityPublishOnboarding = ({
       />
 
       <Link
-        aria-label="Criar publicaÃ§Ã£o agora"
+        aria-label="Criar publicação agora"
         className={cn(
           "fixed z-[125] grid h-16 w-16 place-items-center focus:outline-none focus:ring-4 focus:ring-primary/25",
           placement.highlight,

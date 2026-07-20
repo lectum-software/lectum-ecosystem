@@ -18,7 +18,7 @@ export const useUserSet = (redirect: RedirectTarget = "/dashboard") => {
     (data: user) => {
       if (!data?.user_tokens?.[0]?.token) {
         router.replace(
-          `/auth/error?error=${encodeURIComponent("Token de autenticacao nao retornado.")}`,
+          `/auth/error?error=${encodeURIComponent("Token de autenticação não retornado.")}`,
         );
         return;
       }

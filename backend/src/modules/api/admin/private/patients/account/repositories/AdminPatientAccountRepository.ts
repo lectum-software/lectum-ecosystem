@@ -7,38 +7,40 @@ const accountTokenSelect = {
   updatedAt: true,
 } satisfies Prisma.user_tokenSelect;
 
+const accountUserSelect = {
+  active: true,
+  account_status: true,
+  account_status_changed_at: true,
+  account_status_expires_at: true,
+  confirmed: true,
+  confirmed_date: true,
+  createdAt: true,
+  deleted: true,
+  deletedAt: true,
+  email: true,
+  id: true,
+  name: true,
+  need_reset: true,
+  password: true,
+  provider: true,
+  role: true,
+  user_tokens: {
+    orderBy: [{ updatedAt: "desc" as const }, { createdAt: "desc" as const }],
+    select: accountTokenSelect,
+    where: {
+      deleted: false,
+      token: {
+        not: null,
+      },
+    },
+  },
+} satisfies Prisma.userSelect;
+
 const accountProfileSelect = {
   id: true,
   user_id: true,
   user: {
-    select: {
-      active: true,
-      account_status: true,
-      account_status_changed_at: true,
-      account_status_expires_at: true,
-      confirmed: true,
-      confirmed_date: true,
-      createdAt: true,
-      deleted: true,
-      deletedAt: true,
-      email: true,
-      id: true,
-      name: true,
-      need_reset: true,
-      password: true,
-      provider: true,
-      role: true,
-      user_tokens: {
-        orderBy: [{ updatedAt: "desc" }, { createdAt: "desc" }],
-        select: accountTokenSelect,
-        where: {
-          deleted: false,
-          token: {
-            not: null,
-          },
-        },
-      },
-    },
+    select: accountUserSelect,
   },
 } satisfies Prisma.patient_profileSelect;
 
@@ -46,9 +48,15 @@ const existingUserSelect = {
   id: true,
 } satisfies Prisma.userSelect;
 
-export type AdminPatientAccountRecord = Prisma.patient_profileGetPayload<{
-  select: typeof accountProfileSelect;
+type AdminPatientAccountUserRecord = Prisma.userGetPayload<{
+  select: typeof accountUserSelect;
 }>;
+
+export type AdminPatientAccountRecord = {
+  id: string;
+  user: AdminPatientAccountUserRecord;
+  user_id: string;
+};
 
 export type AdminPatientAccountAudit = {
   action:
@@ -71,7 +79,7 @@ export type AdminPatientAccountAudit = {
 
 export class AdminPatientAccountRepository {
   async findPatient(id: string): Promise<AdminPatientAccountRecord | null> {
-    return prisma.patient_profile.findFirst({
+    const profile = await prisma.patient_profile.findFirst({
       where: {
         deleted: false,
         OR: [{ id }, { user_id: id }],
@@ -82,6 +90,25 @@ export class AdminPatientAccountRepository {
       },
       select: accountProfileSelect,
     });
+
+    if (profile) return profile;
+
+    const user = await prisma.user.findFirst({
+      where: {
+        deleted: false,
+        id,
+        role: "paciente",
+      },
+      select: accountUserSelect,
+    });
+
+    if (!user) return null;
+
+    return {
+      id: user.id,
+      user,
+      user_id: user.id,
+    };
   }
 
   async findUserByEmail(email: string) {

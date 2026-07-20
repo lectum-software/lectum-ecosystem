@@ -169,7 +169,7 @@ const loadImageElement = async (src: string) =>
 
     image.crossOrigin = "anonymous";
     image.onload = () => resolve(image);
-    image.onerror = () => reject(new Error("NÃ£o foi possÃ­vel carregar a imagem."));
+    image.onerror = () => reject(new Error("Não foi possível carregar a imagem."));
     image.src = src;
   });
 
@@ -654,7 +654,7 @@ const createLectumShareFile = async (target: LectumShareSocialTarget) => {
   const mediaUrl = resolvePublicMediaUrl(target.mediaUrl);
 
   if (!mediaUrl) {
-    throw new Error("M?dia indispon?vel para compartilhamento.");
+    throw new Error("Mídia indisponível para compartilhamento.");
   }
 
   if ("fonts" in document) {

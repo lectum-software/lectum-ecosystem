@@ -28,7 +28,7 @@ const HEATMAP_DAYS = [
   { id: "wed", label: "Qua" },
   { id: "thu", label: "Qui" },
   { id: "fri", label: "Sex" },
-  { id: "sat", label: "SÃ¡b" },
+  { id: "sat", label: "Sáb" },
   { id: "sun", label: "Dom" },
 ] as const;
 const HEATMAP_HOURS = [0, 4, 8, 12, 16, 20] as const;
@@ -283,7 +283,7 @@ const voteTargetTitle = (vote: AdminPatientEngagementBundle["votesMade"][number]
   if (vote.reply) return vote.reply.post.title;
   if (vote.post) return vote.post.title;
 
-  return "conteÃºdo";
+  return "conteúdo";
 };
 
 const countsFromBundle = (bundle: AdminPatientEngagementBundle): EngagementCounts => ({
@@ -300,7 +300,7 @@ const buildMetrics = (
 ): AdminPatientDetailMetric[] => [
   metric({
     current: current.posts_created,
-    description: "Posts publicados pelo paciente no perÃ­odo.",
+    description: "Posts publicados pelo paciente no período.",
     id: "posts_created",
     label: "Posts criados",
     previous: previous.posts_created,
@@ -308,9 +308,9 @@ const buildMetrics = (
   }),
   metric({
     current: current.comments_created,
-    description: "ComentÃ¡rios ou respostas criados pelo paciente no perÃ­odo.",
+    description: "Comentários ou respostas criados pelo paciente no período.",
     id: "comments_created",
-    label: "ComentÃ¡rios",
+    label: "Comentários",
     previous: previous.comments_created,
     source: "post_reply.author_id",
   }),
@@ -320,7 +320,7 @@ const buildMetrics = (
     id: "upvotes_received",
     label: "Upvotes recebidos",
     previous: previous.upvotes_received,
-    source: "post_vote.value>0 em conteÃºdo do paciente",
+    source: "post_vote.value>0 em conteúdo do paciente",
   }),
   metric({
     current: current.downvotes_received,
@@ -328,7 +328,7 @@ const buildMetrics = (
     id: "downvotes_received",
     label: "Downvotes recebidos",
     previous: previous.downvotes_received,
-    source: "post_vote.value<0 em conteÃºdo do paciente",
+    source: "post_vote.value<0 em conteúdo do paciente",
   }),
   metric({
     current: current.responses_received,
@@ -336,7 +336,7 @@ const buildMetrics = (
     id: "responses_received",
     label: "Respostas recebidas",
     previous: previous.responses_received,
-    source: "post_reply em conteÃºdo do paciente",
+    source: "post_reply em conteúdo do paciente",
   }),
 ];
 
@@ -386,7 +386,7 @@ const buildSeries = (
 const activityFromPost = (
   post: AdminPatientEngagementBundle["posts"][number],
 ): AdminPatientDetailActivityItem => ({
-  description: `Criou um post na comunidade ${post.community.name}: ${snippet(post.content, "sem conteÃºdo textual")}.`,
+  description: `Criou um post na comunidade ${post.community.name}: ${snippet(post.content, "sem conteúdo textual")}.`,
   detail_url: postUrl(post),
   id: `post-${post.id}`,
   occurred_at: post.createdAt,
@@ -398,7 +398,7 @@ const activityFromPost = (
 const activityFromReply = (
   reply: AdminPatientEngagementBundle["replies"][number],
 ): AdminPatientDetailActivityItem => ({
-  description: `Comentou no post "${reply.post.title}": ${snippet(reply.content, "comentÃ¡rio sem texto")}.`,
+  description: `Comentou no post "${reply.post.title}": ${snippet(reply.content, "comentário sem texto")}.`,
   detail_url: replyUrl(reply),
   id: `reply-${reply.id}`,
   occurred_at: reply.createdAt,
@@ -458,12 +458,12 @@ const activityFromMembership = (
 const activityFromReview = (
   review: AdminPatientEngagementBundle["reviews"][number],
 ): AdminPatientDetailActivityItem => ({
-  description: `Criou uma avaliaÃ§Ã£o profissional com nota ${review.rating}. O comentÃ¡rio nÃ£o Ã© exibido nesta visÃ£o operacional.`,
+  description: `Criou uma avaliação profissional com nota ${review.rating}. O comentário não é exibido nesta visão operacional.`,
   detail_url: null,
   id: `review-${review.id}`,
   occurred_at: review.createdAt,
   source: "professional_review",
-  title: "AvaliaÃ§Ã£o criada",
+  title: "Avaliação criada",
   type: "professional_review_created",
 });
 
@@ -604,7 +604,7 @@ const buildHeatmap = (bundle: AdminPatientEngagementBundle) => {
     total_events: eventDates.length,
     unavailable_reason:
       eventDates.length === 0
-        ? "Sem eventos suficientes de posts, comentÃ¡rios, votos ou salvamentos no perÃ­odo."
+        ? "Sem eventos suficientes de posts, comentários, votos ou salvamentos no período."
         : null,
   };
 };
@@ -659,9 +659,9 @@ const buildDetail = (
       ? [
           {
             description:
-              "Nenhuma visitor_location vinculada ao paciente foi encontrada; localizaÃ§Ã£o precisa nÃ£o Ã© inferida.",
+              "Nenhuma visitor_location vinculada ao paciente foi encontrada; localização precisa não é inferida.",
             id: "location",
-            label: "LocalizaÃ§Ã£o agregada",
+            label: "Localização agregada",
             source: "visitor_location",
           },
         ]
@@ -669,9 +669,9 @@ const buildDetail = (
     ...(!heatmap.available
       ? [
           {
-            description: heatmap.unavailable_reason ?? "Sem eventos suficientes no perÃ­odo.",
+            description: heatmap.unavailable_reason ?? "Sem eventos suficientes no período.",
             id: "heatmap",
-            label: "HorÃ¡rios de maior atividade",
+            label: "Horários de maior atividade",
             source: heatmap.source,
           },
         ]
@@ -681,7 +681,7 @@ const buildDetail = (
   return {
     activities: {
       coverage_note:
-        "Atividades sÃ£o derivadas de posts, comentÃ¡rios, votos, salvamentos, entrada em comunidades e avaliaÃ§Ãµes reais. Login nÃ£o Ã© exibido porque nÃ£o hÃ¡ evento de login confiÃ¡vel nesta V1.",
+        "Atividades são derivadas de posts, comentários, votos, salvamentos, entrada em comunidades e avaliações reais. Login não é exibido porque não há evento de login confiável nesta V1.",
       items: buildActivities(currentBundle),
       source: "community_activity+professional_review",
     },
@@ -691,10 +691,10 @@ const buildDetail = (
     },
     coverage_notes: [
       "Aba Conta possui suporte administrativo auditado de acesso, sessões, suspensão, desativação e exclusão; não há silenciamento, restrição parcial ou moderação automática de paciente.",
-      "Status Ativo/Inativo representa user.active, nÃ£o retenÃ§Ã£o nem engajamento recente.",
-      "E-mail Ã© exibido apenas para admin autenticado; telefone, nascimento, bio, IP, coordenadas e endereÃ§o completo sÃ£o omitidos na V1.",
-      "Ãšltimo acesso usa somente metadados reais de sessÃ£o/token do usuÃ¡rio, quando existentes.",
-      "LocalizaÃ§Ã£o, quando disponÃ­vel, usa apenas dados coarse de visitor_location.",
+      "Status Ativo/Inativo representa user.active, não retenção nem engajamento recente.",
+      "E-mail é exibido apenas para admin autenticado; telefone, nascimento, bio, IP, coordenadas e endereço completo são omitidos na V1.",
+      "Último acesso usa somente metadados reais de sessão/token do usuário, quando existentes.",
+      "Localização, quando disponível, usa apenas dados coarse de visitor_location.",
     ],
     header: buildHeader(patient),
     heatmap,
@@ -707,8 +707,8 @@ const buildDetail = (
         "patient_profile.bio",
         "IP",
         "coordenadas",
-        "endereÃ§o completo",
-        "comentÃ¡rio textual de avaliaÃ§Ãµes profissionais",
+        "endereço completo",
+        "comentário textual de avaliações profissionais",
       ],
       visible_fields: [
         "user.id",

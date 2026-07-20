@@ -24,6 +24,7 @@ Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente. A r
   - `POST /deactivate`;
   - `POST /delete`.
 - Usar apenas fontes reais ja existentes: `user`, `user_token`, `patient_profile` e `admin_activity_log`.
+- Carregar a conta administrativa pelo `user` quando o paciente existe em `users` mas ainda nao possui `patient_profile`, mantendo suporte a `patient_profile.id`/`patient_profile.user_id` quando o perfil existir.
 - Exigir motivo interno e confirmacao forte quando a acao for destrutiva/sensivel, espelhando as regras do psicologo.
 - Registrar auditoria como `target_type="patient"`, `domain="patient_account"` e `area="conta_e_acesso"`.
 - Generalizar o `AccountRepository.deleteOwnAccount` para permitir metadados de auditoria de paciente sem duplicar a rotina de anonimizacao/soft delete ja existente.
@@ -35,6 +36,7 @@ Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente. A r
 - A decisao anterior de conta somente leitura da TASK-61 fica substituida somente para a aba **Conta** e para fluxos de conta/acesso.
 - Nao ha novo modelo Prisma, migration, pacote, seed, mock ou endpoint simulado.
 - A exclusao administrativa de paciente reaproveita a anonimizacao real de conta e marca `patient_profile` como deletado pela rotina existente.
+- Pacientes preview/onboarding incompleto sem linha em `patient_profiles` deixam de receber 404 na aba **Conta**; as capacidades sao calculadas diretamente de `users`/`user_tokens` e ficam bloqueadas quando faltar senha local ou sessao real.
 - O suporte administrativo passa a ter paridade operacional entre psicologos e pacientes para incidentes de acesso, com auditoria explicita.
 - Continuam fora do escopo silenciar, banir, moderar publicacoes/comentarios/votos/avaliacoes ou criar restricoes parciais de comunidade.
 
@@ -49,3 +51,17 @@ Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente. A r
 - `pnpm check`
 - Smoke HTTP local: `GET http://localhost:3002/pacientes/cmrqsrab5001f1guh2ve5oy90?tab=conta` retornou `200`.
 - Smoke HTTP local sem token: `POST http://localhost:3001/api/admin/private/patients/cmrqsrab5001f1guh2ve5oy90/account/suspend` retornou `401`.
+
+## Revisao 2026-07-20 - Paciente sem patient_profile
+
+Foi identificado que pacientes preview podem existir apenas em `users` com `role="paciente"` e sem linha em `patient_profiles`. O detalhe do paciente ja carregava esses casos a partir de `users`, mas a nova aba **Conta** buscava somente `patient_profile`, gerando `404 not_found` para usuarios validos.
+
+Decidimos que a aba **Conta** deve seguir a mesma identidade do detalhe administrativo: primeiro resolve `patient_profile.id`/`user_id` quando houver perfil; se nao houver perfil, resolve diretamente `users.id` para pacientes nao deletados. Nenhum dado fake, seed, migration ou backfill foi criado.
+
+Validacao complementar:
+
+- Service local: `showAdminPatientAccount({ id: "cmrqsr926001d1guhoz10yvaz" })` retornou `200` com capacidades reais calculadas de `users`/`user_tokens`.
+- `pnpm --dir backend exec biome check --write src/modules/api/admin/private/patients/account/repositories/AdminPatientAccountRepository.ts`
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm check`

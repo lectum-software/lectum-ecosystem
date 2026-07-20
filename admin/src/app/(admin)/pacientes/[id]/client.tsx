@@ -64,9 +64,9 @@ const LOADING_PLACEHOLDERS = ["profile", "engagement", "activity", "communities"
 const PATIENT_DETAIL_TABS = [
   { id: "geral", label: "Geral" },
   { id: "perfil", label: "Perfil e cadastro" },
-  { id: "estatisticas", label: "EstatÃ­sticas" },
-  { id: "publicacoes", label: "PublicaÃ§Ãµes" },
-  { id: "denuncias", label: "DenÃºncias" },
+  { id: "estatisticas", label: "Estatísticas" },
+  { id: "publicacoes", label: "Publicações" },
+  { id: "denuncias", label: "Denúncias" },
   { id: "atividades", label: "Atividades" },
   { id: "conta", label: "Conta" },
 ] as const;
@@ -84,35 +84,35 @@ const metricIcons: Record<PatientsDetailMetric["id"], LucideIcon> = {
 const activitySourceLabels: Record<PatientsDetailActivity["source"], string> = {
   community_member: "Comunidade",
   community_post: "Post",
-  post_reply: "ComentÃ¡rio",
+  post_reply: "Comentário",
   post_reply_save: "Resposta salva",
   post_save: "Post salvo",
   post_vote: "Voto",
-  professional_review: "AvaliaÃ§Ã£o",
+  professional_review: "Avaliação",
 };
 const seriesConfig = [
   { color: "var(--admin-primary)", key: "posts_created", label: "Posts" },
-  { color: "#5d9df6", key: "comments_created", label: "ComentÃ¡rios" },
+  { color: "#5d9df6", key: "comments_created", label: "Comentários" },
   { color: "var(--admin-success)", key: "upvotes_received", label: "Upvotes recebidos" },
   { color: "var(--admin-danger)", key: "downvotes_received", label: "Downvotes recebidos" },
   { color: "var(--admin-warning)", key: "responses_received", label: "Respostas recebidas" },
 ] as const;
-const EMPTY_SELECT_OPTION = { label: "NÃ£o informado", value: "" } as const;
+const EMPTY_SELECT_OPTION = { label: "Não informado", value: "" } as const;
 const PATIENT_GENDER_OPTIONS = [
   EMPTY_SELECT_OPTION,
   { label: "Feminino", value: "feminino" },
   { label: "Masculino", value: "masculino" },
-  { label: "NÃ£o binÃ¡rio", value: "nao_binario" },
+  { label: "Não binário", value: "nao_binario" },
   { label: "Outro", value: "outro" },
-  { label: "Prefiro nÃ£o dizer", value: "prefiro_nao_dizer" },
+  { label: "Prefiro não dizer", value: "prefiro_nao_dizer" },
 ] as const;
 const patientPersonalDataSchema = z.object({
-  gender: z.string().max(80, "Use no mÃ¡ximo 80 caracteres.").optional(),
+  gender: z.string().max(80, "Use no máximo 80 caracteres.").optional(),
   reason: z
     .string()
     .trim()
     .min(10, "Informe um motivo com pelo menos 10 caracteres.")
-    .max(500, "Use no mÃ¡ximo 500 caracteres."),
+    .max(500, "Use no máximo 500 caracteres."),
 });
 type PatientPersonalDataFormValues = z.infer<typeof patientPersonalDataSchema>;
 
@@ -385,7 +385,7 @@ const MetricCard = ({ metric }: { metric: PatientsDetailMetric }) => {
       </p>
       <div className="mt-3 flex flex-wrap items-center gap-2">
         <TrendBadge metric={metric} />
-        <span className="text-xs font-bold text-muted">vs. perÃ­odo anterior</span>
+        <span className="text-xs font-bold text-muted">vs. período anterior</span>
       </div>
     </CardShell>
   );
@@ -399,7 +399,7 @@ const ErrorState = ({ message, onRetry }: { message: string; onRetry: () => void
           <AlertTriangle aria-hidden className="h-5 w-5" />
         </div>
         <div>
-          <h2 className="text-lg font-black">NÃ£o foi possÃ­vel carregar o paciente</h2>
+          <h2 className="text-lg font-black">Não foi possível carregar o paciente</h2>
           <p className="mt-1 text-sm text-muted">{message}</p>
         </div>
       </div>
@@ -508,9 +508,9 @@ const EngagementChart = ({ detail }: { detail: AdminPatientDetail }) => {
       <CardShell className="p-5">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <h2 className="text-xl font-black text-foreground">EstatÃ­sticas de engajamento</h2>
+            <h2 className="text-xl font-black text-foreground">Estatísticas de engajamento</h2>
             <p className="mt-1 text-sm text-muted">
-              Nenhum ponto real de engajamento foi encontrado para o perÃ­odo selecionado.
+              Nenhum ponto real de engajamento foi encontrado para o período selecionado.
             </p>
           </div>
           <span className="w-fit rounded-full bg-surface-muted px-2 py-1 text-[0.65rem] font-bold text-muted">
@@ -548,9 +548,9 @@ const EngagementChart = ({ detail }: { detail: AdminPatientDetail }) => {
     <CardShell className="p-5">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h2 className="text-xl font-black text-foreground">EstatÃ­sticas de engajamento</h2>
+          <h2 className="text-xl font-black text-foreground">Estatísticas de engajamento</h2>
           <p className="mt-1 text-sm text-muted">
-            Dados reais de posts, comentÃ¡rios, votos recebidos e respostas recebidas no perÃ­odo.
+            Dados reais de posts, comentários, votos recebidos e respostas recebidas no período.
           </p>
         </div>
         <span className="w-fit rounded-full bg-surface-muted px-2 py-1 text-[0.65rem] font-bold text-muted">
@@ -577,7 +577,7 @@ const EngagementChart = ({ detail }: { detail: AdminPatientDetail }) => {
         <div className="w-full overflow-x-auto rounded-[1.5rem] border border-border/70 bg-surface p-4">
           <div className="mx-auto w-full min-w-[720px] max-w-[980px]">
             <svg
-              aria-label="GrÃ¡fico de engajamento do paciente"
+              aria-label="Gráfico de engajamento do paciente"
               className="block h-auto w-full"
               height={height}
               preserveAspectRatio="xMidYMid meet"
@@ -657,7 +657,7 @@ const EngagementChart = ({ detail }: { detail: AdminPatientDetail }) => {
 const ActivityList = ({
   detail,
   description = detail.activities.coverage_note,
-  emptyMessage = "Nenhum evento real foi encontrado para este paciente no perÃ­odo selecionado.",
+  emptyMessage = "Nenhum evento real foi encontrado para este paciente no período selecionado.",
   items = detail.activities.items,
   title = "Atividades recentes",
 }: {
@@ -687,8 +687,8 @@ const ActivityList = ({
           <thead className="border-b border-border text-xs text-muted">
             <tr>
               <th className="py-3 pr-3 font-black">Data</th>
-              <th className="px-3 py-3 font-black">AÃ§Ã£o</th>
-              <th className="px-3 py-3 font-black">DescriÃ§Ã£o</th>
+              <th className="px-3 py-3 font-black">Ação</th>
+              <th className="px-3 py-3 font-black">Descrição</th>
               <th className="px-3 py-3 font-black">Fonte</th>
             </tr>
           </thead>
@@ -752,7 +752,7 @@ const Communities = ({ detail }: { detail: AdminPatientDetail }) => (
         <div>
           <h2 className="text-lg font-extrabold text-foreground">Comunidades mais ativas</h2>
           <p className="mt-1 text-sm text-muted">
-            Ranking calculado por participaÃ§Ã£o real e interaÃ§Ãµes do paciente nas comunidades.
+            Ranking calculado por participação real e interações do paciente nas comunidades.
           </p>
         </div>
       </div>
@@ -761,7 +761,7 @@ const Communities = ({ detail }: { detail: AdminPatientDetail }) => (
     <div className="mt-5 space-y-3">
       {detail.communities.items.length === 0 ? (
         <p className="rounded-2xl bg-surface-muted p-4 text-sm text-muted">
-          Nenhuma comunidade com interaÃ§Ã£o real foi encontrada no perÃ­odo.
+          Nenhuma comunidade com interação real foi encontrada no período.
         </p>
       ) : (
         detail.communities.items.map((community, index) => (
@@ -774,13 +774,13 @@ const Communities = ({ detail }: { detail: AdminPatientDetail }) => (
               <div className="min-w-0">
                 <h3 className="truncate font-black text-foreground">{community.name}</h3>
                 <p className="text-sm text-muted">
-                  {community.is_member ? "Membro real" : "InteraÃ§Ã£o sem vÃ­nculo ativo"}
+                  {community.is_member ? "Membro real" : "Interação sem vínculo ativo"}
                   {community.member_since ? ` desde ${formatDateTime(community.member_since)}` : ""}
                 </p>
               </div>
             </div>
             <Badge className="w-fit bg-primary-soft text-primary">
-              {numberFormatter.format(community.interactions)} interaÃ§Ãµes
+              {numberFormatter.format(community.interactions)} interações
             </Badge>
           </div>
         ))
@@ -808,9 +808,9 @@ const Heatmap = ({ detail }: { detail: AdminPatientDetail }) => {
         <div className="flex items-start gap-3">
           <IconCircle icon={CalendarDays} />
           <div>
-            <h2 className="text-lg font-extrabold text-foreground">HorÃ¡rios de maior atividade</h2>
+            <h2 className="text-lg font-extrabold text-foreground">Horários de maior atividade</h2>
             <p className="mt-1 text-sm text-muted">
-              AgregaÃ§Ã£o de eventos reais no fuso BrasÃ­lia ({detail.heatmap.timezone}).
+              Agregação de eventos reais no fuso Brasília ({detail.heatmap.timezone}).
             </p>
           </div>
         </div>
@@ -948,17 +948,17 @@ const EmptyTabState = ({
 
 const formatPatientLocation = (detail: AdminPatientDetail) => {
   const location = detail.header.location;
-  if (!location) return "NÃ£o capturada";
+  if (!location) return "Não capturada";
 
   return (
-    [location.city, location.state, location.country].filter(Boolean).join(", ") || "NÃ£o capturada"
+    [location.city, location.state, location.country].filter(Boolean).join(", ") || "Não capturada"
   );
 };
 
 const getOnboardingLabel = (detail: AdminPatientDetail) =>
   detail.header.onboarding_completed_at
     ? formatDateTime(detail.header.onboarding_completed_at)
-    : "Sem conclusÃ£o registrada";
+    : "Sem conclusão registrada";
 
 const SummaryCard = ({
   actionHref,
@@ -1011,12 +1011,12 @@ const AccountSituationCard = ({ detail, id }: { detail: AdminPatientDetail; id: 
       actionLabel="Abrir dados da conta"
       description="Resumo somente leitura de acesso do paciente."
       icon={ShieldCheck}
-      title="SituaÃ§Ã£o da conta"
+      title="Situação da conta"
       badge={
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <p className="text-xs font-black uppercase tracking-[0.12em] text-primary">
-              SituaÃ§Ã£o atual
+              Situação atual
             </p>
             <p className="mt-1 text-xl font-black text-foreground">
               {active ? "Conta ativa" : "Conta inativa"}
@@ -1034,7 +1034,7 @@ const AccountSituationCard = ({ detail, id }: { detail: AdminPatientDetail; id: 
       }
     >
       <FieldRow label="E-mail" value={detail.header.email} />
-      <FieldRow label="Ãšltimo acesso" value={formatLastAccess(detail.header.last_access_at)} />
+      <FieldRow label="Último acesso" value={formatLastAccess(detail.header.last_access_at)} />
       <FieldRow label="Cadastro via" value={detail.header.provider_label} />
       <FieldRow label="Criado em" value={formatDateTime(detail.header.created_at)} />
     </SummaryCard>
@@ -1051,26 +1051,26 @@ const PatientRegistrationSummaryCard = ({
   <SummaryCard
     actionHref={patientTabHref(id, "perfil")}
     actionLabel="Abrir perfil e cadastro"
-    description="Dados cadastrais mÃ­nimos aprovados para o Admin V1."
+    description="Dados cadastrais mínimos aprovados para o Admin V1."
     icon={UserRound}
     title="Cadastro do paciente"
     badge={
       <div>
         <p className="text-xs font-black uppercase tracking-[0.12em] text-primary">Onboarding</p>
         <p className="mt-1 text-xl font-black text-foreground">
-          {detail.header.onboarding_completed_at ? "ConcluÃ­do" : "Sem conclusÃ£o registrada"}
+          {detail.header.onboarding_completed_at ? "Concluído" : "Sem conclusão registrada"}
         </p>
         <p className="mt-3 text-sm font-bold leading-6 text-muted">
           {detail.header.onboarding_completed_at
-            ? "Fluxo inicial concluÃ­do com data real registrada."
-            : "Nenhuma conclusÃ£o de onboarding foi encontrada para este paciente."}
+            ? "Fluxo inicial concluído com data real registrada."
+            : "Nenhuma conclusão de onboarding foi encontrada para este paciente."}
         </p>
       </div>
     }
   >
     <FieldRow label="ID do paciente" value={detail.header.id} />
-    <FieldRow label="GÃªnero" value={formatPatientGender(detail.header.gender)} />
-    <FieldRow label="LocalizaÃ§Ã£o agregada" value={formatPatientLocation(detail)} />
+    <FieldRow label="Gênero" value={formatPatientGender(detail.header.gender)} />
+    <FieldRow label="Localização agregada" value={formatPatientLocation(detail)} />
     <FieldRow label="Onboarding" value={getOnboardingLabel(detail)} />
   </SummaryCard>
 );
@@ -1083,30 +1083,30 @@ const PatientEngagementSummaryCard = ({
   id: string;
 }) => {
   const totalSignals = detail.metrics.reduce((total, metric) => total + metric.value, 0);
-  const topCommunity = detail.communities.items[0]?.name ?? "NÃ£o informado";
+  const topCommunity = detail.communities.items[0]?.name ?? "Não informado";
 
   return (
     <SummaryCard
       actionHref={patientTabHref(id, "estatisticas")}
-      actionLabel="Abrir estatÃ­sticas"
-      description="Leitura reduzida do engajamento real no perÃ­odo padrÃ£o."
+      actionLabel="Abrir estatísticas"
+      description="Leitura reduzida do engajamento real no período padrão."
       icon={BarChart3}
       title="Engajamento"
       badge={
         <div>
           <p className="text-xs font-black uppercase tracking-[0.12em] text-primary">
-            Sinais no perÃ­odo
+            Sinais no período
           </p>
           <p className="mt-1 text-3xl font-black text-foreground">
             {numberFormatter.format(totalSignals)}
           </p>
           <p className="mt-3 text-sm font-bold leading-6 text-muted">
-            Soma de posts, comentÃ¡rios, votos e respostas recebidas, sem estimativas.
+            Soma de posts, comentários, votos e respostas recebidas, sem estimativas.
           </p>
         </div>
       }
     >
-      <FieldRow label="PerÃ­odo" value={detail.period.label} />
+      <FieldRow label="Período" value={detail.period.label} />
       <FieldRow label="Comunidade destaque" value={topCommunity} />
       <FieldRow
         label="Eventos no heatmap"
@@ -1151,7 +1151,7 @@ const ProfileFormActions = ({
       type="submit"
     >
       {disabled ? <Loader2 aria-hidden className="h-4 w-4 animate-spin" /> : null}
-      Salvar alteraÃ§Ãµes
+      Salvar alterações
     </button>
   </div>
 );
@@ -1159,8 +1159,8 @@ const ProfileFormActions = ({
 const PatientPersonalDataRows = ({ detail }: { detail: AdminPatientDetail }) => (
   <>
     <FieldRow label="E-mail" value={detail.header.email} />
-    <FieldRow label="GÃªnero" value={formatPatientGender(detail.header.gender)} />
-    <FieldRow label="LocalizaÃ§Ã£o" value={formatPatientLocation(detail)} />
+    <FieldRow label="Gênero" value={formatPatientGender(detail.header.gender)} />
+    <FieldRow label="Localização" value={formatPatientLocation(detail)} />
   </>
 );
 
@@ -1204,31 +1204,31 @@ const PatientPersonalDataEditForm = ({
               <span className="inline-flex items-center gap-2">
                 {detail.header.email}
                 <LockKeyhole
-                  aria-label="E-mail editÃ¡vel somente por fluxo de conta"
+                  aria-label="E-mail editável somente por fluxo de conta"
                   className="h-4 w-4 text-muted"
                 />
               </span>
             }
           />
-          <FieldRow label="LocalizaÃ§Ã£o" value={formatPatientLocation(detail)} />
+          <FieldRow label="Localização" value={formatPatientLocation(detail)} />
         </div>
         <SelectController<PatientPersonalDataFormValues>
           disabled={disabled}
-          label="GÃªnero"
+          label="Gênero"
           name="gender"
           options={mergeCurrentOption(PATIENT_GENDER_OPTIONS, detail.header.gender)}
         />
         <TextareaController<PatientPersonalDataFormValues>
           disabled={disabled}
-          label="Motivo da alteraÃ§Ã£o"
+          label="Motivo da alteração"
           name="reason"
-          placeholder="Descreva o motivo operacional da alteraÃ§Ã£o."
+          placeholder="Descreva o motivo operacional da alteração."
           required
           rows={3}
         />
         <p className="rounded-2xl bg-surface-muted p-3 text-xs font-bold leading-5 text-muted">
-          E-mail e localizaÃ§Ã£o permanecem somente leitura nesta ediÃ§Ã£o: o e-mail pertence ao
-          fluxo de conta e a localizaÃ§Ã£o vem de dados coarse de visitor_location.
+          E-mail e localização permanecem somente leitura nesta edição: o e-mail pertence ao fluxo
+          de conta e a localização vem de dados coarse de visitor_location.
         </p>
         <ProfileFormActions disabled={disabled} onCancel={onCancel} />
       </form>
@@ -1260,7 +1260,7 @@ const ProfileRegistrationTab = ({ detail }: { detail: AdminPatientDetail }) => {
 const GeneralTab = ({ detail, id }: { detail: AdminPatientDetail; id: string }) => (
   <div className="space-y-5">
     <section>
-      <h2 className="sr-only">MÃ©tricas principais do paciente</h2>
+      <h2 className="sr-only">Métricas principais do paciente</h2>
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
         {detail.metrics.map((metric) => (
           <MetricCard key={metric.id} metric={metric} />
@@ -1296,20 +1296,20 @@ const PublicationsTab = ({ detail }: { detail: AdminPatientDetail }) => {
 
   return (
     <ActivityList
-      description="PublicaÃ§Ãµes derivadas dos eventos reais de posts criados pelo paciente retornados no contrato atual."
+      description="Publicações derivadas dos eventos reais de posts criados pelo paciente retornados no contrato atual."
       detail={detail}
-      emptyMessage="Nenhuma publicaÃ§Ã£o real foi encontrada para este paciente no perÃ­odo consultado."
+      emptyMessage="Nenhuma publicação real foi encontrada para este paciente no período consultado."
       items={publicationActivities}
-      title="PublicaÃ§Ãµes"
+      title="Publicações"
     />
   );
 };
 
 const ReportsTab = () => (
   <EmptyTabState
-    description="A V1 do detalhe de pacientes nÃ£o possui contrato dedicado de denÃºncias nem aÃ§Ãµes de moderaÃ§Ã£o para paciente. Nenhum dado foi simulado nesta aba."
+    description="A V1 do detalhe de pacientes não possui contrato dedicado de denúncias nem ações de moderação para paciente. Nenhum dado foi simulado nesta aba."
     icon={AlertTriangle}
-    title="DenÃºncias"
+    title="Denúncias"
   />
 );
 

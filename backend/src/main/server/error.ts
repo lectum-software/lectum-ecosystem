@@ -14,7 +14,7 @@ export const errorHandler: ErrorRequestHandler = (error, _req, res, _next) => {
   const status = Number(error.status || 500);
   const message = error instanceof Error ? error.message : "Internal Server Error";
 
-  console.error("[SERVER] erro n?o tratado", {
+  console.error("[SERVER] erro não tratado", {
     message,
     name: error?.name,
     status,
