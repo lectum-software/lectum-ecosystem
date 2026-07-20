@@ -233,8 +233,10 @@ A UI do dashboard geral replica o mesmo layout do bloco **Cobertura de acolhimen
 
 ## Atualizacao 2026-07-20: filtros deslocados para blocos analiticos
 
-O dashboard geral `/comunidades` deixa de exibir os controles de periodo/data no header da pagina. A decisao e colocar os mesmos controles diretamente nos blocos que dependem do recorte temporal: **Estatisticas de pessoas**, **Estatisticas de conteudo**, **Cobertura de acolhimento**, **Principais comunidades** e **Horarios de maior atividade**.
+O dashboard geral `/comunidades` deixa de exibir os controles de periodo/data no header da pagina. A decisao e colocar os mesmos controles diretamente nos blocos que continuam dependentes do recorte temporal escolhido pelo Admin: **Estatisticas de pessoas**, **Estatisticas de conteudo** e **Cobertura de acolhimento**.
 
-Os controles sao renderizados em cada bloco, mas permanecem sincronizados e continuam alimentando a mesma query real do dashboard. Essa escolha evita estados concorrentes e multiplas leituras divergentes na mesma pagina nesta V1, ao mesmo tempo em que aproxima a edicao de periodo das secoes onde os dados sao consumidos. **Postagens mais recentes** e **Posts mais populares** ficam sem controles por decisao anterior de produto.
+**Principais comunidades** e **Horarios de maior atividade** deixam de expor controles manuais e passam a usar sempre o periodo fixo de **Ultimos 6 meses**. A decisao evita que rankings e horarios operacionais fiquem excessivamente sensiveis a recortes curtos, mantendo uma janela estavel para comparacao entre comunidades e picos de uso. A implementacao reutiliza a mesma query real do endpoint de dashboard com intervalo customizado de seis meses; nao cria endpoint paralelo, mock ou estado derivado artificial.
 
-Consequencia: a pagina reduz o peso visual do header e aumenta a autonomia visual de cada bloco analitico sem criar endpoint paralelo, schema/migration, dependencia, mock, seed ou backfill.
+Os controles dos tres blocos filtraveis permanecem sincronizados e continuam alimentando a mesma query real do dashboard. Essa escolha evita estados concorrentes para as estatisticas principais, ao mesmo tempo em que aproxima a edicao de periodo das secoes onde os dados sao consumidos. **Postagens mais recentes** e **Posts mais populares** ficam sem controles por decisao anterior de produto.
+
+Consequencia: a pagina reduz o peso visual do header, preserva filtros nos blocos principais de estatisticas e estabiliza **Principais comunidades**/**Horarios de maior atividade** em uma janela operacional fixa de seis meses, sem criar schema/migration, dependencia, mock, seed ou backfill.

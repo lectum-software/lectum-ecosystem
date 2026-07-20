@@ -1015,25 +1015,26 @@ Regras de UI obrigatórias:
 
 ## Ajuste complementar 2026-07-20 - Filtros por bloco no dashboard geral
 
-- Pedido do usuário: remover os campos de período/data do header do dashboard `/comunidades` e exibir os campos nos blocos **Estatísticas de pessoas**, **Estatísticas de conteúdo**, **Cobertura de acolhimento**, **Principais comunidades** e **Horários de maior atividade**.
-- Frontend Admin: o header passou a conter somente título e descrição da página. Os controles de período, data inicial e data final foram extraídos para `DashboardPeriodControls` e renderizados no topo dos cinco blocos solicitados.
-- Os controles permanecem sincronizados e continuam alimentando a mesma query real `GET /api/admin/private/communities/dashboard`, preservando o comportamento vigente de período único aplicado ao dashboard inteiro, sem criar endpoint paralelo ou estados concorrentes entre blocos.
-- **Postagens mais recentes** e **Posts mais populares** não receberam controles, mantendo a decisão anterior de não fazer parte do recorte operacional desses cinco blocos.
-- Não houve schema Prisma/migration, package novo, mock, seed, backfill, endpoint simulado ou uso de `<img>` cru.
-- Builder/Quick Copy `vcp://quickcopy/vcp-24aaa2941d814e5b90572bc93ae50e2a` não está exposto como ferramenta callable neste ambiente; referências usadas: captura enviada pelo usuário e `_product/proto/admin/Comunidades/Comunidades - Dashboard.png`.
+- Pedido do usuario: remover os campos de periodo/data do header do dashboard `/comunidades`, exibir os campos nos blocos **Estatisticas de pessoas**, **Estatisticas de conteudo** e **Cobertura de acolhimento**, e deixar **Principais comunidades** e **Horarios de maior atividade** sem filtros manuais.
+- Frontend Admin: o header passou a conter somente titulo e descricao da pagina. Os controles de periodo, data inicial e data final foram extraidos para `DashboardPeriodControls` e renderizados apenas nos tres blocos analiticos filtraveis.
+- **Estatisticas de pessoas**, **Estatisticas de conteudo** e **Cobertura de acolhimento** permanecem sincronizadas e continuam alimentando a mesma query real `GET /api/admin/private/communities/dashboard` do recorte selecionado pelo Admin.
+- **Principais comunidades** e **Horarios de maior atividade** agora usam recorte fixo de **Ultimos 6 meses**, sem exibir seletor de periodo ou datas; a UI reutiliza o endpoint real existente com query customizada de seis meses, sem mocks nem endpoint paralelo.
+- **Postagens mais recentes** e **Posts mais populares** continuam sem controles, mantendo a decisao anterior de nao fazer parte do recorte operacional desses blocos.
+- Nao houve schema Prisma/migration, package novo, mock, seed, backfill, endpoint simulado ou uso de `<img>` cru.
+- Builder/Quick Copy `vcp://quickcopy/vcp-24aaa2941d814e5b90572bc93ae50e2a` nao esta exposto como ferramenta callable neste ambiente; referencias usadas: captura enviada pelo usuario e `_product/proto/admin/Comunidades/Comunidades - Dashboard.png`.
 - ADR atualizado: `adrs/0231-admin-comunidades-dashboard-agregacoes.md`.
 
-### Critérios deste ajuste
+### Criterios deste ajuste
 
-- [x] O header de `/comunidades` não exibe mais período nem datas.
-- [x] **Estatísticas de pessoas** exibe período, data inicial e data final.
-- [x] **Estatísticas de conteúdo** exibe período, data inicial e data final.
-- [x] **Cobertura de acolhimento** exibe período, data inicial e data final.
-- [x] **Principais comunidades** exibe período, data inicial e data final.
-- [x] **Horários de maior atividade** exibe período, data inicial e data final.
-- [x] Os controles usam a query real existente do dashboard, sem mocks nem endpoint paralelo.
+- [x] O header de `/comunidades` nao exibe mais periodo nem datas.
+- [x] **Estatisticas de pessoas** exibe periodo, data inicial e data final.
+- [x] **Estatisticas de conteudo** exibe periodo, data inicial e data final.
+- [x] **Cobertura de acolhimento** exibe periodo, data inicial e data final.
+- [x] **Principais comunidades** nao exibe filtros de periodo/data e usa periodo fixo de **Ultimos 6 meses**.
+- [x] **Horarios de maior atividade** nao exibe filtros de periodo/data e usa periodo fixo de **Ultimos 6 meses**.
+- [x] Os recortes usam a query real existente do dashboard, sem mocks nem endpoint paralelo.
 
-### Validação deste ajuste
+### Validacao deste ajuste
 
 - `pnpm --dir admin check`: sem erros.
 - `pnpm --dir admin build`: sem erros.

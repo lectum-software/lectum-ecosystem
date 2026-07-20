@@ -303,6 +303,14 @@ const startOfCurrentMonth = () => {
 
 const startOfCurrentYear = () => new Date(new Date().getFullYear(), 0, 1);
 
+const startOfLastSixMonths = () => {
+  const date = new Date();
+  date.setHours(12, 0, 0, 0);
+  date.setMonth(date.getMonth() - 6);
+
+  return date;
+};
+
 const getCommunityDashboardRangeForPeriod = (
   period: CommunityDashboardPeriodPreset,
 ): CommunitiesDashboardQuery => {
@@ -315,6 +323,12 @@ const getCommunityDashboardRangeForPeriod = (
 
   return { from: toInputDate(startOfCurrentWeek()), to: today };
 };
+
+const getCommunityDashboardLastSixMonthsRange = (): CommunitiesDashboardQuery => ({
+  from: toInputDate(startOfLastSixMonths()),
+  period: "custom",
+  to: toInputDate(new Date()),
+});
 
 const buildCommunityDashboardPeriodQuery = (
   period: CommunityDashboardPeriodValue,
@@ -1767,29 +1781,24 @@ const PopularPostsTable = ({ posts }: { posts: CommunitiesDashboardPopularPost[]
 
 const TopCommunitiesTable = ({
   communities,
-  filters,
   periodLabel,
 }: {
   communities: CommunitiesDashboardTopCommunity[];
-  filters?: React.ReactNode;
   periodLabel: string;
 }) => (
   <div className="scroll-mt-6" id="lista-de-comunidades">
     <CardShell className="p-5">
-      <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+      <div className="flex items-start justify-between gap-4">
         <div className="min-w-0">
           <h2 className="text-lg font-black text-foreground">Principais comunidades</h2>
           <BlockPeriodLabel>{periodLabel}</BlockPeriodLabel>
         </div>
-        <div className="flex w-full min-w-0 flex-col gap-3 xl:max-w-xl xl:items-end">
-          {filters}
-          <Link
-            className="text-xs font-black text-primary transition hover:text-primary-hover"
-            href="/comunidades/lista"
-          >
-            Ver todas
-          </Link>
-        </div>
+        <Link
+          className="shrink-0 text-xs font-black text-primary transition hover:text-primary-hover"
+          href="/comunidades/lista"
+        >
+          Ver todas
+        </Link>
       </div>
 
       {communities.length === 0 ? (
@@ -1906,11 +1915,9 @@ const TopCommunitiesTable = ({
 );
 
 const CommunitiesPeakActivityHoursCard = ({
-  filters,
   periodLabel,
   points,
 }: {
-  filters?: React.ReactNode;
   periodLabel: string;
   points: CommunitiesDashboardHourlyActivityPoint[];
 }) => {
@@ -1927,12 +1934,9 @@ const CommunitiesPeakActivityHoursCard = ({
 
   return (
     <CardShell className="h-full p-5">
-      <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
-        <div className="min-w-0">
-          <h2 className="text-lg font-black text-foreground">Horários de maior atividade</h2>
-          <BlockPeriodLabel>{periodLabel}</BlockPeriodLabel>
-        </div>
-        {filters ? <div className="w-full min-w-0 xl:max-w-xl">{filters}</div> : null}
+      <div className="min-w-0">
+        <h2 className="text-lg font-black text-foreground">Horários de maior atividade</h2>
+        <BlockPeriodLabel>{periodLabel}</BlockPeriodLabel>
       </div>
 
       {totalActivity === 0 ? (
@@ -2223,10 +2227,14 @@ const DashboardCareCoverageCard = ({
   );
 };
 const DashboardContent = ({
+  fixedSixMonthPeriodLabel,
+  fixedSixMonthSummary,
   periodControls,
   periodLabel,
   summary,
 }: {
+  fixedSixMonthPeriodLabel: string;
+  fixedSixMonthSummary: AdminCommunitiesDashboard;
   periodControls: Omit<DashboardPeriodControlsProps, "controlIdPrefix">;
   periodLabel: string;
   summary: AdminCommunitiesDashboard;
@@ -2307,14 +2315,12 @@ const DashboardContent = ({
 
       <div className="grid min-w-0 gap-5 xl:grid-cols-2">
         <TopCommunitiesTable
-          communities={summary.top_communities.items}
-          filters={renderPeriodControls("communities-top-communities")}
-          periodLabel={periodLabel}
+          communities={fixedSixMonthSummary.top_communities.items}
+          periodLabel={fixedSixMonthPeriodLabel}
         />
         <CommunitiesPeakActivityHoursCard
-          filters={renderPeriodControls("communities-peak-activity")}
-          periodLabel={periodLabel}
-          points={summary.global_statistics.current.charts.hourly_activity}
+          periodLabel={fixedSixMonthPeriodLabel}
+          points={fixedSixMonthSummary.global_statistics.current.charts.hourly_activity}
         />
       </div>
 
@@ -2343,8 +2349,15 @@ export const AdminCommunitiesClient = () => {
   });
   const validRange = selectedPeriod === "custom" ? isValidCustomRange(appliedRange) : true;
   const queryInput = buildCommunityDashboardPeriodQuery(selectedPeriod, appliedRange);
+  const fixedSixMonthQueryInput = getCommunityDashboardLastSixMonthsRange();
   const query = useAdminCommunitiesDashboard(queryInput, { enabled: validRange });
+  const fixedSixMonthQuery = useAdminCommunitiesDashboard(fixedSixMonthQueryInput, {
+    enabled: validRange,
+  });
   const queryError = query.error ? resolveApiError(query.error) : null;
+  const fixedSixMonthQueryError = fixedSixMonthQuery.error
+    ? resolveApiError(fixedSixMonthQuery.error)
+    : null;
   const handlePeriodChange = (nextPeriod: CommunityDashboardPeriodPreset) => {
     setSelectedPeriod(nextPeriod);
     applyRange(getCommunityDashboardRangeForPeriod(nextPeriod));
@@ -2365,14 +2378,26 @@ export const AdminCommunitiesClient = () => {
         />
       ) : null}
 
-      {validRange && query.isLoading ? <LoadingGrid /> : null}
+      {validRange && (query.isLoading || fixedSixMonthQuery.isLoading) ? <LoadingGrid /> : null}
 
       {validRange && query.isError && queryError ? (
         <ErrorState message={queryError} onRetry={() => void query.refetch()} />
       ) : null}
 
-      {validRange && query.data ? (
+      {validRange && fixedSixMonthQuery.isError && fixedSixMonthQueryError ? (
+        <ErrorState
+          message={fixedSixMonthQueryError}
+          onRetry={() => void fixedSixMonthQuery.refetch()}
+        />
+      ) : null}
+
+      {validRange && query.data && fixedSixMonthQuery.data ? (
         <DashboardContent
+          fixedSixMonthPeriodLabel={formatSelectedPeriod(
+            fixedSixMonthQuery.data.period,
+            "Últimos 6 meses",
+          )}
+          fixedSixMonthSummary={fixedSixMonthQuery.data}
           periodControls={{
             displayRange: draftRange,
             onDateChange: handleDateChange,
