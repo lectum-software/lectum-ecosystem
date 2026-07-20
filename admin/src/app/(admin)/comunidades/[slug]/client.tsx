@@ -283,7 +283,7 @@ const parseContentSortParam = (value: string | null): ContentSortValue =>
 const parseContentPeriodParam = (value: string | null): ContentPeriodPreset =>
   contentPeriodPresetValues.includes(value as ContentPeriodPreset)
     ? (value as ContentPeriodPreset)
-    : "week";
+    : "all";
 
 const statisticsPeriodOptions = contentPeriodOptions satisfies ReadonlyArray<{
   id: StatisticsPeriodValue;

@@ -799,3 +799,26 @@ Regras:
 - `pnpm --dir backend exec biome check "src/modules/api/admin/private/communities/manage/DTOs/IAdminCommunityManageDTO.ts" "src/modules/api/admin/private/communities/manage/use-cases/services.ts"`
 - `pnpm --dir admin exec tsc --noEmit --pretty false`
 - `pnpm --dir backend exec tsc --noEmit --pretty false`
+
+## Ajuste complementar 2026-07-20 - Conteúdo abre em Todo o período
+
+- Pedido do usuário: na aba **Conteúdo** do detalhe administrativo da comunidade, abrir por padrão em **Todo o período** para que a listagem inicial seja coerente com os contadores totais de posts exibidos no topo e na lista de comunidades.
+- A UI Admin passou a usar `contentPeriod=all` como fallback quando a URL não informa período. Parâmetros explícitos de URL, como `contentPeriod=week`, continuam sendo respeitados.
+- O backend e o contrato real `GET /api/admin/private/communities/:id/content` não foram alterados; `Todo o período` segue sem recorte temporal no backend e os campos **De**/**Até** continuam apenas como referência visual para customização.
+- Não houve package novo, schema Prisma/migration, endpoint paralelo, mock, seed, backfill, alteração destrutiva de dados ou uso de `<img>` cru.
+- Builder/Quick Copy não está exposto como ferramenta callable no ambiente; a referência usada foi a captura enviada pelo usuário e o padrão local da aba **Conteúdo** do Admin.
+- ADR atualizado: `adrs/0264-admin-comunidade-abas-conteudo-ranking.md`.
+
+### Critérios de aceite complementares
+
+- [x] A aba **Conteúdo** abre por padrão com **Período = Todo o período** quando a URL não informa `contentPeriod`.
+- [x] A listagem inicial deixa de esconder posts antigos por filtro semanal implícito.
+- [x] Parâmetros explícitos de período em URL continuam funcionando.
+
+### Validação executada para este ajuste
+
+- `pnpm --dir admin exec biome check "src/app/(admin)/comunidades/[slug]/client.tsx"`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check`
+- Smoke HTTP local `GET http://localhost:3002/comunidades/autocuidado-em-pratica?tab=conteudo` retornou 200.

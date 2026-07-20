@@ -726,3 +726,11 @@ A decisao anterior de manter **Principais comunidades** independente do filtro f
 A partir desta atualizacao, a excecao e: **Postagens mais recentes** e **Posts mais populares** permanecem historicos/acumulados, mas **Principais comunidades** passa a usar o mesmo periodo do dashboard e o mesmo universo de eventos atribuiveis a comunidades usado por **Horarios de maior atividade**. A UI explicita o periodo nos dois blocos.
 
 Consequencia: a leitura operacional do ranking fica coerente com o grafico horario, sem endpoint novo, schema Prisma/migration, dependencia, mock, seed ou backfill.
+
+## Atualização 2026-07-20: período padrão acumulado na aba Conteúdo
+
+A aba **Conteúdo** do detalhe administrativo de comunidade deve abrir com visão acumulada quando o Admin chega pela navegação padrão (`?tab=conteudo`), porque os contadores do cabeçalho e da lista de comunidades representam totais publicados. Manter **Esta semana** como filtro implícito fazia a tela parecer vazia quando existiam posts fora da semana corrente.
+
+A decisão é usar `contentPeriod=all` como fallback apenas no estado inicial do frontend. URLs com `contentPeriod` explícito continuam prevalecendo, inclusive os CTAs operacionais que já levam para posts recentes ou filtros específicos. O backend não muda: `period=all` permanece sem recorte temporal e os campos **De**/**Até** seguem como referência visual para personalização.
+
+Consequência: a primeira leitura da aba fica coerente com os totais exibidos no Admin, sem endpoint novo, schema Prisma/migration, dependência, mock, seed, backfill ou alteração de persistência.
