@@ -2,16 +2,19 @@
 
 import {
   AlertTriangle,
+  BarChart3,
+  CalendarDays,
   CheckCircle2,
   Clock3,
+  FileText,
   Heart,
+  Info,
   Loader2,
   type LucideIcon,
   Mail,
   MapPin,
   MessageCircle,
   RefreshCw,
-  Save,
   ShieldCheck,
   ThumbsDown,
   ThumbsUp,
@@ -21,12 +24,13 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { useMemo } from "react";
+import { type ReactNode, useMemo } from "react";
 import { useAdminPatientDetail } from "@/api/callers/patients";
 import { resolveApiError } from "@/api/handle";
 import type {
   AdminPatientDetail,
   PatientsDetailActivity,
+  PatientsDetailCommunity,
   PatientsDetailMetric,
 } from "@/api/req/patients";
 import { aggregateCalendarChartPoints, buildSmoothSvgPath } from "@/lib/chart-time-series";
@@ -44,21 +48,23 @@ const PATIENT_DETAIL_TABS = [
 ] as const;
 type PatientDetailTab = (typeof PATIENT_DETAIL_TABS)[number]["id"];
 const numberFormatter = new Intl.NumberFormat("pt-BR");
+const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+const CARD = "rounded-card border border-border/80 bg-surface/95 shadow-admin-soft backdrop-blur";
 const metricIcons: Record<PatientsDetailMetric["id"], LucideIcon> = {
   comments_created: MessageCircle,
   downvotes_received: ThumbsDown,
-  posts_created: UserRound,
+  posts_created: FileText,
   responses_received: Heart,
   upvotes_received: ThumbsUp,
 };
-const activityIcons: Record<PatientsDetailActivity["type"], LucideIcon> = {
-  community_joined: UsersRound,
-  post_created: UserRound,
-  post_reply_created: MessageCircle,
-  post_reply_saved: Save,
-  post_saved: Save,
-  post_vote: ThumbsUp,
-  professional_review_created: Heart,
+const activitySourceLabels: Record<PatientsDetailActivity["source"], string> = {
+  community_member: "Comunidade",
+  community_post: "Post",
+  post_reply: "Comentário",
+  post_reply_save: "Resposta salva",
+  post_save: "Post salvo",
+  post_vote: "Voto",
+  professional_review: "Avaliação",
 };
 const seriesConfig = [
   { color: "var(--admin-primary)", key: "posts_created", label: "Posts" },
@@ -90,6 +96,9 @@ const formatChange = (value: number | null) => {
 };
 const safeAvatarSrc = (src: string | null) => {
   if (!src) return null;
+  if (src.startsWith("/public/files/") || src.startsWith("/community/icons/")) {
+    return `${apiUrl}${src}`;
+  }
   if (src.startsWith("/")) return src;
   try {
     const url = new URL(src);
@@ -99,6 +108,7 @@ const safeAvatarSrc = (src: string | null) => {
   }
   return null;
 };
+const isApiMediaSrc = (src: string | null) => Boolean(src?.startsWith(apiUrl));
 const initialsFromName = (name: string) =>
   name
     .split(" ")
@@ -116,15 +126,25 @@ const formatNullable = (value: string | null | undefined) => {
   return normalized || "N\u00e3o informado";
 };
 
-const CardShell = ({ children, className }: { children?: React.ReactNode; className?: string }) => (
-  <section
+const CardShell = ({ children, className }: { children?: ReactNode; className?: string }) => (
+  <section className={cn(CARD, className)}>{children}</section>
+);
+
+const Badge = ({ children, className }: { children: ReactNode; className?: string }) => (
+  <span
     className={cn(
-      "rounded-card border border-border/80 bg-surface/95 shadow-admin-soft backdrop-blur",
+      "inline-flex items-center rounded-full px-2.5 py-1 text-xs font-black",
       className,
     )}
   >
     {children}
-  </section>
+  </span>
+);
+
+const IconCircle = ({ icon: Icon }: { icon: LucideIcon }) => (
+  <span className="grid h-11 w-11 shrink-0 place-items-center rounded-[18px] bg-primary-soft text-primary ring-1 ring-primary/10">
+    <Icon aria-hidden className="h-5 w-5" />
+  </span>
 );
 
 const Avatar = ({ name, src }: { name: string; src: string | null }) => {
@@ -143,6 +163,7 @@ const Avatar = ({ name, src }: { name: string; src: string | null }) => {
       height={128}
       priority
       src={imageSrc}
+      unoptimized={isApiMediaSrc(imageSrc)}
       width={128}
     />
   );
@@ -164,25 +185,15 @@ const TrendBadge = ({ metric }: { metric: PatientsDetailMetric }) => (
 const MetricCard = ({ metric }: { metric: PatientsDetailMetric }) => {
   const Icon = metricIcons[metric.id];
   return (
-    <CardShell className="min-h-[8.75rem] p-4">
-      <div className="flex items-start justify-between gap-3">
-        <div className="grid h-10 w-10 place-items-center rounded-full bg-primary-soft text-primary">
-          <Icon aria-hidden className="h-4 w-4" />
-        </div>
-        <span className="rounded-full bg-surface-muted px-2 py-1 text-[0.65rem] font-bold text-muted">
-          fonte real
-        </span>
-      </div>
-      <div className="mt-4 space-y-1.5">
-        <p className="text-sm font-semibold text-foreground">{metric.label}</p>
-        <p className="text-3xl font-bold tracking-tight text-foreground">
-          {numberFormatter.format(metric.value)}
-        </p>
-        <div className="flex flex-wrap items-center gap-2">
-          <TrendBadge metric={metric} />
-          <span className="text-xs font-medium text-muted">vs. período anterior</span>
-        </div>
-        <p className="text-xs leading-relaxed text-muted">{metric.description}</p>
+    <CardShell className="min-h-[9.25rem] p-4">
+      <IconCircle icon={Icon} />
+      <p className="mt-4 text-sm font-extrabold text-muted">{metric.label}</p>
+      <p className="mt-2 text-3xl font-extrabold tracking-tight text-foreground">
+        {numberFormatter.format(metric.value)}
+      </p>
+      <div className="mt-3 flex flex-wrap items-center gap-2">
+        <TrendBadge metric={metric} />
+        <span className="text-xs font-bold text-muted">vs. período anterior</span>
       </div>
     </CardShell>
   );
@@ -238,16 +249,19 @@ const Header = ({
             <div className="mt-2 flex flex-wrap items-center gap-2 text-sm font-semibold text-muted">
               <span>Paciente</span>
             </div>
-            <div className="mt-4 flex flex-wrap items-center gap-x-8 gap-y-3 text-sm text-muted xl:gap-x-10">
-              <span className="inline-flex items-center gap-2">
+            <div className="mt-4 flex min-w-0 flex-nowrap items-center gap-x-5 overflow-x-auto text-sm text-muted sm:gap-x-6 md:overflow-visible xl:gap-x-8">
+              <span
+                className="inline-flex min-w-0 max-w-80 shrink items-center gap-2 whitespace-nowrap"
+                title={detail.header.email}
+              >
                 <Mail aria-hidden className="h-4 w-4 shrink-0 text-primary" />
-                <span className="min-w-0 break-words">{detail.header.email}</span>
+                <span className="min-w-0 truncate">{detail.header.email}</span>
               </span>
-              <span className="inline-flex items-center gap-2">
+              <span className="inline-flex shrink-0 items-center gap-2 whitespace-nowrap">
                 <ShieldCheck aria-hidden className="h-4 w-4 shrink-0 text-primary" />
                 <span>{detail.header.status === "active" ? "Conta ativa" : "Conta inativa"}</span>
               </span>
-              <span className="inline-flex items-center gap-2">
+              <span className="inline-flex shrink-0 items-center gap-2 whitespace-nowrap">
                 <MapPin aria-hidden className="h-4 w-4 shrink-0 text-primary" />
                 <span>{location}</span>
               </span>
@@ -274,7 +288,7 @@ const Header = ({
               >
                 <span>{item.label}</span>
                 {active ? (
-                  <span className="absolute bottom-1 left-1/2 h-1 w-9 -translate-x-1/2 rounded-full bg-primary" />
+                  <span className="absolute inset-x-4 bottom-1 h-1 rounded-full bg-primary" />
                 ) : null}
               </Link>
             );
@@ -451,9 +465,9 @@ const EngagementChart = ({ detail }: { detail: AdminPatientDetail }) => {
 const ActivityList = ({
   detail,
   description = detail.activities.coverage_note,
-  emptyMessage = "Nenhum evento real foi encontrado para este paciente no per\u00edodo selecionado.",
+  emptyMessage = "Nenhum evento real foi encontrado para este paciente no período selecionado.",
   items = detail.activities.items,
-  title = "Atividade recente",
+  title = "Atividades recentes",
 }: {
   detail: AdminPatientDetail;
   description?: string;
@@ -462,54 +476,95 @@ const ActivityList = ({
   title?: string;
 }) => (
   <CardShell className="p-5">
-    <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-      <div>
-        <h2 className="text-xl font-black text-foreground">{title}</h2>
-        <p className="mt-1 text-sm text-muted">{description}</p>
+    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+      <div className="flex items-start gap-3">
+        <IconCircle icon={Clock3} />
+        <div>
+          <h2 className="text-lg font-extrabold text-foreground">{title}</h2>
+          {description ? <p className="mt-1 text-sm text-muted">{description}</p> : null}
+        </div>
       </div>
-      <span className="w-fit rounded-full bg-surface-muted px-2 py-1 text-[0.65rem] font-bold text-muted">
-        {detail.activities.source}
-      </span>
+      <Badge className="bg-surface-muted text-muted">{detail.activities.source}</Badge>
     </div>
-    <div className="mt-5 divide-y divide-border">
-      {items.length === 0 ? (
-        <p className="rounded-2xl bg-surface-muted p-4 text-sm text-muted">{emptyMessage}</p>
-      ) : (
-        items.map((activity) => {
-          const Icon = activityIcons[activity.type];
-          return (
-            <article className="flex gap-3 py-4" key={activity.id}>
-              <div className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-primary-soft text-primary">
-                <Icon aria-hidden className="h-5 w-5" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <h3 className="font-black text-foreground">{activity.title}</h3>
-                <p className="mt-1 text-sm leading-relaxed text-muted">{activity.description}</p>
-                <p className="mt-2 inline-flex items-center gap-2 text-xs font-bold text-muted">
-                  <Clock3 aria-hidden className="h-3.5 w-3.5" />
-                  {formatDateTime(activity.occurred_at)} - {activity.source}
-                </p>
-              </div>
-            </article>
-          );
-        })
-      )}
-    </div>
+
+    {items.length === 0 ? (
+      <p className="mt-5 rounded-2xl bg-surface-muted p-4 text-sm text-muted">{emptyMessage}</p>
+    ) : (
+      <div className="mt-4 overflow-x-auto">
+        <table className="w-full min-w-[720px] text-left text-sm">
+          <thead className="border-b border-border text-xs text-muted">
+            <tr>
+              <th className="py-3 pr-3 font-black">Data</th>
+              <th className="px-3 py-3 font-black">Ação</th>
+              <th className="px-3 py-3 font-black">Descrição</th>
+              <th className="px-3 py-3 font-black">Fonte</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-border">
+            {items.map((activity) => (
+              <tr key={activity.id}>
+                <td className="py-3 pr-3 font-bold text-muted">
+                  {formatDateTime(activity.occurred_at)}
+                </td>
+                <td className="px-3 py-3 font-black text-foreground">{activity.title}</td>
+                <td className="px-3 py-3 text-muted">{activity.description}</td>
+                <td className="px-3 py-3 font-bold text-foreground">
+                  {activitySourceLabels[activity.source]}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    )}
   </CardShell>
 );
 
+const CommunityAvatar = ({
+  community,
+  index,
+}: {
+  community: PatientsDetailCommunity;
+  index: number;
+}) => {
+  const imageSrc = safeAvatarSrc(community.avatar_url);
+
+  if (imageSrc) {
+    return (
+      <Image
+        alt={`Avatar da comunidade ${community.name}`}
+        className="h-11 w-11 shrink-0 rounded-[18px] object-cover"
+        height={44}
+        src={imageSrc}
+        unoptimized={isApiMediaSrc(imageSrc)}
+        width={44}
+      />
+    );
+  }
+
+  return (
+    <span
+      className="grid h-11 w-11 shrink-0 place-items-center rounded-[18px] text-sm font-black text-white"
+      style={{ backgroundColor: community.color || "var(--admin-primary)" }}
+    >
+      {index + 1}
+    </span>
+  );
+};
+
 const Communities = ({ detail }: { detail: AdminPatientDetail }) => (
   <CardShell className="p-5">
-    <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-      <div>
-        <h2 className="text-xl font-black text-foreground">Comunidades mais ativas</h2>
-        <p className="mt-1 text-sm text-muted">
-          Ranking calculado por participação real e interações do paciente nas comunidades.
-        </p>
+    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+      <div className="flex items-start gap-3">
+        <IconCircle icon={UsersRound} />
+        <div>
+          <h2 className="text-lg font-extrabold text-foreground">Comunidades mais ativas</h2>
+          <p className="mt-1 text-sm text-muted">
+            Ranking calculado por participação real e interações do paciente nas comunidades.
+          </p>
+        </div>
       </div>
-      <span className="w-fit rounded-full bg-surface-muted px-2 py-1 text-[0.65rem] font-bold text-muted">
-        {detail.communities.source}
-      </span>
+      <Badge className="bg-surface-muted text-muted">{detail.communities.source}</Badge>
     </div>
     <div className="mt-5 space-y-3">
       {detail.communities.items.length === 0 ? (
@@ -522,30 +577,26 @@ const Communities = ({ detail }: { detail: AdminPatientDetail }) => (
             className="flex flex-col gap-3 rounded-2xl border border-border p-4 sm:flex-row sm:items-center sm:justify-between"
             key={community.id}
           >
-            <div className="flex items-center gap-3">
-              <span
-                className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl text-sm font-black text-white"
-                style={{ backgroundColor: community.color || "var(--admin-primary)" }}
-              >
-                {index + 1}
-              </span>
-              <div>
-                <h3 className="font-black text-foreground">{community.name}</h3>
+            <div className="flex min-w-0 items-center gap-3">
+              <CommunityAvatar community={community} index={index} />
+              <div className="min-w-0">
+                <h3 className="truncate font-black text-foreground">{community.name}</h3>
                 <p className="text-sm text-muted">
                   {community.is_member ? "Membro real" : "Interação sem vínculo ativo"}
                   {community.member_since ? ` desde ${formatDateTime(community.member_since)}` : ""}
                 </p>
               </div>
             </div>
-            <span className="rounded-full bg-primary-soft px-3 py-1 text-sm font-black text-primary">
+            <Badge className="w-fit bg-primary-soft text-primary">
               {numberFormatter.format(community.interactions)} interações
-            </span>
+            </Badge>
           </div>
         ))
       )}
     </div>
   </CardShell>
 );
+
 const Heatmap = ({ detail }: { detail: AdminPatientDetail }) => {
   const rows = useMemo(
     () =>
@@ -561,16 +612,19 @@ const Heatmap = ({ detail }: { detail: AdminPatientDetail }) => {
 
   return (
     <CardShell className="p-5">
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <h2 className="text-xl font-black text-foreground">Horários de maior atividade</h2>
-          <p className="mt-1 text-sm text-muted">
-            Agregação de eventos reais no fuso Brasília ({detail.heatmap.timezone}).
-          </p>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="flex items-start gap-3">
+          <IconCircle icon={CalendarDays} />
+          <div>
+            <h2 className="text-lg font-extrabold text-foreground">Horários de maior atividade</h2>
+            <p className="mt-1 text-sm text-muted">
+              Agregação de eventos reais no fuso Brasília ({detail.heatmap.timezone}).
+            </p>
+          </div>
         </div>
-        <span className="w-fit rounded-full bg-surface-muted px-2 py-1 text-[0.65rem] font-bold text-muted">
+        <Badge className="w-fit bg-surface-muted text-muted">
           {numberFormatter.format(detail.heatmap.total_events)} eventos
-        </span>
+        </Badge>
       </div>
       {!detail.heatmap.available ? (
         <p className="mt-5 rounded-2xl bg-surface-muted p-4 text-sm text-muted">
@@ -639,79 +693,274 @@ const PrivacyNotes = ({ detail }: { detail: AdminPatientDetail }) => (
   </CardShell>
 );
 
-const FieldRow = ({ label, value }: { label: string; value: React.ReactNode }) => (
-  <div className="border-b border-border py-3 last:border-0">
-    <dt className="text-sm font-black text-muted">{label}</dt>
-    <dd className="mt-1 text-sm font-bold text-foreground">{value}</dd>
+const FieldRow = ({ label, value }: { label: string; value: ReactNode }) => (
+  <div className="grid gap-1 border-b border-border/80 py-3 last:border-0 sm:grid-cols-[190px_1fr]">
+    <dt className="text-sm font-extrabold text-muted">{label}</dt>
+    <dd className="text-sm font-bold text-foreground">{value}</dd>
   </div>
 );
 
-const InfoCard = ({ children, title }: { children: React.ReactNode; title: string }) => (
+const InfoCard = ({
+  children,
+  description,
+  icon: Icon,
+  title,
+}: {
+  children: ReactNode;
+  description?: string;
+  icon: LucideIcon;
+  title: string;
+}) => (
   <CardShell className="p-5">
-    <h2 className="text-lg font-black text-foreground">{title}</h2>
+    <div className="flex items-start gap-3">
+      <IconCircle icon={Icon} />
+      <div>
+        <h2 className="text-lg font-extrabold text-foreground">{title}</h2>
+        {description ? <p className="mt-1 text-sm text-muted">{description}</p> : null}
+      </div>
+    </div>
     <dl className="mt-4">{children}</dl>
   </CardShell>
 );
 
-const EmptyTabState = ({ description, title }: { description: string; title: string }) => (
+const EmptyTabState = ({
+  description,
+  icon = CheckCircle2,
+  title,
+}: {
+  description: string;
+  icon?: LucideIcon;
+  title: string;
+}) => (
   <CardShell className="p-6">
     <div className="flex gap-3">
-      <CheckCircle2 aria-hidden className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
+      <IconCircle icon={icon} />
       <div>
-        <h2 className="text-lg font-black text-foreground">{title}</h2>
+        <h2 className="text-lg font-extrabold text-foreground">{title}</h2>
         <p className="mt-2 text-sm leading-6 text-muted">{description}</p>
       </div>
     </div>
   </CardShell>
 );
 
-const ProfileRegistrationTab = ({ detail }: { detail: AdminPatientDetail }) => {
+const formatPatientLocation = (detail: AdminPatientDetail) => {
   const location = detail.header.location;
+  if (!location) return "Não capturada";
 
   return (
-    <div className="grid gap-6 xl:grid-cols-2">
-      <InfoCard title="Perfil do paciente">
-        <FieldRow label="Nome" value={detail.header.name} />
-        <FieldRow label="E-mail" value={detail.header.email} />
-        <FieldRow label="G\u00eanero" value={formatNullable(detail.header.gender)} />
-        <FieldRow
-          label="Localiza\u00e7\u00e3o agregada"
-          value={
-            location
-              ? [location.city, location.state, location.country].filter(Boolean).join(", ") ||
-                "N\u00e3o capturada"
-              : "N\u00e3o capturada"
-          }
-        />
-      </InfoCard>
-      <InfoCard title="Cadastro">
-        <FieldRow label="ID do paciente" value={detail.header.id} />
-        <FieldRow label="Status" value={detail.header.status_label} />
-        <FieldRow label="Cadastro via" value={detail.header.provider_label} />
-        <FieldRow label="Criado em" value={formatDateTime(detail.header.created_at)} />
-        <FieldRow
-          label="Onboarding"
-          value={
-            detail.header.onboarding_completed_at
-              ? formatDateTime(detail.header.onboarding_completed_at)
-              : "Sem conclus\u00e3o registrada"
-          }
-        />
-      </InfoCard>
-    </div>
+    [location.city, location.state, location.country].filter(Boolean).join(", ") || "Não capturada"
   );
 };
 
-const GeneralTab = ({ detail }: { detail: AdminPatientDetail }) => (
-  <div className="space-y-6">
-    <EngagementChart detail={detail} />
-    <div className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
-      <ActivityList detail={detail} />
-      <div className="space-y-6">
-        <Communities detail={detail} />
-        <Heatmap detail={detail} />
+const getOnboardingLabel = (detail: AdminPatientDetail) =>
+  detail.header.onboarding_completed_at
+    ? formatDateTime(detail.header.onboarding_completed_at)
+    : "Sem conclusão registrada";
+
+const SummaryCard = ({
+  actionHref,
+  actionLabel,
+  badge,
+  children,
+  description,
+  icon: Icon,
+  title,
+}: {
+  actionHref?: string;
+  actionLabel?: string;
+  badge?: ReactNode;
+  children: ReactNode;
+  description: string;
+  icon: LucideIcon;
+  title: string;
+}) => (
+  <CardShell className="flex h-full flex-col p-5">
+    <div className="flex items-start justify-between gap-3">
+      <div>
+        <h2 className="text-lg font-black text-foreground">{title}</h2>
+        <p className="mt-1 text-sm text-muted">{description}</p>
       </div>
+      <IconCircle icon={Icon} />
     </div>
+    {badge ? (
+      <div className="mt-5 rounded-[28px] border border-primary/15 bg-primary-soft/55 p-4">
+        {badge}
+      </div>
+    ) : null}
+    <dl className="mt-4 flex-1 divide-y divide-border text-sm">{children}</dl>
+    {actionHref && actionLabel ? (
+      <Link
+        className="mt-4 inline-flex h-11 w-full items-center justify-center rounded-control border border-primary/45 bg-surface px-4 text-sm font-black text-primary shadow-control transition hover:bg-primary-soft sm:w-auto"
+        href={actionHref}
+      >
+        {actionLabel}
+      </Link>
+    ) : null}
+  </CardShell>
+);
+
+const AccountSituationCard = ({ detail, id }: { detail: AdminPatientDetail; id: string }) => {
+  const active = detail.header.status === "active";
+
+  return (
+    <SummaryCard
+      actionHref={patientTabHref(id, "conta")}
+      actionLabel="Abrir dados da conta"
+      description="Resumo somente leitura de acesso do paciente."
+      icon={ShieldCheck}
+      title="Situação da conta"
+      badge={
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <p className="text-xs font-black uppercase tracking-[0.12em] text-primary">
+              Situação atual
+            </p>
+            <p className="mt-1 text-xl font-black text-foreground">
+              {active ? "Conta ativa" : "Conta inativa"}
+            </p>
+            <p className="mt-3 text-sm font-bold leading-6 text-muted">
+              {active
+                ? "Login liberado para uso normal da plataforma."
+                : "Conta sem acesso ativo no momento; sem ações destrutivas na V1."}
+            </p>
+          </div>
+          <Badge className={active ? "bg-emerald-50 text-success" : "bg-red-50 text-danger"}>
+            {detail.header.status_label}
+          </Badge>
+        </div>
+      }
+    >
+      <FieldRow label="E-mail" value={detail.header.email} />
+      <FieldRow label="Último acesso" value={formatLastAccess(detail.header.last_access_at)} />
+      <FieldRow label="Cadastro via" value={detail.header.provider_label} />
+      <FieldRow label="Criado em" value={formatDateTime(detail.header.created_at)} />
+    </SummaryCard>
+  );
+};
+
+const PatientRegistrationSummaryCard = ({
+  detail,
+  id,
+}: {
+  detail: AdminPatientDetail;
+  id: string;
+}) => (
+  <SummaryCard
+    actionHref={patientTabHref(id, "perfil")}
+    actionLabel="Abrir perfil e cadastro"
+    description="Dados cadastrais mínimos aprovados para o Admin V1."
+    icon={UserRound}
+    title="Cadastro do paciente"
+    badge={
+      <div>
+        <p className="text-xs font-black uppercase tracking-[0.12em] text-primary">Onboarding</p>
+        <p className="mt-1 text-xl font-black text-foreground">
+          {detail.header.onboarding_completed_at ? "Concluído" : "Sem conclusão registrada"}
+        </p>
+        <p className="mt-3 text-sm font-bold leading-6 text-muted">
+          {detail.header.onboarding_completed_at
+            ? "Fluxo inicial concluído com data real registrada."
+            : "Nenhuma conclusão de onboarding foi encontrada para este paciente."}
+        </p>
+      </div>
+    }
+  >
+    <FieldRow label="ID do paciente" value={detail.header.id} />
+    <FieldRow label="Gênero" value={formatNullable(detail.header.gender)} />
+    <FieldRow label="Localização agregada" value={formatPatientLocation(detail)} />
+    <FieldRow label="Onboarding" value={getOnboardingLabel(detail)} />
+  </SummaryCard>
+);
+
+const PatientEngagementSummaryCard = ({
+  detail,
+  id,
+}: {
+  detail: AdminPatientDetail;
+  id: string;
+}) => {
+  const totalSignals = detail.metrics.reduce((total, metric) => total + metric.value, 0);
+  const topCommunity = detail.communities.items[0]?.name ?? "Não informado";
+
+  return (
+    <SummaryCard
+      actionHref={patientTabHref(id, "estatisticas")}
+      actionLabel="Abrir estatísticas"
+      description="Leitura reduzida do engajamento real no período padrão."
+      icon={BarChart3}
+      title="Engajamento"
+      badge={
+        <div>
+          <p className="text-xs font-black uppercase tracking-[0.12em] text-primary">
+            Sinais no período
+          </p>
+          <p className="mt-1 text-3xl font-black text-foreground">
+            {numberFormatter.format(totalSignals)}
+          </p>
+          <p className="mt-3 text-sm font-bold leading-6 text-muted">
+            Soma de posts, comentários, votos e respostas recebidas, sem estimativas.
+          </p>
+        </div>
+      }
+    >
+      <FieldRow label="Período" value={detail.period.label} />
+      <FieldRow label="Comunidade destaque" value={topCommunity} />
+      <FieldRow
+        label="Eventos no heatmap"
+        value={numberFormatter.format(detail.heatmap.total_events)}
+      />
+      <FieldRow label="Fuso" value={detail.period.timezone} />
+    </SummaryCard>
+  );
+};
+
+const ProfileRegistrationTab = ({ detail }: { detail: AdminPatientDetail }) => (
+  <div className="grid gap-5 xl:grid-cols-2">
+    <InfoCard
+      description="Campos pessoais mínimos retornados pelo contrato de paciente."
+      icon={UserRound}
+      title="Dados pessoais"
+    >
+      <FieldRow label="Nome" value={detail.header.name} />
+      <FieldRow label="E-mail" value={detail.header.email} />
+      <FieldRow label="Gênero" value={formatNullable(detail.header.gender)} />
+      <FieldRow label="Localização agregada" value={formatPatientLocation(detail)} />
+    </InfoCard>
+    <InfoCard
+      description="Origem e datas operacionais do cadastro."
+      icon={CalendarDays}
+      title="Cadastro"
+    >
+      <FieldRow label="ID do paciente" value={detail.header.id} />
+      <FieldRow label="Status" value={detail.header.status_label} />
+      <FieldRow label="Cadastro via" value={detail.header.provider_label} />
+      <FieldRow label="Criado em" value={formatDateTime(detail.header.created_at)} />
+      <FieldRow label="Onboarding" value={getOnboardingLabel(detail)} />
+    </InfoCard>
+    <div className="xl:col-span-2">
+      <PrivacyNotes detail={detail} />
+    </div>
+  </div>
+);
+
+const GeneralTab = ({ detail, id }: { detail: AdminPatientDetail; id: string }) => (
+  <div className="space-y-5">
+    <section>
+      <h2 className="sr-only">Métricas principais do paciente</h2>
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+        {detail.metrics.map((metric) => (
+          <MetricCard key={metric.id} metric={metric} />
+        ))}
+      </div>
+    </section>
+
+    <div className="grid items-stretch gap-5 xl:grid-cols-3">
+      <AccountSituationCard detail={detail} id={id} />
+      <PatientRegistrationSummaryCard detail={detail} id={id} />
+      <PatientEngagementSummaryCard detail={detail} id={id} />
+    </div>
+
+    <ActivityList detail={detail} />
     <PrivacyNotes detail={detail} />
   </div>
 );
@@ -733,33 +982,40 @@ const PublicationsTab = ({ detail }: { detail: AdminPatientDetail }) => {
 
   return (
     <ActivityList
-      description="Publica\u00e7\u00f5es derivadas dos eventos reais de posts criados pelo paciente retornados no contrato atual."
+      description="Publicações derivadas dos eventos reais de posts criados pelo paciente retornados no contrato atual."
       detail={detail}
-      emptyMessage="Nenhuma publica\u00e7\u00e3o real foi encontrada para este paciente no per\u00edodo consultado."
+      emptyMessage="Nenhuma publicação real foi encontrada para este paciente no período consultado."
       items={publicationActivities}
-      title="Publica\u00e7\u00f5es"
+      title="Publicações"
     />
   );
 };
 
 const ReportsTab = () => (
   <EmptyTabState
-    description="A V1 do detalhe de pacientes n\u00e3o possui contrato dedicado de den\u00fancias nem a\u00e7\u00f5es de modera\u00e7\u00e3o para paciente. Nenhum dado foi simulado nesta aba."
-    title="Den\u00fancias"
+    description="A V1 do detalhe de pacientes não possui contrato dedicado de denúncias nem ações de moderação para paciente. Nenhum dado foi simulado nesta aba."
+    icon={AlertTriangle}
+    title="Denúncias"
   />
 );
 
 const AccountTab = ({ detail }: { detail: AdminPatientDetail }) => (
-  <div className="grid gap-6 xl:grid-cols-2">
-    <InfoCard title="Conta">
+  <div className="grid gap-5 xl:grid-cols-2">
+    <InfoCard
+      description="Dados de acesso disponíveis para suporte administrativo somente leitura."
+      icon={ShieldCheck}
+      title="Resumo da conta"
+    >
       <FieldRow label="Status" value={detail.header.status_label} />
       <FieldRow label="E-mail" value={detail.header.email} />
+      <FieldRow label="Último acesso" value={formatLastAccess(detail.header.last_access_at)} />
       <FieldRow label="Origem de cadastro" value={detail.header.provider_label} />
       <FieldRow label="Criado em" value={formatDateTime(detail.header.created_at)} />
     </InfoCard>
     <EmptyTabState
-      description="N\u00e3o h\u00e1 a\u00e7\u00f5es administrativas destrutivas, bloqueio, silenciamento, banimento ou exclus\u00e3o de paciente na V1."
-      title="A\u00e7\u00f5es de conta"
+      description="Não há ações administrativas destrutivas, bloqueio, silenciamento, banimento ou exclusão de paciente na V1."
+      icon={Info}
+      title="Ações de conta"
     />
   </div>
 );
@@ -788,7 +1044,7 @@ const DetailContent = ({
     ) : tab === "conta" ? (
       <AccountTab detail={detail} />
     ) : (
-      <GeneralTab detail={detail} />
+      <GeneralTab detail={detail} id={id} />
     )}
   </div>
 );

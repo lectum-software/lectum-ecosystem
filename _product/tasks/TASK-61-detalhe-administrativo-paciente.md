@@ -309,3 +309,24 @@ Frontend esperado:
 - Pedido do usuário: remover gênero do header, trocar **Status da conta: Ativo** por **Conta ativa** e posicionar o status entre e-mail e localização.
 - O header agora lista e-mail, status da conta e localização, nesta ordem.
 - Gênero permanece somente na aba **Perfil e cadastro**, usando o dado real existente, e não aparece mais no header.
+
+## Ajuste pos-feedback 2026-07-19 - Abas internas padronizadas com Psicologos
+
+- Pedido do usuario: padronizar as abas de detalhe do paciente conforme o detalhe administrativo do psicologo, mantendo o volume reduzido de dados de pacientes.
+- A aba **Geral** passou a seguir o mesmo padrao de leitura do psicologo: metricas principais no topo, tres cards de situacao (`Situacao da conta`, `Cadastro do paciente`, `Engajamento`) e atividades recentes em tabela.
+- A aba **Perfil e cadastro** passou a usar cards com icone e `FieldRow` responsivo, concentrando somente nome, e-mail, genero, localizacao agregada, status, origem, criacao e onboarding.
+- As abas **Estatisticas**, **Publicacoes**, **Denuncias**, **Atividades** e **Conta** foram alinhadas visualmente aos cards/listas do psicologo, sem criar paridade falsa de dados nem endpoint dedicado quando o contrato V1 nao existe.
+- O header manteve o padrao ja ajustado com metadados em linha e abas com underline igual ao detalhe do psicologo.
+- Nao houve alteracao de backend, contrato HTTP, schema Prisma, migration, package, seed, mock, tracking, dado sensivel novo ou acao administrativa de paciente.
+- Builder/Quick Copy nao esta exposto como ferramenta callable no ambiente; a referencia auditavel foi a captura enviada pelo usuario e os PNGs locais `_product/proto/admin/Pacientes/Pacientes - Detalhes.png` e `_product/proto/admin/Psicologos/Detalhes do psicologo/Perfil e Cadastro.png`.
+- ADR criado: `adrs/0287-admin-paciente-abas-padronizadas.md`.
+
+### Validacao complementar executada
+
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/pacientes/[id]/client.tsx"`
+- `pnpm --dir admin exec eslint "src/app/(admin)/pacientes/[id]/client.tsx"`
+- `pnpm --dir admin typecheck`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check`
+- Smoke HTTP local: `/pacientes/cmrqsrab5001f1guh2ve5oy90`, `?tab=perfil`, `?tab=estatisticas`, `?tab=publicacoes`, `?tab=denuncias`, `?tab=atividades` e `?tab=conta` retornaram `200`.
