@@ -842,3 +842,29 @@ Regras:
 - `pnpm --dir admin build`
 - `pnpm check`
 - Smoke HTTP local `GET http://localhost:3002/comunidades/autocuidado-em-pratica?tab=conteudo` retornou 200.
+
+## Ajuste complementar 2026-07-20 - Hierarquia visual da lista de Conteúdo
+
+- Pedido do usuario: na lista de conteudo da comunidade, substituir a tag `Post de psicólogo verificado` por **icone + Post** como no detalhe do post, trocar o icone de detalhe do post por um icone de analytics e remover o icone de excluir post.
+- A UI Admin da aba **Conteudo** passou a renderizar posts com **FileText + Post**, mantendo a verificacao profissional apenas no selo azul do autor.
+- A acao lateral de detalhe analitico passou a usar `BarChart3`, com texto acessivel de Analytics.
+- O botao inline de exclusao/remocao foi removido dos cards da listagem; a remocao administrativa segue disponivel pelos fluxos operacionais de detalhe/moderacao existentes.
+- O ajuste e visual/mobile-first, sem endpoint novo, schema Prisma/migration, package, mock, seed, backfill, alteracao de persistencia ou uso de `<img>` cru.
+- Builder/Quick Copy nao esta exposto como ferramenta callable no ambiente; a referencia usada foi a captura enviada pelo usuario, o screenshot local headless e `_product/proto/admin/Comunidades/Comunidades - Detalhes.png`.
+- ADR atualizado: `adrs/0264-admin-comunidade-abas-conteudo-ranking.md`.
+
+### Criterios de aceite complementares
+
+- [x] Posts na lista da aba **Conteudo** exibem **icone + Post** no cabecalho, sem a tag textual longa `Post de psicólogo verificado`.
+- [x] A acao de detalhe analitico da lista usa icone de analytics.
+- [x] O icone/botao de excluir post nao aparece mais nos cards da listagem.
+- [x] O ajuste nao altera dados reais, endpoints, schema Prisma/migrations, packages ou producao.
+
+### Validacao executada para este ajuste
+
+- `pnpm --dir admin exec biome check "src/app/(admin)/comunidades/[slug]/client.tsx"`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check`
+- Smoke HTTP local `GET http://localhost:3002/comunidades/autocuidado-em-pratica?tab=conteudo` retornou 200.
+- Chrome headless local abriu a rota com perfil temporario e confirmou o guard/login administrativo; a validacao visual autenticada ficou limitada a captura enviada pelo usuario e ao prototipo local porque a sessao Admin real nao fica disponivel no perfil headless isolado.

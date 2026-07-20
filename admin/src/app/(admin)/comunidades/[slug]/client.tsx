@@ -5,6 +5,7 @@ import {
   AlertTriangle,
   ArrowDown,
   ArrowUp,
+  BarChart3,
   Bookmark,
   CalendarDays,
   CheckCircle2,
@@ -59,7 +60,6 @@ import {
   useAdminCommunityDeleteRule,
   useAdminCommunityDetail,
   useAdminCommunityRanking,
-  useAdminCommunityRemoveContent,
   useAdminCommunityReports,
   useAdminCommunityResolveReports,
   useAdminCommunityStatistics,
@@ -139,17 +139,6 @@ const ruleFormSchema = z.object({
 const COMMUNITY_DEACTIVATE_CONFIRMATION = "DESATIVAR COMUNIDADE";
 const COMMUNITY_REACTIVATE_CONFIRMATION = "REATIVAR COMUNIDADE";
 
-const removeContentFormSchema = z.object({
-  confirmation: z
-    .string()
-    .trim()
-    .refine(
-      (value) => value.toUpperCase() === "REMOVER CONTEUDO",
-      "Digite REMOVER CONTEUDO para confirmar.",
-    ),
-  reason: z.string().trim().min(3, "Informe o motivo.").max(500, "Use até 500 caracteres."),
-});
-
 const communityStatusFormSchema = (expectedConfirmation: string) =>
   z.object({
     confirmation: z
@@ -179,7 +168,6 @@ const communityReportResolveSchema = (expectedConfirmation: string) =>
 
 type CommunityFormValues = z.infer<typeof communityFormSchema>;
 type RuleFormValues = z.infer<typeof ruleFormSchema>;
-type RemoveContentFormValues = z.infer<typeof removeContentFormSchema>;
 type CommunityStatusFormValues = z.infer<ReturnType<typeof communityStatusFormSchema>>;
 type CommunityReportResolveFormValues = z.infer<ReturnType<typeof communityReportResolveSchema>>;
 
@@ -2344,91 +2332,6 @@ const QueryStatus = ({
   );
 };
 
-const RemoveContentForm = ({
-  item,
-  onCancel,
-  slug,
-}: {
-  item: AdminCommunityContentItem;
-  onCancel: () => void;
-  slug: string;
-}) => {
-  const mutation = useAdminCommunityRemoveContent(slug);
-  const form = useForm<RemoveContentFormValues>({
-    defaultValues: {
-      confirmation: "",
-      reason: "",
-    },
-    mode: "onSubmit",
-    resolver: zodResolver(removeContentFormSchema),
-  });
-
-  const onSubmit = async (values: RemoveContentFormValues) => {
-    try {
-      await mutation.mutateAsync({
-        input: {
-          confirmation: values.confirmation,
-          reason: values.reason.trim(),
-        },
-        targetId: item.content_id,
-        targetType: item.type,
-      });
-      toast.success("Conteúdo removido com auditoria administrativa.");
-      form.reset();
-      onCancel();
-    } catch (error) {
-      toast.error(resolveApiError(error));
-    }
-  };
-
-  return (
-    <FormProvider {...form}>
-      <form
-        className="mt-3 grid gap-3 rounded-2xl border border-red-100 bg-red-50 p-3"
-        noValidate
-        onSubmit={form.handleSubmit(onSubmit)}
-      >
-        <div>
-          <p className="text-sm font-black text-danger">Remoção administrativa de conteúdo</p>
-          <p className="mt-1 text-xs leading-5 text-danger">
-            A ação remove o {item.type === "post" ? "post" : "comentário"} e registra auditoria
-            real. Quando for post, os comentários vinculados também são encerrados.
-          </p>
-        </div>
-        <TextareaController<RemoveContentFormValues>
-          label="Motivo interno obrigatório"
-          name="reason"
-          required
-          rows={3}
-        />
-        <InputController<RemoveContentFormValues>
-          label="Confirmação forte"
-          name="confirmation"
-          placeholder="REMOVER CONTEUDO"
-          required
-        />
-        <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
-          <button
-            className="h-10 rounded-control border border-border bg-surface px-4 text-xs font-black text-foreground"
-            onClick={onCancel}
-            type="button"
-          >
-            Cancelar
-          </button>
-          <button
-            className="inline-flex h-10 items-center justify-center gap-2 rounded-control bg-danger px-4 text-xs font-black text-white disabled:opacity-70"
-            disabled={mutation.isPending}
-            type="submit"
-          >
-            {mutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-            Remover conteúdo
-          </button>
-        </div>
-      </form>
-    </FormProvider>
-  );
-};
-
 const ContentMediaThumbnail = ({ item }: { item: AdminCommunityContentItem }) => {
   if (!item.media) return null;
 
@@ -2709,9 +2612,16 @@ const ContentMetrics = ({ item }: { item: AdminCommunityContentItem }) => {
 const ContentItemHeader = ({ item }: { item: AdminCommunityContentItem }) => (
   <div className="flex flex-wrap items-center gap-2">
     {item.status === "removed" ? <StatusBadge tone="muted">Removido</StatusBadge> : null}
-    <span className="rounded-full bg-surface-muted px-2.5 py-1 text-xs font-black text-muted">
-      {item.content_kind_label}
-    </span>
+    {item.type === "post" ? (
+      <span className="inline-flex items-center gap-1.5 text-xs font-black text-muted">
+        <FileText aria-hidden className="h-4 w-4" />
+        <span>Post</span>
+      </span>
+    ) : (
+      <span className="rounded-full bg-surface-muted px-2.5 py-1 text-xs font-black text-muted">
+        {item.content_kind_label}
+      </span>
+    )}
     <span className="text-xs font-bold text-muted">{formatDateTime(item.created_at)}</span>
   </div>
 );
@@ -2897,29 +2807,19 @@ const ContentItemMain = ({ item }: { item: AdminCommunityContentItem }) => {
   );
 };
 
-const ContentItemCard = ({
-  item,
-  selected,
-  setSelected,
-  slug,
-}: {
-  item: AdminCommunityContentItem;
-  selected: boolean;
-  setSelected: (item: AdminCommunityContentItem | null) => void;
-  slug: string;
-}) => (
+const ContentItemCard = ({ item, slug }: { item: AdminCommunityContentItem; slug: string }) => (
   <article className="rounded-2xl border border-border bg-surface p-4">
     <div className="grid gap-3 lg:grid-cols-[1fr_auto] lg:items-start">
       <ContentItemMain item={item} />
       <div className="flex justify-end gap-2 lg:flex-col">
         <Link
-          aria-label="Ver detalhe anal?tico no Admin"
+          aria-label="Ver analytics do conteúdo no Admin"
           className="inline-flex h-10 w-10 items-center justify-center rounded-control border border-primary/20 text-primary transition hover:bg-primary-soft"
           href={adminContentDetailHref(slug, item)}
-          title="Detalhe anal?tico"
+          title="Analytics"
         >
-          <FileText aria-hidden className="h-4 w-4" />
-          <span className="sr-only">Detalhe anal?tico</span>
+          <BarChart3 aria-hidden className="h-4 w-4" />
+          <span className="sr-only">Analytics</span>
         </Link>
         <Link
           aria-label="Ver conteúdo no site"
@@ -2932,25 +2832,9 @@ const ContentItemCard = ({
           <Eye aria-hidden className="h-4 w-4" />
           <span className="sr-only">Ver no site</span>
         </Link>
-        {item.status === "published" ? (
-          <button
-            aria-label={selected ? "Fechar exclusão" : "Excluir conteúdo"}
-            aria-pressed={selected}
-            className="inline-flex h-10 w-10 items-center justify-center rounded-control border border-danger/20 text-danger transition hover:bg-danger/10"
-            onClick={() => setSelected(selected ? null : item)}
-            title={selected ? "Fechar exclusão" : "Excluir"}
-            type="button"
-          >
-            <Trash2 aria-hidden className="h-4 w-4" />
-            <span className="sr-only">{selected ? "Fechar exclusão" : "Excluir"}</span>
-          </button>
-        ) : null}
       </div>
     </div>
     <ContentMetrics item={item} />
-    {selected ? (
-      <RemoveContentForm item={item} onCancel={() => setSelected(null)} slug={slug} />
-    ) : null}
   </article>
 );
 
@@ -2977,7 +2861,6 @@ const ContentTab = ({ createdAt, slug }: { createdAt: string; slug: string }) =>
   const [draftRange, setDraftRange] = useState<ContentCustomRange>(initialRange);
   const [appliedRange, setAppliedRange] = useState<ContentCustomRange>(initialRange);
   const [rangeError, setRangeError] = useState<string | null>(null);
-  const [selected, setSelected] = useState<AdminCommunityContentItem | null>(null);
   const contentQueryInput = useMemo<AdminCommunityContentQuery>(
     () => ({
       ...query,
@@ -2990,7 +2873,6 @@ const ContentTab = ({ createdAt, slug }: { createdAt: string; slug: string }) =>
   const result = useAdminCommunityContent(slug, contentQueryInput);
 
   const updateQuery = (patch: Partial<ContentBaseQuery>) => {
-    setSelected(null);
     setQuery((current) => ({ ...current, ...patch, page: patch.page ?? 1 }));
   };
   const handlePeriodChange = (period: ContentPeriodValue) => {
@@ -3170,13 +3052,7 @@ const ContentTab = ({ createdAt, slug }: { createdAt: string; slug: string }) =>
             </p>
           ) : null}
           {result.data?.data.map((item) => (
-            <ContentItemCard
-              item={item}
-              key={`${item.type}-${item.content_id}`}
-              selected={selected?.content_id === item.content_id}
-              setSelected={setSelected}
-              slug={slug}
-            />
+            <ContentItemCard item={item} key={`${item.type}-${item.content_id}`} slug={slug} />
           ))}
         </div>
         {result.data ? (

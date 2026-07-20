@@ -734,3 +734,11 @@ A aba **Conteúdo** do detalhe administrativo de comunidade deve abrir com visã
 A decisão é usar `contentPeriod=all` como fallback apenas no estado inicial do frontend. URLs com `contentPeriod` explícito continuam prevalecendo, inclusive os CTAs operacionais que já levam para posts recentes ou filtros específicos. O backend não muda: `period=all` permanece sem recorte temporal e os campos **De**/**Até** seguem como referência visual para personalização.
 
 Consequência: a primeira leitura da aba fica coerente com os totais exibidos no Admin, sem endpoint novo, schema Prisma/migration, dependência, mock, seed, backfill ou alteração de persistência.
+
+## Atualização 2026-07-20: hierarquia das ações na lista de Conteúdo
+
+A aba **Conteúdo** do detalhe administrativo de comunidade deixa de exibir, nos cards de posts, a classificação textual longa como `Post de psicólogo verificado`. Para posts, o cabeçalho passa a usar a leitura neutra **ícone de documento + Post**, igual ao padrão usado no detalhe analítico do conteúdo; a verificação profissional continua visível no bloco de autoria pelo selo azul.
+
+A ação lateral que abre o detalhe analítico passa a usar `BarChart3` como ícone de analytics, com `aria-label` e `title` alinhados a Analytics. O botão de exclusão/remocao foi retirado dos cards da listagem para reduzir risco de acionamento destrutivo inline; a remocao administrativa permanece concentrada nos fluxos operacionais de detalhe/moderacao já existentes.
+
+Consequencia: a mudança e apenas apresentacional no Admin, sem endpoint novo, schema Prisma/migration, dependencia, mock, seed, backfill ou alteracao de persistencia.
