@@ -332,7 +332,9 @@ export type PatientsDetailMetric = {
     | "comments_created"
     | "downvotes_received"
     | "posts_created"
-    | "responses_received"
+    | "saves_received"
+    | "shares_received"
+    | "verified_psychologist_responses"
     | "upvotes_received";
   label: string;
   previous_value: number;
@@ -358,7 +360,9 @@ export type PatientsDetailSeriesPoint = {
   date: string;
   downvotes_received: number;
   posts_created: number;
-  responses_received: number;
+  saves_received: number;
+  shares_received: number;
+  verified_psychologist_responses: number;
   upvotes_received: number;
 };
 
@@ -462,7 +466,7 @@ export type AdminPatientDetail = {
   };
   series: {
     points: PatientsDetailSeriesPoint[];
-    source: "community_post+post_reply+post_vote+responses";
+    source: "community_post+post_reply+post_vote+post_save+post_reply_save+post_share+verified_responses";
   };
   source: "user+patient_profile+visitor_location+community_activity+professional_review";
   unavailable: PatientsDetailUnavailable[];

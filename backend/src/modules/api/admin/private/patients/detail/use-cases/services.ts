@@ -1,5 +1,6 @@
 import type { Resolve } from "@/helpers/return";
 import { error, msg } from "@/helpers/translate";
+import { isVerifiedProfessionalEntitlement } from "@/utils/subscription-entitlement";
 import type {
   AdminPatientDetailActivityItem,
   AdminPatientDetailCommunity,
@@ -55,7 +56,9 @@ type EngagementCounts = {
   comments_created: number;
   downvotes_received: number;
   posts_created: number;
-  responses_received: number;
+  saves_received: number;
+  shares_received: number;
+  verified_psychologist_responses: number;
   upvotes_received: number;
 };
 
@@ -286,11 +289,20 @@ const voteTargetTitle = (vote: AdminPatientEngagementBundle["votesMade"][number]
   return "conteúdo";
 };
 
+const isVerifiedPsychologistResponse = (
+  reply: AdminPatientEngagementBundle["responsesReceived"][number],
+) =>
+  reply.author.role === "psicologo" &&
+  isVerifiedProfessionalEntitlement(reply.author.psychologist_profile);
+
 const countsFromBundle = (bundle: AdminPatientEngagementBundle): EngagementCounts => ({
   comments_created: bundle.replies.length,
   downvotes_received: bundle.votesReceived.filter((vote) => vote.value < 0).length,
   posts_created: bundle.posts.length,
-  responses_received: bundle.responsesReceived.length,
+  saves_received: bundle.postSavesReceived.length + bundle.replySavesReceived.length,
+  shares_received: bundle.sharesReceived.length,
+  verified_psychologist_responses: bundle.responsesReceived.filter(isVerifiedPsychologistResponse)
+    .length,
   upvotes_received: bundle.votesReceived.filter((vote) => vote.value > 0).length,
 });
 
@@ -302,23 +314,31 @@ const buildMetrics = (
     current: current.posts_created,
     description: "Posts publicados pelo paciente no período.",
     id: "posts_created",
-    label: "Posts criados",
+    label: "Posts",
     previous: previous.posts_created,
     source: "community_post.author_id",
   }),
   metric({
     current: current.comments_created,
-    description: "Comentários ou respostas criados pelo paciente no período.",
+    description: "Comentários e respostas criados pelo paciente no período.",
     id: "comments_created",
-    label: "Comentários",
+    label: "Comentários totais",
     previous: previous.comments_created,
     source: "post_reply.author_id",
+  }),
+  metric({
+    current: current.verified_psychologist_responses,
+    description: "Respostas reais de psicólogos verificados em posts ou comentários do paciente.",
+    id: "verified_psychologist_responses",
+    label: "Respostas de psicólogos verificados",
+    previous: previous.verified_psychologist_responses,
+    source: "post_reply.author com psicólogo verificado",
   }),
   metric({
     current: current.upvotes_received,
     description: "Votos positivos recebidos em posts e respostas do paciente.",
     id: "upvotes_received",
-    label: "Upvotes recebidos",
+    label: "Upvotes",
     previous: previous.upvotes_received,
     source: "post_vote.value>0 em conteúdo do paciente",
   }),
@@ -326,17 +346,25 @@ const buildMetrics = (
     current: current.downvotes_received,
     description: "Votos negativos recebidos em posts e respostas do paciente.",
     id: "downvotes_received",
-    label: "Downvotes recebidos",
+    label: "Downvotes",
     previous: previous.downvotes_received,
     source: "post_vote.value<0 em conteúdo do paciente",
   }),
   metric({
-    current: current.responses_received,
-    description: "Respostas de terceiros em posts ou replies do paciente.",
-    id: "responses_received",
-    label: "Respostas recebidas",
-    previous: previous.responses_received,
-    source: "post_reply em conteúdo do paciente",
+    current: current.saves_received,
+    description: "Salvamentos recebidos em posts e respostas do paciente.",
+    id: "saves_received",
+    label: "Salvamentos",
+    previous: previous.saves_received,
+    source: "post_save+post_reply_save em conteúdo do paciente",
+  }),
+  metric({
+    current: current.shares_received,
+    description: "Compartilhamentos recebidos em posts e respostas do paciente.",
+    id: "shares_received",
+    label: "Compartilhamentos",
+    previous: previous.shares_received,
+    source: "post_share em conteúdo do paciente",
   }),
 ];
 
@@ -361,7 +389,9 @@ const buildSeries = (
     date,
     downvotes_received: 0,
     posts_created: 0,
-    responses_received: 0,
+    saves_received: 0,
+    shares_received: 0,
+    verified_psychologist_responses: 0,
     upvotes_received: 0,
   });
   const points = new Map(labels.map((label) => [label, emptyPoint(label)]));
@@ -378,7 +408,12 @@ const buildSeries = (
     if (vote.value > 0) increment(vote.createdAt, "upvotes_received");
     if (vote.value < 0) increment(vote.createdAt, "downvotes_received");
   }
-  for (const reply of bundle.responsesReceived) increment(reply.createdAt, "responses_received");
+  for (const reply of bundle.responsesReceived.filter(isVerifiedPsychologistResponse)) {
+    increment(reply.createdAt, "verified_psychologist_responses");
+  }
+  for (const save of bundle.postSavesReceived) increment(save.createdAt, "saves_received");
+  for (const save of bundle.replySavesReceived) increment(save.createdAt, "saves_received");
+  for (const share of bundle.sharesReceived) increment(share.createdAt, "shares_received");
 
   return labels.map((label) => points.get(label) ?? emptyPoint(label));
 };
@@ -725,7 +760,8 @@ const buildDetail = (
     },
     series: {
       points: buildSeries(labels, currentBundle),
-      source: "community_post+post_reply+post_vote+responses",
+      source:
+        "community_post+post_reply+post_vote+post_save+post_reply_save+post_share+verified_responses",
     },
     source: "user+patient_profile+visitor_location+community_activity+professional_review",
     unavailable,

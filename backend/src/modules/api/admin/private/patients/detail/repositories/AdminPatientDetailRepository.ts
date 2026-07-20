@@ -1,5 +1,6 @@
 import type { Prisma } from "@/external/generated/prisma/client";
 import prisma from "@/infra/database/prisma";
+import { activeProfessionalEntitlementWhere } from "@/utils/subscription-entitlement";
 import type { AdminPatientDetailDateRange } from "../DTOs/IAdminPatientDetailDTO";
 
 const rangeWhere = (range: AdminPatientDetailDateRange) => ({
@@ -168,7 +169,30 @@ export type AdminPatientDetailReviewRecord = Prisma.professional_reviewGetPayloa
   select: typeof reviewSelect;
 }>;
 
+const psychologistVerificationProfileSelect = {
+  cfp_verified_at: true,
+  crp_status: true,
+  subscriptions: {
+    select: {
+      id: true,
+      source: true,
+    },
+    where: activeProfessionalEntitlementWhere(),
+  },
+} satisfies Prisma.psychologist_profileSelect;
+
+const responseAuthorSelect = {
+  id: true,
+  psychologist_profile: {
+    select: psychologistVerificationProfileSelect,
+  },
+  role: true,
+} satisfies Prisma.userSelect;
+
 const responseReceivedSelect = {
+  author: {
+    select: responseAuthorSelect,
+  },
   content: true,
   createdAt: true,
   id: true,
@@ -196,6 +220,45 @@ const responseReceivedSelect = {
 
 export type AdminPatientDetailResponseReceivedRecord = Prisma.post_replyGetPayload<{
   select: typeof responseReceivedSelect;
+}>;
+
+const postSaveReceivedSelect = {
+  createdAt: true,
+  id: true,
+  post: {
+    select: postSummarySelect,
+  },
+} satisfies Prisma.post_saveSelect;
+
+export type AdminPatientDetailPostSaveReceivedRecord = Prisma.post_saveGetPayload<{
+  select: typeof postSaveReceivedSelect;
+}>;
+
+const replySaveReceivedSelect = {
+  createdAt: true,
+  id: true,
+  reply: {
+    select: replySummarySelect,
+  },
+} satisfies Prisma.post_reply_saveSelect;
+
+export type AdminPatientDetailReplySaveReceivedRecord = Prisma.post_reply_saveGetPayload<{
+  select: typeof replySaveReceivedSelect;
+}>;
+
+const shareReceivedSelect = {
+  createdAt: true,
+  id: true,
+  post: {
+    select: postSummarySelect,
+  },
+  reply: {
+    select: replySummarySelect,
+  },
+} satisfies Prisma.post_shareSelect;
+
+export type AdminPatientDetailShareReceivedRecord = Prisma.post_shareGetPayload<{
+  select: typeof shareReceivedSelect;
 }>;
 
 export class AdminPatientDetailRepository {
@@ -228,6 +291,9 @@ export class AdminPatientDetailRepository {
       reviews,
       votesReceived,
       responsesReceived,
+      postSavesReceived,
+      replySavesReceived,
+      sharesReceived,
     ] = await Promise.all([
       prisma.community_post.findMany({
         orderBy: {
@@ -436,17 +502,113 @@ export class AdminPatientDetailRepository {
           ],
         },
       }),
+      prisma.post_save.findMany({
+        orderBy: {
+          createdAt: "desc",
+        },
+        select: postSaveReceivedSelect,
+        where: {
+          createdAt,
+          deleted: false,
+          user_id: {
+            not: patientId,
+          },
+          post: {
+            ...publishedPostWhere,
+            author_id: patientId,
+            community: {
+              deleted: false,
+            },
+          },
+        },
+      }),
+      prisma.post_reply_save.findMany({
+        orderBy: {
+          createdAt: "desc",
+        },
+        select: replySaveReceivedSelect,
+        where: {
+          createdAt,
+          deleted: false,
+          user_id: {
+            not: patientId,
+          },
+          reply: {
+            author_id: patientId,
+            deleted: false,
+            post: {
+              ...publishedPostWhere,
+              community: {
+                deleted: false,
+              },
+            },
+          },
+        },
+      }),
+      prisma.post_share.findMany({
+        orderBy: {
+          createdAt: "desc",
+        },
+        select: shareReceivedSelect,
+        where: {
+          AND: [
+            {
+              OR: [
+                {
+                  user_id: null,
+                },
+                {
+                  user_id: {
+                    not: patientId,
+                  },
+                },
+              ],
+            },
+            {
+              OR: [
+                {
+                  post: {
+                    ...publishedPostWhere,
+                    author_id: patientId,
+                    community: {
+                      deleted: false,
+                    },
+                  },
+                  reply_id: null,
+                },
+                {
+                  reply: {
+                    author_id: patientId,
+                    deleted: false,
+                    post: {
+                      ...publishedPostWhere,
+                      community: {
+                        deleted: false,
+                      },
+                    },
+                  },
+                },
+              ],
+            },
+          ],
+          createdAt,
+          deleted: false,
+        },
+      }),
     ]);
 
     return {
       memberships,
       membershipsInPeriod,
       postSaves,
+      postSavesReceived,
       posts,
       replies,
       replySaves,
+      replySavesReceived,
       responsesReceived,
       reviews,
+      sharesReceived,
       votesMade,
       votesReceived,
     };

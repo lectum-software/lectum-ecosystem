@@ -441,3 +441,27 @@ Frontend esperado:
 - `pnpm check`
 - Smoke HTTP local: `GET http://localhost:3002/pacientes/cmrqsr926001d1guhoz10yvaz?tab=atividades` retornou `200`.
 - Smoke HTTP local sem token: `GET http://localhost:3001/api/admin/private/patients/cmrqsr926001d1guhoz10yvaz/activities` retornou `401`.
+
+## Ajuste pos-feedback 2026-07-20 - Estatisticas de comunidade do paciente
+
+- Pedido do usuario: na aba **Estatisticas** do detalhe de paciente, replicar o bloco **Estatisticas de comunidade** do psicologo com contadores proprios do paciente.
+- A aba `/pacientes/[id]?tab=estatisticas` passou a exibir o bloco **Estatisticas de comunidade** com carrossel horizontal de contadores e grafico de series reais.
+- Os contadores exibidos agora sao: **Posts**, **Comentarios totais**, **Respostas de psicologos verificados**, **Upvotes**, **Downvotes**, **Salvamentos** e **Compartilhamentos**.
+- **Respostas de psicologos verificados** conta apenas `post_reply` em posts/comentarios do paciente quando o autor e psicologo com verificacao/entitlement real pelo helper canonico `isVerifiedProfessionalEntitlement`.
+- **Salvamentos** usa `post_save` e `post_reply_save` recebidos em conteudo do paciente, excluindo autoacoes do proprio paciente.
+- **Compartilhamentos** usa `post_share` recebido em posts/respostas do paciente, incluindo compartilhamentos anonimos reais e excluindo autoacoes autenticadas do proprio paciente.
+- A serie temporal da aba Estatisticas foi ampliada para os sete contadores, sem mock, seed, backfill, tracking novo, endpoint paralelo, schema Prisma, migration ou package novo.
+- Builder/Quick Copy nao esta exposto como ferramenta callable no ambiente; as referencias auditaveis foram a captura enviada pelo usuario, `_product/proto/admin/Pacientes/Pacientes - Detalhes.png` e `_product/proto/admin/Psicologos/Detalhes do psicologo/Estatisticas.png`.
+- ADR criado: `adrs/0294-admin-paciente-estatisticas-comunidade-paridade.md`.
+
+### Validacao complementar executada
+
+- `pnpm --dir backend exec biome check --write "src/modules/api/admin/private/patients/detail/DTOs/IAdminPatientDetailDTO.ts" "src/modules/api/admin/private/patients/detail/repositories/AdminPatientDetailRepository.ts" "src/modules/api/admin/private/patients/detail/use-cases/services.ts"`
+- `pnpm --dir admin exec biome check --write "src/api/req/patients/index.ts" "src/app/(admin)/pacientes/[id]/client.tsx"`
+- `pnpm --dir backend check`
+- `pnpm --dir admin check`
+- `pnpm --dir backend build`
+- `pnpm --dir admin build`
+- `pnpm check`
+- Service local: `showAdminPatient({ id: "cmrqsr926001d1guhoz10yvaz", period: "month" })` retornou `200` com os sete contadores e a serie temporal correspondente.
+- Smoke HTTP local: `GET http://localhost:3002/pacientes/cmrqsr926001d1guhoz10yvaz?tab=estatisticas` retornou `200`.

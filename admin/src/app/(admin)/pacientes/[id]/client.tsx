@@ -4,6 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import {
   AlertTriangle,
   BarChart3,
+  Bookmark,
   CalendarDays,
   CheckCircle2,
   ChevronDown,
@@ -11,7 +12,6 @@ import {
   ChevronRight,
   Clock3,
   FileText,
-  Heart,
   KeyRound,
   Loader2,
   Lock,
@@ -25,6 +25,7 @@ import {
   RefreshCw,
   Search,
   Send,
+  Share2,
   ShieldCheck,
   ThumbsDown,
   ThumbsUp,
@@ -35,7 +36,7 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { type ReactNode, useMemo, useState } from "react";
+import { type ReactNode, useCallback, useMemo, useRef, useState } from "react";
 import { FormProvider, type SubmitHandler, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -84,7 +85,9 @@ const metricIcons: Record<PatientsDetailMetric["id"], LucideIcon> = {
   comments_created: MessageCircle,
   downvotes_received: ThumbsDown,
   posts_created: FileText,
-  responses_received: Heart,
+  saves_received: Bookmark,
+  shares_received: Share2,
+  verified_psychologist_responses: ShieldCheck,
   upvotes_received: ThumbsUp,
 };
 const activitySourceLabels: Record<PatientsDetailActivity["source"], string> = {
@@ -98,10 +101,16 @@ const activitySourceLabels: Record<PatientsDetailActivity["source"], string> = {
 };
 const seriesConfig = [
   { color: "var(--admin-primary)", key: "posts_created", label: "Posts" },
-  { color: "#5d9df6", key: "comments_created", label: "Comentários" },
-  { color: "var(--admin-success)", key: "upvotes_received", label: "Upvotes recebidos" },
-  { color: "var(--admin-danger)", key: "downvotes_received", label: "Downvotes recebidos" },
-  { color: "var(--admin-warning)", key: "responses_received", label: "Respostas recebidas" },
+  { color: "#5d9df6", key: "comments_created", label: "Comentários totais" },
+  {
+    color: "var(--admin-success)",
+    key: "verified_psychologist_responses",
+    label: "Respostas de psicólogos verificados",
+  },
+  { color: "var(--admin-success)", key: "upvotes_received", label: "Upvotes" },
+  { color: "var(--admin-danger)", key: "downvotes_received", label: "Downvotes" },
+  { color: "var(--admin-warning)", key: "saves_received", label: "Salvamentos" },
+  { color: "#8b5cf6", key: "shares_received", label: "Compartilhamentos" },
 ] as const;
 const EMPTY_SELECT_OPTION = { label: "Não informado", value: "" } as const;
 const PATIENT_GENDER_OPTIONS = [
@@ -391,7 +400,7 @@ const TrendBadge = ({ metric }: { metric: PatientsDetailMetric }) => (
 const MetricCard = ({ metric }: { metric: PatientsDetailMetric }) => {
   const Icon = metricIcons[metric.id];
   return (
-    <CardShell className="min-h-[9.25rem] p-4">
+    <CardShell className="h-full min-h-[10rem] w-full p-4">
       <IconCircle icon={Icon} />
       <p className="mt-4 text-sm font-extrabold text-muted">{metric.label}</p>
       <p className="mt-2 text-3xl font-extrabold tracking-tight text-foreground">
@@ -402,6 +411,55 @@ const MetricCard = ({ metric }: { metric: PatientsDetailMetric }) => {
         <span className="text-xs font-bold text-muted">vs. período anterior</span>
       </div>
     </CardShell>
+  );
+};
+
+const PatientStatisticsMetricCarousel = ({ metrics }: { metrics: PatientsDetailMetric[] }) => {
+  const scrollerRef = useRef<HTMLDivElement>(null);
+  const scrollMetrics = useCallback((direction: -1 | 1) => {
+    const scroller = scrollerRef.current;
+    if (!scroller) return;
+
+    scroller.scrollBy({
+      behavior: "smooth",
+      left: direction * Math.max(260, scroller.clientWidth * 0.82),
+    });
+  }, []);
+
+  return (
+    <div className="mt-5 min-w-0 max-w-full overflow-x-clip">
+      <div className="relative min-w-0 max-w-full px-11 sm:px-12">
+        <button
+          aria-label="Rolar contadores de estatísticas de comunidade para a esquerda"
+          className="absolute left-0 top-1/2 z-10 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-full border border-border bg-surface text-muted shadow-sm transition hover:border-primary/35 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
+          onClick={() => scrollMetrics(-1)}
+          type="button"
+        >
+          <ChevronLeft aria-hidden className="h-4 w-4" />
+        </button>
+        <div
+          className="flex min-w-0 snap-x snap-mandatory gap-2 overflow-x-auto scroll-smooth pb-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          ref={scrollerRef}
+        >
+          {metrics.map((metric) => (
+            <div
+              className="flex w-full shrink-0 snap-start sm:w-[calc((100%_-_0.5rem)/2)] lg:w-[calc((100%_-_1rem)/3)] 2xl:w-[calc((100%_-_2.5rem)/6)]"
+              key={metric.id}
+            >
+              <MetricCard metric={metric} />
+            </div>
+          ))}
+        </div>
+        <button
+          aria-label="Rolar contadores de estatísticas de comunidade para a direita"
+          className="absolute right-0 top-1/2 z-10 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-full border border-primary/25 bg-primary-soft text-primary shadow-sm transition hover:border-primary/45 hover:bg-primary-soft/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
+          onClick={() => scrollMetrics(1)}
+          type="button"
+        >
+          <ChevronRight aria-hidden className="h-4 w-4" />
+        </button>
+      </div>
+    </div>
   );
 };
 
@@ -513,7 +571,9 @@ const EngagementChart = ({ detail }: { detail: AdminPatientDetail }) => {
     "comments_created",
     "downvotes_received",
     "posts_created",
-    "responses_received",
+    "saves_received",
+    "shares_received",
+    "verified_psychologist_responses",
     "upvotes_received",
   ] as const);
 
@@ -522,7 +582,7 @@ const EngagementChart = ({ detail }: { detail: AdminPatientDetail }) => {
       <CardShell className="p-5">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <h2 className="text-xl font-black text-foreground">Estatísticas de engajamento</h2>
+            <h2 className="text-xl font-black text-foreground">Estatísticas de comunidade</h2>
             <p className="mt-1 text-sm text-muted">
               Nenhum ponto real de engajamento foi encontrado para o período selecionado.
             </p>
@@ -531,11 +591,7 @@ const EngagementChart = ({ detail }: { detail: AdminPatientDetail }) => {
             {detail.period.timezone}
           </span>
         </div>
-        <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
-          {detail.metrics.map((metric) => (
-            <MetricCard key={metric.id} metric={metric} />
-          ))}
-        </div>
+        <PatientStatisticsMetricCarousel metrics={detail.metrics} />
       </CardShell>
     );
   }
@@ -562,20 +618,17 @@ const EngagementChart = ({ detail }: { detail: AdminPatientDetail }) => {
     <CardShell className="p-5">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h2 className="text-xl font-black text-foreground">Estatísticas de engajamento</h2>
+          <h2 className="text-xl font-black text-foreground">Estatísticas de comunidade</h2>
           <p className="mt-1 text-sm text-muted">
-            Dados reais de posts, comentários, votos recebidos e respostas recebidas no período.
+            Dados reais de posts, comentários, respostas de psicólogos verificados, votos,
+            salvamentos e compartilhamentos no período.
           </p>
         </div>
         <span className="w-fit rounded-full bg-surface-muted px-2 py-1 text-[0.65rem] font-bold text-muted">
           {detail.period.timezone}
         </span>
       </div>
-      <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
-        {detail.metrics.map((metric) => (
-          <MetricCard key={metric.id} metric={metric} />
-        ))}
-      </div>
+      <PatientStatisticsMetricCarousel metrics={detail.metrics} />
       <figure className="mt-6 overflow-hidden">
         <div className="mb-4 flex flex-wrap gap-3">
           {seriesConfig.map((item) => (
@@ -884,11 +937,15 @@ const ActivitiesTab = ({ id }: { id: string }) => {
             }}
             value={period}
           >
-            <option value="all">Todo histórico registrado</option>
+            {period === "custom" ? (
+              <option disabled hidden value="custom">
+                Personalizado
+              </option>
+            ) : null}
+            <option value="all">Todo o período</option>
             <option value="30d">Últimos 30 dias</option>
             <option value="90d">Últimos 90 dias</option>
             <option value="180d">Últimos 180 dias</option>
-            <option value="custom">Personalizado</option>
           </DetailFilterSelect>
           <DetailFilterSelect
             className="flex-1"
@@ -937,34 +994,36 @@ const ActivitiesTab = ({ id }: { id: string }) => {
           </label>
         </div>
 
-        {period === "custom" ? (
-          <div className="mt-3 grid gap-3 sm:grid-cols-2">
-            <label className="block text-sm font-black text-muted">
-              De
-              <input
-                className="mt-2 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground"
-                onChange={(event) => {
-                  setCustomFrom(event.target.value);
-                  setPage(1);
-                }}
-                type="date"
-                value={customFrom}
-              />
-            </label>
-            <label className="block text-sm font-black text-muted">
-              Até
-              <input
-                className="mt-2 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground"
-                onChange={(event) => {
-                  setCustomTo(event.target.value);
-                  setPage(1);
-                }}
-                type="date"
-                value={customTo}
-              />
-            </label>
-          </div>
-        ) : null}
+        <div className="mt-3 grid gap-3 sm:grid-cols-2">
+          <label className="block text-sm font-black text-muted">
+            De
+            <input
+              className="mt-2 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground"
+              max={customTo || undefined}
+              onChange={(event) => {
+                setPeriod("custom");
+                setCustomFrom(event.target.value);
+                setPage(1);
+              }}
+              type="date"
+              value={customFrom}
+            />
+          </label>
+          <label className="block text-sm font-black text-muted">
+            Até
+            <input
+              className="mt-2 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground"
+              min={customFrom || undefined}
+              onChange={(event) => {
+                setPeriod("custom");
+                setCustomTo(event.target.value);
+                setPage(1);
+              }}
+              type="date"
+              value={customTo}
+            />
+          </label>
+        </div>
       </CardShell>
 
       <CardShell className="overflow-hidden">
@@ -1421,7 +1480,8 @@ const PatientEngagementSummaryCard = ({
             {numberFormatter.format(totalSignals)}
           </p>
           <p className="mt-3 text-sm font-bold leading-6 text-muted">
-            Soma de posts, comentários, votos e respostas recebidas, sem estimativas.
+            Soma de posts, comentários, respostas verificadas, votos, salvamentos e
+            compartilhamentos, sem estimativas.
           </p>
         </div>
       }
