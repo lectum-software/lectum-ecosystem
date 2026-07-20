@@ -743,8 +743,17 @@ A ação lateral que abre o detalhe analítico passa a usar `BarChart3` como íc
 
 Consequencia: a mudança e apenas apresentacional no Admin, sem endpoint novo, schema Prisma/migration, dependencia, mock, seed, backfill ou alteracao de persistencia.
 
+
 ## Atualização 2026-07-20: tags curtas para respostas e comentarios
 
-A lista da aba **Conteúdo** passa a aplicar o mesmo padrao visual curto usado em posts tambem para respostas de psicologos e comentarios de pacientes. Respostas deixam de exibir a classificacao longa, como `Resposta de psicólogo não verificado`, e passam a mostrar **icone + Resposta**. Comentarios de pacientes passam a mostrar **icone + Comentário**.
+A lista da aba **Conteúdo** passa a aplicar o mesmo padrão visual curto usado em posts tambem para respostas de psicologos e comentarios de pacientes. Respostas deixam de exibir a classificacao longa, como `Resposta de psicólogo não verificado`, e passam a mostrar **icone + Resposta**. Comentarios de pacientes passam a mostrar **icone + Comentário**.
 
 A decisao mantem o selo azul, o papel do autor e os filtros operacionais como fontes de contexto detalhado, mas reduz ruido no cabecalho do card. A mudanca e somente de apresentacao no Admin, sem alterar contrato, endpoint, persistencia, schema Prisma, package, mock ou regra de moderacao.
+
+## Atualizacao 2026-07-20: posts populares junto de ultimos posts na aba Geral
+
+A aba **Geral** do detalhe administrativo de comunidade deve manter **Posts mais populares** junto de **Ultimos posts** como um grupo de conteudo principal. Com a coluna lateral contendo **Denuncias pendentes**, **Cobertura da comunidade** e **Top mentores**, o uso de itens separados no grid podia empurrar **Posts mais populares** para baixo e criar um vao visual entre os dois blocos de posts.
+
+A decisao e agrupar **Ultimos posts** e **Posts mais populares** no mesmo container da coluna principal, com `space-y-4`, e manter os blocos operacionais em uma coluna lateral independente. No mobile, a leitura tambem passa a ser **Ultimos posts** seguido de **Posts mais populares**, antes dos cards laterais.
+
+Consequencia: o ajuste e apenas de layout/mobile-first no Admin; nao altera endpoint, contrato, persistencia, schema Prisma/migration, dependencia, mock, seed, backfill ou regra de moderacao.

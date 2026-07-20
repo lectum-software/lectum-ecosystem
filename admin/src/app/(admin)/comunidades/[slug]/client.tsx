@@ -6095,21 +6095,19 @@ const DetailContent = ({
     {activeTab === "geral" ? (
       <>
         <CommunityHighlightCounters detail={detail} />
-        <div className="grid min-w-0 gap-4 2xl:grid-cols-5">
-          <div className="min-w-0 2xl:col-span-3">
+        <div className="grid min-w-0 gap-4 2xl:grid-cols-5 2xl:items-start">
+          <div className="min-w-0 space-y-4 2xl:col-span-3">
             <LatestCommunityPostsSection pathname={pathname} slug={slug} />
-          </div>
-          <div className="min-w-0 space-y-4 2xl:col-span-2 2xl:row-span-2">
-            <UrgentThingsSection detail={detail} pathname={pathname} />
-            <CommunityCoverageSummaryCard pathname={pathname} slug={slug} />
-            <TopMentorsCard slug={slug} />
-          </div>
-          <div className="min-w-0 2xl:col-span-3">
             <PopularPostsCard
               communitySlug={detail.community.slug}
               pathname={pathname}
               posts={detail.popular_posts}
             />
+          </div>
+          <div className="min-w-0 space-y-4 2xl:col-span-2">
+            <UrgentThingsSection detail={detail} pathname={pathname} />
+            <CommunityCoverageSummaryCard pathname={pathname} slug={slug} />
+            <TopMentorsCard slug={slug} />
           </div>
         </div>
       </>

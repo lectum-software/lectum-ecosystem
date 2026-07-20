@@ -921,6 +921,7 @@ Regras:
 - Smoke HTTP local `GET http://localhost:3002/comunidades/autocuidado-em-pratica` retornou 200.
 - `pnpm check` foi tentado duas vezes, mas atingiu timeout no workspace atual; os processos remanescentes de check foram encerrados e as validações Admin direcionadas passaram.
 
+
 ## Ajuste complementar 2026-07-20 - Tags curtas para respostas e comentarios
 
 - Pedido do usuario: na lista de conteudo da comunidade, quando a publicacao for resposta ou comentario de paciente, usar o mesmo padrao visual curto aplicado ao layout de **Post**.
@@ -946,3 +947,28 @@ Regras:
 - `pnpm check`
 - Smoke HTTP local `GET http://localhost:3002/comunidades/autocuidado-em-pratica?tab=conteudo` retornou 200.
 - Chrome headless local abriu a rota com perfil temporario e confirmou o guard/login administrativo; a validacao visual autenticada ficou limitada a captura enviada pelo usuario porque a sessao Admin real nao fica disponivel no perfil headless isolado.
+
+## Ajuste complementar 2026-07-20 - Posts populares junto de Últimos posts
+
+- Pedido do usuário: manter o bloco **Posts mais populares** junto a **Últimos posts** na aba **Geral** do detalhe administrativo da comunidade.
+- A UI Admin passou a agrupar **Últimos posts** e **Posts mais populares** no mesmo container da coluna principal, removendo o posicionamento separado que deixava o card de posts populares deslocado para baixo quando a coluna lateral ficava mais alta.
+- A coluna lateral permanece independente com **Denúncias pendentes**, **Cobertura da comunidade** e **Top mentores**, preservando os dados reais e os CTAs existentes.
+- O ajuste é apenas visual/mobile-first, sem endpoint novo, schema Prisma/migration, package, mock, seed, backfill, alteração de persistência ou uso de `<img>` cru.
+- Builder/Quick Copy não está exposto como ferramenta callable no ambiente; a referência usada foi a captura enviada pelo usuário, o layout atual da aba **Geral** e `_product/proto/admin/Comunidades/Comunidades - Detalhes.png`.
+- ADR atualizado: `adrs/0264-admin-comunidade-abas-conteudo-ranking.md`.
+
+### Critérios de aceite complementares
+
+- [x] **Posts mais populares** é renderizado imediatamente após **Últimos posts** no grupo principal da aba **Geral**.
+- [x] Em desktop largo, os dois blocos de posts ficam na mesma coluna principal e não são empurrados pela altura da coluna lateral.
+- [x] Em mobile, a ordem permanece **Últimos posts** seguido de **Posts mais populares** antes dos blocos laterais.
+- [x] O ajuste não altera dados reais, endpoints, schema Prisma/migrations, packages ou persistência.
+
+### Validação executada para este ajuste
+
+- `pnpm --dir admin exec biome check "src/app/(admin)/comunidades/[slug]/client.tsx"`
+- `pnpm --dir admin exec tsc --noEmit --pretty false`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check`
+- Smoke HTTP local `GET http://localhost:3002/comunidades/autocuidado-em-pratica` retornou 200.
