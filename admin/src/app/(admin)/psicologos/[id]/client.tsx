@@ -5520,11 +5520,10 @@ const PsychologistReportListItem = ({
     <article className="rounded-card border border-border/75 bg-surface/95 p-4 shadow-admin-soft md:p-5">
       <div className="flex items-start justify-between gap-3">
         <div className="flex flex-wrap items-center gap-2">
-          <Badge className="bg-surface-muted text-muted">{report.content.community.name}</Badge>
+          <ReportStatusBadge group={report.status_group} label={report.status_label} />
           <span className="inline-flex items-center gap-1.5 rounded-full bg-primary-soft px-2.5 py-1 text-xs font-black text-primary">
             <AlertTriangle aria-hidden className="h-3.5 w-3.5" />1 denúncia
           </span>
-          <ReportStatusBadge group={report.status_group} label={report.status_label} />
           <span className="inline-flex items-center gap-1.5 text-xs font-bold text-muted">
             <CalendarDays aria-hidden className="h-3.5 w-3.5" />
             Última em {formatDateTime(report.created_at)}

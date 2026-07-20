@@ -63,3 +63,9 @@ Para isso, o contrato real de `GET /api/admin/private/psychologists/:id/reports`
 A descrição/texto do conteúdo denunciado passa a ter peso visual de descrição (`text-muted`, sem negrito), preservando o peso do título. A alteração é visual e contratual-aditiva, sem schema Prisma, migration, endpoint paralelo, package novo, mock ou backfill.
 
 Validação do ajuste: checks/builds de backend e Admin, `pnpm check`, chamada autenticada do endpoint real confirmando `content.created_at` diferente da data da denúncia e browser local/headless via Chrome/CDP na aba `?tab=denuncias`, verificando metadados **Post · Autocuidado em Pequenos Passos · 15/07/2026 às 16:03**, título em negrito e descrição sem `font-bold`.
+
+## Atualização 2026-07-20: badges resumidos na denúncia do psicólogo
+
+A linha superior dos cards de denúncia no detalhe administrativo do psicólogo deixa de repetir a comunidade como tag. O card mantém somente o status operacional (**Pendente**, **Procedente** ou **Improcedente**), o número de denúncias e a data/hora da última denúncia.
+
+A comunidade continua disponível no metadado do conteúdo denunciado, junto do tipo e da data/hora de criação do post/resposta/comentário. A decisão reduz redundância visual sem alterar API, schema Prisma, auditoria, filtros, histórico ou ações de resolução.

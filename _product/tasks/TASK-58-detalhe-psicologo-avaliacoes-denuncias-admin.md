@@ -100,6 +100,7 @@ Exibir avaliações e denúncias relacionadas ao conteúdo do psicólogo de form
 - Na aba **Denúncias** do detalhe administrativo do psicólogo, a identificação do autor abaixo de **Conteúdo denunciado** foi substituída por metadados no padrão da aba **Publicações**: tipo do conteúdo, comunidade e data/hora real de criação do post/resposta/comentário.
 - O contrato Admin de denúncias foi ampliado de forma aditiva com `content.created_at`, derivado de `community_post.createdAt` ou `post_reply.createdAt`, mantendo `created_at` da denúncia para o badge **Última em** e o histórico.
 - O texto/descrição do conteúdo denunciado ficou visualmente mais leve, sem negrito e com `text-muted`, enquanto o título manteve `font-black`.
+- A linha superior de cada card de denúncia removeu a tag duplicada com o nome da comunidade e passou a manter apenas o status (**Pendente**, **Procedente** ou **Improcedente**), o número de denúncias e a data/hora da última denúncia; a comunidade permanece somente nos metadados do conteúdo denunciado.
 - Não houve alteração de Prisma schema ou migrations; `pnpm --dir backend db:migrate` não foi necessário.
 - Builder/Quick Copy não estava disponível como ferramenta callable no ambiente; foram usados os PNGs locais `_product/proto/admin/Psicólogos/Detalhes do psicólogo/Denúncias.png` e `_product/proto/admin/Psicólogos/Detalhes do psicólogo/Publicações.png`, além do recorte enviado pelo usuário.
 - ADR atualizado: `adrs/0262-resolucao-admin-denuncias-recebidas.md`.
