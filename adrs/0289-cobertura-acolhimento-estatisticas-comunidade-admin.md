@@ -45,6 +45,8 @@ Em ajuste de copy de 2026-07-20, a descrição do bloco foi simplificada para **
 
 Em ajuste complementar de 2026-07-20, a aba **Geral** do detalhe administrativo da comunidade passou a exibir um bloco simplificado **Cobertura da comunidade** entre **Denúncias pendentes** e **Top mentores**. Para evitar criar um contrato paralelo, o bloco reutiliza `GET /api/admin/private/communities/:id/statistics` com `period=all` e mostra `counters.care_coverage.patient_posts_awaiting_verified_psychologist_response` como a quantidade de posts de pacientes sem cobertura qualificada. A regra segue a mesma definição da aba **Estatísticas**: um post deixa de estar sem cobertura quando recebe resposta de psicólogo verificado.
 
+Em refinamento visual posterior de 2026-07-20, o bloco simplificado da aba **Geral** deixou de exibir a frase auxiliar com total de posts de pacientes e quantidade já respondida por psicólogos verificados. A decisão reduz ruído visual e mantém no bloco apenas o contador principal, a barra/taxa de cobertura e o link para a análise completa.
+
 A regra operacional de **Aguardando acolhimento** é intencionalmente mais rígida do que “sem qualquer resposta”: um post deixa a fila de acolhimento somente quando recebe resposta de psicólogo verificado. Isso preserva a aba **Oportunidades** dos psicólogos para atuação operacional e mantém esta visão como métrica administrativa agregada.
 
 ## Consequências
@@ -111,3 +113,10 @@ A regra operacional de **Aguardando acolhimento** é intencionalmente mais rígi
   - `pnpm check`;
   - Smoke real do service `showStatistics` para `ansiedade-em-equilibrio?period=all`, retornando `status=200`, `period=Todo o período`, `patientPosts=1`, `respondedByVerified=0` e `awaitingCoverage=1`;
   - Smoke HTTP local `GET http://localhost:3002/comunidades/ansiedade-em-equilibrio` retornou 200. Validação visual autenticada limitada à captura enviada pelo usuário e à rota local em execução, porque a automação não pôde abrir/controlar o Chrome neste ambiente.
+- Remoção do texto auxiliar da cobertura geral em 2026-07-20:
+  - `pnpm --dir admin exec biome check "src/app/(admin)/comunidades/[slug]/client.tsx"`;
+  - `pnpm --dir admin exec tsc --noEmit --pretty false`;
+  - `pnpm --dir admin check`;
+  - `pnpm --dir admin build`;
+  - Smoke HTTP local `GET http://localhost:3002/comunidades/autocuidado-em-pratica` retornou 200;
+  - `pnpm check` foi tentado duas vezes, mas atingiu timeout no workspace atual; os processos remanescentes de check foram encerrados e as validações Admin direcionadas passaram.

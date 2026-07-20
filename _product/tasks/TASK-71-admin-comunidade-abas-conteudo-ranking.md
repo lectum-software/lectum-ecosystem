@@ -899,3 +899,24 @@ Regras:
 - Smoke real do service `showStatistics` para `ansiedade-em-equilibrio?period=all`, retornando `status=200`, `period=Todo o período`, `patientPosts=1`, `respondedByVerified=0` e `awaitingCoverage=1`.
 - Smoke HTTP local `GET http://localhost:3002/comunidades/ansiedade-em-equilibrio` retornou 200.
 - Validação visual autenticada ficou limitada à captura enviada pelo usuário e à rota local em execução; uma tentativa de abrir/controlar o Chrome pela automação foi bloqueada pela política do ambiente.
+
+## Ajuste complementar 2026-07-20 - Remoção do texto auxiliar da cobertura geral
+
+- Pedido do usuário: remover do bloco **Cobertura da comunidade** o texto auxiliar **1 post de paciente no total; 0 já têm resposta qualificada.**
+- A UI Admin passou a exibir somente o contador principal de posts sem cobertura, a barra/taxa de cobertura e o link para a cobertura completa.
+- O ajuste é apenas visual/copy, sem alterar endpoint, regra de cálculo, dados reais, persistência, package, schema Prisma/migration, mock, seed, backfill ou uso de `<img>` cru.
+- Builder/Quick Copy não está exposto como ferramenta callable no ambiente; a referência usada foi a captura enviada pelo usuário e o layout atual da aba **Geral** de comunidades.
+- ADR atualizado: `adrs/0289-cobertura-acolhimento-estatisticas-comunidade-admin.md`.
+
+### Critério de aceite complementar
+
+- [x] O bloco **Cobertura da comunidade** não exibe mais o texto auxiliar com total de posts e respostas qualificadas.
+
+### Validação executada para este ajuste
+
+- `pnpm --dir admin exec biome check "src/app/(admin)/comunidades/[slug]/client.tsx"`
+- `pnpm --dir admin exec tsc --noEmit --pretty false`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- Smoke HTTP local `GET http://localhost:3002/comunidades/autocuidado-em-pratica` retornou 200.
+- `pnpm check` foi tentado duas vezes, mas atingiu timeout no workspace atual; os processos remanescentes de check foram encerrados e as validações Admin direcionadas passaram.

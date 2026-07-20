@@ -1188,19 +1188,6 @@ const CommunityCoverageSummaryCard = ({ pathname, slug }: { pathname: string; sl
                 {awaitingCoverage === 1 ? "post sem cobertura" : "posts sem cobertura"}
               </span>
             </p>
-            <p className="mt-2 text-xs font-bold leading-5 text-muted">
-              {totalPatientPosts > 0
-                ? `${formatCountLabel(
-                    totalPatientPosts,
-                    "post de paciente",
-                    "posts de pacientes",
-                  )} no total; ${formatCountLabel(
-                    respondedByVerified,
-                    "já tem",
-                    "já têm",
-                  )} resposta qualificada.`
-                : "Ainda não há posts de pacientes publicados nesta comunidade."}
-            </p>
           </div>
 
           <div className="mt-4">
