@@ -380,6 +380,13 @@ export type AdminCommunityContentAnalyticsDetailDTO = {
     type: "comment" | "post";
   };
   metrics: AdminCommunityContentItemDTO["metrics"] & {
+    comment_breakdown: {
+      patient_comments_count: number;
+      source: "post_reply";
+      total_count: number;
+      unverified_psychologist_replies_count: number;
+      verified_psychologist_replies_count: number;
+    };
     moderation_events_count: number;
   };
   moderation: {

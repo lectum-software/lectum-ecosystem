@@ -53,3 +53,13 @@ The public frontend reuses the existing media/player components and sends consol
 Builder/Quick Copy was not available as a callable tool in this environment, so implementation used the local `_product/proto` Admin images and existing Admin visual patterns. No package was added.
 
 Validation evidence: `pnpm --dir backend db:migrate`, `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check`, real `showContentDetail` smoke for a video post and a non-video post, and HTTP 200 for `/comunidades/autocuidado-em-pratica/conteudo/post/cmrmg709v000yt0uh8x55eqae` on localhost Admin.
+
+## Update 2026-07-20: comment-origin breakdown in content preview
+
+The Admin content-detail preview now exposes comment-origin details immediately below the post metrics row. The backend adds `metrics.comment_breakdown` to the existing private Admin detail endpoint instead of creating a parallel endpoint.
+
+The breakdown is computed only from real `post_reply` records already selected for the detail period. A reply/comment authored by `user.role="psicologo"` is classified as a verified psychologist response when `isVerifiedProfessionalEntitlement` returns true for the selected psychologist profile; otherwise it is an unverified psychologist response. Non-psychologist authors remain patient comments. This keeps the detail page aligned with the same professional-verification rule used by content filters and author badges.
+
+The UI decision is to show four compact mobile-first blocks below the existing analytics line: total comments, verified psychologist responses, unverified psychologist responses and patient comments. The total count does not display a redundant `100%`; the other three counts display their rate inline in parentheses with lower visual weight. Label height is reserved so numeric baselines remain aligned even when labels wrap.
+
+Consequences: Admins can audit the quality/origin of discussion on a specific post without opening a separate analytics section. No schema/migration, new package, mock, seed, backfill or additional endpoint was introduced.

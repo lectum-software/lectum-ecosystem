@@ -1481,6 +1481,24 @@ const buildContentDetailSeries = (
   return { comments, series };
 };
 
+const buildContentCommentBreakdown = (
+  comments: ReturnType<typeof buildContentDetailSeries>["comments"],
+): AdminCommunityContentAnalyticsDetailDTO["metrics"]["comment_breakdown"] => {
+  const psychologistReplies = comments.filter((comment) => comment.author.role === "psicologo");
+  const verifiedPsychologistReplies = psychologistReplies.filter((comment) =>
+    isContentAuthorVerified(comment.author),
+  ).length;
+
+  return {
+    patient_comments_count: comments.filter((comment) => comment.author.role !== "psicologo")
+      .length,
+    source: "post_reply",
+    total_count: comments.length,
+    unverified_psychologist_replies_count: psychologistReplies.length - verifiedPsychologistReplies,
+    verified_psychologist_replies_count: verifiedPsychologistReplies,
+  };
+};
+
 const contentSafeBefore = (item: AdminCommunityContentItemDTO) => ({
   author_anonymous: item.author.anonymous,
   author_role: item.author.role,
@@ -3314,6 +3332,7 @@ export const showContentDetail = async (
       type: item.type,
     },
     metrics: {
+      comment_breakdown: buildContentCommentBreakdown(comments),
       comments_count: comments.length,
       downvotes_count: dataset.votes.filter((vote) => vote.value === -1).length,
       moderation_events_count: moderationEvents.length,

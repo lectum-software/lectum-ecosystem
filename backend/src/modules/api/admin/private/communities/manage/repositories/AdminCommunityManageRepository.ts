@@ -1099,6 +1099,9 @@ export class AdminCommunityManageRepository {
       prisma.post_reply.findMany({
         orderBy: [{ createdAt: "asc" }, { id: "asc" }],
         select: {
+          author: {
+            select: adminContentAuthorSelect,
+          },
           createdAt: true,
           id: true,
           parent_reply_id: true,

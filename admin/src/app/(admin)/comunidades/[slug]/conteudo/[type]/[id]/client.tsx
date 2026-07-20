@@ -299,6 +299,37 @@ const contentDetailMetricRowItems = (detail: AdminCommunityContentAnalyticsDetai
   },
 ];
 
+const contentCommentBreakdownItems = (detail: AdminCommunityContentAnalyticsDetail) => {
+  const breakdown = detail.metrics.comment_breakdown;
+  const total = breakdown.total_count;
+
+  return [
+    {
+      id: "total_comments",
+      label: "Total de comentários",
+      value: total,
+    },
+    {
+      rate: formatRatioPercent(breakdown.verified_psychologist_replies_count, total),
+      id: "verified_psychologist_replies",
+      label: "Respostas de psicólogos verificados",
+      value: breakdown.verified_psychologist_replies_count,
+    },
+    {
+      rate: formatRatioPercent(breakdown.unverified_psychologist_replies_count, total),
+      id: "unverified_psychologist_replies",
+      label: "Respostas de psicólogos não verificados",
+      value: breakdown.unverified_psychologist_replies_count,
+    },
+    {
+      id: "patient_comments",
+      label: "Comentários de pacientes",
+      rate: formatRatioPercent(breakdown.patient_comments_count, total),
+      value: breakdown.patient_comments_count,
+    },
+  ];
+};
+
 const ContentWhatsAppIcon = ({ className, ...props }: SVGProps<SVGSVGElement>) => (
   <svg
     className={cn("h-4 w-4 shrink-0", className)}
@@ -485,6 +516,25 @@ const ContentDetailMetricRow = ({ detail }: { detail: AdminCommunityContentAnaly
         );
       })}
     </div>
+    <fieldset className="mt-4 grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
+      <legend className="sr-only">Detalhamento dos comentários do conteúdo</legend>
+      {contentCommentBreakdownItems(detail).map((item) => (
+        <article
+          className="min-w-0 rounded-2xl border border-border/70 bg-surface-muted/40 px-3 py-3"
+          key={item.id}
+        >
+          <p className="min-h-10 text-[11px] font-black uppercase leading-5 tracking-[0.12em] text-muted">
+            {item.label}
+          </p>
+          <p className="mt-1 flex items-baseline gap-1.5 text-lg font-black text-foreground">
+            <span>{formatCount(item.value)}</span>
+            {"rate" in item ? (
+              <span className="text-xs font-semibold text-muted">({item.rate})</span>
+            ) : null}
+          </p>
+        </article>
+      ))}
+    </fieldset>
   </div>
 );
 

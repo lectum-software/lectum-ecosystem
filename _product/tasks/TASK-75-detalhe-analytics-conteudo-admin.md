@@ -454,3 +454,31 @@ Regras anti-recriação:
 - Smoke real do service `showContentDetail` retornou `status=200` para o post com video `cmrmg709v000yt0uh8x55eqae` em `autocuidado-em-pratica`, com retencao indisponivel honesta por ausencia de sessoes; outro post sem video retornou `videoRendered=false`.
 - Smoke HTTP local da rota Admin `http://localhost:3002/comunidades/autocuidado-em-pratica/conteudo/post/cmrmg709v000yt0uh8x55eqae` retornou 200.
 - ADR atualizado: `adrs/0278-detalhe-analytics-conteudo-admin.md`.
+
+## Ajuste complementar 2026-07-20 - Detalhamento de comentários no preview do conteúdo
+
+- Pedido do usuário: abaixo da linha de análises do post no detalhe Admin, exibir o detalhamento de comentários por origem real: total de comentários, respostas de psicólogos verificados, respostas de psicólogos não verificados e comentários de pacientes.
+- O backend passou a retornar `metrics.comment_breakdown` no endpoint real `GET /api/admin/private/communities/:id/content/:type/:contentId/detail`, calculado a partir de `post_reply.author.role` e do mesmo critério de verificação profissional já usado no Admin.
+- A UI mobile-first do Admin renderiza os quatro blocos logo abaixo da linha de métricas do preview. O contador total mostra apenas a quantidade; os demais mostram a taxa inline entre parênteses, em peso menor, e os números ficam alinhados mesmo quando o rótulo ocupa duas linhas.
+- Não houve schema Prisma/migration, endpoint paralelo, mock, seed, backfill, package novo ou uso de `<img>` cru.
+- Builder/Quick Copy não está exposto como ferramenta callable neste ambiente; foram usados os padrões Admin existentes, a captura enviada pelo usuário e a referência local de Admin registrada em `_product/tasks/PROTO-INVENTORY.md`.
+- ADR atualizado: `adrs/0278-detalhe-analytics-conteudo-admin.md`.
+
+### Critérios de aceite complementares
+
+- [x] O detalhe Admin mostra total de comentários abaixo da linha de análises do post.
+- [x] O detalhe Admin separa respostas de psicólogos verificados e não verificados com dados reais.
+- [x] O detalhe Admin separa comentários de pacientes com dados reais.
+- [x] O total de comentários não mostra a taxa redundante de 100%.
+- [x] Os demais contadores mostram a taxa inline após a quantidade, sem linha extra `0% do total`.
+- [x] Os números dos quatro blocos ficam alinhados verticalmente.
+
+### Validação executada para este ajuste
+
+- `pnpm --dir backend check`
+- `pnpm --dir backend build` (uma primeira tentativa falhou por geração Prisma transitória; a repetição concluiu com sucesso)
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check`
+- Smoke real do service `showContentDetail` para `autocuidado-em-pratica/post/cmrmg709v000yt0uh8x55eqae`, retornando `comments_count=9` e `comment_breakdown.total_count=9`, `patient_comments_count=9`, `verified_psychologist_replies_count=0`, `unverified_psychologist_replies_count=0`.
+- Smoke HTTP local da rota Admin `http://localhost:3002/comunidades/autocuidado-em-pratica/conteudo/post/cmrmg709v000yt0uh8x55eqae` retornou 200.
