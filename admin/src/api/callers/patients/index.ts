@@ -3,6 +3,7 @@ import { adminPatientsKeys } from "@/api/cache/keys";
 import {
   type AdminPatientAccountReasonInput,
   type AdminPatientAccountStatusActionInput,
+  type AdminPatientActivitiesQuery,
   type AdminPatientChangeEmailInput,
   type AdminPatientRevokeSessionsInput,
   type AdminPatientSetTemporaryPasswordInput,
@@ -11,6 +12,7 @@ import {
   deactivateAdminPatientAccount,
   deleteAdminPatientAccount,
   getAdminPatientAccount,
+  getAdminPatientActivities,
   getAdminPatientDetail,
   getAdminPatientsDashboard,
   type PatientsDashboardQuery,
@@ -49,6 +51,17 @@ export const useAdminPatientAccount = (id: string, options: { enabled?: boolean 
     enabled: (options.enabled ?? true) && Boolean(id),
     queryFn: () => getAdminPatientAccount(id),
     queryKey: adminPatientsKeys.account(id),
+  });
+
+export const useAdminPatientActivities = (
+  id: string,
+  input: AdminPatientActivitiesQuery,
+  options: { enabled?: boolean } = {},
+) =>
+  useQuery({
+    enabled: (options.enabled ?? true) && Boolean(id),
+    queryFn: () => getAdminPatientActivities(id, input),
+    queryKey: adminPatientsKeys.activities(id, input),
   });
 
 const invalidatePatientAccount = async (

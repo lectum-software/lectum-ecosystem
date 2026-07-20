@@ -6,6 +6,9 @@ import {
   BarChart3,
   CalendarDays,
   CheckCircle2,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   Clock3,
   FileText,
   Heart,
@@ -20,6 +23,7 @@ import {
   MessageCircle,
   Pencil,
   RefreshCw,
+  Search,
   Send,
   ShieldCheck,
   ThumbsDown,
@@ -37,6 +41,7 @@ import { toast } from "sonner";
 import { z } from "zod";
 import {
   useAdminPatientAccount,
+  useAdminPatientActivities,
   useAdminPatientChangeAccountEmail,
   useAdminPatientDeactivateAccount,
   useAdminPatientDeleteAccount,
@@ -51,6 +56,7 @@ import {
 import { resolveApiError } from "@/api/handle";
 import type {
   AdminPatientAccount,
+  AdminPatientActivitiesQuery,
   AdminPatientDetail,
   PatientsDetailActivity,
   PatientsDetailCommunity,
@@ -235,6 +241,14 @@ const formatLastAccess = (value?: string | null) => {
   if (!value) return "N\u00e3o capturado";
 
   return formatDateTime(value);
+};
+const formatInputDate = (value?: string | null) => {
+  if (!value) return "";
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+
+  return date.toISOString().slice(0, 10);
 };
 const formatChange = (value: number | null) => {
   if (value === null) return "sem base anterior";
@@ -711,6 +725,312 @@ const ActivityList = ({
     )}
   </CardShell>
 );
+
+const DetailFilterSelect = ({
+  children,
+  className,
+  label,
+  onChange,
+  value,
+}: {
+  children: ReactNode;
+  className?: string;
+  label: string;
+  onChange: (value: string) => void;
+  value: string;
+}) => (
+  <label className={cn("block text-sm font-black text-muted", className)}>
+    {label}
+    <span className="relative mt-2 block">
+      <select
+        className="h-11 w-full appearance-none rounded-control border border-border bg-surface py-0 pl-3 pr-14 text-sm font-bold text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+        onChange={(event) => onChange(event.target.value)}
+        value={value}
+      >
+        {children}
+      </select>
+      <ChevronDown
+        aria-hidden
+        className="pointer-events-none absolute right-5 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground"
+      />
+    </span>
+  </label>
+);
+
+const ActivitiesPagination = ({
+  page,
+  pages,
+  setPage,
+}: {
+  page: number;
+  pages: number;
+  setPage: (page: number) => void;
+}) => {
+  const safePages = Math.max(1, pages);
+  const safePage = Math.min(Math.max(1, page), safePages);
+
+  return (
+    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <p className="text-sm font-bold text-muted">
+        Página {numberFormatter.format(safePage)} de {numberFormatter.format(safePages)}
+      </p>
+      <div className="flex items-center gap-2">
+        <button
+          className="inline-flex h-10 items-center gap-2 rounded-control border border-border bg-surface px-3 text-sm font-black text-foreground transition hover:border-primary disabled:cursor-not-allowed disabled:opacity-45"
+          disabled={safePage <= 1}
+          onClick={() => setPage(Math.max(1, safePage - 1))}
+          type="button"
+        >
+          <ChevronLeft aria-hidden className="h-4 w-4" />
+          Anterior
+        </button>
+        <button
+          className="inline-flex h-10 items-center gap-2 rounded-control border border-border bg-surface px-3 text-sm font-black text-foreground transition hover:border-primary disabled:cursor-not-allowed disabled:opacity-45"
+          disabled={safePage >= safePages}
+          onClick={() => setPage(Math.min(safePages, safePage + 1))}
+          type="button"
+        >
+          Próxima
+          <ChevronRight aria-hidden className="h-4 w-4" />
+        </button>
+      </div>
+    </div>
+  );
+};
+
+const ActivitiesLoadingState = () => (
+  <div className="space-y-5" data-patient-activities-loading="true">
+    <CardShell className="h-[8.25rem] animate-pulse bg-surface-muted" />
+    <CardShell className="overflow-hidden">
+      <div className="border-b border-border p-4">
+        <div className="h-6 w-56 rounded-full bg-surface-muted" />
+        <div className="mt-2 h-4 w-72 max-w-full rounded-full bg-surface-muted" />
+      </div>
+      <div className="divide-y divide-border">
+        {["one", "two", "three"].map((row) => (
+          <div className="grid gap-3 p-4 sm:grid-cols-[10rem_12rem_1fr_12rem]" key={row}>
+            <div className="h-4 rounded-full bg-surface-muted" />
+            <div className="h-4 rounded-full bg-surface-muted" />
+            <div className="h-4 rounded-full bg-surface-muted" />
+            <div className="h-4 rounded-full bg-surface-muted" />
+          </div>
+        ))}
+      </div>
+    </CardShell>
+  </div>
+);
+
+const resolveActivityPeriod = (preset: string, customFrom: string, customTo: string) => {
+  if (preset === "all") return {};
+  if (preset === "custom") {
+    return customFrom && customTo ? { from: customFrom, to: customTo } : {};
+  }
+
+  const days = preset === "30d" ? 30 : preset === "180d" ? 180 : 90;
+  const to = new Date();
+  const from = new Date();
+  from.setDate(to.getDate() - (days - 1));
+
+  return {
+    from: formatInputDate(from.toISOString()),
+    to: formatInputDate(to.toISOString()),
+  };
+};
+
+const ActivitiesTab = ({ id }: { id: string }) => {
+  const [period, setPeriod] = useState("all");
+  const [customFrom, setCustomFrom] = useState("");
+  const [customTo, setCustomTo] = useState("");
+  const [area, setArea] = useState("all");
+  const [type, setType] = useState("all");
+  const [q, setQ] = useState("");
+  const [page, setPage] = useState(1);
+  const periodRange = useMemo(
+    () => resolveActivityPeriod(period, customFrom, customTo),
+    [customFrom, customTo, period],
+  );
+  const queryInput = useMemo<AdminPatientActivitiesQuery>(
+    () => ({
+      ...periodRange,
+      area,
+      limit: 8,
+      page,
+      q: q.trim() || undefined,
+      type,
+    }),
+    [area, page, periodRange, q, type],
+  );
+  const query = useAdminPatientActivities(id, queryInput);
+  const errorMessage = query.error ? resolveApiError(query.error) : null;
+
+  if (query.isLoading) return <ActivitiesLoadingState />;
+  if (query.isError && errorMessage) {
+    return <ErrorState message={errorMessage} onRetry={() => void query.refetch()} />;
+  }
+  if (!query.data) return null;
+
+  const activities = query.data;
+
+  return (
+    <div className="space-y-5" data-patient-detail-tab="atividades">
+      <CardShell className="p-4">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-end">
+          <DetailFilterSelect
+            className="flex-1"
+            label="Período"
+            onChange={(nextValue) => {
+              setPeriod(nextValue);
+              setPage(1);
+            }}
+            value={period}
+          >
+            <option value="all">Todo histórico registrado</option>
+            <option value="30d">Últimos 30 dias</option>
+            <option value="90d">Últimos 90 dias</option>
+            <option value="180d">Últimos 180 dias</option>
+            <option value="custom">Personalizado</option>
+          </DetailFilterSelect>
+          <DetailFilterSelect
+            className="flex-1"
+            label="Área"
+            onChange={(nextValue) => {
+              setArea(nextValue);
+              setPage(1);
+            }}
+            value={area}
+          >
+            {activities.filters.areas.map((option) => (
+              <option key={option.id} value={option.id}>
+                {option.label} ({numberFormatter.format(option.count)})
+              </option>
+            ))}
+          </DetailFilterSelect>
+          <DetailFilterSelect
+            className="flex-1"
+            label="Tipo de atividade"
+            onChange={(nextValue) => {
+              setType(nextValue);
+              setPage(1);
+            }}
+            value={type}
+          >
+            {activities.filters.types.map((option) => (
+              <option key={option.id} value={option.id}>
+                {option.label} ({numberFormatter.format(option.count)})
+              </option>
+            ))}
+          </DetailFilterSelect>
+          <label className="block flex-1 text-sm font-black text-muted">
+            Buscar
+            <span className="mt-2 flex h-11 items-center rounded-control border border-border bg-surface px-3">
+              <Search aria-hidden className="h-4 w-4 shrink-0 text-muted" />
+              <input
+                className="h-full min-w-0 flex-1 bg-transparent px-2 text-sm font-bold text-foreground outline-none placeholder:text-muted"
+                onChange={(event) => {
+                  setQ(event.target.value);
+                  setPage(1);
+                }}
+                placeholder="Buscar por descrição..."
+                value={q}
+              />
+            </span>
+          </label>
+        </div>
+
+        {period === "custom" ? (
+          <div className="mt-3 grid gap-3 sm:grid-cols-2">
+            <label className="block text-sm font-black text-muted">
+              De
+              <input
+                className="mt-2 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground"
+                onChange={(event) => {
+                  setCustomFrom(event.target.value);
+                  setPage(1);
+                }}
+                type="date"
+                value={customFrom}
+              />
+            </label>
+            <label className="block text-sm font-black text-muted">
+              Até
+              <input
+                className="mt-2 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground"
+                onChange={(event) => {
+                  setCustomTo(event.target.value);
+                  setPage(1);
+                }}
+                type="date"
+                value={customTo}
+              />
+            </label>
+          </div>
+        ) : null}
+      </CardShell>
+
+      <CardShell className="overflow-hidden">
+        <div className="flex flex-col gap-2 border-b border-border p-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h2 className="text-xl font-black text-foreground">Atividades da conta</h2>
+            <p className="mt-1 text-sm text-muted">
+              Mostrando {numberFormatter.format(activities.data.length)} de{" "}
+              {numberFormatter.format(activities.count)} eventos principais filtrados.
+            </p>
+          </div>
+        </div>
+
+        {activities.data.length === 0 ? (
+          <p className="p-5 text-sm font-bold text-muted">
+            Nenhuma atividade real encontrada para os filtros atuais.
+          </p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[820px] table-fixed text-left text-sm">
+              <colgroup>
+                <col className="w-40" />
+                <col className="w-48" />
+                <col />
+                <col className="w-52" />
+              </colgroup>
+              <thead className="border-b border-border text-xs text-muted">
+                <tr>
+                  <th className="py-3 pr-3 pl-4 font-black">Data</th>
+                  <th className="px-3 py-3 font-black">Ação</th>
+                  <th className="px-3 py-3 font-black">Descrição</th>
+                  <th className="py-3 pr-4 pl-3 font-black">Usuário</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {activities.data.map((item) => (
+                  <tr key={item.id}>
+                    <td className="py-3 pr-3 pl-4 font-bold text-muted">
+                      {formatDateTime(item.occurred_at)}
+                    </td>
+                    <td className="px-3 py-3 font-black text-foreground">{item.type.label}</td>
+                    <td className="px-3 py-3 text-muted">{item.description}</td>
+                    <td className="py-3 pr-4 pl-3">
+                      <span className="block font-black text-foreground">
+                        {item.actor?.name || "Não informado"}
+                      </span>
+                      {item.actor?.role ? (
+                        <span className="mt-1 block text-xs font-bold text-muted">
+                          {item.actor.role}
+                        </span>
+                      ) : null}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        <div className="border-t border-border p-4">
+          <ActivitiesPagination page={activities.page} pages={activities.pages} setPage={setPage} />
+        </div>
+      </CardShell>
+    </div>
+  );
+};
 
 const CommunityAvatar = ({
   community,
@@ -2106,7 +2426,7 @@ const DetailContent = ({
     ) : tab === "denuncias" ? (
       <ReportsTab />
     ) : tab === "atividades" ? (
-      <ActivityList detail={detail} />
+      <ActivitiesTab id={id} />
     ) : tab === "conta" ? (
       <AccountTab id={id} />
     ) : (

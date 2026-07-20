@@ -419,3 +419,25 @@ Frontend esperado:
 - `pnpm --dir backend check`
 - `pnpm --dir backend build`
 - `pnpm check`
+
+## Ajuste pos-feedback 2026-07-20 - Aba Atividades com paridade do psicologo
+
+- Pedido do usuario: em detalhes do paciente, na aba **Atividades**, replicar a mesma configuracao da pagina de Atividades existente em detalhes do psicologo.
+- Criado endpoint admin privado `GET /api/admin/private/patients/:id/activities` com filtros reais de periodo, area, tipo, busca textual e paginacao.
+- O feed usa somente fontes reais persistidas: `user`, `patient_profile`, `community_member`, `community_post`, `post_reply`, `post_vote`, `post_save`, `post_reply_save`, `professional_review` e `admin_activity_log`.
+- A UI de `/pacientes/[id]?tab=atividades` passou a usar o mesmo layout operacional do psicologo: card de filtros, tabela **Atividades da conta** com colunas **Data**, **Acao**, **Descricao** e **Usuario**, estado vazio e paginacao.
+- Login continua nao exibido como evento porque nao ha fonte confiavel de login por ocorrencia nesta V1.
+- Exportacao permanece indisponivel porque nao existe endpoint real de exportacao para atividades.
+- Nao houve schema Prisma, migration, package novo, seed, mock, tracking novo, dado fake ou endpoint simulado. `db:migrate` nao se aplicou.
+- Builder/Quick Copy nao esta exposto como ferramenta callable no ambiente; a referencia auditavel foi a captura enviada pelo usuario, `_product/proto/admin/Pacientes/Pacientes - Detalhes.png` e o padrao ja implementado em `_product/proto/admin/Psicologos/Detalhes do psicologo/Atividades.png`.
+- ADR criado: `adrs/0293-admin-paciente-atividades-paridade-psicologo.md`.
+
+### Validacao complementar executada
+
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check`
+- Smoke HTTP local: `GET http://localhost:3002/pacientes/cmrqsr926001d1guhoz10yvaz?tab=atividades` retornou `200`.
+- Smoke HTTP local sem token: `GET http://localhost:3001/api/admin/private/patients/cmrqsr926001d1guhoz10yvaz/activities` retornou `401`.

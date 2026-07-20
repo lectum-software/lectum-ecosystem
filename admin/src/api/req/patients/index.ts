@@ -86,6 +86,77 @@ export type AdminPatientAccountDeleteResponse = {
   source: "user+patient_profile+admin_activity_log";
 };
 
+export type AdminPatientActivitiesQuery = {
+  area?: string;
+  from?: string;
+  limit?: number;
+  page?: number;
+  q?: string;
+  to?: string;
+  type?: string;
+};
+
+export type AdminPatientActivityItem = {
+  actor: {
+    id: string;
+    name: string;
+    role: string;
+  } | null;
+  area: {
+    id: string;
+    label: string;
+  };
+  description: string;
+  detail_url: string | null;
+  id: string;
+  occurred_at: string;
+  source: string;
+  type: {
+    id: string;
+    label: string;
+  };
+};
+
+export type AdminPatientActivities = {
+  active_filters_count: number;
+  count: number;
+  coverage_note: string;
+  data: AdminPatientActivityItem[];
+  export: {
+    available: false;
+    reason: string;
+  };
+  filters: {
+    areas: {
+      count: number;
+      id: string;
+      label: string;
+    }[];
+    types: {
+      count: number;
+      id: string;
+      label: string;
+    }[];
+  };
+  page: number;
+  pages: number;
+  per_page: number;
+  period: {
+    from: string | null;
+    label: string;
+    max_days: number | null;
+    timezone: "server-local";
+    to: string | null;
+  };
+  source: "user+patient_profile+community_member+community_post+post_reply+post_vote+post_save+post_reply_save+professional_review+admin_activity_log";
+  unavailable: {
+    description: string;
+    id: string;
+    label: string;
+    source: string;
+  }[];
+};
+
 export type PatientsDashboardTrend = "down" | "flat" | "unavailable" | "up";
 
 export type PatientsDashboardMetric = {
@@ -403,6 +474,16 @@ const cleanParams = (input: PatientsDashboardQuery) => ({
   ...(input.to ? { to: input.to } : {}),
 });
 
+const cleanActivitiesParams = (input: AdminPatientActivitiesQuery) => ({
+  ...(input.area ? { area: input.area } : {}),
+  ...(input.from ? { from: input.from } : {}),
+  ...(input.limit ? { limit: input.limit } : {}),
+  ...(input.page ? { page: input.page } : {}),
+  ...(input.q ? { q: input.q } : {}),
+  ...(input.to ? { to: input.to } : {}),
+  ...(input.type ? { type: input.type } : {}),
+});
+
 export const getAdminPatientsDashboard = async (input: PatientsDashboardQuery) => {
   const response = await adminApi.get<ApiResponse<AdminPatientsDashboard>>(
     "/api/admin/private/patients/dashboard",
@@ -419,6 +500,17 @@ export const getAdminPatientDetail = async (id: string, input: PatientsDetailQue
     `/api/admin/private/patients/${id}`,
     {
       params: cleanParams(input),
+    },
+  );
+
+  return resolveApiData(response.data);
+};
+
+export const getAdminPatientActivities = async (id: string, input: AdminPatientActivitiesQuery) => {
+  const response = await adminApi.get<ApiResponse<AdminPatientActivities>>(
+    `/api/admin/private/patients/${encodeURIComponent(id)}/activities`,
+    {
+      params: cleanActivitiesParams(input),
     },
   );
 
