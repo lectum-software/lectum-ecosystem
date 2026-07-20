@@ -48,3 +48,20 @@ Builder/Quick Copy não está exposto como ferramenta callable neste ambiente. A
 
 Durante a validação final havia alterações paralelas não relacionadas em arquivos de pacientes (`admin/src/app/(admin)/pacientes/[id]/client.tsx` e `backend/src/modules/api/admin/private/patients/*`). Essas alterações não fazem parte deste ADR nem do commit deste ajuste.
 
+
+
+## Atualização 2026-07-20: tabela e filtro próprio de Comunidades ativas
+
+O bloco **Comunidades ativas** deve ser lido como uma lista operacional, não como cards promocionais. Por isso, a UI passa a usar uma tabela sóbria com colunas de comunidade, interações, posts, respostas, status, ranking e cobertura.
+
+Decisão complementar:
+
+- Manter a origem de dados no endpoint real `GET /api/admin/private/psychologists/:id/statistics`, sem endpoint paralelo.
+- Criar uma query separada no frontend para o bloco **Comunidades ativas**, usando os filtros próprios de **Período**, **De** e **Até**.
+- Não herdar o filtro de comunidade do gráfico de **Estatísticas de comunidade**; a lista continua comparando todas as comunidades ativas no período escolhido no próprio bloco.
+- Preservar `placeholderData` do hook existente para manter a tabela visível durante refetch e exibir apenas o indicador contextual **Atualizando**.
+- Usar tabela com rolagem horizontal no mobile (~390px) e largura completa no desktop, sem trocar `next/image` por `<img>`.
+
+Consequência: administradores conseguem mudar período e datas de **Comunidades ativas** sem deslocar ou alterar os demais blocos de estatísticas, mantendo dados reais e leitura mais compacta.
+
+Validação do ajuste: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e browser local/headless via Chrome/CDP em desktop 1365px e mobile 390px, confirmando filtro `active-communities-statistics-*`, tabela com 7 colunas e rolagem horizontal mobile controlada.

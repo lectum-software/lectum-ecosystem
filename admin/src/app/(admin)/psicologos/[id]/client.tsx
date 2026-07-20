@@ -2605,18 +2605,18 @@ const ActiveCommunityAvatar = ({
     return (
       <Image
         alt={`Comunidade ${community.name}`}
-        className="h-12 w-12 rounded-[18px] object-cover"
-        height={48}
+        className="h-10 w-10 rounded-xl object-cover"
+        height={40}
         src={imageSrc}
         unoptimized={isPublicAdminMediaSrc(imageSrc)}
-        width={48}
+        width={40}
       />
     );
   }
 
   return (
     <span
-      className="grid h-12 w-12 shrink-0 place-items-center rounded-[18px] text-sm font-black text-white"
+      className="grid h-10 w-10 shrink-0 place-items-center rounded-xl text-xs font-black text-white"
       style={{ backgroundColor: community.color || "var(--admin-primary)" }}
     >
       {initials(community.name)}
@@ -2626,21 +2626,34 @@ const ActiveCommunityAvatar = ({
 
 const ActiveCommunitiesBlock = ({
   communities,
+  isRefreshing,
+  periodControls,
 }: {
   communities: PsychologistStatisticsCommunityItem[];
+  isRefreshing: boolean;
+  periodControls: ReactNode;
 }) => (
   <CardShell className="min-w-0 max-w-full overflow-hidden p-5">
-    <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+    <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-start">
       <div className="min-w-0">
-        <h2 className="text-lg font-black text-foreground">Comunidades ativas</h2>
+        <div className="flex flex-wrap items-center gap-2">
+          <h2 className="text-lg font-black text-foreground">Comunidades ativas</h2>
+          {isRefreshing ? (
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary-soft px-2.5 py-1 text-[11px] font-black text-primary">
+              <Loader2 aria-hidden className="h-3.5 w-3.5 animate-spin" />
+              Atualizando
+            </span>
+          ) : null}
+        </div>
         <p className="mt-1 text-xs font-bold leading-5 text-muted">
           Comunidades em que o psicólogo realizou ao menos um post ou resposta no período, ordenadas
           da mais ativa para a menos ativa.
         </p>
+        <Badge className="mt-3 w-fit bg-surface-muted text-muted">
+          {numberFormatter.format(communities.length)} comunidades
+        </Badge>
       </div>
-      <Badge className="w-fit bg-surface-muted text-muted">
-        {numberFormatter.format(communities.length)} comunidades
-      </Badge>
+      {periodControls}
     </div>
 
     {communities.length === 0 ? (
@@ -2648,58 +2661,98 @@ const ActiveCommunitiesBlock = ({
         Nenhuma comunidade com post ou resposta real do psicólogo foi encontrada no período.
       </p>
     ) : (
-      <div className="mt-5 grid gap-3 xl:grid-cols-2">
-        {communities.map((community) => {
-          const interactions = community.posts + community.replies;
-          const coverage = community.coverage;
+      <div className="mt-5 overflow-x-auto rounded-[1.35rem] border border-border bg-surface">
+        <table className="w-full min-w-[920px] border-collapse text-left">
+          <caption className="sr-only">
+            Lista de comunidades ativas do psicólogo por interações, posts, respostas, status de
+            seguimento, ranking e cobertura.
+          </caption>
+          <thead className="bg-surface-muted/80">
+            <tr className="text-xs font-black text-muted">
+              <th className="px-4 py-3" scope="col">
+                Comunidade
+              </th>
+              <th className="px-4 py-3 text-right" scope="col">
+                Interações
+              </th>
+              <th className="px-4 py-3 text-right" scope="col">
+                Posts
+              </th>
+              <th className="px-4 py-3 text-right" scope="col">
+                Respostas
+              </th>
+              <th className="px-4 py-3" scope="col">
+                Status
+              </th>
+              <th className="px-4 py-3" scope="col">
+                Ranking
+              </th>
+              <th className="px-4 py-3" scope="col">
+                Cobertura
+              </th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-border">
+            {communities.map((community) => {
+              const interactions = community.posts + community.replies;
+              const coverage = community.coverage;
 
-          return (
-            <article
-              className="grid gap-4 rounded-[1.5rem] border border-border/80 bg-surface-muted p-4 sm:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)] sm:items-center"
-              key={community.id}
-            >
-              <div className="flex min-w-0 items-start gap-3">
-                <ActiveCommunityAvatar community={community} />
-                <div className="min-w-0">
-                  <h3 className="break-words text-sm font-black text-foreground">
-                    {community.name}
-                  </h3>
-                  <p className="mt-1 text-xs font-bold leading-5 text-muted">
-                    {numberFormatter.format(interactions)} interações ·{" "}
-                    {numberFormatter.format(community.posts)} posts ·{" "}
-                    {numberFormatter.format(community.replies)} respostas
-                  </p>
-                  <Badge
-                    className={cn(
-                      "mt-2",
-                      community.following ? "bg-emerald-50 text-success" : "bg-surface text-muted",
-                    )}
-                  >
-                    {community.following ? "Segue" : "Não segue"}
-                  </Badge>
-                </div>
-              </div>
-              <dl className="grid gap-2 text-sm sm:grid-cols-2">
-                <div className="rounded-2xl bg-surface p-3">
-                  <dt className="text-xs font-black text-muted">Ranking</dt>
-                  <dd className="mt-1 font-black text-foreground">
+              return (
+                <tr
+                  className="align-middle transition hover:bg-surface-muted/45"
+                  key={community.id}
+                >
+                  <th className="px-4 py-4" scope="row">
+                    <div className="flex min-w-0 items-center gap-3">
+                      <ActiveCommunityAvatar community={community} />
+                      <span className="min-w-0">
+                        <span className="block max-w-[18rem] truncate text-sm font-black text-foreground">
+                          {community.name}
+                        </span>
+                        <span className="mt-1 block text-xs font-bold text-muted">
+                          {community.slug}
+                        </span>
+                      </span>
+                    </div>
+                  </th>
+                  <td className="px-4 py-4 text-right text-sm font-black text-foreground">
+                    {numberFormatter.format(interactions)}
+                  </td>
+                  <td className="px-4 py-4 text-right text-sm font-bold text-muted">
+                    {numberFormatter.format(community.posts)}
+                  </td>
+                  <td className="px-4 py-4 text-right text-sm font-bold text-muted">
+                    {numberFormatter.format(community.replies)}
+                  </td>
+                  <td className="px-4 py-4">
+                    <Badge
+                      className={cn(
+                        "whitespace-nowrap",
+                        community.following
+                          ? "bg-success/10 text-success"
+                          : "bg-surface-muted text-muted",
+                      )}
+                    >
+                      {community.following ? "Segue" : "Não segue"}
+                    </Badge>
+                  </td>
+                  <td className="px-4 py-4 text-sm font-black text-foreground">
                     {formatCommunityRanking(community)}
-                  </dd>
-                </div>
-                <div className="rounded-2xl bg-surface p-3">
-                  <dt className="text-xs font-black text-muted">Cobertura</dt>
-                  <dd className="mt-1 font-black text-foreground">
-                    {formatCoverageRate(community)}
-                  </dd>
-                  <dd className="mt-1 text-xs font-bold leading-5 text-muted">
-                    {numberFormatter.format(coverage.covered_patient_posts)} de{" "}
-                    {numberFormatter.format(coverage.patient_posts)} posts de pacientes
-                  </dd>
-                </div>
-              </dl>
-            </article>
-          );
-        })}
+                  </td>
+                  <td className="px-4 py-4">
+                    <span className="block text-sm font-black text-foreground">
+                      {formatCoverageRate(community)}
+                    </span>
+                    <span className="mt-1 block text-xs font-bold leading-5 text-muted">
+                      {numberFormatter.format(coverage.covered_patient_posts)} de{" "}
+                      {numberFormatter.format(coverage.patient_posts)} posts
+                    </span>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
       </div>
     )}
   </CardShell>
@@ -3938,6 +3991,7 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: st
   const trafficStatisticsFilter = useStatisticsPeriodFilter(detail.header.created_at);
   const platformStatisticsFilter = useStatisticsPeriodFilter(detail.header.created_at);
   const communityStatisticsFilter = useStatisticsPeriodFilter(detail.header.created_at);
+  const activeCommunitiesStatisticsFilter = useStatisticsPeriodFilter(detail.header.created_at);
   const activityHoursStatisticsFilter = useStatisticsPeriodFilter(detail.header.created_at);
   const [communityStatisticsSelectedCommunity, setCommunityStatisticsSelectedCommunity] =
     useState("all");
@@ -3970,6 +4024,10 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: st
     id,
     communityStatisticsPeriodQuery,
   );
+  const activeCommunitiesStatisticsQuery = useAdminPsychologistStatistics(
+    id,
+    activeCommunitiesStatisticsFilter.periodQuery,
+  );
   const activityHoursStatisticsQuery = useAdminPsychologistStatistics(
     id,
     activityHoursStatisticsFilter.periodQuery,
@@ -3980,6 +4038,7 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: st
     trafficStatisticsQuery,
     platformStatisticsQuery,
     communityStatisticsQuery,
+    activeCommunitiesStatisticsQuery,
     activityHoursStatisticsQuery,
   ] as const;
   const [visibleBusinessMetricIds, setVisibleBusinessMetricIds] = useState<BusinessChartMetricId[]>(
@@ -4030,6 +4089,8 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: st
     platformStatisticsQuery.isFetching && Boolean(platformStatisticsQuery.data);
   const isCommunityRefreshing =
     communityStatisticsQuery.isFetching && Boolean(communityStatisticsQuery.data);
+  const isActiveCommunitiesRefreshing =
+    activeCommunitiesStatisticsQuery.isFetching && Boolean(activeCommunitiesStatisticsQuery.data);
   const isActivityHoursRefreshing =
     activityHoursStatisticsQuery.isFetching && Boolean(activityHoursStatisticsQuery.data);
   const refetchStatisticsQueries = () => {
@@ -4052,6 +4113,7 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: st
     !trafficStatisticsQuery.data ||
     !platformStatisticsQuery.data ||
     !communityStatisticsQuery.data ||
+    !activeCommunitiesStatisticsQuery.data ||
     !activityHoursStatisticsQuery.data
   ) {
     return null;
@@ -4062,6 +4124,7 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: st
   const trafficStatistics = trafficStatisticsQuery.data;
   const platformStatistics = platformStatisticsQuery.data;
   const communityStatistics = communityStatisticsQuery.data;
+  const activeCommunitiesStatistics = activeCommunitiesStatisticsQuery.data;
   const activityHoursStatistics = activityHoursStatisticsQuery.data;
   const businessMetricMap = new Map(
     businessStatistics.business.cards.map((metric) => [metric.id, metric]),
@@ -4090,7 +4153,7 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: st
     communityStatisticsSelectedCommunity === "all" || hasSelectedCommunity
       ? communityStatisticsSelectedCommunity
       : "all";
-  const activeCommunities = [...communityStatistics.community.communities]
+  const activeCommunities = [...activeCommunitiesStatistics.community.communities]
     .filter((community) => community.posts + community.replies > 0)
     .sort((left, right) => {
       const leftTotal = left.posts + left.replies;
@@ -4331,7 +4394,21 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: st
           />
         </CardShell>
 
-        <ActiveCommunitiesBlock communities={activeCommunities} />
+        <ActiveCommunitiesBlock
+          communities={activeCommunities}
+          isRefreshing={isActiveCommunitiesRefreshing}
+          periodControls={
+            <StatisticsPeriodControls
+              idPrefix="active-communities-statistics"
+              onDateControlsBlur={activeCommunitiesStatisticsFilter.handleDateControlsBlur}
+              onDateChange={activeCommunitiesStatisticsFilter.handleDateChange}
+              onPeriodChange={activeCommunitiesStatisticsFilter.handlePeriodChange}
+              period={activeCommunitiesStatisticsFilter.selectedPeriod}
+              range={activeCommunitiesStatisticsFilter.draftRange}
+              rangeError={activeCommunitiesStatisticsFilter.rangeError}
+            />
+          }
+        />
 
         <PsychologistPlatformActivityHoursCard
           isRefreshing={isActivityHoursRefreshing}

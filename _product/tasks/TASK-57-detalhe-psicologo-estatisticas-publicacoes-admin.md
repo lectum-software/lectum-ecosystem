@@ -239,3 +239,17 @@ Exibir estatísticas de negócio/comunidade e publicações do psicólogo com da
 - Builder/Quick Copy não estava disponível como ferramenta callable no ambiente; a validação visual usou o recorte enviado pelo usuário e o PNG local `_product/proto/admin/Psicólogos/Detalhes do psicólogo/Publicações.png`.
 - ADR atualizado: `adrs/0237-admin-psicologo-estatisticas-publicacoes.md`.
 - Validações executadas para este ajuste: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e browser local/headless via Chrome/CDP em `/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=publicacoes`, com admin temporário real removido ao final, confirmando no desktop 1365px e no mobile 390px que a mídia aparece depois da descrição no DOM e visualmente abaixo dela.
+
+
+### Refinamento visual e filtro de Comunidades ativas em 2026-07-20
+
+- O bloco **Comunidades ativas** foi reestruturado como uma tabela mais sóbria com colunas de comunidade, interações, posts, respostas, status de seguimento, ranking e cobertura.
+- O bloco ganhou filtro próprio de **Período**, **De** e **Até**, independente do filtro de comunidade do gráfico de **Estatísticas de comunidade** e do filtro de **Horários mais ativos**.
+- A lista passou a usar uma query real separada do endpoint Admin de estatísticas, sem criar endpoint paralelo, para recalcular as comunidades ativas pelo período/data escolhidos no próprio bloco.
+- O feedback **Atualizando** fica restrito ao bloco de **Comunidades ativas** durante refetch, preservando os dados anteriores por `placeholderData` do hook existente.
+- A implementação permanece mobile-first: em telas estreitas a tabela fica em rolagem horizontal controlada dentro do card; em desktop usa a largura disponível de forma sóbria.
+- Não houve alteração de backend, API, Prisma schema, migrations, packages, mocks, seeds ou dados artificiais; `pnpm --dir backend db:migrate` não foi necessário.
+- Builder/Quick Copy não estava disponível como ferramenta callable no ambiente; a validação visual usou o recorte enviado pelo usuário e o PNG local `_product/proto/admin/Psicólogos/Detalhes do psicólogo/Estatísticas.png`.
+- ADR atualizado: `adrs/0290-admin-psicologo-comunidade-resumo-cobertura.md`.
+- Validações executadas para este ajuste: `pnpm --dir admin exec biome check --write "src/app/(admin)/psicologos/[id]/client.tsx"`, `pnpm --dir admin exec eslint "src/app/(admin)/psicologos/[id]/client.tsx"`, `pnpm --dir admin check`, `pnpm --dir admin build` e `pnpm check`.
+- Validação de browser local/headless via Chrome/CDP em `/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=estatisticas`: desktop 1365px confirmou tabela com 7 colunas e filtro próprio `active-communities-statistics-*`; mobile 390px confirmou rolagem horizontal controlada da tabela. Admin temporário real criado para validação foi removido ao final.
