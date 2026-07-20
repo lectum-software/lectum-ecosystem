@@ -218,3 +218,23 @@ A decisao e calcular `top_communities.items[].activity_count`, `posts_count` e `
 Acessos a perfil de psicologos permanecem em **Estatisticas de conteudo** como `profile_accesses`, mas deixam de compor `hourly_activity.total` da visao geral porque o evento aponta para um psicologo, nao para uma comunidade unica. Atribuir esse acesso a todas as comunidades do psicologo geraria dupla contagem; escolher uma comunidade por inferencia criaria dado artificial. Consequentemente, o total horario passa a representar apenas atividades com comunidade atribuivel e fica comparavel ao ranking.
 
 Consequencia: **Principais comunidades** exibe atividades e acessos coerentes com **Horarios de maior atividade** para o periodo selecionado, sem endpoint paralelo, schema Prisma/migration, pacote novo, seed, mock ou backfill.
+
+## Atualizacao 2026-07-20: cobertura de acolhimento geral no dashboard
+
+O dashboard geral `/comunidades` passa a exibir, abaixo do grafico de **Estatisticas de conteudo**, um bloco de **Cobertura de acolhimento** agregado de todas as comunidades.
+
+A decisao e reutilizar o contrato ja existente em `global_statistics.current.counters.posts`, sem criar endpoint paralelo: `patients` representa os posts de pacientes no periodo selecionado e `patient_posts_answered_by_verified_psychologists` representa quantos desses posts ja receberam resposta de psicologo verificado ate o fim do periodo. A diferenca entre os dois valores e exibida como **Aguardando acolhimento**.
+
+Consequencia: o Admin ganha uma leitura operacional direta da cobertura qualificada em todas as comunidades, alinhada ao mesmo filtro de periodo do grafico de conteudo, sem schema Prisma/migration, dependencia, mock, seed, backfill ou nova regra persistida.
+
+Em refinamento posterior do mesmo ajuste, o contrato `global_statistics.current.counters` foi ampliado com `care_coverage`, mantendo o mesmo endpoint do dashboard. Esse objeto consolida o total de posts de pacientes, a quantidade respondida por psicologos verificados, a quantidade aguardando acolhimento, o tempo medio ate a primeira resposta verificada e a quebra por posts anonimos/identificados.
+
+A UI do dashboard geral replica o mesmo layout do bloco **Cobertura de acolhimento** da aba **Estatisticas** do detalhe da comunidade: card principal de posts de pacientes com barra anonimos/identificados, cards operacionais de **Aguardando acolhimento** e **Tempo medio ate 1ª resposta**, e barra final de taxa de cobertura por psicologos verificados. Quando a pagina usa filtros por bloco, o card renderiza os controles globais sincronizados, sem criar recorte proprio, endpoint paralelo ou estado temporal independente.
+
+## Atualizacao 2026-07-20: filtros deslocados para blocos analiticos
+
+O dashboard geral `/comunidades` deixa de exibir os controles de periodo/data no header da pagina. A decisao e colocar os mesmos controles diretamente nos blocos que dependem do recorte temporal: **Estatisticas de pessoas**, **Estatisticas de conteudo**, **Cobertura de acolhimento**, **Principais comunidades** e **Horarios de maior atividade**.
+
+Os controles sao renderizados em cada bloco, mas permanecem sincronizados e continuam alimentando a mesma query real do dashboard. Essa escolha evita estados concorrentes e multiplas leituras divergentes na mesma pagina nesta V1, ao mesmo tempo em que aproxima a edicao de periodo das secoes onde os dados sao consumidos. **Postagens mais recentes** e **Posts mais populares** ficam sem controles por decisao anterior de produto.
+
+Consequencia: a pagina reduz o peso visual do header e aumenta a autonomia visual de cada bloco analitico sem criar endpoint paralelo, schema/migration, dependencia, mock, seed ou backfill.

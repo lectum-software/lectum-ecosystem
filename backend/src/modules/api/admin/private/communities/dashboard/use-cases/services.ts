@@ -739,12 +739,47 @@ const buildDashboardGlobalStatistics = (
   const upvoteCount = periodVotes.filter((vote) => vote.value === 1).length;
   const downvoteCount = periodVotes.filter((vote) => vote.value === -1).length;
   const savesCount = periodPostSaves.length + periodReplySaves.length;
-  const patientPostsAnsweredByVerifiedPsychologists = patientPosts.filter((post) =>
-    post.replies.some(
-      (reply) =>
-        reply.createdAt <= period.end && isVerifiedDashboardStatisticsPsychologist(reply.author),
-    ),
-  ).length;
+  const patientPostsWithVerifiedResponse = patientPosts.flatMap((post) => {
+    const firstVerifiedReply = post.replies
+      .filter(
+        (reply) =>
+          reply.createdAt <= period.end && isVerifiedDashboardStatisticsPsychologist(reply.author),
+      )
+      .sort((left, right) => left.createdAt.getTime() - right.createdAt.getTime())[0];
+
+    if (!firstVerifiedReply) return [];
+
+    return [
+      {
+        minutes: Math.max(
+          0,
+          Math.round((firstVerifiedReply.createdAt.getTime() - post.createdAt.getTime()) / 60_000),
+        ),
+        post,
+      },
+    ];
+  });
+  const patientPostsAnsweredByVerifiedPsychologists = patientPostsWithVerifiedResponse.length;
+  const patientPostVerifiedResponseMinutes = patientPostsWithVerifiedResponse.map(
+    (item) => item.minutes,
+  );
+  const patientPostsAwaitingVerifiedPsychologistResponse = Math.max(
+    0,
+    patientPosts.length - patientPostsAnsweredByVerifiedPsychologists,
+  );
+  const anonymousPatientPosts = patientPosts.filter((post) => post.anonymous);
+  const identifiedPatientPosts = patientPosts.filter((post) => !post.anonymous);
+  const anonymousPatientPostsAnsweredByVerifiedPsychologists =
+    patientPostsWithVerifiedResponse.filter((item) => item.post.anonymous).length;
+  const identifiedPatientPostsAnsweredByVerifiedPsychologists =
+    patientPostsWithVerifiedResponse.filter((item) => !item.post.anonymous).length;
+  const averageFirstVerifiedResponseMinutes =
+    patientPostVerifiedResponseMinutes.length > 0
+      ? Math.round(
+          patientPostVerifiedResponseMinutes.reduce((total, value) => total + value, 0) /
+            patientPostVerifiedResponseMinutes.length,
+        )
+      : null;
   const activityItems: DashboardStatisticsActivity[] = [];
 
   for (const member of dataset.members) {
@@ -968,6 +1003,30 @@ const buildDashboardGlobalStatistics = (
       anonymous_posts: {
         source: "community_post.anonymous",
         total: anonymousPostCount,
+      },
+      care_coverage: {
+        average_first_verified_response_minutes: averageFirstVerifiedResponseMinutes,
+        patient_posts_awaiting_verified_psychologist_response:
+          patientPostsAwaitingVerifiedPsychologistResponse,
+        patient_posts_responded_by_verified_psychologists:
+          patientPostsAnsweredByVerifiedPsychologists,
+        patient_posts_verified_response_breakdown: {
+          anonymous: {
+            responded_by_verified_psychologists:
+              anonymousPatientPostsAnsweredByVerifiedPsychologists,
+            total: anonymousPatientPosts.length,
+          },
+          identified: {
+            responded_by_verified_psychologists:
+              identifiedPatientPostsAnsweredByVerifiedPsychologists,
+            total: identifiedPatientPosts.length,
+          },
+          total: {
+            responded_by_verified_psychologists: patientPostsAnsweredByVerifiedPsychologists,
+            total: patientPosts.length,
+          },
+        },
+        source: "community_post+post_reply",
       },
       content_engagement: {
         downvotes: downvoteCount,

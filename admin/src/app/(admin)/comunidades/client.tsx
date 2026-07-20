@@ -6,6 +6,7 @@ import {
   ArrowUp,
   BarChart3,
   Bookmark,
+  CheckCircle2,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
@@ -822,6 +823,78 @@ const buildDashboardStatisticMetricItems = (
     };
   });
 
+const formatDashboardCareCoveragePercent = (value: number) =>
+  `${percentageFormatter.format(Math.round(value * 10) / 10)}%`;
+
+const formatDashboardCareCoverageDuration = (value: number | null | undefined) => {
+  if (value === null || value === undefined) return "—";
+
+  const minutes = Math.max(0, Math.round(Number(value) || 0));
+
+  if (minutes < 60) return `${numberFormatter.format(minutes)} min`;
+
+  const hours = Math.floor(minutes / 60);
+  const remainingMinutes = minutes % 60;
+
+  if (hours < 24) {
+    return remainingMinutes > 0
+      ? `${numberFormatter.format(hours)}h ${numberFormatter.format(remainingMinutes)}min`
+      : `${numberFormatter.format(hours)}h`;
+  }
+
+  const days = Math.floor(hours / 24);
+  const remainingHours = hours % 24;
+
+  return remainingHours > 0
+    ? `${numberFormatter.format(days)}d ${numberFormatter.format(remainingHours)}h`
+    : `${numberFormatter.format(days)}d`;
+};
+
+const formatDashboardVerifiedResponseDetail = (responded: number, total: number) =>
+  `${formatCountLabel(
+    responded,
+    "respondido por psicólogo verificado",
+    "respondidos por psicólogos verificados",
+  )} (${formatDashboardCareCoveragePercent(dashboardStatisticPercentage(responded, total))})`;
+
+const buildDashboardCareCoverageSnapshot = (statistics: CommunitiesDashboardGlobalStatistics) => {
+  const coverage = statistics.counters.care_coverage;
+  const breakdown = coverage.patient_posts_verified_response_breakdown;
+  const totalPatientPosts = Math.max(0, breakdown.total.total);
+  const respondedByVerified = Math.min(
+    totalPatientPosts,
+    Math.max(0, breakdown.total.responded_by_verified_psychologists),
+  );
+  const awaitingCoverage = Math.min(
+    totalPatientPosts,
+    Math.max(0, coverage.patient_posts_awaiting_verified_psychologist_response),
+  );
+  const anonymousPosts = Math.min(totalPatientPosts, Math.max(0, breakdown.anonymous.total));
+  const identifiedPosts = Math.min(totalPatientPosts, Math.max(0, breakdown.identified.total));
+  const anonymousRespondedByVerified = Math.min(
+    anonymousPosts,
+    Math.max(0, breakdown.anonymous.responded_by_verified_psychologists),
+  );
+  const identifiedRespondedByVerified = Math.min(
+    identifiedPosts,
+    Math.max(0, breakdown.identified.responded_by_verified_psychologists),
+  );
+
+  return {
+    anonymousPosts,
+    anonymousRate: dashboardStatisticPercentage(anonymousPosts, totalPatientPosts),
+    anonymousRespondedByVerified,
+    awaitingCoverage,
+    awaitingRate: dashboardStatisticPercentage(awaitingCoverage, totalPatientPosts),
+    coverageRate: dashboardStatisticPercentage(respondedByVerified, totalPatientPosts),
+    identifiedPosts,
+    identifiedRate: dashboardStatisticPercentage(identifiedPosts, totalPatientPosts),
+    identifiedRespondedByVerified,
+    responseAverageMinutes: coverage.average_first_verified_response_minutes,
+    respondedByVerified,
+    totalPatientPosts,
+  };
+};
 const totalDashboardStatisticValue = (statistics: CommunitiesDashboardGlobalStatistics) =>
   statistics.charts.daily.reduce(
     (total, point) =>
@@ -939,23 +1012,92 @@ const EmptyState = ({ period }: { period: AdminCommunitiesDashboard["period"] })
   </CardShell>
 );
 
-const CommunitiesHeader = ({
-  displayRange,
-  onDateChange,
-  onDateControlsBlur,
-  onPeriodChange,
-  period,
-  rangeError,
-}: {
+type DashboardPeriodControlsProps = {
+  controlIdPrefix: string;
   displayRange: CommunitiesDashboardQuery;
   onDateChange: (field: "from" | "to", value: string) => void;
   onDateControlsBlur: FocusEventHandler<HTMLDivElement>;
   onPeriodChange: (period: CommunityDashboardPeriodPreset) => void;
   period: CommunityDashboardPeriodValue;
   rangeError: string | null;
-}) => (
+};
+
+const DashboardPeriodControls = ({
+  controlIdPrefix,
+  displayRange,
+  onDateChange,
+  onDateControlsBlur,
+  onPeriodChange,
+  period,
+  rangeError,
+}: DashboardPeriodControlsProps) => (
+  <div className="min-w-0">
+    <div className="grid min-w-0 gap-3 sm:grid-cols-[minmax(150px,1fr)_minmax(136px,0.75fr)_minmax(136px,0.75fr)]">
+      <label
+        className="grid gap-1 text-xs font-semibold text-muted"
+        htmlFor={`${controlIdPrefix}-period`}
+      >
+        Período
+        <span className="relative">
+          <select
+            className="h-11 w-full appearance-none rounded-control border border-border bg-surface py-0 pl-3 pr-11 text-sm font-semibold text-foreground shadow-control outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+            id={`${controlIdPrefix}-period`}
+            onChange={(event) =>
+              onPeriodChange(event.target.value as CommunityDashboardPeriodPreset)
+            }
+            value={period}
+          >
+            {period === "custom" ? (
+              <option disabled hidden value="custom">
+                Personalizado
+              </option>
+            ) : null}
+            {COMMUNITY_DASHBOARD_PERIOD_OPTIONS.map((option) => (
+              <option key={option.id} value={option.id}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+          <ChevronDown
+            aria-hidden
+            className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground"
+          />
+        </span>
+      </label>
+      <div className="grid min-w-0 gap-3 sm:col-span-2 sm:grid-cols-2" onBlur={onDateControlsBlur}>
+        <label className="text-xs font-semibold text-muted" htmlFor={`${controlIdPrefix}-from`}>
+          De
+          <input
+            className="mt-1 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground shadow-control focus:border-primary"
+            id={`${controlIdPrefix}-from`}
+            max={displayRange.to}
+            onChange={(event) => onDateChange("from", event.target.value)}
+            type="date"
+            value={displayRange.from ?? ""}
+          />
+        </label>
+        <label className="text-xs font-semibold text-muted" htmlFor={`${controlIdPrefix}-to`}>
+          Até
+          <input
+            className="mt-1 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground shadow-control focus:border-primary"
+            id={`${controlIdPrefix}-to`}
+            min={displayRange.from}
+            onChange={(event) => onDateChange("to", event.target.value)}
+            type="date"
+            value={displayRange.to ?? ""}
+          />
+        </label>
+      </div>
+    </div>
+    {period === "custom" && rangeError ? (
+      <p className="mt-2 max-w-xl text-xs font-bold text-danger">{rangeError}</p>
+    ) : null}
+  </div>
+);
+
+const CommunitiesHeader = () => (
   <section className="rounded-card border border-border/70 bg-surface/90 p-5 shadow-admin-soft backdrop-blur md:p-6">
-    <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
+    <div>
       <div>
         <p className="text-xs font-semibold uppercase tracking-[0.12em] text-primary">
           Comunidades
@@ -966,62 +1108,6 @@ const CommunitiesHeader = ({
         <p className="mt-2 max-w-2xl text-sm font-medium leading-6 text-muted">
           Acompanhe a atividade e o engajamento das comunidades.
         </p>
-      </div>
-
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
-        <label className="grid gap-1 text-xs font-semibold text-muted" htmlFor="communities-period">
-          Período
-          <span className="relative">
-            <select
-              className="h-11 min-w-[170px] appearance-none rounded-control border border-border bg-surface py-0 pl-3 pr-11 text-sm font-semibold text-foreground shadow-control outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
-              id="communities-period"
-              onChange={(event) =>
-                onPeriodChange(event.target.value as CommunityDashboardPeriodPreset)
-              }
-              value={period}
-            >
-              {period === "custom" ? (
-                <option disabled hidden value="custom">
-                  Personalizado
-                </option>
-              ) : null}
-              {COMMUNITY_DASHBOARD_PERIOD_OPTIONS.map((option) => (
-                <option key={option.id} value={option.id}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-            <ChevronDown
-              aria-hidden
-              className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground"
-            />
-          </span>
-        </label>
-        <div className="grid gap-3 sm:grid-cols-2" onBlur={onDateControlsBlur}>
-          <label className="text-xs font-semibold text-muted">
-            De
-            <input
-              className="mt-1 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground shadow-control focus:border-primary"
-              max={displayRange.to}
-              onChange={(event) => onDateChange("from", event.target.value)}
-              type="date"
-              value={displayRange.from ?? ""}
-            />
-          </label>
-          <label className="text-xs font-semibold text-muted">
-            Até
-            <input
-              className="mt-1 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground shadow-control focus:border-primary"
-              min={displayRange.from}
-              onChange={(event) => onDateChange("to", event.target.value)}
-              type="date"
-              value={displayRange.to ?? ""}
-            />
-          </label>
-        </div>
-        {period === "custom" && rangeError ? (
-          <p className="max-w-md text-xs font-bold text-danger">{rangeError}</p>
-        ) : null}
       </div>
     </div>
   </section>
@@ -1366,6 +1452,7 @@ const DashboardStatisticsLineChart = ({
 
 const DashboardStatisticsSection = ({
   counterLayout = "grid",
+  filters,
   metrics,
   onToggleMetric,
   points,
@@ -1375,6 +1462,7 @@ const DashboardStatisticsSection = ({
   visibleMetricIds,
 }: {
   counterLayout?: "carousel" | "grid";
+  filters?: React.ReactNode;
   metrics: DashboardStatisticMetricItem[];
   onToggleMetric: (id: DashboardStatisticMetricId) => void;
   periodLabel: string;
@@ -1387,9 +1475,12 @@ const DashboardStatisticsSection = ({
 
   return (
     <CardShell className="p-5 sm:p-6">
-      <div>
-        <h2 className="text-lg font-black text-foreground">{title}</h2>
-        <BlockPeriodLabel>{periodLabel}</BlockPeriodLabel>
+      <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+        <div className="min-w-0">
+          <h2 className="text-lg font-black text-foreground">{title}</h2>
+          <BlockPeriodLabel>{periodLabel}</BlockPeriodLabel>
+        </div>
+        {filters ? <div className="w-full min-w-0 xl:max-w-xl">{filters}</div> : null}
       </div>
       {counterLayout === "grid" ? (
         <DashboardStatisticsMetricGrid
@@ -1676,24 +1767,29 @@ const PopularPostsTable = ({ posts }: { posts: CommunitiesDashboardPopularPost[]
 
 const TopCommunitiesTable = ({
   communities,
+  filters,
   periodLabel,
 }: {
   communities: CommunitiesDashboardTopCommunity[];
+  filters?: React.ReactNode;
   periodLabel: string;
 }) => (
   <div className="scroll-mt-6" id="lista-de-comunidades">
     <CardShell className="p-5">
-      <div className="flex items-start justify-between gap-3">
-        <div>
+      <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+        <div className="min-w-0">
           <h2 className="text-lg font-black text-foreground">Principais comunidades</h2>
           <BlockPeriodLabel>{periodLabel}</BlockPeriodLabel>
         </div>
-        <Link
-          className="text-xs font-black text-primary transition hover:text-primary-hover"
-          href="/comunidades/lista"
-        >
-          Ver todas
-        </Link>
+        <div className="flex w-full min-w-0 flex-col gap-3 xl:max-w-xl xl:items-end">
+          {filters}
+          <Link
+            className="text-xs font-black text-primary transition hover:text-primary-hover"
+            href="/comunidades/lista"
+          >
+            Ver todas
+          </Link>
+        </div>
       </div>
 
       {communities.length === 0 ? (
@@ -1810,9 +1906,11 @@ const TopCommunitiesTable = ({
 );
 
 const CommunitiesPeakActivityHoursCard = ({
+  filters,
   periodLabel,
   points,
 }: {
+  filters?: React.ReactNode;
   periodLabel: string;
   points: CommunitiesDashboardHourlyActivityPoint[];
 }) => {
@@ -1829,9 +1927,12 @@ const CommunitiesPeakActivityHoursCard = ({
 
   return (
     <CardShell className="h-full p-5">
-      <div>
-        <h2 className="text-lg font-black text-foreground">Horários de maior atividade</h2>
-        <BlockPeriodLabel>{periodLabel}</BlockPeriodLabel>
+      <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+        <div className="min-w-0">
+          <h2 className="text-lg font-black text-foreground">Horários de maior atividade</h2>
+          <BlockPeriodLabel>{periodLabel}</BlockPeriodLabel>
+        </div>
+        {filters ? <div className="w-full min-w-0 xl:max-w-xl">{filters}</div> : null}
       </div>
 
       {totalActivity === 0 ? (
@@ -1918,10 +2019,215 @@ const CommunitiesPeakActivityHoursCard = ({
   );
 };
 
+const DashboardCareCoverageCard = ({
+  filters,
+  periodLabel,
+  statistics,
+}: {
+  filters?: React.ReactNode;
+  periodLabel: string;
+  statistics: CommunitiesDashboardGlobalStatistics;
+}) => {
+  const coverage = buildDashboardCareCoverageSnapshot(statistics);
+  const patientVisibilitySegments = [
+    {
+      id: "anonymous_posts",
+      label: "Anônimos",
+      percentage: coverage.anonymousRate,
+      responseDetail: formatDashboardVerifiedResponseDetail(
+        coverage.anonymousRespondedByVerified,
+        coverage.anonymousPosts,
+      ),
+      toneClassName: "bg-warning",
+      value: coverage.anonymousPosts,
+    },
+    {
+      id: "identified_posts",
+      label: "Identificados",
+      percentage: coverage.identifiedRate,
+      responseDetail: formatDashboardVerifiedResponseDetail(
+        coverage.identifiedRespondedByVerified,
+        coverage.identifiedPosts,
+      ),
+      toneClassName: "bg-primary",
+      value: coverage.identifiedPosts,
+    },
+  ] as const;
+  const operationalIndicators = [
+    {
+      description:
+        coverage.awaitingCoverage > 0
+          ? `${formatDashboardCareCoveragePercent(
+              coverage.awaitingRate,
+            )} ainda sem resposta verificada.`
+          : "Sem pendências de acolhimento verificado.",
+      icon: coverage.awaitingCoverage > 0 ? AlertTriangle : CheckCircle2,
+      id: "awaiting_verified_response",
+      label: "Aguardando acolhimento",
+      toneClassName:
+        coverage.awaitingCoverage > 0 ? "bg-danger/10 text-danger" : "bg-success/10 text-success",
+      value: numberFormatter.format(coverage.awaitingCoverage),
+    },
+    {
+      description:
+        coverage.respondedByVerified > 0
+          ? `Média de ${formatCountLabel(
+              coverage.respondedByVerified,
+              "post acolhido",
+              "posts acolhidos",
+            )}.`
+          : "Sem resposta verificada no período.",
+      icon: Reply,
+      id: "average_first_verified_response",
+      label: "Tempo médio até 1ª resposta",
+      toneClassName: "bg-surface-muted text-muted",
+      value: formatDashboardCareCoverageDuration(coverage.responseAverageMinutes),
+    },
+  ] as const;
+
+  return (
+    <CardShell className="p-5 sm:p-6">
+      <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+        <div className="min-w-0">
+          <h2 className="text-xl font-black text-foreground">Cobertura de acolhimento</h2>
+          <BlockPeriodLabel>{periodLabel}</BlockPeriodLabel>
+          <p className="mt-2 max-w-3xl text-sm font-bold leading-6 text-muted">
+            Taxa de resposta qualificada aos posts de pacientes.
+          </p>
+        </div>
+        {filters ? <div className="w-full min-w-0 xl:max-w-xl">{filters}</div> : null}
+      </div>
+
+      <div className="mt-6 grid gap-4 xl:grid-cols-[minmax(0,1.8fr)_minmax(260px,0.9fr)_minmax(260px,0.9fr)]">
+        <article className="min-w-0 rounded-3xl border border-primary/20 bg-surface-muted p-5 shadow-sm">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <div className="flex min-w-0 items-start gap-3.5">
+              <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-success/10 text-success">
+                <FileText aria-hidden className="h-6 w-6" />
+              </span>
+              <div className="min-w-0">
+                <h3 className="text-sm font-black leading-snug text-foreground">
+                  Posts de pacientes
+                </h3>
+              </div>
+            </div>
+            <div className="shrink-0 sm:text-right">
+              <p className="text-4xl font-black leading-none text-foreground">
+                {numberFormatter.format(coverage.totalPatientPosts)}
+              </p>
+              <p className="mt-3 rounded-2xl bg-surface px-4 py-2.5 text-xs font-black leading-5 text-primary shadow-sm">
+                {formatDashboardVerifiedResponseDetail(
+                  coverage.respondedByVerified,
+                  coverage.totalPatientPosts,
+                )}
+              </p>
+            </div>
+          </div>
+
+          <div
+            aria-label={`Distribuição dos posts de pacientes: ${formatDashboardCareCoveragePercent(
+              coverage.anonymousRate,
+            )} anônimos e ${formatDashboardCareCoveragePercent(
+              coverage.identifiedRate,
+            )} identificados`}
+            className="mt-5 flex h-4 overflow-hidden rounded-full bg-surface shadow-inner"
+            role="img"
+          >
+            <span
+              className="block h-full bg-warning"
+              style={{ width: `${Math.min(100, Math.max(0, coverage.anonymousRate))}%` }}
+            />
+            <span
+              className="block h-full bg-primary"
+              style={{ width: `${Math.min(100, Math.max(0, coverage.identifiedRate))}%` }}
+            />
+          </div>
+
+          <div className="mt-5 grid gap-3 sm:grid-cols-2">
+            {patientVisibilitySegments.map((segment) => (
+              <div
+                className="rounded-3xl border border-border/70 bg-surface p-4 shadow-sm"
+                key={segment.id}
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <span className="inline-flex items-center gap-2 text-sm font-black text-foreground">
+                    <span className={cn("h-3 w-3 rounded-full", segment.toneClassName)} />
+                    {segment.label}
+                  </span>
+                  <span className="text-sm font-black text-muted">
+                    {formatDashboardCareCoveragePercent(segment.percentage)}
+                  </span>
+                </div>
+                <p className="mt-4 text-3xl font-black leading-none text-foreground">
+                  {numberFormatter.format(segment.value)}
+                </p>
+                <p className="mt-3 text-xs font-black leading-5 text-primary">
+                  {segment.responseDetail}
+                </p>
+              </div>
+            ))}
+          </div>
+        </article>
+
+        {operationalIndicators.map((indicator) => {
+          const Icon = indicator.icon;
+
+          return (
+            <article
+              className="min-w-0 rounded-3xl border border-border/80 bg-surface-muted p-5 shadow-sm"
+              key={indicator.id}
+            >
+              <span
+                className={cn(
+                  "grid h-12 w-12 place-items-center rounded-full",
+                  indicator.toneClassName,
+                )}
+              >
+                <Icon aria-hidden className="h-6 w-6" />
+              </span>
+              <h3 className="mt-5 min-h-12 text-sm font-black leading-6 text-foreground">
+                {indicator.label}
+              </h3>
+              <p className="mt-3 text-4xl font-black leading-none text-foreground">
+                {indicator.value}
+              </p>
+              <p className="mt-4 text-xs font-bold leading-6 text-muted">{indicator.description}</p>
+            </article>
+          );
+        })}
+      </div>
+
+      <div className="mt-5 rounded-3xl border border-border bg-surface p-5 shadow-sm">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <span className="text-sm font-black text-foreground">
+            Taxa de cobertura por psicólogos verificados
+          </span>
+          <span className="text-sm font-black text-primary">
+            {formatDashboardCareCoveragePercent(coverage.coverageRate)}
+          </span>
+        </div>
+        <div
+          aria-label={`Cobertura verificada de ${formatDashboardCareCoveragePercent(
+            coverage.coverageRate,
+          )}`}
+          className="mt-4 h-4 overflow-hidden rounded-full bg-surface-muted"
+          role="img"
+        >
+          <span
+            className="block h-full rounded-full bg-primary"
+            style={{ width: `${Math.min(100, Math.max(0, coverage.coverageRate))}%` }}
+          />
+        </div>
+      </div>
+    </CardShell>
+  );
+};
 const DashboardContent = ({
+  periodControls,
   periodLabel,
   summary,
 }: {
+  periodControls: Omit<DashboardPeriodControlsProps, "controlIdPrefix">;
   periodLabel: string;
   summary: AdminCommunitiesDashboard;
 }) => {
@@ -1961,6 +2267,9 @@ const DashboardContent = ({
         : [...current, id],
     );
   };
+  const renderPeriodControls = (controlIdPrefix: string) => (
+    <DashboardPeriodControls controlIdPrefix={controlIdPrefix} {...periodControls} />
+  );
 
   return (
     <div className="min-w-0 space-y-5 overflow-x-hidden">
@@ -1968,6 +2277,7 @@ const DashboardContent = ({
 
       <DashboardStatisticsSection
         counterLayout="grid"
+        filters={renderPeriodControls("communities-people-statistics")}
         metrics={peopleMetrics}
         onToggleMetric={togglePeopleMetric}
         periodLabel={periodLabel}
@@ -1979,6 +2289,7 @@ const DashboardContent = ({
 
       <DashboardStatisticsSection
         counterLayout="carousel"
+        filters={renderPeriodControls("communities-content-statistics")}
         metrics={contentMetrics}
         onToggleMetric={toggleContentMetric}
         periodLabel={periodLabel}
@@ -1988,12 +2299,20 @@ const DashboardContent = ({
         visibleMetricIds={visibleContentMetricIds}
       />
 
+      <DashboardCareCoverageCard
+        filters={renderPeriodControls("communities-care-coverage")}
+        periodLabel={periodLabel}
+        statistics={summary.global_statistics.current}
+      />
+
       <div className="grid min-w-0 gap-5 xl:grid-cols-2">
         <TopCommunitiesTable
           communities={summary.top_communities.items}
+          filters={renderPeriodControls("communities-top-communities")}
           periodLabel={periodLabel}
         />
         <CommunitiesPeakActivityHoursCard
+          filters={renderPeriodControls("communities-peak-activity")}
           periodLabel={periodLabel}
           points={summary.global_statistics.current.charts.hourly_activity}
         />
@@ -2037,14 +2356,7 @@ export const AdminCommunitiesClient = () => {
 
   return (
     <div className="min-w-0 overflow-x-hidden space-y-7">
-      <CommunitiesHeader
-        displayRange={draftRange}
-        onDateChange={handleDateChange}
-        onDateControlsBlur={handleDateControlsBlur}
-        onPeriodChange={handlePeriodChange}
-        period={selectedPeriod}
-        rangeError={rangeError}
-      />
+      <CommunitiesHeader />
 
       {!validRange ? (
         <ErrorState
@@ -2061,6 +2373,14 @@ export const AdminCommunitiesClient = () => {
 
       {validRange && query.data ? (
         <DashboardContent
+          periodControls={{
+            displayRange: draftRange,
+            onDateChange: handleDateChange,
+            onDateControlsBlur: handleDateControlsBlur,
+            onPeriodChange: handlePeriodChange,
+            period: selectedPeriod,
+            rangeError,
+          }}
           periodLabel={formatSelectedPeriod(
             query.data.period,
             getCommunityDashboardPeriodLabel(selectedPeriod),

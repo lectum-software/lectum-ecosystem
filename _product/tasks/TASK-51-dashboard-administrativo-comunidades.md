@@ -955,3 +955,89 @@ Regras de UI obrigatórias:
 - Smoke service real `buildCommunitiesDashboard({ period: "all" })` retornou totais horarios `accesses=71`, `posts=24`, `replies=80`, `engagement=208`, `reports=12`, `total=395`; as comunidades principais passaram a expor atividades atribuidas por comunidade, com o top 5 somando 356 atividades e o restante das comunidades respondendo pelo complemento do total.
 - Smoke service real nos presets `today`, `week`, `month`, `year` e `all` confirmou que **Principais comunidades** e **Horarios de maior atividade** usam o mesmo recorte de periodo.
 - Browser local/headless via Chrome/CDP em `http://localhost:3002/comunidades` com sessao admin real temporaria validou os dois blocos lado a lado, sem overflow horizontal global, com **Principais comunidades** exibindo `Periodo: Todo o periodo` e copy `atividades no periodo`.
+
+## Ajuste complementar 2026-07-20 - Cobertura de acolhimento geral no dashboard
+
+- Pedido do usuário: adicionar no dashboard geral `/comunidades` um bloco de **Cobertura de acolhimento** geral, de todas as comunidades, abaixo do gráfico de **Estatísticas de conteúdo**.
+- Frontend Admin: o bloco foi inserido imediatamente após o card de **Estatísticas de conteúdo**, preservando a leitura mobile-first, tokens visuais e sem uso de `<img>` cru.
+- Backend Admin: o endpoint real `GET /api/admin/private/communities/dashboard` passou a expor `global_statistics.current.counters.care_coverage`, calculado a partir de `community_post` e `post_reply`.
+- O bloco exibe posts sem cobertura, taxa de cobertura qualificada e uma tabela única de respostas por psicólogos verificados com **Posts de pacientes**, **Anônimos** e **Identificados**, incluindo total, quantidade respondida por verificado e taxa.
+- Refinos pedidos pelo usuário: a tag azul **Acolhimento geral** e o texto auxiliar explicativo foram removidos; os números da tabela foram alinhados mesmo quando o label **Respondidos por verificado** quebra linha.
+- Builder/Quick Copy `vcp://quickcopy/vcp-24aaa2941d814e5b90572bc93ae50e2a` não está exposto como ferramenta callable neste ambiente; referência usada: `_product/proto/admin/Comunidades/Comunidades - Dashboard.png` e o layout atual do dashboard.
+- Não houve endpoint paralelo, schema Prisma/migration, package novo, mock, seed ou backfill.
+- ADR atualizado: `adrs/0231-admin-comunidades-dashboard-agregacoes.md`.
+
+### Critérios deste ajuste
+
+- [x] O dashboard `/comunidades` exibe um bloco de **Cobertura de acolhimento** abaixo do gráfico de **Estatísticas de conteúdo**.
+- [x] O bloco agrega todas as comunidades e respeita o período selecionado no dashboard.
+- [x] A métrica usa dados reais de `community_post` e `post_reply` em `global_statistics.current.counters.care_coverage`.
+- [x] A tabela mostra total, anônimos e identificados com respondidos por verificado e taxas respectivas.
+- [x] Tag auxiliar, texto auxiliar e desalinhamento dos zeros na tabela foram removidos.
+- [x] O bloco mantém apresentação mobile-first e não usa `<img>` cru.
+- [x] Nenhum mock, dado fake permanente, endpoint simulado, package novo, schema Prisma ou migration foi usado.
+
+### Validação deste ajuste
+
+- `pnpm --dir admin exec biome check "src/app/(admin)/comunidades/client.tsx"`: sem erros.
+- `pnpm --dir admin exec eslint "src/app/(admin)/comunidades/client.tsx"`: sem erros.
+- Smoke service real `buildCommunitiesDashboard({ period: "week" })` retornou `status=200` e `care_coverage` com total, anônimos, identificados, respondidos por verificado e aguardando acolhimento.
+
+## Ajuste complementar 2026-07-20 - Layout de cobertura do detalhe no dashboard geral
+
+- Pedido do usuário: replicar, no dashboard geral `/comunidades`, o layout do bloco **Cobertura de acolhimento** já usado dentro da comunidade na aba **Estatísticas**.
+- O bloco geral passou a usar o mesmo padrão visual: card principal de **Posts de pacientes** com barra Anônimos/Identificados, cards laterais de **Aguardando acolhimento** e **Tempo médio até 1ª resposta**, além da barra final **Taxa de cobertura por psicólogos verificados**.
+- Backend Admin: `global_statistics.current.counters.care_coverage` passou a incluir `average_first_verified_response_minutes`, calculado pela primeira resposta de psicólogo verificado em cada post de paciente do período.
+- O dashboard geral renderiza os controles globais sincronizados no bloco quando a página usa filtros por bloco; o card não cria recorte próprio, endpoint paralelo ou estado temporal independente.
+- Não houve endpoint paralelo, schema Prisma/migration, package novo, mock, seed, backfill ou uso de `<img>` cru.
+
+### Critérios deste ajuste
+
+- [x] O bloco geral replica o layout do bloco de cobertura da aba **Estatísticas** da comunidade.
+- [x] A quebra Anônimos/Identificados, posts respondidos por verificados, pendências e tempo médio usam dados reais agregados de todas as comunidades.
+- [x] O bloco continua abaixo de **Estatísticas de conteúdo** e respeita o período global do dashboard.
+
+### Validação deste ajuste
+
+- `pnpm --dir backend exec biome check "src/modules/api/admin/private/communities/dashboard/DTOs/IAdminCommunitiesDashboardDTO.ts" "src/modules/api/admin/private/communities/dashboard/use-cases/services.ts"`: sem erros.
+- `pnpm --dir admin exec biome check "src/api/req/communities/index.ts" "src/app/(admin)/comunidades/client.tsx"`: sem erros.
+- `pnpm --dir admin exec eslint "src/app/(admin)/comunidades/client.tsx"`: sem erros.
+
+### Validação complementar do layout replicado
+
+- `pnpm --dir backend check`: sem erros.
+- `pnpm --dir backend build`: sem erros.
+- `pnpm --dir admin check`: sem erros.
+- `pnpm --dir admin build`: sem erros.
+- `pnpm check`: sem erros.
+- Smoke service real `buildCommunitiesDashboard({ period: "week" })` retornou `status=200`, `care_coverage.average_first_verified_response_minutes`, total, anônimos, identificados, respondidos por verificado e aguardando acolhimento.
+- Smoke HTTP local `GET http://localhost:3002/comunidades` retornou 200.
+
+## Ajuste complementar 2026-07-20 - Filtros por bloco no dashboard geral
+
+- Pedido do usuário: remover os campos de período/data do header do dashboard `/comunidades` e exibir os campos nos blocos **Estatísticas de pessoas**, **Estatísticas de conteúdo**, **Cobertura de acolhimento**, **Principais comunidades** e **Horários de maior atividade**.
+- Frontend Admin: o header passou a conter somente título e descrição da página. Os controles de período, data inicial e data final foram extraídos para `DashboardPeriodControls` e renderizados no topo dos cinco blocos solicitados.
+- Os controles permanecem sincronizados e continuam alimentando a mesma query real `GET /api/admin/private/communities/dashboard`, preservando o comportamento vigente de período único aplicado ao dashboard inteiro, sem criar endpoint paralelo ou estados concorrentes entre blocos.
+- **Postagens mais recentes** e **Posts mais populares** não receberam controles, mantendo a decisão anterior de não fazer parte do recorte operacional desses cinco blocos.
+- Não houve schema Prisma/migration, package novo, mock, seed, backfill, endpoint simulado ou uso de `<img>` cru.
+- Builder/Quick Copy `vcp://quickcopy/vcp-24aaa2941d814e5b90572bc93ae50e2a` não está exposto como ferramenta callable neste ambiente; referências usadas: captura enviada pelo usuário e `_product/proto/admin/Comunidades/Comunidades - Dashboard.png`.
+- ADR atualizado: `adrs/0231-admin-comunidades-dashboard-agregacoes.md`.
+
+### Critérios deste ajuste
+
+- [x] O header de `/comunidades` não exibe mais período nem datas.
+- [x] **Estatísticas de pessoas** exibe período, data inicial e data final.
+- [x] **Estatísticas de conteúdo** exibe período, data inicial e data final.
+- [x] **Cobertura de acolhimento** exibe período, data inicial e data final.
+- [x] **Principais comunidades** exibe período, data inicial e data final.
+- [x] **Horários de maior atividade** exibe período, data inicial e data final.
+- [x] Os controles usam a query real existente do dashboard, sem mocks nem endpoint paralelo.
+
+### Validação deste ajuste
+
+- `pnpm --dir admin check`: sem erros.
+- `pnpm --dir admin build`: sem erros.
+- `pnpm --dir backend check`: sem erros.
+- `pnpm --dir backend build`: sem erros.
+- `pnpm check`: sem erros.
+- Smoke HTTP local `GET http://localhost:3002/comunidades` retornou 200.
