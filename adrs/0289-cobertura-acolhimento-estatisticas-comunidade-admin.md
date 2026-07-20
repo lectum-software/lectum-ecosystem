@@ -37,6 +37,8 @@ A UI Admin renderiza o bloco **Cobertura de acolhimento** abaixo de **Estatísti
 
 Os indicadores **Posts de pacientes**, **Anônimos** e **Identificados** são apresentados como uma única análise visual: um card principal de base de posts de pacientes contém a distribuição por anonimato/identificação, a quantidade total e, dentro de cada segmento, a quantidade e taxa respondida por psicólogos verificados. O card separado **Respondidos por psicólogos verificados** foi removido para evitar duplicidade visual.
 
+Em 2026-07-20, para avaliação visual local solicitada pelo produto enquanto a base de desenvolvimento da comunidade estava zerada, foi adicionada uma prévia visual apenas em desenvolvimento (`NODE_ENV !== "production"`). A prévia só é aplicada quando todos os indicadores reais de cobertura retornam zero/nulo, é sinalizada com **Exemplo local** e não altera o contrato real, backend, persistência, seed, migration ou build de produção. Em produção ou quando houver qualquer dado real, a UI usa exclusivamente os valores retornados por `counters.care_coverage`.
+
 A regra operacional de **Aguardando acolhimento** é intencionalmente mais rígida do que “sem qualquer resposta”: um post deixa a fila de acolhimento somente quando recebe resposta de psicólogo verificado. Isso preserva a aba **Oportunidades** dos psicólogos para atuação operacional e mantém esta visão como métrica administrativa agregada.
 
 ## Consequências
@@ -45,7 +47,8 @@ A regra operacional de **Aguardando acolhimento** é intencionalmente mais rígi
 - A análise de cobertura pode usar período próprio, sem alterar os filtros de **Estatísticas de conteúdo**, **Estatísticas de pessoas** ou **Horários de maior atividade**.
 - Posts com comentários comuns, mas sem resposta verificada, continuam visíveis como demanda de acolhimento.
 - O tempo médio de primeira resposta verificada passa a depender apenas de eventos reais existentes no período selecionado.
-- Não houve alteração em Prisma schema/migrations, pacote novo, endpoint paralelo, mock, seed ou exposição pública desses indicadores.
+- Não houve alteração em Prisma schema/migrations, pacote novo, endpoint paralelo, seed ou exposição pública desses indicadores.
+- A prévia local de desenvolvimento não substitui métrica real e deve ser removida ou desativada quando a avaliação visual não for mais necessária; por estar restrita a desenvolvimento e sinalizada no UI, não afeta decisões administrativas de produção.
 
 ## Validação
 
@@ -69,3 +72,10 @@ A regra operacional de **Aguardando acolhimento** é intencionalmente mais rígi
   retornando 200. Chrome headless sem sessão administrativa confirmou o guard de
   login; a validação visual autenticada ficou limitada à captura enviada pelo
   usuário, ao protótipo local e aos checks/builds.
+- Ajuste visual de 2026-07-20:
+  - `pnpm --dir admin exec biome check "src/app/(admin)/comunidades/[slug]/client.tsx"`;
+  - `pnpm --dir admin exec tsc --noEmit --pretty false`;
+  - `pnpm --dir admin check`;
+  - `pnpm --dir admin build`;
+  - `pnpm check`;
+  - Smoke HTTP local `GET http://localhost:3002/comunidades/ansiedade-em-equilibrio?tab=estatisticas` retornou 200.

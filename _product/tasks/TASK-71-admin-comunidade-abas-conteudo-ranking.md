@@ -623,6 +623,10 @@ Regras:
 
 - `pnpm --dir admin exec biome check "src/app/(admin)/comunidades/[slug]/client.tsx"`
 - `pnpm --dir admin exec tsc --noEmit --pretty false`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check`
+- Smoke HTTP local `GET http://localhost:3002/comunidades/ansiedade-em-equilibrio?tab=estatisticas` retornou 200.
 - Smoke HTTP local `GET http://localhost:3002/comunidades/autocuidado-em-pratica` retornou 200.
 - `pnpm --dir admin check` foi executado como baseline e atingiu timeout após 124s no workspace atual; as validações direcionadas acima passaram sem erros.
 
@@ -709,6 +713,26 @@ Regras:
 - `pnpm --dir backend exec biome check "src/modules/api/admin/private/communities/manage/DTOs/IAdminCommunityManageDTO.ts" "src/modules/api/admin/private/communities/manage/use-cases/services.ts"`
 - `pnpm --dir admin exec tsc --noEmit --pretty false`
 - `pnpm --dir backend exec tsc --noEmit --pretty false`
+
+## Ajuste complementar 2026-07-20 - Preview local visual da Cobertura de acolhimento
+
+- Pedido do usuário: remover a frase **Anônimos e identificados analisados como uma única base de acolhimento.** do card **Posts de pacientes** e exibir números de exemplo na **Cobertura de acolhimento** apenas para avaliação visual.
+- A UI Admin removeu a frase do card principal, preservando a análise integrada por meio da distribuição visual entre **Anônimos** e **Identificados**.
+- Como a base local da comunidade usada na validação está zerada, foi adicionada uma prévia visual exclusivamente local/de desenvolvimento (`NODE_ENV !== "production"`), aplicada somente quando todos os indicadores reais de cobertura retornam zero/nulo.
+- A prévia é sinalizada com o marcador **Exemplo local**, não altera backend, contrato, persistência, seed, migration ou dados reais, e não é usada em build/produção nem quando existir qualquer dado real para o período.
+- Builder/Quick Copy não está exposto como ferramenta callable no ambiente; a referência usada foi a captura enviada pelo usuário e o layout atual da aba **Estatísticas** da comunidade.
+- ADR atualizado: `adrs/0289-cobertura-acolhimento-estatisticas-comunidade-admin.md`.
+
+### Critérios de aceite complementares
+
+- [x] O card **Posts de pacientes** não exibe mais a frase removida pelo usuário.
+- [x] A **Cobertura de acolhimento** exibe números de exemplo somente em ambiente local/de desenvolvimento quando o retorno real está totalmente zerado, para avaliação visual.
+- [x] A prévia visual é identificada como **Exemplo local** e não altera dados reais, endpoints, schema Prisma/migrations ou produção.
+
+### Validação executada para este ajuste
+
+- `pnpm --dir admin exec biome check "src/app/(admin)/comunidades/[slug]/client.tsx"`
+- `pnpm --dir admin exec tsc --noEmit --pretty false`
 - `pnpm --dir admin check`
 - `pnpm --dir backend check`
 - `pnpm --dir backend build`

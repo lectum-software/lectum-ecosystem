@@ -5070,6 +5070,16 @@ const CommunityStatisticsSegment = ({
   );
 };
 
+const COMMUNITY_CARE_COVERAGE_LOCAL_EXAMPLE = {
+  anonymousPosts: 31,
+  anonymousRespondedByVerified: 18,
+  averageFirstVerifiedResponseMinutes: 142,
+  identifiedPosts: 17,
+  identifiedRespondedByVerified: 11,
+  patientPosts: 48,
+  postsWithAnyResponse: 36,
+} as const;
+
 const CommunityCareCoverageBlock = ({
   dateFilters,
   error,
@@ -5085,40 +5095,82 @@ const CommunityCareCoverageBlock = ({
   onRetry: () => void;
   statistics?: AdminCommunityStatistics;
 }) => {
-  const patientPosts = safeCommunityStatisticCount(statistics?.counters.posts.patients);
-  const anonymousPosts = Math.min(
-    patientPosts,
+  const realPatientPosts = safeCommunityStatisticCount(statistics?.counters.posts.patients);
+  const realAnonymousPosts = Math.min(
+    realPatientPosts,
     safeCommunityStatisticCount(statistics?.counters.anonymous_posts.total),
   );
-  const identifiedPosts = Math.max(0, patientPosts - anonymousPosts);
+  const realIdentifiedPosts = Math.max(0, realPatientPosts - realAnonymousPosts);
   const careCoverage = statistics?.counters.care_coverage;
   const verifiedResponseBreakdown = careCoverage?.patient_posts_verified_response_breakdown;
-  const respondedByVerified = Math.min(
-    patientPosts,
+  const realRespondedByVerified = Math.min(
+    realPatientPosts,
     safeCommunityStatisticCount(careCoverage?.patient_posts_responded_by_verified_psychologists),
   );
-  const anonymousRespondedByVerified = Math.min(
-    anonymousPosts,
+  const realAnonymousRespondedByVerified = Math.min(
+    realAnonymousPosts,
     safeCommunityStatisticCount(
       verifiedResponseBreakdown?.anonymous?.responded_by_verified_psychologists,
     ),
   );
-  const identifiedRespondedByVerified = Math.min(
-    identifiedPosts,
+  const realIdentifiedRespondedByVerified = Math.min(
+    realIdentifiedPosts,
     safeCommunityStatisticCount(
       verifiedResponseBreakdown?.identified?.responded_by_verified_psychologists,
     ),
   );
-  const awaitingVerifiedResponse = Math.min(
-    patientPosts,
+  const realAwaitingVerifiedResponse = Math.min(
+    realPatientPosts,
     safeCommunityStatisticCount(
       careCoverage?.patient_posts_awaiting_verified_psychologist_response,
     ),
   );
-  const postsWithAnyResponse = Math.min(
-    patientPosts,
+  const realPostsWithAnyResponse = Math.min(
+    realPatientPosts,
     safeCommunityStatisticCount(careCoverage?.patient_posts_with_any_response),
   );
+  const realAverageFirstVerifiedResponseMinutes =
+    careCoverage?.average_first_verified_response_minutes ?? null;
+  const showLocalExample =
+    process.env.NODE_ENV !== "production" &&
+    Boolean(statistics) &&
+    realPatientPosts === 0 &&
+    realAnonymousPosts === 0 &&
+    realIdentifiedPosts === 0 &&
+    realRespondedByVerified === 0 &&
+    realAnonymousRespondedByVerified === 0 &&
+    realIdentifiedRespondedByVerified === 0 &&
+    realAwaitingVerifiedResponse === 0 &&
+    realPostsWithAnyResponse === 0 &&
+    realAverageFirstVerifiedResponseMinutes === null;
+  const patientPosts = showLocalExample
+    ? COMMUNITY_CARE_COVERAGE_LOCAL_EXAMPLE.patientPosts
+    : realPatientPosts;
+  const anonymousPosts = showLocalExample
+    ? COMMUNITY_CARE_COVERAGE_LOCAL_EXAMPLE.anonymousPosts
+    : realAnonymousPosts;
+  const identifiedPosts = showLocalExample
+    ? COMMUNITY_CARE_COVERAGE_LOCAL_EXAMPLE.identifiedPosts
+    : realIdentifiedPosts;
+  const respondedByVerified = showLocalExample
+    ? COMMUNITY_CARE_COVERAGE_LOCAL_EXAMPLE.anonymousRespondedByVerified +
+      COMMUNITY_CARE_COVERAGE_LOCAL_EXAMPLE.identifiedRespondedByVerified
+    : realRespondedByVerified;
+  const anonymousRespondedByVerified = showLocalExample
+    ? COMMUNITY_CARE_COVERAGE_LOCAL_EXAMPLE.anonymousRespondedByVerified
+    : realAnonymousRespondedByVerified;
+  const identifiedRespondedByVerified = showLocalExample
+    ? COMMUNITY_CARE_COVERAGE_LOCAL_EXAMPLE.identifiedRespondedByVerified
+    : realIdentifiedRespondedByVerified;
+  const awaitingVerifiedResponse = showLocalExample
+    ? Math.max(0, patientPosts - respondedByVerified)
+    : realAwaitingVerifiedResponse;
+  const postsWithAnyResponse = showLocalExample
+    ? COMMUNITY_CARE_COVERAGE_LOCAL_EXAMPLE.postsWithAnyResponse
+    : realPostsWithAnyResponse;
+  const averageFirstVerifiedResponseMinutes = showLocalExample
+    ? COMMUNITY_CARE_COVERAGE_LOCAL_EXAMPLE.averageFirstVerifiedResponseMinutes
+    : realAverageFirstVerifiedResponseMinutes;
   const coverageRate = communityStatisticPercentage(respondedByVerified, patientPosts);
   const awaitingRate = communityStatisticPercentage(awaitingVerifiedResponse, patientPosts);
   const anonymousRate = communityStatisticPercentage(anonymousPosts, patientPosts);
@@ -5172,9 +5224,7 @@ const CommunityCareCoverageBlock = ({
       label: "Tempo médio até 1ª resposta",
       responseDetail: null,
       toneClassName: "bg-surface-muted text-muted",
-      value: formatCommunityCareCoverageDuration(
-        careCoverage?.average_first_verified_response_minutes,
-      ),
+      value: formatCommunityCareCoverageDuration(averageFirstVerifiedResponseMinutes),
     },
   ] as const;
 
@@ -5188,6 +5238,11 @@ const CommunityCareCoverageBlock = ({
               <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary-soft px-2.5 py-1 text-[11px] font-black text-primary">
                 <Loader2 aria-hidden className="h-3.5 w-3.5 animate-spin" />
                 Atualizando
+              </span>
+            ) : null}
+            {showLocalExample ? (
+              <span className="inline-flex items-center rounded-full border border-warning/20 bg-warning/10 px-2.5 py-1 text-[11px] font-black text-warning">
+                Exemplo local
               </span>
             ) : null}
           </div>
@@ -5218,9 +5273,6 @@ const CommunityCareCoverageBlock = ({
                     <h4 className="text-xs font-black leading-snug text-foreground">
                       Posts de pacientes
                     </h4>
-                    <p className="mt-1 text-[11px] font-bold leading-5 text-muted">
-                      Anônimos e identificados analisados como uma única base de acolhimento.
-                    </p>
                   </div>
                 </div>
                 <div className="shrink-0 sm:text-right">
