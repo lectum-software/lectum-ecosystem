@@ -69,3 +69,9 @@ Consequences: Admins can audit the quality/origin of discussion on a specific po
 The Admin content-detail preview now renders its media/text grid conditionally. When `content.media` is absent, the preview no longer reserves the desktop media column and the body/excerpt starts at the left edge of the content area.
 
 This is a visual-only refinement requested from the Admin content-detail screen. It preserves the existing mobile-first behavior and only enables the 240px media column on wider breakpoints when there is real media to render. No API contract, metric calculation, schema/migration, dependency, mock, seed or backfill changed.
+
+## Update 2026-07-20: compact comment/reply preview
+
+For `comment`/`reply` detail pages, the Admin preview now omits the duplicated title and the origin-post card from the main preview. The detail keeps the author, metrics, public action and the written body/excerpt, while posts continue to show their title and origin context when applicable.
+
+The content-type label now differentiates non-post content by author role: psychologist-authored content is shown as **Resposta**, and patient-authored content is shown as **Comentário**. This is a UI labeling/presentation decision only; it does not change the backend target normalization, metrics, moderation, retention collection or API contract.

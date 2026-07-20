@@ -198,7 +198,17 @@ const initials = (value: string) =>
 const contentTitle = (detail: AdminCommunityContentAnalyticsDetail) =>
   detail.content.title?.trim() ||
   detail.content.excerpt.trim() ||
-  (detail.content.type === "post" ? "Post sem título" : "Resposta");
+  (detail.content.type === "post"
+    ? "Post sem título"
+    : detail.author.role === "psicologo"
+      ? "Resposta"
+      : "Comentário");
+
+const contentTypeLabel = (detail: AdminCommunityContentAnalyticsDetail) => {
+  if (detail.content.type === "post") return "Post";
+
+  return detail.author.role === "psicologo" ? "Resposta" : "Comentário";
+};
 
 const videoAnalyticsCounters = (
   detail: AdminCommunityContentAnalyticsDetail,
@@ -541,6 +551,8 @@ const ContentDetailMetricRow = ({ detail }: { detail: AdminCommunityContentAnaly
 const PreviewSection = ({ detail }: { detail: AdminCommunityContentAnalyticsDetail }) => {
   const publicHref = detail.content.public_url ? toPublicHref(detail.content.public_url) : null;
   const hasMedia = Boolean(detail.content.media);
+  const isPost = detail.content.type === "post";
+  const originPreview = isPost ? detail.content.origin_preview : null;
 
   return (
     <section className={cn(cardClass, "relative min-w-0 max-w-full p-5")}>
@@ -559,16 +571,18 @@ const PreviewSection = ({ detail }: { detail: AdminCommunityContentAnalyticsDeta
       <div className="min-w-0">
         <div className="flex flex-wrap items-center gap-2 pr-12 text-xs font-black text-muted">
           <FileText aria-hidden className="h-4 w-4" />
-          <span>{detail.content.type === "post" ? "Post" : "Resposta/comentário"}</span>
+          <span>{contentTypeLabel(detail)}</span>
           <span aria-hidden>·</span>
           <span>{detail.community.name}</span>
         </div>
         <div className="mt-4">
           <AuthorIdentity author={detail.author} />
         </div>
-        <h2 className="mt-5 min-w-0 text-xl font-black leading-tight text-foreground [overflow-wrap:anywhere]">
-          {contentTitle(detail)}
-        </h2>
+        {isPost ? (
+          <h2 className="mt-5 min-w-0 text-xl font-black leading-tight text-foreground [overflow-wrap:anywhere]">
+            {contentTitle(detail)}
+          </h2>
+        ) : null}
         <div
           className={cn(
             "mt-4 grid min-w-0 gap-5",
@@ -581,23 +595,23 @@ const PreviewSection = ({ detail }: { detail: AdminCommunityContentAnalyticsDeta
             </div>
           ) : null}
           <div className="min-w-0">
-            {detail.content.origin_preview ? (
+            {originPreview ? (
               <div className="rounded-2xl border border-border bg-surface-muted p-4">
                 <p className="text-xs font-black uppercase tracking-[0.18em] text-muted">
-                  {detail.content.origin_preview.label}
+                  {originPreview.label}
                 </p>
                 <p className="mt-2 text-sm font-black text-foreground [overflow-wrap:anywhere]">
-                  {detail.content.origin_preview.title || "Sem título"}
+                  {originPreview.title || "Sem título"}
                 </p>
                 <p className="mt-1 line-clamp-3 text-sm leading-6 text-muted [overflow-wrap:anywhere]">
-                  {detail.content.origin_preview.excerpt || "Sem trecho disponível."}
+                  {originPreview.excerpt || "Sem trecho disponível."}
                 </p>
               </div>
             ) : null}
             <p
               className={cn(
                 "whitespace-pre-line text-sm leading-6 text-foreground [overflow-wrap:anywhere]",
-                detail.content.origin_preview && "mt-5",
+                originPreview && "mt-5",
               )}
             >
               {detail.content.body || detail.content.excerpt || "Sem texto disponível."}

@@ -500,3 +500,25 @@ Regras anti-recriação:
 - `pnpm --dir admin build`
 - `pnpm --dir admin check` (uma tentativa anterior falhou porque `.next/types` estava inconsistente antes do build; após o build, o check passou)
 - Smoke HTTP local da rota Admin `http://localhost:3002/comunidades/autocuidado-em-pratica/conteudo/post/demo-post-marina-autocuidado` retornou 200.
+
+## Ajuste complementar 2026-07-20 - Preview enxuto para comentários e respostas
+
+- Pedido do usuário: em detalhe Admin de comentário/resposta, remover o título duplicado e o bloco **Post de origem**, mantendo apenas o comentário/resposta escrito no preview.
+- O preview agora renderiza título e bloco de origem somente para `content.type="post"`. Para `comment`/`reply`, a área de texto mostra apenas `body`/`excerpt`, preservando autor, métricas e ações do detalhe.
+- O informe de tipo de conteúdo passou a usar **Resposta** quando o autor é psicólogo e **Comentário** quando o autor é paciente; posts continuam como **Post**.
+- O ajuste é apenas visual/rotulagem no Admin, sem alterar endpoint, dados reais, cálculo de métricas, schema Prisma/migration, package, mock, seed, backfill ou uso de `<img>` cru.
+- Builder/Quick Copy não está exposto como ferramenta callable neste ambiente; a referência usada foi a captura enviada pelo usuário e os padrões Admin existentes.
+- ADR atualizado: `adrs/0278-detalhe-analytics-conteudo-admin.md`.
+
+### Critérios de aceite complementares
+
+- [x] Em detalhe de comentário/resposta, o bloco **Post de origem** não aparece no preview principal.
+- [x] Em detalhe de comentário/resposta, o título duplicado não aparece acima do texto.
+- [x] O preview principal mantém o comentário/resposta escrito.
+- [x] O tipo de conteúdo mostra **Resposta** para psicólogo e **Comentário** para paciente.
+
+### Validação executada para este ajuste
+
+- `pnpm --dir admin check` retornou sucesso; há warning pré-existente em `admin/src/app/(admin)/comunidades/client.tsx` sobre import não usado fora do escopo deste ajuste.
+- `pnpm --dir admin build`
+- Smoke HTTP local da rota Admin `http://localhost:3002/comunidades/ansiedade-em-equilibrio/conteudo/comment/cmrb6fn6f000qy0uh0p3nae0u` retornou 200.
