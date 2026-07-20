@@ -1,5 +1,6 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
 import {
   AlertTriangle,
   BarChart3,
@@ -10,10 +11,12 @@ import {
   Heart,
   Info,
   Loader2,
+  LockKeyhole,
   type LucideIcon,
   Mail,
   MapPin,
   MessageCircle,
+  Pencil,
   RefreshCw,
   ShieldCheck,
   ThumbsDown,
@@ -24,8 +27,11 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { type ReactNode, useMemo } from "react";
-import { useAdminPatientDetail } from "@/api/callers/patients";
+import { type ReactNode, useMemo, useState } from "react";
+import { FormProvider, type SubmitHandler, useForm } from "react-hook-form";
+import { toast } from "sonner";
+import { z } from "zod";
+import { useAdminPatientDetail, useAdminPatientUpdatePersonalData } from "@/api/callers/patients";
 import { resolveApiError } from "@/api/handle";
 import type {
   AdminPatientDetail,
@@ -33,6 +39,7 @@ import type {
   PatientsDetailCommunity,
   PatientsDetailMetric,
 } from "@/api/req/patients";
+import { SelectController, TextareaController } from "@/components/controllers";
 import { aggregateCalendarChartPoints, buildSmoothSvgPath } from "@/lib/chart-time-series";
 import { cn } from "@/lib/utils";
 
@@ -73,6 +80,24 @@ const seriesConfig = [
   { color: "var(--admin-danger)", key: "downvotes_received", label: "Downvotes recebidos" },
   { color: "var(--admin-warning)", key: "responses_received", label: "Respostas recebidas" },
 ] as const;
+const EMPTY_SELECT_OPTION = { label: "Não informado", value: "" } as const;
+const PATIENT_GENDER_OPTIONS = [
+  EMPTY_SELECT_OPTION,
+  { label: "Feminino", value: "feminino" },
+  { label: "Masculino", value: "masculino" },
+  { label: "Não binário", value: "nao_binario" },
+  { label: "Outro", value: "outro" },
+  { label: "Prefiro não dizer", value: "prefiro_nao_dizer" },
+] as const;
+const patientPersonalDataSchema = z.object({
+  gender: z.string().max(80, "Use no máximo 80 caracteres.").optional(),
+  reason: z
+    .string()
+    .trim()
+    .min(10, "Informe um motivo com pelo menos 10 caracteres.")
+    .max(500, "Use no máximo 500 caracteres."),
+});
+type PatientPersonalDataFormValues = z.infer<typeof patientPersonalDataSchema>;
 
 const formatDateTime = (value?: string | null) => {
   if (!value) return "N\u00e3o informado";
@@ -125,6 +150,49 @@ const formatNullable = (value: string | null | undefined) => {
   const normalized = String(value ?? "").trim();
   return normalized || "N\u00e3o informado";
 };
+const emptyToNull = (value?: string | null) => {
+  const normalized = value?.trim();
+  return normalized || null;
+};
+const capitalizeOptionLabel = (value?: string | number | null) => {
+  const formatted = formatNullable(value === undefined || value === null ? null : String(value));
+  if (formatted === "N\u00e3o informado") return formatted;
+
+  return formatted.replace(/^(\s*)(\p{L})/u, (_, spaces: string, letter: string) => {
+    return `${spaces}${letter.toLocaleUpperCase("pt-BR")}`;
+  });
+};
+const mergeCurrentOption = (
+  options: readonly { label: string; value: string }[],
+  currentValue?: string | null,
+) => {
+  const normalized = String(currentValue ?? "").trim();
+  if (!normalized || options.some((option) => option.value === normalized)) return [...options];
+  const [firstOption, ...restOptions] = options;
+  if (!firstOption) {
+    return [{ label: `${capitalizeOptionLabel(normalized)} (valor atual)`, value: normalized }];
+  }
+
+  return [
+    firstOption,
+    { label: `${capitalizeOptionLabel(normalized)} (valor atual)`, value: normalized },
+    ...restOptions,
+  ];
+};
+const getStaticOptionLabel = (
+  options: readonly { label: string; value: string }[],
+  value?: string | null,
+) => {
+  const normalized = String(value ?? "").trim();
+  if (!normalized) return "N\u00e3o informado";
+
+  return (
+    options.find((option) => option.value === normalized)?.label ??
+    capitalizeOptionLabel(normalized)
+  );
+};
+const formatPatientGender = (value?: string | null) =>
+  getStaticOptionLabel(PATIENT_GENDER_OPTIONS, value);
 
 const CardShell = ({ children, className }: { children?: ReactNode; className?: string }) => (
   <section className={cn(CARD, className)}>{children}</section>
@@ -701,25 +769,36 @@ const FieldRow = ({ label, value }: { label: string; value: ReactNode }) => (
 );
 
 const InfoCard = ({
+  action,
   children,
+  contentAsDescriptionList = true,
   description,
   icon: Icon,
   title,
 }: {
+  action?: ReactNode;
   children: ReactNode;
+  contentAsDescriptionList?: boolean;
   description?: string;
   icon: LucideIcon;
   title: string;
 }) => (
   <CardShell className="p-5">
-    <div className="flex items-start gap-3">
-      <IconCircle icon={Icon} />
-      <div>
-        <h2 className="text-lg font-extrabold text-foreground">{title}</h2>
-        {description ? <p className="mt-1 text-sm text-muted">{description}</p> : null}
+    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+      <div className="flex items-start gap-3">
+        <IconCircle icon={Icon} />
+        <div>
+          <h2 className="text-lg font-extrabold text-foreground">{title}</h2>
+          {description ? <p className="mt-1 text-sm text-muted">{description}</p> : null}
+        </div>
       </div>
+      {action ? <div className="w-full sm:w-auto">{action}</div> : null}
     </div>
-    <dl className="mt-4">{children}</dl>
+    {contentAsDescriptionList ? (
+      <dl className="mt-4">{children}</dl>
+    ) : (
+      <div className="mt-4">{children}</div>
+    )}
   </CardShell>
 );
 
@@ -866,7 +945,7 @@ const PatientRegistrationSummaryCard = ({
     }
   >
     <FieldRow label="ID do paciente" value={detail.header.id} />
-    <FieldRow label="Gênero" value={formatNullable(detail.header.gender)} />
+    <FieldRow label="Gênero" value={formatPatientGender(detail.header.gender)} />
     <FieldRow label="Localização agregada" value={formatPatientLocation(detail)} />
     <FieldRow label="Onboarding" value={getOnboardingLabel(detail)} />
   </SummaryCard>
@@ -914,34 +993,145 @@ const PatientEngagementSummaryCard = ({
   );
 };
 
-const ProfileRegistrationTab = ({ detail }: { detail: AdminPatientDetail }) => (
-  <div className="grid gap-5 xl:grid-cols-2">
-    <InfoCard
-      description="Campos pessoais mínimos retornados pelo contrato de paciente."
-      icon={UserRound}
-      title="Dados pessoais"
+const ProfileEditButton = ({ disabled, onClick }: { disabled?: boolean; onClick: () => void }) => (
+  <button
+    className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-control border border-primary px-4 text-sm font-black text-primary transition hover:bg-primary-soft disabled:cursor-not-allowed disabled:border-border disabled:text-muted sm:w-auto"
+    disabled={disabled}
+    onClick={onClick}
+    type="button"
+  >
+    <Pencil aria-hidden className="h-4 w-4" />
+    Editar
+  </button>
+);
+
+const ProfileFormActions = ({
+  disabled,
+  onCancel,
+}: {
+  disabled?: boolean;
+  onCancel: () => void;
+}) => (
+  <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
+    <button
+      className="inline-flex h-11 items-center justify-center rounded-control border border-border px-4 text-sm font-black text-foreground transition hover:bg-surface-muted disabled:cursor-not-allowed disabled:text-muted"
+      disabled={disabled}
+      onClick={onCancel}
+      type="button"
     >
-      <FieldRow label="Nome" value={detail.header.name} />
-      <FieldRow label="E-mail" value={detail.header.email} />
-      <FieldRow label="Gênero" value={formatNullable(detail.header.gender)} />
-      <FieldRow label="Localização agregada" value={formatPatientLocation(detail)} />
-    </InfoCard>
-    <InfoCard
-      description="Origem e datas operacionais do cadastro."
-      icon={CalendarDays}
-      title="Cadastro"
+      Cancelar
+    </button>
+    <button
+      className="inline-flex h-11 items-center justify-center gap-2 rounded-control bg-primary px-4 text-sm font-black text-white transition hover:bg-primary-hover disabled:cursor-not-allowed disabled:bg-surface-muted disabled:text-muted"
+      disabled={disabled}
+      type="submit"
     >
-      <FieldRow label="ID do paciente" value={detail.header.id} />
-      <FieldRow label="Status" value={detail.header.status_label} />
-      <FieldRow label="Cadastro via" value={detail.header.provider_label} />
-      <FieldRow label="Criado em" value={formatDateTime(detail.header.created_at)} />
-      <FieldRow label="Onboarding" value={getOnboardingLabel(detail)} />
-    </InfoCard>
-    <div className="xl:col-span-2">
-      <PrivacyNotes detail={detail} />
-    </div>
+      {disabled ? <Loader2 aria-hidden className="h-4 w-4 animate-spin" /> : null}
+      Salvar alterações
+    </button>
   </div>
 );
+
+const PatientPersonalDataRows = ({ detail }: { detail: AdminPatientDetail }) => (
+  <>
+    <FieldRow label="E-mail" value={detail.header.email} />
+    <FieldRow label="Gênero" value={formatPatientGender(detail.header.gender)} />
+    <FieldRow label="Localização" value={formatPatientLocation(detail)} />
+  </>
+);
+
+const PatientPersonalDataEditForm = ({
+  detail,
+  onCancel,
+}: {
+  detail: AdminPatientDetail;
+  onCancel: () => void;
+}) => {
+  const mutation = useAdminPatientUpdatePersonalData(detail.header.id);
+  const form = useForm<PatientPersonalDataFormValues>({
+    defaultValues: {
+      gender: detail.header.gender || "",
+      reason: "",
+    },
+    mode: "onSubmit",
+    resolver: zodResolver(patientPersonalDataSchema),
+  });
+  const disabled = mutation.isPending;
+  const onSubmit: SubmitHandler<PatientPersonalDataFormValues> = async (values) => {
+    try {
+      await mutation.mutateAsync({
+        gender: emptyToNull(values.gender),
+        reason: values.reason.trim(),
+      });
+      toast.success("Dados pessoais do paciente atualizados.");
+      onCancel();
+    } catch (error) {
+      toast.error(resolveApiError(error));
+    }
+  };
+
+  return (
+    <FormProvider {...form}>
+      <form className="space-y-4" onSubmit={form.handleSubmit(onSubmit)}>
+        <div className="rounded-2xl border border-border/80 bg-surface-muted p-4">
+          <FieldRow
+            label="E-mail"
+            value={
+              <span className="inline-flex items-center gap-2">
+                {detail.header.email}
+                <LockKeyhole
+                  aria-label="E-mail editável somente por fluxo de conta"
+                  className="h-4 w-4 text-muted"
+                />
+              </span>
+            }
+          />
+          <FieldRow label="Localização" value={formatPatientLocation(detail)} />
+        </div>
+        <SelectController<PatientPersonalDataFormValues>
+          disabled={disabled}
+          label="Gênero"
+          name="gender"
+          options={mergeCurrentOption(PATIENT_GENDER_OPTIONS, detail.header.gender)}
+        />
+        <TextareaController<PatientPersonalDataFormValues>
+          disabled={disabled}
+          label="Motivo da alteração"
+          name="reason"
+          placeholder="Descreva o motivo operacional da alteração."
+          required
+          rows={3}
+        />
+        <p className="rounded-2xl bg-surface-muted p-3 text-xs font-bold leading-5 text-muted">
+          E-mail e localização permanecem somente leitura nesta edição: o e-mail pertence ao fluxo
+          de conta e a localização vem de dados coarse de visitor_location.
+        </p>
+        <ProfileFormActions disabled={disabled} onCancel={onCancel} />
+      </form>
+    </FormProvider>
+  );
+};
+
+const ProfileRegistrationTab = ({ detail }: { detail: AdminPatientDetail }) => {
+  const [isEditing, setIsEditing] = useState(false);
+
+  return (
+    <div className="grid gap-5">
+      <InfoCard
+        action={isEditing ? null : <ProfileEditButton onClick={() => setIsEditing(true)} />}
+        contentAsDescriptionList={!isEditing}
+        icon={UserRound}
+        title="Dados pessoais"
+      >
+        {isEditing ? (
+          <PatientPersonalDataEditForm detail={detail} onCancel={() => setIsEditing(false)} />
+        ) : (
+          <PatientPersonalDataRows detail={detail} />
+        )}
+      </InfoCard>
+    </div>
+  );
+};
 
 const GeneralTab = ({ detail, id }: { detail: AdminPatientDetail; id: string }) => (
   <div className="space-y-5">

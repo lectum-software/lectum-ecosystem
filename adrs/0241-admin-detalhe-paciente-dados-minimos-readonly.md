@@ -55,3 +55,10 @@ Essa decisÃ£o evita expor marcadores operacionais/legados como forma de cadastro
 O cabeçalho do detalhe do paciente passa a exibir **Último acesso** em vez da combinação de data de cadastro e conclusão de onboarding. O valor vem de metadados reais de `user_token.createdAt/updatedAt`, seguindo o padrão já adotado no detalhe administrativo de psicólogos, e retorna `null` quando não existir token confiável.
 
 Essa exposição permanece somente para Admin autenticado, não adiciona tracking, schema Prisma, migration, mock, seed ou backfill e não transforma login em item de atividade recente da V1.
+
+
+## Atualizacao 2026-07-20: excecao auditada para edicao de genero
+
+A regra de detalhe de paciente somente leitura passa a ter uma excecao explicita apos feedback de produto: o card **Dados pessoais** na aba **Perfil e cadastro** pode editar apenas `patient_profile.gender`, com motivo obrigatorio e auditoria em `admin_activity_log`.
+
+`user.email` e a localizacao coarse derivada de `visitor_location` continuam somente leitura nessa aba. Nao foram adicionadas acoes destrutivas, moderacao, bloqueio, silenciamento, banimento, exclusao, schema Prisma, migration, package, seed, mock ou backfill. A decisao detalhada esta em `adrs/0290-admin-paciente-edicao-dados-pessoais-limitada.md`.

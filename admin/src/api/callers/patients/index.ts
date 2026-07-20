@@ -1,10 +1,12 @@
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { adminPatientsKeys } from "@/api/cache/keys";
 import {
+  type AdminPatientUpdatePersonalDataInput,
   getAdminPatientDetail,
   getAdminPatientsDashboard,
   type PatientsDashboardQuery,
   type PatientsDetailQuery,
+  updateAdminPatientPersonalData,
 } from "@/api/req/patients";
 
 export const useAdminPatientsDashboard = (
@@ -27,3 +29,13 @@ export const useAdminPatientDetail = (
     queryFn: () => getAdminPatientDetail(id, input),
     queryKey: adminPatientsKeys.detail(id, input),
   });
+
+export const useAdminPatientUpdatePersonalData = (id: string) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (input: AdminPatientUpdatePersonalDataInput) =>
+      updateAdminPatientPersonalData(id, input),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: adminPatientsKeys.all }),
+  });
+};

@@ -14,6 +14,11 @@ export type PatientsDetailQuery = {
   to?: string;
 };
 
+export type AdminPatientUpdatePersonalDataInput = {
+  gender?: string | null;
+  reason: string;
+};
+
 export type PatientsDashboardTrend = "down" | "flat" | "unavailable" | "up";
 
 export type PatientsDashboardMetric = {
@@ -348,6 +353,18 @@ export const getAdminPatientDetail = async (id: string, input: PatientsDetailQue
     {
       params: cleanParams(input),
     },
+  );
+
+  return resolveApiData(response.data);
+};
+
+export const updateAdminPatientPersonalData = async (
+  id: string,
+  input: AdminPatientUpdatePersonalDataInput,
+) => {
+  const response = await adminApi.put<ApiResponse<AdminPatientDetail>>(
+    `/api/admin/private/patients/${encodeURIComponent(id)}/personal-data`,
+    input,
   );
 
   return resolveApiData(response.data);

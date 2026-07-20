@@ -143,7 +143,7 @@ Frontend esperado:
 ## Critérios de aceite
 
 - [x] Rota de detalhe só abre para admin autenticado.
-- [x] Tela é somente leitura.
+- [x] Tela permanece sem ações destrutivas/moderação e ganhou edição administrativa auditada limitada de gênero em Dados pessoais após feedback de 2026-07-20.
 - [x] Não há ação de bloquear, silenciar, banir, excluir ou moderar paciente.
 - [x] Não há métrica de retenção.
 - [x] Status usa apenas `Ativo`/`Inativo` baseado em fonte real.
@@ -330,3 +330,26 @@ Frontend esperado:
 - `pnpm --dir admin build`
 - `pnpm check`
 - Smoke HTTP local: `/pacientes/cmrqsrab5001f1guh2ve5oy90`, `?tab=perfil`, `?tab=estatisticas`, `?tab=publicacoes`, `?tab=denuncias`, `?tab=atividades` e `?tab=conta` retornaram `200`.
+
+
+## Ajuste pos-feedback 2026-07-20 - Dados pessoais sem blocos extras e edicao auditada
+
+- Pedido do usuario: na aba **Perfil e cadastro** do detalhe de paciente, remover o bloco **Cadastro**, remover a faixa **Privacidade e cobertura dos dados**, retirar a descricao de **Dados pessoais**, manter apenas **E-mail**, **Genero** e **Localizacao** e adicionar o botao **Editar** como no detalhe do psicologo.
+- A aba **Perfil e cadastro** agora renderiza somente o card **Dados pessoais**, sem descricao, com campos **E-mail**, **Genero** e **Localizacao**.
+- O botao **Editar** reutiliza o padrao visual do detalhe administrativo do psicologo e abre edicao real, nao mockada, limitada ao campo **Genero**.
+- **E-mail** e **Localizacao** permanecem somente leitura: e-mail pertence ao fluxo de conta e a localizacao coarse deriva de visitor_location, sem edicao manual.
+- Criado endpoint admin privado `PUT /api/admin/private/patients/:id/personal-data` para persistir `patient_profile.gender` com motivo obrigatorio e auditoria em `admin_activity_log` (`target_type="patient"`, `domain="patient_profile"`, `action="patient_personal_data_updated"`).
+- Nenhum schema Prisma, migration, package, mock, seed, backfill, acao destrutiva, moderacao, bloqueio, silenciamento, banimento ou exclusao de paciente foi adicionado.
+- Builder/Quick Copy nao esta exposto como ferramenta callable no ambiente; a referencia auditavel foi a captura enviada pelo usuario e os PNGs locais `_product/proto/admin/Pacientes/Pacientes - Detalhes.png` e `_product/proto/admin/Psicologos/Detalhes do psicologo/Perfil e Cadastro.png`.
+- ADR criado: `adrs/0290-admin-paciente-edicao-dados-pessoais-limitada.md`.
+
+### Validacao complementar executada
+
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check`
+- Smoke HTTP local: `GET http://localhost:3002/pacientes/cmrqsrab5001f1guh2ve5oy90?tab=perfil` retornou `200`.
+- Smoke HTTP local: `GET http://localhost:3002/pacientes/cmrqsrab5001f1guh2ve5oy90` retornou `200`.
+- Smoke HTTP local sem token: `PUT http://localhost:3001/api/admin/private/patients/cmrqsrab5001f1guh2ve5oy90/personal-data` retornou `401`.
