@@ -2095,9 +2095,6 @@ const DashboardCareCoverageCard = ({
         <div className="min-w-0">
           <h2 className="text-xl font-black text-foreground">Cobertura de acolhimento</h2>
           <BlockPeriodLabel>{periodLabel}</BlockPeriodLabel>
-          <p className="mt-2 max-w-3xl text-sm font-bold leading-6 text-muted">
-            Taxa de resposta qualificada aos posts de pacientes.
-          </p>
         </div>
         {filters ? <div className="w-full min-w-0 xl:max-w-xl">{filters}</div> : null}
       </div>

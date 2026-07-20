@@ -1042,3 +1042,22 @@ Regras de UI obrigatórias:
 - `pnpm --dir backend build`: sem erros.
 - `pnpm check`: sem erros.
 - Smoke HTTP local `GET http://localhost:3002/comunidades` retornou 200.
+
+## Ajuste complementar 2026-07-20 - Copy da cobertura de acolhimento
+
+- Pedido do usuario: no bloco **Cobertura de acolhimento** do dashboard `/comunidades`, remover o texto **Taxa de resposta qualificada aos posts de pacientes.**
+- Frontend Admin: o paragrafo auxiliar foi removido do cabecalho do bloco, mantendo titulo, periodo, filtros do bloco e cards de cobertura sem alterar dados ou layout estrutural.
+- Nao houve alteracao de backend, contrato de API, schema Prisma/migration, package, mock, seed, backfill, endpoint simulado ou uso de `<img>` cru.
+- ADR nao aplicavel: ajuste pontual de copy sem nova decisao arquitetural, regra de dominio ou trade-off tecnico.
+
+### Criterios deste ajuste
+
+- [x] O bloco **Cobertura de acolhimento** nao exibe mais o texto auxiliar solicitado.
+- [x] O periodo e os filtros do bloco permanecem visiveis.
+- [x] As metricas reais de cobertura permanecem inalteradas.
+
+### Validacao deste ajuste
+
+- `pnpm --dir admin check`: sem erros.
+- `pnpm --dir admin build`: sem erros.
+- Smoke HTTP local `GET http://localhost:3002/comunidades` retornou 200.
