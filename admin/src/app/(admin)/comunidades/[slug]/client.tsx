@@ -2717,22 +2717,35 @@ const ContentMetrics = ({ item }: { item: AdminCommunityContentItem }) => {
   );
 };
 
-const ContentItemHeader = ({ item }: { item: AdminCommunityContentItem }) => (
-  <div className="flex flex-wrap items-center gap-2">
-    {item.status === "removed" ? <StatusBadge tone="muted">Removido</StatusBadge> : null}
-    {item.type === "post" ? (
-      <span className="inline-flex items-center gap-1.5 text-xs font-black text-muted">
-        <FileText aria-hidden className="h-4 w-4" />
-        <span>Post</span>
-      </span>
-    ) : (
-      <span className="rounded-full bg-surface-muted px-2.5 py-1 text-xs font-black text-muted">
-        {item.content_kind_label}
-      </span>
-    )}
-    <span className="text-xs font-bold text-muted">{formatDateTime(item.created_at)}</span>
-  </div>
-);
+const contentItemKindPresentation = (item: AdminCommunityContentItem) => {
+  if (item.type === "post") return { icon: FileText, label: "Post" };
+  if (item.content_kind.endsWith("_reply")) return { icon: Reply, label: "Resposta" };
+  if (item.content_kind === "patient_comment") return { icon: MessageCircle, label: "Comentário" };
+
+  return null;
+};
+
+const ContentItemHeader = ({ item }: { item: AdminCommunityContentItem }) => {
+  const kindPresentation = contentItemKindPresentation(item);
+  const KindIcon = kindPresentation?.icon;
+
+  return (
+    <div className="flex flex-wrap items-center gap-2">
+      {item.status === "removed" ? <StatusBadge tone="muted">Removido</StatusBadge> : null}
+      {kindPresentation && KindIcon ? (
+        <span className="inline-flex items-center gap-1.5 text-xs font-black text-muted">
+          <KindIcon aria-hidden className="h-4 w-4" />
+          <span>{kindPresentation.label}</span>
+        </span>
+      ) : (
+        <span className="rounded-full bg-surface-muted px-2.5 py-1 text-xs font-black text-muted">
+          {item.content_kind_label}
+        </span>
+      )}
+      <span className="text-xs font-bold text-muted">{formatDateTime(item.created_at)}</span>
+    </div>
+  );
+};
 
 const ContentItemBody = ({ item }: { item: AdminCommunityContentItem }) => {
   const hasText = item.excerpt.trim().length > 0;

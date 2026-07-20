@@ -742,3 +742,9 @@ A aba **Conteúdo** do detalhe administrativo de comunidade deixa de exibir, nos
 A ação lateral que abre o detalhe analítico passa a usar `BarChart3` como ícone de analytics, com `aria-label` e `title` alinhados a Analytics. O botão de exclusão/remocao foi retirado dos cards da listagem para reduzir risco de acionamento destrutivo inline; a remocao administrativa permanece concentrada nos fluxos operacionais de detalhe/moderacao já existentes.
 
 Consequencia: a mudança e apenas apresentacional no Admin, sem endpoint novo, schema Prisma/migration, dependencia, mock, seed, backfill ou alteracao de persistencia.
+
+## Atualização 2026-07-20: tags curtas para respostas e comentarios
+
+A lista da aba **Conteúdo** passa a aplicar o mesmo padrao visual curto usado em posts tambem para respostas de psicologos e comentarios de pacientes. Respostas deixam de exibir a classificacao longa, como `Resposta de psicólogo não verificado`, e passam a mostrar **icone + Resposta**. Comentarios de pacientes passam a mostrar **icone + Comentário**.
+
+A decisao mantem o selo azul, o papel do autor e os filtros operacionais como fontes de contexto detalhado, mas reduz ruido no cabecalho do card. A mudanca e somente de apresentacao no Admin, sem alterar contrato, endpoint, persistencia, schema Prisma, package, mock ou regra de moderacao.

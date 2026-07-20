@@ -920,3 +920,29 @@ Regras:
 - `pnpm --dir admin build`
 - Smoke HTTP local `GET http://localhost:3002/comunidades/autocuidado-em-pratica` retornou 200.
 - `pnpm check` foi tentado duas vezes, mas atingiu timeout no workspace atual; os processos remanescentes de check foram encerrados e as validações Admin direcionadas passaram.
+
+## Ajuste complementar 2026-07-20 - Tags curtas para respostas e comentarios
+
+- Pedido do usuario: na lista de conteudo da comunidade, quando a publicacao for resposta ou comentario de paciente, usar o mesmo padrao visual curto aplicado ao layout de **Post**.
+- A UI Admin passou a renderizar respostas de psicologos como **icone + Resposta** e comentarios de pacientes como **icone + Comentário**, removendo as tags textuais longas do cabecalho desses cards.
+- Posts continuam usando **FileText + Post**; respostas usam `Reply`; comentarios de pacientes usam `MessageCircle`.
+- O detalhamento de verificacao/papel continua no bloco de autoria e nos filtros reais; nao houve alteracao de backend, contrato, dados, schema Prisma/migration, package, mock ou persistencia.
+- Builder/Quick Copy nao esta exposto como ferramenta callable no ambiente; a referencia usada foi a captura enviada pelo usuario e `_product/proto/admin/Comunidades/Comunidades - Detalhes.png`.
+- ADR atualizado: `adrs/0264-admin-comunidade-abas-conteudo-ranking.md`.
+
+### Criterios de aceite complementares
+
+- [x] Respostas na lista da aba **Conteudo** exibem **icone + Resposta**, sem tag longa de verificacao no cabecalho.
+- [x] Comentarios de pacientes exibem **icone + Comentário**, no mesmo padrao visual de **Post**.
+- [x] O ajuste e apenas visual e nao altera endpoints, dados reais, schema Prisma/migrations, packages ou producao.
+
+### Validacao executada para este ajuste
+
+- `pnpm --dir admin exec biome check "src/app/(admin)/comunidades/[slug]/client.tsx"`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm --dir frontend check`
+- `pnpm --dir backend check`
+- `pnpm check`
+- Smoke HTTP local `GET http://localhost:3002/comunidades/autocuidado-em-pratica?tab=conteudo` retornou 200.
+- Chrome headless local abriu a rota com perfil temporario e confirmou o guard/login administrativo; a validacao visual autenticada ficou limitada a captura enviada pelo usuario porque a sessao Admin real nao fica disponivel no perfil headless isolado.
