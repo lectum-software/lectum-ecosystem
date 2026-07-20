@@ -41,12 +41,11 @@ A métrica disponível e auditável para acessos é `page_view_event`, já colet
 
 - Nenhuma pendência externa.
 
-
 ## Complemento - Aba Geral
 
-A mesma m?trica de acessos tamb?m passa a alimentar `highlight_counters.accesses_count` no detalhe administrativo da comunidade. Na aba **Geral**, o card **Acessos** aparece antes de **Posts de pacientes** e usa o total hist?rico de `page_view_event` da comunidade e de seus conte?dos relacionados, sem backfill artificial.
+A mesma métrica de acessos também passa a alimentar `highlight_counters.accesses_count` no detalhe administrativo da comunidade. Na aba **Geral**, o card **Acessos** aparece antes de **Posts de pacientes** e usa o total histórico de `page_view_event` da comunidade e de seus conteúdos relacionados, sem backfill artificial.
 
-### Valida??o do complemento Aba Geral
+### Validação do complemento Aba Geral
 
 - `pnpm --dir backend check`
 - `pnpm --dir backend build`
@@ -54,3 +53,10 @@ A mesma m?trica de acessos tamb?m passa a alimentar `highlight_counters.accesses
 - `pnpm --dir admin build`
 - `pnpm check`
 - Smoke HTTP local `GET http://localhost:3002/comunidades/autocuidado-em-pratica` retornou 200.
+
+
+## Atualização 2026-07-18: fallback zero em acessos
+
+O card **Acessos** da aba **Geral** e o contador **Acessos** da aba **Estatísticas** devem exibir `0` quando a contagem real de `page_view_event` não existir ou chegar ausente por compatibilidade durante atualização.
+
+A decisão é normalizar valores ausentes, não numéricos ou negativos para zero somente na apresentação, mantendo a origem real `page_view_event` e sem estimar, fazer backfill ou criar dado artificial.
