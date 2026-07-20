@@ -711,6 +711,13 @@ Regras:
 - `pnpm --dir backend exec tsc --noEmit --pretty false`
 - `pnpm --dir admin check`
 - `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir admin build`
+- `pnpm check`
+- Smoke real do service `showStatistics` para `ansiedade-em-equilibrio?period=week`, retornando `status=200`, breakdown `anonymous/identified/total` em `counters.care_coverage.patient_posts_verified_response_breakdown` e `awaitingVerified=0` no dataset local.
+- Smoke HTTP local `GET http://localhost:3002/comunidades/ansiedade-em-equilibrio?tab=estatisticas` retornou 200.
+- `pnpm --dir admin check`
+- `pnpm --dir backend check`
 - `pnpm --dir admin build`
 - `pnpm --dir backend build`
 - `pnpm check`

@@ -60,8 +60,10 @@ A regra operacional de **Aguardando acolhimento** é intencionalmente mais rígi
 - `pnpm check`
 - Smoke real do service `showStatistics` para
   `ansiedade-em-equilibrio?period=week`, retornando `status=200`, `period=Esta
-  semana`, `patientPosts=0`, `respondedByVerified=0`, `awaitingVerified=0`,
-  `anyResponse=0` e `avgFirstVerifiedMinutes=null`.
+  semana`, `patientPosts=0`, breakdown `anonymous/identified/total` em
+  `counters.care_coverage.patient_posts_verified_response_breakdown`,
+  `respondedByVerified=0`, `awaitingVerified=0`, `anyResponse=0` e
+  `avgFirstVerifiedMinutes=null`.
 - Smoke HTTP local
   `GET http://localhost:3002/comunidades/ansiedade-em-equilibrio?tab=estatisticas`
   retornando 200. Chrome headless sem sessão administrativa confirmou o guard de
