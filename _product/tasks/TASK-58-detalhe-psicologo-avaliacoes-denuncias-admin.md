@@ -94,3 +94,14 @@ Exibir avaliações e denúncias relacionadas ao conteúdo do psicólogo de form
 - Referências visuais usadas: `_product/proto/admin/Psicólogos/Detalhes do psicólogo/Avaliações.png` e `_product/proto/admin/Psicólogos/Detalhes do psicólogo/Denúncias.png`; Builder/Quick Copy não estava disponível no ambiente.
 - ADR criado: `adrs/0238-admin-psicologo-avaliacoes-denuncias-readonly.md`.
 - Validações executadas: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check`, API local autenticada e browser local via Edge/CDP nas abas `avaliacoes` e `denuncias`.
+
+### Ajuste visual em 2026-07-20
+
+- Na aba **Denúncias** do detalhe administrativo do psicólogo, a identificação do autor abaixo de **Conteúdo denunciado** foi substituída por metadados no padrão da aba **Publicações**: tipo do conteúdo, comunidade e data/hora real de criação do post/resposta/comentário.
+- O contrato Admin de denúncias foi ampliado de forma aditiva com `content.created_at`, derivado de `community_post.createdAt` ou `post_reply.createdAt`, mantendo `created_at` da denúncia para o badge **Última em** e o histórico.
+- O texto/descrição do conteúdo denunciado ficou visualmente mais leve, sem negrito e com `text-muted`, enquanto o título manteve `font-black`.
+- Não houve alteração de Prisma schema ou migrations; `pnpm --dir backend db:migrate` não foi necessário.
+- Builder/Quick Copy não estava disponível como ferramenta callable no ambiente; foram usados os PNGs locais `_product/proto/admin/Psicólogos/Detalhes do psicólogo/Denúncias.png` e `_product/proto/admin/Psicólogos/Detalhes do psicólogo/Publicações.png`, além do recorte enviado pelo usuário.
+- ADR atualizado: `adrs/0262-resolucao-admin-denuncias-recebidas.md`.
+- Validações executadas: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check`, chamada autenticada do endpoint real de denúncias confirmando `content.created_at` e browser local/headless via Chrome/CDP em `http://localhost:3002/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=denuncias`, com screenshot em `.tmp/admin-denuncias-psicologo-20260720.png`.
+- Foi criado um admin temporário real apenas para validação local e removido ao final (`remainingTempAdmins: 0`).

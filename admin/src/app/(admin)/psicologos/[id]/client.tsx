@@ -5356,33 +5356,28 @@ const psychologistReportTitle = (report: AdminPsychologistReportItem) => {
   return normalizedTitle && !["comentário", "comentario"].includes(normalizedTitle) ? title : null;
 };
 
-const PsychologistReportContentAuthor = ({ report }: { report: AdminPsychologistReportItem }) => {
-  const avatarSrc = renderableImageSrc(report.content.author.avatar);
+const psychologistReportContentTypeLabel = (report: AdminPsychologistReportItem) => {
+  if (report.content.type === "post") return "Post";
+
+  const title = report.content.title?.trim().toLowerCase();
+  return title && !["comentário", "comentario"].includes(title) ? "Resposta" : "Comentário";
+};
+
+const PsychologistReportContentHeader = ({ report }: { report: AdminPsychologistReportItem }) => {
+  const TypeIcon = report.content.type === "post" ? FileText : MessageCircle;
 
   return (
-    <div className="mt-2 flex min-w-0 items-center gap-2.5">
-      <div className="relative grid h-9 w-9 shrink-0 place-items-center overflow-hidden rounded-full border border-border bg-primary-soft text-xs font-black text-primary">
-        {avatarSrc ? (
-          <Image
-            alt={`Foto de perfil de ${report.content.author.name}`}
-            className="object-cover"
-            fill
-            sizes="36px"
-            src={avatarSrc}
-            unoptimized={isPublicAdminMediaSrc(avatarSrc)}
-          />
-        ) : (
-          initials(report.content.author.name)
-        )}
-      </div>
-      <div className="min-w-0">
-        <span className="block truncate text-sm font-bold text-foreground">
-          {report.content.author.name}
-        </span>
-        <span className="block text-xs font-bold text-muted">
-          {report.content.author.role_label}
-        </span>
-      </div>
+    <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-muted">
+      <TypeIcon aria-hidden className="h-4 w-4 shrink-0" />
+      <span className="font-black">{psychologistReportContentTypeLabel(report)}</span>
+      <span aria-hidden className="font-bold">
+        ·
+      </span>
+      <span className="font-black">{report.content.community.name}</span>
+      <span aria-hidden className="font-bold">
+        ·
+      </span>
+      <span className="font-bold">{formatDateTime(report.content.created_at)}</span>
     </div>
   );
 };
@@ -5553,10 +5548,10 @@ const PsychologistReportListItem = ({
         <p className="text-[0.68rem] font-black uppercase tracking-wide text-muted">
           Conteúdo denunciado
         </p>
-        <PsychologistReportContentAuthor report={report} />
+        <PsychologistReportContentHeader report={report} />
         {title ? <h3 className="mt-3 text-lg font-black text-foreground">{title}</h3> : null}
         <div className="mt-3 space-y-4">
-          <div className="min-w-0 whitespace-pre-wrap text-sm font-bold leading-6 text-foreground">
+          <div className="min-w-0 whitespace-pre-wrap text-sm leading-6 text-muted">
             {report.content.body || report.content.excerpt || "Conteúdo sem texto disponível."}
           </div>
           {report.content.media ? (

@@ -449,6 +449,9 @@ const reportTitle = (report: AdminPsychologistReportRecord) => {
 const reportContent = (report: AdminPsychologistReportRecord) =>
   report.reply ? report.reply.content : report.post.content;
 
+const reportContentCreatedAt = (report: AdminPsychologistReportRecord) =>
+  report.reply ? report.reply.createdAt : report.post.createdAt;
+
 type AdminPsychologistReportAuthor =
   | AdminPsychologistReportRecord["post"]["author"]
   | NonNullable<AdminPsychologistReportRecord["reply"]>["author"];
@@ -545,6 +548,7 @@ const toReportItem = (report: AdminPsychologistReportRecord): AdminPsychologistR
       available,
       body: reportContent(report),
       community: safeCommunity(report),
+      created_at: reportContentCreatedAt(report),
       excerpt: excerpt(reportContent(report)),
       id: reportTargetId(report),
       media: reportMedia(report),

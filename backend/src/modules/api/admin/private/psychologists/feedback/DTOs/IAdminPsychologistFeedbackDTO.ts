@@ -94,6 +94,7 @@ export type AdminPsychologistReportItem = {
       name: string;
       slug: string;
     };
+    created_at: Date;
     excerpt: string;
     id: string;
     media: {

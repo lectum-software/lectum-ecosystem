@@ -53,3 +53,13 @@ As listas de denúncias em comunidades e no detalhe administrativo do psicólogo
 A UI mostra essa identidade abaixo do rótulo **Conteúdo denunciado**, oculta títulos genéricos de comentário/resposta e mantém mídia abaixo do texto. Os botões de decisão foram mantidos como ações diretas auditadas, mas com tratamento visual mais leve para reduzir peso operacional sem alterar permissões, confirmação forte ou auditoria.
 
 Consequência: moderadores têm contexto de autoria antes de decidir, sem duplicar dados, sem mock, sem package novo e sem migration Prisma.
+
+## Atualização 2026-07-20: metadados do conteúdo denunciado no detalhe do psicólogo
+
+A aba **Denúncias** do detalhe administrativo do psicólogo deixa de exibir a identidade do autor logo abaixo do rótulo **Conteúdo denunciado** e passa a usar o mesmo padrão escaneável da aba **Publicações**: tipo do conteúdo (**Post**, **Resposta** ou **Comentário**), comunidade e data/hora de criação do conteúdo.
+
+Para isso, o contrato real de `GET /api/admin/private/psychologists/:id/reports` foi ampliado com `content.created_at`, derivado de `community_post.createdAt` ou `post_reply.createdAt`. A data da denúncia continua disponível em `created_at` no nível da denúncia e segue usada no badge **Última em** e no histórico de denúncias.
+
+A descrição/texto do conteúdo denunciado passa a ter peso visual de descrição (`text-muted`, sem negrito), preservando o peso do título. A alteração é visual e contratual-aditiva, sem schema Prisma, migration, endpoint paralelo, package novo, mock ou backfill.
+
+Validação do ajuste: checks/builds de backend e Admin, `pnpm check`, chamada autenticada do endpoint real confirmando `content.created_at` diferente da data da denúncia e browser local/headless via Chrome/CDP na aba `?tab=denuncias`, verificando metadados **Post · Autocuidado em Pequenos Passos · 15/07/2026 às 16:03**, título em negrito e descrição sem `font-bold`.
