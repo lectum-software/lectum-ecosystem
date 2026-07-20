@@ -52,6 +52,7 @@ Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente. A r
 - Smoke HTTP local: `GET http://localhost:3002/pacientes/cmrqsrab5001f1guh2ve5oy90?tab=conta` retornou `200`.
 - Smoke HTTP local sem token: `POST http://localhost:3001/api/admin/private/patients/cmrqsrab5001f1guh2ve5oy90/account/suspend` retornou `401`.
 
+
 ## Revisao 2026-07-20 - Paciente sem patient_profile
 
 Foi identificado que pacientes preview podem existir apenas em `users` com `role="paciente"` e sem linha em `patient_profiles`. O detalhe do paciente ja carregava esses casos a partir de `users`, mas a nova aba **Conta** buscava somente `patient_profile`, gerando `404 not_found` para usuarios validos.

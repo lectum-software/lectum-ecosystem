@@ -401,3 +401,21 @@ Frontend esperado:
 - `pnpm --dir frontend build`
 - `pnpm check`
 - Smoke HTTP local: `GET http://localhost:3002/pacientes/cmrqsr926001d1guhoz10yvaz` retornou `200`.
+
+
+## Ajuste pos-feedback 2026-07-20 - Conta de paciente sem perfil complementar
+
+- Pedido do usuario: explicar/corrigir por que as opcoes da aba **Conta** nao apareciam para o paciente `cmrqsr926001d1guhoz10yvaz`.
+- Causa encontrada: esse registro existe em `users` com `role="paciente"`, mas ainda nao possui `patient_profile`; o detalhe carregava pelo `user.id`, enquanto o endpoint novo de **Conta** exigia `patient_profile` e retornava `404 not_found`.
+- O backend da aba **Conta** passou a aceitar a mesma identidade do detalhe: usa `patient_profile.id`/`user_id` quando houver perfil e faz fallback real para `users.id` quando o paciente nao deletado ainda nao tiver `patient_profile`.
+- As capacidades continuam derivadas de dados reais (`users`, `user_tokens`) e permanecem honestamente bloqueadas quando faltar senha local, sessao ativa ou e-mail pendente.
+- Nao houve schema Prisma, migration, pacote novo, seed, mock, backfill ou endpoint simulado.
+- ADR atualizado: `adrs/0291-admin-paciente-conta-acesso-paridade-psicologo.md`.
+
+### Validacao complementar executada
+
+- Service local: `showAdminPatientAccount({ id: "cmrqsr926001d1guhoz10yvaz" })` retornou `200`.
+- `pnpm --dir backend exec biome check --write src/modules/api/admin/private/patients/account/repositories/AdminPatientAccountRepository.ts`
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm check`
