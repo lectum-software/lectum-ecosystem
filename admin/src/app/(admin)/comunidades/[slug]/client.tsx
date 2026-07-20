@@ -239,9 +239,8 @@ const contentPeriodOptions = [
   { id: "month", label: "Este mês" },
   { id: "year", label: "Este ano" },
   { id: "all", label: "Todo o período" },
-  { id: "custom", label: "Personalizado" },
 ] as const satisfies ReadonlyArray<{
-  id: ContentPeriodValue;
+  id: ContentPeriodPreset;
   label: string;
 }>;
 
@@ -283,7 +282,6 @@ const activityHoursPeriodOptions = [
   { id: "week", label: "Esta semana" },
   { id: "month", label: "Este mês" },
   { id: "year", label: "Este ano" },
-  { id: "custom", label: "Personalizado" },
 ] as const satisfies ReadonlyArray<CommunityStatisticsPeriodOption>;
 
 const disabledCommunityStatisticsComparisonQuery = {
@@ -479,18 +477,21 @@ const buildPreviousStatisticsRange = (
   return { from: previousFrom, to: previousTo };
 };
 const formatDayMonth = (value: string) => dayMonthFormatter.format(contentDateFromInput(value));
-type ReportPeriodValue = "30d" | "90d" | "180d" | "custom";
+type ReportPeriodValue = "all" | "30d" | "90d" | "180d" | "custom";
 type ReportPeriodPreset = Exclude<ReportPeriodValue, "custom">;
 type ReportDateRange = {
-  from: string;
-  to: string;
+  from?: string;
+  to?: string;
 };
 const reportPeriodOptions: { id: ReportPeriodPreset; label: string }[] = [
+  { id: "all", label: "Todo o período" },
   { id: "30d", label: "Últimos 30 dias" },
   { id: "90d", label: "Últimos 90 dias" },
   { id: "180d", label: "Últimos 180 dias" },
 ];
 const getReportRangeForPeriod = (period: ReportPeriodPreset): ReportDateRange => {
+  if (period === "all") return { from: "", to: "" };
+
   const days = period === "30d" ? 30 : period === "180d" ? 180 : 90;
   const to = new Date();
   const from = new Date();
@@ -3087,6 +3088,11 @@ const ContentTab = ({ createdAt, slug }: { createdAt: string; slug: string }) =>
                 onChange={(event) => handlePeriodChange(event.target.value as ContentPeriodValue)}
                 value={selectedPeriod}
               >
+                {selectedPeriod === "custom" ? (
+                  <option disabled hidden value="custom">
+                    Personalizado
+                  </option>
+                ) : null}
                 {contentPeriodOptions.map((option) => (
                   <option key={option.id} value={option.id}>
                     {option.label}
@@ -3871,12 +3877,12 @@ const CommunityReportResolveDialog = ({
 };
 
 const ReportsTab = ({ slug }: { slug: string }) => {
-  const [selectedPeriod, setSelectedPeriod] = useState<ReportPeriodValue>("90d");
+  const [selectedPeriod, setSelectedPeriod] = useState<ReportPeriodValue>("all");
   const [appliedRange, setAppliedRange] = useState<ReportDateRange>(() =>
-    getReportRangeForPeriod("90d"),
+    getReportRangeForPeriod("all"),
   );
   const [draftRange, setDraftRange] = useState<ReportDateRange>(() =>
-    getReportRangeForPeriod("90d"),
+    getReportRangeForPeriod("all"),
   );
   const [rangeError, setRangeError] = useState<string | null>(null);
   const [type, setType] = useState<CommunityReportFilterType>("all");
@@ -4002,20 +4008,20 @@ const ReportsTab = ({ slug }: { slug: string }) => {
               De
               <input
                 className="mt-2 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground"
-                max={draftRange.to}
+                max={draftRange.to || undefined}
                 onChange={(event) => handleDateChange("from", event.target.value)}
                 type="date"
-                value={draftRange.from}
+                value={draftRange.from ?? ""}
               />
             </label>
             <label className="block text-sm font-black text-muted">
               Até
               <input
                 className="mt-2 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground"
-                min={draftRange.from}
+                min={draftRange.from || undefined}
                 onChange={(event) => handleDateChange("to", event.target.value)}
                 type="date"
-                value={draftRange.to}
+                value={draftRange.to ?? ""}
               />
             </label>
           </div>
@@ -4126,7 +4132,7 @@ type CommunityStatisticsDateFilterProps = {
 
 const useCommunityStatisticsDateFilterState = (
   createdAt: string,
-  initialPeriod: StatisticsPeriodPreset = "week",
+  initialPeriod: StatisticsPeriodPreset = "all",
 ) => {
   const [selectedPeriod, setSelectedPeriod] = useState<StatisticsPeriodValue>(initialPeriod);
   const initialRange = useMemo(
@@ -4956,6 +4962,11 @@ const CommunityStatisticsDateFilters = ({
         onChange={(value) => onPeriodChange(value as StatisticsPeriodValue)}
         value={selectedPeriod}
       >
+        {selectedPeriod === "custom" ? (
+          <option disabled hidden value="custom">
+            Personalizado
+          </option>
+        ) : null}
         {periodOptions.map((option) => (
           <option key={option.id} value={option.id}>
             {option.label}
@@ -5878,11 +5889,15 @@ const ActivitiesTab = ({ slug }: { slug: string }) => {
             }}
             value={period}
           >
-            <option value="all">Todo histórico registrado</option>
+            {period === "custom" ? (
+              <option disabled hidden value="custom">
+                Personalizado
+              </option>
+            ) : null}
+            <option value="all">Todo o período</option>
             <option value="30d">Últimos 30 dias</option>
             <option value="90d">Últimos 90 dias</option>
             <option value="180d">Últimos 180 dias</option>
-            <option value="custom">Personalizado</option>
           </CommunityReportFilterSelect>
           <CommunityReportFilterSelect
             className="flex-1"
@@ -5931,34 +5946,36 @@ const ActivitiesTab = ({ slug }: { slug: string }) => {
           </label>
         </div>
 
-        {period === "custom" ? (
-          <div className="mt-3 grid gap-3 sm:grid-cols-2">
-            <label className="block text-sm font-black text-muted">
-              De
-              <input
-                className="mt-2 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground"
-                onChange={(event) => {
-                  setCustomFrom(event.target.value);
-                  setPage(1);
-                }}
-                type="date"
-                value={customFrom}
-              />
-            </label>
-            <label className="block text-sm font-black text-muted">
-              Até
-              <input
-                className="mt-2 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground"
-                onChange={(event) => {
-                  setCustomTo(event.target.value);
-                  setPage(1);
-                }}
-                type="date"
-                value={customTo}
-              />
-            </label>
-          </div>
-        ) : null}
+        <div className="mt-3 grid gap-3 sm:grid-cols-2">
+          <label className="block text-sm font-black text-muted">
+            De
+            <input
+              className="mt-2 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground"
+              max={customTo || undefined}
+              onChange={(event) => {
+                setPeriod("custom");
+                setCustomFrom(event.target.value);
+                setPage(1);
+              }}
+              type="date"
+              value={customFrom}
+            />
+          </label>
+          <label className="block text-sm font-black text-muted">
+            Até
+            <input
+              className="mt-2 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground"
+              min={customFrom || undefined}
+              onChange={(event) => {
+                setPeriod("custom");
+                setCustomTo(event.target.value);
+                setPage(1);
+              }}
+              type="date"
+              value={customTo}
+            />
+          </label>
+        </div>
       </section>
 
       <section className={cn(cardClass, "overflow-hidden")}>

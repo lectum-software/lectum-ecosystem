@@ -1848,14 +1848,14 @@ const DashboardContent = ({
 
 export const AdminPatientsClient = () => {
   const allowLocalLocationPreview = useLocalLocationPreviewEnabled();
-  const [selectedPeriod, setSelectedPeriod] = useState<PatientsDashboardPeriodValue>("week");
-  const [appliedPeriod, setAppliedPeriod] = useState<PatientsDashboardPeriodValue>("week");
+  const [selectedPeriod, setSelectedPeriod] = useState<PatientsDashboardPeriodValue>("all");
+  const [appliedPeriod, setAppliedPeriod] = useState<PatientsDashboardPeriodValue>("all");
   const [customRangeError, setCustomRangeError] = useState<string | null>(null);
   const [draftRange, setDraftRange] = useState<PatientsDashboardRange>(() =>
-    getDashboardRangeForPeriod("week"),
+    getDashboardRangeForPeriod("all"),
   );
   const [appliedRange, setAppliedRange] = useState<PatientsDashboardRange>(() =>
-    getDashboardRangeForPeriod("week"),
+    getDashboardRangeForPeriod("all"),
   );
   const queryInput = useMemo(
     () => buildDashboardPeriodQuery(appliedPeriod, appliedRange),
@@ -1912,10 +1912,10 @@ export const AdminPatientsClient = () => {
     }, 0);
   };
   const resetPeriod = () => {
-    const defaultRange = getDashboardRangeForPeriod("week");
+    const defaultRange = getDashboardRangeForPeriod("all");
     setCustomRangeError(null);
-    setSelectedPeriod("week");
-    setAppliedPeriod("week");
+    setSelectedPeriod("all");
+    setAppliedPeriod("all");
     setDraftRange(defaultRange);
     setAppliedRange(defaultRange);
   };

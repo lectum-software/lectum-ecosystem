@@ -521,6 +521,7 @@ type StatisticsPeriodValue = NonNullable<AdminPsychologistStatisticsQuery["perio
 type StatisticsPeriodPreset = Exclude<StatisticsPeriodValue, "custom">;
 type StatisticsCustomRange = Pick<AdminPsychologistStatisticsQuery, "from" | "to">;
 type PublicationsPeriodValue = NonNullable<AdminPsychologistPublicationsQuery["period"]>;
+type PublicationsPeriodPreset = Exclude<PublicationsPeriodValue, "custom">;
 type PublicationsCustomRange = Pick<AdminPsychologistPublicationsQuery, "from" | "to">;
 
 const BUSINESS_SERIES_METRIC_KEYS = [
@@ -546,13 +547,12 @@ const STATISTICS_PERIOD_OPTIONS: { id: StatisticsPeriodPreset; label: string }[]
   { id: "all", label: "Todo o período" },
 ];
 
-const PUBLICATIONS_PERIOD_OPTIONS: { id: PublicationsPeriodValue; label: string }[] = [
+const PUBLICATIONS_PERIOD_OPTIONS: { id: PublicationsPeriodPreset; label: string }[] = [
   { id: "today", label: "Hoje" },
   { id: "week", label: "Esta semana" },
   { id: "month", label: "Este mês" },
   { id: "year", label: "Este ano" },
   { id: "all", label: "Todo o período" },
-  { id: "custom", label: "Personalizado" },
 ];
 
 type PublicationSortValue = NonNullable<AdminPsychologistPublicationsQuery["sort"]>;
@@ -1102,13 +1102,13 @@ const STATISTICS_CUSTOM_RANGE_ERROR =
   "Informe um período personalizado completo, com data inicial menor ou igual à final.";
 
 const useStatisticsPeriodFilter = (createdAt?: string | null) => {
-  const [selectedPeriod, setSelectedPeriod] = useState<StatisticsPeriodValue>("week");
-  const [appliedPeriod, setAppliedPeriod] = useState<StatisticsPeriodValue>("week");
+  const [selectedPeriod, setSelectedPeriod] = useState<StatisticsPeriodValue>("all");
+  const [appliedPeriod, setAppliedPeriod] = useState<StatisticsPeriodValue>("all");
   const [draftRange, setDraftRange] = useState<StatisticsCustomRange>(() =>
-    getStatisticsRangeForPeriod("week", createdAt),
+    getStatisticsRangeForPeriod("all", createdAt),
   );
   const [appliedRange, setAppliedRange] = useState<StatisticsCustomRange>(() =>
-    getStatisticsRangeForPeriod("week", createdAt),
+    getStatisticsRangeForPeriod("all", createdAt),
   );
   const [rangeError, setRangeError] = useState<string | null>(null);
   const periodQuery = useMemo(
@@ -4869,13 +4869,13 @@ const PublicationsTab = ({ createdAt, id }: { createdAt: string; id: string }) =
   const [community, setCommunity] = useState("all");
   const [type, setType] = useState<AdminPsychologistPublicationsQuery["type"]>("all");
   const [sort, setSort] = useState<PublicationSortValue>("engagement");
-  const [selectedPeriod, setSelectedPeriod] = useState<PublicationsPeriodValue>("week");
-  const [appliedPeriod, setAppliedPeriod] = useState<PublicationsPeriodValue>("week");
+  const [selectedPeriod, setSelectedPeriod] = useState<PublicationsPeriodValue>("all");
+  const [appliedPeriod, setAppliedPeriod] = useState<PublicationsPeriodValue>("all");
   const [draftRange, setDraftRange] = useState<PublicationsCustomRange>(() =>
-    getStatisticsRangeForPeriod("week", createdAt),
+    getStatisticsRangeForPeriod("all", createdAt),
   );
   const [appliedRange, setAppliedRange] = useState<PublicationsCustomRange>(() =>
-    getStatisticsRangeForPeriod("week", createdAt),
+    getStatisticsRangeForPeriod("all", createdAt),
   );
   const [rangeError, setRangeError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
@@ -4902,26 +4902,12 @@ const PublicationsTab = ({ createdAt, id }: { createdAt: string; id: string }) =
   const handlePageChange = (nextPage: number) => {
     setPage(nextPage);
   };
-  const handlePeriodChange = (period: PublicationsPeriodValue) => {
+  const handlePeriodChange = (period: PublicationsPeriodPreset) => {
+    const nextRange = getStatisticsRangeForPeriod(period, createdAt);
+
     setSelectedPeriod(period);
     setRangeError(null);
     resetToFirstPage();
-
-    if (period === "custom") {
-      if (!customRangeIsValid) {
-        setRangeError(
-          "Informe um período personalizado completo, com data inicial menor ou igual à final.",
-        );
-        return;
-      }
-
-      setAppliedPeriod("custom");
-      setAppliedRange(draftRange);
-      return;
-    }
-
-    const nextRange = getStatisticsRangeForPeriod(period, createdAt);
-
     setDraftRange(nextRange);
     setAppliedRange(nextRange);
     setAppliedPeriod(period);
@@ -5012,9 +4998,14 @@ const PublicationsTab = ({ createdAt, id }: { createdAt: string; id: string }) =
             Período
             <PublicationFilterSelect
               id="publications-period"
-              onChange={(value) => handlePeriodChange(value as PublicationsPeriodValue)}
+              onChange={(value) => handlePeriodChange(value as PublicationsPeriodPreset)}
               value={selectedPeriod}
             >
+              {selectedPeriod === "custom" ? (
+                <option disabled hidden value="custom">
+                  Personalizado
+                </option>
+              ) : null}
               {PUBLICATIONS_PERIOD_OPTIONS.map((option) => (
                 <option key={option.id} value={option.id}>
                   {option.label}
@@ -5358,20 +5349,23 @@ const reportCardIcon: Record<"all" | "dismissed" | "pending" | "total" | "upheld
   upheld: ShieldCheck,
 };
 
-type ReportPeriodValue = "30d" | "90d" | "180d" | "custom";
+type ReportPeriodValue = "all" | "30d" | "90d" | "180d" | "custom";
 type ReportPeriodPreset = Exclude<ReportPeriodValue, "custom">;
 type ReportDateRange = {
-  from: string;
-  to: string;
+  from?: string;
+  to?: string;
 };
 
 const REPORT_PERIOD_OPTIONS: { id: ReportPeriodPreset; label: string }[] = [
+  { id: "all", label: "Todo o período" },
   { id: "30d", label: "Últimos 30 dias" },
   { id: "90d", label: "Últimos 90 dias" },
   { id: "180d", label: "Últimos 180 dias" },
 ];
 
 const getReportRangeForPeriod = (preset: ReportPeriodPreset): ReportDateRange => {
+  if (preset === "all") return { from: "", to: "" };
+
   const days = preset === "30d" ? 30 : preset === "180d" ? 180 : 90;
   const to = new Date();
   const from = new Date();
@@ -6032,12 +6026,12 @@ const DetailFilterSelect = ({
 );
 
 const ReportsTab = ({ id }: { id: string }) => {
-  const [selectedPeriod, setSelectedPeriod] = useState<ReportPeriodValue>("90d");
+  const [selectedPeriod, setSelectedPeriod] = useState<ReportPeriodValue>("all");
   const [appliedRange, setAppliedRange] = useState<ReportDateRange>(() =>
-    getReportRangeForPeriod("90d"),
+    getReportRangeForPeriod("all"),
   );
   const [draftRange, setDraftRange] = useState<ReportDateRange>(() =>
-    getReportRangeForPeriod("90d"),
+    getReportRangeForPeriod("all"),
   );
   const [rangeError, setRangeError] = useState<string | null>(null);
   const [type, setType] = useState<AdminPsychologistReportsQuery["type"]>("all");
@@ -6186,20 +6180,20 @@ const ReportsTab = ({ id }: { id: string }) => {
               De
               <input
                 className="mt-2 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground"
-                max={draftRange.to}
+                max={draftRange.to || undefined}
                 onChange={(event) => handleReportDateChange("from", event.target.value)}
                 type="date"
-                value={draftRange.from}
+                value={draftRange.from ?? ""}
               />
             </label>
             <label className="block text-sm font-black text-muted">
               Até
               <input
                 className="mt-2 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground"
-                min={draftRange.from}
+                min={draftRange.from || undefined}
                 onChange={(event) => handleReportDateChange("to", event.target.value)}
                 type="date"
-                value={draftRange.to}
+                value={draftRange.to ?? ""}
               />
             </label>
           </div>
@@ -6304,11 +6298,15 @@ const ActivitiesTab = ({ id }: { id: string }) => {
             }}
             value={period}
           >
-            <option value="all">Todo histórico registrado</option>
+            {period === "custom" ? (
+              <option disabled hidden value="custom">
+                Personalizado
+              </option>
+            ) : null}
+            <option value="all">Todo o período</option>
             <option value="30d">Últimos 30 dias</option>
             <option value="90d">Últimos 90 dias</option>
             <option value="180d">Últimos 180 dias</option>
-            <option value="custom">Personalizado</option>
           </DetailFilterSelect>
           <DetailFilterSelect
             className="flex-1"
@@ -6357,34 +6355,36 @@ const ActivitiesTab = ({ id }: { id: string }) => {
           </label>
         </div>
 
-        {period === "custom" ? (
-          <div className="mt-3 grid gap-3 sm:grid-cols-2">
-            <label className="block text-sm font-black text-muted">
-              De
-              <input
-                className="mt-2 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground"
-                onChange={(event) => {
-                  setCustomFrom(event.target.value);
-                  setPage(1);
-                }}
-                type="date"
-                value={customFrom}
-              />
-            </label>
-            <label className="block text-sm font-black text-muted">
-              Até
-              <input
-                className="mt-2 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground"
-                onChange={(event) => {
-                  setCustomTo(event.target.value);
-                  setPage(1);
-                }}
-                type="date"
-                value={customTo}
-              />
-            </label>
-          </div>
-        ) : null}
+        <div className="mt-3 grid gap-3 sm:grid-cols-2">
+          <label className="block text-sm font-black text-muted">
+            De
+            <input
+              className="mt-2 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground"
+              max={customTo || undefined}
+              onChange={(event) => {
+                setPeriod("custom");
+                setCustomFrom(event.target.value);
+                setPage(1);
+              }}
+              type="date"
+              value={customFrom}
+            />
+          </label>
+          <label className="block text-sm font-black text-muted">
+            Até
+            <input
+              className="mt-2 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground"
+              min={customFrom || undefined}
+              onChange={(event) => {
+                setPeriod("custom");
+                setCustomTo(event.target.value);
+                setPage(1);
+              }}
+              type="date"
+              value={customTo}
+            />
+          </label>
+        </div>
       </CardShell>
 
       <CardShell className="overflow-hidden">

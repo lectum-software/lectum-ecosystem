@@ -1886,14 +1886,14 @@ const DashboardContent = ({ summary }: { summary: AdminPsychologistsDashboard })
 };
 
 export const AdminPsychologistsClient = () => {
-  const [selectedPeriod, setSelectedPeriod] = useState<DashboardPeriodValue>("week");
-  const [appliedPeriod, setAppliedPeriod] = useState<DashboardPeriodValue>("week");
+  const [selectedPeriod, setSelectedPeriod] = useState<DashboardPeriodValue>("all");
+  const [appliedPeriod, setAppliedPeriod] = useState<DashboardPeriodValue>("all");
   const [customRangeError, setCustomRangeError] = useState<string | null>(null);
   const [draftRange, setDraftRange] = useState<DashboardRange>(() =>
-    getDashboardRangeForPeriod("week"),
+    getDashboardRangeForPeriod("all"),
   );
   const [appliedRange, setAppliedRange] = useState<DashboardRange>(() =>
-    getDashboardRangeForPeriod("week"),
+    getDashboardRangeForPeriod("all"),
   );
   const queryInput = useMemo(
     () => buildDashboardPeriodQuery(appliedPeriod, appliedRange),
@@ -1950,10 +1950,10 @@ export const AdminPsychologistsClient = () => {
     }, 0);
   };
   const resetPeriod = () => {
-    const defaultRange = getDashboardRangeForPeriod("week");
+    const defaultRange = getDashboardRangeForPeriod("all");
     setCustomRangeError(null);
-    setSelectedPeriod("week");
-    setAppliedPeriod("week");
+    setSelectedPeriod("all");
+    setAppliedPeriod("all");
     setDraftRange(defaultRange);
     setAppliedRange(defaultRange);
   };

@@ -2330,7 +2330,7 @@ const DashboardContent = ({
 };
 
 export const AdminCommunitiesClient = () => {
-  const [selectedPeriod, setSelectedPeriod] = useState<CommunityDashboardPeriodValue>("week");
+  const [selectedPeriod, setSelectedPeriod] = useState<CommunityDashboardPeriodValue>("all");
   const {
     appliedRange,
     applyRange,
@@ -2341,7 +2341,7 @@ export const AdminCommunitiesClient = () => {
   } = useDateRangeCommitOnBlur<CommunitiesDashboardQuery>({
     errorMessage:
       "Informe um período personalizado completo, com data inicial menor ou igual à final.",
-    initialRange: () => getCommunityDashboardRangeForPeriod("week"),
+    initialRange: () => getCommunityDashboardRangeForPeriod("all"),
     isValidRange: isValidCustomRange,
   });
   const validRange = selectedPeriod === "custom" ? isValidCustomRange(appliedRange) : true;
@@ -2371,7 +2371,7 @@ export const AdminCommunitiesClient = () => {
       {!validRange ? (
         <ErrorState
           message="Selecione um período válido."
-          onRetry={() => handlePeriodChange("week")}
+          onRetry={() => handlePeriodChange("all")}
         />
       ) : null}
 
