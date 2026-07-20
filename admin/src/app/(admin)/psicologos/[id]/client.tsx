@@ -2583,45 +2583,127 @@ const StatisticsMetricToggleCard = ({
 type PsychologistStatisticsCommunityItem =
   AdminPsychologistStatistics["community"]["communities"][number];
 
-const CommunitySummaryCard = ({
-  description,
-  icon: Icon,
-  label,
-  value,
+const formatCommunityRanking = (community: PsychologistStatisticsCommunityItem) =>
+  community.ranking ? `#${numberFormatter.format(community.ranking.position)}` : "Sem ranking";
+
+const formatCoverageRate = (community: PsychologistStatisticsCommunityItem) =>
+  community.coverage.rate_percent === null
+    ? "Sem base"
+    : `${community.coverage.rate_percent.toLocaleString("pt-BR", {
+        maximumFractionDigits: 1,
+        minimumFractionDigits: 1,
+      })}%`;
+
+const ActiveCommunityAvatar = ({
+  community,
 }: {
-  description: string;
-  icon: LucideIcon;
-  label: string;
-  value: ReactNode;
-}) => (
-  <div className="h-full min-w-0 rounded-card border border-border/80 bg-surface-muted p-4 text-left shadow-none">
-    <div className="flex min-w-0 items-start gap-3">
-      <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-surface text-muted">
-        <Icon aria-hidden className="h-5 w-5" />
-      </span>
-      <span className="min-w-0">
-        <span className="block text-xs font-extrabold leading-snug text-muted">{label}</span>
-        <span className="mt-1 block min-w-0 break-words text-xl font-extrabold leading-tight text-foreground">
-          {value}
-        </span>
-        <span className="mt-1 block min-w-0 break-words text-xs font-bold leading-5 text-muted">
-          {description}
-        </span>
-      </span>
-    </div>
-  </div>
-);
+  community: PsychologistStatisticsCommunityItem;
+}) => {
+  const imageSrc = renderableImageSrc(community.avatar_url);
 
-const formatCommunitySummaryMetric = (metric?: AdminPsychologistEngagementMetric) => {
-  if (!metric) return "\u2014";
+  if (imageSrc) {
+    return (
+      <Image
+        alt={`Comunidade ${community.name}`}
+        className="h-12 w-12 rounded-[18px] object-cover"
+        height={48}
+        src={imageSrc}
+        unoptimized={isPublicAdminMediaSrc(imageSrc)}
+        width={48}
+      />
+    );
+  }
 
-  return metric.available ? formatEngagementMetricValue(metric) : "\u2014";
+  return (
+    <span
+      className="grid h-12 w-12 shrink-0 place-items-center rounded-[18px] text-sm font-black text-white"
+      style={{ backgroundColor: community.color || "var(--admin-primary)" }}
+    >
+      {initials(community.name)}
+    </span>
+  );
 };
 
-const communitySummaryMetricDescription = (metric?: AdminPsychologistEngagementMetric) =>
-  metric?.available
-    ? "M\u00e9trica real da comunidade selecionada"
-    : (metric?.unavailable_reason ?? "Selecione uma comunidade");
+const ActiveCommunitiesBlock = ({
+  communities,
+}: {
+  communities: PsychologistStatisticsCommunityItem[];
+}) => (
+  <CardShell className="min-w-0 max-w-full overflow-hidden p-5">
+    <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+      <div className="min-w-0">
+        <h2 className="text-lg font-black text-foreground">Comunidades ativas</h2>
+        <p className="mt-1 text-xs font-bold leading-5 text-muted">
+          Comunidades em que o psicólogo realizou ao menos um post ou resposta no período, ordenadas
+          da mais ativa para a menos ativa.
+        </p>
+      </div>
+      <Badge className="w-fit bg-surface-muted text-muted">
+        {numberFormatter.format(communities.length)} comunidades
+      </Badge>
+    </div>
+
+    {communities.length === 0 ? (
+      <p className="mt-5 rounded-2xl border border-dashed border-border bg-surface-muted p-4 text-sm font-bold text-muted">
+        Nenhuma comunidade com post ou resposta real do psicólogo foi encontrada no período.
+      </p>
+    ) : (
+      <div className="mt-5 grid gap-3 xl:grid-cols-2">
+        {communities.map((community) => {
+          const interactions = community.posts + community.replies;
+          const coverage = community.coverage;
+
+          return (
+            <article
+              className="grid gap-4 rounded-[1.5rem] border border-border/80 bg-surface-muted p-4 sm:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)] sm:items-center"
+              key={community.id}
+            >
+              <div className="flex min-w-0 items-start gap-3">
+                <ActiveCommunityAvatar community={community} />
+                <div className="min-w-0">
+                  <h3 className="break-words text-sm font-black text-foreground">
+                    {community.name}
+                  </h3>
+                  <p className="mt-1 text-xs font-bold leading-5 text-muted">
+                    {numberFormatter.format(interactions)} interações ·{" "}
+                    {numberFormatter.format(community.posts)} posts ·{" "}
+                    {numberFormatter.format(community.replies)} respostas
+                  </p>
+                  <Badge
+                    className={cn(
+                      "mt-2",
+                      community.following ? "bg-emerald-50 text-success" : "bg-surface text-muted",
+                    )}
+                  >
+                    {community.following ? "Segue" : "Não segue"}
+                  </Badge>
+                </div>
+              </div>
+              <dl className="grid gap-2 text-sm sm:grid-cols-2">
+                <div className="rounded-2xl bg-surface p-3">
+                  <dt className="text-xs font-black text-muted">Ranking</dt>
+                  <dd className="mt-1 font-black text-foreground">
+                    {formatCommunityRanking(community)}
+                  </dd>
+                </div>
+                <div className="rounded-2xl bg-surface p-3">
+                  <dt className="text-xs font-black text-muted">Cobertura</dt>
+                  <dd className="mt-1 font-black text-foreground">
+                    {formatCoverageRate(community)}
+                  </dd>
+                  <dd className="mt-1 text-xs font-bold leading-5 text-muted">
+                    {numberFormatter.format(coverage.covered_patient_posts)} de{" "}
+                    {numberFormatter.format(coverage.patient_posts)} posts de pacientes
+                  </dd>
+                </div>
+              </dl>
+            </article>
+          );
+        })}
+      </div>
+    )}
+  </CardShell>
+);
 const defaultStatisticsMetricItemClassName =
   "flex w-full shrink-0 snap-start sm:w-[calc((100%_-_0.5rem)/2)] lg:w-[calc((100%_-_1rem)/3)] 2xl:w-[calc((100%_-_2.5rem)/6)]";
 
@@ -3997,21 +4079,18 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: st
 
     return metric ? [{ config, metric }] : [];
   });
-  const communityRankingMetric = communityMetricMap.get("ranking");
-  const communityCoverageMetric = communityMetricMap.get("coverage");
-  const selectedCommunitySummary: PsychologistStatisticsCommunityItem | null =
-    communityStatisticsSelectedCommunity === "all"
-      ? null
-      : (communityStatistics.community.communities.find(
-          (community) =>
-            community.id === communityStatisticsSelectedCommunity ||
-            community.slug === communityStatisticsSelectedCommunity,
-        ) ?? null);
+  const hasSelectedCommunity =
+    communityStatisticsSelectedCommunity === "all" ||
+    communityStatistics.community.communities.some(
+      (community) =>
+        community.id === communityStatisticsSelectedCommunity ||
+        community.slug === communityStatisticsSelectedCommunity,
+    );
   const communitySelectValue =
-    communityStatisticsSelectedCommunity === "all" || selectedCommunitySummary
+    communityStatisticsSelectedCommunity === "all" || hasSelectedCommunity
       ? communityStatisticsSelectedCommunity
       : "all";
-  const topActiveCommunities = [...communityStatistics.community.communities]
+  const activeCommunities = [...communityStatistics.community.communities]
     .filter((community) => community.posts + community.replies > 0)
     .sort((left, right) => {
       const leftTotal = left.posts + left.replies;
@@ -4019,17 +4098,7 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: st
       if (leftTotal !== rightTotal) return rightTotal - leftTotal;
 
       return left.name.localeCompare(right.name, "pt-BR");
-    })
-    .slice(0, 3);
-  const topActiveCommunitiesDescription =
-    topActiveCommunities.length > 0
-      ? topActiveCommunities
-          .map(
-            (community) =>
-              `${numberFormatter.format(community.posts + community.replies)} intera\u00e7\u00f5es`,
-          )
-          .join(" \u00b7 ")
-      : "Sem posts ou respostas no per\u00edodo";
+    });
   const communityFilterOptions = [
     { id: "all", label: "Todas" },
     ...communityStatistics.community.communities.map((community) => ({
@@ -4241,50 +4310,6 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: st
             />
           </div>
 
-          <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-            <CommunitySummaryCard
-              description={communitySummaryMetricDescription(communityRankingMetric)}
-              icon={Trophy}
-              label="Ranking"
-              value={formatCommunitySummaryMetric(communityRankingMetric)}
-            />
-            <CommunitySummaryCard
-              description={selectedCommunitySummary?.name ?? "Selecione uma comunidade"}
-              icon={CheckCircle2}
-              label="Segue a comunidade"
-              value={
-                selectedCommunitySummary
-                  ? selectedCommunitySummary.following
-                    ? "Segue"
-                    : "N\u00e3o segue"
-                  : "\u2014"
-              }
-            />
-            <CommunitySummaryCard
-              description={
-                communityCoverageMetric?.available
-                  ? "Posts de pacientes respondidos uma vez por post"
-                  : communitySummaryMetricDescription(communityCoverageMetric)
-              }
-              icon={ShieldCheck}
-              label="Cobertura"
-              value={formatCommunitySummaryMetric(communityCoverageMetric)}
-            />
-            <CommunitySummaryCard
-              description={topActiveCommunitiesDescription}
-              icon={BarChart3}
-              label="Comunidades mais ativas"
-              value={
-                topActiveCommunities.length > 0 ? (
-                  <span className="block text-base leading-snug">
-                    {topActiveCommunities.map((community) => community.name).join(", ")}
-                  </span>
-                ) : (
-                  "\u2014"
-                )
-              }
-            />
-          </div>
           <StatisticsMetricCarousel
             items={communityCards.map(({ config, metric }) => ({
               content: (
@@ -4305,6 +4330,8 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: st
             points={communityStatistics.community.series}
           />
         </CardShell>
+
+        <ActiveCommunitiesBlock communities={activeCommunities} />
 
         <PsychologistPlatformActivityHoursCard
           isRefreshing={isActivityHoursRefreshing}

@@ -208,16 +208,6 @@ const metric = (input: {
   value: input.value,
 });
 
-const unavailableMetric = (id: string, label: string, source: string, reason: string) =>
-  metric({
-    available: false,
-    id,
-    label,
-    source,
-    unavailable_reason: reason,
-    value: null,
-  });
-
 const roundPercent = (value: number) => Math.round(value * 10) / 10;
 
 const percentageChange = (current: number, previous: number) => {
@@ -799,84 +789,6 @@ const filterRepliesByCommunity = (
     ? replies
     : replies.filter((reply) => matchesCommunityFilter(reply.post.community, communityFilter));
 
-const buildCommunityRankingMetric = (
-  communityFilter: string,
-  communities: AdminPsychologistStatisticsDTO["community"]["communities"],
-) => {
-  if (communityFilter === "all") {
-    return unavailableMetric(
-      "ranking",
-      "Ranking do psic\u00f3logo",
-      "community_mentor_ranking",
-      "Selecione uma comunidade",
-    );
-  }
-
-  const selectedCommunity = communities.find((community) =>
-    matchesCommunityFilter(community, communityFilter),
-  );
-
-  if (!selectedCommunity) {
-    return unavailableMetric(
-      "ranking",
-      "Ranking do psic\u00f3logo",
-      "community_mentor_ranking",
-      "O psic\u00f3logo n\u00e3o possui posts ou respostas nesta comunidade.",
-    );
-  }
-
-  if (!selectedCommunity.ranking) {
-    return unavailableMetric(
-      "ranking",
-      "Ranking do psic\u00f3logo",
-      "community_mentor_ranking",
-      "Sem posi\u00e7\u00e3o real no ranking desta comunidade.",
-    );
-  }
-
-  return metric({
-    id: "ranking",
-    label: "Ranking do psic\u00f3logo",
-    source: "community_mentor_ranking",
-    unit: "position",
-    value: selectedCommunity.ranking.position,
-  });
-};
-
-const buildCommunityCoverageMetric = (
-  communityFilter: string,
-  communities: AdminPsychologistStatisticsDTO["community"]["communities"],
-) => {
-  if (communityFilter === "all") {
-    return unavailableMetric(
-      "coverage",
-      "Cobertura",
-      "community_post.author.role=paciente+post_reply.author_id",
-      "Selecione uma comunidade",
-    );
-  }
-
-  const selectedCommunity = communities.find((community) =>
-    matchesCommunityFilter(community, communityFilter),
-  );
-
-  if (!selectedCommunity) {
-    return unavailableMetric(
-      "coverage",
-      "Cobertura",
-      "community_post.author.role=paciente+post_reply.author_id",
-      "O psic\u00f3logo n\u00e3o possui posts ou respostas nesta comunidade.",
-    );
-  }
-
-  return metric({
-    id: "coverage",
-    label: "Cobertura",
-    source: selectedCommunity.coverage.source,
-    value: selectedCommunity.coverage.covered_patient_posts,
-  });
-};
-
 const notFound = () => ({
   status: 404,
   ...error("not_found", { model: "psychologist" }),
@@ -1069,8 +981,6 @@ export const showAdminPsychologistStatistics = async (
     psychologistId: userId,
     repository,
   });
-  const communityRankingMetric = buildCommunityRankingMetric(query.community, communityItems);
-  const communityCoverageMetric = buildCommunityCoverageMetric(query.community, communityItems);
   const platformUsageSummary = summarizePlatformUsage({
     eligiblePsychologistsCount: 1,
     pageViews: platformPageViews,
@@ -1238,8 +1148,6 @@ export const showAdminPsychologistStatistics = async (
           source: "post_reply em posts do psicólogo",
           value: commentsReceived.length,
         }),
-        communityRankingMetric,
-        communityCoverageMetric,
       ],
       communities: communityItems,
       series: communitySeries,

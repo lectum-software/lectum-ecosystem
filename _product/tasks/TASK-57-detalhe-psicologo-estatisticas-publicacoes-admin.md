@@ -215,17 +215,17 @@ Exibir estatísticas de negócio/comunidade e publicações do psicólogo com da
 - Builder/Quick Copy não estava disponível como ferramenta callable no ambiente; foram usados o PNG local `_product/proto/admin/Psicólogos/Detalhes do psicólogo/Estatísticas.png` e o recorte atual enviado pelo usuário.
 - Validações executadas para este ajuste: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e browser local/headless via Chrome/CDP em `/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=estatisticas`, confirmando 5 cards visíveis em **Estatísticas de negócio**, sem setas, com a última borda alinhada à largura útil da seção.
 
-### Complemento resumo de comunidade em 2026-07-20
+### Complemento comunidades ativas em 2026-07-20
 
-- O dropdown de **Estatisticas de comunidade** passou a listar somente comunidades em que o psicologo possui participacao real por post ou resposta; vinculos de seguir sem publicacao/resposta nao entram como opcao.
-- Foi adicionada uma linha de resumo, entre titulo/filtros e contadores plotaveis, com cards cinza para **Ranking**, **Segue a comunidade**, **Cobertura** e **Comunidades mais ativas**.
-- **Cobertura** conta posts de pacientes distintos respondidos pelo psicologo na comunidade selecionada e no periodo filtrado; multiplas respostas no mesmo post contam uma unica vez.
-- **Ranking** e **Cobertura** permanecem fora das metricas ativaveis no grafico, mantendo o aspecto cinza solicitado para informacoes nao plotaveis.
-- A UI mantem implementacao mobile-first: a linha de resumo empilha em telas estreitas e vira quatro colunas em desktop.
-- Nao houve alteracao em Prisma schema ou migrations; `pnpm --dir backend db:migrate` nao foi necessario.
-- Builder/Quick Copy nao estava disponivel como ferramenta callable no ambiente; foram usados o recorte enviado pelo usuario e `_product/proto/admin/Psicologos/Detalhes do psicologo/Estatisticas.png`.
-- ADR criado: `adrs/0290-admin-psicologo-comunidade-resumo-cobertura.md`.
-- Validacoes concluidas nos arquivos desta entrega: Biome direcionado em Admin/Backend, ESLint direcionado em Admin, `pnpm --dir admin build` e smoke real do use case `showAdminPsychologistStatistics`.
-- Smoke real do use case: em **Todas**, `ranking` e `coverage` retornam indisponiveis com motivo "Selecione uma comunidade"; em comunidade selecionada, `ranking` e `coverage` retornam metricas reais e a lista de comunidades vem apenas de participacao por post/resposta.
-- Validacoes amplas ficaram bloqueadas por alteracoes paralelas/preexistentes fora do escopo em Admin/Backend de pacientes: `pnpm --dir admin check` e `pnpm check` falham em `admin/src/app/(admin)/pacientes/[id]/client.tsx`; `pnpm --dir backend check` e TypeScript/backend emit falham em arquivos de `backend/src/modules/api/admin/private/patients/account/`.
-- Browser local/headless em `localhost:3002` foi exercitado, mas o perfil headless nao possuia sessao admin autenticada e permaneceu na tela de login; a validacao visual autenticada ficou limitada por ausencia de credencial/sessao no ambiente.
+- O bloco **Estatísticas de comunidade** removeu os contadores contextuais **Ranking**, **Segue a comunidade**, **Cobertura** e **Comunidades mais ativas**; os cards do bloco principal agora ficam restritos aos contadores que desenham curva no gráfico.
+- Foi adicionado o bloco **Comunidades ativas** entre **Estatísticas de comunidade** e **Horários mais ativos**, com comunidades onde o psicólogo teve ao menos um post ou resposta real no período.
+- A lista é ordenada da comunidade mais ativa para a menos ativa pela soma real de posts e respostas do psicólogo; empates usam o nome da comunidade.
+- Cada comunidade ativa exibe identidade real da comunidade, se o psicólogo segue ou não segue, ranking real na comunidade e cobertura de posts de pacientes.
+- **Cobertura** usa posts de pacientes publicados no período e respostas reais do psicólogo no mesmo período, contando cada post de paciente no máximo uma vez.
+- O contrato Admin real `GET /api/admin/private/psychologists/:id/statistics` foi enriquecido em `community.communities[]` com `following` e `coverage`, mantendo ranking no item da comunidade e sem criar endpoint paralelo.
+- Não houve alteração em Prisma schema ou migrations; `pnpm --dir backend db:migrate` não foi necessário.
+- Builder/Quick Copy não estava disponível como ferramenta callable no ambiente; foram usados o recorte enviado pelo usuário e `_product/proto/admin/Psicólogos/Detalhes do psicólogo/Estatísticas.png`.
+- ADR atualizado: `adrs/0290-admin-psicologo-comunidade-resumo-cobertura.md`.
+- Validações executadas: Biome direcionado nos arquivos alterados de Admin/Backend, ESLint direcionado no arquivo Admin alterado, `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin build`, chamada direta do service `showAdminPsychologistStatistics` e smoke HTTP local em `/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=estatisticas`.
+- Observação: `pnpm --dir admin check` e `pnpm check` foram tentados, mas ficaram bloqueados por alterações paralelas não relacionadas em pacientes; elas não fazem parte deste ajuste.
+
