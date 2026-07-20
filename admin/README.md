@@ -26,6 +26,15 @@ pnpm --dir admin dev
 
 URL local: `http://localhost:3002`.
 
+Se o login exibir erro de conexão com o backend, valide primeiro:
+
+```bash
+curl http://localhost:3001/health
+```
+
+Sem resposta `200`, suba ou reinicie o backend real com `pnpm --dir backend dev`;
+se a API estiver em outra porta/origem, ajuste `NEXT_PUBLIC_API_URL`.
+
 Também é possível subir backend, frontend e Admin juntos pela raiz:
 
 ```bash

@@ -2,10 +2,15 @@ import axios, { AxiosHeaders } from "axios";
 import { getAdminDeviceId } from "@/lib/fingerprint";
 import { clearAdminSession, getAdminToken } from "@/lib/storage";
 
-const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+const normalizeApiUrl = (value?: string | null) => {
+  const normalized = value?.trim();
+  return normalized ? normalized.replace(/\/+$/, "") : "http://localhost:3001";
+};
+
+export const adminApiUrl = normalizeApiUrl(process.env.NEXT_PUBLIC_API_URL);
 
 export const adminApi = axios.create({
-  baseURL: apiUrl,
+  baseURL: adminApiUrl,
   headers: {
     "Content-Type": "application/json",
     "Accept-Language": "pt-BR",

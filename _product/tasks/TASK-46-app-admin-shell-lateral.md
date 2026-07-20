@@ -146,3 +146,10 @@ Regras anti-recriação:
 - Criado app `admin/` separado, com Next.js App Router na porta local `3002`, login real via backend da TASK-45 e storage `lectum.admin.*`.
 - Builder/Quick Copy não estava disponível nas ferramentas do ambiente; a referência visual usada foi `_product/proto/admin/Dashboard.png`.
 - Validações executadas: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm --dir admin audit --prod`, `pnpm check`, smoke HTTP local em `/login` e `/dashboard`, e smoke API real de login/hidrate/logout com admin temporário removido ao final.
+
+## Correção de conectividade local em 2026-07-20
+
+- Diagnóstico de regressão operacional: o Admin em `localhost:3002` apontava corretamente para `localhost:3001`, mas o backend não estava escutando na porta durante o submit do login.
+- Ajustado o erro de rede do Admin para informar a URL efetiva da API e orientar a verificação do backend/`NEXT_PUBLIC_API_URL`, sem criar mock ou fallback simulado.
+- Ajustado `backend` dev watcher para ignorar `src/external/generated/prisma/**`, evitando reinícios por artefatos gerados durante `prisma generate`.
+- ADR registrado: `adrs/0288-admin-login-backend-dev-conectividade.md`.
