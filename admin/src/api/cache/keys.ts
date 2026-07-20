@@ -312,6 +312,7 @@ export const adminPsychologistsKeys = {
 
 export const adminPatientsKeys = {
   all: ["admin", "patients"] as const,
+  account: (id: string) => [...adminPatientsKeys.all, "account", id] as const,
   dashboard: (input: PatientsDashboardQuery) =>
     [...adminPatientsKeys.all, "dashboard", normalizeRange(input)] as const,
   detail: (id: string, input: PatientsDetailQuery) =>

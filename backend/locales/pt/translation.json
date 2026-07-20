@@ -173,7 +173,19 @@
     "admin_community_report_dismiss_confirmation_invalid": "Digite DENUNCIA IMPROCEDENTE para resolver a denuncia como improcedente.",
     "admin_community_report_invalid_status": "Esta denuncia nao possui pendencias que permitam esta acao.",
     "admin_community_report_invalid_target": "Conteudo denunciado nao encontrado nesta comunidade.",
-    "admin_community_report_uphold_confirmation_invalid": "Digite DENUNCIA PROCEDENTE para resolver a denuncia como procedente."
+    "admin_community_report_uphold_confirmation_invalid": "Digite DENUNCIA PROCEDENTE para resolver a denuncia como procedente.",
+    "admin_patient_account_change_email_confirmation_invalid": "Confirmacao forte invalida para alteracao de e-mail do paciente.",
+    "admin_patient_account_already_deleted": "A conta do paciente ja esta excluida.",
+    "admin_patient_account_deactivate_confirmation_invalid": "Confirmacao forte invalida para desativar a conta do paciente.",
+    "admin_patient_account_delete_confirmation_invalid": "Confirmacao forte invalida para excluir a conta do paciente.",
+    "admin_patient_account_email_already_confirmed": "O e-mail do paciente ja esta confirmado.",
+    "admin_patient_account_email_provider_unavailable": "Envio de e-mail transacional indisponivel neste ambiente. A acao nao foi concluida.",
+    "admin_patient_account_password_support_unavailable": "Acao de senha indisponivel para conta de paciente sem senha local.",
+    "admin_patient_account_revoke_sessions_confirmation_invalid": "Confirmacao forte invalida para encerrar sessoes do paciente.",
+    "admin_patient_account_status_transition_invalid": "A conta de paciente ja esta neste status administrativo.",
+    "admin_patient_account_suspend_confirmation_invalid": "Confirmacao forte invalida para suspender a conta do paciente.",
+    "admin_patient_account_suspension_duration_invalid": "Prazo de suspensao do paciente invalido.",
+    "admin_patient_account_temporary_password_confirmation_invalid": "Confirmacao forte invalida para definir senha temporaria do paciente."
   },
   "message": {
     "store": "dado criado",
@@ -281,7 +293,15 @@
     "admin_moderation_event_reviewed": "Evento de modera??o marcado como em revis?o.",
     "admin_moderation_event_resolved": "Evento de modera??o resolvido com auditoria administrativa.",
     "admin_community_report_dismissed": "Denuncia resolvida como improcedente.",
-    "admin_community_report_upheld": "Denuncia resolvida como procedente."
+    "admin_community_report_upheld": "Denuncia resolvida como procedente.",
+    "admin_patient_account_email_changed": "E-mail do paciente alterado e confirmacao enviada.",
+    "admin_patient_account_deactivated": "Conta do paciente desativada com auditoria administrativa e sessoes encerradas.",
+    "admin_patient_account_deleted": "Conta do paciente excluida com soft delete, anonimizacao e auditoria administrativa.",
+    "admin_patient_account_email_confirmation_sent": "Confirmacao de e-mail do paciente reenviada.",
+    "admin_patient_account_password_reset_sent": "Link de redefinicao de senha do paciente enviado.",
+    "admin_patient_account_sessions_revoked": "Sessoes do paciente encerradas com auditoria administrativa.",
+    "admin_patient_account_suspended": "Conta do paciente suspensa com auditoria administrativa e sessoes encerradas.",
+    "admin_patient_account_temporary_password_set": "Senha temporaria do paciente definida com troca obrigatoria no proximo login."
   },
   "gender": {
     "o": "o"

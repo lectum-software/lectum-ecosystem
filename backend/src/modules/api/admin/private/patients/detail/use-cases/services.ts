@@ -690,7 +690,7 @@ const buildDetail = (
       source: "community_member+community_post+post_reply+post_vote+post_save+post_reply_save",
     },
     coverage_notes: [
-      "Tela somente leitura: nÃ£o hÃ¡ aÃ§Ãµes de bloquear, silenciar, banir, excluir ou moderar paciente.",
+      "Aba Conta possui suporte administrativo auditado de acesso, sessões, suspensão, desativação e exclusão; não há silenciamento, restrição parcial ou moderação automática de paciente.",
       "Status Ativo/Inativo representa user.active, nÃ£o retenÃ§Ã£o nem engajamento recente.",
       "E-mail Ã© exibido apenas para admin autenticado; telefone, nascimento, bio, IP, coordenadas e endereÃ§o completo sÃ£o omitidos na V1.",
       "Ãšltimo acesso usa somente metadados reais de sessÃ£o/token do usuÃ¡rio, quando existentes.",

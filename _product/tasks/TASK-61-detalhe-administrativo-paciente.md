@@ -73,7 +73,8 @@ Criar a tela de detalhe administrativo do paciente com dados reais e uma leitura
 
 ## Fora do escopo
 
-- Bloquear, silenciar, banir ou excluir paciente.
+- Silenciar, banir, moderar parcialmente ou aplicar restricoes fora da aba **Conta**.
+- Acoes de conta/acesso (suspender, desativar, encerrar sessoes e excluir) foram reabertas por feedback explicito de 2026-07-20 e ficam limitadas a paridade auditada com a aba **Conta** do detalhe do psicologo.
 - Moderação de publicações, comentários, votos ou avaliações.
 - Taxa de retenção.
 - Exibir localização precisa.
@@ -143,8 +144,9 @@ Frontend esperado:
 ## Critérios de aceite
 
 - [x] Rota de detalhe só abre para admin autenticado.
-- [x] Tela permanece sem ações destrutivas/moderação e ganhou edição administrativa auditada limitada de gênero em Dados pessoais após feedback de 2026-07-20.
-- [x] Não há ação de bloquear, silenciar, banir, excluir ou moderar paciente.
+- [x] Tela mantem ausencia de moderacao/silenciamento parcial e ganhou edicao administrativa auditada limitada de genero em Dados pessoais apos feedback de 2026-07-20.
+- [x] A aba **Conta** possui acoes auditadas de conta/acesso por paridade com psicologo: alterar e-mail, reenviar confirmacao, reset/senha temporaria, encerrar sessoes, suspender, desativar e excluir.
+- [x] Nao ha acao de silenciar, banir ou moderar paciente fora dos fluxos explicitos de conta/acesso.
 - [x] Não há métrica de retenção.
 - [x] Status usa apenas `Ativo`/`Inativo` baseado em fonte real.
 - [x] Métricas de engajamento usam dados reais.
@@ -353,3 +355,27 @@ Frontend esperado:
 - Smoke HTTP local: `GET http://localhost:3002/pacientes/cmrqsrab5001f1guh2ve5oy90?tab=perfil` retornou `200`.
 - Smoke HTTP local: `GET http://localhost:3002/pacientes/cmrqsrab5001f1guh2ve5oy90` retornou `200`.
 - Smoke HTTP local sem token: `PUT http://localhost:3001/api/admin/private/patients/cmrqsrab5001f1guh2ve5oy90/personal-data` retornou `401`.
+
+## Ajuste pos-feedback 2026-07-20 - Paridade da aba Conta com psicologo
+
+- Pedido do usuario: em detalhes do paciente, na aba **Conta**, replicar as mesmas opcoes existentes na aba **Conta** do detalhe do psicologo.
+- A decisao anterior de conta somente leitura da TASK-61 foi substituida apenas para a area de conta/acesso: permanecem fora do escopo silenciamento, banimento, moderacao parcial e automacoes de moderacao de paciente.
+- Criado endpoint admin privado `/api/admin/private/patients/:id/account` com as mesmas familias de operacoes do psicologo: resumo, alteracao de e-mail, reenvio de confirmacao, reset de senha, senha temporaria, encerramento de sessoes, suspensao, desativacao e exclusao.
+- Todas as operacoes exigem admin autenticado, motivo interno, confirmacao forte quando aplicavel e registram `admin_activity_log` com `target_type="patient"` e `domain="patient_account"`.
+- A UI da aba **Conta** passou a usar React Hook Form, Zod e controllers existentes, mobile-first, com cards equivalentes aos do psicologo e estados honestos para contas Google sem senha local.
+- Nao houve schema Prisma, migration, package novo, seed, mock ou endpoint simulado. `db:migrate` nao se aplicou.
+- Builder/Quick Copy nao esta exposto como ferramenta callable no ambiente; a referencia auditavel foi a captura enviada pelo usuario e o padrao ja implementado em `/psicologos/[id]?tab=conta`.
+- ADR criado: `adrs/0291-admin-paciente-conta-acesso-paridade-psicologo.md`.
+
+### Validacao complementar executada
+
+- `pnpm --dir admin exec biome check --write "src/api/cache/keys.ts" "src/api/callers/patients/index.ts" "src/api/req/patients/index.ts" "src/app/(admin)/pacientes/[id]/client.tsx"`
+- `pnpm --dir backend exec biome check --write "src/main/server/imports/write.ts" "src/modules/api/private/account/repositories/AccountRepository.ts" "src/modules/api/admin/private/patients/detail/use-cases/services.ts" "src/modules/api/admin/private/patients/account/index.ts" "src/modules/api/admin/private/patients/account/DTOs/IAdminPatientAccountDTO.ts" "src/modules/api/admin/private/patients/account/repositories/AdminPatientAccountRepository.ts" "src/modules/api/admin/private/patients/account/use-cases/controller.ts" "src/modules/api/admin/private/patients/account/use-cases/services.ts" "src/modules/api/admin/private/patients/account/validator/index.ts"`
+- `pnpm --dir admin check`
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir admin build`
+
+- `pnpm check`
+- Smoke HTTP local: `GET http://localhost:3002/pacientes/cmrqsrab5001f1guh2ve5oy90?tab=conta` retornou `200`.
+- Smoke HTTP local sem token: `POST http://localhost:3001/api/admin/private/patients/cmrqsrab5001f1guh2ve5oy90/account/suspend` retornou `401`.

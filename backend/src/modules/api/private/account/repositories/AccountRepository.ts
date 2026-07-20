@@ -20,13 +20,17 @@ const markDeleted = (now: Date) => ({
 });
 
 type AccountDeletionAdminAudit = {
+  action?: string;
   adminId: string;
+  area?: string;
   changedFields: string[];
+  domain?: string;
   metadata: Prisma.InputJsonObject;
   reason: string;
   safeAfter: Prisma.InputJsonObject;
   safeBefore: Prisma.InputJsonObject;
   targetId: string;
+  targetType?: string;
 };
 
 const recalculatePsychologistRating = async (
@@ -323,18 +327,18 @@ export class AccountRepository implements IAccountRepository {
       if (adminAudit) {
         await tx.admin_activity_log.create({
           data: {
-            action: "psychologist_account_deleted",
+            action: adminAudit.action ?? "psychologist_account_deleted",
             admin_id: adminAudit.adminId,
-            area: "conta_e_acesso",
+            area: adminAudit.area ?? "conta_e_acesso",
             changed_fields: adminAudit.changedFields as Prisma.InputJsonValue,
-            domain: "psychologist_account",
+            domain: adminAudit.domain ?? "psychologist_account",
             metadata: adminAudit.metadata,
             reason: adminAudit.reason,
             safe_after: adminAudit.safeAfter,
             safe_before: adminAudit.safeBefore,
             source: "admin_panel",
             target_id: adminAudit.targetId,
-            target_type: "psychologist",
+            target_type: adminAudit.targetType ?? "psychologist",
           },
           select: {
             id: true,

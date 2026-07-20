@@ -19,6 +19,73 @@ export type AdminPatientUpdatePersonalDataInput = {
   reason: string;
 };
 
+export type AdminPatientAccount = {
+  active: boolean;
+  account_status_expires_at: string | null;
+  account_status: "active" | "deactivated" | "deleted" | "suspended";
+  account_status_changed_at: string | null;
+  account_status_label: string;
+  capabilities: {
+    can_change_email: boolean;
+    can_deactivate_account: boolean;
+    can_delete_account: boolean;
+    can_send_email_confirmation: boolean;
+    can_send_password_reset: boolean;
+    can_set_temporary_password: boolean;
+    can_suspend_account: boolean;
+    can_revoke_sessions: boolean;
+  };
+  confirmed: boolean;
+  confirmed_at: string | null;
+  created_at: string;
+  delete_blocked_reason: string | null;
+  deleted: boolean;
+  deleted_at: string | null;
+  email: string;
+  has_password: boolean;
+  last_access_at: string | null;
+  need_reset: boolean;
+  provider: string;
+  provider_label: string;
+  sessions: {
+    active_count: number;
+    devices_count: number;
+    last_access_at: string | null;
+    source: "user_token";
+  };
+  source: "user+user_token";
+};
+
+export type AdminPatientAccountReasonInput = {
+  reason: string;
+};
+
+export type AdminPatientChangeEmailInput = AdminPatientAccountReasonInput & {
+  confirmation: string;
+  email: string;
+};
+
+export type AdminPatientSetTemporaryPasswordInput = AdminPatientAccountReasonInput & {
+  confirmation: string;
+  password: string;
+  password_confirm: string;
+};
+
+export type AdminPatientRevokeSessionsInput = AdminPatientAccountReasonInput & {
+  confirmation: string;
+};
+
+export type AdminPatientAccountStatusActionInput = AdminPatientAccountReasonInput & {
+  confirmation: string;
+  suspension_duration_days?: number;
+};
+
+export type AdminPatientAccountDeleteResponse = {
+  deleted: true;
+  id: string;
+  source: "user+patient_profile+admin_activity_log";
+};
+
 export type PatientsDashboardTrend = "down" | "flat" | "unavailable" | "up";
 
 export type PatientsDashboardMetric = {
@@ -353,6 +420,110 @@ export const getAdminPatientDetail = async (id: string, input: PatientsDetailQue
     {
       params: cleanParams(input),
     },
+  );
+
+  return resolveApiData(response.data);
+};
+
+export const getAdminPatientAccount = async (id: string) => {
+  const response = await adminApi.get<ApiResponse<AdminPatientAccount>>(
+    `/api/admin/private/patients/${encodeURIComponent(id)}/account`,
+  );
+
+  return resolveApiData(response.data);
+};
+
+export const changeAdminPatientAccountEmail = async (
+  id: string,
+  input: AdminPatientChangeEmailInput,
+) => {
+  const response = await adminApi.post<ApiResponse<AdminPatientAccount>>(
+    `/api/admin/private/patients/${encodeURIComponent(id)}/account/change-email`,
+    input,
+  );
+
+  return resolveApiData(response.data);
+};
+
+export const sendAdminPatientAccountEmailConfirmation = async (
+  id: string,
+  input: AdminPatientAccountReasonInput,
+) => {
+  const response = await adminApi.post<ApiResponse<AdminPatientAccount>>(
+    `/api/admin/private/patients/${encodeURIComponent(id)}/account/send-email-confirmation`,
+    input,
+  );
+
+  return resolveApiData(response.data);
+};
+
+export const sendAdminPatientAccountPasswordReset = async (
+  id: string,
+  input: AdminPatientAccountReasonInput,
+) => {
+  const response = await adminApi.post<ApiResponse<AdminPatientAccount>>(
+    `/api/admin/private/patients/${encodeURIComponent(id)}/account/send-password-reset`,
+    input,
+  );
+
+  return resolveApiData(response.data);
+};
+
+export const setAdminPatientAccountTemporaryPassword = async (
+  id: string,
+  input: AdminPatientSetTemporaryPasswordInput,
+) => {
+  const response = await adminApi.post<ApiResponse<AdminPatientAccount>>(
+    `/api/admin/private/patients/${encodeURIComponent(id)}/account/set-temporary-password`,
+    input,
+  );
+
+  return resolveApiData(response.data);
+};
+
+export const revokeAdminPatientAccountSessions = async (
+  id: string,
+  input: AdminPatientRevokeSessionsInput,
+) => {
+  const response = await adminApi.post<ApiResponse<AdminPatientAccount>>(
+    `/api/admin/private/patients/${encodeURIComponent(id)}/account/revoke-sessions`,
+    input,
+  );
+
+  return resolveApiData(response.data);
+};
+
+export const suspendAdminPatientAccount = async (
+  id: string,
+  input: AdminPatientAccountStatusActionInput,
+) => {
+  const response = await adminApi.post<ApiResponse<AdminPatientAccount>>(
+    `/api/admin/private/patients/${encodeURIComponent(id)}/account/suspend`,
+    input,
+  );
+
+  return resolveApiData(response.data);
+};
+
+export const deactivateAdminPatientAccount = async (
+  id: string,
+  input: AdminPatientAccountStatusActionInput,
+) => {
+  const response = await adminApi.post<ApiResponse<AdminPatientAccount>>(
+    `/api/admin/private/patients/${encodeURIComponent(id)}/account/deactivate`,
+    input,
+  );
+
+  return resolveApiData(response.data);
+};
+
+export const deleteAdminPatientAccount = async (
+  id: string,
+  input: AdminPatientAccountStatusActionInput,
+) => {
+  const response = await adminApi.post<ApiResponse<AdminPatientAccountDeleteResponse>>(
+    `/api/admin/private/patients/${encodeURIComponent(id)}/account/delete`,
+    input,
   );
 
   return resolveApiData(response.data);
