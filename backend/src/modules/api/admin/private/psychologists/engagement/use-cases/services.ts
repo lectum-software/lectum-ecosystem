@@ -1,4 +1,4 @@
-﻿import type { Resolve } from "@/helpers/return";
+import type { Resolve } from "@/helpers/return";
 import { error, msg } from "@/helpers/translate";
 import {
   summarizePlatformHourlyActivity,
@@ -641,7 +641,9 @@ const earlierDate = (current: Date | null, candidate: Date | null) => {
 const buildCommunityItems = (input: {
   allPosts: AdminPsychologistEngagementPost[];
   allReplies: AdminPsychologistEngagementReply[];
+  coverageWindow: { end: Date; start: Date };
   memberships: Awaited<ReturnType<AdminPsychologistEngagementRepository["listCommunities"]>>;
+  patientPostsByCommunity: Map<string, number>;
   posts: AdminPsychologistEngagementPost[];
   replies: AdminPsychologistEngagementReply[];
 }): AdminPsychologistStatisticsDTO["community"]["communities"] => {
@@ -659,6 +661,13 @@ const buildCommunityItems = (input: {
     const next = {
       avatar_url: community.avatar_url,
       color: community.visual_primary_color,
+      coverage: {
+        covered_patient_posts: 0,
+        patient_posts: input.patientPostsByCommunity.get(community.id) ?? 0,
+        rate_percent: null,
+        source: "community_post.author.role=paciente+post_reply.author_id" as const,
+      },
+      following: false,
       id: community.id,
       member_since: null,
       name: community.name,
@@ -673,11 +682,6 @@ const buildCommunityItems = (input: {
     return next;
   };
 
-  for (const membership of input.memberships) {
-    const current = ensureItem(membership.community);
-    current.member_since = earlierDate(current.member_since, membership.createdAt);
-  }
-
   for (const post of input.allPosts) {
     const current = ensureItem(post.community);
     current.member_since = earlierDate(current.member_since, post.createdAt);
@@ -688,6 +692,13 @@ const buildCommunityItems = (input: {
     current.member_since = earlierDate(current.member_since, reply.createdAt);
   }
 
+  for (const membership of input.memberships) {
+    const current = communities.get(membership.community.id);
+    if (!current) continue;
+    current.following = true;
+    current.member_since = earlierDate(current.member_since, membership.createdAt);
+  }
+
   for (const post of input.posts) {
     const current = ensureItem(post.community);
     current.posts += 1;
@@ -696,6 +707,25 @@ const buildCommunityItems = (input: {
   for (const reply of input.replies) {
     const current = ensureItem(reply.post.community);
     current.replies += 1;
+  }
+
+  for (const community of communities.values()) {
+    const coveredPatientPosts = new Set(
+      input.replies
+        .filter(
+          (reply) =>
+            reply.post.community.id === community.id &&
+            reply.post.author.role === "paciente" &&
+            reply.post.createdAt >= input.coverageWindow.start &&
+            reply.post.createdAt <= input.coverageWindow.end,
+        )
+        .map((reply) => reply.post.id),
+    ).size;
+    const patientPosts = community.coverage.patient_posts;
+
+    community.coverage.covered_patient_posts = coveredPatientPosts;
+    community.coverage.rate_percent =
+      patientPosts > 0 ? roundPercent((coveredPatientPosts / patientPosts) * 100) : null;
   }
 
   return [...communities.values()].sort((left, right) => {
@@ -776,7 +806,7 @@ const buildCommunityRankingMetric = (
   if (communityFilter === "all") {
     return unavailableMetric(
       "ranking",
-      "Ranking do psicólogo",
+      "Ranking do psic\u00f3logo",
       "community_mentor_ranking",
       "Selecione uma comunidade",
     );
@@ -789,27 +819,61 @@ const buildCommunityRankingMetric = (
   if (!selectedCommunity) {
     return unavailableMetric(
       "ranking",
-      "Ranking do psicólogo",
+      "Ranking do psic\u00f3logo",
       "community_mentor_ranking",
-      "O psicólogo não possui participação real nesta comunidade.",
+      "O psic\u00f3logo n\u00e3o possui posts ou respostas nesta comunidade.",
     );
   }
 
   if (!selectedCommunity.ranking) {
     return unavailableMetric(
       "ranking",
-      "Ranking do psicólogo",
+      "Ranking do psic\u00f3logo",
       "community_mentor_ranking",
-      "Sem posição real no ranking desta comunidade.",
+      "Sem posi\u00e7\u00e3o real no ranking desta comunidade.",
     );
   }
 
   return metric({
     id: "ranking",
-    label: "Ranking do psicólogo",
+    label: "Ranking do psic\u00f3logo",
     source: "community_mentor_ranking",
     unit: "position",
     value: selectedCommunity.ranking.position,
+  });
+};
+
+const buildCommunityCoverageMetric = (
+  communityFilter: string,
+  communities: AdminPsychologistStatisticsDTO["community"]["communities"],
+) => {
+  if (communityFilter === "all") {
+    return unavailableMetric(
+      "coverage",
+      "Cobertura",
+      "community_post.author.role=paciente+post_reply.author_id",
+      "Selecione uma comunidade",
+    );
+  }
+
+  const selectedCommunity = communities.find((community) =>
+    matchesCommunityFilter(community, communityFilter),
+  );
+
+  if (!selectedCommunity) {
+    return unavailableMetric(
+      "coverage",
+      "Cobertura",
+      "community_post.author.role=paciente+post_reply.author_id",
+      "O psic\u00f3logo n\u00e3o possui posts ou respostas nesta comunidade.",
+    );
+  }
+
+  return metric({
+    id: "coverage",
+    label: "Cobertura",
+    source: selectedCommunity.coverage.source,
+    value: selectedCommunity.coverage.covered_patient_posts,
   });
 };
 
@@ -855,6 +919,7 @@ export const showAdminPsychologistStatistics = async (
     platformPageViews,
     pwaInstallAction,
     trafficPageViews,
+    patientPostsByCommunityCounts,
   ] = await Promise.all([
     repository.listProfileViews(userId, period.current.start, period.current.end),
     repository.listWhatsappClicks(userId, period.current.start, period.current.end),
@@ -880,6 +945,7 @@ export const showAdminPsychologistStatistics = async (
     repository.listPlatformPageViews(userId, period.current.start, period.current.end),
     repository.findPwaInstallAction(userId),
     repository.listPublicProfilePageViews(userId, period.current.start, period.current.end),
+    repository.countPatientPostsByCommunity(period.current.start, period.current.end),
   ]);
 
   const communityPosts = filterPostsByCommunity(posts, query.community);
@@ -952,6 +1018,9 @@ export const showAdminPsychologistStatistics = async (
   ).length;
   const sharesCount = postShares.length + replyShares.length;
   const previousSharesCount = previousPostShares.length + previousReplyShares.length;
+  const patientPostsByCommunity = new Map(
+    patientPostsByCommunityCounts.map((item) => [item.community_id, item._count._all]),
+  );
   const unavailable: AdminPsychologistAvailabilityMetric[] = [];
   const businessSeries = buildSeries({
     commentsReceived,
@@ -988,11 +1057,20 @@ export const showAdminPsychologistStatistics = async (
     whatsappClicks: [],
   });
   const communityItems = await withCommunityRankings({
-    communities: buildCommunityItems({ allPosts, allReplies, memberships, posts, replies }),
+    communities: buildCommunityItems({
+      allPosts,
+      allReplies,
+      coverageWindow: period.current,
+      memberships,
+      patientPostsByCommunity,
+      posts,
+      replies,
+    }),
     psychologistId: userId,
     repository,
   });
   const communityRankingMetric = buildCommunityRankingMetric(query.community, communityItems);
+  const communityCoverageMetric = buildCommunityCoverageMetric(query.community, communityItems);
   const platformUsageSummary = summarizePlatformUsage({
     eligiblePsychologistsCount: 1,
     pageViews: platformPageViews,
@@ -1161,6 +1239,7 @@ export const showAdminPsychologistStatistics = async (
           value: commentsReceived.length,
         }),
         communityRankingMetric,
+        communityCoverageMetric,
       ],
       communities: communityItems,
       series: communitySeries,

@@ -919,6 +919,13 @@ export type AdminPsychologistStatistics = {
     communities: {
       avatar_url: string | null;
       color: string | null;
+      coverage: {
+        covered_patient_posts: number;
+        patient_posts: number;
+        rate_percent: number | null;
+        source: "community_post.author.role=paciente+post_reply.author_id";
+      };
+      following: boolean;
       id: string;
       member_since: string | null;
       name: string;

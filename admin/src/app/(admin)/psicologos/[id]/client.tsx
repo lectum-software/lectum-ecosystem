@@ -2580,55 +2580,48 @@ const StatisticsMetricToggleCard = ({
   );
 };
 
-const StatisticsStaticMetricCard = ({
-  icon: Icon,
-  iconClassName,
-  iconToneClassName,
-  metric,
-}: {
-  icon: LucideIcon;
-  iconClassName: string;
-  iconToneClassName: string;
-  metric: AdminPsychologistEngagementMetric;
-}) => {
-  const displayValue = metric.available ? formatEngagementMetricValue(metric) : "—";
+type PsychologistStatisticsCommunityItem =
+  AdminPsychologistStatistics["community"]["communities"][number];
 
-  return (
-    <div
-      className={cn(
-        "h-full w-full min-w-0 overflow-hidden rounded-card border border-primary/35 bg-surface p-4 text-left shadow-admin-soft ring-1 ring-primary/10",
-        !metric.available && "border-border/75 bg-surface-muted opacity-80 ring-0",
-      )}
-      title={`${metric.label}: ${displayValue}. ${
-        metric.available ? "Métrica real" : "Indisponível"
-      }`}
-    >
-      <span
-        className={cn(
-          "grid h-10 w-10 shrink-0 place-items-center rounded-full",
-          iconToneClassName,
-          iconClassName,
-        )}
-      >
+const CommunitySummaryCard = ({
+  description,
+  icon: Icon,
+  label,
+  value,
+}: {
+  description: string;
+  icon: LucideIcon;
+  label: string;
+  value: ReactNode;
+}) => (
+  <div className="h-full min-w-0 rounded-card border border-border/80 bg-surface-muted p-4 text-left shadow-none">
+    <div className="flex min-w-0 items-start gap-3">
+      <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-surface text-muted">
         <Icon aria-hidden className="h-5 w-5" />
       </span>
-      <span className="mt-4 block min-w-0 max-w-full">
-        <span className="block max-w-full break-words text-xs font-extrabold leading-snug text-foreground">
-          {metric.label}
+      <span className="min-w-0">
+        <span className="block text-xs font-extrabold leading-snug text-muted">{label}</span>
+        <span className="mt-1 block min-w-0 break-words text-xl font-extrabold leading-tight text-foreground">
+          {value}
         </span>
-        <span className="mt-2 block text-2xl font-extrabold leading-none text-foreground">
-          {displayValue}
+        <span className="mt-1 block min-w-0 break-words text-xs font-bold leading-5 text-muted">
+          {description}
         </span>
       </span>
-      {metric.available ? (
-        <MetricComparisonLine className="mt-3" comparison={metric.comparison} />
-      ) : metric.unavailable_reason ? (
-        <span className="mt-3 block text-xs font-bold text-muted">{metric.unavailable_reason}</span>
-      ) : null}
     </div>
-  );
+  </div>
+);
+
+const formatCommunitySummaryMetric = (metric?: AdminPsychologistEngagementMetric) => {
+  if (!metric) return "\u2014";
+
+  return metric.available ? formatEngagementMetricValue(metric) : "\u2014";
 };
 
+const communitySummaryMetricDescription = (metric?: AdminPsychologistEngagementMetric) =>
+  metric?.available
+    ? "M\u00e9trica real da comunidade selecionada"
+    : (metric?.unavailable_reason ?? "Selecione uma comunidade");
 const defaultStatisticsMetricItemClassName =
   "flex w-full shrink-0 snap-start sm:w-[calc((100%_-_0.5rem)/2)] lg:w-[calc((100%_-_1rem)/3)] 2xl:w-[calc((100%_-_2.5rem)/6)]";
 
@@ -4005,6 +3998,38 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: st
     return metric ? [{ config, metric }] : [];
   });
   const communityRankingMetric = communityMetricMap.get("ranking");
+  const communityCoverageMetric = communityMetricMap.get("coverage");
+  const selectedCommunitySummary: PsychologistStatisticsCommunityItem | null =
+    communityStatisticsSelectedCommunity === "all"
+      ? null
+      : (communityStatistics.community.communities.find(
+          (community) =>
+            community.id === communityStatisticsSelectedCommunity ||
+            community.slug === communityStatisticsSelectedCommunity,
+        ) ?? null);
+  const communitySelectValue =
+    communityStatisticsSelectedCommunity === "all" || selectedCommunitySummary
+      ? communityStatisticsSelectedCommunity
+      : "all";
+  const topActiveCommunities = [...communityStatistics.community.communities]
+    .filter((community) => community.posts + community.replies > 0)
+    .sort((left, right) => {
+      const leftTotal = left.posts + left.replies;
+      const rightTotal = right.posts + right.replies;
+      if (leftTotal !== rightTotal) return rightTotal - leftTotal;
+
+      return left.name.localeCompare(right.name, "pt-BR");
+    })
+    .slice(0, 3);
+  const topActiveCommunitiesDescription =
+    topActiveCommunities.length > 0
+      ? topActiveCommunities
+          .map(
+            (community) =>
+              `${numberFormatter.format(community.posts + community.replies)} intera\u00e7\u00f5es`,
+          )
+          .join(" \u00b7 ")
+      : "Sem posts ou respostas no per\u00edodo";
   const communityFilterOptions = [
     { id: "all", label: "Todas" },
     ...communityStatistics.community.communities.map((community) => ({
@@ -4192,7 +4217,7 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: st
                       onChange={(event) =>
                         setCommunityStatisticsSelectedCommunity(event.target.value)
                       }
-                      value={communityStatisticsSelectedCommunity}
+                      value={communitySelectValue}
                     >
                       {communityFilterOptions.map((option) => (
                         <option key={option.id} value={option.id}>
@@ -4216,35 +4241,62 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: st
             />
           </div>
 
+          <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            <CommunitySummaryCard
+              description={communitySummaryMetricDescription(communityRankingMetric)}
+              icon={Trophy}
+              label="Ranking"
+              value={formatCommunitySummaryMetric(communityRankingMetric)}
+            />
+            <CommunitySummaryCard
+              description={selectedCommunitySummary?.name ?? "Selecione uma comunidade"}
+              icon={CheckCircle2}
+              label="Segue a comunidade"
+              value={
+                selectedCommunitySummary
+                  ? selectedCommunitySummary.following
+                    ? "Segue"
+                    : "N\u00e3o segue"
+                  : "\u2014"
+              }
+            />
+            <CommunitySummaryCard
+              description={
+                communityCoverageMetric?.available
+                  ? "Posts de pacientes respondidos uma vez por post"
+                  : communitySummaryMetricDescription(communityCoverageMetric)
+              }
+              icon={ShieldCheck}
+              label="Cobertura"
+              value={formatCommunitySummaryMetric(communityCoverageMetric)}
+            />
+            <CommunitySummaryCard
+              description={topActiveCommunitiesDescription}
+              icon={BarChart3}
+              label="Comunidades mais ativas"
+              value={
+                topActiveCommunities.length > 0 ? (
+                  <span className="block text-base leading-snug">
+                    {topActiveCommunities.map((community) => community.name).join(", ")}
+                  </span>
+                ) : (
+                  "\u2014"
+                )
+              }
+            />
+          </div>
           <StatisticsMetricCarousel
-            items={[
-              ...(communityRankingMetric
-                ? [
-                    {
-                      content: (
-                        <StatisticsStaticMetricCard
-                          icon={Trophy}
-                          iconClassName="text-amber-500"
-                          iconToneClassName="bg-amber-50"
-                          metric={communityRankingMetric}
-                        />
-                      ),
-                      id: "ranking",
-                    },
-                  ]
-                : []),
-              ...communityCards.map(({ config, metric }) => ({
-                content: (
-                  <StatisticsMetricToggleCard
-                    active={visibleCommunityMetricIds.includes(config.id) && metric.available}
-                    config={config}
-                    metric={metric}
-                    onToggle={() => toggleCommunityMetric(config.id)}
-                  />
-                ),
-                id: config.id,
-              })),
-            ]}
+            items={communityCards.map(({ config, metric }) => ({
+              content: (
+                <StatisticsMetricToggleCard
+                  active={visibleCommunityMetricIds.includes(config.id) && metric.available}
+                  config={config}
+                  metric={metric}
+                  onToggle={() => toggleCommunityMetric(config.id)}
+                />
+              ),
+              id: config.id,
+            }))}
             title="estatísticas de comunidade"
           />
 

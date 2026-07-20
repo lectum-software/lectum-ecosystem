@@ -86,8 +86,15 @@ const replySelect = {
   upvotes_count: true,
   post: {
     select: {
+      createdAt: true,
       id: true,
       title: true,
+      author: {
+        select: {
+          id: true,
+          role: true,
+        },
+      },
       community: {
         select: communitySelect,
       },
@@ -336,6 +343,24 @@ export class AdminPsychologistEngagementRepository {
           community: { deleted: false },
         },
       },
+    });
+  }
+
+  async countPatientPostsByCommunity(from: Date, to: Date) {
+    return prisma.community_post.groupBy({
+      by: ["community_id"],
+      where: {
+        author: {
+          active: true,
+          deleted: false,
+          role: "paciente",
+        },
+        community: { deleted: false },
+        createdAt: { gte: from, lte: to },
+        deleted: false,
+        status: "publicado",
+      },
+      _count: { _all: true },
     });
   }
 
