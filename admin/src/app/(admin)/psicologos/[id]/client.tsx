@@ -4680,20 +4680,19 @@ const PublicationItemBody = ({ item }: { item: AdminPsychologistPublicationItem 
 };
 
 const PublicationItemMain = ({ item }: { item: AdminPsychologistPublicationItem }) => {
-  const mediaTextGridClass = cn(
-    "mt-3 grid min-w-0 gap-3",
-    item.media && "sm:grid-cols-[112px_1fr]",
-  );
-
   return (
     <div className="min-w-0">
       <PublicationItemHeader item={item} />
       {item.type === "post" ? (
         <h3 className="mt-4 text-base font-black text-foreground">{item.title}</h3>
       ) : null}
-      <div className={mediaTextGridClass}>
-        <PublicationMedia item={item} />
+      <div className="mt-3 min-w-0">
         <PublicationItemBody item={item} />
+        {item.media ? (
+          <div className="mt-3 max-w-full" data-publication-media-placement="below-description">
+            <PublicationMedia item={item} />
+          </div>
+        ) : null}
       </div>
     </div>
   );

@@ -229,3 +229,13 @@ Exibir estatísticas de negócio/comunidade e publicações do psicólogo com da
 - Validações executadas: Biome direcionado nos arquivos alterados de Admin/Backend, ESLint direcionado no arquivo Admin alterado, `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin build`, chamada direta do service `showAdminPsychologistStatistics` e smoke HTTP local em `/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=estatisticas`.
 - Observação: `pnpm --dir admin check` e `pnpm check` foram tentados, mas ficaram bloqueados por alterações paralelas não relacionadas em pacientes; elas não fazem parte deste ajuste.
 
+
+### Ajuste visual da ordem de mídia em Publicações em 2026-07-20
+
+- Na aba **Publicações**, quando um post ou resposta possui mídia, a descrição/texto agora é renderizada antes da mídia e a mídia fica abaixo do texto em todos os breakpoints.
+- O layout lado a lado desktop entre mídia e descrição foi removido para preservar a hierarquia solicitada; no mobile (~390px) a ordem continua descrição primeiro, mídia abaixo.
+- O renderer existente de mídia foi reaproveitado, mantendo `next/image` para imagens e o miniplayer atual para vídeos; nenhum `<img>` cru foi adicionado.
+- Não houve alteração de backend, API, Prisma schema, migrations, packages, mocks, seeds ou dados artificiais; `pnpm --dir backend db:migrate` não foi necessário.
+- Builder/Quick Copy não estava disponível como ferramenta callable no ambiente; a validação visual usou o recorte enviado pelo usuário e o PNG local `_product/proto/admin/Psicólogos/Detalhes do psicólogo/Publicações.png`.
+- ADR atualizado: `adrs/0237-admin-psicologo-estatisticas-publicacoes.md`.
+- Validações executadas para este ajuste: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e browser local/headless via Chrome/CDP em `/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=publicacoes`, com admin temporário real removido ao final, confirmando no desktop 1365px e no mobile 390px que a mídia aparece depois da descrição no DOM e visualmente abaixo dela.

@@ -367,3 +367,16 @@ Decisão complementar:
 - Aplicar o dimensionamento de 5 colunas apenas em **Estatísticas de negócio**, preservando 1/2/3 colunas em breakpoints menores e rolagem por gesto no mobile.
 
 Consequência: os contadores de negócio ocupam melhor o espaço visual disponível sem alterar dados, contrato backend, tracking, acessibilidade dos botões de KPI ou o comportamento das estatísticas de comunidade.
+
+## Emenda 2026-07-20 - mídia abaixo da descrição em Publicações
+
+A aba **Publicações** do detalhe do psicólogo no Admin deve priorizar a leitura do conteúdo textual antes da mídia anexada. Quando uma publicação tiver imagem ou vídeo, a mídia passa a ser renderizada abaixo do texto de descrição em todos os breakpoints, sem layout lado a lado no desktop.
+
+Decisão complementar:
+
+- Preservar o contrato existente de publicações e métricas, sem alteração de backend, schema ou API.
+- Reutilizar o renderer existente de mídia, mantendo `next/image` para imagens e o miniplayer atual para vídeos.
+- Adicionar atributo estável de validação visual no wrapper da mídia para confirmar a ordem DOM sem depender de seletores frágeis.
+- Manter a abordagem mobile-first: descrição primeiro, mídia abaixo e métricas depois, progredindo para telas maiores sem inverter a ordem.
+
+Consequência: os cards de publicações ficam alinhados ao pedido de produto e evitam que a mídia anteceda ou concorra lateralmente com a descrição, sem mocks, seeds ou dados artificiais.
