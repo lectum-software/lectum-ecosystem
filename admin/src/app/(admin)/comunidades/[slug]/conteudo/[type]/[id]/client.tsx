@@ -540,6 +540,7 @@ const ContentDetailMetricRow = ({ detail }: { detail: AdminCommunityContentAnaly
 
 const PreviewSection = ({ detail }: { detail: AdminCommunityContentAnalyticsDetail }) => {
   const publicHref = detail.content.public_url ? toPublicHref(detail.content.public_url) : null;
+  const hasMedia = Boolean(detail.content.media);
 
   return (
     <section className={cn(cardClass, "relative min-w-0 max-w-full p-5")}>
@@ -568,10 +569,17 @@ const PreviewSection = ({ detail }: { detail: AdminCommunityContentAnalyticsDeta
         <h2 className="mt-5 min-w-0 text-xl font-black leading-tight text-foreground [overflow-wrap:anywhere]">
           {contentTitle(detail)}
         </h2>
-        <div className="mt-4 grid min-w-0 gap-5 xl:grid-cols-[minmax(0,240px)_minmax(0,1fr)] xl:items-start">
-          <div className="min-w-0 xl:justify-self-start">
-            <ContentMediaPreview detail={detail} />
-          </div>
+        <div
+          className={cn(
+            "mt-4 grid min-w-0 gap-5",
+            hasMedia && "xl:grid-cols-[minmax(0,240px)_minmax(0,1fr)] xl:items-start",
+          )}
+        >
+          {hasMedia ? (
+            <div className="min-w-0 xl:justify-self-start">
+              <ContentMediaPreview detail={detail} />
+            </div>
+          ) : null}
           <div className="min-w-0">
             {detail.content.origin_preview ? (
               <div className="rounded-2xl border border-border bg-surface-muted p-4">

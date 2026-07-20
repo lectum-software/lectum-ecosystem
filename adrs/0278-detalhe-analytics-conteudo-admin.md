@@ -63,3 +63,9 @@ The breakdown is computed only from real `post_reply` records already selected f
 The UI decision is to show four compact mobile-first blocks below the existing analytics line: total comments, verified psychologist responses, unverified psychologist responses and patient comments. The total count does not display a redundant `100%`; the other three counts display their rate inline in parentheses with lower visual weight. Label height is reserved so numeric baselines remain aligned even when labels wrap.
 
 Consequences: Admins can audit the quality/origin of discussion on a specific post without opening a separate analytics section. No schema/migration, new package, mock, seed, backfill or additional endpoint was introduced.
+
+## Update 2026-07-20: no-media preview alignment
+
+The Admin content-detail preview now renders its media/text grid conditionally. When `content.media` is absent, the preview no longer reserves the desktop media column and the body/excerpt starts at the left edge of the content area.
+
+This is a visual-only refinement requested from the Admin content-detail screen. It preserves the existing mobile-first behavior and only enables the 240px media column on wider breakpoints when there is real media to render. No API contract, metric calculation, schema/migration, dependency, mock, seed or backfill changed.

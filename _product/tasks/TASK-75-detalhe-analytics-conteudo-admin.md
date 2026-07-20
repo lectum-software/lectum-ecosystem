@@ -482,3 +482,21 @@ Regras anti-recriação:
 - `pnpm check`
 - Smoke real do service `showContentDetail` para `autocuidado-em-pratica/post/cmrmg709v000yt0uh8x55eqae`, retornando `comments_count=9` e `comment_breakdown.total_count=9`, `patient_comments_count=9`, `verified_psychologist_replies_count=0`, `unverified_psychologist_replies_count=0`.
 - Smoke HTTP local da rota Admin `http://localhost:3002/comunidades/autocuidado-em-pratica/conteudo/post/cmrmg709v000yt0uh8x55eqae` retornou 200.
+
+## Ajuste complementar 2026-07-20 - Alinhamento do texto quando não há mídia
+
+- Pedido do usuário: no detalhe Admin do conteúdo, quando o post/resposta não tiver mídia, alinhar o texto da descrição à esquerda.
+- A UI deixou de reservar a coluna lateral de preview de mídia quando `content.media` é nulo. O layout mobile-first permanece em uma coluna sem mídia e só ativa a grade com coluna de 240px em desktop quando existe mídia real a renderizar.
+- O ajuste é somente visual e não altera contrato de API, dados reais, cálculo de métricas, schema Prisma/migration, package, mock, seed, backfill ou uso de `<img>` cru.
+- Builder/Quick Copy não está exposto como ferramenta callable neste ambiente; a referência usada foi a captura enviada pelo usuário e os padrões Admin existentes.
+- ADR atualizado: `adrs/0278-detalhe-analytics-conteudo-admin.md`.
+
+### Critério de aceite complementar
+
+- [x] Em conteúdo sem mídia, o texto da descrição começa na coluna principal à esquerda, sem espaço reservado para preview vazio.
+
+### Validação executada para este ajuste
+
+- `pnpm --dir admin build`
+- `pnpm --dir admin check` (uma tentativa anterior falhou porque `.next/types` estava inconsistente antes do build; após o build, o check passou)
+- Smoke HTTP local da rota Admin `http://localhost:3002/comunidades/autocuidado-em-pratica/conteudo/post/demo-post-marina-autocuidado` retornou 200.
