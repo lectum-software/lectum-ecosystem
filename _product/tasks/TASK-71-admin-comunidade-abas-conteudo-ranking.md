@@ -714,6 +714,31 @@ Regras:
 - `pnpm --dir admin exec tsc --noEmit --pretty false`
 - `pnpm --dir backend exec tsc --noEmit --pretty false`
 
+## Ajuste complementar 2026-07-20 - Refinamento visual da Cobertura de acolhimento
+
+- Pedido do usuário: remover a frase-resumo **36 posts têm alguma resposta; 19 posts ainda precisam de acolhimento por psicólogo verificado.** da barra de taxa e melhorar o layout geral do bloco **Cobertura de acolhimento**, porque alguns textos estavam pequenos.
+- A UI Admin removeu a frase-resumo abaixo da barra de taxa, preservando a métrica visual pela barra e o percentual.
+- O bloco recebeu hierarquia tipográfica maior em título, descrição, cards, contadores, percentuais e descrições; os ícones e paddings também foram ampliados para melhorar leitura em desktop sem quebrar a base mobile-first.
+- A análise integrada de **Posts de pacientes**, **Anônimos** e **Identificados** foi mantida, mas com cards internos mais espaçados e barra de distribuição mais legível.
+- O ajuste é exclusivamente visual/apresentacional no Admin, sem endpoint novo, alteração backend, schema Prisma/migration, package, seed, backfill, persistência ou uso de `<img>` cru.
+- Builder/Quick Copy não está exposto como ferramenta callable no ambiente; a referência usada foi a captura enviada pelo usuário e o layout atual da aba **Estatísticas** da comunidade.
+- ADR atualizado: `adrs/0289-cobertura-acolhimento-estatisticas-comunidade-admin.md`.
+
+### Critérios de aceite complementares
+
+- [x] A frase-resumo abaixo da barra de **Taxa de cobertura por psicólogos verificados** foi removida.
+- [x] O bloco **Cobertura de acolhimento** usa tipografia, ícones e espaçamentos maiores, mantendo layout mobile-first.
+- [x] O ajuste não altera dados reais, endpoints, schema Prisma/migrations, produção ou a regra do preview local.
+
+### Validação executada para este ajuste
+
+- `pnpm --dir admin exec biome check "src/app/(admin)/comunidades/[slug]/client.tsx"`
+- `pnpm --dir admin exec tsc --noEmit --pretty false`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check`
+- Smoke HTTP local `GET http://localhost:3002/comunidades/ansiedade-em-equilibrio?tab=estatisticas` retornou 200.
+
 ## Ajuste complementar 2026-07-20 - Preview local visual da Cobertura de acolhimento
 
 - Pedido do usuário: remover a frase **Anônimos e identificados analisados como uma única base de acolhimento.** do card **Posts de pacientes** e exibir números de exemplo na **Cobertura de acolhimento** apenas para avaliação visual.

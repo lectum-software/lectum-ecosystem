@@ -39,6 +39,8 @@ Os indicadores **Posts de pacientes**, **Anônimos** e **Identificados** são ap
 
 Em 2026-07-20, para avaliação visual local solicitada pelo produto enquanto a base de desenvolvimento da comunidade estava zerada, foi adicionada uma prévia visual apenas em desenvolvimento (`NODE_ENV !== "production"`). A prévia só é aplicada quando todos os indicadores reais de cobertura retornam zero/nulo, é sinalizada com **Exemplo local** e não altera o contrato real, backend, persistência, seed, migration ou build de produção. Em produção ou quando houver qualquer dado real, a UI usa exclusivamente os valores retornados por `counters.care_coverage`.
 
+Em novo ajuste visual de 2026-07-20, a frase-resumo abaixo da barra **Taxa de cobertura por psicólogos verificados** foi removida para reduzir ruído e evitar redundância com os cards. O bloco passou a usar tipografia, ícones, paddings, cards internos e barras maiores, mantendo a estrutura mobile-first e sem alterar dados ou contrato.
+
 A regra operacional de **Aguardando acolhimento** é intencionalmente mais rígida do que “sem qualquer resposta”: um post deixa a fila de acolhimento somente quando recebe resposta de psicólogo verificado. Isso preserva a aba **Oportunidades** dos psicólogos para atuação operacional e mantém esta visão como métrica administrativa agregada.
 
 ## Consequências
@@ -49,6 +51,7 @@ A regra operacional de **Aguardando acolhimento** é intencionalmente mais rígi
 - O tempo médio de primeira resposta verificada passa a depender apenas de eventos reais existentes no período selecionado.
 - Não houve alteração em Prisma schema/migrations, pacote novo, endpoint paralelo, seed ou exposição pública desses indicadores.
 - A prévia local de desenvolvimento não substitui métrica real e deve ser removida ou desativada quando a avaliação visual não for mais necessária; por estar restrita a desenvolvimento e sinalizada no UI, não afeta decisões administrativas de produção.
+- O bloco ficou menos textual e mais orientado a leitura visual; a explicação operacional permanece nos cards de **Aguardando acolhimento** e **Tempo médio até 1ª resposta**.
 
 ## Validação
 
@@ -73,6 +76,13 @@ A regra operacional de **Aguardando acolhimento** é intencionalmente mais rígi
   login; a validação visual autenticada ficou limitada à captura enviada pelo
   usuário, ao protótipo local e aos checks/builds.
 - Ajuste visual de 2026-07-20:
+  - `pnpm --dir admin exec biome check "src/app/(admin)/comunidades/[slug]/client.tsx"`;
+  - `pnpm --dir admin exec tsc --noEmit --pretty false`;
+  - `pnpm --dir admin check`;
+  - `pnpm --dir admin build`;
+  - `pnpm check`;
+  - Smoke HTTP local `GET http://localhost:3002/comunidades/ansiedade-em-equilibrio?tab=estatisticas` retornou 200.
+- Refinamento visual posterior em 2026-07-20:
   - `pnpm --dir admin exec biome check "src/app/(admin)/comunidades/[slug]/client.tsx"`;
   - `pnpm --dir admin exec tsc --noEmit --pretty false`;
   - `pnpm --dir admin check`;

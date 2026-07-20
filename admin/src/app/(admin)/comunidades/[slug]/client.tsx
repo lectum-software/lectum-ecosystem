@@ -5077,7 +5077,6 @@ const COMMUNITY_CARE_COVERAGE_LOCAL_EXAMPLE = {
   identifiedPosts: 17,
   identifiedRespondedByVerified: 11,
   patientPosts: 48,
-  postsWithAnyResponse: 36,
 } as const;
 
 const CommunityCareCoverageBlock = ({
@@ -5165,9 +5164,6 @@ const CommunityCareCoverageBlock = ({
   const awaitingVerifiedResponse = showLocalExample
     ? Math.max(0, patientPosts - respondedByVerified)
     : realAwaitingVerifiedResponse;
-  const postsWithAnyResponse = showLocalExample
-    ? COMMUNITY_CARE_COVERAGE_LOCAL_EXAMPLE.postsWithAnyResponse
-    : realPostsWithAnyResponse;
   const averageFirstVerifiedResponseMinutes = showLocalExample
     ? COMMUNITY_CARE_COVERAGE_LOCAL_EXAMPLE.averageFirstVerifiedResponseMinutes
     : realAverageFirstVerifiedResponseMinutes;
@@ -5229,11 +5225,11 @@ const CommunityCareCoverageBlock = ({
   ] as const;
 
   return (
-    <section aria-busy={isLoading || isFetching} className={cn(cardClass, "min-w-0 p-5")}>
+    <section aria-busy={isLoading || isFetching} className={cn(cardClass, "min-w-0 p-5 sm:p-6")}>
       <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-start">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
-            <h3 className="text-lg font-black text-foreground">Cobertura de acolhimento</h3>
+            <h3 className="text-xl font-black text-foreground">Cobertura de acolhimento</h3>
             {isFetching && !isLoading ? (
               <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary-soft px-2.5 py-1 text-[11px] font-black text-primary">
                 <Loader2 aria-hidden className="h-3.5 w-3.5 animate-spin" />
@@ -5241,12 +5237,12 @@ const CommunityCareCoverageBlock = ({
               </span>
             ) : null}
             {showLocalExample ? (
-              <span className="inline-flex items-center rounded-full border border-warning/20 bg-warning/10 px-2.5 py-1 text-[11px] font-black text-warning">
+              <span className="inline-flex items-center rounded-full border border-warning/20 bg-warning/10 px-3 py-1.5 text-xs font-black text-warning">
                 Exemplo local
               </span>
             ) : null}
           </div>
-          <p className="mt-1 max-w-3xl text-xs font-bold leading-5 text-muted">
+          <p className="mt-2 max-w-3xl text-sm font-bold leading-6 text-muted">
             Visão administrativa da resposta qualificada aos posts de pacientes no período
             selecionado.
           </p>
@@ -5262,24 +5258,24 @@ const CommunityCareCoverageBlock = ({
 
       {statistics ? (
         <>
-          <div className="mt-5 grid gap-3 xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_minmax(0,1fr)]">
-            <article className="min-w-0 rounded-2xl border border-primary/20 bg-surface-muted p-4">
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                <div className="flex min-w-0 items-start gap-3">
-                  <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-success/10 text-success">
-                    <FileText aria-hidden className="h-5 w-5" />
+          <div className="mt-6 grid gap-4 xl:grid-cols-[minmax(0,1.8fr)_minmax(260px,0.9fr)_minmax(260px,0.9fr)]">
+            <article className="min-w-0 rounded-3xl border border-primary/20 bg-surface-muted p-5 shadow-sm">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                <div className="flex min-w-0 items-start gap-3.5">
+                  <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-success/10 text-success">
+                    <FileText aria-hidden className="h-6 w-6" />
                   </span>
                   <div className="min-w-0">
-                    <h4 className="text-xs font-black leading-snug text-foreground">
+                    <h4 className="text-sm font-black leading-snug text-foreground">
                       Posts de pacientes
                     </h4>
                   </div>
                 </div>
                 <div className="shrink-0 sm:text-right">
-                  <p className="text-3xl font-black leading-none text-foreground">
+                  <p className="text-4xl font-black leading-none text-foreground">
                     {numberFormatter.format(patientPosts)}
                   </p>
-                  <p className="mt-2 rounded-2xl bg-surface px-3 py-2 text-[11px] font-black leading-5 text-primary">
+                  <p className="mt-3 rounded-2xl bg-surface px-4 py-2.5 text-xs font-black leading-5 text-primary shadow-sm">
                     {formatCommunityVerifiedResponseDetail(respondedByVerified, patientPosts)}
                   </p>
                 </div>
@@ -5289,7 +5285,7 @@ const CommunityCareCoverageBlock = ({
                 aria-label={`Distribuição dos posts de pacientes: ${formatCommunityStatisticPercent(
                   anonymousRate,
                 )} anônimos e ${formatCommunityStatisticPercent(identifiedRate)} identificados`}
-                className="mt-4 flex h-3 overflow-hidden rounded-full bg-surface"
+                className="mt-5 flex h-4 overflow-hidden rounded-full bg-surface shadow-inner"
                 role="img"
               >
                 <span
@@ -5302,25 +5298,25 @@ const CommunityCareCoverageBlock = ({
                 />
               </div>
 
-              <div className="mt-4 grid gap-2 sm:grid-cols-2">
+              <div className="mt-5 grid gap-3 sm:grid-cols-2">
                 {patientVisibilitySegments.map((segment) => (
                   <div
-                    className="rounded-2xl border border-border/70 bg-surface p-3"
+                    className="rounded-3xl border border-border/70 bg-surface p-4 shadow-sm"
                     key={segment.id}
                   >
                     <div className="flex items-center justify-between gap-2">
-                      <span className="inline-flex items-center gap-2 text-xs font-black text-foreground">
-                        <span className={cn("h-2.5 w-2.5 rounded-full", segment.toneClassName)} />
+                      <span className="inline-flex items-center gap-2 text-sm font-black text-foreground">
+                        <span className={cn("h-3 w-3 rounded-full", segment.toneClassName)} />
                         {segment.label}
                       </span>
-                      <span className="text-xs font-black text-muted">
+                      <span className="text-sm font-black text-muted">
                         {formatCommunityStatisticPercent(segment.percentage)}
                       </span>
                     </div>
-                    <p className="mt-3 text-2xl font-black leading-none text-foreground">
+                    <p className="mt-4 text-3xl font-black leading-none text-foreground">
                       {numberFormatter.format(segment.value)}
                     </p>
-                    <p className="mt-2 text-[11px] font-black leading-5 text-primary">
+                    <p className="mt-3 text-xs font-black leading-5 text-primary">
                       {segment.responseDetail}
                     </p>
                   </div>
@@ -5333,29 +5329,29 @@ const CommunityCareCoverageBlock = ({
 
               return (
                 <article
-                  className="min-w-0 rounded-2xl border border-border/80 bg-surface-muted p-4"
+                  className="min-w-0 rounded-3xl border border-border/80 bg-surface-muted p-5 shadow-sm"
                   key={indicator.id}
                 >
                   <span
                     className={cn(
-                      "grid h-10 w-10 place-items-center rounded-full",
+                      "grid h-12 w-12 place-items-center rounded-full",
                       indicator.toneClassName,
                     )}
                   >
-                    <Icon aria-hidden className="h-5 w-5" />
+                    <Icon aria-hidden className="h-6 w-6" />
                   </span>
-                  <h4 className="mt-4 min-h-10 text-xs font-black leading-snug text-foreground">
+                  <h4 className="mt-5 min-h-12 text-sm font-black leading-6 text-foreground">
                     {indicator.label}
                   </h4>
-                  <p className="mt-2 text-2xl font-black leading-none text-foreground">
+                  <p className="mt-3 text-4xl font-black leading-none text-foreground">
                     {indicator.value}
                   </p>
                   {indicator.responseDetail ? (
-                    <p className="mt-3 rounded-2xl bg-surface px-3 py-2 text-[11px] font-black leading-5 text-primary">
+                    <p className="mt-3 rounded-2xl bg-surface px-4 py-2.5 text-xs font-black leading-5 text-primary">
                       {indicator.responseDetail}
                     </p>
                   ) : null}
-                  <p className="mt-3 text-[11px] font-bold leading-5 text-muted">
+                  <p className="mt-4 text-xs font-bold leading-6 text-muted">
                     {indicator.description}
                   </p>
                 </article>
@@ -5363,12 +5359,12 @@ const CommunityCareCoverageBlock = ({
             })}
           </div>
 
-          <div className="mt-5 rounded-2xl border border-border bg-surface p-4">
+          <div className="mt-5 rounded-3xl border border-border bg-surface p-5 shadow-sm">
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <span className="text-xs font-black text-foreground">
+              <span className="text-sm font-black text-foreground">
                 Taxa de cobertura por psicólogos verificados
               </span>
-              <span className="text-xs font-black text-primary">
+              <span className="text-sm font-black text-primary">
                 {formatCommunityStatisticPercent(coverageRate)}
               </span>
             </div>
@@ -5376,7 +5372,7 @@ const CommunityCareCoverageBlock = ({
               aria-label={`Cobertura verificada de ${formatCommunityStatisticPercent(
                 coverageRate,
               )}`}
-              className="mt-3 h-3 overflow-hidden rounded-full bg-surface-muted"
+              className="mt-4 h-4 overflow-hidden rounded-full bg-surface-muted"
               role="img"
             >
               <span
@@ -5384,15 +5380,6 @@ const CommunityCareCoverageBlock = ({
                 style={{ width: `${Math.min(100, Math.max(0, coverageRate))}%` }}
               />
             </div>
-            <p className="mt-3 text-[11px] font-bold leading-5 text-muted">
-              {formatCountLabel(postsWithAnyResponse, "post tem", "posts têm")} alguma resposta;{" "}
-              {formatCountLabel(
-                awaitingVerifiedResponse,
-                "post ainda precisa",
-                "posts ainda precisam",
-              )}{" "}
-              de acolhimento por psicólogo verificado.
-            </p>
           </div>
         </>
       ) : null}
