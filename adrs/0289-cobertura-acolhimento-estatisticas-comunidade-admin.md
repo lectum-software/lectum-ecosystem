@@ -43,6 +43,8 @@ Em novo ajuste visual de 2026-07-20, a frase-resumo abaixo da barra **Taxa de co
 
 Em ajuste de copy de 2026-07-20, a descrição do bloco foi simplificada para **Taxa de resposta qualificada aos posts de pacientes.**, reforçando que a seção mede cobertura qualificada, sem alterar regra de cálculo ou contrato.
 
+Em ajuste complementar de 2026-07-20, a aba **Geral** do detalhe administrativo da comunidade passou a exibir um bloco simplificado **Cobertura da comunidade** entre **Denúncias pendentes** e **Top mentores**. Para evitar criar um contrato paralelo, o bloco reutiliza `GET /api/admin/private/communities/:id/statistics` com `period=all` e mostra `counters.care_coverage.patient_posts_awaiting_verified_psychologist_response` como a quantidade de posts de pacientes sem cobertura qualificada. A regra segue a mesma definição da aba **Estatísticas**: um post deixa de estar sem cobertura quando recebe resposta de psicólogo verificado.
+
 A regra operacional de **Aguardando acolhimento** é intencionalmente mais rígida do que “sem qualquer resposta”: um post deixa a fila de acolhimento somente quando recebe resposta de psicólogo verificado. Isso preserva a aba **Oportunidades** dos psicólogos para atuação operacional e mantém esta visão como métrica administrativa agregada.
 
 ## Consequências
@@ -54,6 +56,7 @@ A regra operacional de **Aguardando acolhimento** é intencionalmente mais rígi
 - Não houve alteração em Prisma schema/migrations, pacote novo, endpoint paralelo, seed ou exposição pública desses indicadores.
 - A prévia local de desenvolvimento não substitui métrica real e deve ser removida ou desativada quando a avaliação visual não for mais necessária; por estar restrita a desenvolvimento e sinalizada no UI, não afeta decisões administrativas de produção.
 - O bloco ficou menos textual e mais orientado a leitura visual; a explicação operacional permanece nos cards de **Aguardando acolhimento** e **Tempo médio até 1ª resposta**.
+- A aba **Geral** ganhou uma leitura operacional rápida da fila sem cobertura, mas continua dependendo dos mesmos dados reais de estatísticas para não duplicar regra de domínio.
 
 ## Validação
 
@@ -98,3 +101,13 @@ A regra operacional de **Aguardando acolhimento** é intencionalmente mais rígi
   - `pnpm --dir admin build`;
   - `pnpm check`;
   - Smoke HTTP local `GET http://localhost:3002/comunidades/ansiedade-em-equilibrio?tab=estatisticas` retornou 200.
+- Cobertura simplificada na aba **Geral** em 2026-07-20:
+  - `pnpm --dir admin exec biome check "src/app/(admin)/comunidades/[slug]/client.tsx"`;
+  - `pnpm --dir admin exec tsc --noEmit --pretty false`;
+  - `pnpm --dir admin check`;
+  - `pnpm --dir backend check`;
+  - `pnpm --dir backend build`;
+  - `pnpm --dir admin build`;
+  - `pnpm check`;
+  - Smoke real do service `showStatistics` para `ansiedade-em-equilibrio?period=all`, retornando `status=200`, `period=Todo o período`, `patientPosts=1`, `respondedByVerified=0` e `awaitingCoverage=1`;
+  - Smoke HTTP local `GET http://localhost:3002/comunidades/ansiedade-em-equilibrio` retornou 200. Validação visual autenticada limitada à captura enviada pelo usuário e à rota local em execução, porque a automação não pôde abrir/controlar o Chrome neste ambiente.

@@ -1113,6 +1113,127 @@ const UrgentThingsSection = ({
   );
 };
 
+const toCoverageCount = (value: number | null | undefined) => {
+  const count = Number(value ?? 0);
+
+  return Number.isFinite(count) && count > 0 ? Math.trunc(count) : 0;
+};
+
+const CommunityCoverageSummaryCard = ({ pathname, slug }: { pathname: string; slug: string }) => {
+  const statisticsQuery = useMemo<AdminCommunityStatisticsQuery>(() => ({ period: "all" }), []);
+  const result = useAdminCommunityStatistics(slug, statisticsQuery);
+  const coverage = result.data?.counters.care_coverage;
+  const totalPatientPosts = toCoverageCount(
+    coverage?.patient_posts_verified_response_breakdown?.total?.total ??
+      result.data?.counters.posts.patients,
+  );
+  const respondedByVerified = Math.min(
+    totalPatientPosts,
+    toCoverageCount(coverage?.patient_posts_responded_by_verified_psychologists),
+  );
+  const awaitingCoverage = Math.min(
+    totalPatientPosts,
+    coverage
+      ? toCoverageCount(coverage.patient_posts_awaiting_verified_psychologist_response)
+      : Math.max(0, totalPatientPosts - respondedByVerified),
+  );
+  const coverageRate = totalPatientPosts > 0 ? (respondedByVerified / totalPatientPosts) * 100 : 0;
+  const hasAwaitingCoverage = awaitingCoverage > 0;
+
+  return (
+    <section aria-busy={result.isLoading || result.isFetching} className={cn(cardClass, "p-5")}>
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+        <SummaryBlockTitle icon={MessageCircle} title="Cobertura da comunidade" />
+        <span className="inline-flex w-fit shrink-0 items-center rounded-full border border-primary/20 bg-primary-soft px-3 py-1 text-xs font-black text-primary">
+          Todo o período
+        </span>
+      </div>
+
+      {result.isLoading ? (
+        <div className="mt-4 space-y-3">
+          <div className="h-24 animate-pulse rounded-2xl bg-surface-muted" />
+          <div className="h-2 animate-pulse rounded-full bg-surface-muted" />
+        </div>
+      ) : null}
+
+      {result.isError ? (
+        <div className="mt-4">
+          <QueryStatus error={result.error} loading={false} onRetry={() => void result.refetch()} />
+        </div>
+      ) : null}
+
+      {!result.isLoading && !result.isError ? (
+        <>
+          <div
+            className={cn(
+              "mt-4 rounded-2xl border p-4",
+              hasAwaitingCoverage
+                ? "border-warning/25 bg-warning/10"
+                : "border-success/25 bg-success/10",
+            )}
+          >
+            <p
+              className={cn(
+                "text-xs font-black uppercase tracking-[0.12em]",
+                hasAwaitingCoverage ? "text-warning" : "text-success",
+              )}
+            >
+              {hasAwaitingCoverage ? "Sem cobertura" : "Cobertura em dia"}
+            </p>
+            <p className="mt-2 flex flex-wrap items-baseline gap-x-2 gap-y-1 text-foreground">
+              <span className="text-4xl font-black leading-none">
+                {numberFormatter.format(awaitingCoverage)}
+              </span>
+              <span className="text-sm font-black">
+                {awaitingCoverage === 1 ? "post sem cobertura" : "posts sem cobertura"}
+              </span>
+            </p>
+            <p className="mt-2 text-xs font-bold leading-5 text-muted">
+              {totalPatientPosts > 0
+                ? `${formatCountLabel(
+                    totalPatientPosts,
+                    "post de paciente",
+                    "posts de pacientes",
+                  )} no total; ${formatCountLabel(
+                    respondedByVerified,
+                    "já tem",
+                    "já têm",
+                  )} resposta qualificada.`
+                : "Ainda não há posts de pacientes publicados nesta comunidade."}
+            </p>
+          </div>
+
+          <div className="mt-4">
+            <div className="h-2 overflow-hidden rounded-full bg-surface-muted">
+              <div
+                className={cn(
+                  "h-full rounded-full transition-all",
+                  hasAwaitingCoverage ? "bg-warning" : "bg-success",
+                )}
+                style={{
+                  width: `${Math.min(100, Math.max(0, coverageRate))}%`,
+                }}
+              />
+            </div>
+            <div className="mt-2 flex items-center justify-between gap-3 text-xs font-bold text-muted">
+              <span>Taxa de cobertura</span>
+              <span>{formatCommunityStatisticPercent(coverageRate)}</span>
+            </div>
+          </div>
+
+          <Link
+            className="mt-4 inline-flex h-9 w-fit items-center gap-2 rounded-full border border-primary/20 bg-transparent px-3.5 text-xs font-black text-primary transition hover:border-primary/35 hover:bg-primary-soft"
+            href={communityTabHref(pathname, "estatisticas")}
+          >
+            Ver cobertura completa
+            <ChevronRight aria-hidden className="h-3.5 w-3.5" />
+          </Link>
+        </>
+      ) : null}
+    </section>
+  );
+};
+
 const CommunityHeader = ({
   community,
   postsCount,
@@ -5980,6 +6101,7 @@ const DetailContent = ({
           </div>
           <div className="min-w-0 space-y-4 2xl:col-span-2 2xl:row-span-2">
             <UrgentThingsSection detail={detail} pathname={pathname} />
+            <CommunityCoverageSummaryCard pathname={pathname} slug={slug} />
             <TopMentorsCard slug={slug} />
           </div>
           <div className="min-w-0 2xl:col-span-3">

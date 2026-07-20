@@ -868,3 +868,34 @@ Regras:
 - `pnpm check`
 - Smoke HTTP local `GET http://localhost:3002/comunidades/autocuidado-em-pratica?tab=conteudo` retornou 200.
 - Chrome headless local abriu a rota com perfil temporario e confirmou o guard/login administrativo; a validacao visual autenticada ficou limitada a captura enviada pelo usuario e ao prototipo local porque a sessao Admin real nao fica disponivel no perfil headless isolado.
+
+## Ajuste complementar 2026-07-20 - Cobertura simplificada na aba Geral
+
+- Pedido do usuário: na aba **Geral** do detalhe administrativo da comunidade, adicionar entre **Denúncias pendentes** e **Top mentores** um bloco simplificado de **Cobertura da comunidade**, mostrando quantos posts de pacientes estão sem cobertura.
+- A UI Admin passou a renderizar o bloco na coluna lateral da aba **Geral**, logo abaixo de denúncias pendentes e antes de top mentores.
+- O bloco usa o endpoint real já existente `GET /api/admin/private/communities/:id/statistics` com `period=all` e lê `counters.care_coverage.patient_posts_awaiting_verified_psychologist_response`, sem mock, seed, backfill, endpoint paralelo ou alteração de persistência.
+- A regra permanece consistente com a cobertura qualificada da aba **Estatísticas**: um post de paciente está sem cobertura enquanto não recebeu resposta de psicólogo verificado.
+- O bloco é mobile-first, exibe total de posts de pacientes, quantidade já respondida por psicólogos verificados, taxa de cobertura e link para a cobertura completa em **Estatísticas**.
+- Não houve package novo, schema Prisma/migration, alteração backend ou uso de `<img>` cru.
+- Builder/Quick Copy não está exposto como ferramenta callable no ambiente; a referência usada foi a captura enviada pelo usuário e o layout atual da aba **Geral** de comunidades.
+- ADR atualizado: `adrs/0289-cobertura-acolhimento-estatisticas-comunidade-admin.md`.
+
+### Critérios de aceite complementares
+
+- [x] A aba **Geral** exibe o bloco **Cobertura da comunidade** entre **Denúncias pendentes** e **Top mentores**.
+- [x] O bloco mostra quantos posts de pacientes estão sem cobertura no período **Todo o período**.
+- [x] A métrica usa dados reais de `counters.care_coverage`, sem mock, seed, backfill ou endpoint paralelo.
+- [x] A UI permanece mobile-first e não usa `<img>` cru.
+
+### Validação executada para este ajuste
+
+- `pnpm --dir admin exec biome check "src/app/(admin)/comunidades/[slug]/client.tsx"`
+- `pnpm --dir admin exec tsc --noEmit --pretty false`
+- `pnpm --dir admin check`
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir admin build`
+- `pnpm check`
+- Smoke real do service `showStatistics` para `ansiedade-em-equilibrio?period=all`, retornando `status=200`, `period=Todo o período`, `patientPosts=1`, `respondedByVerified=0` e `awaitingCoverage=1`.
+- Smoke HTTP local `GET http://localhost:3002/comunidades/ansiedade-em-equilibrio` retornou 200.
+- Validação visual autenticada ficou limitada à captura enviada pelo usuário e à rota local em execução; uma tentativa de abrir/controlar o Chrome pela automação foi bloqueada pela política do ambiente.
