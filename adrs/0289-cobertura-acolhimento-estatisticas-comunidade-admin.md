@@ -23,23 +23,26 @@ O novo grupo retorna:
 - `patient_posts_responded_by_verified_psychologists`: posts de pacientes no período que receberam pelo menos uma resposta de psicólogo verificado até o fim do período filtrado;
 - `patient_posts_awaiting_verified_psychologist_response`: posts de pacientes no período que ainda não receberam resposta verificada até o fim do período;
 - `patient_posts_with_any_response`: posts de pacientes com qualquer resposta até o fim do período, para diferenciar resposta geral de acolhimento verificado;
+- `patient_posts_verified_response_breakdown`: total e quantidade respondida por psicólogos verificados para todos os posts de pacientes, posts anônimos e posts identificados;
 - `average_first_verified_response_minutes`: média, em minutos, do tempo entre a criação do post de paciente e a primeira resposta de psicólogo verificado.
 
-A UI Admin renderiza o bloco **Cobertura de acolhimento** abaixo de **Estatísticas de conteúdo**, usando o mesmo resultado/período do bloco de conteúdo. O bloco mostra:
+A UI Admin renderiza o bloco **Cobertura de acolhimento** abaixo de **Estatísticas de conteúdo**, com filtro próprio de **Período**, **De** e **Até**. O bloco mostra:
 
 - posts de pacientes;
 - posts anônimos;
 - posts identificados;
-- respondidos por psicólogos verificados;
 - aguardando acolhimento;
 - tempo médio até a primeira resposta verificada;
 - barra de taxa de cobertura por psicólogos verificados.
+
+Os indicadores **Posts de pacientes**, **Anônimos** e **Identificados** são apresentados como uma única análise visual: um card principal de base de posts de pacientes contém a distribuição por anonimato/identificação, a quantidade total e, dentro de cada segmento, a quantidade e taxa respondida por psicólogos verificados. O card separado **Respondidos por psicólogos verificados** foi removido para evitar duplicidade visual.
 
 A regra operacional de **Aguardando acolhimento** é intencionalmente mais rígida do que “sem qualquer resposta”: um post deixa a fila de acolhimento somente quando recebe resposta de psicólogo verificado. Isso preserva a aba **Oportunidades** dos psicólogos para atuação operacional e mantém esta visão como métrica administrativa agregada.
 
 ## Consequências
 
 - Administradores conseguem avaliar rapidamente a cobertura qualificada de posts de pacientes por comunidade e período.
+- A análise de cobertura pode usar período próprio, sem alterar os filtros de **Estatísticas de conteúdo**, **Estatísticas de pessoas** ou **Horários de maior atividade**.
 - Posts com comentários comuns, mas sem resposta verificada, continuam visíveis como demanda de acolhimento.
 - O tempo médio de primeira resposta verificada passa a depender apenas de eventos reais existentes no período selecionado.
 - Não houve alteração em Prisma schema/migrations, pacote novo, endpoint paralelo, mock, seed ou exposição pública desses indicadores.

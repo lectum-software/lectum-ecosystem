@@ -1035,6 +1035,20 @@ export type AdminCommunityStatistics = {
       average_first_verified_response_minutes: number | null;
       patient_posts_awaiting_verified_psychologist_response: number;
       patient_posts_responded_by_verified_psychologists: number;
+      patient_posts_verified_response_breakdown: {
+        anonymous: {
+          responded_by_verified_psychologists: number;
+          total: number;
+        };
+        identified: {
+          responded_by_verified_psychologists: number;
+          total: number;
+        };
+        total: {
+          responded_by_verified_psychologists: number;
+          total: number;
+        };
+      };
       patient_posts_with_any_response: number;
       source: "community_post+post_reply";
     };

@@ -96,8 +96,8 @@ picos.
 
 ## Atualizacao 2026-07-20: ordem operacional dos blocos
 
-A ordem visual da aba **Estatisticas** do detalhe administrativo de comunidade passa a ser **Estatisticas de conteudo**, **Horarios de maior atividade** e **Estatisticas de pessoas**. O bloco de horarios permanece independente em filtro e consulta, mas passa a ficar acima da leitura de pessoas para seguir a hierarquia solicitada pelo produto.
+A ordem visual da aba **Estatisticas** do detalhe administrativo de comunidade passa a ser **Estatisticas de conteudo**, **Cobertura de acolhimento**, **Horarios de maior atividade** e **Estatisticas de pessoas**. O bloco de horarios permanece independente em filtro e consulta e fica acima da leitura de pessoas para seguir a hierarquia solicitada pelo produto.
 
-Consequencia: a leitura comeca por atividade de conteudo e engajamento, segue para distribuicao horaria e termina com composicao/atividade de pessoas. Nao houve alteracao de contrato, calculo, persistencia, schema Prisma/migration, pacote ou fonte de dados.
+Consequencia: a leitura comeca por atividade de conteudo e engajamento, segue para cobertura qualificada, depois distribuicao horaria e termina com composicao/atividade de pessoas. Nao houve alteracao de contrato dos horarios, calculo, persistencia, schema Prisma/migration, pacote ou fonte de dados.
 
 Validacao complementar: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke HTTP local `GET http://localhost:3002/comunidades/ansiedade-em-equilibrio?tab=estatisticas` retornando 200.

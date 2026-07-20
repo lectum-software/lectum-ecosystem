@@ -4248,6 +4248,13 @@ const roundCommunityStatisticPercent = (value: number) => Math.round(value * 10)
 const formatCommunityStatisticPercent = (value: number) =>
   `${percentageFormatter.format(roundCommunityStatisticPercent(value))}%`;
 
+const formatCommunityVerifiedResponseDetail = (responded: number, total: number) =>
+  `${formatCountLabel(
+    responded,
+    "respondido por psicólogo verificado",
+    "respondidos por psicólogos verificados",
+  )} (${formatCommunityStatisticPercent(communityStatisticPercentage(responded, total))})`;
+
 const formatCommunityCareCoverageDuration = (value: number | null | undefined) => {
   if (value === null || value === undefined) return "—";
 
@@ -5064,12 +5071,14 @@ const CommunityStatisticsSegment = ({
 };
 
 const CommunityCareCoverageBlock = ({
+  dateFilters,
   error,
   isFetching,
   isLoading,
   onRetry,
   statistics,
 }: {
+  dateFilters: CommunityStatisticsDateFilterProps;
   error: unknown;
   isFetching: boolean;
   isLoading: boolean;
@@ -5082,65 +5091,64 @@ const CommunityCareCoverageBlock = ({
     safeCommunityStatisticCount(statistics?.counters.anonymous_posts.total),
   );
   const identifiedPosts = Math.max(0, patientPosts - anonymousPosts);
+  const careCoverage = statistics?.counters.care_coverage;
+  const verifiedResponseBreakdown = careCoverage?.patient_posts_verified_response_breakdown;
   const respondedByVerified = Math.min(
     patientPosts,
+    safeCommunityStatisticCount(careCoverage?.patient_posts_responded_by_verified_psychologists),
+  );
+  const anonymousRespondedByVerified = Math.min(
+    anonymousPosts,
     safeCommunityStatisticCount(
-      statistics?.counters.care_coverage.patient_posts_responded_by_verified_psychologists,
+      verifiedResponseBreakdown?.anonymous?.responded_by_verified_psychologists,
+    ),
+  );
+  const identifiedRespondedByVerified = Math.min(
+    identifiedPosts,
+    safeCommunityStatisticCount(
+      verifiedResponseBreakdown?.identified?.responded_by_verified_psychologists,
     ),
   );
   const awaitingVerifiedResponse = Math.min(
     patientPosts,
     safeCommunityStatisticCount(
-      statistics?.counters.care_coverage.patient_posts_awaiting_verified_psychologist_response,
+      careCoverage?.patient_posts_awaiting_verified_psychologist_response,
     ),
   );
   const postsWithAnyResponse = Math.min(
     patientPosts,
-    safeCommunityStatisticCount(statistics?.counters.care_coverage.patient_posts_with_any_response),
+    safeCommunityStatisticCount(careCoverage?.patient_posts_with_any_response),
   );
   const coverageRate = communityStatisticPercentage(respondedByVerified, patientPosts);
   const awaitingRate = communityStatisticPercentage(awaitingVerifiedResponse, patientPosts);
   const anonymousRate = communityStatisticPercentage(anonymousPosts, patientPosts);
   const identifiedRate = communityStatisticPercentage(identifiedPosts, patientPosts);
   const hasStatus = isLoading || Boolean(error);
-  const periodLabel = statistics
-    ? `${statistics.period.label} · ${formatDayMonth(statistics.period.from)} - ${formatDayMonth(
-        statistics.period.to,
-      )}`
-    : null;
-  const indicators = [
+  const patientVisibilitySegments = [
     {
-      description: "Base de posts de pacientes no período.",
-      icon: FileText,
-      id: "patient_posts",
-      label: "Posts de pacientes",
-      toneClassName: "bg-success/10 text-success",
-      value: numberFormatter.format(patientPosts),
-    },
-    {
-      description: `${formatCommunityStatisticPercent(anonymousRate)} dos posts de pacientes.`,
-      icon: Users,
       id: "anonymous_posts",
       label: "Anônimos",
-      toneClassName: "bg-warning/10 text-warning",
-      value: numberFormatter.format(anonymousPosts),
+      percentage: anonymousRate,
+      responseDetail: formatCommunityVerifiedResponseDetail(
+        anonymousRespondedByVerified,
+        anonymousPosts,
+      ),
+      toneClassName: "bg-warning",
+      value: anonymousPosts,
     },
     {
-      description: `${formatCommunityStatisticPercent(identifiedRate)} dos posts de pacientes.`,
-      icon: UserRound,
       id: "identified_posts",
       label: "Identificados",
-      toneClassName: "bg-primary-soft text-primary",
-      value: numberFormatter.format(identifiedPosts),
+      percentage: identifiedRate,
+      responseDetail: formatCommunityVerifiedResponseDetail(
+        identifiedRespondedByVerified,
+        identifiedPosts,
+      ),
+      toneClassName: "bg-primary",
+      value: identifiedPosts,
     },
-    {
-      description: `${formatCommunityStatisticPercent(coverageRate)} de cobertura verificada.`,
-      icon: ShieldCheck,
-      id: "responded_by_verified",
-      label: "Respondidos por psicólogos verificados",
-      toneClassName: "bg-primary-soft text-primary",
-      value: numberFormatter.format(respondedByVerified),
-    },
+  ] as const;
+  const operationalIndicators = [
     {
       description:
         awaitingVerifiedResponse > 0
@@ -5149,6 +5157,7 @@ const CommunityCareCoverageBlock = ({
       icon: awaitingVerifiedResponse > 0 ? AlertTriangle : CheckCircle2,
       id: "awaiting_verified_response",
       label: "Aguardando acolhimento",
+      responseDetail: null,
       toneClassName:
         awaitingVerifiedResponse > 0 ? "bg-danger/10 text-danger" : "bg-success/10 text-success",
       value: numberFormatter.format(awaitingVerifiedResponse),
@@ -5161,16 +5170,17 @@ const CommunityCareCoverageBlock = ({
       icon: Reply,
       id: "average_first_verified_response",
       label: "Tempo médio até 1ª resposta",
+      responseDetail: null,
       toneClassName: "bg-surface-muted text-muted",
       value: formatCommunityCareCoverageDuration(
-        statistics?.counters.care_coverage.average_first_verified_response_minutes,
+        careCoverage?.average_first_verified_response_minutes,
       ),
     },
   ] as const;
 
   return (
     <section aria-busy={isLoading || isFetching} className={cn(cardClass, "min-w-0 p-5")}>
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-start">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
             <h3 className="text-lg font-black text-foreground">Cobertura de acolhimento</h3>
@@ -5182,15 +5192,11 @@ const CommunityCareCoverageBlock = ({
             ) : null}
           </div>
           <p className="mt-1 max-w-3xl text-xs font-bold leading-5 text-muted">
-            Visão administrativa da resposta qualificada aos posts de pacientes no mesmo período de
-            conteúdo.
+            Visão administrativa da resposta qualificada aos posts de pacientes no período
+            selecionado.
           </p>
         </div>
-        {periodLabel ? (
-          <span className="inline-flex w-fit items-center rounded-full border border-border bg-surface-muted px-3 py-1.5 text-[11px] font-black text-muted">
-            {periodLabel}
-          </span>
-        ) : null}
+        <CommunityStatisticsDateFilters {...dateFilters} />
       </div>
 
       {hasStatus ? (
@@ -5201,8 +5207,76 @@ const CommunityCareCoverageBlock = ({
 
       {statistics ? (
         <>
-          <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6">
-            {indicators.map((indicator) => {
+          <div className="mt-5 grid gap-3 xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_minmax(0,1fr)]">
+            <article className="min-w-0 rounded-2xl border border-primary/20 bg-surface-muted p-4">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <div className="flex min-w-0 items-start gap-3">
+                  <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-success/10 text-success">
+                    <FileText aria-hidden className="h-5 w-5" />
+                  </span>
+                  <div className="min-w-0">
+                    <h4 className="text-xs font-black leading-snug text-foreground">
+                      Posts de pacientes
+                    </h4>
+                    <p className="mt-1 text-[11px] font-bold leading-5 text-muted">
+                      Anônimos e identificados analisados como uma única base de acolhimento.
+                    </p>
+                  </div>
+                </div>
+                <div className="shrink-0 sm:text-right">
+                  <p className="text-3xl font-black leading-none text-foreground">
+                    {numberFormatter.format(patientPosts)}
+                  </p>
+                  <p className="mt-2 rounded-2xl bg-surface px-3 py-2 text-[11px] font-black leading-5 text-primary">
+                    {formatCommunityVerifiedResponseDetail(respondedByVerified, patientPosts)}
+                  </p>
+                </div>
+              </div>
+
+              <div
+                aria-label={`Distribuição dos posts de pacientes: ${formatCommunityStatisticPercent(
+                  anonymousRate,
+                )} anônimos e ${formatCommunityStatisticPercent(identifiedRate)} identificados`}
+                className="mt-4 flex h-3 overflow-hidden rounded-full bg-surface"
+                role="img"
+              >
+                <span
+                  className="block h-full bg-warning"
+                  style={{ width: `${Math.min(100, Math.max(0, anonymousRate))}%` }}
+                />
+                <span
+                  className="block h-full bg-primary"
+                  style={{ width: `${Math.min(100, Math.max(0, identifiedRate))}%` }}
+                />
+              </div>
+
+              <div className="mt-4 grid gap-2 sm:grid-cols-2">
+                {patientVisibilitySegments.map((segment) => (
+                  <div
+                    className="rounded-2xl border border-border/70 bg-surface p-3"
+                    key={segment.id}
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="inline-flex items-center gap-2 text-xs font-black text-foreground">
+                        <span className={cn("h-2.5 w-2.5 rounded-full", segment.toneClassName)} />
+                        {segment.label}
+                      </span>
+                      <span className="text-xs font-black text-muted">
+                        {formatCommunityStatisticPercent(segment.percentage)}
+                      </span>
+                    </div>
+                    <p className="mt-3 text-2xl font-black leading-none text-foreground">
+                      {numberFormatter.format(segment.value)}
+                    </p>
+                    <p className="mt-2 text-[11px] font-black leading-5 text-primary">
+                      {segment.responseDetail}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </article>
+
+            {operationalIndicators.map((indicator) => {
               const Icon = indicator.icon;
 
               return (
@@ -5224,6 +5298,11 @@ const CommunityCareCoverageBlock = ({
                   <p className="mt-2 text-2xl font-black leading-none text-foreground">
                     {indicator.value}
                   </p>
+                  {indicator.responseDetail ? (
+                    <p className="mt-3 rounded-2xl bg-surface px-3 py-2 text-[11px] font-black leading-5 text-primary">
+                      {indicator.responseDetail}
+                    </p>
+                  ) : null}
                   <p className="mt-3 text-[11px] font-bold leading-5 text-muted">
                     {indicator.description}
                   </p>
@@ -5570,9 +5649,11 @@ const StatisticsTab = ({ createdAt, slug }: { createdAt: string; slug: string })
 const StatisticsContent = ({ createdAt, slug }: { createdAt: string; slug: string }) => {
   const peopleDateState = useCommunityStatisticsDateFilterState(createdAt);
   const contentDateState = useCommunityStatisticsDateFilterState(createdAt);
+  const careCoverageDateState = useCommunityStatisticsDateFilterState(createdAt);
   const activityHoursDateState = useCommunityStatisticsDateFilterState(createdAt, "all");
   const peopleResult = useAdminCommunityStatistics(slug, peopleDateState.queryInput);
   const contentResult = useAdminCommunityStatistics(slug, contentDateState.queryInput);
+  const careCoverageResult = useAdminCommunityStatistics(slug, careCoverageDateState.queryInput);
   const activityHoursResult = useAdminCommunityStatistics(slug, activityHoursDateState.queryInput);
   const peopleComparisonResult = useAdminCommunityStatistics(
     slug,
@@ -5586,6 +5667,7 @@ const StatisticsContent = ({ createdAt, slug }: { createdAt: string; slug: strin
   );
   const peopleStatistics = peopleResult.data;
   const contentStatistics = contentResult.data;
+  const careCoverageStatistics = careCoverageResult.data;
   const activityHoursStatistics = activityHoursResult.data;
   const peopleComparisonStatistics = peopleComparisonResult.data;
   const contentComparisonStatistics = contentComparisonResult.data;
@@ -5643,11 +5725,12 @@ const StatisticsContent = ({ createdAt, slug }: { createdAt: string; slug: strin
         visibleMetricIds={visibleContentMetricIds}
       />
       <CommunityCareCoverageBlock
-        error={contentResult.error}
-        isFetching={contentResult.isFetching}
-        isLoading={contentResult.isLoading}
-        onRetry={() => void contentResult.refetch()}
-        statistics={contentStatistics}
+        dateFilters={careCoverageDateState.dateFilters}
+        error={careCoverageResult.error}
+        isFetching={careCoverageResult.isFetching}
+        isLoading={careCoverageResult.isLoading}
+        onRetry={() => void careCoverageResult.refetch()}
+        statistics={careCoverageStatistics}
       />
       <CommunityPeakActivityHoursBlock
         dateFilters={activityHoursDateState.dateFilters}

@@ -2217,7 +2217,7 @@ const buildCommunityStatistics = (
   const patientPostsWithAnyResponse = patientPosts.filter((post) =>
     post.replies.some((reply) => reply.createdAt <= period.end),
   ).length;
-  const patientPostVerifiedResponseMinutes = patientPosts.flatMap((post) => {
+  const patientPostsWithVerifiedResponse = patientPosts.flatMap((post) => {
     const firstVerifiedReply = post.replies
       .filter(
         (reply) => reply.createdAt <= period.end && isVerifiedStatisticsPsychologist(reply.author),
@@ -2227,17 +2227,29 @@ const buildCommunityStatistics = (
     if (!firstVerifiedReply) return [];
 
     return [
-      Math.max(
-        0,
-        Math.round((firstVerifiedReply.createdAt.getTime() - post.createdAt.getTime()) / 60_000),
-      ),
+      {
+        minutes: Math.max(
+          0,
+          Math.round((firstVerifiedReply.createdAt.getTime() - post.createdAt.getTime()) / 60_000),
+        ),
+        post,
+      },
     ];
   });
+  const patientPostVerifiedResponseMinutes = patientPostsWithVerifiedResponse.map(
+    (item) => item.minutes,
+  );
   const patientPostsAnsweredByVerifiedPsychologists = patientPostVerifiedResponseMinutes.length;
   const patientPostsAwaitingVerifiedPsychologistResponse = Math.max(
     0,
     patientPosts.length - patientPostsAnsweredByVerifiedPsychologists,
   );
+  const anonymousPatientPosts = patientPosts.filter((post) => post.anonymous);
+  const identifiedPatientPosts = patientPosts.filter((post) => !post.anonymous);
+  const anonymousPatientPostsAnsweredByVerifiedPsychologists =
+    patientPostsWithVerifiedResponse.filter((item) => item.post.anonymous).length;
+  const identifiedPatientPostsAnsweredByVerifiedPsychologists =
+    patientPostsWithVerifiedResponse.filter((item) => !item.post.anonymous).length;
   const averageFirstVerifiedResponseMinutes =
     patientPostVerifiedResponseMinutes.length > 0
       ? Math.round(
@@ -2531,6 +2543,22 @@ const buildCommunityStatistics = (
           patientPostsAwaitingVerifiedPsychologistResponse,
         patient_posts_responded_by_verified_psychologists:
           patientPostsAnsweredByVerifiedPsychologists,
+        patient_posts_verified_response_breakdown: {
+          anonymous: {
+            responded_by_verified_psychologists:
+              anonymousPatientPostsAnsweredByVerifiedPsychologists,
+            total: anonymousPatientPosts.length,
+          },
+          identified: {
+            responded_by_verified_psychologists:
+              identifiedPatientPostsAnsweredByVerifiedPsychologists,
+            total: identifiedPatientPosts.length,
+          },
+          total: {
+            responded_by_verified_psychologists: patientPostsAnsweredByVerifiedPsychologists,
+            total: patientPosts.length,
+          },
+        },
         patient_posts_with_any_response: patientPostsWithAnyResponse,
         source: "community_post+post_reply",
       },

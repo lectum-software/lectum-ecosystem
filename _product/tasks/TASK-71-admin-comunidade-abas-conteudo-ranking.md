@@ -666,15 +666,15 @@ Regras:
 
 ## Ajuste complementar 2026-07-20 - Ordem dos blocos da aba Estatisticas
 
-- Pedido do usuario: alterar a ordem dos blocos da aba **Estatisticas** do detalhe administrativo de comunidade para **Estatisticas de conteudo**, **Horarios de maior atividade** e **Estatisticas de pessoas**.
-- A UI Admin passou a renderizar primeiro o bloco de conteudo, depois o bloco de horarios e, por fim, o bloco de pessoas, preservando os filtros independentes, contadores, graficos, estados de carregamento e chamadas reais ja existentes.
+- Pedido do usuario: alterar a ordem dos blocos da aba **Estatisticas** do detalhe administrativo de comunidade para **Estatisticas de conteudo**, **Cobertura de acolhimento**, **Horarios de maior atividade** e **Estatisticas de pessoas**.
+- A UI Admin passou a renderizar primeiro o bloco de conteudo, depois o bloco de cobertura, depois o bloco de horarios e, por fim, o bloco de pessoas, preservando os filtros independentes, contadores, graficos, estados de carregamento e chamadas reais ja existentes.
 - O ajuste e exclusivamente visual/mobile-first, sem endpoint novo, schema Prisma/migration, package, mock, seed, backfill artificial ou alteracao de persistencia.
 - Builder/Quick Copy nao esta exposto como ferramenta callable no ambiente; a referencia usada foi a captura enviada pelo usuario e o layout atual da aba **Estatisticas** de comunidades.
 - ADR atualizado: `adrs/0284-horarios-maior-atividade-comunidade-admin.md`.
 
 ### Criterio de aceite complementar
 
-- [x] A aba **Estatisticas** do detalhe Admin de comunidade exibe os blocos na ordem: **Estatisticas de conteudo**, **Horarios de maior atividade** e **Estatisticas de pessoas**.
+- [x] A aba **Estatisticas** do detalhe Admin de comunidade exibe os blocos na ordem: **Estatisticas de conteudo**, **Cobertura de acolhimento**, **Horarios de maior atividade** e **Estatisticas de pessoas**.
 
 ### Validacao executada para este ajuste
 
@@ -717,3 +717,29 @@ Regras:
 - Smoke real do service `showStatistics` para `ansiedade-em-equilibrio?period=week`, retornando `status=200`, `period=Esta semana`, `patientPosts=0`, `respondedByVerified=0`, `awaitingVerified=0`, `anyResponse=0` e `avgFirstVerifiedMinutes=null`.
 - Smoke HTTP local `GET http://localhost:3002/comunidades/ansiedade-em-equilibrio?tab=estatisticas` retornou 200.
 - Chrome headless local abriu a rota sem sessão administrativa e confirmou o guard/login; a validação visual autenticada ficou limitada à captura enviada pelo usuário, ao protótipo local e aos checks/builds.
+
+## Ajuste complementar 2026-07-20 - Filtro próprio e breakdown da Cobertura de acolhimento
+
+- Pedido do usuário: no bloco **Cobertura de acolhimento**, adicionar filtro próprio de período/data, mostrar nos contadores **Posts de pacientes**, **Anônimos** e **Identificados** a quantidade e taxa que foram respondidas por psicólogos verificados, e remover o contador separado **Respondidos por psicólogos verificados**.
+- O contrato real `GET /api/admin/private/communities/:id/statistics` passou a retornar `counters.care_coverage.patient_posts_verified_response_breakdown`, com total e respondidos por psicólogos verificados para `total`, `anonymous` e `identified`, calculados a partir de `community_post` e `post_reply` reais.
+- A UI Admin passou a usar uma query/filtro próprio para **Cobertura de acolhimento**, independente de **Estatísticas de conteúdo**, **Estatísticas de pessoas** e **Horários de maior atividade**.
+- Os indicadores **Posts de pacientes**, **Anônimos** e **Identificados** foram integrados em uma única análise visual de base de posts de pacientes, com distribuição por anonimato/identificação, total e linha interna de `respondidos por psicólogos verificados (taxa%)`; o card separado de respondidos foi removido para reduzir duplicidade.
+- A ordem visual final da aba ficou **Estatísticas de conteúdo**, **Cobertura de acolhimento**, **Horários de maior atividade** e **Estatísticas de pessoas**, preservando abordagem mobile-first.
+- Não houve package novo, schema Prisma/migration, endpoint paralelo, mock, seed, backfill ou uso de `<img>` cru.
+- Builder/Quick Copy não está exposto como ferramenta callable no ambiente; a referência usada foi a captura enviada pelo usuário e o layout atual da aba **Estatísticas** da comunidade.
+- ADR atualizado: `adrs/0289-cobertura-acolhimento-estatisticas-comunidade-admin.md`.
+
+### Critérios de aceite complementares
+
+- [x] **Cobertura de acolhimento** possui filtro próprio de **Período**, **De** e **Até**.
+- [x] **Posts de pacientes**, **Anônimos** e **Identificados** aparecem como uma única análise visual integrada e exibem total, quantidade respondida por psicólogos verificados e taxa de resposta verificada.
+- [x] O contador separado **Respondidos por psicólogos verificados** foi removido.
+- [x] O breakdown é calculado no backend a partir de posts e respostas reais, sem mock/backfill.
+- [x] A UI permanece mobile-first e não usa `<img>` cru.
+
+### Validação executada para este ajuste
+
+- `pnpm --dir admin exec biome check "src/app/(admin)/comunidades/[slug]/client.tsx" "src/api/req/communities/index.ts"`
+- `pnpm --dir backend exec biome check "src/modules/api/admin/private/communities/manage/DTOs/IAdminCommunityManageDTO.ts" "src/modules/api/admin/private/communities/manage/use-cases/services.ts"`
+- `pnpm --dir admin exec tsc --noEmit --pretty false`
+- `pnpm --dir backend exec tsc --noEmit --pretty false`
