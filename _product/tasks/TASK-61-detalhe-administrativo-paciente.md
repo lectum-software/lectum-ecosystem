@@ -509,3 +509,27 @@ Frontend esperado:
 - `pnpm --dir admin build`
 - Browser local/headless via Chrome/CDP em `http://localhost:3002/pacientes/cmrqsrab5001f1guh2ve5oy90?tab=estatisticas`, com admin temporario real removido ao final, validou desktop `1365x900` e mobile `390x844`: filtros **Periodo/De/Ate**, default **Todo o periodo**, sete cards toggles, grafico SVG novo, sem badge `America/Sao_Paulo`, sem legenda antiga e `scrollWidth=390` no mobile.
 - `pnpm check` foi reexecutado e ficou bloqueado por formatacao de uma alteracao paralela nao relacionada em `admin/src/components/admin-shell/shell.tsx`; a validacao de escopo desta entrega permaneceu verde com `biome check` no arquivo alterado, `pnpm --dir admin typecheck` e `pnpm --dir admin build`.
+
+## Ajuste pos-feedback 2026-07-21 - Blocos inferiores das Estatisticas do paciente
+
+- Pedido do usuario: abaixo de **Estatisticas de comunidade**, adicionar e alinhar **Comunidades ativas**, **Horarios de maior atividade** e **Uso da plataforma** seguindo o mesmo modelo usado nas estatisticas do psicologo.
+- A aba `/pacientes/[id]?tab=estatisticas` agora renderiza, nesta ordem, **Estatisticas de comunidade**, **Comunidades ativas**, **Horarios de maior atividade** e **Uso da plataforma**, com cards, tabelas, botoes de dia da semana, resumo de uso e estados vazios equivalentes ao padrao visual do psicologo.
+- Cada bloco novo possui seus proprios filtros **Periodo**, **De** e **Ate**, iniciando em **Todo o periodo** sem refetch redundante; ao alterar periodo/data, o Admin refaz a consulta real do detalhe do paciente com `period/from/to` para aquele bloco.
+- O backend do detalhe do paciente foi ampliado sem endpoint paralelo: `active_communities` agora informa posts, comentarios, votos e salvamentos por comunidade; `platform_usage` consolida pageviews, dias ativos, sessoes aproximadas, paginas mais acessadas, horarios de atividade e instalacao PWA.
+- As fontes permanecem reais e persistidas: `page_view_event`, `important_action_event`, `community_post`, `post_reply`, `post_vote`, `post_save`, `post_reply_save`, `community_member` e `professional_review`.
+- A duracao media da plataforma fica indisponivel quando a confiabilidade dos eventos de pageview e baixa, evitando apresentar numero inventado; nao houve mock, seed, backfill, tracking novo, schema Prisma, migration, package novo ou endpoint simulado. `db:migrate` nao se aplicou.
+- Builder/Quick Copy nao esta exposto como ferramenta callable no ambiente; as referencias auditaveis foram as capturas enviadas pelo usuario, `_product/proto/admin/Pacientes/Pacientes - Detalhes.png`, `_product/proto/admin/Psicologos/Detalhes do psicologo/Estatisticas.png` e a implementacao local do detalhe de psicologo.
+- ADR atualizado: `adrs/0294-admin-paciente-estatisticas-comunidade-paridade.md`.
+
+### Validacao complementar executada
+
+- `pnpm --dir backend exec biome check --write "src/modules/api/admin/private/patients/detail/DTOs/IAdminPatientDetailDTO.ts" "src/modules/api/admin/private/patients/detail/repositories/AdminPatientDetailRepository.ts" "src/modules/api/admin/private/patients/detail/use-cases/services.ts"`
+- `pnpm --dir admin exec biome check --write "src/api/req/patients/index.ts" "src/app/(admin)/pacientes/[id]/client.tsx"`
+- `pnpm --dir backend typecheck`
+- `pnpm --dir admin typecheck`
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check`
+- Browser local/headless via Chrome/CDP em `http://localhost:3002/pacientes/cmrb6fbix0000y0uhdpu1bptl?tab=estatisticas`, com admin temporario real removido ao final, validou desktop `1365x900` e mobile `390x844`: quatro blocos da aba, filtros **Periodo/De/Ate** independentes, default **Todo o periodo**, tabela de **Comunidades ativas**, filtro **Todos** nos horarios de maior atividade, resumo de **Uso da plataforma**, sem badge `America/Sao_Paulo`, sem copy antiga do heatmap e `scrollWidth=390` no mobile.

@@ -261,6 +261,30 @@ export type AdminPatientDetailShareReceivedRecord = Prisma.post_shareGetPayload<
   select: typeof shareReceivedSelect;
 }>;
 
+const patientPlatformPageViewSelect = {
+  duration_seconds: true,
+  id: true,
+  normalized_path: true,
+  occurred_at: true,
+  page_kind: true,
+  path: true,
+  session_id: true,
+  user_id: true,
+} satisfies Prisma.page_view_eventSelect;
+
+export type AdminPatientDetailPlatformPageViewRecord = Prisma.page_view_eventGetPayload<{
+  select: typeof patientPlatformPageViewSelect;
+}>;
+
+const patientPlatformPwaInstallSelect = {
+  occurred_at: true,
+  user_id: true,
+} satisfies Prisma.important_action_eventSelect;
+
+export type AdminPatientDetailPwaInstallRecord = Prisma.important_action_eventGetPayload<{
+  select: typeof patientPlatformPwaInstallSelect;
+}>;
+
 export class AdminPatientDetailRepository {
   async findPatient(id: string): Promise<AdminPatientDetailRecord | null> {
     return prisma.user.findFirst({
@@ -612,6 +636,47 @@ export class AdminPatientDetailRepository {
       votesMade,
       votesReceived,
     };
+  }
+
+  async listPlatformPageViews(
+    patientId: string,
+    range: AdminPatientDetailDateRange,
+  ): Promise<AdminPatientDetailPlatformPageViewRecord[]> {
+    return prisma.page_view_event.findMany({
+      orderBy: {
+        occurred_at: "asc",
+      },
+      select: patientPlatformPageViewSelect,
+      where: {
+        deleted: false,
+        occurred_at: rangeWhere(range),
+        user_id: patientId,
+        user: {
+          deleted: false,
+          role: "paciente",
+        },
+      },
+    });
+  }
+
+  async findPwaInstallAction(
+    patientId: string,
+  ): Promise<AdminPatientDetailPwaInstallRecord | null> {
+    return prisma.important_action_event.findFirst({
+      orderBy: {
+        occurred_at: "asc",
+      },
+      select: patientPlatformPwaInstallSelect,
+      where: {
+        action_type: "pwa_installed",
+        deleted: false,
+        user_id: patientId,
+        user: {
+          deleted: false,
+          role: "paciente",
+        },
+      },
+    });
   }
 }
 

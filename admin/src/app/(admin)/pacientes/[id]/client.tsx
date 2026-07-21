@@ -31,7 +31,6 @@ import {
   Share2,
   ShieldCheck,
   UserRound,
-  UsersRound,
   X,
 } from "lucide-react";
 import Image from "next/image";
@@ -353,6 +352,18 @@ const formatLastAccess = (value?: string | null) => {
   if (!value) return "N\u00e3o capturado";
 
   return formatDateTime(value);
+};
+const formatPlatformDuration = (value: number | null) => {
+  if (typeof value !== "number") return "Indisponível";
+
+  const seconds = Math.round(value);
+  const minutes = Math.floor(seconds / 60);
+  const remainder = seconds % 60;
+
+  if (minutes <= 0) return `${remainder}s`;
+  if (remainder === 0) return `${minutes}min`;
+
+  return `${minutes}min ${remainder}s`;
 };
 const formatInputDate = (value?: string | null) => {
   if (!value) return "";
@@ -1704,118 +1715,479 @@ const CommunityAvatar = ({
   );
 };
 
-const Communities = ({ detail }: { detail: AdminPatientDetail }) => (
-  <CardShell className="p-5">
-    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-      <div className="flex items-start gap-3">
-        <IconCircle icon={UsersRound} />
-        <div>
-          <h2 className="text-lg font-extrabold text-foreground">Comunidades mais ativas</h2>
-          <p className="mt-1 text-sm text-muted">
-            Ranking calculado por participação real e interações do paciente nas comunidades.
-          </p>
+const formatPatientCommunityPeriodActions = (interactions: number) =>
+  interactions === 1
+    ? "1 interação no período"
+    : `${numberFormatter.format(interactions)} interações no período`;
+
+const PatientActiveCommunitiesBlock = ({
+  communities,
+  isRefreshing,
+  periodControls,
+}: {
+  communities: PatientsDetailCommunity[];
+  isRefreshing: boolean;
+  periodControls: ReactNode;
+}) => (
+  <CardShell className="min-w-0 max-w-full overflow-hidden p-5">
+    <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-start">
+      <div className="min-w-0">
+        <div className="flex flex-wrap items-center gap-2">
+          <h2 className="text-lg font-black text-foreground">Comunidades ativas</h2>
+          {isRefreshing ? (
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary-soft px-2.5 py-1 text-[11px] font-black text-primary">
+              <Loader2 aria-hidden className="h-3.5 w-3.5 animate-spin" />
+              Atualizando
+            </span>
+          ) : null}
         </div>
-      </div>
-      <Badge className="bg-surface-muted text-muted">{detail.communities.source}</Badge>
-    </div>
-    <div className="mt-5 space-y-3">
-      {detail.communities.items.length === 0 ? (
-        <p className="rounded-2xl bg-surface-muted p-4 text-sm text-muted">
-          Nenhuma comunidade com interação real foi encontrada no período.
+        <p className="mt-1 text-xs font-bold leading-5 text-muted">
+          Comunidades em que o paciente realizou interações reais no período, ordenadas da mais
+          ativa para a menos ativa.
         </p>
-      ) : (
-        detail.communities.items.map((community, index) => (
-          <div
-            className="flex flex-col gap-3 rounded-2xl border border-border p-4 sm:flex-row sm:items-center sm:justify-between"
-            key={community.id}
-          >
-            <div className="flex min-w-0 items-center gap-3">
-              <CommunityAvatar community={community} index={index} />
-              <div className="min-w-0">
-                <h3 className="truncate font-black text-foreground">{community.name}</h3>
-                <p className="text-sm text-muted">
-                  {community.is_member ? "Membro real" : "Interação sem vínculo ativo"}
-                  {community.member_since ? ` desde ${formatDateTime(community.member_since)}` : ""}
-                </p>
-              </div>
-            </div>
-            <Badge className="w-fit bg-primary-soft text-primary">
-              {numberFormatter.format(community.interactions)} interações
-            </Badge>
-          </div>
-        ))
-      )}
+        <Badge className="mt-3 w-fit bg-surface-muted text-muted">
+          {numberFormatter.format(communities.length)} comunidades
+        </Badge>
+      </div>
+      {periodControls}
     </div>
+
+    {communities.length === 0 ? (
+      <p className="mt-5 rounded-2xl border border-dashed border-border bg-surface-muted p-4 text-sm font-bold text-muted">
+        Nenhuma comunidade com interação real do paciente foi encontrada no período.
+      </p>
+    ) : (
+      <div className="mt-5 overflow-x-auto rounded-[1.35rem] border border-border bg-surface">
+        <table className="w-full min-w-[920px] border-collapse text-left">
+          <caption className="sr-only">
+            Lista de comunidades ativas do paciente por interações, posts, comentários, votos,
+            salvamentos e status de membro no período.
+          </caption>
+          <thead className="bg-surface-muted/80">
+            <tr className="text-xs font-black text-muted">
+              <th className="px-4 py-3" scope="col">
+                Comunidade
+              </th>
+              <th className="px-4 py-3 text-center" scope="col">
+                Posts
+              </th>
+              <th className="px-4 py-3 text-center" scope="col">
+                Comentários
+              </th>
+              <th className="px-4 py-3 text-center" scope="col">
+                Votos
+              </th>
+              <th className="px-4 py-3 text-center" scope="col">
+                Salvamentos
+              </th>
+              <th className="px-4 py-3 text-center" scope="col">
+                Status
+              </th>
+              <th className="px-4 py-3 text-center" scope="col">
+                Interações
+              </th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-border">
+            {communities.map((community, index) => (
+              <tr className="align-middle transition hover:bg-surface-muted/45" key={community.id}>
+                <th className="px-4 py-4" scope="row">
+                  <div className="flex min-w-0 items-center gap-3">
+                    <CommunityAvatar community={community} index={index} />
+                    <span className="min-w-0">
+                      <span className="block max-w-[18rem] truncate text-sm font-black text-foreground">
+                        {community.name}
+                      </span>
+                      <span className="mt-1 block text-xs font-bold text-muted">
+                        {formatPatientCommunityPeriodActions(community.interactions)}
+                      </span>
+                    </span>
+                  </div>
+                </th>
+                <td className="px-4 py-4 text-center text-sm font-bold text-muted">
+                  {numberFormatter.format(community.posts)}
+                </td>
+                <td className="px-4 py-4 text-center text-sm font-bold text-muted">
+                  {numberFormatter.format(community.comments)}
+                </td>
+                <td className="px-4 py-4 text-center text-sm font-bold text-muted">
+                  {numberFormatter.format(community.votes)}
+                </td>
+                <td className="px-4 py-4 text-center text-sm font-bold text-muted">
+                  {numberFormatter.format(community.saves)}
+                </td>
+                <td className="px-4 py-4 text-center">
+                  <Badge
+                    className={cn(
+                      "whitespace-nowrap",
+                      community.is_member
+                        ? "bg-success/10 text-success"
+                        : "bg-surface-muted text-muted",
+                    )}
+                  >
+                    {community.is_member ? "Membro" : "Sem vínculo ativo"}
+                  </Badge>
+                </td>
+                <td className="px-4 py-4 text-center">
+                  <span className="block text-sm font-black text-foreground">
+                    {numberFormatter.format(community.interactions)}
+                  </span>
+                  {community.member_since ? (
+                    <span className="mt-1 block text-xs font-bold leading-5 text-muted">
+                      membro desde {formatDateTime(community.member_since)}
+                    </span>
+                  ) : null}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    )}
   </CardShell>
 );
 
-const Heatmap = ({ detail }: { detail: AdminPatientDetail }) => {
-  const rows = useMemo(
-    () =>
-      Array.from(new Set(detail.heatmap.cells.map((cell) => cell.day_index)))
-        .sort((left, right) => left - right)
-        .map((dayIndex) => detail.heatmap.cells.filter((cell) => cell.day_index === dayIndex)),
-    [detail.heatmap.cells],
+type PatientPlatformHourlyActivityPoint =
+  AdminPatientDetail["platform_usage"]["hourly_activity"][number];
+type PatientPlatformHourlyActivityMetricKey =
+  | "accesses"
+  | "engagement"
+  | "posts"
+  | "replies"
+  | "reviews";
+type PatientPlatformHourlyActivitySelection = "all" | `${number}`;
+
+const patientPlatformHourlyActivityBreakdown: {
+  className: string;
+  key: PatientPlatformHourlyActivityMetricKey;
+  label: string;
+}[] = [
+  { className: "bg-primary", key: "accesses", label: "Acessos" },
+  { className: "bg-success", key: "posts", label: "Posts" },
+  { className: "bg-warning", key: "replies", label: "Comentários" },
+  { className: "bg-info", key: "engagement", label: "Interações" },
+  { className: "bg-violet-500", key: "reviews", label: "Avaliações" },
+];
+
+const patientPlatformWeekdayDisplayOrder = [1, 2, 3, 4, 5, 6, 0] as const;
+
+const patientPlatformWeekdayLabel = (day: number) =>
+  day === 0
+    ? "Dom"
+    : day === 1
+      ? "Seg"
+      : day === 2
+        ? "Ter"
+        : day === 3
+          ? "Qua"
+          : day === 4
+            ? "Qui"
+            : day === 5
+              ? "Sex"
+              : "Sáb";
+
+const formatPatientPlatformActivityHourRange = (hour: number) => {
+  const normalizedHour = Math.min(23, Math.max(0, Math.floor(hour)));
+  const nextHour = (normalizedHour + 1) % 24;
+
+  return `${String(normalizedHour).padStart(2, "0")}h-${String(nextHour).padStart(2, "0")}h`;
+};
+
+const safePatientPlatformActivityCount = (value: number | null | undefined) =>
+  numberFormatter.format(typeof value === "number" ? value : 0);
+
+const normalizePatientPlatformHourlyActivityPoint = (
+  point: Partial<PatientPlatformHourlyActivityPoint> | undefined,
+  hour: number,
+): PatientPlatformHourlyActivityPoint => {
+  const accesses = Math.max(0, Number(point?.accesses ?? point?.count ?? 0));
+  const engagement = Math.max(0, Number(point?.engagement ?? 0));
+  const posts = Math.max(0, Number(point?.posts ?? 0));
+  const replies = Math.max(0, Number(point?.replies ?? 0));
+  const reviews = Math.max(0, Number(point?.reviews ?? 0));
+  const total = Math.max(
+    0,
+    Number(point?.total ?? accesses + engagement + posts + replies + reviews),
   );
-  const opacityFor = (count: number) => {
-    if (count === 0 || detail.heatmap.max_count === 0) return 0.12;
-    return 0.25 + (count / detail.heatmap.max_count) * 0.75;
+
+  return {
+    accesses,
+    count: Math.max(0, Number(point?.count ?? total)),
+    engagement,
+    hour,
+    label: point?.label || formatPatientPlatformActivityHourRange(hour),
+    percentage: Math.max(0, Number(point?.percentage ?? 0)),
+    posts,
+    replies,
+    reviews,
+    total,
   };
+};
+
+const PatientPlatformUsageCard = ({
+  detail,
+  isRefreshing = false,
+  periodControls,
+}: {
+  detail: AdminPatientDetail;
+  isRefreshing?: boolean;
+  periodControls: ReactNode;
+}) => {
+  const usage = detail.platform_usage;
 
   return (
     <CardShell className="p-5">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div className="flex items-start gap-3">
-          <IconCircle icon={CalendarDays} />
-          <div>
-            <h2 className="text-lg font-extrabold text-foreground">Horários de maior atividade</h2>
-            <p className="mt-1 text-sm text-muted">
-              Agregação de eventos reais no fuso de Brasília.
-            </p>
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-start">
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-2">
+            <h2 className="text-lg font-black text-foreground">Uso da plataforma</h2>
+            {isRefreshing ? (
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary-soft px-2.5 py-1 text-[11px] font-black text-primary">
+                <Loader2 aria-hidden className="h-3.5 w-3.5 animate-spin" />
+                Atualizando
+              </span>
+            ) : null}
           </div>
+          <p className="mt-1 text-sm font-bold leading-6 text-muted">
+            Acessos, sessões, duração média e instalação PWA do paciente no período.
+          </p>
         </div>
-        <Badge className="w-fit bg-surface-muted text-muted">
-          {numberFormatter.format(detail.heatmap.total_events)} eventos
-        </Badge>
+        {periodControls}
       </div>
-      {!detail.heatmap.available ? (
-        <p className="mt-5 rounded-2xl bg-surface-muted p-4 text-sm text-muted">
-          {detail.heatmap.unavailable_reason || "Sem eventos suficientes para montar o heatmap."}
+
+      <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+        {[
+          ["Último acesso", formatDateTime(usage.last_access_at)],
+          ["Dias com acesso", numberFormatter.format(usage.access_days_count)],
+          ["Sessões", numberFormatter.format(usage.sessions_count)],
+          ["Tempo médio", formatPlatformDuration(usage.average_duration_seconds)],
+          ["PWA instalado", usage.pwa_installation_recorded ? "Sim" : "Não registrado"],
+        ].map(([label, value]) => (
+          <div className="rounded-2xl bg-surface-muted p-3" key={label}>
+            <p className="text-xs font-black text-muted">{label}</p>
+            <p className="mt-1 text-lg font-black text-foreground">{value}</p>
+          </div>
+        ))}
+      </div>
+
+      {usage.duration_unavailable_reason ? (
+        <p className="mt-3 text-xs font-bold text-subtle">{usage.duration_unavailable_reason}</p>
+      ) : null}
+
+      {usage.unavailable_reason ? (
+        <p className="mt-5 rounded-2xl border border-dashed border-border bg-surface-muted p-4 text-sm font-bold text-muted">
+          {usage.unavailable_reason}
         </p>
       ) : (
-        <div className="mt-5 overflow-x-auto">
-          <div className="min-w-[520px] space-y-2">
-            {rows.map((cells) => (
-              <div
-                className="grid grid-cols-[52px_repeat(6,minmax(44px,1fr))] items-center gap-2"
-                key={cells[0]?.day_index}
-              >
-                <span className="text-xs font-black text-muted">{cells[0]?.day}</span>
-                {cells.map((cell) => (
-                  <div
-                    className="grid h-11 place-items-center rounded-xl text-xs font-black text-foreground"
-                    key={`${cell.day_index}-${cell.hour}`}
-                    style={{
-                      backgroundColor: "var(--admin-primary)",
-                      opacity: opacityFor(cell.count),
-                    }}
-                    title={`${cell.day} ${cell.hour_label}: ${cell.count} eventos`}
-                  >
-                    {cell.count}
+        <div className="mt-5 space-y-6">
+          <section>
+            <h3 className="text-sm font-black text-foreground">Páginas mais acessadas</h3>
+            <div className="mt-3 grid gap-3 md:grid-cols-2">
+              {usage.top_pages.map((page) => (
+                <div className="rounded-2xl border border-border/70 p-3" key={page.label}>
+                  <div className="flex items-center justify-between gap-3 text-xs font-black">
+                    <span className="text-muted">{page.label}</span>
+                    <span className="text-foreground">
+                      {numberFormatter.format(page.count)} ·{" "}
+                      {page.percentage.toLocaleString("pt-BR")}%
+                    </span>
                   </div>
-                ))}
-              </div>
-            ))}
-            <div className="grid grid-cols-[52px_repeat(6,minmax(44px,1fr))] gap-2">
-              <span />
-              {detail.heatmap.cells.slice(0, 6).map((cell) => (
-                <span className="text-center text-xs font-bold text-muted" key={cell.hour_label}>
-                  {cell.hour_label}
-                </span>
+                  <div className="mt-2 h-2 overflow-hidden rounded-full bg-surface-muted">
+                    <div
+                      aria-hidden
+                      className="h-full rounded-full bg-primary"
+                      style={{ width: `${Math.min(100, Math.max(0, page.percentage))}%` }}
+                    />
+                  </div>
+                </div>
               ))}
             </div>
-          </div>
+          </section>
         </div>
+      )}
+    </CardShell>
+  );
+};
+
+const PatientPlatformActivityHoursCard = ({
+  detail,
+  isRefreshing = false,
+  periodControls,
+}: {
+  detail: AdminPatientDetail;
+  isRefreshing?: boolean;
+  periodControls: ReactNode;
+}) => {
+  const usage = detail.platform_usage;
+  const [selectedWeekday, setSelectedWeekday] =
+    useState<PatientPlatformHourlyActivitySelection>("all");
+  const platformActivityHours = useMemo(() => {
+    const peakActivityHours = usage.peak_activity_hours ?? [];
+    const activitySource =
+      usage.hourly_activity && usage.hourly_activity.length > 0
+        ? usage.hourly_activity
+        : peakActivityHours;
+    const activityByHour = new Map(activitySource.map((hour) => [hour.hour, hour]));
+
+    return Array.from({ length: 24 }, (_, hour) =>
+      normalizePatientPlatformHourlyActivityPoint(activityByHour.get(hour), hour),
+    );
+  }, [usage.hourly_activity, usage.peak_activity_hours]);
+  const platformActivityHoursByWeekday = useMemo(() => {
+    const activityByDay = new Map(
+      (usage.hourly_activity_by_weekday ?? []).map((item) => [item.day, item]),
+    );
+
+    return new Map(
+      patientPlatformWeekdayDisplayOrder.map((day) => {
+        const item = activityByDay.get(day);
+        const activityByHour = new Map((item?.hours ?? []).map((hour) => [hour.hour, hour]));
+
+        return [
+          String(day) as PatientPlatformHourlyActivitySelection,
+          {
+            day,
+            label: item?.label ?? patientPlatformWeekdayLabel(day),
+            points: Array.from({ length: 24 }, (_, hour) =>
+              normalizePatientPlatformHourlyActivityPoint(activityByHour.get(hour), hour),
+            ),
+          },
+        ];
+      }),
+    );
+  }, [usage.hourly_activity_by_weekday]);
+  const selectedWeekdayItem =
+    selectedWeekday === "all" ? null : platformActivityHoursByWeekday.get(selectedWeekday);
+  const chartActivityHours = selectedWeekdayItem?.points ?? platformActivityHours;
+  const selectedWeekdayLabel = selectedWeekdayItem?.label ?? "Todos os dias";
+  const totalPlatformActivityHours = platformActivityHours.reduce(
+    (total, hour) => total + hour.total,
+    0,
+  );
+  const chartTotalPlatformActivityHours = chartActivityHours.reduce(
+    (total, hour) => total + hour.total,
+    0,
+  );
+  const maxPlatformActivityHourCount = Math.max(1, ...chartActivityHours.map((hour) => hour.total));
+
+  return (
+    <CardShell className="min-w-0 max-w-full overflow-x-clip p-5">
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-start">
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-2">
+            <h2 className="text-lg font-black text-foreground">Horários de maior atividade</h2>
+            {isRefreshing ? (
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary-soft px-2.5 py-1 text-[11px] font-black text-primary">
+                <Loader2 aria-hidden className="h-3.5 w-3.5 animate-spin" />
+                Atualizando
+              </span>
+            ) : null}
+          </div>
+          <p className="mt-1 text-xs font-bold leading-5 text-muted">
+            Distribuição por hora das atividades reais do paciente no período.
+          </p>
+        </div>
+        {periodControls}
+      </div>
+
+      {totalPlatformActivityHours > 0 ? (
+        <>
+          <div className="mt-5">
+            <fieldset className="flex flex-wrap gap-2">
+              <legend className="sr-only">
+                Selecionar dia da semana do gráfico de horários do paciente
+              </legend>
+              <button
+                aria-pressed={selectedWeekday === "all"}
+                className={cn(
+                  "rounded-full border px-3 py-1.5 text-xs font-black transition",
+                  selectedWeekday === "all"
+                    ? "border-primary bg-primary-soft text-primary"
+                    : "border-border bg-surface text-muted hover:border-primary/35 hover:text-primary",
+                )}
+                onClick={() => setSelectedWeekday("all")}
+                type="button"
+              >
+                Todos
+              </button>
+              {[...platformActivityHoursByWeekday.entries()].map(([id, item]) => (
+                <button
+                  aria-pressed={selectedWeekday === id}
+                  className={cn(
+                    "rounded-full border px-3 py-1.5 text-xs font-black transition",
+                    selectedWeekday === id
+                      ? "border-primary bg-primary-soft text-primary"
+                      : "border-border bg-surface text-muted hover:border-primary/35 hover:text-primary",
+                  )}
+                  key={id}
+                  onClick={() => setSelectedWeekday(id)}
+                  type="button"
+                >
+                  {item.label}
+                </button>
+              ))}
+            </fieldset>
+          </div>
+
+          <div className="mt-5 overflow-x-auto rounded-[1.5rem] border border-border/70 bg-surface p-4">
+            <div className="min-w-[760px]">
+              {chartTotalPlatformActivityHours === 0 ? (
+                <div className="rounded-2xl border border-dashed border-border bg-surface-muted p-6 text-sm font-bold text-muted">
+                  Nenhuma atividade real foi registrada para {selectedWeekdayLabel.toLowerCase()}.
+                </div>
+              ) : (
+                <div
+                  aria-label={`Distribuição horária de atividade do paciente em ${selectedWeekdayLabel}`}
+                  className="flex h-44 items-end gap-1"
+                  role="img"
+                >
+                  {chartActivityHours.map((hour) => {
+                    const percentage = (hour.total / maxPlatformActivityHourCount) * 100;
+                    const barHeight = hour.total > 0 ? Math.max(8, percentage) : 2;
+
+                    return (
+                      <div
+                        className="flex min-w-0 flex-1 flex-col items-center justify-end gap-2"
+                        key={hour.hour}
+                      >
+                        <div className="flex h-32 w-full items-end justify-center rounded-t-xl bg-surface-muted px-1">
+                          <span
+                            className="w-full max-w-[1rem] rounded-t-full bg-primary transition"
+                            style={{ height: `${barHeight}%` }}
+                            title={`${hour.label}: ${numberFormatter.format(hour.total)} atividades`}
+                          />
+                        </div>
+                        <span className="text-[10px] font-bold text-subtle">
+                          {String(hour.hour).padStart(2, "0")}h
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="mt-4 flex flex-wrap gap-2">
+            {patientPlatformHourlyActivityBreakdown.map((metric) => {
+              const value = chartActivityHours.reduce((total, hour) => total + hour[metric.key], 0);
+
+              return (
+                <span
+                  className="inline-flex items-center gap-1.5 rounded-full border border-border bg-surface-muted px-2.5 py-1 text-[11px] font-bold text-muted"
+                  key={metric.key}
+                >
+                  <span className={cn("h-2 w-2 rounded-full", metric.className)} />
+                  {metric.label}: {safePatientPlatformActivityCount(value)}
+                </span>
+              );
+            })}
+          </div>
+        </>
+      ) : (
+        <p className="mt-5 rounded-2xl border border-dashed border-border bg-surface-muted p-4 text-sm font-bold text-muted">
+          Sem horários de atividade registrados no período.
+        </p>
       )}
     </CardShell>
   );
@@ -2220,27 +2592,61 @@ const GeneralTab = ({ detail, id }: { detail: AdminPatientDetail; id: string }) 
   </div>
 );
 
+type PatientStatisticsDetailSlice = {
+  detail: AdminPatientDetail;
+  errorMessage: string | null;
+  isRefreshing: boolean;
+  query: ReturnType<typeof useAdminPatientDetail>;
+};
+
+const usePatientStatisticsDetailSlice = (
+  id: string,
+  initialDetail: AdminPatientDetail,
+  filter: ReturnType<typeof usePatientStatisticsPeriodFilter>,
+): PatientStatisticsDetailSlice => {
+  const usesInitialAllPeriod = filter.selectedPeriod === "all";
+  const query = useAdminPatientDetail(id, filter.periodQuery, {
+    enabled: !usesInitialAllPeriod,
+    placeholderData: (previous) => previous ?? initialDetail,
+  });
+  const errorMessage = query.error ? resolveApiError(query.error) : null;
+
+  return {
+    detail: usesInitialAllPeriod ? initialDetail : (query.data ?? initialDetail),
+    errorMessage,
+    isRefreshing: !usesInitialAllPeriod && query.isFetching && Boolean(query.data),
+    query,
+  };
+};
+
 const StatisticsTab = ({ detail, id }: { detail: AdminPatientDetail; id: string }) => {
   const statisticsFilter = usePatientStatisticsPeriodFilter(detail.header.created_at);
-  const usesInitialAllPeriod = statisticsFilter.selectedPeriod === "all";
-  const statisticsQuery = useAdminPatientDetail(id, statisticsFilter.periodQuery, {
-    enabled: !usesInitialAllPeriod,
-    placeholderData: (previous) => previous ?? detail,
-  });
-  const errorMessage = statisticsQuery.error ? resolveApiError(statisticsQuery.error) : null;
-  const statisticsDetail = usesInitialAllPeriod ? detail : (statisticsQuery.data ?? detail);
-  const isRefreshing =
-    !usesInitialAllPeriod && statisticsQuery.isFetching && Boolean(statisticsQuery.data);
+  const activeCommunitiesFilter = usePatientStatisticsPeriodFilter(detail.header.created_at);
+  const activityHoursFilter = usePatientStatisticsPeriodFilter(detail.header.created_at);
+  const platformUsageFilter = usePatientStatisticsPeriodFilter(detail.header.created_at);
+  const communitySlice = usePatientStatisticsDetailSlice(id, detail, statisticsFilter);
+  const activeCommunitiesSlice = usePatientStatisticsDetailSlice(
+    id,
+    detail,
+    activeCommunitiesFilter,
+  );
+  const activityHoursSlice = usePatientStatisticsDetailSlice(id, detail, activityHoursFilter);
+  const platformUsageSlice = usePatientStatisticsDetailSlice(id, detail, platformUsageFilter);
 
-  if (!usesInitialAllPeriod && statisticsQuery.isError && !statisticsQuery.data && errorMessage) {
-    return <ErrorState message={errorMessage} onRetry={() => void statisticsQuery.refetch()} />;
+  if (communitySlice.query.isError && !communitySlice.query.data && communitySlice.errorMessage) {
+    return (
+      <ErrorState
+        message={communitySlice.errorMessage}
+        onRetry={() => void communitySlice.query.refetch()}
+      />
+    );
   }
 
   return (
     <div className="max-w-full space-y-5 overflow-x-clip" data-patient-detail-tab="estatisticas">
       <EngagementChart
-        detail={statisticsDetail}
-        isRefreshing={isRefreshing}
+        detail={communitySlice.detail}
+        isRefreshing={communitySlice.isRefreshing}
         periodControls={
           <PatientStatisticsPeriodControls
             idPrefix="patient-community-statistics"
@@ -2253,10 +2659,51 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPatientDetail; id: string 
           />
         }
       />
-      <div className="grid gap-5 xl:grid-cols-2">
-        <Communities detail={statisticsDetail} />
-        <Heatmap detail={statisticsDetail} />
-      </div>
+      <PatientActiveCommunitiesBlock
+        communities={activeCommunitiesSlice.detail.communities.items}
+        isRefreshing={activeCommunitiesSlice.isRefreshing}
+        periodControls={
+          <PatientStatisticsPeriodControls
+            idPrefix="patient-active-communities-statistics"
+            onDateControlsBlur={activeCommunitiesFilter.handleDateControlsBlur}
+            onDateChange={activeCommunitiesFilter.handleDateChange}
+            onPeriodChange={activeCommunitiesFilter.handlePeriodChange}
+            period={activeCommunitiesFilter.selectedPeriod}
+            range={activeCommunitiesFilter.draftRange}
+            rangeError={activeCommunitiesFilter.rangeError}
+          />
+        }
+      />
+      <PatientPlatformActivityHoursCard
+        detail={activityHoursSlice.detail}
+        isRefreshing={activityHoursSlice.isRefreshing}
+        periodControls={
+          <PatientStatisticsPeriodControls
+            idPrefix="patient-activity-hours-statistics"
+            onDateControlsBlur={activityHoursFilter.handleDateControlsBlur}
+            onDateChange={activityHoursFilter.handleDateChange}
+            onPeriodChange={activityHoursFilter.handlePeriodChange}
+            period={activityHoursFilter.selectedPeriod}
+            range={activityHoursFilter.draftRange}
+            rangeError={activityHoursFilter.rangeError}
+          />
+        }
+      />
+      <PatientPlatformUsageCard
+        detail={platformUsageSlice.detail}
+        isRefreshing={platformUsageSlice.isRefreshing}
+        periodControls={
+          <PatientStatisticsPeriodControls
+            idPrefix="patient-platform-usage-statistics"
+            onDateControlsBlur={platformUsageFilter.handleDateControlsBlur}
+            onDateChange={platformUsageFilter.handleDateChange}
+            onPeriodChange={platformUsageFilter.handlePeriodChange}
+            period={platformUsageFilter.selectedPeriod}
+            range={platformUsageFilter.draftRange}
+            rangeError={platformUsageFilter.rangeError}
+          />
+        }
+      />
     </div>
   );
 };

@@ -80,13 +80,17 @@ export type AdminPatientDetailActivityItem = {
 
 export type AdminPatientDetailCommunity = {
   avatar_url: string | null;
+  comments: number;
   color: string | null;
   id: string;
   interactions: number;
   is_member: boolean;
   member_since: Date | null;
   name: string;
+  posts: number;
+  saves: number;
   slug: string;
+  votes: number;
 };
 
 export type AdminPatientDetailHeatmapCell = {
@@ -95,6 +99,53 @@ export type AdminPatientDetailHeatmapCell = {
   day_index: number;
   hour: number;
   hour_label: string;
+};
+
+export type AdminPatientPlatformUsageTopPage = {
+  count: number;
+  label: string;
+  percentage: number;
+};
+
+export type AdminPatientPlatformUsagePeakActivityHour = {
+  count: number;
+  hour: number;
+  label: string;
+  percentage: number;
+};
+
+export type AdminPatientPlatformUsageHourlyActivityPoint =
+  AdminPatientPlatformUsagePeakActivityHour & {
+    accesses: number;
+    engagement: number;
+    posts: number;
+    replies: number;
+    reviews: number;
+    total: number;
+  };
+
+export type AdminPatientPlatformUsageWeekdayHourlyActivity = {
+  day: number;
+  hours: AdminPatientPlatformUsageHourlyActivityPoint[];
+  label: string;
+};
+
+export type AdminPatientPlatformUsage = {
+  access_days_count: number;
+  average_duration_seconds: number | null;
+  duration_unavailable_reason: string | null;
+  hourly_activity: AdminPatientPlatformUsageHourlyActivityPoint[];
+  hourly_activity_by_weekday: AdminPatientPlatformUsageWeekdayHourlyActivity[];
+  last_access_at: Date | null;
+  peak_activity_hours: AdminPatientPlatformUsagePeakActivityHour[];
+  period_from: string;
+  period_to: string;
+  pwa_installation_recorded: boolean;
+  pwa_installed_at: Date | null;
+  sessions_count: number;
+  source: "page_view_event+important_action_event+community_post+post_reply+post_vote+post_save+post_reply_save+community_member+professional_review";
+  top_pages: AdminPatientPlatformUsageTopPage[];
+  unavailable_reason: string | null;
 };
 
 export type AdminPatientDetailUnavailable = {
@@ -148,6 +199,7 @@ export type AdminPatientDetailDTO = {
   };
   metrics: AdminPatientDetailMetric[];
   period: AdminPatientDetailPeriod;
+  platform_usage: AdminPatientPlatformUsage;
   privacy: {
     omitted_fields: string[];
     visible_fields: string[];

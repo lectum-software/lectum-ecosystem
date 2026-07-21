@@ -493,13 +493,17 @@ export type PatientsDetailActivity = {
 
 export type PatientsDetailCommunity = {
   avatar_url: string | null;
+  comments: number;
   color: string | null;
   id: string;
   interactions: number;
   is_member: boolean;
   member_since: string | null;
   name: string;
+  posts: number;
+  saves: number;
   slug: string;
+  votes: number;
 };
 
 export type PatientsDetailHeatmapCell = {
@@ -508,6 +512,19 @@ export type PatientsDetailHeatmapCell = {
   day_index: number;
   hour: number;
   hour_label: string;
+};
+
+export type PatientPlatformUsageHourlyActivityPoint = {
+  accesses: number;
+  count: number;
+  engagement: number;
+  hour: number;
+  label: string;
+  percentage: number;
+  posts: number;
+  replies: number;
+  reviews: number;
+  total: number;
 };
 
 export type PatientsDetailUnavailable = {
@@ -561,6 +578,36 @@ export type AdminPatientDetail = {
   };
   metrics: PatientsDetailMetric[];
   period: PatientsDetailPeriod;
+  platform_usage: {
+    access_days_count: number;
+    average_duration_seconds: number | null;
+    duration_unavailable_reason: string | null;
+    hourly_activity: PatientPlatformUsageHourlyActivityPoint[];
+    hourly_activity_by_weekday: {
+      day: number;
+      hours: PatientPlatformUsageHourlyActivityPoint[];
+      label: string;
+    }[];
+    last_access_at: string | null;
+    peak_activity_hours: {
+      count: number;
+      hour: number;
+      label: string;
+      percentage: number;
+    }[];
+    period_from: string;
+    period_to: string;
+    pwa_installation_recorded: boolean;
+    pwa_installed_at: string | null;
+    sessions_count: number;
+    source: "page_view_event+important_action_event+community_post+post_reply+post_vote+post_save+post_reply_save+community_member+professional_review";
+    top_pages: {
+      count: number;
+      label: string;
+      percentage: number;
+    }[];
+    unavailable_reason: string | null;
+  };
   privacy: {
     omitted_fields: string[];
     visible_fields: string[];

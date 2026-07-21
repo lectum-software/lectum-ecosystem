@@ -89,3 +89,37 @@ Novo feedback indicou que a aba **Estatisticas** do paciente ainda preservava de
 - `pnpm --dir admin check`
 - `pnpm --dir admin build`
 - Browser local/headless via Chrome/CDP em `/pacientes/cmrqsrab5001f1guh2ve5oy90?tab=estatisticas`, desktop `1365x900` e mobile `390x844`, validando filtros, cards toggles, grafico, remocao do badge de timezone e remocao da legenda antiga.
+
+## Revisao 2026-07-21 - Blocos inferiores com modelo das estatisticas do psicologo
+
+### Contexto
+
+Novo feedback pediu que os blocos abaixo de **Estatisticas de comunidade** no detalhe de paciente tambem seguissem o mesmo modelo ja aplicado no detalhe de psicologo: **Comunidades ativas**, **Horarios de maior atividade** e **Uso da plataforma**, incluindo filtros de periodo/data, cards e tabelas com a mesma hierarquia visual.
+
+### Decisao
+
+- Manter `GET /api/admin/private/patients/:id` como fonte unica da aba, ampliando o contrato do detalhe em vez de criar endpoint paralelo por bloco.
+- Enriquecer `active_communities` com posts, comentarios, votos e salvamentos por comunidade, alem de status de membro e total de interacoes.
+- Incluir `platform_usage` no detalhe do paciente a partir de eventos reais de `page_view_event`, `important_action_event` e eventos de comunidade/avaliacao ja persistidos.
+- Permitir que **Comunidades ativas**, **Horarios de maior atividade** e **Uso da plataforma** tenham filtros independentes **Periodo**, **De** e **Ate** reutilizando o mesmo contrato de periodo do detalhe.
+- Marcar duracao media como indisponivel quando a cobertura de `duration_ms` dos pageviews for insuficiente, em vez de inferir ou preencher dado artificial.
+
+### Consequencias
+
+- A aba de paciente passa a ter a mesma narrativa analitica do psicologo sem duplicar rotas nem misturar modelos de dominio.
+- O custo operacional e de manutencao fica concentrado no contrato existente do detalhe, com refetch independente por bloco no Admin quando o operador altera filtros.
+- Os estados vazios continuam honestos para pacientes sem interacao no periodo.
+- Nao houve schema Prisma, migration, package novo, seed, backfill, mock, tracking novo ou endpoint simulado.
+
+### Validacao
+
+- `pnpm --dir backend exec biome check --write "src/modules/api/admin/private/patients/detail/DTOs/IAdminPatientDetailDTO.ts" "src/modules/api/admin/private/patients/detail/repositories/AdminPatientDetailRepository.ts" "src/modules/api/admin/private/patients/detail/use-cases/services.ts"`
+- `pnpm --dir admin exec biome check --write "src/api/req/patients/index.ts" "src/app/(admin)/pacientes/[id]/client.tsx"`
+- `pnpm --dir backend typecheck`
+- `pnpm --dir admin typecheck`
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check`
+- Browser local/headless via Chrome/CDP em `/pacientes/cmrb6fbix0000y0uhdpu1bptl?tab=estatisticas`, desktop `1365x900` e mobile `390x844`, validando os quatro blocos, filtros independentes, tabela de comunidades ativas, filtro de dia da semana, resumo de uso da plataforma, remocao de elementos antigos e `scrollWidth=390` no mobile.

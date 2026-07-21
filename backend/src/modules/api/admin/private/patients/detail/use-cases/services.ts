@@ -11,9 +11,11 @@ import type {
   AdminPatientDetailPeriod,
   AdminPatientDetailQuery,
   AdminPatientDetailSeriesPoint,
+  AdminPatientPlatformUsage,
   IAdminPatientDetailDTO,
 } from "../DTOs/IAdminPatientDetailDTO";
 import {
+  type AdminPatientDetailPlatformPageViewRecord,
   type AdminPatientDetailRecord,
   AdminPatientDetailRepository,
   type AdminPatientEngagementBundle,
@@ -22,6 +24,7 @@ import {
 const DEFAULT_PERIOD_DAYS = 30;
 const MAX_PERIOD_DAYS = 3660;
 const MS_PER_DAY = 86_400_000;
+const DURATION_RELIABILITY_THRESHOLD = 0.5;
 const TIMEZONE = "America/Sao_Paulo" as const;
 const HEATMAP_DAYS = [
   { id: "mon", label: "Seg" },
@@ -33,6 +36,16 @@ const HEATMAP_DAYS = [
   { id: "sun", label: "Dom" },
 ] as const;
 const HEATMAP_HOURS = [0, 4, 8, 12, 16, 20] as const;
+const PATIENT_PAGE_KIND_LABELS: Record<string, string> = {
+  community: "Comunidades",
+  community_post: "Comunidades",
+  home: "Início",
+  login: "Login",
+  psychologist_profile: "Psicólogos",
+  psychologists: "Psicólogos",
+  signup: "Cadastro",
+};
+const PLATFORM_WEEKDAY_LABELS = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"] as const;
 
 type PeriodResolution = {
   current: AdminPatientDetailDateRange;
@@ -230,6 +243,13 @@ const resolvePeriod = (query: AdminPatientDetailQuery, allPeriodStartDate?: Date
 };
 
 const roundPercent = (value: number) => Math.round(value * 10) / 10;
+const roundOneDecimal = (value: number) => Math.round(value * 10) / 10;
+
+const average = (values: number[]) => {
+  if (values.length === 0) return null;
+
+  return roundOneDecimal(values.reduce((sum, value) => sum + value, 0) / values.length);
+};
 
 const percentageChange = (current: number, previous: number) => {
   if (previous === 0) return current === 0 ? 0 : null;
@@ -418,6 +438,288 @@ const buildSeries = (
   return labels.map((label) => points.get(label) ?? emptyPoint(label));
 };
 
+const patientPlatformPageLabel = (view: AdminPatientDetailPlatformPageViewRecord) => {
+  const path = (view.normalized_path || view.path || "/").split("?")[0] ?? "/";
+  const segments = path.split("/").filter(Boolean);
+  const joined = segments.join("/");
+
+  if (joined.includes("post")) return "Posts";
+  if (joined.includes("community")) return "Comunidades";
+  if (joined.includes("favorite") || joined.includes("favoritos")) return "Favoritos";
+  if (joined.includes("notification") || joined.includes("notificacoes")) return "Notificações";
+  if (
+    joined.includes("settings") ||
+    joined.includes("configuracoes") ||
+    joined.includes("account")
+  ) {
+    return "Configurações";
+  }
+  if (joined.includes("psychologist") || joined.includes("psicologo")) return "Psicólogos";
+  if (joined.includes("profile") || joined.includes("perfil")) return "Perfil";
+  if (joined.startsWith("app")) return "Área do paciente";
+
+  return PATIENT_PAGE_KIND_LABELS[view.page_kind] ?? "Outras páginas";
+};
+
+const platformActivityHourLabel = (hour: number) => {
+  const normalizedHour = Math.min(23, Math.max(0, Math.trunc(hour)));
+  const nextHour = (normalizedHour + 1) % 24;
+
+  return `${pad(normalizedHour)}h-${pad(nextHour)}h`;
+};
+
+type PatientPlatformActivityMetric = "accesses" | "engagement" | "posts" | "replies" | "reviews";
+
+type PatientPlatformDateActivity = {
+  createdAt: Date;
+};
+
+type PatientPlatformHourlyActivityInput = {
+  engagementEvents: PatientPlatformDateActivity[];
+  pageViews: AdminPatientDetailPlatformPageViewRecord[];
+  posts: PatientPlatformDateActivity[];
+  replies: PatientPlatformDateActivity[];
+  reviews: PatientPlatformDateActivity[];
+};
+
+const emptyPlatformHourlyActivityPoint = (
+  hour: number,
+): AdminPatientPlatformUsage["hourly_activity"][number] => ({
+  accesses: 0,
+  count: 0,
+  engagement: 0,
+  hour,
+  label: platformActivityHourLabel(hour),
+  percentage: 0,
+  posts: 0,
+  replies: 0,
+  reviews: 0,
+  total: 0,
+});
+
+const createPlatformHourlyActivityMap = () =>
+  new Map(Array.from({ length: 24 }, (_, hour) => [hour, emptyPlatformHourlyActivityPoint(hour)]));
+
+const finalizePlatformHourlyActivityMap = (
+  hourly: Map<number, AdminPatientPlatformUsage["hourly_activity"][number]>,
+  options: { includeEmpty?: boolean } = {},
+) => {
+  const points = [...hourly.values()];
+  const total = points.reduce((sum, point) => sum + point.total, 0);
+  if (total === 0 && !options.includeEmpty) return [];
+
+  return points.map((point) => ({
+    ...point,
+    count: point.total,
+    percentage: total > 0 ? roundOneDecimal((point.total / total) * 100) : 0,
+  }));
+};
+
+const incrementPlatformHourlyActivity = (
+  hourly: Map<number, AdminPatientPlatformUsage["hourly_activity"][number]>,
+  date: Date,
+  field: PatientPlatformActivityMetric,
+) => {
+  const point = hourly.get(date.getHours());
+  if (!point) return;
+
+  point[field] += 1;
+  point.total += 1;
+};
+
+const incrementPlatformHourlyActivityCollections = (
+  hourly: Map<number, AdminPatientPlatformUsage["hourly_activity"][number]>,
+  hourlyByWeekday: Map<
+    number,
+    {
+      hours: Map<number, AdminPatientPlatformUsage["hourly_activity"][number]>;
+      label: string;
+    }
+  >,
+  date: Date,
+  field: PatientPlatformActivityMetric,
+) => {
+  incrementPlatformHourlyActivity(hourly, date, field);
+  const weekday = hourlyByWeekday.get(date.getDay());
+  if (weekday) incrementPlatformHourlyActivity(weekday.hours, date, field);
+};
+
+const buildPlatformHourlyActivityCollections = (input: PatientPlatformHourlyActivityInput) => {
+  const hourly = createPlatformHourlyActivityMap();
+  const hourlyByWeekday = new Map(
+    PLATFORM_WEEKDAY_LABELS.map((label, day) => [
+      day,
+      {
+        hours: createPlatformHourlyActivityMap(),
+        label,
+      },
+    ]),
+  );
+
+  for (const view of input.pageViews) {
+    if (!view.user_id) continue;
+    incrementPlatformHourlyActivityCollections(
+      hourly,
+      hourlyByWeekday,
+      view.occurred_at,
+      "accesses",
+    );
+  }
+  for (const post of input.posts) {
+    incrementPlatformHourlyActivityCollections(hourly, hourlyByWeekday, post.createdAt, "posts");
+  }
+  for (const reply of input.replies) {
+    incrementPlatformHourlyActivityCollections(hourly, hourlyByWeekday, reply.createdAt, "replies");
+  }
+  for (const event of input.engagementEvents) {
+    incrementPlatformHourlyActivityCollections(
+      hourly,
+      hourlyByWeekday,
+      event.createdAt,
+      "engagement",
+    );
+  }
+  for (const review of input.reviews) {
+    incrementPlatformHourlyActivityCollections(
+      hourly,
+      hourlyByWeekday,
+      review.createdAt,
+      "reviews",
+    );
+  }
+
+  return { hourly, hourlyByWeekday };
+};
+
+const summarizePlatformHourlyActivity = (
+  input: PatientPlatformHourlyActivityInput,
+): AdminPatientPlatformUsage["hourly_activity"] =>
+  finalizePlatformHourlyActivityMap(buildPlatformHourlyActivityCollections(input).hourly);
+
+const summarizePlatformHourlyActivityByWeekday = (
+  input: PatientPlatformHourlyActivityInput,
+): AdminPatientPlatformUsage["hourly_activity_by_weekday"] => {
+  const { hourlyByWeekday } = buildPlatformHourlyActivityCollections(input);
+  const hasActivity = [...hourlyByWeekday.values()].some((item) =>
+    [...item.hours.values()].some((point) => point.total > 0),
+  );
+
+  if (!hasActivity) return [];
+
+  return [...hourlyByWeekday.entries()].map(([day, item]) => ({
+    day,
+    hours: finalizePlatformHourlyActivityMap(item.hours, { includeEmpty: true }),
+    label: item.label,
+  }));
+};
+
+const summarizePlatformPeakActivityHours = (
+  pageViews: AdminPatientDetailPlatformPageViewRecord[],
+): AdminPatientPlatformUsage["peak_activity_hours"] => {
+  const viewsWithUser = pageViews.filter((view) => view.user_id);
+  const countsByHour = Array.from({ length: 24 }, () => 0);
+
+  for (const view of viewsWithUser) countsByHour[view.occurred_at.getHours()] += 1;
+
+  const total = viewsWithUser.length;
+  if (total === 0) return [];
+
+  return countsByHour
+    .map((count, hour) => ({
+      count,
+      hour,
+      label: platformActivityHourLabel(hour),
+      percentage: roundOneDecimal((count / total) * 100),
+    }))
+    .filter((point) => point.count > 0)
+    .sort((left, right) => {
+      if (right.count !== left.count) return right.count - left.count;
+
+      return left.hour - right.hour;
+    })
+    .slice(0, 4);
+};
+
+const buildPlatformUsage = (params: {
+  bundle: AdminPatientEngagementBundle;
+  pageViews: AdminPatientDetailPlatformPageViewRecord[];
+  period: AdminPatientDetailPeriod;
+  pwaInstallAction: { occurred_at: Date } | null;
+}): AdminPatientPlatformUsage => {
+  const { bundle, pageViews, period, pwaInstallAction } = params;
+  const viewsWithUser = pageViews.filter((view) => view.user_id);
+  const sessions = new Set(viewsWithUser.map((view) => view.session_id));
+  const accessDays = new Set(viewsWithUser.map((view) => dateKeyInTimeZone(view.occurred_at)));
+  const durations = viewsWithUser
+    .map((view) => view.duration_seconds)
+    .filter(
+      (value): value is number => typeof value === "number" && Number.isFinite(value) && value > 0,
+    );
+  const durationCoverage = viewsWithUser.length > 0 ? durations.length / viewsWithUser.length : 0;
+  const averageDuration =
+    durationCoverage >= DURATION_RELIABILITY_THRESHOLD ? average(durations) : null;
+  const pageCounts = new Map<string, number>();
+  for (const view of viewsWithUser) {
+    const pageLabel = patientPlatformPageLabel(view);
+    pageCounts.set(pageLabel, (pageCounts.get(pageLabel) ?? 0) + 1);
+  }
+  const hourlyActivityInput = {
+    engagementEvents: [
+      ...bundle.votesMade,
+      ...bundle.postSaves,
+      ...bundle.replySaves,
+      ...bundle.membershipsInPeriod,
+    ],
+    pageViews,
+    posts: bundle.posts,
+    replies: bundle.replies,
+    reviews: bundle.reviews,
+  };
+
+  return {
+    access_days_count: accessDays.size,
+    average_duration_seconds: averageDuration,
+    duration_unavailable_reason:
+      viewsWithUser.length === 0
+        ? "Sem pageviews autenticados do paciente no período."
+        : averageDuration === null
+          ? "Duração indisponível: menos de 50% dos pageviews têm duration_seconds confiável."
+          : null,
+    hourly_activity: summarizePlatformHourlyActivity(hourlyActivityInput),
+    hourly_activity_by_weekday: summarizePlatformHourlyActivityByWeekday(hourlyActivityInput),
+    last_access_at:
+      viewsWithUser.length > 0
+        ? viewsWithUser.reduce<Date | null>(
+            (latest, view) => (!latest || view.occurred_at > latest ? view.occurred_at : latest),
+            null,
+          )
+        : null,
+    peak_activity_hours: summarizePlatformPeakActivityHours(pageViews),
+    period_from: period.from,
+    period_to: period.to,
+    pwa_installation_recorded: Boolean(pwaInstallAction),
+    pwa_installed_at: pwaInstallAction?.occurred_at ?? null,
+    sessions_count: sessions.size,
+    source:
+      "page_view_event+important_action_event+community_post+post_reply+post_vote+post_save+post_reply_save+community_member+professional_review",
+    top_pages: [...pageCounts.entries()]
+      .map(([label, count]) => ({
+        count,
+        label,
+        percentage:
+          viewsWithUser.length > 0 ? roundOneDecimal((count / viewsWithUser.length) * 100) : 0,
+      }))
+      .sort((left, right) => {
+        if (right.count !== left.count) return right.count - left.count;
+
+        return left.label.localeCompare(right.label, "pt-BR");
+      })
+      .slice(0, 6),
+    unavailable_reason:
+      viewsWithUser.length === 0 ? "Sem uso autenticado do paciente no período selecionado." : null,
+  };
+};
+
 const activityFromPost = (
   post: AdminPatientEngagementBundle["posts"][number],
 ): AdminPatientDetailActivityItem => ({
@@ -534,13 +836,17 @@ const upsertCommunity = (
     acc.get(community.id) ??
     ({
       avatar_url: community.avatar_url,
+      comments: 0,
       color: community.visual_primary_color,
       id: community.id,
       interactions: 0,
       is_member: false,
       member_since: null,
       name: community.name,
+      posts: 0,
+      saves: 0,
       slug: community.slug,
+      votes: 0,
     } satisfies AdminPatientDetailCommunity);
 
   current.interactions += increment;
@@ -556,17 +862,28 @@ const buildActiveCommunities = (bundle: AdminPatientEngagementBundle) => {
     item.is_member = true;
     item.member_since = member.createdAt;
   }
-  for (const post of bundle.posts) upsertCommunity(communities, communityFromPost(post), 1);
-  for (const reply of bundle.replies) upsertCommunity(communities, communityFromReply(reply), 1);
+  for (const post of bundle.posts) {
+    const item = upsertCommunity(communities, communityFromPost(post), 1);
+    item.posts += 1;
+  }
+  for (const reply of bundle.replies) {
+    const item = upsertCommunity(communities, communityFromReply(reply), 1);
+    item.comments += 1;
+  }
   for (const vote of bundle.votesMade) {
     const community = communityFromVote(vote);
-    if (community) upsertCommunity(communities, community, 1);
+    if (community) {
+      const item = upsertCommunity(communities, community, 1);
+      item.votes += 1;
+    }
   }
   for (const save of bundle.postSaves) {
-    upsertCommunity(communities, communityFromPostSave(save), 1);
+    const item = upsertCommunity(communities, communityFromPostSave(save), 1);
+    item.saves += 1;
   }
   for (const save of bundle.replySaves) {
-    upsertCommunity(communities, communityFromReplySave(save), 1);
+    const item = upsertCommunity(communities, communityFromReplySave(save), 1);
+    item.saves += 1;
   }
 
   return [...communities.values()]
@@ -685,10 +1002,18 @@ const buildDetail = (
   labels: string[],
   currentBundle: AdminPatientEngagementBundle,
   previousBundle: AdminPatientEngagementBundle,
+  platformPageViews: AdminPatientDetailPlatformPageViewRecord[],
+  pwaInstallAction: { occurred_at: Date } | null,
 ): AdminPatientDetailDTO => {
   const currentCounts = countsFromBundle(currentBundle);
   const previousCounts = countsFromBundle(previousBundle);
   const heatmap = buildHeatmap(currentBundle);
+  const platformUsage = buildPlatformUsage({
+    bundle: currentBundle,
+    pageViews: platformPageViews,
+    period,
+    pwaInstallAction,
+  });
   const unavailable = [
     ...(!patient.visitor_locations[0]
       ? [
@@ -708,6 +1033,27 @@ const buildDetail = (
             id: "heatmap",
             label: "Horários de maior atividade",
             source: heatmap.source,
+          },
+        ]
+      : []),
+    ...(platformUsage.unavailable_reason
+      ? [
+          {
+            description:
+              "Uso da plataforma depende de page_view_event autenticado para o paciente no período selecionado.",
+            id: "platform_usage",
+            label: "Uso da plataforma",
+            source: "page_view_event",
+          },
+        ]
+      : []),
+    ...(platformUsage.duration_unavailable_reason
+      ? [
+          {
+            description: platformUsage.duration_unavailable_reason,
+            id: "platform_duration",
+            label: "Tempo médio",
+            source: "page_view_event.duration_seconds",
           },
         ]
       : []),
@@ -735,6 +1081,7 @@ const buildDetail = (
     heatmap,
     metrics: buildMetrics(currentCounts, previousCounts),
     period,
+    platform_usage: platformUsage,
     privacy: {
       omitted_fields: [
         "patient_profile.phone",
@@ -787,15 +1134,25 @@ export const showAdminPatient = async (data: IAdminPatientDetailDTO): Promise<Re
   }
 
   const { current, labels, period, previous } = resolvedPeriod.period;
-  const [currentBundle, previousBundle] = await Promise.all([
+  const [currentBundle, previousBundle, platformPageViews, pwaInstallAction] = await Promise.all([
     repository.listEngagementBundle(patient.id, current),
     repository.listEngagementBundle(patient.id, previous),
+    repository.listPlatformPageViews(patient.id, current),
+    repository.findPwaInstallAction(patient.id),
   ]);
 
   return {
     status: 200,
     ...msg("index", {}),
-    data: buildDetail(patient, period, labels, currentBundle, previousBundle),
+    data: buildDetail(
+      patient,
+      period,
+      labels,
+      currentBundle,
+      previousBundle,
+      platformPageViews,
+      pwaInstallAction,
+    ),
   };
 };
 
