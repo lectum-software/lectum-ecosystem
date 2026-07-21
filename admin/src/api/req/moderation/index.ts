@@ -47,12 +47,76 @@ export type AdminModerationEventDetail = AdminModerationEvent & {
   reviewed_by_admin_id: string | null;
 };
 
+export type AdminModerationOperationalAlertType =
+  | "invalid_whatsapp"
+  | "patient_post_without_coverage"
+  | "post_report"
+  | "professional_crp_pending"
+  | "psychologist_no_traction"
+  | "unpublished_required_settings";
+
+export type AdminModerationOperationalAlert = {
+  action_href: string | null;
+  action_label: string;
+  age_hours: number | null;
+  community: {
+    id: string;
+    name: string;
+    slug: string;
+  } | null;
+  created_at: string;
+  description: string;
+  entity: {
+    href: string | null;
+    id: string;
+    label: string;
+    type: "post" | "psychologist" | "reply";
+  };
+  facts: {
+    label: string;
+    value: string;
+  }[];
+  group: "compliance" | "denuncias" | "operacional";
+  id: string;
+  priority: AdminModerationSeverity;
+  source: string;
+  title: string;
+  type: AdminModerationOperationalAlertType;
+};
+
+export type AdminModerationOperationalAlerts = {
+  counts: {
+    compliance_total: number;
+    invalid_whatsapp: number;
+    operational_total: number;
+    patient_posts_without_coverage_48h: number;
+    pending_reports: number;
+    professional_crp_pending: number;
+    psychologist_no_traction_after_adaptation: number;
+    total: number;
+    unpublished_required_settings: number;
+    urgent_total: number;
+  };
+  excluded_dimensions: {
+    id: string;
+    reason: string;
+    title: string;
+  }[];
+  items: AdminModerationOperationalAlert[];
+  source: "post_report+community_post+post_reply+psychologist_profile+professional_subscription+profile_view_event+contact_request";
+  thresholds: {
+    patient_post_without_coverage_hours: number;
+    psychologist_adaptation_days: number;
+  };
+};
+
 export type AdminModerationSummary = {
   by_category: Record<string, number>;
   by_decision: Record<string, number>;
   by_severity: Record<string, number>;
   by_status: Record<string, number>;
   latest_pending: AdminModerationEvent[];
+  operational_alerts: AdminModerationOperationalAlerts;
   pending_total: number;
   source: "content_moderation_event";
   urgent_pending_total: number;

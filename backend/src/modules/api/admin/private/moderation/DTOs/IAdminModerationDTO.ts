@@ -93,12 +93,82 @@ export type AdminModerationEventDetailDTO = AdminModerationEventItemDTO & {
   reviewed_by_admin_id: string | null;
 };
 
+export type AdminModerationOperationalAlertType =
+  | "invalid_whatsapp"
+  | "patient_post_without_coverage"
+  | "post_report"
+  | "professional_crp_pending"
+  | "psychologist_no_traction"
+  | "unpublished_required_settings";
+
+export type AdminModerationOperationalAlertPriority = "high" | "low" | "medium" | "urgent";
+
+export type AdminModerationOperationalAlertGroup = "compliance" | "denuncias" | "operacional";
+
+export type AdminModerationOperationalAlertEntityDTO = {
+  href: string | null;
+  id: string;
+  label: string;
+  type: "post" | "psychologist" | "reply";
+};
+
+export type AdminModerationOperationalAlertFactDTO = {
+  label: string;
+  value: string;
+};
+
+export type AdminModerationOperationalAlertDTO = {
+  action_href: string | null;
+  action_label: string;
+  age_hours: number | null;
+  community: AdminModerationCommunityDTO;
+  created_at: Date;
+  description: string;
+  entity: AdminModerationOperationalAlertEntityDTO;
+  facts: AdminModerationOperationalAlertFactDTO[];
+  group: AdminModerationOperationalAlertGroup;
+  id: string;
+  priority: AdminModerationOperationalAlertPriority;
+  source: string;
+  title: string;
+  type: AdminModerationOperationalAlertType;
+};
+
+export type AdminModerationOperationalAlertCountsDTO = {
+  compliance_total: number;
+  invalid_whatsapp: number;
+  operational_total: number;
+  patient_posts_without_coverage_48h: number;
+  pending_reports: number;
+  professional_crp_pending: number;
+  psychologist_no_traction_after_adaptation: number;
+  total: number;
+  unpublished_required_settings: number;
+  urgent_total: number;
+};
+
+export type AdminModerationOperationalAlertsDTO = {
+  counts: AdminModerationOperationalAlertCountsDTO;
+  excluded_dimensions: {
+    id: string;
+    reason: string;
+    title: string;
+  }[];
+  items: AdminModerationOperationalAlertDTO[];
+  source: "post_report+community_post+post_reply+psychologist_profile+professional_subscription+profile_view_event+contact_request";
+  thresholds: {
+    patient_post_without_coverage_hours: number;
+    psychologist_adaptation_days: number;
+  };
+};
+
 export type AdminModerationSummaryDTO = {
   by_category: Record<string, number>;
   by_decision: Record<string, number>;
   by_severity: Record<string, number>;
   by_status: Record<string, number>;
   latest_pending: AdminModerationEventItemDTO[];
+  operational_alerts: AdminModerationOperationalAlertsDTO;
   pending_total: number;
   source: "content_moderation_event";
   urgent_pending_total: number;

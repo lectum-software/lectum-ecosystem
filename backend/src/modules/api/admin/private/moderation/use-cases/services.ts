@@ -1,10 +1,15 @@
-﻿import type { Resolve } from "@/helpers/return";
+import type { Resolve } from "@/helpers/return";
 import { error, msg } from "@/helpers/translate";
+import { normalizeProfessionalDisplayName } from "@/utils/professional-name";
+import { parseStoredCrp } from "@/utils/professional-registry";
+import { hasProfessionalRegistryApproval } from "@/utils/subscription-entitlement";
 import type {
   AdminModerationEventDetailDTO,
   AdminModerationEventItemDTO,
   AdminModerationEventsDTO,
   AdminModerationEventsQuery,
+  AdminModerationOperationalAlertDTO,
+  AdminModerationOperationalAlertsDTO,
   AdminModerationSummaryDTO,
   IAdminModerationEventDTO,
   IAdminModerationEventsDTO,
@@ -15,12 +20,21 @@ import { AdminModerationRepository } from "../repositories/AdminModerationReposi
 import type {
   AdminModerationEventDetailRecord,
   AdminModerationEventRecord,
+  AdminOperationalPsychologistRecord,
+  AdminPostReportRecord,
+  AdminPsychologistMetricCountRecord,
+  AdminUncoveredPatientPostRecord,
   ReplyTargetRecord,
 } from "../repositories/interfaces/IAdminModerationRepository";
 
 const DEFAULT_PAGE = 1;
 const DEFAULT_LIMIT = 10;
 const MAX_LIMIT = 50;
+const OPERATIONAL_ALERT_LIMIT = 12;
+const POST_COVERAGE_HOURS = 48;
+const PSYCHOLOGIST_ADAPTATION_DAYS = 30;
+const HOUR_IN_MS = 60 * 60 * 1000;
+const DAY_IN_MS = 24 * HOUR_IN_MS;
 
 const toStringArray = (value: unknown): string[] => {
   if (!Array.isArray(value)) return [];
@@ -191,14 +205,500 @@ const normalizeQuery = (query: AdminModerationEventsQuery = {}): AdminModeration
   targetType: normalizeFilter(query.targetType) as AdminModerationEventsQuery["targetType"],
 });
 
+const priorityWeight: Record<AdminModerationOperationalAlertDTO["priority"], number> = {
+  urgent: 0,
+  high: 1,
+  medium: 2,
+  low: 3,
+};
+
+const excludedOperationalDimensions = [
+  {
+    id: "region_city_coverage",
+    reason: "Dimensão removida do escopo atual por decisão de produto.",
+    title: "Região/cidade com pacientes sem cobertura",
+  },
+  {
+    id: "price_range_demand",
+    reason: "Dimensão removida do escopo atual por decisão de produto.",
+    title: "Faixa de preço muito buscada com pouca oferta",
+  },
+  {
+    id: "schedule_demand",
+    reason: "Dimensão removida do escopo atual por decisão de produto.",
+    title: "Horários muito buscados sem disponibilidade",
+  },
+] satisfies AdminModerationOperationalAlertsDTO["excluded_dimensions"];
+
+const hoursSince = (date: Date, now: Date) =>
+  Math.max(0, Math.floor((now.getTime() - date.getTime()) / HOUR_IN_MS));
+
+const daysSince = (date: Date, now: Date) =>
+  Math.max(0, Math.floor((now.getTime() - date.getTime()) / DAY_IN_MS));
+
+const plural = (value: number, singular: string, pluralValue: string) =>
+  value === 1 ? singular : pluralValue;
+
+const humanAge = (date: Date, now: Date) => {
+  const hours = hoursSince(date, now);
+  if (hours < 24) return `${hours} ${plural(hours, "hora", "horas")}`;
+
+  const days = daysSince(date, now);
+  return `${days} ${plural(days, "dia", "dias")}`;
+};
+
+const compactText = (value?: string | null, max = 140) => {
+  const normalized = value?.replace(/\s+/g, " ").trim();
+  if (!normalized) return "Sem texto registrado.";
+
+  return normalized.length > max ? `${normalized.slice(0, max - 1)}…` : normalized;
+};
+
+const toJsonStringArray = (value: unknown): string[] => {
+  if (!Array.isArray(value)) return [];
+
+  return value.map((item) => String(item).trim()).filter(Boolean);
+};
+
+const onlyDigits = (value?: string | null) => String(value ?? "").replace(/\D/g, "");
+
+const hasText = (value?: string | null) => Boolean(value?.trim());
+
+const hasValidWhatsapp = (value?: string | null) => {
+  const digits = onlyDigits(value);
+
+  return digits.length >= 8 && digits.length <= 15;
+};
+
+const whatsappStatusLabel = (value?: string | null) => {
+  const digits = onlyDigits(value);
+  if (digits.length === 0) return "ausente";
+
+  return `${digits.length} dígitos armazenados`;
+};
+
+const activeSubscriptions = (profile: AdminOperationalPsychologistRecord, now: Date) =>
+  profile.subscriptions.filter((subscription) => {
+    if (subscription.status !== "ativa") return false;
+
+    return !subscription.current_period_end || subscription.current_period_end > now;
+  });
+
+const isProfessionalSubscription = (
+  subscription: AdminOperationalPsychologistRecord["subscriptions"][number],
+) => subscription.plan.slug !== "gratuito";
+
+const pickCurrentSubscription = (profile: AdminOperationalPsychologistRecord, now: Date) => {
+  const subscriptions = activeSubscriptions(profile, now);
+  if (subscriptions.length === 0) return null;
+
+  return [...subscriptions].sort((left, right) => {
+    const leftProfessional = Number(isProfessionalSubscription(left));
+    const rightProfessional = Number(isProfessionalSubscription(right));
+    if (leftProfessional !== rightProfessional) return rightProfessional - leftProfessional;
+
+    return right.createdAt.getTime() - left.createdAt.getTime();
+  })[0];
+};
+
+const profileStartedAt = (
+  subscription: AdminOperationalPsychologistRecord["subscriptions"][number],
+) => subscription.grant_started_at ?? subscription.createdAt;
+
+const psychologistLabel = (profile: AdminOperationalPsychologistRecord) => {
+  const professionalName = [profile.professional_first_name, profile.professional_last_name]
+    .map((part) => part?.trim())
+    .filter(Boolean)
+    .join(" ");
+
+  return (
+    normalizeProfessionalDisplayName(professionalName) ||
+    normalizeProfessionalDisplayName(profile.user.name) ||
+    "Psicólogo"
+  );
+};
+
+const hasRegistryApproval = (profile: AdminOperationalPsychologistRecord) =>
+  hasProfessionalRegistryApproval({
+    cfp_verified_at: profile.cfp_verified_at,
+    crp_status: profile.crp_status,
+    subscriptions: profile.subscriptions.filter(isProfessionalSubscription),
+  });
+
+const missingRequiredPublishingSettings = (
+  profile: AdminOperationalPsychologistRecord,
+  currentSubscription: AdminOperationalPsychologistRecord["subscriptions"][number],
+) => {
+  const missing: string[] = [];
+  const { crp_number, crp_region } = parseStoredCrp(profile.crp);
+
+  if (!normalizeProfessionalDisplayName(profile.user.name)) missing.push("nome profissional");
+  if (!hasText(profile.video_url)) missing.push("vídeo de apresentação");
+  if (!hasText(profile.modality)) missing.push("modalidade");
+  if (profile.user.psychologist_specialties.length === 0) missing.push("especialidade");
+  if (profile.user.psychologist_services.length === 0) missing.push("serviço");
+  if (profile.user.psychologist_approaches.length === 0) missing.push("abordagem");
+  if (toJsonStringArray(profile.target_audience).length === 0) missing.push("público atendido");
+  if (!hasText(profile.gender)) missing.push("gênero");
+  if (!hasText(profile.cpf)) missing.push("CPF");
+  if (!profile.birthdate) missing.push("data de nascimento");
+  if (!hasText(crp_region)) missing.push("regional do CRP");
+  if (!hasText(crp_number)) missing.push("número do CRP");
+  if (!hasText(profile.professional_address_state)) missing.push("UF de atendimento");
+  if (!hasText(profile.professional_address_city)) missing.push("cidade de atendimento");
+  if (isProfessionalSubscription(currentSubscription) && !hasRegistryApproval(profile)) {
+    missing.push("CRP aprovado");
+  }
+
+  return missing;
+};
+
+const countMap = (items: AdminPsychologistMetricCountRecord[]) => {
+  const map = new Map<string, number>();
+  for (const item of items) map.set(item.psychologist_id, item._count._all);
+
+  return map;
+};
+
+const communityDTO = (
+  community:
+    | AdminPostReportRecord["post"]["community"]
+    | AdminUncoveredPatientPostRecord["community"],
+) => ({
+  id: community.id,
+  name: community.name,
+  slug: community.slug,
+});
+
+const mapReportAlert = (
+  report: AdminPostReportRecord,
+  now: Date,
+): AdminModerationOperationalAlertDTO => {
+  const isReply = report.target_type === "reply" || Boolean(report.reply_id);
+  const community = isReply && report.reply ? report.reply.post.community : report.post.community;
+  const targetId = isReply
+    ? (report.reply?.id ?? report.reply_id ?? report.target_id)
+    : report.post.id;
+  const targetLabel = isReply
+    ? `Resposta em ${report.reply?.post.title ?? report.post.title}`
+    : report.post.title;
+  const targetExcerpt = isReply ? report.reply?.content : report.post.content;
+  const href = targetId
+    ? `/comunidades/${community.slug}/conteudo/${isReply ? "reply" : "post"}/${targetId}`
+    : null;
+
+  return {
+    action_href: href,
+    action_label: "Abrir conteúdo denunciado",
+    age_hours: hoursSince(report.createdAt, now),
+    community: communityDTO(community),
+    created_at: report.createdAt,
+    description: compactText(report.description ?? targetExcerpt, 180),
+    entity: {
+      href,
+      id: targetId ?? report.target_id,
+      label: targetLabel,
+      type: isReply ? "reply" : "post",
+    },
+    facts: [
+      { label: "Motivo", value: report.reason },
+      { label: "Status", value: report.status },
+      { label: "Denunciante", value: report.reporter.role },
+      { label: "Idade", value: humanAge(report.createdAt, now) },
+    ],
+    group: "denuncias",
+    id: `post-report-${report.id}`,
+    priority: "urgent",
+    source: "post_report",
+    title: isReply ? "Denúncia de resposta pendente" : "Denúncia de post pendente",
+    type: "post_report",
+  };
+};
+
+const mapUncoveredPatientPostAlert = (
+  post: AdminUncoveredPatientPostRecord,
+  now: Date,
+): AdminModerationOperationalAlertDTO => {
+  const href = `/comunidades/${post.community.slug}/conteudo/post/${post.id}`;
+
+  return {
+    action_href: href,
+    action_label: "Abrir post",
+    age_hours: hoursSince(post.createdAt, now),
+    community: communityDTO(post.community),
+    created_at: post.createdAt,
+    description: `Post de paciente publicado há ${humanAge(
+      post.createdAt,
+      now,
+    )} ainda sem resposta de psicólogo. Trecho: ${compactText(post.content, 120)}`,
+    entity: {
+      href,
+      id: post.id,
+      label: post.title,
+      type: "post",
+    },
+    facts: [
+      { label: "Comunidade", value: post.community.name },
+      { label: "Idade", value: humanAge(post.createdAt, now) },
+      { label: "Respostas totais", value: String(post.replies_count) },
+    ],
+    group: "operacional",
+    id: `uncovered-post-${post.id}`,
+    priority: "medium",
+    source: "community_post+post_reply+user.role",
+    title: "Post de paciente sem cobertura há 48h",
+    type: "patient_post_without_coverage",
+  };
+};
+
+const buildPsychologistAlerts = (
+  profiles: AdminOperationalPsychologistRecord[],
+  profileViewCounts: Map<string, number>,
+  whatsappClickCounts: Map<string, number>,
+  now: Date,
+) => {
+  const alerts: AdminModerationOperationalAlertDTO[] = [];
+  let professionalCrpPending = 0;
+  let invalidWhatsapp = 0;
+  let unpublishedRequiredSettings = 0;
+  let psychologistNoTractionAfterAdaptation = 0;
+  const adaptationCutoff = new Date(now.getTime() - PSYCHOLOGIST_ADAPTATION_DAYS * DAY_IN_MS);
+
+  for (const profile of profiles) {
+    const currentSubscription = pickCurrentSubscription(profile, now);
+    if (!currentSubscription) continue;
+
+    const name = psychologistLabel(profile);
+    const href = `/psicologos/${profile.user_id}`;
+    const isProfessional = isProfessionalSubscription(currentSubscription);
+    const profileViews = profileViewCounts.get(profile.user_id) ?? 0;
+    const whatsappClicks = whatsappClickCounts.get(profile.user_id) ?? 0;
+    const currentPlanLabel = currentSubscription.plan.name || currentSubscription.plan.slug;
+
+    if (isProfessional && !hasRegistryApproval(profile)) {
+      professionalCrpPending += 1;
+      alerts.push({
+        action_href: href,
+        action_label: "Abrir psicólogo",
+        age_hours: hoursSince(profileStartedAt(currentSubscription), now),
+        community: null,
+        created_at: profileStartedAt(currentSubscription),
+        description: `${name} possui Plano Profissional ativo sem CRP/CFP aprovado ou cortesia administrativa reconhecida.`,
+        entity: {
+          href,
+          id: profile.user_id,
+          label: name,
+          type: "psychologist",
+        },
+        facts: [
+          { label: "Plano", value: currentPlanLabel },
+          { label: "Status CRP", value: profile.crp_status },
+          { label: "Origem", value: currentSubscription.source },
+          { label: "No plano há", value: humanAge(profileStartedAt(currentSubscription), now) },
+        ],
+        group: "compliance",
+        id: `professional-crp-${profile.id}`,
+        priority: "urgent",
+        source: "psychologist_profile+professional_subscription",
+        title: "CRP não aprovado no Plano Profissional",
+        type: "professional_crp_pending",
+      });
+    }
+
+    if (!hasValidWhatsapp(profile.whatsapp)) {
+      invalidWhatsapp += 1;
+      alerts.push({
+        action_href: href,
+        action_label: "Abrir psicólogo",
+        age_hours: hoursSince(profile.updatedAt, now),
+        community: null,
+        created_at: profile.updatedAt,
+        description:
+          "O perfil não possui número suficiente para gerar link wa.me confiável. Esta checagem é sintática e não valida entrega externa do WhatsApp.",
+        entity: {
+          href,
+          id: profile.user_id,
+          label: name,
+          type: "psychologist",
+        },
+        facts: [
+          { label: "Plano", value: currentPlanLabel },
+          { label: "WhatsApp", value: whatsappStatusLabel(profile.whatsapp) },
+          { label: "Publicado", value: profile.published ? "sim" : "não" },
+        ],
+        group: "compliance",
+        id: `invalid-whatsapp-${profile.id}`,
+        priority: "high",
+        source: "psychologist_profile.whatsapp",
+        title: "WhatsApp ausente ou inválido",
+        type: "invalid_whatsapp",
+      });
+    }
+
+    const missingSettings = missingRequiredPublishingSettings(profile, currentSubscription);
+    if (!profile.published && missingSettings.length > 0) {
+      unpublishedRequiredSettings += 1;
+      alerts.push({
+        action_href: href,
+        action_label: "Abrir psicólogo",
+        age_hours: hoursSince(profile.updatedAt, now),
+        community: null,
+        created_at: profile.updatedAt,
+        description: `Perfil não publicado por pendências obrigatórias: ${missingSettings
+          .slice(0, 5)
+          .join(", ")}${missingSettings.length > 5 ? "…" : "."}`,
+        entity: {
+          href,
+          id: profile.user_id,
+          label: name,
+          type: "psychologist",
+        },
+        facts: [
+          { label: "Plano", value: currentPlanLabel },
+          { label: "Pendências", value: String(missingSettings.length) },
+          { label: "Primeiras", value: missingSettings.slice(0, 3).join(", ") },
+        ],
+        group: "operacional",
+        id: `unpublished-settings-${profile.id}`,
+        priority: "medium",
+        source: "psychologist_profile+catalog_relations",
+        title: "Perfil não publicado por configurações obrigatórias",
+        type: "unpublished_required_settings",
+      });
+    }
+
+    if (
+      isProfessional &&
+      profile.published &&
+      profileStartedAt(currentSubscription) <= adaptationCutoff &&
+      profileViews === 0 &&
+      whatsappClicks === 0
+    ) {
+      psychologistNoTractionAfterAdaptation += 1;
+      alerts.push({
+        action_href: href,
+        action_label: "Abrir psicólogo",
+        age_hours: hoursSince(profileStartedAt(currentSubscription), now),
+        community: null,
+        created_at: profileStartedAt(currentSubscription),
+        description: `${name} está publicado no Plano Profissional há ${humanAge(
+          profileStartedAt(currentSubscription),
+          now,
+        )} sem visitas de perfil e sem cliques no WhatsApp.`,
+        entity: {
+          href,
+          id: profile.user_id,
+          label: name,
+          type: "psychologist",
+        },
+        facts: [
+          { label: "Plano", value: currentPlanLabel },
+          { label: "Visitas", value: String(profileViews) },
+          { label: "Cliques WhatsApp", value: String(whatsappClicks) },
+          { label: "Adaptação", value: `${PSYCHOLOGIST_ADAPTATION_DAYS} dias` },
+        ],
+        group: "operacional",
+        id: `no-traction-${profile.id}`,
+        priority: "medium",
+        source: "professional_subscription+profile_view_event+contact_request",
+        title: "Psicólogo sem tração após adaptação",
+        type: "psychologist_no_traction",
+      });
+    }
+  }
+
+  return {
+    alerts,
+    counts: {
+      invalidWhatsapp,
+      professionalCrpPending,
+      psychologistNoTractionAfterAdaptation,
+      unpublishedRequiredSettings,
+    },
+  };
+};
+
+const sortOperationalAlerts = (
+  left: AdminModerationOperationalAlertDTO,
+  right: AdminModerationOperationalAlertDTO,
+) => {
+  const priorityDelta = priorityWeight[left.priority] - priorityWeight[right.priority];
+  if (priorityDelta !== 0) return priorityDelta;
+
+  return right.created_at.getTime() - left.created_at.getTime();
+};
+
+const buildOperationalAlerts = async (
+  repository: AdminModerationRepository,
+): Promise<AdminModerationOperationalAlertsDTO> => {
+  const now = new Date();
+  const uncoveredCutoff = new Date(now.getTime() - POST_COVERAGE_HOURS * HOUR_IN_MS);
+  const [pendingReports, latestReports, uncoveredPostsCount, uncoveredPosts, psychologistProfiles] =
+    await Promise.all([
+      repository.countPendingPostReports(),
+      repository.listPendingPostReports(8),
+      repository.countUncoveredPatientPosts(uncoveredCutoff),
+      repository.listUncoveredPatientPosts(uncoveredCutoff, 8),
+      repository.listOperationalPsychologistProfiles(),
+    ]);
+  const psychologistIds = psychologistProfiles.map((profile) => profile.user_id);
+  const [profileViews, whatsappClicks] = await Promise.all([
+    repository.countProfileViewsByPsychologist(psychologistIds),
+    repository.countWhatsappClicksByPsychologist(psychologistIds),
+  ]);
+  const psychologistAlerts = buildPsychologistAlerts(
+    psychologistProfiles,
+    countMap(profileViews),
+    countMap(whatsappClicks),
+    now,
+  );
+  const reportAlerts = latestReports.map((report) => mapReportAlert(report, now));
+  const uncoveredPostAlerts = uncoveredPosts.map((post) => mapUncoveredPatientPostAlert(post, now));
+  const complianceTotal =
+    psychologistAlerts.counts.professionalCrpPending + psychologistAlerts.counts.invalidWhatsapp;
+  const operationalTotal =
+    uncoveredPostsCount +
+    psychologistAlerts.counts.unpublishedRequiredSettings +
+    psychologistAlerts.counts.psychologistNoTractionAfterAdaptation;
+  const urgentTotal = pendingReports + psychologistAlerts.counts.professionalCrpPending;
+
+  return {
+    counts: {
+      compliance_total: complianceTotal,
+      invalid_whatsapp: psychologistAlerts.counts.invalidWhatsapp,
+      operational_total: operationalTotal,
+      patient_posts_without_coverage_48h: uncoveredPostsCount,
+      pending_reports: pendingReports,
+      professional_crp_pending: psychologistAlerts.counts.professionalCrpPending,
+      psychologist_no_traction_after_adaptation:
+        psychologistAlerts.counts.psychologistNoTractionAfterAdaptation,
+      total: pendingReports + complianceTotal + operationalTotal,
+      unpublished_required_settings: psychologistAlerts.counts.unpublishedRequiredSettings,
+      urgent_total: urgentTotal,
+    },
+    excluded_dimensions: excludedOperationalDimensions,
+    items: [...reportAlerts, ...uncoveredPostAlerts, ...psychologistAlerts.alerts]
+      .sort(sortOperationalAlerts)
+      .slice(0, OPERATIONAL_ALERT_LIMIT),
+    source:
+      "post_report+community_post+post_reply+psychologist_profile+professional_subscription+profile_view_event+contact_request",
+    thresholds: {
+      patient_post_without_coverage_hours: POST_COVERAGE_HOURS,
+      psychologist_adaptation_days: PSYCHOLOGIST_ADAPTATION_DAYS,
+    },
+  };
+};
+
 export const getSummary = async (_data: IAdminModerationSummaryDTO): Promise<Resolve> => {
   const repository = new AdminModerationRepository();
-  const [allEvents, latestPending, pendingTotal, urgentPendingTotal] = await Promise.all([
-    repository.listEvents({}),
-    repository.listLatestPending(5),
-    repository.countPending(),
-    repository.countUrgentPending(),
-  ]);
+  const [allEvents, latestPending, pendingTotal, urgentPendingTotal, operationalAlerts] =
+    await Promise.all([
+      repository.listEvents({}),
+      repository.listLatestPending(5),
+      repository.countPending(),
+      repository.countUrgentPending(),
+      buildOperationalAlerts(repository),
+    ]);
   const replyMap = await hydrateReplyTargets(latestPending);
   const summary: AdminModerationSummaryDTO = {
     by_category: countBy(allEvents, (event) => toStringArray(event.categories)),
@@ -206,6 +706,7 @@ export const getSummary = async (_data: IAdminModerationSummaryDTO): Promise<Res
     by_severity: countBy(allEvents, (event) => [event.severity]),
     by_status: countBy(allEvents, (event) => [event.status]),
     latest_pending: latestPending.map((event) => mapEvent(event, replyMap)),
+    operational_alerts: operationalAlerts,
     pending_total: pendingTotal,
     source: "content_moderation_event",
     urgent_pending_total: urgentPendingTotal,

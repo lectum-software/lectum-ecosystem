@@ -4,7 +4,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   AlertTriangle,
-  Ban,
   CheckCircle2,
   ChevronLeft,
   ChevronRight,
@@ -13,6 +12,7 @@ import {
   Eye,
   Flag,
   Loader2,
+  MessageCircle,
   RefreshCw,
   Search,
   ShieldAlert,
@@ -40,6 +40,7 @@ import type {
   AdminModerationEvent,
   AdminModerationEventDetail,
   AdminModerationEventsQuery,
+  AdminModerationOperationalAlert,
   AdminModerationSeverity,
   AdminModerationStatus,
   AdminModerationSummary,
@@ -83,6 +84,22 @@ const severityCopy: Record<AdminModerationSeverity, { label: string; className: 
   low: { className: "bg-surface-muted text-muted", label: "Baixa" },
   medium: { className: "bg-orange-50 text-orange-700", label: "Média" },
   urgent: { className: "bg-red-600 text-white", label: "Urgente" },
+};
+const operationalGroupCopy: Record<
+  AdminModerationOperationalAlert["group"],
+  { className: string; label: string }
+> = {
+  compliance: { className: "bg-red-50 text-danger", label: "Compliance" },
+  denuncias: { className: "bg-red-600 text-white", label: "Denúncias" },
+  operacional: { className: "bg-blue-50 text-blue-700", label: "Operacional" },
+};
+const operationalTypeLabels: Record<AdminModerationOperationalAlert["type"], string> = {
+  invalid_whatsapp: "WhatsApp inválido",
+  patient_post_without_coverage: "Post sem cobertura",
+  post_report: "Denúncia de conteúdo",
+  professional_crp_pending: "CRP pendente",
+  psychologist_no_traction: "Sem tração",
+  unpublished_required_settings: "Perfil não publicado",
 };
 const categoryLabels: Record<string, string> = {
   abuse_violence: "Abuso/violência",
@@ -240,38 +257,174 @@ const Metric = ({
   );
 };
 
-const SummaryGrid = ({ summary }: { summary: AdminModerationSummary }) => (
-  <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-    <Metric
-      description="Eventos pendentes ou em revisão."
-      icon={<ShieldAlert aria-hidden className="h-5 w-5" />}
-      label="Pendentes"
-      value={summary.pending_total}
-    />
-    <Metric
-      description="Eventos safety_hold urgentes ainda não resolvidos."
-      icon={<Flag aria-hidden className="h-5 w-5" />}
-      label="Urgentes"
-      tone="danger"
-      value={summary.urgent_pending_total}
-    />
-    <Metric
-      description="Relatos sensíveis publicados para acompanhamento."
-      icon={<Eye aria-hidden className="h-5 w-5" />}
-      label="Sensíveis publicados"
-      tone="warning"
-      value={summary.by_decision.allow_sensitive ?? 0}
-    />
-    <Metric
-      description="Submissões bloqueadas antes de virar conteúdo público."
-      icon={<Ban aria-hidden className="h-5 w-5" />}
-      label="Bloqueios/seguranças"
-      tone="success"
-      value={(summary.by_decision.block ?? 0) + (summary.by_decision.safety_hold ?? 0)}
-    />
-  </div>
+const SummaryGrid = ({ summary }: { summary: AdminModerationSummary }) => {
+  const operational = summary.operational_alerts.counts;
+
+  return (
+    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <Metric
+        description="Denúncias reais de posts/respostas aguardando triagem."
+        icon={<Flag aria-hidden className="h-5 w-5" />}
+        label="Denúncias urgentes"
+        tone="danger"
+        value={operational.pending_reports}
+      />
+      <Metric
+        description="CRP pendente em plano profissional e WhatsApp ausente/inválido."
+        icon={<ShieldAlert aria-hidden className="h-5 w-5" />}
+        label="Compliance"
+        tone="warning"
+        value={operational.compliance_total}
+      />
+      <Metric
+        description="Cobertura 48h, perfil sem configurações e tráfego após adaptação."
+        icon={<Clock3 aria-hidden className="h-5 w-5" />}
+        label="Operacionais"
+        value={operational.operational_total}
+      />
+      <Metric
+        description={`${numberFormatter.format(
+          summary.urgent_pending_total,
+        )} evento(s) safety_hold urgente(s) na moderação textual.`}
+        icon={<Eye aria-hidden className="h-5 w-5" />}
+        label="Moderação textual"
+        tone="success"
+        value={summary.pending_total}
+      />
+    </div>
+  );
+};
+
+const OperationalGroup = ({ value }: { value: AdminModerationOperationalAlert["group"] }) => (
+  <Pill className={operationalGroupCopy[value].className}>{operationalGroupCopy[value].label}</Pill>
 );
 
+const OperationalAlertCard = ({ alert }: { alert: AdminModerationOperationalAlert }) => {
+  const href = alert.action_href ?? alert.entity.href;
+
+  return (
+    <article className="rounded-2xl border border-border bg-surface p-4 shadow-control">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0">
+          <div className="flex flex-wrap gap-2">
+            <OperationalGroup value={alert.group} />
+            <Severity value={alert.priority} />
+            <span className="rounded-full bg-surface-muted px-2.5 py-1 text-xs font-black text-muted">
+              {operationalTypeLabels[alert.type]}
+            </span>
+          </div>
+          <h3 className="mt-3 text-base font-black text-foreground">{alert.title}</h3>
+          <p className="mt-1 text-sm leading-6 text-muted">{alert.description}</p>
+        </div>
+        <p className="shrink-0 text-xs font-black text-muted">{formatDateTime(alert.created_at)}</p>
+      </div>
+      <div className="mt-3 grid gap-2 text-xs font-bold text-muted sm:grid-cols-2">
+        <p>Alvo: {alert.entity.label}</p>
+        <p>Origem: {alert.source}</p>
+        {alert.community ? <p>Comunidade: {alert.community.name}</p> : null}
+        {alert.age_hours !== null ? <p>Idade: {numberFormatter.format(alert.age_hours)}h</p> : null}
+      </div>
+      {alert.facts.length > 0 ? (
+        <div className="mt-3 flex flex-wrap gap-2">
+          {alert.facts.map((fact) => (
+            <span
+              className="rounded-full bg-primary-soft px-2.5 py-1 text-[0.68rem] font-black text-primary"
+              key={`${alert.id}-${fact.label}-${fact.value}`}
+            >
+              {fact.label}: {fact.value}
+            </span>
+          ))}
+        </div>
+      ) : null}
+      <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <span className="inline-flex items-center gap-2 text-xs font-bold text-muted">
+          <MessageCircle aria-hidden className="h-4 w-4" />
+          Dados reais; sem mock ou estimativa artificial.
+        </span>
+        {href ? (
+          <Link
+            className="inline-flex h-10 items-center justify-center gap-2 rounded-control border border-border bg-surface px-3 text-xs font-black text-foreground transition hover:border-primary hover:text-primary"
+            href={href}
+          >
+            <ExternalLink aria-hidden className="h-4 w-4" />
+            {alert.action_label}
+          </Link>
+        ) : null}
+      </div>
+    </article>
+  );
+};
+
+const OperationalAlertsPanel = ({ summary }: { summary: AdminModerationSummary }) => {
+  const alerts = summary.operational_alerts;
+  const counts = alerts.counts;
+
+  return (
+    <Card className="overflow-hidden">
+      <div className="border-b border-border p-5">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+          <div>
+            <p className="text-xs font-black uppercase tracking-[0.22em] text-primary">
+              Ações urgentes e operacionais
+            </p>
+            <h2 className="mt-2 text-2xl font-black text-foreground">
+              Denúncias, compliance e acompanhamento de oferta
+            </h2>
+            <p className="mt-2 max-w-3xl text-sm leading-6 text-muted">
+              A central combina denúncias de conteúdo, CRP pendente em plano profissional, WhatsApp
+              ausente/inválido, posts de pacientes sem resposta após{" "}
+              {alerts.thresholds.patient_post_without_coverage_hours}h, perfis não publicados por
+              configurações obrigatórias e profissionais sem tração após{" "}
+              {alerts.thresholds.psychologist_adaptation_days} dias.
+            </p>
+          </div>
+          <span className="inline-flex w-fit rounded-full bg-surface-muted px-3 py-1 text-xs font-black text-muted">
+            {numberFormatter.format(counts.total)} alerta(s) reais
+          </span>
+        </div>
+        <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <div className="rounded-2xl border border-border bg-surface-muted p-3">
+            <p className="text-xs font-black text-muted">Denúncias</p>
+            <p className="mt-1 text-2xl font-black text-foreground">
+              {numberFormatter.format(counts.pending_reports)}
+            </p>
+          </div>
+          <div className="rounded-2xl border border-border bg-surface-muted p-3">
+            <p className="text-xs font-black text-muted">CRP profissional</p>
+            <p className="mt-1 text-2xl font-black text-foreground">
+              {numberFormatter.format(counts.professional_crp_pending)}
+            </p>
+          </div>
+          <div className="rounded-2xl border border-border bg-surface-muted p-3">
+            <p className="text-xs font-black text-muted">WhatsApp inválido</p>
+            <p className="mt-1 text-2xl font-black text-foreground">
+              {numberFormatter.format(counts.invalid_whatsapp)}
+            </p>
+          </div>
+          <div className="rounded-2xl border border-border bg-surface-muted p-3">
+            <p className="text-xs font-black text-muted">Operacionais</p>
+            <p className="mt-1 text-2xl font-black text-foreground">
+              {numberFormatter.format(counts.operational_total)}
+            </p>
+          </div>
+        </div>
+      </div>
+      <div className="grid gap-3 p-4">
+        {alerts.items.length === 0 ? (
+          <div className="rounded-2xl border border-dashed border-border p-5 text-sm leading-6 text-muted">
+            Nenhuma denúncia, pendência de compliance ou alerta operacional encontrado nos dados
+            reais atuais.
+          </div>
+        ) : (
+          alerts.items.map((alert) => <OperationalAlertCard alert={alert} key={alert.id} />)
+        )}
+      </div>
+      <div className="border-t border-border bg-surface-muted p-4 text-xs leading-5 text-muted">
+        Fora do escopo agora: {alerts.excluded_dimensions.map((item) => item.title).join("; ")}.
+      </div>
+    </Card>
+  );
+};
 const FiltersBar = ({
   filters,
   setFilters,
@@ -984,11 +1137,11 @@ export const AdminModerationClient = () => {
       <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
         <div>
           <h1 className="text-3xl font-black tracking-tight text-foreground md:text-4xl">
-            Moderação textual
+            Central de moderação e alertas
           </h1>
           <p className="mt-2 max-w-3xl text-sm font-medium leading-6 text-muted">
-            Acompanhe eventos automáticos gerados por regras determinísticas em textos de pacientes.
-            Conteúdos sensíveis legítimos podem ser publicados, mas ficam pendentes para revisão.
+            Acompanhe denúncias de posts, moderação textual sensível, pendências de compliance
+            profissional e alertas operacionais derivados dos dados reais da Lectum.
           </p>
         </div>
         <button
@@ -1017,20 +1170,27 @@ export const AdminModerationClient = () => {
         />
       ) : null}
       {summary.isLoading ? (
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          {["pending", "urgent", "sensitive", "block"].map((key) => (
-            <Card className="h-36 animate-pulse bg-surface-muted" key={key} />
-          ))}
-        </div>
+        <>
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            {["reports", "compliance", "operational", "textual"].map((key) => (
+              <Card className="h-36 animate-pulse bg-surface-muted" key={key} />
+            ))}
+          </div>
+          <Card className="h-80 animate-pulse bg-surface-muted" />
+        </>
       ) : summary.data ? (
-        <SummaryGrid summary={summary.data} />
+        <>
+          <SummaryGrid summary={summary.data} />
+          <OperationalAlertsPanel summary={summary.data} />
+        </>
       ) : null}
       <FiltersBar filters={filters} setFilters={setFilters} />
       <div className="rounded-2xl border border-border bg-surface-muted p-4 text-sm leading-6 text-muted">
         <p>
           Período consultado: <strong>{formatDate(filters.from)}</strong> —{" "}
           <strong>{formatDate(filters.to)}</strong>. A central usa regex/listas internas sem IA e
-          mostra apenas trechos nas listas.
+          mostra apenas trechos nas listas textuais. Alertas operacionais são derivados do estado
+          atual das tabelas reais e usam limites de 48h/30 dias.
         </p>
       </div>
       <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_420px]">

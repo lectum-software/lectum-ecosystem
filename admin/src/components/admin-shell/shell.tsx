@@ -55,7 +55,9 @@ const SidebarContent = ({
   const openGroupHref =
     openGroupOverride?.pathname === pathname ? openGroupOverride.href : activeGroupHref;
   const moderationSummary = useAdminModerationSummary();
-  const moderationPendingTotal = moderationSummary.data?.pending_total ?? 0;
+  const moderationPendingTotal =
+    (moderationSummary.data?.pending_total ?? 0) +
+    (moderationSummary.data?.operational_alerts?.counts.total ?? 0);
   const adminName = admin?.name || "Admin Lectum";
   const initials = useMemo(() => {
     const names = adminName.split(" ").filter(Boolean);
@@ -223,14 +225,14 @@ const SidebarContent = ({
                       "ml-auto inline-flex h-6 min-w-6 items-center justify-center rounded-full bg-danger px-2 text-[0.68rem] font-black text-white shadow-admin-soft",
                       collapsed && "absolute -right-1 top-1 ml-0 h-5 min-w-5 px-1 text-[0.62rem]",
                     )}
-                    title={`${moderationPendingTotal} eventos pendentes`}
+                    title={`${moderationPendingTotal} ações de moderação pendentes`}
                   >
                     {moderationPendingTotal > 99 ? "99+" : moderationPendingTotal}
                   </span>
                 ) : null}
                 {showModerationBadge ? (
                   <span className="sr-only">
-                    {moderationPendingTotal} eventos de moderação pendentes
+                    {moderationPendingTotal} ações de moderação pendentes
                   </span>
                 ) : null}
               </Link>

@@ -1,13 +1,25 @@
-﻿import type { Prisma } from "@/external/generated/prisma/client";
+import type { Prisma } from "@/external/generated/prisma/client";
 import prisma from "@/infra/database/prisma";
+import { activeSubscriptionPeriodWhere } from "@/utils/subscription-entitlement";
 import type { AdminModerationEventsQuery } from "../DTOs/IAdminModerationDTO";
 import {
   adminModerationEventDetailSelect,
   adminModerationEventSelect,
+  adminOperationalPsychologistSelect,
+  adminPostReportSelect,
+  adminUncoveredPatientPostSelect,
   type IAdminModerationRepository,
 } from "./interfaces/IAdminModerationRepository";
 
 const ACTIVE_REVIEW_STATUSES = ["pending", "reviewing"];
+const ACTIVE_POST_REPORT_STATUSES = [
+  "pendente",
+  "pending",
+  "em_analise",
+  "em analise",
+  "in_review",
+  "in review",
+];
 
 const parseDateOnly = (value: string | undefined, boundary: "end" | "start") => {
   if (!value || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return null;
@@ -87,6 +99,17 @@ export class AdminModerationRepository implements IAdminModerationRepository {
     });
   }
 
+  countPendingPostReports() {
+    return prisma.post_report.count({
+      where: {
+        deleted: false,
+        status: {
+          in: ACTIVE_POST_REPORT_STATUSES,
+        },
+      },
+    });
+  }
+
   countUrgentPending() {
     return prisma.content_moderation_event.count({
       where: {
@@ -95,6 +118,32 @@ export class AdminModerationRepository implements IAdminModerationRepository {
         status: {
           in: ACTIVE_REVIEW_STATUSES,
         },
+      },
+    });
+  }
+
+  countUncoveredPatientPosts(cutoff: Date) {
+    return prisma.community_post.count({
+      where: {
+        author: {
+          deleted: false,
+          role: "paciente",
+        },
+        createdAt: {
+          lte: cutoff,
+        },
+        deleted: false,
+        replies: {
+          none: {
+            author: {
+              active: true,
+              deleted: false,
+              role: "psicologo",
+            },
+            deleted: false,
+          },
+        },
+        status: "publicado",
       },
     });
   }
@@ -117,6 +166,109 @@ export class AdminModerationRepository implements IAdminModerationRepository {
         status: {
           in: ACTIVE_REVIEW_STATUSES,
         },
+      },
+    });
+  }
+
+  listPendingPostReports(limit: number) {
+    return prisma.post_report.findMany({
+      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+      select: adminPostReportSelect,
+      take: limit,
+      where: {
+        deleted: false,
+        status: {
+          in: ACTIVE_POST_REPORT_STATUSES,
+        },
+      },
+    });
+  }
+
+  listUncoveredPatientPosts(cutoff: Date, limit: number) {
+    return prisma.community_post.findMany({
+      orderBy: [{ createdAt: "asc" }, { id: "asc" }],
+      select: adminUncoveredPatientPostSelect,
+      take: limit,
+      where: {
+        author: {
+          deleted: false,
+          role: "paciente",
+        },
+        createdAt: {
+          lte: cutoff,
+        },
+        deleted: false,
+        replies: {
+          none: {
+            author: {
+              active: true,
+              deleted: false,
+              role: "psicologo",
+            },
+            deleted: false,
+          },
+        },
+        status: "publicado",
+      },
+    });
+  }
+
+  listOperationalPsychologistProfiles() {
+    return prisma.psychologist_profile.findMany({
+      orderBy: [{ updatedAt: "desc" }, { id: "desc" }],
+      select: adminOperationalPsychologistSelect,
+      where: {
+        deleted: false,
+        subscriptions: {
+          some: {
+            ...activeSubscriptionPeriodWhere(),
+            plan: {
+              active: true,
+              deleted: false,
+            },
+          },
+        },
+        user: {
+          active: true,
+          deleted: false,
+          role: "psicologo",
+        },
+      },
+    });
+  }
+
+  countProfileViewsByPsychologist(psychologistIds: string[]) {
+    if (psychologistIds.length === 0) return Promise.resolve([]);
+
+    return prisma.profile_view_event.groupBy({
+      by: ["psychologist_id"],
+      where: {
+        deleted: false,
+        psychologist_id: {
+          in: psychologistIds,
+        },
+        source: "profile_page",
+      },
+      _count: {
+        _all: true,
+      },
+    });
+  }
+
+  countWhatsappClicksByPsychologist(psychologistIds: string[]) {
+    if (psychologistIds.length === 0) return Promise.resolve([]);
+
+    return prisma.contact_request.groupBy({
+      by: ["psychologist_id"],
+      where: {
+        channel: "whatsapp",
+        deleted: false,
+        psychologist_id: {
+          in: psychologistIds,
+        },
+      },
+      _count: {
+        _all: true,
       },
     });
   }
