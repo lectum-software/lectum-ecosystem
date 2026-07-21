@@ -9,6 +9,7 @@ import {
 } from "@/modules/api/admin/shared/auth/jwt";
 
 const notAuthorized = { status: 401 };
+const authUnavailable = { message: "admin_auth_unavailable", status: 503 };
 
 type AdminPayload = JwtPayload & {
   device_id?: string;
@@ -37,28 +38,33 @@ passport.use(
         return done(notAuthorized, false);
       }
 
-      const admin = await prisma.admin.findFirst({
-        where: {
-          active: true,
-          deleted: false,
-          email: payload.email,
-          id: payload.id,
-        },
-        include: {
-          admin_tokens: {
-            where: {
-              device_id: payload.device_id,
-            },
-            orderBy: {
-              createdAt: "desc",
+      try {
+        const admin = await prisma.admin.findFirst({
+          where: {
+            active: true,
+            deleted: false,
+            email: payload.email,
+            id: payload.id,
+          },
+          include: {
+            admin_tokens: {
+              where: {
+                device_id: payload.device_id,
+              },
+              orderBy: {
+                createdAt: "desc",
+              },
             },
           },
-        },
-      });
+        });
 
-      if (!admin) return done(notAuthorized, false);
+        if (!admin) return done(notAuthorized, false);
 
-      return done(null, admin);
+        return done(null, admin);
+      } catch (error) {
+        console.error("[ADMIN AUTH] Falha ao validar token administrativo.", error);
+        return done(authUnavailable, false);
+      }
     },
   ),
 );

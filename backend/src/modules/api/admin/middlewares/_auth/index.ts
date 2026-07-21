@@ -12,6 +12,9 @@ type NotAuthorized = {
   status?: number;
 };
 
+const isAuthUnavailable = (authError?: NotAuthorized) =>
+  authError?.status === 503 || authError?.message === "admin_auth_unavailable";
+
 const adminPrivateRouteVerifier = async (req: Request, res: Response, next: NextFunction) => {
   const authHeader = req.headers.authorization;
   if (!authHeader) {
@@ -38,39 +41,54 @@ const adminPrivateRouteVerifier = async (req: Request, res: Response, next: Next
 
   try {
     passport.authenticate("jwt-admin-api", async (authError: NotAuthorized, login: admin) => {
-      if (authError?.message === "ADMIN_JWT_SECRET_NOT_CONFIGURED") {
+      try {
+        if (authError?.message === "ADMIN_JWT_SECRET_NOT_CONFIGURED") {
+          return send(res, {
+            status: 500,
+            ...error("admin_auth_config_error", {}),
+          });
+        }
+
+        if (authError?.message === "ADMIN_JWT_SECRET_MUST_BE_DIFFERENT") {
+          return send(res, {
+            status: 500,
+            ...error("admin_auth_config_error", {}),
+          });
+        }
+
+        if (isAuthUnavailable(authError)) {
+          return send(res, {
+            status: 503,
+            ...error("admin_auth_unavailable", {}),
+          });
+        }
+
+        if (!login) {
+          return send(res, {
+            status: 401,
+            ...error("token_not_authorized", {}),
+          });
+        }
+
+        const bearerToken = authHeader.split(" ")[1];
+        const token = await passAdminToken(login, device.id, bearerToken);
+        if (token.err) return send(res, token.err);
+
+        const logged = await passAdminLogin(login);
+        if (logged.err) return send(res, logged.err);
+
+        req.device = device.id;
+        req.auth = login;
+        req.admin = login;
+
+        return next();
+      } catch (err) {
+        console.error("[ADMIN AUTH] Falha ao hidratar sessão administrativa.", err);
         return send(res, {
-          status: 500,
-          ...error("admin_auth_config_error", {}),
+          status: 503,
+          ...error("admin_auth_unavailable", {}),
         });
       }
-
-      if (authError?.message === "ADMIN_JWT_SECRET_MUST_BE_DIFFERENT") {
-        return send(res, {
-          status: 500,
-          ...error("admin_auth_config_error", {}),
-        });
-      }
-
-      if (!login) {
-        return send(res, {
-          status: 401,
-          ...error("token_not_authorized", {}),
-        });
-      }
-
-      const bearerToken = authHeader.split(" ")[1];
-      const token = await passAdminToken(login, device.id, bearerToken);
-      if (token.err) return send(res, token.err);
-
-      const logged = await passAdminLogin(login);
-      if (logged.err) return send(res, logged.err);
-
-      req.device = device.id;
-      req.auth = login;
-      req.admin = login;
-
-      return next();
     })(req, res, next);
   } catch (_err) {
     return send(res, {

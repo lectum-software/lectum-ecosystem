@@ -28,6 +28,7 @@ dotenv.config();
 
 const TOKEN_API_USER = Number(process.env.TOKEN_API_USER_HIDRATE_HOURS);
 const notAuthorized = { status: 401 };
+const authUnavailable = { message: "auth_unavailable", status: 503 };
 const allowedUserRoles = ["paciente", "psicologo"] as const;
 
 type UserRole = (typeof allowedUserRoles)[number];
@@ -497,31 +498,36 @@ const jwtOptions = {
 passport.use(
   "jwt-user-api",
   new JWTStrategy(jwtOptions, async (payload: JwtPayload, done: VerifiedCallback) => {
-    if (payload.type !== "user" || !payload.email || !payload.device_id) {
-      return done(notAuthorized, false);
-    }
-
-    const repo = new LoginRepository(payload.device_id, [
-      { model: "company", columns: ["ai_api_key"] },
-    ]);
-    let user = await repo.findByEmail({ b: { email: payload.email } });
-
-    if (user?.active) {
-      const createdIn = new Date((payload.iat || 0) * 1000);
-      const diff = differenceInHours(new Date(), createdIn);
-
-      if (diff > TOKEN_API_USER) {
-        try {
-          user = await repo.hidrate(user, payload.device_id);
-          emit_hidrate(user, payload.device_id);
-        } catch (_e) {
-          return done(notAuthorized, false);
-        }
+    try {
+      if (payload.type !== "user" || !payload.email || !payload.device_id) {
+        return done(notAuthorized, false);
       }
 
-      return done(null, user);
-    } else {
+      const repo = new LoginRepository(payload.device_id, [
+        { model: "company", columns: ["ai_api_key"] },
+      ]);
+      let user = await repo.findByEmail({ b: { email: payload.email } });
+
+      if (user?.active) {
+        const createdIn = new Date((payload.iat || 0) * 1000);
+        const diff = differenceInHours(new Date(), createdIn);
+
+        if (diff > TOKEN_API_USER) {
+          try {
+            user = await repo.hidrate(user, payload.device_id);
+            emit_hidrate(user, payload.device_id);
+          } catch (_e) {
+            return done(notAuthorized, false);
+          }
+        }
+
+        return done(null, user);
+      }
+
       return done(notAuthorized, false);
+    } catch (error) {
+      console.error("[USER AUTH] Falha ao validar token de usuário.", error);
+      return done(authUnavailable, false);
     }
   }),
 );
