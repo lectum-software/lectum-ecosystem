@@ -336,3 +336,18 @@ Frontend esperado:
 - `pnpm --dir admin build`
 - `pnpm check`
 - Smoke HTTP local: `GET http://localhost:3002/configuracoes` retornou `200`.
+
+## Ajuste complementar 2026-07-21 - Drag aninhado de especialidades
+
+- Pedido do usuario: ao arrastar uma especialidade dentro de uma categoria expandida, somente a especialidade deve ser reordenada; o card inteiro da categoria nao deve iniciar drag.
+- O inicio do drag por Pointer Events agora valida se o alvo pertence ao `data-catalog-drag-card` mais proximo do proprio item. Assim, eventos iniciados em linhas de especialidade aninhadas nao sobem para iniciar o drag da categoria pai.
+- O drag iniciado com sucesso interrompe a propagacao do `pointerdown`, preservando escopos independentes para categorias e especialidades.
+- Nao houve alteracao de backend, Prisma/migrations, packages, contratos HTTP ou dados persistidos.
+
+### Validacao complementar executada
+
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/configuracoes/client.tsx"`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check`
+- Smoke HTTP local: `GET http://localhost:3002/configuracoes` retornou `200`.

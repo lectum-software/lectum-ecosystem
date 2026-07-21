@@ -189,6 +189,12 @@ const isCatalogDragBlockedTarget = (target: EventTarget | null) => {
 const isCatalogDragHandleTarget = (target: EventTarget | null) =>
   target instanceof Element && Boolean(target.closest("[data-catalog-drag-handle='true']"));
 
+const isCatalogDragCurrentCardTarget = (target: EventTarget | null, currentTarget: HTMLElement) => {
+  if (!(target instanceof Element)) return false;
+
+  return target.closest("[data-catalog-drag-card='true']") === currentTarget;
+};
+
 const catalogScopeKey = (type: AdminSettingsCatalogType, categoryId?: string) =>
   `${type}:${categoryId ?? ""}`;
 
@@ -759,6 +765,7 @@ export const AdminSettingsClient = () => {
   const startCatalogDrag = (event: PointerEvent<HTMLDivElement>, input: CatalogDragInput) => {
     if (isMutating) return;
     if (event.pointerType === "mouse" && event.button !== 0) return;
+    if (!isCatalogDragCurrentCardTarget(event.target, event.currentTarget)) return;
     if (isCatalogDragBlockedTarget(event.target) && !isCatalogDragHandleTarget(event.target))
       return;
     if (event.pointerType !== "mouse" && !isCatalogDragHandleTarget(event.target)) return;
@@ -788,6 +795,7 @@ export const AdminSettingsClient = () => {
     };
     updateDragState(nextState);
     event.currentTarget.setPointerCapture(event.pointerId);
+    event.stopPropagation();
     event.preventDefault();
   };
 
