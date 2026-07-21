@@ -12,8 +12,6 @@ import {
   Loader2,
   Palette,
   Plus,
-  RefreshCw,
-  RotateCcw,
   SlidersHorizontal,
   ToggleLeft,
   ToggleRight,
@@ -30,7 +28,6 @@ import {
   useAdminSettingsCreateCatalogItem,
   useAdminSettingsCreateSpecialtyCategory,
   useAdminSettingsReorderCatalog,
-  useAdminSettingsRestoreDefaults,
   useAdminSettingsUpdateCatalogItem,
   useAdminSettingsUpdateSpecialtyCategory,
 } from "@/api/callers/settings";
@@ -46,7 +43,6 @@ import { cn } from "@/lib/utils";
 
 const cardClass =
   "rounded-card border border-border/80 bg-surface/95 shadow-admin-soft backdrop-blur";
-const RESTORE_CONFIRMATION = "RESTAURAR PADROES";
 
 type MutableCatalogType = Exclude<AdminSettingsCatalogType, "specialty_category">;
 type ListCatalogType = Exclude<MutableCatalogType, "specialty">;
@@ -169,14 +165,6 @@ const formSchema = z.object({
 
 type CatalogForm = z.infer<typeof formSchema>;
 
-const restoreSchema = z.object({
-  confirmation: z.literal(RESTORE_CONFIRMATION, {
-    message: `Digite ${RESTORE_CONFIRMATION} para confirmar`,
-  }),
-});
-
-type RestoreForm = z.infer<typeof restoreSchema>;
-
 const orderedIds = (items: Array<{ id: string }>) => items.map((item) => item.id);
 
 const reorderIds = (ids: string[], id: string, targetIndex: number) => {
@@ -292,9 +280,9 @@ const StatusBadge = ({ active }: { active: boolean }) => (
   </span>
 );
 
-const SettingsHeader = ({ disabled, onRestore }: { disabled: boolean; onRestore: () => void }) => (
+const SettingsHeader = () => (
   <section className={cn(cardClass, "p-5 md:p-6")}>
-    <div className="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
+    <div className="flex flex-col gap-5">
       <div className="min-w-0">
         <p className="text-xs font-semibold uppercase tracking-[0.12em] text-primary">
           Catálogos e filtros
@@ -307,15 +295,6 @@ const SettingsHeader = ({ disabled, onRestore }: { disabled: boolean; onRestore:
           perfil profissional.
         </p>
       </div>
-      <button
-        className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-control bg-primary px-5 text-sm font-semibold text-white shadow-control transition hover:bg-primary-hover disabled:opacity-60 sm:w-fit"
-        disabled={disabled}
-        onClick={onRestore}
-        type="button"
-      >
-        <RefreshCw aria-hidden className="h-4 w-4" />
-        Restaurar padrões
-      </button>
     </div>
   </section>
 );
@@ -563,82 +542,6 @@ const CatalogModal = ({
   );
 };
 
-const RestoreModal = ({
-  onClose,
-  onSubmit,
-  submitting,
-}: {
-  onClose: () => void;
-  onSubmit: (value: string) => Promise<void>;
-  submitting: boolean;
-}) => {
-  const form = useForm<RestoreForm>({
-    defaultValues: { confirmation: "" as RestoreForm["confirmation"] },
-    resolver: zodResolver(restoreSchema),
-  });
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-end bg-overlay p-3 md:items-center md:justify-center">
-      <div className="w-full max-w-lg rounded-[28px] border border-border bg-surface p-5 shadow-2xl">
-        <div className="mb-5 flex items-start justify-between gap-3">
-          <div>
-            <p className="text-xs font-black uppercase tracking-[0.22em] text-danger">
-              Confirmação forte
-            </p>
-            <h2 className="mt-2 text-2xl font-black text-foreground">Restaurar padrões</h2>
-            <p className="mt-2 text-sm leading-6 text-muted">
-              Esta ação reativa e reordena os catálogos oficiais da Lectum. Opções customizadas não
-              são apagadas. Digite <strong>{RESTORE_CONFIRMATION}</strong> para continuar.
-            </p>
-          </div>
-          <button
-            aria-label="Fechar modal"
-            className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-border text-muted hover:text-foreground"
-            onClick={onClose}
-            type="button"
-          >
-            <X className="h-5 w-5" />
-          </button>
-        </div>
-        <FormProvider {...form}>
-          <form
-            className="space-y-3"
-            onSubmit={form.handleSubmit((value) => onSubmit(value.confirmation))}
-          >
-            <InputController<RestoreForm>
-              label="Confirmação"
-              name="confirmation"
-              placeholder={RESTORE_CONFIRMATION}
-              required
-            />
-            <div className="flex flex-col-reverse gap-2 pt-2 sm:flex-row sm:justify-end">
-              <button
-                className="inline-flex h-12 items-center justify-center rounded-2xl border border-border px-5 text-sm font-bold text-muted hover:text-foreground"
-                onClick={onClose}
-                type="button"
-              >
-                Cancelar
-              </button>
-              <button
-                className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl bg-primary px-5 text-sm font-black text-white shadow-admin-soft disabled:opacity-60"
-                disabled={submitting}
-                type="submit"
-              >
-                {submitting ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <RotateCcw className="h-4 w-4" />
-                )}
-                Restaurar padrões
-              </button>
-            </div>
-          </form>
-        </FormProvider>
-      </div>
-    </div>
-  );
-};
-
 export const AdminSettingsClient = () => {
   const catalogs = useAdminSettingsCatalogs();
   const createCategory = useAdminSettingsCreateSpecialtyCategory();
@@ -646,9 +549,7 @@ export const AdminSettingsClient = () => {
   const createItem = useAdminSettingsCreateCatalogItem();
   const updateItem = useAdminSettingsUpdateCatalogItem();
   const reorder = useAdminSettingsReorderCatalog();
-  const restoreDefaults = useAdminSettingsRestoreDefaults();
   const [modal, setModal] = useState<CatalogModalState | null>(null);
-  const [restoreOpen, setRestoreOpen] = useState(false);
   const [dragging, setDragging] = useState<CatalogDragState | null>(null);
   const [optimisticOrders, setOptimisticOrders] = useState<Record<string, string[]>>({});
   const [openCategoryIds, setOpenCategoryIds] = useState<Record<string, boolean>>({});
@@ -681,7 +582,6 @@ export const AdminSettingsClient = () => {
       religions: data?.religions.length ?? 0,
       services: data?.services.length ?? 0,
       specialties: categories.reduce((total, category) => total + category.specialties.length, 0),
-      specialtyCategories: categories.length,
       targetAudiences: data?.target_audiences.length ?? 0,
     }),
     [categories, data],
@@ -916,17 +816,6 @@ export const AdminSettingsClient = () => {
     return undefined;
   };
 
-  const restore = async (confirmation: string) => {
-    try {
-      await restoreDefaults.mutateAsync(confirmation);
-      toast.success("Padrões restaurados");
-      setOptimisticOrders({});
-      setRestoreOpen(false);
-    } catch (error) {
-      toast.error(getErrorMessage(error));
-    }
-  };
-
   const renderCatalogSection = (section: (typeof CATALOG_SECTIONS)[number]) => {
     const items = getOptimisticItems(itemsByType[section.type], section.type);
     const ids = orderedIds(items);
@@ -1012,19 +901,18 @@ export const AdminSettingsClient = () => {
 
   return (
     <div className="space-y-6">
-      <SettingsHeader
-        disabled={catalogs.isLoading || restoreDefaults.isPending}
-        onRestore={() => setRestoreOpen(true)}
-      />
+      <SettingsHeader />
 
-      <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-6">
+      <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 2xl:grid-cols-8">
         {[
-          ["Categorias", counts.specialtyCategories],
           ["Especialidades", counts.specialties],
           ["Abordagens", counts.approaches],
           ["Serviços", counts.services],
-          ["Idiomas/Públicos", counts.languages + counts.targetAudiences],
-          ["Demográficos", counts.genders + counts.raceColors + counts.religions],
+          ["Idiomas", counts.languages],
+          ["Públicos", counts.targetAudiences],
+          ["Gênero", counts.genders],
+          ["Raça", counts.raceColors],
+          ["Religião", counts.religions],
         ].map(([label, value]) => (
           <div className={cn(cardClass, "p-4 md:p-5")} key={String(label)}>
             <p className="text-xs font-semibold uppercase tracking-[0.1em] text-muted">{label}</p>
@@ -1057,10 +945,13 @@ export const AdminSettingsClient = () => {
                     <span className="rounded-full bg-primary-soft px-2.5 py-1 text-xs font-bold text-primary">
                       {categories.length} categorias
                     </span>
+                    <span className="rounded-full bg-primary-soft px-2.5 py-1 text-xs font-bold text-primary">
+                      {counts.specialties} opções
+                    </span>
                   </div>
                   <p className="mt-1 text-sm text-muted">
-                    Categorias persistidas como Ansiedade e Transtornos Relacionados e Humor e Saúde
-                    Mental.
+                    Especialidades usadas nos filtros e no perfil profissional, organizadas por
+                    categoria.
                   </p>
                 </div>
                 <ChevronDown
@@ -1317,13 +1208,6 @@ export const AdminSettingsClient = () => {
             createItem.isPending ||
             updateItem.isPending
           }
-        />
-      ) : null}
-      {restoreOpen ? (
-        <RestoreModal
-          onClose={() => setRestoreOpen(false)}
-          onSubmit={restore}
-          submitting={restoreDefaults.isPending}
         />
       ) : null}
     </div>

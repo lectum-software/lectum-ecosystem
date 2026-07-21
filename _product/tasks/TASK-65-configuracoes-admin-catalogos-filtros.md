@@ -390,3 +390,20 @@ Frontend esperado:
 - `pnpm --dir admin build`
 - `pnpm check`
 - Smoke HTTP local: `GET http://localhost:3002/configuracoes` retornou `200`.
+
+## Ajuste complementar 2026-07-21 - Contadores e cabecalho de catalogos
+
+- Pedido do usuario: remover o botao **Restaurar padroes**, remover os contadores de resumo **Categorias** e **Demograficos**, separar **Idiomas** e **Publicos**, adicionar contadores individuais de **Genero**, **Raca** e **Religiao** e ajustar o cabecalho de **Especialidades**.
+- A faixa de cards de resumo agora exibe apenas contadores por catalogo selecionavel: **Especialidades**, **Abordagens**, **Servicos**, **Idiomas**, **Publicos**, **Genero**, **Raca** e **Religiao**.
+- O contador agregado **Demograficos** e o contador de categorias foram removidos da faixa de resumo.
+- O botao **Restaurar padroes** foi removido do cabecalho da pagina e a interface deixou de abrir o modal de restauracao a partir de Configuracoes.
+- O cabecalho de **Especialidades** mantem a tag com a quantidade de categorias e agora tambem mostra a tag com o total de opcoes; a descricao foi alterada para explicar que se trata de especialidades usadas nos filtros e no perfil profissional, organizadas por categoria.
+- Nao houve alteracao de backend, Prisma/migrations, packages, contratos HTTP, formularios ou dados persistidos.
+
+### Validacao complementar executada
+
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/configuracoes/client.tsx"`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check`
+- Smoke HTTP local: `GET http://localhost:3002/configuracoes` retornou `200`.
