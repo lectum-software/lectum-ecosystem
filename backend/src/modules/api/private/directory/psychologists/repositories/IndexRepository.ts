@@ -487,70 +487,109 @@ export class IndexRepository implements IIndexRepository {
   }
 
   private async getFilters() {
-    const [specialty_categories, specialties, services, approaches, languages, target_audiences] =
-      await Promise.all([
-        prisma.specialty_category.findMany({
-          where: {
-            active: true,
-            deleted: false,
-          },
-          select: categorySelect,
-          orderBy: catalogOrderBy(),
-        }),
-        prisma.specialty.findMany({
-          where: {
-            active: true,
-            deleted: false,
-            category: {
-              active: true,
-              deleted: false,
-            },
-          },
-          select: specialtyCatalogSelect,
-          orderBy: [{ category: { position: "asc" } }, { position: "asc" }, { name: "asc" }],
-        }),
-        prisma.service.findMany({
-          where: {
-            active: true,
-            deleted: false,
-          },
-          select: catalogSelect,
-          orderBy: catalogOrderBy(),
-        }),
-        prisma.approach.findMany({
-          where: {
-            active: true,
-            deleted: false,
-          },
-          select: catalogSelect,
-          orderBy: catalogOrderBy(),
-        }),
-        prisma.profile_catalog_option.findMany({
-          where: {
-            active: true,
-            deleted: false,
-            type: "language",
-          },
-          select: catalogSelect,
-          orderBy: catalogOrderBy(),
-        }),
-        prisma.profile_catalog_option.findMany({
-          where: {
-            active: true,
-            deleted: false,
-            type: "target_audience",
-          },
-          select: catalogSelect,
-          orderBy: catalogOrderBy(),
-        }),
-      ]);
-
-    return {
+    const [
       specialty_categories,
       specialties,
       services,
       approaches,
       languages,
+      target_audiences,
+      genders,
+      race_colors,
+      religions,
+    ] = await Promise.all([
+      prisma.specialty_category.findMany({
+        where: {
+          active: true,
+          deleted: false,
+        },
+        select: categorySelect,
+        orderBy: catalogOrderBy(),
+      }),
+      prisma.specialty.findMany({
+        where: {
+          active: true,
+          deleted: false,
+          category: {
+            active: true,
+            deleted: false,
+          },
+        },
+        select: specialtyCatalogSelect,
+        orderBy: [{ category: { position: "asc" } }, { position: "asc" }, { name: "asc" }],
+      }),
+      prisma.service.findMany({
+        where: {
+          active: true,
+          deleted: false,
+        },
+        select: catalogSelect,
+        orderBy: catalogOrderBy(),
+      }),
+      prisma.approach.findMany({
+        where: {
+          active: true,
+          deleted: false,
+        },
+        select: catalogSelect,
+        orderBy: catalogOrderBy(),
+      }),
+      prisma.profile_catalog_option.findMany({
+        where: {
+          active: true,
+          deleted: false,
+          type: "language",
+        },
+        select: catalogSelect,
+        orderBy: catalogOrderBy(),
+      }),
+      prisma.profile_catalog_option.findMany({
+        where: {
+          active: true,
+          deleted: false,
+          type: "target_audience",
+        },
+        select: catalogSelect,
+        orderBy: catalogOrderBy(),
+      }),
+      prisma.profile_catalog_option.findMany({
+        where: {
+          active: true,
+          deleted: false,
+          type: "gender",
+        },
+        select: catalogSelect,
+        orderBy: catalogOrderBy(),
+      }),
+      prisma.profile_catalog_option.findMany({
+        where: {
+          active: true,
+          deleted: false,
+          type: "race_color",
+        },
+        select: catalogSelect,
+        orderBy: catalogOrderBy(),
+      }),
+      prisma.profile_catalog_option.findMany({
+        where: {
+          active: true,
+          deleted: false,
+          type: "religion",
+        },
+        select: catalogSelect,
+        orderBy: catalogOrderBy(),
+      }),
+    ]);
+
+    return {
+      genders,
+      specialty_categories,
+      specialties,
+      services,
+      approaches,
+      languages,
+      race_colors,
+      religions,
       target_audiences,
     };
   }

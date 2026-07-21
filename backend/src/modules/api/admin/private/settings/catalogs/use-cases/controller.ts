@@ -42,7 +42,17 @@ export const updateCategory = async (req: Request, res: Response) => {
 };
 
 const createItemController =
-  (type: "approach" | "service" | "language" | "target_audience" | "specialty") =>
+  (
+    type:
+      | "approach"
+      | "gender"
+      | "language"
+      | "race_color"
+      | "religion"
+      | "service"
+      | "target_audience"
+      | "specialty",
+  ) =>
   async (req: Request, res: Response) => {
     try {
       return send(res, await createItemService(type, dto(req)));
@@ -52,7 +62,17 @@ const createItemController =
   };
 
 const updateItemController =
-  (type: "approach" | "service" | "language" | "target_audience" | "specialty") =>
+  (
+    type:
+      | "approach"
+      | "gender"
+      | "language"
+      | "race_color"
+      | "religion"
+      | "service"
+      | "target_audience"
+      | "specialty",
+  ) =>
   async (req: Request, res: Response) => {
     try {
       return send(res, await updateItemService(type, dto(req)));
@@ -71,6 +91,12 @@ export const createLanguage = createItemController("language");
 export const updateLanguage = updateItemController("language");
 export const createTargetAudience = createItemController("target_audience");
 export const updateTargetAudience = updateItemController("target_audience");
+export const createGender = createItemController("gender");
+export const updateGender = updateItemController("gender");
+export const createRaceColor = createItemController("race_color");
+export const updateRaceColor = updateItemController("race_color");
+export const createReligion = createItemController("religion");
+export const updateReligion = updateItemController("religion");
 
 export const reorder = async (req: Request, res: Response) => {
   try {

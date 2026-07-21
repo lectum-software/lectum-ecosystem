@@ -209,7 +209,7 @@ Quando construído: módulo de audiência próprio (ex.: `backend/src/modules/ma
 | `crp` | `String?` | registro profissional exibido no cabeçalho |
 | `crp_registration_date` | `DateTime?` | data de inscrição no CRP, preenchida pela consulta CFP real, concessão `admin_grant` ou edição administrativa auditável do registro profissional; não é editável pelo psicólogo e pode ser exibida no perfil público como dado do conselho |
 | `show_experience_tag` | `Boolean @default(true)` | controla se o tempo de experiência calculado por `crp_registration_date` aparece como tag pública |
-| `gender`, `race_color`, `religion` | `String?` | campos declaratórios editáveis no recorte gratuito sem CRP; não entram em validação profissional |
+| `gender`, `race_color`, `religion` | `String?` | campos declaratórios editáveis no recorte gratuito sem CRP; também alimentam filtros públicos e passam a usar opções administráveis em `profile_catalog_option` com tipos `gender`, `race_color` e `religion` |
 | `crp_status` | `String @default("pendente")` | `"pendente" \| "em_analise" \| "aprovado" \| "rejeitado"` (TASK-10/11) |
 | `cfp_verified_at` | `DateTime?` | preenchido so com consulta CFP real; fonte autorizada para TASK-10: InfoSimples `cfp-cadastro` via `DOCUMENT_TOKEN` (ADR-0026) |
 | `whatsapp` | `String?` | E.164; validado em TASK-16 |

@@ -14,6 +14,9 @@ const mutableItemTypes = [
   "service",
   "language",
   "target_audience",
+  "gender",
+  "race_color",
+  "religion",
   "specialty",
 ] as const;
 type MutableItemType = (typeof mutableItemTypes)[number];

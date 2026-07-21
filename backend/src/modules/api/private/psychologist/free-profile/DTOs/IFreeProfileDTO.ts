@@ -103,11 +103,14 @@ export type FreeProfessionalProfileResponse = {
   };
   activation: FreeProfessionalProfileActivation;
   catalogs: {
+    genders: FreeProfileCatalogItem[];
     specialty_categories: FreeProfileCatalogCategory[];
     specialties: FreeProfileCatalogItem[];
     services: FreeProfileCatalogItem[];
     approaches: FreeProfileCatalogItem[];
     languages: FreeProfileCatalogItem[];
+    race_colors: FreeProfileCatalogItem[];
+    religions: FreeProfileCatalogItem[];
     target_audiences: FreeProfileCatalogItem[];
   };
 };

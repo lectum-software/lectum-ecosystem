@@ -252,3 +252,34 @@ export const DEFAULT_TARGET_AUDIENCES: readonly CatalogOptionDefault[] = [
   { name: "Famílias", slug: "familias" },
   { name: "Pessoas LGBTQIA+", slug: "lgbtqia_plus" },
 ];
+
+export const DEFAULT_GENDERS: readonly CatalogOptionDefault[] = [
+  { name: "Feminino", slug: "feminino" },
+  { name: "Masculino", slug: "masculino" },
+  { name: "Não binário", slug: "nao_binario" },
+  { name: "Outro", slug: "outro" },
+  { name: "Prefiro não informar", slug: "nao_informar" },
+];
+
+export const DEFAULT_RACE_COLORS: readonly CatalogOptionDefault[] = [
+  { name: "Branca", slug: "branca" },
+  { name: "Preta", slug: "preta" },
+  { name: "Parda", slug: "parda" },
+  { name: "Amarela", slug: "amarela" },
+  { name: "Indígena", slug: "indigena" },
+  { name: "Prefiro não informar", slug: "nao_informar" },
+];
+
+export const DEFAULT_RELIGIONS: readonly CatalogOptionDefault[] = [
+  { name: "Católica", slug: "catolica" },
+  { name: "Evangélica", slug: "evangelica" },
+  { name: "Espírita", slug: "espirita" },
+  { name: "Umbanda/Candomblé", slug: "umbanda_candomble" },
+  { name: "Judaica", slug: "judaica" },
+  { name: "Islâmica", slug: "islamica" },
+  { name: "Budista", slug: "budista" },
+  { name: "Sem religião", slug: "sem_religiao" },
+  { name: "Ateu/Agnóstico", slug: "ateu_agnostico" },
+  { name: "Outra", slug: "outra" },
+  { name: "Prefiro não informar", slug: "nao_informar" },
+];

@@ -53,6 +53,7 @@ import { usePatient } from "@/api/callers/patient";
 import type {
   DirectoryCatalogItem,
   DirectoryPsychologist,
+  DirectoryPsychologistFilters,
   DirectoryPsychologistsQuery,
   DirectoryPsychologistVideoWatchPayload,
 } from "@/api/generator/types/directory";
@@ -72,14 +73,7 @@ import { playVideoWithSound } from "@/lib/video-playback";
 import { PrivateTemplate } from "@/templates/private";
 import { isPublicMediaUrl, resolvePublicMediaUrl } from "@/utils/media";
 import { CITY_OPTIONS_BY_STATE } from "../professional/profile/setup/brazil-cities";
-import {
-  GENDER_OPTIONS,
-  LANGUAGE_OPTIONS,
-  PUBLIC_TARGET_OPTIONS,
-  RACE_COLOR_OPTIONS,
-  RELIGION_OPTIONS,
-  STATE_OPTIONS,
-} from "../professional/profile/setup/options";
+import { STATE_OPTIONS } from "../professional/profile/setup/options";
 import {
   defaultPsychologistsFilterValues,
   normalizePatientModalityFilter,
@@ -925,16 +919,25 @@ const findCatalogLabel = (
 ) => {
   if (!value) return null;
 
-  return items?.find((item) => item.slug === value || item.id === value)?.name ?? null;
+  return (
+    items?.find((item) => item.slug === value || item.id === value || item.name === value)?.name ??
+    null
+  );
 };
 
 const buildActiveFilterChips = (
   values: PsychologistsFilterForm,
-  filters?: {
-    specialties?: DirectoryCatalogItem[];
-    services?: DirectoryCatalogItem[];
-    approaches?: DirectoryCatalogItem[];
-  },
+  filters?: Pick<
+    DirectoryPsychologistFilters,
+    | "approaches"
+    | "genders"
+    | "languages"
+    | "race_colors"
+    | "religions"
+    | "services"
+    | "specialties"
+    | "target_audiences"
+  >,
 ) => {
   const normalizedValues = normalizeFormValues(values);
   const chips: ActiveFilterChip[] = [];
@@ -968,7 +971,7 @@ const buildActiveFilterChips = (
   );
   addChip(
     "target_audience",
-    findOptionLabel(PUBLIC_TARGET_OPTIONS, normalizedValues.target_audience) ??
+    findCatalogLabel(filters?.target_audiences, normalizedValues.target_audience) ??
       (normalizedValues.target_audience
         ? humanizeFilterValue(normalizedValues.target_audience)
         : null),
@@ -987,22 +990,22 @@ const buildActiveFilterChips = (
   );
   addChip(
     "gender",
-    findOptionLabel(GENDER_OPTIONS, normalizedValues.gender) ??
+    findCatalogLabel(filters?.genders, normalizedValues.gender) ??
       (normalizedValues.gender ? humanizeFilterValue(normalizedValues.gender) : null),
   );
   addChip(
     "race_color",
-    findOptionLabel(RACE_COLOR_OPTIONS, normalizedValues.race_color) ??
+    findCatalogLabel(filters?.race_colors, normalizedValues.race_color) ??
       (normalizedValues.race_color ? humanizeFilterValue(normalizedValues.race_color) : null),
   );
   addChip(
     "religion",
-    findOptionLabel(RELIGION_OPTIONS, normalizedValues.religion) ??
+    findCatalogLabel(filters?.religions, normalizedValues.religion) ??
       (normalizedValues.religion ? humanizeFilterValue(normalizedValues.religion) : null),
   );
   addChip(
     "language",
-    findOptionLabel(LANGUAGE_OPTIONS, normalizedValues.language) ??
+    findCatalogLabel(filters?.languages, normalizedValues.language) ??
       (normalizedValues.language ? humanizeFilterValue(normalizedValues.language) : null),
   );
 

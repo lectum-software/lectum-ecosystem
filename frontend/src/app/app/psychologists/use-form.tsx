@@ -87,9 +87,17 @@ const normalizeFilterOptionText = (value: string) =>
 const withoutPreferNotInform = (options: FieldOption[]) =>
   options.filter((option) => normalizeFilterOptionText(option.label) !== "prefiro nao informar");
 
-const GENDER_FILTER_OPTIONS = withoutPreferNotInform(GENDER_OPTIONS);
-const RACE_COLOR_FILTER_OPTIONS = withoutPreferNotInform(RACE_COLOR_OPTIONS);
-const RELIGION_FILTER_OPTIONS = withoutPreferNotInform(RELIGION_OPTIONS);
+const toDemographicFilterOptions = (
+  items: DirectoryPsychologistFilters[keyof Pick<
+    DirectoryPsychologistFilters,
+    "genders" | "race_colors" | "religions"
+  >],
+  fallback: FieldOption[],
+) => {
+  const options = toCatalogOptions(items);
+
+  return withoutPreferNotInform(options.length > 0 ? options : fallback);
+};
 
 type UsePsychologistsFilterFormProps = {
   filters?: DirectoryPsychologistFilters;
@@ -218,7 +226,8 @@ export const usePsychologistsFilterForm = ({
         label: "Gênero do psicólogo",
         emptyLabel: "Todos os gêneros",
         inputClassName: filterSelectInputClassName,
-        options: GENDER_FILTER_OPTIONS,
+        loading,
+        options: toDemographicFilterOptions(filters?.genders ?? [], GENDER_OPTIONS),
         searchable: true,
         searchMode: "dropdown",
       },
@@ -229,7 +238,8 @@ export const usePsychologistsFilterForm = ({
         label: "Raça do psicólogo",
         emptyLabel: "Todas as raças/cores",
         inputClassName: filterSelectInputClassName,
-        options: RACE_COLOR_FILTER_OPTIONS,
+        loading,
+        options: toDemographicFilterOptions(filters?.race_colors ?? [], RACE_COLOR_OPTIONS),
         searchable: true,
         searchMode: "dropdown",
       },
@@ -240,7 +250,8 @@ export const usePsychologistsFilterForm = ({
         label: "Religião do psicólogo",
         emptyLabel: "Todas as religiões",
         inputClassName: filterSelectInputClassName,
-        options: RELIGION_FILTER_OPTIONS,
+        loading,
+        options: toDemographicFilterOptions(filters?.religions ?? [], RELIGION_OPTIONS),
         searchable: true,
         searchMode: "dropdown",
       },
@@ -289,7 +300,10 @@ export const usePsychologistsFilterForm = ({
     ],
     [
       filters?.approaches,
+      filters?.genders,
       filters?.languages,
+      filters?.race_colors,
+      filters?.religions,
       filters?.services,
       filters?.specialty_categories,
       filters?.specialties,

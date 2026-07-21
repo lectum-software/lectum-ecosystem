@@ -315,48 +315,82 @@ const getUserWithProfile = (userId: string) => {
 };
 
 const getCatalogs = async () => {
-  const [specialty_categories, specialties, services, approaches, languages, target_audiences] =
-    await Promise.all([
-      prisma.specialty_category.findMany({
-        where: { active: true, deleted: false },
-        orderBy: catalogOrderBy(),
-        select: categorySelect,
-      }),
-      prisma.specialty.findMany({
-        where: {
+  const [
+    specialty_categories,
+    specialties,
+    services,
+    approaches,
+    languages,
+    target_audiences,
+    genders,
+    race_colors,
+    religions,
+  ] = await Promise.all([
+    prisma.specialty_category.findMany({
+      where: { active: true, deleted: false },
+      orderBy: catalogOrderBy(),
+      select: categorySelect,
+    }),
+    prisma.specialty.findMany({
+      where: {
+        active: true,
+        deleted: false,
+        category: {
           active: true,
           deleted: false,
-          category: {
-            active: true,
-            deleted: false,
-          },
         },
-        orderBy: [{ category: { position: "asc" } }, { position: "asc" }, { name: "asc" }],
-        select: specialtyCatalogSelect,
-      }),
-      prisma.service.findMany({
-        where: { active: true, deleted: false },
-        orderBy: catalogOrderBy(),
-        select: catalogSelect,
-      }),
-      prisma.approach.findMany({
-        where: { active: true, deleted: false },
-        orderBy: catalogOrderBy(),
-        select: catalogSelect,
-      }),
-      prisma.profile_catalog_option.findMany({
-        where: { active: true, deleted: false, type: "language" },
-        orderBy: catalogOrderBy(),
-        select: catalogSelect,
-      }),
-      prisma.profile_catalog_option.findMany({
-        where: { active: true, deleted: false, type: "target_audience" },
-        orderBy: catalogOrderBy(),
-        select: catalogSelect,
-      }),
-    ]);
+      },
+      orderBy: [{ category: { position: "asc" } }, { position: "asc" }, { name: "asc" }],
+      select: specialtyCatalogSelect,
+    }),
+    prisma.service.findMany({
+      where: { active: true, deleted: false },
+      orderBy: catalogOrderBy(),
+      select: catalogSelect,
+    }),
+    prisma.approach.findMany({
+      where: { active: true, deleted: false },
+      orderBy: catalogOrderBy(),
+      select: catalogSelect,
+    }),
+    prisma.profile_catalog_option.findMany({
+      where: { active: true, deleted: false, type: "language" },
+      orderBy: catalogOrderBy(),
+      select: catalogSelect,
+    }),
+    prisma.profile_catalog_option.findMany({
+      where: { active: true, deleted: false, type: "target_audience" },
+      orderBy: catalogOrderBy(),
+      select: catalogSelect,
+    }),
+    prisma.profile_catalog_option.findMany({
+      where: { active: true, deleted: false, type: "gender" },
+      orderBy: catalogOrderBy(),
+      select: catalogSelect,
+    }),
+    prisma.profile_catalog_option.findMany({
+      where: { active: true, deleted: false, type: "race_color" },
+      orderBy: catalogOrderBy(),
+      select: catalogSelect,
+    }),
+    prisma.profile_catalog_option.findMany({
+      where: { active: true, deleted: false, type: "religion" },
+      orderBy: catalogOrderBy(),
+      select: catalogSelect,
+    }),
+  ]);
 
-  return { specialty_categories, specialties, services, approaches, languages, target_audiences };
+  return {
+    genders,
+    specialty_categories,
+    specialties,
+    services,
+    approaches,
+    languages,
+    race_colors,
+    religions,
+    target_audiences,
+  };
 };
 const toResponse = async (
   item: UserWithProfile,

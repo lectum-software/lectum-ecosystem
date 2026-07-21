@@ -3,7 +3,10 @@ import adminAuth from "../../../middlewares/_auth";
 import {
   createApproach,
   createCategory,
+  createGender,
   createLanguage,
+  createRaceColor,
+  createReligion,
   createService,
   createSpecialty,
   createTargetAudience,
@@ -12,7 +15,10 @@ import {
   restoreDefaults,
   updateApproach,
   updateCategory,
+  updateGender,
   updateLanguage,
+  updateRaceColor,
+  updateReligion,
   updateService,
   updateSpecialty,
   updateTargetAudience,
@@ -47,5 +53,11 @@ routes.post("/languages", createItemValidator, createLanguage);
 routes.put("/languages/:id", updateItemValidator, updateLanguage);
 routes.post("/target-audiences", createItemValidator, createTargetAudience);
 routes.put("/target-audiences/:id", updateItemValidator, updateTargetAudience);
+routes.post("/genders", createItemValidator, createGender);
+routes.put("/genders/:id", updateItemValidator, updateGender);
+routes.post("/race-colors", createItemValidator, createRaceColor);
+routes.put("/race-colors/:id", updateItemValidator, updateRaceColor);
+routes.post("/religions", createItemValidator, createReligion);
+routes.put("/religions/:id", updateItemValidator, updateReligion);
 
 export default routes;

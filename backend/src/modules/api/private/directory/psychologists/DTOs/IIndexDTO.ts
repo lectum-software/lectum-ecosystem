@@ -50,11 +50,14 @@ export type DirectoryPsychologist = {
 };
 
 export type DirectoryPsychologistFilters = {
+  genders: DirectoryCatalogItem[];
   specialty_categories: DirectoryCatalogCategory[];
   specialties: DirectoryCatalogItem[];
   services: DirectoryCatalogItem[];
   approaches: DirectoryCatalogItem[];
   languages: DirectoryCatalogItem[];
+  race_colors: DirectoryCatalogItem[];
+  religions: DirectoryCatalogItem[];
   target_audiences: DirectoryCatalogItem[];
 };
 

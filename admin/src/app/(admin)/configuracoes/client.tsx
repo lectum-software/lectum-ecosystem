@@ -4,11 +4,13 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import {
   CheckCircle2,
   ChevronDown,
+  Church,
   Edit3,
   GripVertical,
   Languages,
   Layers3,
   Loader2,
+  Palette,
   Plus,
   RefreshCw,
   RotateCcw,
@@ -16,6 +18,7 @@ import {
   ToggleLeft,
   ToggleRight,
   UsersRound,
+  VenusAndMars,
   X,
 } from "lucide-react";
 import { type PointerEvent, type ReactNode, useMemo, useRef, useState } from "react";
@@ -126,11 +129,32 @@ const CATALOG_SECTIONS: Array<{
     label: "Público",
     type: "target_audience",
   },
+  {
+    description: "Opções usadas no filtro de gênero e no perfil profissional.",
+    icon: <VenusAndMars className="h-5 w-5" />,
+    label: "Gênero",
+    type: "gender",
+  },
+  {
+    description: "Opções usadas no filtro de raça/cor dos psicólogos.",
+    icon: <Palette className="h-5 w-5" />,
+    label: "Raça",
+    type: "race_color",
+  },
+  {
+    description: "Opções usadas no filtro de religião dos psicólogos.",
+    icon: <Church className="h-5 w-5" />,
+    label: "Religião",
+    type: "religion",
+  },
 ];
 
 const singularLabel: Record<AdminSettingsCatalogType, string> = {
   approach: "abordagem",
+  gender: "gênero",
   language: "idioma",
+  race_color: "raça",
+  religion: "religião",
   service: "serviço",
   specialty: "especialidade",
   specialty_category: "categoria",
@@ -630,7 +654,10 @@ export const AdminSettingsClient = () => {
   const [openCategoryIds, setOpenCategoryIds] = useState<Record<string, boolean>>({});
   const [openSections, setOpenSections] = useState<Record<SettingsSectionId, boolean>>({
     approach: false,
+    gender: false,
     language: false,
+    race_color: false,
+    religion: false,
     service: false,
     specialties: false,
     target_audience: false,
@@ -648,7 +675,10 @@ export const AdminSettingsClient = () => {
   const counts = useMemo(
     () => ({
       approaches: data?.approaches.length ?? 0,
+      genders: data?.genders.length ?? 0,
       languages: data?.languages.length ?? 0,
+      raceColors: data?.race_colors.length ?? 0,
+      religions: data?.religions.length ?? 0,
       services: data?.services.length ?? 0,
       specialties: categories.reduce((total, category) => total + category.specialties.length, 0),
       specialtyCategories: categories.length,
@@ -658,7 +688,10 @@ export const AdminSettingsClient = () => {
   );
   const itemsByType: Record<ListCatalogType, AdminSettingsCatalogOption[]> = {
     approach: data?.approaches ?? [],
+    gender: data?.genders ?? [],
     language: data?.languages ?? [],
+    race_color: data?.race_colors ?? [],
+    religion: data?.religions ?? [],
     service: data?.services ?? [],
     target_audience: data?.target_audiences ?? [],
   };
@@ -984,13 +1017,14 @@ export const AdminSettingsClient = () => {
         onRestore={() => setRestoreOpen(true)}
       />
 
-      <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+      <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-6">
         {[
           ["Categorias", counts.specialtyCategories],
           ["Especialidades", counts.specialties],
           ["Abordagens", counts.approaches],
           ["Serviços", counts.services],
           ["Idiomas/Públicos", counts.languages + counts.targetAudiences],
+          ["Demográficos", counts.genders + counts.raceColors + counts.religions],
         ].map(([label, value]) => (
           <div className={cn(cardClass, "p-4 md:p-5")} key={String(label)}>
             <p className="text-xs font-semibold uppercase tracking-[0.1em] text-muted">{label}</p>

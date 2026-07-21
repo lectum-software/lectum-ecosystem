@@ -5,6 +5,9 @@ export const ADMIN_CATALOG_TYPES = [
   "service",
   "language",
   "target_audience",
+  "gender",
+  "race_color",
+  "religion",
   "specialty",
   "specialty_category",
 ] as const;
@@ -57,7 +60,10 @@ export type AdminSettingsSpecialtyCategoryDTO = AdminSettingsCatalogOptionDTO & 
 
 export type AdminSettingsCatalogsDTO = {
   approaches: AdminSettingsCatalogOptionDTO[];
+  genders: AdminSettingsCatalogOptionDTO[];
   languages: AdminSettingsCatalogOptionDTO[];
+  race_colors: AdminSettingsCatalogOptionDTO[];
+  religions: AdminSettingsCatalogOptionDTO[];
   services: AdminSettingsCatalogOptionDTO[];
   specialty_categories: AdminSettingsSpecialtyCategoryDTO[];
   target_audiences: AdminSettingsCatalogOptionDTO[];

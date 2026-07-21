@@ -337,6 +337,29 @@ Frontend esperado:
 - `pnpm check`
 - Smoke HTTP local: `GET http://localhost:3002/configuracoes` retornou `200`.
 
+## Ajuste complementar 2026-07-21 - Blocos de Genero, Raca e Religiao
+
+- Pedido do usuario: adicionar, na tela Admin **Configuracoes**, os blocos de definicoes de filtros **Genero**, **Raca** e **Religiao**.
+- Os tres blocos foram adicionados ao catalogo administravel usando a tabela real `profile_catalog_option` com tipos `gender`, `race_color` e `religion`, sem criar tabela nova e sem usar mock.
+- A migration `20260721152000_add_demographic_filter_catalogs` popula defaults idempotentes preservando os valores historicos usados nos perfis e filtros publicos (`feminino`, `nao_binario`, `branca`, `catolica` etc.).
+- O endpoint Admin de configuracoes agora lista, cria, edita, desativa/reativa e reordena os novos tipos pelos mesmos contratos reais de catalogo; **Restaurar padroes** tambem reativa/reordena esses defaults.
+- A busca publica de psicologos e o setup/edicao profissional passam a receber Genero, Raca e Religiao pelos catalogos reais retornados pelo backend, mantendo **Prefiro nao informar** fora da busca publica e disponivel no perfil quando ativo.
+- UI mantida mobile-first: os novos blocos entram como cards empilhados no fluxo mobile e como continuidade responsiva da lista de configuracoes em telas maiores.
+- Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente; a referencia auditavel foi `_product/proto/admin/Configuracoes.png` e a captura enviada pelo usuario.
+
+### Validacao complementar executada
+
+- `pnpm --dir backend db:migrate` foi acionado por incluir migration de dados; o processo local ficou preso no `schema-engine`, sem reset ou comando destrutivo. Na sequencia, `pnpm --dir backend exec prisma migrate status` e `pnpm --dir backend exec prisma migrate deploy` confirmaram schema atualizado e sem migrations pendentes.
+- Consulta direta ao banco confirmou as opcoes reais: `gender=5`, `race_color=6`, `religion=11`.
+- Smoke autenticado do endpoint real `GET http://localhost:3001/api/admin/private/settings/catalogs` confirmou `genders=5`, `race_colors=6`, `religions=11`.
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+
 ## Ajuste complementar 2026-07-21 - Drag aninhado de especialidades
 
 - Pedido do usuario: ao arrastar uma especialidade dentro de uma categoria expandida, somente a especialidade deve ser reordenada; o card inteiro da categoria nao deve iniciar drag.

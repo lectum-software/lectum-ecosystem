@@ -1,5 +1,8 @@
 import { z } from "zod";
-import type { FreeProfessionalProfile } from "@/api/generator/types/free-profile";
+import type {
+  FreeProfessionalProfile,
+  FreeProfileCatalogItem,
+} from "@/api/generator/types/free-profile";
 import { onlyDigits } from "@/components/controllers/utils";
 import { type Field, type FieldOption, useFormList } from "@/hooks/form";
 import {
@@ -186,7 +189,19 @@ const PROFESSIONAL_COUNTRY_CALLING_CODE_OPTIONS = COUNTRY_CALLING_CODE_OPTIONS.m
   option.country === "BR" ? { ...option, label: "+55" } : option,
 );
 
-export const createFields = (languageOptions: FieldOption[] = LANGUAGE_OPTIONS) =>
+type ProfileCatalogFieldOptions = {
+  genderOptions?: FieldOption[];
+  languageOptions?: FieldOption[];
+  raceColorOptions?: FieldOption[];
+  religionOptions?: FieldOption[];
+};
+
+export const createFields = ({
+  genderOptions = GENDER_OPTIONS,
+  languageOptions = LANGUAGE_OPTIONS,
+  raceColorOptions = RACE_COLOR_OPTIONS,
+  religionOptions = RELIGION_OPTIONS,
+}: ProfileCatalogFieldOptions = {}) =>
   [
     {
       name: "professional_first_name",
@@ -214,7 +229,7 @@ export const createFields = (languageOptions: FieldOption[] = LANGUAGE_OPTIONS) 
       field: "select",
       label: "Gênero",
       placeholder: "Selecione seu gênero",
-      options: GENDER_OPTIONS,
+      options: genderOptions,
       required: true,
     },
     {
@@ -222,14 +237,14 @@ export const createFields = (languageOptions: FieldOption[] = LANGUAGE_OPTIONS) 
       field: "select",
       label: "Raça/Cor",
       placeholder: "Selecione sua raça/cor",
-      options: RACE_COLOR_OPTIONS,
+      options: raceColorOptions,
     },
     {
       name: "religion",
       field: "select",
       label: "Religião",
       placeholder: "Selecione sua religião",
-      options: RELIGION_OPTIONS,
+      options: religionOptions,
     },
     {
       name: "cpf",
@@ -398,6 +413,37 @@ const hasConfiguredProfile = (data?: FreeProfessionalProfile | null) => {
   );
 };
 
+const humanizeCatalogValue = (value: string) =>
+  value
+    .replace(/[-_]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .replace(/\b\w/g, (letter) => letter.toLocaleUpperCase("pt-BR"));
+
+const ensureCurrentOption = (
+  options: FieldOption[],
+  currentValue?: string | null,
+  fallbackOptions: FieldOption[] = [],
+) => {
+  if (!currentValue || options.some((option) => option.value === currentValue)) return options;
+
+  const fallbackLabel = fallbackOptions.find((option) => option.value === currentValue)?.label;
+
+  return [
+    ...options,
+    {
+      label: fallbackLabel ?? humanizeCatalogValue(currentValue),
+      value: currentValue,
+    },
+  ];
+};
+
+const catalogSlugOptions = (items?: FreeProfileCatalogItem[] | null) =>
+  (items ?? []).map((item) => ({ label: item.name, value: item.slug }));
+
+const catalogNameOptions = (items?: FreeProfileCatalogItem[] | null) =>
+  (items ?? []).map((item) => ({ label: item.name, value: item.name }));
+
 const splitProfessionalNameFallback = (fullName?: string | null) => {
   const parts = String(fullName ?? "")
     .trim()
@@ -455,11 +501,34 @@ export const getDefaultValues = (data?: FreeProfessionalProfile | null): FreePro
 
 export const useFreeProfileForm = (data?: FreeProfessionalProfile | null) => {
   const defaults = getDefaultValues(data);
-  const languageOptions =
-    data?.catalogs.languages?.map((item) => ({ label: item.name, value: item.name })) || [];
+  const genderOptions = catalogSlugOptions(data?.catalogs.genders);
+  const languageOptions = catalogNameOptions(data?.catalogs.languages);
+  const raceColorOptions = catalogSlugOptions(data?.catalogs.race_colors);
+  const religionOptions = catalogSlugOptions(data?.catalogs.religions);
 
   return useFormList<FreeProfileForm>({
-    fields: createFields(languageOptions.length > 0 ? languageOptions : LANGUAGE_OPTIONS),
+    fields: createFields({
+      genderOptions: ensureCurrentOption(
+        genderOptions.length > 0 ? genderOptions : GENDER_OPTIONS,
+        defaults.gender,
+        GENDER_OPTIONS,
+      ),
+      languageOptions: ensureCurrentOption(
+        languageOptions.length > 0 ? languageOptions : LANGUAGE_OPTIONS,
+        defaults.language,
+        LANGUAGE_OPTIONS,
+      ),
+      raceColorOptions: ensureCurrentOption(
+        raceColorOptions.length > 0 ? raceColorOptions : RACE_COLOR_OPTIONS,
+        defaults.race_color,
+        RACE_COLOR_OPTIONS,
+      ),
+      religionOptions: ensureCurrentOption(
+        religionOptions.length > 0 ? religionOptions : RELIGION_OPTIONS,
+        defaults.religion,
+        RELIGION_OPTIONS,
+      ),
+    }),
     schema: freeProfileSchema,
     defaultValues: defaults,
     values: defaults,

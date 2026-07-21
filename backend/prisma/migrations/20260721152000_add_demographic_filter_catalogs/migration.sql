@@ -1,0 +1,31 @@
+INSERT INTO "profile_catalog_options" ("id", "type", "name", "slug", "active", "deleted", "position")
+VALUES
+  ('profile-catalog-gender-feminino', 'gender', 'Feminino', 'feminino', true, false, 0),
+  ('profile-catalog-gender-masculino', 'gender', 'Masculino', 'masculino', true, false, 10),
+  ('profile-catalog-gender-nao-binario', 'gender', 'Não binário', 'nao_binario', true, false, 20),
+  ('profile-catalog-gender-outro', 'gender', 'Outro', 'outro', true, false, 30),
+  ('profile-catalog-gender-nao-informar', 'gender', 'Prefiro não informar', 'nao_informar', true, false, 40),
+  ('profile-catalog-race-color-branca', 'race_color', 'Branca', 'branca', true, false, 0),
+  ('profile-catalog-race-color-preta', 'race_color', 'Preta', 'preta', true, false, 10),
+  ('profile-catalog-race-color-parda', 'race_color', 'Parda', 'parda', true, false, 20),
+  ('profile-catalog-race-color-amarela', 'race_color', 'Amarela', 'amarela', true, false, 30),
+  ('profile-catalog-race-color-indigena', 'race_color', 'Indígena', 'indigena', true, false, 40),
+  ('profile-catalog-race-color-nao-informar', 'race_color', 'Prefiro não informar', 'nao_informar', true, false, 50),
+  ('profile-catalog-religion-catolica', 'religion', 'Católica', 'catolica', true, false, 0),
+  ('profile-catalog-religion-evangelica', 'religion', 'Evangélica', 'evangelica', true, false, 10),
+  ('profile-catalog-religion-espirita', 'religion', 'Espírita', 'espirita', true, false, 20),
+  ('profile-catalog-religion-umbanda-candomble', 'religion', 'Umbanda/Candomblé', 'umbanda_candomble', true, false, 30),
+  ('profile-catalog-religion-judaica', 'religion', 'Judaica', 'judaica', true, false, 40),
+  ('profile-catalog-religion-islamica', 'religion', 'Islâmica', 'islamica', true, false, 50),
+  ('profile-catalog-religion-budista', 'religion', 'Budista', 'budista', true, false, 60),
+  ('profile-catalog-religion-sem-religiao', 'religion', 'Sem religião', 'sem_religiao', true, false, 70),
+  ('profile-catalog-religion-ateu-agnostico', 'religion', 'Ateu/Agnóstico', 'ateu_agnostico', true, false, 80),
+  ('profile-catalog-religion-outra', 'religion', 'Outra', 'outra', true, false, 90),
+  ('profile-catalog-religion-nao-informar', 'religion', 'Prefiro não informar', 'nao_informar', true, false, 100)
+ON CONFLICT ("type", "slug") DO UPDATE SET
+  "name" = EXCLUDED."name",
+  "active" = true,
+  "deleted" = false,
+  "deleted_at" = NULL,
+  "position" = EXCLUDED."position",
+  "updated_at" = CURRENT_TIMESTAMP;

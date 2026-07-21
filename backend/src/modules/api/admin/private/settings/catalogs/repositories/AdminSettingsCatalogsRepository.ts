@@ -3,7 +3,10 @@ import prisma from "@/infra/database/prisma";
 import {
   type CatalogOptionDefault,
   DEFAULT_APPROACHES,
+  DEFAULT_GENDERS,
   DEFAULT_LANGUAGES,
+  DEFAULT_RACE_COLORS,
+  DEFAULT_RELIGIONS,
   DEFAULT_SERVICES,
   DEFAULT_SPECIALTY_CATEGORIES,
   DEFAULT_TARGET_AUDIENCES,
@@ -49,13 +52,25 @@ const optionId = (prefix: string, slug: string) => `${prefix}-${slug}`.slice(0, 
 const optionType = (type: AdminCatalogType) => {
   if (type === "language") return "language";
   if (type === "target_audience") return "target_audience";
+  if (type === "gender") return "gender";
+  if (type === "race_color") return "race_color";
+  if (type === "religion") return "religion";
 
   return null;
 };
 
 export class AdminSettingsCatalogsRepository {
   async listCatalogs(): Promise<AdminSettingsCatalogsDTO> {
-    const [categories, approaches, services, languages, targetAudiences] = await Promise.all([
+    const [
+      categories,
+      approaches,
+      services,
+      languages,
+      targetAudiences,
+      genders,
+      raceColors,
+      religions,
+    ] = await Promise.all([
       prisma.specialty_category.findMany({
         where: { deleted: false },
         orderBy: catalogOrderBy,
@@ -89,6 +104,18 @@ export class AdminSettingsCatalogsRepository {
         where: { deleted: false, type: "target_audience" },
         orderBy: catalogOrderBy,
       }),
+      prisma.profile_catalog_option.findMany({
+        where: { deleted: false, type: "gender" },
+        orderBy: catalogOrderBy,
+      }),
+      prisma.profile_catalog_option.findMany({
+        where: { deleted: false, type: "race_color" },
+        orderBy: catalogOrderBy,
+      }),
+      prisma.profile_catalog_option.findMany({
+        where: { deleted: false, type: "religion" },
+        orderBy: catalogOrderBy,
+      }),
     ]);
 
     const specialty_categories: AdminSettingsSpecialtyCategoryDTO[] = categories.map((category) => {
@@ -110,7 +137,10 @@ export class AdminSettingsCatalogsRepository {
       approaches: approaches.map((item) =>
         toCatalogOption(item, item._count.psychologist_approaches),
       ),
+      genders: genders.map((item) => toCatalogOption(item, null)),
       languages: languages.map((item) => toCatalogOption(item, null)),
+      race_colors: raceColors.map((item) => toCatalogOption(item, null)),
+      religions: religions.map((item) => toCatalogOption(item, null)),
       services: services.map((item) => toCatalogOption(item, item._count.psychologist_services)),
       specialty_categories,
       target_audiences: targetAudiences.map((item) => toCatalogOption(item, null)),
@@ -359,7 +389,14 @@ export class AdminSettingsCatalogsRepository {
       }
 
       const restoreOptions = async (
-        type: "approach" | "service" | "language" | "target_audience",
+        type:
+          | "approach"
+          | "gender"
+          | "language"
+          | "race_color"
+          | "religion"
+          | "service"
+          | "target_audience",
         defaults: readonly CatalogOptionDefault[],
       ) => {
         for (const [index, item] of defaults.entries()) {
@@ -429,6 +466,9 @@ export class AdminSettingsCatalogsRepository {
       await restoreOptions("service", DEFAULT_SERVICES);
       await restoreOptions("language", DEFAULT_LANGUAGES);
       await restoreOptions("target_audience", DEFAULT_TARGET_AUDIENCES);
+      await restoreOptions("gender", DEFAULT_GENDERS);
+      await restoreOptions("race_color", DEFAULT_RACE_COLORS);
+      await restoreOptions("religion", DEFAULT_RELIGIONS);
     });
   }
 }

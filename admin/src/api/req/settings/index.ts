@@ -7,6 +7,9 @@ export const ADMIN_SETTINGS_CATALOG_TYPES = [
   "service",
   "language",
   "target_audience",
+  "gender",
+  "race_color",
+  "religion",
   "specialty",
   "specialty_category",
 ] as const;
@@ -34,7 +37,10 @@ export type AdminSettingsSpecialtyCategory = AdminSettingsCatalogOption & {
 
 export type AdminSettingsCatalogs = {
   approaches: AdminSettingsCatalogOption[];
+  genders: AdminSettingsCatalogOption[];
   languages: AdminSettingsCatalogOption[];
+  race_colors: AdminSettingsCatalogOption[];
+  religions: AdminSettingsCatalogOption[];
   services: AdminSettingsCatalogOption[];
   specialty_categories: AdminSettingsSpecialtyCategory[];
   target_audiences: AdminSettingsCatalogOption[];
@@ -84,7 +90,10 @@ export const updateAdminSpecialtyCategory = async (
 
 const pathByType: Record<Exclude<AdminSettingsCatalogType, "specialty_category">, string> = {
   approach: "approaches",
+  gender: "genders",
   language: "languages",
+  race_color: "race-colors",
+  religion: "religions",
   service: "services",
   specialty: "specialties",
   target_audience: "target-audiences",
