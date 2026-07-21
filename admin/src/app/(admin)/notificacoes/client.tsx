@@ -281,33 +281,35 @@ const ChannelPill = ({ channel }: { channel: AdminNotificationChannel }) => (
   </span>
 );
 
+const filterSelectClass =
+  "h-11 w-full min-w-0 appearance-none rounded-control border border-border bg-surface py-0 pl-3 pr-11 text-sm font-semibold text-foreground shadow-control outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20";
+
+const FilterSelectChevron = () => (
+  <ChevronDown
+    aria-hidden
+    className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground"
+  />
+);
+
 const MetricCard = ({
   available = true,
-  description,
   icon,
   label,
   value,
 }: {
   available?: boolean;
-  description: string;
   icon: ReactNode;
   label: string;
   value: string;
 }) => (
   <CardShell className="min-h-36 p-5">
-    <div className="flex items-start justify-between gap-3">
-      <div className="grid h-12 w-12 place-items-center rounded-full bg-primary-soft text-primary">
-        {icon}
-      </div>
-      <span className="rounded-full bg-surface-muted px-2 py-1 text-[0.65rem] font-bold text-muted">
-        real
-      </span>
+    <div className="grid h-12 w-12 place-items-center rounded-full bg-primary-soft text-primary">
+      {icon}
     </div>
     <p className="mt-4 text-sm font-black text-foreground">{label}</p>
     <p className={cn("mt-2 text-3xl font-black tracking-tight", !available && "text-muted")}>
       {value}
     </p>
-    <p className="mt-2 text-xs leading-relaxed text-muted">{description}</p>
   </CardShell>
 );
 
@@ -316,35 +318,23 @@ const MetricsGrid = ({ metrics }: { metrics: AdminNotificationMetrics }) => {
   return (
     <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
       <MetricCard
-        description={`${metrics.campaigns.sent} campanhas enviadas; card conta entregas com status real de alcance.`}
         icon={<Send aria-hidden className="h-5 w-5" />}
-        label={`Entregas enviadas (${metrics.period.label})`}
+        label="Notificações enviadas"
         value={numberFormatter.format(metrics.deliveries.reached)}
       />
       <MetricCard
-        description="Usuários únicos com entrega real no período. Push sem subscription não entra no alcance."
         icon={<UsersRound aria-hidden className="h-5 w-5" />}
         label="Usuários alcançados"
         value={numberFormatter.format(metrics.deliveries.reached_users)}
       />
       <MetricCard
         available={hasReach}
-        description={
-          hasReach
-            ? "Baseada em read_at/click real persistido."
-            : "Indisponível sem entrega real no período."
-        }
         icon={<Eye aria-hidden className="h-5 w-5" />}
         label="Taxa de abertura média"
         value={hasReach ? formatPercent(metrics.rates.open_rate_percent) : "—"}
       />
       <MetricCard
         available={hasReach}
-        description={
-          hasReach
-            ? "Baseada apenas em clicked_at real."
-            : "Indisponível sem entrega real no período."
-        }
         icon={<MousePointerClick aria-hidden className="h-5 w-5" />}
         label="Taxa de cliques média"
         value={hasReach ? formatPercent(metrics.rates.click_rate_percent) : "—"}
@@ -426,62 +416,71 @@ const NotificationTableFiltersBlock = ({
         </label>
         <label className="min-w-0 text-xs font-bold text-muted">
           Público
-          <select
-            className="mt-1 h-11 w-full min-w-0 rounded-control border border-border bg-surface px-3 text-sm font-semibold text-foreground shadow-control outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
-            onChange={(event) =>
-              onFiltersChange({
-                ...filters,
-                audience: event.target.value as NotificationTableFilters["audience"],
-              })
-            }
-            value={filters.audience}
-          >
-            <option value="all">Todos</option>
-            {AUDIENCE_OPTIONS.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="min-w-0 text-xs font-bold text-muted">
-          Canal
-          <select
-            className="mt-1 h-11 w-full min-w-0 rounded-control border border-border bg-surface px-3 text-sm font-semibold text-foreground shadow-control outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
-            onChange={(event) =>
-              onFiltersChange({
-                ...filters,
-                channel: event.target.value as NotificationTableFilters["channel"],
-              })
-            }
-            value={filters.channel}
-          >
-            <option value="all">Todos</option>
-            <option value="in_app">In-app</option>
-            <option value="push">Push</option>
-          </select>
-        </label>
-        {hasStatusFilter ? (
-          <label className="min-w-0 text-xs font-bold text-muted">
-            Status
+          <span className="relative mt-1 block min-w-0">
             <select
-              className="mt-1 h-11 w-full min-w-0 rounded-control border border-border bg-surface px-3 text-sm font-semibold text-foreground shadow-control outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
-              onChange={(event) => onStatusChange?.(event.target.value)}
-              value={status}
+              className={filterSelectClass}
+              onChange={(event) =>
+                onFiltersChange({
+                  ...filters,
+                  audience: event.target.value as NotificationTableFilters["audience"],
+                })
+              }
+              value={filters.audience}
             >
-              {statusOptions?.map((option) => (
+              <option value="all">Todos</option>
+              {AUDIENCE_OPTIONS.map((option) => (
                 <option key={option.value} value={option.value}>
                   {option.label}
                 </option>
               ))}
             </select>
+            <FilterSelectChevron />
+          </span>
+        </label>
+        <label className="min-w-0 text-xs font-bold text-muted">
+          Canal
+          <span className="relative mt-1 block min-w-0">
+            <select
+              className={filterSelectClass}
+              onChange={(event) =>
+                onFiltersChange({
+                  ...filters,
+                  channel: event.target.value as NotificationTableFilters["channel"],
+                })
+              }
+              value={filters.channel}
+            >
+              <option value="all">Todos</option>
+              <option value="in_app">In-app</option>
+              <option value="push">Push</option>
+            </select>
+            <FilterSelectChevron />
+          </span>
+        </label>
+        {hasStatusFilter ? (
+          <label className="min-w-0 text-xs font-bold text-muted">
+            Status
+            <span className="relative mt-1 block min-w-0">
+              <select
+                className={filterSelectClass}
+                onChange={(event) => onStatusChange?.(event.target.value)}
+                value={status}
+              >
+                {statusOptions?.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+              <FilterSelectChevron />
+            </span>
           </label>
         ) : null}
         <label className="min-w-0 text-xs font-bold text-muted">
           Período
           <span className="relative mt-1 block min-w-0">
             <select
-              className="h-11 w-full min-w-0 appearance-none rounded-control border border-border bg-surface py-0 pl-3 pr-10 text-sm font-semibold text-foreground shadow-control outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+              className={filterSelectClass}
               onChange={(event) => onPeriodChange(event.target.value as NotificationPeriodPreset)}
               value={period}
             >
@@ -496,15 +495,12 @@ const NotificationTableFiltersBlock = ({
                 </option>
               ))}
             </select>
-            <ChevronDown
-              aria-hidden
-              className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground"
-            />
+            <FilterSelectChevron />
           </span>
         </label>
         <div className="grid min-w-0 gap-3 sm:grid-cols-2" onBlur={onDateControlsBlur}>
           <label className="min-w-0 text-xs font-bold text-muted">
-            Data: De
+            De
             <input
               className="mt-1 h-11 w-full min-w-0 rounded-control border border-border bg-surface px-3 text-sm font-semibold text-foreground shadow-control outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
               max={range.to || undefined}
@@ -514,7 +510,7 @@ const NotificationTableFiltersBlock = ({
             />
           </label>
           <label className="min-w-0 text-xs font-bold text-muted">
-            Data: Até
+            Até
             <input
               className="mt-1 h-11 w-full min-w-0 rounded-control border border-border bg-surface px-3 text-sm font-semibold text-foreground shadow-control outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
               min={range.from || undefined}
@@ -666,9 +662,9 @@ const CampaignsList = ({
   <CardShell className="overflow-hidden">
     <div className="flex flex-col gap-3 p-4 sm:flex-row sm:items-start sm:justify-between">
       <div className="min-w-0">
-        <h2 className="text-lg font-black">Campanhas manuais</h2>
+        <h2 className="text-lg font-black">Notificações manuais</h2>
         <p className="text-sm text-muted">
-          {numberFormatter.format(count)} campanha(s) encontrada(s).
+          {numberFormatter.format(count)} notificações(s) encontrada(s).
         </p>
       </div>
       <div className="flex flex-col gap-3 sm:items-end">
@@ -691,7 +687,7 @@ const CampaignsList = ({
     {filtersSlot}
     {campaigns.length === 0 ? (
       <div className="p-6 text-sm font-bold text-muted">
-        Nenhuma campanha manual encontrada para os filtros atuais.
+        Nenhuma notificação manual encontrada para os filtros atuais.
       </div>
     ) : (
       <div className="overflow-x-auto">
@@ -837,7 +833,7 @@ const AutomaticLogs = ({
       <div>
         <h2 className="text-lg font-black">Logs de notificações automáticas</h2>
         <p className="text-sm text-muted">
-          Histórico somente leitura gerado pelo dispatcher real da plataforma.
+          {numberFormatter.format(count)} notificações(s) encontrada(s).
         </p>
       </div>
       {isFetching ? (

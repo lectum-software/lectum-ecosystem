@@ -316,3 +316,22 @@ UI:
 - `pnpm --dir admin build`
 - Smoke HTTP local: `GET http://localhost:3002/notificacoes` retornou `200`.
 - Browser autenticado completo n?o foi repetido nesta execu??o porque n?o h? sess?o Admin interativa acess?vel ao ambiente; a valida??o visual usou a captura enviada pelo usu?rio e o PNG local de refer?ncia.
+
+## Ajuste complementar 2026-07-21 - Copy de notificações e setas dos filtros
+
+- Pedido do usuário: ajustar a copy dos contadores e das tabelas da página Admin **Notificações**, removendo a tag **real** e as descrições internas dos cards de métricas.
+- O contador **Entregas enviadas (Todo o período)** passou a exibir **Notificações enviadas** sem subtítulo auxiliar.
+- **Campanhas manuais** passou a **Notificações manuais**, e os textos de contagem passaram a usar `X notificações(s) encontrada(s).` também nos logs automáticos.
+- Os labels dos campos de data dos filtros por tabela ficaram somente **De** e **Até**.
+- Os selects dos filtros por tabela passaram a usar seta customizada com `appearance-none`, padding à direita e ícone deslocado para `right-4`, evitando seta colada na borda.
+- Não houve mudança de backend, Prisma/migrations, packages, contratos HTTP, dados persistidos, canais disponíveis ou formulários RHF/Zod.
+- Builder/Quick Copy não esteve disponível como ferramenta callable neste ambiente; a referência visual auditável permaneceu `_product/proto/admin/Notificações.png` e a captura enviada pelo usuário.
+
+### Validação deste ajuste
+
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/notificacoes/client.tsx"`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check`
+- Smoke HTTP local: `GET http://localhost:3002/notificacoes` retornou `200`.
+- Browser local/headless em Chrome confirmou renderização da rota protegida até a tela de login; a inspeção autenticada completa depende de sessão Admin interativa no navegador do usuário.
