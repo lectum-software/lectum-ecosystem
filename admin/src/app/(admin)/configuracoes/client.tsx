@@ -357,6 +357,10 @@ const CatalogRow = ({
   transform?: string;
 }) => {
   const isDragDisabled = activeMutation || dragDisabled;
+  const linkedLabel =
+    typeof item.linked_count === "number"
+      ? `${item.linked_count} ${item.linked_count === 1 ? "psicólogo vinculado" : "psicólogos vinculados"}`
+      : null;
 
   return (
     <div
@@ -381,9 +385,7 @@ const CatalogRow = ({
         <div className="flex flex-wrap items-center gap-2">
           <p className="truncate text-sm font-bold text-foreground">{item.name}</p>
           <StatusBadge active={item.active} />
-          {typeof item.linked_count === "number" ? (
-            <span className="text-xs text-muted">{item.linked_count} vínculo(s)</span>
-          ) : null}
+          {linkedLabel ? <span className="text-xs text-muted">{linkedLabel}</span> : null}
         </div>
       </div>
       <div className="flex flex-wrap items-center gap-2">
