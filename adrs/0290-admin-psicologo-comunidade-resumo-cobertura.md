@@ -65,3 +65,18 @@ Decisão complementar:
 Consequência: administradores conseguem mudar período e datas de **Comunidades ativas** sem deslocar ou alterar os demais blocos de estatísticas, mantendo dados reais e leitura mais compacta.
 
 Validação do ajuste: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e browser local/headless via Chrome/CDP em desktop 1365px e mobile 390px, confirmando filtro `active-communities-statistics-*`, tabela com 7 colunas e rolagem horizontal mobile controlada.
+
+## Atualizacao 2026-07-20: densidade da tabela de Comunidades ativas
+
+Apos validacao visual do bloco **Comunidades ativas**, o produto solicitou reduzir redundancia da tabela e tornar a leitura das colunas mais direta.
+
+Decisao complementar:
+
+- Remover a coluna **Interacoes**, porque o mesmo total ja e melhor lido como contexto da comunidade.
+- Exibir abaixo do nome da comunidade o total real de **acoes no periodo**, calculado como `posts + respostas` do psicologo no recorte filtrado.
+- Nao exibir o slug da comunidade nesse bloco, pois a prioridade operacional e comparar atividade real no periodo, nao metadado tecnico.
+- Centralizar os dados das colunas **Posts**, **Respostas**, **Status**, **Ranking** e **Cobertura**, preservando a primeira coluna alinhada a esquerda para identidade da comunidade.
+
+Consequencia: a tabela fica com menos colunas, evita duplicar o total de acoes e melhora a varredura visual em desktop sem alterar backend, endpoint, schema, mocks ou dependencias. No mobile, a rolagem horizontal controlada permanece.
+
+Validacao do ajuste: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e browser local/headless via Chrome/CDP em desktop 1365px e mobile 390px, confirmando a ausencia da coluna **Interacoes**, a sublinha **1 acao no periodo** abaixo do nome e as colunas de dados centralizadas.

@@ -254,6 +254,17 @@ Exibir estatísticas de negócio/comunidade e publicações do psicólogo com da
 - Validações executadas para este ajuste: `pnpm --dir admin exec biome check --write "src/app/(admin)/psicologos/[id]/client.tsx"`, `pnpm --dir admin exec eslint "src/app/(admin)/psicologos/[id]/client.tsx"`, `pnpm --dir admin check`, `pnpm --dir admin build` e `pnpm check`.
 - Validação de browser local/headless via Chrome/CDP em `/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=estatisticas`: desktop 1365px confirmou tabela com 7 colunas e filtro próprio `active-communities-statistics-*`; mobile 390px confirmou rolagem horizontal controlada da tabela. Admin temporário real criado para validação foi removido ao final.
 
+### Ajuste da tabela de Comunidades ativas em 2026-07-20
+
+- Pedido do usuario: no bloco **Comunidades ativas**, substituir o slug exibido abaixo do nome da comunidade pelo total real de **acoes no periodo**, remover a coluna **Interacoes** e centralizar os dados das colunas restantes.
+- A implementacao preserva a regra de dados reais: o total de acoes no periodo continua sendo `posts + respostas` do psicologo para aquela comunidade e periodo filtrado, sem mock, seed ou alteracao de contrato.
+- A tabela permanece mobile-first com rolagem horizontal controlada em telas estreitas; em desktop, posts, respostas, status, ranking e cobertura ficam centralizados.
+- Nao houve alteracao de backend, API, Prisma schema, migrations, packages ou endpoints; `pnpm --dir backend db:migrate` nao foi necessario.
+- Builder/Quick Copy nao estava disponivel como ferramenta callable no ambiente; a validacao visual usou o recorte enviado pelo usuario e o PNG local `_product/proto/admin/Psicologos/Detalhes do psicologo/Estatisticas.png`.
+- ADR atualizado: `adrs/0290-admin-psicologo-comunidade-resumo-cobertura.md`.
+- Validacoes executadas para este ajuste: `pnpm --dir admin exec biome check --write "src/app/(admin)/psicologos/[id]/client.tsx"`, `pnpm --dir admin exec eslint "src/app/(admin)/psicologos/[id]/client.tsx"`, `pnpm --dir admin check`, `pnpm --dir admin build` e `pnpm check`.
+- Validacao de browser local/headless via Chrome/CDP em desktop 1365px e mobile 390px confirmou cabecalhos `Comunidade`, `Posts`, `Respostas`, `Status`, `Ranking` e `Cobertura`, ausencia da coluna **Interacoes**, sublinha `1 acao no periodo` abaixo do nome e alinhamento central dos dados das colunas.
+
 ### Ajuste visual do cabecalho de Publicacoes em 2026-07-20
 
 - Na aba **Publicacoes**, o card branco que envolvia o titulo, o texto **Mostrando X de X registros**, o filtro **Ordenar**, a lista e a paginacao foi removido.

@@ -2594,6 +2594,9 @@ const formatCoverageRate = (community: PsychologistStatisticsCommunityItem) =>
         minimumFractionDigits: 1,
       })}%`;
 
+const formatCommunityPeriodActions = (actions: number) =>
+  `${numberFormatter.format(actions)} ${actions === 1 ? "ação" : "ações"} no período`;
+
 const ActiveCommunityAvatar = ({
   community,
 }: {
@@ -2664,30 +2667,27 @@ const ActiveCommunitiesBlock = ({
       <div className="mt-5 overflow-x-auto rounded-[1.35rem] border border-border bg-surface">
         <table className="w-full min-w-[920px] border-collapse text-left">
           <caption className="sr-only">
-            Lista de comunidades ativas do psicólogo por interações, posts, respostas, status de
-            seguimento, ranking e cobertura.
+            Lista de comunidades ativas do psicólogo por ações no período, posts, respostas, status
+            de seguimento, ranking e cobertura.
           </caption>
           <thead className="bg-surface-muted/80">
             <tr className="text-xs font-black text-muted">
               <th className="px-4 py-3" scope="col">
                 Comunidade
               </th>
-              <th className="px-4 py-3 text-right" scope="col">
-                Interações
-              </th>
-              <th className="px-4 py-3 text-right" scope="col">
+              <th className="px-4 py-3 text-center" scope="col">
                 Posts
               </th>
-              <th className="px-4 py-3 text-right" scope="col">
+              <th className="px-4 py-3 text-center" scope="col">
                 Respostas
               </th>
-              <th className="px-4 py-3" scope="col">
+              <th className="px-4 py-3 text-center" scope="col">
                 Status
               </th>
-              <th className="px-4 py-3" scope="col">
+              <th className="px-4 py-3 text-center" scope="col">
                 Ranking
               </th>
-              <th className="px-4 py-3" scope="col">
+              <th className="px-4 py-3 text-center" scope="col">
                 Cobertura
               </th>
             </tr>
@@ -2710,21 +2710,18 @@ const ActiveCommunitiesBlock = ({
                           {community.name}
                         </span>
                         <span className="mt-1 block text-xs font-bold text-muted">
-                          {community.slug}
+                          {formatCommunityPeriodActions(interactions)}
                         </span>
                       </span>
                     </div>
                   </th>
-                  <td className="px-4 py-4 text-right text-sm font-black text-foreground">
-                    {numberFormatter.format(interactions)}
-                  </td>
-                  <td className="px-4 py-4 text-right text-sm font-bold text-muted">
+                  <td className="px-4 py-4 text-center text-sm font-bold text-muted">
                     {numberFormatter.format(community.posts)}
                   </td>
-                  <td className="px-4 py-4 text-right text-sm font-bold text-muted">
+                  <td className="px-4 py-4 text-center text-sm font-bold text-muted">
                     {numberFormatter.format(community.replies)}
                   </td>
-                  <td className="px-4 py-4">
+                  <td className="px-4 py-4 text-center">
                     <Badge
                       className={cn(
                         "whitespace-nowrap",
@@ -2736,10 +2733,10 @@ const ActiveCommunitiesBlock = ({
                       {community.following ? "Segue" : "Não segue"}
                     </Badge>
                   </td>
-                  <td className="px-4 py-4 text-sm font-black text-foreground">
+                  <td className="px-4 py-4 text-center text-sm font-black text-foreground">
                     {formatCommunityRanking(community)}
                   </td>
-                  <td className="px-4 py-4">
+                  <td className="px-4 py-4 text-center">
                     <span className="block text-sm font-black text-foreground">
                       {formatCoverageRate(community)}
                     </span>
