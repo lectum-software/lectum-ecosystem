@@ -399,6 +399,50 @@ permanecer como atributo do psicologo, mas nao como uma escolha principal no fil
 - Browser local via Chrome/CDP em `/psychologists?modality=online`, viewport `390x844`: dropdown de modalidades exibiu
   apenas `Todas as modalidades`, `Online` e `Presencial`.
 
+## Complemento 2026-07-21 - scroll interno do dropdown pesquisavel
+
+### Contexto
+
+No desktop, dentro da modal de filtros de `/psychologists`, clicar diretamente na barra de rolagem do dropdown
+pesquisavel de especialidades fechava a lista. A causa era o fechamento por `blur` do `SelectController`: em interacoes
+com a scrollbar interna o navegador podia remover o foco do combobox sem informar um `relatedTarget` dentro do
+fieldset, encerrando o dropdown antes do usuario conseguir rolar a lista.
+
+Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente; a referencia visual ativa consultada foi o
+inventario `_product/tasks/PROTO-INVENTORY.md`, com fallback local
+`_product/proto/Filtros de Psicólogos - Serviços Expandidos.jpg`, alem do screenshot enviado pelo usuario.
+
+### Decisao
+
+- Centralizar a correcao no `SelectController` compartilhado da fundacao da TASK-02, sem criar seletor paralelo para a
+  tela de psicologos.
+- Registrar `pointerdown` capturado dentro da raiz do select para diferenciar interacao interna, incluindo a scrollbar,
+  de um clique externo real.
+- Manter um listener de `pointerdown` no `document` apenas enquanto o dropdown esta aberto, fechando a lista quando o
+  alvo esta fora da raiz do select.
+- Preservar fechamento por blur/tab para navegacao por teclado e manter a selecao de opcoes com os handlers existentes.
+
+### Consequencias
+
+- O usuario consegue clicar e arrastar/usar a scrollbar interna dos dropdowns pesquisaveis sem a lista fechar no
+  desktop.
+- A modal de filtros, os dados reais, a URL, os contratos de API e a arquitetura de formulario permanecem inalterados.
+- A correcao tambem beneficia outros usos do `SelectController` com dropdown customizado, sem novo pacote, mock, seed,
+  backend, Prisma ou migration.
+
+### Validacao
+
+- `pnpm.cmd --dir frontend exec biome check --write src/components/controllers/select/index.tsx`
+- `pnpm.cmd --dir frontend check`
+- `pnpm.cmd --dir frontend build` com `NODE_OPTIONS=--max-old-space-size=4096`
+- `pnpm.cmd check` foi tentado apos a correcao; frontend e backend passaram, mas a etapa Admin bloqueou por formatacao
+  preexistente em `admin/src/app/(admin)/pacientes/client.tsx`, fora do escopo deste ajuste.
+- `git diff --check -- frontend/src/components/controllers/select/index.tsx _product/tasks/TASK-13-psicologos-listagem-filtros.md adrs/0019-descoberta-psicologos-taxonomias.md`
+- Browser local via Chrome/CDP em `http://localhost:3000/psychologists`, viewport desktop `1440x1000`: a modal de
+  filtros abriu, o select `Especialidade` exibiu dropdown com overflow vertical (`scrollHeight=3848`,
+  `clientHeight=286`) e o clique real na area da scrollbar interna manteve `#specialty-listbox` aberto com
+  `aria-expanded="true"`.
+
 ## Pendências
 
 - Curadoria ou ingestão real dos catálogos `specialty`, `service` e `approach`.

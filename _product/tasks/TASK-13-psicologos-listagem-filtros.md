@@ -1614,3 +1614,37 @@ Validacoes do complemento:
 - `pnpm --dir backend build`
 - `pnpm check`
 - `git diff --check`
+
+## Execucao complementar: scroll interno do dropdown pesquisavel (2026-07-21)
+
+- Pedido do usuario: no desktop, ao clicar na barra de rolagem da lista suspensa de filtros, a lista nao deve fechar;
+  deve permitir rolar a propria lista suspensa.
+- Referencia visual ativa: inventario `_product/tasks/PROTO-INVENTORY.md`, fallback local
+  `_product/proto/Filtros de Psicólogos - Serviços Expandidos.jpg` e screenshot enviado pelo usuario em
+  `/psychologists`; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
+- Frontend: o `SelectController` compartilhado da fundacao da TASK-02 passou a diferenciar `pointerdown` interno
+  (incluindo scrollbar do dropdown) de clique externo real antes de fechar por `blur`.
+- Frontend: enquanto o dropdown esta aberto, um listener temporario de `pointerdown` no `document` fecha apenas quando o
+  alvo esta fora da raiz do select, mantendo o comportamento esperado de clique externo.
+- Nao houve alteracao de backend, Prisma, migrations, packages, dados reais, filtros, ranking, query params ou rotas.
+- ADR atualizado: `adrs/0019-descoberta-psicologos-taxonomias.md`.
+
+Criterios complementares:
+
+- [x] Clicar na area da scrollbar interna do dropdown pesquisavel no desktop nao fecha a lista.
+- [x] Cliques externos continuam fechando o dropdown.
+- [x] O select continua usando a fundacao da TASK-02, sem componente paralelo.
+- [x] Nenhum `<img>`, package novo, mock, endpoint simulado, dado fake ou mudanca de banco foi usado.
+
+Validacoes do complemento:
+
+- `pnpm.cmd --dir frontend exec biome check --write src/components/controllers/select/index.tsx`
+- `pnpm.cmd --dir frontend check`
+- `pnpm.cmd --dir frontend build` com `NODE_OPTIONS=--max-old-space-size=4096`
+- `pnpm.cmd check` foi tentado apos a correcao; frontend e backend passaram, mas a etapa Admin bloqueou por formatacao
+  preexistente em `admin/src/app/(admin)/pacientes/client.tsx`, fora do escopo deste ajuste.
+- `git diff --check -- frontend/src/components/controllers/select/index.tsx _product/tasks/TASK-13-psicologos-listagem-filtros.md adrs/0019-descoberta-psicologos-taxonomias.md`
+- Browser local via Chrome/CDP em `http://localhost:3000/psychologists`, viewport desktop `1440x1000`: a modal de
+  filtros abriu, o select `Especialidade` exibiu dropdown com overflow vertical (`scrollHeight=3848`,
+  `clientHeight=286`) e o clique real na area da scrollbar interna manteve `#specialty-listbox` aberto com
+  `aria-expanded="true"`.

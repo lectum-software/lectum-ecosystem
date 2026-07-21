@@ -1,7 +1,7 @@
 "use client";
 
 import { ChevronDown, Search } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Controller, type FieldValues, useWatch } from "react-hook-form";
 import { Container } from "@/components/controllers/container";
 import { describedBy, fieldId } from "@/components/controllers/utils";
@@ -43,6 +43,8 @@ export function SelectController<FormType extends FieldValues>({
 }: ControllerFieldProps<FormType>) {
   const inputId = fieldId(name, id);
   const listboxId = `${inputId}-listbox`;
+  const selectRootRef = useRef<HTMLDivElement | HTMLFieldSetElement | null>(null);
+  const isPointerDownInsideRef = useRef(false);
   const [isOpen, setIsOpen] = useState(false);
   const [query, setQuery] = useState("");
   const dependentValue = useWatch({
@@ -63,6 +65,48 @@ export function SelectController<FormType extends FieldValues>({
       .replace(/\p{Diacritic}/gu, "")
       .toLowerCase()
       .trim();
+
+  const registerPointerDownInside = () => {
+    isPointerDownInsideRef.current = true;
+
+    window.setTimeout(() => {
+      isPointerDownInsideRef.current = false;
+    }, 180);
+  };
+  const setDivRootRef = (node: HTMLDivElement | null) => {
+    selectRootRef.current = node;
+  };
+  const setFieldsetRootRef = (node: HTMLFieldSetElement | null) => {
+    selectRootRef.current = node;
+  };
+
+  const shouldKeepDropdownOpenAfterBlur = (
+    currentTarget: EventTarget & HTMLElement,
+    relatedTarget: EventTarget | null,
+  ) => {
+    if (isPointerDownInsideRef.current) return true;
+    if (!(relatedTarget instanceof Node)) return false;
+
+    return currentTarget.contains(relatedTarget);
+  };
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleDocumentPointerDown = (event: PointerEvent) => {
+      const target = event.target;
+      if (!(target instanceof Node)) return;
+      if (selectRootRef.current?.contains(target)) return;
+
+      setIsOpen(false);
+    };
+
+    document.addEventListener("pointerdown", handleDocumentPointerDown, true);
+
+    return () => {
+      document.removeEventListener("pointerdown", handleDocumentPointerDown, true);
+    };
+  }, [isOpen]);
 
   return (
     <Controller
@@ -169,11 +213,14 @@ export function SelectController<FormType extends FieldValues>({
               <fieldset
                 className="relative min-w-0 border-0 p-0"
                 onBlur={(event) => {
-                  const nextTarget = event.relatedTarget;
-                  if (nextTarget && event.currentTarget.contains(nextTarget)) return;
+                  if (shouldKeepDropdownOpenAfterBlur(event.currentTarget, event.relatedTarget)) {
+                    return;
+                  }
 
                   setIsOpen(false);
                 }}
+                onPointerDownCapture={registerPointerDownInside}
+                ref={setFieldsetRootRef}
               >
                 <button
                   aria-controls={listboxId}
@@ -243,7 +290,11 @@ export function SelectController<FormType extends FieldValues>({
                 ) : null}
               </fieldset>
             ) : searchable ? (
-              <div className="relative">
+              <div
+                className="relative"
+                onPointerDownCapture={registerPointerDownInside}
+                ref={setDivRootRef}
+              >
                 <Search
                   aria-hidden="true"
                   className="pointer-events-none absolute left-4 top-1/2 z-10 h-4 w-4 -translate-y-1/2 text-subtle"
@@ -264,7 +315,18 @@ export function SelectController<FormType extends FieldValues>({
                   name={field.name}
                   onBlur={() => {
                     field.onBlur();
-                    window.setTimeout(() => setIsOpen(false), 120);
+                    window.setTimeout(() => {
+                      const activeElement = document.activeElement;
+                      if (
+                        isPointerDownInsideRef.current ||
+                        (activeElement instanceof Node &&
+                          selectRootRef.current?.contains(activeElement))
+                      ) {
+                        return;
+                      }
+
+                      setIsOpen(false);
+                    }, 120);
                   }}
                   onChange={(event) => {
                     const nextQuery = event.target.value;
@@ -314,12 +376,15 @@ export function SelectController<FormType extends FieldValues>({
               <fieldset
                 className="relative min-w-0 border-0 p-0"
                 onBlur={(event) => {
-                  const nextTarget = event.relatedTarget;
-                  if (nextTarget && event.currentTarget.contains(nextTarget)) return;
+                  if (shouldKeepDropdownOpenAfterBlur(event.currentTarget, event.relatedTarget)) {
+                    return;
+                  }
 
                   setIsOpen(false);
                   field.onBlur();
                 }}
+                onPointerDownCapture={registerPointerDownInside}
+                ref={setFieldsetRootRef}
               >
                 <button
                   aria-controls={listboxId}
