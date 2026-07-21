@@ -1770,7 +1770,7 @@ const Heatmap = ({ detail }: { detail: AdminPatientDetail }) => {
           <div>
             <h2 className="text-lg font-extrabold text-foreground">Horários de maior atividade</h2>
             <p className="mt-1 text-sm text-muted">
-              Agregação de eventos reais no fuso Brasília ({detail.heatmap.timezone}).
+              Agregação de eventos reais no fuso de Brasília.
             </p>
           </div>
         </div>
@@ -2222,14 +2222,17 @@ const GeneralTab = ({ detail, id }: { detail: AdminPatientDetail; id: string }) 
 
 const StatisticsTab = ({ detail, id }: { detail: AdminPatientDetail; id: string }) => {
   const statisticsFilter = usePatientStatisticsPeriodFilter(detail.header.created_at);
+  const usesInitialAllPeriod = statisticsFilter.selectedPeriod === "all";
   const statisticsQuery = useAdminPatientDetail(id, statisticsFilter.periodQuery, {
+    enabled: !usesInitialAllPeriod,
     placeholderData: (previous) => previous ?? detail,
   });
   const errorMessage = statisticsQuery.error ? resolveApiError(statisticsQuery.error) : null;
-  const statisticsDetail = statisticsQuery.data ?? detail;
-  const isRefreshing = statisticsQuery.isFetching && Boolean(statisticsQuery.data);
+  const statisticsDetail = usesInitialAllPeriod ? detail : (statisticsQuery.data ?? detail);
+  const isRefreshing =
+    !usesInitialAllPeriod && statisticsQuery.isFetching && Boolean(statisticsQuery.data);
 
-  if (statisticsQuery.isError && !statisticsQuery.data && errorMessage) {
+  if (!usesInitialAllPeriod && statisticsQuery.isError && !statisticsQuery.data && errorMessage) {
     return <ErrorState message={errorMessage} onRetry={() => void statisticsQuery.refetch()} />;
   }
 

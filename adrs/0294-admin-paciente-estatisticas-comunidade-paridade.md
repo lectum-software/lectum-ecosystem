@@ -61,3 +61,31 @@ tracking novo ou endpoint paralelo apenas para preencher a UI.
 - Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente; as referencias
   auditaveis foram a captura enviada pelo usuario, `_product/proto/admin/Pacientes/Pacientes -
   Detalhes.png` e `_product/proto/admin/Psicólogos/Detalhes do psicólogo/Estatísticas.png`.
+
+## Revisao 2026-07-21 - Paridade visual fina com psicologo
+
+### Contexto
+
+Novo feedback indicou que a aba **Estatisticas** do paciente ainda preservava detalhes visuais diferentes do bloco equivalente de psicologos: legenda solta, badge tecnico de timezone, icones de voto diferentes e ausencia dos filtros de periodo/data no header do card.
+
+### Decisao
+
+- Manter `GET /api/admin/private/patients/:id` como fonte unica dos dados reais da aba.
+- Levar os filtros **Periodo**, **De** e **Ate** para o card **Estatisticas de comunidade**, com presets equivalentes aos do psicologo e **Personalizado** apenas como estado derivado de datas manuais.
+- Usar **Todo o periodo** como estado inicial sem segunda chamada HTTP redundante; os demais periodos continuam consultando o backend com `period/from/to`.
+- Transformar os cards de metricas em toggles de series, com icones e cores alinhados ao padrao do psicologo, incluindo setas para upvotes/downvotes.
+- Remover a legenda visual antiga e o badge cru `America/Sao_Paulo`; manter apenas copy humana de fuso de Brasilia no heatmap.
+
+### Consequencias
+
+- A aba de paciente fica visualmente consistente com o detalhe de psicologos sem criar componente compartilhado prematuro nem acoplar contratos de dominio distintos.
+- O admin continua trabalhando apenas com dados reais persistidos e filtros suportados pelo contrato existente.
+- Nao houve alteracao de schema Prisma, migration, package, seed, mock, tracking ou endpoint paralelo.
+
+### Validacao
+
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/pacientes/[id]/client.tsx" "src/api/callers/patients/index.ts"`
+- `pnpm --dir admin typecheck`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- Browser local/headless via Chrome/CDP em `/pacientes/cmrqsrab5001f1guh2ve5oy90?tab=estatisticas`, desktop `1365x900` e mobile `390x844`, validando filtros, cards toggles, grafico, remocao do badge de timezone e remocao da legenda antiga.

@@ -488,3 +488,24 @@ Frontend esperado:
 - `pnpm check` passou antes de alteracoes paralelas fora desta entrega. A reexecucao final ficou bloqueada por mudancas nao relacionadas em `backend/src/modules/api/admin/private/moderation/*` com `AdminModerationSummaryDTO.operational_alerts` incompleto.
 - Service local: `showAdminPatientReports({ id: "cmrb6fbix0000y0uhdpu1bptl" })` retornou `200`, cards reais de denuncias e item de `post_report`.
 - Browser local/headless via Chrome/CDP em `http://localhost:3002/pacientes/cmrb6fbix0000y0uhdpu1bptl?tab=denuncias`, com admin temporario real removido ao final, validou desktop `1365x900` e mobile `390x844`: cards, filtros, lista real de denuncia, icone de alerta no menu e `scrollWidth=390` no mobile.
+
+## Ajuste pos-feedback 2026-07-21 - Paridade visual fina da aba Estatisticas
+
+- Pedido do usuario: a aba **Estatisticas** do detalhe de paciente ainda estava diferente do layout das estatisticas do psicologo, principalmente nos detalhes de icones, filtros de periodo/data e elementos que deveriam sair.
+- O bloco **Estatisticas de comunidade** passou a seguir a mesma composicao visual do psicologo: titulo e copy no topo, filtros **Periodo**, **De** e **Ate** no header do card, cards clicaveis como toggles de serie e grafico SVG logo abaixo.
+- O seletor de **Periodo** da aba Estatisticas usa os mesmos presets operacionais do psicologo (**Hoje**, **Esta semana**, **Este mes**, **Este ano** e **Todo o periodo**) e mantém **Personalizado** apenas como estado tecnico quando o admin edita datas manuais.
+- O periodo inicial da aba ficou em **Todo o periodo** sem refetch redundante, reutilizando o detalhe ja carregado; ao escolher outro preset/data, a aba refaz a consulta real com `period/from/to`.
+- Os icones dos contadores foram alinhados ao padrao do psicologo: votos usam setas direcionais, salvamentos usam bookmark e os cards passam a controlar a visibilidade das series.
+- Foram removidos da aba Estatisticas o badge cru de timezone (`America/Sao_Paulo`) e a legenda solta antiga abaixo dos cards; o heatmap permanece honesto com copy humana de fuso de Brasilia.
+- Nao houve backend novo, contrato HTTP novo, schema Prisma, migration, package, mock, seed, tracking ou ampliacao de dados sensiveis. `db:migrate` nao se aplicou.
+- Builder/Quick Copy nao esta exposto como ferramenta callable no ambiente; as referencias auditaveis foram a captura enviada pelo usuario e `_product/proto/admin/Psicologos/Detalhes do psicologo/Estatisticas.png`.
+- ADR atualizado: `adrs/0294-admin-paciente-estatisticas-comunidade-paridade.md`.
+
+### Validacao complementar executada
+
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/pacientes/[id]/client.tsx" "src/api/callers/patients/index.ts"`
+- `pnpm --dir admin typecheck`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- Browser local/headless via Chrome/CDP em `http://localhost:3002/pacientes/cmrqsrab5001f1guh2ve5oy90?tab=estatisticas`, com admin temporario real removido ao final, validou desktop `1365x900` e mobile `390x844`: filtros **Periodo/De/Ate**, default **Todo o periodo**, sete cards toggles, grafico SVG novo, sem badge `America/Sao_Paulo`, sem legenda antiga e `scrollWidth=390` no mobile.
+- `pnpm check` foi reexecutado e ficou bloqueado por formatacao de uma alteracao paralela nao relacionada em `admin/src/components/admin-shell/shell.tsx`; a validacao de escopo desta entrega permaneceu verde com `biome check` no arquivo alterado, `pnpm --dir admin typecheck` e `pnpm --dir admin build`.
