@@ -19,8 +19,20 @@ const communitySelect = {
 const postSummarySelect = {
   content: true,
   createdAt: true,
+  downvotes_count: true,
   id: true,
+  replies_count: true,
+  reports: {
+    select: {
+      id: true,
+    },
+    where: {
+      deleted: false,
+    },
+  },
+  saves_count: true,
   title: true,
+  upvotes_count: true,
   community: {
     select: communitySelect,
   },
@@ -675,6 +687,26 @@ export class AdminPatientDetailRepository {
           deleted: false,
           role: "paciente",
         },
+      },
+    });
+  }
+
+  async countPostViews(postIds: string[]) {
+    if (postIds.length === 0) return [];
+
+    return prisma.page_view_event.groupBy({
+      by: ["target_id"],
+      where: {
+        deleted: false,
+        target_id: {
+          in: postIds,
+        },
+        target_type: {
+          in: ["community_post", "post"],
+        },
+      },
+      _count: {
+        _all: true,
       },
     });
   }

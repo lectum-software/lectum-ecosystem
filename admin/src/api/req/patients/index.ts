@@ -506,6 +506,45 @@ export type PatientsDetailCommunity = {
   votes: number;
 };
 
+export type PatientsDetailPublicationMetric = {
+  available: boolean;
+  id: "comments" | "downvotes" | "reports" | "saves" | "shares" | "upvotes" | "views";
+  label: string;
+  source: string;
+  unit: "count";
+  unavailable_reason: string | null;
+  value: number;
+};
+
+export type PatientsDetailPublication = {
+  admin_statistics_url: string;
+  community: {
+    avatar_url: string | null;
+    color: string | null;
+    id: string;
+    name: string;
+    slug: string;
+  };
+  content: string;
+  created_at: string;
+  excerpt: string;
+  id: string;
+  metrics: {
+    comments: PatientsDetailPublicationMetric;
+    downvotes: PatientsDetailPublicationMetric;
+    reports: PatientsDetailPublicationMetric;
+    saves: PatientsDetailPublicationMetric;
+    shares: PatientsDetailPublicationMetric;
+    upvotes: PatientsDetailPublicationMetric;
+    views: PatientsDetailPublicationMetric;
+  };
+  public_url: string;
+  source: "community_post";
+  title: string;
+  type: "post";
+  type_label: "Post";
+};
+
 export type PatientsDetailHeatmapCell = {
   count: number;
   day: string;
@@ -607,6 +646,11 @@ export type AdminPatientDetail = {
       percentage: number;
     }[];
     unavailable_reason: string | null;
+  };
+  publications: {
+    coverage_note: string;
+    items: PatientsDetailPublication[];
+    source: "community_post+post_reply+post_vote+post_save+post_share+page_view_event+post_report";
   };
   privacy: {
     omitted_fields: string[];

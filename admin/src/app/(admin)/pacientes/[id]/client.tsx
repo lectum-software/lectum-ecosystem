@@ -12,6 +12,7 @@ import {
   ChevronDown,
   ChevronLeft,
   ChevronRight,
+  ChevronUp,
   Clock3,
   Eye,
   FileText,
@@ -36,7 +37,16 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { type FocusEvent, type ReactNode, useCallback, useMemo, useRef, useState } from "react";
+import {
+  type ComponentPropsWithoutRef,
+  type FocusEvent,
+  Fragment,
+  type ReactNode,
+  useCallback,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { FormProvider, type SubmitHandler, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -65,6 +75,8 @@ import type {
   PatientsDetailActivity,
   PatientsDetailCommunity,
   PatientsDetailMetric,
+  PatientsDetailPublication,
+  PatientsDetailPublicationMetric,
   PatientsDetailQuery,
   PatientsDetailSeriesPoint,
 } from "@/api/req/patients";
@@ -105,6 +117,33 @@ const activitySourceLabels: Record<PatientsDetailActivity["source"], string> = {
   post_save: "Post salvo",
   post_vote: "Voto",
   professional_review: "Avaliação",
+};
+const patientPublicationMetricOrder: (keyof PatientsDetailPublication["metrics"])[] = [
+  "views",
+  "upvotes",
+  "downvotes",
+  "comments",
+  "saves",
+  "shares",
+  "reports",
+];
+const patientPublicationMetricIcon: Record<PatientsDetailPublicationMetric["id"], LucideIcon> = {
+  comments: MessageCircle,
+  downvotes: ArrowDown,
+  reports: AlertTriangle,
+  saves: Bookmark,
+  shares: Share2,
+  upvotes: ArrowUp,
+  views: Eye,
+};
+const patientPublicationMetricLabel: Record<PatientsDetailPublicationMetric["id"], string> = {
+  comments: "comentários",
+  downvotes: "downvotes",
+  reports: "denúncias",
+  saves: "salvamentos",
+  shares: "compartilhamentos",
+  upvotes: "upvotes",
+  views: "visualizações",
 };
 type PatientStatisticsSeriesMetricKey = Exclude<keyof PatientsDetailSeriesPoint, "date">;
 type PatientStatisticsChartMetric = {
@@ -695,8 +734,10 @@ const getStaticOptionLabel = (
 const formatPatientGender = (value?: string | null) =>
   getStaticOptionLabel(PATIENT_GENDER_OPTIONS, value);
 
-const CardShell = ({ children, className }: { children?: ReactNode; className?: string }) => (
-  <section className={cn(CARD, className)}>{children}</section>
+const CardShell = ({ children, className, ...props }: ComponentPropsWithoutRef<"section">) => (
+  <section className={cn(CARD, className)} {...props}>
+    {children}
+  </section>
 );
 
 const Badge = ({ children, className }: { children: ReactNode; className?: string }) => (
@@ -2724,19 +2765,193 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPatientDetail; id: string 
   );
 };
 
-const PublicationsTab = ({ detail }: { detail: AdminPatientDetail }) => {
-  const publicationActivities = detail.activities.items.filter(
-    (activity) => activity.type === "post_created",
-  );
+const PatientPublicationMetricChip = ({ metric }: { metric: PatientsDetailPublicationMetric }) => {
+  const Icon = patientPublicationMetricIcon[metric.id];
+  const label = patientPublicationMetricLabel[metric.id] ?? metric.label.toLowerCase();
+  const value = metric.available ? numberFormatter.format(metric.value) : "indisponível";
 
   return (
-    <ActivityList
-      description="Publicações derivadas dos eventos reais de posts criados pelo paciente retornados no contrato atual."
-      detail={detail}
-      emptyMessage="Nenhuma publicação real foi encontrada para este paciente no período consultado."
-      items={publicationActivities}
-      title="Publicações"
-    />
+    <span
+      className="inline-flex items-center gap-1.5 whitespace-nowrap text-xs font-bold text-muted"
+      title={metric.source}
+    >
+      <Icon aria-hidden className="h-4 w-4 shrink-0" />
+      {value} {label}
+    </span>
+  );
+};
+
+const PatientPublicationMetricsRow = ({ item }: { item: PatientsDetailPublication }) => (
+  <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
+    {patientPublicationMetricOrder.map((metricId) => (
+      <PatientPublicationMetricChip key={metricId} metric={item.metrics[metricId]} />
+    ))}
+  </div>
+);
+
+const PatientPublicationFullContent = ({ item }: { item: PatientsDetailPublication }) => {
+  const content = item.content.trim();
+
+  return (
+    <div className="rounded-2xl border border-border bg-surface-muted p-4">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <p className="text-xs font-black uppercase tracking-[0.18em] text-muted">
+          Conteúdo completo do post
+        </p>
+        <span className="text-xs font-bold text-subtle">{formatDateTime(item.created_at)}</span>
+      </div>
+      <h3 className="mt-3 text-base font-black text-foreground">
+        {item.title.trim() || "Post sem título"}
+      </h3>
+      <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-muted">
+        {content || "Sem conteúdo textual."}
+      </p>
+    </div>
+  );
+};
+
+const PublicationsTab = ({ detail }: { detail: AdminPatientDetail }) => {
+  const [expandedPublicationId, setExpandedPublicationId] = useState<string | null>(null);
+  const publications = detail.publications.items;
+
+  return (
+    <CardShell
+      className="min-w-0 max-w-full overflow-hidden p-5"
+      data-patient-detail-section="publications-table"
+    >
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="flex items-start gap-3">
+          <IconCircle icon={FileText} />
+          <div>
+            <h2 className="text-lg font-extrabold text-foreground">Publicações</h2>
+            <p className="mt-1 text-sm text-muted">{detail.publications.coverage_note}</p>
+            <p className="mt-1 text-xs font-bold text-subtle">
+              Layout em tabela mobile-first com rolagem horizontal controlada em telas estreitas.
+            </p>
+          </div>
+        </div>
+        <Badge className="bg-surface-muted text-muted">{detail.publications.source}</Badge>
+      </div>
+
+      {publications.length === 0 ? (
+        <p className="mt-5 rounded-2xl bg-surface-muted p-4 text-sm text-muted">
+          Nenhuma publicação real foi encontrada para este paciente no período consultado.
+        </p>
+      ) : (
+        <div className="mt-5 max-w-full overflow-x-auto rounded-2xl border border-border">
+          <table className="w-full min-w-[920px] text-left text-sm">
+            <thead className="border-b border-border bg-surface-muted/70 text-xs text-muted">
+              <tr>
+                <th className="w-[160px] px-4 py-3 font-black">Data</th>
+                <th className="w-[120px] px-4 py-3 font-black">Tipo</th>
+                <th className="w-[190px] px-4 py-3 font-black">Comunidade</th>
+                <th className="px-4 py-3 font-black">Prévia (título + descrição)</th>
+                <th className="w-[170px] px-4 py-3 text-right font-black">Ações</th>
+              </tr>
+            </thead>
+            <tbody>
+              {publications.map((item) => {
+                const isExpanded = expandedPublicationId === item.id;
+
+                return (
+                  <Fragment key={item.id}>
+                    <tr className="border-b border-border align-top">
+                      <td className="px-4 py-4 font-bold text-muted">
+                        {formatDateTime(item.created_at)}
+                      </td>
+                      <td className="px-4 py-4">
+                        <span className="inline-flex items-center gap-2 rounded-full border border-border bg-surface px-2.5 py-1 text-xs font-black text-foreground">
+                          <FileText aria-hidden className="h-3.5 w-3.5" />
+                          {item.type_label}
+                        </span>
+                      </td>
+                      <td className="px-4 py-4">
+                        <div className="min-w-0">
+                          <p className="truncate font-black text-foreground">
+                            {item.community.name}
+                          </p>
+                          <p className="mt-1 truncate text-xs font-bold text-subtle">
+                            /{item.community.slug}
+                          </p>
+                        </div>
+                      </td>
+                      <td className="px-4 py-4">
+                        <div className="min-w-0">
+                          <p className="font-black text-foreground">
+                            {item.title.trim() || "Post sem título"}
+                          </p>
+                          <p className="mt-1 text-sm leading-5 text-muted">
+                            {item.excerpt.trim() || "Sem descrição textual."}
+                          </p>
+                        </div>
+                      </td>
+                      <td className="px-4 py-4">
+                        <div className="flex justify-end gap-2">
+                          <button
+                            aria-expanded={isExpanded}
+                            aria-label={
+                              isExpanded
+                                ? "Ocultar conteúdo completo do post"
+                                : "Expandir conteúdo completo do post"
+                            }
+                            className="inline-flex h-10 w-10 items-center justify-center rounded-control border border-border text-foreground transition hover:border-primary hover:text-primary"
+                            onClick={() =>
+                              setExpandedPublicationId((current) =>
+                                current === item.id ? null : item.id,
+                              )
+                            }
+                            title={isExpanded ? "Ocultar conteúdo" : "Ver conteúdo completo"}
+                            type="button"
+                          >
+                            {isExpanded ? (
+                              <ChevronUp aria-hidden className="h-4 w-4" />
+                            ) : (
+                              <ChevronDown aria-hidden className="h-4 w-4" />
+                            )}
+                          </button>
+                          <Link
+                            aria-label="Ver estatísticas da publicação no Admin"
+                            className="inline-flex h-10 w-10 items-center justify-center rounded-control border border-primary/30 text-primary transition hover:bg-primary-soft"
+                            href={item.admin_statistics_url}
+                            title="Estatísticas"
+                          >
+                            <BarChart3 aria-hidden className="h-4 w-4" />
+                            <span className="sr-only">Estatísticas</span>
+                          </Link>
+                          <Link
+                            aria-label="Ver publicação no site"
+                            className="inline-flex h-10 w-10 items-center justify-center rounded-control border border-border text-foreground transition hover:border-primary hover:text-primary"
+                            href={toPublicHref(item.public_url)}
+                            rel="noreferrer"
+                            target="_blank"
+                            title="Ver no site"
+                          >
+                            <Eye aria-hidden className="h-4 w-4" />
+                            <span className="sr-only">Ver no site</span>
+                          </Link>
+                        </div>
+                      </td>
+                    </tr>
+                    <tr className="border-b border-border bg-surface/60">
+                      <td className="px-4 py-3" colSpan={5}>
+                        <PatientPublicationMetricsRow item={item} />
+                      </td>
+                    </tr>
+                    {isExpanded ? (
+                      <tr className="border-b border-border">
+                        <td className="px-4 py-4" colSpan={5}>
+                          <PatientPublicationFullContent item={item} />
+                        </td>
+                      </tr>
+                    ) : null}
+                  </Fragment>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </CardShell>
   );
 };
 

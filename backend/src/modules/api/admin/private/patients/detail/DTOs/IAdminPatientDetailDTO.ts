@@ -93,6 +93,45 @@ export type AdminPatientDetailCommunity = {
   votes: number;
 };
 
+export type AdminPatientDetailPublicationMetric = {
+  available: boolean;
+  id: "comments" | "downvotes" | "reports" | "saves" | "shares" | "upvotes" | "views";
+  label: string;
+  source: string;
+  unit: "count";
+  unavailable_reason: string | null;
+  value: number;
+};
+
+export type AdminPatientDetailPublicationItem = {
+  admin_statistics_url: string;
+  community: {
+    avatar_url: string | null;
+    color: string | null;
+    id: string;
+    name: string;
+    slug: string;
+  };
+  content: string;
+  created_at: Date;
+  excerpt: string;
+  id: string;
+  metrics: {
+    comments: AdminPatientDetailPublicationMetric;
+    downvotes: AdminPatientDetailPublicationMetric;
+    reports: AdminPatientDetailPublicationMetric;
+    saves: AdminPatientDetailPublicationMetric;
+    shares: AdminPatientDetailPublicationMetric;
+    upvotes: AdminPatientDetailPublicationMetric;
+    views: AdminPatientDetailPublicationMetric;
+  };
+  public_url: string;
+  source: "community_post";
+  title: string;
+  type: "post";
+  type_label: "Post";
+};
+
 export type AdminPatientDetailHeatmapCell = {
   count: number;
   day: string;
@@ -200,6 +239,11 @@ export type AdminPatientDetailDTO = {
   metrics: AdminPatientDetailMetric[];
   period: AdminPatientDetailPeriod;
   platform_usage: AdminPatientPlatformUsage;
+  publications: {
+    coverage_note: string;
+    items: AdminPatientDetailPublicationItem[];
+    source: "community_post+post_reply+post_vote+post_save+post_share+page_view_event+post_report";
+  };
   privacy: {
     omitted_fields: string[];
     visible_fields: string[];

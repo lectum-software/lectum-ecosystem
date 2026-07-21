@@ -563,3 +563,39 @@ Frontend esperado:
 - `pnpm check`
 - Smoke HTTP local: `GET http://localhost:3002/pacientes/cmrqsrab5001f1guh2ve5oy90?tab=conta` retornou `200`.
 - Chrome headless local abriu a rota, mas sem sessão administrativa no perfil headless caiu no login; a conferência autenticada visual ficou limitada ao screenshot enviado pelo usuário e à revisão dos literais corrigidos.
+## Ajuste pós-feedback 2026-07-21 - Publicações do paciente em tabela
+
+- Pedido do usuário: exibir as publicações do paciente como lista/tabela com colunas **Data**, **Tipo**, **Comunidade**, **Prévia (título + descrição)** e ações de **Ver** e **Estatísticas**, com linha de métricas abaixo e expansor na própria tabela para ler o conteúdo completo do post.
+- O endpoint `GET /api/admin/private/patients/:id` foi ampliado com `publications.items`, derivado de `community_post` real do paciente e métricas reais de `page_view_event`, `post_reply`, `post_vote`, `post_save`, `post_share` e `post_report`.
+- A aba `/pacientes/[id]?tab=publicacoes` deixou de depender do recorte limitado de atividades recentes e agora renderiza uma tabela mobile-first com rolagem horizontal controlada, ações por linha, métricas no padrão visual das publicações do psicólogo e expansor de conteúdo completo.
+- A ação **Ver** abre a publicação pública e a ação **Estatísticas** reutiliza a rota Admin existente de analytics de conteúdo (`/comunidades/[slug]/conteudo/post/[id]`), sem endpoint paralelo.
+- Não houve schema Prisma, migration, package novo, seed, mock, backfill, tracking novo, moderação, edição ou remoção de conteúdo.
+- Builder/Quick Copy não está exposto como ferramenta callable no ambiente; as referências auditáveis foram a captura enviada pelo usuário, `_product/proto/admin/Pacientes/Pacientes - Detalhes.png` e `_product/proto/admin/Psicólogos/Detalhes do psicólogo/Publicações.png`.
+- ADR criado: `adrs/0299-admin-paciente-publicacoes-tabela-metricas.md`.
+
+### Critérios de aceite do ajuste
+
+- [x] A aba **Publicações** usa posts reais do paciente, não atividades recentes truncadas.
+- [x] A tabela possui colunas **Data**, **Tipo**, **Comunidade**, **Prévia** e **Ações**.
+- [x] Cada publicação possui botões de **Ver** e **Estatísticas**.
+- [x] Cada publicação exibe linha de métricas abaixo da linha principal.
+- [x] O expansor da tabela mostra o conteúdo completo do post.
+- [x] Nenhum mock, seed, endpoint simulado, package novo ou migration foi adicionado.
+
+### Validação complementar executada
+
+- `pnpm --dir backend exec biome check --write "src/modules/api/admin/private/patients/detail/DTOs/IAdminPatientDetailDTO.ts" "src/modules/api/admin/private/patients/detail/repositories/AdminPatientDetailRepository.ts" "src/modules/api/admin/private/patients/detail/use-cases/services.ts"`
+- `pnpm --dir admin exec biome check --write "src/api/req/patients/index.ts" "src/app/(admin)/pacientes/[id]/client.tsx"`
+- `pnpm --dir backend typecheck`
+- `pnpm --dir admin typecheck`
+
+### Validação final complementar
+
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check`
+- Service local: `showAdminPatient({ id: "cmrb6fbrv0002y0uhsqzg306b", period: "all" })` retornou `publications.items.length=2` e métricas reais no primeiro post.
+- Browser local/headless via Chrome/CDP em `/pacientes/cmrb6fbrv0002y0uhsqzg306b?tab=publicacoes`, com admin temporário real removido ao final, validou desktop `1365x900` e mobile `390x844`: colunas solicitadas, ações **Ver**/**Estatísticas**, linha de métricas, expansor de conteúdo completo e rolagem horizontal controlada sem overflow global no mobile.
+- Observação operacional: a primeira reexecução de `pnpm --dir admin build` encontrou lock stale em `admin/.next/lock` de build anterior; o arquivo gerado foi removido e o build foi reexecutado com sucesso.
