@@ -362,3 +362,24 @@ Validacao desta expansao:
 - Validar a aceitação visual com o fundador antes de criar a task de replicação para as demais telas.
 - Se aprovado, criar task formal para consolidar tokens/componentes compartilhados e aplicar o modelo no restante do Admin.
 - Validação mobile em ~390px deve ser repetida em sessão Admin autenticada dedicada; a tentativa headless sem sessão caiu no fluxo protegido/login e não serve como evidência completa do conteúdo autenticado.
+
+## Ajuste pos-feedback 2026-07-21: Configuracoes recolhidas e arrastaveis
+
+O feedback visual da pagina Configuracoes indicou excesso de ruido operacional nos catalogos: slugs expostos, setas de reordenacao competindo com as acoes principais e listas abertas por padrao.
+
+Decisoes:
+
+- Ocultar slugs na UI administrativa, preservando-os somente nos contratos/dados reais.
+- Substituir as setas de reordenacao por drag-and-drop nativo nos blocos de categorias e itens, alinhado ao padrao visual das regras de Comunidades e sem instalar pacote novo.
+- Manter as secoes principais e categorias de Especialidades recolhidas por padrao, com chevron para expansao progressiva.
+- Reutilizar o endpoint real de reordenacao de TASK-65; nao criar mock, endpoint paralelo, package novo ou migracao.
+
+Consequencia: Configuracoes fica mais limpa e escaneavel dentro do piloto premium, mantendo a mesma fonte de dados real e a mesma persistencia dos catalogos.
+
+Validacao deste ajuste:
+
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/configuracoes/client.tsx"`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check`
+- Smoke HTTP local: `GET http://localhost:3002/configuracoes` retornou 200.

@@ -2,11 +2,10 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
-  ArrowDown,
-  ArrowUp,
   CheckCircle2,
   ChevronDown,
   Edit3,
+  GripVertical,
   Languages,
   Layers3,
   Loader2,
@@ -19,7 +18,7 @@ import {
   UsersRound,
   X,
 } from "lucide-react";
-import { type ReactNode, useMemo, useState } from "react";
+import { type DragEvent, type ReactNode, useMemo, useState } from "react";
 import { FormProvider, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -62,6 +61,14 @@ type CatalogModalState =
       categoryId?: string;
       item?: AdminSettingsCatalogOption | AdminSettingsSpecialty;
     };
+
+type SettingsSectionId = "specialties" | ListCatalogType;
+
+type CatalogDragState = {
+  categoryId?: string;
+  id: string;
+  type: AdminSettingsCatalogType;
+};
 
 const CATALOG_SECTIONS: Array<{
   description: string;
@@ -122,17 +129,33 @@ type RestoreForm = z.infer<typeof restoreSchema>;
 
 const orderedIds = (items: Array<{ id: string }>) => items.map((item) => item.id);
 
-const moveId = (ids: string[], id: string, direction: "up" | "down") => {
+const reorderIds = (ids: string[], id: string, targetId: string) => {
   const index = ids.indexOf(id);
-  const nextIndex = direction === "up" ? index - 1 : index + 1;
+  const nextIndex = ids.indexOf(targetId);
 
   if (index < 0 || nextIndex < 0 || nextIndex >= ids.length) return ids;
+  if (index === nextIndex) return ids;
 
   const next = [...ids];
   const [item] = next.splice(index, 1);
   next.splice(nextIndex, 0, item);
 
   return next;
+};
+
+const sameScope = (
+  drag: CatalogDragState | null,
+  type: AdminSettingsCatalogType,
+  categoryId?: string,
+): drag is CatalogDragState =>
+  drag?.type === type && (drag.categoryId ?? "") === (categoryId ?? "");
+
+const isCatalogDragBlockedTarget = (target: EventTarget | null) => {
+  if (!(target instanceof Element)) return false;
+
+  return Boolean(
+    target.closest("button, a, input, textarea, select, label, [contenteditable='true']"),
+  );
 };
 
 const getErrorMessage = (error: unknown) =>
@@ -183,21 +206,36 @@ const EmptyState = ({ children }: { children: ReactNode }) => (
   </div>
 );
 
-const IconButton = ({
+const DragHandle = ({ disabled, label }: { disabled?: boolean; label: string }) => (
+  <span
+    aria-hidden
+    className={cn(
+      "inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-control border border-border bg-surface text-muted transition",
+      disabled
+        ? "cursor-not-allowed opacity-40"
+        : "cursor-grab hover:border-primary/40 hover:text-primary group-active:cursor-grabbing",
+    )}
+    title={label}
+  >
+    <GripVertical className="h-4 w-4" />
+  </span>
+);
+
+const ExpandToggle = ({
   children,
-  disabled,
-  label,
+  controls,
+  expanded,
   onClick,
 }: {
   children: ReactNode;
-  disabled?: boolean;
-  label: string;
+  controls: string;
+  expanded: boolean;
   onClick: () => void;
 }) => (
   <button
-    aria-label={label}
-    className="inline-flex h-9 w-9 items-center justify-center rounded-control border border-border bg-surface text-muted transition hover:border-primary/40 hover:text-primary disabled:cursor-not-allowed disabled:opacity-40"
-    disabled={disabled}
+    aria-controls={controls}
+    aria-expanded={expanded}
+    className="flex min-w-0 flex-1 gap-3 rounded-[1.35rem] text-left transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary"
     onClick={onClick}
     type="button"
   >
@@ -207,72 +245,80 @@ const IconButton = ({
 
 const CatalogRow = ({
   activeMutation,
-  index,
+  dragDisabled,
+  isDragging,
   item,
-  lastIndex,
+  onDragEnd,
+  onDragOver,
+  onDragStart,
+  onDrop,
   onEdit,
-  onMove,
   onToggle,
 }: {
   activeMutation?: boolean;
-  index: number;
+  dragDisabled?: boolean;
+  isDragging?: boolean;
   item: AdminSettingsCatalogOption | AdminSettingsSpecialty;
-  lastIndex: number;
+  onDragEnd: () => void;
+  onDragOver: (event: DragEvent<HTMLDivElement>) => void;
+  onDragStart: (event: DragEvent<HTMLDivElement>) => void;
+  onDrop: (event: DragEvent<HTMLDivElement>) => void;
   onEdit: () => void;
-  onMove: (direction: "up" | "down") => void;
   onToggle: () => void;
-}) => (
-  <div className="flex flex-col gap-3 border-t border-border/70 py-3 first:border-t-0 md:flex-row md:items-center md:justify-between">
-    <div className="min-w-0 flex-1">
-      <div className="flex flex-wrap items-center gap-2">
-        <p className="truncate text-sm font-bold text-foreground">{item.name}</p>
-        <StatusBadge active={item.active} />
-        {typeof item.linked_count === "number" ? (
-          <span className="text-xs text-muted">{item.linked_count} vínculo(s)</span>
-        ) : null}
+}) => {
+  const isDragDisabled = activeMutation || dragDisabled;
+
+  return (
+    <div
+      aria-grabbed={isDragging}
+      className={cn(
+        "group flex flex-col gap-3 border-t border-border/70 py-3 transition first:border-t-0 md:flex-row md:items-center md:justify-between",
+        isDragDisabled ? "cursor-default" : "cursor-grab active:cursor-grabbing",
+        isDragging && "relative z-10 opacity-60",
+      )}
+      draggable={!isDragDisabled}
+      onDragEnd={onDragEnd}
+      onDragOver={onDragOver}
+      onDragStart={onDragStart}
+      onDrop={onDrop}
+    >
+      <div className="min-w-0 flex-1">
+        <div className="flex flex-wrap items-center gap-2">
+          <p className="truncate text-sm font-bold text-foreground">{item.name}</p>
+          <StatusBadge active={item.active} />
+          {typeof item.linked_count === "number" ? (
+            <span className="text-xs text-muted">{item.linked_count} vínculo(s)</span>
+          ) : null}
+        </div>
       </div>
-      <p className="mt-1 text-xs text-muted">/{item.slug}</p>
+      <div className="flex flex-wrap items-center gap-2">
+        <DragHandle disabled={isDragDisabled} label={`Arrastar ${item.name} para reordenar`} />
+        <button
+          className="inline-flex h-9 items-center gap-2 rounded-control border border-border bg-surface px-3 text-xs font-semibold text-muted transition hover:border-primary/40 hover:text-primary"
+          onClick={onEdit}
+          type="button"
+        >
+          <Edit3 className="h-4 w-4" />
+          Editar
+        </button>
+        <button
+          className={cn(
+            "inline-flex h-9 items-center gap-2 rounded-xl border px-3 text-xs font-bold transition disabled:opacity-50",
+            item.active
+              ? "border-orange-200 bg-orange-50 text-orange-700 hover:bg-orange-100"
+              : "border-emerald-200 bg-emerald-50 text-success hover:bg-emerald-100",
+          )}
+          disabled={activeMutation}
+          onClick={onToggle}
+          type="button"
+        >
+          {item.active ? <ToggleRight className="h-4 w-4" /> : <ToggleLeft className="h-4 w-4" />}
+          {item.active ? "Inativar" : "Reativar"}
+        </button>
+      </div>
     </div>
-    <div className="flex flex-wrap items-center gap-2">
-      <IconButton
-        disabled={index === 0 || activeMutation}
-        label={`Mover ${item.name} para cima`}
-        onClick={() => onMove("up")}
-      >
-        <ArrowUp className="h-4 w-4" />
-      </IconButton>
-      <IconButton
-        disabled={index === lastIndex || activeMutation}
-        label={`Mover ${item.name} para baixo`}
-        onClick={() => onMove("down")}
-      >
-        <ArrowDown className="h-4 w-4" />
-      </IconButton>
-      <button
-        className="inline-flex h-9 items-center gap-2 rounded-control border border-border bg-surface px-3 text-xs font-semibold text-muted transition hover:border-primary/40 hover:text-primary"
-        onClick={onEdit}
-        type="button"
-      >
-        <Edit3 className="h-4 w-4" />
-        Editar
-      </button>
-      <button
-        className={cn(
-          "inline-flex h-9 items-center gap-2 rounded-xl border px-3 text-xs font-bold transition disabled:opacity-50",
-          item.active
-            ? "border-orange-200 bg-orange-50 text-orange-700 hover:bg-orange-100"
-            : "border-emerald-200 bg-emerald-50 text-success hover:bg-emerald-100",
-        )}
-        disabled={activeMutation}
-        onClick={onToggle}
-        type="button"
-      >
-        {item.active ? <ToggleRight className="h-4 w-4" /> : <ToggleLeft className="h-4 w-4" />}
-        {item.active ? "Inativar" : "Reativar"}
-      </button>
-    </div>
-  </div>
-);
+  );
+};
 
 const CatalogModal = ({
   categories,
@@ -473,6 +519,15 @@ export const AdminSettingsClient = () => {
   const restoreDefaults = useAdminSettingsRestoreDefaults();
   const [modal, setModal] = useState<CatalogModalState | null>(null);
   const [restoreOpen, setRestoreOpen] = useState(false);
+  const [dragging, setDragging] = useState<CatalogDragState | null>(null);
+  const [openCategoryIds, setOpenCategoryIds] = useState<Record<string, boolean>>({});
+  const [openSections, setOpenSections] = useState<Record<SettingsSectionId, boolean>>({
+    approach: false,
+    language: false,
+    service: false,
+    specialties: false,
+    target_audience: false,
+  });
   const data = catalogs.data;
   const categories = useMemo(() => data?.specialty_categories ?? [], [data?.specialty_categories]);
   const isMutating =
@@ -546,28 +601,83 @@ export const AdminSettingsClient = () => {
     }
   };
 
-  const moveCatalog = async ({
+  const toggleSection = (section: SettingsSectionId) => {
+    setOpenSections((current) => ({ ...current, [section]: !current[section] }));
+  };
+
+  const toggleCategoryOpen = (categoryId: string) => {
+    setOpenCategoryIds((current) => ({ ...current, [categoryId]: !current[categoryId] }));
+  };
+
+  const startCatalogDrag = (event: DragEvent<HTMLDivElement>, dragState: CatalogDragState) => {
+    if (isMutating || isCatalogDragBlockedTarget(event.target)) {
+      event.preventDefault();
+      return;
+    }
+
+    event.dataTransfer.effectAllowed = "move";
+    event.dataTransfer.setData("text/plain", dragState.id);
+    setDragging(dragState);
+  };
+
+  const handleCatalogDragOver = (
+    event: DragEvent<HTMLDivElement>,
+    type: AdminSettingsCatalogType,
+    categoryId?: string,
+  ) => {
+    if (!sameScope(dragging, type, categoryId)) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+    event.dataTransfer.dropEffect = "move";
+  };
+
+  const dropCatalog = async ({
     categoryId,
-    direction,
-    id,
     ids,
+    targetId,
     type,
   }: {
     categoryId?: string;
-    direction: "up" | "down";
-    id: string;
     ids: string[];
+    targetId: string;
     type: AdminSettingsCatalogType;
   }) => {
-    const nextIds = moveId(ids, id, direction);
-    if (nextIds.join("|") === ids.join("|")) return;
+    if (!sameScope(dragging, type, categoryId)) {
+      setDragging(null);
+      return;
+    }
+
+    const nextIds = reorderIds(ids, dragging.id, targetId);
+    if (nextIds.join("|") === ids.join("|")) {
+      setDragging(null);
+      return;
+    }
 
     try {
       await reorder.mutateAsync({ category_id: categoryId, ids: nextIds, type });
       toast.success("Ordem atualizada");
     } catch (error) {
       toast.error(getErrorMessage(error));
+    } finally {
+      setDragging(null);
     }
+  };
+
+  const handleCatalogDrop = (
+    event: DragEvent<HTMLDivElement>,
+    input: {
+      categoryId?: string;
+      ids: string[];
+      targetId: string;
+      type: AdminSettingsCatalogType;
+    },
+  ) => {
+    if (!sameScope(dragging, input.type, input.categoryId)) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+    void dropCatalog(input);
   };
 
   const restore = async (confirmation: string) => {
@@ -583,15 +693,21 @@ export const AdminSettingsClient = () => {
   const renderCatalogSection = (section: (typeof CATALOG_SECTIONS)[number]) => {
     const items = itemsByType[section.type];
     const ids = orderedIds(items);
+    const isOpen = openSections[section.type];
+    const sectionContentId = `settings-section-${section.type}`;
 
     return (
       <section className={cn(cardClass, "p-4 md:p-6")} key={section.type}>
         <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-          <div className="flex gap-3">
+          <ExpandToggle
+            controls={sectionContentId}
+            expanded={isOpen}
+            onClick={() => toggleSection(section.type)}
+          >
             <span className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary-soft text-primary">
               {section.icon}
             </span>
-            <div>
+            <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-2">
                 <h2 className="text-xl font-black text-foreground">{section.label}</h2>
                 <span className="rounded-full bg-primary-soft px-2.5 py-1 text-xs font-bold text-primary">
@@ -600,7 +716,13 @@ export const AdminSettingsClient = () => {
               </div>
               <p className="mt-1 text-sm text-muted">{section.description}</p>
             </div>
-          </div>
+            <ChevronDown
+              className={cn(
+                "mt-4 h-4 w-4 shrink-0 text-primary transition-transform",
+                !isOpen && "-rotate-90",
+              )}
+            />
+          </ExpandToggle>
           <button
             className="inline-flex h-11 items-center justify-center gap-2 rounded-control border border-primary/25 bg-surface px-4 text-sm font-semibold text-primary shadow-control hover:bg-primary-soft"
             onClick={() => setModal({ kind: "item", mode: "create", type: section.type })}
@@ -610,29 +732,44 @@ export const AdminSettingsClient = () => {
             Adicionar {singularLabel[section.type]}
           </button>
         </div>
-        <div className="mt-4">
-          {items.length === 0 ? (
-            <EmptyState>Nenhuma opção cadastrada neste catálogo.</EmptyState>
-          ) : (
-            items.map((item, index) => (
-              <CatalogRow
-                activeMutation={isMutating}
-                index={index}
-                item={item}
-                key={item.id}
-                lastIndex={items.length - 1}
-                onEdit={() => setModal({ item, kind: "item", mode: "edit", type: section.type })}
-                onMove={(direction) =>
-                  moveCatalog({ direction, id: item.id, ids, type: section.type })
-                }
-                onToggle={() => toggleItem(section.type, item)}
-              />
-            ))
-          )}
-        </div>
+        {isOpen ? (
+          <div className="mt-4" id={sectionContentId}>
+            {items.length === 0 ? (
+              <EmptyState>Nenhuma opção cadastrada neste catálogo.</EmptyState>
+            ) : (
+              items.map((item) => (
+                <CatalogRow
+                  activeMutation={isMutating}
+                  dragDisabled={items.length < 2}
+                  isDragging={sameScope(dragging, section.type) && dragging.id === item.id}
+                  item={item}
+                  key={item.id}
+                  onDragEnd={() => setDragging(null)}
+                  onDragOver={(event) => handleCatalogDragOver(event, section.type)}
+                  onDragStart={(event) =>
+                    startCatalogDrag(event, { id: item.id, type: section.type })
+                  }
+                  onDrop={(event) =>
+                    handleCatalogDrop(event, {
+                      ids,
+                      targetId: item.id,
+                      type: section.type,
+                    })
+                  }
+                  onEdit={() => setModal({ item, kind: "item", mode: "edit", type: section.type })}
+                  onToggle={() => toggleItem(section.type, item)}
+                />
+              ))
+            )}
+          </div>
+        ) : null}
       </section>
     );
   };
+
+  const categoryIds = orderedIds(categories);
+  const specialtiesOpen = openSections.specialties;
+  const specialtiesSectionContentId = "settings-section-specialties";
 
   return (
     <div className="space-y-6">
@@ -666,11 +803,15 @@ export const AdminSettingsClient = () => {
         <>
           <section className={cn(cardClass, "p-4 md:p-6")}>
             <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-              <div className="flex gap-3">
+              <ExpandToggle
+                controls={specialtiesSectionContentId}
+                expanded={specialtiesOpen}
+                onClick={() => toggleSection("specialties")}
+              >
                 <span className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary-soft text-primary">
                   <SlidersHorizontal className="h-5 w-5" />
                 </span>
-                <div>
+                <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
                     <h2 className="text-xl font-black text-foreground">Especialidades</h2>
                     <span className="rounded-full bg-primary-soft px-2.5 py-1 text-xs font-bold text-primary">
@@ -682,7 +823,13 @@ export const AdminSettingsClient = () => {
                     Mental.
                   </p>
                 </div>
-              </div>
+                <ChevronDown
+                  className={cn(
+                    "mt-4 h-4 w-4 shrink-0 text-primary transition-transform",
+                    !specialtiesOpen && "-rotate-90",
+                  )}
+                />
+              </ExpandToggle>
               <button
                 className="inline-flex h-11 items-center justify-center gap-2 rounded-control border border-primary/25 bg-surface px-4 text-sm font-semibold text-primary shadow-control hover:bg-primary-soft"
                 onClick={() => setModal({ kind: "category", mode: "create" })}
@@ -693,142 +840,174 @@ export const AdminSettingsClient = () => {
               </button>
             </div>
 
-            <div className="mt-5 space-y-4">
-              {categories.length === 0 ? (
-                <EmptyState>Nenhuma categoria cadastrada.</EmptyState>
-              ) : (
-                categories.map((category, categoryIndex) => {
-                  const categoryIds = orderedIds(categories);
-                  const specialtyIds = orderedIds(category.specialties);
+            {specialtiesOpen ? (
+              <div className="mt-5 space-y-4" id={specialtiesSectionContentId}>
+                {categories.length === 0 ? (
+                  <EmptyState>Nenhuma categoria cadastrada.</EmptyState>
+                ) : (
+                  categories.map((category) => {
+                    const categoryContentId = `settings-category-${category.id}`;
+                    const categoryOpen = Boolean(openCategoryIds[category.id]);
+                    const isCategoryDragging =
+                      sameScope(dragging, "specialty_category") && dragging.id === category.id;
+                    const specialtyIds = orderedIds(category.specialties);
 
-                  return (
-                    <div
-                      className="rounded-[24px] border border-border/80 bg-surface-muted/30 p-4"
-                      key={category.id}
-                    >
-                      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-                        <div>
-                          <div className="flex flex-wrap items-center gap-2">
-                            <ChevronDown className="h-4 w-4 text-primary" />
-                            <h3 className="text-base font-black text-foreground">
-                              {category.name}
-                            </h3>
-                            <StatusBadge active={category.active} />
-                            <span className="text-xs text-muted">
-                              {category.specialties.length} especialidades
+                    return (
+                      <div
+                        aria-grabbed={isCategoryDragging}
+                        className={cn(
+                          "group rounded-[24px] border border-border/80 bg-surface-muted/30 p-4 transition",
+                          isMutating || categories.length < 2
+                            ? "cursor-default"
+                            : "cursor-grab active:cursor-grabbing",
+                          isCategoryDragging &&
+                            "relative z-10 border-primary bg-primary-soft/40 opacity-80 shadow-admin-soft ring-2 ring-primary/15",
+                        )}
+                        draggable={!isMutating && categories.length > 1}
+                        key={category.id}
+                        onDragEnd={() => setDragging(null)}
+                        onDragOver={(event) => handleCatalogDragOver(event, "specialty_category")}
+                        onDragStart={(event) =>
+                          startCatalogDrag(event, { id: category.id, type: "specialty_category" })
+                        }
+                        onDrop={(event) =>
+                          handleCatalogDrop(event, {
+                            ids: categoryIds,
+                            targetId: category.id,
+                            type: "specialty_category",
+                          })
+                        }
+                      >
+                        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                          <ExpandToggle
+                            controls={categoryContentId}
+                            expanded={categoryOpen}
+                            onClick={() => toggleCategoryOpen(category.id)}
+                          >
+                            <span className="mt-0.5 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-primary-soft text-primary">
+                              <ChevronDown
+                                className={cn(
+                                  "h-4 w-4 transition-transform",
+                                  !categoryOpen && "-rotate-90",
+                                )}
+                              />
                             </span>
-                          </div>
-                          <p className="mt-1 text-xs text-muted">/{category.slug}</p>
-                        </div>
-                        <div className="flex flex-wrap items-center gap-2">
-                          <IconButton
-                            disabled={categoryIndex === 0 || isMutating}
-                            label={`Mover ${category.name} para cima`}
-                            onClick={() =>
-                              moveCatalog({
-                                direction: "up",
-                                id: category.id,
-                                ids: categoryIds,
-                                type: "specialty_category",
-                              })
-                            }
-                          >
-                            <ArrowUp className="h-4 w-4" />
-                          </IconButton>
-                          <IconButton
-                            disabled={categoryIndex === categories.length - 1 || isMutating}
-                            label={`Mover ${category.name} para baixo`}
-                            onClick={() =>
-                              moveCatalog({
-                                direction: "down",
-                                id: category.id,
-                                ids: categoryIds,
-                                type: "specialty_category",
-                              })
-                            }
-                          >
-                            <ArrowDown className="h-4 w-4" />
-                          </IconButton>
-                          <button
-                            className="inline-flex h-9 items-center gap-2 rounded-control border border-border bg-surface px-3 text-xs font-semibold text-muted transition hover:border-primary/40 hover:text-primary"
-                            onClick={() => setModal({ category, kind: "category", mode: "edit" })}
-                            type="button"
-                          >
-                            <Edit3 className="h-4 w-4" /> Editar
-                          </button>
-                          <button
-                            className="inline-flex h-9 items-center gap-2 rounded-control border border-primary/25 bg-surface px-3 text-xs font-semibold text-primary hover:bg-primary-soft"
-                            onClick={() =>
-                              setModal({
-                                categoryId: category.id,
-                                kind: "item",
-                                mode: "create",
-                                type: "specialty",
-                              })
-                            }
-                            type="button"
-                          >
-                            <Plus className="h-4 w-4" /> Especialidade
-                          </button>
-                          <button
-                            className={cn(
-                              "inline-flex h-9 items-center gap-2 rounded-xl border px-3 text-xs font-bold transition disabled:opacity-50",
-                              category.active
-                                ? "border-orange-200 bg-orange-50 text-orange-700 hover:bg-orange-100"
-                                : "border-emerald-200 bg-emerald-50 text-success hover:bg-emerald-100",
-                            )}
-                            disabled={isMutating}
-                            onClick={() => toggleCategory(category)}
-                            type="button"
-                          >
-                            {category.active ? (
-                              <ToggleRight className="h-4 w-4" />
-                            ) : (
-                              <ToggleLeft className="h-4 w-4" />
-                            )}
-                            {category.active ? "Inativar" : "Reativar"}
-                          </button>
-                        </div>
-                      </div>
-                      <div className="mt-3 rounded-[1.35rem] border border-border/60 bg-surface px-3">
-                        {category.specialties.length === 0 ? (
-                          <EmptyState>Nenhuma especialidade nesta categoria.</EmptyState>
-                        ) : (
-                          category.specialties.map((item, index) => (
-                            <CatalogRow
-                              activeMutation={isMutating}
-                              index={index}
-                              item={item}
-                              key={item.id}
-                              lastIndex={category.specialties.length - 1}
-                              onEdit={() =>
+                            <div className="min-w-0 flex-1">
+                              <div className="flex flex-wrap items-center gap-2">
+                                <h3 className="text-base font-black text-foreground">
+                                  {category.name}
+                                </h3>
+                                <StatusBadge active={category.active} />
+                                <span className="text-xs text-muted">
+                                  {category.specialties.length} especialidades
+                                </span>
+                              </div>
+                            </div>
+                          </ExpandToggle>
+                          <div className="flex flex-wrap items-center gap-2">
+                            <DragHandle
+                              disabled={isMutating || categories.length < 2}
+                              label={`Arrastar ${category.name} para reordenar`}
+                            />
+                            <button
+                              className="inline-flex h-9 items-center gap-2 rounded-control border border-border bg-surface px-3 text-xs font-semibold text-muted transition hover:border-primary/40 hover:text-primary"
+                              onClick={() => setModal({ category, kind: "category", mode: "edit" })}
+                              type="button"
+                            >
+                              <Edit3 className="h-4 w-4" /> Editar
+                            </button>
+                            <button
+                              className="inline-flex h-9 items-center gap-2 rounded-control border border-primary/25 bg-surface px-3 text-xs font-semibold text-primary hover:bg-primary-soft"
+                              onClick={() =>
                                 setModal({
                                   categoryId: category.id,
-                                  item,
                                   kind: "item",
-                                  mode: "edit",
+                                  mode: "create",
                                   type: "specialty",
                                 })
                               }
-                              onMove={(direction) =>
-                                moveCatalog({
-                                  categoryId: category.id,
-                                  direction,
-                                  id: item.id,
-                                  ids: specialtyIds,
-                                  type: "specialty",
-                                })
-                              }
-                              onToggle={() => toggleItem("specialty", item)}
-                            />
-                          ))
-                        )}
+                              type="button"
+                            >
+                              <Plus className="h-4 w-4" /> Especialidade
+                            </button>
+                            <button
+                              className={cn(
+                                "inline-flex h-9 items-center gap-2 rounded-xl border px-3 text-xs font-bold transition disabled:opacity-50",
+                                category.active
+                                  ? "border-orange-200 bg-orange-50 text-orange-700 hover:bg-orange-100"
+                                  : "border-emerald-200 bg-emerald-50 text-success hover:bg-emerald-100",
+                              )}
+                              disabled={isMutating}
+                              onClick={() => toggleCategory(category)}
+                              type="button"
+                            >
+                              {category.active ? (
+                                <ToggleRight className="h-4 w-4" />
+                              ) : (
+                                <ToggleLeft className="h-4 w-4" />
+                              )}
+                              {category.active ? "Inativar" : "Reativar"}
+                            </button>
+                          </div>
+                        </div>
+                        {categoryOpen ? (
+                          <div
+                            className="mt-3 rounded-[1.35rem] border border-border/60 bg-surface px-3"
+                            id={categoryContentId}
+                          >
+                            {category.specialties.length === 0 ? (
+                              <EmptyState>Nenhuma especialidade nesta categoria.</EmptyState>
+                            ) : (
+                              category.specialties.map((item) => (
+                                <CatalogRow
+                                  activeMutation={isMutating}
+                                  dragDisabled={category.specialties.length < 2}
+                                  isDragging={
+                                    sameScope(dragging, "specialty", category.id) &&
+                                    dragging.id === item.id
+                                  }
+                                  item={item}
+                                  key={item.id}
+                                  onDragEnd={() => setDragging(null)}
+                                  onDragOver={(event) =>
+                                    handleCatalogDragOver(event, "specialty", category.id)
+                                  }
+                                  onDragStart={(event) =>
+                                    startCatalogDrag(event, {
+                                      categoryId: category.id,
+                                      id: item.id,
+                                      type: "specialty",
+                                    })
+                                  }
+                                  onDrop={(event) =>
+                                    handleCatalogDrop(event, {
+                                      categoryId: category.id,
+                                      ids: specialtyIds,
+                                      targetId: item.id,
+                                      type: "specialty",
+                                    })
+                                  }
+                                  onEdit={() =>
+                                    setModal({
+                                      categoryId: category.id,
+                                      item,
+                                      kind: "item",
+                                      mode: "edit",
+                                      type: "specialty",
+                                    })
+                                  }
+                                  onToggle={() => toggleItem("specialty", item)}
+                                />
+                              ))
+                            )}
+                          </div>
+                        ) : null}
                       </div>
-                    </div>
-                  );
-                })
-              )}
-            </div>
+                    );
+                  })
+                )}
+              </div>
+            ) : null}
           </section>
 
           <div className="space-y-4">{CATALOG_SECTIONS.map(renderCatalogSection)}</div>

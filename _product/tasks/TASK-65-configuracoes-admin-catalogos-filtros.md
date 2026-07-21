@@ -271,3 +271,21 @@ Frontend esperado:
 - `pnpm --dir frontend check`
 - `pnpm check`
 - Smoke HTTP local: `GET http://localhost:3002/configuracoes` retornou `200`.
+
+## Ajuste complementar 2026-07-21 - Catalogos recolhidos e drag visual
+
+- Pedido do usuario: remover slugs visiveis, trocar as setas de reordenacao por blocos arrastaveis como nas regras das comunidades e manter secoes/categorias recolhidas por padrao.
+- Os slugs continuam preservados nos contratos e no backend, mas deixam de ser renderizados na UI administrativa de Configuracoes para reduzir ruido visual.
+- As setas de mover para cima/baixo foram removidas; categorias de especialidades e itens de catalogo passam a usar drag-and-drop nativo sobre os blocos, com icone de arraste e persistencia pelo endpoint real de reordenacao existente.
+- Todas as secoes principais (**Especialidades**, **Abordagens**, **Servicos**, **Idiomas** e **Publico**) iniciam recolhidas com seta de expansao.
+- Ao expandir **Especialidades**, cada categoria tambem inicia recolhida e revela suas especialidades somente pela seta da propria categoria.
+- Nao houve alteracao de backend, Prisma/migrations, packages, contratos HTTP, formularios RHF/Zod ou dados persistidos.
+- Builder/Quick Copy nao estava exposto como ferramenta callable neste ambiente; a referencia auditavel permaneceu `_product/proto/admin/Configuracoes.png` e as capturas enviadas pelo usuario.
+
+### Validacao complementar executada
+
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/configuracoes/client.tsx"`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check`
+- Smoke HTTP local: `GET http://localhost:3002/configuracoes` retornou `200`.
