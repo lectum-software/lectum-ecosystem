@@ -238,3 +238,20 @@ UI:
 - `pnpm check`
 - Smoke HTTP local: `GET http://localhost:3002/notificacoes` retornou `200`.
 - Browser local/headless sem sessão admin válida confirmou que a rota protegida cai no login; a inspeção visual autenticada completa depende de sessão Admin interativa, mas a UI alterada foi validada por build/check e pelo smoke da rota.
+
+## Ajuste complementar 2026-07-21 - Header com período no padrão Admin
+
+- Pedido do usuário: no header, fazer os campos de **período** e **data** seguirem o padrão do painel Admin da Lectum.
+- O header de Notificações substituiu os atalhos soltos de período por um seletor **Período** com a mesma linguagem de campo usada nas páginas Admin do piloto, mantendo **De** e **Até** ao lado no mesmo bloco visual do card.
+- As opções expostas respeitam o contrato real de Notificações, que trabalha com `from`/`to` e limite máximo de 90 dias: **Hoje**, **Últimos 7 dias**, **Últimos 30 dias** e **Últimos 90 dias**.
+- **Personalizado** continua sendo apenas um estado interno quando o administrador edita manualmente as datas; não foi adicionado como preset selecionável.
+- Não foram adicionados **Este ano** ou **Todo o período** nesta tela porque o backend de Notificações ainda limita consultas a 90 dias. Expor essas opções sem suporte real poderia criar semântica falsa ou erro de validação.
+- Não houve alteração de backend, contratos HTTP, Prisma/migrations, packages, formulários RHF/Zod, dados persistidos, canais disponíveis ou regras de métricas.
+
+### Validação deste ajuste
+
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/notificacoes/client.tsx"`
+- `pnpm --dir admin exec eslint "src/app/(admin)/notificacoes/client.tsx"`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- Smoke HTTP local: `GET http://localhost:3002/notificacoes` retornou `200`.

@@ -6,6 +6,7 @@ import {
   Bell,
   CalendarDays,
   CheckCircle2,
+  ChevronDown,
   ChevronLeft,
   ChevronRight,
   Clock3,
@@ -55,7 +56,16 @@ import { InputController, SelectController, TextareaController } from "@/compone
 import { useDateRangeCommitOnBlur } from "@/hooks/use-date-range-commit-on-blur";
 import { cn } from "@/lib/utils";
 
-const QUICK_RANGES = [7, 30, 90] as const;
+const NOTIFICATION_PERIOD_OPTIONS = [
+  { days: 1, id: "today", label: "Hoje" },
+  { days: 7, id: "last_7", label: "Últimos 7 dias" },
+  { days: 30, id: "last_30", label: "Últimos 30 dias" },
+  { days: 90, id: "last_90", label: "Últimos 90 dias" },
+] as const;
+
+type NotificationPeriodPreset = (typeof NOTIFICATION_PERIOD_OPTIONS)[number]["id"];
+type NotificationPeriodValue = NotificationPeriodPreset | "custom";
+type NotificationRange = { from: string; to: string };
 const CAMPAIGN_LIMIT = 8;
 const LOGS_LIMIT = 8;
 const cardClass =
@@ -96,12 +106,14 @@ const dateFormatter = new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: 
 const pad = (value: number) => String(value).padStart(2, "0");
 const toInputDate = (date: Date) =>
   `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
-const getQuickRange = (days: number) => {
+const getQuickRange = (days: number): NotificationRange => {
   const today = new Date();
   const from = new Date(today);
   from.setDate(today.getDate() - (days - 1));
   return { from: toInputDate(from), to: toInputDate(today) };
 };
+const getRangeForPeriod = (period: NotificationPeriodPreset): NotificationRange =>
+  getQuickRange(NOTIFICATION_PERIOD_OPTIONS.find((option) => option.id === period)?.days ?? 30);
 const dateFromInput = (value: string) => {
   const [year, month, day] = value.split("-").map(Number);
   return new Date(year, month - 1, day, 12, 0, 0, 0);
@@ -281,16 +293,18 @@ const Header = ({
   onDateChange,
   onDateControlsBlur,
   onNew,
+  onPeriodChange,
+  period,
   range,
   rangeError,
-  setRange,
 }: {
-  onDateChange: (field: "from" | "to", value: string) => void;
+  onDateChange: (field: keyof NotificationRange, value: string) => void;
   onDateControlsBlur: FocusEventHandler<HTMLDivElement>;
   onNew: () => void;
-  range: { from: string; to: string };
+  onPeriodChange: (period: NotificationPeriodPreset) => void;
+  period: NotificationPeriodValue;
+  range: NotificationRange;
   rangeError: string | null;
-  setRange: (range: { from: string; to: string }) => void;
 }) => (
   <CardShell className="p-5 md:p-6">
     <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
@@ -307,7 +321,36 @@ const Header = ({
         </p>
       </div>
       <div className="flex flex-col gap-3 xl:items-end">
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-[minmax(10rem,1fr)_minmax(10rem,1fr)_auto]">
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-[minmax(10rem,0.9fr)_minmax(9rem,0.8fr)_minmax(9rem,0.8fr)_auto]">
+          <label
+            className="grid gap-1 text-xs font-semibold text-muted"
+            htmlFor="notifications-period"
+          >
+            Período
+            <span className="relative">
+              <select
+                className="h-11 w-full min-w-[170px] appearance-none rounded-control border border-border bg-surface py-0 pl-3 pr-11 text-sm font-semibold text-foreground shadow-control outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+                id="notifications-period"
+                onChange={(event) => onPeriodChange(event.target.value as NotificationPeriodPreset)}
+                value={period}
+              >
+                {period === "custom" ? (
+                  <option disabled hidden value="custom">
+                    Personalizado
+                  </option>
+                ) : null}
+                {NOTIFICATION_PERIOD_OPTIONS.map((option) => (
+                  <option key={option.id} value={option.id}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown
+                aria-hidden
+                className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground"
+              />
+            </span>
+          </label>
           <div className="contents" onBlur={onDateControlsBlur}>
             <label className="text-xs font-semibold text-muted">
               De
@@ -331,7 +374,7 @@ const Header = ({
             </label>
           </div>
           <button
-            className="inline-flex h-11 items-center justify-center gap-2 rounded-control bg-primary px-4 text-sm font-bold text-white shadow-admin-soft transition hover:bg-primary-hover sm:col-span-2 lg:col-span-1 lg:self-end"
+            className="inline-flex h-11 min-w-[188px] items-center justify-center gap-2 rounded-control bg-primary px-4 text-sm font-bold text-white shadow-admin-soft transition hover:bg-primary-hover sm:col-span-2 xl:col-span-1 xl:self-end"
             onClick={onNew}
             type="button"
           >
@@ -339,19 +382,9 @@ const Header = ({
             Nova notificação
           </button>
         </div>
-        <div className="flex flex-wrap gap-2 xl:justify-end">
-          {QUICK_RANGES.map((days) => (
-            <button
-              className="rounded-full border border-border bg-surface/80 px-3 py-1.5 text-xs font-semibold text-muted transition hover:border-primary hover:text-primary"
-              key={days}
-              onClick={() => setRange(getQuickRange(days))}
-              type="button"
-            >
-              Últimos {days} dias
-            </button>
-          ))}
-        </div>
-        {rangeError ? <p className="text-xs font-bold text-danger">{rangeError}</p> : null}
+        {period === "custom" && rangeError ? (
+          <p className="text-xs font-bold text-danger">{rangeError}</p>
+        ) : null}
       </div>
     </div>
   </CardShell>
@@ -1063,6 +1096,7 @@ export const AdminNotificationsClient = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<AdminNotificationCampaign | null>(null);
   const [details, setDetails] = useState<AdminNotificationCampaign | null>(null);
+  const [period, setPeriod] = useState<NotificationPeriodValue>("last_30");
   const currentTab = TABS.find((item) => item.value === tab) ?? TABS[0];
   const resetPagination = () => {
     setPage(1);
@@ -1076,7 +1110,7 @@ export const AdminNotificationsClient = () => {
     handleDateControlsBlur,
     rangeError,
   } = useDateRangeCommitOnBlur({
-    initialRange: () => getQuickRange(30),
+    initialRange: () => getRangeForPeriod("last_30"),
     isValidRange,
     onApply: resetPagination,
   });
@@ -1110,8 +1144,13 @@ export const AdminNotificationsClient = () => {
   const cancelCampaign = useAdminNotificationCancelCampaign();
   const firstError = metrics.error || campaigns.error || logs.error || push.error;
 
-  const updateRange = (nextRange: { from: string; to: string }) => {
-    applyRange(nextRange);
+  const updatePeriod = (nextPeriod: NotificationPeriodPreset) => {
+    setPeriod(nextPeriod);
+    applyRange(getRangeForPeriod(nextPeriod));
+  };
+  const updateDateRange = (field: keyof NotificationRange, value: string) => {
+    setPeriod("custom");
+    handleDateChange(field, value);
   };
   const updateFilters = (nextFilters: NotificationsFilters) => {
     setFilters(nextFilters);
@@ -1139,11 +1178,12 @@ export const AdminNotificationsClient = () => {
           setEditing(null);
           setModalOpen(true);
         }}
-        onDateChange={handleDateChange}
+        onDateChange={updateDateRange}
         onDateControlsBlur={handleDateControlsBlur}
+        onPeriodChange={updatePeriod}
+        period={period}
         range={draftRange}
         rangeError={rangeError}
-        setRange={updateRange}
       />
       {firstError ? (
         <ErrorState

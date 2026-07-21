@@ -392,6 +392,26 @@ Validacao desta expansao:
 - Builder/Quick Copy nao estava exposto como ferramenta callable; as referencias auditaveis foram
   `_product/proto/admin/Notificações.png` e a captura enviada pelo usuario.
 
+## Ajuste pos-feedback 2026-07-21: periodo/data no header de Notificacoes
+
+O feedback visual do header de Notificacoes pediu que os controles de periodo e data seguissem o
+padrao do painel Admin, em vez de manter atalhos soltos abaixo dos campos.
+
+Decisoes:
+
+- Substituir os botoes **Ultimos 7 dias**, **Ultimos 30 dias** e **Ultimos 90 dias** por um seletor
+  **Periodo** ao lado dos campos **De** e **Ate**, dentro do card de header.
+- Preservar as janelas reais suportadas pelo contrato atual de Notificacoes: **Hoje**,
+  **Ultimos 7 dias**, **Ultimos 30 dias** e **Ultimos 90 dias**.
+- Manter **Personalizado** apenas como estado interno quando as datas forem editadas manualmente,
+  sem tornar essa opcao um preset selecionavel.
+- Nao expor **Este ano** ou **Todo o periodo** enquanto o backend de Notificacoes seguir limitado a
+  consultas por `from`/`to` com maximo de 90 dias.
+- Nao alterar backend, contratos HTTP, Prisma/migrations, packages, canais ou regras de metricas.
+
+Consequencia: o header fica alinhado ao padrao visual dos demais dashboards Admin sem prometer
+periodos que a API de Notificacoes ainda nao suporta como dado real.
+
 ## Pendências
 
 - Validar a aceitação visual com o fundador antes de criar a task de replicação para as demais telas.
