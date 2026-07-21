@@ -35,4 +35,5 @@ Após a primeira interpretação, o usuário esclareceu que os filtros de **Per�
 - `pnpm --dir admin build` — OK.
 - `pnpm --dir backend check` — OK.
 - `pnpm --dir backend build` — OK.
+- `pnpm check` — OK.
 - Smoke HTTP local em `/notificacoes` — OK.

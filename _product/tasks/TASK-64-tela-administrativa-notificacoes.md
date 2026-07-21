@@ -260,7 +260,9 @@ UI:
 - `pnpm --dir backend check`
 - `pnpm --dir admin build`
 - `pnpm --dir backend build`
+- `pnpm check`
 - Smoke HTTP local: `GET http://localhost:3002/notificacoes` retornou `200`.
+- Smoke do bundle dev de `/notificacoes`: confirmou ausência de **Últimos 7 dias**, **Últimos 30 dias**, **Últimos 90 dias** e `last_30`, com o seletor usando os presets padrão da Lectum.
 
 ## Ajuste complementar 2026-07-21 - Filtros por tabela
 

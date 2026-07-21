@@ -38,5 +38,8 @@ estado interno acionado pela edição manual dos campos `De`/`Até`.
 ## Validação
 
 - `pnpm --dir admin check` — OK.
+- `pnpm --dir admin build` — OK.
 - `pnpm --dir backend check` — OK.
-- Validações de build e smoke local ficam registradas no complemento da TASK-64.
+- `pnpm --dir backend build` — OK.
+- `pnpm check` — OK.
+- Smoke HTTP local em `/notificacoes` e inspeção do bundle dev confirmaram que as opções antigas **Últimos 7/30/90 dias** não são mais emitidas.
