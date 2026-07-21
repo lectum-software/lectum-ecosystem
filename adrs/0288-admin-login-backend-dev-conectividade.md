@@ -32,6 +32,13 @@ devem derrubar o servidor de desenvolvimento durante checks/builds.
   `src/external/generated/prisma/**` do watcher e preservar a saída do terminal
   com `--clear-screen=false`, reduzindo reinícios silenciosos durante geração do
   Prisma Client.
+- Atualizacao operacional em 2026-07-21: o orquestrador raiz `pnpm dev`
+  passou a iniciar o backend primeiro e aguardar `GET /health` responder 2xx
+  antes de subir Frontend, Admin e tunel. O timeout padrao e 90s e pode ser
+  ajustado por `DEV_BACKEND_READY_TIMEOUT_MS`.
+- A tela de login tambem passou a declarar `height: "auto"` nos logos com
+  `next/image`, seguindo a recomendacao do Next.js para preservar aspect ratio
+  quando o CSS global altera dimensoes de imagem.
 
 ## Consequências
 
@@ -41,6 +48,9 @@ devem derrubar o servidor de desenvolvimento durante checks/builds.
   `prisma generate`.
 - Mudanças reais de código backend continuam reiniciando o watcher; apenas
   artefatos Prisma gerados são ignorados.
+- Ao rodar a pilha completa pela raiz, o Admin deixa de ficar clicavel antes
+  de o backend aceitar conexoes HTTP locais, reduzindo falsos erros de conexao
+  no primeiro login apos `prisma generate`/bootstrap do servidor.
 - Não há alteração de contrato de API, schema, migration ou dependência.
 
 ## Validação
@@ -53,6 +63,16 @@ devem derrubar o servidor de desenvolvimento durante checks/builds.
 - `pnpm --dir admin check`
 - `pnpm --dir admin build`
 - `pnpm check`
+- Atualizacao 2026-07-21:
+  - `node --check scripts/dev.mjs`
+  - `pnpm --dir admin check`
+  - `pnpm --dir admin build`
+  - Smoke do orquestrador em portas alternativas (`PORT=3101`,
+    `FRONTEND_PORT=3100`, `DEV_ADMIN_ENABLED=false`) confirmou o wait do
+    backend por `/health` antes de iniciar os dependentes.
+  - `GET http://localhost:3001/health` respondeu `200`.
+  - `POST /api/admin/public/auth/login` com `Origin: http://localhost:3002`
+    respondeu com CORS esperado, comprovando que a API estava alcancavel.
 
 ## Pendências
 

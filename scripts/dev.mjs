@@ -66,6 +66,16 @@ function parsePort(value, fallback) {
   return parsed;
 }
 
+function parsePositiveInteger(value, fallback) {
+  const parsed = Number(value ?? fallback);
+
+  if (!Number.isInteger(parsed) || parsed <= 0) {
+    throw new Error(`Valor inteiro positivo invalido: ${value}`);
+  }
+
+  return parsed;
+}
+
 function assertCommandExists(command, installHint, versionArgs = ["--version"]) {
   const result = spawnSync(command, versionArgs, {
     stdio: "ignore",
@@ -197,6 +207,53 @@ function startProxyServer({ backendPort, frontendPort, proxyPort, publicUrl }) {
   });
 }
 
+function delay(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function requestOk(url, timeoutMs = 1200) {
+  return new Promise((resolve) => {
+    const healthRequest = request(
+      url,
+      {
+        method: "GET",
+      },
+      (response) => {
+        response.resume();
+        resolve(
+          Boolean(response.statusCode && response.statusCode >= 200 && response.statusCode < 300),
+        );
+      },
+    );
+
+    healthRequest.setTimeout(timeoutMs, () => {
+      healthRequest.destroy(new Error("timeout"));
+    });
+
+    healthRequest.on("error", () => resolve(false));
+    healthRequest.end();
+  });
+}
+
+async function waitForHttpOk(url, label, timeoutMs) {
+  const startedAt = Date.now();
+  const deadline = startedAt + timeoutMs;
+
+  console.log(`Aguardando ${label} responder em ${url}...`);
+
+  while (Date.now() < deadline) {
+    if (await requestOk(url)) {
+      const elapsedMs = Date.now() - startedAt;
+      console.log(`${label} pronto em ${elapsedMs}ms.`);
+      return;
+    }
+
+    await delay(1000);
+  }
+
+  throw new Error(`${label} nao respondeu em ${url} apos ${timeoutMs}ms.`);
+}
+
 const backendPort = parsePort(envValue("PORT"), 3001);
 const defaultFrontendPort = backendPort === 3000 ? 3002 : 3000;
 const frontendPort = parsePort(envValue("FRONTEND_PORT"), defaultFrontendPort);
@@ -208,6 +265,10 @@ const tunnelProvider = (envValue("DEV_TUNNEL_PROVIDER") || "cloudflared").trim()
 const tunnelProxyPort = parsePort(envValue("DEV_TUNNEL_PROXY_PORT"), 3005);
 const tunnelName = envValue("DEV_TUNNEL_NAME")?.trim();
 const tunnelPublicUrl = envValue("DEV_TUNNEL_URL")?.trim();
+const backendReadyTimeoutMs = parsePositiveInteger(
+  envValue("DEV_BACKEND_READY_TIMEOUT_MS"),
+  90_000,
+);
 
 const apps = [
   {
@@ -273,6 +334,32 @@ if (tunnelEnabled) {
 const children = new Map();
 let proxyServer;
 let shuttingDown = false;
+
+function startApp(app) {
+  const child = spawn(app.command, app.commandArgs, {
+    detached: process.platform !== "win32",
+    env: process.env,
+    stdio: "inherit",
+  });
+
+  children.set(app.name, child);
+
+  child.on("exit", (code, signal) => {
+    children.delete(app.name);
+
+    if (shuttingDown) {
+      if (children.size === 0) process.exit(0);
+      return;
+    }
+
+    const reason = signal ? `signal ${signal}` : `exit code ${code ?? 0}`;
+    console.error(`\n[${app.name}] finalizou com ${reason}. Encerrando os demais processos...`);
+    stopAll();
+    process.exit(code ?? 1);
+  });
+
+  return child;
+}
 
 function stopAll(signal = "SIGTERM") {
   if (shuttingDown) return;
@@ -384,29 +471,20 @@ if (tunnelEnabled) {
 }
 console.log("");
 
-for (const app of apps) {
-  const child = spawn(app.command, app.commandArgs, {
-    detached: process.platform !== "win32",
-    env: process.env,
-    stdio: "inherit",
-  });
-
-  children.set(app.name, child);
-
-  child.on("exit", (code, signal) => {
-    children.delete(app.name);
-
-    if (shuttingDown) {
-      if (children.size === 0) process.exit(0);
-      return;
-    }
-
-    const reason = signal ? `signal ${signal}` : `exit code ${code ?? 0}`;
-    console.error(`\n[${app.name}] finalizou com ${reason}. Encerrando os demais processos...`);
-    stopAll();
-    process.exit(code ?? 1);
-  });
-}
-
 process.on("SIGINT", () => stopAll("SIGINT"));
 process.on("SIGTERM", () => stopAll("SIGTERM"));
+
+const [backendApp, ...dependentApps] = apps;
+startApp(backendApp);
+
+try {
+  await waitForHttpOk(`${backendApp.url}/health`, "Backend", backendReadyTimeoutMs);
+} catch (error) {
+  console.error(`\n${error instanceof Error ? error.message : "Backend nao ficou pronto."}`);
+  stopAll();
+  process.exit(1);
+}
+
+for (const app of dependentApps) {
+  startApp(app);
+}
