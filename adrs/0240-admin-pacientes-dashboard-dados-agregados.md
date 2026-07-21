@@ -188,3 +188,17 @@ Decisoes:
 - Preferir dados SVG locais a um pacote de mapa nesta iteracao para evitar dependency nova; as fontes cartograficas ficam versionadas em `admin/src/lib/brazil-state-map.ts` e `admin/src/lib/world-country-map.ts`. Se o Admin precisar de drilldown geografico completo no futuro, uma nova task deve avaliar package/licenca/acessibilidade e registrar ADR especifico.
 
 Consequencia: o card fica visualmente mais proximo da referencia de analytics do Wix, segue mobile-first, nao altera contrato/backend/schema/migration e nao amplia a coleta de dados sensiveis.
+
+## Complemento 2026-07-21 - Dashboard sem faixa de ausencia de novos cadastros
+
+Por feedback direto de produto, a faixa informativa **Periodo sem cadastros de pacientes** nao deve ser renderizada em `/pacientes` quando o card **Novos cadastros** estiver zerado.
+
+Decisao:
+
+- Remover o empty state visual especifico de ausencia de novos cadastros do dashboard Admin de pacientes.
+- Manter o card **Novos cadastros** como a fonte suficiente para comunicar o valor `0` no periodo selecionado.
+- Nao alterar o contrato `GET /api/admin/private/patients/dashboard`, os calculos, o backend, schema Prisma, migrations ou fontes de dados.
+
+Consequencia: a visao geral fica mais compacta e evita duplicar a informacao ja presente nos cards, sem mock, pacote novo, endpoint paralelo ou mudanca de regra de dominio.
+
+Validacao do ajuste: `pnpm --dir admin check`, `pnpm --dir admin build`, smoke HTTP local `GET http://localhost:3002/pacientes` retornando `200` e screenshot headless local em `.tmp/admin-pacientes-validation.png`. Em perfil headless sem sessao administrativa, a rota permaneceu no estado de hidratacao/autenticacao; a conferencia visual autenticada ficou limitada ao codigo, build e ao dev server local aberto pelo usuario.

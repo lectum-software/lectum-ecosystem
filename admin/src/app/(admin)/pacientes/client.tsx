@@ -570,23 +570,6 @@ const ErrorState = ({ message, onRetry }: { message: string; onRetry: () => void
   </CardShell>
 );
 
-const EmptyState = ({ period }: { period: AdminPatientsDashboard["period"] }) => (
-  <CardShell className="border-dashed p-5">
-    <div className="flex gap-3">
-      <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-primary-soft text-primary">
-        <Activity aria-hidden className="h-5 w-5" />
-      </div>
-      <div>
-        <h2 className="font-black">Período sem cadastros de pacientes</h2>
-        <p className="mt-1 text-sm text-muted">
-          Nenhum paciente novo foi encontrado entre {formatDate(period.from)} e{" "}
-          {formatDate(period.to)}. Os cards de total continuam usando o snapshot real atual.
-        </p>
-      </div>
-    </div>
-  </CardShell>
-);
-
 const PatientsHeader = ({
   displayRange,
   onDateChange,
@@ -1823,7 +1806,6 @@ const DashboardContent = ({
 
   return (
     <div className="space-y-7">
-      {summary.cards.new_signups.value === 0 ? <EmptyState period={summary.period} /> : null}
 
       <CardShell className="min-w-0 p-5">
         <div className="mb-5 min-w-0">
