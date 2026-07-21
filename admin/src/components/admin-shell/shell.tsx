@@ -32,7 +32,11 @@ const isPremiumPilotPath = (pathname: string) =>
   pathname === "/comunidades" ||
   pathname.startsWith("/comunidades/") ||
   pathname === "/pacientes" ||
-  pathname.startsWith("/pacientes/");
+  pathname.startsWith("/pacientes/") ||
+  pathname === "/configuracoes" ||
+  pathname.startsWith("/configuracoes/") ||
+  pathname === "/settings" ||
+  pathname.startsWith("/settings/");
 
 const SidebarContent = ({
   collapsed,

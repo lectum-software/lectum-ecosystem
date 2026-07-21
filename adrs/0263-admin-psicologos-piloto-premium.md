@@ -324,6 +324,39 @@ Validacao deste ajuste:
 - Smoke HTTP local: `GET http://localhost:3002/pacientes/demo-patient-reviewer-01?tab=perfil` retornou 200.
 - `pnpm check` foi tentado, mas falhou em `pnpm --dir backend check` por erros TypeScript preexistentes em m?dulos backend n?o alterados nesta execu??o.
 
+## Expansao 2026-07-21: Configuracoes no piloto premium
+
+Por pedido direto de produto, a pagina Admin **Configuracoes** tambem passa a usar o escopo
+`admin-premium-pilot`, mantendo o gerenciamento real de catalogos da TASK-65.
+
+Decisoes:
+
+- Incluir `/configuracoes` e o alias `/settings` na regra centralizada do `AdminShell`, sem duplicar
+  layout por pagina.
+- Reaproveitar os tokens do piloto premium: sidebar clara, azul Lectum, cards com borda sutil,
+  raio maior, sombra quase imperceptivel e tipografia menos pesada.
+- Ajustar o header de Configuracoes para card mobile-first com label **Catalogos e filtros**, titulo
+  **Configuracoes**, subtitulo e CTA **Restaurar padroes**.
+- Alinhar superficies e controles de catalogo aos tokens (`bg-surface`, `rounded-control`,
+  `bg-overlay`) sem alterar endpoints, contratos HTTP, formularios RHF/Zod, Prisma, migrations,
+  packages ou dados persistidos.
+
+Consequencia: Configuracoes fica visualmente consistente com Psicologos, Comunidades e Pacientes
+no piloto premium, enquanto Financeiro, Notificacoes, Trafego, Moderacao e Dashboard permanecem
+fora do escopo ate decisao de produto.
+
+Validacao desta expansao:
+
+- `pnpm --dir admin exec biome check --write "src/components/admin-shell/shell.tsx" "src/app/(admin)/configuracoes/client.tsx"`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm --dir backend check`
+- `pnpm --dir frontend check`
+- `pnpm check`
+- Smoke HTTP local: `GET http://localhost:3002/configuracoes` retornou 200.
+- Builder/Quick Copy nao estava exposto como ferramenta callable; a referencia auditavel foi
+  `_product/proto/admin/Configurações.png` e a captura enviada pelo usuario.
+
 ## Pendências
 
 - Validar a aceitação visual com o fundador antes de criar a task de replicação para as demais telas.

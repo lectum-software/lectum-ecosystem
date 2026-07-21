@@ -42,7 +42,8 @@ import type {
 import { InputController, SelectController } from "@/components/controllers";
 import { cn } from "@/lib/utils";
 
-const cardClass = "rounded-card border border-border bg-surface shadow-admin-soft";
+const cardClass =
+  "rounded-card border border-border/80 bg-surface/95 shadow-admin-soft backdrop-blur";
 const RESTORE_CONFIRMATION = "RESTAURAR PADROES";
 
 type MutableCatalogType = Exclude<AdminSettingsCatalogType, "specialty_category">;
@@ -148,6 +149,34 @@ const StatusBadge = ({ active }: { active: boolean }) => (
   </span>
 );
 
+const SettingsHeader = ({ disabled, onRestore }: { disabled: boolean; onRestore: () => void }) => (
+  <section className={cn(cardClass, "p-5 md:p-6")}>
+    <div className="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
+      <div className="min-w-0">
+        <p className="text-xs font-semibold uppercase tracking-[0.12em] text-primary">
+          Catálogos e filtros
+        </p>
+        <h1 className="mt-2 text-3xl font-bold tracking-tight text-foreground md:text-4xl">
+          Configurações
+        </h1>
+        <p className="mt-2 max-w-3xl text-sm font-medium leading-6 text-muted md:text-base">
+          Gerencie as opções de filtros disponíveis na busca de psicólogos e nos formulários de
+          perfil profissional.
+        </p>
+      </div>
+      <button
+        className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-control bg-primary px-5 text-sm font-semibold text-white shadow-control transition hover:bg-primary-hover disabled:opacity-60 sm:w-fit"
+        disabled={disabled}
+        onClick={onRestore}
+        type="button"
+      >
+        <RefreshCw aria-hidden className="h-4 w-4" />
+        Restaurar padrões
+      </button>
+    </div>
+  </section>
+);
+
 const EmptyState = ({ children }: { children: ReactNode }) => (
   <div className="rounded-2xl border border-dashed border-border bg-surface-muted/60 p-4 text-sm text-muted">
     {children}
@@ -167,7 +196,7 @@ const IconButton = ({
 }) => (
   <button
     aria-label={label}
-    className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-border bg-white text-muted transition hover:border-primary/40 hover:text-primary disabled:cursor-not-allowed disabled:opacity-40"
+    className="inline-flex h-9 w-9 items-center justify-center rounded-control border border-border bg-surface text-muted transition hover:border-primary/40 hover:text-primary disabled:cursor-not-allowed disabled:opacity-40"
     disabled={disabled}
     onClick={onClick}
     type="button"
@@ -220,7 +249,7 @@ const CatalogRow = ({
         <ArrowDown className="h-4 w-4" />
       </IconButton>
       <button
-        className="inline-flex h-9 items-center gap-2 rounded-xl border border-border bg-white px-3 text-xs font-bold text-muted transition hover:border-primary/40 hover:text-primary"
+        className="inline-flex h-9 items-center gap-2 rounded-control border border-border bg-surface px-3 text-xs font-semibold text-muted transition hover:border-primary/40 hover:text-primary"
         onClick={onEdit}
         type="button"
       >
@@ -279,11 +308,13 @@ const CatalogModal = ({
     state.kind === "category" ? singularLabel.specialty_category : singularLabel[state.type];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end bg-slate-950/45 p-3 md:items-center md:justify-center">
+    <div className="fixed inset-0 z-50 flex items-end bg-overlay p-3 md:items-center md:justify-center">
       <div className="w-full max-w-lg rounded-[28px] border border-border bg-surface p-5 shadow-2xl">
         <div className="mb-5 flex items-start justify-between gap-3">
           <div>
-            <p className="text-xs font-black uppercase tracking-[0.22em] text-primary">TASK-65</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-primary">
+              Catálogo
+            </p>
             <h2 className="mt-2 text-2xl font-black text-foreground">
               {state.mode === "create" ? "Adicionar" : "Editar"} {label}
             </h2>
@@ -371,7 +402,7 @@ const RestoreModal = ({
   });
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end bg-slate-950/45 p-3 md:items-center md:justify-center">
+    <div className="fixed inset-0 z-50 flex items-end bg-overlay p-3 md:items-center md:justify-center">
       <div className="w-full max-w-lg rounded-[28px] border border-border bg-surface p-5 shadow-2xl">
         <div className="mb-5 flex items-start justify-between gap-3">
           <div>
@@ -571,7 +602,7 @@ export const AdminSettingsClient = () => {
             </div>
           </div>
           <button
-            className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl border border-primary/25 bg-white px-4 text-sm font-black text-primary shadow-control hover:bg-primary-soft"
+            className="inline-flex h-11 items-center justify-center gap-2 rounded-control border border-primary/25 bg-surface px-4 text-sm font-semibold text-primary shadow-control hover:bg-primary-soft"
             onClick={() => setModal({ kind: "item", mode: "create", type: section.type })}
             type="button"
           >
@@ -605,27 +636,10 @@ export const AdminSettingsClient = () => {
 
   return (
     <div className="space-y-6">
-      <header className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-        <div>
-          <p className="text-xs font-black uppercase tracking-[0.3em] text-primary">TASK-65</p>
-          <h1 className="mt-2 text-3xl font-black tracking-tight text-foreground md:text-4xl">
-            Configurações
-          </h1>
-          <p className="mt-2 max-w-3xl text-sm leading-6 text-muted md:text-base">
-            Gerencie as opções de filtros disponíveis na busca de psicólogos e nos formulários de
-            perfil profissional.
-          </p>
-        </div>
-        <button
-          className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl bg-primary px-5 text-sm font-black text-white shadow-admin-soft hover:bg-primary-dark disabled:opacity-60"
-          disabled={catalogs.isLoading || restoreDefaults.isPending}
-          onClick={() => setRestoreOpen(true)}
-          type="button"
-        >
-          <RefreshCw className="h-4 w-4" />
-          Restaurar padrões
-        </button>
-      </header>
+      <SettingsHeader
+        disabled={catalogs.isLoading || restoreDefaults.isPending}
+        onRestore={() => setRestoreOpen(true)}
+      />
 
       <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
         {[
@@ -635,9 +649,9 @@ export const AdminSettingsClient = () => {
           ["Serviços", counts.services],
           ["Idiomas/Públicos", counts.languages + counts.targetAudiences],
         ].map(([label, value]) => (
-          <div className={cn(cardClass, "p-4")} key={String(label)}>
-            <p className="text-xs font-bold uppercase tracking-[0.16em] text-muted">{label}</p>
-            <p className="mt-2 text-2xl font-black text-foreground">{value}</p>
+          <div className={cn(cardClass, "p-4 md:p-5")} key={String(label)}>
+            <p className="text-xs font-semibold uppercase tracking-[0.1em] text-muted">{label}</p>
+            <p className="mt-2 text-2xl font-bold text-foreground">{value}</p>
           </div>
         ))}
       </section>
@@ -670,7 +684,7 @@ export const AdminSettingsClient = () => {
                 </div>
               </div>
               <button
-                className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl border border-primary/25 bg-white px-4 text-sm font-black text-primary shadow-control hover:bg-primary-soft"
+                className="inline-flex h-11 items-center justify-center gap-2 rounded-control border border-primary/25 bg-surface px-4 text-sm font-semibold text-primary shadow-control hover:bg-primary-soft"
                 onClick={() => setModal({ kind: "category", mode: "create" })}
                 type="button"
               >
@@ -736,14 +750,14 @@ export const AdminSettingsClient = () => {
                             <ArrowDown className="h-4 w-4" />
                           </IconButton>
                           <button
-                            className="inline-flex h-9 items-center gap-2 rounded-xl border border-border bg-white px-3 text-xs font-bold text-muted transition hover:border-primary/40 hover:text-primary"
+                            className="inline-flex h-9 items-center gap-2 rounded-control border border-border bg-surface px-3 text-xs font-semibold text-muted transition hover:border-primary/40 hover:text-primary"
                             onClick={() => setModal({ category, kind: "category", mode: "edit" })}
                             type="button"
                           >
                             <Edit3 className="h-4 w-4" /> Editar
                           </button>
                           <button
-                            className="inline-flex h-9 items-center gap-2 rounded-xl border border-primary/25 bg-white px-3 text-xs font-bold text-primary hover:bg-primary-soft"
+                            className="inline-flex h-9 items-center gap-2 rounded-control border border-primary/25 bg-surface px-3 text-xs font-semibold text-primary hover:bg-primary-soft"
                             onClick={() =>
                               setModal({
                                 categoryId: category.id,
@@ -776,7 +790,7 @@ export const AdminSettingsClient = () => {
                           </button>
                         </div>
                       </div>
-                      <div className="mt-3 rounded-2xl bg-white px-3">
+                      <div className="mt-3 rounded-[1.35rem] border border-border/60 bg-surface px-3">
                         {category.specialties.length === 0 ? (
                           <EmptyState>Nenhuma especialidade nesta categoria.</EmptyState>
                         ) : (

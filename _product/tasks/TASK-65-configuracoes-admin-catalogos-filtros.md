@@ -253,3 +253,21 @@ Frontend esperado:
 - `pnpm --dir frontend build`
 - `pnpm check`
 - Browser local/HTTP: Admin `/configuracoes` e `/settings`; frontend `/psychologists` e `/app/professional/profile/setup` em servidor de produ??o local.
+
+## Ajuste complementar 2026-07-21 - Layout piloto premium em Configurações
+
+- Pedido do usuário: aplicar o layout piloto na página Admin **Configurações**.
+- O escopo `admin-premium-pilot` foi estendido para `/configuracoes` e `/settings`, reaproveitando a sidebar clara, tokens azuis Lectum, bordas/sombras sutis e pesos tipográficos mais leves já validados em Psicólogos, Comunidades e Pacientes.
+- O header da página deixou de expor `TASK-65` e passou a usar card mobile-first com label **Catálogos e filtros**, título **Configurações**, subtítulo e CTA **Restaurar padrões** no padrão do piloto.
+- Cards de contagem, botões de catálogo, botões de mover/editar e overlays de modal foram alinhados aos tokens do piloto sem alterar endpoints, contratos, dados persistidos, Prisma/migrations, packages, formulários ou regras de restauração.
+- Builder/Quick Copy não está exposto como ferramenta callable neste ambiente; a referência visual auditável usada foi `_product/proto/admin/Configurações.png` e a captura enviada pelo usuário.
+
+### Validação complementar executada
+
+- `pnpm --dir admin exec biome check --write "src/components/admin-shell/shell.tsx" "src/app/(admin)/configuracoes/client.tsx"`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm --dir backend check`
+- `pnpm --dir frontend check`
+- `pnpm check`
+- Smoke HTTP local: `GET http://localhost:3002/configuracoes` retornou `200`.
