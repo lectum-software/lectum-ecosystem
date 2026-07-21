@@ -13,7 +13,6 @@ import {
   ChevronLeft,
   ChevronRight,
   ChevronUp,
-  Clock3,
   Eye,
   FileText,
   KeyRound,
@@ -109,14 +108,13 @@ const metricIcons: Record<PatientsDetailMetric["id"], LucideIcon> = {
   verified_psychologist_responses: ShieldCheck,
   upvotes_received: ArrowUp,
 };
-const activitySourceLabels: Record<PatientsDetailActivity["source"], string> = {
-  community_member: "Comunidade",
-  community_post: "Post",
-  post_reply: "Comentário",
-  post_reply_save: "Resposta salva",
-  post_save: "Post salvo",
-  post_vote: "Voto",
-  professional_review: "Avaliação",
+const PATIENT_GENERAL_METRIC_IDS = new Set<PatientsDetailMetric["id"]>([
+  "posts_created",
+  "comments_created",
+  "verified_psychologist_responses",
+]);
+const patientMetricDisplayLabels: Partial<Record<PatientsDetailMetric["id"], string>> = {
+  comments_created: "Comentários feitos",
 };
 const patientPublicationMetricOrder: (keyof PatientsDetailPublication["metrics"])[] = [
   "views",
@@ -176,7 +174,7 @@ const PATIENT_COMMUNITY_CHART_METRICS = [
     iconToneClassName: "bg-blue-50",
     id: "comments_created",
     key: "comments_created",
-    label: "Comentários totais",
+    label: "Comentários feitos",
     shortLabel: "Comentários",
     strokeClassName: "stroke-blue-500",
     swatchClassName: "bg-blue-500",
@@ -794,10 +792,12 @@ const TrendBadge = ({ metric }: { metric: PatientsDetailMetric }) => (
 
 const MetricCard = ({ metric }: { metric: PatientsDetailMetric }) => {
   const Icon = metricIcons[metric.id];
+  const label = patientMetricDisplayLabels[metric.id] ?? metric.label;
+
   return (
     <CardShell className="h-full min-h-[10rem] w-full p-4">
       <IconCircle icon={Icon} />
-      <p className="mt-4 text-sm font-extrabold text-muted">{metric.label}</p>
+      <p className="mt-4 text-sm font-extrabold text-muted">{label}</p>
       <p className="mt-2 text-3xl font-extrabold tracking-tight text-foreground">
         {numberFormatter.format(metric.value)}
       </p>
@@ -1374,61 +1374,62 @@ const EngagementChart = ({
 
 const ActivityList = ({
   detail,
-  description = detail.activities.coverage_note,
   emptyMessage = "Nenhum evento real foi encontrado para este paciente no período selecionado.",
   items = detail.activities.items,
   title = "Atividades recentes",
 }: {
   detail: AdminPatientDetail;
-  description?: string;
   emptyMessage?: string;
   items?: PatientsDetailActivity[];
   title?: string;
-}) => (
-  <CardShell className="p-5">
-    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-      <div className="flex items-start gap-3">
-        <IconCircle icon={Clock3} />
+}) => {
+  const patientName = detail.header.name || "Não informado";
+
+  return (
+    <CardShell className="p-5">
+      <div className="flex items-start justify-between gap-3">
         <div>
-          <h2 className="text-lg font-extrabold text-foreground">{title}</h2>
-          {description ? <p className="mt-1 text-sm text-muted">{description}</p> : null}
+          <h2 className="text-lg font-black text-foreground">{title}</h2>
+          <p className="mt-1 text-sm text-muted">
+            Registro simples dos principais eventos reais encontrados.
+          </p>
         </div>
       </div>
-      <Badge className="bg-surface-muted text-muted">{detail.activities.source}</Badge>
-    </div>
 
-    {items.length === 0 ? (
-      <p className="mt-5 rounded-2xl bg-surface-muted p-4 text-sm text-muted">{emptyMessage}</p>
-    ) : (
-      <div className="mt-4 overflow-x-auto">
-        <table className="w-full min-w-[720px] text-left text-sm">
-          <thead className="border-b border-border text-xs text-muted">
-            <tr>
-              <th className="py-3 pr-3 font-black">Data</th>
-              <th className="px-3 py-3 font-black">Ação</th>
-              <th className="px-3 py-3 font-black">Descrição</th>
-              <th className="px-3 py-3 font-black">Fonte</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-border">
-            {items.map((activity) => (
-              <tr key={activity.id}>
-                <td className="py-3 pr-3 font-bold text-muted">
-                  {formatDateTime(activity.occurred_at)}
-                </td>
-                <td className="px-3 py-3 font-black text-foreground">{activity.title}</td>
-                <td className="px-3 py-3 text-muted">{activity.description}</td>
-                <td className="px-3 py-3 font-bold text-foreground">
-                  {activitySourceLabels[activity.source]}
-                </td>
+      {items.length === 0 ? (
+        <p className="mt-5 rounded-2xl bg-surface-muted p-4 text-sm text-muted">{emptyMessage}</p>
+      ) : (
+        <div className="mt-4 overflow-x-auto">
+          <table className="w-full min-w-[720px] text-left text-sm">
+            <thead className="border-b border-border text-xs text-muted">
+              <tr>
+                <th className="py-3 pr-3 font-black">Data</th>
+                <th className="px-3 py-3 font-black">Ação</th>
+                <th className="px-3 py-3 font-black">Descrição</th>
+                <th className="px-3 py-3 font-black">Usuário</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    )}
-  </CardShell>
-);
+            </thead>
+            <tbody className="divide-y divide-border">
+              {items.map((activity) => (
+                <tr key={activity.id}>
+                  <td className="py-3 pr-3 font-bold text-muted">
+                    {formatDateTime(activity.occurred_at)}
+                  </td>
+                  <td className="px-3 py-3 font-black text-foreground">{activity.title}</td>
+                  <td className="px-3 py-3 text-muted">{activity.description}</td>
+                  <td className="px-3 py-3">
+                    <span className="block font-black text-foreground">{patientName}</span>
+                    <span className="mt-1 block text-xs font-bold text-muted">Paciente</span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </CardShell>
+  );
+};
 
 const DetailFilterSelect = ({
   children,
@@ -2279,30 +2280,6 @@ const PatientPlatformActivityHoursCard = ({
   );
 };
 
-const PrivacyNotes = ({ detail }: { detail: AdminPatientDetail }) => (
-  <CardShell className="bg-primary-soft/70 p-5">
-    <div className="flex gap-3">
-      <CheckCircle2 aria-hidden className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
-      <div>
-        <h2 className="font-black text-foreground">Privacidade e cobertura dos dados</h2>
-        <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-muted">
-          {detail.coverage_notes.map((note) => (
-            <li key={note}>{note}</li>
-          ))}
-          {detail.unavailable.map((item) => (
-            <li key={item.id}>
-              <strong className="text-foreground">{item.label}:</strong> {item.description}
-            </li>
-          ))}
-        </ul>
-        <p className="mt-3 text-xs text-muted">
-          Campos omitidos na V1: {detail.privacy.omitted_fields.join(", ")}.
-        </p>
-      </div>
-    </div>
-  </CardShell>
-);
-
 const FieldRow = ({ label, value }: { label: string; value: ReactNode }) => (
   <div className="grid gap-1 border-b border-border/80 py-3 last:border-0 sm:grid-cols-[190px_1fr]">
     <dt className="text-sm font-extrabold text-muted">{label}</dt>
@@ -2352,11 +2329,6 @@ const formatPatientLocation = (detail: AdminPatientDetail) => {
     [location.city, location.state, location.country].filter(Boolean).join(", ") || "Não capturada"
   );
 };
-
-const getOnboardingLabel = (detail: AdminPatientDetail) =>
-  detail.header.onboarding_completed_at
-    ? formatDateTime(detail.header.onboarding_completed_at)
-    : "Sem conclusão registrada";
 
 const SummaryCard = ({
   actionHref,
@@ -2439,39 +2411,32 @@ const AccountSituationCard = ({ detail, id }: { detail: AdminPatientDetail; id: 
   );
 };
 
-const PatientRegistrationSummaryCard = ({
-  detail,
-  id,
-}: {
-  detail: AdminPatientDetail;
-  id: string;
-}) => (
-  <SummaryCard
-    actionHref={patientTabHref(id, "perfil")}
-    actionLabel="Abrir perfil e cadastro"
-    description="Dados cadastrais mínimos aprovados para o Admin V1."
-    icon={UserRound}
-    title="Cadastro do paciente"
-    badge={
-      <div>
-        <p className="text-xs font-black uppercase tracking-[0.12em] text-primary">Onboarding</p>
-        <p className="mt-1 text-xl font-black text-foreground">
-          {detail.header.onboarding_completed_at ? "Concluído" : "Sem conclusão registrada"}
-        </p>
-        <p className="mt-3 text-sm font-bold leading-6 text-muted">
-          {detail.header.onboarding_completed_at
-            ? "Fluxo inicial concluído com data real registrada."
-            : "Nenhuma conclusão de onboarding foi encontrada para este paciente."}
-        </p>
-      </div>
-    }
-  >
-    <FieldRow label="ID do paciente" value={detail.header.id} />
-    <FieldRow label="Gênero" value={formatPatientGender(detail.header.gender)} />
-    <FieldRow label="Localização agregada" value={formatPatientLocation(detail)} />
-    <FieldRow label="Onboarding" value={getOnboardingLabel(detail)} />
-  </SummaryCard>
-);
+const getPatientGeneralMetrics = (detail: AdminPatientDetail) =>
+  detail.metrics.filter((metric) => PATIENT_GENERAL_METRIC_IDS.has(metric.id));
+
+const getPatientMetricValue = (detail: AdminPatientDetail, id: PatientsDetailMetric["id"]) =>
+  detail.metrics.find((metric) => metric.id === id)?.value ?? 0;
+
+const diagnosePatientGeneralEngagement = (total: number) => {
+  if (total < 3) return "Sem base";
+  if (total >= 12) return "Muito ativo";
+  if (total >= 6) return "Ativo";
+
+  return "Pouco ativo";
+};
+
+const getPatientLastActivityAt = (detail: AdminPatientDetail) =>
+  detail.activities.items.reduce<string | null>((latest, activity) => {
+    if (!latest) return activity.occurred_at;
+
+    const latestDate = new Date(latest);
+    const activityDate = new Date(activity.occurred_at);
+
+    if (Number.isNaN(activityDate.getTime())) return latest;
+    if (Number.isNaN(latestDate.getTime())) return activity.occurred_at;
+
+    return activityDate > latestDate ? activity.occurred_at : latest;
+  }, null);
 
 const PatientEngagementSummaryCard = ({
   detail,
@@ -2480,8 +2445,12 @@ const PatientEngagementSummaryCard = ({
   detail: AdminPatientDetail;
   id: string;
 }) => {
-  const totalSignals = detail.metrics.reduce((total, metric) => total + metric.value, 0);
-  const topCommunity = detail.communities.items[0]?.name ?? "Não informado";
+  const activeCommunities = detail.communities.items.length;
+  const posts = getPatientMetricValue(detail, "posts_created");
+  const replies = getPatientMetricValue(detail, "comments_created");
+  const totalSignals = activeCommunities + posts + replies;
+  const engagementDiagnosis = diagnosePatientGeneralEngagement(totalSignals);
+  const lastActivityAt = getPatientLastActivityAt(detail);
 
   return (
     <SummaryCard
@@ -2492,26 +2461,21 @@ const PatientEngagementSummaryCard = ({
       title="Engajamento"
       badge={
         <div>
-          <p className="text-xs font-black uppercase tracking-[0.12em] text-primary">
-            Sinais no período
-          </p>
-          <p className="mt-1 text-3xl font-black text-foreground">
-            {numberFormatter.format(totalSignals)}
-          </p>
+          <p className="text-xs font-black uppercase tracking-[0.12em] text-primary">Engajamento</p>
+          <p className="mt-1 text-3xl font-black text-foreground">{engagementDiagnosis}</p>
           <p className="mt-3 text-sm font-bold leading-6 text-muted">
-            Soma de posts, comentários, respostas verificadas, votos, salvamentos e
-            compartilhamentos, sem estimativas.
+            Diagnóstico derivado de comunidades ativas, posts e respostas reais no período padrão.
           </p>
         </div>
       }
     >
-      <FieldRow label="Período" value={detail.period.label} />
-      <FieldRow label="Comunidade destaque" value={topCommunity} />
+      <FieldRow label="Comunidades ativas" value={numberFormatter.format(activeCommunities)} />
+      <FieldRow label="Posts" value={numberFormatter.format(posts)} />
+      <FieldRow label="Respostas" value={numberFormatter.format(replies)} />
       <FieldRow
-        label="Eventos no heatmap"
-        value={numberFormatter.format(detail.heatmap.total_events)}
+        label="Última atividade"
+        value={lastActivityAt ? formatDateTime(lastActivityAt) : "Não capturada"}
       />
-      <FieldRow label="Fuso" value={detail.period.timezone} />
     </SummaryCard>
   );
 };
@@ -2660,21 +2624,19 @@ const GeneralTab = ({ detail, id }: { detail: AdminPatientDetail; id: string }) 
   <div className="space-y-5">
     <section>
       <h2 className="sr-only">Métricas principais do paciente</h2>
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
-        {detail.metrics.map((metric) => (
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        {getPatientGeneralMetrics(detail).map((metric) => (
           <MetricCard key={metric.id} metric={metric} />
         ))}
       </div>
     </section>
 
-    <div className="grid items-stretch gap-5 xl:grid-cols-3">
+    <div className="grid items-stretch gap-5 xl:grid-cols-2">
       <AccountSituationCard detail={detail} id={id} />
-      <PatientRegistrationSummaryCard detail={detail} id={id} />
       <PatientEngagementSummaryCard detail={detail} id={id} />
     </div>
 
     <ActivityList detail={detail} />
-    <PrivacyNotes detail={detail} />
   </div>
 );
 

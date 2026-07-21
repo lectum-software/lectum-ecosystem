@@ -62,3 +62,20 @@ Essa exposição permanece somente para Admin autenticado, não adiciona tracking, 
 A regra de detalhe de paciente somente leitura passa a ter uma excecao explicita apos feedback de produto: o card **Dados pessoais** na aba **Perfil e cadastro** pode editar apenas `patient_profile.gender`, com motivo obrigatorio e auditoria em `admin_activity_log`.
 
 `user.email` e a localizacao coarse derivada de `visitor_location` continuam somente leitura nessa aba. Nao foram adicionadas acoes destrutivas, moderacao, bloqueio, silenciamento, banimento, exclusao, schema Prisma, migration, package, seed, mock ou backfill. A decisao detalhada esta em `adrs/0290-admin-paciente-edicao-dados-pessoais-limitada.md`.
+
+## Atualizacao 2026-07-21: recorte dos contadores da aba Geral
+
+Apos feedback de produto, a aba **Geral** do detalhe administrativo de paciente passa a exibir um recorte mais curto de contadores principais: **Posts**, **Comentarios feitos** e **Respostas de psicologos verificados**.
+
+As metricas de **Upvotes**, **Downvotes**, **Salvamentos** e **Compartilhamentos** continuam calculadas por fontes reais e disponiveis para areas analiticas especificas, mas deixam de aparecer nos contadores principais da aba **Geral** para reduzir ruido operacional. O resumo de **Engajamento** da mesma aba soma apenas esse recorte visivel, evitando apresentar metricas ocultas no total.
+
+Nao houve alteracao de endpoint, contrato HTTP, schema Prisma, migration, package, mock, seed, backfill ou dado artificial. Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente; a referencia auditavel foi o screenshot enviado pelo usuario e o PNG local `_product/proto/admin/Pacientes/Pacientes - Detalhes.png`.
+
+
+## Atualizacao 2026-07-21: simplificacao da aba Geral do paciente
+
+A aba **Geral** do detalhe administrativo de paciente foi simplificada apos feedback de produto. O bloco **Cadastro do paciente** deixou de ser exibido nessa aba para evitar duplicidade com **Perfil e cadastro** e **Conta**. O card **Engajamento** passou a exibir um diagnostico textual (**Muito ativo**, **Ativo**, **Pouco ativo** ou **Sem base**) derivado de dados reais do periodo padrao, usando comunidades ativas, posts e respostas do paciente.
+
+As linhas operacionais antigas do card (**Periodo**, **Comunidade destaque**, **Eventos no heatmap** e **Fuso**) foram substituidas por **Comunidades ativas**, **Posts**, **Respostas** e **Ultima atividade**. O bloco **Privacidade e cobertura dos dados** foi removido da interface da aba Geral, mantendo as regras de privacidade como decisao documentada e preservada no contrato.
+
+**Atividades recentes** passa a seguir o layout do detalhe administrativo de psicologo, com tabela de **Data**, **Acao**, **Descricao** e **Usuario**, sem badge tecnico de fonte no cabecalho. Nao houve endpoint novo, schema Prisma, migration, package, mock, seed ou backfill artificial.

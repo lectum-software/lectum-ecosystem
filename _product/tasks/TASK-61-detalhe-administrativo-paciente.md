@@ -649,3 +649,62 @@ Frontend esperado:
 - `pnpm --dir admin build`
 - `pnpm check`
 - Smoke HTTP local: `/pacientes/cmrqsrab5001f1guh2ve5oy90?tab=estatisticas` retornou `200`.
+
+## Ajuste pos-feedback 2026-07-21 - Contadores da aba Geral de pacientes
+
+- Pedido do usuario: na aba **Geral** do detalhe administrativo de paciente, remover dos contadores **Upvotes**, **Downvotes**, **Salvamentos** e **Compartilhamentos** e trocar **Comentarios totais** por **Comentarios feitos**.
+- A aba **Geral** agora mostra somente **Posts**, **Comentarios feitos** e **Respostas de psicologos verificados** nos contadores principais.
+- O card resumido de **Engajamento** na aba **Geral** passou a somar apenas os mesmos sinais visiveis nesse recorte, evitando manter votos/salvamentos/compartilhamentos em um contador oculto.
+- As metricas removidas continuam disponiveis nos contratos e nas areas analiticas especificas, sem apagar dados reais nem alterar o backend.
+- Nao houve alteracao de endpoint, contrato HTTP, schema Prisma, migrations, packages, mocks, seeds ou dados artificiais; `pnpm --dir backend db:migrate` nao foi necessario.
+- Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente; a referencia visual foi o screenshot enviado pelo usuario em 2026-07-21 e o PNG local `_product/proto/admin/Pacientes/Pacientes - Detalhes.png`.
+- ADR atualizado: `adrs/0241-admin-detalhe-paciente-dados-minimos-readonly.md`.
+
+### Criterios de aceite do ajuste
+
+- [x] **Upvotes**, **Downvotes**, **Salvamentos** e **Compartilhamentos** nao aparecem nos contadores da aba **Geral**.
+- [x] **Comentarios totais** aparece como **Comentarios feitos** na aba **Geral**.
+- [x] O resumo de engajamento da aba **Geral** nao soma metricas removidas do recorte visual.
+- [x] Nenhum mock, seed, endpoint simulado, migration ou package novo foi adicionado.
+
+### Validacao complementar executada
+
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/pacientes/[id]/client.tsx"`
+- `pnpm --dir admin exec eslint "src/app/(admin)/pacientes/[id]/client.tsx"`
+- `pnpm --dir admin typecheck`
+- `pnpm --dir admin build`
+- Browser local/CDP em `/pacientes/cmrqsrab5001f1guh2ve5oy90`: contadores antigos ausentes, **Comentarios feitos** presente e largura mobile de 390px sem overflow horizontal.
+- `pnpm --dir admin check`
+- `pnpm check`
+
+
+## Ajuste pos-feedback 2026-07-21 - Resumo e atividades da aba Geral
+
+- Pedido do usuario: remover o bloco de status de cadastro do paciente, transformar o resumo de **Engajamento** em diagnostico textual, remover linhas operacionais antigas do card, remover **Privacidade e cobertura dos dados** e alinhar **Atividades recentes** ao layout do psicologo.
+- O bloco **Cadastro do paciente** saiu da aba **Geral**; dados de cadastro permanecem acessiveis pela aba **Perfil e cadastro** e pela aba **Conta**, sem duplicacao visual.
+- O card **Engajamento** agora mostra o diagnostico **Muito ativo**, **Ativo**, **Pouco ativo** ou **Sem base**, derivado apenas de comunidades ativas, posts e respostas reais do periodo padrao.
+- O card **Engajamento** removeu as linhas **Periodo**, **Comunidade destaque**, **Eventos no heatmap** e **Fuso** e passou a listar **Comunidades ativas**, **Posts**, **Respostas** e **Ultima atividade**.
+- O bloco **Privacidade e cobertura dos dados** foi removido da aba **Geral**; as regras de privacidade permanecem documentadas em ADR e preservadas no contrato.
+- **Atividades recentes** passou a usar o mesmo layout do detalhe do psicologo: titulo/copy simples, tabela com **Data**, **Acao**, **Descricao** e **Usuario**, e estado vazio sem badge tecnico de fonte.
+- Nao houve alteracao de endpoint, contrato HTTP, schema Prisma, migrations, packages, mocks, seeds ou dados artificiais; `pnpm --dir backend db:migrate` nao foi necessario.
+- Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente; a referencia visual foi o screenshot enviado pelo usuario em 2026-07-21 e o layout local do detalhe de psicologo.
+- ADR atualizado: `adrs/0241-admin-detalhe-paciente-dados-minimos-readonly.md`.
+
+### Criterios de aceite do ajuste
+
+- [x] O bloco **Cadastro do paciente** nao aparece na aba **Geral**.
+- [x] O card **Engajamento** mostra diagnostico textual em vez de quantidade de sinais.
+- [x] O card **Engajamento** lista **Comunidades ativas**, **Posts**, **Respostas** e **Ultima atividade**.
+- [x] O bloco **Privacidade e cobertura dos dados** nao aparece na aba **Geral**.
+- [x] **Atividades recentes** segue o layout visual do bloco correspondente do detalhe de psicologo.
+- [x] Nenhum mock, seed, endpoint simulado, migration ou package novo foi adicionado.
+
+### Validacao complementar executada
+
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/pacientes/[id]/client.tsx"`
+- `pnpm --dir admin exec eslint "src/app/(admin)/pacientes/[id]/client.tsx"`
+- `pnpm --dir admin typecheck`
+- `pnpm --dir admin build`
+- Browser local/CDP em `/pacientes/cmrqsrab5001f1guh2ve5oy90`: **Cadastro do paciente** e **Privacidade e cobertura dos dados** ausentes; **Engajamento** com diagnostico e novas linhas; **Atividades recentes** com layout de tabela de psicologo.
+- `pnpm --dir admin check`
+- `pnpm check`
