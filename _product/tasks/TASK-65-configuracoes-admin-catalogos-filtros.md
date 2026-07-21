@@ -321,3 +321,18 @@ Frontend esperado:
 - `pnpm --dir frontend build`
 - `pnpm check`
 - Smoke HTTP local: `GET http://localhost:3000/psychologists` retornou `200` e `GET http://localhost:3000/app/professional/profile/setup` retornou redirecionamento esperado `307` sem sessao CLI.
+
+## Ajuste complementar 2026-07-21 - Copy Desativar em catalogos
+
+- Pedido do usuario: alterar o botao **Inativar** para **Desativar** na tela Admin **Configuracoes**.
+- A copy dos botoes de categorias e itens ativos passa a exibir **Desativar**, mantendo **Reativar** para itens desativados e preservando a regra tecnica `active`.
+- Os toasts correlatos foram alinhados para **Categoria desativada** e **Item desativado**.
+- Nao houve alteracao de backend, Prisma/migrations, packages, contratos HTTP, dados persistidos, arquitetura ou regra de dominio.
+
+### Validacao complementar executada
+
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/configuracoes/client.tsx"`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check`
+- Smoke HTTP local: `GET http://localhost:3002/configuracoes` retornou `200`.

@@ -410,7 +410,7 @@ const CatalogRow = ({
           type="button"
         >
           {item.active ? <ToggleRight className="h-4 w-4" /> : <ToggleLeft className="h-4 w-4" />}
-          {item.active ? "Inativar" : "Reativar"}
+          {item.active ? "Desativar" : "Reativar"}
         </button>
       </div>
     </div>
@@ -683,7 +683,7 @@ export const AdminSettingsClient = () => {
   const toggleCategory = async (category: AdminSettingsSpecialtyCategory) => {
     try {
       await updateCategory.mutateAsync({ id: category.id, input: { active: !category.active } });
-      toast.success(category.active ? "Categoria inativada" : "Categoria reativada");
+      toast.success(category.active ? "Categoria desativada" : "Categoria reativada");
     } catch (error) {
       toast.error(getErrorMessage(error));
     }
@@ -695,7 +695,7 @@ export const AdminSettingsClient = () => {
   ) => {
     try {
       await updateItem.mutateAsync({ id: item.id, input: { active: !item.active }, type });
-      toast.success(item.active ? "Item inativado" : "Item reativado");
+      toast.success(item.active ? "Item desativado" : "Item reativado");
     } catch (error) {
       toast.error(getErrorMessage(error));
     }
@@ -1173,7 +1173,7 @@ export const AdminSettingsClient = () => {
                               ) : (
                                 <ToggleLeft className="h-4 w-4" />
                               )}
-                              {category.active ? "Inativar" : "Reativar"}
+                              {category.active ? "Desativar" : "Reativar"}
                             </button>
                           </div>
                         </div>
