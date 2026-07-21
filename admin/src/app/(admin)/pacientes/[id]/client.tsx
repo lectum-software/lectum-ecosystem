@@ -1519,9 +1519,54 @@ const ActivitiesTab = ({ id }: { id: string }) => {
   return (
     <div className="space-y-5" data-patient-detail-tab="atividades">
       <CardShell className="p-4">
-        <div className="flex flex-col gap-3 lg:flex-row lg:items-end">
+        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-[minmax(220px,1.25fr)_minmax(160px,1fr)_minmax(160px,1fr)_minmax(150px,.9fr)_minmax(260px,1.35fr)] xl:items-end">
+          <label className="block min-w-0 text-sm font-black text-muted">
+            Buscar
+            <span className="mt-2 flex h-11 items-center rounded-control border border-border bg-surface px-3">
+              <Search aria-hidden className="h-4 w-4 shrink-0 text-muted" />
+              <input
+                className="h-full min-w-0 flex-1 bg-transparent px-2 text-sm font-bold text-foreground outline-none placeholder:text-muted"
+                onChange={(event) => {
+                  setQ(event.target.value);
+                  setPage(1);
+                }}
+                placeholder="Buscar por descrição..."
+                value={q}
+              />
+            </span>
+          </label>
           <DetailFilterSelect
-            className="flex-1"
+            className="min-w-0"
+            label="Tipo de atividade"
+            onChange={(nextValue) => {
+              setType(nextValue);
+              setPage(1);
+            }}
+            value={type}
+          >
+            {activities.filters.types.map((option) => (
+              <option key={option.id} value={option.id}>
+                {option.label} ({numberFormatter.format(option.count)})
+              </option>
+            ))}
+          </DetailFilterSelect>
+          <DetailFilterSelect
+            className="min-w-0"
+            label="Área"
+            onChange={(nextValue) => {
+              setArea(nextValue);
+              setPage(1);
+            }}
+            value={area}
+          >
+            {activities.filters.areas.map((option) => (
+              <option key={option.id} value={option.id}>
+                {option.label} ({numberFormatter.format(option.count)})
+              </option>
+            ))}
+          </DetailFilterSelect>
+          <DetailFilterSelect
+            className="min-w-0"
             label="Período"
             onChange={(nextValue) => {
               setPeriod(nextValue);
@@ -1539,82 +1584,35 @@ const ActivitiesTab = ({ id }: { id: string }) => {
             <option value="90d">Últimos 90 dias</option>
             <option value="180d">Últimos 180 dias</option>
           </DetailFilterSelect>
-          <DetailFilterSelect
-            className="flex-1"
-            label="Área"
-            onChange={(nextValue) => {
-              setArea(nextValue);
-              setPage(1);
-            }}
-            value={area}
-          >
-            {activities.filters.areas.map((option) => (
-              <option key={option.id} value={option.id}>
-                {option.label} ({numberFormatter.format(option.count)})
-              </option>
-            ))}
-          </DetailFilterSelect>
-          <DetailFilterSelect
-            className="flex-1"
-            label="Tipo de atividade"
-            onChange={(nextValue) => {
-              setType(nextValue);
-              setPage(1);
-            }}
-            value={type}
-          >
-            {activities.filters.types.map((option) => (
-              <option key={option.id} value={option.id}>
-                {option.label} ({numberFormatter.format(option.count)})
-              </option>
-            ))}
-          </DetailFilterSelect>
-          <label className="block flex-1 text-sm font-black text-muted">
-            Buscar
-            <span className="mt-2 flex h-11 items-center rounded-control border border-border bg-surface px-3">
-              <Search aria-hidden className="h-4 w-4 shrink-0 text-muted" />
+          <fieldset className="m-0 min-w-0 border-0 p-0 text-sm font-black text-muted [min-inline-size:0]">
+            <legend className="p-0">Data</legend>
+            <div className="mt-2 grid gap-2 min-[520px]:grid-cols-2">
               <input
-                className="h-full min-w-0 flex-1 bg-transparent px-2 text-sm font-bold text-foreground outline-none placeholder:text-muted"
+                aria-label="Data inicial"
+                className="h-11 w-full min-w-0 rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground"
+                max={customTo || undefined}
                 onChange={(event) => {
-                  setQ(event.target.value);
+                  setPeriod("custom");
+                  setCustomFrom(event.target.value);
                   setPage(1);
                 }}
-                placeholder="Buscar por descrição..."
-                value={q}
+                type="date"
+                value={customFrom}
               />
-            </span>
-          </label>
-        </div>
-
-        <div className="mt-3 grid gap-3 sm:grid-cols-2">
-          <label className="block text-sm font-black text-muted">
-            De
-            <input
-              className="mt-2 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground"
-              max={customTo || undefined}
-              onChange={(event) => {
-                setPeriod("custom");
-                setCustomFrom(event.target.value);
-                setPage(1);
-              }}
-              type="date"
-              value={customFrom}
-            />
-          </label>
-          <label className="block text-sm font-black text-muted">
-            Até
-            <input
-              className="mt-2 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground"
-              min={customFrom || undefined}
-              onChange={(event) => {
-                setPeriod("custom");
-                setCustomTo(event.target.value);
-                setPage(1);
-              }}
-              type="date"
-              value={customTo}
-            />
-          </label>
+              <input
+                aria-label="Data final"
+                className="h-11 w-full min-w-0 rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground"
+                min={customFrom || undefined}
+                onChange={(event) => {
+                  setPeriod("custom");
+                  setCustomTo(event.target.value);
+                  setPage(1);
+                }}
+                type="date"
+                value={customTo}
+              />
+            </div>
+          </fieldset>
         </div>
       </CardShell>
 
