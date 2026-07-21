@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronDown, ChevronLeft, LogOut, Menu, X } from "lucide-react";
+import { AlertTriangle, ChevronDown, ChevronLeft, LogOut, Menu, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { PropsWithChildren } from "react";
@@ -58,6 +58,19 @@ const SidebarContent = ({
   const moderationPendingTotal =
     (moderationSummary.data?.pending_total ?? 0) +
     (moderationSummary.data?.operational_alerts?.counts.total ?? 0);
+  const moderationUrgentTotal =
+    (moderationSummary.data?.urgent_pending_total ?? 0) +
+    (moderationSummary.data?.operational_alerts?.counts.urgent_total ?? 0);
+  const moderationTotalLabel = `${moderationPendingTotal} ${
+    moderationPendingTotal === 1 ? "ação" : "ações"
+  }`;
+  const moderationUrgentLabel = `${moderationUrgentTotal} ${
+    moderationUrgentTotal === 1 ? "ação urgente" : "ações urgentes"
+  }`;
+  const moderationBadgeTitle =
+    moderationUrgentTotal > 0
+      ? `${moderationUrgentLabel} de moderação; ${moderationTotalLabel} no total`
+      : `${moderationTotalLabel} de moderação menos urgentes`;
   const adminName = admin?.name || "Admin Lectum";
   const initials = useMemo(() => {
     const names = adminName.split(" ").filter(Boolean);
@@ -222,18 +235,26 @@ const SidebarContent = ({
                   <span
                     aria-hidden="true"
                     className={cn(
-                      "ml-auto inline-flex h-6 min-w-6 items-center justify-center rounded-full bg-danger px-2 text-[0.68rem] font-black text-white shadow-admin-soft",
-                      collapsed && "absolute -right-1 top-1 ml-0 h-5 min-w-5 px-1 text-[0.62rem]",
+                      "ml-auto inline-flex h-6 min-w-6 items-center justify-center gap-1 rounded-full px-2 text-[0.68rem] font-black shadow-admin-soft",
+                      moderationUrgentTotal > 0
+                        ? "bg-danger text-white"
+                        : "bg-orange-100 text-orange-700 ring-1 ring-orange-200",
+                      collapsed &&
+                        "absolute -right-1 top-1 ml-0 h-5 min-w-5 gap-0 px-1 text-[0.62rem]",
                     )}
-                    title={`${moderationPendingTotal} ações de moderação pendentes`}
+                    title={moderationBadgeTitle}
                   >
-                    {moderationPendingTotal > 99 ? "99+" : moderationPendingTotal}
+                    <AlertTriangle
+                      aria-hidden="true"
+                      className={cn("h-3.5 w-3.5 shrink-0", collapsed && "h-3 w-3")}
+                    />
+                    <span className={cn(collapsed && "sr-only")}>
+                      {moderationPendingTotal > 99 ? "99+" : moderationPendingTotal}
+                    </span>
                   </span>
                 ) : null}
                 {showModerationBadge ? (
-                  <span className="sr-only">
-                    {moderationPendingTotal} ações de moderação pendentes
-                  </span>
+                  <span className="sr-only">{moderationBadgeTitle}</span>
                 ) : null}
               </Link>
             );

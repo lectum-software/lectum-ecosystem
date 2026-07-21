@@ -17,7 +17,7 @@ Cada task é auto-suficiente e deve ser executada isoladamente por uma IA usando
 - A referência visual ativa é Builder Quick Copy + imagens exportadas em `_product/proto`.
 - O Builder está autenticado no espaço `Lectum` e o Quick Copy foi validado via `builder.io code`.
 - Existem 62 JPEGs exportados em `_product/proto`: 61 telas de produto e 1 ícone isolado.
-- A fila operacional agora possui 83 tasks: `TASK-00` a `TASK-77`, incluindo complementos `TASK-18A`, `TASK-29A`/`TASK-29B` e `TASK-31A` a `TASK-31C`.
+- A fila operacional agora possui 84 tasks: `TASK-00` a `TASK-78`, incluindo complementos `TASK-18A`, `TASK-29A`/`TASK-29B` e `TASK-31A` a `TASK-31C`.
 
 ## Inventário visual ativo
 
@@ -158,6 +158,7 @@ ou cortesia manual.
 | 75 | [TASK-75 - Detalhe analítico administrativo de conteúdo e retenção de vídeo](TASK-75-detalhe-analytics-conteudo-admin.md) | Completed | 23, 24, 26, 40, 42, 45, 46, 49, 51, 57, 71, 72, 74 |
 | 76 | [TASK-76 - Ajuste dos filtros de periodo do Admin](TASK-76-ajuste-filtros-periodo-admin.md) | Completed | 46, 48, 51, 53, 57, 58, 59, 60, 61, 71 |
 | 77 | [TASK-77 - Central de moderação e alertas operacionais Admin](TASK-77-central-moderacao-alertas-operacionais-admin.md) | Completed | 45, 46, 57, 70, 74 |
+| 78 | [TASK-78 - Indicador de urgência no menu lateral da moderação Admin](TASK-78-indicador-urgencia-menu-moderacao-admin.md) | Completed | 46, 77 |
 
 ## Ordem operacional recomendada sem bloqueios
 
@@ -207,6 +208,7 @@ Esta secao e a fila pratica para continuar o MVP sem bater nas tasks bloqueadas 
 40. [TASK-75 - Detalhe analítico administrativo de conteúdo e retenção de vídeo](TASK-75-detalhe-analytics-conteudo-admin.md) foi adicionada em 2026-07-18 para criar uma página Admin de detalhe por post/resposta com métricas reais, gráficos de evolução e retenção first-party de vídeo de conteúdo sem backfill ou estimativas falsas.
 41. [TASK-76 - Ajuste dos filtros de periodo do Admin](TASK-76-ajuste-filtros-periodo-admin.md) foi adicionada e concluida em 2026-07-20 para remover `Personalizado` das opcoes selecionaveis de periodo, manter `Todo o periodo` como padrao e acionar o estado customizado apenas pela digitacao nos campos de data.
 42. [TASK-77 - Central de moderação e alertas operacionais Admin](TASK-77-central-moderacao-alertas-operacionais-admin.md) foi adicionada e concluída em 2026-07-21 para reunir denúncias, CRP profissional pendente, WhatsApp inválido, perfis não publicados por configurações obrigatórias, posts de pacientes sem cobertura após 48h e psicólogos profissionais sem tração após adaptação na central `/moderacao`, sem implementar dimensões de região/preço/horário que não se aplicam no momento.
+43. [TASK-78 - Indicador de urgência no menu lateral da moderação Admin](TASK-78-indicador-urgencia-menu-moderacao-admin.md) foi adicionada e concluída em 2026-07-21 para trocar o badge neutro da opção **Moderação** por um indicador com ícone de alerta vermelho quando houver urgência e laranja quando houver apenas pendências menos urgentes.
 
 ### 1A. Trilha Admin planejada
 
@@ -243,6 +245,7 @@ Execute uma por vez, sempre validando, marcando critérios, ADR e commit/push:
 29. [TASK-75 - Detalhe analítico administrativo de conteúdo e retenção de vídeo](TASK-75-detalhe-analytics-conteudo-admin.md)
 30. [TASK-76 - Ajuste dos filtros de periodo do Admin](TASK-76-ajuste-filtros-periodo-admin.md)
 31. [TASK-77 - Central de moderação e alertas operacionais Admin](TASK-77-central-moderacao-alertas-operacionais-admin.md)
+32. [TASK-78 - Indicador de urgência no menu lateral da moderação Admin](TASK-78-indicador-urgencia-menu-moderacao-admin.md)
 
 ### 1. Trilha executavel agora apos TASK-10
 
