@@ -94,7 +94,11 @@ const AUDIENCE_OPTIONS: Array<{ label: string; value: AdminNotificationAudience 
   { label: "Psicólogos ativos", value: "active_psychologists" },
 ];
 
-const TABS: Array<{ label: string; status?: AdminNotificationCampaignStatus; value: string }> = [
+const CAMPAIGN_STATUS_OPTIONS: Array<{
+  label: string;
+  status?: AdminNotificationCampaignStatus;
+  value: string;
+}> = [
   { label: "Todas", value: "all" },
   { label: "Agendadas", status: "scheduled", value: "scheduled" },
   { label: "Enviadas", status: "sent", value: "sent" },
@@ -459,10 +463,13 @@ const NotificationTableFiltersBlock = ({
   onFiltersChange,
   onPeriodChange,
   onReset,
+  onStatusChange,
   period,
   range,
   rangeError,
   searchPlaceholder,
+  status,
+  statusOptions,
   title,
 }: {
   description: string;
@@ -472,10 +479,13 @@ const NotificationTableFiltersBlock = ({
   onFiltersChange: (filters: NotificationTableFilters) => void;
   onPeriodChange: (period: NotificationPeriodPreset) => void;
   onReset: () => void;
+  onStatusChange?: (value: string) => void;
   period: NotificationPeriodValue;
   range: NotificationRange;
   rangeError: string | null;
   searchPlaceholder: string;
+  status?: string;
+  statusOptions?: ReadonlyArray<{ label: string; value: string }>;
   title: string;
 }) => (
   <div className="border-b border-border bg-surface/80 p-4">
@@ -493,7 +503,7 @@ const NotificationTableFiltersBlock = ({
         Limpar filtros
       </button>
     </div>
-    <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-[minmax(16rem,1.5fr)_minmax(10rem,0.85fr)_minmax(9rem,0.75fr)_minmax(11rem,0.85fr)_minmax(16rem,1.25fr)]">
+    <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-[minmax(16rem,1.4fr)_minmax(10rem,0.8fr)_minmax(9rem,0.7fr)_minmax(10rem,0.8fr)_minmax(11rem,0.8fr)_minmax(16rem,1.2fr)]">
       <label className="text-xs font-bold text-muted md:col-span-2 xl:col-span-1">
         Barra de pesquisa
         <span className="relative mt-1 block">
@@ -546,6 +556,22 @@ const NotificationTableFiltersBlock = ({
           <option value="push">Push</option>
         </select>
       </label>
+      {statusOptions && status !== undefined && onStatusChange ? (
+        <label className="text-xs font-bold text-muted">
+          Status
+          <select
+            className="mt-1 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-semibold text-foreground shadow-control outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+            onChange={(event) => onStatusChange(event.target.value)}
+            value={status}
+          >
+            {statusOptions.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </label>
+      ) : null}
       <label className="text-xs font-bold text-muted">
         Período
         <span className="relative mt-1 block">
@@ -1229,7 +1255,7 @@ const NewNotificationModal = ({
 };
 
 export const AdminNotificationsClient = () => {
-  const [tab, setTab] = useState("all");
+  const [campaignStatus, setCampaignStatus] = useState("all");
   const [campaignFilters, setCampaignFilters] = useState<NotificationTableFilters>(() =>
     createDefaultTableFilters(),
   );
@@ -1250,7 +1276,9 @@ export const AdminNotificationsClient = () => {
   const [logsPeriod, setLogsPeriod] = useState<NotificationPeriodValue>(
     NOTIFICATION_DEFAULT_PERIOD,
   );
-  const currentTab = TABS.find((item) => item.value === tab) ?? TABS[0];
+  const selectedCampaignStatus =
+    CAMPAIGN_STATUS_OPTIONS.find((item) => item.value === campaignStatus) ??
+    CAMPAIGN_STATUS_OPTIONS[0];
   const resetCampaignPage = () => setPage(1);
   const resetLogsPage = () => setLogsPage(1);
   const metricRangeControls = useDateRangeCommitOnBlur({
@@ -1288,9 +1316,15 @@ export const AdminNotificationsClient = () => {
       page,
       ...buildNotificationPeriodQuery(campaignPeriod, campaignRangeControls.appliedRange),
       q: campaignFilters.q.trim() || undefined,
-      status: currentTab.status,
+      status: selectedCampaignStatus.status,
     }),
-    [campaignFilters, campaignPeriod, campaignRangeControls.appliedRange, currentTab.status, page],
+    [
+      campaignFilters,
+      campaignPeriod,
+      campaignRangeControls.appliedRange,
+      page,
+      selectedCampaignStatus.status,
+    ],
   );
   const logsQuery = useMemo(
     () => ({
@@ -1357,6 +1391,7 @@ export const AdminNotificationsClient = () => {
   const resetCampaignFilters = () => {
     setCampaignFilters(createDefaultTableFilters());
     setCampaignPeriod(NOTIFICATION_DEFAULT_PERIOD);
+    setCampaignStatus("all");
     setPage(1);
     campaignRangeControls.applyRange(getRangeForPeriod(NOTIFICATION_DEFAULT_PERIOD));
   };
@@ -1366,8 +1401,8 @@ export const AdminNotificationsClient = () => {
     setLogsPage(1);
     logsRangeControls.applyRange(getRangeForPeriod(NOTIFICATION_DEFAULT_PERIOD));
   };
-  const updateTab = (nextTab: string) => {
-    setTab(nextTab);
+  const updateCampaignStatus = (nextStatus: string) => {
+    setCampaignStatus(nextStatus);
     setPage(1);
   };
 
@@ -1420,25 +1455,6 @@ export const AdminNotificationsClient = () => {
       ) : metricRangeIsValid && metrics.data ? (
         <MetricsGrid metrics={metrics.data} />
       ) : null}
-      <CardShell className="p-4">
-        <div className="flex gap-2 overflow-x-auto pb-1">
-          {TABS.map((item) => (
-            <button
-              className={cn(
-                "h-11 shrink-0 rounded-full px-4 text-sm font-black transition",
-                item.value === tab
-                  ? "bg-primary text-white shadow-admin-soft"
-                  : "bg-surface-muted text-muted hover:text-foreground",
-              )}
-              key={item.value}
-              onClick={() => updateTab(item.value)}
-              type="button"
-            >
-              {item.label}
-            </button>
-          ))}
-        </div>
-      </CardShell>
       <div className="rounded-2xl border border-border bg-surface-muted p-4 text-sm leading-6 text-muted">
         <div className="flex gap-3">
           <Megaphone aria-hidden className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
@@ -1461,10 +1477,13 @@ export const AdminNotificationsClient = () => {
             onFiltersChange={updateCampaignFilters}
             onPeriodChange={updateCampaignPeriod}
             onReset={resetCampaignFilters}
+            onStatusChange={updateCampaignStatus}
             period={campaignPeriod}
             range={campaignRangeControls.draftRange}
             rangeError={campaignRangeControls.rangeError}
             searchPlaceholder="Buscar campanha por título ou conteúdo..."
+            status={campaignStatus}
+            statusOptions={CAMPAIGN_STATUS_OPTIONS}
             title="Filtros de campanhas manuais"
           />
         }

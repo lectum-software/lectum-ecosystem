@@ -281,3 +281,19 @@ UI:
 - `pnpm --dir backend check`
 - `pnpm --dir backend build`
 - Smoke HTTP local: `GET http://localhost:3002/notificacoes` retornou `200`.
+
+## Ajuste complementar 2026-07-21 - Status dentro dos filtros de campanhas
+
+- Pedido do usuário: em **Campanhas manuais**, adicionar o filtro **Status** com as opções **Todas**, **Agendadas**, **Enviadas**, **Rascunhos** e **Canceladas**.
+- O bloco isolado acima das tabelas com essas mesmas opções foi removido; o status agora pertence ao mesmo bloco visual de filtros da tabela de campanhas manuais.
+- O filtro de status continua consumindo o contrato real já existente de campanhas (`status`) e reinicia apenas a paginação de campanhas ao mudar.
+- Logs automáticos permanecem com filtros próprios e independentes, sem filtro de status de campanha.
+- Não houve alteração de backend, Prisma/migrations, packages, contratos HTTP, dados persistidos, canais disponíveis, regra de envio ou formulários RHF/Zod.
+- Builder/Quick Copy não esteve disponível como ferramenta callable neste ambiente; a referência visual auditável permaneceu `_product/proto/admin/Notificações.png` e a captura enviada pelo usuário.
+
+### Validação deste ajuste
+
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check`
+- Smoke HTTP local: `GET http://localhost:3002/notificacoes` retornou `200`.
