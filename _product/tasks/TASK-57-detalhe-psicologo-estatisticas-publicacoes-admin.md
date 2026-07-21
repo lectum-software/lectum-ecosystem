@@ -310,3 +310,27 @@ Exibir estatísticas de negócio/comunidade e publicações do psicólogo com da
 - `pnpm check`
 - Smoke HTTP local: `/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=estatisticas` retornou `200`.
 - Service local: `showAdminPsychologistStatistics({ id: "cmrgztri7000tn0uh1q4n8vxf", period: "all" })` retornou `upvotes`, `downvotes`, `interactions` e `engagement_diagnosis` por comunidade com atividade real.
+
+### Ajuste visual da tabela de Comunidades ativas em 2026-07-21
+
+- Pedido do usuario: na tabela **Comunidades ativas** do psicologo, remover as colunas **Upvotes** e **Downvotes**, encurtar **Diagnostico de Engajamento** para **Engajamento**, mover a tag **Seguindo**/**Nao seguindo** para junto do nome da comunidade e ordenar as colunas como **Comunidade**, **Ranking**, **Posts**, **Respostas**, **Cobertura** e **Engajamento**.
+- A alteracao e somente de apresentacao no Admin; o contrato real continua preservando `upvotes`, `downvotes`, `interactions` e `engagement_diagnosis` para diagnostico e compatibilidade, sem endpoint paralelo ou dado artificial.
+- A tabela permanece mobile-first com rolagem horizontal controlada em telas estreitas e menos largura minima no desktop por ter menos colunas.
+- Nao houve alteracao de backend, API, Prisma schema, migrations, packages, mocks, seeds ou dados artificiais; `pnpm --dir backend db:migrate` nao foi necessario.
+- Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente; a validacao visual usou o screenshot enviado pelo usuario em 2026-07-21 e o PNG local `_product/proto/admin/Psicologos/Detalhes do psicologo/Estatisticas.png`.
+- ADR atualizado: `adrs/0300-diagnostico-engajamento-comunidades-admin.md`.
+
+#### Criterios de aceite do ajuste
+
+- [x] Colunas **Upvotes** e **Downvotes** nao aparecem na tabela de comunidades ativas do psicologo.
+- [x] A coluna de diagnostico aparece como **Engajamento**.
+- [x] A tag **Seguindo**/**Nao seguindo** aparece junto ao nome da comunidade, sem coluna propria de status.
+- [x] A ordem das colunas e **Comunidade**, **Ranking**, **Posts**, **Respostas**, **Cobertura** e **Engajamento**.
+- [x] Nenhum mock, seed, endpoint simulado, migration ou package novo foi adicionado.
+
+#### Validacao complementar executada
+
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check`
+- Smoke HTTP local: `/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=estatisticas` retornou `200`.

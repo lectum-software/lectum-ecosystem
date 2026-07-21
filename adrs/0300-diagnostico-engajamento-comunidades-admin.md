@@ -54,3 +54,10 @@ Tambem foi solicitado separar votos em **Upvotes** e **Downvotes** para entender
 ## Pendencias
 
 - Nenhuma dependencia externa.
+
+## Ajuste visual 2026-07-21
+
+- No detalhe administrativo do psicologo, a tabela **Comunidades ativas** deixou de exibir **Upvotes** e **Downvotes** como colunas para reduzir largura e ruido visual.
+- A coluna **Diagnostico de Engajamento** foi renomeada para **Engajamento** apenas na UI; o contrato permanece `engagement_diagnosis`.
+- O status **Seguindo**/**Nao seguindo** passou a aparecer junto ao nome da comunidade, e a ordem visual passou a ser **Comunidade**, **Ranking**, **Posts**, **Respostas**, **Cobertura** e **Engajamento**.
+- A decisao nao remove os campos de votos do backend, pois eles seguem uteis para API, pacientes e leituras futuras.

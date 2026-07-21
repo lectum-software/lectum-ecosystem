@@ -2686,16 +2686,18 @@ const ActiveCommunitiesBlock = ({
       </p>
     ) : (
       <div className="mt-5 overflow-x-auto rounded-[1.35rem] border border-border bg-surface">
-        <table className="w-full min-w-[1180px] border-collapse text-left">
+        <table className="w-full min-w-[980px] border-collapse text-left">
           <caption className="sr-only">
-            Lista de comunidades ativas do psicólogo por ações no período, posts, respostas,
-            upvotes, downvotes, diagnóstico de engajamento, status de seguimento, ranking e
-            cobertura.
+            Lista de comunidades ativas do psicólogo por comunidade, ranking, posts, respostas,
+            cobertura e engajamento, com status de seguimento junto ao nome.
           </caption>
           <thead className="bg-surface-muted/80">
             <tr className="text-xs font-black text-muted">
               <th className="px-4 py-3" scope="col">
                 Comunidade
+              </th>
+              <th className="px-4 py-3 text-center" scope="col">
+                Ranking
               </th>
               <th className="px-4 py-3 text-center" scope="col">
                 Posts
@@ -2704,22 +2706,10 @@ const ActiveCommunitiesBlock = ({
                 Respostas
               </th>
               <th className="px-4 py-3 text-center" scope="col">
-                Upvotes
-              </th>
-              <th className="px-4 py-3 text-center" scope="col">
-                Downvotes
-              </th>
-              <th className="px-4 py-3 text-center" scope="col">
-                Diagnóstico de Engajamento
-              </th>
-              <th className="px-4 py-3 text-center" scope="col">
-                Status
-              </th>
-              <th className="px-4 py-3 text-center" scope="col">
-                Ranking
-              </th>
-              <th className="px-4 py-3 text-center" scope="col">
                 Cobertura
+              </th>
+              <th className="px-4 py-3 text-center" scope="col">
+                Engajamento
               </th>
             </tr>
           </thead>
@@ -2738,8 +2728,20 @@ const ActiveCommunitiesBlock = ({
                     <div className="flex min-w-0 items-center gap-3">
                       <ActiveCommunityAvatar community={community} />
                       <span className="min-w-0">
-                        <span className="block max-w-[18rem] truncate text-sm font-black text-foreground">
-                          {community.name}
+                        <span className="flex min-w-0 items-center gap-2">
+                          <span className="block max-w-[18rem] truncate text-sm font-black text-foreground">
+                            {community.name}
+                          </span>
+                          <Badge
+                            className={cn(
+                              "shrink-0 whitespace-nowrap",
+                              community.following
+                                ? "bg-success/10 text-success"
+                                : "bg-surface-muted text-muted",
+                            )}
+                          >
+                            {community.following ? "Seguindo" : "Não seguindo"}
+                          </Badge>
                         </span>
                         <span className="mt-1 block text-xs font-bold text-muted">
                           {formatCommunityPeriodActions(interactions)}
@@ -2747,37 +2749,14 @@ const ActiveCommunitiesBlock = ({
                       </span>
                     </div>
                   </th>
+                  <td className="px-4 py-4 text-center text-sm font-black text-foreground">
+                    {formatCommunityRanking(community)}
+                  </td>
                   <td className="px-4 py-4 text-center text-sm font-bold text-muted">
                     {numberFormatter.format(community.posts)}
                   </td>
                   <td className="px-4 py-4 text-center text-sm font-bold text-muted">
                     {numberFormatter.format(community.replies)}
-                  </td>
-                  <td className="px-4 py-4 text-center text-sm font-bold text-muted">
-                    {numberFormatter.format(community.upvotes ?? 0)}
-                  </td>
-                  <td className="px-4 py-4 text-center text-sm font-bold text-muted">
-                    {numberFormatter.format(community.downvotes ?? 0)}
-                  </td>
-                  <td className="px-4 py-4 text-center">
-                    <Badge className={communityEngagementDiagnosisClassName(diagnosis.id)}>
-                      {diagnosis.label}
-                    </Badge>
-                  </td>
-                  <td className="px-4 py-4 text-center">
-                    <Badge
-                      className={cn(
-                        "whitespace-nowrap",
-                        community.following
-                          ? "bg-success/10 text-success"
-                          : "bg-surface-muted text-muted",
-                      )}
-                    >
-                      {community.following ? "Seguindo" : "Não seguindo"}
-                    </Badge>
-                  </td>
-                  <td className="px-4 py-4 text-center text-sm font-black text-foreground">
-                    {formatCommunityRanking(community)}
                   </td>
                   <td className="px-4 py-4 text-center">
                     <span className="block text-sm font-black text-foreground">
@@ -2787,6 +2766,11 @@ const ActiveCommunitiesBlock = ({
                       {numberFormatter.format(coverage.covered_patient_posts)} de{" "}
                       {numberFormatter.format(coverage.patient_posts)} posts
                     </span>
+                  </td>
+                  <td className="px-4 py-4 text-center">
+                    <Badge className={communityEngagementDiagnosisClassName(diagnosis.id)}>
+                      {diagnosis.label}
+                    </Badge>
                   </td>
                 </tr>
               );
