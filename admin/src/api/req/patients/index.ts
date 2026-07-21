@@ -495,6 +495,12 @@ export type PatientsDetailCommunity = {
   avatar_url: string | null;
   comments: number;
   color: string | null;
+  downvotes?: number;
+  engagement_diagnosis?: {
+    id: "ativo" | "muito_ativo" | "pouco_ativo" | "sem_base";
+    label: "Ativo" | "Muito ativo" | "Pouco ativo" | "Sem base";
+    source: string;
+  };
   id: string;
   interactions: number;
   is_member: boolean;
@@ -503,6 +509,7 @@ export type PatientsDetailCommunity = {
   posts: number;
   saves: number;
   slug: string;
+  upvotes?: number;
   votes: number;
 };
 

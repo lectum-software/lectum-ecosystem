@@ -1777,6 +1777,30 @@ const formatPatientCommunityPeriodActions = (interactions: number) =>
     ? "1 interação no período"
     : `${numberFormatter.format(interactions)} interações no período`;
 
+const patientCommunityEngagementDiagnosisClassName = (id: string | undefined) =>
+  cn(
+    "whitespace-nowrap",
+    id === "muito_ativo" && "bg-success/10 text-success",
+    id === "ativo" && "bg-primary-soft text-primary",
+    id === "pouco_ativo" && "bg-warning/10 text-warning",
+    (!id || id === "sem_base") && "bg-surface-muted text-muted",
+  );
+
+const getPatientCommunityEngagementDiagnosis = (
+  community: PatientsDetailCommunity,
+): NonNullable<PatientsDetailCommunity["engagement_diagnosis"]> =>
+  community.engagement_diagnosis ?? {
+    id: "sem_base",
+    label: "Sem base",
+    source: "community_post+post_reply+post_vote+post_save+post_reply_save",
+  };
+
+const getPatientCommunityUpvotes = (community: PatientsDetailCommunity) =>
+  community.upvotes ?? community.votes;
+
+const getPatientCommunityDownvotes = (community: PatientsDetailCommunity) =>
+  community.downvotes ?? 0;
+
 const PatientActiveCommunitiesBlock = ({
   communities,
   isRefreshing,
@@ -1815,10 +1839,10 @@ const PatientActiveCommunitiesBlock = ({
       </p>
     ) : (
       <div className="mt-5 overflow-x-auto rounded-[1.35rem] border border-border bg-surface">
-        <table className="w-full min-w-[920px] border-collapse text-left">
+        <table className="w-full min-w-[1120px] border-collapse text-left">
           <caption className="sr-only">
-            Lista de comunidades ativas do paciente por interações, posts, comentários, votos,
-            salvamentos e status de membro no período.
+            Lista de comunidades ativas do paciente por interações, posts, comentários, upvotes,
+            downvotes, salvamentos, diagnóstico de engajamento e status de membro no período.
           </caption>
           <thead className="bg-surface-muted/80">
             <tr className="text-xs font-black text-muted">
@@ -1832,10 +1856,16 @@ const PatientActiveCommunitiesBlock = ({
                 Comentários
               </th>
               <th className="px-4 py-3 text-center" scope="col">
-                Votos
+                Upvotes
+              </th>
+              <th className="px-4 py-3 text-center" scope="col">
+                Downvotes
               </th>
               <th className="px-4 py-3 text-center" scope="col">
                 Salvamentos
+              </th>
+              <th className="px-4 py-3 text-center" scope="col">
+                Diagnóstico de Engajamento
               </th>
               <th className="px-4 py-3 text-center" scope="col">
                 Status
@@ -1846,57 +1876,72 @@ const PatientActiveCommunitiesBlock = ({
             </tr>
           </thead>
           <tbody className="divide-y divide-border">
-            {communities.map((community, index) => (
-              <tr className="align-middle transition hover:bg-surface-muted/45" key={community.id}>
-                <th className="px-4 py-4" scope="row">
-                  <div className="flex min-w-0 items-center gap-3">
-                    <CommunityAvatar community={community} index={index} />
-                    <span className="min-w-0">
-                      <span className="block max-w-[18rem] truncate text-sm font-black text-foreground">
-                        {community.name}
+            {communities.map((community, index) => {
+              const diagnosis = getPatientCommunityEngagementDiagnosis(community);
+
+              return (
+                <tr
+                  className="align-middle transition hover:bg-surface-muted/45"
+                  key={community.id}
+                >
+                  <th className="px-4 py-4" scope="row">
+                    <div className="flex min-w-0 items-center gap-3">
+                      <CommunityAvatar community={community} index={index} />
+                      <span className="min-w-0">
+                        <span className="block max-w-[18rem] truncate text-sm font-black text-foreground">
+                          {community.name}
+                        </span>
+                        <span className="mt-1 block text-xs font-bold text-muted">
+                          {formatPatientCommunityPeriodActions(community.interactions)}
+                        </span>
                       </span>
-                      <span className="mt-1 block text-xs font-bold text-muted">
-                        {formatPatientCommunityPeriodActions(community.interactions)}
+                    </div>
+                  </th>
+                  <td className="px-4 py-4 text-center text-sm font-bold text-muted">
+                    {numberFormatter.format(community.posts)}
+                  </td>
+                  <td className="px-4 py-4 text-center text-sm font-bold text-muted">
+                    {numberFormatter.format(community.comments)}
+                  </td>
+                  <td className="px-4 py-4 text-center text-sm font-bold text-muted">
+                    {numberFormatter.format(getPatientCommunityUpvotes(community))}
+                  </td>
+                  <td className="px-4 py-4 text-center text-sm font-bold text-muted">
+                    {numberFormatter.format(getPatientCommunityDownvotes(community))}
+                  </td>
+                  <td className="px-4 py-4 text-center text-sm font-bold text-muted">
+                    {numberFormatter.format(community.saves)}
+                  </td>
+                  <td className="px-4 py-4 text-center">
+                    <Badge className={patientCommunityEngagementDiagnosisClassName(diagnosis.id)}>
+                      {diagnosis.label}
+                    </Badge>
+                  </td>
+                  <td className="px-4 py-4 text-center">
+                    <Badge
+                      className={cn(
+                        "whitespace-nowrap",
+                        community.is_member
+                          ? "bg-success/10 text-success"
+                          : "bg-surface-muted text-muted",
+                      )}
+                    >
+                      {community.is_member ? "Membro" : "Sem vínculo ativo"}
+                    </Badge>
+                  </td>
+                  <td className="px-4 py-4 text-center">
+                    <span className="block text-sm font-black text-foreground">
+                      {numberFormatter.format(community.interactions)}
+                    </span>
+                    {community.member_since ? (
+                      <span className="mt-1 block text-xs font-bold leading-5 text-muted">
+                        membro desde {formatDateTime(community.member_since)}
                       </span>
-                    </span>
-                  </div>
-                </th>
-                <td className="px-4 py-4 text-center text-sm font-bold text-muted">
-                  {numberFormatter.format(community.posts)}
-                </td>
-                <td className="px-4 py-4 text-center text-sm font-bold text-muted">
-                  {numberFormatter.format(community.comments)}
-                </td>
-                <td className="px-4 py-4 text-center text-sm font-bold text-muted">
-                  {numberFormatter.format(community.votes)}
-                </td>
-                <td className="px-4 py-4 text-center text-sm font-bold text-muted">
-                  {numberFormatter.format(community.saves)}
-                </td>
-                <td className="px-4 py-4 text-center">
-                  <Badge
-                    className={cn(
-                      "whitespace-nowrap",
-                      community.is_member
-                        ? "bg-success/10 text-success"
-                        : "bg-surface-muted text-muted",
-                    )}
-                  >
-                    {community.is_member ? "Membro" : "Sem vínculo ativo"}
-                  </Badge>
-                </td>
-                <td className="px-4 py-4 text-center">
-                  <span className="block text-sm font-black text-foreground">
-                    {numberFormatter.format(community.interactions)}
-                  </span>
-                  {community.member_since ? (
-                    <span className="mt-1 block text-xs font-bold leading-5 text-muted">
-                      membro desde {formatDateTime(community.member_since)}
-                    </span>
-                  ) : null}
-                </td>
-              </tr>
-            ))}
+                    ) : null}
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>

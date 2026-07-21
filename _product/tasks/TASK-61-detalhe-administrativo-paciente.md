@@ -599,3 +599,30 @@ Frontend esperado:
 - Service local: `showAdminPatient({ id: "cmrb6fbrv0002y0uhsqzg306b", period: "all" })` retornou `publications.items.length=2` e métricas reais no primeiro post.
 - Browser local/headless via Chrome/CDP em `/pacientes/cmrb6fbrv0002y0uhsqzg306b?tab=publicacoes`, com admin temporário real removido ao final, validou desktop `1365x900` e mobile `390x844`: colunas solicitadas, ações **Ver**/**Estatísticas**, linha de métricas, expansor de conteúdo completo e rolagem horizontal controlada sem overflow global no mobile.
 - Observação operacional: a primeira reexecução de `pnpm --dir admin build` encontrou lock stale em `admin/.next/lock` de build anterior; o arquivo gerado foi removido e o build foi reexecutado com sucesso.
+
+## Ajuste pos-feedback 2026-07-21 - Diagnostico de Engajamento nas Comunidades ativas
+
+- Pedido do usuario: chamar o indicador de **Diagnostico de Engajamento**, usando os rotulos **Muito ativo**, **Ativo**, **Pouco ativo** e **Sem base**, separar **Upvotes** e **Downvotes** e nao exibir comunidades sem atividade real no periodo.
+- O bloco **Comunidades ativas** do paciente agora considera atividade real como post, comentario, upvote, downvote ou salvamento realizado pelo paciente na comunidade durante o periodo filtrado; comunidades apenas seguidas e sem interacao nao aparecem.
+- A tabela passou a separar **Upvotes** e **Downvotes** em vez de exibir apenas votos agregados, preservando `votes` no contrato como total para compatibilidade.
+- O endpoint real `GET /api/admin/private/patients/:id` foi expandido em `communities.items[]` com `upvotes`, `downvotes` e `engagement_diagnosis`, sem endpoint paralelo, mock, seed, backfill artificial, schema Prisma, migration ou package novo.
+- A regra compartilhada de diagnostico foi centralizada em `backend/src/utils/admin-community-engagement-diagnosis.ts` e documentada no ADR-0300.
+- Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente; as referencias auditaveis foram o screenshot enviado pelo usuario em 2026-07-21 e `_product/proto/admin/Pacientes/Pacientes - Detalhes.png`.
+- ADR criado: `adrs/0300-diagnostico-engajamento-comunidades-admin.md`.
+
+### Criterios de aceite do ajuste
+
+- [x] Comunidades sem post, comentario, upvote, downvote ou salvamento real do paciente no periodo nao aparecem em **Comunidades ativas**.
+- [x] A tabela mostra **Upvotes** e **Downvotes** separados.
+- [x] A tabela mostra **Diagnostico de Engajamento** com **Muito ativo**, **Ativo**, **Pouco ativo** ou **Sem base**.
+- [x] Nenhum mock, seed, endpoint simulado, migration ou package novo foi adicionado.
+
+### Validacao complementar executada
+
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check`
+- Smoke HTTP local: `/pacientes/cmrqsrab5001f1guh2ve5oy90?tab=estatisticas` retornou `200`.
+- Service local: `showAdminPatient({ period: "all" })` retornou votos separados e diagnostico para pacientes com atividade real, e lista vazia para pacientes sem atividade.

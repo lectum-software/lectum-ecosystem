@@ -925,8 +925,15 @@ export type AdminPsychologistStatistics = {
         rate_percent: number | null;
         source: "community_post.author.role=paciente+post_reply.author_id";
       };
+      downvotes: number;
+      engagement_diagnosis?: {
+        id: "ativo" | "muito_ativo" | "pouco_ativo" | "sem_base";
+        label: "Ativo" | "Muito ativo" | "Pouco ativo" | "Sem base";
+        source: string;
+      };
       following: boolean;
       id: string;
+      interactions: number;
       member_since: string | null;
       name: string;
       posts: number;
@@ -936,6 +943,7 @@ export type AdminPsychologistStatistics = {
       } | null;
       replies: number;
       slug: string;
+      upvotes: number;
     }[];
     series: AdminPsychologistStatisticsPoint[];
   };

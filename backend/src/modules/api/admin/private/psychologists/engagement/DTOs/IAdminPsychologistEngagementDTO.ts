@@ -1,4 +1,5 @@
 ﻿import type { Request } from "express";
+import type { AdminCommunityEngagementDiagnosis } from "@/utils/admin-community-engagement-diagnosis";
 
 export type AdminPsychologistEngagementQuery = {
   community?: string;
@@ -110,8 +111,11 @@ export type AdminPsychologistStatisticsCommunityItem = {
     rate_percent: number | null;
     source: "community_post.author.role=paciente+post_reply.author_id";
   };
+  downvotes: number;
+  engagement_diagnosis: AdminCommunityEngagementDiagnosis;
   following: boolean;
   id: string;
+  interactions: number;
   member_since: Date | null;
   name: string;
   posts: number;
@@ -121,6 +125,7 @@ export type AdminPsychologistStatisticsCommunityItem = {
   } | null;
   replies: number;
   slug: string;
+  upvotes: number;
 };
 
 export type AdminPsychologistPlatformUsageTopPage = {

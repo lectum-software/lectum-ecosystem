@@ -497,7 +497,18 @@ export class AdminPsychologistEngagementRepository {
   async listPostVotesByUser(userId: string, from?: Date, to?: Date) {
     return prisma.post_vote.findMany({
       orderBy: { createdAt: "asc" },
-      select: { createdAt: true, post_id: true, value: true },
+      select: {
+        createdAt: true,
+        post_id: true,
+        value: true,
+        post: {
+          select: {
+            community: {
+              select: communitySelect,
+            },
+          },
+        },
+      },
       where: {
         ...(from && to ? { createdAt: { gte: from, lte: to } } : {}),
         deleted: false,
@@ -516,7 +527,22 @@ export class AdminPsychologistEngagementRepository {
   async listReplyVotesByUser(userId: string, from?: Date, to?: Date) {
     return prisma.post_vote.findMany({
       orderBy: { createdAt: "asc" },
-      select: { createdAt: true, reply_id: true, value: true },
+      select: {
+        createdAt: true,
+        reply_id: true,
+        value: true,
+        reply: {
+          select: {
+            post: {
+              select: {
+                community: {
+                  select: communitySelect,
+                },
+              },
+            },
+          },
+        },
+      },
       where: {
         ...(from && to ? { createdAt: { gte: from, lte: to } } : {}),
         deleted: false,

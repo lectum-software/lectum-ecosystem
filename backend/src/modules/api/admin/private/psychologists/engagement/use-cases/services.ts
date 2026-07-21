@@ -1,5 +1,6 @@
 import type { Resolve } from "@/helpers/return";
 import { error, msg } from "@/helpers/translate";
+import { diagnoseAdminCommunityEngagement } from "@/utils/admin-community-engagement-diagnosis";
 import {
   summarizePlatformHourlyActivity,
   summarizePlatformHourlyActivityByWeekday,
@@ -634,8 +635,14 @@ const buildCommunityItems = (input: {
   coverageWindow: { end: Date; start: Date };
   memberships: Awaited<ReturnType<AdminPsychologistEngagementRepository["listCommunities"]>>;
   patientPostsByCommunity: Map<string, number>;
+  postVotesByUser: Awaited<
+    ReturnType<AdminPsychologistEngagementRepository["listPostVotesByUser"]>
+  >;
   posts: AdminPsychologistEngagementPost[];
   replies: AdminPsychologistEngagementReply[];
+  replyVotesByUser: Awaited<
+    ReturnType<AdminPsychologistEngagementRepository["listReplyVotesByUser"]>
+  >;
 }): AdminPsychologistStatisticsDTO["community"]["communities"] => {
   const communities = new Map<
     string,
@@ -657,14 +664,22 @@ const buildCommunityItems = (input: {
         rate_percent: null,
         source: "community_post.author.role=paciente+post_reply.author_id" as const,
       },
+      downvotes: 0,
+      engagement_diagnosis: diagnoseAdminCommunityEngagement({
+        interactions: 0,
+        maxInteractions: 0,
+        source: "community_post+post_reply+post_vote.user_id",
+      }),
       following: false,
       id: community.id,
+      interactions: 0,
       member_since: null,
       name: community.name,
       posts: 0,
       ranking: null,
       replies: 0,
       slug: community.slug,
+      upvotes: 0,
     };
 
     communities.set(community.id, next);
@@ -683,20 +698,41 @@ const buildCommunityItems = (input: {
   }
 
   for (const membership of input.memberships) {
-    const current = communities.get(membership.community.id);
-    if (!current) continue;
+    const current = ensureItem(membership.community);
     current.following = true;
     current.member_since = earlierDate(current.member_since, membership.createdAt);
   }
 
   for (const post of input.posts) {
     const current = ensureItem(post.community);
+    current.interactions += 1;
     current.posts += 1;
   }
 
   for (const reply of input.replies) {
     const current = ensureItem(reply.post.community);
+    current.interactions += 1;
     current.replies += 1;
+  }
+
+  for (const vote of input.postVotesByUser) {
+    const community = vote.post?.community;
+    if (!community) continue;
+
+    const current = ensureItem(community);
+    current.interactions += 1;
+    if (vote.value > 0) current.upvotes += 1;
+    if (vote.value < 0) current.downvotes += 1;
+  }
+
+  for (const vote of input.replyVotesByUser) {
+    const community = vote.reply?.post.community;
+    if (!community) continue;
+
+    const current = ensureItem(community);
+    current.interactions += 1;
+    if (vote.value > 0) current.upvotes += 1;
+    if (vote.value < 0) current.downvotes += 1;
   }
 
   for (const community of communities.values()) {
@@ -718,13 +754,28 @@ const buildCommunityItems = (input: {
       patientPosts > 0 ? roundPercent((coveredPatientPosts / patientPosts) * 100) : null;
   }
 
-  return [...communities.values()].sort((left, right) => {
-    const leftTotal = left.posts + left.replies;
-    const rightTotal = right.posts + right.replies;
-    if (leftTotal !== rightTotal) return rightTotal - leftTotal;
+  const activeCommunities = [...communities.values()].filter(
+    (community) => community.interactions > 0,
+  );
+  const maxInteractions = Math.max(
+    0,
+    ...activeCommunities.map((community) => community.interactions),
+  );
 
-    return left.name.localeCompare(right.name, "pt-BR");
-  });
+  return activeCommunities
+    .map((community) => ({
+      ...community,
+      engagement_diagnosis: diagnoseAdminCommunityEngagement({
+        interactions: community.interactions,
+        maxInteractions,
+        source: "community_post+post_reply+post_vote.user_id",
+      }),
+    }))
+    .sort((left, right) => {
+      if (left.interactions !== right.interactions) return right.interactions - left.interactions;
+
+      return left.name.localeCompare(right.name, "pt-BR");
+    });
 };
 
 const withCommunityRankings = async (input: {
@@ -975,8 +1026,10 @@ export const showAdminPsychologistStatistics = async (
       coverageWindow: period.current,
       memberships,
       patientPostsByCommunity,
+      postVotesByUser: platformPostVotes,
       posts,
       replies,
+      replyVotesByUser: platformReplyVotes,
     }),
     psychologistId: userId,
     repository,

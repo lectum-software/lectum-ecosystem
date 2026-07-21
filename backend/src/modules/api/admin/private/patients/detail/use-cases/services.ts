@@ -1,5 +1,6 @@
 import type { Resolve } from "@/helpers/return";
 import { error, msg } from "@/helpers/translate";
+import { diagnoseAdminCommunityEngagement } from "@/utils/admin-community-engagement-diagnosis";
 import { isVerifiedProfessionalEntitlement } from "@/utils/subscription-entitlement";
 import type {
   AdminPatientDetailActivityItem,
@@ -840,6 +841,12 @@ const upsertCommunity = (
       avatar_url: community.avatar_url,
       comments: 0,
       color: community.visual_primary_color,
+      downvotes: 0,
+      engagement_diagnosis: diagnoseAdminCommunityEngagement({
+        interactions: 0,
+        maxInteractions: 0,
+        source: "community_post+post_reply+post_vote+post_save+post_reply_save",
+      }),
       id: community.id,
       interactions: 0,
       is_member: false,
@@ -848,6 +855,7 @@ const upsertCommunity = (
       posts: 0,
       saves: 0,
       slug: community.slug,
+      upvotes: 0,
       votes: 0,
     } satisfies AdminPatientDetailCommunity);
 
@@ -876,6 +884,8 @@ const buildActiveCommunities = (bundle: AdminPatientEngagementBundle) => {
     const community = communityFromVote(vote);
     if (community) {
       const item = upsertCommunity(communities, community, 1);
+      if (vote.value > 0) item.upvotes += 1;
+      if (vote.value < 0) item.downvotes += 1;
       item.votes += 1;
     }
   }
@@ -888,7 +898,23 @@ const buildActiveCommunities = (bundle: AdminPatientEngagementBundle) => {
     item.saves += 1;
   }
 
-  return [...communities.values()]
+  const activeCommunities = [...communities.values()].filter(
+    (community) => community.interactions > 0,
+  );
+  const maxInteractions = Math.max(
+    0,
+    ...activeCommunities.map((community) => community.interactions),
+  );
+
+  return activeCommunities
+    .map((community) => ({
+      ...community,
+      engagement_diagnosis: diagnoseAdminCommunityEngagement({
+        interactions: community.interactions,
+        maxInteractions,
+        source: "community_post+post_reply+post_vote+post_save+post_reply_save",
+      }),
+    }))
     .sort((left, right) => {
       if (right.interactions !== left.interactions) return right.interactions - left.interactions;
       if (Number(right.is_member) !== Number(left.is_member)) {

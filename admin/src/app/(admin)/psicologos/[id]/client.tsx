@@ -2597,6 +2597,27 @@ const formatCoverageRate = (community: PsychologistStatisticsCommunityItem) =>
 const formatCommunityPeriodActions = (actions: number) =>
   `${numberFormatter.format(actions)} ${actions === 1 ? "ação" : "ações"} no período`;
 
+const communityEngagementDiagnosisClassName = (id: string | undefined) =>
+  cn(
+    "whitespace-nowrap",
+    id === "muito_ativo" && "bg-success/10 text-success",
+    id === "ativo" && "bg-primary-soft text-primary",
+    id === "pouco_ativo" && "bg-warning/10 text-warning",
+    (!id || id === "sem_base") && "bg-surface-muted text-muted",
+  );
+
+const getCommunityEngagementDiagnosis = (
+  community: PsychologistStatisticsCommunityItem,
+): NonNullable<PsychologistStatisticsCommunityItem["engagement_diagnosis"]> =>
+  community.engagement_diagnosis ?? {
+    id: "sem_base",
+    label: "Sem base",
+    source: "community_post+post_reply+post_vote.user_id",
+  };
+
+const getPsychologistCommunityInteractions = (community: PsychologistStatisticsCommunityItem) =>
+  community.interactions ?? community.posts + community.replies;
+
 const ActiveCommunityAvatar = ({
   community,
 }: {
@@ -2649,8 +2670,8 @@ const ActiveCommunitiesBlock = ({
           ) : null}
         </div>
         <p className="mt-1 text-xs font-bold leading-5 text-muted">
-          Comunidades em que o psicólogo realizou ao menos um post ou resposta no período, ordenadas
-          da mais ativa para a menos ativa.
+          Comunidades em que o psicólogo realizou post, resposta, upvote ou downvote no período,
+          ordenadas da mais ativa para a menos ativa.
         </p>
         <Badge className="mt-3 w-fit bg-surface-muted text-muted">
           {numberFormatter.format(communities.length)} comunidades
@@ -2661,14 +2682,15 @@ const ActiveCommunitiesBlock = ({
 
     {communities.length === 0 ? (
       <p className="mt-5 rounded-2xl border border-dashed border-border bg-surface-muted p-4 text-sm font-bold text-muted">
-        Nenhuma comunidade com post ou resposta real do psicólogo foi encontrada no período.
+        Nenhuma comunidade com atividade real do psicólogo foi encontrada no período.
       </p>
     ) : (
       <div className="mt-5 overflow-x-auto rounded-[1.35rem] border border-border bg-surface">
-        <table className="w-full min-w-[920px] border-collapse text-left">
+        <table className="w-full min-w-[1180px] border-collapse text-left">
           <caption className="sr-only">
-            Lista de comunidades ativas do psicólogo por ações no período, posts, respostas, status
-            de seguimento, ranking e cobertura.
+            Lista de comunidades ativas do psicólogo por ações no período, posts, respostas,
+            upvotes, downvotes, diagnóstico de engajamento, status de seguimento, ranking e
+            cobertura.
           </caption>
           <thead className="bg-surface-muted/80">
             <tr className="text-xs font-black text-muted">
@@ -2680,6 +2702,15 @@ const ActiveCommunitiesBlock = ({
               </th>
               <th className="px-4 py-3 text-center" scope="col">
                 Respostas
+              </th>
+              <th className="px-4 py-3 text-center" scope="col">
+                Upvotes
+              </th>
+              <th className="px-4 py-3 text-center" scope="col">
+                Downvotes
+              </th>
+              <th className="px-4 py-3 text-center" scope="col">
+                Diagnóstico de Engajamento
               </th>
               <th className="px-4 py-3 text-center" scope="col">
                 Status
@@ -2694,8 +2725,9 @@ const ActiveCommunitiesBlock = ({
           </thead>
           <tbody className="divide-y divide-border">
             {communities.map((community) => {
-              const interactions = community.posts + community.replies;
+              const interactions = getPsychologistCommunityInteractions(community);
               const coverage = community.coverage;
+              const diagnosis = getCommunityEngagementDiagnosis(community);
 
               return (
                 <tr
@@ -2720,6 +2752,17 @@ const ActiveCommunitiesBlock = ({
                   </td>
                   <td className="px-4 py-4 text-center text-sm font-bold text-muted">
                     {numberFormatter.format(community.replies)}
+                  </td>
+                  <td className="px-4 py-4 text-center text-sm font-bold text-muted">
+                    {numberFormatter.format(community.upvotes ?? 0)}
+                  </td>
+                  <td className="px-4 py-4 text-center text-sm font-bold text-muted">
+                    {numberFormatter.format(community.downvotes ?? 0)}
+                  </td>
+                  <td className="px-4 py-4 text-center">
+                    <Badge className={communityEngagementDiagnosisClassName(diagnosis.id)}>
+                      {diagnosis.label}
+                    </Badge>
                   </td>
                   <td className="px-4 py-4 text-center">
                     <Badge
@@ -4151,10 +4194,10 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: st
       ? communityStatisticsSelectedCommunity
       : "all";
   const activeCommunities = [...activeCommunitiesStatistics.community.communities]
-    .filter((community) => community.posts + community.replies > 0)
+    .filter((community) => getPsychologistCommunityInteractions(community) > 0)
     .sort((left, right) => {
-      const leftTotal = left.posts + left.replies;
-      const rightTotal = right.posts + right.replies;
+      const leftTotal = getPsychologistCommunityInteractions(left);
+      const rightTotal = getPsychologistCommunityInteractions(right);
       if (leftTotal !== rightTotal) return rightTotal - leftTotal;
 
       return left.name.localeCompare(right.name, "pt-BR");

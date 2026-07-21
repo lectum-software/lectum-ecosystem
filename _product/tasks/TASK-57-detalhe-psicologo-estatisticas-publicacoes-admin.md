@@ -283,3 +283,30 @@ Exibir estatísticas de negócio/comunidade e publicações do psicólogo com da
 - Builder/Quick Copy nao estava disponivel como ferramenta callable no ambiente; a validacao visual usou o recorte enviado pelo usuario e o PNG local `_product/proto/admin/Psicologos/Detalhes do psicologo/Estatisticas.png`.
 - ADR atualizado: `adrs/0290-admin-psicologo-comunidade-resumo-cobertura.md`.
 - Validacoes executadas para este ajuste: `pnpm --dir admin exec biome check --write "src/app/(admin)/psicologos/[id]/client.tsx"`, `pnpm --dir admin exec eslint "src/app/(admin)/psicologos/[id]/client.tsx"`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` (reexecutado com sucesso apos timeout inicial) e browser local/headless via Chrome/CDP em `/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=estatisticas` com admin temporario real removido ao final. O browser confirmou em desktop 1365px e mobile 390px: coluna **Status** exibindo **Seguindo** ou **Nao seguindo**, ausencia da copy antiga **Segue**/**Nao segue**, ausencia da coluna **Interacoes** e alinhamento central da coluna **Status**.
+
+## Ajuste pos-feedback 2026-07-21 - Diagnostico de Engajamento nas Comunidades ativas
+
+- Pedido do usuario: chamar o indicador de **Diagnostico de Engajamento**, usando os rotulos **Muito ativo**, **Ativo**, **Pouco ativo** e **Sem base**, separar **Upvotes** e **Downvotes** e nao exibir comunidades sem atividade real no periodo.
+- O bloco **Comunidades ativas** do psicologo agora considera atividade real como post, resposta, upvote ou downvote realizado pelo psicologo na comunidade durante o periodo filtrado; comunidades apenas seguidas e sem acao real nao aparecem.
+- A tabela passou a separar **Upvotes** e **Downvotes** para expor o habito de incentivo/desincentivo feito pelo psicologo dentro da comunidade.
+- O endpoint real `GET /api/admin/private/psychologists/:id/statistics` foi expandido em `communities.items[]` com `upvotes`, `downvotes`, `interactions` e `engagement_diagnosis`, sem endpoint paralelo, mock, seed, backfill artificial, schema Prisma, migration ou package novo.
+- A regra compartilhada de diagnostico foi centralizada em `backend/src/utils/admin-community-engagement-diagnosis.ts` e documentada no ADR-0300.
+- Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente; as referencias auditaveis foram o screenshot enviado pelo usuario em 2026-07-21 e `_product/proto/admin/Psicologos/Detalhes do psicologo/Estatisticas.png`.
+- ADR criado: `adrs/0300-diagnostico-engajamento-comunidades-admin.md`.
+
+### Criterios de aceite do ajuste
+
+- [x] Comunidades sem post, resposta, upvote ou downvote real do psicologo no periodo nao aparecem em **Comunidades ativas**.
+- [x] A tabela mostra **Upvotes** e **Downvotes** separados.
+- [x] A tabela mostra **Diagnostico de Engajamento** com **Muito ativo**, **Ativo**, **Pouco ativo** ou **Sem base**.
+- [x] Nenhum mock, seed, endpoint simulado, migration ou package novo foi adicionado.
+
+### Validacao complementar executada
+
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check`
+- Smoke HTTP local: `/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=estatisticas` retornou `200`.
+- Service local: `showAdminPsychologistStatistics({ id: "cmrgztri7000tn0uh1q4n8vxf", period: "all" })` retornou `upvotes`, `downvotes`, `interactions` e `engagement_diagnosis` por comunidade com atividade real.

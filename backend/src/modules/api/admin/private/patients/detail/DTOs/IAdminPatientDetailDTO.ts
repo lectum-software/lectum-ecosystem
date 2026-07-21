@@ -1,4 +1,5 @@
 import type { Request } from "express";
+import type { AdminCommunityEngagementDiagnosis } from "@/utils/admin-community-engagement-diagnosis";
 
 export type AdminPatientDetailQuery = {
   from?: string;
@@ -82,6 +83,8 @@ export type AdminPatientDetailCommunity = {
   avatar_url: string | null;
   comments: number;
   color: string | null;
+  downvotes: number;
+  engagement_diagnosis: AdminCommunityEngagementDiagnosis;
   id: string;
   interactions: number;
   is_member: boolean;
@@ -90,6 +93,7 @@ export type AdminPatientDetailCommunity = {
   posts: number;
   saves: number;
   slug: string;
+  upvotes: number;
   votes: number;
 };
 
