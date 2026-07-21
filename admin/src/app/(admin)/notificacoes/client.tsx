@@ -489,7 +489,7 @@ const NotificationTableFiltersBlock = ({
   title: string;
 }) => (
   <div className="border-b border-border bg-surface/80 p-4">
-    <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
+    <div className="hidden flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
       <div>
         <p className="text-xs font-semibold uppercase tracking-[0.12em] text-primary">Filtros</p>
         <h2 className="mt-1 text-lg font-bold text-foreground">{title}</h2>
@@ -503,7 +503,7 @@ const NotificationTableFiltersBlock = ({
         Limpar filtros
       </button>
     </div>
-    <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-[minmax(16rem,1.4fr)_minmax(10rem,0.8fr)_minmax(9rem,0.7fr)_minmax(10rem,0.8fr)_minmax(11rem,0.8fr)_minmax(16rem,1.2fr)]">
+    <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-[minmax(16rem,1.4fr)_minmax(10rem,0.8fr)_minmax(9rem,0.7fr)_minmax(10rem,0.8fr)_minmax(11rem,0.8fr)_minmax(16rem,1.2fr)]">
       <label className="text-xs font-bold text-muted md:col-span-2 xl:col-span-1">
         Barra de pesquisa
         <span className="relative mt-1 block">
