@@ -3,9 +3,12 @@ import { adminSettingsKeys } from "@/api/cache/keys";
 import {
   type AdminSettingsCatalogPayload,
   type AdminSettingsCatalogType,
+  type AdminSettingsDeletePayload,
   type AdminSettingsReorderPayload,
   createAdminCatalogItem,
   createAdminSpecialtyCategory,
+  deleteAdminCatalogItem,
+  deleteAdminSpecialtyCategory,
   getAdminSettingsCatalogs,
   reorderAdminSettingsCatalog,
   restoreAdminSettingsCatalogDefaults,
@@ -42,6 +45,16 @@ export const useAdminSettingsUpdateSpecialtyCategory = () => {
   });
 };
 
+export const useAdminSettingsDeleteSpecialtyCategory = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, input }: { id: string; input: AdminSettingsDeletePayload }) =>
+      deleteAdminSpecialtyCategory(id, input),
+    onSuccess: () => invalidateSettings(queryClient),
+  });
+};
+
 export const useAdminSettingsCreateCatalogItem = () => {
   const queryClient = useQueryClient();
 
@@ -70,6 +83,23 @@ export const useAdminSettingsUpdateCatalogItem = () => {
       input: AdminSettingsCatalogPayload;
       type: Exclude<AdminSettingsCatalogType, "specialty_category">;
     }) => updateAdminCatalogItem(type, id, input),
+    onSuccess: () => invalidateSettings(queryClient),
+  });
+};
+
+export const useAdminSettingsDeleteCatalogItem = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      id,
+      input,
+      type,
+    }: {
+      id: string;
+      input: AdminSettingsDeletePayload;
+      type: Exclude<AdminSettingsCatalogType, "specialty_category">;
+    }) => deleteAdminCatalogItem(type, id, input),
     onSuccess: () => invalidateSettings(queryClient),
   });
 };

@@ -15,6 +15,7 @@ import {
   SlidersHorizontal,
   ToggleLeft,
   ToggleRight,
+  Trash2,
   UsersRound,
   VenusAndMars,
   X,
@@ -27,6 +28,8 @@ import {
   useAdminSettingsCatalogs,
   useAdminSettingsCreateCatalogItem,
   useAdminSettingsCreateSpecialtyCategory,
+  useAdminSettingsDeleteCatalogItem,
+  useAdminSettingsDeleteSpecialtyCategory,
   useAdminSettingsReorderCatalog,
   useAdminSettingsUpdateCatalogItem,
   useAdminSettingsUpdateSpecialtyCategory,
@@ -43,6 +46,7 @@ import { cn } from "@/lib/utils";
 
 const cardClass =
   "rounded-card border border-border/80 bg-surface/95 shadow-admin-soft backdrop-blur";
+const DELETE_CONFIRMATION = "EXCLUIR CATALOGO";
 
 type MutableCatalogType = Exclude<AdminSettingsCatalogType, "specialty_category">;
 type ListCatalogType = Exclude<MutableCatalogType, "specialty">;
@@ -59,6 +63,17 @@ type CatalogModalState =
       type: MutableCatalogType;
       categoryId?: string;
       item?: AdminSettingsCatalogOption | AdminSettingsSpecialty;
+    };
+
+type CatalogDeleteModalState =
+  | {
+      kind: "category";
+      category: AdminSettingsSpecialtyCategory;
+    }
+  | {
+      kind: "item";
+      item: AdminSettingsCatalogOption | AdminSettingsSpecialty;
+      type: MutableCatalogType;
     };
 
 type SettingsSectionId = "specialties" | ListCatalogType;
@@ -164,6 +179,14 @@ const formSchema = z.object({
 });
 
 type CatalogForm = z.infer<typeof formSchema>;
+
+const deleteSchema = z.object({
+  confirmation: z.string().refine((value) => value.trim().toUpperCase() === DELETE_CONFIRMATION, {
+    message: `Digite ${DELETE_CONFIRMATION} para confirmar`,
+  }),
+});
+
+type DeleteForm = z.infer<typeof deleteSchema>;
 
 const orderedIds = (items: Array<{ id: string }>) => items.map((item) => item.id);
 
@@ -348,6 +371,7 @@ const CatalogRow = ({
   dragDisabled,
   isDragging,
   item,
+  onDelete,
   onEdit,
   onPointerCancel,
   onPointerDown,
@@ -360,6 +384,7 @@ const CatalogRow = ({
   dragDisabled?: boolean;
   isDragging?: boolean;
   item: AdminSettingsCatalogOption | AdminSettingsSpecialty;
+  onDelete: () => void;
   onEdit: () => void;
   onPointerCancel: (event: PointerEvent<HTMLDivElement>) => void;
   onPointerDown: (event: PointerEvent<HTMLDivElement>) => void;
@@ -423,6 +448,16 @@ const CatalogRow = ({
         >
           {item.active ? <ToggleRight className="h-4 w-4" /> : <ToggleLeft className="h-4 w-4" />}
           {item.active ? "Desativar" : "Reativar"}
+        </button>
+        <button
+          aria-label={`Excluir ${item.name}`}
+          className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-danger/25 bg-danger/5 text-danger transition hover:bg-danger/10 disabled:opacity-50"
+          disabled={activeMutation}
+          onClick={onDelete}
+          title={`Excluir ${item.name}`}
+          type="button"
+        >
+          <Trash2 className="h-4 w-4" />
         </button>
       </div>
     </div>
@@ -542,14 +577,109 @@ const CatalogModal = ({
   );
 };
 
+const DeleteCatalogModal = ({
+  onClose,
+  onSubmit,
+  state,
+  submitting,
+}: {
+  onClose: () => void;
+  onSubmit: (confirmation: string) => Promise<void>;
+  state: CatalogDeleteModalState;
+  submitting: boolean;
+}) => {
+  const form = useForm<DeleteForm>({
+    defaultValues: { confirmation: "" },
+    resolver: zodResolver(deleteSchema),
+  });
+  const isCategory = state.kind === "category";
+  const name = isCategory ? state.category.name : state.item.name;
+  const label = isCategory ? singularLabel.specialty_category : singularLabel[state.type];
+  const specialtiesCount = isCategory ? state.category.specialties.length : 0;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end bg-overlay p-3 md:items-center md:justify-center">
+      <div className="w-full max-w-lg rounded-[28px] border border-danger/20 bg-surface p-5 shadow-2xl">
+        <div className="mb-5 flex items-start justify-between gap-3">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-danger">
+              Exclusão de catálogo
+            </p>
+            <h2 className="mt-2 text-2xl font-black text-foreground">Excluir {label}</h2>
+            <p className="mt-1 text-sm leading-6 text-muted">
+              Esta ação aplica soft delete em <strong>{name}</strong>, removendo a opção dos
+              filtros, formulários e da tela de configurações. Vínculos históricos permanecem
+              preservados.
+            </p>
+            {isCategory ? (
+              <p className="mt-2 rounded-2xl border border-orange-200 bg-orange-50 px-3 py-2 text-xs font-semibold text-orange-700">
+                A categoria também remove {specialtiesCount}{" "}
+                {specialtiesCount === 1 ? "especialidade" : "especialidades"} da seleção pública.
+              </p>
+            ) : null}
+          </div>
+          <button
+            aria-label="Fechar modal"
+            className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-border text-muted hover:text-foreground"
+            onClick={onClose}
+            type="button"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+        <FormProvider {...form}>
+          <form
+            className="space-y-3"
+            onSubmit={form.handleSubmit((values) => onSubmit(values.confirmation))}
+          >
+            <p className="text-sm text-muted">
+              Digite <strong>{DELETE_CONFIRMATION}</strong> para confirmar.
+            </p>
+            <InputController<DeleteForm>
+              label="Confirmação forte"
+              name="confirmation"
+              placeholder={DELETE_CONFIRMATION}
+              required
+            />
+            <div className="flex flex-col-reverse gap-2 pt-2 sm:flex-row sm:justify-end">
+              <button
+                className="inline-flex h-12 items-center justify-center rounded-2xl border border-border px-5 text-sm font-bold text-muted hover:text-foreground"
+                onClick={onClose}
+                type="button"
+              >
+                Cancelar
+              </button>
+              <button
+                className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl bg-danger px-5 text-sm font-black text-white shadow-admin-soft disabled:opacity-60"
+                disabled={submitting}
+                type="submit"
+              >
+                {submitting ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Trash2 className="h-4 w-4" />
+                )}
+                Excluir
+              </button>
+            </div>
+          </form>
+        </FormProvider>
+      </div>
+    </div>
+  );
+};
+
 export const AdminSettingsClient = () => {
   const catalogs = useAdminSettingsCatalogs();
   const createCategory = useAdminSettingsCreateSpecialtyCategory();
   const updateCategory = useAdminSettingsUpdateSpecialtyCategory();
+  const deleteCategory = useAdminSettingsDeleteSpecialtyCategory();
   const createItem = useAdminSettingsCreateCatalogItem();
   const updateItem = useAdminSettingsUpdateCatalogItem();
+  const deleteItem = useAdminSettingsDeleteCatalogItem();
   const reorder = useAdminSettingsReorderCatalog();
   const [modal, setModal] = useState<CatalogModalState | null>(null);
+  const [deleteModal, setDeleteModal] = useState<CatalogDeleteModalState | null>(null);
   const [dragging, setDragging] = useState<CatalogDragState | null>(null);
   const [optimisticOrders, setOptimisticOrders] = useState<Record<string, string[]>>({});
   const [openCategoryIds, setOpenCategoryIds] = useState<Record<string, boolean>>({});
@@ -570,8 +700,10 @@ export const AdminSettingsClient = () => {
   const isMutating =
     createCategory.isPending ||
     updateCategory.isPending ||
+    deleteCategory.isPending ||
     createItem.isPending ||
     updateItem.isPending ||
+    deleteItem.isPending ||
     reorder.isPending;
   const counts = useMemo(
     () => ({
@@ -638,6 +770,31 @@ export const AdminSettingsClient = () => {
     try {
       await updateItem.mutateAsync({ id: item.id, input: { active: !item.active }, type });
       toast.success(item.active ? "Item desativado" : "Item reativado");
+    } catch (error) {
+      toast.error(getErrorMessage(error));
+    }
+  };
+
+  const deleteCatalog = async (confirmation: string) => {
+    if (!deleteModal) return;
+
+    try {
+      if (deleteModal.kind === "category") {
+        await deleteCategory.mutateAsync({
+          id: deleteModal.category.id,
+          input: { confirmation: confirmation.trim().toUpperCase() },
+        });
+      } else {
+        await deleteItem.mutateAsync({
+          id: deleteModal.item.id,
+          input: { confirmation: confirmation.trim().toUpperCase() },
+          type: deleteModal.type,
+        });
+      }
+
+      toast.success("Catálogo excluído");
+      setOptimisticOrders({});
+      setDeleteModal(null);
     } catch (error) {
       toast.error(getErrorMessage(error));
     }
@@ -870,6 +1027,7 @@ export const AdminSettingsClient = () => {
                   isDragging={sameScope(dragging, section.type) && dragging.id === item.id}
                   item={item}
                   key={item.id}
+                  onDelete={() => setDeleteModal({ item, kind: "item", type: section.type })}
                   onEdit={() => setModal({ item, kind: "item", mode: "edit", type: section.type })}
                   onPointerCancel={(event) =>
                     cancelCatalogPointerDrag(event, { id: item.id, type: section.type })
@@ -1112,6 +1270,16 @@ export const AdminSettingsClient = () => {
                               )}
                               {category.active ? "Desativar" : "Reativar"}
                             </button>
+                            <button
+                              aria-label={`Excluir ${category.name}`}
+                              className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-danger/25 bg-danger/5 text-danger transition hover:bg-danger/10 disabled:opacity-50"
+                              disabled={isMutating}
+                              onClick={() => setDeleteModal({ category, kind: "category" })}
+                              title={`Excluir ${category.name}`}
+                              type="button"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
                           </div>
                         </div>
                         {categoryOpen ? (
@@ -1134,6 +1302,9 @@ export const AdminSettingsClient = () => {
                                   }
                                   item={item}
                                   key={item.id}
+                                  onDelete={() =>
+                                    setDeleteModal({ item, kind: "item", type: "specialty" })
+                                  }
                                   onEdit={() =>
                                     setModal({
                                       categoryId: category.id,
@@ -1208,6 +1379,14 @@ export const AdminSettingsClient = () => {
             createItem.isPending ||
             updateItem.isPending
           }
+        />
+      ) : null}
+      {deleteModal ? (
+        <DeleteCatalogModal
+          onClose={() => setDeleteModal(null)}
+          onSubmit={deleteCatalog}
+          state={deleteModal}
+          submitting={deleteCategory.isPending || deleteItem.isPending}
         />
       ) : null}
     </div>

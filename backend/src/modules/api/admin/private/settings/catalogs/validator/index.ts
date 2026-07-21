@@ -17,6 +17,10 @@ const updateBody = [
   { key: "position", coerse: "number", method: "numeric", int: true, min: 0, optional: true },
 ] satisfies IValidatorRequest["body"];
 
+const deleteBody = [
+  { key: "confirmation", coerse: "string", method: "string", min: 5, max: 80 },
+] satisfies IValidatorRequest["body"];
+
 const specialtyCreateBody = [
   ...createBody,
   { key: "category_id", coerse: "string", method: "string", min: 1, max: 160 },
@@ -32,6 +36,8 @@ export const createCategoryValidator = validator({ body: createBody });
 export const updateCategoryValidator = validator({ body: updateBody, params: idParam });
 export const createItemValidator = validator({ body: createBody });
 export const updateItemValidator = validator({ body: updateBody, params: idParam });
+export const deleteCategoryValidator = validator({ body: deleteBody, params: idParam });
+export const deleteItemValidator = validator({ body: deleteBody, params: idParam });
 export const createSpecialtyValidator = validator({ body: specialtyCreateBody });
 export const updateSpecialtyValidator = validator({ body: specialtyUpdateBody, params: idParam });
 export const reorderValidator = validator({

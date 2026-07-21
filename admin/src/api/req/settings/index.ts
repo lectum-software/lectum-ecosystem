@@ -59,6 +59,10 @@ export type AdminSettingsReorderPayload = {
   type: AdminSettingsCatalogType;
 };
 
+export type AdminSettingsDeletePayload = {
+  confirmation: string;
+};
+
 const baseUrl = "/api/admin/private/settings/catalogs";
 
 export const getAdminSettingsCatalogs = async () => {
@@ -83,6 +87,18 @@ export const updateAdminSpecialtyCategory = async (
   const response = await adminApi.put<ApiResponse<AdminSettingsCatalogs>>(
     `${baseUrl}/specialty-categories/${encodeURIComponent(id)}`,
     input,
+  );
+
+  return resolveApiData(response.data);
+};
+
+export const deleteAdminSpecialtyCategory = async (
+  id: string,
+  input: AdminSettingsDeletePayload,
+) => {
+  const response = await adminApi.delete<ApiResponse<AdminSettingsCatalogs>>(
+    `${baseUrl}/specialty-categories/${encodeURIComponent(id)}`,
+    { data: input },
   );
 
   return resolveApiData(response.data);
@@ -119,6 +135,19 @@ export const updateAdminCatalogItem = async (
   const response = await adminApi.put<ApiResponse<AdminSettingsCatalogs>>(
     `${baseUrl}/${pathByType[type]}/${encodeURIComponent(id)}`,
     input,
+  );
+
+  return resolveApiData(response.data);
+};
+
+export const deleteAdminCatalogItem = async (
+  type: Exclude<AdminSettingsCatalogType, "specialty_category">,
+  id: string,
+  input: AdminSettingsDeletePayload,
+) => {
+  const response = await adminApi.delete<ApiResponse<AdminSettingsCatalogs>>(
+    `${baseUrl}/${pathByType[type]}/${encodeURIComponent(id)}`,
+    { data: input },
   );
 
   return resolveApiData(response.data);

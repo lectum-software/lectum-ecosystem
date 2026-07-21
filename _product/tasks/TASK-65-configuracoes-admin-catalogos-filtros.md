@@ -290,6 +290,23 @@ Frontend esperado:
 - `pnpm check`
 - Smoke HTTP local: `GET http://localhost:3002/configuracoes` retornou `200`.
 
+## Ajuste complementar 2026-07-21 - Contadores e cabecalho de catalogos
+
+- Pedido do usuario: remover o botao **Restaurar padroes**, remover os contadores de resumo **Categorias** e **Demograficos**, separar **Idiomas** e **Publicos**, adicionar contadores individuais de **Genero**, **Raca** e **Religiao** e ajustar o cabecalho de **Especialidades**.
+- A faixa de cards de resumo agora exibe apenas contadores por catalogo selecionavel: **Especialidades**, **Abordagens**, **Servicos**, **Idiomas**, **Publicos**, **Genero**, **Raca** e **Religiao**.
+- O contador agregado **Demograficos** e o contador de categorias foram removidos da faixa de resumo.
+- O botao **Restaurar padroes** foi removido do cabecalho da pagina e a interface deixou de abrir o modal de restauracao a partir de Configuracoes.
+- O cabecalho de **Especialidades** mantem a tag com a quantidade de categorias e agora tambem mostra a tag com o total de opcoes; a descricao foi alterada para explicar que se trata de especialidades usadas nos filtros e no perfil profissional, organizadas por categoria.
+- Nao houve alteracao de backend, Prisma/migrations, packages, contratos HTTP, formularios ou dados persistidos.
+
+### Validacao complementar executada
+
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/configuracoes/client.tsx"`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check`
+- Smoke HTTP local: `GET http://localhost:3002/configuracoes` retornou `200`.
+
 ## Ajuste complementar 2026-07-21 - Drag animado sem toast de ordem
 
 - Pedido do usuario: melhorar o clique e arraste das opcoes com animacao de deslocamento do bloco arrastado e dos blocos ao redor, alem de remover a tag verde de confirmacao de atualizacao de ordem.
@@ -391,19 +408,25 @@ Frontend esperado:
 - `pnpm check`
 - Smoke HTTP local: `GET http://localhost:3002/configuracoes` retornou `200`.
 
-## Ajuste complementar 2026-07-21 - Contadores e cabecalho de catalogos
+## Ajuste complementar 2026-07-21 - Exclusao forte de catalogos
 
-- Pedido do usuario: remover o botao **Restaurar padroes**, remover os contadores de resumo **Categorias** e **Demograficos**, separar **Idiomas** e **Publicos**, adicionar contadores individuais de **Genero**, **Raca** e **Religiao** e ajustar o cabecalho de **Especialidades**.
-- A faixa de cards de resumo agora exibe apenas contadores por catalogo selecionavel: **Especialidades**, **Abordagens**, **Servicos**, **Idiomas**, **Publicos**, **Genero**, **Raca** e **Religiao**.
-- O contador agregado **Demograficos** e o contador de categorias foram removidos da faixa de resumo.
-- O botao **Restaurar padroes** foi removido do cabecalho da pagina e a interface deixou de abrir o modal de restauracao a partir de Configuracoes.
-- O cabecalho de **Especialidades** mantem a tag com a quantidade de categorias e agora tambem mostra a tag com o total de opcoes; a descricao foi alterada para explicar que se trata de especialidades usadas nos filtros e no perfil profissional, organizadas por categoria.
-- Nao houve alteracao de backend, Prisma/migrations, packages, contratos HTTP, formularios ou dados persistidos.
+- Pedido do usuario: alem da opcao de **Desativar**, adicionar um icone de lixeira para excluir catalogos com confirmacao forte.
+- A tela Admin **Configuracoes** passa a exibir um botao icon-only de lixeira em categorias, especialidades e demais opcoes de catalogo, mantendo **Desativar/Reativar** como acao separada.
+- A exclusao exige a confirmacao forte `EXCLUIR CATALOGO` na UI e tambem no backend, evitando bypass por chamada direta.
+- A exclusao usa soft delete real (`deleted=true`, `deletedAt`, `active=false`) e remove o item das listagens administrativas, filtros publicos e formularios de novas selecoes sem apagar vinculos historicos.
+- Ao excluir uma categoria de especialidades, suas especialidades nao excluidas tambem recebem soft delete para evitar catalogos orfaos invisiveis.
+- A geracao de slug agora considera registros deletados para evitar conflito com indices unicos quando uma opcao excluida tiver o mesmo nome de uma nova opcao.
+- Nao houve alteracao de Prisma schema/migrations nem instalacao de packages.
+- Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente; a referencia auditavel foi `_product/proto/admin/Configuracoes.png` e a captura enviada pelo usuario.
 
 ### Validacao complementar executada
 
-- `pnpm --dir admin exec biome check --write "src/app/(admin)/configuracoes/client.tsx"`
+- `pnpm --dir backend exec biome check --write "src/modules/api/admin/private/settings/catalogs/DTOs/IAdminSettingsCatalogsDTO.ts" "src/modules/api/admin/private/settings/catalogs/index.ts" "src/modules/api/admin/private/settings/catalogs/repositories/AdminSettingsCatalogsRepository.ts" "src/modules/api/admin/private/settings/catalogs/use-cases/controller.ts" "src/modules/api/admin/private/settings/catalogs/use-cases/services.ts" "src/modules/api/admin/private/settings/catalogs/validator/index.ts" "locales/pt/translation.json"`
+- `pnpm --dir admin exec biome check --write "src/api/req/settings/index.ts" "src/api/callers/settings/index.ts" "src/app/(admin)/configuracoes/client.tsx"`
+- `pnpm --dir backend check`
 - `pnpm --dir admin check`
+- `pnpm --dir backend build`
 - `pnpm --dir admin build`
 - `pnpm check`
+- Smoke seguro do fluxo real de exclusao: chamada de exclusao de `gender` com confirmacao invalida retornou `422` e manteve a contagem de generos inalterada (`before=6`, `after=6`).
 - Smoke HTTP local: `GET http://localhost:3002/configuracoes` retornou `200`.

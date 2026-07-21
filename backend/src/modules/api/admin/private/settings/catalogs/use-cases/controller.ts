@@ -4,6 +4,8 @@ import type { IAdminSettingsCatalogsDTO } from "../DTOs/IAdminSettingsCatalogsDT
 import {
   createCategory as createCategoryService,
   createItem as createItemService,
+  deleteCategory as deleteCategoryService,
+  deleteItem as deleteItemService,
   index as indexService,
   reorder as reorderService,
   restoreDefaults as restoreDefaultsService,
@@ -38,6 +40,14 @@ export const updateCategory = async (req: Request, res: Response) => {
     return send(res, await updateCategoryService(dto(req)));
   } catch (err) {
     return error500(res, "admin_settings_catalogs_category_update", err);
+  }
+};
+
+export const deleteCategory = async (req: Request, res: Response) => {
+  try {
+    return send(res, await deleteCategoryService(dto(req)));
+  } catch (err) {
+    return error500(res, "admin_settings_catalogs_category_delete", err);
   }
 };
 
@@ -81,22 +91,50 @@ const updateItemController =
     }
   };
 
+const deleteItemController =
+  (
+    type:
+      | "approach"
+      | "gender"
+      | "language"
+      | "race_color"
+      | "religion"
+      | "service"
+      | "target_audience"
+      | "specialty",
+  ) =>
+  async (req: Request, res: Response) => {
+    try {
+      return send(res, await deleteItemService(type, dto(req)));
+    } catch (err) {
+      return error500(res, `admin_settings_catalogs_${type}_delete`, err);
+    }
+  };
+
 export const createSpecialty = createItemController("specialty");
 export const updateSpecialty = updateItemController("specialty");
+export const deleteSpecialty = deleteItemController("specialty");
 export const createApproach = createItemController("approach");
 export const updateApproach = updateItemController("approach");
+export const deleteApproach = deleteItemController("approach");
 export const createService = createItemController("service");
 export const updateService = updateItemController("service");
+export const deleteService = deleteItemController("service");
 export const createLanguage = createItemController("language");
 export const updateLanguage = updateItemController("language");
+export const deleteLanguage = deleteItemController("language");
 export const createTargetAudience = createItemController("target_audience");
 export const updateTargetAudience = updateItemController("target_audience");
+export const deleteTargetAudience = deleteItemController("target_audience");
 export const createGender = createItemController("gender");
 export const updateGender = updateItemController("gender");
+export const deleteGender = deleteItemController("gender");
 export const createRaceColor = createItemController("race_color");
 export const updateRaceColor = updateItemController("race_color");
+export const deleteRaceColor = deleteItemController("race_color");
 export const createReligion = createItemController("religion");
 export const updateReligion = updateItemController("religion");
+export const deleteReligion = deleteItemController("religion");
 
 export const reorder = async (req: Request, res: Response) => {
   try {

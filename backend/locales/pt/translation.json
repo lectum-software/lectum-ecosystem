@@ -303,7 +303,8 @@
     "admin_patient_account_password_reset_sent": "Link de redefinição de senha do paciente enviado.",
     "admin_patient_account_sessions_revoked": "Sessões do paciente encerradas com auditoria administrativa.",
     "admin_patient_account_suspended": "Conta do paciente suspensa com auditoria administrativa e sessões encerradas.",
-    "admin_patient_account_temporary_password_set": "Senha temporária do paciente definida com troca obrigatória no próximo login."
+    "admin_patient_account_temporary_password_set": "Senha temporária do paciente definida com troca obrigatória no próximo login.",
+    "admin_settings_catalog_deleted": "Catálogo excluído com soft delete."
   },
   "gender": {
     "o": "o"

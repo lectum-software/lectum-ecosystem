@@ -49,6 +49,12 @@ const toCatalogOption = (
 
 const optionId = (prefix: string, slug: string) => `${prefix}-${slug}`.slice(0, 190);
 
+const softDeleteData = (now = new Date()) => ({
+  active: false,
+  deleted: true,
+  deletedAt: now,
+});
+
 const optionType = (type: AdminCatalogType) => {
   if (type === "language") return "language";
   if (type === "target_audience") return "target_audience";
@@ -148,7 +154,7 @@ export class AdminSettingsCatalogsRepository {
   }
 
   async slugExists(type: AdminCatalogType, slug: string, excludeId?: string) {
-    const baseWhere = { slug, deleted: false, ...(excludeId ? { id: { not: excludeId } } : {}) };
+    const baseWhere = { slug, ...(excludeId ? { id: { not: excludeId } } : {}) };
 
     if (type === "specialty_category") {
       return Boolean(
@@ -295,6 +301,45 @@ export class AdminSettingsCatalogsRepository {
       }
     >,
   ) {
+    if (type === "specialty") {
+      return prisma.specialty.updateMany({ where: { id, deleted: false }, data });
+    }
+    if (type === "service") {
+      return prisma.service.updateMany({ where: { id, deleted: false }, data });
+    }
+    if (type === "approach") {
+      return prisma.approach.updateMany({ where: { id, deleted: false }, data });
+    }
+
+    const catalogType = optionType(type) || type;
+    return prisma.profile_catalog_option.updateMany({
+      where: { id, deleted: false, type: catalogType },
+      data,
+    });
+  }
+
+  async deleteCategory(id: string) {
+    return prisma.$transaction(async (tx) => {
+      const now = new Date();
+      const result = await tx.specialty_category.updateMany({
+        where: { id, deleted: false },
+        data: softDeleteData(now),
+      });
+
+      if (result.count === 0) return result;
+
+      await tx.specialty.updateMany({
+        where: { category_id: id, deleted: false },
+        data: softDeleteData(now),
+      });
+
+      return result;
+    });
+  }
+
+  async deleteItem(type: Exclude<AdminCatalogType, "specialty_category">, id: string) {
+    const data = softDeleteData();
+
     if (type === "specialty") {
       return prisma.specialty.updateMany({ where: { id, deleted: false }, data });
     }

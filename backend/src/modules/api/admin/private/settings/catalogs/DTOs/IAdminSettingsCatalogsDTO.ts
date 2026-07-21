@@ -31,9 +31,13 @@ export type CatalogResetPayload = {
   confirmation?: string;
 };
 
+export type CatalogDeletePayload = {
+  confirmation?: string;
+};
+
 export type IAdminSettingsCatalogsDTO = {
   admin: admin;
-  b?: CatalogItemPayload & CatalogReorderPayload & CatalogResetPayload;
+  b?: CatalogItemPayload & CatalogReorderPayload & CatalogResetPayload & CatalogDeletePayload;
   p?: {
     id?: string;
   };

@@ -8,6 +8,7 @@ import type {
 import { AdminSettingsCatalogsRepository } from "../repositories/AdminSettingsCatalogsRepository";
 
 const RESET_CONFIRMATION = "RESTAURAR PADROES";
+const DELETE_CONFIRMATION = "EXCLUIR CATALOGO";
 
 const mutableItemTypes = [
   "approach",
@@ -131,6 +132,28 @@ export const updateCategory = async (data: IAdminSettingsCatalogsDTO): Promise<R
   return list(repository);
 };
 
+export const deleteCategory = async (data: IAdminSettingsCatalogsDTO): Promise<Resolve> => {
+  const repository = new AdminSettingsCatalogsRepository();
+  const id = data.p?.id;
+  if (!id) return invalid("specialty_category");
+
+  if (data.b?.confirmation?.trim().toUpperCase() !== DELETE_CONFIRMATION) {
+    return {
+      status: 422,
+      ...error("invalid", { model: "catalog_delete_confirmation" }),
+    };
+  }
+
+  const result = await repository.deleteCategory(id);
+  if (result.count === 0) return notFound("specialty_category");
+
+  return {
+    status: 200,
+    ...msg("admin_settings_catalog_deleted"),
+    data: await repository.listCatalogs(),
+  };
+};
+
 export const createItem = async (
   type: MutableItemType,
   data: IAdminSettingsCatalogsDTO,
@@ -174,6 +197,31 @@ export const updateItem = async (
   if (result.count === 0) return notFound(type);
 
   return list(repository);
+};
+
+export const deleteItem = async (
+  type: MutableItemType,
+  data: IAdminSettingsCatalogsDTO,
+): Promise<Resolve> => {
+  const repository = new AdminSettingsCatalogsRepository();
+  const id = data.p?.id;
+  if (!id) return invalid(type);
+
+  if (data.b?.confirmation?.trim().toUpperCase() !== DELETE_CONFIRMATION) {
+    return {
+      status: 422,
+      ...error("invalid", { model: "catalog_delete_confirmation" }),
+    };
+  }
+
+  const result = await repository.deleteItem(type, id);
+  if (result.count === 0) return notFound(type);
+
+  return {
+    status: 200,
+    ...msg("admin_settings_catalog_deleted"),
+    data: await repository.listCatalogs(),
+  };
 };
 
 export const reorder = async (data: IAdminSettingsCatalogsDTO): Promise<Resolve> => {
