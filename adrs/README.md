@@ -137,3 +137,4 @@ Formato recomendado:
 - [ADR-0265 - Hidratação assíncrona de socket como best-effort](0265-socket-hidratacao-assincrona-best-effort.md) - Accepted
 - [ADR-0275 - Opção Hoje nos filtros de período do Admin](0275-periodo-hoje-filtros-admin.md) - Accepted
 - [ADR-0284 - Horários de maior atividade nas estatísticas da comunidade](0284-horarios-maior-atividade-comunidade-admin.md) - Accepted
+- [ADR-0296 - Denuncias do paciente no Admin usando post_report real](0296-admin-paciente-denuncias-post-report-readonly.md) - Accepted

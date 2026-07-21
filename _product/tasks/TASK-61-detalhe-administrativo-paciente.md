@@ -465,3 +465,26 @@ Frontend esperado:
 - `pnpm check`
 - Service local: `showAdminPatient({ id: "cmrqsr926001d1guhoz10yvaz", period: "month" })` retornou `200` com os sete contadores e a serie temporal correspondente.
 - Smoke HTTP local: `GET http://localhost:3002/pacientes/cmrqsr926001d1guhoz10yvaz?tab=estatisticas` retornou `200`.
+
+## Ajuste pos-feedback 2026-07-21 - Denuncias do paciente com layout do psicologo
+
+- Pedido do usuario: replicar o layout da aba **Denuncias** do detalhe do psicologo na pagina de **Denuncias** do paciente e incluir o icone de alerta no menu quando houver alguma denuncia.
+- Criado endpoint admin privado `GET /api/admin/private/patients/:id/reports`, protegido por Admin, usando apenas `post_report` real vinculado a conteudo autorado pelo paciente (`community_post.author_id` ou `post_reply.author_id`).
+- A aba `/pacientes/[id]?tab=denuncias` passou a usar a mesma composicao visual do psicologo: quatro cards, filtros **Tipo**, **Status**, **Periodo**, **De** e **Ate**, lista de conteudo denunciado, historico do denunciante e link para conteudo publico quando disponivel.
+- O menu de abas do paciente agora consulta o total real de denuncias e exibe `AlertTriangle` ao lado de **Denuncias** quando `post_report` retornar total maior que zero.
+- A V1 permanece leitura operacional para paciente: sem botoes de resolucao, remocao de conteudo, sancao de conta, silenciamento ou moderacao parcial nesta aba.
+- Nao houve schema Prisma, migration, package novo, seed, backfill, mock, endpoint simulado ou dado fake. `db:migrate` nao se aplicou.
+- Builder/Quick Copy nao esta exposto como ferramenta callable no ambiente; as referencias auditaveis foram as capturas enviadas pelo usuario e o padrao local de `_product/proto/admin/Psicologos/Detalhes do psicologo/Denuncias.png`.
+- ADR criado: `adrs/0296-admin-paciente-denuncias-post-report-readonly.md`.
+
+### Validacao complementar executada
+
+- `pnpm --dir backend exec biome check --write "src/main/server/imports/write.ts" "src/modules/api/admin/private/patients/reports/DTOs/IAdminPatientReportsDTO.ts" "src/modules/api/admin/private/patients/reports/index.ts" "src/modules/api/admin/private/patients/reports/repositories/AdminPatientReportsRepository.ts" "src/modules/api/admin/private/patients/reports/use-cases/controller.ts" "src/modules/api/admin/private/patients/reports/use-cases/services.ts" "src/modules/api/admin/private/patients/reports/validator/index.ts"`
+- `pnpm --dir admin exec biome check --write "src/api/cache/keys.ts" "src/api/callers/patients/index.ts" "src/api/req/patients/index.ts" "src/app/(admin)/pacientes/[id]/client.tsx"`
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check` passou antes de alteracoes paralelas fora desta entrega. A reexecucao final ficou bloqueada por mudancas nao relacionadas em `backend/src/modules/api/admin/private/moderation/*` com `AdminModerationSummaryDTO.operational_alerts` incompleto.
+- Service local: `showAdminPatientReports({ id: "cmrb6fbix0000y0uhdpu1bptl" })` retornou `200`, cards reais de denuncias e item de `post_report`.
+- Browser local/headless via Chrome/CDP em `http://localhost:3002/pacientes/cmrb6fbix0000y0uhdpu1bptl?tab=denuncias`, com admin temporario real removido ao final, validou desktop `1365x900` e mobile `390x844`: cards, filtros, lista real de denuncia, icone de alerta no menu e `scrollWidth=390` no mobile.

@@ -18,6 +18,7 @@ import type {
 } from "@/api/req/notifications";
 import type {
   AdminPatientActivitiesQuery,
+  AdminPatientReportsQuery,
   PatientsDashboardQuery,
   PatientsDetailQuery,
 } from "@/api/req/patients";
@@ -86,6 +87,15 @@ const normalizePatientActivities = (input: AdminPatientActivitiesQuery) => ({
   limit: input.limit || 10,
   page: input.page || 1,
   q: input.q || "",
+  to: input.to || "default",
+  type: input.type || "all",
+});
+
+const normalizePatientReports = (input: AdminPatientReportsQuery) => ({
+  from: input.from || "default",
+  limit: input.limit || 10,
+  page: input.page || 1,
+  status: input.status || "all",
   to: input.to || "default",
   type: input.type || "all",
 });
@@ -335,6 +345,8 @@ export const adminPatientsKeys = {
     [...adminPatientsKeys.all, "detail", id, normalizeRange(input)] as const,
   list: (input: PatientsListQuery) =>
     [...adminPatientsKeys.all, "list", normalizePatientsList(input)] as const,
+  reports: (id: string, input: AdminPatientReportsQuery) =>
+    [...adminPatientsKeys.all, "reports", id, normalizePatientReports(input)] as const,
 };
 
 export const adminNotificationsKeys = {

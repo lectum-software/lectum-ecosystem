@@ -5,6 +5,8 @@ import {
   type AdminPatientAccountStatusActionInput,
   type AdminPatientActivitiesQuery,
   type AdminPatientChangeEmailInput,
+  type AdminPatientDetail,
+  type AdminPatientReportsQuery,
   type AdminPatientRevokeSessionsInput,
   type AdminPatientSetTemporaryPasswordInput,
   type AdminPatientUpdatePersonalDataInput,
@@ -14,6 +16,7 @@ import {
   getAdminPatientAccount,
   getAdminPatientActivities,
   getAdminPatientDetail,
+  getAdminPatientReports,
   getAdminPatientsDashboard,
   type PatientsDashboardQuery,
   type PatientsDetailQuery,
@@ -38,10 +41,16 @@ export const useAdminPatientsDashboard = (
 export const useAdminPatientDetail = (
   id: string,
   input: PatientsDetailQuery,
-  options: { enabled?: boolean } = {},
+  options: {
+    enabled?: boolean;
+    placeholderData?:
+      | AdminPatientDetail
+      | ((previousData: AdminPatientDetail | undefined) => AdminPatientDetail | undefined);
+  } = {},
 ) =>
   useQuery({
     enabled: (options.enabled ?? true) && Boolean(id),
+    placeholderData: options.placeholderData,
     queryFn: () => getAdminPatientDetail(id, input),
     queryKey: adminPatientsKeys.detail(id, input),
   });
@@ -62,6 +71,17 @@ export const useAdminPatientActivities = (
     enabled: (options.enabled ?? true) && Boolean(id),
     queryFn: () => getAdminPatientActivities(id, input),
     queryKey: adminPatientsKeys.activities(id, input),
+  });
+
+export const useAdminPatientReports = (
+  id: string,
+  input: AdminPatientReportsQuery,
+  options: { enabled?: boolean } = {},
+) =>
+  useQuery({
+    enabled: (options.enabled ?? true) && Boolean(id),
+    queryFn: () => getAdminPatientReports(id, input),
+    queryKey: adminPatientsKeys.reports(id, input),
   });
 
 const invalidatePatientAccount = async (

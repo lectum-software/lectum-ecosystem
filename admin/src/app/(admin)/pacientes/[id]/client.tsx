@@ -3,6 +3,8 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   AlertTriangle,
+  ArrowDown,
+  ArrowUp,
   BarChart3,
   Bookmark,
   CalendarDays,
@@ -11,6 +13,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Clock3,
+  Eye,
   FileText,
   KeyRound,
   Loader2,
@@ -27,8 +30,6 @@ import {
   Send,
   Share2,
   ShieldCheck,
-  ThumbsDown,
-  ThumbsUp,
   UserRound,
   UsersRound,
   X,
@@ -36,7 +37,7 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { type ReactNode, useCallback, useMemo, useRef, useState } from "react";
+import { type FocusEvent, type ReactNode, useCallback, useMemo, useRef, useState } from "react";
 import { FormProvider, type SubmitHandler, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -47,6 +48,7 @@ import {
   useAdminPatientDeactivateAccount,
   useAdminPatientDeleteAccount,
   useAdminPatientDetail,
+  useAdminPatientReports,
   useAdminPatientRevokeSessions,
   useAdminPatientSendEmailConfirmation,
   useAdminPatientSendPasswordReset,
@@ -59,9 +61,13 @@ import type {
   AdminPatientAccount,
   AdminPatientActivitiesQuery,
   AdminPatientDetail,
+  AdminPatientReportItem,
+  AdminPatientReportsQuery,
   PatientsDetailActivity,
   PatientsDetailCommunity,
   PatientsDetailMetric,
+  PatientsDetailQuery,
+  PatientsDetailSeriesPoint,
 } from "@/api/req/patients";
 import { InputController, SelectController, TextareaController } from "@/components/controllers";
 import { aggregateCalendarChartPoints, buildSmoothSvgPath } from "@/lib/chart-time-series";
@@ -80,15 +86,17 @@ const PATIENT_DETAIL_TABS = [
 type PatientDetailTab = (typeof PATIENT_DETAIL_TABS)[number]["id"];
 const numberFormatter = new Intl.NumberFormat("pt-BR");
 const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+const publicFrontendUrl = process.env.NEXT_PUBLIC_FRONTEND_URL || "http://localhost:3000";
+const publicMediaPathPrefixes = ["/public/files/", "/community/icons/"] as const;
 const CARD = "rounded-card border border-border/80 bg-surface/95 shadow-admin-soft backdrop-blur";
 const metricIcons: Record<PatientsDetailMetric["id"], LucideIcon> = {
   comments_created: MessageCircle,
-  downvotes_received: ThumbsDown,
+  downvotes_received: ArrowDown,
   posts_created: FileText,
   saves_received: Bookmark,
   shares_received: Share2,
   verified_psychologist_responses: ShieldCheck,
-  upvotes_received: ThumbsUp,
+  upvotes_received: ArrowUp,
 };
 const activitySourceLabels: Record<PatientsDetailActivity["source"], string> = {
   community_member: "Comunidade",
@@ -99,19 +107,114 @@ const activitySourceLabels: Record<PatientsDetailActivity["source"], string> = {
   post_vote: "Voto",
   professional_review: "Avaliação",
 };
-const seriesConfig = [
-  { color: "var(--admin-primary)", key: "posts_created", label: "Posts" },
-  { color: "#5d9df6", key: "comments_created", label: "Comentários totais" },
+type PatientStatisticsSeriesMetricKey = Exclude<keyof PatientsDetailSeriesPoint, "date">;
+type PatientStatisticsChartMetric = {
+  icon: LucideIcon;
+  iconClassName: string;
+  iconToneClassName: string;
+  id: PatientsDetailMetric["id"];
+  key: PatientStatisticsSeriesMetricKey;
+  label: string;
+  shortLabel: string;
+  strokeClassName: string;
+  swatchClassName: string;
+};
+
+const PATIENT_COMMUNITY_CHART_METRICS = [
   {
-    color: "var(--admin-success)",
+    icon: FileText,
+    iconClassName: "text-primary",
+    iconToneClassName: "bg-primary-soft",
+    id: "posts_created",
+    key: "posts_created",
+    label: "Posts",
+    shortLabel: "Posts",
+    strokeClassName: "stroke-primary",
+    swatchClassName: "bg-primary",
+  },
+  {
+    icon: MessageCircle,
+    iconClassName: "text-blue-500",
+    iconToneClassName: "bg-blue-50",
+    id: "comments_created",
+    key: "comments_created",
+    label: "Comentários totais",
+    shortLabel: "Comentários",
+    strokeClassName: "stroke-blue-500",
+    swatchClassName: "bg-blue-500",
+  },
+  {
+    icon: ShieldCheck,
+    iconClassName: "text-teal-500",
+    iconToneClassName: "bg-teal-50",
+    id: "verified_psychologist_responses",
     key: "verified_psychologist_responses",
     label: "Respostas de psicólogos verificados",
+    shortLabel: "Verificados",
+    strokeClassName: "stroke-teal-500",
+    swatchClassName: "bg-teal-500",
   },
-  { color: "var(--admin-success)", key: "upvotes_received", label: "Upvotes" },
-  { color: "var(--admin-danger)", key: "downvotes_received", label: "Downvotes" },
-  { color: "var(--admin-warning)", key: "saves_received", label: "Salvamentos" },
-  { color: "#8b5cf6", key: "shares_received", label: "Compartilhamentos" },
-] as const;
+  {
+    icon: ArrowUp,
+    iconClassName: "text-emerald-500",
+    iconToneClassName: "bg-emerald-50",
+    id: "upvotes_received",
+    key: "upvotes_received",
+    label: "Upvotes",
+    shortLabel: "Upvotes",
+    strokeClassName: "stroke-emerald-500",
+    swatchClassName: "bg-emerald-500",
+  },
+  {
+    icon: ArrowDown,
+    iconClassName: "text-red-500",
+    iconToneClassName: "bg-red-50",
+    id: "downvotes_received",
+    key: "downvotes_received",
+    label: "Downvotes",
+    shortLabel: "Downvotes",
+    strokeClassName: "stroke-red-500",
+    swatchClassName: "bg-red-500",
+  },
+  {
+    icon: Bookmark,
+    iconClassName: "text-orange-500",
+    iconToneClassName: "bg-orange-50",
+    id: "saves_received",
+    key: "saves_received",
+    label: "Salvamentos",
+    shortLabel: "Salvos",
+    strokeClassName: "stroke-orange-500",
+    swatchClassName: "bg-orange-500",
+  },
+  {
+    icon: Share2,
+    iconClassName: "text-violet-500",
+    iconToneClassName: "bg-violet-50",
+    id: "shares_received",
+    key: "shares_received",
+    label: "Compartilhamentos",
+    shortLabel: "Shares",
+    strokeClassName: "stroke-violet-500",
+    swatchClassName: "bg-violet-500",
+  },
+] as const satisfies readonly PatientStatisticsChartMetric[];
+
+type PatientCommunityChartMetric = (typeof PATIENT_COMMUNITY_CHART_METRICS)[number];
+type PatientCommunityChartMetricId = PatientCommunityChartMetric["id"];
+type PatientStatisticsPeriodValue = NonNullable<PatientsDetailQuery["period"]>;
+type PatientStatisticsPeriodPreset = Exclude<PatientStatisticsPeriodValue, "custom">;
+type PatientStatisticsCustomRange = Pick<PatientsDetailQuery, "from" | "to">;
+const PATIENT_STATISTICS_PERIOD_OPTIONS: { id: PatientStatisticsPeriodPreset; label: string }[] = [
+  { id: "today", label: "Hoje" },
+  { id: "week", label: "Esta semana" },
+  { id: "month", label: "Este mês" },
+  { id: "year", label: "Este ano" },
+  { id: "all", label: "Todo o período" },
+];
+const PATIENT_STATISTICS_SERIES_METRIC_KEYS = PATIENT_COMMUNITY_CHART_METRICS.map(
+  (item) => item.key,
+) as PatientStatisticsSeriesMetricKey[];
 const EMPTY_SELECT_OPTION = { label: "Não informado", value: "" } as const;
 const PATIENT_GENDER_OPTIONS = [
   EMPTY_SELECT_OPTION,
@@ -259,6 +362,156 @@ const formatInputDate = (value?: string | null) => {
 
   return date.toISOString().slice(0, 10);
 };
+const formatDayMonth = (value?: string | null) => {
+  if (!value) return "período anterior";
+
+  const isoDate = value.match(/^(\d{4})-(\d{2})-(\d{2})/)?.[0];
+  const date = new Date(isoDate ? `${isoDate}T00:00:00.000Z` : value);
+  if (Number.isNaN(date.getTime())) return "período anterior";
+
+  return new Intl.DateTimeFormat("pt-BR", {
+    day: "2-digit",
+    month: "2-digit",
+    timeZone: "UTC",
+  }).format(date);
+};
+const toDateInputValue = (date: Date) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+};
+const startOfCurrentWeek = () => {
+  const date = new Date();
+  const day = date.getDay();
+  const diff = day === 0 ? -6 : 1 - day;
+  date.setDate(date.getDate() + diff);
+
+  return date;
+};
+const startOfCurrentMonth = () => {
+  const date = new Date();
+  date.setDate(1);
+
+  return date;
+};
+const startOfCurrentYear = () => new Date(new Date().getFullYear(), 0, 1);
+const dateInputValueFromString = (value?: string | null) => {
+  if (!value) return toDateInputValue(new Date());
+
+  const date = new Date(value);
+
+  return Number.isNaN(date.getTime()) ? toDateInputValue(new Date()) : toDateInputValue(date);
+};
+const getPatientStatisticsRangeForPeriod = (
+  period: PatientStatisticsPeriodPreset,
+  createdAt?: string | null,
+): Required<PatientStatisticsCustomRange> => {
+  const today = toDateInputValue(new Date());
+
+  if (period === "today") return { from: today, to: today };
+  if (period === "week") return { from: toDateInputValue(startOfCurrentWeek()), to: today };
+  if (period === "month") return { from: toDateInputValue(startOfCurrentMonth()), to: today };
+  if (period === "year") return { from: toDateInputValue(startOfCurrentYear()), to: today };
+
+  return { from: dateInputValueFromString(createdAt), to: today };
+};
+const buildPatientStatisticsPeriodQuery = (
+  period: PatientStatisticsPeriodValue,
+  customRange: PatientStatisticsCustomRange,
+): PatientsDetailQuery =>
+  period === "custom" ? { from: customRange.from, period, to: customRange.to } : { period };
+const patientStatisticsDateFromInput = (value: string) => {
+  const [year, month, day] = value.split("-").map(Number);
+
+  return new Date(year, month - 1, day, 12, 0, 0, 0);
+};
+const isValidPatientStatisticsRange = (range: PatientStatisticsCustomRange) => {
+  if (!range.from || !range.to) return false;
+
+  return patientStatisticsDateFromInput(range.from) <= patientStatisticsDateFromInput(range.to);
+};
+const PATIENT_STATISTICS_CUSTOM_RANGE_ERROR =
+  "Informe um período personalizado completo, com data inicial menor ou igual à final.";
+
+const usePatientStatisticsPeriodFilter = (createdAt?: string | null) => {
+  const [selectedPeriod, setSelectedPeriod] = useState<PatientStatisticsPeriodValue>("all");
+  const [appliedPeriod, setAppliedPeriod] = useState<PatientStatisticsPeriodValue>("all");
+  const [draftRange, setDraftRange] = useState<PatientStatisticsCustomRange>(() =>
+    getPatientStatisticsRangeForPeriod("all", createdAt),
+  );
+  const [appliedRange, setAppliedRange] = useState<PatientStatisticsCustomRange>(() =>
+    getPatientStatisticsRangeForPeriod("all", createdAt),
+  );
+  const [rangeError, setRangeError] = useState<string | null>(null);
+  const periodQuery = useMemo(
+    () => buildPatientStatisticsPeriodQuery(appliedPeriod, appliedRange),
+    [appliedPeriod, appliedRange],
+  );
+  const handlePeriodChange = useCallback(
+    (period: PatientStatisticsPeriodPreset) => {
+      const nextRange = getPatientStatisticsRangeForPeriod(period, createdAt);
+
+      setRangeError(null);
+      setSelectedPeriod(period);
+      setAppliedPeriod(period);
+      setDraftRange(nextRange);
+      setAppliedRange(nextRange);
+    },
+    [createdAt],
+  );
+  const handleDateChange = useCallback(
+    (field: keyof PatientStatisticsCustomRange, value: string) => {
+      setRangeError(null);
+      setSelectedPeriod("custom");
+      setDraftRange((current) => ({
+        ...current,
+        [field]: value,
+      }));
+    },
+    [],
+  );
+  const commitRange = useCallback(() => {
+    if (selectedPeriod !== "custom") return;
+
+    if (!isValidPatientStatisticsRange(draftRange)) {
+      setRangeError(PATIENT_STATISTICS_CUSTOM_RANGE_ERROR);
+      return;
+    }
+
+    setRangeError(null);
+    setAppliedPeriod("custom");
+    setAppliedRange(draftRange);
+  }, [draftRange, selectedPeriod]);
+  const handleDateControlsBlur = useCallback(
+    (event: FocusEvent<HTMLDivElement>) => {
+      const currentTarget = event.currentTarget;
+      const nextFocusedElement = event.relatedTarget as Node | null;
+
+      if (nextFocusedElement && currentTarget.contains(nextFocusedElement)) return;
+
+      window.setTimeout(() => {
+        const activeElement = document.activeElement;
+
+        if (activeElement && currentTarget.contains(activeElement)) return;
+
+        commitRange();
+      }, 0);
+    },
+    [commitRange],
+  );
+
+  return {
+    draftRange,
+    handleDateChange,
+    handleDateControlsBlur,
+    handlePeriodChange,
+    periodQuery,
+    rangeError,
+    selectedPeriod,
+  };
+};
 const formatChange = (value: number | null) => {
   if (value === null) return "sem base anterior";
   if (value === 0) return "0%";
@@ -281,6 +534,73 @@ const safeAvatarSrc = (src: string | null) => {
   return null;
 };
 const isApiMediaSrc = (src: string | null) => Boolean(src?.startsWith(apiUrl));
+const isPublicMediaPath = (pathname: string) =>
+  publicMediaPathPrefixes.some((prefix) => pathname.startsWith(prefix));
+const resolveAdminMediaUrl = (src?: string | null) => {
+  const value = src?.trim();
+  if (!value) return null;
+
+  const apiBase = apiUrl.replace(/\/$/, "");
+
+  try {
+    const parsed = new URL(value, apiBase);
+    if (isPublicMediaPath(parsed.pathname)) {
+      return `${apiBase}${parsed.pathname}${parsed.search}`;
+    }
+    if (value.startsWith("http")) return value;
+    return value.startsWith("/") ? value : `${apiBase}/${value}`;
+  } catch {
+    if (publicMediaPathPrefixes.some((prefix) => value.startsWith(prefix))) {
+      return `${apiBase}${value}`;
+    }
+    return value.startsWith("/") || value.startsWith("http") ? value : null;
+  }
+};
+const allowedRemoteImageHosts = () => {
+  const hosts = new Set(["localhost", "127.0.0.1", "lh3.googleusercontent.com"]);
+
+  for (const candidate of [
+    apiUrl,
+    ...(process.env.NEXT_PUBLIC_IMAGE_REMOTE_HOSTS?.split(",") ?? []),
+  ]) {
+    const normalized = candidate.trim();
+    if (!normalized) continue;
+
+    try {
+      const url = new URL(normalized.includes("://") ? normalized : `https://${normalized}`);
+      if (url.hostname) hosts.add(url.hostname);
+    } catch {
+      // Entradas inválidas de env não devem quebrar a renderização de mídia.
+    }
+  }
+
+  return hosts;
+};
+const canRenderImage = (src: string | null) => {
+  const resolved = resolveAdminMediaUrl(src);
+  if (!resolved) return false;
+  if (resolved.startsWith("/")) return true;
+
+  try {
+    const url = new URL(resolved);
+
+    return allowedRemoteImageHosts().has(url.hostname);
+  } catch {
+    return false;
+  }
+};
+const renderableImageSrc = (src: string | null) => {
+  const resolved = resolveAdminMediaUrl(src);
+
+  return resolved && canRenderImage(resolved) ? resolved : null;
+};
+const isPublicAdminMediaSrc = (src: string) => {
+  try {
+    return isPublicMediaPath(new URL(src, apiUrl).pathname);
+  } catch {
+    return false;
+  }
+};
 const initialsFromName = (name: string) =>
   name
     .split(" ")
@@ -293,6 +613,11 @@ const isPatientDetailTab = (value: string | null): value is PatientDetailTab =>
   PATIENT_DETAIL_TABS.some((tab) => tab.id === value);
 const patientTabHref = (id: string, tab: PatientDetailTab) =>
   tab === "geral" ? `/pacientes/${id}` : `/pacientes/${id}?tab=${tab}`;
+const toPublicHref = (url: string) => {
+  if (/^https?:\/\//.test(url)) return url;
+
+  return `${publicFrontendUrl.replace(/\/$/, "")}${url}`;
+};
 const formatNullable = (value: string | null | undefined) => {
   const normalized = String(value ?? "").trim();
   return normalized || "N\u00e3o informado";
@@ -414,7 +739,186 @@ const MetricCard = ({ metric }: { metric: PatientsDetailMetric }) => {
   );
 };
 
-const PatientStatisticsMetricCarousel = ({ metrics }: { metrics: PatientsDetailMetric[] }) => {
+type PatientStatisticsPeriodControlsProps = {
+  className?: string;
+  idPrefix: string;
+  onDateControlsBlur: (event: FocusEvent<HTMLDivElement>) => void;
+  onDateChange: (field: keyof PatientStatisticsCustomRange, value: string) => void;
+  onPeriodChange: (period: PatientStatisticsPeriodPreset) => void;
+  period: PatientStatisticsPeriodValue;
+  range: PatientStatisticsCustomRange;
+  rangeError: string | null;
+};
+
+const PatientStatisticsPeriodControls = ({
+  className,
+  idPrefix,
+  onDateControlsBlur,
+  onDateChange,
+  onPeriodChange,
+  period,
+  range,
+  rangeError,
+}: PatientStatisticsPeriodControlsProps) => (
+  <div className={cn("w-full lg:w-[min(720px,52vw)]", className)} onBlur={onDateControlsBlur}>
+    <div className="grid gap-2 sm:grid-cols-3">
+      <label className="block text-xs font-black text-muted" htmlFor={`${idPrefix}-period`}>
+        Período
+        <span className="relative mt-2 block">
+          <select
+            className="h-11 w-full appearance-none rounded-control border border-border bg-surface py-0 pl-3 pr-11 text-sm font-bold text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+            id={`${idPrefix}-period`}
+            onChange={(event) =>
+              onPeriodChange(event.target.value as PatientStatisticsPeriodPreset)
+            }
+            value={period}
+          >
+            {period === "custom" ? (
+              <option disabled hidden value="custom">
+                Personalizado
+              </option>
+            ) : null}
+            {PATIENT_STATISTICS_PERIOD_OPTIONS.map((option) => (
+              <option key={option.id} value={option.id}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+          <ChevronDown
+            aria-hidden
+            className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground"
+          />
+        </span>
+      </label>
+
+      <label className="block text-xs font-black text-muted" htmlFor={`${idPrefix}-from`}>
+        De
+        <input
+          className="mt-2 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+          id={`${idPrefix}-from`}
+          onChange={(event) => onDateChange("from", event.target.value)}
+          type="date"
+          value={range.from ?? ""}
+        />
+      </label>
+      <label className="block text-xs font-black text-muted" htmlFor={`${idPrefix}-to`}>
+        Até
+        <input
+          className="mt-2 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+          id={`${idPrefix}-to`}
+          onChange={(event) => onDateChange("to", event.target.value)}
+          type="date"
+          value={range.to ?? ""}
+        />
+      </label>
+    </div>
+    {rangeError ? (
+      <p className="mt-2 max-w-md text-xs font-bold text-danger">{rangeError}</p>
+    ) : null}
+  </div>
+);
+
+const formatPatientPreviousPeriod = (period: AdminPatientDetail["period"]) =>
+  period.previous_from && period.previous_to
+    ? `${formatDayMonth(period.previous_from)} - ${formatDayMonth(period.previous_to)}`
+    : "período anterior";
+
+const PatientMetricComparisonLine = ({
+  metric,
+  period,
+}: {
+  metric: PatientsDetailMetric;
+  period: AdminPatientDetail["period"];
+}) => {
+  const hasArrow = metric.trend === "up" || metric.trend === "down";
+  const TrendIcon = metric.trend === "down" ? ArrowDown : ArrowUp;
+
+  return (
+    <div className="mt-3 flex min-w-0 max-w-full flex-wrap items-center gap-1.5 text-[0.68rem]">
+      <span
+        className={cn(
+          "inline-flex items-center gap-1 font-black",
+          metric.trend === "up" && "text-success",
+          metric.trend === "down" && "text-danger",
+          (metric.trend === "flat" || metric.trend === "unavailable") && "text-muted",
+        )}
+      >
+        {hasArrow ? <TrendIcon aria-hidden className="h-3 w-3" /> : null}
+        {formatChange(metric.change_percent)}
+      </span>
+      <span className="min-w-0 break-words font-bold text-muted">
+        vs. {formatPatientPreviousPeriod(period)}
+      </span>
+    </div>
+  );
+};
+
+const PatientStatisticsMetricToggleCard = ({
+  active,
+  config,
+  metric,
+  onToggle,
+  period,
+}: {
+  active: boolean;
+  config: PatientStatisticsChartMetric;
+  metric: PatientsDetailMetric;
+  onToggle: () => void;
+  period: AdminPatientDetail["period"];
+}) => {
+  const Icon = config.icon;
+  const displayValue = numberFormatter.format(metric.value);
+
+  return (
+    <button
+      aria-pressed={active}
+      className={cn(
+        "h-full w-full min-w-0 overflow-hidden rounded-card border p-4 text-left transition duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2",
+        active
+          ? "border-primary/35 bg-surface shadow-admin-soft ring-1 ring-primary/10"
+          : "border-border/80 bg-border/50 shadow-none hover:-translate-y-0.5 hover:border-primary/25 hover:bg-border/60",
+      )}
+      onClick={onToggle}
+      title={`${metric.label}: ${displayValue}. ${active ? "Visível no gráfico" : "Oculto no gráfico"}`}
+      type="button"
+    >
+      <span className="block min-w-0 max-w-full">
+        <span className="block">
+          <span
+            className={cn(
+              "grid h-10 w-10 shrink-0 place-items-center rounded-full",
+              config.iconToneClassName,
+              config.iconClassName,
+            )}
+          >
+            <Icon aria-hidden className="h-5 w-5" />
+          </span>
+        </span>
+        <span className="mt-4 block min-w-0 max-w-full">
+          <span className="block max-w-full break-words text-xs font-extrabold leading-snug text-foreground">
+            {metric.label}
+          </span>
+          <span className="mt-2 block text-2xl font-extrabold leading-none text-foreground">
+            {displayValue}
+          </span>
+        </span>
+      </span>
+      <PatientMetricComparisonLine metric={metric} period={period} />
+      <span className="sr-only">{active ? "visível no gráfico" : "oculto no gráfico"}</span>
+    </button>
+  );
+};
+
+const patientStatisticsMetricItemClassName =
+  "flex w-full shrink-0 snap-start sm:w-[calc((100%_-_0.5rem)/2)] lg:w-[calc((100%_-_1rem)/3)] 2xl:w-[calc((100%_-_2.5rem)/6)]";
+
+const PatientStatisticsMetricCarousel = ({
+  items,
+  title,
+}: {
+  items: { content: ReactNode; id: string }[];
+  title: string;
+}) => {
   const scrollerRef = useRef<HTMLDivElement>(null);
   const scrollMetrics = useCallback((direction: -1 | 1) => {
     const scroller = scrollerRef.current;
@@ -427,10 +931,11 @@ const PatientStatisticsMetricCarousel = ({ metrics }: { metrics: PatientsDetailM
   }, []);
 
   return (
-    <div className="mt-5 min-w-0 max-w-full overflow-x-clip">
+    <fieldset className="mt-5 min-w-0 max-w-full overflow-x-clip">
+      <legend className="sr-only">Contadores exibidos no gráfico de {title}</legend>
       <div className="relative min-w-0 max-w-full px-11 sm:px-12">
         <button
-          aria-label="Rolar contadores de estatísticas de comunidade para a esquerda"
+          aria-label={`Rolar contadores de ${title} para a esquerda`}
           className="absolute left-0 top-1/2 z-10 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-full border border-border bg-surface text-muted shadow-sm transition hover:border-primary/35 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
           onClick={() => scrollMetrics(-1)}
           type="button"
@@ -441,17 +946,14 @@ const PatientStatisticsMetricCarousel = ({ metrics }: { metrics: PatientsDetailM
           className="flex min-w-0 snap-x snap-mandatory gap-2 overflow-x-auto scroll-smooth pb-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
           ref={scrollerRef}
         >
-          {metrics.map((metric) => (
-            <div
-              className="flex w-full shrink-0 snap-start sm:w-[calc((100%_-_0.5rem)/2)] lg:w-[calc((100%_-_1rem)/3)] 2xl:w-[calc((100%_-_2.5rem)/6)]"
-              key={metric.id}
-            >
-              <MetricCard metric={metric} />
+          {items.map((item) => (
+            <div className={patientStatisticsMetricItemClassName} key={item.id}>
+              {item.content}
             </div>
           ))}
         </div>
         <button
-          aria-label="Rolar contadores de estatísticas de comunidade para a direita"
+          aria-label={`Rolar contadores de ${title} para a direita`}
           className="absolute right-0 top-1/2 z-10 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-full border border-primary/25 bg-primary-soft text-primary shadow-sm transition hover:border-primary/45 hover:bg-primary-soft/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
           onClick={() => scrollMetrics(1)}
           type="button"
@@ -459,7 +961,7 @@ const PatientStatisticsMetricCarousel = ({ metrics }: { metrics: PatientsDetailM
           <ChevronRight aria-hidden className="h-4 w-4" />
         </button>
       </div>
-    </div>
+    </fieldset>
   );
 };
 
@@ -496,6 +998,13 @@ const Header = ({
   id: string;
   tab: PatientDetailTab;
 }) => {
+  const reportsAlertInput = useMemo<AdminPatientReportsQuery>(
+    () => ({ limit: 1, page: 1, status: "all", type: "all" }),
+    [],
+  );
+  const reportsAlertQuery = useAdminPatientReports(id, reportsAlertInput);
+  const reportsCount =
+    reportsAlertQuery.data?.cards.find((card) => card.id === "total")?.value ?? 0;
   const location = detail.header.location
     ? [detail.header.location.city, detail.header.location.state, detail.header.location.country]
         .filter(Boolean)
@@ -540,17 +1049,26 @@ const Header = ({
         <nav aria-label="Abas do detalhe do paciente" className="flex min-w-max gap-1 py-1">
           {PATIENT_DETAIL_TABS.map((item) => {
             const active = item.id === tab;
+            const showReportsAlert = item.id === "denuncias" && reportsCount > 0;
+            const reportsAlertLabel =
+              reportsCount === 1
+                ? "Há 1 denúncia vinculada ao paciente"
+                : `Há ${numberFormatter.format(reportsCount)} denúncias vinculadas ao paciente`;
 
             return (
               <Link
+                aria-current={active ? "page" : undefined}
                 className={cn(
-                  "relative inline-flex min-h-12 items-center justify-center rounded-full px-3.5 text-sm font-black transition",
+                  "relative inline-flex min-h-12 items-center justify-center gap-2 rounded-full px-3.5 text-sm font-black transition",
                   active ? "text-primary" : "text-foreground hover:text-primary",
                 )}
                 href={patientTabHref(id, item.id)}
                 key={item.id}
               >
                 <span>{item.label}</span>
+                {showReportsAlert ? (
+                  <AlertTriangle aria-label={reportsAlertLabel} className="h-4 w-4 text-danger" />
+                ) : null}
                 {active ? (
                   <span className="absolute inset-x-4 bottom-1 h-1 rounded-full bg-primary" />
                 ) : null}
@@ -562,51 +1080,54 @@ const Header = ({
     </CardShell>
   );
 };
-const EngagementChart = ({ detail }: { detail: AdminPatientDetail }) => {
-  const width = 980;
-  const height = 280;
-  const padding = { bottom: 28, left: 48, right: 28, top: 28 };
-  const points = detail.series.points;
-  const chartPoints = aggregateCalendarChartPoints(points, [
-    "comments_created",
-    "downvotes_received",
-    "posts_created",
-    "saves_received",
-    "shares_received",
-    "verified_psychologist_responses",
-    "upvotes_received",
-  ] as const);
+const aggregatePatientStatisticsChartPoints = (points: PatientsDetailSeriesPoint[]) =>
+  aggregateCalendarChartPoints(points, PATIENT_STATISTICS_SERIES_METRIC_KEYS);
 
-  if (chartPoints.length === 0) {
+const PatientStatisticsSeriesChart = ({
+  keys,
+  points,
+}: {
+  keys: readonly PatientStatisticsChartMetric[];
+  points: PatientsDetailSeriesPoint[];
+}) => {
+  if (keys.length === 0) {
     return (
-      <CardShell className="p-5">
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-          <div>
-            <h2 className="text-xl font-black text-foreground">Estatísticas de comunidade</h2>
-            <p className="mt-1 text-sm text-muted">
-              Nenhum ponto real de engajamento foi encontrado para o período selecionado.
-            </p>
-          </div>
-          <span className="w-fit rounded-full bg-surface-muted px-2 py-1 text-[0.65rem] font-bold text-muted">
-            {detail.period.timezone}
-          </span>
-        </div>
-        <PatientStatisticsMetricCarousel metrics={detail.metrics} />
-      </CardShell>
+      <div className="mt-5 rounded-2xl border border-dashed border-border bg-surface-muted p-6 text-sm font-bold text-muted">
+        Selecione pelo menos um contador disponível para visualizar a evolução.
+      </div>
+    );
+  }
+  if (points.length === 0) {
+    return (
+      <div className="mt-5 rounded-2xl border border-dashed border-border bg-surface-muted p-6 text-sm font-bold text-muted">
+        Nenhum ponto real de evolução foi encontrado para o período.
+      </div>
     );
   }
 
-  const maxValue = Math.max(
+  const chartPoints = aggregatePatientStatisticsChartPoints(points);
+  if (chartPoints.length === 0) {
+    return (
+      <div className="mt-5 rounded-2xl border border-dashed border-border bg-surface-muted p-6 text-sm font-bold text-muted">
+        Nenhum ponto real de evolução foi encontrado para o período.
+      </div>
+    );
+  }
+
+  const chartWidth = 1120;
+  const chartHeight = 280;
+  const padding = { bottom: 28, left: 42, right: 28, top: 28 };
+  const innerWidth = chartWidth - padding.left - padding.right;
+  const innerHeight = chartHeight - padding.top - padding.bottom;
+  const max = Math.max(
     1,
-    ...chartPoints.flatMap((point) => seriesConfig.map((item) => point[item.key])),
+    ...chartPoints.flatMap((point) => keys.map((item) => Number(point[item.key] ?? 0))),
   );
-  const chartWidth = width - padding.left - padding.right;
-  const chartHeight = height - padding.top - padding.bottom;
-  const getX = (index: number) =>
+  const xFor = (index: number) =>
     padding.left +
-    (chartPoints.length <= 1 ? chartWidth / 2 : (index * chartWidth) / (chartPoints.length - 1));
-  const getY = (value: number) => padding.top + chartHeight - (value / maxValue) * chartHeight;
-  const gridValues = [0, 0.25, 0.5, 0.75, 1].map((ratio) => Math.round(maxValue * ratio));
+    (chartPoints.length <= 1 ? innerWidth / 2 : (index / (chartPoints.length - 1)) * innerWidth);
+  const yFor = (value: number) => padding.top + innerHeight - (value / max) * innerHeight;
+  const gridValues = [0, 0.25, 0.5, 0.75, 1].map((ratio) => Math.round(max * ratio));
   const labelStep = Math.max(1, Math.ceil(chartPoints.length / 8));
   const dateLabels = chartPoints.flatMap((point, index) =>
     index % labelStep === 0 || index === chartPoints.length - 1
@@ -615,108 +1136,168 @@ const EngagementChart = ({ detail }: { detail: AdminPatientDetail }) => {
   );
 
   return (
-    <CardShell className="p-5">
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <h2 className="text-xl font-black text-foreground">Estatísticas de comunidade</h2>
-          <p className="mt-1 text-sm text-muted">
+    <div className="mt-4 w-full overflow-x-auto rounded-[1.5rem] border border-border/70 bg-surface p-4">
+      <div className="mx-auto w-full min-w-[760px] max-w-[1120px]">
+        <svg
+          aria-label="Evolução do período por contador selecionado"
+          className="block h-auto w-full"
+          height={chartHeight}
+          preserveAspectRatio="xMidYMid meet"
+          role="img"
+          viewBox={`0 0 ${chartWidth} ${chartHeight}`}
+          width={chartWidth}
+        >
+          <title>Evolução do período</title>
+          {gridValues.map((value) => {
+            const y = yFor(value);
+
+            return (
+              <g key={`patient-statistics-grid-${value}-${y}`}>
+                <line
+                  className="stroke-border"
+                  opacity="0.44"
+                  strokeDasharray={value === 0 ? "0" : "4 6"}
+                  strokeWidth="1"
+                  x1={padding.left}
+                  x2={chartWidth - padding.right}
+                  y1={y}
+                  y2={y}
+                />
+                <text
+                  className="fill-muted text-[10px] font-medium"
+                  dominantBaseline="middle"
+                  textAnchor="end"
+                  x={padding.left - 8}
+                  y={y}
+                >
+                  {numberFormatter.format(value)}
+                </text>
+              </g>
+            );
+          })}
+          {keys.map((item) => {
+            const linePoints = chartPoints.map((point, index) => ({
+              x: xFor(index),
+              y: yFor(Number(point[item.key] ?? 0)),
+            }));
+            const linePath = buildSmoothSvgPath(linePoints);
+
+            return (
+              <path
+                className={cn("fill-none opacity-90", item.strokeClassName)}
+                d={linePath}
+                key={item.id}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2.05"
+              />
+            );
+          })}
+          {keys.map((item) =>
+            chartPoints.map((point, index) => {
+              const value = Number(point[item.key] ?? 0);
+
+              return (
+                <circle
+                  className={cn("fill-surface", item.strokeClassName)}
+                  cx={xFor(index)}
+                  cy={yFor(value)}
+                  key={`${item.id}-${point.date}`}
+                  opacity={index === chartPoints.length - 1 ? "1" : "0.72"}
+                  r={index === chartPoints.length - 1 ? "3.1" : "2.1"}
+                  strokeWidth="1.45"
+                >
+                  <title>
+                    {point.tooltipLabel} · {item.label}: {numberFormatter.format(value)}
+                  </title>
+                </circle>
+              );
+            }),
+          )}
+        </svg>
+        <div
+          className="mt-1 grid gap-1"
+          style={{ gridTemplateColumns: `repeat(${dateLabels.length}, 1fr)` }}
+        >
+          {dateLabels.map(({ date, label }) => (
+            <span className="min-w-0 text-center text-[10px] font-bold text-subtle" key={date}>
+              {label}
+            </span>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const EngagementChart = ({
+  detail,
+  isRefreshing,
+  periodControls,
+}: {
+  detail: AdminPatientDetail;
+  isRefreshing: boolean;
+  periodControls: ReactNode;
+}) => {
+  const metricMap = new Map(detail.metrics.map((metric) => [metric.id, metric]));
+  const cards = PATIENT_COMMUNITY_CHART_METRICS.flatMap((config) => {
+    const metric = metricMap.get(config.id);
+
+    return metric ? [{ config, metric }] : [];
+  });
+  const [visibleMetricIds, setVisibleMetricIds] = useState<PatientCommunityChartMetricId[]>(() =>
+    PATIENT_COMMUNITY_CHART_METRICS.map((item) => item.id),
+  );
+  const visibleChartKeys = cards
+    .filter(({ config }) => visibleMetricIds.includes(config.id))
+    .map(({ config }) => config);
+  const toggleMetric = (metricId: PatientCommunityChartMetricId) => {
+    setVisibleMetricIds((current) => {
+      if (!current.includes(metricId)) return [...current, metricId];
+
+      const next = current.filter((item) => item !== metricId);
+      return next.length > 0 ? next : current;
+    });
+  };
+
+  return (
+    <CardShell className="min-w-0 max-w-full overflow-x-clip p-5">
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-start">
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-2">
+            <h2 className="text-lg font-black text-foreground">Estatísticas de comunidade</h2>
+            {isRefreshing ? (
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary-soft px-2.5 py-1 text-[11px] font-black text-primary">
+                <Loader2 aria-hidden className="h-3.5 w-3.5 animate-spin" />
+                Atualizando
+              </span>
+            ) : null}
+          </div>
+          <p className="mt-1 text-xs font-bold leading-5 text-muted">
             Dados reais de posts, comentários, respostas de psicólogos verificados, votos,
             salvamentos e compartilhamentos no período.
           </p>
         </div>
-        <span className="w-fit rounded-full bg-surface-muted px-2 py-1 text-[0.65rem] font-bold text-muted">
-          {detail.period.timezone}
-        </span>
+        {periodControls}
       </div>
-      <PatientStatisticsMetricCarousel metrics={detail.metrics} />
-      <figure className="mt-6 overflow-hidden">
-        <div className="mb-4 flex flex-wrap gap-3">
-          {seriesConfig.map((item) => (
-            <span
-              className="inline-flex items-center gap-2 text-xs font-semibold text-muted"
-              key={item.key}
-            >
-              <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: item.color }} />
-              {item.label}
-            </span>
-          ))}
-        </div>
-        <div className="w-full overflow-x-auto rounded-[1.5rem] border border-border/70 bg-surface p-4">
-          <div className="mx-auto w-full min-w-[720px] max-w-[980px]">
-            <svg
-              aria-label="Gráfico de engajamento do paciente"
-              className="block h-auto w-full"
-              height={height}
-              preserveAspectRatio="xMidYMid meet"
-              role="img"
-              viewBox={`0 0 ${width} ${height}`}
-              width={width}
-            >
-              {gridValues.map((value) => {
-                const y = getY(value);
-                return (
-                  <g key={`grid-${value}-${y}`}>
-                    <line
-                      opacity="0.58"
-                      stroke="var(--admin-border)"
-                      strokeWidth="1"
-                      x1={padding.left}
-                      x2={width - padding.right}
-                      y1={y}
-                      y2={y}
-                    />
-                    <text fill="var(--admin-muted)" fontSize="11" fontWeight="500" x="8" y={y + 4}>
-                      {numberFormatter.format(value)}
-                    </text>
-                  </g>
-                );
-              })}
-              {seriesConfig.map((item) => {
-                const linePoints = chartPoints.map((point, index) => ({
-                  x: getX(index),
-                  y: getY(point[item.key]),
-                }));
-                const path = buildSmoothSvgPath(linePoints);
-                return (
-                  <g key={item.key}>
-                    <path
-                      d={path}
-                      fill="none"
-                      opacity="0.88"
-                      stroke={item.color}
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2.05"
-                    />
-                    {linePoints.map((point, index) => (
-                      <circle
-                        cx={point.x}
-                        cy={point.y}
-                        fill="var(--admin-surface)"
-                        key={`${item.key}-${chartPoints[index].date}`}
-                        opacity={index === linePoints.length - 1 ? "1" : "0.72"}
-                        r={index === linePoints.length - 1 ? "3.1" : "2.1"}
-                        stroke={item.color}
-                        strokeWidth="1.45"
-                      />
-                    ))}
-                  </g>
-                );
-              })}
-            </svg>
-            <div
-              className="mt-1 grid gap-1"
-              style={{ gridTemplateColumns: `repeat(${dateLabels.length}, 1fr)` }}
-            >
-              {dateLabels.map(({ date, label }) => (
-                <span className="min-w-0 text-center text-[10px] font-bold text-subtle" key={date}>
-                  {label}
-                </span>
-              ))}
-            </div>
-          </div>
-        </div>
-      </figure>
+
+      <PatientStatisticsMetricCarousel
+        items={cards.map(({ config, metric }) => ({
+          content: (
+            <PatientStatisticsMetricToggleCard
+              active={visibleMetricIds.includes(config.id)}
+              config={config}
+              metric={metric}
+              onToggle={() => toggleMetric(config.id)}
+              period={detail.period}
+            />
+          ),
+          id: config.id,
+        }))}
+        title="estatísticas de comunidade"
+      />
+
+      <PatientStatisticsSeriesChart keys={visibleChartKeys} points={detail.series.points} />
     </CardShell>
   );
 };
@@ -1305,26 +1886,6 @@ const InfoCard = ({
   </CardShell>
 );
 
-const EmptyTabState = ({
-  description,
-  icon = CheckCircle2,
-  title,
-}: {
-  description: string;
-  icon?: LucideIcon;
-  title: string;
-}) => (
-  <CardShell className="p-6">
-    <div className="flex gap-3">
-      <IconCircle icon={icon} />
-      <div>
-        <h2 className="text-lg font-extrabold text-foreground">{title}</h2>
-        <p className="mt-2 text-sm leading-6 text-muted">{description}</p>
-      </div>
-    </div>
-  </CardShell>
-);
-
 const formatPatientLocation = (detail: AdminPatientDetail) => {
   const location = detail.header.location;
   if (!location) return "Não capturada";
@@ -1659,15 +2220,43 @@ const GeneralTab = ({ detail, id }: { detail: AdminPatientDetail; id: string }) 
   </div>
 );
 
-const StatisticsTab = ({ detail }: { detail: AdminPatientDetail }) => (
-  <div className="space-y-6">
-    <EngagementChart detail={detail} />
-    <div className="grid gap-6 xl:grid-cols-2">
-      <Communities detail={detail} />
-      <Heatmap detail={detail} />
+const StatisticsTab = ({ detail, id }: { detail: AdminPatientDetail; id: string }) => {
+  const statisticsFilter = usePatientStatisticsPeriodFilter(detail.header.created_at);
+  const statisticsQuery = useAdminPatientDetail(id, statisticsFilter.periodQuery, {
+    placeholderData: (previous) => previous ?? detail,
+  });
+  const errorMessage = statisticsQuery.error ? resolveApiError(statisticsQuery.error) : null;
+  const statisticsDetail = statisticsQuery.data ?? detail;
+  const isRefreshing = statisticsQuery.isFetching && Boolean(statisticsQuery.data);
+
+  if (statisticsQuery.isError && !statisticsQuery.data && errorMessage) {
+    return <ErrorState message={errorMessage} onRetry={() => void statisticsQuery.refetch()} />;
+  }
+
+  return (
+    <div className="max-w-full space-y-5 overflow-x-clip" data-patient-detail-tab="estatisticas">
+      <EngagementChart
+        detail={statisticsDetail}
+        isRefreshing={isRefreshing}
+        periodControls={
+          <PatientStatisticsPeriodControls
+            idPrefix="patient-community-statistics"
+            onDateControlsBlur={statisticsFilter.handleDateControlsBlur}
+            onDateChange={statisticsFilter.handleDateChange}
+            onPeriodChange={statisticsFilter.handlePeriodChange}
+            period={statisticsFilter.selectedPeriod}
+            range={statisticsFilter.draftRange}
+            rangeError={statisticsFilter.rangeError}
+          />
+        }
+      />
+      <div className="grid gap-5 xl:grid-cols-2">
+        <Communities detail={statisticsDetail} />
+        <Heatmap detail={statisticsDetail} />
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 const PublicationsTab = ({ detail }: { detail: AdminPatientDetail }) => {
   const publicationActivities = detail.activities.items.filter(
@@ -1685,13 +2274,447 @@ const PublicationsTab = ({ detail }: { detail: AdminPatientDetail }) => {
   );
 };
 
-const ReportsTab = () => (
-  <EmptyTabState
-    description="A V1 do detalhe de pacientes não possui contrato dedicado de denúncias nem ações de moderação para paciente. Nenhum dado foi simulado nesta aba."
-    icon={AlertTriangle}
-    title="Denúncias"
-  />
+const reportCardIcon: Record<"dismissed" | "pending" | "total" | "upheld", LucideIcon> = {
+  dismissed: CheckCircle2,
+  pending: AlertTriangle,
+  total: AlertTriangle,
+  upheld: ShieldCheck,
+};
+
+type ReportPeriodValue = "all" | "30d" | "90d" | "180d" | "custom";
+type ReportPeriodPreset = Exclude<ReportPeriodValue, "custom">;
+type ReportDateRange = {
+  from?: string;
+  to?: string;
+};
+
+const REPORT_PERIOD_OPTIONS: { id: ReportPeriodPreset; label: string }[] = [
+  { id: "all", label: "Todo o período" },
+  { id: "30d", label: "Últimos 30 dias" },
+  { id: "90d", label: "Últimos 90 dias" },
+  { id: "180d", label: "Últimos 180 dias" },
+];
+
+const getReportRangeForPeriod = (preset: ReportPeriodPreset): ReportDateRange => {
+  if (preset === "all") return { from: "", to: "" };
+
+  const days = preset === "30d" ? 30 : preset === "180d" ? 180 : 90;
+  const to = new Date();
+  const from = new Date();
+  from.setDate(to.getDate() - (days - 1));
+
+  return {
+    from: formatInputDate(from.toISOString()),
+    to: formatInputDate(to.toISOString()),
+  };
+};
+
+const reportDateFromInput = (value: string) => {
+  const [year, month, day] = value.split("-").map(Number);
+
+  return new Date(year, month - 1, day, 12, 0, 0, 0);
+};
+
+const isValidReportRange = (range: ReportDateRange) => {
+  if (!range.from || !range.to) return false;
+
+  return reportDateFromInput(range.from) <= reportDateFromInput(range.to);
+};
+
+const ReportStatusBadge = ({ group, label }: { group: string; label: string }) => {
+  const className =
+    group === "upheld"
+      ? "bg-red-50 text-danger"
+      : group === "dismissed"
+        ? "bg-emerald-50 text-success"
+        : group === "pending"
+          ? "bg-yellow-50 text-yellow-700"
+          : "bg-orange-50 text-orange-700";
+
+  return <Badge className={className}>{label}</Badge>;
+};
+
+const patientReportTitle = (report: AdminPatientReportItem) => {
+  if (report.content.type === "post") return report.content.title?.trim() || "Post sem título";
+
+  const title = report.content.title?.trim();
+  const normalizedTitle = title?.toLowerCase();
+
+  return normalizedTitle && !["comentário", "comentario"].includes(normalizedTitle) ? title : null;
+};
+
+const patientReportContentTypeLabel = (report: AdminPatientReportItem) => {
+  if (report.content.type === "post") return "Post";
+
+  const title = report.content.title?.trim().toLowerCase();
+  return title && !["comentário", "comentario"].includes(title) ? "Resposta" : "Comentário";
+};
+
+const PatientReportContentHeader = ({ report }: { report: AdminPatientReportItem }) => {
+  const TypeIcon = report.content.type === "post" ? FileText : MessageCircle;
+
+  return (
+    <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-muted">
+      <TypeIcon aria-hidden className="h-4 w-4 shrink-0" />
+      <span className="font-black">{patientReportContentTypeLabel(report)}</span>
+      <span aria-hidden className="font-bold">
+        ·
+      </span>
+      <span className="font-black">{report.content.community.name}</span>
+      <span aria-hidden className="font-bold">
+        ·
+      </span>
+      <span className="font-bold">{formatDateTime(report.content.created_at)}</span>
+    </div>
+  );
+};
+
+const PatientReportMedia = ({ report }: { report: AdminPatientReportItem }) => {
+  if (!report.content.media) return null;
+
+  const src = report.content.media.media_url;
+  const mediaType = report.content.media.media_type.toLowerCase();
+  const isVideo = mediaType.startsWith("video") || /\.(mp4|webm|mov|m4v)$/i.test(src);
+  const looksLikeImage = mediaType.startsWith("image") || /\.(png|jpe?g|webp|gif)$/i.test(src);
+  const imageSrc = !isVideo ? renderableImageSrc(src) : null;
+  const videoSrc = isVideo ? resolveAdminMediaUrl(src) : null;
+  const mediaLabel = isVideo ? "Miniplayer de vídeo denunciado" : "Miniatura de mídia denunciada";
+
+  return (
+    <div
+      className={cn(
+        "relative w-full overflow-hidden rounded-2xl border border-border bg-surface-muted",
+        isVideo ? "aspect-[9/16] max-w-40" : "h-32 max-w-72",
+      )}
+    >
+      {imageSrc && looksLikeImage ? (
+        <Image
+          alt={mediaLabel}
+          className="object-cover"
+          fill
+          sizes="288px"
+          src={imageSrc}
+          unoptimized={isPublicAdminMediaSrc(imageSrc)}
+        />
+      ) : null}
+      {videoSrc ? (
+        <video
+          aria-label={mediaLabel}
+          className="h-full w-full bg-black object-cover"
+          controls
+          muted
+          playsInline
+          preload="metadata"
+          src={videoSrc}
+        />
+      ) : null}
+      {!imageSrc && !videoSrc ? (
+        <div className="grid h-full place-items-center gap-1 p-3 text-center text-xs font-black text-muted">
+          <FileText aria-hidden className="mx-auto h-5 w-5" />
+          <span>Mídia denunciada</span>
+        </div>
+      ) : null}
+    </div>
+  );
+};
+
+const PatientReportReporterHistory = ({ report }: { report: AdminPatientReportItem }) => (
+  <section className="mt-5 border-t border-border/70 pt-4">
+    <h4 className="text-sm font-black text-foreground">Histórico de denúncias</h4>
+    <div className="mt-3 divide-y divide-border/70">
+      <article
+        className="py-2 text-sm"
+        title={`${report.reported_by.name} · ${formatDateTime(report.created_at)} · Motivo: ${
+          report.reason_label
+        }${report.description ? ` · ${report.description}` : ""}`}
+      >
+        <div className="flex min-w-0 flex-wrap items-center gap-2">
+          <Badge className="bg-surface-muted text-muted">{report.reported_by.label}</Badge>
+          <span className="shrink-0 font-normal text-foreground">{report.reported_by.name}</span>
+          <span className="inline-flex shrink-0 items-center gap-1 text-xs font-bold text-muted">
+            <CalendarDays aria-hidden className="h-3.5 w-3.5" />
+            {formatDateTime(report.created_at)}
+          </span>
+          <span aria-hidden className="shrink-0 text-muted/70">
+            ·
+          </span>
+          <span className="min-w-0 truncate font-bold text-foreground">
+            Motivo: {report.reason_label}
+          </span>
+        </div>
+        {report.description ? (
+          <p className="mt-1 line-clamp-2 text-sm leading-5 text-muted">{report.description}</p>
+        ) : null}
+      </article>
+    </div>
+  </section>
 );
+
+const PatientReportListItem = ({ report }: { report: AdminPatientReportItem }) => {
+  const title = patientReportTitle(report);
+
+  return (
+    <article className="rounded-card border border-border/75 bg-surface/95 p-4 shadow-admin-soft md:p-5">
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex flex-wrap items-center gap-2">
+          <ReportStatusBadge group={report.status_group} label={report.status_label} />
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-primary-soft px-2.5 py-1 text-xs font-black text-primary">
+            <AlertTriangle aria-hidden className="h-3.5 w-3.5" />1 denúncia
+          </span>
+          <span className="inline-flex items-center gap-1.5 text-xs font-bold text-muted">
+            <CalendarDays aria-hidden className="h-3.5 w-3.5" />
+            Última em {formatDateTime(report.created_at)}
+          </span>
+        </div>
+        {report.content.available && report.content.public_url ? (
+          <Link
+            aria-label="Ver conteúdo público"
+            className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-foreground/75 transition hover:text-foreground"
+            href={toPublicHref(report.content.public_url)}
+            rel="noreferrer"
+            target="_blank"
+            title="Ver conteúdo público"
+          >
+            <Eye aria-hidden className="h-4 w-4" />
+          </Link>
+        ) : null}
+      </div>
+      <section className="mt-4">
+        <p className="text-[0.68rem] font-black uppercase tracking-wide text-muted">
+          Conteúdo denunciado
+        </p>
+        <PatientReportContentHeader report={report} />
+        {title ? <h3 className="mt-3 text-lg font-black text-foreground">{title}</h3> : null}
+        <div className="mt-3 space-y-4">
+          <div className="min-w-0 whitespace-pre-wrap text-sm leading-6 text-muted">
+            {report.content.body || report.content.excerpt || "Conteúdo sem texto disponível."}
+          </div>
+          {report.content.media ? (
+            <div className="max-w-72">
+              <PatientReportMedia report={report} />
+            </div>
+          ) : null}
+        </div>
+        {!report.content.available ? (
+          <p className="mt-3 rounded-2xl border border-danger/15 bg-danger/10 p-3 text-xs font-bold leading-5 text-danger">
+            {report.content.unavailable_reason || "Conteúdo removido ou indisponível."}
+          </p>
+        ) : null}
+      </section>
+      <PatientReportReporterHistory report={report} />
+    </article>
+  );
+};
+
+const ReportsLoadingState = () => (
+  <div className="space-y-5" data-patient-reports-loading="true">
+    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      {["total", "pending", "dismissed", "upheld"].map((card) => (
+        <CardShell className="h-[8.75rem] animate-pulse bg-surface-muted" key={card} />
+      ))}
+    </div>
+    <CardShell className="h-[8.25rem] animate-pulse bg-surface-muted" />
+    <div className="space-y-4">
+      {["first", "second"].map((item) => (
+        <CardShell className="h-60 animate-pulse bg-surface-muted" key={item} />
+      ))}
+    </div>
+  </div>
+);
+
+const ReportsTab = ({ id }: { id: string }) => {
+  const [selectedPeriod, setSelectedPeriod] = useState<ReportPeriodValue>("all");
+  const [appliedRange, setAppliedRange] = useState<ReportDateRange>(() =>
+    getReportRangeForPeriod("all"),
+  );
+  const [draftRange, setDraftRange] = useState<ReportDateRange>(() =>
+    getReportRangeForPeriod("all"),
+  );
+  const [rangeError, setRangeError] = useState<string | null>(null);
+  const [type, setType] = useState<AdminPatientReportsQuery["type"]>("all");
+  const [status, setStatus] = useState<AdminPatientReportsQuery["status"]>("all");
+  const [page, setPage] = useState(1);
+  const queryInput = useMemo<AdminPatientReportsQuery>(
+    () => ({
+      ...appliedRange,
+      limit: 5,
+      page,
+      status,
+      type,
+    }),
+    [appliedRange, page, status, type],
+  );
+  const query = useAdminPatientReports(id, queryInput);
+  const errorMessage = query.error ? resolveApiError(query.error) : null;
+  const handleReportPeriodChange = (value: ReportPeriodPreset) => {
+    const nextRange = getReportRangeForPeriod(value);
+
+    setRangeError(null);
+    setSelectedPeriod(value);
+    setDraftRange(nextRange);
+    setAppliedRange(nextRange);
+    setPage(1);
+  };
+  const handleReportDateChange = (field: keyof ReportDateRange, value: string) => {
+    setRangeError(null);
+    setSelectedPeriod("custom");
+    setDraftRange((current) => ({
+      ...current,
+      [field]: value,
+    }));
+  };
+  const commitReportRange = () => {
+    if (!isValidReportRange(draftRange)) {
+      setRangeError(
+        "Informe um período personalizado completo, com data inicial menor ou igual à final.",
+      );
+      return;
+    }
+
+    setRangeError(null);
+    setAppliedRange(draftRange);
+    setPage(1);
+  };
+  const handleReportDateControlsBlur = (event: {
+    currentTarget: HTMLDivElement;
+    relatedTarget: EventTarget | null;
+  }) => {
+    const currentTarget = event.currentTarget;
+    const nextFocusedElement = event.relatedTarget as Node | null;
+
+    if (nextFocusedElement && currentTarget.contains(nextFocusedElement)) return;
+
+    window.setTimeout(() => {
+      const activeElement = document.activeElement;
+
+      if (activeElement && currentTarget.contains(activeElement)) return;
+
+      commitReportRange();
+    }, 0);
+  };
+
+  if (query.isLoading) return <ReportsLoadingState />;
+  if (query.isError && errorMessage) {
+    return <ErrorState message={errorMessage} onRetry={() => void query.refetch()} />;
+  }
+  if (!query.data) return null;
+
+  const reports = query.data;
+
+  return (
+    <div className="space-y-5" data-patient-detail-tab="denuncias">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        {reports.cards.map((card) => {
+          const Icon = reportCardIcon[card.id];
+
+          return (
+            <CardShell className="p-5" key={card.id}>
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <p className="text-sm font-black text-foreground">{card.label}</p>
+                  <p className="mt-5 text-4xl font-black text-foreground">
+                    {numberFormatter.format(card.value)}
+                  </p>
+                </div>
+                <IconCircle icon={Icon} />
+              </div>
+            </CardShell>
+          );
+        })}
+      </div>
+
+      <CardShell className="p-4">
+        <div className="grid gap-3 lg:grid-cols-[1fr_1fr_1fr_2fr] lg:items-end">
+          <DetailFilterSelect
+            label="Tipo"
+            onChange={(nextValue) => {
+              setType(nextValue as AdminPatientReportsQuery["type"]);
+              setPage(1);
+            }}
+            value={type ?? "all"}
+          >
+            {reports.filters.types.map((option) => (
+              <option key={option.id} value={option.id}>
+                {option.label} ({numberFormatter.format(option.count)})
+              </option>
+            ))}
+          </DetailFilterSelect>
+          <DetailFilterSelect
+            label="Status"
+            onChange={(nextValue) => {
+              setStatus(nextValue as AdminPatientReportsQuery["status"]);
+              setPage(1);
+            }}
+            value={status ?? "all"}
+          >
+            {reports.filters.statuses.map((option) => (
+              <option key={option.id} value={option.id}>
+                {option.label} ({numberFormatter.format(option.count)})
+              </option>
+            ))}
+          </DetailFilterSelect>
+          <DetailFilterSelect
+            label="Período"
+            onChange={(nextValue) => {
+              handleReportPeriodChange(nextValue as ReportPeriodPreset);
+            }}
+            value={selectedPeriod}
+          >
+            {selectedPeriod === "custom" ? (
+              <option disabled hidden value="custom">
+                Personalizado
+              </option>
+            ) : null}
+            {REPORT_PERIOD_OPTIONS.map((option) => (
+              <option key={option.id} value={option.id}>
+                {option.label}
+              </option>
+            ))}
+          </DetailFilterSelect>
+          <div className="grid gap-3 sm:grid-cols-2" onBlur={handleReportDateControlsBlur}>
+            <label className="block text-sm font-black text-muted">
+              De
+              <input
+                className="mt-2 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground"
+                max={draftRange.to || undefined}
+                onChange={(event) => handleReportDateChange("from", event.target.value)}
+                type="date"
+                value={draftRange.from ?? ""}
+              />
+            </label>
+            <label className="block text-sm font-black text-muted">
+              Até
+              <input
+                className="mt-2 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground"
+                min={draftRange.from || undefined}
+                onChange={(event) => handleReportDateChange("to", event.target.value)}
+                type="date"
+                value={draftRange.to ?? ""}
+              />
+            </label>
+          </div>
+        </div>
+        {rangeError ? <p className="mt-3 text-xs font-bold text-danger">{rangeError}</p> : null}
+      </CardShell>
+
+      <section className="space-y-4" aria-label="Denúncias recebidas">
+        {reports.data.length === 0 ? (
+          <CardShell className="p-5">
+            <p className="text-sm font-bold text-muted">
+              Nenhuma denúncia real encontrada para os filtros atuais.
+            </p>
+          </CardShell>
+        ) : (
+          reports.data.map((item) => <PatientReportListItem key={item.id} report={item} />)
+        )}
+
+        <CardShell className="p-4">
+          <ActivitiesPagination page={reports.page} pages={reports.pages} setPage={setPage} />
+        </CardShell>
+      </section>
+    </div>
+  );
+};
 
 const booleanBadge = (value: boolean, labels: { false: string; true: string }) => (
   <Badge className={value ? "bg-emerald-50 text-success" : "bg-orange-50 text-orange-700"}>
@@ -2480,11 +3503,11 @@ const DetailContent = ({
     {tab === "perfil" ? (
       <ProfileRegistrationTab detail={detail} />
     ) : tab === "estatisticas" ? (
-      <StatisticsTab detail={detail} />
+      <StatisticsTab detail={detail} id={id} />
     ) : tab === "publicacoes" ? (
       <PublicationsTab detail={detail} />
     ) : tab === "denuncias" ? (
-      <ReportsTab />
+      <ReportsTab id={id} />
     ) : tab === "atividades" ? (
       <ActivitiesTab id={id} />
     ) : tab === "conta" ? (
@@ -2498,7 +3521,7 @@ export const AdminPatientDetailClient = ({ id }: { id: string }) => {
   const searchParams = useSearchParams();
   const requestedTab = searchParams.get("tab");
   const tab: PatientDetailTab = isPatientDetailTab(requestedTab) ? requestedTab : "geral";
-  const query = useAdminPatientDetail(id, { period: "month" });
+  const query = useAdminPatientDetail(id, { period: "all" });
   const queryError = query.error ? resolveApiError(query.error) : null;
 
   return (
