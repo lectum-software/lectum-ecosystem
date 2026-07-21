@@ -13,6 +13,7 @@ import {
 export const adminNavItems = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutGrid },
   { label: "Tráfego", href: "/trafego", icon: ChartNoAxesCombined },
+  { label: "Moderação", href: "/moderacao", icon: ShieldAlert, badge: "moderation" },
   {
     label: "Comunidades",
     href: "/comunidades",
@@ -22,7 +23,6 @@ export const adminNavItems = [
       { label: "Lista de Comunidades", href: "/comunidades/lista" },
     ],
   },
-  { label: "Moderação", href: "/moderacao", icon: ShieldAlert, badge: "moderation" },
   {
     label: "Psicólogos",
     href: "/psicologos",
