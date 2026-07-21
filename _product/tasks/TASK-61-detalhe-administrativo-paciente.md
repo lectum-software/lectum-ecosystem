@@ -626,3 +626,26 @@ Frontend esperado:
 - `pnpm check`
 - Smoke HTTP local: `/pacientes/cmrqsrab5001f1guh2ve5oy90?tab=estatisticas` retornou `200`.
 - Service local: `showAdminPatient({ period: "all" })` retornou votos separados e diagnostico para pacientes com atividade real, e lista vazia para pacientes sem atividade.
+
+## Ajuste pos-feedback 2026-07-21 - Tabela de Comunidades ativas do paciente
+
+- Pedido do usuario: na tabela **Comunidades ativas** do paciente, remover as colunas **Interacoes** e **Status**, adicionar a tag **Seguindo**/**Nao seguindo** junto ao nome da comunidade e encurtar **Diagnostico de Engajamento** para **Engajamento**.
+- A alteracao e somente visual no Admin; os dados reais de `interactions`, `is_member` e `engagement_diagnosis` continuam no contrato para ordenacao, compatibilidade e leituras futuras.
+- A tabela permanece mobile-first com rolagem horizontal controlada, mas com largura minima menor por ter menos colunas.
+- Nao houve alteracao de backend, API, Prisma schema, migrations, packages, mocks, seeds ou dados artificiais; `pnpm --dir backend db:migrate` nao foi necessario.
+- Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente; a validacao visual usou o screenshot enviado pelo usuario em 2026-07-21 e o PNG local `_product/proto/admin/Pacientes/Pacientes - Detalhes.png`.
+- ADR atualizado: `adrs/0300-diagnostico-engajamento-comunidades-admin.md`.
+
+### Criterios de aceite do ajuste
+
+- [x] Colunas **Interacoes** e **Status** nao aparecem na tabela de comunidades ativas do paciente.
+- [x] A tag **Seguindo**/**Nao seguindo** aparece junto ao nome da comunidade.
+- [x] A coluna **Diagnostico de Engajamento** aparece como **Engajamento**.
+- [x] Nenhum mock, seed, endpoint simulado, migration ou package novo foi adicionado.
+
+### Validacao complementar executada
+
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check`
+- Smoke HTTP local: `/pacientes/cmrqsrab5001f1guh2ve5oy90?tab=estatisticas` retornou `200`.

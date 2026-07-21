@@ -1839,10 +1839,10 @@ const PatientActiveCommunitiesBlock = ({
       </p>
     ) : (
       <div className="mt-5 overflow-x-auto rounded-[1.35rem] border border-border bg-surface">
-        <table className="w-full min-w-[1120px] border-collapse text-left">
+        <table className="w-full min-w-[980px] border-collapse text-left">
           <caption className="sr-only">
-            Lista de comunidades ativas do paciente por interações, posts, comentários, upvotes,
-            downvotes, salvamentos, diagnóstico de engajamento e status de membro no período.
+            Lista de comunidades ativas do paciente por comunidade, posts, comentários, upvotes,
+            downvotes, salvamentos e engajamento, com status de seguimento junto ao nome.
           </caption>
           <thead className="bg-surface-muted/80">
             <tr className="text-xs font-black text-muted">
@@ -1865,13 +1865,7 @@ const PatientActiveCommunitiesBlock = ({
                 Salvamentos
               </th>
               <th className="px-4 py-3 text-center" scope="col">
-                Diagnóstico de Engajamento
-              </th>
-              <th className="px-4 py-3 text-center" scope="col">
-                Status
-              </th>
-              <th className="px-4 py-3 text-center" scope="col">
-                Interações
+                Engajamento
               </th>
             </tr>
           </thead>
@@ -1888,8 +1882,20 @@ const PatientActiveCommunitiesBlock = ({
                     <div className="flex min-w-0 items-center gap-3">
                       <CommunityAvatar community={community} index={index} />
                       <span className="min-w-0">
-                        <span className="block max-w-[18rem] truncate text-sm font-black text-foreground">
-                          {community.name}
+                        <span className="flex min-w-0 items-center gap-2">
+                          <span className="block max-w-[18rem] truncate text-sm font-black text-foreground">
+                            {community.name}
+                          </span>
+                          <Badge
+                            className={cn(
+                              "shrink-0 whitespace-nowrap",
+                              community.is_member
+                                ? "bg-success/10 text-success"
+                                : "bg-surface-muted text-muted",
+                            )}
+                          >
+                            {community.is_member ? "Seguindo" : "Não seguindo"}
+                          </Badge>
                         </span>
                         <span className="mt-1 block text-xs font-bold text-muted">
                           {formatPatientCommunityPeriodActions(community.interactions)}
@@ -1916,28 +1922,6 @@ const PatientActiveCommunitiesBlock = ({
                     <Badge className={patientCommunityEngagementDiagnosisClassName(diagnosis.id)}>
                       {diagnosis.label}
                     </Badge>
-                  </td>
-                  <td className="px-4 py-4 text-center">
-                    <Badge
-                      className={cn(
-                        "whitespace-nowrap",
-                        community.is_member
-                          ? "bg-success/10 text-success"
-                          : "bg-surface-muted text-muted",
-                      )}
-                    >
-                      {community.is_member ? "Membro" : "Sem vínculo ativo"}
-                    </Badge>
-                  </td>
-                  <td className="px-4 py-4 text-center">
-                    <span className="block text-sm font-black text-foreground">
-                      {numberFormatter.format(community.interactions)}
-                    </span>
-                    {community.member_since ? (
-                      <span className="mt-1 block text-xs font-bold leading-5 text-muted">
-                        membro desde {formatDateTime(community.member_since)}
-                      </span>
-                    ) : null}
                   </td>
                 </tr>
               );

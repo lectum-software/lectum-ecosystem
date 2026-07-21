@@ -61,3 +61,10 @@ Tambem foi solicitado separar votos em **Upvotes** e **Downvotes** para entender
 - A coluna **Diagnostico de Engajamento** foi renomeada para **Engajamento** apenas na UI; o contrato permanece `engagement_diagnosis`.
 - O status **Seguindo**/**Nao seguindo** passou a aparecer junto ao nome da comunidade, e a ordem visual passou a ser **Comunidade**, **Ranking**, **Posts**, **Respostas**, **Cobertura** e **Engajamento**.
 - A decisao nao remove os campos de votos do backend, pois eles seguem uteis para API, pacientes e leituras futuras.
+
+## Ajuste visual paciente 2026-07-21
+
+- No detalhe administrativo do paciente, a tabela **Comunidades ativas** deixou de exibir as colunas **Interacoes** e **Status** para reduzir ruido visual.
+- O status de participacao passou a aparecer como **Seguindo**/**Nao seguindo** junto ao nome da comunidade, usando o booleano real `is_member`.
+- A coluna **Diagnostico de Engajamento** foi renomeada para **Engajamento** apenas na UI; o contrato permanece `engagement_diagnosis`.
+- A decisao nao remove `interactions` nem `is_member` do backend, pois seguem necessarios para ordenacao, compatibilidade e futuras leituras operacionais.
