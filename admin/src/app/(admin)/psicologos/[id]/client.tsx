@@ -5037,7 +5037,7 @@ const PublicationsTab = ({ createdAt, id }: { createdAt: string; id: string }) =
         {rangeError ? <p className="mt-3 text-xs font-bold text-danger">{rangeError}</p> : null}
       </CardShell>
 
-      <CardShell className="p-5">
+      <section className="space-y-5">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h2 className="text-xl font-black text-foreground">Publicações</h2>
@@ -5047,7 +5047,7 @@ const PublicationsTab = ({ createdAt, id }: { createdAt: string; id: string }) =
             </p>
           </div>
           <label
-            className="relative flex h-11 w-full cursor-pointer items-center gap-2 rounded-control border border-border bg-surface px-3 pr-10 text-xs font-black text-muted transition focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 sm:w-64"
+            className="relative flex h-11 w-full cursor-pointer items-center gap-2 rounded-control border border-border bg-transparent px-3 pr-10 text-xs font-black text-muted transition focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 sm:w-64"
             htmlFor="publications-sort"
           >
             <span className="shrink-0">Ordenar</span>
@@ -5077,7 +5077,7 @@ const PublicationsTab = ({ createdAt, id }: { createdAt: string; id: string }) =
           </label>
         </div>
 
-        <div className="mt-5 space-y-3">
+        <div className="space-y-3">
           {publications.data.length === 0 ? (
             <p className="rounded-2xl bg-surface-muted p-4 text-sm font-bold text-muted">
               Nenhuma publicação real encontrada para os filtros atuais.
@@ -5122,14 +5122,14 @@ const PublicationsTab = ({ createdAt, id }: { createdAt: string; id: string }) =
           })}
         </div>
 
-        <div className="mt-5">
+        <div>
           <PublicationsPagination
             page={publications.page}
             pages={publications.pages}
             setPage={handlePageChange}
           />
         </div>
-      </CardShell>
+      </section>
     </div>
   );
 };

@@ -380,3 +380,16 @@ Decisão complementar:
 - Manter a abordagem mobile-first: descrição primeiro, mídia abaixo e métricas depois, progredindo para telas maiores sem inverter a ordem.
 
 Consequência: os cards de publicações ficam alinhados ao pedido de produto e evitam que a mídia anteceda ou concorra lateralmente com a descrição, sem mocks, seeds ou dados artificiais.
+
+## Emenda 2026-07-20 - area de cabecalho transparente em Publicacoes
+
+A aba **Publicacoes** do detalhe do psicologo no Admin nao deve envolver o titulo, o contador **Mostrando X de X registros** e o filtro **Ordenar** em um card branco unico. O unico fundo branco persistente dessa area deve pertencer aos blocos/cards individuais de publicacao.
+
+Decisao complementar:
+
+- Remover o `CardShell` que envolvia cabecalho, lista e paginacao da secao de publicacoes.
+- Manter o titulo, contador e filtro de ordenacao diretamente sobre o fundo da pagina, preservando o layout mobile-first.
+- Deixar o controle de ordenacao sem preenchimento branco proprio, mantendo borda/foco acessiveis.
+- Preservar `bg-surface` apenas nos artigos/cards de publicacao, sem alterar dados, contrato de API, backend, schema ou metricas.
+
+Consequencia: a hierarquia visual fica mais leve e alinhada ao pedido de produto, com destaque nos blocos de conteudo reais e sem criar componente, endpoint, mock ou dependencia nova.
