@@ -305,3 +305,19 @@ Frontend esperado:
 - `pnpm --dir admin build`
 - `pnpm check`
 - Smoke HTTP local: `GET http://localhost:3002/configuracoes` retornou `200`.
+
+## Ajuste complementar 2026-07-21 - Ordem publica das categorias de especialidade
+
+- Pedido do usuario: a ordem das categorias definida em **Configuracoes** deve aparecer igual no filtro de especialidades dos pacientes e na edicao/setup de perfil dos psicologos no site publico.
+- O filtro publico `/psychologists` passa a montar os grupos de especialidade usando `filters.specialty_categories` como fonte explicita de ordenacao e rotulo; `filters.specialties` alimenta apenas os itens dentro de cada grupo.
+- O setup/edicao profissional `/app/professional/profile/setup` passa a montar os grupos usando `catalogs.specialty_categories` como fonte explicita de ordenacao e rotulo; `catalogs.specialties` alimenta apenas os itens dentro de cada grupo.
+- O fallback honesto **Outras especialidades** permanece apenas para especialidades sem categoria persistida.
+- Nao houve alteracao de backend, Prisma/migrations, packages, contratos HTTP, formularios RHF/Zod ou dados fake/mock.
+
+### Validacao complementar executada
+
+- `pnpm --dir frontend exec biome check --write "src/app/app/psychologists/filter-options.ts" "src/app/app/psychologists/use-form.tsx" "src/app/app/professional/profile/setup/logic.tsx"`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- Smoke HTTP local: `GET http://localhost:3000/psychologists` retornou `200` e `GET http://localhost:3000/app/professional/profile/setup` retornou redirecionamento esperado `307` sem sessao CLI.

@@ -39,7 +39,10 @@ import { Controller, type FieldPath, useFieldArray } from "react-hook-form";
 import { toast } from "sonner";
 import { useAccount } from "@/api/callers/account";
 import { usePsychologistFreeProfile } from "@/api/callers/psychologist-free-profile";
-import type { FreeProfileCatalogItem } from "@/api/generator/types/free-profile";
+import type {
+  FreeProfileCatalogCategory,
+  FreeProfileCatalogItem,
+} from "@/api/generator/types/free-profile";
 import { AccountDeleteSection } from "@/components/account/account-delete-section";
 import { components } from "@/components/controllers";
 import { Container } from "@/components/controllers/container";
@@ -94,6 +97,18 @@ type CatalogTagGroup = {
 const catalogCollator = new Intl.Collator("pt-BR", { sensitivity: "base" });
 
 const compareCatalogItems = (left: FreeProfileCatalogItem, right: FreeProfileCatalogItem) => {
+  const leftPosition = left.position ?? Number.POSITIVE_INFINITY;
+  const rightPosition = right.position ?? Number.POSITIVE_INFINITY;
+
+  if (leftPosition !== rightPosition) return leftPosition - rightPosition;
+
+  return catalogCollator.compare(left.name, right.name);
+};
+
+const compareCatalogCategories = (
+  left: FreeProfileCatalogCategory,
+  right: FreeProfileCatalogCategory,
+) => {
   const leftPosition = left.position ?? Number.POSITIVE_INFINITY;
   const rightPosition = right.position ?? Number.POSITIVE_INFINITY;
 
@@ -1000,15 +1015,32 @@ export const ProfessionalProfileSetupLogic = () => {
       string,
       {
         items: FreeProfileCatalogItem[];
+        order: number;
         position: number;
         title: string;
       }
     >();
 
+    const categories = [...(profile.data?.catalogs.specialty_categories || [])].sort(
+      compareCatalogCategories,
+    );
+
+    for (const [order, category] of categories.entries()) {
+      if (!category.active) continue;
+
+      groups.set(category.id, {
+        items: [],
+        order,
+        position: category.position ?? Number.POSITIVE_INFINITY,
+        title: category.name,
+      });
+    }
+
     for (const item of profile.data?.catalogs.specialties || []) {
       const key = item.category?.id || "uncategorized";
       const current = groups.get(key) ?? {
         items: [],
+        order: groups.size,
         position: item.category?.position ?? Number.POSITIVE_INFINITY,
         title: item.category?.name || "Outras especialidades",
       };
@@ -1018,7 +1050,9 @@ export const ProfessionalProfileSetupLogic = () => {
     }
 
     return Array.from(groups.values())
+      .filter((group) => group.items.length > 0)
       .sort((left, right) => {
+        if (left.order !== right.order) return left.order - right.order;
         if (left.position !== right.position) return left.position - right.position;
 
         return catalogCollator.compare(left.title, right.title);
@@ -1026,9 +1060,8 @@ export const ProfessionalProfileSetupLogic = () => {
       .map((group) => ({
         items: group.items.sort(compareCatalogItems),
         title: group.title,
-      }))
-      .filter((group) => group.items.length > 0);
-  }, [profile.data?.catalogs.specialties]);
+      }));
+  }, [profile.data?.catalogs.specialties, profile.data?.catalogs.specialty_categories]);
   const orderedServiceOptions = useMemo(
     () => [...(profile.data?.catalogs.services || [])].sort(compareCatalogItems),
     [profile.data?.catalogs.services],
