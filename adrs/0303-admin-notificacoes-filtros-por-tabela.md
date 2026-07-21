@@ -42,3 +42,30 @@ Em seguida, o usuário solicitou que o status de campanhas manuais deixasse de e
 - `pnpm --dir backend build` — OK.
 - `pnpm check` — OK.
 - Smoke HTTP local em `/notificacoes` — OK.
+
+## Complemento 2026-07-21 - CTA e topo simplificado
+
+### Contexto
+
+Depois da migra??o do status para os filtros de **Campanhas manuais**, o usu?rio solicitou nova simplifica??o visual: remover os filtros de per?odo/data do header, mover o CTA **Nova notifica??o** para o card de campanhas, retirar o aviso operacional, encurtar a contagem, remover a divis?ria acima dos filtros e ajustar o grid para o ?ltimo campo de data n?o encostar na borda.
+
+### Decis?o
+
+- O header de Notifica??es n?o possui mais controles de **Per?odo**, **De** ou **At?**; m?tricas continuam fixas em **Todo o per?odo**.
+- O CTA **Nova notifica??o** pertence ao cabe?alho do card **Campanhas manuais**, junto da contagem da tabela que ele afeta.
+- O aviso operacional ?Esta tela cria campanhas manuais...? foi removido e a contagem fica apenas como `0 campanha(s) encontrada(s).` quando n?o h? registros.
+- Os campos de filtro iniciam diretamente abaixo do cabe?alho do card, sem linha divis?ria; o grid usa `min-w-0`, padding `md:p-5` e colunas responsivas para preservar a margem do campo **Data: At?**.
+
+### Consequ?ncias
+
+- O topo da p?gina fica mais calmo e o bot?o de cria??o fica associado ao contexto de campanhas manuais.
+- Os controles de data continuam dispon?veis por tabela, sem duplicidade no header.
+- A largura dos filtros evita corte visual em desktop sem alterar contratos HTTP, backend ou persist?ncia.
+
+### Valida??o
+
+- `pnpm --dir admin exec biome check "src/app/(admin)/notificacoes/client.tsx"` ? OK.
+- `pnpm --dir admin exec eslint "src/app/(admin)/notificacoes/client.tsx"` ? OK.
+- `pnpm --dir admin check` ? OK.
+- `pnpm --dir admin build` ? OK.
+- Smoke HTTP local em `/notificacoes` ? OK.

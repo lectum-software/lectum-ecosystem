@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -14,7 +14,6 @@ import {
   Edit3,
   Eye,
   Loader2,
-  Megaphone,
   MousePointerClick,
   Plus,
   RefreshCw,
@@ -354,115 +353,29 @@ const MetricsGrid = ({ metrics }: { metrics: AdminNotificationMetrics }) => {
   );
 };
 
-const Header = ({
-  onDateChange,
-  onDateControlsBlur,
-  onNew,
-  onPeriodChange,
-  period,
-  range,
-  rangeError,
-}: {
-  onDateChange: (field: keyof NotificationRange, value: string) => void;
-  onDateControlsBlur: FocusEventHandler<HTMLDivElement>;
-  onNew: () => void;
-  onPeriodChange: (period: NotificationPeriodPreset) => void;
-  period: NotificationPeriodValue;
-  range: NotificationRange;
-  rangeError: string | null;
-}) => (
+const Header = () => (
   <CardShell className="p-5 md:p-6">
-    <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
-      <div className="min-w-0">
-        <p className="text-xs font-semibold uppercase tracking-[0.12em] text-primary">
-          Campanhas e logs
-        </p>
-        <h1 className="mt-2 text-3xl font-bold tracking-tight text-foreground md:text-4xl">
-          Notificações
-        </h1>
-        <p className="mt-2 max-w-3xl text-sm font-medium leading-6 text-muted md:text-base">
-          Gerencie e envie notificações reais para usuários da plataforma. Esta área não é uma caixa
-          de entrada do administrador.
-        </p>
-      </div>
-      <div className="flex flex-col gap-3 xl:items-end">
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-[minmax(10rem,0.9fr)_minmax(9rem,0.8fr)_minmax(9rem,0.8fr)_auto]">
-          <label
-            className="grid gap-1 text-xs font-semibold text-muted"
-            htmlFor="notifications-period"
-          >
-            Período
-            <span className="relative">
-              <select
-                className="h-11 w-full min-w-[170px] appearance-none rounded-control border border-border bg-surface py-0 pl-3 pr-11 text-sm font-semibold text-foreground shadow-control outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
-                id="notifications-period"
-                onChange={(event) => onPeriodChange(event.target.value as NotificationPeriodPreset)}
-                value={period}
-              >
-                {period === "custom" ? (
-                  <option disabled hidden value="custom">
-                    Personalizado
-                  </option>
-                ) : null}
-                {NOTIFICATION_PERIOD_OPTIONS.map((option) => (
-                  <option key={option.id} value={option.id}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-              <ChevronDown
-                aria-hidden
-                className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground"
-              />
-            </span>
-          </label>
-          <div className="contents" onBlur={onDateControlsBlur}>
-            <label className="text-xs font-semibold text-muted">
-              De
-              <input
-                className="mt-1 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-semibold text-foreground shadow-control transition focus:border-primary"
-                max={range.to || undefined}
-                onChange={(event) => onDateChange("from", event.target.value)}
-                type="date"
-                value={range.from}
-              />
-            </label>
-            <label className="text-xs font-semibold text-muted">
-              Até
-              <input
-                className="mt-1 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-semibold text-foreground shadow-control transition focus:border-primary"
-                min={range.from || undefined}
-                onChange={(event) => onDateChange("to", event.target.value)}
-                type="date"
-                value={range.to}
-              />
-            </label>
-          </div>
-          <button
-            className="inline-flex h-11 min-w-[188px] items-center justify-center gap-2 rounded-control bg-primary px-4 text-sm font-bold text-white shadow-admin-soft transition hover:bg-primary-hover sm:col-span-2 xl:col-span-1 xl:self-end"
-            onClick={onNew}
-            type="button"
-          >
-            <Plus aria-hidden className="h-4 w-4" />
-            Nova notificação
-          </button>
-        </div>
-        {period === "custom" && rangeError ? (
-          <p className="text-xs font-bold text-danger">{rangeError}</p>
-        ) : null}
-      </div>
+    <div className="min-w-0">
+      <p className="text-xs font-semibold uppercase tracking-[0.12em] text-primary">
+        Campanhas e logs
+      </p>
+      <h1 className="mt-2 text-3xl font-bold tracking-tight text-foreground md:text-4xl">
+        Notificações
+      </h1>
+      <p className="mt-2 max-w-3xl text-sm font-medium leading-6 text-muted md:text-base">
+        Gerencie e envie notificações reais para usuários da plataforma. Esta área não é uma caixa
+        de entrada do administrador.
+      </p>
     </div>
   </CardShell>
 );
 
 const NotificationTableFiltersBlock = ({
-  description,
   filters,
   onDateChange,
   onDateControlsBlur,
   onFiltersChange,
   onPeriodChange,
-  onReset,
   onStatusChange,
   period,
   range,
@@ -470,15 +383,12 @@ const NotificationTableFiltersBlock = ({
   searchPlaceholder,
   status,
   statusOptions,
-  title,
 }: {
-  description: string;
   filters: NotificationTableFilters;
   onDateChange: (field: keyof NotificationRange, value: string) => void;
   onDateControlsBlur: FocusEventHandler<HTMLDivElement>;
   onFiltersChange: (filters: NotificationTableFilters) => void;
   onPeriodChange: (period: NotificationPeriodPreset) => void;
-  onReset: () => void;
   onStatusChange?: (value: string) => void;
   period: NotificationPeriodValue;
   range: NotificationRange;
@@ -486,145 +396,141 @@ const NotificationTableFiltersBlock = ({
   searchPlaceholder: string;
   status?: string;
   statusOptions?: ReadonlyArray<{ label: string; value: string }>;
-  title: string;
-}) => (
-  <div className="border-b border-border bg-surface/80 p-4">
-    <div className="hidden flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
-      <div>
-        <p className="text-xs font-semibold uppercase tracking-[0.12em] text-primary">Filtros</p>
-        <h2 className="mt-1 text-lg font-bold text-foreground">{title}</h2>
-        <p className="mt-1 text-sm font-medium text-muted">{description}</p>
-      </div>
-      <button
-        className="mt-3 h-11 rounded-control border border-border bg-surface px-4 text-sm font-bold text-muted transition hover:border-border-strong hover:text-foreground sm:mt-0"
-        onClick={onReset}
-        type="button"
+}) => {
+  const hasStatusFilter = Boolean(statusOptions && status !== undefined && onStatusChange);
+
+  return (
+    <div className="bg-surface/80 p-4 md:p-5">
+      <div
+        className={cn(
+          "grid gap-3 md:grid-cols-2 xl:grid-cols-3",
+          hasStatusFilter
+            ? "2xl:grid-cols-[minmax(14rem,1.3fr)_minmax(8.5rem,0.75fr)_minmax(8rem,0.7fr)_minmax(8.5rem,0.75fr)_minmax(9.5rem,0.8fr)_minmax(20rem,1.25fr)]"
+            : "2xl:grid-cols-[minmax(14rem,1.4fr)_minmax(8.5rem,0.8fr)_minmax(8rem,0.75fr)_minmax(9.5rem,0.8fr)_minmax(20rem,1.25fr)]",
+        )}
       >
-        Limpar filtros
-      </button>
-    </div>
-    <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-[minmax(16rem,1.4fr)_minmax(10rem,0.8fr)_minmax(9rem,0.7fr)_minmax(10rem,0.8fr)_minmax(11rem,0.8fr)_minmax(16rem,1.2fr)]">
-      <label className="text-xs font-bold text-muted md:col-span-2 xl:col-span-1">
-        Barra de pesquisa
-        <span className="relative mt-1 block">
-          <Search
-            aria-hidden
-            className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-subtle"
-          />
-          <input
-            className="h-11 w-full rounded-control border border-border bg-surface pl-9 pr-3 text-sm font-semibold text-foreground shadow-control outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
-            onChange={(event) => onFiltersChange({ ...filters, q: event.target.value })}
-            placeholder={searchPlaceholder}
-            value={filters.q}
-          />
-        </span>
-      </label>
-      <label className="text-xs font-bold text-muted">
-        Público
-        <select
-          className="mt-1 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-semibold text-foreground shadow-control outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
-          onChange={(event) =>
-            onFiltersChange({
-              ...filters,
-              audience: event.target.value as NotificationTableFilters["audience"],
-            })
-          }
-          value={filters.audience}
-        >
-          <option value="all">Todos</option>
-          {AUDIENCE_OPTIONS.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
-      </label>
-      <label className="text-xs font-bold text-muted">
-        Canal
-        <select
-          className="mt-1 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-semibold text-foreground shadow-control outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
-          onChange={(event) =>
-            onFiltersChange({
-              ...filters,
-              channel: event.target.value as NotificationTableFilters["channel"],
-            })
-          }
-          value={filters.channel}
-        >
-          <option value="all">Todos</option>
-          <option value="in_app">In-app</option>
-          <option value="push">Push</option>
-        </select>
-      </label>
-      {statusOptions && status !== undefined && onStatusChange ? (
-        <label className="text-xs font-bold text-muted">
-          Status
+        <label className="min-w-0 text-xs font-bold text-muted md:col-span-2 xl:col-span-1">
+          Barra de pesquisa
+          <span className="relative mt-1 block min-w-0">
+            <Search
+              aria-hidden
+              className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-subtle"
+            />
+            <input
+              className="h-11 w-full min-w-0 rounded-control border border-border bg-surface pl-9 pr-3 text-sm font-semibold text-foreground shadow-control outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+              onChange={(event) => onFiltersChange({ ...filters, q: event.target.value })}
+              placeholder={searchPlaceholder}
+              value={filters.q}
+            />
+          </span>
+        </label>
+        <label className="min-w-0 text-xs font-bold text-muted">
+          Público
           <select
-            className="mt-1 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-semibold text-foreground shadow-control outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
-            onChange={(event) => onStatusChange(event.target.value)}
-            value={status}
+            className="mt-1 h-11 w-full min-w-0 rounded-control border border-border bg-surface px-3 text-sm font-semibold text-foreground shadow-control outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+            onChange={(event) =>
+              onFiltersChange({
+                ...filters,
+                audience: event.target.value as NotificationTableFilters["audience"],
+              })
+            }
+            value={filters.audience}
           >
-            {statusOptions.map((option) => (
+            <option value="all">Todos</option>
+            {AUDIENCE_OPTIONS.map((option) => (
               <option key={option.value} value={option.value}>
                 {option.label}
               </option>
             ))}
           </select>
         </label>
-      ) : null}
-      <label className="text-xs font-bold text-muted">
-        Período
-        <span className="relative mt-1 block">
+        <label className="min-w-0 text-xs font-bold text-muted">
+          Canal
           <select
-            className="h-11 w-full appearance-none rounded-control border border-border bg-surface py-0 pl-3 pr-10 text-sm font-semibold text-foreground shadow-control outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
-            onChange={(event) => onPeriodChange(event.target.value as NotificationPeriodPreset)}
-            value={period}
+            className="mt-1 h-11 w-full min-w-0 rounded-control border border-border bg-surface px-3 text-sm font-semibold text-foreground shadow-control outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+            onChange={(event) =>
+              onFiltersChange({
+                ...filters,
+                channel: event.target.value as NotificationTableFilters["channel"],
+              })
+            }
+            value={filters.channel}
           >
-            {period === "custom" ? (
-              <option disabled hidden value="custom">
-                Personalizado
-              </option>
-            ) : null}
-            {NOTIFICATION_PERIOD_OPTIONS.map((option) => (
-              <option key={option.id} value={option.id}>
-                {option.label}
-              </option>
-            ))}
+            <option value="all">Todos</option>
+            <option value="in_app">In-app</option>
+            <option value="push">Push</option>
           </select>
-          <ChevronDown
-            aria-hidden
-            className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground"
-          />
-        </span>
-      </label>
-      <div className="grid gap-3 sm:grid-cols-2" onBlur={onDateControlsBlur}>
-        <label className="text-xs font-bold text-muted">
-          Data: De
-          <input
-            className="mt-1 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-semibold text-foreground shadow-control outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
-            max={range.to || undefined}
-            onChange={(event) => onDateChange("from", event.target.value)}
-            type="date"
-            value={range.from}
-          />
         </label>
-        <label className="text-xs font-bold text-muted">
-          Data: Até
-          <input
-            className="mt-1 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-semibold text-foreground shadow-control outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
-            min={range.from || undefined}
-            onChange={(event) => onDateChange("to", event.target.value)}
-            type="date"
-            value={range.to}
-          />
+        {hasStatusFilter ? (
+          <label className="min-w-0 text-xs font-bold text-muted">
+            Status
+            <select
+              className="mt-1 h-11 w-full min-w-0 rounded-control border border-border bg-surface px-3 text-sm font-semibold text-foreground shadow-control outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+              onChange={(event) => onStatusChange?.(event.target.value)}
+              value={status}
+            >
+              {statusOptions?.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </label>
+        ) : null}
+        <label className="min-w-0 text-xs font-bold text-muted">
+          Período
+          <span className="relative mt-1 block min-w-0">
+            <select
+              className="h-11 w-full min-w-0 appearance-none rounded-control border border-border bg-surface py-0 pl-3 pr-10 text-sm font-semibold text-foreground shadow-control outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+              onChange={(event) => onPeriodChange(event.target.value as NotificationPeriodPreset)}
+              value={period}
+            >
+              {period === "custom" ? (
+                <option disabled hidden value="custom">
+                  Personalizado
+                </option>
+              ) : null}
+              {NOTIFICATION_PERIOD_OPTIONS.map((option) => (
+                <option key={option.id} value={option.id}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+            <ChevronDown
+              aria-hidden
+              className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground"
+            />
+          </span>
         </label>
+        <div className="grid min-w-0 gap-3 sm:grid-cols-2" onBlur={onDateControlsBlur}>
+          <label className="min-w-0 text-xs font-bold text-muted">
+            Data: De
+            <input
+              className="mt-1 h-11 w-full min-w-0 rounded-control border border-border bg-surface px-3 text-sm font-semibold text-foreground shadow-control outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+              max={range.to || undefined}
+              onChange={(event) => onDateChange("from", event.target.value)}
+              type="date"
+              value={range.from}
+            />
+          </label>
+          <label className="min-w-0 text-xs font-bold text-muted">
+            Data: Até
+            <input
+              className="mt-1 h-11 w-full min-w-0 rounded-control border border-border bg-surface px-3 text-sm font-semibold text-foreground shadow-control outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+              min={range.from || undefined}
+              onChange={(event) => onDateChange("to", event.target.value)}
+              type="date"
+              value={range.to}
+            />
+          </label>
+        </div>
       </div>
+      {period === "custom" && rangeError ? (
+        <p className="mt-3 text-xs font-bold text-danger">{rangeError}</p>
+      ) : null}
     </div>
-    {period === "custom" && rangeError ? (
-      <p className="mt-3 text-xs font-bold text-danger">{rangeError}</p>
-    ) : null}
-  </div>
-);
+  );
+};
 
 const ErrorState = ({ message, onRetry }: { message: string; onRetry: () => void }) => (
   <CardShell className="p-5">
@@ -738,6 +644,7 @@ const CampaignsList = ({
   onCancel,
   onDetails,
   onEdit,
+  onNew,
   onNext,
   onPrev,
   page,
@@ -750,26 +657,36 @@ const CampaignsList = ({
   onCancel: (campaign: AdminNotificationCampaign) => void;
   onDetails: (campaign: AdminNotificationCampaign) => void;
   onEdit: (campaign: AdminNotificationCampaign) => void;
+  onNew: () => void;
   onNext: () => void;
   onPrev: () => void;
   page: number;
   pages: number;
 }) => (
   <CardShell className="overflow-hidden">
-    <div className="flex flex-col gap-2 border-b border-border p-4 sm:flex-row sm:items-center sm:justify-between">
-      <div>
+    <div className="flex flex-col gap-3 p-4 sm:flex-row sm:items-start sm:justify-between">
+      <div className="min-w-0">
         <h2 className="text-lg font-black">Campanhas manuais</h2>
         <p className="text-sm text-muted">
-          {numberFormatter.format(count)} campanha(s) encontrada(s). Status e entregas vêm do
-          backend real.
+          {numberFormatter.format(count)} campanha(s) encontrada(s).
         </p>
       </div>
-      {isFetching ? (
-        <span className="inline-flex items-center gap-2 text-xs font-black text-muted">
-          <Loader2 aria-hidden className="h-4 w-4 animate-spin" />
-          Atualizando
-        </span>
-      ) : null}
+      <div className="flex flex-col gap-3 sm:items-end">
+        {isFetching ? (
+          <span className="inline-flex items-center gap-2 text-xs font-black text-muted">
+            <Loader2 aria-hidden className="h-4 w-4 animate-spin" />
+            Atualizando
+          </span>
+        ) : null}
+        <button
+          className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-control bg-primary px-4 text-sm font-bold text-white shadow-admin-soft transition hover:bg-primary-hover sm:w-auto"
+          onClick={onNew}
+          type="button"
+        >
+          <Plus aria-hidden className="h-4 w-4" />
+          Nova notificação
+        </button>
+      </div>
     </div>
     {filtersSlot}
     {campaigns.length === 0 ? (
@@ -916,7 +833,7 @@ const AutomaticLogs = ({
   pages: number;
 }) => (
   <CardShell className="overflow-hidden">
-    <div className="flex flex-col gap-2 border-b border-border p-4 sm:flex-row sm:items-center sm:justify-between">
+    <div className="flex flex-col gap-2 p-4 sm:flex-row sm:items-center sm:justify-between">
       <div>
         <h2 className="text-lg font-black">Logs de notificações automáticas</h2>
         <p className="text-sm text-muted">
@@ -1267,9 +1184,6 @@ export const AdminNotificationsClient = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<AdminNotificationCampaign | null>(null);
   const [details, setDetails] = useState<AdminNotificationCampaign | null>(null);
-  const [metricPeriod, setMetricPeriod] = useState<NotificationPeriodValue>(
-    NOTIFICATION_DEFAULT_PERIOD,
-  );
   const [campaignPeriod, setCampaignPeriod] = useState<NotificationPeriodValue>(
     NOTIFICATION_DEFAULT_PERIOD,
   );
@@ -1281,11 +1195,6 @@ export const AdminNotificationsClient = () => {
     CAMPAIGN_STATUS_OPTIONS[0];
   const resetCampaignPage = () => setPage(1);
   const resetLogsPage = () => setLogsPage(1);
-  const metricRangeControls = useDateRangeCommitOnBlur({
-    errorMessage: tableRangeErrorMessage,
-    initialRange: () => getRangeForPeriod(NOTIFICATION_DEFAULT_PERIOD),
-    isValidRange,
-  });
   const campaignRangeControls = useDateRangeCommitOnBlur({
     errorMessage: tableRangeErrorMessage,
     initialRange: () => getRangeForPeriod(NOTIFICATION_DEFAULT_PERIOD),
@@ -1298,15 +1207,13 @@ export const AdminNotificationsClient = () => {
     isValidRange,
     onApply: resetLogsPage,
   });
-  const metricRangeIsValid =
-    metricPeriod === "custom" ? isValidRange(metricRangeControls.appliedRange) : true;
   const campaignRangeIsValid =
     campaignPeriod === "custom" ? isValidRange(campaignRangeControls.appliedRange) : true;
   const logsRangeIsValid =
     logsPeriod === "custom" ? isValidRange(logsRangeControls.appliedRange) : true;
-  const metricQuery = useMemo(
-    () => buildNotificationPeriodQuery(metricPeriod, metricRangeControls.appliedRange),
-    [metricPeriod, metricRangeControls.appliedRange],
+  const metricQuery = useMemo<AdminNotificationsRangeQuery>(
+    () => ({ period: NOTIFICATION_DEFAULT_PERIOD }),
+    [],
   );
   const campaignQuery = useMemo(
     () => ({
@@ -1337,33 +1244,19 @@ export const AdminNotificationsClient = () => {
     }),
     [logFilters, logsPage, logsPeriod, logsRangeControls.appliedRange],
   );
-  const metrics = useAdminNotificationMetrics(metricQuery, { enabled: metricRangeIsValid });
+  const metrics = useAdminNotificationMetrics(metricQuery);
   const campaigns = useAdminNotificationCampaigns(campaignQuery, { enabled: campaignRangeIsValid });
   const logs = useAdminNotificationAutomaticLogs(logsQuery, { enabled: logsRangeIsValid });
   const push = useAdminNotificationPushStatus();
   const cancelCampaign = useAdminNotificationCancelCampaign();
   const firstError = metrics.error || campaigns.error || logs.error || push.error;
-  const metricPeriodLabel = getNotificationPeriodLabel(metricPeriod);
+  const metricPeriodLabel = getNotificationPeriodLabel(NOTIFICATION_DEFAULT_PERIOD);
   const footerPeriodLabel = metrics.data?.period
     ? `${metrics.data.period.label} - ${formatDate(metrics.data.period.from)} a ${formatDate(
         metrics.data.period.to,
       )}`
-    : metricPeriod === "all" ||
-        !metricRangeControls.appliedRange.from ||
-        !metricRangeControls.appliedRange.to
-      ? metricPeriodLabel
-      : `${metricPeriodLabel} - ${formatDate(metricRangeControls.appliedRange.from)} a ${formatDate(
-          metricRangeControls.appliedRange.to,
-        )}`;
+    : metricPeriodLabel;
 
-  const updateMetricPeriod = (nextPeriod: NotificationPeriodPreset) => {
-    setMetricPeriod(nextPeriod);
-    metricRangeControls.applyRange(getRangeForPeriod(nextPeriod));
-  };
-  const updateMetricDateRange = (field: keyof NotificationRange, value: string) => {
-    setMetricPeriod("custom");
-    metricRangeControls.handleDateChange(field, value);
-  };
   const updateCampaignPeriod = (nextPeriod: NotificationPeriodPreset) => {
     setCampaignPeriod(nextPeriod);
     campaignRangeControls.applyRange(getRangeForPeriod(nextPeriod));
@@ -1388,22 +1281,13 @@ export const AdminNotificationsClient = () => {
     setLogFilters(nextFilters);
     setLogsPage(1);
   };
-  const resetCampaignFilters = () => {
-    setCampaignFilters(createDefaultTableFilters());
-    setCampaignPeriod(NOTIFICATION_DEFAULT_PERIOD);
-    setCampaignStatus("all");
-    setPage(1);
-    campaignRangeControls.applyRange(getRangeForPeriod(NOTIFICATION_DEFAULT_PERIOD));
-  };
-  const resetLogFilters = () => {
-    setLogFilters(createDefaultTableFilters());
-    setLogsPeriod(NOTIFICATION_DEFAULT_PERIOD);
-    setLogsPage(1);
-    logsRangeControls.applyRange(getRangeForPeriod(NOTIFICATION_DEFAULT_PERIOD));
-  };
   const updateCampaignStatus = (nextStatus: string) => {
     setCampaignStatus(nextStatus);
     setPage(1);
+  };
+  const openCreateModal = () => {
+    setEditing(null);
+    setModalOpen(true);
   };
 
   const handleCancel = async (campaign: AdminNotificationCampaign) => {
@@ -1418,28 +1302,8 @@ export const AdminNotificationsClient = () => {
 
   return (
     <div className="space-y-6">
-      <Header
-        onNew={() => {
-          setEditing(null);
-          setModalOpen(true);
-        }}
-        onDateChange={updateMetricDateRange}
-        onDateControlsBlur={metricRangeControls.handleDateControlsBlur}
-        onPeriodChange={updateMetricPeriod}
-        period={metricPeriod}
-        range={metricRangeControls.draftRange}
-        rangeError={metricRangeControls.rangeError}
-      />
-      {!metricRangeIsValid ? (
-        <ErrorState
-          message={
-            metricRangeControls.rangeError ||
-            "Informe um período personalizado completo, com data inicial menor ou igual à final."
-          }
-          onRetry={() => undefined}
-        />
-      ) : null}
-      {metricRangeIsValid && firstError ? (
+      <Header />
+      {firstError ? (
         <ErrorState
           message={resolveApiError(firstError)}
           onRetry={() => {
@@ -1450,33 +1314,21 @@ export const AdminNotificationsClient = () => {
           }}
         />
       ) : null}
-      {metricRangeIsValid && metrics.isLoading ? (
+      {metrics.isLoading ? (
         <LoadingCards />
-      ) : metricRangeIsValid && metrics.data ? (
+      ) : metrics.data ? (
         <MetricsGrid metrics={metrics.data} />
       ) : null}
-      <div className="rounded-2xl border border-border bg-surface-muted p-4 text-sm leading-6 text-muted">
-        <div className="flex gap-3">
-          <Megaphone aria-hidden className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
-          <p>
-            Esta tela cria campanhas manuais com entregas reais. Métricas de abertura e clique só
-            aparecem quando existem eventos persistidos de leitura ou clique. E-mail não existe
-            nesta V1.
-          </p>
-        </div>
-      </div>
       <CampaignsList
         campaigns={campaigns.data?.data ?? []}
         count={campaigns.data?.count ?? 0}
         filtersSlot={
           <NotificationTableFiltersBlock
-            description="Filtra somente esta tabela, mantendo estado e paginação independentes dos logs."
             filters={campaignFilters}
             onDateChange={updateCampaignDateRange}
             onDateControlsBlur={campaignRangeControls.handleDateControlsBlur}
             onFiltersChange={updateCampaignFilters}
             onPeriodChange={updateCampaignPeriod}
-            onReset={resetCampaignFilters}
             onStatusChange={updateCampaignStatus}
             period={campaignPeriod}
             range={campaignRangeControls.draftRange}
@@ -1484,7 +1336,6 @@ export const AdminNotificationsClient = () => {
             searchPlaceholder="Buscar campanha por título ou conteúdo..."
             status={campaignStatus}
             statusOptions={CAMPAIGN_STATUS_OPTIONS}
-            title="Filtros de campanhas manuais"
           />
         }
         isFetching={campaigns.isFetching}
@@ -1494,6 +1345,7 @@ export const AdminNotificationsClient = () => {
           setEditing(campaign);
           setModalOpen(true);
         }}
+        onNew={openCreateModal}
         onNext={() => setPage((current) => current + 1)}
         onPrev={() => setPage((current) => Math.max(1, current - 1))}
         page={campaigns.data?.page ?? page}
@@ -1504,18 +1356,15 @@ export const AdminNotificationsClient = () => {
         data={logs.data?.data ?? []}
         filtersSlot={
           <NotificationTableFiltersBlock
-            description="Filtra somente esta tabela de logs reais gerados pelo dispatcher."
             filters={logFilters}
             onDateChange={updateLogsDateRange}
             onDateControlsBlur={logsRangeControls.handleDateControlsBlur}
             onFiltersChange={updateLogFilters}
             onPeriodChange={updateLogsPeriod}
-            onReset={resetLogFilters}
             period={logsPeriod}
             range={logsRangeControls.draftRange}
             rangeError={logsRangeControls.rangeError}
             searchPlaceholder="Buscar log por notificação, disparo ou usuário..."
-            title="Filtros de logs automáticos"
           />
         }
         isFetching={logs.isFetching}
@@ -1527,7 +1376,8 @@ export const AdminNotificationsClient = () => {
       <div className="flex flex-col gap-2 rounded-2xl border border-border bg-surface p-4 text-xs font-bold text-muted sm:flex-row sm:items-center sm:justify-between">
         <span className="inline-flex items-center gap-2">
           <CheckCircle2 aria-hidden className="h-4 w-4 text-success" />
-          Mobile-first: cards empilhados, abas roláveis e tabelas com scroll horizontal acessível.
+          Mobile-first: cards empilhados, filtros responsivos e tabelas com scroll horizontal
+          acessível.
         </span>
         <span>
           <CalendarDays aria-hidden className="mr-1 inline h-4 w-4" />

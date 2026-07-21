@@ -297,3 +297,22 @@ UI:
 - `pnpm --dir admin build`
 - `pnpm check`
 - Smoke HTTP local: `GET http://localhost:3002/notificacoes` retornou `200`.
+
+## Ajuste complementar 2026-07-21 - CTA e topo simplificado
+
+- Pedido do usu?rio: remover filtros de **Per?odo**, **De** e **At?** do header, mover **Nova notifica??o** para **Campanhas manuais**, remover a faixa operacional, simplificar o subt?tulo de contagem, remover a linha acima dos filtros e ajustar o grid para n?o cortar o ?ltimo campo de data.
+- O header fica apenas com contexto, t?tulo e subt?tulo; m?tricas seguem consultando **Todo o per?odo** por padr?o e os filtros de per?odo/data ficam somente nos blocos das tabelas.
+- O CTA **Nova notifica??o** passa a morar no cabe?alho do card **Campanhas manuais**.
+- O aviso operacional ?Esta tela cria campanhas manuais...? foi removido; a contagem de campanhas fica como `0 campanha(s) encontrada(s).`.
+- O cabe?alho do card n?o renderiza mais borda divis?ria acima dos filtros; os filtros ganharam `min-w-0`, padding `md:p-5` e grid em `xl`/`2xl` para preservar margem padr?o e evitar corte no campo **Data: At?**.
+- N?o houve mudan?a de backend, Prisma/migrations, packages, contratos HTTP, dados persistidos, canais dispon?veis ou formul?rios RHF/Zod.
+- Builder/Quick Copy n?o esteve dispon?vel como ferramenta callable neste ambiente; a refer?ncia visual audit?vel permaneceu `_product/proto/admin/Notifica??es.png` e a captura enviada pelo usu?rio.
+
+### Valida??o deste ajuste
+
+- `pnpm --dir admin exec biome check "src/app/(admin)/notificacoes/client.tsx"`
+- `pnpm --dir admin exec eslint "src/app/(admin)/notificacoes/client.tsx"`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- Smoke HTTP local: `GET http://localhost:3002/notificacoes` retornou `200`.
+- Browser autenticado completo n?o foi repetido nesta execu??o porque n?o h? sess?o Admin interativa acess?vel ao ambiente; a valida??o visual usou a captura enviada pelo usu?rio e o PNG local de refer?ncia.
