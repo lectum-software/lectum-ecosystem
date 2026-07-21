@@ -342,8 +342,8 @@ Decisoes:
   packages ou dados persistidos.
 
 Consequencia: Configuracoes fica visualmente consistente com Psicologos, Comunidades e Pacientes
-no piloto premium, enquanto Financeiro, Notificacoes, Trafego, Moderacao e Dashboard permanecem
-fora do escopo ate decisao de produto.
+no piloto premium, enquanto Financeiro, Notificacoes, Trafego, Moderacao e Dashboard permaneciam
+fora do escopo ate nova decisao de produto.
 
 Validacao desta expansao:
 
@@ -356,6 +356,41 @@ Validacao desta expansao:
 - Smoke HTTP local: `GET http://localhost:3002/configuracoes` retornou 200.
 - Builder/Quick Copy nao estava exposto como ferramenta callable; a referencia auditavel foi
   `_product/proto/admin/Configurações.png` e a captura enviada pelo usuario.
+
+## Expansao 2026-07-21: Notificacoes no piloto premium
+
+Por pedido direto de produto, a pagina Admin **Notificacoes** tambem passa a usar o escopo
+`admin-premium-pilot`, mantendo o gerenciamento real de campanhas manuais e logs automaticos da
+TASK-64/TASK-63.
+
+Decisoes:
+
+- Incluir `/notificacoes` e descendentes na regra centralizada do `AdminShell`, sem duplicar shell
+  ou criar tema paralelo.
+- Reaproveitar os tokens do piloto premium: sidebar clara, azul Lectum, cards com borda sutil,
+  sombra quase imperceptivel, `rounded-card`/`rounded-control` e tipografia menos pesada.
+- Converter o topo de Notificacoes em card mobile-first com label **Campanhas e logs**, titulo,
+  subtitulo, filtros de periodo e CTA **Nova notificacao** dentro do mesmo bloco.
+- Alinhar os status visuais de campanhas aos tokens semanticos do Admin (`danger`, `warning`,
+  `success`, `primary`), evitando utilitarios de cores soltas no componente alterado.
+- Nao alterar endpoints, contratos HTTP, regras de envio, disponibilidade real de push, metricas,
+  Prisma/migrations, packages, formularios RHF/Zod ou dados persistidos.
+
+Consequencia: Notificacoes fica visualmente consistente com Psicologos, Comunidades, Pacientes e
+Configuracoes no piloto premium, sem mudar o escopo funcional da tela nem prometer canais/metricas
+que nao existam como dado real.
+
+Validacao desta expansao:
+
+- `pnpm --dir admin exec biome check --write "src/components/admin-shell/shell.tsx" "src/app/(admin)/notificacoes/client.tsx"`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check`
+- Smoke HTTP local: `GET http://localhost:3002/notificacoes` retornou 200.
+- Browser local/headless sem sessao admin valida confirmou protecao com redirecionamento para login;
+  a inspecao visual autenticada completa depende de sessao Admin interativa.
+- Builder/Quick Copy nao estava exposto como ferramenta callable; as referencias auditaveis foram
+  `_product/proto/admin/Notificações.png` e a captura enviada pelo usuario.
 
 ## Pendências
 

@@ -33,6 +33,8 @@ const isPremiumPilotPath = (pathname: string) =>
   pathname.startsWith("/comunidades/") ||
   pathname === "/pacientes" ||
   pathname.startsWith("/pacientes/") ||
+  pathname === "/notificacoes" ||
+  pathname.startsWith("/notificacoes/") ||
   pathname === "/configuracoes" ||
   pathname.startsWith("/configuracoes/") ||
   pathname === "/settings" ||

@@ -58,7 +58,8 @@ import { cn } from "@/lib/utils";
 const QUICK_RANGES = [7, 30, 90] as const;
 const CAMPAIGN_LIMIT = 8;
 const LOGS_LIMIT = 8;
-const cardClass = "rounded-card border border-border bg-surface shadow-admin-soft";
+const cardClass =
+  "rounded-card border border-border/80 bg-surface/95 shadow-admin-soft backdrop-blur";
 
 const AUDIENCE_OPTIONS: Array<{ label: string; value: AdminNotificationAudience }> = [
   { label: "Todos os usuários", value: "all_users" },
@@ -77,12 +78,12 @@ const TABS: Array<{ label: string; status?: AdminNotificationCampaignStatus; val
 ];
 
 const STATUS_COPY: Record<AdminNotificationCampaignStatus, { label: string; className: string }> = {
-  canceled: { className: "bg-red-50 text-danger", label: "Cancelada" },
+  canceled: { className: "bg-danger/10 text-danger", label: "Cancelada" },
   draft: { className: "bg-surface-muted text-muted", label: "Rascunho" },
-  failed: { className: "bg-red-50 text-danger", label: "Falhou" },
-  scheduled: { className: "bg-blue-50 text-blue-700", label: "Agendada" },
-  sending: { className: "bg-yellow-50 text-yellow-700", label: "Enviando" },
-  sent: { className: "bg-emerald-50 text-success", label: "Enviada" },
+  failed: { className: "bg-danger/10 text-danger", label: "Falhou" },
+  scheduled: { className: "bg-primary-soft text-primary", label: "Agendada" },
+  sending: { className: "bg-warning/10 text-warning", label: "Enviando" },
+  sent: { className: "bg-success/10 text-success", label: "Enviada" },
 };
 
 const numberFormatter = new Intl.NumberFormat("pt-BR");
@@ -291,64 +292,69 @@ const Header = ({
   rangeError: string | null;
   setRange: (range: { from: string; to: string }) => void;
 }) => (
-  <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
-    <div>
-      <h1 className="text-3xl font-black tracking-tight text-foreground md:text-4xl">
-        Notificações
-      </h1>
-      <p className="mt-2 max-w-2xl text-sm font-medium text-muted">
-        Gerencie e envie notificações reais para usuários da plataforma. Esta área não é uma caixa
-        de entrada do administrador.
-      </p>
-    </div>
-    <div className="flex flex-col gap-3 xl:items-end">
-      <div className="grid gap-3 sm:grid-cols-[1fr_1fr_auto]">
-        <div className="contents" onBlur={onDateControlsBlur}>
-          <label className="text-xs font-black text-muted">
-            De
-            <input
-              className="mt-1 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground shadow-control focus:border-primary"
-              max={range.to}
-              onChange={(event) => onDateChange("from", event.target.value)}
-              type="date"
-              value={range.from}
-            />
-          </label>
-          <label className="text-xs font-black text-muted">
-            Até
-            <input
-              className="mt-1 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground shadow-control focus:border-primary"
-              min={range.from}
-              onChange={(event) => onDateChange("to", event.target.value)}
-              type="date"
-              value={range.to}
-            />
-          </label>
-        </div>
-        <button
-          className="inline-flex h-11 items-center justify-center gap-2 self-end rounded-control bg-primary px-4 text-sm font-black text-white shadow-admin-soft transition hover:bg-primary-hover"
-          onClick={onNew}
-          type="button"
-        >
-          <Plus aria-hidden className="h-4 w-4" />
-          Nova notificação
-        </button>
+  <CardShell className="p-5 md:p-6">
+    <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
+      <div className="min-w-0">
+        <p className="text-xs font-semibold uppercase tracking-[0.12em] text-primary">
+          Campanhas e logs
+        </p>
+        <h1 className="mt-2 text-3xl font-bold tracking-tight text-foreground md:text-4xl">
+          Notificações
+        </h1>
+        <p className="mt-2 max-w-3xl text-sm font-medium leading-6 text-muted md:text-base">
+          Gerencie e envie notificações reais para usuários da plataforma. Esta área não é uma caixa
+          de entrada do administrador.
+        </p>
       </div>
-      <div className="flex flex-wrap gap-2">
-        {QUICK_RANGES.map((days) => (
+      <div className="flex flex-col gap-3 xl:items-end">
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-[minmax(10rem,1fr)_minmax(10rem,1fr)_auto]">
+          <div className="contents" onBlur={onDateControlsBlur}>
+            <label className="text-xs font-semibold text-muted">
+              De
+              <input
+                className="mt-1 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-semibold text-foreground shadow-control transition focus:border-primary"
+                max={range.to}
+                onChange={(event) => onDateChange("from", event.target.value)}
+                type="date"
+                value={range.from}
+              />
+            </label>
+            <label className="text-xs font-semibold text-muted">
+              Até
+              <input
+                className="mt-1 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-semibold text-foreground shadow-control transition focus:border-primary"
+                min={range.from}
+                onChange={(event) => onDateChange("to", event.target.value)}
+                type="date"
+                value={range.to}
+              />
+            </label>
+          </div>
           <button
-            className="rounded-full border border-border bg-surface px-3 py-1.5 text-xs font-black text-muted transition hover:border-primary hover:text-primary"
-            key={days}
-            onClick={() => setRange(getQuickRange(days))}
+            className="inline-flex h-11 items-center justify-center gap-2 rounded-control bg-primary px-4 text-sm font-bold text-white shadow-admin-soft transition hover:bg-primary-hover sm:col-span-2 lg:col-span-1 lg:self-end"
+            onClick={onNew}
             type="button"
           >
-            Últimos {days} dias
+            <Plus aria-hidden className="h-4 w-4" />
+            Nova notificação
           </button>
-        ))}
+        </div>
+        <div className="flex flex-wrap gap-2 xl:justify-end">
+          {QUICK_RANGES.map((days) => (
+            <button
+              className="rounded-full border border-border bg-surface/80 px-3 py-1.5 text-xs font-semibold text-muted transition hover:border-primary hover:text-primary"
+              key={days}
+              onClick={() => setRange(getQuickRange(days))}
+              type="button"
+            >
+              Últimos {days} dias
+            </button>
+          ))}
+        </div>
+        {rangeError ? <p className="text-xs font-bold text-danger">{rangeError}</p> : null}
       </div>
-      {rangeError ? <p className="text-xs font-bold text-danger">{rangeError}</p> : null}
     </div>
-  </div>
+  </CardShell>
 );
 
 const FiltersBar = ({

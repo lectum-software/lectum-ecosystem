@@ -220,3 +220,21 @@ UI:
 - Validações executadas: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check`.
 - Validação local: `http://localhost:3002/notificacoes` respondeu 200; `/api/admin/private/notifications/push-status` respondeu 401 sem token, confirmando proteção. O teste completo criar/enviar/agendar/cancelar via browser real depende de sessão admin interativa, mas as ações usam endpoints reais já validados por build/check e pela fundação da TASK-63.
 - ADR: `adrs/0244-admin-notificacoes-ui-push-disponibilidade.md`.
+
+## Ajuste complementar 2026-07-21 - Layout piloto premium em Notificações
+
+- Pedido do usuário: aplicar o layout piloto na página Admin **Notificações**.
+- O shell administrativo agora inclui `/notificacoes` e descendentes no escopo `admin-premium-pilot`, reutilizando a sidebar clara, tokens azuis Lectum, bordas/sombras sutis e pesos tipográficos mais leves já validados em Psicólogos, Comunidades, Pacientes e Configurações.
+- O header da página passou a ser um card mobile-first com label **Campanhas e logs**, título **Notificações**, subtítulo, filtros de período e CTA **Nova notificação** no mesmo bloco visual do piloto.
+- Cards, filtros, abas, tabelas, logs e modais continuam consumindo endpoints reais da TASK-63; não houve alteração de backend, Prisma/migrations, packages, contratos HTTP, formulários RHF/Zod, dados persistidos, canais disponíveis ou regras de métricas.
+- Os status visuais de campanhas foram alinhados aos tokens semânticos do Admin, removendo cores utilitárias soltas do componente de Notificações.
+- Builder/Quick Copy não está exposto como ferramenta callable neste ambiente; as referências auditáveis usadas foram `_product/proto/admin/Notificações.png`, o ADR do piloto `adrs/0263-admin-psicologos-piloto-premium.md` e a captura enviada pelo usuário.
+
+### Validação complementar executada
+
+- `pnpm --dir admin exec biome check --write "src/components/admin-shell/shell.tsx" "src/app/(admin)/notificacoes/client.tsx"`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check`
+- Smoke HTTP local: `GET http://localhost:3002/notificacoes` retornou `200`.
+- Browser local/headless sem sessão admin válida confirmou que a rota protegida cai no login; a inspeção visual autenticada completa depende de sessão Admin interativa, mas a UI alterada foi validada por build/check e pelo smoke da rota.
