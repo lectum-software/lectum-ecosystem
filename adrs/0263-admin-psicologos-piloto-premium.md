@@ -383,3 +383,24 @@ Validacao deste ajuste:
 - `pnpm --dir admin build`
 - `pnpm check`
 - Smoke HTTP local: `GET http://localhost:3002/configuracoes` retornou 200.
+
+## Ajuste pos-feedback 2026-07-21: drag animado em Configuracoes
+
+A primeira versao arrastavel de Configuracoes usava HTML5 drag/drop nativo. O feedback visual mostrou que a experiencia nao comunicava bem o deslocamento da lista e ainda exibia um toast verde excessivo a cada atualizacao de ordem.
+
+Decisoes:
+
+- Migrar a reordenacao visual de Configuracoes para Pointer Events, reaproveitando a logica de deslocamento animado ja adotada nas regras de Comunidades.
+- Animar o card arrastado e os cards vizinhos com `translate3d`, mantendo o layout mobile-first e sem instalar dependencia de drag-and-drop.
+- Aplicar ordem otimista por escopo de catalogo enquanto o endpoint real de reordenacao persiste a mudanca.
+- Remover o toast de sucesso **Ordem atualizada** para reduzir ruido visual; manter feedback de erro se a persistencia falhar.
+
+Consequencia: a interacao fica mais previsivel e premium, com animacao clara de rearranjo e menos ruido de notificacao, sem alterar dominio, contrato ou persistencia.
+
+Validacao deste ajuste:
+
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/configuracoes/client.tsx"`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check`
+- Smoke HTTP local: `GET http://localhost:3002/configuracoes` retornou 200.

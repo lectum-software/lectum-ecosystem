@@ -289,3 +289,19 @@ Frontend esperado:
 - `pnpm --dir admin build`
 - `pnpm check`
 - Smoke HTTP local: `GET http://localhost:3002/configuracoes` retornou `200`.
+
+## Ajuste complementar 2026-07-21 - Drag animado sem toast de ordem
+
+- Pedido do usuario: melhorar o clique e arraste das opcoes com animacao de deslocamento do bloco arrastado e dos blocos ao redor, alem de remover a tag verde de confirmacao de atualizacao de ordem.
+- O drag-and-drop nativo por `draggable` foi substituido por interacao por Pointer Events, seguindo o padrao das regras de Comunidades: o card arrastado acompanha o cursor e os demais cards se deslocam com `translate3d` durante a operacao.
+- A reordenacao usa estado otimista por escopo de catalogo ate a persistencia real concluir, mantendo a UI no destino escolhido sem depender de mock ou pacote novo.
+- O toast verde **Ordem atualizada** foi removido somente para reordenacao; erros continuam exibindo feedback e as demais acoes de catalogo preservam seus feedbacks existentes.
+- Nao houve alteracao de backend, Prisma/migrations, packages, contratos HTTP, formularios RHF/Zod ou dados persistidos.
+
+### Validacao complementar executada
+
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/configuracoes/client.tsx"`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check`
+- Smoke HTTP local: `GET http://localhost:3002/configuracoes` retornou `200`.

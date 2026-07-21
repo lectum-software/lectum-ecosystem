@@ -18,7 +18,7 @@ import {
   UsersRound,
   X,
 } from "lucide-react";
-import { type DragEvent, type ReactNode, useMemo, useState } from "react";
+import { type PointerEvent, type ReactNode, useMemo, useRef, useState } from "react";
 import { FormProvider, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -64,9 +64,35 @@ type CatalogModalState =
 
 type SettingsSectionId = "specialties" | ListCatalogType;
 
-type CatalogDragState = {
+type CatalogDragInput = {
   categoryId?: string;
   id: string;
+  ids: string[];
+  type: AdminSettingsCatalogType;
+};
+
+type CatalogDragMetric = {
+  bottom: number;
+  height: number;
+  id: string;
+  top: number;
+};
+
+type CatalogDragSession = CatalogDragInput & {
+  draggedSlotSize: number;
+  metrics: CatalogDragMetric[];
+  pointerId: number;
+  sourceIndex: number;
+  startClientY: number;
+};
+
+type CatalogDragState = {
+  categoryId?: string;
+  draggedSlotSize: number;
+  id: string;
+  offsetY: number;
+  sourceIndex: number;
+  targetIndex: number;
   type: AdminSettingsCatalogType;
 };
 
@@ -129,26 +155,28 @@ type RestoreForm = z.infer<typeof restoreSchema>;
 
 const orderedIds = (items: Array<{ id: string }>) => items.map((item) => item.id);
 
-const reorderIds = (ids: string[], id: string, targetId: string) => {
+const reorderIds = (ids: string[], id: string, targetIndex: number) => {
   const index = ids.indexOf(id);
-  const nextIndex = ids.indexOf(targetId);
 
-  if (index < 0 || nextIndex < 0 || nextIndex >= ids.length) return ids;
-  if (index === nextIndex) return ids;
+  if (index < 0) return ids;
 
   const next = [...ids];
   const [item] = next.splice(index, 1);
-  next.splice(nextIndex, 0, item);
+  if (!item) return ids;
+
+  const boundedTargetIndex = Math.max(0, Math.min(targetIndex, next.length));
+  if (index === boundedTargetIndex) return ids;
+
+  next.splice(boundedTargetIndex, 0, item);
 
   return next;
 };
 
-const sameScope = (
-  drag: CatalogDragState | null,
+const sameScope = <T extends { categoryId?: string; type: AdminSettingsCatalogType }>(
+  drag: T | null,
   type: AdminSettingsCatalogType,
   categoryId?: string,
-): drag is CatalogDragState =>
-  drag?.type === type && (drag.categoryId ?? "") === (categoryId ?? "");
+): drag is T => drag?.type === type && (drag.categoryId ?? "") === (categoryId ?? "");
 
 const isCatalogDragBlockedTarget = (target: EventTarget | null) => {
   if (!(target instanceof Element)) return false;
@@ -156,6 +184,65 @@ const isCatalogDragBlockedTarget = (target: EventTarget | null) => {
   return Boolean(
     target.closest("button, a, input, textarea, select, label, [contenteditable='true']"),
   );
+};
+
+const isCatalogDragHandleTarget = (target: EventTarget | null) =>
+  target instanceof Element && Boolean(target.closest("[data-catalog-drag-handle='true']"));
+
+const catalogScopeKey = (type: AdminSettingsCatalogType, categoryId?: string) =>
+  `${type}:${categoryId ?? ""}`;
+
+const applyOptimisticOrder = <T extends { id: string }>(items: T[], orderIds?: string[]) => {
+  if (!orderIds) return items;
+
+  const itemsById = new Map(items.map((item) => [item.id, item]));
+  const ordered = orderIds
+    .map((id) => itemsById.get(id))
+    .filter((item): item is T => Boolean(item));
+  const orderedIdsSet = new Set(ordered.map((item) => item.id));
+  const missing = items.filter((item) => !orderedIdsSet.has(item.id));
+
+  return [...ordered, ...missing];
+};
+
+const measureCatalogCards = (container: HTMLElement | null): CatalogDragMetric[] =>
+  Array.from(container?.children ?? [])
+    .filter(
+      (element): element is HTMLElement =>
+        element instanceof HTMLElement && element.dataset.catalogDragCard === "true",
+    )
+    .map((element) => {
+      const rect = element.getBoundingClientRect();
+
+      return {
+        bottom: rect.bottom,
+        height: rect.height,
+        id: element.dataset.catalogDragId ?? "",
+        top: rect.top,
+      };
+    })
+    .filter((metric) => metric.id);
+
+const resolveCatalogSlotSize = (metrics: CatalogDragMetric[], sourceIndex: number) => {
+  const sourceMetric = metrics[sourceIndex];
+  if (!sourceMetric) return 0;
+
+  const nextMetric = metrics[sourceIndex + 1];
+  const previousMetric = metrics[sourceIndex - 1];
+  const nextGap = nextMetric ? nextMetric.top - sourceMetric.bottom : null;
+  const previousGap = previousMetric ? sourceMetric.top - previousMetric.bottom : null;
+  const gap = [nextGap, previousGap].find((value) => typeof value === "number" && value > 0) ?? 12;
+
+  return sourceMetric.height + gap;
+};
+
+const resolveCatalogTargetIndex = (clientY: number, session: CatalogDragSession) => {
+  const metricsWithoutDragged = session.metrics.filter((metric) => metric.id !== session.id);
+  const beforeMetricIndex = metricsWithoutDragged.findIndex(
+    (metric) => clientY < metric.top + metric.height / 2,
+  );
+
+  return beforeMetricIndex >= 0 ? beforeMetricIndex : metricsWithoutDragged.length;
 };
 
 const getErrorMessage = (error: unknown) =>
@@ -210,11 +297,12 @@ const DragHandle = ({ disabled, label }: { disabled?: boolean; label: string }) 
   <span
     aria-hidden
     className={cn(
-      "inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-control border border-border bg-surface text-muted transition",
+      "inline-flex h-9 w-9 shrink-0 touch-none items-center justify-center rounded-control border border-border bg-surface text-muted transition",
       disabled
         ? "cursor-not-allowed opacity-40"
         : "cursor-grab hover:border-primary/40 hover:text-primary group-active:cursor-grabbing",
     )}
+    data-catalog-drag-handle="true"
     title={label}
   >
     <GripVertical className="h-4 w-4" />
@@ -248,23 +336,25 @@ const CatalogRow = ({
   dragDisabled,
   isDragging,
   item,
-  onDragEnd,
-  onDragOver,
-  onDragStart,
-  onDrop,
   onEdit,
+  onPointerCancel,
+  onPointerDown,
+  onPointerMove,
+  onPointerUp,
   onToggle,
+  transform,
 }: {
   activeMutation?: boolean;
   dragDisabled?: boolean;
   isDragging?: boolean;
   item: AdminSettingsCatalogOption | AdminSettingsSpecialty;
-  onDragEnd: () => void;
-  onDragOver: (event: DragEvent<HTMLDivElement>) => void;
-  onDragStart: (event: DragEvent<HTMLDivElement>) => void;
-  onDrop: (event: DragEvent<HTMLDivElement>) => void;
   onEdit: () => void;
+  onPointerCancel: (event: PointerEvent<HTMLDivElement>) => void;
+  onPointerDown: (event: PointerEvent<HTMLDivElement>) => void;
+  onPointerMove: (event: PointerEvent<HTMLDivElement>) => void;
+  onPointerUp: (event: PointerEvent<HTMLDivElement>) => void;
   onToggle: () => void;
+  transform?: string;
 }) => {
   const isDragDisabled = activeMutation || dragDisabled;
 
@@ -272,15 +362,20 @@ const CatalogRow = ({
     <div
       aria-grabbed={isDragging}
       className={cn(
-        "group flex flex-col gap-3 border-t border-border/70 py-3 transition first:border-t-0 md:flex-row md:items-center md:justify-between",
+        "group flex flex-col gap-3 border-t border-border/70 py-3 will-change-transform first:border-t-0 md:flex-row md:items-center md:justify-between",
         isDragDisabled ? "cursor-default" : "cursor-grab active:cursor-grabbing",
-        isDragging && "relative z-10 opacity-60",
+        isDragging
+          ? "relative z-20 select-none border-primary bg-primary-soft/35 shadow-admin-soft ring-2 ring-primary/15"
+          : "transition-[transform,border-color,background-color,box-shadow] duration-200 ease-out",
       )}
-      draggable={!isDragDisabled}
-      onDragEnd={onDragEnd}
-      onDragOver={onDragOver}
-      onDragStart={onDragStart}
-      onDrop={onDrop}
+      data-catalog-drag-card="true"
+      data-catalog-drag-id={item.id}
+      onLostPointerCapture={onPointerCancel}
+      onPointerCancel={onPointerCancel}
+      onPointerDown={onPointerDown}
+      onPointerMove={onPointerMove}
+      onPointerUp={onPointerUp}
+      style={transform ? { transform } : undefined}
     >
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center gap-2">
@@ -520,6 +615,7 @@ export const AdminSettingsClient = () => {
   const [modal, setModal] = useState<CatalogModalState | null>(null);
   const [restoreOpen, setRestoreOpen] = useState(false);
   const [dragging, setDragging] = useState<CatalogDragState | null>(null);
+  const [optimisticOrders, setOptimisticOrders] = useState<Record<string, string[]>>({});
   const [openCategoryIds, setOpenCategoryIds] = useState<Record<string, boolean>>({});
   const [openSections, setOpenSections] = useState<Record<SettingsSectionId, boolean>>({
     approach: false,
@@ -528,6 +624,8 @@ export const AdminSettingsClient = () => {
     specialties: false,
     target_audience: false,
   });
+  const dragSessionRef = useRef<CatalogDragSession | null>(null);
+  const dragStateRef = useRef<CatalogDragState | null>(null);
   const data = catalogs.data;
   const categories = useMemo(() => data?.specialty_categories ?? [], [data?.specialty_categories]);
   const isMutating =
@@ -609,81 +707,173 @@ export const AdminSettingsClient = () => {
     setOpenCategoryIds((current) => ({ ...current, [categoryId]: !current[categoryId] }));
   };
 
-  const startCatalogDrag = (event: DragEvent<HTMLDivElement>, dragState: CatalogDragState) => {
-    if (isMutating || isCatalogDragBlockedTarget(event.target)) {
-      event.preventDefault();
-      return;
-    }
-
-    event.dataTransfer.effectAllowed = "move";
-    event.dataTransfer.setData("text/plain", dragState.id);
-    setDragging(dragState);
+  const updateDragState = (nextState: CatalogDragState | null) => {
+    dragStateRef.current = nextState;
+    setDragging(nextState);
   };
 
-  const handleCatalogDragOver = (
-    event: DragEvent<HTMLDivElement>,
+  const getOptimisticItems = <T extends { id: string }>(
+    items: T[],
+    type: AdminSettingsCatalogType,
+    categoryId?: string,
+  ) => applyOptimisticOrder(items, optimisticOrders[catalogScopeKey(type, categoryId)]);
+
+  const isSameDragSession = (
+    session: CatalogDragSession | null,
+    input: Pick<CatalogDragInput, "categoryId" | "id" | "type">,
+    pointerId: number,
+  ): session is CatalogDragSession =>
+    Boolean(
+      session &&
+        session.pointerId === pointerId &&
+        session.id === input.id &&
+        sameScope(session, input.type, input.categoryId),
+    );
+
+  const persistCatalogOrder = async (session: CatalogDragSession, targetIndex: number) => {
+    const nextIds = reorderIds(session.ids, session.id, targetIndex);
+    if (nextIds.join("|") === session.ids.join("|")) return;
+
+    const scopeKey = catalogScopeKey(session.type, session.categoryId);
+    setOptimisticOrders((current) => ({ ...current, [scopeKey]: nextIds }));
+
+    try {
+      await reorder.mutateAsync({
+        category_id: session.categoryId,
+        ids: nextIds,
+        type: session.type,
+      });
+    } catch (error) {
+      setOptimisticOrders((current) => {
+        const next = { ...current };
+        delete next[scopeKey];
+
+        return next;
+      });
+      toast.error(getErrorMessage(error));
+    }
+  };
+
+  const startCatalogDrag = (event: PointerEvent<HTMLDivElement>, input: CatalogDragInput) => {
+    if (isMutating) return;
+    if (event.pointerType === "mouse" && event.button !== 0) return;
+    if (isCatalogDragBlockedTarget(event.target) && !isCatalogDragHandleTarget(event.target))
+      return;
+    if (event.pointerType !== "mouse" && !isCatalogDragHandleTarget(event.target)) return;
+
+    const metrics = measureCatalogCards(event.currentTarget.parentElement);
+    const metricSourceIndex = metrics.findIndex((metric) => metric.id === input.id);
+    const sourceIndex = metricSourceIndex >= 0 ? metricSourceIndex : input.ids.indexOf(input.id);
+    const draggedSlotSize = resolveCatalogSlotSize(metrics, sourceIndex);
+
+    if (metrics.length < 2 || sourceIndex < 0 || draggedSlotSize <= 0) return;
+
+    const nextState: CatalogDragState = {
+      ...input,
+      draggedSlotSize,
+      offsetY: 0,
+      sourceIndex,
+      targetIndex: sourceIndex,
+    };
+
+    dragSessionRef.current = {
+      ...input,
+      draggedSlotSize,
+      metrics,
+      pointerId: event.pointerId,
+      sourceIndex,
+      startClientY: event.clientY,
+    };
+    updateDragState(nextState);
+    event.currentTarget.setPointerCapture(event.pointerId);
+    event.preventDefault();
+  };
+
+  const handleCatalogPointerMove = (
+    event: PointerEvent<HTMLDivElement>,
+    input: Pick<CatalogDragInput, "categoryId" | "id" | "type">,
+  ) => {
+    const session = dragSessionRef.current;
+    if (!isSameDragSession(session, input, event.pointerId)) return;
+
+    updateDragState({
+      categoryId: session.categoryId,
+      draggedSlotSize: session.draggedSlotSize,
+      id: session.id,
+      offsetY: event.clientY - session.startClientY,
+      sourceIndex: session.sourceIndex,
+      targetIndex: resolveCatalogTargetIndex(event.clientY, session),
+      type: session.type,
+    });
+    event.preventDefault();
+  };
+
+  const handleCatalogPointerEnd = (
+    event: PointerEvent<HTMLDivElement>,
+    input: Pick<CatalogDragInput, "categoryId" | "id" | "type">,
+  ) => {
+    const session = dragSessionRef.current;
+    if (!isSameDragSession(session, input, event.pointerId)) return;
+
+    const targetIndex = dragStateRef.current?.targetIndex ?? session.sourceIndex;
+
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+
+    dragSessionRef.current = null;
+    updateDragState(null);
+    event.preventDefault();
+
+    if (targetIndex !== session.sourceIndex) {
+      void persistCatalogOrder(session, targetIndex);
+    }
+  };
+
+  const cancelCatalogPointerDrag = (
+    event: PointerEvent<HTMLDivElement>,
+    input: Pick<CatalogDragInput, "categoryId" | "id" | "type">,
+  ) => {
+    const session = dragSessionRef.current;
+    if (!isSameDragSession(session, input, event.pointerId)) return;
+
+    dragSessionRef.current = null;
+    updateDragState(null);
+  };
+
+  const resolveCatalogTransform = (
+    id: string,
+    index: number,
     type: AdminSettingsCatalogType,
     categoryId?: string,
   ) => {
-    if (!sameScope(dragging, type, categoryId)) return;
+    if (!sameScope(dragging, type, categoryId)) return undefined;
+    if (id === dragging.id) return `translate3d(0, ${dragging.offsetY}px, 0)`;
 
-    event.preventDefault();
-    event.stopPropagation();
-    event.dataTransfer.dropEffect = "move";
-  };
-
-  const dropCatalog = async ({
-    categoryId,
-    ids,
-    targetId,
-    type,
-  }: {
-    categoryId?: string;
-    ids: string[];
-    targetId: string;
-    type: AdminSettingsCatalogType;
-  }) => {
-    if (!sameScope(dragging, type, categoryId)) {
-      setDragging(null);
-      return;
+    if (
+      dragging.targetIndex > dragging.sourceIndex &&
+      index > dragging.sourceIndex &&
+      index <= dragging.targetIndex
+    ) {
+      return `translate3d(0, -${dragging.draggedSlotSize}px, 0)`;
     }
 
-    const nextIds = reorderIds(ids, dragging.id, targetId);
-    if (nextIds.join("|") === ids.join("|")) {
-      setDragging(null);
-      return;
+    if (
+      dragging.targetIndex < dragging.sourceIndex &&
+      index >= dragging.targetIndex &&
+      index < dragging.sourceIndex
+    ) {
+      return `translate3d(0, ${dragging.draggedSlotSize}px, 0)`;
     }
 
-    try {
-      await reorder.mutateAsync({ category_id: categoryId, ids: nextIds, type });
-      toast.success("Ordem atualizada");
-    } catch (error) {
-      toast.error(getErrorMessage(error));
-    } finally {
-      setDragging(null);
-    }
-  };
-
-  const handleCatalogDrop = (
-    event: DragEvent<HTMLDivElement>,
-    input: {
-      categoryId?: string;
-      ids: string[];
-      targetId: string;
-      type: AdminSettingsCatalogType;
-    },
-  ) => {
-    if (!sameScope(dragging, input.type, input.categoryId)) return;
-
-    event.preventDefault();
-    event.stopPropagation();
-    void dropCatalog(input);
+    return undefined;
   };
 
   const restore = async (confirmation: string) => {
     try {
       await restoreDefaults.mutateAsync(confirmation);
       toast.success("Padrões restaurados");
+      setOptimisticOrders({});
       setRestoreOpen(false);
     } catch (error) {
       toast.error(getErrorMessage(error));
@@ -691,7 +881,7 @@ export const AdminSettingsClient = () => {
   };
 
   const renderCatalogSection = (section: (typeof CATALOG_SECTIONS)[number]) => {
-    const items = itemsByType[section.type];
+    const items = getOptimisticItems(itemsByType[section.type], section.type);
     const ids = orderedIds(items);
     const isOpen = openSections[section.type];
     const sectionContentId = `settings-section-${section.type}`;
@@ -737,27 +927,28 @@ export const AdminSettingsClient = () => {
             {items.length === 0 ? (
               <EmptyState>Nenhuma opção cadastrada neste catálogo.</EmptyState>
             ) : (
-              items.map((item) => (
+              items.map((item, index) => (
                 <CatalogRow
                   activeMutation={isMutating}
                   dragDisabled={items.length < 2}
                   isDragging={sameScope(dragging, section.type) && dragging.id === item.id}
                   item={item}
                   key={item.id}
-                  onDragEnd={() => setDragging(null)}
-                  onDragOver={(event) => handleCatalogDragOver(event, section.type)}
-                  onDragStart={(event) =>
-                    startCatalogDrag(event, { id: item.id, type: section.type })
-                  }
-                  onDrop={(event) =>
-                    handleCatalogDrop(event, {
-                      ids,
-                      targetId: item.id,
-                      type: section.type,
-                    })
-                  }
                   onEdit={() => setModal({ item, kind: "item", mode: "edit", type: section.type })}
+                  onPointerCancel={(event) =>
+                    cancelCatalogPointerDrag(event, { id: item.id, type: section.type })
+                  }
+                  onPointerDown={(event) =>
+                    startCatalogDrag(event, { id: item.id, ids, type: section.type })
+                  }
+                  onPointerMove={(event) =>
+                    handleCatalogPointerMove(event, { id: item.id, type: section.type })
+                  }
+                  onPointerUp={(event) =>
+                    handleCatalogPointerEnd(event, { id: item.id, type: section.type })
+                  }
                   onToggle={() => toggleItem(section.type, item)}
+                  transform={resolveCatalogTransform(item.id, index, section.type)}
                 />
               ))
             )}
@@ -767,7 +958,8 @@ export const AdminSettingsClient = () => {
     );
   };
 
-  const categoryIds = orderedIds(categories);
+  const displayCategories = getOptimisticItems(categories, "specialty_category");
+  const categoryIds = orderedIds(displayCategories);
   const specialtiesOpen = openSections.specialties;
   const specialtiesSectionContentId = "settings-section-specialties";
 
@@ -842,41 +1034,74 @@ export const AdminSettingsClient = () => {
 
             {specialtiesOpen ? (
               <div className="mt-5 space-y-4" id={specialtiesSectionContentId}>
-                {categories.length === 0 ? (
+                {displayCategories.length === 0 ? (
                   <EmptyState>Nenhuma categoria cadastrada.</EmptyState>
                 ) : (
-                  categories.map((category) => {
+                  displayCategories.map((category, categoryIndex) => {
                     const categoryContentId = `settings-category-${category.id}`;
                     const categoryOpen = Boolean(openCategoryIds[category.id]);
                     const isCategoryDragging =
                       sameScope(dragging, "specialty_category") && dragging.id === category.id;
-                    const specialtyIds = orderedIds(category.specialties);
+                    const specialties = getOptimisticItems(
+                      category.specialties,
+                      "specialty",
+                      category.id,
+                    );
+                    const specialtyIds = orderedIds(specialties);
+                    const categoryTransform = resolveCatalogTransform(
+                      category.id,
+                      categoryIndex,
+                      "specialty_category",
+                    );
 
                     return (
                       <div
                         aria-grabbed={isCategoryDragging}
                         className={cn(
-                          "group rounded-[24px] border border-border/80 bg-surface-muted/30 p-4 transition",
-                          isMutating || categories.length < 2
+                          "group rounded-[24px] border border-border/80 bg-surface-muted/30 p-4 will-change-transform",
+                          isMutating || displayCategories.length < 2
                             ? "cursor-default"
                             : "cursor-grab active:cursor-grabbing",
                           isCategoryDragging &&
                             "relative z-10 border-primary bg-primary-soft/40 opacity-80 shadow-admin-soft ring-2 ring-primary/15",
+                          !isCategoryDragging &&
+                            "transition-[transform,border-color,background-color,box-shadow] duration-200 ease-out",
                         )}
-                        draggable={!isMutating && categories.length > 1}
+                        data-catalog-drag-card="true"
+                        data-catalog-drag-id={category.id}
                         key={category.id}
-                        onDragEnd={() => setDragging(null)}
-                        onDragOver={(event) => handleCatalogDragOver(event, "specialty_category")}
-                        onDragStart={(event) =>
-                          startCatalogDrag(event, { id: category.id, type: "specialty_category" })
-                        }
-                        onDrop={(event) =>
-                          handleCatalogDrop(event, {
-                            ids: categoryIds,
-                            targetId: category.id,
+                        onLostPointerCapture={(event) =>
+                          cancelCatalogPointerDrag(event, {
+                            id: category.id,
                             type: "specialty_category",
                           })
                         }
+                        onPointerCancel={(event) =>
+                          cancelCatalogPointerDrag(event, {
+                            id: category.id,
+                            type: "specialty_category",
+                          })
+                        }
+                        onPointerDown={(event) =>
+                          startCatalogDrag(event, {
+                            id: category.id,
+                            ids: categoryIds,
+                            type: "specialty_category",
+                          })
+                        }
+                        onPointerMove={(event) =>
+                          handleCatalogPointerMove(event, {
+                            id: category.id,
+                            type: "specialty_category",
+                          })
+                        }
+                        onPointerUp={(event) =>
+                          handleCatalogPointerEnd(event, {
+                            id: category.id,
+                            type: "specialty_category",
+                          })
+                        }
+                        style={categoryTransform ? { transform: categoryTransform } : undefined}
                       >
                         <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                           <ExpandToggle
@@ -899,14 +1124,14 @@ export const AdminSettingsClient = () => {
                                 </h3>
                                 <StatusBadge active={category.active} />
                                 <span className="text-xs text-muted">
-                                  {category.specialties.length} especialidades
+                                  {specialties.length} especialidades
                                 </span>
                               </div>
                             </div>
                           </ExpandToggle>
                           <div className="flex flex-wrap items-center gap-2">
                             <DragHandle
-                              disabled={isMutating || categories.length < 2}
+                              disabled={isMutating || displayCategories.length < 2}
                               label={`Arrastar ${category.name} para reordenar`}
                             />
                             <button
@@ -955,38 +1180,19 @@ export const AdminSettingsClient = () => {
                             className="mt-3 rounded-[1.35rem] border border-border/60 bg-surface px-3"
                             id={categoryContentId}
                           >
-                            {category.specialties.length === 0 ? (
+                            {specialties.length === 0 ? (
                               <EmptyState>Nenhuma especialidade nesta categoria.</EmptyState>
                             ) : (
-                              category.specialties.map((item) => (
+                              specialties.map((item, index) => (
                                 <CatalogRow
                                   activeMutation={isMutating}
-                                  dragDisabled={category.specialties.length < 2}
+                                  dragDisabled={specialties.length < 2}
                                   isDragging={
                                     sameScope(dragging, "specialty", category.id) &&
                                     dragging.id === item.id
                                   }
                                   item={item}
                                   key={item.id}
-                                  onDragEnd={() => setDragging(null)}
-                                  onDragOver={(event) =>
-                                    handleCatalogDragOver(event, "specialty", category.id)
-                                  }
-                                  onDragStart={(event) =>
-                                    startCatalogDrag(event, {
-                                      categoryId: category.id,
-                                      id: item.id,
-                                      type: "specialty",
-                                    })
-                                  }
-                                  onDrop={(event) =>
-                                    handleCatalogDrop(event, {
-                                      categoryId: category.id,
-                                      ids: specialtyIds,
-                                      targetId: item.id,
-                                      type: "specialty",
-                                    })
-                                  }
                                   onEdit={() =>
                                     setModal({
                                       categoryId: category.id,
@@ -996,7 +1202,42 @@ export const AdminSettingsClient = () => {
                                       type: "specialty",
                                     })
                                   }
+                                  onPointerCancel={(event) =>
+                                    cancelCatalogPointerDrag(event, {
+                                      categoryId: category.id,
+                                      id: item.id,
+                                      type: "specialty",
+                                    })
+                                  }
+                                  onPointerDown={(event) =>
+                                    startCatalogDrag(event, {
+                                      categoryId: category.id,
+                                      id: item.id,
+                                      ids: specialtyIds,
+                                      type: "specialty",
+                                    })
+                                  }
+                                  onPointerMove={(event) =>
+                                    handleCatalogPointerMove(event, {
+                                      categoryId: category.id,
+                                      id: item.id,
+                                      type: "specialty",
+                                    })
+                                  }
+                                  onPointerUp={(event) =>
+                                    handleCatalogPointerEnd(event, {
+                                      categoryId: category.id,
+                                      id: item.id,
+                                      type: "specialty",
+                                    })
+                                  }
                                   onToggle={() => toggleItem("specialty", item)}
+                                  transform={resolveCatalogTransform(
+                                    item.id,
+                                    index,
+                                    "specialty",
+                                    category.id,
+                                  )}
                                 />
                               ))
                             )}
