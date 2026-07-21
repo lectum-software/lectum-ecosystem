@@ -2730,7 +2730,7 @@ const ActiveCommunitiesBlock = ({
                           : "bg-surface-muted text-muted",
                       )}
                     >
-                      {community.following ? "Segue" : "Não segue"}
+                      {community.following ? "Seguindo" : "Não seguindo"}
                     </Badge>
                   </td>
                   <td className="px-4 py-4 text-center text-sm font-black text-foreground">

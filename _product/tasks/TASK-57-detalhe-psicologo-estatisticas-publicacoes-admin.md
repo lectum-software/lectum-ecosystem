@@ -274,3 +274,12 @@ Exibir estatísticas de negócio/comunidade e publicações do psicólogo com da
 - Builder/Quick Copy nao estava disponivel como ferramenta callable no ambiente; a validacao visual usou o recorte enviado pelo usuario e o PNG local `_product/proto/admin/Psicologos/Detalhes do psicologo/Publicacoes.png`.
 - ADR atualizado: `adrs/0237-admin-psicologo-estatisticas-publicacoes.md`.
 - Validacoes executadas para este ajuste: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e browser local/headless via Chrome/CDP em `/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=publicacoes` com admin temporario real removido ao final. O browser confirmou em desktop 1365px e mobile 390px: cabecalho da secao transparente, filtro **Ordenar** transparente e primeiro card de publicacao em branco (`bg-surface`).
+
+### Ajuste da copy de status em Comunidades ativas em 2026-07-21
+
+- Pedido do usuario: na coluna **Status** do bloco **Comunidades ativas**, trocar os textos **Segue** e **Nao segue** por **Seguindo** e **Nao seguindo**.
+- A alteracao e apenas de copy/rotulo visual sobre o booleano real `community.following`; nao houve alteracao de contrato, backend, schema, migration, endpoint, mock ou seed.
+- A tabela permanece mobile-first e preserva os dados reais e a centralizacao das colunas ajustadas anteriormente.
+- Builder/Quick Copy nao estava disponivel como ferramenta callable no ambiente; a validacao visual usou o recorte enviado pelo usuario e o PNG local `_product/proto/admin/Psicologos/Detalhes do psicologo/Estatisticas.png`.
+- ADR atualizado: `adrs/0290-admin-psicologo-comunidade-resumo-cobertura.md`.
+- Validacoes executadas para este ajuste: `pnpm --dir admin exec biome check --write "src/app/(admin)/psicologos/[id]/client.tsx"`, `pnpm --dir admin exec eslint "src/app/(admin)/psicologos/[id]/client.tsx"`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` (reexecutado com sucesso apos timeout inicial) e browser local/headless via Chrome/CDP em `/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=estatisticas` com admin temporario real removido ao final. O browser confirmou em desktop 1365px e mobile 390px: coluna **Status** exibindo **Seguindo** ou **Nao seguindo**, ausencia da copy antiga **Segue**/**Nao segue**, ausencia da coluna **Interacoes** e alinhamento central da coluna **Status**.

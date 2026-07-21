@@ -80,3 +80,17 @@ Decisao complementar:
 Consequencia: a tabela fica com menos colunas, evita duplicar o total de acoes e melhora a varredura visual em desktop sem alterar backend, endpoint, schema, mocks ou dependencias. No mobile, a rolagem horizontal controlada permanece.
 
 Validacao do ajuste: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e browser local/headless via Chrome/CDP em desktop 1365px e mobile 390px, confirmando a ausencia da coluna **Interacoes**, a sublinha **1 acao no periodo** abaixo do nome e as colunas de dados centralizadas.
+
+## Atualizacao 2026-07-21: copy da coluna Status em Comunidades ativas
+
+A coluna **Status** do bloco **Comunidades ativas** deve expressar a relacao de seguimento como estado em progresso, alinhada ao pedido de produto.
+
+Decisao complementar:
+
+- Manter o campo real `community.following` como fonte unica do estado.
+- Renderizar `true` como **Seguindo** e `false` como **Nao seguindo**.
+- Nao alterar semantica, cores, backend, contrato, banco ou regra de ordenacao do bloco.
+
+Consequencia: a leitura do status fica mais natural para o Admin, sem criar dado novo nem alterar a origem real da informacao.
+
+Validacao do ajuste: `pnpm --dir admin exec biome check --write "src/app/(admin)/psicologos/[id]/client.tsx"`, `pnpm --dir admin exec eslint "src/app/(admin)/psicologos/[id]/client.tsx"`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` (reexecutado com sucesso apos timeout inicial) e browser local/headless via Chrome/CDP em desktop 1365px e mobile 390px, confirmando **Seguindo**/**Nao seguindo** na coluna **Status**, ausencia de **Segue**/**Nao segue** e alinhamento central preservado.
