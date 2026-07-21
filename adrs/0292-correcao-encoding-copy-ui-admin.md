@@ -33,3 +33,36 @@ O problema estava em literais já corrompidos no código do Admin, em strings re
 - `pnpm --dir frontend build`
 - `pnpm check`
 - Smoke HTTP local: `GET http://localhost:3002/pacientes/cmrqsr926001d1guhoz10yvaz` retornou `200`.
+
+## Complemento 2026-07-21: acentuação e ortografia da aba Conta do paciente
+
+### Contexto
+
+Após revisão visual do usuário em `/pacientes/:id?tab=conta`, a aba **Conta** ainda exibia
+copies sem acentuação em labels, avisos, placeholders e mensagens de ação, como `Metodo de login`,
+`Troca obrigatoria`, `Sem pendencia`, `Motivo/observacao interna`, `confirmacao`, `sessoes` e
+`Alteracao`.
+
+### Decisão
+
+- Corrigir os literais da UI Admin diretamente em `admin/src/app/(admin)/pacientes/[id]/client.tsx`.
+- Corrigir as mensagens backend de erro/sucesso usadas pela aba de conta do paciente em
+  `backend/locales/pt/translation.json`.
+- Manter confirmação forte com copy correta (`ALTERAR E-MAIL`, `ENCERRAR SESSÕES`) e aceitar
+  entrada legada sem acento/hífen por normalização, evitando quebrar operadores que digitarem o
+  formato anterior.
+- Não alterar schema Prisma, migrations, packages, endpoints ou dados persistidos.
+
+### Validação complementar
+
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/pacientes/[id]/client.tsx"`
+- `pnpm --dir backend exec biome check --write "src/modules/api/admin/private/patients/account/use-cases/services.ts" "locales/pt/translation.json"`
+- `pnpm --dir admin check`
+- `pnpm --dir backend check`
+- `pnpm --dir admin build`
+- `pnpm --dir backend build`
+- `pnpm check`
+- Smoke HTTP local: `GET http://localhost:3002/pacientes/cmrqsrab5001f1guh2ve5oy90?tab=conta` retornou `200`.
+- Chrome headless local abriu a rota, mas sem sessão administrativa no perfil headless caiu no login;
+  a conferência autenticada visual ficou limitada ao screenshot enviado pelo usuário e à revisão dos
+  literais corrigidos.

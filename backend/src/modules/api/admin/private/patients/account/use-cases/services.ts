@@ -29,12 +29,24 @@ import {
   AdminPatientAccountRepository,
 } from "../repositories/AdminPatientAccountRepository";
 
-const CHANGE_EMAIL_CONFIRMATION = "ALTERAR EMAIL";
+const CHANGE_EMAIL_CONFIRMATION = "ALTERAR E-MAIL";
 const DEACTIVATE_ACCOUNT_CONFIRMATION = "DESATIVAR CONTA";
 const DELETE_ACCOUNT_CONFIRMATION = "EXCLUIR CONTA";
 const TEMP_PASSWORD_CONFIRMATION = "ALTERAR SENHA";
-const REVOKE_SESSIONS_CONFIRMATION = "ENCERRAR SESSOES";
+const REVOKE_SESSIONS_CONFIRMATION = "ENCERRAR SESSÕES";
 const SUSPEND_ACCOUNT_CONFIRMATION = "SUSPENDER CONTA";
+
+const normalizeStrongConfirmation = (value: string) =>
+  value
+    .trim()
+    .toUpperCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/-/g, "")
+    .replace(/\s+/g, " ");
+
+const matchesStrongConfirmation = (value: string, expected: string) =>
+  normalizeStrongConfirmation(value) === normalizeStrongConfirmation(expected);
 
 const ACCOUNT_STATUS_LABELS: Record<AdminPatientAccountStatus, string> = {
   active: "Ativa",
@@ -330,7 +342,7 @@ export const changeAdminPatientAccountEmail = async (
   const account = buildAccountDto(profile);
   if (!account.capabilities.can_change_email) return passwordSupportUnavailable();
 
-  if (data.b.confirmation.trim().toUpperCase() !== CHANGE_EMAIL_CONFIRMATION) {
+  if (!matchesStrongConfirmation(data.b.confirmation, CHANGE_EMAIL_CONFIRMATION)) {
     return {
       status: 400,
       ...error("admin_patient_account_change_email_confirmation_invalid", {}),
@@ -509,7 +521,7 @@ export const setAdminPatientAccountTemporaryPassword = async (
   const account = buildAccountDto(profile);
   if (!account.capabilities.can_set_temporary_password) return passwordSupportUnavailable();
 
-  if (data.b.confirmation.trim().toUpperCase() !== TEMP_PASSWORD_CONFIRMATION) {
+  if (!matchesStrongConfirmation(data.b.confirmation, TEMP_PASSWORD_CONFIRMATION)) {
     return {
       status: 400,
       ...error("admin_patient_account_temporary_password_confirmation_invalid", {}),
@@ -576,7 +588,7 @@ const changeAccountStatus = async ({
   if (currentStatus === "deleted") return accountAlreadyDeleted();
   if (currentStatus === accountStatus) return invalidStatusTransition();
 
-  if (data.b.confirmation.trim().toUpperCase() !== confirmation) {
+  if (!matchesStrongConfirmation(data.b.confirmation, confirmation)) {
     return {
       status: 400,
       ...error(invalidConfirmationKey, {}),
@@ -642,7 +654,7 @@ export const deleteAdminPatientAccount = async (
   const currentStatus = normalizeAccountStatus(profile.user);
   if (currentStatus === "deleted") return accountAlreadyDeleted();
 
-  if (data.b.confirmation.trim().toUpperCase() !== DELETE_ACCOUNT_CONFIRMATION) {
+  if (!matchesStrongConfirmation(data.b.confirmation, DELETE_ACCOUNT_CONFIRMATION)) {
     return {
       status: 400,
       ...error("admin_patient_account_delete_confirmation_invalid", {}),
@@ -701,7 +713,7 @@ export const revokeAdminPatientAccountSessions = async (
   const { profile, repository } = await loadAccount(data.p.id);
   if (!profile) return profileNotFound();
 
-  if (data.b.confirmation.trim().toUpperCase() !== REVOKE_SESSIONS_CONFIRMATION) {
+  if (!matchesStrongConfirmation(data.b.confirmation, REVOKE_SESSIONS_CONFIRMATION)) {
     return {
       status: 400,
       ...error("admin_patient_account_revoke_sessions_confirmation_invalid", {}),

@@ -237,19 +237,37 @@ const accountReasonSchema = z.object({
   reason: z
     .string()
     .min(10, "Informe o motivo interno com pelo menos 10 caracteres.")
-    .max(500, "Use no maximo 500 caracteres."),
+    .max(500, "Use no máximo 500 caracteres."),
 });
+
+const STRONG_CONFIRMATIONS = {
+  changeEmail: "ALTERAR E-MAIL",
+  revokeSessions: "ENCERRAR SESSÕES",
+  temporaryPassword: "ALTERAR SENHA",
+} as const;
+
+const normalizeStrongConfirmation = (value: string) =>
+  value
+    .trim()
+    .toUpperCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/-/g, "")
+    .replace(/\s+/g, " ");
+
+const matchesStrongConfirmation = (value: string, expected: string) =>
+  normalizeStrongConfirmation(value) === normalizeStrongConfirmation(expected);
 
 const accountChangeEmailSchema = accountReasonSchema
   .extend({
     confirmation: z.string(),
-    email: z.string().email("Informe um e-mail valido."),
+    email: z.string().email("Informe um e-mail válido."),
   })
   .superRefine((values, ctx) => {
-    if (values.confirmation.trim().toUpperCase() !== "ALTERAR EMAIL") {
+    if (!matchesStrongConfirmation(values.confirmation, STRONG_CONFIRMATIONS.changeEmail)) {
       ctx.addIssue({
         code: "custom",
-        message: "Digite ALTERAR EMAIL para confirmar.",
+        message: `Digite ${STRONG_CONFIRMATIONS.changeEmail} para confirmar.`,
         path: ["confirmation"],
       });
     }
@@ -261,14 +279,14 @@ const accountTemporaryPasswordSchema = accountReasonSchema
     password: z
       .string()
       .min(10, "Use pelo menos 10 caracteres.")
-      .max(128, "Use no maximo 128 caracteres."),
+      .max(128, "Use no máximo 128 caracteres."),
     password_confirm: z.string(),
   })
   .superRefine((values, ctx) => {
-    if (values.confirmation.trim().toUpperCase() !== "ALTERAR SENHA") {
+    if (!matchesStrongConfirmation(values.confirmation, STRONG_CONFIRMATIONS.temporaryPassword)) {
       ctx.addIssue({
         code: "custom",
-        message: "Digite ALTERAR SENHA para confirmar.",
+        message: `Digite ${STRONG_CONFIRMATIONS.temporaryPassword} para confirmar.`,
         path: ["confirmation"],
       });
     }
@@ -287,10 +305,10 @@ const accountRevokeSessionsSchema = accountReasonSchema
     confirmation: z.string(),
   })
   .superRefine((values, ctx) => {
-    if (values.confirmation.trim().toUpperCase() !== "ENCERRAR SESSOES") {
+    if (!matchesStrongConfirmation(values.confirmation, STRONG_CONFIRMATIONS.revokeSessions)) {
       ctx.addIssue({
         code: "custom",
-        message: "Digite ENCERRAR SESSOES para confirmar.",
+        message: `Digite ${STRONG_CONFIRMATIONS.revokeSessions} para confirmar.`,
         path: ["confirmation"],
       });
     }
@@ -316,12 +334,12 @@ const createAccountStatusActionSchema = (
       confirmation: z.string(),
       suspension_duration_days: requireSuspensionDuration
         ? z.enum(SUSPENSION_DURATION_VALUES, {
-            message: "Selecione o prazo da suspensao.",
+            message: "Selecione o prazo da suspensão.",
           })
         : z.string().optional(),
     })
     .superRefine((values, ctx) => {
-      if (values.confirmation.trim().toUpperCase() !== confirmationText) {
+      if (!matchesStrongConfirmation(values.confirmation, confirmationText)) {
         ctx.addIssue({
           code: "custom",
           message: `Digite ${confirmationText} para confirmar.`,
@@ -2334,7 +2352,7 @@ const AccountSituationCard = ({ detail, id }: { detail: AdminPatientDetail; id: 
             <p className="mt-3 text-sm font-bold leading-6 text-muted">
               {active
                 ? "Login liberado para uso normal da plataforma."
-                : "Conta sem acesso ativo no momento; revise as acoes completas na aba Conta."}
+                : "Conta sem acesso ativo no momento; revise as ações completas na aba Conta."}
             </p>
           </div>
           <Badge className={active ? "bg-emerald-50 text-success" : "bg-red-50 text-danger"}>
@@ -3170,6 +3188,16 @@ const booleanBadge = (value: boolean, labels: { false: string; true: string }) =
   </Badge>
 );
 
+const formatCountWithUnit = (count: number, singular: string, plural: string) =>
+  `${numberFormatter.format(count)} ${count === 1 ? singular : plural}`;
+
+const formatSessionDeviceSummary = (sessions: AdminPatientAccount["sessions"]) =>
+  `${formatCountWithUnit(sessions.active_count, "sessão", "sessões")} em ${formatCountWithUnit(
+    sessions.devices_count,
+    "dispositivo",
+    "dispositivos",
+  )}`;
+
 const AccountUnavailableNotice = ({ children }: { children: ReactNode }) => (
   <div className="rounded-2xl border border-dashed border-border bg-surface-muted p-4 text-sm font-bold leading-6 text-muted">
     {children}
@@ -3207,11 +3235,11 @@ const AccountSummaryCard = ({ account }: { account: AdminPatientAccount }) => (
       })}
     />
     <FieldRow label="Confirmado em" value={formatDateTime(account.confirmed_at)} />
-    <FieldRow label="Metodo de login" value={account.provider_label} />
+    <FieldRow label="Método de login" value={account.provider_label} />
     <FieldRow
       label="Senha local"
       value={booleanBadge(account.has_password, {
-        false: "Nao possui senha local",
+        false: "Não possui senha local",
         true: "Possui senha local",
       })}
     />
@@ -3228,26 +3256,18 @@ const AccountSummaryCard = ({ account }: { account: AdminPatientAccount }) => (
       value={formatDateTime(account.account_status_changed_at)}
     />
     {account.account_status === "suspended" ? (
-      <FieldRow label="Suspensa ate" value={formatDateTime(account.account_status_expires_at)} />
+      <FieldRow label="Suspensa até" value={formatDateTime(account.account_status_expires_at)} />
     ) : null}
     <FieldRow
-      label="Troca obrigatoria"
+      label="Troca obrigatória"
       value={booleanBadge(account.need_reset, {
-        false: "Sem pendencia",
+        false: "Sem pendência",
         true: "Pendente",
       })}
     />
     <FieldRow label="Conta criada em" value={formatDateTime(account.created_at)} />
-    <FieldRow label="Ultimo acesso" value={formatLastAccess(account.last_access_at)} />
-    <FieldRow
-      label="Sessoes ativas"
-      value={
-        numberFormatter.format(account.sessions.active_count) +
-        " sessao(oes) em " +
-        numberFormatter.format(account.sessions.devices_count) +
-        " dispositivo(s)"
-      }
-    />
+    <FieldRow label="Último acesso" value={formatLastAccess(account.last_access_at)} />
+    <FieldRow label="Sessões ativas" value={formatSessionDeviceSummary(account.sessions)} />
   </InfoCard>
 );
 
@@ -3272,7 +3292,7 @@ const AccountChangeEmailForm = ({ account, id }: { account: AdminPatientAccount;
         reason: values.reason.trim(),
       });
       form.reset();
-      toast.success("E-mail alterado. Confirmacao enviada para o novo endereco.");
+      toast.success("E-mail alterado. Confirmação enviada para o novo endereço.");
     } catch (error) {
       toast.error(resolveApiError(error));
     }
@@ -3292,18 +3312,18 @@ const AccountChangeEmailForm = ({ account, id }: { account: AdminPatientAccount;
         />
         <TextareaController<AccountChangeEmailFormValues>
           disabled={disabled}
-          label="Motivo/observacao interna"
+          label="Motivo/observação interna"
           name="reason"
-          placeholder="Explique a solicitacao recebida pelo suporte."
+          placeholder="Explique a solicitação recebida pelo suporte."
           required
           rows={3}
         />
         <InputController<AccountChangeEmailFormValues>
           autoComplete="off"
           disabled={disabled}
-          label="Confirmacao forte"
+          label="Confirmação forte"
           name="confirmation"
-          placeholder="ALTERAR EMAIL"
+          placeholder={STRONG_CONFIRMATIONS.changeEmail}
           required
         />
         <button
@@ -3342,7 +3362,7 @@ const AccountSendEmailConfirmationForm = ({
     try {
       await mutation.mutateAsync({ reason: values.reason.trim() });
       form.reset();
-      toast.success("Confirmacao de e-mail reenviada.");
+      toast.success("Confirmação de e-mail reenviada.");
     } catch (error) {
       toast.error(resolveApiError(error));
     }
@@ -3351,7 +3371,7 @@ const AccountSendEmailConfirmationForm = ({
   if (!account.capabilities.can_send_email_confirmation) {
     return (
       <AccountUnavailableNotice>
-        Reenvio disponivel apenas quando o e-mail esta pendente de confirmacao.
+        Reenvio disponível apenas quando o e-mail está pendente de confirmação.
       </AccountUnavailableNotice>
     );
   }
@@ -3361,7 +3381,7 @@ const AccountSendEmailConfirmationForm = ({
       <form className="grid gap-3" noValidate onSubmit={form.handleSubmit(onSubmit)}>
         <TextareaController<AccountReasonFormValues>
           disabled={disabled}
-          label="Motivo/observacao interna"
+          label="Motivo/observação interna"
           name="reason"
           placeholder="Informe o motivo do reenvio."
           required
@@ -3377,7 +3397,7 @@ const AccountSendEmailConfirmationForm = ({
           ) : (
             <Send aria-hidden className="h-4 w-4" />
           )}
-          Reenviar confirmacao
+          Reenviar confirmação
         </button>
       </form>
     </FormProvider>
@@ -3403,7 +3423,7 @@ const AccountPasswordResetForm = ({
     try {
       await mutation.mutateAsync({ reason: values.reason.trim() });
       form.reset();
-      toast.success("Link de redefinicao enviado.");
+      toast.success("Link de redefinição enviado.");
     } catch (error) {
       toast.error(resolveApiError(error));
     }
@@ -3412,7 +3432,7 @@ const AccountPasswordResetForm = ({
   if (!account.capabilities.can_send_password_reset) {
     return (
       <AccountUnavailableNotice>
-        Esta conta acessa via Google. Redefinicao de senha local indisponivel.
+        Esta conta acessa via Google. Redefinição de senha local indisponível.
       </AccountUnavailableNotice>
     );
   }
@@ -3422,9 +3442,9 @@ const AccountPasswordResetForm = ({
       <form className="grid gap-3" noValidate onSubmit={form.handleSubmit(onSubmit)}>
         <TextareaController<AccountReasonFormValues>
           disabled={disabled}
-          label="Motivo/observacao interna"
+          label="Motivo/observação interna"
           name="reason"
-          placeholder="Explique por que o link sera enviado pelo Admin."
+          placeholder="Explique por que o link será enviado pelo Admin."
           required
           rows={3}
         />
@@ -3438,7 +3458,7 @@ const AccountPasswordResetForm = ({
           ) : (
             <Send aria-hidden className="h-4 w-4" />
           )}
-          Enviar link de redefinicao
+          Enviar link de redefinição
         </button>
       </form>
     </FormProvider>
@@ -3474,7 +3494,7 @@ const AccountTemporaryPasswordForm = ({
         reason: values.reason.trim(),
       });
       form.reset();
-      toast.success("Senha temporaria definida. O paciente devera troca-la no proximo login.");
+      toast.success("Senha temporária definida. O paciente deverá trocá-la no próximo login.");
     } catch (error) {
       toast.error(resolveApiError(error));
     }
@@ -3483,7 +3503,7 @@ const AccountTemporaryPasswordForm = ({
   if (!account.capabilities.can_set_temporary_password) {
     return (
       <AccountUnavailableNotice>
-        Esta conta acessa via Google. Alteracao de senha local indisponivel.
+        Esta conta acessa via Google. Alteração de senha local indisponível.
       </AccountUnavailableNotice>
     );
   }
@@ -3492,14 +3512,14 @@ const AccountTemporaryPasswordForm = ({
     <FormProvider {...form}>
       <form className="grid gap-3" noValidate onSubmit={form.handleSubmit(onSubmit)}>
         <div className="rounded-2xl border border-orange-200 bg-orange-50 p-3 text-sm font-bold leading-6 text-orange-800">
-          A senha temporaria nao sera exibida novamente, nao sera gravada em auditoria e exigira
-          troca obrigatoria no proximo login do paciente.
+          A senha temporária não será exibida novamente, não será gravada em auditoria e exigirá
+          troca obrigatória no próximo login do paciente.
         </div>
         <div className="grid gap-3 md:grid-cols-2">
           <InputController<AccountTemporaryPasswordFormValues>
             autoComplete="new-password"
             disabled={disabled}
-            label="Senha temporaria"
+            label="Senha temporária"
             name="password"
             required
             type="password"
@@ -3507,7 +3527,7 @@ const AccountTemporaryPasswordForm = ({
           <InputController<AccountTemporaryPasswordFormValues>
             autoComplete="new-password"
             disabled={disabled}
-            label="Confirmar senha temporaria"
+            label="Confirmar senha temporária"
             name="password_confirm"
             required
             type="password"
@@ -3515,18 +3535,18 @@ const AccountTemporaryPasswordForm = ({
         </div>
         <TextareaController<AccountTemporaryPasswordFormValues>
           disabled={disabled}
-          label="Motivo/observacao interna"
+          label="Motivo/observação interna"
           name="reason"
-          placeholder="Registre o motivo excepcional para senha temporaria."
+          placeholder="Registre o motivo excepcional para senha temporária."
           required
           rows={3}
         />
         <InputController<AccountTemporaryPasswordFormValues>
           autoComplete="off"
           disabled={disabled}
-          label="Confirmacao forte"
+          label="Confirmação forte"
           name="confirmation"
-          placeholder="ALTERAR SENHA"
+          placeholder={STRONG_CONFIRMATIONS.temporaryPassword}
           required
         />
         <button
@@ -3539,7 +3559,7 @@ const AccountTemporaryPasswordForm = ({
           ) : (
             <KeyRound aria-hidden className="h-4 w-4" />
           )}
-          Definir senha temporaria
+          Definir senha temporária
         </button>
       </form>
     </FormProvider>
@@ -3571,7 +3591,7 @@ const AccountRevokeSessionsForm = ({
         reason: values.reason.trim(),
       });
       form.reset();
-      toast.success("Sessoes do paciente encerradas.");
+      toast.success("Sessões do paciente encerradas.");
     } catch (error) {
       toast.error(resolveApiError(error));
     }
@@ -3582,23 +3602,23 @@ const AccountRevokeSessionsForm = ({
       <form className="grid gap-3" noValidate onSubmit={form.handleSubmit(onSubmit)}>
         {!account.capabilities.can_revoke_sessions ? (
           <AccountUnavailableNotice>
-            Nenhuma sessao ativa real foi encontrada em user_token.
+            Nenhuma sessão ativa real foi encontrada em user_token.
           </AccountUnavailableNotice>
         ) : null}
         <TextareaController<AccountRevokeSessionsFormValues>
           disabled={disabled}
-          label="Motivo/observacao interna"
+          label="Motivo/observação interna"
           name="reason"
-          placeholder="Explique por que as sessoes serao encerradas."
+          placeholder="Explique por que as sessões serão encerradas."
           required
           rows={3}
         />
         <InputController<AccountRevokeSessionsFormValues>
           autoComplete="off"
           disabled={disabled}
-          label="Confirmacao forte"
+          label="Confirmação forte"
           name="confirmation"
-          placeholder="ENCERRAR SESSOES"
+          placeholder={STRONG_CONFIRMATIONS.revokeSessions}
           required
         />
         <button
@@ -3611,7 +3631,7 @@ const AccountRevokeSessionsForm = ({
           ) : (
             <LogOut aria-hidden className="h-4 w-4" />
           )}
-          Encerrar sessoes
+          Encerrar sessões
         </button>
       </form>
     </FormProvider>
@@ -3636,43 +3656,43 @@ const ACCOUNT_STATUS_ACTION_CONFIG: Record<
   }
 > = {
   deactivate: {
-    blockedMessage: "A conta ja esta desativada ou nao pode receber esta acao.",
+    blockedMessage: "A conta já está desativada ou não pode receber esta ação.",
     buttonClassName:
       "border border-border bg-surface px-4 text-foreground hover:border-primary hover:text-primary",
     buttonLabel: "Desativar conta",
     canRun: (account) => account.capabilities.can_deactivate_account,
     confirmation: "DESATIVAR CONTA",
     description:
-      "Acao administrativa reversivel por decisao futura: bloqueia login e encerra sessoes do paciente.",
+      "Ação administrativa reversível por decisão futura: bloqueia login e encerra sessões do paciente.",
     icon: X,
     schema: accountDeactivateSchema,
-    successMessage: "Conta desativada e sessoes encerradas.",
+    successMessage: "Conta desativada e sessões encerradas.",
     title: "Desativar conta",
   },
   delete: {
-    blockedMessage: "Exclusao indisponivel para esta conta no estado atual.",
+    blockedMessage: "Exclusão indisponível para esta conta no estado atual.",
     buttonClassName: "bg-danger px-4 text-white hover:bg-danger/90",
     buttonLabel: "Excluir conta",
     canRun: (account) => account.capabilities.can_delete_account,
     confirmation: "EXCLUIR CONTA",
     description:
-      "Acao permanente: aplica soft delete, anonimiza dados da conta, remove o perfil do paciente e encerra sessoes.",
+      "Ação permanente: aplica soft delete, anonimiza dados da conta, remove o perfil do paciente e encerra sessões.",
     icon: AlertTriangle,
     schema: accountDeleteSchema,
-    successMessage: "Conta excluida. Retornando para a lista de pacientes.",
+    successMessage: "Conta excluída. Retornando para a lista de pacientes.",
     title: "Excluir conta",
   },
   suspend: {
-    blockedMessage: "A conta ja esta suspensa ou nao pode receber esta acao.",
+    blockedMessage: "A conta já está suspensa ou não pode receber esta ação.",
     buttonClassName: "bg-danger px-4 text-white hover:bg-danger/90",
     buttonLabel: "Suspender conta",
     canRun: (account) => account.capabilities.can_suspend_account,
     confirmation: "SUSPENDER CONTA",
     description:
-      "Acao punitiva/operacional temporaria: bloqueia login e encerra sessoes sem apagar dados.",
+      "Ação punitiva/operacional temporária: bloqueia login e encerra sessões sem apagar dados.",
     icon: Lock,
     schema: accountSuspendSchema,
-    successMessage: "Conta suspensa e sessoes encerradas.",
+    successMessage: "Conta suspensa e sessões encerradas.",
     title: "Suspender conta",
   },
 };
@@ -3762,7 +3782,7 @@ const AccountStatusActionForm = ({
           {kind === "suspend" ? (
             <SelectController<AccountStatusActionFormValues>
               disabled={disabled}
-              label="Prazo da suspensao"
+              label="Prazo da suspensão"
               name="suspension_duration_days"
               options={SUSPENSION_DURATION_OPTIONS}
               required
@@ -3770,16 +3790,16 @@ const AccountStatusActionForm = ({
           ) : null}
           <TextareaController<AccountStatusActionFormValues>
             disabled={disabled}
-            label="Motivo/observacao interna"
+            label="Motivo/observação interna"
             name="reason"
-            placeholder="Registre a justificativa administrativa da acao."
+            placeholder="Registre a justificativa administrativa da ação."
             required
             rows={3}
           />
           <InputController<AccountStatusActionFormValues>
             autoComplete="off"
             disabled={disabled}
-            label="Confirmacao forte"
+            label="Confirmação forte"
             name="confirmation"
             placeholder={config.confirmation}
             required
@@ -3828,8 +3848,8 @@ const AccountTab = ({ id }: { id: string }) => {
             <div>
               <h2 className="text-lg font-black text-foreground">Conta Google sem senha local</h2>
               <p className="mt-1 text-sm font-bold leading-6 text-muted">
-                Esta conta acessa via Google. Alteracao ou criacao de senha local estao
-                indisponiveis.
+                Esta conta acessa via Google. Alteração ou criação de senha local estão
+                indisponíveis.
               </p>
             </div>
           </div>
@@ -3842,12 +3862,12 @@ const AccountTab = ({ id }: { id: string }) => {
         <InfoCard contentAsDescriptionList={false} icon={Mail} title="E-mail da conta">
           <div className="grid gap-5">
             <div className="rounded-2xl border border-border bg-surface-muted p-4 text-sm font-bold leading-6 text-muted">
-              Alterar e-mail exige nova confirmacao, envia e-mail transacional real quando
-              configurado e encerra sessoes do paciente.
+              Alterar e-mail exige nova confirmação, envia e-mail transacional real quando
+              configurado e encerra sessões do paciente.
             </div>
             {!account.capabilities.can_change_email ? (
               <AccountUnavailableNotice>
-                Alteracao administrativa de e-mail bloqueada para identidade sem senha local.
+                Alteração administrativa de e-mail bloqueada para identidade sem senha local.
               </AccountUnavailableNotice>
             ) : null}
             <AccountChangeEmailForm account={account} id={id} />
@@ -3857,28 +3877,28 @@ const AccountTab = ({ id }: { id: string }) => {
       </div>
 
       <div className="grid gap-5 xl:grid-cols-2">
-        <InfoCard contentAsDescriptionList={false} icon={KeyRound} title="Senha e recuperacao">
+        <InfoCard contentAsDescriptionList={false} icon={KeyRound} title="Senha e recuperação">
           <div className="grid gap-5">
             <div>
               <h3 className="mb-2 text-sm font-black text-foreground">
-                Acao preferencial: link de redefinicao
+                Ação preferencial: link de redefinição
               </h3>
               <AccountPasswordResetForm account={account} id={id} />
             </div>
             <div>
               <h3 className="mb-2 text-sm font-black text-foreground">
-                Suporte excepcional: senha temporaria
+                Suporte excepcional: senha temporária
               </h3>
               <AccountTemporaryPasswordForm account={account} id={id} />
             </div>
           </div>
         </InfoCard>
 
-        <InfoCard contentAsDescriptionList={false} icon={ShieldCheck} title="Sessoes e seguranca">
+        <InfoCard contentAsDescriptionList={false} icon={ShieldCheck} title="Sessões e segurança">
           <div className="grid gap-4">
             <dl>
               <FieldRow
-                label="Sessoes ativas"
+                label="Sessões ativas"
                 value={numberFormatter.format(account.sessions.active_count)}
               />
               <FieldRow
@@ -3886,7 +3906,7 @@ const AccountTab = ({ id }: { id: string }) => {
                 value={numberFormatter.format(account.sessions.devices_count)}
               />
               <FieldRow
-                label="Ultima sessao"
+                label="Última sessão"
                 value={formatDateTime(account.sessions.last_access_at)}
               />
             </dl>
@@ -3895,7 +3915,7 @@ const AccountTab = ({ id }: { id: string }) => {
         </InfoCard>
       </div>
 
-      <InfoCard contentAsDescriptionList={false} icon={AlertTriangle} title="Acoes da conta">
+      <InfoCard contentAsDescriptionList={false} icon={AlertTriangle} title="Ações da conta">
         <div className="grid gap-5">
           <dl>
             <FieldRow
@@ -3907,17 +3927,17 @@ const AccountTab = ({ id }: { id: string }) => {
               }
             />
             <FieldRow
-              label="Ultima alteracao de status"
+              label="Última alteração de status"
               value={formatDateTime(account.account_status_changed_at)}
             />
             {account.account_status === "suspended" ? (
               <FieldRow
-                label="Suspensa ate"
+                label="Suspensa até"
                 value={formatDateTime(account.account_status_expires_at)}
               />
             ) : null}
             <FieldRow
-              label="Bloqueio para exclusao"
+              label="Bloqueio para exclusão"
               value={account.delete_blocked_reason || "Nenhum bloqueio operacional identificado"}
             />
           </dl>

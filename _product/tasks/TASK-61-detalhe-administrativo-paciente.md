@@ -533,3 +533,33 @@ Frontend esperado:
 - `pnpm --dir admin build`
 - `pnpm check`
 - Browser local/headless via Chrome/CDP em `http://localhost:3002/pacientes/cmrb6fbix0000y0uhdpu1bptl?tab=estatisticas`, com admin temporario real removido ao final, validou desktop `1365x900` e mobile `390x844`: quatro blocos da aba, filtros **Periodo/De/Ate** independentes, default **Todo o periodo**, tabela de **Comunidades ativas**, filtro **Todos** nos horarios de maior atividade, resumo de **Uso da plataforma**, sem badge `America/Sao_Paulo`, sem copy antiga do heatmap e `scrollWidth=390` no mobile.
+
+## Ajuste pós-feedback 2026-07-21 - Acentuação e ortografia da aba Conta
+
+- Pedido do usuário: corrigir acentuação e ortografia dos textos exibidos na aba **Conta** do detalhe administrativo de paciente.
+- Corrigidos labels, avisos, placeholders e toasts da UI de `/pacientes/[id]?tab=conta`, incluindo **Método de login**, **Troca obrigatória**, **Sem pendência**, **Sessões ativas**, **Motivo/observação interna** e **Confirmação forte**.
+- As confirmações fortes visíveis passaram a usar copy correta (`ALTERAR E-MAIL` e `ENCERRAR SESSÕES`) com normalização compatível no frontend e backend para aceitar a entrada legada sem acento/hífen, sem quebrar operadores acostumados ao formato anterior.
+- Corrigidas mensagens backend de erro/sucesso da aba de conta do paciente em `backend/locales/pt/translation.json`.
+- A contagem `sessao(oes)` foi substituída por pluralização legível: `1 sessão`/`n sessões` e `1 dispositivo`/`n dispositivos`.
+- Não houve alteração de schema Prisma, migrations, package, endpoint, seed, mock, dado artificial ou regra de domínio.
+- Builder/Quick Copy não está exposto como ferramenta callable neste ambiente; a referência auditável foi o screenshot enviado pelo usuário em 2026-07-21.
+- ADR atualizado: `adrs/0292-correcao-encoding-copy-ui-admin.md`.
+
+### Critérios de aceite do ajuste
+
+- [x] Textos visíveis da aba **Conta** citados no screenshot estão acentuados corretamente.
+- [x] Mensagens backend usadas por ações da conta do paciente estão em PT-BR acentuado.
+- [x] Confirmações fortes continuam operáveis com o formato anterior sem acentos.
+- [x] Nenhum `<img>` cru, mock, seed, endpoint novo, migration ou package novo foi adicionado.
+
+### Validação complementar executada
+
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/pacientes/[id]/client.tsx"`
+- `pnpm --dir backend exec biome check --write "src/modules/api/admin/private/patients/account/use-cases/services.ts" "locales/pt/translation.json"`
+- `pnpm --dir admin check`
+- `pnpm --dir backend check`
+- `pnpm --dir admin build`
+- `pnpm --dir backend build`
+- `pnpm check`
+- Smoke HTTP local: `GET http://localhost:3002/pacientes/cmrqsrab5001f1guh2ve5oy90?tab=conta` retornou `200`.
+- Chrome headless local abriu a rota, mas sem sessão administrativa no perfil headless caiu no login; a conferência autenticada visual ficou limitada ao screenshot enviado pelo usuário e à revisão dos literais corrigidos.
