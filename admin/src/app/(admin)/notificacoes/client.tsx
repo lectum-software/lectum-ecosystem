@@ -51,23 +51,38 @@ import {
   type AdminNotificationChannel,
   type AdminNotificationMetrics,
   type AdminNotificationPushStatus,
+  type AdminNotificationsRangeQuery,
 } from "@/api/req/notifications";
 import { InputController, SelectController, TextareaController } from "@/components/controllers";
 import { useDateRangeCommitOnBlur } from "@/hooks/use-date-range-commit-on-blur";
 import { cn } from "@/lib/utils";
 
-const NOTIFICATION_PERIOD_OPTIONS = [
-  { days: 1, id: "today", label: "Hoje" },
-  { days: 7, id: "last_7", label: "Últimos 7 dias" },
-  { days: 30, id: "last_30", label: "Últimos 30 dias" },
-  { days: 90, id: "last_90", label: "Últimos 90 dias" },
-] as const;
+type NotificationPeriodValue = NonNullable<AdminNotificationsRangeQuery["period"]>;
+type NotificationPeriodPreset = Exclude<NotificationPeriodValue, "custom">;
 
-type NotificationPeriodPreset = (typeof NOTIFICATION_PERIOD_OPTIONS)[number]["id"];
-type NotificationPeriodValue = NotificationPeriodPreset | "custom";
+const NOTIFICATION_PERIOD_OPTIONS = [
+  { id: "today", label: "Hoje" },
+  { id: "week", label: "Esta semana" },
+  { id: "month", label: "Este mês" },
+  { id: "year", label: "Este ano" },
+  { id: "all", label: "Todo o período" },
+] as const satisfies ReadonlyArray<{
+  id: NotificationPeriodPreset;
+  label: string;
+}>;
 type NotificationRange = { from: string; to: string };
+type NotificationTableFilters = {
+  audience: "all" | AdminNotificationAudience;
+  channel: "all" | AdminNotificationChannel;
+  q: string;
+};
+
 const CAMPAIGN_LIMIT = 8;
 const LOGS_LIMIT = 8;
+const MAX_NOTIFICATION_PERIOD_DAYS = 3660;
+const NOTIFICATION_DEFAULT_PERIOD: NotificationPeriodPreset = "all";
+const tableRangeErrorMessage =
+  "Informe um período de até 3660 dias, com data inicial menor ou igual à final.";
 const cardClass =
   "rounded-card border border-border/80 bg-surface/95 shadow-admin-soft backdrop-blur";
 
@@ -106,22 +121,67 @@ const dateFormatter = new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: 
 const pad = (value: number) => String(value).padStart(2, "0");
 const toInputDate = (date: Date) =>
   `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
-const getQuickRange = (days: number): NotificationRange => {
+const startOfCurrentWeek = () => {
   const today = new Date();
-  const from = new Date(today);
-  from.setDate(today.getDate() - (days - 1));
-  return { from: toInputDate(from), to: toInputDate(today) };
+  const day = today.getDay();
+  const mondayOffset = day === 0 ? -6 : 1 - day;
+  const start = new Date(today);
+  start.setDate(today.getDate() + mondayOffset);
+
+  return start;
 };
-const getRangeForPeriod = (period: NotificationPeriodPreset): NotificationRange =>
-  getQuickRange(NOTIFICATION_PERIOD_OPTIONS.find((option) => option.id === period)?.days ?? 30);
+
+const startOfCurrentMonth = () => {
+  const today = new Date();
+  return new Date(today.getFullYear(), today.getMonth(), 1);
+};
+
+const startOfCurrentYear = () => {
+  const today = new Date();
+  return new Date(today.getFullYear(), 0, 1);
+};
+
+const getRangeForPeriod = (period: NotificationPeriodPreset): NotificationRange => {
+  const today = toInputDate(new Date());
+
+  if (period === "today") return { from: today, to: today };
+  if (period === "all") return { from: "", to: today };
+  if (period === "month") return { from: toInputDate(startOfCurrentMonth()), to: today };
+  if (period === "year") return { from: toInputDate(startOfCurrentYear()), to: today };
+
+  return { from: toInputDate(startOfCurrentWeek()), to: today };
+};
+
+const buildNotificationPeriodQuery = (
+  period: NotificationPeriodValue,
+  range: NotificationRange,
+): AdminNotificationsRangeQuery =>
+  period === "custom" ? { from: range.from, period, to: range.to } : { period };
+
+const getNotificationPeriodLabel = (period: NotificationPeriodValue) =>
+  period === "custom"
+    ? "Personalizado"
+    : (NOTIFICATION_PERIOD_OPTIONS.find((option) => option.id === period)?.label ??
+      "Período selecionado");
+const createDefaultTableFilters = (): NotificationTableFilters => ({
+  audience: "all",
+  channel: "all",
+  q: "",
+});
 const dateFromInput = (value: string) => {
   const [year, month, day] = value.split("-").map(Number);
   return new Date(year, month - 1, day, 12, 0, 0, 0);
 };
+const daysBetweenInclusive = (from: Date, to: Date) =>
+  Math.floor((to.getTime() - from.getTime()) / 86_400_000) + 1;
 const isValidRange = (range: { from?: string; to?: string }) => {
   if (!range.from || !range.to) return false;
 
-  return dateFromInput(range.from) <= dateFromInput(range.to);
+  const from = dateFromInput(range.from);
+  const to = dateFromInput(range.to);
+  if (Number.isNaN(from.getTime()) || Number.isNaN(to.getTime()) || from > to) return false;
+
+  return daysBetweenInclusive(from, to) <= MAX_NOTIFICATION_PERIOD_DAYS;
 };
 const toInputDateTime = (value?: string | null) => {
   if (!value) return "";
@@ -134,10 +194,16 @@ const formatDateTime = (value?: string | null) => {
   const date = new Date(value);
   return Number.isNaN(date.getTime()) ? "—" : dateTimeFormatter.format(date);
 };
-const formatDate = (value: string) => dateFormatter.format(new Date(value));
+const formatDate = (value: string) => dateFormatter.format(dateFromInput(value));
 const formatPercent = (value: number) => `${percentFormatter.format(value)}%`;
 const audienceLabel = (value: AdminNotificationAudience) =>
   AUDIENCE_OPTIONS.find((item) => item.value === value)?.label ?? value;
+const roleLabel = (value?: null | string) => {
+  if (value === "psicologo") return "Psicólogo";
+  if (value === "paciente") return "Paciente";
+
+  return "Usuário";
+};
 const channelLabel = (value: AdminNotificationChannel) => (value === "in_app" ? "In-app" : "Push");
 const channelText = (channels: AdminNotificationChannel[]) =>
   channels.map(channelLabel).join(" + ");
@@ -185,11 +251,6 @@ const notificationFormSchema = z
 
 type NotificationFormValues = z.infer<typeof notificationFormSchema>;
 type SubmitIntent = NotificationFormValues["delivery_mode"];
-type NotificationsFilters = {
-  audience: "all" | AdminNotificationAudience;
-  channel: "all" | AdminNotificationChannel;
-  q: string;
-};
 
 const CardShell = ({ children, className }: { children?: ReactNode; className?: string }) => (
   <section className={cn(cardClass, className)}>{children}</section>
@@ -254,7 +315,7 @@ const MetricsGrid = ({ metrics }: { metrics: AdminNotificationMetrics }) => {
       <MetricCard
         description={`${metrics.campaigns.sent} campanhas enviadas; card conta entregas com status real de alcance.`}
         icon={<Send aria-hidden className="h-5 w-5" />}
-        label={`Entregas enviadas (${metrics.period.days} dias)`}
+        label={`Entregas enviadas (${metrics.period.label})`}
         value={numberFormatter.format(metrics.deliveries.reached)}
       />
       <MetricCard
@@ -356,7 +417,7 @@ const Header = ({
               De
               <input
                 className="mt-1 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-semibold text-foreground shadow-control transition focus:border-primary"
-                max={range.to}
+                max={range.to || undefined}
                 onChange={(event) => onDateChange("from", event.target.value)}
                 type="date"
                 value={range.from}
@@ -366,7 +427,7 @@ const Header = ({
               Até
               <input
                 className="mt-1 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-semibold text-foreground shadow-control transition focus:border-primary"
-                min={range.from}
+                min={range.from || undefined}
                 onChange={(event) => onDateChange("to", event.target.value)}
                 type="date"
                 value={range.to}
@@ -390,23 +451,72 @@ const Header = ({
   </CardShell>
 );
 
-const FiltersBar = ({
+const NotificationTableFiltersBlock = ({
+  description,
   filters,
-  setFilters,
+  onDateChange,
+  onDateControlsBlur,
+  onFiltersChange,
+  onPeriodChange,
+  onReset,
+  period,
+  range,
+  rangeError,
+  searchPlaceholder,
+  title,
 }: {
-  filters: NotificationsFilters;
-  setFilters: (filters: NotificationsFilters) => void;
+  description: string;
+  filters: NotificationTableFilters;
+  onDateChange: (field: keyof NotificationRange, value: string) => void;
+  onDateControlsBlur: FocusEventHandler<HTMLDivElement>;
+  onFiltersChange: (filters: NotificationTableFilters) => void;
+  onPeriodChange: (period: NotificationPeriodPreset) => void;
+  onReset: () => void;
+  period: NotificationPeriodValue;
+  range: NotificationRange;
+  rangeError: string | null;
+  searchPlaceholder: string;
+  title: string;
 }) => (
-  <CardShell className="p-4">
-    <div className="grid gap-3 lg:grid-cols-[1.2fr_1fr_1fr_1.6fr]">
-      <label className="text-xs font-black text-muted">
+  <div className="border-b border-border bg-surface/80 p-4">
+    <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
+      <div>
+        <p className="text-xs font-semibold uppercase tracking-[0.12em] text-primary">Filtros</p>
+        <h2 className="mt-1 text-lg font-bold text-foreground">{title}</h2>
+        <p className="mt-1 text-sm font-medium text-muted">{description}</p>
+      </div>
+      <button
+        className="mt-3 h-11 rounded-control border border-border bg-surface px-4 text-sm font-bold text-muted transition hover:border-border-strong hover:text-foreground sm:mt-0"
+        onClick={onReset}
+        type="button"
+      >
+        Limpar filtros
+      </button>
+    </div>
+    <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-[minmax(16rem,1.5fr)_minmax(10rem,0.85fr)_minmax(9rem,0.75fr)_minmax(11rem,0.85fr)_minmax(16rem,1.25fr)]">
+      <label className="text-xs font-bold text-muted md:col-span-2 xl:col-span-1">
+        Barra de pesquisa
+        <span className="relative mt-1 block">
+          <Search
+            aria-hidden
+            className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-subtle"
+          />
+          <input
+            className="h-11 w-full rounded-control border border-border bg-surface pl-9 pr-3 text-sm font-semibold text-foreground shadow-control outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+            onChange={(event) => onFiltersChange({ ...filters, q: event.target.value })}
+            placeholder={searchPlaceholder}
+            value={filters.q}
+          />
+        </span>
+      </label>
+      <label className="text-xs font-bold text-muted">
         Público
         <select
-          className="mt-1 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground shadow-control outline-none focus:border-primary"
+          className="mt-1 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-semibold text-foreground shadow-control outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
           onChange={(event) =>
-            setFilters({
+            onFiltersChange({
               ...filters,
-              audience: event.target.value as NotificationsFilters["audience"],
+              audience: event.target.value as NotificationTableFilters["audience"],
             })
           }
           value={filters.audience}
@@ -419,14 +529,14 @@ const FiltersBar = ({
           ))}
         </select>
       </label>
-      <label className="text-xs font-black text-muted">
+      <label className="text-xs font-bold text-muted">
         Canal
         <select
-          className="mt-1 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground shadow-control outline-none focus:border-primary"
+          className="mt-1 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-semibold text-foreground shadow-control outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
           onChange={(event) =>
-            setFilters({
+            onFiltersChange({
               ...filters,
-              channel: event.target.value as NotificationsFilters["channel"],
+              channel: event.target.value as NotificationTableFilters["channel"],
             })
           }
           value={filters.channel}
@@ -436,30 +546,58 @@ const FiltersBar = ({
           <option value="push">Push</option>
         </select>
       </label>
-      <button
-        className="h-11 self-end rounded-control border border-border bg-surface px-4 text-sm font-black text-muted transition hover:border-border-strong hover:text-foreground"
-        onClick={() => setFilters({ audience: "all", channel: "all", q: "" })}
-        type="button"
-      >
-        Limpar filtros
-      </button>
-      <label className="text-xs font-black text-muted">
-        Buscar por título ou conteúdo
+      <label className="text-xs font-bold text-muted">
+        Período
         <span className="relative mt-1 block">
-          <Search
+          <select
+            className="h-11 w-full appearance-none rounded-control border border-border bg-surface py-0 pl-3 pr-10 text-sm font-semibold text-foreground shadow-control outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+            onChange={(event) => onPeriodChange(event.target.value as NotificationPeriodPreset)}
+            value={period}
+          >
+            {period === "custom" ? (
+              <option disabled hidden value="custom">
+                Personalizado
+              </option>
+            ) : null}
+            {NOTIFICATION_PERIOD_OPTIONS.map((option) => (
+              <option key={option.id} value={option.id}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+          <ChevronDown
             aria-hidden
-            className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-subtle"
-          />
-          <input
-            className="h-11 w-full rounded-control border border-border bg-surface pl-9 pr-3 text-sm font-bold text-foreground shadow-control outline-none focus:border-primary"
-            onChange={(event) => setFilters({ ...filters, q: event.target.value })}
-            placeholder="Buscar campanha..."
-            value={filters.q}
+            className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground"
           />
         </span>
       </label>
+      <div className="grid gap-3 sm:grid-cols-2" onBlur={onDateControlsBlur}>
+        <label className="text-xs font-bold text-muted">
+          Data: De
+          <input
+            className="mt-1 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-semibold text-foreground shadow-control outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+            max={range.to || undefined}
+            onChange={(event) => onDateChange("from", event.target.value)}
+            type="date"
+            value={range.from}
+          />
+        </label>
+        <label className="text-xs font-bold text-muted">
+          Data: Até
+          <input
+            className="mt-1 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-semibold text-foreground shadow-control outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+            min={range.from || undefined}
+            onChange={(event) => onDateChange("to", event.target.value)}
+            type="date"
+            value={range.to}
+          />
+        </label>
+      </div>
     </div>
-  </CardShell>
+    {period === "custom" && rangeError ? (
+      <p className="mt-3 text-xs font-bold text-danger">{rangeError}</p>
+    ) : null}
+  </div>
 );
 
 const ErrorState = ({ message, onRetry }: { message: string; onRetry: () => void }) => (
@@ -569,6 +707,7 @@ const CampaignDetailsModal = ({
 const CampaignsList = ({
   campaigns,
   count,
+  filtersSlot,
   isFetching,
   onCancel,
   onDetails,
@@ -580,6 +719,7 @@ const CampaignsList = ({
 }: {
   campaigns: AdminNotificationCampaign[];
   count: number;
+  filtersSlot: ReactNode;
   isFetching: boolean;
   onCancel: (campaign: AdminNotificationCampaign) => void;
   onDetails: (campaign: AdminNotificationCampaign) => void;
@@ -605,6 +745,7 @@ const CampaignsList = ({
         </span>
       ) : null}
     </div>
+    {filtersSlot}
     {campaigns.length === 0 ? (
       <div className="p-6 text-sm font-bold text-muted">
         Nenhuma campanha manual encontrada para os filtros atuais.
@@ -732,6 +873,7 @@ const Pager = ({
 const AutomaticLogs = ({
   count,
   data,
+  filtersSlot,
   isFetching,
   onNext,
   onPrev,
@@ -740,6 +882,7 @@ const AutomaticLogs = ({
 }: {
   count: number;
   data: AdminNotificationAutomaticLog[];
+  filtersSlot: ReactNode;
   isFetching: boolean;
   onNext: () => void;
   onPrev: () => void;
@@ -761,9 +904,10 @@ const AutomaticLogs = ({
         </span>
       ) : null}
     </div>
+    {filtersSlot}
     {data.length === 0 ? (
       <div className="p-6 text-sm font-bold text-muted">
-        Nenhum log automático real encontrado para o período atual.
+        Nenhum log automático real encontrado para os filtros atuais.
       </div>
     ) : (
       <div className="overflow-x-auto">
@@ -796,7 +940,7 @@ const AutomaticLogs = ({
                     {log.trigger_key || "—"}
                   </td>
                   <td className="px-4 py-4 text-sm font-bold text-muted">
-                    {log.user?.role || "usuário"}
+                    {roleLabel(log.user?.role)}
                   </td>
                   <td className="px-4 py-4">
                     <ChannelPill channel={log.channel} />
@@ -1086,79 +1230,145 @@ const NewNotificationModal = ({
 
 export const AdminNotificationsClient = () => {
   const [tab, setTab] = useState("all");
-  const [filters, setFilters] = useState<NotificationsFilters>({
-    audience: "all",
-    channel: "all",
-    q: "",
-  });
+  const [campaignFilters, setCampaignFilters] = useState<NotificationTableFilters>(() =>
+    createDefaultTableFilters(),
+  );
+  const [logFilters, setLogFilters] = useState<NotificationTableFilters>(() =>
+    createDefaultTableFilters(),
+  );
   const [page, setPage] = useState(1);
   const [logsPage, setLogsPage] = useState(1);
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<AdminNotificationCampaign | null>(null);
   const [details, setDetails] = useState<AdminNotificationCampaign | null>(null);
-  const [period, setPeriod] = useState<NotificationPeriodValue>("last_30");
+  const [metricPeriod, setMetricPeriod] = useState<NotificationPeriodValue>(
+    NOTIFICATION_DEFAULT_PERIOD,
+  );
+  const [campaignPeriod, setCampaignPeriod] = useState<NotificationPeriodValue>(
+    NOTIFICATION_DEFAULT_PERIOD,
+  );
+  const [logsPeriod, setLogsPeriod] = useState<NotificationPeriodValue>(
+    NOTIFICATION_DEFAULT_PERIOD,
+  );
   const currentTab = TABS.find((item) => item.value === tab) ?? TABS[0];
-  const resetPagination = () => {
-    setPage(1);
-    setLogsPage(1);
-  };
-  const {
-    appliedRange,
-    applyRange,
-    draftRange,
-    handleDateChange,
-    handleDateControlsBlur,
-    rangeError,
-  } = useDateRangeCommitOnBlur({
-    initialRange: () => getRangeForPeriod("last_30"),
+  const resetCampaignPage = () => setPage(1);
+  const resetLogsPage = () => setLogsPage(1);
+  const metricRangeControls = useDateRangeCommitOnBlur({
+    errorMessage: tableRangeErrorMessage,
+    initialRange: () => getRangeForPeriod(NOTIFICATION_DEFAULT_PERIOD),
     isValidRange,
-    onApply: resetPagination,
   });
+  const campaignRangeControls = useDateRangeCommitOnBlur({
+    errorMessage: tableRangeErrorMessage,
+    initialRange: () => getRangeForPeriod(NOTIFICATION_DEFAULT_PERIOD),
+    isValidRange,
+    onApply: resetCampaignPage,
+  });
+  const logsRangeControls = useDateRangeCommitOnBlur({
+    errorMessage: tableRangeErrorMessage,
+    initialRange: () => getRangeForPeriod(NOTIFICATION_DEFAULT_PERIOD),
+    isValidRange,
+    onApply: resetLogsPage,
+  });
+  const metricRangeIsValid =
+    metricPeriod === "custom" ? isValidRange(metricRangeControls.appliedRange) : true;
+  const campaignRangeIsValid =
+    campaignPeriod === "custom" ? isValidRange(campaignRangeControls.appliedRange) : true;
+  const logsRangeIsValid =
+    logsPeriod === "custom" ? isValidRange(logsRangeControls.appliedRange) : true;
+  const metricQuery = useMemo(
+    () => buildNotificationPeriodQuery(metricPeriod, metricRangeControls.appliedRange),
+    [metricPeriod, metricRangeControls.appliedRange],
+  );
   const campaignQuery = useMemo(
     () => ({
-      audience: filters.audience === "all" ? undefined : filters.audience,
-      channel: filters.channel === "all" ? undefined : filters.channel,
-      from: appliedRange.from,
+      audience: campaignFilters.audience === "all" ? undefined : campaignFilters.audience,
+      channel: campaignFilters.channel === "all" ? undefined : campaignFilters.channel,
       limit: CAMPAIGN_LIMIT,
       page,
-      q: filters.q.trim() || undefined,
+      ...buildNotificationPeriodQuery(campaignPeriod, campaignRangeControls.appliedRange),
+      q: campaignFilters.q.trim() || undefined,
       status: currentTab.status,
-      to: appliedRange.to,
     }),
-    [appliedRange, currentTab.status, filters, page],
+    [campaignFilters, campaignPeriod, campaignRangeControls.appliedRange, currentTab.status, page],
   );
   const logsQuery = useMemo(
     () => ({
-      channel: filters.channel === "all" ? undefined : filters.channel,
-      from: appliedRange.from,
+      audience: logFilters.audience === "all" ? undefined : logFilters.audience,
+      channel: logFilters.channel === "all" ? undefined : logFilters.channel,
       limit: LOGS_LIMIT,
       page: logsPage,
-      to: appliedRange.to,
+      ...buildNotificationPeriodQuery(logsPeriod, logsRangeControls.appliedRange),
+      q: logFilters.q.trim() || undefined,
     }),
-    [appliedRange, filters.channel, logsPage],
+    [logFilters, logsPage, logsPeriod, logsRangeControls.appliedRange],
   );
-  const metrics = useAdminNotificationMetrics(appliedRange);
-  const campaigns = useAdminNotificationCampaigns(campaignQuery);
-  const logs = useAdminNotificationAutomaticLogs(logsQuery);
+  const metrics = useAdminNotificationMetrics(metricQuery, { enabled: metricRangeIsValid });
+  const campaigns = useAdminNotificationCampaigns(campaignQuery, { enabled: campaignRangeIsValid });
+  const logs = useAdminNotificationAutomaticLogs(logsQuery, { enabled: logsRangeIsValid });
   const push = useAdminNotificationPushStatus();
   const cancelCampaign = useAdminNotificationCancelCampaign();
   const firstError = metrics.error || campaigns.error || logs.error || push.error;
+  const metricPeriodLabel = getNotificationPeriodLabel(metricPeriod);
+  const footerPeriodLabel = metrics.data?.period
+    ? `${metrics.data.period.label} - ${formatDate(metrics.data.period.from)} a ${formatDate(
+        metrics.data.period.to,
+      )}`
+    : metricPeriod === "all" ||
+        !metricRangeControls.appliedRange.from ||
+        !metricRangeControls.appliedRange.to
+      ? metricPeriodLabel
+      : `${metricPeriodLabel} - ${formatDate(metricRangeControls.appliedRange.from)} a ${formatDate(
+          metricRangeControls.appliedRange.to,
+        )}`;
 
-  const updatePeriod = (nextPeriod: NotificationPeriodPreset) => {
-    setPeriod(nextPeriod);
-    applyRange(getRangeForPeriod(nextPeriod));
+  const updateMetricPeriod = (nextPeriod: NotificationPeriodPreset) => {
+    setMetricPeriod(nextPeriod);
+    metricRangeControls.applyRange(getRangeForPeriod(nextPeriod));
   };
-  const updateDateRange = (field: keyof NotificationRange, value: string) => {
-    setPeriod("custom");
-    handleDateChange(field, value);
+  const updateMetricDateRange = (field: keyof NotificationRange, value: string) => {
+    setMetricPeriod("custom");
+    metricRangeControls.handleDateChange(field, value);
   };
-  const updateFilters = (nextFilters: NotificationsFilters) => {
-    setFilters(nextFilters);
-    resetPagination();
+  const updateCampaignPeriod = (nextPeriod: NotificationPeriodPreset) => {
+    setCampaignPeriod(nextPeriod);
+    campaignRangeControls.applyRange(getRangeForPeriod(nextPeriod));
+  };
+  const updateCampaignDateRange = (field: keyof NotificationRange, value: string) => {
+    setCampaignPeriod("custom");
+    campaignRangeControls.handleDateChange(field, value);
+  };
+  const updateLogsPeriod = (nextPeriod: NotificationPeriodPreset) => {
+    setLogsPeriod(nextPeriod);
+    logsRangeControls.applyRange(getRangeForPeriod(nextPeriod));
+  };
+  const updateLogsDateRange = (field: keyof NotificationRange, value: string) => {
+    setLogsPeriod("custom");
+    logsRangeControls.handleDateChange(field, value);
+  };
+  const updateCampaignFilters = (nextFilters: NotificationTableFilters) => {
+    setCampaignFilters(nextFilters);
+    setPage(1);
+  };
+  const updateLogFilters = (nextFilters: NotificationTableFilters) => {
+    setLogFilters(nextFilters);
+    setLogsPage(1);
+  };
+  const resetCampaignFilters = () => {
+    setCampaignFilters(createDefaultTableFilters());
+    setCampaignPeriod(NOTIFICATION_DEFAULT_PERIOD);
+    setPage(1);
+    campaignRangeControls.applyRange(getRangeForPeriod(NOTIFICATION_DEFAULT_PERIOD));
+  };
+  const resetLogFilters = () => {
+    setLogFilters(createDefaultTableFilters());
+    setLogsPeriod(NOTIFICATION_DEFAULT_PERIOD);
+    setLogsPage(1);
+    logsRangeControls.applyRange(getRangeForPeriod(NOTIFICATION_DEFAULT_PERIOD));
   };
   const updateTab = (nextTab: string) => {
     setTab(nextTab);
-    resetPagination();
+    setPage(1);
   };
 
   const handleCancel = async (campaign: AdminNotificationCampaign) => {
@@ -1178,14 +1388,23 @@ export const AdminNotificationsClient = () => {
           setEditing(null);
           setModalOpen(true);
         }}
-        onDateChange={updateDateRange}
-        onDateControlsBlur={handleDateControlsBlur}
-        onPeriodChange={updatePeriod}
-        period={period}
-        range={draftRange}
-        rangeError={rangeError}
+        onDateChange={updateMetricDateRange}
+        onDateControlsBlur={metricRangeControls.handleDateControlsBlur}
+        onPeriodChange={updateMetricPeriod}
+        period={metricPeriod}
+        range={metricRangeControls.draftRange}
+        rangeError={metricRangeControls.rangeError}
       />
-      {firstError ? (
+      {!metricRangeIsValid ? (
+        <ErrorState
+          message={
+            metricRangeControls.rangeError ||
+            "Informe um período personalizado completo, com data inicial menor ou igual à final."
+          }
+          onRetry={() => undefined}
+        />
+      ) : null}
+      {metricRangeIsValid && firstError ? (
         <ErrorState
           message={resolveApiError(firstError)}
           onRetry={() => {
@@ -1196,9 +1415,9 @@ export const AdminNotificationsClient = () => {
           }}
         />
       ) : null}
-      {metrics.isLoading ? (
+      {metricRangeIsValid && metrics.isLoading ? (
         <LoadingCards />
-      ) : metrics.data ? (
+      ) : metricRangeIsValid && metrics.data ? (
         <MetricsGrid metrics={metrics.data} />
       ) : null}
       <CardShell className="p-4">
@@ -1220,7 +1439,6 @@ export const AdminNotificationsClient = () => {
           ))}
         </div>
       </CardShell>
-      <FiltersBar filters={filters} setFilters={updateFilters} />
       <div className="rounded-2xl border border-border bg-surface-muted p-4 text-sm leading-6 text-muted">
         <div className="flex gap-3">
           <Megaphone aria-hidden className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
@@ -1234,6 +1452,22 @@ export const AdminNotificationsClient = () => {
       <CampaignsList
         campaigns={campaigns.data?.data ?? []}
         count={campaigns.data?.count ?? 0}
+        filtersSlot={
+          <NotificationTableFiltersBlock
+            description="Filtra somente esta tabela, mantendo estado e paginação independentes dos logs."
+            filters={campaignFilters}
+            onDateChange={updateCampaignDateRange}
+            onDateControlsBlur={campaignRangeControls.handleDateControlsBlur}
+            onFiltersChange={updateCampaignFilters}
+            onPeriodChange={updateCampaignPeriod}
+            onReset={resetCampaignFilters}
+            period={campaignPeriod}
+            range={campaignRangeControls.draftRange}
+            rangeError={campaignRangeControls.rangeError}
+            searchPlaceholder="Buscar campanha por título ou conteúdo..."
+            title="Filtros de campanhas manuais"
+          />
+        }
         isFetching={campaigns.isFetching}
         onCancel={handleCancel}
         onDetails={setDetails}
@@ -1249,6 +1483,22 @@ export const AdminNotificationsClient = () => {
       <AutomaticLogs
         count={logs.data?.count ?? 0}
         data={logs.data?.data ?? []}
+        filtersSlot={
+          <NotificationTableFiltersBlock
+            description="Filtra somente esta tabela de logs reais gerados pelo dispatcher."
+            filters={logFilters}
+            onDateChange={updateLogsDateRange}
+            onDateControlsBlur={logsRangeControls.handleDateControlsBlur}
+            onFiltersChange={updateLogFilters}
+            onPeriodChange={updateLogsPeriod}
+            onReset={resetLogFilters}
+            period={logsPeriod}
+            range={logsRangeControls.draftRange}
+            rangeError={logsRangeControls.rangeError}
+            searchPlaceholder="Buscar log por notificação, disparo ou usuário..."
+            title="Filtros de logs automáticos"
+          />
+        }
         isFetching={logs.isFetching}
         onNext={() => setLogsPage((current) => current + 1)}
         onPrev={() => setLogsPage((current) => Math.max(1, current - 1))}
@@ -1262,7 +1512,7 @@ export const AdminNotificationsClient = () => {
         </span>
         <span>
           <CalendarDays aria-hidden className="mr-1 inline h-4 w-4" />
-          {formatDate(appliedRange.from)} — {formatDate(appliedRange.to)}
+          {footerPeriodLabel}
         </span>
       </div>
       {modalOpen ? (

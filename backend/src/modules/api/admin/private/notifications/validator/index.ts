@@ -3,6 +3,7 @@ import {
   ADMIN_NOTIFICATION_AUDIENCES,
   ADMIN_NOTIFICATION_CAMPAIGN_STATUSES,
   ADMIN_NOTIFICATION_CHANNELS,
+  ADMIN_NOTIFICATION_PERIODS,
   NOTIFICATION_DELIVERY_STATUSES,
 } from "../DTOs/IAdminNotificationsDTO";
 
@@ -41,6 +42,13 @@ const paginationQuery = [
   { key: "page", method: "numeric", int: true, positive: true, optional: true },
   { key: "limit", method: "numeric", int: true, positive: true, max: 100, optional: true },
   { key: "from", coerse: "string", method: "string", max: 10, optional: true },
+  {
+    key: "period",
+    coerse: "string",
+    method: "enumeric",
+    optional: true,
+    values: [...ADMIN_NOTIFICATION_PERIODS],
+  },
   { key: "to", coerse: "string", method: "string", max: 10, optional: true },
 ] satisfies IValidatorRequest["query"];
 
@@ -82,6 +90,13 @@ export const automaticLogsValidator = validator({
   query: [
     ...paginationQuery,
     {
+      key: "audience",
+      coerse: "string",
+      method: "enumeric",
+      optional: true,
+      values: [...ADMIN_NOTIFICATION_AUDIENCES],
+    },
+    {
       key: "channel",
       coerse: "string",
       method: "enumeric",
@@ -95,6 +110,7 @@ export const automaticLogsValidator = validator({
       optional: true,
       values: [...NOTIFICATION_DELIVERY_STATUSES],
     },
+    { key: "q", coerse: "string", method: "string", max: 120, optional: true },
     { key: "trigger_key", coerse: "string", method: "string", max: 80, optional: true },
   ],
 });

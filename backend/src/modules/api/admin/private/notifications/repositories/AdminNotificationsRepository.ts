@@ -48,6 +48,28 @@ export class AdminNotificationsRepository {
     return rows.length;
   }
 
+  async findEarliestNotificationActivityDate() {
+    const [campaigns, deliveries] = await Promise.all([
+      prisma.admin_notification_campaign.aggregate({
+        _min: { createdAt: true },
+        where: { deleted: false },
+      }),
+      prisma.notification_delivery.aggregate({
+        _min: { createdAt: true },
+        where: { deleted: false },
+      }),
+    ]);
+    const dates: Date[] = [];
+
+    if (campaigns._min.createdAt) dates.push(campaigns._min.createdAt);
+    if (deliveries._min.createdAt) dates.push(deliveries._min.createdAt);
+
+    return dates.reduce<Date | undefined>(
+      (earliest, date) => (!earliest || date < earliest ? date : earliest),
+      undefined,
+    );
+  }
+
   async createCampaign(data: {
     adminId: string;
     audience: AdminNotificationAudience;
@@ -132,14 +154,41 @@ export class AdminNotificationsRepository {
   }
 
   async listAutomaticLogs(params: {
+    audience?: AdminNotificationAudience;
     channel?: AdminNotificationChannel;
     page: number;
     limit: number;
+    q?: string;
     range?: DateRange | null;
     status?: NotificationDeliveryStatus;
     triggerKey?: string;
   }) {
+    const search = params.q?.trim();
+    const and: Prisma.notification_deliveryWhereInput[] = [];
+
+    if (params.audience) {
+      and.push({ user: activeAudienceWhere(params.audience) });
+    }
+
+    if (search) {
+      and.push({
+        OR: [
+          { trigger_key: { contains: search, mode: "insensitive" } },
+          { failure_reason: { contains: search, mode: "insensitive" } },
+          {
+            notification: {
+              is: { message_key: { contains: search, mode: "insensitive" } },
+            },
+          },
+          { user: { name: { contains: search, mode: "insensitive" } } },
+          { user: { email: { contains: search, mode: "insensitive" } } },
+          { user: { role: { contains: search, mode: "insensitive" } } },
+        ],
+      });
+    }
+
     const where: Prisma.notification_deliveryWhereInput = {
+      AND: and.length > 0 ? and : undefined,
       channel: params.channel,
       createdAt: params.range ? { gte: params.range.start, lte: params.range.end } : undefined,
       deleted: false,

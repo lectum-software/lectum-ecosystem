@@ -31,13 +31,24 @@ export const NOTIFICATION_DELIVERY_STATUSES = [
   "skipped",
 ] as const;
 
+export const ADMIN_NOTIFICATION_PERIODS = [
+  "all",
+  "today",
+  "week",
+  "month",
+  "year",
+  "custom",
+] as const;
+
 export type AdminNotificationAudience = (typeof ADMIN_NOTIFICATION_AUDIENCES)[number];
 export type AdminNotificationChannel = (typeof ADMIN_NOTIFICATION_CHANNELS)[number];
 export type AdminNotificationCampaignStatus = (typeof ADMIN_NOTIFICATION_CAMPAIGN_STATUSES)[number];
+export type AdminNotificationPeriod = (typeof ADMIN_NOTIFICATION_PERIODS)[number];
 export type NotificationDeliveryStatus = (typeof NOTIFICATION_DELIVERY_STATUSES)[number];
 
 export type AdminNotificationsRangeQuery = {
   from?: string;
+  period?: AdminNotificationPeriod;
   to?: string;
 };
 
@@ -51,9 +62,11 @@ export type AdminNotificationCampaignsQuery = AdminNotificationsRangeQuery & {
 };
 
 export type AdminNotificationLogsQuery = AdminNotificationsRangeQuery & {
+  audience?: AdminNotificationAudience;
   channel?: AdminNotificationChannel;
   limit?: number;
   page?: number;
+  q?: string;
   status?: NotificationDeliveryStatus;
   trigger_key?: string;
 };
@@ -188,7 +201,8 @@ export type AdminNotificationPushStatus = {
 const cleanParams = <T extends Record<string, unknown>>(input: T) =>
   Object.fromEntries(
     Object.entries(input).filter(
-      ([, value]) => value !== undefined && value !== "" && value !== "all",
+      ([key, value]) =>
+        value !== undefined && value !== "" && (key === "period" || value !== "all"),
     ),
   );
 

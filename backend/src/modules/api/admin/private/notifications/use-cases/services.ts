@@ -29,7 +29,7 @@ import {
 
 const MESSAGE_KEY = "admin_campaign";
 const DEFAULT_PERIOD_DAYS = 30;
-const MAX_PERIOD_DAYS = 90;
+const MAX_PERIOD_DAYS = 3660;
 const OPEN_STATUSES = ["read", "clicked"];
 const REACHED_STATUSES = ["sent", "delivered", "read", "clicked"];
 
@@ -68,6 +68,18 @@ const addDays = (date: Date, days: number) => {
   return next;
 };
 
+const startOfMonth = (date: Date) => startOfDate(new Date(date.getFullYear(), date.getMonth(), 1));
+
+const startOfWeek = (date: Date) => {
+  const next = startOfDate(date);
+  const day = next.getDay();
+  const diff = day === 0 ? -6 : 1 - day;
+
+  return addDays(next, diff);
+};
+
+const startOfYear = (date: Date) => startOfDate(new Date(date.getFullYear(), 0, 1));
+
 const parseDateOnly = (value: string | undefined, boundary: "end" | "start") => {
   if (!value || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return null;
 
@@ -89,14 +101,15 @@ const daysBetweenInclusive = (from: Date, to: Date) => {
   return Math.floor((end - start) / 86_400_000) + 1;
 };
 
-const resolvePeriod = (query: AdminNotificationsQuery | undefined) => {
+const resolvePeriod = (query: AdminNotificationsQuery | undefined, allPeriodStartDate?: Date) => {
   const hasCustomFrom = Boolean(query?.from);
   const hasCustomTo = Boolean(query?.to);
+  const preset = query?.period || (hasCustomFrom || hasCustomTo ? "custom" : "all");
   let start: Date;
   let end: Date;
-  let label = "Ultimos 30 dias";
+  let label = "Todo o período";
 
-  if (hasCustomFrom || hasCustomTo) {
+  if (preset === "custom") {
     if (!hasCustomFrom || !hasCustomTo) return null;
 
     const customStart = parseDateOnly(query?.from, "start");
@@ -105,10 +118,34 @@ const resolvePeriod = (query: AdminNotificationsQuery | undefined) => {
 
     start = customStart;
     end = customEnd;
-    label = "Periodo personalizado";
+    label = "Período personalizado";
+  } else if (preset === "today") {
+    const today = new Date();
+    start = startOfDate(today);
+    end = endOfDate(today);
+    label = "Hoje";
+  } else if (preset === "week") {
+    const today = new Date();
+    start = startOfWeek(today);
+    end = endOfDate(today);
+    label = "Esta semana";
+  } else if (preset === "month") {
+    const today = new Date();
+    start = startOfMonth(today);
+    end = endOfDate(today);
+    label = "Este mês";
+  } else if (preset === "year") {
+    const today = new Date();
+    start = startOfYear(today);
+    end = endOfDate(today);
+    label = "Este ano";
+  } else if (preset === "all") {
+    const today = new Date();
+    start = startOfDate(allPeriodStartDate ?? addDays(today, -(DEFAULT_PERIOD_DAYS - 1)));
+    end = endOfDate(today);
+    label = "Todo o período";
   } else {
-    end = endOfDate(new Date());
-    start = startOfDate(addDays(end, -(DEFAULT_PERIOD_DAYS - 1)));
+    return null;
   }
 
   const days = daysBetweenInclusive(start, end);
@@ -127,6 +164,9 @@ const resolvePeriod = (query: AdminNotificationsQuery | undefined) => {
     start,
   } satisfies DateRange & { period: Record<string, unknown> };
 };
+
+const resolveNotificationPeriod = async (query: AdminNotificationsQuery | undefined) =>
+  resolvePeriod(query, await repository.findEarliestNotificationActivityDate());
 
 const isAdminNotificationAudience = (value: string): value is AdminNotificationAudience =>
   ADMIN_NOTIFICATION_AUDIENCES.includes(value as AdminNotificationAudience);
@@ -530,8 +570,8 @@ export const listCampaigns = async (data: IAdminNotificationsDTO): Promise<Resol
   const status = data.q?.status as AdminNotificationCampaignStatus | undefined;
   const audience = data.q?.audience as AdminNotificationAudience | undefined;
   const channel = data.q?.channel as AdminNotificationChannel | undefined;
-  const range = data.q?.from || data.q?.to ? resolvePeriod(data.q) : null;
-  if ((data.q?.from || data.q?.to) && !range) return fail("invalid_analytics_date_range");
+  const range = await resolveNotificationPeriod(data.q);
+  if (!range) return fail("invalid_analytics_date_range");
 
   const list = await repository.listCampaigns({
     audience,
@@ -589,13 +629,15 @@ export const pushStatus = async (): Promise<Resolve> => {
 
 export const automaticLogs = async (data: IAdminNotificationsDTO): Promise<Resolve> => {
   const { limit, page } = parsePagination(data.q);
-  const range = data.q?.from || data.q?.to ? resolvePeriod(data.q) : null;
-  if ((data.q?.from || data.q?.to) && !range) return fail("invalid_analytics_date_range");
+  const range = await resolveNotificationPeriod(data.q);
+  if (!range) return fail("invalid_analytics_date_range");
 
   const list = await repository.listAutomaticLogs({
+    audience: data.q?.audience as AdminNotificationAudience | undefined,
     channel: data.q?.channel as AdminNotificationChannel | undefined,
     limit,
     page,
+    q: data.q?.q,
     range,
     status: data.q?.status as NotificationDeliveryStatus | undefined,
     triggerKey: data.q?.trigger_key,
@@ -629,7 +671,7 @@ const rate = (numerator: number, denominator: number) =>
   denominator === 0 ? 0 : Math.round((numerator / denominator) * 10_000) / 100;
 
 export const metrics = async (data: IAdminNotificationsDTO): Promise<Resolve> => {
-  const range = resolvePeriod(data.q);
+  const range = await resolveNotificationPeriod(data.q);
   if (!range) return fail("invalid_analytics_date_range");
 
   const deliveryWhere: Prisma.notification_deliveryWhereInput = {

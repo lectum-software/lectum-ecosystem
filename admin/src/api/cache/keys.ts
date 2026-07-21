@@ -147,6 +147,7 @@ const normalizePsychologistActivities = (input: AdminPsychologistActivitiesQuery
 
 const normalizeNotificationsRange = (input: AdminNotificationsRangeQuery) => ({
   from: input.from || "default",
+  period: input.period || "all",
   to: input.to || "default",
 });
 
@@ -156,16 +157,20 @@ const normalizeNotificationCampaigns = (input: AdminNotificationCampaignsQuery) 
   from: input.from || "default",
   limit: input.limit || 10,
   page: input.page || 1,
+  period: input.period || "all",
   q: input.q || "",
   status: input.status || "all",
   to: input.to || "default",
 });
 
 const normalizeNotificationLogs = (input: AdminNotificationLogsQuery) => ({
+  audience: input.audience || "all",
   channel: input.channel || "all",
   from: input.from || "default",
   limit: input.limit || 8,
   page: input.page || 1,
+  period: input.period || "all",
+  q: input.q || "",
   status: input.status || "all",
   to: input.to || "default",
   trigger_key: input.trigger_key || "",

@@ -29,9 +29,19 @@ export const NOTIFICATION_DELIVERY_STATUSES = [
   "skipped",
 ] as const;
 
+export const ADMIN_NOTIFICATION_PERIODS = [
+  "all",
+  "today",
+  "week",
+  "month",
+  "year",
+  "custom",
+] as const;
+
 export type AdminNotificationAudience = (typeof ADMIN_NOTIFICATION_AUDIENCES)[number];
 export type AdminNotificationChannel = (typeof ADMIN_NOTIFICATION_CHANNELS)[number];
 export type AdminNotificationCampaignStatus = (typeof ADMIN_NOTIFICATION_CAMPAIGN_STATUSES)[number];
+export type AdminNotificationPeriod = (typeof ADMIN_NOTIFICATION_PERIODS)[number];
 export type NotificationDeliveryStatus = (typeof NOTIFICATION_DELIVERY_STATUSES)[number];
 
 export type CampaignPayload = {
@@ -52,6 +62,7 @@ export type AdminNotificationsQuery = {
   from?: string;
   limit?: number;
   page?: number;
+  period?: AdminNotificationPeriod;
   q?: string;
   status?: string;
   to?: string;

@@ -243,15 +243,39 @@ UI:
 
 - Pedido do usuário: no header, fazer os campos de **período** e **data** seguirem o padrão do painel Admin da Lectum.
 - O header de Notificações substituiu os atalhos soltos de período por um seletor **Período** com a mesma linguagem de campo usada nas páginas Admin do piloto, mantendo **De** e **Até** ao lado no mesmo bloco visual do card.
-- As opções expostas respeitam o contrato real de Notificações, que trabalha com `from`/`to` e limite máximo de 90 dias: **Hoje**, **Últimos 7 dias**, **Últimos 30 dias** e **Últimos 90 dias**.
+- Correção aplicada após validação de produto: janelas como **Últimos 7 dias**, **Últimos 30 dias** e **Últimos 90 dias** não são as opções padrão da Lectum para selects de período no Admin.
+- As opções expostas em Notificações agora são as mesmas do padrão Lectum: **Hoje**, **Esta semana**, **Este mês**, **Este ano** e **Todo o período**.
+- O período padrão da tela passou a ser **Todo o período**, e o frontend envia `period` para métricas, campanhas e logs.
 - **Personalizado** continua sendo apenas um estado interno quando o administrador edita manualmente as datas; não foi adicionado como preset selecionável.
-- Não foram adicionados **Este ano** ou **Todo o período** nesta tela porque o backend de Notificações ainda limita consultas a 90 dias. Expor essas opções sem suporte real poderia criar semântica falsa ou erro de validação.
-- Não houve alteração de backend, contratos HTTP, Prisma/migrations, packages, formulários RHF/Zod, dados persistidos, canais disponíveis ou regras de métricas.
+- O backend de Notificações passou a aceitar `period=all|today|week|month|year|custom` e resolve **Todo o período** a partir do primeiro registro real de campanha/entrega, sem mock ou backfill.
+- Não houve alteração de Prisma/migrations, packages, formulários RHF/Zod, dados persistidos, canais disponíveis ou regras de envio.
 
 ### Validação deste ajuste
 
 - `pnpm --dir admin exec biome check --write "src/app/(admin)/notificacoes/client.tsx"`
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/notificacoes/client.tsx" "src/api/req/notifications/index.ts" "src/api/cache/keys.ts"`
+- `pnpm --dir backend exec biome check --write "src/modules/api/admin/private/notifications/DTOs/IAdminNotificationsDTO.ts" "src/modules/api/admin/private/notifications/validator/index.ts" "src/modules/api/admin/private/notifications/use-cases/services.ts" "src/modules/api/admin/private/notifications/repositories/AdminNotificationsRepository.ts"`
 - `pnpm --dir admin exec eslint "src/app/(admin)/notificacoes/client.tsx"`
 - `pnpm --dir admin check`
+- `pnpm --dir backend check`
 - `pnpm --dir admin build`
+- `pnpm --dir backend build`
+- Smoke HTTP local: `GET http://localhost:3002/notificacoes` retornou `200`.
+
+## Ajuste complementar 2026-07-21 - Filtros por tabela
+
+- Pedido do usuário: separar filtros para **Campanhas manuais** e **Logs de notificações automáticas**, com **Barra de pesquisa**, **Público**, **Canal**, **Período** e **Data** em cada tabela.
+- Correção após clarificação: os filtros de **Período** e **Data** não ficam em um card independente; cada conjunto de filtros é renderizado como bloco interno do próprio card da tabela correspondente, logo abaixo do cabeçalho da tabela.
+- Campanhas manuais e logs automáticos passaram a manter estado de filtro, período/data e paginação independentes.
+- A listagem de logs automáticos passou a aceitar filtros reais de `audience` e `q` no backend, além de `channel`, `period`, `from` e `to`, sem mocks ou endpoints simulados.
+- O seletor de período dos filtros por tabela segue o padrão Lectum documentado no ajuste anterior: **Hoje**, **Esta semana**, **Este mês**, **Este ano** e **Todo o período**; **Personalizado** permanece apenas como estado interno ao editar datas.
+- Não houve alteração de Prisma/migrations, packages, modelos persistidos, canais disponíveis, regra de envio ou formulários RHF/Zod.
+- Builder/Quick Copy não esteve disponível como ferramenta callable neste ambiente; a referência visual auditável permaneceu `_product/proto/admin/Notificações.png` e a captura enviada pelo usuário.
+
+### Validação deste ajuste
+
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
 - Smoke HTTP local: `GET http://localhost:3002/notificacoes` retornou `200`.
