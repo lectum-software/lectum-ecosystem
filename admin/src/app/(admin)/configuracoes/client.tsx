@@ -195,6 +195,9 @@ const isCatalogDragCurrentCardTarget = (target: EventTarget | null, currentTarge
   return target.closest("[data-catalog-drag-card='true']") === currentTarget;
 };
 
+const isCatalogNestedDragScopeTarget = (target: EventTarget | null) =>
+  target instanceof Element && Boolean(target.closest("[data-catalog-nested-drag-scope='true']"));
+
 const catalogScopeKey = (type: AdminSettingsCatalogType, categoryId?: string) =>
   `${type}:${categoryId ?? ""}`;
 
@@ -765,6 +768,7 @@ export const AdminSettingsClient = () => {
   const startCatalogDrag = (event: PointerEvent<HTMLDivElement>, input: CatalogDragInput) => {
     if (isMutating) return;
     if (event.pointerType === "mouse" && event.button !== 0) return;
+    if (input.type === "specialty_category" && isCatalogNestedDragScopeTarget(event.target)) return;
     if (!isCatalogDragCurrentCardTarget(event.target, event.currentTarget)) return;
     if (isCatalogDragBlockedTarget(event.target) && !isCatalogDragHandleTarget(event.target))
       return;
@@ -1188,7 +1192,9 @@ export const AdminSettingsClient = () => {
                         {categoryOpen ? (
                           <div
                             className="mt-3 rounded-[1.35rem] border border-border/60 bg-surface px-3"
+                            data-catalog-nested-drag-scope="true"
                             id={categoryContentId}
+                            onPointerDown={(event) => event.stopPropagation()}
                           >
                             {specialties.length === 0 ? (
                               <EmptyState>Nenhuma especialidade nesta categoria.</EmptyState>

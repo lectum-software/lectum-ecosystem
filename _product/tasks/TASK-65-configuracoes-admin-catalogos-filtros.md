@@ -351,3 +351,19 @@ Frontend esperado:
 - `pnpm --dir admin build`
 - `pnpm check`
 - Smoke HTTP local: `GET http://localhost:3002/configuracoes` retornou `200`.
+
+## Ajuste complementar 2026-07-21 - Escopo exclusivo para drag de especialidades
+
+- Pedido do usuario: ao clicar e arrastar uma especialidade dentro de uma categoria expandida, o sistema ainda estava arrastando o bloco inteiro da categoria.
+- A area expandida de especialidades agora e marcada como um escopo aninhado de drag e bloqueia a propagacao do `pointerdown` para o card da categoria.
+- O inicio de drag de categorias tambem ignora qualquer alvo dentro desse escopo aninhado, evitando que cliques em linhas ou espacos internos da lista iniciem reordenacao da categoria pai.
+- A reordenacao das especialidades continua sendo feita pelo `CatalogRow` da propria especialidade, com animacao por Pointer Events e persistencia pelo endpoint real de reordenacao.
+- Nao houve alteracao de backend, Prisma/migrations, packages, contratos HTTP ou dados persistidos.
+
+### Validacao complementar executada
+
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/configuracoes/client.tsx"`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check`
+- Smoke HTTP local: `GET http://localhost:3002/configuracoes` retornou `200`.
