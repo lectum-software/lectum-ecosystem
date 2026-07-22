@@ -4,8 +4,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import {
   AlertTriangle,
   Bell,
-  CalendarDays,
-  CheckCircle2,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
@@ -120,7 +118,6 @@ const dateTimeFormatter = new Intl.DateTimeFormat("pt-BR", {
   dateStyle: "short",
   timeStyle: "short",
 });
-const dateFormatter = new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "short" });
 const pad = (value: number) => String(value).padStart(2, "0");
 const toInputDate = (date: Date) =>
   `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
@@ -161,11 +158,6 @@ const buildNotificationPeriodQuery = (
 ): AdminNotificationsRangeQuery =>
   period === "custom" ? { from: range.from, period, to: range.to } : { period };
 
-const getNotificationPeriodLabel = (period: NotificationPeriodValue) =>
-  period === "custom"
-    ? "Personalizado"
-    : (NOTIFICATION_PERIOD_OPTIONS.find((option) => option.id === period)?.label ??
-      "Período selecionado");
 const createDefaultTableFilters = (): NotificationTableFilters => ({
   audience: "all",
   channel: "all",
@@ -197,7 +189,6 @@ const formatDateTime = (value?: string | null) => {
   const date = new Date(value);
   return Number.isNaN(date.getTime()) ? "—" : dateTimeFormatter.format(date);
 };
-const formatDate = (value: string) => dateFormatter.format(dateFromInput(value));
 const formatPercent = (value: number) => `${percentFormatter.format(value)}%`;
 const audienceLabel = (value: AdminNotificationAudience) =>
   AUDIENCE_OPTIONS.find((item) => item.value === value)?.label ?? value;
@@ -897,12 +888,7 @@ const AutomaticLogs = ({
         </table>
       </div>
     )}
-    <div className="border-t border-border">
-      <div className="px-4 pt-4 text-xs font-bold text-muted">
-        Mostrando logs reais: {numberFormatter.format(count)} registro(s)
-      </div>
-      <Pager onNext={onNext} onPrev={onPrev} page={page} pages={pages} />
-    </div>
+    <Pager onNext={onNext} onPrev={onPrev} page={page} pages={pages} />
   </CardShell>
 );
 
@@ -1246,12 +1232,6 @@ export const AdminNotificationsClient = () => {
   const push = useAdminNotificationPushStatus();
   const cancelCampaign = useAdminNotificationCancelCampaign();
   const firstError = metrics.error || campaigns.error || logs.error || push.error;
-  const metricPeriodLabel = getNotificationPeriodLabel(NOTIFICATION_DEFAULT_PERIOD);
-  const footerPeriodLabel = metrics.data?.period
-    ? `${metrics.data.period.label} - ${formatDate(metrics.data.period.from)} a ${formatDate(
-        metrics.data.period.to,
-      )}`
-    : metricPeriodLabel;
 
   const updateCampaignPeriod = (nextPeriod: NotificationPeriodPreset) => {
     setCampaignPeriod(nextPeriod);
@@ -1369,17 +1349,6 @@ export const AdminNotificationsClient = () => {
         page={logs.data?.page ?? logsPage}
         pages={logs.data?.pages ?? 1}
       />
-      <div className="flex flex-col gap-2 rounded-2xl border border-border bg-surface p-4 text-xs font-bold text-muted sm:flex-row sm:items-center sm:justify-between">
-        <span className="inline-flex items-center gap-2">
-          <CheckCircle2 aria-hidden className="h-4 w-4 text-success" />
-          Mobile-first: cards empilhados, filtros responsivos e tabelas com scroll horizontal
-          acessível.
-        </span>
-        <span>
-          <CalendarDays aria-hidden className="mr-1 inline h-4 w-4" />
-          {footerPeriodLabel}
-        </span>
-      </div>
       {modalOpen ? (
         <NewNotificationModal
           campaign={editing}

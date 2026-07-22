@@ -335,3 +335,19 @@ UI:
 - `pnpm check`
 - Smoke HTTP local: `GET http://localhost:3002/notificacoes` retornou `200`.
 - Browser local/headless em Chrome confirmou renderização da rota protegida até a tela de login; a inspeção autenticada completa depende de sessão Admin interativa no navegador do usuário.
+
+## Ajuste complementar 2026-07-21 - Remoção de rodapés auxiliares
+
+- Pedido do usuário: remover da tabela de logs o texto **Mostrando logs reais: X registro(s)** e remover a faixa inferior **Mobile-first: cards empilhados...**.
+- A paginação dos logs automáticos foi mantida, sem o texto auxiliar de contagem duplicado.
+- A faixa informativa inferior foi removida integralmente para reduzir ruído visual na página Admin **Notificações**.
+- Não houve mudança de backend, Prisma/migrations, packages, contratos HTTP, dados persistidos, canais disponíveis ou formulários RHF/Zod.
+- Builder/Quick Copy não esteve disponível como ferramenta callable neste ambiente; a referência visual auditável permaneceu `_product/proto/admin/Notificações.png` e a captura enviada pelo usuário.
+
+### Validação deste ajuste
+
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/notificacoes/client.tsx"`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check`
+- Smoke HTTP local: `GET http://localhost:3002/notificacoes` retornou `200`.
