@@ -79,3 +79,9 @@ A aba **Geral** do detalhe administrativo de paciente foi simplificada apos feed
 As linhas operacionais antigas do card (**Periodo**, **Comunidade destaque**, **Eventos no heatmap** e **Fuso**) foram substituidas por **Comunidades ativas**, **Posts**, **Respostas** e **Ultima atividade**. O bloco **Privacidade e cobertura dos dados** foi removido da interface da aba Geral, mantendo as regras de privacidade como decisao documentada e preservada no contrato.
 
 **Atividades recentes** passa a seguir o layout do detalhe administrativo de psicologo, com tabela de **Data**, **Acao**, **Descricao** e **Usuario**, sem badge tecnico de fonte no cabecalho. Nao houve endpoint novo, schema Prisma, migration, package, mock, seed ou backfill artificial.
+
+## Atualizacao 2026-07-22: contador de denuncias recebidas
+
+Apos feedback de produto, a aba **Geral** passa a exibir tambem o contador **Denuncias recebidas** ao lado do recorte principal de **Posts**, **Comentarios feitos** e **Respostas de psicologos verificados**.
+
+O contador usa `post_report` real vinculado a posts ou comentarios do paciente no periodo do detalhe, incluindo comparativo com periodo anterior pelo mesmo contrato de metricas ja existente. Nao ha acao de moderacao nessa area, mock, seed, backfill artificial, schema Prisma, migration ou package novo.

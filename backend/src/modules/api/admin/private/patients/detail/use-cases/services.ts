@@ -72,6 +72,7 @@ type EngagementCounts = {
   comments_created: number;
   downvotes_received: number;
   posts_created: number;
+  reports_received: number;
   saves_received: number;
   shares_received: number;
   verified_psychologist_responses: number;
@@ -322,6 +323,7 @@ const countsFromBundle = (bundle: AdminPatientEngagementBundle): EngagementCount
   comments_created: bundle.replies.length,
   downvotes_received: bundle.votesReceived.filter((vote) => vote.value < 0).length,
   posts_created: bundle.posts.length,
+  reports_received: bundle.reportsReceived.length,
   saves_received: bundle.postSavesReceived.length + bundle.replySavesReceived.length,
   shares_received: bundle.sharesReceived.length,
   verified_psychologist_responses: bundle.responsesReceived.filter(isVerifiedPsychologistResponse)
@@ -356,6 +358,14 @@ const buildMetrics = (
     label: "Respostas de psicólogos verificados",
     previous: previous.verified_psychologist_responses,
     source: "post_reply.author com psicólogo verificado",
+  }),
+  metric({
+    current: current.reports_received,
+    description: "Denúncias reais recebidas em posts ou comentários do paciente.",
+    id: "reports_received",
+    label: "Denúncias recebidas",
+    previous: previous.reports_received,
+    source: "post_report em conteúdo do paciente",
   }),
   metric({
     current: current.upvotes_received,

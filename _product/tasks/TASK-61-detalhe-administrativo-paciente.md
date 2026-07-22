@@ -708,3 +708,31 @@ Frontend esperado:
 - Browser local/CDP em `/pacientes/cmrqsrab5001f1guh2ve5oy90`: **Cadastro do paciente** e **Privacidade e cobertura dos dados** ausentes; **Engajamento** com diagnostico e novas linhas; **Atividades recentes** com layout de tabela de psicologo.
 - `pnpm --dir admin check`
 - `pnpm check`
+
+## Ajuste pos-feedback 2026-07-22 - Contador de denuncias recebidas na aba Geral
+
+- Pedido do usuario: ao lado do contador **Respostas de psicologos verificados**, adicionar um contador de **Denuncias recebidas**.
+- O endpoint `GET /api/admin/private/patients/:id` passou a incluir a metrica real `reports_received`, calculada a partir de `post_report` vinculado a posts ou comentarios do paciente no periodo consultado, com comparativo contra periodo anterior pelo mesmo contrato de metricas do detalhe.
+- A aba **Geral** passou a exibir **Denuncias recebidas** no grid de contadores principais, na sequencia de **Respostas de psicologos verificados**, com grid responsivo mobile-first (`sm` em 2 colunas e `xl` em 4 colunas).
+- Nao houve schema Prisma, migration, package novo, seed, mock, backfill artificial, endpoint simulado ou acao de moderacao adicionada. `db:migrate` nao se aplicou.
+- Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente; as referencias auditaveis foram o screenshot enviado pelo usuario e `_product/proto/admin/Pacientes/Pacientes - Detalhes.png`.
+- ADR atualizado: `adrs/0241-admin-detalhe-paciente-dados-minimos-readonly.md`.
+
+### Criterios de aceite do ajuste
+
+- [x] A aba **Geral** mostra o contador **Denuncias recebidas** junto aos contadores principais.
+- [x] O contador usa `post_report` real de posts e comentarios do paciente, sem mock ou dado artificial.
+- [x] O grid dos contadores permanece mobile-first e comporta quatro cards lado a lado em telas amplas.
+- [x] Nenhum schema Prisma, migration, package novo, seed ou endpoint simulado foi adicionado.
+
+### Validacao complementar executada
+
+- `pnpm --dir backend exec biome check --write "src/modules/api/admin/private/patients/detail/DTOs/IAdminPatientDetailDTO.ts" "src/modules/api/admin/private/patients/detail/repositories/AdminPatientDetailRepository.ts" "src/modules/api/admin/private/patients/detail/use-cases/services.ts"`
+- `pnpm --dir admin exec biome check --write "src/api/req/patients/index.ts" "src/app/(admin)/pacientes/[id]/client.tsx"`
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check`
+- Service local: `showAdminPatient({ id: "cmrqsrab5001f1guh2ve5oy90", period: "all" })` retornou a metrica `reports_received` com label **Denuncias recebidas** e fonte `post_report em conteudo do paciente`.
+- Browser local/headless via Chrome/CDP em `/pacientes/cmrqsrab5001f1guh2ve5oy90`, com admin temporario real removido ao final, validou desktop `1365x900`: quatro cards principais, **Denuncias recebidas** ao lado de **Respostas de psicologos verificados**; e mobile `390x844`: contador presente e `scrollWidth=390`.

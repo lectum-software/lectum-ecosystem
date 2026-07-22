@@ -103,6 +103,7 @@ const metricIcons: Record<PatientsDetailMetric["id"], LucideIcon> = {
   comments_created: MessageCircle,
   downvotes_received: ArrowDown,
   posts_created: FileText,
+  reports_received: AlertTriangle,
   saves_received: Bookmark,
   shares_received: Share2,
   verified_psychologist_responses: ShieldCheck,
@@ -112,6 +113,7 @@ const PATIENT_GENERAL_METRIC_IDS = new Set<PatientsDetailMetric["id"]>([
   "posts_created",
   "comments_created",
   "verified_psychologist_responses",
+  "reports_received",
 ]);
 const patientMetricDisplayLabels: Partial<Record<PatientsDetailMetric["id"], string>> = {
   comments_created: "Comentários feitos",
@@ -2624,7 +2626,7 @@ const GeneralTab = ({ detail, id }: { detail: AdminPatientDetail; id: string }) 
   <div className="space-y-5">
     <section>
       <h2 className="sr-only">Métricas principais do paciente</h2>
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {getPatientGeneralMetrics(detail).map((metric) => (
           <MetricCard key={metric.id} metric={metric} />
         ))}

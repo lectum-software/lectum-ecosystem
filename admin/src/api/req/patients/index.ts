@@ -433,6 +433,7 @@ export type PatientsDetailMetric = {
     | "comments_created"
     | "downvotes_received"
     | "posts_created"
+    | "reports_received"
     | "saves_received"
     | "shares_received"
     | "verified_psychologist_responses"

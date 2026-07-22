@@ -273,6 +273,15 @@ export type AdminPatientDetailShareReceivedRecord = Prisma.post_shareGetPayload<
   select: typeof shareReceivedSelect;
 }>;
 
+const reportReceivedSelect = {
+  createdAt: true,
+  id: true,
+} satisfies Prisma.post_reportSelect;
+
+export type AdminPatientDetailReportReceivedRecord = Prisma.post_reportGetPayload<{
+  select: typeof reportReceivedSelect;
+}>;
+
 const patientPlatformPageViewSelect = {
   duration_seconds: true,
   id: true,
@@ -330,6 +339,7 @@ export class AdminPatientDetailRepository {
       postSavesReceived,
       replySavesReceived,
       sharesReceived,
+      reportsReceived,
     ] = await Promise.all([
       prisma.community_post.findMany({
         orderBy: {
@@ -631,6 +641,33 @@ export class AdminPatientDetailRepository {
           deleted: false,
         },
       }),
+      prisma.post_report.findMany({
+        orderBy: {
+          createdAt: "desc",
+        },
+        select: reportReceivedSelect,
+        where: {
+          createdAt,
+          deleted: false,
+          OR: [
+            {
+              post: {
+                author_id: patientId,
+              },
+              reply_id: null,
+              target_type: "post",
+            },
+            {
+              reply: {
+                author_id: patientId,
+              },
+              reply_id: {
+                not: null,
+              },
+            },
+          ],
+        },
+      }),
     ]);
 
     return {
@@ -642,6 +679,7 @@ export class AdminPatientDetailRepository {
       replies,
       replySaves,
       replySavesReceived,
+      reportsReceived,
       responsesReceived,
       reviews,
       sharesReceived,
