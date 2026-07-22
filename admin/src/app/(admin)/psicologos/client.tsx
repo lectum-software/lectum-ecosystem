@@ -131,6 +131,20 @@ const formatSelectedPeriod = (period: AdminPsychologistsDashboard["period"]) => 
   return `Período: ${period.label} · ${formatDate(period.from)} a ${formatDate(period.to)}`;
 };
 
+const getDashboardPeriodLabel = (period: DashboardPeriodValue) => {
+  if (period === "custom") return "Personalizado";
+
+  return DASHBOARD_PERIOD_OPTIONS.find((option) => option.id === period)?.label ?? "Todo o período";
+};
+
+const formatDraftSelectedPeriod = (period: DashboardPeriodValue, range: DashboardRange) => {
+  const label = getDashboardPeriodLabel(period);
+
+  if (!range.from || !range.to) return `Período: ${label}`;
+
+  return `Período: ${label} · ${formatDate(range.from)} a ${formatDate(range.to)}`;
+};
+
 const formatChange = (value: number | null) => {
   if (value === null) return "sem base anterior";
   if (value === 0) return "0%";
@@ -1609,7 +1623,21 @@ const StatsContent = ({ summary }: { summary: AdminPsychologistsDashboard }) => 
   );
 };
 
-const PsychologistsHeader = ({
+const PsychologistsHeader = () => (
+  <section className="rounded-card border border-border/70 bg-surface/90 p-5 shadow-admin-soft backdrop-blur md:p-6">
+    <div>
+      <p className="text-xs font-semibold uppercase tracking-[0.12em] text-primary">Psicólogos</p>
+      <h1 className="mt-2 text-3xl font-bold tracking-tight text-foreground md:text-4xl">
+        Dashboard de Psicólogos
+      </h1>
+      <p className="mt-2 max-w-2xl text-sm font-medium leading-6 text-muted">
+        Análise global dos psicólogos da plataforma.
+      </p>
+    </div>
+  </section>
+);
+
+const DashboardPeriodControls = ({
   displayRange,
   onDateControlsBlur,
   onDateChange,
@@ -1624,78 +1652,83 @@ const PsychologistsHeader = ({
   period: DashboardPeriodValue;
   rangeError: string | null;
 }) => (
-  <section className="rounded-card border border-border/70 bg-surface/90 p-5 shadow-admin-soft backdrop-blur md:p-6">
-    <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
-      <div>
-        <p className="text-xs font-semibold uppercase tracking-[0.12em] text-primary">Psicólogos</p>
-        <h1 className="mt-2 text-3xl font-bold tracking-tight text-foreground md:text-4xl">
-          Dashboard de Psicólogos
-        </h1>
-        <p className="mt-2 max-w-2xl text-sm font-medium leading-6 text-muted">
-          Análise global dos psicólogos da plataforma.
-        </p>
-      </div>
-
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
-        <label
-          className="grid gap-1 text-xs font-semibold text-muted"
-          htmlFor="psychologists-period"
-        >
-          Período
-          <span className="relative">
-            <select
-              className="h-11 min-w-[170px] appearance-none rounded-control border border-border bg-surface py-0 pl-3 pr-11 text-sm font-semibold text-foreground shadow-control outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
-              id="psychologists-period"
-              onChange={(event) => onPeriodChange(event.target.value as DashboardPeriodPreset)}
-              value={period}
-            >
-              {period === "custom" ? (
-                <option disabled hidden value="custom">
-                  Personalizado
-                </option>
-              ) : null}
-              {DASHBOARD_PERIOD_OPTIONS.map((option) => (
-                <option key={option.id} value={option.id}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-            <ChevronDown
-              aria-hidden
-              className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground"
-            />
-          </span>
+  <div className="flex w-full flex-col gap-2 xl:w-auto xl:items-end">
+    <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+      <label className="grid gap-1 text-xs font-semibold text-muted" htmlFor="psychologists-period">
+        Período
+        <span className="relative">
+          <select
+            className="h-11 w-full min-w-[170px] appearance-none rounded-control border border-border bg-surface py-0 pl-3 pr-11 text-sm font-semibold text-foreground shadow-control outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+            id="psychologists-period"
+            onChange={(event) => onPeriodChange(event.target.value as DashboardPeriodPreset)}
+            value={period}
+          >
+            {period === "custom" ? (
+              <option disabled hidden value="custom">
+                Personalizado
+              </option>
+            ) : null}
+            {DASHBOARD_PERIOD_OPTIONS.map((option) => (
+              <option key={option.id} value={option.id}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+          <ChevronDown
+            aria-hidden
+            className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground"
+          />
+        </span>
+      </label>
+      <div className="grid gap-3 sm:grid-cols-2" onBlur={onDateControlsBlur}>
+        <label className="text-xs font-semibold text-muted">
+          De
+          <input
+            className="mt-1 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground shadow-control focus:border-primary"
+            max={displayRange.to}
+            onChange={(event) => onDateChange("from", event.target.value)}
+            type="date"
+            value={displayRange.from ?? ""}
+          />
         </label>
-        <div className="grid gap-3 sm:grid-cols-2" onBlur={onDateControlsBlur}>
-          <label className="text-xs font-semibold text-muted">
-            De
-            <input
-              className="mt-1 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground shadow-control focus:border-primary"
-              max={displayRange.to}
-              onChange={(event) => onDateChange("from", event.target.value)}
-              type="date"
-              value={displayRange.from ?? ""}
-            />
-          </label>
-          <label className="text-xs font-semibold text-muted">
-            Até
-            <input
-              className="mt-1 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground shadow-control focus:border-primary"
-              min={displayRange.from}
-              onChange={(event) => onDateChange("to", event.target.value)}
-              type="date"
-              value={displayRange.to ?? ""}
-            />
-          </label>
-        </div>
-        {period === "custom" && rangeError ? (
-          <p className="max-w-md text-xs font-bold text-danger">{rangeError}</p>
-        ) : null}
+        <label className="text-xs font-semibold text-muted">
+          Até
+          <input
+            className="mt-1 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground shadow-control focus:border-primary"
+            min={displayRange.from}
+            onChange={(event) => onDateChange("to", event.target.value)}
+            type="date"
+            value={displayRange.to ?? ""}
+          />
+        </label>
       </div>
     </div>
-  </section>
+    {period === "custom" && rangeError ? (
+      <p className="max-w-md text-xs font-bold text-danger">{rangeError}</p>
+    ) : null}
+  </div>
 );
 
+const DashboardOverviewPanel = ({
+  children,
+  periodControls,
+  periodDescription,
+}: {
+  children: ReactNode;
+  periodControls: ReactNode;
+  periodDescription: string;
+}) => (
+  <CardShell className="min-w-0 p-5 md:p-6">
+    <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
+      <div className="min-w-0">
+        <h2 className="text-xl font-bold text-foreground">Visão geral</h2>
+        <p className="mt-1 text-sm font-bold leading-6 text-muted">{periodDescription}</p>
+      </div>
+      {periodControls}
+    </div>
+    <div className="mt-5">{children}</div>
+  </CardShell>
+);
 const CardsGrid = ({
   activeMetricKeys,
   onToggleMetric,
@@ -1862,7 +1895,13 @@ const DashboardTrafficSourcesCard = ({ summary }: { summary: AdminPsychologistsD
   );
 };
 
-const DashboardContent = ({ summary }: { summary: AdminPsychologistsDashboard }) => {
+const DashboardContent = ({
+  periodControls,
+  summary,
+}: {
+  periodControls: ReactNode;
+  summary: AdminPsychologistsDashboard;
+}) => {
   const [visibleMetricKeys, setVisibleMetricKeys] = useState<DashboardMetricKey[]>(() => [
     ...CARD_ORDER,
   ]);
@@ -1881,15 +1920,17 @@ const DashboardContent = ({ summary }: { summary: AdminPsychologistsDashboard })
       {!hasDashboardRecords(summary) ? <EmptyState period={summary.period} /> : null}
 
       <section className="space-y-4">
-        <h2 className="text-xl font-bold text-foreground">Visão geral</h2>
-        <CardShell className="min-w-0 p-5">
+        <DashboardOverviewPanel
+          periodControls={periodControls}
+          periodDescription={formatSelectedPeriod(summary.period)}
+        >
           <CardsGrid
             activeMetricKeys={activeMetricKeys}
             onToggleMetric={toggleMetric}
             summary={summary}
           />
           <TimelineChart points={summary.timeline.points} visibleMetricKeys={activeMetricKeys} />
-        </CardShell>
+        </DashboardOverviewPanel>
         <DashboardTrafficSourcesCard summary={summary} />
       </section>
 
@@ -1972,17 +2013,20 @@ export const AdminPsychologistsClient = () => {
     setDraftRange(defaultRange);
     setAppliedRange(defaultRange);
   };
+  const periodControls = (
+    <DashboardPeriodControls
+      displayRange={displayRange}
+      onDateControlsBlur={handleDateControlsBlur}
+      onDateChange={handleDateChange}
+      onPeriodChange={handlePeriodChange}
+      period={selectedPeriod}
+      rangeError={customRangeError}
+    />
+  );
 
   return (
     <div className="space-y-7">
-      <PsychologistsHeader
-        displayRange={displayRange}
-        onDateControlsBlur={handleDateControlsBlur}
-        onDateChange={handleDateChange}
-        onPeriodChange={handlePeriodChange}
-        period={selectedPeriod}
-        rangeError={customRangeError}
-      />
+      <PsychologistsHeader />
 
       {!validRange ? (
         <ErrorState
@@ -1991,13 +2035,23 @@ export const AdminPsychologistsClient = () => {
         />
       ) : null}
 
-      {validRange && query.isLoading ? <LoadingGrid /> : null}
+      {validRange && query.isLoading ? (
+        <DashboardOverviewPanel
+          periodControls={periodControls}
+          periodDescription={formatDraftSelectedPeriod(selectedPeriod, displayRange)}
+        >
+          <LoadingGrid />
+          <div className="mt-4 h-[20rem] animate-pulse rounded-[1.5rem] border border-border/70 bg-surface-muted" />
+        </DashboardOverviewPanel>
+      ) : null}
 
       {validRange && query.isError && queryError ? (
         <ErrorState message={queryError} onRetry={() => void query.refetch()} />
       ) : null}
 
-      {validRange && query.data ? <DashboardContent summary={query.data} /> : null}
+      {validRange && query.data ? (
+        <DashboardContent periodControls={periodControls} summary={query.data} />
+      ) : null}
     </div>
   );
 };

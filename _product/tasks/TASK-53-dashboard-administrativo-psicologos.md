@@ -316,3 +316,13 @@ Packages usados:
 - Nao houve alteracao de backend, contrato HTTP, calculo, Prisma, migration, seed, mock, package novo ou fonte de dados.
 - Referencia visual local mantida: `_product/proto/admin/Psicologos/Psicologos - Dashboard.png`; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
 - Validacoes desta correcao: `pnpm --dir admin exec biome check "src/app/(admin)/psicologos/client.tsx"`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke HTTP local em `http://localhost:3002/psicologos` retornando 200.
+
+### Correção UX em 2026-07-22 - filtros dentro da visão geral
+
+- Pedido do usuário: mover **Visão geral** para dentro do bloco branco dos contadores/gráfico e posicionar **Período**, **De** e **Até** na mesma linha do título dessa visão geral.
+- O card de topo mantém somente o título **Dashboard de Psicólogos** e o subtítulo executivo; os filtros saíram desse topo e passam a compor o cabeçalho interno do bloco de contadores e gráfico.
+- O texto informativo do período consultado agora fica logo abaixo de **Visão geral**, dentro do mesmo bloco branco, preservando a leitura do intervalo real retornado pela API.
+- A composição segue mobile-first: em telas estreitas o título, texto do período e filtros empilham; em desktop os filtros ficam alinhados à direita na mesma linha do título.
+- Não houve alteração de backend, contrato HTTP, cálculo, Prisma, migration, seed, mock, package novo ou fonte de dados.
+- Referência visual local mantida: `_product/proto/admin/Psicólogos/Psicólogos - Dashboard.png`; Builder/Quick Copy não está exposto como ferramenta callable neste ambiente, e a correção também considerou o screenshot enviado pelo usuário.
+- Validações desta correção: `pnpm --dir admin exec biome check --write "src/app/(admin)/psicologos/client.tsx"`, `pnpm --dir admin check`, `pnpm --dir admin build` e smoke local em `http://localhost:3002/psicologos` retornando 200. O build exigiu aguardar build concorrente em diretório temporário e remover lock stale de `.next/dev/lock` após encerrar o dev server Admin local.
