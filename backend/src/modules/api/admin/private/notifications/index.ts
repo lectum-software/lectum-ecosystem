@@ -4,6 +4,7 @@ import {
   automaticLogs,
   cancelCampaign,
   createCampaign,
+  emailStatus,
   listCampaigns,
   metrics,
   pushStatus,
@@ -28,6 +29,7 @@ routes.use(adminAuth);
 
 routes.get("/metrics", metricsValidator, metrics);
 routes.get("/push-status", pushStatus);
+routes.get("/email-status", emailStatus);
 routes.get("/automatic-logs", automaticLogsValidator, automaticLogs);
 routes.get("/campaigns", listCampaignsValidator, listCampaigns);
 routes.post("/campaigns", createCampaignValidator, createCampaign);

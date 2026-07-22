@@ -19,6 +19,7 @@ export type NotificationUserRole = "paciente" | "psicologo" | string | null | un
 export type NewPostAuthorScope = "patients_only" | "professionals_only" | "all" | "favorites";
 
 export type NotificationPreferenceEntry = {
+  email?: boolean;
   enabled?: boolean;
   in_app?: boolean;
   push?: boolean;
@@ -38,7 +39,7 @@ export const defaultNewPostAuthorScope = (role: NotificationUserRole): NewPostAu
 const normalizeEnabled = (entry: Record<string, unknown> | undefined) => {
   if (!entry) return true;
   if (typeof entry.enabled === "boolean") return entry.enabled;
-  if (entry.in_app === false && entry.push === false) return false;
+  if (entry.in_app === false && entry.push === false && entry.email !== true) return false;
   return true;
 };
 
@@ -109,7 +110,7 @@ export const normalizeNotificationPrefsForJson = (
 export const isChannelAllowed = (
   prefs: unknown,
   key: string,
-  channel: keyof Pick<NotificationPreferenceEntry, "in_app" | "push">,
+  channel: keyof Pick<NotificationPreferenceEntry, "email" | "in_app" | "push">,
 ) => {
   if (!isRecord(prefs)) return true;
 

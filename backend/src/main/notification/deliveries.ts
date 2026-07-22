@@ -1,7 +1,7 @@
 ﻿import type { Prisma } from "@/external/generated/prisma/client";
 import prisma from "@/infra/database/prisma";
 
-export type NotificationDeliveryChannel = "in_app" | "push";
+export type NotificationDeliveryChannel = "email" | "in_app" | "push";
 export type NotificationDeliverySource = "automatic" | "manual";
 export type NotificationDeliveryStatus =
   | "clicked"

@@ -20,8 +20,8 @@ Ela deve permitir ao administrador criar notificações para usuários e acompan
 
 Decisão de produto:
 
-- Não considerar e-mail nesta V1.
-- Canais visíveis: `in-app` e `push` quando push estiver disponível.
+- E-mail passa a ser canal real de notificações manuais quando o backend confirmar SMTP configurado.
+- Canais visíveis: `in-app`, `push` quando push estiver disponível e `email` quando SMTP estiver disponível.
 - Logs automáticos são leitura/auditoria, não criação manual.
 
 ## Objetivo
@@ -69,7 +69,7 @@ Implementar a UI administrativa de notificações com criação de campanhas man
     - título;
     - mensagem;
     - público;
-    - canais (`in_app`, `push` se disponível);
+    - canais (`in_app`, `push` se disponível, `email` se SMTP estiver disponível);
     - redirect/link interno opcional;
     - enviar agora ou agendar;
   - ações:
@@ -77,8 +77,8 @@ Implementar a UI administrativa de notificações com criação de campanhas man
     - enviar agora;
     - agendar;
     - cancelar rascunho/agendada quando permitido.
-- Não mostrar canal e-mail.
-- Não mostrar template de e-mail.
+- Mostrar canal e-mail apenas com provider SMTP real disponível.
+- Não mostrar editor/template rico de e-mail nesta etapa.
 - Não mostrar taxa de abertura/clique quando a TASK-63 retornar métrica indisponível.
 
 ## Escopo backend
@@ -90,8 +90,7 @@ Implementar a UI administrativa de notificações com criação de campanhas man
 
 ## Fora do escopo
 
-- E-mail.
-- SMTP/templates de e-mail.
+- Editor rico ou templates personalizados de e-mail.
 - WhatsApp/SMS.
 - Editor rico.
 - Segmentação avançada.
@@ -158,7 +157,7 @@ Formulário:
   - mensagem obrigatória;
   - público obrigatório;
   - ao menos um canal;
-  - `email` não é canal aceito;
+  - `email` só é canal aceito quando SMTP real estiver configurado;
   - data futura para agendamento;
   - redirect opcional validado.
 - Preview simples do conteúdo antes de enviar/agendar.
@@ -180,7 +179,7 @@ UI:
 - [x] `_product/proto/admin/Notificações.png` foi citada como referência visual.
 - [x] A tela deixa claro que serve para gerenciar/enviar notificações aos usuários.
 - [x] Botão **Nova notificação** abre fluxo real de criação.
-- [x] Não existe canal e-mail na UI.
+- [x] Canal e-mail aparece na UI somente quando SMTP real estiver disponível.
 - [x] Form usa React Hook Form, Zod e controllers.
 - [x] Campanhas manuais listam status reais: rascunho, agendada, enviada, cancelada.
 - [x] Logs automáticos são somente leitura.
@@ -351,3 +350,28 @@ UI:
 - `pnpm --dir admin build`
 - `pnpm check`
 - Smoke HTTP local: `GET http://localhost:3002/notificacoes` retornou `200`.
+
+## Ajuste complementar 2026-07-21 - Canal e-mail real nas notificações manuais
+
+- Pedido do usuário: habilitar notificações também por e-mail, aproveitando o SMTP/Nodemailer já configurado no backend com remetente de teste da Planuze.
+- A decisão anterior da TASK-64 que mantinha e-mail fora da V1 foi superada por `adrs/0304-admin-notificacoes-email-smtp.md`.
+- O backend passou a aceitar `email` em `ADMIN_NOTIFICATION_CHANNELS`, validar SMTP real antes de criar/editar/enviar campanhas com esse canal e expor `/api/admin/private/notifications/email-status`.
+- O envio de e-mail reutiliza o provider existente `modules/api/config/nodemailer/send`, template `transactional.hbs` e variáveis `EMAIL_API_*`; não foi criado mock, provider paralelo, package novo nem migração Prisma.
+- O título da notificação é usado como assunto do e-mail; a mensagem é renderizada como HTML escapado e o redirect interno opcional vira botão para a primeira origem de `WEB_URL`.
+- Entregas de e-mail são persistidas em `notification_delivery.channel="email"` com `status="sent"` somente quando o SMTP aceita o envio; falhas e skips registram `failed`/`skipped` com `failure_reason`.
+- O Admin passou a consultar o status de e-mail real, mostrar checkbox **E-mail** no modal quando disponível, incluir **E-mail** nos filtros de canal, pills e detalhes, e informar que abertura/clique de e-mail ainda não têm tracking nesta etapa.
+- Push e e-mail continuam independentes: se push estiver indisponível ou desativado por preferência, isso não bloqueia a tentativa de entrega por e-mail quando selecionada.
+- Sem alteração de Prisma/migrations, packages ou estrutura persistida; o campo JSON `channels` e a coluna string `notification_delivery.channel` já comportam o novo canal.
+
+### Validação deste ajuste
+
+- `pnpm --dir backend exec biome check --write "src/modules/api/admin/private/notifications/DTOs/IAdminNotificationsDTO.ts" "src/modules/api/admin/private/notifications/use-cases/services.ts" "src/modules/api/admin/private/notifications/use-cases/controller.ts" "src/modules/api/admin/private/notifications/index.ts" "src/main/notification/deliveries.ts" "src/main/notification/preferences.ts" "locales/pt/translation.json"`
+- `pnpm --dir admin exec biome check --write "src/api/req/notifications/index.ts" "src/api/cache/keys.ts" "src/api/callers/notifications/index.ts" "src/app/(admin)/notificacoes/client.tsx"`
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check`
+- Smoke HTTP local: `GET http://localhost:3002/notificacoes` retornou `200`.
+- Smoke de proteção backend: `GET http://localhost:3001/api/admin/private/notifications/email-status` retornou `401` sem token, confirmando autenticação Admin.
+- O arquivo `backend/.env` foi verificado sem expor segredo: as variáveis `EMAIL_API_*` necessárias estavam presentes e havia referência ao remetente Planuze.

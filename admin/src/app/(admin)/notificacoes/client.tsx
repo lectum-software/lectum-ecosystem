@@ -12,6 +12,7 @@ import {
   Edit3,
   Eye,
   Loader2,
+  Mail,
   MousePointerClick,
   Plus,
   RefreshCw,
@@ -31,6 +32,7 @@ import {
   useAdminNotificationCampaigns,
   useAdminNotificationCancelCampaign,
   useAdminNotificationCreateCampaign,
+  useAdminNotificationEmailStatus,
   useAdminNotificationMetrics,
   useAdminNotificationPushStatus,
   useAdminNotificationScheduleCampaign,
@@ -46,6 +48,7 @@ import {
   type AdminNotificationCampaignPayload,
   type AdminNotificationCampaignStatus,
   type AdminNotificationChannel,
+  type AdminNotificationEmailStatus,
   type AdminNotificationMetrics,
   type AdminNotificationPushStatus,
   type AdminNotificationsRangeQuery,
@@ -198,7 +201,12 @@ const roleLabel = (value?: null | string) => {
 
   return "Usuário";
 };
-const channelLabel = (value: AdminNotificationChannel) => (value === "in_app" ? "In-app" : "Push");
+const CHANNEL_LABELS: Record<AdminNotificationChannel, string> = {
+  email: "E-mail",
+  in_app: "In-app",
+  push: "Push",
+};
+const channelLabel = (value: AdminNotificationChannel) => CHANNEL_LABELS[value] ?? value;
 const channelText = (channels: AdminNotificationChannel[]) =>
   channels.map(channelLabel).join(" + ");
 
@@ -217,6 +225,7 @@ const notificationFormSchema = z
     audience: z.enum(ADMIN_NOTIFICATION_AUDIENCES),
     body: z.string().trim().min(3, "Informe a mensagem.").max(500, "Use até 500 caracteres."),
     delivery_mode: z.enum(["draft", "send_now", "schedule"]),
+    email: z.boolean(),
     in_app: z.boolean(),
     push: z.boolean(),
     redirect: internalRedirect,
@@ -224,7 +233,7 @@ const notificationFormSchema = z
     title: z.string().trim().min(3, "Informe o título.").max(120, "Use até 120 caracteres."),
   })
   .superRefine((values, context) => {
-    if (!values.in_app && !values.push) {
+    if (!values.email && !values.in_app && !values.push) {
       context.addIssue({
         code: "custom",
         message: "Selecione ao menos um canal.",
@@ -263,7 +272,9 @@ const StatusBadge = ({ status }: { status: AdminNotificationCampaignStatus }) =>
 
 const ChannelPill = ({ channel }: { channel: AdminNotificationChannel }) => (
   <span className="inline-flex items-center gap-1 rounded-full bg-primary-soft px-2 py-1 text-xs font-black text-primary">
-    {channel === "push" ? (
+    {channel === "email" ? (
+      <Mail aria-hidden className="h-3 w-3" />
+    ) : channel === "push" ? (
       <Smartphone aria-hidden className="h-3 w-3" />
     ) : (
       <Bell aria-hidden className="h-3 w-3" />
@@ -444,6 +455,7 @@ const NotificationTableFiltersBlock = ({
               <option value="all">Todos</option>
               <option value="in_app">In-app</option>
               <option value="push">Push</option>
+              <option value="email">E-mail</option>
             </select>
             <FilterSelectChevron />
           </span>
@@ -560,7 +572,7 @@ const ChannelCheckbox = ({
   control: Control<NotificationFormValues>;
   disabled?: boolean;
   label: string;
-  name: "in_app" | "push";
+  name: "email" | "in_app" | "push";
 }) => {
   const { field } = useController({ control, name });
 
@@ -901,12 +913,20 @@ const pushUnavailableCopy = (push?: AdminNotificationPushStatus) => {
   return "Push oculto por indisponibilidade real do backend.";
 };
 
+const emailUnavailableCopy = (email?: AdminNotificationEmailStatus) => {
+  if (!email) return "Verificando disponibilidade real de e-mail no backend.";
+  if (email.available) return null;
+  return "E-mail oculto: SMTP não está configurado no backend.";
+};
+
 const NewNotificationModal = ({
   campaign,
+  email,
   onClose,
   push,
 }: {
   campaign?: AdminNotificationCampaign | null;
+  email?: AdminNotificationEmailStatus;
   onClose: () => void;
   push?: AdminNotificationPushStatus;
 }) => {
@@ -915,12 +935,15 @@ const NewNotificationModal = ({
   const sendCampaign = useAdminNotificationSendCampaign();
   const scheduleCampaign = useAdminNotificationScheduleCampaign();
   const [intent, setIntent] = useState<SubmitIntent>("draft");
+  const emailAvailable = Boolean(email?.available);
+  const emailVisible = emailAvailable || Boolean(campaign?.channels.includes("email"));
   const pushAvailable = Boolean(push?.available);
   const form = useForm<NotificationFormValues>({
     defaultValues: {
       audience: campaign?.audience ?? "all_users",
       body: campaign?.body ?? "",
       delivery_mode: "draft",
+      email: emailAvailable ? (campaign?.channels.includes("email") ?? false) : false,
       in_app: campaign?.channels.includes("in_app") ?? true,
       push: pushAvailable ? (campaign?.channels.includes("push") ?? false) : false,
       redirect: campaign?.redirect ?? "",
@@ -931,15 +954,25 @@ const NewNotificationModal = ({
     resolver: zodResolver(notificationFormSchema),
   });
   useEffect(() => {
+    form.setValue(
+      "email",
+      emailAvailable ? (campaign?.channels.includes("email") ?? false) : false,
+    );
     form.setValue("push", pushAvailable ? (campaign?.channels.includes("push") ?? false) : false);
-  }, [campaign, form, pushAvailable]);
+  }, [campaign, emailAvailable, form, pushAvailable]);
   const preview = useWatch({ control: form.control });
   const pending =
     createCampaign.isPending ||
     updateCampaign.isPending ||
     sendCampaign.isPending ||
     scheduleCampaign.isPending;
+  const unavailableEmail = emailUnavailableCopy(email);
   const unavailablePush = pushUnavailableCopy(push);
+  const previewChannels = [
+    preview.in_app ? "In-app" : null,
+    preview.push && pushAvailable ? "Push" : null,
+    preview.email && emailAvailable ? "E-mail" : null,
+  ].filter(Boolean);
 
   const submit = async (values: NotificationFormValues) => {
     if (
@@ -952,6 +985,7 @@ const NewNotificationModal = ({
     const channels: AdminNotificationChannel[] = [
       ...(values.in_app ? ["in_app" as const] : []),
       ...(values.push && pushAvailable ? ["push" as const] : []),
+      ...(values.email && emailAvailable ? ["email" as const] : []),
     ];
     const payload: AdminNotificationCampaignPayload = {
       audience: values.audience,
@@ -967,14 +1001,14 @@ const NewNotificationModal = ({
       if (values.delivery_mode === "send_now") {
         const result = await sendCampaign.mutateAsync(saved.id);
         toast.success(
-          `Campanha enviada. Entregas reais: ${numberFormatter.format(result.summary.total_deliveries)}.`,
+          `Notificação enviada. Entregas reais: ${numberFormatter.format(result.summary.total_deliveries)}.`,
         );
       } else if (values.delivery_mode === "schedule") {
         await scheduleCampaign.mutateAsync({
           id: saved.id,
           scheduledAt: new Date(values.scheduled_at || "").toISOString(),
         });
-        toast.success("Campanha agendada com dados reais.");
+        toast.success("Notificação agendada com dados reais.");
       } else {
         toast.success("Rascunho salvo.");
       }
@@ -1002,8 +1036,8 @@ const NewNotificationModal = ({
               Criar campanha manual para usuários
             </h2>
             <p className="mt-2 text-sm leading-6 text-muted">
-              Canais de e-mail, SMS e WhatsApp estão fora da V1. Logs automáticos são somente
-              leitura.
+              E-mail e push aparecem somente quando o backend confirma provedores reais. Logs
+              automáticos são somente leitura.
             </p>
           </div>
           <button
@@ -1034,7 +1068,7 @@ const NewNotificationModal = ({
                 disabled={pending}
                 label="Mensagem"
                 name="body"
-                placeholder="Escreva a mensagem curta exibida na notificação in-app."
+                placeholder="Escreva a mensagem curta exibida nos canais selecionados."
                 required
                 rows={5}
               />
@@ -1047,7 +1081,7 @@ const NewNotificationModal = ({
               />
               <div>
                 <p className="mb-2 text-sm font-semibold text-foreground">Canais *</p>
-                <div className="grid gap-3 sm:grid-cols-2">
+                <div className="grid gap-3 sm:grid-cols-3">
                   <ChannelCheckbox
                     control={form.control}
                     disabled={pending}
@@ -1062,12 +1096,25 @@ const NewNotificationModal = ({
                       name="push"
                     />
                   ) : null}
+                  {emailVisible ? (
+                    <ChannelCheckbox
+                      control={form.control}
+                      disabled={pending || !emailAvailable}
+                      label="E-mail"
+                      name="email"
+                    />
+                  ) : null}
                 </div>
                 <span className="mt-1 block min-h-5 text-xs font-medium text-danger">
                   {form.formState.errors.in_app?.message || ""}
                 </span>
-                {unavailablePush ? (
+                {unavailableEmail ? (
                   <p className="rounded-2xl border border-border bg-surface-muted p-3 text-xs font-bold text-muted">
+                    {unavailableEmail}
+                  </p>
+                ) : null}
+                {unavailablePush ? (
+                  <p className="mt-2 rounded-2xl border border-border bg-surface-muted p-3 text-xs font-bold text-muted">
                     {unavailablePush}
                   </p>
                 ) : null}
@@ -1104,11 +1151,10 @@ const NewNotificationModal = ({
                 <p className="font-black text-foreground">Resumo do envio</p>
                 <ul className="mt-2 space-y-1">
                   <li>Público: {preview.audience ? audienceLabel(preview.audience) : "—"}</li>
-                  <li>
-                    Canais: {preview.in_app ? "In-app" : ""}
-                    {preview.in_app && preview.push ? " + " : ""}
-                    {preview.push && pushAvailable ? "Push" : !preview.in_app ? "—" : ""}
-                  </li>
+                  <li>Canais: {previewChannels.length > 0 ? previewChannels.join(" + ") : "—"}</li>
+                  {preview.email && emailAvailable ? (
+                    <li>Assunto do e-mail: {preview.title || "título da notificação"}</li>
+                  ) : null}
                   <li>Redirect: {preview.redirect || "sem redirect"}</li>
                 </ul>
               </div>
@@ -1230,8 +1276,9 @@ export const AdminNotificationsClient = () => {
   const campaigns = useAdminNotificationCampaigns(campaignQuery, { enabled: campaignRangeIsValid });
   const logs = useAdminNotificationAutomaticLogs(logsQuery, { enabled: logsRangeIsValid });
   const push = useAdminNotificationPushStatus();
+  const email = useAdminNotificationEmailStatus();
   const cancelCampaign = useAdminNotificationCancelCampaign();
-  const firstError = metrics.error || campaigns.error || logs.error || push.error;
+  const firstError = metrics.error || campaigns.error || logs.error || push.error || email.error;
 
   const updateCampaignPeriod = (nextPeriod: NotificationPeriodPreset) => {
     setCampaignPeriod(nextPeriod);
@@ -1287,6 +1334,7 @@ export const AdminNotificationsClient = () => {
             void campaigns.refetch();
             void logs.refetch();
             void push.refetch();
+            void email.refetch();
           }}
         />
       ) : null}
@@ -1352,6 +1400,7 @@ export const AdminNotificationsClient = () => {
       {modalOpen ? (
         <NewNotificationModal
           campaign={editing}
+          email={email.data}
           onClose={() => {
             setModalOpen(false);
             setEditing(null);

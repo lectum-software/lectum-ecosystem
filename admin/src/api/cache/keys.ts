@@ -360,6 +360,7 @@ export const adminNotificationsKeys = {
     [...adminNotificationsKeys.all, "automatic-logs", normalizeNotificationLogs(input)] as const,
   campaigns: (input: AdminNotificationCampaignsQuery) =>
     [...adminNotificationsKeys.all, "campaigns", normalizeNotificationCampaigns(input)] as const,
+  emailStatus: () => [...adminNotificationsKeys.all, "email-status"] as const,
   metrics: (input: AdminNotificationsRangeQuery) =>
     [...adminNotificationsKeys.all, "metrics", normalizeNotificationsRange(input)] as const,
   pushStatus: () => [...adminNotificationsKeys.all, "push-status"] as const,

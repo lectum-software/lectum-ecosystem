@@ -125,8 +125,8 @@
     "admin_auth_inactive": "Administrador inativo",
     "admin_auth_unconfirmed": "Administrador ainda não confirmado",
     "admin_notification_channel_required": "Selecione pelo menos um canal de notifica??o.",
-    "admin_notification_email_channel_not_allowed": "E-mail n?o est? dispon?vel nas notifica??es da V1.",
-    "admin_notification_invalid_channel": "Canal de notifica??o inv?lido. Use apenas in_app ou push.",
+    "admin_notification_email_provider_unavailable": "Envio de e-mail indisponível neste ambiente. Configure SMTP antes de selecionar E-mail.",
+    "admin_notification_invalid_channel": "Canal de notifica??o inv?lido. Use apenas in_app, push ou email.",
     "admin_notification_invalid_audience": "P?blico da campanha inv?lido.",
     "admin_notification_invalid_redirect": "Informe uma rota interna v?lida para o redirecionamento.",
     "admin_notification_campaign_not_mutable": "Somente campanhas em rascunho podem ser editadas.",
@@ -455,6 +455,7 @@
     "send_for": "Enviado por",
     "recovery_code": "Código de recuperação",
     "confirm_code": "Código de confirmação",
+    "btn_open_notification": "Abrir na Lectum",
     "btn_recovery_password": "Recuperar senha"
   },
   "sms": {

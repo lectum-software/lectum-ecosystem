@@ -2,11 +2,13 @@
 import type { Prisma } from "@/external/generated/prisma/client";
 import type { Resolve } from "@/helpers/return";
 import { error, msg } from "@/helpers/translate";
+import { resolve as translate } from "@/helpers/translate/resolve";
 import prisma from "@/infra/database/prisma";
 import { createNotificationDelivery } from "@/main/notification/deliveries";
 import { isChannelAllowed } from "@/main/notification/preferences";
 import { sendWebPushToSubscriptions } from "@/main/notification/push";
 import { notification as emitNotification } from "@/main/socket/events/notification";
+import { send as sendEmail } from "@/modules/api/config/nodemailer/send";
 import {
   ADMIN_NOTIFICATION_AUDIENCES,
   ADMIN_NOTIFICATION_CHANNELS,
@@ -32,6 +34,16 @@ const DEFAULT_PERIOD_DAYS = 30;
 const MAX_PERIOD_DAYS = 3660;
 const OPEN_STATUSES = ["read", "clicked"];
 const REACHED_STATUSES = ["sent", "delivered", "read", "clicked"];
+const EMAIL_STATUS_REASON_NOT_CONFIGURED = "email_smtp_not_configured";
+const REQUIRED_EMAIL_ENV_KEYS = [
+  "EMAIL_API_EMAIL",
+  "EMAIL_API_KEY",
+  "EMAIL_API_HOST",
+  "EMAIL_API_PORT",
+  "EMAIL_API_SENDER",
+  "EMAIL_API_NAME",
+  "EMAIL_API_UNSUBSCRIBE",
+] as const;
 
 const repository = new AdminNotificationsRepository();
 
@@ -45,6 +57,75 @@ const ok = (data: unknown, code = "index", status = 200): Resolve => ({
   ...msg(code, {}),
   data,
 });
+
+const emailProviderStatusData = () => {
+  const configured = REQUIRED_EMAIL_ENV_KEYS.every((key) => Boolean(process.env[key]?.trim()));
+
+  return {
+    available: configured,
+    configured,
+    reason: configured ? null : EMAIL_STATUS_REASON_NOT_CONFIGURED,
+    sender_address: process.env.EMAIL_API_SENDER || null,
+    sender_name: process.env.EMAIL_API_NAME || null,
+  };
+};
+
+const ensureEmailProviderAvailable = (channels: AdminNotificationChannel[] | undefined) => {
+  if (!channels?.includes("email")) return null;
+  if (emailProviderStatusData().available) return null;
+
+  return fail("admin_notification_email_provider_unavailable", 503);
+};
+
+const escapeHtml = (value: string) =>
+  value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+
+const getFirstName = (name: string | null | undefined) => {
+  const firstName = name?.trim().split(/\s+/)[0];
+  return firstName || "usuário";
+};
+
+const renderEmailParagraphs = (body: string) =>
+  body
+    .split(/\r?\n{2,}/)
+    .map((paragraph) => paragraph.trim())
+    .filter(Boolean)
+    .map(
+      (paragraph) =>
+        `<p style="margin: 0 0 14px;">${escapeHtml(paragraph).replace(/\r?\n/g, "<br />")}</p>`,
+    )
+    .join("");
+
+const firstPublicWebUrl = () => process.env.WEB_URL?.split(",")[0]?.trim().replace(/\/$/, "") || "";
+
+const redirectUrlForEmail = (redirect: null | string) => {
+  if (!redirect) return undefined;
+
+  const baseUrl = firstPublicWebUrl();
+  return baseUrl ? `${baseUrl}${redirect}` : undefined;
+};
+
+const adminNotificationEmailHtml = (campaign: CampaignRecord) => {
+  const redirectHint = campaign.redirect
+    ? '<p style="margin: 18px 0 0; color: #64748b;">Use o botão abaixo para abrir a área relacionada na Lectum.</p>'
+    : "";
+
+  return `<div style="text-align: left; color: #0f2344;">
+    <h2 style="font-family: 'Poppins', Helvetica, Arial, sans-serif; font-size: 22px; line-height: 30px; margin: 0 0 16px;">${escapeHtml(
+      campaign.title,
+    )}</h2>
+    <div style="font-size: 16px; line-height: 26px;">${renderEmailParagraphs(campaign.body)}</div>
+    ${redirectHint}
+  </div>`;
+};
+
+const getErrorMessage = (value: unknown) =>
+  value instanceof Error ? value.message : String(value);
 
 const pad = (value: number) => String(value).padStart(2, "0");
 const toDateKey = (date: Date) =>
@@ -180,7 +261,6 @@ const normalizeChannels = (
   if (!channels || channels.length === 0) return fail("admin_notification_channel_required");
 
   const normalized = [...new Set(channels.map((channel) => channel.trim().toLowerCase()))];
-  if (normalized.includes("email")) return fail("admin_notification_email_channel_not_allowed");
 
   if (!normalized.every(isAdminNotificationChannel)) {
     return fail("admin_notification_invalid_channel");
@@ -341,6 +421,29 @@ const manualMessageProps = (campaign: CampaignRecord) => ({
   title: campaign.title,
 });
 
+type AudienceUser = Awaited<ReturnType<AdminNotificationsRepository["listAudienceUsers"]>>[number];
+
+const sendCampaignEmail = async (campaign: CampaignRecord, user: AudienceUser) => {
+  const redirectUrl = redirectUrlForEmail(campaign.redirect);
+  const name = getFirstName(user.name);
+
+  return sendEmail({
+    messageProps: {
+      btn_accept_invite: redirectUrl ? translate("email.btn_open_notification") : undefined,
+      email: user.email,
+      hello: translate("email.hello", { name }),
+      html: adminNotificationEmailHtml(campaign),
+      name,
+      send_for: translate("email.send_for"),
+      url: redirectUrl,
+    },
+    subject: campaign.title,
+    template: "transactional",
+    to: user.email,
+    type: "marketing",
+  });
+};
+
 const materializeCampaignDeliveries = async (campaign: CampaignRecord) => {
   const channels = parseStoredChannels(campaign.channels);
   const audience = campaign.audience as AdminNotificationAudience;
@@ -348,6 +451,7 @@ const materializeCampaignDeliveries = async (campaign: CampaignRecord) => {
   const emittedUsers: string[] = [];
   const summary = {
     audience_users: users.length,
+    email_sent: 0,
     failed: 0,
     in_app_delivered: 0,
     push_sent: 0,
@@ -413,40 +517,119 @@ const materializeCampaignDeliveries = async (campaign: CampaignRecord) => {
           triggerKey: MESSAGE_KEY,
           userId: user.id,
         });
-        continue;
-      }
+      } else {
+        const result = await sendWebPushToSubscriptions({
+          body: campaign.body,
+          campaignId: campaign.id,
+          messageProps: manualMessageProps(campaign),
+          redirect: campaign.redirect,
+          subscriptions: user.notification_subscriptions,
+          title: campaign.title,
+        });
+        const now = new Date();
 
-      const result = await sendWebPushToSubscriptions({
-        body: campaign.body,
-        campaignId: campaign.id,
-        messageProps: manualMessageProps(campaign),
-        redirect: campaign.redirect,
-        subscriptions: user.notification_subscriptions,
-        title: campaign.title,
-      });
+        if (result.status === "sent") summary.push_sent++;
+        if (result.status === "failed") summary.failed++;
+        if (result.status === "skipped") summary.skipped++;
+        summary.total_deliveries++;
+
+        await createNotificationDelivery({
+          campaignId: campaign.id,
+          channel: "push",
+          failureReason: result.failureReason ?? null,
+          metadata: {
+            campaign_id: campaign.id,
+            failed_count: result.failedCount,
+            sent_count: result.sentCount,
+            targeted_count: result.targetedCount,
+          },
+          sentAt: result.status === "sent" ? now : null,
+          source: "manual",
+          status: result.status,
+          triggerKey: MESSAGE_KEY,
+          userId: user.id,
+        });
+      }
+    }
+
+    if (channels.includes("email")) {
+      const email = user.email?.trim();
       const now = new Date();
 
-      if (result.status === "sent") summary.push_sent++;
-      if (result.status === "failed") summary.failed++;
-      if (result.status === "skipped") summary.skipped++;
-      summary.total_deliveries++;
-
-      await createNotificationDelivery({
-        campaignId: campaign.id,
-        channel: "push",
-        failureReason: result.failureReason ?? null,
-        metadata: {
-          campaign_id: campaign.id,
-          failed_count: result.failedCount,
-          sent_count: result.sentCount,
-          targeted_count: result.targetedCount,
-        },
-        sentAt: result.status === "sent" ? now : null,
-        source: "manual",
-        status: result.status,
-        triggerKey: MESSAGE_KEY,
-        userId: user.id,
-      });
+      if (!isChannelAllowed(user.notification_preference?.prefs, MESSAGE_KEY, "email")) {
+        summary.skipped++;
+        summary.total_deliveries++;
+        await createNotificationDelivery({
+          campaignId: campaign.id,
+          channel: "email",
+          failureReason: "preference_disabled",
+          metadata: { campaign_id: campaign.id },
+          source: "manual",
+          status: "skipped",
+          triggerKey: MESSAGE_KEY,
+          userId: user.id,
+        });
+      } else if (!email) {
+        summary.skipped++;
+        summary.total_deliveries++;
+        await createNotificationDelivery({
+          campaignId: campaign.id,
+          channel: "email",
+          failureReason: "email_missing",
+          metadata: { campaign_id: campaign.id },
+          source: "manual",
+          status: "skipped",
+          triggerKey: MESSAGE_KEY,
+          userId: user.id,
+        });
+      } else {
+        try {
+          const delivered = await sendCampaignEmail(campaign, user);
+          summary.total_deliveries++;
+          if (delivered) {
+            summary.email_sent++;
+            await createNotificationDelivery({
+              campaignId: campaign.id,
+              channel: "email",
+              metadata: {
+                campaign_id: campaign.id,
+                sender_address: process.env.EMAIL_API_SENDER,
+                sender_name: process.env.EMAIL_API_NAME,
+              },
+              sentAt: now,
+              source: "manual",
+              status: "sent",
+              triggerKey: MESSAGE_KEY,
+              userId: user.id,
+            });
+          } else {
+            summary.failed++;
+            await createNotificationDelivery({
+              campaignId: campaign.id,
+              channel: "email",
+              failureReason: "email_send_failed",
+              metadata: { campaign_id: campaign.id },
+              source: "manual",
+              status: "failed",
+              triggerKey: MESSAGE_KEY,
+              userId: user.id,
+            });
+          }
+        } catch (error) {
+          summary.failed++;
+          summary.total_deliveries++;
+          await createNotificationDelivery({
+            campaignId: campaign.id,
+            channel: "email",
+            failureReason: getErrorMessage(error).slice(0, 512),
+            metadata: { campaign_id: campaign.id },
+            source: "manual",
+            status: "failed",
+            triggerKey: MESSAGE_KEY,
+            userId: user.id,
+          });
+        }
+      }
     }
   }
 
@@ -463,6 +646,8 @@ export const createCampaign = async (data: IAdminNotificationsDTO): Promise<Reso
 
   const normalized = normalizeCampaignPayload(data.b ?? {});
   if ("success" in normalized) return normalized;
+  const emailProvider = ensureEmailProviderAvailable(normalized.channels);
+  if (emailProvider) return emailProvider;
 
   const campaign = await repository.createCampaign({
     adminId,
@@ -489,6 +674,8 @@ export const updateCampaign = async (data: IAdminNotificationsDTO): Promise<Reso
 
   const normalized = normalizeCampaignPayload(data.b ?? {}, true);
   if ("success" in normalized) return normalized;
+  const emailProvider = ensureEmailProviderAvailable(normalized.channels);
+  if (emailProvider) return emailProvider;
 
   const updated = await repository.updateCampaign(campaign.id, {
     audience: normalized.audience,
@@ -543,6 +730,8 @@ export const sendCampaign = async (data: IAdminNotificationsDTO): Promise<Resolv
 
   const sendable = ensureSendableCampaign(campaign);
   if (sendable) return sendable;
+  const emailProvider = ensureEmailProviderAvailable(parseStoredChannels(campaign.channels));
+  if (emailProvider) return emailProvider;
 
   await repository.updateCampaign(campaign.id, { status: "sending" });
 
@@ -626,6 +815,8 @@ export const pushStatus = async (): Promise<Resolve> => {
         : null,
   });
 };
+
+export const emailStatus = async (): Promise<Resolve> => ok(emailProviderStatusData());
 
 export const automaticLogs = async (data: IAdminNotificationsDTO): Promise<Resolve> => {
   const { limit, page } = parsePagination(data.q);
@@ -747,9 +938,9 @@ export const metrics = async (data: IAdminNotificationsDTO): Promise<Resolve> =>
       total: totalDeliveries,
     },
     notes: [
-      "Email is not available in V1. Only in_app and push are tracked.",
+      "Email is available for manual campaigns only when SMTP is configured; reach counts accepted SMTP sends.",
       "Push reach is counted only when a real web push send succeeds; missing VAPID or subscriptions are skipped.",
-      "Open/read and click rates use only persisted read_at/clicked_at events.",
+      "Open/read and click rates use only persisted read_at/clicked_at events; email opens/clicks are not tracked yet.",
       "Audience active users are defined as user.active=true and deleted=false.",
     ],
     period: range.period,

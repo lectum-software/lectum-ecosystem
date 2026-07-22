@@ -8,7 +8,7 @@ export const ADMIN_NOTIFICATION_AUDIENCES = [
   "active_psychologists",
 ] as const;
 
-export const ADMIN_NOTIFICATION_CHANNELS = ["in_app", "push"] as const;
+export const ADMIN_NOTIFICATION_CHANNELS = ["in_app", "push", "email"] as const;
 
 export const ADMIN_NOTIFICATION_CAMPAIGN_STATUSES = [
   "draft",

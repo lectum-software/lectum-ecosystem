@@ -5,6 +5,7 @@ import {
   automaticLogs as automaticLogsService,
   cancelCampaign as cancelCampaignService,
   createCampaign as createCampaignService,
+  emailStatus as emailStatusService,
   listCampaigns as listCampaignsService,
   metrics as metricsService,
   pushStatus as pushStatusService,
@@ -98,5 +99,13 @@ export const pushStatus = async (_req: Request, res: Response) => {
     return send(res, await pushStatusService());
   } catch (err) {
     return error500(res, "admin_notifications_push_status", err);
+  }
+};
+
+export const emailStatus = async (_req: Request, res: Response) => {
+  try {
+    return send(res, await emailStatusService());
+  } catch (err) {
+    return error500(res, "admin_notifications_email_status", err);
   }
 };

@@ -9,6 +9,7 @@ import {
   createAdminNotificationCampaign,
   getAdminNotificationAutomaticLogs,
   getAdminNotificationCampaigns,
+  getAdminNotificationEmailStatus,
   getAdminNotificationMetrics,
   getAdminNotificationPushStatus,
   scheduleAdminNotificationCampaign,
@@ -50,6 +51,12 @@ export const useAdminNotificationPushStatus = () =>
   useQuery({
     queryFn: getAdminNotificationPushStatus,
     queryKey: adminNotificationsKeys.pushStatus(),
+  });
+
+export const useAdminNotificationEmailStatus = () =>
+  useQuery({
+    queryFn: getAdminNotificationEmailStatus,
+    queryKey: adminNotificationsKeys.emailStatus(),
   });
 
 const invalidateNotifications = async (queryClient: ReturnType<typeof useQueryClient>) => {

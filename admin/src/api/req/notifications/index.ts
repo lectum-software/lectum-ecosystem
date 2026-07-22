@@ -10,7 +10,7 @@ export const ADMIN_NOTIFICATION_AUDIENCES = [
   "active_psychologists",
 ] as const;
 
-export const ADMIN_NOTIFICATION_CHANNELS = ["in_app", "push"] as const;
+export const ADMIN_NOTIFICATION_CHANNELS = ["in_app", "push", "email"] as const;
 
 export const ADMIN_NOTIFICATION_CAMPAIGN_STATUSES = [
   "draft",
@@ -119,6 +119,7 @@ export type AdminNotificationSendResponse = {
   campaign: AdminNotificationCampaign;
   summary: {
     audience_users: number;
+    email_sent: number;
     failed: number;
     in_app_delivered: number;
     push_sent: number;
@@ -196,6 +197,14 @@ export type AdminNotificationPushStatus = {
   available: boolean;
   configured: boolean;
   reason: "push_subscription_missing" | "push_vapid_not_configured" | null;
+};
+
+export type AdminNotificationEmailStatus = {
+  available: boolean;
+  configured: boolean;
+  reason: "email_smtp_not_configured" | null;
+  sender_address: null | string;
+  sender_name: null | string;
 };
 
 const cleanParams = <T extends Record<string, unknown>>(input: T) =>
@@ -282,6 +291,14 @@ export const getAdminNotificationAutomaticLogs = async (input: AdminNotification
 export const getAdminNotificationPushStatus = async () => {
   const response = await adminApi.get<ApiResponse<AdminNotificationPushStatus>>(
     "/api/admin/private/notifications/push-status",
+  );
+
+  return resolveApiData(response.data);
+};
+
+export const getAdminNotificationEmailStatus = async () => {
+  const response = await adminApi.get<ApiResponse<AdminNotificationEmailStatus>>(
+    "/api/admin/private/notifications/email-status",
   );
 
   return resolveApiData(response.data);
