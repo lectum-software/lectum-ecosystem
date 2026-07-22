@@ -280,3 +280,35 @@ Frontend esperado:
   - `pnpm check`;
   - smoke HTTP local `GET http://localhost:3002/financeiro` retornou `200`;
   - Chrome headless local abriu `/financeiro` e confirmou protecao por sessao real ao redirecionar para login em perfil temporario sem token Admin; a inspecao visual autenticada ficou limitada ao codigo compilado, prototipos locais e capturas autenticadas enviadas pelo usuario.
+
+## Ajuste p?s-feedback 2026-07-22 - Contadores controlam curvas do gr?fico
+
+- Pedido do usu?rio: o clique nos blocos contadores de `/financeiro` deve exibir/esconder a curva correspondente no gr?fico, igual ao comportamento j? aplicado nos dashboards Admin de Psic?logos e Pacientes.
+- Os quatro contadores financeiros (**Receita total**, **Novas assinaturas**, **Assinaturas ativas** e **Cancelamentos**) foram convertidos em bot?es acess?veis com `aria-pressed`, estado ativo/inativo e altern?ncia da s?rie vis?vel, mantendo pelo menos uma curva ativa no gr?fico.
+- A s?rie temporal real do endpoint financeiro passou a expor tamb?m `active_subscriptions` e `cancellations` por bucket, al?m de `revenue_cents`, `confirmed_payments` e `new_subscriptions`, usando somente `payment_event` e `professional_subscription` reais.
+- O gr?fico deixou de depender de barras para novas assinaturas e passou a renderizar curvas SVG para as m?tricas selecionadas; receita usa eixo em reais e as demais m?tricas usam eixo em quantidade para evitar misturar unidades sem indica??o.
+- O CSV manteve o mesmo endpoint real e passou a incluir as novas colunas agregadas `active_subscriptions` e `cancellations`, sem exportar dados sens?veis de pagamento.
+- N?o houve altera??o de Prisma/migrations, instala??o de package, seed, mock, dado artificial ou endpoint simulado.
+- Builder/Quick Copy n?o est? exposto como ferramenta callable neste ambiente; as refer?ncias audit?veis foram `_product/proto/admin/Financeiro.png`, `_product/proto/admin/Pacientes/Pacientes - Dashboard.png` e a captura autenticada enviada pelo usu?rio em 2026-07-22.
+- ADR atualizado: `adrs/0242-admin-financeiro-receita-mrr-exportacao.md`.
+
+### Crit?rios de aceite do ajuste
+
+- [x] Todos os blocos contadores da **Vis?o Geral** de `/financeiro` s?o clic?veis e alternam a curva correspondente no gr?fico.
+- [x] Pelo menos uma curva permanece ativa ap?s os cliques, evitando gr?fico vazio por intera??o acidental.
+- [x] As curvas usam dados reais do contrato financeiro; assinaturas ativas e cancelamentos foram adicionados ? s?rie sem mock/backfill artificial.
+- [x] Layout mobile-first e acessibilidade do padr?o de Psic?logos/Pacientes foram preservados com bot?es `aria-pressed` e legenda sr-only.
+- [x] Nenhum `<img>` cru, package novo, schema Prisma, migration ou endpoint simulado foi adicionado.
+
+### Valida??o complementar executada
+
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/financeiro/client.tsx" "src/api/req/finance/index.ts"`
+- `pnpm --dir backend exec biome check --write "src/modules/api/admin/private/finance/dashboard/DTOs/IAdminFinanceDashboardDTO.ts" "src/modules/api/admin/private/finance/dashboard/use-cases/services.ts"`
+- `pnpm --dir admin check`
+- `pnpm --dir backend check` (primeira tentativa excedeu 120s; repeti??o com timeout maior passou)
+- `pnpm --dir admin build`
+- `pnpm --dir backend build`
+- `pnpm check` (primeira tentativa excedeu 300s; repeti??o com timeout maior passou)
+- Smoke de servi?o real: `buildAdminFinanceDashboard({ period: "all" })` retornou `status=200` e `points=30` na base local.
+- Smoke HTTP local: `GET http://localhost:3002/financeiro` retornou `200` no servidor Admin local.
+- Smoke HTTP local protegido: `GET http://localhost:3001/api/admin/private/finance/dashboard?period=all` sem token Admin retornou `401`.

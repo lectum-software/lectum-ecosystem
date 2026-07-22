@@ -439,23 +439,31 @@ const mapSubscription = (subscription: SubscriptionRecord): AdminFinanceSubscrip
   status_label: formatStatusLabel(subscription.status),
 });
 
-const buildSeries = (
+const buildSeries = async (
   buckets: Bucket[],
   paymentEvents: PaymentEventRecord[],
-  subscriptions: SubscriptionRecord[],
-): AdminFinanceSeriesPoint[] =>
-  buckets.map((bucket) => {
-    const revenue = summarizeRevenue(recordsInBucket(paymentEvents, bucket));
-    const newSubscriptions = recordsInBucket(subscriptions, bucket).length;
+  repository: AdminFinanceDashboardRepository,
+): Promise<AdminFinanceSeriesPoint[]> =>
+  Promise.all(
+    buckets.map(async (bucket) => {
+      const [newSubscriptions, activeSubscriptions, cancellations] = await Promise.all([
+        repository.countNewPaidSubscriptions(bucket),
+        repository.countActivePaidSubscriptionsAt(bucket.end),
+        repository.countCancelledPaidSubscriptions(bucket),
+      ]);
+      const revenue = summarizeRevenue(recordsInBucket(paymentEvents, bucket));
 
-    return {
-      confirmed_payments: revenue.confirmed_count,
-      end_date: bucket.end_date,
-      new_subscriptions: newSubscriptions,
-      revenue_cents: revenue.revenue_cents,
-      start_date: bucket.start_date,
-    };
-  });
+      return {
+        active_subscriptions: activeSubscriptions,
+        cancellations,
+        confirmed_payments: revenue.confirmed_count,
+        end_date: bucket.end_date,
+        new_subscriptions: newSubscriptions,
+        revenue_cents: revenue.revenue_cents,
+        start_date: bucket.start_date,
+      };
+    }),
+  );
 
 const buildUnavailable = (currentRevenue: PaymentRevenue, previousRevenue: PaymentRevenue) => {
   const unavailable = [];
@@ -530,7 +538,7 @@ export const buildAdminFinanceDashboard = async (
     (subscription) => !subscription.plan.interval.toLowerCase().includes("month"),
   );
   const buckets = buildBuckets(current, groupBy);
-  const series = buildSeries(buckets, currentPaymentEvents, newSubscriptions);
+  const series = await buildSeries(buckets, currentPaymentEvents, repository);
   const unavailable = buildUnavailable(currentRevenue, previousRevenue);
 
   const dashboard: AdminFinanceDashboard = {
@@ -692,6 +700,8 @@ const buildCsv = (dashboard: AdminFinanceDashboard) => {
       "revenue_cents",
       "confirmed_payments",
       "new_subscriptions",
+      "active_subscriptions",
+      "cancellations",
     ]),
   );
   for (const point of dashboard.series.points) {
@@ -703,6 +713,8 @@ const buildCsv = (dashboard: AdminFinanceDashboard) => {
         point.revenue_cents,
         point.confirmed_payments,
         point.new_subscriptions,
+        point.active_subscriptions,
+        point.cancellations,
       ]),
     );
   }

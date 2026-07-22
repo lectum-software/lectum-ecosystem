@@ -49,11 +49,20 @@ const CARD_ORDER = [
   "active_subscriptions",
   "cancellations",
 ] as const;
-const CHART_COLORS = {
-  bar: "var(--admin-primary-soft)",
-  line: "var(--admin-primary)",
-  subscription: "var(--admin-success)",
-};
+type FinanceMetricKey = (typeof CARD_ORDER)[number];
+
+const FINANCE_METRIC_CONFIG = {
+  active_subscriptions: { color: "#5d9df6", icon: UsersRound },
+  cancellations: { color: "#e5484d", icon: XCircle },
+  new_subscriptions: { color: "#13a85b", icon: UserPlus },
+  revenue_total: { color: "#308ce8", icon: BadgeDollarSign },
+} satisfies Record<FinanceMetricKey, { color: string; icon: LucideIcon }>;
+
+const COUNT_METRIC_KEYS = [
+  "new_subscriptions",
+  "active_subscriptions",
+  "cancellations",
+] as const satisfies readonly FinanceMetricKey[];
 
 const moneyFormatter = new Intl.NumberFormat("pt-BR", {
   currency: "BRL",
@@ -155,21 +164,13 @@ const CardShell = ({ children, className }: { children?: React.ReactNode; classN
   </section>
 );
 
-const toneClasses = {
-  danger: "bg-red-50 text-danger",
-  green: "bg-emerald-50 text-success",
-  purple: "bg-primary-soft text-primary",
-  yellow: "bg-yellow-50 text-yellow-700",
-};
+const hexToRgba = (hex: string, alpha: number) => {
+  const normalized = hex.replace("#", "");
+  const red = Number.parseInt(normalized.slice(0, 2), 16);
+  const green = Number.parseInt(normalized.slice(2, 4), 16);
+  const blue = Number.parseInt(normalized.slice(4, 6), 16);
 
-const metricConfig: Record<
-  (typeof CARD_ORDER)[number],
-  { icon: LucideIcon; tone: keyof typeof toneClasses }
-> = {
-  active_subscriptions: { icon: UsersRound, tone: "purple" },
-  cancellations: { icon: XCircle, tone: "danger" },
-  new_subscriptions: { icon: UserPlus, tone: "green" },
-  revenue_total: { icon: BadgeDollarSign, tone: "purple" },
+  return `rgba(${red}, ${green}, ${blue}, ${alpha})`;
 };
 
 const TrendBadge = ({ metric }: { metric: FinanceMetric }) => (
@@ -199,27 +200,43 @@ const MetricValue = ({ metric }: { metric: FinanceMetric }) => {
   return <span className="min-w-0 truncate">{numberFormatter.format(metric.value)}</span>;
 };
 
-const MetricCard = ({ metric }: { metric: FinanceMetric }) => {
-  const config = metricConfig[metric.id];
-  const Icon = config.icon;
+const MetricCard = ({
+  active,
+  color,
+  icon: Icon,
+  metric,
+  onToggle,
+}: {
+  active: boolean;
+  color: string;
+  icon: LucideIcon;
+  metric: FinanceMetric;
+  onToggle: () => void;
+}) => {
   const description = metric.available
     ? metric.description
     : metric.unavailable_reason || metric.description;
 
   return (
-    <article
+    <button
+      aria-pressed={active}
       className={cn(
-        "min-h-[8.75rem] min-w-0 rounded-card border border-primary/35 bg-surface p-3 text-left shadow-admin-soft ring-1 ring-primary/10 md:p-4 xl:min-h-[8.25rem] xl:p-3",
-        !metric.available && "border-border/80 bg-border/50 shadow-none ring-0",
+        "min-h-[8.75rem] min-w-0 rounded-card border p-3 text-left transition duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 md:p-4 xl:min-h-[8.25rem] xl:p-3",
+        active
+          ? "border-primary/35 bg-surface shadow-admin-soft ring-1 ring-primary/10"
+          : "border-border/80 bg-border/50 shadow-none hover:-translate-y-0.5 hover:border-primary/25 hover:bg-border/60",
+        !metric.available && active && "border-border/80 bg-surface-muted ring-0",
       )}
-      title={`${metric.label}: ${description}`}
+      onClick={onToggle}
+      title={`${metric.label}: ${description}. ${
+        active ? "Visível no gráfico" : "Oculto no gráfico"
+      }`}
+      type="button"
     >
       <div className="flex items-start justify-between gap-3">
         <div
-          className={cn(
-            "grid h-9 w-9 place-items-center rounded-full xl:h-8 xl:w-8",
-            toneClasses[config.tone],
-          )}
+          className="grid h-9 w-9 place-items-center rounded-full xl:h-8 xl:w-8"
+          style={{ backgroundColor: hexToRgba(color, 0.1), color }}
         >
           <Icon aria-hidden className="h-4 w-4" />
         </div>
@@ -243,8 +260,9 @@ const MetricCard = ({ metric }: { metric: FinanceMetric }) => {
         {metric.available ? null : (
           <p className="truncate text-[0.68rem] font-semibold text-muted">{description}</p>
         )}
+        <span className="sr-only">{active ? "visível no gráfico" : "oculto no gráfico"}</span>
       </div>
-    </article>
+    </button>
   );
 };
 
@@ -403,32 +421,72 @@ const FinancePeriodControls = ({
   </div>
 );
 
-const CardsGrid = ({ dashboard }: { dashboard: AdminFinanceDashboard }) => (
-  <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-    {CARD_ORDER.map((key) => (
-      <MetricCard key={key} metric={dashboard.cards[key]} />
-    ))}
-  </div>
+const CardsGrid = ({
+  activeMetricKeys,
+  dashboard,
+  onToggleMetric,
+}: {
+  activeMetricKeys: FinanceMetricKey[];
+  dashboard: AdminFinanceDashboard;
+  onToggleMetric: (key: FinanceMetricKey) => void;
+}) => (
+  <fieldset className="grid grid-cols-2 gap-3 md:grid-cols-4">
+    <legend className="sr-only">Contadores exibidos no gráfico da visão geral financeira</legend>
+    {CARD_ORDER.map((key) => {
+      const config = FINANCE_METRIC_CONFIG[key];
+
+      return (
+        <MetricCard
+          active={activeMetricKeys.includes(key)}
+          key={key}
+          metric={dashboard.cards[key]}
+          onToggle={() => onToggleMetric(key)}
+          {...config}
+        />
+      );
+    })}
+  </fieldset>
 );
 
 const FinanceChart = ({
   points,
   revenueAvailable,
+  visibleMetricKeys,
 }: {
   points: FinanceSeriesPoint[];
   revenueAvailable: boolean;
+  visibleMetricKeys: FinanceMetricKey[];
 }) => {
   const width = 1120;
   const height = 280;
-  const padding = { bottom: 28, left: 68, right: 28, top: 28 };
+  const series = visibleMetricKeys.map((key) => ({
+    color: FINANCE_METRIC_CONFIG[key].color,
+    key,
+    unit: key === "revenue_total" ? "currency_cents" : "count",
+  }));
+
+  if (series.length === 0) {
+    return (
+      <div className="mt-5 rounded-2xl border border-dashed border-border bg-surface-muted p-6 text-sm font-bold text-muted">
+        Selecione pelo menos um contador para visualizar a evolução.
+      </div>
+    );
+  }
+
   const chartPoints = aggregateCalendarChartPoints(
     points.map((point) => ({
-      confirmed_payments: point.confirmed_payments,
+      active_subscriptions: point.active_subscriptions,
+      cancellations: point.cancellations,
       date: point.start_date,
       new_subscriptions: point.new_subscriptions,
-      revenue_cents: point.revenue_cents,
+      revenue_total: point.revenue_cents,
     })),
-    ["confirmed_payments", "new_subscriptions", "revenue_cents"] as const,
+    CARD_ORDER,
+    {
+      metricAggregations: {
+        active_subscriptions: "last",
+      },
+    },
   );
 
   if (chartPoints.length === 0) {
@@ -439,26 +497,29 @@ const FinanceChart = ({
     );
   }
 
+  const hasCurrencySeries = series.some((item) => item.unit === "currency_cents");
+  const hasCountSeries = series.some((item) => item.unit === "count");
+  const padding = {
+    bottom: 28,
+    left: hasCurrencySeries ? 68 : 42,
+    right: hasCurrencySeries && hasCountSeries ? 62 : 28,
+    top: 28,
+  };
   const chartWidth = width - padding.left - padding.right;
   const chartHeight = height - padding.top - padding.bottom;
-  const maxRevenue = Math.max(1, ...chartPoints.map((point) => point.revenue_cents));
-  const maxSubscriptions = Math.max(1, ...chartPoints.map((point) => point.new_subscriptions));
+  const countMetricKeys = COUNT_METRIC_KEYS.filter((key) => visibleMetricKeys.includes(key));
+  const maxCurrency = Math.max(1, ...chartPoints.map((point) => point.revenue_total));
+  const maxCount = Math.max(
+    1,
+    ...chartPoints.flatMap((point) => countMetricKeys.map((key) => point[key])),
+  );
   const getX = (index: number) =>
     chartPoints.length <= 1
       ? padding.left + chartWidth / 2
       : padding.left + (index * chartWidth) / (chartPoints.length - 1);
-  const getRevenueY = (value: number) =>
-    padding.top + chartHeight - (value / maxRevenue) * chartHeight;
-  const getBarHeight = (value: number) => (value / maxSubscriptions) * chartHeight;
-  const gridValues = [0, 0.25, 0.5, 0.75, 1].map((ratio) => ({
-    ratio,
-    value: Math.round(maxRevenue * ratio),
-  }));
-  const linePoints = chartPoints.map((point, index) => ({
-    x: getX(index),
-    y: getRevenueY(point.revenue_cents),
-  }));
-  const linePath = buildSmoothSvgPath(linePoints);
+  const getY = (value: number, maxValue: number) =>
+    padding.top + chartHeight - (value / maxValue) * chartHeight;
+  const gridRatios = [0, 0.25, 0.5, 0.75, 1];
   const labelStep = Math.max(1, Math.ceil(chartPoints.length / 8));
   const dateLabels = chartPoints.flatMap((point, index) =>
     index % labelStep === 0 || index === chartPoints.length - 1
@@ -469,12 +530,13 @@ const FinanceChart = ({
   return (
     <figure className="mt-4 w-full overflow-x-auto rounded-[1.5rem] border border-border/70 bg-surface p-4">
       <figcaption className="sr-only">
-        Receita confirmada {revenueAvailable ? "" : "parcial ou indisponível"} e novas assinaturas
-        pagas ao longo do tempo.
+        Curvas controladas pelos contadores financeiros. Receita confirmada
+        {revenueAvailable ? "" : " parcial ou indisponível"} usa eixo em reais; assinaturas e
+        cancelamentos usam eixo em quantidade.
       </figcaption>
       <div className="mx-auto w-full min-w-[760px] max-w-[1120px]">
         <svg
-          aria-label="Receita e novas assinaturas ao longo do tempo"
+          aria-label="Gráfico temporal dos contadores financeiros"
           className="block h-auto w-full"
           height={height}
           preserveAspectRatio="xMidYMid meet"
@@ -482,10 +544,15 @@ const FinanceChart = ({
           viewBox={`0 0 ${width} ${height}`}
           width={width}
         >
-          {gridValues.map(({ ratio, value }) => {
-            const y = getRevenueY(value);
+          {gridRatios.map((ratio) => {
+            const y = padding.top + chartHeight - ratio * chartHeight;
+            const leftValue = hasCurrencySeries
+              ? formatMoney(Math.round(maxCurrency * ratio))
+              : numberFormatter.format(Math.round(maxCount * ratio));
+            const rightValue = numberFormatter.format(Math.round(maxCount * ratio));
+
             return (
-              <g key={`finance-grid-${ratio}-${value}-${y}`}>
+              <g key={`finance-grid-${ratio}-${y}`}>
                 <line
                   opacity="0.58"
                   stroke="var(--admin-border)"
@@ -496,50 +563,58 @@ const FinanceChart = ({
                   y2={y}
                 />
                 <text fill="var(--admin-muted)" fontSize="11" fontWeight="500" x="6" y={y + 4}>
-                  {formatMoney(value)}
+                  {leftValue}
                 </text>
+                {hasCurrencySeries && hasCountSeries ? (
+                  <text
+                    fill="var(--admin-muted)"
+                    fontSize="11"
+                    fontWeight="500"
+                    textAnchor="end"
+                    x={width - 4}
+                    y={y + 4}
+                  >
+                    {rightValue}
+                  </text>
+                ) : null}
               </g>
             );
           })}
 
-          {chartPoints.map((point, index) => {
-            const x = getX(index);
-            const barHeight = getBarHeight(point.new_subscriptions);
+          {series.map((item) => {
+            const maxValue = item.unit === "currency_cents" ? maxCurrency : maxCount;
+            const linePoints = chartPoints.map((point, index) => ({
+              x: getX(index),
+              y: getY(point[item.key], maxValue),
+            }));
+            const path = buildSmoothSvgPath(linePoints);
+
             return (
-              <rect
-                fill={CHART_COLORS.subscription}
-                height={barHeight}
-                key={`finance-bar-${point.date}`}
-                opacity="0.16"
-                rx="6"
-                width="18"
-                x={x - 9}
-                y={padding.top + chartHeight - barHeight}
-              />
+              <g key={item.key}>
+                <path
+                  d={path}
+                  fill="none"
+                  opacity="0.88"
+                  stroke={item.color}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2.05"
+                />
+                {linePoints.map((point, index) => (
+                  <circle
+                    cx={point.x}
+                    cy={point.y}
+                    fill="var(--admin-surface)"
+                    key={`${item.key}-${chartPoints[index].date}`}
+                    opacity={index === linePoints.length - 1 ? "1" : "0.72"}
+                    r={index === linePoints.length - 1 ? "3.1" : "2.1"}
+                    stroke={item.color}
+                    strokeWidth="1.45"
+                  />
+                ))}
+              </g>
             );
           })}
-
-          <path
-            d={linePath}
-            fill="none"
-            opacity="0.88"
-            stroke={CHART_COLORS.line}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth="2.1"
-          />
-          {linePoints.map((point, index) => (
-            <circle
-              cx={point.x}
-              cy={point.y}
-              fill="var(--admin-surface)"
-              key={`finance-point-${chartPoints[index].date}`}
-              opacity={index === linePoints.length - 1 ? "1" : "0.72"}
-              r={index === linePoints.length - 1 ? "3.1" : "2.1"}
-              stroke={CHART_COLORS.line}
-              strokeWidth="1.45"
-            />
-          ))}
         </svg>
         <div
           className="mt-1 grid gap-1"
@@ -555,7 +630,6 @@ const FinanceChart = ({
     </figure>
   );
 };
-
 const RevenuePanel = ({ dashboard }: { dashboard: AdminFinanceDashboard }) => (
   <div className="grid gap-4 xl:grid-cols-2">
     <CardShell className="p-5">
@@ -743,22 +817,26 @@ const CoverageNotes = ({ dashboard }: { dashboard: AdminFinanceDashboard }) => (
 );
 
 const FinanceOverview = ({
+  activeMetricKeys,
   dashboard,
   displayRange,
   isLoading,
   onDateChange,
   onDateControlsBlur,
   onPeriodChange,
+  onToggleMetric,
   period,
   rangeError,
   rangeValid,
 }: {
+  activeMetricKeys: FinanceMetricKey[];
   dashboard?: AdminFinanceDashboard;
   displayRange: FinanceDashboardRange;
   isLoading: boolean;
   onDateChange: (field: "from" | "to", value: string) => void;
   onDateControlsBlur: (event: FocusEvent<HTMLDivElement>) => void;
   onPeriodChange: (period: FinancePeriodPreset) => void;
+  onToggleMetric: (key: FinanceMetricKey) => void;
   period: FinancePeriodValue;
   rangeError: string | null;
   rangeValid: boolean;
@@ -804,13 +882,17 @@ const FinanceOverview = ({
       ) : null}
       {!isLoading && rangeValid && dashboard ? (
         <>
-          <CardsGrid dashboard={dashboard} />
+          <CardsGrid
+            activeMetricKeys={activeMetricKeys}
+            dashboard={dashboard}
+            onToggleMetric={onToggleMetric}
+          />
           <div className="mt-5 flex min-w-0 flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
             <div className="min-w-0">
               <h3 className="text-base font-bold text-foreground">Receita ao longo do tempo</h3>
               <p className="mt-1 text-sm text-muted">
-                Linha com pagamentos confirmados reais e barras com novas assinaturas profissionais
-                pagas.
+                Curvas controladas pelos contadores, com receita em reais e demais métricas em
+                quantidade.
               </p>
             </div>
             <span className="w-fit rounded-full bg-surface-muted px-2 py-1 text-[0.65rem] font-bold text-muted">
@@ -820,13 +902,13 @@ const FinanceOverview = ({
           <FinanceChart
             points={dashboard.series.points}
             revenueAvailable={dashboard.cards.revenue_total.available}
+            visibleMetricKeys={activeMetricKeys}
           />
         </>
       ) : null}
     </CardShell>
   );
 };
-
 const DashboardContent = ({ dashboard }: { dashboard: AdminFinanceDashboard }) => (
   <div className="space-y-6">
     <RevenuePanel dashboard={dashboard} />
@@ -840,6 +922,9 @@ export const AdminFinanceClient = () => {
   const [exportError, setExportError] = useState<string | null>(null);
   const [selectedPeriod, setSelectedPeriod] = useState<FinancePeriodValue>(DEFAULT_FINANCE_PERIOD);
   const [appliedPeriod, setAppliedPeriod] = useState<FinancePeriodValue>(DEFAULT_FINANCE_PERIOD);
+  const [visibleMetricKeys, setVisibleMetricKeys] = useState<FinanceMetricKey[]>(() => [
+    ...CARD_ORDER,
+  ]);
   const [rangeError, setRangeError] = useState<string | null>(null);
   const [draftRange, setDraftRange] = useState<FinanceDashboardRange>(() =>
     getDashboardRangeForPeriod(DEFAULT_FINANCE_PERIOD),
@@ -854,6 +939,7 @@ export const AdminFinanceClient = () => {
   const validRange = appliedPeriod !== "custom" || isValidRange(appliedRange);
   const validDraftRange = isValidRange(draftRange);
   const visibleRangeValid = selectedPeriod !== "custom" || validDraftRange;
+  const activeMetricKeys = CARD_ORDER.filter((key) => visibleMetricKeys.includes(key));
   const query = useAdminFinanceDashboard(queryInput, { enabled: validRange });
   const exportMutation = useAdminFinanceExport();
   const queryError = query.error ? resolveApiError(query.error) : null;
@@ -925,6 +1011,18 @@ export const AdminFinanceClient = () => {
     }, 0);
   };
 
+  const toggleMetric = (metricKey: FinanceMetricKey) => {
+    setVisibleMetricKeys((current) => {
+      if (current.includes(metricKey)) {
+        if (current.length === 1) return current;
+
+        return current.filter((key) => key !== metricKey);
+      }
+
+      return [...current, metricKey];
+    });
+  };
+
   const handleExport = async () => {
     if (selectedPeriod === "custom" && !validDraftRange) {
       setRangeError(
@@ -966,12 +1064,14 @@ export const AdminFinanceClient = () => {
       />
 
       <FinanceOverview
+        activeMetricKeys={activeMetricKeys}
         dashboard={query.data}
         displayRange={displayRange}
         isLoading={validRange && query.isLoading}
         onDateChange={handleFinanceDateChange}
         onDateControlsBlur={handleDateControlsBlur}
         onPeriodChange={handleFinancePeriodChange}
+        onToggleMetric={toggleMetric}
         period={selectedPeriod}
         rangeError={rangeError}
         rangeValid={visibleRangeValid}

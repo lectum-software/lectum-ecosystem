@@ -39,3 +39,22 @@ Decisoes:
 - Aplicar os mesmos filtros/presets no CSV exportado, sem adicionar campos sensiveis, package novo, schema Prisma ou migration.
 
 Consequencia: a interface fica mais simples e alinhada ao painel Admin, enquanto o backend continua garantindo dados reais e compatibilidade para consumidores existentes que ainda enviem `groupBy`.
+
+## Ajuste 2026-07-22: contadores financeiros controlam curvas do gr?fico
+
+O feedback de produto pediu que a **Vis?o Geral** do Financeiro tivesse a mesma intera??o j? usada nos dashboards Admin de Psic?logos e Pacientes: clicar no bloco contador alterna a s?rie correspondente no gr?fico, mantendo a compara??o visual sob controle do operador.
+
+Decis?es:
+
+- Transformar os quatro cards financeiros prim?rios em bot?es acess?veis com `aria-pressed`, preservando o layout mobile-first e mantendo pelo menos uma s?rie ativa para evitar gr?fico vazio por intera??o acidental.
+- Ampliar `series.points` do contrato financeiro com `active_subscriptions` e `cancellations` por bucket real, mantendo `revenue_cents`, `confirmed_payments` e `new_subscriptions` para gr?fico e CSV.
+- Calcular `new_subscriptions`, `active_subscriptions` e `cancellations` por bucket a partir dos mesmos m?todos reais de `professional_subscription` usados pelos cards, sem backfill, seed, mock ou infer?ncia de cancelamento por aus?ncia de renova??o.
+- Renderizar todas as m?tricas selecionadas como curvas SVG. Receita usa eixo em reais; novas assinaturas, assinaturas ativas e cancelamentos usam eixo de quantidade quando aparecem junto da receita, para n?o misturar unidades sem indica??o.
+- Manter `confirmed_payments` no payload/CSV como dado de auditoria financeira, mas n?o como card toggle porque n?o existe bloco contador prim?rio correspondente na UI atual.
+- Incluir `active_subscriptions` e `cancellations` na se??o de s?rie agregada do CSV, sem alterar endpoint, MIME, filename ou expor token/PAN/CVV/dados sens?veis.
+
+Consequ?ncias:
+
+- O gr?fico financeiro fica consistente com Psic?logos e Pacientes, usando os pr?prios cards como legenda/intera??o.
+- A consulta passa a executar contagens reais por bucket para as novas curvas. O custo ? aceit?vel para o Admin porque o per?odo m?ximo continua limitado e a agrega??o autom?tica usa buckets semanais/mensais em janelas longas.
+- A decis?o n?o altera Prisma, migrations, packages nem a regra financeira central de contar somente receita confirmada real do Mercado Pago.

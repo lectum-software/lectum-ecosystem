@@ -39,6 +39,8 @@ export type FinancePeriod = {
 };
 
 export type FinanceSeriesPoint = {
+  active_subscriptions: number;
+  cancellations: number;
   confirmed_payments: number;
   end_date: string;
   new_subscriptions: number;
