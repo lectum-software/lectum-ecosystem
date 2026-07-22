@@ -40,21 +40,60 @@ Decisoes:
 
 Consequencia: a interface fica mais simples e alinhada ao painel Admin, enquanto o backend continua garantindo dados reais e compatibilidade para consumidores existentes que ainda enviem `groupBy`.
 
-## Ajuste 2026-07-22: contadores financeiros controlam curvas do gr?fico
 
-O feedback de produto pediu que a **Vis?o Geral** do Financeiro tivesse a mesma intera??o j? usada nos dashboards Admin de Psic?logos e Pacientes: clicar no bloco contador alterna a s?rie correspondente no gr?fico, mantendo a compara??o visual sob controle do operador.
+## Ajuste 2026-07-22: contadores financeiros controlam curvas do gráfico
 
-Decis?es:
+O feedback de produto pediu que a **Visão Geral** do Financeiro tivesse a mesma interação já usada nos dashboards Admin de Psicólogos e Pacientes: clicar no bloco contador alterna a série correspondente no gráfico, mantendo a comparação visual sob controle do operador.
 
-- Transformar os quatro cards financeiros prim?rios em bot?es acess?veis com `aria-pressed`, preservando o layout mobile-first e mantendo pelo menos uma s?rie ativa para evitar gr?fico vazio por intera??o acidental.
-- Ampliar `series.points` do contrato financeiro com `active_subscriptions` e `cancellations` por bucket real, mantendo `revenue_cents`, `confirmed_payments` e `new_subscriptions` para gr?fico e CSV.
-- Calcular `new_subscriptions`, `active_subscriptions` e `cancellations` por bucket a partir dos mesmos m?todos reais de `professional_subscription` usados pelos cards, sem backfill, seed, mock ou infer?ncia de cancelamento por aus?ncia de renova??o.
-- Renderizar todas as m?tricas selecionadas como curvas SVG. Receita usa eixo em reais; novas assinaturas, assinaturas ativas e cancelamentos usam eixo de quantidade quando aparecem junto da receita, para n?o misturar unidades sem indica??o.
-- Manter `confirmed_payments` no payload/CSV como dado de auditoria financeira, mas n?o como card toggle porque n?o existe bloco contador prim?rio correspondente na UI atual.
-- Incluir `active_subscriptions` e `cancellations` na se??o de s?rie agregada do CSV, sem alterar endpoint, MIME, filename ou expor token/PAN/CVV/dados sens?veis.
+Decisões:
 
-Consequ?ncias:
+- Transformar os quatro cards financeiros primários em botões acessíveis com `aria-pressed`, preservando o layout mobile-first e mantendo pelo menos uma série ativa para evitar gráfico vazio por interação acidental.
+- Ampliar `series.points` do contrato financeiro com `active_subscriptions` e `cancellations` por bucket real, mantendo `revenue_cents`, `confirmed_payments` e `new_subscriptions` para gráfico e CSV.
+- Calcular `new_subscriptions`, `active_subscriptions` e `cancellations` por bucket a partir dos mesmos métodos reais de `professional_subscription` usados pelos cards, sem backfill, seed, mock ou inferência de cancelamento por ausência de renovação.
+- Renderizar todas as métricas selecionadas como curvas SVG. Receita usa eixo em reais; novas assinaturas, assinaturas ativas e cancelamentos usam eixo de quantidade quando aparecem junto da receita, para não misturar unidades sem indicação.
+- Manter `confirmed_payments` no payload/CSV como dado de auditoria financeira, mas não como card toggle porque não existe bloco contador primário correspondente na UI atual.
+- Incluir `active_subscriptions` e `cancellations` na seção de série agregada do CSV, sem alterar endpoint, MIME, filename ou expor token/PAN/CVV/dados sensíveis.
 
-- O gr?fico financeiro fica consistente com Psic?logos e Pacientes, usando os pr?prios cards como legenda/intera??o.
-- A consulta passa a executar contagens reais por bucket para as novas curvas. O custo ? aceit?vel para o Admin porque o per?odo m?ximo continua limitado e a agrega??o autom?tica usa buckets semanais/mensais em janelas longas.
-- A decis?o n?o altera Prisma, migrations, packages nem a regra financeira central de contar somente receita confirmada real do Mercado Pago.
+Consequências:
+
+- O gráfico financeiro fica consistente com Psicólogos e Pacientes, usando os próprios cards como legenda/interação.
+- A consulta passa a executar contagens reais por bucket para as novas curvas. O custo é aceitável para o Admin porque o período máximo continua limitado e a agregação automática usa buckets semanais/mensais em janelas longas.
+- A decisão não altera Prisma, migrations, packages nem a regra financeira central de contar somente receita confirmada real do Mercado Pago.
+
+
+## Ajuste 2026-07-22: LTV médio substitui ticket mensal e bloco de cobertura sai da UI
+
+Feedback de produto pediu remover o bloco visual **Cobertura dos dados financeiros** de `/financeiro` e trocar o card **Ticket médio mensal por assinatura** por **LTV médio dos psicólogos**.
+
+Decisões:
+
+- Remover apenas o bloco visível de cobertura da UI; `coverage_notes` e métricas indisponíveis permanecem no contrato/CSV para rastreabilidade operacional sem ocupar a tela.
+- Substituir `average_ticket` por `average_ltv` no dashboard financeiro.
+- Calcular `average_ltv` como receita confirmada lifetime em `payment_event` vinculada ao `professional_subscription.id` ou `gateway_subscription_id`, dividida pela quantidade de psicólogos com assinatura paga Mercado Pago criada até o fim do período.
+- Marcar o LTV como indisponível quando houver pagamento confirmado vinculado sem valor monetário extraível, sem projetar por preço do plano.
+- Manter plano gratuito e `source="admin_grant"` fora do denominador e da receita do LTV.
+
+Consequências:
+
+- A tela passa a privilegiar valor acumulado real por psicólogo pagante em vez de preço médio mensal.
+- Eventos de pagamento não vinculáveis a uma assinatura não entram no LTV, embora ainda possam compor a receita total quando confirmados e com valor extraível.
+- A remoção do bloco visual reduz ruído na tela sem eliminar as notas de auditoria disponíveis no CSV e no contrato da API.
+
+## Ajuste 2026-07-22: receita de novas assinaturas e Churn
+
+Feedback de produto pediu remover a cópia visível acima do gráfico financeiro, ocultar a tag de fonte técnica e refinar os contadores com receita de novas assinaturas e nomenclatura de Churn.
+
+Decisões:
+
+- Remover apenas os textos visíveis do bloco de gráfico e a tag `payment_event+professional_subscription`; `series.source` permanece no contrato para auditoria e CSV.
+- Adicionar o card `new_subscriptions_revenue` entre **Assinaturas ativas** e **Novas assinaturas**, com soma real de `subscription_plan.price_cents` das assinaturas pagas criadas no período.
+- Incluir `new_subscriptions_revenue_cents` em `series.points` e na seção agregada do CSV para que o gráfico e a exportação usem o mesmo contrato real.
+- Renomear o card `cancellations` para **Churn** e adicionar `rate_percent` ao contrato das métricas; a taxa usa cancelamentos reais no período divididos pela base paga no início do período.
+- Manter o id técnico `cancellations` para compatibilidade do contrato e usar apenas label/copy de **Churn** na UI.
+- Preservar a interação dos cards como controles de curva com `aria-pressed`, layout mobile-first e sem criar schema, migration, package, seed, mock ou endpoint paralelo.
+
+Consequências:
+
+- A Visão Geral passa a alinhar contadores e curvas na ordem solicitada pelo produto.
+- O valor de receita de novas assinaturas representa soma dos planos iniciados no período, não substitui a receita total confirmada em `payment_event`.
+- Churn pode exibir `sem base` quando houver saída sem base paga confiável no início do período, evitando taxa artificial.

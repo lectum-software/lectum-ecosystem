@@ -16,13 +16,13 @@
 
 A tela **Financeiro** do Admin usa como referência `_product/proto/admin/Financeiro.png`.
 
-Ela deve mostrar uma visão geral das receitas da plataforma, baseada apenas em assinaturas profissionais pagas e eventos financeiros reais. A tela da referência possui cards de receita, novas assinaturas, assinaturas ativas, cancelamentos, gráfico de receita, MRR, ticket médio e lista inferior. Por decisão de produto, a lista inferior deve se chamar **Novas assinaturas de psicólogos**, não "Novos cadastros de psicólogos".
+Ela deve mostrar uma visão geral das receitas da plataforma, baseada apenas em assinaturas profissionais pagas e eventos financeiros reais. A tela da referência possui cards de receita, novas assinaturas, assinaturas ativas, cancelamentos, gráfico de receita, MRR, LTV médio e lista inferior. Por decisão de produto, a lista inferior deve se chamar **Novas assinaturas de psicólogos**, não "Novos cadastros de psicólogos".
 
 Também foi definido que esta tela deve incluir **Exportar relatório**.
 
 ## Objetivo
 
-Implementar o dashboard financeiro administrativo com dados reais de assinatura/pagamento, cálculo honesto de MRR/ticket médio e exportação CSV do relatório filtrado.
+Implementar o dashboard financeiro administrativo com dados reais de assinatura/pagamento, cálculo honesto de MRR/LTV médio e exportação CSV do relatório filtrado.
 
 ## Pré-requisitos e bloqueios
 
@@ -51,7 +51,7 @@ Implementar o dashboard financeiro administrativo com dados reais de assinatura/
   - gráfico "Receita ao longo do tempo";
   - seção com:
     - Receita recorrente mensal (MRR);
-    - Ticket médio mensal por assinatura;
+    - LTV médio dos psicólogos;
   - lista **Novas assinaturas de psicólogos**.
 - Exportação:
   - botão deve chamar endpoint real;
@@ -113,10 +113,11 @@ Definições de métrica:
   - soma do valor mensal dos planos pagos ativos;
   - excluir gratuito e cortesia;
   - se houver planos com intervalos diferentes no futuro, normalizar para mês em ADR.
-- **Ticket médio mensal**:
-  - `MRR / assinaturas pagas ativas`;
-  - se só existir plano profissional de R$ 9,90, o valor deve refletir esse plano;
-  - evitar hardcode: usar `subscription_plan.price_cents`.
+- **LTV médio dos psicólogos**:
+  - receita confirmada lifetime vinculada por id local da assinatura ou `gateway_subscription_id`;
+  - dividir por psicólogos com assinatura profissional paga Mercado Pago até o fim do período;
+  - se houver pagamento confirmado vinculado sem valor monetário extraível, exibir indisponível com copy honesta.
+
 - **Receita ao longo do tempo**:
   - agrupar receita confirmada por dia/semana/mês conforme `groupBy`;
   - barras podem representar assinaturas ativas ou novas assinaturas, mas a legenda precisa ser explícita.
@@ -166,7 +167,7 @@ Frontend esperado:
 - [x] Novas assinaturas excluem plano gratuito e cortesia/admin grant.
 - [x] Receita total usa pagamento confirmado real ou aparece indisponível com copy honesta.
 - [x] MRR exclui gratuito e cortesia.
-- [x] Ticket médio usa `subscription_plan.price_cents`/MRR real, sem hardcode.
+- [x] LTV médio dos psicólogos usa payment_event confirmado vinculado à assinatura paga real, sem mock ou projeção por plano.
 - [x] Cancelamentos só aparecem como número real se houver fonte confiável.
 - [x] Nenhum dado financeiro é simulado.
 - [x] Nenhuma referência a Stripe foi criada.
@@ -281,34 +282,101 @@ Frontend esperado:
   - smoke HTTP local `GET http://localhost:3002/financeiro` retornou `200`;
   - Chrome headless local abriu `/financeiro` e confirmou protecao por sessao real ao redirecionar para login em perfil temporario sem token Admin; a inspecao visual autenticada ficou limitada ao codigo compilado, prototipos locais e capturas autenticadas enviadas pelo usuario.
 
-## Ajuste p?s-feedback 2026-07-22 - Contadores controlam curvas do gr?fico
 
-- Pedido do usu?rio: o clique nos blocos contadores de `/financeiro` deve exibir/esconder a curva correspondente no gr?fico, igual ao comportamento j? aplicado nos dashboards Admin de Psic?logos e Pacientes.
-- Os quatro contadores financeiros (**Receita total**, **Novas assinaturas**, **Assinaturas ativas** e **Cancelamentos**) foram convertidos em bot?es acess?veis com `aria-pressed`, estado ativo/inativo e altern?ncia da s?rie vis?vel, mantendo pelo menos uma curva ativa no gr?fico.
-- A s?rie temporal real do endpoint financeiro passou a expor tamb?m `active_subscriptions` e `cancellations` por bucket, al?m de `revenue_cents`, `confirmed_payments` e `new_subscriptions`, usando somente `payment_event` e `professional_subscription` reais.
-- O gr?fico deixou de depender de barras para novas assinaturas e passou a renderizar curvas SVG para as m?tricas selecionadas; receita usa eixo em reais e as demais m?tricas usam eixo em quantidade para evitar misturar unidades sem indica??o.
-- O CSV manteve o mesmo endpoint real e passou a incluir as novas colunas agregadas `active_subscriptions` e `cancellations`, sem exportar dados sens?veis de pagamento.
-- N?o houve altera??o de Prisma/migrations, instala??o de package, seed, mock, dado artificial ou endpoint simulado.
-- Builder/Quick Copy n?o est? exposto como ferramenta callable neste ambiente; as refer?ncias audit?veis foram `_product/proto/admin/Financeiro.png`, `_product/proto/admin/Pacientes/Pacientes - Dashboard.png` e a captura autenticada enviada pelo usu?rio em 2026-07-22.
+## Ajuste pós-feedback 2026-07-22 - Contadores controlam curvas do gráfico
+
+- Pedido do usuário: o clique nos blocos contadores de `/financeiro` deve exibir/esconder a curva correspondente no gráfico, igual ao comportamento já aplicado nos dashboards Admin de Psicólogos e Pacientes.
+- Os quatro contadores financeiros (**Receita total**, **Novas assinaturas**, **Assinaturas ativas** e **Cancelamentos**) foram convertidos em botões acessíveis com `aria-pressed`, estado ativo/inativo e alternância da série visível, mantendo pelo menos uma curva ativa no gráfico.
+- A série temporal real do endpoint financeiro passou a expor também `active_subscriptions` e `cancellations` por bucket, além de `revenue_cents`, `confirmed_payments` e `new_subscriptions`, usando somente `payment_event` e `professional_subscription` reais.
+- O gráfico deixou de depender de barras para novas assinaturas e passou a renderizar curvas SVG para as métricas selecionadas; receita usa eixo em reais e as demais métricas usam eixo em quantidade para evitar misturar unidades sem indicação.
+- O CSV manteve o mesmo endpoint real e passou a incluir as novas colunas agregadas `active_subscriptions` e `cancellations`, sem exportar dados sensíveis de pagamento.
+- Não houve alteração de Prisma/migrations, instalação de package, seed, mock, dado artificial ou endpoint simulado.
+- Builder/Quick Copy não está exposto como ferramenta callable neste ambiente; as referências auditáveis foram `_product/proto/admin/Financeiro.png`, `_product/proto/admin/Pacientes/Pacientes - Dashboard.png` e a captura autenticada enviada pelo usuário em 2026-07-22.
 - ADR atualizado: `adrs/0242-admin-financeiro-receita-mrr-exportacao.md`.
 
-### Crit?rios de aceite do ajuste
+### Critérios de aceite do ajuste
 
-- [x] Todos os blocos contadores da **Vis?o Geral** de `/financeiro` s?o clic?veis e alternam a curva correspondente no gr?fico.
-- [x] Pelo menos uma curva permanece ativa ap?s os cliques, evitando gr?fico vazio por intera??o acidental.
-- [x] As curvas usam dados reais do contrato financeiro; assinaturas ativas e cancelamentos foram adicionados ? s?rie sem mock/backfill artificial.
-- [x] Layout mobile-first e acessibilidade do padr?o de Psic?logos/Pacientes foram preservados com bot?es `aria-pressed` e legenda sr-only.
+- [x] Todos os blocos contadores da **Visão Geral** de `/financeiro` são clicáveis e alternam a curva correspondente no gráfico.
+- [x] Pelo menos uma curva permanece ativa após os cliques, evitando gráfico vazio por interação acidental.
+- [x] As curvas usam dados reais do contrato financeiro; assinaturas ativas e cancelamentos foram adicionados à série sem mock/backfill artificial.
+- [x] Layout mobile-first e acessibilidade do padrão de Psicólogos/Pacientes foram preservados com botões `aria-pressed` e legenda sr-only.
 - [x] Nenhum `<img>` cru, package novo, schema Prisma, migration ou endpoint simulado foi adicionado.
 
-### Valida??o complementar executada
+### Validação complementar executada
 
 - `pnpm --dir admin exec biome check --write "src/app/(admin)/financeiro/client.tsx" "src/api/req/finance/index.ts"`
 - `pnpm --dir backend exec biome check --write "src/modules/api/admin/private/finance/dashboard/DTOs/IAdminFinanceDashboardDTO.ts" "src/modules/api/admin/private/finance/dashboard/use-cases/services.ts"`
 - `pnpm --dir admin check`
-- `pnpm --dir backend check` (primeira tentativa excedeu 120s; repeti??o com timeout maior passou)
+- `pnpm --dir backend check`
 - `pnpm --dir admin build`
 - `pnpm --dir backend build`
-- `pnpm check` (primeira tentativa excedeu 300s; repeti??o com timeout maior passou)
-- Smoke de servi?o real: `buildAdminFinanceDashboard({ period: "all" })` retornou `status=200` e `points=30` na base local.
+- `pnpm check`
+- Smoke de serviço real: `buildAdminFinanceDashboard({ period: "all" })` retornou `status=200`, `points=30` e primeiro ponto com `active_subscriptions`, `cancellations`, `new_subscriptions`, `confirmed_payments` e `revenue_cents` reais da base local.
 - Smoke HTTP local: `GET http://localhost:3002/financeiro` retornou `200` no servidor Admin local.
 - Smoke HTTP local protegido: `GET http://localhost:3001/api/admin/private/finance/dashboard?period=all` sem token Admin retornou `401`.
+
+
+## Ajuste pós-feedback 2026-07-22 - LTV médio e remoção da cobertura visual
+
+- Pedido do usuário: remover o bloco visual **Cobertura dos dados financeiros** de `/financeiro` e trocar **Ticket médio mensal por assinatura** por **LTV médio dos psicólogos**.
+- A UI removeu apenas o bloco visível de cobertura; `coverage_notes` e métricas indisponíveis permanecem no contrato/CSV para rastreabilidade operacional sem ocupar a tela.
+- O contrato financeiro substitui `average_ticket` por `average_ltv`, calculado com receita lifetime confirmada em `payment_event` vinculada ao `professional_subscription.id` ou `gateway_subscription_id`, dividida por psicólogos com assinatura paga Mercado Pago até o fim do período.
+- O LTV fica indisponível quando existir pagamento confirmado vinculado sem valor monetário extraível; não há projeção por preço de plano, mock, seed ou dado artificial.
+- Plano gratuito e `source="admin_grant"` permanecem fora do denominador e da receita do LTV.
+- Não houve alteração de Prisma/migrations, instalação de package ou endpoint simulado.
+- Builder/Quick Copy não está exposto como ferramenta callable neste ambiente; as referências auditáveis foram `_product/proto/admin/Financeiro.png` e a captura autenticada enviada pelo usuário em 2026-07-22.
+- ADR atualizado: `adrs/0242-admin-financeiro-receita-mrr-exportacao.md`.
+
+### Critérios de aceite do ajuste
+
+- [x] O bloco **Cobertura dos dados financeiros** não é mais renderizado em `/financeiro`.
+- [x] O bloco **LTV médio dos psicólogos** substitui **Ticket médio mensal por assinatura**.
+- [x] `average_ltv` usa somente pagamentos confirmados reais vinculados às assinaturas pagas, sem projeção por plano.
+- [x] Pagamento confirmado vinculado sem valor monetário extraível deixa o LTV indisponível com motivo explícito.
+- [x] O CSV exporta o resumo de LTV sem token, PAN, CVV ou dado sensível de cartão.
+
+### Validação complementar executada
+
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/financeiro/client.tsx" "src/api/req/finance/index.ts"`
+- `pnpm --dir backend exec biome check --write "src/modules/api/admin/private/finance/dashboard/DTOs/IAdminFinanceDashboardDTO.ts" "src/modules/api/admin/private/finance/dashboard/repositories/AdminFinanceDashboardRepository.ts" "src/modules/api/admin/private/finance/dashboard/use-cases/services.ts"`
+- `pnpm --dir backend check`
+- `pnpm --dir admin check`
+- `pnpm --dir backend build`
+- `pnpm --dir admin build`
+- `pnpm check`
+- Smoke de serviço real em `backend/dist` com `.env` local: `buildAdminFinanceDashboard({ period: "all" })` retornou `status=200`, `average_ltv` presente, cards `revenue_total`, `active_subscriptions`, `new_subscriptions_revenue`, `new_subscriptions`, `cancellations` e `points=30`.
+- Smoke CSV real: `exportAdminFinanceDashboardCsv({ period: "all" })` retornou `status=200`, CSV com `average_ltv` e sem `average_ticket`.
+- Smoke HTTP local: `GET http://localhost:3002/financeiro` retornou `200`.
+- Smoke HTTP local protegido: `GET http://localhost:3001/api/admin/private/finance/dashboard?period=all` sem token Admin retornou `401`.
+- Browser/Quick Copy: Builder/Quick Copy não está exposto como ferramenta callable neste ambiente; validação visual ficou baseada no build Admin, smoke HTTP local, protótipo local `_product/proto/admin/Financeiro.png` e captura autenticada enviada pelo usuário.
+
+## Ajuste pós-feedback 2026-07-22 - Receita de novas assinaturas e Churn
+
+- Pedido do usuário: remover o título **Receita ao longo do tempo**, o texto de apoio **Curvas controladas pelos contadores, com receita em reais e demais métricas em quantidade.** e a tag visual `payment_event+professional_subscription` do bloco de gráfico.
+- Os contadores da **Visão Geral** agora seguem a ordem solicitada: **Receita total**, **Assinaturas ativas**, **Receita de novas assinaturas**, **Novas assinaturas** e **Churn**.
+- O novo contador **Receita de novas assinaturas** soma `subscription_plan.price_cents` das assinaturas profissionais pagas iniciadas no período, excluindo plano gratuito e cortesia/admin grant; a métrica também foi adicionada em `series.points` e no CSV como `new_subscriptions_revenue_cents`.
+- **Cancelamentos** foi renomeado para **Churn** e exibe a taxa em texto menor ao lado da quantidade. A taxa usa `cancellations / base paga no início do período`; quando há churn sem base confiável, o frontend mostra `sem base` entre parênteses.
+- Os cards continuam sendo botões acessíveis com `aria-pressed` e controlam as curvas reais do gráfico, mantendo pelo menos uma série ativa.
+- Não houve alteração de Prisma/migrations, instalação de package, seed, mock, dado artificial ou endpoint simulado.
+- Builder/Quick Copy não está exposto como ferramenta callable neste ambiente; as referências auditáveis foram `_product/proto/admin/Financeiro.png` e a captura autenticada enviada pelo usuário em 2026-07-22.
+- ADR atualizado: `adrs/0242-admin-financeiro-receita-mrr-exportacao.md`.
+
+### Critérios de aceite do ajuste
+
+- [x] O título, subtítulo e chip de fonte visível do gráfico foram removidos de `/financeiro`.
+- [x] Os contadores aparecem na ordem **Receita total**, **Assinaturas ativas**, **Receita de novas assinaturas**, **Novas assinaturas**, **Churn**.
+- [x] **Receita de novas assinaturas** usa dados reais de `professional_subscription` + `subscription_plan.price_cents`, sem mock ou projeção visual.
+- [x] **Churn** substitui **Cancelamentos** e exibe a taxa textual entre parênteses após a quantidade.
+- [x] O contrato financeiro, série temporal e CSV incluem `new_subscriptions_revenue`/`new_subscriptions_revenue_cents` e `rate_percent`.
+
+### Validação complementar executada
+
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/financeiro/client.tsx" "src/api/req/finance/index.ts"`
+- `pnpm --dir backend exec biome check --write "src/modules/api/admin/private/finance/dashboard/DTOs/IAdminFinanceDashboardDTO.ts" "src/modules/api/admin/private/finance/dashboard/repositories/AdminFinanceDashboardRepository.ts" "src/modules/api/admin/private/finance/dashboard/use-cases/services.ts"`
+- `pnpm --dir admin check`
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir admin build`
+- `pnpm check`
+- Smoke de serviço real com `.env` local: `buildAdminFinanceDashboard` para `today`, `week`, `month`, `year` e `all` retornou `status=200`, cards `revenue_total,active_subscriptions,new_subscriptions_revenue,new_subscriptions,cancellations`, `new_subscriptions_revenue` e `rate_percent` de churn.
+- Smoke HTTP local: `GET http://localhost:3002/financeiro` retornou `200`.

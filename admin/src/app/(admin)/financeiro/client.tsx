@@ -45,8 +45,9 @@ const FINANCE_PERIOD_OPTIONS: {
 const DEFAULT_FINANCE_PERIOD: FinancePeriodPreset = "all";
 const CARD_ORDER = [
   "revenue_total",
-  "new_subscriptions",
   "active_subscriptions",
+  "new_subscriptions_revenue",
+  "new_subscriptions",
   "cancellations",
 ] as const;
 type FinanceMetricKey = (typeof CARD_ORDER)[number];
@@ -55,12 +56,18 @@ const FINANCE_METRIC_CONFIG = {
   active_subscriptions: { color: "#5d9df6", icon: UsersRound },
   cancellations: { color: "#e5484d", icon: XCircle },
   new_subscriptions: { color: "#13a85b", icon: UserPlus },
+  new_subscriptions_revenue: { color: "#8b5cf6", icon: BadgeDollarSign },
   revenue_total: { color: "#308ce8", icon: BadgeDollarSign },
 } satisfies Record<FinanceMetricKey, { color: string; icon: LucideIcon }>;
 
+const CURRENCY_METRIC_KEYS = [
+  "revenue_total",
+  "new_subscriptions_revenue",
+] as const satisfies readonly FinanceMetricKey[];
+
 const COUNT_METRIC_KEYS = [
-  "new_subscriptions",
   "active_subscriptions",
+  "new_subscriptions",
   "cancellations",
 ] as const satisfies readonly FinanceMetricKey[];
 
@@ -69,6 +76,10 @@ const moneyFormatter = new Intl.NumberFormat("pt-BR", {
   style: "currency",
 });
 const numberFormatter = new Intl.NumberFormat("pt-BR");
+const percentFormatter = new Intl.NumberFormat("pt-BR", {
+  maximumFractionDigits: 1,
+  minimumFractionDigits: 0,
+});
 
 const pad = (value: number) => String(value).padStart(2, "0");
 const toInputDate = (date: Date) =>
@@ -127,6 +138,9 @@ const formatDateTime = (value: string) =>
   }).format(new Date(value));
 
 const formatMoney = (cents: number) => moneyFormatter.format(cents / 100);
+
+const formatPercent = (value: number | null) =>
+  value === null ? "sem base" : `${percentFormatter.format(value)}%`;
 
 const formatChange = (value: number | null) => {
   if (value === null) return "sem base confiável";
@@ -200,6 +214,24 @@ const MetricValue = ({ metric }: { metric: FinanceMetric }) => {
   return <span className="min-w-0 truncate">{numberFormatter.format(metric.value)}</span>;
 };
 
+const LtvValue = ({ dashboard }: { dashboard: AdminFinanceDashboard }) => {
+  if (dashboard.average_ltv.available) {
+    return <span>{formatMoney(dashboard.average_ltv.value_cents)}</span>;
+  }
+
+  return <span className="text-muted">Indisponível</span>;
+};
+
+const ChurnRate = ({ metric }: { metric: FinanceMetric }) => {
+  if (metric.id !== "cancellations" || !metric.available) return null;
+
+  return (
+    <span className="shrink-0 text-sm font-medium tracking-normal text-muted xl:text-xs">
+      ({formatPercent(metric.rate_percent)})
+    </span>
+  );
+};
+
 const MetricCard = ({
   active,
   color,
@@ -250,6 +282,7 @@ const MetricCard = ({
         </p>
         <p className="flex min-w-0 items-baseline gap-1.5 overflow-hidden whitespace-nowrap text-2xl font-bold tracking-tight text-foreground xl:text-[1.65rem]">
           <MetricValue metric={metric} />
+          <ChurnRate metric={metric} />
         </p>
         <div className="flex min-w-0 items-center gap-1.5 overflow-hidden whitespace-nowrap">
           <TrendBadge metric={metric} />
@@ -267,7 +300,7 @@ const MetricCard = ({
 };
 
 const LoadingGrid = () => (
-  <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-5">
     {CARD_ORDER.map((key) => (
       <CardShell
         className="h-[8.75rem] animate-pulse bg-surface-muted xl:h-[8.25rem]"
@@ -430,7 +463,7 @@ const CardsGrid = ({
   dashboard: AdminFinanceDashboard;
   onToggleMetric: (key: FinanceMetricKey) => void;
 }) => (
-  <fieldset className="grid grid-cols-2 gap-3 md:grid-cols-4">
+  <fieldset className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-5">
     <legend className="sr-only">Contadores exibidos no gráfico da visão geral financeira</legend>
     {CARD_ORDER.map((key) => {
       const config = FINANCE_METRIC_CONFIG[key];
@@ -450,11 +483,9 @@ const CardsGrid = ({
 
 const FinanceChart = ({
   points,
-  revenueAvailable,
   visibleMetricKeys,
 }: {
   points: FinanceSeriesPoint[];
-  revenueAvailable: boolean;
   visibleMetricKeys: FinanceMetricKey[];
 }) => {
   const width = 1120;
@@ -462,7 +493,9 @@ const FinanceChart = ({
   const series = visibleMetricKeys.map((key) => ({
     color: FINANCE_METRIC_CONFIG[key].color,
     key,
-    unit: key === "revenue_total" ? "currency_cents" : "count",
+    unit: CURRENCY_METRIC_KEYS.some((currencyKey) => currencyKey === key)
+      ? "currency_cents"
+      : "count",
   }));
 
   if (series.length === 0) {
@@ -479,6 +512,7 @@ const FinanceChart = ({
       cancellations: point.cancellations,
       date: point.start_date,
       new_subscriptions: point.new_subscriptions,
+      new_subscriptions_revenue: point.new_subscriptions_revenue_cents,
       revenue_total: point.revenue_cents,
     })),
     CARD_ORDER,
@@ -507,8 +541,12 @@ const FinanceChart = ({
   };
   const chartWidth = width - padding.left - padding.right;
   const chartHeight = height - padding.top - padding.bottom;
+  const currencyMetricKeys = CURRENCY_METRIC_KEYS.filter((key) => visibleMetricKeys.includes(key));
   const countMetricKeys = COUNT_METRIC_KEYS.filter((key) => visibleMetricKeys.includes(key));
-  const maxCurrency = Math.max(1, ...chartPoints.map((point) => point.revenue_total));
+  const maxCurrency = Math.max(
+    1,
+    ...chartPoints.flatMap((point) => currencyMetricKeys.map((key) => point[key])),
+  );
   const maxCount = Math.max(
     1,
     ...chartPoints.flatMap((point) => countMetricKeys.map((key) => point[key])),
@@ -529,11 +567,7 @@ const FinanceChart = ({
 
   return (
     <figure className="mt-4 w-full overflow-x-auto rounded-[1.5rem] border border-border/70 bg-surface p-4">
-      <figcaption className="sr-only">
-        Curvas controladas pelos contadores financeiros. Receita confirmada
-        {revenueAvailable ? "" : " parcial ou indisponível"} usa eixo em reais; assinaturas e
-        cancelamentos usam eixo em quantidade.
-      </figcaption>
+      <figcaption className="sr-only">Gráfico temporal dos contadores financeiros.</figcaption>
       <div className="mx-auto w-full min-w-[760px] max-w-[1120px]">
         <svg
           aria-label="Gráfico temporal dos contadores financeiros"
@@ -656,15 +690,20 @@ const RevenuePanel = ({ dashboard }: { dashboard: AdminFinanceDashboard }) => (
           <BadgeDollarSign aria-hidden className="h-5 w-5" />
         </div>
         <div>
-          <h2 className="text-xl font-black text-foreground">Ticket médio mensal por assinatura</h2>
-          <p className="text-sm text-muted">{dashboard.average_ticket.description}</p>
+          <h2 className="text-xl font-black text-foreground">LTV médio dos psicólogos</h2>
+          <p className="text-sm text-muted">{dashboard.average_ltv.description}</p>
         </div>
       </div>
       <p className="mt-6 text-4xl font-black tracking-tight text-foreground">
-        {formatMoney(dashboard.average_ticket.value_cents)}
+        <LtvValue dashboard={dashboard} />
       </p>
+      {!dashboard.average_ltv.available && dashboard.average_ltv.unavailable_reason ? (
+        <p className="mt-2 text-xs font-bold text-muted">
+          {dashboard.average_ltv.unavailable_reason}
+        </p>
+      ) : null}
       <span className="mt-3 inline-flex rounded-full bg-surface-muted px-2 py-1 text-xs font-bold text-muted">
-        {dashboard.average_ticket.source}
+        {dashboard.average_ltv.source}
       </span>
     </CardShell>
   </div>
@@ -795,27 +834,6 @@ const NewSubscriptions = ({ dashboard }: { dashboard: AdminFinanceDashboard }) =
   </CardShell>
 );
 
-const CoverageNotes = ({ dashboard }: { dashboard: AdminFinanceDashboard }) => (
-  <CardShell className="bg-primary-soft/70 p-5">
-    <div className="flex gap-3">
-      <AlertTriangle aria-hidden className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
-      <div>
-        <h2 className="font-black text-foreground">Cobertura dos dados financeiros</h2>
-        <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-muted">
-          {dashboard.coverage_notes.map((note) => (
-            <li key={note}>{note}</li>
-          ))}
-          {dashboard.unavailable.map((item) => (
-            <li key={item.id}>
-              <strong className="text-foreground">{item.label}:</strong> {item.description}
-            </li>
-          ))}
-        </ul>
-      </div>
-    </div>
-  </CardShell>
-);
-
 const FinanceOverview = ({
   activeMetricKeys,
   dashboard,
@@ -887,33 +905,17 @@ const FinanceOverview = ({
             dashboard={dashboard}
             onToggleMetric={onToggleMetric}
           />
-          <div className="mt-5 flex min-w-0 flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-            <div className="min-w-0">
-              <h3 className="text-base font-bold text-foreground">Receita ao longo do tempo</h3>
-              <p className="mt-1 text-sm text-muted">
-                Curvas controladas pelos contadores, com receita em reais e demais métricas em
-                quantidade.
-              </p>
-            </div>
-            <span className="w-fit rounded-full bg-surface-muted px-2 py-1 text-[0.65rem] font-bold text-muted">
-              {dashboard.series.source}
-            </span>
-          </div>
-          <FinanceChart
-            points={dashboard.series.points}
-            revenueAvailable={dashboard.cards.revenue_total.available}
-            visibleMetricKeys={activeMetricKeys}
-          />
+          <FinanceChart points={dashboard.series.points} visibleMetricKeys={activeMetricKeys} />
         </>
       ) : null}
     </CardShell>
   );
 };
+
 const DashboardContent = ({ dashboard }: { dashboard: AdminFinanceDashboard }) => (
   <div className="space-y-6">
     <RevenuePanel dashboard={dashboard} />
     <NewSubscriptions dashboard={dashboard} />
-    <CoverageNotes dashboard={dashboard} />
   </div>
 );
 
