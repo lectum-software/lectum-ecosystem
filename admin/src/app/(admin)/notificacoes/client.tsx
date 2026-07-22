@@ -332,13 +332,13 @@ const MetricsGrid = ({ metrics }: { metrics: AdminNotificationMetrics }) => {
       <MetricCard
         available={hasReach}
         icon={<Eye aria-hidden className="h-5 w-5" />}
-        label="Taxa de abertura média"
+        label="Taxa de abertura"
         value={hasReach ? formatPercent(metrics.rates.open_rate_percent) : "—"}
       />
       <MetricCard
         available={hasReach}
         icon={<MousePointerClick aria-hidden className="h-5 w-5" />}
-        label="Taxa de cliques média"
+        label="Taxa de cliques por abertura"
         value={hasReach ? formatPercent(metrics.rates.click_rate_percent) : "—"}
       />
     </div>
@@ -834,7 +834,7 @@ const AutomaticLogs = ({
   <CardShell className="overflow-hidden">
     <div className="flex flex-col gap-2 p-4 sm:flex-row sm:items-center sm:justify-between">
       <div>
-        <h2 className="text-lg font-black">Logs de notificações automáticas</h2>
+        <h2 className="text-lg font-black">Notificações automáticas</h2>
         <p className="text-sm text-muted">
           {numberFormatter.format(count)} notificações(s) encontrada(s).
         </p>
