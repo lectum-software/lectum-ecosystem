@@ -1162,3 +1162,12 @@ Regras de cálculo:
 - Builder/Quick Copy nao esta exposto como ferramenta callable no ambiente; foram usadas a captura enviada pelo usuario e a referencia local do grafico de horarios de maior atividade das comunidades.
 - ADR atualizado: `adrs/0266-metricas-conversao-uso-psicologos-admin.md`.
 - Validacoes executadas: `pnpm --dir admin check`, `pnpm --dir admin build` e browser local/headless via Chrome/CDP em `/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=estatisticas` confirmando o bloco separado abaixo de **Estatisticas de comunidade**, filtros proprios, 24 barras, chips de dias, legenda completa e ausencia de **Pico**.
+
+## Ajuste complementar 2026-07-22 - Layout do modo de cadastro alinhado a devices
+
+- Pedido do usuário: no dashboard Admin de psicólogos, o gráfico **Modo de cadastro** deve usar o mesmo layout do gráfico **Devices dos psicólogos**.
+- A UI passou a reutilizar o mesmo padrão visual do gráfico de devices: pizza sem total central, rótulos percentuais dentro das fatias quando há espaço, legenda em cards laterais e estado vazio honesto quando não há cadastros nas categorias Google/E-mail e senha.
+- O contrato backend e a regra de domínio permanecem inalterados: **Google** e **E-mail e senha** continuam vindo de `user.provider`; valores legados/desconhecidos não viram categoria nova de produto.
+- Não houve endpoint novo, mock, package, schema Prisma/migration ou fonte paralela de dados.
+- Builder/Quick Copy não está exposto como ferramenta callable neste ambiente; a referência usada foi a captura enviada pelo usuário em 2026-07-22 e o padrão local do card **Devices dos psicólogos**.
+- Validações executadas: `pnpm --dir admin check`, `pnpm --dir admin build` e smoke HTTP local `GET http://localhost:3002/psicologos` retornando 200. `pnpm check` foi tentado e atingiu timeout de 304s na sessão do agente antes de capturar resultado final.

@@ -850,6 +850,45 @@ const buildPieSlicePath = (
   ].join(" ");
 };
 
+const renderPiePercentageLabel = ({
+  color,
+  label,
+  x,
+  y,
+}: {
+  color: string;
+  label: string;
+  x: number;
+  y: number;
+}) => {
+  const width = 39;
+  const height = 16;
+
+  return (
+    <g>
+      <rect
+        fill={hexToRgba(color, 0.86)}
+        height={height}
+        rx={height / 2}
+        width={width}
+        x={x - width / 2}
+        y={y - height / 2}
+      />
+      <text
+        dominantBaseline="middle"
+        fill="white"
+        fontSize="8.5"
+        fontWeight="900"
+        textAnchor="middle"
+        x={x}
+        y={y + 0.25}
+      >
+        {label}
+      </text>
+    </g>
+  );
+};
+
 const SignupMethodPieChart = ({
   signupMethod,
 }: {
@@ -858,7 +897,8 @@ const SignupMethodPieChart = ({
   const center = 60;
   const radius = 48;
   const total = Math.max(0, signupMethod.total);
-  const segments = signupMethod.items.reduce<{
+  const visibleItems = signupMethod.items.filter((item) => item.count > 0);
+  const segments = visibleItems.reduce<{
     currentAngle: number;
     items: Array<{
       endAngle: number;
@@ -886,6 +926,15 @@ const SignupMethodPieChart = ({
     },
     { currentAngle: -90, items: [] },
   ).items;
+
+  if (total === 0) {
+    return (
+      <p className="mt-5 rounded-2xl border border-dashed border-border bg-surface-muted p-4 text-sm font-bold text-muted">
+        Sem cadastros de psicólogos nas categorias Google ou E-mail e senha no período selecionado.
+      </p>
+    );
+  }
+
   const ariaLabel = `Gráfico de pizza do modo de cadastro: ${signupMethod.items
     .map(
       (item) =>
@@ -913,78 +962,83 @@ const SignupMethodPieChart = ({
         />
         {segments.map((segment) => {
           const color = SIGNUP_METHOD_CHART_COLORS[segment.item.id];
+          const labelPoint = getPiePoint(
+            center,
+            radius * 0.58,
+            (segment.startAngle + segment.endAngle) / 2,
+          );
+          const percentageLabel = formatPercentageValue(segment.item.percentage);
 
           if (segment.share >= 0.999) {
             return (
-              <circle
-                cx={center}
-                cy={center}
-                fill={color}
-                key={segment.item.id}
-                r={radius}
-                stroke="var(--admin-surface)"
-                strokeWidth="1.4"
-              />
+              <g key={segment.item.id}>
+                <circle
+                  cx={center}
+                  cy={center}
+                  fill={color}
+                  r={radius}
+                  stroke="var(--admin-surface)"
+                  strokeWidth="1.4"
+                />
+                {renderPiePercentageLabel({
+                  color,
+                  label: percentageLabel,
+                  x: center,
+                  y: center,
+                })}
+              </g>
             );
           }
 
           return (
-            <path
-              d={buildPieSlicePath(center, radius, segment.startAngle, segment.endAngle)}
-              fill={color}
-              key={segment.item.id}
-              stroke="var(--admin-surface)"
-              strokeWidth="1.4"
-            />
+            <g key={segment.item.id}>
+              <path
+                d={buildPieSlicePath(center, radius, segment.startAngle, segment.endAngle)}
+                fill={color}
+                stroke="var(--admin-surface)"
+                strokeWidth="1.4"
+              />
+              {segment.share >= 0.08
+                ? renderPiePercentageLabel({
+                    color,
+                    label: percentageLabel,
+                    x: labelPoint.x,
+                    y: labelPoint.y,
+                  })
+                : null}
+            </g>
           );
         })}
-        <text
-          fill="var(--admin-foreground)"
-          fontSize="17"
-          fontWeight="900"
-          textAnchor="middle"
-          x={center}
-          y="58"
-        >
-          {numberFormatter.format(total)}
-        </text>
-        <text
-          fill="var(--admin-muted)"
-          fontSize="8"
-          fontWeight="700"
-          textAnchor="middle"
-          x={center}
-          y="73"
-        >
-          cadastros
-        </text>
       </svg>
       <figcaption className="space-y-3">
-        {signupMethod.items.map((item) => (
-          <div className="rounded-2xl bg-surface-muted p-3" key={item.id}>
-            <div className="flex items-center justify-between gap-3">
-              <span className="flex min-w-0 items-center gap-2 text-sm font-black text-foreground">
-                <span
-                  aria-hidden
-                  className="h-3 w-3 shrink-0 rounded-full"
-                  style={{ backgroundColor: SIGNUP_METHOD_CHART_COLORS[item.id] }}
-                />
-                <span className="truncate">{item.label}</span>
-              </span>
-              <span className="text-sm font-black text-foreground">
-                {formatPercentageValue(item.percentage)}
-              </span>
+        {signupMethod.items.map((item) => {
+          const signupLabel = item.count === 1 ? "cadastro" : "cadastros";
+
+          return (
+            <div className="rounded-2xl bg-surface-muted p-3" key={item.id}>
+              <div className="flex items-center justify-between gap-3">
+                <span className="flex min-w-0 items-center gap-2 text-sm font-black text-foreground">
+                  <span
+                    aria-hidden
+                    className="h-3 w-3 shrink-0 rounded-full"
+                    style={{ backgroundColor: SIGNUP_METHOD_CHART_COLORS[item.id] }}
+                  />
+                  <span className="truncate">{item.label}</span>
+                </span>
+                <span className="text-sm font-black text-foreground">
+                  {formatPercentageValue(item.percentage)}
+                </span>
+              </div>
+              <p className="mt-1 text-xs font-bold text-muted">
+                {numberFormatter.format(item.count)} {signupLabel}
+              </p>
             </div>
-            <p className="mt-1 text-xs font-bold text-muted">
-              {numberFormatter.format(item.count)} cadastro(s)
-            </p>
-          </div>
-        ))}
+          );
+        })}
       </figcaption>
     </figure>
   );
 };
-
 const ConversionAndUsageBlocks = ({ summary }: { summary: AdminPsychologistsDashboard }) => {
   const conversion = summary.conversion;
   const platformUsage = summary.platform_usage;
@@ -1194,45 +1248,6 @@ const DeviceUsagePieChart = ({
     },
     { currentAngle: -90, items: [] },
   ).items;
-  const renderPercentageLabel = ({
-    color,
-    label,
-    x,
-    y,
-  }: {
-    color: string;
-    label: string;
-    x: number;
-    y: number;
-  }) => {
-    const width = 39;
-    const height = 16;
-
-    return (
-      <g>
-        <rect
-          fill={hexToRgba(color, 0.86)}
-          height={height}
-          rx={height / 2}
-          width={width}
-          x={x - width / 2}
-          y={y - height / 2}
-        />
-        <text
-          dominantBaseline="middle"
-          fill="white"
-          fontSize="8.5"
-          fontWeight="900"
-          textAnchor="middle"
-          x={x}
-          y={y + 0.25}
-        >
-          {label}
-        </text>
-      </g>
-    );
-  };
-
   if (total === 0) {
     return (
       <p className="mt-5 rounded-2xl border border-dashed border-border bg-surface-muted p-4 text-sm font-bold text-muted">
@@ -1287,7 +1302,7 @@ const DeviceUsagePieChart = ({
                   stroke="var(--admin-surface)"
                   strokeWidth="1.4"
                 />
-                {renderPercentageLabel({
+                {renderPiePercentageLabel({
                   color,
                   label: percentageLabel,
                   x: center,
@@ -1306,7 +1321,7 @@ const DeviceUsagePieChart = ({
                 strokeWidth="1.4"
               />
               {segment.share >= 0.08
-                ? renderPercentageLabel({
+                ? renderPiePercentageLabel({
                     color,
                     label: percentageLabel,
                     x: labelPoint.x,

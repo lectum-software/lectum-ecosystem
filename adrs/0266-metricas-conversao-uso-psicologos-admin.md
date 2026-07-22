@@ -293,3 +293,11 @@ A decisao e de hierarquia e independencia analitica: **Uso da plataforma** perma
 O contrato backend, as fontes first-party, as regras de calculo e a composicao das categorias (`accesses`, `posts`, `replies`, `engagement`, `reports`, `total`) permanecem inalterados. Nao ha endpoint paralelo, schema Prisma, migration, package, mock, seed, backfill ou persistencia adicional.
 
 Validacao complementar 2026-07-19: `pnpm --dir admin check`, `pnpm --dir admin build` e browser local/headless via Chrome/CDP em `/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=estatisticas` confirmando o bloco separado abaixo de **Estatisticas de comunidade**, filtros proprios, 24 barras, chips de dias, legenda completa e ausencia de **Pico**.
+
+## Complemento 2026-07-22 - Consistência visual entre modo de cadastro e devices
+
+O gráfico **Modo de cadastro** do dashboard Admin de psicólogos deve usar o mesmo padrão visual do gráfico **Devices dos psicólogos**: pizza com percentuais nas fatias, sem total central, e legenda em cards laterais. A decisão é exclusivamente de apresentação para reduzir inconsistência visual entre dois cards analíticos lado a lado.
+
+A fonte de dados, o contrato `signup_method`, a regra de duas categorias de produto (**Google** e **E-mail e senha**) e o tratamento de provedores legados/desconhecidos permanecem inalterados. Não há schema Prisma, migration, endpoint novo, package, mock ou backfill.
+
+Validação complementar 2026-07-22: `pnpm --dir admin check`, `pnpm --dir admin build` e smoke HTTP local em `/psicologos` retornando 200. `pnpm check` foi tentado e atingiu timeout de 304s antes de capturar resultado final.
