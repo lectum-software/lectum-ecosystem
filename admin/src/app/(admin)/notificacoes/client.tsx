@@ -59,6 +59,7 @@ import {
   type AdminNotificationMetrics,
   type AdminNotificationPushStatus,
   type AdminNotificationsRangeQuery,
+  type NotificationDeliveryStatus,
 } from "@/api/req/notifications";
 import { InputController, SelectController, TextareaController } from "@/components/controllers";
 import { useDateRangeCommitOnBlur } from "@/hooks/use-date-range-commit-on-blur";
@@ -113,6 +114,21 @@ const CAMPAIGN_STATUS_OPTIONS: Array<{
   { label: "Canceladas", status: "canceled", value: "canceled" },
 ];
 
+const DELIVERY_STATUS_OPTIONS: Array<{
+  label: string;
+  status?: NotificationDeliveryStatus;
+  value: string;
+}> = [
+  { label: "Todos", value: "all" },
+  { label: "Na fila", status: "queued", value: "queued" },
+  { label: "Enviadas", status: "sent", value: "sent" },
+  { label: "Entregues", status: "delivered", value: "delivered" },
+  { label: "Lidas", status: "read", value: "read" },
+  { label: "Clicadas", status: "clicked", value: "clicked" },
+  { label: "Falhas", status: "failed", value: "failed" },
+  { label: "Omitidas", status: "skipped", value: "skipped" },
+];
+
 const STATUS_COPY: Record<AdminNotificationCampaignStatus, { label: string; className: string }> = {
   canceled: { className: "bg-danger/10 text-danger", label: "Cancelada" },
   draft: { className: "bg-surface-muted text-muted", label: "Rascunho" },
@@ -120,6 +136,18 @@ const STATUS_COPY: Record<AdminNotificationCampaignStatus, { label: string; clas
   scheduled: { className: "bg-primary-soft text-primary", label: "Agendada" },
   sending: { className: "bg-warning/10 text-warning", label: "Enviando" },
   sent: { className: "bg-success/10 text-success", label: "Enviada" },
+};
+const DELIVERY_STATUS_COPY: Record<
+  NotificationDeliveryStatus,
+  { label: string; className: string }
+> = {
+  clicked: { className: "bg-primary-soft text-primary", label: "Clicada" },
+  delivered: { className: "bg-success/10 text-success", label: "Entregue" },
+  failed: { className: "bg-danger/10 text-danger", label: "Falhou" },
+  queued: { className: "bg-surface-muted text-muted", label: "Na fila" },
+  read: { className: "bg-success/10 text-success", label: "Lida" },
+  sent: { className: "bg-primary-soft text-primary", label: "Enviada" },
+  skipped: { className: "bg-warning/10 text-warning", label: "Omitida" },
 };
 
 const numberFormatter = new Intl.NumberFormat("pt-BR");
@@ -297,6 +325,59 @@ const StatusBadge = ({ status }: { status: AdminNotificationCampaignStatus }) =>
     {STATUS_COPY[status].label}
   </span>
 );
+
+const DeliveryStatusBadge = ({ status }: { status: NotificationDeliveryStatus }) => (
+  <span
+    className={cn(
+      "inline-flex rounded-full px-2.5 py-1 text-xs font-black",
+      DELIVERY_STATUS_COPY[status].className,
+    )}
+  >
+    {DELIVERY_STATUS_COPY[status].label}
+  </span>
+);
+
+const EngagementCell = ({ log }: { log: AdminNotificationAutomaticLog }) => {
+  const clicked = Boolean(log.clicked_at || log.status === "clicked");
+  const read = Boolean(log.read_at || clicked || log.status === "read");
+  const engagementDateTime = log.clicked_at || log.read_at;
+  const formattedEngagementDateTime = engagementDateTime
+    ? formatDateTime(engagementDateTime)
+    : "Data de engajamento não registrada";
+
+  if (clicked) {
+    return (
+      <div>
+        <span className="inline-flex rounded-full bg-primary-soft px-2.5 py-1 text-xs font-black text-primary">
+          Clicada
+        </span>
+        <p className="mt-1 text-xs font-bold text-muted">{formattedEngagementDateTime}</p>
+      </div>
+    );
+  }
+
+  if (read) {
+    return (
+      <div>
+        <span className="inline-flex rounded-full bg-success/10 px-2.5 py-1 text-xs font-black text-success">
+          Lida
+        </span>
+        <p className="mt-1 text-xs font-bold text-muted">{formattedEngagementDateTime}</p>
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <span className="inline-flex rounded-full bg-surface-muted px-2.5 py-1 text-xs font-black text-muted">
+        Sem engajamento
+      </span>
+      <p className="mt-1 text-xs font-bold text-muted">
+        {log.channel === "email" ? "Sem data; e-mail sem tracking" : "Sem data de engajamento"}
+      </p>
+    </div>
+  );
+};
 
 const ChannelPill = ({ channel }: { channel: AdminNotificationChannel }) => (
   <span className="inline-flex items-center gap-1 rounded-full bg-primary-soft px-2 py-1 text-xs font-black text-primary">
@@ -896,22 +977,16 @@ const AutomaticLogs = ({
         <table className="min-w-[960px] w-full border-collapse text-left text-sm">
           <thead className="bg-surface-muted text-xs uppercase tracking-[0.08em] text-muted">
             <tr>
-              <th className="px-4 py-3">Notificação automática</th>
+              <th className="px-4 py-3">Notificação</th>
               <th className="px-4 py-3">Para</th>
               <th className="px-4 py-3">Canal</th>
               <th className="px-4 py-3">Enviada em</th>
-              <th className="px-4 py-3">Alcance</th>
-              <th className="px-4 py-3">Abertura</th>
-              <th className="px-4 py-3">Cliques</th>
+              <th className="px-4 py-3">Status</th>
+              <th className="px-4 py-3">Engajamento</th>
             </tr>
           </thead>
           <tbody>
             {data.map((log) => {
-              const reached = ["sent", "delivered", "read", "clicked"].includes(log.status);
-              const opened = Boolean(
-                log.read_at || log.clicked_at || ["read", "clicked"].includes(log.status),
-              );
-              const clicked = Boolean(log.clicked_at || log.status === "clicked");
               const title =
                 log.notification?.message_key || log.trigger_key || "notificação automática";
               return (
@@ -926,9 +1001,17 @@ const AutomaticLogs = ({
                   <td className="px-4 py-4 text-sm font-bold text-muted">
                     {formatDateTime(log.sent_at || log.delivered_at || log.created_at)}
                   </td>
-                  <td className="px-4 py-4 font-black">{reached ? "1" : "—"}</td>
-                  <td className="px-4 py-4 font-black">{opened ? "1" : "—"}</td>
-                  <td className="px-4 py-4 font-black">{clicked ? "1" : "—"}</td>
+                  <td className="px-4 py-4">
+                    <DeliveryStatusBadge status={log.status} />
+                    {log.failure_reason ? (
+                      <p className="mt-1 max-w-56 text-xs font-bold leading-5 text-muted">
+                        {log.failure_reason}
+                      </p>
+                    ) : null}
+                  </td>
+                  <td className="px-4 py-4">
+                    <EngagementCell log={log} />
+                  </td>
                 </tr>
               );
             })}
@@ -1237,6 +1320,7 @@ const NewNotificationModal = ({
 
 export const AdminNotificationsClient = () => {
   const [campaignStatus, setCampaignStatus] = useState("all");
+  const [logStatus, setLogStatus] = useState("all");
   const [campaignFilters, setCampaignFilters] = useState<NotificationTableFilters>(() =>
     createDefaultTableFilters(),
   );
@@ -1257,6 +1341,8 @@ export const AdminNotificationsClient = () => {
   const selectedCampaignStatus =
     CAMPAIGN_STATUS_OPTIONS.find((item) => item.value === campaignStatus) ??
     CAMPAIGN_STATUS_OPTIONS[0];
+  const selectedLogStatus =
+    DELIVERY_STATUS_OPTIONS.find((item) => item.value === logStatus) ?? DELIVERY_STATUS_OPTIONS[0];
   const resetCampaignPage = () => setPage(1);
   const resetLogsPage = () => setLogsPage(1);
   const campaignRangeControls = useDateRangeCommitOnBlur({
@@ -1305,8 +1391,9 @@ export const AdminNotificationsClient = () => {
       page: logsPage,
       ...buildNotificationPeriodQuery(logsPeriod, logsRangeControls.appliedRange),
       q: logFilters.q.trim() || undefined,
+      status: selectedLogStatus.status,
     }),
-    [logFilters, logsPage, logsPeriod, logsRangeControls.appliedRange],
+    [logFilters, logsPage, logsPeriod, logsRangeControls.appliedRange, selectedLogStatus.status],
   );
   const metrics = useAdminNotificationMetrics(metricQuery);
   const campaigns = useAdminNotificationCampaigns(campaignQuery, { enabled: campaignRangeIsValid });
@@ -1343,6 +1430,10 @@ export const AdminNotificationsClient = () => {
   const updateCampaignStatus = (nextStatus: string) => {
     setCampaignStatus(nextStatus);
     setPage(1);
+  };
+  const updateLogStatus = (nextStatus: string) => {
+    setLogStatus(nextStatus);
+    setLogsPage(1);
   };
   const openCreateModal = () => {
     setEditing(null);
@@ -1421,10 +1512,13 @@ export const AdminNotificationsClient = () => {
             onDateControlsBlur={logsRangeControls.handleDateControlsBlur}
             onFiltersChange={updateLogFilters}
             onPeriodChange={updateLogsPeriod}
+            onStatusChange={updateLogStatus}
             period={logsPeriod}
             range={logsRangeControls.draftRange}
             rangeError={logsRangeControls.rangeError}
             searchPlaceholder="Buscar log por notificação ou usuário..."
+            status={logStatus}
+            statusOptions={DELIVERY_STATUS_OPTIONS}
           />
         }
         isFetching={logs.isFetching}

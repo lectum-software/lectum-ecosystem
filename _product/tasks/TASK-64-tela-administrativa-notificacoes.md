@@ -393,3 +393,19 @@ UI:
 - `pnpm --dir admin build` (primeira tentativa bloqueada temporariamente por `.next/lock` de build Next já em execução; repetição concluída com sucesso após o lock sumir)
 - `pnpm check` (primeira tentativa excedeu timeout do runner sem erro; repetição com timeout maior concluída com sucesso)
 - Smoke HTTP local: `GET http://localhost:3002/notificacoes` retornou `200`.
+
+## Ajuste complementar 2026-07-21 - Status e engajamento nos logs automáticos
+
+- Pedido do usuário: substituir **Alcance**, **Abertura** e **Cliques** por **Status** e **Engajamento** porque cada linha já representa uma entrega individual.
+- A tabela de **Notificações automáticas** agora mostra **Status** como o estado real persistido da entrega (`queued`, `sent`, `delivered`, `read`, `clicked`, `failed` ou `skipped`).
+- A coluna **Engajamento** mostra **Clicada**, **Lida** ou **Sem engajamento** e informa abaixo a data/hora quando `clicked_at` ou `read_at` existe.
+- O filtro **Status** também foi adicionado aos filtros de **Notificações automáticas**, com opções reais de status de entrega, e envia `status` no `logsQuery`.
+- Não houve alteração de backend, Prisma/migrations, packages, contratos HTTP, dados persistidos, canais disponíveis ou regra de envio.
+
+### Validação deste ajuste
+
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/notificacoes/client.tsx"`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+
+- Servidor local `localhost:3002` reiniciado após build; chunk client de Notificações contém **Engajamento** e não contém **Alcance/Abertura/Cliques**.
