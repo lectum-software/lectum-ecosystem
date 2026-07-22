@@ -2993,33 +2993,31 @@ const formatPatientLocation = (detail: AdminPatientDetail) => {
 const SummaryCard = ({
   actionHref,
   actionLabel,
-  badge,
+  eyebrow,
   children,
-  description,
+  helperText,
   icon: Icon,
   title,
 }: {
   actionHref?: string;
   actionLabel?: string;
-  badge?: ReactNode;
   children: ReactNode;
-  description: string;
+  eyebrow: string;
+  helperText: string;
   icon: LucideIcon;
   title: string;
 }) => (
   <CardShell className="flex h-full flex-col p-5">
-    <div className="flex items-start justify-between gap-3">
-      <div>
-        <h2 className="text-lg font-black text-foreground">{title}</h2>
-        <p className="mt-1 text-sm text-muted">{description}</p>
+    <div className="rounded-[28px] border border-primary/15 bg-primary-soft/55 p-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <p className="text-xs font-black uppercase tracking-[0.12em] text-primary">{eyebrow}</p>
+          <p className="mt-1 text-xl font-black text-foreground">{title}</p>
+        </div>
+        <IconCircle icon={Icon} />
       </div>
-      <IconCircle icon={Icon} />
+      <p className="mt-3 text-sm font-bold leading-6 text-muted">{helperText}</p>
     </div>
-    {badge ? (
-      <div className="mt-5 rounded-[28px] border border-primary/15 bg-primary-soft/55 p-4">
-        {badge}
-      </div>
-    ) : null}
     <dl className="mt-4 flex-1 divide-y divide-border text-sm">{children}</dl>
     {actionHref && actionLabel ? (
       <Link
@@ -3034,34 +3032,18 @@ const SummaryCard = ({
 
 const AccountSituationCard = ({ detail, id }: { detail: AdminPatientDetail; id: string }) => {
   const active = detail.header.status === "active";
+  const helperText = active
+    ? "Login liberado para uso normal da plataforma."
+    : "Conta sem acesso ativo no momento; revise as ações completas na aba Conta.";
 
   return (
     <SummaryCard
       actionHref={patientTabHref(id, "conta")}
       actionLabel="Abrir dados da conta"
-      description="Resumo somente leitura de acesso do paciente."
-      icon={ShieldCheck}
-      title="Situação da conta"
-      badge={
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <p className="text-xs font-black uppercase tracking-[0.12em] text-primary">
-              Situação atual
-            </p>
-            <p className="mt-1 text-xl font-black text-foreground">
-              {active ? "Conta ativa" : "Conta inativa"}
-            </p>
-            <p className="mt-3 text-sm font-bold leading-6 text-muted">
-              {active
-                ? "Login liberado para uso normal da plataforma."
-                : "Conta sem acesso ativo no momento; revise as ações completas na aba Conta."}
-            </p>
-          </div>
-          <Badge className={active ? "bg-emerald-50 text-success" : "bg-red-50 text-danger"}>
-            {detail.header.status_label}
-          </Badge>
-        </div>
-      }
+      eyebrow="Conta"
+      helperText={helperText}
+      icon={UserRound}
+      title={active ? "Conta ativa" : "Conta inativa"}
     >
       <FieldRow label="E-mail" value={detail.header.email} />
       <FieldRow label="Último acesso" value={formatLastAccess(detail.header.last_access_at)} />
@@ -3116,18 +3098,10 @@ const PatientEngagementSummaryCard = ({
     <SummaryCard
       actionHref={patientTabHref(id, "estatisticas")}
       actionLabel="Abrir estatísticas"
-      description="Leitura reduzida do engajamento real no período padrão."
+      eyebrow="Engajamento"
+      helperText="Diagnóstico derivado de comunidades ativas, posts e respostas reais no período padrão."
       icon={BarChart3}
-      title="Engajamento"
-      badge={
-        <div>
-          <p className="text-xs font-black uppercase tracking-[0.12em] text-primary">Engajamento</p>
-          <p className="mt-1 text-3xl font-black text-foreground">{engagementDiagnosis}</p>
-          <p className="mt-3 text-sm font-bold leading-6 text-muted">
-            Diagnóstico derivado de comunidades ativas, posts e respostas reais no período padrão.
-          </p>
-        </div>
-      }
+      title={engagementDiagnosis}
     >
       <FieldRow label="Comunidades ativas" value={numberFormatter.format(activeCommunities)} />
       <FieldRow label="Posts" value={numberFormatter.format(posts)} />

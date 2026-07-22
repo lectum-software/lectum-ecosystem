@@ -762,3 +762,32 @@ Frontend esperado:
 - `pnpm --dir admin build`
 - Smoke HTTP local: `/pacientes/cmrqsrab5001f1guh2ve5oy90?tab=estatisticas` retornou `200`.
 - Browser local/headless via Chrome/CDP em `/pacientes/cmrqsrab5001f1guh2ve5oy90?tab=estatisticas`, com token temporario de admin real removido ao final, validou desktop `1365x900` e mobile `390x844`: aviso de previa presente, comunidades de exemplo presentes, estados vazios removidos visualmente e `scrollWidth=390` no mobile.
+
+## Ajuste pos-feedback 2026-07-22 - Layout dos blocos de conta e engajamento
+
+- Pedido do usuario: fazer os blocos **Situacao da conta** e **Engajamento** do paciente seguirem o modelo de layout dos blocos do psicologo.
+- Os dois cards da aba **Geral** em `/pacientes/[id]` agora usam o mesmo padrao visual dos cards do detalhe de psicologo: painel destacado interno com eyebrow, titulo, helper text e icone, linhas de dados abaixo e CTA no rodape.
+- O card de conta passou a abrir com eyebrow **Conta** e titulo **Conta ativa/inativa**, mantendo dados reais de e-mail, ultimo acesso, origem e criacao.
+- O card de engajamento passou a abrir com eyebrow **Engajamento** e titulo do diagnostico textual, mantendo comunidades ativas, posts, respostas e ultima atividade reais.
+- Nao houve alteracao de backend, endpoint, contrato HTTP, schema Prisma, migrations, packages, mocks, seeds, backfill artificial ou dados sensiveis; `db:migrate` nao se aplicou.
+- Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente; as referencias auditaveis foram os screenshots enviados pelo usuario, `_product/proto/admin/Pacientes/Pacientes - Detalhes.png` e o layout local do detalhe de psicologo.
+
+### Criterios de aceite do ajuste
+
+- [x] **Situacao da conta** usa o modelo visual dos cards do psicologo, sem cabecalho externo duplicado.
+- [x] **Engajamento** usa o modelo visual dos cards do psicologo, sem cabecalho externo duplicado.
+- [x] Os dados exibidos permanecem derivados do contrato real existente de paciente.
+- [x] O layout mobile-first foi validado em 390px sem overflow horizontal.
+- [x] Nenhum mock, seed, endpoint simulado, migration ou package novo foi adicionado.
+
+### Validacao complementar executada
+
+- `pnpm --dir admin exec biome check "src/app/(admin)/pacientes/[id]/client.tsx"`
+- `pnpm --dir admin exec eslint "src/app/(admin)/pacientes/[id]/client.tsx"`
+- `pnpm --dir admin typecheck`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm --dir frontend check`
+- `pnpm --dir backend check`
+- `pnpm check`
+- Browser local/headless via Chrome/CDP em `/pacientes/cmrqsrab5001f1guh2ve5oy90`, com admin temporario real removido ao final, validou desktop `1365x900` e mobile `390x844`: os dois cards possuem painel destacado interno no padrao do psicologo, as copies externas antigas nao aparecem e `scrollWidth=390` no mobile.
