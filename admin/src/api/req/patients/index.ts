@@ -628,6 +628,18 @@ export type AdminPatientDetail = {
   platform_usage: {
     access_days_count: number;
     average_duration_seconds: number | null;
+    device_usage: {
+      items: {
+        count: number;
+        device_type: "desktop" | "mobile" | "tablet" | "unknown";
+        id: "desktop" | "mobile" | "tablet" | "unknown";
+        label: string;
+        percentage: number;
+      }[];
+      source: "visitor_session.device_type+user_id";
+      total_sessions: number;
+      unavailable_reason: string | null;
+    };
     duration_unavailable_reason: string | null;
     hourly_activity: PatientPlatformUsageHourlyActivityPoint[];
     hourly_activity_by_weekday: {
@@ -647,7 +659,7 @@ export type AdminPatientDetail = {
     pwa_installation_recorded: boolean;
     pwa_installed_at: string | null;
     sessions_count: number;
-    source: "page_view_event+important_action_event+community_post+post_reply+post_vote+post_save+post_reply_save+community_member+professional_review";
+    source: "page_view_event+visitor_session+important_action_event+community_post+post_reply+post_vote+post_save+post_reply_save+community_member+professional_review";
     top_pages: {
       count: number;
       label: string;

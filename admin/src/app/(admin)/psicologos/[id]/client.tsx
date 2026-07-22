@@ -3818,6 +3818,265 @@ const PsychologistTrafficSourcesCard = ({
   );
 };
 
+type PsychologistPlatformDeviceUsage =
+  AdminPsychologistStatistics["platform_usage"]["device_usage"];
+type PsychologistPlatformDeviceUsageItem = PsychologistPlatformDeviceUsage["items"][number];
+
+const formatDeviceSessionCount = (count: number) =>
+  `${numberFormatter.format(count)} ${count === 1 ? "sessão" : "sessões"}`;
+
+const formatDevicePercentage = (percentage: number) => `${percentage.toLocaleString("pt-BR")}%`;
+
+const psychologistPlatformDeviceChartColors = {
+  desktop: "#13a85b",
+  mobile: "#308ce8",
+  tablet: "#8b5cf6",
+  unknown: "#94a3b8",
+} satisfies Record<PsychologistPlatformDeviceUsageItem["device_type"], string>;
+
+const hexToRgba = (hex: string, alpha: number) => {
+  const normalized = hex.replace("#", "");
+  const red = Number.parseInt(normalized.slice(0, 2), 16);
+  const green = Number.parseInt(normalized.slice(2, 4), 16);
+  const blue = Number.parseInt(normalized.slice(4, 6), 16);
+
+  return `rgba(${red}, ${green}, ${blue}, ${alpha})`;
+};
+
+const getPiePoint = (center: number, radius: number, angleInDegrees: number) => {
+  const angleInRadians = (Math.PI / 180) * angleInDegrees;
+
+  return {
+    x: center + radius * Math.cos(angleInRadians),
+    y: center + radius * Math.sin(angleInRadians),
+  };
+};
+
+const buildPieSlicePath = (
+  center: number,
+  radius: number,
+  startAngle: number,
+  endAngle: number,
+) => {
+  const start = getPiePoint(center, radius, startAngle);
+  const end = getPiePoint(center, radius, endAngle);
+  const largeArcFlag = endAngle - startAngle > 180 ? 1 : 0;
+
+  return [
+    `M ${center} ${center}`,
+    `L ${start.x} ${start.y}`,
+    `A ${radius} ${radius} 0 ${largeArcFlag} 1 ${end.x} ${end.y}`,
+    "Z",
+  ].join(" ");
+};
+
+const PlatformDevicePiePercentageLabel = ({
+  color,
+  label,
+  x,
+  y,
+}: {
+  color: string;
+  label: string;
+  x: number;
+  y: number;
+}) => {
+  const width = 39;
+  const height = 16;
+
+  return (
+    <g>
+      <rect
+        fill={hexToRgba(color, 0.86)}
+        height={height}
+        rx={height / 2}
+        width={width}
+        x={x - width / 2}
+        y={y - height / 2}
+      />
+      <text
+        dominantBaseline="middle"
+        fill="var(--admin-surface)"
+        fontSize="8.5"
+        fontWeight="900"
+        textAnchor="middle"
+        x={x}
+        y={y + 0.25}
+      >
+        {label}
+      </text>
+    </g>
+  );
+};
+
+const PsychologistPlatformDeviceUsageSection = ({
+  deviceUsage,
+}: {
+  deviceUsage?: PsychologistPlatformDeviceUsage;
+}) => {
+  const items = deviceUsage?.items ?? [];
+  const totalSessions = deviceUsage?.total_sessions ?? 0;
+  const center = 60;
+  const radius = 48;
+  const visibleItems = items.filter((item) => item.count > 0);
+  const hasDeviceSessions = totalSessions > 0 && visibleItems.length > 0;
+  const segments = visibleItems.reduce<{
+    currentAngle: number;
+    items: Array<{
+      endAngle: number;
+      item: PsychologistPlatformDeviceUsageItem;
+      share: number;
+      startAngle: number;
+    }>;
+  }>(
+    (accumulator, item) => {
+      const share = totalSessions > 0 ? item.count / totalSessions : 0;
+      if (share <= 0) return accumulator;
+
+      const startAngle = accumulator.currentAngle;
+      const endAngle = startAngle + share * 360;
+
+      return {
+        currentAngle: endAngle,
+        items: accumulator.items.concat({
+          endAngle,
+          item,
+          share,
+          startAngle,
+        }),
+      };
+    },
+    { currentAngle: -90, items: [] },
+  ).items;
+  const ariaLabel = hasDeviceSessions
+    ? `Gráfico de pizza dos devices usados pelo psicólogo: ${items
+        .map(
+          (item) =>
+            `${item.label}: ${formatDeviceSessionCount(item.count)}, ${formatDevicePercentage(
+              item.percentage,
+            )}`,
+        )
+        .join("; ")}.`
+    : `Gráfico de pizza dos devices usados pelo psicólogo: ${
+        deviceUsage?.unavailable_reason ??
+        "sem sessões autenticadas por dispositivo no período selecionado."
+      }`;
+
+  return (
+    <section className="min-w-0">
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h3 className="text-sm font-black text-foreground">Devices</h3>
+          <p className="mt-1 text-xs font-bold leading-5 text-muted">
+            Sessões autenticadas do psicólogo por tipo de dispositivo no período.
+          </p>
+        </div>
+        <span className="rounded-full border border-border bg-surface-muted px-3 py-1 text-xs font-black text-muted">
+          {formatDeviceSessionCount(totalSessions)}
+        </span>
+      </div>
+
+      <figure className="mt-3 grid gap-4 sm:grid-cols-[minmax(8rem,10rem)_1fr] sm:items-center">
+        <svg
+          aria-label={ariaLabel}
+          className="mx-auto aspect-square w-36 sm:w-40"
+          role="img"
+          viewBox="0 0 120 120"
+        >
+          <circle
+            cx={center}
+            cy={center}
+            fill="var(--admin-surface-muted)"
+            r={radius}
+            stroke="var(--admin-border)"
+            strokeWidth="1"
+          />
+          {segments.map((segment) => {
+            const color = psychologistPlatformDeviceChartColors[segment.item.device_type];
+            const labelPoint = getPiePoint(
+              center,
+              radius * 0.58,
+              (segment.startAngle + segment.endAngle) / 2,
+            );
+            const percentageLabel = formatDevicePercentage(segment.item.percentage);
+
+            if (segment.share >= 0.999) {
+              return (
+                <g key={segment.item.device_type}>
+                  <circle
+                    cx={center}
+                    cy={center}
+                    fill={color}
+                    r={radius}
+                    stroke="var(--admin-surface)"
+                    strokeWidth="1.4"
+                  />
+                  <PlatformDevicePiePercentageLabel
+                    color={color}
+                    label={percentageLabel}
+                    x={center}
+                    y={center}
+                  />
+                </g>
+              );
+            }
+
+            return (
+              <g key={segment.item.device_type}>
+                <path
+                  d={buildPieSlicePath(center, radius, segment.startAngle, segment.endAngle)}
+                  fill={color}
+                  stroke="var(--admin-surface)"
+                  strokeWidth="1.4"
+                />
+                {segment.share >= 0.08 ? (
+                  <PlatformDevicePiePercentageLabel
+                    color={color}
+                    label={percentageLabel}
+                    x={labelPoint.x}
+                    y={labelPoint.y}
+                  />
+                ) : null}
+              </g>
+            );
+          })}
+        </svg>
+        <figcaption className="space-y-3">
+          {hasDeviceSessions ? (
+            items.map((device) => (
+              <div className="rounded-2xl bg-surface-muted p-3" key={device.id}>
+                <div className="flex items-center justify-between gap-3">
+                  <span className="flex min-w-0 items-center gap-2 text-sm font-black text-foreground">
+                    <span
+                      aria-hidden
+                      className="h-3 w-3 shrink-0 rounded-full"
+                      style={{
+                        backgroundColor: psychologistPlatformDeviceChartColors[device.device_type],
+                      }}
+                    />
+                    <span className="truncate">{device.label}</span>
+                  </span>
+                  <span className="text-sm font-black text-foreground">
+                    {formatDevicePercentage(device.percentage)}
+                  </span>
+                </div>
+                <p className="mt-1 text-xs font-bold text-muted">
+                  {formatDeviceSessionCount(device.count)}
+                </p>
+              </div>
+            ))
+          ) : (
+            <p className="rounded-2xl border border-dashed border-border bg-surface-muted p-4 text-sm font-bold text-muted">
+              {deviceUsage?.unavailable_reason ??
+                "Sem sessões autenticadas por dispositivo no período selecionado."}
+            </p>
+          )}
+        </figcaption>
+      </figure>
+    </section>
+  );
+};
+
 const PsychologistPlatformUsageCard = ({
   isRefreshing = false,
   periodControls,
@@ -3868,15 +4127,15 @@ const PsychologistPlatformUsageCard = ({
         <p className="mt-3 text-xs font-bold text-subtle">{usage.duration_unavailable_reason}</p>
       ) : null}
 
-      {usage.unavailable_reason ? (
-        <p className="mt-5 rounded-2xl border border-dashed border-border bg-surface-muted p-4 text-sm font-bold text-muted">
-          {usage.unavailable_reason}
-        </p>
-      ) : (
-        <div className="mt-5 space-y-6">
-          <section>
-            <h3 className="text-sm font-black text-foreground">Páginas mais acessadas</h3>
-            <div className="mt-3 grid gap-3 md:grid-cols-2">
+      <div className="mt-5 grid gap-5 lg:grid-cols-2">
+        <section className="min-w-0">
+          <h3 className="text-sm font-black text-foreground">Páginas mais acessadas</h3>
+          {usage.unavailable_reason ? (
+            <p className="mt-3 rounded-2xl border border-dashed border-border bg-surface-muted p-4 text-sm font-bold text-muted">
+              {usage.unavailable_reason}
+            </p>
+          ) : (
+            <div className="mt-3 grid gap-3">
               {usage.top_pages.map((page) => (
                 <div className="rounded-2xl border border-border/70 p-3" key={page.label}>
                   <div className="flex items-center justify-between gap-3 text-xs font-black">
@@ -3896,9 +4155,10 @@ const PsychologistPlatformUsageCard = ({
                 </div>
               ))}
             </div>
-          </section>
-        </div>
-      )}
+          )}
+        </section>
+        <PsychologistPlatformDeviceUsageSection deviceUsage={usage.device_usage} />
+      </div>
     </CardShell>
   );
 };

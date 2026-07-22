@@ -19,6 +19,7 @@ import type {
 } from "../DTOs/IAdminPatientDetailDTO";
 import {
   type AdminPatientDetailPlatformPageViewRecord,
+  type AdminPatientDetailPlatformSessionRecord,
   type AdminPatientDetailRecord,
   AdminPatientDetailRepository,
   type AdminPatientEngagementBundle,
@@ -47,6 +48,14 @@ const PATIENT_PAGE_KIND_LABELS: Record<string, string> = {
   psychologist_profile: "Psicólogos",
   psychologists: "Psicólogos",
   signup: "Cadastro",
+};
+const PLATFORM_DEVICE_TYPES = ["desktop", "mobile", "tablet", "unknown"] as const;
+type PlatformDeviceType = (typeof PLATFORM_DEVICE_TYPES)[number];
+const PLATFORM_DEVICE_LABELS: Record<PlatformDeviceType, string> = {
+  desktop: "Desktop",
+  mobile: "Mobile",
+  tablet: "Tablet",
+  unknown: "Não identificado",
 };
 const PLATFORM_WEEKDAY_LABELS = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"] as const;
 
@@ -248,6 +257,66 @@ const resolvePeriod = (query: AdminPatientDetailQuery, allPeriodStartDate?: Date
 
 const roundPercent = (value: number) => Math.round(value * 10) / 10;
 const roundOneDecimal = (value: number) => Math.round(value * 10) / 10;
+
+const normalizePlatformDeviceType = (value: string | null | undefined): PlatformDeviceType => {
+  const normalized = (value ?? "").trim().toLowerCase();
+  if (normalized === "desktop" || normalized === "mobile" || normalized === "tablet") {
+    return normalized;
+  }
+
+  return "unknown";
+};
+
+const buildPlatformDeviceUsage = (sessions: AdminPatientDetailPlatformSessionRecord[]) => {
+  const counts: Record<PlatformDeviceType, number> = {
+    desktop: 0,
+    mobile: 0,
+    tablet: 0,
+    unknown: 0,
+  };
+
+  for (const session of sessions) {
+    counts[normalizePlatformDeviceType(session.device_type)] += 1;
+  }
+
+  const totalSessions = sessions.length;
+
+  return {
+    items: PLATFORM_DEVICE_TYPES.map((deviceType) => ({
+      count: counts[deviceType],
+      device_type: deviceType,
+      id: deviceType,
+      label: PLATFORM_DEVICE_LABELS[deviceType],
+      percentage:
+        totalSessions > 0 ? roundOneDecimal((counts[deviceType] / totalSessions) * 100) : 0,
+    })).sort((left, right) => {
+      if (right.count !== left.count) return right.count - left.count;
+
+      return left.label.localeCompare(right.label, "pt-BR");
+    }),
+    source: "visitor_session.device_type+user_id" as const,
+    total_sessions: totalSessions,
+    unavailable_reason:
+      totalSessions === 0
+        ? "Sem sessões autenticadas do paciente por dispositivo no período selecionado."
+        : null,
+  };
+};
+
+const latestPlatformAccessAt = (params: {
+  pageViews: Array<{ occurred_at: Date }>;
+  sessions: Array<{ last_seen_at: Date }>;
+}) => {
+  const dates = [
+    ...params.pageViews.map((view) => view.occurred_at),
+    ...params.sessions.map((session) => session.last_seen_at),
+  ];
+
+  return dates.reduce<Date | null>(
+    (latest, current) => (!latest || current > latest ? current : latest),
+    null,
+  );
+};
 
 const average = (values: number[]) => {
   if (values.length === 0) return null;
@@ -658,10 +727,11 @@ const buildPlatformUsage = (params: {
   pageViews: AdminPatientDetailPlatformPageViewRecord[];
   period: AdminPatientDetailPeriod;
   pwaInstallAction: { occurred_at: Date } | null;
+  sessions: AdminPatientDetailPlatformSessionRecord[];
 }): AdminPatientPlatformUsage => {
-  const { bundle, pageViews, period, pwaInstallAction } = params;
+  const { bundle, pageViews, period, pwaInstallAction, sessions: platformSessions } = params;
   const viewsWithUser = pageViews.filter((view) => view.user_id);
-  const sessions = new Set(viewsWithUser.map((view) => view.session_id));
+  const pageViewSessions = new Set(viewsWithUser.map((view) => view.session_id));
   const accessDays = new Set(viewsWithUser.map((view) => dateKeyInTimeZone(view.occurred_at)));
   const durations = viewsWithUser
     .map((view) => view.duration_seconds)
@@ -692,6 +762,7 @@ const buildPlatformUsage = (params: {
   return {
     access_days_count: accessDays.size,
     average_duration_seconds: averageDuration,
+    device_usage: buildPlatformDeviceUsage(platformSessions),
     duration_unavailable_reason:
       viewsWithUser.length === 0
         ? "Sem pageviews autenticados do paciente no período."
@@ -700,21 +771,18 @@ const buildPlatformUsage = (params: {
           : null,
     hourly_activity: summarizePlatformHourlyActivity(hourlyActivityInput),
     hourly_activity_by_weekday: summarizePlatformHourlyActivityByWeekday(hourlyActivityInput),
-    last_access_at:
-      viewsWithUser.length > 0
-        ? viewsWithUser.reduce<Date | null>(
-            (latest, view) => (!latest || view.occurred_at > latest ? view.occurred_at : latest),
-            null,
-          )
-        : null,
+    last_access_at: latestPlatformAccessAt({
+      pageViews: viewsWithUser,
+      sessions: platformSessions,
+    }),
     peak_activity_hours: summarizePlatformPeakActivityHours(pageViews),
     period_from: period.from,
     period_to: period.to,
     pwa_installation_recorded: Boolean(pwaInstallAction),
     pwa_installed_at: pwaInstallAction?.occurred_at ?? null,
-    sessions_count: sessions.size,
+    sessions_count: platformSessions.length > 0 ? platformSessions.length : pageViewSessions.size,
     source:
-      "page_view_event+important_action_event+community_post+post_reply+post_vote+post_save+post_reply_save+community_member+professional_review",
+      "page_view_event+visitor_session+important_action_event+community_post+post_reply+post_vote+post_save+post_reply_save+community_member+professional_review",
     top_pages: [...pageCounts.entries()]
       .map(([label, count]) => ({
         count,
@@ -1166,6 +1234,7 @@ const buildDetail = (
   currentBundle: AdminPatientEngagementBundle,
   previousBundle: AdminPatientEngagementBundle,
   platformPageViews: AdminPatientDetailPlatformPageViewRecord[],
+  platformSessions: AdminPatientDetailPlatformSessionRecord[],
   postViews: Awaited<ReturnType<AdminPatientDetailRepository["countPostViews"]>>,
   pwaInstallAction: { occurred_at: Date } | null,
 ): AdminPatientDetailDTO => {
@@ -1177,6 +1246,7 @@ const buildDetail = (
     pageViews: platformPageViews,
     period,
     pwaInstallAction,
+    sessions: platformSessions,
   });
   const unavailable = [
     ...(!patient.visitor_locations[0]
@@ -1305,12 +1375,14 @@ export const showAdminPatient = async (data: IAdminPatientDetailDTO): Promise<Re
   }
 
   const { current, labels, period, previous } = resolvedPeriod.period;
-  const [currentBundle, previousBundle, platformPageViews, pwaInstallAction] = await Promise.all([
-    repository.listEngagementBundle(patient.id, current),
-    repository.listEngagementBundle(patient.id, previous),
-    repository.listPlatformPageViews(patient.id, current),
-    repository.findPwaInstallAction(patient.id),
-  ]);
+  const [currentBundle, previousBundle, platformPageViews, platformSessions, pwaInstallAction] =
+    await Promise.all([
+      repository.listEngagementBundle(patient.id, current),
+      repository.listEngagementBundle(patient.id, previous),
+      repository.listPlatformPageViews(patient.id, current),
+      repository.listPlatformSessions(patient.id, current),
+      repository.findPwaInstallAction(patient.id),
+    ]);
   const postViews = await repository.countPostViews(currentBundle.posts.map((post) => post.id));
 
   return {
@@ -1323,6 +1395,7 @@ export const showAdminPatient = async (data: IAdminPatientDetailDTO): Promise<Re
       currentBundle,
       previousBundle,
       platformPageViews,
+      platformSessions,
       postViews,
       pwaInstallAction,
     ),

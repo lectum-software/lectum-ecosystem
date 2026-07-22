@@ -151,6 +151,23 @@ export type AdminPatientPlatformUsageTopPage = {
   percentage: number;
 };
 
+export type AdminPatientPlatformDeviceType = "desktop" | "mobile" | "tablet" | "unknown";
+
+export type AdminPatientPlatformUsageDeviceItem = {
+  count: number;
+  device_type: AdminPatientPlatformDeviceType;
+  id: AdminPatientPlatformDeviceType;
+  label: string;
+  percentage: number;
+};
+
+export type AdminPatientPlatformUsageDeviceUsage = {
+  items: AdminPatientPlatformUsageDeviceItem[];
+  source: "visitor_session.device_type+user_id";
+  total_sessions: number;
+  unavailable_reason: string | null;
+};
+
 export type AdminPatientPlatformUsagePeakActivityHour = {
   count: number;
   hour: number;
@@ -177,6 +194,7 @@ export type AdminPatientPlatformUsageWeekdayHourlyActivity = {
 export type AdminPatientPlatformUsage = {
   access_days_count: number;
   average_duration_seconds: number | null;
+  device_usage: AdminPatientPlatformUsageDeviceUsage;
   duration_unavailable_reason: string | null;
   hourly_activity: AdminPatientPlatformUsageHourlyActivityPoint[];
   hourly_activity_by_weekday: AdminPatientPlatformUsageWeekdayHourlyActivity[];
@@ -187,7 +205,7 @@ export type AdminPatientPlatformUsage = {
   pwa_installation_recorded: boolean;
   pwa_installed_at: Date | null;
   sessions_count: number;
-  source: "page_view_event+important_action_event+community_post+post_reply+post_vote+post_save+post_reply_save+community_member+professional_review";
+  source: "page_view_event+visitor_session+important_action_event+community_post+post_reply+post_vote+post_save+post_reply_save+community_member+professional_review";
   top_pages: AdminPatientPlatformUsageTopPage[];
   unavailable_reason: string | null;
 };

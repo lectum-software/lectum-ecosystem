@@ -28,6 +28,14 @@ const communitySelect = {
   visual_primary_color: true,
 } satisfies Prisma.communitySelect;
 
+const platformSessionSelect = {
+  device_type: true,
+  first_seen_at: true,
+  last_seen_at: true,
+  session_id: true,
+  user_id: true,
+} satisfies Prisma.visitor_sessionSelect;
+
 const postSelect = {
   content: true,
   createdAt: true,
@@ -118,6 +126,10 @@ export type AdminPsychologistEngagementProfile = Prisma.psychologist_profileGetP
   select: typeof psychologistSelect;
 }>;
 
+export type AdminPsychologistPlatformSessionRecord = Prisma.visitor_sessionGetPayload<{
+  select: typeof platformSessionSelect;
+}>;
+
 export type AdminPsychologistEngagementPost = Prisma.community_postGetPayload<{
   select: typeof postSelect;
 }>;
@@ -173,6 +185,34 @@ export class AdminPsychologistEngagementRepository {
       where: {
         deleted: false,
         occurred_at: { gte: from, lte: to },
+        user_id: userId,
+        user: {
+          active: true,
+          deleted: false,
+          role: "psicologo",
+        },
+      },
+    });
+  }
+
+  async listPlatformSessions(
+    userId: string,
+    from: Date,
+    to: Date,
+  ): Promise<AdminPsychologistPlatformSessionRecord[]> {
+    return prisma.visitor_session.findMany({
+      orderBy: {
+        last_seen_at: "asc",
+      },
+      select: platformSessionSelect,
+      where: {
+        deleted: false,
+        first_seen_at: {
+          lte: to,
+        },
+        last_seen_at: {
+          gte: from,
+        },
         user_id: userId,
         user: {
           active: true,

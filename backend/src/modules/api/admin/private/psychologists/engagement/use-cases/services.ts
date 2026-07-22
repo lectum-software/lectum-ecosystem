@@ -25,6 +25,7 @@ import {
   type AdminPsychologistEngagementPost,
   type AdminPsychologistEngagementReply,
   AdminPsychologistEngagementRepository,
+  type AdminPsychologistPlatformSessionRecord,
   PROFILE_VIDEO_ACTION_TYPES,
   type ProfileVideoActionType,
 } from "../repositories/AdminPsychologistEngagementRepository";
@@ -210,6 +211,75 @@ const metric = (input: {
 });
 
 const roundPercent = (value: number) => Math.round(value * 10) / 10;
+
+const PLATFORM_DEVICE_TYPES = ["desktop", "mobile", "tablet", "unknown"] as const;
+type PlatformDeviceType = (typeof PLATFORM_DEVICE_TYPES)[number];
+
+const PLATFORM_DEVICE_LABELS: Record<PlatformDeviceType, string> = {
+  desktop: "Desktop",
+  mobile: "Mobile",
+  tablet: "Tablet",
+  unknown: "Não identificado",
+};
+
+const normalizePlatformDeviceType = (value: string | null | undefined): PlatformDeviceType => {
+  const normalized = (value ?? "").trim().toLowerCase();
+  if (normalized === "desktop" || normalized === "mobile" || normalized === "tablet") {
+    return normalized;
+  }
+
+  return "unknown";
+};
+
+const buildPlatformDeviceUsage = (sessions: AdminPsychologistPlatformSessionRecord[]) => {
+  const counts: Record<PlatformDeviceType, number> = {
+    desktop: 0,
+    mobile: 0,
+    tablet: 0,
+    unknown: 0,
+  };
+
+  for (const session of sessions) {
+    counts[normalizePlatformDeviceType(session.device_type)] += 1;
+  }
+
+  const totalSessions = sessions.length;
+
+  return {
+    items: PLATFORM_DEVICE_TYPES.map((deviceType) => ({
+      count: counts[deviceType],
+      device_type: deviceType,
+      id: deviceType,
+      label: PLATFORM_DEVICE_LABELS[deviceType],
+      percentage: totalSessions > 0 ? roundPercent((counts[deviceType] / totalSessions) * 100) : 0,
+    })).sort((left, right) => {
+      if (right.count !== left.count) return right.count - left.count;
+
+      return left.label.localeCompare(right.label, "pt-BR");
+    }),
+    source: "visitor_session.device_type+user_id" as const,
+    total_sessions: totalSessions,
+    unavailable_reason:
+      totalSessions === 0
+        ? "Sem sessões autenticadas do psicólogo por dispositivo no período selecionado."
+        : null,
+  };
+};
+
+const latestPlatformAccessAt = (params: {
+  pageViews: Array<{ occurred_at: Date }>;
+  sessions: Array<{ last_seen_at: Date }>;
+}) => {
+  const dates = [
+    ...params.pageViews.map((view) => view.occurred_at),
+    ...params.sessions.map((session) => session.last_seen_at),
+  ];
+
+  return dates.reduce<Date | null>(
+    (latest, current) => (!latest || current > latest ? current : latest),
+    null,
+  );
+};
 
 const percentageChange = (current: number, previous: number) => {
   if (previous === 0) return current === 0 ? 0 : null;
@@ -880,6 +950,7 @@ export const showAdminPsychologistStatistics = async (
     previousReplies,
     memberships,
     platformPageViews,
+    platformSessions,
     pwaInstallAction,
     trafficPageViews,
     patientPostsByCommunityCounts,
@@ -906,6 +977,7 @@ export const showAdminPsychologistStatistics = async (
     repository.listAuthoredReplies(userId, period.previous.start, period.previous.end),
     repository.listCommunities(userId),
     repository.listPlatformPageViews(userId, period.current.start, period.current.end),
+    repository.listPlatformSessions(userId, period.current.start, period.current.end),
     repository.findPwaInstallAction(userId),
     repository.listPublicProfilePageViews(userId, period.current.start, period.current.end),
     repository.countPatientPostsByCommunity(period.current.start, period.current.end),
@@ -1062,21 +1134,22 @@ export const showAdminPsychologistStatistics = async (
         ? new Set(platformPageViews.map((view) => toDateKey(view.occurred_at))).size
         : 0,
     average_duration_seconds: platformUsageSummary.average_duration_seconds,
+    device_usage: buildPlatformDeviceUsage(platformSessions),
     duration_unavailable_reason: platformUsageSummary.duration_unavailable_reason,
-    last_access_at:
-      platformPageViews.length > 0
-        ? platformPageViews.reduce<Date | null>(
-            (latest, view) => (!latest || view.occurred_at > latest ? view.occurred_at : latest),
-            null,
-          )
-        : null,
+    last_access_at: latestPlatformAccessAt({
+      pageViews: platformPageViews,
+      sessions: platformSessions,
+    }),
     period_from: period.period.from,
     period_to: period.period.to,
     pwa_installation_recorded: Boolean(pwaInstallAction),
     pwa_installed_at: pwaInstallAction?.occurred_at ?? null,
-    sessions_count: new Set(platformPageViews.map((view) => view.session_id)).size,
+    sessions_count:
+      platformSessions.length > 0
+        ? platformSessions.length
+        : new Set(platformPageViews.map((view) => view.session_id)).size,
     source:
-      "page_view_event+important_action_event+community_post+post_reply+post_vote+post_save+post_reply_save+post_share+post_report" as const,
+      "page_view_event+visitor_session+important_action_event+community_post+post_reply+post_vote+post_save+post_reply_save+post_share+post_report" as const,
     hourly_activity: platformHourlyActivity,
     hourly_activity_by_weekday: platformHourlyActivityByWeekday,
     peak_activity_hours: summarizePlatformPeakActivityHours(platformPageViews),

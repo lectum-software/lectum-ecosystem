@@ -134,6 +134,23 @@ export type AdminPsychologistPlatformUsageTopPage = {
   percentage: number;
 };
 
+export type AdminPsychologistPlatformDeviceType = "desktop" | "mobile" | "tablet" | "unknown";
+
+export type AdminPsychologistPlatformUsageDeviceItem = {
+  count: number;
+  device_type: AdminPsychologistPlatformDeviceType;
+  id: AdminPsychologistPlatformDeviceType;
+  label: string;
+  percentage: number;
+};
+
+export type AdminPsychologistPlatformUsageDeviceUsage = {
+  items: AdminPsychologistPlatformUsageDeviceItem[];
+  source: "visitor_session.device_type+user_id";
+  total_sessions: number;
+  unavailable_reason: string | null;
+};
+
 export type AdminPsychologistPlatformUsagePeakActivityHour = {
   count: number;
   hour: number;
@@ -160,6 +177,7 @@ export type AdminPsychologistPlatformUsageWeekdayHourlyActivity = {
 export type AdminPsychologistPlatformUsage = {
   access_days_count: number;
   average_duration_seconds: number | null;
+  device_usage: AdminPsychologistPlatformUsageDeviceUsage;
   duration_unavailable_reason: string | null;
   hourly_activity: AdminPsychologistPlatformUsageHourlyActivityPoint[];
   hourly_activity_by_weekday: AdminPsychologistPlatformUsageWeekdayHourlyActivity[];
@@ -169,7 +187,7 @@ export type AdminPsychologistPlatformUsage = {
   pwa_installation_recorded: boolean;
   pwa_installed_at: Date | null;
   sessions_count: number;
-  source: "page_view_event+important_action_event+community_post+post_reply+post_vote+post_save+post_reply_save+post_share+post_report";
+  source: "page_view_event+visitor_session+important_action_event+community_post+post_reply+post_vote+post_save+post_reply_save+post_share+post_report";
   peak_activity_hours: AdminPsychologistPlatformUsagePeakActivityHour[];
   top_pages: AdminPsychologistPlatformUsageTopPage[];
   unavailable_reason: string | null;

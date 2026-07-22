@@ -297,6 +297,18 @@ export type AdminPatientDetailPlatformPageViewRecord = Prisma.page_view_eventGet
   select: typeof patientPlatformPageViewSelect;
 }>;
 
+const patientPlatformSessionSelect = {
+  device_type: true,
+  first_seen_at: true,
+  last_seen_at: true,
+  session_id: true,
+  user_id: true,
+} satisfies Prisma.visitor_sessionSelect;
+
+export type AdminPatientDetailPlatformSessionRecord = Prisma.visitor_sessionGetPayload<{
+  select: typeof patientPlatformSessionSelect;
+}>;
+
 const patientPlatformPwaInstallSelect = {
   occurred_at: true,
   user_id: true,
@@ -700,6 +712,32 @@ export class AdminPatientDetailRepository {
       where: {
         deleted: false,
         occurred_at: rangeWhere(range),
+        user_id: patientId,
+        user: {
+          deleted: false,
+          role: "paciente",
+        },
+      },
+    });
+  }
+
+  async listPlatformSessions(
+    patientId: string,
+    range: AdminPatientDetailDateRange,
+  ): Promise<AdminPatientDetailPlatformSessionRecord[]> {
+    return prisma.visitor_session.findMany({
+      orderBy: {
+        last_seen_at: "asc",
+      },
+      select: patientPlatformSessionSelect,
+      where: {
+        deleted: false,
+        first_seen_at: {
+          lte: range.end,
+        },
+        last_seen_at: {
+          gte: range.start,
+        },
         user_id: patientId,
         user: {
           deleted: false,
