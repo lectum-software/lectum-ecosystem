@@ -54,6 +54,8 @@ const normalizeFinanceList = (input: FinanceListQuery) => ({
   ...normalizeRange(input),
   limit: input.limit || 20,
   page: input.page || 1,
+  q: input.q || "",
+  status: input.status || "all",
 });
 
 const normalizePsychologistsList = (input: PsychologistsListQuery) => ({

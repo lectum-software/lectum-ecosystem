@@ -22,6 +22,7 @@ const MAX_LIST_LIMIT = 50;
 const DASHBOARD_TABLE_PREVIEW_TAKE = 5;
 const DAYS_PER_AVERAGE_MONTH = 30.4375;
 const MILLISECONDS_PER_DAY = 86_400_000;
+const SUBSCRIPTION_STATUS_FILTERS = new Set(["ativa", "cancelada", "inadimplente"]);
 
 const pad = (value: number) => String(value).padStart(2, "0");
 const toDateKey = (date: Date) =>
@@ -524,6 +525,11 @@ type FinanceSubscriptionRecord =
   | SubscriptionRecord
   | SubscriptionRelationRecord;
 
+type SubscriptionReferenceRecord = {
+  gateway_subscription_id: string | null;
+  id: string;
+};
+
 const monthlyPriceCents = (subscription: Pick<SubscriptionRecord, "plan">) => {
   const interval = subscription.plan.interval.toLowerCase();
   if (interval.includes("year") || interval.includes("ano") || interval.includes("annual")) {
@@ -553,36 +559,69 @@ const formatStatusLabel = (status: string) => {
   return labels[status] ?? status;
 };
 
+const subscriptionReferenceValues = (subscription: SubscriptionReferenceRecord) =>
+  [subscription.id, subscription.gateway_subscription_id].filter((reference): reference is string =>
+    Boolean(reference && reference.length > 3),
+  );
+
+const findLatestConfirmedPaymentForSubscription = (
+  subscription: SubscriptionReferenceRecord,
+  paymentEvents?: PaymentEventRecord[],
+) => {
+  if (!paymentEvents || paymentEvents.length === 0) return null;
+
+  const references = subscriptionReferenceValues(subscription);
+  if (references.length === 0) return null;
+
+  let latest: PaymentEventRecord | null = null;
+
+  for (const event of paymentEvents) {
+    if (!isPaymentEvent(event.type, event.payload)) continue;
+    if (!isConfirmedPaymentStatus(event.payload)) continue;
+    if (!payloadContainsAnyReference(event.payload, references)) continue;
+    if (!latest || event.createdAt > latest.createdAt) latest = event;
+  }
+
+  return latest;
+};
+
 const mapSubscription = (
   subscription: FinanceSubscriptionRecord,
-): AdminFinanceSubscriptionItem => ({
-  created_at: subscription.createdAt.toISOString(),
-  current_period_end: subscription.current_period_end?.toISOString() ?? null,
-  detail_url: `/psicologos/${subscription.psychologist.user.id}`,
-  gateway: subscription.gateway,
-  gateway_subscription_id: subscription.gateway_subscription_id,
-  id: subscription.id,
-  plan: {
-    id: subscription.plan.id,
-    interval: subscription.plan.interval,
-    name: subscription.plan.name,
-    price_cents: subscription.plan.price_cents,
-    slug: subscription.plan.slug,
-  },
-  psychologist: {
-    crp: subscription.psychologist.crp,
-    email: subscription.psychologist.user.email,
-    id: subscription.psychologist.id,
-    name: subscription.psychologist.user.name,
-    profile_id: subscription.psychologist.id,
-    user_id: subscription.psychologist.user.id,
-  },
-  source: subscription.source,
-  started_at: subscription.createdAt.toISOString(),
-  status: subscription.status,
-  status_label: formatStatusLabel(subscription.status),
-  updated_at: subscription.updatedAt.toISOString(),
-});
+  paymentEvents?: PaymentEventRecord[],
+): AdminFinanceSubscriptionItem => {
+  const latestPayment = findLatestConfirmedPaymentForSubscription(subscription, paymentEvents);
+
+  return {
+    created_at: subscription.createdAt.toISOString(),
+    current_period_end: subscription.current_period_end?.toISOString() ?? null,
+    detail_url: `/psicologos/${subscription.psychologist.user.id}`,
+    gateway: subscription.gateway,
+    gateway_subscription_id: subscription.gateway_subscription_id,
+    id: subscription.id,
+    last_charge_at: latestPayment?.createdAt.toISOString() ?? null,
+    next_charge_at: subscription.current_period_end?.toISOString() ?? null,
+    plan: {
+      id: subscription.plan.id,
+      interval: subscription.plan.interval,
+      name: subscription.plan.name,
+      price_cents: subscription.plan.price_cents,
+      slug: subscription.plan.slug,
+    },
+    psychologist: {
+      crp: subscription.psychologist.crp,
+      email: subscription.psychologist.user.email,
+      id: subscription.psychologist.id,
+      name: subscription.psychologist.user.name,
+      profile_id: subscription.psychologist.id,
+      user_id: subscription.psychologist.user.id,
+    },
+    source: subscription.source,
+    started_at: subscription.createdAt.toISOString(),
+    status: subscription.status,
+    status_label: formatStatusLabel(subscription.status),
+    updated_at: subscription.updatedAt.toISOString(),
+  };
+};
 
 const toPayloadString = (value: unknown) => {
   if (typeof value === "string" && value.trim()) return value.trim();
@@ -604,17 +643,12 @@ const extractPaymentReference = (payload: unknown) =>
     ]),
   );
 
-const subscriptionReferences = (subscription: PaymentReferenceSubscriptionRecord) =>
-  [subscription.id, subscription.gateway_subscription_id].filter((reference): reference is string =>
-    Boolean(reference && reference.length > 3),
-  );
-
 const findSubscriptionForPayment = (
   event: PaymentEventRecord,
   subscriptions: PaymentReferenceSubscriptionRecord[],
 ) =>
   subscriptions.find((subscription) =>
-    payloadContainsAnyReference(event.payload, subscriptionReferences(subscription)),
+    payloadContainsAnyReference(event.payload, subscriptionReferenceValues(subscription)),
   ) ?? null;
 
 const mapCharge = (
@@ -642,7 +676,7 @@ const mapCharge = (
       extractPaymentReference(event.payload),
     status: "confirmed",
     status_label: "Confirmada",
-    subscription: subscription ? mapSubscription(subscription) : null,
+    subscription: subscription ? mapSubscription(subscription, [event]) : null,
     unavailable_reason:
       amountCents === null ? "payment_event_confirmado_sem_valor_monetario_extraivel" : null,
   };
@@ -693,6 +727,16 @@ const paginationForCount = (query: AdminFinanceQuery, count: number) => {
     page,
     pages,
     skip: (page - 1) * pagination.limit,
+  };
+};
+
+const normalizeSubscriptionRelationFilters = (query: AdminFinanceQuery) => {
+  const q = query.q?.trim();
+  const status = query.status?.trim();
+
+  return {
+    ...(q ? { q } : {}),
+    ...(status && status !== "all" && SUBSCRIPTION_STATUS_FILTERS.has(status) ? { status } : {}),
   };
 };
 
@@ -749,19 +793,29 @@ export const listAdminFinanceSubscriptions = async (query: AdminFinanceQuery): P
   }
 
   const { current, period } = resolvedPeriod.period;
-  const count = await repository.countPaidSubscriptionsForRelation(current);
+  const filters = normalizeSubscriptionRelationFilters(query ?? {});
+  const count = await repository.countPaidSubscriptionsForRelation(current, filters);
   const pagination = paginationForCount(query ?? {}, count);
-  const subscriptions = await repository.listPaidSubscriptionsForRelation(current, {
-    skip: pagination.skip,
-    take: pagination.limit,
-  });
+  const [subscriptions, lifetimePaymentEvents] = await Promise.all([
+    repository.listPaidSubscriptionsForRelation(
+      current,
+      {
+        skip: pagination.skip,
+        take: pagination.limit,
+      },
+      filters,
+    ),
+    repository.listPaymentEventsForLifetime(),
+  ]);
 
   return {
     status: 200,
     ...msg("index", {}),
     data: {
       count,
-      data: subscriptions.map(mapSubscription),
+      data: subscriptions.map((subscription) =>
+        mapSubscription(subscription, lifetimePaymentEvents),
+      ),
       page: pagination.page,
       pages: pagination.pages,
       per_page: pagination.limit,
@@ -1018,7 +1072,9 @@ export const buildAdminFinanceDashboard = async (
       total: currentCharges.length,
     },
     new_subscriptions: {
-      items: newSubscriptions.map(mapSubscription),
+      items: newSubscriptions.map((subscription) =>
+        mapSubscription(subscription, lifetimePaymentEvents),
+      ),
       source: "professional_subscription+subscription_plan+psychologist_profile+user",
       total: currentNewSubscriptionCount,
     },
@@ -1028,7 +1084,9 @@ export const buildAdminFinanceDashboard = async (
       source: "payment_event+professional_subscription",
     },
     subscription_relation: {
-      items: subscriptionRelationItems.map(mapSubscription),
+      items: subscriptionRelationItems.map((subscription) =>
+        mapSubscription(subscription, lifetimePaymentEvents),
+      ),
       source: "professional_subscription+subscription_plan+psychologist_profile+user",
       total: subscriptionRelationTotal,
     },

@@ -154,3 +154,23 @@ Consequências:
 - O Admin passa a ter um lifetime observacional real, baseado em cancelamentos já persistidos.
 - Enquanto houver pouco histórico de cancelamento, a métrica pode aparecer indisponível; essa limitação é preferível a projetar lifetime artificial.
 - A decisão não adiciona package, schema Prisma, migration, mock, seed ou endpoint simulado.
+
+## Ajuste 2026-07-22: relação de assinaturas com datas de cobrança e filtros Lectum
+
+Feedback de produto pediu simplificar a relação completa de assinaturas, removendo colunas técnicas/operacionais visíveis e alinhando busca/filtros ao padrão das listagens Admin Lectum.
+
+Decisões:
+
+- A relação visual de assinaturas pagas deixa de exibir **CRP**, **Plano**, **Período atual** e **Gateway** como colunas; o contrato continua carregando dados necessários para compatibilidade e para regras financeiras internas.
+- A tabela passa a exibir **Início**, **Última** e **Próxima** como datas sem hora. **Última** é calculada a partir do `payment_event` real confirmado mais recente vinculado ao `professional_subscription.id` ou `gateway_subscription_id`; **Próxima** usa `professional_subscription.current_period_end`.
+- O CRP pode continuar sendo usado como critério de busca operacional, mas não fica exposto na coluna principal da relação.
+- Os filtros da lista passam a ser `q`, `status` e data de início por `period=custom&from&to`, reaproveitando o contrato financeiro existente e filtrando `professional_subscription.createdAt`.
+- O filtro/coluna de plano não foi incluído para reduzir ruído na operação financeira atual; a lista continua restringida no backend a assinaturas pagas Mercado Pago, excluindo plano gratuito/cortesia.
+- A UI usa o mesmo layout das listagens Lectum Admin: busca em pill com ícone, selects/inputs arredondados, responsivos e botão **Limpar** contextual.
+- Não foi criada migration, tabela auxiliar, cache materializado, package novo, seed, mock ou endpoint simulado.
+
+Consequências:
+
+- A tela fica mais próxima da leitura financeira solicitada, mostrando datas de cobrança/renovação sem expor identificadores de gateway como coluna principal.
+- A derivação de **Última** depende dos `payment_event` reais já persistidos; quando não houver evento confirmado vinculável, o campo aparece vazio (`—`) em vez de estimar cobrança por plano.
+- Para a versão Admin atual, a busca da última cobrança percorre eventos reais em serviço para evitar alteração de schema. Se o volume de `payment_event` crescer, uma futura task pode introduzir índice, campo dedicado ou relação persistida mediante nova decisão arquitetural.

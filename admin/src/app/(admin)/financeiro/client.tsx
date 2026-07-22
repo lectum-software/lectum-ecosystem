@@ -154,7 +154,7 @@ const formatMoney = (cents: number) => moneyFormatter.format(cents / 100);
 const formatMaybeMoney = (cents: number | null) =>
   cents === null ? "Indisponível" : formatMoney(cents);
 
-const formatNullableDateTime = (value: string | null) => (value ? formatDateTime(value) : "â€”");
+const formatNullableDate = (value: string | null) => (value ? formatDate(value) : "—");
 
 const shortReference = (value: string | null) => {
   if (!value) return "â€”";
@@ -969,11 +969,12 @@ const SubscriptionRelation = ({ dashboard }: { dashboard: AdminFinanceDashboard 
               </div>
               <p className="truncate text-xs font-bold text-muted">{item.psychologist.email}</p>
               <p className="mt-2 text-sm font-bold text-foreground">
-                {item.plan.name} · {formatMoney(item.plan.price_cents)}
+                Valor {formatMoney(item.plan.price_cents)}
               </p>
               <p className="text-xs text-muted">
-                Início {formatDateTime(item.started_at)} · Período até{" "}
-                {formatNullableDateTime(item.current_period_end)}
+                Início {formatDate(item.started_at)} · Última{" "}
+                {formatNullableDate(item.last_charge_at)} · Próxima{" "}
+                {formatNullableDate(item.next_charge_at)}
               </p>
             </div>
           </div>
@@ -987,14 +988,14 @@ const SubscriptionRelation = ({ dashboard }: { dashboard: AdminFinanceDashboard 
     </div>
 
     <div className="hidden overflow-x-auto lg:block">
-      <table className="w-full min-w-[960px] text-left text-sm">
+      <table className="w-full min-w-[900px] text-left text-sm">
         <caption className="sr-only">Relação de assinaturas pagas no período</caption>
         <thead className="text-xs text-muted">
           <tr>
             <th className="px-5 py-3 font-black">Psicólogo</th>
-            <th className="px-5 py-3 font-black">Plano</th>
             <th className="px-5 py-3 font-black">Início</th>
-            <th className="px-5 py-3 font-black">Período atual</th>
+            <th className="px-5 py-3 font-black">Última</th>
+            <th className="px-5 py-3 font-black">Próxima</th>
             <th className="px-5 py-3 font-black">Valor</th>
             <th className="px-5 py-3 font-black">Status</th>
           </tr>
@@ -1011,14 +1012,9 @@ const SubscriptionRelation = ({ dashboard }: { dashboard: AdminFinanceDashboard 
                   </div>
                 </div>
               </td>
-              <td className="px-5 py-4">
-                <p className="font-black text-foreground">{item.plan.name}</p>
-                <p className="text-xs text-muted">{shortReference(item.gateway_subscription_id)}</p>
-              </td>
-              <td className="px-5 py-4 text-muted">{formatDateTime(item.started_at)}</td>
-              <td className="px-5 py-4 text-muted">
-                {formatNullableDateTime(item.current_period_end)}
-              </td>
+              <td className="px-5 py-4 text-muted">{formatDate(item.started_at)}</td>
+              <td className="px-5 py-4 text-muted">{formatNullableDate(item.last_charge_at)}</td>
+              <td className="px-5 py-4 text-muted">{formatNullableDate(item.next_charge_at)}</td>
               <td className="px-5 py-4 font-black text-foreground">
                 {formatMoney(item.plan.price_cents)}
               </td>

@@ -1,3 +1,4 @@
+import type { Prisma } from "@/external/generated/prisma/client";
 import prisma from "@/infra/database/prisma";
 import type { AdminFinanceDateRange } from "../DTOs/IAdminFinanceDashboardDTO";
 
@@ -25,6 +26,55 @@ const paidGatewaySubscriptionWhere = {
   },
   plan: paidPlanWhere,
   source: "mercadopago",
+};
+
+const relationStatuses = ["ativa", "cancelada", "inadimplente"];
+
+export type AdminFinanceSubscriptionRelationFilters = {
+  q?: string;
+  status?: string;
+};
+
+const paidSubscriptionRelationWhere = (
+  range: AdminFinanceDateRange,
+  filters: AdminFinanceSubscriptionRelationFilters = {},
+): Prisma.professional_subscriptionWhereInput => {
+  const query = filters.q?.trim();
+
+  return {
+    ...paidGatewaySubscriptionWhere,
+    createdAt: dateRangeWhere(range),
+    status: filters.status ?? {
+      in: relationStatuses,
+    },
+    ...(query
+      ? {
+          OR: [
+            { id: { contains: query, mode: "insensitive" } },
+            { gateway_subscription_id: { contains: query, mode: "insensitive" } },
+            {
+              psychologist: {
+                crp: { contains: query, mode: "insensitive" },
+              },
+            },
+            {
+              psychologist: {
+                user: {
+                  email: { contains: query, mode: "insensitive" },
+                },
+              },
+            },
+            {
+              psychologist: {
+                user: {
+                  name: { contains: query, mode: "insensitive" },
+                },
+              },
+            },
+          ],
+        }
+      : {}),
+  };
 };
 
 const subscriptionSelect = {
@@ -226,21 +276,19 @@ export class AdminFinanceDashboardRepository {
     });
   }
 
-  async countPaidSubscriptionsForRelation(range: AdminFinanceDateRange) {
+  async countPaidSubscriptionsForRelation(
+    range: AdminFinanceDateRange,
+    filters: AdminFinanceSubscriptionRelationFilters = {},
+  ) {
     return prisma.professional_subscription.count({
-      where: {
-        ...paidGatewaySubscriptionWhere,
-        createdAt: dateRangeWhere(range),
-        status: {
-          in: ["ativa", "cancelada", "inadimplente"],
-        },
-      },
+      where: paidSubscriptionRelationWhere(range, filters),
     });
   }
 
   async listPaidSubscriptionsForRelation(
     range: AdminFinanceDateRange,
     { skip = 0, take = 50 }: { skip?: number; take?: number } = {},
+    filters: AdminFinanceSubscriptionRelationFilters = {},
   ) {
     return prisma.professional_subscription.findMany({
       orderBy: [
@@ -253,13 +301,7 @@ export class AdminFinanceDashboardRepository {
       ],
       skip,
       take,
-      where: {
-        ...paidGatewaySubscriptionWhere,
-        createdAt: dateRangeWhere(range),
-        status: {
-          in: ["ativa", "cancelada", "inadimplente"],
-        },
-      },
+      where: paidSubscriptionRelationWhere(range, filters),
       select: subscriptionSelect,
     });
   }

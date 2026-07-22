@@ -10,6 +10,8 @@ export type AdminFinanceQuery = {
   limit?: number;
   page?: number;
   period?: AdminFinancePeriodValue;
+  q?: string;
+  status?: string;
   to?: string;
 };
 
@@ -83,6 +85,8 @@ export type AdminFinanceSubscriptionItem = {
     profile_id: string;
     user_id: string;
   };
+  last_charge_at: string | null;
+  next_charge_at: string | null;
   source: string;
   started_at: string;
   status: string;

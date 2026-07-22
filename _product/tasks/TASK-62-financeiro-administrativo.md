@@ -517,3 +517,47 @@ Frontend esperado:
 - Smoke HTTP local: `GET http://localhost:3002/financeiro` retornou `200`.
 - Smoke HTTP local protegido: `GET http://localhost:3001/api/admin/private/finance/dashboard?period=all` sem token Admin retornou `401`.
 - Browser local autenticado em `http://localhost:3002/financeiro` com sessão Admin real temporária confirmou no DOM os blocos **Receita recorrente mensal (MRR)**, **LTV médio dos psicólogos** e **Lifetime médio dos psicólogos**; a sessão temporária de validação foi removida ao final.
+
+## Ajuste pós-feedback 2026-07-22 - Relação de assinaturas com busca e filtros Lectum
+
+- Pedido do usuário: ajustar `/financeiro/assinaturas` removendo as colunas **CRP**, **Período atual**, **Gateway** e **Plano**; adicionar **Última** e **Próxima** após **Início**; ocultar hora nas datas; e adicionar barra de pesquisa e filtros no mesmo layout Lectum, sem filtro de plano e com filtro de data de início da assinatura.
+- A tabela completa de assinaturas agora exibe, no desktop, apenas **Psicólogo**, **Início**, **Última**, **Próxima**, **Valor** e **Status**; no mobile, os cards seguem os mesmos dados principais sem mostrar plano, CRP, gateway ou período técnico.
+- As datas de **Início**, **Última** e **Próxima** usam formatação apenas de data, sem hora.
+- **Última** é derivada de `payment_event` real confirmado vinculado ao `professional_subscription.id` ou ao `gateway_subscription_id`; quando não há cobrança confirmada vinculada, a UI exibe `—`.
+- **Próxima** é derivada de `professional_subscription.current_period_end`, mantendo a origem real já persistida da assinatura.
+- A busca aceita nome, e-mail, CRP ou identificador real da assinatura/gateway; o CRP permanece pesquisável para operação, mas não é exibido como coluna.
+- Os filtros da tabela seguem o padrão visual Lectum usado nas listagens Admin: campo de busca pill com ícone, filtros arredondados e responsivos, e botão **Limpar** somente quando houver filtro ativo.
+- O filtro de plano foi removido; os filtros ativos são busca, **Início de**, **Início até** e **Status**.
+- O filtro de data de início reutiliza o contrato real `period=custom&from=YYYY-MM-DD&to=YYYY-MM-DD` e filtra `professional_subscription.createdAt`, sem endpoint paralelo.
+- O dashboard `/financeiro` também teve a prévia de **Relação de assinaturas** alinhada às colunas **Início**, **Última**, **Próxima**, **Valor** e **Status**.
+- Não houve alteração de Prisma/migrations, instalação de package, seed, mock, dado artificial ou endpoint simulado.
+- Builder/Quick Copy não está exposto como ferramenta callable neste ambiente; as referências auditáveis foram `_product/proto/admin/Financeiro.png` e a captura autenticada enviada pelo usuário em 2026-07-22.
+- ADR atualizado: `adrs/0242-admin-financeiro-receita-mrr-exportacao.md`.
+
+### Critérios de aceite do ajuste
+
+- [x] `/financeiro/assinaturas` não exibe as colunas **CRP**, **Período atual**, **Gateway** ou **Plano**.
+- [x] A tabela exibe **Última** e **Próxima** após **Início**.
+- [x] As datas exibidas na relação de assinaturas não mostram hora.
+- [x] A busca e os filtros usam o mesmo padrão visual Lectum das listagens Admin.
+- [x] O filtro de plano foi removido.
+- [x] Existe filtro por data de início da assinatura com intervalo **Início de**/**Início até**.
+- [x] A busca, o filtro de status e o filtro de data usam endpoint real e contrato Admin privado existente, sem mock.
+- [x] A prévia de **Relação de assinaturas** em `/financeiro` foi alinhada às mesmas colunas principais.
+- [x] UI mobile-first preservada e nenhum `<img>` cru foi usado.
+- [x] Nenhum package, schema Prisma, migration, mock ou endpoint simulado foi adicionado.
+
+### Validação complementar executada
+
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/financeiro/assinaturas/client.tsx" "src/app/(admin)/financeiro/client.tsx" "src/api/req/finance/index.ts" "src/api/cache/keys.ts"`
+- `pnpm --dir backend exec biome check --write "src/modules/api/admin/private/finance/dashboard/DTOs/IAdminFinanceDashboardDTO.ts" "src/modules/api/admin/private/finance/dashboard/repositories/AdminFinanceDashboardRepository.ts" "src/modules/api/admin/private/finance/dashboard/use-cases/services.ts" "src/modules/api/admin/private/finance/lists/validator/index.ts"`
+- `pnpm --dir admin check`
+- `pnpm --dir backend check`
+- `pnpm --dir admin build`
+- `pnpm --dir backend build`
+- `pnpm check`
+- Smoke de serviço real com `.env` local: `listAdminFinanceSubscriptions({ period: "all", limit: 2 })` retornou `status=200`, `count=6`, `items=2` e todos os itens continham `last_charge_at`/`next_charge_at`; `listAdminFinanceSubscriptions({ period: "all", limit: 2, q: "ana", status: "ativa" })` retornou `status=200`, `count=1`, `items=1`.
+- Smoke de filtro de início real: `listAdminFinanceSubscriptions({ period: "custom", from: "2026-07-15", to: "2026-07-22", limit: 10 })` retornou `status=200`, `count=3`, `items=3` e datas de início dentro do intervalo.
+- Smoke HTTP local protegido: `GET http://localhost:3001/api/admin/private/finance/subscriptions?period=all&q=ana&status=ativa` sem token Admin retornou `401`.
+- Smoke HTTP/Admin local: `GET http://localhost:3002/financeiro/assinaturas` retornou `200`; o bundle da rota contém os controles de busca/status e não contém as colunas removidas **CRP**, **Plano** ou **Período atual**.
+- Chrome headless local em `http://localhost:3002/financeiro/assinaturas` confirmou o guard de autenticação Admin; a validação visual autenticada completa permanece limitada à captura enviada pelo usuário porque a ferramenta Builder/Quick Copy não está disponível como callable e não há acesso automatizado à sessão Admin autenticada do navegador aberto.

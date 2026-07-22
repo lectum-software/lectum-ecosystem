@@ -23,6 +23,8 @@ export const schema: IValidatorRequest = {
     { key: "to", coerse: "string", method: "string", max: 10, optional: true },
     { key: "groupBy", coerse: "string", method: "string", max: 5, optional: true },
     { key: "period", coerse: "string", method: "string", max: 10, optional: true },
+    { key: "q", coerse: "string", method: "string", max: 120, optional: true },
+    { key: "status", coerse: "string", method: "string", max: 20, optional: true },
   ],
 };
 

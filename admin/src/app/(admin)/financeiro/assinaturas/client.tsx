@@ -1,9 +1,16 @@
 "use client";
 
-import { AlertTriangle, ChevronLeft, ChevronRight, RefreshCw, UsersRound } from "lucide-react";
+import {
+  AlertTriangle,
+  ChevronLeft,
+  ChevronRight,
+  RefreshCw,
+  Search,
+  UsersRound,
+} from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { type ReactNode, useMemo } from "react";
+import { type ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import { useAdminFinanceSubscriptions } from "@/api/callers/finance";
 import { resolveApiError } from "@/api/handle";
 import type {
@@ -14,6 +21,7 @@ import type {
 import { cn } from "@/lib/utils";
 
 const LIST_LIMIT_OPTIONS = [10, 20, 50];
+const SEARCH_DEBOUNCE_MS = 350;
 const validPeriods = new Set<FinancePeriodValue>([
   "all",
   "custom",
@@ -27,6 +35,15 @@ const moneyFormatter = new Intl.NumberFormat("pt-BR", {
   style: "currency",
 });
 const numberFormatter = new Intl.NumberFormat("pt-BR");
+const statusFilterOptions = [
+  { label: "Todos os status", value: "all" },
+  { label: "Ativas", value: "ativa" },
+  { label: "Inadimplentes", value: "inadimplente" },
+  { label: "Canceladas", value: "cancelada" },
+] as const;
+const validSubscriptionStatuses = new Set<string>(
+  statusFilterOptions.map((option) => option.value),
+);
 
 const parsePositiveNumber = (value: string | null, fallback: number) => {
   const parsed = Number(value);
@@ -37,31 +54,28 @@ const parsePositiveNumber = (value: string | null, fallback: number) => {
 
 const parseQuery = (params: URLSearchParams): FinanceListQuery => {
   const period = params.get("period") as FinancePeriodValue | null;
+  const q = params.get("q");
+  const status = params.get("status");
 
   return {
     from: params.get("from") || undefined,
     limit: Math.min(50, parsePositiveNumber(params.get("limit"), 20)),
     page: parsePositiveNumber(params.get("page"), 1),
     period: period && validPeriods.has(period) ? period : "all",
+    q: q || undefined,
+    status:
+      status && validSubscriptionStatuses.has(status) && status !== "all" ? status : undefined,
     to: params.get("to") || undefined,
   };
 };
 
-const formatDateTime = (value: string) =>
+const formatDate = (value: string) =>
   new Intl.DateTimeFormat("pt-BR", {
     dateStyle: "short",
-    timeStyle: "short",
   }).format(new Date(value));
 
-const formatNullableDateTime = (value: string | null) => (value ? formatDateTime(value) : "—");
+const formatNullableDate = (value: string | null) => (value ? formatDate(value) : "—");
 const formatMoney = (cents: number) => moneyFormatter.format(cents / 100);
-
-const shortReference = (value: string | null) => {
-  if (!value) return "—";
-  if (value.length <= 18) return value;
-
-  return `${value.slice(0, 10)}...${value.slice(-4)}`;
-};
 
 const CardShell = ({ children, className }: { children?: ReactNode; className?: string }) => (
   <section
@@ -72,6 +86,100 @@ const CardShell = ({ children, className }: { children?: ReactNode; className?: 
   >
     {children}
   </section>
+);
+
+const SearchBox = ({ onSearch, value }: { onSearch: (value: string) => void; value?: string }) => {
+  const [draft, setDraft] = useState(value || "");
+  const onSearchRef = useRef(onSearch);
+
+  useEffect(() => {
+    onSearchRef.current = onSearch;
+  }, [onSearch]);
+
+  useEffect(() => {
+    const normalized = draft.trim();
+    const current = value || "";
+
+    if (normalized === current) return;
+
+    const timer = window.setTimeout(() => {
+      onSearchRef.current(normalized);
+    }, SEARCH_DEBOUNCE_MS);
+
+    return () => window.clearTimeout(timer);
+  }, [draft, value]);
+
+  return (
+    <label className="relative block h-12 w-full min-w-0 text-sm font-medium text-foreground">
+      <span className="sr-only">Buscar por nome, e-mail ou identificador</span>
+      <Search
+        aria-hidden
+        className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-subtle"
+      />
+      <input
+        className="h-full w-full appearance-none rounded-full border border-border bg-surface py-0 pl-10 pr-4 text-sm font-medium text-foreground shadow-control outline-none transition placeholder:text-subtle focus:border-primary focus:ring-2 focus:ring-primary/15"
+        onChange={(event) => setDraft(event.target.value)}
+        placeholder="Nome, e-mail ou ID..."
+        type="search"
+        value={draft}
+      />
+    </label>
+  );
+};
+
+const DateFilterField = ({
+  label,
+  max,
+  min,
+  onChange,
+  value,
+}: {
+  label: string;
+  max?: string;
+  min?: string;
+  onChange: (value: string) => void;
+  value?: string;
+}) => (
+  <label className="flex min-w-0 flex-col gap-1 text-xs font-medium text-muted sm:min-w-[160px]">
+    {label}
+    <input
+      className="h-12 w-full min-w-0 rounded-full border border-border bg-surface px-4 py-0 text-sm font-medium text-foreground shadow-control outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/15"
+      max={max}
+      min={min}
+      onChange={(event) => onChange(event.target.value)}
+      type="date"
+      value={value || ""}
+    />
+  </label>
+);
+
+const StatusFilterField = ({
+  onChange,
+  value,
+}: {
+  onChange: (value: string) => void;
+  value?: string;
+}) => (
+  <label className="flex min-w-0 flex-col gap-1 text-xs font-medium text-muted sm:min-w-[180px]">
+    Status
+    <span className="relative block text-sm font-medium text-foreground">
+      <select
+        className="h-12 w-full min-w-0 appearance-none rounded-full border border-border bg-surface py-0 pl-4 pr-12 text-sm font-medium text-foreground shadow-control outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/15"
+        onChange={(event) => onChange(event.target.value)}
+        value={value || "all"}
+      >
+        {statusFilterOptions.map((option) => (
+          <option key={option.value} value={option.value}>
+            {option.label}
+          </option>
+        ))}
+      </select>
+      <ChevronRight
+        aria-hidden
+        className="pointer-events-none absolute right-5 top-1/2 h-4 w-4 -translate-y-1/2 rotate-90 text-foreground"
+      />
+    </span>
+  </label>
 );
 
 const InitialsAvatar = ({ name }: { name: string }) => {
@@ -176,10 +284,6 @@ const SubscriptionsTable = ({ items }: { items: FinanceSubscriptionItem[] }) => 
               <p className="truncate text-xs font-bold text-muted">{item.psychologist.email}</p>
               <dl className="mt-4 grid grid-cols-2 gap-3 text-xs">
                 <div>
-                  <dt className="font-semibold text-muted">Plano</dt>
-                  <dd className="mt-1 font-bold text-foreground">{item.plan.name}</dd>
-                </div>
-                <div>
                   <dt className="font-semibold text-muted">Valor</dt>
                   <dd className="mt-1 font-bold text-foreground">
                     {formatMoney(item.plan.price_cents)}
@@ -187,14 +291,18 @@ const SubscriptionsTable = ({ items }: { items: FinanceSubscriptionItem[] }) => 
                 </div>
                 <div>
                   <dt className="font-semibold text-muted">Início</dt>
+                  <dd className="mt-1 font-bold text-foreground">{formatDate(item.started_at)}</dd>
+                </div>
+                <div>
+                  <dt className="font-semibold text-muted">Última</dt>
                   <dd className="mt-1 font-bold text-foreground">
-                    {formatDateTime(item.started_at)}
+                    {formatNullableDate(item.last_charge_at)}
                   </dd>
                 </div>
                 <div>
-                  <dt className="font-semibold text-muted">Período atual</dt>
+                  <dt className="font-semibold text-muted">Próxima</dt>
                   <dd className="mt-1 font-bold text-foreground">
-                    {formatNullableDateTime(item.current_period_end)}
+                    {formatNullableDate(item.next_charge_at)}
                   </dd>
                 </div>
               </dl>
@@ -205,16 +313,14 @@ const SubscriptionsTable = ({ items }: { items: FinanceSubscriptionItem[] }) => 
     </div>
 
     <div className="hidden overflow-x-auto lg:block">
-      <table className="w-full min-w-[1180px] text-left text-sm">
+      <table className="w-full min-w-[900px] text-left text-sm">
         <caption className="sr-only">Relação completa de assinaturas pagas</caption>
         <thead className="border-b border-border text-xs font-bold uppercase tracking-[0.08em] text-muted">
           <tr>
             <th className="px-5 py-4">Psicólogo</th>
-            <th className="px-5 py-4">CRP</th>
-            <th className="px-5 py-4">Plano</th>
             <th className="px-5 py-4">Início</th>
-            <th className="px-5 py-4">Período atual</th>
-            <th className="px-5 py-4">Gateway</th>
+            <th className="px-5 py-4">Última</th>
+            <th className="px-5 py-4">Próxima</th>
             <th className="px-5 py-4">Valor</th>
             <th className="px-5 py-4">Status</th>
           </tr>
@@ -237,21 +343,13 @@ const SubscriptionsTable = ({ items }: { items: FinanceSubscriptionItem[] }) => 
                 </div>
               </td>
               <td className="whitespace-nowrap px-5 py-4 text-muted">
-                {item.psychologist.crp || "—"}
-              </td>
-              <td className="px-5 py-4">
-                <p className="font-black text-foreground">{item.plan.name}</p>
-                <p className="text-xs text-muted">{item.plan.interval}</p>
+                {formatDate(item.started_at)}
               </td>
               <td className="whitespace-nowrap px-5 py-4 text-muted">
-                {formatDateTime(item.started_at)}
+                {formatNullableDate(item.last_charge_at)}
               </td>
               <td className="whitespace-nowrap px-5 py-4 text-muted">
-                {formatNullableDateTime(item.current_period_end)}
-              </td>
-              <td className="px-5 py-4" title={item.gateway_subscription_id ?? undefined}>
-                <p className="font-bold text-foreground">{item.gateway ?? "—"}</p>
-                <p className="text-xs text-muted">{shortReference(item.gateway_subscription_id)}</p>
+                {formatNullableDate(item.next_charge_at)}
               </td>
               <td className="whitespace-nowrap px-5 py-4 font-black text-foreground">
                 {formatMoney(item.plan.price_cents)}
@@ -297,6 +395,30 @@ export const AdminFinanceSubscriptionsClient = () => {
     router.replace(next ? `${pathname}?${next}` : pathname, { scroll: false });
   };
 
+  const hasTableFilters = Boolean(query.q || query.status || query.from || query.to);
+  const handleStartDateFilterChange = (field: "from" | "to", value: string) => {
+    if (!value) {
+      const otherDate = field === "from" ? query.to : query.from;
+      replaceParams(
+        otherDate ? { [field]: otherDate, period: "custom" } : { [field]: null, period: "all" },
+      );
+      return;
+    }
+
+    let nextFrom = field === "from" ? value : (query.from ?? summary?.period.from ?? value);
+    let nextTo = field === "to" ? value : (query.to ?? summary?.period.to ?? value);
+
+    if (nextFrom > nextTo) {
+      if (field === "from") nextTo = nextFrom;
+      else nextFrom = nextTo;
+    }
+
+    replaceParams({ from: nextFrom, period: "custom", to: nextTo });
+  };
+  const clearTableFilters = () => {
+    replaceParams({ from: null, period: "all", q: null, status: null, to: null });
+  };
+
   const pages = summary?.pages ?? 1;
   const page = Math.min(query.page ?? 1, pages);
   const periodSummary = summary
@@ -330,12 +452,54 @@ export const AdminFinanceSubscriptionsClient = () => {
       </header>
 
       <CardShell className="overflow-hidden">
-        <div className="border-b border-border px-4 py-4">
-          <p className="text-sm font-semibold text-foreground">
-            {summary ? numberFormatter.format(summary.count) : "—"} assinaturas encontradas
-          </p>
+        <div className="space-y-4 border-b border-border px-4 py-4">
+          <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-sm font-semibold text-foreground">
+              {summary ? numberFormatter.format(summary.count) : "—"} assinaturas encontradas
+            </p>
+            <p className="text-xs font-bold text-muted">
+              {hasTableFilters
+                ? "Filtros aplicados sobre assinaturas pagas reais."
+                : "Busque por psicólogo, e-mail ou identificador."}
+            </p>
+          </div>
+          <div className="flex min-w-0 flex-col gap-3 xl:flex-row xl:items-end xl:justify-between">
+            <div className="min-w-0 xl:w-full xl:max-w-[520px]">
+              <SearchBox
+                key={query.q ?? ""}
+                onSearch={(value) => replaceParams({ q: value || null })}
+                value={query.q}
+              />
+            </div>
+            <div className="flex min-w-0 flex-col gap-2 text-sm font-medium text-foreground sm:flex-row sm:flex-wrap sm:items-end xl:flex-nowrap xl:justify-end">
+              <DateFilterField
+                label="Início de"
+                max={query.to}
+                onChange={(value) => handleStartDateFilterChange("from", value)}
+                value={query.from}
+              />
+              <DateFilterField
+                label="Início até"
+                min={query.from}
+                onChange={(value) => handleStartDateFilterChange("to", value)}
+                value={query.to}
+              />
+              <StatusFilterField
+                onChange={(value) => replaceParams({ status: value === "all" ? null : value })}
+                value={query.status}
+              />
+              {hasTableFilters ? (
+                <button
+                  className="inline-flex h-12 items-center justify-center rounded-full border border-border bg-surface px-5 text-sm font-semibold text-foreground shadow-control transition hover:border-primary hover:text-primary"
+                  onClick={clearTableFilters}
+                  type="button"
+                >
+                  Limpar
+                </button>
+              ) : null}
+            </div>
+          </div>
         </div>
-
         {subscriptionsQuery.isLoading ? <LoadingState /> : null}
         {subscriptionsQuery.isError && queryError ? (
           <div className="p-4">

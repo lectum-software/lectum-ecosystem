@@ -17,7 +17,11 @@ export type FinanceDashboardQuery = {
 export type FinanceListQuery = FinanceDashboardQuery & {
   limit?: number;
   page?: number;
+  q?: string;
+  status?: string;
 };
+
+type FinanceRequestQuery = FinanceDashboardQuery & Pick<FinanceListQuery, "q" | "status">;
 
 export type FinanceMetric = {
   available: boolean;
@@ -69,6 +73,8 @@ export type FinanceSubscriptionItem = {
   gateway: string | null;
   gateway_subscription_id: string | null;
   id: string;
+  last_charge_at: string | null;
+  next_charge_at: string | null;
   plan: {
     id: string;
     interval: string;
@@ -181,12 +187,14 @@ export type AdminFinanceDashboard = {
   }>;
 };
 
-const cleanParams = (input: FinanceDashboardQuery) => ({
+const cleanParams = (input: FinanceRequestQuery) => ({
   ...(input.from ? { from: input.from } : {}),
   ...(input.groupBy ? { groupBy: input.groupBy } : {}),
   ...(input.limit ? { limit: input.limit } : {}),
   ...(input.page ? { page: input.page } : {}),
   ...(input.period ? { period: input.period } : {}),
+  ...(input.q ? { q: input.q } : {}),
+  ...(input.status ? { status: input.status } : {}),
   ...(input.to ? { to: input.to } : {}),
 });
 
