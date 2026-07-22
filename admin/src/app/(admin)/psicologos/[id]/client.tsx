@@ -2011,6 +2011,115 @@ const formatSubscriptionLtv = (
   return "Não informado";
 };
 
+const SUBSCRIPTION_STATUS_BADGE_CLASS: Record<string, string> = {
+  ativa: "bg-emerald-50 text-success",
+  cancelada: "bg-red-50 text-danger",
+  inadimplente: "bg-orange-50 text-orange-700",
+  inativa: "bg-surface-muted text-muted",
+};
+
+const formatSubscriptionStatusLabel = (status?: string | null) => {
+  const normalized = String(status ?? "").trim();
+  if (!normalized) return "Sem plano";
+
+  return capitalizeOptionLabel(normalized.replace(/_/g, " "));
+};
+
+const getSubscriptionSituation = (
+  detail: AdminPsychologistDetail,
+  billing?: AdminPsychologistBilling,
+) => {
+  const subscription = detail.general.subscription;
+  const plan = billing?.plan;
+  const status = plan?.status ?? subscription.status;
+  const normalizedStatus = String(status ?? "")
+    .trim()
+    .toLowerCase();
+  const source = plan?.source ?? subscription.source;
+  const planSlug = plan?.plan_slug ?? subscription.plan_slug;
+  const priceCents = plan?.price_cents ?? subscription.price_cents;
+  const isActive = normalizedStatus === "ativa";
+  const isCourtesy =
+    Boolean(plan?.is_courtesy) ||
+    Boolean(billing?.courtesy.can_revoke) ||
+    (isActive && source === "admin_grant" && planSlug !== "gratuito");
+  const isFree = isActive && planSlug === "gratuito";
+  const isPaid =
+    isActive &&
+    !isCourtesy &&
+    planSlug !== "gratuito" &&
+    (Boolean(plan?.is_paid) || source === "mercadopago" || (priceCents ?? 0) > 0);
+
+  if (isCourtesy) {
+    return {
+      badgeClassName: SUBSCRIPTION_STATUS_BADGE_CLASS.ativa,
+      badgeLabel: "Ativa",
+      helperText:
+        "Cortesia administrativa ativa sem cobrança. Revogação e detalhes ficam em Plano e pagamentos.",
+      label: "Cortesia ativa",
+    };
+  }
+
+  if (isPaid) {
+    return {
+      badgeClassName: SUBSCRIPTION_STATUS_BADGE_CLASS.ativa,
+      badgeLabel: "Ativa",
+      helperText:
+        "Assinatura profissional paga ativa. Cobranças e LTV ficam em Plano e pagamentos.",
+      label: "Assinatura paga ativa",
+    };
+  }
+
+  if (isFree) {
+    return {
+      badgeClassName: SUBSCRIPTION_STATUS_BADGE_CLASS.ativa,
+      badgeLabel: "Ativa",
+      helperText:
+        "Plano gratuito ativo sem cobrança financeira. Cortesia ou upgrade ficam em Plano e pagamentos.",
+      label: "Plano gratuito ativo",
+    };
+  }
+
+  if (normalizedStatus === "inadimplente") {
+    return {
+      badgeClassName: SUBSCRIPTION_STATUS_BADGE_CLASS.inadimplente,
+      badgeLabel: formatSubscriptionStatusLabel(status),
+      helperText:
+        "Assinatura com pendência financeira. Revise gateway e histórico em Plano e pagamentos.",
+      label: "Assinatura inadimplente",
+    };
+  }
+
+  if (normalizedStatus === "cancelada") {
+    return {
+      badgeClassName: SUBSCRIPTION_STATUS_BADGE_CLASS.cancelada,
+      badgeLabel: formatSubscriptionStatusLabel(status),
+      helperText:
+        "Assinatura cancelada. Direitos profissionais dependem de novo plano ativo ou cortesia.",
+      label: "Assinatura cancelada",
+    };
+  }
+
+  if (normalizedStatus === "inativa") {
+    return {
+      badgeClassName: SUBSCRIPTION_STATUS_BADGE_CLASS.inativa,
+      badgeLabel: formatSubscriptionStatusLabel(status),
+      helperText: "Nenhuma assinatura profissional ativa liberando cobrança neste momento.",
+      label: "Assinatura inativa",
+    };
+  }
+
+  return {
+    badgeClassName:
+      SUBSCRIPTION_STATUS_BADGE_CLASS[normalizedStatus] ?? "bg-surface-muted text-muted",
+    badgeLabel: formatSubscriptionStatusLabel(status),
+    helperText: isActive
+      ? "Assinatura ativa registrada no resumo administrativo atual."
+      : "Sem assinatura ativa registrada para este psicólogo no resumo atual.",
+    label: isActive ? "Assinatura ativa" : "Sem assinatura ativa",
+  };
+};
+
 const SubscriptionCard = ({
   billing,
   billingError,
@@ -2024,6 +2133,7 @@ const SubscriptionCard = ({
 }) => {
   const pathname = usePathname();
   const subscription = detail.general.subscription;
+  const situation = getSubscriptionSituation(detail, billing);
   const rows: Array<[string, ReactNode]> = [
     ["Plano atual", getHeaderPlanLabel(detail)],
     ["Início", formatDate(subscription.started_at)],
@@ -2041,7 +2151,19 @@ const SubscriptionCard = ({
         </div>
         <IconCircle icon={Wallet} />
       </div>
-      <dl className="mt-5 flex-1 divide-y divide-border text-sm">
+      <div className="mt-5 rounded-[28px] border border-primary/15 bg-primary-soft/55 p-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <p className="text-xs font-black uppercase tracking-[0.12em] text-primary">
+              Situação atual
+            </p>
+            <p className="mt-1 text-xl font-black text-foreground">{situation.label}</p>
+          </div>
+          <Badge className={situation.badgeClassName}>{situation.badgeLabel}</Badge>
+        </div>
+        <p className="mt-3 text-sm font-bold leading-6 text-muted">{situation.helperText}</p>
+      </div>
+      <dl className="mt-4 flex-1 divide-y divide-border text-sm">
         {rows.map(([label, value]) => (
           <div className="grid gap-1 py-3 sm:grid-cols-[190px_1fr]" key={label}>
             <dt className={cn("font-black text-muted", label === "LTV" ? "text-primary" : "")}>

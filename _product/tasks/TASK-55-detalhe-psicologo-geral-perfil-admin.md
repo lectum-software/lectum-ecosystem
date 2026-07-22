@@ -323,3 +323,33 @@ Criar o shell de detalhe do psicólogo e as abas Geral e Perfil/Cadastro com dad
 - `git diff --check -- "admin/src/app/(admin)/psicologos/[id]/client.tsx"`
 - `pnpm --dir admin check`
 - `pnpm --dir admin build`
+
+## Ajuste complementar 2026-07-22 - situacao da assinatura no resumo Geral
+
+- Pedido direto de produto aplicado no card `Dados da assinatura` da aba Admin `Geral`.
+- O card passou a ter um bloco azul no topo, igual aos blocos `Situacao da conta` e `Situacao do registro`, com `Situacao atual`, titulo de situacao, badge de status e texto explicativo.
+- A situacao usa somente dados reais ja disponiveis no resumo administrativo e no endpoint real de billing quando carregado:
+  - cortesia administrativa ativa aparece como `Cortesia ativa`;
+  - assinatura profissional paga ativa aparece como `Assinatura paga ativa`;
+  - plano gratuito ativo aparece como `Plano gratuito ativo`;
+  - status `inadimplente`, `cancelada`, `inativa` e ausencia de assinatura tem fallback honesto.
+- Nao houve alteracao de backend, endpoint, schema Prisma, migrations, packages, mock ou dado persistido.
+- A UI permanece mobile-first: o bloco novo empilha conteudo em largura estreita e mantem o alinhamento dos tres cards na grade desktop.
+- Builder/Quick Copy nao esteve acessivel como ferramenta callable neste ambiente; a referencia visual usada foi a captura enviada pelo usuario e o PNG local `_product/proto/admin/Psicologos/Detalhes do psicologo/Geral.png`.
+
+### Criterios do ajuste de situacao da assinatura
+
+- [x] `Dados da assinatura` exibe um bloco azul de `Situacao atual` no topo.
+- [x] O bloco segue o mesmo padrao visual dos cards `Situacao da conta` e `Situacao do registro`.
+- [x] A situacao da assinatura usa dados reais ja carregados, sem mock.
+- [x] UI permanece mobile-first.
+- [x] Nenhum `<img>` cru foi usado.
+
+### Validacao complementar do ajuste de situacao da assinatura
+
+- `pnpm --dir admin exec biome check "src/app/(admin)/psicologos/[id]/client.tsx"`
+- `pnpm --dir admin exec eslint "src/app/(admin)/psicologos/[id]/client.tsx"`
+- `pnpm --dir admin typecheck`
+- `pnpm --dir admin build` foi reexecutado, mas ficou bloqueado por lock preexistente em `.next/lock` apos outro processo `next build` nao finalizar limpo.
+- `pnpm check` (frontend e backend passaram; admin ficou bloqueado por formatacao preexistente em `admin/src/app/(admin)/pacientes/[id]/client.tsx` e `admin/src/app/(admin)/pacientes/client.tsx`).
+- Smoke HTTP local: `GET http://localhost:3002/psicologos/cmrgztri7000tn0uh1q4n8vxf` retornou `200`.

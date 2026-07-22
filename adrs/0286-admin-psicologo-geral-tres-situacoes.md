@@ -68,3 +68,25 @@ Validações adicionais:
 - `git diff --check -- "admin/src/app/(admin)/psicologos/[id]/client.tsx"`
 - `pnpm --dir admin check`
 - `pnpm --dir admin build`
+
+## Atualizacao 2026-07-22 - situacao da assinatura no card Dados da assinatura
+
+O card `Dados da assinatura` da aba Geral passou a seguir a mesma composicao visual dos outros dois blocos de situacao: bloco azul de `Situacao atual`, titulo, badge e texto explicativo antes das linhas de detalhe. A situacao e derivada apenas de dados reais ja carregados pelo detalhe Admin e, quando disponivel, pelo endpoint real de billing.
+
+Regras de apresentacao:
+
+- `source="admin_grant"` ativo ou cortesia ativa no billing vira `Cortesia ativa`.
+- Plano profissional pago ativo vira `Assinatura paga ativa`.
+- Plano gratuito ativo vira `Plano gratuito ativo`.
+- `inadimplente`, `cancelada`, `inativa` e ausencia de assinatura usam labels e textos honestos, sem criar estado simulado.
+
+Nao houve alteracao de backend, schema Prisma, migrations, endpoints, packages ou dados persistidos. A decisao mantem os tres cards principais da aba Geral alinhados em desktop e empilhados em mobile-first.
+
+Validacoes adicionais:
+
+- `pnpm --dir admin exec biome check "src/app/(admin)/psicologos/[id]/client.tsx"`
+- `pnpm --dir admin exec eslint "src/app/(admin)/psicologos/[id]/client.tsx"`
+- `pnpm --dir admin typecheck`
+- `pnpm --dir admin build` foi reexecutado, mas ficou bloqueado por lock preexistente em `.next/lock` apos outro processo `next build` nao finalizar limpo.
+- `pnpm check` (frontend e backend passaram; admin ficou bloqueado por formatacao preexistente em `admin/src/app/(admin)/pacientes/[id]/client.tsx` e `admin/src/app/(admin)/pacientes/client.tsx`).
+- Smoke HTTP local em `/psicologos/cmrgztri7000tn0uh1q4n8vxf` retornou `200`.
