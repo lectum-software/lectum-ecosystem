@@ -673,15 +673,11 @@ const RevenuePanel = ({ dashboard }: { dashboard: AdminFinanceDashboard }) => (
         </div>
         <div>
           <h2 className="text-xl font-black text-foreground">Receita recorrente mensal (MRR)</h2>
-          <p className="text-sm text-muted">{dashboard.mrr.description}</p>
         </div>
       </div>
       <p className="mt-6 text-4xl font-black tracking-tight text-foreground">
         {formatMoney(dashboard.mrr.value_cents)}
       </p>
-      <span className="mt-3 inline-flex rounded-full bg-surface-muted px-2 py-1 text-xs font-bold text-muted">
-        {dashboard.mrr.source}
-      </span>
     </CardShell>
 
     <CardShell className="p-5">
@@ -691,7 +687,6 @@ const RevenuePanel = ({ dashboard }: { dashboard: AdminFinanceDashboard }) => (
         </div>
         <div>
           <h2 className="text-xl font-black text-foreground">LTV médio dos psicólogos</h2>
-          <p className="text-sm text-muted">{dashboard.average_ltv.description}</p>
         </div>
       </div>
       <p className="mt-6 text-4xl font-black tracking-tight text-foreground">
@@ -702,9 +697,6 @@ const RevenuePanel = ({ dashboard }: { dashboard: AdminFinanceDashboard }) => (
           {dashboard.average_ltv.unavailable_reason}
         </p>
       ) : null}
-      <span className="mt-3 inline-flex rounded-full bg-surface-muted px-2 py-1 text-xs font-bold text-muted">
-        {dashboard.average_ltv.source}
-      </span>
     </CardShell>
   </div>
 );
@@ -751,9 +743,6 @@ const NewSubscriptions = ({ dashboard }: { dashboard: AdminFinanceDashboard }) =
           período.
         </p>
       </div>
-      <span className="w-fit rounded-full bg-surface-muted px-2 py-1 text-[0.65rem] font-bold text-muted">
-        {dashboard.new_subscriptions.source}
-      </span>
     </div>
 
     <div className="grid gap-3 p-4 lg:hidden">

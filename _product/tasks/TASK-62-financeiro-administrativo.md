@@ -380,3 +380,26 @@ Frontend esperado:
 - `pnpm check`
 - Smoke de serviço real com `.env` local: `buildAdminFinanceDashboard` para `today`, `week`, `month`, `year` e `all` retornou `status=200`, cards `revenue_total,active_subscriptions,new_subscriptions_revenue,new_subscriptions,cancellations`, `new_subscriptions_revenue` e `rate_percent` de churn.
 - Smoke HTTP local: `GET http://localhost:3002/financeiro` retornou `200`.
+
+## Ajuste pós-feedback 2026-07-22 - Remoção de textos técnicos no Financeiro
+
+- Pedido do usuário: remover da UI de `/financeiro` as descrições longas dos cards **Receita recorrente mensal (MRR)** e **LTV médio dos psicólogos**, além das tags visuais `active_paid_subscriptions`, `payment_event_linked_to_paid_psychologists` e `professional_subscription+subscription_plan+psychologist_profile+user`.
+- A alteração foi limitada ao frontend Admin: os campos `description` e `source` permanecem no contrato financeiro para rastreabilidade, exportação e depuração operacional, mas deixam de ser renderizados nesses blocos visuais.
+- Não houve alteração de endpoint, contrato HTTP, cálculo financeiro, Prisma/migrations, packages, dados persistidos, mock ou endpoint simulado.
+- Builder/Quick Copy segue sem ferramenta callable neste ambiente; a referência auditável permanece `_product/proto/admin/Financeiro.png` e a captura autenticada enviada pelo usuário em 2026-07-22.
+
+### Critérios de aceite do ajuste
+
+- [x] O texto de apoio do card **Receita recorrente mensal (MRR)** não é mais renderizado.
+- [x] O texto de apoio do card **LTV médio dos psicólogos** não é mais renderizado.
+- [x] As tags visuais `active_paid_subscriptions`, `payment_event_linked_to_paid_psychologists` e `professional_subscription+subscription_plan+psychologist_profile+user` não aparecem mais em `/financeiro`.
+- [x] Os cálculos e fontes reais permanecem preservados no backend/contrato, sem simulação.
+
+### Validação complementar executada
+
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/financeiro/client.tsx"`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check`
+- `GET http://localhost:3002/financeiro` retornou `200`.
+- Chrome headless local abriu `http://localhost:3002/financeiro` e `Select-String` confirmou ausência das descrições/tags removidas no DOM carregado sem sessão; a validação autenticada visual completa permanece baseada na captura enviada pelo usuário e no build Admin porque o backend local não estava ouvindo em `3001` durante a checagem.

@@ -97,3 +97,18 @@ Consequências:
 - A Visão Geral passa a alinhar contadores e curvas na ordem solicitada pelo produto.
 - O valor de receita de novas assinaturas representa soma dos planos iniciados no período, não substitui a receita total confirmada em `payment_event`.
 - Churn pode exibir `sem base` quando houver saída sem base paga confiável no início do período, evitando taxa artificial.
+
+## Ajuste 2026-07-22: textos técnicos ocultos nos blocos MRR/LTV e lista de novas assinaturas
+
+Feedback de produto pediu remover da UI de `/financeiro` as descrições explicativas longas de MRR e LTV, além das tags técnicas de fonte exibidas nos blocos inferiores.
+
+Decisões:
+
+- Ocultar no frontend Admin as descrições visíveis de `mrr.description` e `average_ltv.description` nos cards inferiores, mantendo somente título, ícone e valor.
+- Ocultar as tags visuais `active_paid_subscriptions`, `payment_event_linked_to_paid_psychologists` e `professional_subscription+subscription_plan+psychologist_profile+user` desses blocos.
+- Manter `description` e `source` no contrato financeiro e na lógica de backend para rastreabilidade, CSV e auditoria operacional, sem alterar cálculo, endpoint, Prisma/migrations ou packages.
+
+Consequências:
+
+- A tela fica menos técnica para o operador Admin sem perder a proveniência dos dados no contrato real.
+- A mudança é exclusivamente visual e não altera as regras de receita, MRR, LTV, novas assinaturas ou exportação.
