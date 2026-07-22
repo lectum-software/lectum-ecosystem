@@ -459,3 +459,40 @@ Validacao deste ajuste:
 - `pnpm --dir admin build`
 - `pnpm check`
 - Smoke HTTP local: `GET http://localhost:3002/configuracoes` retornou 200.
+
+## Expansao 2026-07-22: Financeiro no piloto premium
+
+Por pedido direto de produto, a pagina Admin **Financeiro** tambem passa a usar o escopo
+`admin-premium-pilot`, mantendo intactas as regras reais da TASK-62 para receita confirmada, MRR,
+ticket medio, cancelamentos e CSV.
+
+Decisoes:
+
+- Incluir `/financeiro` e descendentes na regra centralizada do `AdminShell`, sem duplicar shell ou
+  criar tema paralelo.
+- Reaproveitar os tokens do piloto premium: sidebar clara, azul Lectum, cards com borda sutil,
+  sombra quase imperceptivel, `rounded-card`/`rounded-control` e tipografia menos pesada.
+- Converter o header de Financeiro em card mobile-first com label **Receitas e assinaturas**,
+  titulo, subtitulo, resumo do periodo, selo **CSV real disponivel**, filtros e CTA **Exportar
+  relatorio** dentro do mesmo bloco.
+- Substituir os atalhos soltos de **7 dias**, **30 dias** e **90 dias** por um seletor **Periodo**
+  que mapeia as mesmas janelas reais para `from`/`to`; **Personalizado** permanece somente como
+  estado interno apos digitacao manual nas datas.
+- Manter o seletor **Agrupar** usando `groupBy=day|week|month`, sem alterar endpoint, contrato,
+  calculo financeiro, gateway, schema Prisma, migrations, packages ou dados persistidos.
+
+Consequencia: Financeiro fica visualmente consistente com o piloto premium ja aplicado em
+Psicologos, Comunidades, Pacientes, Configuracoes e Notificacoes, sem transformar o painel em
+dashboard fiscal/contabil e sem simular metricas financeiras.
+
+Validacao desta expansao:
+
+- `pnpm --dir admin exec biome check --write "src/components/admin-shell/shell.tsx" "src/app/(admin)/financeiro/client.tsx"`
+- `pnpm --dir admin exec biome check "src/components/admin-shell/shell.tsx" "src/app/(admin)/financeiro/client.tsx"`
+- `pnpm --dir admin exec eslint "src/app/(admin)/financeiro/client.tsx" "src/components/admin-shell/shell.tsx"`
+- `pnpm --dir admin typecheck`
+- `pnpm --dir admin build` em worktree temporario contendo os arquivos alterados, sem usar o
+  `.next/lock` do dev server local ativo.
+- Smoke HTTP local: `GET http://localhost:3002/financeiro` retornou `200`.
+- `pnpm --dir admin check` no checkout principal foi tentado e ficou bloqueado por formatacao
+  preexistente sem diff desta task em `admin/src/app/(admin)/pacientes/client.tsx`.

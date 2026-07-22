@@ -200,3 +200,20 @@ Frontend esperado:
 - Exportacao CSV validada por service real com filtros de periodo, contendo resumo, serie agregada e novas assinaturas de psicologos, sem token/PAN/CVV.
 - Validacoes executadas: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check`, rota local `http://localhost:3002/financeiro` (HTTP 200), endpoints em backend isolado `:3011` protegidos com HTTP 401 sem token e teste de geracao CSV via service real.
 - ADR criado: `adrs/0242-admin-financeiro-receita-mrr-exportacao.md`.
+
+## Ajuste complementar 2026-07-22 - Layout piloto premium no Financeiro
+
+- Pedido do usuario: aplicar o layout piloto nas paginas do painel Financeiro Admin.
+- A rota `/financeiro` passou a entrar no escopo centralizado `admin-premium-pilot` do `AdminShell`, reutilizando a sidebar clara, azul Lectum, bordas sutis, sombras reduzidas e tipografia menos pesada ja validadas em Psicologos, Comunidades, Pacientes, Configuracoes e Notificacoes.
+- O topo de Financeiro foi convertido em card mobile-first com label **Receitas e assinaturas**, titulo, subtitulo, resumo do periodo consultado, selo **CSV real disponivel**, filtros e CTA **Exportar relatorio** no mesmo bloco.
+- Os atalhos soltos de **7 dias**, **30 dias** e **90 dias** foram substituidos por um seletor **Periodo** com as mesmas janelas reais mapeadas para `from`/`to`; o estado **Personalizado** aparece somente quando o usuario digita datas manualmente.
+- O seletor **Agrupar** continua usando o contrato real `groupBy=day|week|month`, sem alterar endpoints, calculos financeiros, CSV, Prisma/migrations, packages ou dados exibidos.
+- Builder/Quick Copy nao esta exposto como ferramenta callable no ambiente; a referencia auditavel permanece `_product/proto/admin/Financeiro.png` e o padrao piloto documentado no ADR `adrs/0263-admin-psicologos-piloto-premium.md`.
+- Validacoes executadas para este ajuste:
+  - `pnpm --dir admin exec biome check --write "src/components/admin-shell/shell.tsx" "src/app/(admin)/financeiro/client.tsx"`;
+  - `pnpm --dir admin exec biome check "src/components/admin-shell/shell.tsx" "src/app/(admin)/financeiro/client.tsx"`;
+  - `pnpm --dir admin exec eslint "src/app/(admin)/financeiro/client.tsx" "src/components/admin-shell/shell.tsx"`;
+  - `pnpm --dir admin typecheck`;
+  - `pnpm --dir admin build` em worktree temporario com os arquivos alterados, para evitar o `.next/lock` do dev server local ativo em `3002`;
+  - smoke HTTP local `GET http://localhost:3002/financeiro` retornou `200`.
+- Observacao: `pnpm --dir admin check` no checkout principal foi tentado, mas ficou bloqueado por formatacao preexistente sem diff desta task em `admin/src/app/(admin)/pacientes/client.tsx`; a validacao de build foi isolada em worktree temporario para nao interromper a sessao Admin local aberta.

@@ -4,6 +4,7 @@ import {
   AlertTriangle,
   BadgeDollarSign,
   CalendarDays,
+  ChevronDown,
   CreditCard,
   Download,
   FileDown,
@@ -30,7 +31,19 @@ import { useDateRangeCommitOnBlur } from "@/hooks/use-date-range-commit-on-blur"
 import { aggregateCalendarChartPoints } from "@/lib/chart-time-series";
 import { cn } from "@/lib/utils";
 
-const QUICK_RANGES = [7, 30, 90] as const;
+const FINANCE_PERIOD_OPTIONS = [
+  { id: "last_7", label: "Últimos 7 dias", days: 7 },
+  { id: "last_30", label: "Últimos 30 dias", days: 30 },
+  { id: "last_90", label: "Últimos 90 dias", days: 90 },
+] as const;
+type FinancePeriodPreset = (typeof FINANCE_PERIOD_OPTIONS)[number]["id"];
+type FinancePeriodValue = FinancePeriodPreset | "custom";
+const FINANCE_PERIOD_DAYS: Record<FinancePeriodPreset, number> = {
+  last_7: 7,
+  last_30: 30,
+  last_90: 90,
+};
+const DEFAULT_FINANCE_PERIOD: FinancePeriodPreset = "last_30";
 const CARD_ORDER = [
   "revenue_total",
   "new_subscriptions",
@@ -69,6 +82,9 @@ const getQuickRange = (days: number): FinanceDashboardQuery => {
     to: toInputDate(today),
   };
 };
+
+const getRangeForPeriod = (period: FinancePeriodPreset) =>
+  getQuickRange(FINANCE_PERIOD_DAYS[period]);
 
 const formatDate = (value: string) =>
   new Intl.DateTimeFormat("pt-BR", {
@@ -111,7 +127,10 @@ const downloadBlob = (blob: Blob, filename: string) => {
 
 const CardShell = ({ children, className }: { children?: React.ReactNode; className?: string }) => (
   <section
-    className={cn("rounded-card border border-border bg-surface shadow-admin-soft", className)}
+    className={cn(
+      "rounded-card border border-border/80 bg-surface/95 shadow-admin-soft backdrop-blur",
+      className,
+    )}
   >
     {children}
   </section>
@@ -229,104 +248,157 @@ const ErrorState = ({ message, onRetry }: { message: string; onRetry: () => void
 );
 
 const FinanceHeader = ({
+  dashboard,
   exportError,
   exportFeedback,
   exportPending,
   onDateChange,
   onDateControlsBlur,
   onExport,
+  onGroupByChange,
+  onPeriodChange,
+  period,
+  periodCopy,
   range,
   rangeError,
-  setRange,
 }: {
+  dashboard?: AdminFinanceDashboard;
   exportError: string | null;
   exportFeedback: string | null;
   exportPending: boolean;
   onDateChange: (field: "from" | "to", value: string) => void;
   onDateControlsBlur: FocusEventHandler<HTMLDivElement>;
   onExport: () => void;
+  onGroupByChange: (groupBy: FinanceDashboardQuery["groupBy"]) => void;
+  onPeriodChange: (period: FinancePeriodPreset) => void;
+  period: FinancePeriodValue;
+  periodCopy: string;
   range: FinanceDashboardQuery;
   rangeError: string | null;
-  setRange: (range: FinanceDashboardQuery) => void;
 }) => (
-  <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
-    <div>
-      <h1 className="text-3xl font-black tracking-tight text-foreground md:text-4xl">Financeiro</h1>
-      <p className="mt-2 text-sm font-medium text-muted">
-        Visão geral das receitas reais da plataforma, assinaturas pagas e MRR de psicólogos.
-      </p>
-    </div>
-
-    <div className="flex flex-col gap-3 xl:items-end">
-      <div className="grid gap-3 sm:grid-cols-[1fr_1fr_150px]" onBlur={onDateControlsBlur}>
-        <label className="text-xs font-black text-muted">
-          De
-          <input
-            className="mt-1 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground shadow-control focus:border-primary"
-            max={range.to}
-            onChange={(event) => onDateChange("from", event.target.value)}
-            type="date"
-            value={range.from}
-          />
-        </label>
-        <label className="text-xs font-black text-muted">
-          Até
-          <input
-            className="mt-1 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground shadow-control focus:border-primary"
-            min={range.from}
-            onChange={(event) => onDateChange("to", event.target.value)}
-            type="date"
-            value={range.to}
-          />
-        </label>
-        <label className="text-xs font-black text-muted">
-          Agrupar
-          <select
-            className="mt-1 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground shadow-control focus:border-primary"
-            onChange={(event) =>
-              setRange({
-                ...range,
-                groupBy: event.target.value as FinanceDashboardQuery["groupBy"],
-              })
-            }
-            value={range.groupBy || "day"}
-          >
-            <option value="day">Diário</option>
-            <option value="month">Mensal</option>
-          </select>
-        </label>
+  <CardShell className="p-5 md:p-6">
+    <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
+      <div className="min-w-0">
+        <p className="text-xs font-semibold uppercase tracking-[0.12em] text-primary">
+          Receitas e assinaturas
+        </p>
+        <h1 className="mt-2 text-3xl font-bold tracking-tight text-foreground md:text-4xl">
+          Financeiro
+        </h1>
+        <p className="mt-2 max-w-3xl text-sm font-medium leading-6 text-muted md:text-base">
+          Visão geral das receitas reais da plataforma, assinaturas pagas e MRR de psicólogos.
+        </p>
+        <div className="mt-4 flex flex-wrap items-center gap-2 text-xs font-semibold text-muted">
+          <span className="inline-flex items-center gap-1 rounded-full bg-surface-muted px-2.5 py-1.5">
+            <CalendarDays aria-hidden className="h-3.5 w-3.5" />
+            {periodCopy}
+            {dashboard ? <span>({dashboard.period.days} dias)</span> : null}
+          </span>
+          <span className="inline-flex items-center gap-1 rounded-full bg-primary-soft px-2.5 py-1.5 text-primary">
+            <FileDown aria-hidden className="h-3.5 w-3.5" /> CSV real disponível
+          </span>
+        </div>
       </div>
 
-      <div className="flex flex-wrap gap-2 sm:justify-end">
-        {QUICK_RANGES.map((days) => (
+      <div className="flex flex-col gap-3 xl:items-end">
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-[minmax(10rem,0.9fr)_minmax(8.5rem,0.75fr)_minmax(8.5rem,0.75fr)_minmax(8.5rem,0.75fr)]">
+          <label className="grid gap-1 text-xs font-semibold text-muted" htmlFor="finance-period">
+            Período
+            <span className="relative">
+              <select
+                className="h-11 w-full min-w-0 appearance-none rounded-control border border-border bg-surface py-0 pl-3 pr-11 text-sm font-semibold text-foreground shadow-control outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+                id="finance-period"
+                onChange={(event) => onPeriodChange(event.target.value as FinancePeriodPreset)}
+                value={period}
+              >
+                {period === "custom" ? (
+                  <option disabled hidden value="custom">
+                    Personalizado
+                  </option>
+                ) : null}
+                {FINANCE_PERIOD_OPTIONS.map((option) => (
+                  <option key={option.id} value={option.id}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown
+                aria-hidden
+                className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground"
+              />
+            </span>
+          </label>
+          <div
+            className="grid gap-3 sm:col-span-2 sm:grid-cols-2 xl:col-span-2"
+            onBlur={onDateControlsBlur}
+          >
+            <label className="text-xs font-semibold text-muted">
+              De
+              <input
+                className="mt-1 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground shadow-control outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+                max={range.to}
+                onChange={(event) => onDateChange("from", event.target.value)}
+                type="date"
+                value={range.from}
+              />
+            </label>
+            <label className="text-xs font-semibold text-muted">
+              Até
+              <input
+                className="mt-1 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground shadow-control outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+                min={range.from}
+                onChange={(event) => onDateChange("to", event.target.value)}
+                type="date"
+                value={range.to}
+              />
+            </label>
+          </div>
+          <label className="grid gap-1 text-xs font-semibold text-muted" htmlFor="finance-group">
+            Agrupar
+            <span className="relative">
+              <select
+                className="h-11 w-full min-w-0 appearance-none rounded-control border border-border bg-surface py-0 pl-3 pr-11 text-sm font-semibold text-foreground shadow-control outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+                id="finance-group"
+                onChange={(event) =>
+                  onGroupByChange(event.target.value as FinanceDashboardQuery["groupBy"])
+                }
+                value={range.groupBy || "day"}
+              >
+                <option value="day">Diário</option>
+                <option value="week">Semanal</option>
+                <option value="month">Mensal</option>
+              </select>
+              <ChevronDown
+                aria-hidden
+                className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground"
+              />
+            </span>
+          </label>
+        </div>
+
+        <div className="flex flex-col gap-2 sm:items-end">
           <button
-            className="h-9 rounded-full border border-border bg-surface px-3 text-xs font-black text-muted transition hover:border-primary hover:text-primary"
-            key={days}
-            onClick={() => setRange(getQuickRange(days))}
+            className="inline-flex h-11 items-center justify-center gap-2 rounded-control bg-primary px-4 text-sm font-black text-white shadow-admin-glow transition hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-60"
+            disabled={exportPending || !isValidRange(range)}
+            onClick={onExport}
             type="button"
           >
-            {days} dias
+            {exportPending ? (
+              <Loader2 aria-hidden className="h-4 w-4 animate-spin" />
+            ) : (
+              <Download aria-hidden className="h-4 w-4" />
+            )}
+            Exportar relatório
           </button>
-        ))}
-        <button
-          className="inline-flex h-10 items-center justify-center gap-2 rounded-control bg-primary px-4 text-sm font-black text-white shadow-admin-glow transition hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-60"
-          disabled={exportPending || !isValidRange(range)}
-          onClick={onExport}
-          type="button"
-        >
-          {exportPending ? (
-            <Loader2 aria-hidden className="h-4 w-4 animate-spin" />
-          ) : (
-            <Download aria-hidden className="h-4 w-4" />
-          )}
-          Exportar relatório
-        </button>
+          {rangeError ? <p className="text-xs font-bold text-danger">{rangeError}</p> : null}
+          {exportFeedback ? (
+            <p className="text-xs font-bold text-success">{exportFeedback}</p>
+          ) : null}
+          {exportError ? <p className="text-xs font-bold text-danger">{exportError}</p> : null}
+        </div>
       </div>
-      {rangeError ? <p className="text-xs font-bold text-danger">{rangeError}</p> : null}
-      {exportFeedback ? <p className="text-xs font-bold text-success">{exportFeedback}</p> : null}
-      {exportError ? <p className="text-xs font-bold text-danger">{exportError}</p> : null}
     </div>
-  </div>
+  </CardShell>
 );
 
 const CardsGrid = ({ dashboard }: { dashboard: AdminFinanceDashboard }) => (
@@ -706,6 +778,7 @@ const DashboardContent = ({ dashboard }: { dashboard: AdminFinanceDashboard }) =
 export const AdminFinanceClient = () => {
   const [exportFeedback, setExportFeedback] = useState<string | null>(null);
   const [exportError, setExportError] = useState<string | null>(null);
+  const [selectedPeriod, setSelectedPeriod] = useState<FinancePeriodValue>(DEFAULT_FINANCE_PERIOD);
   const {
     appliedRange,
     applyRange,
@@ -714,7 +787,7 @@ export const AdminFinanceClient = () => {
     handleDateControlsBlur,
     rangeError,
   } = useDateRangeCommitOnBlur<FinanceDashboardQuery>({
-    initialRange: () => getQuickRange(30),
+    initialRange: () => getRangeForPeriod(DEFAULT_FINANCE_PERIOD),
     isValidRange,
     onApply: () => {
       setExportFeedback(null);
@@ -730,6 +803,25 @@ export const AdminFinanceClient = () => {
 
     return `${formatDate(appliedRange.from)} — ${formatDate(appliedRange.to)}`;
   }, [appliedRange]);
+
+  const resetToDefaultPeriod = () => {
+    setSelectedPeriod(DEFAULT_FINANCE_PERIOD);
+    applyRange(getRangeForPeriod(DEFAULT_FINANCE_PERIOD));
+  };
+
+  const handleFinancePeriodChange = (nextPeriod: FinancePeriodPreset) => {
+    setSelectedPeriod(nextPeriod);
+    applyRange(getRangeForPeriod(nextPeriod));
+  };
+
+  const handleFinanceDateChange = (field: "from" | "to", value: string) => {
+    setSelectedPeriod("custom");
+    handleDateChange(field, value);
+  };
+
+  const handleFinanceGroupByChange = (groupBy: FinanceDashboardQuery["groupBy"]) => {
+    applyRange({ ...draftRange, groupBy });
+  };
 
   const handleExport = async () => {
     if (!validRange) return;
@@ -749,31 +841,25 @@ export const AdminFinanceClient = () => {
   return (
     <div className="space-y-6">
       <FinanceHeader
+        dashboard={query.data}
         exportError={exportError}
         exportFeedback={exportFeedback}
         exportPending={exportMutation.isPending}
-        onDateChange={handleDateChange}
+        onDateChange={handleFinanceDateChange}
         onDateControlsBlur={handleDateControlsBlur}
         onExport={handleExport}
+        onGroupByChange={handleFinanceGroupByChange}
+        onPeriodChange={handleFinancePeriodChange}
+        period={selectedPeriod}
+        periodCopy={periodCopy}
         range={draftRange}
         rangeError={rangeError}
-        setRange={applyRange}
       />
-
-      <div className="flex flex-wrap items-center gap-2 text-sm text-muted">
-        <CalendarDays aria-hidden className="h-4 w-4" />
-        <span className="font-bold">Período consultado:</span>
-        <span>{periodCopy}</span>
-        {query.data ? <span>({query.data.period.days} dias)</span> : null}
-        <span className="inline-flex items-center gap-1 rounded-full bg-surface-muted px-2 py-1 text-xs font-bold">
-          <FileDown aria-hidden className="h-3.5 w-3.5" /> CSV real disponível
-        </span>
-      </div>
 
       {!validRange ? (
         <ErrorState
           message="A data inicial precisa ser menor ou igual à data final."
-          onRetry={() => applyRange(getQuickRange(30))}
+          onRetry={resetToDefaultPeriod}
         />
       ) : null}
 
