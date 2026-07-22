@@ -736,3 +736,29 @@ Frontend esperado:
 - `pnpm check`
 - Service local: `showAdminPatient({ id: "cmrqsrab5001f1guh2ve5oy90", period: "all" })` retornou a metrica `reports_received` com label **Denuncias recebidas** e fonte `post_report em conteudo do paciente`.
 - Browser local/headless via Chrome/CDP em `/pacientes/cmrqsrab5001f1guh2ve5oy90`, com admin temporario real removido ao final, validou desktop `1365x900`: quatro cards principais, **Denuncias recebidas** ao lado de **Respostas de psicologos verificados**; e mobile `390x844`: contador presente e `scrollWidth=390`.
+
+## Ajuste pos-feedback 2026-07-22 - Previa visual local das estatisticas do paciente
+
+- Pedido do usuario: colocar numeros de exemplo nas estatisticas do paciente apenas para visualizacao.
+- A aba **Estatisticas** do paciente ganhou uma previa visual local, restrita a `NODE_ENV=development` e ao paciente `cmrqsrab5001f1guh2ve5oy90`, para preencher graficos, comunidades ativas, horarios de maior atividade, uso da plataforma, paginas acessadas e devices quando os blocos estao sem dados reais.
+- A previa mostra aviso explicito de que os numeros sao apenas para avaliacao de layout e nao altera API, banco ou dados reais.
+- A logica preserva qualquer recorte que ja tenha dado real e so preenche visualmente blocos vazios; em build/producao (`NODE_ENV=production`) a previa fica desativada.
+- Nao houve alteracao de backend, endpoint, contrato HTTP, schema Prisma, migrations, packages, seed, backfill artificial ou dado persistido. `db:migrate` nao se aplicou.
+- Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente; a referencia visual foi o screenshot enviado pelo usuario em 2026-07-22 e o layout atual da aba no browser local.
+- ADR atualizado: `adrs/0241-admin-detalhe-paciente-dados-minimos-readonly.md`.
+
+### Criterios de aceite do ajuste
+
+- [x] Blocos vazios da aba **Estatisticas** exibem numeros de exemplo apenas na previa local de desenvolvimento.
+- [x] A tela indica explicitamente que os numeros sao exemplo visual e nao dados reais.
+- [x] A previa nao altera backend, API, banco, Prisma, migrations ou dados persistidos.
+- [x] A previa nao aparece em build/producao.
+
+### Validacao complementar executada
+
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/pacientes/[id]/client.tsx"`
+- `pnpm --dir admin exec tsc --noEmit --pretty false`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- Smoke HTTP local: `/pacientes/cmrqsrab5001f1guh2ve5oy90?tab=estatisticas` retornou `200`.
+- Browser local/headless via Chrome/CDP em `/pacientes/cmrqsrab5001f1guh2ve5oy90?tab=estatisticas`, com token temporario de admin real removido ao final, validou desktop `1365x900` e mobile `390x844`: aviso de previa presente, comunidades de exemplo presentes, estados vazios removidos visualmente e `scrollWidth=390` no mobile.

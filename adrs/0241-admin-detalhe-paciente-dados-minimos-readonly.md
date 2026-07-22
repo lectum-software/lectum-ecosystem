@@ -85,3 +85,9 @@ As linhas operacionais antigas do card (**Periodo**, **Comunidade destaque**, **
 Apos feedback de produto, a aba **Geral** passa a exibir tambem o contador **Denuncias recebidas** ao lado do recorte principal de **Posts**, **Comentarios feitos** e **Respostas de psicologos verificados**.
 
 O contador usa `post_report` real vinculado a posts ou comentarios do paciente no periodo do detalhe, incluindo comparativo com periodo anterior pelo mesmo contrato de metricas ja existente. Nao ha acao de moderacao nessa area, mock, seed, backfill artificial, schema Prisma, migration ou package novo.
+
+## Atualizacao 2026-07-22: previa visual local de estatisticas vazias
+
+Apos feedback de produto, a aba **Estatisticas** do detalhe administrativo de paciente pode exibir numeros de exemplo somente para visualizacao local de layout quando o ambiente esta em `NODE_ENV=development`, o paciente alvo e `cmrqsrab5001f1guh2ve5oy90` e os blocos ainda nao possuem dados reais.
+
+A decisao e uma excecao visual e temporaria para avaliacao do Admin local: a UI mostra aviso explicito de que os numeros nao sao reais, preserva recortes que ja tenham dado real e nao altera backend, endpoint, schema Prisma, migration, seed, backfill, banco ou contrato HTTP. Em build/producao (`NODE_ENV=production`) a previa fica desativada, mantendo os estados vazios honestos quando nao houver dados reais.

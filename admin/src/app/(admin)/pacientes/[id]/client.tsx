@@ -2013,6 +2013,405 @@ const normalizePatientPlatformHourlyActivityPoint = (
   };
 };
 
+const PATIENT_STATISTICS_VISUAL_EXAMPLE_PATIENT_ID = "cmrqsrab5001f1guh2ve5oy90";
+const PATIENT_STATISTICS_VISUAL_EXAMPLE_ENABLED = process.env.NODE_ENV === "development";
+
+const PATIENT_STATISTICS_VISUAL_EXAMPLE_METRICS: Partial<
+  Record<PatientsDetailMetric["id"], number>
+> = {
+  comments_created: 18,
+  downvotes_received: 3,
+  posts_created: 6,
+  saves_received: 9,
+  shares_received: 5,
+  upvotes_received: 31,
+  verified_psychologist_responses: 4,
+};
+
+const PATIENT_STATISTICS_VISUAL_EXAMPLE_SERIES = {
+  comments_created: [2, 4, 5, 3, 4],
+  downvotes_received: [0, 1, 0, 1, 1],
+  posts_created: [0, 1, 2, 1, 2],
+  saves_received: [1, 2, 2, 1, 3],
+  shares_received: [0, 1, 1, 1, 2],
+  upvotes_received: [4, 6, 8, 5, 8],
+  verified_psychologist_responses: [0, 1, 1, 1, 1],
+} satisfies Record<PatientStatisticsSeriesMetricKey, number[]>;
+
+const PATIENT_STATISTICS_VISUAL_EXAMPLE_ACTIVITY_HOURS = [
+  { accesses: 2, engagement: 1, hour: 8, replies: 1, reviews: 1, total: 5 },
+  { accesses: 4, hour: 10, posts: 2, replies: 3, reviews: 2, total: 11 },
+  { accesses: 3, engagement: 3, hour: 14, posts: 1, replies: 3, total: 10 },
+  { accesses: 5, engagement: 4, hour: 18, posts: 2, replies: 3, total: 14 },
+  { accesses: 2, engagement: 2, hour: 21, replies: 3, total: 7 },
+] satisfies Array<{
+  accesses?: number;
+  engagement?: number;
+  hour: number;
+  posts?: number;
+  replies?: number;
+  reviews?: number;
+  total: number;
+}>;
+
+const patientStatisticsVisualExampleChartMetricIds = new Set<PatientsDetailMetric["id"]>(
+  PATIENT_COMMUNITY_CHART_METRICS.map((metric) => metric.id),
+);
+
+const patientStatisticsVisualExampleNumber = (value: number | null | undefined) =>
+  Math.max(0, Number(value ?? 0));
+
+const isPatientStatisticsVisualExampleEligible = (id: string) =>
+  PATIENT_STATISTICS_VISUAL_EXAMPLE_ENABLED && id === PATIENT_STATISTICS_VISUAL_EXAMPLE_PATIENT_ID;
+
+const hasPatientStatisticsCommunityChartData = (detail: AdminPatientDetail) =>
+  detail.metrics.some(
+    (metric) => patientStatisticsVisualExampleChartMetricIds.has(metric.id) && metric.value > 0,
+  ) ||
+  detail.series.points.some((point) =>
+    PATIENT_STATISTICS_SERIES_METRIC_KEYS.some((key) => point[key] > 0),
+  );
+
+const hasPatientStatisticsActiveCommunitiesData = (detail: AdminPatientDetail) =>
+  detail.communities.items.length > 0;
+
+const hasPatientStatisticsActivityHoursData = (detail: AdminPatientDetail) => {
+  const hasHourlyActivity = detail.platform_usage.hourly_activity.some(
+    (point) => patientStatisticsVisualExampleNumber(point.total) > 0,
+  );
+  const hasWeekdayActivity = detail.platform_usage.hourly_activity_by_weekday.some((day) =>
+    day.hours.some((point) => patientStatisticsVisualExampleNumber(point.total) > 0),
+  );
+
+  return hasHourlyActivity || hasWeekdayActivity;
+};
+
+const hasPatientStatisticsPlatformUsageData = (detail: AdminPatientDetail) => {
+  const usage = detail.platform_usage;
+
+  return (
+    patientStatisticsVisualExampleNumber(usage.sessions_count) > 0 ||
+    patientStatisticsVisualExampleNumber(usage.access_days_count) > 0 ||
+    patientStatisticsVisualExampleNumber(usage.device_usage.total_sessions) > 0 ||
+    usage.top_pages.some((page) => patientStatisticsVisualExampleNumber(page.count) > 0)
+  );
+};
+
+const shouldUsePatientStatisticsVisualExample = (id: string, detail: AdminPatientDetail) =>
+  isPatientStatisticsVisualExampleEligible(id) &&
+  (!hasPatientStatisticsCommunityChartData(detail) ||
+    !hasPatientStatisticsActiveCommunitiesData(detail) ||
+    !hasPatientStatisticsActivityHoursData(detail) ||
+    !hasPatientStatisticsPlatformUsageData(detail));
+
+const formatPatientStatisticsVisualExampleDate = (date: Date) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+};
+
+const parsePatientStatisticsVisualExampleDate = (value: string | null | undefined) => {
+  if (!value) {
+    return null;
+  }
+
+  const date = new Date(`${value}T12:00:00`);
+
+  return Number.isNaN(date.getTime()) ? null : date;
+};
+
+const buildPatientStatisticsVisualExampleDates = (detail: AdminPatientDetail) => {
+  const existingDates = detail.series.points.map((point) => point.date).filter(Boolean);
+
+  if (existingDates.length >= 5) {
+    return existingDates.slice(-5);
+  }
+
+  const toDate =
+    parsePatientStatisticsVisualExampleDate(detail.period.to) ??
+    parsePatientStatisticsVisualExampleDate(detail.period.from) ??
+    new Date();
+
+  return Array.from({ length: 5 }, (_, index) => {
+    const date = new Date(toDate);
+    date.setDate(toDate.getDate() - (4 - index));
+
+    return formatPatientStatisticsVisualExampleDate(date);
+  });
+};
+
+const buildPatientStatisticsVisualExampleSeries = (detail: AdminPatientDetail) =>
+  buildPatientStatisticsVisualExampleDates(detail).map((date, index) => ({
+    date,
+    comments_created: PATIENT_STATISTICS_VISUAL_EXAMPLE_SERIES.comments_created[index] ?? 0,
+    downvotes_received: PATIENT_STATISTICS_VISUAL_EXAMPLE_SERIES.downvotes_received[index] ?? 0,
+    posts_created: PATIENT_STATISTICS_VISUAL_EXAMPLE_SERIES.posts_created[index] ?? 0,
+    saves_received: PATIENT_STATISTICS_VISUAL_EXAMPLE_SERIES.saves_received[index] ?? 0,
+    shares_received: PATIENT_STATISTICS_VISUAL_EXAMPLE_SERIES.shares_received[index] ?? 0,
+    upvotes_received: PATIENT_STATISTICS_VISUAL_EXAMPLE_SERIES.upvotes_received[index] ?? 0,
+    verified_psychologist_responses:
+      PATIENT_STATISTICS_VISUAL_EXAMPLE_SERIES.verified_psychologist_responses[index] ?? 0,
+  }));
+
+const buildPatientStatisticsVisualExampleMetrics = (metrics: AdminPatientDetail["metrics"]) =>
+  metrics.map((metric) => {
+    const value = PATIENT_STATISTICS_VISUAL_EXAMPLE_METRICS[metric.id];
+
+    if (typeof value !== "number") {
+      return metric;
+    }
+
+    const previousValue = Math.max(0, value - Math.ceil(value * 0.25));
+    const changePercent =
+      previousValue > 0 ? ((value - previousValue) / previousValue) * 100 : null;
+    const trend: PatientsDetailMetric["trend"] =
+      value > previousValue ? "up" : value < previousValue ? "down" : "flat";
+
+    return {
+      ...metric,
+      change_percent: changePercent,
+      previous_value: previousValue,
+      trend,
+      value,
+    };
+  });
+
+const buildPatientStatisticsVisualExampleCommunities = (
+  detail: AdminPatientDetail,
+): AdminPatientDetail["communities"]["items"] => {
+  const periodStart = detail.period.from ?? formatPatientStatisticsVisualExampleDate(new Date());
+  const diagnosisSource = "community_post+post_reply+post_vote+post_save+post_reply_save";
+
+  return [
+    {
+      avatar_url: null,
+      color: "#2F80ED",
+      comments: 8,
+      downvotes: 1,
+      engagement_diagnosis: {
+        id: "muito_ativo",
+        label: "Muito ativo",
+        source: diagnosisSource,
+      },
+      id: "visual-example-community-ansiedade",
+      interactions: 19,
+      is_member: true,
+      member_since: periodStart,
+      name: "Ansiedade e rotina",
+      posts: 3,
+      saves: 4,
+      slug: "visual-example-ansiedade-rotina",
+      upvotes: 14,
+      votes: 15,
+    },
+    {
+      avatar_url: null,
+      color: "#19A463",
+      comments: 6,
+      downvotes: 0,
+      engagement_diagnosis: {
+        id: "ativo",
+        label: "Ativo",
+        source: diagnosisSource,
+      },
+      id: "visual-example-community-autocuidado",
+      interactions: 14,
+      is_member: true,
+      member_since: periodStart,
+      name: "Autocuidado diário",
+      posts: 2,
+      saves: 3,
+      slug: "visual-example-autocuidado-diario",
+      upvotes: 11,
+      votes: 11,
+    },
+    {
+      avatar_url: null,
+      color: "#9B51E0",
+      comments: 4,
+      downvotes: 2,
+      engagement_diagnosis: {
+        id: "pouco_ativo",
+        label: "Pouco ativo",
+        source: diagnosisSource,
+      },
+      id: "visual-example-community-sono",
+      interactions: 10,
+      is_member: false,
+      member_since: null,
+      name: "Sono e descanso",
+      posts: 1,
+      saves: 2,
+      slug: "visual-example-sono-descanso",
+      upvotes: 6,
+      votes: 8,
+    },
+  ];
+};
+
+const buildPatientStatisticsVisualExampleHourlyActivity = (scale = 1) =>
+  Array.from({ length: 24 }, (_, hour) => {
+    const example = PATIENT_STATISTICS_VISUAL_EXAMPLE_ACTIVITY_HOURS.find(
+      (point) => point.hour === hour,
+    );
+
+    return normalizePatientPlatformHourlyActivityPoint(
+      {
+        accesses: Math.round((example?.accesses ?? 0) * scale),
+        engagement: Math.round((example?.engagement ?? 0) * scale),
+        posts: Math.round((example?.posts ?? 0) * scale),
+        replies: Math.round((example?.replies ?? 0) * scale),
+        reviews: Math.round((example?.reviews ?? 0) * scale),
+        total: Math.round((example?.total ?? 0) * scale),
+      },
+      hour,
+    );
+  });
+
+const buildPatientStatisticsVisualExampleWeekdayActivity = () => {
+  const multipliers = {
+    0: 0.2,
+    1: 0.55,
+    2: 0.7,
+    3: 1,
+    4: 0.85,
+    5: 0.65,
+    6: 0.35,
+  } satisfies Record<(typeof patientPlatformWeekdayDisplayOrder)[number], number>;
+
+  return patientPlatformWeekdayDisplayOrder.map((day) => ({
+    day,
+    hours: buildPatientStatisticsVisualExampleHourlyActivity(multipliers[day]),
+    label: patientPlatformWeekdayLabel(day),
+  }));
+};
+
+const buildPatientStatisticsVisualExamplePeakHours = (
+  hourlyActivity: PatientPlatformHourlyActivityPoint[],
+) => {
+  const totalActivity = hourlyActivity.reduce(
+    (total, point) => total + patientStatisticsVisualExampleNumber(point.total),
+    0,
+  );
+
+  return hourlyActivity
+    .filter((point) => patientStatisticsVisualExampleNumber(point.total) > 0)
+    .sort(
+      (first, second) =>
+        patientStatisticsVisualExampleNumber(second.total) -
+        patientStatisticsVisualExampleNumber(first.total),
+    )
+    .slice(0, 3)
+    .map((point) => ({
+      count: patientStatisticsVisualExampleNumber(point.total),
+      hour: point.hour,
+      label: point.label,
+      percentage:
+        totalActivity > 0
+          ? (patientStatisticsVisualExampleNumber(point.total) / totalActivity) * 100
+          : 0,
+    }));
+};
+
+const buildPatientStatisticsVisualExamplePlatformUsage = (
+  usage: AdminPatientDetail["platform_usage"],
+  shouldFillActivityHours: boolean,
+  shouldFillPlatformUsage: boolean,
+): AdminPatientDetail["platform_usage"] => {
+  const hourlyActivity = shouldFillActivityHours
+    ? buildPatientStatisticsVisualExampleHourlyActivity()
+    : usage.hourly_activity;
+  const weekdayActivity = shouldFillActivityHours
+    ? buildPatientStatisticsVisualExampleWeekdayActivity()
+    : usage.hourly_activity_by_weekday;
+  const peakActivityHours = shouldFillActivityHours
+    ? buildPatientStatisticsVisualExamplePeakHours(hourlyActivity)
+    : usage.peak_activity_hours;
+
+  if (!shouldFillPlatformUsage) {
+    return {
+      ...usage,
+      hourly_activity: hourlyActivity,
+      hourly_activity_by_weekday: weekdayActivity,
+      peak_activity_hours: peakActivityHours,
+    };
+  }
+
+  const visualExampleLastAccessAt = usage.last_access_at ?? `${usage.period_to}T18:30:00.000Z`;
+
+  return {
+    ...usage,
+    access_days_count: 5,
+    average_duration_seconds: 742,
+    device_usage: {
+      ...usage.device_usage,
+      items: [
+        { count: 21, device_type: "desktop", id: "desktop", label: "Desktop", percentage: 60 },
+        { count: 12, device_type: "mobile", id: "mobile", label: "Mobile", percentage: 34.3 },
+        { count: 2, device_type: "tablet", id: "tablet", label: "Tablet", percentage: 5.7 },
+        {
+          count: 0,
+          device_type: "unknown",
+          id: "unknown",
+          label: "Não identificado",
+          percentage: 0,
+        },
+      ],
+      total_sessions: 35,
+      unavailable_reason: null,
+    },
+    duration_unavailable_reason: null,
+    hourly_activity: hourlyActivity,
+    hourly_activity_by_weekday: weekdayActivity,
+    last_access_at: visualExampleLastAccessAt,
+    peak_activity_hours: peakActivityHours,
+    pwa_installation_recorded: true,
+    pwa_installed_at: usage.pwa_installed_at ?? visualExampleLastAccessAt,
+    sessions_count: 35,
+    top_pages: [
+      { count: 14, label: "Comunidades", percentage: 40 },
+      { count: 9, label: "Perfil", percentage: 25.7 },
+      { count: 7, label: "Sessões", percentage: 20 },
+      { count: 5, label: "Notificações", percentage: 14.3 },
+    ],
+    unavailable_reason: null,
+  };
+};
+
+const buildPatientStatisticsVisualExampleDetail = (
+  detail: AdminPatientDetail,
+): AdminPatientDetail => {
+  const shouldFillCommunityChart = !hasPatientStatisticsCommunityChartData(detail);
+  const shouldFillActiveCommunities = !hasPatientStatisticsActiveCommunitiesData(detail);
+  const shouldFillActivityHours = !hasPatientStatisticsActivityHoursData(detail);
+  const shouldFillPlatformUsage = !hasPatientStatisticsPlatformUsageData(detail);
+
+  return {
+    ...detail,
+    communities: shouldFillActiveCommunities
+      ? {
+          ...detail.communities,
+          items: buildPatientStatisticsVisualExampleCommunities(detail),
+        }
+      : detail.communities,
+    metrics: shouldFillCommunityChart
+      ? buildPatientStatisticsVisualExampleMetrics(detail.metrics)
+      : detail.metrics,
+    platform_usage: buildPatientStatisticsVisualExamplePlatformUsage(
+      detail.platform_usage,
+      shouldFillActivityHours,
+      shouldFillPlatformUsage,
+    ),
+    series: shouldFillCommunityChart
+      ? {
+          ...detail.series,
+          points: buildPatientStatisticsVisualExampleSeries(detail),
+        }
+      : detail.series,
+  };
+};
 type PatientPlatformDeviceUsage = AdminPatientDetail["platform_usage"]["device_usage"];
 type PatientPlatformDeviceUsageItem = PatientPlatformDeviceUsage["items"][number];
 
@@ -2941,6 +3340,19 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPatientDetail; id: string 
   );
   const activityHoursSlice = usePatientStatisticsDetailSlice(id, detail, activityHoursFilter);
   const platformUsageSlice = usePatientStatisticsDetailSlice(id, detail, platformUsageFilter);
+  const visualExampleEnabled = shouldUsePatientStatisticsVisualExample(id, detail);
+  const communityDetail = visualExampleEnabled
+    ? buildPatientStatisticsVisualExampleDetail(communitySlice.detail)
+    : communitySlice.detail;
+  const activeCommunitiesDetail = visualExampleEnabled
+    ? buildPatientStatisticsVisualExampleDetail(activeCommunitiesSlice.detail)
+    : activeCommunitiesSlice.detail;
+  const activityHoursDetail = visualExampleEnabled
+    ? buildPatientStatisticsVisualExampleDetail(activityHoursSlice.detail)
+    : activityHoursSlice.detail;
+  const platformUsageDetail = visualExampleEnabled
+    ? buildPatientStatisticsVisualExampleDetail(platformUsageSlice.detail)
+    : platformUsageSlice.detail;
 
   if (communitySlice.query.isError && !communitySlice.query.data && communitySlice.errorMessage) {
     return (
@@ -2953,8 +3365,14 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPatientDetail; id: string 
 
   return (
     <div className="max-w-full space-y-5 overflow-x-clip" data-patient-detail-tab="estatisticas">
+      {visualExampleEnabled ? (
+        <div className="rounded-2xl border border-warning/30 bg-warning/10 px-4 py-3 text-sm font-semibold text-warning">
+          Prévia visual local: números de exemplo apenas para avaliação do layout. Não são dados
+          reais e não alteram API ou banco.
+        </div>
+      ) : null}
       <EngagementChart
-        detail={communitySlice.detail}
+        detail={communityDetail}
         isRefreshing={communitySlice.isRefreshing}
         periodControls={
           <PatientStatisticsPeriodControls
@@ -2969,7 +3387,7 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPatientDetail; id: string 
         }
       />
       <PatientActiveCommunitiesBlock
-        communities={activeCommunitiesSlice.detail.communities.items}
+        communities={activeCommunitiesDetail.communities.items}
         isRefreshing={activeCommunitiesSlice.isRefreshing}
         periodControls={
           <PatientStatisticsPeriodControls
@@ -2984,7 +3402,7 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPatientDetail; id: string 
         }
       />
       <PatientPlatformActivityHoursCard
-        detail={activityHoursSlice.detail}
+        detail={activityHoursDetail}
         isRefreshing={activityHoursSlice.isRefreshing}
         periodControls={
           <PatientStatisticsPeriodControls
@@ -2999,7 +3417,7 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPatientDetail; id: string 
         }
       />
       <PatientPlatformUsageCard
-        detail={platformUsageSlice.detail}
+        detail={platformUsageDetail}
         isRefreshing={platformUsageSlice.isRefreshing}
         periodControls={
           <PatientStatisticsPeriodControls
