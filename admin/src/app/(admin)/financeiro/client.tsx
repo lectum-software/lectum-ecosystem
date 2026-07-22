@@ -15,7 +15,7 @@ import {
   UsersRound,
   XCircle,
 } from "lucide-react";
-import { type FocusEventHandler, useState } from "react";
+import { type FocusEvent, useMemo, useState } from "react";
 import { useAdminFinanceDashboard, useAdminFinanceExport } from "@/api/callers/finance";
 import { resolveApiError } from "@/api/handle";
 import type {
@@ -25,23 +25,24 @@ import type {
   FinanceSeriesPoint,
   FinanceSubscriptionItem,
 } from "@/api/req/finance";
-import { useDateRangeCommitOnBlur } from "@/hooks/use-date-range-commit-on-blur";
 import { aggregateCalendarChartPoints, buildSmoothSvgPath } from "@/lib/chart-time-series";
 import { cn } from "@/lib/utils";
 
-const FINANCE_PERIOD_OPTIONS = [
-  { id: "last_7", label: "Últimos 7 dias", days: 7 },
-  { id: "last_30", label: "Últimos 30 dias", days: 30 },
-  { id: "last_90", label: "Últimos 90 dias", days: 90 },
-] as const;
-type FinancePeriodPreset = (typeof FINANCE_PERIOD_OPTIONS)[number]["id"];
-type FinancePeriodValue = FinancePeriodPreset | "custom";
-const FINANCE_PERIOD_DAYS: Record<FinancePeriodPreset, number> = {
-  last_7: 7,
-  last_30: 30,
-  last_90: 90,
-};
-const DEFAULT_FINANCE_PERIOD: FinancePeriodPreset = "last_30";
+type FinancePeriodValue = NonNullable<FinanceDashboardQuery["period"]>;
+type FinancePeriodPreset = Exclude<FinancePeriodValue, "custom">;
+type FinanceDashboardRange = Pick<FinanceDashboardQuery, "from" | "to">;
+
+const FINANCE_PERIOD_OPTIONS: {
+  id: FinancePeriodPreset;
+  label: string;
+}[] = [
+  { id: "today", label: "Hoje" },
+  { id: "week", label: "Esta semana" },
+  { id: "month", label: "Este mês" },
+  { id: "year", label: "Este ano" },
+  { id: "all", label: "Todo o período" },
+];
+const DEFAULT_FINANCE_PERIOD: FinancePeriodPreset = "all";
 const CARD_ORDER = [
   "revenue_total",
   "new_subscriptions",
@@ -69,20 +70,40 @@ const dateFromInput = (value: string) => {
   return new Date(year, month - 1, day, 12, 0, 0, 0);
 };
 
-const getQuickRange = (days: number): FinanceDashboardQuery => {
-  const today = new Date();
-  const from = new Date(today);
-  from.setDate(today.getDate() - (days - 1));
-
-  return {
-    from: toInputDate(from),
-    groupBy: days > 45 ? "month" : "day",
-    to: toInputDate(today),
-  };
+const startOfCurrentWeek = () => {
+  const date = new Date();
+  const day = date.getDay();
+  const diff = day === 0 ? -6 : 1 - day;
+  date.setDate(date.getDate() + diff);
+  return date;
 };
 
-const getRangeForPeriod = (period: FinancePeriodPreset) =>
-  getQuickRange(FINANCE_PERIOD_DAYS[period]);
+const startOfCurrentMonth = () => {
+  const date = new Date();
+  return new Date(date.getFullYear(), date.getMonth(), 1);
+};
+
+const startOfCurrentYear = () => {
+  const date = new Date();
+  return new Date(date.getFullYear(), 0, 1);
+};
+
+const getDashboardRangeForPeriod = (period: FinancePeriodPreset): FinanceDashboardRange => {
+  const today = toInputDate(new Date());
+
+  if (period === "today") return { from: today, to: today };
+  if (period === "all") return { from: "", to: today };
+  if (period === "month") return { from: toInputDate(startOfCurrentMonth()), to: today };
+  if (period === "year") return { from: toInputDate(startOfCurrentYear()), to: today };
+
+  return { from: toInputDate(startOfCurrentWeek()), to: today };
+};
+
+const buildFinanceDashboardQuery = (
+  period: FinancePeriodValue,
+  range: FinanceDashboardRange,
+): FinanceDashboardQuery =>
+  period === "custom" ? { from: range.from, period, to: range.to } : { period };
 
 const formatDate = (value: string) =>
   new Intl.DateTimeFormat("pt-BR", {
@@ -228,7 +249,7 @@ const MetricCard = ({ metric }: { metric: FinanceMetric }) => {
 };
 
 const LoadingGrid = () => (
-  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+  <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
     {CARD_ORDER.map((key) => (
       <CardShell
         className="h-[8.75rem] animate-pulse bg-surface-muted xl:h-[8.25rem]"
@@ -266,26 +287,14 @@ const FinanceHeader = ({
   exportError,
   exportFeedback,
   exportPending,
-  onDateChange,
-  onDateControlsBlur,
+  exportDisabled,
   onExport,
-  onGroupByChange,
-  onPeriodChange,
-  period,
-  range,
-  rangeError,
 }: {
   exportError: string | null;
   exportFeedback: string | null;
   exportPending: boolean;
-  onDateChange: (field: "from" | "to", value: string) => void;
-  onDateControlsBlur: FocusEventHandler<HTMLDivElement>;
+  exportDisabled: boolean;
   onExport: () => void;
-  onGroupByChange: (groupBy: FinanceDashboardQuery["groupBy"]) => void;
-  onPeriodChange: (period: FinancePeriodPreset) => void;
-  period: FinancePeriodValue;
-  range: FinanceDashboardQuery;
-  rangeError: string | null;
 }) => (
   <CardShell className="border-border/70 bg-surface/90 p-5 md:p-6">
     <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
@@ -301,109 +310,101 @@ const FinanceHeader = ({
         </p>
       </div>
 
-      <div className="flex flex-col gap-3 xl:items-end">
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-[minmax(10rem,0.9fr)_minmax(8.5rem,0.75fr)_minmax(8.5rem,0.75fr)_minmax(8.5rem,0.75fr)]">
-          <label className="grid gap-1 text-xs font-semibold text-muted" htmlFor="finance-period">
-            Período
-            <span className="relative">
-              <select
-                className="h-11 w-full min-w-0 appearance-none rounded-control border border-border bg-surface py-0 pl-3 pr-11 text-sm font-semibold text-foreground shadow-control outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
-                id="finance-period"
-                onChange={(event) => onPeriodChange(event.target.value as FinancePeriodPreset)}
-                value={period}
-              >
-                {period === "custom" ? (
-                  <option disabled hidden value="custom">
-                    Personalizado
-                  </option>
-                ) : null}
-                {FINANCE_PERIOD_OPTIONS.map((option) => (
-                  <option key={option.id} value={option.id}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-              <ChevronDown
-                aria-hidden
-                className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground"
-              />
-            </span>
-          </label>
-          <div
-            className="grid gap-3 sm:col-span-2 sm:grid-cols-2 xl:col-span-2"
-            onBlur={onDateControlsBlur}
-          >
-            <label className="text-xs font-semibold text-muted">
-              De
-              <input
-                className="mt-1 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground shadow-control outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
-                max={range.to}
-                onChange={(event) => onDateChange("from", event.target.value)}
-                type="date"
-                value={range.from}
-              />
-            </label>
-            <label className="text-xs font-semibold text-muted">
-              Até
-              <input
-                className="mt-1 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground shadow-control outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
-                min={range.from}
-                onChange={(event) => onDateChange("to", event.target.value)}
-                type="date"
-                value={range.to}
-              />
-            </label>
-          </div>
-          <label className="grid gap-1 text-xs font-semibold text-muted" htmlFor="finance-group">
-            Agrupar
-            <span className="relative">
-              <select
-                className="h-11 w-full min-w-0 appearance-none rounded-control border border-border bg-surface py-0 pl-3 pr-11 text-sm font-semibold text-foreground shadow-control outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
-                id="finance-group"
-                onChange={(event) =>
-                  onGroupByChange(event.target.value as FinanceDashboardQuery["groupBy"])
-                }
-                value={range.groupBy || "day"}
-              >
-                <option value="day">Diário</option>
-                <option value="week">Semanal</option>
-                <option value="month">Mensal</option>
-              </select>
-              <ChevronDown
-                aria-hidden
-                className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground"
-              />
-            </span>
-          </label>
-        </div>
-
-        <div className="flex flex-col gap-2 sm:items-end">
-          <button
-            className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-control bg-primary px-4 text-sm font-black text-white shadow-admin-glow transition hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
-            disabled={exportPending || !isValidRange(range)}
-            onClick={onExport}
-            type="button"
-          >
-            {exportPending ? (
-              <Loader2 aria-hidden className="h-4 w-4 animate-spin" />
-            ) : (
-              <Download aria-hidden className="h-4 w-4" />
-            )}
-            Exportar relatório
-          </button>
-          {rangeError ? <p className="text-xs font-bold text-danger">{rangeError}</p> : null}
-          {exportFeedback ? (
-            <p className="text-xs font-bold text-success">{exportFeedback}</p>
-          ) : null}
-          {exportError ? <p className="text-xs font-bold text-danger">{exportError}</p> : null}
-        </div>
+      <div className="flex flex-col gap-2 sm:items-end">
+        <button
+          className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-control bg-primary px-4 text-sm font-black text-white shadow-admin-glow transition hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
+          disabled={exportPending || exportDisabled}
+          onClick={onExport}
+          type="button"
+        >
+          {exportPending ? (
+            <Loader2 aria-hidden className="h-4 w-4 animate-spin" />
+          ) : (
+            <Download aria-hidden className="h-4 w-4" />
+          )}
+          Exportar relatório
+        </button>
+        {exportFeedback ? <p className="text-xs font-bold text-success">{exportFeedback}</p> : null}
+        {exportError ? <p className="text-xs font-bold text-danger">{exportError}</p> : null}
       </div>
     </div>
   </CardShell>
 );
 
+const FinancePeriodControls = ({
+  displayRange,
+  onDateChange,
+  onDateControlsBlur,
+  onPeriodChange,
+  period,
+  rangeError,
+}: {
+  displayRange: FinanceDashboardRange;
+  onDateChange: (field: "from" | "to", value: string) => void;
+  onDateControlsBlur: (event: FocusEvent<HTMLDivElement>) => void;
+  onPeriodChange: (period: FinancePeriodPreset) => void;
+  period: FinancePeriodValue;
+  rangeError: string | null;
+}) => (
+  <div className="flex w-full flex-col gap-2 xl:w-auto xl:items-end">
+    <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+      <label className="grid gap-1 text-xs font-semibold text-muted" htmlFor="finance-period">
+        Período
+        <span className="relative">
+          <select
+            className="h-11 min-w-[170px] appearance-none rounded-control border border-border bg-surface py-0 pl-3 pr-11 text-sm font-semibold text-foreground shadow-control outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+            id="finance-period"
+            onChange={(event) => onPeriodChange(event.target.value as FinancePeriodPreset)}
+            value={period}
+          >
+            {period === "custom" ? (
+              <option disabled hidden value="custom">
+                Personalizado
+              </option>
+            ) : null}
+            {FINANCE_PERIOD_OPTIONS.map((option) => (
+              <option key={option.id} value={option.id}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+          <ChevronDown
+            aria-hidden
+            className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground"
+          />
+        </span>
+      </label>
+      <div className="grid gap-3 sm:grid-cols-2" onBlur={onDateControlsBlur}>
+        <label className="text-xs font-semibold text-muted">
+          De
+          <input
+            className="mt-1 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground shadow-control outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+            max={displayRange.to || undefined}
+            onChange={(event) => onDateChange("from", event.target.value)}
+            type="date"
+            value={displayRange.from ?? ""}
+          />
+        </label>
+        <label className="text-xs font-semibold text-muted">
+          Até
+          <input
+            className="mt-1 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground shadow-control outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+            min={displayRange.from || undefined}
+            onChange={(event) => onDateChange("to", event.target.value)}
+            type="date"
+            value={displayRange.to ?? ""}
+          />
+        </label>
+      </div>
+    </div>
+    {period === "custom" && rangeError ? (
+      <p className="max-w-md text-xs font-bold text-danger">{rangeError}</p>
+    ) : null}
+  </div>
+);
+
 const CardsGrid = ({ dashboard }: { dashboard: AdminFinanceDashboard }) => (
-  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+  <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
     {CARD_ORDER.map((key) => (
       <MetricCard key={key} metric={dashboard.cards[key]} />
     ))}
@@ -467,19 +468,10 @@ const FinanceChart = ({
 
   return (
     <figure className="mt-4 w-full overflow-x-auto rounded-[1.5rem] border border-border/70 bg-surface p-4">
-      <div className="mb-3 flex flex-wrap gap-3">
-        <span className="inline-flex items-center gap-2 text-xs font-black text-muted">
-          <span className="h-3 w-3 rounded-full" style={{ backgroundColor: CHART_COLORS.line }} />
-          Receita confirmada {revenueAvailable ? "" : "(parcial/indisponível)"}
-        </span>
-        <span className="inline-flex items-center gap-2 text-xs font-black text-muted">
-          <span
-            className="h-3 w-3 rounded-full"
-            style={{ backgroundColor: CHART_COLORS.subscription }}
-          />
-          Novas assinaturas pagas
-        </span>
-      </div>
+      <figcaption className="sr-only">
+        Receita confirmada {revenueAvailable ? "" : "parcial ou indisponível"} e novas assinaturas
+        pagas ao longo do tempo.
+      </figcaption>
       <div className="mx-auto w-full min-w-[760px] max-w-[1120px]">
         <svg
           aria-label="Receita e novas assinaturas ao longo do tempo"
@@ -560,21 +552,6 @@ const FinanceChart = ({
           ))}
         </div>
       </div>
-      <details className="mt-3 rounded-2xl bg-surface-muted p-3 text-xs text-muted">
-        <summary className="cursor-pointer font-black text-foreground">
-          Resumo textual do gráfico
-        </summary>
-        <div className="mt-2 grid gap-2 sm:grid-cols-2">
-          {chartPoints.map((point) => (
-            <p key={point.date}>
-              <strong className="text-foreground">{point.tooltipLabel}:</strong>{" "}
-              {formatMoney(point.revenue_cents)} em {point.confirmed_payments} pagamentos
-              confirmados; {numberFormatter.format(point.new_subscriptions)} novas assinaturas
-              pagas.
-            </p>
-          ))}
-        </div>
-      </details>
     </figure>
   );
 };
@@ -765,38 +742,93 @@ const CoverageNotes = ({ dashboard }: { dashboard: AdminFinanceDashboard }) => (
   </CardShell>
 );
 
-const FinanceOverview = ({ dashboard }: { dashboard: AdminFinanceDashboard }) => (
-  <CardShell className="min-w-0 p-5">
-    <div className="mb-5 flex min-w-0 flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-      <div className="min-w-0">
-        <h2 className="text-xl font-bold text-foreground">Visão Geral</h2>
-        <p className="mt-1 text-sm font-bold leading-6 text-muted">
-          {dashboard.period.label} · {formatDate(dashboard.period.from)} a{" "}
-          {formatDate(dashboard.period.to)}
-        </p>
+const FinanceOverview = ({
+  dashboard,
+  displayRange,
+  isLoading,
+  onDateChange,
+  onDateControlsBlur,
+  onPeriodChange,
+  period,
+  rangeError,
+  rangeValid,
+}: {
+  dashboard?: AdminFinanceDashboard;
+  displayRange: FinanceDashboardRange;
+  isLoading: boolean;
+  onDateChange: (field: "from" | "to", value: string) => void;
+  onDateControlsBlur: (event: FocusEvent<HTMLDivElement>) => void;
+  onPeriodChange: (period: FinancePeriodPreset) => void;
+  period: FinancePeriodValue;
+  rangeError: string | null;
+  rangeValid: boolean;
+}) => {
+  const selectedPeriodLabel =
+    FINANCE_PERIOD_OPTIONS.find((option) => option.id === period)?.label ?? "Personalizado";
+  const periodSummary =
+    period === "custom"
+      ? rangeValid
+        ? `Período personalizado · ${formatDate(displayRange.from ?? "")} a ${formatDate(
+            displayRange.to ?? "",
+          )}`
+        : "Período personalizado"
+      : dashboard
+        ? `${dashboard.period.label} · ${formatDate(dashboard.period.from)} a ${formatDate(
+            dashboard.period.to,
+          )}`
+        : selectedPeriodLabel;
+
+  return (
+    <CardShell className="min-w-0 p-5">
+      <div className="mb-5 flex min-w-0 flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+        <div className="min-w-0">
+          <h2 className="text-xl font-bold text-foreground">Visão Geral</h2>
+          <p className="mt-1 text-sm font-bold leading-6 text-muted">{periodSummary}</p>
+        </div>
+
+        <FinancePeriodControls
+          displayRange={displayRange}
+          onDateChange={onDateChange}
+          onDateControlsBlur={onDateControlsBlur}
+          onPeriodChange={onPeriodChange}
+          period={period}
+          rangeError={rangeError}
+        />
       </div>
-      <span className="w-fit rounded-full bg-surface-muted px-2 py-1 text-[0.65rem] font-bold text-muted">
-        {dashboard.series.source}
-      </span>
-    </div>
-    <CardsGrid dashboard={dashboard} />
-    <div className="mt-5">
-      <h3 className="text-base font-bold text-foreground">Receita ao longo do tempo</h3>
-      <p className="mt-1 text-sm text-muted">
-        Linha com pagamentos confirmados reais e barras com novas assinaturas profissionais pagas.
-      </p>
-    </div>
-    <FinanceChart
-      points={dashboard.series.points}
-      revenueAvailable={dashboard.cards.revenue_total.available}
-    />
-  </CardShell>
-);
+
+      {isLoading ? <LoadingGrid /> : null}
+      {!isLoading && !rangeValid ? (
+        <p className="rounded-2xl bg-surface-muted p-4 text-sm font-bold text-muted">
+          Ajuste o período personalizado para carregar a visão geral financeira.
+        </p>
+      ) : null}
+      {!isLoading && rangeValid && dashboard ? (
+        <>
+          <CardsGrid dashboard={dashboard} />
+          <div className="mt-5 flex min-w-0 flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+            <div className="min-w-0">
+              <h3 className="text-base font-bold text-foreground">Receita ao longo do tempo</h3>
+              <p className="mt-1 text-sm text-muted">
+                Linha com pagamentos confirmados reais e barras com novas assinaturas profissionais
+                pagas.
+              </p>
+            </div>
+            <span className="w-fit rounded-full bg-surface-muted px-2 py-1 text-[0.65rem] font-bold text-muted">
+              {dashboard.series.source}
+            </span>
+          </div>
+          <FinanceChart
+            points={dashboard.series.points}
+            revenueAvailable={dashboard.cards.revenue_total.available}
+          />
+        </>
+      ) : null}
+    </CardShell>
+  );
+};
 
 const DashboardContent = ({ dashboard }: { dashboard: AdminFinanceDashboard }) => (
   <div className="space-y-6">
-    <FinanceOverview dashboard={dashboard} />
-
     <RevenuePanel dashboard={dashboard} />
     <NewSubscriptions dashboard={dashboard} />
     <CoverageNotes dashboard={dashboard} />
@@ -807,53 +839,115 @@ export const AdminFinanceClient = () => {
   const [exportFeedback, setExportFeedback] = useState<string | null>(null);
   const [exportError, setExportError] = useState<string | null>(null);
   const [selectedPeriod, setSelectedPeriod] = useState<FinancePeriodValue>(DEFAULT_FINANCE_PERIOD);
-  const {
-    appliedRange,
-    applyRange,
-    draftRange,
-    handleDateChange,
-    handleDateControlsBlur,
-    rangeError,
-  } = useDateRangeCommitOnBlur<FinanceDashboardQuery>({
-    initialRange: () => getRangeForPeriod(DEFAULT_FINANCE_PERIOD),
-    isValidRange,
-    onApply: () => {
-      setExportFeedback(null);
-      setExportError(null);
-    },
-  });
-  const validRange = isValidRange(appliedRange);
-  const query = useAdminFinanceDashboard(appliedRange, { enabled: validRange });
+  const [appliedPeriod, setAppliedPeriod] = useState<FinancePeriodValue>(DEFAULT_FINANCE_PERIOD);
+  const [rangeError, setRangeError] = useState<string | null>(null);
+  const [draftRange, setDraftRange] = useState<FinanceDashboardRange>(() =>
+    getDashboardRangeForPeriod(DEFAULT_FINANCE_PERIOD),
+  );
+  const [appliedRange, setAppliedRange] = useState<FinanceDashboardRange>(() =>
+    getDashboardRangeForPeriod(DEFAULT_FINANCE_PERIOD),
+  );
+  const queryInput = useMemo(
+    () => buildFinanceDashboardQuery(appliedPeriod, appliedRange),
+    [appliedPeriod, appliedRange],
+  );
+  const validRange = appliedPeriod !== "custom" || isValidRange(appliedRange);
+  const validDraftRange = isValidRange(draftRange);
+  const visibleRangeValid = selectedPeriod !== "custom" || validDraftRange;
+  const query = useAdminFinanceDashboard(queryInput, { enabled: validRange });
   const exportMutation = useAdminFinanceExport();
   const queryError = query.error ? resolveApiError(query.error) : null;
+  const displayRange =
+    selectedPeriod !== "custom" && query.data
+      ? { from: query.data.period.from, to: query.data.period.to }
+      : draftRange;
+
+  const clearExportMessages = () => {
+    setExportFeedback(null);
+    setExportError(null);
+  };
 
   const resetToDefaultPeriod = () => {
+    const defaultRange = getDashboardRangeForPeriod(DEFAULT_FINANCE_PERIOD);
+    setRangeError(null);
     setSelectedPeriod(DEFAULT_FINANCE_PERIOD);
-    applyRange(getRangeForPeriod(DEFAULT_FINANCE_PERIOD));
+    setAppliedPeriod(DEFAULT_FINANCE_PERIOD);
+    setDraftRange(defaultRange);
+    setAppliedRange(defaultRange);
+    clearExportMessages();
   };
 
   const handleFinancePeriodChange = (nextPeriod: FinancePeriodPreset) => {
+    const nextRange = getDashboardRangeForPeriod(nextPeriod);
+    setRangeError(null);
     setSelectedPeriod(nextPeriod);
-    applyRange(getRangeForPeriod(nextPeriod));
+    setAppliedPeriod(nextPeriod);
+    setDraftRange(nextRange);
+    setAppliedRange(nextRange);
+    clearExportMessages();
   };
 
   const handleFinanceDateChange = (field: "from" | "to", value: string) => {
+    setRangeError(null);
     setSelectedPeriod("custom");
-    handleDateChange(field, value);
+    setDraftRange({ ...displayRange, [field]: value });
   };
 
-  const handleFinanceGroupByChange = (groupBy: FinanceDashboardQuery["groupBy"]) => {
-    applyRange({ ...draftRange, groupBy });
+  const commitCustomRange = () => {
+    if (selectedPeriod !== "custom") return;
+
+    if (!validDraftRange) {
+      setRangeError(
+        "Informe um período personalizado completo, com data inicial menor ou igual à final.",
+      );
+      return;
+    }
+
+    setRangeError(null);
+    setSelectedPeriod("custom");
+    setAppliedPeriod("custom");
+    setAppliedRange(draftRange);
+    clearExportMessages();
+  };
+
+  const handleDateControlsBlur = (event: FocusEvent<HTMLDivElement>) => {
+    const currentTarget = event.currentTarget;
+    const nextFocusedElement = event.relatedTarget as Node | null;
+
+    if (nextFocusedElement && currentTarget.contains(nextFocusedElement)) return;
+
+    window.setTimeout(() => {
+      const activeElement = document.activeElement;
+
+      if (activeElement && currentTarget.contains(activeElement)) return;
+
+      commitCustomRange();
+    }, 0);
   };
 
   const handleExport = async () => {
+    if (selectedPeriod === "custom" && !validDraftRange) {
+      setRangeError(
+        "Informe um período personalizado completo, com data inicial menor ou igual à final.",
+      );
+      return;
+    }
+
     if (!validRange) return;
 
     setExportFeedback(null);
     setExportError(null);
 
+    const exportQuery =
+      selectedPeriod === "custom" ? buildFinanceDashboardQuery("custom", draftRange) : queryInput;
+
+    if (selectedPeriod === "custom") {
+      setAppliedPeriod("custom");
+      setAppliedRange(draftRange);
+    }
+
     try {
-      const result = await exportMutation.mutateAsync(appliedRange);
+      const result = await exportMutation.mutateAsync(exportQuery);
       downloadBlob(result.blob, result.filename);
       setExportFeedback(`Relatório ${result.filename} baixado em CSV.`);
     } catch (error) {
@@ -865,16 +959,22 @@ export const AdminFinanceClient = () => {
     <div className="space-y-6">
       <FinanceHeader
         exportError={exportError}
+        exportDisabled={!validRange || !visibleRangeValid}
         exportFeedback={exportFeedback}
         exportPending={exportMutation.isPending}
+        onExport={handleExport}
+      />
+
+      <FinanceOverview
+        dashboard={query.data}
+        displayRange={displayRange}
+        isLoading={validRange && query.isLoading}
         onDateChange={handleFinanceDateChange}
         onDateControlsBlur={handleDateControlsBlur}
-        onExport={handleExport}
-        onGroupByChange={handleFinanceGroupByChange}
         onPeriodChange={handleFinancePeriodChange}
         period={selectedPeriod}
-        range={draftRange}
         rangeError={rangeError}
+        rangeValid={visibleRangeValid}
       />
 
       {!validRange ? (
@@ -883,8 +983,6 @@ export const AdminFinanceClient = () => {
           onRetry={resetToDefaultPeriod}
         />
       ) : null}
-
-      {validRange && query.isLoading ? <LoadingGrid /> : null}
 
       {validRange && query.isFetching && !query.isLoading ? (
         <p className="inline-flex items-center gap-2 text-sm font-bold text-muted">

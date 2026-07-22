@@ -528,3 +528,53 @@ Validacao deste ajuste:
 - `pnpm --dir admin check`
 - `pnpm --dir admin build`
 - Smoke HTTP local: `GET http://localhost:3002/financeiro` retornou `200`.
+
+## Ajuste pos-feedback 2026-07-22: filtros do Financeiro dentro da Visao Geral
+
+O refinamento visual do Financeiro indicou que o header deveria ficar ainda mais proximo do padrao das demais paginas Lectum/Admin, deixando controles analiticos dentro do bloco de leitura correspondente.
+
+Decisoes:
+
+- Manter o header de Financeiro apenas com label, titulo, subtitulo e CTA **Exportar relatorio**.
+- Mover `Periodo`, `De` e `Ate` para o card **Visao Geral**, acima dos contadores e do grafico, para que filtro, numeros e serie temporal fiquem em um mesmo contexto visual.
+- Remover o controle visual **Agrupar**, reduzindo ruido e delegando a granularidade ao backend conforme a janela consultada.
+- Usar os presets **Hoje**, **Esta semana**, **Este mes**, **Este ano** e **Todo o periodo**; **Personalizado** permanece apenas como estado interno quando o usuario edita datas manualmente.
+- Nao criar componente/tema paralelo, nao instalar package novo e nao alterar dados persistidos.
+
+Consequencia: Financeiro acompanha melhor o modelo de leitura de Pacientes e das demais telas do piloto premium: header limpo, card de visao geral autocontido e menos controles operacionais expostos.
+
+## Ajuste pos-feedback 2026-07-22: Visao Geral de Financeiro espelhada em Pacientes
+
+Novo feedback visual pediu que o bloco **Visao Geral** de `/financeiro` seguisse de forma mais fiel
+o layout ja validado em `/pacientes`.
+
+Decisoes:
+
+- Padronizar a composicao interna do card: titulo e periodo no lado esquerdo, filtros de
+  `Periodo`, `De` e `Ate` no lado direito em desktop e empilhados no mobile.
+- Usar o mesmo grid de contadores de Pacientes (`2` colunas no mobile e `4` no desktop), mantendo
+  os quatro indicadores financeiros reais da TASK-62.
+- Remover chip de fonte, titulo/descricao redundantes do grafico, legenda visual separada e
+  resumo expansivel para deixar a leitura do grafico logo abaixo dos contadores.
+- Preservar a explicacao do grafico em `figcaption` acessivel e manter notas de cobertura
+  financeira no bloco proprio, sem esconder indisponibilidades reais.
+- Nao alterar backend, contratos HTTP, calculos financeiros, CSV, Prisma/migrations, packages ou
+  dados persistidos neste refinamento.
+
+Consequencia: o Financeiro fica visualmente consistente com a hierarquia da Visao Geral de
+Pacientes, sem criar componente paralelo nem transformar dados financeiros indisponiveis em numeros
+estimados.
+
+Validacao deste ajuste:
+
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/financeiro/client.tsx"`
+- `pnpm --dir admin exec biome check "src/app/(admin)/financeiro/client.tsx"`
+- `pnpm --dir admin exec eslint "src/app/(admin)/financeiro/client.tsx"`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- Smoke de service real: `buildAdminFinanceDashboard` retornou `200` para `today`, `week`,
+  `month`, `year` e `all`.
+- `pnpm check`
+- Smoke HTTP local: `GET http://localhost:3002/financeiro` retornou `200`.

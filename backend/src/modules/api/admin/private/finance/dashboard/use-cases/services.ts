@@ -14,7 +14,7 @@ import type {
 import { AdminFinanceDashboardRepository } from "../repositories/AdminFinanceDashboardRepository";
 
 const DEFAULT_PERIOD_DAYS = 30;
-const MAX_PERIOD_DAYS = 90;
+const MAX_PERIOD_DAYS = 3660;
 const DEFAULT_SUBSCRIPTION_TAKE = 50;
 
 const pad = (value: number) => String(value).padStart(2, "0");
@@ -60,8 +60,21 @@ const daysBetweenInclusive = (from: Date, to: Date) => {
   return Math.floor((end - start) / 86_400_000) + 1;
 };
 
-const resolveGroupBy = (value: AdminFinanceQuery["groupBy"]): AdminFinanceGroupBy => {
+const startOfWeek = (date: Date) => {
+  const next = startOfDate(date);
+  const day = next.getDay();
+  const diff = day === 0 ? -6 : 1 - day;
+  next.setDate(next.getDate() + diff);
+  return next;
+};
+
+const startOfMonth = (date: Date) => new Date(date.getFullYear(), date.getMonth(), 1, 0, 0, 0, 0);
+const startOfYear = (date: Date) => new Date(date.getFullYear(), 0, 1, 0, 0, 0, 0);
+
+const resolveGroupBy = (value: AdminFinanceQuery["groupBy"], days: number): AdminFinanceGroupBy => {
   if (value === "month" || value === "week") return value;
+  if (days > 180) return "month";
+  if (days > 62) return "week";
 
   return "day";
 };
@@ -84,16 +97,19 @@ type PeriodResult =
       success: false;
     };
 
-const resolvePeriod = (query: AdminFinanceQuery): PeriodResult => {
-  const groupBy = resolveGroupBy(query.groupBy);
+const resolvePeriod = (
+  query: AdminFinanceQuery,
+  allPeriodStartDate?: Date | null,
+): PeriodResult => {
   const hasCustomFrom = Boolean(query.from);
   const hasCustomTo = Boolean(query.to);
+  const preset = query.period || (hasCustomFrom || hasCustomTo ? "custom" : null);
 
   let start: Date;
   let end: Date;
   let label = "Últimos 30 dias";
 
-  if (hasCustomFrom || hasCustomTo) {
+  if (preset === "custom") {
     if (!hasCustomFrom || !hasCustomTo) {
       return { code: "invalid_analytics_date_range", success: false };
     }
@@ -108,6 +124,34 @@ const resolvePeriod = (query: AdminFinanceQuery): PeriodResult => {
     start = customStart;
     end = customEnd;
     label = "Período personalizado";
+  } else if (preset === "today") {
+    const today = new Date();
+    start = startOfDate(today);
+    end = endOfDate(today);
+    label = "Hoje";
+  } else if (preset === "week") {
+    const today = new Date();
+    start = startOfWeek(today);
+    end = endOfDate(today);
+    label = "Esta semana";
+  } else if (preset === "month") {
+    const today = new Date();
+    start = startOfMonth(today);
+    end = endOfDate(today);
+    label = "Este mês";
+  } else if (preset === "year") {
+    const today = new Date();
+    start = startOfYear(today);
+    end = endOfDate(today);
+    label = "Este ano";
+  } else if (preset === "all") {
+    const today = new Date();
+    start = startOfDate(allPeriodStartDate ?? addDays(today, -(DEFAULT_PERIOD_DAYS - 1)));
+    end = endOfDate(today);
+    if (start > end) start = startOfDate(today);
+    label = "Todo o período";
+  } else if (preset) {
+    return { code: "invalid_analytics_date_range", success: false };
   } else {
     const today = new Date();
     end = endOfDate(today);
@@ -119,6 +163,7 @@ const resolvePeriod = (query: AdminFinanceQuery): PeriodResult => {
     return { code: "invalid_analytics_date_range", success: false };
   }
 
+  const groupBy = resolveGroupBy(query.groupBy, days);
   const previousEnd = endOfDate(addDays(start, -1));
   const previousStart = startOfDate(addDays(start, -days));
 
@@ -151,7 +196,6 @@ type Bucket = {
   start_date: string;
 };
 
-const startOfMonth = (date: Date) => new Date(date.getFullYear(), date.getMonth(), 1, 0, 0, 0, 0);
 const endOfMonth = (date: Date) =>
   new Date(date.getFullYear(), date.getMonth() + 1, 0, 23, 59, 59, 999);
 
@@ -433,7 +477,11 @@ export const buildAdminFinanceDashboard = async (
   query: AdminFinanceQuery,
   options: { subscriptionTake?: number } = {},
 ): Promise<Resolve> => {
-  const resolvedPeriod = resolvePeriod(query ?? {});
+  const normalizedQuery = query ?? {};
+  const repository = new AdminFinanceDashboardRepository();
+  const allPeriodStartDate =
+    normalizedQuery.period === "all" ? await repository.findFinanceStartDate() : null;
+  const resolvedPeriod = resolvePeriod(normalizedQuery, allPeriodStartDate);
   if (!resolvedPeriod.success) {
     return {
       status: 400,
@@ -441,7 +489,6 @@ export const buildAdminFinanceDashboard = async (
     };
   }
 
-  const repository = new AdminFinanceDashboardRepository();
   const { current, groupBy, period, previous } = resolvedPeriod.period;
   const subscriptionTake = options.subscriptionTake ?? DEFAULT_SUBSCRIPTION_TAKE;
 

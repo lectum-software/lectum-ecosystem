@@ -26,3 +26,16 @@ O painel financeiro precisa mostrar receita, novas assinaturas, assinaturas ativ
 - A tela privilegia precisão e honestidade operacional em vez de estimar receita por multiplicação de assinaturas.
 - Em ambientes com payloads incompletos do Mercado Pago, a receita pode aparecer indisponível enquanto MRR e ticket médio seguem disponíveis a partir do banco de assinatura.
 - O Admin Financeiro fica dependente da qualidade dos webhooks/eventos reais já persistidos em `payment_event`, sem criar dados fake ou endpoint simulado.
+
+## Ajuste 2026-07-22: presets sem agrupamento manual no Financeiro
+
+O feedback de produto pediu que os filtros de `/financeiro` fossem deslocados para a **Visao Geral**, sem controle manual de agrupamento, e que os presets passassem a representar periodos de negocio em vez de janelas fixas de 7/30/90 dias.
+
+Decisoes:
+
+- Aceitar no contrato financeiro `period=today|week|month|year|all|custom`, preservando `from`/`to` para `custom` e mantendo `groupBy=day|week|month` apenas como compatibilidade de API/exportacao.
+- Remover o seletor **Agrupar** da UI Admin; a agregacao passa a ser automatica por extensao do periodo: diaria em janelas curtas, semanal em janelas intermediarias e mensal em janelas longas.
+- Resolver **Todo o periodo** a partir da primeira data financeira real encontrada em `payment_event` Mercado Pago ou `professional_subscription` paga, com fallback para os ultimos 30 dias somente quando nao houver nenhum dado financeiro real.
+- Aplicar os mesmos filtros/presets no CSV exportado, sem adicionar campos sensiveis, package novo, schema Prisma ou migration.
+
+Consequencia: a interface fica mais simples e alinhada ao painel Admin, enquanto o backend continua garantindo dados reais e compatibilidade para consumidores existentes que ainda enviem `groupBy`.

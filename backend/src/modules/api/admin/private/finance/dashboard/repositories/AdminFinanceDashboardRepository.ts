@@ -59,6 +59,39 @@ const subscriptionSelect = {
 };
 
 export class AdminFinanceDashboardRepository {
+  async findFinanceStartDate(): Promise<Date | null> {
+    const [firstPaymentEvent, firstSubscription] = await Promise.all([
+      prisma.payment_event.findFirst({
+        orderBy: {
+          createdAt: "asc",
+        },
+        where: {
+          deleted: false,
+          gateway: "mercadopago",
+        },
+        select: {
+          createdAt: true,
+        },
+      }),
+      prisma.professional_subscription.findFirst({
+        orderBy: {
+          createdAt: "asc",
+        },
+        where: paidGatewaySubscriptionWhere,
+        select: {
+          createdAt: true,
+        },
+      }),
+    ]);
+
+    const dates = [firstPaymentEvent?.createdAt, firstSubscription?.createdAt].filter(
+      (date): date is Date => Boolean(date),
+    );
+    if (dates.length === 0) return null;
+
+    return dates.reduce((earliest, date) => (date < earliest ? date : earliest), dates[0]);
+  }
+
   async countActivePaidSubscriptionsAt(at: Date): Promise<number> {
     return prisma.professional_subscription.count({
       where: {

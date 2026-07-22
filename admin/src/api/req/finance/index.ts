@@ -3,10 +3,12 @@ import { resolveApiData } from "@/api/handle";
 import type { ApiResponse } from "@/api/types";
 
 export type FinanceGroupBy = "day" | "month" | "week";
+export type FinancePeriodValue = "all" | "custom" | "month" | "today" | "week" | "year";
 
 export type FinanceDashboardQuery = {
   from?: string;
   groupBy?: FinanceGroupBy;
+  period?: FinancePeriodValue;
   to?: string;
 };
 
@@ -111,6 +113,7 @@ export type AdminFinanceDashboard = {
 const cleanParams = (input: FinanceDashboardQuery) => ({
   ...(input.from ? { from: input.from } : {}),
   ...(input.groupBy ? { groupBy: input.groupBy } : {}),
+  ...(input.period ? { period: input.period } : {}),
   ...(input.to ? { to: input.to } : {}),
 });
 

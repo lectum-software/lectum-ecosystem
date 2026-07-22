@@ -235,3 +235,48 @@ Frontend esperado:
   - `pnpm --dir admin check`;
   - `pnpm --dir admin build`;
   - smoke HTTP local `GET http://localhost:3002/financeiro` retornou `200`.
+
+## Ajuste pos-feedback 2026-07-22 - Filtros dentro da Visao Geral
+
+- Pedido do usuario: mover filtros de periodo/data para o bloco **Visao Geral**, remover o filtro visual **Agrupar** e trocar os presets por **Hoje**, **Esta semana**, **Este mes**, **Este ano** e **Todo o periodo**.
+- O header de `/financeiro` agora permanece limpo, com label, titulo, subtitulo e CTA **Exportar relatorio**, seguindo o padrao das demais paginas Admin.
+- O card unico de **Visao Geral** concentra os filtros reais (`Periodo`, `De`, `Ate`), os quatro contadores financeiros e o grafico **Receita ao longo do tempo**.
+- O filtro **Agrupar** foi removido da UI. O backend segue aceitando `groupBy=day|week|month` por compatibilidade, mas a tela passa a usar agregacao automatica conforme a janela consultada: dia para periodos curtos, semana para periodos intermediarios e mes para periodos longos.
+- O contrato Financeiro agora aceita `period=today|week|month|year|all|custom`; `custom` usa `from`/`to` digitados, e `all` busca a primeira data financeira real em `payment_event` Mercado Pago ou assinatura profissional paga, com fallback honesto para os ultimos 30 dias quando nao houver dado financeiro real.
+- A exportacao CSV usa os mesmos filtros aplicados pela tela, incluindo presets e periodo personalizado, sem incluir dados sensiveis de pagamento.
+- Nao houve instalacao de package novo, alteracao de Prisma/migrations, mock, dado fake permanente ou endpoint simulado.
+- Builder/Quick Copy segue sem ferramenta callable neste ambiente; as referencias auditaveis permanecem `_product/proto/admin/Financeiro.png`, o padrao ativo em `/pacientes` e as capturas enviadas pelo usuario.
+- Validacoes executadas para este ajuste:
+  - `pnpm --dir admin exec biome check --write "src/app/(admin)/financeiro/client.tsx" "src/api/req/finance/index.ts"`;
+  - `pnpm --dir backend exec biome check --write "src/modules/api/admin/private/finance/dashboard/DTOs/IAdminFinanceDashboardDTO.ts" "src/modules/api/admin/private/finance/dashboard/validator/index.ts" "src/modules/api/admin/private/finance/dashboard/use-cases/services.ts" "src/modules/api/admin/private/finance/dashboard/repositories/AdminFinanceDashboardRepository.ts"`;
+  - `pnpm --dir admin exec biome check "src/app/(admin)/financeiro/client.tsx" "src/api/req/finance/index.ts"`;
+  - `pnpm --dir backend exec biome check "src/modules/api/admin/private/finance/dashboard/DTOs/IAdminFinanceDashboardDTO.ts" "src/modules/api/admin/private/finance/dashboard/validator/index.ts" "src/modules/api/admin/private/finance/dashboard/use-cases/services.ts" "src/modules/api/admin/private/finance/dashboard/repositories/AdminFinanceDashboardRepository.ts"`;
+  - `pnpm --dir admin exec eslint "src/app/(admin)/financeiro/client.tsx"`;
+  - `pnpm --dir admin typecheck`;
+  - `pnpm --dir backend check`;
+  - `pnpm --dir backend build`;
+  - smoke de service real: `buildAdminFinanceDashboard` retornou `200` para `today`, `week`, `month`, `year` e `all`;
+  - `pnpm --dir admin build` em worktree temporario contendo somente os arquivos desta task;
+  - smoke HTTP local `GET http://localhost:3002/financeiro` retornou `200`.
+- Observacao: `pnpm --dir admin check` no checkout principal ficou bloqueado por alteracao fora do escopo em `admin/src/app/(admin)/psicologos/client.tsx`; em worktree temporario limpo com este patch, o mesmo comando ficou bloqueado por formatacao preexistente em `admin/src/app/(admin)/pacientes/client.tsx`. Por isso `pnpm check` nao foi concluido nesta rodada.
+
+## Ajuste pos-feedback 2026-07-22 - Layout da Visao Geral alinhado a Pacientes
+
+- Pedido do usuario: fazer a **Visao Geral** do painel financeiro seguir a mesma composicao da **Visao Geral** do dashboard de Pacientes enviada em captura.
+- O card **Visao Geral** de `/financeiro` passou a usar a mesma estrutura visual de Pacientes: titulo e periodo a esquerda, controles **Periodo**, **De** e **Ate** a direita, contadores em grid responsivo `2 -> 4` e grafico logo abaixo dos contadores.
+- Foram removidos elementos visuais extras que deixavam o Financeiro diferente de Pacientes dentro desse bloco: chip de fonte da serie, titulo/descricao redundantes acima do grafico, legenda visual separada e resumo expansivel.
+- A legenda operacional do grafico foi preservada de forma acessivel via `figcaption` somente para leitores de tela; as notas honestas de cobertura financeira continuam no bloco proprio de cobertura, sem simular receita, assinatura ou cancelamento.
+- A exportacao CSV, presets reais, calculos financeiros, endpoints, Prisma/migrations e packages permaneceram inalterados neste refinamento visual.
+- Builder/Quick Copy segue sem ferramenta callable neste ambiente; as referencias auditaveis foram `_product/proto/admin/Financeiro.png`, `_product/proto/admin/Pacientes/Pacientes - Dashboard.png` e as capturas de `/pacientes` enviadas pelo usuario.
+- Validacoes executadas para este refinamento:
+  - `pnpm --dir admin exec biome check --write "src/app/(admin)/financeiro/client.tsx"`;
+  - `pnpm --dir admin exec biome check "src/app/(admin)/financeiro/client.tsx"`;
+  - `pnpm --dir admin exec eslint "src/app/(admin)/financeiro/client.tsx"`;
+  - `pnpm --dir admin check` (primeira tentativa estourou o timeout local de 240s sem erro reportado; segunda tentativa com timeout maior passou);
+  - `pnpm --dir admin build`;
+  - `pnpm --dir backend check`;
+  - `pnpm --dir backend build`;
+  - smoke de service real: `buildAdminFinanceDashboard` retornou `200` para `today`, `week`, `month`, `year` e `all`;
+  - `pnpm check`;
+  - smoke HTTP local `GET http://localhost:3002/financeiro` retornou `200`;
+  - Chrome headless local abriu `/financeiro` e confirmou protecao por sessao real ao redirecionar para login em perfil temporario sem token Admin; a inspecao visual autenticada ficou limitada ao codigo compilado, prototipos locais e capturas autenticadas enviadas pelo usuario.
