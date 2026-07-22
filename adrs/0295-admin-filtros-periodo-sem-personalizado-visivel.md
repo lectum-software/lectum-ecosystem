@@ -28,6 +28,31 @@ O ajuste é transversal ao Admin e afeta dashboards e abas de detalhe que já us
 - Intervalos customizados continuam funcionando sem alterar endpoints.
 - Algumas abas de atividades exibem dois campos de data a mais por padrão, mantendo layout mobile-first empilhado e progressivo.
 
+## Complemento 2026-07-22: filtros de Pacientes dentro da Visão Geral
+
+### Contexto
+
+Após validação visual do dashboard `/pacientes`, o usuário solicitou mover os filtros `Período`,
+`De` e `Até` do header institucional da página para o card **Visão Geral**, mantendo a leitura do
+período junto dos contadores e do gráfico temporal que ele controla.
+
+### Decisão
+
+- O header de `/pacientes` fica somente com breadcrumb visual, título e subtítulo da seção.
+- Os controles de período/data são renderizados no topo do card **Visão Geral**, à direita em
+  desktop e empilhados em mobile.
+- A regra de `custom` deste ADR permanece inalterada: `Personalizado` só aparece como opção
+  `disabled hidden` quando datas manuais ativam o intervalo customizado.
+- Não há alteração de backend, contrato HTTP, query key, schema Prisma, migration ou package.
+
+### Consequências
+
+- A página separa melhor apresentação institucional e controle analítico.
+- Os filtros ficam próximos ao bloco que será recalculado, reduzindo ambiguidade visual.
+- Durante carregamento inicial sem dados renderizados, os controles aparecem apenas quando a
+  **Visão Geral** está disponível; a validação de erro de período permanece preservada após edição
+  manual.
+
 ## Validação
 
 - `pnpm --dir admin check` — OK.
@@ -36,6 +61,16 @@ O ajuste é transversal ao Admin e afeta dashboards e abas de detalhe que já us
 - Scan estático: sem defaults antigos `week`/`30d`/`90d`/`180d` nos estados de período mapeados.
 - Chrome headless local abriu `http://localhost:3002/psicologos`; em perfil sem sessão administrativa a rota exibiu login, então a conferência visual autenticada ficou limitada ao código, build e protótipo local.
 - Referência visual local: `_product/proto/admin/Psicólogos/Detalhes do psicólogo/Publicações.png`.
+
+### Validação complementar 2026-07-22
+
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/pacientes/client.tsx"` — OK.
+- `pnpm --dir admin check` — OK.
+- `pnpm --dir admin build` — OK.
+- `pnpm check` — OK.
+- Smoke HTTP local: `GET http://localhost:3002/pacientes` retornou `200`.
+- Referência visual local: `_product/proto/admin/Pacientes/Pacientes - Dashboard.png` e screenshot
+  enviado pelo usuário em 2026-07-22.
 
 ## Pendências
 

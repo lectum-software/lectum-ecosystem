@@ -490,3 +490,28 @@ Frontend esperado:
 - `pnpm check`
 - Smoke HTTP local: `GET http://localhost:3002/pacientes` retornou `200`.
 - Preview visual isolado do mapa-mundi foi capturado com Chrome headless local e confirmou mapa continuo, com Brasil destacado sem formas soltas/desconfiguradas. A validacao autenticada completa no browser do Admin segue dependente da sessao local do usuario.
+
+## Ajuste pos-feedback 2026-07-22 - Filtros no bloco Visao Geral
+
+- Pedido do usuario: mover os filtros **Periodo**, **De** e **Ate** do header do dashboard `/pacientes` para o bloco **Visao Geral**.
+- O header de `/pacientes` agora renderiza apenas a identificacao da secao, titulo e subtitulo, sem controles analiticos.
+- Os filtros foram mantidos com o mesmo estado real e passaram para o topo do card **Visao Geral**, ao lado do titulo em desktop e empilhados de forma mobile-first em telas menores.
+- A regra vigente de `Personalizado` permanece preservada: a opcao continua apenas como `disabled hidden` quando a digitacao nos campos de data ativa intervalo customizado.
+- Nao houve alteracao de backend, contrato HTTP, schema Prisma, migration, package novo, endpoint, seed, mock ou dado artificial.
+- Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente; as referencias usadas foram `_product/proto/admin/Pacientes/Pacientes - Dashboard.png` e o screenshot enviado pelo usuario em 2026-07-22.
+- ADR atualizado: `adrs/0295-admin-filtros-periodo-sem-personalizado-visivel.md`.
+
+### Criterios de aceite do ajuste
+
+- [x] Header de `/pacientes` nao contem os filtros de periodo/data.
+- [x] Card **Visao Geral** contem **Periodo**, **De** e **Ate** antes dos contadores e do grafico.
+- [x] Layout mobile-first preservado, com filtros empilhados antes de expandirem para desktop.
+- [x] Nenhum `<img>` cru, mock, seed, dado artificial, endpoint novo ou package novo foi adicionado.
+
+### Validacao complementar executada
+
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/pacientes/client.tsx"`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check`
+- Smoke HTTP local: `GET http://localhost:3002/pacientes` retornou `200`.

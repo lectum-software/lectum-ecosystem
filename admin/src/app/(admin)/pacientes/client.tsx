@@ -570,7 +570,7 @@ const ErrorState = ({ message, onRetry }: { message: string; onRetry: () => void
   </CardShell>
 );
 
-const PatientsHeader = ({
+const PatientsPeriodControls = ({
   displayRange,
   onDateChange,
   onDateControlsBlur,
@@ -585,74 +585,74 @@ const PatientsHeader = ({
   period: PatientsDashboardPeriodValue;
   rangeError: string | null;
 }) => (
-  <section className="rounded-card border border-border/70 bg-surface/90 p-5 shadow-admin-soft backdrop-blur md:p-6">
-    <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
-      <div>
-        <p className="text-xs font-semibold uppercase tracking-[0.12em] text-primary">Pacientes</p>
-        <h1 className="mt-2 text-3xl font-bold tracking-tight text-foreground md:text-4xl">
-          Dashboard de Pacientes
-        </h1>
-        <p className="mt-2 max-w-2xl text-sm font-medium leading-6 text-muted">
-          Gerencie crescimento, status de conta e acompanhamento básico dos pacientes da plataforma.
-        </p>
-      </div>
-
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
-        <label className="grid gap-1 text-xs font-semibold text-muted" htmlFor="patients-period">
-          Período
-          <span className="relative">
-            <select
-              className="h-11 min-w-[170px] appearance-none rounded-control border border-border bg-surface py-0 pl-3 pr-11 text-sm font-semibold text-foreground shadow-control outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
-              id="patients-period"
-              onChange={(event) =>
-                onPeriodChange(event.target.value as PatientsDashboardPeriodPreset)
-              }
-              value={period}
-            >
-              {period === "custom" ? (
-                <option disabled hidden value="custom">
-                  Personalizado
-                </option>
-              ) : null}
-              {PATIENTS_DASHBOARD_PERIOD_OPTIONS.map((option) => (
-                <option key={option.id} value={option.id}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-            <ChevronDown
-              aria-hidden
-              className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground"
-            />
-          </span>
+  <div className="flex w-full flex-col gap-2 xl:w-auto xl:items-end">
+    <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+      <label className="grid gap-1 text-xs font-semibold text-muted" htmlFor="patients-period">
+        Período
+        <span className="relative">
+          <select
+            className="h-11 min-w-[170px] appearance-none rounded-control border border-border bg-surface py-0 pl-3 pr-11 text-sm font-semibold text-foreground shadow-control outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+            id="patients-period"
+            onChange={(event) =>
+              onPeriodChange(event.target.value as PatientsDashboardPeriodPreset)
+            }
+            value={period}
+          >
+            {period === "custom" ? (
+              <option disabled hidden value="custom">
+                Personalizado
+              </option>
+            ) : null}
+            {PATIENTS_DASHBOARD_PERIOD_OPTIONS.map((option) => (
+              <option key={option.id} value={option.id}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+          <ChevronDown
+            aria-hidden
+            className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground"
+          />
+        </span>
+      </label>
+      <div className="grid gap-3 sm:grid-cols-2" onBlur={onDateControlsBlur}>
+        <label className="text-xs font-semibold text-muted">
+          De
+          <input
+            className="mt-1 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground shadow-control focus:border-primary"
+            max={displayRange.to}
+            onChange={(event) => onDateChange("from", event.target.value)}
+            type="date"
+            value={displayRange.from ?? ""}
+          />
         </label>
-        <div className="grid gap-3 sm:grid-cols-2" onBlur={onDateControlsBlur}>
-          <label className="text-xs font-semibold text-muted">
-            De
-            <input
-              className="mt-1 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground shadow-control focus:border-primary"
-              max={displayRange.to}
-              onChange={(event) => onDateChange("from", event.target.value)}
-              type="date"
-              value={displayRange.from ?? ""}
-            />
-          </label>
-          <label className="text-xs font-semibold text-muted">
-            Até
-            <input
-              className="mt-1 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground shadow-control focus:border-primary"
-              min={displayRange.from}
-              onChange={(event) => onDateChange("to", event.target.value)}
-              type="date"
-              value={displayRange.to ?? ""}
-            />
-          </label>
-        </div>
-        {period === "custom" && rangeError ? (
-          <p className="max-w-md text-xs font-bold text-danger">{rangeError}</p>
-        ) : null}
+        <label className="text-xs font-semibold text-muted">
+          Até
+          <input
+            className="mt-1 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground shadow-control focus:border-primary"
+            min={displayRange.from}
+            onChange={(event) => onDateChange("to", event.target.value)}
+            type="date"
+            value={displayRange.to ?? ""}
+          />
+        </label>
       </div>
     </div>
+    {period === "custom" && rangeError ? (
+      <p className="max-w-md text-xs font-bold text-danger">{rangeError}</p>
+    ) : null}
+  </div>
+);
+
+const PatientsHeader = () => (
+  <section className="rounded-card border border-border/70 bg-surface/90 p-5 shadow-admin-soft backdrop-blur md:p-6">
+    <p className="text-xs font-semibold uppercase tracking-[0.12em] text-primary">Pacientes</p>
+    <h1 className="mt-2 text-3xl font-bold tracking-tight text-foreground md:text-4xl">
+      Dashboard de Pacientes
+    </h1>
+    <p className="mt-2 max-w-2xl text-sm font-medium leading-6 text-muted">
+      Gerencie crescimento, status de conta e acompanhamento básico dos pacientes da plataforma.
+    </p>
   </section>
 );
 
@@ -1786,9 +1786,21 @@ const PlatformUsageCard = ({ summary }: { summary: AdminPatientsDashboard }) => 
 
 const DashboardContent = ({
   allowLocalLocationPreview,
+  displayRange,
+  onDateChange,
+  onDateControlsBlur,
+  onPeriodChange,
+  period,
+  rangeError,
   summary,
 }: {
   allowLocalLocationPreview: boolean;
+  onDateChange: (field: "from" | "to", value: string) => void;
+  onDateControlsBlur: (event: FocusEvent<HTMLDivElement>) => void;
+  onPeriodChange: (period: PatientsDashboardPeriodPreset) => void;
+  displayRange: PatientsDashboardRange;
+  period: PatientsDashboardPeriodValue;
+  rangeError: string | null;
   summary: AdminPatientsDashboard;
 }) => {
   const [visibleMetricKeys, setVisibleMetricKeys] = useState<DashboardMetricKey[]>(() => [
@@ -1806,14 +1818,23 @@ const DashboardContent = ({
 
   return (
     <div className="space-y-7">
-
       <CardShell className="min-w-0 p-5">
-        <div className="mb-5 min-w-0">
-          <h2 className="text-xl font-bold text-foreground">Visão Geral</h2>
-          <p className="mt-1 text-sm font-bold leading-6 text-muted">
-            {summary.period.label} · {formatDate(summary.period.from)} a{" "}
-            {formatDate(summary.period.to)}
-          </p>
+        <div className="mb-5 flex min-w-0 flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+          <div className="min-w-0">
+            <h2 className="text-xl font-bold text-foreground">Visão Geral</h2>
+            <p className="mt-1 text-sm font-bold leading-6 text-muted">
+              {summary.period.label} · {formatDate(summary.period.from)} a{" "}
+              {formatDate(summary.period.to)}
+            </p>
+          </div>
+          <PatientsPeriodControls
+            displayRange={displayRange}
+            onDateChange={onDateChange}
+            onDateControlsBlur={onDateControlsBlur}
+            onPeriodChange={onPeriodChange}
+            period={period}
+            rangeError={rangeError}
+          />
         </div>
         <CardsGrid
           activeMetricKeys={activeMetricKeys}
@@ -1904,14 +1925,7 @@ export const AdminPatientsClient = () => {
 
   return (
     <div className="space-y-6">
-      <PatientsHeader
-        displayRange={displayRange}
-        onDateChange={handleCustomDateChange}
-        onDateControlsBlur={handleDateControlsBlur}
-        onPeriodChange={handlePeriodChange}
-        period={selectedPeriod}
-        rangeError={customRangeError}
-      />
+      <PatientsHeader />
 
       {!validRange ? (
         <ErrorState
@@ -1936,6 +1950,12 @@ export const AdminPatientsClient = () => {
       {validRange && query.data ? (
         <DashboardContent
           allowLocalLocationPreview={allowLocalLocationPreview}
+          displayRange={displayRange}
+          onDateChange={handleCustomDateChange}
+          onDateControlsBlur={handleDateControlsBlur}
+          onPeriodChange={handlePeriodChange}
+          period={selectedPeriod}
+          rangeError={customRangeError}
           summary={query.data}
         />
       ) : null}
