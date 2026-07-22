@@ -213,6 +213,14 @@ export class AdminNotificationsRepository {
               email: true,
               id: true,
               name: true,
+              psychologist_profile: {
+                select: {
+                  cfp_verified_at: true,
+                  crp_status: true,
+                  gender: true,
+                  professional_first_name: true,
+                },
+              },
               role: true,
             },
           },

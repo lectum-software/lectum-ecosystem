@@ -139,8 +139,7 @@ Logs automáticos:
 - Mostrar histórico de notificações automáticas enviadas pela plataforma.
 - Colunas mínimas:
   - notificação automática;
-  - disparo;
-  - público;
+  - para;
   - canal;
   - enviada em;
   - alcance;
@@ -375,3 +374,41 @@ UI:
 - Smoke HTTP local: `GET http://localhost:3002/notificacoes` retornou `200`.
 - Smoke de proteção backend: `GET http://localhost:3001/api/admin/private/notifications/email-status` retornou `401` sem token, confirmando autenticação Admin.
 - O arquivo `backend/.env` foi verificado sem expor segredo: as variáveis `EMAIL_API_*` necessárias estavam presentes e havia referência ao remetente Planuze.
+
+## Ajuste complementar 2026-07-21 - Destinatário nos logs automáticos
+
+- Pedido do usuário: remover a coluna **Disparo** dos logs automáticos e trocar **Público** por **Para**.
+- A tabela de **Logs de notificações automáticas** agora exibe o nome do usuário destinatário na coluna **Para**, com selo de perfil verificado quando o destinatário é psicólogo aprovado/validado, e abaixo informa **Paciente**, **Psicólogo** ou **Usuário** conforme `user.role`.
+- O backend passou a incluir dados mínimos do `psychologist_profile` no usuário dos logs automáticos para que o selo seja derivado de dado real (`cfp_verified_at` ou `crp_status="aprovado"`), sem mock ou coluna nova.
+- O placeholder da busca dos logs foi ajustado para remover a menção a **disparo**.
+- Não houve alteração de Prisma/migrations, packages, regras de envio, canais disponíveis ou persistência.
+
+### Validação deste ajuste
+
+- `pnpm --dir backend exec biome check --write "src/modules/api/admin/private/notifications/repositories/AdminNotificationsRepository.ts"`
+- `pnpm --dir admin exec biome check --write "src/api/req/notifications/index.ts" "src/app/(admin)/notificacoes/client.tsx"`
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build` (primeira tentativa bloqueada temporariamente por `.next/lock` de build Next já em execução; repetição concluída com sucesso após o lock sumir)
+- `pnpm check` (primeira tentativa excedeu timeout do runner sem erro; repetição com timeout maior concluída com sucesso)
+- Smoke HTTP local: `GET http://localhost:3002/notificacoes` retornou `200`.
+
+
+## Ajuste complementar 2026-07-21 - Status e engajamento nos logs autom?ticos
+
+- Pedido do usu?rio: como cada entrega autom?tica ocupa uma linha individual, trocar as colunas **Alcance**, **Abertura** e **Cliques** por **Status** e **Engajamento**.
+- A tabela de **Notifica??es autom?ticas** agora mostra o status operacional real da entrega (`queued`, `sent`, `delivered`, `read`, `clicked`, `failed` ou `skipped`) como badge em PT-BR.
+- A coluna **Engajamento** resume a intera??o por linha: **Clicada**, **Lida** ou **Sem engajamento**, derivada apenas de `clicked_at`, `read_at` e `status`; quando existe `clicked_at` ou `read_at`, a data/hora aparece abaixo do badge.
+- Para e-mail sem tracking, a copy informa a limita??o; quando n?o existe evento, mostra que n?o h? data de engajamento.
+- O motivo de falha (`failure_reason`) permanece vis?vel junto ao status quando existir.
+- N?o houve altera??o de backend, Prisma/migrations, packages, contratos HTTP, dados persistidos, canais dispon?veis ou regra de envio.
+
+### Valida??o deste ajuste
+
+- `pnpm --dir admin exec biome check "src/app/(admin)/notificacoes/client.tsx"`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build` (primeira tentativa bloqueada temporariamente por `.next/lock`; repeti??o conclu?da com sucesso)
+- `pnpm check`
+- Smoke HTTP local: `GET http://localhost:3002/notificacoes` retornou `200`.
+- Browser autenticado completo n?o foi repetido neste ambiente sem sess?o Admin interativa acess?vel; a altera??o foi validada por build/check e pela captura enviada pelo usu?rio.

@@ -23,7 +23,14 @@ import {
   UsersRound,
   X,
 } from "lucide-react";
-import { type FocusEventHandler, type ReactNode, useEffect, useMemo, useState } from "react";
+import {
+  type FocusEventHandler,
+  type ReactNode,
+  type SVGProps,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import { type Control, FormProvider, useController, useForm, useWatch } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -130,6 +137,18 @@ const STATUS_COPY: Record<AdminNotificationCampaignStatus, { label: string; clas
   sending: { className: "bg-warning/10 text-warning", label: "Enviando" },
   sent: { className: "bg-success/10 text-success", label: "Enviada" },
 };
+const DELIVERY_STATUS_COPY: Record<
+  NotificationDeliveryStatus,
+  { label: string; className: string }
+> = {
+  clicked: { className: "bg-primary-soft text-primary", label: "Clicada" },
+  delivered: { className: "bg-success/10 text-success", label: "Entregue" },
+  failed: { className: "bg-danger/10 text-danger", label: "Falhou" },
+  queued: { className: "bg-surface-muted text-muted", label: "Na fila" },
+  read: { className: "bg-success/10 text-success", label: "Lida" },
+  sent: { className: "bg-primary-soft text-primary", label: "Enviada" },
+  skipped: { className: "bg-warning/10 text-warning", label: "Omitida" },
+};
 
 const numberFormatter = new Intl.NumberFormat("pt-BR");
 const percentFormatter = new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 1 });
@@ -217,6 +236,27 @@ const roleLabel = (value?: null | string) => {
 
   return "Usuário";
 };
+const VerifiedBadgeIcon = ({ className, ...props }: SVGProps<SVGSVGElement>) => (
+  <svg
+    className={cn("h-4 w-4 shrink-0 text-primary", className)}
+    fill="none"
+    viewBox="0 0 30 28"
+    xmlns="http://www.w3.org/2000/svg"
+    {...props}
+  >
+    <title>Perfil verificado</title>
+    <path
+      d="M10.3636 28L7.77273 23.7333L2.86364 22.6667L3.34091 17.7333L0 14L3.34091 10.2667L2.86364 5.33333L7.77273 4.26667L10.3636 0L15 1.93333L19.6364 0L22.2273 4.26667L27.1364 5.33333L26.6591 10.2667L30 14L26.6591 17.7333L27.1364 22.6667L22.2273 23.7333L19.6364 28L15 26.0667L10.3636 28ZM13.5682 18.7333L21.2727 11.2L19.3636 9.26667L13.5682 14.9333L10.6364 12.1333L8.72727 14L13.5682 18.7333Z"
+      fill="currentColor"
+    />
+  </svg>
+);
+type NotificationRecipient = AdminNotificationAutomaticLog["user"];
+const recipientName = (user: NotificationRecipient) => user.name?.trim() || user.email || "Usuário";
+const recipientHasVerifiedBadge = (user: NotificationRecipient) =>
+  user.role === "psicologo" &&
+  (Boolean(user.psychologist_profile?.cfp_verified_at) ||
+    user.psychologist_profile?.crp_status === "aprovado");
 const CHANNEL_LABELS: Record<AdminNotificationChannel, string> = {
   email: "E-mail",
   in_app: "In-app",
@@ -286,6 +326,59 @@ const StatusBadge = ({ status }: { status: AdminNotificationCampaignStatus }) =>
   </span>
 );
 
+const DeliveryStatusBadge = ({ status }: { status: NotificationDeliveryStatus }) => (
+  <span
+    className={cn(
+      "inline-flex rounded-full px-2.5 py-1 text-xs font-black",
+      DELIVERY_STATUS_COPY[status].className,
+    )}
+  >
+    {DELIVERY_STATUS_COPY[status].label}
+  </span>
+);
+
+const EngagementCell = ({ log }: { log: AdminNotificationAutomaticLog }) => {
+  const clicked = Boolean(log.clicked_at || log.status === "clicked");
+  const read = Boolean(log.read_at || clicked || log.status === "read");
+  const engagementDateTime = log.clicked_at || log.read_at;
+  const formattedEngagementDateTime = engagementDateTime
+    ? formatDateTime(engagementDateTime)
+    : "Data de engajamento n?o registrada";
+
+  if (clicked) {
+    return (
+      <div>
+        <span className="inline-flex rounded-full bg-primary-soft px-2.5 py-1 text-xs font-black text-primary">
+          Clicada
+        </span>
+        <p className="mt-1 text-xs font-bold text-muted">{formattedEngagementDateTime}</p>
+      </div>
+    );
+  }
+
+  if (read) {
+    return (
+      <div>
+        <span className="inline-flex rounded-full bg-success/10 px-2.5 py-1 text-xs font-black text-success">
+          Lida
+        </span>
+        <p className="mt-1 text-xs font-bold text-muted">{formattedEngagementDateTime}</p>
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <span className="inline-flex rounded-full bg-surface-muted px-2.5 py-1 text-xs font-black text-muted">
+        Sem engajamento
+      </span>
+      <p className="mt-1 text-xs font-bold text-muted">
+        {log.channel === "email" ? "Sem data; e-mail sem tracking" : "Sem data de engajamento"}
+      </p>
+    </div>
+  );
+};
+
 const ChannelPill = ({ channel }: { channel: AdminNotificationChannel }) => (
   <span className="inline-flex items-center gap-1 rounded-full bg-primary-soft px-2 py-1 text-xs font-black text-primary">
     {channel === "email" ? (
@@ -297,6 +390,18 @@ const ChannelPill = ({ channel }: { channel: AdminNotificationChannel }) => (
     )}
     {channelLabel(channel)}
   </span>
+);
+
+const RecipientCell = ({ user }: { user: NotificationRecipient }) => (
+  <div className="min-w-0">
+    <div className="flex min-w-0 items-center gap-1.5">
+      <span className="min-w-0 truncate font-black text-foreground">{recipientName(user)}</span>
+      {recipientHasVerifiedBadge(user) ? (
+        <VerifiedBadgeIcon aria-label="Perfil verificado" className="h-3.5 w-3.5" />
+      ) : null}
+    </div>
+    <p className="mt-0.5 truncate text-xs font-bold text-muted">{roleLabel(user.role)}</p>
+  </div>
 );
 
 const filterSelectClass =
@@ -873,32 +978,22 @@ const AutomaticLogs = ({
           <thead className="bg-surface-muted text-xs uppercase tracking-[0.08em] text-muted">
             <tr>
               <th className="px-4 py-3">Notificação automática</th>
-              <th className="px-4 py-3">Disparo</th>
-              <th className="px-4 py-3">Público</th>
+              <th className="px-4 py-3">Para</th>
               <th className="px-4 py-3">Canal</th>
               <th className="px-4 py-3">Enviada em</th>
-              <th className="px-4 py-3">Alcance</th>
-              <th className="px-4 py-3">Abertura</th>
-              <th className="px-4 py-3">Cliques</th>
+              <th className="px-4 py-3">Status</th>
+              <th className="px-4 py-3">Engajamento</th>
             </tr>
           </thead>
           <tbody>
             {data.map((log) => {
-              const reached = ["sent", "delivered", "read", "clicked"].includes(log.status);
-              const opened = Boolean(
-                log.read_at || log.clicked_at || ["read", "clicked"].includes(log.status),
-              );
-              const clicked = Boolean(log.clicked_at || log.status === "clicked");
               const title =
                 log.notification?.message_key || log.trigger_key || "notificação automática";
               return (
                 <tr className="border-t border-border align-top" key={log.id}>
                   <td className="px-4 py-4 font-black text-foreground">{title}</td>
-                  <td className="px-4 py-4 text-sm font-bold text-muted">
-                    {log.trigger_key || "—"}
-                  </td>
-                  <td className="px-4 py-4 text-sm font-bold text-muted">
-                    {roleLabel(log.user?.role)}
+                  <td className="px-4 py-4 text-sm">
+                    <RecipientCell user={log.user} />
                   </td>
                   <td className="px-4 py-4">
                     <ChannelPill channel={log.channel} />
@@ -1413,7 +1508,7 @@ export const AdminNotificationsClient = () => {
             period={logsPeriod}
             range={logsRangeControls.draftRange}
             rangeError={logsRangeControls.rangeError}
-            searchPlaceholder="Buscar log por notificação, disparo ou usuário..."
+            searchPlaceholder="Buscar log por notificação ou usuário..."
             status={logStatus}
             statusOptions={DELIVERY_STATUS_OPTIONS}
           />

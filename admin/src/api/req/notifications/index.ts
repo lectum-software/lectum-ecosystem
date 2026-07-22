@@ -182,7 +182,15 @@ export type AdminNotificationAutomaticLog = {
   source: "automatic" | "manual";
   status: NotificationDeliveryStatus;
   trigger_key: string | null;
-  user: Pick<Admin, "email" | "id" | "name"> & { role?: string | null };
+  user: Pick<Admin, "email" | "id" | "name"> & {
+    psychologist_profile?: {
+      cfp_verified_at?: string | null;
+      crp_status?: string | null;
+      gender?: string | null;
+      professional_first_name?: string | null;
+    } | null;
+    role?: string | null;
+  };
 };
 
 export type AdminNotificationAutomaticLogsResponse = {
