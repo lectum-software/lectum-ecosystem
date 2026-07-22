@@ -41,7 +41,16 @@ export const adminNavItems = [
       { label: "Lista de pacientes", href: "/pacientes/lista" },
     ],
   },
-  { label: "Financeiro", href: "/financeiro", icon: CircleDollarSign },
+  {
+    label: "Financeiro",
+    href: "/financeiro",
+    icon: CircleDollarSign,
+    children: [
+      { label: "Visão geral", href: "/financeiro" },
+      { label: "Cobranças", href: "/financeiro/cobrancas" },
+      { label: "Assinaturas", href: "/financeiro/assinaturas" },
+    ],
+  },
   { label: "Notificações", href: "/notificacoes", icon: Bell },
   { label: "Configurações", href: "/configuracoes", icon: Settings },
 ] as const;

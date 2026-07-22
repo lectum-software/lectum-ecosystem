@@ -447,3 +447,34 @@ Frontend esperado:
 - Smoke de service real com `.env` local: `buildAdminFinanceDashboard({ period: "all" })`, `listAdminFinanceCharges({ period: "all", limit: 2 })` e `listAdminFinanceSubscriptions({ period: "all", limit: 2 })` retornaram `status=200`; o dashboard expôs `latest_charges` e `subscription_relation`.
 - Smoke HTTP local protegido: `GET http://localhost:3001/api/admin/private/finance/charges?period=all` e `GET http://localhost:3001/api/admin/private/finance/subscriptions?period=all` sem token Admin retornaram `401`.
 - Smoke HTTP local Admin: `GET http://localhost:3002/financeiro`, `/financeiro/cobrancas` e `/financeiro/assinaturas` retornaram `200`.
+
+## Ajuste pós-feedback 2026-07-22 - Submenu lateral de Financeiro
+
+- Pedido do usuário: no menu lateral, a opção **Financeiro** deve exibir as opções **Visão geral**, **Cobranças** e **Assinaturas**.
+- O item **Financeiro** em `adminNavItems` foi convertido em grupo expansível usando o mesmo padrão já aplicado em Comunidades, Psicólogos e Pacientes.
+- As opções criadas apontam para rotas reais existentes do Admin Financeiro:
+  - **Visão geral**: `/financeiro`;
+  - **Cobranças**: `/financeiro/cobrancas`;
+  - **Assinaturas**: `/financeiro/assinaturas`.
+- O comportamento mobile-first do drawer e da sidebar recolhida foi preservado pelo componente compartilhado `AdminShell`; rotas filhas sob `/financeiro` continuam mantendo o grupo aberto/ativo.
+- Não houve alteração de endpoint, backend, contrato financeiro, Prisma/migrations, packages, dados persistidos, mock ou endpoint simulado.
+- Builder/Quick Copy não está exposto como ferramenta callable neste ambiente; as referências auditáveis foram `_product/proto/admin/Financeiro.png` e a captura autenticada enviada pelo usuário em 2026-07-22.
+- ADR criado: `adrs/0308-admin-financeiro-submenu.md`.
+
+### Critérios de aceite do ajuste
+
+- [x] **Financeiro** no menu lateral exibe submenu com **Visão geral**, **Cobranças** e **Assinaturas**.
+- [x] **Visão geral** aponta para `/financeiro`.
+- [x] **Cobranças** aponta para `/financeiro/cobrancas`.
+- [x] **Assinaturas** aponta para `/financeiro/assinaturas`.
+- [x] O submenu reutiliza o padrão existente do shell Admin, sem criar navegação paralela.
+- [x] Nenhum `<img>` cru, package novo, schema Prisma, migration, mock ou endpoint simulado foi adicionado.
+
+### Validação complementar executada
+
+- `pnpm --dir admin exec biome check --write "src/components/admin-shell/nav.ts"`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check`
+- Smoke HTTP local: `GET http://localhost:3002/financeiro`, `/financeiro/cobrancas` e `/financeiro/assinaturas` retornaram `200`.
+- Validação visual autenticada: limitada à captura fornecida pelo usuário, ao protótipo local `_product/proto/admin/Financeiro.png` e ao build Admin, pois a ferramenta Builder/Quick Copy não está disponível como callable neste ambiente e não há acesso automatizado à sessão Admin autenticada do navegador aberto.
