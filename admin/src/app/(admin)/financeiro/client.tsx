@@ -3,11 +3,9 @@
 import {
   AlertTriangle,
   BadgeDollarSign,
-  CalendarDays,
   ChevronDown,
   CreditCard,
   Download,
-  FileDown,
   Loader2,
   type LucideIcon,
   RefreshCw,
@@ -17,7 +15,7 @@ import {
   UsersRound,
   XCircle,
 } from "lucide-react";
-import { type FocusEventHandler, useMemo, useState } from "react";
+import { type FocusEventHandler, useState } from "react";
 import { useAdminFinanceDashboard, useAdminFinanceExport } from "@/api/callers/finance";
 import { resolveApiError } from "@/api/handle";
 import type {
@@ -28,7 +26,7 @@ import type {
   FinanceSubscriptionItem,
 } from "@/api/req/finance";
 import { useDateRangeCommitOnBlur } from "@/hooks/use-date-range-commit-on-blur";
-import { aggregateCalendarChartPoints } from "@/lib/chart-time-series";
+import { aggregateCalendarChartPoints, buildSmoothSvgPath } from "@/lib/chart-time-series";
 import { cn } from "@/lib/utils";
 
 const FINANCE_PERIOD_OPTIONS = [
@@ -156,7 +154,7 @@ const metricConfig: Record<
 const TrendBadge = ({ metric }: { metric: FinanceMetric }) => (
   <span
     className={cn(
-      "inline-flex items-center gap-1 text-xs font-black",
+      "inline-flex min-w-0 items-center gap-1 whitespace-nowrap text-[0.68rem] font-semibold",
       metric.trend === "up" && "text-success",
       metric.trend === "down" && "text-danger",
       (metric.trend === "flat" || metric.trend === "unavailable") && "text-muted",
@@ -170,55 +168,72 @@ const TrendBadge = ({ metric }: { metric: FinanceMetric }) => (
 
 const MetricValue = ({ metric }: { metric: FinanceMetric }) => {
   if (!metric.available) {
-    return <span className="text-2xl font-black text-muted">Indisponível</span>;
+    return <span className="min-w-0 truncate text-muted">Indisponível</span>;
   }
 
   if (metric.unit === "currency_cents") {
-    return <span className="text-3xl font-black tracking-tight">{formatMoney(metric.value)}</span>;
+    return <span className="min-w-0 truncate">{formatMoney(metric.value)}</span>;
   }
 
-  return (
-    <span className="text-3xl font-black tracking-tight">
-      {numberFormatter.format(metric.value)}
-    </span>
-  );
+  return <span className="min-w-0 truncate">{numberFormatter.format(metric.value)}</span>;
 };
 
 const MetricCard = ({ metric }: { metric: FinanceMetric }) => {
   const config = metricConfig[metric.id];
   const Icon = config.icon;
+  const description = metric.available
+    ? metric.description
+    : metric.unavailable_reason || metric.description;
 
   return (
-    <CardShell className="min-h-44 p-5">
+    <article
+      className={cn(
+        "min-h-[8.75rem] min-w-0 rounded-card border border-primary/35 bg-surface p-3 text-left shadow-admin-soft ring-1 ring-primary/10 md:p-4 xl:min-h-[8.25rem] xl:p-3",
+        !metric.available && "border-border/80 bg-border/50 shadow-none ring-0",
+      )}
+      title={`${metric.label}: ${description}`}
+    >
       <div className="flex items-start justify-between gap-3">
         <div
-          className={cn("grid h-12 w-12 place-items-center rounded-full", toneClasses[config.tone])}
+          className={cn(
+            "grid h-9 w-9 place-items-center rounded-full xl:h-8 xl:w-8",
+            toneClasses[config.tone],
+          )}
         >
-          <Icon aria-hidden className="h-5 w-5" />
+          <Icon aria-hidden className="h-4 w-4" />
         </div>
-        <span className="rounded-full bg-surface-muted px-2 py-1 text-[0.65rem] font-bold text-muted">
-          real
-        </span>
       </div>
-      <div className="mt-5 space-y-2 text-foreground">
-        <p className="text-sm font-black">{metric.label}</p>
-        <MetricValue metric={metric} />
-        <div className="flex flex-wrap items-center gap-2">
-          <TrendBadge metric={metric} />
-          <span className="text-xs font-medium text-muted">vs. período anterior</span>
-        </div>
-        <p className="text-xs leading-relaxed text-muted">
-          {metric.available ? metric.description : metric.unavailable_reason || metric.description}
+      <div className="mt-4 min-w-0 space-y-1.5 xl:mt-3">
+        <p
+          className="truncate whitespace-nowrap text-xs font-semibold text-foreground"
+          title={metric.label}
+        >
+          {metric.label}
         </p>
+        <p className="flex min-w-0 items-baseline gap-1.5 overflow-hidden whitespace-nowrap text-2xl font-bold tracking-tight text-foreground xl:text-[1.65rem]">
+          <MetricValue metric={metric} />
+        </p>
+        <div className="flex min-w-0 items-center gap-1.5 overflow-hidden whitespace-nowrap">
+          <TrendBadge metric={metric} />
+          <span className="min-w-0 truncate text-[0.68rem] font-medium text-muted">
+            vs. período anterior
+          </span>
+        </div>
+        {metric.available ? null : (
+          <p className="truncate text-[0.68rem] font-semibold text-muted">{description}</p>
+        )}
       </div>
-    </CardShell>
+    </article>
   );
 };
 
 const LoadingGrid = () => (
-  <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
     {CARD_ORDER.map((key) => (
-      <CardShell className="h-44 animate-pulse bg-surface-muted" key={`finance-${key}`} />
+      <CardShell
+        className="h-[8.75rem] animate-pulse bg-surface-muted xl:h-[8.25rem]"
+        key={`finance-${key}`}
+      />
     ))}
   </div>
 );
@@ -248,7 +263,6 @@ const ErrorState = ({ message, onRetry }: { message: string; onRetry: () => void
 );
 
 const FinanceHeader = ({
-  dashboard,
   exportError,
   exportFeedback,
   exportPending,
@@ -258,11 +272,9 @@ const FinanceHeader = ({
   onGroupByChange,
   onPeriodChange,
   period,
-  periodCopy,
   range,
   rangeError,
 }: {
-  dashboard?: AdminFinanceDashboard;
   exportError: string | null;
   exportFeedback: string | null;
   exportPending: boolean;
@@ -272,11 +284,10 @@ const FinanceHeader = ({
   onGroupByChange: (groupBy: FinanceDashboardQuery["groupBy"]) => void;
   onPeriodChange: (period: FinancePeriodPreset) => void;
   period: FinancePeriodValue;
-  periodCopy: string;
   range: FinanceDashboardQuery;
   rangeError: string | null;
 }) => (
-  <CardShell className="p-5 md:p-6">
+  <CardShell className="border-border/70 bg-surface/90 p-5 md:p-6">
     <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
       <div className="min-w-0">
         <p className="text-xs font-semibold uppercase tracking-[0.12em] text-primary">
@@ -288,16 +299,6 @@ const FinanceHeader = ({
         <p className="mt-2 max-w-3xl text-sm font-medium leading-6 text-muted md:text-base">
           Visão geral das receitas reais da plataforma, assinaturas pagas e MRR de psicólogos.
         </p>
-        <div className="mt-4 flex flex-wrap items-center gap-2 text-xs font-semibold text-muted">
-          <span className="inline-flex items-center gap-1 rounded-full bg-surface-muted px-2.5 py-1.5">
-            <CalendarDays aria-hidden className="h-3.5 w-3.5" />
-            {periodCopy}
-            {dashboard ? <span>({dashboard.period.days} dias)</span> : null}
-          </span>
-          <span className="inline-flex items-center gap-1 rounded-full bg-primary-soft px-2.5 py-1.5 text-primary">
-            <FileDown aria-hidden className="h-3.5 w-3.5" /> CSV real disponível
-          </span>
-        </div>
       </div>
 
       <div className="flex flex-col gap-3 xl:items-end">
@@ -378,7 +379,7 @@ const FinanceHeader = ({
 
         <div className="flex flex-col gap-2 sm:items-end">
           <button
-            className="inline-flex h-11 items-center justify-center gap-2 rounded-control bg-primary px-4 text-sm font-black text-white shadow-admin-glow transition hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-60"
+            className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-control bg-primary px-4 text-sm font-black text-white shadow-admin-glow transition hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
             disabled={exportPending || !isValidRange(range)}
             onClick={onExport}
             type="button"
@@ -402,14 +403,11 @@ const FinanceHeader = ({
 );
 
 const CardsGrid = ({ dashboard }: { dashboard: AdminFinanceDashboard }) => (
-  <section>
-    <h2 className="mb-4 text-xl font-black text-foreground">Visão geral</h2>
-    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-      {CARD_ORDER.map((key) => (
-        <MetricCard key={key} metric={dashboard.cards[key]} />
-      ))}
-    </div>
-  </section>
+  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+    {CARD_ORDER.map((key) => (
+      <MetricCard key={key} metric={dashboard.cards[key]} />
+    ))}
+  </div>
 );
 
 const FinanceChart = ({
@@ -419,9 +417,9 @@ const FinanceChart = ({
   points: FinanceSeriesPoint[];
   revenueAvailable: boolean;
 }) => {
-  const width = 780;
-  const height = 340;
-  const padding = { bottom: 50, left: 62, right: 28, top: 24 };
+  const width = 1120;
+  const height = 280;
+  const padding = { bottom: 28, left: 68, right: 28, top: 28 };
   const chartPoints = aggregateCalendarChartPoints(
     points.map((point) => ({
       confirmed_payments: point.confirmed_payments,
@@ -431,6 +429,15 @@ const FinanceChart = ({
     })),
     ["confirmed_payments", "new_subscriptions", "revenue_cents"] as const,
   );
+
+  if (chartPoints.length === 0) {
+    return (
+      <div className="mt-5 rounded-2xl border border-dashed border-border bg-surface-muted p-6 text-sm font-bold text-muted">
+        Nenhum ponto real de receita foi encontrado para o período.
+      </div>
+    );
+  }
+
   const chartWidth = width - padding.left - padding.right;
   const chartHeight = height - padding.top - padding.bottom;
   const maxRevenue = Math.max(1, ...chartPoints.map((point) => point.revenue_cents));
@@ -442,17 +449,25 @@ const FinanceChart = ({
   const getRevenueY = (value: number) =>
     padding.top + chartHeight - (value / maxRevenue) * chartHeight;
   const getBarHeight = (value: number) => (value / maxSubscriptions) * chartHeight;
-  const gridValues = [0, 0.25, 0.5, 0.75, 1].map((ratio) => Math.round(maxRevenue * ratio));
-  const linePath = chartPoints
-    .map(
-      (point, index) =>
-        `${index === 0 ? "M" : "L"}${getX(index)},${getRevenueY(point.revenue_cents)}`,
-    )
-    .join(" ");
+  const gridValues = [0, 0.25, 0.5, 0.75, 1].map((ratio) => ({
+    ratio,
+    value: Math.round(maxRevenue * ratio),
+  }));
+  const linePoints = chartPoints.map((point, index) => ({
+    x: getX(index),
+    y: getRevenueY(point.revenue_cents),
+  }));
+  const linePath = buildSmoothSvgPath(linePoints);
+  const labelStep = Math.max(1, Math.ceil(chartPoints.length / 8));
+  const dateLabels = chartPoints.flatMap((point, index) =>
+    index % labelStep === 0 || index === chartPoints.length - 1
+      ? [{ date: point.date, label: point.chartLabel }]
+      : [],
+  );
 
   return (
-    <figure className="mt-5 overflow-hidden">
-      <div className="mb-4 flex flex-wrap gap-3">
+    <figure className="mt-4 w-full overflow-x-auto rounded-[1.5rem] border border-border/70 bg-surface p-4">
+      <div className="mb-3 flex flex-wrap gap-3">
         <span className="inline-flex items-center gap-2 text-xs font-black text-muted">
           <span className="h-3 w-3 rounded-full" style={{ backgroundColor: CHART_COLORS.line }} />
           Receita confirmada {revenueAvailable ? "" : "(parcial/indisponível)"}
@@ -465,18 +480,22 @@ const FinanceChart = ({
           Novas assinaturas pagas
         </span>
       </div>
-      <div className="overflow-x-auto">
+      <div className="mx-auto w-full min-w-[760px] max-w-[1120px]">
         <svg
           aria-label="Receita e novas assinaturas ao longo do tempo"
-          className="min-w-[700px]"
+          className="block h-auto w-full"
+          height={height}
+          preserveAspectRatio="xMidYMid meet"
           role="img"
           viewBox={`0 0 ${width} ${height}`}
+          width={width}
         >
-          {gridValues.map((value) => {
+          {gridValues.map(({ ratio, value }) => {
             const y = getRevenueY(value);
             return (
-              <g key={`finance-grid-${value}-${y}`}>
+              <g key={`finance-grid-${ratio}-${value}-${y}`}>
                 <line
+                  opacity="0.58"
                   stroke="var(--admin-border)"
                   strokeWidth="1"
                   x1={padding.left}
@@ -484,7 +503,7 @@ const FinanceChart = ({
                   y1={y}
                   y2={y}
                 />
-                <text fill="var(--admin-muted)" fontSize="11" x="4" y={y + 4}>
+                <text fill="var(--admin-muted)" fontSize="11" fontWeight="500" x="6" y={y + 4}>
                   {formatMoney(value)}
                 </text>
               </g>
@@ -499,10 +518,10 @@ const FinanceChart = ({
                 fill={CHART_COLORS.subscription}
                 height={barHeight}
                 key={`finance-bar-${point.date}`}
-                opacity="0.22"
+                opacity="0.16"
                 rx="6"
-                width="22"
-                x={x - 11}
+                width="18"
+                x={x - 9}
                 y={padding.top + chartHeight - barHeight}
               />
             );
@@ -511,35 +530,35 @@ const FinanceChart = ({
           <path
             d={linePath}
             fill="none"
+            opacity="0.88"
             stroke={CHART_COLORS.line}
             strokeLinecap="round"
-            strokeWidth="3.5"
+            strokeLinejoin="round"
+            strokeWidth="2.1"
           />
-          {chartPoints.map((point, index) => (
+          {linePoints.map((point, index) => (
             <circle
-              cx={getX(index)}
-              cy={getRevenueY(point.revenue_cents)}
+              cx={point.x}
+              cy={point.y}
               fill="var(--admin-surface)"
-              key={`finance-point-${point.date}`}
-              r="4.5"
+              key={`finance-point-${chartPoints[index].date}`}
+              opacity={index === linePoints.length - 1 ? "1" : "0.72"}
+              r={index === linePoints.length - 1 ? "3.1" : "2.1"}
               stroke={CHART_COLORS.line}
-              strokeWidth="2.5"
+              strokeWidth="1.45"
             />
           ))}
-
-          {chartPoints.map((point, index) => (
-            <text
-              fill="var(--admin-foreground)"
-              fontSize="11"
-              key={`finance-label-${point.date}`}
-              textAnchor="middle"
-              x={getX(index)}
-              y={height - 15}
-            >
-              {point.chartLabel}
-            </text>
-          ))}
         </svg>
+        <div
+          className="mt-1 grid gap-1"
+          style={{ gridTemplateColumns: `repeat(${dateLabels.length}, 1fr)` }}
+        >
+          {dateLabels.map(({ date, label }) => (
+            <span className="min-w-0 text-center text-[10px] font-bold text-subtle" key={date}>
+              {label}
+            </span>
+          ))}
+        </div>
       </div>
       <details className="mt-3 rounded-2xl bg-surface-muted p-3 text-xs text-muted">
         <summary className="cursor-pointer font-black text-foreground">
@@ -746,28 +765,37 @@ const CoverageNotes = ({ dashboard }: { dashboard: AdminFinanceDashboard }) => (
   </CardShell>
 );
 
+const FinanceOverview = ({ dashboard }: { dashboard: AdminFinanceDashboard }) => (
+  <CardShell className="min-w-0 p-5">
+    <div className="mb-5 flex min-w-0 flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+      <div className="min-w-0">
+        <h2 className="text-xl font-bold text-foreground">Visão Geral</h2>
+        <p className="mt-1 text-sm font-bold leading-6 text-muted">
+          {dashboard.period.label} · {formatDate(dashboard.period.from)} a{" "}
+          {formatDate(dashboard.period.to)}
+        </p>
+      </div>
+      <span className="w-fit rounded-full bg-surface-muted px-2 py-1 text-[0.65rem] font-bold text-muted">
+        {dashboard.series.source}
+      </span>
+    </div>
+    <CardsGrid dashboard={dashboard} />
+    <div className="mt-5">
+      <h3 className="text-base font-bold text-foreground">Receita ao longo do tempo</h3>
+      <p className="mt-1 text-sm text-muted">
+        Linha com pagamentos confirmados reais e barras com novas assinaturas profissionais pagas.
+      </p>
+    </div>
+    <FinanceChart
+      points={dashboard.series.points}
+      revenueAvailable={dashboard.cards.revenue_total.available}
+    />
+  </CardShell>
+);
+
 const DashboardContent = ({ dashboard }: { dashboard: AdminFinanceDashboard }) => (
   <div className="space-y-6">
-    <CardsGrid dashboard={dashboard} />
-
-    <CardShell className="p-5">
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <h2 className="text-xl font-black text-foreground">Receita ao longo do tempo</h2>
-          <p className="mt-1 text-sm text-muted">
-            Linha com pagamentos confirmados reais e barras com novas assinaturas profissionais
-            pagas.
-          </p>
-        </div>
-        <span className="w-fit rounded-full bg-surface-muted px-2 py-1 text-[0.65rem] font-bold text-muted">
-          {dashboard.series.source}
-        </span>
-      </div>
-      <FinanceChart
-        points={dashboard.series.points}
-        revenueAvailable={dashboard.cards.revenue_total.available}
-      />
-    </CardShell>
+    <FinanceOverview dashboard={dashboard} />
 
     <RevenuePanel dashboard={dashboard} />
     <NewSubscriptions dashboard={dashboard} />
@@ -798,11 +826,6 @@ export const AdminFinanceClient = () => {
   const query = useAdminFinanceDashboard(appliedRange, { enabled: validRange });
   const exportMutation = useAdminFinanceExport();
   const queryError = query.error ? resolveApiError(query.error) : null;
-  const periodCopy = useMemo(() => {
-    if (!appliedRange.from || !appliedRange.to) return "Selecione um período válido";
-
-    return `${formatDate(appliedRange.from)} — ${formatDate(appliedRange.to)}`;
-  }, [appliedRange]);
 
   const resetToDefaultPeriod = () => {
     setSelectedPeriod(DEFAULT_FINANCE_PERIOD);
@@ -841,7 +864,6 @@ export const AdminFinanceClient = () => {
   return (
     <div className="space-y-6">
       <FinanceHeader
-        dashboard={query.data}
         exportError={exportError}
         exportFeedback={exportFeedback}
         exportPending={exportMutation.isPending}
@@ -851,7 +873,6 @@ export const AdminFinanceClient = () => {
         onGroupByChange={handleFinanceGroupByChange}
         onPeriodChange={handleFinancePeriodChange}
         period={selectedPeriod}
-        periodCopy={periodCopy}
         range={draftRange}
         rangeError={rangeError}
       />

@@ -496,3 +496,35 @@ Validacao desta expansao:
 - Smoke HTTP local: `GET http://localhost:3002/financeiro` retornou `200`.
 - `pnpm --dir admin check` no checkout principal foi tentado e ficou bloqueado por formatacao
   preexistente sem diff desta task em `admin/src/app/(admin)/pacientes/client.tsx`.
+
+## Ajuste pos-feedback 2026-07-22: Visao Geral unificada em Financeiro
+
+Novo feedback visual pediu que `/financeiro` acompanhasse mais de perto o padrao ja consolidado
+em `/pacientes`: header limpo e um bloco unico de **Visao Geral** contendo contadores e grafico.
+
+Decisoes:
+
+- Remover do header os chips redundantes de periodo consultado e CSV, deixando o bloco superior
+  focado em titulo, subtitulo, filtros reais e CTA **Exportar relatorio**.
+- Reorganizar o conteudo principal em um card unico de **Visao Geral** com periodo retornado pelo
+  backend, quatro contadores financeiros e o grafico **Receita ao longo do tempo** dentro do mesmo
+  agrupamento visual.
+- Compactar os cards de metricas para proporcao semelhante aos contadores de Pacientes, mantendo
+  descricoes reais em `title`/estado indisponivel e sem esconder indisponibilidades financeiras.
+- Usar `buildSmoothSvgPath` tambem no grafico financeiro, com plot limpo, borda sutil, labels
+  reduzidos e barras discretas para novas assinaturas pagas.
+- Nao alterar endpoints, contrato HTTP, calculos financeiros, gateway, schema Prisma, migrations,
+  packages, CSV ou dados persistidos.
+
+Consequencia: Financeiro passa a seguir o mesmo padrao de leitura dos demais dashboards do piloto
+premium sem criar componente ou tema paralelo e sem simular receita, assinatura ou cancelamento.
+
+Validacao deste ajuste:
+
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/financeiro/client.tsx"`
+- `pnpm --dir admin exec biome check "src/app/(admin)/financeiro/client.tsx"`
+- `pnpm --dir admin exec eslint "src/app/(admin)/financeiro/client.tsx"`
+- `pnpm --dir admin typecheck`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- Smoke HTTP local: `GET http://localhost:3002/financeiro` retornou `200`.

@@ -1,4 +1,4 @@
-﻿# TASK-62: Financeiro administrativo
+# TASK-62: Financeiro administrativo
 
 ## Metadata
 
@@ -217,3 +217,21 @@ Frontend esperado:
   - `pnpm --dir admin build` em worktree temporario com os arquivos alterados, para evitar o `.next/lock` do dev server local ativo em `3002`;
   - smoke HTTP local `GET http://localhost:3002/financeiro` retornou `200`.
 - Observacao: `pnpm --dir admin check` no checkout principal foi tentado, mas ficou bloqueado por formatacao preexistente sem diff desta task em `admin/src/app/(admin)/pacientes/client.tsx`; a validacao de build foi isolada em worktree temporario para nao interromper a sessao Admin local aberta.
+
+## Ajuste pos-feedback 2026-07-22 - Visao Geral unificada no Financeiro
+
+- Pedido do usuario: refinar `/financeiro` conforme as demais paginas Lectum/Admin, especialmente header e bloco de contadores + grafico da **Visao Geral**.
+- O header foi simplificado para seguir o padrao de Pacientes: card superior com label, titulo, subtitulo, filtros reais (`Periodo`, `De`, `Ate`, `Agrupar`) e CTA **Exportar relatorio**, sem chips redundantes de periodo/CSV.
+- Os quatro contadores financeiros foram compactados e movidos para dentro de um card unico de **Visao Geral**, junto com o periodo real retornado pelo backend e o grafico **Receita ao longo do tempo**.
+- O grafico financeiro passou a usar `buildSmoothSvgPath`, plot limpo com borda sutil, labels de eixo reduzidos e barras discretas para novas assinaturas pagas, preservando a legenda e o resumo textual acessivel.
+- Descricoes e indisponibilidades financeiras continuam honestas: cards indisponiveis mantem copy real e nenhum dado financeiro foi simulado.
+- Nao houve alteracao de endpoint, contrato HTTP, backend, calculos de receita/MRR/ticket/cancelamento, CSV, Prisma/migrations, packages ou dados persistidos.
+- Builder/Quick Copy segue sem ferramenta callable neste ambiente; a referencia auditavel permanece `_product/proto/admin/Financeiro.png`, o padrao ativo em `/pacientes` e as capturas enviadas pelo usuario.
+- Validacoes executadas para este ajuste:
+  - `pnpm --dir admin exec biome check --write "src/app/(admin)/financeiro/client.tsx"`;
+  - `pnpm --dir admin exec biome check "src/app/(admin)/financeiro/client.tsx"`;
+  - `pnpm --dir admin exec eslint "src/app/(admin)/financeiro/client.tsx"`;
+  - `pnpm --dir admin typecheck`;
+  - `pnpm --dir admin check`;
+  - `pnpm --dir admin build`;
+  - smoke HTTP local `GET http://localhost:3002/financeiro` retornou `200`.
