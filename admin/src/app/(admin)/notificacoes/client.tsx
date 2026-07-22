@@ -52,6 +52,7 @@ import {
   type AdminNotificationMetrics,
   type AdminNotificationPushStatus,
   type AdminNotificationsRangeQuery,
+  type NotificationDeliveryStatus,
 } from "@/api/req/notifications";
 import { InputController, SelectController, TextareaController } from "@/components/controllers";
 import { useDateRangeCommitOnBlur } from "@/hooks/use-date-range-commit-on-blur";
@@ -104,6 +105,21 @@ const CAMPAIGN_STATUS_OPTIONS: Array<{
   { label: "Enviadas", status: "sent", value: "sent" },
   { label: "Rascunhos", status: "draft", value: "draft" },
   { label: "Canceladas", status: "canceled", value: "canceled" },
+];
+
+const DELIVERY_STATUS_OPTIONS: Array<{
+  label: string;
+  status?: NotificationDeliveryStatus;
+  value: string;
+}> = [
+  { label: "Todas", value: "all" },
+  { label: "Na fila", status: "queued", value: "queued" },
+  { label: "Enviadas", status: "sent", value: "sent" },
+  { label: "Entregues", status: "delivered", value: "delivered" },
+  { label: "Abertas", status: "read", value: "read" },
+  { label: "Clicadas", status: "clicked", value: "clicked" },
+  { label: "Falhas", status: "failed", value: "failed" },
+  { label: "Omitidas", status: "skipped", value: "skipped" },
 ];
 
 const STATUS_COPY: Record<AdminNotificationCampaignStatus, { label: string; className: string }> = {
@@ -1201,6 +1217,7 @@ const NewNotificationModal = ({
 
 export const AdminNotificationsClient = () => {
   const [campaignStatus, setCampaignStatus] = useState("all");
+  const [logStatus, setLogStatus] = useState("all");
   const [campaignFilters, setCampaignFilters] = useState<NotificationTableFilters>(() =>
     createDefaultTableFilters(),
   );
@@ -1221,6 +1238,8 @@ export const AdminNotificationsClient = () => {
   const selectedCampaignStatus =
     CAMPAIGN_STATUS_OPTIONS.find((item) => item.value === campaignStatus) ??
     CAMPAIGN_STATUS_OPTIONS[0];
+  const selectedLogStatus =
+    DELIVERY_STATUS_OPTIONS.find((item) => item.value === logStatus) ?? DELIVERY_STATUS_OPTIONS[0];
   const resetCampaignPage = () => setPage(1);
   const resetLogsPage = () => setLogsPage(1);
   const campaignRangeControls = useDateRangeCommitOnBlur({
@@ -1269,8 +1288,9 @@ export const AdminNotificationsClient = () => {
       page: logsPage,
       ...buildNotificationPeriodQuery(logsPeriod, logsRangeControls.appliedRange),
       q: logFilters.q.trim() || undefined,
+      status: selectedLogStatus.status,
     }),
-    [logFilters, logsPage, logsPeriod, logsRangeControls.appliedRange],
+    [logFilters, logsPage, logsPeriod, logsRangeControls.appliedRange, selectedLogStatus.status],
   );
   const metrics = useAdminNotificationMetrics(metricQuery);
   const campaigns = useAdminNotificationCampaigns(campaignQuery, { enabled: campaignRangeIsValid });
@@ -1307,6 +1327,10 @@ export const AdminNotificationsClient = () => {
   const updateCampaignStatus = (nextStatus: string) => {
     setCampaignStatus(nextStatus);
     setPage(1);
+  };
+  const updateLogStatus = (nextStatus: string) => {
+    setLogStatus(nextStatus);
+    setLogsPage(1);
   };
   const openCreateModal = () => {
     setEditing(null);
@@ -1385,10 +1409,13 @@ export const AdminNotificationsClient = () => {
             onDateControlsBlur={logsRangeControls.handleDateControlsBlur}
             onFiltersChange={updateLogFilters}
             onPeriodChange={updateLogsPeriod}
+            onStatusChange={updateLogStatus}
             period={logsPeriod}
             range={logsRangeControls.draftRange}
             rangeError={logsRangeControls.rangeError}
             searchPlaceholder="Buscar log por notificação, disparo ou usuário..."
+            status={logStatus}
+            statusOptions={DELIVERY_STATUS_OPTIONS}
           />
         }
         isFetching={logs.isFetching}
