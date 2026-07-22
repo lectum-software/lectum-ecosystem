@@ -133,3 +133,24 @@ Consequências:
 - A rastreabilidade aumenta sem acoplar `payment_event` a uma nova tabela ou migration; a vinculação continua por referências reais já persistidas no payload do gateway.
 - Eventos de cobrança reais, mas não vinculáveis a uma assinatura local, são exibidos de forma honesta como não vinculados.
 - A mudança não adiciona package, schema Prisma, migration, seed, mock ou endpoint simulado.
+
+## Ajuste 2026-07-22: lifetime médio dos psicólogos
+
+Feedback de produto pediu adicionar, logo após **LTV médio dos psicólogos**, o indicador de quanto tempo em média um psicólogo permanece assinante antes de cancelar.
+
+Decisões:
+
+- Expor `average_subscription_lifetime` no contrato do dashboard financeiro.
+- Manter **LTV médio dos psicólogos** e **Lifetime médio dos psicólogos** como métricas de todo o histórico financeiro real, enquanto **MRR** permanece sensível ao período filtrado da Visão Geral.
+- Exibir na UI uma linha **Período de análise** sem tags técnicas: MRR mostra o período filtrado; LTV e Lifetime mostram **Todo o período**.
+- Calcular o lifetime médio apenas com assinaturas pagas reais do Mercado Pago (`source="mercadopago"`, gateway Mercado Pago, plano pago e `gateway_subscription_id` persistido) já canceladas em todo o histórico financeiro real.
+- Medir a duração por assinatura cancelada como `professional_subscription.updatedAt - professional_subscription.createdAt`, porque o modelo atual não possui um campo dedicado `cancelled_at` e o próprio cálculo de churn financeiro já usa `status="cancelada"` com `updatedAt` como evidência real de cancelamento persistido.
+- Retornar o valor em dias e meses, deixando a UI formatar em meses quando houver pelo menos 1 mês médio e em dias quando o histórico real for menor.
+- Marcar o indicador como indisponível quando não houver nenhuma assinatura paga cancelada, sem estimar por churn, preço de plano, seed, backfill ou dado artificial.
+- Incluir o resumo de `average_subscription_lifetime` no CSV financeiro, sem payload bruto, token, PAN, CVV ou dado sensível de cartão.
+
+Consequências:
+
+- O Admin passa a ter um lifetime observacional real, baseado em cancelamentos já persistidos.
+- Enquanto houver pouco histórico de cancelamento, a métrica pode aparecer indisponível; essa limitação é preferível a projetar lifetime artificial.
+- A decisão não adiciona package, schema Prisma, migration, mock, seed ou endpoint simulado.

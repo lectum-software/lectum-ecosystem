@@ -127,6 +127,15 @@ export type AdminFinanceDashboard = {
     unavailable_reason: string | null;
     value_cents: number;
   };
+  average_subscription_lifetime: {
+    available: boolean;
+    cancelled_subscription_count: number;
+    description: string;
+    source: "cancelled_paid_subscriptions";
+    unavailable_reason: string | null;
+    value_days: number;
+    value_months: number;
+  };
   cards: {
     active_subscriptions: FinanceMetric;
     cancellations: FinanceMetric;

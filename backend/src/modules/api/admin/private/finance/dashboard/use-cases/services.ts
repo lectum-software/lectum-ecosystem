@@ -20,6 +20,8 @@ const DEFAULT_SUBSCRIPTION_TAKE = 50;
 const DEFAULT_LIST_LIMIT = 20;
 const MAX_LIST_LIMIT = 50;
 const DASHBOARD_TABLE_PREVIEW_TAKE = 5;
+const DAYS_PER_AVERAGE_MONTH = 30.4375;
+const MILLISECONDS_PER_DAY = 86_400_000;
 
 const pad = (value: number) => String(value).padStart(2, "0");
 const toDateKey = (date: Date) =>
@@ -382,7 +384,11 @@ type PaymentEventRecord = Awaited<
 >[number];
 
 type LifetimeSubscriptionRecord = Awaited<
-  ReturnType<AdminFinanceDashboardRepository["listPaidSubscriptionsForLifetimeAt"]>
+  ReturnType<AdminFinanceDashboardRepository["listPaidSubscriptionsForLifetime"]>
+>[number];
+
+type CancelledLifetimeSubscriptionRecord = Awaited<
+  ReturnType<AdminFinanceDashboardRepository["listCancelledPaidSubscriptionsForLifetime"]>
 >[number];
 
 type PaymentRevenue = {
@@ -459,6 +465,38 @@ const summarizeAverageLtv = (
     unavailableReason: available ? null : "payment_event_vinculado_sem_valor_monetario_extraivel",
     valueCents:
       available && paidPsychologistCount > 0 ? Math.round(revenueCents / paidPsychologistCount) : 0,
+  };
+};
+
+const summarizeAverageSubscriptionLifetime = (
+  subscriptions: CancelledLifetimeSubscriptionRecord[],
+) => {
+  if (subscriptions.length === 0) {
+    return {
+      available: false,
+      cancelledSubscriptionCount: 0,
+      unavailableReason: "Sem assinaturas pagas canceladas em todo o período.",
+      valueDays: 0,
+      valueMonths: 0,
+    };
+  }
+
+  const totalDays = subscriptions.reduce((sum, subscription) => {
+    const durationInDays = Math.max(
+      0,
+      (subscription.updatedAt.getTime() - subscription.createdAt.getTime()) / MILLISECONDS_PER_DAY,
+    );
+
+    return sum + durationInDays;
+  }, 0);
+  const valueDays = roundPercent(totalDays / subscriptions.length);
+
+  return {
+    available: true,
+    cancelledSubscriptionCount: subscriptions.length,
+    unavailableReason: null,
+    valueDays,
+    valueMonths: roundPercent(valueDays / DAYS_PER_AVERAGE_MONTH),
   };
 };
 
@@ -809,6 +847,7 @@ export const buildAdminFinanceDashboard = async (
     currentChurnOpeningBaseCount,
     activeSubscriptions,
     lifetimeSubscriptions,
+    cancelledLifetimeSubscriptions,
     lifetimePaymentEvents,
     newSubscriptions,
     paymentReferenceSubscriptions,
@@ -825,8 +864,9 @@ export const buildAdminFinanceDashboard = async (
     repository.countCancelledPaidSubscriptions(previous),
     repository.countPaidSubscriptionsInOpeningBaseAt(current.start),
     repository.listActivePaidSubscriptionsAt(current.end),
-    repository.listPaidSubscriptionsForLifetimeAt(current.end),
-    repository.listPaymentEventsUntil(current.end),
+    repository.listPaidSubscriptionsForLifetime(),
+    repository.listCancelledPaidSubscriptionsForLifetime(),
+    repository.listPaymentEventsForLifetime(),
     repository.listNewPaidSubscriptions(current, subscriptionTake),
     repository.listPaidSubscriptionsForPaymentReferenceAt(current.end),
     repository.countPaidSubscriptionsForRelation(current),
@@ -856,6 +896,9 @@ export const buildAdminFinanceDashboard = async (
     currentChurnOpeningBaseCount,
   );
   const averageLtv = summarizeAverageLtv(lifetimeSubscriptions, lifetimePaymentEvents);
+  const averageSubscriptionLifetime = summarizeAverageSubscriptionLifetime(
+    cancelledLifetimeSubscriptions,
+  );
   const nonMonthlyIntervals = activeSubscriptions.some(
     (subscription) => !subscription.plan.interval.toLowerCase().includes("month"),
   );
@@ -873,12 +916,22 @@ export const buildAdminFinanceDashboard = async (
     average_ltv: {
       available: averageLtv.available,
       description:
-        "Receita confirmada lifetime vinculada às assinaturas pagas, dividida pelos psicólogos com assinatura Mercado Pago até o fim do período.",
+        "Receita confirmada lifetime de todo o período vinculada às assinaturas pagas, dividida pelos psicólogos com assinatura Mercado Pago real.",
       linked_confirmed_payments: averageLtv.linkedConfirmedPayments,
       paid_psychologist_count: averageLtv.paidPsychologistCount,
       source: "payment_event_linked_to_paid_psychologists",
       unavailable_reason: averageLtv.unavailableReason,
       value_cents: averageLtv.valueCents,
+    },
+    average_subscription_lifetime: {
+      available: averageSubscriptionLifetime.available,
+      cancelled_subscription_count: averageSubscriptionLifetime.cancelledSubscriptionCount,
+      description:
+        "Tempo médio entre o início da assinatura paga Mercado Pago e o cancelamento real persistido, usando somente assinaturas canceladas em todo o período.",
+      source: "cancelled_paid_subscriptions",
+      unavailable_reason: averageSubscriptionLifetime.unavailableReason,
+      value_days: averageSubscriptionLifetime.valueDays,
+      value_months: averageSubscriptionLifetime.valueMonths,
     },
     cards: {
       revenue_total: metric({
@@ -941,8 +994,9 @@ export const buildAdminFinanceDashboard = async (
     coverage_notes: [
       "Fonte visual: _product/proto/admin/Financeiro.png. Builder/Quick Copy não está acessível neste ambiente; a implementação usa a imagem local como referência.",
       "Receita só considera payment_event real do Mercado Pago com status confirmado e valor monetário extraível; não há projeção por quantidade de assinaturas.",
-      "LTV médio dos psicólogos usa somente payment_event confirmado vinculado ao id local da assinatura ou gateway_subscription_id, dividido por psicólogos com assinatura paga real até o fim do período.",
-      "Plano gratuito e cortesia administrativa source=admin_grant são excluídos de receita, MRR, LTV médio e cards financeiros.",
+      "LTV médio dos psicólogos usa sempre todo o período: somente payment_event confirmado vinculado ao id local da assinatura ou gateway_subscription_id, dividido por psicólogos com assinatura paga real.",
+      "Lifetime médio dos psicólogos usa sempre todo o período: somente assinaturas pagas Mercado Pago já canceladas, medindo createdAt até updatedAt do cancelamento real persistido.",
+      "Plano gratuito e cortesia administrativa source=admin_grant são excluídos de receita, MRR, LTV médio, lifetime médio e cards financeiros.",
       "Churn usa somente status=cancelada persistido no banco pelo fluxo real de assinatura; a taxa divide saídas pela base paga no início do período, sem inferência por ausência de renovação.",
       nonMonthlyIntervals
         ? "Há planos ativos com intervalo não mensal; o MRR normaliza plano anual dividindo por 12 conforme ADR da task."
@@ -1042,6 +1096,19 @@ const buildCsv = (dashboard: AdminFinanceDashboard) => {
       dashboard.average_ltv.available ? dashboard.average_ltv.value_cents : "indisponivel",
       dashboard.average_ltv.source,
       `paid_psychologist_count=${dashboard.average_ltv.paid_psychologist_count};linked_confirmed_payments=${dashboard.average_ltv.linked_confirmed_payments};reason=${dashboard.average_ltv.unavailable_reason ?? ""};${dashboard.average_ltv.description}`,
+    ]),
+  );
+  rows.push(
+    csvRow([
+      "resumo_financeiro",
+      "average_subscription_lifetime",
+      "Lifetime medio dos psicologos",
+      "",
+      dashboard.average_subscription_lifetime.available
+        ? dashboard.average_subscription_lifetime.value_months
+        : "indisponivel",
+      dashboard.average_subscription_lifetime.source,
+      `value_days=${dashboard.average_subscription_lifetime.value_days};cancelled_subscription_count=${dashboard.average_subscription_lifetime.cancelled_subscription_count};reason=${dashboard.average_subscription_lifetime.unavailable_reason ?? ""};${dashboard.average_subscription_lifetime.description}`,
     ]),
   );
 

@@ -282,13 +282,10 @@ export class AdminFinanceDashboardRepository {
     });
   }
 
-  async listPaidSubscriptionsForLifetimeAt(at: Date) {
+  async listPaidSubscriptionsForLifetime() {
     return prisma.professional_subscription.findMany({
       where: {
         ...paidGatewaySubscriptionWhere,
-        createdAt: {
-          lte: at,
-        },
         status: {
           in: ["ativa", "cancelada", "inadimplente"],
         },
@@ -297,6 +294,20 @@ export class AdminFinanceDashboardRepository {
         gateway_subscription_id: true,
         id: true,
         psychologist_id: true,
+      },
+    });
+  }
+
+  async listCancelledPaidSubscriptionsForLifetime() {
+    return prisma.professional_subscription.findMany({
+      where: {
+        ...paidGatewaySubscriptionWhere,
+        status: "cancelada",
+      },
+      select: {
+        createdAt: true,
+        id: true,
+        updatedAt: true,
       },
     });
   }
@@ -321,15 +332,12 @@ export class AdminFinanceDashboardRepository {
     });
   }
 
-  async listPaymentEventsUntil(at: Date) {
+  async listPaymentEventsForLifetime() {
     return prisma.payment_event.findMany({
       orderBy: {
         createdAt: "asc",
       },
       where: {
-        createdAt: {
-          lte: at,
-        },
         deleted: false,
         gateway: "mercadopago",
       },

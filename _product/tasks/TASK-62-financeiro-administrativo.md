@@ -478,3 +478,42 @@ Frontend esperado:
 - `pnpm check`
 - Smoke HTTP local: `GET http://localhost:3002/financeiro`, `/financeiro/cobrancas` e `/financeiro/assinaturas` retornaram `200`.
 - Validação visual autenticada: limitada à captura fornecida pelo usuário, ao protótipo local `_product/proto/admin/Financeiro.png` e ao build Admin, pois a ferramenta Builder/Quick Copy não está disponível como callable neste ambiente e não há acesso automatizado à sessão Admin autenticada do navegador aberto.
+
+## Ajuste pós-feedback 2026-07-22 - Lifetime médio dos psicólogos
+
+- Pedido do usuário: adicionar um bloco **Lifetime médio dos psicólogos** após o bloco **LTV médio dos psicólogos** em `/financeiro`.
+- O dashboard financeiro passou a expor `average_subscription_lifetime`, calculado com assinaturas pagas reais do Mercado Pago já canceladas em todo o histórico financeiro real.
+- A duração média usa a diferença entre `professional_subscription.createdAt` e `professional_subscription.updatedAt` das assinaturas com `status="cancelada"`, reaproveitando a mesma evidência real usada pelo churn financeiro enquanto não existe campo dedicado `cancelled_at`.
+- A UI mobile-first renderiza os blocos inferiores em ordem: **Receita recorrente mensal (MRR)**, **LTV médio dos psicólogos** e **Lifetime médio dos psicólogos**; no mobile ficam empilhados e no desktop usam grid de 3 colunas.
+- Os três blocos exibem **Período de análise** sem tags técnicas: MRR usa o filtro vigente da Visão Geral; LTV e Lifetime indicam **Todo o período**.
+- Quando não há assinatura paga cancelada real, o card mostra **Indisponível** sem estimativa por churn, plano, seed, backfill ou dado artificial.
+- O CSV financeiro passou a incluir `average_subscription_lifetime` no resumo, sem token, PAN, CVV, payload bruto ou dado sensível de cartão.
+- Não houve alteração de Prisma/migrations, instalação de package, mock, dado fake permanente ou endpoint simulado.
+- Builder/Quick Copy não está exposto como ferramenta callable neste ambiente; as referências auditáveis foram `_product/proto/admin/Financeiro.png` e a captura autenticada enviada pelo usuário em 2026-07-22.
+- ADR atualizado: `adrs/0242-admin-financeiro-receita-mrr-exportacao.md`.
+
+### Critérios de aceite do ajuste
+
+- [x] O bloco **Lifetime médio dos psicólogos** aparece após **LTV médio dos psicólogos** em `/financeiro`.
+- [x] A métrica usa somente assinaturas pagas Mercado Pago reais canceladas, sem plano gratuito ou cortesia/admin grant.
+- [x] Sem cancelamentos reais, o card fica indisponível em vez de projetar lifetime artificial.
+- [x] O contrato financeiro e o CSV incluem `average_subscription_lifetime`.
+- [x] Os blocos inferiores exibem **Período de análise** coerente com o filtro de MRR e o histórico global de LTV/Lifetime.
+- [x] UI mobile-first preservada e nenhum `<img>` cru foi usado.
+- [x] Nenhum package, schema Prisma, migration, mock ou endpoint simulado foi adicionado.
+
+### Validação complementar executada
+
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/financeiro/client.tsx" "src/api/req/finance/index.ts"`
+- `pnpm --dir backend exec biome check --write "src/modules/api/admin/private/finance/dashboard/DTOs/IAdminFinanceDashboardDTO.ts" "src/modules/api/admin/private/finance/dashboard/repositories/AdminFinanceDashboardRepository.ts" "src/modules/api/admin/private/finance/dashboard/use-cases/services.ts"`
+- `pnpm --dir admin exec biome check "src/app/(admin)/financeiro/client.tsx" "src/api/req/finance/index.ts"`
+- `pnpm --dir backend exec biome check "src/modules/api/admin/private/finance/dashboard/DTOs/IAdminFinanceDashboardDTO.ts" "src/modules/api/admin/private/finance/dashboard/repositories/AdminFinanceDashboardRepository.ts" "src/modules/api/admin/private/finance/dashboard/use-cases/services.ts"`
+- `pnpm --dir admin check`
+- `pnpm --dir backend check`
+- `pnpm --dir admin build`
+- `pnpm --dir backend build`
+- `pnpm check`
+- Smoke de serviço real com `.env` local: `buildAdminFinanceDashboard({ period: "all" })` retornou `status=200`, `average_subscription_lifetime.available=true`, `cancelled_subscription_count=1`, `value_days=21.6`, `value_months=0.7`; `exportAdminFinanceDashboardCsv({ period: "all" })` retornou `status=200` e CSV contendo `average_subscription_lifetime`.
+- Smoke HTTP local: `GET http://localhost:3002/financeiro` retornou `200`.
+- Smoke HTTP local protegido: `GET http://localhost:3001/api/admin/private/finance/dashboard?period=all` sem token Admin retornou `401`.
+- Browser local autenticado em `http://localhost:3002/financeiro` com sessão Admin real temporária confirmou no DOM os blocos **Receita recorrente mensal (MRR)**, **LTV médio dos psicólogos** e **Lifetime médio dos psicólogos**; a sessão temporária de validação foi removida ao final.

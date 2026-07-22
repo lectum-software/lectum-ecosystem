@@ -5,6 +5,7 @@ import {
   ArrowRight,
   BadgeDollarSign,
   ChevronDown,
+  Clock,
   CreditCard,
   Download,
   Loader2,
@@ -83,6 +84,10 @@ const percentFormatter = new Intl.NumberFormat("pt-BR", {
   maximumFractionDigits: 1,
   minimumFractionDigits: 0,
 });
+const decimalFormatter = new Intl.NumberFormat("pt-BR", {
+  maximumFractionDigits: 1,
+  minimumFractionDigits: 0,
+});
 
 const pad = (value: number) => String(value).padStart(2, "0");
 const toInputDate = (date: Date) =>
@@ -133,6 +138,11 @@ const formatDate = (value: string) =>
     day: "2-digit",
     month: "short",
   }).format(dateFromInput(value));
+
+const formatAnalysisRange = (from: string, to: string) => `${formatDate(from)} a ${formatDate(to)}`;
+
+const formatFilteredAnalysisPeriod = (period: AdminFinanceDashboard["period"]) =>
+  `${period.label} · ${formatAnalysisRange(period.from, period.to)}`;
 
 const formatDateTime = (value: string) =>
   new Intl.DateTimeFormat("pt-BR", {
@@ -248,6 +258,35 @@ const LtvValue = ({ dashboard }: { dashboard: AdminFinanceDashboard }) => {
 
   return <span className="text-muted">Indisponível</span>;
 };
+
+const LifetimeValue = ({ dashboard }: { dashboard: AdminFinanceDashboard }) => {
+  const lifetime = dashboard.average_subscription_lifetime;
+
+  if (!lifetime.available) {
+    return <span className="text-muted">Indisponível</span>;
+  }
+
+  if (lifetime.value_months >= 1) {
+    return (
+      <span>
+        {decimalFormatter.format(lifetime.value_months)}{" "}
+        {lifetime.value_months === 1 ? "mês" : "meses"}
+      </span>
+    );
+  }
+
+  return (
+    <span>
+      {decimalFormatter.format(lifetime.value_days)} {lifetime.value_days === 1 ? "dia" : "dias"}
+    </span>
+  );
+};
+
+const AnalysisPeriodNote = ({ children }: { children: React.ReactNode }) => (
+  <p className="mt-1 text-xs font-semibold leading-5 text-muted">
+    Período de análise: <span className="font-black text-foreground">{children}</span>
+  </p>
+);
 
 const ChurnRate = ({ metric }: { metric: FinanceMetric }) => {
   if (metric.id !== "cancellations" || !metric.available) return null;
@@ -692,14 +731,15 @@ const FinanceChart = ({
   );
 };
 const RevenuePanel = ({ dashboard }: { dashboard: AdminFinanceDashboard }) => (
-  <div className="grid gap-4 xl:grid-cols-2">
+  <div className="grid gap-4 xl:grid-cols-3">
     <CardShell className="p-5">
       <div className="flex items-center gap-3">
         <div className="grid h-11 w-11 place-items-center rounded-full bg-primary-soft text-primary">
           <CreditCard aria-hidden className="h-5 w-5" />
         </div>
-        <div>
+        <div className="min-w-0">
           <h2 className="text-xl font-black text-foreground">Receita recorrente mensal (MRR)</h2>
+          <AnalysisPeriodNote>{formatFilteredAnalysisPeriod(dashboard.period)}</AnalysisPeriodNote>
         </div>
       </div>
       <p className="mt-6 text-4xl font-black tracking-tight text-foreground">
@@ -712,8 +752,9 @@ const RevenuePanel = ({ dashboard }: { dashboard: AdminFinanceDashboard }) => (
         <div className="grid h-11 w-11 place-items-center rounded-full bg-emerald-50 text-success">
           <BadgeDollarSign aria-hidden className="h-5 w-5" />
         </div>
-        <div>
+        <div className="min-w-0">
           <h2 className="text-xl font-black text-foreground">LTV médio dos psicólogos</h2>
+          <AnalysisPeriodNote>Todo o período</AnalysisPeriodNote>
         </div>
       </div>
       <p className="mt-6 text-4xl font-black tracking-tight text-foreground">
@@ -724,6 +765,21 @@ const RevenuePanel = ({ dashboard }: { dashboard: AdminFinanceDashboard }) => (
           {dashboard.average_ltv.unavailable_reason}
         </p>
       ) : null}
+    </CardShell>
+
+    <CardShell className="p-5">
+      <div className="flex items-center gap-3">
+        <div className="grid h-11 w-11 place-items-center rounded-full bg-primary-soft text-primary">
+          <Clock aria-hidden className="h-5 w-5" />
+        </div>
+        <div className="min-w-0">
+          <h2 className="text-xl font-black text-foreground">Lifetime médio dos psicólogos</h2>
+          <AnalysisPeriodNote>Todo o período</AnalysisPeriodNote>
+        </div>
+      </div>
+      <p className="mt-6 text-4xl font-black tracking-tight text-foreground">
+        <LifetimeValue dashboard={dashboard} />
+      </p>
     </CardShell>
   </div>
 );
