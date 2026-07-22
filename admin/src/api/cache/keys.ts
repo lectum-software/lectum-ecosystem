@@ -9,7 +9,7 @@ import type {
   CommunitiesDashboardQuery,
 } from "@/api/req/communities";
 import type { DashboardSummaryQuery } from "@/api/req/dashboard";
-import type { FinanceDashboardQuery } from "@/api/req/finance";
+import type { FinanceDashboardQuery, FinanceListQuery } from "@/api/req/finance";
 import type { AdminModerationEventsQuery } from "@/api/req/moderation";
 import type {
   AdminNotificationCampaignsQuery,
@@ -48,6 +48,12 @@ const normalizeRange = (input: AdminRangeQuery) => ({
   groupBy: "groupBy" in input ? input.groupBy || "day" : undefined,
   period: "period" in input ? input.period || "default" : undefined,
   to: input.to || "default",
+});
+
+const normalizeFinanceList = (input: FinanceListQuery) => ({
+  ...normalizeRange(input),
+  limit: input.limit || 20,
+  page: input.page || 1,
 });
 
 const normalizePsychologistsList = (input: PsychologistsListQuery) => ({
@@ -297,8 +303,12 @@ export const adminCommunitiesKeys = {
 
 export const adminFinanceKeys = {
   all: ["admin", "finance"] as const,
+  charges: (input: FinanceListQuery) =>
+    [...adminFinanceKeys.all, "charges", normalizeFinanceList(input)] as const,
   dashboard: (input: FinanceDashboardQuery) =>
     [...adminFinanceKeys.all, "dashboard", normalizeRange(input)] as const,
+  subscriptions: (input: FinanceListQuery) =>
+    [...adminFinanceKeys.all, "subscriptions", normalizeFinanceList(input)] as const,
 };
 
 export const adminPsychologistsKeys = {

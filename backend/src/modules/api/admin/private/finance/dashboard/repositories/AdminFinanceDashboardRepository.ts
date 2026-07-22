@@ -31,6 +31,7 @@ const subscriptionSelect = {
   createdAt: true,
   current_period_end: true,
   gateway: true,
+  gateway_subscription_id: true,
   id: true,
   source: true,
   status: true,
@@ -51,6 +52,7 @@ const subscriptionSelect = {
       user: {
         select: {
           email: true,
+          id: true,
           name: true,
         },
       },
@@ -216,6 +218,62 @@ export class AdminFinanceDashboardRepository {
       where: {
         ...paidGatewaySubscriptionWhere,
         createdAt: dateRangeWhere(range),
+        status: {
+          in: ["ativa", "cancelada", "inadimplente"],
+        },
+      },
+      select: subscriptionSelect,
+    });
+  }
+
+  async countPaidSubscriptionsForRelation(range: AdminFinanceDateRange) {
+    return prisma.professional_subscription.count({
+      where: {
+        ...paidGatewaySubscriptionWhere,
+        createdAt: dateRangeWhere(range),
+        status: {
+          in: ["ativa", "cancelada", "inadimplente"],
+        },
+      },
+    });
+  }
+
+  async listPaidSubscriptionsForRelation(
+    range: AdminFinanceDateRange,
+    { skip = 0, take = 50 }: { skip?: number; take?: number } = {},
+  ) {
+    return prisma.professional_subscription.findMany({
+      orderBy: [
+        {
+          updatedAt: "desc",
+        },
+        {
+          createdAt: "desc",
+        },
+      ],
+      skip,
+      take,
+      where: {
+        ...paidGatewaySubscriptionWhere,
+        createdAt: dateRangeWhere(range),
+        status: {
+          in: ["ativa", "cancelada", "inadimplente"],
+        },
+      },
+      select: subscriptionSelect,
+    });
+  }
+
+  async listPaidSubscriptionsForPaymentReferenceAt(at: Date) {
+    return prisma.professional_subscription.findMany({
+      orderBy: {
+        createdAt: "desc",
+      },
+      where: {
+        ...paidGatewaySubscriptionWhere,
+        createdAt: {
+          lte: at,
+        },
         status: {
           in: ["ativa", "cancelada", "inadimplente"],
         },

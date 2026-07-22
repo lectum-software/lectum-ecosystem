@@ -1,6 +1,7 @@
 import type { Resolve } from "@/helpers/return";
 import { error, msg } from "@/helpers/translate";
 import type {
+  AdminFinanceChargeItem,
   AdminFinanceDashboard,
   AdminFinanceDateRange,
   AdminFinanceGroupBy,
@@ -16,6 +17,9 @@ import { AdminFinanceDashboardRepository } from "../repositories/AdminFinanceDas
 const DEFAULT_PERIOD_DAYS = 30;
 const MAX_PERIOD_DAYS = 3660;
 const DEFAULT_SUBSCRIPTION_TAKE = 50;
+const DEFAULT_LIST_LIMIT = 20;
+const MAX_LIST_LIMIT = 50;
+const DASHBOARD_TABLE_PREVIEW_TAKE = 5;
 
 const pad = (value: number) => String(value).padStart(2, "0");
 const toDateKey = (date: Date) =>
@@ -97,7 +101,7 @@ type PeriodResult =
       success: false;
     };
 
-const resolvePeriod = (
+export const resolveAdminFinancePeriod = (
   query: AdminFinanceQuery,
   allPeriodStartDate?: Date | null,
 ): PeriodResult => {
@@ -279,7 +283,7 @@ const metric = (params: {
   };
 };
 
-const isRecord = (value: unknown): value is Record<string, unknown> =>
+export const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null && !Array.isArray(value);
 
 const stringifyPayload = (value: unknown) => {
@@ -290,13 +294,13 @@ const stringifyPayload = (value: unknown) => {
   }
 };
 
-const payloadContainsAnyReference = (payload: unknown, references: string[]) => {
+export const payloadContainsAnyReference = (payload: unknown, references: string[]) => {
   const text = stringifyPayload(payload);
 
   return references.some((reference) => text.includes(reference.toLowerCase()));
 };
 
-const findPayloadValue = (value: unknown, keys: string[]): unknown => {
+export const findPayloadValue = (value: unknown, keys: string[]): unknown => {
   if (Array.isArray(value)) {
     for (const item of value) {
       const found = findPayloadValue(item, keys);
@@ -346,7 +350,7 @@ const toAmountCents = (value: unknown): number | null => {
   return Math.round(parsed * 100);
 };
 
-const extractPaymentAmountCents = (payload: unknown) =>
+export const extractPaymentAmountCents = (payload: unknown) =>
   toAmountCents(
     findPayloadValue(payload, [
       "transaction_amount",
@@ -357,7 +361,7 @@ const extractPaymentAmountCents = (payload: unknown) =>
     ]),
   );
 
-const isConfirmedPaymentStatus = (payload: unknown) => {
+export const isConfirmedPaymentStatus = (payload: unknown) => {
   const status = normalizeText(
     findPayloadValue(payload, ["status", "status_detail", "action", "payment_status"]),
   );
@@ -365,7 +369,7 @@ const isConfirmedPaymentStatus = (payload: unknown) => {
   return ["approved", "accredited", "paid"].some((term) => status.includes(term));
 };
 
-const isPaymentEvent = (type: string, payload: unknown) => {
+export const isPaymentEvent = (type: string, payload: unknown) => {
   const typeText = normalizeText(type);
   if (typeText.includes("payment")) return true;
 
@@ -465,9 +469,22 @@ type SubscriptionRecord = Awaited<
   ReturnType<AdminFinanceDashboardRepository["listNewPaidSubscriptions"]>
 >[number];
 
+type SubscriptionRelationRecord = Awaited<
+  ReturnType<AdminFinanceDashboardRepository["listPaidSubscriptionsForRelation"]>
+>[number];
+
+type PaymentReferenceSubscriptionRecord = Awaited<
+  ReturnType<AdminFinanceDashboardRepository["listPaidSubscriptionsForPaymentReferenceAt"]>
+>[number];
+
 type NewSubscriptionValueRecord = Awaited<
   ReturnType<AdminFinanceDashboardRepository["listNewPaidSubscriptionValues"]>
 >[number];
+
+type FinanceSubscriptionRecord =
+  | PaymentReferenceSubscriptionRecord
+  | SubscriptionRecord
+  | SubscriptionRelationRecord;
 
 const monthlyPriceCents = (subscription: Pick<SubscriptionRecord, "plan">) => {
   const interval = subscription.plan.interval.toLowerCase();
@@ -498,10 +515,14 @@ const formatStatusLabel = (status: string) => {
   return labels[status] ?? status;
 };
 
-const mapSubscription = (subscription: SubscriptionRecord): AdminFinanceSubscriptionItem => ({
+const mapSubscription = (
+  subscription: FinanceSubscriptionRecord,
+): AdminFinanceSubscriptionItem => ({
   created_at: subscription.createdAt.toISOString(),
   current_period_end: subscription.current_period_end?.toISOString() ?? null,
+  detail_url: `/psicologos/${subscription.psychologist.user.id}`,
   gateway: subscription.gateway,
+  gateway_subscription_id: subscription.gateway_subscription_id,
   id: subscription.id,
   plan: {
     id: subscription.plan.id,
@@ -515,12 +536,202 @@ const mapSubscription = (subscription: SubscriptionRecord): AdminFinanceSubscrip
     email: subscription.psychologist.user.email,
     id: subscription.psychologist.id,
     name: subscription.psychologist.user.name,
+    profile_id: subscription.psychologist.id,
+    user_id: subscription.psychologist.user.id,
   },
   source: subscription.source,
   started_at: subscription.createdAt.toISOString(),
   status: subscription.status,
   status_label: formatStatusLabel(subscription.status),
+  updated_at: subscription.updatedAt.toISOString(),
 });
+
+const toPayloadString = (value: unknown) => {
+  if (typeof value === "string" && value.trim()) return value.trim();
+  if (typeof value === "number" && Number.isFinite(value)) return String(value);
+
+  return null;
+};
+
+const extractPaymentReference = (payload: unknown) =>
+  toPayloadString(
+    findPayloadValue(payload, [
+      "external_reference",
+      "preapproval_id",
+      "preapproval",
+      "subscription_id",
+      "gateway_subscription_id",
+      "payment_id",
+      "id",
+    ]),
+  );
+
+const subscriptionReferences = (subscription: PaymentReferenceSubscriptionRecord) =>
+  [subscription.id, subscription.gateway_subscription_id].filter((reference): reference is string =>
+    Boolean(reference && reference.length > 3),
+  );
+
+const findSubscriptionForPayment = (
+  event: PaymentEventRecord,
+  subscriptions: PaymentReferenceSubscriptionRecord[],
+) =>
+  subscriptions.find((subscription) =>
+    payloadContainsAnyReference(event.payload, subscriptionReferences(subscription)),
+  ) ?? null;
+
+const mapCharge = (
+  event: PaymentEventRecord,
+  subscriptions: PaymentReferenceSubscriptionRecord[],
+): AdminFinanceChargeItem | null => {
+  if (!isPaymentEvent(event.type, event.payload)) return null;
+  if (!isConfirmedPaymentStatus(event.payload)) return null;
+
+  const amountCents = extractPaymentAmountCents(event.payload);
+  const subscription = findSubscriptionForPayment(event, subscriptions);
+
+  return {
+    amount_available: amountCents !== null,
+    amount_cents: amountCents,
+    detail_url: subscription ? `/psicologos/${subscription.psychologist.user.id}` : null,
+    event_id: event.id,
+    event_type: event.type,
+    external_id: event.external_id,
+    gateway: "mercadopago",
+    occurred_at: event.createdAt.toISOString(),
+    reference:
+      subscription?.gateway_subscription_id ??
+      subscription?.id ??
+      extractPaymentReference(event.payload),
+    status: "confirmed",
+    status_label: "Confirmada",
+    subscription: subscription ? mapSubscription(subscription) : null,
+    unavailable_reason:
+      amountCents === null ? "payment_event_confirmado_sem_valor_monetario_extraivel" : null,
+  };
+};
+
+const buildChargeItems = (
+  events: PaymentEventRecord[],
+  subscriptions: PaymentReferenceSubscriptionRecord[],
+) =>
+  events
+    .map((event) => mapCharge(event, subscriptions))
+    .filter((item): item is AdminFinanceChargeItem => Boolean(item))
+    .sort((left, right) => Date.parse(right.occurred_at) - Date.parse(left.occurred_at));
+
+const normalizeFinancePagination = (query: AdminFinanceQuery) => {
+  const page = Math.max(1, Number(query.page || 1));
+  const limit = Math.min(MAX_LIST_LIMIT, Math.max(1, Number(query.limit || DEFAULT_LIST_LIMIT)));
+
+  return {
+    limit,
+    page,
+    skip: (page - 1) * limit,
+  };
+};
+
+const paginateItems = <T>(items: T[], page: number, limit: number) => {
+  const count = items.length;
+  const pages = Math.max(1, Math.ceil(count / limit));
+  const safePage = Math.min(page, pages);
+  const skip = (safePage - 1) * limit;
+
+  return {
+    count,
+    data: items.slice(skip, skip + limit),
+    page: safePage,
+    pages,
+    per_page: limit,
+  };
+};
+
+const paginationForCount = (query: AdminFinanceQuery, count: number) => {
+  const pagination = normalizeFinancePagination(query);
+  const pages = Math.max(1, Math.ceil(count / pagination.limit));
+  const page = Math.min(pagination.page, pages);
+
+  return {
+    ...pagination,
+    page,
+    pages,
+    skip: (page - 1) * pagination.limit,
+  };
+};
+
+const resolveFinanceListPeriod = async (
+  query: AdminFinanceQuery,
+  repository: AdminFinanceDashboardRepository,
+) => {
+  const allPeriodStartDate =
+    query.period === "all" ? await repository.findFinanceStartDate() : null;
+
+  return resolveAdminFinancePeriod(query, allPeriodStartDate);
+};
+
+export const listAdminFinanceCharges = async (query: AdminFinanceQuery): Promise<Resolve> => {
+  const repository = new AdminFinanceDashboardRepository();
+  const resolvedPeriod = await resolveFinanceListPeriod(query ?? {}, repository);
+
+  if (!resolvedPeriod.success) {
+    return {
+      status: 400,
+      ...error(resolvedPeriod.code, {}),
+    };
+  }
+
+  const { current, period } = resolvedPeriod.period;
+  const [paymentEvents, paymentReferenceSubscriptions] = await Promise.all([
+    repository.listPaymentEvents(current),
+    repository.listPaidSubscriptionsForPaymentReferenceAt(current.end),
+  ]);
+  const pagination = normalizeFinancePagination(query ?? {});
+  const charges = buildChargeItems(paymentEvents, paymentReferenceSubscriptions);
+  const page = paginateItems(charges, pagination.page, pagination.limit);
+
+  return {
+    status: 200,
+    ...msg("index", {}),
+    data: {
+      ...page,
+      period,
+      source: "payment_event+professional_subscription",
+    },
+  };
+};
+
+export const listAdminFinanceSubscriptions = async (query: AdminFinanceQuery): Promise<Resolve> => {
+  const repository = new AdminFinanceDashboardRepository();
+  const resolvedPeriod = await resolveFinanceListPeriod(query ?? {}, repository);
+
+  if (!resolvedPeriod.success) {
+    return {
+      status: 400,
+      ...error(resolvedPeriod.code, {}),
+    };
+  }
+
+  const { current, period } = resolvedPeriod.period;
+  const count = await repository.countPaidSubscriptionsForRelation(current);
+  const pagination = paginationForCount(query ?? {}, count);
+  const subscriptions = await repository.listPaidSubscriptionsForRelation(current, {
+    skip: pagination.skip,
+    take: pagination.limit,
+  });
+
+  return {
+    status: 200,
+    ...msg("index", {}),
+    data: {
+      count,
+      data: subscriptions.map(mapSubscription),
+      page: pagination.page,
+      pages: pagination.pages,
+      per_page: pagination.limit,
+      period,
+      source: "professional_subscription+subscription_plan+psychologist_profile+user",
+    },
+  };
+};
 
 const buildSeries = async (
   buckets: Bucket[],
@@ -568,13 +779,13 @@ const buildUnavailable = (currentRevenue: PaymentRevenue, previousRevenue: Payme
 
 export const buildAdminFinanceDashboard = async (
   query: AdminFinanceQuery,
-  options: { subscriptionTake?: number } = {},
+  options: { subscriptionTake?: number; tableTake?: number } = {},
 ): Promise<Resolve> => {
   const normalizedQuery = query ?? {};
   const repository = new AdminFinanceDashboardRepository();
   const allPeriodStartDate =
     normalizedQuery.period === "all" ? await repository.findFinanceStartDate() : null;
-  const resolvedPeriod = resolvePeriod(normalizedQuery, allPeriodStartDate);
+  const resolvedPeriod = resolveAdminFinancePeriod(normalizedQuery, allPeriodStartDate);
   if (!resolvedPeriod.success) {
     return {
       status: 400,
@@ -584,6 +795,7 @@ export const buildAdminFinanceDashboard = async (
 
   const { current, groupBy, period, previous } = resolvedPeriod.period;
   const subscriptionTake = options.subscriptionTake ?? DEFAULT_SUBSCRIPTION_TAKE;
+  const tableTake = options.tableTake ?? DASHBOARD_TABLE_PREVIEW_TAKE;
 
   const [
     currentPaymentEvents,
@@ -599,6 +811,9 @@ export const buildAdminFinanceDashboard = async (
     lifetimeSubscriptions,
     lifetimePaymentEvents,
     newSubscriptions,
+    paymentReferenceSubscriptions,
+    subscriptionRelationTotal,
+    subscriptionRelationItems,
   ] = await Promise.all([
     repository.listPaymentEvents(current),
     repository.listPaymentEvents(previous),
@@ -613,6 +828,11 @@ export const buildAdminFinanceDashboard = async (
     repository.listPaidSubscriptionsForLifetimeAt(current.end),
     repository.listPaymentEventsUntil(current.end),
     repository.listNewPaidSubscriptions(current, subscriptionTake),
+    repository.listPaidSubscriptionsForPaymentReferenceAt(current.end),
+    repository.countPaidSubscriptionsForRelation(current),
+    repository.listPaidSubscriptionsForRelation(current, {
+      take: tableTake,
+    }),
   ]);
 
   const currentRevenue = summarizeRevenue(currentPaymentEvents);
@@ -646,6 +866,7 @@ export const buildAdminFinanceDashboard = async (
     currentNewSubscriptionValues,
     repository,
   );
+  const currentCharges = buildChargeItems(currentPaymentEvents, paymentReferenceSubscriptions);
   const unavailable = buildUnavailable(currentRevenue, previousRevenue);
 
   const dashboard: AdminFinanceDashboard = {
@@ -737,6 +958,11 @@ export const buildAdminFinanceDashboard = async (
       source: "active_paid_subscriptions",
       value_cents: mrrCents,
     },
+    latest_charges: {
+      items: currentCharges.slice(0, tableTake),
+      source: "payment_event+professional_subscription",
+      total: currentCharges.length,
+    },
     new_subscriptions: {
       items: newSubscriptions.map(mapSubscription),
       source: "professional_subscription+subscription_plan+psychologist_profile+user",
@@ -746,6 +972,11 @@ export const buildAdminFinanceDashboard = async (
     series: {
       points: series,
       source: "payment_event+professional_subscription",
+    },
+    subscription_relation: {
+      items: subscriptionRelationItems.map(mapSubscription),
+      source: "professional_subscription+subscription_plan+psychologist_profile+user",
+      total: subscriptionRelationTotal,
     },
     unavailable,
   };
@@ -848,34 +1079,84 @@ const buildCsv = (dashboard: AdminFinanceDashboard) => {
   rows.push(
     csvRow([
       "section",
+      "payment_event_id",
+      "occurred_at",
+      "external_id",
+      "event_type",
+      "amount_cents",
+      "status",
+      "subscription_id",
+      "gateway_subscription_id",
+      "psychologist",
+      "email",
+      "plan",
+      "reference",
+      "reason",
+    ]),
+  );
+  for (const item of dashboard.latest_charges.items) {
+    rows.push(
+      csvRow([
+        "ultimas_cobrancas_realizadas",
+        item.event_id,
+        item.occurred_at,
+        item.external_id,
+        item.event_type,
+        item.amount_available ? item.amount_cents : "indisponivel",
+        item.status_label,
+        item.subscription?.id ?? "",
+        item.subscription?.gateway_subscription_id ?? "",
+        item.subscription?.psychologist.name ?? "",
+        item.subscription?.psychologist.email ?? "",
+        item.subscription?.plan.name ?? "",
+        item.reference ?? "",
+        item.unavailable_reason ?? "",
+      ]),
+    );
+  }
+
+  rows.push("");
+  rows.push(
+    csvRow([
+      "section",
       "subscription_id",
       "created_at",
+      "updated_at",
+      "started_at",
+      "current_period_end",
       "psychologist",
       "email",
       "crp",
       "plan",
       "plan_slug",
+      "interval",
       "price_cents",
       "status",
       "source",
       "gateway",
+      "gateway_subscription_id",
     ]),
   );
-  for (const item of dashboard.new_subscriptions.items) {
+  for (const item of dashboard.subscription_relation.items) {
     rows.push(
       csvRow([
-        "novas_assinaturas_de_psicologos",
+        "relacao_de_assinaturas",
         item.id,
         item.created_at,
+        item.updated_at,
+        item.started_at,
+        item.current_period_end ?? "",
         item.psychologist.name,
         item.psychologist.email,
         item.psychologist.crp ?? "",
         item.plan.name,
         item.plan.slug,
+        item.plan.interval,
         item.plan.price_cents,
         item.status_label,
         item.source,
         item.gateway ?? "",
+        item.gateway_subscription_id ?? "",
       ]),
     );
   }
@@ -896,7 +1177,10 @@ const buildCsv = (dashboard: AdminFinanceDashboard) => {
 export const exportAdminFinanceDashboardCsv = async (
   query: AdminFinanceQuery,
 ): Promise<Resolve> => {
-  const resolve = await buildAdminFinanceDashboard(query, { subscriptionTake: 5000 });
+  const resolve = await buildAdminFinanceDashboard(query, {
+    subscriptionTake: 5000,
+    tableTake: 5000,
+  });
   if (!resolve.success || !isAdminFinanceDashboard(resolve.data)) return resolve;
 
   const dashboard = resolve.data;

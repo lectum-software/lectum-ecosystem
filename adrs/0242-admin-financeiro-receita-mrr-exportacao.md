@@ -112,3 +112,24 @@ Consequências:
 
 - A tela fica menos técnica para o operador Admin sem perder a proveniência dos dados no contrato real.
 - A mudança é exclusivamente visual e não altera as regras de receita, MRR, LTV, novas assinaturas ou exportação.
+
+## Ajuste 2026-07-22: cobranças realizadas e relação completa de assinaturas
+
+Feedback de produto pediu substituir a tabela visual **Novas assinaturas de psicólogos** por **Últimas cobranças realizadas**, adicionar uma tabela de **Relação de assinaturas** e permitir que ambas tenham **Ver todas** para páginas completas.
+
+Decisões:
+
+- Expor no dashboard `latest_charges`, derivado apenas de `payment_event` real do Mercado Pago com evento de pagamento e status confirmado (`approved`, `accredited` ou `paid`). Quando o evento confirmado não possui valor monetário extraível, a cobrança aparece com valor indisponível em vez de estimativa.
+- Vincular cobranças a assinaturas pagas procurando o `professional_subscription.id` ou `gateway_subscription_id` no payload do evento. Eventos confirmados sem vínculo local continuam visíveis como cobrança real não vinculada, sem bloquear a tabela nem criar dado artificial.
+- Expor no dashboard `subscription_relation`, derivado de `professional_subscription` paga Mercado Pago com `subscription_plan`, `psychologist_profile` e `user`, filtrado pelo período da tela e excluindo plano gratuito e `source="admin_grant"`.
+- Criar endpoints Admin privados e paginados `GET /api/admin/private/finance/charges` e `GET /api/admin/private/finance/subscriptions`, reutilizando a mesma resolução real de período do dashboard financeiro.
+- Criar páginas `/financeiro/cobrancas` e `/financeiro/assinaturas` no Admin, com paginação e detalhes seguros. Os links **Ver todas** preservam o período atual por `period=custom&from=...&to=...`.
+- Atualizar o CSV para incluir seções de cobranças realizadas e relação de assinaturas, sem exportar payload bruto, token, PAN, CVV ou metadados sensíveis de cartão.
+- Manter `new_subscriptions` no contrato financeiro para cards/séries e compatibilidade, mas remover essa relação como tabela visual principal de `/financeiro`.
+
+Consequências:
+
+- O operador financeiro passa a ver primeiro cobranças efetivamente confirmadas, enquanto assinaturas ficam em relação própria.
+- A rastreabilidade aumenta sem acoplar `payment_event` a uma nova tabela ou migration; a vinculação continua por referências reais já persistidas no payload do gateway.
+- Eventos de cobrança reais, mas não vinculáveis a uma assinatura local, são exibidos de forma honesta como não vinculados.
+- A mudança não adiciona package, schema Prisma, migration, seed, mock ou endpoint simulado.

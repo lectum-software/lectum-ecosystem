@@ -163,7 +163,7 @@ Frontend esperado:
 
 - [x] Rota Financeiro só abre para admin autenticado.
 - [x] `_product/proto/admin/Financeiro.png` foi citada como referência visual.
-- [x] A lista inferior se chama **Novas assinaturas de psicólogos**.
+- [x] A lista inferior original **Novas assinaturas de psicólogos** foi substituída por **Últimas cobranças realizadas** no ajuste pós-feedback de 2026-07-22.
 - [x] Novas assinaturas excluem plano gratuito e cortesia/admin grant.
 - [x] Receita total usa pagamento confirmado real ou aparece indisponível com copy honesta.
 - [x] MRR exclui gratuito e cortesia.
@@ -403,3 +403,47 @@ Frontend esperado:
 - `pnpm check`
 - `GET http://localhost:3002/financeiro` retornou `200`.
 - Chrome headless local abriu `http://localhost:3002/financeiro` e `Select-String` confirmou ausência das descrições/tags removidas no DOM carregado sem sessão; a validação autenticada visual completa permanece baseada na captura enviada pelo usuário e no build Admin porque o backend local não estava ouvindo em `3001` durante a checagem.
+
+## Ajuste pós-feedback 2026-07-22 - Cobranças e relação completa de assinaturas
+
+- Pedido do usuário: substituir a tabela **Novas assinaturas de psicólogos** por **Últimas cobranças realizadas**, adicionar uma tabela de **Relação de assinaturas** e incluir em ambas a opção **Ver todas** levando a páginas com relação completa de detalhes.
+- O dashboard `/financeiro` agora renderiza duas tabelas mobile-first abaixo dos cards MRR/LTV:
+  - **Últimas cobranças realizadas**, derivada somente de `payment_event` real do Mercado Pago com status confirmado e valor extraível quando disponível;
+  - **Relação de assinaturas**, derivada de `professional_subscription` paga Mercado Pago + `subscription_plan` + `psychologist_profile` + `user`, excluindo plano gratuito e cortesia/admin grant.
+- O contrato do dashboard passou a expor `latest_charges` e `subscription_relation`; `new_subscriptions` permanece no contrato financeiro para cards/séries legados, mas não é mais a tabela visual principal.
+- Foram adicionados endpoints Admin paginados reais:
+  - `GET /api/admin/private/finance/charges`;
+  - `GET /api/admin/private/finance/subscriptions`.
+- Os links **Ver todas** apontam para `/financeiro/cobrancas` e `/financeiro/assinaturas`, preservando o período exibido no dashboard via query `period=custom&from=YYYY-MM-DD&to=YYYY-MM-DD`.
+- As páginas completas exibem paginação, detalhes de evento/assinatura, psicólogo, plano, status e valores seguros, sem payload bruto, token, PAN, CVV ou dados sensíveis de cartão.
+- O CSV passou a incluir seções de **Últimas cobranças realizadas** e **Relação de assinaturas** com os mesmos dados seguros do contrato.
+- Não houve alteração de Prisma/migrations, instalação de package, seed, mock, dado artificial ou endpoint simulado.
+- Builder/Quick Copy não está exposto como ferramenta callable neste ambiente; as referências auditáveis foram `_product/proto/admin/Financeiro.png` e a captura autenticada enviada pelo usuário em 2026-07-22.
+- ADR atualizado: `adrs/0242-admin-financeiro-receita-mrr-exportacao.md`.
+
+### Critérios de aceite do ajuste
+
+- [x] A tabela visual **Novas assinaturas de psicólogos** foi substituída por **Últimas cobranças realizadas** em `/financeiro`.
+- [x] A tabela **Últimas cobranças realizadas** usa somente eventos `payment_event` reais confirmados do Mercado Pago, sem simulação.
+- [x] A tabela **Relação de assinaturas** usa somente assinaturas pagas Mercado Pago reais e exclui plano gratuito/cortesia.
+- [x] Ambas as tabelas possuem ação **Ver todas** para páginas completas de detalhe.
+- [x] `/financeiro/cobrancas` lista cobranças com paginação e detalhes seguros.
+- [x] `/financeiro/assinaturas` lista assinaturas com paginação e detalhes seguros.
+- [x] As rotas novas consomem endpoints Admin privados protegidos por autenticação Admin real.
+- [x] Nenhum payload bruto, token, PAN, CVV ou dado sensível de cartão é exibido ou exportado.
+- [x] UI mobile-first preservada e nenhum `<img>` cru foi usado.
+- [x] Nenhum package, schema Prisma, migration, mock ou endpoint simulado foi adicionado.
+
+### Validação complementar executada
+
+- `pnpm --dir backend exec biome check --write "src/modules/api/admin/private/finance/dashboard/DTOs/IAdminFinanceDashboardDTO.ts" "src/modules/api/admin/private/finance/dashboard/repositories/AdminFinanceDashboardRepository.ts" "src/modules/api/admin/private/finance/dashboard/use-cases/services.ts" "src/modules/api/admin/private/finance/lists/DTOs/IAdminFinanceListsDTO.ts" "src/modules/api/admin/private/finance/lists/use-cases/controller.ts" "src/modules/api/admin/private/finance/lists/validator/index.ts" "src/modules/api/admin/private/finance/lists/index.ts" "src/main/server/imports/write.ts"`
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/financeiro/client.tsx" "src/app/(admin)/financeiro/cobrancas/client.tsx" "src/app/(admin)/financeiro/cobrancas/page.tsx" "src/app/(admin)/financeiro/assinaturas/client.tsx" "src/app/(admin)/financeiro/assinaturas/page.tsx" "src/api/req/finance/index.ts" "src/api/callers/finance/index.ts" "src/api/cache/keys.ts"`
+- `pnpm --dir admin typecheck`
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check`
+- Smoke de service real com `.env` local: `buildAdminFinanceDashboard({ period: "all" })`, `listAdminFinanceCharges({ period: "all", limit: 2 })` e `listAdminFinanceSubscriptions({ period: "all", limit: 2 })` retornaram `status=200`; o dashboard expôs `latest_charges` e `subscription_relation`.
+- Smoke HTTP local protegido: `GET http://localhost:3001/api/admin/private/finance/charges?period=all` e `GET http://localhost:3001/api/admin/private/finance/subscriptions?period=all` sem token Admin retornaram `401`.
+- Smoke HTTP local Admin: `GET http://localhost:3002/financeiro`, `/financeiro/cobrancas` e `/financeiro/assinaturas` retornaram `200`.

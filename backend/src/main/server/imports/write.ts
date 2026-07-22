@@ -6,6 +6,7 @@ import apiAdminPrivateCommunitiesManage from "@/modules/api/admin/private/commun
 import apiAdminPrivateDashboardExport from "@/modules/api/admin/private/dashboard/export";
 import apiAdminPrivateDashboardSummary from "@/modules/api/admin/private/dashboard/summary";
 import apiAdminPrivateFinanceDashboard from "@/modules/api/admin/private/finance/dashboard";
+import apiAdminPrivateFinanceLists from "@/modules/api/admin/private/finance/lists";
 import apiAdminPrivateModeration from "@/modules/api/admin/private/moderation";
 import apiAdminPrivateNotifications from "@/modules/api/admin/private/notifications";
 import apiAdminPrivatePatientsAccount from "@/modules/api/admin/private/patients/account";
@@ -158,6 +159,7 @@ mountRoute("/api/admin/private/communities", apiAdminPrivateCommunitiesManage);
 mountRoute("/api/admin/private/dashboard/summary", apiAdminPrivateDashboardSummary);
 mountRoute("/api/admin/private/dashboard/export", apiAdminPrivateDashboardExport);
 mountRoute("/api/admin/private/finance/dashboard", apiAdminPrivateFinanceDashboard);
+mountRoute("/api/admin/private/finance", apiAdminPrivateFinanceLists);
 mountRoute("/api/admin/private/moderation", apiAdminPrivateModeration);
 mountRoute("/api/admin/private/notifications", apiAdminPrivateNotifications);
 mountRoute("/api/admin/private/patients/dashboard", apiAdminPrivatePatientsDashboard);
