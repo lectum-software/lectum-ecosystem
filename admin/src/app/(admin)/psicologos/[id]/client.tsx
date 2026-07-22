@@ -2144,22 +2144,15 @@ const SubscriptionCard = ({
 
   return (
     <CardShell className="flex h-full flex-col p-5">
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <h2 className="text-lg font-black text-foreground">Dados da assinatura</h2>
-          <p className="mt-1 text-sm text-muted">Resumo somente leitura do plano atual.</p>
-        </div>
-        <IconCircle icon={Wallet} />
-      </div>
-      <div className="mt-5 rounded-[28px] border border-primary/15 bg-primary-soft/55 p-4">
+      <div className="rounded-[28px] border border-primary/15 bg-primary-soft/55 p-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <p className="text-xs font-black uppercase tracking-[0.12em] text-primary">
-              Situação atual
+              Assinatura
             </p>
             <p className="mt-1 text-xl font-black text-foreground">{situation.label}</p>
           </div>
-          <Badge className={situation.badgeClassName}>{situation.badgeLabel}</Badge>
+          <IconCircle icon={Wallet} />
         </div>
         <p className="mt-3 text-sm font-bold leading-6 text-muted">{situation.helperText}</p>
       </div>
@@ -2214,14 +2207,10 @@ const AccountSituationCard = ({ id }: { id: string }) => {
   if (query.isLoading) {
     return (
       <CardShell className="p-5">
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <h2 className="text-lg font-black text-foreground">Situação da conta</h2>
-            <p className="mt-1 text-sm text-muted">Resumo de acesso e e-mail.</p>
-          </div>
+        <div className="flex justify-end">
           <IconCircle icon={UserRound} />
         </div>
-        <div className="mt-5 h-52 animate-pulse rounded-3xl bg-surface-muted" />
+        <div className="mt-4 h-52 animate-pulse rounded-3xl bg-surface-muted" />
       </CardShell>
     );
   }
@@ -2229,11 +2218,7 @@ const AccountSituationCard = ({ id }: { id: string }) => {
   if (query.isError && errorMessage) {
     return (
       <CardShell className="p-5">
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <h2 className="text-lg font-black text-foreground">Situação da conta</h2>
-            <p className="mt-1 text-sm text-muted">Resumo de acesso e e-mail.</p>
-          </div>
+        <div className="flex justify-end">
           <IconCircle icon={AlertTriangle} />
         </div>
         <p className="mt-5 rounded-2xl bg-surface-muted p-4 text-sm font-bold leading-6 text-muted">
@@ -2278,24 +2263,13 @@ const AccountSituationCard = ({ id }: { id: string }) => {
 
   return (
     <CardShell className="flex h-full flex-col p-5">
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <h2 className="text-lg font-black text-foreground">Situação da conta</h2>
-          <p className="mt-1 text-sm text-muted">Resumo de acesso e e-mail.</p>
-        </div>
-        <IconCircle icon={UserRound} />
-      </div>
-      <div className="mt-5 rounded-[28px] border border-primary/15 bg-primary-soft/55 p-4">
+      <div className="rounded-[28px] border border-primary/15 bg-primary-soft/55 p-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <p className="text-xs font-black uppercase tracking-[0.12em] text-primary">
-              Situação atual
-            </p>
+            <p className="text-xs font-black uppercase tracking-[0.12em] text-primary">Conta</p>
             <p className="mt-1 text-xl font-black text-foreground">{situation.label}</p>
           </div>
-          <Badge className={ACCOUNT_STATUS_BADGE_CLASS[account.account_status]}>
-            {account.account_status_label}
-          </Badge>
+          <IconCircle icon={UserRound} />
         </div>
         <p className="mt-3 text-sm font-bold leading-6 text-muted">
           {getAccountSituationHelperText(account)}
@@ -2372,30 +2346,15 @@ const RegistryStatusCard = ({ id }: { id: string }) => {
 
   return (
     <CardShell className="flex h-full flex-col p-5">
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <h2 className="text-lg font-black text-foreground">Situação do registro</h2>
-          <p className="mt-1 text-sm text-muted">Resumo do CRP e da verificação profissional.</p>
-        </div>
-        <IconCircle icon={ShieldCheck} />
-      </div>
-      <div className="mt-5 rounded-[28px] border border-primary/15 bg-primary-soft/55 p-4">
+      <div className="rounded-[28px] border border-primary/15 bg-primary-soft/55 p-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <p className="text-xs font-black uppercase tracking-[0.12em] text-primary">
-              Situação atual
-            </p>
+            <p className="text-xs font-black uppercase tracking-[0.12em] text-primary">Registro</p>
             <p className="mt-1 text-xl font-black text-foreground">
               {registry.summary.status_label}
             </p>
           </div>
-          <Badge
-            className={
-              REGISTRY_VERIFICATION_TONE[registry.summary.status] ?? "bg-surface-muted text-muted"
-            }
-          >
-            {registry.summary.approval_label}
-          </Badge>
+          <IconCircle icon={ShieldCheck} />
         </div>
         <p className="mt-3 text-sm font-bold leading-6 text-muted">{helperText}</p>
       </div>
