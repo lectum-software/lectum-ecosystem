@@ -134,6 +134,34 @@ export class AdminFinanceDashboardRepository {
     });
   }
 
+  async countPaidSubscriptionsInOpeningBaseAt(at: Date): Promise<number> {
+    return prisma.professional_subscription.count({
+      where: {
+        ...paidGatewaySubscriptionWhere,
+        createdAt: {
+          lte: at,
+        },
+        OR: [
+          { current_period_end: null },
+          {
+            current_period_end: {
+              gte: at,
+            },
+          },
+        ],
+        status: {
+          in: ["ativa", "cancelada"],
+        },
+        NOT: {
+          status: "cancelada",
+          updatedAt: {
+            lt: at,
+          },
+        },
+      },
+    });
+  }
+
   async listActivePaidSubscriptionsAt(at: Date) {
     return prisma.professional_subscription.findMany({
       where: {
@@ -155,6 +183,30 @@ export class AdminFinanceDashboardRepository {
     });
   }
 
+  async listNewPaidSubscriptionValues(range: AdminFinanceDateRange) {
+    return prisma.professional_subscription.findMany({
+      orderBy: {
+        createdAt: "asc",
+      },
+      where: {
+        ...paidGatewaySubscriptionWhere,
+        createdAt: dateRangeWhere(range),
+        status: {
+          in: ["ativa", "cancelada", "inadimplente"],
+        },
+      },
+      select: {
+        createdAt: true,
+        id: true,
+        plan: {
+          select: {
+            price_cents: true,
+          },
+        },
+      },
+    });
+  }
+
   async listNewPaidSubscriptions(range: AdminFinanceDateRange, take = 50) {
     return prisma.professional_subscription.findMany({
       orderBy: {
@@ -172,6 +224,25 @@ export class AdminFinanceDashboardRepository {
     });
   }
 
+  async listPaidSubscriptionsForLifetimeAt(at: Date) {
+    return prisma.professional_subscription.findMany({
+      where: {
+        ...paidGatewaySubscriptionWhere,
+        createdAt: {
+          lte: at,
+        },
+        status: {
+          in: ["ativa", "cancelada", "inadimplente"],
+        },
+      },
+      select: {
+        gateway_subscription_id: true,
+        id: true,
+        psychologist_id: true,
+      },
+    });
+  }
+
   async listPaymentEvents(range: AdminFinanceDateRange) {
     return prisma.payment_event.findMany({
       orderBy: {
@@ -179,6 +250,28 @@ export class AdminFinanceDashboardRepository {
       },
       where: {
         createdAt: dateRangeWhere(range),
+        deleted: false,
+        gateway: "mercadopago",
+      },
+      select: {
+        createdAt: true,
+        external_id: true,
+        id: true,
+        payload: true,
+        type: true,
+      },
+    });
+  }
+
+  async listPaymentEventsUntil(at: Date) {
+    return prisma.payment_event.findMany({
+      orderBy: {
+        createdAt: "asc",
+      },
+      where: {
+        createdAt: {
+          lte: at,
+        },
         deleted: false,
         gateway: "mercadopago",
       },

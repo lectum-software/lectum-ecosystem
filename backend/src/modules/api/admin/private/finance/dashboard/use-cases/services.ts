@@ -248,6 +248,7 @@ const metric = (params: {
   id: AdminFinanceMetric["id"];
   label: string;
   previous: number;
+  ratePercent?: number | null;
   source: string;
   unit: AdminFinanceMetric["unit"];
   unavailableReason?: string | null;
@@ -262,6 +263,7 @@ const metric = (params: {
     id: params.id,
     label: params.label,
     previous_value: params.previous,
+    rate_percent: params.ratePercent ?? null,
     source: params.source,
     trend:
       !available || change === null
@@ -279,6 +281,20 @@ const metric = (params: {
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null && !Array.isArray(value);
+
+const stringifyPayload = (value: unknown) => {
+  try {
+    return JSON.stringify(value ?? "").toLowerCase();
+  } catch {
+    return String(value ?? "").toLowerCase();
+  }
+};
+
+const payloadContainsAnyReference = (payload: unknown, references: string[]) => {
+  const text = stringifyPayload(payload);
+
+  return references.some((reference) => text.includes(reference.toLowerCase()));
+};
 
 const findPayloadValue = (value: unknown, keys: string[]): unknown => {
   if (Array.isArray(value)) {
@@ -361,6 +377,10 @@ type PaymentEventRecord = Awaited<
   ReturnType<AdminFinanceDashboardRepository["listPaymentEvents"]>
 >[number];
 
+type LifetimeSubscriptionRecord = Awaited<
+  ReturnType<AdminFinanceDashboardRepository["listPaidSubscriptionsForLifetimeAt"]>
+>[number];
+
 type PaymentRevenue = {
   confirmed_count: number;
   missing_amount_count: number;
@@ -388,11 +408,65 @@ const summarizeRevenue = (events: PaymentEventRecord[]): PaymentRevenue =>
     { confirmed_count: 0, missing_amount_count: 0, revenue_cents: 0 },
   );
 
+const summarizeAverageLtv = (
+  subscriptions: LifetimeSubscriptionRecord[],
+  paymentEvents: PaymentEventRecord[],
+) => {
+  const paidPsychologistCount = new Set(
+    subscriptions.map((subscription) => subscription.psychologist_id),
+  ).size;
+  const references = Array.from(
+    new Set(
+      subscriptions.flatMap((subscription) =>
+        [subscription.id, subscription.gateway_subscription_id].filter(
+          (reference): reference is string => Boolean(reference && reference.length > 3),
+        ),
+      ),
+    ),
+  );
+
+  let linkedConfirmedPayments = 0;
+  let missingAmountCount = 0;
+  let revenueCents = 0;
+
+  if (references.length > 0) {
+    for (const event of paymentEvents) {
+      if (!isPaymentEvent(event.type, event.payload)) continue;
+      if (!isConfirmedPaymentStatus(event.payload)) continue;
+      if (!payloadContainsAnyReference(event.payload, references)) continue;
+
+      linkedConfirmedPayments += 1;
+      const amount = extractPaymentAmountCents(event.payload);
+      if (amount === null) {
+        missingAmountCount += 1;
+        continue;
+      }
+
+      revenueCents += amount;
+    }
+  }
+
+  const available = missingAmountCount === 0;
+
+  return {
+    available,
+    linkedConfirmedPayments,
+    paidPsychologistCount,
+    unavailableReason: available ? null : "payment_event_vinculado_sem_valor_monetario_extraivel",
+    valueCents:
+      available && paidPsychologistCount > 0 ? Math.round(revenueCents / paidPsychologistCount) : 0,
+  };
+};
+
 const recordsInBucket = <T extends { createdAt: Date }>(items: T[], bucket: Bucket) =>
   items.filter((item) => item.createdAt >= bucket.start && item.createdAt <= bucket.end);
 
 type SubscriptionRecord = Awaited<
   ReturnType<AdminFinanceDashboardRepository["listNewPaidSubscriptions"]>
+>[number];
+
+type NewSubscriptionValueRecord = Awaited<
+  ReturnType<AdminFinanceDashboardRepository["listNewPaidSubscriptionValues"]>
 >[number];
 
 const monthlyPriceCents = (subscription: Pick<SubscriptionRecord, "plan">) => {
@@ -402,6 +476,15 @@ const monthlyPriceCents = (subscription: Pick<SubscriptionRecord, "plan">) => {
   }
 
   return subscription.plan.price_cents;
+};
+
+const sumSubscriptionPlanRevenueCents = (subscriptions: NewSubscriptionValueRecord[]) =>
+  subscriptions.reduce((sum, subscription) => sum + subscription.plan.price_cents, 0);
+
+const calculateChurnRatePercent = (cancellations: number, openingBase: number) => {
+  if (openingBase === 0) return null;
+
+  return roundPercent((cancellations / openingBase) * 100);
 };
 
 const formatStatusLabel = (status: string) => {
@@ -442,12 +525,13 @@ const mapSubscription = (subscription: SubscriptionRecord): AdminFinanceSubscrip
 const buildSeries = async (
   buckets: Bucket[],
   paymentEvents: PaymentEventRecord[],
+  newSubscriptionValues: NewSubscriptionValueRecord[],
   repository: AdminFinanceDashboardRepository,
 ): Promise<AdminFinanceSeriesPoint[]> =>
   Promise.all(
     buckets.map(async (bucket) => {
-      const [newSubscriptions, activeSubscriptions, cancellations] = await Promise.all([
-        repository.countNewPaidSubscriptions(bucket),
+      const bucketNewSubscriptions = recordsInBucket(newSubscriptionValues, bucket);
+      const [activeSubscriptions, cancellations] = await Promise.all([
         repository.countActivePaidSubscriptionsAt(bucket.end),
         repository.countCancelledPaidSubscriptions(bucket),
       ]);
@@ -458,7 +542,8 @@ const buildSeries = async (
         cancellations,
         confirmed_payments: revenue.confirmed_count,
         end_date: bucket.end_date,
-        new_subscriptions: newSubscriptions,
+        new_subscriptions: bucketNewSubscriptions.length,
+        new_subscriptions_revenue_cents: sumSubscriptionPlanRevenueCents(bucketNewSubscriptions),
         revenue_cents: revenue.revenue_cents,
         start_date: bucket.start_date,
       };
@@ -503,24 +588,30 @@ export const buildAdminFinanceDashboard = async (
   const [
     currentPaymentEvents,
     previousPaymentEvents,
-    currentNewSubscriptionCount,
-    previousNewSubscriptionCount,
+    currentNewSubscriptionValues,
+    previousNewSubscriptionValues,
     currentActiveSubscriptionCount,
     previousActiveSubscriptionCount,
     currentCancellationCount,
     previousCancellationCount,
+    currentChurnOpeningBaseCount,
     activeSubscriptions,
+    lifetimeSubscriptions,
+    lifetimePaymentEvents,
     newSubscriptions,
   ] = await Promise.all([
     repository.listPaymentEvents(current),
     repository.listPaymentEvents(previous),
-    repository.countNewPaidSubscriptions(current),
-    repository.countNewPaidSubscriptions(previous),
+    repository.listNewPaidSubscriptionValues(current),
+    repository.listNewPaidSubscriptionValues(previous),
     repository.countActivePaidSubscriptionsAt(current.end),
     repository.countActivePaidSubscriptionsAt(previous.end),
     repository.countCancelledPaidSubscriptions(current),
     repository.countCancelledPaidSubscriptions(previous),
+    repository.countPaidSubscriptionsInOpeningBaseAt(current.start),
     repository.listActivePaidSubscriptionsAt(current.end),
+    repository.listPaidSubscriptionsForLifetimeAt(current.end),
+    repository.listPaymentEventsUntil(current.end),
     repository.listNewPaidSubscriptions(current, subscriptionTake),
   ]);
 
@@ -532,53 +623,43 @@ export const buildAdminFinanceDashboard = async (
     (sum, subscription) => sum + monthlyPriceCents(subscription),
     0,
   );
-  const averageTicketCents =
-    currentActiveSubscriptionCount > 0 ? Math.round(mrrCents / currentActiveSubscriptionCount) : 0;
+  const currentNewSubscriptionCount = currentNewSubscriptionValues.length;
+  const previousNewSubscriptionCount = previousNewSubscriptionValues.length;
+  const currentNewSubscriptionRevenueCents = sumSubscriptionPlanRevenueCents(
+    currentNewSubscriptionValues,
+  );
+  const previousNewSubscriptionRevenueCents = sumSubscriptionPlanRevenueCents(
+    previousNewSubscriptionValues,
+  );
+  const currentChurnRatePercent = calculateChurnRatePercent(
+    currentCancellationCount,
+    currentChurnOpeningBaseCount,
+  );
+  const averageLtv = summarizeAverageLtv(lifetimeSubscriptions, lifetimePaymentEvents);
   const nonMonthlyIntervals = activeSubscriptions.some(
     (subscription) => !subscription.plan.interval.toLowerCase().includes("month"),
   );
   const buckets = buildBuckets(current, groupBy);
-  const series = await buildSeries(buckets, currentPaymentEvents, repository);
+  const series = await buildSeries(
+    buckets,
+    currentPaymentEvents,
+    currentNewSubscriptionValues,
+    repository,
+  );
   const unavailable = buildUnavailable(currentRevenue, previousRevenue);
 
   const dashboard: AdminFinanceDashboard = {
-    average_ticket: {
+    average_ltv: {
+      available: averageLtv.available,
       description:
-        "MRR dividido pela quantidade de assinaturas profissionais pagas ativas no snapshot do período.",
-      source: "mrr_divided_by_active_paid_subscriptions",
-      value_cents: averageTicketCents,
+        "Receita confirmada lifetime vinculada às assinaturas pagas, dividida pelos psicólogos com assinatura Mercado Pago até o fim do período.",
+      linked_confirmed_payments: averageLtv.linkedConfirmedPayments,
+      paid_psychologist_count: averageLtv.paidPsychologistCount,
+      source: "payment_event_linked_to_paid_psychologists",
+      unavailable_reason: averageLtv.unavailableReason,
+      value_cents: averageLtv.valueCents,
     },
     cards: {
-      active_subscriptions: metric({
-        current: currentActiveSubscriptionCount,
-        description:
-          "Assinaturas profissionais pagas ativas no snapshot final do período. Planos gratuitos e cortesias são excluídos.",
-        id: "active_subscriptions",
-        label: "Assinaturas ativas",
-        previous: previousActiveSubscriptionCount,
-        source: "professional_subscription.status=ativa + source=mercadopago",
-        unit: "count",
-      }),
-      cancellations: metric({
-        current: currentCancellationCount,
-        description:
-          "Cancelamentos reais persistidos no status local sincronizado pelo gateway, usando updatedAt no período.",
-        id: "cancellations",
-        label: "Cancelamentos",
-        previous: previousCancellationCount,
-        source: "professional_subscription.status=cancelada",
-        unit: "count",
-      }),
-      new_subscriptions: metric({
-        current: currentNewSubscriptionCount,
-        description:
-          "Assinaturas profissionais pagas iniciadas no período, sem plano gratuito e sem source=admin_grant.",
-        id: "new_subscriptions",
-        label: "Novas assinaturas",
-        previous: previousNewSubscriptionCount,
-        source: "professional_subscription.createdAt + source=mercadopago",
-        unit: "count",
-      }),
       revenue_total: metric({
         available: revenueAvailable,
         current: currentRevenue.revenue_cents,
@@ -594,12 +675,54 @@ export const buildAdminFinanceDashboard = async (
           : "payment_event_confirmado_sem_valor_monetario_extraivel",
         unit: "currency_cents",
       }),
+      active_subscriptions: metric({
+        current: currentActiveSubscriptionCount,
+        description:
+          "Assinaturas profissionais pagas ativas no snapshot final do período. Planos gratuitos e cortesias são excluídos.",
+        id: "active_subscriptions",
+        label: "Assinaturas ativas",
+        previous: previousActiveSubscriptionCount,
+        source: "professional_subscription.status=ativa + source=mercadopago",
+        unit: "count",
+      }),
+      new_subscriptions_revenue: metric({
+        current: currentNewSubscriptionRevenueCents,
+        description:
+          "Soma do valor dos planos pagos iniciados no período, usando subscription_plan.price_cents e excluindo plano gratuito e cortesia.",
+        id: "new_subscriptions_revenue",
+        label: "Receita de novas assinaturas",
+        previous: previousNewSubscriptionRevenueCents,
+        source: "professional_subscription.createdAt + subscription_plan.price_cents",
+        unit: "currency_cents",
+      }),
+      new_subscriptions: metric({
+        current: currentNewSubscriptionCount,
+        description:
+          "Assinaturas profissionais pagas iniciadas no período, sem plano gratuito e sem source=admin_grant.",
+        id: "new_subscriptions",
+        label: "Novas assinaturas",
+        previous: previousNewSubscriptionCount,
+        source: "professional_subscription.createdAt + source=mercadopago",
+        unit: "count",
+      }),
+      cancellations: metric({
+        current: currentCancellationCount,
+        description:
+          "Churn de assinaturas profissionais pagas persistido no status local sincronizado pelo gateway, usando updatedAt no período.",
+        id: "cancellations",
+        label: "Churn",
+        previous: previousCancellationCount,
+        ratePercent: currentChurnRatePercent,
+        source: "professional_subscription.status=cancelada",
+        unit: "count",
+      }),
     },
     coverage_notes: [
       "Fonte visual: _product/proto/admin/Financeiro.png. Builder/Quick Copy não está acessível neste ambiente; a implementação usa a imagem local como referência.",
       "Receita só considera payment_event real do Mercado Pago com status confirmado e valor monetário extraível; não há projeção por quantidade de assinaturas.",
-      "Plano gratuito e cortesia administrativa source=admin_grant são excluídos de receita, MRR, ticket médio e cards financeiros.",
-      "Cancelamentos usam somente status=cancelada persistido no banco pelo fluxo real de assinatura; não há inferência por ausência de renovação.",
+      "LTV médio dos psicólogos usa somente payment_event confirmado vinculado ao id local da assinatura ou gateway_subscription_id, dividido por psicólogos com assinatura paga real até o fim do período.",
+      "Plano gratuito e cortesia administrativa source=admin_grant são excluídos de receita, MRR, LTV médio e cards financeiros.",
+      "Churn usa somente status=cancelada persistido no banco pelo fluxo real de assinatura; a taxa divide saídas pela base paga no início do período, sem inferência por ausência de renovação.",
       nonMonthlyIntervals
         ? "Há planos ativos com intervalo não mensal; o MRR normaliza plano anual dividindo por 12 conforme ADR da task."
         : "Todos os planos ativos considerados usam o preço em subscription_plan.price_cents, sem hardcode de valor.",
@@ -663,7 +786,7 @@ const buildCsv = (dashboard: AdminFinanceDashboard) => {
         "",
         card.available ? card.value : "indisponivel",
         card.source,
-        `unit=${card.unit};previous=${card.previous_value};change_percent=${card.change_percent ?? "n/a"};reason=${card.unavailable_reason ?? ""}`,
+        `unit=${card.unit};previous=${card.previous_value};change_percent=${card.change_percent ?? "n/a"};rate_percent=${card.rate_percent ?? "n/a"};reason=${card.unavailable_reason ?? ""}`,
       ]),
     );
   }
@@ -682,12 +805,12 @@ const buildCsv = (dashboard: AdminFinanceDashboard) => {
   rows.push(
     csvRow([
       "resumo_financeiro",
-      "average_ticket",
-      "Ticket medio mensal por assinatura",
+      "average_ltv",
+      "LTV medio dos psicologos",
       "",
-      dashboard.average_ticket.value_cents,
-      dashboard.average_ticket.source,
-      dashboard.average_ticket.description,
+      dashboard.average_ltv.available ? dashboard.average_ltv.value_cents : "indisponivel",
+      dashboard.average_ltv.source,
+      `paid_psychologist_count=${dashboard.average_ltv.paid_psychologist_count};linked_confirmed_payments=${dashboard.average_ltv.linked_confirmed_payments};reason=${dashboard.average_ltv.unavailable_reason ?? ""};${dashboard.average_ltv.description}`,
     ]),
   );
 
@@ -700,6 +823,7 @@ const buildCsv = (dashboard: AdminFinanceDashboard) => {
       "revenue_cents",
       "confirmed_payments",
       "new_subscriptions",
+      "new_subscriptions_revenue_cents",
       "active_subscriptions",
       "cancellations",
     ]),
@@ -713,6 +837,7 @@ const buildCsv = (dashboard: AdminFinanceDashboard) => {
         point.revenue_cents,
         point.confirmed_payments,
         point.new_subscriptions,
+        point.new_subscriptions_revenue_cents,
         point.active_subscriptions,
         point.cancellations,
       ]),

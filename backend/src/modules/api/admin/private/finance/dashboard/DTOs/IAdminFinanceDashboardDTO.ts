@@ -32,9 +32,15 @@ export type AdminFinanceMetric = {
   available: boolean;
   change_percent: number | null;
   description: string;
-  id: "active_subscriptions" | "cancellations" | "new_subscriptions" | "revenue_total";
+  id:
+    | "active_subscriptions"
+    | "cancellations"
+    | "new_subscriptions"
+    | "new_subscriptions_revenue"
+    | "revenue_total";
   label: string;
   previous_value: number;
+  rate_percent: number | null;
   source: string;
   trend: "down" | "flat" | "unavailable" | "up";
   unit: "count" | "currency_cents";
@@ -48,6 +54,7 @@ export type AdminFinanceSeriesPoint = {
   confirmed_payments: number;
   end_date: string;
   new_subscriptions: number;
+  new_subscriptions_revenue_cents: number;
   revenue_cents: number;
   start_date: string;
 };
@@ -84,15 +91,20 @@ export type AdminFinanceUnavailableMetric = {
 };
 
 export type AdminFinanceDashboard = {
-  average_ticket: {
+  average_ltv: {
+    available: boolean;
     description: string;
-    source: "mrr_divided_by_active_paid_subscriptions";
+    linked_confirmed_payments: number;
+    paid_psychologist_count: number;
+    source: "payment_event_linked_to_paid_psychologists";
+    unavailable_reason: string | null;
     value_cents: number;
   };
   cards: {
     active_subscriptions: AdminFinanceMetric;
     cancellations: AdminFinanceMetric;
     new_subscriptions: AdminFinanceMetric;
+    new_subscriptions_revenue: AdminFinanceMetric;
     revenue_total: AdminFinanceMetric;
   };
   coverage_notes: string[];
