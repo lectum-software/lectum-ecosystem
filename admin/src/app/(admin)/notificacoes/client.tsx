@@ -94,6 +94,30 @@ const tableRangeErrorMessage =
 const cardClass =
   "rounded-card border border-border/80 bg-surface/95 shadow-admin-soft backdrop-blur";
 
+const useDocumentScrollLock = (locked: boolean) => {
+  useEffect(() => {
+    if (!locked || typeof document === "undefined") return;
+
+    const { body, documentElement } = document;
+    const previousBodyOverflow = body.style.overflow;
+    const previousDocumentOverflow = documentElement.style.overflow;
+    const previousBodyOverscrollBehavior = body.style.overscrollBehavior;
+    const previousDocumentOverscrollBehavior = documentElement.style.overscrollBehavior;
+
+    body.style.overflow = "hidden";
+    documentElement.style.overflow = "hidden";
+    body.style.overscrollBehavior = "none";
+    documentElement.style.overscrollBehavior = "none";
+
+    return () => {
+      body.style.overflow = previousBodyOverflow;
+      documentElement.style.overflow = previousDocumentOverflow;
+      body.style.overscrollBehavior = previousBodyOverscrollBehavior;
+      documentElement.style.overscrollBehavior = previousDocumentOverscrollBehavior;
+    };
+  }, [locked]);
+};
+
 const AUDIENCE_OPTIONS: Array<{ label: string; value: AdminNotificationAudience }> = [
   { label: "Todos os usuários", value: "all_users" },
   { label: "Pacientes", value: "patients" },
@@ -1338,6 +1362,7 @@ export const AdminNotificationsClient = () => {
   const [logsPeriod, setLogsPeriod] = useState<NotificationPeriodValue>(
     NOTIFICATION_DEFAULT_PERIOD,
   );
+  useDocumentScrollLock(modalOpen || Boolean(details));
   const selectedCampaignStatus =
     CAMPAIGN_STATUS_OPTIONS.find((item) => item.value === campaignStatus) ??
     CAMPAIGN_STATUS_OPTIONS[0];
