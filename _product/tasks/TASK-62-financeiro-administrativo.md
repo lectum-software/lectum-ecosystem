@@ -264,7 +264,7 @@ Frontend esperado:
 
 - Pedido do usuario: fazer a **Visao Geral** do painel financeiro seguir a mesma composicao da **Visao Geral** do dashboard de Pacientes enviada em captura.
 - O card **Visao Geral** de `/financeiro` passou a usar a mesma estrutura visual de Pacientes: titulo e periodo a esquerda, controles **Periodo**, **De** e **Ate** a direita, contadores em grid responsivo `2 -> 4` e grafico logo abaixo dos contadores.
-- Foram removidos elementos visuais extras que deixavam o Financeiro diferente de Pacientes dentro desse bloco: chip de fonte da serie, titulo/descricao redundantes acima do grafico, legenda visual separada e resumo expansivel.
+- Foram removidos elementos visuais extras que deixavam o Financeiro diferente de Pacientes dentro desse bloco, como legenda visual separada e resumo expansivel; o titulo/descricao do grafico e o chip de fonte foram mantidos compactos no card para preservar leitura e rastreabilidade real.
 - A legenda operacional do grafico foi preservada de forma acessivel via `figcaption` somente para leitores de tela; as notas honestas de cobertura financeira continuam no bloco proprio de cobertura, sem simular receita, assinatura ou cancelamento.
 - A exportacao CSV, presets reais, calculos financeiros, endpoints, Prisma/migrations e packages permaneceram inalterados neste refinamento visual.
 - Builder/Quick Copy segue sem ferramenta callable neste ambiente; as referencias auditaveis foram `_product/proto/admin/Financeiro.png`, `_product/proto/admin/Pacientes/Pacientes - Dashboard.png` e as capturas de `/pacientes` enviadas pelo usuario.

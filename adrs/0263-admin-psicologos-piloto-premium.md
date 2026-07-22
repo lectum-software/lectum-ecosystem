@@ -554,8 +554,9 @@ Decisoes:
   `Periodo`, `De` e `Ate` no lado direito em desktop e empilhados no mobile.
 - Usar o mesmo grid de contadores de Pacientes (`2` colunas no mobile e `4` no desktop), mantendo
   os quatro indicadores financeiros reais da TASK-62.
-- Remover chip de fonte, titulo/descricao redundantes do grafico, legenda visual separada e
-  resumo expansivel para deixar a leitura do grafico logo abaixo dos contadores.
+- Remover legenda visual separada e resumo expansivel para deixar a leitura do grafico logo
+  abaixo dos contadores, mantendo titulo/descricao compactos e chip de fonte junto ao grafico
+  para preservar rastreabilidade do dado real.
 - Preservar a explicacao do grafico em `figcaption` acessivel e manter notas de cobertura
   financeira no bloco proprio, sem esconder indisponibilidades reais.
 - Nao alterar backend, contratos HTTP, calculos financeiros, CSV, Prisma/migrations, packages ou
