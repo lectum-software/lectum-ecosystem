@@ -104,11 +104,30 @@ const subscriptionSelect = {
           email: true,
           id: true,
           name: true,
+          payment_methods: {
+            orderBy: {
+              updatedAt: "desc",
+            },
+            select: {
+              brand: true,
+              exp_month: true,
+              exp_year: true,
+              gateway: true,
+              gateway_token: true,
+              last4: true,
+              updatedAt: true,
+            },
+            take: 5,
+            where: {
+              deleted: false,
+              gateway: "mercadopago",
+            },
+          },
         },
       },
     },
   },
-};
+} satisfies Prisma.professional_subscriptionSelect;
 
 export class AdminFinanceDashboardRepository {
   async findFinanceStartDate(): Promise<Date | null> {

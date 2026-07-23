@@ -114,6 +114,16 @@ export type AdminFinancePaymentHealth = {
   total_events: number;
 };
 
+export type AdminFinancePaymentMethod = {
+  brand: string | null;
+  exp_month: number | null;
+  exp_year: number | null;
+  gateway: string;
+  last4: string | null;
+  matches_subscription: boolean;
+  saved_at: string | null;
+};
+
 export type AdminFinanceSubscriptionItem = {
   created_at: string;
   current_period_end: string | null;
@@ -140,6 +150,7 @@ export type AdminFinanceSubscriptionItem = {
   next_charge_at: string | null;
   payment_health: AdminFinancePaymentHealth;
   payment_history: AdminFinancePaymentHistory;
+  payment_method: AdminFinancePaymentMethod | null;
   source: string;
   started_at: string;
   status: string;

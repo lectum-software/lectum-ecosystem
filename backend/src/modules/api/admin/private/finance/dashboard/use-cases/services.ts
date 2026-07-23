@@ -10,6 +10,7 @@ import type {
   AdminFinancePaymentHistory,
   AdminFinancePaymentHistoryItem,
   AdminFinancePaymentHistoryStatus,
+  AdminFinancePaymentMethod,
   AdminFinancePeriod,
   AdminFinanceQuery,
   AdminFinanceSeriesPoint,
@@ -564,6 +565,31 @@ const formatStatusLabel = (status: string) => {
   return labels[status] ?? status;
 };
 
+const mapPaymentMethod = (
+  subscription: FinanceSubscriptionRecord,
+): AdminFinancePaymentMethod | null => {
+  const methods = subscription.psychologist.user.payment_methods;
+  const matchedMethod =
+    methods.find(
+      (method) =>
+        Boolean(subscription.gateway_subscription_id) &&
+        method.gateway_token === subscription.gateway_subscription_id,
+    ) ?? null;
+  const method = matchedMethod ?? methods[0] ?? null;
+
+  if (!method) return null;
+
+  return {
+    brand: method.brand ?? null,
+    exp_month: method.exp_month ?? null,
+    exp_year: method.exp_year ?? null,
+    gateway: method.gateway,
+    last4: method.last4 ?? null,
+    matches_subscription: Boolean(matchedMethod),
+    saved_at: method.updatedAt?.toISOString() ?? null,
+  };
+};
+
 const subscriptionReferenceValues = (subscription: SubscriptionReferenceRecord) =>
   [subscription.id, subscription.gateway_subscription_id].filter((reference): reference is string =>
     Boolean(reference && reference.length > 3),
@@ -892,6 +918,7 @@ const mapSubscription = (
     next_charge_at: subscription.current_period_end?.toISOString() ?? null,
     payment_health: paymentInsights.health,
     payment_history: paymentInsights.history,
+    payment_method: mapPaymentMethod(subscription),
     plan: {
       id: subscription.plan.id,
       interval: subscription.plan.interval,

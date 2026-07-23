@@ -153,3 +153,12 @@ Adicionar análise real de confiabilidade do pagamento por assinatura paga Merca
 - No detalhe expandido, a tag de classificação foi removida e o aviso técnico sobre ausência de `payment_event` reconciliado deixou de ser exibido como nota visual.
 - O contador/fonte de eventos reconciliados também deixou de aparecer no cabeçalho do histórico, mantendo o histórico dentro da assinatura sem expor detalhe técnico desnecessário.
 - Não houve alteração de contrato HTTP, backend, Prisma/migrations, packages ou dados persistidos.
+
+## Ajuste pós-feedback 2026-07-22 - Cartão salvo na confiabilidade
+
+- Pedido do usuário: na área de **Confiabilidade do pagamento**, exibir os dados de cartão do psicólogo que ficam salvos.
+- O contrato de assinaturas financeiras passou a retornar `payment_method` seguro por assinatura, usando somente dados locais de exibição (`brand`, `last4`, `exp_month`, `exp_year` e data de atualização) persistidos em `payment_method`; `gateway_token`, PAN e CVV continuam fora do payload Admin.
+- A UI do detalhe expandido passou a exibir **Cartão salvo do psicólogo** dentro de **Confiabilidade do pagamento**, com bandeira/final/validade quando existirem e estado honesto quando nenhum cartão seguro estiver salvo.
+- O backend marca se o cartão salvo corresponde ao `gateway_subscription_id` da assinatura; quando não corresponde, a UI informa apenas que é o último cartão salvo do psicólogo, sem afirmar vínculo indevido.
+- Após feedback visual, o cartão salvo permanece alinhado no topo à direita do bloco azul e os contadores de confiabilidade voltaram a ocupar a largura horizontal das duas colunas abaixo do cabeçalho/cartão.
+- Não houve alteração de Prisma/migrations, packages, cobrança no gateway, mock, seed ou dado artificial.

@@ -117,6 +117,16 @@ export type FinancePaymentHealth = {
   total_events: number;
 };
 
+export type FinancePaymentMethod = {
+  brand: string | null;
+  exp_month: number | null;
+  exp_year: number | null;
+  gateway: string;
+  last4: string | null;
+  matches_subscription: boolean;
+  saved_at: string | null;
+};
+
 export type FinanceSubscriptionItem = {
   created_at: string;
   current_period_end: string | null;
@@ -128,6 +138,7 @@ export type FinanceSubscriptionItem = {
   next_charge_at: string | null;
   payment_health: FinancePaymentHealth;
   payment_history: FinancePaymentHistory;
+  payment_method: FinancePaymentMethod | null;
   plan: {
     id: string;
     interval: string;

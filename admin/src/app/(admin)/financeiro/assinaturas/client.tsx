@@ -4,6 +4,7 @@ import {
   AlertTriangle,
   ChevronLeft,
   ChevronRight,
+  CreditCard,
   RefreshCw,
   Search,
   UsersRound,
@@ -18,6 +19,7 @@ import type {
   FinancePaymentHealth,
   FinancePaymentHistoryItem,
   FinancePaymentHistoryStatus,
+  FinancePaymentMethod,
   FinancePeriodValue,
   FinanceSubscriptionItem,
 } from "@/api/req/finance";
@@ -83,6 +85,18 @@ const formatNullableMoney = (cents: number | null) =>
   typeof cents === "number" ? formatMoney(cents) : "Valor indisponível";
 const formatPercent = (value: number | null) =>
   typeof value === "number" ? `${numberFormatter.format(value)}%` : "—";
+const formatCardBrand = (brand: string | null) =>
+  brand?.trim() ? brand.trim().replaceAll("_", " ").toUpperCase() : "Cartão";
+const formatCardLabel = (method: FinancePaymentMethod) => {
+  const last4 = method.last4?.trim() ? `final ${method.last4}` : "final não informado";
+
+  return `${formatCardBrand(method.brand)} ${last4}`;
+};
+const formatCardExpiration = (method: FinancePaymentMethod) => {
+  if (!method.exp_month || !method.exp_year) return "Validade não informada";
+
+  return `Validade ${String(method.exp_month).padStart(2, "0")}/${method.exp_year}`;
+};
 
 const CardShell = ({ children, className }: { children?: ReactNode; className?: string }) => (
   <section
@@ -269,6 +283,54 @@ const HealthMetric = ({ label, value }: { label: string; value: ReactNode }) => 
   </div>
 );
 
+const SavedPaymentMethodCard = ({
+  className,
+  method,
+}: {
+  className?: string;
+  method: FinancePaymentMethod | null;
+}) => (
+  <div className={cn("mt-4 rounded-3xl border border-border bg-surface p-4", className)}>
+    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+      <div className="flex min-w-0 gap-3">
+        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-primary-soft text-primary">
+          <CreditCard aria-hidden className="h-5 w-5" />
+        </span>
+        <div className="min-w-0">
+          <p className="text-xs font-semibold uppercase tracking-[0.1em] text-primary">
+            Cartão salvo do psicólogo
+          </p>
+          {method ? (
+            <>
+              <h4 className="mt-1 text-base font-black text-foreground">
+                {formatCardLabel(method)}
+              </h4>
+              <p className="mt-1 text-sm font-semibold text-muted">
+                {formatCardExpiration(method)}
+                {method.saved_at ? ` · Salvo em ${formatDate(method.saved_at)}` : ""}
+              </p>
+            </>
+          ) : (
+            <>
+              <h4 className="mt-1 text-base font-black text-foreground">
+                Nenhum cartão salvo encontrado
+              </h4>
+              <p className="mt-1 text-sm font-semibold text-muted">
+                Não há bandeira, final ou validade seguros salvos para este psicólogo.
+              </p>
+            </>
+          )}
+        </div>
+      </div>
+      {method ? (
+        <span className="inline-flex w-fit rounded-full border border-border bg-surface-muted px-3 py-1 text-xs font-black text-muted">
+          {method.matches_subscription ? "Vinculado à assinatura" : "Último cartão salvo"}
+        </span>
+      ) : null}
+    </div>
+  </div>
+);
+
 const PaymentHistoryRow = ({ item }: { item: FinancePaymentHistoryItem }) => (
   <li className="rounded-3xl border border-border bg-surface p-4">
     <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
@@ -312,8 +374,8 @@ const PaymentHealthDetails = ({ item }: { item: FinanceSubscriptionItem }) => {
 
   return (
     <div className="rounded-3xl border border-primary/10 bg-primary-soft/25 p-4 lg:p-5">
-      <div>
-        <div>
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(320px,420px)] lg:items-start">
+        <div className="min-w-0">
           <p className="text-xs font-semibold uppercase tracking-[0.12em] text-primary">
             Confiabilidade do pagamento
           </p>
@@ -323,44 +385,49 @@ const PaymentHealthDetails = ({ item }: { item: FinanceSubscriptionItem }) => {
             considerando sucessos, falhas, pendências e atrasos.
           </p>
         </div>
+
+        <SavedPaymentMethodCard className="mt-0 lg:justify-self-end" method={item.payment_method} />
+
+        <dl className="grid gap-3 sm:grid-cols-2 lg:col-span-2 lg:grid-cols-4">
+          <HealthMetric
+            label="Taxa de sucesso"
+            value={formatPercent(health.success_rate_percent)}
+          />
+          <HealthMetric
+            label="Tentativas finais"
+            value={numberFormatter.format(health.final_attempts)}
+          />
+          <HealthMetric
+            label="Falhas consecutivas"
+            value={numberFormatter.format(health.consecutive_failures)}
+          />
+          <HealthMetric
+            label="Dias em atraso"
+            value={health.days_overdue === null ? "—" : numberFormatter.format(health.days_overdue)}
+          />
+          <HealthMetric
+            label="Pagamentos aprovados"
+            value={numberFormatter.format(health.successful_payments)}
+          />
+          <HealthMetric
+            label="Pagamentos recusados"
+            value={numberFormatter.format(health.failed_payments)}
+          />
+          <HealthMetric label="Pendentes" value={numberFormatter.format(health.pending_payments)} />
+          <HealthMetric label="Último sucesso" value={formatNullableDate(health.last_success_at)} />
+          <HealthMetric label="Última falha" value={formatNullableDate(health.last_failure_at)} />
+        </dl>
+
+        {visibleHealthNotes.length > 0 ? (
+          <ul className="space-y-2 text-xs font-semibold leading-5 text-muted lg:col-span-2">
+            {visibleHealthNotes.map((note) => (
+              <li className="rounded-2xl bg-surface/80 px-3 py-2" key={note}>
+                {note}
+              </li>
+            ))}
+          </ul>
+        ) : null}
       </div>
-
-      <dl className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <HealthMetric label="Taxa de sucesso" value={formatPercent(health.success_rate_percent)} />
-        <HealthMetric
-          label="Tentativas finais"
-          value={numberFormatter.format(health.final_attempts)}
-        />
-        <HealthMetric
-          label="Falhas consecutivas"
-          value={numberFormatter.format(health.consecutive_failures)}
-        />
-        <HealthMetric
-          label="Dias em atraso"
-          value={health.days_overdue === null ? "—" : numberFormatter.format(health.days_overdue)}
-        />
-        <HealthMetric
-          label="Pagamentos aprovados"
-          value={numberFormatter.format(health.successful_payments)}
-        />
-        <HealthMetric
-          label="Pagamentos recusados"
-          value={numberFormatter.format(health.failed_payments)}
-        />
-        <HealthMetric label="Pendentes" value={numberFormatter.format(health.pending_payments)} />
-        <HealthMetric label="Último sucesso" value={formatNullableDate(health.last_success_at)} />
-        <HealthMetric label="Última falha" value={formatNullableDate(health.last_failure_at)} />
-      </dl>
-
-      {visibleHealthNotes.length > 0 ? (
-        <ul className="mt-4 space-y-2 text-xs font-semibold leading-5 text-muted">
-          {visibleHealthNotes.map((note) => (
-            <li className="rounded-2xl bg-surface/80 px-3 py-2" key={note}>
-              {note}
-            </li>
-          ))}
-        </ul>
-      ) : null}
 
       <div className="mt-5">
         <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
