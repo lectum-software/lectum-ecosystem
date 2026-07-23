@@ -5025,10 +5025,8 @@ const PublicationVideoMiniplayer = ({ label, src }: { label: string; src: string
 };
 
 const PublicationMedia = ({ item }: { item: AdminPsychologistPublicationItem }) => {
-  if (!item.media) return null;
-
-  const src = item.media.url;
-  const mediaType = item.media.type?.toLowerCase() ?? "";
+  const src = item.media?.url ?? null;
+  const mediaType = item.media?.type?.toLowerCase() ?? "";
   const isVideo = mediaType.startsWith("video") || /\.(mp4|webm|mov|m4v)$/i.test(src ?? "");
   const imageSrc = !isVideo ? renderableImageSrc(src) : null;
   const videoSrc = isVideo ? resolveAdminMediaUrl(src) : null;
@@ -5037,31 +5035,39 @@ const PublicationMedia = ({ item }: { item: AdminPsychologistPublicationItem }) 
   const mediaLabel = isVideo ? "Miniplayer de vídeo publicado" : "Miniatura de mídia publicada";
 
   return (
-    <div
-      className={cn(
-        "relative w-full overflow-hidden rounded-2xl border border-border bg-surface-muted",
-        isVideo ? "aspect-[9/16] max-w-40 sm:w-28 sm:max-w-none" : "h-24 sm:h-28 sm:w-28",
-      )}
-    >
+    <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-2xl border border-border bg-surface-muted text-primary">
       {imageSrc && looksLikeImage ? (
         <Image
           alt={mediaLabel}
           className="object-cover"
           fill
-          sizes="112px"
+          sizes="56px"
           src={imageSrc}
           unoptimized={isPublicAdminMediaSrc(imageSrc)}
         />
       ) : null}
-      {videoSrc ? <PublicationVideoMiniplayer label={mediaLabel} src={videoSrc} /> : null}
+      {videoSrc ? (
+        <>
+          <video
+            aria-label={mediaLabel}
+            className="h-full w-full bg-black object-cover"
+            muted
+            playsInline
+            preload="metadata"
+            src={videoSrc}
+          />
+          <span className="absolute inset-0 grid place-items-center bg-black/20 text-white">
+            <Play aria-hidden className="h-5 w-5 fill-current" />
+          </span>
+        </>
+      ) : null}
       {!imageSrc && !videoSrc ? (
-        <div className="grid h-full place-items-center gap-1 p-3 text-center text-xs font-black text-muted">
+        <div className="grid h-full place-items-center text-primary">
           {item.type === "post" ? (
-            <FileText aria-hidden className="mx-auto h-5 w-5" />
+            <FileText aria-hidden className="h-6 w-6" />
           ) : (
-            <MessageCircle aria-hidden className="mx-auto h-5 w-5" />
+            <MessageCircle aria-hidden className="h-6 w-6" />
           )}
-          <span>Mídia publicada</span>
         </div>
       ) : null}
     </div>
@@ -5116,32 +5122,34 @@ const PublicationItemBody = ({ item }: { item: AdminPsychologistPublicationItem 
 
   return (
     <div className="min-w-0">
-      <p className="text-sm leading-6 text-muted">{hasText ? item.excerpt : "Sem texto."}</p>
+      <p className="line-clamp-2 text-sm leading-5 text-muted">
+        {hasText ? item.excerpt : "Sem texto."}
+      </p>
     </div>
   );
 };
 
 const PublicationItemMain = ({ item }: { item: AdminPsychologistPublicationItem }) => {
   return (
-    <div className="min-w-0">
-      <PublicationItemHeader item={item} />
-      {item.type === "post" ? (
-        <h3 className="mt-4 text-base font-black text-foreground">{item.title}</h3>
-      ) : null}
-      <div className="mt-3 min-w-0">
-        <PublicationItemBody item={item} />
-        {item.media ? (
-          <div className="mt-3 max-w-full" data-publication-media-placement="below-description">
-            <PublicationMedia item={item} />
-          </div>
+    <div className="flex min-w-0 gap-3">
+      <PublicationMedia item={item} />
+      <div className="min-w-0">
+        <PublicationItemHeader item={item} />
+        {item.type === "post" ? (
+          <h3 className="mt-2 line-clamp-1 text-sm font-black text-foreground sm:text-base">
+            {item.title}
+          </h3>
         ) : null}
+        <div className="mt-1 min-w-0">
+          <PublicationItemBody item={item} />
+        </div>
       </div>
     </div>
   );
 };
 
 const PublicationMetrics = ({ item }: { item: AdminPsychologistPublicationItem }) => (
-  <div className="mt-4 border-t border-border pt-3">
+  <div className="border-t border-border pt-3">
     <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-xs font-bold text-muted">
       {publicationMetricOrder.map((metricId) => {
         const metric = item.metrics[metricId];

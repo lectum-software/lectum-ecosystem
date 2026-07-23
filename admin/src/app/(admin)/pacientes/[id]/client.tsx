@@ -3487,31 +3487,35 @@ const PublicationsTab = ({ detail }: { detail: AdminPatientDetail }) => {
                 className="grid gap-4 p-4 lg:grid-cols-[1fr_auto] lg:items-start"
                 key={item.id}
               >
-                <div className="min-w-0">
-                  <div className="flex flex-wrap items-center gap-2 text-xs text-muted">
-                    <FileText aria-hidden className="h-4 w-4 shrink-0" />
-                    <span className="font-black">{item.type_label}</span>
-                    <span aria-hidden className="font-bold">
-                      ·
-                    </span>
-                    <span className="font-black">{item.community.name}</span>
-                    <span aria-hidden className="font-bold">
-                      ·
-                    </span>
-                    <span className="font-bold">{formatDateTime(item.created_at)}</span>
-                    <span className="font-bold text-subtle">/{item.community.slug}</span>
-                  </div>
-                  <h3 className="mt-3 text-base font-black text-foreground">
-                    {item.title.trim() || "Post sem título"}
-                  </h3>
-                  <p className="mt-2 text-sm leading-6 text-muted">
-                    {item.excerpt.trim() || "Sem descrição textual."}
-                  </p>
-                  {isExpanded ? (
-                    <div className="mt-4">
-                      <PatientPublicationFullContent item={item} />
+                <div className="flex min-w-0 gap-3">
+                  <span className="grid h-14 w-14 shrink-0 place-items-center rounded-2xl border border-border bg-primary-soft text-primary">
+                    <FileText aria-hidden className="h-6 w-6" />
+                  </span>
+                  <div className="min-w-0">
+                    <div className="flex flex-wrap items-center gap-2 text-xs text-muted">
+                      <span className="font-black">{item.type_label}</span>
+                      <span aria-hidden className="font-bold">
+                        ·
+                      </span>
+                      <span className="font-black">{item.community.name}</span>
+                      <span aria-hidden className="font-bold">
+                        ·
+                      </span>
+                      <span className="font-bold">{formatDateTime(item.created_at)}</span>
+                      <span className="font-bold text-subtle">/{item.community.slug}</span>
                     </div>
-                  ) : null}
+                    <h3 className="mt-2 line-clamp-1 text-sm font-black text-foreground sm:text-base">
+                      {item.title.trim() || "Post sem título"}
+                    </h3>
+                    <p className="mt-1 line-clamp-2 text-sm leading-5 text-muted">
+                      {item.excerpt.trim() || "Sem descrição textual."}
+                    </p>
+                    {isExpanded ? (
+                      <div className="mt-4">
+                        <PatientPublicationFullContent item={item} />
+                      </div>
+                    ) : null}
+                  </div>
                 </div>
                 <div className="flex justify-end gap-2 lg:flex-col">
                   <button
