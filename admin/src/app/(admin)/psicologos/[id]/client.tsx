@@ -8846,7 +8846,11 @@ const RegistryApproveForm = ({
           name="situation_confirmed"
           options={[
             { label: "Selecione", value: "" },
-            { label: "Sim, situação ativa conferida", value: "sim" },
+            {
+              label:
+                "Sim, verifiquei manualmente a situação do registro no Conselho Federal de Psicologia",
+              value: "sim",
+            },
           ]}
           required
         />
