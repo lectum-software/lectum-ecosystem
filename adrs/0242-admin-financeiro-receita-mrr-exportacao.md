@@ -192,3 +192,22 @@ Consequências:
 - A operação financeira passa a localizar cobranças por psicólogo ou identificador sem criar endpoint paralelo nem consulta mockada.
 - Como o status real da página completa é apenas `Confirmada`, novos status de cobrança só devem aparecer em task futura se o contrato financeiro passar a listar eventos não confirmados com copy honesta.
 - Não há alteração de schema Prisma, migration, package, seed, mock ou dado artificial.
+
+## Ajuste 2026-07-23: filtros de data financeiros com commit após data completa
+
+Feedback de produto identificou que os campos nativos de data em `/financeiro/cobrancas` começavam a consultar a lista enquanto o operador ainda digitava a data. Em Chrome com locale pt-BR, a digitação parcial do ano pode produzir valores normalizados como `0002-07-23`, fazendo a URL receber um intervalo customizado inválido antes da conclusão do campo.
+
+Decisões:
+
+- Manter `type="date"` e o layout mobile-first das listas financeiras, sem pacote de máscara/calendário novo.
+- Separar rascunho local de data do estado aplicado na URL para as listas completas de cobranças e assinaturas.
+- Aplicar `period=custom&from&to` somente quando o operador sair do grupo de datas ou pressionar Enter com datas completas.
+- Rejeitar como rascunho/inválidas datas incompletas ou implausíveis com ano anterior a 1900, impedindo que valores como `0002-07-23` cheguem às queries de listagem.
+- Sanitizar `from`/`to` em `parseQuery` e na atualização dos search params; se a URL carregar intervalo incompleto, o frontend não o trata como filtro customizado válido e remove os parâmetros inválidos na próxima troca de filtro.
+
+Consequências:
+
+- A digitação manual deixa de disparar buscas intermediárias e erros por datas parciais.
+- A consulta continua real e baseada nos endpoints existentes; apenas o momento de aplicar o filtro mudou.
+- O ano mínimo de 1900 é uma barreira de plausibilidade de UI para diferenciar datas reais de estados parciais do input nativo, sem alterar contrato backend nem schema.
+- Não há instalação de package, schema Prisma, migration, mock, seed ou endpoint simulado.

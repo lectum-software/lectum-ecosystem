@@ -633,3 +633,35 @@ Frontend esperado:
 - Smoke HTTP local protegido: `GET http://localhost:3001/api/admin/private/finance/charges?period=all&q=ana&status=confirmed` sem token Admin retornou `401`.
 - Smoke HTTP/Admin local: `GET http://localhost:3002/financeiro/cobrancas` retornou `200`.
 - Chrome headless local abriu `/financeiro/cobrancas` sem sessão Admin e confirmou redirecionamento/guard para o login administrativo; a validação visual autenticada completa permanece limitada à captura enviada pelo usuário porque não há acesso automatizado à sessão Admin autenticada já aberta.
+
+## Ajuste pós-feedback 2026-07-23 - Datas dos filtros sem pesquisa prematura
+
+- Pedido do usuário: ajustar os campos de seleção de data porque, ao digitar a data manualmente, a lista começava a pesquisar antes da data completa ser informada.
+- Em `/financeiro/cobrancas`, os campos **Data de** e **Data até** agora usam rascunho local e só aplicam o filtro real ao sair do grupo de datas ou pressionar Enter, evitando enviar `period=custom&from&to` durante a digitação parcial.
+- O mesmo padrão foi aplicado em `/financeiro/assinaturas` para evitar a mesma regressão nos campos **Início de** e **Início até**.
+- Datas incompletas ou implausíveis geradas pelo input nativo durante a digitação, como `0002-07-23`, não são enviadas para as queries; `parseQuery` ignora intervalos incompletos/anos anteriores a 1900 quando vierem pela URL, e a atualização de filtros também limpa `from`/`to` inválidos antes de trocar a rota.
+- A aplicação de datas completas continua usando o endpoint Admin privado real e o contrato existente `period=custom&from=YYYY-MM-DD&to=YYYY-MM-DD`, sem filtro apenas visual.
+- Não houve alteração de backend, contrato HTTP, Prisma/migrations, packages, seed, mock, dado artificial ou endpoint simulado.
+- Builder/Quick Copy não está exposto como ferramenta callable neste ambiente; as referências auditáveis foram a captura autenticada enviada pelo usuário em 2026-07-23 e o padrão visual já aplicado nas listas financeiras.
+- ADR atualizado: `adrs/0242-admin-financeiro-receita-mrr-exportacao.md`.
+
+### Critérios de aceite do ajuste
+
+- [x] Digitar uma data parcial em `/financeiro/cobrancas` não dispara pesquisa nem atualiza a URL antes de a data completa ser confirmada.
+- [x] Digitar uma data parcial em `/financeiro/assinaturas` não dispara pesquisa nem atualiza a URL antes de a data completa ser confirmada.
+- [x] URLs já existentes com datas incompletas/implausíveis, como `from=0002-07-23`, não chegam às chamadas de listagem como filtro customizado válido.
+- [x] Datas completas continuam aplicando `period=custom&from&to` nos endpoints reais ao sair do grupo de datas ou pressionar Enter.
+- [x] UI mobile-first preservada e nenhum `<img>` cru foi usado.
+- [x] Nenhum package, schema Prisma, migration, mock ou endpoint simulado foi adicionado.
+
+### Validação complementar executada
+
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/financeiro/cobrancas/client.tsx" "src/app/(admin)/financeiro/assinaturas/client.tsx"`.
+- `pnpm --dir admin exec eslint "src/app/(admin)/financeiro/cobrancas/client.tsx" "src/app/(admin)/financeiro/assinaturas/client.tsx"`.
+- `pnpm --dir admin typecheck`.
+- `pnpm --dir admin check`.
+- `pnpm --dir admin build`.
+- `pnpm check`.
+- Smoke HTTP local: `GET http://localhost:3002/financeiro/cobrancas?from=0002-07-23&period=custom&to=2026-07-23` retornou `200`, sem quebrar a rota com a URL problemática enviada na captura.
+- Scan estático: `rg -n "handleChargeDateFilterChange|handleStartDateFilterChange|from=0002|onChange=\{\(value\) => handle.*DateFilterChange" "admin/src/app/(admin)/financeiro/cobrancas/client.tsx" "admin/src/app/(admin)/financeiro/assinaturas/client.tsx"` não retornou ocorrências.
+- Chrome headless local abriu a URL problemática de /financeiro/cobrancas; sem sessão Admin no perfil temporário, a validação autenticada completa permaneceu limitada à captura enviada pelo usuário e aos checks/builds.

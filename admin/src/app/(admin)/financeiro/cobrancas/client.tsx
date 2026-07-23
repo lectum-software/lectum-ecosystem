@@ -9,14 +9,32 @@ import {
   Search,
 } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { type ReactNode, useEffect, useMemo, useRef, useState } from "react";
+import {
+  type FocusEvent,
+  type KeyboardEvent,
+  type ReactNode,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { useAdminFinanceCharges } from "@/api/callers/finance";
 import { resolveApiError } from "@/api/handle";
 import type { FinanceChargeItem, FinanceListQuery, FinancePeriodValue } from "@/api/req/finance";
 import { cn } from "@/lib/utils";
 
+type DateFilterDraft = {
+  from: string;
+  to: string;
+};
+
+type DateFilterFieldName = keyof DateFilterDraft;
+type DateFilterDraftUpdate = DateFilterDraft | ((current: DateFilterDraft) => DateFilterDraft);
+
 const LIST_LIMIT_OPTIONS = [10, 20, 50];
 const SEARCH_DEBOUNCE_MS = 350;
+const FINANCE_FILTER_MIN_YEAR = 1900;
+const FINANCE_FILTER_DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 const validPeriods = new Set<FinancePeriodValue>([
   "all",
   "custom",
@@ -43,19 +61,36 @@ const parsePositiveNumber = (value: string | null, fallback: number) => {
   return Math.floor(parsed);
 };
 
+const isCompleteFinanceFilterDate = (value?: string | null): value is string => {
+  if (!value || !FINANCE_FILTER_DATE_PATTERN.test(value)) return false;
+
+  const [year, month, day] = value.split("-").map(Number);
+  if (year < FINANCE_FILTER_MIN_YEAR) return false;
+
+  const date = new Date(year, month - 1, day, 12, 0, 0, 0);
+
+  return date.getFullYear() === year && date.getMonth() === month - 1 && date.getDate() === day;
+};
+
 const parseQuery = (params: URLSearchParams): FinanceListQuery => {
   const period = params.get("period") as FinancePeriodValue | null;
   const q = params.get("q");
   const status = params.get("status");
+  const from = params.get("from");
+  const to = params.get("to");
+  const validFrom = isCompleteFinanceFilterDate(from) ? from : undefined;
+  const validTo = isCompleteFinanceFilterDate(to) ? to : undefined;
+  const hasValidRange = Boolean(validFrom && validTo);
+  const validPeriod = period && validPeriods.has(period) ? period : "all";
 
   return {
-    from: params.get("from") || undefined,
+    from: hasValidRange ? validFrom : undefined,
     limit: Math.min(50, parsePositiveNumber(params.get("limit"), 20)),
     page: parsePositiveNumber(params.get("page"), 1),
-    period: period && validPeriods.has(period) ? period : "all",
+    period: validPeriod === "custom" && !hasValidRange ? "all" : validPeriod,
     q: q || undefined,
     status: status && validChargeStatuses.has(status) && status !== "all" ? status : undefined,
-    to: params.get("to") || undefined,
+    to: hasValidRange ? validTo : undefined,
   };
 };
 
@@ -123,26 +158,43 @@ const DateFilterField = ({
   max,
   min,
   onChange,
+  onCommit,
   value,
 }: {
   label: string;
   max?: string;
   min?: string;
   onChange: (value: string) => void;
+  onCommit: () => void;
   value?: string;
-}) => (
-  <label className="flex min-w-0 flex-col gap-1 text-xs font-medium text-muted sm:min-w-[150px]">
-    {label}
-    <input
-      className="h-12 w-full min-w-0 rounded-full border border-border bg-surface px-4 py-0 text-sm font-medium text-foreground shadow-control outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/15"
-      max={max}
-      min={min}
-      onChange={(event) => onChange(event.target.value)}
-      type="date"
-      value={value || ""}
-    />
-  </label>
-);
+}) => {
+  const invalidDraft = Boolean(value && !isCompleteFinanceFilterDate(value));
+
+  const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+    if (event.key !== "Enter") return;
+
+    event.preventDefault();
+    onCommit();
+    event.currentTarget.blur();
+  };
+
+  return (
+    <label className="flex min-w-0 flex-col gap-1 text-xs font-medium text-muted sm:min-w-[150px]">
+      {label}
+      <input
+        aria-invalid={invalidDraft || undefined}
+        className="h-12 w-full min-w-0 rounded-full border border-border bg-surface px-4 py-0 text-sm font-medium text-foreground shadow-control outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/15 aria-[invalid=true]:border-danger aria-[invalid=true]:focus:ring-danger/15"
+        max={max}
+        min={min}
+        onChange={(event) => onChange(event.target.value)}
+        onKeyDown={handleKeyDown}
+        title="Informe a data completa para aplicar o filtro."
+        type="date"
+        value={value || ""}
+      />
+    </label>
+  );
+};
 
 const StatusFilterField = ({
   onChange,
@@ -353,10 +405,30 @@ export const AdminFinanceChargesClient = () => {
   const searchParams = useSearchParams();
   const searchString = searchParams.toString();
   const query = useMemo(() => parseQuery(new URLSearchParams(searchString)), [searchString]);
+  const dateQueryKey = `${query.from ?? ""}|${query.to ?? ""}`;
+  const queryDateDraft = useMemo<DateFilterDraft>(
+    () => ({ from: query.from ?? "", to: query.to ?? "" }),
+    [query.from, query.to],
+  );
+  const [dateDraftState, setDateDraftState] = useState(() => ({
+    key: dateQueryKey,
+    range: queryDateDraft,
+  }));
+  const dateDraft = dateDraftState.key === dateQueryKey ? dateDraftState.range : queryDateDraft;
+  const lastEditedDateFieldRef = useRef<DateFilterFieldName>("from");
   const chargesQuery = useAdminFinanceCharges(query);
   const queryError = chargesQuery.error ? resolveApiError(chargesQuery.error) : null;
   const summary = chargesQuery.data;
   const items = summary?.data ?? [];
+
+  const setDateDraft = (update: DateFilterDraftUpdate) => {
+    setDateDraftState((currentState) => {
+      const currentRange = currentState.key === dateQueryKey ? currentState.range : queryDateDraft;
+      const range = typeof update === "function" ? update(currentRange) : update;
+
+      return { key: dateQueryKey, range };
+    });
+  };
 
   const replaceParams = (
     updates: Partial<Record<keyof FinanceListQuery, string | number | null>>,
@@ -372,32 +444,66 @@ export const AdminFinanceChargesClient = () => {
       }
     }
 
+    const from = params.get("from");
+    const to = params.get("to");
+    const hasDateParams = params.has("from") || params.has("to");
+    const hasCompleteRange = isCompleteFinanceFilterDate(from) && isCompleteFinanceFilterDate(to);
+
+    if (hasDateParams && !hasCompleteRange) {
+      params.delete("from");
+      params.delete("to");
+      if (params.get("period") === "custom") params.set("period", "all");
+    }
+
     if (options.resetPage !== false) params.delete("page");
     const next = params.toString();
     router.replace(next ? `${pathname}?${next}` : pathname, { scroll: false });
   };
 
   const hasTableFilters = Boolean(query.q || query.status || query.from || query.to);
-  const handleChargeDateFilterChange = (field: "from" | "to", value: string) => {
-    if (!value) {
-      const otherDate = field === "from" ? query.to : query.from;
-      replaceParams(
-        otherDate ? { [field]: otherDate, period: "custom" } : { [field]: null, period: "all" },
-      );
+  const commitChargeDateFilters = () => {
+    const hasIncompleteDraft =
+      (dateDraft.from && !isCompleteFinanceFilterDate(dateDraft.from)) ||
+      (dateDraft.to && !isCompleteFinanceFilterDate(dateDraft.to));
+
+    if (hasIncompleteDraft) return;
+
+    if (!dateDraft.from && !dateDraft.to) {
+      replaceParams({ from: null, period: "all", to: null });
       return;
     }
 
-    let nextFrom = field === "from" ? value : (query.from ?? summary?.period.from ?? value);
-    let nextTo = field === "to" ? value : (query.to ?? summary?.period.to ?? value);
+    let nextFrom = dateDraft.from || dateDraft.to;
+    let nextTo = dateDraft.to || dateDraft.from;
 
     if (nextFrom > nextTo) {
-      if (field === "from") nextTo = nextFrom;
+      if (lastEditedDateFieldRef.current === "from") nextTo = nextFrom;
       else nextFrom = nextTo;
     }
 
     replaceParams({ from: nextFrom, period: "custom", to: nextTo });
+    setDateDraft({ from: nextFrom, to: nextTo });
+  };
+  const handleChargeDateDraftChange = (field: DateFilterFieldName, value: string) => {
+    lastEditedDateFieldRef.current = field;
+    setDateDraft((current) => ({ ...current, [field]: value }));
+  };
+  const handleDateFiltersBlur = (event: FocusEvent<HTMLDivElement>) => {
+    const currentTarget = event.currentTarget;
+    const nextFocusedElement = event.relatedTarget as Node | null;
+
+    if (nextFocusedElement && currentTarget.contains(nextFocusedElement)) return;
+
+    window.setTimeout(() => {
+      const activeElement = document.activeElement;
+
+      if (activeElement && currentTarget.contains(activeElement)) return;
+
+      commitChargeDateFilters();
+    }, 0);
   };
   const clearTableFilters = () => {
+    setDateDraft({ from: "", to: "" });
     replaceParams({
       from: null,
       period: "all",
@@ -442,18 +548,25 @@ export const AdminFinanceChargesClient = () => {
               </p>
             </div>
             <div className="flex min-w-0 flex-col gap-2 text-sm font-medium text-foreground sm:flex-row sm:flex-wrap sm:items-end xl:flex-1 xl:justify-end">
-              <DateFilterField
-                label="Data de"
-                max={query.to}
-                onChange={(value) => handleChargeDateFilterChange("from", value)}
-                value={query.from}
-              />
-              <DateFilterField
-                label="Data até"
-                min={query.from}
-                onChange={(value) => handleChargeDateFilterChange("to", value)}
-                value={query.to}
-              />
+              <div
+                className="flex min-w-0 flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-end"
+                onBlur={handleDateFiltersBlur}
+              >
+                <DateFilterField
+                  label="Data de"
+                  max={isCompleteFinanceFilterDate(dateDraft.to) ? dateDraft.to : undefined}
+                  onChange={(value) => handleChargeDateDraftChange("from", value)}
+                  onCommit={commitChargeDateFilters}
+                  value={dateDraft.from}
+                />
+                <DateFilterField
+                  label="Data até"
+                  min={isCompleteFinanceFilterDate(dateDraft.from) ? dateDraft.from : undefined}
+                  onChange={(value) => handleChargeDateDraftChange("to", value)}
+                  onCommit={commitChargeDateFilters}
+                  value={dateDraft.to}
+                />
+              </div>
               <StatusFilterField
                 onChange={(value) => replaceParams({ status: value === "all" ? null : value })}
                 value={query.status}
