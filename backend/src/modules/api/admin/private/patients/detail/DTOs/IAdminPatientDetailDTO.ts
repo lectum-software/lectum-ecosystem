@@ -45,6 +45,40 @@ export type AdminPatientDetailMetric = {
   value: number;
 };
 
+export type AdminPatientIntentMetric = {
+  change_percent: number | null;
+  description: string;
+  id: "favorites" | "profile_views" | "repeated_profile_views" | "whatsapp_clicks";
+  label: string;
+  previous_value: number;
+  score_contribution: number;
+  score_weight: number;
+  source: string;
+  trend: AdminPatientDetailTrend;
+  unit: "count";
+  value: number;
+};
+
+export type AdminPatientIntentAnalysis = {
+  coverage_note: string;
+  last_signal_at: Date | null;
+  level: {
+    id: "high" | "low" | "medium" | "no_signals";
+    label: "Alta intenção" | "Baixa intenção" | "Média intenção" | "Sem sinais";
+    tone: "cool" | "hot" | "neutral" | "warm";
+  };
+  max_score: 100;
+  metrics: AdminPatientIntentMetric[];
+  privacy_note: string;
+  score: number;
+  source: "profile_view_event+psychologist_favorite+contact_request";
+  summary: string;
+  total_signals: number;
+  unique_psychologists_contacted: number;
+  unique_psychologists_favorited: number;
+  unique_psychologists_viewed: number;
+};
+
 export type AdminPatientDetailSeriesPoint = {
   comments_created: number;
   date: string;
@@ -259,6 +293,7 @@ export type AdminPatientDetailDTO = {
     total_events: number;
     unavailable_reason: string | null;
   };
+  intent_analysis: AdminPatientIntentAnalysis;
   metrics: AdminPatientDetailMetric[];
   period: AdminPatientDetailPeriod;
   platform_usage: AdminPatientPlatformUsage;

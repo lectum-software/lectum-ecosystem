@@ -72,6 +72,7 @@ import type {
   AdminPatientReportsQuery,
   PatientsDetailActivity,
   PatientsDetailCommunity,
+  PatientsDetailIntentMetric,
   PatientsDetailMetric,
   PatientsDetailPublication,
   PatientsDetailPublicationMetric,
@@ -107,6 +108,36 @@ const metricIcons: Record<PatientsDetailMetric["id"], LucideIcon> = {
   shares_received: Share2,
   verified_psychologist_responses: ShieldCheck,
   upvotes_received: ArrowUp,
+};
+const patientIntentMetricIcons: Record<PatientsDetailIntentMetric["id"], LucideIcon> = {
+  favorites: Bookmark,
+  profile_views: Eye,
+  repeated_profile_views: RefreshCw,
+  whatsapp_clicks: MessageCircle,
+};
+const patientIntentMetricToneClassNames: Record<PatientsDetailIntentMetric["id"], string> = {
+  favorites: "bg-orange-50 text-orange-500",
+  profile_views: "bg-primary-soft text-primary",
+  repeated_profile_views: "bg-violet-50 text-violet-500",
+  whatsapp_clicks: "bg-success/10 text-success",
+};
+const patientIntentLevelClassNames: Record<
+  AdminPatientDetail["intent_analysis"]["level"]["id"],
+  string
+> = {
+  high: "border-success/25 bg-success/10 text-success",
+  low: "border-primary/20 bg-primary-soft text-primary",
+  medium: "border-warning/25 bg-warning/10 text-warning",
+  no_signals: "border-border bg-surface-muted text-muted",
+};
+const patientIntentProgressClassNames: Record<
+  AdminPatientDetail["intent_analysis"]["level"]["id"],
+  string
+> = {
+  high: "bg-success",
+  low: "bg-primary",
+  medium: "bg-warning",
+  no_signals: "bg-border",
 };
 const PATIENT_GENERAL_METRIC_IDS = new Set<PatientsDetailMetric["id"]>([
   "posts_created",
@@ -898,7 +929,7 @@ const PatientMetricComparisonLine = ({
   metric,
   period,
 }: {
-  metric: PatientsDetailMetric;
+  metric: Pick<PatientsDetailMetric, "change_percent" | "trend">;
   period: AdminPatientDetail["period"];
 }) => {
   const hasArrow = metric.trend === "up" || metric.trend === "down";
@@ -2755,6 +2786,150 @@ const PatientPlatformUsageCard = ({
   );
 };
 
+const formatPatientIntentScore = (score: number, maxScore: number) =>
+  `${numberFormatter.format(score)}/${numberFormatter.format(maxScore)}`;
+
+const PatientIntentMetricCard = ({
+  metric,
+  period,
+}: {
+  metric: PatientsDetailIntentMetric;
+  period: AdminPatientDetail["period"];
+}) => {
+  const Icon = patientIntentMetricIcons[metric.id];
+
+  return (
+    <div className="rounded-2xl border border-border/75 bg-surface p-4">
+      <div className="flex items-start justify-between gap-3">
+        <span
+          className={cn(
+            "grid h-10 w-10 shrink-0 place-items-center rounded-full",
+            patientIntentMetricToneClassNames[metric.id],
+          )}
+        >
+          <Icon aria-hidden className="h-5 w-5" />
+        </span>
+        <span className="rounded-full bg-surface-muted px-2.5 py-1 text-[11px] font-black text-muted">
+          +{numberFormatter.format(metric.score_weight)} pts/sinal
+        </span>
+      </div>
+      <p className="mt-4 text-xs font-black uppercase tracking-[0.12em] text-muted">
+        {metric.label}
+      </p>
+      <p className="mt-1 text-2xl font-black text-foreground">
+        {numberFormatter.format(metric.value)}
+      </p>
+      <p className="mt-2 text-xs font-bold leading-5 text-muted">{metric.description}</p>
+      <PatientMetricComparisonLine metric={metric} period={period} />
+    </div>
+  );
+};
+
+const PatientIntentAnalysisCard = ({
+  detail,
+  isRefreshing = false,
+  periodControls,
+}: {
+  detail: AdminPatientDetail;
+  isRefreshing?: boolean;
+  periodControls: ReactNode;
+}) => {
+  const intent = detail.intent_analysis;
+  const scorePercentage =
+    intent.max_score > 0 ? Math.min(100, Math.max(0, (intent.score / intent.max_score) * 100)) : 0;
+
+  return (
+    <CardShell className="min-w-0 max-w-full overflow-hidden p-5">
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-start">
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-2">
+            <h2 className="text-lg font-black text-foreground">Análise de intenção do paciente</h2>
+            <span
+              className={cn(
+                "inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] font-black",
+                patientIntentLevelClassNames[intent.level.id],
+              )}
+            >
+              {intent.level.label}
+            </span>
+            {isRefreshing ? (
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary-soft px-2.5 py-1 text-[11px] font-black text-primary">
+                <Loader2 aria-hidden className="h-3.5 w-3.5 animate-spin" />
+                Atualizando
+              </span>
+            ) : null}
+          </div>
+          <p className="mt-1 text-sm font-bold leading-6 text-muted">{intent.coverage_note}</p>
+        </div>
+        {periodControls}
+      </div>
+
+      <div className="mt-5 grid gap-4 xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
+        <section className="rounded-[28px] border border-primary/15 bg-primary-soft/45 p-4">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <p className="text-xs font-black uppercase tracking-[0.12em] text-primary">
+                Score de intenção
+              </p>
+              <p className="mt-1 text-3xl font-black text-foreground">
+                {formatPatientIntentScore(intent.score, intent.max_score)}
+              </p>
+            </div>
+            <IconCircle icon={BarChart3} />
+          </div>
+          <div className="mt-4 h-2.5 overflow-hidden rounded-full bg-surface">
+            <div
+              aria-hidden
+              className={cn(
+                "h-full rounded-full transition-all",
+                patientIntentProgressClassNames[intent.level.id],
+              )}
+              style={{ width: `${scorePercentage}%` }}
+            />
+          </div>
+          <p className="mt-4 text-sm font-bold leading-6 text-muted">{intent.summary}</p>
+          <dl className="mt-4 grid gap-3 text-sm sm:grid-cols-2">
+            <div className="rounded-2xl bg-surface/80 p-3">
+              <dt className="text-xs font-black text-muted">Psicólogos vistos</dt>
+              <dd className="mt-1 font-black text-foreground">
+                {numberFormatter.format(intent.unique_psychologists_viewed)}
+              </dd>
+            </div>
+            <div className="rounded-2xl bg-surface/80 p-3">
+              <dt className="text-xs font-black text-muted">Favoritados</dt>
+              <dd className="mt-1 font-black text-foreground">
+                {numberFormatter.format(intent.unique_psychologists_favorited)}
+              </dd>
+            </div>
+            <div className="rounded-2xl bg-surface/80 p-3">
+              <dt className="text-xs font-black text-muted">Contatados</dt>
+              <dd className="mt-1 font-black text-foreground">
+                {numberFormatter.format(intent.unique_psychologists_contacted)}
+              </dd>
+            </div>
+            <div className="rounded-2xl bg-surface/80 p-3">
+              <dt className="text-xs font-black text-muted">Último sinal</dt>
+              <dd className="mt-1 font-black text-foreground">
+                {intent.last_signal_at ? formatDateTime(intent.last_signal_at) : "Não capturado"}
+              </dd>
+            </div>
+          </dl>
+        </section>
+
+        <section className="grid min-w-0 gap-3 sm:grid-cols-2">
+          {intent.metrics.map((metric) => (
+            <PatientIntentMetricCard key={metric.id} metric={metric} period={detail.period} />
+          ))}
+        </section>
+      </div>
+
+      <p className="mt-4 rounded-2xl border border-border/75 bg-surface-muted p-3 text-xs font-bold leading-5 text-muted">
+        {intent.privacy_note}
+      </p>
+    </CardShell>
+  );
+};
+
 const PatientPlatformActivityHoursCard = ({
   detail,
   isRefreshing = false,
@@ -3301,10 +3476,12 @@ const usePatientStatisticsDetailSlice = (
 };
 
 const StatisticsTab = ({ detail, id }: { detail: AdminPatientDetail; id: string }) => {
+  const intentFilter = usePatientStatisticsPeriodFilter(detail.header.created_at);
   const statisticsFilter = usePatientStatisticsPeriodFilter(detail.header.created_at);
   const activeCommunitiesFilter = usePatientStatisticsPeriodFilter(detail.header.created_at);
   const activityHoursFilter = usePatientStatisticsPeriodFilter(detail.header.created_at);
   const platformUsageFilter = usePatientStatisticsPeriodFilter(detail.header.created_at);
+  const intentSlice = usePatientStatisticsDetailSlice(id, detail, intentFilter);
   const communitySlice = usePatientStatisticsDetailSlice(id, detail, statisticsFilter);
   const activeCommunitiesSlice = usePatientStatisticsDetailSlice(
     id,
@@ -3344,6 +3521,21 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPatientDetail; id: string 
           reais e não alteram API ou banco.
         </div>
       ) : null}
+      <PatientIntentAnalysisCard
+        detail={intentSlice.detail}
+        isRefreshing={intentSlice.isRefreshing}
+        periodControls={
+          <PatientStatisticsPeriodControls
+            idPrefix="patient-intent-statistics"
+            onDateControlsBlur={intentFilter.handleDateControlsBlur}
+            onDateChange={intentFilter.handleDateChange}
+            onPeriodChange={intentFilter.handlePeriodChange}
+            period={intentFilter.selectedPeriod}
+            range={intentFilter.draftRange}
+            rangeError={intentFilter.rangeError}
+          />
+        }
+      />
       <EngagementChart
         detail={communityDetail}
         isRefreshing={communitySlice.isRefreshing}

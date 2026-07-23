@@ -791,3 +791,40 @@ Frontend esperado:
 - `pnpm --dir backend check`
 - `pnpm check`
 - Browser local/headless via Chrome/CDP em `/pacientes/cmrqsrab5001f1guh2ve5oy90`, com admin temporario real removido ao final, validou desktop `1365x900` e mobile `390x844`: os dois cards possuem painel destacado interno no padrao do psicologo, as copies externas antigas nao aparecem e `scrollWidth=390` no mobile.
+
+## Ajuste pos-feedback 2026-07-23 - Analise de intencao do paciente
+
+- Pedido do usuario: na aba **Estatisticas** do paciente, antes do bloco **Estatisticas de comunidade**, adicionar uma analise interna para o Admin entender se o paciente parece estar apenas navegando ou se tem maior intencao de virar paciente de psicologos.
+- O endpoint real `GET /api/admin/private/patients/:id` foi ampliado com `intent_analysis`, calculado no mesmo recorte de periodo da aba e com comparativo contra o periodo anterior.
+- A analise usa somente fontes reais ja persistidas:
+  - `profile_view_event.viewer_id` com `source=profile_page` para aberturas de perfil de psicologos;
+  - `psychologist_favorite.user_id` com `deleted=false` para psicologos favoritados ativos;
+  - `contact_request.user_id` com `channel=whatsapp` para cliques no WhatsApp.
+- O score deterministico de 0 a 100 combina aberturas de perfil, retornos ao mesmo perfil, favoritos e cliques WhatsApp; clique no WhatsApp e favorito pesam mais por indicarem maior proximidade de contato.
+- O bloco e exclusivo do Admin, nao e exibido publicamente nem para psicologos, e a propria UI informa que nao infere sessao, atendimento, diagnostico ou conteudo de conversa.
+- A previa visual local de desenvolvimento existente na aba **Estatisticas** nao alimenta a analise de intencao; se nao houver sinais reais, o bloco mostra **Sem sinais** e contadores zerados.
+- Nao houve schema Prisma, migration, package novo, seed, mock, backfill artificial, endpoint simulado ou tracking novo. `db:migrate` nao se aplicou.
+- Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente; a referencia visual foi o screenshot enviado pelo usuario em 2026-07-23 e a validacao no browser local.
+- ADR criado: `adrs/0312-admin-patient-intent-analysis.md`.
+
+### Criterios de aceite do ajuste
+
+- [x] A aba **Estatisticas** exibe **Analise de intencao do paciente** antes de **Estatisticas de comunidade**.
+- [x] Score, nivel e metricas usam apenas aberturas reais de perfil, favoritos ativos, cliques reais no WhatsApp e retornos ao mesmo perfil.
+- [x] O bloco e descrito como indicador interno do Admin e nao exposto a pacientes ou psicologos.
+- [x] A UI explicita que a analise nao infere sessao, atendimento, diagnostico ou conteudo de conversa.
+- [x] O filtro de periodo da analise funciona independente dos outros blocos de estatisticas.
+- [x] O layout mobile-first foi validado em 390px sem overflow horizontal.
+- [x] Nenhum mock, seed, endpoint simulado, tracking novo, migration ou package novo foi adicionado.
+
+### Validacao complementar executada
+
+- `pnpm --dir backend exec biome check --write "src/modules/api/admin/private/patients/detail/DTOs/IAdminPatientDetailDTO.ts" "src/modules/api/admin/private/patients/detail/repositories/AdminPatientDetailRepository.ts" "src/modules/api/admin/private/patients/detail/use-cases/services.ts"`
+- `pnpm --dir admin exec biome check --write "src/api/req/patients/index.ts" "src/app/(admin)/pacientes/[id]/client.tsx"`
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check`
+- Service local: `showAdminPatient({ id: "cmrqsrab5001f1guh2ve5oy90", period: "all" })` retornou `intent_analysis` real com fonte `profile_view_event+psychologist_favorite+contact_request` e sem usar a previa visual local.
+- Browser local/headless via Chrome/CDP em `/pacientes/cmrqsrab5001f1guh2ve5oy90?tab=estatisticas`, com admin temporario real removido ao final, validou desktop `1365x900`: bloco de intencao antes de comunidade, score, metrica de WhatsApp e nota de privacidade presentes; e mobile `390x844`: bloco presente, comunidade abaixo e `scrollWidth=390`.

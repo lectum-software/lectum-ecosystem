@@ -318,6 +318,36 @@ export type AdminPatientDetailPwaInstallRecord = Prisma.important_action_eventGe
   select: typeof patientPlatformPwaInstallSelect;
 }>;
 
+const patientIntentProfileViewSelect = {
+  createdAt: true,
+  id: true,
+  psychologist_id: true,
+} satisfies Prisma.profile_view_eventSelect;
+
+export type AdminPatientIntentProfileViewRecord = Prisma.profile_view_eventGetPayload<{
+  select: typeof patientIntentProfileViewSelect;
+}>;
+
+const patientIntentFavoriteSelect = {
+  createdAt: true,
+  id: true,
+  psychologist_id: true,
+} satisfies Prisma.psychologist_favoriteSelect;
+
+export type AdminPatientIntentFavoriteRecord = Prisma.psychologist_favoriteGetPayload<{
+  select: typeof patientIntentFavoriteSelect;
+}>;
+
+const patientIntentWhatsappClickSelect = {
+  createdAt: true,
+  id: true,
+  psychologist_id: true,
+} satisfies Prisma.contact_requestSelect;
+
+export type AdminPatientIntentWhatsappClickRecord = Prisma.contact_requestGetPayload<{
+  select: typeof patientIntentWhatsappClickSelect;
+}>;
+
 export class AdminPatientDetailRepository {
   async findPatient(id: string): Promise<AdminPatientDetailRecord | null> {
     return prisma.user.findFirst({
@@ -765,6 +795,78 @@ export class AdminPatientDetailRepository {
         },
       },
     });
+  }
+
+  async listIntentSignals(patientId: string, range: AdminPatientDetailDateRange) {
+    const createdAt = rangeWhere(range);
+
+    const [profileViews, favorites, whatsappClicks] = await Promise.all([
+      prisma.profile_view_event.findMany({
+        orderBy: {
+          createdAt: "desc",
+        },
+        select: patientIntentProfileViewSelect,
+        where: {
+          createdAt,
+          deleted: false,
+          source: "profile_page",
+          viewer_id: patientId,
+          psychologist: {
+            deleted: false,
+            role: "psicologo",
+          },
+          viewer: {
+            deleted: false,
+            role: "paciente",
+          },
+        },
+      }),
+      prisma.psychologist_favorite.findMany({
+        orderBy: {
+          createdAt: "desc",
+        },
+        select: patientIntentFavoriteSelect,
+        where: {
+          createdAt,
+          deleted: false,
+          user_id: patientId,
+          psychologist: {
+            deleted: false,
+            role: "psicologo",
+          },
+          user: {
+            deleted: false,
+            role: "paciente",
+          },
+        },
+      }),
+      prisma.contact_request.findMany({
+        orderBy: {
+          createdAt: "desc",
+        },
+        select: patientIntentWhatsappClickSelect,
+        where: {
+          channel: "whatsapp",
+          createdAt,
+          deleted: false,
+          user_id: patientId,
+          psychologist: {
+            deleted: false,
+            role: "psicologo",
+          },
+          user: {
+            deleted: false,
+            role: "paciente",
+          },
+        },
+      }),
+    ]);
+
+    return {
+      favorites,
+      profileViews,
+      whatsappClicks,
+    };
   }
 
   async countPostViews(postIds: string[]) {

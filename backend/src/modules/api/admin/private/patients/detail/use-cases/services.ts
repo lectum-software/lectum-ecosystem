@@ -14,6 +14,8 @@ import type {
   AdminPatientDetailPublicationMetric,
   AdminPatientDetailQuery,
   AdminPatientDetailSeriesPoint,
+  AdminPatientIntentAnalysis,
+  AdminPatientIntentMetric,
   AdminPatientPlatformUsage,
   IAdminPatientDetailDTO,
 } from "../DTOs/IAdminPatientDetailDTO";
@@ -58,6 +60,25 @@ const PLATFORM_DEVICE_LABELS: Record<PlatformDeviceType, string> = {
   unknown: "Não identificado",
 };
 const PLATFORM_WEEKDAY_LABELS = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"] as const;
+const PATIENT_INTENT_SOURCE = "profile_view_event+psychologist_favorite+contact_request" as const;
+const PATIENT_INTENT_METRIC_SOURCES = {
+  favorites: "psychologist_favorite.user_id",
+  profile_views: "profile_view_event.viewer_id+source=profile_page",
+  repeated_profile_views: "profile_view_event.viewer_id+psychologist_id",
+  whatsapp_clicks: "contact_request.user_id+channel=whatsapp",
+} as const;
+const PATIENT_INTENT_SCORE_WEIGHTS = {
+  favorites: 20,
+  profile_views: 3,
+  repeated_profile_views: 5,
+  whatsapp_clicks: 45,
+} as const satisfies Record<AdminPatientIntentMetric["id"], number>;
+const PATIENT_INTENT_SCORE_CAPS = {
+  favorites: 40,
+  profile_views: 30,
+  repeated_profile_views: 20,
+  whatsapp_clicks: 90,
+} as const satisfies Record<AdminPatientIntentMetric["id"], number>;
 
 type PeriodResolution = {
   current: AdminPatientDetailDateRange;
@@ -86,6 +107,15 @@ type EngagementCounts = {
   shares_received: number;
   verified_psychologist_responses: number;
   upvotes_received: number;
+};
+
+type PatientIntentSignals = Awaited<ReturnType<AdminPatientDetailRepository["listIntentSignals"]>>;
+
+type PatientIntentCounts = {
+  favorites: number;
+  profile_views: number;
+  repeated_profile_views: number;
+  whatsapp_clicks: number;
 };
 
 type CommunityLike = {
@@ -350,6 +380,185 @@ const metric = (params: {
     trend: change === null ? "unavailable" : change > 0 ? "up" : change < 0 ? "down" : "flat",
     unit: "count",
     value: params.current,
+  };
+};
+
+const uniqueCount = <T>(items: T[], getKey: (item: T) => string | null | undefined) =>
+  new Set(items.map(getKey).filter((value): value is string => Boolean(value))).size;
+
+const scoreContribution = (metricId: AdminPatientIntentMetric["id"], value: number) =>
+  Math.min(
+    PATIENT_INTENT_SCORE_CAPS[metricId],
+    Math.max(0, value) * PATIENT_INTENT_SCORE_WEIGHTS[metricId],
+  );
+
+const patientIntentMetric = (params: {
+  current: number;
+  description: string;
+  id: AdminPatientIntentMetric["id"];
+  label: string;
+  previous: number;
+}): AdminPatientIntentMetric => {
+  const change = percentageChange(params.current, params.previous);
+
+  return {
+    change_percent: change,
+    description: params.description,
+    id: params.id,
+    label: params.label,
+    previous_value: params.previous,
+    score_contribution: scoreContribution(params.id, params.current),
+    score_weight: PATIENT_INTENT_SCORE_WEIGHTS[params.id],
+    source: PATIENT_INTENT_METRIC_SOURCES[params.id],
+    trend: change === null ? "unavailable" : change > 0 ? "up" : change < 0 ? "down" : "flat",
+    unit: "count",
+    value: params.current,
+  };
+};
+
+const countsFromIntentSignals = (signals: PatientIntentSignals): PatientIntentCounts => {
+  const uniqueProfileViews = uniqueCount(signals.profileViews, (view) => view.psychologist_id);
+
+  return {
+    favorites: signals.favorites.length,
+    profile_views: signals.profileViews.length,
+    repeated_profile_views: Math.max(0, signals.profileViews.length - uniqueProfileViews),
+    whatsapp_clicks: signals.whatsappClicks.length,
+  };
+};
+
+const latestIntentSignalAt = (signals: PatientIntentSignals) =>
+  [...signals.profileViews, ...signals.favorites, ...signals.whatsappClicks].reduce<Date | null>(
+    (latest, signal) => (!latest || signal.createdAt > latest ? signal.createdAt : latest),
+    null,
+  );
+
+const patientIntentLevel = (
+  score: number,
+  counts: PatientIntentCounts,
+): AdminPatientIntentAnalysis["level"] => {
+  if (score <= 0) {
+    return {
+      id: "no_signals",
+      label: "Sem sinais",
+      tone: "neutral",
+    };
+  }
+
+  if (counts.whatsapp_clicks > 0 || score >= 45) {
+    return {
+      id: "high",
+      label: "Alta intenção",
+      tone: "hot",
+    };
+  }
+
+  if (counts.favorites > 0 || score >= 20) {
+    return {
+      id: "medium",
+      label: "Média intenção",
+      tone: "warm",
+    };
+  }
+
+  return {
+    id: "low",
+    label: "Baixa intenção",
+    tone: "cool",
+  };
+};
+
+const patientIntentSummary = (
+  level: AdminPatientIntentAnalysis["level"],
+  counts: PatientIntentCounts,
+) => {
+  if (level.id === "high") {
+    return counts.whatsapp_clicks > 0
+      ? "Paciente já acionou o CTA de WhatsApp no período, sinal forte de intenção de contato."
+      : "Paciente combina múltiplos sinais de exploração e consideração no período.";
+  }
+
+  if (level.id === "medium") {
+    return counts.favorites > 0
+      ? "Paciente favoritou psicólogo(s) e demonstra consideração ativa antes do contato."
+      : "Paciente demonstra exploração recorrente de perfis, mas ainda sem sinal forte de contato.";
+  }
+
+  if (level.id === "low") {
+    return "Paciente abriu perfil(is) de psicólogos, mas ainda sem favorito ou clique no WhatsApp no período.";
+  }
+
+  return "Sem sinais reais de intenção de contato do paciente no período selecionado.";
+};
+
+const buildPatientIntentAnalysis = (
+  currentSignals: PatientIntentSignals,
+  previousSignals: PatientIntentSignals,
+): AdminPatientIntentAnalysis => {
+  const currentCounts = countsFromIntentSignals(currentSignals);
+  const previousCounts = countsFromIntentSignals(previousSignals);
+  const metrics: AdminPatientIntentMetric[] = [
+    patientIntentMetric({
+      current: currentCounts.profile_views,
+      description: "Aberturas reais de perfis públicos de psicólogos pelo paciente.",
+      id: "profile_views",
+      label: "Perfis abertos",
+      previous: previousCounts.profile_views,
+    }),
+    patientIntentMetric({
+      current: currentCounts.favorites,
+      description: "Psicólogos favoritados pelo paciente e ainda ativos no período.",
+      id: "favorites",
+      label: "Psicólogos favoritados",
+      previous: previousCounts.favorites,
+    }),
+    patientIntentMetric({
+      current: currentCounts.whatsapp_clicks,
+      description: "Cliques reais no CTA de WhatsApp para psicólogos.",
+      id: "whatsapp_clicks",
+      label: "Cliques no WhatsApp",
+      previous: previousCounts.whatsapp_clicks,
+    }),
+    patientIntentMetric({
+      current: currentCounts.repeated_profile_views,
+      description: "Aberturas repetidas em perfis de psicólogos já vistos no período.",
+      id: "repeated_profile_views",
+      label: "Retornos ao mesmo perfil",
+      previous: previousCounts.repeated_profile_views,
+    }),
+  ];
+  const score = Math.min(
+    100,
+    Math.round(metrics.reduce((total, item) => total + item.score_contribution, 0)),
+  );
+  const level = patientIntentLevel(score, currentCounts);
+
+  return {
+    coverage_note:
+      "A análise usa apenas sinais reais de descoberta e contato dentro do site; o destino máximo observado é o clique no WhatsApp.",
+    last_signal_at: latestIntentSignalAt(currentSignals),
+    level,
+    max_score: 100,
+    metrics,
+    privacy_note:
+      "Indicador interno do Admin; não é exibido a pacientes ou psicólogos e não infere sessão, atendimento, diagnóstico ou conteúdo de conversa.",
+    score,
+    source: PATIENT_INTENT_SOURCE,
+    summary: patientIntentSummary(level, currentCounts),
+    total_signals:
+      currentCounts.profile_views + currentCounts.favorites + currentCounts.whatsapp_clicks,
+    unique_psychologists_contacted: uniqueCount(
+      currentSignals.whatsappClicks,
+      (click) => click.psychologist_id,
+    ),
+    unique_psychologists_favorited: uniqueCount(
+      currentSignals.favorites,
+      (favorite) => favorite.psychologist_id,
+    ),
+    unique_psychologists_viewed: uniqueCount(
+      currentSignals.profileViews,
+      (view) => view.psychologist_id,
+    ),
   };
 };
 
@@ -1233,6 +1442,8 @@ const buildDetail = (
   labels: string[],
   currentBundle: AdminPatientEngagementBundle,
   previousBundle: AdminPatientEngagementBundle,
+  currentIntentSignals: PatientIntentSignals,
+  previousIntentSignals: PatientIntentSignals,
   platformPageViews: AdminPatientDetailPlatformPageViewRecord[],
   platformSessions: AdminPatientDetailPlatformSessionRecord[],
   postViews: Awaited<ReturnType<AdminPatientDetailRepository["countPostViews"]>>,
@@ -1241,6 +1452,7 @@ const buildDetail = (
   const currentCounts = countsFromBundle(currentBundle);
   const previousCounts = countsFromBundle(previousBundle);
   const heatmap = buildHeatmap(currentBundle);
+  const intentAnalysis = buildPatientIntentAnalysis(currentIntentSignals, previousIntentSignals);
   const platformUsage = buildPlatformUsage({
     bundle: currentBundle,
     pageViews: platformPageViews,
@@ -1310,9 +1522,11 @@ const buildDetail = (
       "E-mail é exibido apenas para admin autenticado; telefone, nascimento, bio, IP, coordenadas e endereço completo são omitidos na V1.",
       "Último acesso usa somente metadados reais de sessão/token do usuário, quando existentes.",
       "Localização, quando disponível, usa apenas dados coarse de visitor_location.",
+      "Análise de intenção usa contagens derivadas de aberturas de perfil, favoritos e cliques WhatsApp; não expõe conversa, diagnóstico ou atendimento.",
     ],
     header: buildHeader(patient),
     heatmap,
+    intent_analysis: intentAnalysis,
     metrics: buildMetrics(currentCounts, previousCounts),
     period,
     platform_usage: platformUsage,
@@ -1344,6 +1558,7 @@ const buildDetail = (
         "user.createdAt",
         "patient_profile.gender",
         "visitor_location.city/state/country",
+        "contagens derivadas de profile_view_event/psychologist_favorite/contact_request",
       ],
     },
     series: {
@@ -1375,14 +1590,23 @@ export const showAdminPatient = async (data: IAdminPatientDetailDTO): Promise<Re
   }
 
   const { current, labels, period, previous } = resolvedPeriod.period;
-  const [currentBundle, previousBundle, platformPageViews, platformSessions, pwaInstallAction] =
-    await Promise.all([
-      repository.listEngagementBundle(patient.id, current),
-      repository.listEngagementBundle(patient.id, previous),
-      repository.listPlatformPageViews(patient.id, current),
-      repository.listPlatformSessions(patient.id, current),
-      repository.findPwaInstallAction(patient.id),
-    ]);
+  const [
+    currentBundle,
+    previousBundle,
+    currentIntentSignals,
+    previousIntentSignals,
+    platformPageViews,
+    platformSessions,
+    pwaInstallAction,
+  ] = await Promise.all([
+    repository.listEngagementBundle(patient.id, current),
+    repository.listEngagementBundle(patient.id, previous),
+    repository.listIntentSignals(patient.id, current),
+    repository.listIntentSignals(patient.id, previous),
+    repository.listPlatformPageViews(patient.id, current),
+    repository.listPlatformSessions(patient.id, current),
+    repository.findPwaInstallAction(patient.id),
+  ]);
   const postViews = await repository.countPostViews(currentBundle.posts.map((post) => post.id));
 
   return {
@@ -1394,6 +1618,8 @@ export const showAdminPatient = async (data: IAdminPatientDetailDTO): Promise<Re
       labels,
       currentBundle,
       previousBundle,
+      currentIntentSignals,
+      previousIntentSignals,
       platformPageViews,
       platformSessions,
       postViews,

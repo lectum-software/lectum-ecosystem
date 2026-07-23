@@ -446,6 +446,20 @@ export type PatientsDetailMetric = {
   value: number;
 };
 
+export type PatientsDetailIntentMetric = {
+  change_percent: number | null;
+  description: string;
+  id: "favorites" | "profile_views" | "repeated_profile_views" | "whatsapp_clicks";
+  label: string;
+  previous_value: number;
+  score_contribution: number;
+  score_weight: number;
+  source: string;
+  trend: PatientsDashboardTrend;
+  unit: "count";
+  value: number;
+};
+
 export type PatientsDetailPeriod = {
   days: number;
   from: string;
@@ -622,6 +636,25 @@ export type AdminPatientDetail = {
     timezone: "America/Sao_Paulo";
     total_events: number;
     unavailable_reason: string | null;
+  };
+  intent_analysis: {
+    coverage_note: string;
+    last_signal_at: string | null;
+    level: {
+      id: "high" | "low" | "medium" | "no_signals";
+      label: "Alta intenção" | "Baixa intenção" | "Média intenção" | "Sem sinais";
+      tone: "cool" | "hot" | "neutral" | "warm";
+    };
+    max_score: 100;
+    metrics: PatientsDetailIntentMetric[];
+    privacy_note: string;
+    score: number;
+    source: "profile_view_event+psychologist_favorite+contact_request";
+    summary: string;
+    total_signals: number;
+    unique_psychologists_contacted: number;
+    unique_psychologists_favorited: number;
+    unique_psychologists_viewed: number;
   };
   metrics: PatientsDetailMetric[];
   period: PatientsDetailPeriod;
