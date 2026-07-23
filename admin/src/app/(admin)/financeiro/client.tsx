@@ -159,11 +159,6 @@ const formatDate = (value: string) => {
   }).format(date);
 };
 
-const formatAnalysisRange = (from: string, to: string) => `${formatDate(from)} a ${formatDate(to)}`;
-
-const formatFilteredAnalysisPeriod = (period: AdminFinanceDashboard["period"]) =>
-  `${period.label} · ${formatAnalysisRange(period.from, period.to)}`;
-
 const formatDateTime = (value: string) => {
   const date = parseFinanceDate(value);
 
@@ -316,9 +311,7 @@ const LifetimeValue = ({ dashboard }: { dashboard: AdminFinanceDashboard }) => {
 };
 
 const AnalysisPeriodNote = ({ children }: { children: React.ReactNode }) => (
-  <p className="mt-1 text-xs font-semibold leading-5 text-muted">
-    Período de análise: <span className="font-black text-foreground">{children}</span>
-  </p>
+  <p className="mt-1 text-xs font-medium leading-5 text-muted">{children}</p>
 );
 
 const ChurnRate = ({ metric }: { metric: FinanceMetric }) => {
@@ -772,7 +765,7 @@ const RevenuePanel = ({ dashboard }: { dashboard: AdminFinanceDashboard }) => (
         </div>
         <div className="min-w-0">
           <h2 className="text-xl font-black text-foreground">Receita recorrente mensal (MRR)</h2>
-          <AnalysisPeriodNote>{formatFilteredAnalysisPeriod(dashboard.period)}</AnalysisPeriodNote>
+          <AnalysisPeriodNote>Todo o período</AnalysisPeriodNote>
         </div>
       </div>
       <p className="mt-6 text-4xl font-black tracking-tight text-foreground">

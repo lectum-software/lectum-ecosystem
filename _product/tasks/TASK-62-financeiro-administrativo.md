@@ -665,3 +665,29 @@ Frontend esperado:
 - Smoke HTTP local: `GET http://localhost:3002/financeiro/cobrancas?from=0002-07-23&period=custom&to=2026-07-23` retornou `200`, sem quebrar a rota com a URL problemática enviada na captura.
 - Scan estático: `rg -n "handleChargeDateFilterChange|handleStartDateFilterChange|from=0002|onChange=\{\(value\) => handle.*DateFilterChange" "admin/src/app/(admin)/financeiro/cobrancas/client.tsx" "admin/src/app/(admin)/financeiro/assinaturas/client.tsx"` não retornou ocorrências.
 - Chrome headless local abriu a URL problemática de /financeiro/cobrancas; sem sessão Admin no perfil temporário, a validação autenticada completa permaneceu limitada à captura enviada pelo usuário e aos checks/builds.
+
+## Ajuste pós-feedback 2026-07-23 - Subtítulos dos contadores MRR, LTV e Lifetime
+
+- Pedido do usuário: nos contadores **MRR**, **LTV** e **Lifetime** em `/financeiro`, trocar o texto abaixo do título para somente **Todo o período** em peso menor.
+- Os três cards inferiores do Financeiro agora reutilizam o mesmo subtítulo simples **Todo o período**, sem o prefixo **Período de análise:** e sem intervalo de datas no MRR.
+- O peso visual do subtítulo foi reduzido para `font-medium`, mantendo a leitura discreta em `text-muted` e preservando a hierarquia dos títulos/valores.
+- A alteração é somente visual em `admin/src/app/(admin)/financeiro/client.tsx`; cálculos, filtros, endpoints, CSV, Prisma/migrations e packages permaneceram inalterados.
+- Builder/Quick Copy não está exposto como ferramenta callable neste ambiente; as referências auditáveis foram `_product/proto/admin/Financeiro.png` e a captura autenticada enviada pelo usuário em 2026-07-23.
+- ADR não criado: não houve decisão arquitetural, integração nova, regra de domínio nova ou trade-off persistente além da copy/estilo visual solicitado.
+
+### Critérios de aceite do ajuste
+
+- [x] O card **Receita recorrente mensal (MRR)** exibe abaixo do título somente **Todo o período**.
+- [x] O card **LTV médio dos psicólogos** exibe abaixo do título somente **Todo o período**.
+- [x] O card **Lifetime médio dos psicólogos** exibe abaixo do título somente **Todo o período**.
+- [x] O subtítulo dos três cards usa peso menor que o texto anterior.
+- [x] UI mobile-first preservada e nenhum `<img>` cru foi usado.
+- [x] Nenhum package, schema Prisma, migration, mock ou endpoint simulado foi adicionado.
+
+### Validação complementar executada
+
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/financeiro/client.tsx"`.
+- `pnpm --dir admin check`.
+- `pnpm --dir admin build`.
+- Scan estático: `rg -n "Período de análise|PerÃ­odo de anÃ¡lise|formatFilteredAnalysisPeriod|formatAnalysisRange" "admin/src/app/(admin)/financeiro/client.tsx"` não retornou ocorrências.
+- Smoke HTTP local: `GET http://localhost:3002/financeiro` retornou `200`.
