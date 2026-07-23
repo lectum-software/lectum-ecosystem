@@ -608,6 +608,18 @@ const PUBLICATIONS_SORT_OPTIONS: { id: PublicationSortValue; label: string }[] =
 
 const CARD = "rounded-card border border-border/80 bg-surface/95 shadow-admin-soft backdrop-blur";
 const COURTESY_GRANT_CONFIRMATION = "CONCEDER CORTESIA";
+const DATE_INPUT_MAX_FOUR_DIGIT_YEAR = "9999-12-31";
+const ISO_DATE_INPUT_WITH_FOUR_DIGIT_YEAR_REGEX = /^\d{4}-\d{2}-\d{2}$/;
+
+const createCrpRegistrationDateSchema = (requiredMessage: string) =>
+  z
+    .string()
+    .trim()
+    .min(1, requiredMessage)
+    .refine(
+      (value) => !value || ISO_DATE_INPUT_WITH_FOUR_DIGIT_YEAR_REGEX.test(value),
+      "Use ano com 4 dígitos.",
+    );
 
 const courtesyDetailsSchema = z.object({
   cpf: z
@@ -617,7 +629,7 @@ const courtesyDetailsSchema = z.object({
     .max(14, "Use no maximo 14 caracteres.")
     .refine((value) => isValidCpf(value), "Informe um CPF valido."),
   crp: z.string().trim().min(1, "Informe o CRP.").max(40, "Use no maximo 40 caracteres."),
-  crp_registration_date: z.string().trim().min(1, "Informe a data inscrição CRP."),
+  crp_registration_date: createCrpRegistrationDateSchema("Informe a data inscrição CRP."),
   notes: z
     .string()
     .trim()
@@ -677,7 +689,7 @@ const registryApproveBaseSchema = z.object({
     .min(1, "Informe o CPF.")
     .refine((value) => isValidCpf(value), "Informe um CPF válido."),
   crp: z.string().min(1, "Informe o número do CRP.").max(40, "Use no máximo 40 caracteres."),
-  crp_registration_date: z.string().min(1, "Informe a data de inscrição no CRP."),
+  crp_registration_date: createCrpRegistrationDateSchema("Informe a data de inscrição no CRP."),
   regional_crp: z.string().min(1, "Selecione a regional do CRP."),
   situation_confirmed: z.string(),
 });
@@ -734,7 +746,7 @@ const registrySaveSchema = registrySaveBaseSchema.superRefine((values, ctx) => {
 
 const registryIdentitySchema = z.object({
   crp: z.string().min(1, "Informe o número do CRP.").max(40, "Use no máximo 40 caracteres."),
-  crp_registration_date: z.string().min(1, "Informe a data de inscrição no CRP."),
+  crp_registration_date: createCrpRegistrationDateSchema("Informe a data de inscrição no CRP."),
   regional_crp: z.string().min(1, "Selecione a regional do CRP."),
 });
 
@@ -1465,6 +1477,9 @@ const formatInputDate = (value?: string | null) => {
 
   return date.toISOString().slice(0, 10);
 };
+
+const limitDateInputToFourDigitYear = (value: string) =>
+  value.replace(/^\+?(\d{4})\d+-(\d{2})-(\d{2})$/, "$1-$2-$3");
 
 const normalizeCpfInput = (value?: string | null) => onlyDigits(value).slice(0, 11);
 
@@ -8221,6 +8236,8 @@ const CourtesyGrantForm = ({ billing, id }: { billing: AdminPsychologistBilling;
               <InputController<CourtesyFormValues>
                 disabled={disabled}
                 label="Data inscrição CRP"
+                maskValue={limitDateInputToFourDigitYear}
+                max={DATE_INPUT_MAX_FOUR_DIGIT_YEAR}
                 name="crp_registration_date"
                 required
                 type="date"
@@ -8610,6 +8627,8 @@ const RegistryIdentityForm = ({
           <div className="sm:col-span-2">
             <InputController<RegistryIdentityFormValues>
               label="Data de inscrição no CRP"
+              maskValue={limitDateInputToFourDigitYear}
+              max={DATE_INPUT_MAX_FOUR_DIGIT_YEAR}
               name="crp_registration_date"
               required
               type="date"

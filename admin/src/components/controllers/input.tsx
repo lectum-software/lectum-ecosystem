@@ -14,7 +14,9 @@ export type InputControllerProps<TFormValues extends FieldValues> = {
   disabled?: boolean;
   inputMode?: ComponentPropsWithoutRef<"input">["inputMode"];
   maskValue?: (value: string) => string;
+  max?: ComponentPropsWithoutRef<"input">["max"];
   maxLength?: number;
+  min?: ComponentPropsWithoutRef<"input">["min"];
   required?: boolean;
 };
 
@@ -24,7 +26,9 @@ export const InputController = <TFormValues extends FieldValues>({
   inputMode,
   label,
   maskValue,
+  max,
   maxLength,
+  min,
   name,
   placeholder,
   required,
@@ -54,7 +58,9 @@ export const InputController = <TFormValues extends FieldValues>({
         disabled={disabled}
         id={String(name)}
         inputMode={inputMode}
+        max={max}
         maxLength={maxLength}
+        min={min}
         onChangeCapture={(event) => {
           if (maskValue) event.currentTarget.value = maskValue(event.currentTarget.value);
         }}

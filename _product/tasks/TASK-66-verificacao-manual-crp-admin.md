@@ -404,3 +404,12 @@ Se o schema atual não suportar auditoria mínima sem `raw`, usar `raw` com shap
 - `pnpm --dir backend check`
 - `pnpm check` passou após reexecução com timeout maior; a primeira tentativa de 304s expirou antes de terminar.
 - Smoke HTTP autenticado/visual não foi executado porque não havia servidor Admin ativo em `localhost:3002` nem ferramenta de browser autenticada disponível neste ambiente; a validação visual usou a captura enviada pelo usuário e a referência local `_product/proto/admin/Psicólogos/Detalhes do psicólogo/Perfil e Cadastro.png`.
+
+### Ajuste de limite do ano da data de inscrição CRP 2026-07-23
+
+- Pedido direto de produto aplicado no card `Registro profissional` da aba Admin `Perfil e cadastro`.
+- O campo `Data de inscrição no CRP` passou a limitar entradas de ano expandido para 4 dígitos no `InputController` do Admin, usando `max="9999-12-31"` e normalização imediata do valor técnico `aaaa-mm-dd`.
+- A mesma regra foi aplicada ao campo equivalente de concessão de cortesia para manter consistência operacional de CRP.
+- Os schemas Zod dos formulários de registro/cortesia também passaram a rejeitar datas fora do padrão `aaaa-mm-dd`, evitando envio de ano com mais de 4 dígitos.
+- Não houve alteração de backend, schema Prisma, migrations, packages, contrato de API ou regra de domínio; ADR novo não foi necessário por ser ajuste pontual de validação/UX.
+- Validações executadas: `pnpm --dir admin check`, `pnpm --dir admin build`, `git diff --check` nos arquivos alterados e smoke HTTP local em `/psicologos/cmrwmw35t0000xkuhxoceh77v?tab=perfil` retornando 200.
