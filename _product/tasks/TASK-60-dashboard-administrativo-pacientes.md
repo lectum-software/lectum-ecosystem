@@ -555,3 +555,20 @@ Frontend esperado:
 ### ADR
 
 - ADR-0314: Distribuicao agregada de intencao dos pacientes no dashboard Admin.
+
+## Ajuste pos-feedback 2026-07-23 - Simplificacao visual da analise de intencao
+
+- Pedido do usuario: no bloco **Analise da intencao dos pacientes**, remover a tag de quantidade de pacientes com sinais reais, remover o texto de cobertura logo abaixo do periodo e remover a faixa final de privacidade.
+- Pedido complementar do usuario: trocar o icone de **Frios** para um simbolo de frio e deixar o icone de **Muito qualificados** em vermelho.
+- A UI do Admin foi ajustada sem mudar contrato HTTP, calculo, fontes reais, schema Prisma, migration, package, seed, mock ou tracking.
+- O backend continua retornando `coverage_note`, `patients_with_signals` e `privacy_note` para preservar compatibilidade do contrato, mas esses textos nao sao mais renderizados neste bloco do dashboard.
+- O segmento **Frios** agora usa icone `Snowflake`; **Muito qualificados** mantem `Flame` com tom visual `danger`.
+- ADR-0314 permanece vigente; nao houve nova decisao arquitetural, apenas refinamento visual.
+
+### Validacao complementar executada
+
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/pacientes/client.tsx"`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- Browser local headless autenticado em `http://localhost:3002/pacientes` confirmou: textos removidos, icone `lucide-snowflake` em **Frios** e `text-danger` em **Muito qualificados**.
+- Admin temporario de validacao foi removido do banco apos a verificacao.

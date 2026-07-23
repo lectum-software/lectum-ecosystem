@@ -13,6 +13,7 @@ import {
   MessageCircle,
   RefreshCw,
   Smartphone,
+  Snowflake,
   Target,
   UserCheck,
   UserPlus,
@@ -83,7 +84,7 @@ const PATIENT_INTENT_CHART_COLORS = {
   very_qualified: "#13a85b",
 } satisfies Record<PatientsDashboardIntentSegment["id"], string>;
 const PATIENT_INTENT_ICONS = {
-  cold: UserRound,
+  cold: Snowflake,
   curious: Eye,
   objective: Target,
   very_qualified: Flame,
@@ -92,7 +93,7 @@ const PATIENT_INTENT_TONE_CLASS_NAMES = {
   cold: "bg-surface-muted text-muted",
   curious: "bg-primary-soft text-primary",
   objective: "bg-warning/10 text-warning",
-  very_qualified: "bg-success/10 text-success",
+  very_qualified: "bg-danger/10 text-danger",
 } satisfies Record<PatientsDashboardIntentSegment["id"], string>;
 const LOCATION_RANKING_LIMIT = 5;
 const BRAZIL_STATE_CODES = new Set([
@@ -963,13 +964,7 @@ const PatientIntentAnalysisCard = ({ summary }: { summary: AdminPatientsDashboar
           <p className="mt-2 text-sm font-bold leading-6 text-muted">
             {formatSelectedPeriod(summary.period)}
           </p>
-          <p className="mt-1 max-w-3xl text-sm font-bold leading-6 text-muted">
-            {intent.coverage_note}
-          </p>
         </div>
-        <span className="w-fit rounded-full bg-primary-soft px-3 py-1.5 text-xs font-black text-primary">
-          {numberFormatter.format(intent.patients_with_signals)} com sinais reais
-        </span>
       </div>
 
       <div className="mt-5 grid gap-4 xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
@@ -1025,10 +1020,6 @@ const PatientIntentAnalysisCard = ({ summary }: { summary: AdminPatientsDashboar
           ))}
         </section>
       </div>
-
-      <p className="mt-4 rounded-2xl border border-border/75 bg-surface-muted p-3 text-xs font-bold leading-5 text-muted">
-        {intent.privacy_note}
-      </p>
     </CardShell>
   );
 };
