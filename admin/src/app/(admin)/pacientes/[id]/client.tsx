@@ -2932,10 +2932,6 @@ const PatientIntentAnalysisCard = ({
           ))}
         </section>
       </div>
-
-      <p className="mt-4 rounded-2xl border border-border/75 bg-surface-muted p-3 text-xs font-bold leading-5 text-muted">
-        {intent.privacy_note}
-      </p>
     </CardShell>
   );
 };
