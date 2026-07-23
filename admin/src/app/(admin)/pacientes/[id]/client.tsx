@@ -15,6 +15,7 @@ import {
   ChevronUp,
   Eye,
   FileText,
+  Flame,
   KeyRound,
   Loader2,
   Lock,
@@ -138,6 +139,15 @@ const patientIntentProgressClassNames: Record<
   low: "bg-primary",
   medium: "bg-warning",
   no_signals: "bg-border",
+};
+const patientIntentTemperatureLabels: Record<
+  AdminPatientDetail["intent_analysis"]["level"]["id"],
+  string
+> = {
+  high: "Quente",
+  low: "Fria",
+  medium: "Morna",
+  no_signals: "Sem sinais",
 };
 const PATIENT_GENERAL_METRIC_IDS = new Set<PatientsDetailMetric["id"]>([
   "posts_created",
@@ -3288,6 +3298,36 @@ const PatientEngagementSummaryCard = ({
   );
 };
 
+const PatientIntentTemperatureSummaryCard = ({
+  detail,
+  id,
+}: {
+  detail: AdminPatientDetail;
+  id: string;
+}) => {
+  const intent = detail.intent_analysis;
+  const temperature = patientIntentTemperatureLabels[intent.level.id];
+
+  return (
+    <SummaryCard
+      actionHref={patientTabHref(id, "estatisticas")}
+      actionLabel="Abrir análise de intenção"
+      eyebrow="Intenção"
+      helperText={intent.summary}
+      icon={Flame}
+      title={`Temperatura: ${temperature}`}
+    >
+      <FieldRow label="Nível" value={intent.level.label} />
+      <FieldRow label="Score" value={formatPatientIntentScore(intent.score, intent.max_score)} />
+      <FieldRow label="Sinais reais" value={numberFormatter.format(intent.total_signals)} />
+      <FieldRow
+        label="Último sinal"
+        value={intent.last_signal_at ? formatDateTime(intent.last_signal_at) : "Não capturado"}
+      />
+    </SummaryCard>
+  );
+};
+
 const ProfileEditButton = ({ disabled, onClick }: { disabled?: boolean; onClick: () => void }) => (
   <button
     className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-control border border-primary px-4 text-sm font-black text-primary transition hover:bg-primary-soft disabled:cursor-not-allowed disabled:border-border disabled:text-muted sm:w-auto"
@@ -3439,9 +3479,10 @@ const GeneralTab = ({ detail, id }: { detail: AdminPatientDetail; id: string }) 
       </div>
     </section>
 
-    <div className="grid items-stretch gap-5 xl:grid-cols-2">
+    <div className="grid items-stretch gap-5 xl:grid-cols-3">
       <AccountSituationCard detail={detail} id={id} />
       <PatientEngagementSummaryCard detail={detail} id={id} />
+      <PatientIntentTemperatureSummaryCard detail={detail} id={id} />
     </div>
 
     <ActivityList detail={detail} />

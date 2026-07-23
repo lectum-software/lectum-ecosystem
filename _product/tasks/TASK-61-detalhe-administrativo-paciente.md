@@ -828,3 +828,49 @@ Frontend esperado:
 - `pnpm check`
 - Service local: `showAdminPatient({ id: "cmrqsrab5001f1guh2ve5oy90", period: "all" })` retornou `intent_analysis` real com fonte `profile_view_event+psychologist_favorite+contact_request` e sem usar a previa visual local.
 - Browser local/headless via Chrome/CDP em `/pacientes/cmrqsrab5001f1guh2ve5oy90?tab=estatisticas`, com admin temporario real removido ao final, validou desktop `1365x900`: bloco de intencao antes de comunidade, score, metrica de WhatsApp e nota de privacidade presentes; e mobile `390x844`: bloco presente, comunidade abaixo e `scrollWidth=390`.
+
+## Ajuste pos-feedback 2026-07-23 - Nome de exibicao em Dados pessoais
+
+- Pedido direto de produto aplicado na aba Admin **Perfil e cadastro**, card **Dados pessoais** do paciente.
+- A primeira linha do card agora e **Nome de exibicao**, usando `header.name`, valor real derivado de `user.name` do paciente.
+- O mesmo resumo somente leitura aparece no modo de edicao de genero antes de e-mail e localizacao, sem permitir alterar nome por este fluxo.
+- E-mail e localizacao permanecem somente leitura; genero continua sendo o unico campo editavel nesse card.
+- Nao houve alteracao de backend, contrato HTTP, schema Prisma, migrations, packages, mock, seed ou endpoint simulado.
+- Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente; as referencias auditaveis foram a captura enviada pelo usuario e `_product/proto/admin/Pacientes/Pacientes - Detalhes.png`.
+- ADR criado: `adrs/0313-admin-dados-pessoais-nomes-exibicao.md`.
+
+### Criterios de aceite do ajuste
+
+- [x] **Dados pessoais** do paciente mostra **Nome de exibicao** como primeira linha.
+- [x] O nome exibido usa `user.name` real ja retornado no detalhe administrativo do paciente.
+- [x] O fluxo de edicao do card nao permite alterar nome, e-mail ou localizacao por este ajuste.
+- [x] Nenhum schema Prisma, migration, package novo, mock, seed ou endpoint simulado foi adicionado.
+
+### Validacao complementar executada
+
+- Pendente ate a conclusao da execucao.
+## Ajuste pos-feedback 2026-07-23 - Temperatura de intencao na aba Geral
+
+- Pedido do usuario: apos o bloco **Engajamento** da aba **Geral**, adicionar um terceiro bloco de **Intencao** mostrando a "temperatura" do paciente.
+- A aba **Geral** agora renderiza os cards resumidos em grid mobile-first na ordem **Conta**, **Engajamento** e **Intencao**, progredindo para tres colunas em telas amplas.
+- O novo card **Intencao** reutiliza o `intent_analysis` real do contrato existente e traduz o nivel em temperatura operacional: **Temperatura: Quente**, **Temperatura: Morna**, **Temperatura: Fria** ou **Temperatura: Sem sinais**.
+- O resumo mostra nivel, score, sinais reais e ultimo sinal, com CTA para abrir a analise completa na aba **Estatisticas**.
+- Nao houve backend novo, endpoint novo, contrato HTTP novo, schema Prisma, migration, package, seed, mock, backfill artificial ou tracking novo. `db:migrate` nao se aplicou.
+- Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente; as referencias auditaveis foram o screenshot enviado pelo usuario em 2026-07-23 e `_product/proto/admin/Pacientes/Pacientes - Detalhes.png`.
+- ADR atualizado: `adrs/0312-admin-patient-intent-analysis.md`.
+
+### Criterios de aceite do ajuste
+
+- [x] A aba **Geral** exibe um terceiro card **Intencao** imediatamente apos **Engajamento**.
+- [x] O card mostra a temperatura do paciente derivada de `intent_analysis.level`, sem dado inventado.
+- [x] O resumo exibe nivel, score, sinais reais e ultimo sinal com CTA para a analise completa.
+- [x] O layout permanece mobile-first e sem overflow horizontal em 390px.
+- [x] Nenhum mock, seed, endpoint simulado, tracking novo, migration ou package novo foi adicionado.
+
+### Validacao complementar executada
+
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/pacientes/[id]/client.tsx"`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check`
+- Browser local/headless via Chrome/CDP em `/pacientes/cmrqsrab5001f1guh2ve5oy90`, com servidor local temporario do Admin em `next start` na porta 3002, validou desktop `1365x900` e mobile `390x844`: ordem **Conta** -> **Engajamento** -> **Intencao**, titulo **Temperatura: Sem sinais**, score `0/100`, ausencia de overflow horizontal (`scrollWidth=390` no mobile).
