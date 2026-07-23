@@ -103,7 +103,10 @@ const formatDateTime = (value: string) =>
   }).format(new Date(value));
 
 const formatNullableDate = (value: string | null) => (value ? formatDate(value) : "—");
-const isCancelledSubscription = (item: FinanceSubscriptionItem) => item.status === "cancelada";
+const isCancelledSubscription = (item: FinanceSubscriptionItem) =>
+  item.status === "cancelada" || item.status_label.toLocaleLowerCase("pt-BR").includes("cancelad");
+const shouldShowCancellationMetric = (item: FinanceSubscriptionItem) =>
+  isCancelledSubscription(item) || Boolean(item.cancelled_at);
 const formatNextChargeDate = (item: FinanceSubscriptionItem) =>
   isCancelledSubscription(item) ? "—" : formatNullableDate(item.next_charge_at);
 const formatCancellationDate = (item: FinanceSubscriptionItem) =>
@@ -469,7 +472,7 @@ const PaymentHealthDetails = ({ item }: { item: FinanceSubscriptionItem }) => {
           <HealthMetric label="Pendentes" value={numberFormatter.format(health.pending_payments)} />
           <HealthMetric label="Último sucesso" value={formatNullableDate(health.last_success_at)} />
           <HealthMetric label="Última falha" value={formatNullableDate(health.last_failure_at)} />
-          {isCancelledSubscription(item) ? (
+          {shouldShowCancellationMetric(item) ? (
             <HealthMetric label="Cancelamento" value={formatCancellationDate(item)} />
           ) : null}
         </dl>

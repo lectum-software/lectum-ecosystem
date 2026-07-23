@@ -347,3 +347,29 @@ Adicionar análise real de confiabilidade do pagamento por assinatura paga Merca
 - `rg -n "Próxima/Cancel|PrÃ³xima/Cancel|subscriptionLifecycle|formatSubscriptionLifecycleDate" "admin/src/app/(admin)/financeiro"` sem ocorrências.
 - `rg -n "Próxima/Cancel|PrÃ³xima/Cancel|subscriptionLifecycle|formatSubscriptionLifecycleDate" admin/.next/static admin/.next/server -g "!cache/**"` sem ocorrências após build.
 - Smoke HTTP local: `GET http://localhost:3002/financeiro/assinaturas` retornou `200`.
+
+## Ajuste pós-feedback 2026-07-23 - Bloco Cancelamento no grid de métricas
+
+- Pedido do usuário: ao lado de **Última falha**, adicionar um bloco para exibir a data de cancelamento caso a assinatura tenha sido cancelada.
+- O detalhe expandido de `/financeiro/assinaturas` mantém **Cancelamento** imediatamente após **Última falha** no grid mobile-first de métricas.
+- A guarda de exibição passou a ser defensiva: o bloco aparece quando a assinatura está cancelada por status/label ou quando o contrato real traz `cancelled_at`, evitando ocultar a data por divergência de normalização visual.
+- Assinaturas não canceladas continuam sem o bloco **Cancelamento**.
+- Não houve alteração de Prisma/migrations, contrato de backend, CSV, package, seed, mock, dado artificial ou endpoint simulado.
+- Builder/Quick Copy não está exposto como ferramenta callable neste ambiente; as referências auditáveis foram `_product/proto/admin/Financeiro.png` e as capturas autenticadas enviadas pelo usuário em 2026-07-23.
+- ADR atualizado: `adrs/0309-admin-assinaturas-saude-pagamento.md`.
+
+### Critérios de aceite do ajuste
+
+- [x] O grid de métricas do dropdown exibe **Cancelamento** logo após **Última falha** para assinatura cancelada.
+- [x] A exibição é baseada em dado real (`status="cancelada"`/label cancelada ou `cancelled_at` presente), sem mock ou fallback inventado.
+- [x] Assinaturas ativas/inadimplentes não exibem o bloco **Cancelamento**.
+- [x] UI mobile-first preservada e nenhum `<img>` cru foi usado.
+- [x] Nenhum package, schema Prisma, migration, mock ou endpoint simulado foi adicionado.
+
+### Validação complementar executada
+
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/financeiro/assinaturas/client.tsx"`.
+- `pnpm --dir admin check`.
+- `pnpm --dir admin build`.
+- Smoke de serviço real com `.env` local: `listAdminFinanceSubscriptions({ period: "all", status: "cancelada", limit: 5 })` retornou `status=200`, `count=1` e item cancelado com `cancelled_at`.
+- Smoke HTTP local: `GET http://localhost:3002/financeiro/assinaturas` retornou `200`.
