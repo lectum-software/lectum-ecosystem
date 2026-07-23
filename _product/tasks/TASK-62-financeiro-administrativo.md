@@ -561,3 +561,32 @@ Frontend esperado:
 - Smoke HTTP local protegido: `GET http://localhost:3001/api/admin/private/finance/subscriptions?period=all&q=ana&status=ativa` sem token Admin retornou `401`.
 - Smoke HTTP/Admin local: `GET http://localhost:3002/financeiro/assinaturas` retornou `200`; o bundle da rota contém os controles de busca/status e não contém as colunas removidas **CRP**, **Plano** ou **Período atual**.
 - Chrome headless local em `http://localhost:3002/financeiro/assinaturas` confirmou o guard de autenticação Admin; a validação visual autenticada completa permanece limitada à captura enviada pelo usuário porque a ferramenta Builder/Quick Copy não está disponível como callable e não há acesso automatizado à sessão Admin autenticada do navegador aberto.
+
+## Ajuste pós-feedback 2026-07-23 - Cobranças sem retorno/período/evento/referência
+
+- Pedido do usuário: em `/financeiro/cobrancas`, remover do header o botão **Voltar ao Financeiro** e a linha **Todo o período · 2026-06-28 a 2026-07-23**; remover da tabela as colunas **Evento** e **Referência**.
+- O header da página mantém apenas o contexto **Financeiro**, o título **Últimas cobranças realizadas** e a descrição da relação completa.
+- A tabela desktop agora exibe apenas **Data**, **Psicólogo**, **Plano**, **Valor** e **Status**, reduzindo a largura mínima da relação para acompanhar as colunas remanescentes.
+- Os cards mobile também deixam de exibir a referência operacional, mantendo somente data, valor e plano além do psicólogo/status.
+- A alteração é somente visual em `admin/src/app/(admin)/financeiro/cobrancas/client.tsx`; o endpoint Admin privado, a paginação e o consumo de eventos reais do Mercado Pago não foram alterados.
+- Nenhum package, schema Prisma, migration, mock, dado artificial ou endpoint simulado foi adicionado.
+- Builder/Quick Copy não está exposto como ferramenta callable neste ambiente; a referência auditável foi a captura autenticada enviada pelo usuário em 2026-07-23.
+- ADR não criado: não houve decisão arquitetural, integração nova, regra de domínio nova ou trade-off persistente além da remoção visual solicitada.
+
+### Critérios de aceite do ajuste
+
+- [x] O header de `/financeiro/cobrancas` não exibe o botão **Voltar ao Financeiro**.
+- [x] O header de `/financeiro/cobrancas` não exibe o resumo **Todo o período · 2026-06-28 a 2026-07-23**.
+- [x] A tabela desktop de cobranças não exibe as colunas **Evento** e **Referência**.
+- [x] Os cards mobile não exibem a referência operacional removida da relação principal.
+- [x] A lista continua consumindo o endpoint real de cobranças, sem mock ou endpoint paralelo.
+- [x] Nenhum `<img>` cru, package novo, schema Prisma, migration, mock ou endpoint simulado foi adicionado.
+
+### Validação complementar executada
+
+- `pnpm --dir admin biome:check`
+- `pnpm --dir admin lint`
+- `pnpm --dir admin typecheck`
+- `pnpm --dir admin build`
+- `rg -n "Voltar ao Financeiro|Todo o período|Evento|Referência|shortReference|periodSummary" "admin/src/app/(admin)/financeiro/cobrancas/client.tsx"` não retornou ocorrências.
+- Smoke HTTP local: `GET http://localhost:3002/financeiro/cobrancas` retornou `200` e o HTML inicial não continha os textos removidos.

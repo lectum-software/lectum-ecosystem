@@ -1,7 +1,6 @@
 "use client";
 
 import { AlertTriangle, ChevronLeft, ChevronRight, CreditCard, RefreshCw } from "lucide-react";
-import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { type ReactNode, useMemo } from "react";
 import { useAdminFinanceCharges } from "@/api/callers/finance";
@@ -51,13 +50,6 @@ const formatDateTime = (value: string) =>
 
 const formatMoney = (cents: number | null) =>
   cents === null ? "Indisponível" : moneyFormatter.format(cents / 100);
-
-const shortReference = (value: string | null) => {
-  if (!value) return "—";
-  if (value.length <= 18) return value;
-
-  return `${value.slice(0, 10)}...${value.slice(-4)}`;
-};
 
 const CardShell = ({ children, className }: { children?: ReactNode; className?: string }) => (
   <section
@@ -186,12 +178,6 @@ const ChargesTable = ({ items }: { items: FinanceChargeItem[] }) => (
                     {item.subscription?.plan.name ?? "Não identificado"}
                   </dd>
                 </div>
-                <div>
-                  <dt className="font-semibold text-muted">Referência</dt>
-                  <dd className="mt-1 font-bold text-foreground">
-                    {shortReference(item.reference)}
-                  </dd>
-                </div>
               </dl>
             </div>
           </div>
@@ -200,15 +186,13 @@ const ChargesTable = ({ items }: { items: FinanceChargeItem[] }) => (
     </div>
 
     <div className="hidden overflow-x-auto lg:block">
-      <table className="w-full min-w-[1120px] text-left text-sm">
+      <table className="w-full min-w-[860px] text-left text-sm">
         <caption className="sr-only">Relação completa de cobranças confirmadas</caption>
         <thead className="border-b border-border text-xs font-bold uppercase tracking-[0.08em] text-muted">
           <tr>
             <th className="px-5 py-4">Data</th>
             <th className="px-5 py-4">Psicólogo</th>
             <th className="px-5 py-4">Plano</th>
-            <th className="px-5 py-4">Evento</th>
-            <th className="px-5 py-4">Referência</th>
             <th className="px-5 py-4">Valor</th>
             <th className="px-5 py-4">Status</th>
           </tr>
@@ -238,11 +222,6 @@ const ChargesTable = ({ items }: { items: FinanceChargeItem[] }) => (
                 </p>
                 <p className="text-xs text-muted">{item.subscription?.status_label ?? "—"}</p>
               </td>
-              <td className="px-5 py-4" title={item.external_id}>
-                <p className="font-bold text-foreground">{item.event_type}</p>
-                <p className="text-xs text-muted">{shortReference(item.external_id)}</p>
-              </td>
-              <td className="px-5 py-4 text-muted">{shortReference(item.reference)}</td>
               <td className="whitespace-nowrap px-5 py-4 font-black text-foreground">
                 {formatMoney(item.amount_cents)}
               </td>
@@ -289,9 +268,6 @@ export const AdminFinanceChargesClient = () => {
 
   const pages = summary?.pages ?? 1;
   const page = Math.min(query.page ?? 1, pages);
-  const periodSummary = summary
-    ? `${summary.period.label} · ${summary.period.from} a ${summary.period.to}`
-    : "Carregando período";
 
   return (
     <div className="min-w-0 max-w-full space-y-7 overflow-x-clip">
@@ -307,15 +283,7 @@ export const AdminFinanceChargesClient = () => {
             <p className="mt-2 max-w-2xl text-sm font-medium leading-6 text-muted">
               Relação completa de cobranças confirmadas por eventos reais do Mercado Pago.
             </p>
-            <p className="mt-2 text-xs font-bold text-muted">{periodSummary}</p>
           </div>
-          <Link
-            className="inline-flex h-11 w-fit items-center justify-center gap-2 rounded-control border border-border bg-surface px-4 text-sm font-black text-foreground shadow-control transition hover:border-primary/40 hover:text-primary"
-            href="/financeiro"
-          >
-            <ChevronLeft aria-hidden className="h-4 w-4" />
-            Voltar ao Financeiro
-          </Link>
         </div>
       </header>
 
