@@ -5,11 +5,15 @@ import {
   AlertTriangle,
   ChevronDown,
   ChevronRight,
+  Eye,
+  Flame,
   Loader2,
   type LucideIcon,
   MapPin,
+  MessageCircle,
   RefreshCw,
   Smartphone,
+  Target,
   UserCheck,
   UserPlus,
   UserRound,
@@ -22,6 +26,7 @@ import type {
   AdminPatientsDashboard,
   PatientsDashboardBreakdownItem,
   PatientsDashboardDailyPoint,
+  PatientsDashboardIntentSegment,
   PatientsDashboardMetric,
   PatientsDashboardQuery,
 } from "@/api/req/patients";
@@ -71,6 +76,24 @@ const DEVICE_USAGE_CHART_COLORS = {
   tablet: "#8b5cf6",
   unknown: "#94a3b8",
 } satisfies Record<DeviceUsageItem["device_type"], string>;
+const PATIENT_INTENT_CHART_COLORS = {
+  cold: "#64748b",
+  curious: "#308ce8",
+  objective: "#f59f00",
+  very_qualified: "#13a85b",
+} satisfies Record<PatientsDashboardIntentSegment["id"], string>;
+const PATIENT_INTENT_ICONS = {
+  cold: UserRound,
+  curious: Eye,
+  objective: Target,
+  very_qualified: Flame,
+} satisfies Record<PatientsDashboardIntentSegment["id"], LucideIcon>;
+const PATIENT_INTENT_TONE_CLASS_NAMES = {
+  cold: "bg-surface-muted text-muted",
+  curious: "bg-primary-soft text-primary",
+  objective: "bg-warning/10 text-warning",
+  very_qualified: "bg-success/10 text-success",
+} satisfies Record<PatientsDashboardIntentSegment["id"], string>;
 const LOCATION_RANKING_LIMIT = 5;
 const BRAZIL_STATE_CODES = new Set([
   "AC",
@@ -856,6 +879,159 @@ const MiniBar = ({
     </div>
   </div>
 );
+
+const PatientIntentSegmentCard = ({ segment }: { segment: PatientsDashboardIntentSegment }) => {
+  const Icon = PATIENT_INTENT_ICONS[segment.id];
+  const color = PATIENT_INTENT_CHART_COLORS[segment.id];
+
+  return (
+    <div className="min-w-0 rounded-2xl border border-border/75 bg-surface p-4">
+      <div className="flex items-start justify-between gap-3">
+        <span
+          className={cn(
+            "grid h-10 w-10 shrink-0 place-items-center rounded-full",
+            PATIENT_INTENT_TONE_CLASS_NAMES[segment.id],
+          )}
+        >
+          <Icon aria-hidden className="h-5 w-5" />
+        </span>
+        <span className="rounded-full bg-surface-muted px-2.5 py-1 text-xs font-black text-foreground">
+          {formatPercentageValue(segment.percentage)}
+        </span>
+      </div>
+      <p className="mt-4 text-xs font-black uppercase tracking-[0.12em] text-muted">
+        {segment.label}
+      </p>
+      <p className="mt-1 text-2xl font-black text-foreground">
+        {numberFormatter.format(segment.count)}
+      </p>
+      <div className="mt-3 h-2 overflow-hidden rounded-full bg-surface-muted">
+        <div
+          aria-hidden
+          className="h-full rounded-full"
+          style={{ backgroundColor: color, width: `${segment.percentage}%` }}
+        />
+      </div>
+      <p className="mt-3 text-xs font-bold leading-5 text-muted">{segment.description}</p>
+    </div>
+  );
+};
+
+const PatientIntentDistributionBar = ({
+  items,
+  total,
+}: {
+  items: PatientsDashboardIntentSegment[];
+  total: number;
+}) => (
+  <div
+    aria-label="Distribuição percentual de intenção dos pacientes"
+    className="flex h-3 overflow-hidden rounded-full bg-surface-muted"
+    role="img"
+  >
+    {total > 0 ? (
+      items.map((segment) =>
+        segment.count > 0 ? (
+          <span
+            className="h-full"
+            key={segment.id}
+            style={{
+              backgroundColor: PATIENT_INTENT_CHART_COLORS[segment.id],
+              width: `${segment.percentage}%`,
+            }}
+            title={`${segment.label}: ${formatPercentageValue(segment.percentage)}`}
+          />
+        ) : null,
+      )
+    ) : (
+      <span className="h-full w-full bg-surface-muted" />
+    )}
+  </div>
+);
+
+const PatientIntentAnalysisCard = ({ summary }: { summary: AdminPatientsDashboard }) => {
+  const intent = summary.intent_analysis;
+
+  return (
+    <CardShell className="p-5">
+      <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+        <div className="min-w-0">
+          <div className="flex items-center gap-2">
+            <Target aria-hidden className="h-5 w-5 text-primary" />
+            <h2 className="text-xl font-bold text-foreground">Análise da intenção dos pacientes</h2>
+          </div>
+          <p className="mt-2 text-sm font-bold leading-6 text-muted">
+            {formatSelectedPeriod(summary.period)}
+          </p>
+          <p className="mt-1 max-w-3xl text-sm font-bold leading-6 text-muted">
+            {intent.coverage_note}
+          </p>
+        </div>
+        <span className="w-fit rounded-full bg-primary-soft px-3 py-1.5 text-xs font-black text-primary">
+          {numberFormatter.format(intent.patients_with_signals)} com sinais reais
+        </span>
+      </div>
+
+      <div className="mt-5 grid gap-4 xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
+        <section className="rounded-[1.6rem] border border-border/75 bg-surface-muted/70 p-4">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <p className="text-xs font-black uppercase tracking-[0.12em] text-muted">
+                Distribuição geral
+              </p>
+              <p className="mt-1 text-3xl font-black text-foreground">
+                {numberFormatter.format(intent.total_patients)}
+              </p>
+              <p className="mt-1 text-sm font-bold text-muted">pacientes considerados</p>
+            </div>
+            <span className="grid h-12 w-12 place-items-center rounded-full bg-surface text-success">
+              <MessageCircle aria-hidden className="h-5 w-5" />
+            </span>
+          </div>
+          <div className="mt-5">
+            <PatientIntentDistributionBar items={intent.items} total={intent.total_patients} />
+          </div>
+          <div className="mt-5 grid gap-3 sm:grid-cols-2">
+            <div className="rounded-2xl bg-surface p-3">
+              <p className="text-xs font-black text-muted">Aberturas de perfil</p>
+              <p className="mt-1 text-lg font-black text-foreground">
+                {numberFormatter.format(intent.signal_totals.profile_views)}
+              </p>
+            </div>
+            <div className="rounded-2xl bg-surface p-3">
+              <p className="text-xs font-black text-muted">Favoritos ativos</p>
+              <p className="mt-1 text-lg font-black text-foreground">
+                {numberFormatter.format(intent.signal_totals.favorites)}
+              </p>
+            </div>
+            <div className="rounded-2xl bg-surface p-3">
+              <p className="text-xs font-black text-muted">Cliques no WhatsApp</p>
+              <p className="mt-1 text-lg font-black text-foreground">
+                {numberFormatter.format(intent.signal_totals.whatsapp_clicks)}
+              </p>
+            </div>
+            <div className="rounded-2xl bg-surface p-3">
+              <p className="text-xs font-black text-muted">Retornos ao perfil</p>
+              <p className="mt-1 text-lg font-black text-foreground">
+                {numberFormatter.format(intent.signal_totals.repeated_profile_views)}
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <section className="grid min-w-0 gap-3 sm:grid-cols-2">
+          {intent.items.map((segment) => (
+            <PatientIntentSegmentCard key={segment.id} segment={segment} />
+          ))}
+        </section>
+      </div>
+
+      <p className="mt-4 rounded-2xl border border-border/75 bg-surface-muted p-3 text-xs font-bold leading-5 text-muted">
+        {intent.privacy_note}
+      </p>
+    </CardShell>
+  );
+};
 
 const getPiePoint = (center: number, radius: number, angleInDegrees: number) => {
   const angleInRadians = (Math.PI / 180) * angleInDegrees;
@@ -1843,6 +2019,8 @@ const DashboardContent = ({
         />
         <TimelineChart points={summary.series.points} visibleMetricKeys={activeMetricKeys} />
       </CardShell>
+
+      <PatientIntentAnalysisCard summary={summary} />
 
       <Statistics allowLocalLocationPreview={allowLocalLocationPreview} summary={summary} />
     </div>

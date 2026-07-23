@@ -87,6 +87,27 @@ const patientPlatformSessionSelect = {
   user_id: true,
 } satisfies Prisma.visitor_sessionSelect;
 
+const patientIntentProfileViewSelect = {
+  createdAt: true,
+  id: true,
+  psychologist_id: true,
+  viewer_id: true,
+} satisfies Prisma.profile_view_eventSelect;
+
+const patientIntentFavoriteSelect = {
+  createdAt: true,
+  id: true,
+  psychologist_id: true,
+  user_id: true,
+} satisfies Prisma.psychologist_favoriteSelect;
+
+const patientIntentWhatsappClickSelect = {
+  createdAt: true,
+  id: true,
+  psychologist_id: true,
+  user_id: true,
+} satisfies Prisma.contact_requestSelect;
+
 const recentPatientSelect = {
   active: true,
   avatar: true,
@@ -253,6 +274,18 @@ export type AdminPatientPlatformSessionRecord = Prisma.visitor_sessionGetPayload
   select: typeof patientPlatformSessionSelect;
 }>;
 
+export type AdminPatientIntentProfileViewRecord = Prisma.profile_view_eventGetPayload<{
+  select: typeof patientIntentProfileViewSelect;
+}>;
+
+export type AdminPatientIntentFavoriteRecord = Prisma.psychologist_favoriteGetPayload<{
+  select: typeof patientIntentFavoriteSelect;
+}>;
+
+export type AdminPatientIntentWhatsappClickRecord = Prisma.contact_requestGetPayload<{
+  select: typeof patientIntentWhatsappClickSelect;
+}>;
+
 export class AdminPatientsDashboardRepository {
   async listPatientSnapshots(): Promise<AdminPatientSnapshotRecord[]> {
     return prisma.user.findMany({
@@ -373,6 +406,79 @@ export class AdminPatientsDashboardRepository {
         },
       },
     });
+  }
+
+  async listIntentSignals(range: AdminPatientsDashboardDateRange) {
+    const createdAt = rangeWhere(range);
+
+    const profileViews = await prisma.profile_view_event.findMany({
+      orderBy: {
+        createdAt: "asc",
+      },
+      select: patientIntentProfileViewSelect,
+      where: {
+        createdAt,
+        deleted: false,
+        source: "profile_page",
+        psychologist: {
+          deleted: false,
+          role: "psicologo",
+        },
+        viewer: {
+          deleted: false,
+          role: "paciente",
+        },
+        viewer_id: {
+          not: null,
+        },
+      },
+    });
+    const favorites = await prisma.psychologist_favorite.findMany({
+      orderBy: {
+        createdAt: "asc",
+      },
+      select: patientIntentFavoriteSelect,
+      where: {
+        createdAt,
+        deleted: false,
+        psychologist: {
+          deleted: false,
+          role: "psicologo",
+        },
+        user: {
+          deleted: false,
+          role: "paciente",
+        },
+      },
+    });
+    const whatsappClicks = await prisma.contact_request.findMany({
+      orderBy: {
+        createdAt: "asc",
+      },
+      select: patientIntentWhatsappClickSelect,
+      where: {
+        channel: "whatsapp",
+        createdAt,
+        deleted: false,
+        psychologist: {
+          deleted: false,
+          role: "psicologo",
+        },
+        user: {
+          deleted: false,
+          role: "paciente",
+        },
+        user_id: {
+          not: null,
+        },
+      },
+    });
+
+    return {
+      favorites,
+      profileViews,
+      whatsappClicks,
+    };
   }
 
   async countNewPatients(range: AdminPatientsDashboardDateRange): Promise<number> {

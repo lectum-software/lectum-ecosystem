@@ -135,6 +135,36 @@ export type AdminPatientsDashboardDeviceUsage = {
   unavailable_reason: string | null;
 };
 
+export type AdminPatientsDashboardIntentSegmentId =
+  | "cold"
+  | "curious"
+  | "objective"
+  | "very_qualified";
+
+export type AdminPatientsDashboardIntentSegment = {
+  count: number;
+  description: string;
+  id: AdminPatientsDashboardIntentSegmentId;
+  label: "Curiosos" | "Frios" | "Muito qualificados" | "Objetivos";
+  percentage: number;
+};
+
+export type AdminPatientsDashboardIntentAnalysis = {
+  coverage_note: string;
+  items: AdminPatientsDashboardIntentSegment[];
+  patients_with_signals: number;
+  privacy_note: string;
+  signal_totals: {
+    favorites: number;
+    profile_views: number;
+    repeated_profile_views: number;
+    whatsapp_clicks: number;
+  };
+  source: "profile_view_event+psychologist_favorite+contact_request";
+  total_patients: number;
+  total_signals: number;
+};
+
 export type AdminPatientsDashboardSummary = {
   cards: {
     active_patients: AdminPatientsDashboardMetric;
@@ -160,6 +190,7 @@ export type AdminPatientsDashboardSummary = {
     available: false;
     reason: string;
   };
+  intent_analysis: AdminPatientsDashboardIntentAnalysis;
   locations: {
     cities: AdminPatientsDashboardLocationItem[];
     countries: AdminPatientsDashboardLocationItem[];

@@ -4,6 +4,8 @@ import type {
   AdminPatientsDashboardBreakdownItem,
   AdminPatientsDashboardDateRange,
   AdminPatientsDashboardDeviceType,
+  AdminPatientsDashboardIntentAnalysis,
+  AdminPatientsDashboardIntentSegmentId,
   AdminPatientsDashboardMetric,
   AdminPatientsDashboardPeriod,
   AdminPatientsDashboardQuery,
@@ -43,6 +45,17 @@ type PeriodResult =
       code: string;
       success: false;
     };
+
+type PatientsDashboardIntentSignals = Awaited<
+  ReturnType<AdminPatientsDashboardRepository["listIntentSignals"]>
+>;
+
+type PatientsDashboardIntentCounts = {
+  favorites: number;
+  profile_views: number;
+  repeated_profile_views: number;
+  whatsapp_clicks: number;
+};
 
 const GENDER_LABELS: Record<string, string> = {
   female: "Feminino",
@@ -94,6 +107,38 @@ const PATIENT_PAGE_KIND_LABELS: Record<string, string> = {
   psychologists: "Psicólogos",
   signup: "Cadastro",
 };
+
+const PATIENT_INTENT_SOURCE = "profile_view_event+psychologist_favorite+contact_request" as const;
+const PATIENT_INTENT_SCORE_WEIGHTS = {
+  favorites: 20,
+  profile_views: 3,
+  repeated_profile_views: 5,
+  whatsapp_clicks: 45,
+} as const satisfies Record<keyof PatientsDashboardIntentCounts, number>;
+const PATIENT_INTENT_SCORE_CAPS = {
+  favorites: 40,
+  profile_views: 30,
+  repeated_profile_views: 20,
+  whatsapp_clicks: 90,
+} as const satisfies Record<keyof PatientsDashboardIntentCounts, number>;
+const PATIENT_INTENT_SEGMENT_LABELS = {
+  cold: "Frios",
+  curious: "Curiosos",
+  objective: "Objetivos",
+  very_qualified: "Muito qualificados",
+} as const satisfies Record<AdminPatientsDashboardIntentSegmentId, string>;
+const PATIENT_INTENT_SEGMENT_DESCRIPTIONS = {
+  cold: "Sem abertura de perfil, favorito ou clique no WhatsApp no período.",
+  curious: "Abriram perfis de psicólogos, mas ainda sem favorito ou contato.",
+  objective: "Favoritaram psicólogos ou retornaram a perfis, sem clique no WhatsApp.",
+  very_qualified: "Clicaram no WhatsApp ou concentraram múltiplos sinais fortes.",
+} as const satisfies Record<AdminPatientsDashboardIntentSegmentId, string>;
+const PATIENT_INTENT_SEGMENT_ORDER: AdminPatientsDashboardIntentSegmentId[] = [
+  "cold",
+  "curious",
+  "objective",
+  "very_qualified",
+];
 
 const addDays = (date: Date, days: number) => {
   const next = new Date(date);
@@ -282,6 +327,132 @@ const safePercentage = (value: number, total: number) => {
   if (total <= 0) return 0;
 
   return roundPercent((value / total) * 100);
+};
+
+const createIntentCounts = (): PatientsDashboardIntentCounts => ({
+  favorites: 0,
+  profile_views: 0,
+  repeated_profile_views: 0,
+  whatsapp_clicks: 0,
+});
+
+const scoreContribution = (metricId: keyof PatientsDashboardIntentCounts, value: number) =>
+  Math.min(
+    PATIENT_INTENT_SCORE_CAPS[metricId],
+    Math.max(0, value) * PATIENT_INTENT_SCORE_WEIGHTS[metricId],
+  );
+
+const patientIntentScore = (counts: PatientsDashboardIntentCounts) =>
+  Math.min(
+    100,
+    Math.round(
+      scoreContribution("profile_views", counts.profile_views) +
+        scoreContribution("repeated_profile_views", counts.repeated_profile_views) +
+        scoreContribution("favorites", counts.favorites) +
+        scoreContribution("whatsapp_clicks", counts.whatsapp_clicks),
+    ),
+  );
+
+const classifyPatientIntent = (
+  counts: PatientsDashboardIntentCounts,
+): AdminPatientsDashboardIntentSegmentId => {
+  const score = patientIntentScore(counts);
+
+  if (counts.whatsapp_clicks > 0 || score >= 45) return "very_qualified";
+  if (counts.favorites > 0 || score >= 20) return "objective";
+  if (counts.profile_views > 0 || counts.repeated_profile_views > 0 || score > 0) {
+    return "curious";
+  }
+
+  return "cold";
+};
+
+const getIntentCountsForPatient = (
+  countsByPatient: Map<string, PatientsDashboardIntentCounts>,
+  patientId: string,
+) => {
+  const current = countsByPatient.get(patientId);
+  if (current) return current;
+
+  const next = createIntentCounts();
+  countsByPatient.set(patientId, next);
+  return next;
+};
+
+const buildPatientIntentAnalysis = (
+  patients: AdminPatientSnapshotRecord[],
+  signals: PatientsDashboardIntentSignals,
+): AdminPatientsDashboardIntentAnalysis => {
+  const patientIds = new Set(patients.map((patient) => patient.id));
+  const countsByPatient = new Map<string, PatientsDashboardIntentCounts>();
+  const profilePsychologistsByPatient = new Map<string, Set<string>>();
+
+  for (const view of signals.profileViews) {
+    if (!view.viewer_id || !patientIds.has(view.viewer_id)) continue;
+
+    const counts = getIntentCountsForPatient(countsByPatient, view.viewer_id);
+    counts.profile_views += 1;
+
+    if (!profilePsychologistsByPatient.has(view.viewer_id)) {
+      profilePsychologistsByPatient.set(view.viewer_id, new Set());
+    }
+    profilePsychologistsByPatient.get(view.viewer_id)?.add(view.psychologist_id);
+  }
+
+  for (const [patientId, psychologists] of profilePsychologistsByPatient.entries()) {
+    const counts = getIntentCountsForPatient(countsByPatient, patientId);
+    counts.repeated_profile_views = Math.max(0, counts.profile_views - psychologists.size);
+  }
+
+  for (const favorite of signals.favorites) {
+    if (!patientIds.has(favorite.user_id)) continue;
+
+    getIntentCountsForPatient(countsByPatient, favorite.user_id).favorites += 1;
+  }
+
+  for (const click of signals.whatsappClicks) {
+    if (!click.user_id || !patientIds.has(click.user_id)) continue;
+
+    getIntentCountsForPatient(countsByPatient, click.user_id).whatsapp_clicks += 1;
+  }
+
+  const segmentCounts = new Map<AdminPatientsDashboardIntentSegmentId, number>(
+    PATIENT_INTENT_SEGMENT_ORDER.map((segmentId) => [segmentId, 0]),
+  );
+  const signalTotals = createIntentCounts();
+
+  for (const patient of patients) {
+    const counts = countsByPatient.get(patient.id) ?? createIntentCounts();
+    const segmentId = classifyPatientIntent(counts);
+    segmentCounts.set(segmentId, (segmentCounts.get(segmentId) ?? 0) + 1);
+    signalTotals.profile_views += counts.profile_views;
+    signalTotals.repeated_profile_views += counts.repeated_profile_views;
+    signalTotals.favorites += counts.favorites;
+    signalTotals.whatsapp_clicks += counts.whatsapp_clicks;
+  }
+
+  const totalSignals =
+    signalTotals.profile_views + signalTotals.favorites + signalTotals.whatsapp_clicks;
+  const coldPatients = segmentCounts.get("cold") ?? 0;
+
+  return {
+    coverage_note:
+      "Distribuição por pacientes existentes no fim do período, usando somente sinais reais de descoberta e contato dentro do site.",
+    items: PATIENT_INTENT_SEGMENT_ORDER.map((segmentId) => ({
+      count: segmentCounts.get(segmentId) ?? 0,
+      description: PATIENT_INTENT_SEGMENT_DESCRIPTIONS[segmentId],
+      id: segmentId,
+      label: PATIENT_INTENT_SEGMENT_LABELS[segmentId],
+      percentage: safePercentage(segmentCounts.get(segmentId) ?? 0, patients.length),
+    })),
+    patients_with_signals: Math.max(0, patients.length - coldPatients),
+    privacy_note:
+      "Indicador agregado interno do Admin; não é exibido a pacientes ou psicólogos e não infere sessão, atendimento, diagnóstico ou conteúdo de conversa.",
+    signal_totals: signalTotals,
+    source: PATIENT_INTENT_SOURCE,
+    total_patients: patients.length,
+    total_signals: totalSignals,
+  };
 };
 
 const normalizeDeviceType = (value: string): AdminPatientsDashboardDeviceType => {
@@ -843,6 +1014,7 @@ export const buildPatientsDashboard = async (
       repository.listPatientPwaInstallActions(current),
       repository.listPatientPlatformSessions(current),
     ]);
+  const intentSignals = await repository.listIntentSignals(current);
 
   const currentPatients = patients.filter((patient) => createdUntil(patient, current.end));
   const previousPatients = patients.filter((patient) => createdUntil(patient, previous.end));
@@ -868,6 +1040,7 @@ export const buildPatientsDashboard = async (
     ),
   });
   const deviceUsage = buildDeviceUsage(patientPlatformSessions);
+  const intentAnalysis = buildPatientIntentAnalysis(currentPatients, intentSignals);
 
   const summary: AdminPatientsDashboardSummary = {
     cards: {
@@ -912,6 +1085,7 @@ export const buildPatientsDashboard = async (
       "Gênero e forma de cadastro consideram somente pacientes cadastrados no período selecionado; em Todo o período incluem a base completa.",
       "Tempo médio do paciente usa pageviews autenticados first-party e ignora períodos em que o app fica oculto/minimizado quando o navegador envia eventos de visibilidade.",
       "Localização usa apenas capturas agregadas e coarse de visitor_location no período selecionado; cidades com baixa frequência são agrupadas, e coordenadas, IP e endereço não são retornados.",
+      "Análise de intenção usa apenas agregados de abertura de perfil, favoritos ativos e cliques no WhatsApp; não expõe conversa, diagnóstico ou atendimento.",
     ],
     demographics: buildDemographics(currentPeriodPatients),
     device_usage: deviceUsage,
@@ -919,6 +1093,7 @@ export const buildPatientsDashboard = async (
       available: false,
       reason: "Exportação não exibida porque ainda não existe endpoint real para pacientes.",
     },
+    intent_analysis: intentAnalysis,
     locations: locationSummary,
     period,
     platform_usage: platformUsage,

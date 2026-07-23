@@ -515,3 +515,43 @@ Frontend esperado:
 - `pnpm --dir admin build`
 - `pnpm check`
 - Smoke HTTP local: `GET http://localhost:3002/pacientes` retornou `200`.
+
+## Ajuste pos-feedback 2026-07-23 - Analise agregada de intencao dos pacientes
+
+- Pedido do usuario: no dashboard `/pacientes`, abaixo do bloco **Visao Geral**, adicionar uma analise de intencao mostrando o percentual de pacientes **Frios**, **Curiosos**, **Objetivos** e **Muito qualificados**.
+- O endpoint `GET /api/admin/private/patients/dashboard` passou a retornar `intent_analysis`, com distribuicao agregada e totais de sinais reais no periodo selecionado.
+- Fontes usadas: `profile_view_event.viewer_id` com `source="profile_page"`, `psychologist_favorite.user_id` ainda ativo e `contact_request.user_id` com `channel="whatsapp"`; retornos ao mesmo perfil sao derivados de repeticao real de abertura por paciente/psicologo.
+- Denominador: pacientes reais existentes ao final do periodo selecionado. Pacientes sem sinais no periodo entram como **Frios** para preservar leitura percentual da base total.
+- Classificacao V1: **Frios** sem sinais; **Curiosos** com abertura de perfil/baixa intencao sem favorito ou WhatsApp; **Objetivos** com favoritos ou retorno relevante ao perfil sem WhatsApp; **Muito qualificados** com clique no WhatsApp ou multiplos sinais fortes.
+- A UI exibe o bloco imediatamente apos **Visao Geral**, com barra de distribuicao, totais de sinais e cards percentuais/contagens por categoria.
+- A analise e exclusivamente interna do Admin: nao e exibida publicamente, nem para pacientes, nem para psicologos; a copy deixa claro que nao infere sessao, atendimento, diagnostico ou conteudo de conversa.
+- Nao houve criacao de tracking novo, schema Prisma, migration, package, seed, mock, backfill artificial ou endpoint paralelo.
+- Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente; as referencias usadas foram `_product/proto/admin/Pacientes/Pacientes - Dashboard.png` e os screenshots enviados pelo usuario em 2026-07-23.
+
+### Criterios de aceite do ajuste
+
+- [x] Bloco **Analise da intencao dos pacientes** aparece abaixo de **Visao Geral** no dashboard `/pacientes`.
+- [x] O bloco mostra percentuais e contagens de **Frios**, **Curiosos**, **Objetivos** e **Muito qualificados**.
+- [x] O calculo usa apenas sinais reais ja persistidos de abertura de perfil, favoritos e clique no WhatsApp.
+- [x] O filtro de periodo do dashboard altera a consulta usada pela analise.
+- [x] A UI deixa claro que o indicador e agregado, interno do Admin e nao representa diagnostico, atendimento ou conversa.
+- [x] Layout mobile-first validado em 390px sem overflow horizontal.
+- [x] Nenhum mock, seed, dado artificial, migration, package novo ou tracking novo foi adicionado.
+
+### Validacao complementar executada
+
+- `pnpm --dir backend exec biome check --write "src/modules/api/admin/private/patients/dashboard/DTOs/IAdminPatientsDashboardDTO.ts" "src/modules/api/admin/private/patients/dashboard/repositories/AdminPatientsDashboardRepository.ts" "src/modules/api/admin/private/patients/dashboard/use-cases/services.ts"`
+- `pnpm --dir admin exec biome check --write "src/api/req/patients/index.ts" "src/app/(admin)/pacientes/client.tsx"`
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check`
+- Servico local `buildPatientsDashboard({ period: "all" })` retornou `status=200`, `intent_analysis.total_patients=151`, `patients_with_signals=22`, categorias `cold`, `curious`, `objective`, `very_qualified` e `source="profile_view_event+psychologist_favorite+contact_request"`.
+- API local autenticada `GET http://localhost:3001/api/admin/private/patients/dashboard?period=all` retornou `intent_analysis` com as quatro categorias.
+- Browser local headless autenticado com Admin real temporario em `http://localhost:3102/pacientes` confirmou ordem abaixo de **Visao Geral**, exibicao das quatro categorias, nota de privacidade, totais de sinais e mobile 390px com `overflow=false`; screenshots salvos em `.tmp/patient-dashboard-intent-desktop.png` e `.tmp/patient-dashboard-intent-mobile.png`.
+- Admins temporarios de validacao foram removidos do banco apos a verificacao.
+
+### ADR
+
+- ADR-0314: Distribuicao agregada de intencao dos pacientes no dashboard Admin.

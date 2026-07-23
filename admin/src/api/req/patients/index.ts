@@ -380,6 +380,32 @@ export type PatientsDashboardDeviceUsage = {
   unavailable_reason: string | null;
 };
 
+export type PatientsDashboardIntentSegmentId = "cold" | "curious" | "objective" | "very_qualified";
+
+export type PatientsDashboardIntentSegment = {
+  count: number;
+  description: string;
+  id: PatientsDashboardIntentSegmentId;
+  label: "Curiosos" | "Frios" | "Muito qualificados" | "Objetivos";
+  percentage: number;
+};
+
+export type PatientsDashboardIntentAnalysis = {
+  coverage_note: string;
+  items: PatientsDashboardIntentSegment[];
+  patients_with_signals: number;
+  privacy_note: string;
+  signal_totals: {
+    favorites: number;
+    profile_views: number;
+    repeated_profile_views: number;
+    whatsapp_clicks: number;
+  };
+  source: "profile_view_event+psychologist_favorite+contact_request";
+  total_patients: number;
+  total_signals: number;
+};
+
 export type AdminPatientsDashboard = {
   cards: {
     active_patients: PatientsDashboardMetric;
@@ -405,6 +431,7 @@ export type AdminPatientsDashboard = {
     available: false;
     reason: string;
   };
+  intent_analysis: PatientsDashboardIntentAnalysis;
   locations: {
     cities: PatientsDashboardBreakdownItem[];
     countries: PatientsDashboardBreakdownItem[];
