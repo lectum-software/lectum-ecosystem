@@ -5401,8 +5401,8 @@ const PublicationsTab = ({ createdAt, id }: { createdAt: string; id: string }) =
         {rangeError ? <p className="mt-3 text-xs font-bold text-danger">{rangeError}</p> : null}
       </CardShell>
 
-      <section className="space-y-5">
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+      <CardShell className="overflow-hidden">
+        <div className="flex flex-col gap-3 border-b border-border p-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h2 className="text-xl font-black text-foreground">Publicações</h2>
             <p className="mt-1 text-sm text-muted">
@@ -5441,21 +5441,20 @@ const PublicationsTab = ({ createdAt, id }: { createdAt: string; id: string }) =
           </label>
         </div>
 
-        <div className="space-y-3">
-          {publications.data.length === 0 ? (
-            <p className="rounded-2xl bg-surface-muted p-4 text-sm font-bold text-muted">
-              Nenhuma publicação real encontrada para os filtros atuais.
-            </p>
-          ) : null}
-          {publications.data.map((item) => {
-            const adminDetailHref = publicationAdminDetailHref(item);
+        {publications.data.length === 0 ? (
+          <p className="p-5 text-sm font-bold text-muted">
+            Nenhuma publicação real encontrada para os filtros atuais.
+          </p>
+        ) : (
+          <div className="divide-y divide-border">
+            {publications.data.map((item) => {
+              const adminDetailHref = publicationAdminDetailHref(item);
 
-            return (
-              <article
-                className="rounded-2xl border border-border bg-surface p-4"
-                key={`${item.type}-${item.id}`}
-              >
-                <div className="grid gap-3 lg:grid-cols-[1fr_auto] lg:items-start">
+              return (
+                <article
+                  className="grid gap-4 p-4 lg:grid-cols-[1fr_auto] lg:items-start"
+                  key={`${item.type}-${item.id}`}
+                >
                   <PublicationItemMain item={item} />
                   <div className="flex justify-end gap-2 lg:flex-col">
                     <Link
@@ -5479,21 +5478,23 @@ const PublicationsTab = ({ createdAt, id }: { createdAt: string; id: string }) =
                       <span className="sr-only">Ver no site</span>
                     </Link>
                   </div>
-                </div>
-                <PublicationMetrics item={item} />
-              </article>
-            );
-          })}
-        </div>
+                  <div className="lg:col-span-2">
+                    <PublicationMetrics item={item} />
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        )}
 
-        <div>
+        <div className="border-t border-border p-4">
           <PublicationsPagination
             page={publications.page}
             pages={publications.pages}
             setPage={handlePageChange}
           />
         </div>
-      </section>
+      </CardShell>
     </div>
   );
 };
