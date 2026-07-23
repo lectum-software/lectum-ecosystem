@@ -926,14 +926,13 @@ const LatestCharges = ({ dashboard }: { dashboard: AdminFinanceDashboard }) => (
     </div>
 
     <div className="hidden overflow-x-auto lg:block">
-      <table className="w-full min-w-[920px] text-left text-sm">
+      <table className="w-full min-w-[820px] text-left text-sm">
         <caption className="sr-only">Últimas cobranças confirmadas no período</caption>
         <thead className="text-xs text-muted">
           <tr>
             <th className="px-5 py-3 font-black">Data</th>
             <th className="px-5 py-3 font-black">Psicólogo</th>
-            <th className="px-5 py-3 font-black">Assinatura</th>
-            <th className="px-5 py-3 font-black">Evento</th>
+            <th className="px-5 py-3 font-black">Plano</th>
             <th className="px-5 py-3 font-black">Valor</th>
             <th className="px-5 py-3 font-black">Status</th>
           </tr>
@@ -960,10 +959,6 @@ const LatestCharges = ({ dashboard }: { dashboard: AdminFinanceDashboard }) => (
                   {item.subscription?.plan.name ?? "Não identificada"}
                 </p>
                 <p className="text-xs text-muted">{shortReference(item.reference)}</p>
-              </td>
-              <td className="px-5 py-4 text-muted" title={item.external_id}>
-                <p className="font-bold text-foreground">{item.event_type}</p>
-                <p className="text-xs">{shortReference(item.external_id)}</p>
               </td>
               <td className="px-5 py-4 font-black text-foreground">
                 {formatMaybeMoney(item.amount_cents)}
