@@ -314,15 +314,13 @@ const SummaryGrid = ({ summary }: { summary: AdminModerationSummary }) => {
         value={operational.compliance_total}
       />
       <Metric
-        description="Cobertura 48h, perfil sem configurações e tráfego após adaptação."
+        description="Paciente sem cobertura há 48h, Perfil de psicólogo não publicado por falta de configurações e Psicólogo assinante sem tráfego para perfil e WhatsApp."
         icon={<Clock3 aria-hidden className="h-5 w-5" />}
         label="Operacionais"
         value={operational.operational_total}
       />
       <Metric
-        description={`${numberFormatter.format(
-          summary.urgent_pending_total,
-        )} evento(s) safety_hold urgente(s) na moderação textual.`}
+        description="Detecção automática de conteúdo potencialmente sensível, bloqueável ou urgente para triagem."
         icon={<Eye aria-hidden className="h-5 w-5" />}
         label="Moderação textual"
         tone="success"
