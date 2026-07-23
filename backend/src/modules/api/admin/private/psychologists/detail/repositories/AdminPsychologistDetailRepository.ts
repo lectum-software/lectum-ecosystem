@@ -78,6 +78,8 @@ export const adminPsychologistDetailSelect = {
   id: true,
   languages: true,
   modality: true,
+  professional_first_name: true,
+  professional_last_name: true,
   professional_address_city: true,
   professional_address_complement: true,
   professional_address_district: true,

@@ -353,3 +353,32 @@ Criar o shell de detalhe do psicólogo e as abas Geral e Perfil/Cadastro com dad
 - `pnpm --dir admin build` foi reexecutado, mas ficou bloqueado por lock preexistente em `.next/lock` apos outro processo `next build` nao finalizar limpo.
 - `pnpm check` (frontend e backend passaram; admin ficou bloqueado por formatacao preexistente em `admin/src/app/(admin)/pacientes/[id]/client.tsx` e `admin/src/app/(admin)/pacientes/client.tsx`).
 - Smoke HTTP local: `GET http://localhost:3002/psicologos/cmrgztri7000tn0uh1q4n8vxf` retornou `200`.
+
+## Ajuste pos-feedback 2026-07-23 - Nome completo em Dados pessoais
+
+- Pedido direto de produto aplicado na aba Admin **Perfil e cadastro**, card **Dados pessoais** do psicologo.
+- O endpoint `GET /api/admin/private/psychologists/:id` passou a retornar `profile.personal.full_name`, montado a partir de `psychologist_profile.professional_first_name` + `professional_last_name` e preservando prefixos/titulos definidos pelo psicologo, como `Dra.` ou `Psicologa`.
+- Quando o nome profissional separado nao existir em perfis legados, o fallback usa `user.name` apenas com normalizacao de espacos.
+- A primeira linha do card **Dados pessoais** agora e **Nome completo**; CPF, e-mail, WhatsApp e demais dados continuam abaixo.
+- Nao houve alteracao de schema Prisma, migrations, packages, mock, seed ou endpoint simulado.
+- Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente; as referencias auditaveis foram a captura enviada pelo usuario e `_product/proto/admin/Psicologos/Detalhes do psicologo/Perfil e Cadastro.png`.
+- ADR criado: `adrs/0313-admin-dados-pessoais-nomes-exibicao.md`.
+
+### Criterios de aceite do ajuste
+
+- [x] **Dados pessoais** do psicologo mostra **Nome completo** como primeira linha.
+- [x] O nome exibido usa o nome profissional definido pelo psicologo e preserva prefixos/titulos digitados.
+- [x] Perfis legados sem nome profissional separado usam fallback real de `user.name`.
+- [x] Nenhum schema Prisma, migration, package novo, mock, seed ou endpoint simulado foi adicionado.
+
+### Validacao complementar executada
+
+- `pnpm --dir backend exec biome check "src/modules/api/admin/private/psychologists/detail/DTOs/IAdminPsychologistDetailDTO.ts" "src/modules/api/admin/private/psychologists/detail/repositories/AdminPsychologistDetailRepository.ts" "src/modules/api/admin/private/psychologists/detail/use-cases/services.ts"`
+- `pnpm --dir admin exec biome check "src/api/req/psychologists/index.ts" "src/app/(admin)/psicologos/[id]/client.tsx" "src/app/(admin)/pacientes/[id]/client.tsx"`
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build` executado com sucesso apos aguardar/remover lock stale de build anterior.
+- `pnpm check`
+- API local com admin temporario real removido ao final: `GET /api/admin/private/psychologists/cmrwmw35t0000xkuhxoceh77v` retornou `profile.personal.full_name="Ana Beatriz Lima"`; `GET /api/admin/private/patients/cmrqsrab5001f1guh2ve5oy90?period=all` retornou `header.name="Paciente preview 52"`.
+- Browser local/headless via Chrome CDP em viewport 390x844: `/psicologos/cmrwmw35t0000xkuhxoceh77v?tab=perfil` exibiu a linha **Nome completo / Ana Beatriz Lima** e `scrollWidth=390`; `/pacientes/cmrqsrab5001f1guh2ve5oy90?tab=perfil` exibiu a linha **Nome de exibicao / Paciente preview 52** e `scrollWidth=390`.

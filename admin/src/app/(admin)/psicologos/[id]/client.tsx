@@ -9326,6 +9326,7 @@ const ProfileReadOnlyPersonalData = ({ detail }: { detail: AdminPsychologistDeta
 
   return (
     <>
+      <FieldRow label="Nome completo" value={formatNullable(personal.full_name)} />
       <FieldRow label="CPF" value={formatCpfDisplay(personal.cpf)} />
       <FieldRow
         label="E-mail"

@@ -3369,6 +3369,7 @@ const ProfileFormActions = ({
 
 const PatientPersonalDataRows = ({ detail }: { detail: AdminPatientDetail }) => (
   <>
+    <FieldRow label="Nome de exibição" value={detail.header.name} />
     <FieldRow label="E-mail" value={detail.header.email} />
     <FieldRow label="Gênero" value={formatPatientGender(detail.header.gender)} />
     <FieldRow label="Localização" value={formatPatientLocation(detail)} />
@@ -3409,6 +3410,7 @@ const PatientPersonalDataEditForm = ({
     <FormProvider {...form}>
       <form className="space-y-4" onSubmit={form.handleSubmit(onSubmit)}>
         <div className="rounded-2xl border border-border/80 bg-surface-muted p-4">
+          <FieldRow label="Nome de exibição" value={detail.header.name} />
           <FieldRow
             label="E-mail"
             value={

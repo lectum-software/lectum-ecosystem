@@ -126,6 +126,7 @@ export type AdminPsychologistDetailDTO = {
       birthdate: Date | null;
       cpf: string | null;
       email: string;
+      full_name: string;
       phone: string | null;
       provider: string;
     };

@@ -874,3 +874,33 @@ Frontend esperado:
 - `pnpm --dir admin build`
 - `pnpm check`
 - Browser local/headless via Chrome/CDP em `/pacientes/cmrqsrab5001f1guh2ve5oy90`, com servidor local temporario do Admin em `next start` na porta 3002, validou desktop `1365x900` e mobile `390x844`: ordem **Conta** -> **Engajamento** -> **Intencao**, titulo **Temperatura: Sem sinais**, score `0/100`, ausencia de overflow horizontal (`scrollWidth=390` no mobile).
+
+
+## Ajuste pos-feedback 2026-07-23 - Nome de exibicao em Dados pessoais
+
+- Pedido direto de produto aplicado na aba Admin **Perfil e cadastro**, card **Dados pessoais** do paciente.
+- A primeira linha do card agora e **Nome de exibicao**, usando `header.name`, valor real derivado de `user.name` do paciente.
+- O mesmo resumo somente leitura aparece no modo de edicao de genero antes de e-mail e localizacao, sem permitir alterar nome por este fluxo.
+- E-mail e localizacao permanecem somente leitura; genero continua sendo o unico campo editavel nesse card.
+- Nao houve alteracao de backend, contrato HTTP, schema Prisma, migrations, packages, mock, seed ou endpoint simulado.
+- Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente; as referencias auditaveis foram a captura enviada pelo usuario e `_product/proto/admin/Pacientes/Pacientes - Detalhes.png`.
+- ADR criado: `adrs/0313-admin-dados-pessoais-nomes-exibicao.md`.
+
+### Criterios de aceite do ajuste
+
+- [x] **Dados pessoais** do paciente mostra **Nome de exibicao** como primeira linha.
+- [x] O nome exibido usa `user.name` real ja retornado no detalhe administrativo do paciente.
+- [x] O fluxo de edicao do card nao permite alterar nome, e-mail ou localizacao por este ajuste.
+- [x] Nenhum schema Prisma, migration, package novo, mock, seed ou endpoint simulado foi adicionado.
+
+### Validacao complementar executada
+
+- `pnpm --dir backend exec biome check "src/modules/api/admin/private/psychologists/detail/DTOs/IAdminPsychologistDetailDTO.ts" "src/modules/api/admin/private/psychologists/detail/repositories/AdminPsychologistDetailRepository.ts" "src/modules/api/admin/private/psychologists/detail/use-cases/services.ts"`
+- `pnpm --dir admin exec biome check "src/api/req/psychologists/index.ts" "src/app/(admin)/psicologos/[id]/client.tsx" "src/app/(admin)/pacientes/[id]/client.tsx"`
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build` executado com sucesso apos aguardar/remover lock stale de build anterior.
+- `pnpm check`
+- API local com admin temporario real removido ao final: `GET /api/admin/private/psychologists/cmrwmw35t0000xkuhxoceh77v` retornou `profile.personal.full_name="Ana Beatriz Lima"`; `GET /api/admin/private/patients/cmrqsrab5001f1guh2ve5oy90?period=all` retornou `header.name="Paciente preview 52"`.
+- Browser local/headless via Chrome CDP em viewport 390x844: `/psicologos/cmrwmw35t0000xkuhxoceh77v?tab=perfil` exibiu a linha **Nome completo / Ana Beatriz Lima** e `scrollWidth=390`; `/pacientes/cmrqsrab5001f1guh2ve5oy90?tab=perfil` exibiu a linha **Nome de exibicao / Paciente preview 52** e `scrollWidth=390`.

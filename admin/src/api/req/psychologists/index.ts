@@ -587,6 +587,7 @@ export type AdminPsychologistDetail = {
       birthdate: string | null;
       cpf: string | null;
       email: string;
+      full_name: string;
       phone: string | null;
       provider: string;
     };
