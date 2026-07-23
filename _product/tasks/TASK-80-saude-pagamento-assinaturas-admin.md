@@ -1,4 +1,4 @@
-# TASK-80: Saúde de pagamento nas assinaturas Admin
+# TASK-80: Confiabilidade do pagamento nas assinaturas Admin
 
 ## Metadata
 
@@ -10,12 +10,12 @@
 | Fase | Admin / Financeiro |
 | Status | Completed |
 | Dependências | TASK-45, TASK-46, TASK-56, TASK-62 |
-| ADR alvo | ADR sobre cálculo honesto de saúde de pagamento e histórico por assinatura |
+| ADR alvo | ADR sobre cálculo honesto de confiabilidade do pagamento e histórico por assinatura |
 
 ## Contexto
 
 O Admin já possui a rota `/financeiro/assinaturas` com assinaturas profissionais pagas e filtros reais.
-O usuário pediu, em 2026-07-22, que a listagem mostre apenas uma coluna de **Saúde do pagamento** para indicar se o psicólogo tem problema recorrente de cobrança, e que cada assinatura possa ser expandida por uma seta para exibir o histórico de pagamentos daquela assinatura.
+O usuário pediu, em 2026-07-22, que a listagem mostre apenas uma coluna de **Confiabilidade do pagamento** para indicar se o psicólogo tem problema recorrente de cobrança, e que cada assinatura possa ser expandida por uma seta para exibir o histórico de pagamentos daquela assinatura.
 
 A intenção de produto é preservar a hierarquia:
 
@@ -28,7 +28,7 @@ Ou seja, pagamentos não devem virar linhas de assinatura separadas nem tabela p
 
 ## Objetivo
 
-Adicionar análise real de saúde de pagamento por assinatura paga Mercado Pago no Admin Financeiro, com coluna resumida na tabela e detalhes expansíveis contendo histórico de cobranças e métricas auxiliares.
+Adicionar análise real de confiabilidade do pagamento por assinatura paga Mercado Pago no Admin Financeiro, com coluna resumida na tabela e detalhes expansíveis contendo histórico de cobranças e métricas auxiliares.
 
 ## Pré-requisitos e bloqueios
 
@@ -71,9 +71,9 @@ Adicionar análise real de saúde de pagamento por assinatura paga Mercado Pago 
 
 - Atualizar `/financeiro/assinaturas`:
   - manter a página mobile-first;
-  - adicionar apenas uma coluna de resumo chamada **Saúde do pagamento**;
+  - adicionar apenas uma coluna de resumo chamada **Confiabilidade do pagamento**;
   - adicionar botão/seta de expansão por assinatura;
-  - expandir a assinatura para mostrar histórico de pagamentos e detalhes da saúde;
+  - expandir a assinatura para mostrar histórico de pagamentos e detalhes da confiabilidade;
   - adaptar o comportamento para cards no mobile;
   - não usar `<img>`.
 - No detalhe expandido:
@@ -94,11 +94,11 @@ Adicionar análise real de saúde de pagamento por assinatura paga Mercado Pago 
 ## Critérios de aceite
 
 - [x] `/financeiro/assinaturas` continua protegida por sessão Admin real.
-- [x] A tabela mostra apenas uma coluna nova de **Saúde do pagamento** para o resumo da análise.
+- [x] A tabela mostra apenas uma coluna nova de **Confiabilidade do pagamento** para o resumo da análise.
 - [x] Cada assinatura possui seta/botão de dropdown acessível.
 - [x] O detalhe expandido mostra o histórico de pagamentos dentro da assinatura.
 - [x] O histórico usa somente `payment_event` real reconciliado por id local da assinatura ou `gateway_subscription_id`.
-- [x] A saúde de pagamento combina taxa de sucesso, volume de tentativas, falhas consecutivas, pagamentos pendentes e atraso de inadimplência.
+- [x] A confiabilidade do pagamento combina taxa de sucesso, volume de tentativas, falhas consecutivas, pagamentos pendentes e atraso de inadimplência.
 - [x] Poucas tentativas ou ausência de eventos geram copy honesta de histórico insuficiente.
 - [x] Nenhum mock, dado fake permanente ou endpoint simulado foi usado.
 - [x] UI mobile-first validada.
@@ -123,8 +123,8 @@ Adicionar análise real de saúde de pagamento por assinatura paga Mercado Pago 
 - Referência visual consultada: `_product/proto/admin/Financeiro.png`; Builder/Quick Copy não ficou exposto como ferramenta callable neste ambiente.
 - Backend Financeiro passou a enriquecer cada `FinanceSubscriptionItem` com `payment_health` e `payment_history`, sem migration e sem endpoint simulado.
 - A reconciliação do histórico usa apenas `payment_event` real Mercado Pago cujo payload contenha `professional_subscription.id` ou `gateway_subscription_id`.
-- A saúde classifica cada assinatura como `healthy`, `attention`, `risk`, `critical` ou `insufficient_history`, combinando taxa de sucesso, tentativas finais, falhas consecutivas, pendências e atraso quando o status local está inadimplente.
-- `/financeiro/assinaturas` passou a exibir uma única coluna **Saúde do pagamento**. Após feedback do usuário, a tag ficou com uma linha só (`Saudável`, `Atenção`, `Risco`, `Crítica` ou `Histórico insuficiente`); o resumo completo permanece dentro do dropdown.
+- A confiabilidade classifica cada assinatura como `healthy`, `attention`, `risk`, `critical` ou `insufficient_history`, combinando taxa de sucesso, tentativas finais, falhas consecutivas, pendências e atraso quando o status local está inadimplente.
+- `/financeiro/assinaturas` passou a exibir uma única coluna **Confiabilidade do pagamento**. Após feedback do usuário, a tag ficou com uma linha só (`Saudável`, `Atenção`, `Risco`, `Crítica` ou `Histórico insuficiente`); o resumo completo permanece dentro do dropdown.
 - Cada assinatura tem botão/seta expansível. No mobile, a assinatura continua como card mobile-first; no desktop, a linha expande dentro da tabela.
 - O detalhe expandido mostra métricas auxiliares e as últimas cobranças vinculadas à assinatura, com estado honesto quando não há `payment_event` reconciliável.
 - Validações executadas:
@@ -138,3 +138,10 @@ Adicionar análise real de saúde de pagamento por assinatura paga Mercado Pago 
   - smoke real do service `listAdminFinanceSubscriptions({ period: "all", limit: 1 })`, confirmando `payment_health` e `payment_history` no item retornado;
   - smoke HTTP local `GET http://localhost:3002/financeiro/assinaturas` retornou `200`.
 - ADR criado: `adrs/0309-admin-assinaturas-saude-pagamento.md`.
+
+## Ajuste pós-feedback 2026-07-22 - Termo da coluna
+
+- Pedido do usuário: trocar o termo da coluna para **Confiabilidade do pagamento**.
+- A UI de `/financeiro/assinaturas` foi atualizada no header, caption acessível, coluna da tabela, título do detalhe expandido e copy explicativa da confiabilidade.
+- A tag continua com uma linha só, exibindo apenas o rótulo da classificação; o resumo completo permanece no dropdown.
+- Não houve alteração de contrato HTTP, backend, Prisma/migrations, packages ou dados persistidos.

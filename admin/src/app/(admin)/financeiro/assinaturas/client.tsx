@@ -309,11 +309,12 @@ const PaymentHealthDetails = ({ item }: { item: FinanceSubscriptionItem }) => {
       <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.12em] text-primary">
-            Saúde do pagamento
+            Confiabilidade do pagamento
           </p>
           <h3 className="mt-1 text-lg font-black text-foreground">{health.summary}</h3>
           <p className="mt-1 max-w-2xl text-sm font-medium leading-6 text-muted">
-            Análise derivada dos payment_events reais reconciliados com esta assinatura.
+            A confiabilidade do pagamento resume a estabilidade das cobranças da assinatura,
+            considerando sucessos, falhas, pendências e atrasos.
           </p>
         </div>
         <PaymentHealthBadge health={health} />
@@ -515,7 +516,8 @@ const SubscriptionsTable = ({ items }: { items: FinanceSubscriptionItem[] }) => 
       <div className="hidden overflow-x-auto lg:block">
         <table className="w-full min-w-[1040px] text-left text-sm">
           <caption className="sr-only">
-            Relação completa de assinaturas pagas com saúde do pagamento e histórico expansível
+            Relação completa de assinaturas pagas com confiabilidade do pagamento e histórico
+            expansível
           </caption>
           <thead className="border-b border-border text-xs font-bold uppercase tracking-[0.08em] text-muted">
             <tr>
@@ -527,7 +529,7 @@ const SubscriptionsTable = ({ items }: { items: FinanceSubscriptionItem[] }) => 
               <th className="px-5 py-4">Próxima</th>
               <th className="px-5 py-4">Valor</th>
               <th className="px-5 py-4">Status</th>
-              <th className="px-5 py-4">Saúde do pagamento</th>
+              <th className="px-5 py-4">Confiabilidade do pagamento</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-border">
@@ -675,8 +677,8 @@ export const AdminFinanceSubscriptionsClient = () => {
               Relação de assinaturas
             </h1>
             <p className="mt-2 max-w-2xl text-sm font-medium leading-6 text-muted">
-              Relação completa de assinaturas profissionais pagas com saúde do pagamento e histórico
-              expansível por assinatura.
+              Relação completa de assinaturas profissionais pagas com confiabilidade do pagamento e
+              histórico expansível por assinatura.
             </p>
             <p className="mt-2 text-xs font-bold text-muted">{periodSummary}</p>
           </div>
