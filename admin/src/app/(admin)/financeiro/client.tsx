@@ -90,12 +90,27 @@ const decimalFormatter = new Intl.NumberFormat("pt-BR", {
 });
 
 const pad = (value: number) => String(value).padStart(2, "0");
+const DATE_ONLY_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 const toInputDate = (date: Date) =>
   `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
 
-const dateFromInput = (value: string) => {
+const parseFinanceDate = (value?: string | null) => {
+  if (!value) return null;
+
+  if (!DATE_ONLY_PATTERN.test(value)) {
+    const date = new Date(value);
+
+    return Number.isNaN(date.getTime()) ? null : date;
+  }
+
   const [year, month, day] = value.split("-").map(Number);
-  return new Date(year, month - 1, day, 12, 0, 0, 0);
+  const date = new Date(year, month - 1, day, 12, 0, 0, 0);
+
+  if (date.getFullYear() !== year || date.getMonth() !== month - 1 || date.getDate() !== day) {
+    return null;
+  }
+
+  return date;
 };
 
 const startOfCurrentWeek = () => {
@@ -133,22 +148,32 @@ const buildFinanceDashboardQuery = (
 ): FinanceDashboardQuery =>
   period === "custom" ? { from: range.from, period, to: range.to } : { period };
 
-const formatDate = (value: string) =>
-  new Intl.DateTimeFormat("pt-BR", {
+const formatDate = (value: string) => {
+  const date = parseFinanceDate(value);
+
+  if (!date) return "—";
+
+  return new Intl.DateTimeFormat("pt-BR", {
     day: "2-digit",
     month: "short",
-  }).format(dateFromInput(value));
+  }).format(date);
+};
 
 const formatAnalysisRange = (from: string, to: string) => `${formatDate(from)} a ${formatDate(to)}`;
 
 const formatFilteredAnalysisPeriod = (period: AdminFinanceDashboard["period"]) =>
   `${period.label} · ${formatAnalysisRange(period.from, period.to)}`;
 
-const formatDateTime = (value: string) =>
-  new Intl.DateTimeFormat("pt-BR", {
+const formatDateTime = (value: string) => {
+  const date = parseFinanceDate(value);
+
+  if (!date) return "—";
+
+  return new Intl.DateTimeFormat("pt-BR", {
     dateStyle: "short",
     timeStyle: "short",
-  }).format(new Date(value));
+  }).format(date);
+};
 
 const formatMoney = (cents: number) => moneyFormatter.format(cents / 100);
 const formatMaybeMoney = (cents: number | null) =>
@@ -195,7 +220,12 @@ const formatChange = (value: number | null) => {
 const isValidRange = (range: FinanceDashboardQuery) => {
   if (!range.from || !range.to) return false;
 
-  return dateFromInput(range.from) <= dateFromInput(range.to);
+  const from = parseFinanceDate(range.from);
+  const to = parseFinanceDate(range.to);
+
+  if (!from || !to) return false;
+
+  return from <= to;
 };
 
 const downloadBlob = (blob: Blob, filename: string) => {
