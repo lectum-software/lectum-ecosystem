@@ -33,5 +33,6 @@ O modelo atual não possui relação formal entre `payment_event` e `professiona
 - Não foi criada migration nem tabela de tentativa de cobrança nesta etapa.
 - Não há mock, seed ou fallback inventado para pagamentos ausentes.
 - A apresentação ao Admin usa o termo **Confiabilidade do pagamento**; nomes técnicos internos como `payment_health` permanecem por compatibilidade do contrato recém-criado.
+- No detalhe expandido, a UI privilegia a leitura operacional: remove a tag duplicada de classificação, o contador/fonte de eventos reconciliados e a nota técnica de ausência de `payment_event`, mantendo os dados e o estado honesto no contrato.
 - A precisão da reconciliação continua limitada ao payload bruto do Mercado Pago até existir uma relação persistida dedicada entre pagamento e assinatura.
 - A UI fica preparada para exibir métricas mais completas futuramente se o backend passar a persistir tentativas de cobrança normalizadas.

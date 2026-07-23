@@ -145,3 +145,11 @@ Adicionar análise real de confiabilidade do pagamento por assinatura paga Merca
 - A UI de `/financeiro/assinaturas` foi atualizada no header, caption acessível, coluna da tabela, título do detalhe expandido e copy explicativa da confiabilidade.
 - A tag continua com uma linha só, exibindo apenas o rótulo da classificação; o resumo completo permanece no dropdown.
 - Não houve alteração de contrato HTTP, backend, Prisma/migrations, packages ou dados persistidos.
+
+## Ajuste pós-feedback 2026-07-22 - Simplificação de copy na listagem
+
+- Pedido do usuário: remover o botão **Voltar ao Financeiro**, remover o resumo de período do header e trocar a descrição por **Relação de assinaturas do plano profissional.**
+- O texto auxiliar acima dos filtros foi removido para evitar redundância com a busca e a expansão por assinatura.
+- No detalhe expandido, a tag de classificação foi removida e o aviso técnico sobre ausência de `payment_event` reconciliado deixou de ser exibido como nota visual.
+- O contador/fonte de eventos reconciliados também deixou de aparecer no cabeçalho do histórico, mantendo o histórico dentro da assinatura sem expor detalhe técnico desnecessário.
+- Não houve alteração de contrato HTTP, backend, Prisma/migrations, packages ou dados persistidos.

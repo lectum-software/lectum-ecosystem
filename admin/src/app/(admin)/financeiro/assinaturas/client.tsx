@@ -303,10 +303,16 @@ const PaymentHistoryRow = ({ item }: { item: FinancePaymentHistoryItem }) => (
 
 const PaymentHealthDetails = ({ item }: { item: FinanceSubscriptionItem }) => {
   const { payment_health: health, payment_history: history } = item;
+  const visibleHealthNotes = health.notes.filter(
+    (note) =>
+      !note.startsWith(
+        "Nenhum payment_event de cobrança foi reconciliado pelo id local da assinatura",
+      ),
+  );
 
   return (
     <div className="rounded-3xl border border-primary/10 bg-primary-soft/25 p-4 lg:p-5">
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+      <div>
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.12em] text-primary">
             Confiabilidade do pagamento
@@ -317,7 +323,6 @@ const PaymentHealthDetails = ({ item }: { item: FinanceSubscriptionItem }) => {
             considerando sucessos, falhas, pendências e atrasos.
           </p>
         </div>
-        <PaymentHealthBadge health={health} />
       </div>
 
       <dl className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
@@ -347,9 +352,9 @@ const PaymentHealthDetails = ({ item }: { item: FinanceSubscriptionItem }) => {
         <HealthMetric label="Última falha" value={formatNullableDate(health.last_failure_at)} />
       </dl>
 
-      {health.notes.length > 0 ? (
+      {visibleHealthNotes.length > 0 ? (
         <ul className="mt-4 space-y-2 text-xs font-semibold leading-5 text-muted">
-          {health.notes.map((note) => (
+          {visibleHealthNotes.map((note) => (
             <li className="rounded-2xl bg-surface/80 px-3 py-2" key={note}>
               {note}
             </li>
@@ -360,9 +365,6 @@ const PaymentHealthDetails = ({ item }: { item: FinanceSubscriptionItem }) => {
       <div className="mt-5">
         <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
           <h4 className="text-sm font-black text-foreground">Histórico de pagamentos</h4>
-          <p className="text-xs font-semibold text-muted">
-            {numberFormatter.format(history.total)} eventos reconciliados · Fonte: {history.source}
-          </p>
         </div>
         {history.available ? (
           <ul className="mt-3 grid gap-3">
@@ -515,10 +517,7 @@ const SubscriptionsTable = ({ items }: { items: FinanceSubscriptionItem[] }) => 
 
       <div className="hidden overflow-x-auto lg:block">
         <table className="w-full min-w-[1040px] text-left text-sm">
-          <caption className="sr-only">
-            Relação completa de assinaturas pagas com confiabilidade do pagamento e histórico
-            expansível
-          </caption>
+          <caption className="sr-only">Relação de assinaturas do plano profissional.</caption>
           <thead className="border-b border-border text-xs font-bold uppercase tracking-[0.08em] text-muted">
             <tr>
               <th className="w-12 px-5 py-4">
@@ -661,9 +660,6 @@ export const AdminFinanceSubscriptionsClient = () => {
 
   const pages = summary?.pages ?? 1;
   const page = Math.min(query.page ?? 1, pages);
-  const periodSummary = summary
-    ? `${summary.period.label} · ${summary.period.from} a ${summary.period.to}`
-    : "Carregando período";
 
   return (
     <div className="min-w-0 max-w-full space-y-7 overflow-x-clip">
@@ -677,31 +673,17 @@ export const AdminFinanceSubscriptionsClient = () => {
               Relação de assinaturas
             </h1>
             <p className="mt-2 max-w-2xl text-sm font-medium leading-6 text-muted">
-              Relação completa de assinaturas profissionais pagas com confiabilidade do pagamento e
-              histórico expansível por assinatura.
+              Relação de assinaturas do plano profissional.
             </p>
-            <p className="mt-2 text-xs font-bold text-muted">{periodSummary}</p>
           </div>
-          <Link
-            className="inline-flex h-11 w-fit items-center justify-center gap-2 rounded-control border border-border bg-surface px-4 text-sm font-black text-foreground shadow-control transition hover:border-primary/40 hover:text-primary"
-            href="/financeiro"
-          >
-            <ChevronLeft aria-hidden className="h-4 w-4" />
-            Voltar ao Financeiro
-          </Link>
         </div>
       </header>
 
       <CardShell className="overflow-hidden">
         <div className="space-y-4 border-b border-border px-4 py-4">
-          <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-col gap-1 sm:flex-row sm:items-center">
             <p className="text-sm font-semibold text-foreground">
               {summary ? numberFormatter.format(summary.count) : "—"} assinaturas encontradas
-            </p>
-            <p className="text-xs font-bold text-muted">
-              {hasTableFilters
-                ? "Filtros aplicados sobre assinaturas pagas reais."
-                : "Busque por psicólogo, e-mail ou identificador; expanda a assinatura para ver pagamentos."}
             </p>
           </div>
           <div className="flex min-w-0 flex-col gap-3 xl:flex-row xl:items-end xl:justify-between">
