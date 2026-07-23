@@ -5026,6 +5026,8 @@ const PublicationVideoMiniplayer = ({ label, src }: { label: string; src: string
 
 const PublicationMedia = ({ item }: { item: AdminPsychologistPublicationItem }) => {
   const src = item.media?.url ?? null;
+  if (!src) return null;
+
   const mediaType = item.media?.type?.toLowerCase() ?? "";
   const isVideo = mediaType.startsWith("video") || /\.(mp4|webm|mov|m4v)$/i.test(src ?? "");
   const imageSrc = !isVideo ? renderableImageSrc(src) : null;
@@ -5033,6 +5035,8 @@ const PublicationMedia = ({ item }: { item: AdminPsychologistPublicationItem }) 
   const looksLikeImage =
     mediaType.startsWith("image") || /\.(png|jpe?g|webp|gif)$/i.test(src ?? "");
   const mediaLabel = isVideo ? "Miniplayer de vídeo publicado" : "Miniatura de mídia publicada";
+
+  if (!imageSrc && !videoSrc) return null;
 
   return (
     <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-2xl border border-border bg-surface-muted text-primary">
@@ -5060,15 +5064,6 @@ const PublicationMedia = ({ item }: { item: AdminPsychologistPublicationItem }) 
             <Play aria-hidden className="h-5 w-5 fill-current" />
           </span>
         </>
-      ) : null}
-      {!imageSrc && !videoSrc ? (
-        <div className="grid h-full place-items-center text-primary">
-          {item.type === "post" ? (
-            <FileText aria-hidden className="h-6 w-6" />
-          ) : (
-            <MessageCircle aria-hidden className="h-6 w-6" />
-          )}
-        </div>
       ) : null}
     </div>
   );
