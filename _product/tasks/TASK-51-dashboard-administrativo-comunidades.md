@@ -1114,3 +1114,26 @@ Regras de UI obrigatórias:
 - `pnpm --dir admin build`: sem erros.
 - `pnpm check`: sem erros.
 - Browser local/headless com Admin real temporario em `http://localhost:3002/comunidades`: card **Postagens de pacientes** validado em desktop e mobile ~390px sem os textos **Anonimos** e **Identificados**; admin temporario removido da base local ao final.
+
+
+## Ajuste complementar 2026-07-23 - Copy de votos no contador de conteudo
+
+- Pedido do usuario: no dashboard `/comunidades`, trocar os textos **Votos positivos** por **Upvotes** e **Votos negativos** por **Downvotes**.
+- Frontend Admin: os labels e descricoes dos cards correspondentes em **Estatisticas de conteudo** foram atualizados, mantendo os ids, dados reais, graficos e agregacoes inalterados.
+- Builder/Quick Copy `vcp://quickcopy/vcp-24aaa2941d814e5b90572bc93ae50e2a` nao esta exposto como ferramenta callable neste ambiente; referencias usadas: captura enviada pelo usuario e `_product/proto/admin/Comunidades/Comunidades - Dashboard.png`.
+- Nao houve alteracao de backend, endpoint, schema Prisma/migration, package, mock, seed, backfill, endpoint simulado ou uso de `<img>` cru.
+- ADR nao aplicavel: ajuste pontual de copy sem nova decisao arquitetural, regra de dominio ou trade-off tecnico.
+
+### Criterios deste ajuste
+
+- [x] O card de votos positivos exibe **Upvotes**.
+- [x] O card de votos negativos exibe **Downvotes**.
+- [x] As metricas reais e o grafico permanecem inalterados.
+- [x] A UI permanece mobile-first e sem `<img>` cru.
+
+### Validacao deste ajuste
+
+- `pnpm --dir admin check`: sem erros.
+- `pnpm --dir admin build`: sem erros.
+- `pnpm check`: sem erros.
+- Browser local/headless com Admin real temporario em `http://localhost:3002/comunidades`: cards de votos validados em desktop e mobile ~390px com **Upvotes** e **Downvotes**; admin temporario removido da base local ao final.
