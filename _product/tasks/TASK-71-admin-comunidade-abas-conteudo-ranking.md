@@ -1002,3 +1002,26 @@ Regras:
 - `pnpm check`: sem erros.
 - Smoke real de `showStatistics` para `perguntas-da-comunidade-layout?period=all`: `posts_by_content_format.total=7` e `replies_by_content_format.total=7`, confirmando o recorte somente de psicólogos no banco local.
 - Browser local/headless com Admin real temporário validou `/comunidades/perguntas-da-comunidade-layout?tab=estatisticas` em desktop e mobile ~390px exibindo **Cobertura de acolhimento**, cards **Posts** e **Respostas**, copy com **psicólogos**, 1 gráfico de pizza de posts e 1 de respostas; admin temporário removido da base local ao final.
+
+## Ajuste complementar 2026-07-23 - Remoção dos indicadores no contador de postagens de pacientes
+
+- Pedido do usuário: no detalhe administrativo da comunidade `/comunidades/[slug]?tab=estatisticas`, remover os indicadores **Anônimos** e **Identificados** exibidos dentro do contador **Postagens de pacientes** em **Estatísticas de conteúdo**.
+- Frontend Admin: o card **Postagens de pacientes** deixou de montar/renderizar os detalhes internos de anônimos/identificados, mantendo o total, o comportamento de seleção no gráfico e os demais contadores.
+- A quebra de anônimos/identificados continua disponível nos blocos analíticos apropriados, como **Cobertura de acolhimento**, sem alterar contrato de API, backend, agregações reais ou dados persistidos.
+- Builder/Quick Copy `vcp://quickcopy/vcp-24aaa2941d814e5b90572bc93ae50e2a` não está exposto como ferramenta callable neste ambiente; referências usadas: captura enviada pelo usuário e `_product/proto/admin/Comunidades/Comunidades - Detalhes.png`.
+- Não houve package novo, endpoint paralelo, mock, seed, backfill, schema Prisma/migration, alteração de backend ou uso de `<img>` cru.
+- ADR não aplicável: ajuste pontual de apresentação/copy sem nova decisão arquitetural, regra de domínio, integração ou trade-off técnico.
+
+### Critérios deste ajuste
+
+- [x] O contador **Postagens de pacientes** no detalhe da comunidade não exibe mais os indicadores **Anônimos** e **Identificados**.
+- [x] O total de postagens de pacientes permanece visível e selecionável no gráfico.
+- [x] A UI permanece mobile-first e sem `<img>` cru.
+- [x] Nenhum dado real, contrato HTTP, backend, schema Prisma, migration ou package foi alterado.
+
+### Validação deste ajuste
+
+- `pnpm --dir admin check`: sem erros.
+- `pnpm --dir admin build`: sem erros.
+- Browser local/headless com Admin real temporário em `http://localhost:3002/comunidades/autocuidado-em-pratica?tab=estatisticas`: card **Postagens de pacientes** validado em desktop e mobile ~390px com texto `Postagens de pacientes\n1\nvisível no gráfico`, sem **Anônimos** e **Identificados**; admin temporário removido da base local ao final.
+- `pnpm check`: tentado, mas bloqueado por alteração pendente não relacionada no dashboard de pacientes (`backend/src/modules/api/admin/private/patients/dashboard/use-cases/services.ts`) com warning `lint/correctness/noUnusedVariables` para `intentAnalysis`.

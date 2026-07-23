@@ -4305,32 +4305,6 @@ const buildCommunityStatisticsMetricComparison = (
   };
 };
 
-const buildPatientPostsBreakdown = (
-  statistics: AdminCommunityStatistics,
-): CommunityStatisticsMetricDetail[] => {
-  const total = safeCommunityStatisticCount(statistics.counters.posts.patients);
-  const anonymous = Math.min(
-    total,
-    safeCommunityStatisticCount(statistics.counters.anonymous_posts.total),
-  );
-  const identified = Math.max(0, total - anonymous);
-
-  return [
-    {
-      id: "anonymous",
-      label: "Anônimos",
-      percentage: communityStatisticPercentage(anonymous, total),
-      value: anonymous,
-    },
-    {
-      id: "identified",
-      label: "Identificados",
-      percentage: communityStatisticPercentage(identified, total),
-      value: identified,
-    },
-  ];
-};
-
 const COMMUNITY_PEOPLE_STATISTICS_METRICS = [
   {
     dotClassName: "bg-primary",
@@ -4417,7 +4391,6 @@ const COMMUNITY_PEOPLE_STATISTICS_METRICS = [
 const COMMUNITY_CONTENT_STATISTICS_METRICS = [
   {
     dotClassName: "bg-success",
-    getDetails: buildPatientPostsBreakdown,
     getValue: (statistics: AdminCommunityStatistics) => statistics.counters.posts.patients,
     icon: FileText,
     iconClassName: "text-success",
