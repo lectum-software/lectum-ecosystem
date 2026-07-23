@@ -2302,13 +2302,11 @@ const formatContentFormatTotal = (total: number, labels: { plural: string; singu
 const DashboardContentFormatDistributionCard = ({
   description,
   distribution,
-  periodLabel,
   title,
   totalLabels,
 }: {
   description: string;
   distribution: CommunitiesPostContentFormatDistribution;
-  periodLabel: string;
   title: string;
   totalLabels: { plural: string; singular: string };
 }) => {
@@ -2345,7 +2343,7 @@ const DashboardContentFormatDistributionCard = ({
     { currentAngle: -90, items: [] },
   ).items;
   const ariaLabel = hasContent
-    ? `Gráfico de pizza de ${title.toLowerCase()} por tipo de conteúdo: ${distribution.items
+    ? `Gráfico de pizza de formatos de ${title.toLowerCase()}: ${distribution.items
         .map(
           (item) =>
             `${item.label}: ${numberFormatter.format(item.count)}, ${formatContentFormatPercentage(
@@ -2353,25 +2351,24 @@ const DashboardContentFormatDistributionCard = ({
             )}`,
         )
         .join("; ")}.`
-    : `Gráfico de pizza de ${title.toLowerCase()} por tipo de conteúdo: sem conteúdo no período selecionado.`;
+    : `Gráfico de pizza de formatos de ${title.toLowerCase()}: sem conteúdo no período selecionado.`;
 
   return (
-    <CardShell className="min-w-0 p-5 sm:p-6">
+    <CardShell className="min-w-0 max-w-full overflow-hidden p-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
-          <h2 className="text-xl font-black text-foreground">{title}</h2>
-          <BlockPeriodLabel>{periodLabel}</BlockPeriodLabel>
-          <p className="mt-2 text-xs font-bold leading-5 text-muted">{description}</p>
+          <h3 className="text-lg font-black text-foreground">{title}</h3>
+          <p className="mt-1 text-xs font-bold leading-5 text-muted">{description}</p>
         </div>
         <span className="shrink-0 rounded-full bg-surface-muted px-3 py-1.5 text-xs font-black text-muted">
           {formatContentFormatTotal(distribution.total, totalLabels)}
         </span>
       </div>
 
-      <figure className="mt-5 grid gap-5 lg:grid-cols-[minmax(10rem,14rem)_1fr] lg:items-center">
+      <figure className="mt-5 grid gap-4 sm:grid-cols-[minmax(8rem,10rem)_1fr] sm:items-center">
         <svg
           aria-label={ariaLabel}
-          className="mx-auto aspect-square w-40 sm:w-48"
+          className="mx-auto aspect-square w-36 sm:w-40"
           role="img"
           viewBox="0 0 120 120"
         >
@@ -2428,13 +2425,10 @@ const DashboardContentFormatDistributionCard = ({
             );
           })}
         </svg>
-        <figcaption className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <figcaption className="grid gap-2">
           {distribution.items.map((item) => (
             <div
-              className={cn(
-                "rounded-3xl border border-border/70 bg-surface-muted p-4",
-                item.count === 0 && "opacity-70",
-              )}
+              className={cn("rounded-2xl bg-surface-muted p-3", item.count === 0 && "opacity-70")}
               key={item.id}
             >
               <div className="flex items-center justify-between gap-3">
@@ -2450,10 +2444,7 @@ const DashboardContentFormatDistributionCard = ({
                   {formatContentFormatPercentage(item.percentage)}
                 </span>
               </div>
-              <p className="mt-3 text-3xl font-black leading-none text-foreground">
-                {numberFormatter.format(item.count)}
-              </p>
-              <p className="mt-2 text-xs font-bold text-muted">
+              <p className="mt-1 text-xs font-bold text-muted">
                 {formatContentFormatTotal(item.count, totalLabels)}
               </p>
             </div>
@@ -2465,25 +2456,21 @@ const DashboardContentFormatDistributionCard = ({
 };
 
 const DashboardContentFormatDistributionsBlock = ({
-  periodLabel,
   statistics,
 }: {
-  periodLabel: string;
   statistics: CommunitiesDashboardGlobalStatistics;
 }) => (
   <div className="grid gap-5 lg:grid-cols-2">
     <DashboardContentFormatDistributionCard
-      description="Quantidade e taxa dos posts publicados no período por formato."
+      description="Quantidade e taxa por formato dos posts de psicólogos no mesmo período da Cobertura de acolhimento."
       distribution={statistics.charts.posts_by_content_format}
-      periodLabel={periodLabel}
-      title="Posts por tipo de conteúdo"
+      title="Posts"
       totalLabels={{ plural: "posts", singular: "post" }}
     />
     <DashboardContentFormatDistributionCard
-      description="Quantidade e taxa das respostas publicadas no período por formato."
+      description="Quantidade e taxa por formato das respostas de psicólogos no mesmo período da Cobertura de acolhimento."
       distribution={statistics.charts.replies_by_content_format}
-      periodLabel={periodLabel}
-      title="Respostas por tipo de conteúdo"
+      title="Respostas"
       totalLabels={{ plural: "respostas", singular: "resposta" }}
     />
   </div>
@@ -2575,10 +2562,7 @@ const DashboardContent = ({
         statistics={summary.global_statistics.current}
       />
 
-      <DashboardContentFormatDistributionsBlock
-        periodLabel={periodLabel}
-        statistics={summary.global_statistics.current}
-      />
+      <DashboardContentFormatDistributionsBlock statistics={summary.global_statistics.current} />
 
       <div className="grid min-w-0 gap-5 xl:grid-cols-2">
         <TopCommunitiesTable

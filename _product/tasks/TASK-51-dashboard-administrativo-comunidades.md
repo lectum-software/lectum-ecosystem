@@ -1065,8 +1065,8 @@ Regras de UI obrigatórias:
 ## Ajuste complementar 2026-07-23 - Distribuição de posts e respostas por tipo de conteúdo
 
 - Pedido do usuário: após **Cobertura de acolhimento** no dashboard `/comunidades`, adicionar blocos de **Posts** e **Respostas** com quantidade e taxa por tipo de conteúdo: apenas texto, vídeo, imagem e carrossel de imagens, em gráfico de pizza.
-- Backend Admin: `GET /api/admin/private/communities/dashboard` passou a expor `global_statistics.current.charts.posts_by_content_format` e `replies_by_content_format`, calculados a partir de `community_post.media_type`, `community_post.media_url`, `community_post_media` e `post_reply.media_type/media_url` reais.
-- Frontend Admin: o dashboard renderiza dois cards mobile-first imediatamente após **Cobertura de acolhimento**, cada um com gráfico de pizza SVG acessível e legenda textual com quantidade e percentual.
+- Backend Admin: `GET /api/admin/private/communities/dashboard` passou a expor `global_statistics.current.charts.posts_by_content_format` e `replies_by_content_format`, calculados a partir de `community_post.media_type`, `community_post.media_url`, `community_post_media` e `post_reply.media_type/media_url` reais de autores com `user.role="psicologo"`.
+- Frontend Admin: o dashboard renderiza dois cards mobile-first imediatamente após **Cobertura de acolhimento**, cada um com gráfico de pizza SVG acessível e legenda textual com quantidade e percentual; em ajuste posterior, o layout foi alinhado ao bloco equivalente das Estatísticas do psicólogo.
 - A classificação segue a regra real: sem mídia = **Apenas texto**, qualquer vídeo = **Vídeo**, uma imagem = **Imagem**, e duas ou mais imagens em posts = **Carrossel de imagens**; respostas mantêm carrossel com zero enquanto o modelo `post_reply` suportar uma mídia direta.
 - Builder/Quick Copy `vcp://quickcopy/vcp-24aaa2941d814e5b90572bc93ae50e2a` não está exposto como ferramenta callable neste ambiente; referências usadas: captura enviada pelo usuário e `_product/proto/admin/Comunidades/Comunidades - Dashboard.png`.
 - Não houve package novo, schema Prisma/migration, endpoint paralelo, mock, seed, backfill ou uso de `<img>` cru.
@@ -1074,23 +1074,23 @@ Regras de UI obrigatórias:
 
 ### Critérios deste ajuste
 
-- [x] `/comunidades` exibe **Posts por tipo de conteúdo** após **Cobertura de acolhimento**.
-- [x] `/comunidades` exibe **Respostas por tipo de conteúdo** após **Cobertura de acolhimento**.
-- [x] As distribuições usam dados reais do período selecionado e retornam quantidade/taxa para texto, vídeo, imagem e carrossel.
+- [x] `/comunidades` exibe o card **Posts** após **Cobertura de acolhimento**.
+- [x] `/comunidades` exibe o card **Respostas** após **Cobertura de acolhimento**.
+- [x] As distribuições usam dados reais de psicólogos no período selecionado e retornam quantidade/taxa para texto, vídeo, imagem e carrossel.
 - [x] Os gráficos são SVG/CSS próprios, com alternativa textual por legenda e `aria-label`.
 - [x] Nenhum mock, dado fake permanente, endpoint simulado, package novo, schema Prisma ou migration foi usado.
 
 ### Validação deste ajuste
 
-- `pnpm --dir backend exec biome check "src/modules/api/admin/private/communities/dashboard/DTOs/IAdminCommunitiesDashboardDTO.ts" "src/modules/api/admin/private/communities/dashboard/repositories/AdminCommunitiesDashboardRepository.ts" "src/modules/api/admin/private/communities/dashboard/use-cases/services.ts" "src/modules/api/admin/private/communities/manage/DTOs/IAdminCommunityManageDTO.ts" "src/modules/api/admin/private/communities/manage/repositories/AdminCommunityManageRepository.ts" "src/modules/api/admin/private/communities/manage/use-cases/services.ts"`: sem erros.
-- `pnpm --dir admin exec biome check "src/api/req/communities/index.ts" "src/app/(admin)/comunidades/client.tsx" "src/app/(admin)/comunidades/[slug]/client.tsx"`: sem erros.
+- `pnpm --dir backend exec biome check "src/modules/api/admin/private/communities/dashboard/use-cases/services.ts" "src/modules/api/admin/private/communities/manage/use-cases/services.ts"`: sem erros.
+- `pnpm --dir admin exec biome check "src/app/(admin)/comunidades/client.tsx" "src/app/(admin)/comunidades/[slug]/client.tsx"`: sem erros.
 - `pnpm --dir backend check`: sem erros.
 - `pnpm --dir admin check`: sem erros.
 - `pnpm --dir backend build`: sem erros.
 - `pnpm --dir admin build`: sem erros.
 - `pnpm check`: sem erros.
-- Smoke API real autenticado em `GET /api/admin/private/communities/dashboard?period=all`: `posts_by_content_format.total=24` e `replies_by_content_format.total=80` no banco local.
-- Browser local/headless com Admin real temporário validou `/comunidades` exibindo **Cobertura de acolhimento**, **Posts por tipo de conteúdo** e **Respostas por tipo de conteúdo**, com 1 gráfico de pizza de posts e 1 de respostas.
+- Smoke real de service para o dashboard `/comunidades?period=all`: `posts_by_content_format.total=16` e `replies_by_content_format.total=10`, confirmando o recorte somente de psicólogos no banco local.
+- Browser local/headless com Admin real temporário validou `/comunidades` em desktop e mobile ~390px exibindo **Cobertura de acolhimento**, cards **Posts** e **Respostas**, copy com **psicólogos**, 1 gráfico de pizza de posts e 1 de respostas; admin temporário removido da base local ao final.
 
 ## Ajuste complementar 2026-07-23 - Remocao dos indicadores no contador de postagens de pacientes
 
@@ -1114,7 +1114,6 @@ Regras de UI obrigatórias:
 - `pnpm --dir admin build`: sem erros.
 - `pnpm check`: sem erros.
 - Browser local/headless com Admin real temporario em `http://localhost:3002/comunidades`: card **Postagens de pacientes** validado em desktop e mobile ~390px sem os textos **Anonimos** e **Identificados**; admin temporario removido da base local ao final.
-
 
 ## Ajuste complementar 2026-07-23 - Copy de votos no contador de conteudo
 

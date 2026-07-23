@@ -2621,8 +2621,8 @@ const buildCommunityStatistics = (
         hours: [...item.hours.values()],
         label: item.label,
       })),
-      posts_by_content_format: buildPostContentFormatDistribution(periodPosts),
-      replies_by_content_format: buildReplyContentFormatDistribution(periodReplies),
+      posts_by_content_format: buildPostContentFormatDistribution(psychologistPosts),
+      replies_by_content_format: buildReplyContentFormatDistribution(psychologistReplies),
       posts_by_author: statisticsSplit("community_post+post_reply", [
         { id: "patients", label: "Pacientes", value: patientPosts.length },
         {

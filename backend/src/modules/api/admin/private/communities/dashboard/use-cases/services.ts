@@ -1074,8 +1074,8 @@ const buildDashboardGlobalStatistics = (
         { id: "psychologists", label: "Psicólogos", value: followers.psychologists },
       ]),
       hourly_activity: [...hourlyActivity.values()],
-      posts_by_content_format: buildPostContentFormatDistribution(periodPosts),
-      replies_by_content_format: buildReplyContentFormatDistribution(periodReplies),
+      posts_by_content_format: buildPostContentFormatDistribution(psychologistPosts),
+      replies_by_content_format: buildReplyContentFormatDistribution(psychologistReplies),
       posts_by_author: dashboardStatisticsSplit("community_post+post_reply", [
         { id: "patients", label: "Pacientes", value: patientPosts.length },
         {
