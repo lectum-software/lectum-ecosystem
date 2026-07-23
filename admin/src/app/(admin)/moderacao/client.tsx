@@ -281,9 +281,6 @@ const Metric = ({
         <div className={cn("grid h-12 w-12 place-items-center rounded-full", toneClass)}>
           {icon}
         </div>
-        <span className="rounded-full bg-surface-muted px-2 py-1 text-[0.65rem] font-bold text-muted">
-          real
-        </span>
       </div>
       <p className="mt-4 text-sm font-black text-foreground">{label}</p>
       <p className="mt-2 text-3xl font-black tracking-tight text-foreground">
@@ -314,7 +311,7 @@ const SummaryGrid = ({ summary }: { summary: AdminModerationSummary }) => {
         value={operational.compliance_total}
       />
       <Metric
-        description="Paciente sem cobertura há 48h, Perfil de psicólogo não publicado por falta de configurações e Psicólogo assinante sem tráfego para perfil e WhatsApp."
+        description="Pacientes sem cobertura há 48h, perfis de psicólogos não publicados por falta de configurações e psicólogos assinantes sem tráfego para perfil/WhatsApp."
         icon={<Clock3 aria-hidden className="h-5 w-5" />}
         label="Operacionais"
         value={operational.operational_total}
