@@ -35,8 +35,10 @@ O modelo atual não possui relação formal entre `payment_event` e `professiona
 
 - Não foi criada migration nem tabela de tentativa de cobrança nesta etapa.
 - Não há mock, seed ou fallback inventado para pagamentos ausentes.
-- A apresentação ao Admin usa o termo **Confiabilidade do pagamento**; nomes técnicos internos como `payment_health` permanecem por compatibilidade do contrato recém-criado.
+- A apresentação ao Admin mantém **Confiabilidade do pagamento** no detalhe explicativo e usa a abreviação **Confiabilidade Pgto** apenas na coluna da tabela para reduzir largura; nomes técnicos internos como `payment_health` permanecem por compatibilidade do contrato recém-criado.
 - No detalhe expandido, a UI privilegia a leitura operacional: remove a tag duplicada de classificação, o contador/fonte de eventos reconciliados e a nota técnica de ausência de `payment_event`, mantendo os dados e o estado honesto no contrato.
+- O histórico de pagamentos não expõe metadados técnicos do gateway como tipo do evento (`payment.updated`), referência externa ou `status_detail` bruto (`approved`); a linha mantém data, gateway, valor e badge traduzido.
+- Notas de amostra pequena continuam podendo existir no contrato de análise, mas não são exibidas como faixa visual no dropdown para evitar ruído operacional.
 - A exibição do cartão é informativa e não cria nova relação entre assinatura e cartão; quando o `gateway_token` salvo não corresponde ao `gateway_subscription_id`, a UI informa apenas que é o último cartão salvo do psicólogo.
 - O layout do dropdown mantém o cartão salvo no topo direito, enquanto as métricas de confiabilidade ocupam a largura das duas colunas abaixo do cabeçalho/cartão para preservar leitura horizontal no desktop e empilhamento mobile-first.
 - O filtro de confiabilidade é aplicado no service depois de mapear a saúde real de pagamento, porque a classificação depende de `payment_event` reconciliado e não existe coluna persistida dedicada. Isso preserva a honestidade do dado, mas pode exigir otimização futura se a lista crescer muito.

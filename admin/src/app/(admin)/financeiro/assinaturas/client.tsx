@@ -178,7 +178,7 @@ const DateFilterField = ({
   onChange: (value: string) => void;
   value?: string;
 }) => (
-  <label className="flex min-w-0 flex-col gap-1 text-xs font-medium text-muted sm:min-w-[160px]">
+  <label className="flex min-w-0 flex-col gap-1 text-xs font-medium text-muted sm:min-w-[150px]">
     {label}
     <input
       className="h-12 w-full min-w-0 rounded-full border border-border bg-surface px-4 py-0 text-sm font-medium text-foreground shadow-control outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/15"
@@ -198,7 +198,7 @@ const StatusFilterField = ({
   onChange: (value: string) => void;
   value?: string;
 }) => (
-  <label className="flex min-w-0 flex-col gap-1 text-xs font-medium text-muted sm:min-w-[180px]">
+  <label className="flex min-w-0 flex-col gap-1 text-xs font-medium text-muted sm:min-w-[170px]">
     Status
     <span className="relative block text-sm font-medium text-foreground">
       <select
@@ -219,6 +219,11 @@ const StatusFilterField = ({
     </span>
   </label>
 );
+
+const hiddenHealthNotePrefixes = [
+  "Nenhum payment_event de cobrança foi reconciliado pelo id local da assinatura",
+  "Amostra pequena:",
+];
 
 const PaymentHealthFilterField = ({
   onChange,
@@ -344,7 +349,7 @@ const SavedPaymentMethodCard = ({
         </span>
         <div className="min-w-0">
           <p className="text-xs font-semibold uppercase tracking-[0.1em] text-primary">
-            Cartão salvo do psicólogo
+            Dados do cartão salvo
           </p>
           {method ? (
             <>
@@ -386,19 +391,13 @@ const PaymentHistoryRow = ({ item }: { item: FinancePaymentHistoryItem }) => (
           <PaymentHistoryStatusBadge item={item} />
         </div>
         <p className="mt-1 text-xs font-semibold text-muted">
-          {formatDate(item.occurred_at)} · {item.gateway} · Evento {item.event_type}
-        </p>
-        <p className="mt-1 truncate text-xs text-muted">
-          Ref. {item.reference ?? item.external_id}
+          {formatDate(item.occurred_at)} · {item.gateway}
         </p>
       </div>
       <div className="text-left sm:text-right">
         <p className="text-sm font-black text-foreground">
           {formatNullableMoney(item.amount_cents)}
         </p>
-        {item.status_detail ? (
-          <p className="mt-1 text-xs font-semibold text-muted">{item.status_detail}</p>
-        ) : null}
       </div>
     </div>
     {item.unavailable_reason ? (
@@ -412,10 +411,7 @@ const PaymentHistoryRow = ({ item }: { item: FinancePaymentHistoryItem }) => (
 const PaymentHealthDetails = ({ item }: { item: FinanceSubscriptionItem }) => {
   const { payment_health: health, payment_history: history } = item;
   const visibleHealthNotes = health.notes.filter(
-    (note) =>
-      !note.startsWith(
-        "Nenhum payment_event de cobrança foi reconciliado pelo id local da assinatura",
-      ),
+    (note) => !hiddenHealthNotePrefixes.some((prefix) => note.startsWith(prefix)),
   );
 
   return (
@@ -427,8 +423,7 @@ const PaymentHealthDetails = ({ item }: { item: FinanceSubscriptionItem }) => {
           </p>
           <h3 className="mt-1 text-lg font-black text-foreground">{health.summary}</h3>
           <p className="mt-1 max-w-2xl text-sm font-medium leading-6 text-muted">
-            A confiabilidade do pagamento resume a estabilidade das cobranças da assinatura,
-            considerando sucessos, falhas, pendências e atrasos.
+            A confiabilidade do pagamento resume a estabilidade das cobranças da assinatura.
           </p>
         </div>
 
@@ -630,7 +625,7 @@ const SubscriptionsTable = ({ items }: { items: FinanceSubscriptionItem[] }) => 
 
       <div className="hidden overflow-x-auto lg:block">
         <table className="w-full min-w-[1040px] text-left text-sm">
-          <caption className="sr-only">Relação de assinaturas do plano profissional.</caption>
+          <caption className="sr-only">Relação de assinaturas do plano profissional</caption>
           <thead className="border-b border-border text-xs font-bold uppercase tracking-[0.08em] text-muted">
             <tr>
               <th className="w-12 px-5 py-4">
@@ -641,7 +636,7 @@ const SubscriptionsTable = ({ items }: { items: FinanceSubscriptionItem[] }) => 
               <th className="px-5 py-4">Próxima</th>
               <th className="px-5 py-4">Valor</th>
               <th className="px-5 py-4">Status</th>
-              <th className="px-5 py-4">Confiabilidade do pagamento</th>
+              <th className="px-5 py-4">Confiabilidade Pgto</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-border">
@@ -792,10 +787,10 @@ export const AdminFinanceSubscriptionsClient = () => {
               Financeiro
             </p>
             <h1 className="mt-2 text-3xl font-bold tracking-tight text-foreground md:text-4xl">
-              Relação de assinaturas
+              Assinaturas
             </h1>
             <p className="mt-2 max-w-2xl text-sm font-medium leading-6 text-muted">
-              Relação de assinaturas do plano profissional.
+              Relação de assinaturas do plano profissional
             </p>
           </div>
         </div>
@@ -803,20 +798,18 @@ export const AdminFinanceSubscriptionsClient = () => {
 
       <CardShell className="overflow-hidden">
         <div className="space-y-4 border-b border-border px-4 py-4">
-          <div className="flex flex-col gap-1 sm:flex-row sm:items-center">
-            <p className="text-sm font-semibold text-foreground">
-              {summary ? numberFormatter.format(summary.count) : "—"} assinaturas encontradas
-            </p>
-          </div>
-          <div className="flex min-w-0 flex-col gap-3 xl:flex-row xl:items-end xl:justify-between">
-            <div className="min-w-0 xl:w-[420px] xl:max-w-[420px] 2xl:w-[460px] 2xl:max-w-[460px]">
+          <div className="flex min-w-0 flex-col gap-4 2xl:flex-row 2xl:items-start 2xl:justify-between">
+            <div className="min-w-0 2xl:w-[320px] 2xl:max-w-[320px] 2xl:flex-none 2xl:pt-5">
               <SearchBox
                 key={query.q ?? ""}
                 onSearch={(value) => replaceParams({ q: value || null })}
                 value={query.q}
               />
+              <p className="mt-2 pl-1 text-sm font-semibold text-foreground">
+                {summary ? numberFormatter.format(summary.count) : "—"} assinaturas encontradas
+              </p>
             </div>
-            <div className="flex min-w-0 flex-col gap-2 text-sm font-medium text-foreground sm:flex-row sm:flex-wrap sm:items-end xl:flex-nowrap xl:justify-end">
+            <div className="flex min-w-0 flex-col gap-2 text-sm font-medium text-foreground sm:flex-row sm:flex-wrap sm:items-end 2xl:flex-1 2xl:justify-end">
               <DateFilterField
                 label="Início de"
                 max={query.to}

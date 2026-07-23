@@ -246,3 +246,35 @@ Adicionar análise real de confiabilidade do pagamento por assinatura paga Merca
 - `pnpm check`
 - Smoke HTTP local: `GET http://localhost:3002/financeiro/assinaturas` retornou `200`.
 - Conferência de artefato local: `rg "Confiável|confiável|Saudável|saudável" admin/.next -g '!cache/**'` confirmou `Confiável` no bundle Admin e nenhuma ocorrência restante de `Saudável` nos arquivos de confiabilidade.
+
+## Ajuste pós-feedback 2026-07-23 - Copy, filtros e histórico de Assinaturas
+
+- Pedido do usuário: ajustar a copy de `/financeiro/assinaturas`, alinhar busca/filtros, abreviar a coluna para **Confiabilidade Pgto**, simplificar a explicação da confiabilidade, renomear o cartão salvo para **Dados do cartão salvo**, remover a faixa de amostra pequena e ocultar metadados técnicos do histórico de pagamentos.
+- A rota `/financeiro/assinaturas` mantém o título **Assinaturas** e usa a copy auxiliar **Relação de assinaturas do plano profissional**.
+- O contador de assinaturas fica abaixo da busca; a busca recebe espaçamento no desktop amplo para alinhar seu campo com os inputs dos filtros, preservando largura total no mobile.
+- A coluna desktop passa a exibir **Confiabilidade Pgto**; o detalhe expandido mantém **Confiabilidade do pagamento** e a explicação reduzida a uma frase.
+- O card de forma de pagamento no detalhe expandido passa a usar **Dados do cartão salvo**.
+- A nota visual **Amostra pequena: interprete a taxa junto com falhas consecutivas e status atual.** deixou de aparecer no dropdown, sem alterar o contrato real de análise.
+- O histórico de pagamentos não exibe mais `Evento payment.updated`, `Ref. preapproval_*` nem `status_detail` bruto como `approved`; a linha mantém data, gateway, badge traduzido e valor.
+- O ajuste é exclusivamente visual/copy no Admin; não altera backend, Prisma/migrations, packages, gateway, seed, mock, dado artificial ou endpoint simulado.
+- Builder/Quick Copy não está exposto como ferramenta callable neste ambiente; as referências auditáveis foram `_product/proto/admin/Financeiro.png` e as capturas autenticadas enviadas pelo usuário em 2026-07-23.
+- ADR atualizado: `adrs/0309-admin-assinaturas-saude-pagamento.md`.
+
+### Critérios de aceite do ajuste
+
+- [x] O texto auxiliar visível é **Relação de assinaturas do plano profissional**.
+- [x] Busca e campos de filtros ficam alinhados no desktop amplo e continuam mobile-first.
+- [x] A coluna desktop exibe **Confiabilidade Pgto**.
+- [x] A explicação da confiabilidade foi reduzida para **A confiabilidade do pagamento resume a estabilidade das cobranças da assinatura.**
+- [x] O card de forma de pagamento exibe **Dados do cartão salvo**.
+- [x] A faixa de amostra pequena não é renderizada.
+- [x] O histórico não mostra tipo de evento, referência externa nem `status_detail` bruto.
+- [x] UI mobile-first preservada e nenhum `<img>` cru foi usado.
+- [x] Nenhum package, schema Prisma, migration, mock ou endpoint simulado foi adicionado.
+
+### Validação complementar executada
+
+- `pnpm --dir admin exec biome check "src/app/(admin)/financeiro/assinaturas/client.tsx"`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- Smoke HTTP local: `GET http://localhost:3002/financeiro/assinaturas` retornou `200`.
