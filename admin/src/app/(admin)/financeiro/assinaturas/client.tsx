@@ -96,6 +96,12 @@ const formatDate = (value: string) =>
     dateStyle: "short",
   }).format(new Date(value));
 
+const formatDateTime = (value: string) =>
+  new Intl.DateTimeFormat("pt-BR", {
+    dateStyle: "short",
+    timeStyle: "short",
+  }).format(new Date(value));
+
 const formatNullableDate = (value: string | null) => (value ? formatDate(value) : "—");
 const formatMoney = (cents: number) => moneyFormatter.format(cents / 100);
 const formatNullableMoney = (cents: number | null) =>
@@ -391,7 +397,8 @@ const PaymentHistoryRow = ({ item }: { item: FinancePaymentHistoryItem }) => (
           <PaymentHistoryStatusBadge item={item} />
         </div>
         <p className="mt-1 text-xs font-semibold text-muted">
-          {formatDate(item.occurred_at)} · {item.gateway}
+          <time dateTime={item.occurred_at}>{formatDateTime(item.occurred_at)}</time> ·{" "}
+          {item.gateway}
         </p>
       </div>
       <div className="text-left sm:text-right">
