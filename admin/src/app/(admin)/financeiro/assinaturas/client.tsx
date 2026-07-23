@@ -49,7 +49,7 @@ const statusFilterOptions = [
 ] as const;
 const paymentHealthFilterOptions = [
   { label: "Todas as confiabilidades", value: "all" },
-  { label: "Saudável", value: "healthy" },
+  { label: "Confiável", value: "healthy" },
   { label: "Atenção", value: "attention" },
   { label: "Risco", value: "risk" },
   { label: "Crítica", value: "critical" },

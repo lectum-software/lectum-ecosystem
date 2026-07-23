@@ -124,7 +124,7 @@ Adicionar análise real de confiabilidade do pagamento por assinatura paga Merca
 - Backend Financeiro passou a enriquecer cada `FinanceSubscriptionItem` com `payment_health` e `payment_history`, sem migration e sem endpoint simulado.
 - A reconciliação do histórico usa apenas `payment_event` real Mercado Pago cujo payload contenha `professional_subscription.id` ou `gateway_subscription_id`.
 - A confiabilidade classifica cada assinatura como `healthy`, `attention`, `risk`, `critical` ou `insufficient_history`, combinando taxa de sucesso, tentativas finais, falhas consecutivas, pendências e atraso quando o status local está inadimplente.
-- `/financeiro/assinaturas` passou a exibir uma única coluna **Confiabilidade do pagamento**. Após feedback do usuário, a tag ficou com uma linha só (`Saudável`, `Atenção`, `Risco`, `Crítica` ou `Histórico insuficiente`); o resumo completo permanece dentro do dropdown.
+- `/financeiro/assinaturas` passou a exibir uma única coluna **Confiabilidade do pagamento**. Após feedback do usuário, a tag ficou com uma linha só (`Confiável`, `Atenção`, `Risco`, `Crítica` ou `Histórico insuficiente`); o resumo completo permanece dentro do dropdown.
 - Cada assinatura tem botão/seta expansível. No mobile, a assinatura continua como card mobile-first; no desktop, a linha expande dentro da tabela.
 - O detalhe expandido mostra métricas auxiliares e as últimas cobranças vinculadas à assinatura, com estado honesto quando não há `payment_event` reconciliável.
 - Validações executadas:
@@ -218,3 +218,31 @@ Adicionar análise real de confiabilidade do pagamento por assinatura paga Merca
 - `pnpm --dir admin check`
 - `pnpm --dir admin build`
 - Smoke HTTP local: `GET http://localhost:3002/financeiro/assinaturas` retornou `200`.
+
+## Ajuste pós-feedback 2026-07-23 - Rótulo Confiável
+
+- Pedido do usuário: alterar o rótulo visual **Saudável** para **Confiável** na confiabilidade do pagamento.
+- O valor técnico/API continua `healthy`, preservando contrato, filtro `paymentHealth`, query keys e compatibilidade com backend/frontend.
+- A UI mobile-first de `/financeiro/assinaturas` passou a exibir **Confiável** no filtro e nos badges; o resumo do dropdown usa `confiável` quando a taxa de sucesso está disponível.
+- O ajuste é exclusivamente de copy operacional no Admin; não altera Prisma/migrations, packages, dados persistidos, gateway, mock, seed ou endpoint simulado.
+- Builder/Quick Copy não está exposto como ferramenta callable neste ambiente; as referências auditáveis continuam sendo `_product/proto/admin/Financeiro.png` e a captura autenticada enviada pelo usuário em 2026-07-23.
+
+### Critérios de aceite do ajuste
+
+- [x] A classificação técnica `healthy` é exibida como **Confiável** na tabela e no filtro.
+- [x] As demais classificações permanecem `Atenção`, `Risco`, `Crítica` e `Histórico insuficiente`.
+- [x] O contrato HTTP e o valor de filtro `paymentHealth=healthy` permanecem inalterados.
+- [x] UI mobile-first preservada e nenhum `<img>` cru foi usado.
+- [x] Nenhum package, schema Prisma, migration, mock ou endpoint simulado foi adicionado.
+
+### Validação complementar executada
+
+- `pnpm --dir admin exec biome check "src/app/(admin)/financeiro/assinaturas/client.tsx"`
+- `pnpm --dir backend exec biome check "src/modules/api/admin/private/finance/dashboard/use-cases/services.ts"`
+- `pnpm --dir admin check`
+- `pnpm --dir backend check`
+- `pnpm --dir admin build`
+- `pnpm --dir backend build`
+- `pnpm check`
+- Smoke HTTP local: `GET http://localhost:3002/financeiro/assinaturas` retornou `200`.
+- Conferência de artefato local: `rg "Confiável|confiável|Saudável|saudável" admin/.next -g '!cache/**'` confirmou `Confiável` no bundle Admin e nenhuma ocorrência restante de `Saudável` nos arquivos de confiabilidade.

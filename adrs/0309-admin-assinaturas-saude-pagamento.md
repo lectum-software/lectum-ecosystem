@@ -27,6 +27,7 @@ O modelo atual não possui relação formal entre `payment_event` e `professiona
   - `risk`;
   - `critical`;
   - `insufficient_history`.
+- O status técnico `healthy` permanece no contrato e filtros, mas o rótulo exibido ao Admin é **Confiável** para comunicar estabilidade de cobrança de forma mais direta.
 - A taxa de sucesso usa somente tentativas finais de cobrança: aprovadas versus recusadas/canceladas/chargeback. Cobranças pendentes são exibidas, mas não entram no denominador.
 - Histórico insuficiente não é tratado como falha: a UI informa honestamente que não há `payment_event` reconciliável.
 

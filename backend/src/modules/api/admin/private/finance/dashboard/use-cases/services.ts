@@ -753,7 +753,7 @@ const buildPaymentHealthSummary = (params: {
   if (params.status === "healthy") {
     return params.successRatePercent === null
       ? "Sem falhas recentes"
-      : `${params.successRatePercent}% de sucesso · saudável`;
+      : `${params.successRatePercent}% de sucesso · confiável`;
   }
 
   return "Histórico insuficiente";
@@ -854,7 +854,7 @@ const buildPaymentInsights = (
       final_attempts: finalAttempts,
       label:
         status === "healthy"
-          ? "Saudável"
+          ? "Confiável"
           : status === "attention"
             ? "Atenção"
             : status === "risk"
