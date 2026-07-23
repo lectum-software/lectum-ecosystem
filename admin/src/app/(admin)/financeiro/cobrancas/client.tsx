@@ -253,6 +253,13 @@ const ChargeStatusBadge = ({ item }: { item: FinanceChargeItem }) => (
   </span>
 );
 
+const formatChargeSubscriptionPlanState = (item: FinanceChargeItem) => {
+  if (!item.subscription) return "—";
+  if (item.subscription.status === "ativa") return "Ativo";
+
+  return item.subscription.status_label;
+};
+
 const ErrorState = ({ message, onRetry }: { message: string; onRetry: () => void }) => (
   <CardShell className="p-6">
     <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -340,6 +347,7 @@ const ChargesTable = ({ items }: { items: FinanceChargeItem[] }) => (
                   <dd className="mt-1 font-bold text-foreground">
                     {item.subscription?.plan.name ?? "Não identificado"}
                   </dd>
+                  <p className="mt-1 text-muted">{formatChargeSubscriptionPlanState(item)}</p>
                 </div>
               </dl>
             </div>
@@ -383,7 +391,7 @@ const ChargesTable = ({ items }: { items: FinanceChargeItem[] }) => (
                 <p className="font-black text-foreground">
                   {item.subscription?.plan.name ?? "Não identificado"}
                 </p>
-                <p className="text-xs text-muted">{item.subscription?.status_label ?? "—"}</p>
+                <p className="text-xs text-muted">{formatChargeSubscriptionPlanState(item)}</p>
               </td>
               <td className="whitespace-nowrap px-5 py-4 font-black text-foreground">
                 {formatMoney(item.amount_cents)}

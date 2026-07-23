@@ -750,3 +750,33 @@ Frontend esperado:
 - `pnpm check` foi executado, mas ficou bloqueado por formata??o preexistente fora do escopo em `backend/src/modules/api/admin/private/patients/profile-edit/use-cases/services.ts`; os checks/builds relevantes do Admin passaram.
 - Smoke HTTP local: `GET http://localhost:3002/financeiro` retornou `200`.
 - Scan est?tico/build: `admin/src/app/(admin)/financeiro/client.tsx` e o build em `admin/.next` cont?m **Confiabilidade Pgto** na rota de Financeiro, enquanto a pr?via de assinaturas n?o cont?m mais a coluna **?ltima**.
+
+
+## Ajuste p?s-feedback 2026-07-23 - Estado ativo na coluna Plano de cobran?as
+
+- Pedido do usu?rio: na coluna **Plano**, abaixo de **Plano Profissional**, adicionar o texto **Ativo**.
+- A pr?via **?ltimas cobran?as realizadas** em `/financeiro` deixou de exibir a refer?ncia curta abaixo do plano e passou a exibir o estado operacional da assinatura; para assinaturas com `status="ativa"`, o texto exibido ? **Ativo**.
+- A rela??o completa `/financeiro/cobrancas` tamb?m usa a mesma regra na coluna **Plano**, trocando a forma feminina **Ativa** por **Ativo** quando a assinatura est? ativa e preservando status n?o ativos reais, como **Inadimplente**.
+- Os cards mobile de cobran?as exibem o mesmo texto abaixo do plano, mantendo a hierarquia mobile-first.
+- A altera??o ? somente visual e reutiliza `professional_subscription.status`/`status_label` j? retornados pelo contrato financeiro; n?o houve endpoint, c?lculo financeiro, schema Prisma, migration, package, mock ou dado artificial novo.
+- Builder/Quick Copy n?o est? exposto como ferramenta callable neste ambiente; as refer?ncias audit?veis foram as capturas autenticadas enviadas pelo usu?rio em 2026-07-23 e `_product/proto/admin/Financeiro.png`.
+- ADR n?o criado: n?o houve decis?o arquitetural, integra??o nova, regra de dom?nio nova ou trade-off persistente al?m da copy visual solicitada.
+
+### Crit?rios de aceite do ajuste
+
+- [x] Em `/financeiro`, a coluna **Plano** da pr?via de cobran?as exibe **Ativo** abaixo de **Plano Profissional** para assinatura ativa.
+- [x] Em `/financeiro/cobrancas`, a coluna **Plano** exibe **Ativo** abaixo de **Plano Profissional** para assinatura ativa.
+- [x] Status n?o ativos continuam exibindo o status real retornado pelo backend financeiro, sem mascarar inadimpl?ncia ou cancelamento.
+- [x] Os cards mobile de cobran?as exibem o mesmo estado abaixo do plano.
+- [x] Nenhum endpoint, c?lculo financeiro, schema Prisma, migration, package, mock ou dado artificial foi adicionado.
+- [x] UI mobile-first preservada e nenhum `<img>` cru foi usado.
+
+### Valida??o complementar executada
+
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/financeiro/client.tsx" "src/app/(admin)/financeiro/cobrancas/client.tsx"`.
+- `pnpm --dir admin exec biome check "src/app/(admin)/financeiro/client.tsx" "src/app/(admin)/financeiro/cobrancas/client.tsx"`.
+- `pnpm --dir admin exec eslint "src/app/(admin)/financeiro/client.tsx" "src/app/(admin)/financeiro/cobrancas/client.tsx"`.
+- `pnpm --dir admin check`.
+- `pnpm --dir admin build` no checkout principal foi tentado, mas ficou bloqueado pelo `.next/lock` de outro build/servidor Next ativo.
+- `pnpm --dir ".tmp/admin-build-plan-active-20260723191907/admin" build` passou em worktree tempor?rio contendo os arquivos alterados.
+- Smoke HTTP local: `GET http://localhost:3002/financeiro` e `GET http://localhost:3002/financeiro/cobrancas?period=all` retornaram `200`.

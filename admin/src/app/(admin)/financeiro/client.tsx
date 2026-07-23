@@ -180,13 +180,6 @@ const isCancelledSubscription = (item: FinanceSubscriptionItem) => item.status =
 const formatNextChargeDate = (item: FinanceSubscriptionItem) =>
   isCancelledSubscription(item) ? "—" : formatNullableDate(item.next_charge_at);
 
-const shortReference = (value: string | null) => {
-  if (!value) return "â€”";
-  if (value.length <= 16) return value;
-
-  return `${value.slice(0, 8)}...${value.slice(-4)}`;
-};
-
 const detailsHref = (
   base: "/financeiro/assinaturas" | "/financeiro/cobrancas",
   dashboard: AdminFinanceDashboard,
@@ -873,6 +866,13 @@ const ChargeStatusBadge = ({ item }: { item: FinanceChargeItem }) => (
   </span>
 );
 
+const formatChargeSubscriptionPlanState = (item: FinanceChargeItem) => {
+  if (!item.subscription) return "—";
+  if (item.subscription.status === "ativa") return "Ativo";
+
+  return item.subscription.status_label;
+};
+
 const LatestCharges = ({ dashboard }: { dashboard: AdminFinanceDashboard }) => (
   <CardShell className="overflow-hidden">
     <div className="flex flex-col gap-2 border-b border-border p-5 sm:flex-row sm:items-center sm:justify-between">
@@ -911,8 +911,8 @@ const LatestCharges = ({ dashboard }: { dashboard: AdminFinanceDashboard }) => (
                 {formatMaybeMoney(item.amount_cents)} · {formatDateTime(item.occurred_at)}
               </p>
               <p className="text-xs text-muted">
-                {item.subscription?.plan.name ?? "Plano não identificado"} · Ref.{" "}
-                {shortReference(item.reference)}
+                {item.subscription?.plan.name ?? "Plano não identificado"} ·{" "}
+                {formatChargeSubscriptionPlanState(item)}
               </p>
             </div>
           </div>
@@ -958,7 +958,7 @@ const LatestCharges = ({ dashboard }: { dashboard: AdminFinanceDashboard }) => (
                 <p className="font-black text-foreground">
                   {item.subscription?.plan.name ?? "Não identificada"}
                 </p>
-                <p className="text-xs text-muted">{shortReference(item.reference)}</p>
+                <p className="text-xs text-muted">{formatChargeSubscriptionPlanState(item)}</p>
               </td>
               <td className="px-5 py-4 font-black text-foreground">
                 {formatMaybeMoney(item.amount_cents)}
