@@ -125,7 +125,7 @@ const PATIENT_INTENT_SEGMENT_LABELS = {
   cold: "Frios",
   curious: "Curiosos",
   objective: "Interessados",
-  very_qualified: "Muito qualificados",
+  very_qualified: "Qualificados",
 } as const satisfies Record<AdminPatientsDashboardIntentSegmentId, string>;
 const PATIENT_INTENT_SEGMENT_DESCRIPTIONS = {
   cold: "Sem abertura de perfil, favorito ou clique no WhatsApp no período.",

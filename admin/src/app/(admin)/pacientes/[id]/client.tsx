@@ -140,14 +140,14 @@ const patientIntentProgressClassNames: Record<
   medium: "bg-warning",
   no_signals: "bg-border",
 };
-const patientIntentTemperatureLabels: Record<
+const patientIntentDisplayLabels: Record<
   AdminPatientDetail["intent_analysis"]["level"]["id"],
   string
 > = {
-  high: "Quente",
-  low: "Fria",
-  medium: "Morna",
-  no_signals: "Sem sinais",
+  high: "Qualificado",
+  low: "Curioso",
+  medium: "Interessado",
+  no_signals: "Frio",
 };
 const PATIENT_GENERAL_METRIC_IDS = new Set<PatientsDetailMetric["id"]>([
   "posts_created",
@@ -157,6 +157,12 @@ const PATIENT_GENERAL_METRIC_IDS = new Set<PatientsDetailMetric["id"]>([
 ]);
 const patientMetricDisplayLabels: Partial<Record<PatientsDetailMetric["id"], string>> = {
   comments_created: "Comentários feitos",
+  downvotes_received: "Downvotes (recebidos)",
+  posts_created: "Posts feitos",
+  reports_received: "Denúncias (recebidas)",
+  saves_received: "Salvamentos (recebidos)",
+  shares_received: "Compartilhamentos (recebidos)",
+  upvotes_received: "Upvotes (recebido)",
 };
 const patientPublicationMetricOrder: (keyof PatientsDetailPublication["metrics"])[] = [
   "views",
@@ -205,7 +211,7 @@ const PATIENT_COMMUNITY_CHART_METRICS = [
     iconToneClassName: "bg-primary-soft",
     id: "posts_created",
     key: "posts_created",
-    label: "Posts",
+    label: "Posts feitos",
     shortLabel: "Posts",
     strokeClassName: "stroke-primary",
     swatchClassName: "bg-primary",
@@ -233,12 +239,23 @@ const PATIENT_COMMUNITY_CHART_METRICS = [
     swatchClassName: "bg-teal-500",
   },
   {
+    icon: AlertTriangle,
+    iconClassName: "text-rose-500",
+    iconToneClassName: "bg-rose-50",
+    id: "reports_received",
+    key: "reports_received",
+    label: "Denúncias (recebidas)",
+    shortLabel: "Denúncias",
+    strokeClassName: "stroke-rose-500",
+    swatchClassName: "bg-rose-500",
+  },
+  {
     icon: ArrowUp,
     iconClassName: "text-emerald-500",
     iconToneClassName: "bg-emerald-50",
     id: "upvotes_received",
     key: "upvotes_received",
-    label: "Upvotes",
+    label: "Upvotes (recebido)",
     shortLabel: "Upvotes",
     strokeClassName: "stroke-emerald-500",
     swatchClassName: "bg-emerald-500",
@@ -249,7 +266,7 @@ const PATIENT_COMMUNITY_CHART_METRICS = [
     iconToneClassName: "bg-red-50",
     id: "downvotes_received",
     key: "downvotes_received",
-    label: "Downvotes",
+    label: "Downvotes (recebidos)",
     shortLabel: "Downvotes",
     strokeClassName: "stroke-red-500",
     swatchClassName: "bg-red-500",
@@ -260,7 +277,7 @@ const PATIENT_COMMUNITY_CHART_METRICS = [
     iconToneClassName: "bg-orange-50",
     id: "saves_received",
     key: "saves_received",
-    label: "Salvamentos",
+    label: "Salvamentos (recebidos)",
     shortLabel: "Salvos",
     strokeClassName: "stroke-orange-500",
     swatchClassName: "bg-orange-500",
@@ -271,7 +288,7 @@ const PATIENT_COMMUNITY_CHART_METRICS = [
     iconToneClassName: "bg-violet-50",
     id: "shares_received",
     key: "shares_received",
-    label: "Compartilhamentos",
+    label: "Compartilhamentos (recebidos)",
     shortLabel: "Shares",
     strokeClassName: "stroke-violet-500",
     swatchClassName: "bg-violet-500",
@@ -984,6 +1001,7 @@ const PatientStatisticsMetricToggleCard = ({
   period: AdminPatientDetail["period"];
 }) => {
   const Icon = config.icon;
+  const label = config.label;
   const displayValue = numberFormatter.format(metric.value);
 
   return (
@@ -996,7 +1014,7 @@ const PatientStatisticsMetricToggleCard = ({
           : "border-border/80 bg-border/50 shadow-none hover:-translate-y-0.5 hover:border-primary/25 hover:bg-border/60",
       )}
       onClick={onToggle}
-      title={`${metric.label}: ${displayValue}. ${active ? "Visível no gráfico" : "Oculto no gráfico"}`}
+      title={`${label}: ${displayValue}. ${active ? "Visível no gráfico" : "Oculto no gráfico"}`}
       type="button"
     >
       <span className="block min-w-0 max-w-full">
@@ -1013,7 +1031,7 @@ const PatientStatisticsMetricToggleCard = ({
         </span>
         <span className="mt-4 block min-w-0 max-w-full">
           <span className="block max-w-full break-words text-xs font-extrabold leading-snug text-foreground">
-            {metric.label}
+            {label}
           </span>
           <span className="mt-2 block text-2xl font-extrabold leading-none text-foreground">
             {displayValue}
@@ -1392,7 +1410,7 @@ const EngagementChart = ({
           </div>
           <p className="mt-1 text-xs font-bold leading-5 text-muted">
             Dados reais de posts, comentários, respostas de psicólogos verificados, votos,
-            salvamentos e compartilhamentos no período.
+            denúncias, salvamentos e compartilhamentos no período.
           </p>
         </div>
         {periodControls}
@@ -2067,6 +2085,7 @@ const PATIENT_STATISTICS_VISUAL_EXAMPLE_METRICS: Partial<
   comments_created: 18,
   downvotes_received: 3,
   posts_created: 6,
+  reports_received: 2,
   saves_received: 9,
   shares_received: 5,
   upvotes_received: 31,
@@ -2077,6 +2096,7 @@ const PATIENT_STATISTICS_VISUAL_EXAMPLE_SERIES = {
   comments_created: [2, 4, 5, 3, 4],
   downvotes_received: [0, 1, 0, 1, 1],
   posts_created: [0, 1, 2, 1, 2],
+  reports_received: [0, 0, 1, 0, 1],
   saves_received: [1, 2, 2, 1, 3],
   shares_received: [0, 1, 1, 1, 2],
   upvotes_received: [4, 6, 8, 5, 8],
@@ -2099,6 +2119,19 @@ const PATIENT_STATISTICS_VISUAL_EXAMPLE_ACTIVITY_HOURS = [
   total: number;
 }>;
 
+const PATIENT_INTENT_ANALYSIS_VISUAL_EXAMPLE_METRICS = {
+  favorites: { previousValue: 0, value: 1 },
+  profile_views: { previousValue: 4, value: 7 },
+  repeated_profile_views: { previousValue: 1, value: 2 },
+  whatsapp_clicks: { previousValue: 0, value: 1 },
+} satisfies Record<
+  PatientsDetailIntentMetric["id"],
+  {
+    previousValue: number;
+    value: number;
+  }
+>;
+
 const patientStatisticsVisualExampleChartMetricIds = new Set<PatientsDetailMetric["id"]>(
   PATIENT_COMMUNITY_CHART_METRICS.map((metric) => metric.id),
 );
@@ -2108,6 +2141,22 @@ const patientStatisticsVisualExampleNumber = (value: number | null | undefined) 
 
 const isPatientStatisticsVisualExampleEligible = (id: string) =>
   PATIENT_STATISTICS_VISUAL_EXAMPLE_ENABLED && id === PATIENT_STATISTICS_VISUAL_EXAMPLE_PATIENT_ID;
+
+const hasPatientIntentAnalysisData = (detail: AdminPatientDetail) => {
+  const intent = detail.intent_analysis;
+
+  return (
+    intent.score > 0 ||
+    intent.total_signals > 0 ||
+    intent.unique_psychologists_contacted > 0 ||
+    intent.unique_psychologists_favorited > 0 ||
+    intent.unique_psychologists_viewed > 0 ||
+    intent.metrics.some((metric) => metric.value > 0)
+  );
+};
+
+const shouldUsePatientIntentVisualExample = (id: string, detail: AdminPatientDetail) =>
+  isPatientStatisticsVisualExampleEligible(id) && !hasPatientIntentAnalysisData(detail);
 
 const hasPatientStatisticsCommunityChartData = (detail: AdminPatientDetail) =>
   detail.metrics.some(
@@ -2167,6 +2216,100 @@ const parsePatientStatisticsVisualExampleDate = (value: string | null | undefine
   return Number.isNaN(date.getTime()) ? null : date;
 };
 
+type PatientIntentLevelId = AdminPatientDetail["intent_analysis"]["level"]["id"];
+
+const patientIntentVisualExampleLevelLabel = (
+  id: PatientIntentLevelId,
+): AdminPatientDetail["intent_analysis"]["level"]["label"] =>
+  (
+    ({
+      high: "Qualificado",
+      low: "Curioso",
+      medium: "Interessado",
+      no_signals: "Frio",
+    }) as Record<PatientIntentLevelId, AdminPatientDetail["intent_analysis"]["level"]["label"]>
+  )[id];
+
+const buildPatientIntentVisualExampleLevel = (
+  score: number,
+): AdminPatientDetail["intent_analysis"]["level"] => {
+  if (score >= 70) {
+    return { id: "high", label: patientIntentVisualExampleLevelLabel("high"), tone: "hot" };
+  }
+
+  if (score >= 40) {
+    return { id: "medium", label: patientIntentVisualExampleLevelLabel("medium"), tone: "warm" };
+  }
+
+  if (score > 0) {
+    return { id: "low", label: patientIntentVisualExampleLevelLabel("low"), tone: "cool" };
+  }
+
+  return {
+    id: "no_signals",
+    label: patientIntentVisualExampleLevelLabel("no_signals"),
+    tone: "neutral",
+  };
+};
+
+const buildPatientIntentVisualExampleMetrics = (
+  metrics: PatientsDetailIntentMetric[],
+): PatientsDetailIntentMetric[] =>
+  metrics.map((metric) => {
+    const example = PATIENT_INTENT_ANALYSIS_VISUAL_EXAMPLE_METRICS[metric.id];
+    const previousValue = Math.max(0, example.previousValue);
+    const value = Math.max(0, example.value);
+    const changePercent =
+      previousValue > 0 ? ((value - previousValue) / previousValue) * 100 : null;
+    const trend =
+      changePercent === null
+        ? "unavailable"
+        : value > previousValue
+          ? "up"
+          : value < previousValue
+            ? "down"
+            : "flat";
+
+    return {
+      ...metric,
+      change_percent: changePercent,
+      previous_value: previousValue,
+      score_contribution: value * metric.score_weight,
+      trend,
+      value,
+    };
+  });
+
+const buildPatientIntentVisualExampleDetail = (detail: AdminPatientDetail): AdminPatientDetail => {
+  const metrics = buildPatientIntentVisualExampleMetrics(detail.intent_analysis.metrics);
+  const score = Math.min(
+    detail.intent_analysis.max_score,
+    metrics.reduce((total, metric) => total + metric.score_contribution, 0),
+  );
+  const periodTo = formatPatientStatisticsVisualExampleDate(
+    parsePatientStatisticsVisualExampleDate(detail.period.to) ?? new Date(),
+  );
+
+  return {
+    ...detail,
+    intent_analysis: {
+      ...detail.intent_analysis,
+      coverage_note:
+        "Indicador interno do Admin para avaliar visualmente a proximidade do contato no período selecionado.",
+      last_signal_at: `${periodTo}T18:40:00-03:00`,
+      level: buildPatientIntentVisualExampleLevel(score),
+      metrics,
+      score,
+      summary:
+        "Paciente com múltiplos sinais de descoberta, favoritos e intenção de contato no período selecionado.",
+      total_signals: metrics.reduce((total, metric) => total + metric.value, 0),
+      unique_psychologists_contacted: 1,
+      unique_psychologists_favorited: 1,
+      unique_psychologists_viewed: 5,
+    },
+  };
+};
+
 const buildPatientStatisticsVisualExampleDates = (detail: AdminPatientDetail) => {
   const existingDates = detail.series.points.map((point) => point.date).filter(Boolean);
 
@@ -2193,6 +2336,7 @@ const buildPatientStatisticsVisualExampleSeries = (detail: AdminPatientDetail) =
     comments_created: PATIENT_STATISTICS_VISUAL_EXAMPLE_SERIES.comments_created[index] ?? 0,
     downvotes_received: PATIENT_STATISTICS_VISUAL_EXAMPLE_SERIES.downvotes_received[index] ?? 0,
     posts_created: PATIENT_STATISTICS_VISUAL_EXAMPLE_SERIES.posts_created[index] ?? 0,
+    reports_received: PATIENT_STATISTICS_VISUAL_EXAMPLE_SERIES.reports_received[index] ?? 0,
     saves_received: PATIENT_STATISTICS_VISUAL_EXAMPLE_SERIES.saves_received[index] ?? 0,
     shares_received: PATIENT_STATISTICS_VISUAL_EXAMPLE_SERIES.shares_received[index] ?? 0,
     upvotes_received: PATIENT_STATISTICS_VISUAL_EXAMPLE_SERIES.upvotes_received[index] ?? 0,
@@ -3299,15 +3443,9 @@ const PatientEngagementSummaryCard = ({
   );
 };
 
-const PatientIntentTemperatureSummaryCard = ({
-  detail,
-  id,
-}: {
-  detail: AdminPatientDetail;
-  id: string;
-}) => {
+const PatientIntentSummaryCard = ({ detail, id }: { detail: AdminPatientDetail; id: string }) => {
   const intent = detail.intent_analysis;
-  const temperature = patientIntentTemperatureLabels[intent.level.id];
+  const classification = patientIntentDisplayLabels[intent.level.id];
 
   return (
     <SummaryCard
@@ -3316,9 +3454,9 @@ const PatientIntentTemperatureSummaryCard = ({
       eyebrow="Intenção"
       helperText={intent.summary}
       icon={Flame}
-      title={temperature}
+      title={classification}
     >
-      <FieldRow label="Nível" value={intent.level.label} />
+      <FieldRow label="Classificação" value={intent.level.label} />
       <FieldRow label="Score" value={formatPatientIntentScore(intent.score, intent.max_score)} />
       <FieldRow label="Sinais reais" value={numberFormatter.format(intent.total_signals)} />
       <FieldRow
@@ -3494,7 +3632,7 @@ const GeneralTab = ({ detail, id }: { detail: AdminPatientDetail; id: string }) 
     <div className="grid items-stretch gap-5 xl:grid-cols-3">
       <AccountSituationCard detail={detail} id={id} />
       <PatientEngagementSummaryCard detail={detail} id={id} />
-      <PatientIntentTemperatureSummaryCard detail={detail} id={id} />
+      <PatientIntentSummaryCard detail={detail} id={id} />
     </div>
 
     <ActivityList detail={detail} />
@@ -3544,6 +3682,9 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPatientDetail; id: string 
   const activityHoursSlice = usePatientStatisticsDetailSlice(id, detail, activityHoursFilter);
   const platformUsageSlice = usePatientStatisticsDetailSlice(id, detail, platformUsageFilter);
   const visualExampleEnabled = shouldUsePatientStatisticsVisualExample(id, detail);
+  const intentDetail = shouldUsePatientIntentVisualExample(id, intentSlice.detail)
+    ? buildPatientIntentVisualExampleDetail(intentSlice.detail)
+    : intentSlice.detail;
   const communityDetail = visualExampleEnabled
     ? buildPatientStatisticsVisualExampleDetail(communitySlice.detail)
     : communitySlice.detail;
@@ -3568,14 +3709,8 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPatientDetail; id: string 
 
   return (
     <div className="max-w-full space-y-5 overflow-x-clip" data-patient-detail-tab="estatisticas">
-      {visualExampleEnabled ? (
-        <div className="rounded-2xl border border-warning/30 bg-warning/10 px-4 py-3 text-sm font-semibold text-warning">
-          Prévia visual local: números de exemplo apenas para avaliação do layout. Não são dados
-          reais e não alteram API ou banco.
-        </div>
-      ) : null}
       <PatientIntentAnalysisCard
-        detail={intentSlice.detail}
+        detail={intentDetail}
         isRefreshing={intentSlice.isRefreshing}
         periodControls={
           <PatientStatisticsPeriodControls

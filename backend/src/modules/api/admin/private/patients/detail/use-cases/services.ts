@@ -440,7 +440,7 @@ const patientIntentLevel = (
   if (score <= 0) {
     return {
       id: "no_signals",
-      label: "Sem sinais",
+      label: "Frio",
       tone: "neutral",
     };
   }
@@ -448,7 +448,7 @@ const patientIntentLevel = (
   if (counts.whatsapp_clicks > 0 || score >= 45) {
     return {
       id: "high",
-      label: "Alta intenção",
+      label: "Qualificado",
       tone: "hot",
     };
   }
@@ -456,14 +456,14 @@ const patientIntentLevel = (
   if (counts.favorites > 0 || score >= 20) {
     return {
       id: "medium",
-      label: "Média intenção",
+      label: "Interessado",
       tone: "warm",
     };
   }
 
   return {
     id: "low",
-    label: "Baixa intenção",
+    label: "Curioso",
     tone: "cool",
   };
 };
@@ -615,9 +615,9 @@ const buildMetrics = (
 ): AdminPatientDetailMetric[] => [
   metric({
     current: current.posts_created,
-    description: "Posts publicados pelo paciente no período.",
+    description: "Posts feitos pelo paciente no período.",
     id: "posts_created",
-    label: "Posts",
+    label: "Posts feitos",
     previous: previous.posts_created,
     source: "community_post.author_id",
   }),
@@ -625,7 +625,7 @@ const buildMetrics = (
     current: current.comments_created,
     description: "Comentários e respostas criados pelo paciente no período.",
     id: "comments_created",
-    label: "Comentários totais",
+    label: "Comentários feitos",
     previous: previous.comments_created,
     source: "post_reply.author_id",
   }),
@@ -641,7 +641,7 @@ const buildMetrics = (
     current: current.reports_received,
     description: "Denúncias reais recebidas em posts ou comentários do paciente.",
     id: "reports_received",
-    label: "Denúncias recebidas",
+    label: "Denúncias (recebidas)",
     previous: previous.reports_received,
     source: "post_report em conteúdo do paciente",
   }),
@@ -649,7 +649,7 @@ const buildMetrics = (
     current: current.upvotes_received,
     description: "Votos positivos recebidos em posts e respostas do paciente.",
     id: "upvotes_received",
-    label: "Upvotes",
+    label: "Upvotes (recebido)",
     previous: previous.upvotes_received,
     source: "post_vote.value>0 em conteúdo do paciente",
   }),
@@ -657,7 +657,7 @@ const buildMetrics = (
     current: current.downvotes_received,
     description: "Votos negativos recebidos em posts e respostas do paciente.",
     id: "downvotes_received",
-    label: "Downvotes",
+    label: "Downvotes (recebidos)",
     previous: previous.downvotes_received,
     source: "post_vote.value<0 em conteúdo do paciente",
   }),
@@ -665,7 +665,7 @@ const buildMetrics = (
     current: current.saves_received,
     description: "Salvamentos recebidos em posts e respostas do paciente.",
     id: "saves_received",
-    label: "Salvamentos",
+    label: "Salvamentos (recebidos)",
     previous: previous.saves_received,
     source: "post_save+post_reply_save em conteúdo do paciente",
   }),
@@ -673,7 +673,7 @@ const buildMetrics = (
     current: current.shares_received,
     description: "Compartilhamentos recebidos em posts e respostas do paciente.",
     id: "shares_received",
-    label: "Compartilhamentos",
+    label: "Compartilhamentos (recebidos)",
     previous: previous.shares_received,
     source: "post_share em conteúdo do paciente",
   }),
@@ -700,6 +700,7 @@ const buildSeries = (
     date,
     downvotes_received: 0,
     posts_created: 0,
+    reports_received: 0,
     saves_received: 0,
     shares_received: 0,
     verified_psychologist_responses: 0,
@@ -725,6 +726,7 @@ const buildSeries = (
   for (const save of bundle.postSavesReceived) increment(save.createdAt, "saves_received");
   for (const save of bundle.replySavesReceived) increment(save.createdAt, "saves_received");
   for (const share of bundle.sharesReceived) increment(share.createdAt, "shares_received");
+  for (const report of bundle.reportsReceived) increment(report.createdAt, "reports_received");
 
   return labels.map((label) => points.get(label) ?? emptyPoint(label));
 };

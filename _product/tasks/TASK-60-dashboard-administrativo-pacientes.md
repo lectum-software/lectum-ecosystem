@@ -182,16 +182,16 @@ Frontend esperado:
 
 - ADR-0240: Dashboard Admin de pacientes com dados agregados e sem retenÃ§Ã£o V1.
 
-## Ajuste complementar 2026-07-14 - Tempo médio do paciente
+## Ajuste complementar 2026-07-14 - Tempo mï¿½dio do paciente
 
-- Pedido do usuário: além do tempo médio dos psicólogos, medir também o tempo médio de uso dos pacientes.
-- O dashboard Admin de Pacientes passou a retornar e exibir `platform_usage.average_duration_seconds`, calculado somente a partir de `page_view_event` autenticado de usuários `role="paciente"` no período selecionado.
-- A métrica usa a mesma regra de confiabilidade aplicada ao uso de psicólogos: só exibe média quando pelo menos 50% dos pageviews de pacientes possuem `duration_seconds` positivo; caso contrário, mostra indisponibilidade honesta.
-- A coleta de duração foi ajustada no tracker global da TASK-49 para pausar quando o navegador fica oculto/minimizado e retomar ao voltar, sem contar tempo em background quando o browser informa visibilidade.
-- Não foram criados mocks, backfill artificial, endpoints paralelos, schema Prisma, migrations ou packages novos.
-- Referência visual: `_product/proto/admin/Pacientes/Pacientes - Dashboard.png`; não há protótipo específico para este novo card e Builder/Quick Copy não está exposto como ferramenta direta neste ambiente.
+- Pedido do usuï¿½rio: alï¿½m do tempo mï¿½dio dos psicï¿½logos, medir tambï¿½m o tempo mï¿½dio de uso dos pacientes.
+- O dashboard Admin de Pacientes passou a retornar e exibir `platform_usage.average_duration_seconds`, calculado somente a partir de `page_view_event` autenticado de usuï¿½rios `role="paciente"` no perï¿½odo selecionado.
+- A mï¿½trica usa a mesma regra de confiabilidade aplicada ao uso de psicï¿½logos: sï¿½ exibe mï¿½dia quando pelo menos 50% dos pageviews de pacientes possuem `duration_seconds` positivo; caso contrï¿½rio, mostra indisponibilidade honesta.
+- A coleta de duraï¿½ï¿½o foi ajustada no tracker global da TASK-49 para pausar quando o navegador fica oculto/minimizado e retomar ao voltar, sem contar tempo em background quando o browser informa visibilidade.
+- Nï¿½o foram criados mocks, backfill artificial, endpoints paralelos, schema Prisma, migrations ou packages novos.
+- Referï¿½ncia visual: `_product/proto/admin/Pacientes/Pacientes - Dashboard.png`; nï¿½o hï¿½ protï¿½tipo especï¿½fico para este novo card e Builder/Quick Copy nï¿½o estï¿½ exposto como ferramenta direta neste ambiente.
 
-### Validação complementar executada
+### Validaï¿½ï¿½o complementar executada
 
 - `pnpm --dir backend check`
 - `pnpm --dir backend build`
@@ -200,20 +200,20 @@ Frontend esperado:
 - `pnpm --dir admin check`
 - `pnpm --dir admin build`
 - `pnpm check`
-- Serviço local `buildPatientsDashboard({})` retornou `platform_usage` real com `average_duration_seconds=null`, `duration_unavailable_reason="Sem pageviews autenticados de pacientes no período."`, `pageviews_count=0` e `sessions_count=0` na base local, sem criar dados artificiais.
-- `GET /api/admin/private/patients/dashboard` sem sessão Admin retornou `401`.
+- Serviï¿½o local `buildPatientsDashboard({})` retornou `platform_usage` real com `average_duration_seconds=null`, `duration_unavailable_reason="Sem pageviews autenticados de pacientes no perï¿½odo."`, `pageviews_count=0` e `sessions_count=0` na base local, sem criar dados artificiais.
+- `GET /api/admin/private/patients/dashboard` sem sessï¿½o Admin retornou `401`.
 - `GET http://localhost:3002/pacientes` retornou `200` no servidor Admin local.
 
 ## Ajuste complementar 2026-07-18 - Layout piloto premium em Pacientes
 
-- Pedido do usuário: aplicar o layout piloto premium nas páginas de pacientes do Admin.
-- O dashboard `/pacientes` passou a entrar no escopo visual `admin-premium-pilot`, compartilhando a sidebar clara, tokens azuis Lectum, cards com borda sutil e tipografia mais leve do piloto já usado em Psicólogos/Comunidades.
-- A área principal foi reorganizada em um card **Visão Geral**, reunindo contadores e gráfico temporal com curvas SVG suaves, strokes/markers mais finos e plot com superfície limpa.
-- A tabela desktop da lista resumida deixou de depender de largura mínima fixa e mantém cards mobile, evitando scrollbar horizontal na leitura de desktop.
-- Não houve alteração de backend, endpoint, contrato, query, schema Prisma, migration, package, seed, mock, dados sensíveis ou regras de exportação/retenção.
-- Builder/Quick Copy não está exposto como ferramenta callable no ambiente; a referência auditável continua sendo `_product/proto/admin/Pacientes/Pacientes - Dashboard.png` e o ADR do piloto visual foi atualizado em `adrs/0263-admin-psicologos-piloto-premium.md`.
+- Pedido do usuï¿½rio: aplicar o layout piloto premium nas pï¿½ginas de pacientes do Admin.
+- O dashboard `/pacientes` passou a entrar no escopo visual `admin-premium-pilot`, compartilhando a sidebar clara, tokens azuis Lectum, cards com borda sutil e tipografia mais leve do piloto jï¿½ usado em Psicï¿½logos/Comunidades.
+- A ï¿½rea principal foi reorganizada em um card **Visï¿½o Geral**, reunindo contadores e grï¿½fico temporal com curvas SVG suaves, strokes/markers mais finos e plot com superfï¿½cie limpa.
+- A tabela desktop da lista resumida deixou de depender de largura mï¿½nima fixa e mantï¿½m cards mobile, evitando scrollbar horizontal na leitura de desktop.
+- Nï¿½o houve alteraï¿½ï¿½o de backend, endpoint, contrato, query, schema Prisma, migration, package, seed, mock, dados sensï¿½veis ou regras de exportaï¿½ï¿½o/retenï¿½ï¿½o.
+- Builder/Quick Copy nï¿½o estï¿½ exposto como ferramenta callable no ambiente; a referï¿½ncia auditï¿½vel continua sendo `_product/proto/admin/Pacientes/Pacientes - Dashboard.png` e o ADR do piloto visual foi atualizado em `adrs/0263-admin-psicologos-piloto-premium.md`.
 
-### Validação complementar executada
+### Validaï¿½ï¿½o complementar executada
 
 - `pnpm --dir admin exec biome check --write "src/components/admin-shell/shell.tsx" "src/app/(admin)/pacientes/client.tsx" "src/app/(admin)/pacientes/[id]/client.tsx"`
 - `pnpm --dir admin check`
@@ -255,8 +255,8 @@ Frontend esperado:
 - `pnpm --dir backend build`
 - `pnpm --dir admin check`
 - `pnpm --dir admin build`
-- Serviço local: `buildPatientsDashboard({ period: "year" })` retornou `200 Este ano 3660`.
-- Serviço local: `buildPatientsDashboard({ period: "all" })` retornou `200 Todo o período`.
+- Serviï¿½o local: `buildPatientsDashboard({ period: "year" })` retornou `200 Este ano 3660`.
+- Serviï¿½o local: `buildPatientsDashboard({ period: "all" })` retornou `200 Todo o perï¿½odo`.
 
 ## Ajuste pos-feedback 2026-07-18 - Contadores e grafico alinhados a Psicologos
 
@@ -359,17 +359,17 @@ Frontend esperado:
 - Smoke HTTP local: `GET http://localhost:3002/pacientes/lista` retornou `200`.
 - Smoke HTTP local: `GET http://localhost:3001/api/admin/private/patients?limit=1` sem token Admin retornou `401`.
 
-## Ajuste pos-feedback 2026-07-19 - Mapa e ranking de localização de pacientes
+## Ajuste pos-feedback 2026-07-19 - Mapa e ranking de localizaï¿½ï¿½o de pacientes
 
-- Pedido do usuário: evoluir o card **Localização** com um mapa e listagens de cidades e estados mais acessados.
-- O endpoint `GET /api/admin/private/patients/dashboard` passou a calcular `locations` com capturas reais de `visitor_location` vinculadas a pacientes dentro do período selecionado, em vez de usar apenas a última localização por paciente sem recorte temporal.
-- A UI `/pacientes` agora renderiza um mapa SVG simplificado de UFs brasileiras, sem package novo e sem usar imagem do protótipo como gráfico final.
-- O card também exibe rankings **Top estados** e **Top cidades**, usando apenas agregados reais. Cidades com frequência menor que 2 capturas são agrupadas em **Outras cidades** para reduzir exposição em dado sensível de saúde.
-- Locais fora do Brasil continuam aparecendo nas listagens; o mapa informa quando não há UF brasileira identificada.
-- Não houve schema Prisma, migration, package novo, seed, mock, backfill artificial ou endpoint paralelo.
-- Builder/Quick Copy não está exposto como ferramenta callable neste ambiente; a referência auditável continua sendo `_product/proto/admin/Pacientes/Pacientes - Dashboard.png`, complementada pelos screenshots enviados pelo usuário em 2026-07-18/2026-07-19.
+- Pedido do usuï¿½rio: evoluir o card **Localizaï¿½ï¿½o** com um mapa e listagens de cidades e estados mais acessados.
+- O endpoint `GET /api/admin/private/patients/dashboard` passou a calcular `locations` com capturas reais de `visitor_location` vinculadas a pacientes dentro do perï¿½odo selecionado, em vez de usar apenas a ï¿½ltima localizaï¿½ï¿½o por paciente sem recorte temporal.
+- A UI `/pacientes` agora renderiza um mapa SVG simplificado de UFs brasileiras, sem package novo e sem usar imagem do protï¿½tipo como grï¿½fico final.
+- O card tambï¿½m exibe rankings **Top estados** e **Top cidades**, usando apenas agregados reais. Cidades com frequï¿½ncia menor que 2 capturas sï¿½o agrupadas em **Outras cidades** para reduzir exposiï¿½ï¿½o em dado sensï¿½vel de saï¿½de.
+- Locais fora do Brasil continuam aparecendo nas listagens; o mapa informa quando nï¿½o hï¿½ UF brasileira identificada.
+- Nï¿½o houve schema Prisma, migration, package novo, seed, mock, backfill artificial ou endpoint paralelo.
+- Builder/Quick Copy nï¿½o estï¿½ exposto como ferramenta callable neste ambiente; a referï¿½ncia auditï¿½vel continua sendo `_product/proto/admin/Pacientes/Pacientes - Dashboard.png`, complementada pelos screenshots enviados pelo usuï¿½rio em 2026-07-18/2026-07-19.
 
-### Validação complementar executada
+### Validaï¿½ï¿½o complementar executada
 
 - `pnpm --dir backend exec biome check --write "src/modules/api/admin/private/patients/dashboard/repositories/AdminPatientsDashboardRepository.ts" "src/modules/api/admin/private/patients/dashboard/use-cases/services.ts"`
 - `pnpm --dir admin exec biome check --write "src/app/(admin)/pacientes/client.tsx"`
@@ -378,9 +378,9 @@ Frontend esperado:
 - `pnpm --dir admin check`
 - `pnpm --dir admin build`
 - `pnpm check`
-- Serviço local `buildPatientsDashboard({ period: "all" })` retornou `status=200`, `locations.total=0`, `states=[]` e `cities=[]` na base local atual, sem criar dados artificiais.
+- Serviï¿½o local `buildPatientsDashboard({ period: "all" })` retornou `status=200`, `locations.total=0`, `states=[]` e `cities=[]` na base local atual, sem criar dados artificiais.
 - Smoke HTTP local `GET http://localhost:3002/pacientes` retornou `200`.
-- Browser local headless em `http://localhost:3002/pacientes` carregou o fluxo protegido e exibiu redirecionamento para login por ausência de sessão Admin compartilhada; a validação visual autenticada ficou limitada ao build/código porque não usei nem criei credencial Admin artificial.
+- Browser local headless em `http://localhost:3002/pacientes` carregou o fluxo protegido e exibiu redirecionamento para login por ausï¿½ncia de sessï¿½o Admin compartilhada; a validaï¿½ï¿½o visual autenticada ficou limitada ao build/cï¿½digo porque nï¿½o usei nem criei credencial Admin artificial.
 
 ## Ajuste pos-feedback 2026-07-19 - Preview local de localizacao com dados de exemplo
 
@@ -518,11 +518,11 @@ Frontend esperado:
 
 ## Ajuste pos-feedback 2026-07-23 - Analise agregada de intencao dos pacientes
 
-- Pedido do usuario: no dashboard `/pacientes`, abaixo do bloco **Visao Geral**, adicionar uma analise de intencao mostrando o percentual de pacientes **Frios**, **Curiosos**, **Interessados** e **Muito qualificados**.
+- Pedido do usuario: no dashboard `/pacientes`, abaixo do bloco **Visao Geral**, adicionar uma analise de intencao mostrando o percentual de pacientes **Frios**, **Curiosos**, **Interessados** e **Qualificados**.
 - O endpoint `GET /api/admin/private/patients/dashboard` passou a retornar `intent_analysis`, com distribuicao agregada e totais de sinais reais no periodo selecionado.
 - Fontes usadas: `profile_view_event.viewer_id` com `source="profile_page"`, `psychologist_favorite.user_id` ainda ativo e `contact_request.user_id` com `channel="whatsapp"`; retornos ao mesmo perfil sao derivados de repeticao real de abertura por paciente/psicologo.
 - Denominador: pacientes reais existentes ao final do periodo selecionado. Pacientes sem sinais no periodo entram como **Frios** para preservar leitura percentual da base total.
-- Classificacao V1: **Frios** sem sinais; **Curiosos** com abertura de perfil/baixa intencao sem favorito ou WhatsApp; **Interessados** com favoritos ou retorno relevante ao perfil sem WhatsApp; **Muito qualificados** com clique no WhatsApp ou multiplos sinais fortes.
+- Classificacao V1: **Frios** sem sinais; **Curiosos** com abertura de perfil/baixa intencao sem favorito ou WhatsApp; **Interessados** com favoritos ou retorno relevante ao perfil sem WhatsApp; **Qualificados** com clique no WhatsApp ou multiplos sinais fortes.
 - A UI exibe o bloco imediatamente apos **Visao Geral**, com barra de distribuicao, totais de sinais e cards percentuais/contagens por categoria.
 - A analise e exclusivamente interna do Admin: nao e exibida publicamente, nem para pacientes, nem para psicologos; a copy deixa claro que nao infere sessao, atendimento, diagnostico ou conteudo de conversa.
 - Nao houve criacao de tracking novo, schema Prisma, migration, package, seed, mock, backfill artificial ou endpoint paralelo.
@@ -531,7 +531,7 @@ Frontend esperado:
 ### Criterios de aceite do ajuste
 
 - [x] Bloco **Analise da intencao dos pacientes** aparece abaixo de **Visao Geral** no dashboard `/pacientes`.
-- [x] O bloco mostra percentuais e contagens de **Frios**, **Curiosos**, **Interessados** e **Muito qualificados**.
+- [x] O bloco mostra percentuais e contagens de **Frios**, **Curiosos**, **Interessados** e **Qualificados**.
 - [x] O calculo usa apenas sinais reais ja persistidos de abertura de perfil, favoritos e clique no WhatsApp.
 - [x] O filtro de periodo do dashboard altera a consulta usada pela analise.
 - [x] A UI deixa claro que o indicador e agregado, interno do Admin e nao representa diagnostico, atendimento ou conversa.
@@ -559,10 +559,10 @@ Frontend esperado:
 ## Ajuste pos-feedback 2026-07-23 - Simplificacao visual da analise de intencao
 
 - Pedido do usuario: no bloco **Analise da intencao dos pacientes**, remover a tag de quantidade de pacientes com sinais reais, remover o texto de cobertura logo abaixo do periodo e remover a faixa final de privacidade.
-- Pedido complementar do usuario: trocar o icone de **Frios** para um simbolo de frio e deixar o icone de **Muito qualificados** em vermelho.
+- Pedido complementar do usuario: trocar o icone de **Frios** para um simbolo de frio e deixar o icone de **Qualificados** em vermelho.
 - A UI do Admin foi ajustada sem mudar contrato HTTP, calculo, fontes reais, schema Prisma, migration, package, seed, mock ou tracking.
 - O backend continua retornando `coverage_note`, `patients_with_signals` e `privacy_note` para preservar compatibilidade do contrato, mas esses textos nao sao mais renderizados neste bloco do dashboard.
-- O segmento **Frios** agora usa icone `Snowflake`; **Muito qualificados** mantem `Flame` com tom visual `danger`.
+- O segmento **Frios** agora usa icone `Snowflake`; **Qualificados** mantem `Flame` com tom visual `danger`.
 - ADR-0314 permanece vigente; nao houve nova decisao arquitetural, apenas refinamento visual.
 
 ### Validacao complementar executada
@@ -570,7 +570,7 @@ Frontend esperado:
 - `pnpm --dir admin exec biome check --write "src/app/(admin)/pacientes/client.tsx"`
 - `pnpm --dir admin check`
 - `pnpm --dir admin build`
-- Browser local headless autenticado em `http://localhost:3002/pacientes` confirmou: textos removidos, icone `lucide-snowflake` em **Frios** e `text-danger` em **Muito qualificados**.
+- Browser local headless autenticado em `http://localhost:3002/pacientes` confirmou: textos removidos, icone `lucide-snowflake` em **Frios** e `text-danger` em **Qualificados**.
 - Admin temporario de validacao foi removido do banco apos a verificacao.
 
 ## Ajuste pos-feedback 2026-07-23 - Renomeacao de Objetivos para Interessados
@@ -603,3 +603,32 @@ Frontend esperado:
 ### ADR
 
 - ADR-0314 atualizado: label de produto do segmento `objective` renomeado para **Interessados**.
+
+## Ajuste pos-feedback 2026-07-23 - Renomeacao de Muito qualificados para Qualificados
+
+- Pedido do usuario: na analise agregada de intencao do dashboard `/pacientes`, trocar o termo **Muito qualificados** por **Qualificados**.
+- O backend preservou o id tecnico `very_qualified` para compatibilidade do contrato, mas passou a retornar `label="Qualificados"`.
+- A UI do Admin continua renderizando a categoria a partir do payload real de `GET /api/admin/private/patients/dashboard`, sem override local, endpoint paralelo ou dado artificial.
+- A classificacao, fontes reais e pesos nao mudaram: o segmento continua representando pacientes que clicaram no WhatsApp ou concentraram multiplos sinais fortes.
+- Nao houve schema Prisma, migration, package novo, seed, mock, backfill artificial, tracking novo ou mudanca de endpoint. `db:migrate` nao se aplicou.
+- Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente; a referencia auditavel foi o screenshot enviado pelo usuario em 2026-07-23 e `_product/proto/admin/Pacientes/Pacientes - Dashboard.png`.
+- ADR atualizado: `adrs/0314-admin-patient-dashboard-intent-distribution.md`.
+
+### Criterios de aceite do ajuste
+
+- [x] Dashboard `/pacientes` exibe **Qualificados** no segmento `very_qualified`.
+- [x] O texto **Muito qualificados** nao aparece mais no Admin nem no contrato tipado do dashboard.
+- [x] O id tecnico `very_qualified` foi mantido estavel para compatibilidade.
+- [x] Nenhum mock, seed, dado artificial, migration, package novo, endpoint simulado ou tracking novo foi adicionado.
+
+### Validacao complementar executada
+
+- `pnpm --dir backend exec biome check --write "src/modules/api/admin/private/patients/dashboard/DTOs/IAdminPatientsDashboardDTO.ts" "src/modules/api/admin/private/patients/dashboard/use-cases/services.ts"`
+- `pnpm --dir admin exec biome check --write "src/api/req/patients/index.ts"`
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check`
+- Service local `buildPatientsDashboard({ period: "all" })` retornou labels `["Frios","Curiosos","Interessados","Qualificados"]` em `intent_analysis.items`, sem criar dados artificiais.
+- Browser local/headless via Chrome CDP em `/pacientes`, com admin temporario real removido ao final, validou desktop `1365x900` e mobile `390x844`: **QUALIFICADOS** presente, **MUITO QUALIFICADOS** ausente e `scrollWidth=390` no mobile.

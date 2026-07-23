@@ -206,15 +206,15 @@ Frontend esperado:
 
 ## Ajuste complementar 2026-07-18 - Layout piloto premium no detalhe
 
-- Pedido do usuário: aplicar o layout piloto premium nas páginas de pacientes do Admin.
+- Pedido do usuï¿½rio: aplicar o layout piloto premium nas pï¿½ginas de pacientes do Admin.
 - A rota `/pacientes/[id]` passou a entrar no escopo visual `admin-premium-pilot`, preservando a tela somente leitura e todos os dados reais existentes.
-- O cabeçalho operacional e os filtros passaram a usar superfície/borda/sombra do piloto; os cards de métricas foram compactados com pesos tipográficos mais leves.
-- O gráfico de engajamento passou a usar curvas SVG suaves com `buildSmoothSvgPath`, strokes/markers mais finos e plot limpo com borda sutil.
-- A série **Comentários** deixou de depender de `var(--admin-info)` inexistente e passou a usar cor real definida no componente.
-- Não houve alteração de backend, endpoint, contrato, query, schema Prisma, migration, package, seed, mock, dados sensíveis ou ações administrativas de paciente.
-- Builder/Quick Copy não está exposto como ferramenta callable no ambiente; a referência auditável continua sendo `_product/proto/admin/Pacientes/Pacientes - Detalhes.png` e o ADR do piloto visual foi atualizado em `adrs/0263-admin-psicologos-piloto-premium.md`.
+- O cabeï¿½alho operacional e os filtros passaram a usar superfï¿½cie/borda/sombra do piloto; os cards de mï¿½tricas foram compactados com pesos tipogrï¿½ficos mais leves.
+- O grï¿½fico de engajamento passou a usar curvas SVG suaves com `buildSmoothSvgPath`, strokes/markers mais finos e plot limpo com borda sutil.
+- A sï¿½rie **Comentï¿½rios** deixou de depender de `var(--admin-info)` inexistente e passou a usar cor real definida no componente.
+- Nï¿½o houve alteraï¿½ï¿½o de backend, endpoint, contrato, query, schema Prisma, migration, package, seed, mock, dados sensï¿½veis ou aï¿½ï¿½es administrativas de paciente.
+- Builder/Quick Copy nï¿½o estï¿½ exposto como ferramenta callable no ambiente; a referï¿½ncia auditï¿½vel continua sendo `_product/proto/admin/Pacientes/Pacientes - Detalhes.png` e o ADR do piloto visual foi atualizado em `adrs/0263-admin-psicologos-piloto-premium.md`.
 
-### Validação complementar executada
+### Validaï¿½ï¿½o complementar executada
 
 - `pnpm --dir admin exec biome check --write "src/components/admin-shell/shell.tsx" "src/app/(admin)/pacientes/client.tsx" "src/app/(admin)/pacientes/[id]/client.tsx"`
 - `pnpm --dir admin check`
@@ -256,7 +256,7 @@ Frontend esperado:
 - `pnpm --dir backend build`
 - `pnpm --dir admin check`
 - `pnpm --dir admin build`
-- Serviço local: `showAdminPatient({ id: "demo-patient-reviewer-01", period: "year" })` retornou `200 Este ano 3660`.
+- Serviï¿½o local: `showAdminPatient({ id: "demo-patient-reviewer-01", period: "year" })` retornou `200 Este ano 3660`.
 
 ## Ajuste pos-feedback 2026-07-19 - Remocao dos controles superiores do detalhe
 
@@ -288,29 +288,29 @@ Frontend esperado:
 - `pnpm --dir admin build`
 - Smoke HTTP local: `GET http://localhost:3002/pacientes/demo-patient-reviewer-01` retornou `200`.
 - Smoke HTTP local: `GET http://localhost:3002/pacientes/demo-patient-reviewer-01?tab=perfil` retornou `200`.
-- `pnpm check` foi tentado, mas falhou em `pnpm --dir backend check` por erros TypeScript preexistentes em módulos backend não alterados nesta execução.
+- `pnpm check` foi tentado, mas falhou em `pnpm --dir backend check` por erros TypeScript preexistentes em mï¿½dulos backend nï¿½o alterados nesta execuï¿½ï¿½o.
 
 ## Ajuste pos-feedback 2026-07-19 - Copy e metadado do header do paciente
 
-- Pedido do usuário: remover o ID do header do detalhe do paciente, reduzir a copy de localização ausente e trocar a linha de cadastro/onboarding pela data/hora de último acesso.
-- O header de `/pacientes/[id]` agora mostra apenas **Paciente** abaixo do nome, sem o identificador visual nessa área.
-- A localização ausente passou de **Localização agregada não capturada** para **Localização não capturada**.
+- Pedido do usuï¿½rio: remover o ID do header do detalhe do paciente, reduzir a copy de localizaï¿½ï¿½o ausente e trocar a linha de cadastro/onboarding pela data/hora de ï¿½ltimo acesso.
+- O header de `/pacientes/[id]` agora mostra apenas **Paciente** abaixo do nome, sem o identificador visual nessa ï¿½rea.
+- A localizaï¿½ï¿½o ausente passou de **Localizaï¿½ï¿½o agregada nï¿½o capturada** para **Localizaï¿½ï¿½o nï¿½o capturada**.
 - O endpoint `GET /api/admin/private/patients/:id` passou a retornar `header.last_access_at` calculado a partir de `user_token.createdAt/updatedAt` real, sem tracking novo, seed, mock ou backfill.
-- Quando não houver token real, a UI exibe estado honesto de informação não capturada pelo formatador existente.
-- Não houve schema Prisma, migration, package novo, ação administrativa ou ampliação de dados sensíveis além do metadado operacional de último acesso aprovado no ADR-0241.
+- Quando nï¿½o houver token real, a UI exibe estado honesto de informaï¿½ï¿½o nï¿½o capturada pelo formatador existente.
+- Nï¿½o houve schema Prisma, migration, package novo, aï¿½ï¿½o administrativa ou ampliaï¿½ï¿½o de dados sensï¿½veis alï¿½m do metadado operacional de ï¿½ltimo acesso aprovado no ADR-0241.
 
 ## Ajuste pos-feedback 2026-07-19 - Status da conta no header
 
-- Pedido do usuário: no header do detalhe do paciente, substituir a forma de cadastro pelo status da conta e remover a tag verde **Ativo** ao lado do nome.
-- O header agora mantém o status operacional apenas na linha de metadados como **Status da conta: Ativo/Inativo**, derivado de `user.active` real.
-- A forma de cadastro continua disponível nas abas internas de cadastro/conta, mas não aparece mais no header.
-- Não houve backend novo, schema Prisma, migration, package, seed, mock, tracking, dado sensível ou ação administrativa.
+- Pedido do usuï¿½rio: no header do detalhe do paciente, substituir a forma de cadastro pelo status da conta e remover a tag verde **Ativo** ao lado do nome.
+- O header agora mantï¿½m o status operacional apenas na linha de metadados como **Status da conta: Ativo/Inativo**, derivado de `user.active` real.
+- A forma de cadastro continua disponï¿½vel nas abas internas de cadastro/conta, mas nï¿½o aparece mais no header.
+- Nï¿½o houve backend novo, schema Prisma, migration, package, seed, mock, tracking, dado sensï¿½vel ou aï¿½ï¿½o administrativa.
 
 ## Ajuste pos-feedback 2026-07-19 - Ordem dos metadados do header
 
-- Pedido do usuário: remover gênero do header, trocar **Status da conta: Ativo** por **Conta ativa** e posicionar o status entre e-mail e localização.
-- O header agora lista e-mail, status da conta e localização, nesta ordem.
-- Gênero permanece somente na aba **Perfil e cadastro**, usando o dado real existente, e não aparece mais no header.
+- Pedido do usuï¿½rio: remover gï¿½nero do header, trocar **Status da conta: Ativo** por **Conta ativa** e posicionar o status entre e-mail e localizaï¿½ï¿½o.
+- O header agora lista e-mail, status da conta e localizaï¿½ï¿½o, nesta ordem.
+- Gï¿½nero permanece somente na aba **Perfil e cadastro**, usando o dado real existente, e nï¿½o aparece mais no header.
 
 ## Ajuste pos-feedback 2026-07-19 - Abas internas padronizadas com Psicologos
 
@@ -534,25 +534,25 @@ Frontend esperado:
 - `pnpm check`
 - Browser local/headless via Chrome/CDP em `http://localhost:3002/pacientes/cmrb6fbix0000y0uhdpu1bptl?tab=estatisticas`, com admin temporario real removido ao final, validou desktop `1365x900` e mobile `390x844`: quatro blocos da aba, filtros **Periodo/De/Ate** independentes, default **Todo o periodo**, tabela de **Comunidades ativas**, filtro **Todos** nos horarios de maior atividade, resumo de **Uso da plataforma**, sem badge `America/Sao_Paulo`, sem copy antiga do heatmap e `scrollWidth=390` no mobile.
 
-## Ajuste pós-feedback 2026-07-21 - Acentuação e ortografia da aba Conta
+## Ajuste pï¿½s-feedback 2026-07-21 - Acentuaï¿½ï¿½o e ortografia da aba Conta
 
-- Pedido do usuário: corrigir acentuação e ortografia dos textos exibidos na aba **Conta** do detalhe administrativo de paciente.
-- Corrigidos labels, avisos, placeholders e toasts da UI de `/pacientes/[id]?tab=conta`, incluindo **Método de login**, **Troca obrigatória**, **Sem pendência**, **Sessões ativas**, **Motivo/observação interna** e **Confirmação forte**.
-- As confirmações fortes visíveis passaram a usar copy correta (`ALTERAR E-MAIL` e `ENCERRAR SESSÕES`) com normalização compatível no frontend e backend para aceitar a entrada legada sem acento/hífen, sem quebrar operadores acostumados ao formato anterior.
+- Pedido do usuï¿½rio: corrigir acentuaï¿½ï¿½o e ortografia dos textos exibidos na aba **Conta** do detalhe administrativo de paciente.
+- Corrigidos labels, avisos, placeholders e toasts da UI de `/pacientes/[id]?tab=conta`, incluindo **Mï¿½todo de login**, **Troca obrigatï¿½ria**, **Sem pendï¿½ncia**, **Sessï¿½es ativas**, **Motivo/observaï¿½ï¿½o interna** e **Confirmaï¿½ï¿½o forte**.
+- As confirmaï¿½ï¿½es fortes visï¿½veis passaram a usar copy correta (`ALTERAR E-MAIL` e `ENCERRAR SESSï¿½ES`) com normalizaï¿½ï¿½o compatï¿½vel no frontend e backend para aceitar a entrada legada sem acento/hï¿½fen, sem quebrar operadores acostumados ao formato anterior.
 - Corrigidas mensagens backend de erro/sucesso da aba de conta do paciente em `backend/locales/pt/translation.json`.
-- A contagem `sessao(oes)` foi substituída por pluralização legível: `1 sessão`/`n sessões` e `1 dispositivo`/`n dispositivos`.
-- Não houve alteração de schema Prisma, migrations, package, endpoint, seed, mock, dado artificial ou regra de domínio.
-- Builder/Quick Copy não está exposto como ferramenta callable neste ambiente; a referência auditável foi o screenshot enviado pelo usuário em 2026-07-21.
+- A contagem `sessao(oes)` foi substituï¿½da por pluralizaï¿½ï¿½o legï¿½vel: `1 sessï¿½o`/`n sessï¿½es` e `1 dispositivo`/`n dispositivos`.
+- Nï¿½o houve alteraï¿½ï¿½o de schema Prisma, migrations, package, endpoint, seed, mock, dado artificial ou regra de domï¿½nio.
+- Builder/Quick Copy nï¿½o estï¿½ exposto como ferramenta callable neste ambiente; a referï¿½ncia auditï¿½vel foi o screenshot enviado pelo usuï¿½rio em 2026-07-21.
 - ADR atualizado: `adrs/0292-correcao-encoding-copy-ui-admin.md`.
 
-### Critérios de aceite do ajuste
+### Critï¿½rios de aceite do ajuste
 
-- [x] Textos visíveis da aba **Conta** citados no screenshot estão acentuados corretamente.
-- [x] Mensagens backend usadas por ações da conta do paciente estão em PT-BR acentuado.
-- [x] Confirmações fortes continuam operáveis com o formato anterior sem acentos.
+- [x] Textos visï¿½veis da aba **Conta** citados no screenshot estï¿½o acentuados corretamente.
+- [x] Mensagens backend usadas por aï¿½ï¿½es da conta do paciente estï¿½o em PT-BR acentuado.
+- [x] Confirmaï¿½ï¿½es fortes continuam operï¿½veis com o formato anterior sem acentos.
 - [x] Nenhum `<img>` cru, mock, seed, endpoint novo, migration ou package novo foi adicionado.
 
-### Validação complementar executada
+### Validaï¿½ï¿½o complementar executada
 
 - `pnpm --dir admin exec biome check --write "src/app/(admin)/pacientes/[id]/client.tsx"`
 - `pnpm --dir backend exec biome check --write "src/modules/api/admin/private/patients/account/use-cases/services.ts" "locales/pt/translation.json"`
@@ -562,43 +562,43 @@ Frontend esperado:
 - `pnpm --dir backend build`
 - `pnpm check`
 - Smoke HTTP local: `GET http://localhost:3002/pacientes/cmrqsrab5001f1guh2ve5oy90?tab=conta` retornou `200`.
-- Chrome headless local abriu a rota, mas sem sessão administrativa no perfil headless caiu no login; a conferência autenticada visual ficou limitada ao screenshot enviado pelo usuário e à revisão dos literais corrigidos.
-## Ajuste pós-feedback 2026-07-21 - Publicações do paciente em tabela
+- Chrome headless local abriu a rota, mas sem sessï¿½o administrativa no perfil headless caiu no login; a conferï¿½ncia autenticada visual ficou limitada ao screenshot enviado pelo usuï¿½rio e ï¿½ revisï¿½o dos literais corrigidos.
+## Ajuste pï¿½s-feedback 2026-07-21 - Publicaï¿½ï¿½es do paciente em tabela
 
-- Pedido do usuário: exibir as publicações do paciente como lista/tabela com colunas **Data**, **Tipo**, **Comunidade**, **Prévia (título + descrição)** e ações de **Ver** e **Estatísticas**, com linha de métricas abaixo e expansor na própria tabela para ler o conteúdo completo do post.
-- O endpoint `GET /api/admin/private/patients/:id` foi ampliado com `publications.items`, derivado de `community_post` real do paciente e métricas reais de `page_view_event`, `post_reply`, `post_vote`, `post_save`, `post_share` e `post_report`.
-- A aba `/pacientes/[id]?tab=publicacoes` deixou de depender do recorte limitado de atividades recentes e agora renderiza uma tabela mobile-first com rolagem horizontal controlada, ações por linha, métricas no padrão visual das publicações do psicólogo e expansor de conteúdo completo.
-- A ação **Ver** abre a publicação pública e a ação **Estatísticas** reutiliza a rota Admin existente de analytics de conteúdo (`/comunidades/[slug]/conteudo/post/[id]`), sem endpoint paralelo.
-- Não houve schema Prisma, migration, package novo, seed, mock, backfill, tracking novo, moderação, edição ou remoção de conteúdo.
-- Builder/Quick Copy não está exposto como ferramenta callable no ambiente; as referências auditáveis foram a captura enviada pelo usuário, `_product/proto/admin/Pacientes/Pacientes - Detalhes.png` e `_product/proto/admin/Psicólogos/Detalhes do psicólogo/Publicações.png`.
+- Pedido do usuï¿½rio: exibir as publicaï¿½ï¿½es do paciente como lista/tabela com colunas **Data**, **Tipo**, **Comunidade**, **Prï¿½via (tï¿½tulo + descriï¿½ï¿½o)** e aï¿½ï¿½es de **Ver** e **Estatï¿½sticas**, com linha de mï¿½tricas abaixo e expansor na prï¿½pria tabela para ler o conteï¿½do completo do post.
+- O endpoint `GET /api/admin/private/patients/:id` foi ampliado com `publications.items`, derivado de `community_post` real do paciente e mï¿½tricas reais de `page_view_event`, `post_reply`, `post_vote`, `post_save`, `post_share` e `post_report`.
+- A aba `/pacientes/[id]?tab=publicacoes` deixou de depender do recorte limitado de atividades recentes e agora renderiza uma tabela mobile-first com rolagem horizontal controlada, aï¿½ï¿½es por linha, mï¿½tricas no padrï¿½o visual das publicaï¿½ï¿½es do psicï¿½logo e expansor de conteï¿½do completo.
+- A aï¿½ï¿½o **Ver** abre a publicaï¿½ï¿½o pï¿½blica e a aï¿½ï¿½o **Estatï¿½sticas** reutiliza a rota Admin existente de analytics de conteï¿½do (`/comunidades/[slug]/conteudo/post/[id]`), sem endpoint paralelo.
+- Nï¿½o houve schema Prisma, migration, package novo, seed, mock, backfill, tracking novo, moderaï¿½ï¿½o, ediï¿½ï¿½o ou remoï¿½ï¿½o de conteï¿½do.
+- Builder/Quick Copy nï¿½o estï¿½ exposto como ferramenta callable no ambiente; as referï¿½ncias auditï¿½veis foram a captura enviada pelo usuï¿½rio, `_product/proto/admin/Pacientes/Pacientes - Detalhes.png` e `_product/proto/admin/Psicï¿½logos/Detalhes do psicï¿½logo/Publicaï¿½ï¿½es.png`.
 - ADR criado: `adrs/0299-admin-paciente-publicacoes-tabela-metricas.md`.
 
-### Critérios de aceite do ajuste
+### Critï¿½rios de aceite do ajuste
 
-- [x] A aba **Publicações** usa posts reais do paciente, não atividades recentes truncadas.
-- [x] A tabela possui colunas **Data**, **Tipo**, **Comunidade**, **Prévia** e **Ações**.
-- [x] Cada publicação possui botões de **Ver** e **Estatísticas**.
-- [x] Cada publicação exibe linha de métricas abaixo da linha principal.
-- [x] O expansor da tabela mostra o conteúdo completo do post.
+- [x] A aba **Publicaï¿½ï¿½es** usa posts reais do paciente, nï¿½o atividades recentes truncadas.
+- [x] A tabela possui colunas **Data**, **Tipo**, **Comunidade**, **Prï¿½via** e **Aï¿½ï¿½es**.
+- [x] Cada publicaï¿½ï¿½o possui botï¿½es de **Ver** e **Estatï¿½sticas**.
+- [x] Cada publicaï¿½ï¿½o exibe linha de mï¿½tricas abaixo da linha principal.
+- [x] O expansor da tabela mostra o conteï¿½do completo do post.
 - [x] Nenhum mock, seed, endpoint simulado, package novo ou migration foi adicionado.
 
-### Validação complementar executada
+### Validaï¿½ï¿½o complementar executada
 
 - `pnpm --dir backend exec biome check --write "src/modules/api/admin/private/patients/detail/DTOs/IAdminPatientDetailDTO.ts" "src/modules/api/admin/private/patients/detail/repositories/AdminPatientDetailRepository.ts" "src/modules/api/admin/private/patients/detail/use-cases/services.ts"`
 - `pnpm --dir admin exec biome check --write "src/api/req/patients/index.ts" "src/app/(admin)/pacientes/[id]/client.tsx"`
 - `pnpm --dir backend typecheck`
 - `pnpm --dir admin typecheck`
 
-### Validação final complementar
+### Validaï¿½ï¿½o final complementar
 
 - `pnpm --dir backend check`
 - `pnpm --dir backend build`
 - `pnpm --dir admin check`
 - `pnpm --dir admin build`
 - `pnpm check`
-- Service local: `showAdminPatient({ id: "cmrb6fbrv0002y0uhsqzg306b", period: "all" })` retornou `publications.items.length=2` e métricas reais no primeiro post.
-- Browser local/headless via Chrome/CDP em `/pacientes/cmrb6fbrv0002y0uhsqzg306b?tab=publicacoes`, com admin temporário real removido ao final, validou desktop `1365x900` e mobile `390x844`: colunas solicitadas, ações **Ver**/**Estatísticas**, linha de métricas, expansor de conteúdo completo e rolagem horizontal controlada sem overflow global no mobile.
-- Observação operacional: a primeira reexecução de `pnpm --dir admin build` encontrou lock stale em `admin/.next/lock` de build anterior; o arquivo gerado foi removido e o build foi reexecutado com sucesso.
+- Service local: `showAdminPatient({ id: "cmrb6fbrv0002y0uhsqzg306b", period: "all" })` retornou `publications.items.length=2` e mï¿½tricas reais no primeiro post.
+- Browser local/headless via Chrome/CDP em `/pacientes/cmrb6fbrv0002y0uhsqzg306b?tab=publicacoes`, com admin temporï¿½rio real removido ao final, validou desktop `1365x900` e mobile `390x844`: colunas solicitadas, aï¿½ï¿½es **Ver**/**Estatï¿½sticas**, linha de mï¿½tricas, expansor de conteï¿½do completo e rolagem horizontal controlada sem overflow global no mobile.
+- Observaï¿½ï¿½o operacional: a primeira reexecuï¿½ï¿½o de `pnpm --dir admin build` encontrou lock stale em `admin/.next/lock` de build anterior; o arquivo gerado foi removido e o build foi reexecutado com sucesso.
 
 ## Ajuste pos-feedback 2026-07-21 - Diagnostico de Engajamento nas Comunidades ativas
 
@@ -802,7 +802,7 @@ Frontend esperado:
   - `contact_request.user_id` com `channel=whatsapp` para cliques no WhatsApp.
 - O score deterministico de 0 a 100 combina aberturas de perfil, retornos ao mesmo perfil, favoritos e cliques WhatsApp; clique no WhatsApp e favorito pesam mais por indicarem maior proximidade de contato.
 - O bloco e exclusivo do Admin, nao e exibido publicamente nem para psicologos, e a propria UI informa que nao infere sessao, atendimento, diagnostico ou conteudo de conversa.
-- A previa visual local de desenvolvimento existente na aba **Estatisticas** nao alimenta a analise de intencao; se nao houver sinais reais, o bloco mostra **Sem sinais** e contadores zerados.
+- A previa visual local de desenvolvimento existente na aba **Estatisticas** nao alimenta a analise de intencao; se nao houver sinais reais, o bloco mostra **Frio** e contadores zerados.
 - Nao houve schema Prisma, migration, package novo, seed, mock, backfill artificial, endpoint simulado ou tracking novo. `db:migrate` nao se aplicou.
 - Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente; a referencia visual foi o screenshot enviado pelo usuario em 2026-07-23 e a validacao no browser local.
 - ADR criado: `adrs/0312-admin-patient-intent-analysis.md`.
@@ -829,31 +829,11 @@ Frontend esperado:
 - Service local: `showAdminPatient({ id: "cmrqsrab5001f1guh2ve5oy90", period: "all" })` retornou `intent_analysis` real com fonte `profile_view_event+psychologist_favorite+contact_request` e sem usar a previa visual local.
 - Browser local/headless via Chrome/CDP em `/pacientes/cmrqsrab5001f1guh2ve5oy90?tab=estatisticas`, com admin temporario real removido ao final, validou desktop `1365x900`: bloco de intencao antes de comunidade, score, metrica de WhatsApp e nota de privacidade presentes; e mobile `390x844`: bloco presente, comunidade abaixo e `scrollWidth=390`.
 
-## Ajuste pos-feedback 2026-07-23 - Nome de exibicao em Dados pessoais
-
-- Pedido direto de produto aplicado na aba Admin **Perfil e cadastro**, card **Dados pessoais** do paciente.
-- A primeira linha do card agora e **Nome de exibicao**, usando `header.name`, valor real derivado de `user.name` do paciente.
-- O mesmo resumo somente leitura aparece no modo de edicao de genero antes de e-mail e localizacao, sem permitir alterar nome por este fluxo.
-- E-mail e localizacao permanecem somente leitura; genero continua sendo o unico campo editavel nesse card.
-- Nao houve alteracao de backend, contrato HTTP, schema Prisma, migrations, packages, mock, seed ou endpoint simulado.
-- Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente; as referencias auditaveis foram a captura enviada pelo usuario e `_product/proto/admin/Pacientes/Pacientes - Detalhes.png`.
-- ADR criado: `adrs/0313-admin-dados-pessoais-nomes-exibicao.md`.
-
-### Criterios de aceite do ajuste
-
-- [x] **Dados pessoais** do paciente mostra **Nome de exibicao** como primeira linha.
-- [x] O nome exibido usa `user.name` real ja retornado no detalhe administrativo do paciente.
-- [x] O fluxo de edicao do card nao permite alterar nome, e-mail ou localizacao por este ajuste.
-- [x] Nenhum schema Prisma, migration, package novo, mock, seed ou endpoint simulado foi adicionado.
-
-### Validacao complementar executada
-
-- Pendente ate a conclusao da execucao.
 ## Ajuste pos-feedback 2026-07-23 - Intencao na aba Geral
 
 - Pedido do usuario: apos o bloco **Engajamento** da aba **Geral**, adicionar um terceiro bloco de **Intencao** mostrando a classificacao de intencao do paciente, sem expor a palavra interna "temperatura" na UI.
 - A aba **Geral** agora renderiza os cards resumidos em grid mobile-first na ordem **Conta**, **Engajamento** e **Intencao**, progredindo para tres colunas em telas amplas.
-- O novo card **Intencao** reutiliza o `intent_analysis` real do contrato existente e traduz o nivel em classificacao operacional visivel como **Quente**, **Morna**, **Fria** ou **Sem sinais**.
+- O novo card **Intencao** reutiliza o `intent_analysis` real do contrato existente e traduz o nivel em classificacao operacional visivel como **Frio**, **Curioso**, **Interessado** ou **Qualificado**.
 - O resumo mostra nivel, score, sinais reais e ultimo sinal, com CTA para abrir a analise completa na aba **Estatisticas**.
 - Nao houve backend novo, endpoint novo, contrato HTTP novo, schema Prisma, migration, package, seed, mock, backfill artificial ou tracking novo. `db:migrate` nao se aplicou.
 - Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente; as referencias auditaveis foram o screenshot enviado pelo usuario em 2026-07-23 e `_product/proto/admin/Pacientes/Pacientes - Detalhes.png`.
@@ -873,7 +853,7 @@ Frontend esperado:
 - `pnpm --dir admin check`
 - `pnpm --dir admin build`
 - `pnpm check`
-- Browser local/headless via Chrome/CDP em `/pacientes/cmrqsrab5001f1guh2ve5oy90`, com Admin local em `localhost:3002`, validou desktop `1365x900` e mobile `390x844`: ordem **Conta** -> **Engajamento** -> **Intencao**, titulo **Sem sinais**, ausencia do termo visivel **Temperatura**, score `0/100` e ausencia de overflow horizontal (`scrollWidth=390` no mobile).
+- Browser local/headless via Chrome/CDP em `/pacientes/cmrqsrab5001f1guh2ve5oy90`, com Admin local em `localhost:3002`, validou desktop `1365x900` e mobile `390x844`: ordem **Conta** -> **Engajamento** -> **Intencao**, titulo **Frio**, ausencia do termo visivel **Temperatura**, score `0/100` e ausencia de overflow horizontal (`scrollWidth=390` no mobile).
 
 
 ## Ajuste pos-feedback 2026-07-23 - Nome de exibicao em Dados pessoais
@@ -904,6 +884,60 @@ Frontend esperado:
 - `pnpm check`
 - API local com admin temporario real removido ao final: `GET /api/admin/private/psychologists/cmrwmw35t0000xkuhxoceh77v` retornou `profile.personal.full_name="Ana Beatriz Lima"`; `GET /api/admin/private/patients/cmrqsrab5001f1guh2ve5oy90?period=all` retornou `header.name="Paciente preview 52"`.
 - Browser local/headless via Chrome CDP em viewport 390x844: `/psicologos/cmrwmw35t0000xkuhxoceh77v?tab=perfil` exibiu a linha **Nome completo / Ana Beatriz Lima** e `scrollWidth=390`; `/pacientes/cmrqsrab5001f1guh2ve5oy90?tab=perfil` exibiu a linha **Nome de exibicao / Paciente preview 52** e `scrollWidth=390`.
+
+## Ajuste pos-feedback 2026-07-23 - Previa visual de intencao sem aviso global
+
+- Pedido do usuario: remover a frase **Previa visual local: numeros de exemplo apenas para avaliacao do layout. Nao sao dados reais e nao alteram API ou banco.** da aba **Estatisticas** e adicionar numeros de exemplo na **Analise de intencao do paciente** apenas para visualizacao local.
+- A aba **Estatisticas** nao renderiza mais o aviso global da previa visual local.
+- A **Analise de intencao do paciente** recebe numeros de exemplo somente em `NODE_ENV=development`, no paciente de preview `cmrqsrab5001f1guh2ve5oy90` e quando a propria analise nao possui sinais reais no periodo selecionado.
+- A previa preserva qualquer sinal real existente, nao altera backend, endpoint, contrato HTTP, schema Prisma, migrations, packages, seed, banco, tracking ou dados persistidos.
+- Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente; as referencias auditaveis foram o screenshot enviado pelo usuario e `_product/proto/admin/Pacientes/Pacientes - Detalhes.png`.
+- ADR atualizado: `adrs/0312-admin-patient-intent-analysis.md` e complemento em `adrs/0241-admin-detalhe-paciente-dados-minimos-readonly.md`.
+
+### Criterios de aceite do ajuste
+
+- [x] A frase solicitada nao aparece mais na aba **Estatisticas**.
+- [x] A **Analise de intencao do paciente** mostra numeros de exemplo no preview local quando nao ha sinais reais.
+- [x] A previa de intencao continua desativada em build/producao e nao substitui dados reais.
+- [x] Nenhum schema Prisma, migration, package novo, mock persistente, seed, endpoint simulado ou tracking novo foi adicionado.
+
+### Validacao complementar executada
+
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/pacientes/[id]/client.tsx"`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check`
+- Browser local/headless via Chrome CDP em `/pacientes/cmrqsrab5001f1guh2ve5oy90?tab=estatisticas`, com admin temporario real removido ao final: desktop `1365x900` validou ausencia do aviso, score `96/100`, numeros de exemplo em perfis abertos/favoritados/WhatsApp e bloco antes de **Estatisticas de comunidade**; mobile `390x844` validou ausencia do aviso, score `96/100` e `scrollWidth=390`.
+
+## Ajuste pos-feedback 2026-07-23 - Nomenclatura direcional nas estatisticas
+
+- Pedido do usuario: explicitar se os contadores da aba **Estatisticas** do paciente sao acoes feitas ou recebidas e adicionar **Denuncias (recebidas)**.
+- O backend manteve o contrato real `GET /api/admin/private/patients/:id`, renomeando labels de metricas para **Posts feitos**, **Comentarios feitos**, **Upvotes (recebido)**, **Downvotes (recebidos)**, **Salvamentos (recebidos)**, **Compartilhamentos (recebidos)** e **Denuncias (recebidas)**.
+- O contador **Denuncias (recebidas)** usa `reports_received` real ja calculado a partir de `post_report` em posts/respostas do paciente e agora tambem entra na serie temporal da aba **Estatisticas**.
+- A UI do Admin adicionou o card ao carrossel mobile-first de **Estatisticas de comunidade**, mantendo os filtros independentes e sem criar endpoint paralelo.
+- Nao houve schema Prisma, migration, package novo, seed, mock persistente, endpoint simulado, tracking novo ou backfill artificial. `db:migrate` nao se aplicou.
+- Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente; as referencias auditaveis foram o screenshot enviado pelo usuario e `_product/proto/admin/Pacientes/Pacientes - Detalhes.png`.
+- ADR atualizado: `adrs/0294-admin-paciente-estatisticas-comunidade-paridade.md`.
+
+### Criterios de aceite do ajuste
+
+- [x] A aba **Estatisticas** exibe os labels direcionais solicitados para posts, comentarios, votos, salvamentos e compartilhamentos.
+- [x] A aba **Estatisticas** exibe o contador **Denuncias (recebidas)** no carrossel de **Estatisticas de comunidade**.
+- [x] **Denuncias (recebidas)** usa `post_report` real vinculado a posts/respostas do paciente e aparece na serie temporal.
+- [x] O layout permanece mobile-first e sem overflow horizontal em 390px.
+- [x] Nenhum schema Prisma, migration, package novo, mock persistente, seed, endpoint simulado ou tracking novo foi adicionado.
+
+### Validacao complementar executada
+
+- `pnpm --dir backend exec biome check --write "src/modules/api/admin/private/patients/detail/DTOs/IAdminPatientDetailDTO.ts" "src/modules/api/admin/private/patients/detail/use-cases/services.ts"`
+- `pnpm --dir admin exec biome check --write "src/api/req/patients/index.ts" "src/app/(admin)/pacientes/[id]/client.tsx"`
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check`
+- Service local `showAdminPatient({ id: "cmrqsrab5001f1guh2ve5oy90", period: "all" })` retornou labels reais **Posts feitos**, **Comentarios feitos**, **Denuncias (recebidas)**, **Upvotes (recebido)**, **Downvotes (recebidos)**, **Salvamentos (recebidos)** e **Compartilhamentos (recebidos)**.
+- Browser local/headless via Chrome CDP em `/pacientes/cmrqsrab5001f1guh2ve5oy90?tab=estatisticas`, com admin temporario real removido ao final: desktop `1365x900` validou a aba **Estatisticas** renderizada sem labels antigos de intencao; mobile `390x844` validou `scrollWidth=390`.
 
 
 ## Ajuste pos-feedback 2026-07-23 - Nome de exibicao editavel pelo Admin
@@ -938,3 +972,32 @@ Frontend esperado:
 - API local com admin temporario real removido ao final: `PUT /api/admin/private/patients/cmrqsrab5001f1guh2ve5oy90/personal-data` alterou o nome para validar persistencia, auditoria `changed_fields=["Nome de exibicao"]`, metadata `changed_field_keys=["display_name"]`, e depois restaurou `Paciente preview 52`.
 - Smoke HTTP sem token no mesmo endpoint retornou `401`.
 - Browser local/headless via Chrome CDP em `/pacientes/cmrqsrab5001f1guh2ve5oy90?tab=perfil`, viewport mobile `390x844`, validou o campo editavel **Nome de exibicao**, helper text atualizado, motivo visivel e `scrollWidth=390`.
+
+## Ajuste pos-feedback 2026-07-23 - Classificacao final da analise de intencao
+
+- Pedido do usuario: na aba **Estatisticas** do paciente, o resultado da analise de intencao deve ser **Frio**, **Curioso**, **Interessado** ou **Qualificado**.
+- O backend preservou os ids tecnicos `no_signals`, `low`, `medium` e `high`, mas passou a retornar os labels de produto **Frio**, **Curioso**, **Interessado** e **Qualificado** no contrato real `intent_analysis.level.label`.
+- A UI do detalhe do paciente passou a usar a mesma classificacao na analise completa da aba **Estatisticas** e no card resumido **Intencao** da aba **Geral**, removendo labels operacionais anteriores como alta/media/baixa intencao e quente/morna/fria.
+- Nao houve alteracao de calculo, fontes reais, endpoint HTTP, schema Prisma, migration, package, seed, mock, backfill artificial ou tracking novo. `db:migrate` nao se aplicou.
+- Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente; as referencias auditaveis foram o screenshot enviado pelo usuario em 2026-07-23 e `_product/proto/admin/Pacientes/Pacientes - Detalhes.png`.
+- ADR atualizado: `adrs/0312-admin-patient-intent-analysis.md`.
+
+### Criterios de aceite do ajuste
+
+- [x] `intent_analysis.level.label` retorna somente **Frio**, **Curioso**, **Interessado** ou **Qualificado**.
+- [x] A aba **Estatisticas** exibe a classificacao com a nova nomenclatura de produto.
+- [x] O card **Intencao** da aba **Geral** usa a mesma nomenclatura e nao exibe labels antigos de temperatura.
+- [x] O layout mobile-first permanece sem overflow horizontal em 390px.
+- [x] Nenhum schema Prisma, migration, package novo, mock, seed, endpoint simulado ou tracking novo foi adicionado.
+
+### Validacao complementar executada
+
+- `pnpm --dir backend exec biome check --write "src/modules/api/admin/private/patients/detail/DTOs/IAdminPatientDetailDTO.ts" "src/modules/api/admin/private/patients/detail/use-cases/services.ts" "src/modules/api/admin/private/patients/dashboard/DTOs/IAdminPatientsDashboardDTO.ts" "src/modules/api/admin/private/patients/dashboard/use-cases/services.ts"`
+- `pnpm --dir admin exec biome check --write "src/api/req/patients/index.ts" "src/app/(admin)/pacientes/[id]/client.tsx"`
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check`
+- Service local `showAdminPatient({ id: "cmrqsrab5001f1guh2ve5oy90", period: "all" })` retornou `intent_analysis.level.label="Frio"` com id tecnico `no_signals`, sem dados artificiais.
+- Browser local/headless via Chrome CDP em `/pacientes/cmrqsrab5001f1guh2ve5oy90?tab=estatisticas`, com admin temporario real removido ao final, validou desktop `1365x900` e mobile `390x844`: classificacao permitida presente, labels antigos ausentes e `scrollWidth=390` no mobile.

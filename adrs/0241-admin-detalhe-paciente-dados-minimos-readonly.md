@@ -90,14 +90,15 @@ O contador usa `post_report` real vinculado a posts ou comentarios do paciente n
 
 Apos feedback de produto, a aba **Estatisticas** do detalhe administrativo de paciente pode exibir numeros de exemplo somente para visualizacao local de layout quando o ambiente esta em `NODE_ENV=development`, o paciente alvo e `cmrqsrab5001f1guh2ve5oy90` e os blocos ainda nao possuem dados reais.
 
-A decisao e uma excecao visual e temporaria para avaliacao do Admin local: a UI mostra aviso explicito de que os numeros nao sao reais, preserva recortes que ja tenham dado real e nao altera backend, endpoint, schema Prisma, migration, seed, backfill, banco ou contrato HTTP. Em build/producao (`NODE_ENV=production`) a previa fica desativada, mantendo os estados vazios honestos quando nao houver dados reais.
+A decisao e uma excecao visual e temporaria para avaliacao do Admin local: a UI preserva recortes que ja tenham dado real e nao altera backend, endpoint, schema Prisma, migration, seed, backfill, banco ou contrato HTTP. Em build/producao (`NODE_ENV=production`) a previa fica desativada, mantendo os estados vazios honestos quando nao houver dados reais.
+
+Complemento de 2026-07-23: por feedback visual, o aviso global da previa foi removido da interface e a analise completa de intencao do paciente tambem pode receber numeros de exemplo na mesma restricao local/development do paciente de preview, apenas quando a analise estiver sem sinais reais. A decisao detalhada da analise de intencao permanece no ADR-0312.
 
 ## Atualizacao 2026-07-22: paridade visual dos cards de Situacao da conta e Engajamento
 
 Apos feedback visual de produto, os cards **Situacao da conta** e **Engajamento** da aba **Geral** do detalhe administrativo de paciente passaram a seguir o mesmo modelo dos cards do detalhe administrativo de psicologo: card externo simples, painel destacado interno com eyebrow em caixa alta, titulo principal, helper text e icone, seguido das linhas de dados e do CTA no rodape.
 
 A alteracao remove a hierarquia duplicada anterior desses dois cards, sem alterar metricas, contratos HTTP, backend, schema Prisma, migrations, packages, mocks, seeds, backfill artificial ou dados sensiveis. Os dados continuam vindo do contrato real existente de paciente. Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente; as referencias auditaveis foram os screenshots enviados pelo usuario, o PNG local `_product/proto/admin/Pacientes/Pacientes - Detalhes.png` e o layout local do detalhe de psicologo.
-
 
 ## Atualizacao 2026-07-23: nome de exibicao editavel pelo Admin
 

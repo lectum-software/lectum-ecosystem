@@ -123,3 +123,31 @@ Novo feedback pediu que os blocos abaixo de **Estatisticas de comunidade** no de
 - `pnpm --dir admin build`
 - `pnpm check`
 - Browser local/headless via Chrome/CDP em `/pacientes/cmrb6fbix0000y0uhdpu1bptl?tab=estatisticas`, desktop `1365x900` e mobile `390x844`, validando os quatro blocos, filtros independentes, tabela de comunidades ativas, filtro de dia da semana, resumo de uso da plataforma, remocao de elementos antigos e `scrollWidth=390` no mobile.
+
+## Revisao 2026-07-23 - Nomenclatura direcional e denuncias na estatistica
+
+### Contexto
+
+Feedback de produto identificou ambiguidade nos contadores da aba **Estatisticas** do paciente:
+alguns indicadores representam acoes feitas pelo paciente, enquanto outros representam engajamento
+recebido no conteudo dele.
+
+### Decisao
+
+- Renomear os contadores do bloco **Estatisticas de comunidade** para explicitar a direcao:
+  **Posts feitos**, **Comentarios feitos**, **Upvotes (recebido)**,
+  **Downvotes (recebidos)**, **Salvamentos (recebidos)** e
+  **Compartilhamentos (recebidos)**.
+- Incluir **Denuncias (recebidas)** no mesmo carrossel e na serie temporal, usando o contador real
+  `reports_received` ja calculado a partir de `post_report` em posts/respostas do paciente.
+- Manter **Respostas de psicologos verificados** inalterado, pois o label ja descreve a fonte de
+  interacao recebida.
+- Nao criar tracking, endpoint paralelo, schema Prisma, migration, package, seed, mock ou backfill.
+
+### Consequencias
+
+- O Admin passa a distinguir visualmente acoes feitas pelo paciente de engajamentos recebidos.
+- Denuncias recebidas podem ser comparadas no mesmo periodo e exibidas no grafico junto aos demais
+  contadores reais.
+- A semantica de calculo permanece a mesma: posts/comentarios sao autorias do paciente; votos,
+  salvamentos, compartilhamentos e denuncias sao recebidos no conteudo do paciente.

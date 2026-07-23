@@ -24,7 +24,7 @@ A distribuicao usa como denominador os pacientes reais existentes no final do pe
 - **Frios**: sem abertura de perfil, favorito ou clique no WhatsApp no periodo;
 - **Curiosos**: abriram perfil/baixa intencao, sem favorito ou WhatsApp;
 - **Interessados**: favoritaram psicologos ou retornaram a perfis, sem clique no WhatsApp;
-- **Muito qualificados**: clicaram no WhatsApp ou concentraram multiplos sinais fortes.
+- **Qualificados**: clicaram no WhatsApp ou concentraram multiplos sinais fortes.
 
 A UI do Admin mostra apenas agregados: percentual, contagem por categoria e totais de sinais. Nao retorna lista nominal neste bloco, nao expande eventos brutos e inclui copy de privacidade informando que o indicador e interno do Admin e nao representa diagnostico, atendimento ou conteudo de conversa.
 
@@ -49,3 +49,9 @@ A UI do Admin mostra apenas agregados: percentual, contagem por categoria e tota
 ## Atualizacao 2026-07-23 - Label Interessados
 
 O label de produto do segmento tecnico `objective` foi renomeado de **Objetivos** para **Interessados**. A mudanca evita sugerir que o paciente tomou uma decisao objetiva/rapida de contato; o segmento segue representando favoritos ou retornos a perfis sem clique no WhatsApp. O id tecnico foi mantido para compatibilidade do contrato.
+
+## Atualizacao 2026-07-23 - Label Qualificados
+
+Por decisao direta de produto, o segmento tecnico `very_qualified` do dashboard `/pacientes` foi renomeado visualmente de **Muito qualificados** para **Qualificados**.
+
+O id tecnico `very_qualified` foi preservado para compatibilidade do contrato e o criterio de classificacao nao mudou: pacientes com clique no WhatsApp ou multiplos sinais fortes continuam entrando nesse segmento. A mudanca e somente de label de produto e foi validada com `buildPatientsDashboard({ period: "all" })`, `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e browser local/headless em desktop e mobile.

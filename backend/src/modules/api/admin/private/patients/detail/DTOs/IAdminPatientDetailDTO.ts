@@ -64,7 +64,7 @@ export type AdminPatientIntentAnalysis = {
   last_signal_at: Date | null;
   level: {
     id: "high" | "low" | "medium" | "no_signals";
-    label: "Alta intenção" | "Baixa intenção" | "Média intenção" | "Sem sinais";
+    label: "Curioso" | "Frio" | "Interessado" | "Qualificado";
     tone: "cool" | "hot" | "neutral" | "warm";
   };
   max_score: 100;
@@ -84,6 +84,7 @@ export type AdminPatientDetailSeriesPoint = {
   date: string;
   downvotes_received: number;
   posts_created: number;
+  reports_received: number;
   saves_received: number;
   shares_received: number;
   verified_psychologist_responses: number;

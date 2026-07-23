@@ -145,7 +145,7 @@ export type AdminPatientsDashboardIntentSegment = {
   count: number;
   description: string;
   id: AdminPatientsDashboardIntentSegmentId;
-  label: "Curiosos" | "Frios" | "Interessados" | "Muito qualificados";
+  label: "Curiosos" | "Frios" | "Interessados" | "Qualificados";
   percentage: number;
 };
 
