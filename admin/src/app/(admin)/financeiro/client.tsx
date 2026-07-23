@@ -941,7 +941,7 @@ const SubscriptionRelation = ({ dashboard }: { dashboard: AdminFinanceDashboard 
   <CardShell className="overflow-hidden">
     <div className="flex flex-col gap-2 border-b border-border p-5 sm:flex-row sm:items-center sm:justify-between">
       <div>
-        <h2 className="text-xl font-black text-foreground">Relação de assinaturas</h2>
+        <h2 className="text-xl font-black text-foreground">Assinaturas</h2>
         <p className="mt-1 text-sm text-muted">
           Mostrando {numberFormatter.format(dashboard.subscription_relation.items.length)} de{" "}
           {numberFormatter.format(dashboard.subscription_relation.total)} assinaturas pagas do
@@ -989,7 +989,7 @@ const SubscriptionRelation = ({ dashboard }: { dashboard: AdminFinanceDashboard 
 
     <div className="hidden overflow-x-auto lg:block">
       <table className="w-full min-w-[900px] text-left text-sm">
-        <caption className="sr-only">Relação de assinaturas pagas no período</caption>
+        <caption className="sr-only">Assinaturas pagas no período</caption>
         <thead className="text-xs text-muted">
           <tr>
             <th className="px-5 py-3 font-black">Psicólogo</th>
