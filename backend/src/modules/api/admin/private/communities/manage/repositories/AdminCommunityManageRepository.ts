@@ -377,6 +377,20 @@ const adminCommunityStatisticsPostSelect = {
   author_id: true,
   createdAt: true,
   id: true,
+  media_items: {
+    orderBy: [{ position: "asc" }, { createdAt: "asc" }, { id: "asc" }],
+    select: {
+      id: true,
+      media_type: true,
+      media_url: true,
+      position: true,
+    },
+    where: {
+      deleted: false,
+    },
+  },
+  media_type: true,
+  media_url: true,
   replies: {
     where: {
       deleted: false,
@@ -399,6 +413,8 @@ const adminCommunityStatisticsReplySelect = {
   author_id: true,
   createdAt: true,
   id: true,
+  media_type: true,
+  media_url: true,
   post_id: true,
 } satisfies Prisma.post_replySelect;
 

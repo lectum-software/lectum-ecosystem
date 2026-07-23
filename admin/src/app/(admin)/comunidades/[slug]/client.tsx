@@ -91,6 +91,7 @@ import type {
   AdminCommunityStatusInput,
   AdminCommunityUpdateInput,
   AdminCommunityUrgentPendingReport,
+  CommunitiesPostContentFormatDistribution,
 } from "@/api/req/communities";
 import { InputController, SelectController, TextareaController } from "@/components/controllers";
 import { aggregateCalendarChartPoints, buildSmoothSvgPath } from "@/lib/chart-time-series";
@@ -5394,6 +5395,297 @@ const CommunityCareCoverageBlock = ({
   );
 };
 
+type CommunityPostContentFormatDistributionItem =
+  CommunitiesPostContentFormatDistribution["items"][number];
+
+const communityPostContentFormatChartColors = {
+  image: "#308ce8",
+  image_carousel: "#f59e0b",
+  text: "#64748b",
+  video: "#8b5cf6",
+} satisfies Record<CommunityPostContentFormatDistributionItem["id"], string>;
+
+const hexToRgba = (hex: string, alpha: number) => {
+  const normalized = hex.replace("#", "");
+  const red = Number.parseInt(normalized.slice(0, 2), 16);
+  const green = Number.parseInt(normalized.slice(2, 4), 16);
+  const blue = Number.parseInt(normalized.slice(4, 6), 16);
+
+  return `rgba(${red}, ${green}, ${blue}, ${alpha})`;
+};
+
+const getPiePoint = (center: number, radius: number, angleInDegrees: number) => {
+  const angleInRadians = (Math.PI / 180) * angleInDegrees;
+
+  return {
+    x: center + radius * Math.cos(angleInRadians),
+    y: center + radius * Math.sin(angleInRadians),
+  };
+};
+
+const buildPieSlicePath = (
+  center: number,
+  radius: number,
+  startAngle: number,
+  endAngle: number,
+) => {
+  const start = getPiePoint(center, radius, startAngle);
+  const end = getPiePoint(center, radius, endAngle);
+  const largeArcFlag = endAngle - startAngle > 180 ? 1 : 0;
+
+  return [
+    `M ${center} ${center}`,
+    `L ${start.x} ${start.y}`,
+    `A ${radius} ${radius} 0 ${largeArcFlag} 1 ${end.x} ${end.y}`,
+    "Z",
+  ].join(" ");
+};
+
+const PiePercentageLabel = ({
+  color,
+  label,
+  x,
+  y,
+}: {
+  color: string;
+  label: string;
+  x: number;
+  y: number;
+}) => {
+  const width = 39;
+  const height = 16;
+
+  return (
+    <g>
+      <rect
+        fill={hexToRgba(color, 0.86)}
+        height={height}
+        rx={height / 2}
+        width={width}
+        x={x - width / 2}
+        y={y - height / 2}
+      />
+      <text
+        dominantBaseline="middle"
+        fill="var(--admin-surface)"
+        fontSize="8.5"
+        fontWeight="900"
+        textAnchor="middle"
+        x={x}
+        y={y + 0.25}
+      >
+        {label}
+      </text>
+    </g>
+  );
+};
+
+const formatContentFormatPercentage = (percentage: number) =>
+  `${percentage.toLocaleString("pt-BR", {
+    maximumFractionDigits: 1,
+    minimumFractionDigits: percentage > 0 && percentage < 1 ? 1 : 0,
+  })}%`;
+
+const formatContentFormatTotal = (total: number, labels: { plural: string; singular: string }) =>
+  `${numberFormatter.format(total)} ${total === 1 ? labels.singular : labels.plural}`;
+
+const CommunityContentFormatDistributionCard = ({
+  description,
+  distribution,
+  isFetching,
+  title,
+  totalLabels,
+}: {
+  description: string;
+  distribution: CommunitiesPostContentFormatDistribution;
+  isFetching: boolean;
+  title: string;
+  totalLabels: { plural: string; singular: string };
+}) => {
+  const center = 60;
+  const radius = 48;
+  const visibleItems = distribution.items.filter((item) => item.count > 0);
+  const hasContent = distribution.total > 0 && visibleItems.length > 0;
+  const segments = visibleItems.reduce<{
+    currentAngle: number;
+    items: Array<{
+      endAngle: number;
+      item: CommunityPostContentFormatDistributionItem;
+      share: number;
+      startAngle: number;
+    }>;
+  }>(
+    (accumulator, item) => {
+      const share = distribution.total > 0 ? item.count / distribution.total : 0;
+      if (share <= 0) return accumulator;
+
+      const startAngle = accumulator.currentAngle;
+      const endAngle = startAngle + share * 360;
+
+      return {
+        currentAngle: endAngle,
+        items: accumulator.items.concat({
+          endAngle,
+          item,
+          share,
+          startAngle,
+        }),
+      };
+    },
+    { currentAngle: -90, items: [] },
+  ).items;
+  const ariaLabel = hasContent
+    ? `Gráfico de pizza de ${title.toLowerCase()} por tipo de conteúdo: ${distribution.items
+        .map(
+          (item) =>
+            `${item.label}: ${numberFormatter.format(item.count)}, ${formatContentFormatPercentage(
+              item.percentage,
+            )}`,
+        )
+        .join("; ")}.`
+    : `Gráfico de pizza de ${title.toLowerCase()} por tipo de conteúdo: sem conteúdo no período selecionado.`;
+
+  return (
+    <section className={cn(cardClass, "min-w-0 p-5 sm:p-6")}>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-2">
+            <h3 className="text-xl font-black text-foreground">{title}</h3>
+            {isFetching ? (
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary-soft px-2.5 py-1 text-[11px] font-black text-primary">
+                <Loader2 aria-hidden className="h-3.5 w-3.5 animate-spin" />
+                Atualizando
+              </span>
+            ) : null}
+          </div>
+          <p className="mt-2 text-sm font-bold leading-6 text-muted">{description}</p>
+        </div>
+        <span className="shrink-0 rounded-full bg-surface-muted px-3 py-1.5 text-xs font-black text-muted">
+          {formatContentFormatTotal(distribution.total, totalLabels)}
+        </span>
+      </div>
+
+      <figure className="mt-5 grid gap-5 lg:grid-cols-[minmax(10rem,14rem)_1fr] lg:items-center">
+        <svg
+          aria-label={ariaLabel}
+          className="mx-auto aspect-square w-40 sm:w-48"
+          role="img"
+          viewBox="0 0 120 120"
+        >
+          <circle
+            cx={center}
+            cy={center}
+            fill="var(--admin-surface-muted)"
+            r={radius}
+            stroke="var(--admin-border)"
+            strokeWidth="1"
+          />
+          {segments.map((segment) => {
+            const color = communityPostContentFormatChartColors[segment.item.id];
+            const labelPoint = getPiePoint(
+              center,
+              radius * 0.58,
+              (segment.startAngle + segment.endAngle) / 2,
+            );
+            const percentageLabel = formatContentFormatPercentage(segment.item.percentage);
+
+            if (segment.share >= 0.999) {
+              return (
+                <g key={segment.item.id}>
+                  <circle
+                    cx={center}
+                    cy={center}
+                    fill={color}
+                    r={radius}
+                    stroke="var(--admin-surface)"
+                    strokeWidth="1.4"
+                  />
+                  <PiePercentageLabel color={color} label={percentageLabel} x={center} y={center} />
+                </g>
+              );
+            }
+
+            return (
+              <g key={segment.item.id}>
+                <path
+                  d={buildPieSlicePath(center, radius, segment.startAngle, segment.endAngle)}
+                  fill={color}
+                  stroke="var(--admin-surface)"
+                  strokeWidth="1.4"
+                />
+                {segment.share >= 0.08 ? (
+                  <PiePercentageLabel
+                    color={color}
+                    label={percentageLabel}
+                    x={labelPoint.x}
+                    y={labelPoint.y}
+                  />
+                ) : null}
+              </g>
+            );
+          })}
+        </svg>
+        <figcaption className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          {distribution.items.map((item) => (
+            <div
+              className={cn(
+                "rounded-3xl border border-border/70 bg-surface-muted p-4",
+                item.count === 0 && "opacity-70",
+              )}
+              key={item.id}
+            >
+              <div className="flex items-center justify-between gap-3">
+                <span className="flex min-w-0 items-center gap-2 text-sm font-black text-foreground">
+                  <span
+                    aria-hidden
+                    className="h-3 w-3 shrink-0 rounded-full"
+                    style={{ backgroundColor: communityPostContentFormatChartColors[item.id] }}
+                  />
+                  <span className="truncate">{item.label}</span>
+                </span>
+                <span className="text-sm font-black text-foreground">
+                  {formatContentFormatPercentage(item.percentage)}
+                </span>
+              </div>
+              <p className="mt-3 text-3xl font-black leading-none text-foreground">
+                {numberFormatter.format(item.count)}
+              </p>
+              <p className="mt-2 text-xs font-bold text-muted">
+                {formatContentFormatTotal(item.count, totalLabels)}
+              </p>
+            </div>
+          ))}
+        </figcaption>
+      </figure>
+    </section>
+  );
+};
+
+const CommunityContentFormatDistributionsBlock = ({
+  isFetching,
+  statistics,
+}: {
+  isFetching: boolean;
+  statistics: AdminCommunityStatistics;
+}) => (
+  <div className="grid gap-5 lg:grid-cols-2">
+    <CommunityContentFormatDistributionCard
+      description="Quantidade e taxa dos posts publicados no período de cobertura por formato."
+      distribution={statistics.charts.posts_by_content_format}
+      isFetching={isFetching}
+      title="Posts por tipo de conteúdo"
+      totalLabels={{ plural: "posts", singular: "post" }}
+    />
+    <CommunityContentFormatDistributionCard
+      description="Quantidade e taxa das respostas publicadas no período de cobertura por formato."
+      distribution={statistics.charts.replies_by_content_format}
+      isFetching={isFetching}
+      title="Respostas por tipo de conteúdo"
+      totalLabels={{ plural: "respostas", singular: "resposta" }}
+    />
+  </div>
+);
+
 type CommunityHourlyActivityPoint = AdminCommunityStatistics["charts"]["hourly_activity"][number];
 type CommunityHourlyActivityMetricKey = "accesses" | "engagement" | "posts" | "replies" | "reports";
 type CommunityHourlyActivitySelection = "all" | `${number}`;
@@ -5778,6 +6070,12 @@ const StatisticsContent = ({ createdAt, slug }: { createdAt: string; slug: strin
         onRetry={() => void careCoverageResult.refetch()}
         statistics={careCoverageStatistics}
       />
+      {careCoverageStatistics ? (
+        <CommunityContentFormatDistributionsBlock
+          isFetching={careCoverageResult.isFetching && !careCoverageResult.isLoading}
+          statistics={careCoverageStatistics}
+        />
+      ) : null}
       <CommunityPeakActivityHoursBlock
         dateFilters={activityHoursDateState.dateFilters}
         error={activityHoursResult.error}

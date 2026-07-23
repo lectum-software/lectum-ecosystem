@@ -4,6 +4,8 @@ import { buildProfessionalFullDisplayName } from "@/utils/professional-name";
 import { isVerifiedProfessionalEntitlement } from "@/utils/subscription-entitlement";
 import type {
   AdminCommunitiesDashboardActivitySeries,
+  AdminCommunitiesDashboardContentFormatDistribution,
+  AdminCommunitiesDashboardContentFormatId,
   AdminCommunitiesDashboardDateRange,
   AdminCommunitiesDashboardGlobalStatistics,
   AdminCommunitiesDashboardMetric,
@@ -212,6 +214,119 @@ const resolvePeriod = (
 };
 
 const roundPercent = (value: number) => Math.round(value * 10) / 10;
+
+const CONTENT_FORMAT_ORDER = ["text", "video", "image", "image_carousel"] as const;
+
+const CONTENT_FORMAT_LABELS = {
+  image: "Imagem",
+  image_carousel: "Carrossel de imagens",
+  text: "Apenas texto",
+  video: "Vídeo",
+} satisfies Record<
+  AdminCommunitiesDashboardContentFormatId,
+  AdminCommunitiesDashboardContentFormatDistribution["items"][number]["label"]
+>;
+
+const emptyContentFormatCounts = () =>
+  ({
+    image: 0,
+    image_carousel: 0,
+    text: 0,
+    video: 0,
+  }) satisfies Record<AdminCommunitiesDashboardContentFormatId, number>;
+
+const normalizeContentMediaType = (value?: string | null) =>
+  (value ?? "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
+
+type DashboardStatisticsContentFormatPost = {
+  media_items: Array<{
+    media_type: string;
+    media_url: string;
+  }>;
+  media_type: string | null;
+  media_url: string | null;
+};
+
+type DashboardStatisticsContentFormatReply = {
+  media_type: string | null;
+  media_url: string | null;
+};
+
+const classifyPostContentFormat = (
+  post: DashboardStatisticsContentFormatPost,
+): AdminCommunitiesDashboardContentFormatId => {
+  const mediaItems = post.media_items.filter((item) => item.media_url);
+  const mediaTypes = mediaItems.map((item) => normalizeContentMediaType(item.media_type));
+  const legacyMediaType = post.media_url ? normalizeContentMediaType(post.media_type) : "";
+  const hasVideo = mediaTypes.includes("video") || legacyMediaType === "video";
+  if (hasVideo) return "video";
+
+  const imageItemsCount = mediaTypes.filter((type) => type === "image").length;
+  if (imageItemsCount > 1) return "image_carousel";
+  if (imageItemsCount === 1 || legacyMediaType === "image") return "image";
+
+  return "text";
+};
+
+const classifyReplyContentFormat = (
+  reply: DashboardStatisticsContentFormatReply,
+): AdminCommunitiesDashboardContentFormatId => {
+  const mediaType = reply.media_url ? normalizeContentMediaType(reply.media_type) : "";
+  if (mediaType === "video") return "video";
+  if (mediaType === "image") return "image";
+
+  return "text";
+};
+
+const buildPostContentFormatDistribution = (
+  posts: DashboardStatisticsContentFormatPost[],
+): AdminCommunitiesDashboardContentFormatDistribution => {
+  const counts = emptyContentFormatCounts();
+
+  for (const post of posts) {
+    counts[classifyPostContentFormat(post)] += 1;
+  }
+
+  const total = posts.length;
+
+  return {
+    items: CONTENT_FORMAT_ORDER.map((id) => ({
+      count: counts[id],
+      id,
+      label: CONTENT_FORMAT_LABELS[id],
+      percentage: total > 0 ? roundPercent((counts[id] / total) * 100) : 0,
+    })),
+    source: "community_post.media_type+community_post_media",
+    total,
+  };
+};
+
+const buildReplyContentFormatDistribution = (
+  replies: DashboardStatisticsContentFormatReply[],
+): AdminCommunitiesDashboardContentFormatDistribution => {
+  const counts = emptyContentFormatCounts();
+
+  for (const reply of replies) {
+    counts[classifyReplyContentFormat(reply)] += 1;
+  }
+
+  const total = replies.length;
+
+  return {
+    items: CONTENT_FORMAT_ORDER.map((id) => ({
+      count: counts[id],
+      id,
+      label: CONTENT_FORMAT_LABELS[id],
+      percentage: total > 0 ? roundPercent((counts[id] / total) * 100) : 0,
+    })),
+    source: "post_reply.media_type",
+    total,
+  };
+};
 
 const percentageChange = (current: number, previous: number) => {
   if (previous === 0) return current === 0 ? 0 : null;
@@ -959,6 +1074,8 @@ const buildDashboardGlobalStatistics = (
         { id: "psychologists", label: "Psicólogos", value: followers.psychologists },
       ]),
       hourly_activity: [...hourlyActivity.values()],
+      posts_by_content_format: buildPostContentFormatDistribution(periodPosts),
+      replies_by_content_format: buildReplyContentFormatDistribution(periodReplies),
       posts_by_author: dashboardStatisticsSplit("community_post+post_reply", [
         { id: "patients", label: "Pacientes", value: patientPosts.length },
         {

@@ -73,6 +73,23 @@ export type AdminCommunitiesDashboardStatisticsSplit = {
   value: number;
 };
 
+export type AdminCommunitiesDashboardContentFormatId =
+  | "image"
+  | "image_carousel"
+  | "text"
+  | "video";
+
+export type AdminCommunitiesDashboardContentFormatDistribution = {
+  items: Array<{
+    count: number;
+    id: AdminCommunitiesDashboardContentFormatId;
+    label: "Apenas texto" | "Carrossel de imagens" | "Imagem" | "Vídeo";
+    percentage: number;
+  }>;
+  source: "community_post.media_type+community_post_media" | "post_reply.media_type";
+  total: number;
+};
+
 export type AdminCommunitiesDashboardStatisticsDailyPoint = {
   active_patients: number;
   active_psychologists: number;
@@ -116,6 +133,8 @@ export type AdminCommunitiesDashboardGlobalStatistics = {
     daily: AdminCommunitiesDashboardStatisticsDailyPoint[];
     followers_split: AdminCommunitiesDashboardStatisticsSplit[];
     hourly_activity: AdminCommunitiesDashboardHourlyActivityPoint[];
+    posts_by_content_format: AdminCommunitiesDashboardContentFormatDistribution;
+    replies_by_content_format: AdminCommunitiesDashboardContentFormatDistribution;
     posts_by_author: AdminCommunitiesDashboardStatisticsSplit[];
     replies_by_author: AdminCommunitiesDashboardStatisticsSplit[];
   };

@@ -13,6 +13,8 @@ import type {
   AdminCommunityContentAnalyticsDetailDTO,
   AdminCommunityContentDetailQuery,
   AdminCommunityContentDTO,
+  AdminCommunityContentFormatDistributionDTO,
+  AdminCommunityContentFormatId,
   AdminCommunityContentItemDTO,
   AdminCommunityContentQuery,
   AdminCommunityCreateBody,
@@ -156,6 +158,119 @@ const dateKey = (date: Date) =>
   `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
 
 const roundPercent = (value: number) => Math.round(value * 10) / 10;
+const CONTENT_FORMAT_ORDER = ["text", "video", "image", "image_carousel"] as const;
+
+const CONTENT_FORMAT_LABELS = {
+  image: "Imagem",
+  image_carousel: "Carrossel de imagens",
+  text: "Apenas texto",
+  video: "Vídeo",
+} satisfies Record<
+  AdminCommunityContentFormatId,
+  AdminCommunityContentFormatDistributionDTO["items"][number]["label"]
+>;
+
+const emptyContentFormatCounts = () =>
+  ({
+    image: 0,
+    image_carousel: 0,
+    text: 0,
+    video: 0,
+  }) satisfies Record<AdminCommunityContentFormatId, number>;
+
+const normalizeContentMediaType = (value?: string | null) =>
+  (value ?? "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
+
+type CommunityStatisticsContentFormatPost = {
+  media_items: Array<{
+    media_type: string;
+    media_url: string;
+  }>;
+  media_type: string | null;
+  media_url: string | null;
+};
+
+type CommunityStatisticsContentFormatReply = {
+  media_type: string | null;
+  media_url: string | null;
+};
+
+const classifyPostContentFormat = (
+  post: CommunityStatisticsContentFormatPost,
+): AdminCommunityContentFormatId => {
+  const mediaItems = post.media_items.filter((item) => item.media_url);
+  const mediaTypes = mediaItems.map((item) => normalizeContentMediaType(item.media_type));
+  const legacyMediaType = post.media_url ? normalizeContentMediaType(post.media_type) : "";
+  const hasVideo = mediaTypes.includes("video") || legacyMediaType === "video";
+  if (hasVideo) return "video";
+
+  const imageItemsCount = mediaTypes.filter((type) => type === "image").length;
+  if (imageItemsCount > 1) return "image_carousel";
+  if (imageItemsCount === 1 || legacyMediaType === "image") return "image";
+
+  return "text";
+};
+
+const classifyReplyContentFormat = (
+  reply: CommunityStatisticsContentFormatReply,
+): AdminCommunityContentFormatId => {
+  const mediaType = reply.media_url ? normalizeContentMediaType(reply.media_type) : "";
+  if (mediaType === "video") return "video";
+  if (mediaType === "image") return "image";
+
+  return "text";
+};
+
+const buildPostContentFormatDistribution = (
+  posts: CommunityStatisticsContentFormatPost[],
+): AdminCommunityContentFormatDistributionDTO => {
+  const counts = emptyContentFormatCounts();
+
+  for (const post of posts) {
+    counts[classifyPostContentFormat(post)] += 1;
+  }
+
+  const total = posts.length;
+
+  return {
+    items: CONTENT_FORMAT_ORDER.map((id) => ({
+      count: counts[id],
+      id,
+      label: CONTENT_FORMAT_LABELS[id],
+      percentage: total > 0 ? roundPercent((counts[id] / total) * 100) : 0,
+    })),
+    source: "community_post.media_type+community_post_media",
+    total,
+  };
+};
+
+const buildReplyContentFormatDistribution = (
+  replies: CommunityStatisticsContentFormatReply[],
+): AdminCommunityContentFormatDistributionDTO => {
+  const counts = emptyContentFormatCounts();
+
+  for (const reply of replies) {
+    counts[classifyReplyContentFormat(reply)] += 1;
+  }
+
+  const total = replies.length;
+
+  return {
+    items: CONTENT_FORMAT_ORDER.map((id) => ({
+      count: counts[id],
+      id,
+      label: CONTENT_FORMAT_LABELS[id],
+      percentage: total > 0 ? roundPercent((counts[id] / total) * 100) : 0,
+    })),
+    source: "post_reply.media_type",
+    total,
+  };
+};
+
 const stripHtml = (value: string | null | undefined) =>
   (value ?? "")
     .replace(/<[^>]*>/g, " ")
@@ -2506,6 +2621,8 @@ const buildCommunityStatistics = (
         hours: [...item.hours.values()],
         label: item.label,
       })),
+      posts_by_content_format: buildPostContentFormatDistribution(periodPosts),
+      replies_by_content_format: buildReplyContentFormatDistribution(periodReplies),
       posts_by_author: statisticsSplit("community_post+post_reply", [
         { id: "patients", label: "Pacientes", value: patientPosts.length },
         {

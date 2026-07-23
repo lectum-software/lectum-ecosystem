@@ -128,6 +128,19 @@ export type CommunitiesDashboardStatisticsSplit = {
   value: number;
 };
 
+export type CommunitiesContentFormatId = "image" | "image_carousel" | "text" | "video";
+
+export type CommunitiesPostContentFormatDistribution = {
+  items: Array<{
+    count: number;
+    id: CommunitiesContentFormatId;
+    label: "Apenas texto" | "Carrossel de imagens" | "Imagem" | "Vídeo";
+    percentage: number;
+  }>;
+  source: "community_post.media_type+community_post_media" | "post_reply.media_type";
+  total: number;
+};
+
 export type CommunitiesDashboardStatisticsDailyPoint = {
   active_patients: number;
   active_psychologists: number;
@@ -171,6 +184,8 @@ export type CommunitiesDashboardGlobalStatistics = {
     daily: CommunitiesDashboardStatisticsDailyPoint[];
     followers_split: CommunitiesDashboardStatisticsSplit[];
     hourly_activity: CommunitiesDashboardHourlyActivityPoint[];
+    posts_by_content_format: CommunitiesPostContentFormatDistribution;
+    replies_by_content_format: CommunitiesPostContentFormatDistribution;
     posts_by_author: CommunitiesDashboardStatisticsSplit[];
     replies_by_author: CommunitiesDashboardStatisticsSplit[];
   };
@@ -1039,6 +1054,8 @@ export type AdminCommunityStatistics = {
     followers_split: AdminCommunityStatisticsSplit[];
     hourly_activity: AdminCommunityStatisticsHourlyActivity[];
     hourly_activity_by_weekday: AdminCommunityStatisticsWeekdayHourlyActivity[];
+    posts_by_content_format: CommunitiesPostContentFormatDistribution;
+    replies_by_content_format: CommunitiesPostContentFormatDistribution;
     posts_by_author: AdminCommunityStatisticsSplit[];
     replies_by_author: AdminCommunityStatisticsSplit[];
   };

@@ -680,6 +680,19 @@ export type AdminCommunityStatisticsSplitDTO = {
   value: number;
 };
 
+export type AdminCommunityContentFormatId = "image" | "image_carousel" | "text" | "video";
+
+export type AdminCommunityContentFormatDistributionDTO = {
+  items: Array<{
+    count: number;
+    id: AdminCommunityContentFormatId;
+    label: "Apenas texto" | "Carrossel de imagens" | "Imagem" | "Vídeo";
+    percentage: number;
+  }>;
+  source: "community_post.media_type+community_post_media" | "post_reply.media_type";
+  total: number;
+};
+
 export type AdminCommunityStatisticsDailyPointDTO = {
   accesses: number;
   active_patients: number;
@@ -731,6 +744,8 @@ export type AdminCommunityStatisticsDTO = {
     followers_split: AdminCommunityStatisticsSplitDTO[];
     hourly_activity: AdminCommunityStatisticsHourlyActivityDTO[];
     hourly_activity_by_weekday: AdminCommunityStatisticsWeekdayHourlyActivityDTO[];
+    posts_by_content_format: AdminCommunityContentFormatDistributionDTO;
+    replies_by_content_format: AdminCommunityContentFormatDistributionDTO;
     posts_by_author: AdminCommunityStatisticsSplitDTO[];
     replies_by_author: AdminCommunityStatisticsSplitDTO[];
   };
