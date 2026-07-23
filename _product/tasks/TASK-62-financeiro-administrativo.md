@@ -691,3 +691,62 @@ Frontend esperado:
 - `pnpm --dir admin build`.
 - Scan estático: `rg -n "Período de análise|PerÃ­odo de anÃ¡lise|formatFilteredAnalysisPeriod|formatAnalysisRange" "admin/src/app/(admin)/financeiro/client.tsx"` não retornou ocorrências.
 - Smoke HTTP local: `GET http://localhost:3002/financeiro` retornou `200`.
+
+## Ajuste pós-feedback 2026-07-23 - Preview de cobranças sem coluna Evento
+
+- Pedido do usuário: na tabela **Últimas cobranças realizadas** exibida em `/financeiro`, remover a coluna **Evento** e trocar o cabeçalho **Assinatura** por **Plano**.
+- A prévia desktop de cobranças do dashboard financeiro agora exibe apenas **Data**, **Psicólogo**, **Plano**, **Valor** e **Status**.
+- O valor do plano e a referência curta da assinatura permanecem na coluna **Plano**; o tipo/id do evento de pagamento deixa de ser exibido nessa prévia, sem alterar o endpoint real ou a página completa de cobranças.
+- A largura mínima da tabela foi reduzida para acompanhar as cinco colunas remanescentes, preservando o comportamento responsivo/mobile-first existente.
+- A alteração é somente visual em `admin/src/app/(admin)/financeiro/client.tsx`; contratos HTTP, cálculos financeiros, CSV, Prisma/migrations e packages permaneceram inalterados.
+- Builder/Quick Copy não está exposto como ferramenta callable neste ambiente; as referências auditáveis foram `_product/proto/admin/Financeiro.png` e a captura autenticada enviada pelo usuário em 2026-07-23.
+- ADR não criado: não houve decisão arquitetural, integração nova, regra de domínio nova ou trade-off persistente além da remoção/copy visual solicitada.
+
+### Critérios de aceite do ajuste
+
+- [x] A tabela **Últimas cobranças realizadas** em `/financeiro` não exibe a coluna **Evento**.
+- [x] O cabeçalho **Assinatura** foi alterado para **Plano**.
+- [x] A tabela continua exibindo dados reais de cobranças já retornados pelo endpoint Admin financeiro, sem mock ou endpoint paralelo.
+- [x] UI mobile-first preservada e nenhum `<img>` cru foi adicionado.
+- [x] Nenhum package, schema Prisma, migration, mock ou endpoint simulado foi adicionado.
+
+### Validação complementar executada
+
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/financeiro/client.tsx"`.
+- `pnpm --dir admin exec eslint "src/app/(admin)/financeiro/client.tsx"`.
+- `pnpm --dir admin check`.
+- `pnpm --dir admin build`.
+- `pnpm check`.
+- Scan estático: `rg -n "<th[^\\n]*Evento|<th[^\\n]*Assinatura|item\\.event_type|shortReference\\(item\\.external_id\\)" "admin/src/app/(admin)/financeiro/client.tsx"` não retornou ocorrências.
+- Smoke HTTP local: `GET http://localhost:3002/financeiro` retornou `200`.
+- Chrome headless local abriu `/financeiro` sem sessão Admin e confirmou o guard/redirect para login; a validação visual autenticada completa permaneceu limitada à captura enviada pelo usuário e à inspeção estática/build da tela.
+
+
+## Ajuste p?s-feedback 2026-07-23 - Colunas da pr?via de assinaturas no Financeiro
+
+- Pedido do usu?rio: em `/financeiro`, alterar as colunas da tabela **Assinaturas** para **Psic?logo**, **In?cio**, **Pr?xima**, **Valor**, **Status** e **Confiabilidade Pgto**.
+- A pr?via desktop de assinaturas no dashboard financeiro removeu a coluna **?ltima** e passou a exibir **Confiabilidade Pgto** como ?ltima coluna, reutilizando o `payment_health` real j? retornado pelo contrato financeiro.
+- Os cards mobile da mesma se??o tamb?m deixaram de mostrar **?ltima** e exibem o badge de confiabilidade de pagamento antes das datas principais, preservando o layout mobile-first.
+- A p?gina completa `/financeiro/assinaturas` j? seguia essa composi??o e n?o precisou de altera??o de contrato, endpoint, c?lculo financeiro, Prisma/migration, package, mock ou dado artificial.
+- Builder/Quick Copy n?o est? exposto como ferramenta callable neste ambiente; as refer?ncias audit?veis foram `_product/proto/admin/Financeiro.png`, a captura autenticada enviada pelo usu?rio em 2026-07-23 e o padr?o j? aplicado em `/financeiro/assinaturas`.
+- ADR atualizado: `adrs/0242-admin-financeiro-receita-mrr-exportacao.md`.
+
+### Crit?rios de aceite do ajuste
+
+- [x] A tabela **Assinaturas** em `/financeiro` exibe as colunas **Psic?logo**, **In?cio**, **Pr?xima**, **Valor**, **Status** e **Confiabilidade Pgto**.
+- [x] A coluna **?ltima** n?o ? exibida na pr?via de assinaturas em `/financeiro`.
+- [x] A coluna **Confiabilidade Pgto** usa o `payment_health` real retornado pelo backend financeiro, sem c?lculo visual paralelo ou mock.
+- [x] Os cards mobile da pr?via de assinaturas removem **?ltima** e exibem a confiabilidade de pagamento.
+- [x] Nenhum endpoint, c?lculo financeiro, schema Prisma, migration, package, mock ou dado artificial foi adicionado.
+- [x] UI mobile-first preservada e nenhum `<img>` cru foi usado.
+
+### Valida??o complementar executada
+
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/financeiro/client.tsx"`.
+- `pnpm --dir admin exec biome check "src/app/(admin)/financeiro/client.tsx"`.
+- `pnpm --dir admin exec eslint "src/app/(admin)/financeiro/client.tsx"`.
+- `pnpm --dir admin check`.
+- `pnpm --dir admin build`.
+- `pnpm check` foi executado, mas ficou bloqueado por formata??o preexistente fora do escopo em `backend/src/modules/api/admin/private/patients/profile-edit/use-cases/services.ts`; os checks/builds relevantes do Admin passaram.
+- Smoke HTTP local: `GET http://localhost:3002/financeiro` retornou `200`.
+- Scan est?tico/build: `admin/src/app/(admin)/financeiro/client.tsx` e o build em `admin/.next` cont?m **Confiabilidade Pgto** na rota de Financeiro, enquanto a pr?via de assinaturas n?o cont?m mais a coluna **?ltima**.

@@ -211,3 +211,20 @@ Consequências:
 - A consulta continua real e baseada nos endpoints existentes; apenas o momento de aplicar o filtro mudou.
 - O ano mínimo de 1900 é uma barreira de plausibilidade de UI para diferenciar datas reais de estados parciais do input nativo, sem alterar contrato backend nem schema.
 - Não há instalação de package, schema Prisma, migration, mock, seed ou endpoint simulado.
+
+
+## Ajuste 2026-07-23: confiabilidade de pagamento na pr?via de assinaturas
+
+Feedback de produto pediu que a tabela **Assinaturas** do dashboard `/financeiro` usasse a mesma leitura operacional da rela??o completa, priorizando a pr?xima cobran?a e a confiabilidade do pagamento.
+
+Decis?es:
+
+- A pr?via de assinaturas no dashboard passa a exibir **Psic?logo**, **In?cio**, **Pr?xima**, **Valor**, **Status** e **Confiabilidade Pgto**.
+- A coluna **?ltima** ? removida apenas da pr?via visual do dashboard; a informa??o de cobran?as confirmadas continua dispon?vel na tabela de cobran?as e no hist?rico da rela??o completa de assinaturas.
+- **Confiabilidade Pgto** reutiliza o `payment_health` j? calculado pelo servi?o financeiro a partir de `payment_event` e `professional_subscription`, sem endpoint novo, c?lculo visual paralelo ou dado simulado.
+- Os cards mobile seguem a mesma hierarquia, exibindo a confiabilidade de pagamento junto aos dados principais da assinatura.
+
+Consequ?ncias:
+
+- A pr?via do Financeiro fica consistente com `/financeiro/assinaturas` e reduz redund?ncia com a tabela de cobran?as realizadas.
+- A mudan?a ? somente de apresenta??o: n?o altera contrato HTTP, c?lculo financeiro, CSV, Prisma/migrations, packages, seeds, mocks ou dados persistidos.

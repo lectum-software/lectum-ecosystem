@@ -26,6 +26,7 @@ import type {
   FinanceChargeItem,
   FinanceDashboardQuery,
   FinanceMetric,
+  FinancePaymentHealth,
   FinanceSeriesPoint,
   FinanceSubscriptionItem,
 } from "@/api/req/finance";
@@ -825,6 +826,26 @@ const StatusBadge = ({ item }: { item: FinanceSubscriptionItem }) => (
   </span>
 );
 
+const paymentHealthClassName: Record<FinancePaymentHealth["status"], string> = {
+  attention: "border-yellow-100 bg-yellow-50 text-yellow-700",
+  critical: "border-danger/20 bg-danger/5 text-danger",
+  healthy: "border-emerald-100 bg-emerald-50 text-success",
+  insufficient_history: "border-border bg-surface-muted text-muted",
+  risk: "border-orange-200 bg-orange-50 text-orange-700",
+};
+
+const PaymentHealthBadge = ({ health }: { health: FinancePaymentHealth }) => (
+  <span
+    className={cn(
+      "inline-flex max-w-full items-center rounded-full border px-3 py-1.5 text-xs font-black leading-none",
+      paymentHealthClassName[health.status],
+    )}
+    title={health.summary}
+  >
+    {health.label}
+  </span>
+);
+
 const InitialsAvatar = ({ name }: { name: string }) => {
   const initials = name
     .split(" ")
@@ -997,9 +1018,11 @@ const SubscriptionRelation = ({ dashboard }: { dashboard: AdminFinanceDashboard 
               <p className="mt-2 text-sm font-bold text-foreground">
                 Valor {formatMoney(item.plan.price_cents)}
               </p>
+              <div className="mt-3">
+                <PaymentHealthBadge health={item.payment_health} />
+              </div>
               <p className="text-xs text-muted">
-                Início {formatDate(item.started_at)} · Última{" "}
-                {formatNullableDate(item.last_charge_at)} · Próxima {formatNextChargeDate(item)}
+                Início {formatDate(item.started_at)} · Próxima {formatNextChargeDate(item)}
               </p>
             </div>
           </div>
@@ -1013,16 +1036,16 @@ const SubscriptionRelation = ({ dashboard }: { dashboard: AdminFinanceDashboard 
     </div>
 
     <div className="hidden overflow-x-auto lg:block">
-      <table className="w-full min-w-[900px] text-left text-sm">
+      <table className="w-full min-w-[980px] text-left text-sm">
         <caption className="sr-only">Assinaturas pagas no período</caption>
         <thead className="text-xs text-muted">
           <tr>
             <th className="px-5 py-3 font-black">Psicólogo</th>
             <th className="px-5 py-3 font-black">Início</th>
-            <th className="px-5 py-3 font-black">Última</th>
             <th className="px-5 py-3 font-black">Próxima</th>
             <th className="px-5 py-3 font-black">Valor</th>
             <th className="px-5 py-3 font-black">Status</th>
+            <th className="px-5 py-3 font-black">Confiabilidade Pgto</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-border">
@@ -1038,13 +1061,15 @@ const SubscriptionRelation = ({ dashboard }: { dashboard: AdminFinanceDashboard 
                 </div>
               </td>
               <td className="px-5 py-4 text-muted">{formatDate(item.started_at)}</td>
-              <td className="px-5 py-4 text-muted">{formatNullableDate(item.last_charge_at)}</td>
               <td className="px-5 py-4 text-muted">{formatNextChargeDate(item)}</td>
               <td className="px-5 py-4 font-black text-foreground">
                 {formatMoney(item.plan.price_cents)}
               </td>
               <td className="px-5 py-4">
                 <StatusBadge item={item} />
+              </td>
+              <td className="max-w-[260px] px-5 py-4">
+                <PaymentHealthBadge health={item.payment_health} />
               </td>
             </tr>
           ))}
