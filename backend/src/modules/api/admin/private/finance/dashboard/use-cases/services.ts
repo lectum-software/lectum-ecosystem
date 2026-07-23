@@ -28,6 +28,7 @@ const DASHBOARD_TABLE_PREVIEW_TAKE = 5;
 const MAX_PAYMENT_HISTORY_ITEMS = 10;
 const DAYS_PER_AVERAGE_MONTH = 30.4375;
 const MILLISECONDS_PER_DAY = 86_400_000;
+const CHARGE_STATUS_FILTERS = new Set<AdminFinanceChargeItem["status"]>(["confirmed"]);
 const SUBSCRIPTION_STATUS_FILTERS = new Set(["ativa", "cancelada", "inadimplente"]);
 const PAYMENT_HEALTH_FILTERS = new Set<AdminFinancePaymentHealth["status"]>([
   "attention",
@@ -997,6 +998,56 @@ const buildChargeItems = (
     .filter((item): item is AdminFinanceChargeItem => Boolean(item))
     .sort((left, right) => Date.parse(right.occurred_at) - Date.parse(left.occurred_at));
 
+type ChargeServiceFilters = {
+  q?: string;
+  status?: AdminFinanceChargeItem["status"];
+};
+
+const normalizeChargeFilters = (query: AdminFinanceQuery): ChargeServiceFilters => {
+  const q = query.q?.trim();
+  const status = query.status?.trim();
+  const validStatus =
+    status &&
+    status !== "all" &&
+    CHARGE_STATUS_FILTERS.has(status as AdminFinanceChargeItem["status"])
+      ? (status as AdminFinanceChargeItem["status"])
+      : undefined;
+
+  return {
+    ...(q ? { q } : {}),
+    ...(validStatus ? { status: validStatus } : {}),
+  };
+};
+
+const matchesChargeSearch = (item: AdminFinanceChargeItem, q?: string) => {
+  const needle = normalizeText(q);
+  if (!needle) return true;
+
+  const searchableValues = [
+    item.event_id,
+    item.event_type,
+    item.external_id,
+    item.reference,
+    item.status_label,
+    item.subscription?.gateway_subscription_id,
+    item.subscription?.id,
+    item.subscription?.plan.name,
+    item.subscription?.plan.slug,
+    item.subscription?.psychologist.crp,
+    item.subscription?.psychologist.email,
+    item.subscription?.psychologist.name,
+  ];
+
+  return searchableValues.some((value) => normalizeText(value).includes(needle));
+};
+
+const filterChargeItems = (items: AdminFinanceChargeItem[], filters: ChargeServiceFilters) =>
+  items.filter((item) => {
+    if (filters.status && item.status !== filters.status) return false;
+
+    return matchesChargeSearch(item, filters.q);
+  });
+
 const normalizeFinancePagination = (query: AdminFinanceQuery) => {
   const page = Math.max(1, Number(query.page || 1));
   const limit = Math.min(MAX_LIST_LIMIT, Math.max(1, Number(query.limit || DEFAULT_LIST_LIMIT)));
@@ -1085,7 +1136,11 @@ export const listAdminFinanceCharges = async (query: AdminFinanceQuery): Promise
     repository.listPaidSubscriptionsForPaymentReferenceAt(current.end),
   ]);
   const pagination = normalizeFinancePagination(query ?? {});
-  const charges = buildChargeItems(paymentEvents, paymentReferenceSubscriptions);
+  const filters = normalizeChargeFilters(query ?? {});
+  const charges = filterChargeItems(
+    buildChargeItems(paymentEvents, paymentReferenceSubscriptions),
+    filters,
+  );
   const page = paginateItems(charges, pagination.page, pagination.limit);
 
   return {

@@ -590,3 +590,46 @@ Frontend esperado:
 - `pnpm --dir admin build`
 - `rg -n "Voltar ao Financeiro|Todo o período|Evento|Referência|shortReference|periodSummary" "admin/src/app/(admin)/financeiro/cobrancas/client.tsx"` não retornou ocorrências.
 - Smoke HTTP local: `GET http://localhost:3002/financeiro/cobrancas` retornou `200` e o HTML inicial não continha os textos removidos.
+
+## Ajuste pós-feedback 2026-07-23 - Busca e filtros em Cobranças
+
+- Pedido do usuário: trocar o título **Últimas cobranças realizadas** por **Cobranças**, adicionar barra de pesquisa, filtros de data e filtro de status na tabela, e manter a quantidade de cobranças encontradas abaixo da barra de busca.
+- A página `/financeiro/cobrancas` agora exibe o título **Cobranças** no header e mantém a descrição da relação completa de cobranças confirmadas por eventos reais do Mercado Pago.
+- A tabela ganhou busca em pill com ícone, filtros mobile-first **Data de**, **Data até** e **Status**, além de botão **Limpar** contextual quando há filtro ativo.
+- A contagem **cobranças encontradas** foi deslocada para imediatamente abaixo da barra de pesquisa, seguindo o padrão visual Lectum já usado na relação de assinaturas.
+- A busca envia `q` para o endpoint Admin privado real `GET /api/admin/private/finance/charges` e filtra cobranças por nome/e-mail do psicólogo, plano, CRP, ids/referências do evento ou assinatura e status exibido.
+- O filtro de data reutiliza o contrato real `period=custom&from=YYYY-MM-DD&to=YYYY-MM-DD`, filtrando `payment_event.createdAt` no período resolvido pelo serviço financeiro.
+- O filtro de status usa o status real atual das cobranças retornadas (`confirmed`/Confirmada), sem criar endpoint paralelo ou status artificial.
+- Não houve alteração de Prisma/migrations, instalação de package, seed, mock, dado artificial ou endpoint simulado.
+- Builder/Quick Copy não está exposto como ferramenta callable neste ambiente; as referências auditáveis foram `_product/proto/admin/Financeiro.png`, a captura autenticada enviada pelo usuário em 2026-07-23 e o padrão visual já aplicado em `/financeiro/assinaturas`.
+- ADR atualizado: `adrs/0242-admin-financeiro-receita-mrr-exportacao.md`.
+
+### Critérios de aceite do ajuste
+
+- [x] O header de `/financeiro/cobrancas` exibe **Cobranças** em vez de **Últimas cobranças realizadas**.
+- [x] A tabela possui barra de pesquisa no padrão Lectum Admin.
+- [x] A tabela possui filtros de data **Data de**/**Data até**.
+- [x] A tabela possui filtro visual de **Status**.
+- [x] A quantidade de cobranças encontradas fica abaixo da barra de busca.
+- [x] Busca, status, paginação e contagem usam o endpoint Admin privado real de cobranças, sem mock ou filtro apenas visual.
+- [x] O filtro de data reaproveita o contrato real de período customizado do Financeiro.
+- [x] UI mobile-first preservada e nenhum `<img>` cru foi usado.
+- [x] Nenhum package, schema Prisma, migration, mock ou endpoint simulado foi adicionado.
+
+### Validação complementar executada
+
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/financeiro/cobrancas/client.tsx"`.
+- `pnpm --dir backend exec biome check --write "src/modules/api/admin/private/finance/dashboard/use-cases/services.ts"`.
+- `pnpm --dir admin exec biome check "src/app/(admin)/financeiro/cobrancas/client.tsx"`.
+- `pnpm --dir admin exec eslint "src/app/(admin)/financeiro/cobrancas/client.tsx"`.
+- `pnpm --dir backend exec biome check "src/modules/api/admin/private/finance/dashboard/use-cases/services.ts"`.
+- `pnpm --dir admin check`.
+- `pnpm --dir backend check`.
+- `pnpm --dir backend build`.
+- `pnpm check`.
+- `pnpm --dir admin build` no checkout principal ficou bloqueado pelo `.next/lock` do dev server Admin ativo em `localhost:3002`; o mesmo build foi executado com sucesso em worktree temporário com `admin/node_modules` em junction e o arquivo alterado desta task.
+- Smoke de serviço real com `.env` local: `listAdminFinanceCharges({ period: "all", limit: 2 })` retornou `status=200`, `count=8`, `items=2`; `listAdminFinanceCharges({ period: "all", limit: 2, status: "confirmed" })` retornou `status=200`, `count=8`, `items=2`; `listAdminFinanceCharges({ period: "all", limit: 2, q: "ana" })` retornou `status=200`, `count=2`, `items=2`.
+- Smoke de data real: `listAdminFinanceCharges({ period: "custom", from: "2026-07-20", to: "2026-07-23", limit: 50 })` retornou `status=200`, `count=3`, `items=3`.
+- Smoke HTTP local protegido: `GET http://localhost:3001/api/admin/private/finance/charges?period=all&q=ana&status=confirmed` sem token Admin retornou `401`.
+- Smoke HTTP/Admin local: `GET http://localhost:3002/financeiro/cobrancas` retornou `200`.
+- Chrome headless local abriu `/financeiro/cobrancas` sem sessão Admin e confirmou redirecionamento/guard para o login administrativo; a validação visual autenticada completa permanece limitada à captura enviada pelo usuário porque não há acesso automatizado à sessão Admin autenticada já aberta.

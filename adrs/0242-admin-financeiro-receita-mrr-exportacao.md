@@ -174,3 +174,21 @@ Consequências:
 - A tela fica mais próxima da leitura financeira solicitada, mostrando datas de cobrança/renovação sem expor identificadores de gateway como coluna principal.
 - A derivação de **Última** depende dos `payment_event` reais já persistidos; quando não houver evento confirmado vinculável, o campo aparece vazio (`—`) em vez de estimar cobrança por plano.
 - Para a versão Admin atual, a busca da última cobrança percorre eventos reais em serviço para evitar alteração de schema. Se o volume de `payment_event` crescer, uma futura task pode introduzir índice, campo dedicado ou relação persistida mediante nova decisão arquitetural.
+
+## Ajuste 2026-07-23: busca e filtros na relação completa de cobranças
+
+Feedback de produto pediu que `/financeiro/cobrancas` deixasse de usar a nomenclatura de preview **Últimas cobranças realizadas**, adotasse **Cobranças** como título da página completa e ganhasse busca, filtros de data/status e contagem abaixo da busca.
+
+Decisões:
+
+- Manter a lista de cobranças como relação de `payment_event` real confirmado do Mercado Pago; o filtro de status atual aceita apenas `confirmed`, porque a página continua restrita a cobranças confirmadas e não cria estados artificiais.
+- Aplicar `q` no serviço depois do mapeamento seguro de cobranças, procurando nome/e-mail do psicólogo, CRP, plano, ids locais/gateway, referência do evento e status exibido, sem expor payload bruto.
+- Reutilizar `period=custom&from&to` para o filtro **Data de/Data até**, preservando a resolução centralizada de período do Financeiro e filtrando o período de `payment_event.createdAt` já usado pela lista.
+- Manter a paginação e a contagem no backend após os filtros, para que **cobranças encontradas** reflita o resultado real filtrado e não apenas a página atual no frontend.
+- Reaproveitar o padrão visual da relação de assinaturas: busca em pill, filtros arredondados, botão **Limpar** contextual e layout mobile-first.
+
+Consequências:
+
+- A operação financeira passa a localizar cobranças por psicólogo ou identificador sem criar endpoint paralelo nem consulta mockada.
+- Como o status real da página completa é apenas `Confirmada`, novos status de cobrança só devem aparecer em task futura se o contrato financeiro passar a listar eventos não confirmados com copy honesta.
+- Não há alteração de schema Prisma, migration, package, seed, mock ou dado artificial.

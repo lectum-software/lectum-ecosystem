@@ -1,14 +1,22 @@
 "use client";
 
-import { AlertTriangle, ChevronLeft, ChevronRight, CreditCard, RefreshCw } from "lucide-react";
+import {
+  AlertTriangle,
+  ChevronLeft,
+  ChevronRight,
+  CreditCard,
+  RefreshCw,
+  Search,
+} from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { type ReactNode, useMemo } from "react";
+import { type ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import { useAdminFinanceCharges } from "@/api/callers/finance";
 import { resolveApiError } from "@/api/handle";
 import type { FinanceChargeItem, FinanceListQuery, FinancePeriodValue } from "@/api/req/finance";
 import { cn } from "@/lib/utils";
 
 const LIST_LIMIT_OPTIONS = [10, 20, 50];
+const SEARCH_DEBOUNCE_MS = 350;
 const validPeriods = new Set<FinancePeriodValue>([
   "all",
   "custom",
@@ -17,6 +25,11 @@ const validPeriods = new Set<FinancePeriodValue>([
   "week",
   "year",
 ]);
+const statusFilterOptions = [
+  { label: "Todos os status", value: "all" },
+  { label: "Confirmadas", value: "confirmed" },
+] as const;
+const validChargeStatuses = new Set<string>(statusFilterOptions.map((option) => option.value));
 const moneyFormatter = new Intl.NumberFormat("pt-BR", {
   currency: "BRL",
   style: "currency",
@@ -32,12 +45,16 @@ const parsePositiveNumber = (value: string | null, fallback: number) => {
 
 const parseQuery = (params: URLSearchParams): FinanceListQuery => {
   const period = params.get("period") as FinancePeriodValue | null;
+  const q = params.get("q");
+  const status = params.get("status");
 
   return {
     from: params.get("from") || undefined,
     limit: Math.min(50, parsePositiveNumber(params.get("limit"), 20)),
     page: parsePositiveNumber(params.get("page"), 1),
     period: period && validPeriods.has(period) ? period : "all",
+    q: q || undefined,
+    status: status && validChargeStatuses.has(status) && status !== "all" ? status : undefined,
     to: params.get("to") || undefined,
   };
 };
@@ -60,6 +77,100 @@ const CardShell = ({ children, className }: { children?: ReactNode; className?: 
   >
     {children}
   </section>
+);
+
+const SearchBox = ({ onSearch, value }: { onSearch: (value: string) => void; value?: string }) => {
+  const [draft, setDraft] = useState(value || "");
+  const onSearchRef = useRef(onSearch);
+
+  useEffect(() => {
+    onSearchRef.current = onSearch;
+  }, [onSearch]);
+
+  useEffect(() => {
+    const normalized = draft.trim();
+    const current = value || "";
+
+    if (normalized === current) return;
+
+    const timer = window.setTimeout(() => {
+      onSearchRef.current(normalized);
+    }, SEARCH_DEBOUNCE_MS);
+
+    return () => window.clearTimeout(timer);
+  }, [draft, value]);
+
+  return (
+    <label className="relative block h-12 w-full min-w-0 text-sm font-medium text-foreground">
+      <span className="sr-only">Buscar por psicólogo, e-mail ou identificador</span>
+      <Search
+        aria-hidden
+        className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-subtle"
+      />
+      <input
+        className="h-full w-full appearance-none rounded-full border border-border bg-surface py-0 pl-10 pr-4 text-sm font-medium text-foreground shadow-control outline-none transition placeholder:text-subtle focus:border-primary focus:ring-2 focus:ring-primary/15"
+        onChange={(event) => setDraft(event.target.value)}
+        placeholder="Nome, e-mail ou ID..."
+        type="search"
+        value={draft}
+      />
+    </label>
+  );
+};
+
+const DateFilterField = ({
+  label,
+  max,
+  min,
+  onChange,
+  value,
+}: {
+  label: string;
+  max?: string;
+  min?: string;
+  onChange: (value: string) => void;
+  value?: string;
+}) => (
+  <label className="flex min-w-0 flex-col gap-1 text-xs font-medium text-muted sm:min-w-[150px]">
+    {label}
+    <input
+      className="h-12 w-full min-w-0 rounded-full border border-border bg-surface px-4 py-0 text-sm font-medium text-foreground shadow-control outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/15"
+      max={max}
+      min={min}
+      onChange={(event) => onChange(event.target.value)}
+      type="date"
+      value={value || ""}
+    />
+  </label>
+);
+
+const StatusFilterField = ({
+  onChange,
+  value,
+}: {
+  onChange: (value: string) => void;
+  value?: string;
+}) => (
+  <label className="flex min-w-0 flex-col gap-1 text-xs font-medium text-muted sm:min-w-[170px]">
+    Status
+    <span className="relative block text-sm font-medium text-foreground">
+      <select
+        className="h-12 w-full min-w-0 appearance-none rounded-full border border-border bg-surface py-0 pl-4 pr-12 text-sm font-medium text-foreground shadow-control outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/15"
+        onChange={(event) => onChange(event.target.value)}
+        value={value || "all"}
+      >
+        {statusFilterOptions.map((option) => (
+          <option key={option.value} value={option.value}>
+            {option.label}
+          </option>
+        ))}
+      </select>
+      <ChevronRight
+        aria-hidden
+        className="pointer-events-none absolute right-5 top-1/2 h-4 w-4 -translate-y-1/2 rotate-90 text-foreground"
+      />
+    </span>
+  </label>
 );
 
 const InitialsAvatar = ({ name }: { name: string }) => {
@@ -266,6 +377,36 @@ export const AdminFinanceChargesClient = () => {
     router.replace(next ? `${pathname}?${next}` : pathname, { scroll: false });
   };
 
+  const hasTableFilters = Boolean(query.q || query.status || query.from || query.to);
+  const handleChargeDateFilterChange = (field: "from" | "to", value: string) => {
+    if (!value) {
+      const otherDate = field === "from" ? query.to : query.from;
+      replaceParams(
+        otherDate ? { [field]: otherDate, period: "custom" } : { [field]: null, period: "all" },
+      );
+      return;
+    }
+
+    let nextFrom = field === "from" ? value : (query.from ?? summary?.period.from ?? value);
+    let nextTo = field === "to" ? value : (query.to ?? summary?.period.to ?? value);
+
+    if (nextFrom > nextTo) {
+      if (field === "from") nextTo = nextFrom;
+      else nextFrom = nextTo;
+    }
+
+    replaceParams({ from: nextFrom, period: "custom", to: nextTo });
+  };
+  const clearTableFilters = () => {
+    replaceParams({
+      from: null,
+      period: "all",
+      q: null,
+      status: null,
+      to: null,
+    });
+  };
+
   const pages = summary?.pages ?? 1;
   const page = Math.min(query.page ?? 1, pages);
 
@@ -278,7 +419,7 @@ export const AdminFinanceChargesClient = () => {
               Financeiro
             </p>
             <h1 className="mt-2 text-3xl font-bold tracking-tight text-foreground md:text-4xl">
-              Últimas cobranças realizadas
+              Cobranças
             </h1>
             <p className="mt-2 max-w-2xl text-sm font-medium leading-6 text-muted">
               Relação completa de cobranças confirmadas por eventos reais do Mercado Pago.
@@ -288,10 +429,46 @@ export const AdminFinanceChargesClient = () => {
       </header>
 
       <CardShell className="overflow-hidden">
-        <div className="border-b border-border px-4 py-4">
-          <p className="text-sm font-semibold text-foreground">
-            {summary ? numberFormatter.format(summary.count) : "—"} cobranças encontradas
-          </p>
+        <div className="space-y-4 border-b border-border px-4 py-4">
+          <div className="flex min-w-0 flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+            <div className="min-w-0 xl:w-[360px] xl:max-w-[360px] xl:flex-none xl:pt-5">
+              <SearchBox
+                key={query.q ?? ""}
+                onSearch={(value) => replaceParams({ q: value || null })}
+                value={query.q}
+              />
+              <p className="mt-2 pl-1 text-sm font-semibold text-foreground">
+                {summary ? numberFormatter.format(summary.count) : "—"} cobranças encontradas
+              </p>
+            </div>
+            <div className="flex min-w-0 flex-col gap-2 text-sm font-medium text-foreground sm:flex-row sm:flex-wrap sm:items-end xl:flex-1 xl:justify-end">
+              <DateFilterField
+                label="Data de"
+                max={query.to}
+                onChange={(value) => handleChargeDateFilterChange("from", value)}
+                value={query.from}
+              />
+              <DateFilterField
+                label="Data até"
+                min={query.from}
+                onChange={(value) => handleChargeDateFilterChange("to", value)}
+                value={query.to}
+              />
+              <StatusFilterField
+                onChange={(value) => replaceParams({ status: value === "all" ? null : value })}
+                value={query.status}
+              />
+              {hasTableFilters ? (
+                <button
+                  className="inline-flex h-12 items-center justify-center rounded-full border border-border bg-surface px-5 text-sm font-semibold text-foreground shadow-control transition hover:border-primary hover:text-primary"
+                  onClick={clearTableFilters}
+                  type="button"
+                >
+                  Limpar
+                </button>
+              ) : null}
+            </div>
+          </div>
         </div>
 
         {chargesQuery.isLoading ? <LoadingState /> : null}
