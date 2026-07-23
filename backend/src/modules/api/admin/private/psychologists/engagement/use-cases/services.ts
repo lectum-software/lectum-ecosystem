@@ -10,6 +10,8 @@ import {
 } from "@/utils/admin-psychologist-analytics";
 import type {
   AdminPsychologistAvailabilityMetric,
+  AdminPsychologistContentFormatDistribution,
+  AdminPsychologistContentFormatId,
   AdminPsychologistEngagementQuery,
   AdminPsychologistMetricComparison,
   AdminPsychologistPublicationItem,
@@ -211,6 +213,82 @@ const metric = (input: {
 });
 
 const roundPercent = (value: number) => Math.round(value * 10) / 10;
+
+const CONTENT_FORMAT_ORDER = ["text", "video", "image", "image_carousel"] as const;
+
+const CONTENT_FORMAT_LABELS = {
+  image: "Imagem",
+  image_carousel: "Carrossel de imagens",
+  text: "Apenas texto",
+  video: "Vídeo",
+} satisfies Record<
+  AdminPsychologistContentFormatId,
+  AdminPsychologistContentFormatDistribution["items"][number]["label"]
+>;
+
+const emptyContentFormatCounts = () =>
+  ({
+    image: 0,
+    image_carousel: 0,
+    text: 0,
+    video: 0,
+  }) satisfies Record<AdminPsychologistContentFormatId, number>;
+
+const normalizeContentMediaType = (value?: string | null) =>
+  (value ?? "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
+
+const classifyPostContentFormat = (
+  post: AdminPsychologistEngagementPost,
+): AdminPsychologistContentFormatId => {
+  const mediaItems = post.media_items.filter((item) => item.media_url);
+  const mediaTypes = mediaItems.map((item) => normalizeContentMediaType(item.media_type));
+  const legacyMediaType = post.media_url ? normalizeContentMediaType(post.media_type) : "";
+  const hasVideo = mediaTypes.includes("video") || legacyMediaType === "video";
+  if (hasVideo) return "video";
+
+  const imageItemsCount = mediaTypes.filter((type) => type === "image").length;
+  if (imageItemsCount > 1) return "image_carousel";
+  if (imageItemsCount === 1 || legacyMediaType === "image") return "image";
+
+  return "text";
+};
+
+const classifyReplyContentFormat = (
+  reply: AdminPsychologistEngagementReply,
+): AdminPsychologistContentFormatId => {
+  const mediaType = reply.media_url ? normalizeContentMediaType(reply.media_type) : "";
+  if (mediaType === "video") return "video";
+  if (mediaType === "image") return "image";
+
+  return "text";
+};
+
+const buildContentFormatDistribution = <T>(
+  items: T[],
+  classify: (item: T) => AdminPsychologistContentFormatId,
+): AdminPsychologistContentFormatDistribution => {
+  const counts = emptyContentFormatCounts();
+
+  for (const item of items) {
+    counts[classify(item)] += 1;
+  }
+
+  const total = items.length;
+
+  return {
+    items: CONTENT_FORMAT_ORDER.map((id) => ({
+      count: counts[id],
+      id,
+      label: CONTENT_FORMAT_LABELS[id],
+      percentage: total > 0 ? roundPercent((counts[id] / total) * 100) : 0,
+    })),
+    total,
+  };
+};
 
 const PLATFORM_DEVICE_TYPES = ["desktop", "mobile", "tablet", "unknown"] as const;
 type PlatformDeviceType = (typeof PLATFORM_DEVICE_TYPES)[number];
@@ -1106,6 +1184,11 @@ export const showAdminPsychologistStatistics = async (
     psychologistId: userId,
     repository,
   });
+  const communityContentDistribution = {
+    posts: buildContentFormatDistribution(communityPosts, classifyPostContentFormat),
+    replies: buildContentFormatDistribution(communityReplies, classifyReplyContentFormat),
+    source: "community_post.media_type+community_post_media+post_reply.media_type" as const,
+  };
   const platformUsageSummary = summarizePlatformUsage({
     eligiblePsychologistsCount: 1,
     pageViews: platformPageViews,
@@ -1276,6 +1359,7 @@ export const showAdminPsychologistStatistics = async (
         }),
       ],
       communities: communityItems,
+      content_distribution: communityContentDistribution,
       series: communitySeries,
     },
     period: period.period,

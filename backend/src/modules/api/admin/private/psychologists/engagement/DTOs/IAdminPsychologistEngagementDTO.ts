@@ -102,6 +102,20 @@ export type AdminPsychologistStatisticsVideo = {
   video_url: string | null;
 };
 
+export type AdminPsychologistContentFormatId = "image" | "image_carousel" | "text" | "video";
+
+export type AdminPsychologistContentFormatDistributionItem = {
+  count: number;
+  id: AdminPsychologistContentFormatId;
+  label: "Apenas texto" | "Carrossel de imagens" | "Imagem" | "Vídeo";
+  percentage: number;
+};
+
+export type AdminPsychologistContentFormatDistribution = {
+  items: AdminPsychologistContentFormatDistributionItem[];
+  total: number;
+};
+
 export type AdminPsychologistStatisticsCommunityItem = {
   avatar_url: string | null;
   color: string | null;
@@ -224,6 +238,11 @@ export type AdminPsychologistStatisticsDTO = {
   community: {
     cards: AdminPsychologistAvailabilityMetric[];
     communities: AdminPsychologistStatisticsCommunityItem[];
+    content_distribution: {
+      posts: AdminPsychologistContentFormatDistribution;
+      replies: AdminPsychologistContentFormatDistribution;
+      source: "community_post.media_type+community_post_media+post_reply.media_type";
+    };
     series: AdminPsychologistStatisticsSeriesPoint[];
   };
   period: AdminPsychologistStatisticsPeriod;

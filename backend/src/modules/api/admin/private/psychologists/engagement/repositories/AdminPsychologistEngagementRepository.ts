@@ -67,7 +67,6 @@ const postSelect = {
       media_url: true,
       position: true,
     },
-    take: 1,
     where: {
       deleted: false,
     },

@@ -334,3 +334,32 @@ Exibir estatísticas de negócio/comunidade e publicações do psicólogo com da
 - `pnpm --dir admin build`
 - `pnpm check`
 - Smoke HTTP local: `/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=estatisticas` retornou `200`.
+
+### Ajuste pos-feedback 2026-07-22 - Distribuicao de formatos em Posts e Respostas
+
+- Pedido do usuario: entre **Comunidades ativas** e **Horarios de maior atividade**, adicionar duas colunas com dois blocos, um de **Posts** e outro de **Respostas**, informando quantidade e taxa de conteudo **Apenas texto**, **Video**, **Imagem** e **Carrossel de imagens** em grafico de pizza.
+- O contrato real `GET /api/admin/private/psychologists/:id/statistics` foi expandido em `community.content_distribution`, preservando o endpoint existente e calculando a distribuicao por posts/respostas reais do psicologo no periodo.
+- A classificacao V1 e deterministica: sem midia = **Apenas texto**; qualquer video = **Video**; uma imagem = **Imagem**; duas ou mais imagens no post = **Carrossel de imagens**. Respostas usam a midia unica real de `post_reply`; carrossel permanece categoria canonica com `0` enquanto nao existir suporte real a multiplas midias em respostas.
+- A UI usa SVG acessivel para os graficos de pizza, legenda textual com quantidade e percentual, e layout mobile-first: uma coluna em ~390px e duas colunas no desktop.
+- Nao houve alteracao em Prisma schema ou migrations; `pnpm --dir backend db:migrate` nao foi necessario.
+- Builder/Quick Copy nao estava disponivel como ferramenta callable no ambiente; a validacao visual usou o screenshot enviado pelo usuario em 2026-07-22 e o PNG local `_product/proto/admin/Psicologos/Detalhes do psicologo/Estatisticas.png`.
+- ADR criado: `adrs/0310-distribuicao-formato-conteudo-psicologo-admin.md`.
+
+#### Criterios de aceite do ajuste
+
+- [x] Dois blocos aparecem entre **Comunidades ativas** e **Horarios de maior atividade**.
+- [x] O bloco **Posts** mostra grafico de pizza, quantidade e taxa para **Apenas texto**, **Video**, **Imagem** e **Carrossel de imagens**.
+- [x] O bloco **Respostas** mostra grafico de pizza, quantidade e taxa para **Apenas texto**, **Video**, **Imagem** e **Carrossel de imagens**.
+- [x] Os dados vem de posts/respostas reais do psicologo no periodo, sem mock, seed, endpoint paralelo, migration ou package novo.
+- [x] A UI permanece mobile-first e foi validada em desktop e 390px.
+
+#### Validacao complementar executada
+
+- `pnpm --dir backend biome:check`
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check`
+- Chamada direta do service `showAdminPsychologistStatistics({ id: "cmrgztri7000tn0uh1q4n8vxf", period: "all" })` confirmou `community.content_distribution.posts` e `community.content_distribution.replies` com as quatro categorias, contagens e percentuais reais.
+- Browser local/headless via Chrome/CDP em `/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=estatisticas`: desktop 1365px e mobile 390px confirmaram os graficos de pizza de **Posts** e **Respostas**, as legendas de formatos e o posicionamento entre os blocos solicitados. Admin temporario real criado para validacao foi removido ao final.

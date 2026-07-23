@@ -909,6 +909,18 @@ export type AdminPsychologistEngagementMetric = {
   value: number | null;
 };
 
+export type AdminPsychologistContentFormatId = "image" | "image_carousel" | "text" | "video";
+
+export type AdminPsychologistContentFormatDistribution = {
+  items: {
+    count: number;
+    id: AdminPsychologistContentFormatId;
+    label: "Apenas texto" | "Carrossel de imagens" | "Imagem" | "Vídeo";
+    percentage: number;
+  }[];
+  total: number;
+};
+
 export type AdminPsychologistStatistics = {
   business: {
     cards: AdminPsychologistEngagementMetric[];
@@ -945,6 +957,11 @@ export type AdminPsychologistStatistics = {
       slug: string;
       upvotes: number;
     }[];
+    content_distribution: {
+      posts: AdminPsychologistContentFormatDistribution;
+      replies: AdminPsychologistContentFormatDistribution;
+      source: "community_post.media_type+community_post_media+post_reply.media_type";
+    };
     series: AdminPsychologistStatisticsPoint[];
   };
   period: {
