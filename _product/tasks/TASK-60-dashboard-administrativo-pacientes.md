@@ -518,11 +518,11 @@ Frontend esperado:
 
 ## Ajuste pos-feedback 2026-07-23 - Analise agregada de intencao dos pacientes
 
-- Pedido do usuario: no dashboard `/pacientes`, abaixo do bloco **Visao Geral**, adicionar uma analise de intencao mostrando o percentual de pacientes **Frios**, **Curiosos**, **Objetivos** e **Muito qualificados**.
+- Pedido do usuario: no dashboard `/pacientes`, abaixo do bloco **Visao Geral**, adicionar uma analise de intencao mostrando o percentual de pacientes **Frios**, **Curiosos**, **Interessados** e **Muito qualificados**.
 - O endpoint `GET /api/admin/private/patients/dashboard` passou a retornar `intent_analysis`, com distribuicao agregada e totais de sinais reais no periodo selecionado.
 - Fontes usadas: `profile_view_event.viewer_id` com `source="profile_page"`, `psychologist_favorite.user_id` ainda ativo e `contact_request.user_id` com `channel="whatsapp"`; retornos ao mesmo perfil sao derivados de repeticao real de abertura por paciente/psicologo.
 - Denominador: pacientes reais existentes ao final do periodo selecionado. Pacientes sem sinais no periodo entram como **Frios** para preservar leitura percentual da base total.
-- Classificacao V1: **Frios** sem sinais; **Curiosos** com abertura de perfil/baixa intencao sem favorito ou WhatsApp; **Objetivos** com favoritos ou retorno relevante ao perfil sem WhatsApp; **Muito qualificados** com clique no WhatsApp ou multiplos sinais fortes.
+- Classificacao V1: **Frios** sem sinais; **Curiosos** com abertura de perfil/baixa intencao sem favorito ou WhatsApp; **Interessados** com favoritos ou retorno relevante ao perfil sem WhatsApp; **Muito qualificados** com clique no WhatsApp ou multiplos sinais fortes.
 - A UI exibe o bloco imediatamente apos **Visao Geral**, com barra de distribuicao, totais de sinais e cards percentuais/contagens por categoria.
 - A analise e exclusivamente interna do Admin: nao e exibida publicamente, nem para pacientes, nem para psicologos; a copy deixa claro que nao infere sessao, atendimento, diagnostico ou conteudo de conversa.
 - Nao houve criacao de tracking novo, schema Prisma, migration, package, seed, mock, backfill artificial ou endpoint paralelo.
@@ -531,7 +531,7 @@ Frontend esperado:
 ### Criterios de aceite do ajuste
 
 - [x] Bloco **Analise da intencao dos pacientes** aparece abaixo de **Visao Geral** no dashboard `/pacientes`.
-- [x] O bloco mostra percentuais e contagens de **Frios**, **Curiosos**, **Objetivos** e **Muito qualificados**.
+- [x] O bloco mostra percentuais e contagens de **Frios**, **Curiosos**, **Interessados** e **Muito qualificados**.
 - [x] O calculo usa apenas sinais reais ja persistidos de abertura de perfil, favoritos e clique no WhatsApp.
 - [x] O filtro de periodo do dashboard altera a consulta usada pela analise.
 - [x] A UI deixa claro que o indicador e agregado, interno do Admin e nao representa diagnostico, atendimento ou conversa.
@@ -572,3 +572,34 @@ Frontend esperado:
 - `pnpm --dir admin build`
 - Browser local headless autenticado em `http://localhost:3002/pacientes` confirmou: textos removidos, icone `lucide-snowflake` em **Frios** e `text-danger` em **Muito qualificados**.
 - Admin temporario de validacao foi removido do banco apos a verificacao.
+
+## Ajuste pos-feedback 2026-07-23 - Renomeacao de Objetivos para Interessados
+
+- Pedido do usuario: o termo **Objetivos** era dubio porque poderia sugerir decisao objetiva/rapida de clicar no WhatsApp, embora o segmento represente favoritos ou retornos a perfis sem contato.
+- Decisao de produto: renomear o label exibido para **Interessados**, mantendo o id tecnico `objective` para preservar compatibilidade do contrato entre backend e Admin.
+- A classificacao, fontes reais e pesos nao mudaram: o segmento continua representando pacientes que favoritaram psicologos ou retornaram a perfis, sem clique no WhatsApp.
+- Nao houve alteracao de schema Prisma, migration, package, seed, mock, tracking ou endpoint novo.
+- ADR-0314 atualizado para registrar a nomenclatura de produto.
+
+### Criterios de aceite do ajuste
+
+- [x] Dashboard `/pacientes` mostra **Interessados** no lugar de **Objetivos**.
+- [x] Contrato tecnico mantem o id `objective` estavel.
+- [x] Nenhum mock, seed, dado artificial, migration, package novo ou tracking novo foi adicionado.
+
+### Validacao complementar executada
+
+- `pnpm --dir backend exec biome check --write "src/modules/api/admin/private/patients/dashboard/DTOs/IAdminPatientsDashboardDTO.ts" "src/modules/api/admin/private/patients/dashboard/use-cases/services.ts"`
+- `pnpm --dir admin exec biome check --write "src/api/req/patients/index.ts"`
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check`
+- Servico local `buildPatientsDashboard({ period: "all" })` retornou o segmento `objective` com `label="Interessados"`, `count=22` e `percentage=14.6` na base local atual, sem criar dados artificiais.
+- Browser local headless autenticado em `http://localhost:3002/pacientes` confirmou o label **INTERESSADOS** e ausencia de **OBJETIVOS**.
+- Admin temporario de validacao foi removido do banco apos a verificacao.
+
+### ADR
+
+- ADR-0314 atualizado: label de produto do segmento `objective` renomeado para **Interessados**.

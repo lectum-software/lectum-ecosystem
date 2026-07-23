@@ -386,7 +386,7 @@ export type PatientsDashboardIntentSegment = {
   count: number;
   description: string;
   id: PatientsDashboardIntentSegmentId;
-  label: "Curiosos" | "Frios" | "Muito qualificados" | "Objetivos";
+  label: "Curiosos" | "Frios" | "Interessados" | "Muito qualificados";
   percentage: number;
 };
 

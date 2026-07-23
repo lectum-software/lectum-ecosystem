@@ -23,7 +23,7 @@ A distribuicao usa como denominador os pacientes reais existentes no final do pe
 
 - **Frios**: sem abertura de perfil, favorito ou clique no WhatsApp no periodo;
 - **Curiosos**: abriram perfil/baixa intencao, sem favorito ou WhatsApp;
-- **Objetivos**: favoritaram psicologos ou retornaram a perfis, sem clique no WhatsApp;
+- **Interessados**: favoritaram psicologos ou retornaram a perfis, sem clique no WhatsApp;
 - **Muito qualificados**: clicaram no WhatsApp ou concentraram multiplos sinais fortes.
 
 A UI do Admin mostra apenas agregados: percentual, contagem por categoria e totais de sinais. Nao retorna lista nominal neste bloco, nao expande eventos brutos e inclui copy de privacidade informando que o indicador e interno do Admin e nao representa diagnostico, atendimento ou conteudo de conversa.
@@ -45,3 +45,7 @@ A UI do Admin mostra apenas agregados: percentual, contagem por categoria e tota
 - `pnpm check`
 - `buildPatientsDashboard({ period: "all" })` retornou as quatro categorias de `intent_analysis` com dados reais.
 - Browser local headless autenticado confirmou o bloco abaixo de **Visao Geral**, as quatro categorias, nota de privacidade e mobile 390px sem overflow horizontal.
+
+## Atualizacao 2026-07-23 - Label Interessados
+
+O label de produto do segmento tecnico `objective` foi renomeado de **Objetivos** para **Interessados**. A mudanca evita sugerir que o paciente tomou uma decisao objetiva/rapida de contato; o segmento segue representando favoritos ou retornos a perfis sem clique no WhatsApp. O id tecnico foi mantido para compatibilidade do contrato.

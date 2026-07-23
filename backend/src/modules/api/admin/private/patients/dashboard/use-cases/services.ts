@@ -124,7 +124,7 @@ const PATIENT_INTENT_SCORE_CAPS = {
 const PATIENT_INTENT_SEGMENT_LABELS = {
   cold: "Frios",
   curious: "Curiosos",
-  objective: "Objetivos",
+  objective: "Interessados",
   very_qualified: "Muito qualificados",
 } as const satisfies Record<AdminPatientsDashboardIntentSegmentId, string>;
 const PATIENT_INTENT_SEGMENT_DESCRIPTIONS = {
