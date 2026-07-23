@@ -126,6 +126,7 @@ export type AdminFinancePaymentMethod = {
 };
 
 export type AdminFinanceSubscriptionItem = {
+  cancelled_at: string | null;
   created_at: string;
   current_period_end: string | null;
   detail_url: string;

@@ -916,6 +916,7 @@ const mapSubscription = (
   const paymentInsights = buildPaymentInsights(subscription, paymentEvents);
 
   return {
+    cancelled_at: subscription.status === "cancelada" ? subscription.updatedAt.toISOString() : null,
     created_at: subscription.createdAt.toISOString(),
     current_period_end: subscription.current_period_end?.toISOString() ?? null,
     detail_url: `/psicologos/${subscription.psychologist.user.id}`,
@@ -1651,6 +1652,7 @@ const buildCsv = (dashboard: AdminFinanceDashboard) => {
     csvRow([
       "section",
       "subscription_id",
+      "cancelled_at",
       "created_at",
       "updated_at",
       "started_at",
@@ -1673,6 +1675,7 @@ const buildCsv = (dashboard: AdminFinanceDashboard) => {
       csvRow([
         "relacao_de_assinaturas",
         item.id,
+        item.cancelled_at ?? "",
         item.created_at,
         item.updated_at,
         item.started_at,

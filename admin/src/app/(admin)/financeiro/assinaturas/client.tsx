@@ -103,6 +103,13 @@ const formatDateTime = (value: string) =>
   }).format(new Date(value));
 
 const formatNullableDate = (value: string | null) => (value ? formatDate(value) : "—");
+const isCancelledSubscription = (item: FinanceSubscriptionItem) => item.status === "cancelada";
+const subscriptionLifecycleDate = (item: FinanceSubscriptionItem) =>
+  isCancelledSubscription(item) ? (item.cancelled_at ?? item.updated_at) : item.next_charge_at;
+const subscriptionLifecycleLabel = (item: FinanceSubscriptionItem) =>
+  isCancelledSubscription(item) ? "Cancelamento" : "Próxima";
+const formatSubscriptionLifecycleDate = (item: FinanceSubscriptionItem) =>
+  formatNullableDate(subscriptionLifecycleDate(item));
 const formatMoney = (cents: number) => moneyFormatter.format(cents / 100);
 const formatNullableMoney = (cents: number | null) =>
   typeof cents === "number" ? formatMoney(cents) : "Valor indisponível";
@@ -464,6 +471,9 @@ const PaymentHealthDetails = ({ item }: { item: FinanceSubscriptionItem }) => {
           <HealthMetric label="Pendentes" value={numberFormatter.format(health.pending_payments)} />
           <HealthMetric label="Último sucesso" value={formatNullableDate(health.last_success_at)} />
           <HealthMetric label="Última falha" value={formatNullableDate(health.last_failure_at)} />
+          {isCancelledSubscription(item) ? (
+            <HealthMetric label="Cancelamento" value={formatSubscriptionLifecycleDate(item)} />
+          ) : null}
         </dl>
 
         {visibleHealthNotes.length > 0 ? (
@@ -599,9 +609,11 @@ const SubscriptionsTable = ({ items }: { items: FinanceSubscriptionItem[] }) => 
                       </dd>
                     </div>
                     <div>
-                      <dt className="font-semibold text-muted">Próxima</dt>
+                      <dt className="font-semibold text-muted">
+                        {subscriptionLifecycleLabel(item)}
+                      </dt>
                       <dd className="mt-1 font-bold text-foreground">
-                        {formatNullableDate(item.next_charge_at)}
+                        {formatSubscriptionLifecycleDate(item)}
                       </dd>
                     </div>
                   </dl>
@@ -640,7 +652,7 @@ const SubscriptionsTable = ({ items }: { items: FinanceSubscriptionItem[] }) => 
               </th>
               <th className="px-5 py-4">Psicólogo</th>
               <th className="px-5 py-4">Início</th>
-              <th className="px-5 py-4">Próxima</th>
+              <th className="px-5 py-4">Próxima/Cancel.</th>
               <th className="px-5 py-4">Valor</th>
               <th className="px-5 py-4">Status</th>
               <th className="px-5 py-4">Confiabilidade Pgto</th>
@@ -690,7 +702,12 @@ const SubscriptionsTable = ({ items }: { items: FinanceSubscriptionItem[] }) => 
                       {formatDate(item.started_at)}
                     </td>
                     <td className="whitespace-nowrap px-5 py-4 text-muted">
-                      {formatNullableDate(item.next_charge_at)}
+                      <span>{formatSubscriptionLifecycleDate(item)}</span>
+                      {isCancelledSubscription(item) ? (
+                        <span className="mt-1 block text-[11px] font-black uppercase tracking-[0.08em] text-danger">
+                          Cancelamento
+                        </span>
+                      ) : null}
                     </td>
                     <td className="whitespace-nowrap px-5 py-4 font-black text-foreground">
                       {formatMoney(item.plan.price_cents)}

@@ -278,3 +278,41 @@ Adicionar análise real de confiabilidade do pagamento por assinatura paga Merca
 - `pnpm --dir admin check`
 - `pnpm --dir admin build`
 - Smoke HTTP local: `GET http://localhost:3002/financeiro/assinaturas` retornou `200`.
+
+## Ajuste pós-feedback 2026-07-23 - Data de cancelamento em Assinaturas
+
+- Pedido do usuário: caso uma assinatura esteja cancelada, a relação `/financeiro/assinaturas` precisa exibir a data do cancelamento.
+- O contrato Admin Financeiro de `FinanceSubscriptionItem` passou a retornar `cancelled_at` nullable, derivado de `professional_subscription.updatedAt` somente quando `status="cancelada"`, seguindo a regra já usada por churn/lifetime enquanto não há coluna Prisma dedicada.
+- A UI mobile-first de `/financeiro/assinaturas` agora troca a data de **Próxima** por **Cancelamento** nas assinaturas canceladas, exibindo a data no card mobile, na linha desktop e no dropdown de confiabilidade.
+- A prévia de **Assinaturas** em `/financeiro` foi alinhada à mesma regra para não mostrar próxima cobrança em assinatura cancelada.
+- O CSV financeiro passou a incluir a coluna `cancelled_at` na seção `relacao_de_assinaturas`.
+- `_product/tasks/DATA-MODEL.md` foi atualizado para documentar o campo derivado `cancelled_at` no contrato administrativo de leitura financeira, sem criar campo Prisma.
+- Não houve alteração de Prisma/migrations, instalação de package, seed, mock, dado artificial ou endpoint simulado.
+- Builder/Quick Copy não está exposto como ferramenta callable neste ambiente; as referências auditáveis foram `_product/proto/admin/Financeiro.png` e a captura autenticada enviada pelo usuário em 2026-07-23.
+- ADR atualizado: `adrs/0309-admin-assinaturas-saude-pagamento.md`.
+
+### Critérios de aceite do ajuste
+
+- [x] Assinaturas canceladas em `/financeiro/assinaturas` exibem a data de cancelamento.
+- [x] Assinaturas ativas/inadimplentes continuam exibindo a próxima cobrança quando houver `current_period_end`.
+- [x] O dropdown de confiabilidade mostra a data de **Cancelamento** quando a assinatura está cancelada.
+- [x] A prévia de assinaturas em `/financeiro` segue a mesma regra de próxima cobrança versus cancelamento.
+- [x] O contrato Admin privado retorna `cancelled_at` sem criar migration ou coluna Prisma nova.
+- [x] O CSV financeiro inclui `cancelled_at` na relação de assinaturas.
+- [x] UI mobile-first preservada e nenhum `<img>` cru foi usado.
+- [x] Nenhum package, schema Prisma, migration, mock ou endpoint simulado foi adicionado.
+
+### Validação complementar executada
+
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/financeiro/assinaturas/client.tsx" "src/app/(admin)/financeiro/client.tsx" "src/api/req/finance/index.ts"`.
+- `pnpm --dir backend exec biome check --write "src/modules/api/admin/private/finance/dashboard/DTOs/IAdminFinanceDashboardDTO.ts" "src/modules/api/admin/private/finance/dashboard/use-cases/services.ts"`.
+- `pnpm --dir admin check`.
+- `pnpm --dir backend check`.
+- `pnpm --dir admin build`.
+- `pnpm --dir backend build`.
+- `pnpm check`.
+- Smoke de serviço real com `.env` local: `listAdminFinanceSubscriptions({ period: "all", status: "cancelada", limit: 5 })` retornou `status=200`, `count=1` e `cancelled_at="2026-07-20T10:20:00.000Z"` igual ao `updated_at` da assinatura cancelada.
+- Smoke de CSV real: `exportAdminFinanceDashboardCsv({ period: "all" })` retornou `status=200`, CSV com cabeçalho `cancelled_at` e linha da assinatura cancelada com `2026-07-20T10:20:00.000Z`.
+- Smoke HTTP local: `GET http://localhost:3002/financeiro/assinaturas?q=paula` retornou `200`.
+- Smoke HTTP local protegido: `GET http://localhost:3001/api/admin/private/finance/subscriptions?period=all&status=cancelada` sem token Admin retornou `401`.
+- Observação de browser local: o Chrome headless existe no host, mas a execução automatizada foi bloqueada por política do ambiente; a validação visual autenticada permaneceu baseada na captura fornecida pelo usuário, no build Admin e nos smokes locais.

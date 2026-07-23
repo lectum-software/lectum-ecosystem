@@ -155,6 +155,13 @@ const formatMaybeMoney = (cents: number | null) =>
   cents === null ? "Indisponível" : formatMoney(cents);
 
 const formatNullableDate = (value: string | null) => (value ? formatDate(value) : "—");
+const isCancelledSubscription = (item: FinanceSubscriptionItem) => item.status === "cancelada";
+const subscriptionLifecycleDate = (item: FinanceSubscriptionItem) =>
+  isCancelledSubscription(item) ? (item.cancelled_at ?? item.updated_at) : item.next_charge_at;
+const subscriptionLifecycleLabel = (item: FinanceSubscriptionItem) =>
+  isCancelledSubscription(item) ? "Cancelamento" : "Próxima";
+const formatSubscriptionLifecycleDate = (item: FinanceSubscriptionItem) =>
+  formatNullableDate(subscriptionLifecycleDate(item));
 
 const shortReference = (value: string | null) => {
   if (!value) return "â€”";
@@ -973,8 +980,8 @@ const SubscriptionRelation = ({ dashboard }: { dashboard: AdminFinanceDashboard 
               </p>
               <p className="text-xs text-muted">
                 Início {formatDate(item.started_at)} · Última{" "}
-                {formatNullableDate(item.last_charge_at)} · Próxima{" "}
-                {formatNullableDate(item.next_charge_at)}
+                {formatNullableDate(item.last_charge_at)} · {subscriptionLifecycleLabel(item)}{" "}
+                {formatSubscriptionLifecycleDate(item)}
               </p>
             </div>
           </div>
@@ -995,7 +1002,7 @@ const SubscriptionRelation = ({ dashboard }: { dashboard: AdminFinanceDashboard 
             <th className="px-5 py-3 font-black">Psicólogo</th>
             <th className="px-5 py-3 font-black">Início</th>
             <th className="px-5 py-3 font-black">Última</th>
-            <th className="px-5 py-3 font-black">Próxima</th>
+            <th className="px-5 py-3 font-black">Próxima/Cancel.</th>
             <th className="px-5 py-3 font-black">Valor</th>
             <th className="px-5 py-3 font-black">Status</th>
           </tr>
@@ -1014,7 +1021,14 @@ const SubscriptionRelation = ({ dashboard }: { dashboard: AdminFinanceDashboard 
               </td>
               <td className="px-5 py-4 text-muted">{formatDate(item.started_at)}</td>
               <td className="px-5 py-4 text-muted">{formatNullableDate(item.last_charge_at)}</td>
-              <td className="px-5 py-4 text-muted">{formatNullableDate(item.next_charge_at)}</td>
+              <td className="px-5 py-4 text-muted">
+                <span>{formatSubscriptionLifecycleDate(item)}</span>
+                {isCancelledSubscription(item) ? (
+                  <span className="mt-1 block text-[11px] font-black uppercase tracking-[0.08em] text-danger">
+                    Cancelamento
+                  </span>
+                ) : null}
+              </td>
               <td className="px-5 py-4 font-black text-foreground">
                 {formatMoney(item.plan.price_cents)}
               </td>

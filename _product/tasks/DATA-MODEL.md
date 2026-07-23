@@ -770,6 +770,12 @@ Trocar de provedor = novo adapter. **Limite real:** card tokens são específico
 | `@@index([psychologist_id, status])` | | habilita selo/destaque/ranking quando `ativa` |
 | `@@index([source, status])`, `@@index([status, current_period_end])` | | auditoria e filtro de entitlement ativo não expirado |
 
+Complemento 2026-07-23: contratos administrativos de leitura financeira que retornam `professional_subscription`
+podem expor `cancelled_at` como campo derivado e nullable. Para `status="cancelada"`, `cancelled_at`
+usa o `updatedAt` da assinatura como data do cancelamento real persistido pelo fluxo de gateway/sincronização
+ou cancelamento operacional; para outros status, retorna `null`. Isso não cria coluna Prisma nova enquanto o
+produto ainda não possui campo dedicado `cancelled_at`.
+
 `source="admin_grant"` com plano `profissional`, `status="ativa"` e `current_period_end` futuro concede a mesma experiência de perfil do Plano Profissional até expirar: selo, até 10 especialidades e seleção de todos os serviços/abordagens ativos. Vídeo de apresentação é permitido a todos os planos.
 
 Complemento 2026-07-04: no fluxo pago via gateway (`source="mercadopago"`), assinatura profissional ativa e verificação profissional são estados separados. A assinatura paga ativa concede direito ao próximo passo de onboarding, mas **não** concede selo público de verificado nem libera edição do perfil profissional enquanto `psychologist_profile.cfp_verified_at` estiver nulo. Complemento 2026-07-11: a ordem vigente do onboarding pago é endereço de faturamento → WhatsApp → verificação profissional → perfil; a etapa pendente deve ser retomável e redirecionar para `/app/professional/whatsapp/verify` quando faltar WhatsApp e para `/app/professional/cfp` quando o WhatsApp já estiver cadastrado e a verificação profissional ainda estiver pendente. O Plano Gratuito (`slug="gratuito"`, `source="free_signup"`) não entra nesse gate de CFP e segue a jornada gratuita por WhatsApp/perfil. Cortesia administrativa ativa (`source="admin_grant"`) permanece como equivalência operacional de verificação pública quando concedida manualmente, conforme ADRs de cortesia.
