@@ -184,8 +184,51 @@ const CRP_REGION_OPTIONS = [
 
 const CRP_REGION_PLACEHOLDER = { label: "Selecione a regional", value: "" };
 
+const getCrpRegionCode = (value?: string | null) => {
+  const match = String(value ?? "").match(/\d{1,2}/);
+
+  return match ? match[0].padStart(2, "0") : null;
+};
+
+const normalizeCrpRegionToken = (value?: string | null) =>
+  String(value ?? "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim()
+    .toUpperCase();
+
+const getCrpRegionAcronyms = (value?: string | null) => {
+  const suffix = String(value ?? "")
+    .split(" - ")
+    .at(1);
+  if (!suffix) return [];
+
+  return [suffix, ...suffix.split("/")].map(normalizeCrpRegionToken).filter(Boolean);
+};
+
+const resolveCrpRegionFieldValue = (value?: string | null) => {
+  const currentRegional = String(value ?? "").trim();
+  if (!currentRegional) return "";
+
+  const exactOption = CRP_REGION_OPTIONS.find((option) => option.value === currentRegional);
+  if (exactOption) return exactOption.value;
+
+  const currentCode = getCrpRegionCode(currentRegional);
+  const matchingOption = currentCode
+    ? CRP_REGION_OPTIONS.find((option) => getCrpRegionCode(option.value) === currentCode)
+    : null;
+  if (matchingOption) return matchingOption.value;
+
+  const currentToken = normalizeCrpRegionToken(currentRegional);
+  const matchingAcronymOption = CRP_REGION_OPTIONS.find((option) =>
+    getCrpRegionAcronyms(option.value).includes(currentToken),
+  );
+
+  return matchingAcronymOption?.value ?? currentRegional;
+};
+
 const createCrpRegionSelectOptions = (currentValue?: string | null) => {
-  const currentRegional = String(currentValue ?? "").trim();
+  const currentRegional = resolveCrpRegionFieldValue(currentValue);
   const baseOptions = [CRP_REGION_PLACEHOLDER, ...CRP_REGION_OPTIONS];
 
   if (!currentRegional || CRP_REGION_OPTIONS.some((option) => option.value === currentRegional)) {
@@ -194,7 +237,7 @@ const createCrpRegionSelectOptions = (currentValue?: string | null) => {
 
   return [
     CRP_REGION_PLACEHOLDER,
-    { label: `${currentRegional} (valor atual)`, value: currentRegional },
+    { label: currentRegional, value: currentRegional },
     ...CRP_REGION_OPTIONS,
   ];
 };
@@ -1269,6 +1312,9 @@ const formatNullable = (value?: string | number | null) => {
   return String(value);
 };
 
+const formatCrpRegion = (value?: string | null) =>
+  formatNullable(resolveCrpRegionFieldValue(value));
+
 const formatAdminHeaderCrp = (detail: AdminPsychologistDetail) => {
   const professional = detail.profile.professional;
   const [fallbackRegion, ...fallbackRegistrationParts] = String(detail.header.crp ?? "").split("/");
@@ -2330,7 +2376,7 @@ const RegistryStatusCard = ({ id }: { id: string }) => {
   const registry = query.data;
   if (!registry) return null;
   const summaryItems = [
-    { label: "Regional CRP", value: formatNullable(registry.identity.regional_crp) },
+    { label: "Regional CRP", value: formatCrpRegion(registry.identity.regional_crp) },
     { label: "Nº CRP", value: formatNullable(registry.identity.registration_number) },
     {
       label: "Data de inscrição",
@@ -7940,7 +7986,7 @@ const ActiveCourtesyCard = ({ billing, id }: { billing: AdminPsychologistBilling
       </div>
 
       <dl className="mt-5 divide-y divide-border text-sm">
-        <FieldRow label="Regional CRP" value={billing.courtesy.regional_crp || "Não informado"} />
+        <FieldRow label="Regional CRP" value={formatCrpRegion(billing.courtesy.regional_crp)} />
         <FieldRow
           label="CRP"
           value={billing.courtesy.registration_number || billing.courtesy.crp || "Não informado"}
@@ -8071,7 +8117,7 @@ const CourtesyGrantForm = ({ billing, id }: { billing: AdminPsychologistBilling;
       crp_registration_date: formatInputDate(billing.courtesy.crp_registration_date),
       notes: "",
       period_days: String(billing.courtesy.period_options[1]?.days ?? 90),
-      regional_crp: billing.courtesy.regional_crp || "",
+      regional_crp: resolveCrpRegionFieldValue(billing.courtesy.regional_crp),
     },
     mode: "onSubmit",
     resolver: zodResolver(courtesyDetailsSchema),
@@ -8096,7 +8142,7 @@ const CourtesyGrantForm = ({ billing, id }: { billing: AdminPsychologistBilling;
       crp_registration_date: formatInputDate(billing.courtesy.crp_registration_date),
       notes: "",
       period_days: String(billing.courtesy.period_options[1]?.days ?? 90),
-      regional_crp: billing.courtesy.regional_crp || "",
+      regional_crp: resolveCrpRegionFieldValue(billing.courtesy.regional_crp),
     });
     confirmationForm.reset({ confirmation: "" });
   }, [billing.courtesy, confirmationForm, form]);
@@ -8266,7 +8312,10 @@ const CourtesyGrantForm = ({ billing, id }: { billing: AdminPsychologistBilling;
             </div>
 
             <dl className="mt-5 divide-y divide-border rounded-2xl border border-border bg-surface-muted px-4 text-sm">
-              <FieldRow label="Regional CRP" value={pendingCourtesyValues.regional_crp} />
+              <FieldRow
+                label="Regional CRP"
+                value={formatCrpRegion(pendingCourtesyValues.regional_crp)}
+              />
               <FieldRow label="CRP" value={pendingCourtesyValues.crp} />
               <FieldRow
                 label="Data inscrição CRP"
@@ -8496,7 +8545,7 @@ const RegistryIdentityForm = ({
     defaultValues: {
       crp: registry.identity.registration_number || "",
       crp_registration_date: formatInputDate(registry.identity.crp_registration_date),
-      regional_crp: registry.identity.regional_crp || "",
+      regional_crp: resolveCrpRegionFieldValue(registry.identity.regional_crp),
     },
     mode: "onSubmit",
     resolver: zodResolver(registryIdentitySchema),
@@ -8510,7 +8559,7 @@ const RegistryIdentityForm = ({
     form.reset({
       crp: registry.identity.registration_number || "",
       crp_registration_date: formatInputDate(registry.identity.crp_registration_date),
-      regional_crp: registry.identity.regional_crp || "",
+      regional_crp: resolveCrpRegionFieldValue(registry.identity.regional_crp),
     });
   }, [form, registry.identity]);
 
@@ -8573,7 +8622,7 @@ const RegistryIdentityForm = ({
             disabled={!form.formState.isDirty}
             type="submit"
           >
-            Salvar registro
+            Salvar
           </button>
           {canApprove ? (
             <button
@@ -8582,7 +8631,7 @@ const RegistryIdentityForm = ({
               type="button"
             >
               <ShieldCheck aria-hidden className="h-4 w-4" />
-              Aprovar manualmente
+              Aprovar
             </button>
           ) : null}
           {canReject ? (
@@ -8592,7 +8641,7 @@ const RegistryIdentityForm = ({
               type="button"
             >
               <AlertTriangle aria-hidden className="h-4 w-4" />
-              Rejeitar verificação
+              Rejeitar
             </button>
           ) : null}
         </div>
@@ -8625,7 +8674,7 @@ const RegistrySaveIdentityForm = ({
   }, [form]);
 
   const registrySummaryItems = [
-    { label: "Regional CRP", value: formatNullable(identityDraft.regional_crp) },
+    { label: "Regional CRP", value: formatCrpRegion(identityDraft.regional_crp) },
     { label: "Nº CRP", value: formatNullable(identityDraft.crp) },
     { label: "Data de inscrição", value: formatDateOnly(identityDraft.crp_registration_date) },
   ];
@@ -8697,7 +8746,7 @@ const RegistrySaveIdentityForm = ({
             type="submit"
           >
             {mutation.isPending ? <Loader2 aria-hidden className="h-4 w-4 animate-spin" /> : null}
-            Salvar registro
+            Salvar
           </button>
         </div>
       </form>
@@ -8723,7 +8772,9 @@ const RegistryApproveForm = ({
       crp_registration_date:
         identityDraft?.crp_registration_date ??
         formatInputDate(registry.identity.crp_registration_date),
-      regional_crp: identityDraft?.regional_crp ?? registry.identity.regional_crp ?? "",
+      regional_crp: resolveCrpRegionFieldValue(
+        identityDraft?.regional_crp ?? registry.identity.regional_crp,
+      ),
     }),
     [
       identityDraft,
@@ -8813,7 +8864,7 @@ const RegistryApproveForm = ({
           type="submit"
         >
           {mutation.isPending ? <Loader2 aria-hidden className="h-4 w-4 animate-spin" /> : null}
-          Aprovar manualmente
+          Aprovar
         </button>
       </form>
     </FormProvider>
@@ -8869,7 +8920,7 @@ const RegistryRejectForm = ({ id, onClose }: { id: string; onClose: () => void }
           type="submit"
         >
           {mutation.isPending ? <Loader2 aria-hidden className="h-4 w-4 animate-spin" /> : null}
-          Rejeitar verificação
+          Rejeitar
         </button>
       </form>
     </FormProvider>

@@ -384,3 +384,23 @@ Se o schema atual não suportar auditoria mínima sem `raw`, usar `raw` com shap
 - A rolagem interna da modal foi removida; o conteudo ficou mais compacto, com resumo dos dados em cards e campo de confirmacao/acao alinhados ao layout piloto.
 - A Data de inscricao exibida na confirmacao forte agora usa formato `dd/mm/aaaa`, evitando mostrar o valor tecnico `aaaa-mm-dd` do input.
 - Validacoes do ajuste: `pnpm --dir admin check`, `pnpm --dir admin build` e smoke HTTP local em `/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=perfil` retornando 200. Validacao visual autenticada do modal segue dependente de sessao Admin real no navegador do usuario.
+
+### Ajuste de copy e Regional CRP 2026-07-23
+
+- Pedido direto de produto aplicado no card `Registro profissional` da aba Admin `Perfil e cadastro`.
+- O campo `Regional CRP` passou a resolver valores legados numéricos/UF para o texto exato da opção administrativa disponível no select (ex.: `06` passa a exibir `6ª Região - SP`) e valores fora da lista deixam de receber o sufixo artificial `(valor atual)`.
+- Os botões do card e das confirmações fortes passaram a usar as cópias curtas `Salvar`, `Aprovar` e `Rejeitar`, evitando quebra/colisão no layout desktop e preservando a leitura mobile-first.
+- Não houve alteração de backend, schema Prisma, migrations, packages, contrato de API ou regra de domínio; ADR novo não foi necessário por ser ajuste pontual de apresentação.
+
+### Validação complementar do ajuste de copy e Regional CRP
+
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/psicologos/[id]/client.tsx"`
+- `pnpm --dir admin exec eslint "src/app/(admin)/psicologos/[id]/client.tsx"`
+- `pnpm --dir admin typecheck`
+- `git diff --check -- "admin/src/app/(admin)/psicologos/[id]/client.tsx"`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build` passou após uma primeira tentativa bloqueada por outro processo `next build` já em execução/lock temporário em `.next/lock`.
+- `pnpm --dir frontend check`
+- `pnpm --dir backend check`
+- `pnpm check` passou após reexecução com timeout maior; a primeira tentativa de 304s expirou antes de terminar.
+- Smoke HTTP autenticado/visual não foi executado porque não havia servidor Admin ativo em `localhost:3002` nem ferramenta de browser autenticada disponível neste ambiente; a validação visual usou a captura enviada pelo usuário e a referência local `_product/proto/admin/Psicólogos/Detalhes do psicólogo/Perfil e Cadastro.png`.
