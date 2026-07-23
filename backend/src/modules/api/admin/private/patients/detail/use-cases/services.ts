@@ -1566,7 +1566,7 @@ const buildDetail = (
     series: {
       points: buildSeries(labels, currentBundle),
       source:
-        "community_post+post_reply+post_vote+post_save+post_reply_save+post_share+verified_responses",
+        "community_post+post_reply+post_vote+post_save+post_reply_save+post_share+post_report+verified_responses",
     },
     source: "user+patient_profile+visitor_location+community_activity+professional_review",
     unavailable,

@@ -151,3 +151,15 @@ recebido no conteudo dele.
   contadores reais.
 - A semantica de calculo permanece a mesma: posts/comentarios sao autorias do paciente; votos,
   salvamentos, compartilhamentos e denuncias sao recebidos no conteudo do paciente.
+
+### Validacao
+
+- `pnpm --dir backend exec biome check --write "src/modules/api/admin/private/patients/detail/DTOs/IAdminPatientDetailDTO.ts" "src/modules/api/admin/private/patients/detail/use-cases/services.ts"`
+- `pnpm --dir admin exec biome check --write "src/api/req/patients/index.ts" "src/app/(admin)/pacientes/[id]/client.tsx"`
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `cmd /c pnpm check`
+- Service local `showAdminPatient({ id: "cmrqsrab5001f1guh2ve5oy90", period: "all" })` confirmou os labels novos, `reports_received` e `series.source` com `post_report`.
+- Browser local/headless via Chrome CDP em `/pacientes/cmrqsrab5001f1guh2ve5oy90?tab=estatisticas`, desktop `1365x900` e mobile `390x844`, validou todos os labels direcionais, **Denuncias (recebidas)** no bloco e `scrollWidth=390` no mobile; admin temporario real removido ao final.

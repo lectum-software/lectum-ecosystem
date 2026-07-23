@@ -935,9 +935,9 @@ Frontend esperado:
 - `pnpm --dir backend build`
 - `pnpm --dir admin check`
 - `pnpm --dir admin build`
-- `pnpm check`
-- Service local `showAdminPatient({ id: "cmrqsrab5001f1guh2ve5oy90", period: "all" })` retornou labels reais **Posts feitos**, **Comentarios feitos**, **Denuncias (recebidas)**, **Upvotes (recebido)**, **Downvotes (recebidos)**, **Salvamentos (recebidos)** e **Compartilhamentos (recebidos)**.
-- Browser local/headless via Chrome CDP em `/pacientes/cmrqsrab5001f1guh2ve5oy90?tab=estatisticas`, com admin temporario real removido ao final: desktop `1365x900` validou a aba **Estatisticas** renderizada sem labels antigos de intencao; mobile `390x844` validou `scrollWidth=390`.
+- `cmd /c pnpm check`
+- Service local `showAdminPatient({ id: "cmrqsrab5001f1guh2ve5oy90", period: "all" })` confirmou labels direcionais, `reports_received` e `series.source` com `post_report`.
+- Browser local/headless via Chrome CDP em `/pacientes/cmrqsrab5001f1guh2ve5oy90?tab=estatisticas`, com admin temporario real removido ao final: desktop `1365x900` e mobile `390x844` validaram todos os labels, **Denuncias (recebidas)**, ausencia de **Comentarios totais** e `scrollWidth=390` no mobile.
 
 
 ## Ajuste pos-feedback 2026-07-23 - Nome de exibicao editavel pelo Admin
