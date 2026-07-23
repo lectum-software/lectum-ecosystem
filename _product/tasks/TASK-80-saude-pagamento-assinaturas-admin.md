@@ -283,8 +283,8 @@ Adicionar análise real de confiabilidade do pagamento por assinatura paga Merca
 
 - Pedido do usuário: caso uma assinatura esteja cancelada, a relação `/financeiro/assinaturas` precisa exibir a data do cancelamento.
 - O contrato Admin Financeiro de `FinanceSubscriptionItem` passou a retornar `cancelled_at` nullable, derivado de `professional_subscription.updatedAt` somente quando `status="cancelada"`, seguindo a regra já usada por churn/lifetime enquanto não há coluna Prisma dedicada.
-- A UI mobile-first de `/financeiro/assinaturas` agora troca a data de **Próxima** por **Cancelamento** nas assinaturas canceladas, exibindo a data no card mobile, na linha desktop e no dropdown de confiabilidade.
-- A prévia de **Assinaturas** em `/financeiro` foi alinhada à mesma regra para não mostrar próxima cobrança em assinatura cancelada.
+- A UI mobile-first de `/financeiro/assinaturas` passou a exibir a data de cancelamento no dropdown de confiabilidade da assinatura cancelada.
+- A coluna **Próxima** da relação principal foi revisada no ajuste seguinte para permanecer exclusiva de próxima cobrança, exibindo `—` em assinaturas canceladas.
 - O CSV financeiro passou a incluir a coluna `cancelled_at` na seção `relacao_de_assinaturas`.
 - `_product/tasks/DATA-MODEL.md` foi atualizado para documentar o campo derivado `cancelled_at` no contrato administrativo de leitura financeira, sem criar campo Prisma.
 - Não houve alteração de Prisma/migrations, instalação de package, seed, mock, dado artificial ou endpoint simulado.
@@ -293,10 +293,10 @@ Adicionar análise real de confiabilidade do pagamento por assinatura paga Merca
 
 ### Critérios de aceite do ajuste
 
-- [x] Assinaturas canceladas em `/financeiro/assinaturas` exibem a data de cancelamento.
+- [x] Assinaturas canceladas em `/financeiro/assinaturas` exibem a data de cancelamento no dropdown.
 - [x] Assinaturas ativas/inadimplentes continuam exibindo a próxima cobrança quando houver `current_period_end`.
 - [x] O dropdown de confiabilidade mostra a data de **Cancelamento** quando a assinatura está cancelada.
-- [x] A prévia de assinaturas em `/financeiro` segue a mesma regra de próxima cobrança versus cancelamento.
+- [x] A coluna **Próxima** na relação e na prévia de assinaturas fica exclusiva de próxima cobrança.
 - [x] O contrato Admin privado retorna `cancelled_at` sem criar migration ou coluna Prisma nova.
 - [x] O CSV financeiro inclui `cancelled_at` na relação de assinaturas.
 - [x] UI mobile-first preservada e nenhum `<img>` cru foi usado.
@@ -316,3 +316,34 @@ Adicionar análise real de confiabilidade do pagamento por assinatura paga Merca
 - Smoke HTTP local: `GET http://localhost:3002/financeiro/assinaturas?q=paula` retornou `200`.
 - Smoke HTTP local protegido: `GET http://localhost:3001/api/admin/private/finance/subscriptions?period=all&status=cancelada` sem token Admin retornou `401`.
 - Observação de browser local: o Chrome headless existe no host, mas a execução automatizada foi bloqueada por política do ambiente; a validação visual autenticada permaneceu baseada na captura fornecida pelo usuário, no build Admin e nos smokes locais.
+
+## Ajuste pós-feedback 2026-07-23 - Coluna Próxima sem cancelamento
+
+- Pedido do usuário: a coluna de próxima data de cobrança não deve ser também a data de cancelamento; quando a assinatura estiver **Cancelada**, a coluna deve mostrar apenas `—`.
+- `/financeiro/assinaturas` voltou a exibir o cabeçalho **Próxima** na tabela desktop e o rótulo **Próxima** nos cards mobile.
+- Para `status="cancelada"`, a relação principal exibe `—` em **Próxima**, mesmo quando existe `current_period_end` persistido.
+- A data de **Cancelamento** continua disponível no dropdown de confiabilidade da assinatura cancelada, preservando a necessidade operacional sem misturar com a coluna de próxima cobrança.
+- A prévia de **Assinaturas** em `/financeiro` segue a mesma regra: **Próxima** mostra a próxima cobrança somente para assinaturas não canceladas e `—` para canceladas.
+- Não houve alteração de Prisma/migrations, contrato de backend, CSV, package, seed, mock, dado artificial ou endpoint simulado.
+- Builder/Quick Copy não está exposto como ferramenta callable neste ambiente; as referências auditáveis foram `_product/proto/admin/Financeiro.png` e a captura autenticada enviada pelo usuário em 2026-07-23.
+- ADR atualizado: `adrs/0309-admin-assinaturas-saude-pagamento.md`.
+
+### Critérios de aceite do ajuste
+
+- [x] A tabela desktop de `/financeiro/assinaturas` exibe a coluna **Próxima**, não **Próxima/Cancel.**.
+- [x] Assinaturas canceladas exibem `—` na coluna **Próxima**.
+- [x] Cards mobile de `/financeiro/assinaturas` mantêm o rótulo **Próxima** e exibem `—` para assinaturas canceladas.
+- [x] A data de cancelamento continua visível no dropdown de confiabilidade da assinatura cancelada.
+- [x] A prévia de assinaturas em `/financeiro` usa a mesma regra da coluna **Próxima**.
+- [x] UI mobile-first preservada e nenhum `<img>` cru foi usado.
+- [x] Nenhum package, schema Prisma, migration, mock ou endpoint simulado foi adicionado.
+
+### Validação complementar executada
+
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/financeiro/assinaturas/client.tsx" "src/app/(admin)/financeiro/client.tsx"`.
+- `pnpm --dir admin check`.
+- `pnpm --dir admin build`.
+- `pnpm check`.
+- `rg -n "Próxima/Cancel|PrÃ³xima/Cancel|subscriptionLifecycle|formatSubscriptionLifecycleDate" "admin/src/app/(admin)/financeiro"` sem ocorrências.
+- `rg -n "Próxima/Cancel|PrÃ³xima/Cancel|subscriptionLifecycle|formatSubscriptionLifecycleDate" admin/.next/static admin/.next/server -g "!cache/**"` sem ocorrências após build.
+- Smoke HTTP local: `GET http://localhost:3002/financeiro/assinaturas` retornou `200`.

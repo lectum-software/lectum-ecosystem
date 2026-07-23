@@ -37,9 +37,9 @@ O modelo atual não possui relação formal entre `payment_event` e `professiona
 - Não foi criada migration nem tabela de tentativa de cobrança nesta etapa.
 - Não há mock, seed ou fallback inventado para pagamentos ausentes.
 - A apresentação ao Admin mantém **Confiabilidade do pagamento** no detalhe explicativo e usa a abreviação **Confiabilidade Pgto** apenas na coluna da tabela para reduzir largura; nomes técnicos internos como `payment_health` permanecem por compatibilidade do contrato recém-criado.
-- A coluna de ciclo da assinatura passa a mostrar a próxima cobrança para assinaturas vigentes e a data de **Cancelamento** para assinaturas canceladas, evitando manter uma próxima cobrança visual em um item já cancelado.
+- A coluna **Próxima** permanece restrita à próxima cobrança. Assinaturas vigentes exibem `next_charge_at`; assinaturas canceladas exibem `—` nessa coluna para não misturar ciclo futuro com cancelamento.
 - No detalhe expandido, a UI privilegia a leitura operacional: remove a tag duplicada de classificação, o contador/fonte de eventos reconciliados e a nota técnica de ausência de `payment_event`, mantendo os dados e o estado honesto no contrato.
-- A data de cancelamento também aparece como métrica operacional no dropdown da assinatura cancelada e entra no CSV financeiro como `cancelled_at`, sem expor payload bruto ou dados sensíveis do gateway.
+- A data de cancelamento aparece como métrica operacional no dropdown da assinatura cancelada e entra no CSV financeiro como `cancelled_at`, sem expor payload bruto ou dados sensíveis do gateway.
 - O histórico de pagamentos não expõe metadados técnicos do gateway como tipo do evento (`payment.updated`), referência externa ou `status_detail` bruto (`approved`); a linha mantém data, gateway, valor e badge traduzido.
 - Notas de amostra pequena continuam podendo existir no contrato de análise, mas não são exibidas como faixa visual no dropdown para evitar ruído operacional.
 - A exibição do cartão é informativa e não cria nova relação entre assinatura e cartão; quando o `gateway_token` salvo não corresponde ao `gateway_subscription_id`, a UI informa apenas que é o último cartão salvo do psicólogo.
