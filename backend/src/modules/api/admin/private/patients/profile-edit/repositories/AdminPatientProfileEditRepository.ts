@@ -32,7 +32,11 @@ export type AdminPatientProfileEditAudit = {
 };
 
 export type AdminPatientPersonalProfileUpdate = {
-  gender: string | null;
+  gender?: string | null;
+};
+
+export type AdminPatientPersonalUserUpdate = {
+  name?: string;
 };
 
 export class AdminPatientProfileEditRepository {
@@ -51,23 +55,38 @@ export class AdminPatientProfileEditRepository {
     patient: AdminPatientProfileEditRecord,
     input: {
       audit: AdminPatientProfileEditAudit | null;
-      profile: AdminPatientPersonalProfileUpdate;
+      profile: AdminPatientPersonalProfileUpdate | null;
+      user: AdminPatientPersonalUserUpdate | null;
     },
   ) {
     return prisma.$transaction(async (tx) => {
-      const profile = await tx.patient_profile.upsert({
-        create: {
-          gender: input.profile.gender,
-          user_id: patient.id,
-        },
-        select: { id: true },
-        update: {
-          deleted: false,
-          deletedAt: null,
-          gender: input.profile.gender,
-        },
-        where: { user_id: patient.id },
-      });
+      if (input.user) {
+        await tx.user.update({
+          data: input.user,
+          select: { id: true },
+          where: { id: patient.id },
+        });
+      }
+
+      let profileId = patient.patient_profile?.id ?? null;
+
+      if (input.profile) {
+        const profile = await tx.patient_profile.upsert({
+          create: {
+            gender: input.profile.gender ?? null,
+            user_id: patient.id,
+          },
+          select: { id: true },
+          update: {
+            deleted: false,
+            deletedAt: null,
+            gender: input.profile.gender ?? null,
+          },
+          where: { user_id: patient.id },
+        });
+
+        profileId = profile.id;
+      }
 
       if (input.audit) {
         await tx.admin_activity_log.create({
@@ -76,10 +95,10 @@ export class AdminPatientProfileEditRepository {
             admin_id: input.audit.adminId,
             area: "perfil_e_cadastro",
             changed_fields: input.audit.changedFields as Prisma.InputJsonValue,
-            domain: "patient_profile",
+            domain: "patient_personal_data",
             metadata: {
               ...input.audit.metadata,
-              profile_id: profile.id,
+              ...(profileId ? { profile_id: profileId } : {}),
             },
             reason: input.audit.reason,
             safe_after: input.audit.safeAfter,

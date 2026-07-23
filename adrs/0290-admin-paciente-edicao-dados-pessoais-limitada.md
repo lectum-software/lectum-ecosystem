@@ -49,3 +49,9 @@ Builder/Quick Copy não está exposto como ferramenta callable neste ambiente. A
 - `pnpm check`
 - Smoke HTTP local em `/pacientes/cmrqsrab5001f1guh2ve5oy90?tab=perfil` retornou `200`.
 - Smoke HTTP local do endpoint `PUT /api/admin/private/patients/:id/personal-data` sem token retornou `401`.
+
+## Atualizacao 2026-07-23: nome de exibicao editavel
+
+O pedido de produto desta data tornou o **Nome de exibicao** editavel pelo Admin no mesmo fluxo auditado de dados pessoais do paciente. A persistencia altera `user.name`, nao `patient_profile`, e o payload do endpoint `PUT /api/admin/private/patients/:id/personal-data` passa a aceitar `display_name` opcional junto de `gender` opcional/nulo e `reason` obrigatorio.
+
+Esta atualizacao substitui a limitacao anterior de editar apenas `patient_profile.gender`. A auditoria grava `action="patient_personal_data_updated"`, `domain="patient_personal_data"`, `changed_field_keys=["display_name"]` quando o nome muda e snapshots seguros apenas de **Nome de exibicao** e/ou **Genero**. E-mail e localizacao continuam fora do fluxo. Nao houve schema Prisma novo, migration, package novo, mock, seed, backfill ou endpoint simulado.

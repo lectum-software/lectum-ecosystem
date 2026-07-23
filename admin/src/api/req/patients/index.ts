@@ -15,6 +15,7 @@ export type PatientsDetailQuery = {
 };
 
 export type AdminPatientUpdatePersonalDataInput = {
+  display_name?: string;
   gender?: string | null;
   reason: string;
 };

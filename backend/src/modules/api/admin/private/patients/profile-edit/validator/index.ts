@@ -12,6 +12,14 @@ export const updatePersonalDataSchema: IValidatorRequest = {
   params: [patientParam],
   body: [
     {
+      key: "display_name",
+      coerse: "string",
+      method: "string",
+      min: 2,
+      max: 120,
+      optional: true,
+    },
+    {
       key: "gender",
       coerse: "string",
       method: "string",

@@ -188,6 +188,14 @@ Quando construído: módulo de audiência próprio (ex.: `backend/src/modules/ma
 | `onboarding_completed_at` | `DateTime?` | null = onboarding pendente (TASK-08) |
 | `@@index([user_id])` | | |
 
+Complemento 2026-07-23: o nome de exibicao do paciente permanece em `user.name`, nao em
+`patient_profile`. O Admin pode corrigir esse nome pelo endpoint auditado
+`PUT /api/admin/private/patients/:id/personal-data`, junto ao campo opcional `patient_profile.gender`.
+A operacao exige `reason`, grava `admin_activity_log` com `target_type="patient"`,
+`action="patient_personal_data_updated"` e snapshots seguros apenas de **Nome de exibicao** e/ou
+**Genero** quando esses campos forem alterados. E-mail e localizacao coarse continuam fora desse
+fluxo.
+
 ---
 
 ## Perfil do psicólogo

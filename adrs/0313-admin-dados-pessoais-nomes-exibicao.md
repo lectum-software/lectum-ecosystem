@@ -19,11 +19,14 @@ Os cards **Dados pessoais** nas abas **Perfil e cadastro** dos detalhes administ
 - Esse campo e montado a partir de `psychologist_profile.professional_first_name` + `professional_last_name`, preservando prefixos/titulos digitados pelo psicologo; se esses campos estiverem ausentes, usa `user.name` apenas com normalizacao de espacos.
 - A UI do Admin mostra **Nome completo** como primeira linha do card **Dados pessoais** do psicologo.
 - O detalhe administrativo do paciente reutiliza `header.name`, ja derivado de `user.name`, como **Nome de exibicao** e mostra esse valor como primeira linha do card **Dados pessoais**.
-- A mudanca e somente de leitura no Admin; nao cria edicao de nome, nao altera perfil publico, nao muda autenticacao e nao amplia dados sensiveis alem de nomes ja usados na identificacao administrativa.
+- Atualizacao 2026-07-23: por pedido de produto, **Nome de exibicao** do paciente deixa de ser somente leitura no Admin e passa a ser editavel no mesmo fluxo auditado de dados pessoais de paciente.
+- A edicao do paciente persiste somente `user.name` e exige motivo obrigatorio; e-mail e localizacao continuam fora desse fluxo. A auditoria grava `changed_field_keys=["display_name"]` quando o nome muda, snapshots seguros de **Nome de exibicao** e `action="patient_personal_data_updated"`.
+- A mudanca nao altera autenticacao, nao cria sobrenome de exibicao para paciente, nao muda schema Prisma e nao amplia dados sensiveis alem de nomes ja usados na identificacao administrativa.
 
 ## Consequencias
 
 - O Admin consegue conferir o nome definido pelo usuario no mesmo bloco de dados pessoais, reduzindo ambiguidades de suporte.
+- O Admin consegue corrigir erro operacional no nome de exibicao do paciente sem usar fluxo de conta, sem editar e-mail e sem impersonar o paciente.
 - O header do psicologo continua livre para usar a apresentacao normalizada existente, enquanto o card de dados pessoais preserva o valor completo definido no perfil profissional.
 - Nao houve schema Prisma, migration, package novo, mock, seed ou endpoint simulado.
 

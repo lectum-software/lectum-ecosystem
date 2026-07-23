@@ -303,6 +303,11 @@ const PATIENT_GENDER_OPTIONS = [
   { label: "Prefiro não dizer", value: "prefiro_nao_dizer" },
 ] as const;
 const patientPersonalDataSchema = z.object({
+  display_name: z
+    .string()
+    .trim()
+    .min(2, "Informe um nome de exibição com pelo menos 2 caracteres.")
+    .max(120, "Use no máximo 120 caracteres."),
   gender: z.string().max(80, "Use no máximo 80 caracteres.").optional(),
   reason: z
     .string()
@@ -3382,6 +3387,7 @@ const PatientPersonalDataEditForm = ({
   const mutation = useAdminPatientUpdatePersonalData(detail.header.id);
   const form = useForm<PatientPersonalDataFormValues>({
     defaultValues: {
+      display_name: detail.header.name,
       gender: detail.header.gender || "",
       reason: "",
     },
@@ -3392,6 +3398,7 @@ const PatientPersonalDataEditForm = ({
   const onSubmit: SubmitHandler<PatientPersonalDataFormValues> = async (values) => {
     try {
       await mutation.mutateAsync({
+        display_name: values.display_name.trim(),
         gender: emptyToNull(values.gender),
         reason: values.reason.trim(),
       });
@@ -3406,7 +3413,6 @@ const PatientPersonalDataEditForm = ({
     <FormProvider {...form}>
       <form className="space-y-4" onSubmit={form.handleSubmit(onSubmit)}>
         <div className="rounded-2xl border border-border/80 bg-surface-muted p-4">
-          <FieldRow label="Nome de exibição" value={detail.header.name} />
           <FieldRow
             label="E-mail"
             value={
@@ -3421,6 +3427,13 @@ const PatientPersonalDataEditForm = ({
           />
           <FieldRow label="Localização" value={formatPatientLocation(detail)} />
         </div>
+        <InputController<PatientPersonalDataFormValues>
+          disabled={disabled}
+          label="Nome de exibição"
+          name="display_name"
+          placeholder="Informe o nome exibido no perfil administrativo."
+          required
+        />
         <SelectController<PatientPersonalDataFormValues>
           disabled={disabled}
           label="Gênero"
@@ -3436,8 +3449,9 @@ const PatientPersonalDataEditForm = ({
           rows={3}
         />
         <p className="rounded-2xl bg-surface-muted p-3 text-xs font-bold leading-5 text-muted">
-          E-mail e localização permanecem somente leitura nesta edição: o e-mail pertence ao fluxo
-          de conta e a localização vem de dados coarse de visitor_location.
+          Nome de exibição e gênero são atualizados com auditoria administrativa. E-mail e
+          localização permanecem somente leitura: o e-mail pertence ao fluxo de conta e a
+          localização vem de dados coarse de visitor_location.
         </p>
         <ProfileFormActions disabled={disabled} onCancel={onCancel} />
       </form>

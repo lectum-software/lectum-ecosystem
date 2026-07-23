@@ -276,6 +276,7 @@
     "admin_psychologist_profile_personal_updated": "Dados pessoais atualizados com auditoria administrativa.",
     "admin_psychologist_profile_professional_updated": "Dados profissionais atualizados com auditoria administrativa.",
     "admin_psychologist_profile_no_changes": "Nenhuma altera??o foi identificada.",
+    "admin_patient_profile_invalid_display_name": "Informe um nome de exibi\u00e7\u00e3o v\u00e1lido para o paciente.",
     "admin_patient_profile_invalid_gender": "Informe um gênero válido para o paciente.",
     "admin_patient_profile_no_changes": "Nenhuma alteração foi identificada.",
     "admin_patient_profile_personal_updated": "Dados pessoais do paciente atualizados com auditoria administrativa.",

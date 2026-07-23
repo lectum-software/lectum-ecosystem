@@ -904,3 +904,37 @@ Frontend esperado:
 - `pnpm check`
 - API local com admin temporario real removido ao final: `GET /api/admin/private/psychologists/cmrwmw35t0000xkuhxoceh77v` retornou `profile.personal.full_name="Ana Beatriz Lima"`; `GET /api/admin/private/patients/cmrqsrab5001f1guh2ve5oy90?period=all` retornou `header.name="Paciente preview 52"`.
 - Browser local/headless via Chrome CDP em viewport 390x844: `/psicologos/cmrwmw35t0000xkuhxoceh77v?tab=perfil` exibiu a linha **Nome completo / Ana Beatriz Lima** e `scrollWidth=390`; `/pacientes/cmrqsrab5001f1guh2ve5oy90?tab=perfil` exibiu a linha **Nome de exibicao / Paciente preview 52** e `scrollWidth=390`.
+
+
+## Ajuste pos-feedback 2026-07-23 - Nome de exibicao editavel pelo Admin
+
+- Pedido do usuario: o nome de exibicao do paciente deve ser editavel pelo Admin na aba **Perfil e cadastro**.
+- O formulario de **Dados pessoais** passou a editar **Nome de exibicao** com a fundacao de formularios da TASK-02 (`React Hook Form`, `Zod` e `InputController`), mantendo layout mobile-first e campo em largura total.
+- O endpoint real `PUT /api/admin/private/patients/:id/personal-data` agora aceita `display_name` junto do `reason`, persiste o valor normalizado em `user.name` e retorna o detalhe atualizado sem endpoint paralelo.
+- A alteracao exige motivo administrativo e registra auditoria em `admin_activity_log` no dominio `patient_personal_data`, com `changed_fields`/metadados diferenciando `display_name` e `gender`.
+- E-mail e localizacao continuam somente leitura neste fluxo; genero permanece editavel pelo mesmo endpoint quando enviado.
+- Nao houve schema Prisma, migration, package novo, seed, mock, backfill artificial ou endpoint simulado. `db:migrate` nao se aplicou.
+- Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente; as referencias auditaveis foram o screenshot enviado pelo usuario em 2026-07-23 e `_product/proto/admin/Pacientes/Pacientes - Detalhes.png`.
+- ADRs atualizados: `adrs/0290-admin-paciente-edicao-dados-pessoais-limitada.md`, `adrs/0313-admin-dados-pessoais-nomes-exibicao.md` e `adrs/0241-admin-detalhe-paciente-dados-minimos-readonly.md`.
+
+### Criterios de aceite do ajuste
+
+- [x] O Admin consegue editar **Nome de exibicao** do paciente em **Perfil e cadastro > Dados pessoais**.
+- [x] O valor editado e persistido em `user.name` e refletido no header/resumo administrativo do paciente.
+- [x] A alteracao exige **Motivo da alteracao** e gera auditoria administrativa com o campo `display_name`.
+- [x] E-mail e localizacao continuam somente leitura neste fluxo.
+- [x] O formulario usa RHF/Zod/controllers, permanece mobile-first e foi validado em 390px sem overflow horizontal.
+- [x] Nenhum schema Prisma, migration, package novo, mock, seed ou endpoint simulado foi adicionado.
+
+### Validacao complementar executada
+
+- `pnpm --dir backend exec biome check --write "src/modules/api/admin/private/patients/profile-edit/DTOs/IAdminPatientProfileEditDTO.ts" "src/modules/api/admin/private/patients/profile-edit/validator/index.ts" "src/modules/api/admin/private/patients/profile-edit/repositories/AdminPatientProfileEditRepository.ts" "src/modules/api/admin/private/patients/profile-edit/use-cases/services.ts" "locales/pt/translation.json"`
+- `pnpm --dir admin exec biome check --write "src/api/req/patients/index.ts" "src/app/(admin)/pacientes/[id]/client.tsx"`
+- `pnpm --dir admin check`
+- `pnpm --dir backend check` executado com sucesso apos regenerar o Prisma client por falha transiente de `ENOTEMPTY` no diretorio gerado.
+- `pnpm --dir backend build`
+- `pnpm --dir admin build`
+- `pnpm check`
+- API local com admin temporario real removido ao final: `PUT /api/admin/private/patients/cmrqsrab5001f1guh2ve5oy90/personal-data` alterou o nome para validar persistencia, auditoria `changed_fields=["Nome de exibicao"]`, metadata `changed_field_keys=["display_name"]`, e depois restaurou `Paciente preview 52`.
+- Smoke HTTP sem token no mesmo endpoint retornou `401`.
+- Browser local/headless via Chrome CDP em `/pacientes/cmrqsrab5001f1guh2ve5oy90?tab=perfil`, viewport mobile `390x844`, validou o campo editavel **Nome de exibicao**, helper text atualizado, motivo visivel e `scrollWidth=390`.

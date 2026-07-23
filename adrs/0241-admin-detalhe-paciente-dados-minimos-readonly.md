@@ -97,3 +97,10 @@ A decisao e uma excecao visual e temporaria para avaliacao do Admin local: a UI 
 Apos feedback visual de produto, os cards **Situacao da conta** e **Engajamento** da aba **Geral** do detalhe administrativo de paciente passaram a seguir o mesmo modelo dos cards do detalhe administrativo de psicologo: card externo simples, painel destacado interno com eyebrow em caixa alta, titulo principal, helper text e icone, seguido das linhas de dados e do CTA no rodape.
 
 A alteracao remove a hierarquia duplicada anterior desses dois cards, sem alterar metricas, contratos HTTP, backend, schema Prisma, migrations, packages, mocks, seeds, backfill artificial ou dados sensiveis. Os dados continuam vindo do contrato real existente de paciente. Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente; as referencias auditaveis foram os screenshots enviados pelo usuario, o PNG local `_product/proto/admin/Pacientes/Pacientes - Detalhes.png` e o layout local do detalhe de psicologo.
+
+
+## Atualizacao 2026-07-23: nome de exibicao editavel pelo Admin
+
+A excecao auditada do card **Dados pessoais** passa a incluir tambem o **Nome de exibicao** do paciente, persistido em `user.name` pelo endpoint `PUT /api/admin/private/patients/:id/personal-data` com `reason` obrigatorio e auditoria em `admin_activity_log`.
+
+A decisao substitui a limitacao anterior de editar somente genero neste card. E-mail e localizacao coarse continuam somente leitura; telefone, nascimento, bio, endereco completo, IP e coordenadas permanecem omitidos. Nao houve schema Prisma, migration, package novo, mock, seed, backfill ou endpoint simulado.
