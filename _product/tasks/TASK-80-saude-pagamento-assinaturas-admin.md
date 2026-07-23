@@ -162,3 +162,37 @@ Adicionar análise real de confiabilidade do pagamento por assinatura paga Merca
 - O backend marca se o cartão salvo corresponde ao `gateway_subscription_id` da assinatura; quando não corresponde, a UI informa apenas que é o último cartão salvo do psicólogo, sem afirmar vínculo indevido.
 - Após feedback visual, o cartão salvo permanece alinhado no topo à direita do bloco azul e os contadores de confiabilidade voltaram a ocupar a largura horizontal das duas colunas abaixo do cabeçalho/cartão.
 - Não houve alteração de Prisma/migrations, packages, cobrança no gateway, mock, seed ou dado artificial.
+
+## Ajuste pós-feedback 2026-07-23 - Filtro de confiabilidade
+
+- Pedido do usuário: adicionar um filtro de **Confiabilidade** em `/financeiro/assinaturas`.
+- A rota Admin `GET /api/admin/private/finance/subscriptions` passou a aceitar o filtro `paymentHealth` com os valores reais derivados de `payment_health.status`: `healthy`, `attention`, `risk`, `critical` e `insufficient_history`.
+- Como a confiabilidade é calculada a partir de `professional_subscription` + `payment_event` reconciliado, o filtro é aplicado no service depois do mapeamento real de saúde de pagamento, sem criar coluna persistida, endpoint paralelo, mock ou aproximação no banco.
+- A UI mobile-first passou a exibir o select **Confiabilidade** ao lado de busca, datas de início e status; o filtro fica refletido na URL, participa da key do React Query e é limpo pelo botão **Limpar**.
+- O filtro preserva a paginação sobre o resultado filtrado e continua usando somente assinaturas pagas Mercado Pago reais, excluindo plano gratuito/cortesia pelas regras existentes.
+- Builder/Quick Copy não está exposto como ferramenta callable neste ambiente; as referências auditáveis foram `_product/proto/admin/Financeiro.png` e a captura autenticada enviada pelo usuário em 2026-07-22.
+- Não houve alteração de Prisma/migrations, packages, cobrança no gateway, seed, mock, dado artificial ou endpoint simulado.
+
+### Critérios de aceite do ajuste
+
+- [x] `/financeiro/assinaturas` possui filtro visual **Confiabilidade** com todas as classificações reais.
+- [x] O filtro usa o contrato Admin privado existente via query `paymentHealth`, sem endpoint paralelo.
+- [x] A filtragem ocorre sobre `payment_health.status` calculado a partir de dados reais de assinatura e `payment_event`.
+- [x] A paginação e o contador refletem o resultado filtrado.
+- [x] O botão **Limpar** também remove o filtro de confiabilidade.
+- [x] UI mobile-first preservada e nenhum `<img>` cru foi usado.
+- [x] Nenhum package, schema Prisma, migration, mock ou endpoint simulado foi adicionado.
+
+### Validação complementar executada
+
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/financeiro/assinaturas/client.tsx" "src/api/req/finance/index.ts" "src/api/cache/keys.ts"`
+- `pnpm --dir backend exec biome check --write "src/modules/api/admin/private/finance/dashboard/DTOs/IAdminFinanceDashboardDTO.ts" "src/modules/api/admin/private/finance/dashboard/use-cases/services.ts" "src/modules/api/admin/private/finance/lists/validator/index.ts"`
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check`
+- Smoke de serviço real com `.env` local: `listAdminFinanceSubscriptions({ period: "all", paymentHealth, limit: 50 })` retornou `status=200` para `healthy`, `attention`, `risk`, `critical` e `insufficient_history`, com os itens retornados sempre compatíveis com o filtro solicitado.
+- Smoke HTTP local protegido: `GET http://localhost:3001/api/admin/private/finance/subscriptions?period=all&paymentHealth=risk` sem token Admin retornou `401`.
+- Smoke HTTP local Admin: `GET http://localhost:3002/financeiro/assinaturas?paymentHealth=risk` retornou `200`; Microsoft Edge headless abriu a rota local sem sessão e confirmou carregamento do shell protegido, enquanto a validação visual autenticada permaneceu baseada na captura enviada pelo usuário e no build Admin porque não há acesso automatizado à sessão Admin já aberta.
+- Observação: após as validações acima, alterações fora do escopo apareceram em arquivos de comunidades no backend e uma nova tentativa de `pnpm --dir backend check` falhou por import não usado em `backend/src/modules/api/admin/private/communities/manage/use-cases/services.ts`; essas alterações não pertencem a este ajuste e não foram incluídas no commit.

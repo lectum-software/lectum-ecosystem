@@ -25,6 +25,7 @@ export const schema: IValidatorRequest = {
     { key: "period", coerse: "string", method: "string", max: 10, optional: true },
     { key: "q", coerse: "string", method: "string", max: 120, optional: true },
     { key: "status", coerse: "string", method: "string", max: 20, optional: true },
+    { key: "paymentHealth", coerse: "string", method: "string", max: 32, optional: true },
   ],
 };
 

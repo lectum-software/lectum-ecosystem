@@ -20,6 +20,7 @@ O modelo atual não possui relação formal entre `payment_event` e `professiona
   - `payment_event` com referência ao id local da assinatura ou ao `gateway_subscription_id`.
 - A coluna de tabela mostra apenas o resumo da confiabilidade; métricas auxiliares ficam no dropdown.
 - O dropdown de confiabilidade também exibe o cartão salvo do psicólogo quando houver `payment_method` local seguro. O payload Admin pode expor somente `brand`, `last4`, `exp_month`, `exp_year`, data de atualização e se o registro corresponde ao `gateway_subscription_id`; `gateway_token`, PAN e CVV permanecem backend-only/fora do contrato.
+- A listagem completa de assinaturas aceita filtro operacional por confiabilidade via query `paymentHealth`, usando exatamente as classificações derivadas de `payment_health.status`.
 - O cálculo classifica a confiabilidade em:
   - `healthy`;
   - `attention`;
@@ -37,5 +38,6 @@ O modelo atual não possui relação formal entre `payment_event` e `professiona
 - No detalhe expandido, a UI privilegia a leitura operacional: remove a tag duplicada de classificação, o contador/fonte de eventos reconciliados e a nota técnica de ausência de `payment_event`, mantendo os dados e o estado honesto no contrato.
 - A exibição do cartão é informativa e não cria nova relação entre assinatura e cartão; quando o `gateway_token` salvo não corresponde ao `gateway_subscription_id`, a UI informa apenas que é o último cartão salvo do psicólogo.
 - O layout do dropdown mantém o cartão salvo no topo direito, enquanto as métricas de confiabilidade ocupam a largura das duas colunas abaixo do cabeçalho/cartão para preservar leitura horizontal no desktop e empilhamento mobile-first.
+- O filtro de confiabilidade é aplicado no service depois de mapear a saúde real de pagamento, porque a classificação depende de `payment_event` reconciliado e não existe coluna persistida dedicada. Isso preserva a honestidade do dado, mas pode exigir otimização futura se a lista crescer muito.
 - A precisão da reconciliação continua limitada ao payload bruto do Mercado Pago até existir uma relação persistida dedicada entre pagamento e assinatura.
 - A UI fica preparada para exibir métricas mais completas futuramente se o backend passar a persistir tentativas de cobrança normalizadas.

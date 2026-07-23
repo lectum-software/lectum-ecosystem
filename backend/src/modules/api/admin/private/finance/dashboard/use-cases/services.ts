@@ -29,6 +29,13 @@ const MAX_PAYMENT_HISTORY_ITEMS = 10;
 const DAYS_PER_AVERAGE_MONTH = 30.4375;
 const MILLISECONDS_PER_DAY = 86_400_000;
 const SUBSCRIPTION_STATUS_FILTERS = new Set(["ativa", "cancelada", "inadimplente"]);
+const PAYMENT_HEALTH_FILTERS = new Set<AdminFinancePaymentHealth["status"]>([
+  "attention",
+  "critical",
+  "healthy",
+  "insufficient_history",
+  "risk",
+]);
 
 const pad = (value: number) => String(value).padStart(2, "0");
 const toDateKey = (date: Date) =>
@@ -1029,11 +1036,23 @@ const paginationForCount = (query: AdminFinanceQuery, count: number) => {
   };
 };
 
-const normalizeSubscriptionRelationFilters = (query: AdminFinanceQuery) => {
+type SubscriptionRelationServiceFilters = {
+  paymentHealth?: AdminFinancePaymentHealth["status"];
+  q?: string;
+  status?: string;
+};
+
+const normalizeSubscriptionRelationFilters = (
+  query: AdminFinanceQuery,
+): SubscriptionRelationServiceFilters => {
+  const paymentHealth = query.paymentHealth?.trim() as
+    | AdminFinancePaymentHealth["status"]
+    | undefined;
   const q = query.q?.trim();
   const status = query.status?.trim();
 
   return {
+    ...(paymentHealth && PAYMENT_HEALTH_FILTERS.has(paymentHealth) ? { paymentHealth } : {}),
     ...(q ? { q } : {}),
     ...(status && status !== "all" && SUBSCRIPTION_STATUS_FILTERS.has(status) ? { status } : {}),
   };
@@ -1093,7 +1112,40 @@ export const listAdminFinanceSubscriptions = async (query: AdminFinanceQuery): P
 
   const { current, period } = resolvedPeriod.period;
   const filters = normalizeSubscriptionRelationFilters(query ?? {});
-  const count = await repository.countPaidSubscriptionsForRelation(current, filters);
+  const { paymentHealth, ...databaseFilters } = filters;
+  const baseCount = await repository.countPaidSubscriptionsForRelation(current, databaseFilters);
+
+  if (paymentHealth) {
+    const pagination = normalizeFinancePagination(query ?? {});
+    const [subscriptions, lifetimePaymentEvents] = await Promise.all([
+      baseCount > 0
+        ? repository.listPaidSubscriptionsForRelation(
+            current,
+            {
+              take: baseCount,
+            },
+            databaseFilters,
+          )
+        : Promise.resolve([] as SubscriptionRelationRecord[]),
+      repository.listPaymentEventsForLifetime(),
+    ]);
+    const filteredItems = subscriptions
+      .map((subscription) => mapSubscription(subscription, lifetimePaymentEvents))
+      .filter((subscription) => subscription.payment_health.status === paymentHealth);
+    const page = paginateItems(filteredItems, pagination.page, pagination.limit);
+
+    return {
+      status: 200,
+      ...msg("index", {}),
+      data: {
+        ...page,
+        period,
+        source: "professional_subscription+subscription_plan+psychologist_profile+user",
+      },
+    };
+  }
+
+  const count = baseCount;
   const pagination = paginationForCount(query ?? {}, count);
   const [subscriptions, lifetimePaymentEvents] = await Promise.all([
     repository.listPaidSubscriptionsForRelation(
@@ -1102,7 +1154,7 @@ export const listAdminFinanceSubscriptions = async (query: AdminFinanceQuery): P
         skip: pagination.skip,
         take: pagination.limit,
       },
-      filters,
+      databaseFilters,
     ),
     repository.listPaymentEventsForLifetime(),
   ]);

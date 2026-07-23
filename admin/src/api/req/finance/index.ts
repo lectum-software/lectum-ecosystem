@@ -17,11 +17,13 @@ export type FinanceDashboardQuery = {
 export type FinanceListQuery = FinanceDashboardQuery & {
   limit?: number;
   page?: number;
+  paymentHealth?: FinancePaymentHealthStatus;
   q?: string;
   status?: string;
 };
 
-type FinanceRequestQuery = FinanceDashboardQuery & Pick<FinanceListQuery, "q" | "status">;
+type FinanceRequestQuery = FinanceDashboardQuery &
+  Pick<FinanceListQuery, "paymentHealth" | "q" | "status">;
 
 export type FinanceMetric = {
   available: boolean;
@@ -257,6 +259,7 @@ const cleanParams = (input: FinanceRequestQuery) => ({
   ...(input.limit ? { limit: input.limit } : {}),
   ...(input.page ? { page: input.page } : {}),
   ...(input.period ? { period: input.period } : {}),
+  ...(input.paymentHealth ? { paymentHealth: input.paymentHealth } : {}),
   ...(input.q ? { q: input.q } : {}),
   ...(input.status ? { status: input.status } : {}),
   ...(input.to ? { to: input.to } : {}),

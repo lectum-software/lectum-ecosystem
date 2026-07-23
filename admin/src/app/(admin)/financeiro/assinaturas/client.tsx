@@ -17,6 +17,7 @@ import { resolveApiError } from "@/api/handle";
 import type {
   FinanceListQuery,
   FinancePaymentHealth,
+  FinancePaymentHealthStatus,
   FinancePaymentHistoryItem,
   FinancePaymentHistoryStatus,
   FinancePaymentMethod,
@@ -46,8 +47,19 @@ const statusFilterOptions = [
   { label: "Inadimplentes", value: "inadimplente" },
   { label: "Canceladas", value: "cancelada" },
 ] as const;
+const paymentHealthFilterOptions = [
+  { label: "Todas as confiabilidades", value: "all" },
+  { label: "Saudável", value: "healthy" },
+  { label: "Atenção", value: "attention" },
+  { label: "Risco", value: "risk" },
+  { label: "Crítica", value: "critical" },
+  { label: "Histórico insuficiente", value: "insufficient_history" },
+] as const;
 const validSubscriptionStatuses = new Set<string>(
   statusFilterOptions.map((option) => option.value),
+);
+const validPaymentHealthStatuses = new Set<string>(
+  paymentHealthFilterOptions.map((option) => option.value),
 );
 
 const parsePositiveNumber = (value: string | null, fallback: number) => {
@@ -59,6 +71,7 @@ const parsePositiveNumber = (value: string | null, fallback: number) => {
 
 const parseQuery = (params: URLSearchParams): FinanceListQuery => {
   const period = params.get("period") as FinancePeriodValue | null;
+  const paymentHealth = params.get("paymentHealth");
   const q = params.get("q");
   const status = params.get("status");
 
@@ -66,6 +79,10 @@ const parseQuery = (params: URLSearchParams): FinanceListQuery => {
     from: params.get("from") || undefined,
     limit: Math.min(50, parsePositiveNumber(params.get("limit"), 20)),
     page: parsePositiveNumber(params.get("page"), 1),
+    paymentHealth:
+      paymentHealth && validPaymentHealthStatuses.has(paymentHealth) && paymentHealth !== "all"
+        ? (paymentHealth as FinancePaymentHealthStatus)
+        : undefined,
     period: period && validPeriods.has(period) ? period : "all",
     q: q || undefined,
     status:
@@ -190,6 +207,35 @@ const StatusFilterField = ({
         value={value || "all"}
       >
         {statusFilterOptions.map((option) => (
+          <option key={option.value} value={option.value}>
+            {option.label}
+          </option>
+        ))}
+      </select>
+      <ChevronRight
+        aria-hidden
+        className="pointer-events-none absolute right-5 top-1/2 h-4 w-4 -translate-y-1/2 rotate-90 text-foreground"
+      />
+    </span>
+  </label>
+);
+
+const PaymentHealthFilterField = ({
+  onChange,
+  value,
+}: {
+  onChange: (value: string) => void;
+  value?: string;
+}) => (
+  <label className="flex min-w-0 flex-col gap-1 text-xs font-medium text-muted sm:min-w-[220px]">
+    Confiabilidade
+    <span className="relative block text-sm font-medium text-foreground">
+      <select
+        className="h-12 w-full min-w-0 appearance-none rounded-full border border-border bg-surface py-0 pl-4 pr-12 text-sm font-medium text-foreground shadow-control outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/15"
+        onChange={(event) => onChange(event.target.value)}
+        value={value || "all"}
+      >
+        {paymentHealthFilterOptions.map((option) => (
           <option key={option.value} value={option.value}>
             {option.label}
           </option>
@@ -701,7 +747,9 @@ export const AdminFinanceSubscriptionsClient = () => {
     router.replace(next ? `${pathname}?${next}` : pathname, { scroll: false });
   };
 
-  const hasTableFilters = Boolean(query.q || query.status || query.from || query.to);
+  const hasTableFilters = Boolean(
+    query.q || query.status || query.paymentHealth || query.from || query.to,
+  );
   const handleStartDateFilterChange = (field: "from" | "to", value: string) => {
     if (!value) {
       const otherDate = field === "from" ? query.to : query.from;
@@ -722,7 +770,14 @@ export const AdminFinanceSubscriptionsClient = () => {
     replaceParams({ from: nextFrom, period: "custom", to: nextTo });
   };
   const clearTableFilters = () => {
-    replaceParams({ from: null, period: "all", q: null, status: null, to: null });
+    replaceParams({
+      from: null,
+      paymentHealth: null,
+      period: "all",
+      q: null,
+      status: null,
+      to: null,
+    });
   };
 
   const pages = summary?.pages ?? 1;
@@ -777,6 +832,12 @@ export const AdminFinanceSubscriptionsClient = () => {
               <StatusFilterField
                 onChange={(value) => replaceParams({ status: value === "all" ? null : value })}
                 value={query.status}
+              />
+              <PaymentHealthFilterField
+                onChange={(value) =>
+                  replaceParams({ paymentHealth: value === "all" ? null : value })
+                }
+                value={query.paymentHealth}
               />
               {hasTableFilters ? (
                 <button

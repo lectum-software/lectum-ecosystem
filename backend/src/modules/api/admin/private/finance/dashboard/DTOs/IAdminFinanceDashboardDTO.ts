@@ -9,6 +9,7 @@ export type AdminFinanceQuery = {
   groupBy?: AdminFinanceGroupBy;
   limit?: number;
   page?: number;
+  paymentHealth?: AdminFinancePaymentHealthStatus;
   period?: AdminFinancePeriodValue;
   q?: string;
   status?: string;
