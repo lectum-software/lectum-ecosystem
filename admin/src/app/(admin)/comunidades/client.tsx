@@ -801,25 +801,6 @@ const dashboardStatisticValue = (
   }
 };
 
-const patientPostDetails = (statistics: CommunitiesDashboardGlobalStatistics) => {
-  const anonymous = statistics.counters.anonymous_posts.total;
-  const identified = Math.max(0, statistics.counters.posts.patients - anonymous);
-  const total = statistics.counters.posts.patients;
-
-  return [
-    {
-      label: "Anônimos",
-      percentage: dashboardStatisticPercentage(anonymous, total),
-      value: anonymous,
-    },
-    {
-      label: "Identificados",
-      percentage: dashboardStatisticPercentage(identified, total),
-      value: identified,
-    },
-  ];
-};
-
 const buildDashboardStatisticMetricItems = (
   current: CommunitiesDashboardGlobalStatistics,
   previous: CommunitiesDashboardGlobalStatistics,
@@ -832,7 +813,6 @@ const buildDashboardStatisticMetricItems = (
     return {
       ...config,
       changePercent: dashboardStatisticPercentageChange(value, previousValue),
-      details: config.id === "patient_posts" ? patientPostDetails(current) : undefined,
       previousValue,
       value,
     };

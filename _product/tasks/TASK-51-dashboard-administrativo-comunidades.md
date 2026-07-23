@@ -1091,3 +1091,26 @@ Regras de UI obrigatórias:
 - `pnpm check`: sem erros.
 - Smoke API real autenticado em `GET /api/admin/private/communities/dashboard?period=all`: `posts_by_content_format.total=24` e `replies_by_content_format.total=80` no banco local.
 - Browser local/headless com Admin real temporário validou `/comunidades` exibindo **Cobertura de acolhimento**, **Posts por tipo de conteúdo** e **Respostas por tipo de conteúdo**, com 1 gráfico de pizza de posts e 1 de respostas.
+
+## Ajuste complementar 2026-07-23 - Remocao dos indicadores no contador de postagens de pacientes
+
+- Pedido do usuario: no dashboard `/comunidades`, remover os indicadores **Anonimos** e **Identificados** exibidos dentro do contador **Postagens de pacientes** em **Estatisticas de conteudo**.
+- Frontend Admin: o card **Postagens de pacientes** deixou de montar e renderizar os detalhes internos de anonimos/identificados, mantendo o total, comparativo de periodo e comportamento de selecao do grafico.
+- A quebra anonimos/identificados continua disponivel nos blocos analiticos apropriados, como **Cobertura de acolhimento**, sem alterar contrato de API ou agregacoes reais.
+- Builder/Quick Copy `vcp://quickcopy/vcp-24aaa2941d814e5b90572bc93ae50e2a` nao esta exposto como ferramenta callable neste ambiente; referencias usadas: captura enviada pelo usuario e `_product/proto/admin/Comunidades/Comunidades - Dashboard.png`.
+- Nao houve alteracao de backend, endpoint, schema Prisma/migration, package, mock, seed, backfill, endpoint simulado ou uso de `<img>` cru.
+- ADR nao aplicavel: ajuste pontual de apresentacao sem nova decisao arquitetural, regra de dominio ou trade-off tecnico.
+
+### Criterios deste ajuste
+
+- [x] O contador **Postagens de pacientes** nao exibe mais os indicadores **Anonimos** e **Identificados**.
+- [x] O total de postagens de pacientes e o comparativo de periodo permanecem visiveis.
+- [x] A UI permanece mobile-first e sem `<img>` cru.
+- [x] Nenhum dado real, contrato HTTP, backend, schema Prisma, migration ou package foi alterado.
+
+### Validacao deste ajuste
+
+- `pnpm --dir admin check`: sem erros.
+- `pnpm --dir admin build`: sem erros.
+- `pnpm check`: sem erros.
+- Browser local/headless com Admin real temporario em `http://localhost:3002/comunidades`: card **Postagens de pacientes** validado em desktop e mobile ~390px sem os textos **Anonimos** e **Identificados**; admin temporario removido da base local ao final.
