@@ -196,3 +196,25 @@ Adicionar análise real de confiabilidade do pagamento por assinatura paga Merca
 - Smoke HTTP local protegido: `GET http://localhost:3001/api/admin/private/finance/subscriptions?period=all&paymentHealth=risk` sem token Admin retornou `401`.
 - Smoke HTTP local Admin: `GET http://localhost:3002/financeiro/assinaturas?paymentHealth=risk` retornou `200`; Microsoft Edge headless abriu a rota local sem sessão e confirmou carregamento do shell protegido, enquanto a validação visual autenticada permaneceu baseada na captura enviada pelo usuário e no build Admin porque não há acesso automatizado à sessão Admin já aberta.
 - Observação: após as validações acima, alterações fora do escopo apareceram em arquivos de comunidades no backend e uma nova tentativa de `pnpm --dir backend check` falhou por import não usado em `backend/src/modules/api/admin/private/communities/manage/use-cases/services.ts`; essas alterações não pertencem a este ajuste e não foram incluídas no commit.
+
+## Ajuste pós-feedback 2026-07-23 - Tamanho da busca nos filtros de assinaturas
+
+- Pedido do usuário: corrigir o tamanho da barra de pesquisa em `/financeiro/assinaturas`, que ficou larga demais após a inclusão do filtro **Confiabilidade** e invadia visualmente os filtros de data.
+- A largura da busca foi limitada no layout desktop (`xl/2xl`), preservando largura total no fluxo mobile-first e mantendo os filtros **Início de**, **Início até**, **Status** e **Confiabilidade** alinhados no mesmo bloco.
+- O ajuste é exclusivamente visual no Admin; não altera contrato HTTP, backend, Prisma/migrations, packages, dados persistidos, mock ou endpoint simulado.
+- Builder/Quick Copy não está exposto como ferramenta callable neste ambiente; as referências auditáveis foram `_product/proto/admin/Financeiro.png` e a captura autenticada enviada pelo usuário em 2026-07-22.
+
+### Critérios de aceite do ajuste
+
+- [x] A barra de pesquisa não sobrepõe os filtros de data/status/confiabilidade no desktop.
+- [x] A busca continua responsiva e ocupa largura útil no mobile.
+- [x] Os filtros existentes continuam no mesmo contrato real e sem endpoint paralelo.
+- [x] UI mobile-first preservada e nenhum `<img>` cru foi usado.
+- [x] Nenhum package, schema Prisma, migration, mock ou endpoint simulado foi adicionado.
+
+### Validação complementar executada
+
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/financeiro/assinaturas/client.tsx"`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- Smoke HTTP local: `GET http://localhost:3002/financeiro/assinaturas` retornou `200`.

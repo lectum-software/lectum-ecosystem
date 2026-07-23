@@ -809,7 +809,7 @@ export const AdminFinanceSubscriptionsClient = () => {
             </p>
           </div>
           <div className="flex min-w-0 flex-col gap-3 xl:flex-row xl:items-end xl:justify-between">
-            <div className="min-w-0 xl:w-full xl:max-w-[520px]">
+            <div className="min-w-0 xl:w-[420px] xl:max-w-[420px] 2xl:w-[460px] 2xl:max-w-[460px]">
               <SearchBox
                 key={query.q ?? ""}
                 onSearch={(value) => replaceParams({ q: value || null })}
