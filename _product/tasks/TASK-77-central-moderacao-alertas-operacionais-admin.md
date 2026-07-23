@@ -148,3 +148,21 @@ Frontend esperado:
 - Nenhuma migration foi criada; `pnpm --dir backend db:migrate` não se aplica.
 - Comandos executados sem erro: `pnpm --dir backend typecheck`, `pnpm --dir admin typecheck`, `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check`.
 - Smoke local: `Invoke-WebRequest http://localhost:3002/moderacao` retornou HTTP 200. Também foi gerado screenshot headless mobile em `.tmp/moderacao-mobile.png`; como o contexto headless não possui sessão Admin, a captura parou no estado autenticado de carregamento, então a validação visual efetiva ficou coberta por build/check e pelo dev server local já autenticado do usuário.
+
+## Ajuste complementar 2026-07-23 - Layout piloto premium na Moderacao
+
+- Pedido do usuario: aplicar o layout piloto nas paginas de Moderacao do Admin.
+- A rota `/moderacao` e eventuais descendentes passaram a entrar no escopo centralizado `admin-premium-pilot` do `AdminShell`, reaproveitando sidebar clara, azul Lectum, bordas sutis, sombras reduzidas, raio maior e tipografia menos pesada ja validados no piloto.
+- O cabecalho da central foi convertido para card mobile-first com label **Operacao e seguranca**, titulo, subtitulo e acao **Atualizar** no mesmo bloco visual do piloto.
+- O bloco de filtros da moderacao textual passou a usar card com cabecalho contextual, controles com foco premium e hierarquia visual alinhada as demais paginas do piloto.
+- Nao houve alteracao de backend, contratos HTTP, dados persistidos, Prisma/migrations, packages, formularios RHF/Zod ou regras de moderacao.
+- Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente; a referencia auditavel foi a captura enviada pelo usuario, `_product/proto/admin/Notificacoes.png` e o ADR do piloto `adrs/0263-admin-psicologos-piloto-premium.md`.
+
+
+Validacao deste ajuste:
+
+- `pnpm --dir admin exec biome check --write "src/components/admin-shell/shell.tsx" "src/app/(admin)/moderacao/client.tsx"`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build` (primeira tentativa bloqueada por build Next concorrente; reexecutado apos o lock liberar e concluiu com sucesso)
+- Smoke HTTP local: `GET http://localhost:3002/moderacao` retornou `200`.
+- `pnpm check` foi tentado, mas excedeu o limite de 10 minutos do runner e deixou processos orfaos; os processos do check foram encerrados para evitar carga duplicada. Como o ajuste alterou apenas Admin/docs, a validacao relevante ficou coberta por `pnpm --dir admin check` e `pnpm --dir admin build`.

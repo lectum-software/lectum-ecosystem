@@ -579,3 +579,35 @@ Validacao deste ajuste:
   `month`, `year` e `all`.
 - `pnpm check`
 - Smoke HTTP local: `GET http://localhost:3002/financeiro` retornou `200`.
+
+
+## Expansao 2026-07-23: Moderacao no piloto premium
+
+Por pedido direto de produto, a pagina Admin **Moderacao** tambem passa a usar o escopo
+`admin-premium-pilot`, mantendo intactos os dados reais e regras da TASK-77/TASK-74.
+
+Decisoes:
+
+- Incluir `/moderacao` e descendentes na regra centralizada do `AdminShell`, sem duplicar shell ou
+  criar tema paralelo.
+- Reaproveitar os tokens do piloto premium: sidebar clara, azul Lectum, cards com borda sutil,
+  sombra quase imperceptivel, `rounded-card`/`rounded-control` e tipografia menos pesada.
+- Converter o topo de Moderacao em card mobile-first com label **Operacao e seguranca**, titulo,
+  subtitulo e CTA **Atualizar** no mesmo bloco.
+- Transformar o bloco de filtros textuais em um card com header contextual, mantendo os mesmos
+  filtros reais por status, decisao, categoria, severidade, comunidade, busca e periodo.
+- Nao alterar endpoints, contratos HTTP, derivacao de alertas, Prisma/migrations, packages,
+  formularios RHF/Zod ou dados persistidos.
+
+Consequencia: Moderacao fica visualmente consistente com Psicologos, Comunidades, Pacientes,
+Configuracoes, Notificacoes e Financeiro no piloto premium, sem mudar o escopo funcional da central
+nem simular novas acoes operacionais.
+
+
+Validacao desta expansao:
+
+- `pnpm --dir admin exec biome check --write "src/components/admin-shell/shell.tsx" "src/app/(admin)/moderacao/client.tsx"`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build` (primeira tentativa bloqueada por build Next concorrente; reexecutado com sucesso)
+- Smoke HTTP local: `GET http://localhost:3002/moderacao` retornou `200`.
+- `pnpm check` foi tentado, mas excedeu 10 minutos no runner; sem alteracoes em backend/frontend nesta expansao.

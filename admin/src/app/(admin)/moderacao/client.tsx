@@ -50,7 +50,8 @@ import { cn } from "@/lib/utils";
 
 const EVENT_LIMIT = 8;
 const REMOVE_CONFIRMATION = "REMOVER CONTEUDO";
-const cardClass = "rounded-card border border-border bg-surface shadow-admin-soft";
+const cardClass =
+  "rounded-card border border-border/80 bg-surface/95 shadow-admin-soft backdrop-blur";
 const numberFormatter = new Intl.NumberFormat("pt-BR");
 const dateTimeFormatter = new Intl.DateTimeFormat("pt-BR", {
   dateStyle: "short",
@@ -190,6 +191,42 @@ const formatDate = (value: string) => dateFormatter.format(new Date(value));
 
 const Card = ({ children, className }: { children?: ReactNode; className?: string }) => (
   <section className={cn(cardClass, className)}>{children}</section>
+);
+
+const Header = ({
+  disabled,
+  loading,
+  onRefresh,
+}: {
+  disabled: boolean;
+  loading: boolean;
+  onRefresh: () => void;
+}) => (
+  <Card className="p-5 md:p-6">
+    <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
+      <div className="min-w-0">
+        <p className="text-xs font-semibold uppercase tracking-[0.12em] text-primary">
+          Operação e segurança
+        </p>
+        <h1 className="mt-2 text-3xl font-bold tracking-tight text-foreground md:text-4xl">
+          Central de moderação e alertas
+        </h1>
+        <p className="mt-2 max-w-3xl text-sm font-medium leading-6 text-muted md:text-base">
+          Acompanhe denúncias de posts, moderação textual sensível, pendências de compliance
+          profissional e alertas operacionais derivados dos dados reais da Lectum.
+        </p>
+      </div>
+      <button
+        className="inline-flex h-11 items-center justify-center gap-2 rounded-control border border-border bg-surface px-4 text-sm font-semibold text-foreground shadow-control transition hover:border-border-strong hover:text-primary disabled:opacity-60"
+        disabled={disabled}
+        onClick={onRefresh}
+        type="button"
+      >
+        <RefreshCw aria-hidden className={cn("h-4 w-4", loading && "animate-spin")} />
+        Atualizar
+      </button>
+    </div>
+  </Card>
 );
 const Pill = ({ className, children }: { className?: string; children: ReactNode }) => (
   <span className={cn("inline-flex rounded-full px-2.5 py-1 text-xs font-black", className)}>
@@ -432,104 +469,117 @@ const FiltersBar = ({
   filters: Filters;
   setFilters: (filters: Filters) => void;
 }) => (
-  <Card className="p-4">
-    <div className="grid gap-3 lg:grid-cols-4 xl:grid-cols-[1fr_1fr_1fr_1fr_1.4fr]">
-      <Select
-        label="Status"
-        onChange={(value) => setFilters({ ...filters, status: value as Filters["status"] })}
-        options={[
-          ["all", "Todos"],
-          ["pending", "Pendente"],
-          ["reviewing", "Em revisão"],
-          ["resolved", "Resolvido"],
-        ]}
-        value={filters.status}
-      />
-      <Select
-        label="Decisão"
-        onChange={(value) => setFilters({ ...filters, decision: value as Filters["decision"] })}
-        options={[
-          ["all", "Todas"],
-          ["allow_sensitive", "Sensível publicado"],
-          ["block", "Bloqueado"],
-          ["safety_hold", "Segurança urgente"],
-        ]}
-        value={filters.decision}
-      />
-      <Select
-        label="Categoria"
-        onChange={(value) => setFilters({ ...filters, category: value })}
-        options={categoryOptions}
-        value={filters.category}
-      />
-      <Select
-        label="Severidade"
-        onChange={(value) => setFilters({ ...filters, severity: value as Filters["severity"] })}
-        options={[
-          ["all", "Todas"],
-          ["low", "Baixa"],
-          ["medium", "Média"],
-          ["high", "Alta"],
-          ["urgent", "Urgente"],
-        ]}
-        value={filters.severity}
-      />
-      <label className="text-xs font-black text-muted">
-        Busca
-        <span className="relative mt-1 block">
-          <Search
-            aria-hidden
-            className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-subtle"
-          />
-          <input
-            className="h-11 w-full rounded-control border border-border bg-surface pl-9 pr-3 text-sm font-bold text-foreground shadow-control outline-none focus:border-primary"
-            onChange={(event) => setFilters({ ...filters, q: event.target.value })}
-            placeholder="Trecho, regra, comunidade..."
-            value={filters.q}
-          />
-        </span>
-      </label>
+  <Card className="overflow-hidden">
+    <div className="border-b border-border/80 p-5">
+      <div className="flex flex-col gap-1">
+        <p className="text-xs font-semibold uppercase tracking-[0.12em] text-primary">
+          Moderação textual
+        </p>
+        <h2 className="text-xl font-bold text-foreground">Filtros de eventos</h2>
+        <p className="text-sm leading-6 text-muted">
+          Refine a fila de content_moderation_event sem alterar os alertas operacionais derivados.
+        </p>
+      </div>
     </div>
-    <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_1fr_auto]">
-      <label className="text-xs font-black text-muted">
-        Comunidade
-        <input
-          className="mt-1 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground shadow-control outline-none focus:border-primary"
-          onChange={(event) => setFilters({ ...filters, community: event.target.value || "all" })}
-          placeholder="ID, slug ou nome"
-          value={filters.community === "all" ? "" : filters.community}
+    <div className="bg-surface/80 p-4 md:p-5">
+      <div className="grid gap-3 lg:grid-cols-4 xl:grid-cols-[1fr_1fr_1fr_1fr_1.4fr]">
+        <Select
+          label="Status"
+          onChange={(value) => setFilters({ ...filters, status: value as Filters["status"] })}
+          options={[
+            ["all", "Todos"],
+            ["pending", "Pendente"],
+            ["reviewing", "Em revisão"],
+            ["resolved", "Resolvido"],
+          ]}
+          value={filters.status}
         />
-      </label>
-      <DateInput
-        label="De"
-        max={filters.to}
-        onChange={(value) => setFilters({ ...filters, from: value })}
-        value={filters.from}
-      />
-      <DateInput
-        label="Até"
-        min={filters.from}
-        onChange={(value) => setFilters({ ...filters, to: value })}
-        value={filters.to}
-      />
-      <div className="flex flex-wrap items-end gap-2">
-        {[7, 30, 90].map((days) => (
+        <Select
+          label="Decisão"
+          onChange={(value) => setFilters({ ...filters, decision: value as Filters["decision"] })}
+          options={[
+            ["all", "Todas"],
+            ["allow_sensitive", "Sensível publicado"],
+            ["block", "Bloqueado"],
+            ["safety_hold", "Segurança urgente"],
+          ]}
+          value={filters.decision}
+        />
+        <Select
+          label="Categoria"
+          onChange={(value) => setFilters({ ...filters, category: value })}
+          options={categoryOptions}
+          value={filters.category}
+        />
+        <Select
+          label="Severidade"
+          onChange={(value) => setFilters({ ...filters, severity: value as Filters["severity"] })}
+          options={[
+            ["all", "Todas"],
+            ["low", "Baixa"],
+            ["medium", "Média"],
+            ["high", "Alta"],
+            ["urgent", "Urgente"],
+          ]}
+          value={filters.severity}
+        />
+        <label className="text-xs font-semibold text-muted">
+          Busca
+          <span className="relative mt-1 block">
+            <Search
+              aria-hidden
+              className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-subtle"
+            />
+            <input
+              className="h-11 w-full rounded-control border border-border bg-surface pl-9 pr-3 text-sm font-semibold text-foreground shadow-control outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+              onChange={(event) => setFilters({ ...filters, q: event.target.value })}
+              placeholder="Trecho, regra, comunidade..."
+              value={filters.q}
+            />
+          </span>
+        </label>
+      </div>
+      <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_1fr_auto]">
+        <label className="text-xs font-semibold text-muted">
+          Comunidade
+          <input
+            className="mt-1 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-semibold text-foreground shadow-control outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+            onChange={(event) => setFilters({ ...filters, community: event.target.value || "all" })}
+            placeholder="ID, slug ou nome"
+            value={filters.community === "all" ? "" : filters.community}
+          />
+        </label>
+        <DateInput
+          label="De"
+          max={filters.to}
+          onChange={(value) => setFilters({ ...filters, from: value })}
+          value={filters.from}
+        />
+        <DateInput
+          label="Até"
+          min={filters.from}
+          onChange={(value) => setFilters({ ...filters, to: value })}
+          value={filters.to}
+        />
+        <div className="flex flex-wrap items-end gap-2">
+          {[7, 30, 90].map((days) => (
+            <button
+              className="h-10 rounded-full border border-border bg-surface px-3 text-xs font-semibold text-muted transition hover:border-primary hover:text-primary"
+              key={days}
+              onClick={() => setFilters({ ...filters, ...getQuickRange(days) })}
+              type="button"
+            >
+              {days} dias
+            </button>
+          ))}
           <button
-            className="h-10 rounded-full border border-border bg-surface px-3 text-xs font-black text-muted transition hover:border-primary hover:text-primary"
-            key={days}
-            onClick={() => setFilters({ ...filters, ...getQuickRange(days) })}
+            className="h-10 rounded-full border border-border bg-surface px-3 text-xs font-semibold text-muted transition hover:border-border-strong hover:text-foreground"
+            onClick={() => setFilters(initialFilters)}
             type="button"
           >
-            {days} dias
+            Limpar
           </button>
-        ))}
-        <button
-          className="h-10 rounded-full border border-border bg-surface px-3 text-xs font-black text-muted transition hover:border-border-strong hover:text-foreground"
-          onClick={() => setFilters(initialFilters)}
-          type="button"
-        >
-          Limpar
-        </button>
+        </div>
       </div>
     </div>
   </Card>
@@ -546,10 +596,10 @@ const Select = ({
   options: ReadonlyArray<readonly [string, string]>;
   value: string;
 }) => (
-  <label className="text-xs font-black text-muted">
+  <label className="text-xs font-semibold text-muted">
     {label}
     <select
-      className="mt-1 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground shadow-control outline-none focus:border-primary"
+      className="mt-1 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-semibold text-foreground shadow-control outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
       onChange={(event) => onChange(event.target.value)}
       value={value}
     >
@@ -575,10 +625,10 @@ const DateInput = ({
   onChange: (value: string) => void;
   value: string;
 }) => (
-  <label className="text-xs font-black text-muted">
+  <label className="text-xs font-semibold text-muted">
     {label}
     <input
-      className="mt-1 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground shadow-control outline-none focus:border-primary"
+      className="mt-1 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-semibold text-foreground shadow-control outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
       max={max}
       min={min}
       onChange={(event) => onChange(event.target.value)}
@@ -1134,32 +1184,11 @@ export const AdminModerationClient = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
-        <div>
-          <h1 className="text-3xl font-black tracking-tight text-foreground md:text-4xl">
-            Central de moderação e alertas
-          </h1>
-          <p className="mt-2 max-w-3xl text-sm font-medium leading-6 text-muted">
-            Acompanhe denúncias de posts, moderação textual sensível, pendências de compliance
-            profissional e alertas operacionais derivados dos dados reais da Lectum.
-          </p>
-        </div>
-        <button
-          className="inline-flex h-11 items-center justify-center gap-2 rounded-control border border-border bg-surface px-4 text-sm font-black text-foreground shadow-control transition hover:border-border-strong disabled:opacity-60"
-          disabled={summary.isFetching || events.isFetching || detail.isFetching}
-          onClick={refreshAll}
-          type="button"
-        >
-          <RefreshCw
-            aria-hidden
-            className={cn(
-              "h-4 w-4",
-              (summary.isFetching || events.isFetching || detail.isFetching) && "animate-spin",
-            )}
-          />
-          Atualizar
-        </button>
-      </div>
+      <Header
+        disabled={summary.isFetching || events.isFetching || detail.isFetching}
+        loading={summary.isFetching || events.isFetching || detail.isFetching}
+        onRefresh={refreshAll}
+      />
       {firstError ? (
         <ErrorState
           error={firstError}
