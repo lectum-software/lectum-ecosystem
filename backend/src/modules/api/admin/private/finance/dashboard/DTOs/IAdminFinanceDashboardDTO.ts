@@ -63,6 +63,57 @@ export type AdminFinanceSeriesPoint = {
   start_date: string;
 };
 
+export type AdminFinancePaymentHealthStatus =
+  | "attention"
+  | "critical"
+  | "healthy"
+  | "insufficient_history"
+  | "risk";
+
+export type AdminFinancePaymentHistoryStatus = "failed" | "pending" | "processed" | "successful";
+
+export type AdminFinancePaymentHistoryItem = {
+  amount_available: boolean;
+  amount_cents: number | null;
+  event_id: string;
+  event_type: string;
+  external_id: string;
+  gateway: "mercadopago";
+  occurred_at: string;
+  reference: string | null;
+  status: AdminFinancePaymentHistoryStatus;
+  status_detail: string | null;
+  status_label: string;
+  title: string;
+  unavailable_reason: string | null;
+};
+
+export type AdminFinancePaymentHistory = {
+  available: boolean;
+  items: AdminFinancePaymentHistoryItem[];
+  reason: string | null;
+  source: "payment_event.filtered_by_subscription_reference";
+  total: number;
+};
+
+export type AdminFinancePaymentHealth = {
+  consecutive_failures: number;
+  days_overdue: number | null;
+  failed_payments: number;
+  final_attempts: number;
+  label: string;
+  last_failure_at: string | null;
+  last_success_at: string | null;
+  notes: string[];
+  pending_payments: number;
+  source: "payment_event+professional_subscription";
+  status: AdminFinancePaymentHealthStatus;
+  successful_payments: number;
+  success_rate_percent: number | null;
+  summary: string;
+  total_events: number;
+};
+
 export type AdminFinanceSubscriptionItem = {
   created_at: string;
   current_period_end: string | null;
@@ -87,6 +138,8 @@ export type AdminFinanceSubscriptionItem = {
   };
   last_charge_at: string | null;
   next_charge_at: string | null;
+  payment_health: AdminFinancePaymentHealth;
+  payment_history: AdminFinancePaymentHistory;
   source: string;
   started_at: string;
   status: string;

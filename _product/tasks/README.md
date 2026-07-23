@@ -17,7 +17,7 @@ Cada task é auto-suficiente e deve ser executada isoladamente por uma IA usando
 - A referência visual ativa é Builder Quick Copy + imagens exportadas em `_product/proto`.
 - O Builder está autenticado no espaço `Lectum` e o Quick Copy foi validado via `builder.io code`.
 - Existem 62 JPEGs exportados em `_product/proto`: 61 telas de produto e 1 ícone isolado.
-- A fila operacional agora possui 85 tasks: `TASK-00` a `TASK-79`, incluindo complementos `TASK-18A`, `TASK-29A`/`TASK-29B` e `TASK-31A` a `TASK-31C`.
+- A fila operacional agora possui 86 tasks: `TASK-00` a `TASK-80`, incluindo complementos `TASK-18A`, `TASK-29A`/`TASK-29B` e `TASK-31A` a `TASK-31C`.
 
 ## Inventário visual ativo
 
@@ -160,6 +160,7 @@ ou cortesia manual.
 | 77 | [TASK-77 - Central de moderação e alertas operacionais Admin](TASK-77-central-moderacao-alertas-operacionais-admin.md) | Completed | 45, 46, 57, 70, 74 |
 | 78 | [TASK-78 - Indicador de urgência no menu lateral da moderação Admin](TASK-78-indicador-urgencia-menu-moderacao-admin.md) | Completed | 46, 77 |
 | 79 | [TASK-79 - Sessões por device no detalhe administrativo](TASK-79-sessoes-por-device-detalhe-admin.md) | Completed | 47, 57, 61, 72 |
+| 80 | [TASK-80 - Saúde de pagamento nas assinaturas Admin](TASK-80-saude-pagamento-assinaturas-admin.md) | Completed | 45, 46, 56, 62 |
 
 ## Ordem operacional recomendada sem bloqueios
 
@@ -211,6 +212,7 @@ Esta secao e a fila pratica para continuar o MVP sem bater nas tasks bloqueadas 
 42. [TASK-77 - Central de moderação e alertas operacionais Admin](TASK-77-central-moderacao-alertas-operacionais-admin.md) foi adicionada e concluída em 2026-07-21 para reunir denúncias, CRP profissional pendente, WhatsApp inválido, perfis não publicados por configurações obrigatórias, posts de pacientes sem cobertura após 48h e psicólogos profissionais sem tração após adaptação na central `/moderacao`, sem implementar dimensões de região/preço/horário que não se aplicam no momento.
 43. [TASK-78 - Indicador de urgência no menu lateral da moderação Admin](TASK-78-indicador-urgencia-menu-moderacao-admin.md) foi adicionada e concluída em 2026-07-21 para trocar o badge neutro da opção **Moderação** por um indicador com ícone de alerta vermelho quando houver urgência e laranja quando houver apenas pendências menos urgentes.
 44. [TASK-79 - Sessões por device no detalhe administrativo](TASK-79-sessoes-por-device-detalhe-admin.md) foi concluída em 2026-07-22 para levar aos detalhes individuais de psicólogo e paciente a mesma lógica real dos dashboards: distribuição de sessões autenticadas por `visitor_session.device_type` no período, sem medir device principal por usuário, com **Páginas mais acessadas** e **Devices** em duas colunas no desktop e pie chart em **Devices**.
+45. [TASK-80 - Saúde de pagamento nas assinaturas Admin](TASK-80-saude-pagamento-assinaturas-admin.md) foi concluída em 2026-07-22 para adicionar uma coluna resumida de **Saúde do pagamento** em `/financeiro/assinaturas` e dropdown por assinatura com histórico real de `payment_event`, mantendo a tag em uma linha e sem simular cobranças.
 
 ### 1A. Trilha Admin planejada
 

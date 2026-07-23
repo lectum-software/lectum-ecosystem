@@ -10,11 +10,14 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { type ReactNode, useEffect, useMemo, useRef, useState } from "react";
+import { Fragment, type ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import { useAdminFinanceSubscriptions } from "@/api/callers/finance";
 import { resolveApiError } from "@/api/handle";
 import type {
   FinanceListQuery,
+  FinancePaymentHealth,
+  FinancePaymentHistoryItem,
+  FinancePaymentHistoryStatus,
   FinancePeriodValue,
   FinanceSubscriptionItem,
 } from "@/api/req/finance";
@@ -76,6 +79,10 @@ const formatDate = (value: string) =>
 
 const formatNullableDate = (value: string | null) => (value ? formatDate(value) : "—");
 const formatMoney = (cents: number) => moneyFormatter.format(cents / 100);
+const formatNullableMoney = (cents: number | null) =>
+  typeof cents === "number" ? formatMoney(cents) : "Valor indisponível";
+const formatPercent = (value: number | null) =>
+  typeof value === "number" ? `${numberFormatter.format(value)}%` : "—";
 
 const CardShell = ({ children, className }: { children?: ReactNode; className?: string }) => (
   <section
@@ -217,6 +224,161 @@ const StatusBadge = ({ item }: { item: FinanceSubscriptionItem }) => (
   </span>
 );
 
+const paymentHealthClassName: Record<FinancePaymentHealth["status"], string> = {
+  attention: "border-yellow-100 bg-yellow-50 text-yellow-700",
+  critical: "border-danger/20 bg-danger/5 text-danger",
+  healthy: "border-emerald-100 bg-emerald-50 text-success",
+  insufficient_history: "border-border bg-surface-muted text-muted",
+  risk: "border-orange-200 bg-orange-50 text-orange-700",
+};
+
+const paymentHistoryStatusClassName: Record<FinancePaymentHistoryStatus, string> = {
+  failed: "border-danger/20 bg-danger/5 text-danger",
+  pending: "border-yellow-100 bg-yellow-50 text-yellow-700",
+  processed: "border-border bg-surface-muted text-muted",
+  successful: "border-emerald-100 bg-emerald-50 text-success",
+};
+
+const PaymentHealthBadge = ({ health }: { health: FinancePaymentHealth }) => (
+  <span
+    className={cn(
+      "inline-flex max-w-full items-center rounded-full border px-3 py-1.5 text-xs font-black leading-none",
+      paymentHealthClassName[health.status],
+    )}
+    title={health.summary}
+  >
+    {health.label}
+  </span>
+);
+
+const PaymentHistoryStatusBadge = ({ item }: { item: FinancePaymentHistoryItem }) => (
+  <span
+    className={cn(
+      "inline-flex rounded-full border px-2 py-1 text-xs font-black",
+      paymentHistoryStatusClassName[item.status],
+    )}
+  >
+    {item.status_label}
+  </span>
+);
+
+const HealthMetric = ({ label, value }: { label: string; value: ReactNode }) => (
+  <div className="rounded-3xl border border-border bg-surface px-4 py-3">
+    <dt className="text-xs font-semibold text-muted">{label}</dt>
+    <dd className="mt-1 text-sm font-black text-foreground">{value}</dd>
+  </div>
+);
+
+const PaymentHistoryRow = ({ item }: { item: FinancePaymentHistoryItem }) => (
+  <li className="rounded-3xl border border-border bg-surface p-4">
+    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+      <div className="min-w-0">
+        <div className="flex flex-wrap items-center gap-2">
+          <p className="font-black text-foreground">{item.title}</p>
+          <PaymentHistoryStatusBadge item={item} />
+        </div>
+        <p className="mt-1 text-xs font-semibold text-muted">
+          {formatDate(item.occurred_at)} · {item.gateway} · Evento {item.event_type}
+        </p>
+        <p className="mt-1 truncate text-xs text-muted">
+          Ref. {item.reference ?? item.external_id}
+        </p>
+      </div>
+      <div className="text-left sm:text-right">
+        <p className="text-sm font-black text-foreground">
+          {formatNullableMoney(item.amount_cents)}
+        </p>
+        {item.status_detail ? (
+          <p className="mt-1 text-xs font-semibold text-muted">{item.status_detail}</p>
+        ) : null}
+      </div>
+    </div>
+    {item.unavailable_reason ? (
+      <p className="mt-3 rounded-2xl border border-yellow-100 bg-yellow-50 px-3 py-2 text-xs font-semibold text-yellow-700">
+        Pagamento confirmado sem valor monetário extraível no payload.
+      </p>
+    ) : null}
+  </li>
+);
+
+const PaymentHealthDetails = ({ item }: { item: FinanceSubscriptionItem }) => {
+  const { payment_health: health, payment_history: history } = item;
+
+  return (
+    <div className="rounded-3xl border border-primary/10 bg-primary-soft/25 p-4 lg:p-5">
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-primary">
+            Saúde do pagamento
+          </p>
+          <h3 className="mt-1 text-lg font-black text-foreground">{health.summary}</h3>
+          <p className="mt-1 max-w-2xl text-sm font-medium leading-6 text-muted">
+            Análise derivada dos payment_events reais reconciliados com esta assinatura.
+          </p>
+        </div>
+        <PaymentHealthBadge health={health} />
+      </div>
+
+      <dl className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <HealthMetric label="Taxa de sucesso" value={formatPercent(health.success_rate_percent)} />
+        <HealthMetric
+          label="Tentativas finais"
+          value={numberFormatter.format(health.final_attempts)}
+        />
+        <HealthMetric
+          label="Falhas consecutivas"
+          value={numberFormatter.format(health.consecutive_failures)}
+        />
+        <HealthMetric
+          label="Dias em atraso"
+          value={health.days_overdue === null ? "—" : numberFormatter.format(health.days_overdue)}
+        />
+        <HealthMetric
+          label="Pagamentos aprovados"
+          value={numberFormatter.format(health.successful_payments)}
+        />
+        <HealthMetric
+          label="Pagamentos recusados"
+          value={numberFormatter.format(health.failed_payments)}
+        />
+        <HealthMetric label="Pendentes" value={numberFormatter.format(health.pending_payments)} />
+        <HealthMetric label="Último sucesso" value={formatNullableDate(health.last_success_at)} />
+        <HealthMetric label="Última falha" value={formatNullableDate(health.last_failure_at)} />
+      </dl>
+
+      {health.notes.length > 0 ? (
+        <ul className="mt-4 space-y-2 text-xs font-semibold leading-5 text-muted">
+          {health.notes.map((note) => (
+            <li className="rounded-2xl bg-surface/80 px-3 py-2" key={note}>
+              {note}
+            </li>
+          ))}
+        </ul>
+      ) : null}
+
+      <div className="mt-5">
+        <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+          <h4 className="text-sm font-black text-foreground">Histórico de pagamentos</h4>
+          <p className="text-xs font-semibold text-muted">
+            {numberFormatter.format(history.total)} eventos reconciliados · Fonte: {history.source}
+          </p>
+        </div>
+        {history.available ? (
+          <ul className="mt-3 grid gap-3">
+            {history.items.map((historyItem) => (
+              <PaymentHistoryRow item={historyItem} key={historyItem.event_id} />
+            ))}
+          </ul>
+        ) : (
+          <div className="mt-3 rounded-3xl border border-dashed border-border bg-surface p-5 text-sm font-semibold text-muted">
+            {history.reason || "Histórico de pagamentos indisponível para esta assinatura."}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
 const ErrorState = ({ message, onRetry }: { message: string; onRetry: () => void }) => (
   <CardShell className="p-6">
     <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -269,101 +431,177 @@ const pageNumbers = (current: number, pages: number) => {
     .sort((left, right) => left - right);
 };
 
-const SubscriptionsTable = ({ items }: { items: FinanceSubscriptionItem[] }) => (
-  <>
-    <div className="grid gap-3 p-4 lg:hidden">
-      {items.map((item) => (
-        <article className="rounded-3xl border border-border bg-surface p-4" key={item.id}>
-          <div className="flex items-start gap-3">
-            <InitialsAvatar name={item.psychologist.name} />
-            <div className="min-w-0 flex-1">
-              <div className="flex flex-wrap items-center gap-2">
-                <h3 className="truncate font-black text-foreground">{item.psychologist.name}</h3>
-                <StatusBadge item={item} />
-              </div>
-              <p className="truncate text-xs font-bold text-muted">{item.psychologist.email}</p>
-              <dl className="mt-4 grid grid-cols-2 gap-3 text-xs">
-                <div>
-                  <dt className="font-semibold text-muted">Valor</dt>
-                  <dd className="mt-1 font-bold text-foreground">
-                    {formatMoney(item.plan.price_cents)}
-                  </dd>
-                </div>
-                <div>
-                  <dt className="font-semibold text-muted">Início</dt>
-                  <dd className="mt-1 font-bold text-foreground">{formatDate(item.started_at)}</dd>
-                </div>
-                <div>
-                  <dt className="font-semibold text-muted">Última</dt>
-                  <dd className="mt-1 font-bold text-foreground">
-                    {formatNullableDate(item.last_charge_at)}
-                  </dd>
-                </div>
-                <div>
-                  <dt className="font-semibold text-muted">Próxima</dt>
-                  <dd className="mt-1 font-bold text-foreground">
-                    {formatNullableDate(item.next_charge_at)}
-                  </dd>
-                </div>
-              </dl>
-            </div>
-          </div>
-        </article>
-      ))}
-    </div>
+const SubscriptionsTable = ({ items }: { items: FinanceSubscriptionItem[] }) => {
+  const [expandedIds, setExpandedIds] = useState<Set<string>>(() => new Set());
+  const toggleExpanded = (id: string) => {
+    setExpandedIds((current) => {
+      const next = new Set(current);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
 
-    <div className="hidden overflow-x-auto lg:block">
-      <table className="w-full min-w-[900px] text-left text-sm">
-        <caption className="sr-only">Relação completa de assinaturas pagas</caption>
-        <thead className="border-b border-border text-xs font-bold uppercase tracking-[0.08em] text-muted">
-          <tr>
-            <th className="px-5 py-4">Psicólogo</th>
-            <th className="px-5 py-4">Início</th>
-            <th className="px-5 py-4">Última</th>
-            <th className="px-5 py-4">Próxima</th>
-            <th className="px-5 py-4">Valor</th>
-            <th className="px-5 py-4">Status</th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-border">
-          {items.map((item) => (
-            <tr className="transition hover:bg-primary-soft/35" key={item.id}>
-              <td className="px-5 py-4">
-                <div className="flex min-w-0 items-center gap-3">
-                  <InitialsAvatar name={item.psychologist.name} />
-                  <div className="min-w-0">
-                    <Link
-                      className="truncate font-black text-foreground transition hover:text-primary"
-                      href={item.detail_url}
-                    >
+      return next;
+    });
+  };
+
+  const isExpanded = (id: string) => expandedIds.has(id);
+
+  return (
+    <>
+      <div className="grid gap-3 p-4 lg:hidden">
+        {items.map((item) => {
+          const expanded = isExpanded(item.id);
+          const detailsId = `subscription-payment-history-${item.id}`;
+
+          return (
+            <article className="rounded-3xl border border-border bg-surface p-4" key={item.id}>
+              <div className="flex items-start gap-3">
+                <InitialsAvatar name={item.psychologist.name} />
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h3 className="truncate font-black text-foreground">
                       {item.psychologist.name}
-                    </Link>
-                    <p className="truncate text-xs text-muted">{item.psychologist.email}</p>
+                    </h3>
+                    <StatusBadge item={item} />
                   </div>
+                  <p className="truncate text-xs font-bold text-muted">{item.psychologist.email}</p>
+                  <div className="mt-3">
+                    <PaymentHealthBadge health={item.payment_health} />
+                  </div>
+                  <dl className="mt-4 grid grid-cols-2 gap-3 text-xs">
+                    <div>
+                      <dt className="font-semibold text-muted">Valor</dt>
+                      <dd className="mt-1 font-bold text-foreground">
+                        {formatMoney(item.plan.price_cents)}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="font-semibold text-muted">Início</dt>
+                      <dd className="mt-1 font-bold text-foreground">
+                        {formatDate(item.started_at)}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="font-semibold text-muted">Próxima</dt>
+                      <dd className="mt-1 font-bold text-foreground">
+                        {formatNullableDate(item.next_charge_at)}
+                      </dd>
+                    </div>
+                  </dl>
                 </div>
-              </td>
-              <td className="whitespace-nowrap px-5 py-4 text-muted">
-                {formatDate(item.started_at)}
-              </td>
-              <td className="whitespace-nowrap px-5 py-4 text-muted">
-                {formatNullableDate(item.last_charge_at)}
-              </td>
-              <td className="whitespace-nowrap px-5 py-4 text-muted">
-                {formatNullableDate(item.next_charge_at)}
-              </td>
-              <td className="whitespace-nowrap px-5 py-4 font-black text-foreground">
-                {formatMoney(item.plan.price_cents)}
-              </td>
-              <td className="px-5 py-4">
-                <StatusBadge item={item} />
-              </td>
+              </div>
+              <button
+                aria-controls={detailsId}
+                aria-expanded={expanded}
+                className="mt-4 inline-flex h-11 w-full items-center justify-center gap-2 rounded-full border border-border bg-surface px-4 text-sm font-black text-foreground shadow-control transition hover:border-primary hover:text-primary"
+                onClick={() => toggleExpanded(item.id)}
+                type="button"
+              >
+                <ChevronRight
+                  aria-hidden
+                  className={cn("h-4 w-4 transition-transform", expanded && "rotate-90")}
+                />
+                {expanded ? "Ocultar histórico" : "Ver histórico de pagamentos"}
+              </button>
+              {expanded ? (
+                <div className="mt-4" id={detailsId}>
+                  <PaymentHealthDetails item={item} />
+                </div>
+              ) : null}
+            </article>
+          );
+        })}
+      </div>
+
+      <div className="hidden overflow-x-auto lg:block">
+        <table className="w-full min-w-[1040px] text-left text-sm">
+          <caption className="sr-only">
+            Relação completa de assinaturas pagas com saúde do pagamento e histórico expansível
+          </caption>
+          <thead className="border-b border-border text-xs font-bold uppercase tracking-[0.08em] text-muted">
+            <tr>
+              <th className="w-12 px-5 py-4">
+                <span className="sr-only">Expandir</span>
+              </th>
+              <th className="px-5 py-4">Psicólogo</th>
+              <th className="px-5 py-4">Início</th>
+              <th className="px-5 py-4">Próxima</th>
+              <th className="px-5 py-4">Valor</th>
+              <th className="px-5 py-4">Status</th>
+              <th className="px-5 py-4">Saúde do pagamento</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  </>
-);
+          </thead>
+          <tbody className="divide-y divide-border">
+            {items.map((item) => {
+              const expanded = isExpanded(item.id);
+              const detailsId = `subscription-payment-history-${item.id}`;
+
+              return (
+                <Fragment key={item.id}>
+                  <tr className="transition hover:bg-primary-soft/35">
+                    <td className="px-5 py-4">
+                      <button
+                        aria-controls={detailsId}
+                        aria-expanded={expanded}
+                        className="grid h-9 w-9 place-items-center rounded-2xl border border-border bg-surface text-foreground shadow-control transition hover:border-primary hover:text-primary"
+                        onClick={() => toggleExpanded(item.id)}
+                        type="button"
+                      >
+                        <ChevronRight
+                          aria-hidden
+                          className={cn("h-4 w-4 transition-transform", expanded && "rotate-90")}
+                        />
+                        <span className="sr-only">
+                          {expanded ? "Ocultar histórico" : "Ver histórico"} de{" "}
+                          {item.psychologist.name}
+                        </span>
+                      </button>
+                    </td>
+                    <td className="px-5 py-4">
+                      <div className="flex min-w-0 items-center gap-3">
+                        <InitialsAvatar name={item.psychologist.name} />
+                        <div className="min-w-0">
+                          <Link
+                            className="truncate font-black text-foreground transition hover:text-primary"
+                            href={item.detail_url}
+                          >
+                            {item.psychologist.name}
+                          </Link>
+                          <p className="truncate text-xs text-muted">{item.psychologist.email}</p>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="whitespace-nowrap px-5 py-4 text-muted">
+                      {formatDate(item.started_at)}
+                    </td>
+                    <td className="whitespace-nowrap px-5 py-4 text-muted">
+                      {formatNullableDate(item.next_charge_at)}
+                    </td>
+                    <td className="whitespace-nowrap px-5 py-4 font-black text-foreground">
+                      {formatMoney(item.plan.price_cents)}
+                    </td>
+                    <td className="px-5 py-4">
+                      <StatusBadge item={item} />
+                    </td>
+                    <td className="max-w-[260px] px-5 py-4">
+                      <PaymentHealthBadge health={item.payment_health} />
+                    </td>
+                  </tr>
+                  {expanded ? (
+                    <tr className="bg-primary-soft/15">
+                      <td className="px-5 py-5" colSpan={7} id={detailsId}>
+                        <PaymentHealthDetails item={item} />
+                      </td>
+                    </tr>
+                  ) : null}
+                </Fragment>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </>
+  );
+};
 
 export const AdminFinanceSubscriptionsClient = () => {
   const router = useRouter();
@@ -437,7 +675,8 @@ export const AdminFinanceSubscriptionsClient = () => {
               Relação de assinaturas
             </h1>
             <p className="mt-2 max-w-2xl text-sm font-medium leading-6 text-muted">
-              Relação completa de assinaturas profissionais pagas no período selecionado.
+              Relação completa de assinaturas profissionais pagas com saúde do pagamento e histórico
+              expansível por assinatura.
             </p>
             <p className="mt-2 text-xs font-bold text-muted">{periodSummary}</p>
           </div>
@@ -460,7 +699,7 @@ export const AdminFinanceSubscriptionsClient = () => {
             <p className="text-xs font-bold text-muted">
               {hasTableFilters
                 ? "Filtros aplicados sobre assinaturas pagas reais."
-                : "Busque por psicólogo, e-mail ou identificador."}
+                : "Busque por psicólogo, e-mail ou identificador; expanda a assinatura para ver pagamentos."}
             </p>
           </div>
           <div className="flex min-w-0 flex-col gap-3 xl:flex-row xl:items-end xl:justify-between">

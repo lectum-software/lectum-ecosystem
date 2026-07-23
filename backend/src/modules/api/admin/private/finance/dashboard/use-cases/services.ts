@@ -6,6 +6,10 @@ import type {
   AdminFinanceDateRange,
   AdminFinanceGroupBy,
   AdminFinanceMetric,
+  AdminFinancePaymentHealth,
+  AdminFinancePaymentHistory,
+  AdminFinancePaymentHistoryItem,
+  AdminFinancePaymentHistoryStatus,
   AdminFinancePeriod,
   AdminFinanceQuery,
   AdminFinanceSeriesPoint,
@@ -20,6 +24,7 @@ const DEFAULT_SUBSCRIPTION_TAKE = 50;
 const DEFAULT_LIST_LIMIT = 20;
 const MAX_LIST_LIMIT = 50;
 const DASHBOARD_TABLE_PREVIEW_TAKE = 5;
+const MAX_PAYMENT_HISTORY_ITEMS = 10;
 const DAYS_PER_AVERAGE_MONTH = 30.4375;
 const MILLISECONDS_PER_DAY = 86_400_000;
 const SUBSCRIPTION_STATUS_FILTERS = new Set(["ativa", "cancelada", "inadimplente"]);
@@ -564,6 +569,290 @@ const subscriptionReferenceValues = (subscription: SubscriptionReferenceRecord) 
     Boolean(reference && reference.length > 3),
   );
 
+const toPayloadString = (value: unknown) => {
+  if (typeof value === "string" && value.trim()) return value.trim();
+  if (typeof value === "number" && Number.isFinite(value)) return String(value);
+
+  return null;
+};
+
+const extractPaymentReference = (payload: unknown) =>
+  toPayloadString(
+    findPayloadValue(payload, [
+      "external_reference",
+      "preapproval_id",
+      "preapproval",
+      "subscription_id",
+      "gateway_subscription_id",
+      "payment_id",
+      "id",
+    ]),
+  );
+
+const extractPaymentStatusDetail = (payload: unknown) =>
+  toPayloadString(findPayloadValue(payload, ["status_detail", "status", "payment_status"]));
+
+const plural = (count: number, singular: string, pluralized: string) =>
+  count === 1 ? singular : pluralized;
+
+const daysSince = (date: Date, now = new Date()) =>
+  Math.max(
+    0,
+    Math.floor((startOfDate(now).getTime() - startOfDate(date).getTime()) / MILLISECONDS_PER_DAY),
+  );
+
+const resolvePaymentHistoryStatus = (
+  event: PaymentEventRecord,
+): {
+  label: string;
+  status: AdminFinancePaymentHistoryStatus;
+} => {
+  const status = normalizeText(
+    findPayloadValue(event.payload, ["status", "status_detail", "action", "payment_status"]),
+  );
+  const source = `${status} ${normalizeText(event.type)}`;
+
+  if (["approved", "accredited", "paid"].some((term) => source.includes(term))) {
+    return { label: "Aprovada", status: "successful" };
+  }
+
+  if (["rejected", "refused", "charged_back", "chargeback"].some((term) => source.includes(term))) {
+    return { label: "Recusada", status: "failed" };
+  }
+
+  if (source.includes("cancelled") || source.includes("canceled")) {
+    return { label: "Cancelada", status: "failed" };
+  }
+
+  if (
+    ["pending", "in_process", "authorized", "in_mediation"].some((term) => source.includes(term))
+  ) {
+    return { label: "Pendente", status: "pending" };
+  }
+
+  return { label: "Processada", status: "processed" };
+};
+
+const mapPaymentHistoryItem = (event: PaymentEventRecord): AdminFinancePaymentHistoryItem => {
+  const amountCents = extractPaymentAmountCents(event.payload);
+  const status = resolvePaymentHistoryStatus(event);
+
+  return {
+    amount_available: amountCents !== null,
+    amount_cents: amountCents,
+    event_id: event.id,
+    event_type: event.type,
+    external_id: event.external_id,
+    gateway: "mercadopago",
+    occurred_at: event.createdAt.toISOString(),
+    reference: extractPaymentReference(event.payload),
+    status: status.status,
+    status_detail: extractPaymentStatusDetail(event.payload),
+    status_label: status.label,
+    title: "Cobrança da assinatura",
+    unavailable_reason:
+      amountCents === null && status.status === "successful"
+        ? "payment_event_confirmado_sem_valor_monetario_extraivel"
+        : null,
+  };
+};
+
+const paymentHistoryForSubscription = (
+  subscription: SubscriptionReferenceRecord,
+  paymentEvents?: PaymentEventRecord[],
+) => {
+  if (!paymentEvents || paymentEvents.length === 0) return [];
+
+  const references = subscriptionReferenceValues(subscription);
+  if (references.length === 0) return [];
+
+  return paymentEvents
+    .filter((event) => isPaymentEvent(event.type, event.payload))
+    .filter((event) => payloadContainsAnyReference(event.payload, references))
+    .map(mapPaymentHistoryItem)
+    .sort((left, right) => Date.parse(right.occurred_at) - Date.parse(left.occurred_at));
+};
+
+const buildPaymentHealthSummary = (params: {
+  consecutiveFailures: number;
+  daysOverdue: number | null;
+  failedPayments: number;
+  finalAttempts: number;
+  pendingPayments: number;
+  status: AdminFinancePaymentHealth["status"];
+  successRatePercent: number | null;
+}) => {
+  if (params.status === "critical") {
+    if (params.daysOverdue !== null && params.daysOverdue > 0) {
+      const failureSummary =
+        params.consecutiveFailures > 0
+          ? `${params.consecutiveFailures} ${plural(params.consecutiveFailures, "falha seguida", "falhas seguidas")}`
+          : "histórico insuficiente";
+
+      return `Inadimplente há ${params.daysOverdue} ${plural(params.daysOverdue, "dia", "dias")} · ${failureSummary}`;
+    }
+
+    return `${params.consecutiveFailures} ${plural(params.consecutiveFailures, "falha seguida", "falhas seguidas")} · crítico`;
+  }
+
+  if (params.status === "risk") {
+    if (params.consecutiveFailures > 0) {
+      return `${params.consecutiveFailures} ${plural(params.consecutiveFailures, "falha seguida", "falhas seguidas")} · risco`;
+    }
+
+    return params.successRatePercent === null
+      ? "Inadimplente · risco"
+      : `${params.successRatePercent}% de sucesso · risco`;
+  }
+
+  if (params.status === "attention") {
+    if (params.pendingPayments > 0) {
+      return `${params.pendingPayments} ${plural(params.pendingPayments, "cobrança pendente", "cobranças pendentes")} · atenção`;
+    }
+
+    if (params.failedPayments > 0 && params.successRatePercent !== null) {
+      return `${params.successRatePercent}% de sucesso · atenção`;
+    }
+
+    return "Histórico recente exige atenção";
+  }
+
+  if (params.status === "healthy") {
+    return params.successRatePercent === null
+      ? "Sem falhas recentes"
+      : `${params.successRatePercent}% de sucesso · saudável`;
+  }
+
+  return "Histórico insuficiente";
+};
+
+const buildPaymentInsights = (
+  subscription: FinanceSubscriptionRecord,
+  paymentEvents?: PaymentEventRecord[],
+): {
+  health: AdminFinancePaymentHealth;
+  history: AdminFinancePaymentHistory;
+} => {
+  const now = new Date();
+  const allHistory = paymentHistoryForSubscription(subscription, paymentEvents);
+  const successfulPayments = allHistory.filter((item) => item.status === "successful");
+  const failedPayments = allHistory.filter((item) => item.status === "failed");
+  const pendingPayments = allHistory.filter((item) => item.status === "pending");
+  const finalAttempts = successfulPayments.length + failedPayments.length;
+  const successRatePercent =
+    finalAttempts > 0 ? roundPercent((successfulPayments.length / finalAttempts) * 100) : null;
+  const lastSuccessAt = successfulPayments[0]?.occurred_at ?? null;
+  const lastFailureAt = failedPayments[0]?.occurred_at ?? null;
+
+  let consecutiveFailures = 0;
+  for (const item of allHistory) {
+    if (item.status === "pending" || item.status === "processed") continue;
+    if (item.status === "failed") {
+      consecutiveFailures += 1;
+      continue;
+    }
+
+    break;
+  }
+
+  const overdueReference =
+    subscription.current_period_end && subscription.current_period_end < now
+      ? subscription.current_period_end
+      : subscription.status === "inadimplente"
+        ? subscription.updatedAt
+        : null;
+  const daysOverdue =
+    subscription.status === "inadimplente" && overdueReference
+      ? Math.max(1, daysSince(overdueReference, now))
+      : null;
+
+  const status: AdminFinancePaymentHealth["status"] =
+    subscription.status === "inadimplente" && ((daysOverdue ?? 0) >= 7 || consecutiveFailures >= 3)
+      ? "critical"
+      : consecutiveFailures >= 3
+        ? "critical"
+        : subscription.status === "inadimplente" ||
+            consecutiveFailures >= 2 ||
+            (finalAttempts >= 3 && successRatePercent !== null && successRatePercent < 70)
+          ? "risk"
+          : pendingPayments.length > 0 ||
+              consecutiveFailures === 1 ||
+              (finalAttempts >= 3 && successRatePercent !== null && successRatePercent < 90) ||
+              (finalAttempts > 0 && finalAttempts < 3 && failedPayments.length > 0)
+            ? "attention"
+            : finalAttempts > 0
+              ? "healthy"
+              : "insufficient_history";
+
+  const notes: string[] = [];
+  if (finalAttempts > 0 && finalAttempts < 3) {
+    notes.push("Amostra pequena: interprete a taxa junto com falhas consecutivas e status atual.");
+  }
+  if (pendingPayments.length > 0) {
+    notes.push("Há cobrança pendente/processando no payment_event; ela não entra na taxa final.");
+  }
+  if (subscription.status === "inadimplente") {
+    notes.push("O status local da assinatura está inadimplente.");
+  }
+  if (allHistory.length === 0) {
+    notes.push(
+      "Nenhum payment_event de cobrança foi reconciliado pelo id local da assinatura ou gateway_subscription_id.",
+    );
+  }
+  if (allHistory.length > MAX_PAYMENT_HISTORY_ITEMS) {
+    notes.push(`Mostrando as ${MAX_PAYMENT_HISTORY_ITEMS} cobranças mais recentes.`);
+  }
+
+  const summary = buildPaymentHealthSummary({
+    consecutiveFailures,
+    daysOverdue,
+    failedPayments: failedPayments.length,
+    finalAttempts,
+    pendingPayments: pendingPayments.length,
+    status,
+    successRatePercent,
+  });
+
+  return {
+    health: {
+      consecutive_failures: consecutiveFailures,
+      days_overdue: daysOverdue,
+      failed_payments: failedPayments.length,
+      final_attempts: finalAttempts,
+      label:
+        status === "healthy"
+          ? "Saudável"
+          : status === "attention"
+            ? "Atenção"
+            : status === "risk"
+              ? "Risco"
+              : status === "critical"
+                ? "Crítica"
+                : "Histórico insuficiente",
+      last_failure_at: lastFailureAt,
+      last_success_at: lastSuccessAt,
+      notes,
+      pending_payments: pendingPayments.length,
+      source: "payment_event+professional_subscription",
+      status,
+      successful_payments: successfulPayments.length,
+      success_rate_percent: successRatePercent,
+      summary,
+      total_events: allHistory.length,
+    },
+    history: {
+      available: allHistory.length > 0,
+      items: allHistory.slice(0, MAX_PAYMENT_HISTORY_ITEMS),
+      reason:
+        allHistory.length > 0
+          ? null
+          : "Nenhum pagamento real foi encontrado para esta assinatura nos payment_events reconciliados.",
+      source: "payment_event.filtered_by_subscription_reference",
+      total: allHistory.length,
+    },
+  };
+};
+
 const findLatestConfirmedPaymentForSubscription = (
   subscription: SubscriptionReferenceRecord,
   paymentEvents?: PaymentEventRecord[],
@@ -590,6 +879,7 @@ const mapSubscription = (
   paymentEvents?: PaymentEventRecord[],
 ): AdminFinanceSubscriptionItem => {
   const latestPayment = findLatestConfirmedPaymentForSubscription(subscription, paymentEvents);
+  const paymentInsights = buildPaymentInsights(subscription, paymentEvents);
 
   return {
     created_at: subscription.createdAt.toISOString(),
@@ -600,6 +890,8 @@ const mapSubscription = (
     id: subscription.id,
     last_charge_at: latestPayment?.createdAt.toISOString() ?? null,
     next_charge_at: subscription.current_period_end?.toISOString() ?? null,
+    payment_health: paymentInsights.health,
+    payment_history: paymentInsights.history,
     plan: {
       id: subscription.plan.id,
       interval: subscription.plan.interval,
@@ -622,26 +914,6 @@ const mapSubscription = (
     updated_at: subscription.updatedAt.toISOString(),
   };
 };
-
-const toPayloadString = (value: unknown) => {
-  if (typeof value === "string" && value.trim()) return value.trim();
-  if (typeof value === "number" && Number.isFinite(value)) return String(value);
-
-  return null;
-};
-
-const extractPaymentReference = (payload: unknown) =>
-  toPayloadString(
-    findPayloadValue(payload, [
-      "external_reference",
-      "preapproval_id",
-      "preapproval",
-      "subscription_id",
-      "gateway_subscription_id",
-      "payment_id",
-      "id",
-    ]),
-  );
 
 const findSubscriptionForPayment = (
   event: PaymentEventRecord,
