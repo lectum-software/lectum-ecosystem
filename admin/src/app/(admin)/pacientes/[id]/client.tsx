@@ -3315,7 +3315,7 @@ const PatientIntentTemperatureSummaryCard = ({
       eyebrow="Intenção"
       helperText={intent.summary}
       icon={Flame}
-      title={`Temperatura: ${temperature}`}
+      title={temperature}
     >
       <FieldRow label="Nível" value={intent.level.label} />
       <FieldRow label="Score" value={formatPatientIntentScore(intent.score, intent.max_score)} />

@@ -53,23 +53,23 @@ Nenhum tracking novo, migration, schema Prisma, seed, mock, backfill artificial 
 
 Nenhuma pendencia externa nesta execucao.
 
-## Atualizacao 2026-07-23: temperatura de intencao na aba Geral
+## Atualizacao 2026-07-23: classificacao de intencao na aba Geral
 
 Apos feedback visual de produto, a aba **Geral** do detalhe administrativo de paciente passa a
 exibir um terceiro card resumido, **Intencao**, imediatamente apos **Engajamento**.
 
 O card nao cria novo contrato nem recalcula dados no frontend: ele reutiliza o `intent_analysis`
-real ja retornado por `GET /api/admin/private/patients/:id` e traduz o nivel em uma leitura de
-temperatura operacional:
+real ja retornado por `GET /api/admin/private/patients/:id` e traduz o nivel em uma classificacao
+operacional visivel, sem exibir a linguagem interna "Temperatura" na UI:
 
-- `high` -> **Temperatura: Quente**;
-- `medium` -> **Temperatura: Morna**;
-- `low` -> **Temperatura: Fria**;
-- `no_signals` -> **Temperatura: Sem sinais**.
+- `high` -> **Quente**;
+- `medium` -> **Morna**;
+- `low` -> **Fria**;
+- `no_signals` -> **Sem sinais**.
 
 O resumo mostra nivel, score, quantidade de sinais reais e ultimo sinal, com CTA para a analise
 completa na aba **Estatisticas**. A decisao preserva o carater interno do Admin, sem expor a
-temperatura a pacientes ou psicologos e sem inferir sessao, atendimento, diagnostico ou conteudo de
+classificacao a pacientes ou psicologos e sem inferir sessao, atendimento, diagnostico ou conteudo de
 conversa.
 
 Validacoes adicionais:
@@ -78,5 +78,5 @@ Validacoes adicionais:
 - `pnpm --dir admin build`
 - `pnpm check`
 - Browser local/headless em desktop `1365x900` e mobile `390x844`, validando a ordem
-  **Conta** -> **Engajamento** -> **Intencao**, o titulo **Temperatura: Sem sinais**, o score e
-  ausencia de overflow horizontal no mobile.
+  **Conta** -> **Engajamento** -> **Intencao**, o titulo **Sem sinais**, a ausencia do termo visivel
+  **Temperatura**, o score e ausencia de overflow horizontal no mobile.

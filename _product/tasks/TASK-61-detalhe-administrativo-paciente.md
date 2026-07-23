@@ -849,11 +849,11 @@ Frontend esperado:
 ### Validacao complementar executada
 
 - Pendente ate a conclusao da execucao.
-## Ajuste pos-feedback 2026-07-23 - Temperatura de intencao na aba Geral
+## Ajuste pos-feedback 2026-07-23 - Intencao na aba Geral
 
-- Pedido do usuario: apos o bloco **Engajamento** da aba **Geral**, adicionar um terceiro bloco de **Intencao** mostrando a "temperatura" do paciente.
+- Pedido do usuario: apos o bloco **Engajamento** da aba **Geral**, adicionar um terceiro bloco de **Intencao** mostrando a classificacao de intencao do paciente, sem expor a palavra interna "temperatura" na UI.
 - A aba **Geral** agora renderiza os cards resumidos em grid mobile-first na ordem **Conta**, **Engajamento** e **Intencao**, progredindo para tres colunas em telas amplas.
-- O novo card **Intencao** reutiliza o `intent_analysis` real do contrato existente e traduz o nivel em temperatura operacional: **Temperatura: Quente**, **Temperatura: Morna**, **Temperatura: Fria** ou **Temperatura: Sem sinais**.
+- O novo card **Intencao** reutiliza o `intent_analysis` real do contrato existente e traduz o nivel em classificacao operacional visivel como **Quente**, **Morna**, **Fria** ou **Sem sinais**.
 - O resumo mostra nivel, score, sinais reais e ultimo sinal, com CTA para abrir a analise completa na aba **Estatisticas**.
 - Nao houve backend novo, endpoint novo, contrato HTTP novo, schema Prisma, migration, package, seed, mock, backfill artificial ou tracking novo. `db:migrate` nao se aplicou.
 - Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente; as referencias auditaveis foram o screenshot enviado pelo usuario em 2026-07-23 e `_product/proto/admin/Pacientes/Pacientes - Detalhes.png`.
@@ -862,7 +862,7 @@ Frontend esperado:
 ### Criterios de aceite do ajuste
 
 - [x] A aba **Geral** exibe um terceiro card **Intencao** imediatamente apos **Engajamento**.
-- [x] O card mostra a temperatura do paciente derivada de `intent_analysis.level`, sem dado inventado.
+- [x] O card mostra a classificacao do paciente derivada de `intent_analysis.level`, sem dado inventado e sem expor o termo interno "Temperatura" na UI.
 - [x] O resumo exibe nivel, score, sinais reais e ultimo sinal com CTA para a analise completa.
 - [x] O layout permanece mobile-first e sem overflow horizontal em 390px.
 - [x] Nenhum mock, seed, endpoint simulado, tracking novo, migration ou package novo foi adicionado.
@@ -873,7 +873,7 @@ Frontend esperado:
 - `pnpm --dir admin check`
 - `pnpm --dir admin build`
 - `pnpm check`
-- Browser local/headless via Chrome/CDP em `/pacientes/cmrqsrab5001f1guh2ve5oy90`, com servidor local temporario do Admin em `next start` na porta 3002, validou desktop `1365x900` e mobile `390x844`: ordem **Conta** -> **Engajamento** -> **Intencao**, titulo **Temperatura: Sem sinais**, score `0/100`, ausencia de overflow horizontal (`scrollWidth=390` no mobile).
+- Browser local/headless via Chrome/CDP em `/pacientes/cmrqsrab5001f1guh2ve5oy90`, com Admin local em `localhost:3002`, validou desktop `1365x900` e mobile `390x844`: ordem **Conta** -> **Engajamento** -> **Intencao**, titulo **Sem sinais**, ausencia do termo visivel **Temperatura**, score `0/100` e ausencia de overflow horizontal (`scrollWidth=390` no mobile).
 
 
 ## Ajuste pos-feedback 2026-07-23 - Nome de exibicao em Dados pessoais
