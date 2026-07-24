@@ -256,6 +256,7 @@ export interface IAdminModerationRepository {
   listEvents(query: AdminModerationEventsQuery): Promise<AdminModerationEventRecord[]>;
   listLatestPending(limit: number): Promise<AdminModerationEventRecord[]>;
   listPendingPostReports(limit?: number): Promise<AdminPostReportRecord[]>;
+  listPostReports(limit?: number): Promise<AdminPostReportRecord[]>;
   listReplyTargets(replyIds: string[]): Promise<ReplyTargetRecord[]>;
   listUncoveredPatientPosts(
     cutoff: Date,

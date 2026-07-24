@@ -81,3 +81,13 @@ O endpoint `GET /api/admin/private/moderation/operational-alerts` permanece deri
 A página `/moderacao/denuncias` passa a tratar a lista como fila exclusiva de triagem de denúncias de posts/respostas, com cabeçalho mais direto (**Moderação**) e sem ações de navegação/refresh no header.
 
 O endpoint derivado `GET /api/admin/private/moderation/operational-alerts` permanece sem persistir workflow próprio, mas agora aceita filtros opcionais para a fila de denúncias: busca textual (`q`), data (`from`/`to`), status não terminal (`pending`/`reviewing` legado), denunciante por papel seguro (`paciente`/`psicologo`) e motivo (`reason`). Os filtros são aplicados sobre alertas derivados de `post_report` já mapeados, preservando o princípio de dados reais e sem expor dados pessoais do denunciante além do papel necessário para triagem.
+
+## Complemento 2026-07-24: filtros automáticos e status terminal em Denúncias
+
+Após revisão visual da página `/moderacao/denuncias`, os filtros de denúncias deixam de depender dos botões **Filtrar** e **Limpar** e passam a ser aplicados automaticamente a partir dos campos controlados por React Hook Form/Zod/controllers do Admin. A quantidade de registros encontrados fica abaixo da busca para preservar hierarquia visual e remover o título genérico **Pendências** dessa lista.
+
+O filtro **Motivo** passa a ser um dropdown fechado com as mesmas opções do fluxo público de denúncia de conteúdo: `spam`, `abuse`, `self_harm`, `privacy` e `other`. O backend normaliza esses valores e a UI mostra labels humanos, evitando busca textual livre por motivo técnico.
+
+O filtro **Status** passa a aceitar **Todos**, **Pendentes**, **Procedentes** e **Improcedentes**. Para isso, a página exclusiva de denúncias lista `post_report` não deletado, enquanto o summary/dashboard continua contando apenas denúncias pendentes para urgência. Registros legados em `em_analise` continuam aparecendo como **Pendente** e a opção **Em análise** não volta para a UI.
+
+O filtro **Denunciante** permanece limitado ao papel seguro do usuário (**Todos**, **Pacientes**, **Psicólogos**), sem expor dados pessoais do denunciante.

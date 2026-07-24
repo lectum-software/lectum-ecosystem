@@ -184,6 +184,17 @@ export class AdminModerationRepository implements IAdminModerationRepository {
     });
   }
 
+  listPostReports(limit?: number) {
+    return prisma.post_report.findMany({
+      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+      select: adminPostReportSelect,
+      ...(limit ? { take: limit } : {}),
+      where: {
+        deleted: false,
+      },
+    });
+  }
+
   listUncoveredPatientPosts(cutoff: Date, limit?: number) {
     return prisma.community_post.findMany({
       orderBy: [{ createdAt: "desc" }, { id: "desc" }],

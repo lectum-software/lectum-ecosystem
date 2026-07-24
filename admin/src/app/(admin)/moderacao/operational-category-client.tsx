@@ -46,7 +46,7 @@ const groupConfig: Record<
   },
   denuncias: {
     description: "Denúncias de posts/respostas para triagem e moderação.",
-    emptyLabel: "Nenhuma denúncia pendente encontrada nos dados reais atuais.",
+    emptyLabel: "Nenhuma denúncia encontrada nos dados reais atuais.",
     title: "Denúncias",
   },
   operacional: {
@@ -61,9 +61,9 @@ const denunciaFiltersSchema = z
   .object({
     from: z.string().max(10, "Use uma data válida."),
     q: z.string().max(120, "Use até 120 caracteres na busca."),
-    reason: z.string().max(80, "Use até 80 caracteres no motivo."),
+    reason: z.enum(["all", "spam", "abuse", "self_harm", "privacy", "other"]),
     reporter: z.enum(["all", "paciente", "psicologo"]),
-    status: z.enum(["all", "pending", "reviewing"]),
+    status: z.enum(["all", "pending", "upheld", "dismissed"]),
     to: z.string().max(10, "Use uma data válida."),
   })
   .refine((values) => !values.from || !values.to || values.from <= values.to, {
@@ -76,44 +76,66 @@ type DenunciaFiltersFormValues = z.infer<typeof denunciaFiltersSchema>;
 const denunciaFilterDefaults: DenunciaFiltersFormValues = {
   from: "",
   q: "",
-  reason: "",
+  reason: "all",
   reporter: "all",
   status: "all",
   to: "",
 };
 
 const denunciaStatusOptions = [
-  { label: "Todos os status", value: "all" },
-  { label: "Pendente", value: "pending" },
-  { label: "Em análise (legado)", value: "reviewing" },
+  { label: "Todos", value: "all" },
+  { label: "Pendentes", value: "pending" },
+  { label: "Procedentes", value: "upheld" },
+  { label: "Improcedentes", value: "dismissed" },
 ] satisfies Array<{ label: string; value: DenunciaFiltersFormValues["status"] }>;
 
 const denunciaReporterOptions = [
-  { label: "Todos os denunciantes", value: "all" },
-  { label: "Paciente", value: "paciente" },
-  { label: "Psicólogo", value: "psicologo" },
+  { label: "Todos", value: "all" },
+  { label: "Pacientes", value: "paciente" },
+  { label: "Psicólogos", value: "psicologo" },
 ] satisfies Array<{ label: string; value: DenunciaFiltersFormValues["reporter"] }>;
+
+const denunciaReasonOptions = [
+  { label: "Todos", value: "all" },
+  { label: "Spam ou divulgação indevida", value: "spam" },
+  { label: "Ofensa, assédio ou discurso de ódio", value: "abuse" },
+  { label: "Incentivo à violência ou autolesão", value: "self_harm" },
+  { label: "Exposição de dados pessoais", value: "privacy" },
+  { label: "Outro motivo", value: "other" },
+] satisfies Array<{ label: string; value: DenunciaFiltersFormValues["reason"] }>;
 
 const normalizeDenunciaFilters = (
   values: DenunciaFiltersFormValues,
 ): DenunciaFiltersFormValues => ({
   from: values.from,
   q: values.q.trim(),
-  reason: values.reason.trim(),
+  reason: values.reason,
   reporter: values.reporter,
   status: values.status,
   to: values.to,
 });
 
-const countActiveDenunciaFilters = (values: DenunciaFiltersFormValues) =>
-  [
-    values.q,
-    values.from,
-    values.to,
-    values.reason,
-    values.status !== "all" ? values.status : "",
-    values.reporter !== "all" ? values.reporter : "",
-  ].filter(Boolean).length;
+const areDenunciaFiltersEqual = (
+  left: DenunciaFiltersFormValues,
+  right: DenunciaFiltersFormValues,
+) =>
+  left.from === right.from &&
+  left.q === right.q &&
+  left.reason === right.reason &&
+  left.reporter === right.reporter &&
+  left.status === right.status &&
+  left.to === right.to;
+
+const coerceDenunciaFilters = (
+  values?: Partial<DenunciaFiltersFormValues>,
+): DenunciaFiltersFormValues => ({
+  from: values?.from ?? denunciaFilterDefaults.from,
+  q: values?.q ?? denunciaFilterDefaults.q,
+  reason: values?.reason ?? denunciaFilterDefaults.reason,
+  reporter: values?.reporter ?? denunciaFilterDefaults.reporter,
+  status: values?.status ?? denunciaFilterDefaults.status,
+  to: values?.to ?? denunciaFilterDefaults.to,
+});
 
 const toOperationalAlertsFilterQuery = (
   values: DenunciaFiltersFormValues,
@@ -126,7 +148,7 @@ const toOperationalAlertsFilterQuery = (
   return {
     from: normalized.from || undefined,
     q: normalized.q || undefined,
-    reason: normalized.reason || undefined,
+    reason: normalized.reason !== "all" ? normalized.reason : undefined,
     reporter: normalized.reporter,
     status: normalized.status,
     to: normalized.to || undefined,
@@ -182,24 +204,22 @@ const Severity = ({ value }: { value: AdminModerationSeverity }) => (
 );
 
 const DenunciaFiltersBar = ({
-  activeFilterCount,
   disabled,
   form,
-  onClear,
-  onSubmit,
+  isFetching,
+  resultCount,
 }: {
-  activeFilterCount: number;
   disabled: boolean;
   form: UseFormReturn<DenunciaFiltersFormValues>;
-  onClear: () => void;
-  onSubmit: (values: DenunciaFiltersFormValues) => void;
+  isFetching: boolean;
+  resultCount: number;
 }) => (
   <div className="border-b border-border bg-surface/80 p-4">
     <FormProvider {...form}>
       <form
-        className="grid min-w-0 gap-3 md:grid-cols-2 2xl:grid-cols-[minmax(260px,1.25fr)_repeat(5,minmax(150px,1fr))_auto]"
+        className="grid min-w-0 gap-3 md:grid-cols-2 2xl:grid-cols-[minmax(260px,1.25fr)_repeat(5,minmax(150px,1fr))]"
         noValidate
-        onSubmit={form.handleSubmit(onSubmit)}
+        onSubmit={(event) => event.preventDefault()}
       >
         <div className="md:col-span-2 2xl:col-span-1">
           <InputController<DenunciaFiltersFormValues>
@@ -208,6 +228,15 @@ const DenunciaFiltersBar = ({
             name="q"
             placeholder="Conteúdo, comunidade ou alvo"
           />
+          <p className="-mt-1 flex min-h-5 flex-wrap items-center gap-x-2 gap-y-1 text-xs font-bold text-muted">
+            <span>{numberFormatter.format(resultCount)} registro(s) encontrado(s)</span>
+            {isFetching ? (
+              <span className="inline-flex items-center gap-1">
+                <Loader2 aria-hidden className="h-3.5 w-3.5 animate-spin" />
+                Atualizando
+              </span>
+            ) : null}
+          </p>
         </div>
         <InputController<DenunciaFiltersFormValues>
           disabled={disabled}
@@ -223,6 +252,12 @@ const DenunciaFiltersBar = ({
         />
         <SelectController<DenunciaFiltersFormValues>
           disabled={disabled}
+          label="Motivo"
+          name="reason"
+          options={denunciaReasonOptions}
+        />
+        <SelectController<DenunciaFiltersFormValues>
+          disabled={disabled}
           label="Status"
           name="status"
           options={denunciaStatusOptions}
@@ -233,36 +268,6 @@ const DenunciaFiltersBar = ({
           name="reporter"
           options={denunciaReporterOptions}
         />
-        <InputController<DenunciaFiltersFormValues>
-          disabled={disabled}
-          label="Motivo"
-          name="reason"
-          placeholder="Ex.: other"
-        />
-        <div className="flex flex-col gap-2 md:col-span-2 md:flex-row 2xl:col-span-1 2xl:flex-col 2xl:justify-end">
-          <button
-            className="inline-flex h-12 items-center justify-center gap-2 rounded-control bg-primary px-4 text-sm font-black text-white shadow-admin-soft transition hover:bg-primary-hover disabled:opacity-60"
-            disabled={disabled}
-            type="submit"
-          >
-            <Filter aria-hidden className="h-4 w-4" />
-            Filtrar
-            {activeFilterCount > 0 ? (
-              <span className="rounded-full bg-white/20 px-2 py-0.5 text-xs">
-                {activeFilterCount}
-              </span>
-            ) : null}
-          </button>
-          <button
-            className="inline-flex h-12 items-center justify-center gap-2 rounded-control border border-border bg-surface px-4 text-sm font-black text-foreground shadow-control transition hover:border-primary hover:text-primary disabled:opacity-60"
-            disabled={disabled || activeFilterCount === 0}
-            onClick={onClear}
-            type="button"
-          >
-            <X aria-hidden className="h-4 w-4" />
-            Limpar
-          </button>
-        </div>
       </form>
     </FormProvider>
   </div>
@@ -334,9 +339,11 @@ export const AdminModerationOperationalCategoryClient = ({
     useState<DenunciaFiltersFormValues>(denunciaFilterDefaults);
   const filtersForm = useForm<DenunciaFiltersFormValues>({
     defaultValues: denunciaFilterDefaults,
-    mode: "onSubmit",
+    mode: "onChange",
     resolver: zodResolver(denunciaFiltersSchema),
   });
+  const watchedFilters = useWatch({ control: filtersForm.control });
+  const latestAppliedFiltersRef = useRef(appliedFilters);
   const queryInput = useMemo<AdminModerationOperationalAlertsQuery>(
     () => ({
       group,
@@ -348,16 +355,27 @@ export const AdminModerationOperationalCategoryClient = ({
   );
   const query = useAdminModerationOperationalAlerts(queryInput);
   const config = groupConfig[group];
-  const activeFilterCount = countActiveDenunciaFilters(appliedFilters);
-  const submitFilters = (values: DenunciaFiltersFormValues) => {
-    setAppliedFilters(normalizeDenunciaFilters(values));
-    setPage(1);
-  };
-  const clearFilters = () => {
-    filtersForm.reset(denunciaFilterDefaults);
-    setAppliedFilters(denunciaFilterDefaults);
-    setPage(1);
-  };
+
+  useEffect(() => {
+    latestAppliedFiltersRef.current = appliedFilters;
+  }, [appliedFilters]);
+
+  useEffect(() => {
+    if (group !== "denuncias") return;
+
+    const timeout = window.setTimeout(async () => {
+      const valid = await filtersForm.trigger(undefined, { shouldFocus: false });
+      if (!valid) return;
+
+      const normalized = normalizeDenunciaFilters(coerceDenunciaFilters(watchedFilters));
+      if (areDenunciaFiltersEqual(latestAppliedFiltersRef.current, normalized)) return;
+
+      setAppliedFilters(normalized);
+      setPage(1);
+    }, 300);
+
+    return () => window.clearTimeout(timeout);
+  }, [filtersForm, group, watchedFilters]);
 
   return (
     <div className="space-y-6">
@@ -392,26 +410,28 @@ export const AdminModerationOperationalCategoryClient = ({
       ) : null}
 
       <section className={`${cardClass} overflow-hidden`}>
-        <div className="flex flex-col gap-2 border-b border-border p-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h2 className="text-lg font-black text-foreground">Pendências</h2>
-            <p className="text-xs font-bold text-muted">
-              {numberFormatter.format(query.data?.count ?? 0)} registro(s) real(is) nesta categoria
-            </p>
+        {group !== "denuncias" ? (
+          <div className="flex flex-col gap-2 border-b border-border p-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h2 className="text-lg font-black text-foreground">Pendências</h2>
+              <p className="text-xs font-bold text-muted">
+                {numberFormatter.format(query.data?.count ?? 0)} registro(s) real(is) nesta
+                categoria
+              </p>
+            </div>
+            {query.isFetching ? (
+              <span className="inline-flex items-center gap-2 text-xs font-black text-muted">
+                <Loader2 aria-hidden className="h-4 w-4 animate-spin" /> Atualizando
+              </span>
+            ) : null}
           </div>
-          {query.isFetching ? (
-            <span className="inline-flex items-center gap-2 text-xs font-black text-muted">
-              <Loader2 aria-hidden className="h-4 w-4 animate-spin" /> Atualizando
-            </span>
-          ) : null}
-        </div>
+        ) : null}
         {group === "denuncias" ? (
           <DenunciaFiltersBar
-            activeFilterCount={activeFilterCount}
-            disabled={query.isFetching}
+            disabled={query.isLoading}
             form={filtersForm}
-            onClear={clearFilters}
-            onSubmit={submitFilters}
+            isFetching={query.isFetching}
+            resultCount={query.data?.count ?? 0}
           />
         ) : null}
         <div className="grid gap-3 p-4">

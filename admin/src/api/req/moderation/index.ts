@@ -122,9 +122,9 @@ export type AdminModerationOperationalAlertsQuery = {
   limit?: number;
   page?: number;
   q?: string;
-  reason?: string;
+  reason?: "abuse" | "all" | "other" | "privacy" | "self_harm" | "spam";
   reporter?: "all" | "paciente" | "psicologo";
-  status?: "all" | "pending" | "reviewing";
+  status?: "all" | "dismissed" | "pending" | "upheld";
   to?: string;
 };
 

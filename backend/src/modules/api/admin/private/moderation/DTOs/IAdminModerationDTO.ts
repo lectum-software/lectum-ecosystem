@@ -30,15 +30,23 @@ export type AdminModerationOperationalAlertsGroup =
   | "denuncias"
   | "operacional";
 
+export type AdminModerationPostReportReason =
+  | "abuse"
+  | "all"
+  | "other"
+  | "privacy"
+  | "self_harm"
+  | "spam";
+
 export type AdminModerationOperationalAlertsQuery = {
   from?: string;
   group?: AdminModerationOperationalAlertsGroup;
   limit?: number;
   page?: number;
   q?: string;
-  reason?: string;
+  reason?: AdminModerationPostReportReason;
   reporter?: "all" | "paciente" | "psicologo";
-  status?: "all" | "pending" | "reviewing";
+  status?: "all" | "dismissed" | "pending" | "upheld";
   to?: string;
 };
 

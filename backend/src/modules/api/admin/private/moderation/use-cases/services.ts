@@ -258,6 +258,42 @@ const compactText = (value?: string | null, max = 140) => {
   return normalized.length > max ? `${normalized.slice(0, max - 1)}…` : normalized;
 };
 
+const postReportReasonLabels: Record<string, string> = {
+  abuse: "Ofensa, assédio ou discurso de ódio",
+  other: "Outro motivo",
+  privacy: "Exposição de dados pessoais",
+  self_harm: "Incentivo à violência ou autolesão",
+  spam: "Spam ou divulgação indevida",
+};
+
+const postReportReasonLabel = (reason: string) => postReportReasonLabels[reason] ?? reason;
+
+const postReportStatusGroup = (status: string): "dismissed" | "pending" | "upheld" => {
+  const normalized = normalizeSearch(status);
+  if (["resolvida", "resolved", "procedente", "upheld"].includes(normalized)) return "upheld";
+  if (["rejeitada", "rejected", "improcedente", "dismissed"].includes(normalized)) {
+    return "dismissed";
+  }
+
+  return "pending";
+};
+
+const postReportStatusLabel = (status: string) => {
+  const group = postReportStatusGroup(status);
+  if (group === "upheld") return "Procedente";
+  if (group === "dismissed") return "Improcedente";
+
+  return "Pendente";
+};
+
+const postReportPriority = (status: string): AdminModerationOperationalAlertDTO["priority"] => {
+  const group = postReportStatusGroup(status);
+  if (group === "upheld") return "high";
+  if (group === "dismissed") return "medium";
+
+  return "urgent";
+};
+
 const toJsonStringArray = (value: unknown): string[] => {
   if (!Array.isArray(value)) return [];
 
@@ -390,6 +426,7 @@ const mapReportAlert = (
   const href = targetId
     ? `/comunidades/${community.slug}/conteudo/${isReply ? "reply" : "post"}/${targetId}`
     : null;
+  const reportStatusLabel = postReportStatusLabel(report.status);
 
   return {
     action_href: href,
@@ -405,16 +442,16 @@ const mapReportAlert = (
       type: isReply ? "reply" : "post",
     },
     facts: [
-      { label: "Motivo", value: report.reason },
-      { label: "Status", value: report.status },
+      { label: "Motivo", value: postReportReasonLabel(report.reason) },
+      { label: "Status", value: reportStatusLabel },
       { label: "Denunciante", value: report.reporter.role },
       { label: "Idade", value: humanAge(report.createdAt, now) },
     ],
     group: "denuncias",
     id: `post-report-${report.id}`,
-    priority: "urgent",
+    priority: postReportPriority(report.status),
     source: "post_report",
-    title: isReply ? "Denúncia de resposta pendente" : "Denúncia de post pendente",
+    title: `Denúncia de ${isReply ? "resposta" : "post"} ${reportStatusLabel.toLowerCase()}`,
     type: "post_report",
   };
 };
@@ -640,9 +677,9 @@ type BuildOperationalAlertsOptions = {
 };
 
 type NormalizedOperationalAlertsQuery = Required<
-  Pick<AdminModerationOperationalAlertsQuery, "group" | "reporter" | "status">
+  Pick<AdminModerationOperationalAlertsQuery, "group" | "reason" | "reporter" | "status">
 > &
-  Pick<AdminModerationOperationalAlertsQuery, "from" | "limit" | "page" | "q" | "reason" | "to">;
+  Pick<AdminModerationOperationalAlertsQuery, "from" | "limit" | "page" | "q" | "to">;
 
 const buildOperationalAlerts = async (
   repository: AdminModerationRepository,
@@ -723,7 +760,9 @@ const normalizeOperationalStatus = (
 ): NonNullable<AdminModerationOperationalAlertsQuery["status"]> => {
   const normalized = normalizeFilter(value).toLowerCase();
 
-  return normalized === "pending" || normalized === "reviewing" ? normalized : "all";
+  return normalized === "pending" || normalized === "upheld" || normalized === "dismissed"
+    ? normalized
+    : "all";
 };
 
 const normalizeOperationalReporter = (
@@ -732,6 +771,20 @@ const normalizeOperationalReporter = (
   const normalized = normalizeFilter(value).toLowerCase();
 
   return normalized === "paciente" || normalized === "psicologo" ? normalized : "all";
+};
+
+const normalizeOperationalReason = (
+  value?: string | null,
+): NonNullable<AdminModerationOperationalAlertsQuery["reason"]> => {
+  const normalized = normalizeFilter(value).toLowerCase();
+
+  return normalized === "spam" ||
+    normalized === "abuse" ||
+    normalized === "self_harm" ||
+    normalized === "privacy" ||
+    normalized === "other"
+    ? normalized
+    : "all";
 };
 
 const parseOperationalDateOnly = (value: string | undefined, boundary: "end" | "start") => {
@@ -759,8 +812,9 @@ const operationalStatusAliases: Record<
   Exclude<NonNullable<AdminModerationOperationalAlertsQuery["status"]>, "all">,
   string[]
 > = {
-  pending: ["pendente", "pending"],
-  reviewing: ["em_analise", "em analise", "in_review", "in review"],
+  dismissed: ["rejeitada", "rejected", "improcedente", "dismissed"],
+  pending: ["pendente", "pending", "em_analise", "em analise", "in_review", "in review"],
+  upheld: ["resolvida", "resolved", "procedente", "upheld"],
 };
 
 const operationalAlertMatchesSearch = (
@@ -806,9 +860,12 @@ const operationalAlertMatchesFilters = (
     if (reporter !== query.reporter) return false;
   }
 
-  const reason = normalizeSearch(query.reason);
-  if (reason && !normalizedText(operationalFactValue(alert, "Motivo")).includes(reason)) {
-    return false;
+  if (query.reason !== "all") {
+    const reason = normalizedText(operationalFactValue(alert, "Motivo"));
+    const expectedLabel = normalizedText(postReportReasonLabel(query.reason));
+    if (reason !== query.reason && reason !== expectedLabel) {
+      return false;
+    }
   }
 
   return true;
@@ -830,6 +887,7 @@ const normalizeOperationalAlertsQuery = (
 ): NormalizedOperationalAlertsQuery => ({
   ...query,
   group: normalizeOperationalGroup(query.group),
+  reason: normalizeOperationalReason(query.reason),
   reporter: normalizeOperationalReporter(query.reporter),
   status: normalizeOperationalStatus(query.status),
 });
@@ -873,7 +931,12 @@ export const listOperationalAlerts = async (
   const limit = normalizeLimit(query.limit);
   const group = query.group;
   const operationalAlerts = await buildOperationalAlerts(repository);
-  const items = operationalAlerts.items
+  const baseItems =
+    group === "denuncias"
+      ? (await repository.listPostReports()).map((report) => mapReportAlert(report, new Date()))
+      : operationalAlerts.items;
+  const items = baseItems
+    .sort(sortOperationalAlertsByLatest)
     .filter((alert) => operationalAlertMatchesGroup(alert, group))
     .filter((alert) => operationalAlertMatchesFilters(alert, query));
   const paginated = paginate(items, page, limit);

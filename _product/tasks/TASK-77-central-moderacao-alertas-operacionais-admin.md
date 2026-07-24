@@ -222,3 +222,25 @@ Validacao deste ajuste:
 - Smoke HTTP local no Admin (`GET http://localhost:3002/moderacao/denuncias`) retornou 200.
 - Browser local/headless em Chrome para `/moderacao/denuncias` carregou a rota e o bundle da página; sem sessão Admin no perfil headless, permaneceu no estado autenticado de carregamento.
 - Não houve alteração de Prisma schema/migrations; `pnpm --dir backend db:migrate` não se aplica.
+
+## Ajuste complementar 2026-07-24 - Refinos nos filtros de Denúncias
+
+- Pedido do usuário: remover os botões **Filtrar** e **Limpar**, trocar **Motivo** para dropdown com os mesmos motivos da denúncia pública de conteúdo, ajustar as opções de **Status** e **Denunciante**, remover o título **Pendências** e posicionar a quantidade de registros encontrados abaixo da busca.
+- A página `/moderacao/denuncias` agora aplica os filtros automaticamente por React Hook Form/Zod/controllers do Admin, sem botões de confirmação/limpeza.
+- O filtro **Motivo** usa as mesmas opções reais disponíveis ao usuário no fluxo de denunciar post/comentário: spam/divulgação indevida, ofensa/assédio/discurso de ódio, violência/autolesão, exposição de dados pessoais e outro motivo.
+- O filtro **Status** passou a conter **Todos**, **Pendentes**, **Procedentes** e **Improcedentes**, sem expor **Em análise**; registros legados em `em_analise` continuam agrupados como **Pendente**.
+- O filtro **Denunciante** passou a conter **Todos**, **Pacientes** e **Psicólogos**.
+- O endpoint real `GET /api/admin/private/moderation/operational-alerts` passou a listar denúncias de `post_report` não deletadas na página exclusiva de denúncias, permitindo filtrar por pendentes/procedentes/improcedentes sem mock, seed ou endpoint simulado. O summary/dashboard segue usando apenas pendentes para contadores de urgência.
+- Não houve alteração de Prisma schema/migrations, package novo ou dados artificiais; `pnpm --dir backend db:migrate` não se aplica.
+
+### Validação do ajuste de refinamento 2026-07-24
+
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/moderacao/operational-category-client.tsx" "src/api/req/moderation/index.ts"`
+- `pnpm --dir backend exec biome check --write "src/modules/api/admin/private/moderation/DTOs/IAdminModerationDTO.ts" "src/modules/api/admin/private/moderation/repositories/AdminModerationRepository.ts" "src/modules/api/admin/private/moderation/repositories/interfaces/IAdminModerationRepository.ts" "src/modules/api/admin/private/moderation/use-cases/services.ts"`
+- `pnpm --dir admin check`
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir admin build`
+- `pnpm check`
+- Smoke HTTP local no Admin: `GET http://localhost:3002/moderacao/denuncias` retornou `200`.
+- Builder/Quick Copy não está exposto como ferramenta callable neste ambiente; a referência auditável foi a captura enviada pelo usuário e os padrões Admin já registrados em `_product/proto/admin`.
