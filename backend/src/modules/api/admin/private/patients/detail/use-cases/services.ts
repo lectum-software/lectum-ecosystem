@@ -649,7 +649,7 @@ const buildMetrics = (
     current: current.upvotes_received,
     description: "Votos positivos recebidos em posts e respostas do paciente.",
     id: "upvotes_received",
-    label: "Upvotes (recebido)",
+    label: "Upvotes (recebidos)",
     previous: previous.upvotes_received,
     source: "post_vote.value>0 em conteúdo do paciente",
   }),

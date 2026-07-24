@@ -162,7 +162,7 @@ const patientMetricDisplayLabels: Partial<Record<PatientsDetailMetric["id"], str
   reports_received: "Denúncias (recebidas)",
   saves_received: "Salvamentos (recebidos)",
   shares_received: "Compartilhamentos (recebidos)",
-  upvotes_received: "Upvotes (recebido)",
+  upvotes_received: "Upvotes (recebidos)",
 };
 const patientPublicationMetricOrder: (keyof PatientsDetailPublication["metrics"])[] = [
   "views",
@@ -255,7 +255,7 @@ const PATIENT_COMMUNITY_CHART_METRICS = [
     iconToneClassName: "bg-emerald-50",
     id: "upvotes_received",
     key: "upvotes_received",
-    label: "Upvotes (recebido)",
+    label: "Upvotes (recebidos)",
     shortLabel: "Upvotes",
     strokeClassName: "stroke-emerald-500",
     swatchClassName: "bg-emerald-500",

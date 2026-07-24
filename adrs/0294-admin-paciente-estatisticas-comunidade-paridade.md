@@ -135,7 +135,7 @@ recebido no conteudo dele.
 ### Decisao
 
 - Renomear os contadores do bloco **Estatisticas de comunidade** para explicitar a direcao:
-  **Posts feitos**, **Comentarios feitos**, **Upvotes (recebido)**,
+  **Posts feitos**, **Comentarios feitos**, **Upvotes (recebidos)**,
   **Downvotes (recebidos)**, **Salvamentos (recebidos)** e
   **Compartilhamentos (recebidos)**.
 - Incluir **Denuncias (recebidas)** no mesmo carrossel e na serie temporal, usando o contador real
@@ -163,3 +163,20 @@ recebido no conteudo dele.
 - `cmd /c pnpm check`
 - Service local `showAdminPatient({ id: "cmrqsrab5001f1guh2ve5oy90", period: "all" })` confirmou os labels novos, `reports_received` e `series.source` com `post_report`.
 - Browser local/headless via Chrome CDP em `/pacientes/cmrqsrab5001f1guh2ve5oy90?tab=estatisticas`, desktop `1365x900` e mobile `390x844`, validou todos os labels direcionais, **Denuncias (recebidas)** no bloco e `scrollWidth=390` no mobile; admin temporario real removido ao final.
+
+## Revisao 2026-07-23 - Plural em Upvotes recebidos
+
+### Decisao
+
+- Padronizar o label do contador e da serie temporal para **Upvotes (recebidos)**, mantendo a semantica de engajamento recebido no conteudo do paciente.
+
+### Validacao
+
+- `pnpm --dir backend exec biome check --write "src/modules/api/admin/private/patients/detail/use-cases/services.ts"`
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/pacientes/[id]/client.tsx"`
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `cmd /c pnpm check`
+- Browser local/headless via Chrome CDP em `/pacientes/cmrqsrab5001f1guh2ve5oy90?tab=estatisticas`, mobile `390x844`, confirmou **Upvotes (recebidos)** presente, label singular antigo ausente e `scrollWidth=390`; admin temporario real removido ao final.

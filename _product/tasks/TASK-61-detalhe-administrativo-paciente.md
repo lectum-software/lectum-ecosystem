@@ -912,7 +912,7 @@ Frontend esperado:
 ## Ajuste pos-feedback 2026-07-23 - Nomenclatura direcional nas estatisticas
 
 - Pedido do usuario: explicitar se os contadores da aba **Estatisticas** do paciente sao acoes feitas ou recebidas e adicionar **Denuncias (recebidas)**.
-- O backend manteve o contrato real `GET /api/admin/private/patients/:id`, renomeando labels de metricas para **Posts feitos**, **Comentarios feitos**, **Upvotes (recebido)**, **Downvotes (recebidos)**, **Salvamentos (recebidos)**, **Compartilhamentos (recebidos)** e **Denuncias (recebidas)**.
+- O backend manteve o contrato real `GET /api/admin/private/patients/:id`, renomeando labels de metricas para **Posts feitos**, **Comentarios feitos**, **Upvotes (recebidos)**, **Downvotes (recebidos)**, **Salvamentos (recebidos)**, **Compartilhamentos (recebidos)** e **Denuncias (recebidas)**.
 - O contador **Denuncias (recebidas)** usa `reports_received` real ja calculado a partir de `post_report` em posts/respostas do paciente e agora tambem entra na serie temporal da aba **Estatisticas**.
 - A UI do Admin adicionou o card ao carrossel mobile-first de **Estatisticas de comunidade**, mantendo os filtros independentes e sem criar endpoint paralelo.
 - Nao houve schema Prisma, migration, package novo, seed, mock persistente, endpoint simulado, tracking novo ou backfill artificial. `db:migrate` nao se aplicou.
@@ -1001,3 +1001,9 @@ Frontend esperado:
 - `pnpm check`
 - Service local `showAdminPatient({ id: "cmrqsrab5001f1guh2ve5oy90", period: "all" })` retornou `intent_analysis.level.label="Frio"` com id tecnico `no_signals`, sem dados artificiais.
 - Browser local/headless via Chrome CDP em `/pacientes/cmrqsrab5001f1guh2ve5oy90?tab=estatisticas`, com admin temporario real removido ao final, validou desktop `1365x900` e mobile `390x844`: classificacao permitida presente, labels antigos ausentes e `scrollWidth=390` no mobile.
+
+## Ajuste pos-feedback 2026-07-23 - Plural em Upvotes recebidos
+
+- Pedido: pluralizar o label de upvotes para **Upvotes (recebidos)** na aba Estatisticas do detalhe administrativo de paciente.
+- Escopo: label do backend, labels exibidos pelo Admin e documentacao/ADR da TASK-61, sem alterar calculo, schema, migrations, pacotes ou tracking.
+- Validacao executada: Biome nos arquivos alterados, `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `cmd /c pnpm check` e browser local/headless via Chrome CDP no mobile `390x844`, confirmando **Upvotes (recebidos)** presente, label singular antigo ausente e `scrollWidth=390`; admin temporario real removido ao final.
