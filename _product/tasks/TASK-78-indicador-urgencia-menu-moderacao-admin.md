@@ -108,3 +108,20 @@ Adicionar um ícone de alerta na opção **Moderação** do menu lateral Admin, 
 - `pnpm check`.
 - Smoke HTTP local no Admin (`localhost:3002`) retornou 200 para `/moderacao`, `/moderacao/denuncias`, `/moderacao/compliance`, `/moderacao/operacionais` e `/moderacao/conteudo-sensivel`.
 - Chrome headless local em 390x844 confirmou a proteção real da rota e redirecionou para login em perfil sem sessão Admin; a conferência visual autenticada ficou limitada à captura enviada pelo usuário, inspeção do código e build/check porque a sessão Admin interativa do navegador do usuário não fica disponível no perfil headless isolado.
+
+## Ajuste complementar 2026-07-24 - Severidade visual das tags e largura do menu
+
+- Pedido do usuário: no submenu de **Moderação**, as tags numéricas de **Denúncias** e **Compliance** devem ficar vermelhas; **Operacionais** e **Conteúdo sensível** devem ficar laranjas. Também foi solicitado aumentar a largura do menu para que **Moderação** não apareça com ellipsis.
+- As tags continuam usando os mesmos contadores reais de `useAdminModerationSummary`; apenas o tom visual mudou por categoria.
+- Após revisão visual do usuário, a largura expandida do menu lateral desktop ficou em `w-64`, apenas acima da largura original `w-60`, com o padding do conteúdo sincronizado de `lg:pl-60` para `lg:pl-64`.
+- O item pai **Moderação** usa espaçamento interno menor entre ícone, texto, tag e chevron para exibir `Moderação + tag` sem ellipsis sem aumentar o menu em excesso.
+- A barra de filtros da página exclusiva de **Denúncias** passou a usar o layout denso de uma linha somente em `2xl`; abaixo disso, os controles quebram em duas colunas, evitando corte visual/rolagem horizontal quando o menu lateral expandido reduz a área útil.
+- Não houve alteração de backend, Prisma schema/migrations, packages, contratos de API, formulários ou dados artificiais.
+
+### Validação deste ajuste
+
+- `pnpm --dir admin exec biome check --write src/components/admin-shell/shell.tsx src/app/(admin)/moderacao/operational-category-client.tsx`.
+- `pnpm --dir admin check`.
+- `pnpm --dir admin build`.
+- `pnpm check`.
+- Smoke HTTP local no Admin (`localhost:3002`) retornou 200 para `/moderacao`, `/moderacao/denuncias`, `/moderacao/compliance`, `/moderacao/operacionais` e `/moderacao/conteudo-sensivel`.

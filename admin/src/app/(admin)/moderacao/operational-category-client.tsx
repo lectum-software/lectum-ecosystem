@@ -6,15 +6,13 @@ import {
   ChevronLeft,
   ChevronRight,
   ExternalLink,
-  Filter,
   Loader2,
   MessageCircle,
-  X,
 } from "lucide-react";
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { useMemo, useState } from "react";
-import { FormProvider, type UseFormReturn, useForm } from "react-hook-form";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { FormProvider, type UseFormReturn, useForm, useWatch } from "react-hook-form";
 import { z } from "zod";
 import { useAdminModerationOperationalAlerts } from "@/api/callers/moderation";
 import { resolveApiError } from "@/api/handle";
@@ -199,11 +197,11 @@ const DenunciaFiltersBar = ({
   <div className="border-b border-border bg-surface/80 p-4">
     <FormProvider {...form}>
       <form
-        className="grid gap-3 md:grid-cols-2 xl:grid-cols-[minmax(260px,1.25fr)_repeat(5,minmax(150px,1fr))_auto]"
+        className="grid min-w-0 gap-3 md:grid-cols-2 2xl:grid-cols-[minmax(260px,1.25fr)_repeat(5,minmax(150px,1fr))_auto]"
         noValidate
         onSubmit={form.handleSubmit(onSubmit)}
       >
-        <div className="md:col-span-2 xl:col-span-1">
+        <div className="md:col-span-2 2xl:col-span-1">
           <InputController<DenunciaFiltersFormValues>
             disabled={disabled}
             label="Buscar"
@@ -241,7 +239,7 @@ const DenunciaFiltersBar = ({
           name="reason"
           placeholder="Ex.: other"
         />
-        <div className="flex flex-col gap-2 md:col-span-2 md:flex-row xl:col-span-1 xl:flex-col xl:justify-end">
+        <div className="flex flex-col gap-2 md:col-span-2 md:flex-row 2xl:col-span-1 2xl:flex-col 2xl:justify-end">
           <button
             className="inline-flex h-12 items-center justify-center gap-2 rounded-control bg-primary px-4 text-sm font-black text-white shadow-admin-soft transition hover:bg-primary-hover disabled:opacity-60"
             disabled={disabled}

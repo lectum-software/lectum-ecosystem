@@ -34,6 +34,9 @@ Depois da TASK-77, a opção **Moderação** do menu lateral representa tanto ev
 - As opções **Denúncias**, **Compliance**, **Operacionais** e **Conteúdo sensível** exibem tags com contagens reais de pendências da categoria.
 - As contagens continuam vindo de `useAdminModerationSummary`: `pending_reports`, `compliance_total`, `operational_total` e `pending_total`, sem endpoint novo nem estimativa.
 - Enquanto o summary real não é carregado, as tags não são renderizadas para evitar comunicar zero como dado real temporário.
+- As tags de **Denúncias** e **Compliance** usam tom vermelho por representarem fila crítica; **Operacionais** e **Conteúdo sensível** usam tom laranja como alerta pendente.
+- O menu lateral expandido desktop passa para `w-64` e o conteúdo para `lg:pl-64`, com gap menor no item pai expansível, evitando truncamento do rótulo **Moderação** sem ocupar largura excessiva.
+- Em páginas com filtros largos de Moderação, como **Denúncias**, a grade densa fica restrita ao breakpoint `2xl`; em larguras menores, os filtros quebram linhas para evitar corte visual ou rolagem horizontal causada pela navegação lateral.
 
 ## Validação
 
@@ -43,6 +46,7 @@ Depois da TASK-77, a opção **Moderação** do menu lateral representa tanto ev
 - `Invoke-WebRequest http://localhost:3002/moderacao` retornou HTTP 200.
 - Primeira tentativa de `pnpm --dir admin build` falhou por processo Next build concorrente; reexecução concluída com sucesso.
 - Ajuste 2026-07-24: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke HTTP local nas rotas de Moderação retornando 200.
+- Ajuste posterior de largura mínima: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke HTTP local nas rotas de Moderação retornando 200.
 
 ## Pendências
 

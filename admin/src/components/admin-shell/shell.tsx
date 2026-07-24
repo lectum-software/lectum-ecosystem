@@ -32,6 +32,13 @@ const formatNavCount = (value: number) => (value > 99 ? "99+" : String(value));
 
 const pendingCountLabel = (value: number) => `${value} ${value === 1 ? "pendência" : "pendências"}`;
 
+const moderationSubmenuBadgeTone: Record<ModerationSubmenuBadge, "danger" | "warning"> = {
+  compliance: "danger",
+  conteudoSensivel: "warning",
+  denuncias: "danger",
+  operacionais: "warning",
+};
+
 const isPremiumPilotPath = (pathname: string) =>
   pathname === "/psicologos" ||
   pathname.startsWith("/psicologos/") ||
@@ -155,7 +162,7 @@ const SidebarContent = ({
                     aria-current={isActive ? "page" : undefined}
                     aria-expanded={collapsed ? undefined : isOpen}
                     className={cn(
-                      "relative flex min-h-12 w-full items-center gap-3 rounded-2xl px-3 text-left text-sm font-bold transition",
+                      "relative flex min-h-12 w-full items-center gap-2 rounded-2xl px-3 text-left text-sm font-bold transition",
                       premiumPilot
                         ? "text-sidebar-muted hover:bg-sidebar-active hover:text-primary focus-visible:outline-primary"
                         : "text-sidebar-muted hover:bg-sidebar-active/45 hover:text-sidebar-foreground focus-visible:outline-white",
@@ -233,6 +240,11 @@ const SidebarContent = ({
                         const childPendingCount = getModerationSubmenuPendingCount(
                           "badge" in child ? child.badge : undefined,
                         );
+                        const childBadge =
+                          "badge" in child ? (child.badge as ModerationSubmenuBadge) : null;
+                        const childBadgeTone = childBadge
+                          ? moderationSubmenuBadgeTone[childBadge]
+                          : null;
                         const childPendingTitle =
                           childPendingCount === null
                             ? null
@@ -265,9 +277,10 @@ const SidebarContent = ({
                                   aria-hidden="true"
                                   className={cn(
                                     "ml-auto inline-flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full px-1.5 text-[0.66rem] font-black leading-none ring-1 transition",
-                                    childPendingCount > 0
-                                      ? "bg-primary-soft text-primary ring-primary/15"
-                                      : "bg-surface-muted text-subtle ring-border",
+                                    childBadgeTone === "danger" &&
+                                      "bg-danger/10 text-danger ring-danger/20",
+                                    childBadgeTone === "warning" &&
+                                      "bg-warning/10 text-warning ring-warning/25",
                                   )}
                                   title={childPendingTitle ?? undefined}
                                 >
@@ -409,7 +422,7 @@ export const AdminShell = ({ children }: PropsWithChildren) => {
         className={cn(
           "fixed inset-y-0 left-0 z-30 hidden border-r transition-[width] duration-200 lg:block",
           premiumPilot ? "border-border shadow-admin-soft" : "border-white/10",
-          collapsed ? "w-20" : "w-60",
+          collapsed ? "w-20" : "w-64",
         )}
       >
         <button
@@ -467,8 +480,13 @@ export const AdminShell = ({ children }: PropsWithChildren) => {
         </div>
       ) : null}
 
-      <div className={cn("transition-[padding] duration-200 lg:pl-60", collapsed && "lg:pl-20")}>
-        <main className="mx-auto w-full max-w-[1440px] px-4 py-5 sm:px-6 lg:px-8 lg:py-8">
+      <div
+        className={cn(
+          "min-w-0 transition-[padding] duration-200 lg:pl-64",
+          collapsed && "lg:pl-20",
+        )}
+      >
+        <main className="mx-auto w-full min-w-0 max-w-[1440px] px-4 py-5 sm:px-6 lg:px-8 lg:py-8">
           <div className="mb-4 flex lg:hidden">
             <button
               aria-label="Abrir menu administrativo"
