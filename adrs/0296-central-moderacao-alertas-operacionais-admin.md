@@ -101,3 +101,14 @@ Para viabilizar a UI sem mocks, `GET /api/admin/private/moderation/operational-a
 A decisão mantém a central de alertas como derivada/read-only: `/moderacao/denuncias` pode abrir o conteúdo no Admin ou no público, mas não introduz um segundo workflow global de resolução de denúncias. A resolução com ações de **Procedente/Improcedente** continua associada às telas já desenhadas para o contexto de detalhe quando houver fluxo específico.
 
 A renderização de mídia segue a regra do Admin de não usar `<img>` cru: imagens passam por `next/image` quando a origem é permitida e vídeos usam player HTML nativo com miniplayer. Quando o conteúdo foi removido, a UI mostra o motivo de indisponibilidade e oculta o atalho público.
+
+
+## Complemento 2026-07-24: resolução global de denúncias e selo de autor verificado
+
+Após revisão da fila global `/moderacao/denuncias`, a decisão anterior de manter essa página apenas como leitura foi substituída para denúncias reais de `post_report`: a lista global agora pode resolver a denúncia como **Improcedente** ou **Procedente** sem exigir navegação para o detalhe do psicólogo.
+
+A resolução usa um endpoint específico, `POST /api/admin/private/moderation/reports/:reportId/resolve`, protegido por autenticação Admin, confirmação forte e motivo interno obrigatório. **Improcedente** altera apenas a denúncia selecionada para `rejeitada`. **Procedente** altera para `resolvida`; quando a medida escolhida é remover conteúdo, o backend aplica soft delete no post ou na árvore de respostas denunciada, ajusta `replies_count` e encerra denúncias pendentes do mesmo alvo. Todas as ações criam auditoria em `admin_activity_log` com `domain="moderation"`, `area="denuncias"` e `target_type="post_report"`.
+
+O bloco de autor do conteúdo denunciado passou a expor `content.author.verified` no payload de `operational-alerts`. O valor não é armazenado em novo campo: é derivado no backend pela regra já aceita para registro profissional aprovado (`crp_status="aprovado"`, `cfp_verified_at` ou cortesia profissional/admin grant ativa). A UI usa esse booleano apenas para mostrar o selo **Verificado** ao lado do nome quando o autor é psicólogo verificado.
+
+Alertas derivados de compliance/operacionais continuam read-only e sem workflow próprio; a nova resolução se aplica somente aos alertas globais que possuem `report` real de `post_report`.

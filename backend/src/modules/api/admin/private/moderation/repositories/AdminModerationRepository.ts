@@ -3,6 +3,7 @@ import prisma from "@/infra/database/prisma";
 import { activeSubscriptionPeriodWhere } from "@/utils/subscription-entitlement";
 import type { AdminModerationEventsQuery } from "../DTOs/IAdminModerationDTO";
 import {
+  type AdminPostReportRecord,
   adminModerationEventDetailSelect,
   adminModerationEventSelect,
   adminOperationalPsychologistSelect,
@@ -67,6 +68,35 @@ const buildWhere = (
   return where;
 };
 
+export type AdminModerationReportAudit = {
+  action:
+    | "moderation_report_content_removed"
+    | "moderation_report_dismissed"
+    | "moderation_report_upheld";
+  adminId: string;
+  changedFields: string[];
+  metadata?: Prisma.InputJsonObject;
+  reason: string;
+  safeAfter?: Prisma.InputJsonObject;
+  safeBefore?: Prisma.InputJsonObject;
+  targetId: string;
+};
+
+export type AdminModerationReportMutationResult = {
+  affectedReportsCount: number;
+  contentAlreadyUnavailable: boolean;
+  contentRemoved: boolean;
+  report: AdminPostReportRecord;
+};
+
+type TransactionClient = Prisma.TransactionClient;
+
+type ResolveReportUpheldInput = {
+  audit: AdminModerationReportAudit;
+  measure: "none" | "remove_content";
+  report: AdminPostReportRecord;
+};
+
 const activitySafeSnapshot = (event: {
   categories: unknown;
   decision: string;
@@ -86,6 +116,27 @@ const activitySafeSnapshot = (event: {
   target_id: event.target_id,
   target_type: event.target_type,
 });
+
+const reportTargetWhere = (report: AdminPostReportRecord) => ({
+  deleted: false,
+  target_id: report.target_id,
+  target_type: report.target_type,
+});
+
+const reportContentIsAvailable = (report: AdminPostReportRecord) => {
+  if (report.reply) {
+    return (
+      !report.reply.deleted &&
+      !report.reply.post.deleted &&
+      report.reply.post.status === "publicado" &&
+      !report.reply.post.community.deleted
+    );
+  }
+
+  return (
+    !report.post.deleted && report.post.status === "publicado" && !report.post.community.deleted
+  );
+};
 
 export class AdminModerationRepository implements IAdminModerationRepository {
   countPending() {
@@ -294,6 +345,16 @@ export class AdminModerationRepository implements IAdminModerationRepository {
     });
   }
 
+  findPostReport(id: string) {
+    return prisma.post_report.findFirst({
+      select: adminPostReportSelect,
+      where: {
+        deleted: false,
+        id,
+      },
+    });
+  }
+
   listReplyTargets(replyIds: string[]) {
     if (replyIds.length === 0) return Promise.resolve([]);
 
@@ -316,6 +377,91 @@ export class AdminModerationRepository implements IAdminModerationRepository {
           in: replyIds,
         },
       },
+    });
+  }
+
+  async resolveReportDismissed(input: {
+    audit: AdminModerationReportAudit;
+    report: AdminPostReportRecord;
+  }): Promise<AdminModerationReportMutationResult> {
+    return prisma.$transaction(async (transaction) => {
+      const report = await transaction.post_report.update({
+        data: {
+          status: "rejeitada",
+        },
+        select: adminPostReportSelect,
+        where: {
+          id: input.report.id,
+        },
+      });
+
+      await this.createReportAuditLog(transaction, input.audit);
+
+      return {
+        affectedReportsCount: 1,
+        contentAlreadyUnavailable: !reportContentIsAvailable(input.report),
+        contentRemoved: false,
+        report,
+      };
+    });
+  }
+
+  async resolveReportUpheld(
+    input: ResolveReportUpheldInput,
+  ): Promise<AdminModerationReportMutationResult> {
+    return prisma.$transaction(async (transaction) => {
+      const wasAvailable = reportContentIsAvailable(input.report);
+      const contentRemoved =
+        input.measure === "remove_content" && wasAvailable
+          ? await this.softDeleteReportTargetContent(transaction, input.report)
+          : false;
+
+      const affectedReports =
+        input.measure === "remove_content"
+          ? await transaction.post_report.updateMany({
+              data: {
+                status: "resolvida",
+              },
+              where: {
+                ...reportTargetWhere(input.report),
+                status: {
+                  in: ACTIVE_POST_REPORT_STATUSES,
+                },
+              },
+            })
+          : await transaction.post_report.updateMany({
+              data: {
+                status: "resolvida",
+              },
+              where: {
+                deleted: false,
+                id: input.report.id,
+              },
+            });
+
+      const report = await transaction.post_report.findUniqueOrThrow({
+        select: adminPostReportSelect,
+        where: {
+          id: input.report.id,
+        },
+      });
+
+      await this.createReportAuditLog(transaction, {
+        ...input.audit,
+        metadata: {
+          ...(input.audit.metadata ?? {}),
+          affected_reports_count: affectedReports.count,
+          content_already_unavailable: !wasAvailable,
+          content_removed: contentRemoved,
+        },
+      });
+
+      return {
+        affectedReportsCount: affectedReports.count,
+        contentAlreadyUnavailable: !wasAvailable,
+        contentRemoved,
+        report,
+      };
     });
   }
 
@@ -409,6 +555,133 @@ export class AdminModerationRepository implements IAdminModerationRepository {
       });
 
       return updated;
+    });
+  }
+
+  private async softDeleteReportTargetContent(
+    transaction: TransactionClient,
+    report: AdminPostReportRecord,
+  ) {
+    const now = new Date();
+
+    if (report.reply) {
+      const replyIds = await this.findReplyTreeIds(
+        transaction,
+        report.reply.post_id,
+        report.reply.id,
+      );
+      if (replyIds.length === 0) return false;
+
+      const deletedReplies = await transaction.post_reply.updateMany({
+        data: {
+          deleted: true,
+          deletedAt: now,
+        },
+        where: {
+          deleted: false,
+          id: {
+            in: replyIds,
+          },
+          post_id: report.reply.post_id,
+        },
+      });
+
+      if (deletedReplies.count > 0) {
+        await transaction.community_post.update({
+          data: {
+            replies_count: Math.max(0, report.reply.post.replies_count - deletedReplies.count),
+          },
+          where: {
+            id: report.reply.post_id,
+          },
+        });
+      }
+
+      return deletedReplies.count > 0;
+    }
+
+    const deletedReplies = await transaction.post_reply.updateMany({
+      data: {
+        deleted: true,
+        deletedAt: now,
+      },
+      where: {
+        deleted: false,
+        post_id: report.post.id,
+      },
+    });
+
+    await transaction.community_post.update({
+      data: {
+        deleted: true,
+        deletedAt: now,
+        replies_count: Math.max(0, report.post.replies_count - deletedReplies.count),
+        status: "removido",
+      },
+      where: {
+        id: report.post.id,
+      },
+    });
+
+    return true;
+  }
+
+  private async findReplyTreeIds(
+    transaction: TransactionClient,
+    postId: string,
+    rootReplyId: string,
+  ) {
+    const replies = await transaction.post_reply.findMany({
+      select: {
+        id: true,
+        parent_reply_id: true,
+      },
+      where: {
+        deleted: false,
+        post_id: postId,
+      },
+    });
+
+    const childrenByParent = new Map<string, string[]>();
+    for (const reply of replies) {
+      if (!reply.parent_reply_id) continue;
+      const children = childrenByParent.get(reply.parent_reply_id) ?? [];
+      children.push(reply.id);
+      childrenByParent.set(reply.parent_reply_id, children);
+    }
+
+    const ids = new Set<string>();
+    const stack = [rootReplyId];
+
+    while (stack.length > 0) {
+      const current = stack.pop();
+      if (!current || ids.has(current)) continue;
+      ids.add(current);
+      for (const childId of childrenByParent.get(current) ?? []) stack.push(childId);
+    }
+
+    return [...ids];
+  }
+
+  private async createReportAuditLog(
+    transaction: TransactionClient,
+    audit: AdminModerationReportAudit,
+  ) {
+    await transaction.admin_activity_log.create({
+      data: {
+        action: audit.action,
+        admin_id: audit.adminId,
+        area: "denuncias",
+        changed_fields: audit.changedFields,
+        domain: "moderation",
+        metadata: audit.metadata ?? {},
+        reason: audit.reason,
+        safe_after: audit.safeAfter ?? {},
+        safe_before: audit.safeBefore ?? {},
+        source: "admin_panel",
+        target_id: audit.targetId,
+        target_type: "post_report",
+      },
     });
   }
 }

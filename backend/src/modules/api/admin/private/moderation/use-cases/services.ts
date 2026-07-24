@@ -16,14 +16,20 @@ import type {
   AdminModerationOperationalAlertsGroup,
   AdminModerationOperationalAlertsPageDTO,
   AdminModerationOperationalAlertsQuery,
+  AdminModerationReportActionDTO,
   AdminModerationSummaryDTO,
   IAdminModerationEventDTO,
   IAdminModerationEventsDTO,
   IAdminModerationOperationalAlertsDTO,
+  IAdminModerationReportResolveDTO,
   IAdminModerationResolveDTO,
   IAdminModerationSummaryDTO,
 } from "../DTOs/IAdminModerationDTO";
-import { AdminModerationRepository } from "../repositories/AdminModerationRepository";
+import {
+  type AdminModerationReportAudit,
+  type AdminModerationReportMutationResult,
+  AdminModerationRepository,
+} from "../repositories/AdminModerationRepository";
 import type {
   AdminModerationEventDetailRecord,
   AdminModerationEventRecord,
@@ -42,6 +48,8 @@ const POST_COVERAGE_HOURS = 48;
 const PSYCHOLOGIST_ADAPTATION_DAYS = 30;
 const HOUR_IN_MS = 60 * 60 * 1000;
 const DAY_IN_MS = 24 * HOUR_IN_MS;
+const DISMISS_REPORT_CONFIRMATION = "DENUNCIA IMPROCEDENTE";
+const UPHOLD_REPORT_CONFIRMATION = "DENUNCIA PROCEDENTE";
 
 const toStringArray = (value: unknown): string[] => {
   if (!Array.isArray(value)) return [];
@@ -331,6 +339,9 @@ const reportAuthorRoleLabel = (author: AdminPostReportAuthor) => {
     : "Psicólogo";
 };
 
+const reportAuthorVerified = (author: AdminPostReportAuthor) =>
+  author.role === "psicologo" && hasProfessionalRegistryApproval(author.psychologist_profile);
+
 const reportContentType = (report: AdminPostReportRecord): "post" | "reply" =>
   report.reply ? "reply" : "post";
 
@@ -435,6 +446,7 @@ const reportContentDTO = (report: AdminPostReportRecord) => {
       name: reportAuthorName(author),
       role: author.role,
       role_label: reportAuthorRoleLabel(author),
+      verified: reportAuthorVerified(author),
     },
     available,
     body: reportContent(report),
@@ -453,8 +465,15 @@ const reportContentDTO = (report: AdminPostReportRecord) => {
 const reportDTO = (report: AdminPostReportRecord) => {
   const statusGroup = postReportStatusGroup(report.status);
   const statusLabel = postReportStatusLabel(report.status);
+  const available = reportContentAvailable(report);
+  const resolves = statusGroup === "pending";
 
   return {
+    capabilities: {
+      can_remove_content: resolves && available,
+      can_resolve_dismissed: resolves,
+      can_resolve_upheld: resolves,
+    },
     content: reportContentDTO(report),
     created_at: report.createdAt,
     description: report.description,
@@ -475,6 +494,69 @@ const reportDTO = (report: AdminPostReportRecord) => {
     status_label: statusLabel,
   };
 };
+
+const reportActionResponse = (
+  result: AdminModerationReportMutationResult,
+): AdminModerationReportActionDTO => ({
+  affected_reports_count: result.affectedReportsCount,
+  content_already_unavailable: result.contentAlreadyUnavailable,
+  content_removed: result.contentRemoved,
+  report: reportDTO(result.report),
+  source: "post_report+admin_activity_log",
+});
+
+const safeReportTargetSummary = (report: AdminPostReportRecord) => ({
+  Comunidade: reportCommunity(report).name,
+  Conteudo: compactText(reportTitle(report), 100),
+  Tipo: report.reply ? "Resposta" : "Post",
+});
+
+const createReportAudit = (input: {
+  action: AdminModerationReportAudit["action"];
+  adminId: string;
+  changedFields: string[];
+  metadata?: AdminModerationReportAudit["metadata"];
+  reason: string;
+  report: AdminPostReportRecord;
+  safeAfter?: AdminModerationReportAudit["safeAfter"];
+}): AdminModerationReportAudit => ({
+  action: input.action,
+  adminId: input.adminId,
+  changedFields: input.changedFields,
+  metadata: {
+    ...(input.metadata ?? {}),
+    content_author_id: reportAuthor(input.report).id,
+    content_author_role: reportAuthor(input.report).role,
+    report_id: input.report.id,
+    target_id: reportTargetId(input.report),
+    target_type: reportContentType(input.report),
+  },
+  reason: input.reason,
+  safeAfter: input.safeAfter,
+  safeBefore: {
+    "Status da denuncia": postReportStatusLabel(input.report.status),
+    ...safeReportTargetSummary(input.report),
+  },
+  targetId: input.report.id,
+});
+
+const reportResolveStatusFromResolution = (resolution: string) => {
+  if (resolution === "dismissed") return "rejeitada";
+  if (resolution === "upheld") return "resolvida";
+
+  return null;
+};
+
+const invalidReportStatus = () => ({
+  status: 409,
+  ...error("admin_moderation_report_invalid_status", {}),
+});
+
+const dismissConfirmationIsValid = (confirmation: string) =>
+  confirmation.trim().toUpperCase() === DISMISS_REPORT_CONFIRMATION;
+
+const upholdConfirmationIsValid = (confirmation: string) =>
+  confirmation.trim().toUpperCase() === UPHOLD_REPORT_CONFIRMATION;
 
 const toJsonStringArray = (value: unknown): string[] => {
   if (!Array.isArray(value)) return [];
@@ -1084,8 +1166,12 @@ export const getSummary = async (_data: IAdminModerationSummaryDTO): Promise<Res
       repository.listLatestPending(5),
       repository.countPending(),
       repository.countUrgentPending(),
-      buildOperationalAlerts(repository, { itemLimit: OPERATIONAL_ALERT_LIMIT }),
+      buildOperationalAlerts(repository),
     ]);
+  const limitedOperationalAlerts: AdminModerationOperationalAlertsDTO = {
+    ...operationalAlerts,
+    items: operationalAlerts.items.slice(0, OPERATIONAL_ALERT_LIMIT),
+  };
   const replyMap = await hydrateReplyTargets(latestPending);
   const summary: AdminModerationSummaryDTO = {
     by_category: countBy(allEvents, (event) => toStringArray(event.categories)),
@@ -1093,7 +1179,7 @@ export const getSummary = async (_data: IAdminModerationSummaryDTO): Promise<Res
     by_severity: countBy(allEvents, (event) => [event.severity]),
     by_status: countBy(allEvents, (event) => [event.status]),
     latest_pending: latestPending.map((event) => mapEvent(event, replyMap)),
-    operational_alerts: operationalAlerts,
+    operational_alerts: limitedOperationalAlerts,
     pending_total: pendingTotal,
     source: "content_moderation_event",
     urgent_pending_total: urgentPendingTotal,
@@ -1243,5 +1329,120 @@ export const resolveEvent = async (data: IAdminModerationResolveDTO): Promise<Re
     status: 200,
     ...msg("admin_moderation_event_resolved", {}),
     data: mapEventDetail(event, replyMap),
+  };
+};
+
+export const resolveReport = async (data: IAdminModerationReportResolveDTO): Promise<Resolve> => {
+  const admin = data.admin ?? data.auth;
+  if (!admin?.id) {
+    return {
+      status: 401,
+      ...error("token_not_authorized", {}),
+    };
+  }
+
+  const reason = data.b.reason?.trim();
+  if (!reason) {
+    return {
+      status: 422,
+      ...error("admin_moderation_report_reason_required", {}),
+    };
+  }
+
+  const requestedStatus = reportResolveStatusFromResolution(data.b.resolution);
+  if (!requestedStatus) return invalidReportStatus();
+
+  const repository = new AdminModerationRepository();
+  const report = await repository.findPostReport(data.p.reportId);
+  if (!report) {
+    return {
+      status: 404,
+      ...error("admin_moderation_report_not_found", {}),
+    };
+  }
+
+  if (postReportStatusGroup(report.status) !== "pending") return invalidReportStatus();
+
+  if (data.b.resolution === "dismissed") {
+    if (!dismissConfirmationIsValid(data.b.confirmation)) {
+      return {
+        status: 400,
+        ...error("admin_moderation_report_dismiss_confirmation_invalid", {}),
+      };
+    }
+
+    const result = await repository.resolveReportDismissed({
+      audit: createReportAudit({
+        action: "moderation_report_dismissed",
+        adminId: admin.id,
+        changedFields: ["Status da denuncia"],
+        metadata: {
+          resolution: "dismissed",
+        },
+        reason,
+        report,
+        safeAfter: {
+          "Status da denuncia": "Improcedente",
+          ...safeReportTargetSummary(report),
+        },
+      }),
+      report,
+    });
+
+    return {
+      status: 200,
+      ...msg("admin_moderation_report_dismissed", {}),
+      data: reportActionResponse(result),
+    };
+  }
+
+  if (data.b.resolution !== "upheld") return invalidReportStatus();
+
+  if (!upholdConfirmationIsValid(data.b.confirmation)) {
+    return {
+      status: 400,
+      ...error("admin_moderation_report_uphold_confirmation_invalid", {}),
+    };
+  }
+
+  const measure = data.b.measure === "remove_content" ? "remove_content" : "none";
+  const result = await repository.resolveReportUpheld({
+    audit: createReportAudit({
+      action:
+        measure === "remove_content"
+          ? "moderation_report_content_removed"
+          : "moderation_report_upheld",
+      adminId: admin.id,
+      changedFields:
+        measure === "remove_content"
+          ? ["Status da denuncia", "Conteudo denunciado"]
+          : ["Status da denuncia"],
+      metadata: {
+        measure,
+        resolution: "upheld",
+        requested_status: requestedStatus,
+      },
+      reason,
+      report,
+      safeAfter: {
+        "Medida aplicada":
+          measure === "remove_content" ? "Remover conteudo denunciado" : "Manter conteudo",
+        "Status da denuncia": "Procedente",
+        ...safeReportTargetSummary(report),
+      },
+    }),
+    measure,
+    report,
+  });
+
+  return {
+    status: 200,
+    ...msg(
+      result.contentRemoved
+        ? "admin_moderation_report_content_removed"
+        : "admin_moderation_report_upheld",
+      {},
+    ),
+    data: reportActionResponse(result),
   };
 };

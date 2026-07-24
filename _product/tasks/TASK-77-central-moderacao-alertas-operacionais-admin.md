@@ -265,3 +265,29 @@ Validacao deste ajuste:
 - `pnpm check`
 - API local: `GET http://localhost:3001/api/admin/private/moderation/operational-alerts?group=denuncias&limit=3` retornou denúncias reais com `report` no payload.
 - Browser local/headless em Chrome para `/moderacao/denuncias` validou desktop 1365px e mobile 390px com **CONTEÚDO DENUNCIADO**, **Histórico de denúncias**, mídia de vídeo, link público, ação **Abrir conteúdo denunciado** e sem overflow horizontal. Um admin temporário de validação foi criado via bootstrap e removido ao final.
+
+
+## Ajuste complementar 2026-07-24 - Autor e ações reais em Denúncias
+
+- Pedido do usuário: acima do título do post/resposta, adicionar a identificação do autor do conteúdo; substituir o botão **Abrir conteúdo denunciado** pelos botões **Procedente** e **Improcedente**; quando o autor for psicólogo verificado, exibir um selo ao lado do nome.
+- A lista `/moderacao/denuncias` agora mostra o card do autor antes do título, com avatar/iniciais, nome, papel e selo **Verificado** quando o backend identifica `role=psicologo` com registro profissional aprovado.
+- O selo de psicólogo verificado é derivado de dados reais do backend (`crp_status="aprovado"`, `cfp_verified_at` ou cortesia profissional/admin grant ativa via regra existente de entitlement), sem novo campo persistido, mock ou estimativa visual.
+- O botão administrativo textual **Abrir conteúdo denunciado** foi substituído por **Improcedente** e **Procedente** nos cards pendentes. O atalho visual para o conteúdo público continua como ícone quando o conteúdo está disponível.
+- Criado `POST /api/admin/private/moderation/reports/:reportId/resolve` para resolver `post_report` real como improcedente (`status=rejeitada`) ou procedente (`status=resolvida`), com confirmação forte, motivo interno obrigatório e auditoria em `admin_activity_log`.
+- Na ação **Procedente**, o admin pode remover o conteúdo denunciado quando ele ainda está disponível. Posts e respostas seguem a mesma semântica real já usada no fluxo de denúncias do detalhe do psicólogo: soft delete do alvo, remoção de árvore de respostas quando aplicável, ajuste de `replies_count` e resolução das denúncias pendentes do mesmo alvo.
+- Não houve alteração de Prisma schema/migrations, package novo ou dados artificiais; `pnpm --dir backend db:migrate` não se aplica.
+- Builder/Quick Copy não está exposto como ferramenta callable neste ambiente; a referência auditável foi a captura enviada pelo usuário e o layout real da aba de denúncias do psicólogo.
+
+### Validação do ajuste de autor e ações 2026-07-24
+
+- `pnpm --dir backend exec biome check --write src/modules/api/admin/private/moderation/DTOs/IAdminModerationDTO.ts src/modules/api/admin/private/moderation/index.ts src/modules/api/admin/private/moderation/repositories/AdminModerationRepository.ts src/modules/api/admin/private/moderation/repositories/interfaces/IAdminModerationRepository.ts src/modules/api/admin/private/moderation/use-cases/controller.ts src/modules/api/admin/private/moderation/use-cases/services.ts src/modules/api/admin/private/moderation/validator/index.ts locales/pt/translation.json`
+- `pnpm --dir admin exec biome check --write src/api/callers/moderation/index.ts src/api/req/moderation/index.ts "src/app/(admin)/moderacao/operational-category-client.tsx"`
+- `pnpm --dir backend exec biome check --write src/modules/api/admin/private/moderation/use-cases/services.ts`
+- `pnpm --dir backend check`
+- `pnpm --dir admin check`
+- `pnpm --dir backend build`
+- `pnpm --dir admin build`
+- `pnpm check`
+- API local autenticada: `GET /api/admin/private/moderation/operational-alerts?group=denuncias&limit=1` retornou denúncia real com `report.content.author.verified=true` para psicólogo verificado e `capabilities` de resolução pendente.
+- API local autenticada: `POST /api/admin/private/moderation/reports/:reportId/resolve` com confirmação inválida retornou `400`, validando a proteção sem mutação real.
+- Browser local/headless em Chrome para `/moderacao/denuncias` validou desktop 1365px e mobile 390px com identificação do autor, selo **Verificado**, botões **Improcedente/Procedente**, ausência do botão textual **Abrir conteúdo denunciado** no card de denúncia e sem overflow horizontal.

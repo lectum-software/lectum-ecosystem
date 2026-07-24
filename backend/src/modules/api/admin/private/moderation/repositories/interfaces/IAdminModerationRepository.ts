@@ -1,4 +1,5 @@
 ﻿import type { Prisma } from "@/external/generated/prisma/client";
+import { activeProfessionalCourtesyEntitlementWhere } from "@/utils/subscription-entitlement";
 import type { AdminModerationEventsQuery } from "../../DTOs/IAdminModerationDTO";
 
 export const adminModerationEventSelect = {
@@ -60,9 +61,18 @@ const adminModerationReportUserSelect = {
   name: true,
   psychologist_profile: {
     select: {
+      cfp_verified_at: true,
+      crp_status: true,
       gender: true,
       professional_first_name: true,
       professional_last_name: true,
+      subscriptions: {
+        select: {
+          id: true,
+          source: true,
+        },
+        where: activeProfessionalCourtesyEntitlementWhere(),
+      },
     },
   },
   role: true,
@@ -74,8 +84,11 @@ const adminModerationCatalogRelationCountSelect = {
 
 export const adminPostReportSelect = {
   createdAt: true,
+  deleted: true,
+  deletedAt: true,
   description: true,
   id: true,
+  post_id: true,
   reason: true,
   reply_id: true,
   status: true,
@@ -86,6 +99,7 @@ export const adminPostReportSelect = {
       author: {
         select: adminModerationReportUserSelect,
       },
+      author_id: true,
       community: {
         select: adminModerationCommunitySelect,
       },
@@ -108,6 +122,7 @@ export const adminPostReportSelect = {
       },
       media_type: true,
       media_url: true,
+      replies_count: true,
       status: true,
       title: true,
     },
@@ -117,6 +132,7 @@ export const adminPostReportSelect = {
       author: {
         select: adminModerationReportUserSelect,
       },
+      author_id: true,
       content: true,
       createdAt: true,
       deleted: true,
@@ -131,7 +147,9 @@ export const adminPostReportSelect = {
             select: adminModerationCommunitySelect,
           },
           deleted: true,
+          deletedAt: true,
           id: true,
+          replies_count: true,
           status: true,
           title: true,
         },
@@ -292,6 +310,7 @@ export interface IAdminModerationRepository {
   countUrgentPending(): Promise<number>;
   countUncoveredPatientPosts(cutoff: Date): Promise<number>;
   findEvent(id: string): Promise<AdminModerationEventDetailRecord | null>;
+  findPostReport(id: string): Promise<AdminPostReportRecord | null>;
   listOperationalPsychologistProfiles(): Promise<AdminOperationalPsychologistRecord[]>;
   listEvents(query: AdminModerationEventsQuery): Promise<AdminModerationEventRecord[]>;
   listLatestPending(limit: number): Promise<AdminModerationEventRecord[]>;

@@ -3,12 +3,14 @@ import { adminModerationKeys } from "@/api/cache/keys";
 import {
   type AdminModerationEventsQuery,
   type AdminModerationOperationalAlertsQuery,
+  type AdminModerationReportResolveInput,
   type AdminModerationResolveInput,
   getAdminModerationEvent,
   getAdminModerationEvents,
   getAdminModerationOperationalAlerts,
   getAdminModerationSummary,
   resolveAdminModerationEvent,
+  resolveAdminModerationReport,
   reviewAdminModerationEvent,
 } from "@/api/req/moderation";
 
@@ -63,6 +65,23 @@ export const useAdminModerationResolve = () => {
         queryClient.invalidateQueries({ queryKey: adminModerationKeys.all }),
         queryClient.invalidateQueries({ queryKey: adminModerationKeys.detail(event.id) }),
       ]);
+    },
+  });
+};
+
+export const useAdminModerationResolveReport = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      input,
+      reportId,
+    }: {
+      input: AdminModerationReportResolveInput;
+      reportId: string;
+    }) => resolveAdminModerationReport(reportId, input),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: adminModerationKeys.all });
     },
   });
 };

@@ -5,6 +5,7 @@ import {
   listEvents,
   listOperationalAlerts,
   resolveEvent,
+  resolveReport,
   reviewEvent,
   showEvent,
 } from "./services";
@@ -60,5 +61,14 @@ export const resolve = async (req: Request, res: Response) => {
     return send(res, resolveResult);
   } catch (err) {
     return error500(res, "admin_moderation_resolve", err);
+  }
+};
+
+export const reportResolve = async (req: Request, res: Response) => {
+  try {
+    const resolveResult = await resolveReport(req as Parameters<typeof resolveReport>[0]);
+    return send(res, resolveResult);
+  } catch (err) {
+    return error500(res, "admin_moderation_report_resolve", err);
   }
 };

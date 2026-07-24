@@ -8,6 +8,14 @@ const idParam = {
   max: 120,
 } satisfies NonNullable<IValidatorRequest["params"]>[number];
 
+const reportIdParam = {
+  key: "reportId",
+  coerse: "string",
+  method: "string",
+  min: 1,
+  max: 120,
+} satisfies NonNullable<IValidatorRequest["params"]>[number];
+
 export const eventsSchema: IValidatorRequest = {
   query: [
     { key: "page", coerse: "number", method: "numeric", int: true, min: 1, optional: true },
@@ -63,9 +71,20 @@ export const resolveSchema: IValidatorRequest = {
   body: [{ key: "note", coerse: "string", method: "string", min: 3, max: 1000 }],
 };
 
+export const reportResolveSchema: IValidatorRequest = {
+  params: [reportIdParam],
+  body: [
+    { key: "resolution", coerse: "string", method: "string", min: 3, max: 30 },
+    { key: "measure", coerse: "string", method: "string", max: 30, optional: true },
+    { key: "reason", coerse: "string", method: "string", min: 10, max: 500 },
+    { key: "confirmation", coerse: "string", method: "string", min: 3, max: 80 },
+  ],
+};
+
 export const eventsValidator = validator(eventsSchema);
 export const operationalAlertsValidator = validator(operationalAlertsSchema);
 export const eventValidator = validator(eventSchema);
 export const resolveValidator = validator(resolveSchema);
+export const reportResolveValidator = validator(reportResolveSchema);
 
 export default eventsValidator;

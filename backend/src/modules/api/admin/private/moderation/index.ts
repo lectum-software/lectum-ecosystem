@@ -4,6 +4,7 @@ import {
   detail,
   events,
   operationalAlerts,
+  reportResolve,
   resolve,
   review,
   summary,
@@ -12,6 +13,7 @@ import {
   eventsValidator,
   eventValidator,
   operationalAlertsValidator,
+  reportResolveValidator,
   resolveValidator,
 } from "./validator";
 
@@ -20,6 +22,7 @@ const routes = Router();
 routes.use(adminAuth);
 routes.get("/summary", summary);
 routes.get("/operational-alerts", operationalAlertsValidator, operationalAlerts);
+routes.post("/reports/:reportId/resolve", reportResolveValidator, reportResolve);
 routes.get("/events", eventsValidator, events);
 routes.get("/events/:id", eventValidator, detail);
 routes.post("/events/:id/review", eventValidator, review);

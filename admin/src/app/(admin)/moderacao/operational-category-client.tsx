@@ -4,6 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import {
   AlertTriangle,
   CalendarDays,
+  CheckCircle2,
   ChevronLeft,
   ChevronRight,
   ExternalLink,
@@ -12,14 +13,26 @@ import {
   Loader2,
   MessageCircle,
   Play,
+  ShieldCheck,
+  X,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { FormProvider, type UseFormReturn, useForm, useWatch } from "react-hook-form";
+import {
+  FormProvider,
+  type SubmitHandler,
+  type UseFormReturn,
+  useForm,
+  useWatch,
+} from "react-hook-form";
+import { toast } from "sonner";
 import { z } from "zod";
-import { useAdminModerationOperationalAlerts } from "@/api/callers/moderation";
+import {
+  useAdminModerationOperationalAlerts,
+  useAdminModerationResolveReport,
+} from "@/api/callers/moderation";
 import { resolveApiError } from "@/api/handle";
 import type {
   AdminModerationOperationalAlert,
@@ -27,7 +40,7 @@ import type {
   AdminModerationOperationalAlertsQuery,
   AdminModerationSeverity,
 } from "@/api/req/moderation";
-import { InputController, SelectController } from "@/components/controllers";
+import { InputController, SelectController, TextareaController } from "@/components/controllers";
 
 const PAGE_LIMIT = 10;
 const SKELETON_KEYS = ["first", "second", "third"] as const;
@@ -89,6 +102,50 @@ const denunciaFilterDefaults: DenunciaFiltersFormValues = {
   status: "all",
   to: "",
 };
+
+const REPORT_DISMISS_CONFIRMATION = "DENUNCIA IMPROCEDENTE";
+const REPORT_UPHOLD_CONFIRMATION = "DENUNCIA PROCEDENTE";
+
+const reportReasonSchema = z.object({
+  reason: z
+    .string()
+    .min(10, "Informe o motivo interno com pelo menos 10 caracteres.")
+    .max(500, "Use no máximo 500 caracteres."),
+});
+
+const reportDismissSchema = reportReasonSchema
+  .extend({
+    confirmation: z.string(),
+  })
+  .superRefine((values, ctx) => {
+    if (values.confirmation.trim().toUpperCase() !== REPORT_DISMISS_CONFIRMATION) {
+      ctx.addIssue({
+        code: "custom",
+        message: `Digite ${REPORT_DISMISS_CONFIRMATION} para confirmar.`,
+        path: ["confirmation"],
+      });
+    }
+  });
+
+const reportUpholdSchema = reportReasonSchema
+  .extend({
+    confirmation: z.string(),
+    measure: z.enum(["none", "remove_content"], {
+      message: "Selecione a medida de moderação.",
+    }),
+  })
+  .superRefine((values, ctx) => {
+    if (values.confirmation.trim().toUpperCase() !== REPORT_UPHOLD_CONFIRMATION) {
+      ctx.addIssue({
+        code: "custom",
+        message: `Digite ${REPORT_UPHOLD_CONFIRMATION} para confirmar.`,
+        path: ["confirmation"],
+      });
+    }
+  });
+
+type ReportDismissFormValues = z.infer<typeof reportDismissSchema>;
+type ReportUpholdFormValues = z.infer<typeof reportUpholdSchema>;
 
 const denunciaStatusOptions = [
   { label: "Todos", value: "all" },
@@ -340,6 +397,57 @@ const ModerationReportContentHeader = ({ report }: { report: ModerationReport })
   );
 };
 
+const authorInitials = (name: string) => {
+  const parts = name
+    .split(/\s+/)
+    .map((part) => part.trim())
+    .filter(Boolean);
+
+  return (parts[0]?.[0] ?? "A") + (parts[1]?.[0] ?? "");
+};
+
+const ModerationReportAuthor = ({ report }: { report: ModerationReport }) => {
+  const avatarSrc = renderableImageSrc(report.content.author.avatar);
+
+  return (
+    <div className="mt-3 flex min-w-0 items-center gap-3 rounded-2xl border border-border/70 bg-surface-muted/55 p-3">
+      <div className="relative grid h-11 w-11 shrink-0 place-items-center overflow-hidden rounded-full bg-primary-soft text-sm font-black uppercase text-primary">
+        {avatarSrc ? (
+          <Image
+            alt={`Foto de ${report.content.author.name}`}
+            className="object-cover"
+            fill
+            sizes="44px"
+            src={avatarSrc}
+            unoptimized={isPublicAdminMediaSrc(avatarSrc)}
+          />
+        ) : (
+          <span>{authorInitials(report.content.author.name)}</span>
+        )}
+      </div>
+      <div className="min-w-0">
+        <div className="flex min-w-0 flex-wrap items-center gap-2">
+          <p className="min-w-0 truncate text-sm font-black text-foreground">
+            {report.content.author.name}
+          </p>
+          {report.content.author.verified ? (
+            <span
+              className="inline-flex shrink-0 items-center gap-1 rounded-full bg-primary-soft px-2 py-0.5 text-[0.68rem] font-black text-primary"
+              title="Psicólogo verificado"
+            >
+              <ShieldCheck aria-hidden className="h-3 w-3" />
+              Verificado
+            </span>
+          ) : null}
+        </div>
+        <p className="mt-0.5 text-xs font-bold text-muted">
+          Autor do conteúdo · {report.content.author.role_label}
+        </p>
+      </div>
+    </div>
+  );
+};
+
 const ModerationReportMedia = ({ report }: { report: ModerationReport }) => {
   if (!report.content.media) return null;
 
@@ -429,14 +537,305 @@ const ModerationReportHistory = ({ report }: { report: ModerationReport }) => (
   </section>
 );
 
-const ModerationReportListItem = ({ alert }: { alert: AdminModerationOperationalAlert }) => {
+type ReportModerationAction = "dismiss" | "uphold";
+type ReportModerationState = {
+  action: ReportModerationAction;
+  report: ModerationReport;
+} | null;
+
+const ModerationReportActions = ({
+  onResolve,
+  report,
+}: {
+  onResolve: (action: ReportModerationAction) => void;
+  report: ModerationReport;
+}) => {
+  const hasResolutionActions =
+    report.capabilities.can_resolve_dismissed || report.capabilities.can_resolve_upheld;
+
+  if (!hasResolutionActions) {
+    return (
+      <div className="mt-5 flex flex-wrap items-center justify-end gap-2 border-t border-border/70 pt-4">
+        <span className="text-xs font-bold text-muted">Denúncia já encerrada:</span>
+        <ReportStatusBadge report={report} />
+      </div>
+    );
+  }
+
+  return (
+    <div className="mt-5 flex flex-wrap justify-end gap-2 border-t border-border/70 pt-4">
+      {report.capabilities.can_resolve_dismissed ? (
+        <button
+          className="inline-flex min-h-8 items-center justify-center gap-1.5 rounded-full border border-success/20 bg-transparent px-3 py-1 text-xs font-semibold text-success transition hover:border-success/35 hover:bg-success/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-success/15"
+          onClick={() => onResolve("dismiss")}
+          type="button"
+        >
+          <CheckCircle2 aria-hidden className="h-3 w-3" />
+          Improcedente
+        </button>
+      ) : null}
+      {report.capabilities.can_resolve_upheld ? (
+        <button
+          className="inline-flex min-h-8 items-center justify-center gap-1.5 rounded-full border border-danger/20 bg-transparent px-3 py-1 text-xs font-semibold text-danger transition hover:border-danger/35 hover:bg-danger/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-danger/15"
+          onClick={() => onResolve("uphold")}
+          type="button"
+        >
+          <ShieldCheck aria-hidden className="h-3 w-3" />
+          Procedente
+        </button>
+      ) : null}
+    </div>
+  );
+};
+
+const ReportModerationDialog = ({
+  onClose,
+  state,
+}: {
+  onClose: () => void;
+  state: NonNullable<ReportModerationState>;
+}) => {
+  const title =
+    state.action === "dismiss" ? "Resolver como improcedente" : "Resolver como procedente";
+
+  return (
+    <div
+      aria-modal="true"
+      className="fixed inset-0 z-50 flex items-end justify-center bg-foreground/40 p-0 sm:items-center sm:p-4"
+      role="dialog"
+    >
+      <div className="max-h-[92vh] w-full overflow-y-auto rounded-t-[28px] border border-border bg-surface p-5 shadow-admin-soft sm:max-w-2xl sm:rounded-[28px]">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <p className="text-xs font-black uppercase tracking-[0.2em] text-primary">
+              Denúncias e moderação
+            </p>
+            <h3 className="mt-1 text-xl font-black text-foreground">{title}</h3>
+            <p className="mt-2 text-sm font-bold leading-6 text-muted">
+              {state.report.content.type === "post" ? "Post" : "Resposta"} em{" "}
+              {state.report.content.community.name}: {state.report.content.title}
+            </p>
+          </div>
+          <button
+            aria-label="Fechar"
+            className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-border text-muted transition hover:bg-surface-muted"
+            onClick={onClose}
+            type="button"
+          >
+            <X aria-hidden className="h-4 w-4" />
+          </button>
+        </div>
+        <div className="mt-5">
+          {state.action === "dismiss" ? (
+            <ReportDismissForm onClose={onClose} report={state.report} />
+          ) : (
+            <ReportUpholdForm onClose={onClose} report={state.report} />
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const ReportDismissForm = ({
+  onClose,
+  report,
+}: {
+  onClose: () => void;
+  report: ModerationReport;
+}) => {
+  const mutation = useAdminModerationResolveReport();
+  const form = useForm<ReportDismissFormValues>({
+    defaultValues: { confirmation: "", reason: "" },
+    mode: "onSubmit",
+    resolver: zodResolver(reportDismissSchema),
+  });
+
+  const onSubmit: SubmitHandler<ReportDismissFormValues> = async (values) => {
+    try {
+      await mutation.mutateAsync({
+        input: {
+          confirmation: values.confirmation.trim().toUpperCase(),
+          reason: values.reason.trim(),
+          resolution: "dismissed",
+        },
+        reportId: report.id,
+      });
+      form.reset();
+      toast.success("Denúncia resolvida como improcedente.");
+      onClose();
+    } catch (error) {
+      toast.error(resolveApiError(error));
+    }
+  };
+
+  return (
+    <FormProvider {...form}>
+      <form className="grid gap-3" noValidate onSubmit={form.handleSubmit(onSubmit)}>
+        <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-3 text-sm font-bold leading-6 text-emerald-800">
+          Esta ação encerra a denúncia como improcedente e não altera o conteúdo denunciado.
+        </div>
+        <TextareaController<ReportDismissFormValues>
+          disabled={mutation.isPending}
+          label="Motivo/observação interna"
+          name="reason"
+          placeholder="Explique por que a denúncia foi considerada improcedente."
+          required
+          rows={4}
+        />
+        <InputController<ReportDismissFormValues>
+          autoComplete="off"
+          disabled={mutation.isPending}
+          label="Confirmação forte"
+          name="confirmation"
+          placeholder={REPORT_DISMISS_CONFIRMATION}
+          required
+        />
+        <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+          <button
+            className="inline-flex h-12 items-center justify-center rounded-control border border-border px-4 text-sm font-black text-muted transition hover:bg-surface-muted"
+            disabled={mutation.isPending}
+            onClick={onClose}
+            type="button"
+          >
+            Cancelar
+          </button>
+          <button
+            className="inline-flex h-12 items-center justify-center gap-2 rounded-control border border-success bg-surface px-4 text-sm font-black text-success transition hover:bg-emerald-50 disabled:cursor-not-allowed disabled:border-border disabled:text-muted"
+            disabled={mutation.isPending}
+            type="submit"
+          >
+            {mutation.isPending ? (
+              <Loader2 aria-hidden className="h-4 w-4 animate-spin" />
+            ) : (
+              <CheckCircle2 aria-hidden className="h-4 w-4" />
+            )}
+            Resolver como improcedente
+          </button>
+        </div>
+      </form>
+    </FormProvider>
+  );
+};
+
+const ReportUpholdForm = ({
+  onClose,
+  report,
+}: {
+  onClose: () => void;
+  report: ModerationReport;
+}) => {
+  const mutation = useAdminModerationResolveReport();
+  const measureOptions = report.capabilities.can_remove_content
+    ? [
+        { label: "Remover conteúdo denunciado", value: "remove_content" },
+        { label: "Manter conteúdo sem alteração", value: "none" },
+      ]
+    : [{ label: "Manter conteúdo sem alteração", value: "none" }];
+  const form = useForm<ReportUpholdFormValues>({
+    defaultValues: {
+      confirmation: "",
+      measure: report.capabilities.can_remove_content ? "remove_content" : "none",
+      reason: "",
+    },
+    mode: "onSubmit",
+    resolver: zodResolver(reportUpholdSchema),
+  });
+
+  const onSubmit: SubmitHandler<ReportUpholdFormValues> = async (values) => {
+    try {
+      await mutation.mutateAsync({
+        input: {
+          confirmation: values.confirmation.trim().toUpperCase(),
+          measure: values.measure,
+          reason: values.reason.trim(),
+          resolution: "upheld",
+        },
+        reportId: report.id,
+      });
+      form.reset();
+      toast.success(
+        values.measure === "remove_content"
+          ? "Denúncia procedente. Conteúdo removido."
+          : "Denúncia resolvida como procedente.",
+      );
+      onClose();
+    } catch (error) {
+      toast.error(resolveApiError(error));
+    }
+  };
+
+  return (
+    <FormProvider {...form}>
+      <form className="grid gap-3" noValidate onSubmit={form.handleSubmit(onSubmit)}>
+        <div className="rounded-2xl border border-red-200 bg-red-50 p-3 text-sm font-bold leading-6 text-red-800">
+          {report.content.available
+            ? "Se a medida for remover, o conteúdo sairá das listagens públicas. Esta ação não notifica nem aplica sanções de conta automaticamente."
+            : (report.content.unavailable_reason ??
+              "O conteúdo denunciado já está indisponível. A denúncia pode ser encerrada como procedente sem nova remoção.")}
+        </div>
+        <SelectController<ReportUpholdFormValues>
+          disabled={mutation.isPending}
+          label="Medida"
+          name="measure"
+          options={measureOptions}
+          required
+        />
+        <TextareaController<ReportUpholdFormValues>
+          disabled={mutation.isPending}
+          label="Motivo/observação interna"
+          name="reason"
+          placeholder="Explique por que a denúncia foi considerada procedente."
+          required
+          rows={4}
+        />
+        <InputController<ReportUpholdFormValues>
+          autoComplete="off"
+          disabled={mutation.isPending}
+          label="Confirmação forte"
+          name="confirmation"
+          placeholder={REPORT_UPHOLD_CONFIRMATION}
+          required
+        />
+        <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+          <button
+            className="inline-flex h-12 items-center justify-center rounded-control border border-border px-4 text-sm font-black text-muted transition hover:bg-surface-muted"
+            disabled={mutation.isPending}
+            onClick={onClose}
+            type="button"
+          >
+            Cancelar
+          </button>
+          <button
+            className="inline-flex h-12 items-center justify-center gap-2 rounded-control bg-danger px-4 text-sm font-black text-white transition hover:bg-danger/90 disabled:cursor-not-allowed disabled:bg-surface-muted disabled:text-muted"
+            disabled={mutation.isPending}
+            type="submit"
+          >
+            {mutation.isPending ? (
+              <Loader2 aria-hidden className="h-4 w-4 animate-spin" />
+            ) : (
+              <ShieldCheck aria-hidden className="h-4 w-4" />
+            )}
+            Resolver como procedente
+          </button>
+        </div>
+      </form>
+    </FormProvider>
+  );
+};
+
+const ModerationReportListItem = ({
+  alert,
+  onResolve,
+}: {
+  alert: AdminModerationOperationalAlert;
+  onResolve: (state: NonNullable<ReportModerationState>) => void;
+}) => {
   const report = alert.report;
   if (!report) return null;
 
   const title = moderationReportTitle(report);
-  const adminHref = alert.action_href ?? report.content.public_url;
   const contentHref = report.content.public_url ? toPublicHref(report.content.public_url) : null;
-  const adminLinkTarget = adminHref === report.content.public_url ? "_blank" : undefined;
 
   return (
     <article className="rounded-card border border-border/75 bg-surface/95 p-4 shadow-admin-soft md:p-5">
@@ -470,6 +869,7 @@ const ModerationReportListItem = ({ alert }: { alert: AdminModerationOperational
           Conteúdo denunciado
         </p>
         <ModerationReportContentHeader report={report} />
+        <ModerationReportAuthor report={report} />
         {title ? <h3 className="mt-3 text-lg font-black text-foreground">{title}</h3> : null}
         <div className="mt-3 space-y-4">
           <div className="min-w-0 whitespace-pre-wrap text-sm leading-6 text-muted">
@@ -489,20 +889,10 @@ const ModerationReportListItem = ({ alert }: { alert: AdminModerationOperational
       </section>
 
       <ModerationReportHistory report={report} />
-
-      <div className="mt-5 flex flex-wrap justify-end gap-2 border-t border-border/70 pt-4">
-        {adminHref ? (
-          <Link
-            className="inline-flex min-h-10 items-center justify-center gap-2 rounded-control border border-border bg-surface px-3 py-2 text-xs font-black text-foreground transition hover:border-primary hover:text-primary"
-            href={adminHref === report.content.public_url ? toPublicHref(adminHref) : adminHref}
-            rel={adminLinkTarget ? "noreferrer" : undefined}
-            target={adminLinkTarget}
-          >
-            <ExternalLink aria-hidden className="h-4 w-4" />
-            Abrir conteúdo denunciado
-          </Link>
-        ) : null}
-      </div>
+      <ModerationReportActions
+        onResolve={(action) => onResolve({ action, report })}
+        report={report}
+      />
     </article>
   );
 };
@@ -639,6 +1029,7 @@ export const AdminModerationOperationalCategoryClient = ({
   group: Exclude<AdminModerationOperationalAlertsGroup, "all">;
 }) => {
   const [page, setPage] = useState(1);
+  const [moderationState, setModerationState] = useState<ReportModerationState>(null);
   const [appliedFilters, setAppliedFilters] =
     useState<DenunciaFiltersFormValues>(denunciaFilterDefaults);
   const filtersForm = useForm<DenunciaFiltersFormValues>({
@@ -750,7 +1141,11 @@ export const AdminModerationOperationalCategoryClient = ({
           ) : (
             query.data?.data.map((alert) =>
               alert.report ? (
-                <ModerationReportListItem alert={alert} key={alert.id} />
+                <ModerationReportListItem
+                  alert={alert}
+                  key={alert.id}
+                  onResolve={setModerationState}
+                />
               ) : (
                 <OperationalAlertCard alert={alert} key={alert.id} />
               ),
@@ -789,6 +1184,10 @@ export const AdminModerationOperationalCategoryClient = ({
           Fora do escopo agora:{" "}
           {query.data.excluded_dimensions.map((item) => item.title).join("; ")}.
         </div>
+      ) : null}
+
+      {moderationState ? (
+        <ReportModerationDialog onClose={() => setModerationState(null)} state={moderationState} />
       ) : null}
     </div>
   );

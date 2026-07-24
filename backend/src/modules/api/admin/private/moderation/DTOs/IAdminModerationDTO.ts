@@ -58,6 +58,17 @@ export type AdminModerationResolveBody = {
   note: string;
 };
 
+export type AdminModerationReportParams = {
+  reportId: string;
+};
+
+export type AdminModerationReportResolveBody = {
+  confirmation: string;
+  measure?: "none" | "remove_content";
+  reason: string;
+  resolution: "dismissed" | "upheld";
+};
+
 export type IAdminModerationSummaryDTO = {
   auth?: admin;
   admin?: admin;
@@ -83,6 +94,13 @@ export type IAdminModerationEventDTO = {
 
 export type IAdminModerationResolveDTO = IAdminModerationEventDTO & {
   b: AdminModerationResolveBody;
+};
+
+export type IAdminModerationReportResolveDTO = {
+  p: AdminModerationReportParams;
+  b: AdminModerationReportResolveBody;
+  auth?: admin;
+  admin?: admin;
 };
 
 export type AdminModerationCommunityDTO = {
@@ -150,8 +168,12 @@ export type AdminModerationOperationalAlertFactDTO = {
 };
 
 export type AdminModerationReportStatusGroup = "dismissed" | "pending" | "upheld";
-
 export type AdminModerationReportItemDTO = {
+  capabilities: {
+    can_remove_content: boolean;
+    can_resolve_dismissed: boolean;
+    can_resolve_upheld: boolean;
+  };
   content: {
     author: {
       avatar: string | null;
@@ -159,6 +181,7 @@ export type AdminModerationReportItemDTO = {
       name: string;
       role: string;
       role_label: string;
+      verified: boolean;
     };
     available: boolean;
     body: string;
@@ -196,6 +219,14 @@ export type AdminModerationReportItemDTO = {
   status: string;
   status_group: AdminModerationReportStatusGroup;
   status_label: string;
+};
+
+export type AdminModerationReportActionDTO = {
+  affected_reports_count: number;
+  content_already_unavailable: boolean;
+  content_removed: boolean;
+  report: AdminModerationReportItemDTO;
+  source: "post_report+admin_activity_log";
 };
 
 export type AdminModerationOperationalAlertDTO = {

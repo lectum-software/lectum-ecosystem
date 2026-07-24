@@ -86,8 +86,12 @@ export type AdminModerationOperationalAlert = {
 };
 
 export type AdminModerationReportStatusGroup = "dismissed" | "pending" | "upheld";
-
 export type AdminModerationReportItem = {
+  capabilities: {
+    can_remove_content: boolean;
+    can_resolve_dismissed: boolean;
+    can_resolve_upheld: boolean;
+  };
   content: {
     author: {
       avatar: string | null;
@@ -95,6 +99,7 @@ export type AdminModerationReportItem = {
       name: string;
       role: string;
       role_label: string;
+      verified: boolean;
     };
     available: boolean;
     body: string;
@@ -132,6 +137,21 @@ export type AdminModerationReportItem = {
   status: string;
   status_group: AdminModerationReportStatusGroup;
   status_label: string;
+};
+
+export type AdminModerationReportResolveInput = {
+  confirmation: string;
+  measure?: "none" | "remove_content";
+  reason: string;
+  resolution: "dismissed" | "upheld";
+};
+
+export type AdminModerationReportAction = {
+  affected_reports_count: number;
+  content_already_unavailable: boolean;
+  content_removed: boolean;
+  report: AdminModerationReportItem;
+  source: "post_report+admin_activity_log";
 };
 
 export type AdminModerationOperationalAlerts = {
@@ -306,6 +326,18 @@ export const resolveAdminModerationEvent = async (
 ) => {
   const response = await adminApi.post<ApiResponse<AdminModerationEventDetail>>(
     `/api/admin/private/moderation/events/${encodeURIComponent(id)}/resolve`,
+    input,
+  );
+
+  return resolveApiData(response.data);
+};
+
+export const resolveAdminModerationReport = async (
+  reportId: string,
+  input: AdminModerationReportResolveInput,
+) => {
+  const response = await adminApi.post<ApiResponse<AdminModerationReportAction>>(
+    `/api/admin/private/moderation/reports/${encodeURIComponent(reportId)}/resolve`,
     input,
   );
 
