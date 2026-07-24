@@ -87,3 +87,24 @@ Adicionar um ícone de alerta na opção **Moderação** do menu lateral Admin, 
 - Comandos executados sem erro final: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check`.
 - Observação de validação: uma primeira tentativa de `pnpm --dir admin build` falhou por já existir outro processo de build Next em execução; o comando foi reexecutado em seguida e concluiu com sucesso.
 - Smoke local: `Invoke-WebRequest http://localhost:3002/moderacao` retornou HTTP 200.
+
+## Ajuste complementar 2026-07-24 - Tags de pendências nos submenus de Moderação
+
+- Pedido do usuário: renomear o submenu **Dashboard** de Moderação para **Visão geral** e exibir uma tag de quantidade de pendências em **Denúncias**, **Compliance**, **Operacionais** e **Conteúdo sensível**.
+- O submenu `/moderacao` foi renomeado apenas na navegação lateral; a rota e a página exclusiva permanecem as mesmas.
+- As tags usam o summary real já carregado pelo shell lateral:
+  - **Denúncias**: `operational_alerts.counts.pending_reports`;
+  - **Compliance**: `operational_alerts.counts.compliance_total`;
+  - **Operacionais**: `operational_alerts.counts.operational_total`;
+  - **Conteúdo sensível**: `pending_total` de `content_moderation_event`.
+- As tags só são renderizadas depois do retorno real de `useAdminModerationSummary`, evitando exibir zero temporário como dado falso durante o carregamento.
+- Não houve alteração de backend, Prisma schema/migrations, packages, formulários ou uso de dados artificiais.
+
+### Validação deste ajuste
+
+- `pnpm --dir admin exec biome check --write src/components/admin-shell/nav.ts src/components/admin-shell/shell.tsx`.
+- `pnpm --dir admin check`.
+- `pnpm --dir admin build` (primeira tentativa bloqueada por build Next concorrente; reexecutado após o processo finalizar e concluiu com sucesso).
+- `pnpm check`.
+- Smoke HTTP local no Admin (`localhost:3002`) retornou 200 para `/moderacao`, `/moderacao/denuncias`, `/moderacao/compliance`, `/moderacao/operacionais` e `/moderacao/conteudo-sensivel`.
+- Chrome headless local em 390x844 confirmou a proteção real da rota e redirecionou para login em perfil sem sessão Admin; a conferência visual autenticada ficou limitada à captura enviada pelo usuário, inspeção do código e build/check porque a sessão Admin interativa do navegador do usuário não fica disponível no perfil headless isolado.

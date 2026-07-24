@@ -18,6 +18,8 @@ type SidebarContentProps = {
   premiumPilot?: boolean;
 };
 
+type ModerationSubmenuBadge = "compliance" | "conteudoSensivel" | "denuncias" | "operacionais";
+
 const hrefPathname = (href: string) => href.split("?")[0].split("#")[0];
 
 const isNavPathActive = (pathname: string, href: string) => {
@@ -25,6 +27,10 @@ const isNavPathActive = (pathname: string, href: string) => {
 
   return pathname === hrefPath || pathname.startsWith(`${hrefPath}/`);
 };
+
+const formatNavCount = (value: number) => (value > 99 ? "99+" : String(value));
+
+const pendingCountLabel = (value: number) => `${value} ${value === 1 ? "pendência" : "pendências"}`;
 
 const isPremiumPilotPath = (pathname: string) =>
   pathname === "/psicologos" ||
@@ -71,6 +77,13 @@ const SidebarContent = ({
   const moderationUrgentTotal =
     (moderationSummary.data?.urgent_pending_total ?? 0) +
     (moderationSummary.data?.operational_alerts?.counts.urgent_total ?? 0);
+  const hasModerationSummary = Boolean(moderationSummary.data);
+  const moderationSubmenuPendingCounts: Record<ModerationSubmenuBadge, number> = {
+    compliance: moderationSummary.data?.operational_alerts?.counts.compliance_total ?? 0,
+    conteudoSensivel: moderationSummary.data?.pending_total ?? 0,
+    denuncias: moderationSummary.data?.operational_alerts?.counts.pending_reports ?? 0,
+    operacionais: moderationSummary.data?.operational_alerts?.counts.operational_total ?? 0,
+  };
   const moderationTotalLabel = `${moderationPendingTotal} ${
     moderationPendingTotal === 1 ? "ação" : "ações"
   }`;
@@ -81,6 +94,12 @@ const SidebarContent = ({
     moderationUrgentTotal > 0
       ? `${moderationUrgentLabel} de moderação; ${moderationTotalLabel} no total`
       : `${moderationTotalLabel} de moderação menos urgentes`;
+  const getModerationSubmenuPendingCount = (badge?: string) => {
+    if (!hasModerationSummary || !badge) return null;
+    if (!(badge in moderationSubmenuPendingCounts)) return null;
+
+    return moderationSubmenuPendingCounts[badge as ModerationSubmenuBadge];
+  };
   const adminName = admin?.name || "Admin Lectum";
   const initials = useMemo(() => {
     const names = adminName.split(" ").filter(Boolean);
@@ -211,12 +230,19 @@ const SidebarContent = ({
                           (pathname === childHrefPath ||
                             (childHrefPath !== item.href &&
                               pathname.startsWith(`${childHrefPath}/`)));
+                        const childPendingCount = getModerationSubmenuPendingCount(
+                          "badge" in child ? child.badge : undefined,
+                        );
+                        const childPendingTitle =
+                          childPendingCount === null
+                            ? null
+                            : `${pendingCountLabel(childPendingCount)} em ${child.label}`;
 
                         return (
                           <Link
                             aria-current={childIsActive ? "page" : undefined}
                             className={cn(
-                              "flex min-h-10 items-center rounded-xl border-l px-3 pl-4 text-sm font-bold transition",
+                              "flex min-h-10 items-center gap-2 rounded-xl border-l px-3 pl-4 text-sm font-bold transition",
                               premiumPilot
                                 ? "border-border text-sidebar-muted hover:bg-sidebar-active hover:text-primary focus-visible:outline-primary"
                                 : "border-white/10 text-sidebar-muted hover:bg-white/10 hover:text-sidebar-foreground focus-visible:outline-white",
@@ -232,7 +258,26 @@ const SidebarContent = ({
                               onNavigate?.();
                             }}
                           >
-                            {child.label}
+                            <span className="min-w-0 flex-1 truncate">{child.label}</span>
+                            {childPendingCount !== null ? (
+                              <>
+                                <span
+                                  aria-hidden="true"
+                                  className={cn(
+                                    "ml-auto inline-flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full px-1.5 text-[0.66rem] font-black leading-none ring-1 transition",
+                                    childPendingCount > 0
+                                      ? "bg-primary-soft text-primary ring-primary/15"
+                                      : "bg-surface-muted text-subtle ring-border",
+                                  )}
+                                  title={childPendingTitle ?? undefined}
+                                >
+                                  {formatNavCount(childPendingCount)}
+                                </span>
+                                {childPendingTitle ? (
+                                  <span className="sr-only">{childPendingTitle}</span>
+                                ) : null}
+                              </>
+                            ) : null}
                           </Link>
                         );
                       })}

@@ -28,12 +28,21 @@ Depois da TASK-77, a opção **Moderação** do menu lateral representa tanto ev
 - Alertas urgentes têm precedência visual sobre alertas menos urgentes.
 - A cor laranja é intencionalmente restrita a pendências sem urgência; se qualquer urgente existir, o estado inteiro vira vermelho.
 
+## Ajuste 2026-07-24
+
+- O submenu de **Moderação** mantém `/moderacao` como entrada de visão geral, mas a cópia exibida deixa de ser **Dashboard** e passa a ser **Visão geral**.
+- As opções **Denúncias**, **Compliance**, **Operacionais** e **Conteúdo sensível** exibem tags com contagens reais de pendências da categoria.
+- As contagens continuam vindo de `useAdminModerationSummary`: `pending_reports`, `compliance_total`, `operational_total` e `pending_total`, sem endpoint novo nem estimativa.
+- Enquanto o summary real não é carregado, as tags não são renderizadas para evitar comunicar zero como dado real temporário.
+
 ## Validação
 
 - `pnpm --dir admin check`.
 - `pnpm --dir admin build`.
 - `pnpm check`.
-- `Invoke-WebRequest http://localhost:3002/moderacao` retornou HTTP 200.`n- Primeira tentativa de `pnpm --dir admin build` falhou por processo Next build concorrente; reexecução concluída com sucesso.
+- `Invoke-WebRequest http://localhost:3002/moderacao` retornou HTTP 200.
+- Primeira tentativa de `pnpm --dir admin build` falhou por processo Next build concorrente; reexecução concluída com sucesso.
+- Ajuste 2026-07-24: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke HTTP local nas rotas de Moderação retornando 200.
 
 ## Pendências
 

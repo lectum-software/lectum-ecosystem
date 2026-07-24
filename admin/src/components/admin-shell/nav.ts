@@ -19,11 +19,15 @@ export const adminNavItems = [
     icon: ShieldAlert,
     badge: "moderation",
     children: [
-      { label: "Dashboard", href: "/moderacao" },
-      { label: "Denúncias", href: "/moderacao/denuncias" },
-      { label: "Compliance", href: "/moderacao/compliance" },
-      { label: "Operacionais", href: "/moderacao/operacionais" },
-      { label: "Conteúdo sensível", href: "/moderacao/conteudo-sensivel" },
+      { label: "Visão geral", href: "/moderacao" },
+      { label: "Denúncias", href: "/moderacao/denuncias", badge: "denuncias" },
+      { label: "Compliance", href: "/moderacao/compliance", badge: "compliance" },
+      { label: "Operacionais", href: "/moderacao/operacionais", badge: "operacionais" },
+      {
+        label: "Conteúdo sensível",
+        href: "/moderacao/conteudo-sensivel",
+        badge: "conteudoSensivel",
+      },
     ],
   },
   {
