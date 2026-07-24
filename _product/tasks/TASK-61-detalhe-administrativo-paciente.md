@@ -1007,3 +1007,30 @@ Frontend esperado:
 - Pedido: pluralizar o label de upvotes para **Upvotes (recebidos)** na aba Estatisticas do detalhe administrativo de paciente.
 - Escopo: label do backend, labels exibidos pelo Admin e documentacao/ADR da TASK-61, sem alterar calculo, schema, migrations, pacotes ou tracking.
 - Validacao executada: Biome nos arquivos alterados, `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `cmd /c pnpm check` e browser local/headless via Chrome CDP no mobile `390x844`, confirmando **Upvotes (recebidos)** presente, label singular antigo ausente e `scrollWidth=390`; admin temporario real removido ao final.
+
+## Ajuste pos-feedback 2026-07-23 - Copy e opções das estatísticas do paciente
+
+- Pedido do usuario: ajustar a copy de **Estatisticas de comunidade** e **Comunidades ativas** e simplificar as opcoes do carrossel/grafico de estatisticas.
+- A descricao de **Estatisticas de comunidade** passou para: "Publicacoes que realizou e respostas, votos, denuncias, salvamentos e compartilhamentos que recebeu.".
+- A descricao de **Comunidades ativas** passou para: "Publicacoes que realizou, votos que deu e conteudo que salvou nas comunidades.".
+- As opcoes visiveis em **Estatisticas de comunidade** agora sao: **Posts**, **Comentarios**, **Respostas de psicologos verificados**, **Denuncias**, **Upvotes**, **Downvotes**, **Salvamentos** e **Compartilhamentos**.
+- A direcao semantica continua explicita nas descricoes e no contrato real; nao houve alteracao de calculo, endpoint, schema Prisma, migration, package, seed, mock, tracking ou backfill artificial. `db:migrate` nao se aplicou.
+- Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente; as referencias auditaveis foram o screenshot enviado pelo usuario em 2026-07-23 e `_product/proto/admin/Pacientes/Pacientes - Detalhes.png`.
+- ADR atualizado: `adrs/0294-admin-paciente-estatisticas-comunidade-paridade.md`.
+
+### Criterios de aceite do ajuste
+
+- [x] A descricao de **Estatisticas de comunidade** foi substituida pela copy solicitada.
+- [x] A descricao de **Comunidades ativas** foi substituida pela copy solicitada.
+- [x] As opcoes de **Estatisticas de comunidade** aparecem como Posts, Comentarios, Respostas de psicologos verificados, Denuncias, Upvotes, Downvotes, Salvamentos e Compartilhamentos.
+- [x] O layout permanece mobile-first e sem overflow horizontal em 390px.
+- [x] Nenhum schema Prisma, migration, package novo, mock, seed, endpoint simulado, tracking novo ou backfill artificial foi adicionado.
+
+### Validacao complementar executada
+
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/pacientes/[id]/client.tsx"`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check`
+- API local com admin temporario real removido ao final: `GET /api/admin/private/patients/cmrqsrab5001f1guh2ve5oy90?period=all` retornou o detalhe real do paciente e confirmou o label de contrato **Upvotes (recebidos)**.
+- Browser local/headless via Chrome CDP em `http://127.0.0.1:3023/pacientes/cmrqsrab5001f1guh2ve5oy90?tab=estatisticas`, viewport mobile `390x844`, validou as duas copies novas, as oito opcoes solicitadas e `scrollWidth=390`; admin temporario real removido ao final.

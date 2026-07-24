@@ -211,7 +211,7 @@ const PATIENT_COMMUNITY_CHART_METRICS = [
     iconToneClassName: "bg-primary-soft",
     id: "posts_created",
     key: "posts_created",
-    label: "Posts feitos",
+    label: "Posts",
     shortLabel: "Posts",
     strokeClassName: "stroke-primary",
     swatchClassName: "bg-primary",
@@ -222,7 +222,7 @@ const PATIENT_COMMUNITY_CHART_METRICS = [
     iconToneClassName: "bg-blue-50",
     id: "comments_created",
     key: "comments_created",
-    label: "Comentários feitos",
+    label: "Comentários",
     shortLabel: "Comentários",
     strokeClassName: "stroke-blue-500",
     swatchClassName: "bg-blue-500",
@@ -244,7 +244,7 @@ const PATIENT_COMMUNITY_CHART_METRICS = [
     iconToneClassName: "bg-rose-50",
     id: "reports_received",
     key: "reports_received",
-    label: "Denúncias (recebidas)",
+    label: "Denúncias",
     shortLabel: "Denúncias",
     strokeClassName: "stroke-rose-500",
     swatchClassName: "bg-rose-500",
@@ -255,7 +255,7 @@ const PATIENT_COMMUNITY_CHART_METRICS = [
     iconToneClassName: "bg-emerald-50",
     id: "upvotes_received",
     key: "upvotes_received",
-    label: "Upvotes (recebidos)",
+    label: "Upvotes",
     shortLabel: "Upvotes",
     strokeClassName: "stroke-emerald-500",
     swatchClassName: "bg-emerald-500",
@@ -266,7 +266,7 @@ const PATIENT_COMMUNITY_CHART_METRICS = [
     iconToneClassName: "bg-red-50",
     id: "downvotes_received",
     key: "downvotes_received",
-    label: "Downvotes (recebidos)",
+    label: "Downvotes",
     shortLabel: "Downvotes",
     strokeClassName: "stroke-red-500",
     swatchClassName: "bg-red-500",
@@ -277,8 +277,8 @@ const PATIENT_COMMUNITY_CHART_METRICS = [
     iconToneClassName: "bg-orange-50",
     id: "saves_received",
     key: "saves_received",
-    label: "Salvamentos (recebidos)",
-    shortLabel: "Salvos",
+    label: "Salvamentos",
+    shortLabel: "Salvamentos",
     strokeClassName: "stroke-orange-500",
     swatchClassName: "bg-orange-500",
   },
@@ -288,8 +288,8 @@ const PATIENT_COMMUNITY_CHART_METRICS = [
     iconToneClassName: "bg-violet-50",
     id: "shares_received",
     key: "shares_received",
-    label: "Compartilhamentos (recebidos)",
-    shortLabel: "Shares",
+    label: "Compartilhamentos",
+    shortLabel: "Compartilhamentos",
     strokeClassName: "stroke-violet-500",
     swatchClassName: "bg-violet-500",
   },
@@ -1409,8 +1409,8 @@ const EngagementChart = ({
             ) : null}
           </div>
           <p className="mt-1 text-xs font-bold leading-5 text-muted">
-            Dados reais de posts, comentários, respostas de psicólogos verificados, votos,
-            denúncias, salvamentos e compartilhamentos no período.
+            Publicações que realizou e respostas, votos, denúncias, salvamentos e compartilhamentos
+            que recebeu.
           </p>
         </div>
         {periodControls}
@@ -1889,8 +1889,7 @@ const PatientActiveCommunitiesBlock = ({
           ) : null}
         </div>
         <p className="mt-1 text-xs font-bold leading-5 text-muted">
-          Comunidades em que o paciente realizou interações reais no período, ordenadas da mais
-          ativa para a menos ativa.
+          Publicações que realizou, votos que deu e conteúdo que salvou nas comunidades.
         </p>
         <Badge className="mt-3 w-fit bg-surface-muted text-muted">
           {numberFormatter.format(communities.length)} comunidades

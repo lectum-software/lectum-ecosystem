@@ -180,3 +180,29 @@ recebido no conteudo dele.
 - `pnpm --dir admin build`
 - `cmd /c pnpm check`
 - Browser local/headless via Chrome CDP em `/pacientes/cmrqsrab5001f1guh2ve5oy90?tab=estatisticas`, mobile `390x844`, confirmou **Upvotes (recebidos)** presente, label singular antigo ausente e `scrollWidth=390`; admin temporario real removido ao final.
+
+## Revisao 2026-07-23 - Copy explicativa e opcoes simplificadas
+
+### Contexto
+
+Feedback de produto indicou que, apos explicitar a direcao dos sinais, o carrossel de **Estatisticas de comunidade** precisava de opcoes mais curtas, enquanto a direcao deveria ficar concentrada nas descricoes dos blocos.
+
+### Decisao
+
+- Alterar a descricao de **Estatisticas de comunidade** para explicar que posts/comentarios sao publicacoes realizadas e que respostas, votos, denuncias, salvamentos e compartilhamentos sao recebidos.
+- Alterar a descricao de **Comunidades ativas** para explicar que o bloco consolida publicacoes realizadas, votos dados e conteudo salvo nas comunidades.
+- Simplificar os labels visiveis do carrossel/grafico para **Posts**, **Comentarios**, **Respostas de psicologos verificados**, **Denuncias**, **Upvotes**, **Downvotes**, **Salvamentos** e **Compartilhamentos**.
+- Manter os ids, series, fontes reais e contrato de calculo sem alteracao.
+
+### Consequencias
+
+- A UI fica mais curta e legivel no carrossel mobile-first sem perder a direcao semantica dos dados.
+- Nao ha mudanca de banco, endpoint, tracking, pacote ou backfill.
+
+### Validacao
+
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/pacientes/[id]/client.tsx"`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check`
+- Browser local/headless via Chrome CDP em `http://127.0.0.1:3023/pacientes/cmrqsrab5001f1guh2ve5oy90?tab=estatisticas`, mobile `390x844`, confirmou as duas novas descricoes, as oito opcoes simplificadas e `scrollWidth=390`; admin temporario real removido ao final.
