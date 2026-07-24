@@ -149,6 +149,55 @@ export type AdminModerationOperationalAlertFactDTO = {
   value: string;
 };
 
+export type AdminModerationReportStatusGroup = "dismissed" | "pending" | "upheld";
+
+export type AdminModerationReportItemDTO = {
+  content: {
+    author: {
+      avatar: string | null;
+      id: string;
+      name: string;
+      role: string;
+      role_label: string;
+    };
+    available: boolean;
+    body: string;
+    community: {
+      id: string;
+      name: string;
+      slug: string;
+    };
+    created_at: Date;
+    excerpt: string;
+    id: string;
+    media: {
+      media_type: string;
+      media_url: string;
+    } | null;
+    public_url: string | null;
+    title: string;
+    type: "post" | "reply";
+    unavailable_reason: string | null;
+  };
+  created_at: Date;
+  description: string | null;
+  id: string;
+  moderation: {
+    status: string;
+    status_label: string;
+  };
+  reason: string;
+  reason_label: string;
+  reported_by: {
+    label: string;
+    name: string;
+    role: string;
+  };
+  status: string;
+  status_group: AdminModerationReportStatusGroup;
+  status_label: string;
+};
+
 export type AdminModerationOperationalAlertDTO = {
   action_href: string | null;
   action_label: string;
@@ -161,6 +210,7 @@ export type AdminModerationOperationalAlertDTO = {
   group: AdminModerationOperationalAlertGroup;
   id: string;
   priority: AdminModerationOperationalAlertPriority;
+  report?: AdminModerationReportItemDTO | null;
   source: string;
   title: string;
   type: AdminModerationOperationalAlertType;

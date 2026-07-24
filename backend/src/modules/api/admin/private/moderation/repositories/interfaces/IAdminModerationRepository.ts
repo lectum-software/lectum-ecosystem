@@ -42,6 +42,7 @@ export const adminModerationEventDetailSelect = {
 } satisfies Prisma.content_moderation_eventSelect;
 
 const adminModerationCommunitySelect = {
+  deleted: true,
   id: true,
   name: true,
   slug: true,
@@ -50,6 +51,20 @@ const adminModerationCommunitySelect = {
 const adminModerationUserSelect = {
   id: true,
   name: true,
+  role: true,
+} satisfies Prisma.userSelect;
+
+const adminModerationReportUserSelect = {
+  avatar: true,
+  id: true,
+  name: true,
+  psychologist_profile: {
+    select: {
+      gender: true,
+      professional_first_name: true,
+      professional_last_name: true,
+    },
+  },
   role: true,
 } satisfies Prisma.userSelect;
 
@@ -69,35 +84,60 @@ export const adminPostReportSelect = {
   post: {
     select: {
       author: {
-        select: adminModerationUserSelect,
+        select: adminModerationReportUserSelect,
       },
       community: {
         select: adminModerationCommunitySelect,
       },
       content: true,
       createdAt: true,
+      deleted: true,
+      deletedAt: true,
       id: true,
+      media_items: {
+        orderBy: [{ position: "asc" }, { createdAt: "asc" }, { id: "asc" }],
+        select: {
+          id: true,
+          media_type: true,
+          media_url: true,
+          position: true,
+        },
+        where: {
+          deleted: false,
+        },
+      },
+      media_type: true,
+      media_url: true,
+      status: true,
       title: true,
     },
   },
   reply: {
     select: {
       author: {
-        select: adminModerationUserSelect,
+        select: adminModerationReportUserSelect,
       },
       content: true,
       createdAt: true,
+      deleted: true,
+      deletedAt: true,
       id: true,
+      media_type: true,
+      media_url: true,
+      parent_reply_id: true,
       post: {
         select: {
           community: {
             select: adminModerationCommunitySelect,
           },
+          deleted: true,
           id: true,
+          status: true,
           title: true,
         },
       },
       post_id: true,
+      title: true,
     },
   },
   reporter: {

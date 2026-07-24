@@ -79,9 +79,59 @@ export type AdminModerationOperationalAlert = {
   group: "compliance" | "denuncias" | "operacional";
   id: string;
   priority: AdminModerationSeverity;
+  report?: AdminModerationReportItem | null;
   source: string;
   title: string;
   type: AdminModerationOperationalAlertType;
+};
+
+export type AdminModerationReportStatusGroup = "dismissed" | "pending" | "upheld";
+
+export type AdminModerationReportItem = {
+  content: {
+    author: {
+      avatar: string | null;
+      id: string;
+      name: string;
+      role: string;
+      role_label: string;
+    };
+    available: boolean;
+    body: string;
+    community: {
+      id: string;
+      name: string;
+      slug: string;
+    };
+    created_at: string;
+    excerpt: string;
+    id: string;
+    media: {
+      media_type: string;
+      media_url: string;
+    } | null;
+    public_url: string | null;
+    title: string;
+    type: "post" | "reply";
+    unavailable_reason: string | null;
+  };
+  created_at: string;
+  description: string | null;
+  id: string;
+  moderation: {
+    status: string;
+    status_label: string;
+  };
+  reason: string;
+  reason_label: string;
+  reported_by: {
+    label: string;
+    name: string;
+    role: string;
+  };
+  status: string;
+  status_group: AdminModerationReportStatusGroup;
+  status_label: string;
 };
 
 export type AdminModerationOperationalAlerts = {

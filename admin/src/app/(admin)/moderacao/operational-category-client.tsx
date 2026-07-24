@@ -3,12 +3,17 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   AlertTriangle,
+  CalendarDays,
   ChevronLeft,
   ChevronRight,
   ExternalLink,
+  Eye,
+  FileText,
   Loader2,
   MessageCircle,
+  Play,
 } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -33,6 +38,9 @@ const dateTimeFormatter = new Intl.DateTimeFormat("pt-BR", {
   dateStyle: "short",
   timeStyle: "short",
 });
+const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+const publicFrontendUrl = process.env.NEXT_PUBLIC_FRONTEND_URL || "http://localhost:3000";
+const publicMediaPathPrefixes = ["/public/files/", "/community/icons/"] as const;
 
 const groupConfig: Record<
   Exclude<AdminModerationOperationalAlertsGroup, "all">,
@@ -187,6 +195,87 @@ const formatDateTime = (value?: string | null) => {
   return Number.isNaN(date.getTime()) ? "—" : dateTimeFormatter.format(date);
 };
 
+const toPublicHref = (url: string) => {
+  if (/^https?:\/\//.test(url)) return url;
+
+  return `${publicFrontendUrl.replace(/\/$/, "")}${url}`;
+};
+
+const isPublicMediaPath = (pathname: string) =>
+  publicMediaPathPrefixes.some((prefix) => pathname.startsWith(prefix));
+
+const resolveAdminMediaUrl = (src?: string | null) => {
+  const value = src?.trim();
+  if (!value) return null;
+
+  const apiBase = apiUrl.replace(/\/$/, "");
+
+  try {
+    const parsed = new URL(value, apiBase);
+    if (isPublicMediaPath(parsed.pathname)) {
+      return `${apiBase}${parsed.pathname}${parsed.search}`;
+    }
+    if (value.startsWith("http")) return value;
+
+    return value.startsWith("/") ? value : `${apiBase}/${value}`;
+  } catch {
+    if (publicMediaPathPrefixes.some((prefix) => value.startsWith(prefix))) {
+      return `${apiBase}${value}`;
+    }
+
+    return value.startsWith("/") || value.startsWith("http") ? value : null;
+  }
+};
+
+const allowedRemoteImageHosts = () => {
+  const hosts = new Set(["localhost", "127.0.0.1", "lh3.googleusercontent.com"]);
+
+  for (const candidate of [
+    apiUrl,
+    ...(process.env.NEXT_PUBLIC_IMAGE_REMOTE_HOSTS?.split(",") ?? []),
+  ]) {
+    const normalized = candidate.trim();
+    if (!normalized) continue;
+
+    try {
+      const url = new URL(normalized.includes("://") ? normalized : `https://${normalized}`);
+      if (url.hostname) hosts.add(url.hostname);
+    } catch {
+      // Entradas inválidas de env não devem impedir a lista de denúncias.
+    }
+  }
+
+  return hosts;
+};
+
+const canRenderImage = (src: string | null) => {
+  const resolved = resolveAdminMediaUrl(src);
+  if (!resolved) return false;
+  if (resolved.startsWith("/")) return true;
+
+  try {
+    const url = new URL(resolved);
+
+    return allowedRemoteImageHosts().has(url.hostname);
+  } catch {
+    return false;
+  }
+};
+
+const renderableImageSrc = (src: string | null) => {
+  const resolved = resolveAdminMediaUrl(src);
+
+  return resolved && canRenderImage(resolved) ? resolved : null;
+};
+
+const isPublicAdminMediaSrc = (src: string) => {
+  try {
+    return isPublicMediaPath(new URL(src, apiUrl).pathname);
+  } catch {
+    return false;
+  }
+};
+
 const Pill = ({ className, children }: { children: ReactNode; className?: string }) => (
   <span
     className={["inline-flex rounded-full px-2.5 py-1 text-xs font-black", className].join(" ")}
@@ -202,6 +291,221 @@ const OperationalGroup = ({ value }: { value: AdminModerationOperationalAlert["g
 const Severity = ({ value }: { value: AdminModerationSeverity }) => (
   <Pill className={severityCopy[value].className}>{severityCopy[value].label}</Pill>
 );
+
+type ModerationReport = NonNullable<AdminModerationOperationalAlert["report"]>;
+
+const reportStatusBadgeClass: Record<ModerationReport["status_group"], string> = {
+  dismissed: "bg-emerald-50 text-success",
+  pending: "bg-yellow-50 text-yellow-700",
+  upheld: "bg-red-50 text-danger",
+};
+
+const ReportStatusBadge = ({ report }: { report: ModerationReport }) => (
+  <Pill className={reportStatusBadgeClass[report.status_group]}>{report.status_label}</Pill>
+);
+
+const moderationReportTitle = (report: ModerationReport) => {
+  if (report.content.type === "post") return report.content.title?.trim() || "Post sem título";
+
+  const title = report.content.title?.trim();
+  const normalizedTitle = title?.toLowerCase();
+
+  return normalizedTitle && !["comentário", "comentario"].includes(normalizedTitle) ? title : null;
+};
+
+const moderationReportContentTypeLabel = (report: ModerationReport) => {
+  if (report.content.type === "post") return "Post";
+
+  const title = report.content.title?.trim().toLowerCase();
+
+  return title && !["comentário", "comentario"].includes(title) ? "Resposta" : "Comentário";
+};
+
+const ModerationReportContentHeader = ({ report }: { report: ModerationReport }) => {
+  const TypeIcon = report.content.type === "post" ? FileText : MessageCircle;
+
+  return (
+    <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-muted">
+      <TypeIcon aria-hidden className="h-4 w-4 shrink-0" />
+      <span className="font-black">{moderationReportContentTypeLabel(report)}</span>
+      <span aria-hidden className="font-bold">
+        ·
+      </span>
+      <span className="font-black">{report.content.community.name}</span>
+      <span aria-hidden className="font-bold">
+        ·
+      </span>
+      <span className="font-bold">{formatDateTime(report.content.created_at)}</span>
+    </div>
+  );
+};
+
+const ModerationReportMedia = ({ report }: { report: ModerationReport }) => {
+  if (!report.content.media) return null;
+
+  const src = report.content.media.media_url;
+  const mediaType = report.content.media.media_type.toLowerCase();
+  const isVideo = mediaType.startsWith("video") || /\.(mp4|webm|mov|m4v)$/i.test(src);
+  const looksLikeImage = mediaType.startsWith("image") || /\.(png|jpe?g|webp|gif)$/i.test(src);
+  const imageSrc = !isVideo ? renderableImageSrc(src) : null;
+  const videoSrc = isVideo ? resolveAdminMediaUrl(src) : null;
+  const mediaLabel = isVideo ? "Miniplayer de vídeo denunciado" : "Miniatura de mídia denunciada";
+
+  return (
+    <div
+      className={[
+        "relative w-full overflow-hidden rounded-2xl border border-border bg-surface-muted",
+        isVideo ? "aspect-[9/16] max-w-40" : "h-32 max-w-72",
+      ].join(" ")}
+    >
+      {imageSrc && looksLikeImage ? (
+        <Image
+          alt={mediaLabel}
+          className="object-cover"
+          fill
+          sizes="288px"
+          src={imageSrc}
+          unoptimized={isPublicAdminMediaSrc(imageSrc)}
+        />
+      ) : null}
+      {videoSrc ? (
+        <>
+          <video
+            aria-label={mediaLabel}
+            className="h-full w-full object-cover"
+            controls
+            muted
+            playsInline
+            preload="metadata"
+          >
+            <source src={videoSrc} type={mediaType.startsWith("video") ? mediaType : undefined} />
+          </video>
+          <div className="pointer-events-none absolute inset-0 grid place-items-center">
+            <span className="grid h-11 w-11 place-items-center rounded-full bg-foreground/70 text-background shadow-admin-soft">
+              <Play aria-hidden className="h-5 w-5 fill-current" />
+            </span>
+          </div>
+        </>
+      ) : null}
+      {!imageSrc && !videoSrc ? (
+        <div className="grid h-full place-items-center gap-1 p-3 text-center text-xs font-black text-muted">
+          <FileText aria-hidden className="mx-auto h-5 w-5" />
+          <span>Mídia denunciada</span>
+        </div>
+      ) : null}
+    </div>
+  );
+};
+
+const ModerationReportHistory = ({ report }: { report: ModerationReport }) => (
+  <section className="mt-5 border-t border-border/70 pt-4">
+    <h4 className="text-sm font-black text-foreground">Histórico de denúncias</h4>
+    <div className="mt-3 divide-y divide-border/70">
+      <article
+        className="py-2 text-sm"
+        title={`${report.reported_by.name} · ${formatDateTime(report.created_at)} · Motivo: ${
+          report.reason_label
+        }${report.description ? ` · ${report.description}` : ""}`}
+      >
+        <div className="flex min-w-0 flex-wrap items-center gap-2">
+          <Pill className="bg-surface-muted text-muted">{report.reported_by.label}</Pill>
+          <span className="shrink-0 font-normal text-foreground">{report.reported_by.name}</span>
+          <span className="inline-flex shrink-0 items-center gap-1 text-xs font-bold text-muted">
+            <CalendarDays aria-hidden className="h-3.5 w-3.5" />
+            {formatDateTime(report.created_at)}
+          </span>
+          <span aria-hidden className="shrink-0 text-muted/70">
+            ·
+          </span>
+          <span className="min-w-0 truncate font-bold text-foreground">
+            Motivo: {report.reason_label}
+          </span>
+        </div>
+        {report.description ? (
+          <p className="mt-1 line-clamp-2 text-sm leading-5 text-muted">{report.description}</p>
+        ) : null}
+      </article>
+    </div>
+  </section>
+);
+
+const ModerationReportListItem = ({ alert }: { alert: AdminModerationOperationalAlert }) => {
+  const report = alert.report;
+  if (!report) return null;
+
+  const title = moderationReportTitle(report);
+  const adminHref = alert.action_href ?? report.content.public_url;
+  const contentHref = report.content.public_url ? toPublicHref(report.content.public_url) : null;
+  const adminLinkTarget = adminHref === report.content.public_url ? "_blank" : undefined;
+
+  return (
+    <article className="rounded-card border border-border/75 bg-surface/95 p-4 shadow-admin-soft md:p-5">
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex flex-wrap items-center gap-2">
+          <ReportStatusBadge report={report} />
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-primary-soft px-2.5 py-1 text-xs font-black text-primary">
+            <AlertTriangle aria-hidden className="h-3.5 w-3.5" />1 denúncia
+          </span>
+          <span className="inline-flex items-center gap-1.5 text-xs font-bold text-muted">
+            <CalendarDays aria-hidden className="h-3.5 w-3.5" />
+            Última em {formatDateTime(report.created_at)}
+          </span>
+        </div>
+        {contentHref ? (
+          <Link
+            aria-label="Ver conteúdo público"
+            className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-foreground/75 transition hover:text-foreground"
+            href={contentHref}
+            rel="noreferrer"
+            target="_blank"
+            title="Ver conteúdo público"
+          >
+            <Eye aria-hidden className="h-4 w-4" />
+          </Link>
+        ) : null}
+      </div>
+
+      <section className="mt-4">
+        <p className="text-[0.68rem] font-black uppercase tracking-wide text-muted">
+          Conteúdo denunciado
+        </p>
+        <ModerationReportContentHeader report={report} />
+        {title ? <h3 className="mt-3 text-lg font-black text-foreground">{title}</h3> : null}
+        <div className="mt-3 space-y-4">
+          <div className="min-w-0 whitespace-pre-wrap text-sm leading-6 text-muted">
+            {report.content.body || report.content.excerpt || "Conteúdo sem texto disponível."}
+          </div>
+          {report.content.media ? (
+            <div className="max-w-72">
+              <ModerationReportMedia report={report} />
+            </div>
+          ) : null}
+        </div>
+        {!report.content.available ? (
+          <p className="mt-3 rounded-2xl border border-danger/15 bg-danger/10 p-3 text-xs font-bold leading-5 text-danger">
+            {report.content.unavailable_reason || "Conteúdo removido ou indisponível."}
+          </p>
+        ) : null}
+      </section>
+
+      <ModerationReportHistory report={report} />
+
+      <div className="mt-5 flex flex-wrap justify-end gap-2 border-t border-border/70 pt-4">
+        {adminHref ? (
+          <Link
+            className="inline-flex min-h-10 items-center justify-center gap-2 rounded-control border border-border bg-surface px-3 py-2 text-xs font-black text-foreground transition hover:border-primary hover:text-primary"
+            href={adminHref === report.content.public_url ? toPublicHref(adminHref) : adminHref}
+            rel={adminLinkTarget ? "noreferrer" : undefined}
+            target={adminLinkTarget}
+          >
+            <ExternalLink aria-hidden className="h-4 w-4" />
+            Abrir conteúdo denunciado
+          </Link>
+        ) : null}
+      </div>
+    </article>
+  );
+};
 
 const DenunciaFiltersBar = ({
   disabled,
@@ -444,7 +748,13 @@ export const AdminModerationOperationalCategoryClient = ({
               {config.emptyLabel}
             </div>
           ) : (
-            query.data?.data.map((alert) => <OperationalAlertCard alert={alert} key={alert.id} />)
+            query.data?.data.map((alert) =>
+              alert.report ? (
+                <ModerationReportListItem alert={alert} key={alert.id} />
+              ) : (
+                <OperationalAlertCard alert={alert} key={alert.id} />
+              ),
+            )
           )}
         </div>
         <div className="flex flex-col gap-3 border-t border-border p-4 sm:flex-row sm:items-center sm:justify-between">

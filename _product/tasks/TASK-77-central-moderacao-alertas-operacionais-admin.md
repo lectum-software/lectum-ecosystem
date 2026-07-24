@@ -244,3 +244,24 @@ Validacao deste ajuste:
 - `pnpm check`
 - Smoke HTTP local no Admin: `GET http://localhost:3002/moderacao/denuncias` retornou `200`.
 - Builder/Quick Copy não está exposto como ferramenta callable neste ambiente; a referência auditável foi a captura enviada pelo usuário e os padrões Admin já registrados em `_product/proto/admin`.
+
+## Ajuste complementar 2026-07-24 - Lista de Denúncias alinhada ao detalhe do psicólogo
+
+- Pedido do usuário: fazer a lista da página `/moderacao/denuncias` seguir o layout da lista de denúncias exibida no detalhe do psicólogo.
+- A fila de `/moderacao/denuncias` agora renderiza cards detalhados para denúncias reais de `post_report`, com status, quantidade, data da última denúncia, bloco **Conteúdo denunciado**, metadados de tipo/comunidade/data, título/texto/mídia e **Histórico de denúncias**.
+- O layout mantém a ação administrativa **Abrir conteúdo denunciado** e adiciona atalho para o conteúdo público quando ele ainda está disponível, sem criar novo workflow global de procedência/improcedência nesta página.
+- O endpoint real `GET /api/admin/private/moderation/operational-alerts` foi estendido de forma aditiva com `report`, derivado de `post_report`, `community_post`, `community_post_media`, `post_reply`, `user` e comunidade; cards não-denúncia continuam usando o layout operacional anterior.
+- Não houve mock, dado artificial permanente, package novo, Prisma schema ou migration. `pnpm --dir backend db:migrate` não se aplica.
+- Builder/Quick Copy não está exposto como ferramenta callable neste ambiente; a referência auditável foi a captura enviada pelo usuário e `_product/proto/admin/Psicólogos/Detalhes do psicólogo/Denúncias.png`.
+
+### Validação do ajuste de layout de denúncias 2026-07-24
+
+- `pnpm --dir backend exec biome check --write "src/modules/api/admin/private/moderation/DTOs/IAdminModerationDTO.ts" "src/modules/api/admin/private/moderation/repositories/interfaces/IAdminModerationRepository.ts" "src/modules/api/admin/private/moderation/use-cases/services.ts"`
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/moderacao/operational-category-client.tsx" "src/api/req/moderation/index.ts"`
+- `pnpm --dir backend check`
+- `pnpm --dir admin check` (primeira execução paralela excedeu o timeout do runner; reexecutado isolado e concluído sem erro)
+- `pnpm --dir backend build`
+- `pnpm --dir admin build`
+- `pnpm check`
+- API local: `GET http://localhost:3001/api/admin/private/moderation/operational-alerts?group=denuncias&limit=3` retornou denúncias reais com `report` no payload.
+- Browser local/headless em Chrome para `/moderacao/denuncias` validou desktop 1365px e mobile 390px com **CONTEÚDO DENUNCIADO**, **Histórico de denúncias**, mídia de vídeo, link público, ação **Abrir conteúdo denunciado** e sem overflow horizontal. Um admin temporário de validação foi criado via bootstrap e removido ao final.

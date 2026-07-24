@@ -91,3 +91,13 @@ O filtro **Motivo** passa a ser um dropdown fechado com as mesmas opções do fl
 O filtro **Status** passa a aceitar **Todos**, **Pendentes**, **Procedentes** e **Improcedentes**. Para isso, a página exclusiva de denúncias lista `post_report` não deletado, enquanto o summary/dashboard continua contando apenas denúncias pendentes para urgência. Registros legados em `em_analise` continuam aparecendo como **Pendente** e a opção **Em análise** não volta para a UI.
 
 O filtro **Denunciante** permanece limitado ao papel seguro do usuário (**Todos**, **Pacientes**, **Psicólogos**), sem expor dados pessoais do denunciante.
+
+## Complemento 2026-07-24: layout detalhado da lista de Denúncias
+
+A página `/moderacao/denuncias` passou a reutilizar o padrão visual da aba **Denúncias** no detalhe do psicólogo para reduzir divergência entre a fila global de moderação e a visão contextual do profissional.
+
+Para viabilizar a UI sem mocks, `GET /api/admin/private/moderation/operational-alerts` recebeu um campo opcional e aditivo `report` apenas nos alertas de `post_report`. Esse bloco expõe o conteúdo denunciado, autor, comunidade, disponibilidade, mídia, URL pública, status normalizado e histórico mínimo da denúncia. O contrato anterior de `AdminModerationOperationalAlertDTO` permanece compatível para compliance/operacionais e para consumidores que ignorem `report`.
+
+A decisão mantém a central de alertas como derivada/read-only: `/moderacao/denuncias` pode abrir o conteúdo no Admin ou no público, mas não introduz um segundo workflow global de resolução de denúncias. A resolução com ações de **Procedente/Improcedente** continua associada às telas já desenhadas para o contexto de detalhe quando houver fluxo específico.
+
+A renderização de mídia segue a regra do Admin de não usar `<img>` cru: imagens passam por `next/image` quando a origem é permitida e vídeos usam player HTML nativo com miniplayer. Quando o conteúdo foi removido, a UI mostra o motivo de indisponibilidade e oculta o atalho público.

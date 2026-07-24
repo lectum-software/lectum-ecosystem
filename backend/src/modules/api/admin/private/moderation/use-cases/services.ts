@@ -1,6 +1,9 @@
 import type { Resolve } from "@/helpers/return";
 import { error, msg } from "@/helpers/translate";
-import { normalizeProfessionalDisplayName } from "@/utils/professional-name";
+import {
+  buildProfessionalFullDisplayName,
+  normalizeProfessionalDisplayName,
+} from "@/utils/professional-name";
 import { parseStoredCrp } from "@/utils/professional-registry";
 import { hasProfessionalRegistryApproval } from "@/utils/subscription-entitlement";
 import type {
@@ -294,6 +297,185 @@ const postReportPriority = (status: string): AdminModerationOperationalAlertDTO[
   return "urgent";
 };
 
+const roleLabel = (role: string) => {
+  const labels: Record<string, string> = {
+    paciente: "Paciente",
+    psicologo: "Psicólogo",
+  };
+
+  return labels[role] ?? "Usuário";
+};
+
+type AdminPostReportAuthor =
+  | AdminPostReportRecord["post"]["author"]
+  | NonNullable<AdminPostReportRecord["reply"]>["author"];
+
+const reportAuthor = (report: AdminPostReportRecord): AdminPostReportAuthor =>
+  report.reply ? report.reply.author : report.post.author;
+
+const reportAuthorName = (author: AdminPostReportAuthor) => {
+  if (author.role !== "psicologo") return author.name;
+
+  return buildProfessionalFullDisplayName({
+    fallbackName: author.name,
+    firstName: author.psychologist_profile?.professional_first_name,
+    lastName: author.psychologist_profile?.professional_last_name,
+  });
+};
+
+const reportAuthorRoleLabel = (author: AdminPostReportAuthor) => {
+  if (author.role !== "psicologo") return roleLabel(author.role);
+
+  return author.psychologist_profile?.gender?.trim().toLowerCase() === "feminino"
+    ? "Psicóloga"
+    : "Psicólogo";
+};
+
+const reportContentType = (report: AdminPostReportRecord): "post" | "reply" =>
+  report.reply ? "reply" : "post";
+
+const reportCommunity = (report: AdminPostReportRecord) =>
+  report.reply ? report.reply.post.community : report.post.community;
+
+const reportPostId = (report: AdminPostReportRecord) =>
+  report.reply ? report.reply.post.id : report.post.id;
+
+const reportTitle = (report: AdminPostReportRecord) => {
+  if (!report.reply) return report.post.title;
+
+  return report.reply.title || `Resposta em: ${report.reply.post.title}`;
+};
+
+const reportContent = (report: AdminPostReportRecord) =>
+  report.reply ? report.reply.content : report.post.content;
+
+const reportContentCreatedAt = (report: AdminPostReportRecord) =>
+  report.reply ? report.reply.createdAt : report.post.createdAt;
+
+const reportTargetId = (report: AdminPostReportRecord) =>
+  report.reply ? report.reply.id : report.post.id;
+
+const reportContentAvailable = (report: AdminPostReportRecord) => {
+  if (report.reply) {
+    return (
+      !report.reply.deleted &&
+      !report.reply.post.deleted &&
+      report.reply.post.status === "publicado" &&
+      !report.reply.post.community.deleted
+    );
+  }
+
+  return (
+    !report.post.deleted && report.post.status === "publicado" && !report.post.community.deleted
+  );
+};
+
+const reportUnavailableReason = (report: AdminPostReportRecord) => {
+  if (report.reply) {
+    if (report.reply.deleted) return "Resposta denunciada já foi removida.";
+    if (report.reply.post.deleted || report.reply.post.status !== "publicado") {
+      return "Publicação da resposta já está indisponível.";
+    }
+    if (report.reply.post.community.deleted) {
+      return "Comunidade da resposta está indisponível.";
+    }
+  } else {
+    if (report.post.deleted || report.post.status !== "publicado") {
+      return "Publicação denunciada já está indisponível.";
+    }
+    if (report.post.community.deleted) {
+      return "Comunidade da publicação está indisponível.";
+    }
+  }
+
+  return null;
+};
+
+const reportMedia = (report: AdminPostReportRecord) => {
+  if (report.reply) {
+    if (!report.reply.media_url || !report.reply.media_type) return null;
+
+    return {
+      media_type: report.reply.media_type,
+      media_url: report.reply.media_url,
+    };
+  }
+
+  const firstMedia = report.post.media_items[0];
+  const mediaUrl = firstMedia?.media_url ?? report.post.media_url;
+  const mediaType = firstMedia?.media_type ?? report.post.media_type;
+
+  if (!mediaUrl || !mediaType) return null;
+
+  return {
+    media_type: mediaType,
+    media_url: mediaUrl,
+  };
+};
+
+const reportPublicUrl = (report: AdminPostReportRecord) => {
+  if (!reportContentAvailable(report)) return null;
+
+  const community = reportCommunity(report);
+  const postId = reportPostId(report);
+
+  return report.reply
+    ? `/community/${community.slug}/post/${postId}/thread/${report.reply.id}`
+    : `/community/${community.slug}/post/${postId}`;
+};
+
+const reportContentDTO = (report: AdminPostReportRecord) => {
+  const author = reportAuthor(report);
+  const available = reportContentAvailable(report);
+
+  return {
+    author: {
+      avatar: author.avatar,
+      id: author.id,
+      name: reportAuthorName(author),
+      role: author.role,
+      role_label: reportAuthorRoleLabel(author),
+    },
+    available,
+    body: reportContent(report),
+    community: communityDTO(reportCommunity(report)),
+    created_at: reportContentCreatedAt(report),
+    excerpt: compactText(reportContent(report), 120),
+    id: reportTargetId(report),
+    media: reportMedia(report),
+    public_url: reportPublicUrl(report),
+    title: reportTitle(report),
+    type: reportContentType(report),
+    unavailable_reason: available ? null : reportUnavailableReason(report),
+  };
+};
+
+const reportDTO = (report: AdminPostReportRecord) => {
+  const statusGroup = postReportStatusGroup(report.status);
+  const statusLabel = postReportStatusLabel(report.status);
+
+  return {
+    content: reportContentDTO(report),
+    created_at: report.createdAt,
+    description: report.description,
+    id: report.id,
+    moderation: {
+      status: report.status,
+      status_label: statusLabel,
+    },
+    reason: report.reason,
+    reason_label: postReportReasonLabel(report.reason),
+    reported_by: {
+      label: roleLabel(report.reporter.role),
+      name: report.reporter.name,
+      role: report.reporter.role,
+    },
+    status: report.status,
+    status_group: statusGroup,
+    status_label: statusLabel,
+  };
+};
+
 const toJsonStringArray = (value: unknown): string[] => {
   if (!Array.isArray(value)) return [];
 
@@ -416,6 +598,7 @@ const mapReportAlert = (
 ): AdminModerationOperationalAlertDTO => {
   const isReply = report.target_type === "reply" || Boolean(report.reply_id);
   const community = isReply && report.reply ? report.reply.post.community : report.post.community;
+  const detail = reportDTO(report);
   const targetId = isReply
     ? (report.reply?.id ?? report.reply_id ?? report.target_id)
     : report.post.id;
@@ -450,6 +633,7 @@ const mapReportAlert = (
     group: "denuncias",
     id: `post-report-${report.id}`,
     priority: postReportPriority(report.status),
+    report: detail,
     source: "post_report",
     title: `Denúncia de ${isReply ? "resposta" : "post"} ${reportStatusLabel.toLowerCase()}`,
     type: "post_report",
