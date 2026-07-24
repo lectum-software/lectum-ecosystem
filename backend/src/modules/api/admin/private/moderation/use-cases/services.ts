@@ -10,9 +10,13 @@ import type {
   AdminModerationEventsQuery,
   AdminModerationOperationalAlertDTO,
   AdminModerationOperationalAlertsDTO,
+  AdminModerationOperationalAlertsGroup,
+  AdminModerationOperationalAlertsPageDTO,
+  AdminModerationOperationalAlertsQuery,
   AdminModerationSummaryDTO,
   IAdminModerationEventDTO,
   IAdminModerationEventsDTO,
+  IAdminModerationOperationalAlertsDTO,
   IAdminModerationResolveDTO,
   IAdminModerationSummaryDTO,
 } from "../DTOs/IAdminModerationDTO";
@@ -30,7 +34,7 @@ import type {
 const DEFAULT_PAGE = 1;
 const DEFAULT_LIMIT = 10;
 const MAX_LIMIT = 50;
-const OPERATIONAL_ALERT_LIMIT = 12;
+const OPERATIONAL_ALERT_LIMIT = 50;
 const POST_COVERAGE_HOURS = 48;
 const PSYCHOLOGIST_ADAPTATION_DAYS = 30;
 const HOUR_IN_MS = 60 * 60 * 1000;
@@ -618,27 +622,36 @@ const buildPsychologistAlerts = (
   };
 };
 
-const sortOperationalAlerts = (
+const sortOperationalAlertsByLatest = (
   left: AdminModerationOperationalAlertDTO,
   right: AdminModerationOperationalAlertDTO,
 ) => {
+  const dateDelta = right.created_at.getTime() - left.created_at.getTime();
+  if (dateDelta !== 0) return dateDelta;
+
   const priorityDelta = priorityWeight[left.priority] - priorityWeight[right.priority];
   if (priorityDelta !== 0) return priorityDelta;
 
-  return right.created_at.getTime() - left.created_at.getTime();
+  return left.id.localeCompare(right.id);
+};
+
+type BuildOperationalAlertsOptions = {
+  itemLimit?: number;
 };
 
 const buildOperationalAlerts = async (
   repository: AdminModerationRepository,
+  options: BuildOperationalAlertsOptions = {},
 ): Promise<AdminModerationOperationalAlertsDTO> => {
   const now = new Date();
   const uncoveredCutoff = new Date(now.getTime() - POST_COVERAGE_HOURS * HOUR_IN_MS);
+  const itemLimit = options.itemLimit;
   const [pendingReports, latestReports, uncoveredPostsCount, uncoveredPosts, psychologistProfiles] =
     await Promise.all([
       repository.countPendingPostReports(),
-      repository.listPendingPostReports(8),
+      repository.listPendingPostReports(itemLimit),
       repository.countUncoveredPatientPosts(uncoveredCutoff),
-      repository.listUncoveredPatientPosts(uncoveredCutoff, 8),
+      repository.listUncoveredPatientPosts(uncoveredCutoff, itemLimit),
       repository.listOperationalPsychologistProfiles(),
     ]);
   const psychologistIds = psychologistProfiles.map((profile) => profile.user_id);
@@ -661,6 +674,9 @@ const buildOperationalAlerts = async (
     psychologistAlerts.counts.unpublishedRequiredSettings +
     psychologistAlerts.counts.psychologistNoTractionAfterAdaptation;
   const urgentTotal = pendingReports + psychologistAlerts.counts.professionalCrpPending;
+  const items = [...reportAlerts, ...uncoveredPostAlerts, ...psychologistAlerts.alerts].sort(
+    sortOperationalAlertsByLatest,
+  );
 
   return {
     counts: {
@@ -677,9 +693,7 @@ const buildOperationalAlerts = async (
       urgent_total: urgentTotal,
     },
     excluded_dimensions: excludedOperationalDimensions,
-    items: [...reportAlerts, ...uncoveredPostAlerts, ...psychologistAlerts.alerts]
-      .sort(sortOperationalAlerts)
-      .slice(0, OPERATIONAL_ALERT_LIMIT),
+    items: typeof itemLimit === "number" ? items.slice(0, itemLimit) : items,
     source:
       "post_report+community_post+post_reply+psychologist_profile+professional_subscription+profile_view_event+contact_request",
     thresholds: {
@@ -689,6 +703,35 @@ const buildOperationalAlerts = async (
   };
 };
 
+const normalizeOperationalGroup = (
+  value?: string | null,
+): AdminModerationOperationalAlertsGroup => {
+  const normalized = normalizeFilter(value);
+
+  return normalized === "denuncias" || normalized === "compliance" || normalized === "operacional"
+    ? normalized
+    : "all";
+};
+
+const operationalAlertMatchesGroup = (
+  alert: AdminModerationOperationalAlertDTO,
+  group: AdminModerationOperationalAlertsGroup,
+) => {
+  if (group === "all") return true;
+  if (group === "operacional") return alert.group === "operacional";
+  if (group === "compliance") return alert.group === "compliance";
+
+  return alert.group === "denuncias";
+};
+
+const normalizeOperationalAlertsQuery = (
+  query: AdminModerationOperationalAlertsQuery = {},
+): Required<Pick<AdminModerationOperationalAlertsQuery, "group">> &
+  Pick<AdminModerationOperationalAlertsQuery, "limit" | "page"> => ({
+  ...query,
+  group: normalizeOperationalGroup(query.group),
+});
+
 export const getSummary = async (_data: IAdminModerationSummaryDTO): Promise<Resolve> => {
   const repository = new AdminModerationRepository();
   const [allEvents, latestPending, pendingTotal, urgentPendingTotal, operationalAlerts] =
@@ -697,7 +740,7 @@ export const getSummary = async (_data: IAdminModerationSummaryDTO): Promise<Res
       repository.listLatestPending(5),
       repository.countPending(),
       repository.countUrgentPending(),
-      buildOperationalAlerts(repository),
+      buildOperationalAlerts(repository, { itemLimit: OPERATIONAL_ALERT_LIMIT }),
     ]);
   const replyMap = await hydrateReplyTargets(latestPending);
   const summary: AdminModerationSummaryDTO = {
@@ -716,6 +759,35 @@ export const getSummary = async (_data: IAdminModerationSummaryDTO): Promise<Res
     status: 200,
     ...msg("index", {}),
     data: summary,
+  };
+};
+
+export const listOperationalAlerts = async (
+  data: IAdminModerationOperationalAlertsDTO,
+): Promise<Resolve> => {
+  const repository = new AdminModerationRepository();
+  const query = normalizeOperationalAlertsQuery(data.q ?? {});
+  const page = normalizePage(query.page);
+  const limit = normalizeLimit(query.limit);
+  const group = query.group;
+  const operationalAlerts = await buildOperationalAlerts(repository);
+  const items = operationalAlerts.items.filter((alert) =>
+    operationalAlertMatchesGroup(alert, group),
+  );
+  const paginated = paginate(items, page, limit);
+  const payload: AdminModerationOperationalAlertsPageDTO = {
+    ...paginated,
+    counts: operationalAlerts.counts,
+    excluded_dimensions: operationalAlerts.excluded_dimensions,
+    group,
+    source: operationalAlerts.source,
+    thresholds: operationalAlerts.thresholds,
+  };
+
+  return {
+    status: 200,
+    ...msg("index", {}),
+    data: payload,
   };
 };
 

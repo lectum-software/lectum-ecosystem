@@ -24,6 +24,18 @@ export type AdminModerationEventsQuery = {
   to?: string;
 };
 
+export type AdminModerationOperationalAlertsGroup =
+  | "all"
+  | "compliance"
+  | "denuncias"
+  | "operacional";
+
+export type AdminModerationOperationalAlertsQuery = {
+  group?: AdminModerationOperationalAlertsGroup;
+  limit?: number;
+  page?: number;
+};
+
 export type AdminModerationEventParams = {
   id: string;
 };
@@ -39,6 +51,12 @@ export type IAdminModerationSummaryDTO = {
 
 export type IAdminModerationEventsDTO = {
   q: AdminModerationEventsQuery;
+  auth?: admin;
+  admin?: admin;
+};
+
+export type IAdminModerationOperationalAlertsDTO = {
+  q: AdminModerationOperationalAlertsQuery;
   auth?: admin;
   admin?: admin;
 };
@@ -181,4 +199,17 @@ export type AdminModerationEventsDTO = {
   pages: number;
   per_page: number;
   source: "content_moderation_event";
+};
+
+export type AdminModerationOperationalAlertsPageDTO = {
+  count: number;
+  counts: AdminModerationOperationalAlertCountsDTO;
+  data: AdminModerationOperationalAlertDTO[];
+  excluded_dimensions: AdminModerationOperationalAlertsDTO["excluded_dimensions"];
+  group: AdminModerationOperationalAlertsGroup;
+  page: number;
+  pages: number;
+  per_page: number;
+  source: AdminModerationOperationalAlertsDTO["source"];
+  thresholds: AdminModerationOperationalAlertsDTO["thresholds"];
 };

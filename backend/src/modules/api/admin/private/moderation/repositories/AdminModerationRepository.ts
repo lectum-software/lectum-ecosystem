@@ -158,7 +158,7 @@ export class AdminModerationRepository implements IAdminModerationRepository {
 
   listLatestPending(limit: number) {
     return prisma.content_moderation_event.findMany({
-      orderBy: [{ severity: "desc" }, { createdAt: "desc" }, { id: "desc" }],
+      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
       select: adminModerationEventSelect,
       take: limit,
       where: {
@@ -170,11 +170,11 @@ export class AdminModerationRepository implements IAdminModerationRepository {
     });
   }
 
-  listPendingPostReports(limit: number) {
+  listPendingPostReports(limit?: number) {
     return prisma.post_report.findMany({
       orderBy: [{ createdAt: "desc" }, { id: "desc" }],
       select: adminPostReportSelect,
-      take: limit,
+      ...(limit ? { take: limit } : {}),
       where: {
         deleted: false,
         status: {
@@ -184,11 +184,11 @@ export class AdminModerationRepository implements IAdminModerationRepository {
     });
   }
 
-  listUncoveredPatientPosts(cutoff: Date, limit: number) {
+  listUncoveredPatientPosts(cutoff: Date, limit?: number) {
     return prisma.community_post.findMany({
-      orderBy: [{ createdAt: "asc" }, { id: "asc" }],
+      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
       select: adminUncoveredPatientPostSelect,
-      take: limit,
+      ...(limit ? { take: limit } : {}),
       where: {
         author: {
           deleted: false,

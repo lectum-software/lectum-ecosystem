@@ -136,7 +136,7 @@ const SidebarContent = ({
                     aria-current={isActive ? "page" : undefined}
                     aria-expanded={collapsed ? undefined : isOpen}
                     className={cn(
-                      "flex min-h-12 w-full items-center gap-3 rounded-2xl px-3 text-left text-sm font-bold transition",
+                      "relative flex min-h-12 w-full items-center gap-3 rounded-2xl px-3 text-left text-sm font-bold transition",
                       premiumPilot
                         ? "text-sidebar-muted hover:bg-sidebar-active hover:text-primary focus-visible:outline-primary"
                         : "text-sidebar-muted hover:bg-sidebar-active/45 hover:text-sidebar-foreground focus-visible:outline-white",
@@ -167,6 +167,28 @@ const SidebarContent = ({
                     <span className={cn("min-w-0 flex-1 truncate", collapsed && "sr-only")}>
                       {item.label}
                     </span>
+                    {showModerationBadge ? (
+                      <span
+                        aria-hidden="true"
+                        className={cn(
+                          "ml-auto inline-flex h-6 min-w-6 items-center justify-center gap-1 rounded-full px-2 text-[0.68rem] font-black shadow-admin-soft",
+                          moderationUrgentTotal > 0
+                            ? "bg-danger text-white"
+                            : "bg-orange-100 text-orange-700 ring-1 ring-orange-200",
+                          collapsed &&
+                            "absolute -right-1 top-1 ml-0 h-5 min-w-5 gap-0 px-1 text-[0.62rem]",
+                        )}
+                        title={moderationBadgeTitle}
+                      >
+                        <AlertTriangle
+                          aria-hidden="true"
+                          className={cn("h-3.5 w-3.5 shrink-0", collapsed && "h-3 w-3")}
+                        />
+                        <span className={cn(collapsed && "sr-only")}>
+                          {moderationPendingTotal > 99 ? "99+" : moderationPendingTotal}
+                        </span>
+                      </span>
+                    ) : null}
                     <ChevronDown
                       aria-hidden
                       className={cn(
@@ -175,6 +197,9 @@ const SidebarContent = ({
                         collapsed && "hidden",
                       )}
                     />
+                    {showModerationBadge ? (
+                      <span className="sr-only">{moderationBadgeTitle}</span>
+                    ) : null}
                   </button>
 
                   {isOpen && !collapsed ? (

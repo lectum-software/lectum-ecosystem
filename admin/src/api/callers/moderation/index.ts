@@ -2,9 +2,11 @@
 import { adminModerationKeys } from "@/api/cache/keys";
 import {
   type AdminModerationEventsQuery,
+  type AdminModerationOperationalAlertsQuery,
   type AdminModerationResolveInput,
   getAdminModerationEvent,
   getAdminModerationEvents,
+  getAdminModerationOperationalAlerts,
   getAdminModerationSummary,
   resolveAdminModerationEvent,
   reviewAdminModerationEvent,
@@ -21,6 +23,12 @@ export const useAdminModerationEvents = (input: AdminModerationEventsQuery) =>
   useQuery({
     queryFn: () => getAdminModerationEvents(input),
     queryKey: adminModerationKeys.events(input),
+  });
+
+export const useAdminModerationOperationalAlerts = (input: AdminModerationOperationalAlertsQuery) =>
+  useQuery({
+    queryFn: () => getAdminModerationOperationalAlerts(input),
+    queryKey: adminModerationKeys.operationalAlerts(input),
   });
 
 export const useAdminModerationEvent = (id: string | null) =>

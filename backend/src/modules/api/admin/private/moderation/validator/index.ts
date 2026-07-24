@@ -32,6 +32,22 @@ export const eventsSchema: IValidatorRequest = {
   ],
 };
 
+export const operationalAlertsSchema: IValidatorRequest = {
+  query: [
+    { key: "page", coerse: "number", method: "numeric", int: true, min: 1, optional: true },
+    {
+      key: "limit",
+      coerse: "number",
+      method: "numeric",
+      int: true,
+      min: 1,
+      max: 50,
+      optional: true,
+    },
+    { key: "group", coerse: "string", method: "string", max: 30, optional: true },
+  ],
+};
+
 export const eventSchema: IValidatorRequest = {
   params: [idParam],
 };
@@ -42,6 +58,7 @@ export const resolveSchema: IValidatorRequest = {
 };
 
 export const eventsValidator = validator(eventsSchema);
+export const operationalAlertsValidator = validator(operationalAlertsSchema);
 export const eventValidator = validator(eventSchema);
 export const resolveValidator = validator(resolveSchema);
 

@@ -166,3 +166,39 @@ Validacao deste ajuste:
 - `pnpm --dir admin build` (primeira tentativa bloqueada por build Next concorrente; reexecutado apos o lock liberar e concluiu com sucesso)
 - Smoke HTTP local: `GET http://localhost:3002/moderacao` retornou `200`.
 - `pnpm check` foi tentado, mas excedeu o limite de 10 minutos do runner e deixou processos orfaos; os processos do check foram encerrados para evitar carga duplicada. Como o ajuste alterou apenas Admin/docs, a validacao relevante ficou coberta por `pnpm --dir admin check` e `pnpm --dir admin build`.
+
+## Ajuste complementar 2026-07-24 - Páginas exclusivas por categoria de pendência
+
+- Pedido do usuário: separar pendências operacionais abaixo de denúncias/compliance e fazer os botões **Ver todos** abrirem páginas exclusivas da categoria.
+- A visão principal `/moderacao` passou a exibir previews mobile-first com as 5 últimas pendências em três blocos: **Denúncias e Compliance**, **Alertas operacionais** e **Moderação textual**.
+- Pendências operacionais agora ficam em uma lista separada abaixo da lista de **Denúncias e Compliance**, sem misturar prioridades críticas de denúncia/compliance com acompanhamento de oferta.
+- Os botões **Ver todos** agora navegam para páginas exclusivas reais:
+  - `/moderacao/denuncias-compliance` para denúncias pendentes e compliance profissional;
+  - `/moderacao/alertas-operacionais` para pendências operacionais derivadas;
+  - `/moderacao/textual` para a lista completa/filtros/detalhe/action de moderação textual.
+- Criado `GET /api/admin/private/moderation/operational-alerts` com paginação e filtro de grupo para alimentar as páginas exclusivas de denúncias/compliance e operacionais sem criar mocks, tabelas ou workflow de resolução para alertas derivados.
+- A página `/moderacao/textual` reaproveita os endpoints reais de `content_moderation_event` e mantém filtros, detalhe protegido, revisão, resolução e remoção auditada quando aplicável.
+- Não houve alteração de Prisma schema/migrations, package novo ou dados artificiais.
+
+## Ajuste complementar 2026-07-24 - Submenus de Moderação por área
+
+- Pedido do usuário: a opção **Moderação** no menu lateral deve abrir 5 submenus, cada um levando a uma página exclusiva: **Dashboard**, **Denúncias**, **Compliance**, **Operacionais** e **Conteúdo sensível**.
+- O menu lateral agora trata **Moderação** como grupo expansível com os links:
+  - `/moderacao` (**Dashboard**);
+  - `/moderacao/denuncias` (**Denúncias**);
+  - `/moderacao/compliance` (**Compliance**);
+  - `/moderacao/operacionais` (**Operacionais**);
+  - `/moderacao/conteudo-sensivel` (**Conteúdo sensível**).
+- O dashboard `/moderacao` mantém os cards de resumo e previews com as 5 últimas pendências por módulo, mas os botões **Ver todos** passam a navegar para a página exclusiva da categoria correspondente.
+- **Denúncias** e **Compliance** foram separados em páginas e listas distintas; o endpoint paginado `GET /api/admin/private/moderation/operational-alerts` agora aceita `group=denuncias`, `group=compliance` ou `group=operacional`.
+- **Conteúdo sensível** reaproveita a lista/filtros/detalhe/actions reais de `content_moderation_event`, agora em `/moderacao/conteudo-sensivel`.
+- O badge de urgência permanece na opção pai **Moderação**, somando eventos de conteúdo sensível e alertas derivados.
+
+### Validação do ajuste de submenus 2026-07-24
+
+- `pnpm --dir backend check`
+- `pnpm --dir admin check`
+- `pnpm --dir backend build`
+- `pnpm --dir admin build`
+- `pnpm check`
+- Smoke HTTP local no Admin (`localhost:3002`) retornou 200 para `/moderacao`, `/moderacao/denuncias`, `/moderacao/compliance`, `/moderacao/operacionais` e `/moderacao/conteudo-sensivel`.

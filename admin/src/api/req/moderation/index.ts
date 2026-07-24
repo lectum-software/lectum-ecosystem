@@ -110,6 +110,31 @@ export type AdminModerationOperationalAlerts = {
   };
 };
 
+export type AdminModerationOperationalAlertsGroup =
+  | "all"
+  | "compliance"
+  | "denuncias"
+  | "operacional";
+
+export type AdminModerationOperationalAlertsQuery = {
+  group?: AdminModerationOperationalAlertsGroup;
+  limit?: number;
+  page?: number;
+};
+
+export type AdminModerationOperationalAlertsPage = {
+  count: number;
+  counts: AdminModerationOperationalAlerts["counts"];
+  data: AdminModerationOperationalAlert[];
+  excluded_dimensions: AdminModerationOperationalAlerts["excluded_dimensions"];
+  group: AdminModerationOperationalAlertsGroup;
+  page: number;
+  pages: number;
+  per_page: number;
+  source: AdminModerationOperationalAlerts["source"];
+  thresholds: AdminModerationOperationalAlerts["thresholds"];
+};
+
 export type AdminModerationSummary = {
   by_category: Record<string, number>;
   by_decision: Record<string, number>;
@@ -163,6 +188,12 @@ const cleanParams = (input: AdminModerationEventsQuery = {}) => ({
   ...(input.to ? { to: input.to } : {}),
 });
 
+const cleanOperationalAlertsParams = (input: AdminModerationOperationalAlertsQuery = {}) => ({
+  ...(input.group && input.group !== "all" ? { group: input.group } : {}),
+  ...(input.limit ? { limit: input.limit } : {}),
+  ...(input.page ? { page: input.page } : {}),
+});
+
 export const getAdminModerationSummary = async () => {
   const response = await adminApi.get<ApiResponse<AdminModerationSummary>>(
     "/api/admin/private/moderation/summary",
@@ -175,6 +206,17 @@ export const getAdminModerationEvents = async (input: AdminModerationEventsQuery
   const response = await adminApi.get<ApiResponse<AdminModerationEvents>>(
     "/api/admin/private/moderation/events",
     { params: cleanParams(input) },
+  );
+
+  return resolveApiData(response.data);
+};
+
+export const getAdminModerationOperationalAlerts = async (
+  input: AdminModerationOperationalAlertsQuery = {},
+) => {
+  const response = await adminApi.get<ApiResponse<AdminModerationOperationalAlertsPage>>(
+    "/api/admin/private/moderation/operational-alerts",
+    { params: cleanOperationalAlertsParams(input) },
   );
 
   return resolveApiData(response.data);

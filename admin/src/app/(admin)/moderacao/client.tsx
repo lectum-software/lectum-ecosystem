@@ -48,7 +48,8 @@ import type {
 import { InputController, TextareaController } from "@/components/controllers";
 import { cn } from "@/lib/utils";
 
-const EVENT_LIMIT = 8;
+const EVENT_LIMIT = 5;
+const PENDING_PREVIEW_LIMIT = 5;
 const REMOVE_CONFIRMATION = "REMOVER CONTEUDO";
 const cardClass =
   "rounded-card border border-border/80 bg-surface/95 shadow-admin-soft backdrop-blur";
@@ -157,7 +158,7 @@ const initialFilters: Filters = {
   from: initialRange.from,
   q: "",
   severity: "all",
-  status: "all",
+  status: "pending",
   to: initialRange.to,
 };
 
@@ -188,43 +189,63 @@ const formatDateTime = (value?: string | null) => {
   return Number.isNaN(date.getTime()) ? "—" : dateTimeFormatter.format(date);
 };
 const formatDate = (value: string) => dateFormatter.format(new Date(value));
+const sortAlertsByLatest = (
+  left: AdminModerationOperationalAlert,
+  right: AdminModerationOperationalAlert,
+) => new Date(right.created_at).getTime() - new Date(left.created_at).getTime();
 
 const Card = ({ children, className }: { children?: ReactNode; className?: string }) => (
   <section className={cn(cardClass, className)}>{children}</section>
 );
 
 const Header = ({
+  backHref,
+  description = "Acompanhe denúncias de posts, conteúdo sensível, pendências de compliance profissional e alertas operacionais derivados dos dados reais da Lectum.",
   disabled,
+  eyebrow = "Operação e segurança",
   loading,
   onRefresh,
+  title = "Central de moderação e alertas",
 }: {
+  backHref?: string;
+  description?: string;
   disabled: boolean;
+  eyebrow?: string;
   loading: boolean;
   onRefresh: () => void;
+  title?: string;
 }) => (
   <Card className="p-5 md:p-6">
     <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
       <div className="min-w-0">
-        <p className="text-xs font-semibold uppercase tracking-[0.12em] text-primary">
-          Operação e segurança
-        </p>
+        <p className="text-xs font-semibold uppercase tracking-[0.12em] text-primary">{eyebrow}</p>
         <h1 className="mt-2 text-3xl font-bold tracking-tight text-foreground md:text-4xl">
-          Central de moderação e alertas
+          {title}
         </h1>
         <p className="mt-2 max-w-3xl text-sm font-medium leading-6 text-muted md:text-base">
-          Acompanhe denúncias de posts, moderação textual sensível, pendências de compliance
-          profissional e alertas operacionais derivados dos dados reais da Lectum.
+          {description}
         </p>
       </div>
-      <button
-        className="inline-flex h-11 items-center justify-center gap-2 rounded-control border border-border bg-surface px-4 text-sm font-semibold text-foreground shadow-control transition hover:border-border-strong hover:text-primary disabled:opacity-60"
-        disabled={disabled}
-        onClick={onRefresh}
-        type="button"
-      >
-        <RefreshCw aria-hidden className={cn("h-4 w-4", loading && "animate-spin")} />
-        Atualizar
-      </button>
+      <div className="flex flex-col gap-2 sm:flex-row xl:justify-end">
+        {backHref ? (
+          <Link
+            className="inline-flex h-11 items-center justify-center gap-2 rounded-control border border-border bg-surface px-4 text-sm font-semibold text-foreground shadow-control transition hover:border-border-strong hover:text-primary"
+            href={backHref}
+          >
+            <ChevronLeft aria-hidden className="h-4 w-4" />
+            Voltar
+          </Link>
+        ) : null}
+        <button
+          className="inline-flex h-11 items-center justify-center gap-2 rounded-control border border-border bg-surface px-4 text-sm font-semibold text-foreground shadow-control transition hover:border-border-strong hover:text-primary disabled:opacity-60"
+          disabled={disabled}
+          onClick={onRefresh}
+          type="button"
+        >
+          <RefreshCw aria-hidden className={cn("h-4 w-4", loading && "animate-spin")} />
+          Atualizar
+        </button>
+      </div>
     </div>
   </Card>
 );
@@ -319,7 +340,7 @@ const SummaryGrid = ({ summary }: { summary: AdminModerationSummary }) => {
       <Metric
         description="Detecção automática de conteúdo potencialmente sensível, bloqueável ou urgente para triagem."
         icon={<Eye aria-hidden className="h-5 w-5" />}
-        label="Moderação textual"
+        label="Conteúdo sensível"
         tone="success"
         value={summary.pending_total}
       />
@@ -387,9 +408,76 @@ const OperationalAlertCard = ({ alert }: { alert: AdminModerationOperationalAler
   );
 };
 
+const AlertSection = ({
+  description,
+  emptyLabel,
+  items,
+  title,
+  total,
+  viewAllHref,
+}: {
+  description: string;
+  emptyLabel: string;
+  items: AdminModerationOperationalAlert[];
+  title: string;
+  total: number;
+  viewAllHref: string;
+}) => {
+  const visibleItems = items.slice(0, PENDING_PREVIEW_LIMIT);
+
+  return (
+    <section className="space-y-3">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <h3 className="text-lg font-black text-foreground">{title}</h3>
+          <p className="mt-1 max-w-3xl text-sm leading-6 text-muted">{description}</p>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="inline-flex w-fit rounded-full bg-surface-muted px-3 py-1 text-xs font-black text-muted">
+            {numberFormatter.format(total)} pendência(s)
+          </span>
+          {total > 0 ? (
+            <Link
+              className="inline-flex h-9 items-center justify-center rounded-control border border-border bg-surface px-3 text-xs font-black text-foreground transition hover:border-primary hover:text-primary"
+              href={viewAllHref}
+            >
+              Ver todos
+            </Link>
+          ) : null}
+        </div>
+      </div>
+      {items.length === 0 ? (
+        <div className="rounded-2xl border border-dashed border-border p-5 text-sm leading-6 text-muted">
+          {emptyLabel}
+        </div>
+      ) : (
+        <div className="grid gap-3">
+          {visibleItems.map((alert) => (
+            <OperationalAlertCard alert={alert} key={alert.id} />
+          ))}
+          {total > PENDING_PREVIEW_LIMIT || items.length > PENDING_PREVIEW_LIMIT ? (
+            <p className="text-xs font-bold text-muted">
+              Exibindo as {PENDING_PREVIEW_LIMIT} últimas pendências desta lista.
+            </p>
+          ) : null}
+        </div>
+      )}
+    </section>
+  );
+};
+
 const OperationalAlertsPanel = ({ summary }: { summary: AdminModerationSummary }) => {
   const alerts = summary.operational_alerts;
   const counts = alerts.counts;
+  const reportItems = alerts.items
+    .filter((alert) => alert.group === "denuncias")
+    .sort(sortAlertsByLatest);
+  const complianceItems = alerts.items
+    .filter((alert) => alert.group === "compliance")
+    .sort(sortAlertsByLatest);
+  const operationalItems = alerts.items
+    .filter((alert) => alert.group === "operacional")
+    .sort(sortAlertsByLatest);
 
   return (
     <Card className="overflow-hidden">
@@ -403,11 +491,8 @@ const OperationalAlertsPanel = ({ summary }: { summary: AdminModerationSummary }
               Denúncias, compliance e acompanhamento de oferta
             </h2>
             <p className="mt-2 max-w-3xl text-sm leading-6 text-muted">
-              A central combina denúncias de conteúdo, CRP pendente em plano profissional, WhatsApp
-              ausente/inválido, posts de pacientes sem resposta após{" "}
-              {alerts.thresholds.patient_post_without_coverage_hours}h, perfis não publicados por
-              configurações obrigatórias e profissionais sem tração após{" "}
-              {alerts.thresholds.psychologist_adaptation_days} dias.
+              A central separa denúncias e compliance das pendências operacionais para preservar a
+              triagem crítica e deixar a fila de oferta logo abaixo, sem misturar prioridades.
             </p>
           </div>
           <span className="inline-flex w-fit rounded-full bg-surface-muted px-3 py-1 text-xs font-black text-muted">
@@ -441,15 +526,35 @@ const OperationalAlertsPanel = ({ summary }: { summary: AdminModerationSummary }
           </div>
         </div>
       </div>
-      <div className="grid gap-3 p-4">
-        {alerts.items.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-border p-5 text-sm leading-6 text-muted">
-            Nenhuma denúncia, pendência de compliance ou alerta operacional encontrado nos dados
-            reais atuais.
-          </div>
-        ) : (
-          alerts.items.map((alert) => <OperationalAlertCard alert={alert} key={alert.id} />)
-        )}
+      <div className="grid gap-6 p-4">
+        <AlertSection
+          description="Últimas denúncias reais de posts e respostas aguardando triagem."
+          emptyLabel="Nenhuma denúncia pendente encontrada nos dados reais atuais."
+          items={reportItems}
+          title="Denúncias"
+          total={counts.pending_reports}
+          viewAllHref="/moderacao/denuncias"
+        />
+        <div className="border-t border-border pt-5">
+          <AlertSection
+            description="Últimas pendências de compliance profissional, incluindo CRP em Plano Profissional e WhatsApp inválido."
+            emptyLabel="Nenhuma pendência de compliance encontrada nos dados reais atuais."
+            items={complianceItems}
+            title="Compliance"
+            total={counts.compliance_total}
+            viewAllHref="/moderacao/compliance"
+          />
+        </div>
+        <div className="border-t border-border pt-5">
+          <AlertSection
+            description={`Últimas pendências derivadas de oferta: posts sem cobertura após ${alerts.thresholds.patient_post_without_coverage_hours}h, perfis não publicados e profissionais sem tração após ${alerts.thresholds.psychologist_adaptation_days} dias.`}
+            emptyLabel="Nenhuma pendência operacional encontrada nos dados reais atuais."
+            items={operationalItems}
+            title="Operacionais"
+            total={counts.operational_total}
+            viewAllHref="/moderacao/operacionais"
+          />
+        </div>
       </div>
       <div className="border-t border-border bg-surface-muted p-4 text-xs leading-5 text-muted">
         Fora do escopo agora: {alerts.excluded_dimensions.map((item) => item.title).join("; ")}.
@@ -468,7 +573,7 @@ const FiltersBar = ({
     <div className="border-b border-border/80 p-5">
       <div className="flex flex-col gap-1">
         <p className="text-xs font-semibold uppercase tracking-[0.12em] text-primary">
-          Moderação textual
+          Conteúdo sensível
         </p>
         <h2 className="text-xl font-bold text-foreground">Filtros de eventos</h2>
         <p className="text-sm leading-6 text-muted">
@@ -675,6 +780,74 @@ const EventCard = ({
     </div>
   </button>
 );
+
+const TextualPendingPanel = ({
+  onSelect,
+  selectedId,
+  summary,
+  viewAllHref,
+}: {
+  onSelect: (event: AdminModerationEvent) => void;
+  selectedId: string | null;
+  summary: AdminModerationSummary;
+  viewAllHref: string;
+}) => {
+  const pendingItems = summary.latest_pending.slice(0, PENDING_PREVIEW_LIMIT);
+  const hasPending = summary.pending_total > 0;
+
+  return (
+    <Card className="overflow-hidden">
+      <div className="flex flex-col gap-3 border-b border-border p-5 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <p className="text-xs font-black uppercase tracking-[0.22em] text-primary">
+            Conteúdo sensível
+          </p>
+          <h2 className="mt-2 text-2xl font-black text-foreground">
+            Últimas pendências de conteúdo sensível
+          </h2>
+          <p className="mt-2 max-w-3xl text-sm leading-6 text-muted">
+            Eventos sensíveis pendentes em content_moderation_event, mantendo a lista completa com
+            filtros e ações reais no botão Ver todos.
+          </p>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="inline-flex w-fit rounded-full bg-surface-muted px-3 py-1 text-xs font-black text-muted">
+            {numberFormatter.format(summary.pending_total)} pendência(s)
+          </span>
+          {hasPending ? (
+            <Link
+              className="inline-flex h-9 items-center justify-center rounded-control border border-border bg-surface px-3 text-xs font-black text-foreground transition hover:border-primary hover:text-primary"
+              href={viewAllHref}
+            >
+              Ver todos
+            </Link>
+          ) : null}
+        </div>
+      </div>
+      <div className="grid gap-3 p-4">
+        {pendingItems.length === 0 ? (
+          <div className="rounded-2xl border border-dashed border-border p-5 text-sm leading-6 text-muted">
+            Nenhuma pendência de conteúdo sensível encontrada nos dados reais atuais.
+          </div>
+        ) : (
+          pendingItems.map((event) => (
+            <EventCard
+              event={event}
+              key={event.id}
+              onSelect={onSelect}
+              selected={selectedId === event.id}
+            />
+          ))
+        )}
+        {summary.pending_total > PENDING_PREVIEW_LIMIT ? (
+          <p className="text-xs font-bold text-muted">
+            Exibindo as {PENDING_PREVIEW_LIMIT} últimas pendências de conteúdo sensível.
+          </p>
+        ) : null}
+      </div>
+    </Card>
+  );
+};
 
 const EventsList = ({
   count,
@@ -1121,7 +1294,8 @@ const ErrorState = ({ error, onRetry }: { error: unknown; onRetry: () => void })
   </Card>
 );
 
-export const AdminModerationClient = () => {
+export const AdminModerationClient = ({ mode = "overview" }: { mode?: "overview" | "textual" }) => {
+  const isTextualPage = mode === "textual";
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -1147,17 +1321,23 @@ export const AdminModerationClient = () => {
     [filters, page],
   );
   const events = useAdminModerationEvents(eventsInput);
-  const selectedId =
-    selectedOverrideId ?? searchParams.get("event") ?? events.data?.data[0]?.id ?? null;
+  const selectedId = isTextualPage
+    ? (selectedOverrideId ?? searchParams.get("event") ?? events.data?.data[0]?.id ?? null)
+    : null;
   const detail = useAdminModerationEvent(selectedId);
   const review = useAdminModerationReview();
-  const firstError = summary.error || events.error;
+  const firstError = isTextualPage ? events.error : summary.error;
   const setFilters = (next: Filters) => {
     setFiltersState(next);
     setPage(1);
   };
 
   const selectEvent = (event: AdminModerationEvent) => {
+    if (!isTextualPage) {
+      router.push(`/moderacao/conteudo-sensivel?event=${encodeURIComponent(event.id)}`);
+      return;
+    }
+
     setSelectedOverrideId(event.id);
     const params = new URLSearchParams(searchParams.toString());
     params.set("event", event.id);
@@ -1165,8 +1345,10 @@ export const AdminModerationClient = () => {
   };
   const refreshAll = () => {
     void summary.refetch();
-    void events.refetch();
-    void detail.refetch();
+    if (isTextualPage) {
+      void events.refetch();
+      void detail.refetch();
+    }
   };
   const markReviewing = async (event: AdminModerationEventDetail) => {
     try {
@@ -1180,9 +1362,17 @@ export const AdminModerationClient = () => {
   return (
     <div className="space-y-6">
       <Header
-        disabled={summary.isFetching || events.isFetching || detail.isFetching}
-        loading={summary.isFetching || events.isFetching || detail.isFetching}
+        backHref={isTextualPage ? "/moderacao" : undefined}
+        description={
+          isTextualPage
+            ? "Lista exclusiva de pendências de conteúdo sensível, com filtros, detalhe protegido e ações auditadas."
+            : undefined
+        }
+        disabled={isTextualPage ? events.isFetching || detail.isFetching : summary.isFetching}
+        eyebrow={isTextualPage ? "Conteúdo sensível" : undefined}
+        loading={isTextualPage ? events.isFetching || detail.isFetching : summary.isFetching}
         onRefresh={refreshAll}
+        title={isTextualPage ? "Conteúdo sensível" : undefined}
       />
       {firstError ? (
         <ErrorState
@@ -1193,7 +1383,7 @@ export const AdminModerationClient = () => {
           }}
         />
       ) : null}
-      {summary.isLoading ? (
+      {!isTextualPage && summary.isLoading ? (
         <>
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
             {["reports", "compliance", "operational", "textual"].map((key) => (
@@ -1202,47 +1392,59 @@ export const AdminModerationClient = () => {
           </div>
           <Card className="h-80 animate-pulse bg-surface-muted" />
         </>
-      ) : summary.data ? (
+      ) : !isTextualPage && summary.data ? (
         <>
           <SummaryGrid summary={summary.data} />
           <OperationalAlertsPanel summary={summary.data} />
+          <TextualPendingPanel
+            onSelect={selectEvent}
+            selectedId={selectedId}
+            summary={summary.data}
+            viewAllHref="/moderacao/conteudo-sensivel"
+          />
         </>
       ) : null}
-      <FiltersBar filters={filters} setFilters={setFilters} />
-      <div className="rounded-2xl border border-border bg-surface-muted p-4 text-sm leading-6 text-muted">
-        <p>
-          Período consultado: <strong>{formatDate(filters.from)}</strong> —{" "}
-          <strong>{formatDate(filters.to)}</strong>. A central usa regex/listas internas sem IA e
-          mostra apenas trechos nas listas textuais. Alertas operacionais são derivados do estado
-          atual das tabelas reais e usam limites de 48h/30 dias.
-        </p>
-      </div>
-      <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_420px]">
-        <EventsList
-          count={events.data?.count ?? 0}
-          events={events.data?.data ?? []}
-          fetching={events.isFetching}
-          onNext={() => setPage((current) => current + 1)}
-          onPrev={() => setPage((current) => Math.max(1, current - 1))}
-          onSelect={selectEvent}
-          page={events.data?.page ?? page}
-          pages={events.data?.pages ?? 1}
-          selectedId={selectedId}
-        />
-        <Detail
-          error={detail.error}
-          event={detail.data}
-          loading={detail.isLoading && Boolean(selectedId)}
-          onRemove={setRemoveTarget}
-          onResolve={setResolveTarget}
-          onReview={markReviewing}
-          reviewPending={review.isPending}
-        />
-      </div>
+      {isTextualPage ? (
+        <>
+          <FiltersBar filters={filters} setFilters={setFilters} />
+          <div className="rounded-2xl border border-border bg-surface-muted p-4 text-sm leading-6 text-muted">
+            <p>
+              Período consultado: <strong>{formatDate(filters.from)}</strong> —{" "}
+              <strong>{formatDate(filters.to)}</strong>. A central usa regex/listas internas sem IA
+              e mostra apenas trechos nas listas textuais. Alertas operacionais são derivados do
+              estado atual das tabelas reais e usam limites de 48h/30 dias.
+            </p>
+          </div>
+          <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_420px]">
+            <EventsList
+              count={events.data?.count ?? 0}
+              events={events.data?.data ?? []}
+              fetching={events.isFetching}
+              onNext={() => setPage((current) => current + 1)}
+              onPrev={() => setPage((current) => Math.max(1, current - 1))}
+              onSelect={selectEvent}
+              page={events.data?.page ?? page}
+              pages={events.data?.pages ?? 1}
+              selectedId={selectedId}
+            />
+            <Detail
+              error={detail.error}
+              event={detail.data}
+              loading={detail.isLoading && Boolean(selectedId)}
+              onRemove={setRemoveTarget}
+              onResolve={setResolveTarget}
+              onReview={markReviewing}
+              reviewPending={review.isPending}
+            />
+          </div>
+        </>
+      ) : null}
       <div className="flex flex-col gap-2 rounded-2xl border border-border bg-surface p-4 text-xs font-bold text-muted sm:flex-row sm:items-center sm:justify-between">
         <span className="inline-flex items-center gap-2">
           <CheckCircle2 aria-hidden className="h-4 w-4 text-success" />
-          Mobile-first: filtros empilhados, eventos em cards e detalhe abaixo no celular.
+          {isTextualPage
+            ? "Mobile-first: filtros empilhados, eventos em cards e detalhe abaixo no celular."
+            : "Mobile-first: pendências separadas em cards e atalhos para páginas exclusivas."}
         </span>
         <span>Pacientes continuam publicando somente texto; URLs não viram links clicáveis.</span>
       </div>

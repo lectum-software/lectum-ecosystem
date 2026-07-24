@@ -10,7 +10,10 @@ import type {
 } from "@/api/req/communities";
 import type { DashboardSummaryQuery } from "@/api/req/dashboard";
 import type { FinanceDashboardQuery, FinanceListQuery } from "@/api/req/finance";
-import type { AdminModerationEventsQuery } from "@/api/req/moderation";
+import type {
+  AdminModerationEventsQuery,
+  AdminModerationOperationalAlertsQuery,
+} from "@/api/req/moderation";
 import type {
   AdminNotificationCampaignsQuery,
   AdminNotificationLogsQuery,
@@ -199,6 +202,12 @@ const normalizeModerationEvents = (input: AdminModerationEventsQuery) => ({
   to: input.to || "default",
 });
 
+const normalizeModerationOperationalAlerts = (input: AdminModerationOperationalAlertsQuery) => ({
+  group: input.group || "all",
+  limit: input.limit || 10,
+  page: input.page || 1,
+});
+
 const normalizeCommunityContent = (input: AdminCommunityContentQuery) => ({
   from: input.from || "default",
   limit: input.limit || 10,
@@ -384,6 +393,12 @@ export const adminModerationKeys = {
   detail: (id: string) => [...adminModerationKeys.all, "detail", id] as const,
   events: (input: AdminModerationEventsQuery) =>
     [...adminModerationKeys.all, "events", normalizeModerationEvents(input)] as const,
+  operationalAlerts: (input: AdminModerationOperationalAlertsQuery) =>
+    [
+      ...adminModerationKeys.all,
+      "operational-alerts",
+      normalizeModerationOperationalAlerts(input),
+    ] as const,
   summary: () => [...adminModerationKeys.all, "summary"] as const,
 };
 

@@ -1,6 +1,13 @@
 ﻿import type { Request, Response } from "express";
 import { error500, send } from "@/helpers/return";
-import { getSummary, listEvents, resolveEvent, reviewEvent, showEvent } from "./services";
+import {
+  getSummary,
+  listEvents,
+  listOperationalAlerts,
+  resolveEvent,
+  reviewEvent,
+  showEvent,
+} from "./services";
 
 export const summary = async (req: Request, res: Response) => {
   try {
@@ -17,6 +24,15 @@ export const events = async (req: Request, res: Response) => {
     return send(res, resolve);
   } catch (err) {
     return error500(res, "admin_moderation_events", err);
+  }
+};
+
+export const operationalAlerts = async (req: Request, res: Response) => {
+  try {
+    const resolve = await listOperationalAlerts(req as Parameters<typeof listOperationalAlerts>[0]);
+    return send(res, resolve);
+  } catch (err) {
+    return error500(res, "admin_moderation_operational_alerts", err);
   }
 };
 

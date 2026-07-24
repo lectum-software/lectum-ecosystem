@@ -13,7 +13,19 @@ import {
 export const adminNavItems = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutGrid },
   { label: "Tráfego", href: "/trafego", icon: ChartNoAxesCombined },
-  { label: "Moderação", href: "/moderacao", icon: ShieldAlert, badge: "moderation" },
+  {
+    label: "Moderação",
+    href: "/moderacao",
+    icon: ShieldAlert,
+    badge: "moderation",
+    children: [
+      { label: "Dashboard", href: "/moderacao" },
+      { label: "Denúncias", href: "/moderacao/denuncias" },
+      { label: "Compliance", href: "/moderacao/compliance" },
+      { label: "Operacionais", href: "/moderacao/operacionais" },
+      { label: "Conteúdo sensível", href: "/moderacao/conteudo-sensivel" },
+    ],
+  },
   {
     label: "Comunidades",
     href: "/comunidades",

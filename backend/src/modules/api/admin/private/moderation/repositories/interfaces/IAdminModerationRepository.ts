@@ -255,11 +255,11 @@ export interface IAdminModerationRepository {
   listOperationalPsychologistProfiles(): Promise<AdminOperationalPsychologistRecord[]>;
   listEvents(query: AdminModerationEventsQuery): Promise<AdminModerationEventRecord[]>;
   listLatestPending(limit: number): Promise<AdminModerationEventRecord[]>;
-  listPendingPostReports(limit: number): Promise<AdminPostReportRecord[]>;
+  listPendingPostReports(limit?: number): Promise<AdminPostReportRecord[]>;
   listReplyTargets(replyIds: string[]): Promise<ReplyTargetRecord[]>;
   listUncoveredPatientPosts(
     cutoff: Date,
-    limit: number,
+    limit?: number,
   ): Promise<AdminUncoveredPatientPostRecord[]>;
   markReviewing(id: string, adminId: string): Promise<AdminModerationEventDetailRecord | null>;
   countProfileViewsByPsychologist(

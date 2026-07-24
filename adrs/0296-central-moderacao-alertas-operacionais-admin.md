@@ -56,3 +56,22 @@ Os novos alertas precisam usar somente fontes reais já persistidas. As dimensõ
 - Definir workflow de resolução/acknowledgement para alertas derivados caso o time precise histórico operacional.
 - Integrar validação externa real de WhatsApp apenas se houver fornecedor/contrato aprovado.
 - Reavaliar alertas de alta demanda em filtros quando houver fonte first-party persistida e quando região/preço/horário voltarem ao escopo.
+## Complemento 2026-07-24: previews e páginas exclusivas por categoria
+
+O cockpit `/moderacao` passou a ser a visão de resumo. Cada módulo mostra somente as 5 últimas pendências e o botão **Ver todos** abre uma rota exclusiva da categoria:
+
+- `/moderacao/denuncias-compliance` lista denúncias pendentes e compliance profissional;
+- `/moderacao/alertas-operacionais` lista somente pendências operacionais derivadas;
+- `/moderacao/textual` lista eventos de moderação textual com filtros, detalhe protegido e ações auditadas.
+
+Para não transformar o summary em uma listagem completa, foi adicionado `GET /api/admin/private/moderation/operational-alerts`, paginado e filtrável por grupo. O endpoint continua derivado/read-only, sem persistir alertas nem criar status de resolução próprio. O resumo mantém limite operacional de preview, enquanto as páginas exclusivas usam paginação.
+
+A separação visual evita que pendências operacionais de oferta concorram com triagem crítica de denúncias/compliance, preservando a decisão original de não criar workflow próprio para alertas derivados.
+
+## Complemento 2026-07-24: submenu de Moderação com cinco páginas
+
+Após revisão de produto, a navegação de **Moderação** passou a ter cinco entradas explícitas no menu lateral: **Dashboard**, **Denúncias**, **Compliance**, **Operacionais** e **Conteúdo sensível**. A rota `/moderacao` fica como dashboard/resumo; as demais rotas são páginas exclusivas de categoria.
+
+A decisão substitui a rota combinada de denúncias/compliance planejada no complemento anterior. Denúncias e compliance precisam de leitura separada porque têm natureza operacional diferente: denúncias são triagem de conteúdo reportado por usuários, enquanto compliance reúne pendências profissionais como CRP/WhatsApp.
+
+O endpoint `GET /api/admin/private/moderation/operational-alerts` permanece derivado/read-only e passa a aceitar os grupos `denuncias`, `compliance` e `operacional`. Conteúdo sensível continua usando os endpoints reais de `content_moderation_event` em `/moderacao/conteudo-sensivel`.
