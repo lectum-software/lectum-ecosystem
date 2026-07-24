@@ -639,6 +639,11 @@ type BuildOperationalAlertsOptions = {
   itemLimit?: number;
 };
 
+type NormalizedOperationalAlertsQuery = Required<
+  Pick<AdminModerationOperationalAlertsQuery, "group" | "reporter" | "status">
+> &
+  Pick<AdminModerationOperationalAlertsQuery, "from" | "limit" | "page" | "q" | "reason" | "to">;
+
 const buildOperationalAlerts = async (
   repository: AdminModerationRepository,
   options: BuildOperationalAlertsOptions = {},
@@ -713,6 +718,102 @@ const normalizeOperationalGroup = (
     : "all";
 };
 
+const normalizeOperationalStatus = (
+  value?: string | null,
+): NonNullable<AdminModerationOperationalAlertsQuery["status"]> => {
+  const normalized = normalizeFilter(value).toLowerCase();
+
+  return normalized === "pending" || normalized === "reviewing" ? normalized : "all";
+};
+
+const normalizeOperationalReporter = (
+  value?: string | null,
+): NonNullable<AdminModerationOperationalAlertsQuery["reporter"]> => {
+  const normalized = normalizeFilter(value).toLowerCase();
+
+  return normalized === "paciente" || normalized === "psicologo" ? normalized : "all";
+};
+
+const parseOperationalDateOnly = (value: string | undefined, boundary: "end" | "start") => {
+  if (!value || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return null;
+
+  const [year, month, day] = value.split("-").map(Number);
+  const date = new Date(year, month - 1, day);
+  if (Number.isNaN(date.getTime())) return null;
+
+  if (boundary === "start") date.setHours(0, 0, 0, 0);
+  else date.setHours(23, 59, 59, 999);
+
+  return date;
+};
+
+const normalizedText = (value?: string | null) =>
+  String(value ?? "")
+    .trim()
+    .toLowerCase();
+
+const operationalFactValue = (alert: AdminModerationOperationalAlertDTO, label: string) =>
+  alert.facts.find((fact) => normalizedText(fact.label) === normalizedText(label))?.value ?? "";
+
+const operationalStatusAliases: Record<
+  Exclude<NonNullable<AdminModerationOperationalAlertsQuery["status"]>, "all">,
+  string[]
+> = {
+  pending: ["pendente", "pending"],
+  reviewing: ["em_analise", "em analise", "in_review", "in review"],
+};
+
+const operationalAlertMatchesSearch = (
+  alert: AdminModerationOperationalAlertDTO,
+  search: string,
+) => {
+  if (!search) return true;
+
+  return [
+    alert.action_label,
+    alert.community?.name,
+    alert.description,
+    alert.entity.label,
+    alert.priority,
+    alert.source,
+    alert.title,
+    alert.type,
+    ...alert.facts.flatMap((fact) => [fact.label, fact.value]),
+  ]
+    .filter(Boolean)
+    .some((value) => normalizedText(value).includes(search));
+};
+
+const operationalAlertMatchesFilters = (
+  alert: AdminModerationOperationalAlertDTO,
+  query: NormalizedOperationalAlertsQuery,
+) => {
+  const search = normalizeSearch(query.q);
+  if (!operationalAlertMatchesSearch(alert, search)) return false;
+
+  const from = parseOperationalDateOnly(query.from, "start");
+  const to = parseOperationalDateOnly(query.to, "end");
+  if (from && alert.created_at < from) return false;
+  if (to && alert.created_at > to) return false;
+
+  if (query.status !== "all") {
+    const reportStatus = normalizedText(operationalFactValue(alert, "Status"));
+    if (!operationalStatusAliases[query.status].includes(reportStatus)) return false;
+  }
+
+  if (query.reporter !== "all") {
+    const reporter = normalizedText(operationalFactValue(alert, "Denunciante"));
+    if (reporter !== query.reporter) return false;
+  }
+
+  const reason = normalizeSearch(query.reason);
+  if (reason && !normalizedText(operationalFactValue(alert, "Motivo")).includes(reason)) {
+    return false;
+  }
+
+  return true;
+};
+
 const operationalAlertMatchesGroup = (
   alert: AdminModerationOperationalAlertDTO,
   group: AdminModerationOperationalAlertsGroup,
@@ -726,10 +827,11 @@ const operationalAlertMatchesGroup = (
 
 const normalizeOperationalAlertsQuery = (
   query: AdminModerationOperationalAlertsQuery = {},
-): Required<Pick<AdminModerationOperationalAlertsQuery, "group">> &
-  Pick<AdminModerationOperationalAlertsQuery, "limit" | "page"> => ({
+): NormalizedOperationalAlertsQuery => ({
   ...query,
   group: normalizeOperationalGroup(query.group),
+  reporter: normalizeOperationalReporter(query.reporter),
+  status: normalizeOperationalStatus(query.status),
 });
 
 export const getSummary = async (_data: IAdminModerationSummaryDTO): Promise<Resolve> => {
@@ -771,9 +873,9 @@ export const listOperationalAlerts = async (
   const limit = normalizeLimit(query.limit);
   const group = query.group;
   const operationalAlerts = await buildOperationalAlerts(repository);
-  const items = operationalAlerts.items.filter((alert) =>
-    operationalAlertMatchesGroup(alert, group),
-  );
+  const items = operationalAlerts.items
+    .filter((alert) => operationalAlertMatchesGroup(alert, group))
+    .filter((alert) => operationalAlertMatchesFilters(alert, query));
   const paginated = paginate(items, page, limit);
   const payload: AdminModerationOperationalAlertsPageDTO = {
     ...paginated,

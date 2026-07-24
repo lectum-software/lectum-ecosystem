@@ -203,9 +203,15 @@ const normalizeModerationEvents = (input: AdminModerationEventsQuery) => ({
 });
 
 const normalizeModerationOperationalAlerts = (input: AdminModerationOperationalAlertsQuery) => ({
+  from: input.from || "default",
   group: input.group || "all",
   limit: input.limit || 10,
   page: input.page || 1,
+  q: input.q || "",
+  reason: input.reason || "",
+  reporter: input.reporter || "all",
+  status: input.status || "all",
+  to: input.to || "default",
 });
 
 const normalizeCommunityContent = (input: AdminCommunityContentQuery) => ({

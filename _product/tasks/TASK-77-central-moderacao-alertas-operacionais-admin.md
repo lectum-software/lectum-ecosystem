@@ -202,3 +202,23 @@ Validacao deste ajuste:
 - `pnpm --dir admin build`
 - `pnpm check`
 - Smoke HTTP local no Admin (`localhost:3002`) retornou 200 para `/moderacao`, `/moderacao/denuncias`, `/moderacao/compliance`, `/moderacao/operacionais` e `/moderacao/conteudo-sensivel`.
+
+## Ajuste complementar 2026-07-24 - Filtros na página Denúncias
+
+- Pedido do usuário: simplificar o header de `/moderacao/denuncias`, trocar a copy e adicionar filtros na lista.
+- A página `/moderacao/denuncias` agora usa eyebrow **Moderação**, título **Denúncias** e a descrição **Denúncias de posts/respostas para triagem e moderação.**
+- Os botões **Voltar** e **Atualizar** foram removidos do header dessa página; a paginação e links de conteúdo denunciado permanecem.
+- A tabela/lista de pendências de denúncias ganhou filtros mobile-first com React Hook Form/Zod/controllers do Admin: busca, data inicial/final, status, denunciante e motivo.
+- O endpoint real `GET /api/admin/private/moderation/operational-alerts` foi estendido com query params opcionais `q`, `from`, `to`, `status`, `reporter` e `reason`, aplicados sobre alertas derivados de `post_report` sem mocks, dados artificiais, package novo ou migration.
+- Builder/Quick Copy não está exposto como ferramenta callable neste ambiente; a referência auditável foi a captura enviada pelo usuário e os padrões Admin já registrados em `_product/proto/admin`.
+
+### Validação do ajuste de filtros 2026-07-24
+
+- `pnpm --dir backend check`
+- `pnpm --dir admin check` (primeira execução paralela excedeu o timeout do runner; reexecutado isolado e concluído sem erro)
+- `pnpm --dir backend build`
+- `pnpm --dir admin build`
+- `pnpm check`
+- Smoke HTTP local no Admin (`GET http://localhost:3002/moderacao/denuncias`) retornou 200.
+- Browser local/headless em Chrome para `/moderacao/denuncias` carregou a rota e o bundle da página; sem sessão Admin no perfil headless, permaneceu no estado autenticado de carregamento.
+- Não houve alteração de Prisma schema/migrations; `pnpm --dir backend db:migrate` não se aplica.

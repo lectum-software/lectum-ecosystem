@@ -31,9 +31,15 @@ export type AdminModerationOperationalAlertsGroup =
   | "operacional";
 
 export type AdminModerationOperationalAlertsQuery = {
+  from?: string;
   group?: AdminModerationOperationalAlertsGroup;
   limit?: number;
   page?: number;
+  q?: string;
+  reason?: string;
+  reporter?: "all" | "paciente" | "psicologo";
+  status?: "all" | "pending" | "reviewing";
+  to?: string;
 };
 
 export type AdminModerationEventParams = {

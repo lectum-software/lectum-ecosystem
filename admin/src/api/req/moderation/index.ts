@@ -117,9 +117,15 @@ export type AdminModerationOperationalAlertsGroup =
   | "operacional";
 
 export type AdminModerationOperationalAlertsQuery = {
+  from?: string;
   group?: AdminModerationOperationalAlertsGroup;
   limit?: number;
   page?: number;
+  q?: string;
+  reason?: string;
+  reporter?: "all" | "paciente" | "psicologo";
+  status?: "all" | "pending" | "reviewing";
+  to?: string;
 };
 
 export type AdminModerationOperationalAlertsPage = {
@@ -189,9 +195,15 @@ const cleanParams = (input: AdminModerationEventsQuery = {}) => ({
 });
 
 const cleanOperationalAlertsParams = (input: AdminModerationOperationalAlertsQuery = {}) => ({
+  ...(input.from ? { from: input.from } : {}),
   ...(input.group && input.group !== "all" ? { group: input.group } : {}),
   ...(input.limit ? { limit: input.limit } : {}),
   ...(input.page ? { page: input.page } : {}),
+  ...(input.q ? { q: input.q } : {}),
+  ...(input.reason ? { reason: input.reason } : {}),
+  ...(input.reporter && input.reporter !== "all" ? { reporter: input.reporter } : {}),
+  ...(input.status && input.status !== "all" ? { status: input.status } : {}),
+  ...(input.to ? { to: input.to } : {}),
 });
 
 export const getAdminModerationSummary = async () => {

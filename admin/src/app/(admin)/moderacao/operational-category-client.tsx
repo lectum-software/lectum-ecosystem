@@ -1,24 +1,30 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
 import {
   AlertTriangle,
   ChevronLeft,
   ChevronRight,
   ExternalLink,
+  Filter,
   Loader2,
   MessageCircle,
-  RefreshCw,
+  X,
 } from "lucide-react";
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { FormProvider, type UseFormReturn, useForm } from "react-hook-form";
+import { z } from "zod";
 import { useAdminModerationOperationalAlerts } from "@/api/callers/moderation";
 import { resolveApiError } from "@/api/handle";
 import type {
   AdminModerationOperationalAlert,
   AdminModerationOperationalAlertsGroup,
+  AdminModerationOperationalAlertsQuery,
   AdminModerationSeverity,
 } from "@/api/req/moderation";
+import { InputController, SelectController } from "@/components/controllers";
 
 const PAGE_LIMIT = 10;
 const SKELETON_KEYS = ["first", "second", "third"] as const;
@@ -41,8 +47,7 @@ const groupConfig: Record<
     title: "Compliance",
   },
   denuncias: {
-    description:
-      "Página exclusiva para denúncias reais de posts e respostas aguardando triagem, sem misturar compliance ou alertas operacionais.",
+    description: "Denúncias de posts/respostas para triagem e moderação.",
     emptyLabel: "Nenhuma denúncia pendente encontrada nos dados reais atuais.",
     title: "Denúncias",
   },
@@ -52,6 +57,82 @@ const groupConfig: Record<
     emptyLabel: "Nenhuma pendência operacional encontrada nos dados reais atuais.",
     title: "Operacionais",
   },
+};
+
+const denunciaFiltersSchema = z
+  .object({
+    from: z.string().max(10, "Use uma data válida."),
+    q: z.string().max(120, "Use até 120 caracteres na busca."),
+    reason: z.string().max(80, "Use até 80 caracteres no motivo."),
+    reporter: z.enum(["all", "paciente", "psicologo"]),
+    status: z.enum(["all", "pending", "reviewing"]),
+    to: z.string().max(10, "Use uma data válida."),
+  })
+  .refine((values) => !values.from || !values.to || values.from <= values.to, {
+    message: "A data inicial deve ser menor ou igual à final.",
+    path: ["to"],
+  });
+
+type DenunciaFiltersFormValues = z.infer<typeof denunciaFiltersSchema>;
+
+const denunciaFilterDefaults: DenunciaFiltersFormValues = {
+  from: "",
+  q: "",
+  reason: "",
+  reporter: "all",
+  status: "all",
+  to: "",
+};
+
+const denunciaStatusOptions = [
+  { label: "Todos os status", value: "all" },
+  { label: "Pendente", value: "pending" },
+  { label: "Em análise (legado)", value: "reviewing" },
+] satisfies Array<{ label: string; value: DenunciaFiltersFormValues["status"] }>;
+
+const denunciaReporterOptions = [
+  { label: "Todos os denunciantes", value: "all" },
+  { label: "Paciente", value: "paciente" },
+  { label: "Psicólogo", value: "psicologo" },
+] satisfies Array<{ label: string; value: DenunciaFiltersFormValues["reporter"] }>;
+
+const normalizeDenunciaFilters = (
+  values: DenunciaFiltersFormValues,
+): DenunciaFiltersFormValues => ({
+  from: values.from,
+  q: values.q.trim(),
+  reason: values.reason.trim(),
+  reporter: values.reporter,
+  status: values.status,
+  to: values.to,
+});
+
+const countActiveDenunciaFilters = (values: DenunciaFiltersFormValues) =>
+  [
+    values.q,
+    values.from,
+    values.to,
+    values.reason,
+    values.status !== "all" ? values.status : "",
+    values.reporter !== "all" ? values.reporter : "",
+  ].filter(Boolean).length;
+
+const toOperationalAlertsFilterQuery = (
+  values: DenunciaFiltersFormValues,
+): Pick<
+  AdminModerationOperationalAlertsQuery,
+  "from" | "q" | "reason" | "reporter" | "status" | "to"
+> => {
+  const normalized = normalizeDenunciaFilters(values);
+
+  return {
+    from: normalized.from || undefined,
+    q: normalized.q || undefined,
+    reason: normalized.reason || undefined,
+    reporter: normalized.reporter,
+    status: normalized.status,
+    to: normalized.to || undefined,
+  };
 };
 
 const operationalTypeLabels: Record<AdminModerationOperationalAlert["type"], string> = {
@@ -100,6 +181,93 @@ const OperationalGroup = ({ value }: { value: AdminModerationOperationalAlert["g
 
 const Severity = ({ value }: { value: AdminModerationSeverity }) => (
   <Pill className={severityCopy[value].className}>{severityCopy[value].label}</Pill>
+);
+
+const DenunciaFiltersBar = ({
+  activeFilterCount,
+  disabled,
+  form,
+  onClear,
+  onSubmit,
+}: {
+  activeFilterCount: number;
+  disabled: boolean;
+  form: UseFormReturn<DenunciaFiltersFormValues>;
+  onClear: () => void;
+  onSubmit: (values: DenunciaFiltersFormValues) => void;
+}) => (
+  <div className="border-b border-border bg-surface/80 p-4">
+    <FormProvider {...form}>
+      <form
+        className="grid gap-3 md:grid-cols-2 xl:grid-cols-[minmax(260px,1.25fr)_repeat(5,minmax(150px,1fr))_auto]"
+        noValidate
+        onSubmit={form.handleSubmit(onSubmit)}
+      >
+        <div className="md:col-span-2 xl:col-span-1">
+          <InputController<DenunciaFiltersFormValues>
+            disabled={disabled}
+            label="Buscar"
+            name="q"
+            placeholder="Conteúdo, comunidade ou alvo"
+          />
+        </div>
+        <InputController<DenunciaFiltersFormValues>
+          disabled={disabled}
+          label="De"
+          name="from"
+          type="date"
+        />
+        <InputController<DenunciaFiltersFormValues>
+          disabled={disabled}
+          label="Até"
+          name="to"
+          type="date"
+        />
+        <SelectController<DenunciaFiltersFormValues>
+          disabled={disabled}
+          label="Status"
+          name="status"
+          options={denunciaStatusOptions}
+        />
+        <SelectController<DenunciaFiltersFormValues>
+          disabled={disabled}
+          label="Denunciante"
+          name="reporter"
+          options={denunciaReporterOptions}
+        />
+        <InputController<DenunciaFiltersFormValues>
+          disabled={disabled}
+          label="Motivo"
+          name="reason"
+          placeholder="Ex.: other"
+        />
+        <div className="flex flex-col gap-2 md:col-span-2 md:flex-row xl:col-span-1 xl:flex-col xl:justify-end">
+          <button
+            className="inline-flex h-12 items-center justify-center gap-2 rounded-control bg-primary px-4 text-sm font-black text-white shadow-admin-soft transition hover:bg-primary-hover disabled:opacity-60"
+            disabled={disabled}
+            type="submit"
+          >
+            <Filter aria-hidden className="h-4 w-4" />
+            Filtrar
+            {activeFilterCount > 0 ? (
+              <span className="rounded-full bg-white/20 px-2 py-0.5 text-xs">
+                {activeFilterCount}
+              </span>
+            ) : null}
+          </button>
+          <button
+            className="inline-flex h-12 items-center justify-center gap-2 rounded-control border border-border bg-surface px-4 text-sm font-black text-foreground shadow-control transition hover:border-primary hover:text-primary disabled:opacity-60"
+            disabled={disabled || activeFilterCount === 0}
+            onClick={onClear}
+            type="button"
+          >
+            <X aria-hidden className="h-4 w-4" />
+            Limpar
+          </button>
+        </div>
+      </form>
+    </FormProvider>
+  </div>
 );
 
 const OperationalAlertCard = ({ alert }: { alert: AdminModerationOperationalAlert }) => {
@@ -164,16 +332,42 @@ export const AdminModerationOperationalCategoryClient = ({
   group: Exclude<AdminModerationOperationalAlertsGroup, "all">;
 }) => {
   const [page, setPage] = useState(1);
-  const query = useAdminModerationOperationalAlerts({ group, limit: PAGE_LIMIT, page });
+  const [appliedFilters, setAppliedFilters] =
+    useState<DenunciaFiltersFormValues>(denunciaFilterDefaults);
+  const filtersForm = useForm<DenunciaFiltersFormValues>({
+    defaultValues: denunciaFilterDefaults,
+    mode: "onSubmit",
+    resolver: zodResolver(denunciaFiltersSchema),
+  });
+  const queryInput = useMemo<AdminModerationOperationalAlertsQuery>(
+    () => ({
+      group,
+      limit: PAGE_LIMIT,
+      page,
+      ...(group === "denuncias" ? toOperationalAlertsFilterQuery(appliedFilters) : {}),
+    }),
+    [appliedFilters, group, page],
+  );
+  const query = useAdminModerationOperationalAlerts(queryInput);
   const config = groupConfig[group];
+  const activeFilterCount = countActiveDenunciaFilters(appliedFilters);
+  const submitFilters = (values: DenunciaFiltersFormValues) => {
+    setAppliedFilters(normalizeDenunciaFilters(values));
+    setPage(1);
+  };
+  const clearFilters = () => {
+    filtersForm.reset(denunciaFilterDefaults);
+    setAppliedFilters(denunciaFilterDefaults);
+    setPage(1);
+  };
 
   return (
     <div className="space-y-6">
       <section className={cardClass}>
-        <div className="flex flex-col gap-5 p-5 md:p-6 xl:flex-row xl:items-start xl:justify-between">
+        <div className="p-5 md:p-6">
           <div className="min-w-0">
             <p className="text-xs font-semibold uppercase tracking-[0.12em] text-primary">
-              Central de moderação
+              Moderação
             </p>
             <h1 className="mt-2 text-3xl font-bold tracking-tight text-foreground md:text-4xl">
               {config.title}
@@ -181,27 +375,6 @@ export const AdminModerationOperationalCategoryClient = ({
             <p className="mt-2 max-w-3xl text-sm font-medium leading-6 text-muted md:text-base">
               {config.description}
             </p>
-          </div>
-          <div className="flex flex-col gap-2 sm:flex-row xl:justify-end">
-            <Link
-              className="inline-flex h-11 items-center justify-center gap-2 rounded-control border border-border bg-surface px-4 text-sm font-semibold text-foreground shadow-control transition hover:border-border-strong hover:text-primary"
-              href="/moderacao"
-            >
-              <ChevronLeft aria-hidden className="h-4 w-4" />
-              Voltar
-            </Link>
-            <button
-              className="inline-flex h-11 items-center justify-center gap-2 rounded-control border border-border bg-surface px-4 text-sm font-semibold text-foreground shadow-control transition hover:border-border-strong hover:text-primary disabled:opacity-60"
-              disabled={query.isFetching}
-              onClick={() => void query.refetch()}
-              type="button"
-            >
-              <RefreshCw
-                aria-hidden
-                className={query.isFetching ? "h-4 w-4 animate-spin" : "h-4 w-4"}
-              />
-              Atualizar
-            </button>
           </div>
         </div>
       </section>
@@ -234,6 +407,15 @@ export const AdminModerationOperationalCategoryClient = ({
             </span>
           ) : null}
         </div>
+        {group === "denuncias" ? (
+          <DenunciaFiltersBar
+            activeFilterCount={activeFilterCount}
+            disabled={query.isFetching}
+            form={filtersForm}
+            onClear={clearFilters}
+            onSubmit={submitFilters}
+          />
+        ) : null}
         <div className="grid gap-3 p-4">
           {query.isLoading ? (
             SKELETON_KEYS.map((key) => (

@@ -75,3 +75,9 @@ Após revisão de produto, a navegação de **Moderação** passou a ter cinco e
 A decisão substitui a rota combinada de denúncias/compliance planejada no complemento anterior. Denúncias e compliance precisam de leitura separada porque têm natureza operacional diferente: denúncias são triagem de conteúdo reportado por usuários, enquanto compliance reúne pendências profissionais como CRP/WhatsApp.
 
 O endpoint `GET /api/admin/private/moderation/operational-alerts` permanece derivado/read-only e passa a aceitar os grupos `denuncias`, `compliance` e `operacional`. Conteúdo sensível continua usando os endpoints reais de `content_moderation_event` em `/moderacao/conteudo-sensivel`.
+
+## Complemento 2026-07-24: filtros dedicados em Denúncias
+
+A página `/moderacao/denuncias` passa a tratar a lista como fila exclusiva de triagem de denúncias de posts/respostas, com cabeçalho mais direto (**Moderação**) e sem ações de navegação/refresh no header.
+
+O endpoint derivado `GET /api/admin/private/moderation/operational-alerts` permanece sem persistir workflow próprio, mas agora aceita filtros opcionais para a fila de denúncias: busca textual (`q`), data (`from`/`to`), status não terminal (`pending`/`reviewing` legado), denunciante por papel seguro (`paciente`/`psicologo`) e motivo (`reason`). Os filtros são aplicados sobre alertas derivados de `post_report` já mapeados, preservando o princípio de dados reais e sem expor dados pessoais do denunciante além do papel necessário para triagem.
