@@ -112,7 +112,7 @@ const PATIENT_INTENT_TONE_CLASS_NAMES = {
   cold: "bg-surface-muted text-muted",
   curious: "bg-primary-soft text-primary",
   objective: "bg-warning/10 text-warning",
-  very_qualified: "bg-danger/10 text-danger",
+  very_qualified: "bg-success/10 text-success",
 } satisfies Record<PatientsDashboardIntentSegment["id"], string>;
 const LOCATION_RANKING_LIMIT = 5;
 const BRAZIL_STATE_CODES = new Set([
