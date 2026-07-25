@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -303,7 +303,10 @@ type PatientStatisticsCustomRange = Pick<PatientsDetailQuery, "from" | "to">;
 const PATIENT_STATISTICS_PERIOD_OPTIONS: { id: PatientStatisticsPeriodPreset; label: string }[] = [
   { id: "today", label: "Hoje" },
   { id: "week", label: "Esta semana" },
+  { id: "7d", label: "Últimos 7 dias" },
   { id: "month", label: "Este mês" },
+  { id: "30d", label: "Últimos 30 dias" },
+  { id: "90d", label: "Últimos 90 dias" },
   { id: "year", label: "Este ano" },
   { id: "all", label: "Todo o período" },
 ];
@@ -527,6 +530,13 @@ const startOfCurrentMonth = () => {
   return date;
 };
 const startOfCurrentYear = () => new Date(new Date().getFullYear(), 0, 1);
+
+const startOfLastDays = (days: number) => {
+  const date = new Date();
+  date.setDate(date.getDate() - (days - 1));
+
+  return date;
+};
 const dateInputValueFromString = (value?: string | null) => {
   if (!value) return toDateInputValue(new Date());
 
@@ -544,6 +554,9 @@ const getPatientStatisticsRangeForPeriod = (
   if (period === "week") return { from: toDateInputValue(startOfCurrentWeek()), to: today };
   if (period === "month") return { from: toDateInputValue(startOfCurrentMonth()), to: today };
   if (period === "year") return { from: toDateInputValue(startOfCurrentYear()), to: today };
+  if (period === "7d") return { from: toDateInputValue(startOfLastDays(7)), to: today };
+  if (period === "30d") return { from: toDateInputValue(startOfLastDays(30)), to: today };
+  if (period === "90d") return { from: toDateInputValue(startOfLastDays(90)), to: today };
 
   return { from: dateInputValueFromString(createdAt), to: today };
 };

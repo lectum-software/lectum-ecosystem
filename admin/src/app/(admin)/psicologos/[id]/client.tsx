@@ -585,7 +585,10 @@ const BUSINESS_SERIES_METRIC_KEYS = [
 const STATISTICS_PERIOD_OPTIONS: { id: StatisticsPeriodPreset; label: string }[] = [
   { id: "today", label: "Hoje" },
   { id: "week", label: "Esta semana" },
+  { id: "7d", label: "Últimos 7 dias" },
   { id: "month", label: "Este mês" },
+  { id: "30d", label: "Últimos 30 dias" },
+  { id: "90d", label: "Últimos 90 dias" },
   { id: "year", label: "Este ano" },
   { id: "all", label: "Todo o período" },
 ];
@@ -593,7 +596,10 @@ const STATISTICS_PERIOD_OPTIONS: { id: StatisticsPeriodPreset; label: string }[]
 const PUBLICATIONS_PERIOD_OPTIONS: { id: PublicationsPeriodPreset; label: string }[] = [
   { id: "today", label: "Hoje" },
   { id: "week", label: "Esta semana" },
+  { id: "7d", label: "Últimos 7 dias" },
   { id: "month", label: "Este mês" },
+  { id: "30d", label: "Últimos 30 dias" },
+  { id: "90d", label: "Últimos 90 dias" },
   { id: "year", label: "Este ano" },
   { id: "all", label: "Todo o período" },
 ];
@@ -1114,6 +1120,13 @@ const startOfCurrentMonth = () => {
 
 const startOfCurrentYear = () => new Date(new Date().getFullYear(), 0, 1);
 
+const startOfLastDays = (days: number) => {
+  const date = new Date();
+  date.setDate(date.getDate() - (days - 1));
+
+  return date;
+};
+
 const dateInputValueFromString = (value?: string | null) => {
   if (!value) return toDateInputValue(new Date());
 
@@ -1129,6 +1142,9 @@ const getStatisticsRangeForPeriod = (
   const today = toDateInputValue(new Date());
 
   if (period === "today") return { from: today, to: today };
+  if (period === "7d") return { from: toDateInputValue(startOfLastDays(7)), to: today };
+  if (period === "30d") return { from: toDateInputValue(startOfLastDays(30)), to: today };
+  if (period === "90d") return { from: toDateInputValue(startOfLastDays(90)), to: today };
   if (period === "month") return { from: toDateInputValue(startOfCurrentMonth()), to: today };
   if (period === "year") return { from: toDateInputValue(startOfCurrentYear()), to: today };
   if (period === "all") return { from: dateInputValueFromString(createdAt), to: today };

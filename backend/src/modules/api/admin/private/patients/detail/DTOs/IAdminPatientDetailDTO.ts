@@ -3,7 +3,7 @@ import type { AdminCommunityEngagementDiagnosis } from "@/utils/admin-community-
 
 export type AdminPatientDetailQuery = {
   from?: string;
-  period?: "all" | "custom" | "month" | "today" | "week" | "year";
+  period?: "7d" | "30d" | "90d" | "all" | "custom" | "month" | "today" | "week" | "year";
   to?: string;
 };
 

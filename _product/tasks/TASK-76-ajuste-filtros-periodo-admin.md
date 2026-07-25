@@ -1,4 +1,4 @@
-﻿# TASK-76: Ajuste dos filtros de período do Admin
+# TASK-76: Ajuste dos filtros de período do Admin
 
 ## Metadata
 
@@ -124,3 +124,34 @@ Esta task é uma correção transversal de UX no Admin e não altera API, persis
 - `pnpm --dir admin check` - OK na reexecução isolada.
 - Smoke HTTP local no Admin: `GET http://localhost:3002/psicologos`, `GET http://localhost:3002/pacientes` e `GET http://localhost:3002/comunidades` retornaram 200.
 - `pnpm --dir admin build` foi tentado, mas o workspace atual está bloqueado por uma alteração não relacionada em `admin/src/api/req/patients/index.ts`/`admin/src/app/(admin)/pacientes/[id]/client.tsx`: o tipo passou a exigir `operating_systems` nos itens de device usage do detalhe de paciente.
+
+## Ajuste complementar 2026-07-25 - Presets relativos de 7/30/90 dias
+
+- Pedido do usuário: em todos os filtros de período do painel Admin que exibem `Esta semana` e `Este mês`, adicionar `Últimos 7 dias`, `Últimos 30 dias` e `Últimos 90 dias`.
+- Frontend Admin passou a renderizar os três presets nos selects de dashboards, detalhes, notificações, financeiro e moderação que seguem o padrão de período.
+- Backend Admin passou a aceitar `7d`, `30d` e `90d` nos DTOs/resolvers afetados, sempre como janela móvel inclusiva encerrada em hoje.
+- `custom` segue como estado interno/`disabled hidden` apenas para datas digitadas manualmente.
+- Listas financeiras aceitam os novos valores em URL para preservar navegação a partir do dashboard.
+- Sem package novo, mock, endpoint simulado, schema Prisma ou migration.
+- Builder/Quick Copy não está callable; validação visual usou `_product/tasks/PROTO-INVENTORY.md`, protótipos locais e browser/HTTP local.
+
+### Critérios de aceite deste ajuste
+
+- [x] Todos os selects Admin com `Esta semana`/`Este mês` também exibem `Últimos 7 dias`, `Últimos 30 dias`, `Últimos 90 dias`.
+- [x] Backend responde aos presets `7d`, `30d`, `90d` nos contratos Admin afetados.
+- [x] Janelas relativas são inclusivas e encerram no dia atual.
+- [x] `custom` permanece apenas como estado interno/`disabled hidden` quando há datas manuais.
+- [x] UI mobile-first preservada; nenhum `<img>` cru, mock, package novo ou migration foi adicionado.
+- [x] ADR criado em `adrs/0320-admin-presets-relativos-periodo.md`.
+
+### Validação deste ajuste
+
+- `pnpm --dir admin exec biome check --write ...` - OK.
+- `pnpm --dir backend exec biome check --write ...` - OK.
+- `pnpm --dir admin check` - OK.
+- `pnpm --dir backend check` - OK.
+- `pnpm --dir backend build` - OK.
+- `pnpm --dir admin build` - OK.
+- `pnpm check` - OK.
+- Smoke HTTP local no Admin: `/psicologos`, `/pacientes`, `/comunidades`, `/financeiro`, `/notificacoes`, `/moderacao` retornaram 200 em `http://localhost:3002`.
+- Chrome headless local abriu `http://localhost:3002/psicologos` com DOM carregado.

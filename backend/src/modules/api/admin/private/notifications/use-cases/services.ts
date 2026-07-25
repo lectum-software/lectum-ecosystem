@@ -1,4 +1,4 @@
-﻿import { isWebPushConfigured } from "@/config/webPush";
+import { isWebPushConfigured } from "@/config/webPush";
 import type { Prisma } from "@/external/generated/prisma/client";
 import type { Resolve } from "@/helpers/return";
 import { error, msg } from "@/helpers/translate";
@@ -220,6 +220,12 @@ const resolvePeriod = (query: AdminNotificationsQuery | undefined, allPeriodStar
     start = startOfYear(today);
     end = endOfDate(today);
     label = "Este ano";
+  } else if (preset === "7d" || preset === "30d" || preset === "90d") {
+    const today = new Date();
+    const days = preset === "7d" ? 7 : preset === "30d" ? 30 : 90;
+    start = startOfDate(addDays(today, -(days - 1)));
+    end = endOfDate(today);
+    label = `Últimos ${days} dias`;
   } else if (preset === "all") {
     const today = new Date();
     start = startOfDate(allPeriodStartDate ?? addDays(today, -(DEFAULT_PERIOD_DAYS - 1)));

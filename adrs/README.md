@@ -143,3 +143,4 @@ Formato recomendado:
 - [ADR-0315 - Labels de período dos blocos analíticos do Admin sem prefixo](0315-admin-labels-periodo-sem-prefixo.md) - Accepted
 - [ADR-0316 - Filtros por plano nos blocos do dashboard Admin de psicologos](0316-filtros-plano-blocos-dashboard-psicologos-admin.md) - Accepted
 - [ADR-0317 - Filtro Cortesia no dashboard Admin de psicologos](0317-filtro-cortesia-dashboard-psicologos-admin.md) - Accepted
+- [ADR-0320 - Presets relativos de período nos filtros Admin](0320-admin-presets-relativos-periodo.md) - Accepted

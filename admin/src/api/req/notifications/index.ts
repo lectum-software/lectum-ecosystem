@@ -1,4 +1,4 @@
-﻿import { adminApi } from "@/api/client";
+import { adminApi } from "@/api/client";
 import { resolveApiData } from "@/api/handle";
 import type { Admin, ApiResponse } from "@/api/types";
 
@@ -37,6 +37,9 @@ export const ADMIN_NOTIFICATION_PERIODS = [
   "week",
   "month",
   "year",
+  "7d",
+  "30d",
+  "90d",
   "custom",
 ] as const;
 

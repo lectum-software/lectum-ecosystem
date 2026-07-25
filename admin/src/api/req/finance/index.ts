@@ -3,7 +3,16 @@ import { resolveApiData } from "@/api/handle";
 import type { ApiResponse } from "@/api/types";
 
 export type FinanceGroupBy = "day" | "month" | "week";
-export type FinancePeriodValue = "all" | "custom" | "month" | "today" | "week" | "year";
+export type FinancePeriodValue =
+  | "7d"
+  | "30d"
+  | "90d"
+  | "all"
+  | "custom"
+  | "month"
+  | "today"
+  | "week"
+  | "year";
 
 export type FinanceDashboardQuery = {
   from?: string;

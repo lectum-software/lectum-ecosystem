@@ -1,10 +1,10 @@
-﻿import type { Request } from "express";
+import type { Request } from "express";
 import type { AdminCommunityEngagementDiagnosis } from "@/utils/admin-community-engagement-diagnosis";
 
 export type AdminPsychologistEngagementQuery = {
   community?: string;
   from?: string;
-  period?: "all" | "custom" | "month" | "today" | "week" | "year";
+  period?: "7d" | "30d" | "90d" | "all" | "custom" | "month" | "today" | "week" | "year";
   to?: string;
 };
 

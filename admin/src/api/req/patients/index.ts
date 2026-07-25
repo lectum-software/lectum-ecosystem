@@ -4,13 +4,13 @@ import type { ApiResponse } from "@/api/types";
 
 export type PatientsDashboardQuery = {
   from?: string;
-  period?: "all" | "custom" | "month" | "today" | "week" | "year";
+  period?: "7d" | "30d" | "90d" | "all" | "custom" | "month" | "today" | "week" | "year";
   to?: string;
 };
 
 export type PatientsDetailQuery = {
   from?: string;
-  period?: "all" | "custom" | "month" | "today" | "week" | "year";
+  period?: "7d" | "30d" | "90d" | "all" | "custom" | "month" | "today" | "week" | "year";
   to?: string;
 };
 

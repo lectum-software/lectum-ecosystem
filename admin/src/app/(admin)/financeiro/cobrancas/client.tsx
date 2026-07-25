@@ -42,6 +42,9 @@ const validPeriods = new Set<FinancePeriodValue>([
   "today",
   "week",
   "year",
+  "7d",
+  "30d",
+  "90d",
 ]);
 const statusFilterOptions = [
   { label: "Todos os status", value: "all" },

@@ -73,7 +73,10 @@ const normalizeFilterOptionKey = (value: string) =>
 const DASHBOARD_PERIOD_OPTIONS: { id: DashboardPeriodPreset; label: string }[] = [
   { id: "today", label: "Hoje" },
   { id: "week", label: "Esta semana" },
+  { id: "7d", label: "Últimos 7 dias" },
   { id: "month", label: "Este mês" },
+  { id: "30d", label: "Últimos 30 dias" },
+  { id: "90d", label: "Últimos 90 dias" },
   { id: "year", label: "Este ano" },
   { id: "all", label: "Todo o período" },
 ];
@@ -97,6 +100,13 @@ const startOfCurrentWeek = () => {
   return date;
 };
 
+const startOfLastDays = (days: number) => {
+  const date = new Date();
+  date.setDate(date.getDate() - (days - 1));
+
+  return date;
+};
+
 const startOfCurrentMonth = () => {
   const date = new Date();
   date.setDate(1);
@@ -116,6 +126,9 @@ const getDashboardRangeForPeriod = (period: DashboardPeriodPreset): DashboardRan
 
   if (period === "today") return { from: today, to: today };
   if (period === "all") return { from: "", to: today };
+  if (period === "7d") return { from: toInputDate(startOfLastDays(7)), to: today };
+  if (period === "30d") return { from: toInputDate(startOfLastDays(30)), to: today };
+  if (period === "90d") return { from: toInputDate(startOfLastDays(90)), to: today };
   if (period === "month") return { from: toInputDate(startOfCurrentMonth()), to: today };
   if (period === "year") return { from: toInputDate(startOfCurrentYear()), to: today };
 

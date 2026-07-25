@@ -51,7 +51,7 @@ type ModerationChartMetric = {
   label: string;
 };
 
-type OverviewPeriodPreset = "all" | "month" | "today" | "week" | "year";
+type OverviewPeriodPreset = "7d" | "30d" | "90d" | "all" | "month" | "today" | "week" | "year";
 type OverviewPeriodValue = OverviewPeriodPreset | "custom";
 type OverviewRange = {
   from: string;
@@ -72,7 +72,10 @@ const overviewPeriodOptions = [
   ["all", "Todo o período"],
   ["today", "Hoje"],
   ["week", "Esta semana"],
+  ["7d", "Últimos 7 dias"],
   ["month", "Este mês"],
+  ["30d", "Últimos 30 dias"],
+  ["90d", "Últimos 90 dias"],
   ["year", "Este ano"],
 ] as const satisfies readonly (readonly [OverviewPeriodPreset, string])[];
 
@@ -225,6 +228,9 @@ const getOverviewRangeForPeriod = (
   if (period === "today") return { from: to, to };
   if (period === "week") return { from: dateToOverviewInput(startOfOverviewWeek(today)), to };
   if (period === "month") return { from: dateToOverviewInput(startOfOverviewMonth(today)), to };
+  if (period === "7d") return { from: dateToOverviewInput(addOverviewDays(today, -6)), to };
+  if (period === "30d") return { from: dateToOverviewInput(addOverviewDays(today, -29)), to };
+  if (period === "90d") return { from: dateToOverviewInput(addOverviewDays(today, -89)), to };
 
   return { from: dateToOverviewInput(startOfOverviewYear(today)), to };
 };

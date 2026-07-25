@@ -23,7 +23,7 @@ export type AdminCommunitiesListQuery = AdminCommunityPaginationQuery & {
 
 export type AdminCommunityContentQuery = AdminCommunityPaginationQuery & {
   from?: string;
-  period?: "all" | "custom" | "month" | "today" | "week" | "year";
+  period?: "7d" | "30d" | "90d" | "all" | "custom" | "month" | "today" | "week" | "year";
   sort?: "engagement" | "oldest" | "recent";
   status?: "all" | "published" | "removed";
   to?: string;
@@ -41,7 +41,7 @@ export type AdminCommunityContentQuery = AdminCommunityPaginationQuery & {
 
 export type AdminCommunityContentDetailQuery = {
   from?: string;
-  period?: "all" | "custom" | "month" | "today" | "week" | "year";
+  period?: "7d" | "30d" | "90d" | "all" | "custom" | "month" | "today" | "week" | "year";
   to?: string;
 };
 
@@ -85,7 +85,7 @@ export type AdminCommunityActivitiesQuery = AdminCommunityPaginationQuery & {
 
 export type AdminCommunityStatisticsQuery = {
   from?: string;
-  period?: "all" | "custom" | "month" | "today" | "week" | "year";
+  period?: "7d" | "30d" | "90d" | "all" | "custom" | "month" | "today" | "week" | "year";
   to?: string;
 };
 

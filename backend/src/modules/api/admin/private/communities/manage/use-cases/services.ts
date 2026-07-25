@@ -820,6 +820,11 @@ const resolveContentPeriod = (query: AdminCommunityContentQuery): ContentPeriodR
     const today = new Date();
     start = startOfYear(today);
     end = endOfDay(today);
+  } else if (preset === "7d" || preset === "30d" || preset === "90d") {
+    const today = new Date();
+    const days = preset === "7d" ? 7 : preset === "30d" ? 30 : 90;
+    start = startOfDay(addDays(today, -(days - 1)));
+    end = endOfDay(today);
   } else {
     return { success: false, code: "invalid_analytics_date_range" };
   }
@@ -838,6 +843,9 @@ const contentDetailPeriodLabel: Record<
 > = {
   all: "Todo o período",
   custom: "Período personalizado",
+  "7d": "Últimos 7 dias",
+  "30d": "Últimos 30 dias",
+  "90d": "Últimos 90 dias",
   month: "Este mês",
   today: "Hoje",
   week: "Esta semana",
@@ -885,6 +893,9 @@ const resolveContentDetailPeriod = (
     start = startOfMonth(today);
   } else if (preset === "year") {
     start = startOfYear(today);
+  } else if (preset === "7d" || preset === "30d" || preset === "90d") {
+    const days = preset === "7d" ? 7 : preset === "30d" ? 30 : 90;
+    start = startOfDay(addDays(today, -(days - 1)));
   } else if (preset === "all") {
     start = startOfDay(contentCreatedAt);
   } else {
@@ -972,6 +983,9 @@ const statisticsPeriodLabel: Record<
 > = {
   all: "Todo o per\u00edodo",
   custom: "Per\u00edodo personalizado",
+  "7d": "Últimos 7 dias",
+  "30d": "Últimos 30 dias",
+  "90d": "Últimos 90 dias",
   month: "Este m\u00eas",
   today: "Hoje",
   week: "Esta semana",
@@ -1011,6 +1025,9 @@ const resolveStatisticsPeriod = (
     start = startOfMonth(today);
   } else if (preset === "year") {
     start = startOfYear(today);
+  } else if (preset === "7d" || preset === "30d" || preset === "90d") {
+    const days = preset === "7d" ? 7 : preset === "30d" ? 30 : 90;
+    start = startOfDay(addDays(today, -(days - 1)));
   } else if (preset === "all") {
     start = startOfDay(communityCreatedAt);
   } else {

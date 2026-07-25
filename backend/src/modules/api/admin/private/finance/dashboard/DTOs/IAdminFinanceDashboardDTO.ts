@@ -1,7 +1,15 @@
 import type { Request } from "express";
 
 export type AdminFinanceGroupBy = "day" | "month" | "week";
-export type AdminFinancePeriodPreset = "all" | "month" | "today" | "week" | "year";
+export type AdminFinancePeriodPreset =
+  | "7d"
+  | "30d"
+  | "90d"
+  | "all"
+  | "month"
+  | "today"
+  | "week"
+  | "year";
 export type AdminFinancePeriodValue = AdminFinancePeriodPreset | "custom";
 
 export type AdminFinanceQuery = {

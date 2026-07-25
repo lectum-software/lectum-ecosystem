@@ -1,4 +1,4 @@
-﻿import type { admin } from "@/interfaces/objects";
+import type { admin } from "@/interfaces/objects";
 
 export const ADMIN_NOTIFICATION_AUDIENCES = [
   "all_users",
@@ -35,6 +35,9 @@ export const ADMIN_NOTIFICATION_PERIODS = [
   "week",
   "month",
   "year",
+  "7d",
+  "30d",
+  "90d",
   "custom",
 ] as const;
 
