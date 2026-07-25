@@ -267,6 +267,19 @@ export const adminOperationalPsychologistSelect = {
   },
 } satisfies Prisma.psychologist_profileSelect;
 
+export const adminPatientIntentProfileViewSelect = {
+  psychologist_id: true,
+  viewer_id: true,
+} satisfies Prisma.profile_view_eventSelect;
+
+export const adminPatientIntentFavoriteSelect = {
+  user_id: true,
+} satisfies Prisma.psychologist_favoriteSelect;
+
+export const adminPatientIntentWhatsappClickSelect = {
+  user_id: true,
+} satisfies Prisma.contact_requestSelect;
+
 export type AdminModerationEventRecord = Prisma.content_moderation_eventGetPayload<{
   select: typeof adminModerationEventSelect;
 }>;
@@ -294,6 +307,24 @@ export type AdminPsychologistMetricCountRecord = {
   psychologist_id: string;
 };
 
+export type AdminPatientIntentProfileViewRecord = Prisma.profile_view_eventGetPayload<{
+  select: typeof adminPatientIntentProfileViewSelect;
+}>;
+
+export type AdminPatientIntentFavoriteRecord = Prisma.psychologist_favoriteGetPayload<{
+  select: typeof adminPatientIntentFavoriteSelect;
+}>;
+
+export type AdminPatientIntentWhatsappClickRecord = Prisma.contact_requestGetPayload<{
+  select: typeof adminPatientIntentWhatsappClickSelect;
+}>;
+
+export type AdminPatientIntentSignals = {
+  favorites: AdminPatientIntentFavoriteRecord[];
+  profileViews: AdminPatientIntentProfileViewRecord[];
+  whatsappClicks: AdminPatientIntentWhatsappClickRecord[];
+};
+
 export type ReplyTargetRecord = {
   id: string;
   post_id: string;
@@ -316,6 +347,7 @@ export interface IAdminModerationRepository {
   listLatestPending(limit: number): Promise<AdminModerationEventRecord[]>;
   listPendingPostReports(limit?: number): Promise<AdminPostReportRecord[]>;
   listPostReports(limit?: number): Promise<AdminPostReportRecord[]>;
+  listPatientIntentSignals(patientIds: string[]): Promise<AdminPatientIntentSignals>;
   listReplyTargets(replyIds: string[]): Promise<ReplyTargetRecord[]>;
   listUncoveredPatientPosts(
     cutoff: Date,

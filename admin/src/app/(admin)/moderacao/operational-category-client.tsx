@@ -1489,18 +1489,86 @@ const OperationalPendingBadge = ({ alert }: { alert: AdminModerationOperationalA
   );
 };
 
-const OperationalProfileBadge = ({ alert }: { alert: AdminModerationOperationalAlert }) => {
-  const status = resolveComplianceProfileStatus(alert);
+type OperationalDetailItem = {
+  label: string;
+  value: string;
+};
+
+const detailValue = (...values: (string | null | undefined)[]) =>
+  values
+    .map((value) => value?.trim())
+    .filter(Boolean)
+    .join(" · ") || "—";
+
+const operationalAlertDetailItems = (
+  alert: AdminModerationOperationalAlert,
+): OperationalDetailItem[] => {
+  if (alert.type === "patient_post_without_coverage") {
+    return [
+      {
+        label: "Comunidade",
+        value: detailValue(alertFactValue(alert, "Comunidade"), alert.community?.name),
+      },
+      {
+        label: "Engajamento",
+        value: detailValue(
+          alertFactValue(alert, "Engajamento do paciente"),
+          alertFactValue(alert, "Sinais de engajamento"),
+        ),
+      },
+    ];
+  }
+
+  if (alert.type === "unpublished_required_settings") {
+    return [
+      {
+        label: "Plano",
+        value: detailValue(alertFactValue(alert, "Plano")),
+      },
+      {
+        label: "Motivo",
+        value: detailValue(
+          alertFactValue(alert, "Motivo inativo"),
+          alertFactValue(alert, "Primeiras"),
+        ),
+      },
+    ];
+  }
+
+  if (alert.type === "psychologist_no_traction") {
+    return [
+      {
+        label: "Na plataforma",
+        value: detailValue(alertFactValue(alert, "Na plataforma")),
+      },
+      {
+        label: "Critérios",
+        value: detailValue(
+          alertFactValue(alert, "Critérios de adaptação"),
+          alertFactValue(alert, "Adaptação"),
+        ),
+      },
+    ];
+  }
+
+  return alert.facts.slice(0, 2).map((fact) => ({
+    label: fact.label,
+    value: detailValue(fact.value),
+  }));
+};
+
+const OperationalAlertDetails = ({ alert }: { alert: AdminModerationOperationalAlert }) => {
+  const details = operationalAlertDetailItems(alert);
+  const title = details.map((detail) => `${detail.label}: ${detail.value}`).join("\n");
 
   return (
-    <span
-      className={cn(
-        "inline-flex w-fit max-w-full justify-self-start rounded-full px-2.5 py-1 text-xs font-medium",
-        status.className,
-      )}
-    >
-      {status.label}
-    </span>
+    <div className="space-y-1.5 text-xs leading-5 text-muted" title={title}>
+      {details.map((detail) => (
+        <p className="line-clamp-2 [overflow-wrap:anywhere]" key={detail.label}>
+          <span className="font-medium text-foreground">{detail.label}:</span> {detail.value}
+        </p>
+      ))}
+    </div>
   );
 };
 
@@ -1508,7 +1576,7 @@ const OperationalDetailsAction = ({ alert }: { alert: AdminModerationOperational
   const href = alert.action_href ?? alert.entity.href;
   const isContent = alert.entity.type === "post" || alert.entity.type === "reply";
   const targetLabel = isContent ? alert.entity.label : alertUserName(alert);
-  const title = isContent ? "Abrir detalhes do conteúdo" : "Abrir detalhes do psicólogo";
+  const title = isContent ? "Abrir detalhes do conte?do" : "Abrir detalhes do psic?logo";
 
   return href ? (
     <Link
@@ -1532,7 +1600,6 @@ const OperationalDetailsAction = ({ alert }: { alert: AdminModerationOperational
 };
 
 const OperationalAlertRow = ({ alert }: { alert: AdminModerationOperationalAlert }) => {
-  const plan = alertFactValue(alert, "Plano") || "—";
   const userName = alertUserName(alert);
   const roleLabel = alertUserRoleLabel(alert);
   const showVerifiedBadge = alertUserVerified(alert);
@@ -1562,11 +1629,8 @@ const OperationalAlertRow = ({ alert }: { alert: AdminModerationOperationalAlert
           <p className="mt-0.5 truncate text-xs font-normal text-muted">{roleLabel}</p>
         </div>
       </td>
-      <td className="px-5 py-4 align-middle text-xs font-medium text-primary" title={plan}>
-        {plan}
-      </td>
       <td className="px-5 py-4 align-middle">
-        <OperationalProfileBadge alert={alert} />
+        <OperationalAlertDetails alert={alert} />
       </td>
       <td className="px-5 py-4 align-middle">
         <OperationalDetailsAction alert={alert} />
@@ -1577,14 +1641,13 @@ const OperationalAlertRow = ({ alert }: { alert: AdminModerationOperationalAlert
 
 const OperationalAlertsTable = ({ alerts }: { alerts: AdminModerationOperationalAlert[] }) => (
   <div className="overflow-x-auto">
-    <table className="w-full min-w-[1060px] table-fixed border-collapse">
+    <table className="w-full min-w-[1040px] table-fixed border-collapse">
       <thead className="bg-surface-muted/70 text-left text-[0.7rem] font-medium uppercase tracking-[0.1em] text-subtle">
         <tr>
-          <th className="w-[22%] px-5 py-4 font-medium">Pendência</th>
-          <th className="w-[15%] px-5 py-4 font-medium">Pendente há</th>
-          <th className="w-[24%] px-5 py-4 font-medium">Usuário</th>
-          <th className="w-[16%] px-5 py-4 font-medium">Plano</th>
-          <th className="w-[17%] px-5 py-4 font-medium">Status do perfil</th>
+          <th className="w-[20%] px-5 py-4 font-medium">Pendência</th>
+          <th className="w-[14%] px-5 py-4 font-medium">Pendente há</th>
+          <th className="w-[22%] px-5 py-4 font-medium">Usuário</th>
+          <th className="w-[38%] px-5 py-4 font-medium">Detalhes</th>
           <th className="w-[6%] px-5 py-4 font-medium">
             <span className="sr-only">Ações</span>
           </th>

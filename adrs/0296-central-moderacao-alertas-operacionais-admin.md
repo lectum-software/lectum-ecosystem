@@ -213,3 +213,9 @@ O filtro **Plano** de `/moderacao/compliance` passa a tratar **Plano Cortesia** 
 A fonte canônica da cortesia permanece o dado persistido `professional_subscription.source="admin_grant"`, conforme o modelo de assinatura. O endpoint derivado `operational-alerts` não cria estado novo: ele rotula a assinatura vigente de origem `admin_grant` como **Plano Cortesia**, inclui a origem nos fatos de pendências de Compliance e aplica o filtro antes da paginação.
 
 Com a nova segmentação, `plan=profissional` deixa de capturar alertas de origem `admin_grant`; esses alertas ficam em `plan=cortesia`. A decisão mantém a central read-only, sem migration, sem endpoint paralelo e sem fallback mockado.
+
+## Complemento 2026-07-25: Detalhes operacionais por tipo de pendencia
+
+A tabela de `/moderacao/operacionais` passa a remover **Plano** e **Status do perfil** da grade principal e a concentrar a leitura acionavel em **Detalhes**. Como as pendencias operacionais sao heterogeneas, cada tipo define seus proprios fatos: cobertura de post mostra comunidade e nivel de engajamento do paciente; perfil nao publicado mostra plano e motivo de inatividade; sem tracao mostra tempo na plataforma e criterios de adaptacao ja cumpridos.
+
+O backend continua sendo a fonte de verdade dos fatos. Para **Post sem cobertura**, o engajamento do paciente e derivado das fontes first-party ja usadas na intencao de pacientes (`profile_view_event`, `psychologist_favorite` e `contact_request.channel=whatsapp`) com a mesma classificacao Frio/Curioso/Interessado/Qualificado. A UI apenas formata esses fatos, preservando filtros/paginacao no endpoint derivado e evitando mocks, estado local paralelo ou persistencia nova.

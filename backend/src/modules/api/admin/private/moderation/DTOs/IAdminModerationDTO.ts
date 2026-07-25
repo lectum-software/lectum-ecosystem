@@ -352,7 +352,7 @@ export type AdminModerationOperationalAlertsDTO = {
     title: string;
   }[];
   items: AdminModerationOperationalAlertDTO[];
-  source: "post_report+community_post+post_reply+psychologist_profile+professional_subscription+profile_view_event+contact_request";
+  source: "post_report+community_post+post_reply+psychologist_profile+professional_subscription+profile_view_event+psychologist_favorite+contact_request";
   thresholds: {
     patient_post_without_coverage_hours: number;
     psychologist_adaptation_days: number;

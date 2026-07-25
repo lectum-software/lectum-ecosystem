@@ -671,3 +671,9 @@ Validacao deste ajuste:
 - `pnpm check` (a primeira execução excedeu 184s; reexecutado com timeout maior e concluído com sucesso)
 - API local autenticada: `GET /api/admin/private/moderation/operational-alerts?group=compliance&plan=cortesia&limit=50` retornou `200`, `count=0` na base real atual e nenhuma linha inválida; `plan=profissional` retornou `200`, `count=8` e `0` linhas com `Origem=admin_grant`/`Plano Cortesia`.
 - Browser local/headless em Chrome para `http://localhost:3002/moderacao/compliance` validou desktop 1365px e mobile 390px com **Plano Cortesia** (`value="cortesia"`) no select **Plano**, sem faixa **Fora do escopo agora...**, sem label **Busca**, sem overflow horizontal e com requisição real contendo `plan=cortesia` ao alterar o filtro. Admin temporário de validação removido ao final.
+
+## Complemento 2026-07-25: Detalhes especificos na tabela de Operacionais
+
+A fila exclusiva `/moderacao/operacionais` deixou de exibir as colunas genericas **Plano** e **Status do perfil**. A tabela permanece compacta, mas agora usa a coluna **Detalhes** para expor o dado operacional acionavel conforme o tipo de pendencia: comunidade e engajamento do paciente em posts sem cobertura; plano e motivo real de inatividade em perfis nao publicados; tempo do profissional na plataforma e criterios de adaptacao ja atendidos em profissionais sem tracao.
+
+Para nao transformar a UI em uma camada heuristica, os detalhes sao entregues pelos fatos reais do contrato `operational-alerts`. O nivel de engajamento do paciente em **Post sem cobertura** reaproveita a mesma base first-party usada na analise de intencao de pacientes (`profile_view_event`, `psychologist_favorite` e `contact_request.channel=whatsapp`), sem mocks ou estimativas externas. Nao houve alteracao de Prisma schema/migrations nem package novo.

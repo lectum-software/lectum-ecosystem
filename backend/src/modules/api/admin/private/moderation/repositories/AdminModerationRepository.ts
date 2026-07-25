@@ -7,6 +7,9 @@ import {
   adminModerationEventDetailSelect,
   adminModerationEventSelect,
   adminOperationalPsychologistSelect,
+  adminPatientIntentFavoriteSelect,
+  adminPatientIntentProfileViewSelect,
+  adminPatientIntentWhatsappClickSelect,
   adminPostReportSelect,
   adminUncoveredPatientPostSelect,
   type IAdminModerationRepository,
@@ -333,6 +336,78 @@ export class AdminModerationRepository implements IAdminModerationRepository {
         _all: true,
       },
     });
+  }
+
+  async listPatientIntentSignals(patientIds: string[]) {
+    if (patientIds.length === 0) {
+      return {
+        favorites: [],
+        profileViews: [],
+        whatsappClicks: [],
+      };
+    }
+
+    const [profileViews, favorites, whatsappClicks] = await Promise.all([
+      prisma.profile_view_event.findMany({
+        select: adminPatientIntentProfileViewSelect,
+        where: {
+          deleted: false,
+          psychologist: {
+            deleted: false,
+            role: "psicologo",
+          },
+          source: "profile_page",
+          viewer: {
+            deleted: false,
+            role: "paciente",
+          },
+          viewer_id: {
+            in: patientIds,
+          },
+        },
+      }),
+      prisma.psychologist_favorite.findMany({
+        select: adminPatientIntentFavoriteSelect,
+        where: {
+          deleted: false,
+          psychologist: {
+            deleted: false,
+            role: "psicologo",
+          },
+          user: {
+            deleted: false,
+            role: "paciente",
+          },
+          user_id: {
+            in: patientIds,
+          },
+        },
+      }),
+      prisma.contact_request.findMany({
+        select: adminPatientIntentWhatsappClickSelect,
+        where: {
+          channel: "whatsapp",
+          deleted: false,
+          psychologist: {
+            deleted: false,
+            role: "psicologo",
+          },
+          user: {
+            deleted: false,
+            role: "paciente",
+          },
+          user_id: {
+            in: patientIds,
+          },
+        },
+      }),
+    ]);
+
+    return {
+      favorites,
+      profileViews,
+      whatsappClicks,
+    };
   }
 
   findEvent(id: string) {

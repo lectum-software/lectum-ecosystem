@@ -36,6 +36,7 @@ import type {
   AdminModerationEventDetailRecord,
   AdminModerationEventRecord,
   AdminOperationalPsychologistRecord,
+  AdminPatientIntentSignals,
   AdminPostReportRecord,
   AdminPsychologistMetricCountRecord,
   AdminUncoveredPatientPostRecord,
@@ -50,6 +51,24 @@ const POST_COVERAGE_HOURS = 48;
 const PSYCHOLOGIST_ADAPTATION_DAYS = 30;
 const HOUR_IN_MS = 60 * 60 * 1000;
 const DAY_IN_MS = 24 * HOUR_IN_MS;
+const PATIENT_INTENT_SCORE_WEIGHTS = {
+  favorites: 20,
+  profile_views: 3,
+  repeated_profile_views: 5,
+  whatsapp_clicks: 45,
+} as const;
+const PATIENT_INTENT_SCORE_CAPS = {
+  favorites: 40,
+  profile_views: 30,
+  repeated_profile_views: 20,
+  whatsapp_clicks: 90,
+} as const;
+const PATIENT_ENGAGEMENT_LABELS = {
+  cold: "Frio",
+  curious: "Curioso",
+  objective: "Interessado",
+  very_qualified: "Qualificado",
+} as const;
 const DISMISS_REPORT_CONFIRMATION = "DENUNCIA IMPROCEDENTE";
 const UPHOLD_REPORT_CONFIRMATION = "DENUNCIA PROCEDENTE";
 
@@ -350,6 +369,21 @@ const reportAuthorVerified = (author: AdminPostReportAuthor) =>
   author.role === "psicologo" && hasProfessionalRegistryApproval(author.psychologist_profile);
 
 type AdminModerationAlertUser = NonNullable<AdminModerationOperationalAlertDTO["user"]>;
+
+type PatientIntentCounts = {
+  favorites: number;
+  profile_views: number;
+  repeated_profile_views: number;
+  whatsapp_clicks: number;
+};
+
+type PatientEngagementSegment = keyof typeof PATIENT_ENGAGEMENT_LABELS;
+
+type PatientEngagementSummary = {
+  label: string;
+  score: number;
+  signalSummary: string;
+};
 
 const reportAuthorAlertUser = (author: AdminPostReportAuthor): AdminModerationAlertUser => ({
   id: author.id,
@@ -729,6 +763,116 @@ const countMap = (items: AdminPsychologistMetricCountRecord[]) => {
   return map;
 };
 
+const createPatientIntentCounts = (): PatientIntentCounts => ({
+  favorites: 0,
+  profile_views: 0,
+  repeated_profile_views: 0,
+  whatsapp_clicks: 0,
+});
+
+const getPatientIntentCounts = (
+  countsByPatient: Map<string, PatientIntentCounts>,
+  patientId: string,
+) => {
+  const current = countsByPatient.get(patientId);
+  if (current) return current;
+
+  const next = createPatientIntentCounts();
+  countsByPatient.set(patientId, next);
+  return next;
+};
+
+const patientIntentScoreContribution = (metricId: keyof PatientIntentCounts, value: number) =>
+  Math.min(
+    PATIENT_INTENT_SCORE_CAPS[metricId],
+    Math.max(0, value) * PATIENT_INTENT_SCORE_WEIGHTS[metricId],
+  );
+
+const patientIntentScore = (counts: PatientIntentCounts) =>
+  Math.min(
+    100,
+    Math.round(
+      patientIntentScoreContribution("profile_views", counts.profile_views) +
+        patientIntentScoreContribution("repeated_profile_views", counts.repeated_profile_views) +
+        patientIntentScoreContribution("favorites", counts.favorites) +
+        patientIntentScoreContribution("whatsapp_clicks", counts.whatsapp_clicks),
+    ),
+  );
+
+const classifyPatientEngagement = (counts: PatientIntentCounts): PatientEngagementSegment => {
+  const score = patientIntentScore(counts);
+
+  if (counts.whatsapp_clicks > 0 || score >= 45) return "very_qualified";
+  if (counts.favorites > 0 || score >= 20) return "objective";
+  if (counts.profile_views > 0 || counts.repeated_profile_views > 0 || score > 0) {
+    return "curious";
+  }
+
+  return "cold";
+};
+
+const countPhrase = (value: number, singular: string, plural: string) =>
+  `${value} ${value === 1 ? singular : plural}`;
+
+const patientEngagementSignalSummary = (counts: PatientIntentCounts) =>
+  [
+    countPhrase(counts.profile_views, "perfil aberto", "perfis abertos"),
+    countPhrase(counts.repeated_profile_views, "retorno a perfil", "retornos a perfis"),
+    countPhrase(counts.favorites, "favorito", "favoritos"),
+    countPhrase(counts.whatsapp_clicks, "clique no WhatsApp", "cliques no WhatsApp"),
+  ].join(", ");
+
+const buildPatientEngagementById = (patientIds: string[], signals: AdminPatientIntentSignals) => {
+  const patientIdSet = new Set(patientIds);
+  const countsByPatient = new Map<string, PatientIntentCounts>();
+  const profilePsychologistsByPatient = new Map<string, Set<string>>();
+
+  for (const view of signals.profileViews) {
+    if (!view.viewer_id || !patientIdSet.has(view.viewer_id)) continue;
+
+    const counts = getPatientIntentCounts(countsByPatient, view.viewer_id);
+    counts.profile_views += 1;
+
+    if (!profilePsychologistsByPatient.has(view.viewer_id)) {
+      profilePsychologistsByPatient.set(view.viewer_id, new Set());
+    }
+    profilePsychologistsByPatient.get(view.viewer_id)?.add(view.psychologist_id);
+  }
+
+  for (const [patientId, psychologists] of profilePsychologistsByPatient.entries()) {
+    const counts = getPatientIntentCounts(countsByPatient, patientId);
+    counts.repeated_profile_views = Math.max(0, counts.profile_views - psychologists.size);
+  }
+
+  for (const favorite of signals.favorites) {
+    if (!patientIdSet.has(favorite.user_id)) continue;
+
+    getPatientIntentCounts(countsByPatient, favorite.user_id).favorites += 1;
+  }
+
+  for (const click of signals.whatsappClicks) {
+    if (!click.user_id || !patientIdSet.has(click.user_id)) continue;
+
+    getPatientIntentCounts(countsByPatient, click.user_id).whatsapp_clicks += 1;
+  }
+
+  const engagementByPatientId = new Map<string, PatientEngagementSummary>();
+
+  for (const patientId of patientIdSet) {
+    const counts = countsByPatient.get(patientId) ?? createPatientIntentCounts();
+    const segment = classifyPatientEngagement(counts);
+    const score = patientIntentScore(counts);
+
+    engagementByPatientId.set(patientId, {
+      label: PATIENT_ENGAGEMENT_LABELS[segment],
+      score,
+      signalSummary: patientEngagementSignalSummary(counts),
+    });
+  }
+
+  return engagementByPatientId;
+};
+
 const communityDTO = (
   community:
     | AdminPostReportRecord["post"]["community"]
@@ -792,6 +936,7 @@ const mapReportAlert = (
 const mapUncoveredPatientPostAlert = (
   post: AdminUncoveredPatientPostRecord,
   now: Date,
+  engagement: PatientEngagementSummary,
 ): AdminModerationOperationalAlertDTO => {
   const href = `/comunidades/${post.community.slug}/conteudo/post/${post.id}`;
   const user = uncoveredPostAuthorAlertUser(post.author);
@@ -814,13 +959,17 @@ const mapUncoveredPatientPostAlert = (
     },
     facts: [
       { label: "Comunidade", value: post.community.name },
+      { label: "Engajamento do paciente", value: engagement.label },
+      { label: "Sinais de engajamento", value: engagement.signalSummary },
+      { label: "Score de engajamento", value: String(engagement.score) },
       { label: "Idade", value: humanAge(post.createdAt, now) },
       { label: "Respostas totais", value: String(post.replies_count) },
     ],
     group: "operacional",
     id: `uncovered-post-${post.id}`,
     priority: "medium",
-    source: "community_post+post_reply+user.role",
+    source:
+      "community_post+post_reply+user.role+profile_view_event+psychologist_favorite+contact_request",
     title: "Post de paciente sem cobertura há 48h",
     type: "patient_post_without_coverage",
     user,
@@ -949,6 +1098,7 @@ const buildPsychologistAlerts = (
         facts: [
           { label: "Plano", value: currentPlanLabel },
           { label: "Pendências", value: String(missingSettings.length) },
+          { label: "Motivo inativo", value: missingSettings.join(", ") },
           { label: "Publicado", value: profile.published ? "sim" : "não" },
           { label: "Primeiras", value: missingSettings.slice(0, 3).join(", ") },
         ],
@@ -988,10 +1138,21 @@ const buildPsychologistAlerts = (
         },
         facts: [
           { label: "Plano", value: currentPlanLabel },
+          { label: "Na plataforma", value: humanAge(profile.createdAt, now) },
           { label: "Visitas", value: String(profileViews) },
           { label: "Cliques WhatsApp", value: String(whatsappClicks) },
           { label: "Publicado", value: profile.published ? "sim" : "não" },
           { label: "Adaptação", value: `${PSYCHOLOGIST_ADAPTATION_DAYS} dias` },
+          {
+            label: "Critérios de adaptação",
+            value: [
+              "plano profissional ativo",
+              "perfil publicado",
+              `${PSYCHOLOGIST_ADAPTATION_DAYS} dias de adaptação concluídos`,
+              `${profileViews} visitas de perfil`,
+              `${whatsappClicks} cliques no WhatsApp`,
+            ].join("; "),
+          },
         ],
         group: "operacional",
         id: `no-traction-${profile.id}`,
@@ -1063,10 +1224,13 @@ const buildOperationalAlerts = async (
       repository.listOperationalPsychologistProfiles(),
     ]);
   const psychologistIds = psychologistProfiles.map((profile) => profile.user_id);
-  const [profileViews, whatsappClicks] = await Promise.all([
+  const patientIds = [...new Set(uncoveredPosts.map((post) => post.author.id))];
+  const [profileViews, whatsappClicks, patientIntentSignals] = await Promise.all([
     repository.countProfileViewsByPsychologist(psychologistIds),
     repository.countWhatsappClicksByPsychologist(psychologistIds),
+    repository.listPatientIntentSignals(patientIds),
   ]);
+  const patientEngagementById = buildPatientEngagementById(patientIds, patientIntentSignals);
   const psychologistAlerts = buildPsychologistAlerts(
     psychologistProfiles,
     countMap(profileViews),
@@ -1074,7 +1238,17 @@ const buildOperationalAlerts = async (
     now,
   );
   const reportAlerts = latestReports.map((report) => mapReportAlert(report, now));
-  const uncoveredPostAlerts = uncoveredPosts.map((post) => mapUncoveredPatientPostAlert(post, now));
+  const uncoveredPostAlerts = uncoveredPosts.map((post) =>
+    mapUncoveredPatientPostAlert(
+      post,
+      now,
+      patientEngagementById.get(post.author.id) ?? {
+        label: PATIENT_ENGAGEMENT_LABELS.cold,
+        score: 0,
+        signalSummary: patientEngagementSignalSummary(createPatientIntentCounts()),
+      },
+    ),
+  );
   const complianceTotal =
     psychologistAlerts.counts.professionalCrpPending + psychologistAlerts.counts.invalidWhatsapp;
   const operationalTotal =
@@ -1103,7 +1277,7 @@ const buildOperationalAlerts = async (
     excluded_dimensions: excludedOperationalDimensions,
     items: typeof itemLimit === "number" ? items.slice(0, itemLimit) : items,
     source:
-      "post_report+community_post+post_reply+psychologist_profile+professional_subscription+profile_view_event+contact_request",
+      "post_report+community_post+post_reply+psychologist_profile+professional_subscription+profile_view_event+psychologist_favorite+contact_request",
     thresholds: {
       patient_post_without_coverage_hours: POST_COVERAGE_HOURS,
       psychologist_adaptation_days: PSYCHOLOGIST_ADAPTATION_DAYS,
