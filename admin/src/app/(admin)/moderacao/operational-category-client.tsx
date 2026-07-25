@@ -1499,11 +1499,23 @@ type OperationalDetailItem = {
   value: string;
 };
 
-const detailValue = (...values: (string | null | undefined)[]) =>
-  values
+const detailValue = (...values: (string | null | undefined)[]) => {
+  const seen = new Set<string>();
+  const uniqueValues = values
     .map((value) => value?.trim())
-    .filter(Boolean)
-    .join(" · ") || "—";
+    .filter((value): value is string => Boolean(value))
+    .filter((value) => {
+      const key = value
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase();
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+
+  return uniqueValues.join(" · ") || "—";
+};
 
 const operationalAlertDetailItems = (
   alert: AdminModerationOperationalAlert,
@@ -1512,13 +1524,13 @@ const operationalAlertDetailItems = (
     return [
       {
         label: "Comunidade",
-        value: detailValue(alertFactValue(alert, "Comunidade"), alert.community?.name),
+        value: detailValue(alert.community?.name, alertFactValue(alert, "Comunidade")),
       },
       {
         label: "Engajamento",
         value: detailValue(
-          alertFactValue(alert, "Engajamento do paciente"),
-          alertFactValue(alert, "Sinais de engajamento"),
+          alertFactValue(alert, "Engajamento na comunidade"),
+          alertFactValue(alert, "Atividade na comunidade"),
         ),
       },
     ];

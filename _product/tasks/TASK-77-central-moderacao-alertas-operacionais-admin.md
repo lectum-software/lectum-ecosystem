@@ -676,4 +676,11 @@ Validacao deste ajuste:
 
 A fila exclusiva `/moderacao/operacionais` deixou de exibir as colunas genericas **Plano** e **Status do perfil**. A tabela permanece compacta, mas agora usa a coluna **Detalhes** para expor o dado operacional acionavel conforme o tipo de pendencia: comunidade e engajamento do paciente em posts sem cobertura; plano e motivo real de inatividade em perfis nao publicados; tempo do profissional na plataforma e criterios de adaptacao ja atendidos em profissionais sem tracao.
 
-Para nao transformar a UI em uma camada heuristica, os detalhes sao entregues pelos fatos reais do contrato `operational-alerts`. O nivel de engajamento do paciente em **Post sem cobertura** reaproveita a mesma base first-party usada na analise de intencao de pacientes (`profile_view_event`, `psychologist_favorite` e `contact_request.channel=whatsapp`), sem mocks ou estimativas externas. Nao houve alteracao de Prisma schema/migrations nem package novo.
+Para nao transformar a UI em uma camada heuristica, os detalhes sao entregues pelos fatos reais do contrato `operational-alerts`. O nivel de engajamento do paciente em **Post sem cobertura** agora e calculado somente em relacao a comunidade daquele post, usando atividades first-party de comunidade (`community_post`, `post_reply`, `post_vote`, `post_save`, `post_reply_save` e `post_share`) para classificar o usuario como **Pouco ativo**, **Ativo** ou **Muito ativo**. A UI tambem remove duplicatas ao compor o nome da comunidade, evitando exibir a mesma comunidade duas vezes. Nao houve alteracao de Prisma schema/migrations nem package novo.
+
+### Criterios deste ajuste
+
+- [x] **Post sem cobertura** mostra o nome da comunidade apenas uma vez na coluna **Detalhes**.
+- [x] O engajamento exibido em **Post sem cobertura** deixa de usar temperatura/intencao geral da plataforma.
+- [x] O engajamento passa a ser derivado da atividade real do paciente naquela comunidade: posts, respostas, votos, salvamentos e compartilhamentos.
+- [x] O ajuste e mobile-first, sem `<img>` cru, sem package novo, sem mock e sem migration.

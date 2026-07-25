@@ -36,7 +36,8 @@ import type {
   AdminModerationEventDetailRecord,
   AdminModerationEventRecord,
   AdminOperationalPsychologistRecord,
-  AdminPatientIntentSignals,
+  AdminPatientCommunityEngagementSignals,
+  AdminPatientCommunityEngagementTarget,
   AdminPostReportRecord,
   AdminPsychologistMetricCountRecord,
   AdminRegistrationFailureUserRecord,
@@ -52,23 +53,18 @@ const POST_COVERAGE_HOURS = 48;
 const PSYCHOLOGIST_ADAPTATION_DAYS = 30;
 const HOUR_IN_MS = 60 * 60 * 1000;
 const DAY_IN_MS = 24 * HOUR_IN_MS;
-const PATIENT_INTENT_SCORE_WEIGHTS = {
-  favorites: 20,
-  profile_views: 3,
-  repeated_profile_views: 5,
-  whatsapp_clicks: 45,
+const COMMUNITY_ENGAGEMENT_SCORE_WEIGHTS = {
+  posts: 3,
+  replies: 2,
+  saves: 1,
+  shares: 1,
+  votes: 1,
 } as const;
-const PATIENT_INTENT_SCORE_CAPS = {
-  favorites: 40,
-  profile_views: 30,
-  repeated_profile_views: 20,
-  whatsapp_clicks: 90,
-} as const;
-const PATIENT_ENGAGEMENT_LABELS = {
-  cold: "Frio",
-  curious: "Curioso",
-  objective: "Interessado",
-  very_qualified: "Qualificado",
+const COMMUNITY_ENGAGEMENT_LABELS = {
+  active: "Ativo",
+  low: "Pouco ativo",
+  none: "Sem atividade previa",
+  very_active: "Muito ativo",
 } as const;
 const DISMISS_REPORT_CONFIRMATION = "DENUNCIA IMPROCEDENTE";
 const UPHOLD_REPORT_CONFIRMATION = "DENUNCIA PROCEDENTE";
@@ -382,16 +378,17 @@ const reportAuthorVerified = (author: AdminPostReportAuthor) =>
 
 type AdminModerationAlertUser = NonNullable<AdminModerationOperationalAlertDTO["user"]>;
 
-type PatientIntentCounts = {
-  favorites: number;
-  profile_views: number;
-  repeated_profile_views: number;
-  whatsapp_clicks: number;
+type PatientCommunityEngagementCounts = {
+  posts: number;
+  replies: number;
+  saves: number;
+  shares: number;
+  votes: number;
 };
 
-type PatientEngagementSegment = keyof typeof PATIENT_ENGAGEMENT_LABELS;
+type PatientCommunityEngagementSegment = keyof typeof COMMUNITY_ENGAGEMENT_LABELS;
 
-type PatientEngagementSummary = {
+type PatientCommunityEngagementSummary = {
   label: string;
   score: number;
   signalSummary: string;
@@ -785,114 +782,158 @@ const countMap = (items: AdminPsychologistMetricCountRecord[]) => {
   return map;
 };
 
-const createPatientIntentCounts = (): PatientIntentCounts => ({
-  favorites: 0,
-  profile_views: 0,
-  repeated_profile_views: 0,
-  whatsapp_clicks: 0,
+const createPatientCommunityEngagementCounts = (): PatientCommunityEngagementCounts => ({
+  posts: 0,
+  replies: 0,
+  saves: 0,
+  shares: 0,
+  votes: 0,
 });
 
-const getPatientIntentCounts = (
-  countsByPatient: Map<string, PatientIntentCounts>,
-  patientId: string,
+const patientCommunityEngagementKey = (userId: string, communityId: string) =>
+  `${userId}:${communityId}`;
+
+const getPatientCommunityEngagementCounts = (
+  countsByTarget: Map<string, PatientCommunityEngagementCounts>,
+  userId: string,
+  communityId: string,
 ) => {
-  const current = countsByPatient.get(patientId);
+  const key = patientCommunityEngagementKey(userId, communityId);
+  const current = countsByTarget.get(key);
   if (current) return current;
 
-  const next = createPatientIntentCounts();
-  countsByPatient.set(patientId, next);
+  const next = createPatientCommunityEngagementCounts();
+  countsByTarget.set(key, next);
   return next;
 };
 
-const patientIntentScoreContribution = (metricId: keyof PatientIntentCounts, value: number) =>
-  Math.min(
-    PATIENT_INTENT_SCORE_CAPS[metricId],
-    Math.max(0, value) * PATIENT_INTENT_SCORE_WEIGHTS[metricId],
+const patientCommunityEngagementScoreContribution = (
+  metricId: keyof PatientCommunityEngagementCounts,
+  value: number,
+) => Math.max(0, value) * COMMUNITY_ENGAGEMENT_SCORE_WEIGHTS[metricId];
+
+const patientCommunityEngagementScore = (counts: PatientCommunityEngagementCounts) =>
+  Math.round(
+    patientCommunityEngagementScoreContribution("posts", counts.posts) +
+      patientCommunityEngagementScoreContribution("replies", counts.replies) +
+      patientCommunityEngagementScoreContribution("votes", counts.votes) +
+      patientCommunityEngagementScoreContribution("saves", counts.saves) +
+      patientCommunityEngagementScoreContribution("shares", counts.shares),
   );
 
-const patientIntentScore = (counts: PatientIntentCounts) =>
-  Math.min(
-    100,
-    Math.round(
-      patientIntentScoreContribution("profile_views", counts.profile_views) +
-        patientIntentScoreContribution("repeated_profile_views", counts.repeated_profile_views) +
-        patientIntentScoreContribution("favorites", counts.favorites) +
-        patientIntentScoreContribution("whatsapp_clicks", counts.whatsapp_clicks),
-    ),
-  );
+const classifyPatientCommunityEngagement = (
+  counts: PatientCommunityEngagementCounts,
+): PatientCommunityEngagementSegment => {
+  const score = patientCommunityEngagementScore(counts);
+  const authoredActivity = counts.posts + counts.replies;
+  const totalActivity = authoredActivity + counts.votes + counts.saves + counts.shares;
 
-const classifyPatientEngagement = (counts: PatientIntentCounts): PatientEngagementSegment => {
-  const score = patientIntentScore(counts);
+  if (score >= 16 || authoredActivity >= 8) return "very_active";
+  if (score >= 6 || authoredActivity >= 3) return "active";
+  if (totalActivity > 0) return "low";
 
-  if (counts.whatsapp_clicks > 0 || score >= 45) return "very_qualified";
-  if (counts.favorites > 0 || score >= 20) return "objective";
-  if (counts.profile_views > 0 || counts.repeated_profile_views > 0 || score > 0) {
-    return "curious";
-  }
-
-  return "cold";
+  return "none";
 };
 
 const countPhrase = (value: number, singular: string, plural: string) =>
   `${value} ${value === 1 ? singular : plural}`;
 
-const patientEngagementSignalSummary = (counts: PatientIntentCounts) =>
+const patientCommunityEngagementSignalSummary = (counts: PatientCommunityEngagementCounts) =>
   [
-    countPhrase(counts.profile_views, "perfil aberto", "perfis abertos"),
-    countPhrase(counts.repeated_profile_views, "retorno a perfil", "retornos a perfis"),
-    countPhrase(counts.favorites, "favorito", "favoritos"),
-    countPhrase(counts.whatsapp_clicks, "clique no WhatsApp", "cliques no WhatsApp"),
+    countPhrase(counts.posts, "post na comunidade", "posts na comunidade"),
+    countPhrase(counts.replies, "resposta", "respostas"),
+    countPhrase(counts.votes, "voto", "votos"),
+    countPhrase(counts.saves, "salvamento", "salvamentos"),
+    countPhrase(counts.shares, "compartilhamento", "compartilhamentos"),
   ].join(", ");
 
-const buildPatientEngagementById = (patientIds: string[], signals: AdminPatientIntentSignals) => {
-  const patientIdSet = new Set(patientIds);
-  const countsByPatient = new Map<string, PatientIntentCounts>();
-  const profilePsychologistsByPatient = new Map<string, Set<string>>();
+const postVoteCommunityId = (vote: AdminPatientCommunityEngagementSignals["votes"][number]) =>
+  vote.post?.community_id ?? vote.reply?.post.community_id ?? null;
 
-  for (const view of signals.profileViews) {
-    if (!view.viewer_id || !patientIdSet.has(view.viewer_id)) continue;
+const patientCommunityEngagementSummary = (
+  counts: PatientCommunityEngagementCounts,
+): PatientCommunityEngagementSummary => {
+  const segment = classifyPatientCommunityEngagement(counts);
+  const score = patientCommunityEngagementScore(counts);
 
-    const counts = getPatientIntentCounts(countsByPatient, view.viewer_id);
-    counts.profile_views += 1;
+  return {
+    label: COMMUNITY_ENGAGEMENT_LABELS[segment],
+    score,
+    signalSummary: patientCommunityEngagementSignalSummary(counts),
+  };
+};
 
-    if (!profilePsychologistsByPatient.has(view.viewer_id)) {
-      profilePsychologistsByPatient.set(view.viewer_id, new Set());
+const buildPatientCommunityEngagementByTarget = (
+  targets: AdminPatientCommunityEngagementTarget[],
+  signals: AdminPatientCommunityEngagementSignals,
+) => {
+  const targetKeys = new Set(
+    targets.map((target) => patientCommunityEngagementKey(target.userId, target.communityId)),
+  );
+  const countsByTarget = new Map<string, PatientCommunityEngagementCounts>();
+
+  for (const post of signals.posts) {
+    if (!targetKeys.has(patientCommunityEngagementKey(post.author_id, post.community_id))) continue;
+
+    getPatientCommunityEngagementCounts(countsByTarget, post.author_id, post.community_id).posts +=
+      1;
+  }
+
+  for (const reply of signals.replies) {
+    const communityId = reply.post.community_id;
+    if (!targetKeys.has(patientCommunityEngagementKey(reply.author_id, communityId))) continue;
+
+    getPatientCommunityEngagementCounts(countsByTarget, reply.author_id, communityId).replies += 1;
+  }
+
+  for (const vote of signals.votes) {
+    const communityId = postVoteCommunityId(vote);
+    if (!communityId || !targetKeys.has(patientCommunityEngagementKey(vote.user_id, communityId))) {
+      continue;
     }
-    profilePsychologistsByPatient.get(view.viewer_id)?.add(view.psychologist_id);
+
+    getPatientCommunityEngagementCounts(countsByTarget, vote.user_id, communityId).votes += 1;
   }
 
-  for (const [patientId, psychologists] of profilePsychologistsByPatient.entries()) {
-    const counts = getPatientIntentCounts(countsByPatient, patientId);
-    counts.repeated_profile_views = Math.max(0, counts.profile_views - psychologists.size);
+  for (const save of signals.postSaves) {
+    const communityId = save.post.community_id;
+    if (!targetKeys.has(patientCommunityEngagementKey(save.user_id, communityId))) continue;
+
+    getPatientCommunityEngagementCounts(countsByTarget, save.user_id, communityId).saves += 1;
   }
 
-  for (const favorite of signals.favorites) {
-    if (!patientIdSet.has(favorite.user_id)) continue;
+  for (const save of signals.replySaves) {
+    const communityId = save.reply.post.community_id;
+    if (!targetKeys.has(patientCommunityEngagementKey(save.user_id, communityId))) continue;
 
-    getPatientIntentCounts(countsByPatient, favorite.user_id).favorites += 1;
+    getPatientCommunityEngagementCounts(countsByTarget, save.user_id, communityId).saves += 1;
   }
 
-  for (const click of signals.whatsappClicks) {
-    if (!click.user_id || !patientIdSet.has(click.user_id)) continue;
+  for (const share of signals.shares) {
+    const communityId = share.post.community_id;
+    if (
+      !share.user_id ||
+      !targetKeys.has(patientCommunityEngagementKey(share.user_id, communityId))
+    ) {
+      continue;
+    }
 
-    getPatientIntentCounts(countsByPatient, click.user_id).whatsapp_clicks += 1;
+    getPatientCommunityEngagementCounts(countsByTarget, share.user_id, communityId).shares += 1;
   }
 
-  const engagementByPatientId = new Map<string, PatientEngagementSummary>();
+  const engagementByTarget = new Map<string, PatientCommunityEngagementSummary>();
 
-  for (const patientId of patientIdSet) {
-    const counts = countsByPatient.get(patientId) ?? createPatientIntentCounts();
-    const segment = classifyPatientEngagement(counts);
-    const score = patientIntentScore(counts);
-
-    engagementByPatientId.set(patientId, {
-      label: PATIENT_ENGAGEMENT_LABELS[segment],
-      score,
-      signalSummary: patientEngagementSignalSummary(counts),
-    });
+  for (const target of targets) {
+    const key = patientCommunityEngagementKey(target.userId, target.communityId);
+    engagementByTarget.set(
+      key,
+      patientCommunityEngagementSummary(
+        countsByTarget.get(key) ?? createPatientCommunityEngagementCounts(),
+      ),
+    );
   }
 
-  return engagementByPatientId;
+  return engagementByTarget;
 };
 
 const communityDTO = (
@@ -958,7 +999,7 @@ const mapReportAlert = (
 const mapUncoveredPatientPostAlert = (
   post: AdminUncoveredPatientPostRecord,
   now: Date,
-  engagement: PatientEngagementSummary,
+  engagement: PatientCommunityEngagementSummary,
 ): AdminModerationOperationalAlertDTO => {
   const href = `/comunidades/${post.community.slug}/conteudo/post/${post.id}`;
   const user = uncoveredPostAuthorAlertUser(post.author);
@@ -981,17 +1022,16 @@ const mapUncoveredPatientPostAlert = (
     },
     facts: [
       { label: "Comunidade", value: post.community.name },
-      { label: "Engajamento do paciente", value: engagement.label },
-      { label: "Sinais de engajamento", value: engagement.signalSummary },
-      { label: "Score de engajamento", value: String(engagement.score) },
+      { label: "Engajamento na comunidade", value: engagement.label },
+      { label: "Atividade na comunidade", value: engagement.signalSummary },
+      { label: "Score de atividade", value: String(engagement.score) },
       { label: "Idade", value: humanAge(post.createdAt, now) },
       { label: "Respostas totais", value: String(post.replies_count) },
     ],
     group: "operacional",
     id: `uncovered-post-${post.id}`,
     priority: "medium",
-    source:
-      "community_post+post_reply+user.role+profile_view_event+psychologist_favorite+contact_request",
+    source: "community_post+post_reply+user.role+post_vote+post_save+post_reply_save+post_share",
     title: "Post de paciente sem cobertura há 48h",
     type: "patient_post_without_coverage",
     user,
@@ -1292,13 +1332,19 @@ const buildOperationalAlerts = async (
     repository.listRegistrationFailureUsers(itemLimit),
   ]);
   const psychologistIds = psychologistProfiles.map((profile) => profile.user_id);
-  const patientIds = [...new Set(uncoveredPosts.map((post) => post.author.id))];
-  const [profileViews, whatsappClicks, patientIntentSignals] = await Promise.all([
+  const patientCommunityEngagementTargets = uncoveredPosts.map((post) => ({
+    communityId: post.community.id,
+    userId: post.author.id,
+  }));
+  const [profileViews, whatsappClicks, patientCommunityEngagementSignals] = await Promise.all([
     repository.countProfileViewsByPsychologist(psychologistIds),
     repository.countWhatsappClicksByPsychologist(psychologistIds),
-    repository.listPatientIntentSignals(patientIds),
+    repository.listPatientCommunityEngagementSignals(patientCommunityEngagementTargets),
   ]);
-  const patientEngagementById = buildPatientEngagementById(patientIds, patientIntentSignals);
+  const patientCommunityEngagementByTarget = buildPatientCommunityEngagementByTarget(
+    patientCommunityEngagementTargets,
+    patientCommunityEngagementSignals,
+  );
   const psychologistAlerts = buildPsychologistAlerts(
     psychologistProfiles,
     countMap(profileViews),
@@ -1313,11 +1359,9 @@ const buildOperationalAlerts = async (
     mapUncoveredPatientPostAlert(
       post,
       now,
-      patientEngagementById.get(post.author.id) ?? {
-        label: PATIENT_ENGAGEMENT_LABELS.cold,
-        score: 0,
-        signalSummary: patientEngagementSignalSummary(createPatientIntentCounts()),
-      },
+      patientCommunityEngagementByTarget.get(
+        patientCommunityEngagementKey(post.author.id, post.community.id),
+      ) ?? patientCommunityEngagementSummary(createPatientCommunityEngagementCounts()),
     ),
   );
   const complianceTotal =
@@ -1353,7 +1397,7 @@ const buildOperationalAlerts = async (
     excluded_dimensions: excludedOperationalDimensions,
     items: typeof itemLimit === "number" ? items.slice(0, itemLimit) : items,
     source:
-      "post_report+community_post+post_reply+user+psychologist_profile+professional_subscription+profile_view_event+psychologist_favorite+contact_request",
+      "post_report+community_post+post_reply+user+psychologist_profile+professional_subscription+profile_view_event+contact_request+post_vote+post_save+post_reply_save+post_share",
     thresholds: {
       patient_post_without_coverage_hours: POST_COVERAGE_HOURS,
       psychologist_adaptation_days: PSYCHOLOGIST_ADAPTATION_DAYS,
