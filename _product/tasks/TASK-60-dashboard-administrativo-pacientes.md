@@ -632,3 +632,35 @@ Frontend esperado:
 - `pnpm check`
 - Service local `buildPatientsDashboard({ period: "all" })` retornou labels `["Frios","Curiosos","Interessados","Qualificados"]` em `intent_analysis.items`, sem criar dados artificiais.
 - Browser local/headless via Chrome CDP em `/pacientes`, com admin temporario real removido ao final, validou desktop `1365x900` e mobile `390x844`: **QUALIFICADOS** presente, **MUITO QUALIFICADOS** ausente e `scrollWidth=390` no mobile.
+
+## Ajuste pos-feedback 2026-07-25 - Filtros de intenção nos blocos agregados
+
+- Pedido do usuário: nos blocos **Gênero**, **Forma de cadastro**, **Devices e sistemas**, **Uso da plataforma** e **Localização**, adicionar filtros com as opções **Todos**, **Frios**, **Curiosos**, **Interessados** e **Qualificados**.
+- O endpoint `GET /api/admin/private/patients/dashboard` passou a retornar `intent_filters`, com opções e recortes agregados por segmento de intenção para os mesmos blocos, usando a classificação real já calculada em `intent_analysis`.
+- Os recortes filtram somente agregados internos do Admin: gênero/forma de cadastro por pacientes do período, devices/sistemas por `visitor_session`, uso por `page_view_event`/PWA e localização coarse por `visitor_location`, sem lista nominal, sem endpoint paralelo, sem tracking novo e sem recalcular segmento no cliente.
+- A UI mobile-first adicionou um dropdown compacto em cada bloco. Após feedback visual, o rótulo visível **Intenção** foi removido, mantendo texto apenas para leitores de tela, e o dropdown foi reduzido para preservar **Devices e sistemas** em uma linha.
+- Não houve alteração de schema Prisma, migration, package novo, seed, mock, backfill artificial ou exposição de dado sensível.
+- Builder/Quick Copy não está exposto como ferramenta callable neste ambiente; as referências usadas foram `_product/proto/admin/Pacientes/Pacientes - Dashboard.png` e o screenshot enviado pelo usuário em 2026-07-25.
+- ADR atualizado: `adrs/0314-admin-patient-dashboard-intent-distribution.md`.
+
+### Critérios de aceite do ajuste
+
+- [x] Os blocos **Gênero**, **Forma de cadastro**, **Devices e sistemas**, **Uso da plataforma** e **Localização** exibem filtro por intenção.
+- [x] Cada filtro oferece **Todos**, **Frios**, **Curiosos**, **Interessados** e **Qualificados**.
+- [x] A opção **Todos** preserva o agregado original do dashboard.
+- [x] Os filtros usam somente dados reais já retornados pelo backend e não criam cálculo fake no cliente.
+- [x] O texto visível **Intenção** não aparece nos filtros compactos, mas a acessibilidade mantém label `sr-only`.
+- [x] O título **Devices e sistemas** não quebra linha no desktop validado.
+- [x] Nenhum mock, seed, dado artificial, migration, package novo, endpoint simulado ou tracking novo foi adicionado.
+
+### Validação complementar executada
+
+- `pnpm --dir backend exec biome check --write "src/modules/api/admin/private/patients/dashboard/DTOs/IAdminPatientsDashboardDTO.ts" "src/modules/api/admin/private/patients/dashboard/use-cases/services.ts"`
+- `pnpm --dir admin exec biome check --write "src/api/req/patients/index.ts" "src/app/(admin)/pacientes/client.tsx"`
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check`
+- Serviço local `buildPatientsDashboard({ period: "all" })` retornou `intent_filters.options` com **Todos**, **Frios**, **Curiosos**, **Interessados** e **Qualificados**, além de `breakdowns` para `all`, `cold`, `curious`, `objective` e `very_qualified`.
+- Browser local/headless autenticado em `http://localhost:3002/pacientes` validou 5 dropdowns, ausência de texto visível **Intenção**, largura compacta de 124px e **Devices e sistemas** em linha única; screenshot salvo em `.tmp/patient-dashboard-intent-filters.png`.

@@ -55,3 +55,11 @@ O label de produto do segmento tecnico `objective` foi renomeado de **Objetivos*
 Por decisao direta de produto, o segmento tecnico `very_qualified` do dashboard `/pacientes` foi renomeado visualmente de **Muito qualificados** para **Qualificados**.
 
 O id tecnico `very_qualified` foi preservado para compatibilidade do contrato e o criterio de classificacao nao mudou: pacientes com clique no WhatsApp ou multiplos sinais fortes continuam entrando nesse segmento. A mudanca e somente de label de produto e foi validada com `buildPatientsDashboard({ period: "all" })`, `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e browser local/headless em desktop e mobile.
+
+## Atualização 2026-07-25 - Filtros agregados por intenção
+
+O dashboard `/pacientes` passou a expor `intent_filters` no contrato de `GET /api/admin/private/patients/dashboard` para permitir que os blocos **Gênero**, **Forma de cadastro**, **Devices e sistemas**, **Uso da plataforma** e **Localização** sejam recortados por **Todos**, **Frios**, **Curiosos**, **Interessados** e **Qualificados**.
+
+A decisão preserva a classificação canônica já calculada em `intent_analysis`: o backend monta os recortes por segmento usando dados reais do mesmo período, e o Admin apenas alterna entre agregados prontos. Isso evita recalcular intenção no cliente e evita criar endpoint paralelo, tracking novo, seed, mock ou backfill.
+
+Os recortes continuam agregados e internos ao Admin. Não há lista nominal por segmento nesses blocos, e localização permanece coarse via `visitor_location`, sem IP, coordenada ou endereço. Na UI, o seletor é compacto e sem o rótulo visual **Intenção**; a acessibilidade mantém label apenas `sr-only`.
