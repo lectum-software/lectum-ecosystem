@@ -114,6 +114,7 @@ const operationalCategoryFiltersSchema = z
       "post_report",
       "professional_crp_pending",
       "psychologist_no_traction",
+      "registration_error",
       "unpublished_required_settings",
     ]),
     from: z.string().max(10, "Use uma data válida."),
@@ -222,6 +223,7 @@ const operationalCategoryTypeOptions: Record<
   operacional: [
     { label: "Todos", value: "all" },
     { label: "Posts sem cobertura", value: "patient_post_without_coverage" },
+    { label: "Erro no cadastro", value: "registration_error" },
     { label: "Perfis não publicados", value: "unpublished_required_settings" },
     { label: "Sem tração", value: "psychologist_no_traction" },
   ],
@@ -352,6 +354,7 @@ const operationalTypeLabels: Record<AdminModerationOperationalAlert["type"], str
   post_report: "Denúncia de conteúdo",
   professional_crp_pending: "CRP pendente",
   psychologist_no_traction: "Sem tração",
+  registration_error: "Erro no cadastro",
   unpublished_required_settings: "Perfil não publicado",
 };
 
@@ -1444,6 +1447,7 @@ const operationalTablePendingLabels: Partial<
 > = {
   patient_post_without_coverage: "Post sem cobertura",
   psychologist_no_traction: "Sem tração",
+  registration_error: "Erro no cadastro",
   unpublished_required_settings: "Perfis não publicados",
 };
 
@@ -1452,6 +1456,7 @@ const operationalTablePendingClass: Partial<
 > = {
   patient_post_without_coverage: "bg-orange-50 text-orange-700",
   psychologist_no_traction: "bg-yellow-50 text-yellow-700",
+  registration_error: "bg-red-50 text-danger",
   unpublished_required_settings: "bg-primary-soft text-primary",
 };
 
@@ -1464,7 +1469,7 @@ const alertUserName = (alert: AdminModerationOperationalAlert) =>
 const alertUserRoleLabel = (alert: AdminModerationOperationalAlert) =>
   alert.user?.role_label ??
   alert.professional?.role_label ??
-  (alert.entity.type === "post" || alert.entity.type === "reply"
+  (alert.entity.type === "patient" || alert.entity.type === "post" || alert.entity.type === "reply"
     ? "Paciente"
     : alert.entity.type === "psychologist"
       ? "Psicólogo"
@@ -1551,6 +1556,19 @@ const operationalAlertDetailItems = (
     ];
   }
 
+  if (alert.type === "registration_error") {
+    return [
+      {
+        label: "Modo de cadastro",
+        value: detailValue(alertFactValue(alert, "Modo de cadastro")),
+      },
+      {
+        label: "Email",
+        value: detailValue(alertFactValue(alert, "Email")),
+      },
+    ];
+  }
+
   return alert.facts.slice(0, 2).map((fact) => ({
     label: fact.label,
     value: detailValue(fact.value),
@@ -1576,7 +1594,13 @@ const OperationalDetailsAction = ({ alert }: { alert: AdminModerationOperational
   const href = alert.action_href ?? alert.entity.href;
   const isContent = alert.entity.type === "post" || alert.entity.type === "reply";
   const targetLabel = isContent ? alert.entity.label : alertUserName(alert);
-  const title = isContent ? "Abrir detalhes do conte?do" : "Abrir detalhes do psic?logo";
+  const title = isContent
+    ? "Abrir detalhes do conteúdo"
+    : alert.entity.type === "patient"
+      ? "Abrir detalhes do paciente"
+      : alert.entity.type === "psychologist"
+        ? "Abrir detalhes do psicólogo"
+        : "Abrir detalhes do usuário";
 
   return href ? (
     <Link

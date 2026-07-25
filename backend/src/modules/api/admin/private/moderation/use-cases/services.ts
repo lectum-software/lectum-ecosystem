@@ -39,6 +39,7 @@ import type {
   AdminPatientIntentSignals,
   AdminPostReportRecord,
   AdminPsychologistMetricCountRecord,
+  AdminRegistrationFailureUserRecord,
   AdminUncoveredPatientPostRecord,
   ReplyTargetRecord,
 } from "../repositories/interfaces/IAdminModerationRepository";
@@ -340,6 +341,17 @@ const roleLabel = (role: string) => {
   return labels[role] ?? "Usuário";
 };
 
+const registrationModeLabel = (provider?: string | null) =>
+  normalizeSearch(provider) === "google" ? "Google" : "Email/senha";
+
+const registrationAlertHref = (user: AdminRegistrationFailureUserRecord) =>
+  user.role === "psicologo" ? `/psicologos/${user.id}` : `/pacientes/${user.id}`;
+
+const registrationAlertEntityType = (
+  user: AdminRegistrationFailureUserRecord,
+): AdminModerationOperationalAlertDTO["entity"]["type"] =>
+  user.role === "psicologo" ? "psychologist" : "patient";
+
 type AdminPostReportAuthor =
   | AdminPostReportRecord["post"]["author"]
   | NonNullable<AdminPostReportRecord["reply"]>["author"];
@@ -400,6 +412,16 @@ const uncoveredPostAuthorAlertUser = (
   name: normalizeProfessionalDisplayName(author.name) || roleLabel(author.role),
   role: author.role,
   role_label: roleLabel(author.role),
+  show_verified_badge: false,
+});
+
+const registrationFailureAlertUser = (
+  user: AdminRegistrationFailureUserRecord,
+): AdminModerationAlertUser => ({
+  id: user.id,
+  name: normalizeProfessionalDisplayName(user.name) || roleLabel(user.role),
+  role: user.role,
+  role_label: roleLabel(user.role),
   show_verified_badge: false,
 });
 
@@ -976,6 +998,43 @@ const mapUncoveredPatientPostAlert = (
   };
 };
 
+const mapRegistrationFailureAlert = (
+  user: AdminRegistrationFailureUserRecord,
+  now: Date,
+): AdminModerationOperationalAlertDTO => {
+  const href = registrationAlertHref(user);
+  const mode = registrationModeLabel(user.provider);
+  const alertUser = registrationFailureAlertUser(user);
+
+  return {
+    action_href: href,
+    action_label: "Abrir usuário",
+    age_hours: hoursSince(user.createdAt, now),
+    community: null,
+    created_at: user.createdAt,
+    description: `${alertUser.name} iniciou cadastro via ${mode}, mas ainda não confirmou o e-mail.`,
+    entity: {
+      href,
+      id: user.id,
+      label: alertUser.name,
+      type: registrationAlertEntityType(user),
+    },
+    facts: [
+      { label: "Modo de cadastro", value: mode },
+      { label: "Email", value: user.email },
+      { label: "Perfil", value: roleLabel(user.role) },
+      { label: "Status de e-mail", value: "Pendente" },
+    ],
+    group: "operacional",
+    id: `registration-error-${user.id}`,
+    priority: "medium",
+    source: "user.confirmed+user.provider",
+    title: "Cadastro sem confirmação de e-mail",
+    type: "registration_error",
+    user: alertUser,
+  };
+};
+
 const buildPsychologistAlerts = (
   profiles: AdminOperationalPsychologistRecord[],
   profileViewCounts: Map<string, number>,
@@ -1215,14 +1274,23 @@ const buildOperationalAlerts = async (
   const now = new Date();
   const uncoveredCutoff = new Date(now.getTime() - POST_COVERAGE_HOURS * HOUR_IN_MS);
   const itemLimit = options.itemLimit;
-  const [pendingReports, latestReports, uncoveredPostsCount, uncoveredPosts, psychologistProfiles] =
-    await Promise.all([
-      repository.countPendingPostReports(),
-      repository.listPendingPostReports(itemLimit),
-      repository.countUncoveredPatientPosts(uncoveredCutoff),
-      repository.listUncoveredPatientPosts(uncoveredCutoff, itemLimit),
-      repository.listOperationalPsychologistProfiles(),
-    ]);
+  const [
+    pendingReports,
+    latestReports,
+    uncoveredPostsCount,
+    uncoveredPosts,
+    psychologistProfiles,
+    registrationErrors,
+    registrationFailureUsers,
+  ] = await Promise.all([
+    repository.countPendingPostReports(),
+    repository.listPendingPostReports(itemLimit),
+    repository.countUncoveredPatientPosts(uncoveredCutoff),
+    repository.listUncoveredPatientPosts(uncoveredCutoff, itemLimit),
+    repository.listOperationalPsychologistProfiles(),
+    repository.countRegistrationFailureUsers(),
+    repository.listRegistrationFailureUsers(itemLimit),
+  ]);
   const psychologistIds = psychologistProfiles.map((profile) => profile.user_id);
   const patientIds = [...new Set(uncoveredPosts.map((post) => post.author.id))];
   const [profileViews, whatsappClicks, patientIntentSignals] = await Promise.all([
@@ -1238,6 +1306,9 @@ const buildOperationalAlerts = async (
     now,
   );
   const reportAlerts = latestReports.map((report) => mapReportAlert(report, now));
+  const registrationAlerts = registrationFailureUsers.map((user) =>
+    mapRegistrationFailureAlert(user, now),
+  );
   const uncoveredPostAlerts = uncoveredPosts.map((post) =>
     mapUncoveredPatientPostAlert(
       post,
@@ -1253,12 +1324,16 @@ const buildOperationalAlerts = async (
     psychologistAlerts.counts.professionalCrpPending + psychologistAlerts.counts.invalidWhatsapp;
   const operationalTotal =
     uncoveredPostsCount +
+    registrationErrors +
     psychologistAlerts.counts.unpublishedRequiredSettings +
     psychologistAlerts.counts.psychologistNoTractionAfterAdaptation;
   const urgentTotal = pendingReports + psychologistAlerts.counts.professionalCrpPending;
-  const items = [...reportAlerts, ...uncoveredPostAlerts, ...psychologistAlerts.alerts].sort(
-    sortOperationalAlertsByLatest,
-  );
+  const items = [
+    ...reportAlerts,
+    ...registrationAlerts,
+    ...uncoveredPostAlerts,
+    ...psychologistAlerts.alerts,
+  ].sort(sortOperationalAlertsByLatest);
 
   return {
     counts: {
@@ -1270,6 +1345,7 @@ const buildOperationalAlerts = async (
       professional_crp_pending: psychologistAlerts.counts.professionalCrpPending,
       psychologist_no_traction_after_adaptation:
         psychologistAlerts.counts.psychologistNoTractionAfterAdaptation,
+      registration_errors: registrationErrors,
       total: pendingReports + complianceTotal + operationalTotal,
       unpublished_required_settings: psychologistAlerts.counts.unpublishedRequiredSettings,
       urgent_total: urgentTotal,
@@ -1277,7 +1353,7 @@ const buildOperationalAlerts = async (
     excluded_dimensions: excludedOperationalDimensions,
     items: typeof itemLimit === "number" ? items.slice(0, itemLimit) : items,
     source:
-      "post_report+community_post+post_reply+psychologist_profile+professional_subscription+profile_view_event+psychologist_favorite+contact_request",
+      "post_report+community_post+post_reply+user+psychologist_profile+professional_subscription+profile_view_event+psychologist_favorite+contact_request",
     thresholds: {
       patient_post_without_coverage_hours: POST_COVERAGE_HOURS,
       psychologist_adaptation_days: PSYCHOLOGIST_ADAPTATION_DAYS,
@@ -1323,6 +1399,7 @@ const normalizeOperationalAlertType = (
     normalized === "post_report" ||
     normalized === "professional_crp_pending" ||
     normalized === "psychologist_no_traction" ||
+    normalized === "registration_error" ||
     normalized === "unpublished_required_settings"
     ? normalized
     : "all";
@@ -1580,6 +1657,7 @@ const createOperationalChartPoint = (date: string) => ({
   date,
   patient_posts_without_coverage_48h: 0,
   psychologist_no_traction_after_adaptation: 0,
+  registration_errors: 0,
   unpublished_required_settings: 0,
 });
 
@@ -1654,6 +1732,16 @@ const buildAlertOverviewCharts = (alerts: AdminModerationOperationalAlertDTO[]) 
         alert.created_at,
         createOperationalChartPoint,
         "psychologist_no_traction_after_adaptation",
+      );
+      continue;
+    }
+
+    if (alert.type === "registration_error") {
+      incrementChartPoint(
+        operational,
+        alert.created_at,
+        createOperationalChartPoint,
+        "registration_errors",
       );
     }
   }

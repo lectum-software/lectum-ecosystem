@@ -11,6 +11,7 @@ import {
   adminPatientIntentProfileViewSelect,
   adminPatientIntentWhatsappClickSelect,
   adminPostReportSelect,
+  adminRegistrationFailureUserSelect,
   adminUncoveredPatientPostSelect,
   type IAdminModerationRepository,
 } from "./interfaces/IAdminModerationRepository";
@@ -164,6 +165,20 @@ export class AdminModerationRepository implements IAdminModerationRepository {
     });
   }
 
+  countRegistrationFailureUsers() {
+    return prisma.user.count({
+      where: {
+        account_status: "active",
+        active: true,
+        confirmed: false,
+        deleted: false,
+        role: {
+          in: ["paciente", "psicologo"],
+        },
+      },
+    });
+  }
+
   countUrgentPending() {
     return prisma.content_moderation_event.count({
       where: {
@@ -245,6 +260,23 @@ export class AdminModerationRepository implements IAdminModerationRepository {
       ...(limit ? { take: limit } : {}),
       where: {
         deleted: false,
+      },
+    });
+  }
+
+  listRegistrationFailureUsers(limit?: number) {
+    return prisma.user.findMany({
+      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+      select: adminRegistrationFailureUserSelect,
+      ...(limit ? { take: limit } : {}),
+      where: {
+        account_status: "active",
+        active: true,
+        confirmed: false,
+        deleted: false,
+        role: {
+          in: ["paciente", "psicologo"],
+        },
       },
     });
   }

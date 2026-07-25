@@ -106,6 +106,12 @@ const operationalChartMetrics = [
     label: "Falta de cobertura há 48h",
   },
   {
+    color: "#e5484d",
+    icon: AlertTriangle,
+    key: "registration_errors",
+    label: "Erros no cadastro",
+  },
+  {
     color: "#8b5cf6",
     icon: ShieldAlert,
     key: "unpublished_required_settings",

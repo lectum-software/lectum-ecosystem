@@ -53,6 +53,7 @@ export type AdminModerationOperationalAlertType =
   | "post_report"
   | "professional_crp_pending"
   | "psychologist_no_traction"
+  | "registration_error"
   | "unpublished_required_settings";
 
 export type AdminModerationOperationalAlertProfessional = {
@@ -88,7 +89,7 @@ export type AdminModerationOperationalAlert = {
     href: string | null;
     id: string;
     label: string;
-    type: "post" | "psychologist" | "reply";
+    type: "patient" | "post" | "psychologist" | "reply";
   };
   facts: {
     label: string;
@@ -198,6 +199,7 @@ export type AdminModerationOperationalChartPoint = {
   date: string;
   patient_posts_without_coverage_48h: number;
   psychologist_no_traction_after_adaptation: number;
+  registration_errors: number;
   unpublished_required_settings: number;
 };
 
@@ -241,6 +243,7 @@ export type AdminModerationOperationalAlerts = {
     pending_reports: number;
     professional_crp_pending: number;
     psychologist_no_traction_after_adaptation: number;
+    registration_errors: number;
     total: number;
     unpublished_required_settings: number;
     urgent_total: number;
@@ -251,7 +254,7 @@ export type AdminModerationOperationalAlerts = {
     title: string;
   }[];
   items: AdminModerationOperationalAlert[];
-  source: "post_report+community_post+post_reply+psychologist_profile+professional_subscription+profile_view_event+psychologist_favorite+contact_request";
+  source: "post_report+community_post+post_reply+user+psychologist_profile+professional_subscription+profile_view_event+psychologist_favorite+contact_request";
   thresholds: {
     patient_post_without_coverage_hours: number;
     psychologist_adaptation_days: number;

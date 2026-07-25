@@ -267,6 +267,20 @@ export const adminOperationalPsychologistSelect = {
   },
 } satisfies Prisma.psychologist_profileSelect;
 
+export const adminRegistrationFailureUserSelect = {
+  account_status: true,
+  active: true,
+  confirmed: true,
+  confirmed_date: true,
+  confirm_date: true,
+  createdAt: true,
+  email: true,
+  id: true,
+  name: true,
+  provider: true,
+  role: true,
+} satisfies Prisma.userSelect;
+
 export const adminPatientIntentProfileViewSelect = {
   psychologist_id: true,
   viewer_id: true,
@@ -298,6 +312,10 @@ export type AdminUncoveredPatientPostRecord = Prisma.community_postGetPayload<{
 
 export type AdminOperationalPsychologistRecord = Prisma.psychologist_profileGetPayload<{
   select: typeof adminOperationalPsychologistSelect;
+}>;
+
+export type AdminRegistrationFailureUserRecord = Prisma.userGetPayload<{
+  select: typeof adminRegistrationFailureUserSelect;
 }>;
 
 export type AdminPsychologistMetricCountRecord = {
@@ -338,6 +356,7 @@ export type ReplyTargetRecord = {
 export interface IAdminModerationRepository {
   countPending(): Promise<number>;
   countPendingPostReports(): Promise<number>;
+  countRegistrationFailureUsers(): Promise<number>;
   countUrgentPending(): Promise<number>;
   countUncoveredPatientPosts(cutoff: Date): Promise<number>;
   findEvent(id: string): Promise<AdminModerationEventDetailRecord | null>;
@@ -348,6 +367,7 @@ export interface IAdminModerationRepository {
   listPendingPostReports(limit?: number): Promise<AdminPostReportRecord[]>;
   listPostReports(limit?: number): Promise<AdminPostReportRecord[]>;
   listPatientIntentSignals(patientIds: string[]): Promise<AdminPatientIntentSignals>;
+  listRegistrationFailureUsers(limit?: number): Promise<AdminRegistrationFailureUserRecord[]>;
   listReplyTargets(replyIds: string[]): Promise<ReplyTargetRecord[]>;
   listUncoveredPatientPosts(
     cutoff: Date,
