@@ -364,6 +364,47 @@ export type AdminPsychologistsDashboardTrafficSources = {
   updated_at: Date | null;
 };
 
+export type AdminPsychologistsDashboardTractionCategoryId =
+  | "insufficient_data"
+  | "low_traction"
+  | "strong_traction"
+  | "unconverted_interest"
+  | "unconverted_traffic";
+
+export type AdminPsychologistsDashboardTractionCategory = {
+  count: number;
+  description: string;
+  id: AdminPsychologistsDashboardTractionCategoryId;
+  label: string;
+  percentage: number;
+  totals: {
+    favorites: number;
+    profile_views: number;
+    whatsapp_clicks: number;
+  };
+};
+
+export type AdminPsychologistsDashboardTractionResults = {
+  categories: AdminPsychologistsDashboardTractionCategory[];
+  description: string;
+  source: "profile_view_event+contact_request+psychologist_favorite";
+  thresholds: {
+    favorites_high_30d: number;
+    minimum_active_days: number;
+    profile_views_high_30d: number;
+    strong_conversion_rate_percent: number;
+    whatsapp_high_30d: number;
+    whatsapp_high_with_conversion_30d: number;
+  };
+  totals: {
+    favorites: number;
+    profile_views: number;
+    psychologists: number;
+    whatsapp_clicks: number;
+  };
+  unavailable_reason: string | null;
+};
+
 export type AdminPsychologistsDashboardPlanSegment = "all" | "courtesy" | "free" | "subscribers";
 
 export type AdminPsychologistsDashboardPlanSegmentSummary = {
@@ -415,6 +456,7 @@ export type AdminPsychologistsDashboardSummary = {
     points: AdminPsychologistsDashboardDailyPoint[];
     source: "user+professional_subscription";
   };
+  traction: AdminPsychologistsDashboardTractionResults;
   traffic_sources: AdminPsychologistsDashboardTrafficSources;
   unavailable: AdminPsychologistsDashboardUnavailableMetric[];
 };

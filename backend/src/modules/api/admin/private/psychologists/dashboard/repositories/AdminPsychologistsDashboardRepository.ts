@@ -587,6 +587,19 @@ export class AdminPsychologistsDashboardRepository
     });
   }
 
+  async listFavoriteEvents(range: AdminPsychologistsDashboardDateRange) {
+    return prisma.psychologist_favorite.findMany({
+      where: {
+        createdAt: eventCreatedAtWhere(range),
+        deleted: false,
+      },
+      select: {
+        createdAt: true,
+        psychologist_id: true,
+      },
+    });
+  }
+
   async listProfileViews(range: AdminPsychologistsDashboardDateRange) {
     return prisma.profile_view_event.findMany({
       where: {

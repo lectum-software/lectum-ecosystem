@@ -398,6 +398,47 @@ export type PsychologistsDashboardTrafficSources = {
   updated_at: string | null;
 };
 
+export type PsychologistsDashboardTractionCategoryId =
+  | "insufficient_data"
+  | "low_traction"
+  | "strong_traction"
+  | "unconverted_interest"
+  | "unconverted_traffic";
+
+export type PsychologistsDashboardTractionCategory = {
+  count: number;
+  description: string;
+  id: PsychologistsDashboardTractionCategoryId;
+  label: string;
+  percentage: number;
+  totals: {
+    favorites: number;
+    profile_views: number;
+    whatsapp_clicks: number;
+  };
+};
+
+export type PsychologistsDashboardTractionResults = {
+  categories: PsychologistsDashboardTractionCategory[];
+  description: string;
+  source: "profile_view_event+contact_request+psychologist_favorite";
+  thresholds: {
+    favorites_high_30d: number;
+    minimum_active_days: number;
+    profile_views_high_30d: number;
+    strong_conversion_rate_percent: number;
+    whatsapp_high_30d: number;
+    whatsapp_high_with_conversion_30d: number;
+  };
+  totals: {
+    favorites: number;
+    profile_views: number;
+    psychologists: number;
+    whatsapp_clicks: number;
+  };
+  unavailable_reason: string | null;
+};
+
 export type PsychologistsDashboardPlanSegment = "all" | "courtesy" | "free" | "subscribers";
 
 export type PsychologistsDashboardPlanSegmentSummary = {
@@ -1497,6 +1538,7 @@ export type AdminPsychologistsDashboard = {
     points: PsychologistsDashboardDailyPoint[];
     source: "user+professional_subscription";
   };
+  traction: PsychologistsDashboardTractionResults;
   traffic_sources: PsychologistsDashboardTrafficSources;
   unavailable: PsychologistsDashboardUnavailableMetric[];
 };

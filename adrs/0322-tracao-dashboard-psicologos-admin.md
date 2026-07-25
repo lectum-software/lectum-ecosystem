@@ -1,0 +1,52 @@
+# ADR-0322 - Tracao agregada no dashboard Admin de psicologos
+
+## Status
+
+Accepted
+
+## Contexto
+
+O produto precisa saber, de forma interna e agregada, quantos psicologos estao tendo resultados de negocio na Lectum. A informacao nao deve ser publica, nao deve ranquear psicologos entre si e nao deve ser usada como punicao. Ela complementa a leitura de "temperatura" dos pacientes com uma leitura operacional dos resultados dos profissionais.
+
+As fontes reais disponiveis sao:
+
+- `profile_view_event.source="profile_page"` para aberturas do perfil publico;
+- `contact_request.channel="whatsapp"` para cliques de WhatsApp;
+- `psychologist_favorite` para favoritos.
+
+Como o dashboard Admin tem filtros de periodo que variam de "Hoje" a "Todo o periodo", a classificacao nao pode comparar psicologos entre si nem usar apenas totais brutos da janela, pois periodos longos favoreceriam perfis antigos e periodos curtos poderiam superestimar perfis recem-criados.
+
+## Decisao
+
+Adicionar ao dashboard Admin de psicologos um bloco **Tracao** calculado individualmente por psicologo e exibido apenas de forma agregada por categoria.
+
+A V1 usa cinco categorias:
+
+1. **Tracao Forte** - WhatsApp e o sinal mais forte e prevalece sobre as outras metricas.
+2. **Trafego Nao Convertido** - muitas aberturas de perfil, mas poucos cliques no WhatsApp.
+3. **Interesse Nao Convertido** - muitos favoritos, mas poucos cliques no WhatsApp.
+4. **Baixa Tracao** - poucos cliques no WhatsApp, poucas aberturas de perfil e poucos favoritos.
+5. **Dados Insuficientes** - perfil com janela ativa curta demais para leitura estavel, salvo quando WhatsApp ja indica Tracao Forte.
+
+Os cortes sao normalizados para 30 dias a partir dos dias ativos do perfil dentro da janela selecionada:
+
+- WhatsApp alto: 5+ cliques/30d;
+- WhatsApp forte com conversao: 3+ cliques/30d, 2+ cliques reais e taxa WhatsApp/perfil >= 5%;
+- Trafego alto: 60+ aberturas de perfil/30d;
+- Interesse alto: 5+ favoritos/30d;
+- Dados insuficientes: menos de 7 dias ativos dentro da janela, exceto quando WhatsApp ja caracteriza Tracao Forte.
+
+A UI mostra grafico de pizza, quantidades e percentuais de psicologos em cada categoria logo abaixo da visao geral e antes de **Origem do trafego**. Nao ha lista individual, ranking ou exportacao por profissional nesta entrega.
+
+## Consequencias
+
+- O Admin ganha uma visao rapida de saude de resultado dos psicologos sem expor informacao sensivel ao publico.
+- O calculo fica estavel para `Todo o periodo`, `Este ano` e janelas customizadas porque os sinais sao normalizados por dias ativos.
+- Psicologos recem-criados nao sao marcados como baixa performance por falta de tempo de exposicao, salvo quando ja ha sinal forte de WhatsApp.
+- A decisao nao cria schema, migration, package novo, mock, seed ou fonte estimada.
+- Futuras versoes podem calibrar os cortes com dados reais de conversao, mas devem registrar novo ADR se mudarem regra de dominio ou exposicao individual.
+
+## Validacao
+
+- Smoke local de `buildPsychologistsDashboard({ period: "all" })` retornou `traction` com cinco categorias, totais reais e percentuais.
+- Checks/builds da task foram executados conforme registrado em `TASK-84`.

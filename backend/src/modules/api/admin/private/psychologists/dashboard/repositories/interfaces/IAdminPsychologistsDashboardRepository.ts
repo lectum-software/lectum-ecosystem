@@ -138,6 +138,9 @@ export type AdminPsychologistDirectoryFilterSearchRecord = {
 };
 
 export interface IAdminPsychologistsDashboardRepository {
+  listFavoriteEvents(
+    range: AdminPsychologistsDashboardDateRange,
+  ): Promise<AdminPsychologistEventRecord[]>;
   listProfileViews(
     range: AdminPsychologistsDashboardDateRange,
   ): Promise<AdminPsychologistEventRecord[]>;

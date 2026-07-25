@@ -44,6 +44,7 @@ type DashboardPeriodValue = NonNullable<PsychologistsDashboardQuery["period"]>;
 type DashboardPeriodPreset = Exclude<DashboardPeriodValue, "custom">;
 type DashboardRange = Pick<PsychologistsDashboardQuery, "from" | "to">;
 type DeviceUsageItem = AdminPsychologistsDashboard["device_usage"]["items"][number];
+type TractionCategoryItem = AdminPsychologistsDashboard["traction"]["categories"][number];
 type PlanSegmentFilter = PsychologistsDashboardPlanSegment;
 type SignupMethodItem = AdminPsychologistsDashboard["signup_method"]["items"][number];
 type SupplyDemandSortKey = "psychologists" | "searches" | "searches_per_psychologist";
@@ -256,6 +257,14 @@ const DASHBOARD_METRIC_CONFIG = {
   subscriber_psychologists: { color: "#5d9df6", icon: UserCheck },
   total_psychologists: { color: "#308ce8", icon: UsersRound },
 } satisfies Record<DashboardMetricKey, { color: string; icon: LucideIcon }>;
+
+const TRACTION_CHART_COLORS = {
+  insufficient_data: "#94a3b8",
+  low_traction: "#f59f00",
+  strong_traction: "#13a85b",
+  unconverted_interest: "#8b5cf6",
+  unconverted_traffic: "#ef4444",
+} satisfies Record<TractionCategoryItem["id"], string>;
 
 const SIGNUP_METHOD_CHART_COLORS = {
   email_password: "#13a85b",
@@ -1888,6 +1897,217 @@ const CardsGrid = ({
   );
 };
 
+const TractionPieChart = ({ traction }: { traction: AdminPsychologistsDashboard["traction"] }) => {
+  const center = 60;
+  const radius = 48;
+  const total = Math.max(0, traction.totals.psychologists);
+  const visibleItems = traction.categories.filter((item) => item.count > 0);
+  const segments = visibleItems.reduce<{
+    currentAngle: number;
+    items: Array<{
+      endAngle: number;
+      item: TractionCategoryItem;
+      share: number;
+      startAngle: number;
+    }>;
+  }>(
+    (accumulator, item) => {
+      const share = total > 0 ? item.count / total : 0;
+      if (share <= 0) return accumulator;
+
+      const startAngle = accumulator.currentAngle;
+      const endAngle = startAngle + share * 360;
+
+      return {
+        currentAngle: endAngle,
+        items: accumulator.items.concat({
+          endAngle,
+          item,
+          share,
+          startAngle,
+        }),
+      };
+    },
+    { currentAngle: -90, items: [] },
+  ).items;
+
+  if (total === 0) {
+    return (
+      <p className="mt-5 rounded-2xl border border-dashed border-border bg-surface-muted p-4 text-sm font-bold text-muted">
+        {traction.unavailable_reason ??
+          "Sem psicólogos ativos no período selecionado para classificar Tração."}
+      </p>
+    );
+  }
+
+  const ariaLabel =
+    "Gráfico de pizza de Tração dos psicólogos: " +
+    traction.categories
+      .map(
+        (item) =>
+          item.label +
+          ": " +
+          numberFormatter.format(item.count) +
+          " psicólogo(s), " +
+          formatPercentageValue(item.percentage),
+      )
+      .join("; ") +
+    ".";
+
+  return (
+    <figure className="mt-5 grid gap-5 lg:grid-cols-[minmax(11rem,15rem)_1fr] lg:items-center">
+      <svg
+        aria-label={ariaLabel}
+        className="mx-auto aspect-square w-44 sm:w-48"
+        role="img"
+        viewBox="0 0 120 120"
+      >
+        <circle
+          cx={center}
+          cy={center}
+          fill="var(--admin-surface-muted)"
+          r={radius}
+          stroke="var(--admin-border)"
+          strokeWidth="1"
+        />
+        {segments.map((segment) => {
+          const color = TRACTION_CHART_COLORS[segment.item.id];
+          const labelPoint = getPiePoint(
+            center,
+            radius * 0.58,
+            (segment.startAngle + segment.endAngle) / 2,
+          );
+          const percentageLabel = formatPercentageValue(segment.item.percentage);
+
+          if (segment.share >= 0.999) {
+            return (
+              <g key={segment.item.id}>
+                <circle
+                  cx={center}
+                  cy={center}
+                  fill={color}
+                  r={radius}
+                  stroke="var(--admin-surface)"
+                  strokeWidth="1.4"
+                />
+                {renderPiePercentageLabel({
+                  color,
+                  label: percentageLabel,
+                  x: center,
+                  y: center,
+                })}
+              </g>
+            );
+          }
+
+          return (
+            <g key={segment.item.id}>
+              <path
+                d={buildPieSlicePath(center, radius, segment.startAngle, segment.endAngle)}
+                fill={color}
+                stroke="var(--admin-surface)"
+                strokeWidth="1.4"
+              />
+              {segment.share >= 0.08
+                ? renderPiePercentageLabel({
+                    color,
+                    label: percentageLabel,
+                    x: labelPoint.x,
+                    y: labelPoint.y,
+                  })
+                : null}
+            </g>
+          );
+        })}
+      </svg>
+      <figcaption className="grid gap-3 sm:grid-cols-2">
+        {traction.categories.map((item) => {
+          const color = TRACTION_CHART_COLORS[item.id];
+
+          return (
+            <article className="rounded-2xl bg-surface-muted p-3" key={item.id}>
+              <div className="flex items-start justify-between gap-3">
+                <span className="flex min-w-0 items-center gap-2 text-sm font-black text-foreground">
+                  <span
+                    aria-hidden
+                    className="mt-0.5 h-3 w-3 shrink-0 rounded-full"
+                    style={{ backgroundColor: color }}
+                  />
+                  <span>{item.label}</span>
+                </span>
+                <span className="shrink-0 text-sm font-black text-foreground">
+                  {formatPercentageValue(item.percentage)}
+                </span>
+              </div>
+              <p className="mt-1 text-sm font-black text-foreground">
+                {numberFormatter.format(item.count)} psicólogo(s)
+              </p>
+              <p className="mt-1 text-xs font-bold leading-5 text-muted">{item.description}</p>
+              <p className="mt-2 text-[0.68rem] font-black uppercase tracking-[0.1em] text-subtle">
+                WhatsApp {numberFormatter.format(item.totals.whatsapp_clicks)} · Perfil{" "}
+                {numberFormatter.format(item.totals.profile_views)} · Favoritos{" "}
+                {numberFormatter.format(item.totals.favorites)}
+              </p>
+            </article>
+          );
+        })}
+      </figcaption>
+    </figure>
+  );
+};
+
+const DashboardTractionCard = ({ summary }: { summary: AdminPsychologistsDashboard }) => {
+  const traction = summary.traction;
+  if (!traction) return null;
+
+  const thresholds = traction.thresholds;
+
+  return (
+    <CardShell className="p-5">
+      <PanelTitle
+        description={formatSelectedPeriod(summary.period)}
+        icon={Activity}
+        title="Tração"
+      />
+      <p className="mt-3 text-sm font-bold leading-6 text-muted">{traction.description}</p>
+      <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        {[
+          {
+            label: "Psicólogos analisados",
+            value: numberFormatter.format(traction.totals.psychologists),
+          },
+          {
+            label: "Cliques WhatsApp",
+            value: numberFormatter.format(traction.totals.whatsapp_clicks),
+          },
+          {
+            label: "Aberturas de perfil",
+            value: numberFormatter.format(traction.totals.profile_views),
+          },
+          {
+            label: "Favoritos",
+            value: numberFormatter.format(traction.totals.favorites),
+          },
+        ].map((metric) => (
+          <div className="rounded-2xl bg-surface-muted p-3" key={metric.label}>
+            <p className="text-xs font-black text-muted">{metric.label}</p>
+            <p className="mt-1 text-xl font-black text-foreground">{metric.value}</p>
+          </div>
+        ))}
+      </div>
+      <TractionPieChart traction={traction} />
+      <p className="mt-4 rounded-2xl border border-border/70 bg-surface-muted p-3 text-xs font-bold leading-5 text-subtle">
+        Cortes normalizados para 30 dias: WhatsApp alto ≥{" "}
+        {numberFormatter.format(thresholds.whatsapp_high_30d)} cliques; tráfego alto ≥{" "}
+        {numberFormatter.format(thresholds.profile_views_high_30d)} aberturas; interesse alto ≥{" "}
+        {numberFormatter.format(thresholds.favorites_high_30d)} favoritos. Dados insuficientes usam
+        menos de {numberFormatter.format(thresholds.minimum_active_days)} dias ativos, salvo quando
+        WhatsApp já indica Tração Forte.
+      </p>
+    </CardShell>
+  );
+};
+
 const TrafficSourceMetricValue = ({
   className,
   percentage,
@@ -2067,6 +2287,7 @@ const DashboardContent = ({
           />
           <TimelineChart points={summary.timeline.points} visibleMetricKeys={activeMetricKeys} />
         </DashboardOverviewPanel>
+        <DashboardTractionCard summary={summary} />
         <DashboardTrafficSourcesCard summary={summary} />
       </section>
 

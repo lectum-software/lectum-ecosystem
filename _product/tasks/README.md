@@ -17,7 +17,7 @@ Cada task é auto-suficiente e deve ser executada isoladamente por uma IA usando
 - A referência visual ativa é Builder Quick Copy + imagens exportadas em `_product/proto`.
 - O Builder está autenticado no espaço `Lectum` e o Quick Copy foi validado via `builder.io code`.
 - Existem 62 JPEGs exportados em `_product/proto`: 61 telas de produto e 1 ícone isolado.
-- A fila operacional agora possui 89 tasks: `TASK-00` a `TASK-83`, incluindo complementos `TASK-18A`, `TASK-29A`/`TASK-29B` e `TASK-31A` a `TASK-31C`.
+- A fila operacional agora possui 90 tasks: `TASK-00` a `TASK-84`, incluindo complementos `TASK-18A`, `TASK-29A`/`TASK-29B` e `TASK-31A` a `TASK-31C`.
 
 ## Inventário visual ativo
 
@@ -164,6 +164,7 @@ ou cortesia manual.
 | 81 | [TASK-81 - Sistema operacional nos analytics Admin](TASK-81-sistema-operacional-analytics-admin.md) | Completed | 47, 53, 57, 60, 61, 79 |
 | 82 | [TASK-82 - Filtro Cortesia no dashboard Admin de psicologos](TASK-82-filtro-cortesia-dashboard-psicologos-admin.md) | Completed | 53, 72, 81 |
 | 83 | [TASK-83 - Erro no cadastro em Operacionais Admin](TASK-83-erro-cadastro-operacionais-admin.md) | Completed | 45, 46, 77, 78 |
+| 84 | [TASK-84 - Tracao no dashboard Admin de psicologos](TASK-84-tracao-dashboard-psicologos-admin.md) | Completed | 53, 72, 76, 82 |
 
 ## Ordem operacional recomendada sem bloqueios
 
@@ -219,6 +220,7 @@ Esta secao e a fila pratica para continuar o MVP sem bater nas tasks bloqueadas 
 46. [TASK-81 - Sistema operacional nos analytics Admin](TASK-81-sistema-operacional-analytics-admin.md) foi adicionada e concluida em 2026-07-25 para exibir graficos de pizza de OS nos dashboards de psicologos/pacientes e detalhar os sistemas operacionais dentro de cada device nas abas de estatisticas individuais, usando `visitor_session.os` + `visitor_session.device_type`, sem versao exata, user-agent bruto, backfill ou estimativas.
 47. [TASK-82 - Filtro Cortesia no dashboard Admin de psicologos](TASK-82-filtro-cortesia-dashboard-psicologos-admin.md) foi adicionada e concluida em 2026-07-25 para separar nos filtros por plano dos blocos de `/psicologos` o recorte de cortesia administrativa (`professional_subscription.source="admin_grant"`), mantendo **Assinantes** restrito a pagamentos Mercado Pago e **Todos** como agregado completo.
 48. [TASK-83 - Erro no cadastro em Operacionais Admin](TASK-83-erro-cadastro-operacionais-admin.md) foi adicionada e concluida em 2026-07-25 para listar em `/moderacao/operacionais` cadastros de pacientes e psicologos ativos ainda nao confirmados (`user.confirmed=false`), exibindo modo de cadastro e e-mail, com remocao automatica quando a confirmacao real conclui.
+49. [TASK-84 - Tracao no dashboard Admin de psicologos](TASK-84-tracao-dashboard-psicologos-admin.md) foi adicionada e concluida em 2026-07-25 para exibir no dashboard `/psicologos` a classificacao agregada **Tracao** com grafico de pizza, usando WhatsApp, aberturas de perfil e favoritos reais na janela temporal selecionada, sem ranking publico ou punicao.
 
 ### 1A. Trilha Admin planejada
 
@@ -261,6 +263,7 @@ Execute uma por vez, sempre validando, marcando critérios, ADR e commit/push:
 35. [TASK-81 - Sistema operacional nos analytics Admin](TASK-81-sistema-operacional-analytics-admin.md)
 36. [TASK-82 - Filtro Cortesia no dashboard Admin de psicologos](TASK-82-filtro-cortesia-dashboard-psicologos-admin.md)
 37. [TASK-83 - Erro no cadastro em Operacionais Admin](TASK-83-erro-cadastro-operacionais-admin.md)
+38. [TASK-84 - Tracao no dashboard Admin de psicologos](TASK-84-tracao-dashboard-psicologos-admin.md)
 
 ### 1. Trilha executavel agora apos TASK-10
 

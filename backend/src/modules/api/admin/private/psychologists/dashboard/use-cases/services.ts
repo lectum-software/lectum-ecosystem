@@ -35,11 +35,14 @@ import type {
   AdminPsychologistsDashboardPsychologist,
   AdminPsychologistsDashboardQuery,
   AdminPsychologistsDashboardSummary,
+  AdminPsychologistsDashboardTractionCategoryId,
+  AdminPsychologistsDashboardTractionResults,
   IAdminPsychologistsDashboardDTO,
 } from "../DTOs/IAdminPsychologistsDashboardDTO";
 import { AdminPsychologistsDashboardRepository } from "../repositories/AdminPsychologistsDashboardRepository";
 import type {
   AdminPsychologistDirectoryFilterSearchRecord,
+  AdminPsychologistEventRecord,
   AdminPsychologistPlatformPageViewRecord,
   AdminPsychologistPlatformPwaInstallRecord,
   AdminPsychologistPlatformSessionRecord,
@@ -59,6 +62,12 @@ const FREE_PLAN_SLUG = "gratuito";
 const DIRECTORY_FILTER_SEARCH_ACTION_SOURCE =
   "important_action_event.action_type=psychologist_directory_filter_search";
 const CITY_FILTER_MINIMUM_SEARCHES = 10;
+const TRACTION_FAVORITES_HIGH_30D = 5;
+const TRACTION_MIN_ACTIVE_DAYS = 7;
+const TRACTION_PROFILE_VIEWS_HIGH_30D = 60;
+const TRACTION_STRONG_CONVERSION_RATE_PERCENT = 5;
+const TRACTION_WHATSAPP_HIGH_30D = 5;
+const TRACTION_WHATSAPP_HIGH_WITH_CONVERSION_30D = 3;
 
 const PLAN_SEGMENT_OPTIONS: Array<{
   id: AdminPsychologistsDashboardPlanSegment;
@@ -69,6 +78,45 @@ const PLAN_SEGMENT_OPTIONS: Array<{
   { id: "subscribers", label: "Assinantes" },
   { id: "courtesy", label: "Cortesia" },
 ];
+
+const TRACTION_CATEGORY_ORDER: AdminPsychologistsDashboardTractionCategoryId[] = [
+  "strong_traction",
+  "unconverted_traffic",
+  "unconverted_interest",
+  "low_traction",
+  "insufficient_data",
+];
+
+const TRACTION_CATEGORY_CONFIG = {
+  insufficient_data: {
+    description:
+      "Perfis com menos de 7 dias ativos na janela analisada e sem volume forte de WhatsApp para classificar com seguran\u00e7a.",
+    label: "Dados Insuficientes",
+  },
+  low_traction: {
+    description:
+      "Poucos cliques no WhatsApp, poucas aberturas de perfil e poucos favoritos na janela analisada.",
+    label: "Baixa Tra\u00e7\u00e3o",
+  },
+  strong_traction: {
+    description:
+      "Volume forte de cliques no WhatsApp, o sinal de resultado mais relevante para o neg\u00f3cio.",
+    label: "Tra\u00e7\u00e3o Forte",
+  },
+  unconverted_interest: {
+    description:
+      "Muitos favoritos, mas poucos cliques no WhatsApp; h\u00e1 inten\u00e7\u00e3o salva que ainda n\u00e3o vira contato.",
+    label: "Interesse N\u00e3o Convertido",
+  },
+  unconverted_traffic: {
+    description:
+      "Muitas aberturas de perfil, mas poucos cliques no WhatsApp; h\u00e1 tr\u00e1fego que n\u00e3o vira contato.",
+    label: "Tr\u00e1fego N\u00e3o Convertido",
+  },
+} satisfies Record<
+  AdminPsychologistsDashboardTractionCategoryId,
+  { description: string; label: string }
+>;
 
 const DEVICE_LABELS: Record<AdminPsychologistsDashboardDeviceType, string> = {
   desktop: "Desktop",
@@ -603,6 +651,188 @@ const currentWeekdayValue = () => {
 
 const dateInRange = (date: Date, range: AdminPsychologistsDashboardDateRange) =>
   date >= range.start && date <= range.end;
+
+type TractionSignalCounts = {
+  activeDays: number;
+  favorites: number;
+  normalizedFavorites: number;
+  normalizedProfileViews: number;
+  normalizedWhatsappClicks: number;
+  profileViews: number;
+  whatsappClicks: number;
+  whatsappConversionRate: number | null;
+};
+
+const countEventsByPsychologist = (events: AdminPsychologistEventRecord[]) => {
+  const counts = new Map<string, number>();
+
+  for (const event of events) {
+    counts.set(event.psychologist_id, (counts.get(event.psychologist_id) ?? 0) + 1);
+  }
+
+  return counts;
+};
+
+const normalizeCountToThirtyDays = (count: number, activeDays: number) => {
+  if (activeDays <= 0) return 0;
+
+  return roundPercent((count / activeDays) * 30);
+};
+
+const getProfileActiveDaysInRange = (
+  profile: AdminPsychologistProfileRecord,
+  range: AdminPsychologistsDashboardDateRange,
+) => {
+  const rangeStart = startOfDate(range.start);
+  const rangeEnd = endOfDate(range.end);
+  const profileStart = startOfDate(profile.user.createdAt);
+  const activeStart = profileStart > rangeStart ? profileStart : rangeStart;
+
+  if (activeStart > rangeEnd) return 0;
+
+  return daysBetweenInclusive(activeStart, rangeEnd);
+};
+
+const classifyTractionCategory = (
+  signals: TractionSignalCounts,
+): AdminPsychologistsDashboardTractionCategoryId => {
+  const hasStrongWhatsappVolume =
+    signals.normalizedWhatsappClicks >= TRACTION_WHATSAPP_HIGH_30D ||
+    (signals.whatsappClicks >= 2 &&
+      signals.normalizedWhatsappClicks >= TRACTION_WHATSAPP_HIGH_WITH_CONVERSION_30D &&
+      typeof signals.whatsappConversionRate === "number" &&
+      signals.whatsappConversionRate >= TRACTION_STRONG_CONVERSION_RATE_PERCENT);
+
+  if (hasStrongWhatsappVolume) return "strong_traction";
+  if (signals.activeDays < TRACTION_MIN_ACTIVE_DAYS) return "insufficient_data";
+
+  const hasLowWhatsappVolume = signals.normalizedWhatsappClicks < TRACTION_WHATSAPP_HIGH_30D;
+  const hasWeakWhatsappConversion =
+    signals.whatsappConversionRate === null ||
+    signals.whatsappConversionRate < TRACTION_STRONG_CONVERSION_RATE_PERCENT;
+
+  if (
+    signals.normalizedProfileViews >= TRACTION_PROFILE_VIEWS_HIGH_30D &&
+    hasLowWhatsappVolume &&
+    hasWeakWhatsappConversion
+  ) {
+    return "unconverted_traffic";
+  }
+
+  if (signals.normalizedFavorites >= TRACTION_FAVORITES_HIGH_30D && hasLowWhatsappVolume) {
+    return "unconverted_interest";
+  }
+
+  return "low_traction";
+};
+
+const buildTractionResults = (params: {
+  favorites: AdminPsychologistEventRecord[];
+  profileViews: AdminPsychologistEventRecord[];
+  profiles: AdminPsychologistProfileRecord[];
+  range: AdminPsychologistsDashboardDateRange;
+  whatsappClicks: AdminPsychologistEventRecord[];
+}): AdminPsychologistsDashboardTractionResults => {
+  const analyzedPsychologistIds = new Set(params.profiles.map((profile) => profile.user.id));
+  const favoriteEvents = params.favorites.filter((event) =>
+    analyzedPsychologistIds.has(event.psychologist_id),
+  );
+  const profileViewEvents = params.profileViews.filter((event) =>
+    analyzedPsychologistIds.has(event.psychologist_id),
+  );
+  const whatsappClickEvents = params.whatsappClicks.filter((event) =>
+    analyzedPsychologistIds.has(event.psychologist_id),
+  );
+  const favoriteCounts = countEventsByPsychologist(favoriteEvents);
+  const profileViewCounts = countEventsByPsychologist(profileViewEvents);
+  const whatsappClickCounts = countEventsByPsychologist(whatsappClickEvents);
+  const categories = new Map(
+    TRACTION_CATEGORY_ORDER.map((id) => [
+      id,
+      {
+        count: 0,
+        totals: {
+          favorites: 0,
+          profile_views: 0,
+          whatsapp_clicks: 0,
+        },
+      },
+    ]),
+  );
+
+  for (const profile of params.profiles) {
+    const psychologistId = profile.user.id;
+    const activeDays = getProfileActiveDaysInRange(profile, params.range);
+    const favorites = favoriteCounts.get(psychologistId) ?? 0;
+    const profileViews = profileViewCounts.get(psychologistId) ?? 0;
+    const whatsappClicks = whatsappClickCounts.get(psychologistId) ?? 0;
+    const categoryId = classifyTractionCategory({
+      activeDays,
+      favorites,
+      normalizedFavorites: normalizeCountToThirtyDays(favorites, activeDays),
+      normalizedProfileViews: normalizeCountToThirtyDays(profileViews, activeDays),
+      normalizedWhatsappClicks: normalizeCountToThirtyDays(whatsappClicks, activeDays),
+      profileViews,
+      whatsappClicks,
+      whatsappConversionRate:
+        profileViews > 0 ? roundPercent((whatsappClicks / profileViews) * 100) : null,
+    });
+    const category = categories.get(categoryId);
+
+    if (category) {
+      category.count += 1;
+      category.totals.favorites += favorites;
+      category.totals.profile_views += profileViews;
+      category.totals.whatsapp_clicks += whatsappClicks;
+    }
+  }
+
+  const totalPsychologists = params.profiles.length;
+
+  return {
+    categories: TRACTION_CATEGORY_ORDER.map((id) => {
+      const config = TRACTION_CATEGORY_CONFIG[id];
+      const values = categories.get(id) ?? {
+        count: 0,
+        totals: {
+          favorites: 0,
+          profile_views: 0,
+          whatsapp_clicks: 0,
+        },
+      };
+
+      return {
+        count: values.count,
+        description: config.description,
+        id,
+        label: config.label,
+        percentage: safePercentage(values.count, totalPsychologists),
+        totals: values.totals,
+      };
+    }),
+    description:
+      "Classifica\u00e7\u00e3o interna e agregada dos psic\u00f3logos por resultados de neg\u00f3cio na janela selecionada; n\u00e3o \u00e9 p\u00fablica, n\u00e3o ranqueia e n\u00e3o pune profissionais.",
+    source: "profile_view_event+contact_request+psychologist_favorite",
+    thresholds: {
+      favorites_high_30d: TRACTION_FAVORITES_HIGH_30D,
+      minimum_active_days: TRACTION_MIN_ACTIVE_DAYS,
+      profile_views_high_30d: TRACTION_PROFILE_VIEWS_HIGH_30D,
+      strong_conversion_rate_percent: TRACTION_STRONG_CONVERSION_RATE_PERCENT,
+      whatsapp_high_30d: TRACTION_WHATSAPP_HIGH_30D,
+      whatsapp_high_with_conversion_30d: TRACTION_WHATSAPP_HIGH_WITH_CONVERSION_30D,
+    },
+    totals: {
+      favorites: favoriteEvents.length,
+      profile_views: profileViewEvents.length,
+      psychologists: totalPsychologists,
+      whatsapp_clicks: whatsappClickEvents.length,
+    },
+    unavailable_reason:
+      totalPsychologists === 0
+        ? "Sem psic\u00f3logos ativos no fim do per\u00edodo selecionado para classificar tra\u00e7\u00e3o."
+        : null,
+  };
+};
 
 const profileCreatedUntil = (profile: AdminPsychologistProfileRecord, date: Date) =>
   profile.user.createdAt <= date;
@@ -1559,18 +1789,24 @@ export const buildPsychologistsDashboard = async (
   const psychologistUserIds = profiles.map((profile) => profile.user.id);
   const [
     directoryFilterSearchActions,
+    favoriteEvents,
     rankingCandidates,
     platformPageViews,
     platformSessions,
     platformPwaInstalls,
+    profileViewEvents,
     publicProfilePageViews,
+    whatsappContactRequests,
   ] = await Promise.all([
     repository.listDirectoryFilterSearchActions(current),
+    repository.listFavoriteEvents(current),
     repository.listPublicRankingCandidates(),
     repository.listPlatformPageViews(current),
     repository.listPlatformSessions(current),
     repository.listPlatformPwaInstallActions(current),
+    repository.listProfileViews(current),
     repository.listPublicProfilePageViews(current, psychologistUserIds),
+    repository.listWhatsappContactRequests(current),
   ]);
 
   const currentProfiles = profiles.filter((profile) => profileCreatedUntil(profile, current.end));
@@ -1618,7 +1854,17 @@ export const buildPsychologistsDashboard = async (
   const deviceUsage = planSegments.all.device_usage;
   const operatingSystemUsage = buildOperatingSystemUsage(platformSessions);
   const trafficSources = planSegments.all.traffic_sources;
+  const traction = buildTractionResults({
+    favorites: favoriteEvents,
+    profileViews: profileViewEvents,
+    profiles: currentProfiles,
+    range: current,
+    whatsappClicks: whatsappContactRequests,
+  });
   const statistics = planSegments.all.statistics;
+  const profileNameByUserId = new Map(
+    profiles.map((profile) => [profile.user.id, profile.user.name]),
+  );
 
   const summary: AdminPsychologistsDashboardSummary = {
     cards: {
@@ -1716,7 +1962,7 @@ export const buildPsychologistsDashboard = async (
         base_score: roundRankingScore(ranking.baseScore),
         crp: item.crp,
         id: item.user.id,
-        name: normalizeName(item.user.name),
+        name: normalizeName(profileNameByUserId.get(item.user.id) ?? "Psicólogo"),
         position: index + 1,
         public_profile_url: `/psychologists/${item.user.id}`,
         score: roundRankingScore(ranking.score),
@@ -1734,11 +1980,23 @@ export const buildPsychologistsDashboard = async (
       }),
       source: "user+professional_subscription",
     },
+    traction,
     traffic_sources: {
       ...trafficSources,
       source: "page_view_event.traffic_source+target_type=psychologist",
     },
     unavailable: [
+      ...(traction.unavailable_reason
+        ? [
+            {
+              description:
+                "A Tra\u00e7\u00e3o depende de ao menos um perfil de psic\u00f3logo ativo no per\u00edodo selecionado.",
+              id: "psychologist_traction",
+              label: "Tra\u00e7\u00e3o dos psic\u00f3logos",
+              source: "profile_view_event+contact_request+psychologist_favorite",
+            },
+          ]
+        : []),
       ...(trafficSources.unavailable_reason
         ? [
             {
