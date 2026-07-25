@@ -33,6 +33,7 @@ Dashboards agregam por sessoes autenticadas do papel da tela e tambem retornam u
 - O Admin passa a enxergar OS sem coletar dado bruto adicional.
 - Os dashboards ficam mais compactos: a leitura principal continua por device, e OS vira detalhamento textual vinculado ao device em vez de uma segunda pizza com muitas opcoes.
 - No dashboard de pacientes, **Devices e sistemas** entra na primeira linha de estatisticas ao lado de **Genero** e **Forma de cadastro**, deixando **Localizacao** e **Uso da plataforma** na segunda linha em desktop.
+- A UI do dashboard de pacientes mantém títulos sem quebra e seletores compactos para preservar essa primeira linha em três blocos sem sacrificar o empilhamento mobile-first.
 - Nao ha versao do OS, fabricante ou modelo de aparelho.
 - Sessoes historicas sem `os` permanecem como **Nao identificado**; nao ha backfill.
 - O mesmo usuario pode aparecer em mais de uma categoria de OS se usou mais de um sistema no periodo.

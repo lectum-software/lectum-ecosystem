@@ -494,9 +494,9 @@ const PanelTitle = ({
   title: string;
 }) => (
   <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-    <div className="flex items-center gap-2">
+    <div className="flex shrink-0 items-center gap-2">
       <Icon aria-hidden className="h-5 w-5 text-primary" />
-      <h3 className="whitespace-nowrap text-lg font-black text-foreground">{title}</h3>
+      <h3 className="shrink-0 whitespace-nowrap text-lg font-black text-foreground">{title}</h3>
     </div>
     {source || action ? (
       <div className="flex w-full flex-col gap-2 sm:w-auto sm:items-end">
@@ -526,7 +526,7 @@ const IntentFilterSelect = ({
     <span className="sr-only">Filtrar por intenção do paciente</span>
     <span className="relative">
       <select
-        className="h-10 w-full min-w-[8.5rem] appearance-none rounded-control border border-border bg-surface py-0 pl-3 pr-9 text-sm font-semibold text-foreground shadow-control outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20 sm:w-[8.5rem]"
+        className="h-10 w-full min-w-[7.75rem] appearance-none rounded-control border border-border bg-surface py-0 pl-3 pr-8 text-sm font-semibold text-foreground shadow-control outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20 sm:w-[7.75rem]"
         id={id}
         onChange={(event) => onChange(event.target.value as PatientsDashboardIntentFilterId)}
         value={value}
@@ -539,7 +539,7 @@ const IntentFilterSelect = ({
       </select>
       <ChevronDown
         aria-hidden
-        className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted"
+        className="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted"
       />
     </span>
   </label>
