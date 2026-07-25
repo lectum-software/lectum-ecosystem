@@ -140,3 +140,4 @@ Formato recomendado:
 - [ADR-0296 - Denuncias do paciente no Admin usando post_report real](0296-admin-paciente-denuncias-post-report-readonly.md) - Accepted
 - [ADR-0312 - Analise de intencao do paciente no Admin](0312-admin-patient-intent-analysis.md) - Accepted
 - [ADR-0314 - Distribuicao agregada de intencao dos pacientes no dashboard Admin](0314-admin-patient-dashboard-intent-distribution.md) - Accepted
+- [ADR-0315 - Labels de período dos blocos analíticos do Admin sem prefixo](0315-admin-labels-periodo-sem-prefixo.md) - Accepted

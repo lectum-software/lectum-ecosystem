@@ -340,9 +340,9 @@ const formatDate = (value: string) =>
   }).format(dateFromInput(value));
 
 const formatSelectedPeriod = (period: AdminPatientsDashboard["period"]) => {
-  if (!period.from || !period.to) return `Período: ${period.label}`;
+  if (!period.from || !period.to) return period.label;
 
-  return `Período: ${period.label} · ${formatDate(period.from)} a ${formatDate(period.to)}`;
+  return `${period.label} · ${formatDate(period.from)} a ${formatDate(period.to)}`;
 };
 
 const formatChange = (value: number | null) => {

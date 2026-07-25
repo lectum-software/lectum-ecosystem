@@ -97,3 +97,30 @@ Regras de UI obrigatórias:
 ## Notas de execução
 
 Esta task é uma correção transversal de UX no Admin e não altera API, persistência ou regras de domínio. O estado `custom` continua necessário para consultas reais com intervalo manual.
+
+
+## Ajuste complementar 2026-07-25 - Labels de período sem prefixo nos blocos analíticos
+
+- Pedido do usuário: em todos os blocos de gráficos e análises do painel Admin, quando o texto estiver no formato **Período: Todo o período · 28 de jun. a 24 de jul.**, manter somente **Todo o período · 28 de jun. a 24 de jul.**.
+- Os formatadores dos dashboards administrativos de **Psicólogos**, **Pacientes** e **Comunidades** passaram a renderizar somente o label do preset e o intervalo de datas, sem o prefixo **Período:**.
+- O bloco **Origem do tráfego** em `/psicologos`, que possuía o prefixo hardcoded, foi alinhado ao mesmo padrão.
+- Financeiro e Moderação já estavam no padrão sem prefixo e não precisaram de alteração.
+- Não houve mudança de backend, contratos HTTP, query keys, Prisma schema/migrations, packages, formulários ou dados persistidos.
+- Builder/Quick Copy não está exposto como ferramenta callable neste ambiente; a alteração textual usou o inventário local `_product/tasks/PROTO-INVENTORY.md` e os padrões Admin já registrados em `_product/proto/admin` como referência auditável.
+
+### Critérios de aceite deste ajuste
+
+- [x] Os blocos analíticos de `/psicologos` não exibem mais o prefixo **Período:**.
+- [x] Os blocos analíticos de `/pacientes` não exibem mais o prefixo **Período:**.
+- [x] Os blocos analíticos de `/comunidades` não exibem mais o prefixo **Período:**.
+- [x] O scan estático de `admin/src` não encontra ocorrências de **Período:**.
+- [x] Nenhum mock, dado artificial, endpoint simulado, package novo ou alteração de banco foi usado.
+- [x] ADR criado em `adrs/0315-admin-labels-periodo-sem-prefixo.md`.
+
+### Validação deste ajuste
+
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/psicologos/client.tsx" "src/app/(admin)/pacientes/client.tsx" "src/app/(admin)/comunidades/client.tsx"` - OK.
+- `rg -n "Período:|PerÃ­odo:" admin/src` - OK, sem ocorrências.
+- `pnpm --dir admin check` - OK na reexecução isolada.
+- Smoke HTTP local no Admin: `GET http://localhost:3002/psicologos`, `GET http://localhost:3002/pacientes` e `GET http://localhost:3002/comunidades` retornaram 200.
+- `pnpm --dir admin build` foi tentado, mas o workspace atual está bloqueado por uma alteração não relacionada em `admin/src/api/req/patients/index.ts`/`admin/src/app/(admin)/pacientes/[id]/client.tsx`: o tipo passou a exigir `operating_systems` nos itens de device usage do detalhe de paciente.

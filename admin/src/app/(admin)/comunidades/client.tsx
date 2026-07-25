@@ -371,7 +371,7 @@ const formatShortRange = (from: string, to: string) => {
 const formatSelectedPeriod = (
   period: Pick<AdminCommunitiesDashboard["period"], "from" | "to">,
   label: string,
-) => `Período: ${label} · ${formatDate(period.from)} a ${formatDate(period.to)}`;
+) => `${label} · ${formatDate(period.from)} a ${formatDate(period.to)}`;
 
 const getCommunityDashboardPeriodLabel = (period: CommunityDashboardPeriodValue) =>
   period === "custom"

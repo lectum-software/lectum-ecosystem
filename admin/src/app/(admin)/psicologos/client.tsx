@@ -126,9 +126,9 @@ const formatDate = (value: string) =>
   }).format(dateFromInput(value));
 
 const formatSelectedPeriod = (period: AdminPsychologistsDashboard["period"]) => {
-  if (!period.from || !period.to) return `Período: ${period.label}`;
+  if (!period.from || !period.to) return period.label;
 
-  return `Período: ${period.label} · ${formatDate(period.from)} a ${formatDate(period.to)}`;
+  return `${period.label} · ${formatDate(period.from)} a ${formatDate(period.to)}`;
 };
 
 const getDashboardPeriodLabel = (period: DashboardPeriodValue) => {
@@ -140,9 +140,9 @@ const getDashboardPeriodLabel = (period: DashboardPeriodValue) => {
 const formatDraftSelectedPeriod = (period: DashboardPeriodValue, range: DashboardRange) => {
   const label = getDashboardPeriodLabel(period);
 
-  if (!range.from || !range.to) return `Período: ${label}`;
+  if (!range.from || !range.to) return label;
 
-  return `Período: ${label} · ${formatDate(range.from)} a ${formatDate(range.to)}`;
+  return `${label} · ${formatDate(range.from)} a ${formatDate(range.to)}`;
 };
 
 const formatChange = (value: number | null) => {
@@ -1797,7 +1797,7 @@ const DashboardTrafficSourcesCard = ({ summary }: { summary: AdminPsychologistsD
           Canais que levam pacientes até os perfis
         </h3>
         <p className="mt-1 text-sm font-bold leading-6 text-muted">
-          Período: {summary.period.label} · {formatDate(summary.period.from)} a{" "}
+          {summary.period.label} · {formatDate(summary.period.from)} a{" "}
           {formatDate(summary.period.to)}
         </p>
       </div>
