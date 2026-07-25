@@ -74,7 +74,7 @@ const groupConfig: Record<
   },
   operacional: {
     description:
-      "Pendências operacionais por falta de cobertura há mais de 48h, perfis profissionais não publicados por configurações obrigatórias e falta de tração para perfil/Whatsapp de profissionais assinantes.",
+      "Pendências por falta de cobertura, perfis profissionais não publicados e falta de tração de profissionais.",
     emptyLabel: "Nenhuma pendência operacional encontrada nos dados reais atuais.",
     title: "Operacionais",
   },
@@ -1527,8 +1527,8 @@ const operationalAlertDetailItems = (
         value: detailValue(alert.community?.name, alertFactValue(alert, "Comunidade")),
       },
       {
-        label: "Engajamento",
-        value: detailValue(alertFactValue(alert, "Engajamento na comunidade")),
+        label: "Sem cobertura",
+        value: detailValue(alertFactValue(alert, "Idade"), formatPendingDuration(alert)),
       },
     ];
   }

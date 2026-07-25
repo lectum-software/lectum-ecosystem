@@ -227,3 +227,9 @@ A UI apenas formata esses fatos e remove valores duplicados ao compor a comunida
 Em **Post sem cobertura**, o nivel de engajamento continua sendo calculado a partir das atividades first-party reais do paciente na comunidade, mas a leitura operacional nao deve expor a decomposicao dessas atividades. A UI e o payload de fatos visiveis passam a apresentar apenas o segmento analitico resultante, como **Sem atividade previa**, **Pouco ativo**, **Ativo** ou **Muito ativo**.
 
 A decisao reduz ruido na fila e evita que a coluna **Detalhes** vire uma lista de contadores. Os contadores internos de posts, respostas, votos, salvamentos e compartilhamentos permanecem apenas como insumo de classificacao no service; os fatos **Atividade na comunidade** e **Score de atividade** deixam de ser retornados para apresentacao. Nao ha novo estado persistido, migration, endpoint paralelo ou mock.
+
+## Complemento 2026-07-25: detalhe de cobertura substitui engajamento
+
+A fila `/moderacao/operacionais` passa a usar uma copy de escopo mais curta no header: **Pendencias por falta de cobertura, perfis profissionais nao publicados e falta de tracao de profissionais.**. A decisao evita repetir regras internas como 48h/configuracoes obrigatorias/WhatsApp no resumo da pagina, mantendo esses criterios no contrato e na documentacao da task.
+
+Para **Post sem cobertura**, a coluna **Detalhes** deixa de exibir o nivel de engajamento do paciente e passa a exibir **Sem cobertura**, com a duracao real da pendencia. A UI usa primeiro o fato derivado **Idade** do alerta e mantém fallback para `age_hours`/`created_at` pelo helper de duracao ja usado nas tabelas, sem nova query, sem persistencia e sem endpoint paralelo.

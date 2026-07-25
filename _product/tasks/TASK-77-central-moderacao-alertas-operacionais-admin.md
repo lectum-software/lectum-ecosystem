@@ -706,3 +706,27 @@ Nao houve alteracao de Prisma schema/migrations, package novo, mock, seed ou end
 - `pnpm --dir backend build`
 - `pnpm --dir admin build`
 - Nao houve alteracao de Prisma schema/migrations; `pnpm --dir backend db:migrate` nao se aplica.
+
+## Complemento 2026-07-25: Copy operacional e periodo sem cobertura
+
+Pedido do usuario: simplificar a descricao do header de `/moderacao/operacionais` e substituir o detalhe **Engajamento** em **Post sem cobertura** pelo periodo que o post esta sem cobertura.
+
+A descricao da pagina passa a ser **Pendencias por falta de cobertura, perfis profissionais nao publicados e falta de tracao de profissionais.**. Na tabela, posts sem cobertura seguem mostrando a comunidade uma unica vez, mas o segundo detalhe deixa de ser engajamento e passa a ser **Sem cobertura**, usando a idade real do alerta/post ja derivada de `operational-alerts`.
+
+Nao houve alteracao de backend, Prisma schema/migrations, package novo, mock, seed ou endpoint simulado; `pnpm --dir backend db:migrate` nao se aplica.
+
+### Criterios deste ajuste
+
+- [x] O header de `/moderacao/operacionais` usa a nova descricao simplificada.
+- [x] **Post sem cobertura** nao exibe mais **Engajamento** na coluna **Detalhes**.
+- [x] **Post sem cobertura** exibe **Sem cobertura** com o periodo real da pendencia.
+- [x] O ajuste e mobile-first, sem `<img>` cru, sem package novo, sem mock e sem migration.
+
+### Validacao deste ajuste
+
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/moderacao/operational-category-client.tsx"`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check`
+- Smoke HTTP local: `GET http://localhost:3002/moderacao/operacionais` retornou `200`.
+- Nao houve alteracao de Prisma schema/migrations; `pnpm --dir backend db:migrate` nao se aplica.
