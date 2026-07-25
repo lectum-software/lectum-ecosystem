@@ -947,7 +947,7 @@ type BuildOperationalAlertsOptions = {
 type NormalizedOperationalAlertsQuery = Required<
   Pick<
     AdminModerationOperationalAlertsQuery,
-    "contentType" | "group" | "reason" | "reporter" | "status"
+    "alertType" | "contentType" | "group" | "reason" | "reporter" | "status"
   >
 > &
   Pick<AdminModerationOperationalAlertsQuery, "from" | "limit" | "page" | "q" | "to">;
@@ -1044,6 +1044,21 @@ const normalizeOperationalContentType = (
   return normalized === "post" || normalized === "reply" ? normalized : "all";
 };
 
+const normalizeOperationalAlertType = (
+  value?: string | null,
+): NonNullable<AdminModerationOperationalAlertsQuery["alertType"]> => {
+  const normalized = normalizeFilter(value).toLowerCase();
+
+  return normalized === "invalid_whatsapp" ||
+    normalized === "patient_post_without_coverage" ||
+    normalized === "post_report" ||
+    normalized === "professional_crp_pending" ||
+    normalized === "psychologist_no_traction" ||
+    normalized === "unpublished_required_settings"
+    ? normalized
+    : "all";
+};
+
 const normalizeOperationalReporter = (
   value?: string | null,
 ): NonNullable<AdminModerationOperationalAlertsQuery["reporter"]> => {
@@ -1129,6 +1144,10 @@ const operationalAlertMatchesFilters = (
   if (from && alert.created_at < from) return false;
   if (to && alert.created_at > to) return false;
 
+  if (query.alertType !== "all" && alert.type !== query.alertType) {
+    return false;
+  }
+
   if (query.contentType !== "all" && alert.report?.content.type !== query.contentType) {
     return false;
   }
@@ -1169,6 +1188,7 @@ const normalizeOperationalAlertsQuery = (
   query: AdminModerationOperationalAlertsQuery = {},
 ): NormalizedOperationalAlertsQuery => ({
   ...query,
+  alertType: normalizeOperationalAlertType(query.alertType),
   contentType: normalizeOperationalContentType(query.contentType),
   group: normalizeOperationalGroup(query.group),
   reason: normalizeOperationalReason(query.reason),

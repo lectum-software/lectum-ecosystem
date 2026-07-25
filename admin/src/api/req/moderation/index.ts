@@ -245,6 +245,7 @@ export type AdminModerationOperationalAlertsGroup =
   | "operacional";
 
 export type AdminModerationOperationalAlertsQuery = {
+  alertType?: "all" | AdminModerationOperationalAlertType;
   contentType?: "all" | "post" | "reply";
   from?: string;
   group?: AdminModerationOperationalAlertsGroup;
@@ -325,6 +326,7 @@ const cleanParams = (input: AdminModerationEventsQuery = {}) => ({
 });
 
 const cleanOperationalAlertsParams = (input: AdminModerationOperationalAlertsQuery = {}) => ({
+  ...(input.alertType && input.alertType !== "all" ? { alertType: input.alertType } : {}),
   ...(input.contentType && input.contentType !== "all" ? { contentType: input.contentType } : {}),
   ...(input.from ? { from: input.from } : {}),
   ...(input.group && input.group !== "all" ? { group: input.group } : {}),

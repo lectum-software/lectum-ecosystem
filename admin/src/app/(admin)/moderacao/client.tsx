@@ -11,14 +11,13 @@ import {
   ExternalLink,
   Loader2,
   RefreshCw,
-  Search,
   Trash2,
   X,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { type ReactNode, useMemo, useState } from "react";
-import { FormProvider, useForm } from "react-hook-form";
+import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { FormProvider, type UseFormReturn, useForm, useWatch } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 import { adminCommunitiesKeys, adminModerationKeys } from "@/api/cache/keys";
@@ -39,11 +38,11 @@ import type {
   AdminModerationSeverity,
   AdminModerationStatus,
 } from "@/api/req/moderation";
-import { InputController, TextareaController } from "@/components/controllers";
+import { InputController, SelectController, TextareaController } from "@/components/controllers";
 import { cn } from "@/lib/utils";
 import { ModerationOverviewCharts } from "./overview-charts";
 
-const EVENT_LIMIT = 5;
+const EVENT_LIMIT = 10;
 const REMOVE_CONFIRMATION = "REMOVER CONTEUDO";
 const cardClass =
   "rounded-card border border-border/80 bg-surface/95 shadow-admin-soft backdrop-blur";
@@ -52,7 +51,6 @@ const dateTimeFormatter = new Intl.DateTimeFormat("pt-BR", {
   dateStyle: "short",
   timeStyle: "short",
 });
-const dateFormatter = new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "short" });
 const pad = (value: number) => String(value).padStart(2, "0");
 const toInputDate = (date: Date) =>
   `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
@@ -107,17 +105,39 @@ const targetLabels: Record<string, string> = {
   submitted_post: "Post bloqueado antes da publicação",
   submitted_reply: "Resposta bloqueada antes da publicação",
 };
-const categoryOptions = [
-  ["all", "Todas"],
-  ["external_link", "Links externos"],
-  ["sexual_health", "Saúde sexual"],
-  ["explicit_sexual", "Sexual explícito"],
-  ["minor_sexual_risk", "Menor/risco sexual"],
-  ["self_harm_suicide", "Autolesão/suicídio"],
-  ["abuse_violence", "Abuso/violência"],
-  ["spam_scam", "Spam/golpe"],
-  ["other", "Outro"],
-] as const;
+const statusFilterOptions = [
+  { label: "Todos", value: "all" },
+  { label: "Pendente", value: "pending" },
+  { label: "Em revisão", value: "reviewing" },
+  { label: "Resolvido", value: "resolved" },
+] satisfies Array<{ label: string; value: "all" | AdminModerationStatus }>;
+
+const decisionFilterOptions = [
+  { label: "Todas", value: "all" },
+  { label: "Sensível publicado", value: "allow_sensitive" },
+  { label: "Bloqueado", value: "block" },
+  { label: "Segurança urgente", value: "safety_hold" },
+] satisfies Array<{ label: string; value: "all" | AdminModerationDecision }>;
+
+const categoryFilterOptions = [
+  { label: "Todas", value: "all" },
+  { label: "Links externos", value: "external_link" },
+  { label: "Saúde sexual", value: "sexual_health" },
+  { label: "Sexual explícito", value: "explicit_sexual" },
+  { label: "Menor/risco sexual", value: "minor_sexual_risk" },
+  { label: "Autolesão/suicídio", value: "self_harm_suicide" },
+  { label: "Abuso/violência", value: "abuse_violence" },
+  { label: "Spam/golpe", value: "spam_scam" },
+  { label: "Outro", value: "other" },
+] satisfies Array<{ label: string; value: string }>;
+
+const severityFilterOptions = [
+  { label: "Todas", value: "all" },
+  { label: "Baixa", value: "low" },
+  { label: "Média", value: "medium" },
+  { label: "Alta", value: "high" },
+  { label: "Urgente", value: "urgent" },
+] satisfies Array<{ label: string; value: "all" | AdminModerationSeverity }>;
 
 type Filters = {
   category: string;
@@ -131,7 +151,7 @@ type Filters = {
 };
 const initialFilters: Filters = {
   category: "all",
-  community: "all",
+  community: "",
   decision: "all",
   from: initialRange.from,
   q: "",
@@ -139,6 +159,22 @@ const initialFilters: Filters = {
   status: "pending",
   to: initialRange.to,
 };
+
+const textualFiltersSchema = z
+  .object({
+    category: z.string().max(60, "Use no máximo 60 caracteres."),
+    community: z.string().max(120, "Use no máximo 120 caracteres."),
+    decision: z.enum(["all", "allow_sensitive", "block", "safety_hold"]),
+    from: z.string().max(10, "Use uma data válida."),
+    q: z.string().max(120, "Use no máximo 120 caracteres."),
+    severity: z.enum(["all", "high", "low", "medium", "urgent"]),
+    status: z.enum(["all", "pending", "reviewing", "resolved"]),
+    to: z.string().max(10, "Use uma data válida."),
+  })
+  .refine((values) => !values.from || !values.to || values.from <= values.to, {
+    message: "A data inicial deve ser menor ou igual à final.",
+    path: ["to"],
+  });
 
 const resolveSchema = z.object({
   note: z
@@ -166,7 +202,26 @@ const formatDateTime = (value?: string | null) => {
 
   return Number.isNaN(date.getTime()) ? "—" : dateTimeFormatter.format(date);
 };
-const formatDate = (value: string) => dateFormatter.format(new Date(value));
+const normalizeTextualFilters = (values: Filters): Filters => ({
+  category: values.category,
+  community: values.community,
+  decision: values.decision,
+  from: values.from,
+  q: values.q,
+  severity: values.severity,
+  status: values.status,
+  to: values.to,
+});
+
+const areTextualFiltersEqual = (left: Filters, right: Filters) =>
+  left.category === right.category &&
+  left.community === right.community &&
+  left.decision === right.decision &&
+  left.from === right.from &&
+  left.q === right.q &&
+  left.severity === right.severity &&
+  left.status === right.status &&
+  left.to === right.to;
 const Card = ({ children, className }: { children?: ReactNode; className?: string }) => (
   <section className={cn(cardClass, className)}>{children}</section>
 );
@@ -235,179 +290,89 @@ const Categories = ({ items }: { items: string[] }) => (
 );
 
 const FiltersBar = ({
-  filters,
-  setFilters,
+  disabled,
+  form,
+  isFetching,
+  onDateBlur,
+  resultCount,
 }: {
-  filters: Filters;
-  setFilters: (filters: Filters) => void;
+  disabled: boolean;
+  form: UseFormReturn<Filters>;
+  isFetching: boolean;
+  onDateBlur: () => void;
+  resultCount: number;
 }) => (
-  <Card className="overflow-hidden">
-    <div className="border-b border-border/80 p-5">
-      <div className="flex flex-col gap-1">
-        <p className="text-xs font-semibold uppercase tracking-[0.12em] text-primary">
-          Conteúdo sensível
-        </p>
-        <h2 className="text-xl font-bold text-foreground">Filtros de eventos</h2>
-        <p className="text-sm leading-6 text-muted">
-          Refine a fila de content_moderation_event sem alterar os alertas operacionais derivados.
-        </p>
-      </div>
-    </div>
-    <div className="bg-surface/80 p-4 md:p-5">
-      <div className="grid gap-3 lg:grid-cols-4 xl:grid-cols-[1fr_1fr_1fr_1fr_1.4fr]">
-        <Select
-          label="Status"
-          onChange={(value) => setFilters({ ...filters, status: value as Filters["status"] })}
-          options={[
-            ["all", "Todos"],
-            ["pending", "Pendente"],
-            ["reviewing", "Em revisão"],
-            ["resolved", "Resolvido"],
-          ]}
-          value={filters.status}
-        />
-        <Select
-          label="Decisão"
-          onChange={(value) => setFilters({ ...filters, decision: value as Filters["decision"] })}
-          options={[
-            ["all", "Todas"],
-            ["allow_sensitive", "Sensível publicado"],
-            ["block", "Bloqueado"],
-            ["safety_hold", "Segurança urgente"],
-          ]}
-          value={filters.decision}
-        />
-        <Select
-          label="Categoria"
-          onChange={(value) => setFilters({ ...filters, category: value })}
-          options={categoryOptions}
-          value={filters.category}
-        />
-        <Select
-          label="Severidade"
-          onChange={(value) => setFilters({ ...filters, severity: value as Filters["severity"] })}
-          options={[
-            ["all", "Todas"],
-            ["low", "Baixa"],
-            ["medium", "Média"],
-            ["high", "Alta"],
-            ["urgent", "Urgente"],
-          ]}
-          value={filters.severity}
-        />
-        <label className="text-xs font-semibold text-muted">
-          Busca
-          <span className="relative mt-1 block">
-            <Search
-              aria-hidden
-              className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-subtle"
-            />
-            <input
-              className="h-11 w-full rounded-control border border-border bg-surface pl-9 pr-3 text-sm font-semibold text-foreground shadow-control outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
-              onChange={(event) => setFilters({ ...filters, q: event.target.value })}
-              placeholder="Trecho, regra, comunidade..."
-              value={filters.q}
-            />
-          </span>
-        </label>
-      </div>
-      <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_1fr_auto]">
-        <label className="text-xs font-semibold text-muted">
-          Comunidade
-          <input
-            className="mt-1 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-semibold text-foreground shadow-control outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
-            onChange={(event) => setFilters({ ...filters, community: event.target.value || "all" })}
-            placeholder="ID, slug ou nome"
-            value={filters.community === "all" ? "" : filters.community}
+  <div className="border-b border-border bg-surface/80 p-4">
+    <FormProvider {...form}>
+      <form
+        className="grid min-w-0 gap-3 md:grid-cols-2 2xl:grid-cols-[minmax(180px,0.85fr)_minmax(150px,0.7fr)_minmax(150px,0.7fr)_repeat(3,minmax(145px,0.8fr))_repeat(2,minmax(190px,1fr))]"
+        noValidate
+        onSubmit={(event) => event.preventDefault()}
+      >
+        <div className="md:col-span-2 2xl:col-span-1">
+          <SelectController<Filters>
+            disabled={disabled}
+            label="Status"
+            name="status"
+            options={statusFilterOptions}
           />
-        </label>
-        <DateInput
-          label="De"
-          max={filters.to}
-          onChange={(value) => setFilters({ ...filters, from: value })}
-          value={filters.from}
-        />
-        <DateInput
-          label="Até"
-          min={filters.from}
-          onChange={(value) => setFilters({ ...filters, to: value })}
-          value={filters.to}
-        />
-        <div className="flex flex-wrap items-end gap-2">
-          {[7, 30, 90].map((days) => (
-            <button
-              className="h-10 rounded-full border border-border bg-surface px-3 text-xs font-semibold text-muted transition hover:border-primary hover:text-primary"
-              key={days}
-              onClick={() => setFilters({ ...filters, ...getQuickRange(days) })}
-              type="button"
-            >
-              {days} dias
-            </button>
-          ))}
-          <button
-            className="h-10 rounded-full border border-border bg-surface px-3 text-xs font-semibold text-muted transition hover:border-border-strong hover:text-foreground"
-            onClick={() => setFilters(initialFilters)}
-            type="button"
-          >
-            Limpar
-          </button>
+          <p className="-mt-1 flex min-h-5 flex-wrap items-center gap-x-2 gap-y-1 text-xs font-bold text-muted">
+            <span>{numberFormatter.format(resultCount)} registro(s) encontrado(s)</span>
+            {isFetching ? (
+              <span className="inline-flex items-center gap-1">
+                <Loader2 aria-hidden className="h-3.5 w-3.5 animate-spin" />
+                Atualizando
+              </span>
+            ) : null}
+          </p>
         </div>
-      </div>
-    </div>
-  </Card>
-);
-
-const Select = ({
-  label,
-  onChange,
-  options,
-  value,
-}: {
-  label: string;
-  onChange: (value: string) => void;
-  options: ReadonlyArray<readonly [string, string]>;
-  value: string;
-}) => (
-  <label className="text-xs font-semibold text-muted">
-    {label}
-    <select
-      className="mt-1 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-semibold text-foreground shadow-control outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
-      onChange={(event) => onChange(event.target.value)}
-      value={value}
-    >
-      {options.map(([optionValue, optionLabel]) => (
-        <option key={optionValue} value={optionValue}>
-          {optionLabel}
-        </option>
-      ))}
-    </select>
-  </label>
-);
-
-const DateInput = ({
-  label,
-  max,
-  min,
-  onChange,
-  value,
-}: {
-  label: string;
-  max?: string;
-  min?: string;
-  onChange: (value: string) => void;
-  value: string;
-}) => (
-  <label className="text-xs font-semibold text-muted">
-    {label}
-    <input
-      className="mt-1 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-semibold text-foreground shadow-control outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
-      max={max}
-      min={min}
-      onChange={(event) => onChange(event.target.value)}
-      type="date"
-      value={value}
-    />
-  </label>
+        <InputController<Filters>
+          disabled={disabled}
+          label="De"
+          name="from"
+          onBlur={onDateBlur}
+          type="date"
+        />
+        <InputController<Filters>
+          disabled={disabled}
+          label="Até"
+          name="to"
+          onBlur={onDateBlur}
+          type="date"
+        />
+        <SelectController<Filters>
+          disabled={disabled}
+          label="Decisão"
+          name="decision"
+          options={decisionFilterOptions}
+        />
+        <SelectController<Filters>
+          disabled={disabled}
+          label="Categoria"
+          name="category"
+          options={categoryFilterOptions}
+        />
+        <SelectController<Filters>
+          disabled={disabled}
+          label="Severidade"
+          name="severity"
+          options={severityFilterOptions}
+        />
+        <InputController<Filters>
+          disabled={disabled}
+          label="Comunidade"
+          name="community"
+          placeholder="ID, slug ou nome"
+        />
+        <InputController<Filters>
+          disabled={disabled}
+          label="Busca"
+          name="q"
+          placeholder="Trecho, regra, comunidade..."
+        />
+      </form>
+    </FormProvider>
+  </div>
 );
 
 const EventCard = ({
@@ -454,9 +419,7 @@ const EventCard = ({
 );
 
 const EventsList = ({
-  count,
   events,
-  fetching,
   onNext,
   onPrev,
   onSelect,
@@ -464,9 +427,7 @@ const EventsList = ({
   pages,
   selectedId,
 }: {
-  count: number;
   events: AdminModerationEvent[];
-  fetching: boolean;
   onNext: () => void;
   onPrev: () => void;
   onSelect: (event: AdminModerationEvent) => void;
@@ -474,20 +435,7 @@ const EventsList = ({
   pages: number;
   selectedId: string | null;
 }) => (
-  <Card className="overflow-hidden">
-    <div className="flex flex-col gap-2 border-b border-border p-4 sm:flex-row sm:items-center sm:justify-between">
-      <div>
-        <h2 className="text-lg font-black text-foreground">Eventos</h2>
-        <p className="text-xs font-bold text-muted">
-          {numberFormatter.format(count)} registro(s) reais em content_moderation_event
-        </p>
-      </div>
-      {fetching ? (
-        <span className="inline-flex items-center gap-2 text-xs font-black text-muted">
-          <Loader2 aria-hidden className="h-4 w-4 animate-spin" /> Atualizando
-        </span>
-      ) : null}
-    </div>
+  <div className="overflow-hidden rounded-2xl border border-border bg-surface/70">
     <div className="grid gap-3 p-4">
       {events.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-border p-5 text-sm leading-6 text-muted">
@@ -529,7 +477,7 @@ const EventsList = ({
         </button>
       </div>
     </div>
-  </Card>
+  </div>
 );
 
 const Info = ({ label, value }: { label: string; value: ReactNode }) => (
@@ -903,26 +851,37 @@ export const AdminModerationClient = ({ mode = "overview" }: { mode?: "overview"
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const [filters, setFiltersState] = useState<Filters>(initialFilters);
+  const [appliedTextualFilters, setAppliedTextualFilters] = useState<Filters>(initialFilters);
   const [page, setPage] = useState(1);
   const [selectedOverrideId, setSelectedOverrideId] = useState<string | null>(null);
   const [resolveTarget, setResolveTarget] = useState<AdminModerationEventDetail | null>(null);
   const [removeTarget, setRemoveTarget] = useState<AdminModerationEventDetail | null>(null);
+  const filtersForm = useForm<Filters>({
+    defaultValues: initialFilters,
+    mode: "onChange",
+    resolver: zodResolver(textualFiltersSchema),
+  });
+  const watchedTextualAutoFilters = useWatch({
+    control: filtersForm.control,
+    name: ["status", "decision", "category", "severity", "community", "q"],
+  });
+  const watchedTextualAutoFiltersKey = watchedTextualAutoFilters.join("|");
+  const latestAppliedTextualFiltersRef = useRef(appliedTextualFilters);
   const summary = useAdminModerationSummary();
   const eventsInput: AdminModerationEventsQuery = useMemo(
     () => ({
-      category: filters.category,
-      community: filters.community,
-      decision: filters.decision,
-      from: filters.from,
+      category: appliedTextualFilters.category,
+      community: appliedTextualFilters.community.trim() || "all",
+      decision: appliedTextualFilters.decision,
+      from: appliedTextualFilters.from,
       limit: EVENT_LIMIT,
       page,
-      q: filters.q.trim() || undefined,
-      severity: filters.severity,
-      status: filters.status,
-      to: filters.to,
+      q: appliedTextualFilters.q.trim() || undefined,
+      severity: appliedTextualFilters.severity,
+      status: appliedTextualFilters.status,
+      to: appliedTextualFilters.to,
     }),
-    [filters, page],
+    [appliedTextualFilters, page],
   );
   const events = useAdminModerationEvents(eventsInput);
   const selectedId = isTextualPage
@@ -931,10 +890,51 @@ export const AdminModerationClient = ({ mode = "overview" }: { mode?: "overview"
   const detail = useAdminModerationEvent(selectedId);
   const review = useAdminModerationReview();
   const firstError = isTextualPage ? events.error : summary.error;
-  const setFilters = (next: Filters) => {
-    setFiltersState(next);
-    setPage(1);
-  };
+
+  useEffect(() => {
+    latestAppliedTextualFiltersRef.current = appliedTextualFilters;
+  }, [appliedTextualFilters]);
+
+  const applyCurrentTextualFilters = useCallback(
+    async ({ includeDateDraft = false }: { includeDateDraft?: boolean } = {}) => {
+      if (!isTextualPage) return;
+
+      if (includeDateDraft) {
+        const validDates = await filtersForm.trigger(["from", "to"], { shouldFocus: false });
+        if (!validDates) return;
+      }
+
+      const current = normalizeTextualFilters(filtersForm.getValues());
+      const normalized = includeDateDraft
+        ? current
+        : {
+            ...current,
+            from: latestAppliedTextualFiltersRef.current.from,
+            to: latestAppliedTextualFiltersRef.current.to,
+          };
+
+      if (areTextualFiltersEqual(latestAppliedTextualFiltersRef.current, normalized)) return;
+
+      setAppliedTextualFilters(normalized);
+      setPage(1);
+    },
+    [filtersForm, isTextualPage],
+  );
+
+  const handleTextualDateBlur = useCallback(() => {
+    void applyCurrentTextualFilters({ includeDateDraft: true });
+  }, [applyCurrentTextualFilters]);
+
+  useEffect(() => {
+    if (!isTextualPage) return;
+    void watchedTextualAutoFiltersKey;
+
+    const timeout = window.setTimeout(() => {
+      void applyCurrentTextualFilters();
+    }, 300);
+
+    return () => window.clearTimeout(timeout);
+  }, [applyCurrentTextualFilters, isTextualPage, watchedTextualAutoFiltersKey]);
 
   const selectEvent = (event: AdminModerationEvent) => {
     if (!isTextualPage) {
@@ -959,13 +959,12 @@ export const AdminModerationClient = ({ mode = "overview" }: { mode?: "overview"
   return (
     <div className="space-y-6">
       <Header
-        backHref={isTextualPage ? "/moderacao" : undefined}
         description={
           isTextualPage
             ? "Lista exclusiva de pendências de conteúdo sensível, com filtros, detalhe protegido e ações auditadas."
             : undefined
         }
-        eyebrow={isTextualPage ? "Conteúdo sensível" : undefined}
+        eyebrow={isTextualPage ? "Moderação" : undefined}
         title={isTextualPage ? "Conteúdo sensível" : undefined}
       />
       {firstError ? (
@@ -990,21 +989,17 @@ export const AdminModerationClient = ({ mode = "overview" }: { mode?: "overview"
         <ModerationOverviewCharts summary={summary.data} />
       ) : null}
       {isTextualPage ? (
-        <>
-          <FiltersBar filters={filters} setFilters={setFilters} />
-          <div className="rounded-2xl border border-border bg-surface-muted p-4 text-sm leading-6 text-muted">
-            <p>
-              Período consultado: <strong>{formatDate(filters.from)}</strong> —{" "}
-              <strong>{formatDate(filters.to)}</strong>. A central usa regex/listas internas sem IA
-              e mostra apenas trechos nas listas textuais. Alertas operacionais são derivados do
-              estado atual das tabelas reais e usam limites de 48h/30 dias.
-            </p>
-          </div>
-          <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_420px]">
+        <section className={cn(cardClass, "overflow-hidden")}>
+          <FiltersBar
+            disabled={events.isLoading}
+            form={filtersForm}
+            isFetching={events.isFetching}
+            onDateBlur={handleTextualDateBlur}
+            resultCount={events.data?.count ?? 0}
+          />
+          <div className="grid gap-5 p-4 xl:grid-cols-[minmax(0,1fr)_420px]">
             <EventsList
-              count={events.data?.count ?? 0}
               events={events.data?.data ?? []}
-              fetching={events.isFetching}
               onNext={() => setPage((current) => current + 1)}
               onPrev={() => setPage((current) => Math.max(1, current - 1))}
               onSelect={selectEvent}
@@ -1022,7 +1017,7 @@ export const AdminModerationClient = ({ mode = "overview" }: { mode?: "overview"
               reviewPending={review.isPending}
             />
           </div>
-        </>
+        </section>
       ) : null}
       {resolveTarget ? (
         <ResolveModal event={resolveTarget} onClose={() => setResolveTarget(null)} />

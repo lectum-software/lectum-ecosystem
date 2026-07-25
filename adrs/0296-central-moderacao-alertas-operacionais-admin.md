@@ -136,6 +136,16 @@ Cada bloco possui filtro independente de período e datas. A filtragem temporal 
 
 Para preservar a leitura do dashboard em desktop, os blocos usam uma toolbar única: período, datas, seletor contextual e atalho de lista ficam na mesma linha em larguras administrativas. Em telas pequenas, a regra mobile-first permite empilhamento para evitar overflow horizontal e manter campos tocáveis.
 
+## Complemento 2026-07-25: layout unificado das páginas exclusivas de moderação
+
+Após revisão visual da página `/moderacao/denuncias`, as páginas exclusivas `/moderacao/compliance`, `/moderacao/operacionais` e `/moderacao/conteudo-sensivel` passam a seguir o mesmo padrão estrutural de página: card de cabeçalho com eyebrow **Moderação**, título e descrição; card principal com filtros no topo, contador de registros abaixo do primeiro filtro, indicador **Atualizando** e paginação no rodapé.
+
+Compliance e Operacionais continuam usando `GET /api/admin/private/moderation/operational-alerts` com alertas derivados/read-only. Para permitir filtros equivalentes sem criar mock nem estado local inconsistente, o endpoint recebeu o parâmetro opcional `alertType`, aplicado sobre o tipo real do alerta (`professional_crp_pending`, `invalid_whatsapp`, `patient_post_without_coverage`, `unpublished_required_settings` e `psychologist_no_traction`). Datas continuam sendo aplicadas somente após `blur`, como na fila de denúncias.
+
+Conteúdo sensível mantém os endpoints reais de `content_moderation_event`, detalhe protegido e ações auditadas; a mudança é visual/composicional: os filtros passam a usar React Hook Form/Zod/controllers do Admin no mesmo card da lista, sem o header intermediário de filtros, sem faixa de período consultado e sem botão **Voltar** no cabeçalho.
+
+Builder/Quick Copy não está exposto como ferramenta callable neste ambiente; a referência auditável foi a captura enviada pelo usuário da página `/moderacao/denuncias` e os padrões Admin já documentados em `_product/proto/admin`.
+
 ## Complemento 2026-07-25: selo Lectum no autor verificado da fila de denúncias
 
 A fila `/moderacao/denuncias` passa a representar psicólogos verificados no card de autor usando o mesmo selo visual da Lectum, sem a pílula textual **Verificado**. A mudança é apenas composicional e preserva a fonte real do estado `author.verified` retornada pelo backend, mantendo acessibilidade por `aria-label` no SVG.

@@ -358,7 +358,6 @@ Validacao deste ajuste:
 - `pnpm --dir admin build`
 - Smoke HTTP local no Admin (`GET http://localhost:3002/moderacao`) retornou `200`.
 
-
 ## Ajuste complementar 2026-07-24 - Contador total e filtros compactos na Visão geral
 
 - Pedido do usuário: no bloco **Denúncias** da Visão geral, adicionar contador de **Total de denúncias** antes de **Pendentes**, reduzir o tamanho dos filtros e posicionar o filtro **Tipo** na primeira posição.
@@ -403,6 +402,30 @@ Validacao deste ajuste:
 - `pnpm --dir admin check`
 - `pnpm --dir admin build` (duas tentativas iniciais foram bloqueadas por outro processo `next build`; reexecutado após finalizar e concluído sem erro)
 - Smoke HTTP local no Admin (`GET http://localhost:3002/moderacao`) retornou `200`.
+
+## Ajuste complementar 2026-07-25 - Layout unificado nas páginas exclusivas
+
+- Pedido do usuário: fazer **Compliance**, **Operacionais** e **Conteúdo sensível** seguirem o mesmo layout da página **Denúncias**.
+- `/moderacao/compliance` e `/moderacao/operacionais` agora usam card principal com filtros no topo, contador de registros abaixo de **Tipo**, indicador **Atualizando** junto ao contador e paginação no rodapé, removendo o cabeçalho intermediário **Pendências**.
+- O endpoint real `GET /api/admin/private/moderation/operational-alerts` recebeu o filtro opcional `alertType` para manter os selects **Tipo** dessas páginas no backend, sem paginação filtrada apenas no cliente, mocks ou dados artificiais.
+- `/moderacao/conteudo-sensivel` passou a usar eyebrow **Moderação**, sem botão **Voltar** no header, com filtros React Hook Form/Zod/controllers no mesmo card da lista, contador abaixo de **Status** e sem a faixa **Período consultado**.
+- Os filtros de data de Compliance, Operacionais e Conteúdo sensível seguem o padrão de Denúncias: digitam em estado local do form e só atualizam a query ao perder foco (`blur`).
+- Não houve alteração de Prisma schema/migrations, package novo, mock, seed ou endpoint simulado; `pnpm --dir backend db:migrate` não se aplica.
+- Builder/Quick Copy não está exposto como ferramenta callable neste ambiente; a referência auditável foi a captura enviada pelo usuário da página `/moderacao/denuncias` e os padrões Admin já registrados em `_product/proto/admin`.
+
+### Validação deste ajuste
+
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/moderacao/client.tsx" "src/app/(admin)/moderacao/operational-category-client.tsx" "src/api/req/moderation/index.ts"`
+- `pnpm --dir backend exec biome check --write "src/modules/api/admin/private/moderation/DTOs/IAdminModerationDTO.ts" "src/modules/api/admin/private/moderation/use-cases/services.ts" "src/modules/api/admin/private/moderation/validator/index.ts"`
+- `pnpm --dir admin typecheck`
+- `pnpm --dir backend typecheck`
+- `pnpm --dir admin check`
+- `pnpm --dir backend check`
+- `pnpm --dir admin build` (uma tentativa inicial encontrou outro `next build` em execução; reexecutado após finalizar e concluído sem erro)
+- `pnpm --dir backend build`
+- `pnpm check`
+- Smoke API local real com admin temporário: `operational-alerts?group=compliance&alertType=professional_crp_pending`, `operational-alerts?group=operacional&alertType=patient_post_without_coverage` e `moderation/events` retornaram `200`.
+- Validação manual automatizada no Chrome/CDP local em 1365x900 e 390x844: `/moderacao/denuncias`, `/moderacao/compliance`, `/moderacao/operacionais` e `/moderacao/conteudo-sensivel` renderizaram headers, filtros e contadores no mesmo padrão, sem overflow horizontal mobile; o admin temporário criado para a validação foi removido ao final.
 
 ## Ajuste complementar 2026-07-25 - Selo Lectum no autor verificado em Denúncias
 

@@ -41,6 +41,7 @@ export type AdminModerationPostReportReason =
 export type AdminModerationPostReportContentType = "all" | "post" | "reply";
 
 export type AdminModerationOperationalAlertsQuery = {
+  alertType?: "all" | AdminModerationOperationalAlertType;
   contentType?: AdminModerationPostReportContentType;
   from?: string;
   group?: AdminModerationOperationalAlertsGroup;

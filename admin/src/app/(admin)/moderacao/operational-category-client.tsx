@@ -38,6 +38,7 @@ import type {
   AdminModerationOperationalAlert,
   AdminModerationOperationalAlertsGroup,
   AdminModerationOperationalAlertsQuery,
+  AdminModerationOperationalAlertType,
   AdminModerationSeverity,
 } from "@/api/req/moderation";
 import { InputController, SelectController, TextareaController } from "@/components/controllers";
@@ -101,6 +102,35 @@ const denunciaFilterDefaults: DenunciaFiltersFormValues = {
   reason: "all",
   reporter: "all",
   status: "pending",
+  to: "",
+};
+
+const operationalCategoryFiltersSchema = z
+  .object({
+    alertType: z.enum([
+      "all",
+      "invalid_whatsapp",
+      "patient_post_without_coverage",
+      "post_report",
+      "professional_crp_pending",
+      "psychologist_no_traction",
+      "unpublished_required_settings",
+    ]),
+    from: z.string().max(10, "Use uma data válida."),
+    q: z.string().max(120, "Use no máximo 120 caracteres."),
+    to: z.string().max(10, "Use uma data válida."),
+  })
+  .refine((values) => !values.from || !values.to || values.from <= values.to, {
+    message: "A data inicial deve ser menor ou igual à final.",
+    path: ["to"],
+  });
+
+type OperationalCategoryFiltersFormValues = z.infer<typeof operationalCategoryFiltersSchema>;
+
+const operationalCategoryFilterDefaults: OperationalCategoryFiltersFormValues = {
+  alertType: "all",
+  from: "",
+  q: "",
   to: "",
 };
 
@@ -176,6 +206,23 @@ const denunciaReasonOptions = [
   { label: "Outro motivo", value: "other" },
 ] satisfies Array<{ label: string; value: DenunciaFiltersFormValues["reason"] }>;
 
+const operationalCategoryTypeOptions: Record<
+  Exclude<AdminModerationOperationalAlertsGroup, "all" | "denuncias">,
+  Array<{ label: string; value: "all" | AdminModerationOperationalAlertType }>
+> = {
+  compliance: [
+    { label: "Todos", value: "all" },
+    { label: "CRP pendente", value: "professional_crp_pending" },
+    { label: "WhatsApp inválido", value: "invalid_whatsapp" },
+  ],
+  operacional: [
+    { label: "Todos", value: "all" },
+    { label: "Posts sem cobertura", value: "patient_post_without_coverage" },
+    { label: "Perfis não publicados", value: "unpublished_required_settings" },
+    { label: "Sem tração", value: "psychologist_no_traction" },
+  ],
+};
+
 const normalizeDenunciaFilters = (
   values: DenunciaFiltersFormValues,
 ): DenunciaFiltersFormValues => ({
@@ -223,6 +270,46 @@ const toOperationalAlertsFilterQuery = (
     reason: normalized.reason !== "all" ? normalized.reason : undefined,
     reporter: normalized.reporter,
     status: normalized.status,
+    to: normalized.to || undefined,
+  };
+};
+
+const normalizeOperationalCategoryFilters = (
+  values: OperationalCategoryFiltersFormValues,
+): OperationalCategoryFiltersFormValues => ({
+  alertType: values.alertType,
+  from: values.from,
+  q: values.q,
+  to: values.to,
+});
+
+const areOperationalCategoryFiltersEqual = (
+  left: OperationalCategoryFiltersFormValues,
+  right: OperationalCategoryFiltersFormValues,
+) =>
+  left.alertType === right.alertType &&
+  left.from === right.from &&
+  left.q === right.q &&
+  left.to === right.to;
+
+const coerceOperationalCategoryFilters = (
+  values?: Partial<OperationalCategoryFiltersFormValues>,
+): OperationalCategoryFiltersFormValues => ({
+  alertType: values?.alertType ?? operationalCategoryFilterDefaults.alertType,
+  from: values?.from ?? operationalCategoryFilterDefaults.from,
+  q: values?.q ?? operationalCategoryFilterDefaults.q,
+  to: values?.to ?? operationalCategoryFilterDefaults.to,
+});
+
+const toOperationalCategoryFilterQuery = (
+  values: OperationalCategoryFiltersFormValues,
+): Pick<AdminModerationOperationalAlertsQuery, "alertType" | "from" | "q" | "to"> => {
+  const normalized = normalizeOperationalCategoryFilters(values);
+
+  return {
+    alertType: normalized.alertType !== "all" ? normalized.alertType : undefined,
+    from: normalized.from || undefined,
+    q: normalized.q.trim() || undefined,
     to: normalized.to || undefined,
   };
 };
@@ -988,6 +1075,70 @@ const DenunciaFiltersBar = ({
   </div>
 );
 
+const OperationalCategoryFiltersBar = ({
+  disabled,
+  form,
+  group,
+  isFetching,
+  onDateBlur,
+  resultCount,
+}: {
+  disabled: boolean;
+  form: UseFormReturn<OperationalCategoryFiltersFormValues>;
+  group: Exclude<AdminModerationOperationalAlertsGroup, "all" | "denuncias">;
+  isFetching: boolean;
+  onDateBlur: () => void;
+  resultCount: number;
+}) => (
+  <div className="border-b border-border bg-surface/80 p-4">
+    <FormProvider {...form}>
+      <form
+        className="grid min-w-0 gap-3 md:grid-cols-2 2xl:grid-cols-[minmax(260px,1.15fr)_minmax(150px,0.75fr)_minmax(150px,0.75fr)_minmax(280px,1.35fr)]"
+        noValidate
+        onSubmit={(event) => event.preventDefault()}
+      >
+        <div className="md:col-span-2 2xl:col-span-1">
+          <SelectController<OperationalCategoryFiltersFormValues>
+            disabled={disabled}
+            label="Tipo"
+            name="alertType"
+            options={operationalCategoryTypeOptions[group]}
+          />
+          <p className="-mt-1 flex min-h-5 flex-wrap items-center gap-x-2 gap-y-1 text-xs font-bold text-muted">
+            <span>{numberFormatter.format(resultCount)} registro(s) encontrado(s)</span>
+            {isFetching ? (
+              <span className="inline-flex items-center gap-1">
+                <Loader2 aria-hidden className="h-3.5 w-3.5 animate-spin" />
+                Atualizando
+              </span>
+            ) : null}
+          </p>
+        </div>
+        <InputController<OperationalCategoryFiltersFormValues>
+          disabled={disabled}
+          label="De"
+          name="from"
+          onBlur={onDateBlur}
+          type="date"
+        />
+        <InputController<OperationalCategoryFiltersFormValues>
+          disabled={disabled}
+          label="Até"
+          name="to"
+          onBlur={onDateBlur}
+          type="date"
+        />
+        <InputController<OperationalCategoryFiltersFormValues>
+          disabled={disabled}
+          label="Busca"
+          name="q"
+          placeholder="Nome, origem ou fato..."
+        />
+      </form>
+    </FormProvider>
+  </div>
+);
+
 const OperationalAlertCard = ({ alert }: { alert: AdminModerationOperationalAlert }) => {
   const href = alert.action_href ?? alert.entity.href;
 
@@ -1053,25 +1204,40 @@ export const AdminModerationOperationalCategoryClient = ({
   const [moderationState, setModerationState] = useState<ReportModerationState>(null);
   const [appliedFilters, setAppliedFilters] =
     useState<DenunciaFiltersFormValues>(denunciaFilterDefaults);
+  const [appliedCategoryFilters, setAppliedCategoryFilters] =
+    useState<OperationalCategoryFiltersFormValues>(operationalCategoryFilterDefaults);
   const filtersForm = useForm<DenunciaFiltersFormValues>({
     defaultValues: denunciaFilterDefaults,
     mode: "onChange",
     resolver: zodResolver(denunciaFiltersSchema),
   });
+  const categoryFiltersForm = useForm<OperationalCategoryFiltersFormValues>({
+    defaultValues: operationalCategoryFilterDefaults,
+    mode: "onChange",
+    resolver: zodResolver(operationalCategoryFiltersSchema),
+  });
   const watchedAutoFilters = useWatch({
     control: filtersForm.control,
     name: ["contentType", "reason", "reporter", "status"],
   });
+  const watchedCategoryAutoFilters = useWatch({
+    control: categoryFiltersForm.control,
+    name: ["alertType", "q"],
+  });
   const watchedAutoFiltersKey = watchedAutoFilters.join("|");
+  const watchedCategoryAutoFiltersKey = watchedCategoryAutoFilters.join("|");
   const latestAppliedFiltersRef = useRef(appliedFilters);
+  const latestAppliedCategoryFiltersRef = useRef(appliedCategoryFilters);
   const queryInput = useMemo<AdminModerationOperationalAlertsQuery>(
     () => ({
       group,
       limit: PAGE_LIMIT,
       page,
-      ...(group === "denuncias" ? toOperationalAlertsFilterQuery(appliedFilters) : {}),
+      ...(group === "denuncias"
+        ? toOperationalAlertsFilterQuery(appliedFilters)
+        : toOperationalCategoryFilterQuery(appliedCategoryFilters)),
     }),
-    [appliedFilters, group, page],
+    [appliedCategoryFilters, appliedFilters, group, page],
   );
   const query = useAdminModerationOperationalAlerts(queryInput);
   const config = groupConfig[group];
@@ -1079,6 +1245,10 @@ export const AdminModerationOperationalCategoryClient = ({
   useEffect(() => {
     latestAppliedFiltersRef.current = appliedFilters;
   }, [appliedFilters]);
+
+  useEffect(() => {
+    latestAppliedCategoryFiltersRef.current = appliedCategoryFilters;
+  }, [appliedCategoryFilters]);
 
   const applyCurrentDenunciaFilters = useCallback(
     async ({ includeDateDraft = false }: { includeDateDraft?: boolean } = {}) => {
@@ -1106,9 +1276,45 @@ export const AdminModerationOperationalCategoryClient = ({
     [filtersForm, group],
   );
 
+  const applyCurrentOperationalCategoryFilters = useCallback(
+    async ({ includeDateDraft = false }: { includeDateDraft?: boolean } = {}) => {
+      if (group === "denuncias") return;
+
+      if (includeDateDraft) {
+        const validDates = await categoryFiltersForm.trigger(["from", "to"], {
+          shouldFocus: false,
+        });
+        if (!validDates) return;
+      }
+
+      const current = normalizeOperationalCategoryFilters(
+        coerceOperationalCategoryFilters(categoryFiltersForm.getValues()),
+      );
+      const normalized = includeDateDraft
+        ? current
+        : {
+            ...current,
+            from: latestAppliedCategoryFiltersRef.current.from,
+            to: latestAppliedCategoryFiltersRef.current.to,
+          };
+
+      if (areOperationalCategoryFiltersEqual(latestAppliedCategoryFiltersRef.current, normalized)) {
+        return;
+      }
+
+      setAppliedCategoryFilters(normalized);
+      setPage(1);
+    },
+    [categoryFiltersForm, group],
+  );
+
   const handleDenunciaDateBlur = useCallback(() => {
     void applyCurrentDenunciaFilters({ includeDateDraft: true });
   }, [applyCurrentDenunciaFilters]);
+
+  const handleOperationalCategoryDateBlur = useCallback(() => {
+    void applyCurrentOperationalCategoryFilters({ includeDateDraft: true });
+  }, [applyCurrentOperationalCategoryFilters]);
 
   useEffect(() => {
     if (group !== "denuncias") return;
@@ -1120,6 +1326,17 @@ export const AdminModerationOperationalCategoryClient = ({
 
     return () => window.clearTimeout(timeout);
   }, [applyCurrentDenunciaFilters, group, watchedAutoFiltersKey]);
+
+  useEffect(() => {
+    if (group === "denuncias") return;
+    void watchedCategoryAutoFiltersKey;
+
+    const timeout = window.setTimeout(() => {
+      void applyCurrentOperationalCategoryFilters();
+    }, 300);
+
+    return () => window.clearTimeout(timeout);
+  }, [applyCurrentOperationalCategoryFilters, group, watchedCategoryAutoFiltersKey]);
 
   return (
     <div className="space-y-6">
@@ -1155,20 +1372,14 @@ export const AdminModerationOperationalCategoryClient = ({
 
       <section className={`${cardClass} overflow-hidden`}>
         {group !== "denuncias" ? (
-          <div className="flex flex-col gap-2 border-b border-border p-4 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <h2 className="text-lg font-black text-foreground">Pendências</h2>
-              <p className="text-xs font-bold text-muted">
-                {numberFormatter.format(query.data?.count ?? 0)} registro(s) real(is) nesta
-                categoria
-              </p>
-            </div>
-            {query.isFetching ? (
-              <span className="inline-flex items-center gap-2 text-xs font-black text-muted">
-                <Loader2 aria-hidden className="h-4 w-4 animate-spin" /> Atualizando
-              </span>
-            ) : null}
-          </div>
+          <OperationalCategoryFiltersBar
+            disabled={query.isLoading}
+            form={categoryFiltersForm}
+            group={group}
+            isFetching={query.isFetching}
+            onDateBlur={handleOperationalCategoryDateBlur}
+            resultCount={query.data?.count ?? 0}
+          />
         ) : null}
         {group === "denuncias" ? (
           <DenunciaFiltersBar
