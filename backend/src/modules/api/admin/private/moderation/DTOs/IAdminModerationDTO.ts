@@ -47,6 +47,8 @@ export type AdminModerationOperationalAlertsQuery = {
   group?: AdminModerationOperationalAlertsGroup;
   limit?: number;
   page?: number;
+  plan?: "all" | "gratuito" | "profissional";
+  profileStatus?: "active" | "all" | "inactive";
   q?: string;
   reason?: AdminModerationPostReportReason;
   reporter?: "all" | "paciente" | "psicologo";
@@ -169,6 +171,24 @@ export type AdminModerationOperationalAlertEntityDTO = {
 export type AdminModerationOperationalAlertFactDTO = {
   label: string;
   value: string;
+};
+
+export type AdminModerationOperationalAlertProfessionalDTO = {
+  gender: string | null;
+  id: string;
+  is_subscriber: boolean;
+  name: string;
+  registry_verified: boolean;
+  role_label: string;
+  show_verified_badge: boolean;
+};
+
+export type AdminModerationOperationalAlertUserDTO = {
+  id: string;
+  name: string;
+  role: string;
+  role_label: string;
+  show_verified_badge: boolean;
 };
 
 export type AdminModerationReportStatusGroup = "dismissed" | "pending" | "upheld";
@@ -303,10 +323,12 @@ export type AdminModerationOperationalAlertDTO = {
   group: AdminModerationOperationalAlertGroup;
   id: string;
   priority: AdminModerationOperationalAlertPriority;
+  professional?: AdminModerationOperationalAlertProfessionalDTO | null;
   report?: AdminModerationReportItemDTO | null;
   source: string;
   title: string;
   type: AdminModerationOperationalAlertType;
+  user?: AdminModerationOperationalAlertUserDTO | null;
 };
 
 export type AdminModerationOperationalAlertCountsDTO = {

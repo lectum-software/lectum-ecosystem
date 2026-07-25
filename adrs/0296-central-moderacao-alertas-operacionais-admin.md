@@ -155,3 +155,11 @@ A fila `/moderacao/denuncias` passa a representar psicólogos verificados no car
 As paginas exclusivas de moderacao passam a repetir, no lado direito do card de header, o total de pendências correspondente a cada area: denuncias pendentes, compliance, operacionais e conteudo sensivel. O contador e apresentado sem fundo azul nem titulo auxiliar, com o numero centralizado e o texto **pendências** abaixo.
 
 A decisao reaproveita contadores reais ja existentes nos contratos Admin (`operational-alerts.counts` para Denuncias/Compliance/Operacionais e `summary.pending_total` para Conteudo sensivel), em vez de criar chamada paralela, estado local estimado ou novo contrato. Durante carregamento/refetch, a UI indica atualizacao e evita exibir `0` temporario como se fosse dado real.
+
+## Complemento 2026-07-25: demandas de Compliance em linha única
+
+A página exclusiva `/moderacao/compliance` passa a tratar cada alerta derivado de psicólogo como uma linha operacional compacta, em vez de card narrativo. A linha mostra somente os campos necessários para triagem rápida: **Pendência**, **Data**, **Profissional**, **Plano**, **Perfil** e ícone de abertura do detalhe administrativo do psicólogo.
+
+A decisão mantém os alertas como derivados/read-only e reaproveita o contrato existente de `operational-alerts`. Para completar a coluna **Perfil** sem criar estado novo, os alertas de **CRP pendente** passaram a incluir o fato aditivo **Publicado** no mesmo padrão já usado nos alertas de WhatsApp inválido. A UI deriva **Ativo/Inativo** desse fato real de publicação do perfil.
+
+O detalhe textual, origem técnica, idade, papel profissional, selo de verificado e demais fatos continuam disponíveis no payload e na busca, mas não são exibidos na fila principal de Compliance para preservar a exigência de uma demanda por linha. Em mobile, a tabela usa rolagem horizontal contida, sem expandir a largura da página.

@@ -473,3 +473,33 @@ Validacao deste ajuste:
 - `pnpm check`
 - Smoke HTTP local no Admin retornou `200` para `/moderacao/denuncias`, `/moderacao/compliance`, `/moderacao/operacionais` e `/moderacao/conteudo-sensivel`.
 - Browser local/headless em Chrome/CDP validou desktop 1365px e mobile 390px nas quatro rotas: o numero aparece a direita no desktop, sem fundo azul nem titulo **PENDENCIAS**, centralizado com **pendências** abaixo e sem overflow horizontal. Admin temporario de validacao removido ao final.
+
+## Ajuste complementar 2026-07-25 - Demandas de Compliance em linha única
+
+- Pedido do usuário: na tela de **Compliance**, cada demanda deve ocupar apenas uma linha com as colunas **Pendência** (CRP pendente/WhatsApp inválido), **Data**, **Profissional**, **Plano**, **Perfil** (Ativo/Inativo) e um ícone para abrir a página de detalhes do psicólogo.
+- A lista `/moderacao/compliance` passou a renderizar as pendências derivadas em formato tabular compacto, mantendo uma linha por alerta no desktop e rolagem horizontal contida no mobile para evitar overflow da página.
+- A UI deixou de exibir descrição, origem, idade, papel profissional, selo de verificado e chips auxiliares nos itens de Compliance; esses dados continuam no contrato real para busca/filtros e outras visões, mas a fila principal mostra apenas os campos operacionais solicitados.
+- O endpoint real `GET /api/admin/private/moderation/operational-alerts` passou a incluir o fato **Publicado** também nos alertas de **CRP pendente**, permitindo derivar **Perfil Ativo/Inativo** na mesma coluna usada nos alertas de WhatsApp inválido, sem criar mock ou novo campo persistido.
+- Não houve alteração de Prisma schema/migrations, package novo, mock, seed ou endpoint simulado; `pnpm --dir backend db:migrate` não se aplica.
+- Builder/Quick Copy não está exposto como ferramenta callable neste ambiente; a referência visual foi a captura enviada pelo usuário e a tela local `/moderacao/compliance`.
+
+### Critérios deste ajuste
+
+- [x] Cada demanda de `/moderacao/compliance` aparece em uma única linha no layout de lista.
+- [x] A linha mostra **Pendência**, **Data**, **Profissional**, **Plano** e **Perfil**.
+- [x] **Pendência** usa rótulos controlados **CRP pendente** ou **WhatsApp inválido**.
+- [x] **Perfil** mostra **Ativo** ou **Inativo** a partir do estado real de publicação do perfil.
+- [x] A ação textual **Abrir psicólogo** foi substituída por ícone com rótulo acessível para abrir o detalhe administrativo.
+- [x] A alteração é mobile-first, sem `<img>` cru, sem package novo e sem migration.
+
+### Validação deste ajuste
+
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/moderacao/operational-category-client.tsx"`
+- `pnpm --dir backend exec biome check --write "src/modules/api/admin/private/moderation/use-cases/services.ts"`
+- `pnpm --dir admin check`
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir admin build` (uma tentativa inicial encontrou outro `next build`; reexecutado após finalizar e concluiu sem erro)
+- `pnpm check`
+- API local autenticada: `GET /api/admin/private/moderation/operational-alerts?group=compliance&limit=20` retornou 8 pendências reais; alertas de CRP pendente incluem `Publicado=sim` no bloco `facts`.
+- Browser local/headless em Chrome para `/moderacao/compliance` validou desktop 1365px e mobile 390px com cabeçalho **Pendência/Data/Profissional/Plano/Perfil**, 8 linhas de demanda, 8 ícones de detalhe e sem overflow horizontal da página.

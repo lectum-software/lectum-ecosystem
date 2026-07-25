@@ -62,7 +62,12 @@ const toStringArray = (value: unknown): string[] => {
 const normalizePage = (value?: number) => Math.max(DEFAULT_PAGE, Number(value || DEFAULT_PAGE));
 const normalizeLimit = (value?: number) =>
   Math.min(MAX_LIMIT, Math.max(1, Number(value || DEFAULT_LIMIT)));
-const normalizeSearch = (value?: string | null) => value?.trim().toLowerCase() ?? "";
+const normalizeSearch = (value?: string | null) =>
+  String(value ?? "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim()
+    .toLowerCase();
 const normalizeFilter = (value?: string | null) => value?.trim() || "all";
 
 const paginate = <T>(items: T[], page: number, limit: number) => {
@@ -344,6 +349,26 @@ const reportAuthorRoleLabel = (author: AdminPostReportAuthor) => {
 const reportAuthorVerified = (author: AdminPostReportAuthor) =>
   author.role === "psicologo" && hasProfessionalRegistryApproval(author.psychologist_profile);
 
+type AdminModerationAlertUser = NonNullable<AdminModerationOperationalAlertDTO["user"]>;
+
+const reportAuthorAlertUser = (author: AdminPostReportAuthor): AdminModerationAlertUser => ({
+  id: author.id,
+  name: reportAuthorName(author),
+  role: author.role,
+  role_label: reportAuthorRoleLabel(author),
+  show_verified_badge: reportAuthorVerified(author),
+});
+
+const uncoveredPostAuthorAlertUser = (
+  author: AdminUncoveredPatientPostRecord["author"],
+): AdminModerationAlertUser => ({
+  id: author.id,
+  name: normalizeProfessionalDisplayName(author.name) || roleLabel(author.role),
+  role: author.role,
+  role_label: roleLabel(author.role),
+  show_verified_badge: false,
+});
+
 const reportContentType = (report: AdminPostReportRecord): "post" | "reply" =>
   report.reply ? "reply" : "post";
 
@@ -624,6 +649,33 @@ const psychologistLabel = (profile: AdminOperationalPsychologistRecord) => {
   );
 };
 
+const normalizeSelectedProfessionalGender = (gender?: string | null) =>
+  String(gender ?? "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim()
+    .toLowerCase();
+
+const psychologistRoleLabel = (profile: AdminOperationalPsychologistRecord) => {
+  const selectedGender = normalizeSelectedProfessionalGender(profile.gender);
+
+  return selectedGender.includes("feminino") || selectedGender.includes("mulher")
+    ? "Psicóloga"
+    : "Psicólogo";
+};
+
+const psychologistAlertUser = (
+  profile: AdminOperationalPsychologistRecord,
+  name: string,
+  registryVerified: boolean,
+): AdminModerationAlertUser => ({
+  id: profile.user_id,
+  name,
+  role: "psicologo",
+  role_label: psychologistRoleLabel(profile),
+  show_verified_badge: registryVerified,
+});
+
 const hasRegistryApproval = (profile: AdminOperationalPsychologistRecord) =>
   hasProfessionalRegistryApproval({
     cfp_verified_at: profile.cfp_verified_at,
@@ -694,6 +746,7 @@ const mapReportAlert = (
     ? `/comunidades/${community.slug}/conteudo/${isReply ? "reply" : "post"}/${targetId}`
     : null;
   const reportStatusLabel = postReportStatusLabel(report.status);
+  const author = reportAuthor(report);
 
   return {
     action_href: href,
@@ -721,6 +774,7 @@ const mapReportAlert = (
     source: "post_report",
     title: `Denúncia de ${isReply ? "resposta" : "post"} ${reportStatusLabel.toLowerCase()}`,
     type: "post_report",
+    user: reportAuthorAlertUser(author),
   };
 };
 
@@ -729,6 +783,7 @@ const mapUncoveredPatientPostAlert = (
   now: Date,
 ): AdminModerationOperationalAlertDTO => {
   const href = `/comunidades/${post.community.slug}/conteudo/post/${post.id}`;
+  const user = uncoveredPostAuthorAlertUser(post.author);
 
   return {
     action_href: href,
@@ -757,6 +812,7 @@ const mapUncoveredPatientPostAlert = (
     source: "community_post+post_reply+user.role",
     title: "Post de paciente sem cobertura há 48h",
     type: "patient_post_without_coverage",
+    user,
   };
 };
 
@@ -780,11 +836,22 @@ const buildPsychologistAlerts = (
     const name = psychologistLabel(profile);
     const href = `/psicologos/${profile.user_id}`;
     const isProfessional = isProfessionalSubscription(currentSubscription);
+    const registryVerified = hasRegistryApproval(profile);
+    const user = psychologistAlertUser(profile, name, registryVerified);
     const profileViews = profileViewCounts.get(profile.user_id) ?? 0;
     const whatsappClicks = whatsappClickCounts.get(profile.user_id) ?? 0;
     const currentPlanLabel = currentSubscription.plan.name || currentSubscription.plan.slug;
+    const professional = {
+      gender: profile.gender,
+      id: profile.user_id,
+      is_subscriber: isProfessional,
+      name,
+      registry_verified: registryVerified,
+      role_label: psychologistRoleLabel(profile),
+      show_verified_badge: isProfessional && registryVerified,
+    };
 
-    if (isProfessional && !hasRegistryApproval(profile)) {
+    if (isProfessional && !registryVerified) {
       professionalCrpPending += 1;
       alerts.push({
         action_href: href,
@@ -802,15 +869,18 @@ const buildPsychologistAlerts = (
         facts: [
           { label: "Plano", value: currentPlanLabel },
           { label: "Status CRP", value: profile.crp_status },
+          { label: "Publicado", value: profile.published ? "sim" : "não" },
           { label: "Origem", value: currentSubscription.source },
           { label: "No plano há", value: humanAge(profileStartedAt(currentSubscription), now) },
         ],
         group: "compliance",
         id: `professional-crp-${profile.id}`,
         priority: "urgent",
+        professional,
         source: "psychologist_profile+professional_subscription",
         title: "CRP não aprovado no Plano Profissional",
         type: "professional_crp_pending",
+        user,
       });
     }
 
@@ -838,9 +908,11 @@ const buildPsychologistAlerts = (
         group: "compliance",
         id: `invalid-whatsapp-${profile.id}`,
         priority: "high",
+        professional,
         source: "psychologist_profile.whatsapp",
         title: "WhatsApp ausente ou inválido",
         type: "invalid_whatsapp",
+        user,
       });
     }
 
@@ -865,6 +937,7 @@ const buildPsychologistAlerts = (
         facts: [
           { label: "Plano", value: currentPlanLabel },
           { label: "Pendências", value: String(missingSettings.length) },
+          { label: "Publicado", value: profile.published ? "sim" : "não" },
           { label: "Primeiras", value: missingSettings.slice(0, 3).join(", ") },
         ],
         group: "operacional",
@@ -873,6 +946,7 @@ const buildPsychologistAlerts = (
         source: "psychologist_profile+catalog_relations",
         title: "Perfil não publicado por configurações obrigatórias",
         type: "unpublished_required_settings",
+        user,
       });
     }
 
@@ -904,6 +978,7 @@ const buildPsychologistAlerts = (
           { label: "Plano", value: currentPlanLabel },
           { label: "Visitas", value: String(profileViews) },
           { label: "Cliques WhatsApp", value: String(whatsappClicks) },
+          { label: "Publicado", value: profile.published ? "sim" : "não" },
           { label: "Adaptação", value: `${PSYCHOLOGIST_ADAPTATION_DAYS} dias` },
         ],
         group: "operacional",
@@ -912,6 +987,7 @@ const buildPsychologistAlerts = (
         source: "professional_subscription+profile_view_event+contact_request",
         title: "Psicólogo sem tração após adaptação",
         type: "psychologist_no_traction",
+        user,
       });
     }
   }
@@ -947,7 +1023,14 @@ type BuildOperationalAlertsOptions = {
 type NormalizedOperationalAlertsQuery = Required<
   Pick<
     AdminModerationOperationalAlertsQuery,
-    "alertType" | "contentType" | "group" | "reason" | "reporter" | "status"
+    | "alertType"
+    | "contentType"
+    | "group"
+    | "plan"
+    | "profileStatus"
+    | "reason"
+    | "reporter"
+    | "status"
   >
 > &
   Pick<AdminModerationOperationalAlertsQuery, "from" | "limit" | "page" | "q" | "to">;
@@ -1059,6 +1142,22 @@ const normalizeOperationalAlertType = (
     : "all";
 };
 
+const normalizeOperationalPlan = (
+  value?: string | null,
+): NonNullable<AdminModerationOperationalAlertsQuery["plan"]> => {
+  const normalized = normalizeFilter(value).toLowerCase();
+
+  return normalized === "gratuito" || normalized === "profissional" ? normalized : "all";
+};
+
+const normalizeOperationalProfileStatus = (
+  value?: string | null,
+): NonNullable<AdminModerationOperationalAlertsQuery["profileStatus"]> => {
+  const normalized = normalizeFilter(value).toLowerCase();
+
+  return normalized === "active" || normalized === "inactive" ? normalized : "all";
+};
+
 const normalizeOperationalReporter = (
   value?: string | null,
 ): NonNullable<AdminModerationOperationalAlertsQuery["reporter"]> => {
@@ -1096,11 +1195,35 @@ const parseOperationalDateOnly = (value: string | undefined, boundary: "end" | "
 
 const normalizedText = (value?: string | null) =>
   String(value ?? "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
     .trim()
     .toLowerCase();
 
 const operationalFactValue = (alert: AdminModerationOperationalAlertDTO, label: string) =>
   alert.facts.find((fact) => normalizedText(fact.label) === normalizedText(label))?.value ?? "";
+
+const operationalProfilePublishedStatus = (alert: AdminModerationOperationalAlertDTO) => {
+  const published = normalizedText(operationalFactValue(alert, "Publicado"));
+  if (["ativo", "publicado", "sim", "true"].includes(published)) return true;
+  if (["despublicado", "false", "inativo", "nao"].includes(published)) return false;
+
+  return null;
+};
+
+const operationalAlertMatchesPlan = (
+  alert: AdminModerationOperationalAlertDTO,
+  plan: NonNullable<AdminModerationOperationalAlertsQuery["plan"]>,
+) => {
+  if (plan === "all") return true;
+
+  const currentPlan = normalizedText(operationalFactValue(alert, "Plano"));
+  if (plan === "profissional") {
+    return alert.professional?.is_subscriber === true || currentPlan.includes("profissional");
+  }
+
+  return currentPlan.includes("gratuito");
+};
 
 const operationalStatusAliases: Record<
   Exclude<NonNullable<AdminModerationOperationalAlertsQuery["status"]>, "all">,
@@ -1123,9 +1246,15 @@ const operationalAlertMatchesSearch = (
     alert.description,
     alert.entity.label,
     alert.priority,
+    alert.professional?.gender,
+    alert.professional?.name,
+    alert.professional?.role_label,
     alert.source,
     alert.title,
     alert.type,
+    alert.user?.name,
+    alert.user?.role_label,
+    alert.user?.role,
     ...alert.facts.flatMap((fact) => [fact.label, fact.value]),
   ]
     .filter(Boolean)
@@ -1146,6 +1275,14 @@ const operationalAlertMatchesFilters = (
 
   if (query.alertType !== "all" && alert.type !== query.alertType) {
     return false;
+  }
+
+  if (!operationalAlertMatchesPlan(alert, query.plan)) return false;
+
+  if (query.profileStatus !== "all") {
+    const published = operationalProfilePublishedStatus(alert);
+    if (query.profileStatus === "active" && published !== true) return false;
+    if (query.profileStatus === "inactive" && published !== false) return false;
   }
 
   if (query.contentType !== "all" && alert.report?.content.type !== query.contentType) {
@@ -1191,6 +1328,8 @@ const normalizeOperationalAlertsQuery = (
   alertType: normalizeOperationalAlertType(query.alertType),
   contentType: normalizeOperationalContentType(query.contentType),
   group: normalizeOperationalGroup(query.group),
+  plan: normalizeOperationalPlan(query.plan),
+  profileStatus: normalizeOperationalProfileStatus(query.profileStatus),
   reason: normalizeOperationalReason(query.reason),
   reporter: normalizeOperationalReporter(query.reporter),
   status: normalizeOperationalStatus(query.status),

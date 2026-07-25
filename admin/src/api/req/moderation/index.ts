@@ -55,6 +55,24 @@ export type AdminModerationOperationalAlertType =
   | "psychologist_no_traction"
   | "unpublished_required_settings";
 
+export type AdminModerationOperationalAlertProfessional = {
+  gender: string | null;
+  id: string;
+  is_subscriber: boolean;
+  name: string;
+  registry_verified: boolean;
+  role_label: string;
+  show_verified_badge: boolean;
+};
+
+export type AdminModerationOperationalAlertUser = {
+  id: string;
+  name: string;
+  role: string;
+  role_label: string;
+  show_verified_badge: boolean;
+};
+
 export type AdminModerationOperationalAlert = {
   action_href: string | null;
   action_label: string;
@@ -79,10 +97,12 @@ export type AdminModerationOperationalAlert = {
   group: "compliance" | "denuncias" | "operacional";
   id: string;
   priority: AdminModerationSeverity;
+  professional?: AdminModerationOperationalAlertProfessional | null;
   report?: AdminModerationReportItem | null;
   source: string;
   title: string;
   type: AdminModerationOperationalAlertType;
+  user?: AdminModerationOperationalAlertUser | null;
 };
 
 export type AdminModerationReportStatusGroup = "dismissed" | "pending" | "upheld";
@@ -251,6 +271,8 @@ export type AdminModerationOperationalAlertsQuery = {
   group?: AdminModerationOperationalAlertsGroup;
   limit?: number;
   page?: number;
+  plan?: "all" | "gratuito" | "profissional";
+  profileStatus?: "active" | "all" | "inactive";
   q?: string;
   reason?: "abuse" | "all" | "other" | "privacy" | "self_harm" | "spam";
   reporter?: "all" | "paciente" | "psicologo";
@@ -332,6 +354,10 @@ const cleanOperationalAlertsParams = (input: AdminModerationOperationalAlertsQue
   ...(input.group && input.group !== "all" ? { group: input.group } : {}),
   ...(input.limit ? { limit: input.limit } : {}),
   ...(input.page ? { page: input.page } : {}),
+  ...(input.plan && input.plan !== "all" ? { plan: input.plan } : {}),
+  ...(input.profileStatus && input.profileStatus !== "all"
+    ? { profileStatus: input.profileStatus }
+    : {}),
   ...(input.q ? { q: input.q } : {}),
   ...(input.reason ? { reason: input.reason } : {}),
   ...(input.reporter && input.reporter !== "all" ? { reporter: input.reporter } : {}),

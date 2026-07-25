@@ -63,7 +63,7 @@ const groupConfig: Record<
 > = {
   compliance: {
     description:
-      "Página exclusiva para pendências de compliance profissional, incluindo CRP em Plano Profissional e WhatsApp inválido.",
+      "Pendências de conformidade dos psicólogos, incluindo CRP pendente em Plano Profissional e WhatsApp inválido.",
     emptyLabel: "Nenhuma pendência de compliance encontrada nos dados reais atuais.",
     title: "Compliance",
   },
@@ -117,6 +117,8 @@ const operationalCategoryFiltersSchema = z
       "unpublished_required_settings",
     ]),
     from: z.string().max(10, "Use uma data válida."),
+    plan: z.enum(["all", "gratuito", "profissional"]),
+    profileStatus: z.enum(["all", "active", "inactive"]),
     q: z.string().max(120, "Use no máximo 120 caracteres."),
     to: z.string().max(10, "Use uma data válida."),
   })
@@ -130,6 +132,8 @@ type OperationalCategoryFiltersFormValues = z.infer<typeof operationalCategoryFi
 const operationalCategoryFilterDefaults: OperationalCategoryFiltersFormValues = {
   alertType: "all",
   from: "",
+  plan: "all",
+  profileStatus: "all",
   q: "",
   to: "",
 };
@@ -223,6 +227,18 @@ const operationalCategoryTypeOptions: Record<
   ],
 };
 
+const compliancePlanOptions = [
+  { label: "Todos", value: "all" },
+  { label: "Plano Gratuito", value: "gratuito" },
+  { label: "Plano Profissional", value: "profissional" },
+] satisfies Array<{ label: string; value: OperationalCategoryFiltersFormValues["plan"] }>;
+
+const complianceProfileStatusOptions = [
+  { label: "Todos", value: "all" },
+  { label: "Ativo", value: "active" },
+  { label: "Inativo", value: "inactive" },
+] satisfies Array<{ label: string; value: OperationalCategoryFiltersFormValues["profileStatus"] }>;
+
 const normalizeDenunciaFilters = (
   values: DenunciaFiltersFormValues,
 ): DenunciaFiltersFormValues => ({
@@ -279,6 +295,8 @@ const normalizeOperationalCategoryFilters = (
 ): OperationalCategoryFiltersFormValues => ({
   alertType: values.alertType,
   from: values.from,
+  plan: values.plan,
+  profileStatus: values.profileStatus,
   q: values.q,
   to: values.to,
 });
@@ -289,6 +307,8 @@ const areOperationalCategoryFiltersEqual = (
 ) =>
   left.alertType === right.alertType &&
   left.from === right.from &&
+  left.plan === right.plan &&
+  left.profileStatus === right.profileStatus &&
   left.q === right.q &&
   left.to === right.to;
 
@@ -297,19 +317,30 @@ const coerceOperationalCategoryFilters = (
 ): OperationalCategoryFiltersFormValues => ({
   alertType: values?.alertType ?? operationalCategoryFilterDefaults.alertType,
   from: values?.from ?? operationalCategoryFilterDefaults.from,
+  plan: values?.plan ?? operationalCategoryFilterDefaults.plan,
+  profileStatus: values?.profileStatus ?? operationalCategoryFilterDefaults.profileStatus,
   q: values?.q ?? operationalCategoryFilterDefaults.q,
   to: values?.to ?? operationalCategoryFilterDefaults.to,
 });
 
 const toOperationalCategoryFilterQuery = (
   values: OperationalCategoryFiltersFormValues,
-): Pick<AdminModerationOperationalAlertsQuery, "alertType" | "from" | "q" | "to"> => {
+  group: Exclude<AdminModerationOperationalAlertsGroup, "all" | "denuncias">,
+): Pick<
+  AdminModerationOperationalAlertsQuery,
+  "alertType" | "from" | "plan" | "profileStatus" | "q" | "to"
+> => {
   const normalized = normalizeOperationalCategoryFilters(values);
 
   return {
     alertType: normalized.alertType !== "all" ? normalized.alertType : undefined,
     from: normalized.from || undefined,
-    q: normalized.q.trim() || undefined,
+    plan: group === "compliance" && normalized.plan !== "all" ? normalized.plan : undefined,
+    profileStatus:
+      group === "compliance" && normalized.profileStatus !== "all"
+        ? normalized.profileStatus
+        : undefined,
+    q: group === "operacional" ? normalized.q.trim() || undefined : undefined,
     to: normalized.to || undefined,
   };
 };
@@ -462,6 +493,34 @@ const HeaderPendingCount = ({ count, loading }: { count?: number | null; loading
       </p>
     </div>
   );
+};
+
+const alertFactValue = (alert: AdminModerationOperationalAlert, label: string) =>
+  alert.facts.find(
+    (fact) => fact.label.toLocaleLowerCase("pt-BR") === label.toLocaleLowerCase("pt-BR"),
+  )?.value ?? "";
+
+const resolveComplianceProfileStatus = (alert: AdminModerationOperationalAlert) => {
+  const published = alertFactValue(alert, "Publicado").trim().toLocaleLowerCase("pt-BR");
+
+  if (["sim", "ativo", "publicado", "true"].includes(published)) {
+    return {
+      className: "bg-success/10 text-success",
+      label: "Ativo",
+    };
+  }
+
+  if (["não", "nao", "inativo", "despublicado", "false"].includes(published)) {
+    return {
+      className: "bg-danger/10 text-danger",
+      label: "Inativo",
+    };
+  }
+
+  return {
+    className: "bg-surface-muted text-muted",
+    label: "—",
+  };
 };
 
 type ModerationReport = NonNullable<AdminModerationOperationalAlert["report"]>;
@@ -1110,55 +1169,81 @@ const OperationalCategoryFiltersBar = ({
   isFetching: boolean;
   onDateBlur: () => void;
   resultCount: number;
-}) => (
-  <div className="border-b border-border bg-surface/80 p-4">
-    <FormProvider {...form}>
-      <form
-        className="grid min-w-0 gap-3 md:grid-cols-2 2xl:grid-cols-[minmax(260px,1.15fr)_minmax(150px,0.75fr)_minmax(150px,0.75fr)_minmax(280px,1.35fr)]"
-        noValidate
-        onSubmit={(event) => event.preventDefault()}
-      >
-        <div className="md:col-span-2 2xl:col-span-1">
-          <SelectController<OperationalCategoryFiltersFormValues>
+}) => {
+  const isCompliance = group === "compliance";
+
+  return (
+    <div className="border-b border-border bg-surface/80 p-4">
+      <FormProvider {...form}>
+        <form
+          className={cn(
+            "grid min-w-0 gap-3 md:grid-cols-2",
+            isCompliance
+              ? "2xl:grid-cols-[minmax(220px,1fr)_minmax(150px,0.7fr)_minmax(150px,0.7fr)_minmax(190px,0.85fr)_minmax(190px,0.85fr)]"
+              : "2xl:grid-cols-[minmax(260px,1.15fr)_minmax(150px,0.75fr)_minmax(150px,0.75fr)_minmax(280px,1.35fr)]",
+          )}
+          noValidate
+          onSubmit={(event) => event.preventDefault()}
+        >
+          <div className="md:col-span-2 2xl:col-span-1">
+            <SelectController<OperationalCategoryFiltersFormValues>
+              disabled={disabled}
+              label="Tipo"
+              name="alertType"
+              options={operationalCategoryTypeOptions[group]}
+            />
+            <p className="-mt-1 flex min-h-5 flex-wrap items-center gap-x-2 gap-y-1 text-xs font-bold text-muted">
+              <span>{numberFormatter.format(resultCount)} registro(s) encontrado(s)</span>
+              {isFetching ? (
+                <span className="inline-flex items-center gap-1">
+                  <Loader2 aria-hidden className="h-3.5 w-3.5 animate-spin" />
+                  Atualizando
+                </span>
+              ) : null}
+            </p>
+          </div>
+          <InputController<OperationalCategoryFiltersFormValues>
             disabled={disabled}
-            label="Tipo"
-            name="alertType"
-            options={operationalCategoryTypeOptions[group]}
+            label="De"
+            name="from"
+            onBlur={onDateBlur}
+            type="date"
           />
-          <p className="-mt-1 flex min-h-5 flex-wrap items-center gap-x-2 gap-y-1 text-xs font-bold text-muted">
-            <span>{numberFormatter.format(resultCount)} registro(s) encontrado(s)</span>
-            {isFetching ? (
-              <span className="inline-flex items-center gap-1">
-                <Loader2 aria-hidden className="h-3.5 w-3.5 animate-spin" />
-                Atualizando
-              </span>
-            ) : null}
-          </p>
-        </div>
-        <InputController<OperationalCategoryFiltersFormValues>
-          disabled={disabled}
-          label="De"
-          name="from"
-          onBlur={onDateBlur}
-          type="date"
-        />
-        <InputController<OperationalCategoryFiltersFormValues>
-          disabled={disabled}
-          label="Até"
-          name="to"
-          onBlur={onDateBlur}
-          type="date"
-        />
-        <InputController<OperationalCategoryFiltersFormValues>
-          disabled={disabled}
-          label="Busca"
-          name="q"
-          placeholder="Nome, origem ou fato..."
-        />
-      </form>
-    </FormProvider>
-  </div>
-);
+          <InputController<OperationalCategoryFiltersFormValues>
+            disabled={disabled}
+            label="Até"
+            name="to"
+            onBlur={onDateBlur}
+            type="date"
+          />
+          {isCompliance ? (
+            <>
+              <SelectController<OperationalCategoryFiltersFormValues>
+                disabled={disabled}
+                label="Plano"
+                name="plan"
+                options={compliancePlanOptions}
+              />
+              <SelectController<OperationalCategoryFiltersFormValues>
+                disabled={disabled}
+                label="Status de perfil"
+                name="profileStatus"
+                options={complianceProfileStatusOptions}
+              />
+            </>
+          ) : (
+            <InputController<OperationalCategoryFiltersFormValues>
+              disabled={disabled}
+              label="Busca"
+              name="q"
+              placeholder="Nome, origem ou fato..."
+            />
+          )}
+        </form>
+      </FormProvider>
+    </div>
+  );
+};
 
 const OperationalAlertCard = ({ alert }: { alert: AdminModerationOperationalAlert }) => {
   const href = alert.action_href ?? alert.entity.href;
@@ -1216,6 +1301,274 @@ const OperationalAlertCard = ({ alert }: { alert: AdminModerationOperationalAler
   );
 };
 
+const CompliancePendingBadge = ({ alert }: { alert: AdminModerationOperationalAlert }) => (
+  <span className="inline-flex max-w-full items-center rounded-full bg-danger/10 px-2.5 py-1 text-xs font-medium text-danger">
+    <span className="truncate">{operationalTypeLabels[alert.type]}</span>
+  </span>
+);
+
+const ComplianceProfileBadge = ({ alert }: { alert: AdminModerationOperationalAlert }) => {
+  const status = resolveComplianceProfileStatus(alert);
+
+  return (
+    <span
+      className={cn(
+        "inline-flex w-fit max-w-full justify-self-start rounded-full px-2.5 py-1 text-xs font-medium",
+        status.className,
+      )}
+    >
+      {status.label}
+    </span>
+  );
+};
+
+const ComplianceAlertRow = ({ alert }: { alert: AdminModerationOperationalAlert }) => {
+  const href = alert.action_href ?? alert.entity.href;
+  const professionalName = alert.professional?.name ?? alert.user?.name ?? alert.entity.label;
+  const plan = alertFactValue(alert, "Plano") || "\u2014";
+
+  return (
+    <tr className="border-t border-border/80 text-sm text-foreground transition hover:bg-primary-soft/30">
+      <td className="px-5 py-4 align-middle">
+        <CompliancePendingBadge alert={alert} />
+      </td>
+      <td className="px-5 py-4 align-middle text-xs font-normal text-muted">
+        <time dateTime={alert.created_at} title={formatDateTime(alert.created_at)}>
+          {formatDateTime(alert.created_at)}
+        </time>
+      </td>
+      <td className="px-5 py-4 align-middle">
+        <span className="truncate font-medium text-foreground" title={professionalName}>
+          {professionalName}
+        </span>
+      </td>
+      <td className="px-5 py-4 align-middle text-xs font-medium text-primary" title={plan}>
+        {plan}
+      </td>
+      <td className="px-5 py-4 align-middle">
+        <ComplianceProfileBadge alert={alert} />
+      </td>
+      <td className="px-5 py-4 align-middle">
+        {href ? (
+          <Link
+            aria-label={`Abrir detalhes administrativos de ${professionalName}`}
+            className="grid h-9 w-9 place-items-center rounded-full border border-border bg-surface text-foreground shadow-control transition hover:border-primary hover:text-primary"
+            href={href}
+            title={"Abrir detalhes do psic\u00f3logo"}
+          >
+            <ExternalLink aria-hidden className="h-4 w-4" />
+          </Link>
+        ) : (
+          <span
+            aria-label={"Detalhe administrativo indispon\u00edvel"}
+            className="grid h-9 w-9 place-items-center rounded-full border border-border bg-surface-muted text-muted"
+            role="img"
+            title={"Detalhe administrativo indispon\u00edvel"}
+          >
+            <ExternalLink aria-hidden className="h-4 w-4" />
+          </span>
+        )}
+      </td>
+    </tr>
+  );
+};
+
+const ComplianceAlertsTable = ({ alerts }: { alerts: AdminModerationOperationalAlert[] }) => (
+  <div className="overflow-x-auto">
+    <table className="w-full min-w-[960px] table-fixed border-collapse">
+      <thead className="bg-surface-muted/70 text-left text-[0.7rem] font-medium uppercase tracking-[0.1em] text-subtle">
+        <tr>
+          <th className="w-[22%] px-5 py-4 font-medium">Pendência</th>
+          <th className="w-[17%] px-5 py-4 font-medium">Data</th>
+          <th className="w-[24%] px-5 py-4 font-medium">Profissional</th>
+          <th className="w-[17%] px-5 py-4 font-medium">Plano</th>
+          <th className="w-[14%] px-5 py-4 font-medium">Perfil</th>
+          <th className="w-[6%] px-5 py-4 font-medium">
+            <span className="sr-only">Ações</span>
+          </th>
+        </tr>
+      </thead>
+      <tbody className="divide-y divide-border/70">
+        {alerts.map((alert) => (
+          <ComplianceAlertRow alert={alert} key={alert.id} />
+        ))}
+      </tbody>
+    </table>
+  </div>
+);
+
+const operationalTablePendingLabels: Partial<
+  Record<AdminModerationOperationalAlert["type"], string>
+> = {
+  patient_post_without_coverage: "Post sem cobertura",
+  psychologist_no_traction: "Sem tração",
+  unpublished_required_settings: "Perfis não publicados",
+};
+
+const operationalTablePendingClass: Partial<
+  Record<AdminModerationOperationalAlert["type"], string>
+> = {
+  patient_post_without_coverage: "bg-orange-50 text-orange-700",
+  psychologist_no_traction: "bg-yellow-50 text-yellow-700",
+  unpublished_required_settings: "bg-primary-soft text-primary",
+};
+
+const operationalTablePendingLabel = (alert: AdminModerationOperationalAlert) =>
+  operationalTablePendingLabels[alert.type] ?? operationalTypeLabels[alert.type];
+
+const alertUserName = (alert: AdminModerationOperationalAlert) =>
+  alert.user?.name ?? alert.professional?.name ?? alert.entity.label;
+
+const alertUserRoleLabel = (alert: AdminModerationOperationalAlert) =>
+  alert.user?.role_label ??
+  alert.professional?.role_label ??
+  (alert.entity.type === "post" || alert.entity.type === "reply"
+    ? "Paciente"
+    : alert.entity.type === "psychologist"
+      ? "Psicólogo"
+      : "Usuário");
+
+const alertUserVerified = (alert: AdminModerationOperationalAlert) =>
+  Boolean(alert.user?.show_verified_badge ?? alert.professional?.show_verified_badge);
+
+const formatPendingDays = (alert: AdminModerationOperationalAlert) => {
+  const hours =
+    typeof alert.age_hours === "number"
+      ? alert.age_hours
+      : Math.max(0, Math.floor((Date.now() - new Date(alert.created_at).getTime()) / 3_600_000));
+  const days = Math.floor(hours / 24);
+
+  if (days < 1) return "menos de 1 dia";
+
+  return `${numberFormatter.format(days)} ${days === 1 ? "dia" : "dias"}`;
+};
+
+const OperationalPendingBadge = ({ alert }: { alert: AdminModerationOperationalAlert }) => {
+  const label = operationalTablePendingLabel(alert);
+
+  return (
+    <span
+      className={cn(
+        "inline-flex max-w-full items-center rounded-full px-2.5 py-1 text-xs font-medium",
+        operationalTablePendingClass[alert.type] ?? "bg-surface-muted text-muted",
+      )}
+      title={label}
+    >
+      <span className="truncate">{label}</span>
+    </span>
+  );
+};
+
+const OperationalProfileBadge = ({ alert }: { alert: AdminModerationOperationalAlert }) => {
+  const status = resolveComplianceProfileStatus(alert);
+
+  return (
+    <span
+      className={cn(
+        "inline-flex w-fit max-w-full justify-self-start rounded-full px-2.5 py-1 text-xs font-medium",
+        status.className,
+      )}
+    >
+      {status.label}
+    </span>
+  );
+};
+
+const OperationalDetailsAction = ({ alert }: { alert: AdminModerationOperationalAlert }) => {
+  const href = alert.action_href ?? alert.entity.href;
+  const isContent = alert.entity.type === "post" || alert.entity.type === "reply";
+  const targetLabel = isContent ? alert.entity.label : alertUserName(alert);
+  const title = isContent ? "Abrir detalhes do conteúdo" : "Abrir detalhes do psicólogo";
+
+  return href ? (
+    <Link
+      aria-label={`${title}: ${targetLabel}`}
+      className="grid h-9 w-9 place-items-center rounded-full border border-border bg-surface text-foreground shadow-control transition hover:border-primary hover:text-primary"
+      href={href}
+      title={title}
+    >
+      <ExternalLink aria-hidden className="h-4 w-4" />
+    </Link>
+  ) : (
+    <span
+      aria-label="Detalhe administrativo indisponível"
+      className="grid h-9 w-9 place-items-center rounded-full border border-border bg-surface-muted text-muted"
+      role="img"
+      title="Detalhe administrativo indisponível"
+    >
+      <ExternalLink aria-hidden className="h-4 w-4" />
+    </span>
+  );
+};
+
+const OperationalAlertRow = ({ alert }: { alert: AdminModerationOperationalAlert }) => {
+  const plan = alertFactValue(alert, "Plano") || "?";
+  const userName = alertUserName(alert);
+  const roleLabel = alertUserRoleLabel(alert);
+  const showVerifiedBadge = alertUserVerified(alert);
+
+  return (
+    <tr className="border-t border-border/80 text-sm text-foreground transition hover:bg-primary-soft/30">
+      <td className="px-5 py-4 align-middle">
+        <OperationalPendingBadge alert={alert} />
+      </td>
+      <td className="px-5 py-4 align-middle text-xs font-medium text-muted">
+        {formatPendingDays(alert)}
+      </td>
+      <td className="px-5 py-4 align-middle">
+        <div className="min-w-0">
+          <div className="flex min-w-0 items-center gap-1.5">
+            <span className="truncate font-medium text-foreground" title={userName}>
+              {userName}
+            </span>
+            {showVerifiedBadge ? (
+              <VerifiedBadgeIcon
+                aria-label="Registro profissional verificado"
+                className="h-4 w-4"
+                role="img"
+              />
+            ) : null}
+          </div>
+          <p className="mt-0.5 truncate text-xs font-normal text-muted">{roleLabel}</p>
+        </div>
+      </td>
+      <td className="px-5 py-4 align-middle text-xs font-medium text-primary" title={plan}>
+        {plan}
+      </td>
+      <td className="px-5 py-4 align-middle">
+        <OperationalProfileBadge alert={alert} />
+      </td>
+      <td className="px-5 py-4 align-middle">
+        <OperationalDetailsAction alert={alert} />
+      </td>
+    </tr>
+  );
+};
+
+const OperationalAlertsTable = ({ alerts }: { alerts: AdminModerationOperationalAlert[] }) => (
+  <div className="overflow-x-auto">
+    <table className="w-full min-w-[1060px] table-fixed border-collapse">
+      <thead className="bg-surface-muted/70 text-left text-[0.7rem] font-medium uppercase tracking-[0.1em] text-subtle">
+        <tr>
+          <th className="w-[22%] px-5 py-4 font-medium">Pendência</th>
+          <th className="w-[15%] px-5 py-4 font-medium">Pendente há</th>
+          <th className="w-[24%] px-5 py-4 font-medium">Usuário</th>
+          <th className="w-[16%] px-5 py-4 font-medium">Plano</th>
+          <th className="w-[17%] px-5 py-4 font-medium">Status do perfil</th>
+          <th className="w-[6%] px-5 py-4 font-medium">
+            <span className="sr-only">Ações</span>
+          </th>
+        </tr>
+      </thead>
+      <tbody className="divide-y divide-border/70">
+        {alerts.map((alert) => (
+          <OperationalAlertRow alert={alert} key={alert.id} />
+        ))}
+      </tbody>
+    </table>
+  </div>
+);
+
 export const AdminModerationOperationalCategoryClient = ({
   group,
 }: {
@@ -1243,7 +1596,7 @@ export const AdminModerationOperationalCategoryClient = ({
   });
   const watchedCategoryAutoFilters = useWatch({
     control: categoryFiltersForm.control,
-    name: ["alertType", "q"],
+    name: ["alertType", "plan", "profileStatus", "q"],
   });
   const watchedAutoFiltersKey = watchedAutoFilters.join("|");
   const watchedCategoryAutoFiltersKey = watchedCategoryAutoFilters.join("|");
@@ -1256,7 +1609,7 @@ export const AdminModerationOperationalCategoryClient = ({
       page,
       ...(group === "denuncias"
         ? toOperationalAlertsFilterQuery(appliedFilters)
-        : toOperationalCategoryFilterQuery(appliedCategoryFilters)),
+        : toOperationalCategoryFilterQuery(appliedCategoryFilters, group)),
     }),
     [appliedCategoryFilters, appliedFilters, group, page],
   );
@@ -1423,17 +1776,25 @@ export const AdminModerationOperationalCategoryClient = ({
             resultCount={query.data?.count ?? 0}
           />
         ) : null}
-        <div className="grid gap-3 p-4">
-          {query.isLoading ? (
-            SKELETON_KEYS.map((key) => (
+        {query.isLoading ? (
+          <div className="grid gap-3 p-4">
+            {SKELETON_KEYS.map((key) => (
               <div className="h-36 animate-pulse rounded-2xl bg-surface-muted" key={key} />
-            ))
-          ) : (query.data?.data.length ?? 0) === 0 ? (
+            ))}
+          </div>
+        ) : (query.data?.data.length ?? 0) === 0 ? (
+          <div className="p-4">
             <div className="rounded-2xl border border-dashed border-border p-5 text-sm leading-6 text-muted">
               {config.emptyLabel}
             </div>
-          ) : (
-            query.data?.data.map((alert) =>
+          </div>
+        ) : group === "compliance" ? (
+          <ComplianceAlertsTable alerts={query.data?.data ?? []} />
+        ) : group === "operacional" ? (
+          <OperationalAlertsTable alerts={query.data?.data ?? []} />
+        ) : (
+          <div className="grid gap-3 p-4">
+            {query.data?.data.map((alert) =>
               alert.report ? (
                 <ModerationReportListItem
                   alert={alert}
@@ -1443,9 +1804,9 @@ export const AdminModerationOperationalCategoryClient = ({
               ) : (
                 <OperationalAlertCard alert={alert} key={alert.id} />
               ),
-            )
-          )}
-        </div>
+            )}
+          </div>
+        )}
         <div className="flex flex-col gap-3 border-t border-border p-4 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-xs font-bold text-muted">
             Página {query.data?.page ?? page} de {query.data?.pages ?? 1}
@@ -1472,13 +1833,6 @@ export const AdminModerationOperationalCategoryClient = ({
           </div>
         </div>
       </section>
-
-      {query.data?.excluded_dimensions.length ? (
-        <div className="rounded-2xl border border-border bg-surface-muted p-4 text-xs leading-5 text-muted">
-          Fora do escopo agora:{" "}
-          {query.data.excluded_dimensions.map((item) => item.title).join("; ")}.
-        </div>
-      ) : null}
 
       {moderationState ? (
         <ReportModerationDialog onClose={() => setModerationState(null)} state={moderationState} />
