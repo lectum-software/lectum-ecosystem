@@ -79,7 +79,7 @@ const overviewPeriodOptions = [
 const reportChartMetrics = [
   { color: "#0f2a52", icon: AlertTriangle, key: REPORT_TOTAL_KEY, label: "Total de denúncias" },
   { color: "#308ce8", icon: Flag, key: "pending", label: "Pendentes" },
-  { color: "#64748b", icon: X, key: "dismissed", label: "Improcedentes" },
+  { color: "#16a34a", icon: X, key: "dismissed", label: "Improcedentes" },
   { color: "#e5484d", icon: CheckCircle2, key: "upheld", label: "Procedentes" },
 ] satisfies ModerationChartMetric[];
 

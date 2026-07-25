@@ -387,3 +387,19 @@ Validacao deste ajuste:
 - `pnpm --dir admin check`
 - `pnpm --dir admin build`
 - Smoke HTTP local no Admin (`GET http://localhost:3002/moderacao`) retornou `200`.
+
+
+## Ajuste complementar 2026-07-24 - Copy do dashboard de moderação
+
+- Pedido do usuário: remover o botão **Atualizar** do header de `/moderacao`, trocar a identificação superior para **Moderação**, renomear o título para **Dashboard da moderação**, substituir a descrição por **Análise global de denúncias, compliance e alertas operacionais da plataforma.** e deixar o contador **Improcedentes** com ícone verde.
+- O componente de header da central de moderação deixou de renderizar o CTA de atualização manual, mantendo somente o link **Voltar** quando alguma página interna precisar dele.
+- O contador **Improcedentes** do bloco **Denúncias** recebeu cor verde no ícone/linha da métrica, sem alterar fonte de dados, contrato de API, persistência ou filtros.
+- Não houve alteração de backend, Prisma schema/migrations, packages, dados persistidos, contratos de API ou formulários.
+- Builder/Quick Copy não está exposto como ferramenta callable neste ambiente; a referência visual usada foi a captura enviada pelo usuário e o layout real local de `/moderacao`.
+
+### Validação deste ajuste
+
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/moderacao/client.tsx" "src/app/(admin)/moderacao/overview-charts.tsx"`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build` (duas tentativas iniciais foram bloqueadas por outro processo `next build`; reexecutado após finalizar e concluído sem erro)
+- Smoke HTTP local no Admin (`GET http://localhost:3002/moderacao`) retornou `200`.

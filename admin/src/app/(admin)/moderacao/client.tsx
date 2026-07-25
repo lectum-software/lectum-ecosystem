@@ -173,19 +173,13 @@ const Card = ({ children, className }: { children?: ReactNode; className?: strin
 
 const Header = ({
   backHref,
-  description = "Acompanhe denúncias de posts, conteúdo sensível, pendências de compliance profissional e alertas operacionais derivados dos dados reais da Lectum.",
-  disabled,
-  eyebrow = "Operação e segurança",
-  loading,
-  onRefresh,
-  title = "Central de moderação e alertas",
+  description = "Análise global de denúncias, compliance e alertas operacionais da plataforma.",
+  eyebrow = "Moderação",
+  title = "Dashboard da moderação",
 }: {
   backHref?: string;
   description?: string;
-  disabled: boolean;
   eyebrow?: string;
-  loading: boolean;
-  onRefresh: () => void;
   title?: string;
 }) => (
   <Card className="p-5 md:p-6">
@@ -199,8 +193,8 @@ const Header = ({
           {description}
         </p>
       </div>
-      <div className="flex flex-col gap-2 sm:flex-row xl:justify-end">
-        {backHref ? (
+      {backHref ? (
+        <div className="flex flex-col gap-2 sm:flex-row xl:justify-end">
           <Link
             className="inline-flex h-11 items-center justify-center gap-2 rounded-control border border-border bg-surface px-4 text-sm font-semibold text-foreground shadow-control transition hover:border-border-strong hover:text-primary"
             href={backHref}
@@ -208,17 +202,8 @@ const Header = ({
             <ChevronLeft aria-hidden className="h-4 w-4" />
             Voltar
           </Link>
-        ) : null}
-        <button
-          className="inline-flex h-11 items-center justify-center gap-2 rounded-control border border-border bg-surface px-4 text-sm font-semibold text-foreground shadow-control transition hover:border-border-strong hover:text-primary disabled:opacity-60"
-          disabled={disabled}
-          onClick={onRefresh}
-          type="button"
-        >
-          <RefreshCw aria-hidden className={cn("h-4 w-4", loading && "animate-spin")} />
-          Atualizar
-        </button>
-      </div>
+        </div>
+      ) : null}
     </div>
   </Card>
 );
@@ -962,13 +947,6 @@ export const AdminModerationClient = ({ mode = "overview" }: { mode?: "overview"
     params.set("event", event.id);
     router.replace(`${pathname}?${params.toString()}`, { scroll: false });
   };
-  const refreshAll = () => {
-    void summary.refetch();
-    if (isTextualPage) {
-      void events.refetch();
-      void detail.refetch();
-    }
-  };
   const markReviewing = async (event: AdminModerationEventDetail) => {
     try {
       await review.mutateAsync(event.id);
@@ -987,10 +965,7 @@ export const AdminModerationClient = ({ mode = "overview" }: { mode?: "overview"
             ? "Lista exclusiva de pendências de conteúdo sensível, com filtros, detalhe protegido e ações auditadas."
             : undefined
         }
-        disabled={isTextualPage ? events.isFetching || detail.isFetching : summary.isFetching}
         eyebrow={isTextualPage ? "Conteúdo sensível" : undefined}
-        loading={isTextualPage ? events.isFetching || detail.isFetching : summary.isFetching}
-        onRefresh={refreshAll}
         title={isTextualPage ? "Conteúdo sensível" : undefined}
       />
       {firstError ? (
