@@ -69,14 +69,14 @@ const reportTypeOptions = [
 ] as const satisfies readonly (readonly [AdminModerationReportChartType, string])[];
 
 const overviewPeriodOptions = [
-  ["all", "Todo o período"],
   ["today", "Hoje"],
   ["week", "Esta semana"],
-  ["7d", "Últimos 7 dias"],
   ["month", "Este mês"],
+  ["year", "Este ano"],
+  ["7d", "Últimos 7 dias"],
   ["30d", "Últimos 30 dias"],
   ["90d", "Últimos 90 dias"],
-  ["year", "Este ano"],
+  ["all", "Todo o período"],
 ] as const satisfies readonly (readonly [OverviewPeriodPreset, string])[];
 
 const reportChartMetrics = [

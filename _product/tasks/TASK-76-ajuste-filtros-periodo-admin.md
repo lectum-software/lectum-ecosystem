@@ -155,3 +155,31 @@ Esta task é uma correção transversal de UX no Admin e não altera API, persis
 - `pnpm check` - OK.
 - Smoke HTTP local no Admin: `/psicologos`, `/pacientes`, `/comunidades`, `/financeiro`, `/notificacoes`, `/moderacao` retornaram 200 em `http://localhost:3002`.
 - Chrome headless local abriu `http://localhost:3002/psicologos` com DOM carregado.
+
+## Ajuste complementar 2026-07-25 - Ordem dos presets de período
+
+- Pedido do usuário: em todos os filtros de período do painel Admin, ordenar as opções como `Hoje`, `Esta semana`, `Este mês`, `Este ano`, `Últimos 7 dias`, `Últimos 30 dias`, `Últimos 90 dias`, `Todo o período`.
+- Os filtros padrão de dashboards, detalhes, financeiro, notificações, moderação e estatísticas de comunidade foram alinhados na mesma ordem visual.
+- Filtros especializados que já exibiam `Últimos 180 dias` mantiveram esse recorte após `Últimos 90 dias` e antes de `Todo o período`, para não remover uma janela existente.
+- `custom` continua apenas como estado interno/`disabled hidden` quando há datas manuais.
+- Não houve mudança de backend, contratos HTTP, query keys, Prisma schema/migrations, packages, formulários ou dados persistidos.
+- Builder/Quick Copy não está callable neste ambiente; a conferência visual usou o inventário local e o browser local com o Admin em `localhost:3002`.
+
+### Critérios de aceite deste ajuste
+
+- [x] Filtros padrão de período do Admin seguem a ordem solicitada.
+- [x] Filtros especializados com `Últimos 180 dias` preservam esse recorte após `Últimos 90 dias` e antes de `Todo o período`.
+- [x] `custom` permanece oculto como estado interno para intervalo manual.
+- [x] UI mobile-first preservada; nenhum `<img>` cru, mock, package novo ou migration foi adicionado.
+- [x] ADR criado em `adrs/0321-ordem-presets-periodo-admin.md`.
+
+### Validação deste ajuste
+
+- `pnpm --dir admin exec biome check --write ...` - OK.
+- `pnpm --dir admin check` - OK.
+- `pnpm --dir admin build` - OK.
+- `pnpm --dir backend check` - OK após isolar alterações paralelas não relacionadas.
+- `pnpm check` - tentado, mas não concluiu de forma limpa no workspace porque alterações paralelas não relacionadas da TASK-84 reapareceram em arquivos backend de tração do dashboard de psicólogos; não houve falha atribuída a este ajuste.
+- Smoke HTTP local no Admin: `/psicologos`, `/pacientes`, `/comunidades`, `/financeiro`, `/notificacoes` e `/moderacao` retornaram 200 em `http://localhost:3002`.
+- Chrome headless local abriu `http://localhost:3002/psicologos` e gerou screenshot; sem sessão administrativa, a página exibiu redirecionamento para login.
+

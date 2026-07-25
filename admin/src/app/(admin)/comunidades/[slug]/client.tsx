@@ -237,11 +237,11 @@ type CommunityStatisticsPeriodOption = {
 const contentPeriodOptions = [
   { id: "today", label: "Hoje" },
   { id: "week", label: "Esta semana" },
-  { id: "7d", label: "Últimos 7 dias" },
   { id: "month", label: "Este mês" },
+  { id: "year", label: "Este ano" },
+  { id: "7d", label: "Últimos 7 dias" },
   { id: "30d", label: "Últimos 30 dias" },
   { id: "90d", label: "Últimos 90 dias" },
-  { id: "year", label: "Este ano" },
   { id: "all", label: "Todo o período" },
 ] as const satisfies ReadonlyArray<{
   id: ContentPeriodPreset;
@@ -262,11 +262,11 @@ const contentSortValues = contentSortOptions.map((option) => option.id) as reado
 const contentPeriodPresetValues = [
   "today",
   "week",
-  "7d",
   "month",
+  "year",
+  "7d",
   "30d",
   "90d",
-  "year",
   "all",
 ] as const;
 
@@ -291,13 +291,14 @@ const statisticsPeriodOptions = contentPeriodOptions satisfies ReadonlyArray<{
 }>;
 
 const activityHoursPeriodOptions = [
-  { id: "all", label: "Todo o período" },
+  { id: "today", label: "Hoje" },
   { id: "week", label: "Esta semana" },
-  { id: "7d", label: "Últimos 7 dias" },
   { id: "month", label: "Este mês" },
+  { id: "year", label: "Este ano" },
+  { id: "7d", label: "Últimos 7 dias" },
   { id: "30d", label: "Últimos 30 dias" },
   { id: "90d", label: "Últimos 90 dias" },
-  { id: "year", label: "Este ano" },
+  { id: "all", label: "Todo o período" },
 ] as const satisfies ReadonlyArray<CommunityStatisticsPeriodOption>;
 
 const disabledCommunityStatisticsComparisonQuery = {
@@ -503,29 +504,50 @@ const buildPreviousStatisticsRange = (
   return { from: previousFrom, to: previousTo };
 };
 const formatDayMonth = (value: string) => dayMonthFormatter.format(contentDateFromInput(value));
-type ReportPeriodValue = "all" | "30d" | "90d" | "180d" | "custom";
+type ReportPeriodValue =
+  | "today"
+  | "week"
+  | "month"
+  | "year"
+  | "7d"
+  | "30d"
+  | "90d"
+  | "180d"
+  | "all"
+  | "custom";
 type ReportPeriodPreset = Exclude<ReportPeriodValue, "custom">;
 type ReportDateRange = {
   from?: string;
   to?: string;
 };
 const reportPeriodOptions: { id: ReportPeriodPreset; label: string }[] = [
-  { id: "all", label: "Todo o período" },
+  { id: "today", label: "Hoje" },
+  { id: "week", label: "Esta semana" },
+  { id: "month", label: "Este mês" },
+  { id: "year", label: "Este ano" },
+  { id: "7d", label: "Últimos 7 dias" },
   { id: "30d", label: "Últimos 30 dias" },
   { id: "90d", label: "Últimos 90 dias" },
   { id: "180d", label: "Últimos 180 dias" },
+  { id: "all", label: "Todo o período" },
 ];
 const getReportRangeForPeriod = (period: ReportPeriodPreset): ReportDateRange => {
-  if (period === "all") return { from: "", to: "" };
+  const today = toDateInputValue(new Date());
 
-  const days = period === "30d" ? 30 : period === "180d" ? 180 : 90;
+  if (period === "all") return { from: "", to: "" };
+  if (period === "today") return { from: today, to: today };
+  if (period === "week") return { from: toDateInputValue(startOfCurrentWeek()), to: today };
+  if (period === "month") return { from: toDateInputValue(startOfCurrentMonth()), to: today };
+  if (period === "year") return { from: toDateInputValue(startOfCurrentYear()), to: today };
+
+  const days = period === "7d" ? 7 : period === "30d" ? 30 : period === "180d" ? 180 : 90;
   const to = new Date();
-  const from = new Date();
+  const from = new Date(to);
   from.setDate(to.getDate() - (days - 1));
 
   return {
     from: toDateInputValue(from),
-    to: toDateInputValue(to),
+    to: today,
   };
 };
 const isValidReportRange = (range: ReportDateRange) => {
@@ -533,7 +555,17 @@ const isValidReportRange = (range: ReportDateRange) => {
 
   return contentDateFromInput(range.from) <= contentDateFromInput(range.to);
 };
-type ActivityPeriodValue = "30d" | "90d" | "180d" | "all" | "custom";
+type ActivityPeriodValue =
+  | "today"
+  | "week"
+  | "month"
+  | "year"
+  | "7d"
+  | "30d"
+  | "90d"
+  | "180d"
+  | "all"
+  | "custom";
 const resolveCommunityActivityPeriod = (
   preset: ActivityPeriodValue,
   customFrom: string,
@@ -544,14 +576,21 @@ const resolveCommunityActivityPeriod = (
     return customFrom && customTo ? { from: customFrom, to: customTo } : {};
   }
 
-  const days = preset === "30d" ? 30 : preset === "180d" ? 180 : 90;
+  const today = toDateInputValue(new Date());
+
+  if (preset === "today") return { from: today, to: today };
+  if (preset === "week") return { from: toDateInputValue(startOfCurrentWeek()), to: today };
+  if (preset === "month") return { from: toDateInputValue(startOfCurrentMonth()), to: today };
+  if (preset === "year") return { from: toDateInputValue(startOfCurrentYear()), to: today };
+
+  const days = preset === "7d" ? 7 : preset === "30d" ? 30 : preset === "180d" ? 180 : 90;
   const to = new Date();
-  const from = new Date();
+  const from = new Date(to);
   from.setDate(to.getDate() - (days - 1));
 
   return {
     from: toDateInputValue(from),
-    to: toDateInputValue(to),
+    to: today,
   };
 };
 const formatCountLabel = (value: number, singular: string, plural: string) =>
@@ -6184,10 +6223,15 @@ const ActivitiesTab = ({ slug }: { slug: string }) => {
                 Personalizado
               </option>
             ) : null}
-            <option value="all">Todo o período</option>
+            <option value="today">Hoje</option>
+            <option value="week">Esta semana</option>
+            <option value="month">Este mês</option>
+            <option value="year">Este ano</option>
+            <option value="7d">Últimos 7 dias</option>
             <option value="30d">Últimos 30 dias</option>
             <option value="90d">Últimos 90 dias</option>
             <option value="180d">Últimos 180 dias</option>
+            <option value="all">Todo o período</option>
           </CommunityReportFilterSelect>
           <CommunityReportFilterSelect
             className="flex-1"

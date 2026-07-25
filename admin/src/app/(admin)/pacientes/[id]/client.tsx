@@ -303,11 +303,11 @@ type PatientStatisticsCustomRange = Pick<PatientsDetailQuery, "from" | "to">;
 const PATIENT_STATISTICS_PERIOD_OPTIONS: { id: PatientStatisticsPeriodPreset; label: string }[] = [
   { id: "today", label: "Hoje" },
   { id: "week", label: "Esta semana" },
-  { id: "7d", label: "Últimos 7 dias" },
   { id: "month", label: "Este mês" },
+  { id: "year", label: "Este ano" },
+  { id: "7d", label: "Últimos 7 dias" },
   { id: "30d", label: "Últimos 30 dias" },
   { id: "90d", label: "Últimos 90 dias" },
-  { id: "year", label: "Este ano" },
   { id: "all", label: "Todo o período" },
 ];
 const PATIENT_STATISTICS_SERIES_METRIC_KEYS = PATIENT_COMMUNITY_CHART_METRICS.map(
@@ -486,14 +486,6 @@ const formatPlatformDuration = (value: number | null) => {
   if (remainder === 0) return `${minutes}min`;
 
   return `${minutes}min ${remainder}s`;
-};
-const formatInputDate = (value?: string | null) => {
-  if (!value) return "";
-
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "";
-
-  return date.toISOString().slice(0, 10);
 };
 const formatDayMonth = (value?: string | null) => {
   if (!value) return "período anterior";
@@ -1609,14 +1601,21 @@ const resolveActivityPeriod = (preset: string, customFrom: string, customTo: str
     return customFrom && customTo ? { from: customFrom, to: customTo } : {};
   }
 
-  const days = preset === "30d" ? 30 : preset === "180d" ? 180 : 90;
+  const today = toDateInputValue(new Date());
+
+  if (preset === "today") return { from: today, to: today };
+  if (preset === "week") return { from: toDateInputValue(startOfCurrentWeek()), to: today };
+  if (preset === "month") return { from: toDateInputValue(startOfCurrentMonth()), to: today };
+  if (preset === "year") return { from: toDateInputValue(startOfCurrentYear()), to: today };
+
+  const days = preset === "7d" ? 7 : preset === "30d" ? 30 : preset === "180d" ? 180 : 90;
   const to = new Date();
-  const from = new Date();
+  const from = new Date(to);
   from.setDate(to.getDate() - (days - 1));
 
   return {
-    from: formatInputDate(from.toISOString()),
-    to: formatInputDate(to.toISOString()),
+    from: toDateInputValue(from),
+    to: today,
   };
 };
 
@@ -1717,10 +1716,15 @@ const ActivitiesTab = ({ id }: { id: string }) => {
                 Personalizado
               </option>
             ) : null}
-            <option value="all">Todo o período</option>
+            <option value="today">Hoje</option>
+            <option value="week">Esta semana</option>
+            <option value="month">Este mês</option>
+            <option value="year">Este ano</option>
+            <option value="7d">Últimos 7 dias</option>
             <option value="30d">Últimos 30 dias</option>
             <option value="90d">Últimos 90 dias</option>
             <option value="180d">Últimos 180 dias</option>
+            <option value="all">Todo o período</option>
           </DetailFilterSelect>
           <fieldset className="m-0 min-w-0 border-0 p-0 text-sm font-black text-muted [min-inline-size:0]">
             <legend className="p-0">Data</legend>
@@ -4010,7 +4014,17 @@ const reportCardIcon: Record<"dismissed" | "pending" | "total" | "upheld", Lucid
   upheld: ShieldCheck,
 };
 
-type ReportPeriodValue = "all" | "30d" | "90d" | "180d" | "custom";
+type ReportPeriodValue =
+  | "today"
+  | "week"
+  | "month"
+  | "year"
+  | "7d"
+  | "30d"
+  | "90d"
+  | "180d"
+  | "all"
+  | "custom";
 type ReportPeriodPreset = Exclude<ReportPeriodValue, "custom">;
 type ReportDateRange = {
   from?: string;
@@ -4018,23 +4032,34 @@ type ReportDateRange = {
 };
 
 const REPORT_PERIOD_OPTIONS: { id: ReportPeriodPreset; label: string }[] = [
-  { id: "all", label: "Todo o período" },
+  { id: "today", label: "Hoje" },
+  { id: "week", label: "Esta semana" },
+  { id: "month", label: "Este mês" },
+  { id: "year", label: "Este ano" },
+  { id: "7d", label: "Últimos 7 dias" },
   { id: "30d", label: "Últimos 30 dias" },
   { id: "90d", label: "Últimos 90 dias" },
   { id: "180d", label: "Últimos 180 dias" },
+  { id: "all", label: "Todo o período" },
 ];
 
 const getReportRangeForPeriod = (preset: ReportPeriodPreset): ReportDateRange => {
-  if (preset === "all") return { from: "", to: "" };
+  const today = toDateInputValue(new Date());
 
-  const days = preset === "30d" ? 30 : preset === "180d" ? 180 : 90;
+  if (preset === "all") return { from: "", to: "" };
+  if (preset === "today") return { from: today, to: today };
+  if (preset === "week") return { from: toDateInputValue(startOfCurrentWeek()), to: today };
+  if (preset === "month") return { from: toDateInputValue(startOfCurrentMonth()), to: today };
+  if (preset === "year") return { from: toDateInputValue(startOfCurrentYear()), to: today };
+
+  const days = preset === "7d" ? 7 : preset === "30d" ? 30 : preset === "180d" ? 180 : 90;
   const to = new Date();
-  const from = new Date();
+  const from = new Date(to);
   from.setDate(to.getDate() - (days - 1));
 
   return {
-    from: formatInputDate(from.toISOString()),
-    to: formatInputDate(to.toISOString()),
+    from: toDateInputValue(from),
+    to: today,
   };
 };
 

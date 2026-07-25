@@ -48,11 +48,11 @@ type CommunityDashboardPeriodPreset = Exclude<CommunityDashboardPeriodValue, "cu
 const COMMUNITY_DASHBOARD_PERIOD_OPTIONS = [
   { id: "today", label: "Hoje" },
   { id: "week", label: "Esta semana" },
-  { id: "7d", label: "Últimos 7 dias" },
   { id: "month", label: "Este mês" },
+  { id: "year", label: "Este ano" },
+  { id: "7d", label: "Últimos 7 dias" },
   { id: "30d", label: "Últimos 30 dias" },
   { id: "90d", label: "Últimos 90 dias" },
-  { id: "year", label: "Este ano" },
   { id: "all", label: "Todo o período" },
 ] as const satisfies ReadonlyArray<{
   id: CommunityDashboardPeriodPreset;
