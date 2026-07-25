@@ -232,6 +232,64 @@ export type AdminModerationReportActionDTO = {
   source: "post_report+admin_activity_log";
 };
 
+export type AdminModerationReportChartType =
+  | "all"
+  | "patient_comments"
+  | "patient_posts"
+  | "psychologist_posts"
+  | "psychologist_replies";
+
+export type AdminModerationReportChartPointDTO = {
+  date: string;
+  dismissed: number;
+  pending: number;
+  upheld: number;
+};
+
+export type AdminModerationComplianceChartPointDTO = {
+  date: string;
+  invalid_whatsapp: number;
+  professional_crp_pending: number;
+};
+
+export type AdminModerationOperationalChartPointDTO = {
+  date: string;
+  patient_posts_without_coverage_48h: number;
+  psychologist_no_traction_after_adaptation: number;
+  unpublished_required_settings: number;
+};
+
+export type AdminModerationSensitiveContentChartPointDTO = {
+  allow_sensitive: number;
+  block: number;
+  date: string;
+  safety_hold: number;
+};
+
+export type AdminModerationOverviewChartsDTO = {
+  compliance: {
+    points: AdminModerationComplianceChartPointDTO[];
+  };
+  content_sensitive: {
+    by_category: Record<
+      string,
+      {
+        points: AdminModerationSensitiveContentChartPointDTO[];
+      }
+    >;
+    categories: string[];
+  };
+  operational: {
+    points: AdminModerationOperationalChartPointDTO[];
+  };
+  reports: Record<
+    AdminModerationReportChartType,
+    {
+      points: AdminModerationReportChartPointDTO[];
+    }
+  >;
+};
+
 export type AdminModerationOperationalAlertDTO = {
   action_href: string | null;
   action_label: string;
@@ -285,6 +343,7 @@ export type AdminModerationSummaryDTO = {
   by_status: Record<string, number>;
   latest_pending: AdminModerationEventItemDTO[];
   operational_alerts: AdminModerationOperationalAlertsDTO;
+  overview_charts: AdminModerationOverviewChartsDTO;
   pending_total: number;
   source: "content_moderation_event";
   urgent_pending_total: number;

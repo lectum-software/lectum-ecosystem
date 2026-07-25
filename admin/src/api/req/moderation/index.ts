@@ -154,6 +154,64 @@ export type AdminModerationReportAction = {
   source: "post_report+admin_activity_log";
 };
 
+export type AdminModerationReportChartType =
+  | "all"
+  | "patient_comments"
+  | "patient_posts"
+  | "psychologist_posts"
+  | "psychologist_replies";
+
+export type AdminModerationReportChartPoint = {
+  date: string;
+  dismissed: number;
+  pending: number;
+  upheld: number;
+};
+
+export type AdminModerationComplianceChartPoint = {
+  date: string;
+  invalid_whatsapp: number;
+  professional_crp_pending: number;
+};
+
+export type AdminModerationOperationalChartPoint = {
+  date: string;
+  patient_posts_without_coverage_48h: number;
+  psychologist_no_traction_after_adaptation: number;
+  unpublished_required_settings: number;
+};
+
+export type AdminModerationSensitiveContentChartPoint = {
+  allow_sensitive: number;
+  block: number;
+  date: string;
+  safety_hold: number;
+};
+
+export type AdminModerationOverviewCharts = {
+  compliance: {
+    points: AdminModerationComplianceChartPoint[];
+  };
+  content_sensitive: {
+    by_category: Record<
+      string,
+      {
+        points: AdminModerationSensitiveContentChartPoint[];
+      }
+    >;
+    categories: string[];
+  };
+  operational: {
+    points: AdminModerationOperationalChartPoint[];
+  };
+  reports: Record<
+    AdminModerationReportChartType,
+    {
+      points: AdminModerationReportChartPoint[];
+    }
+  >;
+};
+
 export type AdminModerationOperationalAlerts = {
   counts: {
     compliance_total: number;
@@ -219,6 +277,7 @@ export type AdminModerationSummary = {
   by_status: Record<string, number>;
   latest_pending: AdminModerationEvent[];
   operational_alerts: AdminModerationOperationalAlerts;
+  overview_charts: AdminModerationOverviewCharts;
   pending_total: number;
   source: "content_moderation_event";
   urgent_pending_total: number;

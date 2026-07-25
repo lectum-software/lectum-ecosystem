@@ -16,7 +16,9 @@ import type {
   AdminModerationOperationalAlertsGroup,
   AdminModerationOperationalAlertsPageDTO,
   AdminModerationOperationalAlertsQuery,
+  AdminModerationOverviewChartsDTO,
   AdminModerationReportActionDTO,
+  AdminModerationReportChartType,
   AdminModerationSummaryDTO,
   IAdminModerationEventDTO,
   IAdminModerationEventsDTO,
@@ -1174,15 +1176,213 @@ const normalizeOperationalAlertsQuery = (
   status: normalizeOperationalStatus(query.status),
 });
 
+const reportChartTypes = [
+  "all",
+  "patient_comments",
+  "patient_posts",
+  "psychologist_posts",
+  "psychologist_replies",
+] as const satisfies readonly AdminModerationReportChartType[];
+
+const chartDateKey = (date: Date) => date.toISOString().slice(0, 10);
+
+const incrementChartPoint = <T extends { date: string }>(
+  map: Map<string, T>,
+  date: Date,
+  createPoint: (date: string) => T,
+  key: string,
+) => {
+  const day = chartDateKey(date);
+  const point = map.get(day) ?? createPoint(day);
+  const writable = point as unknown as Record<string, number>;
+
+  writable[key] = Number(writable[key] ?? 0) + 1;
+  map.set(day, point);
+};
+
+const sortChartPoints = <T extends { date: string }>(map: Map<string, T>) =>
+  [...map.values()].sort((left, right) => left.date.localeCompare(right.date));
+
+const createReportChartPoint = (date: string) => ({
+  date,
+  dismissed: 0,
+  pending: 0,
+  upheld: 0,
+});
+
+const createComplianceChartPoint = (date: string) => ({
+  date,
+  invalid_whatsapp: 0,
+  professional_crp_pending: 0,
+});
+
+const createOperationalChartPoint = (date: string) => ({
+  date,
+  patient_posts_without_coverage_48h: 0,
+  psychologist_no_traction_after_adaptation: 0,
+  unpublished_required_settings: 0,
+});
+
+const createSensitiveContentChartPoint = (date: string) => ({
+  allow_sensitive: 0,
+  block: 0,
+  date,
+  safety_hold: 0,
+});
+
+const reportChartType = (report: AdminPostReportRecord): AdminModerationReportChartType => {
+  const author = reportAuthor(report);
+
+  if (report.reply) {
+    return author.role === "psicologo" ? "psychologist_replies" : "patient_comments";
+  }
+
+  return author.role === "psicologo" ? "psychologist_posts" : "patient_posts";
+};
+
+const buildReportOverviewCharts = (reports: AdminPostReportRecord[]) => {
+  const maps = Object.fromEntries(reportChartTypes.map((type) => [type, new Map()])) as Record<
+    AdminModerationReportChartType,
+    Map<string, ReturnType<typeof createReportChartPoint>>
+  >;
+
+  for (const report of reports) {
+    const status = postReportStatusGroup(report.status);
+    for (const type of ["all", reportChartType(report)] as const) {
+      incrementChartPoint(maps[type], report.createdAt, createReportChartPoint, status);
+    }
+  }
+
+  return Object.fromEntries(
+    reportChartTypes.map((type) => [type, { points: sortChartPoints(maps[type]) }]),
+  ) as AdminModerationOverviewChartsDTO["reports"];
+};
+
+const buildAlertOverviewCharts = (alerts: AdminModerationOperationalAlertDTO[]) => {
+  const compliance = new Map<string, ReturnType<typeof createComplianceChartPoint>>();
+  const operational = new Map<string, ReturnType<typeof createOperationalChartPoint>>();
+
+  for (const alert of alerts) {
+    if (alert.type === "professional_crp_pending" || alert.type === "invalid_whatsapp") {
+      incrementChartPoint(compliance, alert.created_at, createComplianceChartPoint, alert.type);
+      continue;
+    }
+
+    if (alert.type === "patient_post_without_coverage") {
+      incrementChartPoint(
+        operational,
+        alert.created_at,
+        createOperationalChartPoint,
+        "patient_posts_without_coverage_48h",
+      );
+      continue;
+    }
+
+    if (alert.type === "unpublished_required_settings") {
+      incrementChartPoint(
+        operational,
+        alert.created_at,
+        createOperationalChartPoint,
+        "unpublished_required_settings",
+      );
+      continue;
+    }
+
+    if (alert.type === "psychologist_no_traction") {
+      incrementChartPoint(
+        operational,
+        alert.created_at,
+        createOperationalChartPoint,
+        "psychologist_no_traction_after_adaptation",
+      );
+    }
+  }
+
+  return {
+    compliance: { points: sortChartPoints(compliance) },
+    operational: { points: sortChartPoints(operational) },
+  };
+};
+
+const buildSensitiveContentOverviewCharts = (events: AdminModerationEventRecord[]) => {
+  const byCategory = new Map<
+    string,
+    Map<string, ReturnType<typeof createSensitiveContentChartPoint>>
+  >();
+  const ensureCategoryMap = (category: string) => {
+    const existing = byCategory.get(category);
+    if (existing) return existing;
+
+    const created = new Map<string, ReturnType<typeof createSensitiveContentChartPoint>>();
+    byCategory.set(category, created);
+
+    return created;
+  };
+
+  for (const event of events) {
+    if (
+      event.decision !== "allow_sensitive" &&
+      event.decision !== "block" &&
+      event.decision !== "safety_hold"
+    ) {
+      continue;
+    }
+
+    const categories = toStringArray(event.categories);
+    const categoryIds = categories.length > 0 ? categories : ["other"];
+
+    for (const category of ["all", ...categoryIds]) {
+      incrementChartPoint(
+        ensureCategoryMap(category),
+        event.createdAt,
+        createSensitiveContentChartPoint,
+        event.decision,
+      );
+    }
+  }
+
+  const categories = [...byCategory.keys()].sort((left, right) => {
+    if (left === "all") return -1;
+    if (right === "all") return 1;
+
+    return left.localeCompare(right);
+  });
+  const categoryEntries = categories.map((category) => [
+    category,
+    { points: sortChartPoints(ensureCategoryMap(category)) },
+  ]);
+
+  return {
+    by_category: Object.fromEntries(categoryEntries),
+    categories,
+  };
+};
+
+const buildOverviewCharts = (
+  events: AdminModerationEventRecord[],
+  reports: AdminPostReportRecord[],
+  operationalAlerts: AdminModerationOperationalAlertsDTO,
+): AdminModerationOverviewChartsDTO => {
+  const alertCharts = buildAlertOverviewCharts(operationalAlerts.items);
+
+  return {
+    compliance: alertCharts.compliance,
+    content_sensitive: buildSensitiveContentOverviewCharts(events),
+    operational: alertCharts.operational,
+    reports: buildReportOverviewCharts(reports),
+  };
+};
+
 export const getSummary = async (_data: IAdminModerationSummaryDTO): Promise<Resolve> => {
   const repository = new AdminModerationRepository();
-  const [allEvents, latestPending, pendingTotal, urgentPendingTotal, operationalAlerts] =
+  const [allEvents, latestPending, pendingTotal, urgentPendingTotal, operationalAlerts, reports] =
     await Promise.all([
       repository.listEvents({}),
       repository.listLatestPending(5),
       repository.countPending(),
       repository.countUrgentPending(),
       buildOperationalAlerts(repository),
+      repository.listPostReports(),
     ]);
   const limitedOperationalAlerts: AdminModerationOperationalAlertsDTO = {
     ...operationalAlerts,
@@ -1196,6 +1396,7 @@ export const getSummary = async (_data: IAdminModerationSummaryDTO): Promise<Res
     by_status: countBy(allEvents, (event) => [event.status]),
     latest_pending: latestPending.map((event) => mapEvent(event, replyMap)),
     operational_alerts: limitedOperationalAlerts,
+    overview_charts: buildOverviewCharts(allEvents, reports, operationalAlerts),
     pending_total: pendingTotal,
     source: "content_moderation_event",
     urgent_pending_total: urgentPendingTotal,

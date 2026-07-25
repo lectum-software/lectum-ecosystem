@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -9,13 +9,9 @@ import {
   ChevronRight,
   Clock3,
   ExternalLink,
-  Eye,
-  Flag,
   Loader2,
-  MessageCircle,
   RefreshCw,
   Search,
-  ShieldAlert,
   Trash2,
   X,
 } from "lucide-react";
@@ -40,16 +36,14 @@ import type {
   AdminModerationEvent,
   AdminModerationEventDetail,
   AdminModerationEventsQuery,
-  AdminModerationOperationalAlert,
   AdminModerationSeverity,
   AdminModerationStatus,
-  AdminModerationSummary,
 } from "@/api/req/moderation";
 import { InputController, TextareaController } from "@/components/controllers";
 import { cn } from "@/lib/utils";
+import { ModerationOverviewCharts } from "./overview-charts";
 
 const EVENT_LIMIT = 5;
-const PENDING_PREVIEW_LIMIT = 5;
 const REMOVE_CONFIRMATION = "REMOVER CONTEUDO";
 const cardClass =
   "rounded-card border border-border/80 bg-surface/95 shadow-admin-soft backdrop-blur";
@@ -72,71 +66,55 @@ const getQuickRange = (days: number) => {
 const initialRange = getQuickRange(30);
 
 const decisionCopy: Record<AdminModerationDecision, { label: string; className: string }> = {
-  allow_sensitive: { className: "bg-orange-50 text-orange-700", label: "Sensível publicado" },
+  allow_sensitive: { className: "bg-orange-50 text-orange-700", label: "SensÃ­vel publicado" },
   block: { className: "bg-red-50 text-danger", label: "Bloqueado" },
-  safety_hold: { className: "bg-red-600 text-white", label: "Segurança urgente" },
+  safety_hold: { className: "bg-red-600 text-white", label: "SeguranÃ§a urgente" },
 };
 const statusCopy: Record<AdminModerationStatus, { label: string; className: string }> = {
   pending: { className: "bg-yellow-50 text-yellow-700", label: "Pendente" },
   resolved: { className: "bg-emerald-50 text-success", label: "Resolvido" },
-  reviewing: { className: "bg-blue-50 text-blue-700", label: "Em revisão" },
+  reviewing: { className: "bg-blue-50 text-blue-700", label: "Em revisÃ£o" },
 };
 const severityCopy: Record<AdminModerationSeverity, { label: string; className: string }> = {
   high: { className: "bg-red-50 text-danger", label: "Alta" },
   low: { className: "bg-surface-muted text-muted", label: "Baixa" },
-  medium: { className: "bg-orange-50 text-orange-700", label: "Média" },
+  medium: { className: "bg-orange-50 text-orange-700", label: "MÃ©dia" },
   urgent: { className: "bg-red-600 text-white", label: "Urgente" },
 };
-const operationalGroupCopy: Record<
-  AdminModerationOperationalAlert["group"],
-  { className: string; label: string }
-> = {
-  compliance: { className: "bg-red-50 text-danger", label: "Compliance" },
-  denuncias: { className: "bg-red-600 text-white", label: "Denúncias" },
-  operacional: { className: "bg-blue-50 text-blue-700", label: "Operacional" },
-};
-const operationalTypeLabels: Record<AdminModerationOperationalAlert["type"], string> = {
-  invalid_whatsapp: "WhatsApp inválido",
-  patient_post_without_coverage: "Post sem cobertura",
-  post_report: "Denúncia de conteúdo",
-  professional_crp_pending: "CRP pendente",
-  psychologist_no_traction: "Sem tração",
-  unpublished_required_settings: "Perfil não publicado",
-};
 const categoryLabels: Record<string, string> = {
-  abuse_violence: "Abuso/violência",
-  explicit_sexual: "Sexual explícito",
+  abuse_violence: "Abuso/violÃªncia",
+  explicit_sexual: "Sexual explÃ­cito",
   external_link: "Link externo",
   minor_sexual_risk: "Menor/risco sexual",
   other: "Outro",
-  self_harm_suicide: "Autolesão/suicídio",
-  sexual_health: "Saúde sexual",
+  self_harm_suicide: "AutolesÃ£o/suicÃ­dio",
+  sexual_health: "SaÃºde sexual",
   spam_scam: "Spam/golpe",
 };
 const reasonLabels: Record<string, string> = {
   external_contact_invitation_blocked: "Convite para contato externo",
   minor_sexual_risk_blocked: "Contexto sexual com menor",
-  patient_external_link_blocked: "URL ou domínio externo",
-  self_harm_immediate_safety_hold: "Risco imediato/autolesão",
-  sensitive_term_requires_admin_awareness: "Termo sensível em relato",
-  sensitive_therapeutic_context: "Relato terapêutico sensível",
-  sexual_solicitation_blocked: "Solicitação/divulgação sexual",
+  patient_external_link_blocked: "URL ou domÃ­nio externo",
+  self_harm_immediate_safety_hold: "Risco imediato/autolesÃ£o",
+  sensitive_term_requires_admin_awareness: "Termo sensÃ­vel em relato",
+  sensitive_therapeutic_context: "Relato terapÃªutico sensÃ­vel",
+  sexual_solicitation_blocked: "SolicitaÃ§Ã£o/divulgaÃ§Ã£o sexual",
   spam_or_scam_blocked: "Spam ou golpe",
 };
 const targetLabels: Record<string, string> = {
   community_post: "Post publicado",
   post_reply: "Resposta publicada",
-  submitted_post: "Post bloqueado antes da publicação",
-  submitted_reply: "Resposta bloqueada antes da publicação",
+  submitted_post: "Post bloqueado antes da publicaÃ§Ã£o",
+  submitted_reply: "Resposta bloqueada antes da publicaÃ§Ã£o",
 };
 const categoryOptions = [
   ["all", "Todas"],
   ["external_link", "Links externos"],
-  ["sexual_health", "Saúde sexual"],
-  ["explicit_sexual", "Sexual explícito"],
+  ["sexual_health", "SaÃºde sexual"],
+  ["explicit_sexual", "Sexual explÃ­cito"],
   ["minor_sexual_risk", "Menor/risco sexual"],
-  ["self_harm_suicide", "Autolesão/suicídio"],
-  ["abuse_violence", "Abuso/violência"],
+  ["self_harm_suicide", "AutolesÃ£o/suicÃ­dio"],
+  ["abuse_violence", "Abuso/violÃªncia"],
   ["spam_scam", "Spam/golpe"],
   ["other", "Outro"],
 ] as const;
@@ -167,7 +145,7 @@ const resolveSchema = z.object({
     .string()
     .trim()
     .min(3, "Informe a nota administrativa.")
-    .max(1000, "Use até 1000 caracteres."),
+    .max(1000, "Use atÃ© 1000 caracteres."),
 });
 const removeSchema = z.object({
   confirmation: z
@@ -177,35 +155,30 @@ const removeSchema = z.object({
       (value) => value.toUpperCase() === REMOVE_CONFIRMATION,
       `Digite ${REMOVE_CONFIRMATION} para confirmar.`,
     ),
-  reason: z.string().trim().min(3, "Informe o motivo.").max(500, "Use até 500 caracteres."),
+  reason: z.string().trim().min(3, "Informe o motivo.").max(500, "Use atÃ© 500 caracteres."),
 });
 type ResolveValues = z.infer<typeof resolveSchema>;
 type RemoveValues = z.infer<typeof removeSchema>;
 
 const formatDateTime = (value?: string | null) => {
-  if (!value) return "—";
+  if (!value) return "â€”";
   const date = new Date(value);
 
-  return Number.isNaN(date.getTime()) ? "—" : dateTimeFormatter.format(date);
+  return Number.isNaN(date.getTime()) ? "â€”" : dateTimeFormatter.format(date);
 };
 const formatDate = (value: string) => dateFormatter.format(new Date(value));
-const sortAlertsByLatest = (
-  left: AdminModerationOperationalAlert,
-  right: AdminModerationOperationalAlert,
-) => new Date(right.created_at).getTime() - new Date(left.created_at).getTime();
-
 const Card = ({ children, className }: { children?: ReactNode; className?: string }) => (
   <section className={cn(cardClass, className)}>{children}</section>
 );
 
 const Header = ({
   backHref,
-  description = "Acompanhe denúncias de posts, conteúdo sensível, pendências de compliance profissional e alertas operacionais derivados dos dados reais da Lectum.",
+  description = "Acompanhe denÃºncias de posts, conteÃºdo sensÃ­vel, pendÃªncias de compliance profissional e alertas operacionais derivados dos dados reais da Lectum.",
   disabled,
-  eyebrow = "Operação e segurança",
+  eyebrow = "OperaÃ§Ã£o e seguranÃ§a",
   loading,
   onRefresh,
-  title = "Central de moderação e alertas",
+  title = "Central de moderaÃ§Ã£o e alertas",
 }: {
   backHref?: string;
   description?: string;
@@ -276,292 +249,6 @@ const Categories = ({ items }: { items: string[] }) => (
   </div>
 );
 
-const Metric = ({
-  description,
-  icon,
-  label,
-  tone = "primary",
-  value,
-}: {
-  description: string;
-  icon: ReactNode;
-  label: string;
-  tone?: "danger" | "primary" | "success" | "warning";
-  value: number;
-}) => {
-  const toneClass = {
-    danger: "bg-red-50 text-danger",
-    primary: "bg-primary-soft text-primary",
-    success: "bg-emerald-50 text-success",
-    warning: "bg-orange-50 text-orange-700",
-  }[tone];
-
-  return (
-    <Card className="min-h-36 p-5">
-      <div className="flex items-start justify-between gap-3">
-        <div className={cn("grid h-12 w-12 place-items-center rounded-full", toneClass)}>
-          {icon}
-        </div>
-      </div>
-      <p className="mt-4 text-sm font-black text-foreground">{label}</p>
-      <p className="mt-2 text-3xl font-black tracking-tight text-foreground">
-        {numberFormatter.format(value)}
-      </p>
-      <p className="mt-2 text-xs leading-relaxed text-muted">{description}</p>
-    </Card>
-  );
-};
-
-const SummaryGrid = ({ summary }: { summary: AdminModerationSummary }) => {
-  const operational = summary.operational_alerts.counts;
-
-  return (
-    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-      <Metric
-        description="Denúncias reais de posts/respostas aguardando triagem."
-        icon={<Flag aria-hidden className="h-5 w-5" />}
-        label="Denúncias urgentes"
-        tone="danger"
-        value={operational.pending_reports}
-      />
-      <Metric
-        description="CRP pendente em plano profissional e WhatsApp ausente/inválido."
-        icon={<ShieldAlert aria-hidden className="h-5 w-5" />}
-        label="Compliance"
-        tone="warning"
-        value={operational.compliance_total}
-      />
-      <Metric
-        description="Pacientes sem cobertura há 48h, perfis de psicólogos não publicados por falta de configurações e psicólogos assinantes sem tráfego para perfil/WhatsApp."
-        icon={<Clock3 aria-hidden className="h-5 w-5" />}
-        label="Operacionais"
-        value={operational.operational_total}
-      />
-      <Metric
-        description="Detecção automática de conteúdo potencialmente sensível, bloqueável ou urgente para triagem."
-        icon={<Eye aria-hidden className="h-5 w-5" />}
-        label="Conteúdo sensível"
-        tone="success"
-        value={summary.pending_total}
-      />
-    </div>
-  );
-};
-
-const OperationalGroup = ({ value }: { value: AdminModerationOperationalAlert["group"] }) => (
-  <Pill className={operationalGroupCopy[value].className}>{operationalGroupCopy[value].label}</Pill>
-);
-
-const OperationalAlertCard = ({ alert }: { alert: AdminModerationOperationalAlert }) => {
-  const href = alert.action_href ?? alert.entity.href;
-
-  return (
-    <article className="rounded-2xl border border-border bg-surface p-4 shadow-control">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div className="min-w-0">
-          <div className="flex flex-wrap gap-2">
-            <OperationalGroup value={alert.group} />
-            <Severity value={alert.priority} />
-            <span className="rounded-full bg-surface-muted px-2.5 py-1 text-xs font-black text-muted">
-              {operationalTypeLabels[alert.type]}
-            </span>
-          </div>
-          <h3 className="mt-3 text-base font-black text-foreground">{alert.title}</h3>
-          <p className="mt-1 text-sm leading-6 text-muted">{alert.description}</p>
-        </div>
-        <p className="shrink-0 text-xs font-black text-muted">{formatDateTime(alert.created_at)}</p>
-      </div>
-      <div className="mt-3 grid gap-2 text-xs font-bold text-muted sm:grid-cols-2">
-        <p>Alvo: {alert.entity.label}</p>
-        <p>Origem: {alert.source}</p>
-        {alert.community ? <p>Comunidade: {alert.community.name}</p> : null}
-        {alert.age_hours !== null ? <p>Idade: {numberFormatter.format(alert.age_hours)}h</p> : null}
-      </div>
-      {alert.facts.length > 0 ? (
-        <div className="mt-3 flex flex-wrap gap-2">
-          {alert.facts.map((fact) => (
-            <span
-              className="rounded-full bg-primary-soft px-2.5 py-1 text-[0.68rem] font-black text-primary"
-              key={`${alert.id}-${fact.label}-${fact.value}`}
-            >
-              {fact.label}: {fact.value}
-            </span>
-          ))}
-        </div>
-      ) : null}
-      <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-        <span className="inline-flex items-center gap-2 text-xs font-bold text-muted">
-          <MessageCircle aria-hidden className="h-4 w-4" />
-          Dados reais; sem mock ou estimativa artificial.
-        </span>
-        {href ? (
-          <Link
-            className="inline-flex h-10 items-center justify-center gap-2 rounded-control border border-border bg-surface px-3 text-xs font-black text-foreground transition hover:border-primary hover:text-primary"
-            href={href}
-          >
-            <ExternalLink aria-hidden className="h-4 w-4" />
-            {alert.action_label}
-          </Link>
-        ) : null}
-      </div>
-    </article>
-  );
-};
-
-const AlertSection = ({
-  description,
-  emptyLabel,
-  items,
-  title,
-  total,
-  viewAllHref,
-}: {
-  description: string;
-  emptyLabel: string;
-  items: AdminModerationOperationalAlert[];
-  title: string;
-  total: number;
-  viewAllHref: string;
-}) => {
-  const visibleItems = items.slice(0, PENDING_PREVIEW_LIMIT);
-
-  return (
-    <section className="space-y-3">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <h3 className="text-lg font-black text-foreground">{title}</h3>
-          <p className="mt-1 max-w-3xl text-sm leading-6 text-muted">{description}</p>
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="inline-flex w-fit rounded-full bg-surface-muted px-3 py-1 text-xs font-black text-muted">
-            {numberFormatter.format(total)} pendência(s)
-          </span>
-          {total > 0 ? (
-            <Link
-              className="inline-flex h-9 items-center justify-center rounded-control border border-border bg-surface px-3 text-xs font-black text-foreground transition hover:border-primary hover:text-primary"
-              href={viewAllHref}
-            >
-              Ver todos
-            </Link>
-          ) : null}
-        </div>
-      </div>
-      {items.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-border p-5 text-sm leading-6 text-muted">
-          {emptyLabel}
-        </div>
-      ) : (
-        <div className="grid gap-3">
-          {visibleItems.map((alert) => (
-            <OperationalAlertCard alert={alert} key={alert.id} />
-          ))}
-          {total > PENDING_PREVIEW_LIMIT || items.length > PENDING_PREVIEW_LIMIT ? (
-            <p className="text-xs font-bold text-muted">
-              Exibindo as {PENDING_PREVIEW_LIMIT} últimas pendências desta lista.
-            </p>
-          ) : null}
-        </div>
-      )}
-    </section>
-  );
-};
-
-const OperationalAlertsPanel = ({ summary }: { summary: AdminModerationSummary }) => {
-  const alerts = summary.operational_alerts;
-  const counts = alerts.counts;
-  const reportItems = alerts.items
-    .filter((alert) => alert.group === "denuncias")
-    .sort(sortAlertsByLatest);
-  const complianceItems = alerts.items
-    .filter((alert) => alert.group === "compliance")
-    .sort(sortAlertsByLatest);
-  const operationalItems = alerts.items
-    .filter((alert) => alert.group === "operacional")
-    .sort(sortAlertsByLatest);
-
-  return (
-    <Card className="overflow-hidden">
-      <div className="border-b border-border p-5">
-        <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-          <div>
-            <p className="text-xs font-black uppercase tracking-[0.22em] text-primary">
-              Ações urgentes e operacionais
-            </p>
-            <h2 className="mt-2 text-2xl font-black text-foreground">
-              Denúncias, compliance e acompanhamento de oferta
-            </h2>
-            <p className="mt-2 max-w-3xl text-sm leading-6 text-muted">
-              A central separa denúncias e compliance das pendências operacionais para preservar a
-              triagem crítica e deixar a fila de oferta logo abaixo, sem misturar prioridades.
-            </p>
-          </div>
-          <span className="inline-flex w-fit rounded-full bg-surface-muted px-3 py-1 text-xs font-black text-muted">
-            {numberFormatter.format(counts.total)} alerta(s) reais
-          </span>
-        </div>
-        <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-          <div className="rounded-2xl border border-border bg-surface-muted p-3">
-            <p className="text-xs font-black text-muted">Denúncias</p>
-            <p className="mt-1 text-2xl font-black text-foreground">
-              {numberFormatter.format(counts.pending_reports)}
-            </p>
-          </div>
-          <div className="rounded-2xl border border-border bg-surface-muted p-3">
-            <p className="text-xs font-black text-muted">CRP profissional</p>
-            <p className="mt-1 text-2xl font-black text-foreground">
-              {numberFormatter.format(counts.professional_crp_pending)}
-            </p>
-          </div>
-          <div className="rounded-2xl border border-border bg-surface-muted p-3">
-            <p className="text-xs font-black text-muted">WhatsApp inválido</p>
-            <p className="mt-1 text-2xl font-black text-foreground">
-              {numberFormatter.format(counts.invalid_whatsapp)}
-            </p>
-          </div>
-          <div className="rounded-2xl border border-border bg-surface-muted p-3">
-            <p className="text-xs font-black text-muted">Operacionais</p>
-            <p className="mt-1 text-2xl font-black text-foreground">
-              {numberFormatter.format(counts.operational_total)}
-            </p>
-          </div>
-        </div>
-      </div>
-      <div className="grid gap-6 p-4">
-        <AlertSection
-          description="Últimas denúncias reais de posts e respostas aguardando triagem."
-          emptyLabel="Nenhuma denúncia pendente encontrada nos dados reais atuais."
-          items={reportItems}
-          title="Denúncias"
-          total={counts.pending_reports}
-          viewAllHref="/moderacao/denuncias"
-        />
-        <div className="border-t border-border pt-5">
-          <AlertSection
-            description="Últimas pendências de compliance profissional, incluindo CRP em Plano Profissional e WhatsApp inválido."
-            emptyLabel="Nenhuma pendência de compliance encontrada nos dados reais atuais."
-            items={complianceItems}
-            title="Compliance"
-            total={counts.compliance_total}
-            viewAllHref="/moderacao/compliance"
-          />
-        </div>
-        <div className="border-t border-border pt-5">
-          <AlertSection
-            description={`Últimas pendências derivadas de oferta: posts sem cobertura após ${alerts.thresholds.patient_post_without_coverage_hours}h, perfis não publicados e profissionais sem tração após ${alerts.thresholds.psychologist_adaptation_days} dias.`}
-            emptyLabel="Nenhuma pendência operacional encontrada nos dados reais atuais."
-            items={operationalItems}
-            title="Operacionais"
-            total={counts.operational_total}
-            viewAllHref="/moderacao/operacionais"
-          />
-        </div>
-      </div>
-      <div className="border-t border-border bg-surface-muted p-4 text-xs leading-5 text-muted">
-        Fora do escopo agora: {alerts.excluded_dimensions.map((item) => item.title).join("; ")}.
-      </div>
-    </Card>
-  );
-};
 const FiltersBar = ({
   filters,
   setFilters,
@@ -573,7 +260,7 @@ const FiltersBar = ({
     <div className="border-b border-border/80 p-5">
       <div className="flex flex-col gap-1">
         <p className="text-xs font-semibold uppercase tracking-[0.12em] text-primary">
-          Conteúdo sensível
+          ConteÃºdo sensÃ­vel
         </p>
         <h2 className="text-xl font-bold text-foreground">Filtros de eventos</h2>
         <p className="text-sm leading-6 text-muted">
@@ -589,19 +276,19 @@ const FiltersBar = ({
           options={[
             ["all", "Todos"],
             ["pending", "Pendente"],
-            ["reviewing", "Em revisão"],
+            ["reviewing", "Em revisÃ£o"],
             ["resolved", "Resolvido"],
           ]}
           value={filters.status}
         />
         <Select
-          label="Decisão"
+          label="DecisÃ£o"
           onChange={(value) => setFilters({ ...filters, decision: value as Filters["decision"] })}
           options={[
             ["all", "Todas"],
-            ["allow_sensitive", "Sensível publicado"],
+            ["allow_sensitive", "SensÃ­vel publicado"],
             ["block", "Bloqueado"],
-            ["safety_hold", "Segurança urgente"],
+            ["safety_hold", "SeguranÃ§a urgente"],
           ]}
           value={filters.decision}
         />
@@ -617,7 +304,7 @@ const FiltersBar = ({
           options={[
             ["all", "Todas"],
             ["low", "Baixa"],
-            ["medium", "Média"],
+            ["medium", "MÃ©dia"],
             ["high", "Alta"],
             ["urgent", "Urgente"],
           ]}
@@ -656,7 +343,7 @@ const FiltersBar = ({
           value={filters.from}
         />
         <DateInput
-          label="Até"
+          label="AtÃ©"
           min={filters.from}
           onChange={(value) => setFilters({ ...filters, to: value })}
           value={filters.to}
@@ -781,74 +468,6 @@ const EventCard = ({
   </button>
 );
 
-const TextualPendingPanel = ({
-  onSelect,
-  selectedId,
-  summary,
-  viewAllHref,
-}: {
-  onSelect: (event: AdminModerationEvent) => void;
-  selectedId: string | null;
-  summary: AdminModerationSummary;
-  viewAllHref: string;
-}) => {
-  const pendingItems = summary.latest_pending.slice(0, PENDING_PREVIEW_LIMIT);
-  const hasPending = summary.pending_total > 0;
-
-  return (
-    <Card className="overflow-hidden">
-      <div className="flex flex-col gap-3 border-b border-border p-5 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <p className="text-xs font-black uppercase tracking-[0.22em] text-primary">
-            Conteúdo sensível
-          </p>
-          <h2 className="mt-2 text-2xl font-black text-foreground">
-            Últimas pendências de conteúdo sensível
-          </h2>
-          <p className="mt-2 max-w-3xl text-sm leading-6 text-muted">
-            Eventos sensíveis pendentes em content_moderation_event, mantendo a lista completa com
-            filtros e ações reais no botão Ver todos.
-          </p>
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="inline-flex w-fit rounded-full bg-surface-muted px-3 py-1 text-xs font-black text-muted">
-            {numberFormatter.format(summary.pending_total)} pendência(s)
-          </span>
-          {hasPending ? (
-            <Link
-              className="inline-flex h-9 items-center justify-center rounded-control border border-border bg-surface px-3 text-xs font-black text-foreground transition hover:border-primary hover:text-primary"
-              href={viewAllHref}
-            >
-              Ver todos
-            </Link>
-          ) : null}
-        </div>
-      </div>
-      <div className="grid gap-3 p-4">
-        {pendingItems.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-border p-5 text-sm leading-6 text-muted">
-            Nenhuma pendência de conteúdo sensível encontrada nos dados reais atuais.
-          </div>
-        ) : (
-          pendingItems.map((event) => (
-            <EventCard
-              event={event}
-              key={event.id}
-              onSelect={onSelect}
-              selected={selectedId === event.id}
-            />
-          ))
-        )}
-        {summary.pending_total > PENDING_PREVIEW_LIMIT ? (
-          <p className="text-xs font-bold text-muted">
-            Exibindo as {PENDING_PREVIEW_LIMIT} últimas pendências de conteúdo sensível.
-          </p>
-        ) : null}
-      </div>
-    </Card>
-  );
-};
-
 const EventsList = ({
   count,
   events,
@@ -902,7 +521,7 @@ const EventsList = ({
     </div>
     <div className="flex flex-col gap-3 border-t border-border p-4 sm:flex-row sm:items-center sm:justify-between">
       <p className="text-xs font-bold text-muted">
-        Página {page} de {pages}
+        PÃ¡gina {page} de {pages}
       </p>
       <div className="flex gap-2">
         <button
@@ -920,7 +539,7 @@ const EventsList = ({
           onClick={onNext}
           type="button"
         >
-          Próxima
+          PrÃ³xima
           <ChevronRight aria-hidden className="h-4 w-4" />
         </button>
       </div>
@@ -956,7 +575,7 @@ const Detail = ({
   if (error) {
     return (
       <Card className="p-5">
-        <h2 className="font-black text-foreground">Detalhe indisponível</h2>
+        <h2 className="font-black text-foreground">Detalhe indisponÃ­vel</h2>
         <p className="mt-1 text-sm text-muted">{resolveApiError(error)}</p>
       </Card>
     );
@@ -965,7 +584,7 @@ const Detail = ({
     return (
       <Card className="p-5">
         <div className="rounded-2xl border border-dashed border-border p-5 text-sm leading-6 text-muted">
-          Selecione um evento para ver snapshot protegido, regras disparadas e ações.
+          Selecione um evento para ver snapshot protegido, regras disparadas e aÃ§Ãµes.
         </div>
       </Card>
     );
@@ -984,10 +603,10 @@ const Detail = ({
           Detalhe protegido
         </p>
         <h2 className="mt-2 text-2xl font-black text-foreground">
-          {event.title_snapshot || targetLabels[event.target_type] || "Evento de moderação"}
+          {event.title_snapshot || targetLabels[event.target_type] || "Evento de moderaÃ§Ã£o"}
         </h2>
         <p className="mt-2 text-sm leading-6 text-muted">
-          Snapshot completo visível apenas nesta rota Admin autenticada.
+          Snapshot completo visÃ­vel apenas nesta rota Admin autenticada.
         </p>
         <div className="mt-4 flex flex-wrap gap-2">
           <Decision value={event.decision} />
@@ -997,10 +616,10 @@ const Detail = ({
       </div>
       <div className="space-y-5 p-5">
         <div className="grid gap-3 sm:grid-cols-2">
-          <Info label="Autor público" value={event.author.public_label} />
-          <Info label="Autor Admin" value={event.author.admin_label || "—"} />
+          <Info label="Autor pÃºblico" value={event.author.public_label} />
+          <Info label="Autor Admin" value={event.author.admin_label || "â€”"} />
           <Info label="Papel" value={event.author.role} />
-          <Info label="Comunidade" value={event.community?.name ?? "—"} />
+          <Info label="Comunidade" value={event.community?.name ?? "â€”"} />
           <Info label="Alvo" value={targetLabels[event.target_type] ?? event.target_type} />
           <Info label="Criado em" value={formatDateTime(event.created_at)} />
           <Info label="Revisado em" value={formatDateTime(event.reviewed_at)} />
@@ -1053,7 +672,7 @@ const Detail = ({
             </Link>
           ) : (
             <span className="inline-flex min-h-11 items-center rounded-control border border-border bg-surface-muted px-4 text-sm font-black text-muted">
-              Bloqueado antes da publicação
+              Bloqueado antes da publicaÃ§Ã£o
             </span>
           )}
           {event.status !== "resolved" ? (
@@ -1068,7 +687,7 @@ const Detail = ({
               ) : (
                 <Clock3 aria-hidden className="h-4 w-4" />
               )}
-              Marcar em revisão
+              Marcar em revisÃ£o
             </button>
           ) : null}
           <button
@@ -1086,7 +705,7 @@ const Detail = ({
               type="button"
             >
               <Trash2 aria-hidden className="h-4 w-4" />
-              Remover conteúdo
+              Remover conteÃºdo
             </button>
           ) : null}
         </div>
@@ -1098,10 +717,10 @@ const Detail = ({
 const ModalTitle = ({ onClose, title }: { onClose: () => void; title: string }) => (
   <div className="flex items-start justify-between gap-3">
     <div>
-      <p className="text-xs font-black uppercase tracking-[0.22em] text-primary">Ação Admin</p>
+      <p className="text-xs font-black uppercase tracking-[0.22em] text-primary">AÃ§Ã£o Admin</p>
       <h2 className="mt-2 text-2xl font-black text-foreground">{title}</h2>
       <p className="mt-2 text-sm leading-6 text-muted">
-        A ação registra auditoria e não envia conteúdo sensível para logs técnicos.
+        A aÃ§Ã£o registra auditoria e nÃ£o envia conteÃºdo sensÃ­vel para logs tÃ©cnicos.
       </p>
     </div>
     <button
@@ -1177,7 +796,7 @@ const ResolveModal = ({
               disabled={mutation.isPending}
               label="Nota administrativa"
               name="note"
-              placeholder="Descreva a decisão tomada e próximos passos."
+              placeholder="Descreva a decisÃ£o tomada e prÃ³ximos passos."
               required
               rows={5}
             />
@@ -1200,7 +819,8 @@ const RemoveModal = ({
   const resolveMutation = useAdminModerationResolve();
   const removeMutation = useMutation({
     mutationFn: async (values: RemoveValues) => {
-      if (!event.community || !event.target_id) throw new Error("Conteúdo publicado indisponível.");
+      if (!event.community || !event.target_id)
+        throw new Error("ConteÃºdo publicado indisponÃ­vel.");
       const targetType = event.target_type === "post_reply" ? "comment" : "post";
 
       return removeAdminCommunityContent(event.community.id, targetType, event.target_id, {
@@ -1227,10 +847,10 @@ const RemoveModal = ({
       await resolveMutation.mutateAsync({
         id: event.id,
         input: {
-          note: `Conteúdo publicado removido pelo fluxo auditado de comunidade. Motivo: ${values.reason.trim()}`,
+          note: `ConteÃºdo publicado removido pelo fluxo auditado de comunidade. Motivo: ${values.reason.trim()}`,
         },
       });
-      toast.success("Conteúdo removido e evento resolvido.");
+      toast.success("ConteÃºdo removido e evento resolvido.");
       onClose();
     } catch (error) {
       toast.error(resolveApiError(error));
@@ -1240,24 +860,24 @@ const RemoveModal = ({
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-overlay p-3 sm:items-center">
       <Card className="max-h-[92dvh] w-full max-w-xl overflow-y-auto p-5 sm:p-6">
-        <ModalTitle onClose={onClose} title="Remover conteúdo publicado" />
+        <ModalTitle onClose={onClose} title="Remover conteÃºdo publicado" />
         <p className="mt-4 rounded-2xl border border-red-100 bg-red-50 p-4 text-sm leading-6 text-danger">
-          Esta ação usa o fluxo real de remoção auditada de comunidades. Depois, o evento será
+          Esta aÃ§Ã£o usa o fluxo real de remoÃ§Ã£o auditada de comunidades. Depois, o evento serÃ¡
           resolvido com nota administrativa.
         </p>
         <FormProvider {...form}>
           <form className="mt-5 grid gap-4" noValidate onSubmit={form.handleSubmit(submit)}>
             <TextareaController<RemoveValues>
               disabled={pending}
-              label="Motivo interno obrigatório"
+              label="Motivo interno obrigatÃ³rio"
               name="reason"
-              placeholder="Explique por que o conteúdo sensível publicado será removido."
+              placeholder="Explique por que o conteÃºdo sensÃ­vel publicado serÃ¡ removido."
               required
               rows={4}
             />
             <InputController<RemoveValues>
               disabled={pending}
-              label="Confirmação forte"
+              label="ConfirmaÃ§Ã£o forte"
               name="confirmation"
               placeholder={REMOVE_CONFIRMATION}
               required
@@ -1278,7 +898,7 @@ const ErrorState = ({ error, onRetry }: { error: unknown; onRetry: () => void })
           <AlertTriangle aria-hidden className="h-5 w-5" />
         </div>
         <div>
-          <h2 className="text-lg font-black">Não foi possível carregar a moderação</h2>
+          <h2 className="text-lg font-black">NÃ£o foi possÃ­vel carregar a moderaÃ§Ã£o</h2>
           <p className="mt-1 text-sm text-muted">{resolveApiError(error)}</p>
         </div>
       </div>
@@ -1353,7 +973,7 @@ export const AdminModerationClient = ({ mode = "overview" }: { mode?: "overview"
   const markReviewing = async (event: AdminModerationEventDetail) => {
     try {
       await review.mutateAsync(event.id);
-      toast.success("Evento marcado em revisão.");
+      toast.success("Evento marcado em revisÃ£o.");
     } catch (error) {
       toast.error(resolveApiError(error));
     }
@@ -1365,14 +985,14 @@ export const AdminModerationClient = ({ mode = "overview" }: { mode?: "overview"
         backHref={isTextualPage ? "/moderacao" : undefined}
         description={
           isTextualPage
-            ? "Lista exclusiva de pendências de conteúdo sensível, com filtros, detalhe protegido e ações auditadas."
+            ? "Lista exclusiva de pendÃªncias de conteÃºdo sensÃ­vel, com filtros, detalhe protegido e aÃ§Ãµes auditadas."
             : undefined
         }
         disabled={isTextualPage ? events.isFetching || detail.isFetching : summary.isFetching}
-        eyebrow={isTextualPage ? "Conteúdo sensível" : undefined}
+        eyebrow={isTextualPage ? "ConteÃºdo sensÃ­vel" : undefined}
         loading={isTextualPage ? events.isFetching || detail.isFetching : summary.isFetching}
         onRefresh={refreshAll}
-        title={isTextualPage ? "Conteúdo sensível" : undefined}
+        title={isTextualPage ? "ConteÃºdo sensÃ­vel" : undefined}
       />
       {firstError ? (
         <ErrorState
@@ -1393,25 +1013,16 @@ export const AdminModerationClient = ({ mode = "overview" }: { mode?: "overview"
           <Card className="h-80 animate-pulse bg-surface-muted" />
         </>
       ) : !isTextualPage && summary.data ? (
-        <>
-          <SummaryGrid summary={summary.data} />
-          <OperationalAlertsPanel summary={summary.data} />
-          <TextualPendingPanel
-            onSelect={selectEvent}
-            selectedId={selectedId}
-            summary={summary.data}
-            viewAllHref="/moderacao/conteudo-sensivel"
-          />
-        </>
+        <ModerationOverviewCharts summary={summary.data} />
       ) : null}
       {isTextualPage ? (
         <>
           <FiltersBar filters={filters} setFilters={setFilters} />
           <div className="rounded-2xl border border-border bg-surface-muted p-4 text-sm leading-6 text-muted">
             <p>
-              Período consultado: <strong>{formatDate(filters.from)}</strong> —{" "}
+              PerÃ­odo consultado: <strong>{formatDate(filters.from)}</strong> â€”{" "}
               <strong>{formatDate(filters.to)}</strong>. A central usa regex/listas internas sem IA
-              e mostra apenas trechos nas listas textuais. Alertas operacionais são derivados do
+              e mostra apenas trechos nas listas textuais. Alertas operacionais sÃ£o derivados do
               estado atual das tabelas reais e usam limites de 48h/30 dias.
             </p>
           </div>
@@ -1444,9 +1055,9 @@ export const AdminModerationClient = ({ mode = "overview" }: { mode?: "overview"
           <CheckCircle2 aria-hidden className="h-4 w-4 text-success" />
           {isTextualPage
             ? "Mobile-first: filtros empilhados, eventos em cards e detalhe abaixo no celular."
-            : "Mobile-first: pendências separadas em cards e atalhos para páginas exclusivas."}
+            : "Mobile-first: pendÃªncias separadas em cards e atalhos para pÃ¡ginas exclusivas."}
         </span>
-        <span>Pacientes continuam publicando somente texto; URLs não viram links clicáveis.</span>
+        <span>Pacientes continuam publicando somente texto; URLs nÃ£o viram links clicÃ¡veis.</span>
       </div>
       {resolveTarget ? (
         <ResolveModal event={resolveTarget} onClose={() => setResolveTarget(null)} />
