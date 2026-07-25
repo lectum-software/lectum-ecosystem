@@ -58,6 +58,8 @@ type OverviewRange = {
   to: string;
 };
 
+const REPORT_TOTAL_KEY = "total_reports";
+
 const reportTypeOptions = [
   ["all", "Todos"],
   ["psychologist_posts", "Posts de psicólogos"],
@@ -75,6 +77,7 @@ const overviewPeriodOptions = [
 ] as const satisfies readonly (readonly [OverviewPeriodPreset, string])[];
 
 const reportChartMetrics = [
+  { color: "#0f2a52", icon: AlertTriangle, key: REPORT_TOTAL_KEY, label: "Total de denúncias" },
   { color: "#308ce8", icon: Flag, key: "pending", label: "Pendentes" },
   { color: "#64748b", icon: X, key: "dismissed", label: "Improcedentes" },
   { color: "#e5484d", icon: CheckCircle2, key: "upheld", label: "Procedentes" },
@@ -140,7 +143,28 @@ const hexToRgba = (hex: string, alpha: number) => {
   return `rgba(${red}, ${green}, ${blue}, ${alpha})`;
 };
 
-const chartPointValue = (point: ModerationChartPoint, key: string) => Number(point[key] ?? 0) || 0;
+const rawChartPointValue = (point: ModerationChartPoint, key: string) =>
+  Number(point[key] ?? 0) || 0;
+
+const reportTotalValue = (point: ModerationChartPoint) =>
+  rawChartPointValue(point, "pending") +
+  rawChartPointValue(point, "dismissed") +
+  rawChartPointValue(point, "upheld");
+
+const withDerivedMetricValues = (
+  points: ModerationChartPoint[],
+  metrics: ModerationChartMetric[],
+) => {
+  if (!metrics.some((metric) => metric.key === REPORT_TOTAL_KEY)) return points;
+
+  return points.map((point) => ({
+    ...point,
+    [REPORT_TOTAL_KEY]: reportTotalValue(point),
+  }));
+};
+
+const chartPointValue = (point: ModerationChartPoint, key: string) =>
+  key === REPORT_TOTAL_KEY ? reportTotalValue(point) : rawChartPointValue(point, key);
 
 const chartMetricValue = (points: ModerationChartPoint[], key: string) =>
   points.reduce((total, point) => total + chartPointValue(point, key), 0);
@@ -243,11 +267,11 @@ const OverviewSelect = ({
   options: readonly (readonly [string, string])[];
   value: string;
 }) => (
-  <label className="grid shrink-0 gap-1 text-xs font-semibold text-muted">
+  <label className="grid min-w-0 gap-1 text-xs font-semibold text-muted sm:w-48 xl:w-48">
     {label}
     <span className="relative">
       <select
-        className="h-11 w-full min-w-[15rem] appearance-none rounded-control border border-border bg-surface py-0 pl-3 pr-11 text-sm font-semibold text-foreground shadow-control outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+        className="h-10 w-full min-w-0 appearance-none rounded-control border border-border bg-surface py-0 pl-3 pr-9 text-sm font-semibold text-foreground shadow-control outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
         onChange={(event) => onChange(event.target.value)}
         value={value}
       >
@@ -259,7 +283,7 @@ const OverviewSelect = ({
       </select>
       <ChevronDown
         aria-hidden
-        className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground"
+        className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground"
       />
     </span>
   </label>
@@ -284,12 +308,15 @@ const OverviewPeriodControls = ({
 
   return (
     <div className="flex w-full shrink-0 flex-col gap-2 xl:w-auto xl:items-end">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
-        <label className="grid shrink-0 gap-1 text-xs font-semibold text-muted" htmlFor={id}>
+      <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-end xl:flex-nowrap">
+        <label
+          className="grid min-w-0 gap-1 text-xs font-semibold text-muted sm:w-44 xl:w-40"
+          htmlFor={id}
+        >
           Período
           <span className="relative">
             <select
-              className="h-11 min-w-[170px] appearance-none rounded-control border border-border bg-surface py-0 pl-3 pr-11 text-sm font-semibold text-foreground shadow-control outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+              className="h-10 w-full appearance-none rounded-control border border-border bg-surface py-0 pl-3 pr-9 text-sm font-semibold text-foreground shadow-control outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
               id={id}
               onChange={(event) => onPeriodChange(event.target.value as OverviewPeriodPreset)}
               value={period}
@@ -307,25 +334,25 @@ const OverviewPeriodControls = ({
             </select>
             <ChevronDown
               aria-hidden
-              className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground"
+              className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground"
             />
           </span>
         </label>
-        <div className="grid shrink-0 gap-3 sm:grid-cols-2">
-          <label className="text-xs font-semibold text-muted sm:min-w-[176px]">
+        <div className="grid shrink-0 gap-2 sm:grid-cols-2">
+          <label className="text-xs font-semibold text-muted sm:w-36 xl:w-32">
             De
             <input
-              className="mt-1 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground shadow-control focus:border-primary"
+              className="mt-1 h-10 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground shadow-control focus:border-primary"
               max={range.to}
               onChange={(event) => onDateChange("from", event.target.value)}
               type="date"
               value={range.from}
             />
           </label>
-          <label className="text-xs font-semibold text-muted sm:min-w-[176px]">
+          <label className="text-xs font-semibold text-muted sm:w-36 xl:w-32">
             Até
             <input
-              className="mt-1 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground shadow-control focus:border-primary"
+              className="mt-1 h-10 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground shadow-control focus:border-primary"
               min={range.from}
               onChange={(event) => onDateChange("to", event.target.value)}
               type="date"
@@ -436,8 +463,9 @@ const OverviewTimelineChart = ({
   }
 
   const metricKeys = metrics.map((metric) => metric.key);
+  const sourcePoints = withDerivedMetricValues(points, metrics);
   const chartPoints = aggregateCalendarChartPoints(
-    points as ({ date: string } & Record<string, number>)[],
+    sourcePoints as ({ date: string } & Record<string, number>)[],
     metricKeys,
   );
   const maxValue = Math.max(
@@ -601,7 +629,8 @@ const OverviewChartBlock = ({
           </p>
         </div>
         <div className="flex w-full flex-col gap-3 xl:w-auto xl:items-end">
-          <div className="flex w-full min-w-0 flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end xl:w-auto xl:flex-nowrap xl:justify-end">
+          <div className="flex w-full min-w-0 flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-end xl:w-auto xl:flex-nowrap xl:justify-end">
+            {selector}
             <OverviewPeriodControls
               onDateChange={handleDateChange}
               onPeriodChange={handlePeriodChange}
@@ -610,9 +639,8 @@ const OverviewChartBlock = ({
               rangeError={rangeError}
               title={title}
             />
-            {selector}
             <Link
-              className="inline-flex h-11 shrink-0 items-center justify-center gap-2 rounded-control border border-border bg-surface px-4 text-sm font-semibold text-foreground shadow-control transition hover:border-border-strong hover:text-primary"
+              className="inline-flex h-10 shrink-0 items-center justify-center gap-2 rounded-control border border-border bg-surface px-3 text-sm font-semibold text-foreground shadow-control transition hover:border-border-strong hover:text-primary"
               href={href}
             >
               <ExternalLink aria-hidden className="h-4 w-4" />
@@ -624,7 +652,11 @@ const OverviewChartBlock = ({
       <fieldset
         className={cn(
           "mt-5 grid grid-cols-2 gap-3",
-          metrics.length === 2 ? "md:grid-cols-2" : "md:grid-cols-3",
+          metrics.length === 2
+            ? "md:grid-cols-2"
+            : metrics.length === 4
+              ? "md:grid-cols-2 xl:grid-cols-4"
+              : "md:grid-cols-3",
         )}
       >
         <legend className="sr-only">Contadores exibidos no gráfico de {title}</legend>

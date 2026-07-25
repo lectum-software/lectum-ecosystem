@@ -357,3 +357,19 @@ Validacao deste ajuste:
 - `pnpm --dir admin check`
 - `pnpm --dir admin build`
 - Smoke HTTP local no Admin (`GET http://localhost:3002/moderacao`) retornou `200`.
+
+
+## Ajuste complementar 2026-07-24 - Contador total e filtros compactos na Visão geral
+
+- Pedido do usuário: no bloco **Denúncias** da Visão geral, adicionar contador de **Total de denúncias** antes de **Pendentes**, reduzir o tamanho dos filtros e posicionar o filtro **Tipo** na primeira posição.
+- O bloco **Denúncias** agora exibe quatro contadores, com **Total de denúncias** calculado a partir das séries reais de pendentes, improcedentes e procedentes, sem alterar contrato backend ou persistência.
+- A linha de filtros dos blocos da Visão geral ficou mais compacta: selects, datas e botão **Abrir lista** usam altura/larguras menores para evitar sobreposição e reduzir quebra de texto no desktop.
+- O seletor contextual agora aparece antes dos controles de período; em **Denúncias**, isso coloca **Tipo** como primeiro filtro da linha.
+- Não houve alteração de backend, Prisma schema/migrations, packages, dados persistidos, contratos de API ou formulários.
+
+### Validação deste ajuste
+
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/moderacao/overview-charts.tsx"`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- Smoke HTTP local no Admin (`GET http://localhost:3002/moderacao`) retornou `200`.
