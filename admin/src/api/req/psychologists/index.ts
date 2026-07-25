@@ -398,7 +398,7 @@ export type PsychologistsDashboardTrafficSources = {
   updated_at: string | null;
 };
 
-export type PsychologistsDashboardPlanSegment = "all" | "free" | "subscribers";
+export type PsychologistsDashboardPlanSegment = "all" | "courtesy" | "free" | "subscribers";
 
 export type PsychologistsDashboardPlanSegmentSummary = {
   device_usage: PsychologistsDashboardDeviceUsage;

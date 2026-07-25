@@ -67,6 +67,7 @@ const PLAN_SEGMENT_OPTIONS: Array<{
   { id: "all", label: "Todos" },
   { id: "free", label: "Gratuitos" },
   { id: "subscribers", label: "Assinantes" },
+  { id: "courtesy", label: "Cortesia" },
 ];
 
 const DEVICE_LABELS: Record<AdminPsychologistsDashboardDeviceType, string> = {
@@ -654,6 +655,7 @@ const profileMatchesPlanSegment = (
 ) => {
   if (segment === "all") return true;
   if (segment === "free") return getPlanSegmentAt(profile, date) === "free";
+  if (segment === "courtesy") return getPlanSegmentAt(profile, date) === "courtesy";
 
   return getPlanSegmentAt(profile, date) === "subscriber";
 };

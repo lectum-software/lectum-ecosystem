@@ -52,6 +52,7 @@ const PLAN_SEGMENT_FILTER_OPTIONS: { id: PlanSegmentFilter; label: string }[] = 
   { id: "all", label: "Todos" },
   { id: "free", label: "Gratuitos" },
   { id: "subscribers", label: "Assinantes" },
+  { id: "courtesy", label: "Cortesia" },
 ];
 
 const SUPPLY_DEMAND_SORT_OPTIONS: { id: SupplyDemandSortKey; label: string }[] = [

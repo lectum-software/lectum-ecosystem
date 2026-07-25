@@ -364,7 +364,7 @@ export type AdminPsychologistsDashboardTrafficSources = {
   updated_at: Date | null;
 };
 
-export type AdminPsychologistsDashboardPlanSegment = "all" | "free" | "subscribers";
+export type AdminPsychologistsDashboardPlanSegment = "all" | "courtesy" | "free" | "subscribers";
 
 export type AdminPsychologistsDashboardPlanSegmentSummary = {
   device_usage: AdminPsychologistsDashboardDeviceUsage;
