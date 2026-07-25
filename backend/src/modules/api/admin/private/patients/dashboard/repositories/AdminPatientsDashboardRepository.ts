@@ -83,6 +83,7 @@ const patientPwaInstallSelect = {
 
 const patientPlatformSessionSelect = {
   device_type: true,
+  os: true,
   session_id: true,
   user_id: true,
 } satisfies Prisma.visitor_sessionSelect;

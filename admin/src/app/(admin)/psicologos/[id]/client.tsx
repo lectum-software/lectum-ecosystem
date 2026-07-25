@@ -4322,28 +4322,52 @@ const PsychologistPlatformDeviceUsageSection = ({
         </svg>
         <figcaption className="space-y-3">
           {hasDeviceSessions ? (
-            items.map((device) => (
-              <div className="rounded-2xl bg-surface-muted p-3" key={device.id}>
-                <div className="flex items-center justify-between gap-3">
-                  <span className="flex min-w-0 items-center gap-2 text-sm font-black text-foreground">
-                    <span
-                      aria-hidden
-                      className="h-3 w-3 shrink-0 rounded-full"
-                      style={{
-                        backgroundColor: psychologistPlatformDeviceChartColors[device.device_type],
-                      }}
-                    />
-                    <span className="truncate">{device.label}</span>
-                  </span>
-                  <span className="text-sm font-black text-foreground">
-                    {formatDevicePercentage(device.percentage)}
-                  </span>
+            items.map((device) => {
+              const operatingSystems = (device.operating_systems ?? []).filter(
+                (item) => item.count > 0,
+              );
+
+              return (
+                <div className="rounded-2xl bg-surface-muted p-3" key={device.id}>
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="flex min-w-0 items-center gap-2 text-sm font-black text-foreground">
+                      <span
+                        aria-hidden
+                        className="h-3 w-3 shrink-0 rounded-full"
+                        style={{
+                          backgroundColor:
+                            psychologistPlatformDeviceChartColors[device.device_type],
+                        }}
+                      />
+                      <span className="truncate">{device.label}</span>
+                    </span>
+                    <span className="text-sm font-black text-foreground">
+                      {formatDevicePercentage(device.percentage)}
+                    </span>
+                  </div>
+                  <p className="mt-1 text-xs font-bold text-muted">
+                    {formatDeviceSessionCount(device.count)}
+                  </p>
+                  {operatingSystems.length > 0 ? (
+                    <div className="mt-2 flex flex-wrap gap-1.5">
+                      {operatingSystems.map((operatingSystem) => (
+                        <span
+                          className="rounded-full bg-surface px-2 py-1 text-[0.68rem] font-black text-muted"
+                          key={operatingSystem.id}
+                        >
+                          {operatingSystem.label}: {formatDeviceSessionCount(operatingSystem.count)}{" "}
+                          · {formatDevicePercentage(operatingSystem.percentage)}
+                        </span>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="mt-2 text-[0.68rem] font-bold text-subtle">
+                      Sistema operacional não identificado.
+                    </p>
+                  )}
                 </div>
-                <p className="mt-1 text-xs font-bold text-muted">
-                  {formatDeviceSessionCount(device.count)}
-                </p>
-              </div>
-            ))
+              );
+            })
           ) : (
             <p className="rounded-2xl border border-dashed border-border bg-surface-muted p-4 text-sm font-bold text-muted">
               {deviceUsage?.unavailable_reason ??

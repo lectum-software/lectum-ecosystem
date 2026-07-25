@@ -430,6 +430,8 @@ Regra: a rota publica de analytics pode receber dados normalizados de dispositiv
 user-agent bruto ou payload sensivel novo. Payloads antigos de localizacao continuam validos; sem `session_id`, a rota
 nao cria `visitor_session` e segue processando localizacao quando aplicavel.
 
+Complemento TASK-81 (2026-07-25): os relatorios Admin de sistema operacional usam somente `visitor_session.os` normalizado combinado com `visitor_session.device_type`. Categorias de relatorio: Android, iOS, iPadOS, Windows, macOS, Outros e Nao identificado. iPadOS pode ser derivado quando `device_type="tablet"` e o `os` capturado vier como `ios` ou `macos`; Linux/ChromeOS/valores nao mapeados entram em Outros. Nao persistir versao exata, modelo do aparelho nem user-agent bruto, e nao criar backfill para sessoes historicas sem `os`.
+
 ---
 
 ## Avaliações

@@ -150,17 +150,35 @@ export type AdminPsychologistPlatformUsageTopPage = {
 
 export type AdminPsychologistPlatformDeviceType = "desktop" | "mobile" | "tablet" | "unknown";
 
+export type AdminPsychologistPlatformOperatingSystem =
+  | "android"
+  | "ios"
+  | "ipados"
+  | "macos"
+  | "other"
+  | "unknown"
+  | "windows";
+
+export type AdminPsychologistPlatformUsageOperatingSystemItem = {
+  count: number;
+  id: AdminPsychologistPlatformOperatingSystem;
+  label: string;
+  operating_system: AdminPsychologistPlatformOperatingSystem;
+  percentage: number;
+};
+
 export type AdminPsychologistPlatformUsageDeviceItem = {
   count: number;
   device_type: AdminPsychologistPlatformDeviceType;
   id: AdminPsychologistPlatformDeviceType;
   label: string;
+  operating_systems: AdminPsychologistPlatformUsageOperatingSystemItem[];
   percentage: number;
 };
 
 export type AdminPsychologistPlatformUsageDeviceUsage = {
   items: AdminPsychologistPlatformUsageDeviceItem[];
-  source: "visitor_session.device_type+user_id";
+  source: "visitor_session.device_type+visitor_session.os+user_id";
   total_sessions: number;
   unavailable_reason: string | null;
 };

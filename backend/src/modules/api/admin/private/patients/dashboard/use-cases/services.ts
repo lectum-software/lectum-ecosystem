@@ -1,5 +1,11 @@
 import type { Resolve } from "@/helpers/return";
 import { error, msg } from "@/helpers/translate";
+import type { AdminOperatingSystemType } from "@/utils/admin-operating-system";
+import {
+  ADMIN_OPERATING_SYSTEM_LABELS,
+  ADMIN_OPERATING_SYSTEM_TYPES,
+  normalizeAdminOperatingSystem,
+} from "@/utils/admin-operating-system";
 import type {
   AdminPatientsDashboardBreakdownItem,
   AdminPatientsDashboardDateRange,
@@ -511,6 +517,51 @@ const buildDeviceUsage = (sessions: AdminPatientPlatformSessionRecord[]) => {
     total_sessions: totalSessions,
     unavailable_reason:
       totalSessions === 0 ? "Sem sessões autenticadas de pacientes no período selecionado." : null,
+  };
+};
+
+const buildOperatingSystemUsage = (sessions: AdminPatientPlatformSessionRecord[]) => {
+  const counts = Object.fromEntries(
+    ADMIN_OPERATING_SYSTEM_TYPES.map((operatingSystem) => [operatingSystem, 0]),
+  ) as Record<AdminOperatingSystemType, number>;
+  const activePatientsByOperatingSystem = new Map<AdminOperatingSystemType, Set<string>>(
+    ADMIN_OPERATING_SYSTEM_TYPES.map((operatingSystem) => [operatingSystem, new Set<string>()]),
+  );
+
+  for (const session of sessions) {
+    const deviceType = normalizeDeviceType(session.device_type);
+    const operatingSystem = normalizeAdminOperatingSystem(session.os, deviceType);
+    counts[operatingSystem] += 1;
+    if (session.user_id) activePatientsByOperatingSystem.get(operatingSystem)?.add(session.user_id);
+  }
+
+  const totalSessions = sessions.length;
+  const totalActivePatients = new Set(
+    sessions
+      .map((session) => session.user_id)
+      .filter((userId): userId is string => Boolean(userId)),
+  ).size;
+
+  return {
+    items: ADMIN_OPERATING_SYSTEM_TYPES.map((operatingSystem) => ({
+      active_patients_count: activePatientsByOperatingSystem.get(operatingSystem)?.size ?? 0,
+      count: counts[operatingSystem],
+      id: operatingSystem,
+      label: ADMIN_OPERATING_SYSTEM_LABELS[operatingSystem],
+      operating_system: operatingSystem,
+      percentage: safePercentage(counts[operatingSystem], totalSessions),
+    })).sort((left, right) => {
+      if (right.count !== left.count) return right.count - left.count;
+
+      return left.label.localeCompare(right.label, "pt-BR");
+    }),
+    source: "visitor_session.os+visitor_session.device_type+user.role=paciente" as const,
+    total_active_patients: totalActivePatients,
+    total_sessions: totalSessions,
+    unavailable_reason:
+      totalSessions === 0
+        ? "Sem sessões autenticadas de pacientes com sistema operacional no período selecionado."
+        : null,
   };
 };
 
@@ -1040,6 +1091,7 @@ export const buildPatientsDashboard = async (
     ),
   });
   const deviceUsage = buildDeviceUsage(patientPlatformSessions);
+  const operatingSystemUsage = buildOperatingSystemUsage(patientPlatformSessions);
   const intentAnalysis = buildPatientIntentAnalysis(currentPatients, intentSignals);
 
   const summary: AdminPatientsDashboardSummary = {
@@ -1082,6 +1134,7 @@ export const buildPatientsDashboard = async (
       "Atividade recente usa eventos reais de comunidade, reações e salvamentos já persistidos.",
       "Uso da plataforma mede somente pageviews autenticados e eventos first-party de instalação PWA de pacientes no período selecionado.",
       "Devices dos pacientes usa somente visitor_session autenticada vinculada a user.role=paciente no período selecionado.",
+      "Sistema operacional dos pacientes usa somente visitor_session autenticada com os normalizado; não armazena user-agent bruto.",
       "Gênero e forma de cadastro consideram somente pacientes cadastrados no período selecionado; em Todo o período incluem a base completa.",
       "Tempo médio do paciente usa pageviews autenticados first-party e ignora períodos em que o app fica oculto/minimizado quando o navegador envia eventos de visibilidade.",
       "Localização usa apenas capturas agregadas e coarse de visitor_location no período selecionado; cidades com baixa frequência são agrupadas, e coordenadas, IP e endereço não são retornados.",
@@ -1095,6 +1148,7 @@ export const buildPatientsDashboard = async (
     },
     intent_analysis: intentAnalysis,
     locations: locationSummary,
+    operating_system_usage: operatingSystemUsage,
     period,
     platform_usage: platformUsage,
     recent_patients: {
@@ -1135,6 +1189,17 @@ export const buildPatientsDashboard = async (
                 "Distribuição de devices dos pacientes depende de visitor_session autenticada com user.role=paciente no período selecionado.",
               id: "patient_device_usage",
               label: "Devices dos pacientes",
+              source: "visitor_session",
+            },
+          ]
+        : []),
+      ...(operatingSystemUsage.unavailable_reason
+        ? [
+            {
+              description:
+                "Distribuição de sistemas operacionais dos pacientes depende de visitor_session autenticada com os normalizado no período selecionado.",
+              id: "patient_operating_system_usage",
+              label: "Sistema operacional dos pacientes",
               source: "visitor_session",
             },
           ]

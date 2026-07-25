@@ -115,6 +115,7 @@ export type AdminPsychologistPlatformPageViewRecord = {
 
 export type AdminPsychologistPlatformSessionRecord = {
   device_type: string;
+  os: string | null;
   session_id: string;
   user_id: string | null;
 };

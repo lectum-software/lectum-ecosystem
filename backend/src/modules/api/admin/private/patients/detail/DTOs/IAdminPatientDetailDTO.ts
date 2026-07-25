@@ -188,17 +188,35 @@ export type AdminPatientPlatformUsageTopPage = {
 
 export type AdminPatientPlatformDeviceType = "desktop" | "mobile" | "tablet" | "unknown";
 
+export type AdminPatientPlatformOperatingSystem =
+  | "android"
+  | "ios"
+  | "ipados"
+  | "macos"
+  | "other"
+  | "unknown"
+  | "windows";
+
+export type AdminPatientPlatformUsageOperatingSystemItem = {
+  count: number;
+  id: AdminPatientPlatformOperatingSystem;
+  label: string;
+  operating_system: AdminPatientPlatformOperatingSystem;
+  percentage: number;
+};
+
 export type AdminPatientPlatformUsageDeviceItem = {
   count: number;
   device_type: AdminPatientPlatformDeviceType;
   id: AdminPatientPlatformDeviceType;
   label: string;
+  operating_systems: AdminPatientPlatformUsageOperatingSystemItem[];
   percentage: number;
 };
 
 export type AdminPatientPlatformUsageDeviceUsage = {
   items: AdminPatientPlatformUsageDeviceItem[];
-  source: "visitor_session.device_type+user_id";
+  source: "visitor_session.device_type+visitor_session.os+user_id";
   total_sessions: number;
   unavailable_reason: string | null;
 };

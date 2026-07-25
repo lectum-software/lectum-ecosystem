@@ -381,6 +381,32 @@ export type PatientsDashboardDeviceUsage = {
   unavailable_reason: string | null;
 };
 
+export type PatientsDashboardOperatingSystem =
+  | "android"
+  | "ios"
+  | "ipados"
+  | "macos"
+  | "other"
+  | "unknown"
+  | "windows";
+
+export type PatientsDashboardOperatingSystemUsageItem = {
+  active_patients_count: number;
+  count: number;
+  id: PatientsDashboardOperatingSystem;
+  label: string;
+  operating_system: PatientsDashboardOperatingSystem;
+  percentage: number;
+};
+
+export type PatientsDashboardOperatingSystemUsage = {
+  items: PatientsDashboardOperatingSystemUsageItem[];
+  source: "visitor_session.os+visitor_session.device_type+user.role=paciente";
+  total_active_patients: number;
+  total_sessions: number;
+  unavailable_reason: string | null;
+};
+
 export type PatientsDashboardIntentSegmentId = "cold" | "curious" | "objective" | "very_qualified";
 
 export type PatientsDashboardIntentSegment = {
@@ -440,6 +466,7 @@ export type AdminPatientsDashboard = {
     states: PatientsDashboardBreakdownItem[];
     total: number;
   };
+  operating_system_usage: PatientsDashboardOperatingSystemUsage;
   period: PatientsDashboardPeriod;
   platform_usage: PatientsDashboardPlatformUsage;
   recent_patients: {
@@ -696,9 +723,16 @@ export type AdminPatientDetail = {
         device_type: "desktop" | "mobile" | "tablet" | "unknown";
         id: "desktop" | "mobile" | "tablet" | "unknown";
         label: string;
+        operating_systems: {
+          count: number;
+          id: PatientsDashboardOperatingSystem;
+          label: string;
+          operating_system: PatientsDashboardOperatingSystem;
+          percentage: number;
+        }[];
         percentage: number;
       }[];
-      source: "visitor_session.device_type+user_id";
+      source: "visitor_session.device_type+visitor_session.os+user_id";
       total_sessions: number;
       unavailable_reason: string | null;
     };

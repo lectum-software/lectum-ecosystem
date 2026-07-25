@@ -492,6 +492,7 @@ export class AdminPsychologistsDashboardRepository
       },
       select: {
         device_type: true,
+        os: true,
         session_id: true,
         user_id: true,
       },

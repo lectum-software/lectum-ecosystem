@@ -135,6 +135,32 @@ export type AdminPatientsDashboardDeviceUsage = {
   unavailable_reason: string | null;
 };
 
+export type AdminPatientsDashboardOperatingSystem =
+  | "android"
+  | "ios"
+  | "ipados"
+  | "macos"
+  | "other"
+  | "unknown"
+  | "windows";
+
+export type AdminPatientsDashboardOperatingSystemUsageItem = {
+  active_patients_count: number;
+  count: number;
+  id: AdminPatientsDashboardOperatingSystem;
+  label: string;
+  operating_system: AdminPatientsDashboardOperatingSystem;
+  percentage: number;
+};
+
+export type AdminPatientsDashboardOperatingSystemUsage = {
+  items: AdminPatientsDashboardOperatingSystemUsageItem[];
+  source: "visitor_session.os+visitor_session.device_type+user.role=paciente";
+  total_active_patients: number;
+  total_sessions: number;
+  unavailable_reason: string | null;
+};
+
 export type AdminPatientsDashboardIntentSegmentId =
   | "cold"
   | "curious"
@@ -198,6 +224,7 @@ export type AdminPatientsDashboardSummary = {
     states: AdminPatientsDashboardLocationItem[];
     total: number;
   };
+  operating_system_usage: AdminPatientsDashboardOperatingSystemUsage;
   period: AdminPatientsDashboardPeriod;
   platform_usage: AdminPatientsDashboardPlatformUsage;
   recent_patients: {

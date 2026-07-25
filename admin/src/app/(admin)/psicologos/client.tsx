@@ -7,6 +7,7 @@ import {
   ChevronDown,
   type LucideIcon,
   MessageCircle,
+  MonitorCog,
   RefreshCw,
   Search,
   ShieldCheck,
@@ -43,6 +44,8 @@ type DashboardPeriodValue = NonNullable<PsychologistsDashboardQuery["period"]>;
 type DashboardPeriodPreset = Exclude<DashboardPeriodValue, "custom">;
 type DashboardRange = Pick<PsychologistsDashboardQuery, "from" | "to">;
 type DeviceUsageItem = AdminPsychologistsDashboard["device_usage"]["items"][number];
+type OperatingSystemUsageItem =
+  AdminPsychologistsDashboard["operating_system_usage"]["items"][number];
 type SignupMethodItem = AdminPsychologistsDashboard["signup_method"]["items"][number];
 type SupplyDemandSortKey = "psychologists" | "searches" | "searches_per_psychologist";
 
@@ -1148,7 +1151,7 @@ const ConversionAndUsageBlocks = ({ summary }: { summary: AdminPsychologistsDash
         </div>
       </CardShell>
 
-      <div className="grid gap-5 xl:grid-cols-2">
+      <div className="grid gap-5 xl:grid-cols-3">
         <CardShell className="p-5">
           <PanelTitle icon={UserPlus} title="Modo de cadastro" />
           <p className="mt-2 text-sm font-bold leading-6 text-muted">{selectedPeriodLabel}</p>
@@ -1167,7 +1170,13 @@ const ConversionAndUsageBlocks = ({ summary }: { summary: AdminPsychologistsDash
           <DeviceUsagePieChart deviceUsage={summary.device_usage} />
         </CardShell>
 
-        <CardShell className="p-5 xl:col-span-2">
+        <CardShell className="p-5">
+          <PanelTitle icon={MonitorCog} title="Sistema operacional" />
+          <p className="mt-2 text-sm font-bold leading-6 text-muted">{selectedPeriodLabel}</p>
+          <OperatingSystemUsagePieChart operatingSystemUsage={summary.operating_system_usage} />
+        </CardShell>
+
+        <CardShell className="p-5 xl:col-span-3">
           <PanelTitle icon={Activity} title="Uso da plataforma" />
           <p className="mt-2 text-sm font-bold leading-6 text-muted">{selectedPeriodLabel}</p>
           <div className="mt-5 grid gap-3 sm:grid-cols-2">
@@ -1224,6 +1233,16 @@ const DEVICE_USAGE_CHART_COLORS = {
   tablet: "#8b5cf6",
   unknown: "#94a3b8",
 } satisfies Record<DeviceUsageItem["device_type"], string>;
+
+const OPERATING_SYSTEM_USAGE_CHART_COLORS = {
+  android: "#13a85b",
+  ios: "#308ce8",
+  ipados: "#8b5cf6",
+  macos: "#64748b",
+  other: "#f59f00",
+  unknown: "#94a3b8",
+  windows: "#2563eb",
+} satisfies Record<OperatingSystemUsageItem["operating_system"], string>;
 
 const DeviceUsagePieChart = ({
   deviceUsage,
@@ -1360,6 +1379,163 @@ const DeviceUsagePieChart = ({
                     aria-hidden
                     className="h-3 w-3 shrink-0 rounded-full"
                     style={{ backgroundColor: DEVICE_USAGE_CHART_COLORS[item.device_type] }}
+                  />
+                  <span className="truncate">{item.label}</span>
+                </span>
+                <span className="text-sm font-black text-foreground">
+                  {formatPercentageValue(item.percentage)}
+                </span>
+              </div>
+              <p className="mt-1 text-xs font-bold text-muted">
+                {numberFormatter.format(item.count)} {sessionsLabel} ·{" "}
+                {numberFormatter.format(item.active_psychologists_count)} {psychologistsLabel}
+              </p>
+            </div>
+          );
+        })}
+      </figcaption>
+    </figure>
+  );
+};
+
+const OperatingSystemUsagePieChart = ({
+  operatingSystemUsage,
+}: {
+  operatingSystemUsage: AdminPsychologistsDashboard["operating_system_usage"];
+}) => {
+  const center = 60;
+  const radius = 48;
+  const total = Math.max(0, operatingSystemUsage.total_sessions);
+  const visibleItems = operatingSystemUsage.items.filter((item) => item.count > 0);
+  const segments = visibleItems.reduce<{
+    currentAngle: number;
+    items: Array<{
+      endAngle: number;
+      item: OperatingSystemUsageItem;
+      share: number;
+      startAngle: number;
+    }>;
+  }>(
+    (accumulator, item) => {
+      const share = total > 0 ? item.count / total : 0;
+      if (share <= 0) return accumulator;
+
+      const startAngle = accumulator.currentAngle;
+      const endAngle = startAngle + share * 360;
+
+      return {
+        currentAngle: endAngle,
+        items: accumulator.items.concat({
+          endAngle,
+          item,
+          share,
+          startAngle,
+        }),
+      };
+    },
+    { currentAngle: -90, items: [] },
+  ).items;
+
+  if (total === 0) {
+    return (
+      <p className="mt-5 rounded-2xl border border-dashed border-border bg-surface-muted p-4 text-sm font-bold text-muted">
+        {operatingSystemUsage.unavailable_reason ??
+          "Sem sessões autenticadas de psicólogos com sistema operacional no período selecionado."}
+      </p>
+    );
+  }
+
+  const ariaLabel = `Gráfico de pizza dos sistemas operacionais usados por psicólogos: ${operatingSystemUsage.items
+    .map(
+      (item) =>
+        `${item.label}: ${numberFormatter.format(item.count)} sessão(ões), ${formatPercentageValue(
+          item.percentage,
+        )}`,
+    )
+    .join("; ")}.`;
+
+  return (
+    <figure className="mt-5 grid gap-5 sm:grid-cols-[minmax(9rem,11rem)_1fr] sm:items-center xl:grid-cols-1 2xl:grid-cols-[minmax(9rem,11rem)_1fr]">
+      <svg
+        aria-label={ariaLabel}
+        className="mx-auto aspect-square w-40 sm:w-44"
+        role="img"
+        viewBox="0 0 120 120"
+      >
+        <circle
+          cx={center}
+          cy={center}
+          fill="var(--admin-surface-muted)"
+          r={radius}
+          stroke="var(--admin-border)"
+          strokeWidth="1"
+        />
+        {segments.map((segment) => {
+          const color = OPERATING_SYSTEM_USAGE_CHART_COLORS[segment.item.operating_system];
+          const labelPoint = getPiePoint(
+            center,
+            radius * 0.58,
+            (segment.startAngle + segment.endAngle) / 2,
+          );
+          const percentageLabel = formatPercentageValue(segment.item.percentage);
+
+          if (segment.share >= 0.999) {
+            return (
+              <g key={segment.item.operating_system}>
+                <circle
+                  cx={center}
+                  cy={center}
+                  fill={color}
+                  r={radius}
+                  stroke="var(--admin-surface)"
+                  strokeWidth="1.4"
+                />
+                {renderPiePercentageLabel({
+                  color,
+                  label: percentageLabel,
+                  x: center,
+                  y: center,
+                })}
+              </g>
+            );
+          }
+
+          return (
+            <g key={segment.item.operating_system}>
+              <path
+                d={buildPieSlicePath(center, radius, segment.startAngle, segment.endAngle)}
+                fill={color}
+                stroke="var(--admin-surface)"
+                strokeWidth="1.4"
+              />
+              {segment.share >= 0.08
+                ? renderPiePercentageLabel({
+                    color,
+                    label: percentageLabel,
+                    x: labelPoint.x,
+                    y: labelPoint.y,
+                  })
+                : null}
+            </g>
+          );
+        })}
+      </svg>
+      <figcaption className="space-y-3">
+        {operatingSystemUsage.items.map((item) => {
+          const sessionsLabel = item.count === 1 ? "sessão" : "sessões";
+          const psychologistsLabel =
+            item.active_psychologists_count === 1 ? "psicólogo" : "psicólogos";
+
+          return (
+            <div className="rounded-2xl bg-surface-muted p-3" key={item.operating_system}>
+              <div className="flex items-center justify-between gap-3">
+                <span className="flex min-w-0 items-center gap-2 text-sm font-black text-foreground">
+                  <span
+                    aria-hidden
+                    className="h-3 w-3 shrink-0 rounded-full"
+                    style={{
+                      backgroundColor: OPERATING_SYSTEM_USAGE_CHART_COLORS[item.operating_system],
+                    }}
                   />
                   <span className="truncate">{item.label}</span>
                 </span>

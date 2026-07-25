@@ -1,5 +1,11 @@
 import type { Resolve } from "@/helpers/return";
 import { error, msg } from "@/helpers/translate";
+import type { AdminOperatingSystemType } from "@/utils/admin-operating-system";
+import {
+  ADMIN_OPERATING_SYSTEM_LABELS,
+  ADMIN_OPERATING_SYSTEM_TYPES,
+  normalizeAdminOperatingSystem,
+} from "@/utils/admin-operating-system";
 import {
   firstPaidProfessionalSubscription,
   isPaidProfessionalSubscription,
@@ -402,6 +408,54 @@ const buildDeviceUsage = (sessions: AdminPsychologistPlatformSessionRecord[]) =>
     unavailable_reason:
       totalSessions === 0
         ? "Sem sessões autenticadas de psicólogos com dispositivo identificado no período selecionado."
+        : null,
+  };
+};
+
+const buildOperatingSystemUsage = (sessions: AdminPsychologistPlatformSessionRecord[]) => {
+  const counts = Object.fromEntries(
+    ADMIN_OPERATING_SYSTEM_TYPES.map((operatingSystem) => [operatingSystem, 0]),
+  ) as Record<AdminOperatingSystemType, number>;
+  const activePsychologistsByOperatingSystem = new Map<AdminOperatingSystemType, Set<string>>(
+    ADMIN_OPERATING_SYSTEM_TYPES.map((operatingSystem) => [operatingSystem, new Set<string>()]),
+  );
+
+  for (const session of sessions) {
+    const deviceType = normalizeDeviceType(session.device_type);
+    const operatingSystem = normalizeAdminOperatingSystem(session.os, deviceType);
+    counts[operatingSystem] += 1;
+    if (session.user_id) {
+      activePsychologistsByOperatingSystem.get(operatingSystem)?.add(session.user_id);
+    }
+  }
+
+  const totalSessions = sessions.length;
+  const totalActivePsychologists = new Set(
+    sessions
+      .map((session) => session.user_id)
+      .filter((userId): userId is string => Boolean(userId)),
+  ).size;
+
+  return {
+    items: ADMIN_OPERATING_SYSTEM_TYPES.map((operatingSystem) => ({
+      active_psychologists_count:
+        activePsychologistsByOperatingSystem.get(operatingSystem)?.size ?? 0,
+      count: counts[operatingSystem],
+      id: operatingSystem,
+      label: ADMIN_OPERATING_SYSTEM_LABELS[operatingSystem],
+      operating_system: operatingSystem,
+      percentage: safePercentage(counts[operatingSystem], totalSessions),
+    })).sort((left, right) => {
+      if (right.count !== left.count) return right.count - left.count;
+
+      return left.label.localeCompare(right.label, "pt-BR");
+    }),
+    source: "visitor_session.os+visitor_session.device_type+user.role=psicologo" as const,
+    total_active_psychologists: totalActivePsychologists,
+    total_sessions: totalSessions,
+    unavailable_reason:
+      totalSessions === 0
+        ? "Sem sessões autenticadas de psicólogos com sistema operacional no período selecionado."
         : null,
   };
 };
@@ -1362,6 +1416,7 @@ export const buildPsychologistsDashboard = async (
     ),
   });
   const deviceUsage = buildDeviceUsage(platformSessions);
+  const operatingSystemUsage = buildOperatingSystemUsage(platformSessions);
   const trafficSources = summarizePsychologistTrafficOrigins(publicProfilePageViews);
   const statistics = buildStatistics(profiles, current.end);
 
@@ -1445,6 +1500,7 @@ export const buildPsychologistsDashboard = async (
       directoryFilters,
     }),
     directory_filters: directoryFilters,
+    operating_system_usage: operatingSystemUsage,
     period,
     platform_usage: {
       ...platformUsage,
@@ -1526,6 +1582,17 @@ export const buildPsychologistsDashboard = async (
                 "Distribuição de devices dos psicólogos depende de visitor_session autenticada com user.role=psicologo no período selecionado.",
               id: "psychologist_device_usage",
               label: "Devices dos psicólogos",
+              source: "visitor_session",
+            },
+          ]
+        : []),
+      ...(operatingSystemUsage.unavailable_reason
+        ? [
+            {
+              description:
+                "Distribuição de sistemas operacionais dos psicólogos depende de visitor_session autenticada com os normalizado no período selecionado.",
+              id: "psychologist_operating_system_usage",
+              label: "Sistema operacional dos psicólogos",
               source: "visitor_session",
             },
           ]

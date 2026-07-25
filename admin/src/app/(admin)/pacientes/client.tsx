@@ -11,6 +11,7 @@ import {
   type LucideIcon,
   MapPin,
   MessageCircle,
+  MonitorCog,
   RefreshCw,
   Smartphone,
   Snowflake,
@@ -43,6 +44,7 @@ const CARD_ORDER = [
   "new_signups",
 ] as const;
 type DeviceUsageItem = AdminPatientsDashboard["device_usage"]["items"][number];
+type OperatingSystemUsageItem = AdminPatientsDashboard["operating_system_usage"]["items"][number];
 type PatientsDashboardPeriodValue = NonNullable<PatientsDashboardQuery["period"]>;
 type PatientsDashboardPeriodPreset = Exclude<PatientsDashboardPeriodValue, "custom">;
 type PatientsDashboardRange = Pick<PatientsDashboardQuery, "from" | "to">;
@@ -77,6 +79,15 @@ const DEVICE_USAGE_CHART_COLORS = {
   tablet: "#8b5cf6",
   unknown: "#94a3b8",
 } satisfies Record<DeviceUsageItem["device_type"], string>;
+const OPERATING_SYSTEM_USAGE_CHART_COLORS = {
+  android: "#13a85b",
+  ios: "#308ce8",
+  ipados: "#8b5cf6",
+  macos: "#64748b",
+  other: "#f59f00",
+  unknown: "#94a3b8",
+  windows: "#2563eb",
+} satisfies Record<OperatingSystemUsageItem["operating_system"], string>;
 const PATIENT_INTENT_CHART_COLORS = {
   cold: "#64748b",
   curious: "#308ce8",
@@ -1399,6 +1410,162 @@ const DeviceUsagePieChart = ({
   );
 };
 
+const OperatingSystemUsagePieChart = ({
+  operatingSystemUsage,
+}: {
+  operatingSystemUsage: AdminPatientsDashboard["operating_system_usage"];
+}) => {
+  const center = 60;
+  const radius = 48;
+  const total = Math.max(0, operatingSystemUsage.total_sessions);
+  const visibleItems = operatingSystemUsage.items.filter((item) => item.count > 0);
+  const segments = visibleItems.reduce<{
+    currentAngle: number;
+    items: Array<{
+      endAngle: number;
+      item: OperatingSystemUsageItem;
+      share: number;
+      startAngle: number;
+    }>;
+  }>(
+    (accumulator, item) => {
+      const share = total > 0 ? item.count / total : 0;
+      if (share <= 0) return accumulator;
+
+      const startAngle = accumulator.currentAngle;
+      const endAngle = startAngle + share * 360;
+
+      return {
+        currentAngle: endAngle,
+        items: accumulator.items.concat({
+          endAngle,
+          item,
+          share,
+          startAngle,
+        }),
+      };
+    },
+    { currentAngle: -90, items: [] },
+  ).items;
+
+  if (total === 0) {
+    return (
+      <p className="mt-5 rounded-2xl border border-dashed border-border bg-surface-muted p-4 text-sm font-bold text-muted">
+        {operatingSystemUsage.unavailable_reason ??
+          "Sem sessões autenticadas de pacientes com sistema operacional no período selecionado."}
+      </p>
+    );
+  }
+
+  const ariaLabel = `Gráfico de pizza dos sistemas operacionais usados por pacientes: ${operatingSystemUsage.items
+    .map(
+      (item) =>
+        `${item.label}: ${numberFormatter.format(item.count)} sessão(ões), ${formatPercentageValue(
+          item.percentage,
+        )}`,
+    )
+    .join("; ")}.`;
+
+  return (
+    <figure className="mt-5 grid gap-5 sm:grid-cols-[minmax(9rem,11rem)_1fr] sm:items-center">
+      <svg
+        aria-label={ariaLabel}
+        className="mx-auto aspect-square w-40 sm:w-44"
+        role="img"
+        viewBox="0 0 120 120"
+      >
+        <circle
+          cx={center}
+          cy={center}
+          fill="var(--admin-surface-muted)"
+          r={radius}
+          stroke="var(--admin-border)"
+          strokeWidth="1"
+        />
+        {segments.map((segment) => {
+          const color = OPERATING_SYSTEM_USAGE_CHART_COLORS[segment.item.operating_system];
+          const labelPoint = getPiePoint(
+            center,
+            radius * 0.58,
+            (segment.startAngle + segment.endAngle) / 2,
+          );
+          const percentageLabel = formatPercentageValue(segment.item.percentage);
+
+          if (segment.share >= 0.999) {
+            return (
+              <g key={segment.item.operating_system}>
+                <circle
+                  cx={center}
+                  cy={center}
+                  fill={color}
+                  r={radius}
+                  stroke="var(--admin-surface)"
+                  strokeWidth="1.4"
+                />
+                <PieSlicePercentageLabel
+                  color={color}
+                  label={percentageLabel}
+                  x={center}
+                  y={center}
+                />
+              </g>
+            );
+          }
+
+          return (
+            <g key={segment.item.operating_system}>
+              <path
+                d={buildPieSlicePath(center, radius, segment.startAngle, segment.endAngle)}
+                fill={color}
+                stroke="var(--admin-surface)"
+                strokeWidth="1.4"
+              />
+              {segment.share >= 0.08 ? (
+                <PieSlicePercentageLabel
+                  color={color}
+                  label={percentageLabel}
+                  x={labelPoint.x}
+                  y={labelPoint.y}
+                />
+              ) : null}
+            </g>
+          );
+        })}
+      </svg>
+      <figcaption className="space-y-3">
+        {operatingSystemUsage.items.map((item) => {
+          const sessionsLabel = item.count === 1 ? "sessão" : "sessões";
+          const patientsLabel = item.active_patients_count === 1 ? "paciente" : "pacientes";
+
+          return (
+            <div className="rounded-2xl bg-surface-muted p-3" key={item.operating_system}>
+              <div className="flex items-center justify-between gap-3">
+                <span className="flex min-w-0 items-center gap-2 text-sm font-black text-foreground">
+                  <span
+                    aria-hidden
+                    className="h-3 w-3 shrink-0 rounded-full"
+                    style={{
+                      backgroundColor: OPERATING_SYSTEM_USAGE_CHART_COLORS[item.operating_system],
+                    }}
+                  />
+                  <span className="truncate">{item.label}</span>
+                </span>
+                <span className="text-sm font-black text-foreground">
+                  {formatPercentageValue(item.percentage)}
+                </span>
+              </div>
+              <p className="mt-1 text-xs font-bold text-muted">
+                {numberFormatter.format(item.count)} {sessionsLabel} ·{" "}
+                {numberFormatter.format(item.active_patients_count)} {patientsLabel}
+              </p>
+            </div>
+          );
+        })}
+      </figcaption>
+    </figure>
+  );
+};
+
 const getLocationCountRange = (items: PatientsDashboardBreakdownItem[]) => {
   const counts = items.filter((item) => item.count > 0).map((item) => item.count);
 
@@ -1829,7 +1996,7 @@ const Statistics = ({
 
   return (
     <section aria-label="Estatísticas agregadas de pacientes">
-      <div className="grid gap-4 xl:grid-cols-3">
+      <div className="grid gap-4 xl:grid-cols-2">
         <CardShell className="p-5">
           <PanelTitle icon={UserRound} title="Gênero" />
           <p className="mt-2 text-sm font-bold leading-6 text-muted">
@@ -1845,7 +2012,6 @@ const Statistics = ({
             total={summary.demographics.gender.total}
           />
         </CardShell>
-        <DeviceUsageCard allowLocalDevicePreview={allowLocalLocationPreview} summary={summary} />
         <CardShell className="p-5">
           <PanelTitle icon={UserPlus} title="Forma de cadastro" />
           <p className="mt-2 text-sm font-bold leading-6 text-muted">
@@ -1860,6 +2026,10 @@ const Statistics = ({
             total={summary.demographics.signup_sources.total}
           />
         </CardShell>
+      </div>
+      <div className="mt-4 grid gap-4 xl:grid-cols-2">
+        <DeviceUsageCard allowLocalDevicePreview={allowLocalLocationPreview} summary={summary} />
+        <OperatingSystemUsageCard summary={summary} />
       </div>
       <div className="mt-4 grid gap-4 xl:grid-cols-2">
         <CardShell className="p-5">
@@ -1898,6 +2068,16 @@ const DeviceUsageCard = ({
     </CardShell>
   );
 };
+
+const OperatingSystemUsageCard = ({ summary }: { summary: AdminPatientsDashboard }) => (
+  <CardShell className="p-5">
+    <PanelTitle icon={MonitorCog} title="Sistema operacional" />
+    <p className="mt-2 text-sm font-bold leading-6 text-muted">
+      {formatSelectedPeriod(summary.period)}
+    </p>
+    <OperatingSystemUsagePieChart operatingSystemUsage={summary.operating_system_usage} />
+  </CardShell>
+);
 
 const PlatformUsageCard = ({ summary }: { summary: AdminPatientsDashboard }) => {
   const platformUsage = summary.platform_usage;

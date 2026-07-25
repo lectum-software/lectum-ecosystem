@@ -1,6 +1,12 @@
 import type { Resolve } from "@/helpers/return";
 import { error, msg } from "@/helpers/translate";
 import { diagnoseAdminCommunityEngagement } from "@/utils/admin-community-engagement-diagnosis";
+import type { AdminOperatingSystemType } from "@/utils/admin-operating-system";
+import {
+  ADMIN_OPERATING_SYSTEM_LABELS,
+  ADMIN_OPERATING_SYSTEM_TYPES,
+  normalizeAdminOperatingSystem,
+} from "@/utils/admin-operating-system";
 import { isVerifiedProfessionalEntitlement } from "@/utils/subscription-entitlement";
 import type {
   AdminPatientDetailActivityItem,
@@ -304,27 +310,64 @@ const buildPlatformDeviceUsage = (sessions: AdminPatientDetailPlatformSessionRec
     tablet: 0,
     unknown: 0,
   };
+  const operatingSystemCounts = new Map<
+    PlatformDeviceType,
+    Record<AdminOperatingSystemType, number>
+  >(
+    PLATFORM_DEVICE_TYPES.map((deviceType) => [
+      deviceType,
+      Object.fromEntries(
+        ADMIN_OPERATING_SYSTEM_TYPES.map((operatingSystem) => [operatingSystem, 0]),
+      ) as Record<AdminOperatingSystemType, number>,
+    ]),
+  );
 
   for (const session of sessions) {
-    counts[normalizePlatformDeviceType(session.device_type)] += 1;
+    const deviceType = normalizePlatformDeviceType(session.device_type);
+    const operatingSystem = normalizeAdminOperatingSystem(session.os, deviceType);
+    counts[deviceType] += 1;
+    const countsByOperatingSystem = operatingSystemCounts.get(deviceType);
+    if (countsByOperatingSystem) countsByOperatingSystem[operatingSystem] += 1;
   }
 
   const totalSessions = sessions.length;
 
   return {
-    items: PLATFORM_DEVICE_TYPES.map((deviceType) => ({
-      count: counts[deviceType],
-      device_type: deviceType,
-      id: deviceType,
-      label: PLATFORM_DEVICE_LABELS[deviceType],
-      percentage:
-        totalSessions > 0 ? roundOneDecimal((counts[deviceType] / totalSessions) * 100) : 0,
-    })).sort((left, right) => {
+    items: PLATFORM_DEVICE_TYPES.map((deviceType) => {
+      const deviceTotal = counts[deviceType];
+      const countsByOperatingSystem = operatingSystemCounts.get(deviceType);
+
+      return {
+        count: deviceTotal,
+        device_type: deviceType,
+        id: deviceType,
+        label: PLATFORM_DEVICE_LABELS[deviceType],
+        operating_systems: ADMIN_OPERATING_SYSTEM_TYPES.map((operatingSystem) => ({
+          count: countsByOperatingSystem?.[operatingSystem] ?? 0,
+          id: operatingSystem,
+          label: ADMIN_OPERATING_SYSTEM_LABELS[operatingSystem],
+          operating_system: operatingSystem,
+          percentage:
+            deviceTotal > 0
+              ? roundOneDecimal(
+                  ((countsByOperatingSystem?.[operatingSystem] ?? 0) / deviceTotal) * 100,
+                )
+              : 0,
+        }))
+          .filter((operatingSystem) => operatingSystem.count > 0)
+          .sort((left, right) => {
+            if (right.count !== left.count) return right.count - left.count;
+
+            return left.label.localeCompare(right.label, "pt-BR");
+          }),
+        percentage: totalSessions > 0 ? roundOneDecimal((deviceTotal / totalSessions) * 100) : 0,
+      };
+    }).sort((left, right) => {
       if (right.count !== left.count) return right.count - left.count;
 
       return left.label.localeCompare(right.label, "pt-BR");
     }),
-    source: "visitor_session.device_type+user_id" as const,
+    source: "visitor_session.device_type+visitor_session.os+user_id" as const,
     total_sessions: totalSessions,
     unavailable_reason:
       totalSessions === 0

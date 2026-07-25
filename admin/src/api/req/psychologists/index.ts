@@ -349,6 +349,32 @@ export type PsychologistsDashboardDeviceUsage = {
   unavailable_reason: string | null;
 };
 
+export type PsychologistsDashboardOperatingSystem =
+  | "android"
+  | "ios"
+  | "ipados"
+  | "macos"
+  | "other"
+  | "unknown"
+  | "windows";
+
+export type PsychologistsDashboardOperatingSystemUsageItem = {
+  active_psychologists_count: number;
+  count: number;
+  id: PsychologistsDashboardOperatingSystem;
+  label: string;
+  operating_system: PsychologistsDashboardOperatingSystem;
+  percentage: number;
+};
+
+export type PsychologistsDashboardOperatingSystemUsage = {
+  items: PsychologistsDashboardOperatingSystemUsageItem[];
+  source: "visitor_session.os+visitor_session.device_type+user.role=psicologo";
+  total_active_psychologists: number;
+  total_sessions: number;
+  unavailable_reason: string | null;
+};
+
 export type PsychologistsDashboardTrafficSourceItem = {
   badge: "primary_source" | null;
   description: string;
@@ -984,9 +1010,16 @@ export type AdminPsychologistStatistics = {
         device_type: "desktop" | "mobile" | "tablet" | "unknown";
         id: "desktop" | "mobile" | "tablet" | "unknown";
         label: string;
+        operating_systems: {
+          count: number;
+          id: PsychologistsDashboardOperatingSystem;
+          label: string;
+          operating_system: PsychologistsDashboardOperatingSystem;
+          percentage: number;
+        }[];
         percentage: number;
       }[];
-      source: "visitor_session.device_type+user_id";
+      source: "visitor_session.device_type+visitor_session.os+user_id";
       total_sessions: number;
       unavailable_reason: string | null;
     };
@@ -1423,6 +1456,7 @@ export type AdminPsychologistsDashboard = {
   device_usage: PsychologistsDashboardDeviceUsage;
   filters_searches: PsychologistsDashboardFilterSearches;
   directory_filters: PsychologistsDashboardDirectoryFilters;
+  operating_system_usage: PsychologistsDashboardOperatingSystemUsage;
   period: PsychologistsDashboardPeriod;
   platform_usage: PsychologistsDashboardPlatformUsage;
   psychologists: {

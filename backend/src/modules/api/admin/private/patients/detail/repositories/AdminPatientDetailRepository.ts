@@ -301,6 +301,7 @@ const patientPlatformSessionSelect = {
   device_type: true,
   first_seen_at: true,
   last_seen_at: true,
+  os: true,
   session_id: true,
   user_id: true,
 } satisfies Prisma.visitor_sessionSelect;
