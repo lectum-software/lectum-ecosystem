@@ -730,3 +730,30 @@ Nao houve alteracao de backend, Prisma schema/migrations, package novo, mock, se
 - `pnpm check`
 - Smoke HTTP local: `GET http://localhost:3002/moderacao/operacionais` retornou `200`.
 - Nao houve alteracao de Prisma schema/migrations; `pnpm --dir backend db:migrate` nao se aplica.
+
+## Complemento 2026-07-25 - Conteúdo sensível em tabela operacional
+
+- Pedido do usuário: transformar a lista de **Conteúdo sensível** em tabela com o mesmo layout da tabela de **Operacionais**.
+- `/moderacao/conteudo-sensivel` passou a renderizar os eventos reais de `content_moderation_event` em tabela compacta com rolagem horizontal contida, mantendo filtros, paginação e contador da página.
+- A tabela usa as colunas **Data**, **Categoria**, **Severidade**, **Decisão**, **Autor**, **Conteúdo** e **Comunidade**.
+- A coluna **Conteúdo** possui duas linhas: prévia do título/snapshot e prévia da descrição/trecho seguro.
+- O detalhe protegido e as ações auditadas continuam disponíveis a partir do botão acessível na célula **Conteúdo**, sem criar coluna extra nem endpoint paralelo.
+- Não houve alteração de backend, Prisma schema/migrations, package novo, mock, seed ou endpoint simulado; `pnpm --dir backend db:migrate` não se aplica.
+- Builder/Quick Copy não está exposto como ferramenta callable neste ambiente; a referência visual foi a captura enviada pelo usuário e a tabela local de `/moderacao/operacionais`.
+
+### Critérios deste ajuste
+
+- [x] `/moderacao/conteudo-sensivel` usa tabela no padrão visual de `/moderacao/operacionais`.
+- [x] A tabela mostra **Data**, **Categoria**, **Severidade**, **Decisão**, **Autor**, **Conteúdo** e **Comunidade**.
+- [x] **Conteúdo** exibe duas linhas: prévia do título e prévia da descrição.
+- [x] O detalhe protegido e as ações auditadas permanecem acessíveis sem coluna extra.
+- [x] O ajuste é mobile-first, sem `<img>` cru, sem package novo e sem migration.
+
+### Validação deste ajuste
+
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/moderacao/client.tsx"`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check`
+- Smoke HTTP local: `GET http://localhost:3002/moderacao/conteudo-sensivel` retornou `200`.
+- Sem ferramenta Builder/Quick Copy callable e sem sessão Admin headless neste ambiente; a validação visual foi coberta pelo build, pelo smoke local e pela referência enviada pelo usuário comparada à tabela existente de `/moderacao/operacionais`.

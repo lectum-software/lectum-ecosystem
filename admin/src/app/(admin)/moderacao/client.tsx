@@ -44,6 +44,7 @@ import { ModerationOverviewCharts } from "./overview-charts";
 
 const EVENT_LIMIT = 10;
 const REMOVE_CONFIRMATION = "REMOVER CONTEUDO";
+const TEXTUAL_TABLE_SKELETON_KEYS = ["first", "second", "third"] as const;
 const cardClass =
   "rounded-card border border-border/80 bg-surface/95 shadow-admin-soft backdrop-blur";
 const numberFormatter = new Intl.NumberFormat("pt-BR");
@@ -405,7 +406,30 @@ const FiltersBar = ({
   </div>
 );
 
-const EventCard = ({
+const firstCategoryLabel = (items: string[]) => {
+  const normalizedItems = items.length ? items : ["other"];
+  const labels = normalizedItems.map((item) => categoryLabels[item] ?? item);
+
+  return {
+    allLabels: labels.join(" · "),
+    visibleLabel: `${labels[0]}${labels.length > 1 ? ` +${labels.length - 1}` : ""}`,
+  };
+};
+
+const ContentSensitiveCategoryBadge = ({ items }: { items: string[] }) => {
+  const category = firstCategoryLabel(items);
+
+  return (
+    <span
+      className="inline-flex max-w-full items-center rounded-full bg-primary-soft px-2.5 py-1 text-xs font-medium text-primary"
+      title={category.allLabels}
+    >
+      <span className="truncate">{category.visibleLabel}</span>
+    </span>
+  );
+};
+
+const ContentSensitiveEventRow = ({
   event,
   onSelect,
   selected,
@@ -413,43 +437,67 @@ const EventCard = ({
   event: AdminModerationEvent;
   onSelect: (event: AdminModerationEvent) => void;
   selected: boolean;
-}) => (
-  <button
-    className={cn(
-      "w-full rounded-2xl border bg-surface p-4 text-left shadow-control transition hover:border-primary",
-      selected ? "border-primary ring-4 ring-primary-soft" : "border-border",
-    )}
-    onClick={() => onSelect(event)}
-    type="button"
-  >
-    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-      <div className="min-w-0">
-        <div className="flex flex-wrap gap-2">
-          <Decision value={event.decision} />
-          <Severity value={event.severity} />
-          <Status value={event.status} />
-        </div>
-        <h3 className="mt-3 font-black text-foreground">
-          {event.title_snapshot || targetLabels[event.target_type] || event.target_type}
-        </h3>
-        <p className="mt-1 line-clamp-3 text-sm leading-6 text-muted">{event.content_excerpt}</p>
-      </div>
-      <p className="shrink-0 text-xs font-black text-muted">{formatDateTime(event.created_at)}</p>
-    </div>
-    <div className="mt-3 grid gap-2 text-xs font-bold text-muted sm:grid-cols-2">
-      <p>Comunidade: {event.community?.name ?? "Sem comunidade"}</p>
-      <p>Autor: {event.author.public_label}</p>
-      <p>Alvo: {targetLabels[event.target_type] ?? event.target_type}</p>
-      <p>Regra: {reasonLabels[event.reason_code] ?? event.reason_code}</p>
-    </div>
-    <div className="mt-3">
-      <Categories items={event.categories} />
-    </div>
-  </button>
-);
+}) => {
+  const titlePreview =
+    event.title_snapshot?.trim() || targetLabels[event.target_type] || "Conteúdo";
+  const descriptionPreview = event.content_excerpt.trim() || "Sem descrição persistida.";
+  const communityName = event.community?.name ?? "Sem comunidade";
 
-const EventsList = ({
+  return (
+    <tr
+      className={cn(
+        "border-t border-border/80 text-sm text-foreground transition hover:bg-primary-soft/30",
+        selected ? "bg-primary-soft/45" : null,
+      )}
+    >
+      <td className="px-5 py-4 align-middle text-xs font-medium text-muted">
+        {formatDateTime(event.created_at)}
+      </td>
+      <td className="px-5 py-4 align-middle">
+        <ContentSensitiveCategoryBadge items={event.categories} />
+      </td>
+      <td className="px-5 py-4 align-middle">
+        <Severity value={event.severity} />
+      </td>
+      <td className="px-5 py-4 align-middle">
+        <Decision value={event.decision} />
+      </td>
+      <td className="px-5 py-4 align-middle">
+        <span
+          className="block truncate text-sm font-medium text-foreground"
+          title={event.author.public_label}
+        >
+          {event.author.public_label}
+        </span>
+      </td>
+      <td className="px-5 py-4 align-middle">
+        <button
+          aria-label={`Abrir detalhe protegido de ${titlePreview}`}
+          className="block w-full min-w-0 rounded-control text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+          onClick={() => onSelect(event)}
+          title="Abrir detalhe protegido"
+          type="button"
+        >
+          <p className="truncate text-sm font-semibold text-foreground" title={titlePreview}>
+            {titlePreview}
+          </p>
+          <p className="mt-1 line-clamp-1 text-xs leading-5 text-muted" title={descriptionPreview}>
+            {descriptionPreview}
+          </p>
+        </button>
+      </td>
+      <td className="px-5 py-4 align-middle">
+        <span className="block truncate text-sm font-medium text-muted" title={communityName}>
+          {communityName}
+        </span>
+      </td>
+    </tr>
+  );
+};
+
+const ContentSensitiveEventsTable = ({
   events,
+  loading,
   onNext,
   onPrev,
   onSelect,
@@ -458,6 +506,7 @@ const EventsList = ({
   selectedId,
 }: {
   events: AdminModerationEvent[];
+  loading: boolean;
   onNext: () => void;
   onPrev: () => void;
   onSelect: (event: AdminModerationEvent) => void;
@@ -465,23 +514,46 @@ const EventsList = ({
   pages: number;
   selectedId: string | null;
 }) => (
-  <div className="overflow-hidden rounded-2xl border border-border bg-surface/70">
-    <div className="grid gap-3 p-4">
-      {events.length === 0 ? (
+  <>
+    {loading ? (
+      <div className="grid gap-3 p-4">
+        {TEXTUAL_TABLE_SKELETON_KEYS.map((key) => (
+          <div className="h-20 animate-pulse rounded-2xl bg-surface-muted" key={key} />
+        ))}
+      </div>
+    ) : events.length === 0 ? (
+      <div className="p-4">
         <div className="rounded-2xl border border-dashed border-border p-5 text-sm leading-6 text-muted">
           Nenhum evento encontrado para os filtros atuais.
         </div>
-      ) : (
-        events.map((event) => (
-          <EventCard
-            event={event}
-            key={event.id}
-            onSelect={onSelect}
-            selected={selectedId === event.id}
-          />
-        ))
-      )}
-    </div>
+      </div>
+    ) : (
+      <div className="overflow-x-auto">
+        <table className="w-full min-w-[1180px] table-fixed border-collapse">
+          <thead className="bg-surface-muted/70 text-left text-[0.7rem] font-medium uppercase tracking-[0.1em] text-subtle">
+            <tr>
+              <th className="w-[13%] px-5 py-4 font-medium">Data</th>
+              <th className="w-[14%] px-5 py-4 font-medium">Categoria</th>
+              <th className="w-[12%] px-5 py-4 font-medium">Severidade</th>
+              <th className="w-[15%] px-5 py-4 font-medium">Decisão</th>
+              <th className="w-[13%] px-5 py-4 font-medium">Autor</th>
+              <th className="w-[23%] px-5 py-4 font-medium">Conteúdo</th>
+              <th className="w-[10%] px-5 py-4 font-medium">Comunidade</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-border/70">
+            {events.map((event) => (
+              <ContentSensitiveEventRow
+                event={event}
+                key={event.id}
+                onSelect={onSelect}
+                selected={selectedId === event.id}
+              />
+            ))}
+          </tbody>
+        </table>
+      </div>
+    )}
     <div className="flex flex-col gap-3 border-t border-border p-4 sm:flex-row sm:items-center sm:justify-between">
       <p className="text-xs font-bold text-muted">
         Página {page} de {pages}
@@ -507,7 +579,7 @@ const EventsList = ({
         </button>
       </div>
     </div>
-  </div>
+  </>
 );
 
 const Info = ({ label, value }: { label: string; value: ReactNode }) => (
@@ -676,6 +748,53 @@ const Detail = ({
     </Card>
   );
 };
+
+const DetailDialog = ({
+  error,
+  event,
+  loading,
+  onClose,
+  onRemove,
+  onResolve,
+  onReview,
+  reviewPending,
+}: {
+  error: unknown;
+  event?: AdminModerationEventDetail;
+  loading: boolean;
+  onClose: () => void;
+  onRemove: (event: AdminModerationEventDetail) => void;
+  onResolve: (event: AdminModerationEventDetail) => void;
+  onReview: (event: AdminModerationEventDetail) => void;
+  reviewPending: boolean;
+}) => (
+  <div className="fixed inset-0 z-50 flex items-end justify-center bg-overlay p-3 sm:items-center">
+    <div className="max-h-[92dvh] w-full max-w-5xl overflow-y-auto rounded-card bg-background shadow-admin-soft">
+      <div className="sticky top-0 z-10 flex justify-end border-b border-border bg-surface/95 p-3 backdrop-blur">
+        <button
+          aria-label="Fechar detalhe protegido"
+          className="inline-flex h-10 items-center justify-center gap-2 rounded-control border border-border bg-surface px-3 text-sm font-black text-foreground transition hover:border-border-strong hover:text-primary"
+          onClick={onClose}
+          type="button"
+        >
+          <X aria-hidden className="h-4 w-4" />
+          Fechar
+        </button>
+      </div>
+      <div className="p-3 sm:p-4">
+        <Detail
+          error={error}
+          event={event}
+          loading={loading}
+          onRemove={onRemove}
+          onResolve={onResolve}
+          onReview={onReview}
+          reviewPending={reviewPending}
+        />
+      </div>
+    </div>
+  </div>
+);
 
 const ModalTitle = ({ onClose, title }: { onClose: () => void; title: string }) => (
   <div className="flex items-start justify-between gap-3">
@@ -915,7 +1034,7 @@ export const AdminModerationClient = ({ mode = "overview" }: { mode?: "overview"
   );
   const events = useAdminModerationEvents(eventsInput);
   const selectedId = isTextualPage
-    ? (selectedOverrideId ?? searchParams.get("event") ?? events.data?.data[0]?.id ?? null)
+    ? (selectedOverrideId ?? searchParams.get("event") ?? null)
     : null;
   const detail = useAdminModerationEvent(selectedId);
   const review = useAdminModerationReview();
@@ -977,6 +1096,15 @@ export const AdminModerationClient = ({ mode = "overview" }: { mode?: "overview"
     params.set("event", event.id);
     router.replace(`${pathname}?${params.toString()}`, { scroll: false });
   };
+  const closeSelectedEvent = useCallback(() => {
+    setSelectedOverrideId(null);
+
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete("event");
+    const nextSearch = params.toString();
+
+    router.replace(nextSearch ? `${pathname}?${nextSearch}` : pathname, { scroll: false });
+  }, [pathname, router, searchParams]);
   const markReviewing = async (event: AdminModerationEventDetail) => {
     try {
       await review.mutateAsync(event.id);
@@ -1029,27 +1157,29 @@ export const AdminModerationClient = ({ mode = "overview" }: { mode?: "overview"
             onDateBlur={handleTextualDateBlur}
             resultCount={events.data?.count ?? 0}
           />
-          <div className="grid gap-5 p-4 xl:grid-cols-[minmax(0,1fr)_420px]">
-            <EventsList
-              events={events.data?.data ?? []}
-              onNext={() => setPage((current) => current + 1)}
-              onPrev={() => setPage((current) => Math.max(1, current - 1))}
-              onSelect={selectEvent}
-              page={events.data?.page ?? page}
-              pages={events.data?.pages ?? 1}
-              selectedId={selectedId}
-            />
-            <Detail
-              error={detail.error}
-              event={detail.data}
-              loading={detail.isLoading && Boolean(selectedId)}
-              onRemove={setRemoveTarget}
-              onResolve={setResolveTarget}
-              onReview={markReviewing}
-              reviewPending={review.isPending}
-            />
-          </div>
+          <ContentSensitiveEventsTable
+            events={events.data?.data ?? []}
+            loading={events.isLoading}
+            onNext={() => setPage((current) => current + 1)}
+            onPrev={() => setPage((current) => Math.max(1, current - 1))}
+            onSelect={selectEvent}
+            page={events.data?.page ?? page}
+            pages={events.data?.pages ?? 1}
+            selectedId={selectedId}
+          />
         </section>
+      ) : null}
+      {isTextualPage && selectedId ? (
+        <DetailDialog
+          error={detail.error}
+          event={detail.data}
+          loading={detail.isLoading}
+          onClose={closeSelectedEvent}
+          onRemove={setRemoveTarget}
+          onResolve={setResolveTarget}
+          onReview={markReviewing}
+          reviewPending={review.isPending}
+        />
       ) : null}
       {resolveTarget ? (
         <ResolveModal event={resolveTarget} onClose={() => setResolveTarget(null)} />

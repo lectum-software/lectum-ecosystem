@@ -233,3 +233,11 @@ A decisao reduz ruido na fila e evita que a coluna **Detalhes** vire uma lista d
 A fila `/moderacao/operacionais` passa a usar uma copy de escopo mais curta no header: **Pendencias por falta de cobertura, perfis profissionais nao publicados e falta de tracao de profissionais.**. A decisao evita repetir regras internas como 48h/configuracoes obrigatorias/WhatsApp no resumo da pagina, mantendo esses criterios no contrato e na documentacao da task.
 
 Para **Post sem cobertura**, a coluna **Detalhes** deixa de exibir o nivel de engajamento do paciente e passa a exibir **Sem cobertura**, com a duracao real da pendencia. A UI usa primeiro o fato derivado **Idade** do alerta e mantém fallback para `age_hours`/`created_at` pelo helper de duracao ja usado nas tabelas, sem nova query, sem persistencia e sem endpoint paralelo.
+
+## Complemento 2026-07-25: Conteúdo sensível em tabela operacional
+
+A fila exclusiva `/moderacao/conteudo-sensivel` deixa de usar lista em cards com detalhe lateral fixo e passa a usar uma tabela compacta no mesmo padrão visual de `/moderacao/operacionais`, com rolagem horizontal contida em telas pequenas e densidade adequada para triagem.
+
+A tabela exibe uma linha por evento real de `content_moderation_event` com as colunas **Data**, **Categoria**, **Severidade**, **Decisão**, **Autor**, **Conteúdo** e **Comunidade**. A coluna **Conteúdo** concentra duas linhas: prévia do título/snapshot e prévia da descrição/trecho seguro. Para preservar as ações auditadas e o snapshot protegido sem adicionar uma coluna fora do pedido, o detalhe completo abre a partir do botão acessível dentro da célula **Conteúdo**.
+
+Não houve alteração de backend, contrato HTTP, Prisma schema/migrations, package novo ou dados artificiais. A mudança é composicional no Admin, mobile-first e mantém os endpoints reais de conteúdo sensível.
