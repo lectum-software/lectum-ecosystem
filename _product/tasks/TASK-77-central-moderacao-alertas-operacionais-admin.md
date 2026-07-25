@@ -600,6 +600,23 @@ Validacao deste ajuste:
 - API local autenticada: `GET /api/admin/private/moderation/operational-alerts?group=compliance&limit=20` retornou 8 pendências reais; todas as linhas tinham `professional.role_label` e `professional.show_verified_badge === professional.is_subscriber && professional.registry_verified`.
 - Browser local/headless em Chrome para `/moderacao/compliance` validou desktop 1365px e mobile 390px com 8 linhas reais, **Psicólogo/Psicóloga** abaixo do nome conforme metadado real, pesos de texto até 500 na tabela, tag **Perfil** menor que a coluna e sem overflow horizontal. O conjunto atual não tinha profissional elegível ao selo, então o DOM validou 0 selos contra 0 retornados pela API. Admin temporário de validação removido ao final.
 
+## Ajuste complementar 2026-07-25 - Segmentação dos filtros de Operacionais
+
+- Pedido do usuário: corrigir o filtro **Tipo** de `/moderacao/operacionais`, que mostrava **Sem tração** selecionado mas mantinha linhas de **Post sem cobertura**.
+- A causa era a chave de cache do TanStack Query para `operational-alerts`: ela não incluía `alertType` e também omitia filtros correlatos (`contentType`, `plan`, `profileStatus`). Assim, alterações no select podiam reutilizar o resultado em cache do grupo inteiro sem disparar nova consulta.
+- `adminModerationKeys.operationalAlerts` agora normaliza esses filtros na query key, fazendo cada combinação de tipo/plano/status/tipo de conteúdo ter cache e refetch próprios.
+- A correção é frontend/cache, sem alteração de contrato backend, Prisma schema/migrations, package novo, mock ou dado artificial.
+
+### Critérios deste ajuste
+
+- [x] Alterar **Tipo** em `/moderacao/operacionais` muda a query key e refaz a consulta segmentada.
+- [x] **Sem tração** não reutiliza mais o cache de **Todos** ou **Post sem cobertura**.
+- [x] A mesma proteção cobre filtros de tipo em Denúncias e filtros de Plano/Status de perfil em Compliance.
+
+### Validação deste ajuste
+
+- `pnpm --dir admin exec biome check --write "src/api/cache/keys.ts"`
+
 ## Ajuste complementar 2026-07-25 - Compliance com tempo pendente
 
 - Pedido do usuário: trocar a coluna **Data** da tabela de **Compliance** por **Pendente há**, exibindo há quanto tempo cada demanda está pendente.
@@ -624,3 +641,33 @@ Validacao deste ajuste:
 - `pnpm --dir admin build`
 - `pnpm check`
 - Browser local/headless em Chrome para `/moderacao/compliance` validou desktop 1365px e mobile 390px com 8 linhas reais, cabeçalho **Pendente há**, ausência do cabeçalho **Data**, duração relativa na célula (ex.: **2 dias**), `title` **Pendente desde ...** e sem overflow horizontal da página. Admins temporários `codex-compliance-row-` foram removidos ao final.
+
+## Ajuste complementar 2026-07-25 - Plano Cortesia no filtro de Compliance
+
+- Pedido do usuário: adicionar **Plano Cortesia** ao filtro **Plano** da página `/moderacao/compliance`.
+- A UI do Admin passa a oferecer **Todos**, **Plano Gratuito**, **Plano Profissional** e **Plano Cortesia** no select de Plano, mantendo o padrão mobile-first já usado pela barra de filtros de Compliance.
+- O contrato Admin aceita `plan=cortesia` em `GET /api/admin/private/moderation/operational-alerts` e o backend aplica o filtro antes da paginação, sem filtragem client-side sobre uma página já paginada.
+- A cortesia é identificada pela origem real `professional_subscription.source="admin_grant"`; alertas derivados de psicólogo exibem **Plano Cortesia** quando a assinatura vigente vem dessa origem, inclusive para pendências de WhatsApp.
+- **Plano Profissional** passa a representar assinatura profissional não gratuita que não é cortesia administrativa, evitando misturar cortesia com assinante pago quando a segmentação estiver ativa.
+- Não houve alteração de Prisma schema/migrations, package novo, mock, seed ou endpoint simulado; `pnpm --dir backend db:migrate` não se aplica.
+- Builder/Quick Copy não está exposto como ferramenta callable neste ambiente; a referência visual foi a captura enviada pelo usuário e a tela local `/moderacao/compliance`.
+
+### Critérios deste ajuste
+
+- [x] O filtro **Plano** de `/moderacao/compliance` contém a opção **Plano Cortesia**.
+- [x] Selecionar **Plano Cortesia** envia `plan=cortesia` ao backend real.
+- [x] O backend reconhece `plan=cortesia` e filtra alertas por `professional_subscription.source="admin_grant"` antes da paginação.
+- [x] Alertas de cortesia administrativa exibem **Plano Cortesia** na coluna **Plano**.
+- [x] O ajuste é mobile-first, sem `<img>` cru, sem package novo e sem migration.
+
+### Validação deste ajuste
+
+- `pnpm --dir admin exec biome check "src/app/(admin)/moderacao/operational-category-client.tsx" "src/api/req/moderation/index.ts" "src/api/cache/keys.ts"`
+- `pnpm --dir backend exec biome check "src/modules/api/admin/private/moderation/DTOs/IAdminModerationDTO.ts" "src/modules/api/admin/private/moderation/use-cases/services.ts" "src/modules/api/admin/private/moderation/validator/index.ts"`
+- `pnpm --dir admin check`
+- `pnpm --dir backend check` (a primeira execução encontrou `ENOTEMPTY` transitório no `prisma generate`; `pnpm --dir backend exec prisma generate` e a reexecução do check concluíram com sucesso)
+- `pnpm --dir backend build`
+- `pnpm --dir admin build`
+- `pnpm check` (a primeira execução excedeu 184s; reexecutado com timeout maior e concluído com sucesso)
+- API local autenticada: `GET /api/admin/private/moderation/operational-alerts?group=compliance&plan=cortesia&limit=50` retornou `200`, `count=0` na base real atual e nenhuma linha inválida; `plan=profissional` retornou `200`, `count=8` e `0` linhas com `Origem=admin_grant`/`Plano Cortesia`.
+- Browser local/headless em Chrome para `http://localhost:3002/moderacao/compliance` validou desktop 1365px e mobile 390px com **Plano Cortesia** (`value="cortesia"`) no select **Plano**, sem faixa **Fora do escopo agora...**, sem label **Busca**, sem overflow horizontal e com requisição real contendo `plan=cortesia` ao alterar o filtro. Admin temporário de validação removido ao final.

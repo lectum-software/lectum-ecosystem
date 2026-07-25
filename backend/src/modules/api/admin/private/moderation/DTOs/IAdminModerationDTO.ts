@@ -47,7 +47,7 @@ export type AdminModerationOperationalAlertsQuery = {
   group?: AdminModerationOperationalAlertsGroup;
   limit?: number;
   page?: number;
-  plan?: "all" | "gratuito" | "profissional";
+  plan?: "all" | "cortesia" | "gratuito" | "profissional";
   profileStatus?: "active" | "all" | "inactive";
   q?: string;
   reason?: AdminModerationPostReportReason;

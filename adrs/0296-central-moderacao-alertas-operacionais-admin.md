@@ -192,6 +192,12 @@ O rótulo abaixo do nome é derivado exclusivamente de `psychologist_profile.gen
 
 O selo de verificado na linha só é exibido quando coexistem assinatura profissional ativa não gratuita e registro reconhecido pela regra de domínio já vigente (`crp_status="aprovado"`, `cfp_verified_at` ou cortesia administrativa válida). A tabela também reduz pesos de fonte e usa tags de **Perfil** autoajustadas ao texto para preservar densidade de triagem.
 
+## Complemento 2026-07-25: filtros de listas entram na query key
+
+As listas exclusivas que usam `GET /api/admin/private/moderation/operational-alerts` dependem de cache client-side por TanStack Query. A chave anterior considerava grupo, paginação, datas, busca e filtros de denúncia, mas não incluía `alertType` nem os filtros específicos adicionados depois (`contentType`, `plan`, `profileStatus`). Com isso, a UI podia exibir um select segmentado, como **Sem tração**, enquanto a tabela permanecia com o resultado em cache de **Todos** ou de outro tipo.
+
+A decisão é tratar todos os parâmetros funcionais de segmentação como parte obrigatória da query key: `alertType`, `contentType`, `plan` e `profileStatus` foram adicionados à normalização de `adminModerationKeys.operationalAlerts`. O backend e o contrato HTTP permanecem inalterados; a correção garante apenas que o cache/refetch do cliente acompanhe a segmentação real já suportada pelo endpoint.
+
 ## Complemento 2026-07-25: tempo pendente na tabela de Compliance
 
 A segunda coluna da fila exclusiva `/moderacao/compliance` deixa de exibir a data absoluta e passa a se chamar **Pendente há**, mostrando uma duração relativa da pendência. A decisão melhora a priorização operacional, porque o moderador compara imediatamente o envelhecimento das demandas sem calcular a diferença entre a data exibida e o momento atual.
@@ -199,3 +205,11 @@ A segunda coluna da fila exclusiva `/moderacao/compliance` deixa de exibir a dat
 A duração usa o campo derivado `age_hours` do alerta quando presente, mantendo a fonte de verdade no backend. Quando o campo não está disponível, a UI calcula o fallback a partir de `created_at`; a data/hora absoluta permanece no `title` da célula como **Pendente desde ...** para auditoria e conferência.
 
 O helper de duração foi centralizado e também alimenta a tabela de **Operacionais**, preservando consistência visual entre filas derivadas sem novo estado persistido, sem migration e sem endpoint paralelo.
+
+## Complemento 2026-07-25: Plano Cortesia no filtro de Compliance
+
+O filtro **Plano** de `/moderacao/compliance` passa a tratar **Plano Cortesia** como uma segmentação própria, usando o valor HTTP `plan=cortesia`. A distinção é necessária porque a cortesia administrativa concede experiência profissional, mas a operação precisa separá-la do assinante pago/profissional para triagem e auditoria.
+
+A fonte canônica da cortesia permanece o dado persistido `professional_subscription.source="admin_grant"`, conforme o modelo de assinatura. O endpoint derivado `operational-alerts` não cria estado novo: ele rotula a assinatura vigente de origem `admin_grant` como **Plano Cortesia**, inclui a origem nos fatos de pendências de Compliance e aplica o filtro antes da paginação.
+
+Com a nova segmentação, `plan=profissional` deixa de capturar alertas de origem `admin_grant`; esses alertas ficam em `plan=cortesia`. A decisão mantém a central read-only, sem migration, sem endpoint paralelo e sem fallback mockado.

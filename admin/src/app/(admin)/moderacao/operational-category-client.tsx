@@ -117,7 +117,7 @@ const operationalCategoryFiltersSchema = z
       "unpublished_required_settings",
     ]),
     from: z.string().max(10, "Use uma data válida."),
-    plan: z.enum(["all", "gratuito", "profissional"]),
+    plan: z.enum(["all", "cortesia", "gratuito", "profissional"]),
     profileStatus: z.enum(["all", "active", "inactive"]),
     q: z.string().max(120, "Use no máximo 120 caracteres."),
     to: z.string().max(10, "Use uma data válida."),
@@ -231,6 +231,7 @@ const compliancePlanOptions = [
   { label: "Todos", value: "all" },
   { label: "Plano Gratuito", value: "gratuito" },
   { label: "Plano Profissional", value: "profissional" },
+  { label: "Plano Cortesia", value: "cortesia" },
 ] satisfies Array<{ label: string; value: OperationalCategoryFiltersFormValues["plan"] }>;
 
 const complianceProfileStatusOptions = [

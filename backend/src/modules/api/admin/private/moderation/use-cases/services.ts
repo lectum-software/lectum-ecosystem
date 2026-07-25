@@ -619,6 +619,17 @@ const isProfessionalSubscription = (
   subscription: AdminOperationalPsychologistRecord["subscriptions"][number],
 ) => subscription.plan.slug !== "gratuito";
 
+const isCourtesySubscription = (
+  subscription: AdminOperationalPsychologistRecord["subscriptions"][number],
+) => subscription.source === "admin_grant";
+
+const subscriptionPlanLabel = (
+  subscription: AdminOperationalPsychologistRecord["subscriptions"][number],
+) =>
+  isCourtesySubscription(subscription)
+    ? "Plano Cortesia"
+    : subscription.plan.name || subscription.plan.slug;
+
 const pickCurrentSubscription = (profile: AdminOperationalPsychologistRecord, now: Date) => {
   const subscriptions = activeSubscriptions(profile, now);
   if (subscriptions.length === 0) return null;
@@ -840,7 +851,7 @@ const buildPsychologistAlerts = (
     const user = psychologistAlertUser(profile, name, registryVerified);
     const profileViews = profileViewCounts.get(profile.user_id) ?? 0;
     const whatsappClicks = whatsappClickCounts.get(profile.user_id) ?? 0;
-    const currentPlanLabel = currentSubscription.plan.name || currentSubscription.plan.slug;
+    const currentPlanLabel = subscriptionPlanLabel(currentSubscription);
     const professional = {
       gender: profile.gender,
       id: profile.user_id,
@@ -904,6 +915,7 @@ const buildPsychologistAlerts = (
           { label: "Plano", value: currentPlanLabel },
           { label: "WhatsApp", value: whatsappStatusLabel(profile.whatsapp) },
           { label: "Publicado", value: profile.published ? "sim" : "não" },
+          { label: "Origem", value: currentSubscription.source },
         ],
         group: "compliance",
         id: `invalid-whatsapp-${profile.id}`,
@@ -1147,7 +1159,9 @@ const normalizeOperationalPlan = (
 ): NonNullable<AdminModerationOperationalAlertsQuery["plan"]> => {
   const normalized = normalizeFilter(value).toLowerCase();
 
-  return normalized === "gratuito" || normalized === "profissional" ? normalized : "all";
+  return normalized === "cortesia" || normalized === "gratuito" || normalized === "profissional"
+    ? normalized
+    : "all";
 };
 
 const normalizeOperationalProfileStatus = (
@@ -1218,8 +1232,21 @@ const operationalAlertMatchesPlan = (
   if (plan === "all") return true;
 
   const currentPlan = normalizedText(operationalFactValue(alert, "Plano"));
+  const currentSource = normalizedText(operationalFactValue(alert, "Origem"));
+  const isCourtesy =
+    currentSource === "admin_grant" ||
+    currentSource.includes("cortesia") ||
+    currentPlan.includes("cortesia");
+
+  if (plan === "cortesia") {
+    return isCourtesy;
+  }
+
   if (plan === "profissional") {
-    return alert.professional?.is_subscriber === true || currentPlan.includes("profissional");
+    return (
+      !isCourtesy &&
+      (alert.professional?.is_subscriber === true || currentPlan.includes("profissional"))
+    );
   }
 
   return currentPlan.includes("gratuito");
