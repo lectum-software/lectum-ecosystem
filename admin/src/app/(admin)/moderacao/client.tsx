@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -66,55 +66,55 @@ const getQuickRange = (days: number) => {
 const initialRange = getQuickRange(30);
 
 const decisionCopy: Record<AdminModerationDecision, { label: string; className: string }> = {
-  allow_sensitive: { className: "bg-orange-50 text-orange-700", label: "SensÃ­vel publicado" },
+  allow_sensitive: { className: "bg-orange-50 text-orange-700", label: "Sensível publicado" },
   block: { className: "bg-red-50 text-danger", label: "Bloqueado" },
-  safety_hold: { className: "bg-red-600 text-white", label: "SeguranÃ§a urgente" },
+  safety_hold: { className: "bg-red-600 text-white", label: "Segurança urgente" },
 };
 const statusCopy: Record<AdminModerationStatus, { label: string; className: string }> = {
   pending: { className: "bg-yellow-50 text-yellow-700", label: "Pendente" },
   resolved: { className: "bg-emerald-50 text-success", label: "Resolvido" },
-  reviewing: { className: "bg-blue-50 text-blue-700", label: "Em revisÃ£o" },
+  reviewing: { className: "bg-blue-50 text-blue-700", label: "Em revisão" },
 };
 const severityCopy: Record<AdminModerationSeverity, { label: string; className: string }> = {
   high: { className: "bg-red-50 text-danger", label: "Alta" },
   low: { className: "bg-surface-muted text-muted", label: "Baixa" },
-  medium: { className: "bg-orange-50 text-orange-700", label: "MÃ©dia" },
+  medium: { className: "bg-orange-50 text-orange-700", label: "Média" },
   urgent: { className: "bg-red-600 text-white", label: "Urgente" },
 };
 const categoryLabels: Record<string, string> = {
-  abuse_violence: "Abuso/violÃªncia",
-  explicit_sexual: "Sexual explÃ­cito",
+  abuse_violence: "Abuso/violência",
+  explicit_sexual: "Sexual explícito",
   external_link: "Link externo",
   minor_sexual_risk: "Menor/risco sexual",
   other: "Outro",
-  self_harm_suicide: "AutolesÃ£o/suicÃ­dio",
-  sexual_health: "SaÃºde sexual",
+  self_harm_suicide: "Autolesão/suicídio",
+  sexual_health: "Saúde sexual",
   spam_scam: "Spam/golpe",
 };
 const reasonLabels: Record<string, string> = {
   external_contact_invitation_blocked: "Convite para contato externo",
   minor_sexual_risk_blocked: "Contexto sexual com menor",
-  patient_external_link_blocked: "URL ou domÃ­nio externo",
-  self_harm_immediate_safety_hold: "Risco imediato/autolesÃ£o",
-  sensitive_term_requires_admin_awareness: "Termo sensÃ­vel em relato",
-  sensitive_therapeutic_context: "Relato terapÃªutico sensÃ­vel",
-  sexual_solicitation_blocked: "SolicitaÃ§Ã£o/divulgaÃ§Ã£o sexual",
+  patient_external_link_blocked: "URL ou domínio externo",
+  self_harm_immediate_safety_hold: "Risco imediato/autolesão",
+  sensitive_term_requires_admin_awareness: "Termo sensível em relato",
+  sensitive_therapeutic_context: "Relato terapêutico sensível",
+  sexual_solicitation_blocked: "Solicitação/divulgação sexual",
   spam_or_scam_blocked: "Spam ou golpe",
 };
 const targetLabels: Record<string, string> = {
   community_post: "Post publicado",
   post_reply: "Resposta publicada",
-  submitted_post: "Post bloqueado antes da publicaÃ§Ã£o",
-  submitted_reply: "Resposta bloqueada antes da publicaÃ§Ã£o",
+  submitted_post: "Post bloqueado antes da publicação",
+  submitted_reply: "Resposta bloqueada antes da publicação",
 };
 const categoryOptions = [
   ["all", "Todas"],
   ["external_link", "Links externos"],
-  ["sexual_health", "SaÃºde sexual"],
-  ["explicit_sexual", "Sexual explÃ­cito"],
+  ["sexual_health", "Saúde sexual"],
+  ["explicit_sexual", "Sexual explícito"],
   ["minor_sexual_risk", "Menor/risco sexual"],
-  ["self_harm_suicide", "AutolesÃ£o/suicÃ­dio"],
-  ["abuse_violence", "Abuso/violÃªncia"],
+  ["self_harm_suicide", "Autolesão/suicídio"],
+  ["abuse_violence", "Abuso/violência"],
   ["spam_scam", "Spam/golpe"],
   ["other", "Outro"],
 ] as const;
@@ -145,7 +145,7 @@ const resolveSchema = z.object({
     .string()
     .trim()
     .min(3, "Informe a nota administrativa.")
-    .max(1000, "Use atÃ© 1000 caracteres."),
+    .max(1000, "Use até 1000 caracteres."),
 });
 const removeSchema = z.object({
   confirmation: z
@@ -155,16 +155,16 @@ const removeSchema = z.object({
       (value) => value.toUpperCase() === REMOVE_CONFIRMATION,
       `Digite ${REMOVE_CONFIRMATION} para confirmar.`,
     ),
-  reason: z.string().trim().min(3, "Informe o motivo.").max(500, "Use atÃ© 500 caracteres."),
+  reason: z.string().trim().min(3, "Informe o motivo.").max(500, "Use até 500 caracteres."),
 });
 type ResolveValues = z.infer<typeof resolveSchema>;
 type RemoveValues = z.infer<typeof removeSchema>;
 
 const formatDateTime = (value?: string | null) => {
-  if (!value) return "â€”";
+  if (!value) return "—";
   const date = new Date(value);
 
-  return Number.isNaN(date.getTime()) ? "â€”" : dateTimeFormatter.format(date);
+  return Number.isNaN(date.getTime()) ? "—" : dateTimeFormatter.format(date);
 };
 const formatDate = (value: string) => dateFormatter.format(new Date(value));
 const Card = ({ children, className }: { children?: ReactNode; className?: string }) => (
@@ -173,12 +173,12 @@ const Card = ({ children, className }: { children?: ReactNode; className?: strin
 
 const Header = ({
   backHref,
-  description = "Acompanhe denÃºncias de posts, conteÃºdo sensÃ­vel, pendÃªncias de compliance profissional e alertas operacionais derivados dos dados reais da Lectum.",
+  description = "Acompanhe denúncias de posts, conteúdo sensível, pendências de compliance profissional e alertas operacionais derivados dos dados reais da Lectum.",
   disabled,
-  eyebrow = "OperaÃ§Ã£o e seguranÃ§a",
+  eyebrow = "Operação e segurança",
   loading,
   onRefresh,
-  title = "Central de moderaÃ§Ã£o e alertas",
+  title = "Central de moderação e alertas",
 }: {
   backHref?: string;
   description?: string;
@@ -260,7 +260,7 @@ const FiltersBar = ({
     <div className="border-b border-border/80 p-5">
       <div className="flex flex-col gap-1">
         <p className="text-xs font-semibold uppercase tracking-[0.12em] text-primary">
-          ConteÃºdo sensÃ­vel
+          Conteúdo sensível
         </p>
         <h2 className="text-xl font-bold text-foreground">Filtros de eventos</h2>
         <p className="text-sm leading-6 text-muted">
@@ -276,19 +276,19 @@ const FiltersBar = ({
           options={[
             ["all", "Todos"],
             ["pending", "Pendente"],
-            ["reviewing", "Em revisÃ£o"],
+            ["reviewing", "Em revisão"],
             ["resolved", "Resolvido"],
           ]}
           value={filters.status}
         />
         <Select
-          label="DecisÃ£o"
+          label="Decisão"
           onChange={(value) => setFilters({ ...filters, decision: value as Filters["decision"] })}
           options={[
             ["all", "Todas"],
-            ["allow_sensitive", "SensÃ­vel publicado"],
+            ["allow_sensitive", "Sensível publicado"],
             ["block", "Bloqueado"],
-            ["safety_hold", "SeguranÃ§a urgente"],
+            ["safety_hold", "Segurança urgente"],
           ]}
           value={filters.decision}
         />
@@ -304,7 +304,7 @@ const FiltersBar = ({
           options={[
             ["all", "Todas"],
             ["low", "Baixa"],
-            ["medium", "MÃ©dia"],
+            ["medium", "Média"],
             ["high", "Alta"],
             ["urgent", "Urgente"],
           ]}
@@ -343,7 +343,7 @@ const FiltersBar = ({
           value={filters.from}
         />
         <DateInput
-          label="AtÃ©"
+          label="Até"
           min={filters.from}
           onChange={(value) => setFilters({ ...filters, to: value })}
           value={filters.to}
@@ -521,7 +521,7 @@ const EventsList = ({
     </div>
     <div className="flex flex-col gap-3 border-t border-border p-4 sm:flex-row sm:items-center sm:justify-between">
       <p className="text-xs font-bold text-muted">
-        PÃ¡gina {page} de {pages}
+        Página {page} de {pages}
       </p>
       <div className="flex gap-2">
         <button
@@ -539,7 +539,7 @@ const EventsList = ({
           onClick={onNext}
           type="button"
         >
-          PrÃ³xima
+          Próxima
           <ChevronRight aria-hidden className="h-4 w-4" />
         </button>
       </div>
@@ -575,7 +575,7 @@ const Detail = ({
   if (error) {
     return (
       <Card className="p-5">
-        <h2 className="font-black text-foreground">Detalhe indisponÃ­vel</h2>
+        <h2 className="font-black text-foreground">Detalhe indisponível</h2>
         <p className="mt-1 text-sm text-muted">{resolveApiError(error)}</p>
       </Card>
     );
@@ -584,7 +584,7 @@ const Detail = ({
     return (
       <Card className="p-5">
         <div className="rounded-2xl border border-dashed border-border p-5 text-sm leading-6 text-muted">
-          Selecione um evento para ver snapshot protegido, regras disparadas e aÃ§Ãµes.
+          Selecione um evento para ver snapshot protegido, regras disparadas e ações.
         </div>
       </Card>
     );
@@ -603,10 +603,10 @@ const Detail = ({
           Detalhe protegido
         </p>
         <h2 className="mt-2 text-2xl font-black text-foreground">
-          {event.title_snapshot || targetLabels[event.target_type] || "Evento de moderaÃ§Ã£o"}
+          {event.title_snapshot || targetLabels[event.target_type] || "Evento de moderação"}
         </h2>
         <p className="mt-2 text-sm leading-6 text-muted">
-          Snapshot completo visÃ­vel apenas nesta rota Admin autenticada.
+          Snapshot completo visível apenas nesta rota Admin autenticada.
         </p>
         <div className="mt-4 flex flex-wrap gap-2">
           <Decision value={event.decision} />
@@ -616,10 +616,10 @@ const Detail = ({
       </div>
       <div className="space-y-5 p-5">
         <div className="grid gap-3 sm:grid-cols-2">
-          <Info label="Autor pÃºblico" value={event.author.public_label} />
-          <Info label="Autor Admin" value={event.author.admin_label || "â€”"} />
+          <Info label="Autor público" value={event.author.public_label} />
+          <Info label="Autor Admin" value={event.author.admin_label || "—"} />
           <Info label="Papel" value={event.author.role} />
-          <Info label="Comunidade" value={event.community?.name ?? "â€”"} />
+          <Info label="Comunidade" value={event.community?.name ?? "—"} />
           <Info label="Alvo" value={targetLabels[event.target_type] ?? event.target_type} />
           <Info label="Criado em" value={formatDateTime(event.created_at)} />
           <Info label="Revisado em" value={formatDateTime(event.reviewed_at)} />
@@ -672,7 +672,7 @@ const Detail = ({
             </Link>
           ) : (
             <span className="inline-flex min-h-11 items-center rounded-control border border-border bg-surface-muted px-4 text-sm font-black text-muted">
-              Bloqueado antes da publicaÃ§Ã£o
+              Bloqueado antes da publicação
             </span>
           )}
           {event.status !== "resolved" ? (
@@ -687,7 +687,7 @@ const Detail = ({
               ) : (
                 <Clock3 aria-hidden className="h-4 w-4" />
               )}
-              Marcar em revisÃ£o
+              Marcar em revisão
             </button>
           ) : null}
           <button
@@ -705,7 +705,7 @@ const Detail = ({
               type="button"
             >
               <Trash2 aria-hidden className="h-4 w-4" />
-              Remover conteÃºdo
+              Remover conteúdo
             </button>
           ) : null}
         </div>
@@ -717,10 +717,10 @@ const Detail = ({
 const ModalTitle = ({ onClose, title }: { onClose: () => void; title: string }) => (
   <div className="flex items-start justify-between gap-3">
     <div>
-      <p className="text-xs font-black uppercase tracking-[0.22em] text-primary">AÃ§Ã£o Admin</p>
+      <p className="text-xs font-black uppercase tracking-[0.22em] text-primary">Ação Admin</p>
       <h2 className="mt-2 text-2xl font-black text-foreground">{title}</h2>
       <p className="mt-2 text-sm leading-6 text-muted">
-        A aÃ§Ã£o registra auditoria e nÃ£o envia conteÃºdo sensÃ­vel para logs tÃ©cnicos.
+        A ação registra auditoria e não envia conteúdo sensível para logs técnicos.
       </p>
     </div>
     <button
@@ -796,7 +796,7 @@ const ResolveModal = ({
               disabled={mutation.isPending}
               label="Nota administrativa"
               name="note"
-              placeholder="Descreva a decisÃ£o tomada e prÃ³ximos passos."
+              placeholder="Descreva a decisão tomada e próximos passos."
               required
               rows={5}
             />
@@ -819,8 +819,7 @@ const RemoveModal = ({
   const resolveMutation = useAdminModerationResolve();
   const removeMutation = useMutation({
     mutationFn: async (values: RemoveValues) => {
-      if (!event.community || !event.target_id)
-        throw new Error("ConteÃºdo publicado indisponÃ­vel.");
+      if (!event.community || !event.target_id) throw new Error("Conteúdo publicado indisponível.");
       const targetType = event.target_type === "post_reply" ? "comment" : "post";
 
       return removeAdminCommunityContent(event.community.id, targetType, event.target_id, {
@@ -847,10 +846,10 @@ const RemoveModal = ({
       await resolveMutation.mutateAsync({
         id: event.id,
         input: {
-          note: `ConteÃºdo publicado removido pelo fluxo auditado de comunidade. Motivo: ${values.reason.trim()}`,
+          note: `Conteúdo publicado removido pelo fluxo auditado de comunidade. Motivo: ${values.reason.trim()}`,
         },
       });
-      toast.success("ConteÃºdo removido e evento resolvido.");
+      toast.success("Conteúdo removido e evento resolvido.");
       onClose();
     } catch (error) {
       toast.error(resolveApiError(error));
@@ -860,24 +859,24 @@ const RemoveModal = ({
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-overlay p-3 sm:items-center">
       <Card className="max-h-[92dvh] w-full max-w-xl overflow-y-auto p-5 sm:p-6">
-        <ModalTitle onClose={onClose} title="Remover conteÃºdo publicado" />
+        <ModalTitle onClose={onClose} title="Remover conteúdo publicado" />
         <p className="mt-4 rounded-2xl border border-red-100 bg-red-50 p-4 text-sm leading-6 text-danger">
-          Esta aÃ§Ã£o usa o fluxo real de remoÃ§Ã£o auditada de comunidades. Depois, o evento serÃ¡
+          Esta ação usa o fluxo real de remoção auditada de comunidades. Depois, o evento será
           resolvido com nota administrativa.
         </p>
         <FormProvider {...form}>
           <form className="mt-5 grid gap-4" noValidate onSubmit={form.handleSubmit(submit)}>
             <TextareaController<RemoveValues>
               disabled={pending}
-              label="Motivo interno obrigatÃ³rio"
+              label="Motivo interno obrigatório"
               name="reason"
-              placeholder="Explique por que o conteÃºdo sensÃ­vel publicado serÃ¡ removido."
+              placeholder="Explique por que o conteúdo sensível publicado será removido."
               required
               rows={4}
             />
             <InputController<RemoveValues>
               disabled={pending}
-              label="ConfirmaÃ§Ã£o forte"
+              label="Confirmação forte"
               name="confirmation"
               placeholder={REMOVE_CONFIRMATION}
               required
@@ -898,7 +897,7 @@ const ErrorState = ({ error, onRetry }: { error: unknown; onRetry: () => void })
           <AlertTriangle aria-hidden className="h-5 w-5" />
         </div>
         <div>
-          <h2 className="text-lg font-black">NÃ£o foi possÃ­vel carregar a moderaÃ§Ã£o</h2>
+          <h2 className="text-lg font-black">Não foi possível carregar a moderação</h2>
           <p className="mt-1 text-sm text-muted">{resolveApiError(error)}</p>
         </div>
       </div>
@@ -973,7 +972,7 @@ export const AdminModerationClient = ({ mode = "overview" }: { mode?: "overview"
   const markReviewing = async (event: AdminModerationEventDetail) => {
     try {
       await review.mutateAsync(event.id);
-      toast.success("Evento marcado em revisÃ£o.");
+      toast.success("Evento marcado em revisão.");
     } catch (error) {
       toast.error(resolveApiError(error));
     }
@@ -985,14 +984,14 @@ export const AdminModerationClient = ({ mode = "overview" }: { mode?: "overview"
         backHref={isTextualPage ? "/moderacao" : undefined}
         description={
           isTextualPage
-            ? "Lista exclusiva de pendÃªncias de conteÃºdo sensÃ­vel, com filtros, detalhe protegido e aÃ§Ãµes auditadas."
+            ? "Lista exclusiva de pendências de conteúdo sensível, com filtros, detalhe protegido e ações auditadas."
             : undefined
         }
         disabled={isTextualPage ? events.isFetching || detail.isFetching : summary.isFetching}
-        eyebrow={isTextualPage ? "ConteÃºdo sensÃ­vel" : undefined}
+        eyebrow={isTextualPage ? "Conteúdo sensível" : undefined}
         loading={isTextualPage ? events.isFetching || detail.isFetching : summary.isFetching}
         onRefresh={refreshAll}
-        title={isTextualPage ? "ConteÃºdo sensÃ­vel" : undefined}
+        title={isTextualPage ? "Conteúdo sensível" : undefined}
       />
       {firstError ? (
         <ErrorState
@@ -1020,9 +1019,9 @@ export const AdminModerationClient = ({ mode = "overview" }: { mode?: "overview"
           <FiltersBar filters={filters} setFilters={setFilters} />
           <div className="rounded-2xl border border-border bg-surface-muted p-4 text-sm leading-6 text-muted">
             <p>
-              PerÃ­odo consultado: <strong>{formatDate(filters.from)}</strong> â€”{" "}
+              Período consultado: <strong>{formatDate(filters.from)}</strong> —{" "}
               <strong>{formatDate(filters.to)}</strong>. A central usa regex/listas internas sem IA
-              e mostra apenas trechos nas listas textuais. Alertas operacionais sÃ£o derivados do
+              e mostra apenas trechos nas listas textuais. Alertas operacionais são derivados do
               estado atual das tabelas reais e usam limites de 48h/30 dias.
             </p>
           </div>
@@ -1055,9 +1054,9 @@ export const AdminModerationClient = ({ mode = "overview" }: { mode?: "overview"
           <CheckCircle2 aria-hidden className="h-4 w-4 text-success" />
           {isTextualPage
             ? "Mobile-first: filtros empilhados, eventos em cards e detalhe abaixo no celular."
-            : "Mobile-first: pendÃªncias separadas em cards e atalhos para pÃ¡ginas exclusivas."}
+            : "Mobile-first: pendências separadas em cards e atalhos para páginas exclusivas."}
         </span>
-        <span>Pacientes continuam publicando somente texto; URLs nÃ£o viram links clicÃ¡veis.</span>
+        <span>Pacientes continuam publicando somente texto; URLs não viram links clicáveis.</span>
       </div>
       {resolveTarget ? (
         <ResolveModal event={resolveTarget} onClose={() => setResolveTarget(null)} />
