@@ -600,3 +600,27 @@ Validacao deste ajuste:
 - API local autenticada: `GET /api/admin/private/moderation/operational-alerts?group=compliance&limit=20` retornou 8 pendências reais; todas as linhas tinham `professional.role_label` e `professional.show_verified_badge === professional.is_subscriber && professional.registry_verified`.
 - Browser local/headless em Chrome para `/moderacao/compliance` validou desktop 1365px e mobile 390px com 8 linhas reais, **Psicólogo/Psicóloga** abaixo do nome conforme metadado real, pesos de texto até 500 na tabela, tag **Perfil** menor que a coluna e sem overflow horizontal. O conjunto atual não tinha profissional elegível ao selo, então o DOM validou 0 selos contra 0 retornados pela API. Admin temporário de validação removido ao final.
 
+## Ajuste complementar 2026-07-25 - Compliance com tempo pendente
+
+- Pedido do usuário: trocar a coluna **Data** da tabela de **Compliance** por **Pendente há**, exibindo há quanto tempo cada demanda está pendente.
+- `/moderacao/compliance` passa a exibir a duração relativa da pendência na segunda coluna, usando `age_hours` do alerta derivado quando disponível e `created_at` como fallback.
+- O horário absoluto continua disponível no `title` da célula como **Pendente desde ...**, preservando auditoria sem ocupar espaço na linha de triagem.
+- A formatação de duração foi centralizada e reaproveitada pela tabela de **Operacionais**, evitando helper duplicado e mantendo o mesmo padrão de leitura para filas derivadas.
+- Não houve alteração de Prisma schema/migrations, package novo, mock, seed ou endpoint simulado; `pnpm --dir backend db:migrate` não se aplica.
+- Builder/Quick Copy não está exposto como ferramenta callable neste ambiente; a referência visual foi a captura enviada pelo usuário e a tela local `/moderacao/compliance`.
+
+### Critérios deste ajuste
+
+- [x] A coluna **Data** não aparece mais na tabela de `/moderacao/compliance`.
+- [x] A coluna equivalente passa a se chamar **Pendente há**.
+- [x] Cada linha de Compliance mostra a duração real da pendência com base no alerta derivado.
+- [x] A data/hora absoluta permanece acessível no `title` da célula.
+- [x] A alteração é mobile-first, sem `<img>` cru, sem package novo e sem migration.
+
+### Validação deste ajuste
+
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/moderacao/operational-category-client.tsx"`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check`
+- Browser local/headless em Chrome para `/moderacao/compliance` validou desktop 1365px e mobile 390px com 8 linhas reais, cabeçalho **Pendente há**, ausência do cabeçalho **Data**, duração relativa na célula (ex.: **2 dias**), `title` **Pendente desde ...** e sem overflow horizontal da página. Admins temporários `codex-compliance-row-` foram removidos ao final.

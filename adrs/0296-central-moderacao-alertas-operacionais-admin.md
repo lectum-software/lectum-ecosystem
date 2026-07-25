@@ -192,3 +192,10 @@ O rótulo abaixo do nome é derivado exclusivamente de `psychologist_profile.gen
 
 O selo de verificado na linha só é exibido quando coexistem assinatura profissional ativa não gratuita e registro reconhecido pela regra de domínio já vigente (`crp_status="aprovado"`, `cfp_verified_at` ou cortesia administrativa válida). A tabela também reduz pesos de fonte e usa tags de **Perfil** autoajustadas ao texto para preservar densidade de triagem.
 
+## Complemento 2026-07-25: tempo pendente na tabela de Compliance
+
+A segunda coluna da fila exclusiva `/moderacao/compliance` deixa de exibir a data absoluta e passa a se chamar **Pendente há**, mostrando uma duração relativa da pendência. A decisão melhora a priorização operacional, porque o moderador compara imediatamente o envelhecimento das demandas sem calcular a diferença entre a data exibida e o momento atual.
+
+A duração usa o campo derivado `age_hours` do alerta quando presente, mantendo a fonte de verdade no backend. Quando o campo não está disponível, a UI calcula o fallback a partir de `created_at`; a data/hora absoluta permanece no `title` da célula como **Pendente desde ...** para auditoria e conferência.
+
+O helper de duração foi centralizado e também alimenta a tabela de **Operacionais**, preservando consistência visual entre filas derivadas sem novo estado persistido, sem migration e sem endpoint paralelo.

@@ -377,6 +377,29 @@ const formatDateTime = (value?: string | null) => {
   return Number.isNaN(date.getTime()) ? "—" : dateTimeFormatter.format(date);
 };
 
+const formatPendingDuration = (alert: AdminModerationOperationalAlert) => {
+  const createdAt = new Date(alert.created_at).getTime();
+  const computedHours = Number.isNaN(createdAt)
+    ? null
+    : Math.max(0, Math.floor((Date.now() - createdAt) / 3_600_000));
+  const hours =
+    typeof alert.age_hours === "number" ? Math.max(0, Math.floor(alert.age_hours)) : computedHours;
+
+  if (hours === null) return "—";
+  if (hours < 1) return "menos de 1 hora";
+  if (hours < 24) return `${numberFormatter.format(hours)} ${hours === 1 ? "hora" : "horas"}`;
+
+  const days = Math.floor(hours / 24);
+  if (days < 30) return `${numberFormatter.format(days)} ${days === 1 ? "dia" : "dias"}`;
+
+  const months = Math.floor(days / 30);
+  if (months < 12) return `${numberFormatter.format(months)} ${months === 1 ? "mês" : "meses"}`;
+
+  const years = Math.floor(days / 365);
+
+  return `${numberFormatter.format(years)} ${years === 1 ? "ano" : "anos"}`;
+};
+
 const toPublicHref = (url: string) => {
   if (/^https?:\/\//.test(url)) return url;
 
@@ -1336,8 +1359,11 @@ const ComplianceAlertRow = ({ alert }: { alert: AdminModerationOperationalAlert 
         <CompliancePendingBadge alert={alert} />
       </td>
       <td className="px-5 py-4 align-middle text-xs font-normal text-muted">
-        <time dateTime={alert.created_at} title={formatDateTime(alert.created_at)}>
-          {formatDateTime(alert.created_at)}
+        <time
+          dateTime={alert.created_at}
+          title={`Pendente desde ${formatDateTime(alert.created_at)}`}
+        >
+          {formatPendingDuration(alert)}
         </time>
       </td>
       <td className="px-5 py-4 align-middle">
@@ -1394,7 +1420,7 @@ const ComplianceAlertsTable = ({ alerts }: { alerts: AdminModerationOperationalA
       <thead className="bg-surface-muted/70 text-left text-[0.7rem] font-medium uppercase tracking-[0.1em] text-subtle">
         <tr>
           <th className="w-[22%] px-5 py-4 font-medium">Pendência</th>
-          <th className="w-[17%] px-5 py-4 font-medium">Data</th>
+          <th className="w-[17%] px-5 py-4 font-medium">Pendente há</th>
           <th className="w-[24%] px-5 py-4 font-medium">Profissional</th>
           <th className="w-[17%] px-5 py-4 font-medium">Plano</th>
           <th className="w-[14%] px-5 py-4 font-medium">Perfil</th>
@@ -1445,18 +1471,6 @@ const alertUserRoleLabel = (alert: AdminModerationOperationalAlert) =>
 
 const alertUserVerified = (alert: AdminModerationOperationalAlert) =>
   Boolean(alert.user?.show_verified_badge ?? alert.professional?.show_verified_badge);
-
-const formatPendingDays = (alert: AdminModerationOperationalAlert) => {
-  const hours =
-    typeof alert.age_hours === "number"
-      ? alert.age_hours
-      : Math.max(0, Math.floor((Date.now() - new Date(alert.created_at).getTime()) / 3_600_000));
-  const days = Math.floor(hours / 24);
-
-  if (days < 1) return "menos de 1 dia";
-
-  return `${numberFormatter.format(days)} ${days === 1 ? "dia" : "dias"}`;
-};
 
 const OperationalPendingBadge = ({ alert }: { alert: AdminModerationOperationalAlert }) => {
   const label = operationalTablePendingLabel(alert);
@@ -1528,7 +1542,7 @@ const OperationalAlertRow = ({ alert }: { alert: AdminModerationOperationalAlert
         <OperationalPendingBadge alert={alert} />
       </td>
       <td className="px-5 py-4 align-middle text-xs font-medium text-muted">
-        {formatPendingDays(alert)}
+        {formatPendingDuration(alert)}
       </td>
       <td className="px-5 py-4 align-middle">
         <div className="min-w-0">
