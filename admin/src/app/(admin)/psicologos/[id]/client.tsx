@@ -393,6 +393,7 @@ const GENERAL_METRIC_LABELS: Record<string, string> = {
 
 type StatisticsSeriesPoint = AdminPsychologistStatistics["business"]["series"][number];
 type StatisticsSeriesMetricKey = Exclude<keyof StatisticsSeriesPoint, "date">;
+type BusinessTractionCategoryId = AdminPsychologistStatistics["business"]["traction"]["id"];
 type StatisticsChartMetric = {
   dotRadius: number;
   icon: LucideIcon;
@@ -404,6 +405,14 @@ type StatisticsChartMetric = {
   shortLabel: string;
   strokeClassName: string;
   swatchClassName: string;
+};
+
+const BUSINESS_TRACTION_BADGE_CLASS: Record<BusinessTractionCategoryId, string> = {
+  insufficient_data: "bg-surface-muted text-subtle",
+  low_traction: "bg-surface-muted text-muted",
+  strong_traction: "bg-success/10 text-success",
+  unconverted_interest: "bg-primary-soft text-primary",
+  unconverted_traffic: "bg-warning/10 text-warning",
 };
 
 const BUSINESS_CHART_METRICS = [
@@ -4814,6 +4823,7 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: st
   const communityStatistics = communityStatisticsQuery.data;
   const activeCommunitiesStatistics = activeCommunitiesStatisticsQuery.data;
   const activityHoursStatistics = activityHoursStatisticsQuery.data;
+  const businessTraction = businessStatistics.business.traction;
   const businessMetricMap = new Map(
     businessStatistics.business.cards.map((metric) => [metric.id, metric]),
   );
@@ -4902,9 +4912,17 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: st
       <section aria-busy={isBusinessRefreshing} className="grid max-w-full gap-5 overflow-x-clip">
         <CardShell className="min-w-0 max-w-full overflow-x-clip p-5">
           <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-start">
-            <div className="min-w-0">
+            <div className="min-w-0 xl:col-span-2">
               <div className="flex flex-wrap items-center gap-2">
                 <h2 className="text-lg font-black text-foreground">Estatísticas de negócio</h2>
+                <Badge
+                  className={cn(
+                    "border border-current/10",
+                    BUSINESS_TRACTION_BADGE_CLASS[businessTraction.id],
+                  )}
+                >
+                  {businessTraction.label}
+                </Badge>
                 {isBusinessRefreshing ? (
                   <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary-soft px-2.5 py-1 text-[11px] font-black text-primary">
                     <Loader2 aria-hidden className="h-3.5 w-3.5 animate-spin" />
@@ -4912,11 +4930,11 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: st
                   </span>
                 ) : null}
               </div>
-              <p className="mt-1 text-xs font-bold leading-5 text-muted">
-                Visão do desempenho comercial do psicólogo na plataforma, incluindo descoberta,
-                interesse e intenção de contato.
-              </p>
             </div>
+            <p className="min-w-0 text-xs font-bold leading-5 text-muted">
+              Visão do desempenho comercial do psicólogo na plataforma, incluindo descoberta,
+              interesse e intenção de contato.
+            </p>
             <StatisticsPeriodControls
               idPrefix="business-statistics"
               onDateControlsBlur={businessStatisticsFilter.handleDateControlsBlur}

@@ -363,3 +363,32 @@ Exibir estatísticas de negócio/comunidade e publicações do psicólogo com da
 - `pnpm check`
 - Chamada direta do service `showAdminPsychologistStatistics({ id: "cmrgztri7000tn0uh1q4n8vxf", period: "all" })` confirmou `community.content_distribution.posts` e `community.content_distribution.replies` com as quatro categorias, contagens e percentuais reais.
 - Browser local/headless via Chrome/CDP em `/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=estatisticas`: desktop 1365px e mobile 390px confirmaram os graficos de pizza de **Posts** e **Respostas**, as legendas de formatos e o posicionamento entre os blocos solicitados. Admin temporario real criado para validacao foi removido ao final.
+
+### Ajuste pos-feedback 2026-07-25 - Tag de tracao em Estatisticas de negocio
+
+- Pedido do usuario: ao lado do titulo **Estatisticas de negocio**, exibir uma tag com a classificacao **Tracao Forte**, **Interesse Nao Convertido**, **Trafego Nao Convertido**, **Baixa Tracao** ou **Dados Insuficientes**.
+- O endpoint real `GET /api/admin/private/psychologists/:id/statistics` foi expandido em `business.traction`, calculado com os mesmos sinais reais da TASK-84: `profile_view_event.source="profile_page"`, `contact_request.channel="whatsapp"` e `psychologist_favorite`.
+- A classificacao respeita o filtro de periodo da secao de negocio e normaliza os sinais para 30 dias pelos dias ativos do perfil na janela selecionada, sem mock, seed, endpoint paralelo, migration ou package novo.
+- A UI Admin renderiza a tag em layout mobile-first ao lado do titulo, preservando o indicador **Atualizando** durante refetch.
+- Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente; as referencias auditaveis foram o screenshot enviado pelo usuario e `_product/proto/admin/Psicologos/Detalhes do psicologo/Estatisticas.png`.
+- ADR atualizado: `adrs/0322-tracao-dashboard-psicologos-admin.md`.
+
+#### Criterios de aceite do ajuste
+
+- [x] A aba **Estatisticas** exibe a tag de tracao ao lado de **Estatisticas de negocio**.
+- [x] A categoria vem do endpoint real de estatisticas e usa somente visualizacoes de perfil, cliques WhatsApp e favoritos persistidos.
+- [x] A classificacao respeita o periodo selecionado na secao e usa normalizacao para 30 dias.
+- [x] Nenhum mock, seed, endpoint simulado, migration ou package novo foi adicionado.
+
+#### Validacao complementar executada
+
+- `pnpm --dir backend exec biome check src/modules/api/admin/private/psychologists/engagement/DTOs/IAdminPsychologistEngagementDTO.ts src/modules/api/admin/private/psychologists/engagement/use-cases/services.ts`
+- `pnpm --dir admin exec biome check src/api/req/psychologists/index.ts "src/app/(admin)/psicologos/[id]/client.tsx"`
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check` passou apos repetir a execucao; a primeira tentativa falhou por erro transitorio do `prisma generate` no Windows indicando que `src/external/generated/prisma` existia mas nao parecia um Prisma Client gerado. `pnpm --dir backend exec prisma generate` passou em seguida e a repeticao de `pnpm check` ficou verde.
+- Chamada direta do service `showAdminPsychologistStatistics({ id: "cmrgztri7000tn0uh1q4n8vxf", period: "all" })` confirmou `business.traction.label="Tracao Forte"` com sinais reais.
+- HTTP local autenticado em `GET http://localhost:3001/api/admin/private/psychologists/cmrgztri7000tn0uh1q4n8vxf/statistics?period=all` confirmou `business.traction`.
+- Browser local/headless via Chrome/CDP em build Admin servido em `http://localhost:3012/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=estatisticas` confirmou em desktop 1365px e mobile 390px que **Estatisticas de negocio** exibe a tag **Tracao Forte** ao lado do titulo. A porta 3012 foi usada apenas para validar build novo sem interferir no servidor local 3002 ja aberto; CORS foi desabilitado no Chrome de validacao porque o backend local permite a origem padrao 3002.

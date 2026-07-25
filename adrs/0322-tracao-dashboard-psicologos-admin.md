@@ -38,12 +38,15 @@ Os cortes sao normalizados para 30 dias a partir dos dias ativos do perfil dentr
 
 A UI mostra grafico de pizza, quantidades e percentuais de psicologos em cada categoria logo abaixo da visao geral e antes de **Origem do trafego**. A legenda fica em coluna unica na ordem Tracao Forte, Interesse Nao Convertido, Trafego Nao Convertido, Baixa Tracao e Dados Insuficientes. Para manter o bloco mais executivo, a interface nao exibe texto introdutorio, contadores agregados, totais de eventos por categoria nem a faixa tecnica dos cortes. Nao ha lista individual, ranking ou exportacao por profissional nesta entrega.
 
+Complemento de 2026-07-25: a aba individual **Estatisticas** do psicologo tambem pode exibir a mesma classificacao como tag operacional ao lado do titulo **Estatisticas de negocio**. O calculo permanece privado/Admin, usa o mesmo periodo selecionado e as mesmas fontes reais (`profile_view_event`, `contact_request` e `psychologist_favorite`). A tag individual nao muda a decisao original: nao e publica, nao cria ranking, nao exporta lista punitiva e serve apenas para contextualizar o detalhe do psicologo que o Admin ja abriu.
+
 ## Consequencias
 
 - O Admin ganha uma visao rapida de saude de resultado dos psicologos sem expor informacao sensivel ao publico.
 - O calculo fica estavel para `Todo o periodo`, `Este ano` e janelas customizadas porque os sinais sao normalizados por dias ativos.
 - Psicologos recem-criados nao sao marcados como baixa performance por falta de tempo de exposicao, salvo quando ja ha sinal forte de WhatsApp.
 - A decisao nao cria schema, migration, package novo, mock, seed ou fonte estimada.
+- A tag individual evita recalculo local divergente no Admin porque o endpoint real de estatisticas do psicologo retorna a categoria e os sinais usados.
 - Futuras versoes podem calibrar os cortes com dados reais de conversao, mas devem registrar novo ADR se mudarem regra de dominio ou exposicao individual.
 
 ## Validacao
@@ -51,3 +54,4 @@ A UI mostra grafico de pizza, quantidades e percentuais de psicologos em cada ca
 - Smoke local de `buildPsychologistsDashboard({ period: "all" })` retornou `traction` com cinco categorias, totais reais e percentuais.
 - Checks/builds da task foram executados conforme registrado em `TASK-84`.
 - Refinamento de UI em 2026-07-25 validado com smoke local confirmando ordem e novas descricoes das categorias, alem de checks/builds de backend/admin e `pnpm check`.
+- Complemento individual de 2026-07-25 validado com `showAdminPsychologistStatistics({ id: "cmrgztri7000tn0uh1q4n8vxf", period: "all" })`, HTTP Admin autenticado do endpoint de estatisticas, `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e browser local/headless em desktop 1365px e mobile 390px.

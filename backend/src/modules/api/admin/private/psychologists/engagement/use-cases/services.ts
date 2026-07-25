@@ -16,6 +16,8 @@ import {
 } from "@/utils/admin-psychologist-analytics";
 import type {
   AdminPsychologistAvailabilityMetric,
+  AdminPsychologistBusinessTraction,
+  AdminPsychologistBusinessTractionCategoryId,
   AdminPsychologistContentFormatDistribution,
   AdminPsychologistContentFormatId,
   AdminPsychologistEngagementQuery,
@@ -41,12 +43,46 @@ import {
 const DEFAULT_PERIOD_DAYS = 30;
 const MAX_PERIOD_DAYS = 3660;
 const MS_PER_DAY = 86_400_000;
+const TRACTION_FAVORITES_HIGH_30D = 5;
+const TRACTION_MIN_ACTIVE_DAYS = 7;
+const TRACTION_PROFILE_VIEWS_HIGH_30D = 60;
+const TRACTION_STRONG_CONVERSION_RATE_PERCENT = 5;
+const TRACTION_WHATSAPP_HIGH_30D = 5;
+const TRACTION_WHATSAPP_HIGH_WITH_CONVERSION_30D = 3;
 type AdminPsychologistPublicationsSort = NonNullable<AdminPsychologistPublicationsQuery["sort"]>;
 const PSYCHOLOGIST_PUBLICATIONS_SORTS = new Set<AdminPsychologistPublicationsSort>([
   "engagement",
   "oldest",
   "recent",
 ]);
+
+const BUSINESS_TRACTION_CATEGORY_CONFIG = {
+  insufficient_data: {
+    description:
+      "Perfil com menos de 7 dias ativos no período e sem volume forte de WhatsApp para classificar com segurança.",
+    label: "Dados Insuficientes",
+  },
+  low_traction: {
+    description:
+      "Poucos cliques no WhatsApp, poucas aberturas de perfil e poucos favoritos no período.",
+    label: "Baixa Tração",
+  },
+  strong_traction: {
+    description: "Alto índice de cliques no WhatsApp, o sinal mais forte de resultado.",
+    label: "Tração Forte",
+  },
+  unconverted_interest: {
+    description: "Muitos favoritos, mas poucos cliques no WhatsApp.",
+    label: "Interesse Não Convertido",
+  },
+  unconverted_traffic: {
+    description: "Muitas aberturas de perfil, mas poucos cliques no WhatsApp.",
+    label: "Tráfego Não Convertido",
+  },
+} satisfies Record<
+  AdminPsychologistBusinessTractionCategoryId,
+  { description: string; label: string }
+>;
 
 const pad = (value: number) => String(value).padStart(2, "0");
 const toDateKey = (date: Date) =>
@@ -225,6 +261,117 @@ const metric = (input: {
 });
 
 const roundPercent = (value: number) => Math.round(value * 10) / 10;
+
+const normalizeCountToThirtyDays = (count: number, activeDays: number) => {
+  if (activeDays <= 0) return 0;
+
+  return roundPercent((count / activeDays) * 30);
+};
+
+type BusinessTractionSignals = {
+  activeDays: number;
+  favorites: number;
+  normalizedFavorites: number;
+  normalizedProfileViews: number;
+  normalizedWhatsappClicks: number;
+  profileViews: number;
+  whatsappClicks: number;
+  whatsappConversionRate: number | null;
+};
+
+const classifyBusinessTractionCategory = (
+  signals: BusinessTractionSignals,
+): AdminPsychologistBusinessTractionCategoryId => {
+  const hasStrongWhatsappVolume =
+    signals.normalizedWhatsappClicks >= TRACTION_WHATSAPP_HIGH_30D ||
+    (signals.whatsappClicks >= 2 &&
+      signals.normalizedWhatsappClicks >= TRACTION_WHATSAPP_HIGH_WITH_CONVERSION_30D &&
+      typeof signals.whatsappConversionRate === "number" &&
+      signals.whatsappConversionRate >= TRACTION_STRONG_CONVERSION_RATE_PERCENT);
+
+  if (hasStrongWhatsappVolume) return "strong_traction";
+  if (signals.activeDays < TRACTION_MIN_ACTIVE_DAYS) return "insufficient_data";
+
+  const hasLowWhatsappVolume = signals.normalizedWhatsappClicks < TRACTION_WHATSAPP_HIGH_30D;
+  const hasWeakWhatsappConversion =
+    signals.whatsappConversionRate === null ||
+    signals.whatsappConversionRate < TRACTION_STRONG_CONVERSION_RATE_PERCENT;
+
+  if (
+    signals.normalizedProfileViews >= TRACTION_PROFILE_VIEWS_HIGH_30D &&
+    hasLowWhatsappVolume &&
+    hasWeakWhatsappConversion
+  ) {
+    return "unconverted_traffic";
+  }
+
+  if (signals.normalizedFavorites >= TRACTION_FAVORITES_HIGH_30D && hasLowWhatsappVolume) {
+    return "unconverted_interest";
+  }
+
+  return "low_traction";
+};
+
+const getProfileActiveDaysInStatisticsRange = (
+  profileCreatedAt: Date,
+  range: { end: Date; start: Date },
+) => {
+  const rangeStart = startOfDate(range.start);
+  const rangeEnd = endOfDate(range.end);
+  const profileStart = startOfDate(profileCreatedAt);
+  const activeStart = profileStart > rangeStart ? profileStart : rangeStart;
+
+  if (activeStart > rangeEnd) return 0;
+
+  return daysBetweenInclusive(activeStart, rangeEnd);
+};
+
+const buildBusinessTraction = (input: {
+  activeDays: number;
+  favorites: number;
+  profileViews: number;
+  whatsappClicks: number;
+}): AdminPsychologistBusinessTraction => {
+  const whatsappConversionRate =
+    input.profileViews > 0 ? roundPercent((input.whatsappClicks / input.profileViews) * 100) : null;
+  const signals = {
+    activeDays: input.activeDays,
+    favorites: input.favorites,
+    normalizedFavorites: normalizeCountToThirtyDays(input.favorites, input.activeDays),
+    normalizedProfileViews: normalizeCountToThirtyDays(input.profileViews, input.activeDays),
+    normalizedWhatsappClicks: normalizeCountToThirtyDays(input.whatsappClicks, input.activeDays),
+    profileViews: input.profileViews,
+    whatsappClicks: input.whatsappClicks,
+    whatsappConversionRate,
+  };
+  const categoryId = classifyBusinessTractionCategory(signals);
+  const config = BUSINESS_TRACTION_CATEGORY_CONFIG[categoryId];
+
+  return {
+    description: config.description,
+    id: categoryId,
+    label: config.label,
+    signals: {
+      active_days: signals.activeDays,
+      favorites: signals.favorites,
+      normalized_favorites_30d: signals.normalizedFavorites,
+      normalized_profile_views_30d: signals.normalizedProfileViews,
+      normalized_whatsapp_clicks_30d: signals.normalizedWhatsappClicks,
+      profile_views: signals.profileViews,
+      whatsapp_clicks: signals.whatsappClicks,
+      whatsapp_conversion_rate_percent: signals.whatsappConversionRate,
+    },
+    source: "profile_view_event+contact_request+psychologist_favorite",
+    thresholds: {
+      favorites_high_30d: TRACTION_FAVORITES_HIGH_30D,
+      minimum_active_days: TRACTION_MIN_ACTIVE_DAYS,
+      profile_views_high_30d: TRACTION_PROFILE_VIEWS_HIGH_30D,
+      strong_conversion_rate_percent: TRACTION_STRONG_CONVERSION_RATE_PERCENT,
+      whatsapp_high_30d: TRACTION_WHATSAPP_HIGH_30D,
+      whatsapp_high_with_conversion_30d: TRACTION_WHATSAPP_HIGH_WITH_CONVERSION_30D,
+    },
+  };
+};
 
 const CONTENT_FORMAT_ORDER = ["text", "video", "image", "image_carousel"] as const;
 
@@ -1290,6 +1437,12 @@ export const showAdminPsychologistStatistics = async (
     unavailable_reason: platformUsageSummary.unavailable_reason,
   };
   const trafficSources = buildTrafficSources(trafficPageViews);
+  const businessTraction = buildBusinessTraction({
+    activeDays: getProfileActiveDaysInStatisticsRange(profile.user.createdAt, period.current),
+    favorites: favorites.length,
+    profileViews: profileViews.length,
+    whatsappClicks: whatsappClicks.length,
+  });
 
   const response: AdminPsychologistStatisticsDTO = {
     business: {
@@ -1343,6 +1496,7 @@ export const showAdminPsychologistStatistics = async (
         }),
       ],
       series: businessSeries,
+      traction: businessTraction,
     },
     community: {
       cards: [

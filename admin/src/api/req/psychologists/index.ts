@@ -991,6 +991,13 @@ export type AdminPsychologistEngagementMetric = {
   value: number | null;
 };
 
+export type AdminPsychologistBusinessTractionCategoryId =
+  | "insufficient_data"
+  | "low_traction"
+  | "strong_traction"
+  | "unconverted_interest"
+  | "unconverted_traffic";
+
 export type AdminPsychologistContentFormatId = "image" | "image_carousel" | "text" | "video";
 
 export type AdminPsychologistContentFormatDistribution = {
@@ -1007,6 +1014,30 @@ export type AdminPsychologistStatistics = {
   business: {
     cards: AdminPsychologistEngagementMetric[];
     series: AdminPsychologistStatisticsPoint[];
+    traction: {
+      description: string;
+      id: AdminPsychologistBusinessTractionCategoryId;
+      label: string;
+      signals: {
+        active_days: number;
+        favorites: number;
+        normalized_favorites_30d: number;
+        normalized_profile_views_30d: number;
+        normalized_whatsapp_clicks_30d: number;
+        profile_views: number;
+        whatsapp_clicks: number;
+        whatsapp_conversion_rate_percent: number | null;
+      };
+      source: "profile_view_event+contact_request+psychologist_favorite";
+      thresholds: {
+        favorites_high_30d: number;
+        minimum_active_days: number;
+        profile_views_high_30d: number;
+        strong_conversion_rate_percent: number;
+        whatsapp_high_30d: number;
+        whatsapp_high_with_conversion_30d: number;
+      };
+    };
   };
   community: {
     cards: AdminPsychologistEngagementMetric[];
