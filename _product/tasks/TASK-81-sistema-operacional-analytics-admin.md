@@ -145,6 +145,7 @@ Regras anti-recriação:
   - `pnpm --dir backend build`.
   - `pnpm check`.
   - Smoke local em `http://localhost:3002/psicologos` e `http://localhost:3002/pacientes` retornou HTTP 200.
+  - Refinamento de omissão do OS no device **Não identificado** validado com `pnpm --dir admin check`, `pnpm --dir admin build` e smoke local em `/psicologos` e `/pacientes` retornando HTTP 200.
 
 ## Notas de execução
 
@@ -152,4 +153,5 @@ Regras anti-recriação:
 - A contagem de usuários ativos por sistema operacional deduplica `user_id` dentro de cada categoria, mas o mesmo usuário pode aparecer em mais de uma categoria se usou mais de um OS no período.
 - iPadOS é categoria de relatório para preservar tablet separado quando navegadores iPad-like reportam `ios` ou `macos`.
 - Refinamento visual pós-feedback em 2026-07-25: nos dashboards, a legenda de cada device mostra somente o percentual principal e uma linha discreta com OS (`Android 75% · iOS 25%`); a contagem textual de sessões/usuários foi removida para reduzir ruído.
+- Refinamento visual adicional em 2026-07-25: quando o próprio device é **Não identificado**, a linha textual de OS é omitida para evitar repetir `Não identificado 100%`.
 - Ajuste visual pós-feedback em 2026-07-25: no dashboard `/pacientes`, os blocos agregados ficaram em duas linhas no desktop: **Gênero / Forma de cadastro / Devices e sistemas** e **Localização / Uso da plataforma**; no mobile, todos seguem empilhados para preservar o comportamento mobile-first.

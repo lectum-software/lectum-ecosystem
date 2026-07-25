@@ -26,7 +26,7 @@ Categorias normalizadas:
 - demais valores identificados, como Linux/ChromeOS, entram em Outros.
 - ausente/unknown entra em Nao identificado.
 
-Dashboards agregam por sessoes autenticadas do papel da tela e tambem retornam usuarios ativos deduplicados por OS. Apos revisao visual em 2026-07-25, os dashboards deixam de mostrar um card separado de **Sistema operacional** e passam a vincular OS diretamente em `device_usage.items[].operating_systems`, exibido como uma linha textual leve dentro da legenda do grafico de Devices, sem tags, bolinhas extras ou contadores textuais de sessoes/usuarios no item. Detalhes individuais mantem o grafico de Devices e continuam adicionando, em cada device, a lista dos sistemas operacionais observados naquele device com percentual relativo ao device.
+Dashboards agregam por sessoes autenticadas do papel da tela e tambem retornam usuarios ativos deduplicados por OS. Apos revisao visual em 2026-07-25, os dashboards deixam de mostrar um card separado de **Sistema operacional** e passam a vincular OS diretamente em `device_usage.items[].operating_systems`, exibido como uma linha textual leve dentro da legenda do grafico de Devices, sem tags, bolinhas extras ou contadores textuais de sessoes/usuarios no item. Quando o proprio device e **Nao identificado**, essa linha de OS e omitida para nao repetir `Nao identificado 100%`. Detalhes individuais mantem o grafico de Devices e continuam adicionando, em cada device, a lista dos sistemas operacionais observados naquele device com percentual relativo ao device.
 
 ## Consequências
 

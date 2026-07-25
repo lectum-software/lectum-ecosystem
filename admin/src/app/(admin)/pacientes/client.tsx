@@ -1485,7 +1485,8 @@ const DeviceUsagePieChart = ({
       </svg>
       <figcaption className="space-y-3">
         {deviceUsage.items.map((item) => {
-          const operatingSystems = item.operating_systems ?? [];
+          const operatingSystems =
+            item.device_type === "unknown" ? [] : (item.operating_systems ?? []);
           const operatingSystemSummary = operatingSystems
             .map(
               (operatingSystem) =>
