@@ -19,7 +19,7 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   FormProvider,
   type SubmitHandler,
@@ -80,8 +80,8 @@ const groupConfig: Record<
 
 const denunciaFiltersSchema = z
   .object({
+    contentType: z.enum(["all", "post", "reply"]),
     from: z.string().max(10, "Use uma data válida."),
-    q: z.string().max(120, "Use até 120 caracteres na busca."),
     reason: z.enum(["all", "spam", "abuse", "self_harm", "privacy", "other"]),
     reporter: z.enum(["all", "paciente", "psicologo"]),
     status: z.enum(["all", "pending", "upheld", "dismissed"]),
@@ -95,11 +95,11 @@ const denunciaFiltersSchema = z
 type DenunciaFiltersFormValues = z.infer<typeof denunciaFiltersSchema>;
 
 const denunciaFilterDefaults: DenunciaFiltersFormValues = {
+  contentType: "all",
   from: "",
-  q: "",
   reason: "all",
   reporter: "all",
-  status: "all",
+  status: "pending",
   to: "",
 };
 
@@ -154,6 +154,12 @@ const denunciaStatusOptions = [
   { label: "Improcedentes", value: "dismissed" },
 ] satisfies Array<{ label: string; value: DenunciaFiltersFormValues["status"] }>;
 
+const denunciaContentTypeOptions = [
+  { label: "Todos", value: "all" },
+  { label: "Posts", value: "post" },
+  { label: "Respostas", value: "reply" },
+] satisfies Array<{ label: string; value: DenunciaFiltersFormValues["contentType"] }>;
+
 const denunciaReporterOptions = [
   { label: "Todos", value: "all" },
   { label: "Pacientes", value: "paciente" },
@@ -172,8 +178,8 @@ const denunciaReasonOptions = [
 const normalizeDenunciaFilters = (
   values: DenunciaFiltersFormValues,
 ): DenunciaFiltersFormValues => ({
+  contentType: values.contentType,
   from: values.from,
-  q: values.q.trim(),
   reason: values.reason,
   reporter: values.reporter,
   status: values.status,
@@ -184,8 +190,8 @@ const areDenunciaFiltersEqual = (
   left: DenunciaFiltersFormValues,
   right: DenunciaFiltersFormValues,
 ) =>
+  left.contentType === right.contentType &&
   left.from === right.from &&
-  left.q === right.q &&
   left.reason === right.reason &&
   left.reporter === right.reporter &&
   left.status === right.status &&
@@ -194,8 +200,8 @@ const areDenunciaFiltersEqual = (
 const coerceDenunciaFilters = (
   values?: Partial<DenunciaFiltersFormValues>,
 ): DenunciaFiltersFormValues => ({
+  contentType: values?.contentType ?? denunciaFilterDefaults.contentType,
   from: values?.from ?? denunciaFilterDefaults.from,
-  q: values?.q ?? denunciaFilterDefaults.q,
   reason: values?.reason ?? denunciaFilterDefaults.reason,
   reporter: values?.reporter ?? denunciaFilterDefaults.reporter,
   status: values?.status ?? denunciaFilterDefaults.status,
@@ -206,13 +212,13 @@ const toOperationalAlertsFilterQuery = (
   values: DenunciaFiltersFormValues,
 ): Pick<
   AdminModerationOperationalAlertsQuery,
-  "from" | "q" | "reason" | "reporter" | "status" | "to"
+  "contentType" | "from" | "reason" | "reporter" | "status" | "to"
 > => {
   const normalized = normalizeDenunciaFilters(values);
 
   return {
+    contentType: normalized.contentType,
     from: normalized.from || undefined,
-    q: normalized.q || undefined,
     reason: normalized.reason !== "all" ? normalized.reason : undefined,
     reporter: normalized.reporter,
     status: normalized.status,
@@ -901,11 +907,13 @@ const DenunciaFiltersBar = ({
   disabled,
   form,
   isFetching,
+  onDateBlur,
   resultCount,
 }: {
   disabled: boolean;
   form: UseFormReturn<DenunciaFiltersFormValues>;
   isFetching: boolean;
+  onDateBlur: () => void;
   resultCount: number;
 }) => (
   <div className="border-b border-border bg-surface/80 p-4">
@@ -916,11 +924,11 @@ const DenunciaFiltersBar = ({
         onSubmit={(event) => event.preventDefault()}
       >
         <div className="md:col-span-2 2xl:col-span-1">
-          <InputController<DenunciaFiltersFormValues>
+          <SelectController<DenunciaFiltersFormValues>
             disabled={disabled}
-            label="Buscar"
-            name="q"
-            placeholder="Conteúdo, comunidade ou alvo"
+            label="Tipo"
+            name="contentType"
+            options={denunciaContentTypeOptions}
           />
           <p className="-mt-1 flex min-h-5 flex-wrap items-center gap-x-2 gap-y-1 text-xs font-bold text-muted">
             <span>{numberFormatter.format(resultCount)} registro(s) encontrado(s)</span>
@@ -936,12 +944,14 @@ const DenunciaFiltersBar = ({
           disabled={disabled}
           label="De"
           name="from"
+          onBlur={onDateBlur}
           type="date"
         />
         <InputController<DenunciaFiltersFormValues>
           disabled={disabled}
           label="Até"
           name="to"
+          onBlur={onDateBlur}
           type="date"
         />
         <SelectController<DenunciaFiltersFormValues>
@@ -1037,7 +1047,11 @@ export const AdminModerationOperationalCategoryClient = ({
     mode: "onChange",
     resolver: zodResolver(denunciaFiltersSchema),
   });
-  const watchedFilters = useWatch({ control: filtersForm.control });
+  const watchedAutoFilters = useWatch({
+    control: filtersForm.control,
+    name: ["contentType", "reason", "reporter", "status"],
+  });
+  const watchedAutoFiltersKey = watchedAutoFilters.join("|");
   const latestAppliedFiltersRef = useRef(appliedFilters);
   const queryInput = useMemo<AdminModerationOperationalAlertsQuery>(
     () => ({
@@ -1055,22 +1069,46 @@ export const AdminModerationOperationalCategoryClient = ({
     latestAppliedFiltersRef.current = appliedFilters;
   }, [appliedFilters]);
 
-  useEffect(() => {
-    if (group !== "denuncias") return;
+  const applyCurrentDenunciaFilters = useCallback(
+    async ({ includeDateDraft = false }: { includeDateDraft?: boolean } = {}) => {
+      if (group !== "denuncias") return;
 
-    const timeout = window.setTimeout(async () => {
-      const valid = await filtersForm.trigger(undefined, { shouldFocus: false });
-      if (!valid) return;
+      if (includeDateDraft) {
+        const validDates = await filtersForm.trigger(["from", "to"], { shouldFocus: false });
+        if (!validDates) return;
+      }
 
-      const normalized = normalizeDenunciaFilters(coerceDenunciaFilters(watchedFilters));
+      const current = normalizeDenunciaFilters(coerceDenunciaFilters(filtersForm.getValues()));
+      const normalized = includeDateDraft
+        ? current
+        : {
+            ...current,
+            from: latestAppliedFiltersRef.current.from,
+            to: latestAppliedFiltersRef.current.to,
+          };
+
       if (areDenunciaFiltersEqual(latestAppliedFiltersRef.current, normalized)) return;
 
       setAppliedFilters(normalized);
       setPage(1);
+    },
+    [filtersForm, group],
+  );
+
+  const handleDenunciaDateBlur = useCallback(() => {
+    void applyCurrentDenunciaFilters({ includeDateDraft: true });
+  }, [applyCurrentDenunciaFilters]);
+
+  useEffect(() => {
+    if (group !== "denuncias") return;
+    void watchedAutoFiltersKey;
+
+    const timeout = window.setTimeout(() => {
+      void applyCurrentDenunciaFilters();
     }, 300);
 
     return () => window.clearTimeout(timeout);
-  }, [filtersForm, group, watchedFilters]);
+  }, [applyCurrentDenunciaFilters, group, watchedAutoFiltersKey]);
 
   return (
     <div className="space-y-6">
@@ -1126,6 +1164,7 @@ export const AdminModerationOperationalCategoryClient = ({
             disabled={query.isLoading}
             form={filtersForm}
             isFetching={query.isFetching}
+            onDateBlur={handleDenunciaDateBlur}
             resultCount={query.data?.count ?? 0}
           />
         ) : null}

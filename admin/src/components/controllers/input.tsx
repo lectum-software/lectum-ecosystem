@@ -17,6 +17,7 @@ export type InputControllerProps<TFormValues extends FieldValues> = {
   max?: ComponentPropsWithoutRef<"input">["max"];
   maxLength?: number;
   min?: ComponentPropsWithoutRef<"input">["min"];
+  onBlur?: ComponentPropsWithoutRef<"input">["onBlur"];
   required?: boolean;
 };
 
@@ -30,6 +31,7 @@ export const InputController = <TFormValues extends FieldValues>({
   maxLength,
   min,
   name,
+  onBlur,
   placeholder,
   required,
   type = "text",
@@ -61,6 +63,10 @@ export const InputController = <TFormValues extends FieldValues>({
         max={max}
         maxLength={maxLength}
         min={min}
+        onBlur={(event) => {
+          field.onBlur();
+          onBlur?.(event);
+        }}
         onChangeCapture={(event) => {
           if (maskValue) event.currentTarget.value = maskValue(event.currentTarget.value);
         }}

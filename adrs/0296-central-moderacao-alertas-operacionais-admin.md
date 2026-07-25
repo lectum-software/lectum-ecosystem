@@ -112,3 +112,26 @@ A resolução usa um endpoint específico, `POST /api/admin/private/moderation/r
 O bloco de autor do conteúdo denunciado passou a expor `content.author.verified` no payload de `operational-alerts`. O valor não é armazenado em novo campo: é derivado no backend pela regra já aceita para registro profissional aprovado (`crp_status="aprovado"`, `cfp_verified_at` ou cortesia profissional/admin grant ativa). A UI usa esse booleano apenas para mostrar o selo **Verificado** ao lado do nome quando o autor é psicólogo verificado.
 
 Alertas derivados de compliance/operacionais continuam read-only e sem workflow próprio; a nova resolução se aplica somente aos alertas globais que possuem `report` real de `post_report`.
+
+## Complemento 2026-07-24: filtro de tipo, datas por blur e pendentes como padrão
+
+Após revisão da fila global `/moderacao/denuncias`, a busca textual livre deixou de ser o primeiro filtro da tela. A fila passa a priorizar um filtro controlado de tipo de conteúdo, enviado como `contentType=post|reply|all`, porque a triagem operacional precisa alternar rapidamente entre denúncias de posts e respostas sem depender de termos digitados.
+
+O status padrão da UI foi alterado para **Pendentes**, mantendo `status=all` disponível no dropdown para auditoria de resoluções anteriores. Essa decisão aproxima a página do uso principal da moderação: abrir já na fila acionável de denúncias ainda não encerradas.
+
+Os campos `from` e `to` continuam controlados por React Hook Form/Zod, mas a aplicação do filtro de data foi separada do estado digitado. Mudanças em selects aplicam automaticamente; datas só são copiadas para a query após `blur`, evitando chamadas ao backend com datas parciais durante a digitação manual.
+
+## Complemento 2026-07-24: Visão geral de Moderação em blocos gráficos
+
+A aba `/moderacao` deixou de exibir previews/listas/tabelas no dashboard e passou a usar quatro blocos analíticos alinhados ao padrão visual das visões gerais administrativas de Psicólogos e Pacientes: cards de contadores selecionáveis acima de um gráfico temporal em SVG.
+
+O contrato `GET /api/admin/private/moderation/summary` foi ampliado com `overview_charts`, mantendo o endpoint único do dashboard. As séries são derivadas somente de dados reais:
+
+- denúncias: `post_report`, segmentadas por tipo de alvo/autor e por status normalizado (**pendente**, **improcedente**, **procedente**);
+- compliance: alertas derivados de `psychologist_profile` e `professional_subscription` para CRP profissional pendente e WhatsApp inválido;
+- operacionais: alertas derivados de cobertura em comunidades, configuração obrigatória de perfil e tráfego/WhatsApp de psicólogos assinantes;
+- conteúdo sensível: `content_moderation_event`, segmentado por categoria e decisão.
+
+Cada bloco possui filtro independente de período e datas. A filtragem temporal é client-side sobre os pontos agregados retornados pelo summary, sem criar novo endpoint, sem persistir snapshots históricos de alertas derivados e sem introduzir estado fake. Como compliance e operacionais continuam derivados/read-only, suas curvas representam a distribuição por data de origem dos alertas atualmente existentes, não um histórico de snapshots diários.
+
+Para preservar a leitura do dashboard em desktop, os blocos usam uma toolbar única: período, datas, seletor contextual e atalho de lista ficam na mesma linha em larguras administrativas. Em telas pequenas, a regra mobile-first permite empilhamento para evitar overflow horizontal e manter campos tocáveis.

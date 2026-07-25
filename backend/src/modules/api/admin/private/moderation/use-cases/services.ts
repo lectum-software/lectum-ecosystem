@@ -943,7 +943,10 @@ type BuildOperationalAlertsOptions = {
 };
 
 type NormalizedOperationalAlertsQuery = Required<
-  Pick<AdminModerationOperationalAlertsQuery, "group" | "reason" | "reporter" | "status">
+  Pick<
+    AdminModerationOperationalAlertsQuery,
+    "contentType" | "group" | "reason" | "reporter" | "status"
+  >
 > &
   Pick<AdminModerationOperationalAlertsQuery, "from" | "limit" | "page" | "q" | "to">;
 
@@ -1031,6 +1034,14 @@ const normalizeOperationalStatus = (
     : "all";
 };
 
+const normalizeOperationalContentType = (
+  value?: string | null,
+): NonNullable<AdminModerationOperationalAlertsQuery["contentType"]> => {
+  const normalized = normalizeFilter(value).toLowerCase();
+
+  return normalized === "post" || normalized === "reply" ? normalized : "all";
+};
+
 const normalizeOperationalReporter = (
   value?: string | null,
 ): NonNullable<AdminModerationOperationalAlertsQuery["reporter"]> => {
@@ -1116,6 +1127,10 @@ const operationalAlertMatchesFilters = (
   if (from && alert.created_at < from) return false;
   if (to && alert.created_at > to) return false;
 
+  if (query.contentType !== "all" && alert.report?.content.type !== query.contentType) {
+    return false;
+  }
+
   if (query.status !== "all") {
     const reportStatus = normalizedText(operationalFactValue(alert, "Status"));
     if (!operationalStatusAliases[query.status].includes(reportStatus)) return false;
@@ -1152,6 +1167,7 @@ const normalizeOperationalAlertsQuery = (
   query: AdminModerationOperationalAlertsQuery = {},
 ): NormalizedOperationalAlertsQuery => ({
   ...query,
+  contentType: normalizeOperationalContentType(query.contentType),
   group: normalizeOperationalGroup(query.group),
   reason: normalizeOperationalReason(query.reason),
   reporter: normalizeOperationalReporter(query.reporter),

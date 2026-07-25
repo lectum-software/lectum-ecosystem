@@ -291,3 +291,54 @@ Validacao deste ajuste:
 - API local autenticada: `GET /api/admin/private/moderation/operational-alerts?group=denuncias&limit=1` retornou denúncia real com `report.content.author.verified=true` para psicólogo verificado e `capabilities` de resolução pendente.
 - API local autenticada: `POST /api/admin/private/moderation/reports/:reportId/resolve` com confirmação inválida retornou `400`, validando a proteção sem mutação real.
 - Browser local/headless em Chrome para `/moderacao/denuncias` validou desktop 1365px e mobile 390px com identificação do autor, selo **Verificado**, botões **Improcedente/Procedente**, ausência do botão textual **Abrir conteúdo denunciado** no card de denúncia e sem overflow horizontal.
+
+## Ajuste complementar 2026-07-24 - Tipo e aplicação de datas em Denúncias
+
+- Pedido do usuário: substituir a busca textual por filtro **Tipo** (**Posts/Respostas**), impedir que campos de data pesquisem enquanto o admin ainda digita e iniciar a fila com **Status = Pendentes**.
+- A barra de filtros de `/moderacao/denuncias` agora usa um select **Tipo** com **Todos**, **Posts** e **Respostas**, mantendo os demais filtros mobile-first em React Hook Form/Zod/controllers do Admin.
+- O estado padrão da página passa a consultar denúncias pendentes por padrão, refletindo a fila operacional de triagem sem remover a opção **Todos** para auditoria posterior.
+- Os filtros automáticos seguem ativos para selects, mas `from`/`to` ficam como rascunho local durante a digitação e só são aplicados quando o campo perde foco (`blur`), evitando chamadas parciais ao endpoint durante a entrada da data.
+- O endpoint real `GET /api/admin/private/moderation/operational-alerts` foi estendido de forma aditiva com `contentType=post|reply|all`, aplicado sobre `report.content.type` de denúncias reais de `post_report`.
+- Não houve alteração de Prisma schema/migrations, package novo, mock ou dado artificial; `pnpm --dir backend db:migrate` não se aplica.
+- Builder/Quick Copy não está exposto como ferramenta callable neste ambiente; a referência auditável foi a captura enviada pelo usuário e `_product/proto/admin/Psicólogos/Detalhes do psicólogo/Denúncias.png`.
+
+### Validação do ajuste de tipo/datas 2026-07-24
+
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/moderacao/operational-category-client.tsx" "src/components/controllers/input.tsx" "src/api/req/moderation/index.ts"`
+- `pnpm --dir backend exec biome check --write "src/modules/api/admin/private/moderation/DTOs/IAdminModerationDTO.ts" "src/modules/api/admin/private/moderation/validator/index.ts" "src/modules/api/admin/private/moderation/use-cases/services.ts"`
+- `pnpm --dir admin check`
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir admin build`
+- `pnpm check`
+- API local autenticada: `GET /api/admin/private/moderation/operational-alerts?group=denuncias&status=pending&contentType=post&limit=5` retornou somente `report.content.type="post"` e `status_group="pending"`.
+- API local autenticada: `GET /api/admin/private/moderation/operational-alerts?group=denuncias&status=pending&contentType=reply&limit=5` retornou somente `report.content.type="reply"` quando havia itens.
+- Browser local/headless em Chrome para `/moderacao/denuncias` validou desktop e mobile 390px com filtro **Tipo**, ausência da busca antiga, **Status** default **Pendentes**, sem overflow horizontal e com data aplicada apenas após `blur/focusout` do campo.
+- Admins temporários usados nas validações de API/browser foram removidos ao final.
+
+## Ajuste complementar 2026-07-24 - Visão geral por blocos com gráficos
+
+- Pedido do usuário: na aba **Visão geral** de `/moderacao`, substituir tabelas/previews por 4 blocos de contadores + gráficos seguindo o layout das visões gerais de **Psicólogos** e **Pacientes**; depois, manter todas as opções de filtros em uma única linha no desktop.
+- O dashboard `/moderacao` agora renderiza quatro blocos mobile-first: **Denúncias**, **Compliance**, **Operacionais** e **Conteúdo sensível**.
+- **Denúncias** possui seletor de tipo (**Todos**, **Posts de psicólogos**, **Posts de pacientes**, **Respostas de psicólogos**, **Comentários de pacientes**) e curvas **Pendentes**, **Improcedentes** e **Procedentes**.
+- **Compliance** possui contadores/curvas para **CRP profissional pendente** e **WhatsApp inválido**.
+- **Operacionais** possui contadores/curvas para **Falta de cobertura há 48h**, **Perfis profissionais sem configuração obrigatória** e **Psicólogos assinantes sem tráfego**.
+- **Conteúdo sensível** possui seletor por categoria e curvas **Sensível publicado**, **Bloqueado** e **Segurança urgente**.
+- Todos os quatro blocos receberam filtro próprio de **Período**, **De** e **Até**. Em larguras administrativas, período, datas, seletor contextual e **Abrir lista** ficam na mesma linha; em telas estreitas continuam empilhando para preservar mobile-first e evitar overflow.
+- Os textos explicativos solicitados foram removidos dos blocos, mantendo apenas título, período, filtros, contadores clicáveis e gráfico.
+- O `GET /api/admin/private/moderation/summary` foi ampliado com `overview_charts`, derivado de `post_report`, `content_moderation_event` e alertas operacionais reais; não houve mock, dado artificial, migration, package novo ou uso de `<img>`.
+- Builder/Quick Copy não está exposto como ferramenta callable neste ambiente; a referência visual usada foi a captura enviada pelo usuário e os protótipos locais de Psicólogos/Pacientes.
+
+### Validação do ajuste de visão geral 2026-07-24
+
+- `pnpm --dir backend exec biome check --write "src/modules/api/admin/private/moderation/DTOs/IAdminModerationDTO.ts" "src/modules/api/admin/private/moderation/use-cases/services.ts"`
+- `pnpm --dir admin exec biome check --write "src/api/req/moderation/index.ts" "src/app/(admin)/moderacao/client.tsx"`
+- `pnpm --dir backend typecheck`
+- `pnpm --dir admin typecheck`
+- `pnpm --dir backend check`
+- `pnpm --dir admin check` (uma tentativa paralela excedeu o timeout do runner; reexecutado isolado e concluído sem erro)
+- `pnpm --dir backend build`
+- `pnpm --dir admin build` (uma tentativa inicial encontrou outro `next build` em execução; reexecutado após finalizar e concluído sem erro)
+- `pnpm check`
+- Smoke HTTP local: `GET http://localhost:3002/moderacao` retornou `200`.
+- `pnpm --dir backend db:migrate` não se aplica porque não houve alteração em Prisma schema/migrations.

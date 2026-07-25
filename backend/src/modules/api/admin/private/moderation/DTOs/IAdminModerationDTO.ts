@@ -38,7 +38,10 @@ export type AdminModerationPostReportReason =
   | "self_harm"
   | "spam";
 
+export type AdminModerationPostReportContentType = "all" | "post" | "reply";
+
 export type AdminModerationOperationalAlertsQuery = {
+  contentType?: AdminModerationPostReportContentType;
   from?: string;
   group?: AdminModerationOperationalAlertsGroup;
   limit?: number;
