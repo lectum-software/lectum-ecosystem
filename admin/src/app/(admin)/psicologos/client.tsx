@@ -2020,7 +2020,7 @@ const TractionPieChart = ({ traction }: { traction: AdminPsychologistsDashboard[
           );
         })}
       </svg>
-      <figcaption className="grid gap-3 sm:grid-cols-2">
+      <figcaption className="grid gap-3">
         {traction.categories.map((item) => {
           const color = TRACTION_CHART_COLORS[item.id];
 
@@ -2043,11 +2043,6 @@ const TractionPieChart = ({ traction }: { traction: AdminPsychologistsDashboard[
                 {numberFormatter.format(item.count)} psicólogo(s)
               </p>
               <p className="mt-1 text-xs font-bold leading-5 text-muted">{item.description}</p>
-              <p className="mt-2 text-[0.68rem] font-black uppercase tracking-[0.1em] text-subtle">
-                WhatsApp {numberFormatter.format(item.totals.whatsapp_clicks)} · Perfil{" "}
-                {numberFormatter.format(item.totals.profile_views)} · Favoritos{" "}
-                {numberFormatter.format(item.totals.favorites)}
-              </p>
             </article>
           );
         })}
@@ -2060,8 +2055,6 @@ const DashboardTractionCard = ({ summary }: { summary: AdminPsychologistsDashboa
   const traction = summary.traction;
   if (!traction) return null;
 
-  const thresholds = traction.thresholds;
-
   return (
     <CardShell className="p-5">
       <PanelTitle
@@ -2069,41 +2062,7 @@ const DashboardTractionCard = ({ summary }: { summary: AdminPsychologistsDashboa
         icon={Activity}
         title="Tração"
       />
-      <p className="mt-3 text-sm font-bold leading-6 text-muted">{traction.description}</p>
-      <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        {[
-          {
-            label: "Psicólogos analisados",
-            value: numberFormatter.format(traction.totals.psychologists),
-          },
-          {
-            label: "Cliques WhatsApp",
-            value: numberFormatter.format(traction.totals.whatsapp_clicks),
-          },
-          {
-            label: "Aberturas de perfil",
-            value: numberFormatter.format(traction.totals.profile_views),
-          },
-          {
-            label: "Favoritos",
-            value: numberFormatter.format(traction.totals.favorites),
-          },
-        ].map((metric) => (
-          <div className="rounded-2xl bg-surface-muted p-3" key={metric.label}>
-            <p className="text-xs font-black text-muted">{metric.label}</p>
-            <p className="mt-1 text-xl font-black text-foreground">{metric.value}</p>
-          </div>
-        ))}
-      </div>
       <TractionPieChart traction={traction} />
-      <p className="mt-4 rounded-2xl border border-border/70 bg-surface-muted p-3 text-xs font-bold leading-5 text-subtle">
-        Cortes normalizados para 30 dias: WhatsApp alto ≥{" "}
-        {numberFormatter.format(thresholds.whatsapp_high_30d)} cliques; tráfego alto ≥{" "}
-        {numberFormatter.format(thresholds.profile_views_high_30d)} aberturas; interesse alto ≥{" "}
-        {numberFormatter.format(thresholds.favorites_high_30d)} favoritos. Dados insuficientes usam
-        menos de {numberFormatter.format(thresholds.minimum_active_days)} dias ativos, salvo quando
-        WhatsApp já indica Tração Forte.
-      </p>
     </CardShell>
   );
 };

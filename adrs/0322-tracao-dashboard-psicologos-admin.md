@@ -23,8 +23,8 @@ Adicionar ao dashboard Admin de psicologos um bloco **Tracao** calculado individ
 A V1 usa cinco categorias:
 
 1. **Tracao Forte** - WhatsApp e o sinal mais forte e prevalece sobre as outras metricas.
-2. **Trafego Nao Convertido** - muitas aberturas de perfil, mas poucos cliques no WhatsApp.
-3. **Interesse Nao Convertido** - muitos favoritos, mas poucos cliques no WhatsApp.
+2. **Interesse Nao Convertido** - muitos favoritos, mas poucos cliques no WhatsApp.
+3. **Trafego Nao Convertido** - muitas aberturas de perfil, mas poucos cliques no WhatsApp.
 4. **Baixa Tracao** - poucos cliques no WhatsApp, poucas aberturas de perfil e poucos favoritos.
 5. **Dados Insuficientes** - perfil com janela ativa curta demais para leitura estavel, salvo quando WhatsApp ja indica Tracao Forte.
 
@@ -36,7 +36,7 @@ Os cortes sao normalizados para 30 dias a partir dos dias ativos do perfil dentr
 - Interesse alto: 5+ favoritos/30d;
 - Dados insuficientes: menos de 7 dias ativos dentro da janela, exceto quando WhatsApp ja caracteriza Tracao Forte.
 
-A UI mostra grafico de pizza, quantidades e percentuais de psicologos em cada categoria logo abaixo da visao geral e antes de **Origem do trafego**. Nao ha lista individual, ranking ou exportacao por profissional nesta entrega.
+A UI mostra grafico de pizza, quantidades e percentuais de psicologos em cada categoria logo abaixo da visao geral e antes de **Origem do trafego**. A legenda fica em coluna unica na ordem Tracao Forte, Interesse Nao Convertido, Trafego Nao Convertido, Baixa Tracao e Dados Insuficientes. Para manter o bloco mais executivo, a interface nao exibe texto introdutorio, contadores agregados, totais de eventos por categoria nem a faixa tecnica dos cortes. Nao ha lista individual, ranking ou exportacao por profissional nesta entrega.
 
 ## Consequencias
 
@@ -50,3 +50,4 @@ A UI mostra grafico de pizza, quantidades e percentuais de psicologos em cada ca
 
 - Smoke local de `buildPsychologistsDashboard({ period: "all" })` retornou `traction` com cinco categorias, totais reais e percentuais.
 - Checks/builds da task foram executados conforme registrado em `TASK-84`.
+- Refinamento de UI em 2026-07-25 validado com smoke local confirmando ordem e novas descricoes das categorias, alem de checks/builds de backend/admin e `pnpm check`.

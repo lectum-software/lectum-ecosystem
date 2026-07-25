@@ -81,8 +81,8 @@ const PLAN_SEGMENT_OPTIONS: Array<{
 
 const TRACTION_CATEGORY_ORDER: AdminPsychologistsDashboardTractionCategoryId[] = [
   "strong_traction",
-  "unconverted_traffic",
   "unconverted_interest",
+  "unconverted_traffic",
   "low_traction",
   "insufficient_data",
 ];
@@ -90,27 +90,24 @@ const TRACTION_CATEGORY_ORDER: AdminPsychologistsDashboardTractionCategoryId[] =
 const TRACTION_CATEGORY_CONFIG = {
   insufficient_data: {
     description:
-      "Perfis com menos de 7 dias ativos na janela analisada e sem volume forte de WhatsApp para classificar com seguran\u00e7a.",
+      "Perfis com menos de 7 dias ativos no per\u00edodo e sem volume forte de WhatsApp para classificar com seguran\u00e7a.",
     label: "Dados Insuficientes",
   },
   low_traction: {
     description:
-      "Poucos cliques no WhatsApp, poucas aberturas de perfil e poucos favoritos na janela analisada.",
+      "Psic\u00f3logos com poucos cliques no WhatsApp, poucas aberturas de perfil e pouco favoritados.",
     label: "Baixa Tra\u00e7\u00e3o",
   },
   strong_traction: {
-    description:
-      "Volume forte de cliques no WhatsApp, o sinal de resultado mais relevante para o neg\u00f3cio.",
+    description: "Psic\u00f3logos com alto \u00edndice de cliques no WhatsApp.",
     label: "Tra\u00e7\u00e3o Forte",
   },
   unconverted_interest: {
-    description:
-      "Muitos favoritos, mas poucos cliques no WhatsApp; h\u00e1 inten\u00e7\u00e3o salva que ainda n\u00e3o vira contato.",
+    description: "Psic\u00f3logos muito favoritados, mas com poucos cliques no WhatsApp.",
     label: "Interesse N\u00e3o Convertido",
   },
   unconverted_traffic: {
-    description:
-      "Muitas aberturas de perfil, mas poucos cliques no WhatsApp; h\u00e1 tr\u00e1fego que n\u00e3o vira contato.",
+    description: "Psic\u00f3logos com muitas aberturas de perfil, mas poucos cliques no WhatsApp.",
     label: "Tr\u00e1fego N\u00e3o Convertido",
   },
 } satisfies Record<
