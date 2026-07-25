@@ -4323,9 +4323,10 @@ const PsychologistPlatformDeviceUsageSection = ({
         <figcaption className="space-y-3">
           {hasDeviceSessions ? (
             items.map((device) => {
-              const operatingSystems = (device.operating_systems ?? []).filter(
-                (item) => item.count > 0,
-              );
+              const shouldShowOperatingSystemDetails = device.device_type !== "unknown";
+              const operatingSystems = shouldShowOperatingSystemDetails
+                ? (device.operating_systems ?? []).filter((item) => item.count > 0)
+                : [];
 
               return (
                 <div className="rounded-2xl bg-surface-muted p-3" key={device.id}>
@@ -4348,23 +4349,26 @@ const PsychologistPlatformDeviceUsageSection = ({
                   <p className="mt-1 text-xs font-bold text-muted">
                     {formatDeviceSessionCount(device.count)}
                   </p>
-                  {operatingSystems.length > 0 ? (
-                    <div className="mt-2 flex flex-wrap gap-1.5">
-                      {operatingSystems.map((operatingSystem) => (
-                        <span
-                          className="rounded-full bg-surface px-2 py-1 text-[0.68rem] font-black text-muted"
-                          key={operatingSystem.id}
-                        >
-                          {operatingSystem.label}: {formatDeviceSessionCount(operatingSystem.count)}{" "}
-                          · {formatDevicePercentage(operatingSystem.percentage)}
-                        </span>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="mt-2 text-[0.68rem] font-bold text-subtle">
-                      Sistema operacional não identificado.
-                    </p>
-                  )}
+                  {shouldShowOperatingSystemDetails ? (
+                    operatingSystems.length > 0 ? (
+                      <div className="mt-2 flex flex-wrap gap-1.5">
+                        {operatingSystems.map((operatingSystem) => (
+                          <span
+                            className="rounded-full bg-surface px-2 py-1 text-[0.68rem] font-black text-muted"
+                            key={operatingSystem.id}
+                          >
+                            {operatingSystem.label}:{" "}
+                            {formatDeviceSessionCount(operatingSystem.count)} ?{" "}
+                            {formatDevicePercentage(operatingSystem.percentage)}
+                          </span>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="mt-2 text-[0.68rem] font-bold text-subtle">
+                        Sistema operacional n?o identificado.
+                      </p>
+                    )
+                  ) : null}
                 </div>
               );
             })
