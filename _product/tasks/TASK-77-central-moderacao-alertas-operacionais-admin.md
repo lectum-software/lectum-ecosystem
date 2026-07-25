@@ -503,3 +503,34 @@ Validacao deste ajuste:
 - `pnpm check`
 - API local autenticada: `GET /api/admin/private/moderation/operational-alerts?group=compliance&limit=20` retornou 8 pendências reais; alertas de CRP pendente incluem `Publicado=sim` no bloco `facts`.
 - Browser local/headless em Chrome para `/moderacao/compliance` validou desktop 1365px e mobile 390px com cabeçalho **Pendência/Data/Profissional/Plano/Perfil**, 8 linhas de demanda, 8 ícones de detalhe e sem overflow horizontal da página.
+
+## Ajuste complementar 2026-07-25 - Operacionais em tabela por Usuário
+
+- Pedido do usuário: na lista de **Operacionais**, seguir o layout tabular de **Compliance** com as colunas **Pendência**, **Pendente há**, **Usuário**, **Plano**, **Status do perfil** e ícone de detalhe; a coluna antes tratada como **Profissional** deve ser **Usuário** e indicar se o usuário é **Paciente** ou **Psicólogo/Psicóloga**.
+- `/moderacao/operacionais` passou a renderizar uma tabela compacta com uma linha por alerta derivado, rolagem horizontal contida em telas pequenas e cabeçalhos: **Pendência**, **Pendente há**, **Usuário**, **Plano**, **Status do perfil** e ação por ícone.
+- Os rótulos de **Pendência** na tabela operacional foram normalizados para **Post sem cobertura**, **Perfis não publicados** e **Sem tração**, separados dos rótulos técnicos internos.
+- O contrato real `GET /api/admin/private/moderation/operational-alerts` agora inclui metadados aditivos `user` nos alertas: posts sem cobertura usam o autor real de `community_post` como **Paciente**; alertas de perfil usam o usuário do `psychologist_profile` como **Psicólogo/Psicóloga**.
+- Alertas operacionais de perfil também incluem o fato **Publicado**, permitindo derivar **Status do perfil** como **Ativo/Inativo** sem criar campo persistido ou mock. Para posts sem cobertura, **Plano** e **Status do perfil** aparecem como `—`, pois não se aplicam ao paciente/conteúdo.
+- O ícone de detalhe abre a rota Admin do conteúdo para **Post sem cobertura** e a rota Admin do psicólogo para **Perfis não publicados**/**Sem tração**.
+- Não houve alteração de Prisma schema/migrations, package novo, mock, seed ou endpoint simulado; `pnpm --dir backend db:migrate` não se aplica.
+- Builder/Quick Copy não está exposto como ferramenta callable neste ambiente; a referência visual foi a captura enviada pelo usuário da tabela de Compliance e a tela local `/moderacao/operacionais`.
+
+### Critérios deste ajuste
+
+- [x] `/moderacao/operacionais` usa tabela no padrão visual de `/moderacao/compliance`.
+- [x] A tabela mostra **Pendência**, **Pendente há**, **Usuário**, **Plano**, **Status do perfil** e ícone de detalhe.
+- [x] A coluna **Usuário** exibe o nome real e o tipo **Paciente** ou **Psicólogo/Psicóloga**.
+- [x] **Post sem cobertura** aponta para o autor paciente real e abre o detalhe do conteúdo.
+- [x] **Perfis não publicados** e **Sem tração** apontam para o psicólogo real e abrem o detalhe administrativo do psicólogo.
+- [x] A alteração é mobile-first, sem `<img>` cru, sem package novo e sem migration.
+
+### Validação deste ajuste
+
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/moderacao/operational-category-client.tsx" "src/api/req/moderation/index.ts"`
+- `pnpm --dir backend exec biome check --write "src/modules/api/admin/private/moderation/DTOs/IAdminModerationDTO.ts" "src/modules/api/admin/private/moderation/use-cases/services.ts"`
+- `pnpm --dir admin check`
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir admin build`
+- `pnpm check`
+- Smoke HTTP local no Admin: `GET http://localhost:3002/moderacao/operacionais` retornou `200`.

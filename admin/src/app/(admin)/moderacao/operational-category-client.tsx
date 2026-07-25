@@ -1502,7 +1502,7 @@ const OperationalDetailsAction = ({ alert }: { alert: AdminModerationOperational
 };
 
 const OperationalAlertRow = ({ alert }: { alert: AdminModerationOperationalAlert }) => {
-  const plan = alertFactValue(alert, "Plano") || "?";
+  const plan = alertFactValue(alert, "Plano") || "—";
   const userName = alertUserName(alert);
   const roleLabel = alertUserRoleLabel(alert);
   const showVerifiedBadge = alertUserVerified(alert);

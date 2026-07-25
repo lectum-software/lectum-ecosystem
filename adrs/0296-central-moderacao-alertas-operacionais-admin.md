@@ -163,3 +163,13 @@ A página exclusiva `/moderacao/compliance` passa a tratar cada alerta derivado 
 A decisão mantém os alertas como derivados/read-only e reaproveita o contrato existente de `operational-alerts`. Para completar a coluna **Perfil** sem criar estado novo, os alertas de **CRP pendente** passaram a incluir o fato aditivo **Publicado** no mesmo padrão já usado nos alertas de WhatsApp inválido. A UI deriva **Ativo/Inativo** desse fato real de publicação do perfil.
 
 O detalhe textual, origem técnica, idade, papel profissional, selo de verificado e demais fatos continuam disponíveis no payload e na busca, mas não são exibidos na fila principal de Compliance para preservar a exigência de uma demanda por linha. Em mobile, a tabela usa rolagem horizontal contida, sem expandir a largura da página.
+
+## Complemento 2026-07-25: Operacionais em tabela por Usuário
+
+A página exclusiva `/moderacao/operacionais` passa a usar o mesmo padrão de tabela compacta adotado em Compliance, mas com semântica própria de operação: **Pendência**, **Pendente há**, **Usuário**, **Plano**, **Status do perfil** e ação por ícone. A coluna foi definida como **Usuário**, e não **Profissional**, porque a fila mistura pendências de conteúdo criado por pacientes e pendências de perfil de psicólogos.
+
+Para sustentar a leitura sem heurística no frontend, `GET /api/admin/private/moderation/operational-alerts` recebeu um campo aditivo `user` em cada alerta derivado. Em **Post sem cobertura**, o usuário vem do autor real de `community_post` e é rotulado como **Paciente**. Em **Perfis não publicados** e **Sem tração**, o usuário vem do `psychologist_profile`/`user_id`, com rótulo **Psicólogo** ou **Psicóloga** conforme o gênero profissional armazenado.
+
+O status **Ativo/Inativo** continua derivado do fato real **Publicado**. Por isso, os alertas operacionais de psicólogo passaram a incluir esse fato no payload, enquanto alertas de post exibem `—` nas colunas **Plano** e **Status do perfil** por não haver plano/status de perfil aplicável ao paciente/conteúdo. A ação da linha preserva o destino correto: detalhe do conteúdo para posts e detalhe administrativo do psicólogo para pendências de perfil.
+
+A decisão mantém os alertas operacionais como derivados/read-only, sem novo estado persistido, sem migration e sem criar endpoint paralelo.
