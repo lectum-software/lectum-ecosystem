@@ -1325,6 +1325,9 @@ const ComplianceProfileBadge = ({ alert }: { alert: AdminModerationOperationalAl
 const ComplianceAlertRow = ({ alert }: { alert: AdminModerationOperationalAlert }) => {
   const href = alert.action_href ?? alert.entity.href;
   const professionalName = alert.professional?.name ?? alert.user?.name ?? alert.entity.label;
+  const professionalRoleLabel =
+    alert.professional?.role_label ?? alert.user?.role_label ?? "Psicólogo";
+  const showVerifiedBadge = Boolean(alert.professional?.show_verified_badge);
   const plan = alertFactValue(alert, "Plano") || "\u2014";
 
   return (
@@ -1338,9 +1341,21 @@ const ComplianceAlertRow = ({ alert }: { alert: AdminModerationOperationalAlert 
         </time>
       </td>
       <td className="px-5 py-4 align-middle">
-        <span className="truncate font-medium text-foreground" title={professionalName}>
-          {professionalName}
-        </span>
+        <div className="min-w-0">
+          <div className="flex min-w-0 items-center gap-1.5">
+            <span className="truncate font-medium text-foreground" title={professionalName}>
+              {professionalName}
+            </span>
+            {showVerifiedBadge ? (
+              <VerifiedBadgeIcon
+                aria-label="Registro profissional verificado"
+                className="h-4 w-4"
+                role="img"
+              />
+            ) : null}
+          </div>
+          <p className="mt-0.5 truncate text-xs font-normal text-muted">{professionalRoleLabel}</p>
+        </div>
       </td>
       <td className="px-5 py-4 align-middle text-xs font-medium text-primary" title={plan}>
         {plan}

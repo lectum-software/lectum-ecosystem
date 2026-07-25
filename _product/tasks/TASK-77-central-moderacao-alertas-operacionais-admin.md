@@ -569,3 +569,34 @@ Validacao deste ajuste:
 - `pnpm --dir admin build`
 - `pnpm check`
 - Smoke HTTP local no Admin: `GET http://localhost:3002/moderacao/operacionais` retornou `200`.
+
+## Ajuste complementar 2026-07-25 - Refinos profissionais da tabela de Compliance
+
+- Pedido do usuário: reduzir o peso textual da tabela de **Compliance**, exibir **Psicólogo** ou **Psicóloga** abaixo do nome conforme o gênero selecionado pelo profissional, mostrar selo de verificado apenas quando o profissional for assinante e tiver registro verificado, e manter a tag **Perfil** com fundo ajustado ao texto.
+- O backend adiciona metadados derivados `professional` aos alertas de psicólogo retornados por `GET /api/admin/private/moderation/operational-alerts`. O campo `role_label` é derivado de `psychologist_profile.gender`, sem inferência por nome; `feminino`/`mulher` gera **Psicóloga** e os demais valores geram **Psicólogo**.
+- O selo de verificado da linha usa o booleano derivado `professional.show_verified_badge`, verdadeiro somente quando há assinatura profissional ativa não gratuita e aprovação real de registro (`crp_status="aprovado"`, `cfp_verified_at` ou cortesia administrativa reconhecida).
+- A UI da tabela reduz os pesos de fonte dos textos de linha e chips de Compliance; a coluna **Perfil** usa `w-fit`/`justify-self-start`, mantendo o fundo verde/vermelho somente no preenchimento do texto.
+- Não houve alteração de Prisma schema/migrations, package novo, mock, seed ou endpoint simulado; `pnpm --dir backend db:migrate` não se aplica.
+- Builder/Quick Copy não está exposto como ferramenta callable neste ambiente; a referência visual foi a captura enviada pelo usuário e a tela local `/moderacao/compliance`.
+
+### Critérios deste ajuste
+
+- [x] Textos da tabela de `/moderacao/compliance` usam pesos visuais menores que o padrão anterior.
+- [x] A linha mostra **Psicólogo** ou **Psicóloga** abaixo do nome usando o gênero selecionado pelo profissional.
+- [x] A regra não infere gênero pelo nome do profissional.
+- [x] O selo de verificado aparece somente com assinatura profissional ativa e registro verificado.
+- [x] A tag **Perfil** mantém o fundo ajustado ao conteúdo textual.
+- [x] A alteração é mobile-first, sem `<img>` cru, sem package novo e sem migration.
+
+### Validação deste ajuste
+
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/moderacao/operational-category-client.tsx" "src/api/req/moderation/index.ts"`
+- `pnpm --dir backend exec biome check --write "src/modules/api/admin/private/moderation/DTOs/IAdminModerationDTO.ts" "src/modules/api/admin/private/moderation/use-cases/services.ts" "src/modules/api/admin/private/moderation/validator/index.ts"`
+- `pnpm --dir admin check`
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir admin build`
+- `pnpm check`
+- API local autenticada: `GET /api/admin/private/moderation/operational-alerts?group=compliance&limit=20` retornou 8 pendências reais; todas as linhas tinham `professional.role_label` e `professional.show_verified_badge === professional.is_subscriber && professional.registry_verified`.
+- Browser local/headless em Chrome para `/moderacao/compliance` validou desktop 1365px e mobile 390px com 8 linhas reais, **Psicólogo/Psicóloga** abaixo do nome conforme metadado real, pesos de texto até 500 na tabela, tag **Perfil** menor que a coluna e sem overflow horizontal. O conjunto atual não tinha profissional elegível ao selo, então o DOM validou 0 selos contra 0 retornados pela API. Admin temporário de validação removido ao final.
+

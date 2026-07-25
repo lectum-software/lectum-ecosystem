@@ -183,3 +183,12 @@ Para sustentar a leitura sem heurística no frontend, `GET /api/admin/private/mo
 O status **Ativo/Inativo** continua derivado do fato real **Publicado**. Por isso, os alertas operacionais de psicólogo passaram a incluir esse fato no payload, enquanto alertas de post exibem `—` nas colunas **Plano** e **Status do perfil** por não haver plano/status de perfil aplicável ao paciente/conteúdo. A ação da linha preserva o destino correto: detalhe do conteúdo para posts e detalhe administrativo do psicólogo para pendências de perfil.
 
 A decisão mantém os alertas operacionais como derivados/read-only, sem novo estado persistido, sem migration e sem criar endpoint paralelo.
+
+## Complemento 2026-07-25: refinos profissionais da tabela de Compliance
+
+A tabela visual de `/moderacao/compliance` passa a receber metadados derivados de profissional no contrato `operational-alerts`: nome normalizado, gênero selecionado, rótulo profissional, estado de assinatura profissional, estado de registro verificado e booleano de exibição do selo Lectum.
+
+O rótulo abaixo do nome é derivado exclusivamente de `psychologist_profile.gender`, sem inferência por nome. Valores femininos (`feminino`/`mulher`) são exibidos como **Psicóloga**; os demais valores continuam como **Psicólogo**, mantendo a taxonomia binária solicitada para esta UI.
+
+O selo de verificado na linha só é exibido quando coexistem assinatura profissional ativa não gratuita e registro reconhecido pela regra de domínio já vigente (`crp_status="aprovado"`, `cfp_verified_at` ou cortesia administrativa válida). A tabela também reduz pesos de fonte e usa tags de **Perfil** autoajustadas ao texto para preservar densidade de triagem.
+
