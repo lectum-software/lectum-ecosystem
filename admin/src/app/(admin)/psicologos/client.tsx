@@ -1611,7 +1611,7 @@ const StatsContent = ({ summary }: { summary: AdminPsychologistsDashboard }) => 
     <div className="space-y-4">
       <CardShell className="overflow-hidden">
         <div className="border-b border-border bg-surface-muted p-5">
-          <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div className="flex gap-3">
               <div className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-surface text-primary">
                 <SelectedIcon aria-hidden className="h-5 w-5" />
@@ -1625,9 +1625,14 @@ const StatsContent = ({ summary }: { summary: AdminPsychologistsDashboard }) => 
                 <p className="mt-1 text-sm leading-relaxed text-muted">{periodLabel}</p>
               </div>
             </div>
+            <PlanSegmentSelect
+              id="supply-demand-plan-segment"
+              onChange={setPlanSegment}
+              value={planSegment}
+            />
           </div>
 
-          <div className="mt-5 grid gap-3 lg:grid-cols-[minmax(180px,0.85fr)_minmax(220px,1fr)_minmax(160px,0.75fr)_minmax(220px,0.85fr)]">
+          <div className="mt-5 grid gap-3 lg:grid-cols-[minmax(180px,0.85fr)_minmax(260px,1.15fr)_minmax(220px,0.85fr)]">
             <label
               className="grid gap-1 text-xs font-semibold text-muted"
               htmlFor="supply-demand-filter-type"
@@ -1673,12 +1678,6 @@ const StatsContent = ({ summary }: { summary: AdminPsychologistsDashboard }) => 
                 />
               </span>
             </label>
-
-            <PlanSegmentSelect
-              id="supply-demand-plan-segment"
-              onChange={setPlanSegment}
-              value={planSegment}
-            />
 
             <label
               className="grid gap-1 text-xs font-semibold text-muted"
