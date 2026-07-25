@@ -373,3 +373,17 @@ Validacao deste ajuste:
 - `pnpm --dir admin check`
 - `pnpm --dir admin build`
 - Smoke HTTP local no Admin (`GET http://localhost:3002/moderacao`) retornou `200`.
+
+
+## Ajuste complementar 2026-07-24 - Remoção da faixa informativa da Visão geral
+
+- Pedido do usuário: remover a faixa inferior com o texto **Mobile-first: pendências separadas em cards e atalhos para páginas exclusivas.** da rota `/moderacao`.
+- A faixa informativa inferior foi removida do componente de moderação, eliminando também a mensagem auxiliar lateral do mesmo bloco visual.
+- Não houve alteração de backend, Prisma schema/migrations, packages, dados persistidos, contratos de API ou formulários.
+
+### Validação deste ajuste
+
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/moderacao/client.tsx"`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- Smoke HTTP local no Admin (`GET http://localhost:3002/moderacao`) retornou `200`.

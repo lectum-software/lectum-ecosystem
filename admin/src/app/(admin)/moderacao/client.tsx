@@ -1049,15 +1049,6 @@ export const AdminModerationClient = ({ mode = "overview" }: { mode?: "overview"
           </div>
         </>
       ) : null}
-      <div className="flex flex-col gap-2 rounded-2xl border border-border bg-surface p-4 text-xs font-bold text-muted sm:flex-row sm:items-center sm:justify-between">
-        <span className="inline-flex items-center gap-2">
-          <CheckCircle2 aria-hidden className="h-4 w-4 text-success" />
-          {isTextualPage
-            ? "Mobile-first: filtros empilhados, eventos em cards e detalhe abaixo no celular."
-            : "Mobile-first: pendências separadas em cards e atalhos para páginas exclusivas."}
-        </span>
-        <span>Pacientes continuam publicando somente texto; URLs não viram links clicáveis.</span>
-      </div>
       {resolveTarget ? (
         <ResolveModal event={resolveTarget} onClose={() => setResolveTarget(null)} />
       ) : null}
