@@ -304,12 +304,13 @@ export type AdminPsychologistsDashboardDeviceUsageItem = {
   device_type: AdminPsychologistsDashboardDeviceType;
   id: AdminPsychologistsDashboardDeviceType;
   label: string;
+  operating_systems: AdminPsychologistsDashboardOperatingSystemUsageItem[];
   percentage: number;
 };
 
 export type AdminPsychologistsDashboardDeviceUsage = {
   items: AdminPsychologistsDashboardDeviceUsageItem[];
-  source: "visitor_session.device_type+user.role=psicologo";
+  source: "visitor_session.device_type+visitor_session.os+user.role=psicologo";
   total_active_psychologists: number;
   total_sessions: number;
   unavailable_reason: string | null;
@@ -363,6 +364,19 @@ export type AdminPsychologistsDashboardTrafficSources = {
   updated_at: Date | null;
 };
 
+export type AdminPsychologistsDashboardPlanSegment = "all" | "free" | "subscribers";
+
+export type AdminPsychologistsDashboardPlanSegmentSummary = {
+  device_usage: AdminPsychologistsDashboardDeviceUsage;
+  id: AdminPsychologistsDashboardPlanSegment;
+  label: string;
+  platform_usage: AdminPsychologistsDashboardPlatformUsage;
+  psychologists_count: number;
+  signup_method: AdminPsychologistsDashboardSignupMethod;
+  statistics: AdminPsychologistsDashboardStatistics;
+  traffic_sources: AdminPsychologistsDashboardTrafficSources;
+};
+
 export type AdminPsychologistsDashboardSummary = {
   cards: {
     churn: AdminPsychologistsDashboardMetric;
@@ -378,6 +392,10 @@ export type AdminPsychologistsDashboardSummary = {
   filters_searches: AdminPsychologistsDashboardFilterSearches;
   directory_filters: AdminPsychologistsDashboardDirectoryFilters;
   operating_system_usage: AdminPsychologistsDashboardOperatingSystemUsage;
+  plan_segments: Record<
+    AdminPsychologistsDashboardPlanSegment,
+    AdminPsychologistsDashboardPlanSegmentSummary
+  >;
   period: AdminPsychologistsDashboardPeriod;
   platform_usage: AdminPsychologistsDashboardPlatformUsage;
   psychologists: {

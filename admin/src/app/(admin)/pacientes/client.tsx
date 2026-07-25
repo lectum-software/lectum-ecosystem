@@ -11,7 +11,6 @@ import {
   type LucideIcon,
   MapPin,
   MessageCircle,
-  MonitorCog,
   RefreshCw,
   Smartphone,
   Snowflake,
@@ -28,6 +27,8 @@ import type {
   AdminPatientsDashboard,
   PatientsDashboardBreakdownItem,
   PatientsDashboardDailyPoint,
+  PatientsDashboardIntentFilterId,
+  PatientsDashboardIntentFilterOption,
   PatientsDashboardIntentSegment,
   PatientsDashboardMetric,
   PatientsDashboardQuery,
@@ -44,10 +45,19 @@ const CARD_ORDER = [
   "new_signups",
 ] as const;
 type DeviceUsageItem = AdminPatientsDashboard["device_usage"]["items"][number];
-type OperatingSystemUsageItem = AdminPatientsDashboard["operating_system_usage"]["items"][number];
 type PatientsDashboardPeriodValue = NonNullable<PatientsDashboardQuery["period"]>;
 type PatientsDashboardPeriodPreset = Exclude<PatientsDashboardPeriodValue, "custom">;
 type PatientsDashboardRange = Pick<PatientsDashboardQuery, "from" | "to">;
+type PatientsStatisticsIntentFilterKey =
+  | "deviceUsage"
+  | "gender"
+  | "locations"
+  | "platformUsage"
+  | "signupSources";
+type PatientsStatisticsIntentFilters = Record<
+  PatientsStatisticsIntentFilterKey,
+  PatientsDashboardIntentFilterId
+>;
 
 const PATIENTS_DASHBOARD_PERIOD_OPTIONS: {
   id: PatientsDashboardPeriodPreset;
@@ -59,6 +69,13 @@ const PATIENTS_DASHBOARD_PERIOD_OPTIONS: {
   { id: "year", label: "Este ano" },
   { id: "all", label: "Todo o período" },
 ];
+const DEFAULT_PATIENTS_STATISTICS_INTENT_FILTERS: PatientsStatisticsIntentFilters = {
+  deviceUsage: "all",
+  gender: "all",
+  locations: "all",
+  platformUsage: "all",
+  signupSources: "all",
+};
 const CHART_COLORS = ["#308ce8", "#13a85b", "#64748b", "#f59f00"];
 const SIGNUP_SOURCE_CHART_COLORS: Record<string, string> = {
   email_password: "#13a85b",
@@ -79,15 +96,6 @@ const DEVICE_USAGE_CHART_COLORS = {
   tablet: "#8b5cf6",
   unknown: "#94a3b8",
 } satisfies Record<DeviceUsageItem["device_type"], string>;
-const OPERATING_SYSTEM_USAGE_CHART_COLORS = {
-  android: "#13a85b",
-  ios: "#308ce8",
-  ipados: "#8b5cf6",
-  macos: "#64748b",
-  other: "#f59f00",
-  unknown: "#94a3b8",
-  windows: "#2563eb",
-} satisfies Record<OperatingSystemUsageItem["operating_system"], string>;
 const PATIENT_INTENT_CHART_COLORS = {
   cold: "#64748b",
   curious: "#308ce8",
@@ -216,6 +224,24 @@ const LOCAL_PREVIEW_DEVICE_USAGE = {
       device_type: "mobile",
       id: "mobile",
       label: "Mobile",
+      operating_systems: [
+        {
+          active_patients_count: 15,
+          count: 18,
+          id: "android",
+          label: "Android",
+          operating_system: "android",
+          percentage: 75,
+        },
+        {
+          active_patients_count: 5,
+          count: 6,
+          id: "ios",
+          label: "iOS",
+          operating_system: "ios",
+          percentage: 25,
+        },
+      ],
       percentage: 60,
     },
     {
@@ -224,6 +250,24 @@ const LOCAL_PREVIEW_DEVICE_USAGE = {
       device_type: "desktop",
       id: "desktop",
       label: "Desktop",
+      operating_systems: [
+        {
+          active_patients_count: 6,
+          count: 7,
+          id: "windows",
+          label: "Windows",
+          operating_system: "windows",
+          percentage: 70,
+        },
+        {
+          active_patients_count: 2,
+          count: 3,
+          id: "macos",
+          label: "macOS",
+          operating_system: "macos",
+          percentage: 30,
+        },
+      ],
       percentage: 25,
     },
     {
@@ -232,6 +276,16 @@ const LOCAL_PREVIEW_DEVICE_USAGE = {
       device_type: "tablet",
       id: "tablet",
       label: "Tablet",
+      operating_systems: [
+        {
+          active_patients_count: 4,
+          count: 4,
+          id: "ipados",
+          label: "iPadOS",
+          operating_system: "ipados",
+          percentage: 100,
+        },
+      ],
       percentage: 10,
     },
     {
@@ -240,10 +294,20 @@ const LOCAL_PREVIEW_DEVICE_USAGE = {
       device_type: "unknown",
       id: "unknown",
       label: "Não identificado",
+      operating_systems: [
+        {
+          active_patients_count: 2,
+          count: 2,
+          id: "unknown",
+          label: "Não identificado",
+          operating_system: "unknown",
+          percentage: 100,
+        },
+      ],
       percentage: 5,
     },
   ],
-  source: "visitor_session.device_type+user.role=paciente",
+  source: "visitor_session.device_type+visitor_session.os+user.role=paciente",
   total_active_patients: 30,
   total_sessions: 40,
   unavailable_reason: null,
@@ -419,10 +483,12 @@ const CardShell = ({
 );
 
 const PanelTitle = ({
+  action,
   icon: Icon,
   source,
   title,
 }: {
+  action?: ReactNode;
   icon: LucideIcon;
   source?: string;
   title: string;
@@ -430,14 +496,53 @@ const PanelTitle = ({
   <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
     <div className="flex items-center gap-2">
       <Icon aria-hidden className="h-5 w-5 text-primary" />
-      <h3 className="text-lg font-black text-foreground">{title}</h3>
+      <h3 className="whitespace-nowrap text-lg font-black text-foreground">{title}</h3>
     </div>
-    {source ? (
-      <span className="w-fit rounded-full bg-surface-muted px-2 py-1 text-[0.65rem] font-bold text-muted">
-        {source}
-      </span>
+    {source || action ? (
+      <div className="flex w-full flex-col gap-2 sm:w-auto sm:items-end">
+        {source ? (
+          <span className="w-fit rounded-full bg-surface-muted px-2 py-1 text-[0.65rem] font-bold text-muted">
+            {source}
+          </span>
+        ) : null}
+        {action}
+      </div>
     ) : null}
   </div>
+);
+
+const IntentFilterSelect = ({
+  id,
+  onChange,
+  options,
+  value,
+}: {
+  id: string;
+  onChange: (value: PatientsDashboardIntentFilterId) => void;
+  options: PatientsDashboardIntentFilterOption[];
+  value: PatientsDashboardIntentFilterId;
+}) => (
+  <label className="grid w-full gap-1 text-xs font-semibold text-muted sm:w-auto" htmlFor={id}>
+    <span className="sr-only">Filtrar por intenção do paciente</span>
+    <span className="relative">
+      <select
+        className="h-10 w-full min-w-[8.5rem] appearance-none rounded-control border border-border bg-surface py-0 pl-3 pr-9 text-sm font-semibold text-foreground shadow-control outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20 sm:w-[8.5rem]"
+        id={id}
+        onChange={(event) => onChange(event.target.value as PatientsDashboardIntentFilterId)}
+        value={value}
+      >
+        {options.map((option) => (
+          <option key={option.id} value={option.id}>
+            {option.label}
+          </option>
+        ))}
+      </select>
+      <ChevronDown
+        aria-hidden
+        className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted"
+      />
+    </span>
+  </label>
 );
 
 const hexToRgba = (hex: string, alpha: number) => {
@@ -1380,8 +1485,13 @@ const DeviceUsagePieChart = ({
       </svg>
       <figcaption className="space-y-3">
         {deviceUsage.items.map((item) => {
-          const sessionsLabel = item.count === 1 ? "sessão" : "sessões";
-          const patientsLabel = item.active_patients_count === 1 ? "paciente" : "pacientes";
+          const operatingSystems = item.operating_systems ?? [];
+          const operatingSystemSummary = operatingSystems
+            .map(
+              (operatingSystem) =>
+                `${operatingSystem.label} ${formatPercentageValue(operatingSystem.percentage)}`,
+            )
+            .join(" · ");
 
           return (
             <div className="rounded-2xl bg-surface-muted p-3" key={item.device_type}>
@@ -1398,166 +1508,11 @@ const DeviceUsagePieChart = ({
                   {formatPercentageValue(item.percentage)}
                 </span>
               </div>
-              <p className="mt-1 text-xs font-bold text-muted">
-                {numberFormatter.format(item.count)} {sessionsLabel} ·{" "}
-                {numberFormatter.format(item.active_patients_count)} {patientsLabel}
-              </p>
-            </div>
-          );
-        })}
-      </figcaption>
-    </figure>
-  );
-};
-
-const OperatingSystemUsagePieChart = ({
-  operatingSystemUsage,
-}: {
-  operatingSystemUsage: AdminPatientsDashboard["operating_system_usage"];
-}) => {
-  const center = 60;
-  const radius = 48;
-  const total = Math.max(0, operatingSystemUsage.total_sessions);
-  const visibleItems = operatingSystemUsage.items.filter((item) => item.count > 0);
-  const segments = visibleItems.reduce<{
-    currentAngle: number;
-    items: Array<{
-      endAngle: number;
-      item: OperatingSystemUsageItem;
-      share: number;
-      startAngle: number;
-    }>;
-  }>(
-    (accumulator, item) => {
-      const share = total > 0 ? item.count / total : 0;
-      if (share <= 0) return accumulator;
-
-      const startAngle = accumulator.currentAngle;
-      const endAngle = startAngle + share * 360;
-
-      return {
-        currentAngle: endAngle,
-        items: accumulator.items.concat({
-          endAngle,
-          item,
-          share,
-          startAngle,
-        }),
-      };
-    },
-    { currentAngle: -90, items: [] },
-  ).items;
-
-  if (total === 0) {
-    return (
-      <p className="mt-5 rounded-2xl border border-dashed border-border bg-surface-muted p-4 text-sm font-bold text-muted">
-        {operatingSystemUsage.unavailable_reason ??
-          "Sem sessões autenticadas de pacientes com sistema operacional no período selecionado."}
-      </p>
-    );
-  }
-
-  const ariaLabel = `Gráfico de pizza dos sistemas operacionais usados por pacientes: ${operatingSystemUsage.items
-    .map(
-      (item) =>
-        `${item.label}: ${numberFormatter.format(item.count)} sessão(ões), ${formatPercentageValue(
-          item.percentage,
-        )}`,
-    )
-    .join("; ")}.`;
-
-  return (
-    <figure className="mt-5 grid gap-5 sm:grid-cols-[minmax(9rem,11rem)_1fr] sm:items-center">
-      <svg
-        aria-label={ariaLabel}
-        className="mx-auto aspect-square w-40 sm:w-44"
-        role="img"
-        viewBox="0 0 120 120"
-      >
-        <circle
-          cx={center}
-          cy={center}
-          fill="var(--admin-surface-muted)"
-          r={radius}
-          stroke="var(--admin-border)"
-          strokeWidth="1"
-        />
-        {segments.map((segment) => {
-          const color = OPERATING_SYSTEM_USAGE_CHART_COLORS[segment.item.operating_system];
-          const labelPoint = getPiePoint(
-            center,
-            radius * 0.58,
-            (segment.startAngle + segment.endAngle) / 2,
-          );
-          const percentageLabel = formatPercentageValue(segment.item.percentage);
-
-          if (segment.share >= 0.999) {
-            return (
-              <g key={segment.item.operating_system}>
-                <circle
-                  cx={center}
-                  cy={center}
-                  fill={color}
-                  r={radius}
-                  stroke="var(--admin-surface)"
-                  strokeWidth="1.4"
-                />
-                <PieSlicePercentageLabel
-                  color={color}
-                  label={percentageLabel}
-                  x={center}
-                  y={center}
-                />
-              </g>
-            );
-          }
-
-          return (
-            <g key={segment.item.operating_system}>
-              <path
-                d={buildPieSlicePath(center, radius, segment.startAngle, segment.endAngle)}
-                fill={color}
-                stroke="var(--admin-surface)"
-                strokeWidth="1.4"
-              />
-              {segment.share >= 0.08 ? (
-                <PieSlicePercentageLabel
-                  color={color}
-                  label={percentageLabel}
-                  x={labelPoint.x}
-                  y={labelPoint.y}
-                />
+              {operatingSystemSummary ? (
+                <p className="mt-2 text-xs font-medium leading-5 text-subtle">
+                  {operatingSystemSummary}
+                </p>
               ) : null}
-            </g>
-          );
-        })}
-      </svg>
-      <figcaption className="space-y-3">
-        {operatingSystemUsage.items.map((item) => {
-          const sessionsLabel = item.count === 1 ? "sessão" : "sessões";
-          const patientsLabel = item.active_patients_count === 1 ? "paciente" : "pacientes";
-
-          return (
-            <div className="rounded-2xl bg-surface-muted p-3" key={item.operating_system}>
-              <div className="flex items-center justify-between gap-3">
-                <span className="flex min-w-0 items-center gap-2 text-sm font-black text-foreground">
-                  <span
-                    aria-hidden
-                    className="h-3 w-3 shrink-0 rounded-full"
-                    style={{
-                      backgroundColor: OPERATING_SYSTEM_USAGE_CHART_COLORS[item.operating_system],
-                    }}
-                  />
-                  <span className="truncate">{item.label}</span>
-                </span>
-                <span className="text-sm font-black text-foreground">
-                  {formatPercentageValue(item.percentage)}
-                </span>
-              </div>
-              <p className="mt-1 text-xs font-bold text-muted">
-                {numberFormatter.format(item.count)} {sessionsLabel} ·{" "}
-                {numberFormatter.format(item.active_patients_count)} {patientsLabel}
-              </p>
             </div>
           );
         })}
@@ -1991,14 +1946,42 @@ const Statistics = ({
   allowLocalLocationPreview: boolean;
   summary: AdminPatientsDashboard;
 }) => {
-  const showLocationPreview = allowLocalLocationPreview && summary.locations.total === 0;
-  const displayLocations = showLocationPreview ? LOCAL_PREVIEW_LOCATION_DATA : summary.locations;
+  const [intentFilters, setIntentFilters] = useState<PatientsStatisticsIntentFilters>(
+    DEFAULT_PATIENTS_STATISTICS_INTENT_FILTERS,
+  );
+  const getFilteredMetrics = (filterId: PatientsDashboardIntentFilterId) =>
+    summary.intent_filters.breakdowns[filterId] ??
+    summary.intent_filters.breakdowns[summary.intent_filters.default_filter];
+  const setIntentFilter =
+    (key: PatientsStatisticsIntentFilterKey) => (value: PatientsDashboardIntentFilterId) => {
+      setIntentFilters((current) => ({ ...current, [key]: value }));
+    };
+  const genderMetrics = getFilteredMetrics(intentFilters.gender).demographics.gender;
+  const signupSourceMetrics = getFilteredMetrics(intentFilters.signupSources).demographics
+    .signup_sources;
+  const deviceUsage = getFilteredMetrics(intentFilters.deviceUsage).device_usage;
+  const platformUsage = getFilteredMetrics(intentFilters.platformUsage).platform_usage;
+  const locations = getFilteredMetrics(intentFilters.locations).locations;
+  const showLocationPreview =
+    intentFilters.locations === "all" && allowLocalLocationPreview && locations.total === 0;
+  const displayLocations = showLocationPreview ? LOCAL_PREVIEW_LOCATION_DATA : locations;
 
   return (
     <section aria-label="Estatísticas agregadas de pacientes">
-      <div className="grid gap-4 xl:grid-cols-2">
+      <div className="grid gap-4 xl:grid-cols-3">
         <CardShell className="p-5">
-          <PanelTitle icon={UserRound} title="Gênero" />
+          <PanelTitle
+            action={
+              <IntentFilterSelect
+                id="patients-gender-intent-filter"
+                onChange={setIntentFilter("gender")}
+                options={summary.intent_filters.options}
+                value={intentFilters.gender}
+              />
+            }
+            icon={UserRound}
+            title="Gênero"
+          />
           <p className="mt-2 text-sm font-bold leading-6 text-muted">
             {formatSelectedPeriod(summary.period)}
           </p>
@@ -2008,12 +1991,23 @@ const Statistics = ({
             }
             countLabel="paciente(s)"
             emptyMessage="Sem dados reais de gênero para pacientes."
-            items={summary.demographics.gender.items}
-            total={summary.demographics.gender.total}
+            items={genderMetrics.items}
+            total={genderMetrics.total}
           />
         </CardShell>
         <CardShell className="p-5">
-          <PanelTitle icon={UserPlus} title="Forma de cadastro" />
+          <PanelTitle
+            action={
+              <IntentFilterSelect
+                id="patients-signup-source-intent-filter"
+                onChange={setIntentFilter("signupSources")}
+                options={summary.intent_filters.options}
+                value={intentFilters.signupSources}
+              />
+            }
+            icon={UserPlus}
+            title="Forma de cadastro"
+          />
           <p className="mt-2 text-sm font-bold leading-6 text-muted">
             {formatSelectedPeriod(summary.period)}
           </p>
@@ -2022,27 +2016,44 @@ const Statistics = ({
               SIGNUP_SOURCE_CHART_COLORS[item.id] ?? CHART_COLORS[index % CHART_COLORS.length]
             }
             emptyMessage="Sem dados reais de forma de cadastro para pacientes."
-            items={summary.demographics.signup_sources.items}
-            total={summary.demographics.signup_sources.total}
+            items={signupSourceMetrics.items}
+            total={signupSourceMetrics.total}
           />
         </CardShell>
-      </div>
-      <div className="mt-4 grid gap-4 xl:grid-cols-2">
-        <DeviceUsageCard allowLocalDevicePreview={allowLocalLocationPreview} summary={summary} />
-        <OperatingSystemUsageCard summary={summary} />
+        <DeviceUsageCard
+          allowLocalDevicePreview={intentFilters.deviceUsage === "all" && allowLocalLocationPreview}
+          deviceUsage={deviceUsage}
+          intentFilter={intentFilters.deviceUsage}
+          onIntentFilterChange={setIntentFilter("deviceUsage")}
+          period={summary.period}
+          summary={summary}
+        />
       </div>
       <div className="mt-4 grid gap-4 xl:grid-cols-2">
         <CardShell className="p-5">
-          <div className="flex items-center gap-2">
-            <MapPin aria-hidden className="h-5 w-5 text-primary" />
-            <h3 className="text-lg font-black text-foreground">Localização</h3>
-          </div>
+          <PanelTitle
+            action={
+              <IntentFilterSelect
+                id="patients-location-intent-filter"
+                onChange={setIntentFilter("locations")}
+                options={summary.intent_filters.options}
+                value={intentFilters.locations}
+              />
+            }
+            icon={MapPin}
+            title="Localização"
+          />
           <p className="mt-2 text-sm font-bold leading-6 text-muted">
             {formatSelectedPeriod(summary.period)}
           </p>
           <LocationOverview locations={displayLocations} preview={showLocationPreview} />
         </CardShell>
-        <PlatformUsageCard summary={summary} />
+        <PlatformUsageCard
+          intentFilter={intentFilters.platformUsage}
+          onIntentFilterChange={setIntentFilter("platformUsage")}
+          platformUsage={platformUsage}
+          summary={summary}
+        />
       </div>
     </section>
   );
@@ -2050,41 +2061,67 @@ const Statistics = ({
 
 const DeviceUsageCard = ({
   allowLocalDevicePreview,
+  deviceUsage,
+  intentFilter,
+  onIntentFilterChange,
+  period,
   summary,
 }: {
   allowLocalDevicePreview: boolean;
+  deviceUsage: AdminPatientsDashboard["device_usage"];
+  intentFilter: PatientsDashboardIntentFilterId;
+  onIntentFilterChange: (value: PatientsDashboardIntentFilterId) => void;
+  period: AdminPatientsDashboard["period"];
   summary: AdminPatientsDashboard;
 }) => {
-  const showDevicePreview = allowLocalDevicePreview && summary.device_usage.total_sessions === 0;
-  const deviceUsage = showDevicePreview ? LOCAL_PREVIEW_DEVICE_USAGE : summary.device_usage;
+  const showDevicePreview = allowLocalDevicePreview && deviceUsage.total_sessions === 0;
+  const displayDeviceUsage = showDevicePreview ? LOCAL_PREVIEW_DEVICE_USAGE : deviceUsage;
 
   return (
     <CardShell className="p-5">
-      <PanelTitle icon={Smartphone} title="Devices dos pacientes" />
-      <p className="mt-2 text-sm font-bold leading-6 text-muted">
-        {formatSelectedPeriod(summary.period)}
-      </p>
-      <DeviceUsagePieChart deviceUsage={deviceUsage} />
+      <PanelTitle
+        action={
+          <IntentFilterSelect
+            id="patients-device-intent-filter"
+            onChange={onIntentFilterChange}
+            options={summary.intent_filters.options}
+            value={intentFilter}
+          />
+        }
+        icon={Smartphone}
+        title="Devices e sistemas"
+      />
+      <p className="mt-2 text-sm font-bold leading-6 text-muted">{formatSelectedPeriod(period)}</p>
+      <DeviceUsagePieChart deviceUsage={displayDeviceUsage} />
     </CardShell>
   );
 };
 
-const OperatingSystemUsageCard = ({ summary }: { summary: AdminPatientsDashboard }) => (
-  <CardShell className="p-5">
-    <PanelTitle icon={MonitorCog} title="Sistema operacional" />
-    <p className="mt-2 text-sm font-bold leading-6 text-muted">
-      {formatSelectedPeriod(summary.period)}
-    </p>
-    <OperatingSystemUsagePieChart operatingSystemUsage={summary.operating_system_usage} />
-  </CardShell>
-);
-
-const PlatformUsageCard = ({ summary }: { summary: AdminPatientsDashboard }) => {
-  const platformUsage = summary.platform_usage;
-
+const PlatformUsageCard = ({
+  intentFilter,
+  onIntentFilterChange,
+  platformUsage,
+  summary,
+}: {
+  intentFilter: PatientsDashboardIntentFilterId;
+  onIntentFilterChange: (value: PatientsDashboardIntentFilterId) => void;
+  platformUsage: AdminPatientsDashboard["platform_usage"];
+  summary: AdminPatientsDashboard;
+}) => {
   return (
     <CardShell className="p-5">
-      <PanelTitle icon={Activity} title="Uso da plataforma" />
+      <PanelTitle
+        action={
+          <IntentFilterSelect
+            id="patients-platform-usage-intent-filter"
+            onChange={onIntentFilterChange}
+            options={summary.intent_filters.options}
+            value={intentFilter}
+          />
+        }
+        icon={Activity}
+        title="Uso da plataforma"
+      />
       <p className="mt-2 text-sm font-bold leading-6 text-muted">
         {formatSelectedPeriod(summary.period)}
       </p>

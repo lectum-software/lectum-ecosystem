@@ -124,12 +124,13 @@ export type AdminPatientsDashboardDeviceUsageItem = {
   device_type: AdminPatientsDashboardDeviceType;
   id: AdminPatientsDashboardDeviceType;
   label: string;
+  operating_systems: AdminPatientsDashboardOperatingSystemUsageItem[];
   percentage: number;
 };
 
 export type AdminPatientsDashboardDeviceUsage = {
   items: AdminPatientsDashboardDeviceUsageItem[];
-  source: "visitor_session.device_type+user.role=paciente";
+  source: "visitor_session.device_type+visitor_session.os+user.role=paciente";
   total_active_patients: number;
   total_sessions: number;
   unavailable_reason: string | null;
@@ -191,6 +192,48 @@ export type AdminPatientsDashboardIntentAnalysis = {
   total_signals: number;
 };
 
+export type AdminPatientsDashboardIntentFilterId = "all" | AdminPatientsDashboardIntentSegmentId;
+
+export type AdminPatientsDashboardIntentFilterOption = {
+  count: number;
+  id: AdminPatientsDashboardIntentFilterId;
+  label: "Curiosos" | "Frios" | "Interessados" | "Qualificados" | "Todos";
+};
+
+export type AdminPatientsDashboardIntentFilteredMetrics = {
+  demographics: {
+    gender: {
+      items: AdminPatientsDashboardBreakdownItem[];
+      source: "patient_profile.gender";
+      total: number;
+    };
+    signup_sources: {
+      items: AdminPatientsDashboardBreakdownItem[];
+      source: "user.provider";
+      total: number;
+    };
+  };
+  device_usage: AdminPatientsDashboardDeviceUsage;
+  locations: {
+    cities: AdminPatientsDashboardLocationItem[];
+    countries: AdminPatientsDashboardLocationItem[];
+    source: "visitor_location";
+    states: AdminPatientsDashboardLocationItem[];
+    total: number;
+  };
+  platform_usage: AdminPatientsDashboardPlatformUsage;
+};
+
+export type AdminPatientsDashboardIntentFilters = {
+  breakdowns: Record<
+    AdminPatientsDashboardIntentFilterId,
+    AdminPatientsDashboardIntentFilteredMetrics
+  >;
+  default_filter: "all";
+  options: AdminPatientsDashboardIntentFilterOption[];
+  source: "profile_view_event+psychologist_favorite+contact_request";
+};
+
 export type AdminPatientsDashboardSummary = {
   cards: {
     active_patients: AdminPatientsDashboardMetric;
@@ -216,6 +259,7 @@ export type AdminPatientsDashboardSummary = {
     available: false;
     reason: string;
   };
+  intent_filters: AdminPatientsDashboardIntentFilters;
   intent_analysis: AdminPatientsDashboardIntentAnalysis;
   locations: {
     cities: AdminPatientsDashboardLocationItem[];

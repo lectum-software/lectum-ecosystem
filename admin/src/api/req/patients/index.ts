@@ -370,12 +370,13 @@ export type PatientsDashboardDeviceUsageItem = {
   device_type: PatientsDashboardDeviceType;
   id: PatientsDashboardDeviceType;
   label: string;
+  operating_systems: PatientsDashboardOperatingSystemUsageItem[];
   percentage: number;
 };
 
 export type PatientsDashboardDeviceUsage = {
   items: PatientsDashboardDeviceUsageItem[];
-  source: "visitor_session.device_type+user.role=paciente";
+  source: "visitor_session.device_type+visitor_session.os+user.role=paciente";
   total_active_patients: number;
   total_sessions: number;
   unavailable_reason: string | null;
@@ -433,6 +434,45 @@ export type PatientsDashboardIntentAnalysis = {
   total_signals: number;
 };
 
+export type PatientsDashboardIntentFilterId = "all" | PatientsDashboardIntentSegmentId;
+
+export type PatientsDashboardIntentFilterOption = {
+  count: number;
+  id: PatientsDashboardIntentFilterId;
+  label: "Curiosos" | "Frios" | "Interessados" | "Qualificados" | "Todos";
+};
+
+export type PatientsDashboardIntentFilteredMetrics = {
+  demographics: {
+    gender: {
+      items: PatientsDashboardBreakdownItem[];
+      source: "patient_profile.gender";
+      total: number;
+    };
+    signup_sources: {
+      items: PatientsDashboardBreakdownItem[];
+      source: "user.provider";
+      total: number;
+    };
+  };
+  device_usage: PatientsDashboardDeviceUsage;
+  locations: {
+    cities: PatientsDashboardBreakdownItem[];
+    countries: PatientsDashboardBreakdownItem[];
+    source: "visitor_location";
+    states: PatientsDashboardBreakdownItem[];
+    total: number;
+  };
+  platform_usage: PatientsDashboardPlatformUsage;
+};
+
+export type PatientsDashboardIntentFilters = {
+  breakdowns: Record<PatientsDashboardIntentFilterId, PatientsDashboardIntentFilteredMetrics>;
+  default_filter: "all";
+  options: PatientsDashboardIntentFilterOption[];
+  source: "profile_view_event+psychologist_favorite+contact_request";
+};
+
 export type AdminPatientsDashboard = {
   cards: {
     active_patients: PatientsDashboardMetric;
@@ -458,6 +498,7 @@ export type AdminPatientsDashboard = {
     available: false;
     reason: string;
   };
+  intent_filters: PatientsDashboardIntentFilters;
   intent_analysis: PatientsDashboardIntentAnalysis;
   locations: {
     cities: PatientsDashboardBreakdownItem[];

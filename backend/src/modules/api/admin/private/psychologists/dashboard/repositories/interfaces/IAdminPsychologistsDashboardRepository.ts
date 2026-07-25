@@ -128,6 +128,7 @@ export type AdminPsychologistPlatformPwaInstallRecord = {
 export type AdminPsychologistPublicProfilePageViewRecord = {
   occurred_at: Date;
   session_id: string;
+  target_id: string | null;
   traffic_source: string | null;
 };
 

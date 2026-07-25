@@ -11,6 +11,7 @@ import type {
   AdminPatientsDashboardDateRange,
   AdminPatientsDashboardDeviceType,
   AdminPatientsDashboardIntentAnalysis,
+  AdminPatientsDashboardIntentFilterId,
   AdminPatientsDashboardIntentSegmentId,
   AdminPatientsDashboardMetric,
   AdminPatientsDashboardPeriod,
@@ -61,6 +62,11 @@ type PatientsDashboardIntentCounts = {
   profile_views: number;
   repeated_profile_views: number;
   whatsapp_clicks: number;
+};
+
+type PatientsDashboardIntentClassification = {
+  analysis: AdminPatientsDashboardIntentAnalysis;
+  segmentByPatientId: Map<string, AdminPatientsDashboardIntentSegmentId>;
 };
 
 const GENDER_LABELS: Record<string, string> = {
@@ -144,6 +150,10 @@ const PATIENT_INTENT_SEGMENT_ORDER: AdminPatientsDashboardIntentSegmentId[] = [
   "curious",
   "objective",
   "very_qualified",
+];
+const PATIENT_INTENT_FILTER_ORDER: AdminPatientsDashboardIntentFilterId[] = [
+  "all",
+  ...PATIENT_INTENT_SEGMENT_ORDER,
 ];
 
 const addDays = (date: Date, days: number) => {
@@ -385,10 +395,10 @@ const getIntentCountsForPatient = (
   return next;
 };
 
-const buildPatientIntentAnalysis = (
+const buildPatientIntentClassification = (
   patients: AdminPatientSnapshotRecord[],
   signals: PatientsDashboardIntentSignals,
-): AdminPatientsDashboardIntentAnalysis => {
+): PatientsDashboardIntentClassification => {
   const patientIds = new Set(patients.map((patient) => patient.id));
   const countsByPatient = new Map<string, PatientsDashboardIntentCounts>();
   const profilePsychologistsByPatient = new Map<string, Set<string>>();
@@ -425,11 +435,13 @@ const buildPatientIntentAnalysis = (
   const segmentCounts = new Map<AdminPatientsDashboardIntentSegmentId, number>(
     PATIENT_INTENT_SEGMENT_ORDER.map((segmentId) => [segmentId, 0]),
   );
+  const segmentByPatientId = new Map<string, AdminPatientsDashboardIntentSegmentId>();
   const signalTotals = createIntentCounts();
 
   for (const patient of patients) {
     const counts = countsByPatient.get(patient.id) ?? createIntentCounts();
     const segmentId = classifyPatientIntent(counts);
+    segmentByPatientId.set(patient.id, segmentId);
     segmentCounts.set(segmentId, (segmentCounts.get(segmentId) ?? 0) + 1);
     signalTotals.profile_views += counts.profile_views;
     signalTotals.repeated_profile_views += counts.repeated_profile_views;
@@ -442,22 +454,25 @@ const buildPatientIntentAnalysis = (
   const coldPatients = segmentCounts.get("cold") ?? 0;
 
   return {
-    coverage_note:
-      "Distribuição por pacientes existentes no fim do período, usando somente sinais reais de descoberta e contato dentro do site.",
-    items: PATIENT_INTENT_SEGMENT_ORDER.map((segmentId) => ({
-      count: segmentCounts.get(segmentId) ?? 0,
-      description: PATIENT_INTENT_SEGMENT_DESCRIPTIONS[segmentId],
-      id: segmentId,
-      label: PATIENT_INTENT_SEGMENT_LABELS[segmentId],
-      percentage: safePercentage(segmentCounts.get(segmentId) ?? 0, patients.length),
-    })),
-    patients_with_signals: Math.max(0, patients.length - coldPatients),
-    privacy_note:
-      "Indicador agregado interno do Admin; não é exibido a pacientes ou psicólogos e não infere sessão, atendimento, diagnóstico ou conteúdo de conversa.",
-    signal_totals: signalTotals,
-    source: PATIENT_INTENT_SOURCE,
-    total_patients: patients.length,
-    total_signals: totalSignals,
+    analysis: {
+      coverage_note:
+        "Distribuição por pacientes existentes no fim do período, usando somente sinais reais de descoberta e contato dentro do site.",
+      items: PATIENT_INTENT_SEGMENT_ORDER.map((segmentId) => ({
+        count: segmentCounts.get(segmentId) ?? 0,
+        description: PATIENT_INTENT_SEGMENT_DESCRIPTIONS[segmentId],
+        id: segmentId,
+        label: PATIENT_INTENT_SEGMENT_LABELS[segmentId],
+        percentage: safePercentage(segmentCounts.get(segmentId) ?? 0, patients.length),
+      })),
+      patients_with_signals: Math.max(0, patients.length - coldPatients),
+      privacy_note:
+        "Indicador agregado interno do Admin; não é exibido a pacientes ou psicólogos e não infere sessão, atendimento, diagnóstico ou conteúdo de conversa.",
+      signal_totals: signalTotals,
+      source: PATIENT_INTENT_SOURCE,
+      total_patients: patients.length,
+      total_signals: totalSignals,
+    },
+    segmentByPatientId,
   };
 };
 
@@ -483,11 +498,42 @@ const buildDeviceUsage = (sessions: AdminPatientPlatformSessionRecord[]) => {
       new Set<string>(),
     ]),
   );
+  const operatingSystemCountsByDevice = new Map<
+    AdminPatientsDashboardDeviceType,
+    Record<AdminOperatingSystemType, number>
+  >(
+    (Object.keys(counts) as AdminPatientsDashboardDeviceType[]).map((deviceType) => [
+      deviceType,
+      Object.fromEntries(
+        ADMIN_OPERATING_SYSTEM_TYPES.map((operatingSystem) => [operatingSystem, 0]),
+      ) as Record<AdminOperatingSystemType, number>,
+    ]),
+  );
+  const activePatientsByDeviceAndOperatingSystem = new Map<
+    AdminPatientsDashboardDeviceType,
+    Map<AdminOperatingSystemType, Set<string>>
+  >(
+    (Object.keys(counts) as AdminPatientsDashboardDeviceType[]).map((deviceType) => [
+      deviceType,
+      new Map(
+        ADMIN_OPERATING_SYSTEM_TYPES.map((operatingSystem) => [operatingSystem, new Set<string>()]),
+      ),
+    ]),
+  );
 
   for (const session of sessions) {
     const deviceType = normalizeDeviceType(session.device_type);
+    const operatingSystem = normalizeAdminOperatingSystem(session.os, deviceType);
     counts[deviceType] += 1;
     if (session.user_id) activePatientsByDevice.get(deviceType)?.add(session.user_id);
+    const countsByOperatingSystem = operatingSystemCountsByDevice.get(deviceType);
+    if (countsByOperatingSystem) countsByOperatingSystem[operatingSystem] += 1;
+    if (session.user_id) {
+      activePatientsByDeviceAndOperatingSystem
+        .get(deviceType)
+        ?.get(operatingSystem)
+        ?.add(session.user_id);
+    }
   }
 
   const totalSessions = sessions.length;
@@ -499,20 +545,44 @@ const buildDeviceUsage = (sessions: AdminPatientPlatformSessionRecord[]) => {
 
   return {
     items: (Object.keys(counts) as AdminPatientsDashboardDeviceType[])
-      .map((deviceType) => ({
-        active_patients_count: activePatientsByDevice.get(deviceType)?.size ?? 0,
-        count: counts[deviceType],
-        device_type: deviceType,
-        id: deviceType,
-        label: DEVICE_LABELS[deviceType],
-        percentage: safePercentage(counts[deviceType], totalSessions),
-      }))
+      .map((deviceType) => {
+        const deviceTotal = counts[deviceType];
+        const countsByOperatingSystem = operatingSystemCountsByDevice.get(deviceType);
+        const activePatientsByOperatingSystem =
+          activePatientsByDeviceAndOperatingSystem.get(deviceType);
+
+        return {
+          active_patients_count: activePatientsByDevice.get(deviceType)?.size ?? 0,
+          count: deviceTotal,
+          device_type: deviceType,
+          id: deviceType,
+          label: DEVICE_LABELS[deviceType],
+          operating_systems: ADMIN_OPERATING_SYSTEM_TYPES.map((operatingSystem) => ({
+            active_patients_count: activePatientsByOperatingSystem?.get(operatingSystem)?.size ?? 0,
+            count: countsByOperatingSystem?.[operatingSystem] ?? 0,
+            id: operatingSystem,
+            label: ADMIN_OPERATING_SYSTEM_LABELS[operatingSystem],
+            operating_system: operatingSystem,
+            percentage: safePercentage(
+              countsByOperatingSystem?.[operatingSystem] ?? 0,
+              deviceTotal,
+            ),
+          }))
+            .filter((operatingSystem) => operatingSystem.count > 0)
+            .sort((left, right) => {
+              if (right.count !== left.count) return right.count - left.count;
+
+              return left.label.localeCompare(right.label, "pt-BR");
+            }),
+          percentage: safePercentage(deviceTotal, totalSessions),
+        };
+      })
       .sort((left, right) => {
         if (right.count !== left.count) return right.count - left.count;
 
         return left.label.localeCompare(right.label, "pt-BR");
       }),
-    source: "visitor_session.device_type+user.role=paciente" as const,
+    source: "visitor_session.device_type+visitor_session.os+user.role=paciente" as const,
     total_active_patients: totalActivePatients,
     total_sessions: totalSessions,
     unavailable_reason:
@@ -918,6 +988,96 @@ const buildPlatformUsage = (params: {
   };
 };
 
+const matchesIntentFilter = (
+  userId: string | null | undefined,
+  filterId: AdminPatientsDashboardIntentFilterId,
+  segmentByPatientId: Map<string, AdminPatientsDashboardIntentSegmentId>,
+) => {
+  if (filterId === "all") return true;
+  if (!userId) return false;
+
+  return segmentByPatientId.get(userId) === filterId;
+};
+
+const buildPatientIntentFilters = (params: {
+  currentPatients: AdminPatientSnapshotRecord[];
+  currentPeriodPatients: AdminPatientSnapshotRecord[];
+  intentAnalysis: AdminPatientsDashboardIntentAnalysis;
+  labels: string[];
+  locations: AdminPatientLocationRecord[];
+  pageViews: AdminPatientPageViewRecord[];
+  platformSessions: AdminPatientPlatformSessionRecord[];
+  pwaInstalledUserIds: string[];
+  segmentByPatientId: Map<string, AdminPatientsDashboardIntentSegmentId>;
+}): AdminPatientsDashboardSummary["intent_filters"] => {
+  const {
+    currentPatients,
+    currentPeriodPatients,
+    intentAnalysis,
+    labels,
+    locations,
+    pageViews,
+    platformSessions,
+    pwaInstalledUserIds,
+    segmentByPatientId,
+  } = params;
+  const breakdownEntries = PATIENT_INTENT_FILTER_ORDER.map((filterId) => {
+    const eligiblePatients = currentPatients.filter((patient) =>
+      matchesIntentFilter(patient.id, filterId, segmentByPatientId),
+    );
+    const demographicPatients = currentPeriodPatients.filter((patient) =>
+      matchesIntentFilter(patient.id, filterId, segmentByPatientId),
+    );
+    const filteredLocations = locations.filter((location) =>
+      matchesIntentFilter(location.user_id, filterId, segmentByPatientId),
+    );
+    const filteredPageViews = pageViews.filter((view) =>
+      matchesIntentFilter(view.user_id, filterId, segmentByPatientId),
+    );
+    const filteredPlatformSessions = platformSessions.filter((session) =>
+      matchesIntentFilter(session.user_id, filterId, segmentByPatientId),
+    );
+    const filteredPwaInstalledUserIds = pwaInstalledUserIds.filter((userId) =>
+      matchesIntentFilter(userId, filterId, segmentByPatientId),
+    );
+
+    return [
+      filterId,
+      {
+        demographics: buildDemographics(demographicPatients),
+        device_usage: buildDeviceUsage(filteredPlatformSessions),
+        locations: buildLocations(filteredLocations),
+        platform_usage: buildPlatformUsage({
+          eligiblePatientsCount: eligiblePatients.length,
+          labels,
+          pageViews: filteredPageViews,
+          pwaInstalledUserIds: filteredPwaInstalledUserIds,
+        }),
+      },
+    ] as const;
+  });
+
+  return {
+    breakdowns: Object.fromEntries(
+      breakdownEntries,
+    ) as AdminPatientsDashboardSummary["intent_filters"]["breakdowns"],
+    default_filter: "all",
+    options: [
+      {
+        count: intentAnalysis.total_patients,
+        id: "all",
+        label: "Todos",
+      },
+      ...intentAnalysis.items.map((segment) => ({
+        count: segment.count,
+        id: segment.id,
+        label: segment.label,
+      })),
+    ],
+    source: PATIENT_INTENT_SOURCE,
+  };
+};
+
 const snippet = (text: string | null | undefined, fallback: string) => {
   const normalized = text?.replace(/\s+/g, " ").trim();
   if (!normalized) return fallback;
@@ -1092,7 +1252,20 @@ export const buildPatientsDashboard = async (
   });
   const deviceUsage = buildDeviceUsage(patientPlatformSessions);
   const operatingSystemUsage = buildOperatingSystemUsage(patientPlatformSessions);
-  const intentAnalysis = buildPatientIntentAnalysis(currentPatients, intentSignals);
+  const intentClassification = buildPatientIntentClassification(currentPatients, intentSignals);
+  const intentFilters = buildPatientIntentFilters({
+    currentPatients,
+    currentPeriodPatients,
+    intentAnalysis: intentClassification.analysis,
+    labels,
+    locations,
+    pageViews: patientPageViews,
+    platformSessions: patientPlatformSessions,
+    pwaInstalledUserIds: patientPwaInstalls.flatMap((event) =>
+      event.user_id ? [event.user_id] : [],
+    ),
+    segmentByPatientId: intentClassification.segmentByPatientId,
+  });
 
   const summary: AdminPatientsDashboardSummary = {
     cards: {
@@ -1139,6 +1312,7 @@ export const buildPatientsDashboard = async (
       "Tempo médio do paciente usa pageviews autenticados first-party e ignora períodos em que o app fica oculto/minimizado quando o navegador envia eventos de visibilidade.",
       "Localização usa apenas capturas agregadas e coarse de visitor_location no período selecionado; cidades com baixa frequência são agrupadas, e coordenadas, IP e endereço não são retornados.",
       "Análise de intenção usa apenas agregados de abertura de perfil, favoritos ativos e cliques no WhatsApp; não expõe conversa, diagnóstico ou atendimento.",
+      "Filtros por intenção nos blocos agregados usam a mesma classificação real do período e não recalculam segmentos a partir de dados exibidos no cliente.",
     ],
     demographics: buildDemographics(currentPeriodPatients),
     device_usage: deviceUsage,
@@ -1146,7 +1320,8 @@ export const buildPatientsDashboard = async (
       available: false,
       reason: "Exportação não exibida porque ainda não existe endpoint real para pacientes.",
     },
-    intent_analysis: intentAnalysis,
+    intent_filters: intentFilters,
+    intent_analysis: intentClassification.analysis,
     locations: locationSummary,
     operating_system_usage: operatingSystemUsage,
     period,

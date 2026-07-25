@@ -326,3 +326,14 @@ Packages usados:
 - Não houve alteração de backend, contrato HTTP, cálculo, Prisma, migration, seed, mock, package novo ou fonte de dados.
 - Referência visual local mantida: `_product/proto/admin/Psicólogos/Psicólogos - Dashboard.png`; Builder/Quick Copy não está exposto como ferramenta callable neste ambiente, e a correção também considerou o screenshot enviado pelo usuário.
 - Validações desta correção: `pnpm --dir admin exec biome check --write "src/app/(admin)/psicologos/client.tsx"`, `pnpm --dir admin check`, `pnpm --dir admin build` e smoke local em `http://localhost:3002/psicologos` retornando 200. O build exigiu aguardar build concorrente em diretório temporário e remover lock stale de `.next/dev/lock` após encerrar o dev server Admin local.
+
+### Ajuste complementar 2026-07-25 - filtros por plano nos blocos analiticos
+
+- Pedido do usuario: no dashboard Admin de psicologos, adicionar filtro com opcoes **Todos**, **Gratuitos** e **Assinantes** nos blocos **Origem do trafego**, **Comparativo de oferta e demanda**, **Modo de cadastro**, **Devices e sistemas** e **Uso da plataforma**.
+- O backend passou a retornar `plan_segments` no endpoint real `GET /api/admin/private/psychologists/dashboard`, com agregados por segmento derivados de `professional_subscription`, `subscription_plan`, `page_view_event`, `visitor_session`, `important_action_event`, `user` e `psychologist_profile`.
+- No **Comparativo de oferta e demanda**, a demanda permanece baseada nas buscas reais do diretorio publico, enquanto a coluna **Psicologos** troca para a oferta do segmento selecionado; **Buscas/psicologo** e **Leitura** mudam por derivacao dessa oferta.
+- **Assinantes** representa assinatura profissional paga real Mercado Pago ativa; cortesias administrativas seguem somente em **Todos**, pois nao foram solicitadas como opcao propria.
+- A UI adicionou selects locais por bloco, mobile-first, sem endpoint paralelo, schema Prisma/migration, package novo, mock, seed ou backfill.
+- Referencia visual local mantida: `_product/proto/admin/Psicologos/Psicologos - Dashboard.png`; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
+- ADR criado: `adrs/0316-filtros-plano-blocos-dashboard-psicologos-admin.md`.
+- Validacoes deste ajuste: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check`, smoke direto do service com `.env` local via `tsx -r dotenv/config` confirmando `plan_segments` reais e smoke HTTP/browser local em `http://localhost:3002/psicologos` retornando 200. O primeiro `pnpm --dir admin build` foi bloqueado por lock de processo Next concorrente; apos encerrar o processo stale, o build passou. Nao houve alteracao Prisma/migration, portanto `db:migrate` nao se aplicou.

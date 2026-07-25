@@ -26,11 +26,13 @@ Categorias normalizadas:
 - demais valores identificados, como Linux/ChromeOS, entram em Outros.
 - ausente/unknown entra em Nao identificado.
 
-Dashboards agregam por sessoes autenticadas do papel da tela e tambem retornam usuarios ativos deduplicados por OS. Detalhes individuais mantem o grafico de Devices e adicionam, em cada device, a lista dos sistemas operacionais observados naquele device com percentual relativo ao device.
+Dashboards agregam por sessoes autenticadas do papel da tela e tambem retornam usuarios ativos deduplicados por OS. Apos revisao visual em 2026-07-25, os dashboards deixam de mostrar um card separado de **Sistema operacional** e passam a vincular OS diretamente em `device_usage.items[].operating_systems`, exibido como uma linha textual leve dentro da legenda do grafico de Devices, sem tags, bolinhas extras ou contadores textuais de sessoes/usuarios no item. Detalhes individuais mantem o grafico de Devices e continuam adicionando, em cada device, a lista dos sistemas operacionais observados naquele device com percentual relativo ao device.
 
 ## Consequências
 
 - O Admin passa a enxergar OS sem coletar dado bruto adicional.
+- Os dashboards ficam mais compactos: a leitura principal continua por device, e OS vira detalhamento textual vinculado ao device em vez de uma segunda pizza com muitas opcoes.
+- No dashboard de pacientes, **Devices e sistemas** entra na primeira linha de estatisticas ao lado de **Genero** e **Forma de cadastro**, deixando **Localizacao** e **Uso da plataforma** na segunda linha em desktop.
 - Nao ha versao do OS, fabricante ou modelo de aparelho.
 - Sessoes historicas sem `os` permanecem como **Nao identificado**; nao ha backfill.
 - O mesmo usuario pode aparecer em mais de uma categoria de OS se usou mais de um sistema no periodo.

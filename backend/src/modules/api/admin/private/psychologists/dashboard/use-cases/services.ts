@@ -30,6 +30,8 @@ import type {
   AdminPsychologistsDashboardFilterSearches,
   AdminPsychologistsDashboardMetric,
   AdminPsychologistsDashboardPeriod,
+  AdminPsychologistsDashboardPlanSegment,
+  AdminPsychologistsDashboardPlanSegmentSummary,
   AdminPsychologistsDashboardPsychologist,
   AdminPsychologistsDashboardQuery,
   AdminPsychologistsDashboardSummary,
@@ -38,8 +40,11 @@ import type {
 import { AdminPsychologistsDashboardRepository } from "../repositories/AdminPsychologistsDashboardRepository";
 import type {
   AdminPsychologistDirectoryFilterSearchRecord,
+  AdminPsychologistPlatformPageViewRecord,
+  AdminPsychologistPlatformPwaInstallRecord,
   AdminPsychologistPlatformSessionRecord,
   AdminPsychologistProfileRecord,
+  AdminPsychologistPublicProfilePageViewRecord,
   AdminPsychologistSubscriptionRecord,
 } from "../repositories/interfaces/IAdminPsychologistsDashboardRepository";
 
@@ -54,6 +59,15 @@ const FREE_PLAN_SLUG = "gratuito";
 const DIRECTORY_FILTER_SEARCH_ACTION_SOURCE =
   "important_action_event.action_type=psychologist_directory_filter_search";
 const CITY_FILTER_MINIMUM_SEARCHES = 10;
+
+const PLAN_SEGMENT_OPTIONS: Array<{
+  id: AdminPsychologistsDashboardPlanSegment;
+  label: string;
+}> = [
+  { id: "all", label: "Todos" },
+  { id: "free", label: "Gratuitos" },
+  { id: "subscribers", label: "Assinantes" },
+];
 
 const DEVICE_LABELS: Record<AdminPsychologistsDashboardDeviceType, string> = {
   desktop: "Desktop",
@@ -373,11 +387,42 @@ const buildDeviceUsage = (sessions: AdminPsychologistPlatformSessionRecord[]) =>
       new Set<string>(),
     ]),
   );
+  const operatingSystemCountsByDevice = new Map<
+    AdminPsychologistsDashboardDeviceType,
+    Record<AdminOperatingSystemType, number>
+  >(
+    (Object.keys(counts) as AdminPsychologistsDashboardDeviceType[]).map((deviceType) => [
+      deviceType,
+      Object.fromEntries(
+        ADMIN_OPERATING_SYSTEM_TYPES.map((operatingSystem) => [operatingSystem, 0]),
+      ) as Record<AdminOperatingSystemType, number>,
+    ]),
+  );
+  const activePsychologistsByDeviceAndOperatingSystem = new Map<
+    AdminPsychologistsDashboardDeviceType,
+    Map<AdminOperatingSystemType, Set<string>>
+  >(
+    (Object.keys(counts) as AdminPsychologistsDashboardDeviceType[]).map((deviceType) => [
+      deviceType,
+      new Map(
+        ADMIN_OPERATING_SYSTEM_TYPES.map((operatingSystem) => [operatingSystem, new Set<string>()]),
+      ),
+    ]),
+  );
 
   for (const session of sessions) {
     const deviceType = normalizeDeviceType(session.device_type);
+    const operatingSystem = normalizeAdminOperatingSystem(session.os, deviceType);
     counts[deviceType] += 1;
     if (session.user_id) activePsychologistsByDevice.get(deviceType)?.add(session.user_id);
+    const countsByOperatingSystem = operatingSystemCountsByDevice.get(deviceType);
+    if (countsByOperatingSystem) countsByOperatingSystem[operatingSystem] += 1;
+    if (session.user_id) {
+      activePsychologistsByDeviceAndOperatingSystem
+        .get(deviceType)
+        ?.get(operatingSystem)
+        ?.add(session.user_id);
+    }
   }
 
   const totalSessions = sessions.length;
@@ -389,20 +434,45 @@ const buildDeviceUsage = (sessions: AdminPsychologistPlatformSessionRecord[]) =>
 
   return {
     items: (Object.keys(counts) as AdminPsychologistsDashboardDeviceType[])
-      .map((deviceType) => ({
-        active_psychologists_count: activePsychologistsByDevice.get(deviceType)?.size ?? 0,
-        count: counts[deviceType],
-        device_type: deviceType,
-        id: deviceType,
-        label: DEVICE_LABELS[deviceType],
-        percentage: safePercentage(counts[deviceType], totalSessions),
-      }))
+      .map((deviceType) => {
+        const deviceTotal = counts[deviceType];
+        const countsByOperatingSystem = operatingSystemCountsByDevice.get(deviceType);
+        const activePsychologistsByOperatingSystem =
+          activePsychologistsByDeviceAndOperatingSystem.get(deviceType);
+
+        return {
+          active_psychologists_count: activePsychologistsByDevice.get(deviceType)?.size ?? 0,
+          count: deviceTotal,
+          device_type: deviceType,
+          id: deviceType,
+          label: DEVICE_LABELS[deviceType],
+          operating_systems: ADMIN_OPERATING_SYSTEM_TYPES.map((operatingSystem) => ({
+            active_psychologists_count:
+              activePsychologistsByOperatingSystem?.get(operatingSystem)?.size ?? 0,
+            count: countsByOperatingSystem?.[operatingSystem] ?? 0,
+            id: operatingSystem,
+            label: ADMIN_OPERATING_SYSTEM_LABELS[operatingSystem],
+            operating_system: operatingSystem,
+            percentage: safePercentage(
+              countsByOperatingSystem?.[operatingSystem] ?? 0,
+              deviceTotal,
+            ),
+          }))
+            .filter((operatingSystem) => operatingSystem.count > 0)
+            .sort((left, right) => {
+              if (right.count !== left.count) return right.count - left.count;
+
+              return left.label.localeCompare(right.label, "pt-BR");
+            }),
+          percentage: safePercentage(deviceTotal, totalSessions),
+        };
+      })
       .sort((left, right) => {
         if (right.count !== left.count) return right.count - left.count;
 
         return left.label.localeCompare(right.label, "pt-BR");
       }),
-    source: "visitor_session.device_type+user.role=psicologo" as const,
+    source: "visitor_session.device_type+visitor_session.os+user.role=psicologo" as const,
     total_active_psychologists: totalActivePsychologists,
     total_sessions: totalSessions,
     unavailable_reason:
@@ -576,6 +646,40 @@ const hasActiveCourtesyAt = (profile: AdminPsychologistProfileRecord, date: Date
 
 const hasCurrentFreePlanAt = (profile: AdminPsychologistProfileRecord, date: Date) =>
   getPlanSegmentAt(profile, date) === "free";
+
+const profileMatchesPlanSegment = (
+  profile: AdminPsychologistProfileRecord,
+  date: Date,
+  segment: AdminPsychologistsDashboardPlanSegment,
+) => {
+  if (segment === "all") return true;
+  if (segment === "free") return getPlanSegmentAt(profile, date) === "free";
+
+  return getPlanSegmentAt(profile, date) === "subscriber";
+};
+
+const filterProfilesByPlanSegment = (
+  profiles: AdminPsychologistProfileRecord[],
+  date: Date,
+  segment: AdminPsychologistsDashboardPlanSegment,
+) =>
+  segment === "all"
+    ? profiles
+    : profiles.filter((profile) => profileMatchesPlanSegment(profile, date, segment));
+
+const filterRecordsByUserPlanSegment = <T extends { user_id: string | null }>(
+  records: T[],
+  allowedUserIds: Set<string>,
+) => records.filter((record) => record.user_id && allowedUserIds.has(record.user_id));
+
+const filterPublicProfileViewsByPlanSegment = <
+  T extends {
+    target_id: string | null;
+  },
+>(
+  records: T[],
+  allowedPsychologistIds: Set<string>,
+) => records.filter((record) => record.target_id && allowedPsychologistIds.has(record.target_id));
 
 const activeProfessionalSubscriptionsAt = (profile: AdminPsychologistProfileRecord, date: Date) =>
   activeSubscriptionsAt(profile, date).filter(isProfessionalPlan);
@@ -1297,6 +1401,90 @@ const buildConversionBySignupMethod = (profiles: AdminPsychologistProfileRecord[
     };
   });
 
+const buildPlanSegmentSummaries = (params: {
+  currentNewSignups: AdminPsychologistProfileRecord[];
+  currentProfiles: AdminPsychologistProfileRecord[];
+  date: Date;
+  labels: string[];
+  platformPageViews: AdminPsychologistPlatformPageViewRecord[];
+  platformPwaInstalls: AdminPsychologistPlatformPwaInstallRecord[];
+  platformSessions: AdminPsychologistPlatformSessionRecord[];
+  profiles: AdminPsychologistProfileRecord[];
+  publicProfilePageViews: AdminPsychologistPublicProfilePageViewRecord[];
+}) =>
+  PLAN_SEGMENT_OPTIONS.reduce(
+    (accumulator, segment) => {
+      const segmentProfiles = filterProfilesByPlanSegment(
+        params.currentProfiles,
+        params.date,
+        segment.id,
+      );
+      const segmentProfilesForSupply = filterProfilesByPlanSegment(
+        params.profiles,
+        params.date,
+        segment.id,
+      );
+      const segmentNewSignups = filterProfilesByPlanSegment(
+        params.currentNewSignups,
+        params.date,
+        segment.id,
+      );
+      const segmentUserIds = new Set(segmentProfiles.map((profile) => profile.user.id));
+      const segmentSupplyUserIds = new Set(
+        segmentProfilesForSupply.map((profile) => profile.user.id),
+      );
+      const isAll = segment.id === "all";
+      const platformPageViews = isAll
+        ? params.platformPageViews
+        : filterRecordsByUserPlanSegment(params.platformPageViews, segmentUserIds);
+      const platformSessions = isAll
+        ? params.platformSessions
+        : filterRecordsByUserPlanSegment(params.platformSessions, segmentUserIds);
+      const platformPwaInstalls = isAll
+        ? params.platformPwaInstalls
+        : filterRecordsByUserPlanSegment(params.platformPwaInstalls, segmentUserIds);
+      const publicProfilePageViews = isAll
+        ? params.publicProfilePageViews
+        : filterPublicProfileViewsByPlanSegment(
+            params.publicProfilePageViews,
+            segmentSupplyUserIds,
+          );
+      const platformUsage = summarizePlatformUsage({
+        eligiblePsychologistsCount: segmentProfiles.length,
+        labels: params.labels,
+        pageViews: platformPageViews,
+        pwaInstalledUserIds: platformPwaInstalls.flatMap((event) =>
+          event.user_id ? [event.user_id] : [],
+        ),
+      });
+      const trafficSources = summarizePsychologistTrafficOrigins(publicProfilePageViews);
+
+      accumulator[segment.id] = {
+        device_usage: buildDeviceUsage(platformSessions),
+        id: segment.id,
+        label: segment.label,
+        platform_usage: {
+          ...platformUsage,
+          eligible_psychologists_count: segmentProfiles.length,
+          source: "page_view_event+important_action_event" as const,
+        },
+        psychologists_count: segmentProfiles.length,
+        signup_method: buildSignupMethod(segmentNewSignups),
+        statistics: buildStatistics(segmentProfilesForSupply, params.date),
+        traffic_sources: {
+          ...trafficSources,
+          source: "page_view_event.traffic_source+target_type=psychologist" as const,
+        },
+      };
+
+      return accumulator;
+    },
+    {} as Record<
+      AdminPsychologistsDashboardPlanSegment,
+      AdminPsychologistsDashboardPlanSegmentSummary
+    >,
+  );
+
 const mapPsychologistStatus = (
   profile: AdminPsychologistProfileRecord,
   date: Date,
@@ -1407,18 +1595,22 @@ export const buildPsychologistsDashboard = async (
   const previousChurn = calculateChurnPercent(profiles, previous);
   const rankedPsychologists = await rankPsychologistCandidates(rankingCandidates, null);
   const conversion = summarizeConversionCohort(currentNewSignups);
-  const platformUsage = summarizePlatformUsage({
-    eligiblePsychologistsCount: currentProfiles.length,
+  const planSegments = buildPlanSegmentSummaries({
+    currentNewSignups,
+    currentProfiles,
+    date: current.end,
     labels,
-    pageViews: platformPageViews,
-    pwaInstalledUserIds: platformPwaInstalls.flatMap((event) =>
-      event.user_id ? [event.user_id] : [],
-    ),
+    platformPageViews,
+    platformPwaInstalls,
+    platformSessions,
+    profiles,
+    publicProfilePageViews,
   });
-  const deviceUsage = buildDeviceUsage(platformSessions);
+  const platformUsage = planSegments.all.platform_usage;
+  const deviceUsage = planSegments.all.device_usage;
   const operatingSystemUsage = buildOperatingSystemUsage(platformSessions);
-  const trafficSources = summarizePsychologistTrafficOrigins(publicProfilePageViews);
-  const statistics = buildStatistics(profiles, current.end);
+  const trafficSources = planSegments.all.traffic_sources;
+  const statistics = planSegments.all.statistics;
 
   const summary: AdminPsychologistsDashboardSummary = {
     cards: {
@@ -1501,12 +1693,9 @@ export const buildPsychologistsDashboard = async (
     }),
     directory_filters: directoryFilters,
     operating_system_usage: operatingSystemUsage,
+    plan_segments: planSegments,
     period,
-    platform_usage: {
-      ...platformUsage,
-      eligible_psychologists_count: currentProfiles.length,
-      source: "page_view_event+important_action_event",
-    },
+    platform_usage: platformUsage,
     psychologists: {
       items: buildPsychologistsList(profiles, current.end),
       source: "user+psychologist_profile+professional_subscription",
@@ -1528,7 +1717,7 @@ export const buildPsychologistsDashboard = async (
       source: "shared_psychologist_public_ranking_helper",
       total: rankedPsychologists.length,
     },
-    signup_method: buildSignupMethod(currentNewSignups),
+    signup_method: planSegments.all.signup_method,
     statistics,
     timeline: {
       points: buildTimeline({

@@ -7,7 +7,6 @@ import {
   ChevronDown,
   type LucideIcon,
   MessageCircle,
-  MonitorCog,
   RefreshCw,
   Search,
   ShieldCheck,
@@ -25,6 +24,7 @@ import type {
   PsychologistsDashboardBreakdownItem,
   PsychologistsDashboardDailyPoint,
   PsychologistsDashboardMetric,
+  PsychologistsDashboardPlanSegment,
   PsychologistsDashboardQuery,
 } from "@/api/req/psychologists";
 import { aggregateCalendarChartPoints, buildSmoothSvgPath } from "@/lib/chart-time-series";
@@ -44,10 +44,15 @@ type DashboardPeriodValue = NonNullable<PsychologistsDashboardQuery["period"]>;
 type DashboardPeriodPreset = Exclude<DashboardPeriodValue, "custom">;
 type DashboardRange = Pick<PsychologistsDashboardQuery, "from" | "to">;
 type DeviceUsageItem = AdminPsychologistsDashboard["device_usage"]["items"][number];
-type OperatingSystemUsageItem =
-  AdminPsychologistsDashboard["operating_system_usage"]["items"][number];
+type PlanSegmentFilter = PsychologistsDashboardPlanSegment;
 type SignupMethodItem = AdminPsychologistsDashboard["signup_method"]["items"][number];
 type SupplyDemandSortKey = "psychologists" | "searches" | "searches_per_psychologist";
+
+const PLAN_SEGMENT_FILTER_OPTIONS: { id: PlanSegmentFilter; label: string }[] = [
+  { id: "all", label: "Todos" },
+  { id: "free", label: "Gratuitos" },
+  { id: "subscribers", label: "Assinantes" },
+];
 
 const SUPPLY_DEMAND_SORT_OPTIONS: { id: SupplyDemandSortKey; label: string }[] = [
   { id: "searches", label: "Mais buscas" },
@@ -593,6 +598,50 @@ const PanelTitle = ({
   </div>
 );
 
+const PlanSegmentSelect = ({
+  id,
+  onChange,
+  value,
+}: {
+  id: string;
+  onChange: (value: PlanSegmentFilter) => void;
+  value: PlanSegmentFilter;
+}) => (
+  <label className="grid gap-1 text-xs font-semibold text-muted" htmlFor={id}>
+    Plano
+    <span className="relative">
+      <select
+        className="h-11 w-full min-w-[9.25rem] appearance-none rounded-control border border-border bg-surface py-0 pl-3 pr-10 text-sm font-semibold text-foreground shadow-control outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+        id={id}
+        onChange={(event) => onChange(event.target.value as PlanSegmentFilter)}
+        value={value}
+      >
+        {PLAN_SEGMENT_FILTER_OPTIONS.map((option) => (
+          <option key={option.id} value={option.id}>
+            {option.label}
+          </option>
+        ))}
+      </select>
+      <ChevronDown
+        aria-hidden
+        className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground"
+      />
+    </span>
+  </label>
+);
+
+const getPlanSegmentSummary = (summary: AdminPsychologistsDashboard, segment: PlanSegmentFilter) =>
+  summary.plan_segments?.[segment] ?? {
+    device_usage: summary.device_usage,
+    id: "all" as const,
+    label: "Todos",
+    platform_usage: summary.platform_usage,
+    psychologists_count: summary.cards.total_psychologists.value,
+    signup_method: summary.signup_method,
+    statistics: summary.statistics,
+    traffic_sources: summary.traffic_sources,
+  };
+
 const formatComparisonNumber = (value: number) =>
   value.toLocaleString("pt-BR", {
     maximumFractionDigits: 1,
@@ -1058,7 +1107,14 @@ const SignupMethodPieChart = ({
 };
 const ConversionAndUsageBlocks = ({ summary }: { summary: AdminPsychologistsDashboard }) => {
   const conversion = summary.conversion;
-  const platformUsage = summary.platform_usage;
+  const [signupMethodPlanSegment, setSignupMethodPlanSegment] = useState<PlanSegmentFilter>("all");
+  const [deviceUsagePlanSegment, setDeviceUsagePlanSegment] = useState<PlanSegmentFilter>("all");
+  const [platformUsagePlanSegment, setPlatformUsagePlanSegment] =
+    useState<PlanSegmentFilter>("all");
+  const signupMethodSummary = getPlanSegmentSummary(summary, signupMethodPlanSegment);
+  const deviceUsageSummary = getPlanSegmentSummary(summary, deviceUsagePlanSegment);
+  const platformUsageSummary = getPlanSegmentSummary(summary, platformUsagePlanSegment);
+  const platformUsage = platformUsageSummary.platform_usage;
   const selectedPeriodLabel = formatSelectedPeriod(summary.period);
 
   return (
@@ -1151,33 +1207,48 @@ const ConversionAndUsageBlocks = ({ summary }: { summary: AdminPsychologistsDash
         </div>
       </CardShell>
 
-      <div className="grid gap-5 xl:grid-cols-3">
+      <div className="grid gap-5 xl:grid-cols-2">
         <CardShell className="p-5">
-          <PanelTitle icon={UserPlus} title="Modo de cadastro" />
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <PanelTitle icon={UserPlus} title="Modo de cadastro" />
+            <PlanSegmentSelect
+              id="signup-method-plan-segment"
+              onChange={setSignupMethodPlanSegment}
+              value={signupMethodPlanSegment}
+            />
+          </div>
           <p className="mt-2 text-sm font-bold leading-6 text-muted">{selectedPeriodLabel}</p>
-          <SignupMethodPieChart signupMethod={summary.signup_method} />
-          {summary.signup_method.unknown_count > 0 ? (
+          <SignupMethodPieChart signupMethod={signupMethodSummary.signup_method} />
+          {signupMethodSummary.signup_method.unknown_count > 0 ? (
             <p className="mt-4 text-xs font-bold text-subtle">
-              {numberFormatter.format(summary.signup_method.unknown_count)} cadastro(s) legado(s)
-              com via indisponível foram mantidos fora das duas categorias de produto.
+              {numberFormatter.format(signupMethodSummary.signup_method.unknown_count)} cadastro(s)
+              legado(s) com via indisponível foram mantidos fora das duas categorias de produto.
             </p>
           ) : null}
         </CardShell>
 
         <CardShell className="p-5">
-          <PanelTitle icon={Smartphone} title="Devices dos psicólogos" />
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <PanelTitle icon={Smartphone} title="Devices e sistemas" />
+            <PlanSegmentSelect
+              id="device-usage-plan-segment"
+              onChange={setDeviceUsagePlanSegment}
+              value={deviceUsagePlanSegment}
+            />
+          </div>
           <p className="mt-2 text-sm font-bold leading-6 text-muted">{selectedPeriodLabel}</p>
-          <DeviceUsagePieChart deviceUsage={summary.device_usage} />
+          <DeviceUsagePieChart deviceUsage={deviceUsageSummary.device_usage} />
         </CardShell>
 
-        <CardShell className="p-5">
-          <PanelTitle icon={MonitorCog} title="Sistema operacional" />
-          <p className="mt-2 text-sm font-bold leading-6 text-muted">{selectedPeriodLabel}</p>
-          <OperatingSystemUsagePieChart operatingSystemUsage={summary.operating_system_usage} />
-        </CardShell>
-
-        <CardShell className="p-5 xl:col-span-3">
-          <PanelTitle icon={Activity} title="Uso da plataforma" />
+        <CardShell className="p-5 xl:col-span-2">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <PanelTitle icon={Activity} title="Uso da plataforma" />
+            <PlanSegmentSelect
+              id="platform-usage-plan-segment"
+              onChange={setPlatformUsagePlanSegment}
+              value={platformUsagePlanSegment}
+            />
+          </div>
           <p className="mt-2 text-sm font-bold leading-6 text-muted">{selectedPeriodLabel}</p>
           <div className="mt-5 grid gap-3 sm:grid-cols-2">
             {[
@@ -1233,16 +1304,6 @@ const DEVICE_USAGE_CHART_COLORS = {
   tablet: "#8b5cf6",
   unknown: "#94a3b8",
 } satisfies Record<DeviceUsageItem["device_type"], string>;
-
-const OPERATING_SYSTEM_USAGE_CHART_COLORS = {
-  android: "#13a85b",
-  ios: "#308ce8",
-  ipados: "#8b5cf6",
-  macos: "#64748b",
-  other: "#f59f00",
-  unknown: "#94a3b8",
-  windows: "#2563eb",
-} satisfies Record<OperatingSystemUsageItem["operating_system"], string>;
 
 const DeviceUsagePieChart = ({
   deviceUsage,
@@ -1367,9 +1428,13 @@ const DeviceUsagePieChart = ({
       </svg>
       <figcaption className="space-y-3">
         {deviceUsage.items.map((item) => {
-          const sessionsLabel = item.count === 1 ? "sessão" : "sessões";
-          const psychologistsLabel =
-            item.active_psychologists_count === 1 ? "psicólogo" : "psicólogos";
+          const operatingSystems = item.operating_systems ?? [];
+          const operatingSystemSummary = operatingSystems
+            .map(
+              (operatingSystem) =>
+                `${operatingSystem.label} ${formatPercentageValue(operatingSystem.percentage)}`,
+            )
+            .join(" · ");
 
           return (
             <div className="rounded-2xl bg-surface-muted p-3" key={item.device_type}>
@@ -1386,167 +1451,11 @@ const DeviceUsagePieChart = ({
                   {formatPercentageValue(item.percentage)}
                 </span>
               </div>
-              <p className="mt-1 text-xs font-bold text-muted">
-                {numberFormatter.format(item.count)} {sessionsLabel} ·{" "}
-                {numberFormatter.format(item.active_psychologists_count)} {psychologistsLabel}
-              </p>
-            </div>
-          );
-        })}
-      </figcaption>
-    </figure>
-  );
-};
-
-const OperatingSystemUsagePieChart = ({
-  operatingSystemUsage,
-}: {
-  operatingSystemUsage: AdminPsychologistsDashboard["operating_system_usage"];
-}) => {
-  const center = 60;
-  const radius = 48;
-  const total = Math.max(0, operatingSystemUsage.total_sessions);
-  const visibleItems = operatingSystemUsage.items.filter((item) => item.count > 0);
-  const segments = visibleItems.reduce<{
-    currentAngle: number;
-    items: Array<{
-      endAngle: number;
-      item: OperatingSystemUsageItem;
-      share: number;
-      startAngle: number;
-    }>;
-  }>(
-    (accumulator, item) => {
-      const share = total > 0 ? item.count / total : 0;
-      if (share <= 0) return accumulator;
-
-      const startAngle = accumulator.currentAngle;
-      const endAngle = startAngle + share * 360;
-
-      return {
-        currentAngle: endAngle,
-        items: accumulator.items.concat({
-          endAngle,
-          item,
-          share,
-          startAngle,
-        }),
-      };
-    },
-    { currentAngle: -90, items: [] },
-  ).items;
-
-  if (total === 0) {
-    return (
-      <p className="mt-5 rounded-2xl border border-dashed border-border bg-surface-muted p-4 text-sm font-bold text-muted">
-        {operatingSystemUsage.unavailable_reason ??
-          "Sem sessões autenticadas de psicólogos com sistema operacional no período selecionado."}
-      </p>
-    );
-  }
-
-  const ariaLabel = `Gráfico de pizza dos sistemas operacionais usados por psicólogos: ${operatingSystemUsage.items
-    .map(
-      (item) =>
-        `${item.label}: ${numberFormatter.format(item.count)} sessão(ões), ${formatPercentageValue(
-          item.percentage,
-        )}`,
-    )
-    .join("; ")}.`;
-
-  return (
-    <figure className="mt-5 grid gap-5 sm:grid-cols-[minmax(9rem,11rem)_1fr] sm:items-center xl:grid-cols-1 2xl:grid-cols-[minmax(9rem,11rem)_1fr]">
-      <svg
-        aria-label={ariaLabel}
-        className="mx-auto aspect-square w-40 sm:w-44"
-        role="img"
-        viewBox="0 0 120 120"
-      >
-        <circle
-          cx={center}
-          cy={center}
-          fill="var(--admin-surface-muted)"
-          r={radius}
-          stroke="var(--admin-border)"
-          strokeWidth="1"
-        />
-        {segments.map((segment) => {
-          const color = OPERATING_SYSTEM_USAGE_CHART_COLORS[segment.item.operating_system];
-          const labelPoint = getPiePoint(
-            center,
-            radius * 0.58,
-            (segment.startAngle + segment.endAngle) / 2,
-          );
-          const percentageLabel = formatPercentageValue(segment.item.percentage);
-
-          if (segment.share >= 0.999) {
-            return (
-              <g key={segment.item.operating_system}>
-                <circle
-                  cx={center}
-                  cy={center}
-                  fill={color}
-                  r={radius}
-                  stroke="var(--admin-surface)"
-                  strokeWidth="1.4"
-                />
-                {renderPiePercentageLabel({
-                  color,
-                  label: percentageLabel,
-                  x: center,
-                  y: center,
-                })}
-              </g>
-            );
-          }
-
-          return (
-            <g key={segment.item.operating_system}>
-              <path
-                d={buildPieSlicePath(center, radius, segment.startAngle, segment.endAngle)}
-                fill={color}
-                stroke="var(--admin-surface)"
-                strokeWidth="1.4"
-              />
-              {segment.share >= 0.08
-                ? renderPiePercentageLabel({
-                    color,
-                    label: percentageLabel,
-                    x: labelPoint.x,
-                    y: labelPoint.y,
-                  })
-                : null}
-            </g>
-          );
-        })}
-      </svg>
-      <figcaption className="space-y-3">
-        {operatingSystemUsage.items.map((item) => {
-          const sessionsLabel = item.count === 1 ? "sessão" : "sessões";
-          const psychologistsLabel =
-            item.active_psychologists_count === 1 ? "psicólogo" : "psicólogos";
-
-          return (
-            <div className="rounded-2xl bg-surface-muted p-3" key={item.operating_system}>
-              <div className="flex items-center justify-between gap-3">
-                <span className="flex min-w-0 items-center gap-2 text-sm font-black text-foreground">
-                  <span
-                    aria-hidden
-                    className="h-3 w-3 shrink-0 rounded-full"
-                    style={{
-                      backgroundColor: OPERATING_SYSTEM_USAGE_CHART_COLORS[item.operating_system],
-                    }}
-                  />
-                  <span className="truncate">{item.label}</span>
-                </span>
-                <span className="text-sm font-black text-foreground">
-                  {formatPercentageValue(item.percentage)}
-                </span>
-              </div>
-              <p className="mt-1 text-xs font-bold text-muted">
-                {numberFormatter.format(item.count)} {sessionsLabel} ·{" "}
-                {numberFormatter.format(item.active_psychologists_count)} {psychologistsLabel}
-              </p>
+              {operatingSystemSummary ? (
+                <p className="mt-2 text-xs font-medium leading-5 text-subtle">
+                  {operatingSystemSummary}
+                </p>
+              ) : null}
             </div>
           );
         })}
@@ -1558,8 +1467,11 @@ const OperatingSystemUsagePieChart = ({
 const StatsContent = ({ summary }: { summary: AdminPsychologistsDashboard }) => {
   const [activeDimensionId, setActiveDimensionId] = useState("specialties");
   const [optionQuery, setOptionQuery] = useState("");
+  const [planSegment, setPlanSegment] = useState<PlanSegmentFilter>("all");
   const [sortKey, setSortKey] = useState<SupplyDemandSortKey>("searches");
   const filterSearches = summary.filters_searches.dimensions;
+  const planSegmentSummary = getPlanSegmentSummary(summary, planSegment);
+  const statistics = planSegmentSummary.statistics;
 
   const comparisonDimensions: SupplyDemandDimensionConfig[] = [
     {
@@ -1567,84 +1479,84 @@ const StatsContent = ({ summary }: { summary: AdminPsychologistsDashboard }) => 
       icon: Award,
       id: "specialties",
       label: "Especialidades",
-      supply: summary.statistics.specialties,
+      supply: statistics.specialties,
     },
     {
       demand: filterSearches.services,
       icon: ShieldCheck,
       id: "services",
       label: "Servi\u00e7os",
-      supply: summary.statistics.services,
+      supply: statistics.services,
     },
     {
       demand: filterSearches.approaches,
       icon: MessageCircle,
       id: "approaches",
       label: "Abordagens",
-      supply: summary.statistics.approaches,
+      supply: statistics.approaches,
     },
     {
       demand: filterSearches.target_audiences,
       icon: UsersRound,
       id: "target-audience",
       label: "P\u00fablico atendido",
-      supply: summary.statistics.target_audience,
+      supply: statistics.target_audience,
     },
     {
       demand: filterSearches.modalities,
       icon: Activity,
       id: "modalities",
       label: "Modalidades",
-      supply: summary.statistics.modalities,
+      supply: statistics.modalities,
     },
     {
       demand: filterSearches.states,
       icon: Search,
       id: "states",
       label: "Estado",
-      supply: summary.statistics.states,
+      supply: statistics.states,
     },
     {
       demand: filterSearches.cities,
       icon: Search,
       id: "cities",
       label: "Cidade",
-      supply: summary.statistics.cities,
+      supply: statistics.cities,
     },
     {
       demand: filterSearches.genders,
       icon: UserCheck,
       id: "genders",
       label: "G\u00eanero",
-      supply: summary.statistics.gender,
+      supply: statistics.gender,
     },
     {
       demand: filterSearches.race_colors,
       icon: UsersRound,
       id: "race-colors",
       label: "Ra\u00e7a",
-      supply: summary.statistics.race_colors,
+      supply: statistics.race_colors,
     },
     {
       demand: filterSearches.religions,
       icon: ShieldCheck,
       id: "religions",
       label: "Religi\u00e3o",
-      supply: summary.statistics.religions,
+      supply: statistics.religions,
     },
     {
       demand: filterSearches.features,
       icon: UserCheck,
       id: "features",
       label: "Selos e facilidades",
-      supply: summary.statistics.features,
+      supply: statistics.features,
     },
     {
       demand: filterSearches.languages,
       icon: Search,
       id: "languages",
       label: "Idiomas",
-      supply: summary.statistics.languages,
+      supply: statistics.languages,
     },
   ];
   const selectedDimension =
@@ -1695,7 +1607,7 @@ const StatsContent = ({ summary }: { summary: AdminPsychologistsDashboard }) => 
             </div>
           </div>
 
-          <div className="mt-5 grid gap-3 lg:grid-cols-[minmax(180px,0.85fr)_minmax(220px,1fr)_minmax(220px,0.85fr)]">
+          <div className="mt-5 grid gap-3 lg:grid-cols-[minmax(180px,0.85fr)_minmax(220px,1fr)_minmax(160px,0.75fr)_minmax(220px,0.85fr)]">
             <label
               className="grid gap-1 text-xs font-semibold text-muted"
               htmlFor="supply-demand-filter-type"
@@ -1741,6 +1653,12 @@ const StatsContent = ({ summary }: { summary: AdminPsychologistsDashboard }) => 
                 />
               </span>
             </label>
+
+            <PlanSegmentSelect
+              id="supply-demand-plan-segment"
+              onChange={setPlanSegment}
+              value={planSegment}
+            />
 
             <label
               className="grid gap-1 text-xs font-semibold text-muted"
@@ -1955,7 +1873,9 @@ const TrafficSourceMetricValue = ({
 );
 
 const DashboardTrafficSourcesCard = ({ summary }: { summary: AdminPsychologistsDashboard }) => {
-  const traffic = summary.traffic_sources;
+  const [trafficPlanSegment, setTrafficPlanSegment] = useState<PlanSegmentFilter>("all");
+  const trafficSegmentSummary = getPlanSegmentSummary(summary, trafficPlanSegment);
+  const traffic = trafficSegmentSummary.traffic_sources;
   const totalWhatsappClicks = traffic.sources.reduce(
     (total, source) => total + (source.whatsapp_clicks ?? 0),
     0,
@@ -1965,17 +1885,24 @@ const DashboardTrafficSourcesCard = ({ summary }: { summary: AdminPsychologistsD
 
   return (
     <CardShell className="p-5">
-      <div className="min-w-0">
-        <p className="text-xs font-black uppercase tracking-[0.16em] text-primary">
-          Origem do tráfego
-        </p>
-        <h3 className="mt-2 text-lg font-black text-foreground">
-          Canais que levam pacientes até os perfis
-        </h3>
-        <p className="mt-1 text-sm font-bold leading-6 text-muted">
-          {summary.period.label} · {formatDate(summary.period.from)} a{" "}
-          {formatDate(summary.period.to)}
-        </p>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0">
+          <p className="text-xs font-black uppercase tracking-[0.16em] text-primary">
+            Origem do tráfego
+          </p>
+          <h3 className="mt-2 text-lg font-black text-foreground">
+            Canais que levam pacientes até os perfis
+          </h3>
+          <p className="mt-1 text-sm font-bold leading-6 text-muted">
+            {summary.period.label} · {formatDate(summary.period.from)} a{" "}
+            {formatDate(summary.period.to)}
+          </p>
+        </div>
+        <PlanSegmentSelect
+          id="traffic-source-plan-segment"
+          onChange={setTrafficPlanSegment}
+          value={trafficPlanSegment}
+        />
       </div>
 
       <div className="mt-5 hidden overflow-hidden rounded-[1.35rem] border border-border/70 md:block">

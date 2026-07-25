@@ -572,6 +572,7 @@ export class AdminPsychologistsDashboardRepository
       select: {
         occurred_at: true,
         session_id: true,
+        target_id: true,
         traffic_source: true,
       },
       where: {

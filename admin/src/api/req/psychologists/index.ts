@@ -338,12 +338,13 @@ export type PsychologistsDashboardDeviceUsageItem = {
   device_type: PsychologistsDashboardDeviceType;
   id: PsychologistsDashboardDeviceType;
   label: string;
+  operating_systems: PsychologistsDashboardOperatingSystemUsageItem[];
   percentage: number;
 };
 
 export type PsychologistsDashboardDeviceUsage = {
   items: PsychologistsDashboardDeviceUsageItem[];
-  source: "visitor_session.device_type+user.role=psicologo";
+  source: "visitor_session.device_type+visitor_session.os+user.role=psicologo";
   total_active_psychologists: number;
   total_sessions: number;
   unavailable_reason: string | null;
@@ -395,6 +396,19 @@ export type PsychologistsDashboardTrafficSources = {
   total_sessions: number;
   unavailable_reason: string | null;
   updated_at: string | null;
+};
+
+export type PsychologistsDashboardPlanSegment = "all" | "free" | "subscribers";
+
+export type PsychologistsDashboardPlanSegmentSummary = {
+  device_usage: PsychologistsDashboardDeviceUsage;
+  id: PsychologistsDashboardPlanSegment;
+  label: string;
+  platform_usage: PsychologistsDashboardPlatformUsage;
+  psychologists_count: number;
+  signup_method: PsychologistsDashboardSignupMethod;
+  statistics: PsychologistsDashboardStatistics;
+  traffic_sources: PsychologistsDashboardTrafficSources;
 };
 
 export type PsychologistsListOption = {
@@ -1457,6 +1471,10 @@ export type AdminPsychologistsDashboard = {
   filters_searches: PsychologistsDashboardFilterSearches;
   directory_filters: PsychologistsDashboardDirectoryFilters;
   operating_system_usage: PsychologistsDashboardOperatingSystemUsage;
+  plan_segments: Record<
+    PsychologistsDashboardPlanSegment,
+    PsychologistsDashboardPlanSegmentSummary
+  >;
   period: PsychologistsDashboardPeriod;
   platform_usage: PsychologistsDashboardPlatformUsage;
   psychologists: {
