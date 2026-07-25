@@ -203,10 +203,14 @@ const normalizeModerationEvents = (input: AdminModerationEventsQuery) => ({
 });
 
 const normalizeModerationOperationalAlerts = (input: AdminModerationOperationalAlertsQuery) => ({
+  alertType: input.alertType || "all",
+  contentType: input.contentType || "all",
   from: input.from || "default",
   group: input.group || "all",
   limit: input.limit || 10,
   page: input.page || 1,
+  plan: input.plan || "all",
+  profileStatus: input.profileStatus || "all",
   q: input.q || "",
   reason: input.reason || "",
   reporter: input.reporter || "all",
