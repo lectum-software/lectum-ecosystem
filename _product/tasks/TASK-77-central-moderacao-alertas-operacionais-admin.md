@@ -504,6 +504,41 @@ Validacao deste ajuste:
 - API local autenticada: `GET /api/admin/private/moderation/operational-alerts?group=compliance&limit=20` retornou 8 pendências reais; alertas de CRP pendente incluem `Publicado=sim` no bloco `facts`.
 - Browser local/headless em Chrome para `/moderacao/compliance` validou desktop 1365px e mobile 390px com cabeçalho **Pendência/Data/Profissional/Plano/Perfil**, 8 linhas de demanda, 8 ícones de detalhe e sem overflow horizontal da página.
 
+## Ajuste complementar 2026-07-25 - Filtros de Plano e Perfil em Compliance
+
+- Pedido do usuário: remover a faixa **Fora do escopo agora...**, remover a barra de busca da página de **Compliance** e adicionar filtros de **Plano** e **Status de perfil**.
+- `/moderacao/compliance` agora renderiza os filtros **Tipo**, **De**, **Até**, **Plano** e **Status de perfil** no card principal, sem o campo **Busca** nessa fila.
+- A busca textual continua disponível apenas em `/moderacao/operacionais`, preservando o uso operacional onde ela ainda é necessária.
+- O endpoint real `GET /api/admin/private/moderation/operational-alerts` foi estendido de forma aditiva com `plan=gratuito|profissional|all` e `profileStatus=active|inactive|all`, aplicados no backend antes da paginação sobre alertas derivados reais.
+- O filtro **Plano** usa o fato real **Plano** e o marcador `professional.is_subscriber` dos alertas profissionais; o filtro **Status de perfil** deriva **Ativo/Inativo** do fato real **Publicado**.
+- A faixa inferior de dimensões fora de escopo foi removida da página exclusiva; as dimensões seguem documentadas na task/ADR, mas não aparecem na UI de triagem.
+- Não houve alteração de Prisma schema/migrations, package novo, mock, seed ou endpoint simulado; `pnpm --dir backend db:migrate` não se aplica.
+- Builder/Quick Copy não está exposto como ferramenta callable neste ambiente; a referência auditável foi a captura enviada pelo usuário e o protótipo/local Admin já existente.
+
+### Critérios deste ajuste
+
+- [x] A faixa **Fora do escopo agora...** não é mais renderizada em `/moderacao/compliance`.
+- [x] O campo **Busca** foi removido da barra de filtros de `/moderacao/compliance`.
+- [x] A barra de filtros de `/moderacao/compliance` inclui **Plano** com **Todos**, **Plano Gratuito** e **Plano Profissional**.
+- [x] A barra de filtros de `/moderacao/compliance` inclui **Status de perfil** com **Todos**, **Ativo** e **Inativo**.
+- [x] Os filtros de **Plano** e **Status de perfil** são enviados ao backend real e aplicados antes da paginação.
+- [x] A alteração é mobile-first, sem `<img>` cru, sem package novo e sem migration.
+
+### Validação deste ajuste
+
+- `pnpm --dir admin exec biome check "src/app/(admin)/moderacao/operational-category-client.tsx" "src/api/req/moderation/index.ts"`
+- `pnpm --dir backend exec biome check "src/modules/api/admin/private/moderation/DTOs/IAdminModerationDTO.ts" "src/modules/api/admin/private/moderation/validator/index.ts" "src/modules/api/admin/private/moderation/use-cases/services.ts"`
+- `pnpm --dir admin typecheck`
+- `pnpm --dir backend typecheck`
+- `pnpm --dir backend check`
+- `pnpm --dir admin check`
+- `pnpm --dir backend build`
+- `pnpm --dir admin build`
+- `pnpm check`
+- API local autenticada com admin temporário: `GET /api/admin/private/moderation/operational-alerts?group=compliance&limit=50`, `plan=profissional`, `profileStatus=active` e `profileStatus=inactive` retornaram `200` e respeitaram os fatos reais **Plano**/**Publicado**.
+- Browser local/headless em Chrome para `/moderacao/compliance` validou desktop 1365px e mobile 390px: filtros **Plano** e **Status de perfil** presentes, **Busca** ausente, faixa **Fora do escopo agora...** ausente, 8 linhas reais na tabela e sem overflow horizontal da página.
+- Admins temporários de validação com prefixo `codex-compliance-` foram removidos ao final.
+
 ## Ajuste complementar 2026-07-25 - Operacionais em tabela por Usuário
 
 - Pedido do usuário: na lista de **Operacionais**, seguir o layout tabular de **Compliance** com as colunas **Pendência**, **Pendente há**, **Usuário**, **Plano**, **Status do perfil** e ícone de detalhe; a coluna antes tratada como **Profissional** deve ser **Usuário** e indicar se o usuário é **Paciente** ou **Psicólogo/Psicóloga**.

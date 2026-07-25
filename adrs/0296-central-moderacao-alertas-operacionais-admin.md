@@ -164,6 +164,16 @@ A decisão mantém os alertas como derivados/read-only e reaproveita o contrato 
 
 O detalhe textual, origem técnica, idade, papel profissional, selo de verificado e demais fatos continuam disponíveis no payload e na busca, mas não são exibidos na fila principal de Compliance para preservar a exigência de uma demanda por linha. Em mobile, a tabela usa rolagem horizontal contida, sem expandir a largura da página.
 
+## Complemento 2026-07-25: filtros de Plano e Status de perfil na fila de Compliance
+
+A fila exclusiva `/moderacao/compliance` passa a priorizar filtros operacionais fechados, removendo a busca textual livre dessa página. A barra agora mantém **Tipo**, **De** e **Até** e adiciona **Plano** e **Status de perfil**, porque a triagem solicitada pelo admin precisa segmentar pendências por assinatura e publicação do perfil sem depender de termos digitados.
+
+O endpoint derivado/read-only `GET /api/admin/private/moderation/operational-alerts` recebeu os parâmetros opcionais `plan` e `profileStatus`. Ambos são aplicados no backend antes da paginação, preservando consistência entre contadores, páginas e filtros; não há filtragem client-side sobre uma página já paginada.
+
+`plan=profissional` usa o marcador derivado `professional.is_subscriber` e o fato **Plano** já exposto nos alertas. `plan=gratuito` usa o fato **Plano**. `profileStatus=active|inactive` deriva do fato real **Publicado**, mantendo a decisão anterior de não criar persistência própria para alertas operacionais.
+
+A faixa **Fora do escopo agora...** foi removida da UI de Compliance para reduzir ruído na triagem. As dimensões fora de escopo permanecem registradas na documentação/ADR e podem voltar em decisão futura, mas não competem com a lista acionável atual.
+
 ## Complemento 2026-07-25: Operacionais em tabela por Usuário
 
 A página exclusiva `/moderacao/operacionais` passa a usar o mesmo padrão de tabela compacta adotado em Compliance, mas com semântica própria de operação: **Pendência**, **Pendente há**, **Usuário**, **Plano**, **Status do perfil** e ação por ícone. A coluna foi definida como **Usuário**, e não **Profissional**, porque a fila mistura pendências de conteúdo criado por pacientes e pendências de perfil de psicólogos.
