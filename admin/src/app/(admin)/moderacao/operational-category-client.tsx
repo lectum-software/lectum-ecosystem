@@ -1528,10 +1528,7 @@ const operationalAlertDetailItems = (
       },
       {
         label: "Engajamento",
-        value: detailValue(
-          alertFactValue(alert, "Engajamento na comunidade"),
-          alertFactValue(alert, "Atividade na comunidade"),
-        ),
+        value: detailValue(alertFactValue(alert, "Engajamento na comunidade")),
       },
     ];
   }

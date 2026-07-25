@@ -684,3 +684,25 @@ Para nao transformar a UI em uma camada heuristica, os detalhes sao entregues pe
 - [x] O engajamento exibido em **Post sem cobertura** deixa de usar temperatura/intencao geral da plataforma.
 - [x] O engajamento passa a ser derivado da atividade real do paciente naquela comunidade: posts, respostas, votos, salvamentos e compartilhamentos.
 - [x] O ajuste e mobile-first, sem `<img>` cru, sem package novo, sem mock e sem migration.
+
+## Complemento 2026-07-25: Engajamento resumido em Post sem cobertura
+
+Pedido do usuario: em **Post sem cobertura**, o campo **Engajamento** nao deve listar todas as atividades do paciente. O calculo continua usando atividades first-party da comunidade para chegar ao segmento operacional, mas a UI e os fatos visiveis do contrato passam a exibir apenas a analise resumida (**Sem atividade previa**, **Pouco ativo**, **Ativo** ou **Muito ativo**), sem detalhar contagens de posts, respostas, votos, salvamentos ou compartilhamentos.
+
+Nao houve alteracao de Prisma schema/migrations, package novo, mock, seed ou endpoint simulado; `pnpm --dir backend db:migrate` nao se aplica.
+
+### Criterios deste ajuste
+
+- [x] **Post sem cobertura** mostra em **Engajamento** somente a analise resumida do nivel de atividade.
+- [x] A UI nao concatena mais a decomposicao de atividades do paciente no campo **Engajamento**.
+- [x] O payload de fatos visiveis do alerta nao expoe mais **Atividade na comunidade** nem **Score de atividade**.
+- [x] O ajuste e mobile-first, sem `<img>` cru, sem package novo, sem mock e sem migration.
+
+### Validacao deste ajuste de engajamento resumido
+
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/moderacao/operational-category-client.tsx"`
+- `pnpm --dir backend exec biome check --write "src/modules/api/admin/private/moderation/use-cases/services.ts"`
+- `pnpm check`
+- `pnpm --dir backend build`
+- `pnpm --dir admin build`
+- Nao houve alteracao de Prisma schema/migrations; `pnpm --dir backend db:migrate` nao se aplica.

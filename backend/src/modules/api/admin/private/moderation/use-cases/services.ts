@@ -390,8 +390,6 @@ type PatientCommunityEngagementSegment = keyof typeof COMMUNITY_ENGAGEMENT_LABEL
 
 type PatientCommunityEngagementSummary = {
   label: string;
-  score: number;
-  signalSummary: string;
 };
 
 const reportAuthorAlertUser = (author: AdminPostReportAuthor): AdminModerationAlertUser => ({
@@ -835,18 +833,6 @@ const classifyPatientCommunityEngagement = (
   return "none";
 };
 
-const countPhrase = (value: number, singular: string, plural: string) =>
-  `${value} ${value === 1 ? singular : plural}`;
-
-const patientCommunityEngagementSignalSummary = (counts: PatientCommunityEngagementCounts) =>
-  [
-    countPhrase(counts.posts, "post na comunidade", "posts na comunidade"),
-    countPhrase(counts.replies, "resposta", "respostas"),
-    countPhrase(counts.votes, "voto", "votos"),
-    countPhrase(counts.saves, "salvamento", "salvamentos"),
-    countPhrase(counts.shares, "compartilhamento", "compartilhamentos"),
-  ].join(", ");
-
 const postVoteCommunityId = (vote: AdminPatientCommunityEngagementSignals["votes"][number]) =>
   vote.post?.community_id ?? vote.reply?.post.community_id ?? null;
 
@@ -854,12 +840,9 @@ const patientCommunityEngagementSummary = (
   counts: PatientCommunityEngagementCounts,
 ): PatientCommunityEngagementSummary => {
   const segment = classifyPatientCommunityEngagement(counts);
-  const score = patientCommunityEngagementScore(counts);
 
   return {
     label: COMMUNITY_ENGAGEMENT_LABELS[segment],
-    score,
-    signalSummary: patientCommunityEngagementSignalSummary(counts),
   };
 };
 
@@ -1023,8 +1006,6 @@ const mapUncoveredPatientPostAlert = (
     facts: [
       { label: "Comunidade", value: post.community.name },
       { label: "Engajamento na comunidade", value: engagement.label },
-      { label: "Atividade na comunidade", value: engagement.signalSummary },
-      { label: "Score de atividade", value: String(engagement.score) },
       { label: "Idade", value: humanAge(post.createdAt, now) },
       { label: "Respostas totais", value: String(post.replies_count) },
     ],
