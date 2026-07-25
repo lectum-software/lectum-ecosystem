@@ -219,9 +219,9 @@ const formatOverviewPeriod = (
   range: OverviewRange,
   hasPoints: boolean,
 ) => {
-  if (!hasPoints) return "Período: sem pontos reais para exibir.";
+  if (!hasPoints) return "Sem pontos reais para exibir.";
 
-  return `Período: ${overviewPeriodLabel(period)} · ${formatOverviewDate(
+  return `${overviewPeriodLabel(period)} · ${formatOverviewDate(
     range.from,
   )} a ${formatOverviewDate(range.to)}.`;
 };

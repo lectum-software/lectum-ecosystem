@@ -342,3 +342,18 @@ Validacao deste ajuste:
 - `pnpm check`
 - Smoke HTTP local: `GET http://localhost:3002/moderacao` retornou `200`.
 - `pnpm --dir backend db:migrate` não se aplica porque não houve alteração em Prisma schema/migrations.
+
+
+## Ajuste complementar 2026-07-24 - Texto de período na Visão geral
+
+- Pedido do usuário: remover o prefixo **Período:** do texto de período exibido nos blocos da Visão geral de `/moderacao`.
+- `formatOverviewPeriod` agora renderiza diretamente o valor selecionado, como **Todo o período · data inicial a data final**, sem o prefixo redundante.
+- O estado sem pontos reais também deixou de usar o prefixo, exibindo apenas **Sem pontos reais para exibir.**
+- Não houve alteração de backend, Prisma schema/migrations, packages, dados persistidos, contratos de API ou formulários.
+
+### Validação deste ajuste
+
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/moderacao/overview-charts.tsx"`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- Smoke HTTP local no Admin (`GET http://localhost:3002/moderacao`) retornou `200`.
