@@ -664,3 +664,29 @@ Frontend esperado:
 - `pnpm check`
 - Serviço local `buildPatientsDashboard({ period: "all" })` retornou `intent_filters.options` com **Todos**, **Frios**, **Curiosos**, **Interessados** e **Qualificados**, além de `breakdowns` para `all`, `cold`, `curious`, `objective` e `very_qualified`.
 - Browser local/headless autenticado em `http://localhost:3002/pacientes` validou 5 dropdowns, ausência de texto visível **Intenção**, largura compacta de 124px e **Devices e sistemas** em linha única; screenshot salvo em `.tmp/patient-dashboard-intent-filters.png`.
+
+## Ajuste pos-feedback 2026-07-25 - Periodo imediatamente abaixo dos titulos dos blocos
+
+- Pedido do usuario: no dashboard `/pacientes`, fazer o texto **Todo o periodo · 28 de jun. a 25 de jul.** ficar imediatamente abaixo do titulo do bloco, sem ser empurrado pela altura do filtro, permitindo quebra de linha quando necessario.
+- O componente local `PanelTitle` passou a aceitar `description` e renderizar o periodo dentro da coluna do titulo, logo abaixo do `h3`; o filtro compacto continua alinhado a direita no desktop e empilha em mobile.
+- O ajuste foi aplicado aos blocos **Genero**, **Forma de cadastro**, **Devices e sistemas**, **Localizacao** e **Uso da plataforma**.
+- O texto do periodo nao usa `whitespace-nowrap`, preservando a quebra natural de linha quando o espaco restante ao lado do filtro for estreito.
+- Nao houve alteracao de backend, contrato HTTP, schema Prisma, migration, package novo, seed, mock, dado artificial ou uso de `<img>`.
+- Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente; as referencias usadas foram `_product/proto/admin/Pacientes/Pacientes - Dashboard.png` e o screenshot enviado pelo usuario em 2026-07-25.
+- ADR nao foi criado/atualizado porque a mudanca e exclusivamente visual/local de spacing, sem decisao arquitetural, integracao, regra de dominio ou trade-off novo.
+
+### Criterios de aceite do ajuste
+
+- [x] O texto de periodo fica imediatamente abaixo do titulo dos blocos agregados de pacientes.
+- [x] A altura do dropdown de filtro nao empurra o periodo para baixo.
+- [x] O texto do periodo pode quebrar linha quando necessario.
+- [x] Layout mobile-first preservado, com filtro empilhado em telas estreitas.
+- [x] Nenhum mock, seed, dado artificial, migration, package novo, endpoint simulado ou tracking novo foi adicionado.
+
+### Validacao complementar executada
+
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/pacientes/client.tsx"`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check`
+- Browser local/headless autenticado em `http://localhost:3002/pacientes` validou os cinco blocos com periodo abaixo do titulo e gap de 4px entre titulo e periodo. Nos cards mais estreitos, o periodo quebrou em duas linhas de forma natural (`periodHeight=40`) sem ser empurrado pela altura do filtro. O admin temporario de validacao foi removido do banco apos a verificacao.

@@ -484,22 +484,29 @@ const CardShell = ({
 
 const PanelTitle = ({
   action,
+  description,
   icon: Icon,
   source,
   title,
 }: {
   action?: ReactNode;
+  description?: ReactNode;
   icon: LucideIcon;
   source?: string;
   title: string;
 }) => (
-  <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-    <div className="flex shrink-0 items-center gap-2">
-      <Icon aria-hidden className="h-5 w-5 text-primary" />
-      <h3 className="shrink-0 whitespace-nowrap text-lg font-black text-foreground">{title}</h3>
+  <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+    <div className="flex min-w-0 flex-1 items-start gap-2">
+      <Icon aria-hidden className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
+      <div className="min-w-0">
+        <h3 className="min-w-0 whitespace-nowrap text-lg font-black text-foreground">{title}</h3>
+        {description ? (
+          <p className="mt-1 max-w-full text-sm font-bold leading-5 text-muted">{description}</p>
+        ) : null}
+      </div>
     </div>
     {source || action ? (
-      <div className="flex w-full flex-col gap-2 sm:w-auto sm:items-end">
+      <div className="flex w-full flex-col gap-2 sm:w-auto sm:shrink-0 sm:items-end">
         {source ? (
           <span className="w-fit rounded-full bg-surface-muted px-2 py-1 text-[0.65rem] font-bold text-muted">
             {source}
@@ -1980,12 +1987,10 @@ const Statistics = ({
                 value={intentFilters.gender}
               />
             }
+            description={formatSelectedPeriod(summary.period)}
             icon={UserRound}
             title="Gênero"
           />
-          <p className="mt-2 text-sm font-bold leading-6 text-muted">
-            {formatSelectedPeriod(summary.period)}
-          </p>
           <BreakdownPieChart
             colorForItem={(item, index) =>
               GENDER_CHART_COLORS[item.id] ?? CHART_COLORS[index % CHART_COLORS.length]
@@ -2006,12 +2011,10 @@ const Statistics = ({
                 value={intentFilters.signupSources}
               />
             }
+            description={formatSelectedPeriod(summary.period)}
             icon={UserPlus}
             title="Forma de cadastro"
           />
-          <p className="mt-2 text-sm font-bold leading-6 text-muted">
-            {formatSelectedPeriod(summary.period)}
-          </p>
           <BreakdownPieChart
             colorForItem={(item, index) =>
               SIGNUP_SOURCE_CHART_COLORS[item.id] ?? CHART_COLORS[index % CHART_COLORS.length]
@@ -2041,12 +2044,10 @@ const Statistics = ({
                 value={intentFilters.locations}
               />
             }
+            description={formatSelectedPeriod(summary.period)}
             icon={MapPin}
             title="Localização"
           />
-          <p className="mt-2 text-sm font-bold leading-6 text-muted">
-            {formatSelectedPeriod(summary.period)}
-          </p>
           <LocationOverview locations={displayLocations} preview={showLocationPreview} />
         </CardShell>
         <PlatformUsageCard
@@ -2089,10 +2090,10 @@ const DeviceUsageCard = ({
             value={intentFilter}
           />
         }
+        description={formatSelectedPeriod(period)}
         icon={Smartphone}
         title="Devices e sistemas"
       />
-      <p className="mt-2 text-sm font-bold leading-6 text-muted">{formatSelectedPeriod(period)}</p>
       <DeviceUsagePieChart deviceUsage={displayDeviceUsage} />
     </CardShell>
   );
@@ -2120,12 +2121,10 @@ const PlatformUsageCard = ({
             value={intentFilter}
           />
         }
+        description={formatSelectedPeriod(summary.period)}
         icon={Activity}
         title="Uso da plataforma"
       />
-      <p className="mt-2 text-sm font-bold leading-6 text-muted">
-        {formatSelectedPeriod(summary.period)}
-      </p>
       <div className="mt-5 grid gap-3 sm:grid-cols-2">
         {[
           ["Ativos", numberFormatter.format(platformUsage.active_patients_count)],
