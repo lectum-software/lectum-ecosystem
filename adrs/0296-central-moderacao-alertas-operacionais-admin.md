@@ -149,3 +149,9 @@ Builder/Quick Copy não está exposto como ferramenta callable neste ambiente; a
 ## Complemento 2026-07-25: selo Lectum no autor verificado da fila de denúncias
 
 A fila `/moderacao/denuncias` passa a representar psicólogos verificados no card de autor usando o mesmo selo visual da Lectum, sem a pílula textual **Verificado**. A mudança é apenas composicional e preserva a fonte real do estado `author.verified` retornada pelo backend, mantendo acessibilidade por `aria-label` no SVG.
+
+## Complemento 2026-07-25: contadores de pendências nos headers exclusivos
+
+As paginas exclusivas de moderacao passam a repetir, no lado direito do card de header, o total de pendências correspondente a cada area: denuncias pendentes, compliance, operacionais e conteudo sensivel. O contador e apresentado sem fundo azul nem titulo auxiliar, com o numero centralizado e o texto **pendências** abaixo.
+
+A decisao reaproveita contadores reais ja existentes nos contratos Admin (`operational-alerts.counts` para Denuncias/Compliance/Operacionais e `summary.pending_total` para Conteudo sensivel), em vez de criar chamada paralela, estado local estimado ou novo contrato. Durante carregamento/refetch, a UI indica atualizacao e evita exibir `0` temporario como se fosse dado real.

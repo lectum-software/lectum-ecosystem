@@ -447,3 +447,29 @@ Validacao deste ajuste:
 - `pnpm --dir admin build`
 - Smoke HTTP local no Admin: `GET http://localhost:3002/moderacao/denuncias` retornou `200`.
 - `pnpm check` foi reexecutado e falhou em `backend/src/modules/api/admin/private/patients/dashboard/use-cases/services.ts` e `backend/src/modules/api/admin/private/psychologists/dashboard/use-cases/services.ts` por avisos/organização de imports de alterações não relacionadas já presentes no workspace.
+
+## Ajuste complementar 2026-07-25 - Numero de pendências no header das paginas exclusivas
+
+- Pedido do usuario: nos headers de **Denuncias**, **Compliance**, **Operacionais** e **Conteudo sensivel**, adicionar a direita o numero de pendências daquela pagina.
+- `/moderacao/denuncias`, `/moderacao/compliance` e `/moderacao/operacionais` agora exibem o numero de pendências no lado direito do header, com o texto **pendências** centralizado abaixo do numero, usando os contadores reais retornados por `GET /api/admin/private/moderation/operational-alerts` (`pending_reports`, `compliance_total` e `operational_total`).
+- `/moderacao/conteudo-sensivel` exibe o mesmo padrao sem fundo azul nem titulo adicional, usando `pending_total` real do `GET /api/admin/private/moderation/summary`, alinhado ao badge do submenu lateral.
+- Enquanto os dados reais carregam ou atualizam, o header mostra estado de atualizacao sem renderizar zero temporario como dado falso.
+- A alteracao e visual/composicional, mobile-first, sem `<img>` cru, sem novo package, sem alteracao de contrato, sem Prisma schema/migrations e sem mocks.
+
+### Criterios deste ajuste
+
+- [x] **Denuncias** mostra o total de pendências no lado direito do header.
+- [x] **Compliance** mostra o total de pendências no lado direito do header.
+- [x] **Operacionais** mostra o total de pendências no lado direito do header.
+- [x] **Conteudo sensivel** mostra o total de pendências no lado direito do header.
+- [x] Os numeros vem de dados reais ja retornados pelos endpoints Admin existentes.
+- [x] O layout continua mobile-first e nao usa `<img>` cru.
+
+### Validacao deste ajuste
+
+- `pnpm --dir admin exec biome check "src/app/(admin)/moderacao/client.tsx" "src/app/(admin)/moderacao/operational-category-client.tsx"`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check`
+- Smoke HTTP local no Admin retornou `200` para `/moderacao/denuncias`, `/moderacao/compliance`, `/moderacao/operacionais` e `/moderacao/conteudo-sensivel`.
+- Browser local/headless em Chrome/CDP validou desktop 1365px e mobile 390px nas quatro rotas: o numero aparece a direita no desktop, sem fundo azul nem titulo **PENDENCIAS**, centralizado com **pendências** abaixo e sem overflow horizontal. Admin temporario de validacao removido ao final.

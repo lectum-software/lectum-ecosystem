@@ -226,15 +226,40 @@ const Card = ({ children, className }: { children?: ReactNode; className?: strin
   <section className={cn(cardClass, className)}>{children}</section>
 );
 
+const HeaderPendingCount = ({ count, loading }: { count?: number | null; loading?: boolean }) => {
+  const hasCount = typeof count === "number";
+
+  return (
+    <div aria-live="polite" className="min-w-[9rem] px-4 py-2 text-center">
+      <p className="inline-flex items-center justify-center gap-1.5 text-3xl font-black tracking-tight text-foreground">
+        {hasCount ? numberFormatter.format(count) : "—"}
+        {loading ? (
+          <Loader2
+            aria-label="Atualizando pendências"
+            className="h-4 w-4 animate-spin text-muted"
+          />
+        ) : null}
+      </p>
+      <p className="text-xs font-bold text-muted">
+        {hasCount && count === 1 ? "pendência" : "pendências"}
+      </p>
+    </div>
+  );
+};
+
 const Header = ({
   backHref,
   description = "Análise global de denúncias, compliance e alertas operacionais da plataforma.",
   eyebrow = "Moderação",
+  pendingCount,
+  pendingCountLoading = false,
   title = "Dashboard da moderação",
 }: {
   backHref?: string;
   description?: string;
   eyebrow?: string;
+  pendingCount?: number | null;
+  pendingCountLoading?: boolean;
   title?: string;
 }) => (
   <Card className="p-5 md:p-6">
@@ -248,15 +273,20 @@ const Header = ({
           {description}
         </p>
       </div>
-      {backHref ? (
-        <div className="flex flex-col gap-2 sm:flex-row xl:justify-end">
-          <Link
-            className="inline-flex h-11 items-center justify-center gap-2 rounded-control border border-border bg-surface px-4 text-sm font-semibold text-foreground shadow-control transition hover:border-border-strong hover:text-primary"
-            href={backHref}
-          >
-            <ChevronLeft aria-hidden className="h-4 w-4" />
-            Voltar
-          </Link>
+      {backHref || pendingCount !== undefined || pendingCountLoading ? (
+        <div className="flex shrink-0 flex-col gap-2 sm:flex-row xl:items-start xl:justify-end">
+          {pendingCount !== undefined || pendingCountLoading ? (
+            <HeaderPendingCount count={pendingCount} loading={pendingCountLoading} />
+          ) : null}
+          {backHref ? (
+            <Link
+              className="inline-flex h-11 items-center justify-center gap-2 rounded-control border border-border bg-surface px-4 text-sm font-semibold text-foreground shadow-control transition hover:border-border-strong hover:text-primary"
+              href={backHref}
+            >
+              <ChevronLeft aria-hidden className="h-4 w-4" />
+              Voltar
+            </Link>
+          ) : null}
         </div>
       ) : null}
     </div>
@@ -965,6 +995,8 @@ export const AdminModerationClient = ({ mode = "overview" }: { mode?: "overview"
             : undefined
         }
         eyebrow={isTextualPage ? "Moderação" : undefined}
+        pendingCount={isTextualPage ? summary.data?.pending_total : undefined}
+        pendingCountLoading={isTextualPage && summary.isFetching}
         title={isTextualPage ? "Conteúdo sensível" : undefined}
       />
       {firstError ? (

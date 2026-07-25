@@ -443,6 +443,27 @@ const Severity = ({ value }: { value: AdminModerationSeverity }) => (
   <Pill className={severityCopy[value].className}>{severityCopy[value].label}</Pill>
 );
 
+const HeaderPendingCount = ({ count, loading }: { count?: number | null; loading?: boolean }) => {
+  const hasCount = typeof count === "number";
+
+  return (
+    <div aria-live="polite" className="min-w-[9rem] px-4 py-2 text-center">
+      <p className="inline-flex items-center justify-center gap-1.5 text-3xl font-black tracking-tight text-foreground">
+        {hasCount ? numberFormatter.format(count) : "—"}
+        {loading ? (
+          <Loader2
+            aria-label="Atualizando pendências"
+            className="h-4 w-4 animate-spin text-muted"
+          />
+        ) : null}
+      </p>
+      <p className="text-xs font-bold text-muted">
+        {hasCount && count === 1 ? "pendência" : "pendências"}
+      </p>
+    </div>
+  );
+};
+
 type ModerationReport = NonNullable<AdminModerationOperationalAlert["report"]>;
 
 const reportStatusBadgeClass: Record<ModerationReport["status_group"], string> = {
@@ -1338,20 +1359,32 @@ export const AdminModerationOperationalCategoryClient = ({
     return () => window.clearTimeout(timeout);
   }, [applyCurrentOperationalCategoryFilters, group, watchedCategoryAutoFiltersKey]);
 
+  const headerPendingCount = (() => {
+    if (group === "denuncias") return query.data?.counts.pending_reports;
+    if (group === "compliance") return query.data?.counts.compliance_total;
+
+    return query.data?.counts.operational_total;
+  })();
+
   return (
     <div className="space-y-6">
       <section className={cardClass}>
         <div className="p-5 md:p-6">
-          <div className="min-w-0">
-            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-primary">
-              Moderação
-            </p>
-            <h1 className="mt-2 text-3xl font-bold tracking-tight text-foreground md:text-4xl">
-              {config.title}
-            </h1>
-            <p className="mt-2 max-w-3xl text-sm font-medium leading-6 text-muted md:text-base">
-              {config.description}
-            </p>
+          <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
+            <div className="min-w-0">
+              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-primary">
+                Moderação
+              </p>
+              <h1 className="mt-2 text-3xl font-bold tracking-tight text-foreground md:text-4xl">
+                {config.title}
+              </h1>
+              <p className="mt-2 max-w-3xl text-sm font-medium leading-6 text-muted md:text-base">
+                {config.description}
+              </p>
+            </div>
+            <div className="flex shrink-0 justify-start xl:justify-end">
+              <HeaderPendingCount count={headerPendingCount} loading={query.isFetching} />
+            </div>
           </div>
         </div>
       </section>
