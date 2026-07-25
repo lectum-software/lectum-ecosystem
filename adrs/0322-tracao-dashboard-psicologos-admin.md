@@ -36,7 +36,7 @@ Os cortes sao normalizados para 30 dias a partir dos dias ativos do perfil dentr
 - Interesse alto: 5+ favoritos/30d;
 - Dados insuficientes: menos de 7 dias ativos dentro da janela, exceto quando WhatsApp ja caracteriza Tracao Forte.
 
-A UI mostra grafico de pizza, quantidades e percentuais de psicologos em cada categoria logo abaixo da visao geral e antes de **Origem do trafego**. A legenda fica em coluna unica na ordem Tracao Forte, Interesse Nao Convertido, Trafego Nao Convertido, Baixa Tracao e Dados Insuficientes. Para manter o bloco mais executivo, a interface nao exibe texto introdutorio, contadores agregados, totais de eventos por categoria nem a faixa tecnica dos cortes. Nao ha lista individual, ranking ou exportacao por profissional nesta entrega.
+A UI mostra grafico de pizza, quantidades e percentuais de psicologos em cada categoria logo abaixo da visao geral e antes de **Origem do trafego**. A legenda fica em duas colunas no desktop, mantendo leitura mobile-first em uma coluna; a ordem visual e Tracao Forte ao lado de Interesse Nao Convertido, Trafego Nao Convertido ao lado de Baixa Tracao e Dados Insuficientes em linha propria. O bloco oferece filtro por plano (Todos, Gratuitos, Assinantes e Cortesia), calculado no backend por segmento para evitar filtragem visual sem base real. Para manter o bloco mais executivo, a interface nao exibe texto introdutorio, contadores agregados, totais de eventos por categoria nem a faixa tecnica dos cortes. Nao ha lista individual, ranking ou exportacao por profissional nesta entrega.
 
 Complemento de 2026-07-25: a aba individual **Estatisticas** do psicologo tambem pode exibir a mesma classificacao como tag operacional ao lado do titulo **Estatisticas de negocio**. O calculo permanece privado/Admin, usa o mesmo periodo selecionado e as mesmas fontes reais (`profile_view_event`, `contact_request` e `psychologist_favorite`). A tag individual nao muda a decisao original: nao e publica, nao cria ranking, nao exporta lista punitiva e serve apenas para contextualizar o detalhe do psicologo que o Admin ja abriu.
 
@@ -53,5 +53,5 @@ Complemento de 2026-07-25: a aba individual **Estatisticas** do psicologo tambem
 
 - Smoke local de `buildPsychologistsDashboard({ period: "all" })` retornou `traction` com cinco categorias, totais reais e percentuais.
 - Checks/builds da task foram executados conforme registrado em `TASK-84`.
-- Refinamento de UI em 2026-07-25 validado com smoke local confirmando ordem e novas descricoes das categorias, alem de checks/builds de backend/admin e `pnpm check`.
 - Complemento individual de 2026-07-25 validado com `showAdminPsychologistStatistics({ id: "cmrgztri7000tn0uh1q4n8vxf", period: "all" })`, HTTP Admin autenticado do endpoint de estatisticas, `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e browser local/headless em desktop 1365px e mobile 390px.
+- Refinamento de UI em 2026-07-25 validado com smoke local confirmando ordem, novas descricoes e `plan_segments.*.traction`, alem de bundle do Admin com `traction-plan-segment`, checks/builds de backend/admin e `pnpm check`.

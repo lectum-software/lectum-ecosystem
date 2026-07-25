@@ -415,6 +415,7 @@ export type AdminPsychologistsDashboardPlanSegmentSummary = {
   psychologists_count: number;
   signup_method: AdminPsychologistsDashboardSignupMethod;
   statistics: AdminPsychologistsDashboardStatistics;
+  traction: AdminPsychologistsDashboardTractionResults;
   traffic_sources: AdminPsychologistsDashboardTrafficSources;
 };
 

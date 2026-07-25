@@ -1640,12 +1640,16 @@ const buildPlanSegmentSummaries = (params: {
   currentNewSignups: AdminPsychologistProfileRecord[];
   currentProfiles: AdminPsychologistProfileRecord[];
   date: Date;
+  favoriteEvents: AdminPsychologistEventRecord[];
   labels: string[];
   platformPageViews: AdminPsychologistPlatformPageViewRecord[];
   platformPwaInstalls: AdminPsychologistPlatformPwaInstallRecord[];
   platformSessions: AdminPsychologistPlatformSessionRecord[];
+  profileViewEvents: AdminPsychologistEventRecord[];
   profiles: AdminPsychologistProfileRecord[];
   publicProfilePageViews: AdminPsychologistPublicProfilePageViewRecord[];
+  range: AdminPsychologistsDashboardDateRange;
+  whatsappContactRequests: AdminPsychologistEventRecord[];
 }) =>
   PLAN_SEGMENT_OPTIONS.reduce(
     (accumulator, segment) => {
@@ -1706,6 +1710,13 @@ const buildPlanSegmentSummaries = (params: {
         psychologists_count: segmentProfiles.length,
         signup_method: buildSignupMethod(segmentNewSignups),
         statistics: buildStatistics(segmentProfilesForSupply, params.date),
+        traction: buildTractionResults({
+          favorites: params.favoriteEvents,
+          profileViews: params.profileViewEvents,
+          profiles: segmentProfiles,
+          range: params.range,
+          whatsappClicks: params.whatsappContactRequests,
+        }),
         traffic_sources: {
           ...trafficSources,
           source: "page_view_event.traffic_source+target_type=psychologist" as const,
@@ -1840,24 +1851,22 @@ export const buildPsychologistsDashboard = async (
     currentNewSignups,
     currentProfiles,
     date: current.end,
+    favoriteEvents,
     labels,
     platformPageViews,
     platformPwaInstalls,
     platformSessions,
+    profileViewEvents,
     profiles,
     publicProfilePageViews,
+    range: current,
+    whatsappContactRequests,
   });
   const platformUsage = planSegments.all.platform_usage;
   const deviceUsage = planSegments.all.device_usage;
   const operatingSystemUsage = buildOperatingSystemUsage(platformSessions);
   const trafficSources = planSegments.all.traffic_sources;
-  const traction = buildTractionResults({
-    favorites: favoriteEvents,
-    profileViews: profileViewEvents,
-    profiles: currentProfiles,
-    range: current,
-    whatsappClicks: whatsappContactRequests,
-  });
+  const traction = planSegments.all.traction;
   const statistics = planSegments.all.statistics;
   const profileNameByUserId = new Map(
     profiles.map((profile) => [profile.user.id, profile.user.name]),

@@ -669,6 +669,7 @@ const getPlanSegmentSummary = (summary: AdminPsychologistsDashboard, segment: Pl
     psychologists_count: summary.cards.total_psychologists.value,
     signup_method: summary.signup_method,
     statistics: summary.statistics,
+    traction: summary.traction,
     traffic_sources: summary.traffic_sources,
   };
 
@@ -2020,12 +2021,18 @@ const TractionPieChart = ({ traction }: { traction: AdminPsychologistsDashboard[
           );
         })}
       </svg>
-      <figcaption className="grid gap-3">
+      <figcaption className="grid gap-3 md:grid-cols-2">
         {traction.categories.map((item) => {
           const color = TRACTION_CHART_COLORS[item.id];
 
           return (
-            <article className="rounded-2xl bg-surface-muted p-3" key={item.id}>
+            <article
+              className={cn(
+                "rounded-2xl bg-surface-muted p-3",
+                item.id === "insufficient_data" && "md:col-span-2",
+              )}
+              key={item.id}
+            >
               <div className="flex items-start justify-between gap-3">
                 <span className="flex min-w-0 items-center gap-2 text-sm font-black text-foreground">
                   <span
@@ -2052,16 +2059,25 @@ const TractionPieChart = ({ traction }: { traction: AdminPsychologistsDashboard[
 };
 
 const DashboardTractionCard = ({ summary }: { summary: AdminPsychologistsDashboard }) => {
-  const traction = summary.traction;
+  const [tractionPlanSegment, setTractionPlanSegment] = useState<PlanSegmentFilter>("all");
+  const tractionSegmentSummary = getPlanSegmentSummary(summary, tractionPlanSegment);
+  const traction = tractionSegmentSummary.traction;
   if (!traction) return null;
 
   return (
     <CardShell className="p-5">
-      <PanelTitle
-        description={formatSelectedPeriod(summary.period)}
-        icon={Activity}
-        title="Tração"
-      />
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <PanelTitle
+          description={formatSelectedPeriod(summary.period)}
+          icon={Activity}
+          title="Tração"
+        />
+        <PlanSegmentSelect
+          id="traction-plan-segment"
+          onChange={setTractionPlanSegment}
+          value={tractionPlanSegment}
+        />
+      </div>
       <TractionPieChart traction={traction} />
     </CardShell>
   );

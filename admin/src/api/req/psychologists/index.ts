@@ -449,6 +449,7 @@ export type PsychologistsDashboardPlanSegmentSummary = {
   psychologists_count: number;
   signup_method: PsychologistsDashboardSignupMethod;
   statistics: PsychologistsDashboardStatistics;
+  traction: PsychologistsDashboardTractionResults;
   traffic_sources: PsychologistsDashboardTrafficSources;
 };
 

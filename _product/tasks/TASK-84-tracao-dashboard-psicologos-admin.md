@@ -62,8 +62,8 @@ As metricas sao calculadas dentro da janela temporal selecionada e normalizadas 
 - Servidor local: backend recompilado reiniciado em `localhost:3001`; Admin reiniciado em `localhost:3002`.
 - HTTP local `GET http://localhost:3002/psicologos`: `200 OK`.
 - Bundle gerado em `admin/.next/static/chunks/app/(admin)/psicologos` contem o bloco de Tracao e as categorias, confirmando que a porta 3002 esta servindo build com a alteracao.
-- Refinamento visual de Tracao em 2026-07-25 removeu o texto introdutorio, contadores agregados, totais por categoria e faixa tecnica dos cortes; a legenda passou a ficar em coluna unica na ordem Tracao Forte, Interesse Nao Convertido, Trafego Nao Convertido, Baixa Tracao e Dados Insuficientes.
-- Refinamento de UI solicitado em 2026-07-25 validado com `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check`, smoke local de `buildPsychologistsDashboard({ period: "all" })` confirmando ordem/copies e HTTP local `GET http://localhost:3002/psicologos` retornando 200.
+- Refinamento visual de Tracao em 2026-07-25 removeu o texto introdutorio, contadores agregados, totais por categoria e faixa tecnica dos cortes; a legenda passou a ficar em duas colunas no desktop, com Tracao Forte ao lado de Interesse Nao Convertido, Trafego Nao Convertido ao lado de Baixa Tracao e Dados Insuficientes ocupando linha propria; o bloco tambem ganhou filtro por plano (Todos, Gratuitos, Assinantes e Cortesia) com dados reais por segmento.
+- Refinamento de UI solicitado em 2026-07-25 validado com `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check`, smoke local de `buildPsychologistsDashboard({ period: "all" })` confirmando ordem/copies e `plan_segments.*.traction`, bundle com `traction-plan-segment` e HTTP local `GET http://localhost:3002/psicologos` retornando 200.
 
 ## Observacoes
 
