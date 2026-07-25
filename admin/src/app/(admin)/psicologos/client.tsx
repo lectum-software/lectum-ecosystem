@@ -577,18 +577,25 @@ const TimelineChart = ({
 };
 
 const PanelTitle = ({
+  description,
   icon: Icon,
   source,
   title,
 }: {
+  description?: string;
   icon: LucideIcon;
   source?: string;
   title: string;
 }) => (
   <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-    <div className="flex items-center gap-2">
-      <Icon aria-hidden className="h-5 w-5 text-primary" />
-      <h2 className="text-lg font-semibold text-foreground">{title}</h2>
+    <div className="flex min-w-0 items-start gap-2">
+      <Icon aria-hidden className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
+      <div className="min-w-0">
+        <h2 className="text-lg font-semibold text-foreground">{title}</h2>
+        {description ? (
+          <p className="mt-1 text-sm font-bold leading-6 text-muted">{description}</p>
+        ) : null}
+      </div>
     </div>
     {source ? (
       <span className="w-fit rounded-full bg-surface-muted px-2 py-1 text-[0.65rem] font-bold text-muted">
@@ -607,11 +614,11 @@ const PlanSegmentSelect = ({
   onChange: (value: PlanSegmentFilter) => void;
   value: PlanSegmentFilter;
 }) => (
-  <label className="grid gap-1 text-xs font-semibold text-muted" htmlFor={id}>
-    Plano
-    <span className="relative">
+  <label className="block" htmlFor={id}>
+    <span className="sr-only">Filtrar por plano do psicólogo</span>
+    <span className="relative block">
       <select
-        className="h-11 w-full min-w-[9.25rem] appearance-none rounded-control border border-border bg-surface py-0 pl-3 pr-10 text-sm font-semibold text-foreground shadow-control outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+        className="h-10 w-full min-w-[9.25rem] appearance-none rounded-control border border-border bg-surface py-0 pl-3 pr-9 text-sm font-semibold text-foreground shadow-control outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
         id={id}
         onChange={(event) => onChange(event.target.value as PlanSegmentFilter)}
         value={value}
@@ -624,7 +631,7 @@ const PlanSegmentSelect = ({
       </select>
       <ChevronDown
         aria-hidden
-        className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground"
+        className="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground"
       />
     </span>
   </label>
@@ -1120,8 +1127,11 @@ const ConversionAndUsageBlocks = ({ summary }: { summary: AdminPsychologistsDash
   return (
     <section className="grid gap-5">
       <CardShell className="p-5">
-        <PanelTitle icon={TrendingDown} title="Conversão do cadastro até assinatura" />
-        <p className="mt-2 text-sm font-bold leading-6 text-muted">{selectedPeriodLabel}</p>
+        <PanelTitle
+          description={selectedPeriodLabel}
+          icon={TrendingDown}
+          title="Conversão do cadastro até assinatura"
+        />
         <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {[
             {
@@ -1210,14 +1220,17 @@ const ConversionAndUsageBlocks = ({ summary }: { summary: AdminPsychologistsDash
       <div className="grid gap-5 xl:grid-cols-2">
         <CardShell className="p-5">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-            <PanelTitle icon={UserPlus} title="Modo de cadastro" />
+            <PanelTitle
+              description={selectedPeriodLabel}
+              icon={UserPlus}
+              title="Modo de cadastro"
+            />
             <PlanSegmentSelect
               id="signup-method-plan-segment"
               onChange={setSignupMethodPlanSegment}
               value={signupMethodPlanSegment}
             />
           </div>
-          <p className="mt-2 text-sm font-bold leading-6 text-muted">{selectedPeriodLabel}</p>
           <SignupMethodPieChart signupMethod={signupMethodSummary.signup_method} />
           {signupMethodSummary.signup_method.unknown_count > 0 ? (
             <p className="mt-4 text-xs font-bold text-subtle">
@@ -1229,27 +1242,33 @@ const ConversionAndUsageBlocks = ({ summary }: { summary: AdminPsychologistsDash
 
         <CardShell className="p-5">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-            <PanelTitle icon={Smartphone} title="Devices e sistemas" />
+            <PanelTitle
+              description={selectedPeriodLabel}
+              icon={Smartphone}
+              title="Devices e sistemas"
+            />
             <PlanSegmentSelect
               id="device-usage-plan-segment"
               onChange={setDeviceUsagePlanSegment}
               value={deviceUsagePlanSegment}
             />
           </div>
-          <p className="mt-2 text-sm font-bold leading-6 text-muted">{selectedPeriodLabel}</p>
           <DeviceUsagePieChart deviceUsage={deviceUsageSummary.device_usage} />
         </CardShell>
 
         <CardShell className="p-5 xl:col-span-2">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-            <PanelTitle icon={Activity} title="Uso da plataforma" />
+            <PanelTitle
+              description={selectedPeriodLabel}
+              icon={Activity}
+              title="Uso da plataforma"
+            />
             <PlanSegmentSelect
               id="platform-usage-plan-segment"
               onChange={setPlatformUsagePlanSegment}
               value={platformUsagePlanSegment}
             />
           </div>
-          <p className="mt-2 text-sm font-bold leading-6 text-muted">{selectedPeriodLabel}</p>
           <div className="mt-5 grid gap-3 sm:grid-cols-2">
             {[
               ["Ativos", numberFormatter.format(platformUsage.active_psychologists_count)],

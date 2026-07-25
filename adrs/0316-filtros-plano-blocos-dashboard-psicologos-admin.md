@@ -37,3 +37,11 @@ A regra do projeto proibe mocks e backfill. As fontes reais disponiveis sao `pro
 - Smoke direto do service com `.env` local via `tsx -r dotenv/config`, confirmando `plan_segments` para `all`, `free` e `subscribers` e compatibilidade dos agregados de topo com `plan_segments.all`.
 - Smoke HTTP/browser local em `http://localhost:3002/psicologos` retornando 200. A validacao visual autenticada ficou limitada pela ausencia de uma sessao Admin interativa persistida neste ambiente; a rota carregou localmente contra backend real.
 - A primeira tentativa de `pnpm --dir admin build` foi bloqueada por lock de build/dev server Next concorrente; apos encerrar o processo stale, o build passou.
+
+## Atualizacao 2026-07-25 - Cabecalho compacto dos filtros
+
+Apos feedback visual no dashboard `/psicologos`, a UI deixou de exibir o rotulo **Plano** acima dos selects locais dos blocos filtraveis. O nome do controle permanece disponivel para tecnologias assistivas via `sr-only`, preservando acessibilidade sem aumentar a altura visual do cabecalho.
+
+Nos blocos de conversao, modo de cadastro, devices/sistemas e uso da plataforma, a linha de periodo foi movida para dentro do grupo de titulo. Assim o periodo fica imediatamente abaixo do titulo do bloco e nao e deslocado pela altura do dropdown. A decisao e puramente visual e nao altera `plan_segments`, backend, schema, dados, tracking ou packages.
+
+Validacao: `pnpm --dir admin exec biome check --write "src/app/(admin)/psicologos/client.tsx"`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e browser local/headless autenticado em `/psicologos` com 5 selects sem **Plano** visivel e periodo imediatamente abaixo dos titulos.

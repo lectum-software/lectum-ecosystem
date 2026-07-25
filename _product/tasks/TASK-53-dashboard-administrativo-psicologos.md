@@ -337,3 +337,12 @@ Packages usados:
 - Referencia visual local mantida: `_product/proto/admin/Psicologos/Psicologos - Dashboard.png`; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
 - ADR criado: `adrs/0316-filtros-plano-blocos-dashboard-psicologos-admin.md`.
 - Validacoes deste ajuste: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check`, smoke direto do service com `.env` local via `tsx -r dotenv/config` confirmando `plan_segments` reais e smoke HTTP/browser local em `http://localhost:3002/psicologos` retornando 200. O primeiro `pnpm --dir admin build` foi bloqueado por lock de processo Next concorrente; apos encerrar o processo stale, o build passou. Nao houve alteracao Prisma/migration, portanto `db:migrate` nao se aplicou.
+
+### Ajuste pos-feedback 2026-07-25 - filtros compactos por plano nos blocos
+
+- Pedido do usuario: nos blocos do dashboard Admin de psicologos, remover o texto visivel **Plano** dos filtros e aproximar a linha de periodo do titulo do bloco.
+- A UI manteve o filtro por plano com label acessivel apenas via `sr-only` e reduziu a altura do select para preservar o cabecalho compacto.
+- A linha de periodo passou a compor o grupo de titulo nos blocos de conversao, modo de cadastro, devices/sistemas e uso da plataforma, evitando que o dropdown empurre o periodo para baixo.
+- O ajuste e apenas visual no Admin, mobile-first, sem alteracao de backend, contrato HTTP, Prisma, migration, mock, seed, package novo ou fonte de dados.
+- Referencia visual local mantida: `_product/proto/admin/Psicologos/Psicologos - Dashboard.png`; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente, e o screenshot enviado pelo usuario em 2026-07-25 foi usado como referencia direta.
+- Validacoes deste ajuste: `pnpm --dir admin exec biome check --write "src/app/(admin)/psicologos/client.tsx"`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e browser local/headless autenticado em `http://localhost:3002/psicologos` validando 5 selects sem **Plano** visivel, altura de 40px e periodo a 4px abaixo dos titulos dos blocos.
