@@ -74,7 +74,7 @@ const groupConfig: Record<
   },
   operacional: {
     description:
-      "Página exclusiva para pendências operacionais derivadas de oferta: cobertura de posts, publicação de perfis e tração de profissionais.",
+      "Pendências operacionais por falta de cobertura há mais de 48h, perfis profissionais não publicados por configurações obrigatórias e falta de tração para perfil/Whatsapp de profissionais assinantes.",
     emptyLabel: "Nenhuma pendência operacional encontrada nos dados reais atuais.",
     title: "Operacionais",
   },
