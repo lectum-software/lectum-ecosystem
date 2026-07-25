@@ -135,3 +135,7 @@ O contrato `GET /api/admin/private/moderation/summary` foi ampliado com `overvie
 Cada bloco possui filtro independente de período e datas. A filtragem temporal é client-side sobre os pontos agregados retornados pelo summary, sem criar novo endpoint, sem persistir snapshots históricos de alertas derivados e sem introduzir estado fake. Como compliance e operacionais continuam derivados/read-only, suas curvas representam a distribuição por data de origem dos alertas atualmente existentes, não um histórico de snapshots diários.
 
 Para preservar a leitura do dashboard em desktop, os blocos usam uma toolbar única: período, datas, seletor contextual e atalho de lista ficam na mesma linha em larguras administrativas. Em telas pequenas, a regra mobile-first permite empilhamento para evitar overflow horizontal e manter campos tocáveis.
+
+## Complemento 2026-07-25: selo Lectum no autor verificado da fila de denúncias
+
+A fila `/moderacao/denuncias` passa a representar psicólogos verificados no card de autor usando o mesmo selo visual da Lectum, sem a pílula textual **Verificado**. A mudança é apenas composicional e preserva a fonte real do estado `author.verified` retornada pelo backend, mantendo acessibilidade por `aria-label` no SVG.

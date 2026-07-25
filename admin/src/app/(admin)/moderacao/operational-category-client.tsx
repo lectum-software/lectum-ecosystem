@@ -18,7 +18,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import type { ReactNode } from "react";
+import type { ReactNode, SVGProps } from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   FormProvider,
@@ -41,6 +41,7 @@ import type {
   AdminModerationSeverity,
 } from "@/api/req/moderation";
 import { InputController, SelectController, TextareaController } from "@/components/controllers";
+import { cn } from "@/lib/utils";
 
 const PAGE_LIMIT = 10;
 const SKELETON_KEYS = ["first", "second", "third"] as const;
@@ -412,6 +413,22 @@ const authorInitials = (name: string) => {
   return (parts[0]?.[0] ?? "A") + (parts[1]?.[0] ?? "");
 };
 
+const VerifiedBadgeIcon = ({ className, ...props }: SVGProps<SVGSVGElement>) => (
+  <svg
+    className={cn("h-4 w-4 shrink-0 text-primary", className)}
+    fill="none"
+    viewBox="0 0 30 28"
+    xmlns="http://www.w3.org/2000/svg"
+    {...props}
+  >
+    <title>Perfil verificado</title>
+    <path
+      d="M10.3636 28L7.77273 23.7333L2.86364 22.6667L3.34091 17.7333L0 14L3.34091 10.2667L2.86364 5.33333L7.77273 4.26667L10.3636 0L15 1.93333L19.6364 0L22.2273 4.26667L27.1364 5.33333L26.6591 10.2667L30 14L26.6591 17.7333L27.1364 22.6667L22.2273 23.7333L19.6364 28L15 26.0667L10.3636 28ZM13.5682 18.7333L21.2727 11.2L19.3636 9.26667L13.5682 14.9333L10.6364 12.1333L8.72727 14L13.5682 18.7333Z"
+      fill="currentColor"
+    />
+  </svg>
+);
+
 const ModerationReportAuthor = ({ report }: { report: ModerationReport }) => {
   const avatarSrc = renderableImageSrc(report.content.author.avatar);
 
@@ -437,13 +454,7 @@ const ModerationReportAuthor = ({ report }: { report: ModerationReport }) => {
             {report.content.author.name}
           </p>
           {report.content.author.verified ? (
-            <span
-              className="inline-flex shrink-0 items-center gap-1 rounded-full bg-primary-soft px-2 py-0.5 text-[0.68rem] font-black text-primary"
-              title="Psicólogo verificado"
-            >
-              <ShieldCheck aria-hidden className="h-3 w-3" />
-              Verificado
-            </span>
+            <VerifiedBadgeIcon aria-label="Psicólogo verificado" className="h-[18px] w-[18px]" />
           ) : null}
         </div>
         <p className="mt-0.5 text-xs font-bold text-muted">

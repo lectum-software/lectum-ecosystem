@@ -403,3 +403,24 @@ Validacao deste ajuste:
 - `pnpm --dir admin check`
 - `pnpm --dir admin build` (duas tentativas iniciais foram bloqueadas por outro processo `next build`; reexecutado após finalizar e concluído sem erro)
 - Smoke HTTP local no Admin (`GET http://localhost:3002/moderacao`) retornou `200`.
+
+## Ajuste complementar 2026-07-25 - Selo Lectum no autor verificado em Denúncias
+
+- Pedido do usuário: em frente ao nome do psicólogo na lista de `/moderacao/denuncias`, substituir a tag textual **Verificado** pelo selo usado na Lectum.
+- O card de autor do conteúdo denunciado agora exibe apenas o `VerifiedBadgeIcon` com o formato oficial do selo Lectum ao lado do nome quando `report.content.author.verified=true`, mantendo o rótulo acessível `aria-label="Psicólogo verificado"`.
+- A regra de verificação continua vindo do backend real; não houve alteração de contrato, mock, dado artificial, package, Prisma schema ou migration.
+- Builder/Quick Copy não está exposto como ferramenta callable neste ambiente; a referência auditável foi a captura enviada pelo usuário e o selo já usado no produto Lectum.
+
+### Critérios deste ajuste
+
+- [x] A tag visual **Verificado** foi removida do card de autor em `/moderacao/denuncias`.
+- [x] Psicólogos verificados exibem o selo Lectum ao lado do nome com acessibilidade preservada.
+- [x] A alteração é visual, mobile-first, sem `<img>` cru e sem modificar regras de domínio.
+
+### Validação deste ajuste
+
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/moderacao/operational-category-client.tsx"`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- Smoke HTTP local no Admin: `GET http://localhost:3002/moderacao/denuncias` retornou `200`.
+- `pnpm check` foi reexecutado e falhou em `backend/src/modules/api/admin/private/patients/dashboard/use-cases/services.ts` e `backend/src/modules/api/admin/private/psychologists/dashboard/use-cases/services.ts` por avisos/organização de imports de alterações não relacionadas já presentes no workspace.
