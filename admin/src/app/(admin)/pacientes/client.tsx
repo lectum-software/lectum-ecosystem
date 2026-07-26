@@ -1160,69 +1160,159 @@ const PatientIntentAnalysisCard = ({ summary }: { summary: AdminPatientsDashboar
   );
 };
 
-const getPiePoint = (center: number, radius: number, angleInDegrees: number) => {
-  const angleInRadians = (Math.PI / 180) * angleInDegrees;
-
-  return {
-    x: center + radius * Math.cos(angleInRadians),
-    y: center + radius * Math.sin(angleInRadians),
-  };
-};
-
-const buildPieSlicePath = (
-  center: number,
-  radius: number,
-  startAngle: number,
-  endAngle: number,
-) => {
-  const start = getPiePoint(center, radius, startAngle);
-  const end = getPiePoint(center, radius, endAngle);
-  const largeArcFlag = endAngle - startAngle > 180 ? 1 : 0;
-
-  return [
-    `M ${center} ${center}`,
-    `L ${start.x} ${start.y}`,
-    `A ${radius} ${radius} 0 ${largeArcFlag} 1 ${end.x} ${end.y}`,
-    "Z",
-  ].join(" ");
-};
-
-const PieSlicePercentageLabel = ({
-  color,
-  label,
-  x,
-  y,
-}: {
+type PatientsDonutChartItem = {
   color: string;
+  count: number;
+  id: string;
   label: string;
-  x: number;
-  y: number;
+  percentage: number;
+  sublabel?: string | null;
+};
+
+const DonutChart = ({
+  ariaLabel,
+  emptyMessage,
+  items,
+  total,
+}: {
+  ariaLabel: string;
+  emptyMessage: string;
+  items: PatientsDonutChartItem[];
+  total: number;
 }) => {
-  const width = 39;
-  const height = 16;
+  const radius = 42;
+  const circumference = 2 * Math.PI * radius;
+  const visibleItems = items.filter((item) => item.count > 0);
+  const segments = visibleItems.reduce<{
+    cumulative: number;
+    items: Array<{
+      dash: number;
+      item: PatientsDonutChartItem;
+      strokeDashoffset: number;
+    }>;
+  }>(
+    (accumulator, item) => {
+      const share = total > 0 ? item.count / total : 0;
+      const dash = share * circumference;
+
+      return {
+        cumulative: accumulator.cumulative + dash,
+        items: [
+          ...accumulator.items,
+          {
+            dash,
+            item,
+            strokeDashoffset: -accumulator.cumulative,
+          },
+        ],
+      };
+    },
+    { cumulative: 0, items: [] },
+  ).items;
+
+  if (items.length === 0 || visibleItems.length === 0 || total === 0) {
+    return (
+      <p className="mt-5 rounded-2xl border border-dashed border-border bg-surface-muted p-4 text-sm font-bold text-muted">
+        {emptyMessage}
+      </p>
+    );
+  }
 
   return (
-    <g>
-      <rect
-        fill={hexToRgba(color, 0.86)}
-        height={height}
-        rx={height / 2}
-        width={width}
-        x={x - width / 2}
-        y={y - height / 2}
-      />
-      <text
-        dominantBaseline="middle"
-        fill="white"
-        fontSize="8.5"
-        fontWeight="900"
-        textAnchor="middle"
-        x={x}
-        y={y + 0.25}
-      >
-        {label}
-      </text>
-    </g>
+    <figure className="mt-5">
+      <div className="grid min-w-0 gap-5 2xl:grid-cols-[170px_minmax(0,1fr)] 2xl:items-center">
+        <svg
+          aria-label={ariaLabel}
+          className="mx-auto aspect-square w-full max-w-[12rem] min-w-0"
+          role="img"
+          viewBox="0 0 120 120"
+        >
+          <circle
+            cx="60"
+            cy="60"
+            fill="none"
+            r={radius}
+            stroke="var(--admin-surface-muted)"
+            strokeWidth="18"
+          />
+          {segments.map(({ dash, item, strokeDashoffset }) => (
+            <circle
+              cx="60"
+              cy="60"
+              fill="none"
+              key={item.id}
+              r={radius}
+              stroke={item.color}
+              strokeDasharray={`${dash} ${circumference - dash}`}
+              strokeDashoffset={strokeDashoffset}
+              strokeWidth="18"
+              transform="rotate(-90 60 60)"
+            />
+          ))}
+          <text
+            fill="var(--admin-foreground)"
+            fontSize="15"
+            fontWeight="900"
+            textAnchor="middle"
+            x="60"
+            y="58"
+          >
+            {numberFormatter.format(total)}
+          </text>
+          <text
+            fill="var(--admin-muted)"
+            fontSize="8"
+            fontWeight="700"
+            textAnchor="middle"
+            x="60"
+            y="72"
+          >
+            total
+          </text>
+        </svg>
+
+        <div className="min-w-0 space-y-3">
+          {items.map((item) => (
+            <div
+              className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-start gap-3"
+              key={item.id}
+            >
+              <span className="flex min-w-0 items-start gap-2 text-sm font-semibold leading-5 text-foreground">
+                <span
+                  aria-hidden
+                  className="mt-1 h-2.5 w-2.5 shrink-0 rounded-full"
+                  style={{ backgroundColor: item.color }}
+                />
+                <span className="min-w-0">
+                  <span className="block whitespace-normal break-words">{item.label}</span>
+                  {item.sublabel ? (
+                    <span className="mt-1 block text-xs font-semibold leading-5 text-subtle">
+                      {item.sublabel}
+                    </span>
+                  ) : null}
+                </span>
+              </span>
+              <span className="shrink-0 text-right text-sm font-semibold text-foreground">
+                {numberFormatter.format(item.count)}{" "}
+                <span className="text-xs font-medium text-muted">
+                  ({formatPercentageValue(item.percentage)})
+                </span>
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+      <figcaption className="sr-only">
+        {items
+          .map(
+            (item) =>
+              `${item.label}: ${numberFormatter.format(item.count)} (${formatPercentageValue(
+                item.percentage,
+              )})`,
+          )
+          .join("; ")}
+      </figcaption>
+    </figure>
   );
 };
 
@@ -1239,38 +1329,13 @@ const BreakdownPieChart = ({
   items: PatientsDashboardBreakdownItem[];
   total: number;
 }) => {
-  const center = 60;
-  const radius = 48;
-  const segments = items.reduce<{
-    currentAngle: number;
-    items: Array<{
-      endAngle: number;
-      index: number;
-      item: PatientsDashboardBreakdownItem;
-      share: number;
-      startAngle: number;
-    }>;
-  }>(
-    (accumulator, item, index) => {
-      const share = total > 0 ? item.count / total : 0;
-      if (share <= 0) return accumulator;
-
-      const startAngle = accumulator.currentAngle;
-      const endAngle = startAngle + share * 360;
-
-      return {
-        currentAngle: endAngle,
-        items: accumulator.items.concat({
-          endAngle,
-          index,
-          item,
-          share,
-          startAngle,
-        }),
-      };
-    },
-    { currentAngle: -90, items: [] },
-  ).items;
+  const chartItems = items.map((item, index) => ({
+    color: colorForItem(item, index),
+    count: item.count,
+    id: item.id,
+    label: item.label,
+    percentage: item.percentage,
+  }));
   const ariaLabel =
     items.length > 0
       ? `Gráfico de pizza: ${items
@@ -1284,100 +1349,12 @@ const BreakdownPieChart = ({
       : emptyMessage;
 
   return (
-    <figure className="mt-5 grid gap-5 sm:grid-cols-[minmax(9rem,11rem)_1fr] sm:items-center">
-      <svg
-        aria-label={ariaLabel}
-        className="mx-auto aspect-square w-40 sm:w-44"
-        role="img"
-        viewBox="0 0 120 120"
-      >
-        <circle
-          cx={center}
-          cy={center}
-          fill="var(--admin-surface-muted)"
-          r={radius}
-          stroke="var(--admin-border)"
-          strokeWidth="1"
-        />
-        {segments.map((segment) => {
-          const color = colorForItem(segment.item, segment.index);
-          const labelPoint = getPiePoint(
-            center,
-            radius * 0.58,
-            (segment.startAngle + segment.endAngle) / 2,
-          );
-          const percentageLabel = formatPercentageValue(segment.item.percentage);
-
-          if (segment.share >= 0.999) {
-            return (
-              <g key={segment.item.id}>
-                <circle
-                  cx={center}
-                  cy={center}
-                  fill={color}
-                  r={radius}
-                  stroke="var(--admin-surface)"
-                  strokeWidth="1.4"
-                />
-                <PieSlicePercentageLabel
-                  color={color}
-                  label={percentageLabel}
-                  x={center}
-                  y={center}
-                />
-              </g>
-            );
-          }
-
-          return (
-            <g key={segment.item.id}>
-              <path
-                d={buildPieSlicePath(center, radius, segment.startAngle, segment.endAngle)}
-                fill={color}
-                stroke="var(--admin-surface)"
-                strokeWidth="1.4"
-              />
-              {segment.share >= 0.08 ? (
-                <PieSlicePercentageLabel
-                  color={color}
-                  label={percentageLabel}
-                  x={labelPoint.x}
-                  y={labelPoint.y}
-                />
-              ) : null}
-            </g>
-          );
-        })}
-      </svg>
-      <figcaption className="space-y-3">
-        {items.length === 0 ? (
-          <p className="rounded-2xl bg-surface-muted p-4 text-sm font-bold text-muted">
-            {emptyMessage}
-          </p>
-        ) : (
-          items.map((item, index) => (
-            <div className="rounded-2xl bg-surface-muted p-3" key={item.id}>
-              <div className="flex items-center justify-between gap-3">
-                <span className="flex min-w-0 items-center gap-2 text-sm font-black text-foreground">
-                  <span
-                    aria-hidden
-                    className="h-3 w-3 shrink-0 rounded-full"
-                    style={{ backgroundColor: colorForItem(item, index) }}
-                  />
-                  <span className="truncate">{item.label}</span>
-                </span>
-                <span className="text-sm font-black text-foreground">
-                  {formatPercentageValue(item.percentage)}
-                </span>
-              </div>
-              <p className="mt-1 text-xs font-bold text-muted">
-                {numberFormatter.format(item.count)} {countLabel}
-              </p>
-            </div>
-          ))
-        )}
-      </figcaption>
-    </figure>
+    <DonutChart
+      ariaLabel={ariaLabel}
+      emptyMessage={emptyMessage}
+      items={chartItems}
+      total={total}
+    />
   );
 };
 
@@ -1386,48 +1363,28 @@ const DeviceUsagePieChart = ({
 }: {
   deviceUsage: AdminPatientsDashboard["device_usage"];
 }) => {
-  const center = 60;
-  const radius = 48;
   const total = Math.max(0, deviceUsage.total_sessions);
-  const visibleItems = deviceUsage.items.filter((item) => item.count > 0);
-  const segments = visibleItems.reduce<{
-    currentAngle: number;
-    items: Array<{
-      endAngle: number;
-      item: DeviceUsageItem;
-      share: number;
-      startAngle: number;
-    }>;
-  }>(
-    (accumulator, item) => {
-      const share = total > 0 ? item.count / total : 0;
-      if (share <= 0) return accumulator;
+  const emptyMessage =
+    deviceUsage.unavailable_reason ??
+    "Sem sessões autenticadas de pacientes no período selecionado.";
+  const chartItems = deviceUsage.items.map((item) => {
+    const operatingSystems = item.device_type === "unknown" ? [] : (item.operating_systems ?? []);
+    const operatingSystemSummary = operatingSystems
+      .map(
+        (operatingSystem) =>
+          `${operatingSystem.label} ${formatPercentageValue(operatingSystem.percentage)}`,
+      )
+      .join(" · ");
 
-      const startAngle = accumulator.currentAngle;
-      const endAngle = startAngle + share * 360;
-
-      return {
-        currentAngle: endAngle,
-        items: accumulator.items.concat({
-          endAngle,
-          item,
-          share,
-          startAngle,
-        }),
-      };
-    },
-    { currentAngle: -90, items: [] },
-  ).items;
-
-  if (total === 0) {
-    return (
-      <p className="mt-5 rounded-2xl border border-dashed border-border bg-surface-muted p-4 text-sm font-bold text-muted">
-        {deviceUsage.unavailable_reason ??
-          "Sem sessões autenticadas de pacientes no período selecionado."}
-      </p>
-    );
-  }
-
+    return {
+      color: DEVICE_USAGE_CHART_COLORS[item.device_type],
+      count: item.count,
+      id: item.device_type,
+      label: item.label,
+      percentage: item.percentage,
+      sublabel: operatingSystemSummary || null,
+    };
+  });
   const ariaLabel = `Gráfico de pizza dos devices usados por pacientes: ${deviceUsage.items
     .map(
       (item) =>
@@ -1438,110 +1395,14 @@ const DeviceUsagePieChart = ({
     .join("; ")}.`;
 
   return (
-    <figure className="mt-5 grid gap-5 sm:grid-cols-[minmax(9rem,11rem)_1fr] sm:items-center">
-      <svg
-        aria-label={ariaLabel}
-        className="mx-auto aspect-square w-40 sm:w-44"
-        role="img"
-        viewBox="0 0 120 120"
-      >
-        <circle
-          cx={center}
-          cy={center}
-          fill="var(--admin-surface-muted)"
-          r={radius}
-          stroke="var(--admin-border)"
-          strokeWidth="1"
-        />
-        {segments.map((segment) => {
-          const color = DEVICE_USAGE_CHART_COLORS[segment.item.device_type];
-          const labelPoint = getPiePoint(
-            center,
-            radius * 0.58,
-            (segment.startAngle + segment.endAngle) / 2,
-          );
-          const percentageLabel = formatPercentageValue(segment.item.percentage);
-
-          if (segment.share >= 0.999) {
-            return (
-              <g key={segment.item.device_type}>
-                <circle
-                  cx={center}
-                  cy={center}
-                  fill={color}
-                  r={radius}
-                  stroke="var(--admin-surface)"
-                  strokeWidth="1.4"
-                />
-                <PieSlicePercentageLabel
-                  color={color}
-                  label={percentageLabel}
-                  x={center}
-                  y={center}
-                />
-              </g>
-            );
-          }
-
-          return (
-            <g key={segment.item.device_type}>
-              <path
-                d={buildPieSlicePath(center, radius, segment.startAngle, segment.endAngle)}
-                fill={color}
-                stroke="var(--admin-surface)"
-                strokeWidth="1.4"
-              />
-              {segment.share >= 0.08 ? (
-                <PieSlicePercentageLabel
-                  color={color}
-                  label={percentageLabel}
-                  x={labelPoint.x}
-                  y={labelPoint.y}
-                />
-              ) : null}
-            </g>
-          );
-        })}
-      </svg>
-      <figcaption className="space-y-3">
-        {deviceUsage.items.map((item) => {
-          const operatingSystems =
-            item.device_type === "unknown" ? [] : (item.operating_systems ?? []);
-          const operatingSystemSummary = operatingSystems
-            .map(
-              (operatingSystem) =>
-                `${operatingSystem.label} ${formatPercentageValue(operatingSystem.percentage)}`,
-            )
-            .join(" · ");
-
-          return (
-            <div className="rounded-2xl bg-surface-muted p-3" key={item.device_type}>
-              <div className="flex items-center justify-between gap-3">
-                <span className="flex min-w-0 items-center gap-2 text-sm font-black text-foreground">
-                  <span
-                    aria-hidden
-                    className="h-3 w-3 shrink-0 rounded-full"
-                    style={{ backgroundColor: DEVICE_USAGE_CHART_COLORS[item.device_type] }}
-                  />
-                  <span className="truncate">{item.label}</span>
-                </span>
-                <span className="text-sm font-black text-foreground">
-                  {formatPercentageValue(item.percentage)}
-                </span>
-              </div>
-              {operatingSystemSummary ? (
-                <p className="mt-2 text-xs font-medium leading-5 text-subtle">
-                  {operatingSystemSummary}
-                </p>
-              ) : null}
-            </div>
-          );
-        })}
-      </figcaption>
-    </figure>
+    <DonutChart
+      ariaLabel={ariaLabel}
+      emptyMessage={emptyMessage}
+      items={chartItems}
+      total={total}
+    />
   );
 };
-
 const getLocationCountRange = (items: PatientsDashboardBreakdownItem[]) => {
   const counts = items.filter((item) => item.count > 0).map((item) => item.count);
 

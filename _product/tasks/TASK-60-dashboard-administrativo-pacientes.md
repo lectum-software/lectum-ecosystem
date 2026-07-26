@@ -690,3 +690,30 @@ Frontend esperado:
 - `pnpm --dir admin build`
 - `pnpm check`
 - Browser local/headless autenticado em `http://localhost:3002/pacientes` validou os cinco blocos com periodo abaixo do titulo e gap de 4px entre titulo e periodo. Nos cards mais estreitos, o periodo quebrou em duas linhas de forma natural (`periodHeight=40`) sem ser empurrado pela altura do filtro. O admin temporario de validacao foi removido do banco apos a verificacao.
+
+## Ajuste pos-feedback 2026-07-26 - Gráficos de pizza no layout de Tráfego
+
+- Pedido do usuário: fazer os gráficos de pizza do dashboard `/pacientes` seguirem o mesmo layout visual dos gráficos de pizza de `/trafego`.
+- Os blocos **Gênero**, **Forma de cadastro** e **Devices e sistemas** passaram a renderizar donut SVG com total central, anel com `strokeWidth` equivalente ao padrão de Tráfego e legenda simples ao lado/abaixo com marcador, label, contagem e percentual.
+- As etiquetas percentuais desenhadas dentro das fatias e os cards de legenda em `bg-surface-muted` foram removidos desses gráficos; em **Devices e sistemas**, o resumo de sistemas operacionais foi preservado como texto secundário na legenda para não perder a leitura adicionada pela TASK-81.
+- Não houve alteração de backend, contrato HTTP, schema Prisma, migration, package novo, seed, mock, dado artificial ou uso de `<img>`.
+- Builder/Quick Copy não está exposto como ferramenta callable neste ambiente; as referências visuais usadas foram o layout real de `/trafego`, `_product/proto/admin/Tráfego.png`, `_product/proto/admin/Pacientes/Pacientes - Dashboard.png` e os screenshots enviados pelo usuário em 2026-07-26.
+- ADR não foi criado/atualizado porque a mudança é exclusivamente visual/local de layout de gráficos, sem nova decisão arquitetural, integração, regra de domínio ou trade-off de dados.
+
+### Critérios de aceite do ajuste
+
+- [x] **Gênero** usa donut com total central e legenda no padrão de Tráfego.
+- [x] **Forma de cadastro** usa donut com total central e legenda no padrão de Tráfego.
+- [x] **Devices e sistemas** usa donut com total central e legenda no padrão de Tráfego, preservando o resumo real de sistemas operacionais.
+- [x] Percentuais não aparecem mais desenhados dentro das fatias dos três SVGs.
+- [x] Layout mobile-first preservado em 390px sem overflow horizontal.
+- [x] Nenhum mock, seed, dado artificial, migration, package novo, endpoint simulado ou `<img>` foi adicionado.
+
+### Validação complementar executada
+
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/pacientes/client.tsx"`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm --dir backend check`
+- `pnpm check`
+- Browser local/headless autenticado em `http://localhost:3002/pacientes` com Admin real temporário removido após o teste: validou os três cards com donut SVG, total central, `figcaption` apenas `sr-only`, ausência de percentuais dentro das fatias, ausência dos cards antigos de legenda, contagem + percentual na legenda e mobile `390x844` com `scrollWidth=390`. Screenshots salvos em `.tmp/patient-dashboard-donut-desktop.png` e `.tmp/patient-dashboard-donut-mobile.png`.
