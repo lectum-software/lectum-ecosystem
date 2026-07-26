@@ -262,3 +262,13 @@ Os filtros visiveis de **Categoria** e **Severidade** foram removidos para reduz
 Para sustentar a coluna **Autor** sem heuristica de frontend, o contrato protegido de `content_moderation_event` passa a retornar metadados aditivos do autor: `name`, `role_label` e `show_verified_badge`. O nome vem do usuario real; quando o autor for psicologo, usa a composicao profissional ja adotada no Admin. O selo aparece somente quando a regra de verificacao profissional vigente reconhece o psicologo como verificado.
 
 Nao ha migration, package novo, endpoint paralelo, mock ou seed. A mudanca e composicional/contratual aditiva no Admin e preserva o detalhe protegido e as acoes auditadas existentes.
+
+## Complemento 2026-07-26: filtros fechados e atalho de pagina em Conteudo sensivel
+
+A fila exclusiva `/moderacao/conteudo-sensivel` passa a priorizar filtros fechados de triagem. O filtro **Status** mostra somente **Todos**, **Pendente** e **Resolvido**, com **Pendente** como padrao. O status interno **Em revisao** permanece disponivel no detalhe e na acao auditada, mas sai do dropdown principal para evitar que a fila operacional misture estados intermediarios na abertura da pagina.
+
+O filtro **Comunidade** deixa de aceitar texto livre e passa a usar dropdown alimentado pelo endpoint real de comunidades do Admin (`GET /api/admin/private/communities`). A busca textual geral tambem foi removida dessa pagina, portanto a UI nao envia mais `q` para a lista de eventos. A decisao reduz ambiguidade e mantem a segmentacao por comunidade baseada em entidades reais, sem criar endpoint paralelo.
+
+Na tabela, **Status** substitui **Severidade** como coluna principal porque o moderador precisa saber imediatamente se o evento ainda esta pendente ou ja foi resolvido. A severidade segue preservada no detalhe protegido e nos contadores existentes. A nova coluna **Pagina** exibe um icone que abre `public_url` quando ha conteudo publicado; eventos bloqueados antes da publicacao exibem icone desabilitado, evitando link falso.
+
+Nao ha backend novo, migration, package novo, mock ou seed. A mudanca e composicional no Admin e reaproveita contratos existentes de `content_moderation_event` e comunidades.

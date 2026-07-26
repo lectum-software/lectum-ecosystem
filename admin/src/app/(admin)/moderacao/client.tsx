@@ -29,6 +29,7 @@ import { FormProvider, type UseFormReturn, useForm, useWatch } from "react-hook-
 import { toast } from "sonner";
 import { z } from "zod";
 import { adminCommunitiesKeys, adminModerationKeys } from "@/api/cache/keys";
+import { useAdminCommunitiesList } from "@/api/callers/communities";
 import {
   useAdminModerationEvent,
   useAdminModerationEvents,
@@ -117,12 +118,12 @@ const targetLabels: Record<string, string> = {
   submitted_post: "Post bloqueado antes da publicação",
   submitted_reply: "Resposta bloqueada antes da publicação",
 };
+type TextualStatusFilter = "all" | Extract<AdminModerationStatus, "pending" | "resolved">;
 const statusFilterOptions = [
   { label: "Todos", value: "all" },
   { label: "Pendente", value: "pending" },
-  { label: "Em revisão", value: "reviewing" },
   { label: "Resolvido", value: "resolved" },
-] satisfies Array<{ label: string; value: "all" | AdminModerationStatus }>;
+] satisfies Array<{ label: string; value: TextualStatusFilter }>;
 
 const decisionFilterOptions = [
   { label: "Todas", value: "all" },
@@ -135,15 +136,13 @@ type Filters = {
   community: string;
   decision: "all" | AdminModerationDecision;
   from: string;
-  q: string;
-  status: "all" | AdminModerationStatus;
+  status: TextualStatusFilter;
   to: string;
 };
 const initialFilters: Filters = {
-  community: "",
+  community: "all",
   decision: "all",
   from: initialRange.from,
-  q: "",
   status: "pending",
   to: initialRange.to,
 };
@@ -153,8 +152,7 @@ const textualFiltersSchema = z
     community: z.string().max(120, "Use no máximo 120 caracteres."),
     decision: z.enum(["all", "allow_sensitive", "block", "safety_hold"]),
     from: z.string().max(10, "Use uma data válida."),
-    q: z.string().max(120, "Use no máximo 120 caracteres."),
-    status: z.enum(["all", "pending", "reviewing", "resolved"]),
+    status: z.enum(["all", "pending", "resolved"]),
     to: z.string().max(10, "Use uma data válida."),
   })
   .refine((values) => !values.from || !values.to || values.from <= values.to, {
@@ -198,7 +196,6 @@ const normalizeTextualFilters = (values: Filters): Filters => ({
   community: values.community,
   decision: values.decision,
   from: values.from,
-  q: values.q,
   status: values.status,
   to: values.to,
 });
@@ -207,7 +204,6 @@ const areTextualFiltersEqual = (left: Filters, right: Filters) =>
   left.community === right.community &&
   left.decision === right.decision &&
   left.from === right.from &&
-  left.q === right.q &&
   left.status === right.status &&
   left.to === right.to;
 const Card = ({ children, className }: { children?: ReactNode; className?: string }) => (
@@ -324,12 +320,16 @@ const VerifiedBadgeIcon = ({ className, ...props }: SVGProps<SVGSVGElement>) => 
 );
 
 const FiltersBar = ({
+  communitiesLoading,
+  communityOptions,
   disabled,
   form,
   isFetching,
   onDateBlur,
   resultCount,
 }: {
+  communitiesLoading: boolean;
+  communityOptions: Array<{ label: string; value: string }>;
   disabled: boolean;
   form: UseFormReturn<Filters>;
   isFetching: boolean;
@@ -339,7 +339,7 @@ const FiltersBar = ({
   <div className="border-b border-border bg-surface/80 p-4">
     <FormProvider {...form}>
       <form
-        className="grid min-w-0 gap-3 md:grid-cols-2 2xl:grid-cols-[minmax(180px,0.85fr)_minmax(150px,0.7fr)_minmax(150px,0.7fr)_minmax(160px,0.8fr)_minmax(190px,1fr)_minmax(190px,1fr)]"
+        className="grid min-w-0 gap-3 md:grid-cols-2 2xl:grid-cols-[minmax(180px,0.9fr)_minmax(150px,0.75fr)_minmax(150px,0.75fr)_minmax(180px,0.9fr)_minmax(240px,1.2fr)]"
         noValidate
         onSubmit={(event) => event.preventDefault()}
       >
@@ -380,17 +380,11 @@ const FiltersBar = ({
           name="decision"
           options={decisionFilterOptions}
         />
-        <InputController<Filters>
-          disabled={disabled}
+        <SelectController<Filters>
+          disabled={disabled || communitiesLoading}
           label="Comunidade"
           name="community"
-          placeholder="ID, slug ou nome"
-        />
-        <InputController<Filters>
-          disabled={disabled}
-          label="Busca"
-          name="q"
-          placeholder="Trecho, regra, comunidade..."
+          options={communityOptions}
         />
       </form>
     </FormProvider>
@@ -424,7 +418,7 @@ const ContentSensitiveEventRow = ({
         <span title={formatDateTime(event.created_at)}>{formatDateOnly(event.created_at)}</span>
       </td>
       <td className="px-5 py-4 align-middle">
-        <Severity value={event.severity} />
+        <Status value={event.status} />
       </td>
       <td className="px-5 py-4 align-middle">
         <Decision value={event.decision} />
@@ -463,7 +457,38 @@ const ContentSensitiveEventRow = ({
           </p>
         </button>
       </td>
+      <td className="px-5 py-4 align-middle text-center">
+        <ContentPageLink event={event} title={titlePreview} />
+      </td>
     </tr>
+  );
+};
+
+const ContentPageLink = ({ event, title }: { event: AdminModerationEvent; title: string }) => {
+  if (!event.public_url) {
+    return (
+      <span
+        aria-label="Conteúdo sem página publicada"
+        className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-border bg-surface-muted text-subtle"
+        role="img"
+        title="Conteúdo bloqueado antes da publicação"
+      >
+        <ExternalLink aria-hidden className="h-4 w-4" />
+      </span>
+    );
+  }
+
+  return (
+    <Link
+      aria-label={`Abrir página do conteúdo: ${title}`}
+      className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-border bg-surface text-muted shadow-control transition hover:border-primary hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+      href={event.public_url}
+      rel="noreferrer"
+      target="_blank"
+      title="Abrir página do conteúdo"
+    >
+      <ExternalLink aria-hidden className="h-4 w-4" />
+    </Link>
   );
 };
 
@@ -501,14 +526,15 @@ const ContentSensitiveEventsTable = ({
       </div>
     ) : (
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[1040px] table-fixed border-collapse">
+        <table className="w-full min-w-[1120px] table-fixed border-collapse">
           <thead className="bg-surface-muted/70 text-left text-[0.7rem] font-medium uppercase tracking-[0.1em] text-subtle">
             <tr>
-              <th className="w-[14%] px-5 py-4 font-medium">Data</th>
-              <th className="w-[16%] px-5 py-4 font-medium">Severidade</th>
-              <th className="w-[18%] px-5 py-4 font-medium">Decisão</th>
+              <th className="w-[12%] px-5 py-4 font-medium">Data</th>
+              <th className="w-[14%] px-5 py-4 font-medium">Status</th>
+              <th className="w-[17%] px-5 py-4 font-medium">Decisão</th>
               <th className="w-[20%] px-5 py-4 font-medium">Autor</th>
-              <th className="w-[32%] px-5 py-4 font-medium">Conteúdo</th>
+              <th className="w-[29%] px-5 py-4 font-medium">Conteúdo</th>
+              <th className="w-[8%] px-5 py-4 text-center font-medium">Página</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-border/70">
@@ -980,9 +1006,21 @@ export const AdminModerationClient = ({ mode = "overview" }: { mode?: "overview"
     mode: "onChange",
     resolver: zodResolver(textualFiltersSchema),
   });
+  const communitiesInput = useMemo(() => ({ limit: 50, page: 1, sort: "name" as const }), []);
+  const communities = useAdminCommunitiesList(communitiesInput, { enabled: isTextualPage });
+  const communityOptions = useMemo(
+    () => [
+      { label: "Todas", value: "all" },
+      ...(communities.data?.data ?? []).map((community) => ({
+        label: community.name,
+        value: community.id,
+      })),
+    ],
+    [communities.data?.data],
+  );
   const watchedTextualAutoFilters = useWatch({
     control: filtersForm.control,
-    name: ["status", "decision", "community", "q"],
+    name: ["status", "decision", "community"],
   });
   const watchedTextualAutoFiltersKey = watchedTextualAutoFilters.join("|");
   const latestAppliedTextualFiltersRef = useRef(appliedTextualFilters);
@@ -994,7 +1032,6 @@ export const AdminModerationClient = ({ mode = "overview" }: { mode?: "overview"
       from: appliedTextualFilters.from,
       limit: EVENT_LIMIT,
       page,
-      q: appliedTextualFilters.q.trim() || undefined,
       status: appliedTextualFilters.status,
       to: appliedTextualFilters.to,
     }),
@@ -1006,7 +1043,7 @@ export const AdminModerationClient = ({ mode = "overview" }: { mode?: "overview"
     : null;
   const detail = useAdminModerationEvent(selectedId);
   const review = useAdminModerationReview();
-  const firstError = isTextualPage ? events.error : summary.error;
+  const firstError = isTextualPage ? (events.error ?? communities.error) : summary.error;
 
   useEffect(() => {
     latestAppliedTextualFiltersRef.current = appliedTextualFilters;
@@ -1101,6 +1138,7 @@ export const AdminModerationClient = ({ mode = "overview" }: { mode?: "overview"
           onRetry={() => {
             void summary.refetch();
             void events.refetch();
+            if (isTextualPage) void communities.refetch();
           }}
         />
       ) : null}
@@ -1119,6 +1157,8 @@ export const AdminModerationClient = ({ mode = "overview" }: { mode?: "overview"
       {isTextualPage ? (
         <section className={cn(cardClass, "overflow-hidden")}>
           <FiltersBar
+            communitiesLoading={communities.isLoading}
+            communityOptions={communityOptions}
             disabled={events.isLoading}
             form={filtersForm}
             isFetching={events.isFetching}

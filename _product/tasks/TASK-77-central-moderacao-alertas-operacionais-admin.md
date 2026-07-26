@@ -823,3 +823,37 @@ Pedido do usuario: ajustar a fila `/moderacao/operacionais` para remover a busca
 - Smoke HTTP local: `GET http://localhost:3002/moderacao/operacionais` retornou `200`.
 - API local autenticada: `operational-alerts?group=operacional&userRole=paciente&limit=50` retornou 6 registros, todos com `user.role="paciente"`; `userRole=psicologo` retornou 2 registros, todos com `user.role="psicologo"`.
 - Browser local/headless em Chrome para `/moderacao/operacionais` validou desktop 1365px e mobile: filtro **Usuario** presente, **Busca** ausente, 8 linhas reais, tag **Perfil nao publicado** singular, ausencia de **Perfis nao publicados** nas linhas, **Post sem cobertura** com **Publicado em** e sem detalhe **Sem cobertura**. Admin temporario de validacao removido ao final.
+
+## Complemento 2026-07-26 - Filtros e atalho de pagina em Conteudo sensivel
+
+Pedido do usuario: na fila `/moderacao/conteudo-sensivel`, simplificar o filtro de status, trocar o filtro livre de comunidade por dropdown, remover a busca textual, trocar a coluna **Severidade** por **Status** e adicionar uma coluna com icone para abrir a pagina do conteudo.
+
+- O dropdown **Status** agora exibe somente **Todos**, **Pendente** e **Resolvido**, mantendo **Pendente** como padrao da fila.
+- O workflow interno **Em revisao** continua existindo no detalhe/acao auditada, mas nao aparece mais como opcao do filtro principal da lista.
+- O filtro **Comunidade** passou a usar dropdown alimentado pelo endpoint real `GET /api/admin/private/communities`, com opcao **Todas** e valores por `community.id`.
+- A busca textual foi removida da barra de filtros e a query de eventos nao envia mais `q` pela UI dessa pagina.
+- A tabela substitui a coluna **Severidade** por **Status**, mantendo severidade disponivel no detalhe protegido.
+- A nova coluna **Pagina** mostra um icone com link para `public_url` quando o evento possui conteudo publicado; eventos bloqueados antes da publicacao exibem icone desabilitado sem criar link falso.
+- Nao houve alteracao de backend, Prisma schema/migrations, package novo, mock, seed ou endpoint simulado; `pnpm --dir backend db:migrate` nao se aplica.
+- Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente; a referencia visual foi a captura enviada pelo usuario e a tela local `/moderacao/conteudo-sensivel`.
+
+### Criterios deste ajuste
+
+- [x] O filtro **Status** contem somente **Todos**, **Pendente** e **Resolvido**.
+- [x] **Pendente** permanece como valor padrao do filtro **Status**.
+- [x] **Em revisao** nao aparece no dropdown principal de status.
+- [x] O filtro **Comunidade** e um dropdown com comunidades reais.
+- [x] A barra de filtros nao possui mais campo **Busca** nem envia `q` na consulta da pagina.
+- [x] A tabela mostra a coluna **Status** no lugar de **Severidade**.
+- [x] A tabela possui coluna **Pagina** com icone que abre a pagina do conteudo publicado.
+- [x] Eventos sem pagina publicada nao recebem link falso.
+- [x] O ajuste e mobile-first, sem `<img>` cru, sem package novo, sem mock e sem migration.
+
+### Validacao deste ajuste
+
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/moderacao/client.tsx"`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check`
+- Smoke HTTP local: `GET http://localhost:3002/moderacao/conteudo-sensivel` retornou `200`.
+- Browser local/headless autenticado em Chrome validou desktop 1365px e mobile 390px: status com opcoes **Todos/Pendente/Resolvido**, valor padrao `pending`, comunidade como `select` com comunidades reais, ausencia de **Busca**, headers **Data/Status/Decisao/Autor/Conteudo/Pagina**, ausencia de **Severidade**, 3 links reais para conteudo publicado e 5 icones desabilitados para eventos bloqueados, sem overflow horizontal da pagina. Admins temporarios `codex-content-sensitive-` foram removidos ao final.
