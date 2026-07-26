@@ -45,3 +45,11 @@ Respostas/comentários bloqueados continuam snapshot-only porque `post_reply` ai
 Não houve schema/migration, package novo, IA, mock, seed ou endpoint paralelo. Builder/Quick Copy não estava disponível como ferramenta callable; a execução usou a captura enviada pelo usuário e padrões Admin existentes.
 
 Validações: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check` (primeira tentativa expirou por timeout da ferramenta, segunda concluiu), `pnpm --dir admin build`, `pnpm check`, smoke HTTP 200 de `/moderacao/conteudo-sensivel` e smoke HTTP 200 da rota Admin existente de detalhe de post.
+
+## Update 2026-07-26: ícone de detalhe ativo para bloqueios
+
+A coluna de página/detalhe da central de conteúdo sensível não deve renderizar um estado inativo para conteúdo bloqueado. Quando o evento possui `admin_content_url`, o ícone abre a rota protegida do post bloqueado. Quando o evento é snapshot-only/legado e não possui `target_id`, o mesmo ícone abre o detalhe protegido do evento de moderação.
+
+Essa decisão preserva a experiência esperada do Admin sem criar backfill, seed, mock ou post artificial para registros antigos que nunca tiveram página própria. O conteúdo bloqueado continua sem `public_url`, fora de feed público/privado e com snapshot completo restrito ao Admin autenticado.
+
+Validações: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke HTTP 200 de `/moderacao/conteudo-sensivel`.

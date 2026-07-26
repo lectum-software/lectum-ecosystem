@@ -458,26 +458,35 @@ const ContentSensitiveEventRow = ({
         </button>
       </td>
       <td className="px-5 py-4 align-middle text-center">
-        <ContentPageLink event={event} title={titlePreview} />
+        <ContentPageLink event={event} onSelect={onSelect} title={titlePreview} />
       </td>
     </tr>
   );
 };
 
-const ContentPageLink = ({ event, title }: { event: AdminModerationEvent; title: string }) => {
+const ContentPageLink = ({
+  event,
+  onSelect,
+  title,
+}: {
+  event: AdminModerationEvent;
+  onSelect: (event: AdminModerationEvent) => void;
+  title: string;
+}) => {
   const href = event.public_url ?? event.admin_content_url;
   const opensAdminDetail = !event.public_url && Boolean(event.admin_content_url);
 
   if (!href) {
     return (
-      <span
-        aria-label="Conteúdo sem página publicada"
-        className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-border bg-surface-muted text-subtle"
-        role="img"
-        title="Conteúdo bloqueado antes da publicação"
+      <button
+        aria-label={`Abrir detalhe protegido do conteúdo: ${title}`}
+        className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-border bg-surface text-muted shadow-control transition hover:border-primary hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+        onClick={() => onSelect(event)}
+        title="Abrir detalhe protegido do conteúdo"
+        type="button"
       >
         <ExternalLink aria-hidden className="h-4 w-4" />
-      </span>
+      </button>
     );
   }
 

@@ -455,3 +455,22 @@ Regras anti-recriação:
 - `pnpm check`
 - Smoke HTTP local: `http://localhost:3002/moderacao/conteudo-sensivel` retornou 200.
 - Smoke HTTP local: `http://localhost:3002/comunidades/tmp-layout-denuncias-cmrgztri70/conteudo/post/tmp_den_layout_cmrgztri70_thread_01` retornou 200.
+
+## Ajuste complementar 2026-07-26 - Ícone de detalhe habilitado para bloqueios
+
+- Pedido do usuário: quando um post for bloqueado automaticamente, o ícone de visualizar detalhes na central de conteúdo sensível deve estar habilitado.
+- Para eventos com `admin_content_url`, o ícone continua abrindo a rota Admin protegida do post bloqueado em `/comunidades/[slug]/conteudo/post/[id]`.
+- Para eventos bloqueados legados/snapshot-only sem `target_id` e sem URL de post, o ícone deixa de parecer inativo e abre o detalhe protegido do próprio evento de moderação, sem inventar post, seed, backfill ou mock.
+- O ajuste é somente de UX na central Admin; não altera contrato de API, schema Prisma, migration, package, moderação determinística ou exposição pública do conteúdo bloqueado.
+- Builder/Quick Copy não esteve disponível como ferramenta callable; a referência usada foi a captura enviada pelo usuário e os padrões Admin existentes.
+
+### Critério de aceite complementar
+
+- [x] O ícone da coluna de página/detalhe fica acionável para conteúdo bloqueado, navegando para o detalhe Admin do post quando houver `admin_content_url` e abrindo o detalhe protegido do evento quando o registro for snapshot-only.
+
+### Validação executada para este ajuste
+
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check`
+- Smoke HTTP local: `http://localhost:3002/moderacao/conteudo-sensivel` retornou 200.
