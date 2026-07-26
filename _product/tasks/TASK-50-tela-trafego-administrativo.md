@@ -439,3 +439,19 @@ Validacao desta execucao complementar:
 - `pnpm check` — OK.
 - API real local em `GET /api/admin/private/traffic/summary` com admin real transitorio removido apos o teste: `pageviews=519`, `pages_per_session=2.18`, `entry_pages.total=238`.
 - Browser local/headless em `http://localhost:3002/trafego` com admin real transitorio removido apos o teste: validou o bloco **Detalhes da navegacao por paginas**, a lista **Principais paginas de entrada**, os indicadores **Visualizacoes de paginas**, **Media de paginas por sessao** e **Sessoes com pagina de entrada**, e viewports 1366x900 e 390x844 sem overflow horizontal.
+
+## Execucao complementar - metricas de qualidade no bloco de navegacao (2026-07-26)
+
+- Removido do bloco **Detalhes da navegacao por paginas** o indicador **Sessoes com pagina de entrada**, pois o total de entradas ja aparece no cabecalho/lista de **Principais paginas de entrada**.
+- Adicionados ao mesmo bloco os indicadores **Tempo medio na plataforma**, **Taxa de retorno** e **Sessoes com acao importante**, reutilizando os agregados reais `average_time`, `return_rate` e `important_action_sessions` ja retornados em `quality.items`.
+- O bloco continua sem mock, sem endpoint novo, sem alteracao de contrato HTTP, sem Prisma schema/migration, sem packages novos e sem backfill.
+- Builder/Quick Copy nao estava exposto como ferramenta callable nesta execucao; as referencias visuais usadas foram `_product/proto/admin/Tráfego.png` e a captura enviada pelo usuario.
+- ADR atualizado: `adrs/0323-trafego-visao-geral-timeline.md`.
+
+Validacao desta execucao complementar:
+
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/trafego/client.tsx"` — OK.
+- `pnpm --dir admin check` — OK apos reexecucao; a primeira tentativa excedeu o timeout operacional local sem emitir erro.
+- `pnpm --dir admin build` — OK.
+- `pnpm check` — OK.
+- Browser local/headless em `http://localhost:3002/trafego` com admin real transitorio removido apos o teste: validou presenca de **Visualizacoes de paginas**, **Media de paginas por sessao**, **Tempo medio na plataforma**, **Taxa de rejeicao**, **Taxa de retorno** e **Sessoes com acao importante**, ausencia de **Sessoes com pagina de entrada** como card, e viewports 1366x900 e 390x844 sem overflow horizontal.

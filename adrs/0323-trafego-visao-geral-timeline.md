@@ -38,6 +38,13 @@ campos de data e cards que exibem/ocultam curvas.
   `pages_per_session`, `entry_pages.total`, `bounce_rate` e `entry_pages.items`.
 - A lista de **Páginas de entrada** deixa a grade inferior e passa a compor esse bloco para manter a
   leitura de navegação junto ao gráfico de comportamento, sem alterar contrato HTTP ou fórmulas.
+- O indicador **Sessões com página de entrada** deixa de ser exibido como card nesse bloco, porque
+  duplicava o total já apresentado na lista de **Principais páginas de entrada** e podia sugerir
+  incorretamente que nem toda sessão possui uma entrada.
+- O bloco passa a reaproveitar os indicadores reais de qualidade `average_time`, `return_rate` e
+  `important_action_sessions` como cards: **Tempo médio na plataforma**, **Taxa de retorno** e
+  **Sessões com ação importante**. Esses cards usam `quality.items`; não criam endpoint, fórmula,
+  backfill ou contrato novo.
 - Nenhum pacote novo, mock, endpoint simulado, schema Prisma ou migration foi adicionado.
 
 ## Consequências
@@ -78,3 +85,8 @@ campos de data e cards que exibem/ocultam curvas.
   do gráfico da Visão geral, **Principais páginas de entrada**, **Visualizações de páginas**,
   **Média de páginas por sessão**, **Sessões com página de entrada** e viewports 1366x900 e 390x844
   sem overflow horizontal.
+- Browser local/headless complementar em `http://localhost:3002/trafego` — OK: validou os cards
+  **Visualizações de páginas**, **Média de páginas por sessão**, **Tempo médio na plataforma**,
+  **Taxa de rejeição**, **Taxa de retorno** e **Sessões com ação importante**, confirmou a remoção
+  do card **Sessões com página de entrada** e manteve `horizontalOverflowPx=0` em 1366x900 e
+  390x844.

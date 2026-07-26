@@ -700,7 +700,10 @@ const NavigationMetricCard = ({
 const PageNavigationPanel = ({ summary }: { summary: AdminTrafficSummary }) => {
   const pageviewsMetric = findMetric(summary, "pageviews");
   const pagesPerSessionMetric = findMetric(summary, "pages_per_session");
+  const averageTimeMetric = findMetric(summary, "average_time");
   const bounceRateMetric = findMetric(summary, "bounce_rate");
+  const returnRateMetric = findMetric(summary, "return_rate");
+  const importantActionSessionsMetric = findMetric(summary, "important_action_sessions");
   const topEntryPage = summary.entry_pages.items[0] ?? null;
 
   const cards = [
@@ -719,11 +722,11 @@ const PageNavigationPanel = ({ summary }: { summary: AdminTrafficSummary }) => {
       value: pagesPerSessionMetric ? formatMetricValue(pagesPerSessionMetric) : "Indisponível",
     },
     {
-      description: "Sessões cujo primeiro acesso foi identificado como página de entrada.",
-      id: "entry_sessions",
-      metric: null,
-      title: "Sessões com página de entrada",
-      value: numberFormatter.format(summary.entry_pages.total),
+      description: "Tempo médio por pageview com duração registrada por heartbeat/beacon.",
+      id: "average_time",
+      metric: averageTimeMetric,
+      title: "Tempo médio na plataforma",
+      value: averageTimeMetric ? formatMetricValue(averageTimeMetric) : "Indisponível",
     },
     {
       description: "Sessões com uma única pageview e sem ação importante registrada.",
@@ -731,6 +734,22 @@ const PageNavigationPanel = ({ summary }: { summary: AdminTrafficSummary }) => {
       metric: bounceRateMetric,
       title: "Taxa de rejeição",
       value: bounceRateMetric ? formatMetricValue(bounceRateMetric) : "Indisponível",
+    },
+    {
+      description: "Visitantes com sessão anterior ou mais de uma sessão no período.",
+      id: "return_rate",
+      metric: returnRateMetric,
+      title: "Taxa de retorno",
+      value: returnRateMetric ? formatMetricValue(returnRateMetric) : "Indisponível",
+    },
+    {
+      description: "Sessões com pelo menos uma ação importante registrada.",
+      id: "important_action_sessions",
+      metric: importantActionSessionsMetric,
+      title: "Sessões com ação importante",
+      value: importantActionSessionsMetric
+        ? formatMetricValue(importantActionSessionsMetric)
+        : "Indisponível",
     },
   ];
 
