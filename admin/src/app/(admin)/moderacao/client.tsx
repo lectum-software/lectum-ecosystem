@@ -483,7 +483,7 @@ const ContentPageLink = ({ event, title }: { event: AdminModerationEvent; title:
   return (
     <Link
       aria-label={`Abrir detalhes administrativos do conteúdo: ${title}`}
-      className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-primary/30 bg-primary-soft text-primary shadow-control transition hover:border-primary hover:bg-surface hover:text-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+      className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-border bg-surface text-foreground shadow-control transition hover:border-primary hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background"
       href={href}
       title="Abrir detalhes administrativos do conteúdo"
     >

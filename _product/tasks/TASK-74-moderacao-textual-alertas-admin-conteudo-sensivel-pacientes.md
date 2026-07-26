@@ -462,19 +462,20 @@ Regras anti-recriação:
 - Complemento do usuário: o clique no ícone de "ir" deve levar à página Admin de detalhes do conteúdo; não deve abrir modal e não deve levar para o post no ambiente público.
 - Para eventos com `admin_content_url`, o ícone abre sempre a rota Admin protegida do conteúdo em `/comunidades/[slug]/conteudo/[type]/[id]`, inclusive quando também existir `public_url`.
 - Para eventos legados/snapshot-only sem `target_id` e sem `admin_content_url`, o ícone permanece sem navegação porque não existe página própria de conteúdo para abrir; o ajuste não inventa post, seed, backfill, mock ou URL pública.
-- Ajuste visual complementar: quando `admin_content_url` existe, o ícone habilitado usa estado primário (`bg-primary-soft text-primary`) para não parecer indisponível na lista.
+- Ajuste visual complementar: quando `admin_content_url` existe, o ícone habilitado usa a mesma paleta do atalho de detalhes de Operacionais (`bg-surface text-foreground`, com hover primário), mantendo a ação disponível sem destoar da tabela Admin.
 - O ajuste é somente de UX na central Admin; não altera contrato de API, schema Prisma, migration, package, moderação determinística ou exposição pública do conteúdo bloqueado.
 - Builder/Quick Copy não esteve disponível como ferramenta callable; a referência usada foi a captura enviada pelo usuário e os padrões Admin existentes.
 
 ### Critério de aceite complementar
 
-- [x] O ícone da coluna de página/detalhe usa apenas `admin_content_url`, navegando para o detalhe Admin do conteúdo quando disponível, sem abrir modal e sem usar `public_url`, com aparência visual clara de ação habilitada.
+- [x] O ícone da coluna de página/detalhe usa apenas `admin_content_url`, navegando para o detalhe Admin do conteúdo quando disponível, sem abrir modal e sem usar `public_url`, com a mesma paleta do ícone de detalhes em Operacionais.
 
 ### Validação executada para este ajuste
 
-- `pnpm --dir admin check`
+- `pnpm --dir admin check` (primeira tentativa expirou por timeout da ferramenta; a repetição concluiu com sucesso)
 - `pnpm --dir admin build`
 - `pnpm check`
 - Smoke HTTP local: `http://localhost:3002/moderacao/conteudo-sensivel` retornou 200.
+- Smoke HTTP local: `http://localhost:3002/moderacao/operacionais` retornou 200.
 - Smoke HTTP local: `http://localhost:3002/comunidades/tmp-layout-denuncias-cmrgztri70/conteudo/post/tmp_den_layout_cmrgztri70_thread_01` retornou 200.
 - Smoke HTTP local: `http://localhost:3002/comunidades/visualizacao-moderacao/conteudo/post/visual-admin-detail-link-blocked-post` retornou 200.
