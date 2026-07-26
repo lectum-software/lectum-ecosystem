@@ -216,7 +216,7 @@ type AdminContentAnalyticsDetail = {
   content: {
     id: string;
     type: "post" | "reply";
-    status: "published" | "removed";
+    status: "published" | "removed" | "blocked";
     title: string | null;
     excerpt: string;
     body?: string; // somente se já houver padrão seguro para detalhe protegido
@@ -522,3 +522,29 @@ Regras anti-recriação:
 - `pnpm --dir admin check` retornou sucesso; há warning pré-existente em `admin/src/app/(admin)/comunidades/client.tsx` sobre import não usado fora do escopo deste ajuste.
 - `pnpm --dir admin build`
 - Smoke HTTP local da rota Admin `http://localhost:3002/comunidades/ansiedade-em-equilibrio/conteudo/comment/cmrb6fn6f000qy0uh0p3nae0u` retornou 200.
+
+## Ajuste complementar 2026-07-26 - Conteudo bloqueado no detalhe Admin
+
+- Pedido do usuario: reaproveitar a rota Admin existente `/comunidades/[slug]/conteudo/post/[id]` para exibir posts bloqueados automaticamente.
+- O contrato do detalhe passa a aceitar `content.status="blocked"` para `community_post.status="bloqueado"`, com `public_url=null` e alerta operacional de indisponibilidade publica.
+- A pagina mostra o corpo do post bloqueado com badge **Bloqueado automaticamente** e sem acao de remocao, porque o conteudo ja nao esta publicado.
+- A central de moderacao pode enviar o Admin direto para esse detalhe quando o evento possuir `admin_content_url`.
+- Sem schema/migration, endpoint paralelo, package novo, mock, seed ou uso de `<img>` cru.
+- Builder/Quick Copy nao esteve disponivel como ferramenta callable; foram usados a captura enviada pelo usuario e os padroes Admin existentes.
+
+### Criterios de aceite complementares
+
+- [x] O contrato Admin de detalhe aceita `status="blocked"`.
+- [x] O detalhe Admin renderiza conteudo/body de post bloqueado.
+- [x] O detalhe Admin oculta URL publica e acao de remocao para conteudo bloqueado.
+- [x] A central de moderacao abre a rota de detalhe Admin quando houver `admin_content_url`.
+
+### Validacao executada para este ajuste
+
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir admin check` (primeira tentativa expirou por timeout da ferramenta; a repeticao concluiu com sucesso)
+- `pnpm --dir admin build`
+- `pnpm check`
+- Smoke HTTP local: `http://localhost:3002/moderacao/conteudo-sensivel` retornou 200.
+- Smoke HTTP local: `http://localhost:3002/comunidades/tmp-layout-denuncias-cmrgztri70/conteudo/post/tmp_den_layout_cmrgztri70_thread_01` retornou 200.

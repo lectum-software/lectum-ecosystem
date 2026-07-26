@@ -34,7 +34,10 @@ import type {
   ICommunitySuggestionDTO,
   ICommunityTopMentorsDTO,
 } from "../DTOs/ICommunityDTO";
-import type { ICommunityRepository } from "./interfaces/ICommunityRepository";
+import type {
+  CommunityPostCreationOptions,
+  ICommunityRepository,
+} from "./interfaces/ICommunityRepository";
 
 const DEFAULT_LIMIT = 20;
 const MAX_LIMIT = 50;
@@ -2311,7 +2314,10 @@ export class CommunityRepository implements ICommunityRepository {
     };
   }
 
-  async createPost(data: ICommunityCreatePostDTO): Promise<CommunityPostDTO | null> {
+  async createPost(
+    data: ICommunityCreatePostDTO,
+    options: CommunityPostCreationOptions = {},
+  ): Promise<CommunityPostDTO | null> {
     const community = await this.repository.findFirst({
       where: {
         slug: data.p.slug,
@@ -2328,6 +2334,7 @@ export class CommunityRepository implements ICommunityRepository {
     const isPsychologist = data.auth.role === "psicologo";
     const mediaItems = data.b.mediaItems ?? [];
     const firstMediaItem = mediaItems[0];
+    const status = options.status ?? "publicado";
     const post = await prisma.$transaction(async (transaction) => {
       await ensureCommunityMembership({
         client: transaction,
@@ -2354,7 +2361,7 @@ export class CommunityRepository implements ICommunityRepository {
                 }
               : undefined,
           anonymous: isPsychologist ? false : data.b.anonymous === true,
-          status: "publicado",
+          status,
         },
         select: postSelect,
       });

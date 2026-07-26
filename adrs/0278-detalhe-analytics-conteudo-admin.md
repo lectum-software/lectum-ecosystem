@@ -75,3 +75,11 @@ This is a visual-only refinement requested from the Admin content-detail screen.
 For `comment`/`reply` detail pages, the Admin preview now omits the duplicated title and the origin-post card from the main preview. The detail keeps the author, metrics, public action and the written body/excerpt, while posts continue to show their title and origin context when applicable.
 
 The content-type label now differentiates non-post content by author role: psychologist-authored content is shown as **Resposta**, and patient-authored content is shown as **Comentário**. This is a UI labeling/presentation decision only; it does not change the backend target normalization, metrics, moderation, retention collection or API contract.
+
+## Update 2026-07-26: status blocked no detalhe de conteudo
+
+A rota Admin de detalhe `/comunidades/[slug]/conteudo/[type]/[id]` passa a aceitar `content.status="blocked"` para posts internos `community_post.status="bloqueado"` gerados pela moderacao textual deterministica.
+
+Para esse status, o detalhe exibe o corpo do post e badge **Bloqueado automaticamente**, mantem `public_url=null`, mostra alerta operacional de indisponibilidade publica e oculta a acao de remocao, pois o conteudo ja nao esta publicado. A central de moderacao usa `admin_content_url` para apontar diretamente para esse detalhe quando o evento tiver `target_id` real.
+
+A decisao reaproveita o endpoint e a pagina existentes da TASK-75 em vez de criar uma tela paralela de conteudo bloqueado. Nao houve schema/migration, package novo, mock, seed ou backfill.

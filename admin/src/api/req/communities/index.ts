@@ -547,7 +547,7 @@ export type AdminCommunityContentQuery = AdminCommunityPaginationQuery & {
   from?: string;
   period?: "7d" | "30d" | "90d" | "all" | "custom" | "month" | "today" | "week" | "year";
   sort?: "engagement" | "oldest" | "recent";
-  status?: "all" | "published" | "removed";
+  status?: "all" | "blocked" | "published" | "removed";
   to?: string;
   type?:
     | "all"
@@ -605,7 +605,7 @@ export type AdminCommunityContentItem = {
   parent_post_title: string | null;
   post_id: string;
   public_url: string;
-  status: "published" | "removed";
+  status: "blocked" | "published" | "removed";
   title: string | null;
   type: "comment" | "post";
 };
@@ -644,7 +644,7 @@ export type AdminCommunityContentAnalyticsDetail = {
     parent_post_title: string | null;
     post_id: string;
     public_url: string | null;
-    status: "published" | "removed";
+    status: "blocked" | "published" | "removed";
     title: string | null;
     type: "comment" | "post";
   };

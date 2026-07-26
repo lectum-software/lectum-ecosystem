@@ -228,8 +228,8 @@ Regras de persistência:
 
 - `allow` não gera evento.
 - `allow_sensitive` gera evento com `target_id` do post/reply publicado.
-- `block` gera evento sem post/reply publicado; usar `target_type` de submissão, por exemplo `submitted_post` ou `submitted_reply`.
-- `safety_hold` gera evento sem post/reply publicado e severidade urgente.
+- `block` de post raiz persiste `community_post.status="bloqueado"` para detalhe protegido no Admin e gera evento com `target_type="community_post"`/`target_id`; `block` de resposta/comentario e eventos legados seguem snapshot-only com `submitted_reply`/`submitted_post` quando nao houver conteudo interno persistido.
+- `safety_hold` segue a mesma politica de persistencia de `block`: post raiz vira `community_post.status="bloqueado"` interno/Admin, resposta/comentario segue snapshot-only; sempre usa severidade urgente.
 - Para eventos sem conteúdo publicado, persistir snapshot suficiente para revisão administrativa.
 - Evitar expor `content_snapshot` em listas; listas devem usar `content_excerpt`. Detalhe administrativo pode mostrar snapshot completo somente em rota protegida Admin.
 - Não gravar conteúdo sensível em logs de aplicação, mensagens de erro, analytics ou notificações push.
@@ -249,8 +249,8 @@ Fluxo esperado para post:
 3. Se paciente, classificar `title + content`.
 4. Se `allow`, criar post normalmente.
 5. Se `allow_sensitive`, criar post e evento de moderação em transação ou sequência segura.
-6. Se `block`, não criar post; criar evento e retornar erro de domínio 422.
-7. Se `safety_hold`, não criar post; criar evento urgente e retornar erro de domínio 422 com mensagem de segurança.
+6. Se `block`, criar post raiz interno com `status="bloqueado"`, criar evento apontando para esse post e retornar erro de dominio 422 ao paciente; nao criar conteudo publico nem notificar a comunidade.
+7. Se `safety_hold`, criar post raiz interno com `status="bloqueado"`, criar evento urgente apontando para esse post e retornar erro de dominio 422 com mensagem de seguranca; nao criar conteudo publico nem notificar a comunidade.
 8. Garantir que notificação de novo post para comunidade só dispare quando o post foi realmente publicado.
 
 Fluxo equivalente para resposta/comentário:
@@ -364,7 +364,7 @@ Regras anti-recriação:
 - [x] Conteúdo com indício de risco imediato, plano ou instrução de autolesão/suicídio não é publicado, retorna mensagem de segurança e gera alerta Admin `safety_hold` urgente.
 - [x] Conteúdo `allow` continua publicando sem evento de moderação.
 - [x] Conteúdo `allow_sensitive` publica e aparece no Admin como pendente/não revisado.
-- [x] Conteúdo `block` e `safety_hold` não cria `community_post`/`post_reply`, mas cria evento de moderação com snapshot para revisão Admin.
+- [x] Conteúdo `block` e `safety_hold` de post raiz cria `community_post.status="bloqueado"` interno/Admin e evento de moderação apontando para o post; respostas/comentários bloqueados não criam `post_reply` e ficam como snapshot protegido.
 - [x] O Admin exibe contagem/alerta de eventos de moderação pendentes, com destaque para urgentes.
 - [x] O Admin possui lista/central de eventos com filtros por status, decisão, categoria, severidade, comunidade e período.
 - [x] O Admin consegue marcar evento como revisado/resolvido com auditoria.
@@ -423,6 +423,35 @@ Regras anti-recriação:
 - O app do paciente trata os erros `content_moderation_blocked` e `content_moderation_safety_hold` mantendo o rascunho no formul?rio/composer.
 - Builder/Quick Copy n?o estava dispon?vel como ferramenta execut?vel; a UI foi baseada nos padr?es locais do Admin e nas imagens exportadas `_product/proto/admin/Comunidades/Comunidades - Dashboard.png` e `_product/proto/admin/Notifica??es.png`.
 - ADR criado: `adrs/0270-moderacao-textual-deterministica-alertas-admin.md`.
+- Complemento 2026-07-26: posts raiz bloqueados/segurados pela moderacao textual agora sao persistidos internamente como `community_post.status="bloqueado"`, sem publicacao/feed/notificacao, e o evento Admin aponta para a pagina protegida `/comunidades/[slug]/conteudo/post/[id]`. Respostas/comentarios bloqueados permanecem snapshot-only por nao haver status proprio em `post_reply`.
 - Comandos executados: `pnpm --dir backend db:migrate` (primeira tentativa expirou aguardando nome), `pnpm --dir backend db:migrate -- --name add_content_moderation_events`, `pnpm --dir backend exec tsx src/operations/moderation/check-content-moderation.ts`, `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check`.
 
 - Smoke local HTTP executado contra dev servers existentes: `http://localhost:3002/moderacao`, `http://localhost:3002/comunidades` e `http://localhost:3000/app/community/post/new` retornaram 200. Sem ferramenta de browser autenticado/interativo neste ambiente para publicar posts reais pela UI; valida??o comportamental foi coberta por helper automatizado, builds e rotas reais.
+
+## Ajuste complementar 2026-07-26 - Detalhe Admin para post bloqueado
+
+- Pedido do usuario: reaproveitar a pagina Admin existente de detalhes do post para exibir o conteudo de posts bloqueados automaticamente.
+- Posts raiz de pacientes classificados como `block` ou `safety_hold` continuam fora das listas/detalhes privados do paciente e fora do publico, mas passam a ser persistidos como `community_post.status="bloqueado"` apenas para auditoria interna.
+- O evento `content_moderation_event` desses posts passa a usar `target_type="community_post"` e `target_id` do post interno, permitindo que a central de moderacao abra `/comunidades/[slug]/conteudo/post/[id]`.
+- O backend mantem `public_url=null` para decisoes `block`/`safety_hold`; o detalhe Admin mostra badge de bloqueio, alerta operacional e nao oferece acao de remocao publica para conteudo ja bloqueado.
+- Respostas/comentarios bloqueados continuam snapshot-only porque `post_reply` nao possui status de bloqueio; ampliar esse comportamento exigiria nova decisao/migration.
+- Nao houve schema Prisma/migration, package novo, IA, mock, seed ou endpoint paralelo. Builder/Quick Copy nao esteve disponivel como ferramenta callable; foram usados a captura enviada pelo usuario e os padroes Admin existentes.
+
+### Criterios de aceite complementares
+
+- [x] Post raiz bloqueado/segurado e persistido internamente como `community_post.status="bloqueado"`.
+- [x] Post bloqueado nao entra em feed/detalhe publico ou privado do paciente, nao recebe URL publica e nao dispara notificacao de nova postagem.
+- [x] Evento de moderacao do post bloqueado aponta para o `community_post` interno com `target_id`.
+- [x] A central Admin de conteudo sensivel abre a pagina de detalhe administrativo do post bloqueado.
+- [x] A pagina de detalhe Admin exibe o corpo do post bloqueado, status de bloqueio e indisponibilidade publica.
+- [x] Respostas/comentarios bloqueados permanecem snapshot-only, sem migration em `post_reply`.
+
+### Validação executada para este ajuste
+
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir admin check` (primeira tentativa expirou por timeout da ferramenta; a repetição concluiu com sucesso)
+- `pnpm --dir admin build`
+- `pnpm check`
+- Smoke HTTP local: `http://localhost:3002/moderacao/conteudo-sensivel` retornou 200.
+- Smoke HTTP local: `http://localhost:3002/comunidades/tmp-layout-denuncias-cmrgztri70/conteudo/post/tmp_den_layout_cmrgztri70_thread_01` retornou 200.

@@ -282,12 +282,37 @@ export const createPost = async (data: ICommunityCreatePostDTO) => {
     });
 
     if (moderation.decision === "block" || moderation.decision === "safety_hold") {
+      const blockedPost = await repository.createPost(
+        {
+          ...data,
+          b: {
+            title: trimmedTitle,
+            content: trimmedContent,
+            mediaType: undefined,
+            mediaUrl: undefined,
+            mediaItems: [],
+            anonymous: data.b.anonymous === true,
+          },
+        },
+        { status: "bloqueado" },
+      );
+
+      if (!blockedPost) {
+        return {
+          status: 404,
+          ...error("not_found", {
+            model: "community",
+          }),
+        };
+      }
+
       await recordContentModerationEvent({
         authorId: data.auth.id,
-        communityId: moderationCommunity.id,
+        communityId: blockedPost.community.id,
         content: trimmedContent,
         result: moderation,
-        targetType: "submitted_post",
+        targetId: blockedPost.id,
+        targetType: "community_post",
         title: trimmedTitle,
       });
 

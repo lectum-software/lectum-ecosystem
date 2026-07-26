@@ -98,6 +98,40 @@ const formatDateTime = (value?: string | null) => {
   return dateTimeFormatter.format(date);
 };
 
+type ContentPublicationStatus = AdminCommunityContentAnalyticsDetail["content"]["status"];
+
+const contentStatusCopy: Record<
+  ContentPublicationStatus,
+  { className: string; createdAtLabel: string; label: string }
+> = {
+  blocked: {
+    className: "border-danger/20 bg-danger/10 text-danger",
+    createdAtLabel: "Bloqueado automaticamente em",
+    label: "Bloqueado automaticamente",
+  },
+  published: {
+    className: "border-primary/20 bg-primary-soft text-primary",
+    createdAtLabel: "Publicado em",
+    label: "Publicado",
+  },
+  removed: {
+    className: "border-border bg-surface-muted text-muted",
+    createdAtLabel: "Criado em",
+    label: "Removido",
+  },
+};
+
+const ContentStatusBadge = ({ status }: { status: ContentPublicationStatus }) => (
+  <span
+    className={cn(
+      "inline-flex min-h-8 items-center rounded-full border px-3 py-1 text-xs font-black",
+      contentStatusCopy[status].className,
+    )}
+  >
+    {contentStatusCopy[status].label}
+  </span>
+);
+
 const normalizeTargetType = (value: string): ContentDetailTargetType | null => {
   if (value === "post" || value === "comment" || value === "reply") return value;
 
@@ -422,13 +456,17 @@ const AuthorIdentity = ({
 
 const HeaderSection = ({ detail }: { detail: AdminCommunityContentAnalyticsDetail }) => (
   <section className={cn(cardClass, "p-5")}>
-    <div className="min-w-0">
-      <h1 className="max-w-4xl text-2xl font-black leading-tight tracking-[-0.03em] text-foreground sm:text-3xl">
-        Detalhes do conteúdo
-      </h1>
-      <p className="mt-2 text-sm font-bold text-muted">
-        Publicado em {formatDateTime(detail.content.created_at)}
-      </p>
+    <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+      <div className="min-w-0">
+        <h1 className="max-w-4xl text-2xl font-black leading-tight tracking-[-0.03em] text-foreground sm:text-3xl">
+          Detalhes do conteúdo
+        </h1>
+        <p className="mt-2 text-sm font-bold text-muted">
+          {contentStatusCopy[detail.content.status].createdAtLabel}{" "}
+          {formatDateTime(detail.content.created_at)}
+        </p>
+      </div>
+      <ContentStatusBadge status={detail.content.status} />
     </div>
   </section>
 );
@@ -575,6 +613,16 @@ const PreviewSection = ({ detail }: { detail: AdminCommunityContentAnalyticsDeta
           <span aria-hidden>·</span>
           <span>{detail.community.name}</span>
         </div>
+        {detail.content.status === "blocked" ? (
+          <div className="mt-4 flex gap-3 rounded-2xl border border-danger/20 bg-danger/10 p-4 text-sm font-bold leading-6 text-danger">
+            <AlertTriangle aria-hidden className="mt-0.5 h-4 w-4 shrink-0" />
+            <p>
+              Este post foi bloqueado automaticamente e está visível apenas no Admin. Ele não
+              aparece no feed público, não recebe interações públicas e não disparou notificação de
+              nova postagem.
+            </p>
+          </div>
+        ) : null}
         <div className="mt-4">
           <AuthorIdentity author={detail.author} />
         </div>
@@ -1189,6 +1237,14 @@ const RemovalSection = ({
   slug: string;
 }) => {
   const [open, setOpen] = useState(false);
+  const unavailableActionLabel =
+    detail.content.status === "blocked"
+      ? "Conteúdo bloqueado automaticamente"
+      : "Conteúdo já removido";
+  const actionDescription =
+    detail.content.status === "blocked"
+      ? "Conteúdo bloqueado segue pela central de moderação e permanece indisponível no público."
+      : "Remoção usa a mutation auditada existente, sem endpoint paralelo.";
 
   return (
     <section className={cn(cardClass, "p-5")} aria-labelledby="content-detail-removal-title">
@@ -1197,9 +1253,7 @@ const RemovalSection = ({
           <h2 className="text-xl font-black text-foreground" id="content-detail-removal-title">
             Ações administrativas
           </h2>
-          <p className="mt-1 text-sm font-bold text-muted">
-            Remoção usa a mutation auditada existente, sem endpoint paralelo.
-          </p>
+          <p className="mt-1 text-sm font-bold text-muted">{actionDescription}</p>
         </div>
         {detail.content.status === "published" ? (
           <button
@@ -1212,7 +1266,7 @@ const RemovalSection = ({
           </button>
         ) : (
           <span className="rounded-full bg-surface-muted px-3 py-1 text-xs font-black text-muted">
-            Conteúdo já removido
+            {unavailableActionLabel}
           </span>
         )}
       </div>

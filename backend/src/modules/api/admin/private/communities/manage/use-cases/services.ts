@@ -546,6 +546,14 @@ const contentIsRemoved = (
   return item.deleted || item.post.deleted || item.post.status === "removido";
 };
 
+const contentIsBlocked = (
+  item: AdminCommunityContentPostRecord | AdminCommunityContentReplyRecord,
+) => {
+  if ("status" in item) return !item.deleted && item.status === "bloqueado";
+
+  return !item.deleted && !item.post.deleted && item.post.status === "bloqueado";
+};
+
 type AdminCommunityContentAuthor =
   | AdminCommunityContentPostRecord["author"]
   | AdminCommunityContentReplyRecord["author"]
@@ -666,6 +674,11 @@ const mapPostContent = (
   const contentKind = contentKindFor("post", post.author, post.anonymous);
   const anonymous = post.anonymous && post.author.role !== "psicologo";
   const targetKey = contentTargetKey("post", post.id);
+  const status = contentIsRemoved(post)
+    ? "removed"
+    : contentIsBlocked(post)
+      ? "blocked"
+      : "published";
 
   return {
     author: mapContentAuthor(post.author, anonymous),
@@ -690,7 +703,7 @@ const mapPostContent = (
     parent_post_title: null,
     post_id: post.id,
     public_url: `/community/${community.slug}/post/${post.id}`,
-    status: contentIsRemoved(post) ? "removed" : "published",
+    status,
     title: post.title,
     type: "post",
   };
@@ -703,6 +716,11 @@ const mapReplyContent = (
 ): AdminCommunityContentItemDTO => {
   const contentKind = contentKindFor("comment", reply.author);
   const targetKey = contentTargetKey("reply", reply.id);
+  const status = contentIsRemoved(reply)
+    ? "removed"
+    : contentIsBlocked(reply)
+      ? "blocked"
+      : "published";
   const originPreview: AdminCommunityContentItemDTO["origin_preview"] = reply.parent_reply_id
     ? {
         excerpt: excerpt(reply.parent_reply?.content),
@@ -740,7 +758,7 @@ const mapReplyContent = (
     parent_post_title: reply.post.title,
     post_id: reply.post_id,
     public_url: replyPublicUrl(community, reply),
-    status: contentIsRemoved(reply) ? "removed" : "published",
+    status,
     title: reply.title,
     type: "comment",
   };
@@ -3536,7 +3554,7 @@ export const removeContent = async (data: IAdminCommunityRemoveContentDTO): Prom
       post,
       await buildContentMetricsMaps(repository, [post.id], []),
     );
-    if (item.status === "removed") {
+    if (item.status !== "published") {
       return {
         status: 409,
         ...error("admin_community_content_remove_unavailable", {}),
@@ -3577,7 +3595,7 @@ export const removeContent = async (data: IAdminCommunityRemoveContentDTO): Prom
     reply,
     await buildContentMetricsMaps(repository, [], [reply.id]),
   );
-  if (item.status === "removed") {
+  if (item.status !== "published") {
     return {
       status: 409,
       ...error("admin_community_content_remove_unavailable", {}),

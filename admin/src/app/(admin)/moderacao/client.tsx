@@ -113,8 +113,8 @@ const reasonLabels: Record<string, string> = {
   spam_or_scam_blocked: "Spam ou golpe",
 };
 const targetLabels: Record<string, string> = {
-  community_post: "Post publicado",
-  post_reply: "Resposta publicada",
+  community_post: "Post",
+  post_reply: "Resposta",
   submitted_post: "Post bloqueado antes da publicação",
   submitted_reply: "Resposta bloqueada antes da publicação",
 };
@@ -465,7 +465,10 @@ const ContentSensitiveEventRow = ({
 };
 
 const ContentPageLink = ({ event, title }: { event: AdminModerationEvent; title: string }) => {
-  if (!event.public_url) {
+  const href = event.public_url ?? event.admin_content_url;
+  const opensAdminDetail = !event.public_url && Boolean(event.admin_content_url);
+
+  if (!href) {
     return (
       <span
         aria-label="Conteúdo sem página publicada"
@@ -480,12 +483,12 @@ const ContentPageLink = ({ event, title }: { event: AdminModerationEvent; title:
 
   return (
     <Link
-      aria-label={`Abrir página do conteúdo: ${title}`}
+      aria-label={`${opensAdminDetail ? "Abrir detalhe administrativo" : "Abrir página do conteúdo"}: ${title}`}
       className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-border bg-surface text-muted shadow-control transition hover:border-primary hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-      href={event.public_url}
-      rel="noreferrer"
-      target="_blank"
-      title="Abrir página do conteúdo"
+      href={href}
+      rel={opensAdminDetail ? undefined : "noreferrer"}
+      target={opensAdminDetail ? undefined : "_blank"}
+      title={opensAdminDetail ? "Abrir detalhe administrativo" : "Abrir página do conteúdo"}
     >
       <ExternalLink aria-hidden className="h-4 w-4" />
     </Link>
@@ -692,6 +695,15 @@ const Detail = ({
         </div>
         {event.admin_note ? <Info label="Nota administrativa" value={event.admin_note} /> : null}
         <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+          {event.admin_content_url ? (
+            <Link
+              className="inline-flex h-11 items-center justify-center gap-2 rounded-control border border-border bg-surface px-4 text-sm font-black text-foreground transition hover:border-primary hover:text-primary"
+              href={event.admin_content_url}
+            >
+              <ExternalLink aria-hidden className="h-4 w-4" />
+              Abrir detalhes do conteúdo
+            </Link>
+          ) : null}
           {event.public_url ? (
             <Link
               className="inline-flex h-11 items-center justify-center gap-2 rounded-control border border-border bg-surface px-4 text-sm font-black text-foreground transition hover:border-primary hover:text-primary"
@@ -701,11 +713,11 @@ const Detail = ({
               <ExternalLink aria-hidden className="h-4 w-4" />
               Abrir post publicado
             </Link>
-          ) : (
+          ) : !event.admin_content_url ? (
             <span className="inline-flex min-h-11 items-center rounded-control border border-border bg-surface-muted px-4 text-sm font-black text-muted">
               Bloqueado antes da publicação
             </span>
-          )}
+          ) : null}
           {event.status !== "resolved" ? (
             <button
               className="inline-flex h-11 items-center justify-center gap-2 rounded-control border border-border bg-surface px-4 text-sm font-black text-foreground transition hover:border-primary hover:text-primary disabled:opacity-60"

@@ -170,6 +170,7 @@ const buildPublicUrl = (
   replies: Map<string, ReplyTargetRecord>,
 ) => {
   if (!event.target_id) return null;
+  if (event.decision !== "allow_sensitive") return null;
 
   if (event.target_type === "community_post" && event.community?.slug) {
     return `/community/${event.community.slug}/post/${event.target_id}`;
@@ -185,12 +186,34 @@ const buildPublicUrl = (
   return null;
 };
 
+const buildAdminContentUrl = (
+  event: AdminModerationEventRecord | AdminModerationEventDetailRecord,
+  replies: Map<string, ReplyTargetRecord>,
+) => {
+  if (!event.target_id) return null;
+
+  if (event.target_type === "community_post" && event.community?.slug) {
+    return `/comunidades/${event.community.slug}/conteudo/post/${event.target_id}`;
+  }
+
+  if (event.target_type === "post_reply") {
+    const reply = replies.get(event.target_id);
+    if (!reply) return null;
+
+    return `/comunidades/${reply.post.community.slug}/conteudo/comment/${event.target_id}`;
+  }
+
+  return null;
+};
+
 const mapEvent = (
   event: AdminModerationEventRecord,
   replies: Map<string, ReplyTargetRecord>,
 ): AdminModerationEventItemDTO => ({
+  admin_content_url: buildAdminContentUrl(event, replies),
   author: mapEventAuthor(event),
-  blocked_before_publication: !event.target_id,
+  blocked_before_publication:
+    !event.target_id || event.decision === "block" || event.decision === "safety_hold",
   categories: toStringArray(event.categories),
   community: event.community
     ? {

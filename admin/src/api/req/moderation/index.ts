@@ -12,6 +12,7 @@ export type AdminModerationTargetType =
   | "submitted_reply";
 
 export type AdminModerationEvent = {
+  admin_content_url: string | null;
   author: {
     admin_label?: string;
     id: string;

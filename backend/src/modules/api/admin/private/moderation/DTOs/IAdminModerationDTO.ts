@@ -127,6 +127,7 @@ export type AdminModerationAuthorDTO = {
 };
 
 export type AdminModerationEventItemDTO = {
+  admin_content_url: string | null;
   author: AdminModerationAuthorDTO;
   blocked_before_publication: boolean;
   categories: string[];

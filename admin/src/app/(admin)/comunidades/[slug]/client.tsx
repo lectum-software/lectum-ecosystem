@@ -2798,6 +2798,7 @@ const ContentItemHeader = ({ item }: { item: AdminCommunityContentItem }) => {
   return (
     <div className="flex flex-wrap items-center gap-2">
       {item.status === "removed" ? <StatusBadge tone="muted">Removido</StatusBadge> : null}
+      {item.status === "blocked" ? <StatusBadge tone="danger">Bloqueado</StatusBadge> : null}
       {kindPresentation && KindIcon ? (
         <span className="inline-flex items-center gap-1.5 text-xs font-black text-muted">
           <KindIcon aria-hidden className="h-4 w-4" />
@@ -3008,17 +3009,28 @@ const ContentItemCard = ({ item, slug }: { item: AdminCommunityContentItem; slug
           <BarChart3 aria-hidden className="h-4 w-4" />
           <span className="sr-only">Analytics</span>
         </Link>
-        <Link
-          aria-label="Ver conteúdo no site"
-          className="inline-flex h-10 w-10 items-center justify-center rounded-control border border-border text-foreground transition hover:border-primary hover:text-primary"
-          href={toPublicHref(item.public_url)}
-          rel="noreferrer"
-          target="_blank"
-          title="Ver no site"
-        >
-          <Eye aria-hidden className="h-4 w-4" />
-          <span className="sr-only">Ver no site</span>
-        </Link>
+        {item.status === "published" ? (
+          <Link
+            aria-label="Ver conteúdo no site"
+            className="inline-flex h-10 w-10 items-center justify-center rounded-control border border-border text-foreground transition hover:border-primary hover:text-primary"
+            href={toPublicHref(item.public_url)}
+            rel="noreferrer"
+            target="_blank"
+            title="Ver no site"
+          >
+            <Eye aria-hidden className="h-4 w-4" />
+            <span className="sr-only">Ver no site</span>
+          </Link>
+        ) : (
+          <span
+            aria-label="Conteúdo indisponível no site público"
+            className="inline-flex h-10 w-10 items-center justify-center rounded-control border border-border bg-surface-muted text-subtle"
+            role="img"
+            title="Indisponível no site público"
+          >
+            <Eye aria-hidden className="h-4 w-4" />
+          </span>
+        )}
       </div>
     </div>
     <ContentMetrics item={item} />

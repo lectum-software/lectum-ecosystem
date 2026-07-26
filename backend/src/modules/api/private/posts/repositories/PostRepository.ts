@@ -1029,6 +1029,7 @@ export class PostRepository implements IPostRepository {
             where: {
               author_id: data.auth.id!,
               deleted: false,
+              status: "publicado",
               community: {
                 active: true,
                 deleted: false,
@@ -1045,6 +1046,7 @@ export class PostRepository implements IPostRepository {
             where: {
               author_id: data.auth.id!,
               deleted: false,
+              status: "publicado",
               community: {
                 active: true,
                 deleted: false,

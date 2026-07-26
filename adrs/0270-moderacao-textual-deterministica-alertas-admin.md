@@ -33,3 +33,15 @@ A Lectum permite publicações textuais de pacientes em comunidades de saúde me
 
 - Migration Prisma `20260715020539_add_content_moderation_events` aplicada com `pnpm --dir backend db:migrate -- --name add_content_moderation_events` após uma tentativa inicial de `pnpm --dir backend db:migrate` expirar aguardando entrada interativa de nome.
 - Helper validado por `pnpm --dir backend exec tsx src/operations/moderation/check-content-moderation.ts`.
+
+## Update 2026-07-26: post bloqueado com detalhe Admin
+
+Posts raiz de pacientes classificados como `block` ou `safety_hold` passam a ser persistidos internamente como `community_post.status="bloqueado"`. A decisão mantém a resposta pública ao paciente como erro 422 e mantém o conteúdo fora de feeds, detalhes públicos, notificações e interações públicas, mas dá ao Admin um registro próprio do post para auditoria e investigação.
+
+O `content_moderation_event` desses posts agora usa `target_type="community_post"` e `target_id` do post interno. Para decisões de bloqueio, `public_url` continua nulo; a central de moderação expõe `admin_content_url` para abrir a rota protegida `/comunidades/[slug]/conteudo/post/[id]`.
+
+Respostas/comentários bloqueados continuam snapshot-only porque `post_reply` ainda não possui campo de status. Ampliar liberação/detalhe próprio de respostas bloqueadas exigirá nova decisão e possível migration.
+
+Não houve schema/migration, package novo, IA, mock, seed ou endpoint paralelo. Builder/Quick Copy não estava disponível como ferramenta callable; a execução usou a captura enviada pelo usuário e padrões Admin existentes.
+
+Validações: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check` (primeira tentativa expirou por timeout da ferramenta, segunda concluiu), `pnpm --dir admin build`, `pnpm check`, smoke HTTP 200 de `/moderacao/conteudo-sensivel` e smoke HTTP 200 da rota Admin existente de detalhe de post.

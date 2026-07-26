@@ -527,7 +527,7 @@ Complemento 2026-07-12: `community_member.createdAt` é o marco histórico fixo 
 | `media_url` / `media_type` | `String?` | midia opcional em posts de psicologos aptos; `media_type` inicialmente `"video"` ou `"image"` e a URL deve vir do upload R2 em `/public/files/posts/media/` |
 | `media_items` | `community_post_media[]` | itens ativos do carrossel de imagens, ordenados por `position`; manter `media_url`/`media_type` como compatibilidade para a primeira midia ativa |
 | `anonymous` | `Boolean @default(true)` | aplicável a posts de pacientes; `true` preserva o comportamento seguro de mascarar o autor como `Membro Anônimo #1234` com sufixo determinístico por `author_id`, estável entre posts/comunidades sem revelar identidade real; `false` permite mostrar nome/avatar do paciente |
-| `status` | `String @default("publicado")` | `"publicado" \| "pendente" \| "removido"`. Regra de auto-publicar vs moderar: **decisão de TASK-24** (registrar em ADR; default sugerido `publicado` com moderação reativa, pois PRD §16 lista moderação por IA só em V3) |
+| `status` | `String @default("publicado")` | `"publicado" \| "pendente" \| "removido" \| "bloqueado"`. Regra de auto-publicar vs moderar: **decisão de TASK-24** (registrar em ADR; default sugerido `publicado` com moderação reativa, pois PRD §16 lista moderação por IA só em V3). `bloqueado` é status interno para post raiz barrado pela moderação automática, visível somente no Admin e fora de feed público/notificações/interações públicas. |
 | `edited_at` | `DateTime?` | preenchido quando o autor edita título, conteúdo ou mídia após publicação; usado apenas como metadado público `editado`, sem histórico completo no MVP |
 | `upvotes_count` / `downvotes_count` / `replies_count` / `saves_count` | `Int @default(0)` | denormalizados para o feed |
 | `@@index([community_id, status, createdAt])`, `@@index([author_id])` | | feed por comunidade ordenado por data |
@@ -543,6 +543,8 @@ Complemento 2026-06-22: posts de comunidade passam a suportar carrossel de image
 - Edicao de post substitui o conjunto anterior do carrossel com soft delete dos itens antigos; remocao usa `mediaItems:null` e/ou `mediaUrl:null`/`mediaType:null`.
 
 Complemento 2026-06-21: na comunidade, `author.verified` para psicologos considera `cfp_verified_at` preenchido **ou** cortesia administrativa ativa (`professional_subscription.source="admin_grant"` com entitlement profissional ativo). A URL derivada `author.whatsapp_url` deve ser exposta para posts e respostas de qualquer psicologo com WhatsApp publico cadastrado, inclusive no plano gratuito, sem depender de selo ou assinatura profissional. `highlighted_professional_reply` e flags como `has_verified_professional_reply` passam a tratar cortesia administrativa ativa como equivalencia publica de psicologo verificado.
+
+Complemento 2026-07-26: posts raiz de pacientes classificados como `block` ou `safety_hold` pela moderacao textual deterministica passam a ser persistidos como `community_post.status="bloqueado"` para auditoria e detalhe protegido no Admin. Esses registros nao entram nos endpoints publicos/privados de feed/detalhe, nao geram notificacao de nova postagem e nao devem receber interacoes publicas. Respostas/comentarios bloqueados continuam snapshot-only em `content_moderation_event` ate existir status proprio em `post_reply`.
 
 `post_reply` (comentários e respostas, TASK-26; PRD distingue comentário/resposta → árvore de 1 nível):
 
@@ -613,8 +615,8 @@ Complemento 2026-06-29: o painel administrativo ainda e reservado/futuro e nao d
 
 | Campo | Tipo | Notas |
 |---|---|---|
-| `target_type` | `String` | `"community_post" | "post_reply" | "submitted_post" | "submitted_reply"`; submiss?es bloqueadas n?o t?m conte?do p?blico persistido |
-| `target_id` | `String?` | id de `community_post`/`post_reply` quando `allow_sensitive`; `null` quando bloqueado antes da publica??o |
+| `target_type` | `String` | `"community_post" | "post_reply" | "submitted_post" | "submitted_reply"`; posts raiz bloqueados/segurados a partir de 2026-07-26 usam `community_post` com registro interno `status="bloqueado"`; snapshots legados e respostas bloqueadas podem usar `submitted_*` sem conteudo publico persistido |
+| `target_id` | `String?` | id de `community_post`/`post_reply` quando `allow_sensitive`; id de `community_post.status="bloqueado"` para post raiz bloqueado/segurado; `null` quando o evento for snapshot-only antes da publicacao |
 | `community_id` | `String?` | FK opcional para `community`, `onDelete: SetNull` |
 | `author_id` | `String` | FK para `user`; V1 aplica regras autom?ticas apenas quando `user.role="paciente"` |
 | `decision` | `String` | `"allow_sensitive" | "block" | "safety_hold"`; `allow` n?o gera evento |
@@ -629,7 +631,7 @@ Complemento 2026-06-29: o painel administrativo ainda e reservado/futuro e nao d
 | `reviewed_by_admin_id`, `reviewed_at`, `resolved_at`, `admin_note` | `String?` / `DateTime?` | auditoria operacional de revis?o/resolu??o; a??es criam `admin_activity_log` |
 | `@@index([status, severity, createdAt])`, `@@index([decision, createdAt])`, `@@index([target_type, target_id])`, `@@index([community_id, createdAt])`, `@@index([author_id, createdAt])` | | consultas da central Admin e dashboard de comunidades |
 
-Contratos TASK-74: `POST /api/private/community/:slug/posts` e `POST /api/private/posts/:id/replies` classificam texto de pacientes antes da persist?ncia. `allow_sensitive` publica e cria evento pendente; `block`/`safety_hold` n?o cria `community_post`/`post_reply` e retorna erro 422 com mensagem p?blica conservadora. URLs/dom?nios digitados por pacientes s?o bloqueados mesmo que a UI renderize texto puro. Endpoints Admin privados: `GET /api/admin/private/moderation/summary`, `GET /events`, `GET /events/:id`, `POST /events/:id/review` e `POST /events/:id/resolve`.
+Contratos TASK-74: `POST /api/private/community/:slug/posts` e `POST /api/private/posts/:id/replies` classificam texto de pacientes antes da persistencia. `allow_sensitive` publica e cria evento pendente; `block`/`safety_hold` de post raiz cria `community_post.status="bloqueado"` apenas interno/Admin, cria evento pendente apontando para esse post e retorna erro 422 com mensagem publica conservadora; `block`/`safety_hold` de resposta/comentario segue sem criar `post_reply` e usa snapshot protegido no evento. URLs/dominios digitados por pacientes sao bloqueados mesmo que a UI renderize texto puro. Endpoints Admin privados: `GET /api/admin/private/moderation/summary`, `GET /events`, `GET /events/:id`, `POST /events/:id/review` e `POST /events/:id/resolve`.
 
 `post_save` (TASK-28, "Posts Salvos"):
 
