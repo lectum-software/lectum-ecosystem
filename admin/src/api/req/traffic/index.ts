@@ -70,6 +70,14 @@ export type TrafficUnavailableMetric = {
   source: string;
 };
 
+export type TrafficTimelinePoint = {
+  date: string;
+  new_visitors: number;
+  recurring_visitors: number;
+  sessions: number;
+  unique_visitors: number;
+};
+
 export type TrafficPeriod = {
   days: number;
   from: string;
@@ -118,6 +126,10 @@ export type AdminTrafficSummary = {
     items: TrafficRankingItem[];
     source: "page_view_event.target_type=psychologist";
     total: number;
+  };
+  timeline: {
+    points: TrafficTimelinePoint[];
+    source: "visitor_session+page_view_event+important_action_event";
   };
   traffic_sources: {
     items: TrafficBreakdownItem[];

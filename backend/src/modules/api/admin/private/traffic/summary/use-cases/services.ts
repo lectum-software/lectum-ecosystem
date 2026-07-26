@@ -12,6 +12,7 @@ import type {
   AdminTrafficQuery,
   AdminTrafficRankingItem,
   AdminTrafficSummary,
+  AdminTrafficTimelinePoint,
   AdminTrafficUserType,
   AdminTrafficUserTypeItem,
   IAdminTrafficSummaryDTO,
@@ -134,6 +135,9 @@ const daysBetweenInclusive = (from: Date, to: Date) => {
 
   return Math.floor((end - start) / 86_400_000) + 1;
 };
+
+const buildLabels = (from: Date, days: number) =>
+  Array.from({ length: days }, (_, index) => toDateKey(addDays(from, index)));
 
 const resolvePeriod = (query: AdminTrafficQuery): PeriodResult => {
   const hasCustomFrom = Boolean(query.from);
@@ -451,7 +455,7 @@ const buildOverviewCards = (current: TrafficStats, previous: TrafficStats) => {
       current: current.sessions.length,
       description: "Sessões reais capturadas em visitor_session no período.",
       id: "sessions",
-      label: "Sessões do site",
+      label: "Sessões",
       previous: previous.sessions.length,
       source: "visitor_session",
     }),
@@ -470,6 +474,14 @@ const buildOverviewCards = (current: TrafficStats, previous: TrafficStats) => {
       label: "Novos visitantes",
       previous: newVisitorIds(previous).length,
       source: "visitor_session.first_seen_at",
+    }),
+    metric({
+      current: returnVisitors(current).length,
+      description: "Visitantes com sessao anterior ao periodo ou mais de uma sessao no recorte.",
+      id: "recurring_visitors",
+      label: "Visitantes recorrentes",
+      previous: returnVisitors(previous).length,
+      source: "visitor_session",
     }),
     metric({
       current: current.pageViews.length,
@@ -534,6 +546,91 @@ const buildOverviewCards = (current: TrafficStats, previous: TrafficStats) => {
       source: "important_action_event.action_type=pwa_installed",
     }),
   ];
+};
+
+const isInsideRange = (date: Date, range: AdminTrafficDateRange) =>
+  date >= range.start && date <= range.end;
+
+const setFirstObservedDate = (
+  map: Map<string, Date>,
+  visitorId: string,
+  date: Date,
+  range: AdminTrafficDateRange,
+) => {
+  if (!isInsideRange(date, range)) return;
+
+  const current = map.get(visitorId);
+  if (!current || date < current) map.set(visitorId, date);
+};
+
+const buildTimeline = (
+  stats: TrafficStats,
+  period: TrafficPeriodResolution,
+): AdminTrafficTimelinePoint[] => {
+  const labels = buildLabels(period.current.start, period.days);
+  const firstObservedByVisitor = new Map<string, Date>();
+  const newVisitors = new Set(newVisitorIds(stats));
+  const recurringVisitors = new Set(returnVisitors(stats));
+
+  for (const session of stats.sessions) {
+    setFirstObservedDate(
+      firstObservedByVisitor,
+      session.visitor_id,
+      session.first_seen_at,
+      period.current,
+    );
+  }
+
+  for (const pageView of stats.pageViews) {
+    setFirstObservedDate(
+      firstObservedByVisitor,
+      pageView.visitor_id,
+      pageView.occurred_at,
+      period.current,
+    );
+  }
+
+  for (const action of stats.actions) {
+    setFirstObservedDate(
+      firstObservedByVisitor,
+      action.visitor_id,
+      action.occurred_at,
+      period.current,
+    );
+  }
+
+  return labels.map((date) => {
+    const dayStart = parseDateOnly(date, "start") ?? startOfDate(new Date(date));
+    const dayEnd = parseDateOnly(date, "end") ?? endOfDate(new Date(date));
+    const visitorIds = new Set<string>();
+    const sessions = stats.sessions.filter(
+      (session) => session.first_seen_at <= dayEnd && session.last_seen_at >= dayStart,
+    );
+
+    for (const session of sessions) {
+      visitorIds.add(session.visitor_id);
+    }
+
+    for (const pageView of stats.pageViews) {
+      if (toDateKey(pageView.occurred_at) === date) visitorIds.add(pageView.visitor_id);
+    }
+
+    for (const action of stats.actions) {
+      if (toDateKey(action.occurred_at) === date) visitorIds.add(action.visitor_id);
+    }
+
+    return {
+      date,
+      new_visitors: [...firstObservedByVisitor.entries()].filter(
+        ([visitorId, firstObservedAt]) =>
+          newVisitors.has(visitorId) && toDateKey(firstObservedAt) === date,
+      ).length,
+      recurring_visitors: [...visitorIds].filter((visitorId) => recurringVisitors.has(visitorId))
+        .length,
+      sessions: sessions.length,
+      unique_visitors: visitorIds.size,
+    };
+  });
 };
 
 const labelFromSource = (source: string) => {
@@ -1076,6 +1173,10 @@ export const buildTrafficSummary = async (query: AdminTrafficQuery): Promise<Res
     quality,
     top_communities: rankings.topCommunities,
     top_psychologists: rankings.topPsychologists,
+    timeline: {
+      points: buildTimeline(currentStats, resolvedPeriod.period),
+      source: "visitor_session+page_view_event+important_action_event",
+    },
     traffic_sources: buildTrafficSources(currentStats),
     unavailable: [],
     user_types: buildUserTypes(currentStats),

@@ -146,3 +146,4 @@ Formato recomendado:
 - [ADR-0320 - Presets relativos de período nos filtros Admin](0320-admin-presets-relativos-periodo.md) - Accepted
 - [ADR-0321 - Ordem canônica dos presets de período do Admin](0321-ordem-presets-periodo-admin.md) - Accepted
 - [ADR-0322 - Tracao agregada no dashboard Admin de psicologos](0322-tracao-dashboard-psicologos-admin.md) - Accepted
+- [ADR-0323 - Visao geral de Trafego com timeline filtravel](0323-trafego-visao-geral-timeline.md) - Accepted

@@ -305,3 +305,37 @@ Validacao desta execucao complementar:
   apos o teste: header validado sem campos de data, sem atalhos de periodo e sem CTA de
   exportacao; conteudo segue renderizando a **Visao geral** com periodo de 30 dias retornado pelo
   backend.
+
+## Execucao complementar - Visao geral com timeline filtravel (2026-07-26)
+
+- Ajustada a **Visao geral** de `/trafego` para exibir somente os contadores **Sessoes**,
+  **Usuarios unicos**, **Novos visitantes** e **Visitantes recorrentes**.
+- Adicionado grafico SVG abaixo dos contadores, seguindo o layout da Visao geral de `/psicologos`,
+  com filtro de periodo, campos **De/Ate** e cards que exibem/ocultam curvas via `aria-pressed`.
+- Os contadores ficaram sem badge visual **real** e sem texto descritivo interno, conforme feedback
+  de limpeza visual; o comparativo com periodo anterior permanece.
+- Removida a faixa visivel **Resumo textual do grafico** dos graficos de Trafego; o resumo
+  permanece somente como `figcaption` screen-reader-only para acessibilidade.
+- Backend expandiu o resumo real de Trafego com `recurring_visitors` e `timeline.points`, derivados
+  de `visitor_session`, `page_view_event` e `important_action_event`, sem mocks.
+- A exportacao CSV real passa a incluir linhas `overview_timeline`, mantendo paridade com o payload.
+- Nao houve alteracao em Prisma schema/migrations, packages ou dados persistidos.
+- Builder/Quick Copy nao estava exposto como ferramenta callable nesta execucao; as referencias
+  visuais usadas foram o prototipo local de Trafego, o prototipo local do dashboard de Psicologos
+  e a captura enviada pelo usuario.
+
+Validacao desta execucao complementar:
+
+- `pnpm --dir backend exec biome check --write "src/modules/api/admin/private/traffic/summary/DTOs/IAdminTrafficSummaryDTO.ts" "src/modules/api/admin/private/traffic/summary/use-cases/services.ts" "src/modules/api/admin/private/traffic/export/use-cases/services.ts"`
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/trafego/client.tsx" "src/api/req/traffic/index.ts"`
+- `pnpm --dir backend check`
+- `pnpm --dir admin check`
+- `pnpm --dir backend build`
+- `pnpm --dir admin build`
+- `pnpm check`
+- Browser local/headless em `http://localhost:3002/trafego` com admin real transitorio removido
+  apos o teste: validou 4 contadores (**Sessoes**,
+  **Usuarios unicos**, **Novos visitantes**, **Visitantes recorrentes**), ausencia de badge
+  **real**, ausencia das descricoes internas, ausencia da faixa visivel **Resumo textual do
+  grafico**, filtros de periodo/data, toggle de curva por contador e viewport mobile 390x844 sem
+  overflow horizontal.

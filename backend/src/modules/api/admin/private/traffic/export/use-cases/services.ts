@@ -8,6 +8,7 @@ import type {
   AdminTrafficMetric,
   AdminTrafficRankingItem,
   AdminTrafficSummary,
+  AdminTrafficTimelinePoint,
   IAdminTrafficSummaryDTO,
 } from "../../summary/DTOs/IAdminTrafficSummaryDTO";
 import { buildTrafficSummary } from "../../summary/use-cases/services";
@@ -134,6 +135,47 @@ const appendRankingRows = (
   }
 };
 
+const appendTimelineRows = (rows: string[], items: AdminTrafficTimelinePoint[], source: string) => {
+  for (const item of items) {
+    rows.push(
+      csvRow(["overview_timeline", "sessions", "Sessões", item.date, item.sessions, source, ""]),
+    );
+    rows.push(
+      csvRow([
+        "overview_timeline",
+        "unique_visitors",
+        "Usuários únicos",
+        item.date,
+        item.unique_visitors,
+        source,
+        "",
+      ]),
+    );
+    rows.push(
+      csvRow([
+        "overview_timeline",
+        "new_visitors",
+        "Novos visitantes",
+        item.date,
+        item.new_visitors,
+        source,
+        "",
+      ]),
+    );
+    rows.push(
+      csvRow([
+        "overview_timeline",
+        "recurring_visitors",
+        "Visitantes recorrentes",
+        item.date,
+        item.recurring_visitors,
+        source,
+        "",
+      ]),
+    );
+  }
+};
+
 const buildCsv = (summary: AdminTrafficSummary) => {
   const rows: string[] = [];
   rows.push(csvRow(["Lectum Admin Tráfego"]));
@@ -141,6 +183,7 @@ const buildCsv = (summary: AdminTrafficSummary) => {
   rows.push("");
   rows.push(csvRow(["section", "id", "label", "date", "value", "source", "extra"]));
   appendMetricRows(rows, "overview", summary.overview_cards);
+  appendTimelineRows(rows, summary.timeline.points, summary.timeline.source);
   appendBreakdownRows(
     rows,
     "traffic_source",

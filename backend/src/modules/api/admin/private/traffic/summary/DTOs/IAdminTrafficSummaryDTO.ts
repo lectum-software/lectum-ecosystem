@@ -99,6 +99,14 @@ export type AdminTrafficUnavailableMetric = {
   source: string;
 };
 
+export type AdminTrafficTimelinePoint = {
+  date: string;
+  new_visitors: number;
+  recurring_visitors: number;
+  sessions: number;
+  unique_visitors: number;
+};
+
 export type AdminTrafficSummary = {
   conversions: {
     items: AdminTrafficConversion[];
@@ -130,6 +138,10 @@ export type AdminTrafficSummary = {
     items: AdminTrafficRankingItem[];
     source: "page_view_event.target_type=psychologist";
     total: number;
+  };
+  timeline: {
+    points: AdminTrafficTimelinePoint[];
+    source: "visitor_session+page_view_event+important_action_event";
   };
   traffic_sources: {
     items: AdminTrafficBreakdownItem[];
