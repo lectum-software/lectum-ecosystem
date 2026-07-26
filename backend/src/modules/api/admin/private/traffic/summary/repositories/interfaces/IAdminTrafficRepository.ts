@@ -19,10 +19,17 @@ export type TrafficPageViewRecord = {
   occurred_at: Date;
   page_kind: string;
   path: string;
+  referrer_host: string | null;
   session_id: string;
   target_id: string | null;
   target_type: string | null;
+  traffic_medium: string | null;
   traffic_source: string;
+  utm_campaign: string | null;
+  utm_content: string | null;
+  utm_medium: string | null;
+  utm_source: string | null;
+  utm_term: string | null;
   user_id: string | null;
   visitor_id: string;
 };

@@ -145,7 +145,7 @@ export type AdminTrafficSummary = {
   };
   traffic_sources: {
     items: AdminTrafficBreakdownItem[];
-    source: "page_view_event.traffic_source";
+    source: "page_view_event.traffic_source+traffic_medium+utm_*";
     total: number;
   };
   unavailable: AdminTrafficUnavailableMetric[];

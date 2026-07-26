@@ -397,3 +397,27 @@ Validacao desta execucao complementar:
 - `pnpm --dir admin build`
 - `pnpm check`
 - HTTP local `GET http://localhost:3002/trafego` retornou 200.
+
+## Execucao complementar - canais canonicos de origem do trafego (2026-07-26)
+
+- Mapeada a agregacao **Origem do trafego** para canais canonicos solicitados: **Google organico**, **Google Ads**, **Meta Ads**, **Instagram organico**, **Instagram (Link na bio)** e **TikTok**.
+- A classificacao usa somente campos reais de `page_view_event`: `traffic_source`, `traffic_medium`, `utm_source`, `utm_medium`, `utm_campaign`, `utm_content`, `utm_term` e `referrer_host`.
+- `Direto`, canais internos Lectum e `WhatsApp` permanecem preservados; demais origens ficam em **Outros**.
+- A distincao entre pago, organico e link na bio depende de UTMs quando referrer/app nao fornecer sinal confiavel; nao houve backfill, mock, pacote novo, Prisma schema/migration ou tracking de terceiros.
+- Builder/Quick Copy nao estava exposto como ferramenta callable nesta execucao; a referencia auditavel foi `_product/proto/admin/Tráfego.png` e a captura enviada pelo usuario.
+- ADR criado: `adrs/0324-canais-origem-trafego-admin.md`.
+
+Validacao desta execucao complementar:
+
+- `pnpm --dir backend exec biome check --write "src/modules/api/admin/private/traffic/summary/DTOs/IAdminTrafficSummaryDTO.ts" "src/modules/api/admin/private/traffic/summary/repositories/interfaces/IAdminTrafficRepository.ts" "src/modules/api/admin/private/traffic/summary/repositories/AdminTrafficRepository.ts" "src/modules/api/admin/private/traffic/summary/use-cases/services.ts"`
+- `pnpm --dir admin exec biome check --write "src/api/req/traffic/index.ts"`
+
+Validacao adicional concluida:
+
+- `pnpm --dir backend check` — OK.
+- `pnpm --dir backend build` — OK.
+- `pnpm --dir admin check` — OK.
+- `pnpm --dir admin build` — OK.
+- `pnpm check` — OK apos limpar apenas o Prisma Client gerado em `backend/src/external/generated/prisma`, pois a primeira tentativa encontrou `EEXIST` em artefato gerado.
+- HTTP local `GET http://localhost:3002/trafego` — 200.
+- Smoke direto do servico contra o banco local nao foi repetido porque o Postgres local retornou `EMAXCONNSESSION` (limite de conexoes da sessao); nenhuma limpeza/destruicao de dados foi executada.

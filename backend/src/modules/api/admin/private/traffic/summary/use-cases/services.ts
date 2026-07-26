@@ -636,19 +636,144 @@ const buildTimeline = (
   });
 };
 
-const labelFromSource = (source: string) => {
-  const labels: Record<string, string> = {
-    direct: "Direto",
-    google: "Google Pesquisa",
-    instagram: "Instagram",
-    lectum_billing: "Lectum Billing",
-    lectum_community: "Comunidades",
-    lectum_internal: "Lectum interno",
-    lectum_profile: "Perfis Lectum",
-    whatsapp: "WhatsApp",
-  };
+type TrafficSourceChannel =
+  | "direct"
+  | "google_ads"
+  | "google_organic"
+  | "instagram_bio"
+  | "instagram_organic"
+  | "lectum_billing"
+  | "lectum_community"
+  | "lectum_internal"
+  | "lectum_profile"
+  | "meta_ads"
+  | "other"
+  | "tiktok"
+  | "whatsapp";
 
-  return labels[source] ?? source.replace(/_/g, " ");
+const TRAFFIC_SOURCE_LABELS: Record<TrafficSourceChannel, string> = {
+  direct: "Direto",
+  google_ads: "Google Ads",
+  google_organic: "Google orgânico",
+  instagram_bio: "Instagram (Link na bio)",
+  instagram_organic: "Instagram orgânico",
+  lectum_billing: "Lectum Billing",
+  lectum_community: "Comunidades",
+  lectum_internal: "Lectum interno",
+  lectum_profile: "Perfis Lectum",
+  meta_ads: "Meta Ads",
+  other: "Outros",
+  tiktok: "TikTok",
+  whatsapp: "WhatsApp",
+};
+
+const GOOGLE_SOURCES = new Set([
+  "adwords",
+  "gads",
+  "google",
+  "google_adwords",
+  "google_ads",
+  "google_com",
+  "google_com_br",
+]);
+const GOOGLE_AD_SOURCES = new Set(["adwords", "gads", "google_adwords", "google_ads"]);
+const INSTAGRAM_SOURCES = new Set(["ig", "instagram", "instagram_com", "l_instagram_com"]);
+const META_SOURCES = new Set([
+  "facebook",
+  "facebook_com",
+  "fb",
+  "instagram",
+  "instagram_com",
+  "meta",
+  "m_facebook_com",
+  "l_facebook_com",
+]);
+const META_AD_SOURCES = new Set(["facebook_ads", "fb_ads", "ig_ads", "instagram_ads", "meta_ads"]);
+const PAID_MEDIUMS = new Set([
+  "ad",
+  "ads",
+  "cpc",
+  "display",
+  "paid",
+  "paid_search",
+  "paid_social",
+  "paidsocial",
+  "ppc",
+  "remarketing",
+  "retargeting",
+  "sem",
+  "social_paid",
+  "sponsored",
+]);
+const INSTAGRAM_BIO_HINTS = new Set([
+  "bio",
+  "bio_link",
+  "instagram_bio",
+  "link_bio",
+  "link_in_bio",
+  "linkinbio",
+]);
+const TIKTOK_SOURCES = new Set(["tik_tok", "tiktok", "tiktok_ads", "tiktok_com", "tt"]);
+
+const normalizeSourceValue = (value: string | null | undefined) =>
+  (value ?? "")
+    .trim()
+    .toLowerCase()
+    .replace(/[.\-\s/]+/g, "_")
+    .replace(/^_+|_+$/g, "");
+
+const hasAnyExact = (values: string[], options: Set<string>) =>
+  values.some((value) => options.has(value));
+
+const hasAnyHint = (values: string[], options: Set<string>) =>
+  values.some((value) => {
+    if (!value) return false;
+    if (options.has(value)) return true;
+
+    return [...options].some((option) => value.includes(option));
+  });
+
+const classifyTrafficSource = (entry: TrafficPageViewRecord): TrafficSourceChannel => {
+  const sourceValues = [
+    normalizeSourceValue(entry.traffic_source),
+    normalizeSourceValue(entry.utm_source),
+    normalizeSourceValue(entry.referrer_host),
+  ].filter(Boolean);
+  const mediumValues = [
+    normalizeSourceValue(entry.traffic_medium),
+    normalizeSourceValue(entry.utm_medium),
+  ].filter(Boolean);
+  const campaignValues = [
+    normalizeSourceValue(entry.utm_campaign),
+    normalizeSourceValue(entry.utm_content),
+    normalizeSourceValue(entry.utm_term),
+    ...mediumValues,
+  ].filter(Boolean);
+  const primarySource = sourceValues[0] || "direct";
+  const hasPaidSignal = hasAnyExact(mediumValues, PAID_MEDIUMS);
+
+  if (primarySource === "direct" && sourceValues.length === 1) return "direct";
+
+  if (hasAnyExact(sourceValues, GOOGLE_AD_SOURCES)) return "google_ads";
+  if (hasAnyExact(sourceValues, GOOGLE_SOURCES)) {
+    return hasPaidSignal ? "google_ads" : "google_organic";
+  }
+
+  if (hasAnyExact(sourceValues, META_AD_SOURCES)) return "meta_ads";
+  if (hasAnyExact(sourceValues, META_SOURCES) && hasPaidSignal) return "meta_ads";
+
+  if (hasAnyExact(sourceValues, INSTAGRAM_SOURCES)) {
+    return hasAnyHint(campaignValues, INSTAGRAM_BIO_HINTS) ? "instagram_bio" : "instagram_organic";
+  }
+
+  if (hasAnyExact(sourceValues, TIKTOK_SOURCES)) return "tiktok";
+  if (primarySource === "whatsapp") return "whatsapp";
+  if (primarySource === "lectum_billing") return "lectum_billing";
+  if (primarySource === "lectum_community") return "lectum_community";
+  if (primarySource === "lectum_internal") return "lectum_internal";
+  if (primarySource === "lectum_profile") return "lectum_profile";
+
+  return "other";
 };
 
 const buildBreakdown = (items: Array<{ id: string; label: string }>, total: number) => {
@@ -673,16 +798,20 @@ const buildTrafficSources = (stats: TrafficStats) => {
   const entries = entryPageViews(stats);
   const total = entries.length;
   const items = buildBreakdown(
-    entries.map((entry) => ({
-      id: entry.traffic_source || "direct",
-      label: labelFromSource(entry.traffic_source || "direct"),
-    })),
+    entries.map((entry) => {
+      const channel = classifyTrafficSource(entry);
+
+      return {
+        id: channel,
+        label: TRAFFIC_SOURCE_LABELS[channel],
+      };
+    }),
     total,
   ).slice(0, 8);
 
   return {
     items,
-    source: "page_view_event.traffic_source" as const,
+    source: "page_view_event.traffic_source+traffic_medium+utm_*" as const,
     total,
   };
 };
