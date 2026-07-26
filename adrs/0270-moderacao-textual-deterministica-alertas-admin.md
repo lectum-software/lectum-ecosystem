@@ -52,6 +52,8 @@ A coluna de página/detalhe da central de conteúdo sensível deve navegar apena
 
 O ícone não abre o modal de snapshot protegido e não usa a URL pública do post. Eventos snapshot-only/legados sem `target_id` permanecem sem navegação nessa coluna porque não existe página própria de conteúdo para abrir; o detalhe protegido do evento continua restrito ao fluxo específico de revisão, sem criar backfill, seed, mock ou post artificial.
 
+Como a diferença visual entre link ativo e estado indisponível estava ambígua, o ícone com `admin_content_url` passa a usar tokens primários (`bg-primary-soft text-primary`) já existentes no Admin. O estado sem URL permanece com `bg-surface-muted text-subtle`.
+
 Essa decisão preserva a experiência esperada do Admin e evita levar moderadores para o ambiente público. O conteúdo bloqueado continua sem `public_url`, fora de feed público/privado e com snapshot completo restrito ao Admin autenticado.
 
-Validações: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check`, smoke HTTP 200 de `/moderacao/conteudo-sensivel` e smoke HTTP 200 da rota Admin de detalhe `/comunidades/tmp-layout-denuncias-cmrgztri70/conteudo/post/tmp_den_layout_cmrgztri70_thread_01`.
+Validações: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check`, smoke HTTP 200 de `/moderacao/conteudo-sensivel`, smoke HTTP 200 da rota Admin de detalhe `/comunidades/tmp-layout-denuncias-cmrgztri70/conteudo/post/tmp_den_layout_cmrgztri70_thread_01` e smoke HTTP 200 da rota visual `/comunidades/visualizacao-moderacao/conteudo/post/visual-admin-detail-link-blocked-post`.
