@@ -1949,8 +1949,9 @@ const TractionPieChart = ({ traction }: { traction: AdminPsychologistsDashboard[
           item.label +
           ": " +
           numberFormatter.format(item.count) +
-          " psicólogo(s), " +
-          formatPercentageValue(item.percentage),
+          " (" +
+          formatPercentageValue(item.percentage) +
+          ")",
       )
       .join("; ") +
     ".";
@@ -2043,12 +2044,12 @@ const TractionPieChart = ({ traction }: { traction: AdminPsychologistsDashboard[
                   <span>{item.label}</span>
                 </span>
                 <span className="shrink-0 text-sm font-black text-foreground">
-                  {formatPercentageValue(item.percentage)}
+                  {numberFormatter.format(item.count)}{" "}
+                  <span className="font-bold text-muted">
+                    ({formatPercentageValue(item.percentage)})
+                  </span>
                 </span>
               </div>
-              <p className="mt-1 text-sm font-black text-foreground">
-                {numberFormatter.format(item.count)} psicólogo(s)
-              </p>
               <p className="mt-1 text-xs font-bold leading-5 text-muted">{item.description}</p>
             </article>
           );
