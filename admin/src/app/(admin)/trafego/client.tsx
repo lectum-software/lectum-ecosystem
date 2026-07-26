@@ -178,7 +178,7 @@ const hasPeriodRecords = (summary: AdminTrafficSummary) => {
 const CardShell = ({ children, className }: { children?: React.ReactNode; className?: string }) => (
   <section
     className={cn(
-      "rounded-card border border-border/80 bg-surface/95 shadow-admin-soft backdrop-blur",
+      "min-w-0 rounded-card border border-border/80 bg-surface/95 shadow-admin-soft backdrop-blur",
       className,
     )}
   >
@@ -266,7 +266,7 @@ const MetricCard = ({ metric }: { metric: TrafficMetric }) => {
 };
 
 const LoadingGrid = () => (
-  <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+  <div className="grid min-w-0 gap-3 sm:grid-cols-2 xl:grid-cols-5">
     {SKELETON_KEYS.map((key) => (
       <CardShell
         className="h-[9.25rem] animate-pulse bg-surface-muted"
@@ -358,8 +358,13 @@ const DonutChart = ({
 
   return (
     <figure className="mt-5">
-      <div className="grid gap-5 sm:grid-cols-[190px_1fr] sm:items-center">
-        <svg aria-label={ariaLabel} role="img" viewBox="0 0 120 120">
+      <div className="grid min-w-0 gap-5 2xl:grid-cols-[170px_minmax(0,1fr)] 2xl:items-center">
+        <svg
+          aria-label={ariaLabel}
+          className="mx-auto aspect-square w-full max-w-[12rem] min-w-0"
+          role="img"
+          viewBox="0 0 120 120"
+        >
           <circle
             cx="60"
             cy="60"
@@ -404,14 +409,14 @@ const DonutChart = ({
           </text>
         </svg>
 
-        <div className="space-y-3">
+        <div className="min-w-0 space-y-3">
           {items.length === 0 ? (
             <p className="rounded-2xl bg-surface-muted p-4 text-sm text-muted">
               Nenhum dado real capturado no período.
             </p>
           ) : (
             items.map((item, index) => (
-              <div className="flex items-center justify-between gap-3" key={item.id}>
+              <div className="flex min-w-0 items-center justify-between gap-3" key={item.id}>
                 <span className="flex min-w-0 items-center gap-2 text-sm font-semibold text-foreground">
                   <span
                     aria-hidden
@@ -420,7 +425,7 @@ const DonutChart = ({
                   />
                   <span className="truncate">{item.label}</span>
                 </span>
-                <span className="shrink-0 text-sm font-semibold text-foreground">
+                <span className="shrink-0 text-right text-sm font-semibold text-foreground">
                   {numberFormatter.format(item.count)}{" "}
                   <span className="text-xs font-medium text-muted">({item.percentage}%)</span>
                 </span>
@@ -463,9 +468,9 @@ const BarList = ({
     ) : (
       items.map((item) => (
         <div key={item.id}>
-          <div className="flex items-center justify-between gap-3 text-sm">
-            <span className="font-black text-foreground">{item.label}</span>
-            <span className="font-bold text-muted">
+          <div className="flex min-w-0 items-center justify-between gap-3 text-sm">
+            <span className="min-w-0 break-words font-black text-foreground">{item.label}</span>
+            <span className="shrink-0 text-right font-bold text-muted">
               {numberFormatter.format(item.count)} ({item.percentage}%)
             </span>
           </div>
@@ -491,13 +496,13 @@ const PanelTitle = ({
   source?: string;
   title: string;
 }) => (
-  <div className="flex items-start justify-between gap-3">
-    <div className="flex items-center gap-2">
+  <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+    <div className="flex min-w-0 items-center gap-2">
       <Icon aria-hidden className="h-5 w-5 text-primary" />
-      <h2 className="text-lg font-bold text-foreground">{title}</h2>
+      <h2 className="min-w-0 text-lg font-bold text-foreground">{title}</h2>
     </div>
     {source ? (
-      <span className="rounded-full bg-surface-muted px-2 py-1 text-[0.65rem] font-semibold text-muted">
+      <span className="max-w-full self-start break-all rounded-full bg-surface-muted px-2 py-1 text-[0.65rem] font-semibold text-muted sm:max-w-[58%] sm:text-right">
         {source}
       </span>
     ) : null}
@@ -505,46 +510,77 @@ const PanelTitle = ({
 );
 
 const EntryPagesTable = ({ items }: { items: TrafficEntryPage[] }) => (
-  <div className="mt-5 overflow-x-auto">
-    <table className="w-full min-w-[460px] text-left text-sm">
-      <caption className="sr-only">Páginas de entrada por sessões</caption>
-      <thead className="text-xs text-muted">
-        <tr>
-          <th className="py-3 font-black">Página de entrada</th>
-          <th className="py-3 font-black">Sessões</th>
-          <th className="py-3 font-black">%</th>
-        </tr>
-      </thead>
-      <tbody className="divide-y divide-border">
-        {items.map((item) => (
-          <tr key={item.path}>
-            <td className="py-3">
-              <p className="font-black text-foreground">{item.label}</p>
-              <p className="text-xs text-muted">{item.path}</p>
-            </td>
-            <td className="py-3 font-bold text-foreground">{numberFormatter.format(item.count)}</td>
-            <td className="py-3 font-bold text-muted">{item.percentage}%</td>
+  <>
+    <div className="mt-5 space-y-3 md:hidden">
+      {items.map((item) => (
+        <div className="rounded-2xl border border-border bg-surface p-3" key={item.path}>
+          <p className="font-black text-foreground">{item.label}</p>
+          <p className="mt-1 break-all text-xs text-muted">{item.path}</p>
+          <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
+            <div className="rounded-xl bg-surface-muted p-2">
+              <span className="block font-semibold text-muted">Sess&otilde;es</span>
+              <strong className="text-foreground">{numberFormatter.format(item.count)}</strong>
+            </div>
+            <div className="rounded-xl bg-surface-muted p-2">
+              <span className="block font-semibold text-muted">Participa&ccedil;&atilde;o</span>
+              <strong className="text-foreground">{item.percentage}%</strong>
+            </div>
+          </div>
+        </div>
+      ))}
+      {items.length === 0 ? (
+        <p className="rounded-2xl bg-surface-muted p-4 text-sm text-muted">
+          Nenhuma pageview de entrada real no per&iacute;odo.
+        </p>
+      ) : null}
+    </div>
+
+    <div className="mt-5 hidden overflow-x-auto md:block">
+      <table className="w-full min-w-full text-left text-sm">
+        <caption className="sr-only">P&aacute;ginas de entrada por sess&otilde;es</caption>
+        <thead className="text-xs text-muted">
+          <tr>
+            <th className="py-3 font-black">P&aacute;gina de entrada</th>
+            <th className="py-3 font-black">Sess&otilde;es</th>
+            <th className="py-3 font-black">%</th>
           </tr>
-        ))}
-      </tbody>
-    </table>
-    {items.length === 0 ? (
-      <p className="rounded-2xl bg-surface-muted p-4 text-sm text-muted">
-        Nenhuma pageview de entrada real no período.
-      </p>
-    ) : null}
-  </div>
+        </thead>
+        <tbody className="divide-y divide-border">
+          {items.map((item) => (
+            <tr key={item.path}>
+              <td className="min-w-0 py-3 pr-3">
+                <p className="font-black text-foreground">{item.label}</p>
+                <p className="break-all text-xs text-muted">{item.path}</p>
+              </td>
+              <td className="py-3 pr-3 font-bold text-foreground">
+                {numberFormatter.format(item.count)}
+              </td>
+              <td className="py-3 font-bold text-muted">{item.percentage}%</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      {items.length === 0 ? (
+        <p className="rounded-2xl bg-surface-muted p-4 text-sm text-muted">
+          Nenhuma pageview de entrada real no per&iacute;odo.
+        </p>
+      ) : null}
+    </div>
+  </>
 );
 
 const MetricList = ({ items }: { items: TrafficMetric[] }) => (
   <div className="mt-4 divide-y divide-border">
     {items.map((item) => (
-      <div className="flex items-center justify-between gap-3 py-3" key={item.id}>
-        <div>
+      <div
+        className="flex min-w-0 flex-col gap-2 py-3 sm:flex-row sm:items-center sm:justify-between"
+        key={item.id}
+      >
+        <div className="min-w-0">
           <p className="font-black text-foreground">{item.label}</p>
-          <p className="mt-1 text-xs leading-relaxed text-muted">{item.description}</p>
+          <p className="mt-1 break-words text-xs leading-relaxed text-muted">{item.description}</p>
         </div>
-        <div className="text-right">
+        <div className="shrink-0 text-left sm:text-right">
           <p className="font-black text-foreground">{formatMetricValue(item)}</p>
           <TrendBadge metric={item} />
         </div>
@@ -561,14 +597,17 @@ const RankingList = ({ items }: { items: TrafficRankingItem[] }) => (
       </p>
     ) : (
       items.map((item, index) => (
-        <div className="flex items-center justify-between gap-3 py-3" key={item.id}>
+        <div
+          className="flex min-w-0 flex-col gap-2 py-3 sm:flex-row sm:items-start sm:justify-between"
+          key={item.id}
+        >
           <div className="min-w-0">
             <p className="truncate font-black text-foreground">
               #{index + 1} {item.label}
             </p>
-            <p className="text-xs text-muted">{item.path}</p>
+            <p className="break-all text-xs text-muted">{item.path}</p>
           </div>
-          <div className="text-right">
+          <div className="shrink-0 text-left sm:text-right">
             <p className="font-black text-foreground">
               {numberFormatter.format(item.sessions)} sessões
             </p>
@@ -656,12 +695,12 @@ const BrazilAccessMap = ({ states }: { states: TrafficBreakdownItem[] }) => {
 const LocationPanel = ({ locations }: { locations: AdminTrafficSummary["locations"] }) => (
   <CardShell className="p-5">
     <PanelTitle icon={MapPinned} source={locations.source} title="Acessos por localização" />
-    <div className="mt-4 grid gap-5 lg:grid-cols-[1fr_1fr]">
-      <div>
+    <div className="mt-4 grid min-w-0 gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+      <div className="min-w-0">
         <h3 className="text-sm font-black text-foreground">Top estados</h3>
         <BarList items={locations.states} total={locations.total} />
       </div>
-      <div className="rounded-card bg-surface-muted p-4">
+      <div className="min-w-0 rounded-card bg-surface-muted p-4">
         <h3 className="text-sm font-black text-foreground">Mapa de acessos</h3>
         <p className="mt-2 text-xs leading-relaxed text-muted">
           Desenho SVG local sem pacote novo, alimentado somente por `visitor_location` real.
@@ -669,16 +708,18 @@ const LocationPanel = ({ locations }: { locations: AdminTrafficSummary["location
         <BrazilAccessMap states={locations.states} />
         <div className="mt-4 space-y-3">
           {locations.countries.slice(0, 5).map((item, index) => (
-            <div className="flex items-center justify-between gap-3" key={item.id}>
-              <span className="flex items-center gap-2 text-sm font-bold text-foreground">
+            <div className="flex min-w-0 items-center justify-between gap-3" key={item.id}>
+              <span className="flex min-w-0 items-center gap-2 text-sm font-bold text-foreground">
                 <span
                   aria-hidden
                   className="h-3 w-3 rounded-full"
                   style={{ backgroundColor: CHART_COLORS[index % CHART_COLORS.length] }}
                 />
-                {item.label}
+                <span className="min-w-0 truncate">{item.label}</span>
               </span>
-              <span className="text-sm font-black text-foreground">{item.percentage}%</span>
+              <span className="shrink-0 text-sm font-black text-foreground">
+                {item.percentage}%
+              </span>
             </div>
           ))}
         </div>
@@ -705,7 +746,7 @@ const TrafficHeader = ({
   setRange: (range: TrafficSummaryQuery) => void;
 }) => (
   <CardShell className="border-border/70 bg-surface/90 p-5 md:p-6">
-    <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
+    <div className="flex flex-col gap-5 2xl:flex-row 2xl:items-start 2xl:justify-between">
       <div className="min-w-0">
         <p className="text-xs font-semibold uppercase tracking-[0.12em] text-primary">
           Analytics first-party
@@ -719,8 +760,11 @@ const TrafficHeader = ({
         </p>
       </div>
 
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
-        <div className="grid gap-3 sm:grid-cols-2" onBlur={onDateControlsBlur}>
+      <div className="flex w-full min-w-0 flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end 2xl:w-auto 2xl:flex-nowrap">
+        <div
+          className="grid w-full min-w-0 gap-3 sm:w-auto sm:min-w-[18rem] sm:grid-cols-2"
+          onBlur={onDateControlsBlur}
+        >
           <label className="text-xs font-semibold text-muted">
             De
             <input
@@ -742,7 +786,7 @@ const TrafficHeader = ({
             />
           </label>
         </div>
-        <div className="flex flex-wrap gap-2 sm:w-44">
+        <div className="flex w-full flex-wrap gap-2 sm:w-auto 2xl:w-44">
           {QUICK_RANGES.map((days) => (
             <button
               className="h-9 rounded-full border border-border bg-surface px-3 text-xs font-semibold text-muted transition hover:border-primary hover:text-primary"
@@ -755,7 +799,7 @@ const TrafficHeader = ({
           ))}
         </div>
         <button
-          className="inline-flex h-11 min-w-44 items-center justify-center gap-2 rounded-control bg-primary px-4 text-sm font-semibold text-white shadow-control transition hover:brightness-105 disabled:opacity-60"
+          className="inline-flex h-11 w-full min-w-0 items-center justify-center gap-2 rounded-control bg-primary px-4 text-sm font-semibold text-white shadow-control transition hover:brightness-105 disabled:opacity-60 sm:w-auto sm:min-w-44"
           disabled={isExporting || !isValidRange(range)}
           onClick={onExport}
           type="button"
@@ -776,7 +820,7 @@ const TrafficHeader = ({
 );
 
 const TrafficContent = ({ summary }: { summary: AdminTrafficSummary }) => (
-  <div className="space-y-6">
+  <div className="max-w-full space-y-6 overflow-x-clip">
     {!hasPeriodRecords(summary) ? <EmptyState period={summary.period} /> : null}
 
     <CardShell className="p-5 md:p-6">
@@ -792,14 +836,14 @@ const TrafficContent = ({ summary }: { summary: AdminTrafficSummary }) => (
           Contadores reais
         </span>
       </div>
-      <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-5">
+      <div className="mt-5 grid min-w-0 gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-5">
         {summary.overview_cards.map((metric) => (
           <MetricCard key={metric.id} metric={metric} />
         ))}
       </div>
     </CardShell>
 
-    <div className="grid gap-4 xl:grid-cols-3">
+    <div className="grid min-w-0 gap-4 xl:grid-cols-3">
       <CardShell className="p-5">
         <PanelTitle
           icon={PieChart}
@@ -832,7 +876,7 @@ const TrafficContent = ({ summary }: { summary: AdminTrafficSummary }) => (
 
     <LocationPanel locations={summary.locations} />
 
-    <div className="grid gap-4 xl:grid-cols-3">
+    <div className="grid min-w-0 gap-4 xl:grid-cols-3">
       <CardShell className="p-5">
         <PanelTitle
           icon={DoorOpen}
@@ -859,7 +903,7 @@ const TrafficContent = ({ summary }: { summary: AdminTrafficSummary }) => (
       </CardShell>
     </div>
 
-    <div className="grid gap-4 xl:grid-cols-2">
+    <div className="grid min-w-0 gap-4 xl:grid-cols-2">
       <CardShell className="p-5">
         <PanelTitle
           icon={Activity}
@@ -884,7 +928,7 @@ const TrafficContent = ({ summary }: { summary: AdminTrafficSummary }) => (
           <AlertTriangle aria-hidden className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
           <div>
             <h2 className="font-black text-foreground">Limitações exibidas honestamente</h2>
-            <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-muted">
+            <ul className="mt-2 list-disc space-y-1 break-words pl-5 text-sm text-muted">
               {summary.unavailable.map((item) => (
                 <li key={item.id}>
                   <strong className="text-foreground">{item.label}:</strong> {item.description}
@@ -925,7 +969,7 @@ export const AdminTrafficClient = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="max-w-full space-y-6 overflow-x-clip">
       <TrafficHeader
         isExporting={exportMutation.isPending}
         onDateChange={handleDateChange}

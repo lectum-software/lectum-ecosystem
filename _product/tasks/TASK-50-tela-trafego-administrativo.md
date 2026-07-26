@@ -256,3 +256,28 @@ Validacao desta execucao complementar:
   `http://localhost:3012/trafego`, Chrome headless com viewport desktop e emulacao mobile
   390x844; validou `admin-premium-pilot`, label **Analytics first-party**, card **Visao geral**,
   10 badges `real`, CTA de exportacao, 22 cards/sections e mapa SVG do Brasil com 27 estados.
+
+## Execucao complementar - contencao de largura util em Trafego (2026-07-25)
+
+- Corrigida a barra horizontal do browser em `/trafego` sem alterar backend, contratos HTTP,
+  metricas, exportacao CSV, Prisma/migrations ou packages.
+- O `AdminShell` e a base global do Admin passaram a conter overflow horizontal do documento,
+  mantendo a largura util como limite do layout.
+- A tela de Trafego recebeu `min-w-0`, quebras para paths/fontes tecnicas/rankings, cards mobile
+  para paginas de entrada e header empilhado ate `2xl`, evitando que controles e textos longos
+  ultrapassem a area disponivel ao lado da sidebar.
+- O grafico donut passou a usar composicao lado a lado somente em `2xl`, preservando leitura em
+  desktops menores sem forcar largura extra.
+- Builder/Quick Copy nao estava exposto como ferramenta callable nesta execucao; a referencia
+  auditavel foi `_product/proto/admin/TrÃ¡fego.png` e a captura enviada pelo usuario.
+- ADR atualizado: `adrs/0263-admin-psicologos-piloto-premium.md`.
+
+Validacao desta execucao complementar:
+
+- `pnpm --dir admin exec biome check --write "src/app/globals.css" "src/components/admin-shell/shell.tsx" "src/app/(admin)/trafego/client.tsx"`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check`
+- Browser local/headless com admin real transitorio removido apos o teste: build servido em
+  `http://localhost:3002/trafego`; viewports 390x844, 1366x900 e 1920x1000 ficaram com
+  `horizontalOverflowPx=0` e `offscreenCount=0`.

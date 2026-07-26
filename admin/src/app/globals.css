@@ -118,6 +118,8 @@
 
 html {
   min-height: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
   background: var(--admin-background);
   font-size: 15px;
 }
@@ -130,11 +132,20 @@ html {
 
 body {
   min-height: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
   margin: 0;
   background: var(--admin-background);
   color: var(--admin-foreground);
   font-family: var(--admin-font-sans);
   text-rendering: optimizeLegibility;
+}
+
+@supports (overflow-x: clip) {
+  html,
+  body {
+    overflow-x: clip;
+  }
 }
 
 button,

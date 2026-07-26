@@ -416,7 +416,7 @@ export const AdminShell = ({ children }: PropsWithChildren) => {
   return (
     <div
       className={cn(
-        "min-h-dvh bg-background text-foreground",
+        "min-h-dvh max-w-full overflow-x-clip bg-background text-foreground",
         premiumPilot && "admin-premium-pilot",
       )}
     >
@@ -484,11 +484,11 @@ export const AdminShell = ({ children }: PropsWithChildren) => {
 
       <div
         className={cn(
-          "min-w-0 transition-[padding] duration-200 lg:pl-64",
+          "min-w-0 max-w-full overflow-x-clip transition-[padding] duration-200 lg:pl-64",
           collapsed && "lg:pl-20",
         )}
       >
-        <main className="mx-auto w-full min-w-0 max-w-[1440px] px-4 py-5 sm:px-6 lg:px-8 lg:py-8">
+        <main className="mx-auto w-full min-w-0 max-w-full overflow-x-clip px-4 py-5 sm:px-6 lg:px-8 lg:py-8 xl:max-w-[1440px]">
           <div className="mb-4 flex lg:hidden">
             <button
               aria-label="Abrir menu administrativo"

@@ -647,3 +647,33 @@ Validacao desta expansao:
   `http://localhost:3012/trafego`, Chrome headless com viewport desktop e emulacao mobile
   390x844; validou `admin-premium-pilot`, label **Analytics first-party**, card **Visao geral**,
   10 badges `real`, CTA de exportacao, 22 cards/sections e mapa SVG do Brasil com 27 estados.
+
+## Ajuste pos-feedback 2026-07-25: contencao de largura util em Trafego
+
+O feedback visual em `/trafego` mostrou barra de rolagem horizontal no viewport desktop, causada
+por combinacao de conteudo analitico denso, textos longos sem quebra e controles do header
+disputando a largura util ao lado da sidebar.
+
+Decisoes:
+
+- Aplicar uma barreira global no Admin contra scroll horizontal do documento (`html`, `body` e
+  `AdminShell`), mantendo rolagens internas explicitas quando um componente realmente precisar.
+- Ajustar `/trafego` com `min-w-0`, `break-all`/quebra de textos longos e listas em cards no mobile
+  para caminhos, fontes tecnicas e rankings nao expandirem a pagina.
+- Renderizar o grafico donut com layout lado a lado somente em `2xl`, evitando que cards de tres
+  colunas em desktops menores forcem largura extra.
+- Empilhar o header de filtros/CTA ate `2xl`, porque a largura util real considera a sidebar fixa.
+- Nao alterar endpoints, contratos HTTP, metricas, exportacao CSV, Prisma/migrations ou packages.
+
+Consequencia: Trafego preserva os dados reais e a hierarquia visual do piloto premium, mas passa a
+respeitar a largura util da tela sem barra horizontal no browser.
+
+Validacao deste ajuste:
+
+- `pnpm --dir admin exec biome check --write "src/app/globals.css" "src/components/admin-shell/shell.tsx" "src/app/(admin)/trafego/client.tsx"`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check`
+- Browser local/headless com admin real transitorio removido apos o teste: build servido em
+  `http://localhost:3002/trafego`, viewports 390x844, 1366x900 e 1920x1000 com
+  `horizontalOverflowPx=0` e `offscreenCount=0`.
