@@ -611,3 +611,39 @@ Validacao desta expansao:
 - `pnpm --dir admin build` (primeira tentativa bloqueada por build Next concorrente; reexecutado com sucesso)
 - Smoke HTTP local: `GET http://localhost:3002/moderacao` retornou `200`.
 - `pnpm check` foi tentado, mas excedeu 10 minutos no runner; sem alteracoes em backend/frontend nesta expansao.
+
+## Expansao 2026-07-25: Trafego no piloto premium
+
+Por pedido direto de produto, a pagina Admin **Trafego** tambem passa a usar o escopo
+`admin-premium-pilot`, mantendo intactos os endpoints reais da TASK-50.
+
+Decisoes:
+
+- Incluir `/trafego` e descendentes na regra centralizada do `AdminShell`, sem duplicar shell ou
+  criar tema paralelo.
+- Reaproveitar os tokens do piloto premium: sidebar clara, azul Lectum, cards com borda sutil,
+  sombra quase imperceptivel, `rounded-card`/`rounded-control` e tipografia menos pesada.
+- Converter o topo de Trafego em card mobile-first com label **Analytics first-party**, titulo,
+  subtitulo, filtros reais de data/atalhos de periodo e CTA **Exportar relatorio** no mesmo bloco.
+- Agrupar os contadores de **Visao geral** em um card proprio com resumo do periodo retornado pelo
+  backend e manter todos os graficos/listas existentes baseados em dados reais.
+- Substituir a nota de mapa indisponivel por um mapa SVG local do Brasil, sem package novo, usando
+  apenas agregados reais de `visitor_location`; quando nao houver estado real, a tela mostra o mapa
+  base sem volume simulado e com estado vazio honesto.
+- Nao alterar backend, contratos HTTP, formulas de metricas, Prisma/migrations, packages, tracking
+  ou exportacao CSV.
+
+Consequencia: Trafego passa a ficar visualmente consistente com Psicologos, Comunidades, Pacientes,
+Configuracoes, Notificacoes, Financeiro e Moderacao no piloto premium, sem simular trafego nem
+prometer atribuicao maior do que a first-party capturada.
+
+Validacao desta expansao:
+
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/trafego/client.tsx"`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check`
+- Browser local com admin real transitorio removido apos o teste: build atual servido em
+  `http://localhost:3012/trafego`, Chrome headless com viewport desktop e emulacao mobile
+  390x844; validou `admin-premium-pilot`, label **Analytics first-party**, card **Visao geral**,
+  10 badges `real`, CTA de exportacao, 22 cards/sections e mapa SVG do Brasil com 27 estados.

@@ -3,7 +3,6 @@
 import {
   Activity,
   AlertTriangle,
-  CalendarDays,
   DoorOpen,
   Download,
   Globe2,
@@ -17,7 +16,7 @@ import {
   TrendingUp,
   Users,
 } from "lucide-react";
-import { type FocusEventHandler, useMemo } from "react";
+import type { FocusEventHandler } from "react";
 import { toast } from "sonner";
 import { useAdminTrafficExport, useAdminTrafficSummary } from "@/api/callers/traffic";
 import { resolveApiError } from "@/api/handle";
@@ -30,6 +29,7 @@ import type {
   TrafficSummaryQuery,
 } from "@/api/req/traffic";
 import { useDateRangeCommitOnBlur } from "@/hooks/use-date-range-commit-on-blur";
+import { BRAZIL_STATE_MAP_PATHS } from "@/lib/brazil-state-map";
 import { cn } from "@/lib/utils";
 
 const QUICK_RANGES = [7, 30, 90] as const;
@@ -51,6 +51,39 @@ const SKELETON_KEYS = [
 ] as const;
 
 const numberFormatter = new Intl.NumberFormat("pt-BR");
+
+const normalizeTextKey = (value: string) =>
+  value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim()
+    .toUpperCase();
+
+const BRAZIL_STATE_CODES = new Set<string>(BRAZIL_STATE_MAP_PATHS.map((state) => state.code));
+const BRAZIL_STATE_CODE_BY_NAME = new Map(
+  BRAZIL_STATE_MAP_PATHS.map((state) => [normalizeTextKey(state.name), state.code]),
+);
+
+const resolveBrazilStateCode = (item: TrafficBreakdownItem) => {
+  const candidates = [item.id.split(":")[0], item.label.split(",")[0], item.label].map((value) =>
+    normalizeTextKey(value),
+  );
+
+  for (const candidate of candidates) {
+    if (BRAZIL_STATE_CODES.has(candidate)) return candidate;
+
+    const codeByName = BRAZIL_STATE_CODE_BY_NAME.get(candidate);
+    if (codeByName) return codeByName;
+  }
+
+  return null;
+};
+
+const stateMapFill = (count: number, maxCount: number) => {
+  const intensity = maxCount > 0 ? 0.16 + (count / maxCount) * 0.72 : 0.16;
+
+  return `rgb(48 140 232 / ${intensity.toFixed(2)})`;
+};
 
 const pad = (value: number) => String(value).padStart(2, "0");
 const toInputDate = (date: Date) =>
@@ -144,7 +177,10 @@ const hasPeriodRecords = (summary: AdminTrafficSummary) => {
 
 const CardShell = ({ children, className }: { children?: React.ReactNode; className?: string }) => (
   <section
-    className={cn("rounded-card border border-border bg-surface shadow-admin-soft", className)}
+    className={cn(
+      "rounded-card border border-border/80 bg-surface/95 shadow-admin-soft backdrop-blur",
+      className,
+    )}
   >
     {children}
   </section>
@@ -173,11 +209,11 @@ const cardIcons: Record<string, { icon: LucideIcon; tone: keyof typeof toneClass
 
 const TrendBadge = ({ metric }: { metric: TrafficMetric }) => {
   if (metric.unavailable)
-    return <span className="text-xs font-bold text-warning">Indisponível</span>;
+    return <span className="text-[0.68rem] font-semibold text-warning">Indisponível</span>;
 
   const lowerIsBetter = metric.id === "bounce_rate";
   const trendClass = cn(
-    "text-xs font-black",
+    "text-[0.68rem] font-semibold",
     metric.trend === "flat" && "text-muted",
     metric.trend === "unavailable" && "text-muted",
     metric.trend === "up" && (lowerIsBetter ? "text-danger" : "text-success"),
@@ -192,36 +228,50 @@ const MetricCard = ({ metric }: { metric: TrafficMetric }) => {
   const Icon = config.icon;
 
   return (
-    <CardShell className="min-h-40 p-5">
+    <CardShell className="min-h-[9.25rem] min-w-0 p-3 transition duration-200 ease-out hover:-translate-y-0.5 hover:border-primary/25 md:p-4 xl:p-3">
       <div className="flex items-start justify-between gap-3">
         <div
-          className={cn("grid h-12 w-12 place-items-center rounded-full", toneClasses[config.tone])}
+          className={cn(
+            "grid h-9 w-9 shrink-0 place-items-center rounded-full xl:h-8 xl:w-8",
+            toneClasses[config.tone],
+          )}
         >
-          <Icon aria-hidden className="h-5 w-5" />
+          <Icon aria-hidden className="h-4 w-4" />
         </div>
-        <span className="rounded-full bg-surface-muted px-2 py-1 text-[0.65rem] font-bold text-muted">
+        <span className="rounded-full bg-surface-muted px-2 py-1 text-[0.65rem] font-semibold text-muted">
           real
         </span>
       </div>
-      <div className="mt-5 space-y-2">
-        <p className="text-sm font-black text-foreground">{metric.label}</p>
-        <p className="text-3xl font-black tracking-tight text-foreground">
+      <div className="mt-4 min-w-0 space-y-1.5 xl:mt-3">
+        <p className="truncate text-xs font-semibold text-foreground" title={metric.label}>
+          {metric.label}
+        </p>
+        <p className="min-w-0 truncate text-2xl font-bold tracking-tight text-foreground xl:text-[1.7rem]">
           {formatMetricValue(metric)}
         </p>
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex min-w-0 items-center gap-1.5 overflow-hidden whitespace-nowrap">
           <TrendBadge metric={metric} />
-          <span className="text-xs font-medium text-muted">vs. período anterior</span>
+          <span className="min-w-0 truncate text-[0.68rem] font-medium text-muted">
+            vs. período anterior
+          </span>
         </div>
-        <p className="text-xs leading-relaxed text-muted">{metric.description}</p>
+        <p className="line-clamp-2 text-[0.68rem] font-medium leading-4 text-muted">
+          {metric.unavailable
+            ? metric.unavailable_reason || metric.description
+            : metric.description}
+        </p>
       </div>
     </CardShell>
   );
 };
 
 const LoadingGrid = () => (
-  <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6">
+  <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
     {SKELETON_KEYS.map((key) => (
-      <CardShell className="h-40 animate-pulse bg-surface-muted" key={`traffic-skeleton-${key}`} />
+      <CardShell
+        className="h-[9.25rem] animate-pulse bg-surface-muted"
+        key={`traffic-skeleton-${key}`}
+      />
     ))}
   </div>
 );
@@ -234,12 +284,12 @@ const ErrorState = ({ message, onRetry }: { message: string; onRetry: () => void
           <AlertTriangle aria-hidden className="h-5 w-5" />
         </div>
         <div>
-          <h2 className="text-lg font-black">Não foi possível carregar Tráfego</h2>
+          <h2 className="text-lg font-semibold">Não foi possível carregar Tráfego</h2>
           <p className="mt-1 text-sm text-muted">{message}</p>
         </div>
       </div>
       <button
-        className="inline-flex h-11 items-center justify-center gap-2 rounded-control border border-border bg-surface px-4 text-sm font-black text-foreground transition hover:border-border-strong"
+        className="inline-flex h-11 items-center justify-center gap-2 rounded-control border border-border bg-surface px-4 text-sm font-semibold text-foreground transition hover:border-border-strong"
         onClick={onRetry}
         type="button"
       >
@@ -362,15 +412,18 @@ const DonutChart = ({
           ) : (
             items.map((item, index) => (
               <div className="flex items-center justify-between gap-3" key={item.id}>
-                <span className="flex items-center gap-2 text-sm font-bold text-foreground">
+                <span className="flex min-w-0 items-center gap-2 text-sm font-semibold text-foreground">
                   <span
                     aria-hidden
-                    className="h-3 w-3 rounded-full"
+                    className="h-2.5 w-2.5 shrink-0 rounded-full"
                     style={{ backgroundColor: CHART_COLORS[index % CHART_COLORS.length] }}
                   />
-                  {item.label}
+                  <span className="truncate">{item.label}</span>
                 </span>
-                <span className="text-sm font-black text-foreground">{item.percentage}%</span>
+                <span className="shrink-0 text-sm font-semibold text-foreground">
+                  {numberFormatter.format(item.count)}{" "}
+                  <span className="text-xs font-medium text-muted">({item.percentage}%)</span>
+                </span>
               </div>
             ))
           )}
@@ -441,10 +494,10 @@ const PanelTitle = ({
   <div className="flex items-start justify-between gap-3">
     <div className="flex items-center gap-2">
       <Icon aria-hidden className="h-5 w-5 text-primary" />
-      <h2 className="text-lg font-black text-foreground">{title}</h2>
+      <h2 className="text-lg font-bold text-foreground">{title}</h2>
     </div>
     {source ? (
-      <span className="rounded-full bg-surface-muted px-2 py-1 text-[0.65rem] font-bold text-muted">
+      <span className="rounded-full bg-surface-muted px-2 py-1 text-[0.65rem] font-semibold text-muted">
         {source}
       </span>
     ) : null}
@@ -529,6 +582,77 @@ const RankingList = ({ items }: { items: TrafficRankingItem[] }) => (
   </div>
 );
 
+const BrazilAccessMap = ({ states }: { states: TrafficBreakdownItem[] }) => {
+  const stateItems = states.flatMap((item) => {
+    const code = resolveBrazilStateCode(item);
+
+    return code ? [{ ...item, code }] : [];
+  });
+  const byCode = new Map(stateItems.map((item) => [item.code, item]));
+  const maxCount = Math.max(1, ...stateItems.map((item) => item.count));
+  const hasStateData = stateItems.length > 0;
+
+  return (
+    <figure className="mt-4">
+      <svg
+        aria-label={
+          hasStateData
+            ? `Mapa de acessos por estado: ${stateItems
+                .map((item) => `${item.label}: ${numberFormatter.format(item.count)}`)
+                .join("; ")}.`
+            : "Mapa base do Brasil sem acessos por estado capturados no período."
+        }
+        className="mx-auto h-[18rem] w-full max-w-[22rem]"
+        role="img"
+        viewBox="0 0 360 380"
+      >
+        {BRAZIL_STATE_MAP_PATHS.map((state) => {
+          const metric = byCode.get(state.code);
+
+          return (
+            <path
+              d={state.d}
+              fill={metric ? stateMapFill(metric.count, maxCount) : "var(--admin-surface-muted)"}
+              key={state.code}
+              opacity={metric || hasStateData ? 1 : 0.72}
+              stroke="var(--admin-surface)"
+              strokeLinejoin="round"
+              strokeWidth="1.1"
+            >
+              <title>
+                {state.name}: {metric ? numberFormatter.format(metric.count) : "sem acesso"}
+              </title>
+            </path>
+          );
+        })}
+      </svg>
+      {hasStateData ? (
+        <figcaption className="mt-3 flex flex-wrap items-center justify-center gap-2 text-[0.68rem] font-semibold text-muted">
+          <span>Menos acessos</span>
+          <span
+            aria-hidden
+            className="inline-flex overflow-hidden rounded-full border border-border"
+          >
+            {[0.16, 0.3, 0.44, 0.58, 0.72, 0.88].map((opacity) => (
+              <span
+                className="h-3 w-5"
+                key={opacity}
+                style={{ backgroundColor: `rgb(48 140 232 / ${opacity})` }}
+              />
+            ))}
+          </span>
+          <span>Mais acessos</span>
+        </figcaption>
+      ) : (
+        <figcaption className="mt-3 rounded-2xl border border-dashed border-border bg-surface p-3 text-center text-[0.72rem] font-medium leading-5 text-muted">
+          Nenhum estado brasileiro real foi capturado neste período; o mapa base é exibido sem
+          simular volume estadual.
+        </figcaption>
+      )}
+    </figure>
+  );
+};
+
 const LocationPanel = ({ locations }: { locations: AdminTrafficSummary["locations"] }) => (
   <CardShell className="p-5">
     <PanelTitle icon={MapPinned} source={locations.source} title="Acessos por localização" />
@@ -538,11 +662,11 @@ const LocationPanel = ({ locations }: { locations: AdminTrafficSummary["location
         <BarList items={locations.states} total={locations.total} />
       </div>
       <div className="rounded-card bg-surface-muted p-4">
-        <h3 className="text-sm font-black text-foreground">Mapa de acessos simplificado</h3>
+        <h3 className="text-sm font-black text-foreground">Mapa de acessos</h3>
         <p className="mt-2 text-xs leading-relaxed text-muted">
-          Sem pacote de mapa nesta versão. O ranking abaixo usa visitor_location real e mantém uma
-          alternativa acessível ao mapa visual do protótipo.
+          Desenho SVG local sem pacote novo, alimentado somente por `visitor_location` real.
         </p>
+        <BrazilAccessMap states={locations.states} />
         <div className="mt-4 space-y-3">
           {locations.countries.slice(0, 5).map((item, index) => (
             <div className="flex items-center justify-between gap-3" key={item.id}>
@@ -580,79 +704,100 @@ const TrafficHeader = ({
   rangeError: string | null;
   setRange: (range: TrafficSummaryQuery) => void;
 }) => (
-  <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
-    <div>
-      <h1 className="text-3xl font-black tracking-tight text-foreground md:text-4xl">Tráfego</h1>
-      <p className="mt-2 text-sm font-medium text-muted">
-        Acompanhe o comportamento de acesso e as principais origens de tráfego da plataforma.
-      </p>
-    </div>
+  <CardShell className="border-border/70 bg-surface/90 p-5 md:p-6">
+    <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
+      <div className="min-w-0">
+        <p className="text-xs font-semibold uppercase tracking-[0.12em] text-primary">
+          Analytics first-party
+        </p>
+        <h1 className="mt-2 text-3xl font-bold tracking-tight text-foreground md:text-4xl">
+          Tráfego
+        </h1>
+        <p className="mt-2 max-w-3xl text-sm font-medium leading-6 text-muted md:text-base">
+          Acompanhe o comportamento de acesso, os principais canais, dispositivos, páginas e
+          conversões reais da plataforma.
+        </p>
+      </div>
 
-    <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
-      <div className="grid gap-3 sm:grid-cols-2" onBlur={onDateControlsBlur}>
-        <label className="text-xs font-black text-muted">
-          De
-          <input
-            className="mt-1 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground shadow-control focus:border-primary"
-            max={range.to}
-            onChange={(event) => onDateChange("from", event.target.value)}
-            type="date"
-            value={range.from}
-          />
-        </label>
-        <label className="text-xs font-black text-muted">
-          Até
-          <input
-            className="mt-1 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground shadow-control focus:border-primary"
-            min={range.from}
-            onChange={(event) => onDateChange("to", event.target.value)}
-            type="date"
-            value={range.to}
-          />
-        </label>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+        <div className="grid gap-3 sm:grid-cols-2" onBlur={onDateControlsBlur}>
+          <label className="text-xs font-semibold text-muted">
+            De
+            <input
+              className="mt-1 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground shadow-control outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+              max={range.to}
+              onChange={(event) => onDateChange("from", event.target.value)}
+              type="date"
+              value={range.from}
+            />
+          </label>
+          <label className="text-xs font-semibold text-muted">
+            Até
+            <input
+              className="mt-1 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground shadow-control outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+              min={range.from}
+              onChange={(event) => onDateChange("to", event.target.value)}
+              type="date"
+              value={range.to}
+            />
+          </label>
+        </div>
+        <div className="flex flex-wrap gap-2 sm:w-44">
+          {QUICK_RANGES.map((days) => (
+            <button
+              className="h-9 rounded-full border border-border bg-surface px-3 text-xs font-semibold text-muted transition hover:border-primary hover:text-primary"
+              key={days}
+              onClick={() => setRange(getQuickRange(days))}
+              type="button"
+            >
+              {days} dias
+            </button>
+          ))}
+        </div>
+        <button
+          className="inline-flex h-11 min-w-44 items-center justify-center gap-2 rounded-control bg-primary px-4 text-sm font-semibold text-white shadow-control transition hover:brightness-105 disabled:opacity-60"
+          disabled={isExporting || !isValidRange(range)}
+          onClick={onExport}
+          type="button"
+        >
+          {isExporting ? (
+            <Loader2 aria-hidden className="h-4 w-4 animate-spin" />
+          ) : (
+            <Download aria-hidden className="h-4 w-4" />
+          )}
+          Exportar relatório
+        </button>
       </div>
-      <div className="flex flex-wrap gap-2 sm:w-44">
-        {QUICK_RANGES.map((days) => (
-          <button
-            className="h-9 rounded-full border border-border bg-surface px-3 text-xs font-black text-muted transition hover:border-primary hover:text-primary"
-            key={days}
-            onClick={() => setRange(getQuickRange(days))}
-            type="button"
-          >
-            {days} dias
-          </button>
-        ))}
-      </div>
-      <button
-        className="inline-flex h-11 min-w-44 items-center justify-center gap-2 rounded-control border border-primary bg-surface px-4 text-sm font-black text-primary shadow-control transition hover:bg-primary-soft disabled:opacity-60"
-        disabled={isExporting || !isValidRange(range)}
-        onClick={onExport}
-        type="button"
-      >
-        {isExporting ? (
-          <Loader2 aria-hidden className="h-4 w-4 animate-spin" />
-        ) : (
-          <Download aria-hidden className="h-4 w-4" />
-        )}
-        Exportar relatório
-      </button>
-      {rangeError ? <p className="max-w-md text-xs font-bold text-danger">{rangeError}</p> : null}
+      {rangeError ? (
+        <p className="max-w-md text-xs font-semibold text-danger">{rangeError}</p>
+      ) : null}
     </div>
-  </div>
+  </CardShell>
 );
 
 const TrafficContent = ({ summary }: { summary: AdminTrafficSummary }) => (
   <div className="space-y-6">
     {!hasPeriodRecords(summary) ? <EmptyState period={summary.period} /> : null}
 
-    <section>
-      <h2 className="mb-4 text-xl font-black text-foreground">Visão geral</h2>
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+    <CardShell className="p-5 md:p-6">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <h2 className="text-xl font-bold text-foreground">Visão geral</h2>
+          <p className="mt-1 text-sm font-semibold leading-6 text-muted">
+            {summary.period.label} · {formatDate(summary.period.from)} a{" "}
+            {formatDate(summary.period.to)} ({summary.period.days} dias)
+          </p>
+        </div>
+        <span className="w-fit rounded-full bg-primary-soft px-3 py-1 text-xs font-semibold text-primary">
+          Contadores reais
+        </span>
+      </div>
+      <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-5">
         {summary.overview_cards.map((metric) => (
           <MetricCard key={metric.id} metric={metric} />
         ))}
       </div>
-    </section>
+    </CardShell>
 
     <div className="grid gap-4 xl:grid-cols-3">
       <CardShell className="p-5">
@@ -769,12 +914,6 @@ export const AdminTrafficClient = () => {
   const query = useAdminTrafficSummary(appliedRange, { enabled: validRange });
   const exportMutation = useAdminTrafficExport();
   const queryError = query.error ? resolveApiError(query.error) : null;
-  const periodCopy = useMemo(() => {
-    if (!appliedRange.from || !appliedRange.to) return "Selecione um período válido";
-
-    return `${formatDate(appliedRange.from)} — ${formatDate(appliedRange.to)}`;
-  }, [appliedRange]);
-
   const handleExport = async () => {
     try {
       const result = await exportMutation.mutateAsync(appliedRange);
@@ -796,13 +935,6 @@ export const AdminTrafficClient = () => {
         rangeError={rangeError}
         setRange={applyRange}
       />
-
-      <div className="flex flex-wrap items-center gap-2 text-sm text-muted">
-        <CalendarDays aria-hidden className="h-4 w-4" />
-        <span className="font-bold">Período consultado:</span>
-        <span>{periodCopy}</span>
-        {query.data ? <span>({query.data.period.days} dias)</span> : null}
-      </div>
 
       {!validRange ? (
         <ErrorState

@@ -228,3 +228,31 @@ Regras de UI obrigatórias:
 - `pnpm check`: sem erros.
 - Smoke API: resumo e exportacao retornaram dados agregados reais, incluindo origem, dispositivos, PWA, localizacao, paginas de entrada, conversoes e rankings.
 - Browser local: login admin real, abertura de `/trafego`, troca de periodo para 7 dias, exportacao CSV e validacao visual mobile (~390px), tablet (768px) e desktop.
+
+## Execucao complementar - layout piloto em Trafego (2026-07-25)
+
+- Aplicado o escopo visual `admin-premium-pilot` tambem em `/trafego`, sem alterar endpoints,
+  contratos HTTP, formulas, exportacao CSV, Prisma/migrations ou packages.
+- O topo passou a usar card mobile-first com label **Analytics first-party**, filtros de datas,
+  atalhos reais de periodo e CTA **Exportar relatorio**.
+- A **Visao geral** foi agrupada em card proprio com o periodo retornado pelo backend e contadores
+  reais preservando badge `real`, variacao vs. periodo anterior e descricoes de origem.
+- Graficos de origem, dispositivos e tipo de usuario mantem os mesmos agregados reais e passaram a
+  exibir contagem + percentual na legenda.
+- O bloco de localizacao passou a renderizar mapa SVG local do Brasil com agregados reais de
+  `visitor_location`, sem package novo; se nao houver estado real, exibe o mapa base sem simular
+  volume estadual e com copy honesta.
+- Builder/Quick Copy nao estava exposto como ferramenta callable nesta execucao; a referencia
+  auditavel foi `_product/proto/admin/Tráfego.png` e a captura enviada pelo usuario.
+- ADR atualizado: `adrs/0263-admin-psicologos-piloto-premium.md`.
+
+Validacao desta execucao complementar:
+
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/trafego/client.tsx"`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check`
+- Browser local com admin real transitorio removido apos o teste: build atual servido em
+  `http://localhost:3012/trafego`, Chrome headless com viewport desktop e emulacao mobile
+  390x844; validou `admin-premium-pilot`, label **Analytics first-party**, card **Visao geral**,
+  10 badges `real`, CTA de exportacao, 22 cards/sections e mapa SVG do Brasil com 27 estados.
