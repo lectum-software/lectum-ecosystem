@@ -677,3 +677,26 @@ Validacao deste ajuste:
 - Browser local/headless com admin real transitorio removido apos o teste: build servido em
   `http://localhost:3002/trafego`, viewports 390x844, 1366x900 e 1920x1000 com
   `horizontalOverflowPx=0` e `offscreenCount=0`.
+
+## Ajuste pos-feedback 2026-07-26: header limpo em Trafego
+
+Novo feedback visual pediu remover do header de `/trafego` os filtros de data e o CTA **Exportar relatorio** para reduzir ruido e deixar o topo apenas informativo.
+
+Decisoes:
+
+- Manter o header de Trafego apenas com label **Analytics first-party**, titulo e subtitulo.
+- Remover do header os campos **De/Ate**, os atalhos **7/30/90 dias** e o botao **Exportar relatorio**.
+- Preservar a consulta real do resumo no periodo padrao de 30 dias, exibindo o periodo retornado pelo backend dentro do card **Visao geral**.
+- Nao alterar o endpoint nem o caller de exportacao nesta correcao visual; a acao apenas deixa de ser exposta no header.
+- Nao alterar backend, contratos HTTP, formulas, Prisma/migrations, packages, tracking ou dados persistidos.
+
+Consequencia: a pagina ganha um topo mais limpo e menos propenso a compressao visual ao lado da sidebar, mantendo dados reais e sem prometer filtros/exportacao no header.
+
+Validacao deste ajuste:
+
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/trafego/client.tsx"`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check`
+- Browser local/headless em `http://localhost:3002/trafego` com admin real transitorio removido
+  apos o teste: header sem campos de data, sem atalhos de periodo e sem CTA de exportacao.

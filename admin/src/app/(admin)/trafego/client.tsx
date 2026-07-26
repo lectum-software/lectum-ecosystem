@@ -4,9 +4,7 @@ import {
   Activity,
   AlertTriangle,
   DoorOpen,
-  Download,
   Globe2,
-  Loader2,
   type LucideIcon,
   MapPinned,
   MousePointerClick,
@@ -16,9 +14,8 @@ import {
   TrendingUp,
   Users,
 } from "lucide-react";
-import type { FocusEventHandler } from "react";
-import { toast } from "sonner";
-import { useAdminTrafficExport, useAdminTrafficSummary } from "@/api/callers/traffic";
+import { useMemo } from "react";
+import { useAdminTrafficSummary } from "@/api/callers/traffic";
 import { resolveApiError } from "@/api/handle";
 import type {
   AdminTrafficSummary,
@@ -28,11 +25,9 @@ import type {
   TrafficRankingItem,
   TrafficSummaryQuery,
 } from "@/api/req/traffic";
-import { useDateRangeCommitOnBlur } from "@/hooks/use-date-range-commit-on-blur";
 import { BRAZIL_STATE_MAP_PATHS } from "@/lib/brazil-state-map";
 import { cn } from "@/lib/utils";
 
-const QUICK_RANGES = [7, 30, 90] as const;
 const CHART_COLORS = [
   "var(--admin-primary)",
   "var(--admin-success)",
@@ -144,22 +139,6 @@ const formatChange = (value: number | null) => {
   })}%`;
 };
 
-const isValidRange = (range: TrafficSummaryQuery) => {
-  if (!range.from || !range.to) return false;
-
-  return dateFromInput(range.from) <= dateFromInput(range.to);
-};
-
-const downloadBlob = (blob: Blob, filename: string) => {
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = filename;
-  document.body.appendChild(link);
-  link.click();
-  link.remove();
-  URL.revokeObjectURL(url);
-};
 
 const hasPeriodRecords = (summary: AdminTrafficSummary) => {
   const overviewValues = summary.overview_cards.some((card) => card.value > 0);
@@ -728,93 +707,19 @@ const LocationPanel = ({ locations }: { locations: AdminTrafficSummary["location
   </CardShell>
 );
 
-const TrafficHeader = ({
-  isExporting,
-  onDateChange,
-  onDateControlsBlur,
-  onExport,
-  range,
-  rangeError,
-  setRange,
-}: {
-  isExporting: boolean;
-  onDateChange: (field: "from" | "to", value: string) => void;
-  onDateControlsBlur: FocusEventHandler<HTMLDivElement>;
-  onExport: () => void;
-  range: TrafficSummaryQuery;
-  rangeError: string | null;
-  setRange: (range: TrafficSummaryQuery) => void;
-}) => (
+const TrafficHeader = () => (
   <CardShell className="border-border/70 bg-surface/90 p-5 md:p-6">
-    <div className="flex flex-col gap-5 2xl:flex-row 2xl:items-start 2xl:justify-between">
-      <div className="min-w-0">
-        <p className="text-xs font-semibold uppercase tracking-[0.12em] text-primary">
-          Analytics first-party
-        </p>
-        <h1 className="mt-2 text-3xl font-bold tracking-tight text-foreground md:text-4xl">
-          Tráfego
-        </h1>
-        <p className="mt-2 max-w-3xl text-sm font-medium leading-6 text-muted md:text-base">
-          Acompanhe o comportamento de acesso, os principais canais, dispositivos, páginas e
-          conversões reais da plataforma.
-        </p>
-      </div>
-
-      <div className="flex w-full min-w-0 flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end 2xl:w-auto 2xl:flex-nowrap">
-        <div
-          className="grid w-full min-w-0 gap-3 sm:w-auto sm:min-w-[18rem] sm:grid-cols-2"
-          onBlur={onDateControlsBlur}
-        >
-          <label className="text-xs font-semibold text-muted">
-            De
-            <input
-              className="mt-1 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground shadow-control outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
-              max={range.to}
-              onChange={(event) => onDateChange("from", event.target.value)}
-              type="date"
-              value={range.from}
-            />
-          </label>
-          <label className="text-xs font-semibold text-muted">
-            Até
-            <input
-              className="mt-1 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground shadow-control outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
-              min={range.from}
-              onChange={(event) => onDateChange("to", event.target.value)}
-              type="date"
-              value={range.to}
-            />
-          </label>
-        </div>
-        <div className="flex w-full flex-wrap gap-2 sm:w-auto 2xl:w-44">
-          {QUICK_RANGES.map((days) => (
-            <button
-              className="h-9 rounded-full border border-border bg-surface px-3 text-xs font-semibold text-muted transition hover:border-primary hover:text-primary"
-              key={days}
-              onClick={() => setRange(getQuickRange(days))}
-              type="button"
-            >
-              {days} dias
-            </button>
-          ))}
-        </div>
-        <button
-          className="inline-flex h-11 w-full min-w-0 items-center justify-center gap-2 rounded-control bg-primary px-4 text-sm font-semibold text-white shadow-control transition hover:brightness-105 disabled:opacity-60 sm:w-auto sm:min-w-44"
-          disabled={isExporting || !isValidRange(range)}
-          onClick={onExport}
-          type="button"
-        >
-          {isExporting ? (
-            <Loader2 aria-hidden className="h-4 w-4 animate-spin" />
-          ) : (
-            <Download aria-hidden className="h-4 w-4" />
-          )}
-          Exportar relatório
-        </button>
-      </div>
-      {rangeError ? (
-        <p className="max-w-md text-xs font-semibold text-danger">{rangeError}</p>
-      ) : null}
+    <div className="min-w-0">
+      <p className="text-xs font-semibold uppercase tracking-[0.12em] text-primary">
+        Analytics first-party
+      </p>
+      <h1 className="mt-2 text-3xl font-bold tracking-tight text-foreground md:text-4xl">
+        Tráfego
+      </h1>
+      <p className="mt-2 max-w-3xl text-sm font-medium leading-6 text-muted md:text-base">
+        Acompanhe o comportamento de acesso, os principais canais, dispositivos, páginas e
+        conversões reais da plataforma.
+      </p>
     </div>
   </CardShell>
 );
@@ -943,57 +848,21 @@ const TrafficContent = ({ summary }: { summary: AdminTrafficSummary }) => (
 );
 
 export const AdminTrafficClient = () => {
-  const {
-    appliedRange,
-    applyRange,
-    draftRange,
-    handleDateChange,
-    handleDateControlsBlur,
-    rangeError,
-  } = useDateRangeCommitOnBlur<TrafficSummaryQuery>({
-    initialRange: () => getQuickRange(30),
-    isValidRange,
-  });
-  const validRange = isValidRange(appliedRange);
-  const query = useAdminTrafficSummary(appliedRange, { enabled: validRange });
-  const exportMutation = useAdminTrafficExport();
+  const range = useMemo(() => getQuickRange(30), []);
+  const query = useAdminTrafficSummary(range);
   const queryError = query.error ? resolveApiError(query.error) : null;
-  const handleExport = async () => {
-    try {
-      const result = await exportMutation.mutateAsync(appliedRange);
-      downloadBlob(result.blob, result.filename);
-      toast.success("Exportação real de tráfego gerada com sucesso.");
-    } catch (error) {
-      toast.error(resolveApiError(error));
-    }
-  };
 
   return (
     <div className="max-w-full space-y-6 overflow-x-clip">
-      <TrafficHeader
-        isExporting={exportMutation.isPending}
-        onDateChange={handleDateChange}
-        onDateControlsBlur={handleDateControlsBlur}
-        onExport={() => void handleExport()}
-        range={draftRange}
-        rangeError={rangeError}
-        setRange={applyRange}
-      />
+      <TrafficHeader />
 
-      {!validRange ? (
-        <ErrorState
-          message="A data inicial precisa ser menor ou igual à data final."
-          onRetry={() => applyRange(getQuickRange(30))}
-        />
-      ) : null}
+      {query.isLoading ? <LoadingGrid /> : null}
 
-      {validRange && query.isLoading ? <LoadingGrid /> : null}
-
-      {validRange && query.isError && queryError ? (
+      {query.isError && queryError ? (
         <ErrorState message={queryError} onRetry={() => void query.refetch()} />
       ) : null}
 
-      {validRange && query.data ? <TrafficContent summary={query.data} /> : null}
+      {query.data ? <TrafficContent summary={query.data} /> : null}
     </div>
   );
 };

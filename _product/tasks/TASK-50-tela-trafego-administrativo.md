@@ -281,3 +281,27 @@ Validacao desta execucao complementar:
 - Browser local/headless com admin real transitorio removido apos o teste: build servido em
   `http://localhost:3002/trafego`; viewports 390x844, 1366x900 e 1920x1000 ficaram com
   `horizontalOverflowPx=0` e `offscreenCount=0`.
+
+## Execucao complementar - header limpo em Trafego (2026-07-26)
+
+- Removidos do header de `/trafego` os campos visuais de data **De/Ate**, os atalhos **7/30/90 dias**
+  e o CTA **Exportar relatorio**, conforme feedback visual direto.
+- A tela continua consultando dados reais no periodo padrao de 30 dias por meio do endpoint
+  `GET /api/admin/private/traffic/summary`; o periodo permanece visivel no card **Visao geral**.
+- O endpoint e o caller de exportacao foram preservados para nao alterar contrato backend nesta
+  correcao visual, mas a acao deixou de ser exposta no header.
+- Nao houve alteracao em backend, Prisma/migrations, packages, formulas de metricas ou dados
+  persistidos.
+- Builder/Quick Copy nao estava exposto como ferramenta callable nesta execucao; a referencia
+  auditavel foi `_product/proto/admin/Tráfego.png` e a captura enviada pelo usuario.
+
+Validacao desta execucao complementar:
+
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/trafego/client.tsx"`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check`
+- Browser local/headless em `http://localhost:3002/trafego` com admin real transitorio removido
+  apos o teste: header validado sem campos de data, sem atalhos de periodo e sem CTA de
+  exportacao; conteudo segue renderizando a **Visao geral** com periodo de 30 dias retornado pelo
+  backend.
