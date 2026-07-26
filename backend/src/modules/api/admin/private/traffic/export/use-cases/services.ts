@@ -204,6 +204,7 @@ const buildCsv = (summary: AdminTrafficSummary) => {
     summary.top_communities.items,
     summary.top_communities.source,
   );
+  appendRankingRows(rows, "top_post", summary.top_posts.items, summary.top_posts.source);
   appendRankingRows(
     rows,
     "top_psychologist",

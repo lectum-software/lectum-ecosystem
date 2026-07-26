@@ -6,6 +6,7 @@ import type {
   TrafficCommunityLabelRecord,
   TrafficLocationRecord,
   TrafficPageViewRecord,
+  TrafficPostLabelRecord,
   TrafficPsychologistLabelRecord,
   TrafficSessionRecord,
 } from "./interfaces/IAdminTrafficRepository";
@@ -168,6 +169,29 @@ export class AdminTrafficRepository implements IAdminTrafficRepository {
         utm_term: true,
         user_id: true,
         visitor_id: true,
+      },
+    });
+  }
+
+  async listPostsByIds(ids: string[]): Promise<TrafficPostLabelRecord[]> {
+    if (ids.length === 0) return [];
+
+    return prisma.community_post.findMany({
+      where: {
+        deleted: false,
+        id: {
+          in: ids,
+        },
+      },
+      select: {
+        community: {
+          select: {
+            name: true,
+            slug: true,
+          },
+        },
+        id: true,
+        title: true,
       },
     });
   }

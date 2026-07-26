@@ -45,6 +45,13 @@ campos de data e cards que exibem/ocultam curvas.
   `important_action_sessions` como cards: **Tempo médio na plataforma**, **Taxa de retorno** e
   **Sessões com ação importante**. Esses cards usam `quality.items`; não criam endpoint, fórmula,
   backfill ou contrato novo.
+- O card visual **Qualidade do trafego** deixa de ser renderizado como bloco autonomo; as metricas
+  de qualidade permanecem no contrato para alimentar os detalhes de navegacao e as limitacoes
+  indisponiveis.
+- A UI passa a posicionar, imediatamente abaixo de **Detalhes da navegacao por paginas**, uma grade
+  mobile-first de rankings: **Trafego por comunidade**, **Trafego por post** e **Trafego por
+  psicologo**. Em desktop amplo, a grade usa tres colunas lado a lado; em telas estreitas, empilha
+  sem overflow horizontal.
 - Nenhum pacote novo, mock, endpoint simulado, schema Prisma ou migration foi adicionado.
 
 ## Consequências
@@ -90,3 +97,7 @@ campos de data e cards que exibem/ocultam curvas.
   **Taxa de rejeição**, **Taxa de retorno** e **Sessões com ação importante**, confirmou a remoção
   do card **Sessões com página de entrada** e manteve `horizontalOverflowPx=0` em 1366x900 e
   390x844.
+- Browser local/headless complementar (2026-07-26) - OK: validou a remocao visual de
+  **Qualidade do trafego**, a grade imediatamente abaixo de **Detalhes da navegacao por paginas**
+  com **Trafego por comunidade**, **Trafego por post** e **Trafego por psicologo**, tres cards na
+  mesma linha em desktop amplo e viewport mobile 390x844 sem overflow horizontal.

@@ -134,6 +134,11 @@ export type AdminTrafficSummary = {
     source: "page_view_event.target_type=community";
     total: number;
   };
+  top_posts: {
+    items: AdminTrafficRankingItem[];
+    source: "page_view_event.page_kind=community_post";
+    total: number;
+  };
   top_psychologists: {
     items: AdminTrafficRankingItem[];
     source: "page_view_event.target_type=psychologist";

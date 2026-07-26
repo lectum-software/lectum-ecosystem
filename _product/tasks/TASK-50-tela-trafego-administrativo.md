@@ -455,3 +455,38 @@ Validacao desta execucao complementar:
 - `pnpm --dir admin build` — OK.
 - `pnpm check` — OK.
 - Browser local/headless em `http://localhost:3002/trafego` com admin real transitorio removido apos o teste: validou presenca de **Visualizacoes de paginas**, **Media de paginas por sessao**, **Tempo medio na plataforma**, **Taxa de rejeicao**, **Taxa de retorno** e **Sessoes com acao importante**, ausencia de **Sessoes com pagina de entrada** como card, e viewports 1366x900 e 390x844 sem overflow horizontal.
+
+## Execucao complementar - rankings abaixo dos detalhes de navegacao (2026-07-26)
+
+- Removido da UI o bloco autonomo **Qualidade do trafego**.
+- Mantidas as metricas reais de qualidade no contrato para alimentar os cards do bloco
+  **Detalhes da navegacao por paginas** e as limitacoes indisponiveis, sem mock nem formula nova.
+- Criado o ranking real **Trafego por post** no backend, derivado de `page_view_event` com
+  `page_kind="community_post"`/`target_id` e labels reais de `community_post.title` + comunidade.
+- Abaixo de **Detalhes da navegacao por paginas**, a UI agora exibe tres cards lado a lado em
+  desktop amplo e empilhados no mobile: **Trafego por comunidade**, **Trafego por post** e
+  **Trafego por psicologo**.
+- A exportacao CSV passou a incluir a secao `top_post` com a mesma agregacao do resumo.
+- Nao houve alteracao em Prisma schema/migrations, packages, mocks ou dados persistidos.
+- Builder/Quick Copy nao estava exposto como ferramenta callable nesta execucao; as referencias
+  visuais usadas foram `_product/proto/admin/Tráfego.png` e as capturas enviadas pelo usuario.
+- ADRs atualizados: `adrs/0230-admin-trafego-agregacoes.md` e
+  `adrs/0323-trafego-visao-geral-timeline.md`.
+
+Validacao desta execucao complementar:
+
+- `pnpm --dir backend exec biome check --write "src/modules/api/admin/private/traffic/summary/DTOs/IAdminTrafficSummaryDTO.ts" "src/modules/api/admin/private/traffic/summary/repositories/interfaces/IAdminTrafficRepository.ts" "src/modules/api/admin/private/traffic/summary/repositories/AdminTrafficRepository.ts" "src/modules/api/admin/private/traffic/summary/use-cases/services.ts" "src/modules/api/admin/private/traffic/export/use-cases/services.ts"` - OK.
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/trafego/client.tsx" "src/api/req/traffic/index.ts"` - OK.
+- `pnpm --dir backend check` - OK.
+- `pnpm --dir admin check` - OK.
+- `pnpm --dir backend build` - OK.
+- `pnpm --dir admin build` - OK.
+- `pnpm check` - OK.
+- API real local em `GET /api/admin/private/traffic/summary?from=2026-06-27&to=2026-07-26`
+  com admin real transitorio removido apos o teste: `top_posts=5`,
+  `top_post_source=page_view_event.page_kind=community_post`, `top_communities=3` e
+  `top_psychologists=5`.
+- Browser local/headless com build atual servido em porta local efemera e admin real transitorio
+  removido apos o teste: validou **Detalhes da navegacao por paginas**, **Trafego por comunidade**,
+  **Trafego por post**, **Trafego por psicologo**, ausencia de **Qualidade do trafego**, tres cards
+  na mesma linha em 1366x900 e `horizontalOverflowPx=0` em 1366x900 e 390x844.

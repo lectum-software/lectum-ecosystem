@@ -18,6 +18,9 @@ O Builder/Quick Copy ativo `vcp://quickcopy/vcp-24aaa2941d814e5b90572bc93ae50e2a
 - Reutilizar apenas dados reais ja existentes: `visitor_session`, `page_view_event`, `important_action_event`, `visitor_location`, `user`, `community`, `community_post`, `post_reply`, `contact_request` e assinaturas profissionais.
 - Manter o periodo padrao em 30 dias e limite maximo inicial em 180 dias, validando `from <= to`.
 - Usar as mesmas agregacoes no CSV de exportacao, evitando divergencia entre tela e relatorio.
+- Expor tambem `top_posts` no resumo e no CSV, agregando pageviews reais de posts de comunidade
+  por `page_view_event.page_kind="community_post"`/`target_id` e enriquecendo o label com
+  `community_post.title` + comunidade real quando o post ainda existir.
 - Expor metricas de qualidade somente com formula explicita:
   - taxa de cadastro = cadastros de pacientes e psicologos / visitantes unicos;
   - taxa de rejeicao = sessoes com 1 pageview e sem acao importante / sessoes com pageview;
@@ -33,6 +36,8 @@ O Builder/Quick Copy ativo `vcp://quickcopy/vcp-24aaa2941d814e5b90572bc93ae50e2a
 - O custo computacional fica no backend em consultas agregadas sob demanda; se o volume crescer, uma nova ADR devera avaliar pre-agregacao ou jobs analiticos.
 - O mapa fica deliberadamente simples nesta etapa para evitar package novo e evitar visual cartografico enganoso quando a fonte disponivel e um ranking por localidade.
 - A exportacao CSV herda as mesmas limitacoes e formulas do resumo, reduzindo ambiguidade operacional.
+- O ranking de posts reaproveita o tracking first-party ja capturado; posts sem label resolvido
+  continuam aparecendo pelo id real em vez de receber mock ou seed visual.
 
 ## Validacao
 

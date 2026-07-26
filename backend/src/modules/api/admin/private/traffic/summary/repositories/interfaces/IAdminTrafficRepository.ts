@@ -66,6 +66,15 @@ export type TrafficPsychologistLabelRecord = {
   } | null;
 };
 
+export type TrafficPostLabelRecord = {
+  community: {
+    name: string;
+    slug: string;
+  };
+  id: string;
+  title: string;
+};
+
 export interface IAdminTrafficRepository {
   countContactRequests(range: AdminTrafficDateRange): Promise<number>;
   countPostReplies(range: AdminTrafficDateRange): Promise<number>;
@@ -76,6 +85,7 @@ export interface IAdminTrafficRepository {
   listCommunitiesBySlugs(slugs: string[]): Promise<TrafficCommunityLabelRecord[]>;
   listLocations(range: AdminTrafficDateRange): Promise<TrafficLocationRecord[]>;
   listPageViews(range: AdminTrafficDateRange): Promise<TrafficPageViewRecord[]>;
+  listPostsByIds(ids: string[]): Promise<TrafficPostLabelRecord[]>;
   listPsychologistsByIds(ids: string[]): Promise<TrafficPsychologistLabelRecord[]>;
   listSessions(range: AdminTrafficDateRange): Promise<TrafficSessionRecord[]>;
   listVisitorSessionsBefore(

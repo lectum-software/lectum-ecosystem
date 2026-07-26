@@ -1167,23 +1167,47 @@ const buildQuality = (current: TrafficStats, previous: TrafficStats) => {
   };
 };
 
+const isPostPageView = (pageView: TrafficPageViewRecord) =>
+  Boolean(
+    pageView.target_id &&
+      (pageView.page_kind === "community_post" ||
+        pageView.target_type === "community_post" ||
+        pageView.target_type === "post"),
+  );
+
+type TrafficRankingTarget = "community" | "community_post" | "psychologist";
+
+const rankingPath = (targetType: TrafficRankingTarget, id: string, path: string | null) => {
+  if (targetType === "community") return `/community/${id}`;
+  if (targetType === "psychologist") return `/psychologists/${id}`;
+
+  return path;
+};
+
 const targetRanking = (
   stats: TrafficStats,
-  targetType: "community" | "psychologist",
+  targetType: TrafficRankingTarget,
   labels: Map<string, string>,
 ) => {
-  const pageViews = stats.pageViews.filter(
-    (pageView) => pageView.target_type === targetType && pageView.target_id,
-  );
-  const groups = new Map<string, { pageViews: number; sessionKeys: Set<string> }>();
+  const pageViews = stats.pageViews.filter((pageView) => {
+    if (targetType === "community_post") return isPostPageView(pageView);
+
+    return pageView.target_type === targetType && pageView.target_id;
+  });
+  const groups = new Map<
+    string,
+    { pageViews: number; path: string | null; sessionKeys: Set<string> }
+  >();
 
   for (const pageView of pageViews) {
     const id = pageView.target_id!;
     const current = groups.get(id) ?? {
       pageViews: 0,
+      path: null,
       sessionKeys: new Set<string>(),
     };
     current.pageViews += 1;
+    current.path = current.path ?? pageView.path ?? null;
     current.sessionKeys.add(sessionKey(pageView));
     groups.set(id, current);
   }
@@ -1195,7 +1219,7 @@ const targetRanking = (
       count: group.pageViews,
       id,
       label: labels.get(id) ?? id,
-      path: targetType === "community" ? `/community/${id}` : `/psychologists/${id}`,
+      path: rankingPath(targetType, id, group.path),
       percentage: safePercentage(group.sessionKeys.size, totalSessions),
       sessions: group.sessionKeys.size,
     }))
@@ -1214,9 +1238,13 @@ const buildRankings = async (repository: IAdminTrafficRepository, stats: Traffic
       .filter((pageView) => pageView.target_type === "psychologist" && pageView.target_id)
       .map((pageView) => pageView.target_id!),
   );
-  const [communities, psychologists] = await Promise.all([
+  const postIds = uniqueValues(
+    stats.pageViews.filter(isPostPageView).map((pageView) => pageView.target_id!),
+  );
+  const [communities, psychologists, posts] = await Promise.all([
     repository.listCommunitiesBySlugs(communitySlugs),
     repository.listPsychologistsByIds(psychologistIds),
+    repository.listPostsByIds(postIds),
   ]);
   const communityLabels = new Map(communities.map((community) => [community.slug, community.name]));
   const psychologistLabels = new Map(
@@ -1228,7 +1256,15 @@ const buildRankings = async (repository: IAdminTrafficRepository, stats: Traffic
       return [psychologist.id, `${psychologist.name}${suffix}`];
     }),
   );
+  const postLabels = new Map(
+    posts.map((post) => {
+      const communitySuffix = post.community.name ? ` · ${post.community.name}` : "";
+
+      return [post.id, `${post.title}${communitySuffix}`];
+    }),
+  );
   const communityItems = targetRanking(stats, "community", communityLabels);
+  const postItems = targetRanking(stats, "community_post", postLabels);
   const psychologistItems = targetRanking(stats, "psychologist", psychologistLabels);
 
   return {
@@ -1236,6 +1272,11 @@ const buildRankings = async (repository: IAdminTrafficRepository, stats: Traffic
       items: communityItems,
       source: "page_view_event.target_type=community" as const,
       total: communityItems.reduce((sum, item) => sum + item.sessions, 0),
+    },
+    topPosts: {
+      items: postItems,
+      source: "page_view_event.page_kind=community_post" as const,
+      total: postItems.reduce((sum, item) => sum + item.sessions, 0),
     },
     topPsychologists: {
       items: psychologistItems,
@@ -1304,6 +1345,7 @@ export const buildTrafficSummary = async (query: AdminTrafficQuery): Promise<Res
     period,
     quality,
     top_communities: rankings.topCommunities,
+    top_posts: rankings.topPosts,
     top_psychologists: rankings.topPsychologists,
     timeline: {
       points: buildTimeline(currentStats, resolvedPeriod.period),

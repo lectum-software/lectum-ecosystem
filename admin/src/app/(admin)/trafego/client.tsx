@@ -12,7 +12,6 @@ import {
   PieChart,
   RefreshCw,
   Smartphone,
-  TrendingUp,
   Users,
 } from "lucide-react";
 import { type FocusEvent, useMemo, useState } from "react";
@@ -256,6 +255,7 @@ const hasPeriodRecords = (summary: AdminTrafficSummary) => {
     summary.locations.total > 0 ||
     summary.entry_pages.total > 0 ||
     summary.top_communities.total > 0 ||
+    summary.top_posts.total > 0 ||
     summary.top_psychologists.total > 0;
 
   return overviewValues || breakdownValues;
@@ -1313,6 +1313,29 @@ const TrafficContent = ({
 
       <div className="grid min-w-0 gap-4 xl:grid-cols-3">
         <CardShell className="p-5">
+          <PanelTitle
+            icon={Activity}
+            source={summary.top_communities.source}
+            title="Tráfego por comunidade"
+          />
+          <RankingList items={summary.top_communities.items} />
+        </CardShell>
+        <CardShell className="p-5">
+          <PanelTitle icon={FileText} source={summary.top_posts.source} title="Tráfego por post" />
+          <RankingList items={summary.top_posts.items} />
+        </CardShell>
+        <CardShell className="p-5">
+          <PanelTitle
+            icon={Users}
+            source={summary.top_psychologists.source}
+            title="Tráfego por psicólogo"
+          />
+          <RankingList items={summary.top_psychologists.items} />
+        </CardShell>
+      </div>
+
+      <div className="grid min-w-0 gap-4 xl:grid-cols-3">
+        <CardShell className="p-5">
           <PanelTitle icon={PieChart} title="Origem do tráfego" />
           <DonutChart
             ariaLabel="Distribuição de sessões por origem de tráfego"
@@ -1340,43 +1363,14 @@ const TrafficContent = ({
 
       <LocationPanel locations={summary.locations} />
 
-      <div className="grid min-w-0 gap-4 xl:grid-cols-2">
-        <CardShell className="p-5">
-          <PanelTitle
-            icon={MousePointerClick}
-            source={summary.conversions.source}
-            title="Conversões geradas"
-          />
-          <MetricList items={summary.conversions.items} />
-        </CardShell>
-        <CardShell className="p-5">
-          <PanelTitle
-            icon={TrendingUp}
-            source={summary.quality.source}
-            title="Qualidade do tráfego"
-          />
-          <MetricList items={summary.quality.items} />
-        </CardShell>
-      </div>
-
-      <div className="grid min-w-0 gap-4 xl:grid-cols-2">
-        <CardShell className="p-5">
-          <PanelTitle
-            icon={Activity}
-            source={summary.top_communities.source}
-            title="Tráfego por comunidade"
-          />
-          <RankingList items={summary.top_communities.items} />
-        </CardShell>
-        <CardShell className="p-5">
-          <PanelTitle
-            icon={Users}
-            source={summary.top_psychologists.source}
-            title="Tráfego por psicólogo"
-          />
-          <RankingList items={summary.top_psychologists.items} />
-        </CardShell>
-      </div>
+      <CardShell className="p-5">
+        <PanelTitle
+          icon={MousePointerClick}
+          source={summary.conversions.source}
+          title="Conversões geradas"
+        />
+        <MetricList items={summary.conversions.items} />
+      </CardShell>
 
       {summary.unavailable.length > 0 ? (
         <CardShell className="bg-primary-soft/70 p-5">
