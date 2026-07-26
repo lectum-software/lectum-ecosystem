@@ -241,3 +241,24 @@ A fila exclusiva `/moderacao/conteudo-sensivel` deixa de usar lista em cards com
 A tabela exibe uma linha por evento real de `content_moderation_event` com as colunas **Data**, **Categoria**, **Severidade**, **Decisão**, **Autor**, **Conteúdo** e **Comunidade**. A coluna **Conteúdo** concentra duas linhas: prévia do título/snapshot e prévia da descrição/trecho seguro. Para preservar as ações auditadas e o snapshot protegido sem adicionar uma coluna fora do pedido, o detalhe completo abre a partir do botão acessível dentro da célula **Conteúdo**.
 
 Não houve alteração de backend, contrato HTTP, Prisma schema/migrations, package novo ou dados artificiais. A mudança é composicional no Admin, mobile-first e mantém os endpoints reais de conteúdo sensível.
+
+## Complemento 2026-07-25: filtro de usuário e leitura de publicação em Operacionais
+
+A fila `/moderacao/operacionais` deixa de expor busca textual livre na barra de filtros e passa a oferecer o filtro fechado **Usuário** logo após **Tipo**, com os recortes **Todos**, **Pacientes** e **Psicólogos**. A decisão reduz ambiguidade operacional e mantém a segmentação alinhada à coluna **Usuário**, que mistura autores pacientes e perfis profissionais.
+
+O contrato derivado/read-only `GET /api/admin/private/moderation/operational-alerts` recebe o parâmetro opcional `userRole=paciente|psicologo`, aplicado no backend antes da paginação a partir do `user.role` real do alerta. A query key do Admin também inclui `userRole` para evitar reutilização de cache entre segmentos.
+
+Na linha de **Post sem cobertura**, o detalhe secundário deixa de repetir a duração **Sem cobertura** — já representada por **Pendente há** — e passa a mostrar **Publicado em** com a data/hora real de `created_at`. A tag de **Perfil não publicado** também passa a usar copy singular e cor vermelha, coerente com a pendência de ação.
+
+Não há migration, pacote novo, mock, seed ou persistência nova; os alertas continuam derivados de dados reais e read-only.
+
+
+## Complemento 2026-07-25: Conteudo sensivel com tabela reduzida e autor nominal
+
+A fila exclusiva `/moderacao/conteudo-sensivel` foi refinada para priorizar triagem operacional em menos colunas. A tabela passa a exibir **Data**, **Severidade**, **Decisao**, **Autor** e **Conteudo**. **Categoria** sai da grade principal e segue disponivel no detalhe protegido; **Comunidade** deixa de ser coluna propria e passa a aparecer dentro da celula **Conteudo**, abaixo do trecho seguro.
+
+Os filtros visiveis de **Categoria** e **Severidade** foram removidos para reduzir friccao da fila. O contrato Admin de eventos de moderacao permanece compativel com os parametros antigos, mas a UI exclusiva deixa de envia-los e usa a consulta geral para essas dimensoes.
+
+Para sustentar a coluna **Autor** sem heuristica de frontend, o contrato protegido de `content_moderation_event` passa a retornar metadados aditivos do autor: `name`, `role_label` e `show_verified_badge`. O nome vem do usuario real; quando o autor for psicologo, usa a composicao profissional ja adotada no Admin. O selo aparece somente quando a regra de verificacao profissional vigente reconhece o psicologo como verificado.
+
+Nao ha migration, package novo, endpoint paralelo, mock ou seed. A mudanca e composicional/contratual aditiva no Admin e preserva o detalhe protegido e as acoes auditadas existentes.

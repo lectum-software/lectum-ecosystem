@@ -30,6 +30,22 @@ export const adminModerationEventSelect = {
     select: {
       id: true,
       name: true,
+      psychologist_profile: {
+        select: {
+          cfp_verified_at: true,
+          crp_status: true,
+          gender: true,
+          professional_first_name: true,
+          professional_last_name: true,
+          subscriptions: {
+            select: {
+              id: true,
+              source: true,
+            },
+            where: activeProfessionalCourtesyEntitlementWhere(),
+          },
+        },
+      },
       role: true,
     },
   },

@@ -120,8 +120,8 @@ const operationalCategoryFiltersSchema = z
     from: z.string().max(10, "Use uma data válida."),
     plan: z.enum(["all", "cortesia", "gratuito", "profissional"]),
     profileStatus: z.enum(["all", "active", "inactive"]),
-    q: z.string().max(120, "Use no máximo 120 caracteres."),
     to: z.string().max(10, "Use uma data válida."),
+    userRole: z.enum(["all", "paciente", "psicologo"]),
   })
   .refine((values) => !values.from || !values.to || values.from <= values.to, {
     message: "A data inicial deve ser menor ou igual à final.",
@@ -135,8 +135,8 @@ const operationalCategoryFilterDefaults: OperationalCategoryFiltersFormValues = 
   from: "",
   plan: "all",
   profileStatus: "all",
-  q: "",
   to: "",
+  userRole: "all",
 };
 
 const REPORT_DISMISS_CONFIRMATION = "DENUNCIA IMPROCEDENTE";
@@ -242,6 +242,12 @@ const complianceProfileStatusOptions = [
   { label: "Inativo", value: "inactive" },
 ] satisfies Array<{ label: string; value: OperationalCategoryFiltersFormValues["profileStatus"] }>;
 
+const operationalUserRoleOptions = [
+  { label: "Todos", value: "all" },
+  { label: "Pacientes", value: "paciente" },
+  { label: "Psicólogos", value: "psicologo" },
+] satisfies Array<{ label: string; value: OperationalCategoryFiltersFormValues["userRole"] }>;
+
 const normalizeDenunciaFilters = (
   values: DenunciaFiltersFormValues,
 ): DenunciaFiltersFormValues => ({
@@ -300,8 +306,8 @@ const normalizeOperationalCategoryFilters = (
   from: values.from,
   plan: values.plan,
   profileStatus: values.profileStatus,
-  q: values.q,
   to: values.to,
+  userRole: values.userRole,
 });
 
 const areOperationalCategoryFiltersEqual = (
@@ -312,8 +318,8 @@ const areOperationalCategoryFiltersEqual = (
   left.from === right.from &&
   left.plan === right.plan &&
   left.profileStatus === right.profileStatus &&
-  left.q === right.q &&
-  left.to === right.to;
+  left.to === right.to &&
+  left.userRole === right.userRole;
 
 const coerceOperationalCategoryFilters = (
   values?: Partial<OperationalCategoryFiltersFormValues>,
@@ -322,8 +328,8 @@ const coerceOperationalCategoryFilters = (
   from: values?.from ?? operationalCategoryFilterDefaults.from,
   plan: values?.plan ?? operationalCategoryFilterDefaults.plan,
   profileStatus: values?.profileStatus ?? operationalCategoryFilterDefaults.profileStatus,
-  q: values?.q ?? operationalCategoryFilterDefaults.q,
   to: values?.to ?? operationalCategoryFilterDefaults.to,
+  userRole: values?.userRole ?? operationalCategoryFilterDefaults.userRole,
 });
 
 const toOperationalCategoryFilterQuery = (
@@ -331,7 +337,7 @@ const toOperationalCategoryFilterQuery = (
   group: Exclude<AdminModerationOperationalAlertsGroup, "all" | "denuncias">,
 ): Pick<
   AdminModerationOperationalAlertsQuery,
-  "alertType" | "from" | "plan" | "profileStatus" | "q" | "to"
+  "alertType" | "from" | "plan" | "profileStatus" | "to" | "userRole"
 > => {
   const normalized = normalizeOperationalCategoryFilters(values);
 
@@ -343,8 +349,9 @@ const toOperationalCategoryFilterQuery = (
       group === "compliance" && normalized.profileStatus !== "all"
         ? normalized.profileStatus
         : undefined,
-    q: group === "operacional" ? normalized.q.trim() || undefined : undefined,
     to: normalized.to || undefined,
+    userRole:
+      group === "operacional" && normalized.userRole !== "all" ? normalized.userRole : undefined,
   };
 };
 
@@ -1207,7 +1214,7 @@ const OperationalCategoryFiltersBar = ({
             "grid min-w-0 gap-3 md:grid-cols-2",
             isCompliance
               ? "2xl:grid-cols-[minmax(220px,1fr)_minmax(150px,0.7fr)_minmax(150px,0.7fr)_minmax(190px,0.85fr)_minmax(190px,0.85fr)]"
-              : "2xl:grid-cols-[minmax(260px,1.15fr)_minmax(150px,0.75fr)_minmax(150px,0.75fr)_minmax(280px,1.35fr)]",
+              : "2xl:grid-cols-[minmax(260px,1.15fr)_minmax(190px,0.85fr)_minmax(150px,0.75fr)_minmax(150px,0.75fr)]",
           )}
           noValidate
           onSubmit={(event) => event.preventDefault()}
@@ -1229,6 +1236,14 @@ const OperationalCategoryFiltersBar = ({
               ) : null}
             </p>
           </div>
+          {!isCompliance ? (
+            <SelectController<OperationalCategoryFiltersFormValues>
+              disabled={disabled}
+              label="Usuário"
+              name="userRole"
+              options={operationalUserRoleOptions}
+            />
+          ) : null}
           <InputController<OperationalCategoryFiltersFormValues>
             disabled={disabled}
             label="De"
@@ -1258,14 +1273,7 @@ const OperationalCategoryFiltersBar = ({
                 options={complianceProfileStatusOptions}
               />
             </>
-          ) : (
-            <InputController<OperationalCategoryFiltersFormValues>
-              disabled={disabled}
-              label="Busca"
-              name="q"
-              placeholder="Nome, origem ou fato..."
-            />
-          )}
+          ) : null}
         </form>
       </FormProvider>
     </div>
@@ -1448,7 +1456,7 @@ const operationalTablePendingLabels: Partial<
   patient_post_without_coverage: "Post sem cobertura",
   psychologist_no_traction: "Sem tração",
   registration_error: "Erro no cadastro",
-  unpublished_required_settings: "Perfis não publicados",
+  unpublished_required_settings: "Perfil não publicado",
 };
 
 const operationalTablePendingClass: Partial<
@@ -1457,7 +1465,7 @@ const operationalTablePendingClass: Partial<
   patient_post_without_coverage: "bg-orange-50 text-orange-700",
   psychologist_no_traction: "bg-yellow-50 text-yellow-700",
   registration_error: "bg-red-50 text-danger",
-  unpublished_required_settings: "bg-primary-soft text-primary",
+  unpublished_required_settings: "bg-red-50 text-danger",
 };
 
 const operationalTablePendingLabel = (alert: AdminModerationOperationalAlert) =>
@@ -1527,8 +1535,8 @@ const operationalAlertDetailItems = (
         value: detailValue(alert.community?.name, alertFactValue(alert, "Comunidade")),
       },
       {
-        label: "Sem cobertura",
-        value: detailValue(alertFactValue(alert, "Idade"), formatPendingDuration(alert)),
+        label: "Publicado em",
+        value: detailValue(formatDateTime(alert.created_at)),
       },
     ];
   }
@@ -1722,7 +1730,7 @@ export const AdminModerationOperationalCategoryClient = ({
   });
   const watchedCategoryAutoFilters = useWatch({
     control: categoryFiltersForm.control,
-    name: ["alertType", "plan", "profileStatus", "q"],
+    name: ["alertType", "plan", "profileStatus", "userRole"],
   });
   const watchedAutoFiltersKey = watchedAutoFilters.join("|");
   const watchedCategoryAutoFiltersKey = watchedCategoryAutoFilters.join("|");

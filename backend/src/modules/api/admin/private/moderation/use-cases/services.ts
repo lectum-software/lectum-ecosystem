@@ -7,6 +7,7 @@ import {
 import { parseStoredCrp } from "@/utils/professional-registry";
 import { hasProfessionalRegistryApproval } from "@/utils/subscription-entitlement";
 import type {
+  AdminModerationAuthorDTO,
   AdminModerationEventDetailDTO,
   AdminModerationEventItemDTO,
   AdminModerationEventsDTO,
@@ -110,6 +111,53 @@ const authorPublicLabel = (
   return "Usuário";
 };
 
+const authorAdminName = (event: AdminModerationEventRecord | AdminModerationEventDetailRecord) => {
+  if (event.author.role === "psicologo") {
+    return buildProfessionalFullDisplayName({
+      fallbackName: event.author.name,
+      firstName: event.author.psychologist_profile?.professional_first_name,
+      lastName: event.author.psychologist_profile?.professional_last_name,
+    });
+  }
+
+  return event.author.name.trim() || "Usuário";
+};
+
+const authorRoleLabel = (event: AdminModerationEventRecord | AdminModerationEventDetailRecord) => {
+  if (event.author.role === "paciente") return "Paciente";
+
+  if (event.author.role === "psicologo") {
+    const gender = event.author.psychologist_profile?.gender?.trim().toLowerCase();
+
+    return gender === "feminino" || gender === "mulher" ? "Psicóloga" : "Psicólogo";
+  }
+
+  return "Usuário";
+};
+
+const showAuthorVerifiedBadge = (
+  event: AdminModerationEventRecord | AdminModerationEventDetailRecord,
+) =>
+  event.author.role === "psicologo" &&
+  hasProfessionalRegistryApproval(event.author.psychologist_profile);
+
+const mapEventAuthor = (
+  event: AdminModerationEventRecord | AdminModerationEventDetailRecord,
+  options: { includeAdminLabel?: boolean } = {},
+): AdminModerationAuthorDTO => {
+  const name = authorAdminName(event);
+
+  return {
+    ...(options.includeAdminLabel ? { admin_label: name } : {}),
+    id: event.author.id,
+    name,
+    public_label: authorPublicLabel(event),
+    role: event.author.role,
+    role_label: authorRoleLabel(event),
+    show_verified_badge: showAuthorVerifiedBadge(event),
+  };
+};
+
 const createReplyMap = (replies: ReplyTargetRecord[]) => {
   const map = new Map<string, ReplyTargetRecord>();
   for (const reply of replies) map.set(reply.id, reply);
@@ -141,11 +189,7 @@ const mapEvent = (
   event: AdminModerationEventRecord,
   replies: Map<string, ReplyTargetRecord>,
 ): AdminModerationEventItemDTO => ({
-  author: {
-    id: event.author.id,
-    public_label: authorPublicLabel(event),
-    role: event.author.role,
-  },
+  author: mapEventAuthor(event),
   blocked_before_publication: !event.target_id,
   categories: toStringArray(event.categories),
   community: event.community
@@ -177,12 +221,7 @@ const mapEventDetail = (
 ): AdminModerationEventDetailDTO => ({
   ...mapEvent(event, replies),
   admin_note: event.admin_note,
-  author: {
-    admin_label: event.author.name,
-    id: event.author.id,
-    public_label: authorPublicLabel(event),
-    role: event.author.role,
-  },
+  author: mapEventAuthor(event, { includeAdminLabel: true }),
   content_snapshot: event.content_snapshot,
   reviewed_by_admin_id: event.reviewed_by_admin_id,
 });
@@ -208,7 +247,9 @@ const eventMatchesSearch = (event: AdminModerationEventItemDTO, search: string) 
   if (!search) return true;
 
   return [
+    event.author.name,
     event.author.public_label,
+    event.author.role_label,
     event.community?.name,
     event.content_excerpt,
     event.decision,
@@ -1284,6 +1325,7 @@ type NormalizedOperationalAlertsQuery = Required<
     | "reason"
     | "reporter"
     | "status"
+    | "userRole"
   >
 > &
   Pick<AdminModerationOperationalAlertsQuery, "from" | "limit" | "page" | "q" | "to">;
@@ -1456,6 +1498,14 @@ const normalizeOperationalReporter = (
   return normalized === "paciente" || normalized === "psicologo" ? normalized : "all";
 };
 
+const normalizeOperationalUserRole = (
+  value?: string | null,
+): NonNullable<AdminModerationOperationalAlertsQuery["userRole"]> => {
+  const normalized = normalizeFilter(value).toLowerCase();
+
+  return normalized === "paciente" || normalized === "psicologo" ? normalized : "all";
+};
+
 const normalizeOperationalReason = (
   value?: string | null,
 ): NonNullable<AdminModerationOperationalAlertsQuery["reason"]> => {
@@ -1564,6 +1614,18 @@ const operationalAlertMatchesSearch = (
     .some((value) => normalizedText(value).includes(search));
 };
 
+const operationalAlertMatchesUserRole = (
+  alert: AdminModerationOperationalAlertDTO,
+  userRole: NonNullable<AdminModerationOperationalAlertsQuery["userRole"]>,
+) => {
+  if (userRole === "all") return true;
+
+  const alertRole = normalizedText(alert.user?.role ?? alert.professional?.role_label);
+  if (userRole === "psicologo" && ["psicologa", "psicologo"].includes(alertRole)) return true;
+
+  return alertRole === userRole;
+};
+
 const operationalAlertMatchesFilters = (
   alert: AdminModerationOperationalAlertDTO,
   query: NormalizedOperationalAlertsQuery,
@@ -1579,6 +1641,8 @@ const operationalAlertMatchesFilters = (
   if (query.alertType !== "all" && alert.type !== query.alertType) {
     return false;
   }
+
+  if (!operationalAlertMatchesUserRole(alert, query.userRole)) return false;
 
   if (!operationalAlertMatchesPlan(alert, query.plan)) return false;
 
@@ -1636,6 +1700,7 @@ const normalizeOperationalAlertsQuery = (
   reason: normalizeOperationalReason(query.reason),
   reporter: normalizeOperationalReporter(query.reporter),
   status: normalizeOperationalStatus(query.status),
+  userRole: normalizeOperationalUserRole(query.userRole),
 });
 
 const reportChartTypes = [

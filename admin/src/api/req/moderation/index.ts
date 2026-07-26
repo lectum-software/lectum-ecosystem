@@ -15,8 +15,11 @@ export type AdminModerationEvent = {
   author: {
     admin_label?: string;
     id: string;
+    name: string;
     public_label: string;
     role: string;
+    role_label: string;
+    show_verified_badge: boolean;
   };
   blocked_before_publication: boolean;
   categories: string[];
@@ -281,6 +284,7 @@ export type AdminModerationOperationalAlertsQuery = {
   reporter?: "all" | "paciente" | "psicologo";
   status?: "all" | "dismissed" | "pending" | "upheld";
   to?: string;
+  userRole?: "all" | "paciente" | "psicologo";
 };
 
 export type AdminModerationOperationalAlertsPage = {
@@ -366,6 +370,7 @@ const cleanOperationalAlertsParams = (input: AdminModerationOperationalAlertsQue
   ...(input.reporter && input.reporter !== "all" ? { reporter: input.reporter } : {}),
   ...(input.status && input.status !== "all" ? { status: input.status } : {}),
   ...(input.to ? { to: input.to } : {}),
+  ...(input.userRole && input.userRole !== "all" ? { userRole: input.userRole } : {}),
 });
 
 export const getAdminModerationSummary = async () => {

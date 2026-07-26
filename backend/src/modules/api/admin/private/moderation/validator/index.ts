@@ -63,6 +63,7 @@ export const operationalAlertsSchema: IValidatorRequest = {
     { key: "status", coerse: "string", method: "string", max: 30, optional: true },
     { key: "reporter", coerse: "string", method: "string", max: 30, optional: true },
     { key: "reason", coerse: "string", method: "string", max: 80, optional: true },
+    { key: "userRole", coerse: "string", method: "string", max: 30, optional: true },
   ],
 };
 

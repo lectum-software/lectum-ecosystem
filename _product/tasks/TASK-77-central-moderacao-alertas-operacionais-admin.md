@@ -757,3 +757,69 @@ Nao houve alteracao de backend, Prisma schema/migrations, package novo, mock, se
 - `pnpm check`
 - Smoke HTTP local: `GET http://localhost:3002/moderacao/conteudo-sensivel` retornou `200`.
 - Sem ferramenta Builder/Quick Copy callable e sem sessão Admin headless neste ambiente; a validação visual foi coberta pelo build, pelo smoke local e pela referência enviada pelo usuário comparada à tabela existente de `/moderacao/operacionais`.
+
+
+## Complemento 2026-07-25 - Conteudo sensivel com autor nominal e comunidade no conteudo
+
+Pedido do usuario: refinar a fila exclusiva `/moderacao/conteudo-sensivel` para reduzir colunas e tornar a triagem mais direta. A copy do header passa a ser **Posts e comentarios potencialmente sensiveis identificados automaticamente para moderacao.**. A tabela remove a coluna **Categoria**, remove a coluna **Comunidade**, deixa a coluna **Data** sem hora e mantem a hora absoluta apenas no `title` da celula para auditoria.
+
+Os filtros de **Categoria** e **Severidade** foram removidos da UI; o endpoint real de `content_moderation_event` continua aceitando esses parametros para compatibilidade, mas a fila exclusiva passa a consultar ambos como `all`. A coluna **Autor** agora usa o nome real do usuario retornado pelo contrato Admin protegido, mostra o selo Lectum quando o autor for profissional verificado e exibe abaixo o papel operacional (**Paciente**, **Psicologo** ou **Psicologa**). A coluna **Conteudo** concentra titulo, descricao e comunidade.
+
+Nao houve alteracao de Prisma schema/migrations, package novo, mock, seed ou endpoint simulado; `pnpm --dir backend db:migrate` nao se aplica.
+
+### Criterios deste ajuste
+
+- [x] O header de `/moderacao/conteudo-sensivel` usa a nova copy solicitada.
+- [x] A coluna **Data** mostra somente a data, sem hora visivel.
+- [x] A coluna **Categoria** nao aparece mais na tabela.
+- [x] Os filtros **Categoria** e **Severidade** nao aparecem mais na barra de filtros.
+- [x] A coluna **Autor** mostra nome real, selo quando aplicavel e papel abaixo.
+- [x] A coluna **Comunidade** nao aparece mais na tabela.
+- [x] A coluna **Conteudo** mostra a comunidade abaixo da descricao.
+- [x] O ajuste e mobile-first, sem `<img>` cru, sem package novo, sem mock e sem migration.
+
+
+### Validacao deste ajuste
+
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/moderacao/client.tsx" "src/api/req/moderation/index.ts" "src/api/cache/keys.ts" "src/app/(admin)/moderacao/operational-category-client.tsx"`
+- `pnpm --dir backend exec biome check --write "src/modules/api/admin/private/moderation/DTOs/IAdminModerationDTO.ts" "src/modules/api/admin/private/moderation/repositories/interfaces/IAdminModerationRepository.ts" "src/modules/api/admin/private/moderation/use-cases/services.ts" "src/modules/api/admin/private/moderation/validator/index.ts"`
+- `pnpm --dir backend check`
+- `pnpm --dir admin check` (primeira execucao excedeu 181s durante o typecheck; reexecutado com timeout maior e concluiu sem erro)
+- `pnpm --dir backend build`
+- `pnpm --dir admin build`
+- `pnpm check`
+- Smoke HTTP local: `GET http://localhost:3002/moderacao/conteudo-sensivel` retornou `200` apos subir o dev server Admin.
+- Browser local/headless em Chrome carregou a rota; sem sessao Admin no perfil headless, a captura permaneceu no estado autenticado de carregamento. A validacao visual efetiva ficou coberta por build/check, smoke HTTP e comparacao com a captura enviada pelo usuario.
+
+## Complemento 2026-07-25 - Filtro Usuario e publicacao em Operacionais
+
+Pedido do usuario: ajustar a fila `/moderacao/operacionais` para remover a busca textual, adicionar filtro de **Usuario** apos **Tipo**, tornar a tag **Perfil nao publicado** singular/vermelha e trocar o detalhe **Sem cobertura** de posts pela data de publicacao.
+
+- A barra de filtros de Operacionais agora exibe **Tipo**, **Usuario**, **De** e **Ate**, sem campo **Busca**.
+- O filtro **Usuario** usa `userRole=all|paciente|psicologo` no contrato real `GET /api/admin/private/moderation/operational-alerts`, aplicado no backend antes da paginacao e incluido na query key do TanStack Query.
+- A tag operacional `unpublished_required_settings` passa a exibir **Perfil nao publicado** e usar cor vermelha.
+- Em **Post sem cobertura**, a coluna **Detalhes** passa a exibir **Publicado em** com a data/hora real do alerta/post, evitando repetir a duracao ja exibida em **Pendente ha**.
+- Nao houve alteracao de Prisma schema/migrations, package novo, mock, seed ou endpoint simulado; `pnpm --dir backend db:migrate` nao se aplica.
+- Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente; a referencia visual foi a captura enviada pelo usuario e a tela local `/moderacao/operacionais`.
+
+### Criterios deste ajuste
+
+- [x] A tag **Perfis nao publicados** foi substituida por **Perfil nao publicado** na tabela.
+- [x] A tag **Perfil nao publicado** usa cor vermelha, nao azul.
+- [x] **Post sem cobertura** mostra **Publicado em** na coluna **Detalhes**.
+- [x] A barra de filtros de `/moderacao/operacionais` nao mostra mais **Busca**.
+- [x] O filtro **Usuario** aparece logo apos **Tipo** e filtra via backend real por paciente/psicologo.
+- [x] A alteracao e mobile-first, sem `<img>` cru, sem package novo, sem mock e sem migration.
+
+### Validacao deste ajuste
+
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/moderacao/operational-category-client.tsx" "src/api/req/moderation/index.ts" "src/api/cache/keys.ts"`
+- `pnpm --dir backend exec biome check --write "src/modules/api/admin/private/moderation/DTOs/IAdminModerationDTO.ts" "src/modules/api/admin/private/moderation/validator/index.ts" "src/modules/api/admin/private/moderation/use-cases/services.ts"`
+- `pnpm --dir admin check` (primeira tentativa excedeu 183s; reexecutado com timeout maior e concluiu sem erro)
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir admin build` (primeira execucao acusou erro transitorio/stale em `client.tsx`; reexecutado e concluiu sem erro)
+- `pnpm check`
+- Smoke HTTP local: `GET http://localhost:3002/moderacao/operacionais` retornou `200`.
+- API local autenticada: `operational-alerts?group=operacional&userRole=paciente&limit=50` retornou 6 registros, todos com `user.role="paciente"`; `userRole=psicologo` retornou 2 registros, todos com `user.role="psicologo"`.
+- Browser local/headless em Chrome para `/moderacao/operacionais` validou desktop 1365px e mobile: filtro **Usuario** presente, **Busca** ausente, 8 linhas reais, tag **Perfil nao publicado** singular, ausencia de **Perfis nao publicados** nas linhas, **Post sem cobertura** com **Publicado em** e sem detalhe **Sem cobertura**. Admin temporario de validacao removido ao final.

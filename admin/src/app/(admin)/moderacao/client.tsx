@@ -16,7 +16,15 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  type ReactNode,
+  type SVGProps,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { FormProvider, type UseFormReturn, useForm, useWatch } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -51,6 +59,9 @@ const numberFormatter = new Intl.NumberFormat("pt-BR");
 const dateTimeFormatter = new Intl.DateTimeFormat("pt-BR", {
   dateStyle: "short",
   timeStyle: "short",
+});
+const dateFormatter = new Intl.DateTimeFormat("pt-BR", {
+  dateStyle: "short",
 });
 const pad = (value: number) => String(value).padStart(2, "0");
 const toInputDate = (date: Date) =>
@@ -120,55 +131,29 @@ const decisionFilterOptions = [
   { label: "Segurança urgente", value: "safety_hold" },
 ] satisfies Array<{ label: string; value: "all" | AdminModerationDecision }>;
 
-const categoryFilterOptions = [
-  { label: "Todas", value: "all" },
-  { label: "Links externos", value: "external_link" },
-  { label: "Saúde sexual", value: "sexual_health" },
-  { label: "Sexual explícito", value: "explicit_sexual" },
-  { label: "Menor/risco sexual", value: "minor_sexual_risk" },
-  { label: "Autolesão/suicídio", value: "self_harm_suicide" },
-  { label: "Abuso/violência", value: "abuse_violence" },
-  { label: "Spam/golpe", value: "spam_scam" },
-  { label: "Outro", value: "other" },
-] satisfies Array<{ label: string; value: string }>;
-
-const severityFilterOptions = [
-  { label: "Todas", value: "all" },
-  { label: "Baixa", value: "low" },
-  { label: "Média", value: "medium" },
-  { label: "Alta", value: "high" },
-  { label: "Urgente", value: "urgent" },
-] satisfies Array<{ label: string; value: "all" | AdminModerationSeverity }>;
-
 type Filters = {
-  category: string;
   community: string;
   decision: "all" | AdminModerationDecision;
   from: string;
   q: string;
-  severity: "all" | AdminModerationSeverity;
   status: "all" | AdminModerationStatus;
   to: string;
 };
 const initialFilters: Filters = {
-  category: "all",
   community: "",
   decision: "all",
   from: initialRange.from,
   q: "",
-  severity: "all",
   status: "pending",
   to: initialRange.to,
 };
 
 const textualFiltersSchema = z
   .object({
-    category: z.string().max(60, "Use no máximo 60 caracteres."),
     community: z.string().max(120, "Use no máximo 120 caracteres."),
     decision: z.enum(["all", "allow_sensitive", "block", "safety_hold"]),
     from: z.string().max(10, "Use uma data válida."),
     q: z.string().max(120, "Use no máximo 120 caracteres."),
-    severity: z.enum(["all", "high", "low", "medium", "urgent"]),
     status: z.enum(["all", "pending", "reviewing", "resolved"]),
     to: z.string().max(10, "Use uma data válida."),
   })
@@ -203,24 +188,26 @@ const formatDateTime = (value?: string | null) => {
 
   return Number.isNaN(date.getTime()) ? "—" : dateTimeFormatter.format(date);
 };
+const formatDateOnly = (value?: string | null) => {
+  if (!value) return "—";
+  const date = new Date(value);
+
+  return Number.isNaN(date.getTime()) ? "—" : dateFormatter.format(date);
+};
 const normalizeTextualFilters = (values: Filters): Filters => ({
-  category: values.category,
   community: values.community,
   decision: values.decision,
   from: values.from,
   q: values.q,
-  severity: values.severity,
   status: values.status,
   to: values.to,
 });
 
 const areTextualFiltersEqual = (left: Filters, right: Filters) =>
-  left.category === right.category &&
   left.community === right.community &&
   left.decision === right.decision &&
   left.from === right.from &&
   left.q === right.q &&
-  left.severity === right.severity &&
   left.status === right.status &&
   left.to === right.to;
 const Card = ({ children, className }: { children?: ReactNode; className?: string }) => (
@@ -320,6 +307,22 @@ const Categories = ({ items }: { items: string[] }) => (
   </div>
 );
 
+const VerifiedBadgeIcon = ({ className, ...props }: SVGProps<SVGSVGElement>) => (
+  <svg
+    className={cn("h-4 w-4 shrink-0 text-primary", className)}
+    fill="none"
+    viewBox="0 0 30 28"
+    xmlns="http://www.w3.org/2000/svg"
+    {...props}
+  >
+    <title>Perfil verificado</title>
+    <path
+      d="M10.3636 28L7.77273 23.7333L2.86364 22.6667L3.34091 17.7333L0 14L3.34091 10.2667L2.86364 5.33333L7.77273 4.26667L10.3636 0L15 1.93333L19.6364 0L22.2273 4.26667L27.1364 5.33333L26.6591 10.2667L30 14L26.6591 17.7333L27.1364 22.6667L22.2273 23.7333L19.6364 28L15 26.0667L10.3636 28ZM13.5682 18.7333L21.2727 11.2L19.3636 9.26667L13.5682 14.9333L10.6364 12.1333L8.72727 14L13.5682 18.7333Z"
+      fill="currentColor"
+    />
+  </svg>
+);
+
 const FiltersBar = ({
   disabled,
   form,
@@ -336,7 +339,7 @@ const FiltersBar = ({
   <div className="border-b border-border bg-surface/80 p-4">
     <FormProvider {...form}>
       <form
-        className="grid min-w-0 gap-3 md:grid-cols-2 2xl:grid-cols-[minmax(180px,0.85fr)_minmax(150px,0.7fr)_minmax(150px,0.7fr)_repeat(3,minmax(145px,0.8fr))_repeat(2,minmax(190px,1fr))]"
+        className="grid min-w-0 gap-3 md:grid-cols-2 2xl:grid-cols-[minmax(180px,0.85fr)_minmax(150px,0.7fr)_minmax(150px,0.7fr)_minmax(160px,0.8fr)_minmax(190px,1fr)_minmax(190px,1fr)]"
         noValidate
         onSubmit={(event) => event.preventDefault()}
       >
@@ -377,18 +380,6 @@ const FiltersBar = ({
           name="decision"
           options={decisionFilterOptions}
         />
-        <SelectController<Filters>
-          disabled={disabled}
-          label="Categoria"
-          name="category"
-          options={categoryFilterOptions}
-        />
-        <SelectController<Filters>
-          disabled={disabled}
-          label="Severidade"
-          name="severity"
-          options={severityFilterOptions}
-        />
         <InputController<Filters>
           disabled={disabled}
           label="Comunidade"
@@ -406,29 +397,6 @@ const FiltersBar = ({
   </div>
 );
 
-const firstCategoryLabel = (items: string[]) => {
-  const normalizedItems = items.length ? items : ["other"];
-  const labels = normalizedItems.map((item) => categoryLabels[item] ?? item);
-
-  return {
-    allLabels: labels.join(" · "),
-    visibleLabel: `${labels[0]}${labels.length > 1 ? ` +${labels.length - 1}` : ""}`,
-  };
-};
-
-const ContentSensitiveCategoryBadge = ({ items }: { items: string[] }) => {
-  const category = firstCategoryLabel(items);
-
-  return (
-    <span
-      className="inline-flex max-w-full items-center rounded-full bg-primary-soft px-2.5 py-1 text-xs font-medium text-primary"
-      title={category.allLabels}
-    >
-      <span className="truncate">{category.visibleLabel}</span>
-    </span>
-  );
-};
-
 const ContentSensitiveEventRow = ({
   event,
   onSelect,
@@ -442,6 +410,8 @@ const ContentSensitiveEventRow = ({
     event.title_snapshot?.trim() || targetLabels[event.target_type] || "Conteúdo";
   const descriptionPreview = event.content_excerpt.trim() || "Sem descrição persistida.";
   const communityName = event.community?.name ?? "Sem comunidade";
+  const authorName = event.author.name || event.author.admin_label || event.author.public_label;
+  const authorRoleLabel = event.author.role_label || event.author.role;
 
   return (
     <tr
@@ -451,10 +421,7 @@ const ContentSensitiveEventRow = ({
       )}
     >
       <td className="px-5 py-4 align-middle text-xs font-medium text-muted">
-        {formatDateTime(event.created_at)}
-      </td>
-      <td className="px-5 py-4 align-middle">
-        <ContentSensitiveCategoryBadge items={event.categories} />
+        <span title={formatDateTime(event.created_at)}>{formatDateOnly(event.created_at)}</span>
       </td>
       <td className="px-5 py-4 align-middle">
         <Severity value={event.severity} />
@@ -463,12 +430,19 @@ const ContentSensitiveEventRow = ({
         <Decision value={event.decision} />
       </td>
       <td className="px-5 py-4 align-middle">
-        <span
-          className="block truncate text-sm font-medium text-foreground"
-          title={event.author.public_label}
-        >
-          {event.author.public_label}
-        </span>
+        <div className="min-w-0">
+          <div className="flex min-w-0 items-center gap-1.5">
+            <span className="truncate text-sm font-medium text-foreground" title={authorName}>
+              {authorName}
+            </span>
+            {event.author.show_verified_badge ? (
+              <VerifiedBadgeIcon aria-label="Perfil verificado" className="h-[15px] w-[15px]" />
+            ) : null}
+          </div>
+          <p className="mt-1 truncate text-xs font-medium text-muted" title={authorRoleLabel}>
+            {authorRoleLabel}
+          </p>
+        </div>
       </td>
       <td className="px-5 py-4 align-middle">
         <button
@@ -484,12 +458,10 @@ const ContentSensitiveEventRow = ({
           <p className="mt-1 line-clamp-1 text-xs leading-5 text-muted" title={descriptionPreview}>
             {descriptionPreview}
           </p>
+          <p className="mt-1 line-clamp-1 text-xs leading-5 text-muted" title={communityName}>
+            Comunidade: {communityName}
+          </p>
         </button>
-      </td>
-      <td className="px-5 py-4 align-middle">
-        <span className="block truncate text-sm font-medium text-muted" title={communityName}>
-          {communityName}
-        </span>
       </td>
     </tr>
   );
@@ -529,16 +501,14 @@ const ContentSensitiveEventsTable = ({
       </div>
     ) : (
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[1180px] table-fixed border-collapse">
+        <table className="w-full min-w-[1040px] table-fixed border-collapse">
           <thead className="bg-surface-muted/70 text-left text-[0.7rem] font-medium uppercase tracking-[0.1em] text-subtle">
             <tr>
-              <th className="w-[13%] px-5 py-4 font-medium">Data</th>
-              <th className="w-[14%] px-5 py-4 font-medium">Categoria</th>
-              <th className="w-[12%] px-5 py-4 font-medium">Severidade</th>
-              <th className="w-[15%] px-5 py-4 font-medium">Decisão</th>
-              <th className="w-[13%] px-5 py-4 font-medium">Autor</th>
-              <th className="w-[23%] px-5 py-4 font-medium">Conteúdo</th>
-              <th className="w-[10%] px-5 py-4 font-medium">Comunidade</th>
+              <th className="w-[14%] px-5 py-4 font-medium">Data</th>
+              <th className="w-[16%] px-5 py-4 font-medium">Severidade</th>
+              <th className="w-[18%] px-5 py-4 font-medium">Decisão</th>
+              <th className="w-[20%] px-5 py-4 font-medium">Autor</th>
+              <th className="w-[32%] px-5 py-4 font-medium">Conteúdo</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-border/70">
@@ -651,9 +621,9 @@ const Detail = ({
       </div>
       <div className="space-y-5 p-5">
         <div className="grid gap-3 sm:grid-cols-2">
+          <Info label="Autor" value={event.author.name || event.author.admin_label || "—"} />
           <Info label="Autor público" value={event.author.public_label} />
-          <Info label="Autor Admin" value={event.author.admin_label || "—"} />
-          <Info label="Papel" value={event.author.role} />
+          <Info label="Papel" value={event.author.role_label || event.author.role} />
           <Info label="Comunidade" value={event.community?.name ?? "—"} />
           <Info label="Alvo" value={targetLabels[event.target_type] ?? event.target_type} />
           <Info label="Criado em" value={formatDateTime(event.created_at)} />
@@ -1012,21 +982,19 @@ export const AdminModerationClient = ({ mode = "overview" }: { mode?: "overview"
   });
   const watchedTextualAutoFilters = useWatch({
     control: filtersForm.control,
-    name: ["status", "decision", "category", "severity", "community", "q"],
+    name: ["status", "decision", "community", "q"],
   });
   const watchedTextualAutoFiltersKey = watchedTextualAutoFilters.join("|");
   const latestAppliedTextualFiltersRef = useRef(appliedTextualFilters);
   const summary = useAdminModerationSummary();
   const eventsInput: AdminModerationEventsQuery = useMemo(
     () => ({
-      category: appliedTextualFilters.category,
       community: appliedTextualFilters.community.trim() || "all",
       decision: appliedTextualFilters.decision,
       from: appliedTextualFilters.from,
       limit: EVENT_LIMIT,
       page,
       q: appliedTextualFilters.q.trim() || undefined,
-      severity: appliedTextualFilters.severity,
       status: appliedTextualFilters.status,
       to: appliedTextualFilters.to,
     }),
@@ -1119,7 +1087,7 @@ export const AdminModerationClient = ({ mode = "overview" }: { mode?: "overview"
       <Header
         description={
           isTextualPage
-            ? "Lista exclusiva de pendências de conteúdo sensível, com filtros, detalhe protegido e ações auditadas."
+            ? "Posts e comentários potencialmente sensíveis identificados automaticamente para moderação."
             : undefined
         }
         eyebrow={isTextualPage ? "Moderação" : undefined}

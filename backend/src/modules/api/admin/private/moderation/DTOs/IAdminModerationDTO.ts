@@ -54,6 +54,7 @@ export type AdminModerationOperationalAlertsQuery = {
   reporter?: "all" | "paciente" | "psicologo";
   status?: "all" | "dismissed" | "pending" | "upheld";
   to?: string;
+  userRole?: "all" | "paciente" | "psicologo";
 };
 
 export type AdminModerationEventParams = {
@@ -118,8 +119,11 @@ export type AdminModerationCommunityDTO = {
 export type AdminModerationAuthorDTO = {
   admin_label?: string;
   id: string;
+  name: string;
   public_label: string;
   role: string;
+  role_label: string;
+  show_verified_badge: boolean;
 };
 
 export type AdminModerationEventItemDTO = {

@@ -216,6 +216,7 @@ const normalizeModerationOperationalAlerts = (input: AdminModerationOperationalA
   reporter: input.reporter || "all",
   status: input.status || "all",
   to: input.to || "default",
+  userRole: input.userRole || "all",
 });
 
 const normalizeCommunityContent = (input: AdminCommunityContentQuery) => ({
