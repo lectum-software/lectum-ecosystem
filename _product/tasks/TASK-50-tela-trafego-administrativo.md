@@ -377,3 +377,23 @@ Validacao desta execucao complementar:
 - `pnpm --dir admin build`
 - `pnpm check`
 - Browser local/headless em `http://localhost:3002/trafego` com admin real transitorio removido apos o teste: validou **Visitantes unicos** e taxas visiveis em **Novos visitantes** (`100%`) e **Visitantes recorrentes** (`0%`).
+
+## Execucao complementar - limpeza dos donuts de Trafego (2026-07-26)
+
+- Removidas as tags tecnicas dos tres cards de donut: **Origem do trafego**, **Dispositivos** e
+  **Tipo de usuario**. As fontes reais continuam no contrato backend (`source`), mas deixam de
+  competir visualmente com os titulos desses blocos.
+- As legendas dos tres donuts agora exibem os labels completos com quebra de linha e sem ellipsis,
+  preservando contagem e percentual alinhados a direita.
+- Nao houve alteracao em backend, Prisma/migrations, packages, formulas, tracking, dados
+  persistidos ou mocks.
+- Builder/Quick Copy nao estava exposto como ferramenta callable nesta execucao; as referencias
+  visuais usadas foram `_product/proto/admin/Tráfego.png` e a captura enviada pelo usuario.
+
+Validacao desta execucao complementar:
+
+- `pnpm --dir admin exec biome check "src/app/(admin)/trafego/client.tsx"`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check`
+- HTTP local `GET http://localhost:3002/trafego` retornou 200.

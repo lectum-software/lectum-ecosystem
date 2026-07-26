@@ -514,14 +514,17 @@ const DonutChart = ({
             </p>
           ) : (
             items.map((item, index) => (
-              <div className="flex min-w-0 items-center justify-between gap-3" key={item.id}>
-                <span className="flex min-w-0 items-center gap-2 text-sm font-semibold text-foreground">
+              <div
+                className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-start gap-3"
+                key={item.id}
+              >
+                <span className="flex min-w-0 items-start gap-2 text-sm font-semibold leading-5 text-foreground">
                   <span
                     aria-hidden
-                    className="h-2.5 w-2.5 shrink-0 rounded-full"
+                    className="mt-1 h-2.5 w-2.5 shrink-0 rounded-full"
                     style={{ backgroundColor: CHART_COLORS[index % CHART_COLORS.length] }}
                   />
-                  <span className="truncate">{item.label}</span>
+                  <span className="min-w-0 whitespace-normal break-words">{item.label}</span>
                 </span>
                 <span className="shrink-0 text-right text-sm font-semibold text-foreground">
                   {numberFormatter.format(item.count)}{" "}
@@ -1167,11 +1170,7 @@ const TrafficContent = ({
 
       <div className="grid min-w-0 gap-4 xl:grid-cols-3">
         <CardShell className="p-5">
-          <PanelTitle
-            icon={PieChart}
-            source={summary.traffic_sources.source}
-            title="Origem do tráfego"
-          />
+          <PanelTitle icon={PieChart} title="Origem do tráfego" />
           <DonutChart
             ariaLabel="Distribuição de sessões por origem de tráfego"
             items={summary.traffic_sources.items}
@@ -1179,7 +1178,7 @@ const TrafficContent = ({
           />
         </CardShell>
         <CardShell className="p-5">
-          <PanelTitle icon={Smartphone} source={summary.devices.source} title="Dispositivos" />
+          <PanelTitle icon={Smartphone} title="Dispositivos" />
           <DonutChart
             ariaLabel="Distribuição de sessões por dispositivo"
             items={summary.devices.items}
@@ -1187,7 +1186,7 @@ const TrafficContent = ({
           />
         </CardShell>
         <CardShell className="p-5">
-          <PanelTitle icon={Users} source={summary.user_types.source} title="Tipo de usuário" />
+          <PanelTitle icon={Users} title="Tipo de usuário" />
           <DonutChart
             ariaLabel="Distribuição de sessões por tipo de usuário"
             items={summary.user_types.items}

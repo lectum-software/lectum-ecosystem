@@ -700,3 +700,29 @@ Validacao deste ajuste:
 - `pnpm check`
 - Browser local/headless em `http://localhost:3002/trafego` com admin real transitorio removido
   apos o teste: header sem campos de data, sem atalhos de periodo e sem CTA de exportacao.
+
+## Ajuste pos-feedback 2026-07-26: donuts de Trafego mais legiveis
+
+Novo feedback visual pediu remover as tags tecnicas dos cards **Origem do trafego**,
+**Dispositivos** e **Tipo de usuario**, alem de mostrar as legendas completas sem ellipsis.
+
+Decisoes:
+
+- Ocultar nos tres headers as tags `page_view_event.traffic_source`,
+  `visitor_session.device_type+page_view_event.display_mode` e `visitor_session.user.role`.
+- Manter esses identificadores somente no contrato/dados reais, nao como destaque visual do card.
+- Alterar a legenda compartilhada dos donuts para permitir quebra de linha, `break-words` e label
+  completo, preservando contagem e percentual no lado direito.
+- Nao alterar backend, contratos HTTP, formulas, Prisma/migrations, packages, tracking ou dados
+  persistidos.
+
+Consequencia: os tres cards ficam mais limpos e legiveis em desktop e mobile, sem perder a
+rastreabilidade tecnica nos documentos e contratos.
+
+Validacao deste ajuste:
+
+- `pnpm --dir admin exec biome check "src/app/(admin)/trafego/client.tsx"`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check`
+- HTTP local `GET http://localhost:3002/trafego` retornou 200.
