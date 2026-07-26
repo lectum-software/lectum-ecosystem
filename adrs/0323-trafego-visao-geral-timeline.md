@@ -33,6 +33,11 @@ campos de data e cards que exibem/ocultam curvas.
 - `Visitantes recorrentes` na Visão geral é um segmento disjunto de `Novos visitantes`: conta
   somente visitantes com sessão anterior ao início do recorte, evitando que retornos dentro do
   próprio período façam `novos + recorrentes` exceder `visitantes únicos`.
+- A UI passa a exibir, imediatamente abaixo do gráfico da Visão geral, um bloco de **Detalhes da
+  navegação por páginas** usando os agregados reais já presentes no resumo: `pageviews`,
+  `pages_per_session`, `entry_pages.total`, `bounce_rate` e `entry_pages.items`.
+- A lista de **Páginas de entrada** deixa a grade inferior e passa a compor esse bloco para manter a
+  leitura de navegação junto ao gráfico de comportamento, sem alterar contrato HTTP ou fórmulas.
 - Nenhum pacote novo, mock, endpoint simulado, schema Prisma ou migration foi adicionado.
 
 ## Consequências
@@ -44,6 +49,8 @@ campos de data e cards que exibem/ocultam curvas.
   real retornado pela API.
 - A faixa visual **Resumo textual do gráfico** não é exibida nos gráficos de Tráfego; o resumo foi
   mantido como `figcaption` apenas para leitores de tela.
+- O bloco de navegação fica mobile-first: indicadores empilham no mobile, a lista de entradas usa
+  cards em telas estreitas e tabela responsiva a partir de `md`, preservando `overflow-x=0`.
 - Builder/Quick Copy não estava exposto como ferramenta callable neste ambiente; a validação visual
   usou `_product/proto/admin/Tráfego.png`, `_product/proto/admin/Psicólogos/Psicólogos - Dashboard.png`
   e browser local.
@@ -67,3 +74,7 @@ campos de data e cards que exibem/ocultam curvas.
   390x844 sem overflow horizontal.
 - Browser local/headless complementar — OK: validou **Visitantes únicos** e taxas visíveis em
   **Novos visitantes** e **Visitantes recorrentes**.
+- Browser local/headless complementar — OK: validou **Detalhes da navegação por páginas** logo abaixo
+  do gráfico da Visão geral, **Principais páginas de entrada**, **Visualizações de páginas**,
+  **Média de páginas por sessão**, **Sessões com página de entrada** e viewports 1366x900 e 390x844
+  sem overflow horizontal.

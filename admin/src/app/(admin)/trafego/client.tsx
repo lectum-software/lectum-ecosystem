@@ -4,7 +4,7 @@ import {
   Activity,
   AlertTriangle,
   ChevronDown,
-  DoorOpen,
+  FileText,
   Globe2,
   type LucideIcon,
   MapPinned,
@@ -221,6 +221,12 @@ const formatMetricValue = (metric: TrafficMetric) => {
 
   return numberFormatter.format(metric.value);
 };
+
+const findMetric = (summary: AdminTrafficSummary, metricId: string) =>
+  summary.overview_cards.find((metric) => metric.id === metricId) ??
+  summary.quality.items.find((metric) => metric.id === metricId) ??
+  summary.conversions.items.find((metric) => metric.id === metricId) ??
+  null;
 
 const formatMetricRate = (value: number, total: number) => {
   const rate = total > 0 ? (value / total) * 100 : 0;
@@ -664,6 +670,122 @@ const EntryPagesTable = ({ items }: { items: TrafficEntryPage[] }) => (
     </div>
   </>
 );
+
+const NavigationMetricCard = ({
+  description,
+  metric,
+  title,
+  value,
+}: {
+  description: string;
+  metric?: TrafficMetric | null;
+  title: string;
+  value: string;
+}) => (
+  <div className="min-w-0 rounded-2xl border border-border bg-surface p-4">
+    <p className="text-xs font-semibold text-muted">{title}</p>
+    <p className="mt-2 truncate text-2xl font-black tracking-tight text-foreground" title={value}>
+      {value}
+    </p>
+    <div className="mt-1 flex min-w-0 items-center gap-1.5 overflow-hidden whitespace-nowrap">
+      {metric ? <TrendBadge metric={metric} /> : null}
+      <span className="min-w-0 truncate text-[0.68rem] font-medium text-muted">
+        {metric ? "vs. período anterior" : "base do período"}
+      </span>
+    </div>
+    <p className="mt-3 text-xs leading-5 text-muted">{description}</p>
+  </div>
+);
+
+const PageNavigationPanel = ({ summary }: { summary: AdminTrafficSummary }) => {
+  const pageviewsMetric = findMetric(summary, "pageviews");
+  const pagesPerSessionMetric = findMetric(summary, "pages_per_session");
+  const bounceRateMetric = findMetric(summary, "bounce_rate");
+  const topEntryPage = summary.entry_pages.items[0] ?? null;
+
+  const cards = [
+    {
+      description: "Total real de páginas carregadas no período selecionado.",
+      id: "pageviews",
+      metric: pageviewsMetric,
+      title: "Visualizações de páginas",
+      value: pageviewsMetric ? formatMetricValue(pageviewsMetric) : "Indisponível",
+    },
+    {
+      description: "Páginas vistas divididas por sessões com ao menos uma página carregada.",
+      id: "pages_per_session",
+      metric: pagesPerSessionMetric,
+      title: "Média de páginas por sessão",
+      value: pagesPerSessionMetric ? formatMetricValue(pagesPerSessionMetric) : "Indisponível",
+    },
+    {
+      description: "Sessões cujo primeiro acesso foi identificado como página de entrada.",
+      id: "entry_sessions",
+      metric: null,
+      title: "Sessões com página de entrada",
+      value: numberFormatter.format(summary.entry_pages.total),
+    },
+    {
+      description: "Sessões com uma única pageview e sem ação importante registrada.",
+      id: "bounce_rate",
+      metric: bounceRateMetric,
+      title: "Taxa de rejeição",
+      value: bounceRateMetric ? formatMetricValue(bounceRateMetric) : "Indisponível",
+    },
+  ];
+
+  return (
+    <CardShell className="min-w-0 p-5 md:p-6">
+      <div className="flex min-w-0 flex-col gap-3 md:flex-row md:items-start md:justify-between">
+        <div className="min-w-0">
+          <div className="flex min-w-0 items-center gap-2">
+            <FileText aria-hidden className="h-5 w-5 shrink-0 text-primary" />
+            <h2 className="min-w-0 text-xl font-bold text-foreground">
+              Detalhes da navegação por páginas
+            </h2>
+          </div>
+          <p className="mt-2 max-w-3xl text-sm font-medium leading-6 text-muted">
+            Acompanhe como as sessões começam e quantas páginas são vistas no período selecionado.
+            Os números abaixo usam somente pageviews reais capturados pela Lectum.
+          </p>
+        </div>
+        {topEntryPage ? (
+          <div className="rounded-2xl bg-primary-soft px-4 py-3 text-sm md:max-w-xs md:text-right">
+            <p className="font-semibold text-muted">Principal entrada</p>
+            <p className="mt-1 font-black text-foreground">{topEntryPage.label}</p>
+            <p className="mt-1 break-all text-xs font-semibold text-muted">
+              {numberFormatter.format(topEntryPage.count)} sessões · {topEntryPage.percentage}%
+            </p>
+          </div>
+        ) : null}
+      </div>
+
+      <div className="mt-5 grid min-w-0 gap-4 xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.25fr)]">
+        <div className="grid min-w-0 gap-3 sm:grid-cols-2">
+          {cards.map((card) => (
+            <NavigationMetricCard
+              description={card.description}
+              key={card.id}
+              metric={card.metric}
+              title={card.title}
+              value={card.value}
+            />
+          ))}
+        </div>
+
+        <div className="min-w-0 rounded-[1.5rem] border border-border/70 bg-surface-muted/70 p-4">
+          <div className="flex min-w-0 flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+            <h3 className="font-black text-foreground">Principais páginas de entrada</h3>
+            <p className="text-xs font-bold text-muted">
+              Total: {numberFormatter.format(summary.entry_pages.total)} sessões
+            </p>
+          </div>
+          <EntryPagesTable items={summary.entry_pages.items} />
+        </div>
+      </div>
+    </CardShell>
+  );
+};
 
 const MetricList = ({ items }: { items: TrafficMetric[] }) => (
   <div className="mt-4 divide-y divide-border">
@@ -1168,6 +1290,8 @@ const TrafficContent = ({
         />
       </TrafficOverviewPanel>
 
+      <PageNavigationPanel summary={summary} />
+
       <div className="grid min-w-0 gap-4 xl:grid-cols-3">
         <CardShell className="p-5">
           <PanelTitle icon={PieChart} title="Origem do tráfego" />
@@ -1197,15 +1321,7 @@ const TrafficContent = ({
 
       <LocationPanel locations={summary.locations} />
 
-      <div className="grid min-w-0 gap-4 xl:grid-cols-3">
-        <CardShell className="p-5">
-          <PanelTitle
-            icon={DoorOpen}
-            source={summary.entry_pages.source}
-            title="Páginas de entrada"
-          />
-          <EntryPagesTable items={summary.entry_pages.items} />
-        </CardShell>
+      <div className="grid min-w-0 gap-4 xl:grid-cols-2">
         <CardShell className="p-5">
           <PanelTitle
             icon={MousePointerClick}
