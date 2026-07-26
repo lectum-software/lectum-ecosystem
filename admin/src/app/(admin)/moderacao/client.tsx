@@ -534,7 +534,9 @@ const ContentSensitiveEventsTable = ({
               <th className="w-[17%] px-5 py-4 font-medium">Decisão</th>
               <th className="w-[20%] px-5 py-4 font-medium">Autor</th>
               <th className="w-[29%] px-5 py-4 font-medium">Conteúdo</th>
-              <th className="w-[8%] px-5 py-4 text-center font-medium">Página</th>
+              <th className="w-[8%] px-5 py-4 text-center font-medium" scope="col">
+                <span className="sr-only">Abrir detalhes do conteúdo</span>
+              </th>
             </tr>
           </thead>
           <tbody className="divide-y divide-border/70">

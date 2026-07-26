@@ -463,12 +463,14 @@ Regras anti-recriação:
 - Para eventos com `admin_content_url`, o ícone abre sempre a rota Admin protegida do conteúdo em `/comunidades/[slug]/conteudo/[type]/[id]`, inclusive quando também existir `public_url`.
 - Para eventos legados/snapshot-only sem `target_id` e sem `admin_content_url`, o ícone permanece sem navegação porque não existe página própria de conteúdo para abrir; o ajuste não inventa post, seed, backfill, mock ou URL pública.
 - Ajuste visual complementar: quando `admin_content_url` existe, o ícone habilitado usa a mesma paleta do atalho de detalhes de Operacionais (`bg-surface text-foreground`, com hover primário), mantendo a ação disponível sem destoar da tabela Admin.
+- Ajuste visual complementar: o cabeçalho visível da coluna do atalho de detalhes não exibe mais o título "Página"; a coluna mantém rótulo acessível não visual para leitores de tela.
 - O ajuste é somente de UX na central Admin; não altera contrato de API, schema Prisma, migration, package, moderação determinística ou exposição pública do conteúdo bloqueado.
 - Builder/Quick Copy não esteve disponível como ferramenta callable; a referência usada foi a captura enviada pelo usuário e os padrões Admin existentes.
 
 ### Critério de aceite complementar
 
 - [x] O ícone da coluna de página/detalhe usa apenas `admin_content_url`, navegando para o detalhe Admin do conteúdo quando disponível, sem abrir modal e sem usar `public_url`, com a mesma paleta do ícone de detalhes em Operacionais.
+- [x] A coluna do atalho de detalhes não exibe o título visual "Página", preservando rótulo acessível para leitor de tela.
 
 ### Validação executada para este ajuste
 

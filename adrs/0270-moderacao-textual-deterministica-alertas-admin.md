@@ -54,6 +54,8 @@ O ícone não abre o modal de snapshot protegido e não usa a URL pública do po
 
 Como a diferença visual entre link ativo e estado indisponível estava ambígua e o Admin já possui um padrão consolidado em Operacionais, o ícone com `admin_content_url` passa a reutilizar a paleta do atalho de detalhes de Operacionais (`bg-surface text-foreground`, com hover primário). O estado sem URL permanece com `bg-surface-muted text-subtle`.
 
+Para reduzir ruído visual na tabela, o cabeçalho visível da coluna de atalho deixa de exibir "Página". A coluna preserva rótulo não visual para acessibilidade, já que a função do atalho é comunicada pelo `aria-label` do link/estado indisponível em cada linha.
+
 Essa decisão preserva a experiência esperada do Admin e evita levar moderadores para o ambiente público. O conteúdo bloqueado continua sem `public_url`, fora de feed público/privado e com snapshot completo restrito ao Admin autenticado.
 
 Validações: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check`, smoke HTTP 200 de `/moderacao/conteudo-sensivel`, smoke HTTP 200 de `/moderacao/operacionais`, smoke HTTP 200 da rota Admin de detalhe `/comunidades/tmp-layout-denuncias-cmrgztri70/conteudo/post/tmp_den_layout_cmrgztri70_thread_01` e smoke HTTP 200 da rota visual `/comunidades/visualizacao-moderacao/conteudo/post/visual-admin-detail-link-blocked-post`.
