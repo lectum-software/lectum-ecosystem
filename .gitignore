@@ -4,6 +4,7 @@ node_modules/
 .next/
 dist/
 coverage/
+.tmp/
 
 .DS_Store
 *.log
