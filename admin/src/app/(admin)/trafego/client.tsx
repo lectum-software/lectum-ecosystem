@@ -222,6 +222,15 @@ const formatMetricValue = (metric: TrafficMetric) => {
   return numberFormatter.format(metric.value);
 };
 
+const formatMetricRate = (value: number, total: number) => {
+  const rate = total > 0 ? (value / total) * 100 : 0;
+
+  return `${rate.toLocaleString("pt-BR", {
+    maximumFractionDigits: 1,
+    minimumFractionDigits: 0,
+  })}%`;
+};
+
 const formatChange = (value: number | null) => {
   if (value === null) return "sem base";
   if (value === 0) return "0%";
@@ -295,14 +304,17 @@ const MetricCard = ({
   icon: Icon,
   metric,
   onToggle,
+  rate,
 }: {
   active: boolean;
   color: string;
   icon: LucideIcon;
   metric: TrafficMetric;
   onToggle: () => void;
+  rate?: string | null;
 }) => {
   const formattedValue = formatMetricValue(metric);
+  const titleValue = rate ? `${formattedValue} (${rate})` : formattedValue;
 
   return (
     <button
@@ -314,7 +326,7 @@ const MetricCard = ({
           : "border-border/80 bg-border/50 shadow-none hover:-translate-y-0.5 hover:border-primary/25 hover:bg-border/60",
       )}
       onClick={onToggle}
-      title={`${metric.label}: ${formattedValue}. ${
+      title={`${metric.label}: ${titleValue}. ${
         active ? "Visível no gráfico" : "Oculto no gráfico"
       }`}
       type="button"
@@ -331,8 +343,13 @@ const MetricCard = ({
         <p className="truncate text-xs font-semibold text-foreground" title={metric.label}>
           {metric.label}
         </p>
-        <p className="min-w-0 truncate text-2xl font-bold tracking-tight text-foreground xl:text-[1.7rem]">
-          {formattedValue}
+        <p className="flex min-w-0 items-baseline gap-2 truncate whitespace-nowrap text-2xl font-bold tracking-tight text-foreground xl:text-[1.7rem]">
+          <span className="truncate">{formattedValue}</span>
+          {rate ? (
+            <span className="shrink-0 text-base font-medium tracking-normal text-muted xl:text-sm">
+              ({rate})
+            </span>
+          ) : null}
         </p>
         <div className="flex min-w-0 items-center gap-1.5 overflow-hidden whitespace-nowrap">
           <TrendBadge metric={metric} />
@@ -809,7 +826,7 @@ const getTrafficOverviewMetricLabel = (key: TrafficOverviewMetricKey) => {
     new_visitors: "Novos visitantes",
     recurring_visitors: "Visitantes recorrentes",
     sessions: "Sessões",
-    unique_visitors: "Usuários únicos",
+    unique_visitors: "Visitantes únicos",
   };
 
   return labels[key];
@@ -1066,6 +1083,7 @@ const TrafficOverviewCardsGrid = ({
   summary: AdminTrafficSummary;
 }) => {
   const cards = new Map(summary.overview_cards.map((metric) => [metric.id, metric]));
+  const uniqueVisitors = cards.get("unique_visitors")?.value ?? 0;
 
   return (
     <fieldset className="grid min-w-0 gap-3 sm:grid-cols-2 xl:grid-cols-4">
@@ -1073,6 +1091,10 @@ const TrafficOverviewCardsGrid = ({
       {TRAFFIC_OVERVIEW_ORDER.map((key) => {
         const metric = cards.get(key);
         if (!metric) return null;
+        const rate =
+          key === "new_visitors" || key === "recurring_visitors"
+            ? formatMetricRate(metric.value, uniqueVisitors)
+            : null;
 
         return (
           <MetricCard
@@ -1080,6 +1102,7 @@ const TrafficOverviewCardsGrid = ({
             key={key}
             metric={metric}
             onToggle={() => onToggleMetric(key)}
+            rate={rate}
             {...TRAFFIC_OVERVIEW_METRIC_CONFIG[key]}
           />
         );

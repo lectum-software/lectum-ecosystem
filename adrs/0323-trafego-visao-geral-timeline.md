@@ -11,7 +11,7 @@ TASK-50
 ## Contexto
 
 O feedback de 2026-07-26 pediu que a **Visão geral** de `/trafego` mantivesse somente os
-contadores **Sessões**, **Usuários únicos**, **Novos visitantes** e **Visitantes recorrentes**, e que
+contadores **Sessões**, **Visitantes únicos**, **Novos visitantes** e **Visitantes recorrentes**, e que
 ganhasse um gráfico abaixo seguindo o layout da visão geral de `/psicologos`: filtro de período,
 campos de data e cards que exibem/ocultam curvas.
 
@@ -22,6 +22,9 @@ campos de data e cards que exibem/ocultam curvas.
   gráfico SVG local.
 - Os cards não exibem badge visual **real** nem descrições internas para reduzir ruído visual; a
   origem real permanece documentada no contrato e nas seções analíticas.
+- O contador `unique_visitors` é apresentado como **Visitantes únicos** na Visão geral.
+- Os segmentos **Novos visitantes** e **Visitantes recorrentes** exibem a taxa entre parênteses,
+  usando **Visitantes únicos** como denominador do período.
 - O filtro de período fica dentro da Visão geral, preservando o header limpo de Tráfego.
 - O backend mantém os agregados reais existentes e adiciona `recurring_visitors` e `timeline.points`
   ao payload de `GET /api/admin/private/traffic/summary`.
@@ -29,7 +32,7 @@ campos de data e cards que exibem/ocultam curvas.
   `visitor_session`, `page_view_event` e `important_action_event`.
 - `Visitantes recorrentes` na Visão geral é um segmento disjunto de `Novos visitantes`: conta
   somente visitantes com sessão anterior ao início do recorte, evitando que retornos dentro do
-  próprio período façam `novos + recorrentes` exceder `usuários únicos`.
+  próprio período façam `novos + recorrentes` exceder `visitantes únicos`.
 - Nenhum pacote novo, mock, endpoint simulado, schema Prisma ou migration foi adicionado.
 
 ## Consequências
@@ -62,3 +65,5 @@ campos de data e cards que exibem/ocultam curvas.
   internas, remoção da faixa visual
   **Resumo textual do gráfico**, filtros de período/data, toggle de curva por contador e mobile
   390x844 sem overflow horizontal.
+- Browser local/headless complementar — OK: validou **Visitantes únicos** e taxas visíveis em
+  **Novos visitantes** e **Visitantes recorrentes**.

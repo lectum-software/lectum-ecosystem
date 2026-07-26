@@ -466,7 +466,7 @@ const buildOverviewCards = (current: TrafficStats, previous: TrafficStats) => {
       current: getVisitorIds(current).size,
       description: "Visitantes únicos por visitor_id considerando sessões e pageviews.",
       id: "unique_visitors",
-      label: "Usuários únicos",
+      label: "Visitantes únicos",
       previous: getVisitorIds(previous).size,
       source: "visitor_session+page_view_event",
     }),

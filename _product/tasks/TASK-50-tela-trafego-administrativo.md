@@ -309,7 +309,7 @@ Validacao desta execucao complementar:
 ## Execucao complementar - Visao geral com timeline filtravel (2026-07-26)
 
 - Ajustada a **Visao geral** de `/trafego` para exibir somente os contadores **Sessoes**,
-  **Usuarios unicos**, **Novos visitantes** e **Visitantes recorrentes**.
+  **Visitantes unicos**, **Novos visitantes** e **Visitantes recorrentes**.
 - Adicionado grafico SVG abaixo dos contadores, seguindo o layout da Visao geral de `/psicologos`,
   com filtro de periodo, campos **De/Ate** e cards que exibem/ocultam curvas via `aria-pressed`.
 - Os contadores ficaram sem badge visual **real** e sem texto descritivo interno, conforme feedback
@@ -335,7 +335,7 @@ Validacao desta execucao complementar:
 - `pnpm check`
 - Browser local/headless em `http://localhost:3002/trafego` com admin real transitorio removido
   apos o teste: validou 4 contadores (**Sessoes**,
-  **Usuarios unicos**, **Novos visitantes**, **Visitantes recorrentes**), ausencia de badge
+  **Visitantes unicos**, **Novos visitantes**, **Visitantes recorrentes**), ausencia de badge
   **real**, ausencia das descricoes internas, ausencia da faixa visivel **Resumo textual do
   grafico**, filtros de periodo/data, toggle de curva por contador e viewport mobile 390x844 sem
   overflow horizontal.
@@ -346,7 +346,7 @@ Validacao desta execucao complementar:
   **Novos visitantes**: recorrente agora exige sessao anterior ao inicio do periodo.
 - Retornos adicionais dentro do proprio recorte continuam pertencendo ao segmento **Novos
   visitantes** quando o visitante nao tinha historico anterior, evitando casos como `224 novos + 4
-  recorrentes` com apenas `224 usuarios unicos`.
+  recorrentes` com apenas `224 visitantes unicos`.
 - A timeline passa a usar o mesmo criterio disjunto para a curva de recorrentes.
 - Nao houve alteracao em Prisma schema/migrations, packages, mocks ou dados persistidos.
 - ADR atualizado: `adrs/0323-trafego-visao-geral-timeline.md`.
@@ -358,3 +358,22 @@ Validacao desta execucao complementar:
 - `pnpm --dir backend build`
 - `pnpm check`
 - API real local em `GET /api/admin/private/traffic/summary?from=2026-06-27&to=2026-07-26` com admin transitorio removido apos o teste: `usuarios_unicos=224`, `novos_visitantes=224`, `visitantes_recorrentes=0`, `novos+recorrentes=224`.
+
+## Execucao complementar - copy e taxas dos segmentos de visitantes em Trafego (2026-07-26)
+
+- Padronizado o texto do contador como **Visitantes unicos** na Visao geral de `/trafego`, mantendo o identificador tecnico `unique_visitors` no contrato.
+- Os contadores **Novos visitantes** e **Visitantes recorrentes** agora exibem a taxa entre parenteses ao lado do numero, com menor peso visual.
+- A taxa exibida usa **Visitantes unicos** como denominador do periodo: `segmento / visitantes_unicos`.
+- Nao houve alteracao em Prisma schema/migrations, packages, mocks ou dados persistidos.
+- ADR atualizado: `adrs/0323-trafego-visao-geral-timeline.md`.
+
+Validacao desta execucao complementar:
+
+- `pnpm --dir backend exec biome check --write "src/modules/api/admin/private/traffic/summary/use-cases/services.ts"`
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/trafego/client.tsx"`
+- `pnpm --dir backend check`
+- `pnpm --dir admin check`
+- `pnpm --dir backend build`
+- `pnpm --dir admin build`
+- `pnpm check`
+- Browser local/headless em `http://localhost:3002/trafego` com admin real transitorio removido apos o teste: validou **Visitantes unicos** e taxas visiveis em **Novos visitantes** (`100%`) e **Visitantes recorrentes** (`0%`).
