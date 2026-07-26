@@ -48,8 +48,10 @@ Validações: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --di
 
 ## Update 2026-07-26: ícone de detalhe ativo para bloqueios
 
-A coluna de página/detalhe da central de conteúdo sensível não deve renderizar um estado inativo para conteúdo bloqueado. Quando o evento possui `admin_content_url`, o ícone abre a rota protegida do post bloqueado. Quando o evento é snapshot-only/legado e não possui `target_id`, o mesmo ícone abre o detalhe protegido do evento de moderação.
+A coluna de página/detalhe da central de conteúdo sensível deve navegar apenas para detalhe administrativo de conteúdo. Quando o evento possui `admin_content_url`, o ícone abre a rota protegida do conteúdo em `/comunidades/[slug]/conteudo/[type]/[id]`, inclusive se também existir `public_url`.
 
-Essa decisão preserva a experiência esperada do Admin sem criar backfill, seed, mock ou post artificial para registros antigos que nunca tiveram página própria. O conteúdo bloqueado continua sem `public_url`, fora de feed público/privado e com snapshot completo restrito ao Admin autenticado.
+O ícone não abre o modal de snapshot protegido e não usa a URL pública do post. Eventos snapshot-only/legados sem `target_id` permanecem sem navegação nessa coluna porque não existe página própria de conteúdo para abrir; o detalhe protegido do evento continua restrito ao fluxo específico de revisão, sem criar backfill, seed, mock ou post artificial.
 
-Validações: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke HTTP 200 de `/moderacao/conteudo-sensivel`.
+Essa decisão preserva a experiência esperada do Admin e evita levar moderadores para o ambiente público. O conteúdo bloqueado continua sem `public_url`, fora de feed público/privado e com snapshot completo restrito ao Admin autenticado.
+
+Validações: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check`, smoke HTTP 200 de `/moderacao/conteudo-sensivel` e smoke HTTP 200 da rota Admin de detalhe `/comunidades/tmp-layout-denuncias-cmrgztri70/conteudo/post/tmp_den_layout_cmrgztri70_thread_01`.
