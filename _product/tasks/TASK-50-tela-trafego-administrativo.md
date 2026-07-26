@@ -339,3 +339,22 @@ Validacao desta execucao complementar:
   **real**, ausencia das descricoes internas, ausencia da faixa visivel **Resumo textual do
   grafico**, filtros de periodo/data, toggle de curva por contador e viewport mobile 390x844 sem
   overflow horizontal.
+
+## Execucao complementar - segmentos disjuntos de visitantes em Trafego (2026-07-26)
+
+- Corrigida a formula de **Visitantes recorrentes** da Visao geral para ser disjunta de
+  **Novos visitantes**: recorrente agora exige sessao anterior ao inicio do periodo.
+- Retornos adicionais dentro do proprio recorte continuam pertencendo ao segmento **Novos
+  visitantes** quando o visitante nao tinha historico anterior, evitando casos como `224 novos + 4
+  recorrentes` com apenas `224 usuarios unicos`.
+- A timeline passa a usar o mesmo criterio disjunto para a curva de recorrentes.
+- Nao houve alteracao em Prisma schema/migrations, packages, mocks ou dados persistidos.
+- ADR atualizado: `adrs/0323-trafego-visao-geral-timeline.md`.
+
+Validacao desta execucao complementar:
+
+- `pnpm --dir backend exec biome check --write "src/modules/api/admin/private/traffic/summary/use-cases/services.ts"`
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm check`
+- API real local em `GET /api/admin/private/traffic/summary?from=2026-06-27&to=2026-07-26` com admin transitorio removido apos o teste: `usuarios_unicos=224`, `novos_visitantes=224`, `visitantes_recorrentes=0`, `novos+recorrentes=224`.

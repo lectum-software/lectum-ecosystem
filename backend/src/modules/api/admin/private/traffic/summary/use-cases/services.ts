@@ -300,6 +300,9 @@ const loadStats = async (
 const newVisitorIds = (stats: TrafficStats) =>
   [...getVisitorIds(stats)].filter((visitorId) => !stats.priorVisitorIds.has(visitorId));
 
+const recurringVisitorIds = (stats: TrafficStats) =>
+  [...getVisitorIds(stats)].filter((visitorId) => stats.priorVisitorIds.has(visitorId));
+
 const pageViewSessions = (stats: TrafficStats) => {
   const sessions = new Map<string, TrafficPageViewRecord[]>();
 
@@ -476,11 +479,11 @@ const buildOverviewCards = (current: TrafficStats, previous: TrafficStats) => {
       source: "visitor_session.first_seen_at",
     }),
     metric({
-      current: returnVisitors(current).length,
-      description: "Visitantes com sessao anterior ao periodo ou mais de uma sessao no recorte.",
+      current: recurringVisitorIds(current).length,
+      description: "Visitantes com sessao anterior ao inicio do periodo.",
       id: "recurring_visitors",
       label: "Visitantes recorrentes",
-      previous: returnVisitors(previous).length,
+      previous: recurringVisitorIds(previous).length,
       source: "visitor_session",
     }),
     metric({
@@ -570,7 +573,7 @@ const buildTimeline = (
   const labels = buildLabels(period.current.start, period.days);
   const firstObservedByVisitor = new Map<string, Date>();
   const newVisitors = new Set(newVisitorIds(stats));
-  const recurringVisitors = new Set(returnVisitors(stats));
+  const recurringVisitors = new Set(recurringVisitorIds(stats));
 
   for (const session of stats.sessions) {
     setFirstObservedDate(

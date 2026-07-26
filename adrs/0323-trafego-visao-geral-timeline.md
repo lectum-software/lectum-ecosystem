@@ -27,8 +27,9 @@ campos de data e cards que exibem/ocultam curvas.
   ao payload de `GET /api/admin/private/traffic/summary`.
 - A timeline é diária, limitada pelo range atual da TASK-50 (máximo de 180 dias), e deriva somente de
   `visitor_session`, `page_view_event` e `important_action_event`.
-- `Visitantes recorrentes` segue a fórmula real existente: visitantes com sessão anterior ao recorte
-  ou mais de uma sessão no recorte.
+- `Visitantes recorrentes` na Visão geral é um segmento disjunto de `Novos visitantes`: conta
+  somente visitantes com sessão anterior ao início do recorte, evitando que retornos dentro do
+  próprio período façam `novos + recorrentes` exceder `usuários únicos`.
 - Nenhum pacote novo, mock, endpoint simulado, schema Prisma ou migration foi adicionado.
 
 ## Consequências
@@ -53,6 +54,9 @@ campos de data e cards que exibem/ocultam curvas.
 - `pnpm --dir backend build` — OK.
 - `pnpm --dir admin build` — OK.
 - `pnpm check` — OK.
+- API real local em `GET /api/admin/private/traffic/summary?from=2026-06-27&to=2026-07-26` — OK:
+  `usuarios_unicos=224`, `novos_visitantes=224`, `visitantes_recorrentes=0`,
+  `novos+recorrentes=224`.
 - Browser local/headless em `http://localhost:3002/trafego` — OK: validou com admin real
   transitório removido após o teste, 4 contadores, remoção do badge **real**, remoção das descrições
   internas, remoção da faixa visual
