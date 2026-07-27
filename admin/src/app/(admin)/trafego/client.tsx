@@ -633,7 +633,6 @@ const EntryPagesTable = ({ items }: { items: TrafficEntryPage[] }) => (
       {items.map((item) => (
         <div className="rounded-2xl border border-border bg-surface p-3" key={item.path}>
           <p className="font-black text-foreground">{item.label}</p>
-          <p className="mt-1 break-all text-xs text-muted">{item.path}</p>
           <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
             <div className="rounded-xl bg-surface-muted p-2">
               <span className="block font-semibold text-muted">Sess&otilde;es</span>
@@ -668,7 +667,6 @@ const EntryPagesTable = ({ items }: { items: TrafficEntryPage[] }) => (
             <tr key={item.path}>
               <td className="min-w-0 py-3 pr-3">
                 <p className="font-black text-foreground">{item.label}</p>
-                <p className="break-all text-xs text-muted">{item.path}</p>
               </td>
               <td className="py-3 pr-3 font-bold text-foreground">
                 {numberFormatter.format(item.count)}

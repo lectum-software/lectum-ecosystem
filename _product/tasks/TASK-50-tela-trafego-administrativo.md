@@ -558,3 +558,37 @@ Validacao desta execucao complementar:
 - Smoke estatico do codigo - OK: confirmou `formatRankingSummary`, links de ranking, ausencia das
   tres fontes tecnicas nos `PanelTitle` desses cards e ausencia de `{item.path}` no bloco
   `RankingList`.
+
+## Execucao complementar - nomes de paginas de entrada sem slugs (2026-07-27)
+
+- A lista **Principais paginas de entrada** deixou de renderizar o path/slug abaixo do titulo em
+  desktop e mobile; a chave tecnica continua apenas no payload para agrupamento e exportacao.
+- O agrupamento dinamico de posts passou a aparecer como **Posts** em vez de **Posts especificos**.
+- Rotas de entrada nao dinamicas relevantes passaram a usar labels operacionais:
+  `/auth/login` -> **Login**, `/auth/register/psychologist` -> **Cadastro de psicologo** e
+  `/auth/register/patient` -> **Cadastro de paciente**.
+- Mantida a agregacao real por `page_view_event.is_entry`; nao houve mock, backfill, endpoint novo,
+  package novo, Prisma schema/migration ou dados persistidos.
+- Builder/Quick Copy nao estava exposto como ferramenta callable nesta execucao; as referencias
+  auditaveis foram `_product/proto/admin/Tráfego.png` e a captura enviada pelo usuario.
+- ADRs atualizados: `adrs/0230-admin-trafego-agregacoes.md` e
+  `adrs/0323-trafego-visao-geral-timeline.md`.
+
+Validacao desta execucao complementar:
+
+- `pnpm --dir backend exec biome check --write "src/modules/api/admin/private/traffic/summary/use-cases/services.ts"` - OK.
+- `pnpm --dir backend exec biome check "src/modules/api/admin/private/traffic/summary/use-cases/services.ts"` - OK.
+- `pnpm --dir admin exec biome check "src/app/(admin)/trafego/client.tsx"` - OK.
+- `pnpm --dir backend check` - OK.
+- `pnpm --dir admin check` - OK.
+- `pnpm --dir backend build` - OK.
+- `pnpm --dir admin build` - OK.
+- `pnpm check` - OK.
+- API real local direta em `buildTrafficSummary({ from: "2026-06-27", to: "2026-07-26" })` - OK:
+  `entry_pages.total=238`, **Posts** `197`, **Login** `10` e **Cadastro de psicologo** `3`.
+- Browser local/headless com admin real transitorio removido apos o teste em
+  `http://localhost:3022/trafego` - OK: validou **Posts**, **Login** e
+  **Cadastro de psicologo** sem `/community/*/post/*`, `/psychologists/*`, `/community/*`,
+  `/auth/login`, `/auth/register/psychologist` ou **Posts especificos** na lista, em 1366x900 e
+  390x844 sem overflow horizontal.
+- Conferencia direta no banco apos limpeza - OK: `codexTrafficOverviewAdminCount=0`.

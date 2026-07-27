@@ -53,10 +53,13 @@ campos de data e cards que exibem/ocultam curvas.
   psicologo**. Em desktop amplo, a grade usa tres colunas lado a lado; em telas estreitas, empilha
   sem overflow horizontal.
 - A lista **Principais páginas de entrada** passa a consolidar entradas dinâmicas por tipo para
-  evitar linhas separadas por URL individual: posts de comunidade entram em **Posts específicos**
+  evitar linhas separadas por URL individual: posts de comunidade entram em **Posts**
   (`/community/*/post/*`), detalhes de comunidade em **Comunidades** (`/community/*`) e perfis em
   **Perfis de psicólogos** (`/psychologists/*`). O total continua contando a primeira pageview real
   de cada sessão; apenas a chave de agrupamento dessas rotas dinâmicas mudou.
+- A mesma lista passa a exibir apenas nomes operacionais no UI: o grupo de posts aparece como
+  **Posts**, rotas como `/auth/login` e `/auth/register/psychologist` aparecem como **Login** e
+  **Cadastro de psicólogo**, e o path/slug não é renderizado abaixo do titulo.
 - Os rankings **Trafego por comunidade**, **Trafego por post** e **Trafego por psicologo** deixam de
   exibir tags tecnicas de fonte no cabecalho e deixam de mostrar slug/path abaixo do titulo do item.
   O subtitulo passa a exibir `sessoes ? pageviews`, e cada linha recebe um atalho acessivel
@@ -122,3 +125,9 @@ campos de data e cards que exibem/ocultam curvas.
   `page_view_event.target_type=community`, `page_view_event.page_kind=community_post` e
   `page_view_event.target_type=psychologist` nos rankings, metricas `sessoes ? pageviews` abaixo dos
   titulos, links `Ir ate ...` por item e viewport mobile 390x844 sem overflow horizontal.
+- API real local complementar (2026-07-27) - OK: validou `entry_pages.total=238`, grupo
+  **Posts** (`197`), label **Login** (`10`) e label **Cadastro de psicólogo** (`3`).
+- Browser local/headless complementar (2026-07-27) - OK: validou a lista **Principais páginas de
+  entrada** com nomes sem slugs/paths, sem **Posts específicos**, sem `/auth/login`,
+  `/auth/register/psychologist`, `/community/*/post/*`, `/community/*` ou `/psychologists/*`, em
+  desktop 1366x900 e mobile 390x844 sem overflow horizontal.

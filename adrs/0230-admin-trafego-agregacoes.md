@@ -25,7 +25,11 @@ O Builder/Quick Copy ativo `vcp://quickcopy/vcp-24aaa2941d814e5b90572bc93ae50e2a
   acoes importantes, localizacao e registros de dominio agregados) para o inicio de **Todo o periodo**.
 - Consolidar, em **Principais páginas de entrada**, URLs dinamicas de posts, comunidades e perfis
   de psicologos por tipo de entrada, mantendo páginas não dinamicas por path exato. Assim, dois
-  posts diferentes aparecem como uma linha **Posts específicos** em vez de duas linhas por URL.
+  posts diferentes aparecem como uma linha **Posts** em vez de duas linhas por URL.
+- Exibir a lista **Principais páginas de entrada** por nomes operacionais, sem subtitulo de path/slug
+  abaixo do titulo. As chaves tecnicas seguem no contrato para agrupamento/exportacao, enquanto a UI
+  apresenta rotas comuns como **Login** e **Cadastro de psicólogo** em vez de `/auth/login` ou
+  `/auth/register/psychologist`.
 - Expor tambem `top_posts` no resumo e no CSV, agregando pageviews reais de posts de comunidade
   por `page_view_event.page_kind="community_post"`/`target_id` e enriquecendo o label com
   `community_post.title` + comunidade real quando o post ainda existir.
@@ -77,6 +81,14 @@ O Builder/Quick Copy ativo `vcp://quickcopy/vcp-24aaa2941d814e5b90572bc93ae50e2a
     **Posts específicos** (`197`), **Perfis de psicologos** (`4`) e **Comunidades** (`4`);
   - browser local/headless confirmou os paths padrao `/community/*/post/*`, `/psychologists/*` e
     `/community/*` na lista **Principais páginas de entrada**.
+- Validacao complementar em 2026-07-27:
+  - `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`,
+    `pnpm --dir admin build` e `pnpm check`;
+  - API real local confirmou `entry_pages.total=238`, grupo **Posts** (`197`), label **Login**
+    (`10`) e label **Cadastro de psicólogo** (`3`);
+  - browser local/headless confirmou a lista **Principais páginas de entrada** sem subtitulos de
+    path/slug, sem **Posts específicos** e sem exibir `/auth/login`,
+    `/auth/register/psychologist`, `/community/*/post/*`, `/community/*` ou `/psychologists/*`.
 
 ## Task relacionada
 

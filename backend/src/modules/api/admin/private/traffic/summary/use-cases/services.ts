@@ -1046,14 +1046,21 @@ const buildLocations = (stats: TrafficStats) => {
 const pathLabel = (path: string) => {
   const normalized = path || "/";
   if (normalized === "/") return "Página inicial";
+  if (normalized === "/auth/login" || normalized === "/login") return "Login";
+  if (normalized === "/auth/register/psychologist" || normalized === "/register/psychologist")
+    return "Cadastro de psicólogo";
+  if (normalized === "/auth/register/patient" || normalized === "/register/patient")
+    return "Cadastro de paciente";
+  if (normalized === "/auth/register" || normalized === "/register") return "Cadastro";
+  if (normalized.includes("signup/psychologist")) return "Cadastro de psicólogo";
+  if (normalized.includes("signup/patient")) return "Cadastro de paciente";
+  if (normalized.includes("cadastro") || normalized.includes("signup")) return "Cadastro";
   if (normalized === "/psychologists") return "Página de Psicólogos";
   if (normalized.startsWith("/psychologists/")) return "Perfil de Psicólogo";
   if (normalized === "/community" || normalized === "/community/feed") return "Comunidades";
   if (normalized.startsWith("/community/") && normalized.includes("/post/"))
     return "Post específico";
   if (normalized.startsWith("/community/")) return "Comunidade";
-  if (normalized.startsWith("/login")) return "Login";
-  if (normalized.includes("cadastro") || normalized.includes("signup")) return "Cadastro";
 
   return normalized;
 };
@@ -1066,7 +1073,7 @@ const ENTRY_PAGE_GROUPS = {
   },
   communityPosts: {
     id: "entry_group:community_posts",
-    label: "Posts específicos",
+    label: "Posts",
     path: "/community/*/post/*",
   },
   psychologistProfiles: {
