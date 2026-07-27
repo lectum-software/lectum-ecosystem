@@ -1437,25 +1437,6 @@ const TrafficContent = ({
         />
         <MetricList items={summary.conversions.items} />
       </CardShell>
-
-      {summary.unavailable.length > 0 ? (
-        <CardShell className="bg-primary-soft/70 p-5">
-          <div className="flex gap-3">
-            <AlertTriangle aria-hidden className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
-            <div>
-              <h2 className="font-black text-foreground">Limitações exibidas honestamente</h2>
-              <p className="mt-1 text-sm font-bold leading-6 text-muted">{periodDescription}</p>
-              <ul className="mt-2 list-disc space-y-1 break-words pl-5 text-sm text-muted">
-                {summary.unavailable.map((item) => (
-                  <li key={item.id}>
-                    <strong className="text-foreground">{item.label}:</strong> {item.description}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-        </CardShell>
-      ) : null}
     </div>
   );
 };
