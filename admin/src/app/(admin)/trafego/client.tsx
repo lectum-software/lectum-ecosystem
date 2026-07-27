@@ -626,7 +626,7 @@ const EntryPagesTable = ({ items }: { items: TrafficEntryPage[] }) => (
       {items.map((item) => (
         <div className="rounded-2xl border border-border bg-surface p-3" key={item.path}>
           <p className="font-black text-foreground">{item.label}</p>
-          <div className="mt-3 grid grid-cols-3 gap-2 text-xs">
+          <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
             <div className="rounded-xl bg-surface-muted p-2">
               <span className="block font-semibold text-muted">Sess&otilde;es</span>
               <strong className="text-foreground">{numberFormatter.format(item.count)}</strong>
@@ -634,12 +634,6 @@ const EntryPagesTable = ({ items }: { items: TrafficEntryPage[] }) => (
             <div className="rounded-xl bg-surface-muted p-2">
               <span className="block font-semibold text-muted">Participa&ccedil;&atilde;o</span>
               <strong className="text-foreground">{item.percentage}%</strong>
-            </div>
-            <div className="rounded-xl bg-surface-muted p-2">
-              <span className="block font-semibold text-muted">Convers&otilde;es geradas</span>
-              <strong className="text-foreground">
-                {numberFormatter.format(item.conversions)}
-              </strong>
             </div>
           </div>
         </div>
@@ -652,16 +646,13 @@ const EntryPagesTable = ({ items }: { items: TrafficEntryPage[] }) => (
     </div>
 
     <div className="mt-5 hidden overflow-x-auto md:block">
-      <table className="w-full min-w-[38rem] text-left text-sm">
-        <caption className="sr-only">
-          P&aacute;ginas de entrada por sess&otilde;es e convers&otilde;es geradas
-        </caption>
+      <table className="w-full min-w-full text-left text-sm">
+        <caption className="sr-only">P&aacute;ginas de entrada por sess&otilde;es</caption>
         <thead className="text-xs text-muted">
           <tr>
             <th className="py-3 font-black">P&aacute;gina de entrada</th>
             <th className="py-3 text-right font-black">Sess&otilde;es</th>
             <th className="py-3 text-right font-black">%</th>
-            <th className="py-3 text-right font-black">Convers&otilde;es geradas</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-border">
@@ -674,9 +665,6 @@ const EntryPagesTable = ({ items }: { items: TrafficEntryPage[] }) => (
                 {numberFormatter.format(item.count)}
               </td>
               <td className="py-3 pr-3 text-right font-bold text-muted">{item.percentage}%</td>
-              <td className="py-3 text-right font-bold text-foreground">
-                {numberFormatter.format(item.conversions)}
-              </td>
             </tr>
           ))}
         </tbody>

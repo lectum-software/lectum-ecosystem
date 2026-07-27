@@ -651,3 +651,26 @@ Validacao desta execucao complementar:
   ausencia de **Detalhes da navegacao por paginas**, ausencia do paragrafo removido, ausencia de
   **Principal entrada**, presenca de **Conversoes geradas** em **Principais paginas de entrada** e
   `horizontalOverflowPx=0` em desktop 1366x900 e mobile 390x844.
+
+## Execucao complementar - remocao da coluna de conversoes em paginas de entrada (2026-07-27)
+
+- Removida da tabela **Principais paginas de entrada** a coluna **Conversoes geradas**.
+- Nos cards mobile da mesma lista, tambem foi removido o terceiro campo de conversoes, mantendo
+  apenas **Sessoes** e **Participacao**.
+- O card/tabela separado **Conversoes geradas** permanece na tela com dados reais de
+  `summary.conversions.items`.
+- Nao houve mock, backfill, endpoint novo, package novo, Prisma schema/migration ou dado
+  persistido; `db:migrate` nao foi necessario.
+- Builder/Quick Copy nao estava exposto como ferramenta callable neste ambiente; as referencias
+  auditaveis foram `_product/proto/admin/Tráfego.png` e a captura enviada pelo usuario.
+- ADR atualizado: `adrs/0323-trafego-visao-geral-timeline.md`.
+
+Validacao desta execucao complementar:
+
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/trafego/client.tsx"` - OK.
+- `pnpm --dir admin check` - OK.
+- `pnpm --dir admin build` - OK.
+- `pnpm check` - OK.
+- Browser local/headless em `http://localhost:3002/trafego` - OK: validou ausencia da coluna
+  **Conversoes geradas** em **Principais paginas de entrada**, card/tabela separado
+  **Conversoes geradas** preservado e `horizontalOverflowPx=0` em desktop e mobile.
