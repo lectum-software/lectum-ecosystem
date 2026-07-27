@@ -2,8 +2,20 @@ import { adminApi } from "@/api/client";
 import { resolveApiData } from "@/api/handle";
 import type { ApiResponse } from "@/api/types";
 
+export type TrafficPeriodValue =
+  | "7d"
+  | "30d"
+  | "90d"
+  | "all"
+  | "custom"
+  | "month"
+  | "today"
+  | "week"
+  | "year";
+
 export type TrafficSummaryQuery = {
   from?: string;
+  period?: TrafficPeriodValue;
   to?: string;
 };
 
@@ -151,6 +163,7 @@ export type AdminTrafficSummary = {
 
 const cleanParams = (input: TrafficSummaryQuery) => ({
   ...(input.from ? { from: input.from } : {}),
+  ...(input.period ? { period: input.period } : {}),
   ...(input.to ? { to: input.to } : {}),
 });
 

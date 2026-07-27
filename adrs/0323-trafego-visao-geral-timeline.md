@@ -57,6 +57,11 @@ campos de data e cards que exibem/ocultam curvas.
   (`/community/*/post/*`), detalhes de comunidade em **Comunidades** (`/community/*`) e perfis em
   **Perfis de psicólogos** (`/psychologists/*`). O total continua contando a primeira pageview real
   de cada sessão; apenas a chave de agrupamento dessas rotas dinâmicas mudou.
+- Os rankings **Trafego por comunidade**, **Trafego por post** e **Trafego por psicologo** deixam de
+  exibir tags tecnicas de fonte no cabecalho e deixam de mostrar slug/path abaixo do titulo do item.
+  O subtitulo passa a exibir `sessoes ? pageviews`, e cada linha recebe um atalho acessivel
+  `Ir ate ...` para abrir a comunidade, post ou perfil no frontend publico via
+  `NEXT_PUBLIC_FRONTEND_URL` quando o path for relativo.
 - Nenhum pacote novo, mock, endpoint simulado, schema Prisma ou migration foi adicionado.
 
 ## Consequências
@@ -113,3 +118,7 @@ campos de data e cards que exibem/ocultam curvas.
 - Browser local/headless complementar (2026-07-26) - OK: validou a lista **Principais páginas de
   entrada** com `/community/*/post/*`, `/psychologists/*` e `/community/*` em desktop 1366x900 e
   mobile 390x844, sem exibir paths específicos de post nesse bloco.
+- Browser local/headless complementar (2026-07-26) - OK: validou ausencia das tags
+  `page_view_event.target_type=community`, `page_view_event.page_kind=community_post` e
+  `page_view_event.target_type=psychologist` nos rankings, metricas `sessoes ? pageviews` abaixo dos
+  titulos, links `Ir ate ...` por item e viewport mobile 390x844 sem overflow horizontal.

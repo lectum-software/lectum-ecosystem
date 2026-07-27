@@ -521,3 +521,40 @@ Validacao desta execucao complementar:
   apos o teste - OK: validou **Posts especificos** com `/community/*/post/*`, **Perfis de
   psicologos** com `/psychologists/*`, **Comunidades** com `/community/*`, ausencia de path
   especifico de post na lista de entradas e viewports 1366x900 e 390x844 sem overflow horizontal.
+
+## Execucao complementar - rankings com metricas e atalho publico (2026-07-26)
+
+- Removidas da UI dos cards **Trafego por comunidade**, **Trafego por post** e **Trafego por
+  psicologo** as tags tecnicas `page_view_event.target_type=community`,
+  `page_view_event.page_kind=community_post` e `page_view_event.target_type=psychologist`.
+- O texto abaixo do titulo de cada item desses rankings deixou de exibir o slug/path e passou a
+  exibir `sessoes · pageviews`, com pluralizacao de **sessao/sessoes** e **pageview/pageviews**.
+- Cada item recebeu um icone/link acessivel para abrir a comunidade, post ou perfil de psicologo no
+  frontend publico, usando `NEXT_PUBLIC_FRONTEND_URL` quando a URL capturada for relativa.
+- Mantidos apenas dados reais do payload existente; nao houve mock, backfill, package novo,
+  endpoint simulado, Prisma schema/migration ou dados persistidos.
+- Preservado o contrato de periodo por preset ja em andamento no resumo de Trafego
+  (`period=today|week|month|year|7d|30d|90d|all|custom`) para alinhar a UI ao backend sem
+  depender de intervalo fake no cliente.
+- Builder/Quick Copy nao estava exposto como ferramenta callable nesta execucao; as referencias
+  auditaveis foram `_product/proto/admin/Tráfego.png` e a captura enviada pelo usuario.
+- ADRs atualizados: `adrs/0230-admin-trafego-agregacoes.md` e
+  `adrs/0323-trafego-visao-geral-timeline.md`.
+
+Validacao desta execucao complementar:
+
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/trafego/client.tsx"` - OK.
+- `pnpm --dir backend check` - OK via `pnpm check`.
+- `pnpm --dir backend build` - OK.
+- `pnpm --dir admin check` - OK.
+- `pnpm --dir admin build` - OK.
+- `pnpm check` - OK.
+- Browser local/headless em `http://localhost:3002/trafego` com admin real transitorio removido
+  apos o teste - OK: validou ausencia das tres tags tecnicas nos rankings, metricas
+  `sessoes · pageviews` abaixo dos titulos, links `Ir ate ...` e viewport mobile 390x844 sem
+  overflow horizontal. O admin transitorio `codex-trafego-*` foi removido e a conferencia direta no
+  banco retornou `codex_trafego_admin_count=0`.
+- HTTP local `GET http://localhost:3002/trafego` - OK (`200`).
+- Smoke estatico do codigo - OK: confirmou `formatRankingSummary`, links de ranking, ausencia das
+  tres fontes tecnicas nos `PanelTitle` desses cards e ausencia de `{item.path}` no bloco
+  `RankingList`.

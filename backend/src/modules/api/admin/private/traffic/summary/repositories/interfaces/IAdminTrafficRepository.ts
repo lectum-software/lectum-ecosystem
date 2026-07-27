@@ -81,6 +81,7 @@ export interface IAdminTrafficRepository {
   countPublishedCommunityPosts(range: AdminTrafficDateRange): Promise<number>;
   countSubscriptionsStarted(range: AdminTrafficDateRange): Promise<number>;
   countUsersByRole(role: "paciente" | "psicologo", range: AdminTrafficDateRange): Promise<number>;
+  findEarliestTrafficDate(): Promise<Date | null>;
   listActions(range: AdminTrafficDateRange): Promise<TrafficActionRecord[]>;
   listCommunitiesBySlugs(slugs: string[]): Promise<TrafficCommunityLabelRecord[]>;
   listLocations(range: AdminTrafficDateRange): Promise<TrafficLocationRecord[]>;

@@ -18,6 +18,11 @@ O Builder/Quick Copy ativo `vcp://quickcopy/vcp-24aaa2941d814e5b90572bc93ae50e2a
 - Reutilizar apenas dados reais ja existentes: `visitor_session`, `page_view_event`, `important_action_event`, `visitor_location`, `user`, `community`, `community_post`, `post_reply`, `contact_request` e assinaturas profissionais.
 - Manter o periodo padrao em 30 dias e limite maximo inicial em 180 dias, validando `from <= to`.
 - Usar as mesmas agregacoes no CSV de exportacao, evitando divergencia entre tela e relatorio.
+- O endpoint de resumo aceita presets reais de periodo (`today`, `week`, `month`, `year`,
+  `7d`, `30d`, `90d`, `all` e `custom`). Periodos personalizados continuam limitados a
+  180 dias; presets operacionais como **Este ano** e **Todo o periodo** podem chegar a 3660 dias e
+  usam a menor data real encontrada nas fontes reais de trafego e conversao (sessoes, pageviews,
+  acoes importantes, localizacao e registros de dominio agregados) para o inicio de **Todo o periodo**.
 - Consolidar, em **Principais páginas de entrada**, URLs dinamicas de posts, comunidades e perfis
   de psicologos por tipo de entrada, mantendo páginas não dinamicas por path exato. Assim, dois
   posts diferentes aparecem como uma linha **Posts específicos** em vez de duas linhas por URL.
@@ -44,6 +49,8 @@ O Builder/Quick Copy ativo `vcp://quickcopy/vcp-24aaa2941d814e5b90572bc93ae50e2a
   registros.
 - O ranking de posts reaproveita o tracking first-party ja capturado; posts sem label resolvido
   continuam aparecendo pelo id real em vez de receber mock ou seed visual.
+- Os atalhos de periodo reduzem divergencia entre datas calculadas no cliente e no backend; o cliente
+  exibe o periodo efetivo retornado pelo resumo e nao cria range artificial para **Todo o periodo**.
 
 ## Validacao
 

@@ -2,8 +2,20 @@ import type { Request } from "express";
 
 export type AdminTrafficQuery = {
   from?: string;
+  period?: AdminTrafficPeriodPreset;
   to?: string;
 };
+
+export type AdminTrafficPeriodPreset =
+  | "7d"
+  | "30d"
+  | "90d"
+  | "all"
+  | "custom"
+  | "month"
+  | "today"
+  | "week"
+  | "year";
 
 export type AdminTrafficDateRange = {
   end: Date;

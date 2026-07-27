@@ -9,6 +9,7 @@ import type {
   AdminTrafficLocationItem,
   AdminTrafficMetric,
   AdminTrafficPeriod,
+  AdminTrafficPeriodPreset,
   AdminTrafficQuery,
   AdminTrafficRankingItem,
   AdminTrafficSummary,
@@ -27,7 +28,8 @@ import type {
 } from "../repositories/interfaces/IAdminTrafficRepository";
 
 const DEFAULT_PERIOD_DAYS = 30;
-const MAX_PERIOD_DAYS = 180;
+const MAX_CUSTOM_PERIOD_DAYS = 180;
+const MAX_PRESET_PERIOD_DAYS = 3660;
 const TOP_LIMIT = 10;
 
 const DEVICE_LABELS: Record<AdminTrafficDeviceType, string> = {
@@ -104,6 +106,19 @@ const startOfDate = (date: Date) => {
   return next;
 };
 
+const startOfWeek = (date: Date) => {
+  const next = startOfDate(date);
+  const day = next.getDay();
+  const diff = day === 0 ? -6 : 1 - day;
+  next.setDate(next.getDate() + diff);
+
+  return next;
+};
+
+const startOfMonth = (date: Date) => new Date(date.getFullYear(), date.getMonth(), 1);
+
+const startOfYear = (date: Date) => new Date(date.getFullYear(), 0, 1);
+
 const endOfDate = (date: Date) => {
   const next = new Date(date);
   next.setHours(23, 59, 59, 999);
@@ -139,15 +154,28 @@ const daysBetweenInclusive = (from: Date, to: Date) => {
 const buildLabels = (from: Date, days: number) =>
   Array.from({ length: days }, (_, index) => toDateKey(addDays(from, index)));
 
-const resolvePeriod = (query: AdminTrafficQuery): PeriodResult => {
+const presetDays = (preset: AdminTrafficPeriodPreset) => {
+  if (preset === "7d") return 7;
+  if (preset === "30d") return 30;
+  if (preset === "90d") return 90;
+
+  return null;
+};
+
+const resolvePeriod = (
+  query: AdminTrafficQuery,
+  allPeriodStartDate?: Date | null,
+): PeriodResult => {
   const hasCustomFrom = Boolean(query.from);
   const hasCustomTo = Boolean(query.to);
+  const preset = query.period || (hasCustomFrom || hasCustomTo ? "custom" : null);
 
   let start: Date;
   let end: Date;
   let label = "Últimos 30 dias";
+  let maxDays = MAX_CUSTOM_PERIOD_DAYS;
 
-  if (hasCustomFrom || hasCustomTo) {
+  if (preset === "custom") {
     if (!hasCustomFrom || !hasCustomTo)
       return { success: false, code: "invalid_analytics_date_range" };
 
@@ -161,6 +189,41 @@ const resolvePeriod = (query: AdminTrafficQuery): PeriodResult => {
     start = customStart;
     end = customEnd;
     label = "Período personalizado";
+  } else if (preset === "today") {
+    const today = new Date();
+    start = startOfDate(today);
+    end = endOfDate(today);
+    label = "Hoje";
+  } else if (preset === "week") {
+    const today = new Date();
+    start = startOfWeek(today);
+    end = endOfDate(today);
+    label = "Esta semana";
+  } else if (preset === "month") {
+    const today = new Date();
+    start = startOfMonth(today);
+    end = endOfDate(today);
+    label = "Este mês";
+  } else if (preset === "year") {
+    const today = new Date();
+    start = startOfYear(today);
+    end = endOfDate(today);
+    label = "Este ano";
+    maxDays = MAX_PRESET_PERIOD_DAYS;
+  } else if (preset === "all") {
+    const today = new Date();
+    start = startOfDate(allPeriodStartDate ?? addDays(today, -(DEFAULT_PERIOD_DAYS - 1)));
+    end = endOfDate(today);
+    label = "Todo o período";
+    maxDays = MAX_PRESET_PERIOD_DAYS;
+  } else if (preset === "7d" || preset === "30d" || preset === "90d") {
+    const today = new Date();
+    const days = presetDays(preset) ?? DEFAULT_PERIOD_DAYS;
+    start = startOfDate(addDays(today, -(days - 1)));
+    end = endOfDate(today);
+    label = `Últimos ${days} dias`;
+  } else if (preset) {
+    return { success: false, code: "invalid_analytics_date_range" };
   } else {
     const today = new Date();
     end = endOfDate(today);
@@ -168,7 +231,7 @@ const resolvePeriod = (query: AdminTrafficQuery): PeriodResult => {
   }
 
   const days = daysBetweenInclusive(start, end);
-  if (days < 1 || days > MAX_PERIOD_DAYS) {
+  if (days < 1 || days > maxDays) {
     return { success: false, code: "invalid_analytics_date_range" };
   }
 
@@ -184,7 +247,7 @@ const resolvePeriod = (query: AdminTrafficQuery): PeriodResult => {
         days,
         from: toDateKey(start),
         label,
-        max_days: MAX_PERIOD_DAYS,
+        max_days: maxDays,
         previous_from: toDateKey(previousStart),
         previous_to: toDateKey(previousEnd),
         timezone: "server-local",
@@ -1394,7 +1457,10 @@ const unavailableMetrics = (summary: Pick<AdminTrafficSummary, "locations" | "qu
 };
 
 export const buildTrafficSummary = async (query: AdminTrafficQuery): Promise<Resolve> => {
-  const resolvedPeriod = resolvePeriod(query ?? {});
+  const repository = new AdminTrafficRepository();
+  const allPeriodStartDate =
+    query?.period === "all" ? await repository.findEarliestTrafficDate() : null;
+  const resolvedPeriod = resolvePeriod(query ?? {}, allPeriodStartDate);
   if (!resolvedPeriod.success) {
     return {
       status: 400,
@@ -1402,7 +1468,6 @@ export const buildTrafficSummary = async (query: AdminTrafficQuery): Promise<Res
     };
   }
 
-  const repository = new AdminTrafficRepository();
   const { current, period, previous } = resolvedPeriod.period;
   const [currentStats, previousStats] = await Promise.all([
     loadStats(repository, current),

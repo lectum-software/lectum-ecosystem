@@ -19,6 +19,92 @@ const occurredAtWhere = (range: AdminTrafficDateRange) => ({
 const createdAtWhere = occurredAtWhere;
 
 export class AdminTrafficRepository implements IAdminTrafficRepository {
+  async findEarliestTrafficDate(): Promise<Date | null> {
+    const [
+      firstAction,
+      firstCommunityPost,
+      firstContactRequest,
+      firstLocation,
+      firstPageView,
+      firstPostReply,
+      firstSession,
+      firstSubscription,
+      firstUser,
+    ] = await Promise.all([
+      prisma.important_action_event.findFirst({
+        orderBy: { occurred_at: "asc" },
+        select: { occurred_at: true },
+        where: { deleted: false },
+      }),
+      prisma.community_post.findFirst({
+        orderBy: { createdAt: "asc" },
+        select: { createdAt: true },
+        where: { deleted: false, status: "publicado" },
+      }),
+      prisma.contact_request.findFirst({
+        orderBy: { createdAt: "asc" },
+        select: { createdAt: true },
+        where: { channel: "whatsapp", deleted: false },
+      }),
+      prisma.visitor_location.findFirst({
+        orderBy: { createdAt: "asc" },
+        select: { createdAt: true },
+        where: { deleted: false },
+      }),
+      prisma.page_view_event.findFirst({
+        orderBy: { occurred_at: "asc" },
+        select: { occurred_at: true },
+        where: { deleted: false },
+      }),
+      prisma.post_reply.findFirst({
+        orderBy: { createdAt: "asc" },
+        select: { createdAt: true },
+        where: { deleted: false },
+      }),
+      prisma.visitor_session.findFirst({
+        orderBy: { first_seen_at: "asc" },
+        select: { first_seen_at: true },
+        where: { deleted: false },
+      }),
+      prisma.professional_subscription.findFirst({
+        orderBy: { createdAt: "asc" },
+        select: { createdAt: true },
+        where: {
+          deleted: false,
+          plan: {
+            deleted: false,
+            price_cents: { gt: 0 },
+            slug: { not: "gratuito" },
+          },
+          source: { not: "admin_grant" },
+        },
+      }),
+      prisma.user.findFirst({
+        orderBy: { createdAt: "asc" },
+        select: { createdAt: true },
+        where: { active: true, deleted: false, role: { in: ["paciente", "psicologo"] } },
+      }),
+    ]);
+
+    const dates = [
+      firstAction?.occurred_at,
+      firstCommunityPost?.createdAt,
+      firstContactRequest?.createdAt,
+      firstLocation?.createdAt,
+      firstPageView?.occurred_at,
+      firstPostReply?.createdAt,
+      firstSession?.first_seen_at,
+      firstSubscription?.createdAt,
+      firstUser?.createdAt,
+    ].filter((date): date is Date => Boolean(date));
+
+    return dates.reduce<Date | null>((earliest, date) => {
+      if (!earliest || date < earliest) return date;
+
+      return earliest;
+    }, null);
+  }
+
   async countContactRequests(range: AdminTrafficDateRange): Promise<number> {
     return prisma.contact_request.count({
       where: {

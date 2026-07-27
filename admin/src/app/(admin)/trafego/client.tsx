@@ -4,6 +4,7 @@ import {
   Activity,
   AlertTriangle,
   ChevronDown,
+  ExternalLink,
   FileText,
   Globe2,
   type LucideIcon,
@@ -14,7 +15,7 @@ import {
   Smartphone,
   Users,
 } from "lucide-react";
-import { type FocusEvent, useMemo, useState } from "react";
+import { type FocusEvent, useEffect, useMemo, useState } from "react";
 import { useAdminTrafficSummary } from "@/api/callers/traffic";
 import { resolveApiError } from "@/api/handle";
 import type {
@@ -56,10 +57,11 @@ const TRAFFIC_PERIOD_OPTIONS = [
   { id: "today", label: "Hoje" },
   { id: "week", label: "Esta semana" },
   { id: "month", label: "Este mês" },
+  { id: "year", label: "Este ano" },
   { id: "7d", label: "Últimos 7 dias" },
   { id: "30d", label: "Últimos 30 dias" },
   { id: "90d", label: "Últimos 90 dias" },
-  { id: "180d", label: "Últimos 180 dias" },
+  { id: "all", label: "Todo o período" },
 ] as const;
 
 type TrafficOverviewMetricKey = (typeof TRAFFIC_OVERVIEW_ORDER)[number];
@@ -68,6 +70,23 @@ type TrafficPeriodValue = TrafficPeriodPreset | "custom";
 type TrafficDateRange = Required<Pick<TrafficSummaryQuery, "from" | "to">>;
 
 const numberFormatter = new Intl.NumberFormat("pt-BR");
+const publicFrontendUrl = process.env.NEXT_PUBLIC_FRONTEND_URL || "http://localhost:3000";
+
+const toPublicHref = (path: string) => {
+  if (/^https?:\/\//.test(path)) return path;
+
+  const normalizedPath = path.startsWith("/") ? path : `/${path}`;
+  return `${publicFrontendUrl.replace(/\/$/, "")}${normalizedPath}`;
+};
+
+const formatRankingSummary = (item: TrafficRankingItem) => {
+  const sessionLabel = item.sessions === 1 ? "sessão" : "sessões";
+  const pageviewLabel = item.count === 1 ? "pageview" : "pageviews";
+
+  return `${numberFormatter.format(item.sessions)} ${sessionLabel} · ${numberFormatter.format(
+    item.count,
+  )} ${pageviewLabel}`;
+};
 
 const normalizeTextKey = (value: string) =>
   value
@@ -122,6 +141,13 @@ const startOfCurrentMonth = () => {
   return date;
 };
 
+const startOfCurrentYear = () => {
+  const date = new Date();
+  date.setMonth(0, 1);
+
+  return date;
+};
+
 const startOfLastDays = (days: number) => {
   const date = new Date();
   date.setDate(date.getDate() - (days - 1));
@@ -149,9 +175,9 @@ const getTrafficRangeForPeriod = (period: TrafficPeriodPreset): TrafficDateRange
   if (period === "today") return { from: today, to: today };
   if (period === "week") return { from: toInputDate(startOfCurrentWeek()), to: today };
   if (period === "month") return { from: toInputDate(startOfCurrentMonth()), to: today };
+  if (period === "year") return { from: toInputDate(startOfCurrentYear()), to: today };
   if (period === "7d") return getQuickRange(7);
   if (period === "90d") return getQuickRange(90);
-  if (period === "180d") return getQuickRange(180);
 
   return getQuickRange(30);
 };
@@ -168,28 +194,11 @@ const getTrafficPeriodLabel = (period: TrafficPeriodValue) => {
   return TRAFFIC_PERIOD_OPTIONS.find((option) => option.id === period)?.label ?? "Últimos 30 dias";
 };
 
-const getRangeDays = (range: TrafficDateRange) => {
-  if (!range.from || !range.to) return null;
-
-  const days =
-    Math.floor(
-      (dateFromInput(range.to).getTime() - dateFromInput(range.from).getTime()) / 86_400_000,
-    ) + 1;
-
-  return Number.isFinite(days) && days > 0 ? days : null;
-};
-
-const formatPeriodDescription = (
-  period: TrafficPeriodValue,
-  range: TrafficDateRange,
-  days = getRangeDays(range),
-) => {
+const formatPeriodDescription = (period: TrafficPeriodValue, range: TrafficDateRange) => {
   const label = getTrafficPeriodLabel(period);
   if (!range.from || !range.to) return label;
 
-  return `${label} · ${formatDate(range.from)} a ${formatDate(range.to)}${
-    days ? ` (${numberFormatter.format(days)} dias)` : ""
-  }`;
+  return `${label} \u00b7 ${formatDate(range.from)} a ${formatDate(range.to)}`;
 };
 
 const isValidRange = (range: TrafficDateRange) => {
@@ -591,17 +600,24 @@ const BarList = ({
 
 const PanelTitle = ({
   icon: Icon,
+  periodDescription,
   source,
   title,
 }: {
   icon: LucideIcon;
+  periodDescription?: string;
   source?: string;
   title: string;
 }) => (
   <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-    <div className="flex min-w-0 items-center gap-2">
-      <Icon aria-hidden className="h-5 w-5 text-primary" />
-      <h2 className="min-w-0 text-lg font-bold text-foreground">{title}</h2>
+    <div className="min-w-0">
+      <div className="flex min-w-0 items-center gap-2">
+        <Icon aria-hidden className="h-5 w-5 text-primary" />
+        <h2 className="min-w-0 text-lg font-bold text-foreground">{title}</h2>
+      </div>
+      {periodDescription ? (
+        <p className="mt-1 text-sm font-bold leading-6 text-muted">{periodDescription}</p>
+      ) : null}
     </div>
     {source ? (
       <span className="max-w-full self-start break-all rounded-full bg-surface-muted px-2 py-1 text-[0.65rem] font-semibold text-muted sm:max-w-[58%] sm:text-right">
@@ -697,7 +713,13 @@ const NavigationMetricCard = ({
   </div>
 );
 
-const PageNavigationPanel = ({ summary }: { summary: AdminTrafficSummary }) => {
+const PageNavigationPanel = ({
+  periodDescription,
+  summary,
+}: {
+  periodDescription: string;
+  summary: AdminTrafficSummary;
+}) => {
   const pageviewsMetric = findMetric(summary, "pageviews");
   const pagesPerSessionMetric = findMetric(summary, "pages_per_session");
   const averageTimeMetric = findMetric(summary, "average_time");
@@ -763,6 +785,7 @@ const PageNavigationPanel = ({ summary }: { summary: AdminTrafficSummary }) => {
               Detalhes da navegação por páginas
             </h2>
           </div>
+          <p className="mt-1 text-sm font-bold leading-6 text-muted">{periodDescription}</p>
           <p className="mt-2 max-w-3xl text-sm font-medium leading-6 text-muted">
             Acompanhe como as sessões começam e quantas páginas são vistas no período selecionado.
             Os números abaixo usam somente pageviews reais capturados pela Lectum.
@@ -826,7 +849,13 @@ const MetricList = ({ items }: { items: TrafficMetric[] }) => (
   </div>
 );
 
-const RankingList = ({ items }: { items: TrafficRankingItem[] }) => (
+const RankingList = ({
+  destinationLabel,
+  items,
+}: {
+  destinationLabel: string;
+  items: TrafficRankingItem[];
+}) => (
   <div className="mt-4 divide-y divide-border">
     {items.length === 0 ? (
       <p className="rounded-2xl bg-surface-muted p-4 text-sm text-muted">
@@ -834,24 +863,34 @@ const RankingList = ({ items }: { items: TrafficRankingItem[] }) => (
       </p>
     ) : (
       items.map((item, index) => (
-        <div
-          className="flex min-w-0 flex-col gap-2 py-3 sm:flex-row sm:items-start sm:justify-between"
-          key={item.id}
-        >
-          <div className="min-w-0">
+        <div className="flex min-w-0 items-start justify-between gap-3 py-3" key={item.id}>
+          <div className="min-w-0 flex-1">
             <p className="truncate font-black text-foreground">
               #{index + 1} {item.label}
             </p>
-            <p className="break-all text-xs text-muted">{item.path}</p>
+            <p className="mt-1 text-xs font-bold text-muted">{formatRankingSummary(item)}</p>
           </div>
-          <div className="shrink-0 text-left sm:text-right">
-            <p className="font-black text-foreground">
-              {numberFormatter.format(item.sessions)} sessões
-            </p>
-            <p className="text-xs font-bold text-muted">
-              {numberFormatter.format(item.count)} pageviews
-            </p>
-          </div>
+          {item.path ? (
+            <a
+              aria-label={`Ir até ${destinationLabel}: ${item.label}`}
+              className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-border bg-surface text-primary shadow-control transition hover:border-primary hover:bg-primary-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
+              href={toPublicHref(item.path)}
+              rel="noreferrer"
+              target="_blank"
+              title={`Ir até ${destinationLabel}`}
+            >
+              <ExternalLink aria-hidden className="h-4 w-4" />
+            </a>
+          ) : (
+            <span
+              aria-label={`URL indisponível para ${destinationLabel}: ${item.label}`}
+              className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-border bg-surface-muted text-muted opacity-60"
+              role="img"
+              title="URL indisponível"
+            >
+              <ExternalLink aria-hidden className="h-4 w-4" />
+            </span>
+          )}
         </div>
       ))
     )}
@@ -929,9 +968,20 @@ const BrazilAccessMap = ({ states }: { states: TrafficBreakdownItem[] }) => {
   );
 };
 
-const LocationPanel = ({ locations }: { locations: AdminTrafficSummary["locations"] }) => (
+const LocationPanel = ({
+  locations,
+  periodDescription,
+}: {
+  locations: AdminTrafficSummary["locations"];
+  periodDescription: string;
+}) => (
   <CardShell className="p-5">
-    <PanelTitle icon={MapPinned} source={locations.source} title="Acessos por localização" />
+    <PanelTitle
+      icon={MapPinned}
+      periodDescription={periodDescription}
+      source={locations.source}
+      title="Acessos por localização"
+    />
     <div className="mt-4 grid min-w-0 gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
       <div className="min-w-0">
         <h3 className="text-sm font-black text-foreground">Top estados</h3>
@@ -1309,34 +1359,45 @@ const TrafficContent = ({
         />
       </TrafficOverviewPanel>
 
-      <PageNavigationPanel summary={summary} />
+      <PageNavigationPanel periodDescription={periodDescription} summary={summary} />
 
       <div className="grid min-w-0 gap-4 xl:grid-cols-3">
         <CardShell className="p-5">
           <PanelTitle
             icon={Activity}
-            source={summary.top_communities.source}
+            periodDescription={periodDescription}
             title="Tráfego por comunidade"
           />
-          <RankingList items={summary.top_communities.items} />
+          <RankingList destinationLabel="a comunidade" items={summary.top_communities.items} />
         </CardShell>
         <CardShell className="p-5">
-          <PanelTitle icon={FileText} source={summary.top_posts.source} title="Tráfego por post" />
-          <RankingList items={summary.top_posts.items} />
+          <PanelTitle
+            icon={FileText}
+            periodDescription={periodDescription}
+            title="Tráfego por post"
+          />
+          <RankingList destinationLabel="o post" items={summary.top_posts.items} />
         </CardShell>
         <CardShell className="p-5">
           <PanelTitle
             icon={Users}
-            source={summary.top_psychologists.source}
+            periodDescription={periodDescription}
             title="Tráfego por psicólogo"
           />
-          <RankingList items={summary.top_psychologists.items} />
+          <RankingList
+            destinationLabel="o perfil do psicólogo"
+            items={summary.top_psychologists.items}
+          />
         </CardShell>
       </div>
 
       <div className="grid min-w-0 gap-4 xl:grid-cols-3">
         <CardShell className="p-5">
-          <PanelTitle icon={PieChart} title="Origem do tráfego" />
+          <PanelTitle
+            icon={PieChart}
+            periodDescription={periodDescription}
+            title="Origem do tráfego"
+          />
           <DonutChart
             ariaLabel="Distribuição de sessões por origem de tráfego"
             items={summary.traffic_sources.items}
@@ -1344,7 +1405,11 @@ const TrafficContent = ({
           />
         </CardShell>
         <CardShell className="p-5">
-          <PanelTitle icon={Smartphone} title="Dispositivos" />
+          <PanelTitle
+            icon={Smartphone}
+            periodDescription={periodDescription}
+            title="Dispositivos"
+          />
           <DonutChart
             ariaLabel="Distribuição de sessões por dispositivo"
             items={summary.devices.items}
@@ -1352,7 +1417,7 @@ const TrafficContent = ({
           />
         </CardShell>
         <CardShell className="p-5">
-          <PanelTitle icon={Users} title="Tipo de usuário" />
+          <PanelTitle icon={Users} periodDescription={periodDescription} title="Tipo de usuário" />
           <DonutChart
             ariaLabel="Distribuição de sessões por tipo de usuário"
             items={summary.user_types.items}
@@ -1361,11 +1426,12 @@ const TrafficContent = ({
         </CardShell>
       </div>
 
-      <LocationPanel locations={summary.locations} />
+      <LocationPanel locations={summary.locations} periodDescription={periodDescription} />
 
       <CardShell className="p-5">
         <PanelTitle
           icon={MousePointerClick}
+          periodDescription={periodDescription}
           source={summary.conversions.source}
           title="Conversões geradas"
         />
@@ -1378,6 +1444,7 @@ const TrafficContent = ({
             <AlertTriangle aria-hidden className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
             <div>
               <h2 className="font-black text-foreground">Limitações exibidas honestamente</h2>
+              <p className="mt-1 text-sm font-bold leading-6 text-muted">{periodDescription}</p>
               <ul className="mt-2 list-disc space-y-1 break-words pl-5 text-sm text-muted">
                 {summary.unavailable.map((item) => (
                   <li key={item.id}>
@@ -1402,8 +1469,33 @@ export const AdminTrafficClient = () => {
   const [rangeError, setRangeError] = useState<string | null>(null);
   const validRange = isValidRange(appliedRange);
   const validDraftRange = isValidRange(draftRange);
-  const query = useAdminTrafficSummary(appliedRange, { enabled: validRange });
+  const appliedQuery = useMemo<TrafficSummaryQuery>(
+    () =>
+      appliedPeriod === "custom"
+        ? { from: appliedRange.from, period: "custom", to: appliedRange.to }
+        : { period: appliedPeriod },
+    [appliedPeriod, appliedRange.from, appliedRange.to],
+  );
+  const query = useAdminTrafficSummary(appliedQuery, { enabled: validRange });
   const queryError = query.error ? resolveApiError(query.error) : null;
+  useEffect(() => {
+    if (!query.data || appliedPeriod === "custom") return;
+
+    const resolvedRange = {
+      from: query.data.period.from,
+      to: query.data.period.to,
+    };
+
+    const timeout = window.setTimeout(() => {
+      setAppliedRange(resolvedRange);
+
+      if (selectedPeriod === appliedPeriod) {
+        setDraftRange(resolvedRange);
+      }
+    }, 0);
+
+    return () => window.clearTimeout(timeout);
+  }, [appliedPeriod, query.data, selectedPeriod]);
   const handlePeriodChange = (nextPeriod: TrafficPeriodPreset) => {
     const nextRange = getTrafficRangeForPeriod(nextPeriod);
 
@@ -1494,11 +1586,10 @@ export const AdminTrafficClient = () => {
       {validRange && query.data ? (
         <TrafficContent
           periodControls={periodControls}
-          periodDescription={formatPeriodDescription(
-            appliedPeriod,
-            { from: query.data.period.from, to: query.data.period.to },
-            query.data.period.days,
-          )}
+          periodDescription={formatPeriodDescription(appliedPeriod, {
+            from: query.data.period.from,
+            to: query.data.period.to,
+          })}
           summary={query.data}
         />
       ) : null}
