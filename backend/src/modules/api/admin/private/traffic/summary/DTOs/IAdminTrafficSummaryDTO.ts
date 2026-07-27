@@ -1,4 +1,5 @@
 import type { Request } from "express";
+import type { AdminOperatingSystemType } from "@/utils/admin-operating-system";
 
 export type AdminTrafficQuery = {
   from?: string;
@@ -60,8 +61,17 @@ export type AdminTrafficBreakdownItem = {
 
 export type AdminTrafficDeviceType = "desktop" | "mobile" | "pwa" | "tablet" | "unknown";
 
+export type AdminTrafficDeviceOperatingSystemItem = {
+  count: number;
+  id: AdminOperatingSystemType;
+  label: string;
+  operating_system: AdminOperatingSystemType;
+  percentage: number;
+};
+
 export type AdminTrafficDeviceItem = AdminTrafficBreakdownItem & {
   device_type: AdminTrafficDeviceType;
+  operating_systems: AdminTrafficDeviceOperatingSystemItem[];
 };
 
 export type AdminTrafficUserType = "anonymous" | "patients" | "psychologists";
@@ -113,6 +123,8 @@ export type AdminTrafficConversionAction = {
   events: number;
   id: string;
   label: string;
+  patient_actors: number;
+  psychologist_actors: number;
   source: string;
 };
 
@@ -178,7 +190,7 @@ export type AdminTrafficSummary = {
   };
   devices: {
     items: AdminTrafficDeviceItem[];
-    source: "visitor_session.device_type+page_view_event.display_mode";
+    source: "visitor_session.device_type+visitor_session.os+page_view_event.display_mode";
     total: number;
   };
   entry_pages: {

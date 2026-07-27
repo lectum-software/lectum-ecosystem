@@ -46,6 +46,13 @@ export type TrafficBreakdownItem = {
 
 export type TrafficDeviceItem = TrafficBreakdownItem & {
   device_type: "desktop" | "mobile" | "pwa" | "tablet" | "unknown";
+  operating_systems: {
+    count: number;
+    id: "android" | "ios" | "ipados" | "macos" | "other" | "unknown" | "windows";
+    label: string;
+    operating_system: "android" | "ios" | "ipados" | "macos" | "other" | "unknown" | "windows";
+    percentage: number;
+  }[];
 };
 
 export type TrafficUserTypeItem = TrafficBreakdownItem & {
@@ -84,6 +91,8 @@ export type TrafficConversionAction = {
   events: number;
   id: string;
   label: string;
+  patient_actors: number;
+  psychologist_actors: number;
   source: string;
 };
 
@@ -160,7 +169,7 @@ export type AdminTrafficSummary = {
   };
   devices: {
     items: TrafficDeviceItem[];
-    source: "visitor_session.device_type+page_view_event.display_mode";
+    source: "visitor_session.device_type+visitor_session.os+page_view_event.display_mode";
     total: number;
   };
   entry_pages: {

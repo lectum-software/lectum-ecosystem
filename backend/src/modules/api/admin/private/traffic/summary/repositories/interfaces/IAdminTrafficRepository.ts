@@ -4,6 +4,7 @@ export type TrafficSessionRecord = {
   device_type: string;
   first_seen_at: Date;
   last_seen_at: Date;
+  os: string | null;
   session_id: string;
   user: { role: string } | null;
   user_id: string | null;

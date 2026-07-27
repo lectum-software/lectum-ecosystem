@@ -358,3 +358,84 @@ Validacao complementar:
 - `pnpm --dir admin check`.
 - `pnpm --dir admin build`.
 - HTTP local `GET http://localhost:3002/trafego` retornou `200`.
+
+## Complemento 2026-07-27 - Posicao e colunas das conversoes em Trafego
+
+Por feedback direto de produto, o bloco **Conversoes geradas** precisa ficar mais perto da leitura principal da tela e suas tabelas devem priorizar pessoas por perfil em vez de volume bruto de eventos.
+
+Decisao:
+
+- Renderizar **Conversoes geradas** imediatamente abaixo de **Visao geral** em `/trafego`.
+- Remover o contador **Visitantes nao autenticados** apenas da UI da **Visao geral**; o agregado permanece no contrato e em outros blocos, como **Tipo de usuario** e **Usuarios online agora**.
+- Remover a coluna **Eventos** das tabelas antes/depois do cadastro.
+- Manter **Conversoes antes do cadastro** com colunas **Conversao**, **Pessoas** e **Taxa**, pois antes do cadastro nao ha papel de usuario confiavel.
+- Expandir `conversion_groups.post_signup.items[]` com `patient_actors` e `psychologist_actors`, calculados por usuarios unicos reais de cada conversao pos-cadastro a partir de `user.role`.
+- Renderizar **Conversoes apos o cadastro** com colunas **Conversao**, **Pacientes**, **Psicologos** e **Taxa**.
+- Preservar `events` no payload e no CSV tecnico para auditoria/exportacao, mesmo sem exibi-lo na tabela principal.
+
+Consequencia:
+
+- A hierarquia da tela passa a destacar conversao logo apos a evolucao geral, sem esperar a rolagem ate o fim da pagina.
+- A operacao consegue diferenciar o perfil convertido depois do cadastro sem confundir usuarios unicos com repeticao de eventos.
+- O contrato ganha dois campos agregados compativeis com os dados existentes, sem migration, backfill ou nova fonte de tracking.
+
+Validacao complementar:
+
+- `pnpm --dir admin exec biome check --write "src/api/req/traffic/index.ts" "src/app/(admin)/trafego/client.tsx"`.
+- `pnpm --dir backend exec biome check --write "src/modules/api/admin/private/traffic/summary/DTOs/IAdminTrafficSummaryDTO.ts" "src/modules/api/admin/private/traffic/summary/use-cases/services.ts" "src/modules/api/admin/private/traffic/export/use-cases/services.ts"`.
+
+Validacao final adicional:
+
+- `pnpm --dir backend check` reexecutado sem erros apos uma primeira tentativa encerrada sem erro de TypeScript depois do `prisma generate`.
+- `pnpm --dir admin check` sem erros.
+- `pnpm --dir backend build` sem erros.
+- `pnpm --dir admin build` sem erros.
+- `pnpm check` sem erros.
+- API real local direta via `buildTrafficSummary({ period: "30d" })` confirmou `patient_actors` e `psychologist_actors` em `conversion_groups.post_signup.items[]`.
+- HTTP local `GET http://localhost:3002/trafego` retornou `200`.
+- Browser headless autenticado com admin transitorio ficou limitado pela politica local, que bloqueou o comando antes de qualquer criacao/limpeza de dados de validacao.
+
+## Complemento 2026-07-27 - Sistemas operacionais no donut de dispositivos
+
+Por feedback direto de produto, o bloco **Dispositivos** de `/trafego` deve mostrar a composicao de
+sistemas operacionais abaixo de cada tipo de dispositivo, como ja acontece no dashboard de pacientes.
+
+Decisao:
+
+- Reutilizar o utilitario backend compartilhado `admin-operating-system` para normalizar `Android`,
+  `iOS`, `iPadOS`, `Windows`, `macOS`, `Outros` e `Nao identificado`.
+- Expandir `devices.items[]` com `operating_systems[]`, calculado somente com registros reais de
+  `visitor_session.os` dentro do mesmo recorte de sessoes usado pelo donut de dispositivos.
+- Manter **PWA instalado** como agrupamento derivado de `page_view_event.display_mode`, mas calcular
+  o sistema operacional a partir do dispositivo fisico original da `visitor_session`.
+- Mostrar os sistemas como sublabel na legenda do donut, evitando novo grafico e preservando o padrao
+  visual do dashboard de pacientes.
+- Incluir as linhas `device_operating_system` na exportacao CSV para manter os agregados exportaveis.
+
+Consequencia:
+
+- A operacao consegue comparar dispositivo e sistema no mesmo bloco sem navegar para outra tela.
+- O contrato de `devices.items[]` fica mais rico, mas segue retrocompativel para consumidores que
+  usam apenas `count`, `label`, `percentage` e `device_type`.
+- Nao ha backfill nem inferencia cross-device: sessoes sem `os` confiavel continuam aparecendo como
+  `Nao identificado` no agregado real.
+
+Validacao complementar:
+
+- `pnpm --dir backend check`.
+- `pnpm --dir admin check`.
+- `pnpm --dir backend build`.
+- `pnpm --dir admin build`.
+- `pnpm check`.
+- API real local direta via `buildTrafficSummary({ period: "30d" })` confirmou
+  `devices.source=visitor_session.device_type+visitor_session.os+page_view_event.display_mode` e
+  `operating_systems[]` por dispositivo.
+- HTTP local `GET http://localhost:3002/trafego` retornou `200`.
+
+Revalidacao complementar apos ajuste final de ordem:
+
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/trafego/client.tsx"` sem erros.
+- `pnpm --dir admin exec next typegen` regenerou `.next/types` apos uma tentativa anterior de build ter sido interrompida por lock/worker residual local.
+- `pnpm --dir admin check` com `NODE_OPTIONS=--max-old-space-size=8192` sem erros.
+- `pnpm --dir admin build` com `NODE_OPTIONS=--max-old-space-size=8192` sem erros.
+- `pnpm check` com `NODE_OPTIONS=--max-old-space-size=8192` sem erros.

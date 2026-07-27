@@ -1,6 +1,15 @@
 import type { Resolve } from "@/helpers/return";
 import { error, msg } from "@/helpers/translate";
 import type {
+  AdminOperatingSystemDeviceType,
+  AdminOperatingSystemType,
+} from "@/utils/admin-operating-system";
+import {
+  ADMIN_OPERATING_SYSTEM_LABELS,
+  ADMIN_OPERATING_SYSTEM_TYPES,
+  normalizeAdminOperatingSystem,
+} from "@/utils/admin-operating-system";
+import type {
   AdminTrafficBreakdownItem,
   AdminTrafficConversionAction,
   AdminTrafficConversionChart,
@@ -989,18 +998,22 @@ const buildTrafficSources = (stats: TrafficStats) => {
   };
 };
 
+const normalizePhysicalDeviceType = (value: string): AdminOperatingSystemDeviceType => {
+  const normalized = value.trim().toLowerCase();
+  if (normalized === "desktop" || normalized === "mobile" || normalized === "tablet") {
+    return normalized;
+  }
+
+  return "unknown";
+};
+
 const normalizeDeviceType = (
   session: TrafficSessionRecord,
   pwaSessionKeys: Set<string>,
 ): AdminTrafficDeviceType => {
   if (pwaSessionKeys.has(sessionKey(session))) return "pwa";
 
-  const normalized = session.device_type.toLowerCase();
-  if (normalized === "desktop" || normalized === "mobile" || normalized === "tablet") {
-    return normalized;
-  }
-
-  return "unknown";
+  return normalizePhysicalDeviceType(session.device_type);
 };
 
 const buildDevices = (stats: TrafficStats) => {
@@ -1018,26 +1031,60 @@ const buildDevices = (stats: TrafficStats) => {
     tablet: 0,
     unknown: 0,
   };
+  const operatingSystemCountsByDevice = new Map<
+    AdminTrafficDeviceType,
+    Record<AdminOperatingSystemType, number>
+  >(
+    (Object.keys(counts) as AdminTrafficDeviceType[]).map((deviceType) => [
+      deviceType,
+      Object.fromEntries(
+        ADMIN_OPERATING_SYSTEM_TYPES.map((operatingSystem) => [operatingSystem, 0]),
+      ) as Record<AdminOperatingSystemType, number>,
+    ]),
+  );
 
   for (const session of stats.sessions) {
-    counts[normalizeDeviceType(session, pwaSessionKeys)] += 1;
+    const deviceType = normalizeDeviceType(session, pwaSessionKeys);
+    const physicalDeviceType = normalizePhysicalDeviceType(session.device_type);
+    const operatingSystem = normalizeAdminOperatingSystem(session.os, physicalDeviceType);
+    counts[deviceType] += 1;
+    const countsByOperatingSystem = operatingSystemCountsByDevice.get(deviceType);
+    if (countsByOperatingSystem) countsByOperatingSystem[operatingSystem] += 1;
   }
 
   const total = stats.sessions.length;
   const items = (Object.keys(counts) as AdminTrafficDeviceType[])
-    .map<AdminTrafficDeviceItem>((deviceType) => ({
-      count: counts[deviceType],
-      device_type: deviceType,
-      id: deviceType,
-      label: DEVICE_LABELS[deviceType],
-      percentage: safePercentage(counts[deviceType], total),
-    }))
+    .map<AdminTrafficDeviceItem>((deviceType) => {
+      const deviceTotal = counts[deviceType];
+      const countsByOperatingSystem = operatingSystemCountsByDevice.get(deviceType);
+
+      return {
+        count: deviceTotal,
+        device_type: deviceType,
+        id: deviceType,
+        label: DEVICE_LABELS[deviceType],
+        operating_systems: ADMIN_OPERATING_SYSTEM_TYPES.map((operatingSystem) => ({
+          count: countsByOperatingSystem?.[operatingSystem] ?? 0,
+          id: operatingSystem,
+          label: ADMIN_OPERATING_SYSTEM_LABELS[operatingSystem],
+          operating_system: operatingSystem,
+          percentage: safePercentage(countsByOperatingSystem?.[operatingSystem] ?? 0, deviceTotal),
+        }))
+          .filter((operatingSystem) => operatingSystem.count > 0)
+          .sort((left, right) => {
+            if (right.count !== left.count) return right.count - left.count;
+
+            return left.label.localeCompare(right.label, "pt-BR");
+          }),
+        percentage: safePercentage(deviceTotal, total),
+      };
+    })
     .filter((item) => item.count > 0 || item.device_type !== "pwa")
     .sort((left, right) => right.count - left.count);
 
   return {
     items,
-    source: "visitor_session.device_type+page_view_event.display_mode" as const,
+    source: "visitor_session.device_type+visitor_session.os+page_view_event.display_mode" as const,
     total,
   };
 };
@@ -1440,6 +1487,8 @@ const conversionAction = (params: {
   events: number;
   id: string;
   label: string;
+  patientActorIds?: Set<string>;
+  psychologistActorIds?: Set<string>;
   source: string;
   totalActors: number;
 }): AdminTrafficConversionAction => ({
@@ -1450,6 +1499,8 @@ const conversionAction = (params: {
   events: params.events,
   id: params.id,
   label: params.label,
+  patient_actors: params.patientActorIds?.size ?? 0,
+  psychologist_actors: params.psychologistActorIds?.size ?? 0,
   source: params.source,
 });
 
@@ -1527,6 +1578,12 @@ const buildConversionGroups = (current: TrafficStats) => {
   const postSignupItems = postSignupConversionDefinitions.map((definition) => {
     const records = domainConversionRecordsByKind(current, usersById, definition.id);
     const actorIds = new Set(records.flatMap((record) => (record.user_id ? [record.user_id] : [])));
+    const patientActorIds = new Set(
+      [...actorIds].filter((actorId) => usersById.get(actorId)?.role === "paciente"),
+    );
+    const psychologistActorIds = new Set(
+      [...actorIds].filter((actorId) => usersById.get(actorId)?.role === "psicologo"),
+    );
 
     for (const actorId of actorIds) postSignupUsers.add(actorId);
 
@@ -1537,6 +1594,8 @@ const buildConversionGroups = (current: TrafficStats) => {
       events: records.length,
       id: definition.id,
       label: definition.label,
+      patientActorIds,
+      psychologistActorIds,
       source: definition.source,
       totalActors: current.users.length,
     });

@@ -5,6 +5,7 @@ import type {
   AdminTrafficConversion,
   AdminTrafficConversionAction,
   AdminTrafficConversionChart,
+  AdminTrafficDeviceItem,
   AdminTrafficEntryPage,
   AdminTrafficLocationItem,
   AdminTrafficMetric,
@@ -87,6 +88,26 @@ const appendBreakdownRows = (
         `percentage=${item.percentage}`,
       ]),
     );
+  }
+};
+
+const appendDeviceRows = (rows: string[], items: AdminTrafficDeviceItem[], source: string) => {
+  appendBreakdownRows(rows, "device", items, source);
+
+  for (const device of items) {
+    for (const operatingSystem of device.operating_systems) {
+      rows.push(
+        csvRow([
+          "device_operating_system",
+          `${device.id}:${operatingSystem.id}`,
+          `${device.label} - ${operatingSystem.label}`,
+          "",
+          operatingSystem.count,
+          source,
+          `device=${device.id};device_count=${device.count};device_percentage=${device.percentage};operating_system=${operatingSystem.operating_system};percentage=${operatingSystem.percentage}`,
+        ]),
+      );
+    }
   }
 };
 
@@ -179,7 +200,7 @@ const appendConversionActionRows = (
         "",
         item.events,
         item.source,
-        `actors=${item.actors};actor_label=${item.actor_label};actor_percentage=${item.actor_percentage};description=${item.description}`,
+        `actors=${item.actors};patient_actors=${item.patient_actors};psychologist_actors=${item.psychologist_actors};actor_label=${item.actor_label};actor_percentage=${item.actor_percentage};description=${item.description}`,
       ]),
     );
   }
@@ -262,7 +283,7 @@ const buildCsv = (summary: AdminTrafficSummary) => {
     summary.traffic_sources.items,
     summary.traffic_sources.source,
   );
-  appendBreakdownRows(rows, "device", summary.devices.items, summary.devices.source);
+  appendDeviceRows(rows, summary.devices.items, summary.devices.source);
   appendBreakdownRows(rows, "user_type", summary.user_types.items, summary.user_types.source);
   appendLocationRows(rows, "state", summary.locations.states, summary.locations.source);
   appendLocationRows(rows, "city", summary.locations.cities, summary.locations.source);

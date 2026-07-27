@@ -913,3 +913,71 @@ Validacao desta execucao complementar:
 - `pnpm --dir admin check` - OK.
 - `pnpm --dir admin build` - OK.
 - HTTP local `GET http://localhost:3002/trafego` - OK (`200`).
+
+## Execucao complementar - ajuste de Visao geral e tabelas de conversao (2026-07-27)
+
+- Por feedback direto do usuario, a **Visao geral** de `/trafego` voltou a exibir somente quatro contadores: **Sessoes**, **Visitantes unicos**, **Novos visitantes** e **Visitantes recorrentes**, removendo o card **Visitantes nao autenticados** desse bloco.
+- O bloco **Conversoes geradas** foi movido para aparecer imediatamente abaixo de **Visao geral**, antes de navegacao por paginas, rankings, origem, dispositivos, tipo de usuario e localizacao.
+- A tabela **Conversoes antes do cadastro** deixou de exibir a coluna **Eventos**, mantendo **Conversao**, **Pessoas** e **Taxa**.
+- A tabela **Conversoes apos o cadastro** deixou de exibir a coluna **Eventos** e passou a mostrar colunas separadas de **Pacientes** e **Psicologos**, calculadas por usuarios unicos reais por papel em cada conversao pos-cadastro.
+- O contrato `conversion_groups.post_signup.items[]` recebeu os campos agregados `patient_actors` e `psychologist_actors`; o CSV preserva `events` no payload tecnico e adiciona esses dois agregados no campo `extra`.
+- Nao houve mock, endpoint novo, package novo, alteracao em Prisma schema/migrations ou dado persistido; `db:migrate` nao foi necessario.
+- Builder/Quick Copy nao estava exposto como ferramenta callable neste ambiente; as referencias auditaveis foram `_product/proto/admin/Tráfego.png` e as capturas enviadas pelo usuario.
+- ADR atualizado: `adrs/0230-admin-trafego-agregacoes.md`.
+
+Validacao desta execucao complementar:
+
+- `pnpm --dir admin exec biome check --write "src/api/req/traffic/index.ts" "src/app/(admin)/trafego/client.tsx"` - OK.
+- `pnpm --dir backend exec biome check --write "src/modules/api/admin/private/traffic/summary/DTOs/IAdminTrafficSummaryDTO.ts" "src/modules/api/admin/private/traffic/summary/use-cases/services.ts" "src/modules/api/admin/private/traffic/export/use-cases/services.ts"` - OK.
+
+Validacao final adicional desta execucao:
+
+- `pnpm --dir backend check` - primeira tentativa encerrou apos `prisma generate` com exit code operacional `4294967295` sem erro de TypeScript; reexecucao concluida sem erros.
+- `pnpm --dir admin check` - OK.
+- `pnpm --dir backend build` - OK.
+- `pnpm --dir admin build` - OK.
+- `pnpm check` - OK.
+- API real local direta via `buildTrafficSummary({ period: "30d" })` - OK: `conversion_groups.post_signup.items[]` retornou `patient_actors`, `psychologist_actors` e `events` tecnico preservado.
+- HTTP local `GET http://localhost:3002/trafego` - OK (`200`).
+- Browser headless autenticado com admin transitorio nao foi concluido porque a politica local bloqueou o comando de validacao antes de executar criacao/limpeza do admin; nao houve alteracao de dados nessa tentativa bloqueada.
+
+## Execucao complementar - sistemas por dispositivo em Trafego (2026-07-27)
+
+- Por feedback direto do usuario, o bloco **Dispositivos** de `/trafego` passou a exibir abaixo de
+  cada dispositivo as taxas de sistemas operacionais utilizados, seguindo a leitura visual ja usada
+  em **Devices e sistemas** do dashboard de pacientes.
+- O backend expandiu `devices.items[]` com `operating_systems[]`, calculado a partir de
+  `visitor_session.os` real e normalizado pelo utilitario compartilhado
+  `backend/src/utils/admin-operating-system.ts`.
+- A classificacao **PWA instalado** continua derivada de `page_view_event.display_mode`; quando uma
+  sessao e classificada como PWA, o sistema operacional e calculado a partir do `os` da propria
+  `visitor_session` e do dispositivo fisico original da sessao.
+- O Admin renderiza os sistemas como sublinha da legenda do donut, no formato `Windows 70% · macOS 30%`,
+  sem criar grafico, package ou fonte paralela.
+- A exportacao CSV passou a incluir linhas `device_operating_system`, preservando a paridade dos
+  agregados de dispositivos com o payload exibido.
+- Nao houve mock, endpoint novo, package novo, alteracao em Prisma schema/migrations ou dado
+  persistido; `db:migrate` nao foi necessario.
+- Builder/Quick Copy nao estava exposto como ferramenta callable neste ambiente; as referencias
+  auditaveis foram `_product/proto/admin/Tráfego.png`, o dashboard de pacientes ja implementado em
+  `admin/src/app/(admin)/pacientes/client.tsx` e as capturas enviadas pelo usuario.
+- ADR atualizado: `adrs/0230-admin-trafego-agregacoes.md`.
+
+Validacao desta execucao complementar:
+
+- `pnpm --dir backend exec biome check --write "src/modules/api/admin/private/traffic/summary/DTOs/IAdminTrafficSummaryDTO.ts" "src/modules/api/admin/private/traffic/summary/repositories/interfaces/IAdminTrafficRepository.ts" "src/modules/api/admin/private/traffic/summary/repositories/AdminTrafficRepository.ts" "src/modules/api/admin/private/traffic/summary/use-cases/services.ts" "src/modules/api/admin/private/traffic/export/use-cases/services.ts"` - OK.
+- `pnpm --dir admin exec biome check --write "src/api/req/traffic/index.ts" "src/app/(admin)/trafego/client.tsx"` - OK.
+- `pnpm --dir backend check` - OK.
+- `pnpm --dir admin check` - OK.
+- `pnpm --dir backend build` - OK.
+- `pnpm --dir admin build` - OK apos remover lock/processo stale de build Next concorrente gerado por tentativa anterior.
+- `pnpm check` - OK.
+- API real local direta via `buildTrafficSummary({ period: "30d" })` - OK: `devices.source` inclui `visitor_session.os` e `devices.items[]` retornou `operating_systems[]` com percentuais reais por dispositivo.
+- HTTP local `GET http://localhost:3002/trafego` - OK (`200`).
+
+Revalidacao apos reposicionar o bloco diretamente sob Visao geral:
+
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/trafego/client.tsx"` - OK.
+- `pnpm --dir admin check` com `NODE_OPTIONS=--max-old-space-size=8192` - OK apos regenerar tipos de rota com `pnpm --dir admin exec next typegen` devido a uma tentativa anterior de build interrompida ter deixado `.next/types` incompleto.
+- `pnpm --dir admin build` com `NODE_OPTIONS=--max-old-space-size=8192` - OK.
+- `pnpm check` com `NODE_OPTIONS=--max-old-space-size=8192` - OK.

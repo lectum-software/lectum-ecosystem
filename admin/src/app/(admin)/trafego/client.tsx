@@ -25,6 +25,7 @@ import type {
   TrafficBreakdownItem,
   TrafficConversionAction,
   TrafficConversionChart,
+  TrafficDeviceItem,
   TrafficEntryPage,
   TrafficLocationItem,
   TrafficMetric,
@@ -49,7 +50,6 @@ const CHART_COLORS = [
 const SKELETON_KEYS = [
   "sessions",
   "unique_visitors",
-  "anonymous_visitors",
   "new_visitors",
   "recurring_visitors",
 ] as const;
@@ -57,7 +57,6 @@ const SKELETON_KEYS = [
 const TRAFFIC_OVERVIEW_CARD_ORDER = [
   "sessions",
   "unique_visitors",
-  "anonymous_visitors",
   "new_visitors",
   "recurring_visitors",
 ] as const;
@@ -85,8 +84,17 @@ type TrafficOverviewMetricKey = (typeof TRAFFIC_OVERVIEW_CHART_ORDER)[number];
 type TrafficPeriodPreset = (typeof TRAFFIC_PERIOD_OPTIONS)[number]["id"];
 type TrafficPeriodValue = TrafficPeriodPreset | "custom";
 type TrafficDateRange = Required<Pick<TrafficSummaryQuery, "from" | "to">>;
+type TrafficDonutChartItem = TrafficBreakdownItem & {
+  sublabel?: string | null;
+};
 
 const numberFormatter = new Intl.NumberFormat("pt-BR");
+
+const formatPercentageValue = (value: number) =>
+  `${value.toLocaleString("pt-BR", {
+    maximumFractionDigits: 1,
+    minimumFractionDigits: 0,
+  })}%`;
 
 const formatRankingSummary = (item: TrafficRankingItem) => {
   const sessionLabel = item.sessions === 1 ? "sessão" : "sessões";
@@ -415,7 +423,6 @@ const hexToRgba = (hex: string, alpha: number) => {
 };
 
 const TRAFFIC_OVERVIEW_METRIC_CONFIG = {
-  anonymous_visitors: { color: "#64748b", icon: Users },
   new_visitors: { color: "#8b5cf6", icon: Users },
   recurring_visitors: { color: "#f59f00", icon: RefreshCw },
   sessions: { color: "#308ce8", icon: Globe2 },
@@ -644,7 +651,7 @@ const DonutChart = ({
   total,
 }: {
   ariaLabel: string;
-  items: TrafficBreakdownItem[];
+  items: TrafficDonutChartItem[];
   total: number;
 }) => {
   const radius = 42;
@@ -747,11 +754,20 @@ const DonutChart = ({
                     className="mt-1 h-2.5 w-2.5 shrink-0 rounded-full"
                     style={{ backgroundColor: CHART_COLORS[index % CHART_COLORS.length] }}
                   />
-                  <span className="min-w-0 whitespace-normal break-words">{item.label}</span>
+                  <span className="min-w-0">
+                    <span className="block whitespace-normal break-words">{item.label}</span>
+                    {item.sublabel ? (
+                      <span className="mt-1 block whitespace-normal break-words text-xs font-semibold leading-5 text-subtle">
+                        {item.sublabel}
+                      </span>
+                    ) : null}
+                  </span>
                 </span>
                 <span className="shrink-0 text-right text-sm font-semibold text-foreground">
                   {numberFormatter.format(item.count)}{" "}
-                  <span className="text-xs font-medium text-muted">({item.percentage}%)</span>
+                  <span className="text-xs font-medium text-muted">
+                    ({formatPercentageValue(item.percentage)})
+                  </span>
                 </span>
               </div>
             ))
@@ -763,7 +779,9 @@ const DonutChart = ({
           ? items
               .map(
                 (item) =>
-                  `${item.label}: ${numberFormatter.format(item.count)} (${item.percentage}%)`,
+                  `${item.label}: ${numberFormatter.format(item.count)} (${formatPercentageValue(
+                    item.percentage,
+                  )})${item.sublabel ? `; ${item.sublabel}` : ""}`,
               )
               .join("; ")
           : "Sem dados disponíveis."}
@@ -771,6 +789,22 @@ const DonutChart = ({
     </figure>
   );
 };
+
+const buildDeviceDonutItems = (items: TrafficDeviceItem[]): TrafficDonutChartItem[] =>
+  items.map((item) => {
+    const operatingSystems = item.device_type === "unknown" ? [] : (item.operating_systems ?? []);
+    const operatingSystemSummary = operatingSystems
+      .map(
+        (operatingSystem) =>
+          `${operatingSystem.label} ${formatPercentageValue(operatingSystem.percentage)}`,
+      )
+      .join(" · ");
+
+    return {
+      ...item,
+      sublabel: operatingSystemSummary || null,
+    };
+  });
 
 const PanelTitle = ({
   icon: Icon,
@@ -991,11 +1025,8 @@ const formatActorLabel = (action: TrafficConversionAction) => {
   return `${numberFormatter.format(action.actors)} ${label}`;
 };
 
-const formatEventLabel = (events: number) => {
-  const label = events === 1 ? "evento" : "eventos";
-
-  return `${numberFormatter.format(events)} ${label}`;
-};
+const formatRoleActorLabel = (count: number, singular: string, plural: string) =>
+  `${numberFormatter.format(count)} ${count === 1 ? singular : plural}`;
 
 const ConversionChartCard = ({ chart }: { chart: TrafficConversionChart }) => (
   <div className="min-w-0 rounded-[1.5rem] border border-border bg-surface p-4">
@@ -1032,7 +1063,13 @@ const getConversionChartItems = (chart: TrafficConversionChart) =>
     label: CONVERSION_CHART_ITEM_LABELS[item.id] ?? item.label,
   }));
 
-const ConversionActionTable = ({ items }: { items: TrafficConversionAction[] }) => (
+const ConversionActionTable = ({
+  items,
+  variant = "pre_signup",
+}: {
+  items: TrafficConversionAction[];
+  variant?: "post_signup" | "pre_signup";
+}) => (
   <div className="mt-3 overflow-hidden rounded-[1.25rem] border border-border bg-surface">
     {items.length === 0 ? (
       <p className="rounded-2xl bg-surface-muted p-4 text-sm text-muted">
@@ -1042,10 +1079,20 @@ const ConversionActionTable = ({ items }: { items: TrafficConversionAction[] }) 
       <table className="w-full table-fixed text-left text-xs sm:text-sm">
         <thead className="bg-surface-muted text-[0.65rem] font-semibold uppercase tracking-[0.08em] text-muted sm:text-xs">
           <tr>
-            <th className="w-[38%] px-2 py-3 sm:px-3">Conversão</th>
-            <th className="w-[24%] px-2 py-3 text-right sm:px-3">Pessoas</th>
-            <th className="w-[22%] px-2 py-3 text-right sm:px-3">Eventos</th>
-            <th className="w-[16%] px-2 py-3 text-right sm:px-3">Taxa</th>
+            {variant === "post_signup" ? (
+              <>
+                <th className="w-[34%] px-2 py-3 sm:px-3">Conversão</th>
+                <th className="w-[24%] px-2 py-3 text-right sm:px-3">Pacientes</th>
+                <th className="w-[26%] px-2 py-3 text-right sm:px-3">Psicólogos</th>
+                <th className="w-[16%] px-2 py-3 text-right sm:px-3">Taxa</th>
+              </>
+            ) : (
+              <>
+                <th className="w-[48%] px-2 py-3 sm:px-3">Conversão</th>
+                <th className="w-[32%] px-2 py-3 text-right sm:px-3">Pessoas</th>
+                <th className="w-[20%] px-2 py-3 text-right sm:px-3">Taxa</th>
+              </>
+            )}
           </tr>
         </thead>
         <tbody className="divide-y divide-border">
@@ -1055,11 +1102,15 @@ const ConversionActionTable = ({ items }: { items: TrafficConversionAction[] }) 
                 {item.label}
               </td>
               <td className="break-words px-2 py-3 text-right font-medium text-foreground sm:px-3">
-                {formatActorLabel(item)}
+                {variant === "post_signup"
+                  ? formatRoleActorLabel(item.patient_actors ?? 0, "paciente", "pacientes")
+                  : formatActorLabel(item)}
               </td>
-              <td className="break-words px-2 py-3 text-right font-medium text-muted sm:px-3">
-                {formatEventLabel(item.events)}
-              </td>
+              {variant === "post_signup" ? (
+                <td className="break-words px-2 py-3 text-right font-medium text-foreground sm:px-3">
+                  {formatRoleActorLabel(item.psychologist_actors ?? 0, "psicólogo", "psicólogos")}
+                </td>
+              ) : null}
               <td className="break-words px-2 py-3 text-right font-semibold text-primary sm:px-3">
                 {item.actor_percentage}%
               </td>
@@ -1129,7 +1180,7 @@ const ConversionsPanel = ({
           <ConversionChartCard chart={postSignup.overall} />
           <div className="min-w-0">
             <h4 className="text-sm font-black text-foreground">Conversões após o cadastro</h4>
-            <ConversionActionTable items={postSignup.items} />
+            <ConversionActionTable items={postSignup.items} variant="post_signup" />
           </div>
         </ConversionColumn>
       </div>
@@ -1686,7 +1737,6 @@ const LocationPanel = ({
 };
 
 const TRAFFIC_OVERVIEW_CARD_LABELS: Record<TrafficOverviewCardKey, string> = {
-  anonymous_visitors: "Visitantes não autenticados",
   new_visitors: "Novos visitantes",
   recurring_visitors: "Visitantes recorrentes",
   sessions: "Sessões",
@@ -1950,7 +2000,7 @@ const TrafficOverviewCardsGrid = ({
   const uniqueVisitors = cards.get("unique_visitors")?.value ?? 0;
 
   return (
-    <fieldset className="grid min-w-0 gap-3 sm:grid-cols-2 xl:grid-cols-5">
+    <fieldset className="grid min-w-0 gap-3 sm:grid-cols-2 xl:grid-cols-4">
       <legend className="sr-only">Contadores da visão geral de Tráfego</legend>
       {TRAFFIC_OVERVIEW_CARD_ORDER.map((key) => {
         const metric = cards.get(key);
@@ -1958,7 +2008,7 @@ const TrafficOverviewCardsGrid = ({
         const cardMetric = { ...metric, label: TRAFFIC_OVERVIEW_CARD_LABELS[key] };
         const isChartMetric = isTrafficOverviewMetricKey(key);
         const rate =
-          key === "anonymous_visitors" || key === "new_visitors" || key === "recurring_visitors"
+          key === "new_visitors" || key === "recurring_visitors"
             ? formatMetricRate(metric.value, uniqueVisitors)
             : null;
 
@@ -2035,45 +2085,11 @@ const TrafficContent = ({
         />
       </TrafficOverviewPanel>
 
-      <PageNavigationPanel periodDescription={periodDescription} summary={summary} />
+      <ConversionsPanel periodDescription={periodDescription} summary={summary} />
 
       <div className="grid min-w-0 gap-4 xl:grid-cols-3">
         <CardShell className="p-5">
-          <PanelTitle
-            icon={Activity}
-            periodDescription={periodDescription}
-            title="Tráfego por comunidade"
-          />
-          <RankingList destinationLabel="a comunidade" items={summary.top_communities.items} />
-        </CardShell>
-        <CardShell className="p-5">
-          <PanelTitle
-            icon={FileText}
-            periodDescription={periodDescription}
-            title="Tráfego por post"
-          />
-          <RankingList destinationLabel="o post" items={summary.top_posts.items} />
-        </CardShell>
-        <CardShell className="p-5">
-          <PanelTitle
-            icon={Users}
-            periodDescription={periodDescription}
-            title="Tráfego por psicólogo"
-          />
-          <RankingList
-            destinationLabel="o perfil do psicólogo"
-            items={summary.top_psychologists.items}
-          />
-        </CardShell>
-      </div>
-
-      <div className="grid min-w-0 gap-4 xl:grid-cols-3">
-        <CardShell className="p-5">
-          <PanelTitle
-            icon={PieChart}
-            periodDescription={periodDescription}
-            title="Origem do tráfego"
-          />
+          <PanelTitle icon={PieChart} title="Origem do tráfego" />
           <DonutChart
             ariaLabel="Distribuição de sessões por origem de tráfego"
             items={summary.traffic_sources.items}
@@ -2081,14 +2097,10 @@ const TrafficContent = ({
           />
         </CardShell>
         <CardShell className="p-5">
-          <PanelTitle
-            icon={Smartphone}
-            periodDescription={periodDescription}
-            title="Dispositivos"
-          />
+          <PanelTitle icon={Smartphone} title="Dispositivos" />
           <DonutChart
             ariaLabel="Distribuição de sessões por dispositivo"
-            items={summary.devices.items}
+            items={buildDeviceDonutItems(summary.devices.items)}
             total={summary.devices.total}
           />
         </CardShell>
@@ -2102,9 +2114,27 @@ const TrafficContent = ({
         </CardShell>
       </div>
 
-      <LocationPanel locations={summary.locations} periodDescription={periodDescription} />
+      <PageNavigationPanel periodDescription={periodDescription} summary={summary} />
 
-      <ConversionsPanel periodDescription={periodDescription} summary={summary} />
+      <div className="grid min-w-0 gap-4 xl:grid-cols-3">
+        <CardShell className="p-5">
+          <PanelTitle icon={Activity} title="Tráfego por comunidade" />
+          <RankingList destinationLabel="a comunidade" items={summary.top_communities.items} />
+        </CardShell>
+        <CardShell className="p-5">
+          <PanelTitle icon={FileText} title="Tráfego por post" />
+          <RankingList destinationLabel="o post" items={summary.top_posts.items} />
+        </CardShell>
+        <CardShell className="p-5">
+          <PanelTitle icon={Users} title="Tráfego por psicólogo" />
+          <RankingList
+            destinationLabel="o perfil do psicólogo"
+            items={summary.top_psychologists.items}
+          />
+        </CardShell>
+      </div>
+
+      <LocationPanel locations={summary.locations} periodDescription={periodDescription} />
     </div>
   );
 };

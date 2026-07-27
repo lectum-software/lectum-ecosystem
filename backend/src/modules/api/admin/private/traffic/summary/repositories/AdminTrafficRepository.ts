@@ -350,6 +350,7 @@ export class AdminTrafficRepository implements IAdminTrafficRepository {
         device_type: true,
         first_seen_at: true,
         last_seen_at: true,
+        os: true,
         session_id: true,
         user: {
           select: {
@@ -454,6 +455,7 @@ export class AdminTrafficRepository implements IAdminTrafficRepository {
         device_type: true,
         first_seen_at: true,
         last_seen_at: true,
+        os: true,
         session_id: true,
         user: {
           select: {
