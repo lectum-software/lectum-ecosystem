@@ -96,6 +96,26 @@ export type AdminTrafficEntryPage = {
 export type AdminTrafficConversion = AdminTrafficMetric;
 export type AdminTrafficQualityMetric = AdminTrafficMetric;
 
+export type AdminTrafficConversionChart = {
+  description: string;
+  id: string;
+  items: AdminTrafficBreakdownItem[];
+  label: string;
+  source: string;
+  total: number;
+};
+
+export type AdminTrafficConversionAction = {
+  actor_label: string;
+  actor_percentage: number;
+  actors: number;
+  description: string;
+  events: number;
+  id: string;
+  label: string;
+  source: string;
+};
+
 export type AdminTrafficRankingItem = {
   count: number;
   id: string;
@@ -124,6 +144,20 @@ export type AdminTrafficSummary = {
   conversions: {
     items: AdminTrafficConversion[];
     source: "domain_events";
+  };
+  conversion_groups: {
+    post_signup: {
+      items: AdminTrafficConversionAction[];
+      overall: AdminTrafficConversionChart;
+      source: "user+domain_events";
+      total_users: number;
+    };
+    pre_signup: {
+      actions: AdminTrafficConversionAction[];
+      charts: AdminTrafficConversionChart[];
+      source: "visitor_id+user+important_action_event";
+      total_visitors: number;
+    };
   };
   devices: {
     items: AdminTrafficDeviceItem[];

@@ -52,6 +52,25 @@ O Builder/Quick Copy ativo `vcp://quickcopy/vcp-24aaa2941d814e5b90572bc93ae50e2a
   - tempo medio = media de duracao de pageviews quando houver duracao persistida;
   - sessoes com acao importante = sessoes com eventos de dominio em `important_action_event`.
 - Tratar conversoes como agregacoes de eventos reais de dominio e documentar a limitacao de atribuicao, sem prometer atribuicao cross-device absoluta.
+- Separar o bloco **Conversões geradas** em `conversion_groups.pre_signup` e
+  `conversion_groups.post_signup`, mantendo `conversions.items` como contrato compatível para
+  exportação/consumidores anteriores.
+- Em **Conversões para cadastro**, calcular:
+  - `visitor_to_signup`: visitantes únicos do período que aparecem vinculados, pelo mesmo
+    `visitor_id`, a usuários `paciente` ou `psicologo` criados no recorte versus visitantes sem
+    cadastro vinculado;
+  - `signup_roles`: distribuição dos cadastros reais do período entre pacientes e psicólogos;
+  - ações de WhatsApp/PWA antes do cadastro a partir de `important_action_event` sem `user_id` ou
+    com evento anterior a `user.createdAt`.
+- Em **Conversões após cadastro**, usar usuários cadastrados observados no período como base
+  (`visitor_session`, `page_view_event`, `important_action_event`, usuários criados no recorte e
+  eventos de domínio com `user_id`) e calcular:
+  - gráfico geral de usuários com ao menos uma conversão pós-cadastro versus sem conversão;
+  - barras por item com usuários únicos e total de eventos, pois posts, comentários, WhatsApp,
+    assinatura e PWA podem ocorrer mais de uma vez pelo mesmo usuário.
+- WhatsApp e PWA podem aparecer nas duas colunas porque existem antes e depois da autenticação. A
+  coluna pré-cadastro usa `important_action_event` por `visitor_id`; a coluna pós-cadastro usa
+  eventos de domínio com `user_id` e `occurred_at/createdAt >= user.createdAt`.
 - Nao instalar package de grafico, tabela ou mapa: a primeira versao usa SVG/CSS acessivel, listas responsivas e ranking de localizacao como alternativa honesta ao mapa interativo.
 
 ## Consequencias
@@ -71,6 +90,11 @@ O Builder/Quick Copy ativo `vcp://quickcopy/vcp-24aaa2941d814e5b90572bc93ae50e2a
   UI em vez de levar a operacao para uma rota falsa ou publica.
 - Os atalhos de periodo reduzem divergencia entre datas calculadas no cliente e no backend; o cliente
   exibe o periodo efetivo retornado pelo resumo e nao cria range artificial para **Todo o periodo**.
+- As taxas das barras pós-cadastro não somam 100% por desenho: uma pessoa pode gerar múltiplos
+  tipos de conversão no mesmo período. O gráfico geral pós-cadastro é o indicador disjunto para
+  "teve ao menos uma conversão".
+- Cadastros sem `visitor_id` vinculado continuam contabilizados em `signup_roles`, mas não entram
+  como visitante convertido em `visitor_to_signup`, evitando atribuição falsa ou cross-device.
 
 ## Validacao
 
@@ -118,6 +142,11 @@ O Builder/Quick Copy ativo `vcp://quickcopy/vcp-24aaa2941d814e5b90572bc93ae50e2a
 - Validacao complementar em 2026-07-27 para copy de tipo de usuario:
   - `buildTrafficSummary({ period: "30d" })` contra banco local confirmou o label
     **Visitantes nao autenticados** em `user_types.items`;
+  - `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`,
+    `pnpm --dir admin build` e `pnpm check` executados sem erros.
+- Validacao complementar em 2026-07-27 para conversoes em duas colunas:
+  - API real local confirmou `conversion_groups.pre_signup` com gráficos de cadastro/perfil,
+    `conversion_groups.post_signup.overall` e barras pós-cadastro com usuários únicos + eventos;
   - `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`,
     `pnpm --dir admin build` e `pnpm check` executados sem erros.
 

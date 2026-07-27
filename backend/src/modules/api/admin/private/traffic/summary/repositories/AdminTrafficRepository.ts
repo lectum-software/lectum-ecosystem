@@ -4,11 +4,13 @@ import type {
   IAdminTrafficRepository,
   TrafficActionRecord,
   TrafficCommunityLabelRecord,
+  TrafficDomainConversionRecord,
   TrafficLocationRecord,
   TrafficPageViewRecord,
   TrafficPostLabelRecord,
   TrafficPsychologistLabelRecord,
   TrafficSessionRecord,
+  TrafficUserRecord,
 } from "./interfaces/IAdminTrafficRepository";
 
 const occurredAtWhere = (range: AdminTrafficDateRange) => ({
@@ -208,6 +210,117 @@ export class AdminTrafficRepository implements IAdminTrafficRepository {
     });
   }
 
+  async listDomainConversions(
+    range: AdminTrafficDateRange,
+  ): Promise<TrafficDomainConversionRecord[]> {
+    const [communityPosts, postReplies, contactRequests, subscriptionsStarted, pwaInstalls] =
+      await Promise.all([
+        prisma.community_post.findMany({
+          where: {
+            createdAt: createdAtWhere(range),
+            deleted: false,
+            status: "publicado",
+          },
+          select: {
+            author_id: true,
+            createdAt: true,
+          },
+        }),
+        prisma.post_reply.findMany({
+          where: {
+            createdAt: createdAtWhere(range),
+            deleted: false,
+          },
+          select: {
+            author_id: true,
+            createdAt: true,
+          },
+        }),
+        prisma.contact_request.findMany({
+          where: {
+            channel: "whatsapp",
+            createdAt: createdAtWhere(range),
+            deleted: false,
+          },
+          select: {
+            createdAt: true,
+            user_id: true,
+          },
+        }),
+        prisma.professional_subscription.findMany({
+          where: {
+            createdAt: createdAtWhere(range),
+            deleted: false,
+            plan: {
+              deleted: false,
+              price_cents: {
+                gt: 0,
+              },
+              slug: {
+                not: "gratuito",
+              },
+            },
+            source: {
+              not: "admin_grant",
+            },
+          },
+          select: {
+            createdAt: true,
+            psychologist: {
+              select: {
+                user_id: true,
+              },
+            },
+          },
+        }),
+        prisma.important_action_event.findMany({
+          where: {
+            action_type: "pwa_installed",
+            deleted: false,
+            occurred_at: occurredAtWhere(range),
+          },
+          select: {
+            occurred_at: true,
+            user_id: true,
+            visitor_id: true,
+          },
+        }),
+      ]);
+
+    return [
+      ...communityPosts.map<TrafficDomainConversionRecord>((post) => ({
+        kind: "community_posts",
+        occurred_at: post.createdAt,
+        user_id: post.author_id,
+        visitor_id: null,
+      })),
+      ...postReplies.map<TrafficDomainConversionRecord>((reply) => ({
+        kind: "post_replies",
+        occurred_at: reply.createdAt,
+        user_id: reply.author_id,
+        visitor_id: null,
+      })),
+      ...contactRequests.map<TrafficDomainConversionRecord>((request) => ({
+        kind: "whatsapp_clicks",
+        occurred_at: request.createdAt,
+        user_id: request.user_id,
+        visitor_id: null,
+      })),
+      ...subscriptionsStarted.map<TrafficDomainConversionRecord>((subscription) => ({
+        kind: "subscriptions_started",
+        occurred_at: subscription.createdAt,
+        user_id: subscription.psychologist.user_id,
+        visitor_id: null,
+      })),
+      ...pwaInstalls.map<TrafficDomainConversionRecord>((action) => ({
+        kind: "pwa_installs",
+        occurred_at: action.occurred_at,
+        user_id: action.user_id,
+        visitor_id: action.visitor_id,
+      })),
+    ];
+  }
+
   async listLocations(range: AdminTrafficDateRange): Promise<TrafficLocationRecord[]> {
     return prisma.visitor_location.findMany({
       where: {
@@ -324,6 +437,47 @@ export class AdminTrafficRepository implements IAdminTrafficRepository {
         },
         user_id: true,
         visitor_id: true,
+      },
+    });
+  }
+
+  async listUsersByIds(ids: string[]): Promise<TrafficUserRecord[]> {
+    const uniqueIds = [...new Set(ids.filter(Boolean))];
+    if (uniqueIds.length === 0) return [];
+
+    return prisma.user.findMany({
+      where: {
+        active: true,
+        deleted: false,
+        id: {
+          in: uniqueIds,
+        },
+        role: {
+          in: ["paciente", "psicologo"],
+        },
+      },
+      select: {
+        createdAt: true,
+        id: true,
+        role: true,
+      },
+    });
+  }
+
+  async listUsersCreated(range: AdminTrafficDateRange): Promise<TrafficUserRecord[]> {
+    return prisma.user.findMany({
+      where: {
+        active: true,
+        createdAt: createdAtWhere(range),
+        deleted: false,
+        role: {
+          in: ["paciente", "psicologo"],
+        },
+      },
+      select: {
+        createdAt: true,
+        id: true,
+        role: true,
       },
     });
   }

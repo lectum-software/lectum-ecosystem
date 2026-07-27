@@ -67,6 +67,26 @@ export type TrafficEntryPage = {
   percentage: number;
 };
 
+export type TrafficConversionChart = {
+  description: string;
+  id: string;
+  items: TrafficBreakdownItem[];
+  label: string;
+  source: string;
+  total: number;
+};
+
+export type TrafficConversionAction = {
+  actor_label: string;
+  actor_percentage: number;
+  actors: number;
+  description: string;
+  events: number;
+  id: string;
+  label: string;
+  source: string;
+};
+
 export type TrafficRankingItem = {
   count: number;
   id: string;
@@ -103,6 +123,20 @@ export type TrafficPeriod = {
 };
 
 export type AdminTrafficSummary = {
+  conversion_groups: {
+    post_signup: {
+      items: TrafficConversionAction[];
+      overall: TrafficConversionChart;
+      source: "user+domain_events";
+      total_users: number;
+    };
+    pre_signup: {
+      actions: TrafficConversionAction[];
+      charts: TrafficConversionChart[];
+      source: "visitor_id+user+important_action_event";
+      total_visitors: number;
+    };
+  };
   conversions: {
     items: TrafficMetric[];
     source: "domain_events";

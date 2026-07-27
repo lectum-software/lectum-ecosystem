@@ -45,6 +45,26 @@ export type TrafficActionRecord = {
   visitor_id: string;
 };
 
+export type TrafficUserRecord = {
+  createdAt: Date;
+  id: string;
+  role: string;
+};
+
+export type TrafficDomainConversionKind =
+  | "community_posts"
+  | "post_replies"
+  | "pwa_installs"
+  | "subscriptions_started"
+  | "whatsapp_clicks";
+
+export type TrafficDomainConversionRecord = {
+  kind: TrafficDomainConversionKind;
+  occurred_at: Date;
+  user_id: string | null;
+  visitor_id: string | null;
+};
+
 export type TrafficLocationRecord = {
   city: string | null;
   country: string | null;
@@ -81,11 +101,14 @@ export interface IAdminTrafficRepository {
   findEarliestTrafficDate(): Promise<Date | null>;
   listActions(range: AdminTrafficDateRange): Promise<TrafficActionRecord[]>;
   listCommunitiesBySlugs(slugs: string[]): Promise<TrafficCommunityLabelRecord[]>;
+  listDomainConversions(range: AdminTrafficDateRange): Promise<TrafficDomainConversionRecord[]>;
   listLocations(range: AdminTrafficDateRange): Promise<TrafficLocationRecord[]>;
   listPageViews(range: AdminTrafficDateRange): Promise<TrafficPageViewRecord[]>;
   listPostsByIds(ids: string[]): Promise<TrafficPostLabelRecord[]>;
   listPsychologistsByIds(ids: string[]): Promise<TrafficPsychologistLabelRecord[]>;
   listSessions(range: AdminTrafficDateRange): Promise<TrafficSessionRecord[]>;
+  listUsersByIds(ids: string[]): Promise<TrafficUserRecord[]>;
+  listUsersCreated(range: AdminTrafficDateRange): Promise<TrafficUserRecord[]>;
   listVisitorSessionsBefore(
     visitorIds: string[],
     before: Date,

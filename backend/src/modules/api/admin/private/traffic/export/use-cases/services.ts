@@ -3,6 +3,8 @@ import { msg } from "@/helpers/translate";
 import type {
   AdminTrafficBreakdownItem,
   AdminTrafficConversion,
+  AdminTrafficConversionAction,
+  AdminTrafficConversionChart,
   AdminTrafficEntryPage,
   AdminTrafficLocationItem,
   AdminTrafficMetric,
@@ -114,6 +116,46 @@ const appendConversionRows = (rows: string[], items: AdminTrafficConversion[], s
   }
 };
 
+const appendConversionChartRows = (
+  rows: string[],
+  section: string,
+  chart: AdminTrafficConversionChart,
+) => {
+  for (const item of chart.items) {
+    rows.push(
+      csvRow([
+        section,
+        `${chart.id}:${item.id}`,
+        `${chart.label} - ${item.label}`,
+        "",
+        item.count,
+        chart.source,
+        `percentage=${item.percentage};total=${chart.total};description=${chart.description}`,
+      ]),
+    );
+  }
+};
+
+const appendConversionActionRows = (
+  rows: string[],
+  section: string,
+  items: AdminTrafficConversionAction[],
+) => {
+  for (const item of items) {
+    rows.push(
+      csvRow([
+        section,
+        item.id,
+        item.label,
+        "",
+        item.events,
+        item.source,
+        `actors=${item.actors};actor_label=${item.actor_label};actor_percentage=${item.actor_percentage};description=${item.description}`,
+      ]),
+    );
+  }
+};
+
 const appendRankingRows = (
   rows: string[],
   section: string,
@@ -197,6 +239,24 @@ const buildCsv = (summary: AdminTrafficSummary) => {
   appendLocationRows(rows, "country", summary.locations.countries, summary.locations.source);
   appendEntryPageRows(rows, summary.entry_pages.items, summary.entry_pages.source);
   appendConversionRows(rows, summary.conversions.items, summary.conversions.source);
+  for (const chart of summary.conversion_groups.pre_signup.charts) {
+    appendConversionChartRows(rows, "pre_signup_conversion_chart", chart);
+  }
+  appendConversionActionRows(
+    rows,
+    "pre_signup_conversion_action",
+    summary.conversion_groups.pre_signup.actions,
+  );
+  appendConversionChartRows(
+    rows,
+    "post_signup_conversion_chart",
+    summary.conversion_groups.post_signup.overall,
+  );
+  appendConversionActionRows(
+    rows,
+    "post_signup_conversion_action",
+    summary.conversion_groups.post_signup.items,
+  );
   appendMetricRows(rows, "quality", summary.quality.items);
   appendRankingRows(
     rows,

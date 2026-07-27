@@ -2,6 +2,8 @@ import type { Resolve } from "@/helpers/return";
 import { error, msg } from "@/helpers/translate";
 import type {
   AdminTrafficBreakdownItem,
+  AdminTrafficConversionAction,
+  AdminTrafficConversionChart,
   AdminTrafficDateRange,
   AdminTrafficDeviceItem,
   AdminTrafficDeviceType,
@@ -22,9 +24,12 @@ import { AdminTrafficRepository } from "../repositories/AdminTrafficRepository";
 import type {
   IAdminTrafficRepository,
   TrafficActionRecord,
+  TrafficDomainConversionKind,
+  TrafficDomainConversionRecord,
   TrafficLocationRecord,
   TrafficPageViewRecord,
   TrafficSessionRecord,
+  TrafficUserRecord,
 } from "../repositories/interfaces/IAdminTrafficRepository";
 
 const DEFAULT_PERIOD_DAYS = 30;
@@ -77,6 +82,7 @@ type PeriodResult =
 type TrafficStats = {
   actions: TrafficActionRecord[];
   contactRequests: number;
+  domainConversions: TrafficDomainConversionRecord[];
   locations: TrafficLocationRecord[];
   pageViews: TrafficPageViewRecord[];
   patientSignups: number;
@@ -86,6 +92,8 @@ type TrafficStats = {
   publishedCommunityPosts: number;
   sessions: TrafficSessionRecord[];
   subscriptionsStarted: number;
+  users: TrafficUserRecord[];
+  usersCreated: TrafficUserRecord[];
 };
 
 type NumericMetric = {
@@ -320,34 +328,49 @@ const loadStats = async (
   range: AdminTrafficDateRange,
 ): Promise<TrafficStats> => {
   const [
-    sessions,
-    pageViews,
     actions,
+    contactRequests,
+    domainConversions,
     locations,
+    pageViews,
     patientSignups,
+    postReplies,
     psychologistSignups,
     publishedCommunityPosts,
-    postReplies,
-    contactRequests,
+    sessions,
     subscriptionsStarted,
+    usersCreated,
   ] = await Promise.all([
-    repository.listSessions(range),
-    repository.listPageViews(range),
     repository.listActions(range),
+    repository.countContactRequests(range),
+    repository.listDomainConversions(range),
     repository.listLocations(range),
+    repository.listPageViews(range),
     repository.countUsersByRole("paciente", range),
+    repository.countPostReplies(range),
     repository.countUsersByRole("psicologo", range),
     repository.countPublishedCommunityPosts(range),
-    repository.countPostReplies(range),
-    repository.countContactRequests(range),
+    repository.listSessions(range),
     repository.countSubscriptionsStarted(range),
+    repository.listUsersCreated(range),
   ]);
   const visitorIds = [...getVisitorIds({ actions, pageViews, sessions })];
-  const previousSessions = await repository.listVisitorSessionsBefore(visitorIds, range.start);
+  const observedUserIds = uniqueValues([
+    ...sessions.flatMap((session) => (session.user_id ? [session.user_id] : [])),
+    ...pageViews.flatMap((pageView) => (pageView.user_id ? [pageView.user_id] : [])),
+    ...actions.flatMap((action) => (action.user_id ? [action.user_id] : [])),
+    ...domainConversions.flatMap((conversion) => (conversion.user_id ? [conversion.user_id] : [])),
+    ...usersCreated.map((user) => user.id),
+  ]);
+  const [previousSessions, users] = await Promise.all([
+    repository.listVisitorSessionsBefore(visitorIds, range.start),
+    repository.listUsersByIds(observedUserIds),
+  ]);
 
   return {
     actions,
     contactRequests,
+    domainConversions,
     locations,
     pageViews,
     patientSignups,
@@ -357,6 +380,8 @@ const loadStats = async (
     publishedCommunityPosts,
     sessions,
     subscriptionsStarted,
+    users,
+    usersCreated,
   };
 };
 
@@ -1248,6 +1273,290 @@ const buildConversions = (current: TrafficStats, previous: TrafficStats) => ({
   source: "domain_events" as const,
 });
 
+const WHATSAPP_IMPORTANT_ACTION_TYPES = new Set([
+  "psychologist_video_whatsapp_click",
+  "whatsapp_click",
+]);
+const PWA_IMPORTANT_ACTION_TYPES = new Set(["pwa_installed"]);
+
+const userRecordById = (stats: TrafficStats) => new Map(stats.users.map((user) => [user.id, user]));
+
+const visitorIdsByUserId = (stats: TrafficStats) => {
+  const visitors = new Map<string, Set<string>>();
+  const addVisitor = (userId: string | null | undefined, visitorId: string | null | undefined) => {
+    if (!userId || !visitorId) return;
+
+    const current = visitors.get(userId) ?? new Set<string>();
+    current.add(visitorId);
+    visitors.set(userId, current);
+  };
+
+  for (const session of stats.sessions) addVisitor(session.user_id, session.visitor_id);
+  for (const pageView of stats.pageViews) addVisitor(pageView.user_id, pageView.visitor_id);
+  for (const action of stats.actions) addVisitor(action.user_id, action.visitor_id);
+  for (const conversion of stats.domainConversions) {
+    addVisitor(conversion.user_id, conversion.visitor_id);
+  }
+
+  return visitors;
+};
+
+const conversionChart = (params: {
+  description: string;
+  id: string;
+  items: Array<{ count: number; id: string; label: string }>;
+  label: string;
+  source: string;
+  total: number;
+}): AdminTrafficConversionChart => ({
+  description: params.description,
+  id: params.id,
+  items: params.items.map((item) => ({
+    count: item.count,
+    id: item.id,
+    label: item.label,
+    percentage: safePercentage(item.count, params.total),
+  })),
+  label: params.label,
+  source: params.source,
+  total: params.total,
+});
+
+const isBeforeSignupImportantAction = (
+  action: TrafficActionRecord,
+  usersById: Map<string, TrafficUserRecord>,
+  actionTypes: Set<string>,
+) => {
+  if (!actionTypes.has(action.action_type)) return false;
+  if (!action.user_id) return true;
+
+  const user = usersById.get(action.user_id);
+  if (!user) return false;
+
+  return action.occurred_at < user.createdAt;
+};
+
+const isPostSignupDomainConversion = (
+  conversion: TrafficDomainConversionRecord,
+  usersById: Map<string, TrafficUserRecord>,
+) => {
+  if (!conversion.user_id) return false;
+
+  const user = usersById.get(conversion.user_id);
+  if (!user) return false;
+
+  return conversion.occurred_at >= user.createdAt;
+};
+
+const conversionAction = (params: {
+  actorIds: Set<string>;
+  actorLabel: string;
+  description: string;
+  events: number;
+  id: string;
+  label: string;
+  source: string;
+  totalActors: number;
+}): AdminTrafficConversionAction => ({
+  actor_label: params.actorLabel,
+  actor_percentage: safePercentage(params.actorIds.size, params.totalActors),
+  actors: params.actorIds.size,
+  description: params.description,
+  events: params.events,
+  id: params.id,
+  label: params.label,
+  source: params.source,
+});
+
+const domainConversionRecordsByKind = (
+  stats: TrafficStats,
+  usersById: Map<string, TrafficUserRecord>,
+  kind: TrafficDomainConversionKind,
+) =>
+  stats.domainConversions.filter(
+    (conversion) => conversion.kind === kind && isPostSignupDomainConversion(conversion, usersById),
+  );
+
+const buildConversionGroups = (current: TrafficStats) => {
+  const totalVisitors = getVisitorIds(current).size;
+  const visitorsByUserId = visitorIdsByUserId(current);
+  const signupVisitorIds = new Set<string>();
+
+  for (const user of current.usersCreated) {
+    const visitorIds = visitorsByUserId.get(user.id);
+    if (!visitorIds) continue;
+
+    for (const visitorId of visitorIds) signupVisitorIds.add(visitorId);
+  }
+
+  const patientSignups = current.usersCreated.filter((user) => user.role === "paciente").length;
+  const psychologistSignups = current.usersCreated.filter(
+    (user) => user.role === "psicologo",
+  ).length;
+  const totalSignups = patientSignups + psychologistSignups;
+  const usersById = userRecordById(current);
+  const preSignupWhatsappActions = current.actions.filter((action) =>
+    isBeforeSignupImportantAction(action, usersById, WHATSAPP_IMPORTANT_ACTION_TYPES),
+  );
+  const preSignupPwaActions = current.actions.filter((action) =>
+    isBeforeSignupImportantAction(action, usersById, PWA_IMPORTANT_ACTION_TYPES),
+  );
+  const postSignupUsers = new Set<string>();
+  const postSignupConversionDefinitions: Array<{
+    description: string;
+    id: TrafficDomainConversionKind;
+    label: string;
+    source: string;
+  }> = [
+    {
+      description: "Usuários cadastrados que publicaram posts no período.",
+      id: "community_posts",
+      label: "Posts criados",
+      source: "community_post.status=publicado",
+    },
+    {
+      description: "Usuários cadastrados que comentaram ou responderam posts no período.",
+      id: "post_replies",
+      label: "Comentários",
+      source: "post_reply",
+    },
+    {
+      description: "Usuários cadastrados que clicaram em contato por WhatsApp no período.",
+      id: "whatsapp_clicks",
+      label: "Cliques no WhatsApp",
+      source: "contact_request.channel=whatsapp",
+    },
+    {
+      description: "Psicólogos cadastrados que iniciaram assinatura profissional paga.",
+      id: "subscriptions_started",
+      label: "Assinaturas iniciadas",
+      source: "professional_subscription",
+    },
+    {
+      description: "Usuários cadastrados que instalaram a PWA após o cadastro.",
+      id: "pwa_installs",
+      label: "Instalações PWA",
+      source: "important_action_event.action_type=pwa_installed",
+    },
+  ];
+  const postSignupItems = postSignupConversionDefinitions.map((definition) => {
+    const records = domainConversionRecordsByKind(current, usersById, definition.id);
+    const actorIds = new Set(records.flatMap((record) => (record.user_id ? [record.user_id] : [])));
+
+    for (const actorId of actorIds) postSignupUsers.add(actorId);
+
+    return conversionAction({
+      actorIds,
+      actorLabel: "usuários",
+      description: definition.description,
+      events: records.length,
+      id: definition.id,
+      label: definition.label,
+      source: definition.source,
+      totalActors: current.users.length,
+    });
+  });
+
+  return {
+    post_signup: {
+      items: postSignupItems,
+      overall: conversionChart({
+        description:
+          "Usuários cadastrados observados no período que tiveram ao menos uma conversão de domínio após o cadastro.",
+        id: "post_signup_overall",
+        items: [
+          {
+            count: postSignupUsers.size,
+            id: "converted",
+            label: "Tiveram conversão após cadastro",
+          },
+          {
+            count: Math.max(0, current.users.length - postSignupUsers.size),
+            id: "not_converted",
+            label: "Sem conversão após cadastro",
+          },
+        ],
+        label: "Conversão geral após cadastro",
+        source: "user+domain_events",
+        total: current.users.length,
+      }),
+      source: "user+domain_events" as const,
+      total_users: current.users.length,
+    },
+    pre_signup: {
+      actions: [
+        conversionAction({
+          actorIds: new Set(preSignupWhatsappActions.map((action) => action.visitor_id)),
+          actorLabel: "visitantes",
+          description:
+            "Visitantes não autenticados, ou antes do cadastro no mesmo visitor_id, com clique de WhatsApp capturado.",
+          events: preSignupWhatsappActions.length,
+          id: "whatsapp_clicks",
+          label: "Cliques no WhatsApp",
+          source:
+            "important_action_event.action_type=whatsapp_click|psychologist_video_whatsapp_click",
+          totalActors: totalVisitors,
+        }),
+        conversionAction({
+          actorIds: new Set(preSignupPwaActions.map((action) => action.visitor_id)),
+          actorLabel: "visitantes",
+          description:
+            "Visitantes não autenticados, ou antes do cadastro no mesmo visitor_id, com instalação PWA capturada.",
+          events: preSignupPwaActions.length,
+          id: "pwa_installs",
+          label: "Instalações PWA",
+          source: "important_action_event.action_type=pwa_installed",
+          totalActors: totalVisitors,
+        }),
+      ],
+      charts: [
+        conversionChart({
+          description:
+            "Visitantes únicos do período que aparecem vinculados a usuários criados no mesmo recorte pelo mesmo visitor_id.",
+          id: "visitor_to_signup",
+          items: [
+            {
+              count: signupVisitorIds.size,
+              id: "signed_up",
+              label: "Fizeram cadastro",
+            },
+            {
+              count: Math.max(0, totalVisitors - signupVisitorIds.size),
+              id: "not_signed_up",
+              label: "Não fizeram cadastro",
+            },
+          ],
+          label: "Visitantes para cadastro",
+          source: "visitor_id+user.createdAt",
+          total: totalVisitors,
+        }),
+        conversionChart({
+          description:
+            "Distribuição dos cadastros reais criados no período entre pacientes e psicólogos.",
+          id: "signup_roles",
+          items: [
+            {
+              count: patientSignups,
+              id: "patients",
+              label: "Pacientes",
+            },
+            {
+              count: psychologistSignups,
+              id: "psychologists",
+              label: "Psicólogos",
+            },
+          ],
+          label: "Cadastros por perfil",
+          source: "user.role+createdAt",
+          total: totalSignups,
+        }),
+      ],
+      source: "visitor_id+user+important_action_event" as const,
+      total_visitors: totalVisitors,
+    },
+  };
+};
+
 const buildQuality = (current: TrafficStats, previous: TrafficStats) => {
   const currentAverageTime = averageTime(current);
   const previousAverageTime = averageTime(previous);
@@ -1496,6 +1805,7 @@ export const buildTrafficSummary = async (query: AdminTrafficQuery): Promise<Res
 
   const summary: AdminTrafficSummary = {
     conversions: buildConversions(currentStats, previousStats),
+    conversion_groups: buildConversionGroups(currentStats),
     devices: buildDevices(currentStats),
     entry_pages: buildEntryPages(currentStats),
     locations,

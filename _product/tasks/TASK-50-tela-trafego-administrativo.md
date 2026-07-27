@@ -690,3 +690,37 @@ Validacao desta execucao complementar:
 - `pnpm --dir admin exec biome check --write "src/app/(admin)/trafego/client.tsx"` - OK.
 - `pnpm --dir admin check` - OK.
 - `pnpm --dir admin build` - OK.
+
+## Execucao complementar - conversoes em duas colunas (2026-07-27)
+
+- O bloco **Conversoes geradas** foi reorganizado em duas colunas mobile-first:
+  **Conversoes para cadastro** e **Conversoes apos cadastro**.
+- O backend passou a retornar `conversion_groups.pre_signup` com grafico de visitantes que fizeram
+  cadastro versus nao fizeram, grafico de cadastros por perfil (pacientes/psicologos) e barras de
+  WhatsApp/PWA antes do cadastro por `important_action_event`.
+- O backend passou a retornar `conversion_groups.post_signup` com grafico geral de usuarios
+  cadastrados que tiveram ao menos uma conversao apos cadastro versus sem conversao, alem de barras
+  por posts, comentarios, WhatsApp, assinaturas e PWA com usuarios unicos e total de eventos.
+- WhatsApp e PWA podem aparecer nas duas colunas porque existem antes e depois do login; a atribuicao
+  continua first-party por `visitor_id`/`user_id`, sem inferir cross-device.
+- A exportacao CSV real passou a incluir as secoes `pre_signup_conversion_chart`,
+  `pre_signup_conversion_action`, `post_signup_conversion_chart` e
+  `post_signup_conversion_action`, mantendo `conversions.items` compativel.
+- Nao houve mock, backfill, package novo, endpoint simulado, Prisma schema/migration ou dado
+  persistido; `db:migrate` nao foi necessario.
+- Builder/Quick Copy nao estava exposto como ferramenta callable neste ambiente; as referencias
+  auditaveis foram `_product/proto/admin/Tr?fego.png` e a captura enviada pelo usuario.
+- ADR atualizado: `adrs/0230-admin-trafego-agregacoes.md`.
+
+Validacao desta execucao complementar:
+
+- `pnpm --dir backend exec biome check --write "src/modules/api/admin/private/traffic/summary/DTOs/IAdminTrafficSummaryDTO.ts" "src/modules/api/admin/private/traffic/summary/repositories/interfaces/IAdminTrafficRepository.ts" "src/modules/api/admin/private/traffic/summary/repositories/AdminTrafficRepository.ts" "src/modules/api/admin/private/traffic/summary/use-cases/services.ts" "src/modules/api/admin/private/traffic/export/use-cases/services.ts"` - OK.
+- `pnpm --dir admin exec biome check --write "src/api/req/traffic/index.ts" "src/app/(admin)/trafego/client.tsx"` - OK.
+- `pnpm --dir backend check` - OK.
+- `pnpm --dir admin check` - OK.
+- `pnpm --dir backend build` - OK.
+- `pnpm --dir admin build` - OK.
+- `pnpm check` - OK.
+- API real local direta em `buildTrafficSummary({ period: "30d" })` - OK: `conversion_groups` presente, `visitor_to_signup=45/224`, `signup_roles=155 pacientes + 14 psicologos`, `post_signup_overall=19/169` e barras pos-cadastro com usuarios unicos + eventos.
+- HTTP local `GET http://localhost:3002/trafego` - OK (`200`).
+- Browser/headless CDP completo nao foi concluido porque a politica do ambiente bloqueou a inicializacao de processo auxiliar para Chrome/servidores efemeros; nao houve comando destrutivo nem alteracao de dados para contornar essa limitacao.
