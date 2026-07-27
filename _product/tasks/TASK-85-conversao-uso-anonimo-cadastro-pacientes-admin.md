@@ -35,7 +35,7 @@ Builder/Quick Copy não ficou exposto como ferramenta callable neste ambiente; p
 
 ## Objetivo
 
-Permitir que um Admin autenticado veja, em `/pacientes`, um bloco de **Trilha pré-cadastro dos pacientes** com coorte de pacientes cadastrados no período selecionado, cobertura de trilha anônima prévia, prazos até cadastro e primeira página capturada antes do cadastro.
+Permitir que um Admin autenticado veja, em `/pacientes`, um bloco rotulado como **Conversão até o cadastro** com coorte de pacientes cadastrados no período selecionado, cobertura de trilha anônima prévia, prazos até cadastro e primeira página capturada antes do cadastro.
 
 ## Pré-requisitos e bloqueios
 
@@ -113,7 +113,7 @@ Regras anti-recriação:
 - [x] `GET /api/admin/private/patients/dashboard` retorna `anonymous_conversion` com coorte de pacientes cadastrados, cobertura de trilha prévia, prazos, buckets, primeira página e notas de cobertura.
 - [x] O cálculo usa apenas dados reais first-party (`page_view_event`, `visitor_session`, `user_background`, `user.createdAt`) e não cria mock/backfill.
 - [x] Cadastros futuros de pacientes por e-mail/senha e Google salvam a ponte opcional `visitor_id/session_id` em `user_background` quando a identidade first-party existe no cliente.
-- [x] O dashboard `/pacientes` mostra o bloco **Trilha pré-cadastro dos pacientes** abaixo da Visão Geral.
+- [x] O dashboard `/pacientes` mostra o bloco **Conversão até o cadastro** abaixo da Visão Geral, com peso tipográfico reduzido em relação aos títulos padrão.
 - [x] A UI exibe métricas, distribuição por prazo e primeira página pré-cadastro com copy honesta para ausência/amostra pequena.
 - [x] Psicólogos e visitantes anônimos que não viraram paciente não entram no denominador deste bloco.
 - [x] UI mobile-first; nenhum `<img>` cru (somente componentes existentes e ícones SVG de biblioteca já instalada).

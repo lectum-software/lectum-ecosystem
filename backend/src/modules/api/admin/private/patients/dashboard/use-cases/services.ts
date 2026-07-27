@@ -1740,7 +1740,7 @@ export const buildPatientsDashboard = async (
             {
               description: anonymousConversion.unavailable_reason,
               id: "anonymous_conversion",
-              label: "Trilha pre-cadastro dos pacientes",
+              label: "Conversão até o cadastro",
               source: anonymousConversion.source,
             },
           ]

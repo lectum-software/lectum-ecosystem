@@ -502,18 +502,27 @@ const PanelTitle = ({
   icon: Icon,
   source,
   title,
+  titleClassName,
 }: {
   action?: ReactNode;
   description?: ReactNode;
   icon: LucideIcon;
   source?: string;
   title: string;
+  titleClassName?: string;
 }) => (
   <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
     <div className="flex min-w-0 flex-1 items-start gap-2">
       <Icon aria-hidden className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
       <div className="min-w-0">
-        <h3 className="min-w-0 whitespace-nowrap text-lg font-black text-foreground">{title}</h3>
+        <h3
+          className={cn(
+            "min-w-0 whitespace-nowrap text-lg font-black text-foreground",
+            titleClassName,
+          )}
+        >
+          {title}
+        </h3>
         {description ? (
           <p className="mt-1 max-w-full text-sm font-bold leading-5 text-muted">{description}</p>
         ) : null}
@@ -1169,7 +1178,8 @@ const AnonymousConversionCard = ({ summary }: { summary: AdminPatientsDashboard 
       <PanelTitle
         description={formatSelectedPeriod(summary.period)}
         icon={TrendingUp}
-        title="Trilha pré-cadastro dos pacientes"
+        title="Conversão até o cadastro"
+        titleClassName="font-semibold"
       />
 
       <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
