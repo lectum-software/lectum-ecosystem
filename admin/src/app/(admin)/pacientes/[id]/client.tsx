@@ -1405,7 +1405,7 @@ const EngagementChart = ({
       <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-start">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
-            <h2 className="text-lg font-black text-foreground">Estatísticas de comunidade</h2>
+            <h2 className="text-lg font-bold text-foreground">Estatísticas de comunidade</h2>
             {isRefreshing ? (
               <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary-soft px-2.5 py-1 text-[11px] font-black text-primary">
                 <Loader2 aria-hidden className="h-3.5 w-3.5 animate-spin" />
@@ -1897,7 +1897,7 @@ const PatientActiveCommunitiesBlock = ({
     <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-start">
       <div className="min-w-0">
         <div className="flex flex-wrap items-center gap-2">
-          <h2 className="text-lg font-black text-foreground">Comunidades ativas</h2>
+          <h2 className="text-lg font-bold text-foreground">Comunidades ativas</h2>
           {isRefreshing ? (
             <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary-soft px-2.5 py-1 text-[11px] font-black text-primary">
               <Loader2 aria-hidden className="h-3.5 w-3.5 animate-spin" />
@@ -2787,7 +2787,7 @@ const PatientPlatformDeviceUsageSection = ({
     <section className="min-w-0">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h3 className="text-sm font-black text-foreground">Devices</h3>
+          <h3 className="text-sm font-bold text-foreground">Devices</h3>
           <p className="mt-1 text-xs font-bold leading-5 text-muted">
             Sessões autenticadas do paciente por tipo de dispositivo no período.
           </p>
@@ -2966,7 +2966,7 @@ const PatientPlatformUsageCard = ({
       <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-start">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
-            <h2 className="text-lg font-black text-foreground">Uso da plataforma</h2>
+            <h2 className="text-lg font-bold text-foreground">Uso da plataforma</h2>
             {isRefreshing ? (
               <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary-soft px-2.5 py-1 text-[11px] font-black text-primary">
                 <Loader2 aria-hidden className="h-3.5 w-3.5 animate-spin" />
@@ -3002,7 +3002,7 @@ const PatientPlatformUsageCard = ({
 
       <div className="mt-5 grid gap-5 lg:grid-cols-2">
         <section className="min-w-0">
-          <h3 className="text-sm font-black text-foreground">Páginas mais acessadas</h3>
+          <h3 className="text-sm font-bold text-foreground">Páginas mais acessadas</h3>
           {usage.unavailable_reason ? (
             <p className="mt-3 rounded-2xl border border-dashed border-border bg-surface-muted p-4 text-sm font-bold text-muted">
               {usage.unavailable_reason}
@@ -3093,7 +3093,7 @@ const PatientIntentAnalysisCard = ({
       <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-start">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
-            <h2 className="text-lg font-black text-foreground">Análise de intenção do paciente</h2>
+            <h2 className="text-lg font-bold text-foreground">Análise de intenção do paciente</h2>
             <span
               className={cn(
                 "inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] font-black",
@@ -3242,7 +3242,7 @@ const PatientPlatformActivityHoursCard = ({
       <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-start">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
-            <h2 className="text-lg font-black text-foreground">Horários de maior atividade</h2>
+            <h2 className="text-lg font-bold text-foreground">Horários de maior atividade</h2>
             {isRefreshing ? (
               <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary-soft px-2.5 py-1 text-[11px] font-black text-primary">
                 <Loader2 aria-hidden className="h-3.5 w-3.5 animate-spin" />

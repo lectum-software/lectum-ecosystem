@@ -1034,3 +1034,30 @@ Frontend esperado:
 - `pnpm check`
 - API local com admin temporario real removido ao final: `GET /api/admin/private/patients/cmrqsrab5001f1guh2ve5oy90?period=all` retornou o detalhe real do paciente e confirmou o label de contrato **Upvotes (recebidos)**.
 - Browser local/headless via Chrome CDP em `http://127.0.0.1:3023/pacientes/cmrqsrab5001f1guh2ve5oy90?tab=estatisticas`, viewport mobile `390x844`, validou as duas copies novas, as oito opcoes solicitadas e `scrollWidth=390`; admin temporario real removido ao final.
+
+
+## Ajuste pos-feedback 2026-07-27 - Peso textual dos titulos da aba Estatisticas
+
+- Pedido do usuario: reduzir o peso textual dos titulos dos blocos na pagina de detalhe administrativo do paciente, aba **Estatisticas**.
+- A UI do Admin alterou apenas os titulos e subtitulos de blocos da aba **Estatisticas** de `font-black` para `font-bold`, que no escopo `admin-premium-pilot` computa como `font-weight: 600`.
+- Titulos ajustados: **Analise de intencao do paciente**, **Estatisticas de comunidade**, **Comunidades ativas**, **Horarios de maior atividade**, **Uso da plataforma**, **Paginas mais acessadas** e **Devices**.
+- Tamanho, copy, icones, filtros, contratos, calculos e dados reais permaneceram inalterados.
+- Nao houve schema Prisma, migration, package novo, seed, mock, endpoint simulado, tracking ou backfill artificial. `db:migrate` nao se aplicou.
+- Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente; as referencias auditaveis foram o screenshot enviado pelo usuario em 2026-07-27 e `_product/proto/admin/Pacientes/Pacientes - Detalhes.png`.
+- ADR nao atualizado por se tratar de ajuste visual local de tipografia sem decisao arquitetural nova.
+
+### Criterios de aceite do ajuste
+
+- [x] Os titulos dos blocos da aba **Estatisticas** usam peso textual reduzido e computam como `font-weight: 600`.
+- [x] A alteracao cobre **Analise de intencao do paciente**, **Estatisticas de comunidade**, **Comunidades ativas**, **Horarios de maior atividade**, **Uso da plataforma**, **Paginas mais acessadas** e **Devices**.
+- [x] Nenhuma copy, filtro, icone, contrato, calculo ou dado real foi alterado.
+- [x] O layout permanece mobile-first e sem overflow horizontal em 390px.
+- [x] Nenhum schema Prisma, migration, package novo, mock, seed ou endpoint simulado foi adicionado.
+
+### Validacao complementar executada
+
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/pacientes/[id]/client.tsx"`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check` executou `frontend check` e `backend biome`, mas ficou bloqueado no `backend typecheck` por erros TypeScript preexistentes fora do escopo (ex.: `src/main/notification/digests.ts` e `src/modules/api/...`); `admin check` ja havia passado isoladamente.
+- Browser local/headless via Chrome CDP em `http://localhost:3002/pacientes/cmrqsr42d00151guhdwy8tfj4?tab=estatisticas`, com admin temporario real removido ao final: desktop `1366x900` e mobile `390x844` validaram os sete titulos com `fontWeight="600"` e `scrollWidth=390` no mobile.
