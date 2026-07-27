@@ -22,6 +22,12 @@ type GoogleCallbackUser = {
 
 const DELETE_ACCOUNT_PATIENT_CALLBACK = "/app/profile/edit?deleteReauth=ok";
 const DELETE_ACCOUNT_PSYCHOLOGIST_CALLBACK = "/app/professional/profile/setup?deleteReauth=ok";
+const GOOGLE_CALLBACK_INTERNAL_QUERY_KEYS = new Set([
+  "analytics_session_id",
+  "analytics_visitor_id",
+  "delete_token",
+  "link_token",
+]);
 
 const getFrontendOrigin = () => {
   const callbackUrl = process.env.CALLBACK_URL_API_USER || "/";
@@ -79,8 +85,9 @@ const parseGoogleStateQuery = (state: unknown) => {
     const stateObj = JSON.parse(typeof state === "string" ? state : "{}");
     if (stateObj?.query) {
       Object.entries(stateObj.query as Record<string, unknown>).forEach(([key, value]) => {
-        if (key === "link_token" || key === "delete_token" || value === undefined || value === null)
+        if (GOOGLE_CALLBACK_INTERNAL_QUERY_KEYS.has(key) || value === undefined || value === null) {
           return;
+        }
 
         if (Array.isArray(value)) {
           query[key] = value.map((item) => String(item));

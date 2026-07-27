@@ -866,6 +866,18 @@ Adicionado na TASK-49 para sustentar a aba Admin Tráfego sem integração de te
 
 Ambos seguem soft delete, relação opcional com `user` por `onDelete: SetNull` e índices por período, sessão, visitante, usuário e dimensões de agregação.
 
+Complemento TASK-85B (2026-07-27): o cadastro de paciente passa a aceitar, de forma opcional, `analytics_visitor_id` e `analytics_session_id` vindos do storage first-party do frontend. Quando `role="paciente"` e `analytics_visitor_id` é válido, o backend grava um `user_background` com `type="patient_signup_analytics_identity"`, `device_id` do cadastro real e `data` seguro:
+
+| Campo em `data` | Tipo | Notas |
+|---|---|---|
+| `visitor_id` | `String` | Identidade first-party usada para reconstruir a trilha pré-cadastro do paciente. |
+| `session_id` | `String?` | Sessão first-party do cadastro quando disponível. |
+| `captured_at` | `String ISO` | Momento em que a ponte foi persistida no backend. |
+| `source` | `String` | `"patient_registration"` para e-mail/senha e `"google_registration"` para OAuth Google. |
+| `role` | `String` | Sempre `"paciente"` neste tipo. |
+
+Essa ponte não altera `page_view_event`, não cria backfill e não identifica cross-device. Psicólogos não gravam esse tipo de `user_background`; o dashboard de pacientes usa a ponte apenas para descobrir o `visitor_id` do paciente cadastrado e, então, buscar eventos/sessões reais anteriores ao `user.createdAt`.
+
 ## Convencao de rotas (frontend e backend)
 
 A auditoria achou namespaces conflitantes nas tasks de comunidade (`/communities` vs `/community` vs `/posts`). Padrao canonico apos TASK-40:

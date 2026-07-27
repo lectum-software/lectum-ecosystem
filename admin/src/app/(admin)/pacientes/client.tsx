@@ -1180,12 +1180,13 @@ const AnonymousConversionCard = ({ summary }: { summary: AdminPatientsDashboard 
             value: numberFormatter.format(conversion.registered_patients_count),
           },
           {
-            description: "Pacientes com uso sem login capturado antes do cadastro.",
+            description: "Pacientes com uso sem login capturado pela identidade salva no cadastro.",
             label: "Com trilha prévia",
             value: numberFormatter.format(conversion.patients_with_anonymous_history_count),
           },
           {
-            description: "Pacientes sem pageview ou sessão anônima vinculada ao mesmo visitor_id.",
+            description:
+              "Pacientes sem pageview ou sessão anônima encontrada pelo visitor_id do cadastro.",
             label: "Sem trilha capturada",
             value: numberFormatter.format(conversion.patients_without_anonymous_history_count),
           },

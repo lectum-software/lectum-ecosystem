@@ -61,9 +61,7 @@
   "paths": {
     "/api/private/auth/code/:code": {
       "put": {
-        "tags": [
-          "[API] - AUTH (Private)"
-        ],
+        "tags": ["[API] - AUTH (Private)"],
         "description": "Endpoint (Private)",
         "parameters": [
           {
@@ -100,9 +98,7 @@
     },
     "/api/private/auth/confirm": {
       "get": {
-        "tags": [
-          "[API] - AUTH (Private)"
-        ],
+        "tags": ["[API] - AUTH (Private)"],
         "description": "Endpoint (Private)",
         "parameters": [],
         "responses": {
@@ -128,9 +124,7 @@
     },
     "/api/private/auth/hidrate": {
       "get": {
-        "tags": [
-          "[API] - AUTH (Private)"
-        ],
+        "tags": ["[API] - AUTH (Private)"],
         "description": "Endpoint (Private)",
         "parameters": [],
         "responses": {
@@ -156,9 +150,7 @@
     },
     "/api/private/auth/need_reset": {
       "post": {
-        "tags": [
-          "[API] - AUTH (Private)"
-        ],
+        "tags": ["[API] - AUTH (Private)"],
         "description": "Endpoint (Private)",
         "parameters": [],
         "requestBody": {
@@ -179,10 +171,7 @@
                     "type": "string"
                   }
                 },
-                "required": [
-                  "password",
-                  "password_confirm"
-                ],
+                "required": ["password", "password_confirm"],
                 "type": "object"
               }
             }
@@ -211,9 +200,7 @@
     },
     "/api/private/auth/reset": {
       "post": {
-        "tags": [
-          "[API] - AUTH (Private)"
-        ],
+        "tags": ["[API] - AUTH (Private)"],
         "description": "Endpoint (Private)",
         "parameters": [],
         "requestBody": {
@@ -240,11 +227,7 @@
                     "type": "string"
                   }
                 },
-                "required": [
-                  "current_password",
-                  "password",
-                  "password_confirm"
-                ],
+                "required": ["current_password", "password", "password_confirm"],
                 "type": "object"
               }
             }
@@ -273,9 +256,7 @@
     },
     "/api/private/directory/psychologists": {
       "get": {
-        "tags": [
-          "[API] - DIRECTORY (Private)"
-        ],
+        "tags": ["[API] - DIRECTORY (Private)"],
         "description": "Endpoint (Private)",
         "parameters": [
           {
@@ -502,9 +483,7 @@
     },
     "/api/private/directory/psychologists/:id": {
       "get": {
-        "tags": [
-          "[API] - DIRECTORY (Private)"
-        ],
+        "tags": ["[API] - DIRECTORY (Private)"],
         "description": "Endpoint (Private)",
         "parameters": [
           {
@@ -731,9 +710,7 @@
     },
     "/api/private/directory/psychologists/:id/contact": {
       "post": {
-        "tags": [
-          "[API] - DIRECTORY (Private)"
-        ],
+        "tags": ["[API] - DIRECTORY (Private)"],
         "description": "Endpoint (Private)",
         "parameters": [
           {
@@ -960,9 +937,7 @@
     },
     "/api/private/directory/psychologists/:id/contact-click": {
       "post": {
-        "tags": [
-          "[API] - DIRECTORY (Private)"
-        ],
+        "tags": ["[API] - DIRECTORY (Private)"],
         "description": "Endpoint (Private)",
         "parameters": [
           {
@@ -1189,9 +1164,7 @@
     },
     "/api/private/directory/psychologists/:id/posts": {
       "get": {
-        "tags": [
-          "[API] - DIRECTORY (Private)"
-        ],
+        "tags": ["[API] - DIRECTORY (Private)"],
         "description": "Endpoint (Private)",
         "parameters": [
           {
@@ -1418,9 +1391,7 @@
     },
     "/api/private/directory/psychologists/:id/reviews": {
       "get": {
-        "tags": [
-          "[API] - DIRECTORY (Private)"
-        ],
+        "tags": ["[API] - DIRECTORY (Private)"],
         "description": "Endpoint (Private)",
         "parameters": [
           {
@@ -1647,9 +1618,7 @@
     },
     "/api/private/directory/psychologists/:id/search-impression": {
       "post": {
-        "tags": [
-          "[API] - DIRECTORY (Private)"
-        ],
+        "tags": ["[API] - DIRECTORY (Private)"],
         "description": "Endpoint (Private)",
         "parameters": [
           {
@@ -1876,9 +1845,7 @@
     },
     "/api/private/directory/psychologists/:id/video-watch": {
       "post": {
-        "tags": [
-          "[API] - DIRECTORY (Private)"
-        ],
+        "tags": ["[API] - DIRECTORY (Private)"],
         "description": "Endpoint (Private)",
         "parameters": [
           {
@@ -2105,9 +2072,7 @@
     },
     "/api/private/directory/psychologists/:id/view": {
       "post": {
-        "tags": [
-          "[API] - DIRECTORY (Private)"
-        ],
+        "tags": ["[API] - DIRECTORY (Private)"],
         "description": "Endpoint (Private)",
         "parameters": [
           {
@@ -2334,9 +2299,7 @@
     },
     "/api/private/notification_preference/show": {
       "get": {
-        "tags": [
-          "[API] - NOTIFICATION PREFERENCE (Private)"
-        ],
+        "tags": ["[API] - NOTIFICATION PREFERENCE (Private)"],
         "description": "Endpoint (Private)",
         "parameters": [],
         "responses": {
@@ -2362,9 +2325,7 @@
     },
     "/api/private/notification_preference/update": {
       "put": {
-        "tags": [
-          "[API] - NOTIFICATION PREFERENCE (Private)"
-        ],
+        "tags": ["[API] - NOTIFICATION PREFERENCE (Private)"],
         "description": "Endpoint (Private)",
         "parameters": [],
         "requestBody": {
@@ -2407,9 +2368,7 @@
     },
     "/api/private/notification_subscription/key": {
       "get": {
-        "tags": [
-          "[API] - NOTIFICATION SUBSCRIPTION (Private)"
-        ],
+        "tags": ["[API] - NOTIFICATION SUBSCRIPTION (Private)"],
         "description": "Endpoint (Private)",
         "parameters": [],
         "responses": {
@@ -2435,9 +2394,7 @@
     },
     "/api/private/notification_subscription/store": {
       "post": {
-        "tags": [
-          "[API] - NOTIFICATION SUBSCRIPTION (Private)"
-        ],
+        "tags": ["[API] - NOTIFICATION SUBSCRIPTION (Private)"],
         "description": "Endpoint (Private)",
         "parameters": [],
         "requestBody": {
@@ -2486,9 +2443,7 @@
     },
     "/api/private/notification/clean": {
       "post": {
-        "tags": [
-          "[API] - NOTIFICATION (Private)"
-        ],
+        "tags": ["[API] - NOTIFICATION (Private)"],
         "description": "Endpoint (Private)",
         "parameters": [],
         "responses": {
@@ -2514,9 +2469,7 @@
     },
     "/api/private/notification/click/:id/click": {
       "post": {
-        "tags": [
-          "[API] - NOTIFICATION (Private)"
-        ],
+        "tags": ["[API] - NOTIFICATION (Private)"],
         "description": "Endpoint (Private)",
         "parameters": [
           {
@@ -2553,9 +2506,7 @@
     },
     "/api/private/notification/index": {
       "get": {
-        "tags": [
-          "[API] - NOTIFICATION (Private)"
-        ],
+        "tags": ["[API] - NOTIFICATION (Private)"],
         "description": "Endpoint (Private)",
         "parameters": [
           {
@@ -2652,9 +2603,7 @@
     },
     "/api/private/notification/update/:id": {
       "put": {
-        "tags": [
-          "[API] - NOTIFICATION (Private)"
-        ],
+        "tags": ["[API] - NOTIFICATION (Private)"],
         "description": "Endpoint (Private)",
         "parameters": [
           {
@@ -2680,9 +2629,7 @@
                     "type": "string"
                   }
                 },
-                "required": [
-                  "read"
-                ],
+                "required": ["read"],
                 "type": "object"
               }
             }
@@ -2711,9 +2658,7 @@
     },
     "/api/private/patient/favorites": {
       "get": {
-        "tags": [
-          "[API] - PATIENT (Private)"
-        ],
+        "tags": ["[API] - PATIENT (Private)"],
         "description": "Endpoint (Private)",
         "parameters": [
           {
@@ -2830,9 +2775,7 @@
     },
     "/api/private/patient/favorites/:id": {
       "delete": {
-        "tags": [
-          "[API] - PATIENT (Private)"
-        ],
+        "tags": ["[API] - PATIENT (Private)"],
         "description": "Endpoint (Private)",
         "parameters": [
           {
@@ -2867,9 +2810,7 @@
         ]
       },
       "post": {
-        "tags": [
-          "[API] - PATIENT (Private)"
-        ],
+        "tags": ["[API] - PATIENT (Private)"],
         "description": "Endpoint (Private)",
         "parameters": [
           {
@@ -2906,9 +2847,7 @@
     },
     "/api/private/patient/follows": {
       "get": {
-        "tags": [
-          "[API] - PATIENT (Private)"
-        ],
+        "tags": ["[API] - PATIENT (Private)"],
         "description": "Endpoint (Private)",
         "parameters": [
           {
@@ -2955,9 +2894,7 @@
     },
     "/api/private/patient/follows/:id": {
       "delete": {
-        "tags": [
-          "[API] - PATIENT (Private)"
-        ],
+        "tags": ["[API] - PATIENT (Private)"],
         "description": "Endpoint (Private)",
         "parameters": [
           {
@@ -2992,9 +2929,7 @@
         ]
       },
       "post": {
-        "tags": [
-          "[API] - PATIENT (Private)"
-        ],
+        "tags": ["[API] - PATIENT (Private)"],
         "description": "Endpoint (Private)",
         "parameters": [
           {
@@ -3031,9 +2966,7 @@
     },
     "/api/private/patient/onboarding": {
       "put": {
-        "tags": [
-          "[API] - PATIENT (Private)"
-        ],
+        "tags": ["[API] - PATIENT (Private)"],
         "description": "Endpoint (Private)",
         "parameters": [],
         "requestBody": {
@@ -3100,9 +3033,7 @@
     },
     "/api/private/patient/profile": {
       "get": {
-        "tags": [
-          "[API] - PATIENT (Private)"
-        ],
+        "tags": ["[API] - PATIENT (Private)"],
         "description": "Endpoint (Private)",
         "parameters": [],
         "requestBody": {
@@ -3147,9 +3078,7 @@
                     "type": "string"
                   }
                 },
-                "required": [
-                  "name"
-                ],
+                "required": ["name"],
                 "type": "object"
               }
             }
@@ -3176,9 +3105,7 @@
         ]
       },
       "put": {
-        "tags": [
-          "[API] - PATIENT (Private)"
-        ],
+        "tags": ["[API] - PATIENT (Private)"],
         "description": "Endpoint (Private)",
         "parameters": [],
         "requestBody": {
@@ -3223,9 +3150,7 @@
                     "type": "string"
                   }
                 },
-                "required": [
-                  "name"
-                ],
+                "required": ["name"],
                 "type": "object"
               }
             }
@@ -3254,9 +3179,7 @@
     },
     "/api/private/patient/profile/avatar": {
       "delete": {
-        "tags": [
-          "[API] - PATIENT (Private)"
-        ],
+        "tags": ["[API] - PATIENT (Private)"],
         "description": "Endpoint (Private)",
         "parameters": [],
         "requestBody": {
@@ -3301,9 +3224,7 @@
                     "type": "string"
                   }
                 },
-                "required": [
-                  "name"
-                ],
+                "required": ["name"],
                 "type": "object"
               }
             }
@@ -3330,9 +3251,7 @@
         ]
       },
       "post": {
-        "tags": [
-          "[API] - PATIENT (Private)"
-        ],
+        "tags": ["[API] - PATIENT (Private)"],
         "description": "Endpoint (Private)",
         "parameters": [],
         "requestBody": {
@@ -3377,9 +3296,7 @@
                     "type": "string"
                   }
                 },
-                "required": [
-                  "name"
-                ],
+                "required": ["name"],
                 "type": "object"
               }
             }
@@ -3408,9 +3325,7 @@
     },
     "/api/private/patient/reviews": {
       "get": {
-        "tags": [
-          "[API] - PATIENT (Private)"
-        ],
+        "tags": ["[API] - PATIENT (Private)"],
         "description": "Endpoint (Private)",
         "parameters": [
           {
@@ -3455,9 +3370,7 @@
         ]
       },
       "post": {
-        "tags": [
-          "[API] - PATIENT (Private)"
-        ],
+        "tags": ["[API] - PATIENT (Private)"],
         "description": "Endpoint (Private)",
         "parameters": [],
         "requestBody": {
@@ -3484,11 +3397,7 @@
                     "type": "string"
                   }
                 },
-                "required": [
-                  "psychologist_id",
-                  "rating",
-                  "comment"
-                ],
+                "required": ["psychologist_id", "rating", "comment"],
                 "type": "object"
               }
             }
@@ -3517,9 +3426,7 @@
     },
     "/api/private/patient/reviews/eligibility/:id": {
       "get": {
-        "tags": [
-          "[API] - PATIENT (Private)"
-        ],
+        "tags": ["[API] - PATIENT (Private)"],
         "description": "Endpoint (Private)",
         "parameters": [
           {
@@ -3556,9 +3463,7 @@
     },
     "/api/private/psychologist/analytics": {
       "get": {
-        "tags": [
-          "[API] - PSYCHOLOGIST (Private)"
-        ],
+        "tags": ["[API] - PSYCHOLOGIST (Private)"],
         "description": "Endpoint (Private)",
         "parameters": [
           {
@@ -3615,9 +3520,7 @@
     },
     "/api/private/psychologist/cfp/confirm": {
       "post": {
-        "tags": [
-          "[API] - PSYCHOLOGIST (Private)"
-        ],
+        "tags": ["[API] - PSYCHOLOGIST (Private)"],
         "description": "Endpoint (Private)",
         "parameters": [],
         "requestBody": {
@@ -3638,10 +3541,7 @@
                     "type": "string"
                   }
                 },
-                "required": [
-                  "check_id",
-                  "result_key"
-                ],
+                "required": ["check_id", "result_key"],
                 "type": "object"
               }
             }
@@ -3670,9 +3570,7 @@
     },
     "/api/private/psychologist/cfp/search": {
       "post": {
-        "tags": [
-          "[API] - PSYCHOLOGIST (Private)"
-        ],
+        "tags": ["[API] - PSYCHOLOGIST (Private)"],
         "description": "Endpoint (Private)",
         "parameters": [],
         "requestBody": {
@@ -3733,9 +3631,7 @@
     },
     "/api/private/psychologist/free-profile": {
       "get": {
-        "tags": [
-          "[API] - PSYCHOLOGIST (Private)"
-        ],
+        "tags": ["[API] - PSYCHOLOGIST (Private)"],
         "description": "Endpoint (Private)",
         "parameters": [],
         "responses": {
@@ -3759,9 +3655,7 @@
         ]
       },
       "put": {
-        "tags": [
-          "[API] - PSYCHOLOGIST (Private)"
-        ],
+        "tags": ["[API] - PSYCHOLOGIST (Private)"],
         "description": "Endpoint (Private)",
         "parameters": [],
         "responses": {
@@ -3787,9 +3681,7 @@
     },
     "/api/private/psychologist/free-profile/avatar": {
       "delete": {
-        "tags": [
-          "[API] - PSYCHOLOGIST (Private)"
-        ],
+        "tags": ["[API] - PSYCHOLOGIST (Private)"],
         "description": "Endpoint (Private)",
         "parameters": [],
         "responses": {
@@ -3813,9 +3705,7 @@
         ]
       },
       "post": {
-        "tags": [
-          "[API] - PSYCHOLOGIST (Private)"
-        ],
+        "tags": ["[API] - PSYCHOLOGIST (Private)"],
         "description": "Endpoint (Private)",
         "parameters": [],
         "responses": {
@@ -3841,9 +3731,7 @@
     },
     "/api/private/psychologist/free-profile/cover-image": {
       "delete": {
-        "tags": [
-          "[API] - PSYCHOLOGIST (Private)"
-        ],
+        "tags": ["[API] - PSYCHOLOGIST (Private)"],
         "description": "Endpoint (Private)",
         "parameters": [],
         "responses": {
@@ -3867,9 +3755,7 @@
         ]
       },
       "post": {
-        "tags": [
-          "[API] - PSYCHOLOGIST (Private)"
-        ],
+        "tags": ["[API] - PSYCHOLOGIST (Private)"],
         "description": "Endpoint (Private)",
         "parameters": [],
         "responses": {
@@ -3895,9 +3781,7 @@
     },
     "/api/private/psychologist/free-profile/video": {
       "delete": {
-        "tags": [
-          "[API] - PSYCHOLOGIST (Private)"
-        ],
+        "tags": ["[API] - PSYCHOLOGIST (Private)"],
         "description": "Endpoint (Private)",
         "parameters": [],
         "responses": {
@@ -3921,9 +3805,7 @@
         ]
       },
       "post": {
-        "tags": [
-          "[API] - PSYCHOLOGIST (Private)"
-        ],
+        "tags": ["[API] - PSYCHOLOGIST (Private)"],
         "description": "Endpoint (Private)",
         "parameters": [],
         "responses": {
@@ -3949,9 +3831,7 @@
     },
     "/api/private/psychologist/free-profile/video/cover": {
       "post": {
-        "tags": [
-          "[API] - PSYCHOLOGIST (Private)"
-        ],
+        "tags": ["[API] - PSYCHOLOGIST (Private)"],
         "description": "Endpoint (Private)",
         "parameters": [],
         "responses": {
@@ -3977,9 +3857,7 @@
     },
     "/api/private/psychologist/reviews": {
       "get": {
-        "tags": [
-          "[API] - PSYCHOLOGIST (Private)"
-        ],
+        "tags": ["[API] - PSYCHOLOGIST (Private)"],
         "description": "Endpoint (Private)",
         "parameters": [
           {
@@ -4046,9 +3924,7 @@
     },
     "/api/private/psychologist/reviews/:id/response": {
       "post": {
-        "tags": [
-          "[API] - PSYCHOLOGIST (Private)"
-        ],
+        "tags": ["[API] - PSYCHOLOGIST (Private)"],
         "description": "Endpoint (Private)",
         "parameters": [
           {
@@ -4074,9 +3950,7 @@
                     "type": "string"
                   }
                 },
-                "required": [
-                  "response"
-                ],
+                "required": ["response"],
                 "type": "object"
               }
             }
@@ -4105,9 +3979,7 @@
     },
     "/api/private/psychologist/whatsapp-verification/confirm": {
       "post": {
-        "tags": [
-          "[API] - PSYCHOLOGIST (Private)"
-        ],
+        "tags": ["[API] - PSYCHOLOGIST (Private)"],
         "description": "Endpoint (Private)",
         "parameters": [],
         "requestBody": {
@@ -4128,10 +4000,7 @@
                     "type": "string"
                   }
                 },
-                "required": [
-                  "verification_id",
-                  "code"
-                ],
+                "required": ["verification_id", "code"],
                 "type": "object"
               }
             }
@@ -4160,9 +4029,7 @@
     },
     "/api/private/psychologist/whatsapp-verification/request": {
       "post": {
-        "tags": [
-          "[API] - PSYCHOLOGIST (Private)"
-        ],
+        "tags": ["[API] - PSYCHOLOGIST (Private)"],
         "description": "Endpoint (Private)",
         "parameters": [],
         "requestBody": {
@@ -4177,9 +4044,7 @@
                     "type": "string"
                   }
                 },
-                "required": [
-                  "phone"
-                ],
+                "required": ["phone"],
                 "type": "object"
               }
             }
@@ -4208,9 +4073,7 @@
     },
     "/api/public/analytics/action": {
       "post": {
-        "tags": [
-          "[API] - ANALYTICS (Public)"
-        ],
+        "tags": ["[API] - ANALYTICS (Public)"],
         "description": "Endpoint (Public)",
         "parameters": [],
         "requestBody": {
@@ -4273,11 +4136,7 @@
                     "type": "string"
                   }
                 },
-                "required": [
-                  "visitor_id",
-                  "session_id",
-                  "action_type"
-                ],
+                "required": ["visitor_id", "session_id", "action_type"],
                 "type": "object"
               }
             }
@@ -4303,9 +4162,7 @@
     },
     "/api/public/analytics/content-video-watch": {
       "post": {
-        "tags": [
-          "[API] - ANALYTICS (Public)"
-        ],
+        "tags": ["[API] - ANALYTICS (Public)"],
         "description": "Endpoint (Public)",
         "parameters": [],
         "requestBody": {
@@ -4380,12 +4237,7 @@
                     "type": "string"
                   }
                 },
-                "required": [
-                  "visitor_id",
-                  "session_id",
-                  "target_type",
-                  "target_id"
-                ],
+                "required": ["visitor_id", "session_id", "target_type", "target_id"],
                 "type": "object"
               }
             }
@@ -4411,9 +4263,7 @@
     },
     "/api/public/analytics/location-capture": {
       "post": {
-        "tags": [
-          "[API] - ANALYTICS (Public)"
-        ],
+        "tags": ["[API] - ANALYTICS (Public)"],
         "description": "Endpoint (Public)",
         "parameters": [],
         "requestBody": {
@@ -4464,9 +4314,7 @@
                     "type": "string"
                   }
                 },
-                "required": [
-                  "visitor_id"
-                ],
+                "required": ["visitor_id"],
                 "type": "object"
               }
             }
@@ -4492,9 +4340,7 @@
     },
     "/api/public/analytics/page-view": {
       "post": {
-        "tags": [
-          "[API] - ANALYTICS (Public)"
-        ],
+        "tags": ["[API] - ANALYTICS (Public)"],
         "description": "Endpoint (Public)",
         "parameters": [],
         "requestBody": {
@@ -4575,11 +4421,7 @@
                     "type": "string"
                   }
                 },
-                "required": [
-                  "visitor_id",
-                  "session_id",
-                  "path"
-                ],
+                "required": ["visitor_id", "session_id", "path"],
                 "type": "object"
               }
             }
@@ -4605,9 +4447,7 @@
     },
     "/api/public/analytics/page-view/:id/duration": {
       "post": {
-        "tags": [
-          "[API] - ANALYTICS (Public)"
-        ],
+        "tags": ["[API] - ANALYTICS (Public)"],
         "description": "Endpoint (Public)",
         "parameters": [
           {
@@ -4651,11 +4491,7 @@
                     "type": "string"
                   }
                 },
-                "required": [
-                  "visitor_id",
-                  "session_id",
-                  "duration_seconds"
-                ],
+                "required": ["visitor_id", "session_id", "duration_seconds"],
                 "type": "object"
               }
             }
@@ -4681,9 +4517,7 @@
     },
     "/api/public/auth/login": {
       "post": {
-        "tags": [
-          "[API] - AUTH (Public)"
-        ],
+        "tags": ["[API] - AUTH (Public)"],
         "description": "Endpoint (Public)",
         "parameters": [],
         "requestBody": {
@@ -4704,10 +4538,7 @@
                     "type": "string"
                   }
                 },
-                "required": [
-                  "email",
-                  "password"
-                ],
+                "required": ["email", "password"],
                 "type": "object"
               }
             }
@@ -4733,9 +4564,7 @@
     },
     "/api/public/auth/recovery": {
       "post": {
-        "tags": [
-          "[API] - AUTH (Public)"
-        ],
+        "tags": ["[API] - AUTH (Public)"],
         "description": "Endpoint (Public)",
         "parameters": [],
         "requestBody": {
@@ -4750,9 +4579,7 @@
                     "type": "string"
                   }
                 },
-                "required": [
-                  "email"
-                ],
+                "required": ["email"],
                 "type": "object"
               }
             }
@@ -4778,9 +4605,7 @@
     },
     "/api/public/auth/reset/:code": {
       "post": {
-        "tags": [
-          "[API] - AUTH (Public)"
-        ],
+        "tags": ["[API] - AUTH (Public)"],
         "description": "Endpoint (Public)",
         "parameters": [
           {
@@ -4812,10 +4637,7 @@
                     "type": "string"
                   }
                 },
-                "required": [
-                  "password",
-                  "password_confirm"
-                ],
+                "required": ["password", "password_confirm"],
                 "type": "object"
               }
             }
@@ -4841,9 +4663,7 @@
     },
     "/api/public/billing/webhook": {
       "post": {
-        "tags": [
-          "[API] - BILLING (Public)"
-        ],
+        "tags": ["[API] - BILLING (Public)"],
         "description": "Endpoint (Public)",
         "parameters": [],
         "responses": {
@@ -4866,9 +4686,7 @@
     },
     "/api/public/google/callback": {
       "get": {
-        "tags": [
-          "[API] - GOOGLE (Public)"
-        ],
+        "tags": ["[API] - GOOGLE (Public)"],
         "description": "Endpoint (Public)",
         "parameters": [],
         "responses": {
@@ -4891,9 +4709,7 @@
     },
     "/api/public/google/link": {
       "delete": {
-        "tags": [
-          "[API] - GOOGLE (Public)"
-        ],
+        "tags": ["[API] - GOOGLE (Public)"],
         "description": "Endpoint (Public)",
         "parameters": [],
         "responses": {
@@ -4916,9 +4732,7 @@
     },
     "/api/public/google/link/intent": {
       "post": {
-        "tags": [
-          "[API] - GOOGLE (Public)"
-        ],
+        "tags": ["[API] - GOOGLE (Public)"],
         "description": "Endpoint (Public)",
         "parameters": [],
         "responses": {
@@ -4941,9 +4755,7 @@
     },
     "/api/public/google/login/:id": {
       "get": {
-        "tags": [
-          "[API] - GOOGLE (Public)"
-        ],
+        "tags": ["[API] - GOOGLE (Public)"],
         "description": "Endpoint (Public)",
         "parameters": [],
         "responses": {
@@ -4966,9 +4778,7 @@
     },
     "/api/public/google/me": {
       "get": {
-        "tags": [
-          "[API] - GOOGLE (Public)"
-        ],
+        "tags": ["[API] - GOOGLE (Public)"],
         "description": "Endpoint (Public)",
         "parameters": [],
         "responses": {
@@ -4991,9 +4801,7 @@
     },
     "/api/public/user/store": {
       "post": {
-        "tags": [
-          "[API] - USER (Public)"
-        ],
+        "tags": ["[API] - USER (Public)"],
         "description": "Endpoint (Public)",
         "parameters": [
           {
@@ -5028,6 +4836,18 @@
                 "properties": {
                   "active": {
                     "description": "Parâmetro active do body.",
+                    "nullable": false,
+                    "required": false,
+                    "type": "string"
+                  },
+                  "analytics_session_id": {
+                    "description": "Parâmetro analytics_session_id do body.",
+                    "nullable": false,
+                    "required": false,
+                    "type": "string"
+                  },
+                  "analytics_visitor_id": {
+                    "description": "Parâmetro analytics_visitor_id do body.",
                     "nullable": false,
                     "required": false,
                     "type": "string"
@@ -5087,12 +4907,7 @@
                     "type": "string"
                   }
                 },
-                "required": [
-                  "name",
-                  "email",
-                  "password",
-                  "password_confirm"
-                ],
+                "required": ["name", "email", "password", "password_confirm"],
                 "type": "object"
               }
             }

@@ -1,5 +1,6 @@
 import type { Resolve } from "@/helpers/return";
 import { error, msg } from "@/helpers/translate";
+import { extractPatientSignupAnalyticsVisitorId } from "@/modules/api/public/analytics/helpers/signup-identity";
 import type { AdminOperatingSystemType } from "@/utils/admin-operating-system";
 import {
   ADMIN_OPERATING_SYSTEM_LABELS,
@@ -29,6 +30,7 @@ import {
   type AdminPatientPageViewRecord,
   type AdminPatientPlatformSessionRecord,
   type AdminPatientRecentRecord,
+  type AdminPatientSignupAnalyticsIdentityRecord,
   type AdminPatientSnapshotRecord,
   AdminPatientsDashboardRepository,
 } from "../repositories/AdminPatientsDashboardRepository";
@@ -952,6 +954,7 @@ const buildPatientVisitorIds = (params: {
   linkedPageViews: AdminPatientAnonymousConversionPageViewRecord[];
   linkedSessions: AdminPatientAnonymousConversionSessionRecord[];
   patientIds: Set<string>;
+  signupIdentities: AdminPatientSignupAnalyticsIdentityRecord[];
 }) => {
   const visitorIdsByPatientId = new Map<string, Set<string>>();
   const addVisitorId = (patientId: string | null, visitorId: string) => {
@@ -968,6 +971,11 @@ const buildPatientVisitorIds = (params: {
 
   for (const session of params.linkedSessions) {
     addVisitorId(session.user_id, session.visitor_id);
+  }
+
+  for (const identity of params.signupIdentities) {
+    const visitorId = extractPatientSignupAnalyticsVisitorId(identity.data);
+    if (visitorId) addVisitorId(identity.user_id, visitorId);
   }
 
   return visitorIdsByPatientId;
@@ -998,12 +1006,14 @@ const summarizeAnonymousConversion = (params: {
   patients: AdminPatientSnapshotRecord[];
   period: AdminPatientsDashboardPeriod;
   sessions: AdminPatientAnonymousConversionSessionRecord[];
+  signupIdentities: AdminPatientSignupAnalyticsIdentityRecord[];
 }): AdminPatientsDashboardAnonymousConversion => {
   const patientIds = new Set(params.patients.map((patient) => patient.id));
   const visitorIdsByPatientId = buildPatientVisitorIds({
     linkedPageViews: params.linkedPageViews,
     linkedSessions: params.linkedSessions,
     patientIds,
+    signupIdentities: params.signupIdentities,
   });
   const pageViewsByVisitorId = new Map<string, AdminPatientAnonymousConversionPageViewRecord[]>();
   const sessionsByVisitorId = new Map<string, AdminPatientAnonymousConversionSessionRecord[]>();
@@ -1131,7 +1141,7 @@ const summarizeAnonymousConversion = (params: {
     cohort_from: params.period.from,
     cohort_to: params.period.to,
     coverage_note:
-      "Coorte de pacientes cadastrados no periodo; leitura de tras para frente pelo mesmo visitor_id para encontrar uso anonimo anterior ao cadastro. Psicologos e visitantes que nao viraram paciente nao entram neste bloco.",
+      "Coorte de pacientes cadastrados no periodo; leitura de tras para frente pela ponte visitor_id/session_id salva no cadastro do paciente e por eventos vinculados ao mesmo visitor_id. Psicologos e visitantes que nao viraram paciente nao entram neste bloco.",
     first_touch_pages: [...firstTouchGroups.entries()]
       .map(([id, group]) => ({
         average_days: averageNumber(group.historyDays),
@@ -1165,7 +1175,7 @@ const summarizeAnonymousConversion = (params: {
     patients_with_anonymous_history_count: patientsWithHistoryCount,
     patients_without_anonymous_history_count: patientsWithoutHistoryCount,
     registered_patients_count: registeredPatientsCount,
-    source: "user.createdAt+page_view_event+visitor_session",
+    source: "user.createdAt+user_background+page_view_event+visitor_session",
     unavailable_reason:
       registeredPatientsCount === 0
         ? "Sem pacientes cadastrados no periodo selecionado."
@@ -1537,6 +1547,7 @@ export const buildPatientsDashboard = async (
     patientPlatformSessions,
     anonymousConversionLinkedPageViews,
     anonymousConversionLinkedSessions,
+    anonymousConversionSignupIdentities,
   ] = await Promise.all([
     repository.listLocations(current),
     repository.listPatientPageViews(current),
@@ -1544,12 +1555,14 @@ export const buildPatientsDashboard = async (
     repository.listPatientPlatformSessions(current),
     repository.listAnonymousConversionLinkedPageViews(currentPeriodPatientIds),
     repository.listAnonymousConversionLinkedSessions(currentPeriodPatientIds),
+    repository.listAnonymousConversionSignupIdentities(currentPeriodPatientIds),
   ]);
   const anonymousConversionVisitorIds = collectAnonymousConversionVisitorIds(
     buildPatientVisitorIds({
       linkedPageViews: anonymousConversionLinkedPageViews,
       linkedSessions: anonymousConversionLinkedSessions,
       patientIds: new Set(currentPeriodPatientIds),
+      signupIdentities: anonymousConversionSignupIdentities,
     }),
   );
   const anonymousConversionMaxSignupDate = latestPatientSignupDate(currentPeriodPatients);
@@ -1591,6 +1604,7 @@ export const buildPatientsDashboard = async (
     patients: currentPeriodPatients,
     period,
     sessions: anonymousConversionSessions,
+    signupIdentities: anonymousConversionSignupIdentities,
   });
   const intentClassification = buildPatientIntentClassification(currentPatients, intentSignals);
   const intentFilters = buildPatientIntentFilters({
@@ -1649,7 +1663,7 @@ export const buildPatientsDashboard = async (
       "Uso da plataforma mede somente pageviews autenticados e eventos first-party de instalação PWA de pacientes no período selecionado.",
       "Devices dos pacientes usa somente visitor_session autenticada vinculada a user.role=paciente no período selecionado.",
       "Sistema operacional dos pacientes usa somente visitor_session autenticada com os normalizado; não armazena user-agent bruto.",
-      "Trilha pre-cadastro parte dos pacientes cadastrados no periodo e busca, de tras para frente, uso anonimo anterior pelo mesmo visitor_id; psicologos e visitantes que nao viraram paciente ficam fora deste bloco.",
+      "Trilha pre-cadastro parte dos pacientes cadastrados no periodo e busca, de tras para frente, uso anonimo anterior pela ponte visitor_id/session_id salva no cadastro do paciente e pelos eventos vinculados ao mesmo visitor_id; psicologos e visitantes que nao viraram paciente ficam fora deste bloco.",
       "Gênero e forma de cadastro consideram somente pacientes cadastrados no período selecionado; em Todo o período incluem a base completa.",
       "Tempo médio do paciente usa pageviews autenticados first-party e ignora períodos em que o app fica oculto/minimizado quando o navegador envia eventos de visibilidade.",
       "Localização usa apenas capturas agregadas e coarse de visitor_location no período selecionado; cidades com baixa frequência são agrupadas, e coordenadas, IP e endereço não são retornados.",

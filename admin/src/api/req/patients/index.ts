@@ -513,7 +513,7 @@ export type PatientsDashboardAnonymousConversion = {
   patients_with_anonymous_history_count: number;
   patients_without_anonymous_history_count: number;
   registered_patients_count: number;
-  source: "user.createdAt+page_view_event+visitor_session";
+  source: "user.createdAt+user_background+page_view_event+visitor_session";
   unavailable_reason: string | null;
 };
 

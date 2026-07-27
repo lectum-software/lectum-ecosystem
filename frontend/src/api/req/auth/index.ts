@@ -24,6 +24,8 @@ export type RegisterPatientPayload = {
   role: "paciente";
   terms_accepted: true;
   terms_version: string;
+  analytics_visitor_id?: string;
+  analytics_session_id?: string;
 };
 
 export type RegisterPsychologistPayload = {

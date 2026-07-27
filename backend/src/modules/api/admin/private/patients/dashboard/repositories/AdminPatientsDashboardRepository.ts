@@ -1,5 +1,6 @@
 import type { Prisma } from "@/external/generated/prisma/client";
 import prisma from "@/infra/database/prisma";
+import { PATIENT_SIGNUP_ANALYTICS_IDENTITY_TYPE } from "@/modules/api/public/analytics/helpers/signup-identity";
 import type { AdminPatientsDashboardDateRange } from "../DTOs/IAdminPatientsDashboardDTO";
 
 const rangeWhere = (range: AdminPatientsDashboardDateRange) => ({
@@ -119,6 +120,12 @@ const patientAnonymousConversionSessionSelect = {
   },
   visitor_id: true,
 } satisfies Prisma.visitor_sessionSelect;
+
+const patientSignupAnalyticsIdentitySelect = {
+  createdAt: true,
+  data: true,
+  user_id: true,
+} satisfies Prisma.user_backgroundSelect;
 
 const patientIntentProfileViewSelect = {
   createdAt: true,
@@ -315,6 +322,10 @@ export type AdminPatientAnonymousConversionSessionRecord = Prisma.visitor_sessio
   select: typeof patientAnonymousConversionSessionSelect;
 }>;
 
+export type AdminPatientSignupAnalyticsIdentityRecord = Prisma.user_backgroundGetPayload<{
+  select: typeof patientSignupAnalyticsIdentitySelect;
+}>;
+
 export type AdminPatientIntentProfileViewRecord = Prisma.profile_view_eventGetPayload<{
   select: typeof patientIntentProfileViewSelect;
 }>;
@@ -484,6 +495,30 @@ export class AdminPatientsDashboardRepository {
       select: patientAnonymousConversionSessionSelect,
       where: {
         deleted: false,
+        user_id: {
+          in: patientIds,
+        },
+        user: {
+          deleted: false,
+          role: "paciente",
+        },
+      },
+    });
+  }
+
+  async listAnonymousConversionSignupIdentities(
+    patientIds: string[],
+  ): Promise<AdminPatientSignupAnalyticsIdentityRecord[]> {
+    if (patientIds.length === 0) return [];
+
+    return prisma.user_background.findMany({
+      orderBy: {
+        createdAt: "asc",
+      },
+      select: patientSignupAnalyticsIdentitySelect,
+      where: {
+        deleted: false,
+        type: PATIENT_SIGNUP_ANALYTICS_IDENTITY_TYPE,
         user_id: {
           in: patientIds,
         },

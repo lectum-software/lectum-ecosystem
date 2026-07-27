@@ -3,6 +3,11 @@ import type { Prisma } from "@/external/generated/prisma/client";
 import prisma, { type ORM } from "@/infra/database/prisma";
 //Objects
 import type { user } from "@/interfaces/objects";
+import {
+  buildPatientSignupAnalyticsIdentityData,
+  PATIENT_SIGNUP_ANALYTICS_IDENTITY_TYPE,
+  resolveSignupAnalyticsIdentity,
+} from "@/modules/api/public/analytics/helpers/signup-identity";
 
 //Utils
 import { log } from "@/utils/logs";
@@ -42,9 +47,15 @@ export class StoreRepository implements IStoreRepository {
         professional_last_name,
         terms_accepted,
         terms_version,
+        analytics_session_id,
+        analytics_visitor_id,
         ...userData
       } = props.b;
       const role = userData.role || "paciente";
+      const signupAnalyticsIdentity = resolveSignupAnalyticsIdentity({
+        analytics_session_id,
+        analytics_visitor_id,
+      });
 
       const item = await tx.user.create({
         data: {
@@ -70,6 +81,20 @@ export class StoreRepository implements IStoreRepository {
             professional_last_name,
             crp_status: "pendente",
             published: false,
+          },
+        });
+      }
+
+      if (role === "paciente" && signupAnalyticsIdentity) {
+        await tx.user_background.create({
+          data: {
+            user_id: item.id,
+            type: PATIENT_SIGNUP_ANALYTICS_IDENTITY_TYPE,
+            device_id: props.device_id,
+            data: buildPatientSignupAnalyticsIdentityData({
+              identity: signupAnalyticsIdentity,
+              source: "patient_registration",
+            }),
           },
         });
       }

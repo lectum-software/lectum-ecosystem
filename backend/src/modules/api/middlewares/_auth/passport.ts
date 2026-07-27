@@ -99,6 +99,8 @@ passport.use(
         let role: UserRole | undefined;
         let termsAccepted = false;
         let termsVersion: string | undefined;
+        let analyticsVisitorId: string | undefined;
+        let analyticsSessionId: string | undefined;
 
         try {
           const stateObj = JSON.parse(device_id);
@@ -110,6 +112,14 @@ passport.use(
             termsVersion =
               typeof stateObj.query?.terms_version === "string"
                 ? stateObj.query.terms_version
+                : undefined;
+            analyticsVisitorId =
+              typeof stateObj.query?.analytics_visitor_id === "string"
+                ? stateObj.query.analytics_visitor_id
+                : undefined;
+            analyticsSessionId =
+              typeof stateObj.query?.analytics_session_id === "string"
+                ? stateObj.query.analytics_session_id
                 : undefined;
             intent = typeof stateObj.query?.intent === "string" ? stateObj.query.intent : undefined;
             linkToken =
@@ -398,6 +408,8 @@ passport.use(
               role,
               terms_accepted: termsAccepted,
               terms_version: termsVersion,
+              analytics_visitor_id: analyticsVisitorId,
+              analytics_session_id: analyticsSessionId,
             },
           });
         } else {

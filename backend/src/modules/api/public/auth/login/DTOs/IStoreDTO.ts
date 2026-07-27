@@ -9,5 +9,7 @@ export interface IStoreDTO {
     role?: "paciente" | "psicologo";
     terms_accepted?: boolean;
     terms_version?: string;
+    analytics_visitor_id?: string;
+    analytics_session_id?: string;
   };
 }

@@ -88,6 +88,20 @@ export const schema: IValidatorRequest = {
       coerse: "string",
       optional: true,
     },
+    {
+      key: "analytics_visitor_id",
+      method: "string",
+      coerse: "string",
+      optional: true,
+      max: 160,
+    },
+    {
+      key: "analytics_session_id",
+      method: "string",
+      coerse: "string",
+      optional: true,
+      max: 160,
+    },
   ],
   relations: {
     query: [],
