@@ -734,3 +734,19 @@ Frontend esperado:
 - `pnpm check`
 - Browser local/headless em `http://localhost:3002/pacientes` validou desktop 1365px e mobile 390px: **Android 75% / iOS 25%** e **iPadOS 100%** ficaram com `white-space: nowrap`, uma unica linha (`Range.getClientRects() = 1`) e sem overflow horizontal. A rota `/psicologos` tambem carregou sem overflow; a base local nao retornou sublabels de sistemas para esse card.
 - Admin temporario de validacao `codex-device-nowrap-*` foi criado apenas para sessao autenticada de browser e removido ao final.
+
+## Ajuste pos-feedback 2026-07-26 - Label de genero sem quebra de palavra
+
+- Pedido do usuario: no grafico **Genero**, evitar que **Nao informado** quebre a palavra deixando a letra final isolada.
+- A legenda do donut de genero em `/pacientes` passou a aplicar `whitespace-nowrap` e `break-normal` somente ao item de id `nao_informado`, preservando o comportamento dos demais labels e os dados reais retornados pelo backend.
+- Nao houve alteracao de backend, contrato HTTP, Prisma, migration, package novo, mock, seed, endpoint ou regra de calculo.
+- Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente; a referencia auditavel continua sendo `_product/proto/admin/Pacientes/Pacientes - Dashboard.png`, complementada pelo screenshot enviado pelo usuario em 2026-07-26.
+
+### Validacao complementar executada
+
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/pacientes/client.tsx"`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check` foi tentado, mas falhou por alteracoes fora do escopo ja presentes em `backend/src/modules/api/admin/private/traffic/summary/use-cases/services.ts` (imports nao usados/organizacao Biome).
+- Browser local/headless em `http://localhost:3002/pacientes` validou desktop 1365px e mobile 390px: o span visual de **Nao informado** ficou com `white-space: nowrap`, `word-break: normal`, uma unica linha (`Range.getClientRects() = 1`) e sem overflow horizontal.
+- Admins temporarios de validacao `codex-device-nowrap-*` foram removidos ao final.

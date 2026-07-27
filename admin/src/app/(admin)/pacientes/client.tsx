@@ -1284,7 +1284,14 @@ const DonutChart = ({
                   style={{ backgroundColor: item.color }}
                 />
                 <span className="min-w-0">
-                  <span className="block whitespace-normal break-words">{item.label}</span>
+                  <span
+                    className={cn(
+                      "block whitespace-normal break-words",
+                      item.id === "nao_informado" && "whitespace-nowrap break-normal",
+                    )}
+                  >
+                    {item.label}
+                  </span>
                   {item.sublabel ? (
                     <span className="mt-1 block whitespace-nowrap text-xs font-semibold leading-5 text-subtle">
                       {item.sublabel}
