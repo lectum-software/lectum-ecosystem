@@ -12,6 +12,7 @@ import {
   ShieldCheck,
   Smartphone,
   TrendingDown,
+  TrendingUp,
   UserCheck,
   UserPlus,
   UsersRound,
@@ -48,6 +49,7 @@ type TractionCategoryItem = AdminPsychologistsDashboard["traction"]["categories"
 type PlanSegmentFilter = PsychologistsDashboardPlanSegment;
 type SignupMethodItem = AdminPsychologistsDashboard["signup_method"]["items"][number];
 type SupplyDemandSortKey = "psychologists" | "searches" | "searches_per_psychologist";
+type ConversionJourney = "registration" | "subscription";
 
 const PLAN_SEGMENT_FILTER_OPTIONS: { id: PlanSegmentFilter; label: string }[] = [
   { id: "all", label: "Todos" },
@@ -60,6 +62,11 @@ const SUPPLY_DEMAND_SORT_OPTIONS: { id: SupplyDemandSortKey; label: string }[] =
   { id: "searches", label: "Mais buscas" },
   { id: "psychologists", label: "Mais psicólogos" },
   { id: "searches_per_psychologist", label: "Mais buscas por psicólogo" },
+];
+
+const CONVERSION_JOURNEY_OPTIONS: { id: ConversionJourney; label: string }[] = [
+  { id: "subscription", label: "Conversão do cadastro até assinatura" },
+  { id: "registration", label: "Conversão até o cadastro" },
 ];
 
 const toOneDecimal = (value: number) => Math.round(value * 10) / 10;
@@ -660,6 +667,38 @@ const PlanSegmentSelect = ({
   </label>
 );
 
+const ConversionJourneySelect = ({
+  id,
+  onChange,
+  value,
+}: {
+  id: string;
+  onChange: (value: ConversionJourney) => void;
+  value: ConversionJourney;
+}) => (
+  <label className="block" htmlFor={id}>
+    <span className="sr-only">Selecionar trilha de conversão</span>
+    <span className="relative block">
+      <select
+        className="h-10 w-full min-w-[14rem] appearance-none rounded-control border border-border bg-surface py-0 pl-3 pr-9 text-sm font-semibold text-foreground shadow-control outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+        id={id}
+        onChange={(event) => onChange(event.target.value as ConversionJourney)}
+        value={value}
+      >
+        {CONVERSION_JOURNEY_OPTIONS.map((option) => (
+          <option key={option.id} value={option.id}>
+            {option.label}
+          </option>
+        ))}
+      </select>
+      <ChevronDown
+        aria-hidden
+        className="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground"
+      />
+    </span>
+  </label>
+);
+
 const getPlanSegmentSummary = (summary: AdminPsychologistsDashboard, segment: PlanSegmentFilter) =>
   summary.plan_segments?.[segment] ?? {
     device_usage: summary.device_usage,
@@ -1138,6 +1177,8 @@ const SignupMethodPieChart = ({
 };
 const ConversionAndUsageBlocks = ({ summary }: { summary: AdminPsychologistsDashboard }) => {
   const conversion = summary.conversion;
+  const preSignupConversion = summary.pre_signup_conversion;
+  const [conversionJourney, setConversionJourney] = useState<ConversionJourney>("subscription");
   const [signupMethodPlanSegment, setSignupMethodPlanSegment] = useState<PlanSegmentFilter>("all");
   const [deviceUsagePlanSegment, setDeviceUsagePlanSegment] = useState<PlanSegmentFilter>("all");
   const [platformUsagePlanSegment, setPlatformUsagePlanSegment] =
@@ -1147,98 +1188,235 @@ const ConversionAndUsageBlocks = ({ summary }: { summary: AdminPsychologistsDash
   const platformUsageSummary = getPlanSegmentSummary(summary, platformUsagePlanSegment);
   const platformUsage = platformUsageSummary.platform_usage;
   const selectedPeriodLabel = formatSelectedPeriod(summary.period);
+  const selectedConversionJourney =
+    CONVERSION_JOURNEY_OPTIONS.find((option) => option.id === conversionJourney) ??
+    CONVERSION_JOURNEY_OPTIONS[0] ??
+    ({ id: "subscription", label: "Conversão do cadastro até assinatura" } satisfies {
+      id: ConversionJourney;
+      label: string;
+    });
 
   return (
     <section className="grid gap-5">
       <CardShell className="p-5">
-        <PanelTitle
-          description={selectedPeriodLabel}
-          icon={TrendingDown}
-          title="Conversão do cadastro até assinatura"
-        />
-        <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          {[
-            {
-              label: "Cadastros",
-              value: numberFormatter.format(conversion.registered_count),
-            },
-            {
-              label: "Assinaram",
-              value: numberFormatter.format(conversion.converted_paid_count),
-            },
-            {
-              label: "Taxa paga",
-              value: formatNullablePercentage(conversion.conversion_rate),
-            },
-            { label: "Média", value: formatDaysMetric(conversion.average_days) },
-            { label: "Mediana", value: formatDaysMetric(conversion.median_days) },
-            {
-              description: "75% assinam até esse prazo",
-              label: "P75",
-              value: formatDaysMetric(conversion.p75_days),
-            },
-            {
-              description: "90% assinam até esse prazo",
-              label: "P90",
-              value: formatDaysMetric(conversion.p90_days),
-            },
-          ].map(({ description, label, value }) => (
-            <div className="rounded-2xl bg-surface-muted p-3" key={label}>
-              <p className="text-xs font-black text-muted">{label}</p>
-              <p className="mt-1 text-xl font-black text-foreground">{value}</p>
-              {description ? (
-                <p className="mt-1 text-[0.68rem] font-bold leading-snug text-subtle">
-                  {description}
-                </p>
-              ) : null}
-            </div>
-          ))}
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <PanelTitle
+            description={selectedPeriodLabel}
+            icon={conversionJourney === "registration" ? TrendingUp : TrendingDown}
+            title={selectedConversionJourney.label}
+          />
+          <ConversionJourneySelect
+            id="psychologist-conversion-journey"
+            onChange={setConversionJourney}
+            value={conversionJourney}
+          />
         </div>
-        <div className="mt-5 grid gap-3 md:grid-cols-2">
-          <div className="rounded-2xl border border-border/70 p-4">
-            <h3 className="text-sm font-black text-foreground">Distribuição por prazo</h3>
-            <div className="mt-4 space-y-3">
-              {conversion.buckets.map((bucket) => (
-                <MiniBar
-                  key={bucket.id}
-                  label={bucket.label}
-                  percentage={bucket.percentage}
-                  value={`${numberFormatter.format(bucket.count)} · ${formatPercentageValue(
-                    bucket.percentage,
-                  )}`}
-                />
-              ))}
-            </div>
-          </div>
-          <div className="rounded-2xl border border-border/70 p-4">
-            <h3 className="text-sm font-black text-foreground">Conversão por modo de cadastro</h3>
-            <div className="mt-4 space-y-4">
-              {summary.conversion_by_signup_method.map((item) => (
-                <div className="rounded-2xl bg-surface-muted p-3" key={item.id}>
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <p className="text-sm font-black text-foreground">{item.label}</p>
-                      <p className="text-xs font-bold text-muted">
-                        {numberFormatter.format(item.converted_paid_count)} de{" "}
-                        {numberFormatter.format(item.registered_count)} assinaram
-                      </p>
-                    </div>
-                    <span className="text-sm font-black text-primary">
-                      {formatNullablePercentage(item.conversion_rate)}
-                    </span>
-                  </div>
-                  <p className="mt-2 text-xs font-bold text-muted">
-                    Mediana: {formatDaysMetric(item.median_days)} · Média:{" "}
-                    {formatDaysMetric(item.average_days)}
-                  </p>
-                  {!item.sample_sufficient && item.unavailable_reason ? (
-                    <p className="mt-2 text-xs font-bold text-subtle">{item.unavailable_reason}</p>
+
+        {conversionJourney === "subscription" ? (
+          <>
+            <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              {[
+                {
+                  label: "Cadastros",
+                  value: numberFormatter.format(conversion.registered_count),
+                },
+                {
+                  label: "Assinaram",
+                  value: numberFormatter.format(conversion.converted_paid_count),
+                },
+                {
+                  label: "Taxa paga",
+                  value: formatNullablePercentage(conversion.conversion_rate),
+                },
+                { label: "Média", value: formatDaysMetric(conversion.average_days) },
+                { label: "Mediana", value: formatDaysMetric(conversion.median_days) },
+                {
+                  description: "75% assinam até esse prazo",
+                  label: "P75",
+                  value: formatDaysMetric(conversion.p75_days),
+                },
+                {
+                  description: "90% assinam até esse prazo",
+                  label: "P90",
+                  value: formatDaysMetric(conversion.p90_days),
+                },
+              ].map(({ description, label, value }) => (
+                <div className="rounded-2xl bg-surface-muted p-3" key={label}>
+                  <p className="text-xs font-black text-muted">{label}</p>
+                  <p className="mt-1 text-xl font-black text-foreground">{value}</p>
+                  {description ? (
+                    <p className="mt-1 text-[0.68rem] font-bold leading-snug text-subtle">
+                      {description}
+                    </p>
                   ) : null}
                 </div>
               ))}
             </div>
-          </div>
-        </div>
+            <div className="mt-5 grid gap-3 md:grid-cols-2">
+              <div className="rounded-2xl border border-border/70 p-4">
+                <h3 className="text-sm font-black text-foreground">Distribuição por prazo</h3>
+                <div className="mt-4 space-y-3">
+                  {conversion.buckets.map((bucket) => (
+                    <MiniBar
+                      key={bucket.id}
+                      label={bucket.label}
+                      percentage={bucket.percentage}
+                      value={`${numberFormatter.format(bucket.count)} · ${formatPercentageValue(
+                        bucket.percentage,
+                      )}`}
+                    />
+                  ))}
+                </div>
+              </div>
+              <div className="rounded-2xl border border-border/70 p-4">
+                <h3 className="text-sm font-black text-foreground">
+                  Conversão por modo de cadastro
+                </h3>
+                <div className="mt-4 space-y-4">
+                  {summary.conversion_by_signup_method.map((item) => (
+                    <div className="rounded-2xl bg-surface-muted p-3" key={item.id}>
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <p className="text-sm font-black text-foreground">{item.label}</p>
+                          <p className="text-xs font-bold text-muted">
+                            {numberFormatter.format(item.converted_paid_count)} de{" "}
+                            {numberFormatter.format(item.registered_count)} assinaram
+                          </p>
+                        </div>
+                        <span className="text-sm font-black text-primary">
+                          {formatNullablePercentage(item.conversion_rate)}
+                        </span>
+                      </div>
+                      <p className="mt-2 text-xs font-bold text-muted">
+                        Mediana: {formatDaysMetric(item.median_days)} · Média:{" "}
+                        {formatDaysMetric(item.average_days)}
+                      </p>
+                      {!item.sample_sufficient && item.unavailable_reason ? (
+                        <p className="mt-2 text-xs font-bold text-subtle">
+                          {item.unavailable_reason}
+                        </p>
+                      ) : null}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              {[
+                {
+                  label: "Psicólogos cadastrados",
+                  value: numberFormatter.format(preSignupConversion.registered_psychologists_count),
+                },
+                {
+                  label: "Com trilha prévia",
+                  value: numberFormatter.format(
+                    preSignupConversion.psychologists_with_anonymous_history_count,
+                  ),
+                },
+                {
+                  label: "Sem trilha capturada",
+                  value: numberFormatter.format(
+                    preSignupConversion.psychologists_without_anonymous_history_count,
+                  ),
+                },
+                {
+                  label: "Cobertura da trilha",
+                  value: formatNullablePercentage(preSignupConversion.history_coverage_rate),
+                },
+                { label: "Média", value: formatDaysMetric(preSignupConversion.average_days) },
+                { label: "Mediana", value: formatDaysMetric(preSignupConversion.median_days) },
+                {
+                  description: "75% dos psicólogos com trilha cadastram até esse prazo",
+                  label: "P75",
+                  value: formatDaysMetric(preSignupConversion.p75_days),
+                },
+                {
+                  description: "90% dos psicólogos com trilha cadastram até esse prazo",
+                  label: "P90",
+                  value: formatDaysMetric(preSignupConversion.p90_days),
+                },
+              ].map(({ description, label, value }) => (
+                <div className="rounded-2xl bg-surface-muted p-3" key={label}>
+                  <p className="text-xs font-black text-muted">{label}</p>
+                  <p className="mt-1 text-xl font-black text-foreground">{value}</p>
+                  {description ? (
+                    <p className="mt-1 text-[0.68rem] font-bold leading-snug text-subtle">
+                      {description}
+                    </p>
+                  ) : null}
+                </div>
+              ))}
+            </div>
+
+            {preSignupConversion.unavailable_reason ? (
+              <p className="mt-4 rounded-2xl border border-dashed border-border bg-surface-muted p-3 text-sm font-bold text-muted">
+                {preSignupConversion.unavailable_reason}
+              </p>
+            ) : null}
+
+            <div className="mt-5 grid gap-3 md:grid-cols-2">
+              <div className="rounded-2xl border border-border/70 p-4">
+                <h3 className="text-sm font-black text-foreground">
+                  Distribuição do tempo até cadastro
+                </h3>
+                <div className="mt-4 space-y-3">
+                  {preSignupConversion.buckets.map((bucket) => (
+                    <MiniBar
+                      key={bucket.id}
+                      label={bucket.label}
+                      percentage={bucket.percentage}
+                      value={[
+                        numberFormatter.format(bucket.count),
+                        formatPercentageValue(bucket.percentage),
+                      ].join(" · ")}
+                    />
+                  ))}
+                </div>
+              </div>
+
+              <div className="rounded-2xl border border-border/70 p-4">
+                <h3 className="text-sm font-black text-foreground">
+                  Primeira página antes do cadastro
+                </h3>
+                {preSignupConversion.first_touch_pages.length === 0 ? (
+                  <p className="mt-4 rounded-2xl bg-surface-muted p-3 text-sm font-bold text-muted">
+                    Sem primeira página anônima vinculada aos psicólogos cadastrados no período.
+                  </p>
+                ) : (
+                  <div className="mt-4 space-y-4">
+                    {preSignupConversion.first_touch_pages.map((item) => (
+                      <div className="rounded-2xl bg-surface-muted p-3" key={item.id}>
+                        <div className="flex items-start justify-between gap-3">
+                          <div>
+                            <p className="text-sm font-black text-foreground">{item.label}</p>
+                            <p className="text-xs font-bold text-muted">
+                              {numberFormatter.format(item.psychologists_count)} psicólogos com
+                              trilha
+                            </p>
+                          </div>
+                          <span className="text-sm font-black text-primary">
+                            {formatPercentageValue(item.percentage)}
+                          </span>
+                        </div>
+                        <p className="mt-2 text-xs font-bold text-muted">
+                          Tempo médio até cadastro: {formatDaysMetric(item.average_days)}
+                        </p>
+                        {item.unavailable_reason ? (
+                          <p className="mt-2 text-xs font-bold text-subtle">
+                            {item.unavailable_reason}
+                          </p>
+                        ) : null}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </>
+        )}
       </CardShell>
 
       <div className="grid gap-5 xl:grid-cols-2">

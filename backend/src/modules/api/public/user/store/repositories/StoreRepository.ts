@@ -5,7 +5,9 @@ import prisma, { type ORM } from "@/infra/database/prisma";
 import type { user } from "@/interfaces/objects";
 import {
   buildPatientSignupAnalyticsIdentityData,
+  buildPsychologistSignupAnalyticsIdentityData,
   PATIENT_SIGNUP_ANALYTICS_IDENTITY_TYPE,
+  PSYCHOLOGIST_SIGNUP_ANALYTICS_IDENTITY_TYPE,
   resolveSignupAnalyticsIdentity,
 } from "@/modules/api/public/analytics/helpers/signup-identity";
 
@@ -94,6 +96,20 @@ export class StoreRepository implements IStoreRepository {
             data: buildPatientSignupAnalyticsIdentityData({
               identity: signupAnalyticsIdentity,
               source: "patient_registration",
+            }),
+          },
+        });
+      }
+
+      if (role === "psicologo" && signupAnalyticsIdentity) {
+        await tx.user_background.create({
+          data: {
+            user_id: item.id,
+            type: PSYCHOLOGIST_SIGNUP_ANALYTICS_IDENTITY_TYPE,
+            device_id: props.device_id,
+            data: buildPsychologistSignupAnalyticsIdentityData({
+              identity: signupAnalyticsIdentity,
+              source: "psychologist_registration",
             }),
           },
         });

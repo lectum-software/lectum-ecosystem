@@ -1,6 +1,13 @@
 export const PATIENT_SIGNUP_ANALYTICS_IDENTITY_TYPE = "patient_signup_analytics_identity";
+export const PSYCHOLOGIST_SIGNUP_ANALYTICS_IDENTITY_TYPE = "psychologist_signup_analytics_identity";
 
 const ANALYTICS_ID_MAX_LENGTH = 160;
+
+type SignupAnalyticsIdentityRole = "paciente" | "psicologo";
+type SignupAnalyticsIdentitySource =
+  | "google_registration"
+  | "patient_registration"
+  | "psychologist_registration";
 
 export type SignupAnalyticsIdentityInput = {
   analytics_session_id?: string | null;
@@ -36,19 +43,43 @@ export const resolveSignupAnalyticsIdentity = (
   };
 };
 
-export const buildPatientSignupAnalyticsIdentityData = (params: {
+const buildSignupAnalyticsIdentityData = (params: {
   identity: SignupAnalyticsIdentity;
-  source: "google_registration" | "patient_registration";
+  role: SignupAnalyticsIdentityRole;
+  source: SignupAnalyticsIdentitySource;
 }) => ({
   captured_at: new Date().toISOString(),
-  role: "paciente",
+  role: params.role,
   source: params.source,
   visitor_id: params.identity.visitor_id,
   ...(params.identity.session_id ? { session_id: params.identity.session_id } : {}),
 });
 
-export const extractPatientSignupAnalyticsVisitorId = (data: unknown) => {
+export const buildPatientSignupAnalyticsIdentityData = (params: {
+  identity: SignupAnalyticsIdentity;
+  source: "google_registration" | "patient_registration";
+}) =>
+  buildSignupAnalyticsIdentityData({
+    identity: params.identity,
+    role: "paciente",
+    source: params.source,
+  });
+
+export const buildPsychologistSignupAnalyticsIdentityData = (params: {
+  identity: SignupAnalyticsIdentity;
+  source: "google_registration" | "psychologist_registration";
+}) =>
+  buildSignupAnalyticsIdentityData({
+    identity: params.identity,
+    role: "psicologo",
+    source: params.source,
+  });
+
+const extractSignupAnalyticsVisitorId = (data: unknown) => {
   if (!data || Array.isArray(data) || typeof data !== "object") return null;
 
   return normalizeAnalyticsId((data as Record<string, unknown>).visitor_id);
 };
+
+export const extractPatientSignupAnalyticsVisitorId = extractSignupAnalyticsVisitorId;
+export const extractPsychologistSignupAnalyticsVisitorId = extractSignupAnalyticsVisitorId;

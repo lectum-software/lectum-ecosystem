@@ -120,6 +120,40 @@ export type AdminPsychologistPlatformSessionRecord = {
   user_id: string | null;
 };
 
+export type AdminPsychologistPreSignupConversionPageViewRecord = {
+  normalized_path: string;
+  occurred_at: Date;
+  page_kind: string;
+  path: string;
+  session_id: string;
+  user: {
+    createdAt: Date;
+    id: string;
+    role: string;
+  } | null;
+  user_id: string | null;
+  visitor_id: string | null;
+};
+
+export type AdminPsychologistPreSignupConversionSessionRecord = {
+  first_seen_at: Date;
+  last_seen_at: Date;
+  session_id: string;
+  user: {
+    createdAt: Date;
+    id: string;
+    role: string;
+  } | null;
+  user_id: string | null;
+  visitor_id: string | null;
+};
+
+export type AdminPsychologistSignupAnalyticsIdentityRecord = {
+  createdAt: Date;
+  data: Prisma.JsonValue | null;
+  user_id: string;
+};
+
 export type AdminPsychologistPlatformPwaInstallRecord = {
   occurred_at: Date;
   user_id: string | null;
@@ -154,6 +188,25 @@ export interface IAdminPsychologistsDashboardRepository {
   listPlatformSessions(
     range: AdminPsychologistsDashboardDateRange,
   ): Promise<AdminPsychologistPlatformSessionRecord[]>;
+  listPreSignupConversionLinkedPageViews(
+    psychologistIds: string[],
+  ): Promise<AdminPsychologistPreSignupConversionPageViewRecord[]>;
+  listPreSignupConversionLinkedSessions(
+    psychologistIds: string[],
+  ): Promise<AdminPsychologistPreSignupConversionSessionRecord[]>;
+  listPreSignupConversionPageViewsByVisitorIds(
+    visitorIds: string[],
+    psychologistIds: string[],
+    maxOccurredAt: Date | null,
+  ): Promise<AdminPsychologistPreSignupConversionPageViewRecord[]>;
+  listPreSignupConversionSessionsByVisitorIds(
+    visitorIds: string[],
+    psychologistIds: string[],
+    maxFirstSeenAt: Date | null,
+  ): Promise<AdminPsychologistPreSignupConversionSessionRecord[]>;
+  listPreSignupConversionSignupIdentities(
+    psychologistIds: string[],
+  ): Promise<AdminPsychologistSignupAnalyticsIdentityRecord[]>;
   listPlatformPwaInstallActions(
     range: AdminPsychologistsDashboardDateRange,
   ): Promise<AdminPsychologistPlatformPwaInstallRecord[]>;

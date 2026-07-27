@@ -279,6 +279,42 @@ export type PsychologistsDashboardConversion = {
   unavailable_reason: string | null;
 };
 
+export type PsychologistsDashboardPreSignupConversionBucket = {
+  count: number;
+  id: "days_1_3" | "days_4_7" | "days_8_30" | "no_history" | "over_30" | "same_day";
+  label: string;
+  percentage: number;
+};
+
+export type PsychologistsDashboardPreSignupFirstTouchPage = {
+  average_days: number | null;
+  id: string;
+  label: string;
+  percentage: number;
+  psychologists_count: number;
+  sample_sufficient: boolean;
+  unavailable_reason: string | null;
+};
+
+export type PsychologistsDashboardPreSignupConversion = {
+  anonymous_sessions_count: number;
+  average_days: number | null;
+  buckets: PsychologistsDashboardPreSignupConversionBucket[];
+  cohort_from: string;
+  cohort_to: string;
+  coverage_note: string;
+  first_touch_pages: PsychologistsDashboardPreSignupFirstTouchPage[];
+  history_coverage_rate: number | null;
+  median_days: number | null;
+  p75_days: number | null;
+  p90_days: number | null;
+  psychologists_with_anonymous_history_count: number;
+  psychologists_without_anonymous_history_count: number;
+  registered_psychologists_count: number;
+  source: "user.createdAt+user_background+page_view_event+visitor_session";
+  unavailable_reason: string | null;
+};
+
 export type PsychologistsDashboardSignupMethodItem = {
   count: number;
   id: "email_password" | "google";
@@ -1545,6 +1581,7 @@ export type AdminPsychologistsDashboard = {
   conversion_by_signup_method: PsychologistsDashboardConversionBySignupMethodItem[];
   device_usage: PsychologistsDashboardDeviceUsage;
   filters_searches: PsychologistsDashboardFilterSearches;
+  pre_signup_conversion: PsychologistsDashboardPreSignupConversion;
   directory_filters: PsychologistsDashboardDirectoryFilters;
   operating_system_usage: PsychologistsDashboardOperatingSystemUsage;
   plan_segments: Record<

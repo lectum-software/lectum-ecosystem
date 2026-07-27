@@ -8,7 +8,9 @@ import type { user, user_token } from "@/interfaces/objects";
 import { generateToken } from "@/modules/api/middlewares/_auth/utils/generateToken";
 import {
   buildPatientSignupAnalyticsIdentityData,
+  buildPsychologistSignupAnalyticsIdentityData,
   PATIENT_SIGNUP_ANALYTICS_IDENTITY_TYPE,
+  PSYCHOLOGIST_SIGNUP_ANALYTICS_IDENTITY_TYPE,
   resolveSignupAnalyticsIdentity,
 } from "@/modules/api/public/analytics/helpers/signup-identity";
 //
@@ -193,6 +195,20 @@ export class LoginRepository implements ILoginRepository {
             type: PATIENT_SIGNUP_ANALYTICS_IDENTITY_TYPE,
             device_id: this.device_id,
             data: buildPatientSignupAnalyticsIdentityData({
+              identity: signupAnalyticsIdentity,
+              source: "google_registration",
+            }),
+          },
+        });
+      }
+
+      if (role === "psicologo" && signupAnalyticsIdentity) {
+        await tx.user_background.create({
+          data: {
+            user_id: user.id,
+            type: PSYCHOLOGIST_SIGNUP_ANALYTICS_IDENTITY_TYPE,
+            device_id: this.device_id,
+            data: buildPsychologistSignupAnalyticsIdentityData({
               identity: signupAnalyticsIdentity,
               source: "google_registration",
             }),

@@ -1,5 +1,6 @@
 import type { Resolve } from "@/helpers/return";
 import { error, msg } from "@/helpers/translate";
+import { extractPsychologistSignupAnalyticsVisitorId } from "@/modules/api/public/analytics/helpers/signup-identity";
 import type { AdminOperatingSystemType } from "@/utils/admin-operating-system";
 import {
   ADMIN_OPERATING_SYSTEM_LABELS,
@@ -7,8 +8,10 @@ import {
   normalizeAdminOperatingSystem,
 } from "@/utils/admin-operating-system";
 import {
+  daysBetweenDates,
   firstPaidProfessionalSubscription,
   isPaidProfessionalSubscription,
+  platformPageLabel,
   roundOneDecimal,
   signupMethodFromProvider,
   signupMethodLabel,
@@ -32,6 +35,7 @@ import type {
   AdminPsychologistsDashboardPeriod,
   AdminPsychologistsDashboardPlanSegment,
   AdminPsychologistsDashboardPlanSegmentSummary,
+  AdminPsychologistsDashboardPreSignupConversion,
   AdminPsychologistsDashboardPsychologist,
   AdminPsychologistsDashboardQuery,
   AdminPsychologistsDashboardSummary,
@@ -46,8 +50,11 @@ import type {
   AdminPsychologistPlatformPageViewRecord,
   AdminPsychologistPlatformPwaInstallRecord,
   AdminPsychologistPlatformSessionRecord,
+  AdminPsychologistPreSignupConversionPageViewRecord,
+  AdminPsychologistPreSignupConversionSessionRecord,
   AdminPsychologistProfileRecord,
   AdminPsychologistPublicProfilePageViewRecord,
+  AdminPsychologistSignupAnalyticsIdentityRecord,
   AdminPsychologistSubscriptionRecord,
 } from "../repositories/interfaces/IAdminPsychologistsDashboardRepository";
 
@@ -68,6 +75,11 @@ const TRACTION_PROFILE_VIEWS_HIGH_30D = 60;
 const TRACTION_STRONG_CONVERSION_RATE_PERCENT = 5;
 const TRACTION_WHATSAPP_HIGH_30D = 5;
 const TRACTION_WHATSAPP_HIGH_WITH_CONVERSION_30D = 3;
+const PRE_SIGNUP_CONVERSION_FIRST_TOUCH_LIMIT = 6;
+const PRE_SIGNUP_CONVERSION_FIRST_TOUCH_SAMPLE_THRESHOLD = 3;
+const PRE_SIGNUP_CONVERSION_SESSION_LABEL = "Sessão sem página capturada";
+const PRE_SIGNUP_CONVERSION_COVERAGE_NOTE =
+  "Coorte de psicólogos cadastrados no período; leitura de trás para frente pela ponte visitor_id/session_id salva no cadastro do psicólogo e por eventos vinculados ao mesmo visitor_id. Pacientes e visitantes que não viraram psicólogo não entram neste bloco.";
 
 const PLAN_SEGMENT_OPTIONS: Array<{
   id: AdminPsychologistsDashboardPlanSegment;
@@ -184,6 +196,18 @@ const FILTER_SEARCH_TARGET_TYPES = {
   states: ["psychologist_filter_state"],
   target_audiences: ["psychologist_filter_target_audience"],
 } satisfies Record<string, string[]>;
+
+const PRE_SIGNUP_CONVERSION_BUCKETS = [
+  { id: "same_day", label: "Mesmo dia" },
+  { id: "days_1_3", label: "1-3 dias" },
+  { id: "days_4_7", label: "4-7 dias" },
+  { id: "days_8_30", label: "8-30 dias" },
+  { id: "over_30", label: "Mais de 30 dias" },
+  { id: "no_history", label: "Sem trilha capturada" },
+] as const satisfies Array<{
+  id: AdminPsychologistsDashboardPreSignupConversion["buckets"][number]["id"];
+  label: string;
+}>;
 
 type PsychologistsPeriodResolution = {
   current: AdminPsychologistsDashboardDateRange;
@@ -407,6 +431,32 @@ const safePercentage = (value: number, total: number) => {
   return roundPercent((value / total) * 100);
 };
 
+const averageNumber = (values: number[]) => {
+  if (values.length === 0) return null;
+
+  return roundOneDecimal(values.reduce((sum, value) => sum + value, 0) / values.length);
+};
+
+const percentileValue = (values: number[], percent: number) => {
+  if (values.length === 0) return null;
+
+  const sorted = [...values].sort((left, right) => left - right);
+  const index = Math.ceil((percent / 100) * sorted.length) - 1;
+
+  return sorted[Math.min(sorted.length - 1, Math.max(0, index))] ?? null;
+};
+
+const preSignupConversionBucketForDays = (
+  days: number,
+): AdminPsychologistsDashboardPreSignupConversion["buckets"][number]["id"] => {
+  if (days === 0) return "same_day";
+  if (days <= 3) return "days_1_3";
+  if (days <= 7) return "days_4_7";
+  if (days <= 30) return "days_8_30";
+
+  return "over_30";
+};
+
 const normalizeKey = (value: string) =>
   value
     .normalize("NFD")
@@ -416,6 +466,283 @@ const normalizeKey = (value: string) =>
     .replace(/^_+|_+$/g, "");
 
 const normalizeName = (name: string) => name.replace(/\s+/g, " ").trim() || "Psicólogo";
+
+type PreSignupConversionPsychologistTouch = {
+  occurredAt: Date;
+  pageId: string;
+  pageLabel: string;
+  sessionId: string;
+  source: "page_view_event" | "visitor_session";
+};
+
+type PreSignupConversionPsychologistSummary = {
+  daysToRegistration: number | null;
+  firstTouchId: string | null;
+  firstTouchLabel: string | null;
+  psychologistId: string;
+  sessions: Set<string>;
+};
+
+const preSignupConversionPageLabel = (view: AdminPsychologistPreSignupConversionPageViewRecord) =>
+  platformPageLabel(view);
+
+const latestPsychologistSignupDate = (profiles: AdminPsychologistProfileRecord[]) =>
+  profiles.reduce<Date | null>((latest, profile) => {
+    if (!latest || profile.user.createdAt > latest) return profile.user.createdAt;
+
+    return latest;
+  }, null);
+
+const buildPsychologistVisitorIds = (params: {
+  linkedPageViews: AdminPsychologistPreSignupConversionPageViewRecord[];
+  linkedSessions: AdminPsychologistPreSignupConversionSessionRecord[];
+  psychologistIds: Set<string>;
+  signupIdentities: AdminPsychologistSignupAnalyticsIdentityRecord[];
+}) => {
+  const visitorIdsByPsychologistId = new Map<string, Set<string>>();
+  const addVisitorId = (psychologistId: string | null, visitorId: string | null) => {
+    if (!psychologistId || !visitorId || !params.psychologistIds.has(psychologistId)) return;
+
+    const current = visitorIdsByPsychologistId.get(psychologistId) ?? new Set<string>();
+    current.add(visitorId);
+    visitorIdsByPsychologistId.set(psychologistId, current);
+  };
+
+  for (const view of params.linkedPageViews) {
+    addVisitorId(view.user_id, view.visitor_id);
+  }
+
+  for (const session of params.linkedSessions) {
+    addVisitorId(session.user_id, session.visitor_id);
+  }
+
+  for (const identity of params.signupIdentities) {
+    const visitorId = extractPsychologistSignupAnalyticsVisitorId(identity.data);
+    if (visitorId) addVisitorId(identity.user_id, visitorId);
+  }
+
+  return visitorIdsByPsychologistId;
+};
+
+const collectPreSignupConversionVisitorIds = (
+  visitorIdsByPsychologistId: Map<string, Set<string>>,
+) => [
+  ...new Set([...visitorIdsByPsychologistId.values()].flatMap((visitorIds) => [...visitorIds])),
+];
+
+const psychologistScopedRecord = (userId: string | null, psychologistId: string) =>
+  userId === null || userId === psychologistId;
+
+const touchSort = (
+  left: PreSignupConversionPsychologistTouch,
+  right: PreSignupConversionPsychologistTouch,
+) => {
+  const dateDiff = left.occurredAt.getTime() - right.occurredAt.getTime();
+  if (dateDiff !== 0) return dateDiff;
+  if (left.source !== right.source) return left.source === "page_view_event" ? -1 : 1;
+
+  return left.pageLabel.localeCompare(right.pageLabel, "pt-BR");
+};
+
+const summarizePreSignupConversion = (params: {
+  linkedPageViews: AdminPsychologistPreSignupConversionPageViewRecord[];
+  linkedSessions: AdminPsychologistPreSignupConversionSessionRecord[];
+  pageViews: AdminPsychologistPreSignupConversionPageViewRecord[];
+  period: AdminPsychologistsDashboardPeriod;
+  profiles: AdminPsychologistProfileRecord[];
+  sessions: AdminPsychologistPreSignupConversionSessionRecord[];
+  signupIdentities: AdminPsychologistSignupAnalyticsIdentityRecord[];
+}): AdminPsychologistsDashboardPreSignupConversion => {
+  const psychologistIds = new Set(params.profiles.map((profile) => profile.user.id));
+  const visitorIdsByPsychologistId = buildPsychologistVisitorIds({
+    linkedPageViews: params.linkedPageViews,
+    linkedSessions: params.linkedSessions,
+    psychologistIds,
+    signupIdentities: params.signupIdentities,
+  });
+  const pageViewsByVisitorId = new Map<
+    string,
+    AdminPsychologistPreSignupConversionPageViewRecord[]
+  >();
+  const sessionsByVisitorId = new Map<
+    string,
+    AdminPsychologistPreSignupConversionSessionRecord[]
+  >();
+
+  for (const view of params.pageViews) {
+    if (!view.visitor_id) continue;
+
+    const current = pageViewsByVisitorId.get(view.visitor_id) ?? [];
+    current.push(view);
+    pageViewsByVisitorId.set(view.visitor_id, current);
+  }
+
+  for (const session of params.sessions) {
+    if (!session.visitor_id) continue;
+
+    const current = sessionsByVisitorId.get(session.visitor_id) ?? [];
+    current.push(session);
+    sessionsByVisitorId.set(session.visitor_id, current);
+  }
+
+  const psychologistSummaries = params.profiles.map(
+    (profile): PreSignupConversionPsychologistSummary => {
+      const profileVisitorIds =
+        visitorIdsByPsychologistId.get(profile.user.id) ?? new Set<string>();
+      const touches: PreSignupConversionPsychologistTouch[] = [];
+
+      for (const visitorId of profileVisitorIds) {
+        for (const view of pageViewsByVisitorId.get(visitorId) ?? []) {
+          if (!psychologistScopedRecord(view.user_id, profile.user.id)) continue;
+          if (view.occurred_at > profile.user.createdAt) continue;
+
+          const label = preSignupConversionPageLabel(view);
+          touches.push({
+            occurredAt: view.occurred_at,
+            pageId: normalizeKey(label) || "outras_paginas",
+            pageLabel: label,
+            sessionId: view.session_id,
+            source: "page_view_event",
+          });
+        }
+
+        for (const session of sessionsByVisitorId.get(visitorId) ?? []) {
+          if (!psychologistScopedRecord(session.user_id, profile.user.id)) continue;
+          if (session.first_seen_at > profile.user.createdAt) continue;
+
+          touches.push({
+            occurredAt: session.first_seen_at,
+            pageId: "sessao_sem_pagina",
+            pageLabel: PRE_SIGNUP_CONVERSION_SESSION_LABEL,
+            sessionId: session.session_id,
+            source: "visitor_session",
+          });
+        }
+      }
+
+      const sortedTouches = touches.sort(touchSort);
+      const firstTouch = sortedTouches[0];
+      const sessions = new Set(sortedTouches.map((touch) => touch.sessionId));
+
+      return {
+        daysToRegistration: firstTouch
+          ? daysBetweenDates(firstTouch.occurredAt, profile.user.createdAt)
+          : null,
+        firstTouchId: firstTouch?.pageId ?? null,
+        firstTouchLabel: firstTouch?.pageLabel ?? null,
+        psychologistId: profile.user.id,
+        sessions,
+      };
+    },
+  );
+
+  const psychologistsWithHistory = psychologistSummaries.filter(
+    (profile) => typeof profile.daysToRegistration === "number",
+  );
+  const historyDays = psychologistsWithHistory.flatMap((profile) =>
+    typeof profile.daysToRegistration === "number" ? [profile.daysToRegistration] : [],
+  );
+  const bucketCounts = new Map(PRE_SIGNUP_CONVERSION_BUCKETS.map((bucket) => [bucket.id, 0]));
+
+  for (const profile of psychologistSummaries) {
+    const bucket =
+      typeof profile.daysToRegistration === "number"
+        ? preSignupConversionBucketForDays(profile.daysToRegistration)
+        : "no_history";
+    bucketCounts.set(bucket, (bucketCounts.get(bucket) ?? 0) + 1);
+  }
+
+  const firstTouchGroups = new Map<
+    string,
+    {
+      historyDays: number[];
+      label: string;
+      psychologistsCount: number;
+    }
+  >();
+
+  for (const profile of psychologistsWithHistory) {
+    if (!profile.firstTouchId || !profile.firstTouchLabel) continue;
+
+    const current = firstTouchGroups.get(profile.firstTouchId) ?? {
+      historyDays: [],
+      label: profile.firstTouchLabel,
+      psychologistsCount: 0,
+    };
+    current.psychologistsCount += 1;
+
+    if (typeof profile.daysToRegistration === "number") {
+      current.historyDays.push(profile.daysToRegistration);
+    }
+
+    firstTouchGroups.set(profile.firstTouchId, current);
+  }
+
+  const registeredPsychologistsCount = psychologistSummaries.length;
+  const psychologistsWithHistoryCount = psychologistsWithHistory.length;
+  const psychologistsWithoutHistoryCount =
+    registeredPsychologistsCount - psychologistsWithHistoryCount;
+  const anonymousSessionsCount = new Set(
+    psychologistSummaries.flatMap((profile) =>
+      [...profile.sessions].map((sessionId) => `${profile.psychologistId}:${sessionId}`),
+    ),
+  ).size;
+
+  return {
+    anonymous_sessions_count: anonymousSessionsCount,
+    average_days: averageNumber(historyDays),
+    buckets: PRE_SIGNUP_CONVERSION_BUCKETS.map((bucket) => ({
+      count: bucketCounts.get(bucket.id) ?? 0,
+      id: bucket.id,
+      label: bucket.label,
+      percentage: safePercentage(bucketCounts.get(bucket.id) ?? 0, registeredPsychologistsCount),
+    })),
+    cohort_from: params.period.from,
+    cohort_to: params.period.to,
+    coverage_note: PRE_SIGNUP_CONVERSION_COVERAGE_NOTE,
+    first_touch_pages: [...firstTouchGroups.entries()]
+      .map(([id, group]) => ({
+        average_days: averageNumber(group.historyDays),
+        id,
+        label: group.label,
+        percentage: safePercentage(group.psychologistsCount, psychologistsWithHistoryCount),
+        psychologists_count: group.psychologistsCount,
+        sample_sufficient:
+          group.psychologistsCount >= PRE_SIGNUP_CONVERSION_FIRST_TOUCH_SAMPLE_THRESHOLD,
+        unavailable_reason:
+          group.psychologistsCount === 0
+            ? "Sem psicólogos neste ponto de entrada."
+            : group.psychologistsCount < PRE_SIGNUP_CONVERSION_FIRST_TOUCH_SAMPLE_THRESHOLD
+              ? "Amostra pequena; interpretar apenas como leitura operacional."
+              : null,
+      }))
+      .sort((left, right) => {
+        if (right.psychologists_count !== left.psychologists_count) {
+          return right.psychologists_count - left.psychologists_count;
+        }
+
+        return left.label.localeCompare(right.label, "pt-BR");
+      })
+      .slice(0, PRE_SIGNUP_CONVERSION_FIRST_TOUCH_LIMIT),
+    history_coverage_rate:
+      registeredPsychologistsCount > 0
+        ? roundOneDecimal((psychologistsWithHistoryCount / registeredPsychologistsCount) * 100)
+        : null,
+    median_days: percentileValue(historyDays, 50),
+    p75_days: percentileValue(historyDays, 75),
+    p90_days: percentileValue(historyDays, 90),
+    psychologists_with_anonymous_history_count: psychologistsWithHistoryCount,
+    psychologists_without_anonymous_history_count: psychologistsWithoutHistoryCount,
+    registered_psychologists_count: registeredPsychologistsCount,
+    source: "user.createdAt+user_background+page_view_event+visitor_session",
+    unavailable_reason:
+      registeredPsychologistsCount === 0
+        ? "Sem psicólogos cadastrados no período selecionado."
+        : psychologistsWithHistoryCount === 0
+          ? "Nenhum psicólogo cadastrado no período possui trilha anônima prévia capturada pelo mesmo visitor_id."
+          : null,
+  };
+};
 
 const normalizeDeviceType = (value: string): AdminPsychologistsDashboardDeviceType => {
   const normalized = value.trim().toLowerCase();
@@ -1794,6 +2121,10 @@ export const buildPsychologistsDashboard = async (
 
   const { current, labels, period, previous } = resolvedPeriod.period;
 
+  const currentNewSignups = profiles.filter((profile) =>
+    dateInRange(profile.user.createdAt, current),
+  );
+  const currentPeriodPsychologistIds = currentNewSignups.map((profile) => profile.user.id);
   const psychologistUserIds = profiles.map((profile) => profile.user.id);
   const [
     directoryFilterSearchActions,
@@ -1805,6 +2136,9 @@ export const buildPsychologistsDashboard = async (
     profileViewEvents,
     publicProfilePageViews,
     whatsappContactRequests,
+    preSignupConversionLinkedPageViews,
+    preSignupConversionLinkedSessions,
+    preSignupConversionSignupIdentities,
   ] = await Promise.all([
     repository.listDirectoryFilterSearchActions(current),
     repository.listFavoriteEvents(current),
@@ -1815,13 +2149,34 @@ export const buildPsychologistsDashboard = async (
     repository.listProfileViews(current),
     repository.listPublicProfilePageViews(current, psychologistUserIds),
     repository.listWhatsappContactRequests(current),
+    repository.listPreSignupConversionLinkedPageViews(currentPeriodPsychologistIds),
+    repository.listPreSignupConversionLinkedSessions(currentPeriodPsychologistIds),
+    repository.listPreSignupConversionSignupIdentities(currentPeriodPsychologistIds),
+  ]);
+  const preSignupConversionVisitorIds = collectPreSignupConversionVisitorIds(
+    buildPsychologistVisitorIds({
+      linkedPageViews: preSignupConversionLinkedPageViews,
+      linkedSessions: preSignupConversionLinkedSessions,
+      psychologistIds: new Set(currentPeriodPsychologistIds),
+      signupIdentities: preSignupConversionSignupIdentities,
+    }),
+  );
+  const preSignupConversionMaxSignupDate = latestPsychologistSignupDate(currentNewSignups);
+  const [preSignupConversionPageViews, preSignupConversionSessions] = await Promise.all([
+    repository.listPreSignupConversionPageViewsByVisitorIds(
+      preSignupConversionVisitorIds,
+      currentPeriodPsychologistIds,
+      preSignupConversionMaxSignupDate,
+    ),
+    repository.listPreSignupConversionSessionsByVisitorIds(
+      preSignupConversionVisitorIds,
+      currentPeriodPsychologistIds,
+      preSignupConversionMaxSignupDate,
+    ),
   ]);
 
   const currentProfiles = profiles.filter((profile) => profileCreatedUntil(profile, current.end));
   const previousProfiles = profiles.filter((profile) => profileCreatedUntil(profile, previous.end));
-  const currentNewSignups = profiles.filter((profile) =>
-    dateInRange(profile.user.createdAt, current),
-  );
   const previousNewSignups = profiles.filter((profile) =>
     dateInRange(profile.user.createdAt, previous),
   );
@@ -1847,6 +2202,15 @@ export const buildPsychologistsDashboard = async (
   const previousChurn = calculateChurnPercent(profiles, previous);
   const rankedPsychologists = await rankPsychologistCandidates(rankingCandidates, null);
   const conversion = summarizeConversionCohort(currentNewSignups);
+  const preSignupConversion = summarizePreSignupConversion({
+    linkedPageViews: preSignupConversionLinkedPageViews,
+    linkedSessions: preSignupConversionLinkedSessions,
+    pageViews: preSignupConversionPageViews,
+    period,
+    profiles: currentNewSignups,
+    sessions: preSignupConversionSessions,
+    signupIdentities: preSignupConversionSignupIdentities,
+  });
   const planSegments = buildPlanSegmentSummaries({
     currentNewSignups,
     currentProfiles,
@@ -1951,6 +2315,7 @@ export const buildPsychologistsDashboard = async (
       citySupplyItems: statistics.cities.items,
       directoryFilters,
     }),
+    pre_signup_conversion: preSignupConversion,
     directory_filters: directoryFilters,
     operating_system_usage: operatingSystemUsage,
     plan_segments: planSegments,
@@ -2011,6 +2376,16 @@ export const buildPsychologistsDashboard = async (
               id: "traffic_sources",
               label: "Origem do tráfego",
               source: "page_view_event",
+            },
+          ]
+        : []),
+      ...(preSignupConversion.unavailable_reason
+        ? [
+            {
+              description: preSignupConversion.unavailable_reason,
+              id: "pre_signup_conversion",
+              label: "Conversão até o cadastro",
+              source: preSignupConversion.source,
             },
           ]
         : []),

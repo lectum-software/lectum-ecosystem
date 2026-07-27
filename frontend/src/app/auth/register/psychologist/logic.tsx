@@ -7,6 +7,7 @@ import { useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 import { useAuth } from "@/api/callers/auth";
+import { getOrCreateAnalyticsIdentity } from "@/components/analytics/storage";
 import { DividerWithLabel } from "@/components/ui/divider-with-label";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { Logo } from "@/components/ui/logo";
@@ -71,6 +72,7 @@ export const RegisterPsychologistLogic = () => {
     setApiError(null);
     const professionalFirstName = data.professional_first_name.trim();
     const professionalLastName = data.professional_last_name.trim();
+    const analyticsIdentity = getOrCreateAnalyticsIdentity();
 
     registerPsychologist.mutate({
       name: [professionalFirstName, professionalLastName].filter(Boolean).join(" "),
@@ -82,6 +84,12 @@ export const RegisterPsychologistLogic = () => {
       role: "psicologo",
       terms_accepted: true,
       terms_version: TERMS_VERSION,
+      ...(analyticsIdentity
+        ? {
+            analytics_session_id: analyticsIdentity.sessionId,
+            analytics_visitor_id: analyticsIdentity.visitorId,
+          }
+        : {}),
     });
   };
 
@@ -104,6 +112,11 @@ export const RegisterPsychologistLogic = () => {
         terms_accepted: "true",
         terms_version: TERMS_VERSION,
       });
+      const analyticsIdentity = getOrCreateAnalyticsIdentity();
+      if (analyticsIdentity) {
+        query.set("analytics_visitor_id", analyticsIdentity.visitorId);
+        query.set("analytics_session_id", analyticsIdentity.sessionId);
+      }
       if (redirectTo) {
         query.set("redirectTo", redirectTo);
       }

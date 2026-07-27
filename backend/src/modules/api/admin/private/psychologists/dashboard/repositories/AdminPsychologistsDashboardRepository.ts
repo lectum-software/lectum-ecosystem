@@ -1,5 +1,6 @@
 import type { Prisma } from "@/external/generated/prisma/client";
 import prisma from "@/infra/database/prisma";
+import { PSYCHOLOGIST_SIGNUP_ANALYTICS_IDENTITY_TYPE } from "@/modules/api/public/analytics/helpers/signup-identity";
 import { activeProfessionalEntitlementWhere } from "@/utils/subscription-entitlement";
 import type {
   AdminPsychologistsDashboardDateRange,
@@ -227,6 +228,42 @@ const profileBaseSelect = {
     },
   },
 } satisfies Prisma.psychologist_profileSelect;
+
+const preSignupConversionUserSelect = {
+  createdAt: true,
+  id: true,
+  role: true,
+} satisfies Prisma.userSelect;
+
+const preSignupConversionPageViewSelect = {
+  normalized_path: true,
+  occurred_at: true,
+  page_kind: true,
+  path: true,
+  session_id: true,
+  user: {
+    select: preSignupConversionUserSelect,
+  },
+  user_id: true,
+  visitor_id: true,
+} satisfies Prisma.page_view_eventSelect;
+
+const preSignupConversionSessionSelect = {
+  first_seen_at: true,
+  last_seen_at: true,
+  session_id: true,
+  user: {
+    select: preSignupConversionUserSelect,
+  },
+  user_id: true,
+  visitor_id: true,
+} satisfies Prisma.visitor_sessionSelect;
+
+const signupAnalyticsIdentitySelect = {
+  createdAt: true,
+  data: true,
+  user_id: true,
+} satisfies Prisma.user_backgroundSelect;
 
 const publicDirectoryWhere = {
   deleted: false,
@@ -506,6 +543,158 @@ export class AdminPsychologistsDashboardRepository
         },
         user_id: {
           not: null,
+        },
+        user: {
+          active: true,
+          deleted: false,
+          role: "psicologo",
+        },
+      },
+    });
+  }
+
+  async listPreSignupConversionLinkedPageViews(psychologistIds: string[]) {
+    const uniquePsychologistIds = [...new Set(psychologistIds.filter(Boolean))];
+    if (uniquePsychologistIds.length === 0) return [];
+
+    return prisma.page_view_event.findMany({
+      orderBy: {
+        occurred_at: "asc",
+      },
+      select: preSignupConversionPageViewSelect,
+      where: {
+        deleted: false,
+        user_id: {
+          in: uniquePsychologistIds,
+        },
+        user: {
+          active: true,
+          deleted: false,
+          role: "psicologo",
+        },
+      },
+    });
+  }
+
+  async listPreSignupConversionLinkedSessions(psychologistIds: string[]) {
+    const uniquePsychologistIds = [...new Set(psychologistIds.filter(Boolean))];
+    if (uniquePsychologistIds.length === 0) return [];
+
+    return prisma.visitor_session.findMany({
+      orderBy: {
+        first_seen_at: "asc",
+      },
+      select: preSignupConversionSessionSelect,
+      where: {
+        deleted: false,
+        user_id: {
+          in: uniquePsychologistIds,
+        },
+        user: {
+          active: true,
+          deleted: false,
+          role: "psicologo",
+        },
+      },
+    });
+  }
+
+  async listPreSignupConversionPageViewsByVisitorIds(
+    visitorIds: string[],
+    psychologistIds: string[],
+    maxOccurredAt: Date | null,
+  ) {
+    const uniqueVisitorIds = [...new Set(visitorIds.filter(Boolean))];
+    const uniquePsychologistIds = [...new Set(psychologistIds.filter(Boolean))];
+    if (uniqueVisitorIds.length === 0 || !maxOccurredAt) return [];
+
+    return prisma.page_view_event.findMany({
+      orderBy: {
+        occurred_at: "asc",
+      },
+      select: preSignupConversionPageViewSelect,
+      where: {
+        deleted: false,
+        occurred_at: {
+          lte: maxOccurredAt,
+        },
+        visitor_id: {
+          in: uniqueVisitorIds,
+        },
+        OR: [
+          {
+            user_id: null,
+          },
+          {
+            user_id: {
+              in: uniquePsychologistIds,
+            },
+            user: {
+              active: true,
+              deleted: false,
+              role: "psicologo",
+            },
+          },
+        ],
+      },
+    });
+  }
+
+  async listPreSignupConversionSessionsByVisitorIds(
+    visitorIds: string[],
+    psychologistIds: string[],
+    maxFirstSeenAt: Date | null,
+  ) {
+    const uniqueVisitorIds = [...new Set(visitorIds.filter(Boolean))];
+    const uniquePsychologistIds = [...new Set(psychologistIds.filter(Boolean))];
+    if (uniqueVisitorIds.length === 0 || !maxFirstSeenAt) return [];
+
+    return prisma.visitor_session.findMany({
+      orderBy: {
+        first_seen_at: "asc",
+      },
+      select: preSignupConversionSessionSelect,
+      where: {
+        deleted: false,
+        first_seen_at: {
+          lte: maxFirstSeenAt,
+        },
+        visitor_id: {
+          in: uniqueVisitorIds,
+        },
+        OR: [
+          {
+            user_id: null,
+          },
+          {
+            user_id: {
+              in: uniquePsychologistIds,
+            },
+            user: {
+              active: true,
+              deleted: false,
+              role: "psicologo",
+            },
+          },
+        ],
+      },
+    });
+  }
+
+  async listPreSignupConversionSignupIdentities(psychologistIds: string[]) {
+    const uniquePsychologistIds = [...new Set(psychologistIds.filter(Boolean))];
+    if (uniquePsychologistIds.length === 0) return [];
+
+    return prisma.user_background.findMany({
+      orderBy: {
+        createdAt: "asc",
+      },
+      select: signupAnalyticsIdentitySelect,
+      where: {
+        deleted: false,
+        type: PSYCHOLOGIST_SIGNUP_ANALYTICS_IDENTITY_TYPE,
+        user_id: {
+          in: uniquePsychologistIds,
         },
         user: {
           active: true,

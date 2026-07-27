@@ -301,3 +301,15 @@ O gráfico **Modo de cadastro** do dashboard Admin de psicólogos deve usar o me
 A fonte de dados, o contrato `signup_method`, a regra de duas categorias de produto (**Google** e **E-mail e senha**) e o tratamento de provedores legados/desconhecidos permanecem inalterados. Não há schema Prisma, migration, endpoint novo, package, mock ou backfill.
 
 Validação complementar 2026-07-22: `pnpm --dir admin check`, `pnpm --dir admin build` e smoke HTTP local em `/psicologos` retornando 200. `pnpm check` foi tentado e atingiu timeout de 304s antes de capturar resultado final.
+
+## Complemento 2026-07-27 - Trilha pre-cadastro dos psicologos no dashboard Admin
+
+O card **Conversao do cadastro ate assinatura** do dashboard `/psicologos` passa a ter um seletor dropdown. A opcao padrao preserva a leitura de cadastro ate primeira assinatura paga; a nova opcao **Conversao ate o cadastro** exibe uma leitura backward da trilha anonima previa dos psicologos cadastrados no periodo.
+
+A ponte analytics e separada por papel. Pacientes continuam usando `user_background.type="patient_signup_analytics_identity"`; psicologos passam a usar `user_background.type="psychologist_signup_analytics_identity"` quando o cadastro real por e-mail ou Google envia `analytics_visitor_id` first-party valido. Essa decisao evita misturar coortes de pacientes e psicologos no mesmo tipo de background.
+
+O contrato do dashboard adiciona `pre_signup_conversion`, calculado por `user.createdAt+user_background+page_view_event+visitor_session`. A coorte inclui somente usuarios `role="psicologo"` cadastrados no periodo selecionado. O backend usa o `visitor_id` salvo no cadastro e eventos/sessoes reais anteriores ao `user.createdAt`; pacientes, visitantes que nunca viraram psicologo, eventos posteriores ao cadastro, backfill e identificacao cross-device ficam fora da metrica.
+
+Nao ha alteracao de schema Prisma, migration, endpoint paralelo, package novo, mock ou seed. A limitacao operacional e que cadastros historicos sem ponte `psychologist_signup_analytics_identity` continuam em **Sem trilha capturada**.
+
+Validacao complementar 2026-07-27: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check`, smoke real do use-case `buildPsychologistsDashboard({})` confirmando `pre_signup_conversion` presente e 6 buckets, e validacao local do build/DOM Admin em `/psicologos` com o dropdown `psychologist-conversion-journey`.
