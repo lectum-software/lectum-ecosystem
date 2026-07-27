@@ -726,3 +726,26 @@ Validacao deste ajuste:
 - `pnpm --dir admin build`
 - `pnpm check`
 - HTTP local `GET http://localhost:3002/trafego` retornou 200.
+
+## Expansao 2026-07-27: Dashboard geral no piloto premium
+
+Por pedido direto de produto, a rota `/dashboard` tambem passa a usar a linguagem do piloto premium ja aplicada aos principais modulos Admin.
+
+Decisoes:
+
+- Incluir `/dashboard` no escopo `admin-premium-pilot` do `AdminShell`, ativando sidebar clara, tokens azuis e acabamento de bordas/sombras suaves.
+- Reorganizar o topo do Dashboard em um card informativo com CTA real **Exportar CSV** preservado, sem mudar o endpoint existente.
+- Mover os controles de periodo para o card **Visao geral**, substituindo os botoes soltos de 7/30/90 dias por um seletor compacto com os mesmos periodos suportados pelo contrato atual (`from`/`to`, maximo de 90 dias).
+- Manter todas as metricas vindas de `GET /api/admin/private/dashboard/summary` e a exportacao real de `GET /api/admin/private/dashboard/export`; nao houve mock, fallback artificial, backend novo, schema Prisma, migration ou package.
+- Suavizar os cards e graficos existentes com SVG/CSS proprio, curvas com `buildSmoothSvgPath`, grid values deduplicados para evitar warnings de key duplicada quando a escala tem poucos valores, e layout mobile-first empilhado em ~390px.
+- Builder/Quick Copy nao estava exposto como ferramenta neste ambiente; a referencia visual auditavel continuou sendo `_product/proto/admin/Dashboard.png` e as telas piloto ja validadas localmente.
+
+Consequencia: o Dashboard geral fica alinhado ao piloto premium sem transformar o piloto em fundacao global definitiva nem alterar dados, contratos ou regras de dominio.
+
+Validacao desta expansao:
+
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/dashboard/client.tsx" "src/components/admin-shell/shell.tsx"`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check`
+- Browser local/headless em `http://localhost:3002/dashboard` com admin real transitorio removido apos o teste: desktop 1440x1000 com `admin-premium-pilot`, seletor `#dashboard-period` e **Exportar CSV**; mobile 390x900 com shell mobile e cards empilhados.

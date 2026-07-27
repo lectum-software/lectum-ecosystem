@@ -40,6 +40,8 @@ const moderationSubmenuBadgeTone: Record<ModerationSubmenuBadge, "danger" | "war
 };
 
 const isPremiumPilotPath = (pathname: string) =>
+  pathname === "/dashboard" ||
+  pathname.startsWith("/dashboard/") ||
   pathname === "/psicologos" ||
   pathname.startsWith("/psicologos/") ||
   pathname === "/trafego" ||

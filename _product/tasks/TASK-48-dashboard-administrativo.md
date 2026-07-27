@@ -192,3 +192,12 @@ Regras de UI obrigatórias:
 - Severidade de denúncias pendentes é derivada deterministicamente de `reason`/`target_type`, sem nova coluna no banco.
 - Referência visual usada: `_product/proto/admin/Dashboard.png`. Builder/Quick Copy não estava acessível como ferramenta MCP neste ambiente; a limitação foi registrada no ADR.
 - Browser local validado em app Admin temporário com backend temporário, admin real transitório, larguras 390px, 768px e 1366px, troca de período para 30 dias e remoção do admin transitório ao final.
+
+### Complemento visual solicitado (2026-07-27)
+
+- Aplicado o layout piloto premium ao `/dashboard`, mantendo dados reais e contratos da TASK-48 intactos.
+- A rota passou a entrar no escopo `admin-premium-pilot` do AdminShell, com sidebar clara, cards com borda/sombra suave e hierarquia tipografica igual ao piloto ja validado em outras telas Admin.
+- O topo agora usa card informativo com **Exportar CSV** real; os controles de periodo foram movidos para o card **Visao geral** com seletor 7/30/90 dias e campos **De/Ate**, preservando o contrato `from`/`to` existente.
+- Graficos continuam em SVG/CSS proprio, sem pacote novo e sem imagem estatica; a curva de comunidades usa `buildSmoothSvgPath` e os grids foram deduplicados para evitar warnings com poucos valores.
+- UI mobile-first validada em 390px via browser local/headless; desktop validado em 1440px. Builder/Quick Copy nao estava exposto como ferramenta no ambiente, entao a referencia auditavel foi `_product/proto/admin/Dashboard.png` mais o piloto premium local ja aprovado.
+- Validacoes executadas neste complemento: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e browser local/headless em `/dashboard`.
