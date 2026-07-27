@@ -540,14 +540,6 @@ const OnlineNowSkeleton = () => (
   <CardShell className="h-[13rem] animate-pulse border-primary/15 bg-primary-soft/25" />
 );
 
-const onlineNowSegmentClassName = (id: string) =>
-  cn(
-    id === "patients" && "bg-primary",
-    id === "psychologists" && "bg-success",
-    id === "anonymous" && "bg-muted",
-    !["anonymous", "patients", "psychologists"].includes(id) && "bg-subtle",
-  );
-
 const OnlineNowStat = ({ label, value }: { label: string; value: number }) => (
   <div className="rounded-2xl border border-border/70 bg-surface/85 p-3">
     <p className="text-xs font-semibold text-muted">{label}</p>
@@ -557,6 +549,12 @@ const OnlineNowStat = ({ label, value }: { label: string; value: number }) => (
 
 const OnlineNowPanel = ({ onlineNow }: { onlineNow: TrafficOnlineNow }) => {
   const updatedAt = formatTime(onlineNow.window.to);
+  const counters = [
+    { label: "Sess\u00f5es ativas", value: onlineNow.active_sessions },
+    { label: "Pacientes", value: onlineNow.patients },
+    { label: "Psic\u00f3logos", value: onlineNow.psychologists },
+    { label: "N\u00e3o autenticados", value: onlineNow.anonymous_visitors },
+  ];
 
   return (
     <CardShell className="border-primary/20 bg-primary-soft/25 p-5 md:p-6">
@@ -587,29 +585,13 @@ const OnlineNowPanel = ({ onlineNow }: { onlineNow: TrafficOnlineNow }) => {
         </div>
       </div>
 
-      <div className="mt-5 grid min-w-0 gap-3 sm:grid-cols-3">
-        <OnlineNowStat label={"Sess\u00f5es ativas"} value={onlineNow.active_sessions} />
-        <OnlineNowStat label={"Usu\u00e1rios autenticados"} value={onlineNow.authenticated_users} />
-        <OnlineNowStat label="Sem login" value={onlineNow.anonymous_visitors} />
-      </div>
-
-      <div className="mt-5 grid min-w-0 gap-3 lg:grid-cols-3">
-        {onlineNow.items.map((item) => (
-          <div className="min-w-0 rounded-2xl border border-border/70 bg-surface p-4" key={item.id}>
-            <div className="flex min-w-0 items-center justify-between gap-3">
-              <p className="min-w-0 truncate text-sm font-black text-foreground">{item.label}</p>
-              <p className="shrink-0 text-sm font-black text-foreground">
-                {numberFormatter.format(item.count)}
-              </p>
-            </div>
-            <div className="mt-3 h-2 overflow-hidden rounded-full bg-surface-muted">
-              <div
-                className={cn("h-full rounded-full", onlineNowSegmentClassName(item.id))}
-                style={{ width: `${Math.min(100, item.percentage)}%` }}
-              />
-            </div>
-            <p className="mt-2 text-xs font-bold text-muted">{item.percentage}% dos ativos</p>
-          </div>
+      <div className="mt-5 grid min-w-0 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        {counters.map((counter) => (
+          <OnlineNowStat
+            key={`online-now-counter-${counter.label}`}
+            label={counter.label}
+            value={counter.value}
+          />
         ))}
       </div>
 

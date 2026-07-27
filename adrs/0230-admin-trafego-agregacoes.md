@@ -203,28 +203,6 @@ Validacao complementar:
 - `pnpm check`.
 - HTTP local `GET http://localhost:3002/trafego` retornou `200`.
 
-## Complemento 2026-07-27 - Tabelas compactas de conversao
-
-Por feedback direto de produto, a leitura operacional do bloco **Conversoes geradas** deve evitar peso textual excessivo e qualquer rolagem horizontal nas tabelas de conversao.
-
-Decisao:
-
-- Manter o periodo apenas no cabecalho geral do bloco, nao nos subtitulos das duas colunas.
-- Trocar as legendas dos donuts para acoes em voz ativa: **Se cadastraram**, **Nao se cadastraram**, **Se converteram apos o cadastro** e **Nao se converteram apos o cadastro**.
-- Exibir em **Conversao geral apos cadastro** uma explicacao curta: usuarios que realizaram pelo menos uma acao apos se cadastrarem.
-- Renderizar as conversoes antes/depois do cadastro em tabela `table-fixed`, largura total, sem `min-width` e sem wrapper de rolagem horizontal.
-- Reduzir o peso textual da tabela, preservando destaque apenas para a taxa e mantendo as descricoes tecnicas fora da UI.
-
-Consequencia:
-
-- O bloco fica mais compacto e responsivo, com menos ruido visual para operacao.
-- As fontes tecnicas e descricoes continuam disponiveis no contrato/exportacao, mas nao aparecem na tela principal.
-
-Validacao complementar:
-
-- `pnpm --dir admin check`.
-- `pnpm --dir admin build`.
-- HTTP local `GET http://localhost:3002/trafego` retornou `200`.
 ## Complemento 2026-07-27 - Usuarios online agora
 
 Por feedback direto de produto, a tela `/trafego` tambem deve destacar quem esta ativo no momento,
@@ -272,3 +250,55 @@ Validacao complementar:
   a copy do bloco **Usuarios online agora**.
 - Browser/headless CDP completo ficou limitado pela politica do ambiente, que bloqueou a
   inicializacao de processo auxiliar do Chrome.
+
+## Complemento 2026-07-27 - Tabelas compactas de conversao
+
+Por feedback direto de produto, a leitura operacional do bloco **Conversoes geradas** deve evitar peso textual excessivo e qualquer rolagem horizontal nas tabelas de conversao.
+
+Decisao:
+
+- Manter o periodo apenas no cabecalho geral do bloco, nao nos subtitulos das duas colunas.
+- Trocar as legendas dos donuts para acoes em voz ativa: **Se cadastraram**, **Nao se cadastraram**, **Se converteram apos o cadastro** e **Nao se converteram apos o cadastro**.
+- Exibir em **Conversao geral apos cadastro** uma explicacao curta: usuarios que realizaram pelo menos uma acao apos se cadastrarem.
+- Renderizar as conversoes antes/depois do cadastro em tabela `table-fixed`, largura total, sem `min-width` e sem wrapper de rolagem horizontal.
+- Reduzir o peso textual da tabela, preservando destaque apenas para a taxa e mantendo as descricoes tecnicas fora da UI.
+
+Consequencia:
+
+- O bloco fica mais compacto e responsivo, com menos ruido visual para operacao.
+- As fontes tecnicas e descricoes continuam disponiveis no contrato/exportacao, mas nao aparecem na tela principal.
+
+Validacao complementar:
+
+- `pnpm --dir admin check`.
+- `pnpm --dir admin build`.
+- HTTP local `GET http://localhost:3002/trafego` retornou `200`.
+
+## Complemento 2026-07-27 - Quatro contadores em usuarios online agora
+
+Por feedback direto de produto, o bloco **Usuarios online agora** deve reduzir os contadores
+inferiores para a leitura operacional minima pedida na tela.
+
+Decisao:
+
+- Manter o total destacado de visitantes ativos como resumo principal do bloco.
+- Substituir os seis contadores inferiores anteriores por apenas quatro cards: **Sessoes ativas**,
+  **Pacientes**, **Psicologos** e **Nao autenticados**.
+- Reutilizar os campos reais ja existentes em `summary.online_now` sem alterar o contrato do
+  backend nem a exportacao CSV.
+- Remover da UI as barras percentuais dos segmentos nessa area para diminuir ruido visual.
+
+Consequencia:
+
+- O bloco fica mais compacto e direto, preservando a diferenca entre sessoes ativas e visitantes
+  ativos.
+- A API continua expondo os demais campos do snapshot para compatibilidade e exportacao, mas a tela
+  principal mostra somente a leitura solicitada.
+
+Validacao complementar:
+
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/trafego/client.tsx"`.
+- `pnpm --dir admin check`.
+- `pnpm --dir admin build`.
+- `pnpm check`.
+- HTTP local `GET http://localhost:3002/trafego` retornou `200`.
