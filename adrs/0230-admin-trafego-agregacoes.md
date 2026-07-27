@@ -202,3 +202,26 @@ Validacao complementar:
 - `pnpm --dir admin build`.
 - `pnpm check`.
 - HTTP local `GET http://localhost:3002/trafego` retornou `200`.
+
+## Complemento 2026-07-27 - Tabelas compactas de conversao
+
+Por feedback direto de produto, a leitura operacional do bloco **Conversoes geradas** deve evitar peso textual excessivo e qualquer rolagem horizontal nas tabelas de conversao.
+
+Decisao:
+
+- Manter o periodo apenas no cabecalho geral do bloco, nao nos subtitulos das duas colunas.
+- Trocar as legendas dos donuts para acoes em voz ativa: **Se cadastraram**, **Nao se cadastraram**, **Se converteram apos o cadastro** e **Nao se converteram apos o cadastro**.
+- Exibir em **Conversao geral apos cadastro** uma explicacao curta: usuarios que realizaram pelo menos uma acao apos se cadastrarem.
+- Renderizar as conversoes antes/depois do cadastro em tabela `table-fixed`, largura total, sem `min-width` e sem wrapper de rolagem horizontal.
+- Reduzir o peso textual da tabela, preservando destaque apenas para a taxa e mantendo as descricoes tecnicas fora da UI.
+
+Consequencia:
+
+- O bloco fica mais compacto e responsivo, com menos ruido visual para operacao.
+- As fontes tecnicas e descricoes continuam disponiveis no contrato/exportacao, mas nao aparecem na tela principal.
+
+Validacao complementar:
+
+- `pnpm --dir admin check`.
+- `pnpm --dir admin build`.
+- HTTP local `GET http://localhost:3002/trafego` retornou `200`.

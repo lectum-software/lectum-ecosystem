@@ -928,9 +928,31 @@ const formatEventLabel = (events: number) => {
 const ConversionChartCard = ({ chart }: { chart: TrafficConversionChart }) => (
   <div className="min-w-0 rounded-[1.5rem] border border-border bg-surface p-4">
     <h3 className="text-base font-black text-foreground">{chart.label}</h3>
-    <DonutChart ariaLabel={chart.label} items={chart.items} total={chart.total} />
+    {chart.id === "post_signup_overall" ? (
+      <p className="mt-1 text-xs leading-5 text-muted">
+        Usuários que realizaram pelo menos uma ação após se cadastrarem.
+      </p>
+    ) : null}
+    <DonutChart
+      ariaLabel={chart.label}
+      items={getConversionChartItems(chart)}
+      total={chart.total}
+    />
   </div>
 );
+
+const CONVERSION_CHART_ITEM_LABELS: Record<string, string> = {
+  converted: "Se converteram após o cadastro",
+  not_converted: "Não se converteram após o cadastro",
+  not_signed_up: "Não se cadastraram",
+  signed_up: "Se cadastraram",
+};
+
+const getConversionChartItems = (chart: TrafficConversionChart) =>
+  chart.items.map((item) => ({
+    ...item,
+    label: CONVERSION_CHART_ITEM_LABELS[item.id] ?? item.label,
+  }));
 
 const ConversionActionTable = ({ items }: { items: TrafficConversionAction[] }) => (
   <div className="mt-3 overflow-hidden rounded-[1.25rem] border border-border bg-surface">
@@ -939,46 +961,44 @@ const ConversionActionTable = ({ items }: { items: TrafficConversionAction[] }) 
         Nenhuma conversão real capturada no período.
       </p>
     ) : (
-      <div className="overflow-x-auto">
-        <table className="w-full min-w-[34rem] text-left text-sm">
-          <thead className="bg-surface-muted text-xs font-bold uppercase tracking-[0.08em] text-muted">
-            <tr>
-              <th className="px-4 py-3">Conversão</th>
-              <th className="px-4 py-3 text-right">Pessoas</th>
-              <th className="px-4 py-3 text-right">Eventos</th>
-              <th className="px-4 py-3 text-right">Taxa</th>
+      <table className="w-full table-fixed text-left text-xs sm:text-sm">
+        <thead className="bg-surface-muted text-[0.65rem] font-semibold uppercase tracking-[0.08em] text-muted sm:text-xs">
+          <tr>
+            <th className="w-[38%] px-2 py-3 sm:px-3">Conversão</th>
+            <th className="w-[24%] px-2 py-3 text-right sm:px-3">Pessoas</th>
+            <th className="w-[22%] px-2 py-3 text-right sm:px-3">Eventos</th>
+            <th className="w-[16%] px-2 py-3 text-right sm:px-3">Taxa</th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-border">
+          {items.map((item) => (
+            <tr key={item.id}>
+              <td className="break-words px-2 py-3 font-semibold text-foreground sm:px-3">
+                {item.label}
+              </td>
+              <td className="break-words px-2 py-3 text-right font-medium text-foreground sm:px-3">
+                {formatActorLabel(item)}
+              </td>
+              <td className="break-words px-2 py-3 text-right font-medium text-muted sm:px-3">
+                {formatEventLabel(item.events)}
+              </td>
+              <td className="break-words px-2 py-3 text-right font-semibold text-primary sm:px-3">
+                {item.actor_percentage}%
+              </td>
             </tr>
-          </thead>
-          <tbody className="divide-y divide-border">
-            {items.map((item) => (
-              <tr key={item.id}>
-                <td className="px-4 py-3 font-black text-foreground">{item.label}</td>
-                <td className="px-4 py-3 text-right font-bold text-foreground">
-                  {formatActorLabel(item)}
-                </td>
-                <td className="px-4 py-3 text-right font-semibold text-muted">
-                  {formatEventLabel(item.events)}
-                </td>
-                <td className="px-4 py-3 text-right font-bold text-primary">
-                  {item.actor_percentage}%
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+          ))}
+        </tbody>
+      </table>
     )}
   </div>
 );
 
 const ConversionColumn = ({
   children,
-  periodDescription,
   summary,
   title,
 }: {
   children: React.ReactNode;
-  periodDescription: string;
   summary: string;
   title: string;
 }) => (
@@ -986,7 +1006,6 @@ const ConversionColumn = ({
     <div className="min-w-0">
       <p className="text-xs font-semibold uppercase tracking-[0.12em] text-primary">{summary}</p>
       <h3 className="mt-1 text-lg font-black text-foreground">{title}</h3>
-      <p className="mt-1 text-xs font-bold text-muted">{periodDescription}</p>
     </div>
     <div className="mt-4 min-w-0 space-y-4">{children}</div>
   </div>
@@ -1011,7 +1030,6 @@ const ConversionsPanel = ({
       />
       <div className="mt-5 grid min-w-0 gap-4 xl:grid-cols-2">
         <ConversionColumn
-          periodDescription={periodDescription}
           summary={`${numberFormatter.format(preSignup.total_visitors)} visitantes`}
           title="Conversões para cadastro"
         >
@@ -1027,7 +1045,6 @@ const ConversionsPanel = ({
         </ConversionColumn>
 
         <ConversionColumn
-          periodDescription={periodDescription}
           summary={`${numberFormatter.format(postSignup.total_users)} usuários cadastrados`}
           title="Conversões após cadastro"
         >

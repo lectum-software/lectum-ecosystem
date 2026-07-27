@@ -789,3 +789,22 @@ Validacao desta execucao complementar:
 - `pnpm --dir admin check` - OK.
 - `pnpm --dir admin build` - OK.
 - HTTP local `GET http://localhost:3002/trafego` - OK (`200`).
+
+## Execucao complementar - tabela responsiva e labels de conversao (2026-07-27)
+
+- Reduzido o peso visual dos textos da tabela de conversoes antes/depois do cadastro.
+- A tabela passou a usar largura total com colunas fixas e quebras de texto, removendo a necessidade de barra de rolagem horizontal.
+- Removido o periodo que aparecia abaixo dos titulos **Conversoes para cadastro** e **Conversoes apos cadastro**; o periodo permanece apenas no cabecalho do bloco **Conversoes geradas**.
+- As legendas do grafico de cadastro foram ajustadas para **Se cadastraram** e **Nao se cadastraram**.
+- As legendas do grafico geral apos cadastro foram ajustadas para **Se converteram apos o cadastro** e **Nao se converteram apos o cadastro**.
+- O card **Conversao geral apos cadastro** passou a explicar que considera usuarios que realizaram pelo menos uma acao apos se cadastrarem.
+- Nao houve mock, endpoint novo, package novo, alteracao em Prisma schema/migrations ou dado persistido; `db:migrate` nao foi necessario.
+- Builder/Quick Copy nao estava exposto como ferramenta callable neste ambiente; as referencias auditaveis foram `_product/proto/admin/Tr?fego.png` e a captura enviada pelo usuario.
+- ADR atualizado: `adrs/0230-admin-trafego-agregacoes.md`.
+
+Validacao desta execucao complementar:
+
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/trafego/client.tsx"` - OK.
+- `pnpm --dir admin check` - OK.
+- `pnpm --dir admin build` - OK.
+- HTTP local `GET http://localhost:3002/trafego` - OK (`200`).
