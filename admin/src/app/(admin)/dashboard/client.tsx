@@ -3,16 +3,13 @@
 import {
   Activity,
   AlertTriangle,
-  BarChart3,
   CalendarDays,
   ChevronDown,
   Download,
   Flag,
-  Globe2,
   Loader2,
   type LucideIcon,
   RefreshCw,
-  Smartphone,
   UserRoundCheck,
   Users,
   WalletCards,
@@ -24,9 +21,6 @@ import { resolveApiError } from "@/api/handle";
 import type {
   AdminDashboardSummary,
   DashboardDailyPoint,
-  DashboardDeviceItem,
-  DashboardFinancialPoint,
-  DashboardLocationItem,
   DashboardMetric,
   DashboardPendingReport,
   DashboardSummaryQuery,
@@ -35,7 +29,6 @@ import { useDateRangeCommitOnBlur } from "@/hooks/use-date-range-commit-on-blur"
 import { aggregateCalendarChartPoints, buildSmoothSvgPath } from "@/lib/chart-time-series";
 import { cn } from "@/lib/utils";
 
-const COLORS = ["var(--admin-primary)", "#13a85b", "#f59f00", "#8b5cf6", "#e5484d"] as const;
 const DASHBOARD_PERIOD_OPTIONS = [
   { days: 7, id: "7d", label: "Últimos 7 dias" },
   { days: 30, id: "30d", label: "Últimos 30 dias" },
@@ -109,8 +102,6 @@ const formatMetricValue = (metric: DashboardMetric) => {
   return numberFormatter.format(metric.value);
 };
 
-const formatCurrencyCents = (value: number) => currencyFormatter.format(value / 100);
-
 const formatChange = (value: number | null) => {
   if (value === null) return "sem base anterior";
   if (value === 0) return "0%";
@@ -144,16 +135,8 @@ const hasPeriodRecords = (summary: AdminDashboardSummary) => {
     ...summary.community_activity.posts,
     ...summary.community_activity.comments,
   ].some((point) => point.count > 0);
-  const financialValues = summary.financial.daily.some((point) => point.value_cents > 0);
 
-  return (
-    cardValues ||
-    communityValues ||
-    financialValues ||
-    summary.devices.total > 0 ||
-    summary.locations.total > 0 ||
-    summary.pending_reports.total > 0
-  );
+  return cardValues || communityValues || summary.pending_reports.total > 0;
 };
 
 const CardShell = ({ children, className }: { children?: React.ReactNode; className?: string }) => (
@@ -410,230 +393,6 @@ const LineChart = ({
   );
 };
 
-const BarChart = ({ points }: { points: DashboardFinancialPoint[] }) => {
-  const width = 520;
-  const height = 250;
-  const padding = { bottom: 32, left: 48, right: 18, top: 22 };
-  const chartPoints = aggregateCalendarChartPoints(points, ["value_cents"] as const, {
-    metricAggregations: { value_cents: "last" },
-  });
-  const maxValue = Math.max(1, ...chartPoints.map((point) => point.value_cents));
-  const chartWidth = width - padding.left - padding.right;
-  const chartHeight = height - padding.top - padding.bottom;
-  const barGap = 10;
-  const barWidth =
-    chartPoints.length > 0 ? Math.max(12, chartWidth / chartPoints.length - barGap) : 20;
-
-  return (
-    <figure className="mt-4 overflow-hidden rounded-[1.5rem] border border-border/70 bg-surface p-4">
-      <div className="overflow-x-auto">
-        <svg
-          aria-label="Gráfico de barras do MRR estimado por dia"
-          className="min-w-[520px]"
-          role="img"
-          viewBox={`0 0 ${width} ${height}`}
-        >
-          {[...new Set([0, 0.5, 1].map((ratio) => Math.round(maxValue * ratio)))].map((value) => {
-            const y = padding.top + chartHeight - (value / maxValue) * chartHeight;
-            return (
-              <g key={`finance-grid-${value}`}>
-                <line
-                  opacity="0.58"
-                  stroke="var(--admin-border)"
-                  strokeWidth="1"
-                  x1={padding.left}
-                  x2={width - padding.right}
-                  y1={y}
-                  y2={y}
-                />
-                <text fill="var(--admin-muted)" fontSize="10" fontWeight="500" x="0" y={y + 4}>
-                  {formatCurrencyCents(value)}
-                </text>
-              </g>
-            );
-          })}
-          {chartPoints.map((point, index) => {
-            const barHeight = (point.value_cents / maxValue) * chartHeight;
-            const x = padding.left + index * (barWidth + barGap);
-            const y = padding.top + chartHeight - barHeight;
-
-            return (
-              <g key={point.date}>
-                <rect
-                  fill="url(#barGradient)"
-                  height={barHeight}
-                  rx="8"
-                  width={barWidth}
-                  x={x}
-                  y={y}
-                />
-                <text
-                  fill="var(--admin-muted)"
-                  fontSize="10"
-                  fontWeight="600"
-                  textAnchor="middle"
-                  x={x + barWidth / 2}
-                  y={height - 12}
-                >
-                  {point.chartLabel}
-                </text>
-              </g>
-            );
-          })}
-          <defs>
-            <linearGradient id="barGradient" x1="0" x2="0" y1="0" y2="1">
-              <stop offset="0%" stopColor="var(--admin-primary)" stopOpacity="0.82" />
-              <stop offset="100%" stopColor="var(--admin-primary)" stopOpacity="0.32" />
-            </linearGradient>
-          </defs>
-        </svg>
-      </div>
-      <p className="mt-3 text-xs leading-relaxed text-muted">
-        MRR estimado por assinatura profissional ativa no dia, sem tratar como receita confirmada.
-      </p>
-    </figure>
-  );
-};
-
-const DonutChart = ({ items, total }: { items: DashboardDeviceItem[]; total: number }) => {
-  const radius = 42;
-  const circumference = 2 * Math.PI * radius;
-  const visibleItems = items.filter((item) => item.count > 0);
-  const segments = visibleItems.reduce<{
-    cumulative: number;
-    items: Array<{
-      dash: number;
-      item: DashboardDeviceItem;
-      strokeDashoffset: number;
-    }>;
-  }>(
-    (accumulator, item) => {
-      const share = total > 0 ? item.count / total : 0;
-      const dash = share * circumference;
-
-      return {
-        cumulative: accumulator.cumulative + dash,
-        items: [
-          ...accumulator.items,
-          {
-            dash,
-            item,
-            strokeDashoffset: -accumulator.cumulative,
-          },
-        ],
-      };
-    },
-    { cumulative: 0, items: [] },
-  ).items;
-
-  return (
-    <div className="mt-5 grid gap-6 sm:grid-cols-[minmax(10rem,13rem)_1fr] sm:items-center">
-      <svg
-        aria-label="Distribuição de sessões por dispositivo"
-        className="mx-auto aspect-square w-44"
-        role="img"
-        viewBox="0 0 120 120"
-      >
-        <circle
-          cx="60"
-          cy="60"
-          fill="none"
-          r={radius}
-          stroke="var(--admin-surface-muted)"
-          strokeWidth="18"
-        />
-        {segments.map(({ dash, item, strokeDashoffset }, index) => {
-          return (
-            <circle
-              cx="60"
-              cy="60"
-              fill="none"
-              key={item.device_type}
-              r={radius}
-              stroke={COLORS[index % COLORS.length]}
-              strokeDasharray={`${dash} ${circumference - dash}`}
-              strokeDashoffset={strokeDashoffset}
-              strokeWidth="18"
-              transform="rotate(-90 60 60)"
-            />
-          );
-        })}
-        <circle cx="60" cy="60" fill="var(--admin-surface)" r="28" />
-        <text
-          fill="var(--admin-foreground)"
-          fontSize="15"
-          fontWeight="800"
-          textAnchor="middle"
-          x="60"
-          y="58"
-        >
-          {numberFormatter.format(total)}
-        </text>
-        <text
-          fill="var(--admin-muted)"
-          fontSize="8"
-          fontWeight="600"
-          textAnchor="middle"
-          x="60"
-          y="72"
-        >
-          sessões
-        </text>
-      </svg>
-
-      <div className="grid gap-3">
-        {items.map((item, index) => (
-          <div
-            className="flex items-center justify-between gap-3 rounded-2xl bg-surface-muted p-3"
-            key={item.device_type}
-          >
-            <span className="flex items-center gap-2 text-sm font-semibold text-foreground">
-              <span
-                aria-hidden
-                className="h-3 w-3 rounded-full"
-                style={{ backgroundColor: COLORS[index % COLORS.length] }}
-              />
-              {item.label}
-            </span>
-            <span className="text-sm font-bold text-foreground">{item.percentage}%</span>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-};
-
-const LocationList = ({ items, total }: { items: DashboardLocationItem[]; total: number }) => (
-  <div className="mt-5 space-y-4">
-    {items.length === 0 ? (
-      <p className="rounded-2xl border border-dashed border-border bg-surface-muted p-4 text-sm font-medium text-muted">
-        Nenhuma localização real foi capturada no período.
-      </p>
-    ) : (
-      items.map((item) => (
-        <div className="rounded-2xl bg-surface-muted p-3" key={item.country}>
-          <div className="flex items-center justify-between gap-3 text-sm">
-            <span className="font-semibold text-foreground">{item.country}</span>
-            <span className="font-semibold text-muted">
-              {numberFormatter.format(item.count)} ({item.percentage}%)
-            </span>
-          </div>
-          <div className="mt-2 h-2 overflow-hidden rounded-full bg-surface">
-            <div
-              className="h-full rounded-full bg-primary"
-              style={{ width: `${Math.min(100, item.percentage)}%` }}
-            />
-          </div>
-        </div>
-      ))
-    )}
-    <p className="text-xs font-medium leading-5 text-muted">
-      Total de localizações consideradas: {numberFormatter.format(total)}. Sem pacote de mapa nesta
-      versão; ranking por país baseado em visitor_location.
-    </p>
-  </div>
-);
-
 const DashboardHero = ({
   isExporting,
   onExport,
@@ -787,7 +546,7 @@ const PendingReportsCard = ({
   };
 
   return (
-    <CardShell className="p-5 xl:row-span-2">
+    <CardShell className="p-5">
       <div className="flex items-center gap-3">
         <div className="grid h-10 w-10 place-items-center rounded-full bg-danger/10 text-danger">
           <Flag aria-hidden className="h-5 w-5" />
@@ -926,51 +685,16 @@ const DashboardContent = ({
         </div>
       </DashboardOverviewPanel>
 
-      <div className="grid gap-5 xl:grid-cols-[1fr_360px]">
+      <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(20rem,28rem)]">
         <div className="space-y-5">
-          <div className="grid gap-5 2xl:grid-cols-2">
-            <ChartCard
-              description={periodDescription}
-              icon={Activity}
-              title="Atividade nas comunidades"
-            >
-              <ChartLegend items={communitySeries} />
-              <LineChart series={communitySeries} />
-            </ChartCard>
-
-            <ChartCard description={periodDescription} icon={BarChart3} title="Faturamento">
-              <div className="mt-5 rounded-[1.5rem] border border-primary/15 bg-primary-soft/70 p-4">
-                <p className="text-xs font-bold uppercase tracking-[0.14em] text-primary">
-                  Estimativa
-                </p>
-                <p className="mt-2 text-3xl font-bold text-foreground">
-                  {formatCurrencyCents(summary.financial.mrr_cents)}
-                </p>
-                <p className="mt-1 text-xs font-medium leading-5 text-muted">
-                  {summary.financial.label}
-                </p>
-              </div>
-              <BarChart points={summary.financial.daily} />
-            </ChartCard>
-          </div>
-
-          <div className="grid gap-5 2xl:grid-cols-2">
-            <ChartCard
-              description={periodDescription}
-              icon={Globe2}
-              title="Acessos por localização"
-            >
-              <LocationList items={summary.locations.items} total={summary.locations.total} />
-            </ChartCard>
-
-            <ChartCard
-              description={periodDescription}
-              icon={Smartphone}
-              title="Atividade por dispositivo"
-            >
-              <DonutChart items={summary.devices.items} total={summary.devices.total} />
-            </ChartCard>
-          </div>
+          <ChartCard
+            description={periodDescription}
+            icon={Activity}
+            title="Atividade nas comunidades"
+          >
+            <ChartLegend items={communitySeries} />
+            <LineChart series={communitySeries} />
+          </ChartCard>
         </div>
 
         <PendingReportsCard
@@ -978,24 +702,6 @@ const DashboardContent = ({
           total={summary.pending_reports.total}
         />
       </div>
-
-      {summary.unavailable.length > 0 ? (
-        <CardShell className="p-4">
-          <div className="flex gap-3">
-            <AlertTriangle aria-hidden className="mt-0.5 h-5 w-5 shrink-0 text-warning" />
-            <div>
-              <h2 className="font-bold text-foreground">Métricas indisponíveis ou estimadas</h2>
-              <ul className="mt-2 list-disc space-y-1 pl-5 text-sm font-medium text-muted">
-                {summary.unavailable.map((item) => (
-                  <li key={item.id}>
-                    <strong className="text-foreground">{item.label}:</strong> {item.description}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-        </CardShell>
-      ) : null}
     </div>
   );
 };

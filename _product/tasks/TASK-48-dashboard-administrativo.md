@@ -201,3 +201,12 @@ Regras de UI obrigatórias:
 - Graficos continuam em SVG/CSS proprio, sem pacote novo e sem imagem estatica; a curva de comunidades usa `buildSmoothSvgPath` e os grids foram deduplicados para evitar warnings com poucos valores.
 - UI mobile-first validada em 390px via browser local/headless; desktop validado em 1440px. Builder/Quick Copy nao estava exposto como ferramenta no ambiente, entao a referencia auditavel foi `_product/proto/admin/Dashboard.png` mais o piloto premium local ja aprovado.
 - Validacoes executadas neste complemento: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e browser local/headless em `/dashboard`.
+
+### Complemento de limpeza do Dashboard (2026-07-27)
+
+- Removidos da UI do `/dashboard` os blocos **Faturamento**, **Acessos por localização**, **Atividade por dispositivo** e a faixa **Métricas indisponíveis ou estimadas**, conforme solicitação visual direta do usuário.
+- O contrato backend da TASK-48 foi preservado sem alteração; as agregações continuam disponíveis no endpoint de resumo, mas não são renderizadas nesta versão enxuta do Dashboard.
+- O card resumido de MRR/receita permanece na **Visão geral** por fazer parte dos cards principais e continuar com label honesto.
+- Builder/Quick Copy não estava exposto como ferramenta MCP no ambiente; validação visual baseada em `_product/proto/admin/Dashboard.png` e nas capturas fornecidas pelo usuário.
+- Validações executadas: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e browser local/headless em 390px e 1440px; admin transitório de validação removido ao final.
+- ADR relacionado: `adrs/0327-dashboard-admin-enxuto.md`.
