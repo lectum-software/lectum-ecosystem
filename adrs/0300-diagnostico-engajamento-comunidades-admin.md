@@ -22,11 +22,11 @@ Tambem foi solicitado separar votos em **Upvotes** e **Downvotes** para entender
 - Comunidades sem atividade real no periodo nao sao retornadas na relacao:
   - para psicologos, atividade e post, resposta, upvote ou downvote realizado;
   - para pacientes, atividade e post, comentario, upvote, downvote ou salvamento realizado.
-- O diagnostico e derivado deterministicamente por comunidade a partir de interacoes reais do periodo, comparando com a comunidade mais ativa da mesma pessoa naquele recorte:
+- O diagnostico e derivado deterministicamente por comunidade a partir de interacoes reais do periodo, sem comparar o desempenho da pessoa em uma comunidade com outra:
   - menos de 3 interacoes: **Sem base**;
-  - 12+ interacoes e pelo menos 75% da comunidade mais ativa: **Muito ativo**;
-  - 6+ interacoes ou pelo menos 35% da comunidade mais ativa: **Ativo**;
-  - demais comunidades com atividade: **Pouco ativo**.
+  - de 3 a 5 interacoes: **Pouco ativo**;
+  - de 6 a 11 interacoes: **Ativo**;
+  - 12+ interacoes: **Muito ativo**.
 - A logica ficou em `backend/src/utils/admin-community-engagement-diagnosis.ts` para manter a mesma regra em psicologos e pacientes.
 - A UI mostra a coluna **Diagnostico de Engajamento** e substitui/expande votos agregados por **Upvotes** e **Downvotes**.
 
@@ -35,7 +35,7 @@ Tambem foi solicitado separar votos em **Upvotes** e **Downvotes** para entender
 - Administradores conseguem avaliar intensidade e direcao de participacao sem abrir cada post.
 - Comunidades apenas seguidas, mas sem atividade no periodo, deixam de poluir a lista.
 - **Sem base** nao significa ausencia de atividade; significa amostra insuficiente para classificar com justica.
-- Os limiares sao uma regra V1 e devem ser recalibrados quando houver volume real maior ou decisao de normalizar por media da comunidade.
+- Os limiares absolutos sao uma regra V1 e devem ser recalibrados quando houver volume real maior ou decisao de normalizar por baseline interno da propria comunidade.
 
 ## Validacao
 
@@ -68,3 +68,10 @@ Tambem foi solicitado separar votos em **Upvotes** e **Downvotes** para entender
 - O status de participacao passou a aparecer como **Seguindo**/**Nao seguindo** junto ao nome da comunidade, usando o booleano real `is_member`.
 - A coluna **Diagnostico de Engajamento** foi renomeada para **Engajamento** apenas na UI; o contrato permanece `engagement_diagnosis`.
 - A decisao nao remove `interactions` nem `is_member` do backend, pois seguem necessarios para ordenacao, compatibilidade e futuras leituras operacionais.
+
+## Ajuste de regra 2026-07-27
+
+- Pedido do usuario: cada comunidade deve ser analisada individualmente; o resultado de engajamento do psicologo em uma comunidade nao pode depender do engajamento em outra.
+- A regra compartilhada removeu a dependencia de `maxInteractions` da pessoa no periodo. O diagnostico agora usa apenas o total real de interacoes daquela comunidade no recorte selecionado.
+- As faixas passam a ser absolutas e independentes: **Sem base** para 0 a 2 interacoes, **Pouco ativo** para 3 a 5, **Ativo** para 6 a 11 e **Muito ativo** para 12 ou mais.
+- A mudanca preserva o contrato `engagement_diagnosis`, os ids/labels existentes, as fontes first-party reais e a ordenacao por interacoes; nao ha endpoint paralelo, schema Prisma, migration, package novo, mock, seed ou backfill.

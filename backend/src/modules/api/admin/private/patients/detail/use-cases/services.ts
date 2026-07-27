@@ -1182,7 +1182,6 @@ const upsertCommunity = (
       downvotes: 0,
       engagement_diagnosis: diagnoseAdminCommunityEngagement({
         interactions: 0,
-        maxInteractions: 0,
         source: "community_post+post_reply+post_vote+post_save+post_reply_save",
       }),
       id: community.id,
@@ -1239,17 +1238,11 @@ const buildActiveCommunities = (bundle: AdminPatientEngagementBundle) => {
   const activeCommunities = [...communities.values()].filter(
     (community) => community.interactions > 0,
   );
-  const maxInteractions = Math.max(
-    0,
-    ...activeCommunities.map((community) => community.interactions),
-  );
-
   return activeCommunities
     .map((community) => ({
       ...community,
       engagement_diagnosis: diagnoseAdminCommunityEngagement({
         interactions: community.interactions,
-        maxInteractions,
         source: "community_post+post_reply+post_vote+post_save+post_reply_save",
       }),
     }))

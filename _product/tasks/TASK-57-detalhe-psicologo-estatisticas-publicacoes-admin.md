@@ -392,3 +392,29 @@ Exibir estatísticas de negócio/comunidade e publicações do psicólogo com da
 - Chamada direta do service `showAdminPsychologistStatistics({ id: "cmrgztri7000tn0uh1q4n8vxf", period: "all" })` confirmou `business.traction.label="Tracao Forte"` com sinais reais.
 - HTTP local autenticado em `GET http://localhost:3001/api/admin/private/psychologists/cmrgztri7000tn0uh1q4n8vxf/statistics?period=all` confirmou `business.traction`.
 - Browser local/headless via Chrome/CDP em build Admin servido em `http://localhost:3012/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=estatisticas` confirmou em desktop 1365px e mobile 390px que **Estatisticas de negocio** exibe a tag **Tracao Forte** ao lado do titulo. A porta 3012 foi usada apenas para validar build novo sem interferir no servidor local 3002 ja aberto; CORS foi desabilitado no Chrome de validacao porque o backend local permite a origem padrao 3002.
+
+## Ajuste pos-feedback 2026-07-27 - Engajamento independente por comunidade
+
+- Pedido do usuario: como a analise e feita comunidade a comunidade, o resultado do psicologo em uma comunidade nao pode depender do engajamento dele em outra comunidade.
+- A regra compartilhada `diagnoseAdminCommunityEngagement` deixou de receber/comparar `maxInteractions` da pessoa no periodo. O diagnostico agora usa apenas o total real de interacoes daquela comunidade no recorte selecionado.
+- As faixas passam a ser absolutas: **Sem base** para 0 a 2 interacoes, **Pouco ativo** para 3 a 5, **Ativo** para 6 a 11 e **Muito ativo** para 12 ou mais.
+- O contrato `engagement_diagnosis`, os ids/labels existentes, as fontes first-party reais, a ordenacao por interacoes e a UI da coluna **Engajamento** foram preservados.
+- A alteracao tambem corrige o bloco equivalente de paciente por reutilizar o mesmo helper central, sem endpoint paralelo, schema Prisma, migration, package novo, mock, seed ou backfill.
+- Nao houve mudanca visual; Builder/Quick Copy e validacao em browser nao se aplicaram a este ajuste.
+- ADR atualizado: `adrs/0300-diagnostico-engajamento-comunidades-admin.md`.
+
+### Criterios de aceite do ajuste
+
+- [x] O diagnostico de uma comunidade nao depende mais de `maxInteractions` ou de outra comunidade da mesma pessoa.
+- [x] As labels possiveis da coluna **Engajamento** continuam sendo **Sem base**, **Pouco ativo**, **Ativo** e **Muito ativo**.
+- [x] A classificacao usa apenas interacoes reais da comunidade no periodo selecionado.
+- [x] Nenhum mock, seed, endpoint simulado, migration, package novo ou backfill artificial foi adicionado.
+
+### Validacao complementar executada
+
+- `pnpm --dir backend exec biome check --write src/utils/admin-community-engagement-diagnosis.ts src/modules/api/admin/private/psychologists/engagement/use-cases/services.ts src/modules/api/admin/private/patients/detail/use-cases/services.ts`
+- Smoke direto do helper com `pnpm --dir backend exec tsx -e`, confirmando 0/1/2 => **Sem base**, 3/5 => **Pouco ativo**, 6/11 => **Ativo** e 12/30 => **Muito ativo**.
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir backend typecheck` apos falha transiente de `prisma generate` com `ENOTEMPTY` durante a primeira execucao de `pnpm check`.
+- `pnpm check` reexecutado com sucesso.

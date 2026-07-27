@@ -1012,7 +1012,6 @@ const buildCommunityItems = (input: {
       downvotes: 0,
       engagement_diagnosis: diagnoseAdminCommunityEngagement({
         interactions: 0,
-        maxInteractions: 0,
         source: "community_post+post_reply+post_vote.user_id",
       }),
       following: false,
@@ -1102,17 +1101,11 @@ const buildCommunityItems = (input: {
   const activeCommunities = [...communities.values()].filter(
     (community) => community.interactions > 0,
   );
-  const maxInteractions = Math.max(
-    0,
-    ...activeCommunities.map((community) => community.interactions),
-  );
-
   return activeCommunities
     .map((community) => ({
       ...community,
       engagement_diagnosis: diagnoseAdminCommunityEngagement({
         interactions: community.interactions,
-        maxInteractions,
         source: "community_post+post_reply+post_vote.user_id",
       }),
     }))
