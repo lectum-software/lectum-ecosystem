@@ -60,6 +60,7 @@ export type TrafficLocationItem = {
 };
 
 export type TrafficEntryPage = {
+  conversions: number;
   count: number;
   label: string;
   path: string;
@@ -113,7 +114,7 @@ export type AdminTrafficSummary = {
   };
   entry_pages: {
     items: TrafficEntryPage[];
-    source: "page_view_event.is_entry";
+    source: "page_view_event.is_entry+important_action_event.session_id";
     total: number;
   };
   locations: {

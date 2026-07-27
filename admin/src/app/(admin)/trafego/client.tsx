@@ -626,7 +626,7 @@ const EntryPagesTable = ({ items }: { items: TrafficEntryPage[] }) => (
       {items.map((item) => (
         <div className="rounded-2xl border border-border bg-surface p-3" key={item.path}>
           <p className="font-black text-foreground">{item.label}</p>
-          <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
+          <div className="mt-3 grid grid-cols-3 gap-2 text-xs">
             <div className="rounded-xl bg-surface-muted p-2">
               <span className="block font-semibold text-muted">Sess&otilde;es</span>
               <strong className="text-foreground">{numberFormatter.format(item.count)}</strong>
@@ -634,6 +634,12 @@ const EntryPagesTable = ({ items }: { items: TrafficEntryPage[] }) => (
             <div className="rounded-xl bg-surface-muted p-2">
               <span className="block font-semibold text-muted">Participa&ccedil;&atilde;o</span>
               <strong className="text-foreground">{item.percentage}%</strong>
+            </div>
+            <div className="rounded-xl bg-surface-muted p-2">
+              <span className="block font-semibold text-muted">Convers&otilde;es geradas</span>
+              <strong className="text-foreground">
+                {numberFormatter.format(item.conversions)}
+              </strong>
             </div>
           </div>
         </div>
@@ -646,13 +652,16 @@ const EntryPagesTable = ({ items }: { items: TrafficEntryPage[] }) => (
     </div>
 
     <div className="mt-5 hidden overflow-x-auto md:block">
-      <table className="w-full min-w-full text-left text-sm">
-        <caption className="sr-only">P&aacute;ginas de entrada por sess&otilde;es</caption>
+      <table className="w-full min-w-[38rem] text-left text-sm">
+        <caption className="sr-only">
+          P&aacute;ginas de entrada por sess&otilde;es e convers&otilde;es geradas
+        </caption>
         <thead className="text-xs text-muted">
           <tr>
             <th className="py-3 font-black">P&aacute;gina de entrada</th>
-            <th className="py-3 font-black">Sess&otilde;es</th>
-            <th className="py-3 font-black">%</th>
+            <th className="py-3 text-right font-black">Sess&otilde;es</th>
+            <th className="py-3 text-right font-black">%</th>
+            <th className="py-3 text-right font-black">Convers&otilde;es geradas</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-border">
@@ -661,10 +670,13 @@ const EntryPagesTable = ({ items }: { items: TrafficEntryPage[] }) => (
               <td className="min-w-0 py-3 pr-3">
                 <p className="font-black text-foreground">{item.label}</p>
               </td>
-              <td className="py-3 pr-3 font-bold text-foreground">
+              <td className="py-3 pr-3 text-right font-bold text-foreground">
                 {numberFormatter.format(item.count)}
               </td>
-              <td className="py-3 font-bold text-muted">{item.percentage}%</td>
+              <td className="py-3 pr-3 text-right font-bold text-muted">{item.percentage}%</td>
+              <td className="py-3 text-right font-bold text-foreground">
+                {numberFormatter.format(item.conversions)}
+              </td>
             </tr>
           ))}
         </tbody>
@@ -717,7 +729,6 @@ const PageNavigationPanel = ({
   const bounceRateMetric = findMetric(summary, "bounce_rate");
   const returnRateMetric = findMetric(summary, "return_rate");
   const importantActionSessionsMetric = findMetric(summary, "important_action_sessions");
-  const topEntryPage = summary.entry_pages.items[0] ?? null;
 
   const cards = [
     {
@@ -768,29 +779,14 @@ const PageNavigationPanel = ({
 
   return (
     <CardShell className="min-w-0 p-5 md:p-6">
-      <div className="flex min-w-0 flex-col gap-3 md:flex-row md:items-start md:justify-between">
+      <div className="flex min-w-0 flex-col gap-3">
         <div className="min-w-0">
           <div className="flex min-w-0 items-center gap-2">
             <FileText aria-hidden className="h-5 w-5 shrink-0 text-primary" />
-            <h2 className="min-w-0 text-xl font-bold text-foreground">
-              Detalhes da navegação por páginas
-            </h2>
+            <h2 className="min-w-0 text-xl font-bold text-foreground">Uso da plataforma</h2>
           </div>
           <p className="mt-1 text-sm font-bold leading-6 text-muted">{periodDescription}</p>
-          <p className="mt-2 max-w-3xl text-sm font-medium leading-6 text-muted">
-            Acompanhe como as sessões começam e quantas páginas são vistas no período selecionado.
-            Os números abaixo usam somente pageviews reais capturados pela Lectum.
-          </p>
         </div>
-        {topEntryPage ? (
-          <div className="rounded-2xl bg-primary-soft px-4 py-3 text-sm md:max-w-xs md:text-right">
-            <p className="font-semibold text-muted">Principal entrada</p>
-            <p className="mt-1 font-black text-foreground">{topEntryPage.label}</p>
-            <p className="mt-1 break-all text-xs font-semibold text-muted">
-              {numberFormatter.format(topEntryPage.count)} sessões · {topEntryPage.percentage}%
-            </p>
-          </div>
-        ) : null}
       </div>
 
       <div className="mt-5 grid min-w-0 gap-4 xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.25fr)]">

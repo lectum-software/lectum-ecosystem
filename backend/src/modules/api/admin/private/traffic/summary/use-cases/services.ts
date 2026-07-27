@@ -1140,21 +1140,37 @@ const entryPageGroup = (entry: TrafficPageViewRecord) => {
 const buildEntryPages = (stats: TrafficStats) => {
   const entries = entryPageViews(stats);
   const total = entries.length;
-  const groups = new Map<string, { count: number; label: string; path: string }>();
+  const actionsBySession = new Map<string, number>();
+  const groups = new Map<
+    string,
+    { conversions: number; count: number; label: string; path: string }
+  >();
+
+  for (const action of stats.actions) {
+    const key = sessionKey(action);
+    actionsBySession.set(key, (actionsBySession.get(key) ?? 0) + 1);
+  }
 
   for (const entry of entries) {
     const group = entryPageGroup(entry);
+    const conversionCount = actionsBySession.get(sessionKey(entry)) ?? 0;
     const current = groups.get(group.id) ?? {
+      conversions: 0,
       count: 0,
       label: group.label,
       path: group.path,
     };
 
-    groups.set(group.id, { ...current, count: current.count + 1 });
+    groups.set(group.id, {
+      ...current,
+      conversions: current.conversions + conversionCount,
+      count: current.count + 1,
+    });
   }
 
   const items = [...groups.values()]
     .map<AdminTrafficEntryPage>((item) => ({
+      conversions: item.conversions,
       count: item.count,
       label: item.label,
       path: item.path,
@@ -1165,7 +1181,7 @@ const buildEntryPages = (stats: TrafficStats) => {
 
   return {
     items,
-    source: "page_view_event.is_entry" as const,
+    source: "page_view_event.is_entry+important_action_event.session_id" as const,
     total,
   };
 };

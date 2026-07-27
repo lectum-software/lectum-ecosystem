@@ -617,3 +617,37 @@ Validacao desta execucao complementar:
 - API real local com admin transitorio removido apos o teste: `top_posts.items` retornou titulos sem comunidade/CRP, `top_psychologists.items` retornou nomes sem CRP, nenhum path publico `/community/*` ou `/psychologists/*`, e posts sem registro resolvido ficaram com `path=null`.
 - Browser local/headless em `http://localhost:3002/trafego` com admin real transitorio removido apos o teste: validou 11 links `Ir ate ... no Admin`, `href` interno em `/comunidades/...` ou `/psicologos/...`, ausencia de `target="_blank"`, ausencia das tags tecnicas dos rankings, labels com `font-semibold` e sem `font-black`.
 - HTTP local com build atual em `http://localhost:3017/trafego` - OK (`200`).
+
+## Execucao complementar - Uso da plataforma e conversoes por entrada (2026-07-27)
+
+- O bloco **Detalhes da navegacao por paginas** foi renomeado para **Uso da plataforma**.
+- Removido o paragrafo explicativo "Acompanhe como as sessoes comecam..." abaixo do periodo.
+- Removido o card azul **Principal entrada** do topo do bloco.
+- A lista **Principais paginas de entrada** recebeu a coluna/campo **Conversoes geradas** no
+  desktop e nos cards mobile.
+- O backend passou a retornar `entry_pages.items[].conversions`, derivado de
+  `important_action_event` pela mesma chave real de visitante/sessao da primeira pageview da sessao.
+- A exportacao CSV real passou a incluir `conversions` no extra das linhas `entry_page`.
+- Nao houve mock, backfill, endpoint simulado, package novo, Prisma schema/migration ou dado
+  persistido; `db:migrate` nao foi necessario.
+- Builder/Quick Copy nao estava exposto como ferramenta callable neste ambiente; as referencias
+  auditaveis foram `_product/proto/admin/Tráfego.png` e a captura enviada pelo usuario.
+- ADRs atualizados: `adrs/0230-admin-trafego-agregacoes.md` e
+  `adrs/0323-trafego-visao-geral-timeline.md`.
+
+Validacao desta execucao complementar:
+
+- `pnpm --dir backend exec biome check --write "src/modules/api/admin/private/traffic/summary/DTOs/IAdminTrafficSummaryDTO.ts" "src/modules/api/admin/private/traffic/summary/use-cases/services.ts" "src/modules/api/admin/private/traffic/export/use-cases/services.ts"` - OK.
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/trafego/client.tsx" "src/api/req/traffic/index.ts"` - OK.
+- `pnpm --dir backend check` - OK.
+- `pnpm --dir admin check` - OK apos reexecucao com timeout ampliado; a primeira tentativa excedeu o timeout operacional local sem emitir erro.
+- `pnpm --dir backend build` - OK.
+- `pnpm --dir admin build` - OK.
+- `pnpm check` - OK em reexecucao.
+- API real local em `GET /api/admin/private/traffic/summary?period=30d` - OK:
+  `entry_pages.total=238`, `entry_pages.source=page_view_event.is_entry+important_action_event.session_id`
+  e campo `conversions` numerico nos itens de entrada.
+- Browser local/headless em `http://localhost:3002/trafego` - OK: validou **Uso da plataforma**,
+  ausencia de **Detalhes da navegacao por paginas**, ausencia do paragrafo removido, ausencia de
+  **Principal entrada**, presenca de **Conversoes geradas** em **Principais paginas de entrada** e
+  `horizontalOverflowPx=0` em desktop 1366x900 e mobile 390x844.

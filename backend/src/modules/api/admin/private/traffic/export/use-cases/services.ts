@@ -90,7 +90,7 @@ const appendEntryPageRows = (rows: string[], items: AdminTrafficEntryPage[], sou
         "",
         item.count,
         source,
-        `percentage=${item.percentage}`,
+        `percentage=${item.percentage};conversions=${item.conversions}`,
       ]),
     );
   }

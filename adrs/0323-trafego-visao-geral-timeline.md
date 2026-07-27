@@ -60,6 +60,12 @@ campos de data e cards que exibem/ocultam curvas.
 - A mesma lista passa a exibir apenas nomes operacionais no UI: o grupo de posts aparece como
   **Posts**, rotas como `/auth/login` e `/auth/register/psychologist` aparecem como **Login** e
   **Cadastro de psicólogo**, e o path/slug não é renderizado abaixo do titulo.
+- O bloco visual deixa de se chamar **Detalhes da navegação por páginas** e passa a usar o titulo
+  **Uso da plataforma**. O paragrafo explicativo abaixo do periodo e o card azul **Principal
+  entrada** foram removidos para reduzir ruido visual.
+- A tabela/lista **Principais páginas de entrada** passa a exibir a coluna/campo **Conversões
+  geradas**, usando `entry_pages.items[].conversions`, derivado de ações importantes reais
+  atribuidas pela sessão de entrada.
 - Os rankings **Trafego por comunidade**, **Trafego por post** e **Trafego por psicologo** deixam de
   exibir tags tecnicas de fonte no cabecalho e deixam de mostrar slug/path abaixo do titulo do item.
 - O subtitulo passa a exibir `sessoes ? pageviews`, e cada linha recebe um atalho acessivel
@@ -79,7 +85,9 @@ campos de data e cards que exibem/ocultam curvas.
 - A faixa visual **Resumo textual do gráfico** não é exibida nos gráficos de Tráfego; o resumo foi
   mantido como `figcaption` apenas para leitores de tela.
 - O bloco de navegação fica mobile-first: indicadores empilham no mobile, a lista de entradas usa
-  cards em telas estreitas e tabela responsiva a partir de `md`, preservando `overflow-x=0`.
+  cards em telas estreitas e tabela responsiva a partir de `md`, preservando `overflow-x=0`. No
+  mobile, os cards de entrada exibem sessoes, participacao e conversoes geradas em tres campos
+  compactos; no desktop, a nova coluna fica alinhada a direita.
 - Builder/Quick Copy não estava exposto como ferramenta callable neste ambiente; a validação visual
   usou `_product/proto/admin/Tráfego.png`, `_product/proto/admin/Psicólogos/Psicólogos - Dashboard.png`
   e browser local.
@@ -136,3 +144,7 @@ campos de data e cards que exibem/ocultam curvas.
   entrada** com nomes sem slugs/paths, sem **Posts específicos**, sem `/auth/login`,
   `/auth/register/psychologist`, `/community/*/post/*`, `/community/*` ou `/psychologists/*`, em
   desktop 1366x900 e mobile 390x844 sem overflow horizontal.
+- Browser local/headless complementar (2026-07-27) - OK: validou **Uso da plataforma**, ausencia de
+  **Detalhes da navegação por páginas**, ausencia do paragrafo explicativo removido, ausencia de
+  **Principal entrada**, presenca de **Conversões geradas** em **Principais páginas de entrada** e
+  `horizontalOverflowPx=0` em desktop 1366x900 e mobile 390x844.

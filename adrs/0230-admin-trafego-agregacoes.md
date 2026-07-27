@@ -30,6 +30,10 @@ O Builder/Quick Copy ativo `vcp://quickcopy/vcp-24aaa2941d814e5b90572bc93ae50e2a
   abaixo do titulo. As chaves tecnicas seguem no contrato para agrupamento/exportacao, enquanto a UI
   apresenta rotas comuns como **Login** e **Cadastro de psicólogo** em vez de `/auth/login` ou
   `/auth/register/psychologist`.
+- Expor, em cada item de `entry_pages.items`, o campo `conversions`, calculado a partir de
+  `important_action_event` com a mesma chave real de visitante/sessao da primeira pageview da
+  sessao. Essa atribuicao representa conversoes/acoes importantes geradas na sessao de entrada; ela
+  nao tenta atribuir todos os eventos de dominio agregados nem promete atribuicao cross-device.
 - Expor tambem `top_posts` no resumo e no CSV, agregando pageviews reais de posts de comunidade
   por `page_view_event.page_kind="community_post"`/`target_id` e enriquecendo o label somente com
   `community_post.title` quando o post ainda existir.
@@ -38,6 +42,9 @@ O Builder/Quick Copy ativo `vcp://quickcopy/vcp-24aaa2941d814e5b90572bc93ae50e2a
   `/comunidades/[slug]/conteudo/post/[id]` e `/psicologos/[id]`), nao como URL publica.
 - Labels de psicologos em `top_psychologists` usam somente `user.name`; CRP e demais dados de
   `psychologist_profile` ficam fora desse ranking resumido para reduzir ruido visual.
+- O segmento tecnico `anonymous` de **Tipo de usuario** continua significando sessoes sem usuario
+  autenticado vinculado, mas passa a ser exibido como **Visitantes nao autenticados** para evitar
+  confusao com anonimato de posts/comunidades.
 - Expor metricas de qualidade somente com formula explicita:
   - taxa de cadastro = cadastros de pacientes e psicologos / visitantes unicos;
   - taxa de rejeicao = sessoes com 1 pageview e sem acao importante / sessoes com pageview;
@@ -56,6 +63,8 @@ O Builder/Quick Copy ativo `vcp://quickcopy/vcp-24aaa2941d814e5b90572bc93ae50e2a
 - A exportacao CSV tambem recebe as chaves padrao de agrupamento para entradas dinamicas
   (`/community/*/post/*`, `/community/*`, `/psychologists/*`), e não URLs individuais desses
   registros.
+- A exportacao CSV de `entry_page` passa a incluir `conversions` no campo `extra`, mantendo paridade
+  com o resumo sem alterar o valor principal da linha, que continua sendo sessoes de entrada.
 - O ranking de posts reaproveita o tracking first-party ja capturado; posts sem label resolvido
   continuam aparecendo pelo id real em vez de receber mock ou seed visual.
 - Posts sem rota administrativa resolvida ficam com `path=null`, deixando o atalho indisponivel na
@@ -101,6 +110,16 @@ O Builder/Quick Copy ativo `vcp://quickcopy/vcp-24aaa2941d814e5b90572bc93ae50e2a
     internos do Admin e `path=null` para posts nao resolvidos;
   - browser local/headless em `http://localhost:3002/trafego` confirmou links `Ir ate ... no Admin`
     sem `target="_blank"` e sem href publico.
+- Validacao complementar em 2026-07-27 para conversoes por entrada:
+  - API real local confirmou `entry_pages.source=page_view_event.is_entry+important_action_event.session_id`,
+    `entry_pages.total=238` e campo `conversions` numerico nos itens de entrada;
+  - `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`,
+    `pnpm --dir admin build` e `pnpm check` executados sem erros.
+- Validacao complementar em 2026-07-27 para copy de tipo de usuario:
+  - `buildTrafficSummary({ period: "30d" })` contra banco local confirmou o label
+    **Visitantes nao autenticados** em `user_types.items`;
+  - `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`,
+    `pnpm --dir admin build` e `pnpm check` executados sem erros.
 
 ## Task relacionada
 
