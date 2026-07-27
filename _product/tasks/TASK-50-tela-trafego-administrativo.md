@@ -769,3 +769,23 @@ Validacao desta execucao complementar:
 - `pnpm --dir admin build` - OK.
 - `pnpm check` - OK.
 - HTTP local `GET http://localhost:3002/trafego` - OK (`200`).
+
+## Execucao complementar - conversoes com tabela simples (2026-07-27)
+
+- Removidos os textos explicativos longos das colunas e dos cards de graficos em **Conversoes geradas**.
+- Removidas da UI as tags tecnicas de origem (`visitor_id+user+important_action_event`, `user+domain_events`, `visitor_id+user.createdAt`), mantendo essas fontes apenas no contrato/exportacao.
+- O periodo analisado passou a aparecer logo abaixo dos titulos **Conversoes para cadastro** e **Conversoes apos cadastro**.
+- **Acoes antes do cadastro** foi renomeado para **Conversoes antes do cadastro**.
+- **Conversoes por item** foi renomeado para **Conversoes apos o cadastro**.
+- As conversoes antes/depois do cadastro deixaram de usar cards com barras e passaram a usar uma tabela simples com conversao, pessoas, eventos e taxa.
+- As descricoes individuais das conversoes foram ocultadas na UI para reduzir ruido visual; os dados seguem reais e sem alteracao de backend.
+- Nao houve mock, endpoint novo, package novo, alteracao em Prisma schema/migrations ou dado persistido; `db:migrate` nao foi necessario.
+- Builder/Quick Copy nao estava exposto como ferramenta callable neste ambiente; as referencias auditaveis foram `_product/proto/admin/Tráfego.png` e a captura enviada pelo usuario.
+- ADR atualizado: `adrs/0230-admin-trafego-agregacoes.md`.
+
+Validacao desta execucao complementar:
+
+- `pnpm --dir admin exec biome check "src/app/(admin)/trafego/client.tsx"` - OK.
+- `pnpm --dir admin check` - OK.
+- `pnpm --dir admin build` - OK.
+- HTTP local `GET http://localhost:3002/trafego` - OK (`200`).

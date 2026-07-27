@@ -927,84 +927,66 @@ const formatEventLabel = (events: number) => {
 
 const ConversionChartCard = ({ chart }: { chart: TrafficConversionChart }) => (
   <div className="min-w-0 rounded-[1.5rem] border border-border bg-surface p-4">
-    <div className="flex min-w-0 flex-col gap-2">
-      <div className="min-w-0">
-        <h3 className="text-base font-black text-foreground">{chart.label}</h3>
-        <p className="mt-1 text-xs leading-5 text-muted">{chart.description}</p>
-      </div>
-      <span className="max-w-full self-start break-all rounded-full bg-surface-muted px-2 py-1 text-[0.65rem] font-semibold text-muted">
-        {chart.source}
-      </span>
-    </div>
+    <h3 className="text-base font-black text-foreground">{chart.label}</h3>
     <DonutChart ariaLabel={chart.label} items={chart.items} total={chart.total} />
   </div>
 );
 
-const ConversionActionBars = ({
-  items,
-  totalActors,
-}: {
-  items: TrafficConversionAction[];
-  totalActors: number;
-}) => (
-  <div className="mt-4 space-y-4">
-    {items.map((item) => (
-      <div className="rounded-2xl border border-border bg-surface p-4" key={item.id}>
-        <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-          <div className="min-w-0">
-            <p className="font-black text-foreground">{item.label}</p>
-            <p className="mt-1 break-words text-xs leading-5 text-muted">{item.description}</p>
-          </div>
-          <div className="shrink-0 text-left sm:text-right">
-            <p className="text-base font-black text-foreground">{formatActorLabel(item)}</p>
-            <p className="mt-1 text-xs font-bold text-muted">{formatEventLabel(item.events)}</p>
-          </div>
-        </div>
-        <div className="mt-3 h-2 overflow-hidden rounded-full bg-surface-muted">
-          <div
-            className="h-full rounded-full bg-primary"
-            style={{ width: `${Math.min(100, item.actor_percentage)}%` }}
-          />
-        </div>
-        <div className="mt-2 flex min-w-0 flex-col gap-1 text-xs text-muted sm:flex-row sm:items-center sm:justify-between">
-          <span className="font-bold">
-            {item.actor_percentage}% de {numberFormatter.format(totalActors)} {item.actor_label}
-          </span>
-          <span className="break-all font-semibold">{item.source}</span>
-        </div>
-      </div>
-    ))}
+const ConversionActionTable = ({ items }: { items: TrafficConversionAction[] }) => (
+  <div className="mt-3 overflow-hidden rounded-[1.25rem] border border-border bg-surface">
     {items.length === 0 ? (
       <p className="rounded-2xl bg-surface-muted p-4 text-sm text-muted">
         Nenhuma conversão real capturada no período.
       </p>
-    ) : null}
+    ) : (
+      <div className="overflow-x-auto">
+        <table className="w-full min-w-[34rem] text-left text-sm">
+          <thead className="bg-surface-muted text-xs font-bold uppercase tracking-[0.08em] text-muted">
+            <tr>
+              <th className="px-4 py-3">Conversão</th>
+              <th className="px-4 py-3 text-right">Pessoas</th>
+              <th className="px-4 py-3 text-right">Eventos</th>
+              <th className="px-4 py-3 text-right">Taxa</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-border">
+            {items.map((item) => (
+              <tr key={item.id}>
+                <td className="px-4 py-3 font-black text-foreground">{item.label}</td>
+                <td className="px-4 py-3 text-right font-bold text-foreground">
+                  {formatActorLabel(item)}
+                </td>
+                <td className="px-4 py-3 text-right font-semibold text-muted">
+                  {formatEventLabel(item.events)}
+                </td>
+                <td className="px-4 py-3 text-right font-bold text-primary">
+                  {item.actor_percentage}%
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    )}
   </div>
 );
 
 const ConversionColumn = ({
   children,
-  description,
-  source,
+  periodDescription,
   summary,
   title,
 }: {
   children: React.ReactNode;
-  description: string;
-  source: string;
+  periodDescription: string;
   summary: string;
   title: string;
 }) => (
   <div className="min-w-0 rounded-[1.75rem] border border-border/70 bg-surface-muted/60 p-4">
-    <div className="flex min-w-0 flex-col gap-3">
-      <div className="min-w-0">
-        <p className="text-xs font-semibold uppercase tracking-[0.12em] text-primary">{summary}</p>
-        <h3 className="mt-1 text-lg font-black text-foreground">{title}</h3>
-        <p className="mt-1 text-sm leading-6 text-muted">{description}</p>
-      </div>
-      <span className="max-w-full self-start break-all rounded-full bg-surface px-2 py-1 text-[0.65rem] font-semibold text-muted">
-        {source}
-      </span>
+    <div className="min-w-0">
+      <p className="text-xs font-semibold uppercase tracking-[0.12em] text-primary">{summary}</p>
+      <h3 className="mt-1 text-lg font-black text-foreground">{title}</h3>
+      <p className="mt-1 text-xs font-bold text-muted">{periodDescription}</p>
     </div>
     <div className="mt-4 min-w-0 space-y-4">{children}</div>
   </div>
@@ -1029,8 +1011,7 @@ const ConversionsPanel = ({
       />
       <div className="mt-5 grid min-w-0 gap-4 xl:grid-cols-2">
         <ConversionColumn
-          description="Mostra quantos visitantes acompanhados viraram cadastro e como os cadastros se distribuem entre pacientes e psicólogos. WhatsApp e PWA entram aqui quando ocorrem sem login ou antes do cadastro."
-          source={preSignup.source}
+          periodDescription={periodDescription}
           summary={`${numberFormatter.format(preSignup.total_visitors)} visitantes`}
           title="Conversões para cadastro"
         >
@@ -1040,24 +1021,20 @@ const ConversionsPanel = ({
             ))}
           </div>
           <div className="min-w-0">
-            <h4 className="text-sm font-black text-foreground">Ações antes do cadastro</h4>
-            <ConversionActionBars
-              items={preSignup.actions}
-              totalActors={preSignup.total_visitors}
-            />
+            <h4 className="text-sm font-black text-foreground">Conversões antes do cadastro</h4>
+            <ConversionActionTable items={preSignup.actions} />
           </div>
         </ConversionColumn>
 
         <ConversionColumn
-          description="Mostra usuários cadastrados observados no período, quantos tiveram ao menos uma conversão e o volume por tipo de ação. Como o mesmo usuário pode converter mais de uma vez, os itens são barras com usuários únicos e total de eventos."
-          source={postSignup.source}
+          periodDescription={periodDescription}
           summary={`${numberFormatter.format(postSignup.total_users)} usuários cadastrados`}
           title="Conversões após cadastro"
         >
           <ConversionChartCard chart={postSignup.overall} />
           <div className="min-w-0">
-            <h4 className="text-sm font-black text-foreground">Conversões por item</h4>
-            <ConversionActionBars items={postSignup.items} totalActors={postSignup.total_users} />
+            <h4 className="text-sm font-black text-foreground">Conversões após o cadastro</h4>
+            <ConversionActionTable items={postSignup.items} />
           </div>
         </ConversionColumn>
       </div>

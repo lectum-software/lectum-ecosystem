@@ -98,6 +98,11 @@ O Builder/Quick Copy ativo `vcp://quickcopy/vcp-24aaa2941d814e5b90572bc93ae50e2a
 - Na UI, os graficos **Visitantes para cadastro** e **Cadastros por perfil** ficam empilhados dentro
   da coluna **Conversoes para cadastro**, evitando cards estreitos e legendas quebradas em desktop
   sem alterar a regra mobile-first.
+- A UI de **Conversoes geradas** nao exibe as fontes tecnicas (`visitor_id+...`,
+  `user+domain_events`) nem as descricoes longas dos itens. Essas informacoes continuam no payload e
+  na exportacao, mas a tela prioriza leitura operacional com periodo, graficos e tabelas simples.
+- As conversoes antes/depois do cadastro usam tabela com conversao, pessoas, eventos e taxa, em vez
+  de cards com barras, porque o objetivo desse bloco e comparacao rapida e nao ranking visual.
 
 ## Validacao
 
@@ -153,6 +158,9 @@ O Builder/Quick Copy ativo `vcp://quickcopy/vcp-24aaa2941d814e5b90572bc93ae50e2a
   - `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`,
     `pnpm --dir admin build` e `pnpm check` executados sem erros.
 - Validacao complementar em 2026-07-27 para empilhamento dos graficos de cadastro:
+  - `pnpm --dir admin check` e `pnpm --dir admin build` executados sem erros;
+  - HTTP local `GET http://localhost:3002/trafego` retornou `200`.
+- Validacao complementar em 2026-07-27 para tabela simples de conversoes:
   - `pnpm --dir admin check` e `pnpm --dir admin build` executados sem erros;
   - HTTP local `GET http://localhost:3002/trafego` retornou `200`.
 
