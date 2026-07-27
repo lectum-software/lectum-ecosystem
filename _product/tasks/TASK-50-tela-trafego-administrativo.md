@@ -810,6 +810,28 @@ Validacao desta execucao complementar:
 - `pnpm check` - OK.
 - HTTP local `GET http://localhost:3002/trafego` - OK (`200`).
 
+## Execucao complementar - limpeza de copy do online agora (2026-07-27)
+
+- Removidos do bloco **Usuarios online agora** a fonte tecnica visivel
+  `visitor_session.last_seen_at` e a faixa de vazio **Nenhum visitante ativo foi encontrado na
+  janela movel atual.**
+- O texto de contexto foi simplificado para **Visitantes com sessao atualizada nos ultimos 5
+  minutos. Atualizado as HH:mm.**
+- A leitura continua usando o contrato real `summary.online_now`; nao houve alteracao de backend,
+  endpoint, mock, package novo, Prisma schema/migrations ou dado persistido.
+- Builder/Quick Copy nao estava exposto como ferramenta callable neste ambiente; as referencias
+  auditaveis foram a imagem local da tela Trafego em `_product/proto/admin/` e a captura enviada
+  pelo usuario.
+- ADR atualizado: `adrs/0230-admin-trafego-agregacoes.md`.
+
+Validacao desta execucao complementar:
+
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/trafego/client.tsx"` - OK.
+- `pnpm --dir admin check` - OK.
+- `pnpm --dir admin build` - OK.
+- `pnpm check` - OK.
+- HTTP local `GET http://localhost:3002/trafego` - OK (`200`).
+
 ## Execucao complementar - conversoes com tabela simples (2026-07-27)
 
 - Removidos os textos explicativos longos das colunas e dos cards de graficos em **Conversoes geradas**.

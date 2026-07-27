@@ -203,6 +203,35 @@ Validacao complementar:
 - `pnpm check`.
 - HTTP local `GET http://localhost:3002/trafego` retornou `200`.
 
+## Complemento 2026-07-27 - Copy limpa no bloco online agora
+
+Por feedback direto de produto, o bloco **Usuarios online agora** deve mostrar apenas contexto
+operacional legivel e evitar detalhes tecnicos ou faixas de vazio redundantes.
+
+Decisao:
+
+- Remover da UI a fonte tecnica `visitor_session.last_seen_at` do card destacado de visitantes
+  ativos.
+- Remover a faixa vazia **Nenhum visitante ativo foi encontrado na janela movel atual.** quando a
+  contagem atual vier zerada.
+- Simplificar a frase de contexto para indicar somente a janela de 5 minutos e o horario de
+  atualizacao, sem citar `analytics first-party` nessa microcopy.
+- Preservar o contrato e a exportacao existentes, mantendo `summary.online_now.source` disponivel
+  para consumidores tecnicos.
+
+Consequencia:
+
+- A leitura fica mais limpa para operacao, sem perder a fonte tecnica no payload/API.
+- Estado zerado passa a ser comunicado pelos contadores em `0`, sem faixa adicional.
+
+Validacao complementar:
+
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/trafego/client.tsx"`.
+- `pnpm --dir admin check`.
+- `pnpm --dir admin build`.
+- `pnpm check`.
+- HTTP local `GET http://localhost:3002/trafego` retornou `200`.
+
 ## Complemento 2026-07-27 - Usuarios online agora
 
 Por feedback direto de produto, a tela `/trafego` tambem deve destacar quem esta ativo no momento,

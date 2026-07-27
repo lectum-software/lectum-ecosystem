@@ -572,7 +572,7 @@ const OnlineNowPanel = ({ onlineNow }: { onlineNow: TrafficOnlineNow }) => {
           </h2>
           <p className="mt-2 max-w-3xl text-sm font-semibold leading-6 text-muted">
             Visitantes com sess&atilde;o atualizada nos &uacute;ltimos {onlineNow.window.minutes}{" "}
-            minutos por analytics first-party. Atualizado &agrave;s {updatedAt}.
+            minutos. Atualizado &agrave;s {updatedAt}.
           </p>
         </div>
 
@@ -581,7 +581,6 @@ const OnlineNowPanel = ({ onlineNow }: { onlineNow: TrafficOnlineNow }) => {
             {numberFormatter.format(onlineNow.unique_visitors)}
           </p>
           <p className="mt-1 text-sm font-black text-muted">visitantes ativos</p>
-          <p className="mt-2 text-xs font-semibold text-subtle">{onlineNow.source}</p>
         </div>
       </div>
 
@@ -594,12 +593,6 @@ const OnlineNowPanel = ({ onlineNow }: { onlineNow: TrafficOnlineNow }) => {
           />
         ))}
       </div>
-
-      {onlineNow.unique_visitors === 0 ? (
-        <p className="mt-4 rounded-2xl border border-dashed border-border bg-surface/80 p-3 text-sm font-semibold text-muted">
-          Nenhum visitante ativo foi encontrado na janela m&oacute;vel atual.
-        </p>
-      ) : null}
     </CardShell>
   );
 };
