@@ -739,3 +739,33 @@ Validacao desta execucao complementar:
 - `pnpm --dir admin check` - OK.
 - `pnpm --dir admin build` - OK.
 - HTTP local `GET http://localhost:3002/trafego` - OK (`200`).
+
+## Execucao complementar - resgate do mapa de localizacao no padrao pacientes (2026-07-27)
+
+- Resgatado para **Acessos por localizacao** de `/trafego` o layout que segue o mesmo padrao do
+  card **Localizacao** de `/pacientes`: resumo por cidades/estados/paises, mapa amplo, alternancia
+  **Estados/Paises**, ranking lateral com barras, legenda inferior de intensidade e rankings
+  secundarios.
+- A renderizacao continua usando apenas SVG local versionado em `admin/src/lib/brazil-state-map.ts`
+  e `admin/src/lib/world-country-map.ts`, sem package novo de mapa e sem chamada externa em runtime.
+- A fonte real segue sendo `visitor_location`; quando houver qualquer agregado real no periodo, o
+  layout usa somente `locations.cities`, `locations.states`, `locations.countries` e `locations.total`
+  retornados pelo backend.
+- Para permitir conferir visualmente o layout em desenvolvimento local quando `visitor_location` vem
+  vazio, o Admin exibe um preview visual explicitamente rotulado apenas em `localhost`/`127.0.0.1`.
+  O preview nao altera backend, exportacao, banco, captura, API nem a regra de fonte real.
+- Nao houve endpoint simulado, seed, backfill, package novo, alteracao em Prisma schema/migrations
+  ou dado persistido; `db:migrate` nao foi necessario.
+- Builder/Quick Copy nao estava exposto como ferramenta callable neste ambiente; as referencias
+  auditaveis foram a imagem local da tela Trafego em `_product/proto/admin/`, o layout ja implementado em
+  `admin/src/app/(admin)/pacientes/client.tsx` e a captura enviada pelo usuario.
+- ADR atualizado: `adrs/0230-admin-trafego-agregacoes.md`.
+
+Validacao desta execucao complementar:
+
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/trafego/client.tsx"` - OK.
+- `pnpm --dir admin check` - OK apos reexecucao com timeout ampliado; a primeira tentativa excedeu
+  o timeout operacional local sem emitir erro.
+- `pnpm --dir admin build` - OK.
+- `pnpm check` - OK.
+- HTTP local `GET http://localhost:3002/trafego` - OK (`200`).

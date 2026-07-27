@@ -159,3 +159,38 @@ O Builder/Quick Copy ativo `vcp://quickcopy/vcp-24aaa2941d814e5b90572bc93ae50e2a
 ## Task relacionada
 
 - TASK-50
+
+## Complemento 2026-07-27 - Mapa de acessos por localizacao no padrao pacientes
+
+Por feedback direto de produto, o bloco **Acessos por localizacao** de `/trafego` deve reutilizar a
+composicao visual mais completa ja adotada em **Localizacao** de `/pacientes`, em vez do card simples
+com top estados e mapa basico.
+
+Decisao:
+
+- Renderizar o bloco com resumo de cidades/estados/paises, mapa SVG amplo, alternancia
+  **Estados/Paises**, ranking lateral com barras, legenda inferior de intensidade e rankings
+  secundarios.
+- Reutilizar as malhas locais `admin/src/lib/brazil-state-map.ts` e
+  `admin/src/lib/world-country-map.ts`, sem dependencia nova, sem asset remoto e sem chamada externa
+  em runtime.
+- Manter `visitor_location` como unica fonte real para o painel; o frontend nao infere estado/pais
+  alem do agregado ja retornado pelo backend.
+- Permitir somente no cliente Admin local (`localhost`/`127.0.0.1`) um preview visual rotulado quando
+  o agregado real vier vazio, para que o layout possa ser validado antes de haver capturas reais no
+  ambiente de desenvolvimento. Qualquer agregado real desativa automaticamente esse preview.
+
+Consequencia:
+
+- `/trafego` e `/pacientes` passam a ter leitura geografica consistente, mobile-first e sem pacote
+  novo de mapa.
+- A operacao continua vendo dados reais de `visitor_location` em producao; o preview local nao cria
+  registros, nao altera exportacao, nao muda API e nao participa dos calculos de analytics.
+
+Validacao complementar:
+
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/trafego/client.tsx"`.
+- `pnpm --dir admin check`.
+- `pnpm --dir admin build`.
+- `pnpm check`.
+- HTTP local `GET http://localhost:3002/trafego` retornou `200`.

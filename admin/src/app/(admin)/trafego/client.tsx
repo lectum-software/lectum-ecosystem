@@ -4,6 +4,7 @@ import {
   Activity,
   AlertTriangle,
   ChevronDown,
+  ChevronRight,
   ExternalLink,
   FileText,
   Globe2,
@@ -16,7 +17,7 @@ import {
   Users,
 } from "lucide-react";
 import Link from "next/link";
-import { type FocusEvent, useEffect, useMemo, useState } from "react";
+import { type FocusEvent, useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { useAdminTrafficSummary } from "@/api/callers/traffic";
 import { resolveApiError } from "@/api/handle";
 import type {
@@ -25,6 +26,7 @@ import type {
   TrafficConversionAction,
   TrafficConversionChart,
   TrafficEntryPage,
+  TrafficLocationItem,
   TrafficMetric,
   TrafficRankingItem,
   TrafficSummaryQuery,
@@ -33,6 +35,7 @@ import type {
 import { BRAZIL_STATE_MAP_PATHS } from "@/lib/brazil-state-map";
 import { buildSmoothSvgPath } from "@/lib/chart-time-series";
 import { cn } from "@/lib/utils";
+import { WORLD_COUNTRY_MAP_PATHS } from "@/lib/world-country-map";
 
 const CHART_COLORS = [
   "var(--admin-primary)",
@@ -93,12 +96,121 @@ const formatRankingSummary = (item: TrafficRankingItem) => {
   )} ${pageviewLabel}`;
 };
 
+const TRAFFIC_LOCATION_RANKING_LIMIT = 5;
+type TrafficLocationMapScope = "countries" | "states";
+const TRAFFIC_LOCATION_MAP_SCOPE_LABELS = {
+  countries: "Países",
+  states: "Estados",
+} satisfies Record<TrafficLocationMapScope, string>;
+
+const COUNTRY_WORLD_MAP_ID_BY_KEY: Record<string, string> = {
+  alemanha: "276",
+  angola: "024",
+  argentina: "032",
+  australia: "036",
+  br: "076",
+  bra: "076",
+  brasil: "076",
+  brazil: "076",
+  ca: "124",
+  canada: "124",
+  chile: "152",
+  china: "156",
+  de: "276",
+  "estados unidos": "840",
+  espanha: "724",
+  es: "724",
+  franca: "250",
+  france: "250",
+  germany: "276",
+  india: "356",
+  it: "380",
+  italia: "380",
+  japao: "392",
+  japan: "392",
+  mexico: "484",
+  mocambique: "508",
+  mozambique: "508",
+  portugal: "620",
+  pt: "620",
+  prt: "620",
+  "reino unido": "826",
+  uk: "826",
+  "united kingdom": "826",
+  "united states": "840",
+  "united states of america": "840",
+  us: "840",
+  usa: "840",
+};
+
+const LOCAL_TRAFFIC_LOCATION_SAMPLE_HOSTS = new Set(["localhost", "127.0.0.1"]);
+const subscribeToTrafficLocationPreviewSnapshot = () => () => undefined;
+const getLocalTrafficLocationPreviewSnapshot = () =>
+  typeof window !== "undefined" &&
+  LOCAL_TRAFFIC_LOCATION_SAMPLE_HOSTS.has(window.location.hostname);
+const getServerTrafficLocationPreviewSnapshot = () => false;
+const useLocalTrafficLocationPreviewEnabled = () =>
+  useSyncExternalStore(
+    subscribeToTrafficLocationPreviewSnapshot,
+    getLocalTrafficLocationPreviewSnapshot,
+    getServerTrafficLocationPreviewSnapshot,
+  );
+
+const TRAFFIC_LOCATION_VISUAL_SAMPLE_TOTAL = 1652;
+const makeTrafficLocationSampleItem = (
+  id: string,
+  label: string,
+  count: number,
+): TrafficLocationItem => ({
+  count,
+  id,
+  label,
+  percentage: Number(((count / TRAFFIC_LOCATION_VISUAL_SAMPLE_TOTAL) * 100).toFixed(1)),
+});
+const TRAFFIC_LOCATION_VISUAL_SAMPLE = {
+  cities: [
+    makeTrafficLocationSampleItem("São Paulo:SP:Brasil", "São Paulo, SP", 284),
+    makeTrafficLocationSampleItem("Rio de Janeiro:RJ:Brasil", "Rio de Janeiro, RJ", 156),
+    makeTrafficLocationSampleItem("Belo Horizonte:MG:Brasil", "Belo Horizonte, MG", 108),
+    makeTrafficLocationSampleItem("Curitiba:PR:Brasil", "Curitiba, PR", 86),
+    makeTrafficLocationSampleItem("Salvador:BA:Brasil", "Salvador, BA", 72),
+    makeTrafficLocationSampleItem("Lisboa:Portugal", "Lisboa, Portugal", 64),
+    makeTrafficLocationSampleItem("Porto:Portugal", "Porto, Portugal", 48),
+    makeTrafficLocationSampleItem("Luanda:Angola", "Luanda, Angola", 32),
+  ],
+  countries: [
+    makeTrafficLocationSampleItem("Brasil", "Brasil", 1432),
+    makeTrafficLocationSampleItem("Portugal", "Portugal", 96),
+    makeTrafficLocationSampleItem("Estados Unidos", "Estados Unidos", 78),
+    makeTrafficLocationSampleItem("Angola", "Angola", 46),
+  ],
+  states: [
+    makeTrafficLocationSampleItem("SP:Brasil", "São Paulo", 482),
+    makeTrafficLocationSampleItem("RJ:Brasil", "Rio de Janeiro", 252),
+    makeTrafficLocationSampleItem("MG:Brasil", "Minas Gerais", 206),
+    makeTrafficLocationSampleItem("PR:Brasil", "Paraná", 156),
+    makeTrafficLocationSampleItem("BA:Brasil", "Bahia", 112),
+    makeTrafficLocationSampleItem("RS:Brasil", "Rio Grande do Sul", 98),
+    makeTrafficLocationSampleItem("PE:Brasil", "Pernambuco", 74),
+    makeTrafficLocationSampleItem("CE:Brasil", "Ceará", 52),
+  ],
+  total: TRAFFIC_LOCATION_VISUAL_SAMPLE_TOTAL,
+} satisfies Pick<AdminTrafficSummary["locations"], "cities" | "countries" | "states" | "total">;
+
 const normalizeTextKey = (value: string) =>
   value
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
     .trim()
     .toUpperCase();
+
+const normalizeLocationLookupKey = (value: string) =>
+  value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
 
 const BRAZIL_STATE_CODES = new Set<string>(BRAZIL_STATE_MAP_PATHS.map((state) => state.code));
 const BRAZIL_STATE_CODE_BY_NAME = new Map(
@@ -118,12 +230,6 @@ const resolveBrazilStateCode = (item: TrafficBreakdownItem) => {
   }
 
   return null;
-};
-
-const stateMapFill = (count: number, maxCount: number) => {
-  const intensity = maxCount > 0 ? 0.16 + (count / maxCount) * 0.72 : 0.16;
-
-  return `rgb(48 140 232 / ${intensity.toFixed(2)})`;
 };
 
 const pad = (value: number) => String(value).padStart(2, "0");
@@ -594,40 +700,6 @@ const DonutChart = ({
   );
 };
 
-const BarList = ({
-  items,
-  total,
-}: {
-  items: Array<{ count: number; id: string; label: string; percentage: number }>;
-  total: number;
-}) => (
-  <div className="mt-5 space-y-4">
-    {items.length === 0 ? (
-      <p className="rounded-2xl bg-surface-muted p-4 text-sm text-muted">
-        Nenhum dado real capturado no período.
-      </p>
-    ) : (
-      items.map((item) => (
-        <div key={item.id}>
-          <div className="flex min-w-0 items-center justify-between gap-3 text-sm">
-            <span className="min-w-0 break-words font-black text-foreground">{item.label}</span>
-            <span className="shrink-0 text-right font-bold text-muted">
-              {numberFormatter.format(item.count)} ({item.percentage}%)
-            </span>
-          </div>
-          <div className="mt-2 h-2 overflow-hidden rounded-full bg-surface-muted">
-            <div
-              className="h-full rounded-full bg-primary"
-              style={{ width: `${Math.min(100, item.percentage)}%` }}
-            />
-          </div>
-        </div>
-      ))
-    )}
-    <p className="text-xs text-muted">Total considerado: {numberFormatter.format(total)}.</p>
-  </div>
-);
-
 const PanelTitle = ({
   icon: Icon,
   periodDescription,
@@ -1039,74 +1111,470 @@ const RankingList = ({
   </div>
 );
 
-const BrazilAccessMap = ({ states }: { states: TrafficBreakdownItem[] }) => {
-  const stateItems = states.flatMap((item) => {
-    const code = resolveBrazilStateCode(item);
+const getLocationCountRange = (items: TrafficLocationItem[]) => {
+  const counts = items.filter((item) => item.count > 0).map((item) => item.count);
 
-    return code ? [{ ...item, code }] : [];
-  });
-  const byCode = new Map(stateItems.map((item) => [item.code, item]));
-  const maxCount = Math.max(1, ...stateItems.map((item) => item.count));
-  const hasStateData = stateItems.length > 0;
+  if (counts.length === 0) return { max: 0, min: 0 };
+
+  return {
+    max: Math.max(...counts),
+    min: Math.min(...counts),
+  };
+};
+
+const getLocationIntensity = (count: number, min: number, max: number) => {
+  if (count <= 0) return 0;
+  if (max <= min) return 1;
+
+  return (count - min) / (max - min);
+};
+
+const formatLocationAccessCount = (count: number) =>
+  `${numberFormatter.format(count)} ${count === 1 ? "acesso" : "acessos"}`;
+
+const sumLocationCounts = (items: TrafficLocationItem[]) =>
+  items.reduce((total, item) => total + item.count, 0);
+
+const LocationSummaryStats = ({
+  locations,
+}: {
+  locations: Pick<AdminTrafficSummary["locations"], "cities" | "countries" | "states">;
+}) => {
+  const stats = [
+    {
+      count: locations.cities.length,
+      id: "cities",
+      label: "Cidades",
+      total: sumLocationCounts(locations.cities),
+    },
+    {
+      count: locations.states.length,
+      id: "states",
+      label: "Estados",
+      total: sumLocationCounts(locations.states),
+    },
+    {
+      count: locations.countries.length,
+      id: "countries",
+      label: "Países",
+      total: sumLocationCounts(locations.countries),
+    },
+  ];
 
   return (
-    <figure className="mt-4">
+    <div className="grid gap-3 sm:grid-cols-3">
+      {stats.map((item) => (
+        <div className="rounded-[1.25rem] bg-surface-muted p-4" key={item.id}>
+          <p className="text-xs font-black uppercase tracking-[0.08em] text-muted">{item.label}</p>
+          <p className="mt-1 text-2xl font-black text-foreground">
+            {numberFormatter.format(item.count)}
+          </p>
+          <p className="mt-1 text-xs font-bold text-muted">
+            {formatLocationAccessCount(item.total)}
+          </p>
+        </div>
+      ))}
+    </div>
+  );
+};
+
+const LocationMapLegend = ({ items }: { items: TrafficLocationItem[] }) => {
+  const { max, min } = getLocationCountRange(items);
+
+  return (
+    <div className="flex min-w-0 flex-1 items-center gap-2 text-[0.68rem] font-bold text-muted">
+      <span className="whitespace-nowrap">{numberFormatter.format(min)}</span>
+      <span
+        aria-hidden
+        className="h-2 min-w-24 flex-1 rounded-full"
+        style={{
+          background: "linear-gradient(90deg, rgba(48, 140, 232, 0.18), rgba(48, 140, 232, 0.9))",
+        }}
+      />
+      <span className="whitespace-nowrap">{numberFormatter.format(max)}</span>
+    </div>
+  );
+};
+
+const LocationBarRanking = ({
+  emptyMessage,
+  items,
+  title,
+}: {
+  emptyMessage: string;
+  items: TrafficLocationItem[];
+  title: string;
+}) => {
+  const topItems = items.slice(0, TRAFFIC_LOCATION_RANKING_LIMIT);
+  const maxCount = Math.max(1, ...topItems.map((item) => item.count));
+
+  return (
+    <div className="min-w-0">
+      <h4 className="text-xs font-black uppercase tracking-[0.08em] text-muted">{title}</h4>
+      <div className="mt-5 space-y-4">
+        {topItems.length === 0 ? (
+          <p className="rounded-2xl bg-surface-muted p-3 text-xs font-bold leading-5 text-muted">
+            {emptyMessage}
+          </p>
+        ) : (
+          topItems.map((item) => (
+            <div className="min-w-0" key={item.id}>
+              <div className="flex items-center justify-between gap-3 text-sm">
+                <span className="flex min-w-0 items-center gap-1.5 font-medium text-foreground">
+                  <span className="min-w-0 truncate">{item.label}</span>
+                  <ChevronRight aria-hidden className="h-3.5 w-3.5 shrink-0 text-primary" />
+                </span>
+                <span className="shrink-0 font-black text-foreground">
+                  {numberFormatter.format(item.count)}
+                </span>
+              </div>
+              <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-border/70">
+                <div
+                  aria-hidden
+                  className="h-full rounded-full bg-primary"
+                  style={{ width: `${Math.max(8, (item.count / maxCount) * 100)}%` }}
+                />
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+    </div>
+  );
+};
+
+const LocationRankingList = ({
+  emptyMessage,
+  items,
+  title,
+}: {
+  emptyMessage: string;
+  items: TrafficLocationItem[];
+  title: string;
+}) => (
+  <div className="rounded-[1.35rem] border border-border/70 bg-surface p-4">
+    <h4 className="text-xs font-black uppercase tracking-[0.08em] text-muted">{title}</h4>
+    <div className="mt-3 space-y-3">
+      {items.length === 0 ? (
+        <p className="rounded-2xl bg-surface-muted p-3 text-xs font-bold text-muted">
+          {emptyMessage}
+        </p>
+      ) : (
+        items.slice(0, TRAFFIC_LOCATION_RANKING_LIMIT).map((item, index) => (
+          <div key={item.id}>
+            <div className="flex items-center justify-between gap-3">
+              <span className="flex min-w-0 items-center gap-2 text-sm font-black text-foreground">
+                <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-primary-soft text-[0.68rem] font-black text-primary">
+                  {index + 1}
+                </span>
+                <span className="truncate">{item.label}</span>
+              </span>
+              <span className="whitespace-nowrap text-xs font-black text-foreground">
+                {formatLocationAccessCount(item.count)}
+              </span>
+            </div>
+            <div className="mt-2 h-2 overflow-hidden rounded-full bg-surface-muted">
+              <div
+                aria-hidden
+                className="h-full rounded-full bg-primary"
+                style={{ width: `${Math.min(100, Math.max(0, item.percentage))}%` }}
+              />
+            </div>
+          </div>
+        ))
+      )}
+    </div>
+  </div>
+);
+
+const BrazilStateChoroplethMap = ({ states }: { states: TrafficLocationItem[] }) => {
+  const statesByCode = new Map<string, TrafficLocationItem>();
+
+  for (const state of states) {
+    const code = resolveBrazilStateCode(state);
+    if (code) statesByCode.set(code, state);
+  }
+
+  const { max, min } = getLocationCountRange([...statesByCode.values()]);
+  const highlightedStates = [...statesByCode.values()]
+    .sort((left, right) => right.count - left.count)
+    .slice(0, TRAFFIC_LOCATION_RANKING_LIMIT)
+    .map((item) => item.label)
+    .join(", ");
+  const ariaLabel = highlightedStates
+    ? `Mapa do Brasil por UF com destaque para ${highlightedStates}.`
+    : "Mapa do Brasil sem estados brasileiros identificados no período.";
+
+  return (
+    <figure className="min-w-0">
       <svg
-        aria-label={
-          hasStateData
-            ? `Mapa de acessos por estado: ${stateItems
-                .map((item) => `${item.label}: ${numberFormatter.format(item.count)}`)
-                .join("; ")}.`
-            : "Mapa base do Brasil sem acessos por estado capturados no período."
-        }
-        className="mx-auto h-[18rem] w-full max-w-[22rem]"
+        aria-label={ariaLabel}
+        className="mx-auto h-auto max-h-[20rem] w-full max-w-[22rem]"
         role="img"
         viewBox="0 0 360 380"
       >
-        {BRAZIL_STATE_MAP_PATHS.map((state) => {
-          const metric = byCode.get(state.code);
+        {BRAZIL_STATE_MAP_PATHS.map((statePath) => {
+          const item = statesByCode.get(statePath.code);
+          const intensity = item ? getLocationIntensity(item.count, min, max) : 0;
+          const fill = item
+            ? hexToRgba("#308ce8", 0.28 + intensity * 0.62)
+            : "var(--admin-surface-muted)";
+          const stroke = item ? hexToRgba("#308ce8", 0.74) : "var(--admin-border)";
 
           return (
             <path
-              d={state.d}
-              fill={metric ? stateMapFill(metric.count, maxCount) : "var(--admin-surface-muted)"}
-              key={state.code}
-              opacity={metric || hasStateData ? 1 : 0.72}
-              stroke="var(--admin-surface)"
+              d={statePath.d}
+              fill={fill}
+              key={statePath.code}
+              stroke={stroke}
               strokeLinejoin="round"
-              strokeWidth="1.1"
+              strokeWidth={item ? "1.2" : "0.9"}
             >
               <title>
-                {state.name}: {metric ? numberFormatter.format(metric.count) : "sem acesso"}
+                {item
+                  ? `${statePath.name}: ${formatLocationAccessCount(item.count)}`
+                  : `${statePath.name}: sem acesso`}
               </title>
             </path>
           );
         })}
       </svg>
-      {hasStateData ? (
-        <figcaption className="mt-3 flex flex-wrap items-center justify-center gap-2 text-[0.68rem] font-semibold text-muted">
-          <span>Menos acessos</span>
-          <span
-            aria-hidden
-            className="inline-flex overflow-hidden rounded-full border border-border"
-          >
-            {[0.16, 0.3, 0.44, 0.58, 0.72, 0.88].map((opacity) => (
-              <span
-                className="h-3 w-5"
-                key={opacity}
-                style={{ backgroundColor: `rgb(48 140 232 / ${opacity})` }}
-              />
-            ))}
-          </span>
-          <span>Mais acessos</span>
+      {statesByCode.size === 0 ? (
+        <figcaption className="mt-2 text-center text-xs font-bold leading-5 text-muted">
+          Sem estados brasileiros identificados. Locais fora do Brasil continuam nos rankings.
         </figcaption>
-      ) : (
-        <figcaption className="mt-3 rounded-2xl border border-dashed border-border bg-surface p-3 text-center text-[0.72rem] font-medium leading-5 text-muted">
-          Nenhum estado brasileiro real foi capturado neste período; o mapa base é exibido sem
-          simular volume estadual.
-        </figcaption>
-      )}
+      ) : null}
     </figure>
+  );
+};
+
+const resolveWorldCountryMapPath = (item: TrafficLocationItem) => {
+  const idParts = item.id.split(":");
+  const candidates = [item.id, idParts[idParts.length - 1], item.label];
+
+  for (const candidate of candidates) {
+    const normalized = normalizeLocationLookupKey(candidate);
+    const mappedId = COUNTRY_WORLD_MAP_ID_BY_KEY[normalized];
+    const mappedCountry = mappedId
+      ? WORLD_COUNTRY_MAP_PATHS.find((country) => country.id === mappedId)
+      : null;
+    if (mappedCountry) return mappedCountry;
+
+    const countryByName = WORLD_COUNTRY_MAP_PATHS.find(
+      (country) => normalizeLocationLookupKey(country.name) === normalized,
+    );
+    if (countryByName) return countryByName;
+  }
+
+  return null;
+};
+
+const WorldCountryMap = ({ countries }: { countries: TrafficLocationItem[] }) => {
+  const { max, min } = getLocationCountRange(countries);
+  const countriesByMapId = new Map<string, TrafficLocationItem>();
+
+  for (const item of countries) {
+    const countryPath = resolveWorldCountryMapPath(item);
+    if (countryPath) countriesByMapId.set(countryPath.id, item);
+  }
+
+  const highlightedCountries = countries
+    .slice(0, TRAFFIC_LOCATION_RANKING_LIMIT)
+    .map((item) => item.label)
+    .join(", ");
+  const ariaLabel = highlightedCountries
+    ? `Mapa-múndi com destaque para ${highlightedCountries}.`
+    : "Mapa-múndi sem países identificados no período.";
+
+  return (
+    <figure className="min-w-0">
+      <svg
+        aria-label={ariaLabel}
+        className="mx-auto h-auto max-h-[18rem] w-full max-w-[30rem]"
+        role="img"
+        viewBox="0 0 520 270"
+      >
+        {WORLD_COUNTRY_MAP_PATHS.map((country) => {
+          const item = countriesByMapId.get(country.id);
+          const intensity = item ? getLocationIntensity(item.count, min, max) : 0;
+          const fill = item
+            ? hexToRgba("#308ce8", 0.32 + intensity * 0.6)
+            : "var(--admin-surface-muted)";
+          const stroke = item ? hexToRgba("#308ce8", 0.78) : "var(--admin-border)";
+
+          return (
+            <path
+              d={country.d}
+              fill={fill}
+              key={country.id}
+              stroke={stroke}
+              strokeLinejoin="round"
+              strokeWidth={item ? "0.85" : "0.45"}
+            >
+              <title>
+                {item
+                  ? `${country.name}: ${formatLocationAccessCount(item.count)}`
+                  : `${country.name}: sem acesso`}
+              </title>
+            </path>
+          );
+        })}
+      </svg>
+      {countries.length > 0 && countriesByMapId.size === 0 ? (
+        <figcaption className="mt-2 text-center text-xs font-bold leading-5 text-muted">
+          Países não encontrados na malha continuam no ranking agregado.
+        </figcaption>
+      ) : null}
+    </figure>
+  );
+};
+
+const LocationMapScopeToggle = ({
+  hasCountries,
+  hasStates,
+  onScopeChange,
+  scope,
+}: {
+  hasCountries: boolean;
+  hasStates: boolean;
+  onScopeChange: (scope: TrafficLocationMapScope) => void;
+  scope: TrafficLocationMapScope;
+}) => {
+  const options: TrafficLocationMapScope[] = ["states", "countries"];
+
+  return (
+    <fieldset
+      aria-label="Alternar mapa de localização"
+      className="grid grid-cols-2 rounded-full bg-surface-muted p-1 text-xs font-black"
+    >
+      {options.map((option) => {
+        const disabled = option === "states" ? !hasStates : !hasCountries;
+
+        return (
+          <button
+            aria-pressed={scope === option}
+            className={cn(
+              "rounded-full px-3 py-1.5 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-45",
+              scope === option
+                ? "bg-surface text-primary shadow-control"
+                : "text-muted hover:text-foreground",
+            )}
+            disabled={disabled}
+            key={option}
+            onClick={() => onScopeChange(option)}
+            type="button"
+          >
+            {TRAFFIC_LOCATION_MAP_SCOPE_LABELS[option]}
+          </button>
+        );
+      })}
+    </fieldset>
+  );
+};
+
+const LocationMapPanel = ({
+  countries,
+  onScopeChange,
+  scope,
+  states,
+}: {
+  countries: TrafficLocationItem[];
+  onScopeChange: (scope: TrafficLocationMapScope) => void;
+  scope: TrafficLocationMapScope;
+  states: TrafficLocationItem[];
+}) => {
+  const activeItems = scope === "states" ? states : countries;
+  const title = scope === "states" ? "Acessos por Estado" : "Acessos por País";
+  const rankingTitle = scope === "states" ? "Estados" : "Países";
+  const emptyMessage =
+    scope === "states" ? "Nenhum estado real capturado." : "Nenhum país real capturado.";
+
+  return (
+    <div className="overflow-hidden rounded-[1.35rem] border border-border/70 bg-surface">
+      <div className="flex flex-col gap-3 border-b border-border/70 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+        <h4 className="text-base font-black text-foreground">{title}</h4>
+        <LocationMapScopeToggle
+          hasCountries={countries.length > 0}
+          hasStates={states.length > 0}
+          onScopeChange={onScopeChange}
+          scope={scope}
+        />
+      </div>
+      <div className="grid gap-5 px-4 py-5 lg:grid-cols-[minmax(0,1.45fr)_minmax(12rem,0.9fr)] lg:items-center">
+        <div className="min-h-[16rem] min-w-0">
+          {scope === "states" ? (
+            <BrazilStateChoroplethMap states={states} />
+          ) : (
+            <WorldCountryMap countries={countries} />
+          )}
+        </div>
+        <LocationBarRanking emptyMessage={emptyMessage} items={activeItems} title={rankingTitle} />
+      </div>
+      <div className="flex flex-col gap-3 px-4 pb-4 sm:flex-row sm:items-center sm:justify-between">
+        <LocationMapLegend items={activeItems} />
+        <span className="text-[0.68rem] font-bold text-subtle">intensidade por acessos</span>
+      </div>
+    </div>
+  );
+};
+
+const LocationOverview = ({
+  locations,
+  preview = false,
+}: {
+  locations: Pick<AdminTrafficSummary["locations"], "cities" | "countries" | "states" | "total">;
+  preview?: boolean;
+}) => {
+  const [preferredScope, setPreferredScope] = useState<TrafficLocationMapScope>("states");
+  const hasCountries = locations.countries.length > 0;
+  const hasStates = locations.states.length > 0;
+  const scope =
+    preferredScope === "states" && !hasStates && hasCountries ? "countries" : preferredScope;
+  const secondaryItems = scope === "states" ? locations.countries : locations.states;
+  const secondaryTitle = scope === "states" ? "Países" : "Top estados";
+  const secondaryEmptyMessage =
+    scope === "states" ? "Nenhum país real capturado." : "Nenhum estado real capturado.";
+
+  return (
+    <div className="mt-5 space-y-4">
+      <LocationSummaryStats locations={locations} />
+      {locations.total === 0 && !preview ? (
+        <p className="rounded-2xl bg-surface-muted p-4 text-sm font-bold text-muted">
+          Nenhum acesso com localização agregada real foi capturado no período selecionado.
+        </p>
+      ) : (
+        <>
+          <LocationMapPanel
+            countries={locations.countries}
+            onScopeChange={setPreferredScope}
+            scope={scope}
+            states={locations.states}
+          />
+          <div className="grid gap-3 2xl:grid-cols-2">
+            <LocationRankingList
+              emptyMessage="Nenhuma cidade real capturada."
+              items={locations.cities}
+              title="Top cidades"
+            />
+            <LocationRankingList
+              emptyMessage={secondaryEmptyMessage}
+              items={secondaryItems}
+              title={secondaryTitle}
+            />
+          </div>
+          <p className="text-xs font-bold leading-5 text-muted">
+            {preview ? (
+              <>Preview local: {formatLocationAccessCount(locations.total)} para validar layout.</>
+            ) : (
+              <>
+                Total considerado: {formatLocationAccessCount(locations.total)} de visitor_location.
+                Cidades com frequência muito baixa podem aparecer agrupadas para reduzir exposição.
+              </>
+            )}
+          </p>
+        </>
+      )}
+    </div>
   );
 };
 
@@ -1116,46 +1584,34 @@ const LocationPanel = ({
 }: {
   locations: AdminTrafficSummary["locations"];
   periodDescription: string;
-}) => (
-  <CardShell className="p-5">
-    <PanelTitle
-      icon={MapPinned}
-      periodDescription={periodDescription}
-      source={locations.source}
-      title="Acessos por localização"
-    />
-    <div className="mt-4 grid min-w-0 gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
-      <div className="min-w-0">
-        <h3 className="text-sm font-black text-foreground">Top estados</h3>
-        <BarList items={locations.states} total={locations.total} />
-      </div>
-      <div className="min-w-0 rounded-card bg-surface-muted p-4">
-        <h3 className="text-sm font-black text-foreground">Mapa de acessos</h3>
-        <p className="mt-2 text-xs leading-relaxed text-muted">
-          Desenho SVG local sem pacote novo, alimentado somente por `visitor_location` real.
+}) => {
+  const allowLocalPreview = useLocalTrafficLocationPreviewEnabled();
+  const hasLocationData =
+    locations.total > 0 ||
+    locations.states.length > 0 ||
+    locations.countries.length > 0 ||
+    locations.cities.length > 0;
+  const showLocationPreview = allowLocalPreview && !hasLocationData;
+  const displayLocations = showLocationPreview ? TRAFFIC_LOCATION_VISUAL_SAMPLE : locations;
+
+  return (
+    <CardShell className="p-5 md:p-6">
+      <PanelTitle
+        icon={MapPinned}
+        periodDescription={periodDescription}
+        source={showLocationPreview ? "exemplo visual local" : locations.source}
+        title="Acessos por localização"
+      />
+      {showLocationPreview ? (
+        <p className="mt-4 rounded-2xl border border-primary/20 bg-primary-soft/70 p-3 text-xs font-bold leading-5 text-primary">
+          Dados de exemplo exibidos somente no ambiente local para visualização. Não representam
+          registros reais de `visitor_location`.
         </p>
-        <BrazilAccessMap states={locations.states} />
-        <div className="mt-4 space-y-3">
-          {locations.countries.slice(0, 5).map((item, index) => (
-            <div className="flex min-w-0 items-center justify-between gap-3" key={item.id}>
-              <span className="flex min-w-0 items-center gap-2 text-sm font-bold text-foreground">
-                <span
-                  aria-hidden
-                  className="h-3 w-3 rounded-full"
-                  style={{ backgroundColor: CHART_COLORS[index % CHART_COLORS.length] }}
-                />
-                <span className="min-w-0 truncate">{item.label}</span>
-              </span>
-              <span className="shrink-0 text-sm font-black text-foreground">
-                {item.percentage}%
-              </span>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  </CardShell>
-);
+      ) : null}
+      <LocationOverview locations={displayLocations} preview={showLocationPreview} />
+    </CardShell>
+  );
+};
 
 const TRAFFIC_OVERVIEW_CARD_LABELS: Record<TrafficOverviewCardKey, string> = {
   anonymous_visitors: "Visitantes não autenticados",
