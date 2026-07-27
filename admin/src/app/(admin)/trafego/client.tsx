@@ -1007,6 +1007,12 @@ const formatEventLabel = (events: number) => {
 const ConversionChartCard = ({ chart }: { chart: TrafficConversionChart }) => (
   <div className="min-w-0 rounded-[1.5rem] border border-border bg-surface p-4">
     <h3 className="text-base font-black text-foreground">{chart.label}</h3>
+    {chart.id === "visitor_to_signup" ? (
+      <p className="mt-1 text-xs leading-5 text-muted">
+        Estes registros consideram apenas visitantes rastreados. Podem existir outros usuários
+        cadastrados sem rastreamento associado.
+      </p>
+    ) : null}
     {chart.id === "post_signup_overall" ? (
       <p className="mt-1 text-xs leading-5 text-muted">
         Usuários que realizaram pelo menos uma ação após se cadastrarem.

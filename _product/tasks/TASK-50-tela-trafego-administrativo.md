@@ -870,3 +870,24 @@ Validacao desta execucao complementar:
 - `pnpm --dir admin build` - OK.
 - `pnpm check` - OK.
 - HTTP local `GET http://localhost:3002/trafego` - OK (`200`).
+
+## Execucao complementar - aviso de visitantes rastreados em conversoes (2026-07-27)
+
+- Adicionado abaixo de **Visitantes para cadastro** um texto curto informando que o grafico considera
+  apenas visitantes rastreados e que podem existir outros usuarios cadastrados sem rastreamento
+  associado.
+- A mudanca evita interpretar o total rastreado como universo absoluto de todos os cadastros do
+  periodo, mantendo a leitura honesta sobre limitacoes de atribuicao first-party.
+- Nao houve alteracao de backend, endpoint, mock, package novo, Prisma schema/migrations ou dado
+  persistido; `db:migrate` nao foi necessario.
+- Builder/Quick Copy nao estava exposto como ferramenta callable neste ambiente; as referencias
+  auditaveis foram a imagem local da tela Trafego em `_product/proto/admin/` e a captura enviada
+  pelo usuario.
+- ADR atualizado: `adrs/0230-admin-trafego-agregacoes.md`.
+
+Validacao desta execucao complementar:
+
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/trafego/client.tsx"` - OK.
+- `pnpm --dir admin check` - OK.
+- `pnpm --dir admin build` - OK.
+- HTTP local `GET http://localhost:3002/trafego` - OK (`200`).

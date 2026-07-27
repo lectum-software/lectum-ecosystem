@@ -302,3 +302,30 @@ Validacao complementar:
 - `pnpm --dir admin build`.
 - `pnpm check`.
 - HTTP local `GET http://localhost:3002/trafego` retornou `200`.
+
+## Complemento 2026-07-27 - Aviso de visitantes rastreados nas conversoes
+
+Por feedback direto de produto, o grafico **Visitantes para cadastro** precisa deixar explicita a
+limitacao de atribuicao do recorte rastreado para nao ser lido como o universo absoluto de cadastros
+do periodo.
+
+Decisao:
+
+- Exibir abaixo do titulo **Visitantes para cadastro** uma copy curta informando que os registros
+  consideram apenas visitantes rastreados.
+- Informar tambem que podem existir outros usuarios cadastrados sem rastreamento associado.
+- Manter a formula e o contrato inalterados: o grafico continua calculado por identidade
+  first-party rastreavel (`visitor_id`) e nao tenta completar usuarios sem ponte de tracking.
+
+Consequencia:
+
+- A UI fica mais honesta sobre a diferenca entre cadastros rastreados e cadastros totais.
+- A operacao consegue reconciliar visualmente casos em que o total de usuarios cadastrados do
+  periodo seja maior que os visitantes rastreados convertidos.
+
+Validacao complementar:
+
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/trafego/client.tsx"`.
+- `pnpm --dir admin check`.
+- `pnpm --dir admin build`.
+- HTTP local `GET http://localhost:3002/trafego` retornou `200`.
