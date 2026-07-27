@@ -41,7 +41,7 @@ const DEVICE_LABELS: Record<AdminTrafficDeviceType, string> = {
 };
 
 const USER_TYPE_LABELS: Record<AdminTrafficUserType, string> = {
-  anonymous: "Visitantes anônimos",
+  anonymous: "Visitantes não autenticados",
   patients: "Pacientes",
   psychologists: "Psicólogos",
 };
@@ -578,7 +578,7 @@ const buildOverviewCards = (current: TrafficStats, previous: TrafficStats) => {
       current: anonymousVisitors(current),
       description: "Visitantes sem usuário vinculado em visitor_session.",
       id: "anonymous_visitors",
-      label: "Visitantes anônimos",
+      label: "Visitantes não autenticados",
       previous: anonymousVisitors(previous),
       source: "visitor_session.user_id",
     }),
