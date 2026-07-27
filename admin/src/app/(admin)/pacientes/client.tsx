@@ -517,7 +517,7 @@ const PanelTitle = ({
       <div className="min-w-0">
         <h3
           className={cn(
-            "min-w-0 whitespace-nowrap text-lg font-black text-foreground",
+            "min-w-0 whitespace-nowrap text-lg font-bold text-foreground",
             titleClassName,
           )}
         >

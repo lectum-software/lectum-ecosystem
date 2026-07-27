@@ -775,3 +775,26 @@ Frontend esperado:
 - `NODE_OPTIONS=--max-old-space-size=8192 pnpm --dir admin build`
 - `pnpm check`
 - Browser local/headless autenticado em `http://localhost:3002/pacientes?period=all` validou desktop `1366x900` e mobile `390x844`: existe um unico `<br aria-hidden>` no label de genero, o texto visivel foi dividido em duas partes (**Nao** / **informado**), a contagem `144 (92,9%)` nao sobrepoe o label e `scrollWidth` permaneceu igual ao viewport em ambos os tamanhos.
+
+## Ajuste pos-feedback 2026-07-27 - Peso textual dos titulos dos blocos
+
+- Pedido do usuario: reduzir o peso textual dos titulos dos blocos no dashboard `/pacientes`.
+- O componente local `PanelTitle` trocou o titulo padrao dos blocos agregados de `font-black` para `font-bold`; no escopo `admin-premium-pilot`, isso reduz o peso computado de 650 para 600, mantendo tamanho, hierarquia, alinhamento com icone e quebra atual do periodo.
+- O ajuste se aplica aos blocos **Genero**, **Forma de cadastro**, **Devices e sistemas**, **Localizacao** e **Uso da plataforma** sem alterar dados, filtros, graficos, contrato HTTP, schema Prisma, migration, package, seed, mock ou endpoint.
+- Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente; as referencias auditaveis foram `_product/proto/admin/Pacientes/Pacientes - Dashboard.png` e o screenshot enviado pelo usuario em 2026-07-27.
+- ADR nao foi criado/atualizado porque a mudanca e exclusivamente visual/local de tipografia, sem decisao arquitetural, integracao, regra de dominio ou trade-off novo.
+
+### Criterios de aceite do ajuste
+
+- [x] Os titulos dos blocos agregados de `/pacientes` usam peso visual reduzido.
+- [x] A reducao nao muda tamanho, copy, icones, filtros ou dados reais dos blocos.
+- [x] Layout mobile-first em 390px permanece sem overflow horizontal.
+- [x] Nenhum mock, seed, dado artificial, migration, package novo, endpoint simulado ou `<img>` foi adicionado.
+
+### Validacao complementar executada
+
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/pacientes/client.tsx"`
+- `pnpm --dir admin check`
+- `NODE_OPTIONS=--max-old-space-size=8192 pnpm --dir admin build`
+- Browser local/headless autenticado em `http://localhost:3002/pacientes?period=all` validou desktop `1366x900` e mobile `390x844`: titulos **Genero**, **Forma de cadastro**, **Devices e sistemas**, **Localizacao** e **Uso da plataforma** com `fontWeight=600`, classe `font-bold` e `scrollWidth` igual ao viewport em ambos os tamanhos. Screenshots salvos em `.tmp/patient-dashboard-title-weight-desktop-1366.png` e `.tmp/patient-dashboard-title-weight-mobile-390.png`.
+- Admin temporario de validacao `codex-title-weight-*` foi removido do banco apos a verificacao.
