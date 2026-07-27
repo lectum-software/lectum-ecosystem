@@ -393,7 +393,7 @@ const getCommunityDashboardPeriodLabel = (period: CommunityDashboardPeriodValue)
       "Período selecionado");
 
 const BlockPeriodLabel = ({ children }: { children: string }) => (
-  <p className="mt-1 text-sm font-bold leading-6 text-muted">{children}</p>
+  <p className="mt-1 text-sm font-medium leading-6 text-muted">{children}</p>
 );
 
 type DashboardHourlyActivityMetricKey = "accesses" | "engagement" | "posts" | "replies" | "reports";
@@ -589,7 +589,7 @@ const DashboardPostAuthorIdentity = ({ author }: { author: CommunitiesDashboardP
 
   return (
     <div className="flex min-w-0 items-center gap-3">
-      <div className="relative grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-full border border-border bg-primary-soft text-xs font-black text-primary">
+      <div className="relative grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-full border border-border bg-primary-soft text-xs font-semibold text-primary">
         {avatarSrc ? (
           <Image
             alt={`Foto de perfil de ${author.name}`}
@@ -605,10 +605,12 @@ const DashboardPostAuthorIdentity = ({ author }: { author: CommunitiesDashboardP
       </div>
       <div className="min-w-0 flex-1">
         <div className="flex min-w-0 items-center gap-1.5">
-          <span className="min-w-0 truncate font-bold text-foreground">{author.name}</span>
+          <span className="min-w-0 truncate font-medium text-foreground">{author.name}</span>
           {author.verified ? <VerifiedBadgeIcon aria-label="Perfil verificado" /> : null}
         </div>
-        <p className="truncate text-xs font-bold text-muted">{dashboardAuthorRoleLabel(author)}</p>
+        <p className="truncate text-xs font-medium text-muted">
+          {dashboardAuthorRoleLabel(author)}
+        </p>
       </div>
     </div>
   );
@@ -653,7 +655,7 @@ const DashboardPostActions = ({
   }
 
   return (
-    <div className="flex flex-wrap gap-2 text-xs font-black">
+    <div className="flex flex-wrap gap-2 text-xs font-semibold">
       <Link
         className="inline-flex items-center gap-1.5 rounded-full border border-border bg-surface px-3 py-2 text-primary transition hover:bg-primary-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
         href={publicHref}
@@ -712,7 +714,7 @@ const TopCommunityActions = ({
   }
 
   return (
-    <div className="flex flex-wrap gap-2 text-xs font-black">
+    <div className="flex flex-wrap gap-2 text-xs font-semibold">
       <Link
         className="inline-flex items-center gap-1.5 rounded-full border border-border bg-surface px-3 py-2 text-primary transition hover:bg-primary-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
         href={publicHref}
@@ -743,7 +745,7 @@ const TopCommunityAvatar = ({
   return (
     <span
       aria-hidden
-      className="relative grid h-9 w-9 shrink-0 place-items-center overflow-hidden rounded-xl border border-border bg-primary-soft text-xs font-black text-primary"
+      className="relative grid h-9 w-9 shrink-0 place-items-center overflow-hidden rounded-xl border border-border bg-primary-soft text-xs font-semibold text-primary"
     >
       {avatarSrc ? (
         <Image
@@ -986,12 +988,12 @@ const ErrorState = ({ message, onRetry }: { message: string; onRetry: () => void
           <AlertTriangle aria-hidden className="h-5 w-5" />
         </div>
         <div>
-          <h2 className="text-lg font-black">Não foi possível carregar Comunidades</h2>
+          <h2 className="text-lg font-semibold">Não foi possível carregar Comunidades</h2>
           <p className="mt-1 text-sm text-muted">{message}</p>
         </div>
       </div>
       <button
-        className="inline-flex h-11 items-center justify-center gap-2 rounded-control border border-border bg-surface px-4 text-sm font-black text-foreground transition hover:border-border-strong"
+        className="inline-flex h-11 items-center justify-center gap-2 rounded-control border border-border bg-surface px-4 text-sm font-semibold text-foreground transition hover:border-border-strong"
         onClick={onRetry}
         type="button"
       >
@@ -1009,7 +1011,7 @@ const EmptyState = ({ period }: { period: AdminCommunitiesDashboard["period"] })
         <UsersRound aria-hidden className="h-5 w-5" />
       </div>
       <div>
-        <h2 className="font-black">Período sem atividade capturada</h2>
+        <h2 className="font-semibold">Período sem atividade capturada</h2>
         <p className="mt-1 text-sm text-muted">
           Nenhum post, comentário, denúncia ou atividade real foi encontrado entre{" "}
           {formatDate(period.from)} e {formatDate(period.to)}. Ajuste o período ou aguarde novas
@@ -1076,7 +1078,7 @@ const DashboardPeriodControls = ({
         <label className="text-xs font-semibold text-muted" htmlFor={`${controlIdPrefix}-from`}>
           De
           <input
-            className="mt-1 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground shadow-control focus:border-primary"
+            className="mt-1 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-medium text-foreground shadow-control focus:border-primary"
             id={`${controlIdPrefix}-from`}
             max={displayRange.to}
             onChange={(event) => onDateChange("from", event.target.value)}
@@ -1087,7 +1089,7 @@ const DashboardPeriodControls = ({
         <label className="text-xs font-semibold text-muted" htmlFor={`${controlIdPrefix}-to`}>
           Até
           <input
-            className="mt-1 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground shadow-control focus:border-primary"
+            className="mt-1 h-11 w-full rounded-control border border-border bg-surface px-3 text-sm font-medium text-foreground shadow-control focus:border-primary"
             id={`${controlIdPrefix}-to`}
             min={displayRange.from}
             onChange={(event) => onDateChange("to", event.target.value)}
@@ -1098,7 +1100,7 @@ const DashboardPeriodControls = ({
       </div>
     </div>
     {period === "custom" && rangeError ? (
-      <p className="mt-2 max-w-xl text-xs font-bold text-danger">{rangeError}</p>
+      <p className="mt-2 max-w-xl text-xs font-medium text-danger">{rangeError}</p>
     ) : null}
   </div>
 );
@@ -1110,7 +1112,7 @@ const CommunitiesHeader = () => (
         <p className="text-xs font-semibold uppercase tracking-[0.12em] text-primary">
           Comunidades
         </p>
-        <h1 className="mt-2 text-3xl font-bold tracking-tight text-foreground md:text-4xl">
+        <h1 className="mt-2 text-3xl font-semibold tracking-tight text-foreground md:text-4xl">
           Dashboard de Comunidades
         </h1>
         <p className="mt-2 max-w-2xl text-sm font-medium leading-6 text-muted">
@@ -1169,16 +1171,16 @@ const DashboardStatisticCard = ({
         <Icon aria-hidden className="h-5 w-5" />
       </span>
       <span className="mt-4 block min-w-0 max-w-full">
-        <span className="block max-w-full break-words text-xs font-extrabold leading-snug text-foreground">
+        <span className="block max-w-full break-words text-xs font-semibold leading-snug text-foreground">
           {item.label}
         </span>
-        <span className="mt-2 block text-2xl font-extrabold leading-none text-foreground">
+        <span className="mt-2 block text-2xl font-semibold leading-none text-foreground">
           {formattedValue}
         </span>
         <span className="mt-3 block text-xs leading-5">
           <span
             className={cn(
-              "font-extrabold",
+              "font-semibold",
               item.changePercent === null
                 ? "text-muted"
                 : item.changePercent > 0
@@ -1190,14 +1192,14 @@ const DashboardStatisticCard = ({
           >
             {formatChange(item.changePercent)}
           </span>
-          <span className="ml-1 font-bold text-muted">vs. {previousLabel}</span>
+          <span className="ml-1 font-medium text-muted">vs. {previousLabel}</span>
         </span>
 
         {item.details?.length ? (
           <span className="mt-3 grid gap-1">
             {item.details.map((detail) => (
               <span
-                className="flex items-center justify-between gap-2 rounded-full bg-surface-muted px-2 py-1 text-[11px] font-extrabold leading-none text-muted"
+                className="flex items-center justify-between gap-2 rounded-full bg-surface-muted px-2 py-1 text-[11px] font-semibold leading-none text-muted"
                 key={detail.label}
               >
                 <span className="truncate">{detail.label}</span>
@@ -1319,14 +1321,14 @@ const DashboardStatisticsLineChart = ({
 }) => {
   if (items.length === 0) {
     return (
-      <div className="mt-5 rounded-2xl border border-dashed border-border bg-surface-muted p-6 text-sm font-bold text-muted">
+      <div className="mt-5 rounded-2xl border border-dashed border-border bg-surface-muted p-6 text-sm font-medium text-muted">
         Selecione pelo menos um contador para visualizar a evolução.
       </div>
     );
   }
   if (points.length === 0) {
     return (
-      <div className="mt-5 rounded-2xl border border-dashed border-border bg-surface-muted p-6 text-sm font-bold text-muted">
+      <div className="mt-5 rounded-2xl border border-dashed border-border bg-surface-muted p-6 text-sm font-medium text-muted">
         Nenhum ponto real de evolução foi encontrado para o período.
       </div>
     );
@@ -1448,7 +1450,7 @@ const DashboardStatisticsLineChart = ({
           style={{ gridTemplateColumns: `repeat(${dateLabels.length}, 1fr)` }}
         >
           {dateLabels.map(({ date, label }) => (
-            <span className="min-w-0 text-center text-[10px] font-bold text-subtle" key={date}>
+            <span className="min-w-0 text-center text-[10px] font-medium text-subtle" key={date}>
               {label}
             </span>
           ))}
@@ -1485,7 +1487,7 @@ const DashboardStatisticsSection = ({
     <CardShell className="p-5 sm:p-6">
       <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
         <div className="min-w-0">
-          <h2 className="text-lg font-black text-foreground">{title}</h2>
+          <h2 className="text-lg font-semibold text-foreground">{title}</h2>
           <BlockPeriodLabel>{periodLabel}</BlockPeriodLabel>
         </div>
         {filters ? <div className="w-full min-w-0 xl:max-w-xl">{filters}</div> : null}
@@ -1517,9 +1519,9 @@ const RecentPostsTable = ({ posts }: { posts: CommunitiesDashboardRecentPost[] }
     <CardShell className="p-5">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <h2 className="text-lg font-black text-foreground">Postagens mais recentes</h2>
+          <h2 className="text-lg font-semibold text-foreground">Postagens mais recentes</h2>
         </div>
-        <span className="text-xs font-black text-primary">Ver todas</span>
+        <span className="text-xs font-semibold text-primary">Ver todas</span>
       </div>
 
       {posts.length === 0 ? (
@@ -1538,7 +1540,7 @@ const RecentPostsTable = ({ posts }: { posts: CommunitiesDashboardRecentPost[] }
                   key={post.id}
                 >
                   <div className="min-w-0">
-                    <p className="truncate font-black text-foreground">{title}</p>
+                    <p className="truncate font-semibold text-foreground">{title}</p>
                     <p className="mt-1 text-xs text-muted">
                       {post.community_name} · {formatDateTime(post.created_at)}
                     </p>
@@ -1580,15 +1582,17 @@ const RecentPostsTable = ({ posts }: { posts: CommunitiesDashboardRecentPost[] }
               </colgroup>
               <thead className="text-xs text-muted">
                 <tr>
-                  <th className="border-b border-border py-3 pr-3 font-black">Título</th>
-                  <th className="border-b border-border px-3 py-3 font-black">Autor</th>
-                  <th className="border-b border-border px-3 py-3 text-center font-black">
+                  <th className="border-b border-border py-3 pr-3 font-semibold">Título</th>
+                  <th className="border-b border-border px-3 py-3 font-semibold">Autor</th>
+                  <th className="border-b border-border px-3 py-3 text-center font-semibold">
                     Visualizações
                   </th>
-                  <th className="border-b border-border px-3 py-3 text-center font-black">
+                  <th className="border-b border-border px-3 py-3 text-center font-semibold">
                     Comentários
                   </th>
-                  <th className="border-b border-border py-3 pl-3 text-right font-black">Ações</th>
+                  <th className="border-b border-border py-3 pl-3 text-right font-semibold">
+                    Ações
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -1599,7 +1603,7 @@ const RecentPostsTable = ({ posts }: { posts: CommunitiesDashboardRecentPost[] }
                     <tr className="align-top transition hover:bg-surface-muted/50" key={post.id}>
                       <td className="min-w-0 border-b border-border align-top">
                         <div className="min-w-0 py-4 pr-3">
-                          <p className="truncate font-black text-foreground">{title}</p>
+                          <p className="truncate font-semibold text-foreground">{title}</p>
                           <p className="mt-1 truncate text-xs text-muted">
                             {post.community_name} · {formatDateTime(post.created_at)}
                           </p>
@@ -1612,7 +1616,7 @@ const RecentPostsTable = ({ posts }: { posts: CommunitiesDashboardRecentPost[] }
                       </td>
                       <td className="border-b border-border text-center align-top">
                         <div className="px-3 py-4">
-                          <span className="inline-flex items-center gap-2 font-black text-foreground">
+                          <span className="inline-flex items-center gap-2 font-semibold text-foreground">
                             <Eye aria-hidden className="h-4 w-4 text-primary" />
                             {numberFormatter.format(post.views_count)}
                           </span>
@@ -1620,7 +1624,7 @@ const RecentPostsTable = ({ posts }: { posts: CommunitiesDashboardRecentPost[] }
                       </td>
                       <td className="border-b border-border text-center align-top">
                         <div className="px-3 py-4">
-                          <span className="inline-flex items-center gap-2 font-black text-foreground">
+                          <span className="inline-flex items-center gap-2 font-semibold text-foreground">
                             <MessageCircle aria-hidden className="h-4 w-4 text-primary" />
                             {numberFormatter.format(post.comments_count)}
                           </span>
@@ -1647,9 +1651,9 @@ const PopularPostsTable = ({ posts }: { posts: CommunitiesDashboardPopularPost[]
     <CardShell className="p-5">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <h2 className="text-lg font-black text-foreground">Posts mais populares</h2>
+          <h2 className="text-lg font-semibold text-foreground">Posts mais populares</h2>
         </div>
-        <span className="text-xs font-black text-primary">Ver todas</span>
+        <span className="text-xs font-semibold text-primary">Ver todas</span>
       </div>
 
       {posts.length === 0 ? (
@@ -1668,7 +1672,7 @@ const PopularPostsTable = ({ posts }: { posts: CommunitiesDashboardPopularPost[]
                   key={post.id}
                 >
                   <div className="min-w-0">
-                    <p className="truncate font-black text-foreground">{title}</p>
+                    <p className="truncate font-semibold text-foreground">{title}</p>
                     <p className="mt-1 text-xs text-muted">
                       {post.community_name} · {formatDateTime(post.created_at)}
                     </p>
@@ -1710,15 +1714,17 @@ const PopularPostsTable = ({ posts }: { posts: CommunitiesDashboardPopularPost[]
               </colgroup>
               <thead className="text-xs text-muted">
                 <tr>
-                  <th className="border-b border-border py-3 pr-3 font-black">Título</th>
-                  <th className="border-b border-border px-3 py-3 font-black">Autor</th>
-                  <th className="border-b border-border px-3 py-3 text-center font-black">
+                  <th className="border-b border-border py-3 pr-3 font-semibold">Título</th>
+                  <th className="border-b border-border px-3 py-3 font-semibold">Autor</th>
+                  <th className="border-b border-border px-3 py-3 text-center font-semibold">
                     Upvotes
                   </th>
-                  <th className="border-b border-border px-3 py-3 text-center font-black">
+                  <th className="border-b border-border px-3 py-3 text-center font-semibold">
                     Comentários
                   </th>
-                  <th className="border-b border-border py-3 pl-3 text-right font-black">Ações</th>
+                  <th className="border-b border-border py-3 pl-3 text-right font-semibold">
+                    Ações
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -1729,7 +1735,7 @@ const PopularPostsTable = ({ posts }: { posts: CommunitiesDashboardPopularPost[]
                     <tr className="align-top transition hover:bg-surface-muted/50" key={post.id}>
                       <td className="min-w-0 border-b border-border align-top">
                         <div className="py-4 pr-3">
-                          <p className="truncate font-black text-foreground">{title}</p>
+                          <p className="truncate font-semibold text-foreground">{title}</p>
                           <p className="mt-1 truncate text-xs text-muted">
                             {post.community_name} · {formatDateTime(post.created_at)}
                           </p>
@@ -1742,7 +1748,7 @@ const PopularPostsTable = ({ posts }: { posts: CommunitiesDashboardPopularPost[]
                       </td>
                       <td className="border-b border-border text-center align-top">
                         <div className="px-3 py-4">
-                          <span className="inline-flex items-center gap-2 font-black text-foreground">
+                          <span className="inline-flex items-center gap-2 font-semibold text-foreground">
                             <ArrowUp aria-hidden className="h-4 w-4 text-primary" />
                             {numberFormatter.format(post.upvotes_count)}
                           </span>
@@ -1750,7 +1756,7 @@ const PopularPostsTable = ({ posts }: { posts: CommunitiesDashboardPopularPost[]
                       </td>
                       <td className="border-b border-border text-center align-top">
                         <div className="px-3 py-4">
-                          <span className="inline-flex items-center gap-2 font-black text-foreground">
+                          <span className="inline-flex items-center gap-2 font-semibold text-foreground">
                             <MessageCircle aria-hidden className="h-4 w-4 text-primary" />
                             {numberFormatter.format(post.comments_count)}
                           </span>
@@ -1784,11 +1790,11 @@ const TopCommunitiesTable = ({
     <CardShell className="p-5">
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0">
-          <h2 className="text-lg font-black text-foreground">Principais comunidades</h2>
+          <h2 className="text-lg font-semibold text-foreground">Principais comunidades</h2>
           <BlockPeriodLabel>{periodLabel}</BlockPeriodLabel>
         </div>
         <Link
-          className="shrink-0 text-xs font-black text-primary transition hover:text-primary-hover"
+          className="shrink-0 text-xs font-semibold text-primary transition hover:text-primary-hover"
           href="/comunidades/lista"
         >
           Ver todas
@@ -1812,7 +1818,7 @@ const TopCommunitiesTable = ({
                   <div className="flex min-w-0 items-center gap-3">
                     <TopCommunityAvatar community={community} />
                     <div className="min-w-0">
-                      <p className="truncate font-black text-foreground">{community.name}</p>
+                      <p className="truncate font-semibold text-foreground">{community.name}</p>
                       <p className="text-xs text-muted">
                         {formatCountLabel(community.activity_count, "atividade", "atividades")} no
                         período
@@ -1856,15 +1862,19 @@ const TopCommunitiesTable = ({
               </colgroup>
               <thead className="text-xs text-muted">
                 <tr>
-                  <th className="border-b border-border py-3 pr-3 font-black">Comunidade</th>
-                  <th className="border-b border-border px-3 py-3 text-center font-black">
+                  <th className="border-b border-border py-3 pr-3 font-semibold">Comunidade</th>
+                  <th className="border-b border-border px-3 py-3 text-center font-semibold">
                     Seguidores
                   </th>
-                  <th className="border-b border-border px-3 py-3 text-center font-black">Posts</th>
-                  <th className="border-b border-border px-3 py-3 text-center font-black">
+                  <th className="border-b border-border px-3 py-3 text-center font-semibold">
+                    Posts
+                  </th>
+                  <th className="border-b border-border px-3 py-3 text-center font-semibold">
                     Acessos
                   </th>
-                  <th className="border-b border-border py-3 pl-3 text-right font-black">Ações</th>
+                  <th className="border-b border-border py-3 pl-3 text-right font-semibold">
+                    Ações
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -1874,7 +1884,7 @@ const TopCommunitiesTable = ({
                       <div className="flex items-center gap-3">
                         <TopCommunityAvatar community={community} />
                         <div className="min-w-0">
-                          <p className="truncate font-black text-foreground">{community.name}</p>
+                          <p className="truncate font-semibold text-foreground">{community.name}</p>
                           <p className="truncate text-xs text-muted">
                             {formatCountLabel(community.activity_count, "atividade", "atividades")}{" "}
                             no período
@@ -1882,13 +1892,13 @@ const TopCommunitiesTable = ({
                         </div>
                       </div>
                     </td>
-                    <td className="border-b border-border px-3 py-4 text-center font-black">
+                    <td className="border-b border-border px-3 py-4 text-center font-semibold">
                       {numberFormatter.format(community.members_count)}
                     </td>
-                    <td className="border-b border-border px-3 py-4 text-center font-black">
+                    <td className="border-b border-border px-3 py-4 text-center font-semibold">
                       {numberFormatter.format(community.posts_count)}
                     </td>
-                    <td className="border-b border-border px-3 py-4 text-center font-black">
+                    <td className="border-b border-border px-3 py-4 text-center font-semibold">
                       <span className="inline-flex items-center gap-2">
                         <Eye aria-hidden className="h-4 w-4 text-primary" />
                         {numberFormatter.format(community.accesses_count)}
@@ -1929,12 +1939,12 @@ const CommunitiesPeakActivityHoursCard = ({
   return (
     <CardShell className="h-full p-5">
       <div className="min-w-0">
-        <h2 className="text-lg font-black text-foreground">Horários de maior atividade</h2>
+        <h2 className="text-lg font-semibold text-foreground">Horários de maior atividade</h2>
         <BlockPeriodLabel>{periodLabel}</BlockPeriodLabel>
       </div>
 
       {totalActivity === 0 ? (
-        <p className="mt-5 rounded-2xl bg-surface-muted p-4 text-sm font-bold text-muted">
+        <p className="mt-5 rounded-2xl bg-surface-muted p-4 text-sm font-medium text-muted">
           Nenhuma atividade real foi registrada por hora no período selecionado.
         </p>
       ) : (
@@ -1947,18 +1957,18 @@ const CommunitiesPeakActivityHoursCard = ({
               >
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <span className="text-[11px] font-black uppercase tracking-wide text-primary">
+                    <span className="text-[11px] font-semibold uppercase tracking-wide text-primary">
                       #{index + 1} pico
                     </span>
-                    <h3 className="mt-1 text-base font-black text-foreground">
+                    <h3 className="mt-1 text-base font-semibold text-foreground">
                       {formatDashboardActivityHourRange(point.hour)}
                     </h3>
                   </div>
-                  <strong className="text-2xl font-black text-foreground">
+                  <strong className="text-2xl font-semibold text-foreground">
                     {numberFormatter.format(point.total)}
                   </strong>
                 </div>
-                <p className="mt-2 text-[11px] font-bold leading-5 text-muted">
+                <p className="mt-2 text-[11px] font-medium leading-5 text-muted">
                   {formatCountLabel(point.accesses, "acesso", "acessos")} |{" "}
                   {formatCountLabel(point.posts + point.replies, "conteúdo", "conteúdos")} |{" "}
                   {formatCountLabel(point.engagement, "interação", "interações")} |{" "}
@@ -1987,7 +1997,7 @@ const CommunitiesPeakActivityHoursCard = ({
                         title={`${point.label}: ${numberFormatter.format(point.total)} atividades`}
                       />
                     </div>
-                    <span className="text-[10px] font-black text-subtle">
+                    <span className="text-[10px] font-semibold text-subtle">
                       {String(point.hour).padStart(2, "0")}h
                     </span>
                   </div>
@@ -2002,7 +2012,7 @@ const CommunitiesPeakActivityHoursCard = ({
 
               return (
                 <span
-                  className="inline-flex items-center gap-1.5 rounded-full border border-border bg-surface px-2.5 py-1 text-[11px] font-bold text-muted"
+                  className="inline-flex items-center gap-1.5 rounded-full border border-border bg-surface px-2.5 py-1 text-[11px] font-medium text-muted"
                   key={metric.key}
                 >
                   <span className={cn("h-2.5 w-2.5 rounded-full", metric.className)} />
@@ -2087,7 +2097,7 @@ const DashboardCareCoverageCard = ({
     <CardShell className="p-5 sm:p-6">
       <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
         <div className="min-w-0">
-          <h2 className="text-xl font-black text-foreground">Cobertura de acolhimento</h2>
+          <h2 className="text-xl font-semibold text-foreground">Cobertura de acolhimento</h2>
           <BlockPeriodLabel>{periodLabel}</BlockPeriodLabel>
         </div>
         {filters ? <div className="w-full min-w-0 xl:max-w-xl">{filters}</div> : null}
@@ -2101,16 +2111,16 @@ const DashboardCareCoverageCard = ({
                 <FileText aria-hidden className="h-6 w-6" />
               </span>
               <div className="min-w-0">
-                <h3 className="text-sm font-black leading-snug text-foreground">
+                <h3 className="text-sm font-semibold leading-snug text-foreground">
                   Posts de pacientes
                 </h3>
               </div>
             </div>
             <div className="shrink-0 sm:text-right">
-              <p className="text-4xl font-black leading-none text-foreground">
+              <p className="text-4xl font-semibold leading-none text-foreground">
                 {numberFormatter.format(coverage.totalPatientPosts)}
               </p>
-              <p className="mt-3 rounded-2xl bg-surface px-4 py-2.5 text-xs font-black leading-5 text-primary shadow-sm">
+              <p className="mt-3 rounded-2xl bg-surface px-4 py-2.5 text-xs font-semibold leading-5 text-primary shadow-sm">
                 {formatDashboardVerifiedResponseDetail(
                   coverage.respondedByVerified,
                   coverage.totalPatientPosts,
@@ -2145,18 +2155,18 @@ const DashboardCareCoverageCard = ({
                 key={segment.id}
               >
                 <div className="flex items-center justify-between gap-2">
-                  <span className="inline-flex items-center gap-2 text-sm font-black text-foreground">
+                  <span className="inline-flex items-center gap-2 text-sm font-semibold text-foreground">
                     <span className={cn("h-3 w-3 rounded-full", segment.toneClassName)} />
                     {segment.label}
                   </span>
-                  <span className="text-sm font-black text-muted">
+                  <span className="text-sm font-semibold text-muted">
                     {formatDashboardCareCoveragePercent(segment.percentage)}
                   </span>
                 </div>
-                <p className="mt-4 text-3xl font-black leading-none text-foreground">
+                <p className="mt-4 text-3xl font-semibold leading-none text-foreground">
                   {numberFormatter.format(segment.value)}
                 </p>
-                <p className="mt-3 text-xs font-black leading-5 text-primary">
+                <p className="mt-3 text-xs font-semibold leading-5 text-primary">
                   {segment.responseDetail}
                 </p>
               </div>
@@ -2180,13 +2190,15 @@ const DashboardCareCoverageCard = ({
               >
                 <Icon aria-hidden className="h-6 w-6" />
               </span>
-              <h3 className="mt-5 min-h-12 text-sm font-black leading-6 text-foreground">
+              <h3 className="mt-5 min-h-12 text-sm font-semibold leading-6 text-foreground">
                 {indicator.label}
               </h3>
-              <p className="mt-3 text-4xl font-black leading-none text-foreground">
+              <p className="mt-3 text-4xl font-semibold leading-none text-foreground">
                 {indicator.value}
               </p>
-              <p className="mt-4 text-xs font-bold leading-6 text-muted">{indicator.description}</p>
+              <p className="mt-4 text-xs font-medium leading-6 text-muted">
+                {indicator.description}
+              </p>
             </article>
           );
         })}
@@ -2194,10 +2206,10 @@ const DashboardCareCoverageCard = ({
 
       <div className="mt-5 rounded-3xl border border-border bg-surface p-5 shadow-sm">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <span className="text-sm font-black text-foreground">
+          <span className="text-sm font-semibold text-foreground">
             Taxa de cobertura por psicólogos verificados
           </span>
-          <span className="text-sm font-black text-primary">
+          <span className="text-sm font-semibold text-primary">
             {formatDashboardCareCoveragePercent(coverage.coverageRate)}
           </span>
         </div>
@@ -2371,10 +2383,10 @@ const DashboardContentFormatDistributionCard = ({
     <CardShell className="min-w-0 max-w-full overflow-hidden p-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
-          <h3 className="text-lg font-black text-foreground">{title}</h3>
-          <p className="mt-1 text-xs font-bold leading-5 text-muted">{description}</p>
+          <h3 className="text-lg font-semibold text-foreground">{title}</h3>
+          <p className="mt-1 text-xs font-medium leading-5 text-muted">{description}</p>
         </div>
-        <span className="shrink-0 rounded-full bg-surface-muted px-3 py-1.5 text-xs font-black text-muted">
+        <span className="shrink-0 rounded-full bg-surface-muted px-3 py-1.5 text-xs font-semibold text-muted">
           {formatContentFormatTotal(distribution.total, totalLabels)}
         </span>
       </div>
@@ -2475,7 +2487,7 @@ const DashboardContentFormatDistributionCard = ({
               key={item.id}
             >
               <div className="flex items-center justify-between gap-3">
-                <span className="flex min-w-0 items-center gap-2 text-sm font-black text-foreground">
+                <span className="flex min-w-0 items-center gap-2 text-sm font-semibold text-foreground">
                   <span
                     aria-hidden
                     className="h-3 w-3 shrink-0 rounded-full"
@@ -2483,11 +2495,11 @@ const DashboardContentFormatDistributionCard = ({
                   />
                   <span className="truncate">{item.label}</span>
                 </span>
-                <span className="text-sm font-black text-foreground">
+                <span className="text-sm font-semibold text-foreground">
                   {formatContentFormatPercentage(item.percentage)}
                 </span>
               </div>
-              <p className="mt-1 text-xs font-bold text-muted">
+              <p className="mt-1 text-xs font-medium text-muted">
                 {formatContentFormatTotal(item.count, totalLabels)}
               </p>
             </div>

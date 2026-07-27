@@ -1136,3 +1136,27 @@ Regras de UI obrigatÃ³rias:
 - `pnpm --dir admin build`: sem erros.
 - `pnpm check`: sem erros.
 - Browser local/headless com Admin real temporario em `http://localhost:3002/comunidades`: cards de votos validados em desktop e mobile ~390px com **Upvotes** e **Downvotes**; admin temporario removido da base local ao final.
+
+## Ajuste complementar 2026-07-27 - Peso textual no dashboard de comunidades
+
+- Pedido do usuario: reduzir o peso textual dos textos em negrito no dashboard administrativo `/comunidades`.
+- Frontend Admin: os pesos `font-black`, `font-extrabold` e `font-bold` do dashboard foram suavizados para `font-semibold` ou `font-medium`, preservando a hierarquia visual por tamanho, cor, espaçamento e cards existentes.
+- O ajuste ficou restrito a apresentacao visual em `admin/src/app/(admin)/comunidades/client.tsx`; nao houve alteracao de backend, contrato HTTP, dados persistidos, schema Prisma/migrations, packages, filtros, endpoint simulado ou uso de `<img>` cru.
+- Builder/Quick Copy `vcp://quickcopy/vcp-24aaa2941d814e5b90572bc93ae50e2a` nao esta exposto como ferramenta callable neste ambiente; referencias usadas: captura enviada pelo usuario e `_product/proto/admin/Comunidades/Comunidades - Dashboard.png`.
+- ADR nao aplicavel: ajuste pontual de tipografia sem nova decisao arquitetural, regra de dominio, integracao ou trade-off tecnico.
+
+### Criterios deste ajuste
+
+- [x] O dashboard `/comunidades` nao usa mais pesos `font-black`, `font-extrabold` ou `font-bold` nos textos do arquivo principal da tela.
+- [x] Titulos, labels, valores, links, tabelas e textos auxiliares permanecem legiveis com pesos mais leves.
+- [x] A UI permanece mobile-first, sem `<img>` cru e sem alteracao de dados reais.
+
+### Validacao deste ajuste
+
+- `pnpm --dir admin exec biome check "src/app/(admin)/comunidades/client.tsx"`: sem erros.
+- `pnpm --dir admin exec eslint "src/app/(admin)/comunidades/client.tsx"`: sem erros.
+- `pnpm --dir admin typecheck`: sem erros.
+- `pnpm --dir admin build`: sem erros.
+- `pnpm --dir admin check`: bloqueado por alteracao preexistente fora do escopo em `admin/src/app/(admin)/dashboard/client.tsx` (`useEffect` importado sem uso e ordenacao de imports).
+- `pnpm check`: tentativa executada, mas expirou no ambiente antes de concluir; a validacao focada do arquivo alterado, typecheck e build do Admin ficaram verdes.
+- Smoke HTTP local `GET http://localhost:3002/comunidades`: retornou 200.
