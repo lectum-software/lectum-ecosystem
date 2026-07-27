@@ -297,11 +297,6 @@ export class AdminTrafficRepository implements IAdminTrafficRepository {
       select: {
         id: true,
         name: true,
-        psychologist_profile: {
-          select: {
-            crp: true,
-          },
-        },
       },
     });
   }

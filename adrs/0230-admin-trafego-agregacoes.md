@@ -31,8 +31,13 @@ O Builder/Quick Copy ativo `vcp://quickcopy/vcp-24aaa2941d814e5b90572bc93ae50e2a
   apresenta rotas comuns como **Login** e **Cadastro de psicólogo** em vez de `/auth/login` ou
   `/auth/register/psychologist`.
 - Expor tambem `top_posts` no resumo e no CSV, agregando pageviews reais de posts de comunidade
-  por `page_view_event.page_kind="community_post"`/`target_id` e enriquecendo o label com
-  `community_post.title` + comunidade real quando o post ainda existir.
+  por `page_view_event.page_kind="community_post"`/`target_id` e enriquecendo o label somente com
+  `community_post.title` quando o post ainda existir.
+- Os rankings operacionais `top_communities`, `top_posts` e `top_psychologists` expõem `path` como
+  rota interna do Admin para drill-down (`/comunidades/[slug]`,
+  `/comunidades/[slug]/conteudo/post/[id]` e `/psicologos/[id]`), nao como URL publica.
+- Labels de psicologos em `top_psychologists` usam somente `user.name`; CRP e demais dados de
+  `psychologist_profile` ficam fora desse ranking resumido para reduzir ruido visual.
 - Expor metricas de qualidade somente com formula explicita:
   - taxa de cadastro = cadastros de pacientes e psicologos / visitantes unicos;
   - taxa de rejeicao = sessoes com 1 pageview e sem acao importante / sessoes com pageview;
@@ -53,6 +58,8 @@ O Builder/Quick Copy ativo `vcp://quickcopy/vcp-24aaa2941d814e5b90572bc93ae50e2a
   registros.
 - O ranking de posts reaproveita o tracking first-party ja capturado; posts sem label resolvido
   continuam aparecendo pelo id real em vez de receber mock ou seed visual.
+- Posts sem rota administrativa resolvida ficam com `path=null`, deixando o atalho indisponivel na
+  UI em vez de levar a operacao para uma rota falsa ou publica.
 - Os atalhos de periodo reduzem divergencia entre datas calculadas no cliente e no backend; o cliente
   exibe o periodo efetivo retornado pelo resumo e nao cria range artificial para **Todo o periodo**.
 
@@ -89,6 +96,11 @@ O Builder/Quick Copy ativo `vcp://quickcopy/vcp-24aaa2941d814e5b90572bc93ae50e2a
   - browser local/headless confirmou a lista **Principais páginas de entrada** sem subtitulos de
     path/slug, sem **Posts específicos** e sem exibir `/auth/login`,
     `/auth/register/psychologist`, `/community/*/post/*`, `/community/*` ou `/psychologists/*`.
+- Validacao complementar em 2026-07-27 para rankings:
+  - API real local confirmou labels de posts sem comunidade, labels de psicologos sem CRP, paths
+    internos do Admin e `path=null` para posts nao resolvidos;
+  - browser local/headless em `http://localhost:3002/trafego` confirmou links `Ir ate ... no Admin`
+    sem `target="_blank"` e sem href publico.
 
 ## Task relacionada
 

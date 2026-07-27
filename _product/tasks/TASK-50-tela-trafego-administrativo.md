@@ -592,3 +592,28 @@ Validacao desta execucao complementar:
   `/auth/login`, `/auth/register/psychologist` ou **Posts especificos** na lista, em 1366x900 e
   390x844 sem overflow horizontal.
 - Conferencia direta no banco apos limpeza - OK: `codexTrafficOverviewAdminCount=0`.
+
+## Execucao complementar - labels limpos e atalhos internos nos rankings (2026-07-27)
+
+- O ranking **Trafego por post** passou a exibir somente `community_post.title`, sem concatenar o nome da comunidade ao label.
+- O ranking **Trafego por psicologo** passou a exibir somente `user.name`, sem concatenar CRP ou outros dados profissionais vindos de `psychologist_profile`.
+- Os atalhos dos rankings deixaram de montar URLs do frontend publico e agora usam rotas internas do Admin:
+  `/comunidades/[slug]`, `/comunidades/[slug]/conteudo/post/[id]` e `/psicologos/[id]`.
+- Posts sem resolucao real em `community_post` nao recebem rota inventada: o payload retorna `path=null` e a UI mantém o estado desabilitado do icone.
+- O peso visual dos nomes/titulos nos rankings foi reduzido de `font-black` para `font-semibold`, preservando truncamento e acessibilidade.
+- Nao houve mock, backfill, endpoint novo, package novo, Prisma schema/migration ou dado persistido; `db:migrate` nao foi necessario.
+- Builder/Quick Copy nao estava exposto como ferramenta callable nesta execucao; as referencias auditaveis foram `_product/proto/admin/Tráfego.png` e a captura enviada pelo usuario.
+- ADRs atualizados: `adrs/0230-admin-trafego-agregacoes.md` e `adrs/0323-trafego-visao-geral-timeline.md`.
+
+Validacao desta execucao complementar:
+
+- `pnpm --dir backend exec biome check --write "src/modules/api/admin/private/traffic/summary/repositories/interfaces/IAdminTrafficRepository.ts" "src/modules/api/admin/private/traffic/summary/repositories/AdminTrafficRepository.ts" "src/modules/api/admin/private/traffic/summary/use-cases/services.ts"` - OK.
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/trafego/client.tsx"` - OK.
+- `pnpm --dir backend check` - OK.
+- `pnpm --dir admin check` - OK.
+- `pnpm --dir backend build` - OK.
+- `pnpm --dir admin build` - OK.
+- `pnpm check` - OK.
+- API real local com admin transitorio removido apos o teste: `top_posts.items` retornou titulos sem comunidade/CRP, `top_psychologists.items` retornou nomes sem CRP, nenhum path publico `/community/*` ou `/psychologists/*`, e posts sem registro resolvido ficaram com `path=null`.
+- Browser local/headless em `http://localhost:3002/trafego` com admin real transitorio removido apos o teste: validou 11 links `Ir ate ... no Admin`, `href` interno em `/comunidades/...` ou `/psicologos/...`, ausencia de `target="_blank"`, ausencia das tags tecnicas dos rankings, labels com `font-semibold` e sem `font-black`.
+- HTTP local com build atual em `http://localhost:3017/trafego` - OK (`200`).

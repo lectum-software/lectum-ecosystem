@@ -15,6 +15,7 @@ import {
   Smartphone,
   Users,
 } from "lucide-react";
+import Link from "next/link";
 import { type FocusEvent, useEffect, useMemo, useState } from "react";
 import { useAdminTrafficSummary } from "@/api/callers/traffic";
 import { resolveApiError } from "@/api/handle";
@@ -70,14 +71,6 @@ type TrafficPeriodValue = TrafficPeriodPreset | "custom";
 type TrafficDateRange = Required<Pick<TrafficSummaryQuery, "from" | "to">>;
 
 const numberFormatter = new Intl.NumberFormat("pt-BR");
-const publicFrontendUrl = process.env.NEXT_PUBLIC_FRONTEND_URL || "http://localhost:3000";
-
-const toPublicHref = (path: string) => {
-  if (/^https?:\/\//.test(path)) return path;
-
-  const normalizedPath = path.startsWith("/") ? path : `/${path}`;
-  return `${publicFrontendUrl.replace(/\/$/, "")}${normalizedPath}`;
-};
 
 const formatRankingSummary = (item: TrafficRankingItem) => {
   const sessionLabel = item.sessions === 1 ? "sessão" : "sessões";
@@ -863,22 +856,20 @@ const RankingList = ({
       items.map((item, index) => (
         <div className="flex min-w-0 items-start justify-between gap-3 py-3" key={item.id}>
           <div className="min-w-0 flex-1">
-            <p className="truncate font-black text-foreground">
+            <p className="truncate text-base font-semibold leading-6 text-foreground">
               #{index + 1} {item.label}
             </p>
             <p className="mt-1 text-xs font-bold text-muted">{formatRankingSummary(item)}</p>
           </div>
           {item.path ? (
-            <a
-              aria-label={`Ir até ${destinationLabel}: ${item.label}`}
+            <Link
+              aria-label={`Ir até ${destinationLabel} no Admin: ${item.label}`}
               className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-border bg-surface text-primary shadow-control transition hover:border-primary hover:bg-primary-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
-              href={toPublicHref(item.path)}
-              rel="noreferrer"
-              target="_blank"
-              title={`Ir até ${destinationLabel}`}
+              href={item.path}
+              title={`Ir até ${destinationLabel} no Admin`}
             >
               <ExternalLink aria-hidden className="h-4 w-4" />
-            </a>
+            </Link>
           ) : (
             <span
               aria-label={`URL indisponível para ${destinationLabel}: ${item.label}`}

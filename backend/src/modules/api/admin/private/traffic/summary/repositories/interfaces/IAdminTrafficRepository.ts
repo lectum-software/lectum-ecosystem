@@ -61,9 +61,6 @@ export type TrafficCommunityLabelRecord = {
 export type TrafficPsychologistLabelRecord = {
   id: string;
   name: string;
-  psychologist_profile: {
-    crp: string | null;
-  } | null;
 };
 
 export type TrafficPostLabelRecord = {

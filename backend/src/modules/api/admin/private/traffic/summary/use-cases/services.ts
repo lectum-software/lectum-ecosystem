@@ -1323,37 +1323,35 @@ const isPostPageView = (pageView: TrafficPageViewRecord) =>
 
 type TrafficRankingTarget = "community" | "community_post" | "psychologist";
 
-const rankingPath = (targetType: TrafficRankingTarget, id: string, path: string | null) => {
-  if (targetType === "community") return `/community/${id}`;
-  if (targetType === "psychologist") return `/psychologists/${id}`;
+const adminPathSegment = (value: string) => encodeURIComponent(value);
 
-  return path;
+const rankingPath = (targetType: TrafficRankingTarget, id: string) => {
+  if (targetType === "community") return `/comunidades/${adminPathSegment(id)}`;
+  if (targetType === "psychologist") return `/psicologos/${adminPathSegment(id)}`;
+
+  return null;
 };
 
 const targetRanking = (
   stats: TrafficStats,
   targetType: TrafficRankingTarget,
   labels: Map<string, string>,
+  paths = new Map<string, string>(),
 ) => {
   const pageViews = stats.pageViews.filter((pageView) => {
     if (targetType === "community_post") return isPostPageView(pageView);
 
     return pageView.target_type === targetType && pageView.target_id;
   });
-  const groups = new Map<
-    string,
-    { pageViews: number; path: string | null; sessionKeys: Set<string> }
-  >();
+  const groups = new Map<string, { pageViews: number; sessionKeys: Set<string> }>();
 
   for (const pageView of pageViews) {
     const id = pageView.target_id!;
     const current = groups.get(id) ?? {
       pageViews: 0,
-      path: null,
       sessionKeys: new Set<string>(),
     };
     current.pageViews += 1;
-    current.path = current.path ?? pageView.path ?? null;
     current.sessionKeys.add(sessionKey(pageView));
     groups.set(id, current);
   }
@@ -1365,7 +1363,7 @@ const targetRanking = (
       count: group.pageViews,
       id,
       label: labels.get(id) ?? id,
-      path: rankingPath(targetType, id, group.path),
+      path: paths.get(id) ?? rankingPath(targetType, id),
       percentage: safePercentage(group.sessionKeys.size, totalSessions),
       sessions: group.sessionKeys.size,
     }))
@@ -1394,23 +1392,19 @@ const buildRankings = async (repository: IAdminTrafficRepository, stats: Traffic
   ]);
   const communityLabels = new Map(communities.map((community) => [community.slug, community.name]));
   const psychologistLabels = new Map(
-    psychologists.map((psychologist) => {
-      const suffix = psychologist.psychologist_profile?.crp
-        ? ` · CRP ${psychologist.psychologist_profile.crp}`
-        : "";
-
-      return [psychologist.id, `${psychologist.name}${suffix}`];
-    }),
+    psychologists.map((psychologist) => [psychologist.id, psychologist.name]),
   );
-  const postLabels = new Map(
-    posts.map((post) => {
-      const communitySuffix = post.community.name ? ` · ${post.community.name}` : "";
-
-      return [post.id, `${post.title}${communitySuffix}`];
-    }),
+  const postLabels = new Map(posts.map((post) => [post.id, post.title]));
+  const postPaths = new Map(
+    posts.map((post) => [
+      post.id,
+      `/comunidades/${adminPathSegment(post.community.slug)}/conteudo/post/${adminPathSegment(
+        post.id,
+      )}`,
+    ]),
   );
   const communityItems = targetRanking(stats, "community", communityLabels);
-  const postItems = targetRanking(stats, "community_post", postLabels);
+  const postItems = targetRanking(stats, "community_post", postLabels, postPaths);
   const psychologistItems = targetRanking(stats, "psychologist", psychologistLabels);
 
   return {
