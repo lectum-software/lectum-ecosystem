@@ -83,3 +83,13 @@ A rota Admin de detalhe `/comunidades/[slug]/conteudo/[type]/[id]` passa a aceit
 Para esse status, o detalhe exibe o corpo do post e badge **Bloqueado automaticamente**, mantem `public_url=null`, mostra alerta operacional de indisponibilidade publica e oculta a acao de remocao, pois o conteudo ja nao esta publicado. A central de moderacao usa `admin_content_url` para apontar diretamente para esse detalhe quando o evento tiver `target_id` real.
 
 A decisao reaproveita o endpoint e a pagina existentes da TASK-75 em vez de criar uma tela paralela de conteudo bloqueado. Nao houve schema/migration, package novo, mock, seed ou backfill.
+
+## Update 2026-07-27: layout piloto no detalhe Admin de conteudo
+
+A rota contextual `/comunidades/[slug]/conteudo/[type]/[id]` foi alinhada ao layout piloto centralizado do `AdminShell`. O wrapper local antigo, que duplicava `main`, `max-w-7xl` e paddings internos, foi removido para que a pagina use apenas o container global do shell e um container interno simples com `space-y-7` e `overflow-x-clip`.
+
+Os cards do detalhe passam a usar os mesmos tokens visuais do piloto (`border-border/80`, `bg-surface/95`, `shadow-admin-soft` e `backdrop-blur`). A decisao evita um layout paralelo para uma pagina remanescente e mantem a rota dentro do escopo visual `admin-premium-pilot` ja aplicado a `/comunidades` e descendentes.
+
+Nao houve alteracao de API, backend, Prisma, tracking, metricas, dados reais, package, mock, seed ou backfill. Builder/Quick Copy nao estava disponivel como ferramenta callable; a referencia visual usada foi `_product/proto/admin/Comunidades/Comunidades - Detalhes.png` e o padrao local do Admin.
+
+Validacao: `pnpm --dir admin exec biome check --write "src/app/(admin)/comunidades/[slug]/conteudo/[type]/[id]/client.tsx"`, `pnpm --dir admin check`, `pnpm --dir admin build`, smoke HTTP 200 para `/comunidades/autocuidado-em-pratica/conteudo/post/cmrmg709v000yt0uh8x55eqae` e browser local/headless em 1365x900 e 390x844 confirmando `admin-premium-pilot`, ausencia do wrapper antigo e sem overflow horizontal global. `pnpm check` foi tentado, mas atingiu timeout da ferramenta apos 244s sem saida conclusiva.

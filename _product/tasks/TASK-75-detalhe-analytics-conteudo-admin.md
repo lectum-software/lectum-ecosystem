@@ -548,3 +548,30 @@ Regras anti-recriação:
 - `pnpm check`
 - Smoke HTTP local: `http://localhost:3002/moderacao/conteudo-sensivel` retornou 200.
 - Smoke HTTP local: `http://localhost:3002/comunidades/tmp-layout-denuncias-cmrgztri70/conteudo/post/tmp_den_layout_cmrgztri70_thread_01` retornou 200.
+
+## Ajuste complementar 2026-07-27 - Layout piloto no detalhe Admin de conteudo
+
+- Pedido do usuario: aplicar o layout piloto na pagina remanescente de detalhe analitico de conteudo.
+- A rota `/comunidades/[slug]/conteudo/[type]/[id]` deixou de renderizar um wrapper proprio com `main`, `max-w-7xl` e paddings internos (`px-4 py-6 sm:px-6 lg:px-8`), passando a confiar no container unico do `AdminShell` em `admin-premium-pilot`.
+- O container local da pagina agora usa somente `min-w-0 max-w-full space-y-7 overflow-x-clip`, alinhado aos demais paineis Admin e evitando espacamento duplicado.
+- Os cards da pagina foram ajustados para `border-border/80`, `bg-surface/95`, `shadow-admin-soft` e `backdrop-blur`, reaproveitando tokens do piloto sem criar componente ou design system paralelo.
+- O ajuste e somente visual no app Admin: nao altera contrato de API, backend, schema Prisma/migration, dados reais, metricas, tracking, package, mock, seed, backfill ou uso de `<img>` cru.
+- Builder/Quick Copy nao esteve disponivel como ferramenta callable neste ambiente; a referencia visual usada foi `_product/proto/admin/Comunidades/Comunidades - Detalhes.png` e os padroes Admin existentes.
+- O admin temporario usado para validacao headless foi removido da base local ao final.
+
+### Criterios de aceite complementares
+
+- [x] A pagina de detalhe de conteudo usa o container do `AdminShell`/`admin-premium-pilot` sem wrapper antigo de pagina.
+- [x] A rota nao possui mais `main` aninhado nem o wrapper local `max-w-7xl gap-5 overflow-x-hidden px-4 py-6`.
+- [x] Desktop e mobile base ~390px renderizam sem overflow horizontal global.
+- [x] O post real `autocuidado-em-pratica/conteudo/post/cmrmg709v000yt0uh8x55eqae` continua carregando dados reais.
+
+### Validacao executada para este ajuste
+
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/comunidades/[slug]/conteudo/[type]/[id]/client.tsx"`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- Smoke HTTP local: `GET http://localhost:3002/comunidades/autocuidado-em-pratica/conteudo/post/cmrmg709v000yt0uh8x55eqae` retornou 200.
+- Browser local/headless em Chrome com Admin real temporario: validou desktop 1365x900 e mobile 390x844 com `admin-premium-pilot`, container `min-w-0 max-w-full space-y-7 overflow-x-clip`, ausencia do wrapper antigo e `documentElement.scrollWidth === documentElement.clientWidth`.
+- Screenshots de validacao foram geradas temporariamente em `.tmp-content-detail-pilot-desktop.png` e `.tmp-content-detail-pilot-mobile.png`, inspecionadas e removidas antes do commit.
+- `pnpm check` foi tentado, mas atingiu timeout da ferramenta apos 244s sem saida conclusiva; as validacoes direcionadas do app Admin foram concluidas sem erros.

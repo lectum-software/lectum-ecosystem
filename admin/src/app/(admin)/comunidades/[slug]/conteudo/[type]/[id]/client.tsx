@@ -50,7 +50,8 @@ const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
 const publicFrontendUrl = process.env.NEXT_PUBLIC_FRONTEND_URL || "http://localhost:3000";
 const publicMediaPathPrefixes = ["/public/files/", "/community/icons/"] as const;
 const cardClass =
-  "min-w-0 max-w-full rounded-card border border-border bg-surface/95 shadow-admin-soft";
+  "min-w-0 max-w-full rounded-card border border-border/80 bg-surface/95 shadow-admin-soft backdrop-blur";
+const pageClass = "min-w-0 max-w-full space-y-7 overflow-x-clip";
 
 type ContentDetailTargetType = "comment" | "post" | "reply";
 const CONTENT_DETAIL_QUERY = { period: "all" } as const;
@@ -1307,18 +1308,18 @@ export const AdminCommunityContentDetailClient = ({
 
   if (!normalizedType) {
     return (
-      <main className="mx-auto min-w-0 w-full max-w-7xl overflow-x-hidden px-4 py-6 sm:px-6 lg:px-8">
+      <div className={pageClass}>
         <div className={cn(cardClass, "p-5")}>
           <AlertTriangle className="h-6 w-6 text-danger" aria-hidden />
           <h1 className="mt-3 text-xl font-black text-foreground">Tipo de conteúdo inválido</h1>
           <p className="mt-2 text-sm text-muted">Use post, comment ou reply na rota.</p>
         </div>
-      </main>
+      </div>
     );
   }
 
   return (
-    <main className="mx-auto grid min-w-0 w-full max-w-7xl gap-5 overflow-x-hidden px-4 py-6 sm:px-6 lg:px-8">
+    <div className={pageClass}>
       {detailQuery.isLoading ? (
         <div className={cn(cardClass, "grid min-h-64 place-items-center p-8")}>
           <span className="inline-flex items-center gap-2 text-sm font-black text-muted">
@@ -1349,6 +1350,6 @@ export const AdminCommunityContentDetailClient = ({
           />
         </>
       ) : null}
-    </main>
+    </div>
   );
 };
