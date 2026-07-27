@@ -674,3 +674,19 @@ Validacao desta execucao complementar:
 - Browser local/headless em `http://localhost:3002/trafego` - OK: validou ausencia da coluna
   **Conversoes geradas** em **Principais paginas de entrada**, card/tabela separado
   **Conversoes geradas** preservado e `horizontalOverflowPx=0` em desktop e mobile.
+
+## Execucao complementar - Visitantes nao autenticados na Visao geral (2026-07-27)
+
+- Adicionado o card **Visitantes nao autenticados** diretamente a **Visao geral** de `/trafego`, usando o agregado real `overview_cards.anonymous_visitors` ja retornado pelo backend.
+- O card tambem mostra a participacao sobre **Visitantes unicos**, sem expor detalhes individuais e sem mostrar atividade de Admins.
+- O novo card nao alterna curva no grafico diario; a timeline permanece focada nas quatro series ja existentes: sessoes, visitantes unicos, novos visitantes e visitantes recorrentes.
+- A UI normaliza a label desse card no frontend para garantir a copy **Visitantes nao autenticados** mesmo quando o payload vier de um build backend anterior com contrato compativel.
+- Nao houve mock, tracking novo, endpoint novo, pacote novo, alteracao em Prisma schema/migrations ou dados persistidos; `db:migrate` nao foi necessario.
+- Builder/Quick Copy nao estava exposto como ferramenta callable neste ambiente; a referencia auditavel permaneceu `_product/proto/admin/Tráfego.png` e a captura enviada pelo usuario.
+- ADR atualizado: `adrs/0323-trafego-visao-geral-timeline.md`.
+
+Validacao desta execucao complementar:
+
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/trafego/client.tsx"` - OK.
+- `pnpm --dir admin check` - OK.
+- `pnpm --dir admin build` - OK.

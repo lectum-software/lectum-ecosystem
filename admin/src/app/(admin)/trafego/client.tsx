@@ -22,6 +22,8 @@ import { resolveApiError } from "@/api/handle";
 import type {
   AdminTrafficSummary,
   TrafficBreakdownItem,
+  TrafficConversionAction,
+  TrafficConversionChart,
   TrafficEntryPage,
   TrafficMetric,
   TrafficRankingItem,
@@ -43,11 +45,20 @@ const CHART_COLORS = [
 const SKELETON_KEYS = [
   "sessions",
   "unique_visitors",
+  "anonymous_visitors",
   "new_visitors",
   "recurring_visitors",
 ] as const;
 
-const TRAFFIC_OVERVIEW_ORDER = [
+const TRAFFIC_OVERVIEW_CARD_ORDER = [
+  "sessions",
+  "unique_visitors",
+  "anonymous_visitors",
+  "new_visitors",
+  "recurring_visitors",
+] as const;
+
+const TRAFFIC_OVERVIEW_CHART_ORDER = [
   "sessions",
   "unique_visitors",
   "new_visitors",
@@ -65,7 +76,8 @@ const TRAFFIC_PERIOD_OPTIONS = [
   { id: "all", label: "Todo o período" },
 ] as const;
 
-type TrafficOverviewMetricKey = (typeof TRAFFIC_OVERVIEW_ORDER)[number];
+type TrafficOverviewCardKey = (typeof TRAFFIC_OVERVIEW_CARD_ORDER)[number];
+type TrafficOverviewMetricKey = (typeof TRAFFIC_OVERVIEW_CHART_ORDER)[number];
 type TrafficPeriodPreset = (typeof TRAFFIC_PERIOD_OPTIONS)[number]["id"];
 type TrafficPeriodValue = TrafficPeriodPreset | "custom";
 type TrafficDateRange = Required<Pick<TrafficSummaryQuery, "from" | "to">>;
@@ -258,7 +270,9 @@ const hasPeriodRecords = (summary: AdminTrafficSummary) => {
     summary.entry_pages.total > 0 ||
     summary.top_communities.total > 0 ||
     summary.top_posts.total > 0 ||
-    summary.top_psychologists.total > 0;
+    summary.top_psychologists.total > 0 ||
+    summary.conversion_groups.pre_signup.total_visitors > 0 ||
+    summary.conversion_groups.post_signup.total_users > 0;
 
   return overviewValues || breakdownValues;
 };
@@ -284,11 +298,15 @@ const hexToRgba = (hex: string, alpha: number) => {
 };
 
 const TRAFFIC_OVERVIEW_METRIC_CONFIG = {
+  anonymous_visitors: { color: "#64748b", icon: Users },
   new_visitors: { color: "#8b5cf6", icon: Users },
   recurring_visitors: { color: "#f59f00", icon: RefreshCw },
   sessions: { color: "#308ce8", icon: Globe2 },
   unique_visitors: { color: "#13a85b", icon: Users },
-} satisfies Record<TrafficOverviewMetricKey, { color: string; icon: LucideIcon }>;
+} satisfies Record<TrafficOverviewCardKey, { color: string; icon: LucideIcon }>;
+
+const isTrafficOverviewMetricKey = (key: TrafficOverviewCardKey): key is TrafficOverviewMetricKey =>
+  (TRAFFIC_OVERVIEW_CHART_ORDER as readonly string[]).includes(key);
 
 const TrendBadge = ({ metric }: { metric: TrafficMetric }) => {
   if (metric.unavailable)
@@ -314,31 +332,30 @@ const MetricCard = ({
   onToggle,
   rate,
 }: {
-  active: boolean;
+  active?: boolean;
   color: string;
   icon: LucideIcon;
   metric: TrafficMetric;
-  onToggle: () => void;
+  onToggle?: () => void;
   rate?: string | null;
 }) => {
   const formattedValue = formatMetricValue(metric);
   const titleValue = rate ? `${formattedValue} (${rate})` : formattedValue;
-
-  return (
-    <button
-      aria-pressed={active}
-      className={cn(
-        "min-h-[8.75rem] min-w-0 rounded-card border p-3 text-left transition duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 md:p-4 xl:min-h-[8.25rem] xl:p-3",
-        active
-          ? "border-primary/35 bg-surface shadow-admin-soft ring-1 ring-primary/10"
-          : "border-border/80 bg-border/50 shadow-none hover:-translate-y-0.5 hover:border-primary/25 hover:bg-border/60",
-      )}
-      onClick={onToggle}
-      title={`${metric.label}: ${titleValue}. ${
-        active ? "Visível no gráfico" : "Oculto no gráfico"
-      }`}
-      type="button"
-    >
+  const isInteractive = Boolean(onToggle);
+  const isActive = active ?? true;
+  const statusLabel = isInteractive
+    ? isActive
+      ? "Visível no gráfico"
+      : "Oculto no gráfico"
+    : "Contador agregado do período";
+  const className = cn(
+    "min-h-[8.75rem] min-w-0 rounded-card border p-3 text-left transition duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 md:p-4 xl:min-h-[8.25rem] xl:p-3",
+    isActive
+      ? "border-primary/35 bg-surface shadow-admin-soft ring-1 ring-primary/10"
+      : "border-border/80 bg-border/50 shadow-none hover:-translate-y-0.5 hover:border-primary/25 hover:bg-border/60",
+  );
+  const content = (
+    <>
       <div className="flex items-start justify-between gap-3">
         <div
           className="grid h-9 w-9 shrink-0 place-items-center rounded-full xl:h-8 xl:w-8"
@@ -348,7 +365,7 @@ const MetricCard = ({
         </div>
       </div>
       <div className="mt-4 min-w-0 space-y-1.5 xl:mt-3">
-        <p className="truncate text-xs font-semibold text-foreground" title={metric.label}>
+        <p className="min-h-8 text-xs font-semibold leading-4 text-foreground" title={metric.label}>
           {metric.label}
         </p>
         <p className="flex min-w-0 items-baseline gap-2 truncate whitespace-nowrap text-2xl font-bold tracking-tight text-foreground xl:text-[1.7rem]">
@@ -365,14 +382,34 @@ const MetricCard = ({
             vs. período anterior
           </span>
         </div>
-        <span className="sr-only">{active ? "visível no gráfico" : "oculto no gráfico"}</span>
+        <span className="sr-only">{statusLabel.toLowerCase()}</span>
       </div>
+    </>
+  );
+
+  if (!isInteractive) {
+    return (
+      <div className={className} title={`${metric.label}: ${titleValue}. ${statusLabel}`}>
+        {content}
+      </div>
+    );
+  }
+
+  return (
+    <button
+      aria-pressed={isActive}
+      className={className}
+      onClick={onToggle}
+      title={`${metric.label}: ${titleValue}. ${statusLabel}`}
+      type="button"
+    >
+      {content}
     </button>
   );
 };
 
 const LoadingGrid = () => (
-  <div className="grid min-w-0 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+  <div className="grid min-w-0 gap-3 sm:grid-cols-2 xl:grid-cols-5">
     {SKELETON_KEYS.map((key) => (
       <CardShell
         className="h-[9.25rem] animate-pulse bg-surface-muted"
@@ -804,25 +841,157 @@ const PageNavigationPanel = ({
   );
 };
 
-const MetricList = ({ items }: { items: TrafficMetric[] }) => (
-  <div className="mt-4 divide-y divide-border">
+const formatActorLabel = (action: TrafficConversionAction) => {
+  const label = action.actor_label || "usuários";
+
+  return `${numberFormatter.format(action.actors)} ${label}`;
+};
+
+const formatEventLabel = (events: number) => {
+  const label = events === 1 ? "evento" : "eventos";
+
+  return `${numberFormatter.format(events)} ${label}`;
+};
+
+const ConversionChartCard = ({ chart }: { chart: TrafficConversionChart }) => (
+  <div className="min-w-0 rounded-[1.5rem] border border-border bg-surface p-4">
+    <div className="flex min-w-0 flex-col gap-2">
+      <div className="min-w-0">
+        <h3 className="text-base font-black text-foreground">{chart.label}</h3>
+        <p className="mt-1 text-xs leading-5 text-muted">{chart.description}</p>
+      </div>
+      <span className="max-w-full self-start break-all rounded-full bg-surface-muted px-2 py-1 text-[0.65rem] font-semibold text-muted">
+        {chart.source}
+      </span>
+    </div>
+    <DonutChart ariaLabel={chart.label} items={chart.items} total={chart.total} />
+  </div>
+);
+
+const ConversionActionBars = ({
+  items,
+  totalActors,
+}: {
+  items: TrafficConversionAction[];
+  totalActors: number;
+}) => (
+  <div className="mt-4 space-y-4">
     {items.map((item) => (
-      <div
-        className="flex min-w-0 flex-col gap-2 py-3 sm:flex-row sm:items-center sm:justify-between"
-        key={item.id}
-      >
-        <div className="min-w-0">
-          <p className="font-black text-foreground">{item.label}</p>
-          <p className="mt-1 break-words text-xs leading-relaxed text-muted">{item.description}</p>
+      <div className="rounded-2xl border border-border bg-surface p-4" key={item.id}>
+        <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+          <div className="min-w-0">
+            <p className="font-black text-foreground">{item.label}</p>
+            <p className="mt-1 break-words text-xs leading-5 text-muted">{item.description}</p>
+          </div>
+          <div className="shrink-0 text-left sm:text-right">
+            <p className="text-base font-black text-foreground">{formatActorLabel(item)}</p>
+            <p className="mt-1 text-xs font-bold text-muted">{formatEventLabel(item.events)}</p>
+          </div>
         </div>
-        <div className="shrink-0 text-left sm:text-right">
-          <p className="font-black text-foreground">{formatMetricValue(item)}</p>
-          <TrendBadge metric={item} />
+        <div className="mt-3 h-2 overflow-hidden rounded-full bg-surface-muted">
+          <div
+            className="h-full rounded-full bg-primary"
+            style={{ width: `${Math.min(100, item.actor_percentage)}%` }}
+          />
+        </div>
+        <div className="mt-2 flex min-w-0 flex-col gap-1 text-xs text-muted sm:flex-row sm:items-center sm:justify-between">
+          <span className="font-bold">
+            {item.actor_percentage}% de {numberFormatter.format(totalActors)} {item.actor_label}
+          </span>
+          <span className="break-all font-semibold">{item.source}</span>
         </div>
       </div>
     ))}
+    {items.length === 0 ? (
+      <p className="rounded-2xl bg-surface-muted p-4 text-sm text-muted">
+        Nenhuma conversão real capturada no período.
+      </p>
+    ) : null}
   </div>
 );
+
+const ConversionColumn = ({
+  children,
+  description,
+  source,
+  summary,
+  title,
+}: {
+  children: React.ReactNode;
+  description: string;
+  source: string;
+  summary: string;
+  title: string;
+}) => (
+  <div className="min-w-0 rounded-[1.75rem] border border-border/70 bg-surface-muted/60 p-4">
+    <div className="flex min-w-0 flex-col gap-3">
+      <div className="min-w-0">
+        <p className="text-xs font-semibold uppercase tracking-[0.12em] text-primary">{summary}</p>
+        <h3 className="mt-1 text-lg font-black text-foreground">{title}</h3>
+        <p className="mt-1 text-sm leading-6 text-muted">{description}</p>
+      </div>
+      <span className="max-w-full self-start break-all rounded-full bg-surface px-2 py-1 text-[0.65rem] font-semibold text-muted">
+        {source}
+      </span>
+    </div>
+    <div className="mt-4 min-w-0 space-y-4">{children}</div>
+  </div>
+);
+
+const ConversionsPanel = ({
+  periodDescription,
+  summary,
+}: {
+  periodDescription: string;
+  summary: AdminTrafficSummary;
+}) => {
+  const preSignup = summary.conversion_groups.pre_signup;
+  const postSignup = summary.conversion_groups.post_signup;
+
+  return (
+    <CardShell className="p-5">
+      <PanelTitle
+        icon={MousePointerClick}
+        periodDescription={periodDescription}
+        title="Conversões geradas"
+      />
+      <div className="mt-5 grid min-w-0 gap-4 xl:grid-cols-2">
+        <ConversionColumn
+          description="Mostra quantos visitantes acompanhados viraram cadastro e como os cadastros se distribuem entre pacientes e psicólogos. WhatsApp e PWA entram aqui quando ocorrem sem login ou antes do cadastro."
+          source={preSignup.source}
+          summary={`${numberFormatter.format(preSignup.total_visitors)} visitantes`}
+          title="Conversões para cadastro"
+        >
+          <div className="grid min-w-0 gap-4 2xl:grid-cols-2">
+            {preSignup.charts.map((chart) => (
+              <ConversionChartCard chart={chart} key={chart.id} />
+            ))}
+          </div>
+          <div className="min-w-0">
+            <h4 className="text-sm font-black text-foreground">Ações antes do cadastro</h4>
+            <ConversionActionBars
+              items={preSignup.actions}
+              totalActors={preSignup.total_visitors}
+            />
+          </div>
+        </ConversionColumn>
+
+        <ConversionColumn
+          description="Mostra usuários cadastrados observados no período, quantos tiveram ao menos uma conversão e o volume por tipo de ação. Como o mesmo usuário pode converter mais de uma vez, os itens são barras com usuários únicos e total de eventos."
+          source={postSignup.source}
+          summary={`${numberFormatter.format(postSignup.total_users)} usuários cadastrados`}
+          title="Conversões após cadastro"
+        >
+          <ConversionChartCard chart={postSignup.overall} />
+          <div className="min-w-0">
+            <h4 className="text-sm font-black text-foreground">Conversões por item</h4>
+            <ConversionActionBars items={postSignup.items} totalActors={postSignup.total_users} />
+          </div>
+        </ConversionColumn>
+      </div>
+    </CardShell>
+  );
+};
 
 const RankingList = ({
   destinationLabel,
@@ -988,16 +1157,16 @@ const LocationPanel = ({
   </CardShell>
 );
 
-const getTrafficOverviewMetricLabel = (key: TrafficOverviewMetricKey) => {
-  const labels: Record<TrafficOverviewMetricKey, string> = {
-    new_visitors: "Novos visitantes",
-    recurring_visitors: "Visitantes recorrentes",
-    sessions: "Sessões",
-    unique_visitors: "Visitantes únicos",
-  };
-
-  return labels[key];
+const TRAFFIC_OVERVIEW_CARD_LABELS: Record<TrafficOverviewCardKey, string> = {
+  anonymous_visitors: "Visitantes não autenticados",
+  new_visitors: "Novos visitantes",
+  recurring_visitors: "Visitantes recorrentes",
+  sessions: "Sessões",
+  unique_visitors: "Visitantes únicos",
 };
+
+const getTrafficOverviewMetricLabel = (key: TrafficOverviewMetricKey) =>
+  TRAFFIC_OVERVIEW_CARD_LABELS[key];
 
 const getTimelineValue = (point: TrafficTimelinePoint, key: TrafficOverviewMetricKey) =>
   point[key] ?? 0;
@@ -1253,22 +1422,24 @@ const TrafficOverviewCardsGrid = ({
   const uniqueVisitors = cards.get("unique_visitors")?.value ?? 0;
 
   return (
-    <fieldset className="grid min-w-0 gap-3 sm:grid-cols-2 xl:grid-cols-4">
-      <legend className="sr-only">Contadores exibidos no gráfico da visão geral</legend>
-      {TRAFFIC_OVERVIEW_ORDER.map((key) => {
+    <fieldset className="grid min-w-0 gap-3 sm:grid-cols-2 xl:grid-cols-5">
+      <legend className="sr-only">Contadores da visão geral de Tráfego</legend>
+      {TRAFFIC_OVERVIEW_CARD_ORDER.map((key) => {
         const metric = cards.get(key);
         if (!metric) return null;
+        const cardMetric = { ...metric, label: TRAFFIC_OVERVIEW_CARD_LABELS[key] };
+        const isChartMetric = isTrafficOverviewMetricKey(key);
         const rate =
-          key === "new_visitors" || key === "recurring_visitors"
+          key === "anonymous_visitors" || key === "new_visitors" || key === "recurring_visitors"
             ? formatMetricRate(metric.value, uniqueVisitors)
             : null;
 
         return (
           <MetricCard
-            active={activeMetricKeys.includes(key)}
+            active={isChartMetric ? activeMetricKeys.includes(key) : undefined}
             key={key}
-            metric={metric}
-            onToggle={() => onToggleMetric(key)}
+            metric={cardMetric}
+            onToggle={isChartMetric ? () => onToggleMetric(key) : undefined}
             rate={rate}
             {...TRAFFIC_OVERVIEW_METRIC_CONFIG[key]}
           />
@@ -1304,9 +1475,11 @@ const TrafficContent = ({
   summary: AdminTrafficSummary;
 }) => {
   const [visibleMetricKeys, setVisibleMetricKeys] = useState<TrafficOverviewMetricKey[]>(() => [
-    ...TRAFFIC_OVERVIEW_ORDER,
+    ...TRAFFIC_OVERVIEW_CHART_ORDER,
   ]);
-  const activeMetricKeys = TRAFFIC_OVERVIEW_ORDER.filter((key) => visibleMetricKeys.includes(key));
+  const activeMetricKeys = TRAFFIC_OVERVIEW_CHART_ORDER.filter((key) =>
+    visibleMetricKeys.includes(key),
+  );
   const toggleMetric = (metricKey: TrafficOverviewMetricKey) => {
     setVisibleMetricKeys((current) => {
       if (!current.includes(metricKey)) return [...current, metricKey];
@@ -1401,15 +1574,7 @@ const TrafficContent = ({
 
       <LocationPanel locations={summary.locations} periodDescription={periodDescription} />
 
-      <CardShell className="p-5">
-        <PanelTitle
-          icon={MousePointerClick}
-          periodDescription={periodDescription}
-          source={summary.conversions.source}
-          title="Conversões geradas"
-        />
-        <MetricList items={summary.conversions.items} />
-      </CardShell>
+      <ConversionsPanel periodDescription={periodDescription} summary={summary} />
     </div>
   );
 };

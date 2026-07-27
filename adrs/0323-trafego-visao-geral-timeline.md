@@ -17,7 +17,8 @@ campos de data e cards que exibem/ocultam curvas.
 
 ## Decisão
 
-- A UI de `/trafego` passa a whitelistar apenas esses 4 contadores na Visão geral.
+- A UI de `/trafego` passa a whitelistar os contadores principais da Visao geral.
+- Em complemento de 2026-07-27, **Visitantes nao autenticados** passa a compor a Visao geral como quinto card agregado, usando `overview_cards.anonymous_visitors`; ele nao alterna curva no grafico diario porque a timeline vigente permanece com as quatro series historicas.
 - Os cards da Visão geral viram botões acessíveis (`aria-pressed`) para alternar as curvas do
   gráfico SVG local.
 - Os cards não exibem badge visual **real** nem descrições internas para reduzir ruído visual; a
@@ -148,3 +149,4 @@ campos de data e cards que exibem/ocultam curvas.
   **Principal entrada**, ausência da coluna **Conversões geradas** em **Principais páginas de
   entrada**, card/tabela separado **Conversões geradas** preservado e `horizontalOverflowPx=0` em
   desktop 1366x900 e mobile 390x844.
+- Validacao complementar (2026-07-27) - OK: `pnpm --dir admin check` e `pnpm --dir admin build`; validou o quinto card **Visitantes nao autenticados** na **Visao geral**, com participacao sobre **Visitantes unicos** e sem nova serie no grafico diario.
