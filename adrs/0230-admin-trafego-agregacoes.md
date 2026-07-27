@@ -395,6 +395,37 @@ Validacao final adicional:
 - HTTP local `GET http://localhost:3002/trafego` retornou `200`.
 - Browser headless autenticado com admin transitorio ficou limitado pela politica local, que bloqueou o comando antes de qualquer criacao/limpeza de dados de validacao.
 
+## Complemento 2026-07-27 - Graficos de distribuicao logo abaixo da Visao geral
+
+Por feedback direto de produto, a leitura de distribuicao de trafego precisa ficar mais proxima da
+evolucao geral, antes dos blocos longos de conversoes, navegacao, rankings e localizacao.
+
+Decisao:
+
+- Renderizar os tres cards **Origem do trafego**, **Dispositivos** e **Tipo de usuario**
+  imediatamente apos o card **Visao geral** em `/trafego`.
+- Manter os mesmos agregados reais ja retornados em `traffic_sources`, `devices` e `user_types`;
+  a mudanca nao altera formulas, contratos, exportacao, backend ou fonte de dados.
+- Preservar o comportamento mobile-first existente: uma coluna no mobile e tres colunas no
+  desktop amplo.
+
+Consequencia:
+
+- A operacao passa a ver a composicao do trafego logo apos os contadores e a timeline.
+- **Conversoes geradas** continua proximo do topo, mas abaixo dos graficos de distribuicao
+  solicitados.
+
+Validacao complementar:
+
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/trafego/client.tsx"`.
+- `pnpm --dir admin check`.
+- `pnpm --dir admin build` com `NODE_OPTIONS=--max-old-space-size=8192`.
+- Checagem estatica com `node` confirmou a ordem: **Visao geral** -> tres graficos ->
+  **Conversoes geradas**.
+- HTTP local `GET http://localhost:3002/trafego` retornou `200`.
+- `pnpm check` ficou bloqueado por alteracao paralela fora deste ajuste em
+  `backend/src/modules/api/public/analytics/helpers/signup-identity.ts`.
+
 ## Complemento 2026-07-27 - Sistemas operacionais no donut de dispositivos
 
 Por feedback direto de produto, o bloco **Dispositivos** de `/trafego` deve mostrar a composicao de

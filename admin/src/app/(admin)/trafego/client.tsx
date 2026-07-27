@@ -2085,8 +2085,6 @@ const TrafficContent = ({
         />
       </TrafficOverviewPanel>
 
-      <ConversionsPanel periodDescription={periodDescription} summary={summary} />
-
       <div className="grid min-w-0 gap-4 xl:grid-cols-3">
         <CardShell className="p-5">
           <PanelTitle icon={PieChart} title="Origem do tráfego" />
@@ -2113,6 +2111,8 @@ const TrafficContent = ({
           />
         </CardShell>
       </div>
+
+      <ConversionsPanel periodDescription={periodDescription} summary={summary} />
 
       <PageNavigationPanel periodDescription={periodDescription} summary={summary} />
 

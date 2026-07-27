@@ -941,6 +941,23 @@ Validacao final adicional desta execucao:
 - HTTP local `GET http://localhost:3002/trafego` - OK (`200`).
 - Browser headless autenticado com admin transitorio nao foi concluido porque a politica local bloqueou o comando de validacao antes de executar criacao/limpeza do admin; nao houve alteracao de dados nessa tentativa bloqueada.
 
+## Execucao complementar - graficos logo abaixo da Visao geral (2026-07-27)
+
+- Por feedback direto do usuario, os tres graficos **Origem do trafego**, **Dispositivos** e **Tipo de usuario** foram movidos para aparecer imediatamente abaixo do bloco **Visao geral**.
+- O bloco **Conversoes geradas** permanece na sequencia, agora abaixo dos tres graficos, e os blocos de navegacao, rankings e localizacao continuam depois.
+- A alteracao foi apenas de ordem visual no Admin; nao houve alteracao de backend, endpoint, mock, package novo, Prisma schema/migrations, formulas ou dados persistidos.
+- Builder/Quick Copy nao estava exposto como ferramenta callable neste ambiente; as referencias auditaveis foram `_product/proto/admin/Tráfego.png` e a captura enviada pelo usuario.
+- ADR atualizado: `adrs/0230-admin-trafego-agregacoes.md`.
+
+Validacao desta execucao complementar:
+
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/trafego/client.tsx"` - OK.
+- `pnpm --dir admin check` - OK.
+- `pnpm --dir admin build` - OK com `NODE_OPTIONS=--max-old-space-size=8192` apos tentativa local bloqueada por build concorrente.
+- `node` static order check - OK: **Origem do trafego**, **Dispositivos** e **Tipo de usuario** aparecem apos `TrafficOverviewPanel` e antes de `ConversionsPanel`.
+- HTTP local `GET http://localhost:3002/trafego` - OK (`200`).
+- `pnpm check` - bloqueado por alteracao paralela fora deste ajuste em `backend/src/modules/api/public/analytics/helpers/signup-identity.ts` (formatacao Biome em TASK-86), mantida fora do commit desta correcao.
+
 ## Execucao complementar - sistemas por dispositivo em Trafego (2026-07-27)
 
 - Por feedback direto do usuario, o bloco **Dispositivos** de `/trafego` passou a exibir abaixo de
