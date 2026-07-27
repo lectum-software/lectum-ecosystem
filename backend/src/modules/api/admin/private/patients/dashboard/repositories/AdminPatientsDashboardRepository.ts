@@ -88,6 +88,38 @@ const patientPlatformSessionSelect = {
   user_id: true,
 } satisfies Prisma.visitor_sessionSelect;
 
+const patientAnonymousConversionPageViewSelect = {
+  normalized_path: true,
+  occurred_at: true,
+  page_kind: true,
+  path: true,
+  session_id: true,
+  user_id: true,
+  user: {
+    select: {
+      createdAt: true,
+      id: true,
+      role: true,
+    },
+  },
+  visitor_id: true,
+} satisfies Prisma.page_view_eventSelect;
+
+const patientAnonymousConversionSessionSelect = {
+  first_seen_at: true,
+  last_seen_at: true,
+  session_id: true,
+  user_id: true,
+  user: {
+    select: {
+      createdAt: true,
+      id: true,
+      role: true,
+    },
+  },
+  visitor_id: true,
+} satisfies Prisma.visitor_sessionSelect;
+
 const patientIntentProfileViewSelect = {
   createdAt: true,
   id: true,
@@ -275,6 +307,14 @@ export type AdminPatientPlatformSessionRecord = Prisma.visitor_sessionGetPayload
   select: typeof patientPlatformSessionSelect;
 }>;
 
+export type AdminPatientAnonymousConversionPageViewRecord = Prisma.page_view_eventGetPayload<{
+  select: typeof patientAnonymousConversionPageViewSelect;
+}>;
+
+export type AdminPatientAnonymousConversionSessionRecord = Prisma.visitor_sessionGetPayload<{
+  select: typeof patientAnonymousConversionSessionSelect;
+}>;
+
 export type AdminPatientIntentProfileViewRecord = Prisma.profile_view_eventGetPayload<{
   select: typeof patientIntentProfileViewSelect;
 }>;
@@ -405,6 +445,63 @@ export class AdminPatientsDashboardRepository {
           deleted: false,
           role: "paciente",
         },
+      },
+    });
+  }
+
+  async listAnonymousConversionPageViews(
+    range: AdminPatientsDashboardDateRange,
+  ): Promise<AdminPatientAnonymousConversionPageViewRecord[]> {
+    return prisma.page_view_event.findMany({
+      orderBy: {
+        occurred_at: "asc",
+      },
+      select: patientAnonymousConversionPageViewSelect,
+      where: {
+        deleted: false,
+        occurred_at: rangeWhere(range),
+        OR: [
+          {
+            user_id: null,
+          },
+          {
+            user: {
+              deleted: false,
+              role: "paciente",
+            },
+          },
+        ],
+      },
+    });
+  }
+
+  async listAnonymousConversionSessions(
+    range: AdminPatientsDashboardDateRange,
+  ): Promise<AdminPatientAnonymousConversionSessionRecord[]> {
+    return prisma.visitor_session.findMany({
+      orderBy: {
+        first_seen_at: "asc",
+      },
+      select: patientAnonymousConversionSessionSelect,
+      where: {
+        deleted: false,
+        first_seen_at: {
+          lte: range.end,
+        },
+        last_seen_at: {
+          gte: range.start,
+        },
+        OR: [
+          {
+            user_id: null,
+          },
+          {
+            user: {
+              deleted: false,
+              role: "paciente",
+            },
+          },
+        ],
       },
     });
   }

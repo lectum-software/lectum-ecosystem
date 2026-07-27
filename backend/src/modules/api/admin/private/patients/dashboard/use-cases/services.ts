@@ -7,6 +7,7 @@ import {
   normalizeAdminOperatingSystem,
 } from "@/utils/admin-operating-system";
 import type {
+  AdminPatientsDashboardAnonymousConversion,
   AdminPatientsDashboardBreakdownItem,
   AdminPatientsDashboardDateRange,
   AdminPatientsDashboardDeviceType,
@@ -22,6 +23,8 @@ import type {
   IAdminPatientsDashboardDTO,
 } from "../DTOs/IAdminPatientsDashboardDTO";
 import {
+  type AdminPatientAnonymousConversionPageViewRecord,
+  type AdminPatientAnonymousConversionSessionRecord,
   type AdminPatientLocationRecord,
   type AdminPatientPageViewRecord,
   type AdminPatientPlatformSessionRecord,
@@ -34,6 +37,8 @@ const DEFAULT_PERIOD_DAYS = 7;
 const MAX_PERIOD_DAYS = 3660;
 const MS_PER_DAY = 86_400_000;
 const DURATION_RELIABILITY_THRESHOLD = 0.5;
+const ANONYMOUS_CONVERSION_FIRST_TOUCH_LIMIT = 6;
+const FIRST_TOUCH_SAMPLE_THRESHOLD = 3;
 
 type PatientsPeriodResolution = {
   current: AdminPatientsDashboardDateRange;
@@ -155,6 +160,14 @@ const PATIENT_INTENT_FILTER_ORDER: AdminPatientsDashboardIntentFilterId[] = [
   "all",
   ...PATIENT_INTENT_SEGMENT_ORDER,
 ];
+const ANONYMOUS_CONVERSION_BUCKETS = [
+  { id: "same_day", label: "Mesmo dia" },
+  { id: "days_1_3", label: "1-3 dias" },
+  { id: "days_4_7", label: "4-7 dias" },
+  { id: "days_8_30", label: "8-30 dias" },
+  { id: "over_30", label: "Mais de 30 dias" },
+  { id: "not_registered", label: "Ainda n\u00e3o cadastrou" },
+] as const;
 
 const addDays = (date: Date, days: number) => {
   const next = new Date(date);
@@ -349,6 +362,33 @@ const safePercentage = (value: number, total: number) => {
   if (total <= 0) return 0;
 
   return roundPercent((value / total) * 100);
+};
+
+const averageNumber = (values: number[]) => {
+  if (values.length === 0) return null;
+
+  return roundOneDecimal(values.reduce((sum, value) => sum + value, 0) / values.length);
+};
+
+const percentileValue = (values: number[], percent: number) => {
+  if (values.length === 0) return null;
+
+  const sorted = [...values].sort((left, right) => left - right);
+  const index = Math.ceil((percent / 100) * sorted.length) - 1;
+
+  return sorted[Math.min(sorted.length - 1, Math.max(0, index))] ?? null;
+};
+
+const daysBetweenDates = (from: Date, to: Date) =>
+  Math.max(0, Math.floor((startOfDate(to).getTime() - startOfDate(from).getTime()) / MS_PER_DAY));
+
+const anonymousConversionBucketForDays = (days: number) => {
+  if (days === 0) return "same_day";
+  if (days <= 3) return "days_1_3";
+  if (days <= 7) return "days_4_7";
+  if (days <= 30) return "days_8_30";
+
+  return "over_30";
 };
 
 const createIntentCounts = (): PatientsDashboardIntentCounts => ({
@@ -855,7 +895,9 @@ const buildLocations = (locations: AdminPatientLocationRecord[]) => {
   };
 };
 
-const patientPlatformPageLabel = (view: AdminPatientPageViewRecord) => {
+const patientPlatformPageLabel = (
+  view: Pick<AdminPatientPageViewRecord, "normalized_path" | "page_kind" | "path">,
+) => {
   const path = (view.normalized_path || view.path || "/").split("?")[0] ?? "/";
   const segments = path.split("/").filter(Boolean);
   const joined = segments.join("/");
@@ -876,6 +918,232 @@ const patientPlatformPageLabel = (view: AdminPatientPageViewRecord) => {
   if (joined.startsWith("app")) return "Área do paciente";
 
   return PATIENT_PAGE_KIND_LABELS[view.page_kind] ?? "Outras páginas";
+};
+
+type AnonymousConversionVisitor = {
+  firstSeenAt: Date;
+  firstTouchId: string;
+  firstTouchLabel: string;
+  patientCandidates: Map<string, Date>;
+  sessions: Set<string>;
+  visitorId: string;
+};
+
+const isAnonymousUsageBeforePatientSignup = (
+  view: AdminPatientAnonymousConversionPageViewRecord,
+) => {
+  if (!view.user_id || !view.user) return true;
+  if (view.user.role !== "paciente") return false;
+
+  return view.occurred_at < view.user.createdAt;
+};
+
+const isAnonymousSessionBeforePatientSignup = (
+  session: AdminPatientAnonymousConversionSessionRecord,
+) => {
+  if (!session.user_id || !session.user) return true;
+  if (session.user.role !== "paciente") return false;
+
+  return session.first_seen_at < session.user.createdAt;
+};
+
+const anonymousConversionPageLabel = (view: AdminPatientAnonymousConversionPageViewRecord) =>
+  patientPlatformPageLabel(view);
+
+const summarizeAnonymousConversion = (params: {
+  pageViews: AdminPatientAnonymousConversionPageViewRecord[];
+  period: AdminPatientsDashboardPeriod;
+  range: AdminPatientsDashboardDateRange;
+  sessions: AdminPatientAnonymousConversionSessionRecord[];
+}): AdminPatientsDashboardAnonymousConversion => {
+  const visitors = new Map<string, AnonymousConversionVisitor>();
+
+  for (const view of params.pageViews) {
+    const isAnonymousUsage = isAnonymousUsageBeforePatientSignup(view);
+    let visitor = visitors.get(view.visitor_id);
+
+    if (isAnonymousUsage) {
+      const label = anonymousConversionPageLabel(view);
+      visitor =
+        visitor ??
+        ({
+          firstSeenAt: view.occurred_at,
+          firstTouchId: normalizeKey(label) || "outras_paginas",
+          firstTouchLabel: label,
+          patientCandidates: new Map<string, Date>(),
+          sessions: new Set<string>(),
+          visitorId: view.visitor_id,
+        } satisfies AnonymousConversionVisitor);
+
+      if (view.occurred_at < visitor.firstSeenAt) {
+        visitor.firstSeenAt = view.occurred_at;
+        visitor.firstTouchId = normalizeKey(label) || "outras_paginas";
+        visitor.firstTouchLabel = label;
+      }
+
+      visitor.sessions.add(view.session_id);
+      visitors.set(view.visitor_id, visitor);
+    }
+
+    if (!visitor) continue;
+
+    if (
+      view.user?.role === "paciente" &&
+      view.user.createdAt >= visitor.firstSeenAt &&
+      view.user.createdAt <= params.range.end
+    ) {
+      const currentCandidate = visitor.patientCandidates.get(view.user.id);
+      if (!currentCandidate || view.user.createdAt < currentCandidate) {
+        visitor.patientCandidates.set(view.user.id, view.user.createdAt);
+      }
+    }
+  }
+
+  for (const session of params.sessions) {
+    const visitor = visitors.get(session.visitor_id);
+    if (!visitor) continue;
+
+    if (isAnonymousSessionBeforePatientSignup(session)) {
+      visitor.sessions.add(session.session_id);
+    }
+
+    if (
+      session.user?.role === "paciente" &&
+      session.user.createdAt >= visitor.firstSeenAt &&
+      session.user.createdAt <= params.range.end
+    ) {
+      const currentCandidate = visitor.patientCandidates.get(session.user.id);
+      if (!currentCandidate || session.user.createdAt < currentCandidate) {
+        visitor.patientCandidates.set(session.user.id, session.user.createdAt);
+      }
+    }
+  }
+
+  const visitorSummaries = [...visitors.values()].map((visitor) => {
+    const firstConversionDate = [...visitor.patientCandidates.values()].sort(
+      (left, right) => left.getTime() - right.getTime(),
+    )[0];
+    const daysToRegistration = firstConversionDate
+      ? daysBetweenDates(visitor.firstSeenAt, firstConversionDate)
+      : null;
+
+    return {
+      ...visitor,
+      daysToRegistration,
+      firstConversionDate: firstConversionDate ?? null,
+    };
+  });
+  const convertedVisitors = visitorSummaries.filter((visitor) => visitor.firstConversionDate);
+  const convertedDays = convertedVisitors.flatMap((visitor) =>
+    typeof visitor.daysToRegistration === "number" ? [visitor.daysToRegistration] : [],
+  );
+  const bucketCounts = new Map(ANONYMOUS_CONVERSION_BUCKETS.map((bucket) => [bucket.id, 0]));
+
+  for (const visitor of visitorSummaries) {
+    const bucket =
+      typeof visitor.daysToRegistration === "number"
+        ? anonymousConversionBucketForDays(visitor.daysToRegistration)
+        : "not_registered";
+    bucketCounts.set(bucket, (bucketCounts.get(bucket) ?? 0) + 1);
+  }
+
+  const firstTouchGroups = new Map<
+    string,
+    {
+      convertedDays: number[];
+      convertedPatientsCount: number;
+      label: string;
+      visitorsCount: number;
+    }
+  >();
+
+  for (const visitor of visitorSummaries) {
+    const current = firstTouchGroups.get(visitor.firstTouchId) ?? {
+      convertedDays: [],
+      convertedPatientsCount: 0,
+      label: visitor.firstTouchLabel,
+      visitorsCount: 0,
+    };
+    current.visitorsCount += 1;
+
+    if (typeof visitor.daysToRegistration === "number") {
+      current.convertedPatientsCount += 1;
+      current.convertedDays.push(visitor.daysToRegistration);
+    }
+
+    firstTouchGroups.set(visitor.firstTouchId, current);
+  }
+
+  const anonymousVisitorsCount = visitorSummaries.length;
+  const anonymousSessionsCount = new Set(
+    visitorSummaries.flatMap((visitor) =>
+      [...visitor.sessions].map((sessionId) => `${visitor.visitorId}:${sessionId}`),
+    ),
+  ).size;
+  const convertedPatientsCount = convertedVisitors.length;
+
+  return {
+    anonymous_sessions_count: anonymousSessionsCount,
+    anonymous_visitors_count: anonymousVisitorsCount,
+    average_days: averageNumber(convertedDays),
+    buckets: ANONYMOUS_CONVERSION_BUCKETS.map((bucket) => ({
+      count: bucketCounts.get(bucket.id) ?? 0,
+      id: bucket.id,
+      label: bucket.label,
+      percentage: safePercentage(bucketCounts.get(bucket.id) ?? 0, anonymousVisitorsCount),
+    })),
+    cohort_from: params.period.from,
+    cohort_to: params.period.to,
+    conversion_rate:
+      anonymousVisitorsCount > 0
+        ? roundOneDecimal((convertedPatientsCount / anonymousVisitorsCount) * 100)
+        : null,
+    converted_patients_count: convertedPatientsCount,
+    coverage_note:
+      "Coorte de primeiro uso nao autenticado no periodo; conversao exige cadastro real de paciente vinculado ao mesmo visitor_id ate o fim do periodo.",
+    first_touch_pages: [...firstTouchGroups.entries()]
+      .map(([id, group]) => ({
+        average_days: averageNumber(group.convertedDays),
+        converted_patients_count: group.convertedPatientsCount,
+        conversion_rate:
+          group.visitorsCount > 0
+            ? roundOneDecimal((group.convertedPatientsCount / group.visitorsCount) * 100)
+            : null,
+        id,
+        label: group.label,
+        sample_sufficient: group.visitorsCount >= FIRST_TOUCH_SAMPLE_THRESHOLD,
+        unavailable_reason:
+          group.visitorsCount === 0
+            ? "Sem visitantes neste ponto de entrada."
+            : group.convertedPatientsCount === 0
+              ? "Nenhum cadastro de paciente vindo deste ponto de entrada no periodo."
+              : group.visitorsCount < FIRST_TOUCH_SAMPLE_THRESHOLD
+                ? "Amostra pequena; interpretar apenas como leitura operacional."
+                : null,
+        visitors_count: group.visitorsCount,
+      }))
+      .sort((left, right) => {
+        if (right.visitors_count !== left.visitors_count) {
+          return right.visitors_count - left.visitors_count;
+        }
+        if (right.converted_patients_count !== left.converted_patients_count) {
+          return right.converted_patients_count - left.converted_patients_count;
+        }
+
+        return left.label.localeCompare(right.label, "pt-BR");
+      })
+      .slice(0, ANONYMOUS_CONVERSION_FIRST_TOUCH_LIMIT),
+    median_days: percentileValue(convertedDays, 50),
+    p75_days: percentileValue(convertedDays, 75),
+    p90_days: percentileValue(convertedDays, 90),
+    source: "page_view_event+visitor_session+user.createdAt",
+    unavailable_reason:
+      anonymousVisitorsCount === 0
+        ? "Sem uso nao autenticado de pacientes capturado no periodo selecionado."
+        : convertedPatientsCount === 0
+          ? "Nenhum visitante nao autenticado da coorte virou cadastro de paciente ate o fim do periodo."
+          : null,
+  };
 };
 
 const buildPlatformUsage = (params: {
@@ -1224,13 +1492,21 @@ export const buildPatientsDashboard = async (
   }
 
   const { current, labels, period, previous } = resolvedPeriod.period;
-  const [locations, patientPageViews, patientPwaInstalls, patientPlatformSessions] =
-    await Promise.all([
-      repository.listLocations(current),
-      repository.listPatientPageViews(current),
-      repository.listPatientPwaInstallActions(current),
-      repository.listPatientPlatformSessions(current),
-    ]);
+  const [
+    locations,
+    patientPageViews,
+    patientPwaInstalls,
+    patientPlatformSessions,
+    anonymousConversionPageViews,
+    anonymousConversionSessions,
+  ] = await Promise.all([
+    repository.listLocations(current),
+    repository.listPatientPageViews(current),
+    repository.listPatientPwaInstallActions(current),
+    repository.listPatientPlatformSessions(current),
+    repository.listAnonymousConversionPageViews(current),
+    repository.listAnonymousConversionSessions(current),
+  ]);
   const intentSignals = await repository.listIntentSignals(current);
 
   const currentPatients = patients.filter((patient) => createdUntil(patient, current.end));
@@ -1258,6 +1534,12 @@ export const buildPatientsDashboard = async (
   });
   const deviceUsage = buildDeviceUsage(patientPlatformSessions);
   const operatingSystemUsage = buildOperatingSystemUsage(patientPlatformSessions);
+  const anonymousConversion = summarizeAnonymousConversion({
+    pageViews: anonymousConversionPageViews,
+    period,
+    range: current,
+    sessions: anonymousConversionSessions,
+  });
   const intentClassification = buildPatientIntentClassification(currentPatients, intentSignals);
   const intentFilters = buildPatientIntentFilters({
     currentPatients,
@@ -1274,6 +1556,7 @@ export const buildPatientsDashboard = async (
   });
 
   const summary: AdminPatientsDashboardSummary = {
+    anonymous_conversion: anonymousConversion,
     cards: {
       active_patients: metric({
         current: activePatients.length,
@@ -1314,6 +1597,7 @@ export const buildPatientsDashboard = async (
       "Uso da plataforma mede somente pageviews autenticados e eventos first-party de instalação PWA de pacientes no período selecionado.",
       "Devices dos pacientes usa somente visitor_session autenticada vinculada a user.role=paciente no período selecionado.",
       "Sistema operacional dos pacientes usa somente visitor_session autenticada com os normalizado; não armazena user-agent bruto.",
+      "Conversao do uso nao autenticado ate cadastro usa a coorte de primeiro pageview sem conta no periodo, linkada por visitor_id ao primeiro cadastro real de paciente quando existir.",
       "Gênero e forma de cadastro consideram somente pacientes cadastrados no período selecionado; em Todo o período incluem a base completa.",
       "Tempo médio do paciente usa pageviews autenticados first-party e ignora períodos em que o app fica oculto/minimizado quando o navegador envia eventos de visibilidade.",
       "Localização usa apenas capturas agregadas e coarse de visitor_location no período selecionado; cidades com baixa frequência são agrupadas, e coordenadas, IP e endereço não são retornados.",
@@ -1382,6 +1666,16 @@ export const buildPatientsDashboard = async (
               id: "patient_operating_system_usage",
               label: "Sistema operacional dos pacientes",
               source: "visitor_session",
+            },
+          ]
+        : []),
+      ...(anonymousConversion.unavailable_reason
+        ? [
+            {
+              description: anonymousConversion.unavailable_reason,
+              id: "anonymous_conversion",
+              label: "Conversao do uso nao autenticado ate cadastro",
+              source: anonymousConversion.source,
             },
           ]
         : []),

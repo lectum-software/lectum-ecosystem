@@ -432,6 +432,8 @@ nao cria `visitor_session` e segue processando localizacao quando aplicavel.
 
 Complemento TASK-81 (2026-07-25): os relatorios Admin de sistema operacional usam somente `visitor_session.os` normalizado combinado com `visitor_session.device_type`. Categorias de relatorio: Android, iOS, iPadOS, Windows, macOS, Outros e Nao identificado. iPadOS pode ser derivado quando `device_type="tablet"` e o `os` capturado vier como `ios` ou `macos`; Linux/ChromeOS/valores nao mapeados entram em Outros. Nao persistir versao exata, modelo do aparelho nem user-agent bruto, e nao criar backfill para sessoes historicas sem `os`.
 
+Complemento TASK-85 (2026-07-27): o dashboard Admin de pacientes expõe `anonymous_conversion` derivado apenas de `page_view_event`, `visitor_session` e `user.createdAt`. A coorte é o primeiro uso não autenticado capturado no período, agrupado por `visitor_id`; a conversão só conta quando o mesmo `visitor_id` fica associado a `user.role="paciente"` com cadastro real até o fim do período. Não há novo schema, backfill, mock, identificação cross-device, IP bruto ou user-agent bruto nessa métrica.
+
 ---
 
 ## Avaliações

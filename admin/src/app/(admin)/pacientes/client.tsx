@@ -15,6 +15,7 @@ import {
   Smartphone,
   Snowflake,
   Target,
+  TrendingUp,
   UserCheck,
   UserPlus,
   UserRound,
@@ -1160,6 +1161,127 @@ const PatientIntentAnalysisCard = ({ summary }: { summary: AdminPatientsDashboar
   );
 };
 
+const AnonymousConversionCard = ({ summary }: { summary: AdminPatientsDashboard }) => {
+  const conversion = summary.anonymous_conversion;
+
+  return (
+    <CardShell className="p-5">
+      <PanelTitle
+        description={formatSelectedPeriod(summary.period)}
+        icon={TrendingUp}
+        title="Conversão do uso não autenticado até cadastro"
+      />
+
+      <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        {[
+          {
+            description: "Visitantes com primeiro uso sem login no período.",
+            label: "Visitantes",
+            value: numberFormatter.format(conversion.anonymous_visitors_count),
+          },
+          {
+            description: "Sessões vinculadas à coorte de uso não autenticado.",
+            label: "Sessões",
+            value: numberFormatter.format(conversion.anonymous_sessions_count),
+          },
+          {
+            description: "Visitantes que viraram cadastro real de paciente.",
+            label: "Cadastros",
+            value: numberFormatter.format(conversion.converted_patients_count),
+          },
+          {
+            description: "Cadastros ÷ visitantes não autenticados.",
+            label: "Taxa de cadastro",
+            value: formatNullablePercentage(conversion.conversion_rate),
+          },
+          { label: "Média", value: formatDaysMetric(conversion.average_days) },
+          { label: "Mediana", value: formatDaysMetric(conversion.median_days) },
+          {
+            description: "75% cadastram até esse prazo",
+            label: "P75",
+            value: formatDaysMetric(conversion.p75_days),
+          },
+          {
+            description: "90% cadastram até esse prazo",
+            label: "P90",
+            value: formatDaysMetric(conversion.p90_days),
+          },
+        ].map(({ description, label, value }) => (
+          <div className="rounded-2xl bg-surface-muted p-3" key={label}>
+            <p className="text-xs font-black text-muted">{label}</p>
+            <p className="mt-1 text-xl font-black text-foreground">{value}</p>
+            {description ? (
+              <p className="mt-1 text-[0.68rem] font-bold leading-snug text-subtle">
+                {description}
+              </p>
+            ) : null}
+          </div>
+        ))}
+      </div>
+
+      {conversion.unavailable_reason ? (
+        <p className="mt-4 rounded-2xl border border-dashed border-border bg-surface-muted p-3 text-sm font-bold text-muted">
+          {conversion.unavailable_reason}
+        </p>
+      ) : null}
+
+      <div className="mt-5 grid gap-3 md:grid-cols-2">
+        <div className="rounded-2xl border border-border/70 p-4">
+          <h3 className="text-sm font-black text-foreground">Distribuição por prazo</h3>
+          <div className="mt-4 space-y-3">
+            {conversion.buckets.map((bucket) => (
+              <MiniBar
+                key={bucket.id}
+                label={bucket.label}
+                percentage={bucket.percentage}
+                value={`${numberFormatter.format(bucket.count)} · ${formatPercentageValue(
+                  bucket.percentage,
+                )}`}
+              />
+            ))}
+          </div>
+        </div>
+
+        <div className="rounded-2xl border border-border/70 p-4">
+          <h3 className="text-sm font-black text-foreground">Conversão por primeira página</h3>
+          {conversion.first_touch_pages.length === 0 ? (
+            <p className="mt-4 rounded-2xl bg-surface-muted p-3 text-sm font-bold text-muted">
+              Sem ponto de entrada real para a coorte de uso não autenticado no período.
+            </p>
+          ) : (
+            <div className="mt-4 space-y-4">
+              {conversion.first_touch_pages.map((item) => (
+                <div className="rounded-2xl bg-surface-muted p-3" key={item.id}>
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-sm font-black text-foreground">{item.label}</p>
+                      <p className="text-xs font-bold text-muted">
+                        {numberFormatter.format(item.converted_patients_count)} de{" "}
+                        {numberFormatter.format(item.visitors_count)} cadastraram
+                      </p>
+                    </div>
+                    <span className="text-sm font-black text-primary">
+                      {formatNullablePercentage(item.conversion_rate)}
+                    </span>
+                  </div>
+                  <p className="mt-2 text-xs font-bold text-muted">
+                    Tempo médio: {formatDaysMetric(item.average_days)}
+                  </p>
+                  {item.unavailable_reason ? (
+                    <p className="mt-2 text-xs font-bold text-subtle">{item.unavailable_reason}</p>
+                  ) : null}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      <p className="mt-4 text-xs font-bold leading-5 text-subtle">{conversion.coverage_note}</p>
+    </CardShell>
+  );
+};
+
 type PatientsDonutChartItem = {
   color: string;
   count: number;
@@ -2108,6 +2230,8 @@ const DashboardContent = ({
         />
         <TimelineChart points={summary.series.points} visibleMetricKeys={activeMetricKeys} />
       </CardShell>
+
+      <AnonymousConversionCard summary={summary} />
 
       <PatientIntentAnalysisCard summary={summary} />
 

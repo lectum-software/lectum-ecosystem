@@ -234,7 +234,52 @@ export type AdminPatientsDashboardIntentFilters = {
   source: "profile_view_event+psychologist_favorite+contact_request";
 };
 
+export type AdminPatientsDashboardAnonymousConversionBucketId =
+  | "days_1_3"
+  | "days_4_7"
+  | "days_8_30"
+  | "not_registered"
+  | "over_30"
+  | "same_day";
+
+export type AdminPatientsDashboardAnonymousConversionBucket = {
+  count: number;
+  id: AdminPatientsDashboardAnonymousConversionBucketId;
+  label: string;
+  percentage: number;
+};
+
+export type AdminPatientsDashboardAnonymousConversionFirstTouch = {
+  average_days: number | null;
+  converted_patients_count: number;
+  conversion_rate: number | null;
+  id: string;
+  label: string;
+  sample_sufficient: boolean;
+  unavailable_reason: string | null;
+  visitors_count: number;
+};
+
+export type AdminPatientsDashboardAnonymousConversion = {
+  anonymous_sessions_count: number;
+  anonymous_visitors_count: number;
+  average_days: number | null;
+  buckets: AdminPatientsDashboardAnonymousConversionBucket[];
+  cohort_from: string;
+  cohort_to: string;
+  conversion_rate: number | null;
+  converted_patients_count: number;
+  coverage_note: string;
+  first_touch_pages: AdminPatientsDashboardAnonymousConversionFirstTouch[];
+  median_days: number | null;
+  p75_days: number | null;
+  p90_days: number | null;
+  source: "page_view_event+visitor_session+user.createdAt";
+  unavailable_reason: string | null;
+};
+
 export type AdminPatientsDashboardSummary = {
+  anonymous_conversion: AdminPatientsDashboardAnonymousConversion;
   cards: {
     active_patients: AdminPatientsDashboardMetric;
     inactive_patients: AdminPatientsDashboardMetric;
