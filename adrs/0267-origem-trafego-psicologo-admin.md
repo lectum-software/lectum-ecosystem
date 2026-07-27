@@ -46,3 +46,7 @@ A decisão é de hierarquia visual: primeiro leitura executiva temporal, depois 
 Por decisão de produto, o Admin deixa de renderizar a faixa `Nenhuma visita a perfil público de psicólogo com origem de tráfego foi registrada no período.` no bloco **Origem do tráfego**. A tabela permanece visível com a taxonomia fixa de fontes e contadores reais de visualizações de perfil, inclusive quando todos estão zerados.
 
 Quando `whatsapp_clicks` vier `null` por ausência de atribuição first-party persistida, a UI Admin exibe `0` na coluna **WhatsApp** para manter a leitura numérica solicitada. Essa decisão é apenas de apresentação: o contrato backend continua preservando `null`, não cria inferência de origem para cliques de WhatsApp, não altera dados persistidos e não reintroduz a coluna/taxa de conversão.
+
+## Complemento 2026-07-27 - Nomenclatura no dashboard agregado
+
+Por ajuste de hierarquia visual, o bloco agregado em `/psicologos` deixa de exibir a etiqueta superior azul **Origem do tráfego** e passa a usar **Origem do tráfego para psicólogos** como título principal. A decisão é apenas de copy/apresentação e não altera contrato, cálculo, persistência, atribuição de origem ou exibição da tabela.

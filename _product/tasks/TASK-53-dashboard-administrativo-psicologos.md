@@ -362,3 +362,10 @@ Packages usados:
 - `pnpm check`
 - Browser local/headless em `http://localhost:3002/psicologos` carregou a rota sem overflow horizontal; a base local nao retornou sublabels de sistemas operacionais para esse card no periodo validado. O comportamento `nowrap` foi validado com dados locais em `/pacientes` no mesmo componente visual de devices/sistemas.
 - Admin temporario de validacao `codex-device-nowrap-*` foi criado apenas para sessao autenticada de browser e removido ao final.
+
+### Ajuste pós-feedback 2026-07-27 - título da origem de tráfego no dashboard
+
+- Pedido do usuário: remover a etiqueta azul **Origem do tráfego** do bloco homônimo no dashboard Admin de psicólogos e trocar o título **Canais que levam pacientes até os perfis** por **Origem do tráfego para psicólogos**.
+- O ajuste é apenas de copy/hierarquia visual no Admin, mobile-first, sem alteração de backend, contrato HTTP, Prisma, migration, package novo, mock, seed ou fonte de dados.
+- Builder/Quick Copy não está exposto como ferramenta callable neste ambiente; a alteração usou a referência local `_product/proto/admin/Psicólogos/Psicólogos - Dashboard.png` e o screenshot enviado pelo usuário.
+- Validações deste ajuste: `pnpm --dir admin exec biome check --write "src/app/(admin)/psicologos/client.tsx"`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke HTTP local em `http://localhost:3002/psicologos` retornando 200. O build exigiu pausar/reiniciar o dev server Admin local para liberar o lock do Next; o servidor foi reiniciado depois.

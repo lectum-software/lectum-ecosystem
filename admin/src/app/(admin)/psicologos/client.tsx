@@ -2393,12 +2393,7 @@ const DashboardTrafficSourcesCard = ({ summary }: { summary: AdminPsychologistsD
     <CardShell className="p-5">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0">
-          <p className="text-xs font-black uppercase tracking-[0.16em] text-primary">
-            Origem do tráfego
-          </p>
-          <h3 className="mt-2 text-lg font-black text-foreground">
-            Canais que levam pacientes até os perfis
-          </h3>
+          <h3 className="text-lg font-black text-foreground">Origem do tráfego para psicólogos</h3>
           <p className="mt-1 text-sm font-bold leading-6 text-muted">
             {summary.period.label} · {formatDate(summary.period.from)} a{" "}
             {formatDate(summary.period.to)}
