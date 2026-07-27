@@ -167,6 +167,7 @@ ou cortesia manual.
 | 84 | [TASK-84 - Tracao no dashboard Admin de psicologos](TASK-84-tracao-dashboard-psicologos-admin.md) | Completed | 53, 72, 76, 82 |
 | 85 | [TASK-85 - Trilha pre-cadastro dos pacientes no dashboard Admin](TASK-85-conversao-uso-anonimo-cadastro-pacientes-admin.md) | Completed | 45, 46, 47, 49, 60, 76, 81 |
 | 86 | [TASK-86 - Trilha pre-cadastro dos psicologos no dashboard Admin](TASK-86-trilha-pre-cadastro-psicologos-admin.md) | Completed | 45, 46, 47, 49, 53, 72, 76, 81, 85 |
+| 87 | [TASK-87 - Padronizar graficos de donut no Admin](TASK-87-admin-graficos-donut.md) | Completed | 46, 51, 53, 60, 61, 79, 84 |
 
 ## Ordem operacional recomendada sem bloqueios
 

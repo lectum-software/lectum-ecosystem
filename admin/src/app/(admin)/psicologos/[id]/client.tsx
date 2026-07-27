@@ -2986,6 +2986,7 @@ const ContentFormatDistributionCard = ({
 }) => {
   const center = 60;
   const radius = 48;
+  const innerRadius = 31;
   const visibleItems = distribution.items.filter((item) => item.count > 0);
   const hasContent = distribution.total > 0 && visibleItems.length > 0;
   const segments = visibleItems.reduce<{
@@ -3017,7 +3018,7 @@ const ContentFormatDistributionCard = ({
     { currentAngle: -90, items: [] },
   ).items;
   const ariaLabel = hasContent
-    ? `Gráfico de pizza de formatos de ${title.toLowerCase()}: ${distribution.items
+    ? `Gráfico de donut de formatos de ${title.toLowerCase()}: ${distribution.items
         .map(
           (item) =>
             `${item.label}: ${numberFormatter.format(item.count)}, ${formatContentFormatPercentage(
@@ -3025,7 +3026,7 @@ const ContentFormatDistributionCard = ({
             )}`,
         )
         .join("; ")}.`
-    : `Gráfico de pizza de formatos de ${title.toLowerCase()}: sem conteúdo no período selecionado.`;
+    : `Gráfico de donut de formatos de ${title.toLowerCase()}: sem conteúdo no período selecionado.`;
 
   return (
     <CardShell className="min-w-0 max-w-full overflow-hidden p-5">
@@ -3100,7 +3101,7 @@ const ContentFormatDistributionCard = ({
                   stroke="var(--admin-surface)"
                   strokeWidth="1.4"
                 />
-                {segment.share >= 0.08 ? (
+                {segment.share > 1 ? (
                   <PlatformDevicePiePercentageLabel
                     color={color}
                     label={percentageLabel}
@@ -3111,6 +3112,35 @@ const ContentFormatDistributionCard = ({
               </g>
             );
           })}
+          <circle
+            aria-hidden
+            cx={center}
+            cy={center}
+            fill="var(--admin-surface)"
+            r={innerRadius}
+            stroke="var(--admin-surface)"
+            strokeWidth="1"
+          />
+          <text
+            fill="var(--admin-foreground)"
+            fontSize="15"
+            fontWeight="900"
+            textAnchor="middle"
+            x={center}
+            y={center - 2}
+          >
+            {numberFormatter.format(distribution.total)}
+          </text>
+          <text
+            fill="var(--admin-muted)"
+            fontSize="8"
+            fontWeight="700"
+            textAnchor="middle"
+            x={center}
+            y={center + 12}
+          >
+            total
+          </text>
         </svg>
         <figcaption className="grid gap-2">
           {distribution.items.map((item) => (
@@ -4222,6 +4252,7 @@ const PsychologistPlatformDeviceUsageSection = ({
   const totalSessions = deviceUsage?.total_sessions ?? 0;
   const center = 60;
   const radius = 48;
+  const innerRadius = 31;
   const visibleItems = items.filter((item) => item.count > 0);
   const hasDeviceSessions = totalSessions > 0 && visibleItems.length > 0;
   const segments = visibleItems.reduce<{
@@ -4253,7 +4284,7 @@ const PsychologistPlatformDeviceUsageSection = ({
     { currentAngle: -90, items: [] },
   ).items;
   const ariaLabel = hasDeviceSessions
-    ? `Gráfico de pizza dos devices usados pelo psicólogo: ${items
+    ? `Gráfico de donut dos devices usados pelo psicólogo: ${items
         .map(
           (item) =>
             `${item.label}: ${formatDeviceSessionCount(item.count)}, ${formatDevicePercentage(
@@ -4261,7 +4292,7 @@ const PsychologistPlatformDeviceUsageSection = ({
             )}`,
         )
         .join("; ")}.`
-    : `Gráfico de pizza dos devices usados pelo psicólogo: ${
+    : `Gráfico de donut dos devices usados pelo psicólogo: ${
         deviceUsage?.unavailable_reason ??
         "sem sessões autenticadas por dispositivo no período selecionado."
       }`;
@@ -4333,7 +4364,7 @@ const PsychologistPlatformDeviceUsageSection = ({
                   stroke="var(--admin-surface)"
                   strokeWidth="1.4"
                 />
-                {segment.share >= 0.08 ? (
+                {segment.share > 1 ? (
                   <PlatformDevicePiePercentageLabel
                     color={color}
                     label={percentageLabel}
@@ -4344,6 +4375,35 @@ const PsychologistPlatformDeviceUsageSection = ({
               </g>
             );
           })}
+          <circle
+            aria-hidden
+            cx={center}
+            cy={center}
+            fill="var(--admin-surface)"
+            r={innerRadius}
+            stroke="var(--admin-surface)"
+            strokeWidth="1"
+          />
+          <text
+            fill="var(--admin-foreground)"
+            fontSize="15"
+            fontWeight="900"
+            textAnchor="middle"
+            x={center}
+            y={center - 2}
+          >
+            {numberFormatter.format(totalSessions)}
+          </text>
+          <text
+            fill="var(--admin-muted)"
+            fontSize="8"
+            fontWeight="700"
+            textAnchor="middle"
+            x={center}
+            y={center + 12}
+          >
+            total
+          </text>
         </svg>
         <figcaption className="space-y-3">
           {hasDeviceSessions ? (

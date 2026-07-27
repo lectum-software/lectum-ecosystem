@@ -2738,6 +2738,7 @@ const PatientPlatformDeviceUsageSection = ({
   const totalSessions = deviceUsage?.total_sessions ?? 0;
   const center = 60;
   const radius = 48;
+  const innerRadius = 31;
   const visibleItems = items.filter((item) => item.count > 0);
   const hasDeviceSessions = totalSessions > 0 && visibleItems.length > 0;
   const segments = visibleItems.reduce<{
@@ -2769,7 +2770,7 @@ const PatientPlatformDeviceUsageSection = ({
     { currentAngle: -90, items: [] },
   ).items;
   const ariaLabel = hasDeviceSessions
-    ? `Gráfico de pizza dos devices usados pelo paciente: ${items
+    ? `Gráfico de donut dos devices usados pelo paciente: ${items
         .map(
           (item) =>
             `${item.label}: ${formatDeviceSessionCount(item.count)}, ${formatDevicePercentage(
@@ -2777,7 +2778,7 @@ const PatientPlatformDeviceUsageSection = ({
             )}`,
         )
         .join("; ")}.`
-    : `Gráfico de pizza dos devices usados pelo paciente: ${
+    : `Gráfico de donut dos devices usados pelo paciente: ${
         deviceUsage?.unavailable_reason ??
         "sem sessões autenticadas por dispositivo no período selecionado."
       }`;
@@ -2849,7 +2850,7 @@ const PatientPlatformDeviceUsageSection = ({
                   stroke="var(--admin-surface)"
                   strokeWidth="1.4"
                 />
-                {segment.share >= 0.08 ? (
+                {segment.share > 1 ? (
                   <PlatformDevicePiePercentageLabel
                     color={color}
                     label={percentageLabel}
@@ -2860,6 +2861,35 @@ const PatientPlatformDeviceUsageSection = ({
               </g>
             );
           })}
+          <circle
+            aria-hidden
+            cx={center}
+            cy={center}
+            fill="var(--admin-surface)"
+            r={innerRadius}
+            stroke="var(--admin-surface)"
+            strokeWidth="1"
+          />
+          <text
+            fill="var(--admin-foreground)"
+            fontSize="15"
+            fontWeight="900"
+            textAnchor="middle"
+            x={center}
+            y={center - 2}
+          >
+            {numberFormatter.format(totalSessions)}
+          </text>
+          <text
+            fill="var(--admin-muted)"
+            fontSize="8"
+            fontWeight="700"
+            textAnchor="middle"
+            x={center}
+            y={center + 12}
+          >
+            total
+          </text>
         </svg>
         <figcaption className="space-y-3">
           {hasDeviceSessions ? (

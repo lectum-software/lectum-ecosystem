@@ -1457,7 +1457,7 @@ const DonutChart = ({
   );
 };
 
-const BreakdownPieChart = ({
+const BreakdownDonutChart = ({
   colorForItem,
   countLabel = "cadastro(s)",
   emptyMessage = "Sem dados reais.",
@@ -1479,7 +1479,7 @@ const BreakdownPieChart = ({
   }));
   const ariaLabel =
     items.length > 0
-      ? `Gráfico de pizza: ${items
+      ? `Gráfico de donut: ${items
           .map(
             (item) =>
               `${item.label}: ${numberFormatter.format(item.count)} ${countLabel}, ${formatPercentageValue(
@@ -1499,7 +1499,7 @@ const BreakdownPieChart = ({
   );
 };
 
-const DeviceUsagePieChart = ({
+const DeviceUsageDonutChart = ({
   deviceUsage,
 }: {
   deviceUsage: AdminPatientsDashboard["device_usage"];
@@ -1526,7 +1526,7 @@ const DeviceUsagePieChart = ({
       sublabel: operatingSystemSummary || null,
     };
   });
-  const ariaLabel = `Gráfico de pizza dos devices usados por pacientes: ${deviceUsage.items
+  const ariaLabel = `Gráfico de donut dos devices usados por pacientes: ${deviceUsage.items
     .map(
       (item) =>
         `${item.label}: ${numberFormatter.format(item.count)} sessão(ões), ${formatPercentageValue(
@@ -2006,7 +2006,7 @@ const Statistics = ({
             icon={UserRound}
             title="Gênero"
           />
-          <BreakdownPieChart
+          <BreakdownDonutChart
             colorForItem={(item, index) =>
               GENDER_CHART_COLORS[item.id] ?? CHART_COLORS[index % CHART_COLORS.length]
             }
@@ -2030,7 +2030,7 @@ const Statistics = ({
             icon={UserPlus}
             title="Forma de cadastro"
           />
-          <BreakdownPieChart
+          <BreakdownDonutChart
             colorForItem={(item, index) =>
               SIGNUP_SOURCE_CHART_COLORS[item.id] ?? CHART_COLORS[index % CHART_COLORS.length]
             }
@@ -2109,7 +2109,7 @@ const DeviceUsageCard = ({
         icon={Smartphone}
         title="Devices e sistemas"
       />
-      <DeviceUsagePieChart deviceUsage={displayDeviceUsage} />
+      <DeviceUsageDonutChart deviceUsage={displayDeviceUsage} />
     </CardShell>
   );
 };

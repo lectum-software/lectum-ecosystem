@@ -148,3 +148,4 @@ Formato recomendado:
 - [ADR-0322 - Tracao agregada no dashboard Admin de psicologos](0322-tracao-dashboard-psicologos-admin.md) - Accepted
 - [ADR-0323 - Visao geral de Trafego com timeline filtravel](0323-trafego-visao-geral-timeline.md) - Accepted
 - [ADR-0324 - Canais canonicos de origem do trafego no Admin](0324-canais-origem-trafego-admin.md) - Accepted
+- [ADR-0326 - Graficos radiais do Admin como donut](0326-admin-graficos-donut.md) - Accepted

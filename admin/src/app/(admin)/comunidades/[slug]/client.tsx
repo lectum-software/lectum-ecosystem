@@ -5553,6 +5553,7 @@ const CommunityContentFormatDistributionCard = ({
 }) => {
   const center = 60;
   const radius = 48;
+  const innerRadius = 31;
   const visibleItems = distribution.items.filter((item) => item.count > 0);
   const hasContent = distribution.total > 0 && visibleItems.length > 0;
   const segments = visibleItems.reduce<{
@@ -5584,7 +5585,7 @@ const CommunityContentFormatDistributionCard = ({
     { currentAngle: -90, items: [] },
   ).items;
   const ariaLabel = hasContent
-    ? `Gráfico de pizza de formatos de ${title.toLowerCase()}: ${distribution.items
+    ? `Gráfico de donut de formatos de ${title.toLowerCase()}: ${distribution.items
         .map(
           (item) =>
             `${item.label}: ${numberFormatter.format(item.count)}, ${formatContentFormatPercentage(
@@ -5592,7 +5593,7 @@ const CommunityContentFormatDistributionCard = ({
             )}`,
         )
         .join("; ")}.`
-    : `Gráfico de pizza de formatos de ${title.toLowerCase()}: sem conteúdo no período selecionado.`;
+    : `Gráfico de donut de formatos de ${title.toLowerCase()}: sem conteúdo no período selecionado.`;
 
   return (
     <section className={cn(cardClass, "min-w-0 max-w-full overflow-hidden p-5")}>
@@ -5662,7 +5663,7 @@ const CommunityContentFormatDistributionCard = ({
                   stroke="var(--admin-surface)"
                   strokeWidth="1.4"
                 />
-                {segment.share >= 0.08 ? (
+                {segment.share > 1 ? (
                   <PiePercentageLabel
                     color={color}
                     label={percentageLabel}
@@ -5673,6 +5674,35 @@ const CommunityContentFormatDistributionCard = ({
               </g>
             );
           })}
+          <circle
+            aria-hidden
+            cx={center}
+            cy={center}
+            fill="var(--admin-surface)"
+            r={innerRadius}
+            stroke="var(--admin-surface)"
+            strokeWidth="1"
+          />
+          <text
+            fill="var(--admin-foreground)"
+            fontSize="15"
+            fontWeight="900"
+            textAnchor="middle"
+            x={center}
+            y={center - 2}
+          >
+            {numberFormatter.format(distribution.total)}
+          </text>
+          <text
+            fill="var(--admin-muted)"
+            fontSize="8"
+            fontWeight="700"
+            textAnchor="middle"
+            x={center}
+            y={center + 12}
+          >
+            total
+          </text>
         </svg>
         <figcaption className="grid gap-2">
           {distribution.items.map((item) => (

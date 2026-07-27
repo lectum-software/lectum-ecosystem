@@ -1025,13 +1025,14 @@ const renderPiePercentageLabel = ({
   );
 };
 
-const SignupMethodPieChart = ({
+const SignupMethodDonutChart = ({
   signupMethod,
 }: {
   signupMethod: AdminPsychologistsDashboard["signup_method"];
 }) => {
   const center = 60;
   const radius = 48;
+  const innerRadius = 31;
   const total = Math.max(0, signupMethod.total);
   const visibleItems = signupMethod.items.filter((item) => item.count > 0);
   const segments = visibleItems.reduce<{
@@ -1071,7 +1072,7 @@ const SignupMethodPieChart = ({
     );
   }
 
-  const ariaLabel = `Gráfico de pizza do modo de cadastro: ${signupMethod.items
+  const ariaLabel = `Gráfico de donut do modo de cadastro: ${signupMethod.items
     .map(
       (item) =>
         `${item.label}: ${numberFormatter.format(item.count)} cadastro(s), ${formatPercentageValue(
@@ -1134,7 +1135,7 @@ const SignupMethodPieChart = ({
                 stroke="var(--admin-surface)"
                 strokeWidth="1.4"
               />
-              {segment.share >= 0.08
+              {segment.share > 1
                 ? renderPiePercentageLabel({
                     color,
                     label: percentageLabel,
@@ -1145,6 +1146,35 @@ const SignupMethodPieChart = ({
             </g>
           );
         })}
+        <circle
+          aria-hidden
+          cx={center}
+          cy={center}
+          fill="var(--admin-surface)"
+          r={innerRadius}
+          stroke="var(--admin-surface)"
+          strokeWidth="1"
+        />
+        <text
+          fill="var(--admin-foreground)"
+          fontSize="15"
+          fontWeight="900"
+          textAnchor="middle"
+          x={center}
+          y={center - 2}
+        >
+          {numberFormatter.format(total)}
+        </text>
+        <text
+          fill="var(--admin-muted)"
+          fontSize="8"
+          fontWeight="700"
+          textAnchor="middle"
+          x={center}
+          y={center + 12}
+        >
+          total
+        </text>
       </svg>
       <figcaption className="space-y-3">
         {signupMethod.items.map((item) => {
@@ -1433,7 +1463,7 @@ const ConversionAndUsageBlocks = ({ summary }: { summary: AdminPsychologistsDash
               value={signupMethodPlanSegment}
             />
           </div>
-          <SignupMethodPieChart signupMethod={signupMethodSummary.signup_method} />
+          <SignupMethodDonutChart signupMethod={signupMethodSummary.signup_method} />
           {signupMethodSummary.signup_method.unknown_count > 0 ? (
             <p className="mt-4 text-xs font-bold text-subtle">
               {numberFormatter.format(signupMethodSummary.signup_method.unknown_count)} cadastro(s)
@@ -1455,7 +1485,7 @@ const ConversionAndUsageBlocks = ({ summary }: { summary: AdminPsychologistsDash
               value={deviceUsagePlanSegment}
             />
           </div>
-          <DeviceUsagePieChart deviceUsage={deviceUsageSummary.device_usage} />
+          <DeviceUsageDonutChart deviceUsage={deviceUsageSummary.device_usage} />
         </CardShell>
 
         <CardShell className="p-5 xl:col-span-2">
@@ -1526,13 +1556,14 @@ const DEVICE_USAGE_CHART_COLORS = {
   unknown: "#94a3b8",
 } satisfies Record<DeviceUsageItem["device_type"], string>;
 
-const DeviceUsagePieChart = ({
+const DeviceUsageDonutChart = ({
   deviceUsage,
 }: {
   deviceUsage: AdminPsychologistsDashboard["device_usage"];
 }) => {
   const center = 60;
   const radius = 48;
+  const innerRadius = 31;
   const total = Math.max(0, deviceUsage.total_sessions);
   const visibleItems = deviceUsage.items.filter((item) => item.count > 0);
   const segments = visibleItems.reduce<{
@@ -1572,7 +1603,7 @@ const DeviceUsagePieChart = ({
     );
   }
 
-  const ariaLabel = `Gráfico de pizza dos devices usados por psicólogos: ${deviceUsage.items
+  const ariaLabel = `Gráfico de donut dos devices usados por psicólogos: ${deviceUsage.items
     .map(
       (item) =>
         `${item.label}: ${numberFormatter.format(item.count)} sessão(ões), ${formatPercentageValue(
@@ -1635,7 +1666,7 @@ const DeviceUsagePieChart = ({
                 stroke="var(--admin-surface)"
                 strokeWidth="1.4"
               />
-              {segment.share >= 0.08
+              {segment.share > 1
                 ? renderPiePercentageLabel({
                     color,
                     label: percentageLabel,
@@ -1646,6 +1677,35 @@ const DeviceUsagePieChart = ({
             </g>
           );
         })}
+        <circle
+          aria-hidden
+          cx={center}
+          cy={center}
+          fill="var(--admin-surface)"
+          r={innerRadius}
+          stroke="var(--admin-surface)"
+          strokeWidth="1"
+        />
+        <text
+          fill="var(--admin-foreground)"
+          fontSize="15"
+          fontWeight="900"
+          textAnchor="middle"
+          x={center}
+          y={center - 2}
+        >
+          {numberFormatter.format(total)}
+        </text>
+        <text
+          fill="var(--admin-muted)"
+          fontSize="8"
+          fontWeight="700"
+          textAnchor="middle"
+          x={center}
+          y={center + 12}
+        >
+          total
+        </text>
       </svg>
       <figcaption className="space-y-3">
         {deviceUsage.items.map((item) => {
@@ -2076,9 +2136,14 @@ const CardsGrid = ({
   );
 };
 
-const TractionPieChart = ({ traction }: { traction: AdminPsychologistsDashboard["traction"] }) => {
+const TractionDonutChart = ({
+  traction,
+}: {
+  traction: AdminPsychologistsDashboard["traction"];
+}) => {
   const center = 60;
   const radius = 48;
+  const innerRadius = 31;
   const total = Math.max(0, traction.totals.psychologists);
   const visibleItems = traction.categories.filter((item) => item.count > 0);
   const segments = visibleItems.reduce<{
@@ -2120,7 +2185,7 @@ const TractionPieChart = ({ traction }: { traction: AdminPsychologistsDashboard[
   }
 
   const ariaLabel =
-    "Gráfico de pizza de Tração dos psicólogos: " +
+    "Gráfico de donut de Tração dos psicólogos: " +
     traction.categories
       .map(
         (item) =>
@@ -2188,7 +2253,7 @@ const TractionPieChart = ({ traction }: { traction: AdminPsychologistsDashboard[
                 stroke="var(--admin-surface)"
                 strokeWidth="1.4"
               />
-              {segment.share >= 0.08
+              {segment.share > 1
                 ? renderPiePercentageLabel({
                     color,
                     label: percentageLabel,
@@ -2199,6 +2264,35 @@ const TractionPieChart = ({ traction }: { traction: AdminPsychologistsDashboard[
             </g>
           );
         })}
+        <circle
+          aria-hidden
+          cx={center}
+          cy={center}
+          fill="var(--admin-surface)"
+          r={innerRadius}
+          stroke="var(--admin-surface)"
+          strokeWidth="1"
+        />
+        <text
+          fill="var(--admin-foreground)"
+          fontSize="15"
+          fontWeight="900"
+          textAnchor="middle"
+          x={center}
+          y={center - 2}
+        >
+          {numberFormatter.format(total)}
+        </text>
+        <text
+          fill="var(--admin-muted)"
+          fontSize="8"
+          fontWeight="700"
+          textAnchor="middle"
+          x={center}
+          y={center + 12}
+        >
+          total
+        </text>
       </svg>
       <figcaption className="grid gap-3 md:grid-cols-2">
         {traction.categories.map((item) => {
@@ -2257,7 +2351,7 @@ const DashboardTractionCard = ({ summary }: { summary: AdminPsychologistsDashboa
           value={tractionPlanSegment}
         />
       </div>
-      <TractionPieChart traction={traction} />
+      <TractionDonutChart traction={traction} />
     </CardShell>
   );
 };
