@@ -5,39 +5,41 @@ import {
   AlertTriangle,
   CalendarDays,
   ChevronDown,
-  Download,
   Flag,
-  Loader2,
   type LucideIcon,
   RefreshCw,
   UserRoundCheck,
   Users,
   WalletCards,
 } from "lucide-react";
-import { type FocusEventHandler, useMemo, useState } from "react";
-import { toast } from "sonner";
-import { useAdminDashboardExport, useAdminDashboardSummary } from "@/api/callers/dashboard";
+import { type FocusEventHandler, useEffect, useMemo, useState } from "react";
+import { useAdminDashboardSummary } from "@/api/callers/dashboard";
 import { resolveApiError } from "@/api/handle";
 import type {
   AdminDashboardSummary,
   DashboardDailyPoint,
   DashboardMetric,
   DashboardPendingReport,
+  DashboardPeriodPreset,
   DashboardSummaryQuery,
 } from "@/api/req/dashboard";
-import { useDateRangeCommitOnBlur } from "@/hooks/use-date-range-commit-on-blur";
 import { aggregateCalendarChartPoints, buildSmoothSvgPath } from "@/lib/chart-time-series";
 import { cn } from "@/lib/utils";
 
 const DASHBOARD_PERIOD_OPTIONS = [
-  { days: 7, id: "7d", label: "Últimos 7 dias" },
-  { days: 30, id: "30d", label: "Últimos 30 dias" },
-  { days: 90, id: "90d", label: "Últimos 90 dias" },
+  { id: "today", label: "Hoje" },
+  { id: "week", label: "Esta semana" },
+  { id: "month", label: "Este mês" },
+  { id: "year", label: "Este ano" },
+  { id: "7d", label: "Últimos 7 dias" },
+  { id: "30d", label: "Últimos 30 dias" },
+  { id: "90d", label: "Últimos 90 dias" },
+  { id: "all", label: "Todo o período" },
 ] as const;
 const SKELETON_KEYS = ["sessions", "revenue", "patients", "psychologists", "reports"] as const;
 
-type DashboardPeriodPreset = (typeof DASHBOARD_PERIOD_OPTIONS)[number]["id"];
 type DashboardPeriodValue = DashboardPeriodPreset | "custom";
+type DashboardDateRange = Required<Pick<DashboardSummaryQuery, "from" | "to">>;
 
 const numberFormatter = new Intl.NumberFormat("pt-BR");
 const currencyFormatter = new Intl.NumberFormat("pt-BR", {
@@ -49,26 +51,61 @@ const pad = (value: number) => String(value).padStart(2, "0");
 const toInputDate = (date: Date) =>
   `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
 
+const startOfCurrentWeek = () => {
+  const date = new Date();
+  const day = date.getDay();
+  const diff = day === 0 ? -6 : 1 - day;
+  date.setDate(date.getDate() + diff);
+
+  return date;
+};
+
+const startOfCurrentMonth = () => {
+  const date = new Date();
+  date.setDate(1);
+
+  return date;
+};
+
+const startOfCurrentYear = () => {
+  const date = new Date();
+  date.setMonth(0, 1);
+
+  return date;
+};
+
+const startOfLastDays = (days: number) => {
+  const date = new Date();
+  date.setDate(date.getDate() - (days - 1));
+
+  return date;
+};
+
 const dateFromInput = (value: string) => {
   const [year, month, day] = value.split("-").map(Number);
   return new Date(year, month - 1, day, 12, 0, 0, 0);
 };
 
-const getQuickRange = (days: number): DashboardSummaryQuery => {
+const getQuickRange = (days: number): DashboardDateRange => {
   const today = new Date();
-  const from = new Date(today);
-  from.setDate(today.getDate() - (days - 1));
 
   return {
-    from: toInputDate(from),
+    from: toInputDate(startOfLastDays(days)),
     to: toInputDate(today),
   };
 };
 
-const getDashboardRangeForPeriod = (period: DashboardPeriodPreset): DashboardSummaryQuery => {
-  const option = DASHBOARD_PERIOD_OPTIONS.find((item) => item.id === period);
+const getDashboardRangeForPeriod = (period: DashboardPeriodPreset): DashboardDateRange => {
+  const today = toInputDate(new Date());
 
-  return getQuickRange(option?.days ?? 7);
+  if (period === "today") return { from: today, to: today };
+  if (period === "week") return { from: toInputDate(startOfCurrentWeek()), to: today };
+  if (period === "month") return { from: toInputDate(startOfCurrentMonth()), to: today };
+  if (period === "year") return { from: toInputDate(startOfCurrentYear()), to: today };
+  if (period === "30d") return getQuickRange(30);
+  if (period === "90d") return getQuickRange(90);
+
+  return getQuickRange(7);
 };
 
 const getDashboardPeriodLabel = (period: DashboardPeriodValue) => {
@@ -118,22 +155,13 @@ const isValidRange = (range: DashboardSummaryQuery) => {
   return dateFromInput(range.from) <= dateFromInput(range.to);
 };
 
-const downloadBlob = (blob: Blob, filename: string) => {
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = filename;
-  document.body.appendChild(link);
-  link.click();
-  link.remove();
-  URL.revokeObjectURL(url);
-};
-
 const hasPeriodRecords = (summary: AdminDashboardSummary) => {
   const cardValues = Object.values(summary.cards).some((card) => card.value > 0);
   const communityValues = [
-    ...summary.community_activity.posts,
-    ...summary.community_activity.comments,
+    ...summary.community_activity.patient_posts,
+    ...summary.community_activity.psychologist_posts,
+    ...summary.community_activity.patient_comments,
+    ...summary.community_activity.psychologist_replies,
   ].some((point) => point.count > 0);
 
   return cardValues || communityValues || summary.pending_reports.total > 0;
@@ -290,7 +318,7 @@ const LineChart = ({
     <figure className="mt-4 overflow-hidden rounded-[1.5rem] border border-border/70 bg-surface p-4">
       <div className="overflow-x-auto">
         <svg
-          aria-label="Gráfico de linhas com posts e comentários por dia"
+          aria-label="Gráfico de linhas com atividade das comunidades por autoria e tipo"
           className="min-w-[620px]"
           role="img"
           viewBox={`0 0 ${width} ${height}`}
@@ -385,15 +413,7 @@ const LineChart = ({
   );
 };
 
-const DashboardHero = ({
-  isExporting,
-  onExport,
-  range,
-}: {
-  isExporting: boolean;
-  onExport: () => void;
-  range: DashboardSummaryQuery;
-}) => (
+const DashboardHero = () => (
   <CardShell className="border-border/70 bg-surface/90 p-5 md:p-6">
     <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
       <div className="min-w-0">
@@ -404,23 +424,9 @@ const DashboardHero = ({
           Dashboard
         </h1>
         <p className="mt-2 max-w-3xl text-sm font-medium leading-6 text-muted md:text-base">
-          Visão geral da plataforma Lectum com indicadores reais de sessões, comunidade, financeiro,
-          usuários e moderação.
+          Visão geral com os principais indicadores da plataforma
         </p>
       </div>
-      <button
-        className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-control bg-primary px-4 text-sm font-semibold text-white shadow-control transition hover:bg-primary-hover disabled:opacity-60 sm:w-auto"
-        disabled={isExporting || !isValidRange(range)}
-        onClick={onExport}
-        type="button"
-      >
-        {isExporting ? (
-          <Loader2 aria-hidden className="h-4 w-4 animate-spin" />
-        ) : (
-          <Download aria-hidden className="h-4 w-4" />
-        )}
-        Exportar CSV
-      </button>
     </div>
   </CardShell>
 );
@@ -437,7 +443,7 @@ const DashboardPeriodControls = ({
   onDateControlsBlur: FocusEventHandler<HTMLDivElement>;
   onPeriodChange: (period: DashboardPeriodPreset) => void;
   period: DashboardPeriodValue;
-  range: DashboardSummaryQuery;
+  range: DashboardDateRange;
   rangeError: string | null;
 }) => (
   <div className="flex w-full flex-col gap-2 xl:w-auto xl:items-end">
@@ -623,18 +629,18 @@ const ChartLegend = ({
     label: string;
   }>;
 }) => (
-  <div className="mt-5 flex flex-wrap items-center gap-3">
+  <div className="mt-5 grid gap-3 sm:grid-cols-2 md:flex md:flex-wrap md:items-center">
     {items.map((item) => (
       <span
-        className="inline-flex items-center gap-2 text-xs font-semibold text-muted"
+        className="inline-flex min-w-0 items-center gap-2 text-xs font-semibold text-muted"
         key={item.label}
       >
         <span
           aria-hidden
-          className="h-2.5 w-2.5 rounded-full"
+          className="h-2.5 w-2.5 shrink-0 rounded-full"
           style={{ backgroundColor: item.color }}
         />
-        {item.label}
+        <span className="min-w-0 break-words">{item.label}</span>
       </span>
     ))}
   </div>
@@ -653,13 +659,23 @@ const DashboardContent = ({
   const communitySeries = [
     {
       color: "var(--admin-primary)",
-      label: "Posts",
-      points: summary.community_activity.posts,
+      label: "Posts de pacientes",
+      points: summary.community_activity.patient_posts,
     },
     {
-      color: "#8b5cf6",
-      label: "Comentários",
-      points: summary.community_activity.comments,
+      color: "var(--admin-success)",
+      label: "Posts de psicólogos",
+      points: summary.community_activity.psychologist_posts,
+    },
+    {
+      color: "var(--admin-warning)",
+      label: "Comentários de pacientes",
+      points: summary.community_activity.patient_comments,
+    },
+    {
+      color: "var(--admin-danger)",
+      label: "Respostas de psicólogos",
+      points: summary.community_activity.psychologist_replies,
     },
   ];
 
@@ -699,21 +715,22 @@ const DashboardContent = ({
 };
 
 export const AdminDashboardClient = () => {
+  const initialRange = useMemo(() => getDashboardRangeForPeriod("7d"), []);
   const [selectedPeriod, setSelectedPeriod] = useState<DashboardPeriodValue>("7d");
-  const {
-    appliedRange,
-    applyRange,
-    draftRange,
-    handleDateChange,
-    handleDateControlsBlur,
-    rangeError,
-  } = useDateRangeCommitOnBlur<DashboardSummaryQuery>({
-    initialRange: () => getDashboardRangeForPeriod("7d"),
-    isValidRange,
-  });
+  const [appliedPeriod, setAppliedPeriod] = useState<DashboardPeriodValue>("7d");
+  const [draftRange, setDraftRange] = useState<DashboardDateRange>(initialRange);
+  const [appliedRange, setAppliedRange] = useState<DashboardDateRange>(initialRange);
+  const [rangeError, setRangeError] = useState<string | null>(null);
   const validRange = isValidRange(appliedRange);
-  const query = useAdminDashboardSummary(appliedRange, { enabled: validRange });
-  const exportMutation = useAdminDashboardExport();
+  const validDraftRange = isValidRange(draftRange);
+  const appliedQuery = useMemo<DashboardSummaryQuery>(
+    () =>
+      appliedPeriod === "custom"
+        ? { from: appliedRange.from, period: "custom", to: appliedRange.to }
+        : { period: appliedPeriod },
+    [appliedPeriod, appliedRange.from, appliedRange.to],
+  );
+  const query = useAdminDashboardSummary(appliedQuery, { enabled: validRange });
   const queryError = query.error ? resolveApiError(query.error) : null;
   const periodDescription = useMemo(() => {
     const range = query.data
@@ -721,34 +738,84 @@ export const AdminDashboardClient = () => {
           from: query.data.period.from,
           to: query.data.period.to,
         }
-      : appliedRange;
+      : draftRange;
 
-    return formatPeriodDescription(selectedPeriod, range);
-  }, [appliedRange, query.data, selectedPeriod]);
+    return formatPeriodDescription(query.data ? appliedPeriod : selectedPeriod, range);
+  }, [appliedPeriod, draftRange, query.data, selectedPeriod]);
+
+  useEffect(() => {
+    if (!query.data || appliedPeriod === "custom") return;
+
+    const resolvedRange = {
+      from: query.data.period.from,
+      to: query.data.period.to,
+    };
+
+    const timeout = window.setTimeout(() => {
+      setAppliedRange(resolvedRange);
+
+      if (selectedPeriod === appliedPeriod) {
+        setDraftRange(resolvedRange);
+      }
+    }, 0);
+
+    return () => window.clearTimeout(timeout);
+  }, [appliedPeriod, query.data, selectedPeriod]);
 
   const handlePeriodChange = (period: DashboardPeriodPreset) => {
+    const nextRange = getDashboardRangeForPeriod(period);
+
+    setRangeError(null);
     setSelectedPeriod(period);
-    applyRange(getDashboardRangeForPeriod(period));
+    setAppliedPeriod(period);
+    setDraftRange(nextRange);
+    setAppliedRange(nextRange);
   };
 
-  const handleDashboardDateChange = (field: "from" | "to", value: string) => {
+  const handleDashboardDateChange = (field: keyof DashboardDateRange, value: string) => {
+    setRangeError(null);
     setSelectedPeriod("custom");
-    handleDateChange(field, value);
+    setDraftRange((current) => ({ ...current, [field]: value }));
+  };
+
+  const commitCustomRange = () => {
+    if (selectedPeriod !== "custom") return;
+
+    if (!validDraftRange) {
+      setRangeError(
+        "Informe um período personalizado completo, com data inicial menor ou igual à final.",
+      );
+      return;
+    }
+
+    setRangeError(null);
+    setAppliedPeriod("custom");
+    setAppliedRange(draftRange);
+  };
+
+  const handleDateControlsBlur: FocusEventHandler<HTMLDivElement> = (event) => {
+    const currentTarget = event.currentTarget;
+    const nextFocusedElement = event.relatedTarget as Node | null;
+
+    if (nextFocusedElement && currentTarget.contains(nextFocusedElement)) return;
+
+    window.setTimeout(() => {
+      const activeElement = document.activeElement;
+
+      if (activeElement && currentTarget.contains(activeElement)) return;
+
+      commitCustomRange();
+    }, 0);
   };
 
   const resetPeriod = () => {
-    setSelectedPeriod("7d");
-    applyRange(getDashboardRangeForPeriod("7d"));
-  };
+    const defaultRange = getDashboardRangeForPeriod("7d");
 
-  const handleExport = async () => {
-    try {
-      const result = await exportMutation.mutateAsync(appliedRange);
-      downloadBlob(result.blob, result.filename);
-      toast.success("Exportação real gerada com sucesso.");
-    } catch (error) {
-      toast.error(resolveApiError(error));
-    }
+    setRangeError(null);
+    setSelectedPeriod("7d");
+    setAppliedPeriod("7d");
+    setDraftRange(defaultRange);
+    setAppliedRange(defaultRange);
   };
 
   const periodControls = (
@@ -764,11 +831,7 @@ export const AdminDashboardClient = () => {
 
   return (
     <div className="max-w-full space-y-6 overflow-x-clip">
-      <DashboardHero
-        isExporting={exportMutation.isPending}
-        onExport={() => void handleExport()}
-        range={draftRange}
-      />
+      <DashboardHero />
 
       {!validRange ? (
         <ErrorState

@@ -1,10 +1,16 @@
 ﻿import type { AdminDashboardDateRange } from "../../DTOs/IAdminDashboardSummaryDTO";
 
+export type DashboardCommunityAuthorRole = "paciente" | "psicologo";
+
 export interface IAdminDashboardRepository {
   countPendingReports(range: AdminDashboardDateRange): Promise<number>;
   countVisitorSessions(range: AdminDashboardDateRange): Promise<number>;
   countUsersByRole(role: "paciente" | "psicologo", range: AdminDashboardDateRange): Promise<number>;
-  listCommunityPostDates(range: AdminDashboardDateRange): Promise<Array<{ createdAt: Date }>>;
+  findEarliestDashboardDate(): Promise<Date | null>;
+  listCommunityPostDates(
+    range: AdminDashboardDateRange,
+    authorRole?: DashboardCommunityAuthorRole,
+  ): Promise<Array<{ createdAt: Date }>>;
   listPaidSubscriptionsUntil(end: Date): Promise<
     Array<{
       createdAt: Date;
@@ -47,7 +53,10 @@ export interface IAdminDashboardRepository {
       };
     }>
   >;
-  listPostReplyDates(range: AdminDashboardDateRange): Promise<Array<{ createdAt: Date }>>;
+  listPostReplyDates(
+    range: AdminDashboardDateRange,
+    authorRole?: DashboardCommunityAuthorRole,
+  ): Promise<Array<{ createdAt: Date }>>;
   listVisitorLocations(range: AdminDashboardDateRange): Promise<Array<{ country: string | null }>>;
   listVisitorSessions(range: AdminDashboardDateRange): Promise<Array<{ device_type: string }>>;
 }

@@ -2,8 +2,19 @@
 
 export type AdminDashboardQuery = {
   from?: string;
+  period?: AdminDashboardPeriodPreset | "custom";
   to?: string;
 };
+
+export type AdminDashboardPeriodPreset =
+  | "today"
+  | "week"
+  | "month"
+  | "year"
+  | "7d"
+  | "30d"
+  | "90d"
+  | "all";
 
 export type AdminDashboardDateRange = {
   end: Date;
@@ -94,8 +105,12 @@ export type AdminDashboardSummary = {
   };
   community_activity: {
     comments: AdminDashboardDailyPoint[];
+    patient_comments: AdminDashboardDailyPoint[];
+    patient_posts: AdminDashboardDailyPoint[];
     posts: AdminDashboardDailyPoint[];
-    source: "community_post+post_reply";
+    psychologist_posts: AdminDashboardDailyPoint[];
+    psychologist_replies: AdminDashboardDailyPoint[];
+    source: "community_post+post_reply+user.role";
   };
   devices: {
     items: AdminDashboardDeviceItem[];

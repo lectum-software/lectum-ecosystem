@@ -218,3 +218,34 @@ Regras de UI obrigatórias:
 - Contrato backend e dados reais do endpoint do Dashboard permanecem intactos; a mudança é apenas de apresentação no app `admin/`.
 - Validações executadas: `pnpm --dir admin check`, `pnpm --dir admin build` e browser local/headless em 390px e 1440px; admin transitório de validação removido ao final.
 - ADR atualizado: `adrs/0327-dashboard-admin-enxuto.md`.
+
+### Complemento de período e atividade por autoria (2026-07-27)
+
+- Pedido do usuário: trocar o texto do topo para **Visão geral com os principais indicadores da plataforma**, remover o botão **Exportar CSV**, incluir todas as opções padrão do painel Admin no filtro de período mantendo **Últimos 7 dias** como default e detalhar **Atividade nas comunidades** em quatro séries.
+- O filtro do `/dashboard` passou a exibir **Hoje**, **Esta semana**, **Este mês**, **Este ano**, **Últimos 7 dias**, **Últimos 30 dias**, **Últimos 90 dias** e **Todo o período**; presets enviam `period` ao backend e datas manuais continuam usando `from`/`to` com estado interno `custom`.
+- O backend do Dashboard agora resolve `period` real, amplia `max_days` para 3660 dias e calcula **Todo o período** a partir da primeira data real nas fontes agregadas do próprio Dashboard, sem mock/backfill.
+- A atividade de comunidade foi separada por autoria real (`user.role`) em **Posts de pacientes**, **Posts de psicólogos**, **Comentários de pacientes** e **Respostas de psicólogos**, preservando os campos agregados antigos `posts`/`comments` para compatibilidade.
+- O botão visual **Exportar CSV** foi removido do topo; o endpoint real de exportação não foi removido.
+- UI mobile-first preservada; nenhum `<img>` cru, package novo, migration ou dado artificial foi adicionado.
+- Builder/Quick Copy não estava exposto como ferramenta callable; referências usadas: `_product/proto/admin/Dashboard.png` e as capturas fornecidas pelo usuário.
+- ADR criado: `adrs/0328-dashboard-admin-periodos-atividade-comunidades.md`.
+
+#### Critérios deste ajuste
+
+- [x] Texto do topo atualizado para **Visão geral com os principais indicadores da plataforma**.
+- [x] Botão **Exportar CSV** removido da UI do Dashboard.
+- [x] Filtro de período do Dashboard exibe todas as opções padrão do Admin e inicia em **Últimos 7 dias**.
+- [x] **Todo o período** usa datas reais agregadas do backend, sem simulação.
+- [x] Gráfico **Atividade nas comunidades** exibe as quatro séries solicitadas com dados reais por `user.role`.
+- [x] Nenhum mock, package novo, `<img>` cru ou alteração de banco/schema/migration foi usado.
+
+#### Validação deste ajuste
+
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/dashboard/client.tsx" "src/api/req/dashboard/index.ts" "src/api/callers/dashboard/index.ts"`: OK.
+- `pnpm --dir backend exec biome check --write "src/modules/api/admin/private/dashboard/summary/DTOs/IAdminDashboardSummaryDTO.ts" "src/modules/api/admin/private/dashboard/summary/validator/index.ts" "src/modules/api/admin/private/dashboard/summary/repositories/AdminDashboardRepository.ts" "src/modules/api/admin/private/dashboard/summary/repositories/interfaces/IAdminDashboardRepository.ts" "src/modules/api/admin/private/dashboard/summary/use-cases/services.ts"`: OK.
+- `pnpm --dir admin check`: OK.
+- `pnpm --dir backend check`: OK na reexecução com timeout ampliado após a primeira tentativa exceder 120s.
+- `pnpm --dir backend build`: OK.
+- `pnpm --dir admin build`: OK na reexecução após aguardar a finalização de um build paralelo do Next.
+- `pnpm check`: OK.
+- Browser local/headless com admin real transitório em `http://localhost:3002/dashboard`: OK em desktop 1440px e mobile 390px, validando default **Últimos 7 dias**, oito opções padrão, ausência de **Exportar CSV** e quatro séries de comunidade. Evidências: `.tmp/dashboard-admin-validation-20260727/desktop-1440-final.png` e `.tmp/dashboard-admin-validation-20260727/mobile-390-final.png`; admin transitório removido ao final.

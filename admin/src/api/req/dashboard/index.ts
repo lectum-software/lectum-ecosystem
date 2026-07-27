@@ -18,8 +18,19 @@ export type DashboardMetric = {
 
 export type DashboardSummaryQuery = {
   from?: string;
+  period?: DashboardPeriodPreset | "custom";
   to?: string;
 };
+
+export type DashboardPeriodPreset =
+  | "today"
+  | "week"
+  | "month"
+  | "year"
+  | "7d"
+  | "30d"
+  | "90d"
+  | "all";
 
 export type DashboardPeriod = {
   days: number;
@@ -87,8 +98,12 @@ export type AdminDashboardSummary = {
   };
   community_activity: {
     comments: DashboardDailyPoint[];
+    patient_comments: DashboardDailyPoint[];
+    patient_posts: DashboardDailyPoint[];
     posts: DashboardDailyPoint[];
-    source: "community_post+post_reply";
+    psychologist_posts: DashboardDailyPoint[];
+    psychologist_replies: DashboardDailyPoint[];
+    source: "community_post+post_reply+user.role";
   };
   devices: {
     items: DashboardDeviceItem[];
@@ -120,6 +135,7 @@ export type AdminDashboardSummary = {
 
 const cleanParams = (input: DashboardSummaryQuery) => ({
   ...(input.from ? { from: input.from } : {}),
+  ...(input.period ? { period: input.period } : {}),
   ...(input.to ? { to: input.to } : {}),
 });
 
