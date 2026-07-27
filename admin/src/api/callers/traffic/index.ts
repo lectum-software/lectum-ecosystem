@@ -14,6 +14,7 @@ export const useAdminTrafficSummary = (
     enabled: options.enabled ?? true,
     queryFn: () => getAdminTrafficSummary(input),
     queryKey: adminTrafficKeys.summary(input),
+    refetchInterval: 60_000,
   });
 
 export const useAdminTrafficExport = () =>

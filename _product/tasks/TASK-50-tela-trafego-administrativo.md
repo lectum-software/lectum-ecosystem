@@ -808,3 +808,42 @@ Validacao desta execucao complementar:
 - `pnpm --dir admin check` - OK.
 - `pnpm --dir admin build` - OK.
 - HTTP local `GET http://localhost:3002/trafego` - OK (`200`).
+## Execucao complementar - usuarios online agora em Trafego (2026-07-27)
+
+- Adicionado o bloco **Usuarios online agora** perto do topo de `/trafego`, antes de **Visao geral**,
+  para deixar a metrica visivel sem exigir rolagem.
+- O backend passou a retornar `summary.online_now` com janela movel real de 5 minutos sobre
+  `visitor_session.last_seen_at`, contando visitantes unicos ativos, sessoes ativas, usuarios
+  autenticados, visitantes sem login e segmentos de pacientes, psicologos e visitantes nao
+  autenticados.
+- A metrica **agora** e independente do periodo selecionado nos filtros; os filtros continuam
+  controlando as demais agregacoes historicas da tela.
+- A exportacao CSV passou a incluir o snapshot atual nas secoes `online_now` e
+  `online_now_segment`.
+- O Admin refaz a consulta de trafego a cada 60 segundos para manter o bloco atualizado sem criar
+  endpoint paralelo ou fonte simulada.
+- Nao houve mock, seed, endpoint simulado, package novo, alteracao em Prisma schema/migrations ou
+  dado persistido; `db:migrate` nao foi necessario.
+- Builder/Quick Copy nao estava exposto como ferramenta callable neste ambiente; as referencias
+  auditaveis foram `_product/proto/admin/Tráfego.png` e a captura enviada pelo usuario.
+- ADR atualizado: `adrs/0230-admin-trafego-agregacoes.md`.
+
+Validacao desta execucao complementar:
+
+- `pnpm --dir backend exec biome check --write "src/modules/api/admin/private/traffic/summary/DTOs/IAdminTrafficSummaryDTO.ts" "src/modules/api/admin/private/traffic/summary/repositories/interfaces/IAdminTrafficRepository.ts" "src/modules/api/admin/private/traffic/summary/repositories/AdminTrafficRepository.ts" "src/modules/api/admin/private/traffic/summary/use-cases/services.ts" "src/modules/api/admin/private/traffic/export/use-cases/services.ts"` - OK.
+- `pnpm --dir admin exec biome check --write "src/api/req/traffic/index.ts" "src/api/callers/traffic/index.ts" "src/app/(admin)/trafego/client.tsx"` - OK.
+- `pnpm --dir backend check` - OK.
+- `pnpm --dir admin check` - OK.
+- `pnpm --dir backend build` - OK.
+- `pnpm --dir admin build` - OK.
+- `pnpm check` - OK.
+- API real local direta em `buildTrafficSummary({ period: "30d" })` - OK: `online_now`
+  presente, `window.minutes=5`, `source=visitor_session.last_seen_at` e contadores zerados quando
+  nao havia sessao atualizada nos ultimos 5 minutos.
+- HTTP local autenticado `GET /api/admin/private/traffic/summary?period=30d` - OK:
+  `online_now` presente no contrato.
+- HTTP local `GET http://localhost:3024/trafego` - OK (`200`) e bundle da rota confirmou a copy do
+  bloco **Usuarios online agora**.
+- Browser/headless CDP completo nao foi concluido porque a politica do ambiente bloqueou a
+  inicializacao de processo auxiliar para Chrome; a validacao local ficou restrita a API real, build
+  e bundle servido.

@@ -337,6 +337,31 @@ export class AdminTrafficRepository implements IAdminTrafficRepository {
     });
   }
 
+  async listOnlineSessions(range: AdminTrafficDateRange): Promise<TrafficSessionRecord[]> {
+    return prisma.visitor_session.findMany({
+      orderBy: {
+        last_seen_at: "desc",
+      },
+      where: {
+        deleted: false,
+        last_seen_at: occurredAtWhere(range),
+      },
+      select: {
+        device_type: true,
+        first_seen_at: true,
+        last_seen_at: true,
+        session_id: true,
+        user: {
+          select: {
+            role: true,
+          },
+        },
+        user_id: true,
+        visitor_id: true,
+      },
+    });
+  }
+
   async listPageViews(range: AdminTrafficDateRange): Promise<TrafficPageViewRecord[]> {
     return prisma.page_view_event.findMany({
       orderBy: {

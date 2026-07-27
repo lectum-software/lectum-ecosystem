@@ -8,6 +8,7 @@ import type {
   AdminTrafficEntryPage,
   AdminTrafficLocationItem,
   AdminTrafficMetric,
+  AdminTrafficOnlineNow,
   AdminTrafficRankingItem,
   AdminTrafficSummary,
   AdminTrafficTimelinePoint,
@@ -35,6 +36,34 @@ const appendMetricRows = (rows: string[], section: string, metrics: AdminTraffic
         `unit=${metric.unit};previous=${metric.previous_value};change_percent=${
           metric.change_percent ?? "n/a"
         };unavailable=${metric.unavailable}`,
+      ]),
+    );
+  }
+};
+
+const appendOnlineNowRows = (rows: string[], onlineNow: AdminTrafficOnlineNow) => {
+  rows.push(
+    csvRow([
+      "online_now",
+      "unique_visitors",
+      "Usuários online agora",
+      onlineNow.window.to,
+      onlineNow.unique_visitors,
+      onlineNow.source,
+      `window_minutes=${onlineNow.window.minutes};active_sessions=${onlineNow.active_sessions};authenticated_users=${onlineNow.authenticated_users};anonymous_visitors=${onlineNow.anonymous_visitors}`,
+    ]),
+  );
+
+  for (const item of onlineNow.items) {
+    rows.push(
+      csvRow([
+        "online_now_segment",
+        item.id,
+        item.label,
+        onlineNow.window.to,
+        item.count,
+        onlineNow.source,
+        `percentage=${item.percentage};window_minutes=${onlineNow.window.minutes}`,
       ]),
     );
   }
@@ -225,6 +254,7 @@ const buildCsv = (summary: AdminTrafficSummary) => {
   rows.push("");
   rows.push(csvRow(["section", "id", "label", "date", "value", "source", "extra"]));
   appendMetricRows(rows, "overview", summary.overview_cards);
+  appendOnlineNowRows(rows, summary.online_now);
   appendTimelineRows(rows, summary.timeline.points, summary.timeline.source);
   appendBreakdownRows(
     rows,

@@ -122,6 +122,23 @@ export type TrafficPeriod = {
   to: string;
 };
 
+export type TrafficOnlineNow = {
+  active_sessions: number;
+  anonymous_visitors: number;
+  authenticated_users: number;
+  items: TrafficBreakdownItem[];
+  patients: number;
+  psychologists: number;
+  source: "visitor_session.last_seen_at";
+  unique_visitors: number;
+  window: {
+    from: string;
+    minutes: number;
+    timezone: "server-local";
+    to: string;
+  };
+};
+
 export type AdminTrafficSummary = {
   conversion_groups: {
     post_signup: {
@@ -158,6 +175,7 @@ export type AdminTrafficSummary = {
     states: TrafficLocationItem[];
     total: number;
   };
+  online_now: TrafficOnlineNow;
   overview_cards: TrafficMetric[];
   period: TrafficPeriod;
   quality: {

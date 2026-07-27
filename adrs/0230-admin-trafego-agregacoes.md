@@ -225,3 +225,50 @@ Validacao complementar:
 - `pnpm --dir admin check`.
 - `pnpm --dir admin build`.
 - HTTP local `GET http://localhost:3002/trafego` retornou `200`.
+## Complemento 2026-07-27 - Usuarios online agora
+
+Por feedback direto de produto, a tela `/trafego` tambem deve destacar quem esta ativo no momento,
+sem depender de rolagem ate outras secoes e sem misturar essa leitura instantanea com as metricas
+historicas filtradas.
+
+Decisao:
+
+- Expor `summary.online_now` no resumo administrativo de trafego como snapshot real calculado a
+  partir de `visitor_session.last_seen_at`.
+- Usar uma janela movel de 5 minutos terminando no horario da consulta, independente do periodo
+  selecionado na UI.
+- Contar visitantes ativos pelo ultimo registro de sessao de cada `visitor_id` dentro da janela,
+  evitando duplicar um visitante que abriu mais de uma sessao recente.
+- Manter tambem `active_sessions` como contagem operacional de sessoes ativas na janela, separada da
+  contagem de visitantes unicos.
+- Classificar o ultimo estado ativo do visitante em pacientes, psicologos ou visitantes nao
+  autenticados; admins nao entram porque a audiencia Admin usa outro contexto e nao deve poluir
+  analytics first-party do produto.
+- Reconsultar o resumo no Admin a cada 60 segundos para atualizar o bloco **Usuarios online agora**,
+  sem criar endpoint paralelo.
+- Incluir o snapshot atual na exportacao CSV nas secoes `online_now` e `online_now_segment`.
+
+Consequencia:
+
+- A metrica pode aparecer zerada quando nenhuma sessao tiver `last_seen_at` atualizado nos ultimos 5
+  minutos; isso e esperado e evita backfill ou mock para preencher o card.
+- Os filtros de periodo seguem controlando a analise historica, enquanto **Usuarios online agora**
+  representa sempre a janela movel atual.
+- A exportacao CSV passa a conter uma foto do momento da exportacao para essa metrica, nao uma serie
+  historica.
+
+Validacao complementar:
+
+- `pnpm --dir backend check`.
+- `pnpm --dir backend build`.
+- `pnpm --dir admin check`.
+- `pnpm --dir admin build`.
+- `pnpm check`.
+- API real local direta em `buildTrafficSummary({ period: "30d" })` confirmou `online_now`,
+  `window.minutes=5` e `source=visitor_session.last_seen_at`.
+- HTTP local autenticado em `/api/admin/private/traffic/summary?period=30d` confirmou `online_now`
+  no contrato.
+- HTTP local `GET http://localhost:3024/trafego` retornou `200` e o bundle servido da rota continha
+  a copy do bloco **Usuarios online agora**.
+- Browser/headless CDP completo ficou limitado pela politica do ambiente, que bloqueou a
+  inicializacao de processo auxiliar do Chrome.

@@ -140,6 +140,23 @@ export type AdminTrafficTimelinePoint = {
   unique_visitors: number;
 };
 
+export type AdminTrafficOnlineNow = {
+  active_sessions: number;
+  anonymous_visitors: number;
+  authenticated_users: number;
+  items: AdminTrafficBreakdownItem[];
+  patients: number;
+  psychologists: number;
+  source: "visitor_session.last_seen_at";
+  unique_visitors: number;
+  window: {
+    from: string;
+    minutes: number;
+    timezone: "server-local";
+    to: string;
+  };
+};
+
 export type AdminTrafficSummary = {
   conversions: {
     items: AdminTrafficConversion[];
@@ -170,6 +187,7 @@ export type AdminTrafficSummary = {
     total: number;
   };
   locations: AdminTrafficLocations;
+  online_now: AdminTrafficOnlineNow;
   overview_cards: AdminTrafficMetric[];
   period: AdminTrafficPeriod;
   quality: {

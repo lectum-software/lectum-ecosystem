@@ -28,6 +28,7 @@ import type {
   TrafficEntryPage,
   TrafficLocationItem,
   TrafficMetric,
+  TrafficOnlineNow,
   TrafficRankingItem,
   TrafficSummaryQuery,
   TrafficTimelinePoint,
@@ -299,6 +300,16 @@ const formatDate = (value: string) =>
     month: "short",
   }).format(dateFromInput(value));
 
+const formatTime = (value: string) => {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "agora";
+
+  return new Intl.DateTimeFormat("pt-BR", {
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(date);
+};
+
 const getTrafficPeriodLabel = (period: TrafficPeriodValue) => {
   if (period === "custom") return "Período personalizado";
 
@@ -524,6 +535,92 @@ const LoadingGrid = () => (
     ))}
   </div>
 );
+
+const OnlineNowSkeleton = () => (
+  <CardShell className="h-[13rem] animate-pulse border-primary/15 bg-primary-soft/25" />
+);
+
+const onlineNowSegmentClassName = (id: string) =>
+  cn(
+    id === "patients" && "bg-primary",
+    id === "psychologists" && "bg-success",
+    id === "anonymous" && "bg-muted",
+    !["anonymous", "patients", "psychologists"].includes(id) && "bg-subtle",
+  );
+
+const OnlineNowStat = ({ label, value }: { label: string; value: number }) => (
+  <div className="rounded-2xl border border-border/70 bg-surface/85 p-3">
+    <p className="text-xs font-semibold text-muted">{label}</p>
+    <p className="mt-1 text-xl font-black text-foreground">{numberFormatter.format(value)}</p>
+  </div>
+);
+
+const OnlineNowPanel = ({ onlineNow }: { onlineNow: TrafficOnlineNow }) => {
+  const updatedAt = formatTime(onlineNow.window.to);
+
+  return (
+    <CardShell className="border-primary/20 bg-primary-soft/25 p-5 md:p-6">
+      <div className="grid min-w-0 gap-5 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-center">
+        <div className="min-w-0">
+          <div className="inline-flex items-center gap-2 rounded-full border border-success/20 bg-success/10 px-3 py-1 text-xs font-black uppercase tracking-[0.12em] text-success">
+            <span className="relative flex h-2.5 w-2.5" aria-hidden>
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-success opacity-60" />
+              <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-success" />
+            </span>
+            Tempo real
+          </div>
+          <h2 className="mt-3 text-2xl font-black tracking-tight text-foreground">
+            Usu&aacute;rios online agora
+          </h2>
+          <p className="mt-2 max-w-3xl text-sm font-semibold leading-6 text-muted">
+            Visitantes com sess&atilde;o atualizada nos &uacute;ltimos {onlineNow.window.minutes}{" "}
+            minutos por analytics first-party. Atualizado &agrave;s {updatedAt}.
+          </p>
+        </div>
+
+        <div className="rounded-[1.75rem] border border-primary/25 bg-surface p-5 shadow-admin-soft xl:min-w-[14rem] xl:text-right">
+          <p className="text-4xl font-black tracking-tight text-foreground">
+            {numberFormatter.format(onlineNow.unique_visitors)}
+          </p>
+          <p className="mt-1 text-sm font-black text-muted">visitantes ativos</p>
+          <p className="mt-2 text-xs font-semibold text-subtle">{onlineNow.source}</p>
+        </div>
+      </div>
+
+      <div className="mt-5 grid min-w-0 gap-3 sm:grid-cols-3">
+        <OnlineNowStat label={"Sess\u00f5es ativas"} value={onlineNow.active_sessions} />
+        <OnlineNowStat label={"Usu\u00e1rios autenticados"} value={onlineNow.authenticated_users} />
+        <OnlineNowStat label="Sem login" value={onlineNow.anonymous_visitors} />
+      </div>
+
+      <div className="mt-5 grid min-w-0 gap-3 lg:grid-cols-3">
+        {onlineNow.items.map((item) => (
+          <div className="min-w-0 rounded-2xl border border-border/70 bg-surface p-4" key={item.id}>
+            <div className="flex min-w-0 items-center justify-between gap-3">
+              <p className="min-w-0 truncate text-sm font-black text-foreground">{item.label}</p>
+              <p className="shrink-0 text-sm font-black text-foreground">
+                {numberFormatter.format(item.count)}
+              </p>
+            </div>
+            <div className="mt-3 h-2 overflow-hidden rounded-full bg-surface-muted">
+              <div
+                className={cn("h-full rounded-full", onlineNowSegmentClassName(item.id))}
+                style={{ width: `${Math.min(100, item.percentage)}%` }}
+              />
+            </div>
+            <p className="mt-2 text-xs font-bold text-muted">{item.percentage}% dos ativos</p>
+          </div>
+        ))}
+      </div>
+
+      {onlineNow.unique_visitors === 0 ? (
+        <p className="mt-4 rounded-2xl border border-dashed border-border bg-surface/80 p-3 text-sm font-semibold text-muted">
+          Nenhum visitante ativo foi encontrado na janela m&oacute;vel atual.
+        </p>
+      ) : null}
+    </CardShell>
+  );
+};
 
 const ErrorState = ({ message, onRetry }: { message: string; onRetry: () => void }) => (
   <CardShell className="p-6">
@@ -1943,6 +2040,8 @@ const TrafficContent = ({
     <div className="max-w-full space-y-6 overflow-x-clip">
       {!hasPeriodRecords(summary) ? <EmptyState period={summary.period} /> : null}
 
+      <OnlineNowPanel onlineNow={summary.online_now} />
+
       <TrafficOverviewPanel periodControls={periodControls} periodDescription={periodDescription}>
         <TrafficOverviewCardsGrid
           activeMetricKeys={activeMetricKeys}
@@ -2139,13 +2238,16 @@ export const AdminTrafficClient = () => {
       ) : null}
 
       {validRange && query.isLoading ? (
-        <TrafficOverviewPanel
-          periodControls={periodControls}
-          periodDescription={formatPeriodDescription(selectedPeriod, draftRange)}
-        >
-          <LoadingGrid />
-          <div className="mt-4 h-[20rem] animate-pulse rounded-[1.5rem] border border-border/70 bg-surface-muted" />
-        </TrafficOverviewPanel>
+        <>
+          <OnlineNowSkeleton />
+          <TrafficOverviewPanel
+            periodControls={periodControls}
+            periodDescription={formatPeriodDescription(selectedPeriod, draftRange)}
+          >
+            <LoadingGrid />
+            <div className="mt-4 h-[20rem] animate-pulse rounded-[1.5rem] border border-border/70 bg-surface-muted" />
+          </TrafficOverviewPanel>
+        </>
       ) : null}
 
       {validRange && query.isError && queryError ? (

@@ -103,6 +103,7 @@ export interface IAdminTrafficRepository {
   listCommunitiesBySlugs(slugs: string[]): Promise<TrafficCommunityLabelRecord[]>;
   listDomainConversions(range: AdminTrafficDateRange): Promise<TrafficDomainConversionRecord[]>;
   listLocations(range: AdminTrafficDateRange): Promise<TrafficLocationRecord[]>;
+  listOnlineSessions(range: AdminTrafficDateRange): Promise<TrafficSessionRecord[]>;
   listPageViews(range: AdminTrafficDateRange): Promise<TrafficPageViewRecord[]>;
   listPostsByIds(ids: string[]): Promise<TrafficPostLabelRecord[]>;
   listPsychologistsByIds(ids: string[]): Promise<TrafficPsychologistLabelRecord[]>;

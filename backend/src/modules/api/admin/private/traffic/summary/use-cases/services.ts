@@ -10,6 +10,7 @@ import type {
   AdminTrafficEntryPage,
   AdminTrafficLocationItem,
   AdminTrafficMetric,
+  AdminTrafficOnlineNow,
   AdminTrafficPeriod,
   AdminTrafficPeriodPreset,
   AdminTrafficQuery,
@@ -33,6 +34,7 @@ import type {
 } from "../repositories/interfaces/IAdminTrafficRepository";
 
 const DEFAULT_PERIOD_DAYS = 30;
+const ONLINE_NOW_WINDOW_MINUTES = 5;
 const MAX_CUSTOM_PERIOD_DAYS = 180;
 const MAX_PRESET_PERIOD_DAYS = 3660;
 const TOP_LIMIT = 10;
@@ -107,6 +109,13 @@ const addDays = (date: Date, days: number) => {
   next.setDate(next.getDate() + days);
   return next;
 };
+
+const addMinutes = (date: Date, minutes: number) => new Date(date.getTime() + minutes * 60_000);
+
+const onlineNowWindow = (now = new Date()): AdminTrafficDateRange => ({
+  end: now,
+  start: addMinutes(now, -ONLINE_NOW_WINDOW_MINUTES),
+});
 
 const startOfDate = (date: Date) => {
   const next = new Date(date);
@@ -532,6 +541,82 @@ const anonymousVisitors = (stats: TrafficStats) =>
       .filter((session) => !session.user_id || !session.user)
       .map((session) => session.visitor_id),
   ).size;
+
+const buildOnlineNow = (
+  sessions: TrafficSessionRecord[],
+  window: AdminTrafficDateRange,
+): AdminTrafficOnlineNow => {
+  const latestSessionByVisitorId = new Map<string, TrafficSessionRecord>();
+
+  for (const session of sessions) {
+    const current = latestSessionByVisitorId.get(session.visitor_id);
+    if (!current || session.last_seen_at > current.last_seen_at) {
+      latestSessionByVisitorId.set(session.visitor_id, session);
+    }
+  }
+
+  const authenticatedUserIds = new Set<string>();
+  const counts: Record<AdminTrafficUserType, number> = {
+    anonymous: 0,
+    patients: 0,
+    psychologists: 0,
+  };
+
+  for (const session of latestSessionByVisitorId.values()) {
+    if (session.user_id && session.user?.role === "paciente") {
+      authenticatedUserIds.add(session.user_id);
+      counts.patients += 1;
+      continue;
+    }
+
+    if (session.user_id && session.user?.role === "psicologo") {
+      authenticatedUserIds.add(session.user_id);
+      counts.psychologists += 1;
+      continue;
+    }
+
+    counts.anonymous += 1;
+  }
+
+  const totalVisitors = latestSessionByVisitorId.size;
+  const items: AdminTrafficBreakdownItem[] = [
+    {
+      count: counts.patients,
+      id: "patients",
+      label: "Pacientes",
+      percentage: safePercentage(counts.patients, totalVisitors),
+    },
+    {
+      count: counts.psychologists,
+      id: "psychologists",
+      label: "Psicólogos",
+      percentage: safePercentage(counts.psychologists, totalVisitors),
+    },
+    {
+      count: counts.anonymous,
+      id: "anonymous",
+      label: "Visitantes não autenticados",
+      percentage: safePercentage(counts.anonymous, totalVisitors),
+    },
+  ];
+
+  return {
+    active_sessions: sessions.length,
+    anonymous_visitors: counts.anonymous,
+    authenticated_users: authenticatedUserIds.size,
+    items,
+    patients: counts.patients,
+    psychologists: counts.psychologists,
+    source: "visitor_session.last_seen_at",
+    unique_visitors: totalVisitors,
+    window: {
+      from: window.start.toISOString(),
+      minutes: ONLINE_NOW_WINDOW_MINUTES,
+      timezone: "server-local",
+      to: window.end.toISOString(),
+    },
+  };
+};
 
 const buildOverviewCards = (current: TrafficStats, previous: TrafficStats) => {
   const currentPagesPerSession = pagesPerSession(current);
@@ -1795,9 +1880,11 @@ export const buildTrafficSummary = async (query: AdminTrafficQuery): Promise<Res
   }
 
   const { current, period, previous } = resolvedPeriod.period;
-  const [currentStats, previousStats] = await Promise.all([
+  const onlineWindow = onlineNowWindow();
+  const [currentStats, previousStats, onlineSessions] = await Promise.all([
     loadStats(repository, current),
     loadStats(repository, previous),
+    repository.listOnlineSessions(onlineWindow),
   ]);
   const rankings = await buildRankings(repository, currentStats);
   const locations = buildLocations(currentStats);
@@ -1809,6 +1896,7 @@ export const buildTrafficSummary = async (query: AdminTrafficQuery): Promise<Res
     devices: buildDevices(currentStats),
     entry_pages: buildEntryPages(currentStats),
     locations,
+    online_now: buildOnlineNow(onlineSessions, onlineWindow),
     overview_cards: buildOverviewCards(currentStats, previousStats),
     period,
     quality,
