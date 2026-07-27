@@ -962,7 +962,7 @@ const ConversionsPanel = ({
           summary={`${numberFormatter.format(preSignup.total_visitors)} visitantes`}
           title="Conversões para cadastro"
         >
-          <div className="grid min-w-0 gap-4 2xl:grid-cols-2">
+          <div className="grid min-w-0 gap-4">
             {preSignup.charts.map((chart) => (
               <ConversionChartCard chart={chart} key={chart.id} />
             ))}

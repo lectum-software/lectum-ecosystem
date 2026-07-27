@@ -95,6 +95,9 @@ O Builder/Quick Copy ativo `vcp://quickcopy/vcp-24aaa2941d814e5b90572bc93ae50e2a
   "teve ao menos uma conversão".
 - Cadastros sem `visitor_id` vinculado continuam contabilizados em `signup_roles`, mas não entram
   como visitante convertido em `visitor_to_signup`, evitando atribuição falsa ou cross-device.
+- Na UI, os graficos **Visitantes para cadastro** e **Cadastros por perfil** ficam empilhados dentro
+  da coluna **Conversoes para cadastro**, evitando cards estreitos e legendas quebradas em desktop
+  sem alterar a regra mobile-first.
 
 ## Validacao
 
@@ -149,6 +152,9 @@ O Builder/Quick Copy ativo `vcp://quickcopy/vcp-24aaa2941d814e5b90572bc93ae50e2a
     `conversion_groups.post_signup.overall` e barras pós-cadastro com usuários únicos + eventos;
   - `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`,
     `pnpm --dir admin build` e `pnpm check` executados sem erros.
+- Validacao complementar em 2026-07-27 para empilhamento dos graficos de cadastro:
+  - `pnpm --dir admin check` e `pnpm --dir admin build` executados sem erros;
+  - HTTP local `GET http://localhost:3002/trafego` retornou `200`.
 
 ## Task relacionada
 

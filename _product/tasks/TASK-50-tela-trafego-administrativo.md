@@ -724,3 +724,18 @@ Validacao desta execucao complementar:
 - API real local direta em `buildTrafficSummary({ period: "30d" })` - OK: `conversion_groups` presente, `visitor_to_signup=45/224`, `signup_roles=155 pacientes + 14 psicologos`, `post_signup_overall=19/169` e barras pos-cadastro com usuarios unicos + eventos.
 - HTTP local `GET http://localhost:3002/trafego` - OK (`200`).
 - Browser/headless CDP completo nao foi concluido porque a politica do ambiente bloqueou a inicializacao de processo auxiliar para Chrome/servidores efemeros; nao houve comando destrutivo nem alteracao de dados para contornar essa limitacao.
+
+## Execucao complementar - graficos de cadastro empilhados (2026-07-27)
+
+- O grafico **Cadastros por perfil** passou a ficar abaixo de **Visitantes para cadastro** dentro da coluna **Conversoes para cadastro**.
+- A decisao evita cards estreitos em desktop amplo e reduz quebra vertical das legendas dos donuts, preservando a leitura mobile-first ja empilhada.
+- Nao houve mock, endpoint novo, package novo, alteracao em Prisma schema/migrations ou dado persistido; `db:migrate` nao foi necessario.
+- Builder/Quick Copy nao estava exposto como ferramenta callable neste ambiente; as referencias auditaveis foram `_product/proto/admin/Tr?fego.png` e a captura enviada pelo usuario.
+- ADR atualizado: `adrs/0230-admin-trafego-agregacoes.md`.
+
+Validacao desta execucao complementar:
+
+- `pnpm --dir admin exec biome check "src/app/(admin)/trafego/client.tsx"` - OK.
+- `pnpm --dir admin check` - OK.
+- `pnpm --dir admin build` - OK.
+- HTTP local `GET http://localhost:3002/trafego` - OK (`200`).
