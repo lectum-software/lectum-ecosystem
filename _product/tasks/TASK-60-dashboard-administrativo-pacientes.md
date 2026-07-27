@@ -750,3 +750,28 @@ Frontend esperado:
 - `pnpm check` foi tentado, mas falhou por alteracoes fora do escopo ja presentes em `backend/src/modules/api/admin/private/traffic/summary/use-cases/services.ts` (imports nao usados/organizacao Biome).
 - Browser local/headless em `http://localhost:3002/pacientes` validou desktop 1365px e mobile 390px: o span visual de **Nao informado** ficou com `white-space: nowrap`, `word-break: normal`, uma unica linha (`Range.getClientRects() = 1`) e sem overflow horizontal.
 - Admins temporarios de validacao `codex-device-nowrap-*` foram removidos ao final.
+
+## Ajuste pos-feedback 2026-07-27 - Quebra controlada de Nao informado no genero
+
+- Pedido do usuario: no bloco **Genero** do dashboard `/pacientes`, o label **Nao informado** se sobrepunha ao numero; a palavra **informado** deveria quebrar para a segunda linha.
+- A legenda do donut de genero removeu o `whitespace-nowrap` do item `nao_informado` e passou a renderizar visualmente **Nao** + `<br>` + **informado**, mantendo o texto completo em `sr-only` para acessibilidade.
+- O ajuste permanece local ao Admin e preserva os dados reais, contagem, percentual e contrato HTTP existentes.
+- Nao houve alteracao de backend, Prisma, migration, package novo, mock, seed, endpoint ou regra de calculo.
+- Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente; as referencias auditaveis foram `_product/proto/admin/Pacientes/Pacientes - Dashboard.png` e o screenshot enviado pelo usuario em 2026-07-27.
+- ADR nao foi criado/atualizado porque a mudanca e exclusivamente visual/local de legenda, sem decisao arquitetural, integracao, regra de dominio ou trade-off novo.
+
+### Criterios de aceite do ajuste
+
+- [x] **Nao informado** aparece com **Nao** na primeira linha e **informado** na segunda linha no bloco **Genero**.
+- [x] A contagem `144 (92,9%)` permanece separada do label, sem sobreposicao no desktop validado.
+- [x] O layout mobile-first em 390px nao apresenta overflow horizontal nem sobreposicao entre label e contagem.
+- [x] O texto completo **Nao informado** continua disponivel para leitores de tela.
+- [x] Nenhum mock, seed, dado artificial, migration, package novo, endpoint simulado ou `<img>` foi adicionado.
+
+### Validacao complementar executada
+
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/pacientes/client.tsx"`
+- `pnpm --dir admin check`
+- `NODE_OPTIONS=--max-old-space-size=8192 pnpm --dir admin build`
+- `pnpm check`
+- Browser local/headless autenticado em `http://localhost:3002/pacientes?period=all` validou desktop `1366x900` e mobile `390x844`: existe um unico `<br aria-hidden>` no label de genero, o texto visivel foi dividido em duas partes (**Nao** / **informado**), a contagem `144 (92,9%)` nao sobrepoe o label e `scrollWidth` permaneceu igual ao viewport em ambos os tamanhos.
