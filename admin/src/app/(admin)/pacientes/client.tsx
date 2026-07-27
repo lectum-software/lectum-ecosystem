@@ -1286,7 +1286,7 @@ const DonutChart = ({
                 <span className="min-w-0">
                   <span className="block whitespace-normal break-words">{item.label}</span>
                   {item.sublabel ? (
-                    <span className="mt-1 block text-xs font-semibold leading-5 text-subtle">
+                    <span className="mt-1 block whitespace-nowrap text-xs font-semibold leading-5 text-subtle">
                       {item.sublabel}
                     </span>
                   ) : null}

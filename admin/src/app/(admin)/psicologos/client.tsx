@@ -1496,7 +1496,7 @@ const DeviceUsagePieChart = ({
                 </span>
               </div>
               {operatingSystemSummary ? (
-                <p className="mt-2 text-xs font-medium leading-5 text-subtle">
+                <p className="mt-2 whitespace-nowrap text-xs font-medium leading-5 text-subtle">
                   {operatingSystemSummary}
                 </p>
               ) : null}

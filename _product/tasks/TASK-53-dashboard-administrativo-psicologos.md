@@ -346,3 +346,19 @@ Packages usados:
 - O ajuste e apenas visual no Admin, mobile-first, sem alteracao de backend, contrato HTTP, Prisma, migration, mock, seed, package novo ou fonte de dados.
 - Referencia visual local mantida: `_product/proto/admin/Psicologos/Psicologos - Dashboard.png`; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente, e o screenshot enviado pelo usuario em 2026-07-25 foi usado como referencia direta.
 - Validacoes deste ajuste: `pnpm --dir admin exec biome check --write "src/app/(admin)/psicologos/client.tsx"`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e browser local/headless autenticado em `http://localhost:3002/psicologos` validando 5 selects sem **Plano** visivel, altura de 40px e periodo a 4px abaixo dos titulos dos blocos.
+
+## Ajuste pos-feedback 2026-07-26 - Sistemas em uma linha no card de devices
+
+- Pedido do usuario: manter os detalhes de sistema operacional do card **Devices e sistemas** em uma unica linha, sem quebra entre opcoes como **Android / iOS** e **Windows / macOS**.
+- A legenda do card em `/psicologos` passou a aplicar `whitespace-nowrap` ao resumo de sistemas operacionais, alinhando o comportamento ao ajuste feito em `/pacientes`.
+- Nao houve alteracao de backend, contrato HTTP, Prisma, migration, package novo, mock, seed ou regra de calculo.
+- Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente; a referencia auditavel continua sendo `_product/proto/admin/Psicólogos/Psicólogos - Dashboard.png`, complementada pelo screenshot enviado pelo usuario em 2026-07-26 para o card homonimo.
+
+### Validacao complementar executada
+
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/pacientes/client.tsx" "src/app/(admin)/psicologos/client.tsx"`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check`
+- Browser local/headless em `http://localhost:3002/psicologos` carregou a rota sem overflow horizontal; a base local nao retornou sublabels de sistemas operacionais para esse card no periodo validado. O comportamento `nowrap` foi validado com dados locais em `/pacientes` no mesmo componente visual de devices/sistemas.
+- Admin temporario de validacao `codex-device-nowrap-*` foi criado apenas para sessao autenticada de browser e removido ao final.

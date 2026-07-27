@@ -717,3 +717,20 @@ Frontend esperado:
 - `pnpm --dir backend check`
 - `pnpm check`
 - Browser local/headless autenticado em `http://localhost:3002/pacientes` com Admin real temporário removido após o teste: validou os três cards com donut SVG, total central, `figcaption` apenas `sr-only`, ausência de percentuais dentro das fatias, ausência dos cards antigos de legenda, contagem + percentual na legenda e mobile `390x844` com `scrollWidth=390`. Screenshots salvos em `.tmp/patient-dashboard-donut-desktop.png` e `.tmp/patient-dashboard-donut-mobile.png`.
+
+## Ajuste pos-feedback 2026-07-26 - Sistemas em uma linha no card de devices
+
+- Pedido do usuario: no card **Devices e sistemas**, manter os detalhes de sistema operacional na mesma linha, sem quebra visual entre opcoes como **Android / iOS**, **Windows / macOS** e equivalentes.
+- A legenda do donut de `/pacientes` passou a aplicar `whitespace-nowrap` somente no sublabel dos sistemas operacionais, preservando a quebra normal do nome do device e sem alterar dados, percentuais ou contrato HTTP.
+- O ajuste tambem foi espelhado no dashboard `/psicologos` para manter o mesmo comportamento visual no card homonimo.
+- Nao houve alteracao de backend, Prisma, migration, package novo, mock, seed, endpoint ou regra de calculo.
+- Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente; a referencia auditavel continua sendo `_product/proto/admin/Pacientes/Pacientes - Dashboard.png`, complementada pelo screenshot enviado pelo usuario em 2026-07-26.
+
+### Validacao complementar executada
+
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/pacientes/client.tsx" "src/app/(admin)/psicologos/client.tsx"`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check`
+- Browser local/headless em `http://localhost:3002/pacientes` validou desktop 1365px e mobile 390px: **Android 75% / iOS 25%** e **iPadOS 100%** ficaram com `white-space: nowrap`, uma unica linha (`Range.getClientRects() = 1`) e sem overflow horizontal. A rota `/psicologos` tambem carregou sem overflow; a base local nao retornou sublabels de sistemas para esse card.
+- Admin temporario de validacao `codex-device-nowrap-*` foi criado apenas para sessao autenticada de browser e removido ao final.
