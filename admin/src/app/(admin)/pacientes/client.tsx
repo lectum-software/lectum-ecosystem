@@ -1175,23 +1175,18 @@ const AnonymousConversionCard = ({ summary }: { summary: AdminPatientsDashboard 
       <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {[
           {
-            description: "Coorte de pacientes reais cadastrados no período.",
             label: "Pacientes cadastrados",
             value: numberFormatter.format(conversion.registered_patients_count),
           },
           {
-            description: "Pacientes com uso sem login capturado pela identidade salva no cadastro.",
             label: "Com trilha prévia",
             value: numberFormatter.format(conversion.patients_with_anonymous_history_count),
           },
           {
-            description:
-              "Pacientes sem pageview ou sessão anônima encontrada pelo visitor_id do cadastro.",
             label: "Sem trilha capturada",
             value: numberFormatter.format(conversion.patients_without_anonymous_history_count),
           },
           {
-            description: "Pacientes com trilha prévia ÷ pacientes cadastrados.",
             label: "Cobertura da trilha",
             value: formatNullablePercentage(conversion.history_coverage_rate),
           },
@@ -1276,8 +1271,6 @@ const AnonymousConversionCard = ({ summary }: { summary: AdminPatientsDashboard 
           )}
         </div>
       </div>
-
-      <p className="mt-4 text-xs font-bold leading-5 text-subtle">{conversion.coverage_note}</p>
     </CardShell>
   );
 };
