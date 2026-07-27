@@ -136,9 +136,10 @@ export type TrafficOnlineNow = {
   anonymous_visitors: number;
   authenticated_users: number;
   items: TrafficBreakdownItem[];
+  new_visitors: number;
   patients: number;
   psychologists: number;
-  source: "visitor_session.last_seen_at";
+  source: "visitor_session.last_seen_at+visitor_session.first_seen_at";
   unique_visitors: number;
   window: {
     from: string;

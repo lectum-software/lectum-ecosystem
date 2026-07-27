@@ -482,6 +482,7 @@ export type PsychologistsDashboardPlanSegmentSummary = {
   id: PsychologistsDashboardPlanSegment;
   label: string;
   platform_usage: PsychologistsDashboardPlatformUsage;
+  pre_signup_conversion: PsychologistsDashboardPreSignupConversion;
   psychologists_count: number;
   signup_method: PsychologistsDashboardSignupMethod;
   statistics: PsychologistsDashboardStatistics;

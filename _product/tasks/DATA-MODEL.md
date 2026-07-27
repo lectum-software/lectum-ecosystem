@@ -890,6 +890,8 @@ Complemento TASK-86 (2026-07-27): o cadastro de psicólogo também passa a aceit
 
 O dashboard `/psicologos` usa `psychologist_signup_analytics_identity` somente para a coorte de psicólogos cadastrados no período selecionado, buscando `page_view_event` e `visitor_session` reais do mesmo `visitor_id` anteriores ao `user.createdAt`. Pacientes, visitantes que nunca viraram psicólogo, backfill e identificação cross-device permanecem fora da métrica. Pacientes e psicólogos usam tipos diferentes de `user_background` para evitar mistura de papeis.
 
+Complemento TASK-88 (2026-07-27): `AdminPsychologistsDashboardPlanSegmentSummary` tambem expoe `pre_signup_conversion`. Cada segmento (`all`, `subscribers`, `free`, `courtesy`) reutiliza a mesma coorte de psicologos cadastrados no periodo, mas filtra os perfis pelo segmento de plano antes de resumir a trilha pre-cadastro. Nao ha nova tabela, migration, backfill ou identificacao cross-device; o filtro de plano e apenas uma visao segmentada dos eventos first-party reais ja descritos na TASK-86.
+
 ## Convencao de rotas (frontend e backend)
 
 A auditoria achou namespaces conflitantes nas tasks de comunidade (`/communities` vs `/community` vs `/posts`). Padrao canonico apos TASK-40:

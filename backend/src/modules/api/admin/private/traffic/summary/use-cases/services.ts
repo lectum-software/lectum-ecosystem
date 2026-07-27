@@ -554,6 +554,7 @@ const anonymousVisitors = (stats: TrafficStats) =>
 const buildOnlineNow = (
   sessions: TrafficSessionRecord[],
   window: AdminTrafficDateRange,
+  priorVisitorIds: Set<string>,
 ): AdminTrafficOnlineNow => {
   const latestSessionByVisitorId = new Map<string, TrafficSessionRecord>();
 
@@ -588,6 +589,9 @@ const buildOnlineNow = (
   }
 
   const totalVisitors = latestSessionByVisitorId.size;
+  const newVisitors = [...latestSessionByVisitorId.keys()].filter(
+    (visitorId) => !priorVisitorIds.has(visitorId),
+  ).length;
   const items: AdminTrafficBreakdownItem[] = [
     {
       count: counts.patients,
@@ -614,9 +618,10 @@ const buildOnlineNow = (
     anonymous_visitors: counts.anonymous,
     authenticated_users: authenticatedUserIds.size,
     items,
+    new_visitors: newVisitors,
     patients: counts.patients,
     psychologists: counts.psychologists,
-    source: "visitor_session.last_seen_at",
+    source: "visitor_session.last_seen_at+visitor_session.first_seen_at",
     unique_visitors: totalVisitors,
     window: {
       from: window.start.toISOString(),
@@ -1945,7 +1950,12 @@ export const buildTrafficSummary = async (query: AdminTrafficQuery): Promise<Res
     loadStats(repository, previous),
     repository.listOnlineSessions(onlineWindow),
   ]);
-  const rankings = await buildRankings(repository, currentStats);
+  const onlineVisitorIds = [...new Set(onlineSessions.map((session) => session.visitor_id))];
+  const [rankings, onlinePriorSessions] = await Promise.all([
+    buildRankings(repository, currentStats),
+    repository.listVisitorSessionsBefore(onlineVisitorIds, onlineWindow.start),
+  ]);
+  const onlinePriorVisitorIds = new Set(onlinePriorSessions.map((session) => session.visitor_id));
   const locations = buildLocations(currentStats);
   const quality = buildQuality(currentStats, previousStats);
 
@@ -1955,7 +1965,7 @@ export const buildTrafficSummary = async (query: AdminTrafficQuery): Promise<Res
     devices: buildDevices(currentStats),
     entry_pages: buildEntryPages(currentStats),
     locations,
-    online_now: buildOnlineNow(onlineSessions, onlineWindow),
+    online_now: buildOnlineNow(onlineSessions, onlineWindow, onlinePriorVisitorIds),
     overview_cards: buildOverviewCards(currentStats, previousStats),
     period,
     quality,

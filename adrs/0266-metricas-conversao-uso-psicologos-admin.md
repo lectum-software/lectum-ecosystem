@@ -313,3 +313,11 @@ O contrato do dashboard adiciona `pre_signup_conversion`, calculado por `user.cr
 Nao ha alteracao de schema Prisma, migration, endpoint paralelo, package novo, mock ou seed. A limitacao operacional e que cadastros historicos sem ponte `psychologist_signup_analytics_identity` continuam em **Sem trilha capturada**.
 
 Validacao complementar 2026-07-27: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check`, smoke real do use-case `buildPsychologistsDashboard({})` confirmando `pre_signup_conversion` presente e 6 buckets, e validacao local do build/DOM Admin em `/psicologos` com o dropdown `psychologist-conversion-journey`.
+
+## Complemento 2026-07-27 - Seletor de conversao no titulo e filtro de plano na trilha pre-cadastro
+
+O dashboard Admin `/psicologos` passa a tratar a escolha **Conversao do cadastro ate assinatura / Conversao ate o cadastro** como parte do proprio titulo do card de conversao. O canto superior direito do card fica reservado para controles contextuais da visualizacao selecionada.
+
+Quando a visualizacao e **Conversao ate o cadastro**, esse canto superior direito exibe o filtro por plano **Todos / Assinantes / Gratuitos / Cortesia**. O filtro usa `plan_segments[segment].pre_signup_conversion`, calculado no backend por segmento de plano a partir da mesma coorte real e das mesmas fontes first-party da TASK-86 (`user_background`, `page_view_event` e `visitor_session`). A visualizacao padrao **Conversao do cadastro ate assinatura** permanece sem filtro de plano nesse bloco.
+
+A decisao e de hierarquia visual e segmentacao analitica; nao altera tracking, cadastro, Google OAuth, schema Prisma, migrations, endpoint, package, mock, seed, backfill ou identificacao cross-device.

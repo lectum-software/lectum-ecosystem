@@ -505,3 +505,9 @@ Validacao complementar:
 - `pnpm --dir admin build` com `NODE_OPTIONS=--max-old-space-size=8192`.
 - `pnpm check` com `NODE_OPTIONS=--max-old-space-size=8192`.
 - HTTP local `GET http://localhost:3002/trafego`.
+
+## Complemento 2026-07-27 - Novos visitantes no bloco online agora
+
+O contrato `online_now` da tela Trafego passa a expor `new_visitors`, calculado como visitantes presentes na janela operacional de 5 minutos que nao possuem sessao anterior a essa janela. A fonte declarada do bloco passa a ser `visitor_session.last_seen_at+visitor_session.first_seen_at` para refletir a combinacao entre presenca recente e historico previo do visitante.
+
+A decisao apenas alinha backend, DTO e tipo do Admin ao contador que a UI ja consome. Nao altera schema Prisma, migration, tracking first-party, endpoint, package, mock, seed ou backfill.

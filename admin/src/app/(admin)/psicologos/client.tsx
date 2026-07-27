@@ -53,8 +53,8 @@ type ConversionJourney = "registration" | "subscription";
 
 const PLAN_SEGMENT_FILTER_OPTIONS: { id: PlanSegmentFilter; label: string }[] = [
   { id: "all", label: "Todos" },
-  { id: "free", label: "Gratuitos" },
   { id: "subscribers", label: "Assinantes" },
+  { id: "free", label: "Gratuitos" },
   { id: "courtesy", label: "Cortesia" },
 ];
 
@@ -615,7 +615,7 @@ const PanelTitle = ({
   description?: string;
   icon: LucideIcon;
   source?: string;
-  title: string;
+  title: ReactNode;
 }) => (
   <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
     <div className="flex min-w-0 items-start gap-2">
@@ -667,7 +667,7 @@ const PlanSegmentSelect = ({
   </label>
 );
 
-const ConversionJourneySelect = ({
+const ConversionJourneyTitleSelect = ({
   id,
   onChange,
   value,
@@ -676,11 +676,11 @@ const ConversionJourneySelect = ({
   onChange: (value: ConversionJourney) => void;
   value: ConversionJourney;
 }) => (
-  <label className="block" htmlFor={id}>
+  <label className="inline-flex max-w-full" htmlFor={id}>
     <span className="sr-only">Selecionar trilha de conversão</span>
-    <span className="relative block">
+    <span className="relative inline-flex max-w-full items-center">
       <select
-        className="h-10 w-full min-w-[14rem] appearance-none rounded-control border border-border bg-surface py-0 pl-3 pr-9 text-sm font-semibold text-foreground shadow-control outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+        className="max-w-full appearance-none truncate rounded-control bg-transparent py-0 pl-0 pr-7 text-left text-lg font-semibold text-foreground outline-none transition hover:text-primary focus:text-primary focus:ring-2 focus:ring-primary/20"
         id={id}
         onChange={(event) => onChange(event.target.value as ConversionJourney)}
         value={value}
@@ -693,7 +693,7 @@ const ConversionJourneySelect = ({
       </select>
       <ChevronDown
         aria-hidden
-        className="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground"
+        className="pointer-events-none absolute right-0 top-1/2 h-4 w-4 -translate-y-1/2 text-primary"
       />
     </span>
   </label>
@@ -705,6 +705,7 @@ const getPlanSegmentSummary = (summary: AdminPsychologistsDashboard, segment: Pl
     id: "all" as const,
     label: "Todos",
     platform_usage: summary.platform_usage,
+    pre_signup_conversion: summary.pre_signup_conversion,
     psychologists_count: summary.cards.total_psychologists.value,
     signup_method: summary.signup_method,
     statistics: summary.statistics,
@@ -1207,24 +1208,20 @@ const SignupMethodDonutChart = ({
 };
 const ConversionAndUsageBlocks = ({ summary }: { summary: AdminPsychologistsDashboard }) => {
   const conversion = summary.conversion;
-  const preSignupConversion = summary.pre_signup_conversion;
   const [conversionJourney, setConversionJourney] = useState<ConversionJourney>("subscription");
+  const [preSignupConversionPlanSegment, setPreSignupConversionPlanSegment] =
+    useState<PlanSegmentFilter>("all");
   const [signupMethodPlanSegment, setSignupMethodPlanSegment] = useState<PlanSegmentFilter>("all");
   const [deviceUsagePlanSegment, setDeviceUsagePlanSegment] = useState<PlanSegmentFilter>("all");
   const [platformUsagePlanSegment, setPlatformUsagePlanSegment] =
     useState<PlanSegmentFilter>("all");
+  const preSignupConversionSummary = getPlanSegmentSummary(summary, preSignupConversionPlanSegment);
   const signupMethodSummary = getPlanSegmentSummary(summary, signupMethodPlanSegment);
   const deviceUsageSummary = getPlanSegmentSummary(summary, deviceUsagePlanSegment);
   const platformUsageSummary = getPlanSegmentSummary(summary, platformUsagePlanSegment);
+  const preSignupConversion = preSignupConversionSummary.pre_signup_conversion;
   const platformUsage = platformUsageSummary.platform_usage;
   const selectedPeriodLabel = formatSelectedPeriod(summary.period);
-  const selectedConversionJourney =
-    CONVERSION_JOURNEY_OPTIONS.find((option) => option.id === conversionJourney) ??
-    CONVERSION_JOURNEY_OPTIONS[0] ??
-    ({ id: "subscription", label: "Conversão do cadastro até assinatura" } satisfies {
-      id: ConversionJourney;
-      label: string;
-    });
 
   return (
     <section className="grid gap-5">
@@ -1233,13 +1230,21 @@ const ConversionAndUsageBlocks = ({ summary }: { summary: AdminPsychologistsDash
           <PanelTitle
             description={selectedPeriodLabel}
             icon={conversionJourney === "registration" ? TrendingUp : TrendingDown}
-            title={selectedConversionJourney.label}
+            title={
+              <ConversionJourneyTitleSelect
+                id="psychologist-conversion-journey"
+                onChange={setConversionJourney}
+                value={conversionJourney}
+              />
+            }
           />
-          <ConversionJourneySelect
-            id="psychologist-conversion-journey"
-            onChange={setConversionJourney}
-            value={conversionJourney}
-          />
+          {conversionJourney === "registration" ? (
+            <PlanSegmentSelect
+              id="pre-signup-conversion-plan-segment"
+              onChange={setPreSignupConversionPlanSegment}
+              value={preSignupConversionPlanSegment}
+            />
+          ) : null}
         </div>
 
         {conversionJourney === "subscription" ? (

@@ -86,8 +86,8 @@ const PLAN_SEGMENT_OPTIONS: Array<{
   label: string;
 }> = [
   { id: "all", label: "Todos" },
-  { id: "free", label: "Gratuitos" },
   { id: "subscribers", label: "Assinantes" },
+  { id: "free", label: "Gratuitos" },
   { id: "courtesy", label: "Cortesia" },
 ];
 
@@ -1972,6 +1972,12 @@ const buildPlanSegmentSummaries = (params: {
   platformPageViews: AdminPsychologistPlatformPageViewRecord[];
   platformPwaInstalls: AdminPsychologistPlatformPwaInstallRecord[];
   platformSessions: AdminPsychologistPlatformSessionRecord[];
+  period: AdminPsychologistsDashboardPeriod;
+  preSignupConversionLinkedPageViews: AdminPsychologistPreSignupConversionPageViewRecord[];
+  preSignupConversionLinkedSessions: AdminPsychologistPreSignupConversionSessionRecord[];
+  preSignupConversionPageViews: AdminPsychologistPreSignupConversionPageViewRecord[];
+  preSignupConversionSessions: AdminPsychologistPreSignupConversionSessionRecord[];
+  preSignupConversionSignupIdentities: AdminPsychologistSignupAnalyticsIdentityRecord[];
   profileViewEvents: AdminPsychologistEventRecord[];
   profiles: AdminPsychologistProfileRecord[];
   publicProfilePageViews: AdminPsychologistPublicProfilePageViewRecord[];
@@ -2034,6 +2040,15 @@ const buildPlanSegmentSummaries = (params: {
           eligible_psychologists_count: segmentProfiles.length,
           source: "page_view_event+important_action_event" as const,
         },
+        pre_signup_conversion: summarizePreSignupConversion({
+          linkedPageViews: params.preSignupConversionLinkedPageViews,
+          linkedSessions: params.preSignupConversionLinkedSessions,
+          pageViews: params.preSignupConversionPageViews,
+          period: params.period,
+          profiles: segmentNewSignups,
+          sessions: params.preSignupConversionSessions,
+          signupIdentities: params.preSignupConversionSignupIdentities,
+        }),
         psychologists_count: segmentProfiles.length,
         signup_method: buildSignupMethod(segmentNewSignups),
         statistics: buildStatistics(segmentProfilesForSupply, params.date),
@@ -2220,6 +2235,12 @@ export const buildPsychologistsDashboard = async (
     platformPageViews,
     platformPwaInstalls,
     platformSessions,
+    period,
+    preSignupConversionLinkedPageViews,
+    preSignupConversionLinkedSessions,
+    preSignupConversionPageViews,
+    preSignupConversionSessions,
+    preSignupConversionSignupIdentities,
     profileViewEvents,
     profiles,
     publicProfilePageViews,

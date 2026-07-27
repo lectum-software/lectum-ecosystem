@@ -448,6 +448,7 @@ export type AdminPsychologistsDashboardPlanSegmentSummary = {
   id: AdminPsychologistsDashboardPlanSegment;
   label: string;
   platform_usage: AdminPsychologistsDashboardPlatformUsage;
+  pre_signup_conversion: AdminPsychologistsDashboardPreSignupConversion;
   psychologists_count: number;
   signup_method: AdminPsychologistsDashboardSignupMethod;
   statistics: AdminPsychologistsDashboardStatistics;
