@@ -186,16 +186,9 @@ const MetricCard = ({
   metric: DashboardMetric;
   tone: keyof typeof toneClasses;
 }) => (
-  <CardShell className="min-h-[8.75rem] rounded-card border-primary/20 p-3 transition duration-200 ease-out hover:border-primary/30 md:p-4 xl:min-h-[8.25rem]">
-    <div className="flex items-start justify-between gap-3">
-      <div
-        className={cn("grid h-9 w-9 shrink-0 place-items-center rounded-full", toneClasses[tone])}
-      >
-        <Icon aria-hidden className="h-4 w-4" />
-      </div>
-      <span className="line-clamp-1 rounded-full bg-surface-muted px-2 py-1 text-[0.62rem] font-semibold text-muted">
-        {metric.source}
-      </span>
+  <CardShell className="min-h-[7.25rem] rounded-card border-primary/20 p-3 transition duration-200 ease-out hover:border-primary/30 md:p-4">
+    <div className={cn("grid h-9 w-9 shrink-0 place-items-center rounded-full", toneClasses[tone])}>
+      <Icon aria-hidden className="h-4 w-4" />
     </div>
     <div className="mt-4 min-w-0 space-y-1.5">
       <p className="min-h-8 text-xs font-semibold leading-4 text-foreground" title={metric.label}>
@@ -210,7 +203,6 @@ const MetricCard = ({
           vs. período anterior
         </span>
       </div>
-      <p className="line-clamp-2 text-xs leading-5 text-muted">{metric.description}</p>
     </div>
   </CardShell>
 );

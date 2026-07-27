@@ -210,3 +210,11 @@ Regras de UI obrigatórias:
 - Builder/Quick Copy não estava exposto como ferramenta MCP no ambiente; validação visual baseada em `_product/proto/admin/Dashboard.png` e nas capturas fornecidas pelo usuário.
 - Validações executadas: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e browser local/headless em 390px e 1440px; admin transitório de validação removido ao final.
 - ADR relacionado: `adrs/0327-dashboard-admin-enxuto.md`.
+
+### Complemento de contadores limpos (2026-07-27)
+
+- Removidas dos cards contadores da **Visão geral** as tags técnicas de origem, como `visitor_session`, `active_subscription_estimate`, `user.role=...` e `post_report.status=pendente`.
+- Removidas dos mesmos cards as descrições operacionais abaixo do comparativo, preservando apenas ícone, título, valor e variação vs. período anterior.
+- Contrato backend e dados reais do endpoint do Dashboard permanecem intactos; a mudança é apenas de apresentação no app `admin/`.
+- Validações executadas: `pnpm --dir admin check`, `pnpm --dir admin build` e browser local/headless em 390px e 1440px; admin transitório de validação removido ao final.
+- ADR atualizado: `adrs/0327-dashboard-admin-enxuto.md`.
