@@ -1,4 +1,4 @@
-﻿# TASK-85: Conversão de uso não autenticado até cadastro no dashboard Admin de pacientes
+# TASK-85: Trilha pré-cadastro dos pacientes no dashboard Admin
 
 ## Metadata
 
@@ -10,11 +10,13 @@
 | Fase | Admin / Pacientes / Conversão e Analytics |
 | Status | Completed |
 | Dependências | TASK-45, TASK-46, TASK-47, TASK-49, TASK-60, TASK-76, TASK-81 |
-| ADR alvo | ADR sobre métrica first-party de conversão de uso anônimo até cadastro de paciente |
+| ADR alvo | ADR sobre métrica first-party de trilha anônima pré-cadastro de pacientes |
 
 ## Contexto
 
-O dashboard Admin de psicólogos já possui um bloco de conversão do cadastro até a assinatura. O dashboard Admin de pacientes tinha visão geral, intenção, demografia, dispositivos, sistemas e uso autenticado, mas ainda não respondia uma pergunta operacional anterior ao cadastro: quantos visitantes usam a Lectum sem login e depois viram cadastro real de paciente.
+O dashboard Admin de psicólogos já possui um bloco de conversão do cadastro até a assinatura. O dashboard Admin de pacientes tinha visão geral, intenção, demografia, dispositivos, sistemas e uso autenticado, mas ainda não respondia uma pergunta operacional anterior ao cadastro: como os pacientes reais se comportaram antes de se cadastrar.
+
+Revisão de produto em 2026-07-27: este bloco não deve medir visitantes anônimos em geral nem conversões de visitantes para psicólogos. A leitura correta é **de trás para frente**: partir dos pacientes cadastrados no período e buscar a trilha anônima anterior ao cadastro pelo mesmo `visitor_id`.
 
 A plataforma já possui tracking first-party de `page_view_event` e `visitor_session` criado nas tasks de analytics/tráfego. Esta task usa esses eventos existentes e `user.createdAt`, sem criar tracking novo, backfill, mock ou integração de terceiros.
 
@@ -31,7 +33,7 @@ Builder/Quick Copy não ficou exposto como ferramenta callable neste ambiente; p
 
 ## Objetivo
 
-Permitir que um Admin autenticado veja, em `/pacientes`, um bloco de **Conversão do uso não autenticado até cadastro** com coorte de visitantes sem login no período selecionado, taxa de cadastro, prazos até cadastro e distribuição por primeira página visitada.
+Permitir que um Admin autenticado veja, em `/pacientes`, um bloco de **Trilha pré-cadastro dos pacientes** com coorte de pacientes cadastrados no período selecionado, cobertura de trilha anônima prévia, prazos até cadastro e primeira página capturada antes do cadastro.
 
 ## Pré-requisitos e bloqueios
 
@@ -48,21 +50,22 @@ Permitir que um Admin autenticado veja, em `/pacientes`, um bloco de **Conversã
 - Atualizar o dashboard Admin de pacientes (`/pacientes`) com um bloco mobile-first logo abaixo da Visão Geral.
 - Reutilizar o padrão visual do card de conversão do dashboard de psicólogos: cards métricos, distribuição por prazo com barras e lista comparativa lateral.
 - Exibir:
-  - visitantes com primeiro uso sem login no período;
-  - sessões vinculadas à coorte;
-  - cadastros reais de paciente;
-  - taxa de cadastro;
+  - pacientes reais cadastrados no período;
+  - pacientes com trilha anônima prévia capturada;
+  - pacientes sem trilha anônima prévia capturada;
+  - taxa de cobertura da trilha pré-cadastro;
   - média, mediana, P75 e P90 do tempo até cadastro;
-  - distribuição por prazo: mesmo dia, 1-3 dias, 4-7 dias, 8-30 dias, mais de 30 dias, ainda não cadastrou;
-  - conversão por primeira página visitada.
+  - distribuição por prazo: mesmo dia, 1-3 dias, 4-7 dias, 8-30 dias, mais de 30 dias, sem trilha capturada;
+  - primeira página anônima antes do cadastro.
 - Mostrar textos honestos de indisponibilidade/amostra pequena quando aplicável.
 
 ## Escopo backend
 
 - Estender `GET /api/admin/private/patients/dashboard` para retornar `anonymous_conversion` dentro do resumo.
-- Derivar a coorte de `page_view_event` do período quando o evento ocorreu sem usuário ou antes de `user.createdAt` de paciente.
-- Vincular conversão real somente pelo mesmo `visitor_id` quando a sessão/evento estiver associado a `user.role="paciente"` e `user.createdAt` ocorrer até o fim do período selecionado.
-- Usar `visitor_session` apenas para complementar contagem de sessões e identificar conversão quando uma sessão iniciada anonimamente é associada depois ao paciente real.
+- Derivar a coorte de `user.role="paciente"` com `user.createdAt` dentro do período selecionado.
+- Para cada paciente da coorte, localizar `visitor_id`s vinculados ao próprio paciente por `page_view_event`/`visitor_session`.
+- Buscar `page_view_event`/`visitor_session` anteriores ou simultâneos ao `user.createdAt` do paciente pelo mesmo `visitor_id`, aceitando somente registros sem usuário ou do próprio paciente.
+- Psicólogos e visitantes que nunca viraram paciente ficam fora deste bloco; análises gerais de visitantes anônimos pertencem a outra página.
 - Não criar tabela, migration, seed, mock ou dado estimado.
 
 ## Fora do escopo
@@ -79,7 +82,7 @@ Backend esperado:
 
 - DTO `AdminPatientsDashboardAnonymousConversion` em `backend/src/modules/api/admin/private/patients/dashboard/DTOs/IAdminPatientsDashboardDTO.ts`.
 - Repository com leituras reais de `page_view_event` e `visitor_session`, filtrando eventos deletados e usuários paciente quando houver autenticação.
-- Service agregando coorte por `visitor_id`, primeiro toque, conversão, percentis e buckets.
+- Service agregando coorte por paciente cadastrado, trilha prévia por `visitor_id`, primeiro toque, percentis e buckets.
 - `coverage_notes` e `unavailable` atualizados para explicar fonte e limitações.
 
 Frontend esperado:
@@ -103,10 +106,11 @@ Regras anti-recriação:
 
 ## Critérios de aceite
 
-- [x] `GET /api/admin/private/patients/dashboard` retorna `anonymous_conversion` com coorte, taxa, prazos, buckets, primeira página e notas de cobertura.
+- [x] `GET /api/admin/private/patients/dashboard` retorna `anonymous_conversion` com coorte de pacientes cadastrados, cobertura de trilha prévia, prazos, buckets, primeira página e notas de cobertura.
 - [x] O cálculo usa apenas dados reais first-party (`page_view_event`, `visitor_session`, `user.createdAt`) e não cria mock/backfill.
-- [x] O dashboard `/pacientes` mostra o bloco **Conversão do uso não autenticado até cadastro** abaixo da Visão Geral.
-- [x] A UI exibe métricas, distribuição por prazo e conversão por primeira página com copy honesta para ausência/amostra pequena.
+- [x] O dashboard `/pacientes` mostra o bloco **Trilha pré-cadastro dos pacientes** abaixo da Visão Geral.
+- [x] A UI exibe métricas, distribuição por prazo e primeira página pré-cadastro com copy honesta para ausência/amostra pequena.
+- [x] Psicólogos e visitantes anônimos que não viraram paciente não entram no denominador deste bloco.
 - [x] UI mobile-first; nenhum `<img>` cru (somente componentes existentes e ícones SVG de biblioteca já instalada).
 - [x] Nenhum mock, dado fake permanente ou endpoint simulado foi usado.
 - [x] Não houve alteração de banco/schema/migrations; `pnpm --dir backend db:migrate` não se aplica.
@@ -130,11 +134,13 @@ Regras anti-recriação:
 
 ## Notas de execução
 
-- A coorte é o primeiro `page_view_event` sem conta capturado dentro do período selecionado, agrupado por `visitor_id`.
-- Se o mesmo `visitor_id` virar `user.role="paciente"` por evento/sessão associado até o fim do período, conta como cadastro convertido.
-- O mesmo visitante conta uma vez; quando houver mais de um candidato paciente no mesmo `visitor_id`, usa-se a primeira data real de cadastro.
+- A coorte é o conjunto de `user.role="paciente"` cadastrados no período selecionado.
+- A métrica busca a primeira trilha anônima anterior ao cadastro pelo mesmo `visitor_id`, filtrando registros sem usuário ou do próprio paciente.
+- Psicólogos e visitantes que nunca viraram paciente não entram no denominador deste bloco.
 - A métrica não atravessa browsers/devices e não tenta identificar pessoas além do `visitor_id` first-party já persistido.
-- Os cards mostram `Indisponível`/nota operacional quando não há coorte ou conversões suficientes, evitando zero falso.
-- Validação local do service em `period="all"` retornou `status=200`, `anonymous_visitors_count=205`, `converted_patients_count=31` e `conversion_rate=15.1` na base de desenvolvimento.
+- Os cards mostram `Indisponível`/nota operacional quando não há pacientes cadastrados ou trilha prévia suficiente, evitando zero falso.
+- A versão forward anterior retornava `anonymous_visitors_count=205`, `converted_patients_count=31` e `conversion_rate=15.1`; esses campos foram substituídos por `registered_patients_count`, `patients_with_anonymous_history_count`, `patients_without_anonymous_history_count` e `history_coverage_rate`.
+- Validação local do service em `period="all"` retornou `status=200`, `registered_patients_count=155`, `patients_with_anonymous_history_count=26`, `patients_without_anonymous_history_count=129` e `history_coverage_rate=16.8` na base de desenvolvimento.
+- `pnpm check` ficou bloqueado por formatação preexistente em alterações não relacionadas de `admin/src/app/(admin)/trafego/client.tsx`; os checks/builds direcionados de backend/admin para esta task foram executados.
 - Smoke local de browser/rota em `http://localhost:3002/pacientes` retornou HTTP 200.
 - O admin temporário `codex-task85-browser@lectum.local` criado para validação de autenticação local foi removido ao final.

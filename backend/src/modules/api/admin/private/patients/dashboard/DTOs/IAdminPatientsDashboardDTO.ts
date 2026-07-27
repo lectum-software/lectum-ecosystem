@@ -238,7 +238,7 @@ export type AdminPatientsDashboardAnonymousConversionBucketId =
   | "days_1_3"
   | "days_4_7"
   | "days_8_30"
-  | "not_registered"
+  | "no_history"
   | "over_30"
   | "same_day";
 
@@ -251,30 +251,30 @@ export type AdminPatientsDashboardAnonymousConversionBucket = {
 
 export type AdminPatientsDashboardAnonymousConversionFirstTouch = {
   average_days: number | null;
-  converted_patients_count: number;
-  conversion_rate: number | null;
   id: string;
   label: string;
+  patients_count: number;
+  percentage: number;
   sample_sufficient: boolean;
   unavailable_reason: string | null;
-  visitors_count: number;
 };
 
 export type AdminPatientsDashboardAnonymousConversion = {
   anonymous_sessions_count: number;
-  anonymous_visitors_count: number;
   average_days: number | null;
   buckets: AdminPatientsDashboardAnonymousConversionBucket[];
   cohort_from: string;
   cohort_to: string;
-  conversion_rate: number | null;
-  converted_patients_count: number;
   coverage_note: string;
   first_touch_pages: AdminPatientsDashboardAnonymousConversionFirstTouch[];
+  history_coverage_rate: number | null;
   median_days: number | null;
   p75_days: number | null;
   p90_days: number | null;
-  source: "page_view_event+visitor_session+user.createdAt";
+  patients_with_anonymous_history_count: number;
+  patients_without_anonymous_history_count: number;
+  registered_patients_count: number;
+  source: "user.createdAt+page_view_event+visitor_session";
   unavailable_reason: string | null;
 };
 

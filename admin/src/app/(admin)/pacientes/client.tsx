@@ -1169,40 +1169,40 @@ const AnonymousConversionCard = ({ summary }: { summary: AdminPatientsDashboard 
       <PanelTitle
         description={formatSelectedPeriod(summary.period)}
         icon={TrendingUp}
-        title="Conversão do uso não autenticado até cadastro"
+        title="Trilha pré-cadastro dos pacientes"
       />
 
       <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {[
           {
-            description: "Visitantes com primeiro uso sem login no período.",
-            label: "Visitantes",
-            value: numberFormatter.format(conversion.anonymous_visitors_count),
+            description: "Coorte de pacientes reais cadastrados no período.",
+            label: "Pacientes cadastrados",
+            value: numberFormatter.format(conversion.registered_patients_count),
           },
           {
-            description: "Sessões vinculadas à coorte de uso não autenticado.",
-            label: "Sessões",
-            value: numberFormatter.format(conversion.anonymous_sessions_count),
+            description: "Pacientes com uso sem login capturado antes do cadastro.",
+            label: "Com trilha prévia",
+            value: numberFormatter.format(conversion.patients_with_anonymous_history_count),
           },
           {
-            description: "Visitantes que viraram cadastro real de paciente.",
-            label: "Cadastros",
-            value: numberFormatter.format(conversion.converted_patients_count),
+            description: "Pacientes sem pageview ou sessão anônima vinculada ao mesmo visitor_id.",
+            label: "Sem trilha capturada",
+            value: numberFormatter.format(conversion.patients_without_anonymous_history_count),
           },
           {
-            description: "Cadastros ÷ visitantes não autenticados.",
-            label: "Taxa de cadastro",
-            value: formatNullablePercentage(conversion.conversion_rate),
+            description: "Pacientes com trilha prévia ÷ pacientes cadastrados.",
+            label: "Cobertura da trilha",
+            value: formatNullablePercentage(conversion.history_coverage_rate),
           },
           { label: "Média", value: formatDaysMetric(conversion.average_days) },
           { label: "Mediana", value: formatDaysMetric(conversion.median_days) },
           {
-            description: "75% cadastram até esse prazo",
+            description: "75% dos pacientes com trilha cadastram até esse prazo",
             label: "P75",
             value: formatDaysMetric(conversion.p75_days),
           },
           {
-            description: "90% cadastram até esse prazo",
+            description: "90% dos pacientes com trilha cadastram até esse prazo",
             label: "P90",
             value: formatDaysMetric(conversion.p90_days),
           },
@@ -1227,7 +1227,7 @@ const AnonymousConversionCard = ({ summary }: { summary: AdminPatientsDashboard 
 
       <div className="mt-5 grid gap-3 md:grid-cols-2">
         <div className="rounded-2xl border border-border/70 p-4">
-          <h3 className="text-sm font-black text-foreground">Distribuição por prazo</h3>
+          <h3 className="text-sm font-black text-foreground">Distribuição do tempo até cadastro</h3>
           <div className="mt-4 space-y-3">
             {conversion.buckets.map((bucket) => (
               <MiniBar
@@ -1243,10 +1243,10 @@ const AnonymousConversionCard = ({ summary }: { summary: AdminPatientsDashboard 
         </div>
 
         <div className="rounded-2xl border border-border/70 p-4">
-          <h3 className="text-sm font-black text-foreground">Conversão por primeira página</h3>
+          <h3 className="text-sm font-black text-foreground">Primeira página antes do cadastro</h3>
           {conversion.first_touch_pages.length === 0 ? (
             <p className="mt-4 rounded-2xl bg-surface-muted p-3 text-sm font-bold text-muted">
-              Sem ponto de entrada real para a coorte de uso não autenticado no período.
+              Sem primeira página anônima vinculada aos pacientes cadastrados no período.
             </p>
           ) : (
             <div className="mt-4 space-y-4">
@@ -1256,16 +1256,15 @@ const AnonymousConversionCard = ({ summary }: { summary: AdminPatientsDashboard 
                     <div>
                       <p className="text-sm font-black text-foreground">{item.label}</p>
                       <p className="text-xs font-bold text-muted">
-                        {numberFormatter.format(item.converted_patients_count)} de{" "}
-                        {numberFormatter.format(item.visitors_count)} cadastraram
+                        {numberFormatter.format(item.patients_count)} pacientes com trilha
                       </p>
                     </div>
                     <span className="text-sm font-black text-primary">
-                      {formatNullablePercentage(item.conversion_rate)}
+                      {formatPercentageValue(item.percentage)}
                     </span>
                   </div>
                   <p className="mt-2 text-xs font-bold text-muted">
-                    Tempo médio: {formatDaysMetric(item.average_days)}
+                    Tempo médio até cadastro: {formatDaysMetric(item.average_days)}
                   </p>
                   {item.unavailable_reason ? (
                     <p className="mt-2 text-xs font-bold text-subtle">{item.unavailable_reason}</p>

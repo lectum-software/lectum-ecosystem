@@ -449,9 +449,11 @@ export class AdminPatientsDashboardRepository {
     });
   }
 
-  async listAnonymousConversionPageViews(
-    range: AdminPatientsDashboardDateRange,
+  async listAnonymousConversionLinkedPageViews(
+    patientIds: string[],
   ): Promise<AdminPatientAnonymousConversionPageViewRecord[]> {
+    if (patientIds.length === 0) return [];
+
     return prisma.page_view_event.findMany({
       orderBy: {
         occurred_at: "asc",
@@ -459,25 +461,85 @@ export class AdminPatientsDashboardRepository {
       select: patientAnonymousConversionPageViewSelect,
       where: {
         deleted: false,
-        occurred_at: rangeWhere(range),
+        user_id: {
+          in: patientIds,
+        },
+        user: {
+          deleted: false,
+          role: "paciente",
+        },
+      },
+    });
+  }
+
+  async listAnonymousConversionLinkedSessions(
+    patientIds: string[],
+  ): Promise<AdminPatientAnonymousConversionSessionRecord[]> {
+    if (patientIds.length === 0) return [];
+
+    return prisma.visitor_session.findMany({
+      orderBy: {
+        first_seen_at: "asc",
+      },
+      select: patientAnonymousConversionSessionSelect,
+      where: {
+        deleted: false,
+        user_id: {
+          in: patientIds,
+        },
+        user: {
+          deleted: false,
+          role: "paciente",
+        },
+      },
+    });
+  }
+
+  async listAnonymousConversionPageViewsByVisitorIds(
+    visitorIds: string[],
+    patientIds: string[],
+    maxOccurredAt: Date | null,
+  ): Promise<AdminPatientAnonymousConversionPageViewRecord[]> {
+    if (visitorIds.length === 0 || !maxOccurredAt) return [];
+
+    return prisma.page_view_event.findMany({
+      orderBy: {
+        occurred_at: "asc",
+      },
+      select: patientAnonymousConversionPageViewSelect,
+      where: {
+        deleted: false,
+        occurred_at: {
+          lte: maxOccurredAt,
+        },
         OR: [
           {
             user_id: null,
           },
           {
+            user_id: {
+              in: patientIds,
+            },
             user: {
               deleted: false,
               role: "paciente",
             },
           },
         ],
+        visitor_id: {
+          in: visitorIds,
+        },
       },
     });
   }
 
-  async listAnonymousConversionSessions(
-    range: AdminPatientsDashboardDateRange,
+  async listAnonymousConversionSessionsByVisitorIds(
+    visitorIds: string[],
+    patientIds: string[],
+    maxFirstSeenAt: Date | null,
   ): Promise<AdminPatientAnonymousConversionSessionRecord[]> {
+    if (visitorIds.length === 0 || !maxFirstSeenAt) return [];
+
     return prisma.visitor_session.findMany({
       orderBy: {
         first_seen_at: "asc",
@@ -486,22 +548,25 @@ export class AdminPatientsDashboardRepository {
       where: {
         deleted: false,
         first_seen_at: {
-          lte: range.end,
-        },
-        last_seen_at: {
-          gte: range.start,
+          lte: maxFirstSeenAt,
         },
         OR: [
           {
             user_id: null,
           },
           {
+            user_id: {
+              in: patientIds,
+            },
             user: {
               deleted: false,
               role: "paciente",
             },
           },
         ],
+        visitor_id: {
+          in: visitorIds,
+        },
       },
     });
   }

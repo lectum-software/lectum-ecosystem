@@ -166,7 +166,7 @@ const ANONYMOUS_CONVERSION_BUCKETS = [
   { id: "days_4_7", label: "4-7 dias" },
   { id: "days_8_30", label: "8-30 dias" },
   { id: "over_30", label: "Mais de 30 dias" },
-  { id: "not_registered", label: "Ainda n\u00e3o cadastrou" },
+  { id: "no_history", label: "Sem trilha capturada" },
 ] as const;
 
 const addDays = (date: Date, days: number) => {
@@ -920,228 +920,257 @@ const patientPlatformPageLabel = (
   return PATIENT_PAGE_KIND_LABELS[view.page_kind] ?? "Outras páginas";
 };
 
-type AnonymousConversionVisitor = {
-  firstSeenAt: Date;
-  firstTouchId: string;
-  firstTouchLabel: string;
-  patientCandidates: Map<string, Date>;
+type AnonymousConversionPatientTouch = {
+  occurredAt: Date;
+  pageId: string;
+  pageLabel: string;
+  sessionId: string;
+  source: "page_view_event" | "visitor_session";
+};
+
+type AnonymousConversionPatientSummary = {
+  daysToRegistration: number | null;
+  firstTouchId: string | null;
+  firstTouchLabel: string | null;
+  patientId: string;
   sessions: Set<string>;
-  visitorId: string;
 };
 
-const isAnonymousUsageBeforePatientSignup = (
-  view: AdminPatientAnonymousConversionPageViewRecord,
-) => {
-  if (!view.user_id || !view.user) return true;
-  if (view.user.role !== "paciente") return false;
-
-  return view.occurred_at < view.user.createdAt;
-};
-
-const isAnonymousSessionBeforePatientSignup = (
-  session: AdminPatientAnonymousConversionSessionRecord,
-) => {
-  if (!session.user_id || !session.user) return true;
-  if (session.user.role !== "paciente") return false;
-
-  return session.first_seen_at < session.user.createdAt;
-};
+const ANONYMOUS_CONVERSION_SESSION_LABEL = "Sess\u00e3o sem p\u00e1gina capturada";
 
 const anonymousConversionPageLabel = (view: AdminPatientAnonymousConversionPageViewRecord) =>
   patientPlatformPageLabel(view);
 
+const latestPatientSignupDate = (patients: AdminPatientSnapshotRecord[]) =>
+  patients.reduce<Date | null>((latest, patient) => {
+    if (!latest || patient.createdAt > latest) return patient.createdAt;
+
+    return latest;
+  }, null);
+
+const buildPatientVisitorIds = (params: {
+  linkedPageViews: AdminPatientAnonymousConversionPageViewRecord[];
+  linkedSessions: AdminPatientAnonymousConversionSessionRecord[];
+  patientIds: Set<string>;
+}) => {
+  const visitorIdsByPatientId = new Map<string, Set<string>>();
+  const addVisitorId = (patientId: string | null, visitorId: string) => {
+    if (!patientId || !params.patientIds.has(patientId)) return;
+
+    const current = visitorIdsByPatientId.get(patientId) ?? new Set<string>();
+    current.add(visitorId);
+    visitorIdsByPatientId.set(patientId, current);
+  };
+
+  for (const view of params.linkedPageViews) {
+    addVisitorId(view.user_id, view.visitor_id);
+  }
+
+  for (const session of params.linkedSessions) {
+    addVisitorId(session.user_id, session.visitor_id);
+  }
+
+  return visitorIdsByPatientId;
+};
+
+const collectAnonymousConversionVisitorIds = (visitorIdsByPatientId: Map<string, Set<string>>) => [
+  ...new Set([...visitorIdsByPatientId.values()].flatMap((visitorIds) => [...visitorIds])),
+];
+
+const patientScopedRecord = (userId: string | null, patientId: string) =>
+  userId === null || userId === patientId;
+
+const touchSort = (
+  left: AnonymousConversionPatientTouch,
+  right: AnonymousConversionPatientTouch,
+) => {
+  const dateDiff = left.occurredAt.getTime() - right.occurredAt.getTime();
+  if (dateDiff !== 0) return dateDiff;
+  if (left.source !== right.source) return left.source === "page_view_event" ? -1 : 1;
+
+  return left.pageLabel.localeCompare(right.pageLabel, "pt-BR");
+};
+
 const summarizeAnonymousConversion = (params: {
+  linkedPageViews: AdminPatientAnonymousConversionPageViewRecord[];
+  linkedSessions: AdminPatientAnonymousConversionSessionRecord[];
   pageViews: AdminPatientAnonymousConversionPageViewRecord[];
+  patients: AdminPatientSnapshotRecord[];
   period: AdminPatientsDashboardPeriod;
-  range: AdminPatientsDashboardDateRange;
   sessions: AdminPatientAnonymousConversionSessionRecord[];
 }): AdminPatientsDashboardAnonymousConversion => {
-  const visitors = new Map<string, AnonymousConversionVisitor>();
+  const patientIds = new Set(params.patients.map((patient) => patient.id));
+  const visitorIdsByPatientId = buildPatientVisitorIds({
+    linkedPageViews: params.linkedPageViews,
+    linkedSessions: params.linkedSessions,
+    patientIds,
+  });
+  const pageViewsByVisitorId = new Map<string, AdminPatientAnonymousConversionPageViewRecord[]>();
+  const sessionsByVisitorId = new Map<string, AdminPatientAnonymousConversionSessionRecord[]>();
 
   for (const view of params.pageViews) {
-    const isAnonymousUsage = isAnonymousUsageBeforePatientSignup(view);
-    let visitor = visitors.get(view.visitor_id);
-
-    if (isAnonymousUsage) {
-      const label = anonymousConversionPageLabel(view);
-      visitor =
-        visitor ??
-        ({
-          firstSeenAt: view.occurred_at,
-          firstTouchId: normalizeKey(label) || "outras_paginas",
-          firstTouchLabel: label,
-          patientCandidates: new Map<string, Date>(),
-          sessions: new Set<string>(),
-          visitorId: view.visitor_id,
-        } satisfies AnonymousConversionVisitor);
-
-      if (view.occurred_at < visitor.firstSeenAt) {
-        visitor.firstSeenAt = view.occurred_at;
-        visitor.firstTouchId = normalizeKey(label) || "outras_paginas";
-        visitor.firstTouchLabel = label;
-      }
-
-      visitor.sessions.add(view.session_id);
-      visitors.set(view.visitor_id, visitor);
-    }
-
-    if (!visitor) continue;
-
-    if (
-      view.user?.role === "paciente" &&
-      view.user.createdAt >= visitor.firstSeenAt &&
-      view.user.createdAt <= params.range.end
-    ) {
-      const currentCandidate = visitor.patientCandidates.get(view.user.id);
-      if (!currentCandidate || view.user.createdAt < currentCandidate) {
-        visitor.patientCandidates.set(view.user.id, view.user.createdAt);
-      }
-    }
+    const current = pageViewsByVisitorId.get(view.visitor_id) ?? [];
+    current.push(view);
+    pageViewsByVisitorId.set(view.visitor_id, current);
   }
 
   for (const session of params.sessions) {
-    const visitor = visitors.get(session.visitor_id);
-    if (!visitor) continue;
-
-    if (isAnonymousSessionBeforePatientSignup(session)) {
-      visitor.sessions.add(session.session_id);
-    }
-
-    if (
-      session.user?.role === "paciente" &&
-      session.user.createdAt >= visitor.firstSeenAt &&
-      session.user.createdAt <= params.range.end
-    ) {
-      const currentCandidate = visitor.patientCandidates.get(session.user.id);
-      if (!currentCandidate || session.user.createdAt < currentCandidate) {
-        visitor.patientCandidates.set(session.user.id, session.user.createdAt);
-      }
-    }
+    const current = sessionsByVisitorId.get(session.visitor_id) ?? [];
+    current.push(session);
+    sessionsByVisitorId.set(session.visitor_id, current);
   }
 
-  const visitorSummaries = [...visitors.values()].map((visitor) => {
-    const firstConversionDate = [...visitor.patientCandidates.values()].sort(
-      (left, right) => left.getTime() - right.getTime(),
-    )[0];
-    const daysToRegistration = firstConversionDate
-      ? daysBetweenDates(visitor.firstSeenAt, firstConversionDate)
-      : null;
+  const patientSummaries = params.patients.map((patient): AnonymousConversionPatientSummary => {
+    const patientVisitorIds = visitorIdsByPatientId.get(patient.id) ?? new Set<string>();
+    const touches: AnonymousConversionPatientTouch[] = [];
+
+    for (const visitorId of patientVisitorIds) {
+      for (const view of pageViewsByVisitorId.get(visitorId) ?? []) {
+        if (!patientScopedRecord(view.user_id, patient.id)) continue;
+        if (view.occurred_at > patient.createdAt) continue;
+
+        const label = anonymousConversionPageLabel(view);
+        touches.push({
+          occurredAt: view.occurred_at,
+          pageId: normalizeKey(label) || "outras_paginas",
+          pageLabel: label,
+          sessionId: view.session_id,
+          source: "page_view_event",
+        });
+      }
+
+      for (const session of sessionsByVisitorId.get(visitorId) ?? []) {
+        if (!patientScopedRecord(session.user_id, patient.id)) continue;
+        if (session.first_seen_at > patient.createdAt) continue;
+
+        touches.push({
+          occurredAt: session.first_seen_at,
+          pageId: "sessao_sem_pagina",
+          pageLabel: ANONYMOUS_CONVERSION_SESSION_LABEL,
+          sessionId: session.session_id,
+          source: "visitor_session",
+        });
+      }
+    }
+
+    const sortedTouches = touches.sort(touchSort);
+    const firstTouch = sortedTouches[0];
+    const sessions = new Set(sortedTouches.map((touch) => touch.sessionId));
 
     return {
-      ...visitor,
-      daysToRegistration,
-      firstConversionDate: firstConversionDate ?? null,
+      daysToRegistration: firstTouch
+        ? daysBetweenDates(firstTouch.occurredAt, patient.createdAt)
+        : null,
+      firstTouchId: firstTouch?.pageId ?? null,
+      firstTouchLabel: firstTouch?.pageLabel ?? null,
+      patientId: patient.id,
+      sessions,
     };
   });
-  const convertedVisitors = visitorSummaries.filter((visitor) => visitor.firstConversionDate);
-  const convertedDays = convertedVisitors.flatMap((visitor) =>
-    typeof visitor.daysToRegistration === "number" ? [visitor.daysToRegistration] : [],
+
+  const patientsWithHistory = patientSummaries.filter(
+    (patient) => typeof patient.daysToRegistration === "number",
+  );
+  const historyDays = patientsWithHistory.flatMap((patient) =>
+    typeof patient.daysToRegistration === "number" ? [patient.daysToRegistration] : [],
   );
   const bucketCounts = new Map(ANONYMOUS_CONVERSION_BUCKETS.map((bucket) => [bucket.id, 0]));
 
-  for (const visitor of visitorSummaries) {
+  for (const patient of patientSummaries) {
     const bucket =
-      typeof visitor.daysToRegistration === "number"
-        ? anonymousConversionBucketForDays(visitor.daysToRegistration)
-        : "not_registered";
+      typeof patient.daysToRegistration === "number"
+        ? anonymousConversionBucketForDays(patient.daysToRegistration)
+        : "no_history";
     bucketCounts.set(bucket, (bucketCounts.get(bucket) ?? 0) + 1);
   }
 
   const firstTouchGroups = new Map<
     string,
     {
-      convertedDays: number[];
-      convertedPatientsCount: number;
+      historyDays: number[];
       label: string;
-      visitorsCount: number;
+      patientsCount: number;
     }
   >();
 
-  for (const visitor of visitorSummaries) {
-    const current = firstTouchGroups.get(visitor.firstTouchId) ?? {
-      convertedDays: [],
-      convertedPatientsCount: 0,
-      label: visitor.firstTouchLabel,
-      visitorsCount: 0,
-    };
-    current.visitorsCount += 1;
+  for (const patient of patientsWithHistory) {
+    if (!patient.firstTouchId || !patient.firstTouchLabel) continue;
 
-    if (typeof visitor.daysToRegistration === "number") {
-      current.convertedPatientsCount += 1;
-      current.convertedDays.push(visitor.daysToRegistration);
+    const current = firstTouchGroups.get(patient.firstTouchId) ?? {
+      historyDays: [],
+      label: patient.firstTouchLabel,
+      patientsCount: 0,
+    };
+    current.patientsCount += 1;
+
+    if (typeof patient.daysToRegistration === "number") {
+      current.historyDays.push(patient.daysToRegistration);
     }
 
-    firstTouchGroups.set(visitor.firstTouchId, current);
+    firstTouchGroups.set(patient.firstTouchId, current);
   }
 
-  const anonymousVisitorsCount = visitorSummaries.length;
+  const registeredPatientsCount = patientSummaries.length;
+  const patientsWithHistoryCount = patientsWithHistory.length;
+  const patientsWithoutHistoryCount = registeredPatientsCount - patientsWithHistoryCount;
   const anonymousSessionsCount = new Set(
-    visitorSummaries.flatMap((visitor) =>
-      [...visitor.sessions].map((sessionId) => `${visitor.visitorId}:${sessionId}`),
+    patientSummaries.flatMap((patient) =>
+      [...patient.sessions].map((sessionId) => `${patient.patientId}:${sessionId}`),
     ),
   ).size;
-  const convertedPatientsCount = convertedVisitors.length;
 
   return {
     anonymous_sessions_count: anonymousSessionsCount,
-    anonymous_visitors_count: anonymousVisitorsCount,
-    average_days: averageNumber(convertedDays),
+    average_days: averageNumber(historyDays),
     buckets: ANONYMOUS_CONVERSION_BUCKETS.map((bucket) => ({
       count: bucketCounts.get(bucket.id) ?? 0,
       id: bucket.id,
       label: bucket.label,
-      percentage: safePercentage(bucketCounts.get(bucket.id) ?? 0, anonymousVisitorsCount),
+      percentage: safePercentage(bucketCounts.get(bucket.id) ?? 0, registeredPatientsCount),
     })),
     cohort_from: params.period.from,
     cohort_to: params.period.to,
-    conversion_rate:
-      anonymousVisitorsCount > 0
-        ? roundOneDecimal((convertedPatientsCount / anonymousVisitorsCount) * 100)
-        : null,
-    converted_patients_count: convertedPatientsCount,
     coverage_note:
-      "Coorte de primeiro uso nao autenticado no periodo; conversao exige cadastro real de paciente vinculado ao mesmo visitor_id ate o fim do periodo.",
+      "Coorte de pacientes cadastrados no periodo; leitura de tras para frente pelo mesmo visitor_id para encontrar uso anonimo anterior ao cadastro. Psicologos e visitantes que nao viraram paciente nao entram neste bloco.",
     first_touch_pages: [...firstTouchGroups.entries()]
       .map(([id, group]) => ({
-        average_days: averageNumber(group.convertedDays),
-        converted_patients_count: group.convertedPatientsCount,
-        conversion_rate:
-          group.visitorsCount > 0
-            ? roundOneDecimal((group.convertedPatientsCount / group.visitorsCount) * 100)
-            : null,
+        average_days: averageNumber(group.historyDays),
         id,
         label: group.label,
-        sample_sufficient: group.visitorsCount >= FIRST_TOUCH_SAMPLE_THRESHOLD,
+        patients_count: group.patientsCount,
+        percentage: safePercentage(group.patientsCount, patientsWithHistoryCount),
+        sample_sufficient: group.patientsCount >= FIRST_TOUCH_SAMPLE_THRESHOLD,
         unavailable_reason:
-          group.visitorsCount === 0
-            ? "Sem visitantes neste ponto de entrada."
-            : group.convertedPatientsCount === 0
-              ? "Nenhum cadastro de paciente vindo deste ponto de entrada no periodo."
-              : group.visitorsCount < FIRST_TOUCH_SAMPLE_THRESHOLD
-                ? "Amostra pequena; interpretar apenas como leitura operacional."
-                : null,
-        visitors_count: group.visitorsCount,
+          group.patientsCount === 0
+            ? "Sem pacientes neste ponto de entrada."
+            : group.patientsCount < FIRST_TOUCH_SAMPLE_THRESHOLD
+              ? "Amostra pequena; interpretar apenas como leitura operacional."
+              : null,
       }))
       .sort((left, right) => {
-        if (right.visitors_count !== left.visitors_count) {
-          return right.visitors_count - left.visitors_count;
-        }
-        if (right.converted_patients_count !== left.converted_patients_count) {
-          return right.converted_patients_count - left.converted_patients_count;
+        if (right.patients_count !== left.patients_count) {
+          return right.patients_count - left.patients_count;
         }
 
         return left.label.localeCompare(right.label, "pt-BR");
       })
       .slice(0, ANONYMOUS_CONVERSION_FIRST_TOUCH_LIMIT),
-    median_days: percentileValue(convertedDays, 50),
-    p75_days: percentileValue(convertedDays, 75),
-    p90_days: percentileValue(convertedDays, 90),
-    source: "page_view_event+visitor_session+user.createdAt",
+    history_coverage_rate:
+      registeredPatientsCount > 0
+        ? roundOneDecimal((patientsWithHistoryCount / registeredPatientsCount) * 100)
+        : null,
+    median_days: percentileValue(historyDays, 50),
+    p75_days: percentileValue(historyDays, 75),
+    p90_days: percentileValue(historyDays, 90),
+    patients_with_anonymous_history_count: patientsWithHistoryCount,
+    patients_without_anonymous_history_count: patientsWithoutHistoryCount,
+    registered_patients_count: registeredPatientsCount,
+    source: "user.createdAt+page_view_event+visitor_session",
     unavailable_reason:
-      anonymousVisitorsCount === 0
-        ? "Sem uso nao autenticado de pacientes capturado no periodo selecionado."
-        : convertedPatientsCount === 0
-          ? "Nenhum visitante nao autenticado da coorte virou cadastro de paciente ate o fim do periodo."
+      registeredPatientsCount === 0
+        ? "Sem pacientes cadastrados no periodo selecionado."
+        : patientsWithHistoryCount === 0
+          ? "Nenhum paciente cadastrado no periodo possui trilha anonima previa capturada pelo mesmo visitor_id."
           : null,
   };
 };
@@ -1492,23 +1521,6 @@ export const buildPatientsDashboard = async (
   }
 
   const { current, labels, period, previous } = resolvedPeriod.period;
-  const [
-    locations,
-    patientPageViews,
-    patientPwaInstalls,
-    patientPlatformSessions,
-    anonymousConversionPageViews,
-    anonymousConversionSessions,
-  ] = await Promise.all([
-    repository.listLocations(current),
-    repository.listPatientPageViews(current),
-    repository.listPatientPwaInstallActions(current),
-    repository.listPatientPlatformSessions(current),
-    repository.listAnonymousConversionPageViews(current),
-    repository.listAnonymousConversionSessions(current),
-  ]);
-  const intentSignals = await repository.listIntentSignals(current);
-
   const currentPatients = patients.filter((patient) => createdUntil(patient, current.end));
   const previousPatients = patients.filter((patient) => createdUntil(patient, previous.end));
   const currentPeriodPatients = patients.filter((patient) =>
@@ -1517,6 +1529,44 @@ export const buildPatientsDashboard = async (
   const previousPeriodPatients = patients.filter((patient) =>
     dateInRange(patient.createdAt, previous),
   );
+  const currentPeriodPatientIds = currentPeriodPatients.map((patient) => patient.id);
+  const [
+    locations,
+    patientPageViews,
+    patientPwaInstalls,
+    patientPlatformSessions,
+    anonymousConversionLinkedPageViews,
+    anonymousConversionLinkedSessions,
+  ] = await Promise.all([
+    repository.listLocations(current),
+    repository.listPatientPageViews(current),
+    repository.listPatientPwaInstallActions(current),
+    repository.listPatientPlatformSessions(current),
+    repository.listAnonymousConversionLinkedPageViews(currentPeriodPatientIds),
+    repository.listAnonymousConversionLinkedSessions(currentPeriodPatientIds),
+  ]);
+  const anonymousConversionVisitorIds = collectAnonymousConversionVisitorIds(
+    buildPatientVisitorIds({
+      linkedPageViews: anonymousConversionLinkedPageViews,
+      linkedSessions: anonymousConversionLinkedSessions,
+      patientIds: new Set(currentPeriodPatientIds),
+    }),
+  );
+  const anonymousConversionMaxSignupDate = latestPatientSignupDate(currentPeriodPatients);
+  const [anonymousConversionPageViews, anonymousConversionSessions] = await Promise.all([
+    repository.listAnonymousConversionPageViewsByVisitorIds(
+      anonymousConversionVisitorIds,
+      currentPeriodPatientIds,
+      anonymousConversionMaxSignupDate,
+    ),
+    repository.listAnonymousConversionSessionsByVisitorIds(
+      anonymousConversionVisitorIds,
+      currentPeriodPatientIds,
+      anonymousConversionMaxSignupDate,
+    ),
+  ]);
+  const intentSignals = await repository.listIntentSignals(current);
+
   const currentNewPatients = currentPeriodPatients.length;
   const previousNewPatients = previousPeriodPatients.length;
   const activePatients = patients.filter((patient) => patient.active);
@@ -1535,9 +1585,11 @@ export const buildPatientsDashboard = async (
   const deviceUsage = buildDeviceUsage(patientPlatformSessions);
   const operatingSystemUsage = buildOperatingSystemUsage(patientPlatformSessions);
   const anonymousConversion = summarizeAnonymousConversion({
+    linkedPageViews: anonymousConversionLinkedPageViews,
+    linkedSessions: anonymousConversionLinkedSessions,
     pageViews: anonymousConversionPageViews,
+    patients: currentPeriodPatients,
     period,
-    range: current,
     sessions: anonymousConversionSessions,
   });
   const intentClassification = buildPatientIntentClassification(currentPatients, intentSignals);
@@ -1597,7 +1649,7 @@ export const buildPatientsDashboard = async (
       "Uso da plataforma mede somente pageviews autenticados e eventos first-party de instalação PWA de pacientes no período selecionado.",
       "Devices dos pacientes usa somente visitor_session autenticada vinculada a user.role=paciente no período selecionado.",
       "Sistema operacional dos pacientes usa somente visitor_session autenticada com os normalizado; não armazena user-agent bruto.",
-      "Conversao do uso nao autenticado ate cadastro usa a coorte de primeiro pageview sem conta no periodo, linkada por visitor_id ao primeiro cadastro real de paciente quando existir.",
+      "Trilha pre-cadastro parte dos pacientes cadastrados no periodo e busca, de tras para frente, uso anonimo anterior pelo mesmo visitor_id; psicologos e visitantes que nao viraram paciente ficam fora deste bloco.",
       "Gênero e forma de cadastro consideram somente pacientes cadastrados no período selecionado; em Todo o período incluem a base completa.",
       "Tempo médio do paciente usa pageviews autenticados first-party e ignora períodos em que o app fica oculto/minimizado quando o navegador envia eventos de visibilidade.",
       "Localização usa apenas capturas agregadas e coarse de visitor_location no período selecionado; cidades com baixa frequência são agrupadas, e coordenadas, IP e endereço não são retornados.",
@@ -1674,7 +1726,7 @@ export const buildPatientsDashboard = async (
             {
               description: anonymousConversion.unavailable_reason,
               id: "anonymous_conversion",
-              label: "Conversao do uso nao autenticado ate cadastro",
+              label: "Trilha pre-cadastro dos pacientes",
               source: anonymousConversion.source,
             },
           ]

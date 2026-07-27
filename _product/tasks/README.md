@@ -165,7 +165,7 @@ ou cortesia manual.
 | 82 | [TASK-82 - Filtro Cortesia no dashboard Admin de psicologos](TASK-82-filtro-cortesia-dashboard-psicologos-admin.md) | Completed | 53, 72, 81 |
 | 83 | [TASK-83 - Erro no cadastro em Operacionais Admin](TASK-83-erro-cadastro-operacionais-admin.md) | Completed | 45, 46, 77, 78 |
 | 84 | [TASK-84 - Tracao no dashboard Admin de psicologos](TASK-84-tracao-dashboard-psicologos-admin.md) | Completed | 53, 72, 76, 82 |
-| 85 | [TASK-85 - Conversao de uso nao autenticado ate cadastro no dashboard Admin de pacientes](TASK-85-conversao-uso-anonimo-cadastro-pacientes-admin.md) | Completed | 45, 46, 47, 49, 60, 76, 81 |
+| 85 | [TASK-85 - Trilha pre-cadastro dos pacientes no dashboard Admin](TASK-85-conversao-uso-anonimo-cadastro-pacientes-admin.md) | Completed | 45, 46, 47, 49, 60, 76, 81 |
 
 ## Ordem operacional recomendada sem bloqueios
 
@@ -222,7 +222,7 @@ Esta secao e a fila pratica para continuar o MVP sem bater nas tasks bloqueadas 
 47. [TASK-82 - Filtro Cortesia no dashboard Admin de psicologos](TASK-82-filtro-cortesia-dashboard-psicologos-admin.md) foi adicionada e concluida em 2026-07-25 para separar nos filtros por plano dos blocos de `/psicologos` o recorte de cortesia administrativa (`professional_subscription.source="admin_grant"`), mantendo **Assinantes** restrito a pagamentos Mercado Pago e **Todos** como agregado completo.
 48. [TASK-83 - Erro no cadastro em Operacionais Admin](TASK-83-erro-cadastro-operacionais-admin.md) foi adicionada e concluida em 2026-07-25 para listar em `/moderacao/operacionais` cadastros de pacientes e psicologos ativos ainda nao confirmados (`user.confirmed=false`), exibindo modo de cadastro e e-mail, com remocao automatica quando a confirmacao real conclui.
 49. [TASK-84 - Tracao no dashboard Admin de psicologos](TASK-84-tracao-dashboard-psicologos-admin.md) foi adicionada e concluida em 2026-07-25 para exibir no dashboard `/psicologos` a classificacao agregada **Tracao** com grafico de pizza, usando WhatsApp, aberturas de perfil e favoritos reais na janela temporal selecionada, sem ranking publico ou punicao.
-50. [TASK-85 - Conversao de uso nao autenticado ate cadastro no dashboard Admin de pacientes](TASK-85-conversao-uso-anonimo-cadastro-pacientes-admin.md) foi adicionada e concluida em 2026-07-27 para exibir no dashboard `/pacientes` uma coorte first-party de visitantes sem login que viram cadastro real de paciente pelo mesmo `visitor_id`, sem mock, backfill, tracking novo ou identificacao cross-device.
+50. [TASK-85 - Trilha pre-cadastro dos pacientes no dashboard Admin](TASK-85-conversao-uso-anonimo-cadastro-pacientes-admin.md) foi revisada e concluida em 2026-07-27 para exibir no dashboard `/pacientes` uma leitura backward dos pacientes cadastrados no periodo, buscando trilha anonima previa pelo mesmo `visitor_id`, sem incluir psicologos ou visitantes que nunca viraram paciente e sem mock, backfill, tracking novo ou identificacao cross-device.
 
 ### 1A. Trilha Admin planejada
 
@@ -266,7 +266,7 @@ Execute uma por vez, sempre validando, marcando critérios, ADR e commit/push:
 36. [TASK-82 - Filtro Cortesia no dashboard Admin de psicologos](TASK-82-filtro-cortesia-dashboard-psicologos-admin.md)
 37. [TASK-83 - Erro no cadastro em Operacionais Admin](TASK-83-erro-cadastro-operacionais-admin.md)
 38. [TASK-84 - Tracao no dashboard Admin de psicologos](TASK-84-tracao-dashboard-psicologos-admin.md)
-39. [TASK-85 - Conversao de uso nao autenticado ate cadastro no dashboard Admin de pacientes](TASK-85-conversao-uso-anonimo-cadastro-pacientes-admin.md)
+39. [TASK-85 - Trilha pre-cadastro dos pacientes no dashboard Admin](TASK-85-conversao-uso-anonimo-cadastro-pacientes-admin.md)
 
 ### 1. Trilha executavel agora apos TASK-10
 
