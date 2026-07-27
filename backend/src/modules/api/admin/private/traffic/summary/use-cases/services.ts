@@ -995,27 +995,103 @@ const pathLabel = (path: string) => {
   return normalized;
 };
 
+const ENTRY_PAGE_GROUPS = {
+  communities: {
+    id: "entry_group:communities",
+    label: "Comunidades",
+    path: "/community/*",
+  },
+  communityPosts: {
+    id: "entry_group:community_posts",
+    label: "Posts específicos",
+    path: "/community/*/post/*",
+  },
+  psychologistProfiles: {
+    id: "entry_group:psychologist_profiles",
+    label: "Perfis de psicólogos",
+    path: "/psychologists/*",
+  },
+} as const;
+
+const NON_COMMUNITY_DETAIL_SEGMENTS = new Set(["feed", "suggest", "top-mentors"]);
+
+const entryPath = (entry: TrafficPageViewRecord) => entry.entry_path || entry.path || "/";
+
+const pathSegments = (path: string) => (path || "/").split("/").filter(Boolean);
+
+const communitySlugFromPath = (path: string) => {
+  const [first, second, third] = pathSegments(path);
+  if (first === "community") return second ?? null;
+  if (first === "app" && second === "community") return third ?? null;
+
+  return null;
+};
+
+const isCommunityPostEntryPage = (entry: TrafficPageViewRecord, path: string) =>
+  entry.page_kind === "community_post" ||
+  entry.target_type === "community_post" ||
+  entry.target_type === "post" ||
+  path.includes("/post/");
+
+const isPsychologistProfileEntryPage = (entry: TrafficPageViewRecord, path: string) =>
+  entry.page_kind === "psychologist_profile" ||
+  entry.target_type === "psychologist" ||
+  path.startsWith("/psychologists/") ||
+  path.startsWith("/app/psychologist/");
+
+const isCommunityEntryPage = (entry: TrafficPageViewRecord, path: string) => {
+  const slug = communitySlugFromPath(path);
+  const isSpecificCommunityPath = Boolean(slug && !NON_COMMUNITY_DETAIL_SEGMENTS.has(slug));
+  const hasSpecificCommunityTarget = Boolean(
+    entry.target_id && !NON_COMMUNITY_DETAIL_SEGMENTS.has(entry.target_id),
+  );
+
+  return (
+    (entry.target_type === "community" && hasSpecificCommunityTarget) ||
+    (entry.page_kind === "community" && hasSpecificCommunityTarget) ||
+    isSpecificCommunityPath
+  );
+};
+
+const entryPageGroup = (entry: TrafficPageViewRecord) => {
+  const path = entryPath(entry);
+
+  if (isCommunityPostEntryPage(entry, path)) return ENTRY_PAGE_GROUPS.communityPosts;
+  if (isPsychologistProfileEntryPage(entry, path)) return ENTRY_PAGE_GROUPS.psychologistProfiles;
+  if (isCommunityEntryPage(entry, path)) return ENTRY_PAGE_GROUPS.communities;
+
+  return {
+    id: path,
+    label: pathLabel(path),
+    path,
+  };
+};
+
 const buildEntryPages = (stats: TrafficStats) => {
   const entries = entryPageViews(stats);
   const total = entries.length;
-  const items = buildBreakdown(
-    entries.map((entry) => {
-      const path = entry.entry_path || entry.path || "/";
+  const groups = new Map<string, { count: number; label: string; path: string }>();
 
-      return {
-        id: path,
-        label: pathLabel(path),
-      };
-    }),
-    total,
-  )
-    .slice(0, 7)
+  for (const entry of entries) {
+    const group = entryPageGroup(entry);
+    const current = groups.get(group.id) ?? {
+      count: 0,
+      label: group.label,
+      path: group.path,
+    };
+
+    groups.set(group.id, { ...current, count: current.count + 1 });
+  }
+
+  const items = [...groups.values()]
     .map<AdminTrafficEntryPage>((item) => ({
       count: item.count,
       label: item.label,
-      path: item.id,
-      percentage: item.percentage,
-    }));
+      path: item.path,
+      percentage: safePercentage(item.count, total),
+    }))
+    .sort((left, right) => right.count - left.count)
+    .slice(0, 7);
 
   return {
     items,

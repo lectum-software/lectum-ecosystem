@@ -490,3 +490,34 @@ Validacao desta execucao complementar:
   removido apos o teste: validou **Detalhes da navegacao por paginas**, **Trafego por comunidade**,
   **Trafego por post**, **Trafego por psicologo**, ausencia de **Qualidade do trafego**, tres cards
   na mesma linha em 1366x900 e `horizontalOverflowPx=0` em 1366x900 e 390x844.
+
+## Execucao complementar - paginas de entrada dinamicas consolidadas (2026-07-26)
+
+- Ajustada a agregacao de **Principais paginas de entrada** para somar URLs dinamicas por tipo:
+  **Posts especificos** (`/community/*/post/*`), **Comunidades** (`/community/*`) e
+  **Perfis de psicologos** (`/psychologists/*`).
+- Paginas nao dinamicas continuam agrupadas pelo path exato, preservando a leitura operacional de
+  entradas como `/`, `/auth/login`, `/psychologists` e cadastros.
+- O total de entradas permanece derivado da primeira `page_view_event` real de cada sessao; nao
+  houve backfill, mock, endpoint novo, package novo, Prisma schema/migration ou dados persistidos.
+- Builder/Quick Copy nao estava exposto como ferramenta callable nesta execucao; as referencias
+  auditaveis foram `_product/proto/admin/Tráfego.png` e a captura enviada pelo usuario.
+- ADRs atualizados: `adrs/0230-admin-trafego-agregacoes.md` e
+  `adrs/0323-trafego-visao-geral-timeline.md`.
+
+Validacao desta execucao complementar:
+
+- `pnpm --dir backend exec biome check --write "src/modules/api/admin/private/traffic/summary/use-cases/services.ts"` - OK.
+- `pnpm --dir backend check` - OK.
+- `pnpm --dir admin check` - OK.
+- `pnpm --dir backend build` - OK.
+- `pnpm --dir admin build` - OK.
+- `pnpm check` - OK em reexecucao com timeout ampliado.
+- API real local direta em `buildTrafficSummary({ from: "2026-06-27", to: "2026-07-26" })` - OK:
+  `entry_pages.total=238`, **Posts especificos** `197`, **Perfis de psicologos** `4` e
+  **Comunidades** `4`, com paths de agrupamento `/community/*/post/*`, `/psychologists/*` e
+  `/community/*`.
+- Browser local/headless em `http://localhost:3002/trafego` com admin real transitorio removido
+  apos o teste - OK: validou **Posts especificos** com `/community/*/post/*`, **Perfis de
+  psicologos** com `/psychologists/*`, **Comunidades** com `/community/*`, ausencia de path
+  especifico de post na lista de entradas e viewports 1366x900 e 390x844 sem overflow horizontal.

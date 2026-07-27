@@ -52,6 +52,11 @@ campos de data e cards que exibem/ocultam curvas.
   mobile-first de rankings: **Trafego por comunidade**, **Trafego por post** e **Trafego por
   psicologo**. Em desktop amplo, a grade usa tres colunas lado a lado; em telas estreitas, empilha
   sem overflow horizontal.
+- A lista **Principais páginas de entrada** passa a consolidar entradas dinâmicas por tipo para
+  evitar linhas separadas por URL individual: posts de comunidade entram em **Posts específicos**
+  (`/community/*/post/*`), detalhes de comunidade em **Comunidades** (`/community/*`) e perfis em
+  **Perfis de psicólogos** (`/psychologists/*`). O total continua contando a primeira pageview real
+  de cada sessão; apenas a chave de agrupamento dessas rotas dinâmicas mudou.
 - Nenhum pacote novo, mock, endpoint simulado, schema Prisma ou migration foi adicionado.
 
 ## Consequências
@@ -101,3 +106,10 @@ campos de data e cards que exibem/ocultam curvas.
   **Qualidade do trafego**, a grade imediatamente abaixo de **Detalhes da navegacao por paginas**
   com **Trafego por comunidade**, **Trafego por post** e **Trafego por psicologo**, tres cards na
   mesma linha em desktop amplo e viewport mobile 390x844 sem overflow horizontal.
+- API real local complementar (2026-07-26) - OK: validou
+  `entry_pages.total=238` com as entradas dinâmicas consolidadas em **Posts específicos**
+  (`197` sessões), **Perfis de psicólogos** (`4`) e **Comunidades** (`4`), preservando linhas
+  exatas para páginas não dinâmicas como `/`, `/auth/login` e `/psychologists`.
+- Browser local/headless complementar (2026-07-26) - OK: validou a lista **Principais páginas de
+  entrada** com `/community/*/post/*`, `/psychologists/*` e `/community/*` em desktop 1366x900 e
+  mobile 390x844, sem exibir paths específicos de post nesse bloco.

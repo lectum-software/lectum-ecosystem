@@ -18,6 +18,9 @@ O Builder/Quick Copy ativo `vcp://quickcopy/vcp-24aaa2941d814e5b90572bc93ae50e2a
 - Reutilizar apenas dados reais ja existentes: `visitor_session`, `page_view_event`, `important_action_event`, `visitor_location`, `user`, `community`, `community_post`, `post_reply`, `contact_request` e assinaturas profissionais.
 - Manter o periodo padrao em 30 dias e limite maximo inicial em 180 dias, validando `from <= to`.
 - Usar as mesmas agregacoes no CSV de exportacao, evitando divergencia entre tela e relatorio.
+- Consolidar, em **Principais páginas de entrada**, URLs dinamicas de posts, comunidades e perfis
+  de psicologos por tipo de entrada, mantendo páginas não dinamicas por path exato. Assim, dois
+  posts diferentes aparecem como uma linha **Posts específicos** em vez de duas linhas por URL.
 - Expor tambem `top_posts` no resumo e no CSV, agregando pageviews reais de posts de comunidade
   por `page_view_event.page_kind="community_post"`/`target_id` e enriquecendo o label com
   `community_post.title` + comunidade real quando o post ainda existir.
@@ -36,6 +39,9 @@ O Builder/Quick Copy ativo `vcp://quickcopy/vcp-24aaa2941d814e5b90572bc93ae50e2a
 - O custo computacional fica no backend em consultas agregadas sob demanda; se o volume crescer, uma nova ADR devera avaliar pre-agregacao ou jobs analiticos.
 - O mapa fica deliberadamente simples nesta etapa para evitar package novo e evitar visual cartografico enganoso quando a fonte disponivel e um ranking por localidade.
 - A exportacao CSV herda as mesmas limitacoes e formulas do resumo, reduzindo ambiguidade operacional.
+- A exportacao CSV tambem recebe as chaves padrao de agrupamento para entradas dinamicas
+  (`/community/*/post/*`, `/community/*`, `/psychologists/*`), e não URLs individuais desses
+  registros.
 - O ranking de posts reaproveita o tracking first-party ja capturado; posts sem label resolvido
   continuam aparecendo pelo id real em vez de receber mock ou seed visual.
 
@@ -57,6 +63,13 @@ O Builder/Quick Copy ativo `vcp://quickcopy/vcp-24aaa2941d814e5b90572bc93ae50e2a
   - troca do periodo para 7 dias;
   - exportacao CSV;
   - validacao mobile (~390px), tablet (768px) e desktop.
+- Validacao complementar em 2026-07-26:
+  - `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`,
+    `pnpm --dir admin build` e `pnpm check`;
+  - API real local confirmou `entry_pages.total=238` e agregacao de entradas dinamicas em
+    **Posts específicos** (`197`), **Perfis de psicologos** (`4`) e **Comunidades** (`4`);
+  - browser local/headless confirmou os paths padrao `/community/*/post/*`, `/psychologists/*` e
+    `/community/*` na lista **Principais páginas de entrada**.
 
 ## Task relacionada
 
