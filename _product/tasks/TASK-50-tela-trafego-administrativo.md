@@ -998,3 +998,25 @@ Revalidacao apos reposicionar o bloco diretamente sob Visao geral:
 - `pnpm --dir admin check` com `NODE_OPTIONS=--max-old-space-size=8192` - OK apos regenerar tipos de rota com `pnpm --dir admin exec next typegen` devido a uma tentativa anterior de build interrompida ter deixado `.next/types` incompleto.
 - `pnpm --dir admin build` com `NODE_OPTIONS=--max-old-space-size=8192` - OK.
 - `pnpm check` com `NODE_OPTIONS=--max-old-space-size=8192` - OK.
+
+## Execucao complementar - copy e periodo dos graficos de distribuicao (2026-07-27)
+
+- Por feedback direto do usuario, o card **Dispositivos** passou a se chamar **Dispositivos e sistemas**.
+- A sublinha de sistemas operacionais abaixo de cada dispositivo passou a ficar em uma unica linha sem truncamento por ellipsis, exibindo o texto completo como no dashboard de pacientes.
+- O agregado de **Tipo de usuario** passou a exibir **Nao autenticados** no lugar de **Visitantes nao autenticados**.
+- A legenda de **Nao autenticados** recebeu quebra controlada entre as palavras, mantendo **autenticados** inteiro na segunda linha e sem quebra interna.
+- Os cards **Origem do trafego** e **Dispositivos e sistemas** voltaram a exibir o periodo selecionado no cabecalho, alinhados a **Tipo de usuario**.
+- Nao houve mock, endpoint novo, package novo, alteracao em Prisma schema/migrations, formula ou dado persistido; `db:migrate` nao foi necessario.
+- Builder/Quick Copy nao estava exposto como ferramenta callable neste ambiente; as referencias auditaveis foram `_product/proto/admin/Tráfego.png`, o dashboard de pacientes ja implementado em `admin/src/app/(admin)/pacientes/client.tsx` e a captura enviada pelo usuario.
+- ADR atualizado: `adrs/0230-admin-trafego-agregacoes.md`.
+
+Validacao desta execucao complementar:
+
+- `pnpm --dir backend exec biome check --write "src/modules/api/admin/private/traffic/summary/use-cases/services.ts"` - OK.
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/trafego/client.tsx"` - OK.
+- `pnpm --dir backend check` - OK.
+- `pnpm --dir backend build` - OK.
+- `pnpm --dir admin check` com `NODE_OPTIONS=--max-old-space-size=8192` - OK.
+- `pnpm --dir admin build` com `NODE_OPTIONS=--max-old-space-size=8192` - OK.
+- `pnpm check` com `NODE_OPTIONS=--max-old-space-size=8192` - OK.
+- HTTP local `GET http://localhost:3002/trafego` - OK (`200`).

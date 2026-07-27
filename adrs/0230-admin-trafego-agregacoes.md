@@ -470,3 +470,38 @@ Revalidacao complementar apos ajuste final de ordem:
 - `pnpm --dir admin check` com `NODE_OPTIONS=--max-old-space-size=8192` sem erros.
 - `pnpm --dir admin build` com `NODE_OPTIONS=--max-old-space-size=8192` sem erros.
 - `pnpm check` com `NODE_OPTIONS=--max-old-space-size=8192` sem erros.
+
+## Complemento 2026-07-27 - Copy e periodo nos graficos de distribuicao
+
+Por feedback direto de produto, os cards de distribuicao logo abaixo da **Visao geral** precisam
+explicitar periodo em todos os cards e simplificar os nomes exibidos nas legendas.
+
+Decisao:
+
+- Renomear o card **Dispositivos** para **Dispositivos e sistemas**, porque a legenda agora inclui a
+  composicao de sistemas operacionais por dispositivo.
+- Manter os sistemas operacionais em uma unica linha no sublabel da legenda, sem truncamento por
+  ellipsis, para igualar a leitura do dashboard de pacientes.
+- Alterar o label do segmento anonimo de **Tipo de usuario** para **Nao autenticados**, sem mudar o
+  identificador tecnico `anonymous` nem a formula por `visitor_session.user.role`.
+- Controlar a quebra visual do label **Nao autenticados** para manter a palavra `autenticados`
+  inteira na segunda linha, evitando particionar a palavra por falta de largura da coluna.
+- Exibir `periodDescription` tambem em **Origem do trafego** e **Dispositivos e sistemas**, mantendo
+  a consistencia com **Tipo de usuario**.
+
+Consequencia:
+
+- A leitura fica mais proxima do dashboard de pacientes e reduz quebra vertical desnecessaria nas
+  legendas.
+- O contrato permanece estavel: apenas o label humano de `user_types.items[]` muda para a UI/export.
+
+Validacao complementar:
+
+- `pnpm --dir backend exec biome check --write "src/modules/api/admin/private/traffic/summary/use-cases/services.ts"`.
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/trafego/client.tsx"`.
+- `pnpm --dir backend check`.
+- `pnpm --dir backend build`.
+- `pnpm --dir admin check` com `NODE_OPTIONS=--max-old-space-size=8192`.
+- `pnpm --dir admin build` com `NODE_OPTIONS=--max-old-space-size=8192`.
+- `pnpm check` com `NODE_OPTIONS=--max-old-space-size=8192`.
+- HTTP local `GET http://localhost:3002/trafego`.

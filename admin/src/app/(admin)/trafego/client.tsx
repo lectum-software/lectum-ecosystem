@@ -558,6 +558,7 @@ const OnlineNowPanel = ({ onlineNow }: { onlineNow: TrafficOnlineNow }) => {
   const updatedAt = formatTime(onlineNow.window.to);
   const counters = [
     { label: "Sess\u00f5es ativas", value: onlineNow.active_sessions },
+    { label: "Novos visitantes", value: onlineNow.new_visitors },
     { label: "Pacientes", value: onlineNow.patients },
     { label: "Psic\u00f3logos", value: onlineNow.psychologists },
     { label: "N\u00e3o autenticados", value: onlineNow.anonymous_visitors },
@@ -591,7 +592,7 @@ const OnlineNowPanel = ({ onlineNow }: { onlineNow: TrafficOnlineNow }) => {
         </div>
       </div>
 
-      <div className="mt-5 grid min-w-0 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="mt-5 grid min-w-0 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
         {counters.map((counter) => (
           <OnlineNowStat
             key={`online-now-counter-${counter.label}`}
@@ -755,9 +756,25 @@ const DonutChart = ({
                     style={{ backgroundColor: CHART_COLORS[index % CHART_COLORS.length] }}
                   />
                   <span className="min-w-0">
-                    <span className="block whitespace-normal break-words">{item.label}</span>
+                    <span
+                      className={cn(
+                        "block whitespace-normal break-words",
+                        item.id === "anonymous" && "break-normal",
+                      )}
+                    >
+                      {item.id === "anonymous" && item.label === "Não autenticados" ? (
+                        <>
+                          <span className="sr-only">{item.label}</span>
+                          <span aria-hidden>Não</span>
+                          <br aria-hidden />
+                          <span aria-hidden>autenticados</span>
+                        </>
+                      ) : (
+                        item.label
+                      )}
+                    </span>
                     {item.sublabel ? (
-                      <span className="mt-1 block whitespace-normal break-words text-xs font-semibold leading-5 text-subtle">
+                      <span className="mt-1 block whitespace-nowrap text-xs font-semibold leading-5 text-subtle">
                         {item.sublabel}
                       </span>
                     ) : null}
@@ -2087,7 +2104,11 @@ const TrafficContent = ({
 
       <div className="grid min-w-0 gap-4 xl:grid-cols-3">
         <CardShell className="p-5">
-          <PanelTitle icon={PieChart} title="Origem do tráfego" />
+          <PanelTitle
+            icon={PieChart}
+            periodDescription={periodDescription}
+            title="Origem do tráfego"
+          />
           <DonutChart
             ariaLabel="Distribuição de sessões por origem de tráfego"
             items={summary.traffic_sources.items}
@@ -2095,7 +2116,11 @@ const TrafficContent = ({
           />
         </CardShell>
         <CardShell className="p-5">
-          <PanelTitle icon={Smartphone} title="Dispositivos" />
+          <PanelTitle
+            icon={Smartphone}
+            periodDescription={periodDescription}
+            title="Dispositivos e sistemas"
+          />
           <DonutChart
             ariaLabel="Distribuição de sessões por dispositivo"
             items={buildDeviceDonutItems(summary.devices.items)}

@@ -57,7 +57,7 @@ const DEVICE_LABELS: Record<AdminTrafficDeviceType, string> = {
 };
 
 const USER_TYPE_LABELS: Record<AdminTrafficUserType, string> = {
-  anonymous: "Visitantes não autenticados",
+  anonymous: "Não autenticados",
   patients: "Pacientes",
   psychologists: "Psicólogos",
 };
