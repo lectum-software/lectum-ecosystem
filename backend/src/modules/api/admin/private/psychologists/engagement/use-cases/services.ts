@@ -3,6 +3,7 @@ import { error, msg } from "@/helpers/translate";
 import {
   bestAdminCommunityEngagementDiagnosis,
   diagnoseAdminCommunityEngagement,
+  formatAdminPsychologistCommunityEngagementDiagnosis,
 } from "@/utils/admin-community-engagement-diagnosis";
 import type { AdminOperatingSystemType } from "@/utils/admin-operating-system";
 import {
@@ -1013,10 +1014,12 @@ const buildCommunityItems = (input: {
         source: "community_post.author.role=paciente+post_reply.author_id" as const,
       },
       downvotes: 0,
-      engagement_diagnosis: diagnoseAdminCommunityEngagement({
-        interactions: 0,
-        source: "community_post+post_reply+post_vote.user_id",
-      }),
+      engagement_diagnosis: formatAdminPsychologistCommunityEngagementDiagnosis(
+        diagnoseAdminCommunityEngagement({
+          interactions: 0,
+          source: "community_post+post_reply+post_vote.user_id",
+        }),
+      ),
       following: false,
       id: community.id,
       interactions: 0,
@@ -1107,10 +1110,12 @@ const buildCommunityItems = (input: {
   return activeCommunities
     .map((community) => ({
       ...community,
-      engagement_diagnosis: diagnoseAdminCommunityEngagement({
-        interactions: community.interactions,
-        source: "community_post+post_reply+post_vote.user_id",
-      }),
+      engagement_diagnosis: formatAdminPsychologistCommunityEngagementDiagnosis(
+        diagnoseAdminCommunityEngagement({
+          interactions: community.interactions,
+          source: "community_post+post_reply+post_vote.user_id",
+        }),
+      ),
     }))
     .sort((left, right) => {
       if (left.interactions !== right.interactions) return right.interactions - left.interactions;
@@ -1377,10 +1382,12 @@ export const showAdminPsychologistStatistics = async (
     psychologistId: userId,
     repository,
   });
-  const communityEngagementDiagnosis = bestAdminCommunityEngagementDiagnosis({
-    diagnoses: communityItems.map((community) => community.engagement_diagnosis),
-    source: "community.engagement_diagnosis:max",
-  });
+  const communityEngagementDiagnosis = formatAdminPsychologistCommunityEngagementDiagnosis(
+    bestAdminCommunityEngagementDiagnosis({
+      diagnoses: communityItems.map((community) => community.engagement_diagnosis),
+      source: "community.engagement_diagnosis:max",
+    }),
+  );
   const communityContentDistribution = {
     posts: buildContentFormatDistribution(communityPosts, classifyPostContentFormat),
     replies: buildContentFormatDistribution(communityReplies, classifyReplyContentFormat),

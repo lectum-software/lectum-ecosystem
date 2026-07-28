@@ -2861,6 +2861,20 @@ const getCommunityEngagementDiagnosis = (
     source: "community_post+post_reply+post_vote.user_id",
   };
 
+const PSYCHOLOGIST_COMMUNITY_ENGAGEMENT_LABEL_BY_ID: Record<
+  AdminPsychologistStatistics["community"]["engagement_diagnosis"]["id"],
+  string
+> = {
+  ativo: "Engajado",
+  muito_ativo: "Muito engajamento",
+  pouco_ativo: "Pouco engajado",
+  sem_base: "Sem base",
+};
+
+const formatPsychologistCommunityEngagementLabel = (
+  diagnosis: AdminPsychologistStatistics["community"]["engagement_diagnosis"],
+) => PSYCHOLOGIST_COMMUNITY_ENGAGEMENT_LABEL_BY_ID[diagnosis.id] ?? diagnosis.label;
+
 const getPsychologistCommunityInteractions = (community: PsychologistStatisticsCommunityItem) =>
   community.interactions ?? community.posts + community.replies;
 
@@ -2916,7 +2930,7 @@ const ActiveCommunitiesBlock = ({
               communityEngagementDiagnosisClassName(engagementDiagnosis.id),
             )}
           >
-            Engajamento geral: {engagementDiagnosis.label}
+            Engajamento geral: {formatPsychologistCommunityEngagementLabel(engagementDiagnosis)}
           </Badge>
           {isRefreshing ? (
             <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary-soft px-2.5 py-1 text-[11px] font-black text-primary">
@@ -3022,7 +3036,7 @@ const ActiveCommunitiesBlock = ({
                   </td>
                   <td className="px-4 py-4 text-center">
                     <Badge className={communityEngagementDiagnosisClassName(diagnosis.id)}>
-                      {diagnosis.label}
+                      {formatPsychologistCommunityEngagementLabel(diagnosis)}
                     </Badge>
                   </td>
                 </tr>

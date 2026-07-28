@@ -199,11 +199,17 @@ const TRACTION_FILTER_OPTIONS: PsychologistsListOption[] = [
 ];
 
 const ENGAGEMENT_FILTER_OPTIONS: PsychologistsListOption[] = [
-  { count: 0, id: "muito_ativo", label: "Muito ativo" },
-  { count: 0, id: "ativo", label: "Ativo" },
-  { count: 0, id: "pouco_ativo", label: "Pouco ativo" },
+  { count: 0, id: "muito_ativo", label: "Muito engajamento" },
+  { count: 0, id: "ativo", label: "Engajado" },
+  { count: 0, id: "pouco_ativo", label: "Pouco engajado" },
   { count: 0, id: "sem_base", label: "Sem base" },
 ];
+const PSYCHOLOGIST_ENGAGEMENT_LABEL_BY_ID: Record<PsychologistsListEngagementId, string> = {
+  ativo: "Engajado",
+  muito_ativo: "Muito engajamento",
+  pouco_ativo: "Pouco engajado",
+  sem_base: "Sem base",
+};
 const listTractionCategories = new Set<PsychologistsListTractionCategoryId>(
   TRACTION_FILTER_OPTIONS.map((option) => option.id as PsychologistsListTractionCategoryId),
 );
@@ -836,14 +842,13 @@ const resolveTractionLabel = (item: PsychologistsListItem) => {
 };
 
 const resolveEngagementLabel = (item: PsychologistsListItem) => {
-  if (item.engagement.id === "muito_ativo")
-    return { label: item.engagement.label, tone: "active" as const };
-  if (item.engagement.id === "ativo")
-    return { label: item.engagement.label, tone: "info" as const };
-  if (item.engagement.id === "pouco_ativo")
-    return { label: item.engagement.label, tone: "warning" as const };
+  const label = PSYCHOLOGIST_ENGAGEMENT_LABEL_BY_ID[item.engagement.id] ?? item.engagement.label;
 
-  return { label: item.engagement.label, tone: "inactive" as const };
+  if (item.engagement.id === "muito_ativo") return { label, tone: "active" as const };
+  if (item.engagement.id === "ativo") return { label, tone: "info" as const };
+  if (item.engagement.id === "pouco_ativo") return { label, tone: "warning" as const };
+
+  return { label, tone: "inactive" as const };
 };
 
 const RowActions = ({ item }: { item: PsychologistsListItem }) => (

@@ -1,5 +1,8 @@
 import type { Request } from "express";
-import type { AdminCommunityEngagementDiagnosis } from "@/utils/admin-community-engagement-diagnosis";
+import type {
+  AdminCommunityEngagementDiagnosis,
+  AdminPsychologistCommunityEngagementDiagnosis,
+} from "@/utils/admin-community-engagement-diagnosis";
 
 export const ADMIN_PSYCHOLOGISTS_LIST_SORTS = [
   "relevance",
@@ -118,7 +121,7 @@ export type AdminPsychologistsListTractionSummary = {
 };
 
 export type AdminPsychologistsListEngagementSummary = Omit<
-  AdminCommunityEngagementDiagnosis,
+  AdminPsychologistCommunityEngagementDiagnosis,
   "source"
 > & {
   signals: {

@@ -635,7 +635,7 @@ export type PsychologistsListTraction = {
 
 export type PsychologistsListEngagement = {
   id: PsychologistsListEngagementId;
-  label: "Ativo" | "Muito ativo" | "Pouco ativo" | "Sem base";
+  label: "Engajado" | "Muito engajamento" | "Pouco engajado" | "Sem base";
   signals: {
     active_days: number;
     interactions: number;
@@ -1162,7 +1162,7 @@ export type AdminPsychologistEngagementMetric = {
 
 export type AdminCommunityEngagementDiagnosis = {
   id: "ativo" | "muito_ativo" | "pouco_ativo" | "sem_base";
-  label: "Ativo" | "Muito ativo" | "Pouco ativo" | "Sem base";
+  label: "Engajado" | "Muito engajamento" | "Pouco engajado" | "Sem base";
   source: string;
 };
 

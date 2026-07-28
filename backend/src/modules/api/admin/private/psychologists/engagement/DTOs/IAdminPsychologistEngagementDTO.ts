@@ -1,5 +1,5 @@
 import type { Request } from "express";
-import type { AdminCommunityEngagementDiagnosis } from "@/utils/admin-community-engagement-diagnosis";
+import type { AdminPsychologistCommunityEngagementDiagnosis } from "@/utils/admin-community-engagement-diagnosis";
 
 export type AdminPsychologistEngagementQuery = {
   community?: string;
@@ -158,7 +158,7 @@ export type AdminPsychologistStatisticsCommunityItem = {
     source: "community_post.author.role=paciente+post_reply.author_id";
   };
   downvotes: number;
-  engagement_diagnosis: AdminCommunityEngagementDiagnosis;
+  engagement_diagnosis: AdminPsychologistCommunityEngagementDiagnosis;
   following: boolean;
   id: string;
   interactions: number;
@@ -294,7 +294,7 @@ export type AdminPsychologistStatisticsDTO = {
       replies: AdminPsychologistContentFormatDistribution;
       source: "community_post.media_type+community_post_media+post_reply.media_type";
     };
-    engagement_diagnosis: AdminCommunityEngagementDiagnosis;
+    engagement_diagnosis: AdminPsychologistCommunityEngagementDiagnosis;
     series: AdminPsychologistStatisticsSeriesPoint[];
   };
   period: AdminPsychologistStatisticsPeriod;

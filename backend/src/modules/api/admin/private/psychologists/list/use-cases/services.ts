@@ -1,6 +1,9 @@
 import type { Resolve } from "@/helpers/return";
 import { error, msg } from "@/helpers/translate";
-import { diagnoseAdminCommunityEngagement } from "@/utils/admin-community-engagement-diagnosis";
+import {
+  diagnoseAdminCommunityEngagement,
+  formatAdminPsychologistCommunityEngagementDiagnosis,
+} from "@/utils/admin-community-engagement-diagnosis";
 import { crpExperienceYears } from "@/utils/professional-experience";
 import { normalizeProfessionalDisplayName } from "@/utils/professional-name";
 import { rankPsychologistCandidates } from "@/utils/psychologist-public-ranking";
@@ -674,10 +677,12 @@ const buildEngagementSummary = (input: {
 }): AdminPsychologistsListItem["engagement"] => {
   const interactions = input.posts + input.replies + input.votes;
   const normalizedInteractions = normalizeCountToThirtyDays(interactions, input.activeDays);
-  const diagnosis = diagnoseAdminCommunityEngagement({
-    interactions: normalizedInteractions,
-    source: COMMUNITY_ENGAGEMENT_SOURCE,
-  });
+  const diagnosis = formatAdminPsychologistCommunityEngagementDiagnosis(
+    diagnoseAdminCommunityEngagement({
+      interactions: normalizedInteractions,
+      source: COMMUNITY_ENGAGEMENT_SOURCE,
+    }),
+  );
 
   return {
     id: diagnosis.id,

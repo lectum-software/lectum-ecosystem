@@ -10,6 +10,13 @@ export type AdminCommunityEngagementDiagnosis = {
   source: string;
 };
 
+export type AdminPsychologistCommunityEngagementDiagnosis = Omit<
+  AdminCommunityEngagementDiagnosis,
+  "label"
+> & {
+  label: "Engajado" | "Muito engajamento" | "Pouco engajado" | "Sem base";
+};
+
 const labelByDiagnosis: Record<
   AdminCommunityEngagementDiagnosisId,
   AdminCommunityEngagementDiagnosis["label"]
@@ -17,6 +24,16 @@ const labelByDiagnosis: Record<
   ativo: "Ativo",
   muito_ativo: "Muito ativo",
   pouco_ativo: "Pouco ativo",
+  sem_base: "Sem base",
+};
+
+const psychologistLabelByDiagnosis: Record<
+  AdminCommunityEngagementDiagnosisId,
+  AdminPsychologistCommunityEngagementDiagnosis["label"]
+> = {
+  ativo: "Engajado",
+  muito_ativo: "Muito engajamento",
+  pouco_ativo: "Pouco engajado",
   sem_base: "Sem base",
 };
 
@@ -49,22 +66,31 @@ export const diagnoseAdminCommunityEngagement = (input: {
   };
 };
 
+export const formatAdminPsychologistCommunityEngagementDiagnosis = (input: {
+  id: AdminCommunityEngagementDiagnosisId;
+  source: string;
+}): AdminPsychologistCommunityEngagementDiagnosis => ({
+  id: input.id,
+  label: psychologistLabelByDiagnosis[input.id],
+  source: input.source,
+});
+
 export const bestAdminCommunityEngagementDiagnosis = (input: {
-  diagnoses: AdminCommunityEngagementDiagnosis[];
+  diagnoses: { id: AdminCommunityEngagementDiagnosisId }[];
   source: string;
 }): AdminCommunityEngagementDiagnosis => {
-  const best = input.diagnoses.reduce<AdminCommunityEngagementDiagnosis | null>(
+  const best = input.diagnoses.reduce<AdminCommunityEngagementDiagnosisId | null>(
     (current, candidate) => {
-      if (!current) return candidate;
+      if (!current) return candidate.id;
 
-      return diagnosisPriority[candidate.id] > diagnosisPriority[current.id] ? candidate : current;
+      return diagnosisPriority[candidate.id] > diagnosisPriority[current] ? candidate.id : current;
     },
     null,
   );
 
   return {
-    id: best?.id ?? "sem_base",
-    label: labelByDiagnosis[best?.id ?? "sem_base"],
+    id: best ?? "sem_base",
+    label: labelByDiagnosis[best ?? "sem_base"],
     source: input.source,
   };
 };
