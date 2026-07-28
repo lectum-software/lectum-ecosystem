@@ -577,3 +577,34 @@ Frontend esperado:
 - Browser local/headless/CDP com admin temporario real removido ao final em `http://localhost:3002/psicologos/lista?sort=relevance&limit=8&q=T%C3%BAlio&plan=courtesy&profile_status=active&registry_status=active&traction=strong_traction&engagement=muito_ativo`:
   - desktop `1440x1000`: bloco **Filtros aplicados** mostrou Busca, Plano, Status perfil, Status registro, Tracao e Engajamento; seletor de ordenacao mediu `220x40`; `scrollWidth=1440`, `innerWidth=1440`;
   - mobile base `390x844`: mesmos filtros visiveis; seletor de ordenacao mediu `258x38`; `scrollWidth=390`, `innerWidth=390`.
+
+## Ajuste complementar: tags de filtros sem faixa (2026-07-28)
+
+- Pedido do usuario: remover a faixa branca e o texto **Filtros aplicados** quando houver filtro ativo, adicionar um **X** de saida em cada tag de filtro e remover completamente a faixa quando nao houver filtro aplicado.
+- Frontend Admin: `/psicologos/lista` agora renderiza somente as tags dos filtros ativos, sem card/faixa propria e sem label textual redundante.
+- Cada tag ativa tem um botao acessivel **Remover filtro ...** com icone `X`, que remove o respectivo parametro da URL e atualiza a tabela real.
+- Quando nao existem filtros ativos, nenhum resumo/aviso de filtros e renderizado entre os controles e a tabela; a contagem do botao **Filtros ativos** passa a refletir as tags ativas calculadas pela URL.
+- Nao houve alteracao de backend, Prisma/migrations, packages, dados, filtros disponiveis, ordenacao, paginacao ou contratos de API.
+- Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente; a referencia auditavel permaneceu `_product/proto/admin/Psicologos/Psicologos- Lista.png`, a captura enviada pelo usuario e o browser local.
+- ADR novo nao se aplica: ajuste visual/UX local sem nova decisao arquitetural, integracao, regra de dominio ou trade-off relevante.
+
+### Criterios complementares
+
+- [x] Com filtros ativos, a UI nao exibe faixa/card branco nem o texto visivel **Filtros aplicados**.
+- [x] Cada tag de filtro ativo exibe um **X** que remove o filtro correspondente da URL.
+- [x] Sem filtros ativos, nao ha faixa branca, aviso ou resumo de filtros entre os controles e a tabela.
+- [x] A UI permanece mobile-first em base aproximada de `390px` e sem overflow horizontal de viewport.
+- [x] Nenhum backend, Prisma/migrations, package, mock, seed ou endpoint paralelo foi criado.
+
+### Validacao complementar
+
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/psicologos/lista/client.tsx"`
+- `pnpm --dir admin exec eslint "src/app/(admin)/psicologos/lista/client.tsx"`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check`
+- Browser local/headless/CDP com admin temporario real removido ao final:
+  - filtro ativo em `/psicologos/lista?traction_engagement=strong_traction_high_engagement`: tag **Quadrante: Tracao forte + alto engajamento** visivel com botao **Remover filtro Quadrante...**, sem faixa branca nem texto visivel **Filtros aplicados**;
+  - apos clicar no **X**, a URL removeu `traction_engagement`, a contagem voltou para `0` e nenhum resumo/aviso de filtros ficou visivel;
+  - sem filtros em `/psicologos/lista`: nao ha texto **Filtros aplicados**, nao ha mensagem **Nenhum filtro aplicado** e nao ha faixa branca;
+  - desktop `1440x1000` e mobile base `390x844`: sem overflow horizontal de viewport.

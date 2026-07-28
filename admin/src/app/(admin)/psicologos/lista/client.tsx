@@ -623,6 +623,7 @@ const FilterPanel = ({
 };
 
 type ActiveFilterItem = {
+  key: FilterQueryKey;
   label: string;
   value?: string;
 };
@@ -637,7 +638,7 @@ const buildActiveFilterItems = (query: PsychologistsListQuery, data?: AdminPsych
   const active: ActiveFilterItem[] = [];
   const filters = data?.filters;
 
-  if (query.q?.trim()) active.push({ label: "Busca", value: query.q.trim() });
+  if (query.q?.trim()) active.push({ key: "q", label: "Busca", value: query.q.trim() });
 
   const optionFilters: Array<{
     key: FilterQueryKey;
@@ -672,47 +673,53 @@ const buildActiveFilterItems = (query: PsychologistsListQuery, data?: AdminPsych
     if (typeof value !== "string" || !value) continue;
 
     active.push({
+      key: filter.key,
       label: filter.label,
       value: optionLabel(filter.options, value),
     });
   }
 
   for (const option of FILTER_FEATURE_OPTIONS) {
-    if (query[option.name] === true) active.push({ label: option.label });
+    if (query[option.name] === true) active.push({ key: option.name, label: option.label });
   }
 
   return active;
 };
 
-const ActiveFiltersSummary = ({ filters }: { filters: ActiveFilterItem[] }) => (
-  <section
-    aria-label="Filtros aplicados na tabela"
-    className="rounded-[22px] border border-border/80 bg-surface px-4 py-3 shadow-control"
-  >
-    <div className="flex flex-col gap-2 lg:flex-row lg:items-start lg:gap-3">
-      <p className="shrink-0 text-xs font-semibold uppercase tracking-[0.12em] text-muted">
-        Filtros aplicados
-      </p>
-      {filters.length > 0 ? (
-        <div className="flex min-w-0 flex-wrap gap-2">
-          {filters.map((filter) => (
-            <span
-              className="inline-flex min-h-7 items-center rounded-full border border-border bg-surface-muted px-3 text-xs font-medium leading-5 text-muted"
-              key={`${filter.label}-${filter.value ?? "ativo"}`}
+const ActiveFiltersSummary = ({
+  filters,
+  removeHref,
+}: {
+  filters: ActiveFilterItem[];
+  removeHref: (key: FilterQueryKey) => string;
+}) => {
+  if (filters.length === 0) return null;
+
+  return (
+    <ul aria-label="Filtros aplicados na tabela" className="flex min-w-0 flex-wrap gap-2">
+      {filters.map((filter) => {
+        const readableFilter = filter.value ? `${filter.label}: ${filter.value}` : filter.label;
+
+        return (
+          <li
+            className="inline-flex min-h-8 items-center gap-1.5 rounded-full border border-primary/15 bg-primary-soft/70 px-3 text-xs font-medium leading-5 text-muted"
+            key={`${filter.key}-${filter.value ?? "ativo"}`}
+          >
+            <span className="font-semibold text-foreground">{filter.label}</span>
+            {filter.value ? <span>: {filter.value}</span> : null}
+            <a
+              aria-label={`Remover filtro ${readableFilter}`}
+              className="-mr-1 grid h-5 w-5 place-items-center rounded-full text-primary transition hover:bg-primary/10 hover:text-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20"
+              href={removeHref(filter.key)}
             >
-              <span className="font-semibold text-foreground">{filter.label}</span>
-              {filter.value ? <span>: {filter.value}</span> : null}
-            </span>
-          ))}
-        </div>
-      ) : (
-        <p className="text-sm font-medium leading-5 text-muted">
-          Nenhum filtro aplicado; a tabela mostra todos os psicólogos no recorte atual.
-        </p>
-      )}
-    </div>
-  </section>
-);
+              <X aria-hidden className="h-3.5 w-3.5" />
+            </a>
+          </li>
+        );
+      })}
+    </ul>
+  );
+};
 
 const SearchBox = ({ onSearch, value }: { onSearch: (value: string) => void; value?: string }) => {
   const [draft, setDraft] = useState(value || "");
@@ -1192,6 +1199,18 @@ export const AdminPsychologistsListClient = () => {
     router.replace(next ? `${pathname}?${next}` : pathname, { scroll: false });
   };
 
+  const getRemoveActiveFilterHref = (key: FilterQueryKey) => {
+    const params = new URLSearchParams(searchString);
+
+    params.delete(key);
+    if (key === "traction" || key === "engagement") params.delete("traction_engagement");
+    for (const deprecatedKey of DEPRECATED_FILTER_KEYS) params.delete(deprecatedKey);
+    params.delete("page");
+
+    const next = params.toString();
+    return next ? `${pathname}?${next}` : pathname;
+  };
+
   const closeFilters = useCallback(() => {
     if (filterOpenFrameRef.current) {
       window.cancelAnimationFrame(filterOpenFrameRef.current);
@@ -1324,7 +1343,11 @@ export const AdminPsychologistsListClient = () => {
       <div className="min-w-0 space-y-4">
         <div className="flex min-w-0 flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
           <div className="min-w-0 lg:w-full lg:max-w-[560px]">
-            <SearchBox onSearch={(value) => replaceParams({ q: value || null })} value={query.q} />
+            <SearchBox
+              key={query.q ?? ""}
+              onSearch={(value) => replaceParams({ q: value || null })}
+              value={query.q}
+            />
           </div>
           <button
             className="inline-flex h-12 w-full min-w-0 items-center justify-center gap-2 rounded-full border border-border bg-surface px-4 text-sm font-medium text-foreground shadow-control transition hover:border-primary hover:text-primary sm:w-auto"
@@ -1334,12 +1357,12 @@ export const AdminPsychologistsListClient = () => {
             <Filter aria-hidden className="h-4 w-4" />
             Filtros ativos
             <span className="rounded-full bg-primary-soft px-2 py-0.5 text-xs font-medium text-primary">
-              {summary?.active_filters_count ?? activeFilterItems.length}
+              {activeFilterItems.length}
             </span>
           </button>
         </div>
 
-        <ActiveFiltersSummary filters={activeFilterItems} />
+        <ActiveFiltersSummary filters={activeFilterItems} removeHref={getRemoveActiveFilterHref} />
 
         <CardShell className="overflow-hidden">
           <div className="flex flex-col gap-3 border-b border-border px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
