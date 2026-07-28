@@ -798,3 +798,32 @@ Frontend esperado:
 - `NODE_OPTIONS=--max-old-space-size=8192 pnpm --dir admin build`
 - Browser local/headless autenticado em `http://localhost:3002/pacientes?period=all` validou desktop `1366x900` e mobile `390x844`: titulos **Genero**, **Forma de cadastro**, **Devices e sistemas**, **Localizacao** e **Uso da plataforma** com `fontWeight=600`, classe `font-bold` e `scrollWidth` igual ao viewport em ambos os tamanhos. Screenshots salvos em `.tmp/patient-dashboard-title-weight-desktop-1366.png` e `.tmp/patient-dashboard-title-weight-mobile-390.png`.
 - Admin temporario de validacao `codex-title-weight-*` foi removido do banco apos a verificacao.
+
+## Ajuste pos-feedback 2026-07-28 - Intencao e engajamento em duas colunas
+
+- Pedido do usuario: dividir o bloco **Analise da intencao dos pacientes** em duas colunas com graficos: **Intencao dos pacientes** e **Engajamento dos pacientes**.
+- O card principal passou a se chamar **Intencao e engajamento dos pacientes** e manteve o periodo logo abaixo do titulo.
+- A coluna **Intencao dos pacientes** usa os mesmos dados reais de `intent_analysis.items`, agora com donut, barra percentual empilhada e cards de Frios, Curiosos, Interessados e Qualificados.
+- A coluna **Engajamento dos pacientes** usa `intent_analysis.signal_totals` sem alterar contrato, exibindo grafico de barras para aberturas de perfil, favoritos ativos, cliques no WhatsApp e retornos ao perfil.
+- O texto do grafico de engajamento deixa claro que uma pessoa pode gerar mais de um sinal; logo, o grafico mede acoes reais, nao pacientes unicos.
+- Nao houve alteracao de backend, contrato HTTP, Prisma, migration, package novo, tracking, seed, mock, backfill artificial ou uso de `<img>`.
+- Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente; as referencias auditaveis foram `_product/proto/admin/Pacientes/Pacientes - Dashboard.png` e o screenshot enviado pelo usuario em 2026-07-27.
+- ADR atualizado: `adrs/0314-admin-patient-dashboard-intent-distribution.md`.
+
+### Criterios de aceite do ajuste
+
+- [x] O bloco principal exibe o titulo **Intencao e engajamento dos pacientes**.
+- [x] Em desktop, o layout progride para duas colunas: **Intencao dos pacientes** e **Engajamento dos pacientes**.
+- [x] **Intencao dos pacientes** possui grafico proprio usando dados reais de distribuicao por segmento.
+- [x] **Engajamento dos pacientes** possui grafico proprio usando sinais reais de `signal_totals`.
+- [x] O layout mobile-first empilha as colunas em telas estreitas sem overflow horizontal observado no browser headless.
+- [x] Nenhum mock, seed, dado artificial, migration, package novo, endpoint simulado ou `<img>` foi adicionado.
+
+### Validacao complementar executada
+
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/pacientes/client.tsx"`
+- `pnpm --dir admin check`
+- `NODE_OPTIONS=--max-old-space-size=8192 pnpm --dir admin build`
+- `pnpm check`
+- Browser local/headless autenticado em `http://localhost:3002/pacientes?period=all` com Admin temporario real removido ao final: confirmou o bloco **Intencao e engajamento dos pacientes**, as secoes **Intencao dos pacientes** e **Engajamento dos pacientes**, donut de intencao, barras de engajamento e percentual arredondado `14,2% sobre a base considerada.`; screenshot salvo em `.tmp/patient-dashboard-intent-engagement-browser.png`.
+- Durante a validacao, o primeiro build complementar encontrou `ENOSPC` por falta de espaco em artefatos gerados; foram removidos apenas caches/artefatos temporarios de build/browser dentro do workspace e o build foi reexecutado com sucesso.

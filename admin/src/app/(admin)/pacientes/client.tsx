@@ -1096,8 +1096,184 @@ const PatientIntentDistributionBar = ({
   </div>
 );
 
+type PatientEngagementSignal = {
+  color: string;
+  description: string;
+  icon: LucideIcon;
+  id: keyof AdminPatientsDashboard["intent_analysis"]["signal_totals"];
+  label: string;
+  value: number;
+};
+
+const buildPatientIntentDonutItems = (items: PatientsDashboardIntentSegment[]) =>
+  items.map((item) => ({
+    color: PATIENT_INTENT_CHART_COLORS[item.id],
+    count: item.count,
+    id: item.id,
+    label: item.label,
+    percentage: item.percentage,
+  }));
+
+const buildPatientEngagementSignals = (
+  signalTotals: AdminPatientsDashboard["intent_analysis"]["signal_totals"],
+): PatientEngagementSignal[] => [
+  {
+    color: PATIENT_INTENT_CHART_COLORS.curious,
+    description: "Aberturas reais de perfis públicos de psicólogos.",
+    icon: Eye,
+    id: "profile_views",
+    label: "Aberturas de perfil",
+    value: signalTotals.profile_views,
+  },
+  {
+    color: PATIENT_INTENT_CHART_COLORS.objective,
+    description: "Psicólogos favoritados que continuam ativos na base.",
+    icon: Target,
+    id: "favorites",
+    label: "Favoritos ativos",
+    value: signalTotals.favorites,
+  },
+  {
+    color: PATIENT_INTENT_CHART_COLORS.very_qualified,
+    description: "Cliques reais no WhatsApp dentro do período.",
+    icon: MessageCircle,
+    id: "whatsapp_clicks",
+    label: "Cliques no WhatsApp",
+    value: signalTotals.whatsapp_clicks,
+  },
+  {
+    color: "#8b5cf6",
+    description: "Retornos relevantes ao mesmo perfil de psicólogo.",
+    icon: RefreshCw,
+    id: "repeated_profile_views",
+    label: "Retornos ao perfil",
+    value: signalTotals.repeated_profile_views,
+  },
+];
+
+const PatientIntentDonutChart = ({
+  items,
+  total,
+}: {
+  items: PatientsDashboardIntentSegment[];
+  total: number;
+}) => (
+  <DonutChart
+    ariaLabel={`Gráfico de donut de intenção dos pacientes: ${items
+      .map(
+        (item) =>
+          `${item.label}: ${numberFormatter.format(item.count)} pacientes, ${formatPercentageValue(
+            item.percentage,
+          )}`,
+      )
+      .join("; ")}.`}
+    emptyMessage="Sem pacientes reais no período para calcular intenção."
+    items={buildPatientIntentDonutItems(items)}
+    total={total}
+  />
+);
+
+const PatientEngagementBarsChart = ({
+  signals,
+  totalPatients,
+}: {
+  signals: PatientEngagementSignal[];
+  totalPatients: number;
+}) => {
+  const totalSignals = signals.reduce((sum, signal) => sum + signal.value, 0);
+  const maxSignalValue = Math.max(1, ...signals.map((signal) => signal.value));
+
+  return (
+    <div className="mt-5 rounded-2xl border border-border/70 bg-surface p-4">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <p className="text-xs font-black uppercase tracking-[0.12em] text-muted">
+            Sinais observados
+          </p>
+          <p className="mt-1 text-3xl font-black text-foreground">
+            {numberFormatter.format(totalSignals)}
+          </p>
+          <p className="mt-1 text-sm font-bold text-muted">ações reais no período selecionado</p>
+        </div>
+        <span className="grid h-12 w-12 place-items-center rounded-full bg-primary-soft text-primary">
+          <Activity aria-hidden className="h-5 w-5" />
+        </span>
+      </div>
+
+      <div
+        aria-label={`Gráfico de barras de engajamento dos pacientes: ${signals
+          .map((signal) => `${signal.label}: ${numberFormatter.format(signal.value)}`)
+          .join("; ")}.`}
+        className="mt-5 space-y-4"
+        role="img"
+      >
+        {signals.map((signal) => {
+          const barWidth = signal.value > 0 ? (signal.value / maxSignalValue) * 100 : 0;
+          const patientRate =
+            totalPatients > 0 ? Math.round((signal.value / totalPatients) * 1000) / 10 : null;
+
+          return (
+            <div className="space-y-2" key={signal.id}>
+              <div className="flex items-start justify-between gap-3 text-sm">
+                <div className="min-w-0">
+                  <p className="font-bold text-foreground">{signal.label}</p>
+                  <p className="mt-0.5 text-xs font-semibold leading-5 text-muted">
+                    {patientRate === null
+                      ? "Sem base de pacientes no período."
+                      : `${formatPercentageValue(patientRate)} sobre a base considerada.`}
+                  </p>
+                </div>
+                <span className="shrink-0 text-right font-black text-foreground">
+                  {numberFormatter.format(signal.value)}
+                </span>
+              </div>
+              <div className="h-2.5 overflow-hidden rounded-full bg-surface-muted">
+                <div
+                  aria-hidden
+                  className="h-full rounded-full"
+                  style={{ backgroundColor: signal.color, width: `${barWidth}%` }}
+                />
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      <p className="mt-4 text-xs font-semibold leading-5 text-subtle">
+        Uma pessoa pode gerar mais de um sinal; por isso o gráfico mede ações reais, não pacientes
+        únicos.
+      </p>
+    </div>
+  );
+};
+
+const PatientEngagementSignalCard = ({ signal }: { signal: PatientEngagementSignal }) => {
+  const Icon = signal.icon;
+
+  return (
+    <div className="min-w-0 rounded-2xl border border-border/75 bg-surface p-4">
+      <div className="flex items-start justify-between gap-3">
+        <span
+          className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-surface-muted"
+          style={{ color: signal.color }}
+        >
+          <Icon aria-hidden className="h-5 w-5" />
+        </span>
+        <span className="rounded-full bg-surface-muted px-2.5 py-1 text-xs font-black text-foreground">
+          {numberFormatter.format(signal.value)}
+        </span>
+      </div>
+      <p className="mt-4 text-xs font-black uppercase tracking-[0.12em] text-muted">
+        {signal.label}
+      </p>
+      <p className="mt-2 text-xs font-bold leading-5 text-muted">{signal.description}</p>
+    </div>
+  );
+};
+
 const PatientIntentAnalysisCard = ({ summary }: { summary: AdminPatientsDashboard }) => {
   const intent = summary.intent_analysis;
+  const engagementSignals = buildPatientEngagementSignals(intent.signal_totals);
 
   return (
     <CardShell className="p-5">
@@ -1105,7 +1281,9 @@ const PatientIntentAnalysisCard = ({ summary }: { summary: AdminPatientsDashboar
         <div className="min-w-0">
           <div className="flex items-center gap-2">
             <Target aria-hidden className="h-5 w-5 text-primary" />
-            <h2 className="text-xl font-bold text-foreground">Análise da intenção dos pacientes</h2>
+            <h2 className="text-xl font-bold text-foreground">
+              Intenção e engajamento dos pacientes
+            </h2>
           </div>
           <p className="mt-2 text-sm font-bold leading-6 text-muted">
             {formatSelectedPeriod(summary.period)}
@@ -1113,57 +1291,57 @@ const PatientIntentAnalysisCard = ({ summary }: { summary: AdminPatientsDashboar
         </div>
       </div>
 
-      <div className="mt-5 grid gap-4 xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
-        <section className="rounded-[1.6rem] border border-border/75 bg-surface-muted/70 p-4">
+      <div className="mt-5 grid gap-4 xl:grid-cols-2">
+        <section className="min-w-0 rounded-[1.6rem] border border-border/75 bg-surface-muted/70 p-4">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
-              <p className="text-xs font-black uppercase tracking-[0.12em] text-muted">
-                Distribuição geral
-              </p>
+              <p className="text-xs font-black uppercase tracking-[0.12em] text-muted">Gráfico</p>
+              <h3 className="mt-1 text-lg font-bold text-foreground">Intenção dos pacientes</h3>
               <p className="mt-1 text-3xl font-black text-foreground">
                 {numberFormatter.format(intent.total_patients)}
               </p>
               <p className="mt-1 text-sm font-bold text-muted">pacientes considerados</p>
             </div>
-            <span className="grid h-12 w-12 place-items-center rounded-full bg-surface text-success">
-              <MessageCircle aria-hidden className="h-5 w-5" />
+            <span className="grid h-12 w-12 place-items-center rounded-full bg-surface text-primary">
+              <Target aria-hidden className="h-5 w-5" />
             </span>
           </div>
+          <p className="mt-4 text-sm font-bold leading-6 text-muted">
+            Distribuição dos pacientes reais entre Frios, Curiosos, Interessados e Qualificados.
+          </p>
+          <PatientIntentDonutChart items={intent.items} total={intent.total_patients} />
           <div className="mt-5">
             <PatientIntentDistributionBar items={intent.items} total={intent.total_patients} />
           </div>
           <div className="mt-5 grid gap-3 sm:grid-cols-2">
-            <div className="rounded-2xl bg-surface p-3">
-              <p className="text-xs font-black text-muted">Aberturas de perfil</p>
-              <p className="mt-1 text-lg font-black text-foreground">
-                {numberFormatter.format(intent.signal_totals.profile_views)}
-              </p>
-            </div>
-            <div className="rounded-2xl bg-surface p-3">
-              <p className="text-xs font-black text-muted">Favoritos ativos</p>
-              <p className="mt-1 text-lg font-black text-foreground">
-                {numberFormatter.format(intent.signal_totals.favorites)}
-              </p>
-            </div>
-            <div className="rounded-2xl bg-surface p-3">
-              <p className="text-xs font-black text-muted">Cliques no WhatsApp</p>
-              <p className="mt-1 text-lg font-black text-foreground">
-                {numberFormatter.format(intent.signal_totals.whatsapp_clicks)}
-              </p>
-            </div>
-            <div className="rounded-2xl bg-surface p-3">
-              <p className="text-xs font-black text-muted">Retornos ao perfil</p>
-              <p className="mt-1 text-lg font-black text-foreground">
-                {numberFormatter.format(intent.signal_totals.repeated_profile_views)}
-              </p>
-            </div>
+            {intent.items.map((segment) => (
+              <PatientIntentSegmentCard key={segment.id} segment={segment} />
+            ))}
           </div>
         </section>
 
-        <section className="grid min-w-0 gap-3 sm:grid-cols-2">
-          {intent.items.map((segment) => (
-            <PatientIntentSegmentCard key={segment.id} segment={segment} />
-          ))}
+        <section className="min-w-0 rounded-[1.6rem] border border-border/75 bg-surface-muted/70 p-4">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <p className="text-xs font-black uppercase tracking-[0.12em] text-muted">Gráfico</p>
+              <h3 className="mt-1 text-lg font-bold text-foreground">Engajamento dos pacientes</h3>
+              <p className="mt-1 text-sm font-bold leading-6 text-muted">
+                Sinais de descoberta e contato gerados por pacientes no período.
+              </p>
+            </div>
+            <span className="grid h-12 w-12 place-items-center rounded-full bg-surface text-success">
+              <Activity aria-hidden className="h-5 w-5" />
+            </span>
+          </div>
+          <PatientEngagementBarsChart
+            signals={engagementSignals}
+            totalPatients={intent.total_patients}
+          />
+          <div className="mt-5 grid gap-3 sm:grid-cols-2">
+            {engagementSignals.map((signal) => (
+              <PatientEngagementSignalCard key={signal.id} signal={signal} />
+            ))}
+          </div>
         </section>
       </div>
     </CardShell>

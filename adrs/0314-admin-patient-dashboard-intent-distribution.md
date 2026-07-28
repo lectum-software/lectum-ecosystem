@@ -63,3 +63,12 @@ O dashboard `/pacientes` passou a expor `intent_filters` no contrato de `GET /ap
 A decisão preserva a classificação canônica já calculada em `intent_analysis`: o backend monta os recortes por segmento usando dados reais do mesmo período, e o Admin apenas alterna entre agregados prontos. Isso evita recalcular intenção no cliente e evita criar endpoint paralelo, tracking novo, seed, mock ou backfill.
 
 Os recortes continuam agregados e internos ao Admin. Não há lista nominal por segmento nesses blocos, e localização permanece coarse via `visitor_location`, sem IP, coordenada ou endereço. Na UI, o seletor é compacto e sem o rótulo visual **Intenção**; a acessibilidade mantém label apenas `sr-only`.
+
+## Atualizacao 2026-07-28 - Intencao e engajamento em duas colunas
+
+O bloco do dashboard Admin de pacientes foi reorganizado de **Analise da intencao dos pacientes** para **Intencao e engajamento dos pacientes**, com duas leituras paralelas no desktop e empilhamento mobile-first:
+
+- **Intencao dos pacientes**: mantem a classificacao agregada em Frios, Curiosos, Interessados e Qualificados, agora com grafico de donut e barra de distribuicao percentual.
+- **Engajamento dos pacientes**: separa os sinais reais de comportamento em um grafico de barras para aberturas de perfil, favoritos ativos, cliques no WhatsApp e retornos ao perfil.
+
+A decisao evita misturar temperatura/intencao com volume de acoes observadas. O contrato `intent_analysis` permanece o mesmo; a mudanca e somente de hierarquia visual no Admin, sem endpoint novo, schema Prisma, migration, package, tracking, seed, mock ou backfill. A UI informa que uma pessoa pode gerar mais de um sinal, entao o grafico de engajamento mede acoes reais e nao pacientes unicos.
