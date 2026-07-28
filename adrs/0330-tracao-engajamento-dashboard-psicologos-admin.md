@@ -22,7 +22,7 @@ Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente. A e
 - Considerar **alto engajamento** quando posts publicados, respostas e votos/reacoes do psicologo em comunidades atingirem pelo menos 6 interacoes normalizadas para 30 dias, reaproveitando `diagnoseAdminCommunityEngagement`.
 - Tratar como **Dados Insuficientes** perfis com menos de 7 dias ativos no periodo quando nao houver tracao forte nem alto engajamento.
 - Exibir a leitura como matriz agregada mobile-first logo abaixo do bloco **Tracao** e antes de **Origem do trafego para psicologos**.
-- Incluir comparacao agregada da taxa de tracao forte entre psicologos engajados e pouco engajados, sempre com texto de leitura observacional e nao causal.
+- Incluir comparacao agregada da taxa de tracao forte entre psicologos engajados e pouco engajados, com copy objetiva de **impacto observado** que destaca a diferenca em pontos percentuais sem tratar a relacao como causal.
 
 ## Consequencias
 

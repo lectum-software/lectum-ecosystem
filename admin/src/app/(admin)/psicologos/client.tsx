@@ -2427,6 +2427,7 @@ const DashboardTractionEngagementCard = ({ summary }: { summary: AdminPsychologi
   const insufficientData = findTractionEngagementQuadrant(tractionEngagement, "insufficient_data");
   const highEngagement = tractionEngagement.comparison.high_engagement;
   const lowEngagement = tractionEngagement.comparison.low_engagement;
+  const rateDifference = tractionEngagement.comparison.rate_difference_points;
 
   return (
     <CardShell className="p-5">
@@ -2599,14 +2600,25 @@ const DashboardTractionEngagementCard = ({ summary }: { summary: AdminPsychologi
             />
             <TractionEngagementMetric
               label="Diferença observada"
-              value={formatRateDifference(tractionEngagement.comparison.rate_difference_points)}
+              value={formatRateDifference(rateDifference)}
             />
             <div className="rounded-[1.35rem] border border-border bg-surface-muted p-4 text-xs font-bold leading-5 text-muted">
-              Leitura observacional: alto engajamento significa pelo menos{" "}
+              {typeof rateDifference === "number" ? (
+                <>
+                  Impacto observado: psicólogos com alto engajamento apresentam{" "}
+                  <span className="font-black text-foreground">
+                    {formatRateDifference(rateDifference)}
+                  </span>{" "}
+                  na taxa de tração forte versus pouco engajados no período.
+                </>
+              ) : (
+                "Impacto observado: ainda não há base suficiente para comparar a tração entre engajados e pouco engajados no período."
+              )}{" "}
+              Critério:{" "}
               {numberFormatter.format(
                 tractionEngagement.thresholds.high_engagement_interactions_30d,
-              )}{" "}
-              interações em comunidade normalizadas por 30 dias. Não indica causalidade.
+              )}
+              + interações em comunidade a cada 30 dias.
             </div>
           </aside>
         </div>
