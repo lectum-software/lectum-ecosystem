@@ -1012,3 +1012,29 @@ Frontend esperado:
 - `NODE_OPTIONS=--max-old-space-size=8192 pnpm --dir admin build`
 - Browser local/headless autenticado em `http://localhost:3002/pacientes/lista` validou desktop `1366x900`: cabecalhos limpos, exemplos no corpo da tabela e linhas com cinco celulas; validou mobile `390x844`: exemplos nos cards e `scrollWidth=390`. Screenshots salvos em `.tmp/patient-list-row-examples-desktop.png` e `.tmp/patient-list-row-examples-mobile.png`.
 - Admin temporario de validacao `codex-patient-row-examples-*` foi removido do banco apos a verificacao.
+
+## Ajuste pos-feedback 2026-07-28 - Texto simples na tabela de pacientes
+
+- Pedido do usuario: na tabela de `/pacientes/lista`, remover o formato visual de tags e manter somente texto simples para reduzir o peso visual.
+- A coluna **Perfil** deixou de renderizar chips/badges arredondados e passou a usar texto simples com a cor semantica do status real.
+- Os exemplos visuais de **Intencao** e **Engajamento** continuam abaixo do valor real de cada linha/card, mas sem fundo, borda, pill ou formato de tag.
+- Os valores reais continuam vindo do backend e nao houve alteracao de contrato HTTP, filtros, ordenacao, paginacao, schema Prisma, migration, package, seed, mock, backfill, endpoint simulado ou uso de `<img>`.
+- Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente; as referencias auditaveis foram o screenshot enviado pelo usuario em 2026-07-28 e `_product/proto/admin/Pacientes/Pacientes - Dashboard.png`.
+- ADR nao foi criado/atualizado porque a mudanca e exclusivamente visual/local de apresentacao, sem decisao arquitetural, integracao, regra de dominio ou trade-off novo.
+
+### Criterios de aceite do ajuste
+
+- [x] A coluna **Perfil** nao usa mais chip/badge/tag visual.
+- [x] Os exemplos visuais de **Intencao** e **Engajamento** nao usam mais chip/badge/tag visual.
+- [x] Os textos reais e os exemplos continuam legiveis no desktop e nos cards mobile.
+- [x] Layout mobile-first preservado em 390px sem overflow horizontal.
+- [x] Nenhum mock, seed, dado artificial, migration, package novo, endpoint simulado ou `<img>` foi adicionado.
+
+### Validacao complementar executada
+
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/pacientes/lista/client.tsx"`
+- `pnpm --dir admin check`
+- `NODE_OPTIONS=--max-old-space-size=8192 pnpm --dir admin build`
+- `NODE_OPTIONS=--max-old-space-size=8192 pnpm check` (apos uma primeira tentativa com timeout de 244s, reexecutado com timeout maior e concluido sem erros)
+- Browser local/headless autenticado em `http://localhost:3002/pacientes/lista` validou desktop `1366x900` e mobile `390x844`: nenhum texto de **Perfil**, **Intencao** ou **Engajamento** ficou em elemento com `rounded-full`, `border` ou `bg-*`; mobile retornou `scrollWidth=390`. Screenshots salvos em `.tmp/patient-list-plain-text-tags-desktop.png` e `.tmp/patient-list-plain-text-tags-mobile.png`.
+- Admin temporario de validacao `codex-patient-list-plain-text-*` foi removido do banco apos a verificacao.

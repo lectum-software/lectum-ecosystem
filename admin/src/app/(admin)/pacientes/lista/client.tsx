@@ -208,25 +208,6 @@ const SelectField = ({
   </label>
 );
 
-const statusClassName = {
-  active: "bg-emerald-50 text-emerald-700",
-  inactive: "bg-surface-muted text-muted",
-} as const;
-
-const CompactBadge = ({
-  children,
-  tone,
-}: {
-  children: ReactNode;
-  tone: keyof typeof statusClassName;
-}) => (
-  <span
-    className={cn("inline-flex rounded-full px-2.5 py-1 text-xs font-bold", statusClassName[tone])}
-  >
-    {children}
-  </span>
-);
-
 const textToneClassName = {
   active: "text-success",
   inactive: "text-muted",
@@ -234,16 +215,9 @@ const textToneClassName = {
   warning: "text-warning",
 } as const;
 
-const visualExampleToneClassName = {
-  active: "border-success/20 bg-success/10 text-success",
-  inactive: "border-border bg-surface-muted text-muted",
-  info: "border-primary/20 bg-primary-soft text-primary",
-  warning: "border-warning/20 bg-warning/10 text-warning",
-} as const satisfies Record<keyof typeof textToneClassName, string>;
-
 type VisualExample = {
   label: string;
-  tone: keyof typeof visualExampleToneClassName;
+  tone: keyof typeof textToneClassName;
 };
 
 const INTENT_VISUAL_EXAMPLES = [
@@ -288,13 +262,8 @@ const resolveEngagementTone = (item: PatientsListItem): keyof typeof textToneCla
   return "inactive";
 };
 
-const VisualExampleBadge = ({ example }: { example: VisualExample }) => (
-  <span
-    className={cn(
-      "inline-flex min-h-6 items-center rounded-full border px-2 py-0.5 text-[0.68rem] font-bold leading-4 normal-case tracking-normal",
-      visualExampleToneClassName[example.tone],
-    )}
-  >
+const VisualExampleText = ({ example }: { example: VisualExample }) => (
+  <span className={cn("text-xs font-medium leading-5", textToneClassName[example.tone])}>
     {example.label}
   </span>
 );
@@ -311,12 +280,12 @@ const ValueWithVisualExample = ({
   example: VisualExample;
   tone: keyof typeof textToneClassName;
 }) => (
-  <div className="flex min-w-0 flex-col items-start gap-1.5">
+  <div className="flex min-w-0 flex-col items-start gap-0.5">
     <StatusText tone={tone}>{actual}</StatusText>
     <span className="text-[0.62rem] font-semibold uppercase tracking-[0.08em] text-subtle">
       Exemplo visual
     </span>
-    <VisualExampleBadge example={example} />
+    <VisualExampleText example={example} />
   </div>
 );
 
@@ -390,7 +359,7 @@ const PatientMobileCard = ({
       <div>
         <dt className="font-semibold text-muted">Perfil</dt>
         <dd className="mt-1">
-          <CompactBadge tone={item.status}>{item.status_label}</CompactBadge>
+          <StatusText tone={item.status}>{item.status_label}</StatusText>
         </dd>
       </div>
       <div>
@@ -478,7 +447,7 @@ const PatientsTable = ({
                 {formatDate(item.created_at)}
               </td>
               <td className="whitespace-nowrap px-3 py-4">
-                <CompactBadge tone={item.status}>{item.status_label}</CompactBadge>
+                <StatusText tone={item.status}>{item.status_label}</StatusText>
               </td>
               <td className="whitespace-nowrap px-3 py-4">
                 <PatientIntentValue item={item} rowIndex={rowIndex} />
