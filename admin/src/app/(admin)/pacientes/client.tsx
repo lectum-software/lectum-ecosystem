@@ -1104,41 +1104,26 @@ const PatientIntentAnalysisCard = ({ summary }: { summary: AdminPatientsDashboar
         <section className="min-w-0 rounded-[1.6rem] border border-border/75 bg-surface-muted/70 p-4">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
-              <p className="text-xs font-black uppercase tracking-[0.12em] text-muted">Gráfico</p>
-              <h3 className="mt-1 text-lg font-bold text-foreground">Intenção dos pacientes</h3>
+              <h3 className="text-lg font-bold text-foreground">Intenção dos pacientes</h3>
               <p className="mt-1 text-3xl font-black text-foreground">
                 {numberFormatter.format(intent.total_patients)}
               </p>
               <p className="mt-1 text-sm font-bold text-muted">pacientes considerados</p>
             </div>
-            <span className="grid h-12 w-12 place-items-center rounded-full bg-surface text-primary">
-              <Target aria-hidden className="h-5 w-5" />
-            </span>
           </div>
-          <p className="mt-4 text-sm font-bold leading-6 text-muted">
-            Distribuição dos pacientes reais entre Frios, Curiosos, Interessados e Qualificados.
-          </p>
           <PatientIntentDonutChart items={intent.items} total={intent.total_patients} />
         </section>
 
         <section className="min-w-0 rounded-[1.6rem] border border-border/75 bg-surface-muted/70 p-4">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
-              <p className="text-xs font-black uppercase tracking-[0.12em] text-muted">Gráfico</p>
-              <h3 className="mt-1 text-lg font-bold text-foreground">Engajamento dos pacientes</h3>
+              <h3 className="text-lg font-bold text-foreground">Engajamento dos pacientes</h3>
               <p className="mt-1 text-3xl font-black text-foreground">
                 {numberFormatter.format(engagement.total_patients)}
               </p>
               <p className="mt-1 text-sm font-bold text-muted">pacientes considerados</p>
             </div>
-            <span className="grid h-12 w-12 place-items-center rounded-full bg-surface text-success">
-              <Activity aria-hidden className="h-5 w-5" />
-            </span>
           </div>
-          <p className="mt-4 text-sm font-bold leading-6 text-muted">
-            Distribuição dos pacientes reais entre Muito engajados, Engajados, Pouco engajados e Sem
-            engajamento.
-          </p>
           <PatientEngagementDonutChart items={engagement.items} total={engagement.total_patients} />
         </section>
       </div>

@@ -861,3 +861,29 @@ Frontend esperado:
 - Servico local `buildPatientsDashboard({ period: "all" })` retornou `engagement_analysis.items` com **Muito engajados**, **Engajados**, **Pouco engajados** e **Sem engajamento**, totalizando 155 pacientes reais na base local.
 - HTTP local `GET /api/admin/private/patients/dashboard?period=all` com Admin temporario real retornou `engagement_analysis.items` com os quatro niveis e percentuais reais; o Admin temporario foi removido ao final.
 - Browser local/headless em `http://localhost:3002/pacientes?period=all` validou desktop `1366x900` e mobile `390x844`: donuts de intencao e engajamento presentes, barra percentual antiga ausente, textos antigos de sinais individuais ausentes e `scrollWidth` sem overflow horizontal. Screenshots salvos em `.tmp/patient-dashboard-engagement-donut-desktop.png` e `.tmp/patient-dashboard-engagement-donut-mobile.png`.
+
+## Ajuste pos-feedback 2026-07-28 - Cabecalhos limpos nos graficos de intencao e engajamento
+
+- Pedido do usuario: nos blocos **Intencao dos pacientes** e **Engajamento dos pacientes**, remover o texto **Grafico**, remover o icone decorativo a direita e remover as linhas descritivas de distribuicao.
+- A UI mobile-first de `/pacientes` manteve o card principal **Intencao e engajamento dos pacientes** e os dois donuts/legendas reais, mas simplificou o cabecalho interno de cada coluna para focar no titulo, total e grafico.
+- Nao houve alteracao de backend, contrato HTTP, schema Prisma, migration, package novo, seed, mock, dado artificial, endpoint simulado, tracking novo ou uso de `<img>`.
+- Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente; as referencias auditaveis foram `_product/proto/admin/Pacientes/Pacientes - Dashboard.png` e o screenshot enviado pelo usuario em 2026-07-28.
+- ADR nao foi criado/atualizado porque a mudanca e exclusivamente visual/local de copy e ornamentos, sem decisao arquitetural, integracao, regra de dominio ou trade-off novo.
+
+### Criterios de aceite do ajuste
+
+- [x] O texto **Grafico** nao aparece mais nos blocos internos **Intencao dos pacientes** e **Engajamento dos pacientes**.
+- [x] Os icones decorativos a direita dos dois cabecalhos internos foram removidos.
+- [x] As duas linhas descritivas de distribuicao foram removidas.
+- [x] Os donuts e legendas reais de intencao e engajamento permanecem visiveis.
+- [x] Layout mobile-first preservado, sem overflow horizontal em 390px.
+- [x] Nenhum mock, seed, dado artificial, migration, package novo, endpoint simulado ou `<img>` foi adicionado.
+
+### Validacao complementar executada
+
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/pacientes/client.tsx"`
+- `NODE_OPTIONS=--max-old-space-size=8192 pnpm --dir admin check`
+- `NODE_OPTIONS=--max-old-space-size=8192 pnpm --dir admin build` via `cmd /c` no Windows
+- `NODE_OPTIONS=--max-old-space-size=8192 pnpm check`
+- Browser local/headless autenticado em `http://localhost:3002/pacientes?period=all` validou desktop `1366x900` e mobile `390x844`: os dois blocos internos nao exibem **Grafico**, nao possuem o `span` de icone no cabecalho, nao exibem as linhas descritivas removidas, preservam os donuts/legendas reais e nao geram overflow horizontal. Screenshots salvos em `.tmp/patient-dashboard-clean-charts-desktop.png` e `.tmp/patient-dashboard-clean-charts-mobile.png`.
+- Admin temporario de validacao `codex-patient-clean-charts-*` foi removido do banco apos a verificacao.
