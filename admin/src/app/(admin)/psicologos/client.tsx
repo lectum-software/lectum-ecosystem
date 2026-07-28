@@ -46,10 +46,10 @@ type DashboardPeriodValue = NonNullable<PsychologistsDashboardQuery["period"]>;
 type DashboardPeriodPreset = Exclude<DashboardPeriodValue, "custom">;
 type DashboardRange = Pick<PsychologistsDashboardQuery, "from" | "to">;
 type DeviceUsageItem = AdminPsychologistsDashboard["device_usage"]["items"][number];
-type TractionCategoryItem = AdminPsychologistsDashboard["traction"]["categories"][number];
-type TractionEngagementQuadrantItem =
-  AdminPsychologistsDashboard["traction_engagement"]["quadrants"][number];
-type TractionEngagementAxisCategoryId = Exclude<TractionCategoryItem["id"], "insufficient_data">;
+type DemandCategoryItem = AdminPsychologistsDashboard["demand"]["categories"][number];
+type DemandEngagementQuadrantItem =
+  AdminPsychologistsDashboard["demand_engagement"]["quadrants"][number];
+type DemandEngagementAxisCategoryId = Exclude<DemandCategoryItem["id"], "insufficient_data">;
 type PsychologistEngagementDonutBucketId =
   | "engaged"
   | "low_engaged"
@@ -288,13 +288,13 @@ const DASHBOARD_METRIC_CONFIG = {
   total_psychologists: { color: "#308ce8", icon: UsersRound },
 } satisfies Record<DashboardMetricKey, { color: string; icon: LucideIcon }>;
 
-const TRACTION_CHART_COLORS = {
+const DEMAND_CHART_COLORS = {
   insufficient_data: "#94a3b8",
-  low_traction: "#f59f00",
-  strong_traction: "#13a85b",
+  low_demand: "#f59f00",
+  strong_demand: "#13a85b",
   unconverted_interest: "#8b5cf6",
   unconverted_traffic: "#ef4444",
-} satisfies Record<TractionCategoryItem["id"], string>;
+} satisfies Record<DemandCategoryItem["id"], string>;
 
 const PSYCHOLOGIST_ENGAGEMENT_DONUT_COLORS = {
   engaged: "#308ce8",
@@ -303,7 +303,7 @@ const PSYCHOLOGIST_ENGAGEMENT_DONUT_COLORS = {
   very_engaged: "#13a85b",
 } satisfies Record<PsychologistEngagementDonutBucketId, string>;
 
-const TRACTION_ENGAGEMENT_MATRIX_COLUMNS: {
+const DEMAND_ENGAGEMENT_MATRIX_COLUMNS: {
   id: PsychologistEngagementDonutBucketId;
   label: string;
 }[] = [
@@ -325,13 +325,13 @@ const TRACTION_ENGAGEMENT_MATRIX_COLUMNS: {
   },
 ];
 
-const TRACTION_ENGAGEMENT_MATRIX_ROWS: {
-  id: TractionEngagementAxisCategoryId;
+const DEMAND_ENGAGEMENT_MATRIX_ROWS: {
+  id: DemandEngagementAxisCategoryId;
   label: string;
 }[] = [
   {
-    id: "strong_traction",
-    label: "Tração forte",
+    id: "strong_demand",
+    label: "Demanda forte",
   },
   {
     id: "unconverted_interest",
@@ -342,22 +342,22 @@ const TRACTION_ENGAGEMENT_MATRIX_ROWS: {
     label: "Tráfego Não Convertido",
   },
   {
-    id: "low_traction",
-    label: "Baixa Tração",
+    id: "low_demand",
+    label: "Baixa Demanda",
   },
 ];
 
-const buildTractionEngagementQuadrantId = (
-  tractionCategoryId: TractionEngagementAxisCategoryId,
+const buildDemandEngagementQuadrantId = (
+  demandCategoryId: DemandEngagementAxisCategoryId,
   engagementLevel: PsychologistEngagementDonutBucketId,
-): TractionEngagementQuadrantItem["id"] =>
-  `${tractionCategoryId}_${engagementLevel}` as TractionEngagementQuadrantItem["id"];
+): DemandEngagementQuadrantItem["id"] =>
+  `${demandCategoryId}_${engagementLevel}` as DemandEngagementQuadrantItem["id"];
 
-const buildTractionEngagementListHref = (
-  quadrantId: TractionEngagementQuadrantItem["id"],
+const buildDemandEngagementListHref = (
+  quadrantId: DemandEngagementQuadrantItem["id"],
   planSegment: PlanSegmentFilter,
 ) => {
-  const params = new URLSearchParams({ traction_engagement: quadrantId });
+  const params = new URLSearchParams({ demand_engagement: quadrantId });
   const plan = LIST_PLAN_FILTER_BY_SEGMENT[planSegment];
 
   if (plan) params.set("plan", plan);
@@ -801,8 +801,8 @@ const getPlanSegmentSummary = (summary: AdminPsychologistsDashboard, segment: Pl
     psychologists_count: summary.cards.total_psychologists.value,
     signup_method: summary.signup_method,
     statistics: summary.statistics,
-    traction: summary.traction,
-    traction_engagement: summary.traction_engagement,
+    demand: summary.demand,
+    demand_engagement: summary.demand_engagement,
     traffic_sources: summary.traffic_sources,
   };
 
@@ -2375,9 +2375,9 @@ const PsychologistsDonutChart = ({
 };
 
 const buildPsychologistEngagementDonutItems = (
-  tractionEngagement: AdminPsychologistsDashboard["traction_engagement"],
+  demandEngagement: AdminPsychologistsDashboard["demand_engagement"],
 ): PsychologistsDonutChartItem[] => {
-  const total = Math.max(0, tractionEngagement.totals.psychologists);
+  const total = Math.max(0, demandEngagement.totals.psychologists);
   const buildItem = (
     id: PsychologistEngagementDonutBucketId,
     label: string,
@@ -2394,36 +2394,32 @@ const buildPsychologistEngagementDonutItems = (
     buildItem(
       "very_engaged",
       "Muito engajado",
-      Math.max(0, tractionEngagement.totals.very_engaged_psychologists),
+      Math.max(0, demandEngagement.totals.very_engaged_psychologists),
     ),
-    buildItem("engaged", "Engajado", Math.max(0, tractionEngagement.totals.engaged_psychologists)),
+    buildItem("engaged", "Engajado", Math.max(0, demandEngagement.totals.engaged_psychologists)),
     buildItem(
       "low_engaged",
       "Pouco engajado",
-      Math.max(0, tractionEngagement.totals.low_engaged_psychologists),
+      Math.max(0, demandEngagement.totals.low_engaged_psychologists),
     ),
     buildItem(
       "no_engagement",
       "Sem engajamento",
-      Math.max(0, tractionEngagement.totals.no_engagement_psychologists),
+      Math.max(0, demandEngagement.totals.no_engagement_psychologists),
     ),
   ];
 };
 
-const TractionDonutChart = ({
-  traction,
-}: {
-  traction: AdminPsychologistsDashboard["traction"];
-}) => {
-  const total = Math.max(0, traction.totals.psychologists);
-  const items = traction.categories.map((item) => ({
-    color: TRACTION_CHART_COLORS[item.id],
+const DemandDonutChart = ({ demand }: { demand: AdminPsychologistsDashboard["demand"] }) => {
+  const total = Math.max(0, demand.totals.psychologists);
+  const items = demand.categories.map((item) => ({
+    color: DEMAND_CHART_COLORS[item.id],
     count: item.count,
     id: item.id,
     label: item.label,
     percentage: item.percentage,
   }));
-  const ariaLabel = `Gráfico de donut de Tração dos psicólogos: ${traction.categories
+  const ariaLabel = `Gráfico de donut de Demanda dos psicólogos: ${demand.categories
     .map(
       (item) =>
         `${item.label}: ${numberFormatter.format(item.count)} (${formatPercentageValue(
@@ -2436,8 +2432,8 @@ const TractionDonutChart = ({
     <PsychologistsDonutChart
       ariaLabel={ariaLabel}
       emptyMessage={
-        traction.unavailable_reason ??
-        "Sem psicólogos ativos no período selecionado para classificar Tração."
+        demand.unavailable_reason ??
+        "Sem psicólogos ativos no período selecionado para classificar Demanda."
       }
       items={items}
       total={total}
@@ -2446,12 +2442,12 @@ const TractionDonutChart = ({
 };
 
 const PsychologistEngagementDonutChart = ({
-  tractionEngagement,
+  demandEngagement,
 }: {
-  tractionEngagement: AdminPsychologistsDashboard["traction_engagement"];
+  demandEngagement: AdminPsychologistsDashboard["demand_engagement"];
 }) => {
-  const total = Math.max(0, tractionEngagement.totals.psychologists);
-  const items = buildPsychologistEngagementDonutItems(tractionEngagement);
+  const total = Math.max(0, demandEngagement.totals.psychologists);
+  const items = buildPsychologistEngagementDonutItems(demandEngagement);
   const ariaLabel = `Gráfico de donut de Engajamento dos psicólogos: ${items
     .map(
       (item) =>
@@ -2465,7 +2461,7 @@ const PsychologistEngagementDonutChart = ({
     <PsychologistsDonutChart
       ariaLabel={ariaLabel}
       emptyMessage={
-        tractionEngagement.unavailable_reason ??
+        demandEngagement.unavailable_reason ??
         "Sem psicólogos ativos no período selecionado para classificar Engajamento."
       }
       items={items}
@@ -2473,12 +2469,12 @@ const PsychologistEngagementDonutChart = ({
     />
   );
 };
-const DashboardTractionCard = ({ summary }: { summary: AdminPsychologistsDashboard }) => {
-  const [tractionPlanSegment, setTractionPlanSegment] = useState<PlanSegmentFilter>("all");
-  const tractionSegmentSummary = getPlanSegmentSummary(summary, tractionPlanSegment);
-  const traction = tractionSegmentSummary.traction;
-  const tractionEngagement = tractionSegmentSummary.traction_engagement;
-  if (!traction || !tractionEngagement) return null;
+const DashboardDemandCard = ({ summary }: { summary: AdminPsychologistsDashboard }) => {
+  const [demandPlanSegment, setDemandPlanSegment] = useState<PlanSegmentFilter>("all");
+  const demandSegmentSummary = getPlanSegmentSummary(summary, demandPlanSegment);
+  const demand = demandSegmentSummary.demand;
+  const demandEngagement = demandSegmentSummary.demand_engagement;
+  if (!demand || !demandEngagement) return null;
 
   return (
     <CardShell className="p-5">
@@ -2486,12 +2482,12 @@ const DashboardTractionCard = ({ summary }: { summary: AdminPsychologistsDashboa
         <PanelTitle
           description={formatSelectedPeriod(summary.period)}
           icon={Activity}
-          title="Tração e engajamento dos psicólogos"
+          title="Demanda e engajamento dos psicólogos"
         />
         <PlanSegmentSelect
-          id="traction-plan-segment"
-          onChange={setTractionPlanSegment}
-          value={tractionPlanSegment}
+          id="demand-plan-segment"
+          onChange={setDemandPlanSegment}
+          value={demandPlanSegment}
         />
       </div>
 
@@ -2499,14 +2495,14 @@ const DashboardTractionCard = ({ summary }: { summary: AdminPsychologistsDashboa
         <section className="min-w-0 rounded-[1.6rem] border border-border/75 bg-surface-muted/70 p-4">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
-              <h3 className="text-lg font-bold text-foreground">Tração</h3>
+              <h3 className="text-lg font-bold text-foreground">Demanda</h3>
               <p className="mt-1 text-3xl font-black text-foreground">
-                {numberFormatter.format(traction.totals.psychologists)}
+                {numberFormatter.format(demand.totals.psychologists)}
               </p>
               <p className="mt-1 text-sm font-bold text-muted">psicólogos considerados</p>
             </div>
           </div>
-          <TractionDonutChart traction={traction} />
+          <DemandDonutChart demand={demand} />
         </section>
 
         <section className="min-w-0 rounded-[1.6rem] border border-border/75 bg-surface-muted/70 p-4">
@@ -2514,22 +2510,22 @@ const DashboardTractionCard = ({ summary }: { summary: AdminPsychologistsDashboa
             <div>
               <h3 className="text-lg font-bold text-foreground">Engajamento</h3>
               <p className="mt-1 text-3xl font-black text-foreground">
-                {numberFormatter.format(tractionEngagement.totals.psychologists)}
+                {numberFormatter.format(demandEngagement.totals.psychologists)}
               </p>
               <p className="mt-1 text-sm font-bold text-muted">psicólogos considerados</p>
             </div>
           </div>
-          <PsychologistEngagementDonutChart tractionEngagement={tractionEngagement} />
+          <PsychologistEngagementDonutChart demandEngagement={demandEngagement} />
         </section>
       </div>
     </CardShell>
   );
 };
-const findTractionEngagementQuadrant = (
-  tractionEngagement: AdminPsychologistsDashboard["traction_engagement"],
-  id: TractionEngagementQuadrantItem["id"],
+const findDemandEngagementQuadrant = (
+  demandEngagement: AdminPsychologistsDashboard["demand_engagement"],
+  id: DemandEngagementQuadrantItem["id"],
 ) =>
-  tractionEngagement.quadrants.find((quadrant) => quadrant.id === id) ?? {
+  demandEngagement.quadrants.find((quadrant) => quadrant.id === id) ?? {
     count: 0,
     description: "",
     id,
@@ -2547,7 +2543,7 @@ const findTractionEngagementQuadrant = (
     },
   };
 
-const TractionEngagementMetric = ({ label, value }: { label: string; value: ReactNode }) => (
+const DemandEngagementMetric = ({ label, value }: { label: string; value: ReactNode }) => (
   <div className="rounded-2xl bg-surface-muted p-3">
     <p className="text-[0.68rem] font-black uppercase tracking-[0.08em] text-subtle">{label}</p>
     <p className="mt-1 text-base font-black text-foreground">{value}</p>
@@ -2563,22 +2559,22 @@ const formatRateDifference = (value: number | null) => {
   return `${prefix}${numberFormatter.format(Math.abs(value))} p.p.`;
 };
 
-type TractionEngagementMatrixCell = {
+type DemandEngagementMatrixCell = {
   color: string;
   columnLabel: string;
-  quadrant: TractionEngagementQuadrantItem;
+  quadrant: DemandEngagementQuadrantItem;
   rowLabel: string;
   rowPercentage: number;
 };
 
-const buildTractionEngagementRowCells = (
-  tractionEngagement: AdminPsychologistsDashboard["traction_engagement"],
-  row: (typeof TRACTION_ENGAGEMENT_MATRIX_ROWS)[number],
-): TractionEngagementMatrixCell[] => {
-  const quadrants = TRACTION_ENGAGEMENT_MATRIX_COLUMNS.map((column) =>
-    findTractionEngagementQuadrant(
-      tractionEngagement,
-      buildTractionEngagementQuadrantId(row.id, column.id),
+const buildDemandEngagementRowCells = (
+  demandEngagement: AdminPsychologistsDashboard["demand_engagement"],
+  row: (typeof DEMAND_ENGAGEMENT_MATRIX_ROWS)[number],
+): DemandEngagementMatrixCell[] => {
+  const quadrants = DEMAND_ENGAGEMENT_MATRIX_COLUMNS.map((column) =>
+    findDemandEngagementQuadrant(
+      demandEngagement,
+      buildDemandEngagementQuadrantId(row.id, column.id),
     ),
   );
   const rowTotal = quadrants.reduce((total, quadrant) => total + Math.max(0, quadrant.count), 0);
@@ -2586,16 +2582,16 @@ const buildTractionEngagementRowCells = (
   return quadrants.map((quadrant, index) => ({
     color:
       PSYCHOLOGIST_ENGAGEMENT_DONUT_COLORS[
-        TRACTION_ENGAGEMENT_MATRIX_COLUMNS[index]?.id ?? "no_engagement"
+        DEMAND_ENGAGEMENT_MATRIX_COLUMNS[index]?.id ?? "no_engagement"
       ],
-    columnLabel: TRACTION_ENGAGEMENT_MATRIX_COLUMNS[index]?.label ?? quadrant.label,
+    columnLabel: DEMAND_ENGAGEMENT_MATRIX_COLUMNS[index]?.label ?? quadrant.label,
     quadrant,
     rowLabel: row.label,
     rowPercentage: rowTotal > 0 ? toOneDecimal((Math.max(0, quadrant.count) / rowTotal) * 100) : 0,
   }));
 };
 
-const TractionEngagementQuadrantCard = ({
+const DemandEngagementQuadrantCard = ({
   color,
   description,
   headingLabel,
@@ -2609,7 +2605,7 @@ const TractionEngagementQuadrantCard = ({
   headingLabel?: string;
   intensityPercentage?: number;
   planSegment: PlanSegmentFilter;
-  quadrant: TractionEngagementQuadrantItem;
+  quadrant: DemandEngagementQuadrantItem;
   showEngagementLabel?: boolean;
 }) => {
   const hasData = quadrant.count > 0;
@@ -2621,7 +2617,7 @@ const TractionEngagementQuadrantCard = ({
     <Link
       aria-label={`Ver lista de profissionais em ${quadrant.label}`}
       className="block min-h-[7.75rem] min-w-0 rounded-[1.2rem] border p-3 text-left transition duration-200 ease-out hover:-translate-y-0.5 hover:border-primary/35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
-      href={buildTractionEngagementListHref(quadrant.id, planSegment)}
+      href={buildDemandEngagementListHref(quadrant.id, planSegment)}
       style={{
         backgroundColor: hasData ? hexToRgba(color, intensity) : "var(--admin-surface-muted)",
         borderColor: hasData ? hexToRgba(color, 0.32) : "var(--admin-border)",
@@ -2655,19 +2651,19 @@ const TractionEngagementQuadrantCard = ({
   );
 };
 
-const DashboardTractionEngagementCard = ({ summary }: { summary: AdminPsychologistsDashboard }) => {
-  const [tractionEngagementPlanSegment, setTractionEngagementPlanSegment] =
+const DashboardDemandEngagementCard = ({ summary }: { summary: AdminPsychologistsDashboard }) => {
+  const [demandEngagementPlanSegment, setDemandEngagementPlanSegment] =
     useState<PlanSegmentFilter>("all");
-  const segmentSummary = getPlanSegmentSummary(summary, tractionEngagementPlanSegment);
-  const tractionEngagement = segmentSummary.traction_engagement;
+  const segmentSummary = getPlanSegmentSummary(summary, demandEngagementPlanSegment);
+  const demandEngagement = segmentSummary.demand_engagement;
 
-  if (!tractionEngagement) return null;
+  if (!demandEngagement) return null;
 
-  const veryEngaged = tractionEngagement.comparison.very_engaged;
-  const engaged = tractionEngagement.comparison.engaged;
-  const lowEngaged = tractionEngagement.comparison.low_engaged;
-  const noEngagement = tractionEngagement.comparison.no_engagement;
-  const rateDifference = tractionEngagement.comparison.rate_difference_points;
+  const veryEngaged = demandEngagement.comparison.very_engaged;
+  const engaged = demandEngagement.comparison.engaged;
+  const lowEngaged = demandEngagement.comparison.low_engaged;
+  const noEngagement = demandEngagement.comparison.no_engagement;
+  const rateDifference = demandEngagement.comparison.rate_difference_points;
 
   return (
     <CardShell className="p-5">
@@ -2675,42 +2671,42 @@ const DashboardTractionEngagementCard = ({ summary }: { summary: AdminPsychologi
         <PanelTitle
           description={formatSelectedPeriod(summary.period)}
           icon={TrendingUp}
-          title="Tração x Engajamento"
+          title="Demanda x Engajamento"
         />
         <PlanSegmentSelect
-          id="traction-engagement-plan-segment"
-          onChange={setTractionEngagementPlanSegment}
-          value={tractionEngagementPlanSegment}
+          id="demand-engagement-plan-segment"
+          onChange={setDemandEngagementPlanSegment}
+          value={demandEngagementPlanSegment}
         />
       </div>
 
-      {tractionEngagement.totals.psychologists === 0 ? (
+      {demandEngagement.totals.psychologists === 0 ? (
         <p className="mt-5 rounded-2xl border border-dashed border-border bg-surface-muted p-4 text-sm font-bold text-muted">
-          {tractionEngagement.unavailable_reason ??
-            "Sem psicólogos ativos no período selecionado para comparar Tração e Engajamento."}
+          {demandEngagement.unavailable_reason ??
+            "Sem psicólogos ativos no período selecionado para comparar Demanda e Engajamento."}
         </p>
       ) : (
         <div className="mt-5 grid gap-5 xl:grid-cols-[minmax(0,1.18fr)_minmax(280px,0.82fr)]">
           <div className="min-w-0">
             <div className="grid gap-3 lg:hidden">
-              {TRACTION_ENGAGEMENT_MATRIX_ROWS.map((row) => {
-                const rowCells = buildTractionEngagementRowCells(tractionEngagement, row);
+              {DEMAND_ENGAGEMENT_MATRIX_ROWS.map((row) => {
+                const rowCells = buildDemandEngagementRowCells(demandEngagement, row);
 
                 return (
                   <section
                     className="rounded-[1.35rem] border border-border bg-surface p-3"
-                    key={`psychologist-mobile-traction-engagement-${row.label}`}
+                    key={`psychologist-mobile-demand-engagement-${row.label}`}
                   >
                     <h3 className="text-sm font-black text-foreground">{row.label}</h3>
                     <div className="mt-3 grid gap-2 sm:grid-cols-2">
                       {rowCells.map((cell) => (
-                        <TractionEngagementQuadrantCard
+                        <DemandEngagementQuadrantCard
                           color={cell.color}
                           description={`${formatPercentageValue(cell.rowPercentage)} dentro de ${cell.rowLabel.toLowerCase()}.`}
                           headingLabel={cell.columnLabel}
                           intensityPercentage={cell.rowPercentage}
                           key={cell.quadrant.id}
-                          planSegment={tractionEngagementPlanSegment}
+                          planSegment={demandEngagementPlanSegment}
                           quadrant={cell.quadrant}
                           showEngagementLabel
                         />
@@ -2723,30 +2719,30 @@ const DashboardTractionEngagementCard = ({ summary }: { summary: AdminPsychologi
 
             <div className="hidden gap-2 lg:grid lg:grid-cols-[132px_repeat(4,minmax(0,1fr))]">
               <div className="hidden lg:block" aria-hidden />
-              {TRACTION_ENGAGEMENT_MATRIX_COLUMNS.map((column) => (
+              {DEMAND_ENGAGEMENT_MATRIX_COLUMNS.map((column) => (
                 <p
                   className="rounded-2xl bg-surface-muted px-3 py-2 text-center text-xs font-black text-muted"
-                  key={`psychologist-traction-engagement-column-${column.id}`}
+                  key={`psychologist-demand-engagement-column-${column.id}`}
                 >
                   {column.label}
                 </p>
               ))}
 
-              {TRACTION_ENGAGEMENT_MATRIX_ROWS.map((row) => {
-                const rowCells = buildTractionEngagementRowCells(tractionEngagement, row);
+              {DEMAND_ENGAGEMENT_MATRIX_ROWS.map((row) => {
+                const rowCells = buildDemandEngagementRowCells(demandEngagement, row);
 
                 return (
-                  <Fragment key={`psychologist-traction-engagement-row-${row.label}`}>
+                  <Fragment key={`psychologist-demand-engagement-row-${row.label}`}>
                     <p className="grid place-items-center rounded-2xl bg-surface-muted px-2 text-center text-[0.72rem] font-black text-muted">
                       {row.label}
                     </p>
                     {rowCells.map((cell) => (
-                      <TractionEngagementQuadrantCard
+                      <DemandEngagementQuadrantCard
                         color={cell.color}
                         description={`${formatPercentageValue(cell.rowPercentage)} dentro de ${cell.rowLabel.toLowerCase()}.`}
                         intensityPercentage={cell.rowPercentage}
                         key={cell.quadrant.id}
-                        planSegment={tractionEngagementPlanSegment}
+                        planSegment={demandEngagementPlanSegment}
                         quadrant={cell.quadrant}
                       />
                     ))}
@@ -2757,55 +2753,55 @@ const DashboardTractionEngagementCard = ({ summary }: { summary: AdminPsychologi
           </div>
 
           <aside className="grid content-start gap-3">
-            <TractionEngagementMetric
-              label="Tração entre muito engajados"
+            <DemandEngagementMetric
+              label="Demanda entre muito engajados"
               value={
                 <>
-                  {formatNullablePercentage(veryEngaged.strong_traction_rate)}
+                  {formatNullablePercentage(veryEngaged.strong_demand_rate)}
                   <span className="ml-1 text-xs font-bold text-muted">
-                    · {numberFormatter.format(veryEngaged.strong_traction_count)}/
+                    · {numberFormatter.format(veryEngaged.strong_demand_count)}/
                     {numberFormatter.format(veryEngaged.psychologists)}
                   </span>
                 </>
               }
             />
-            <TractionEngagementMetric
-              label="Tração entre engajados"
+            <DemandEngagementMetric
+              label="Demanda entre engajados"
               value={
                 <>
-                  {formatNullablePercentage(engaged.strong_traction_rate)}
+                  {formatNullablePercentage(engaged.strong_demand_rate)}
                   <span className="ml-1 text-xs font-bold text-muted">
-                    · {numberFormatter.format(engaged.strong_traction_count)}/
+                    · {numberFormatter.format(engaged.strong_demand_count)}/
                     {numberFormatter.format(engaged.psychologists)}
                   </span>
                 </>
               }
             />
-            <TractionEngagementMetric
-              label="Tração entre pouco engajados"
+            <DemandEngagementMetric
+              label="Demanda entre pouco engajados"
               value={
                 <>
-                  {formatNullablePercentage(lowEngaged.strong_traction_rate)}
+                  {formatNullablePercentage(lowEngaged.strong_demand_rate)}
                   <span className="ml-1 text-xs font-bold text-muted">
-                    · {numberFormatter.format(lowEngaged.strong_traction_count)}/
+                    · {numberFormatter.format(lowEngaged.strong_demand_count)}/
                     {numberFormatter.format(lowEngaged.psychologists)}
                   </span>
                 </>
               }
             />
-            <TractionEngagementMetric
-              label="Tração entre sem engajamento"
+            <DemandEngagementMetric
+              label="Demanda entre sem engajamento"
               value={
                 <>
-                  {formatNullablePercentage(noEngagement.strong_traction_rate)}
+                  {formatNullablePercentage(noEngagement.strong_demand_rate)}
                   <span className="ml-1 text-xs font-bold text-muted">
-                    · {numberFormatter.format(noEngagement.strong_traction_count)}/
+                    · {numberFormatter.format(noEngagement.strong_demand_count)}/
                     {numberFormatter.format(noEngagement.psychologists)}
                   </span>
                 </>
               }
             />
-            <TractionEngagementMetric
+            <DemandEngagementMetric
               label="Diferença observada"
               value={formatRateDifference(rateDifference)}
             />
@@ -2816,19 +2812,19 @@ const DashboardTractionEngagementCard = ({ summary }: { summary: AdminPsychologi
                   <span className="font-black text-foreground">
                     {formatRateDifference(rateDifference)}
                   </span>{" "}
-                  na taxa de tração forte versus pouco ou sem engajamento no período.
+                  na taxa de demanda forte versus pouco ou sem engajamento no período.
                 </>
               ) : (
-                "Impacto observado: ainda não há base suficiente para comparar a tração entre muito engajados, engajados e pouco ou sem engajamento no período."
+                "Impacto observado: ainda não há base suficiente para comparar a demanda entre muito engajados, engajados e pouco ou sem engajamento no período."
               )}{" "}
               Critério ponderado: Muito engajado ={" "}
-              {numberFormatter.format(tractionEngagement.thresholds.highly_engaged_score_30d)}+
+              {numberFormatter.format(demandEngagement.thresholds.highly_engaged_score_30d)}+
               pontos/30d e pelo menos{" "}
               {numberFormatter.format(
-                tractionEngagement.thresholds.high_value_patient_replies_for_very_engaged_30d,
+                demandEngagement.thresholds.high_value_patient_replies_for_very_engaged_30d,
               )}{" "}
               respostas a posts de pacientes/30d; Engajado ={" "}
-              {numberFormatter.format(tractionEngagement.thresholds.engaged_score_30d)}+ pontos/30d;
+              {numberFormatter.format(demandEngagement.thresholds.engaged_score_30d)}+ pontos/30d;
               Pouco engajado = ao menos 1 intera&ccedil;&atilde;o, mas abaixo desse corte ponderado;
               Sem engajamento = 0 intera&ccedil;&otilde;es em comunidades. Votos, posts e respostas
               fora de posts de pacientes t&ecirc;m teto de pontua&ccedil;&atilde;o.
@@ -3014,8 +3010,8 @@ const DashboardContent = ({
           />
           <TimelineChart points={summary.timeline.points} visibleMetricKeys={activeMetricKeys} />
         </DashboardOverviewPanel>
-        <DashboardTractionCard summary={summary} />
-        <DashboardTractionEngagementCard summary={summary} />
+        <DashboardDemandCard summary={summary} />
+        <DashboardDemandEngagementCard summary={summary} />
         <DashboardTrafficSourcesCard summary={summary} />
       </section>
 

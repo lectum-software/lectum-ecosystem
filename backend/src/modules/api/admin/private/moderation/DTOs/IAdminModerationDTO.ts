@@ -1,4 +1,4 @@
-﻿import type { admin } from "@/interfaces/objects";
+import type { admin } from "@/interfaces/objects";
 
 export type AdminModerationStatus = "all" | "pending" | "reviewing" | "resolved";
 export type AdminModerationDecision = "all" | "allow_sensitive" | "block" | "safety_hold";
@@ -159,7 +159,7 @@ export type AdminModerationOperationalAlertType =
   | "patient_post_without_coverage"
   | "post_report"
   | "professional_crp_pending"
-  | "psychologist_no_traction"
+  | "psychologist_no_demand"
   | "registration_error"
   | "unpublished_required_settings";
 
@@ -282,7 +282,7 @@ export type AdminModerationComplianceChartPointDTO = {
 export type AdminModerationOperationalChartPointDTO = {
   date: string;
   patient_posts_without_coverage_48h: number;
-  psychologist_no_traction_after_adaptation: number;
+  psychologist_no_demand_after_adaptation: number;
   registration_errors: number;
   unpublished_required_settings: number;
 };
@@ -345,7 +345,7 @@ export type AdminModerationOperationalAlertCountsDTO = {
   patient_posts_without_coverage_48h: number;
   pending_reports: number;
   professional_crp_pending: number;
-  psychologist_no_traction_after_adaptation: number;
+  psychologist_no_demand_after_adaptation: number;
   registration_errors: number;
   total: number;
   unpublished_required_settings: number;

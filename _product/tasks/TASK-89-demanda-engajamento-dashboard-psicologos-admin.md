@@ -1,4 +1,4 @@
-﻿# TASK-89 - Comparativo Tracao x Engajamento no dashboard Admin de psicologos
+# TASK-89 - Comparativo Demanda x Engajamento no dashboard Admin de psicologos
 
 ## Status
 
@@ -6,24 +6,24 @@ Completed
 
 ## Contexto
 
-O dashboard Admin de psicologos em `/psicologos` ja possui a leitura agregada **Tracao**, calculada com sinais reais de WhatsApp, perfil e favoritos. O produto agora precisa entender, de forma interna e observacional, se o envolvimento dos psicologos nas comunidades acompanha melhores resultados de tracao.
+O dashboard Admin de psicologos em `/psicologos` ja possui a leitura agregada **Demanda**, calculada com sinais reais de WhatsApp, perfil e favoritos. O produto agora precisa entender, de forma interna e observacional, se o envolvimento dos psicologos nas comunidades acompanha melhores resultados de demanda.
 
 A leitura deve ser agregada, nao publica e nao punitiva. Ela deve cruzar sinais reais ja persistidos:
 
-- tracao: `profile_view_event.source="profile_page"`, `contact_request.channel="whatsapp"` e `psychologist_favorite`;
+- demanda: `profile_view_event.source="profile_page"`, `contact_request.channel="whatsapp"` e `psychologist_favorite`;
 - engajamento comunitario: posts publicados por psicologos em `community_post`, respostas em `post_reply` e votos/reacoes por psicologos em `post_vote`.
 
 ## Escopo
 
-- Estender o contrato real `GET /api/admin/private/psychologists/dashboard` com `traction_engagement`.
+- Estender o contrato real `GET /api/admin/private/psychologists/dashboard` com `demand_engagement`.
 - Calcular quadrantes agregados por psicologo ativo no fim do periodo selecionado:
-  - **Tracao forte + alto engajamento**;
-  - **Alto engajamento + baixa tracao**;
-  - **Tracao forte + baixo engajamento**;
-  - **Baixa tracao + baixo engajamento**;
+  - **Demanda forte + alto engajamento**;
+  - **Alto engajamento + baixa demanda**;
+  - **Demanda forte + baixo engajamento**;
+  - **Baixa demanda + baixo engajamento**;
   - **Dados insuficientes** para perfis com menos de 7 dias ativos sem sinal forte.
 - Usar o mesmo filtro por periodo e o mesmo filtro por plano dos blocos analiticos do dashboard: **Todos**, **Assinantes**, **Gratuitos** e **Cortesia**.
-- Renderizar o bloco **Tracao x Engajamento** logo abaixo de **Tracao** e antes de **Origem do trafego para psicologos**.
+- Renderizar o bloco **Demanda x Engajamento** logo abaixo de **Demanda** e antes de **Origem do trafego para psicologos**.
 - Comunicar a leitura como relacao observacional, sem afirmar causalidade.
 
 ## Fora do escopo
@@ -36,10 +36,10 @@ A leitura deve ser agregada, nao publica e nao punitiva. Ela deve cruzar sinais 
 
 ## Criterios de aceite
 
-- [x] O backend retorna `traction_engagement` no dashboard Admin de psicologos usando apenas dados reais de tracao e comunidade.
+- [x] O backend retorna `demand_engagement` no dashboard Admin de psicologos usando apenas dados reais de demanda e comunidade.
 - [x] A classificacao respeita o periodo selecionado, normaliza engajamento por dias ativos para 30 dias e trata perfis com menos de 7 dias como dados insuficientes quando nao houver sinal forte.
-- [x] `plan_segments` tambem retorna `traction_engagement` para Todos, Assinantes, Gratuitos e Cortesia.
-- [x] O Admin exibe o bloco **Tracao x Engajamento** abaixo de **Tracao** e antes de **Origem do trafego para psicologos**, com matriz mobile-first, filtro por plano e resumo comparando taxa de tracao entre engajados e pouco engajados.
+- [x] `plan_segments` tambem retorna `demand_engagement` para Todos, Assinantes, Gratuitos e Cortesia.
+- [x] O Admin exibe o bloco **Demanda x Engajamento** abaixo de **Demanda** e antes de **Origem do trafego para psicologos**, com matriz mobile-first, filtro por plano e resumo comparando taxa de demanda entre engajados e pouco engajados.
 - [x] A UI explicita que a leitura e observacional e nao causal, e nao usa `<img>`.
 - [x] Nenhum mock, seed artificial, endpoint simulado, package novo ou migration foi criado.
 - [x] ADR relevante registrado.
@@ -56,9 +56,9 @@ A leitura deve ser agregada, nao publica e nao punitiva. Ela deve cruzar sinais 
 - `pnpm --dir backend build`
 - `pnpm --dir admin build`
 - `pnpm check`
-- Smoke real via `buildPsychologistsDashboard({ period: "all" })`: retornou `traction_engagement`, os cinco quadrantes, `source` real e `plan_segments` com `traction_engagement` para `all`, `subscribers`, `free` e `courtesy`.
+- Smoke real via `buildPsychologistsDashboard({ period: "all" })`: retornou `demand_engagement`, os cinco quadrantes, `source` real e `plan_segments` com `demand_engagement` para `all`, `subscribers`, `free` e `courtesy`.
 - HTTP local em `http://localhost:3002/psicologos`: rota respondeu 200 apos recompilar o Admin dev server.
-- Validacao estatica do bundle local: `admin/.next/dev/static/chunks/app/(admin)/psicologos/page.js` contem **Tracao x Engajamento** e `traction-engagement-plan-segment`.
+- Validacao estatica do bundle local: `admin/.next/dev/static/chunks/app/(admin)/psicologos/page.js` contem **Demanda x Engajamento** e `demand-engagement-plan-segment`.
 - Tentativa de validacao headless autenticada foi limitada pela hidratacao de sessao no Chrome efemero; token administrativo transitorio criado para a tentativa foi removido ao final. A validacao funcional da API foi feita diretamente contra o endpoint real e contra o use case.
 - `pnpm --dir backend db:migrate` nao se aplica: nao houve alteracao em `backend/prisma/schema.prisma` nem em `backend/prisma/migrations`.
 
@@ -71,13 +71,13 @@ A leitura deve ser agregada, nao publica e nao punitiva. Ela deve cruzar sinais 
 ## Execucao complementar: quadrantes acionaveis para lista filtrada (2026-07-28)
 
 - Pedido do usuario: transformar os quatro blocos dos quadrantes em botoes que navegam para a lista Admin de psicologos com o filtro do quadrante selecionado e trocar as descricoes por uma orientacao de clique.
-- Frontend Admin: os quatro quadrantes da matriz **Tracao x Engajamento** em `/psicologos` agora sao links/botoes para `/psicologos/lista?traction_engagement=...`, mantendo contagem, percentual e sinais agregados.
+- Frontend Admin: os quatro quadrantes da matriz **Demanda x Engajamento** em `/psicologos` agora sao links/botoes para `/psicologos/lista?demand_engagement=...`, mantendo contagem, percentual e sinais agregados.
 - Frontend Admin: o filtro por plano selecionado no bloco tambem e levado para a lista como `plan=professional`, `plan=free` ou `plan=courtesy` quando aplicavel.
-- Lista Admin: o filtro composto **Quadrante** (`traction_engagement`) e aceito no contrato e nos search params para links profundos vindos do dashboard; a modal principal da lista permanece sem reintroduzir o campo **Quadrante**, conforme decisao complementar registrada na TASK-54.
-- Backend Admin: `GET /api/admin/private/psychologists` valida e aplica `traction_engagement` apos calcular tracao/engajamento reais por psicologo, sem mock, seed, endpoint paralelo, package novo ou migration.
+- Lista Admin: o filtro composto **Quadrante** (`demand_engagement`) e aceito no contrato e nos search params para links profundos vindos do dashboard; a modal principal da lista permanece sem reintroduzir o campo **Quadrante**, conforme decisao complementar registrada na TASK-54.
+- Backend Admin: `GET /api/admin/private/psychologists` valida e aplica `demand_engagement` apos calcular demanda/engajamento reais por psicologo, sem mock, seed, endpoint paralelo, package novo ou migration.
 - Builder/Quick Copy nao estava exposto como ferramenta callable neste ambiente; a execucao usou `_product/tasks/PROTO-INVENTORY.md`, a referencia local `_product/proto/admin/Psicólogos/Psicólogos - Dashboard.png` e a captura enviada pelo usuario.
 - Nenhuma alteracao em `backend/prisma/schema.prisma` ou `backend/prisma/migrations`; `pnpm --dir backend db:migrate` nao se aplica.
-- ADR criado: `adrs/0333-quadrantes-tracao-engajamento-lista-filtrada.md`.
+- ADR criado: `adrs/0333-quadrantes-demanda-engajamento-lista-filtrada.md`.
 
 ### Criterios complementares
 
@@ -97,25 +97,25 @@ A leitura deve ser agregada, nao publica e nao punitiva. Ela deve cruzar sinais 
 - `pnpm --dir admin check`
 - `pnpm --dir admin build`
 - `pnpm check`
-- Smoke local no Admin dev server: `GET http://localhost:3002/psicologos` retornou 200 e `GET http://localhost:3002/psicologos/lista?traction_engagement=strong_traction_high_engagement` retornou 200.
+- Smoke local no Admin dev server: `GET http://localhost:3002/psicologos` retornou 200 e `GET http://localhost:3002/psicologos/lista?demand_engagement=strong_demand_high_engagement` retornou 200.
 
 ## Execucao complementar: detalhamento de engajamento (2026-07-28)
 
-- Pedido do usuario: detalhar o bloco **Engajamento** entre **Muito engajado**, **Engajado**, **Pouco engajado** e **Dados insuficientes**; aplicar o mesmo detalhamento no bloco **Tracao x Engajamento**.
-- Backend Admin: `GET /api/admin/private/psychologists/dashboard` passou a retornar `traction_engagement` com totais e comparacoes separados para `very_engaged`, `engaged` e `low_engaged`, mantendo os agregados `high_engagement` e `low_engagement` por compatibilidade.
-- Backend Admin: os quadrantes do dashboard foram expandidos para seis recortes reais de tracao forte/sem tracao forte cruzados com **muito engajado**, **engajado** e **pouco engajado**, mais **Dados insuficientes**.
-- Lista Admin: o filtro composto `traction_engagement` passou a aceitar os novos ids granulares para manter os links do dashboard para `/psicologos/lista`.
+- Pedido do usuario: detalhar o bloco **Engajamento** entre **Muito engajado**, **Engajado**, **Pouco engajado** e **Dados insuficientes**; aplicar o mesmo detalhamento no bloco **Demanda x Engajamento**.
+- Backend Admin: `GET /api/admin/private/psychologists/dashboard` passou a retornar `demand_engagement` com totais e comparacoes separados para `very_engaged`, `engaged` e `low_engaged`, mantendo os agregados `high_engagement` e `low_engagement` por compatibilidade.
+- Backend Admin: os quadrantes do dashboard foram expandidos para seis recortes reais de demanda forte/sem demanda forte cruzados com **muito engajado**, **engajado** e **pouco engajado**, mais **Dados insuficientes**.
+- Lista Admin: o filtro composto `demand_engagement` passou a aceitar os novos ids granulares para manter os links do dashboard para `/psicologos/lista`.
 - Frontend Admin: o donut de **Engajamento** exibe quatro categorias: **Muito engajado**, **Engajado**, **Pouco engajado** e **Dados insuficientes**.
-- Frontend Admin: a matriz **Tracao x Engajamento** agora tem tres colunas de engajamento e card separado para **Dados insuficientes**, preservando layout mobile-first e links para lista.
+- Frontend Admin: a matriz **Demanda x Engajamento** agora tem tres colunas de engajamento e card separado para **Dados insuficientes**, preservando layout mobile-first e links para lista.
 - Builder/Quick Copy nao estava exposto como ferramenta callable neste ambiente; a execucao usou `_product/tasks/PROTO-INVENTORY.md`, a referencia local `_product/proto/admin/Psicólogos/Psicólogos - Dashboard.png` e a captura enviada pelo usuario.
 - Nenhuma alteracao em `backend/prisma/schema.prisma` ou `backend/prisma/migrations`; `pnpm --dir backend db:migrate` nao se aplica.
-- ADR criado: `adrs/0337-detalhamento-engajamento-tracao-dashboard-psicologos.md`.
+- ADR criado: `adrs/0337-detalhamento-engajamento-demanda-dashboard-psicologos.md`.
 
 ### Criterios complementares
 
 - [x] O bloco **Engajamento** detalha os psicologos entre **Muito engajado**, **Engajado**, **Pouco engajado** e **Dados insuficientes**.
-- [x] O bloco **Tracao x Engajamento** cruza tracao com **Muito engajado**, **Engajado**, **Pouco engajado** e exibe **Dados insuficientes**.
-- [x] Os links da matriz usam filtro real `traction_engagement` na lista Admin com os novos recortes.
+- [x] O bloco **Demanda x Engajamento** cruza demanda com **Muito engajado**, **Engajado**, **Pouco engajado** e exibe **Dados insuficientes**.
+- [x] Os links da matriz usam filtro real `demand_engagement` na lista Admin com os novos recortes.
 - [x] A leitura continua observacional, mobile-first e sem `<img>` cru.
 - [x] Nenhum mock, seed artificial, endpoint simulado, package novo ou migration foi criado.
 
@@ -128,29 +128,29 @@ A leitura deve ser agregada, nao publica e nao punitiva. Ela deve cruzar sinais 
 - `pnpm --dir backend build`
 - `pnpm --dir admin build`
 - `pnpm check`
-- Smoke local no Admin dev server: `GET http://localhost:3002/psicologos` e `GET http://localhost:3002/psicologos/lista?traction_engagement=strong_traction_very_engaged` retornaram 200.
-- Validacao estatica do build: bundle de `/psicologos` contem `strong_traction_very_engaged`, `low_traction_engaged` e **Muito engajado**.
+- Smoke local no Admin dev server: `GET http://localhost:3002/psicologos` e `GET http://localhost:3002/psicologos/lista?demand_engagement=strong_demand_very_engaged` retornaram 200.
+- Validacao estatica do build: bundle de `/psicologos` contem `strong_demand_very_engaged`, `low_demand_engaged` e **Muito engajado**.
 - Tentativa de smoke direto do use case foi limitada pelo banco de desenvolvimento com `EMAXCONNSESSION`; nao houve reset nem comando destrutivo.
 
 ## Execucao complementar: Sem engajamento para psicologos (2026-07-28)
 
 - Pedido do usuario: assim como pacientes exibem a categoria **Sem engajamento**, psicologos tambem precisam separar aqueles que nunca engajaram.
-- Backend Admin: `GET /api/admin/private/psychologists/dashboard` passou a retornar `no_engagement` em `traction_engagement.comparison` e `no_engagement_psychologists` em `totals`, separando psicologos com 0 interacoes reais em comunidades no periodo.
+- Backend Admin: `GET /api/admin/private/psychologists/dashboard` passou a retornar `no_engagement` em `demand_engagement.comparison` e `no_engagement_psychologists` em `totals`, separando psicologos com 0 interacoes reais em comunidades no periodo.
 - Backend Admin: **Pouco engajado** passou a representar psicologos com ao menos 1 interacao real, mas abaixo do corte normalizado de **Engajado**; **Sem engajamento** representa 0 interacoes, preservando **Dados insuficientes** para perfis com menos de 7 dias ativos sem sinal forte.
-- Backend Admin: os quadrantes do dashboard foram expandidos para oito recortes reais de tracao forte/sem tracao forte cruzados com **Muito engajado**, **Engajado**, **Pouco engajado** e **Sem engajamento**, mais **Dados insuficientes**.
-- Lista Admin: o filtro composto `traction_engagement` passou a aceitar `strong_traction_no_engagement` e `low_traction_no_engagement`, mantendo os links reais do dashboard para `/psicologos/lista`.
+- Backend Admin: os quadrantes do dashboard foram expandidos para oito recortes reais de demanda forte/sem demanda forte cruzados com **Muito engajado**, **Engajado**, **Pouco engajado** e **Sem engajamento**, mais **Dados insuficientes**.
+- Lista Admin: o filtro composto `demand_engagement` passou a aceitar `strong_demand_no_engagement` e `low_demand_no_engagement`, mantendo os links reais do dashboard para `/psicologos/lista`.
 - Lista Admin: a coluna **Engajamento** passa a exibir **Sem engajamento** quando o psicologo tem 0 interacoes reais em comunidades, evitando que os links do dashboard cheguem a uma lista com badge **Sem base** para esses casos.
-- Frontend Admin: o donut de **Engajamento** e a matriz **Tracao x Engajamento** exibem a nova categoria **Sem engajamento**, preservando layout mobile-first e links para lista.
+- Frontend Admin: o donut de **Engajamento** e a matriz **Demanda x Engajamento** exibem a nova categoria **Sem engajamento**, preservando layout mobile-first e links para lista.
 - Builder/Quick Copy nao estava exposto como ferramenta callable neste ambiente; a execucao usou `_product/tasks/PROTO-INVENTORY.md`, a referencia local `_product/proto/admin/Psicólogos/Psicólogos - Dashboard.png` e as capturas enviadas pelo usuario.
 - Nenhuma alteracao em `backend/prisma/schema.prisma` ou `backend/prisma/migrations`; `pnpm --dir backend db:migrate` nao se aplica.
-- ADR atualizado: `adrs/0337-detalhamento-engajamento-tracao-dashboard-psicologos.md`.
+- ADR atualizado: `adrs/0337-detalhamento-engajamento-demanda-dashboard-psicologos.md`.
 
 ### Criterios complementares
 
 - [x] O bloco **Engajamento** detalha os psicologos entre **Muito engajado**, **Engajado**, **Pouco engajado**, **Sem engajamento** e **Dados insuficientes**.
-- [x] O bloco **Tracao x Engajamento** cruza tracao com **Muito engajado**, **Engajado**, **Pouco engajado** e **Sem engajamento**, mantendo **Dados insuficientes** separado.
+- [x] O bloco **Demanda x Engajamento** cruza demanda com **Muito engajado**, **Engajado**, **Pouco engajado** e **Sem engajamento**, mantendo **Dados insuficientes** separado.
 - [x] Psicologos com 0 interacoes reais em comunidades no periodo entram em **Sem engajamento** quando nao forem **Dados insuficientes**.
-- [x] Os links da matriz usam filtro real `traction_engagement` na lista Admin com os novos recortes `*_no_engagement`.
+- [x] Os links da matriz usam filtro real `demand_engagement` na lista Admin com os novos recortes `*_no_engagement`.
 - [x] A leitura continua observacional, mobile-first e sem `<img>` cru.
 - [x] Nenhum mock, seed artificial, endpoint simulado, package novo ou migration foi criado.
 
@@ -163,25 +163,25 @@ A leitura deve ser agregada, nao publica e nao punitiva. Ela deve cruzar sinais 
 - `pnpm --dir backend build`
 - `pnpm --dir admin build`
 - `pnpm check`
-- Smoke local no Admin dev server: `GET http://localhost:3002/psicologos` e `GET http://localhost:3002/psicologos/lista?traction_engagement=low_traction_no_engagement` retornaram 200.
-- Validacao estatica do build: bundle de `/psicologos` contem **Sem engajamento**, `strong_traction_no_engagement` e `low_traction_no_engagement`.
+- Smoke local no Admin dev server: `GET http://localhost:3002/psicologos` e `GET http://localhost:3002/psicologos/lista?demand_engagement=low_demand_no_engagement` retornaram 200.
+- Validacao estatica do build: bundle de `/psicologos` contem **Sem engajamento**, `strong_demand_no_engagement` e `low_demand_no_engagement`.
 
 ## Execucao complementar: layout dos quadrantes alinhado a Pacientes (2026-07-28)
 
-- Pedido do usuario: replicar o layout dos quadrantes de **Intencao x Engajamento** de pacientes no bloco **Tracao x Engajamento** de psicologos.
-- Frontend Admin: a matriz de **Tracao x Engajamento** deixou de usar cards altos com texto de instrucao e CTA visual, passando a usar o mesmo padrao visual compacto de pacientes: cabecalhos neutros, labels de linha neutros, cards com contagem, percentual da base e percentual dentro da linha.
-- Frontend Admin: no mobile, os quadrantes passam a ser agrupados por linha de tracao em secoes responsivas, como acontece em pacientes; no desktop, a matriz usa `lg:grid` com label lateral e quatro colunas de engajamento.
-- Frontend Admin: os quadrantes continuam sendo links reais para `/psicologos/lista?traction_engagement=...`, mas a chamada visual **Ver lista** foi removida para preservar o layout espelhado de pacientes.
-- Frontend Admin: **Dados insuficientes** permanece exibido em card compacto separado, porque nao faz parte dos eixos de tracao e engajamento.
+- Pedido do usuario: replicar o layout dos quadrantes de **Intencao x Engajamento** de pacientes no bloco **Demanda x Engajamento** de psicologos.
+- Frontend Admin: a matriz de **Demanda x Engajamento** deixou de usar cards altos com texto de instrucao e CTA visual, passando a usar o mesmo padrao visual compacto de pacientes: cabecalhos neutros, labels de linha neutros, cards com contagem, percentual da base e percentual dentro da linha.
+- Frontend Admin: no mobile, os quadrantes passam a ser agrupados por linha de demanda em secoes responsivas, como acontece em pacientes; no desktop, a matriz usa `lg:grid` com label lateral e quatro colunas de engajamento.
+- Frontend Admin: os quadrantes continuam sendo links reais para `/psicologos/lista?demand_engagement=...`, mas a chamada visual **Ver lista** foi removida para preservar o layout espelhado de pacientes.
+- Frontend Admin: **Dados insuficientes** permanece exibido em card compacto separado, porque nao faz parte dos eixos de demanda e engajamento.
 - Builder/Quick Copy nao estava exposto como ferramenta callable neste ambiente; a execucao usou `_product/tasks/PROTO-INVENTORY.md`, a referencia local `_product/proto/admin/Psicólogos/Psicólogos - Dashboard.png` e as capturas enviadas pelo usuario.
 - Nenhuma alteracao em `backend/prisma/schema.prisma` ou `backend/prisma/migrations`; `pnpm --dir backend db:migrate` nao se aplica.
-- ADR atualizado: `adrs/0337-detalhamento-engajamento-tracao-dashboard-psicologos.md`.
+- ADR atualizado: `adrs/0337-detalhamento-engajamento-demanda-dashboard-psicologos.md`.
 
 ### Criterios complementares
 
-- [x] A matriz **Tracao x Engajamento** de psicologos usa o mesmo layout visual compacto da matriz **Intencao x Engajamento** de pacientes.
+- [x] A matriz **Demanda x Engajamento** de psicologos usa o mesmo layout visual compacto da matriz **Intencao x Engajamento** de pacientes.
 - [x] Os cards dos quadrantes mostram contagem, percentual da base e percentual dentro da linha, sem CTA visual alto.
-- [x] O layout mobile agrupa quadrantes por linha de tracao, como em pacientes.
+- [x] O layout mobile agrupa quadrantes por linha de demanda, como em pacientes.
 - [x] Os links reais para a lista filtrada continuam funcionando.
 - [x] A UI permanece mobile-first e sem `<img>` cru.
 - [x] Nenhum mock, seed artificial, endpoint simulado, package novo ou migration foi criado.
@@ -192,16 +192,16 @@ A leitura deve ser agregada, nao publica e nao punitiva. Ela deve cruzar sinais 
 - `pnpm --dir admin check`
 - `pnpm --dir admin build`
 - `pnpm check`
-- Smoke local no Admin dev server: `GET http://localhost:3002/psicologos` e `GET http://localhost:3002/psicologos/lista?traction_engagement=strong_traction_no_engagement` retornaram 200.
+- Smoke local no Admin dev server: `GET http://localhost:3002/psicologos` e `GET http://localhost:3002/psicologos/lista?demand_engagement=strong_demand_no_engagement` retornaram 200.
 - Validacao estatica do build: bundle de `/psicologos` contem `lg:grid-cols-[104px_repeat(4,minmax(0,1fr))]`, **Dados insuficientes** e **Sem engajamento**.
 
 ## Execucao complementar: remover Dados insuficientes do engajamento (2026-07-28)
 
 - Pedido do usuario: em psicologos, remover **Dados insuficientes** como opcao de **Engajamento**; se nao houver engajamento no periodo, o psicologo deve entrar em **Sem engajamento**.
-- Backend Admin: `traction_engagement` do dashboard nao retorna mais o quadrante `insufficient_data`; perfis com 0 interacoes reais em comunidades entram em `*_no_engagement`, mesmo quando possuem menos de 7 dias ativos.
-- Backend Admin: `insufficient_data_psychologists` permanece no payload de totais apenas por compatibilidade e fica em 0 nessa leitura composta; a categoria **Dados Insuficientes** continua existindo somente na analise isolada de **Tracao**.
-- Lista Admin: o filtro composto `traction_engagement` removeu `insufficient_data` das opcoes e a resolucao backend da lista passou a devolver sempre um dos oito cruzamentos reais de tracao forte/sem tracao forte x engajamento.
-- Frontend Admin: o donut de **Engajamento** e a matriz **Tracao x Engajamento** exibem apenas **Muito engajado**, **Engajado**, **Pouco engajado** e **Sem engajamento**; o card separado de **Dados insuficientes** foi removido.
+- Backend Admin: `demand_engagement` do dashboard nao retorna mais o quadrante `insufficient_data`; perfis com 0 interacoes reais em comunidades entram em `*_no_engagement`, mesmo quando possuem menos de 7 dias ativos.
+- Backend Admin: `insufficient_data_psychologists` permanece no payload de totais apenas por compatibilidade e fica em 0 nessa leitura composta; a categoria **Dados Insuficientes** continua existindo somente na analise isolada de **Demanda**.
+- Lista Admin: o filtro composto `demand_engagement` removeu `insufficient_data` das opcoes e a resolucao backend da lista passou a devolver sempre um dos oito cruzamentos reais de demanda forte/sem demanda forte x engajamento.
+- Frontend Admin: o donut de **Engajamento** e a matriz **Demanda x Engajamento** exibem apenas **Muito engajado**, **Engajado**, **Pouco engajado** e **Sem engajamento**; o card separado de **Dados insuficientes** foi removido.
 - Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente; a execucao usou `_product/tasks/PROTO-INVENTORY.md`, `_product/proto/admin/Psicólogos/Psicólogos - Dashboard.png` e as capturas enviadas pelo usuario.
 - Nenhuma alteracao em `backend/prisma/schema.prisma` ou `backend/prisma/migrations`; `pnpm --dir backend db:migrate` nao se aplica.
 - ADR criado: `adrs/0338-engajamento-comunitario-pacientes-e-sem-dados-insuficientes-psicologos.md`.
@@ -209,10 +209,10 @@ A leitura deve ser agregada, nao publica e nao punitiva. Ela deve cruzar sinais 
 ### Criterios complementares
 
 - [x] O bloco **Engajamento** de psicologos nao exibe mais **Dados insuficientes**.
-- [x] A matriz **Tracao x Engajamento** nao exibe card/filtro para `insufficient_data`.
+- [x] A matriz **Demanda x Engajamento** nao exibe card/filtro para `insufficient_data`.
 - [x] Psicologos com 0 interacoes reais em comunidades no periodo entram em **Sem engajamento**.
-- [x] Os links reais da matriz continuam usando os oito quadrantes `strong_traction_*` e `low_traction_*`.
-- [x] A categoria **Dados Insuficientes** permanece apenas na leitura isolada de **Tracao**.
+- [x] Os links reais da matriz continuam usando os oito quadrantes `strong_demand_*` e `low_demand_*`.
+- [x] A categoria **Dados Insuficientes** permanece apenas na leitura isolada de **Demanda**.
 - [x] Nenhum mock, seed artificial, endpoint simulado, package novo ou migration foi criado.
 
 ### Validacao complementar
@@ -225,26 +225,26 @@ A leitura deve ser agregada, nao publica e nao punitiva. Ela deve cruzar sinais 
 - `pnpm --dir admin build`
 - `pnpm check`
 - Smoke de servico local `buildPsychologistsDashboard({ period: "all" })` retornou 8 quadrantes sem `insufficient_data`, totais `no_engagement_psychologists=9`, `low_engaged_psychologists=5`, `very_engaged_psychologists=1`, `insufficient_data_psychologists=0` e soma igual a 15 psicologos reais.
-- Smoke HTTP local retornou 200 para `http://localhost:3002/psicologos`, `http://localhost:3002/pacientes`, `http://localhost:3002/psicologos/lista?traction_engagement=low_traction_no_engagement` e `http://localhost:3002/pacientes/lista`.
-- Browser local/headless autenticado em `http://localhost:3002/psicologos` e `http://localhost:3002/psicologos/lista?traction_engagement=low_traction_no_engagement` validou mobile `390x844`, `scrollWidth=390`, **Sem engajamento** presente, nenhum link `traction_engagement=insufficient_data` e ausencia do texto de criterio `Dados insuficientes = menos de`. Screenshots salvos em `.tmp/admin-psychologists-engagement-mobile.png` e `.tmp/admin-psychologists-list-no-engagement-mobile.png`.
+- Smoke HTTP local retornou 200 para `http://localhost:3002/psicologos`, `http://localhost:3002/pacientes`, `http://localhost:3002/psicologos/lista?demand_engagement=low_demand_no_engagement` e `http://localhost:3002/pacientes/lista`.
+- Browser local/headless autenticado em `http://localhost:3002/psicologos` e `http://localhost:3002/psicologos/lista?demand_engagement=low_demand_no_engagement` validou mobile `390x844`, `scrollWidth=390`, **Sem engajamento** presente, nenhum link `demand_engagement=insufficient_data` e ausencia do texto de criterio `Dados insuficientes = menos de`. Screenshots salvos em `.tmp/admin-psychologists-engagement-mobile.png` e `.tmp/admin-psychologists-list-no-engagement-mobile.png`.
 
-## Execucao complementar: categorias nao convertidas na matriz Tracao x Engajamento (2026-07-28)
+## Execucao complementar: categorias nao convertidas na matriz Demanda x Engajamento (2026-07-28)
 
-- Pedido do usuario: em **Tracao x Engajamento**, adicionar **Interesse Nao Convertido** e **Trafego Nao Convertido** na parte de tracao.
-- Backend Admin: `GET /api/admin/private/psychologists/dashboard` passou a retornar 16 quadrantes em `traction_engagement`, cruzando **Tracao forte**, **Interesse Nao Convertido**, **Trafego Nao Convertido** e **Baixa Tracao** com **Muito engajado**, **Engajado**, **Pouco engajado** e **Sem engajamento**.
-- Backend Admin: a classificacao isolada `insufficient_data` continua fora do eixo composto, conforme ADR-0338, e permanece mapeada operacionalmente para **Baixa Tracao** na matriz para nao reintroduzir **Dados Insuficientes** em `traction_engagement`.
-- Lista Admin: o filtro composto `traction_engagement` passou a aceitar os novos recortes `unconverted_interest_*` e `unconverted_traffic_*`, mantendo links reais da matriz para `/psicologos/lista`.
-- Frontend Admin: a matriz em `/psicologos` agora exibe as linhas **Tracao forte**, **Interesse Nao Convertido**, **Trafego Nao Convertido** e **Baixa Tracao**, com layout mobile-first e grade desktop compacta.
+- Pedido do usuario: em **Demanda x Engajamento**, adicionar **Interesse Nao Convertido** e **Trafego Nao Convertido** na parte de demanda.
+- Backend Admin: `GET /api/admin/private/psychologists/dashboard` passou a retornar 16 quadrantes em `demand_engagement`, cruzando **Demanda forte**, **Interesse Nao Convertido**, **Trafego Nao Convertido** e **Baixa Demanda** com **Muito engajado**, **Engajado**, **Pouco engajado** e **Sem engajamento**.
+- Backend Admin: a classificacao isolada `insufficient_data` continua fora do eixo composto, conforme ADR-0338, e permanece mapeada operacionalmente para **Baixa Demanda** na matriz para nao reintroduzir **Dados Insuficientes** em `demand_engagement`.
+- Lista Admin: o filtro composto `demand_engagement` passou a aceitar os novos recortes `unconverted_interest_*` e `unconverted_traffic_*`, mantendo links reais da matriz para `/psicologos/lista`.
+- Frontend Admin: a matriz em `/psicologos` agora exibe as linhas **Demanda forte**, **Interesse Nao Convertido**, **Trafego Nao Convertido** e **Baixa Demanda**, com layout mobile-first e grade desktop compacta.
 - Builder/Quick Copy nao estava exposto como ferramenta callable neste ambiente; a execucao usou `_product/tasks/PROTO-INVENTORY.md`, a referencia local `_product/proto/admin/Psicólogos/Psicólogos - Dashboard.png` e a captura enviada pelo usuario.
 - Nenhuma alteracao em `backend/prisma/schema.prisma` ou `backend/prisma/migrations`; `pnpm --dir backend db:migrate` nao se aplica.
-- ADR criado: `adrs/0339-tracao-engajamento-categorias-nao-convertidas.md`.
+- ADR criado: `adrs/0339-demanda-engajamento-categorias-nao-convertidas.md`.
 
 ### Criterios complementares
 
-- [x] A matriz **Tracao x Engajamento** exibe **Interesse Nao Convertido** e **Trafego Nao Convertido** como linhas de tracao.
-- [x] Os novos cruzamentos usam dados reais ja calculados de tracao e engajamento, sem mock, seed, endpoint simulado, package novo ou migration.
+- [x] A matriz **Demanda x Engajamento** exibe **Interesse Nao Convertido** e **Trafego Nao Convertido** como linhas de demanda.
+- [x] Os novos cruzamentos usam dados reais ja calculados de demanda e engajamento, sem mock, seed, endpoint simulado, package novo ou migration.
 - [x] Os links da matriz para a lista Admin preservam o filtro composto com `unconverted_interest_*` e `unconverted_traffic_*`.
-- [x] **Dados Insuficientes** permanece fora da matriz composta, restrito a analise isolada de **Tracao**.
+- [x] **Dados Insuficientes** permanece fora da matriz composta, restrito a analise isolada de **Demanda**.
 - [x] A UI permanece mobile-first e sem `<img>` cru.
 
 ### Validacao complementar
@@ -257,6 +257,6 @@ A leitura deve ser agregada, nao publica e nao punitiva. Ela deve cruzar sinais 
 - `NODE_OPTIONS=--max-old-space-size=8192 pnpm --dir admin build`
 - `NODE_OPTIONS=--max-old-space-size=8192 pnpm check`
 - Smoke de servico local `buildPsychologistsDashboard({ period: "all" })`: retornou 16 quadrantes, incluindo `unconverted_interest_very_engaged` e `unconverted_traffic_no_engagement`, com 15 psicologos reais no total.
-- HTTP local no Admin dev server: `GET http://localhost:3002/psicologos`, `GET http://localhost:3002/psicologos/lista?traction_engagement=unconverted_interest_no_engagement` e `GET http://localhost:3002/psicologos/lista?traction_engagement=unconverted_traffic_engaged` retornaram 200.
+- HTTP local no Admin dev server: `GET http://localhost:3002/psicologos`, `GET http://localhost:3002/psicologos/lista?demand_engagement=unconverted_interest_no_engagement` e `GET http://localhost:3002/psicologos/lista?demand_engagement=unconverted_traffic_engaged` retornaram 200.
 - Validacao estatica do build: bundle de `/psicologos`/`/psicologos/lista` contem **Interesse Nao Convertido**, **Trafego Nao Convertido**, `unconverted_interest_very_engaged`, `unconverted_traffic_no_engagement` e `lg:grid-cols-[132px_repeat(4,minmax(0,1fr))]`.
 - Browser local/headless autenticado em 390x844 validou `/psicologos` e `/psicologos/lista?engagement=sem_base`, com `scrollWidth=390` e screenshots em `.tmp/admin-psychologists-weighted-engagement-mobile.png` e `.tmp/admin-psychologists-list-weighted-engagement-mobile.png`.

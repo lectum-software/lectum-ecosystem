@@ -295,16 +295,16 @@ Criar o shell de detalhe do psicÃ³logo e as abas Geral e Perfil/Cadastro com dad
 - Smoke HTTP local: `GET http://localhost:3002/psicologos/cmrgztri7000tn0uh1q4n8vxf` retornou `200`.
 - `pnpm check` foi executado: frontend e biome backend passaram, mas backend ficou bloqueado em `prisma generate` por `ENOTEMPTY` ao remover `backend/src/external/generated/prisma/models`, fora do escopo deste ajuste Admin/frontend.
 
-## Ajuste complementar 2026-07-19 - refinamento dos cards de situação e assinatura
+## Ajuste complementar 2026-07-19 - refinamento dos cards de situaï¿½ï¿½o e assinatura
 
-- Pedido direto de produto aplicado na aba Admin `Geral` do detalhe do psicólogo.
-- No bloco `Situação do registro`, foram removidas as linhas `Origem`, `Responsável` e `Última atualização`, mantendo apenas `Regional CRP`, `Nº CRP` e `Data de inscrição`.
+- Pedido direto de produto aplicado na aba Admin `Geral` do detalhe do psicï¿½logo.
+- No bloco `Situaï¿½ï¿½o do registro`, foram removidas as linhas `Origem`, `Responsï¿½vel` e `ï¿½ltima atualizaï¿½ï¿½o`, mantendo apenas `Regional CRP`, `Nï¿½ CRP` e `Data de inscriï¿½ï¿½o`.
 - No bloco `Dados da assinatura`, o LTV permanece destacado por peso/tamanho/cor do texto, mas sem fundo azul na linha.
-- O botão `Abrir assinatura` foi mantido no card para navegação direta à aba de assinatura.
-- Os cards `Situação da conta`, `Situação do registro` e `Dados da assinatura` passaram a usar altura alinhada na grid desktop, preservando empilhamento mobile-first.
-- Não houve alteração de backend, endpoint, schema Prisma, migrations, packages ou dados persistidos.
+- O botï¿½o `Abrir assinatura` foi mantido no card para navegaï¿½ï¿½o direta ï¿½ aba de assinatura.
+- Os cards `Situaï¿½ï¿½o da conta`, `Situaï¿½ï¿½o do registro` e `Dados da assinatura` passaram a usar altura alinhada na grid desktop, preservando empilhamento mobile-first.
+- Nï¿½o houve alteraï¿½ï¿½o de backend, endpoint, schema Prisma, migrations, packages ou dados persistidos.
 
-### Validação complementar do refinamento dos cards
+### Validaï¿½ï¿½o complementar do refinamento dos cards
 
 - `pnpm --dir admin exec biome check --write "src/app/(admin)/psicologos/[id]/client.tsx"`
 - `git diff --check -- "admin/src/app/(admin)/psicologos/[id]/client.tsx"`
@@ -314,10 +314,10 @@ Criar o shell de detalhe do psicÃ³logo e as abas Geral e Perfil/Cadastro com dad
 ## Ajuste complementar 2026-07-19 - plano de cortesia no resumo de assinatura
 
 - Pedido direto de produto aplicado no card `Dados da assinatura` da aba Admin `Geral`.
-- A linha `Plano atual` passou a usar a mesma regra visual do header: assinatura `source="admin_grant"` ativa com plano profissional é exibida como `Plano de cortesia`, em vez de `Plano Profissional`.
-- A mudança é somente de apresentação no Admin; não altera plano, assinatura, endpoint, schema Prisma, migrations ou dados persistidos.
+- A linha `Plano atual` passou a usar a mesma regra visual do header: assinatura `source="admin_grant"` ativa com plano profissional ï¿½ exibida como `Plano de cortesia`, em vez de `Plano Profissional`.
+- A mudanï¿½a ï¿½ somente de apresentaï¿½ï¿½o no Admin; nï¿½o altera plano, assinatura, endpoint, schema Prisma, migrations ou dados persistidos.
 
-### Validação complementar do plano de cortesia no resumo
+### Validaï¿½ï¿½o complementar do plano de cortesia no resumo
 
 - `pnpm --dir admin exec biome check --write "src/app/(admin)/psicologos/[id]/client.tsx"`
 - `git diff --check -- "admin/src/app/(admin)/psicologos/[id]/client.tsx"`
@@ -411,24 +411,24 @@ Criar o shell de detalhe do psicÃ³logo e as abas Geral e Perfil/Cadastro com dad
 - Browser local/headless via Chrome CDP em `http://localhost:3002/psicologos/cmrwmw35t0000xkuhxoceh77v`: desktop `1366x900` e mobile `390x844` validaram as abas Geral, Perfil, Plano, Estatisticas, Publicacoes, Avaliacoes, Denuncias, Atividades e Conta sem `font-black`/`font-extrabold` em titulos `h2`/`h3`/`h4` visiveis e sem overflow horizontal. Admin temporario real removido ao final.
 
 
-## Ajuste complementar 2026-07-28 - contadores de tracao e engajamento na aba Geral
+## Ajuste complementar 2026-07-28 - contadores de demanda e engajamento na aba Geral
 
 - Pedido direto de produto aplicado na aba Admin `Geral` do detalhe do psicologo.
-- Os tres blocos `Cliques no WhatsApp`, `Favoritado` e `Visualizacoes de perfil` foram unificados em um unico contador `Tracao`.
-- O contador `Tracao` destaca o resultado real `business.traction.label` retornado por `GET /api/admin/private/psychologists/:id/statistics` no periodo `all`; os tres sinais originais continuam dentro do contador com menor peso textual.
+- Os tres blocos `Cliques no WhatsApp`, `Favoritado` e `Visualizacoes de perfil` foram unificados em um unico contador `Demanda`.
+- O contador `Demanda` destaca o resultado real `business.demand.label` retornado por `GET /api/admin/private/psychologists/:id/statistics` no periodo `all`; os tres sinais originais continuam dentro do contador com menor peso textual.
 - Foi adicionado o contador `Engajamento`, usando `community.engagement_diagnosis.label` do mesmo endpoint real de estatisticas.
-- A ordem dos contadores passa a ser `Ranking`, `Avaliacoes`, `Tracao`, `Engajamento`.
+- A ordem dos contadores passa a ser `Ranking`, `Avaliacoes`, `Demanda`, `Engajamento`.
 - Nao houve alteracao de backend, endpoint, schema Prisma, migrations, package, mock, seed ou backfill.
 - UI permanece mobile-first: os quatro contadores empilham em largura base e usam grade em duas colunas a partir de `sm` e quatro colunas em desktop largo.
 - Builder/Quick Copy nao esteve acessivel como ferramenta callable; foram usadas a captura enviada pelo usuario e a referencia local `_product/proto/admin/Psicologos/Detalhes do psicologo/Geral.png`.
-- ADR criado: `adrs/0329-admin-psicologo-contadores-tracao-engajamento.md`.
+- ADR criado: `adrs/0329-admin-psicologo-contadores-demanda-engajamento.md`.
 
 ### Criterios do ajuste de contadores
 
-- [x] WhatsApp, Favoritado e Visualizacoes de perfil aparecem dentro do contador `Tracao` com menor peso textual.
-- [x] `Tracao` destaca o resultado real da classificacao de tracao do psicologo.
+- [x] WhatsApp, Favoritado e Visualizacoes de perfil aparecem dentro do contador `Demanda` com menor peso textual.
+- [x] `Demanda` destaca o resultado real da classificacao de demanda do psicologo.
 - [x] A aba Geral exibe um novo contador `Engajamento` com diagnostico real.
-- [x] A ordem visual dos contadores e `Ranking`, `Avaliacoes`, `Tracao`, `Engajamento`.
+- [x] A ordem visual dos contadores e `Ranking`, `Avaliacoes`, `Demanda`, `Engajamento`.
 - [x] Nenhum mock, seed artificial, endpoint simulado, package novo ou migration foi criado.
 - [x] Nenhum `<img>` cru foi usado.
 
@@ -440,27 +440,27 @@ Criar o shell de detalhe do psicÃ³logo e as abas Geral e Perfil/Cadastro com dad
 - Smoke HTTP local: GET http://localhost:3002/psicologos/cmrgztri7000tn0uh1q4n8vxf retornou 200.
 
 
-## Ajuste pos-feedback 2026-07-28 - Tracao sem sinais internos
+## Ajuste pos-feedback 2026-07-28 - Demanda sem sinais internos
 
 - Pedido direto de produto aplicado na aba Admin `Geral` do detalhe do psicologo.
-- O contador `Tracao` passou a exibir somente o resultado real `business.traction.label`, sem listar `WhatsApp`, `Favoritado` e `Visualizacoes de perfil` dentro do card.
-- Os sinais continuam disponiveis nos blocos detalhados de estatisticas e nao foram removidos do contrato, tracking, backend ou calculo de tracao.
+- O contador `Demanda` passou a exibir somente o resultado real `business.demand.label`, sem listar `WhatsApp`, `Favoritado` e `Visualizacoes de perfil` dentro do card.
+- Os sinais continuam disponiveis nos blocos detalhados de estatisticas e nao foram removidos do contrato, tracking, backend ou calculo de demanda.
 - Nao houve alteracao de backend, endpoint, schema Prisma, migrations, package, mock, seed ou backfill.
-- UI permanece mobile-first com os quatro contadores na ordem `Ranking`, `Avaliacoes`, `Tracao`, `Engajamento`.
+- UI permanece mobile-first com os quatro contadores na ordem `Ranking`, `Avaliacoes`, `Demanda`, `Engajamento`.
 - Builder/Quick Copy nao esteve acessivel como ferramenta callable; foram usadas a captura enviada pelo usuario e a referencia local `_product/proto/admin/Psicologos/Detalhes do psicologo/Geral.png`.
-- ADR atualizado: `adrs/0329-admin-psicologo-contadores-tracao-engajamento.md`.
+- ADR atualizado: `adrs/0329-admin-psicologo-contadores-demanda-engajamento.md`.
 
 ### Criterios do ajuste pos-feedback
 
-- [x] O contador `Tracao` nao exibe `WhatsApp`, `Favoritado` nem `Visualizacoes de perfil` dentro do card.
-- [x] `Tracao` continua destacando o resultado real da classificacao de tracao do psicologo.
-- [x] A ordem visual dos contadores permanece `Ranking`, `Avaliacoes`, `Tracao`, `Engajamento`.
+- [x] O contador `Demanda` nao exibe `WhatsApp`, `Favoritado` nem `Visualizacoes de perfil` dentro do card.
+- [x] `Demanda` continua destacando o resultado real da classificacao de demanda do psicologo.
+- [x] A ordem visual dos contadores permanece `Ranking`, `Avaliacoes`, `Demanda`, `Engajamento`.
 - [x] Nenhum mock, seed artificial, endpoint simulado, package novo ou migration foi criado.
 - [x] Nenhum `<img>` cru foi usado.
 
 ### Validacao complementar do ajuste pos-feedback
 
-- `pnpm --dir admin exec biome check --write "src/app/(admin)/psicologos/[id]/client.tsx" "../adrs/0329-admin-psicologo-contadores-tracao-engajamento.md" "../_product/tasks/TASK-55-detalhe-psicologo-geral-perfil-admin.md"`
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/psicologos/[id]/client.tsx" "../adrs/0329-admin-psicologo-contadores-demanda-engajamento.md" "../_product/tasks/TASK-55-detalhe-psicologo-geral-perfil-admin.md"`
 - `pnpm --dir admin check`
 - `pnpm --dir admin build`
 - Smoke HTTP local: GET http://localhost:3002/psicologos/cmrgztri7000tn0uh1q4n8vxf retornou 200.

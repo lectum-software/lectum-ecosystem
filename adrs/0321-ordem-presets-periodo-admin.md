@@ -48,5 +48,5 @@ Nos filtros que já tinham `Últimos 180 dias`, manter essa opção como extens�
 ## Pendências
 
 - Nenhuma pendência externa deste ajuste.
-- `pnpm check` de raiz foi tentado, mas não concluiu de forma limpa no workspace porque alterações paralelas não relacionadas da TASK-84 reapareceram em arquivos backend de tração do dashboard de psicólogos.
+- `pnpm check` de raiz foi tentado, mas não concluiu de forma limpa no workspace porque alterações paralelas não relacionadas da TASK-84 reapareceram em arquivos backend de demanda do dashboard de psicólogos.
 - Builder/Quick Copy não está exposto como ferramenta callable neste ambiente; a referência visual ficou limitada a `_product/tasks/PROTO-INVENTORY.md`, protótipos locais e browser local.

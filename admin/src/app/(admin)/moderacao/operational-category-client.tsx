@@ -74,7 +74,7 @@ const groupConfig: Record<
   },
   operacional: {
     description:
-      "Pendências por falta de cobertura, perfis profissionais não publicados e falta de tração de profissionais.",
+      "Pendências por falta de cobertura, perfis profissionais não publicados e falta de demanda de profissionais.",
     emptyLabel: "Nenhuma pendência operacional encontrada nos dados reais atuais.",
     title: "Operacionais",
   },
@@ -113,7 +113,7 @@ const operationalCategoryFiltersSchema = z
       "patient_post_without_coverage",
       "post_report",
       "professional_crp_pending",
-      "psychologist_no_traction",
+      "psychologist_no_demand",
       "registration_error",
       "unpublished_required_settings",
     ]),
@@ -225,7 +225,7 @@ const operationalCategoryTypeOptions: Record<
     { label: "Posts sem cobertura", value: "patient_post_without_coverage" },
     { label: "Erro no cadastro", value: "registration_error" },
     { label: "Perfis não publicados", value: "unpublished_required_settings" },
-    { label: "Sem tração", value: "psychologist_no_traction" },
+    { label: "Sem demanda", value: "psychologist_no_demand" },
   ],
 };
 
@@ -360,7 +360,7 @@ const operationalTypeLabels: Record<AdminModerationOperationalAlert["type"], str
   patient_post_without_coverage: "Post sem cobertura",
   post_report: "Denúncia de conteúdo",
   professional_crp_pending: "CRP pendente",
-  psychologist_no_traction: "Sem tração",
+  psychologist_no_demand: "Sem demanda",
   registration_error: "Erro no cadastro",
   unpublished_required_settings: "Perfil não publicado",
 };
@@ -1454,7 +1454,7 @@ const operationalTablePendingLabels: Partial<
   Record<AdminModerationOperationalAlert["type"], string>
 > = {
   patient_post_without_coverage: "Post sem cobertura",
-  psychologist_no_traction: "Sem tração",
+  psychologist_no_demand: "Sem demanda",
   registration_error: "Erro no cadastro",
   unpublished_required_settings: "Perfil não publicado",
 };
@@ -1463,7 +1463,7 @@ const operationalTablePendingClass: Partial<
   Record<AdminModerationOperationalAlert["type"], string>
 > = {
   patient_post_without_coverage: "bg-orange-50 text-orange-700",
-  psychologist_no_traction: "bg-yellow-50 text-yellow-700",
+  psychologist_no_demand: "bg-yellow-50 text-yellow-700",
   registration_error: "bg-red-50 text-danger",
   unpublished_required_settings: "bg-red-50 text-danger",
 };
@@ -1557,7 +1557,7 @@ const operationalAlertDetailItems = (
     ];
   }
 
-  if (alert.type === "psychologist_no_traction") {
+  if (alert.type === "psychologist_no_demand") {
     return [
       {
         label: "Na plataforma",

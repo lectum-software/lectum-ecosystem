@@ -400,17 +400,17 @@ export type AdminPsychologistsDashboardTrafficSources = {
   updated_at: Date | null;
 };
 
-export type AdminPsychologistsDashboardTractionCategoryId =
+export type AdminPsychologistsDashboardDemandCategoryId =
   | "insufficient_data"
-  | "low_traction"
-  | "strong_traction"
+  | "low_demand"
+  | "strong_demand"
   | "unconverted_interest"
   | "unconverted_traffic";
 
-export type AdminPsychologistsDashboardTractionCategory = {
+export type AdminPsychologistsDashboardDemandCategory = {
   count: number;
   description: string;
-  id: AdminPsychologistsDashboardTractionCategoryId;
+  id: AdminPsychologistsDashboardDemandCategoryId;
   label: string;
   percentage: number;
   totals: {
@@ -420,8 +420,8 @@ export type AdminPsychologistsDashboardTractionCategory = {
   };
 };
 
-export type AdminPsychologistsDashboardTractionResults = {
-  categories: AdminPsychologistsDashboardTractionCategory[];
+export type AdminPsychologistsDashboardDemandResults = {
+  categories: AdminPsychologistsDashboardDemandCategory[];
   description: string;
   source: "profile_view_event+contact_request+psychologist_favorite";
   thresholds: {
@@ -441,24 +441,24 @@ export type AdminPsychologistsDashboardTractionResults = {
   unavailable_reason: string | null;
 };
 
-export type AdminPsychologistsDashboardTractionEngagementTractionCategoryId = Exclude<
-  AdminPsychologistsDashboardTractionCategoryId,
+export type AdminPsychologistsDashboardDemandEngagementDemandCategoryId = Exclude<
+  AdminPsychologistsDashboardDemandCategoryId,
   "insufficient_data"
 >;
 
-export type AdminPsychologistsDashboardTractionEngagementLevelId =
+export type AdminPsychologistsDashboardDemandEngagementLevelId =
   | "engaged"
   | "low_engaged"
   | "no_engagement"
   | "very_engaged";
 
-export type AdminPsychologistsDashboardTractionEngagementQuadrantId =
-  `${AdminPsychologistsDashboardTractionEngagementTractionCategoryId}_${AdminPsychologistsDashboardTractionEngagementLevelId}`;
+export type AdminPsychologistsDashboardDemandEngagementQuadrantId =
+  `${AdminPsychologistsDashboardDemandEngagementDemandCategoryId}_${AdminPsychologistsDashboardDemandEngagementLevelId}`;
 
-export type AdminPsychologistsDashboardTractionEngagementQuadrant = {
+export type AdminPsychologistsDashboardDemandEngagementQuadrant = {
   count: number;
   description: string;
-  id: AdminPsychologistsDashboardTractionEngagementQuadrantId;
+  id: AdminPsychologistsDashboardDemandEngagementQuadrantId;
   label: string;
   percentage: number;
   totals: {
@@ -473,28 +473,28 @@ export type AdminPsychologistsDashboardTractionEngagementQuadrant = {
   };
 };
 
-export type AdminPsychologistsDashboardTractionEngagementRate = {
+export type AdminPsychologistsDashboardDemandEngagementRate = {
   psychologists: number;
-  strong_traction_count: number;
-  strong_traction_rate: number | null;
+  strong_demand_count: number;
+  strong_demand_rate: number | null;
 };
 
-export type AdminPsychologistsDashboardTractionEngagementResults = {
+export type AdminPsychologistsDashboardDemandEngagementResults = {
   comparison: {
-    engaged: AdminPsychologistsDashboardTractionEngagementRate;
-    high_engagement: AdminPsychologistsDashboardTractionEngagementRate;
-    low_engaged: AdminPsychologistsDashboardTractionEngagementRate;
-    low_engagement: AdminPsychologistsDashboardTractionEngagementRate;
+    engaged: AdminPsychologistsDashboardDemandEngagementRate;
+    high_engagement: AdminPsychologistsDashboardDemandEngagementRate;
+    low_engaged: AdminPsychologistsDashboardDemandEngagementRate;
+    low_engagement: AdminPsychologistsDashboardDemandEngagementRate;
     engaged_vs_low_rate_difference_points: number | null;
     engaged_vs_no_rate_difference_points: number | null;
-    no_engagement: AdminPsychologistsDashboardTractionEngagementRate;
+    no_engagement: AdminPsychologistsDashboardDemandEngagementRate;
     rate_difference_points: number | null;
-    very_engaged: AdminPsychologistsDashboardTractionEngagementRate;
+    very_engaged: AdminPsychologistsDashboardDemandEngagementRate;
     very_vs_low_rate_difference_points: number | null;
     very_vs_no_rate_difference_points: number | null;
   };
   description: string;
-  quadrants: AdminPsychologistsDashboardTractionEngagementQuadrant[];
+  quadrants: AdminPsychologistsDashboardDemandEngagementQuadrant[];
   source: "profile_view_event+contact_request+psychologist_favorite+community_post+post_reply+post_vote";
   thresholds: {
     engaged_score_30d: number;
@@ -512,9 +512,9 @@ export type AdminPsychologistsDashboardTractionEngagementResults = {
       replies: number;
       votes: number;
     };
-    traction_strong_whatsapp_high_30d: number;
-    traction_strong_whatsapp_with_conversion_30d: number;
-    traction_strong_conversion_rate_percent: number;
+    demand_strong_whatsapp_high_30d: number;
+    demand_strong_whatsapp_with_conversion_30d: number;
+    demand_strong_conversion_rate_percent: number;
     weights: {
       patient_replies: number;
       posts: number;
@@ -534,7 +534,7 @@ export type AdminPsychologistsDashboardTractionEngagementResults = {
     posts: number;
     psychologists: number;
     replies: number;
-    strong_traction_psychologists: number;
+    strong_demand_psychologists: number;
     very_engaged_psychologists: number;
     votes: number;
   };
@@ -552,8 +552,8 @@ export type AdminPsychologistsDashboardPlanSegmentSummary = {
   psychologists_count: number;
   signup_method: AdminPsychologistsDashboardSignupMethod;
   statistics: AdminPsychologistsDashboardStatistics;
-  traction: AdminPsychologistsDashboardTractionResults;
-  traction_engagement: AdminPsychologistsDashboardTractionEngagementResults;
+  demand: AdminPsychologistsDashboardDemandResults;
+  demand_engagement: AdminPsychologistsDashboardDemandEngagementResults;
   traffic_sources: AdminPsychologistsDashboardTrafficSources;
 };
 
@@ -596,8 +596,8 @@ export type AdminPsychologistsDashboardSummary = {
     points: AdminPsychologistsDashboardDailyPoint[];
     source: "user+professional_subscription";
   };
-  traction: AdminPsychologistsDashboardTractionResults;
-  traction_engagement: AdminPsychologistsDashboardTractionEngagementResults;
+  demand: AdminPsychologistsDashboardDemandResults;
+  demand_engagement: AdminPsychologistsDashboardDemandEngagementResults;
   traffic_sources: AdminPsychologistsDashboardTrafficSources;
   unavailable: AdminPsychologistsDashboardUnavailableMetric[];
 };

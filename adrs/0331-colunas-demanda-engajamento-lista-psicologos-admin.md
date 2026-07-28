@@ -1,4 +1,4 @@
-﻿# ADR-0331 - Colunas de Tracao e Engajamento na lista Admin de psicologos
+# ADR-0331 - Colunas de Demanda e Engajamento na lista Admin de psicologos
 
 ## Status
 
@@ -6,21 +6,21 @@ Accepted
 
 ## Contexto
 
-A lista administrativa de psicologos em `/psicologos/lista` ja exibia ranking, plano, status de perfil, registro e acoes por profissional, mas nao mostrava rapidamente a leitura operacional de **Tracao** e **Engajamento**. Essas duas leituras ja eram relevantes no Admin e precisam aparecer diretamente na tabela para evitar que o time entre no detalhe de cada psicologo para comparar sinais.
+A lista administrativa de psicologos em `/psicologos/lista` ja exibia ranking, plano, status de perfil, registro e acoes por profissional, mas nao mostrava rapidamente a leitura operacional de **Demanda** e **Engajamento**. Essas duas leituras ja eram relevantes no Admin e precisam aparecer diretamente na tabela para evitar que o time entre no detalhe de cada psicologo para comparar sinais.
 
 A listagem possui fontes reais para calcular esses sinais individualmente:
 
-- tracao: `profile_view_event` de pagina de perfil, `contact_request` com canal WhatsApp e `psychologist_favorite`;
+- demanda: `profile_view_event` de pagina de perfil, `contact_request` com canal WhatsApp e `psychologist_favorite`;
 - engajamento: `community_post`, `post_reply` e `post_vote` de usuarios psicologos em comunidades publicas e conteudo nao deletado.
 
 ## Decisao
 
-A resposta de `GET /api/admin/private/psychologists` passa a incluir dois objetos por item: `traction` e `engagement`.
+A resposta de `GET /api/admin/private/psychologists` passa a incluir dois objetos por item: `demand` e `engagement`.
 
-- `traction` classifica o profissional em `strong_traction`, `unconverted_traffic`, `unconverted_interest`, `low_traction` ou `insufficient_data`, usando sinais reais acumulados ate a consulta e normalizados para 30 dias conforme dias ativos desde o cadastro.
+- `demand` classifica o profissional em `strong_demand`, `unconverted_traffic`, `unconverted_interest`, `low_demand` ou `insufficient_data`, usando sinais reais acumulados ate a consulta e normalizados para 30 dias conforme dias ativos desde o cadastro.
 - `engagement` classifica o profissional em `muito_ativo`, `ativo`, `pouco_ativo` ou `sem_base`, reutilizando o diagnostico canonico de engajamento comunitario para a contagem normalizada de posts, respostas e votos.
-- A lista Admin renderiza as colunas **Tracao** e **Engajamento** no desktop e os mesmos rótulos nos cards mobile-first.
-- O endpoint tambem aceita os parametros opcionais `traction`, `engagement` e `traction_engagement` para recorte por URL/modal, aplicando-os somente depois de calcular as classificacoes reais de cada psicologo. O recorte `traction_engagement` combina tracao forte/baixa com engajamento alto/baixo sem persistir dado derivado.
+- A lista Admin renderiza as colunas **Demanda** e **Engajamento** no desktop e os mesmos rótulos nos cards mobile-first.
+- O endpoint tambem aceita os parametros opcionais `demand`, `engagement` e `demand_engagement` para recorte por URL/modal, aplicando-os somente depois de calcular as classificacoes reais de cada psicologo. O recorte `demand_engagement` combina demanda forte/baixa com engajamento alto/baixo sem persistir dado derivado.
 
 ## Consequencias
 

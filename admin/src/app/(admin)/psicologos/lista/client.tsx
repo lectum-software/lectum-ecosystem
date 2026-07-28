@@ -35,13 +35,13 @@ import { useAdminPsychologistsList } from "@/api/callers/psychologists";
 import { resolveApiError } from "@/api/handle";
 import type {
   AdminPsychologistsList,
+  PsychologistsListDemandCategoryId,
+  PsychologistsListDemandEngagementQuadrantId,
   PsychologistsListEngagementId,
   PsychologistsListItem,
   PsychologistsListOption,
   PsychologistsListQuery,
   PsychologistsListSort,
-  PsychologistsListTractionCategoryId,
-  PsychologistsListTractionEngagementQuadrantId,
 } from "@/api/req/psychologists";
 import { cn } from "@/lib/utils";
 
@@ -89,8 +89,8 @@ const FILTER_KEYS = [
   "specialty",
   "state",
   "target_audience",
-  "traction",
-  "traction_engagement",
+  "demand",
+  "demand_engagement",
 ] as const satisfies readonly (keyof PsychologistsListQuery)[];
 
 type FilterQueryKey = (typeof FILTER_KEYS)[number];
@@ -167,26 +167,26 @@ const REGISTRY_STATUS_FILTER_OPTIONS: PsychologistsListOption[] = [
   { count: 0, id: "pending", label: "Pendente" },
 ];
 
-const TRACTION_ENGAGEMENT_FILTER_OPTIONS: PsychologistsListOption[] = [
+const DEMAND_ENGAGEMENT_FILTER_OPTIONS: PsychologistsListOption[] = [
   {
     count: 0,
-    id: "strong_traction_very_engaged",
-    label: "Tra\u00e7\u00e3o forte + muito engajado",
+    id: "strong_demand_very_engaged",
+    label: "Demanda forte + muito engajado",
   },
   {
     count: 0,
-    id: "strong_traction_engaged",
-    label: "Tra\u00e7\u00e3o forte + engajado",
+    id: "strong_demand_engaged",
+    label: "Demanda forte + engajado",
   },
   {
     count: 0,
-    id: "strong_traction_low_engaged",
-    label: "Tra\u00e7\u00e3o forte + pouco engajado",
+    id: "strong_demand_low_engaged",
+    label: "Demanda forte + pouco engajado",
   },
   {
     count: 0,
-    id: "strong_traction_no_engagement",
-    label: "Tra\u00e7\u00e3o forte + sem engajamento",
+    id: "strong_demand_no_engagement",
+    label: "Demanda forte + sem engajamento",
   },
   {
     count: 0,
@@ -230,31 +230,31 @@ const TRACTION_ENGAGEMENT_FILTER_OPTIONS: PsychologistsListOption[] = [
   },
   {
     count: 0,
-    id: "low_traction_very_engaged",
-    label: "Baixa tra\u00e7\u00e3o + muito engajado",
+    id: "low_demand_very_engaged",
+    label: "Baixa demanda + muito engajado",
   },
   {
     count: 0,
-    id: "low_traction_engaged",
-    label: "Baixa tra\u00e7\u00e3o + engajado",
+    id: "low_demand_engaged",
+    label: "Baixa demanda + engajado",
   },
   {
     count: 0,
-    id: "low_traction_low_engaged",
-    label: "Baixa tra\u00e7\u00e3o + pouco engajado",
+    id: "low_demand_low_engaged",
+    label: "Baixa demanda + pouco engajado",
   },
   {
     count: 0,
-    id: "low_traction_no_engagement",
-    label: "Baixa tra\u00e7\u00e3o + sem engajamento",
+    id: "low_demand_no_engagement",
+    label: "Baixa demanda + sem engajamento",
   },
 ];
 
-const TRACTION_FILTER_OPTIONS: PsychologistsListOption[] = [
-  { count: 0, id: "strong_traction", label: "Tração Forte" },
+const DEMAND_FILTER_OPTIONS: PsychologistsListOption[] = [
+  { count: 0, id: "strong_demand", label: "Demanda Forte" },
   { count: 0, id: "unconverted_traffic", label: "Tráfego Não Convertido" },
   { count: 0, id: "unconverted_interest", label: "Interesse Não Convertido" },
-  { count: 0, id: "low_traction", label: "Baixa Tração" },
+  { count: 0, id: "low_demand", label: "Baixa Demanda" },
   { count: 0, id: "insufficient_data", label: "Dados Insuficientes" },
 ];
 
@@ -270,15 +270,15 @@ const PSYCHOLOGIST_ENGAGEMENT_LABEL_BY_ID: Record<PsychologistsListEngagementId,
   pouco_ativo: "Pouco engajado",
   sem_base: "Sem engajamento",
 };
-const listTractionCategories = new Set<PsychologistsListTractionCategoryId>(
-  TRACTION_FILTER_OPTIONS.map((option) => option.id as PsychologistsListTractionCategoryId),
+const listDemandCategories = new Set<PsychologistsListDemandCategoryId>(
+  DEMAND_FILTER_OPTIONS.map((option) => option.id as PsychologistsListDemandCategoryId),
 );
 const listEngagementCategories = new Set<PsychologistsListEngagementId>(
   ENGAGEMENT_FILTER_OPTIONS.map((option) => option.id as PsychologistsListEngagementId),
 );
-const listTractionEngagementQuadrants = new Set<PsychologistsListTractionEngagementQuadrantId>(
-  TRACTION_ENGAGEMENT_FILTER_OPTIONS.map(
-    (option) => option.id as PsychologistsListTractionEngagementQuadrantId,
+const listDemandEngagementQuadrants = new Set<PsychologistsListDemandEngagementQuadrantId>(
+  DEMAND_ENGAGEMENT_FILTER_OPTIONS.map(
+    (option) => option.id as PsychologistsListDemandEngagementQuadrantId,
   ),
 );
 
@@ -302,11 +302,11 @@ const parsePositiveNumber = (value: string | null, fallback: number) => {
 
 const parseBoolean = (value: string | null) => (value === "true" ? true : undefined);
 
-const parseTractionCategory = (
+const parseDemandCategory = (
   value: string | null,
-): PsychologistsListTractionCategoryId | undefined =>
-  value && listTractionCategories.has(value as PsychologistsListTractionCategoryId)
-    ? (value as PsychologistsListTractionCategoryId)
+): PsychologistsListDemandCategoryId | undefined =>
+  value && listDemandCategories.has(value as PsychologistsListDemandCategoryId)
+    ? (value as PsychologistsListDemandCategoryId)
     : undefined;
 
 const parseEngagementCategory = (
@@ -316,12 +316,11 @@ const parseEngagementCategory = (
     ? (value as PsychologistsListEngagementId)
     : undefined;
 
-const parseTractionEngagementQuadrant = (
+const parseDemandEngagementQuadrant = (
   value: string | null,
-): PsychologistsListTractionEngagementQuadrantId | undefined =>
-  value &&
-  listTractionEngagementQuadrants.has(value as PsychologistsListTractionEngagementQuadrantId)
-    ? (value as PsychologistsListTractionEngagementQuadrantId)
+): PsychologistsListDemandEngagementQuadrantId | undefined =>
+  value && listDemandEngagementQuadrants.has(value as PsychologistsListDemandEngagementQuadrantId)
+    ? (value as PsychologistsListDemandEngagementQuadrantId)
     : undefined;
 
 const parseQuery = (params: URLSearchParams): PsychologistsListQuery => {
@@ -352,8 +351,8 @@ const parseQuery = (params: URLSearchParams): PsychologistsListQuery => {
     specialty: params.get("specialty") || undefined,
     state: params.get("state") || undefined,
     target_audience: params.get("target_audience") || undefined,
-    traction: parseTractionCategory(params.get("traction")),
-    traction_engagement: parseTractionEngagementQuadrant(params.get("traction_engagement")),
+    demand: parseDemandCategory(params.get("demand")),
+    demand_engagement: parseDemandEngagementQuadrant(params.get("demand_engagement")),
   };
 };
 
@@ -524,15 +523,15 @@ const FilterPanel = ({
   const toggleFilterFeature = (name: FilterFeatureKey) => {
     onFilter(name, query[name] === true ? null : true);
   };
-  const updateTractionFilter = (value: string) => {
-    onFilter("traction", value || null);
+  const updateDemandFilter = (value: string) => {
+    onFilter("demand", value || null);
 
-    if (value) onFilter("traction_engagement", null);
+    if (value) onFilter("demand_engagement", null);
   };
   const updateEngagementFilter = (value: string) => {
     onFilter("engagement", value || null);
 
-    if (value) onFilter("traction_engagement", null);
+    if (value) onFilter("demand_engagement", null);
   };
   return (
     <>
@@ -562,11 +561,11 @@ const FilterPanel = ({
       />
       <FilterSelectField
         className="col-span-2"
-        label="Tração"
-        onChange={updateTractionFilter}
-        options={TRACTION_FILTER_OPTIONS}
+        label="Demanda"
+        onChange={updateDemandFilter}
+        options={DEMAND_FILTER_OPTIONS}
         placeholder="Todas"
-        value={query.traction}
+        value={query.demand}
       />
       <FilterSelectField
         className="col-span-2"
@@ -714,12 +713,12 @@ const buildActiveFilterItems = (query: PsychologistsListQuery, data?: AdminPsych
     { key: "plan", label: "Plano", options: PLAN_FILTER_OPTIONS },
     { key: "profile_status", label: "Status perfil", options: PROFILE_STATUS_FILTER_OPTIONS },
     { key: "registry_status", label: "Status registro", options: REGISTRY_STATUS_FILTER_OPTIONS },
-    { key: "traction", label: "Tração", options: TRACTION_FILTER_OPTIONS },
+    { key: "demand", label: "Demanda", options: DEMAND_FILTER_OPTIONS },
     { key: "engagement", label: "Engajamento", options: ENGAGEMENT_FILTER_OPTIONS },
     {
-      key: "traction_engagement",
+      key: "demand_engagement",
       label: "Quadrante",
-      options: TRACTION_ENGAGEMENT_FILTER_OPTIONS,
+      options: DEMAND_ENGAGEMENT_FILTER_OPTIONS,
     },
     { key: "specialty", label: "Especialidade", options: filters?.specialties },
     { key: "service", label: "Serviço", options: filters?.services },
@@ -888,17 +887,17 @@ const resolveProfileLabel = (item: PsychologistsListItem) =>
     ? { label: "Ativo", tone: "active" as const }
     : { label: "Inativo", tone: "inactive" as const };
 
-const resolveTractionLabel = (item: PsychologistsListItem) => {
-  if (item.traction.id === "strong_traction")
-    return { label: item.traction.label, tone: "active" as const };
-  if (item.traction.id === "unconverted_interest")
-    return { label: item.traction.label, tone: "info" as const };
-  if (item.traction.id === "unconverted_traffic")
-    return { label: item.traction.label, tone: "warning" as const };
-  if (item.traction.id === "insufficient_data")
-    return { label: item.traction.label, tone: "inactive" as const };
+const resolveDemandLabel = (item: PsychologistsListItem) => {
+  if (item.demand.id === "strong_demand")
+    return { label: item.demand.label, tone: "active" as const };
+  if (item.demand.id === "unconverted_interest")
+    return { label: item.demand.label, tone: "info" as const };
+  if (item.demand.id === "unconverted_traffic")
+    return { label: item.demand.label, tone: "warning" as const };
+  if (item.demand.id === "insufficient_data")
+    return { label: item.demand.label, tone: "inactive" as const };
 
-  return { label: item.traction.label, tone: "danger" as const };
+  return { label: item.demand.label, tone: "danger" as const };
 };
 
 const resolveEngagementLabel = (item: PsychologistsListItem) => {
@@ -948,7 +947,7 @@ const PsychologistCard = ({ item }: { item: PsychologistsListItem }) => {
   const plan = resolvePlanLabel(item);
   const profile = resolveProfileLabel(item);
   const registry = resolveRegistryLabel(item);
-  const traction = resolveTractionLabel(item);
+  const demand = resolveDemandLabel(item);
   const engagement = resolveEngagementLabel(item);
 
   return (
@@ -982,7 +981,7 @@ const PsychologistCard = ({ item }: { item: PsychologistsListItem }) => {
         <StatusText tone={plan.tone}>{plan.label}</StatusText>
         <StatusText tone={profile.tone}>Perfil {profile.label}</StatusText>
         <StatusText tone={registry.tone}>Registro {registry.label}</StatusText>
-        <StatusText tone={traction.tone}>Tração {traction.label}</StatusText>
+        <StatusText tone={demand.tone}>Demanda {demand.label}</StatusText>
         <StatusText tone={engagement.tone}>Engajamento {engagement.label}</StatusText>
       </div>
 
@@ -1034,7 +1033,7 @@ const PsychologistsTable = ({
             <th className="px-2 py-4 font-semibold">Plano</th>
             <th className="px-2 py-4 font-semibold">Perfil</th>
             <th className="px-2 py-4 font-semibold">Registro</th>
-            <th className="px-2 py-4 font-semibold">Tração</th>
+            <th className="px-2 py-4 font-semibold">Demanda</th>
             <th className="px-2 py-4 font-semibold">Engajamento</th>
             <th className="px-2 py-4 text-center font-semibold">Ações</th>
           </tr>
@@ -1044,7 +1043,7 @@ const PsychologistsTable = ({
             const plan = resolvePlanLabel(item);
             const profile = resolveProfileLabel(item);
             const registry = resolveRegistryLabel(item);
-            const traction = resolveTractionLabel(item);
+            const demand = resolveDemandLabel(item);
             const engagement = resolveEngagementLabel(item);
 
             return (
@@ -1097,7 +1096,7 @@ const PsychologistsTable = ({
                   <StatusText tone={registry.tone}>{registry.label}</StatusText>
                 </td>
                 <td className="px-2 py-3">
-                  <StatusText tone={traction.tone}>{traction.label}</StatusText>
+                  <StatusText tone={demand.tone}>{demand.label}</StatusText>
                 </td>
                 <td className="px-2 py-3">
                   <StatusText tone={engagement.tone}>{engagement.label}</StatusText>
@@ -1276,7 +1275,7 @@ export const AdminPsychologistsListClient = () => {
     const params = new URLSearchParams(searchString);
 
     params.delete(key);
-    if (key === "traction" || key === "engagement") params.delete("traction_engagement");
+    if (key === "demand" || key === "engagement") params.delete("demand_engagement");
     for (const deprecatedKey of DEPRECATED_FILTER_KEYS) params.delete(deprecatedKey);
     params.delete("page");
 

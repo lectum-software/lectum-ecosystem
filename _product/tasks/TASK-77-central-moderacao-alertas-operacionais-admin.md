@@ -68,7 +68,7 @@ Ampliar a tela administrativa de moderação para mostrar, com dados reais, den�
   - `psychologist_profile` e `professional_subscription` para CRP pendente/não aprovado no Plano Profissional;
   - `psychologist_profile.whatsapp` para ausência/formato inválido de WhatsApp;
   - `psychologist_profile` + relações de catálogo para perfil não publicado por falta de configurações obrigatórias;
-  - `profile_view_event` e `contact_request.channel=whatsapp` para profissional sem tração após adaptação.
+  - `profile_view_event` e `contact_request.channel=whatsapp` para profissional sem demanda após adaptação.
 - Retornar `operational_alerts` dentro do summary com contadores, thresholds, fontes, dimensões excluídas e itens para a UI.
 - Não persistir/resolver alertas operacionais nesta task; são alertas derivados e read-only.
 
@@ -543,10 +543,10 @@ Validacao deste ajuste:
 
 - Pedido do usuário: na lista de **Operacionais**, seguir o layout tabular de **Compliance** com as colunas **Pendência**, **Pendente há**, **Usuário**, **Plano**, **Status do perfil** e ícone de detalhe; a coluna antes tratada como **Profissional** deve ser **Usuário** e indicar se o usuário é **Paciente** ou **Psicólogo/Psicóloga**.
 - `/moderacao/operacionais` passou a renderizar uma tabela compacta com uma linha por alerta derivado, rolagem horizontal contida em telas pequenas e cabeçalhos: **Pendência**, **Pendente há**, **Usuário**, **Plano**, **Status do perfil** e ação por ícone.
-- Os rótulos de **Pendência** na tabela operacional foram normalizados para **Post sem cobertura**, **Perfis não publicados** e **Sem tração**, separados dos rótulos técnicos internos.
+- Os rótulos de **Pendência** na tabela operacional foram normalizados para **Post sem cobertura**, **Perfis não publicados** e **Sem demanda**, separados dos rótulos técnicos internos.
 - O contrato real `GET /api/admin/private/moderation/operational-alerts` agora inclui metadados aditivos `user` nos alertas: posts sem cobertura usam o autor real de `community_post` como **Paciente**; alertas de perfil usam o usuário do `psychologist_profile` como **Psicólogo/Psicóloga**.
 - Alertas operacionais de perfil também incluem o fato **Publicado**, permitindo derivar **Status do perfil** como **Ativo/Inativo** sem criar campo persistido ou mock. Para posts sem cobertura, **Plano** e **Status do perfil** aparecem como `—`, pois não se aplicam ao paciente/conteúdo.
-- O ícone de detalhe abre a rota Admin do conteúdo para **Post sem cobertura** e a rota Admin do psicólogo para **Perfis não publicados**/**Sem tração**.
+- O ícone de detalhe abre a rota Admin do conteúdo para **Post sem cobertura** e a rota Admin do psicólogo para **Perfis não publicados**/**Sem demanda**.
 - Não houve alteração de Prisma schema/migrations, package novo, mock, seed ou endpoint simulado; `pnpm --dir backend db:migrate` não se aplica.
 - Builder/Quick Copy não está exposto como ferramenta callable neste ambiente; a referência visual foi a captura enviada pelo usuário da tabela de Compliance e a tela local `/moderacao/operacionais`.
 
@@ -556,7 +556,7 @@ Validacao deste ajuste:
 - [x] A tabela mostra **Pendência**, **Pendente há**, **Usuário**, **Plano**, **Status do perfil** e ícone de detalhe.
 - [x] A coluna **Usuário** exibe o nome real e o tipo **Paciente** ou **Psicólogo/Psicóloga**.
 - [x] **Post sem cobertura** aponta para o autor paciente real e abre o detalhe do conteúdo.
-- [x] **Perfis não publicados** e **Sem tração** apontam para o psicólogo real e abrem o detalhe administrativo do psicólogo.
+- [x] **Perfis não publicados** e **Sem demanda** apontam para o psicólogo real e abrem o detalhe administrativo do psicólogo.
 - [x] A alteração é mobile-first, sem `<img>` cru, sem package novo e sem migration.
 
 ### Validação deste ajuste
@@ -602,7 +602,7 @@ Validacao deste ajuste:
 
 ## Ajuste complementar 2026-07-25 - Segmentação dos filtros de Operacionais
 
-- Pedido do usuário: corrigir o filtro **Tipo** de `/moderacao/operacionais`, que mostrava **Sem tração** selecionado mas mantinha linhas de **Post sem cobertura**.
+- Pedido do usuário: corrigir o filtro **Tipo** de `/moderacao/operacionais`, que mostrava **Sem demanda** selecionado mas mantinha linhas de **Post sem cobertura**.
 - A causa era a chave de cache do TanStack Query para `operational-alerts`: ela não incluía `alertType` e também omitia filtros correlatos (`contentType`, `plan`, `profileStatus`). Assim, alterações no select podiam reutilizar o resultado em cache do grupo inteiro sem disparar nova consulta.
 - `adminModerationKeys.operationalAlerts` agora normaliza esses filtros na query key, fazendo cada combinação de tipo/plano/status/tipo de conteúdo ter cache e refetch próprios.
 - A correção é frontend/cache, sem alteração de contrato backend, Prisma schema/migrations, package novo, mock ou dado artificial.
@@ -610,7 +610,7 @@ Validacao deste ajuste:
 ### Critérios deste ajuste
 
 - [x] Alterar **Tipo** em `/moderacao/operacionais` muda a query key e refaz a consulta segmentada.
-- [x] **Sem tração** não reutiliza mais o cache de **Todos** ou **Post sem cobertura**.
+- [x] **Sem demanda** não reutiliza mais o cache de **Todos** ou **Post sem cobertura**.
 - [x] A mesma proteção cobre filtros de tipo em Denúncias e filtros de Plano/Status de perfil em Compliance.
 
 ### Validação deste ajuste
@@ -674,7 +674,7 @@ Validacao deste ajuste:
 
 ## Complemento 2026-07-25: Detalhes especificos na tabela de Operacionais
 
-A fila exclusiva `/moderacao/operacionais` deixou de exibir as colunas genericas **Plano** e **Status do perfil**. A tabela permanece compacta, mas agora usa a coluna **Detalhes** para expor o dado operacional acionavel conforme o tipo de pendencia: comunidade e engajamento do paciente em posts sem cobertura; plano e motivo real de inatividade em perfis nao publicados; tempo do profissional na plataforma e criterios de adaptacao ja atendidos em profissionais sem tracao.
+A fila exclusiva `/moderacao/operacionais` deixou de exibir as colunas genericas **Plano** e **Status do perfil**. A tabela permanece compacta, mas agora usa a coluna **Detalhes** para expor o dado operacional acionavel conforme o tipo de pendencia: comunidade e engajamento do paciente em posts sem cobertura; plano e motivo real de inatividade em perfis nao publicados; tempo do profissional na plataforma e criterios de adaptacao ja atendidos em profissionais sem demanda.
 
 Para nao transformar a UI em uma camada heuristica, os detalhes sao entregues pelos fatos reais do contrato `operational-alerts`. O nivel de engajamento do paciente em **Post sem cobertura** agora e calculado somente em relacao a comunidade daquele post, usando atividades first-party de comunidade (`community_post`, `post_reply`, `post_vote`, `post_save`, `post_reply_save` e `post_share`) para classificar o usuario como **Pouco ativo**, **Ativo** ou **Muito ativo**. A UI tambem remove duplicatas ao compor o nome da comunidade, evitando exibir a mesma comunidade duas vezes. Nao houve alteracao de Prisma schema/migrations nem package novo.
 
@@ -711,7 +711,7 @@ Nao houve alteracao de Prisma schema/migrations, package novo, mock, seed ou end
 
 Pedido do usuario: simplificar a descricao do header de `/moderacao/operacionais` e substituir o detalhe **Engajamento** em **Post sem cobertura** pelo periodo que o post esta sem cobertura.
 
-A descricao da pagina passa a ser **Pendencias por falta de cobertura, perfis profissionais nao publicados e falta de tracao de profissionais.**. Na tabela, posts sem cobertura seguem mostrando a comunidade uma unica vez, mas o segundo detalhe deixa de ser engajamento e passa a ser **Sem cobertura**, usando a idade real do alerta/post ja derivada de `operational-alerts`.
+A descricao da pagina passa a ser **Pendencias por falta de cobertura, perfis profissionais nao publicados e falta de demanda de profissionais.**. Na tabela, posts sem cobertura seguem mostrando a comunidade uma unica vez, mas o segundo detalhe deixa de ser engajamento e passa a ser **Sem cobertura**, usando a idade real do alerta/post ja derivada de `operational-alerts`.
 
 Nao houve alteracao de backend, Prisma schema/migrations, package novo, mock, seed ou endpoint simulado; `pnpm --dir backend db:migrate` nao se aplica.
 

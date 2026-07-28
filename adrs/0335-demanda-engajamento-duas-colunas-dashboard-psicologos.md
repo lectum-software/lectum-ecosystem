@@ -1,4 +1,4 @@
-# ADR-0335: Tracao e engajamento em duas colunas no dashboard Admin de psicologos
+# ADR-0335: Demanda e engajamento em duas colunas no dashboard Admin de psicologos
 
 ## Status
 
@@ -10,9 +10,9 @@ TASK-84, ajuste pos-feedback em 2026-07-28.
 
 ## Contexto
 
-O dashboard Admin de psicologos ja exibia o bloco **Tracao** e, logo abaixo, o comparativo
-**Tracao x Engajamento**. Apos a iteracao do dashboard de pacientes, o produto pediu que o bloco
-superior de tracao tambem se comportasse como uma leitura pareada em duas colunas, semelhante a
+O dashboard Admin de psicologos ja exibia o bloco **Demanda** e, logo abaixo, o comparativo
+**Demanda x Engajamento**. Apos a iteracao do dashboard de pacientes, o produto pediu que o bloco
+superior de demanda tambem se comportasse como uma leitura pareada em duas colunas, semelhante a
 **Intencao e engajamento dos pacientes**.
 
 Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente. A execucao usou
@@ -22,16 +22,16 @@ Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente. A e
 
 ## Decisao
 
-- Renomear o card superior de `/psicologos` para **Tracao e engajamento dos psicologos**.
+- Renomear o card superior de `/psicologos` para **Demanda e engajamento dos psicologos**.
 - Manter um unico filtro por plano no card, aplicado simultaneamente as duas colunas.
 - Reorganizar o card em layout mobile-first: colunas empilhadas em telas estreitas e duas colunas
   a partir do desktop amplo.
-- Manter a coluna **Tracao** usando o contrato real `traction` ja existente.
-- Criar a coluna **Engajamento** derivando a distribuicao de `traction_engagement.totals`, sem
+- Manter a coluna **Demanda** usando o contrato real `demand` ja existente.
+- Criar a coluna **Engajamento** derivando a distribuicao de `demand_engagement.totals`, sem
   alterar backend, contrato HTTP, migration ou criar endpoint paralelo.
 - Exibir o engajamento como tres buckets agregados: **Alto engajamento**, **Baixo engajamento** e
   **Dados insuficientes**.
-- Preservar o bloco separado **Tracao x Engajamento** como leitura observacional detalhada e
+- Preservar o bloco separado **Demanda x Engajamento** como leitura observacional detalhada e
   acionavel para lista filtrada.
 
 ## Consequencias

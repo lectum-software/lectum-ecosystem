@@ -20,19 +20,19 @@ export type PsychologistsListStatus = "free" | "pending" | "unpublished" | "veri
 
 export type PsychologistsListEngagementId = "ativo" | "muito_ativo" | "pouco_ativo" | "sem_base";
 
-export type PsychologistsListTractionEngagementCategoryId = Exclude<
-  PsychologistsListTractionCategoryId,
+export type PsychologistsListDemandEngagementCategoryId = Exclude<
+  PsychologistsListDemandCategoryId,
   "insufficient_data"
 >;
 
-export type PsychologistsListTractionEngagementLevelId =
+export type PsychologistsListDemandEngagementLevelId =
   | "engaged"
   | "low_engaged"
   | "no_engagement"
   | "very_engaged";
 
-export type PsychologistsListTractionEngagementQuadrantId =
-  `${PsychologistsListTractionEngagementCategoryId}_${PsychologistsListTractionEngagementLevelId}`;
+export type PsychologistsListDemandEngagementQuadrantId =
+  `${PsychologistsListDemandEngagementCategoryId}_${PsychologistsListDemandEngagementLevelId}`;
 
 export type PsychologistsListExperience = "0_4" | "5_9" | "10_plus" | "unknown";
 
@@ -63,8 +63,8 @@ export type PsychologistsListQuery = {
   state?: string;
   status?: PsychologistsListStatus;
   target_audience?: string;
-  traction?: PsychologistsListTractionCategoryId;
-  traction_engagement?: PsychologistsListTractionEngagementQuadrantId;
+  demand?: PsychologistsListDemandCategoryId;
+  demand_engagement?: PsychologistsListDemandEngagementQuadrantId;
   verified?: boolean;
 };
 
@@ -453,17 +453,17 @@ export type PsychologistsDashboardTrafficSources = {
   updated_at: string | null;
 };
 
-export type PsychologistsDashboardTractionCategoryId =
+export type PsychologistsDashboardDemandCategoryId =
   | "insufficient_data"
-  | "low_traction"
-  | "strong_traction"
+  | "low_demand"
+  | "strong_demand"
   | "unconverted_interest"
   | "unconverted_traffic";
 
-export type PsychologistsDashboardTractionCategory = {
+export type PsychologistsDashboardDemandCategory = {
   count: number;
   description: string;
-  id: PsychologistsDashboardTractionCategoryId;
+  id: PsychologistsDashboardDemandCategoryId;
   label: string;
   percentage: number;
   totals: {
@@ -473,8 +473,8 @@ export type PsychologistsDashboardTractionCategory = {
   };
 };
 
-export type PsychologistsDashboardTractionResults = {
-  categories: PsychologistsDashboardTractionCategory[];
+export type PsychologistsDashboardDemandResults = {
+  categories: PsychologistsDashboardDemandCategory[];
   description: string;
   source: "profile_view_event+contact_request+psychologist_favorite";
   thresholds: {
@@ -494,24 +494,24 @@ export type PsychologistsDashboardTractionResults = {
   unavailable_reason: string | null;
 };
 
-export type PsychologistsDashboardTractionEngagementCategoryId = Exclude<
-  PsychologistsDashboardTractionCategoryId,
+export type PsychologistsDashboardDemandEngagementCategoryId = Exclude<
+  PsychologistsDashboardDemandCategoryId,
   "insufficient_data"
 >;
 
-export type PsychologistsDashboardTractionEngagementLevelId =
+export type PsychologistsDashboardDemandEngagementLevelId =
   | "engaged"
   | "low_engaged"
   | "no_engagement"
   | "very_engaged";
 
-export type PsychologistsDashboardTractionEngagementQuadrantId =
-  `${PsychologistsDashboardTractionEngagementCategoryId}_${PsychologistsDashboardTractionEngagementLevelId}`;
+export type PsychologistsDashboardDemandEngagementQuadrantId =
+  `${PsychologistsDashboardDemandEngagementCategoryId}_${PsychologistsDashboardDemandEngagementLevelId}`;
 
-export type PsychologistsDashboardTractionEngagementQuadrant = {
+export type PsychologistsDashboardDemandEngagementQuadrant = {
   count: number;
   description: string;
-  id: PsychologistsDashboardTractionEngagementQuadrantId;
+  id: PsychologistsDashboardDemandEngagementQuadrantId;
   label: string;
   percentage: number;
   totals: {
@@ -526,28 +526,28 @@ export type PsychologistsDashboardTractionEngagementQuadrant = {
   };
 };
 
-export type PsychologistsDashboardTractionEngagementRate = {
+export type PsychologistsDashboardDemandEngagementRate = {
   psychologists: number;
-  strong_traction_count: number;
-  strong_traction_rate: number | null;
+  strong_demand_count: number;
+  strong_demand_rate: number | null;
 };
 
-export type PsychologistsDashboardTractionEngagementResults = {
+export type PsychologistsDashboardDemandEngagementResults = {
   comparison: {
-    engaged: PsychologistsDashboardTractionEngagementRate;
-    high_engagement: PsychologistsDashboardTractionEngagementRate;
-    low_engaged: PsychologistsDashboardTractionEngagementRate;
-    low_engagement: PsychologistsDashboardTractionEngagementRate;
+    engaged: PsychologistsDashboardDemandEngagementRate;
+    high_engagement: PsychologistsDashboardDemandEngagementRate;
+    low_engaged: PsychologistsDashboardDemandEngagementRate;
+    low_engagement: PsychologistsDashboardDemandEngagementRate;
     engaged_vs_low_rate_difference_points: number | null;
     engaged_vs_no_rate_difference_points: number | null;
-    no_engagement: PsychologistsDashboardTractionEngagementRate;
+    no_engagement: PsychologistsDashboardDemandEngagementRate;
     rate_difference_points: number | null;
-    very_engaged: PsychologistsDashboardTractionEngagementRate;
+    very_engaged: PsychologistsDashboardDemandEngagementRate;
     very_vs_low_rate_difference_points: number | null;
     very_vs_no_rate_difference_points: number | null;
   };
   description: string;
-  quadrants: PsychologistsDashboardTractionEngagementQuadrant[];
+  quadrants: PsychologistsDashboardDemandEngagementQuadrant[];
   source: "profile_view_event+contact_request+psychologist_favorite+community_post+post_reply+post_vote";
   thresholds: {
     engaged_score_30d: number;
@@ -565,9 +565,9 @@ export type PsychologistsDashboardTractionEngagementResults = {
       replies: number;
       votes: number;
     };
-    traction_strong_whatsapp_high_30d: number;
-    traction_strong_whatsapp_with_conversion_30d: number;
-    traction_strong_conversion_rate_percent: number;
+    demand_strong_whatsapp_high_30d: number;
+    demand_strong_whatsapp_with_conversion_30d: number;
+    demand_strong_conversion_rate_percent: number;
     weights: {
       patient_replies: number;
       posts: number;
@@ -587,7 +587,7 @@ export type PsychologistsDashboardTractionEngagementResults = {
     posts: number;
     psychologists: number;
     replies: number;
-    strong_traction_psychologists: number;
+    strong_demand_psychologists: number;
     very_engaged_psychologists: number;
     votes: number;
   };
@@ -605,8 +605,8 @@ export type PsychologistsDashboardPlanSegmentSummary = {
   psychologists_count: number;
   signup_method: PsychologistsDashboardSignupMethod;
   statistics: PsychologistsDashboardStatistics;
-  traction: PsychologistsDashboardTractionResults;
-  traction_engagement: PsychologistsDashboardTractionEngagementResults;
+  demand: PsychologistsDashboardDemandResults;
+  demand_engagement: PsychologistsDashboardDemandEngagementResults;
   traffic_sources: PsychologistsDashboardTrafficSources;
 };
 
@@ -643,21 +643,21 @@ export type AdminPsychologistRegistryVerificationSummary = {
   status_label: string;
 };
 
-export type PsychologistsListTractionCategoryId =
+export type PsychologistsListDemandCategoryId =
   | "insufficient_data"
-  | "low_traction"
-  | "strong_traction"
+  | "low_demand"
+  | "strong_demand"
   | "unconverted_interest"
   | "unconverted_traffic";
 
-export type PsychologistsListTraction = {
+export type PsychologistsListDemand = {
   description: string;
-  id: PsychologistsListTractionCategoryId;
+  id: PsychologistsListDemandCategoryId;
   label:
-    | "Baixa Tração"
+    | "Baixa Demanda"
     | "Dados Insuficientes"
     | "Interesse Não Convertido"
-    | "Tração Forte"
+    | "Demanda Forte"
     | "Tráfego Não Convertido";
   signals: {
     active_days: number;
@@ -762,7 +762,7 @@ export type PsychologistsListItem = {
   social_value: boolean;
   state: string | null;
   status: PsychologistsListStatus;
-  traction: PsychologistsListTraction;
+  demand: PsychologistsListDemand;
   registry_verification: AdminPsychologistRegistryVerificationSummary;
   verified: boolean;
   whatsapp_clicks_count: number;
@@ -1233,10 +1233,10 @@ export type AdminCommunityEngagementDiagnosis = {
   source: string;
 };
 
-export type AdminPsychologistBusinessTractionCategoryId =
+export type AdminPsychologistBusinessDemandCategoryId =
   | "insufficient_data"
-  | "low_traction"
-  | "strong_traction"
+  | "low_demand"
+  | "strong_demand"
   | "unconverted_interest"
   | "unconverted_traffic";
 
@@ -1256,9 +1256,9 @@ export type AdminPsychologistStatistics = {
   business: {
     cards: AdminPsychologistEngagementMetric[];
     series: AdminPsychologistStatisticsPoint[];
-    traction: {
+    demand: {
       description: string;
-      id: AdminPsychologistBusinessTractionCategoryId;
+      id: AdminPsychologistBusinessDemandCategoryId;
       label: string;
       signals: {
         active_days: number;
@@ -1809,8 +1809,8 @@ export type AdminPsychologistsDashboard = {
     points: PsychologistsDashboardDailyPoint[];
     source: "user+professional_subscription";
   };
-  traction: PsychologistsDashboardTractionResults;
-  traction_engagement: PsychologistsDashboardTractionEngagementResults;
+  demand: PsychologistsDashboardDemandResults;
+  demand_engagement: PsychologistsDashboardDemandEngagementResults;
   traffic_sources: PsychologistsDashboardTrafficSources;
   unavailable: PsychologistsDashboardUnavailableMetric[];
 };
@@ -1848,8 +1848,8 @@ const cleanListParams = (input: PsychologistsListQuery) => ({
   ...(input.state ? { state: input.state } : {}),
   ...(input.status ? { status: input.status } : {}),
   ...(input.target_audience ? { target_audience: input.target_audience } : {}),
-  ...(input.traction ? { traction: input.traction } : {}),
-  ...(input.traction_engagement ? { traction_engagement: input.traction_engagement } : {}),
+  ...(input.demand ? { demand: input.demand } : {}),
+  ...(input.demand_engagement ? { demand_engagement: input.demand_engagement } : {}),
   ...(input.verified ? { verified: input.verified } : {}),
 });
 

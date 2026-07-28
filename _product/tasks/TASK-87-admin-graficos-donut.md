@@ -7,7 +7,7 @@ Substituir todos os gráficos de pizza visíveis do painel administrativo por gr
 ## Escopo
 
 - Dashboards administrativos de pacientes, psicólogos e comunidades.
-- Blocos de distribuição por cadastro, devices/sistemas, formatos de conteúdo e tração.
+- Blocos de distribuição por cadastro, devices/sistemas, formatos de conteúdo e demanda.
 - Detalhes administrativos de paciente, psicólogo e comunidade onde houver distribuição radial.
 
 ## Critérios de aceite
