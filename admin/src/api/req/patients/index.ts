@@ -653,11 +653,7 @@ export type PatientsDetailCommunity = {
   comments: number;
   color: string | null;
   downvotes?: number;
-  engagement_diagnosis?: {
-    id: "ativo" | "muito_ativo" | "pouco_ativo" | "sem_base";
-    label: "Ativo" | "Muito ativo" | "Pouco ativo" | "Sem base";
-    source: string;
-  };
+  engagement_diagnosis?: PatientCommunityEngagementDiagnosis;
   id: string;
   interactions: number;
   is_member: boolean;
@@ -668,6 +664,12 @@ export type PatientsDetailCommunity = {
   slug: string;
   upvotes?: number;
   votes: number;
+};
+
+export type PatientCommunityEngagementDiagnosis = {
+  id: "ativo" | "muito_ativo" | "pouco_ativo" | "sem_base";
+  label: "Ativo" | "Muito ativo" | "Pouco ativo" | "Sem base";
+  source: string;
 };
 
 export type PatientsDetailPublicationMetric = {
@@ -744,6 +746,7 @@ export type AdminPatientDetail = {
     source: "community_activity+professional_review";
   };
   communities: {
+    engagement_diagnosis: PatientCommunityEngagementDiagnosis;
     items: PatientsDetailCommunity[];
     source: "community_member+community_post+post_reply+post_vote+post_save+post_reply_save";
   };

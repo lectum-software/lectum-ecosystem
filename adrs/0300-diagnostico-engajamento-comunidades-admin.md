@@ -90,3 +90,10 @@ Tambem foi solicitado separar votos em **Upvotes** e **Downvotes** para entender
 - A UI moveu a tag **Engajamento geral: ...** para o cabecalho do bloco **Comunidades ativas**, mantendo a tabela com o diagnostico individual por comunidade.
 - Como **Comunidades ativas** possui filtro de periodo independente, a tag passa a usar `activeCommunitiesStatistics.community.engagement_diagnosis`, isto e, o melhor diagnostico individual do mesmo recorte exibido na tabela.
 - Nao houve mudanca no calculo backend nem no contrato `community.engagement_diagnosis`.
+
+## Ajuste de agregacao para pacientes 2026-07-27
+
+- Pedido do usuario: aplicar a mesma logica de resultado geral tambem para pacientes.
+- O detalhe administrativo do paciente agora expõe `communities.engagement_diagnosis` como o melhor diagnostico individual entre `communities.items[].engagement_diagnosis` no periodo selecionado.
+- A tag **Engajamento geral: ...** fica no cabecalho de **Comunidades ativas** do paciente, e a tabela preserva o diagnostico individual por comunidade.
+- A decisao mantém a regra compartilhada de prioridade (**Muito ativo** > **Ativo** > **Pouco ativo** > **Sem base**) e nao altera fontes first-party, schema Prisma, migrations, packages, seeds ou backfills.

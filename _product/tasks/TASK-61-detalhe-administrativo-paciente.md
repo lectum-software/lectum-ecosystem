@@ -1088,3 +1088,34 @@ Frontend esperado:
 - `pnpm --dir admin build`
 - `pnpm check`
 - Browser local/headless via Chrome CDP em `http://localhost:3002/pacientes/cmrqsr42d00151guhdwy8tfj4`: desktop `1366x900` e mobile `390x844` validaram as abas Geral, Perfil, Estatisticas, Publicacoes, Denuncias, Atividades e Conta sem `font-black`/`font-extrabold` em titulos `h2`/`h3`/`h4` visiveis e sem overflow horizontal. Admin temporario real removido ao final.
+
+## Ajuste pos-feedback 2026-07-27 - Tag de engajamento geral em Comunidades ativas
+
+- Pedido do usuario: aplicar aos pacientes a mesma logica de diagnostico geral ja usada em psicologos: analisar o engajamento individual nas comunidades e gerar uma tag geral.
+- O resultado geral do paciente e derivado do melhor diagnostico individual entre as comunidades ativas no periodo selecionado: **Muito ativo** prevalece sobre **Ativo**, que prevalece sobre **Pouco ativo**, que prevalece sobre **Sem base**.
+- O endpoint real `GET /api/admin/private/patients/:id` agora expoe `communities.engagement_diagnosis`, mantendo `communities.items[].engagement_diagnosis` como diagnostico individual por comunidade.
+- A UI Admin renderiza **Engajamento geral: ...** ao lado do titulo **Comunidades ativas** do paciente, usando o mesmo periodo/filtro do bloco e preservando a tabela individual.
+- Nao houve endpoint paralelo, schema Prisma, migration, package novo, mock, seed ou backfill.
+- Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente; o ajuste reutilizou o padrao visual existente da aba **Estatisticas** e o inventario/proto local como referencia auditavel.
+- ADR atualizado: `adrs/0300-diagnostico-engajamento-comunidades-admin.md`.
+
+### Criterios de aceite do ajuste
+
+- [x] A tabela **Comunidades ativas** do paciente continua exibindo o engajamento individual por comunidade.
+- [x] O titulo **Comunidades ativas** do paciente exibe a tag **Engajamento geral: ...**.
+- [x] O engajamento geral usa o melhor resultado individual do periodo selecionado.
+- [x] O contrato real expoe `communities.engagement_diagnosis` sem endpoint paralelo.
+- [x] Nenhum mock, seed, endpoint simulado, migration, package novo ou backfill artificial foi adicionado.
+
+### Validacao complementar executada
+
+- `pnpm --dir backend exec biome check --write src/modules/api/admin/private/patients/detail/DTOs/IAdminPatientDetailDTO.ts src/modules/api/admin/private/patients/detail/use-cases/services.ts`
+- `pnpm --dir admin exec biome check --write src/api/req/patients/index.ts "src/app/(admin)/pacientes/[id]/client.tsx"`
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir admin build`
+- `pnpm --dir admin check`
+- `pnpm check`
+- Smoke local via `pnpm --dir backend exec tsx -e ...`: validou que a agregacao retorna `ativo` para [Sem base, Ativo, Pouco ativo] e `muito_ativo` quando ha uma comunidade Muito ativa.
+- Observacao: o primeiro `pnpm --dir admin check` falhou por artefato gerado stale em `.next/types`; apos `admin build`, o `admin check` passou. O primeiro `pnpm check` falhou transitoriamente em `prisma generate` com `ENOTEMPTY` na pasta gerada; a reexecucao completa passou.
+- Browser/Builder: Builder Quick Copy nao esta exposto como ferramenta callable neste ambiente; validacao visual direta ficou limitada ao build do Admin e ao padrao existente/proto local.

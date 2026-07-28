@@ -1,6 +1,9 @@
 import type { Resolve } from "@/helpers/return";
 import { error, msg } from "@/helpers/translate";
-import { diagnoseAdminCommunityEngagement } from "@/utils/admin-community-engagement-diagnosis";
+import {
+  bestAdminCommunityEngagementDiagnosis,
+  diagnoseAdminCommunityEngagement,
+} from "@/utils/admin-community-engagement-diagnosis";
 import type { AdminOperatingSystemType } from "@/utils/admin-operating-system";
 import {
   ADMIN_OPERATING_SYSTEM_LABELS,
@@ -1504,6 +1507,11 @@ const buildDetail = (
     pwaInstallAction,
     sessions: platformSessions,
   });
+  const activeCommunities = buildActiveCommunities(currentBundle);
+  const communityEngagementDiagnosis = bestAdminCommunityEngagementDiagnosis({
+    diagnoses: activeCommunities.map((community) => community.engagement_diagnosis),
+    source: "communities.items.engagement_diagnosis:max",
+  });
   const unavailable = [
     ...(!patient.visitor_locations[0]
       ? [
@@ -1557,7 +1565,8 @@ const buildDetail = (
       source: "community_activity+professional_review",
     },
     communities: {
-      items: buildActiveCommunities(currentBundle),
+      engagement_diagnosis: communityEngagementDiagnosis,
+      items: activeCommunities,
       source: "community_member+community_post+post_reply+post_vote+post_save+post_reply_save",
     },
     coverage_notes: [

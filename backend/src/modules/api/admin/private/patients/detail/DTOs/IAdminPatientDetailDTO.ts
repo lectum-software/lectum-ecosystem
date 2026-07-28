@@ -277,6 +277,7 @@ export type AdminPatientDetailDTO = {
     source: "community_activity+professional_review";
   };
   communities: {
+    engagement_diagnosis: AdminCommunityEngagementDiagnosis;
     items: AdminPatientDetailCommunity[];
     source: "community_member+community_post+post_reply+post_vote+post_save+post_reply_save";
   };

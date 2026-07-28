@@ -1886,10 +1886,12 @@ const getPatientCommunityDownvotes = (community: PatientsDetailCommunity) =>
 
 const PatientActiveCommunitiesBlock = ({
   communities,
+  engagementDiagnosis,
   isRefreshing,
   periodControls,
 }: {
   communities: PatientsDetailCommunity[];
+  engagementDiagnosis: AdminPatientDetail["communities"]["engagement_diagnosis"];
   isRefreshing: boolean;
   periodControls: ReactNode;
 }) => (
@@ -1898,6 +1900,14 @@ const PatientActiveCommunitiesBlock = ({
       <div className="min-w-0">
         <div className="flex flex-wrap items-center gap-2">
           <h2 className="text-lg font-bold text-foreground">Comunidades ativas</h2>
+          <Badge
+            className={cn(
+              "border border-current/10",
+              patientCommunityEngagementDiagnosisClassName(engagementDiagnosis.id),
+            )}
+          >
+            Engajamento geral: {engagementDiagnosis.label}
+          </Badge>
           {isRefreshing ? (
             <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary-soft px-2.5 py-1 text-[11px] font-black text-primary">
               <Loader2 aria-hidden className="h-3.5 w-3.5 animate-spin" />
@@ -3832,6 +3842,7 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPatientDetail; id: string 
       />
       <PatientActiveCommunitiesBlock
         communities={activeCommunitiesDetail.communities.items}
+        engagementDiagnosis={activeCommunitiesDetail.communities.engagement_diagnosis}
         isRefreshing={activeCommunitiesSlice.isRefreshing}
         periodControls={
           <PatientStatisticsPeriodControls
