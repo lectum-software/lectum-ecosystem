@@ -409,3 +409,32 @@ Criar o shell de detalhe do psicólogo e as abas Geral e Perfil/Cadastro com dad
 - `pnpm --dir admin build`
 - `pnpm check`
 - Browser local/headless via Chrome CDP em `http://localhost:3002/psicologos/cmrwmw35t0000xkuhxoceh77v`: desktop `1366x900` e mobile `390x844` validaram as abas Geral, Perfil, Plano, Estatisticas, Publicacoes, Avaliacoes, Denuncias, Atividades e Conta sem `font-black`/`font-extrabold` em titulos `h2`/`h3`/`h4` visiveis e sem overflow horizontal. Admin temporario real removido ao final.
+
+
+## Ajuste complementar 2026-07-28 - contadores de tracao e engajamento na aba Geral
+
+- Pedido direto de produto aplicado na aba Admin `Geral` do detalhe do psicologo.
+- Os tres blocos `Cliques no WhatsApp`, `Favoritado` e `Visualizacoes de perfil` foram unificados em um unico contador `Tracao`.
+- O contador `Tracao` destaca o resultado real `business.traction.label` retornado por `GET /api/admin/private/psychologists/:id/statistics` no periodo `all`; os tres sinais originais continuam dentro do contador com menor peso textual.
+- Foi adicionado o contador `Engajamento`, usando `community.engagement_diagnosis.label` do mesmo endpoint real de estatisticas.
+- A ordem dos contadores passa a ser `Ranking`, `Avaliacoes`, `Tracao`, `Engajamento`.
+- Nao houve alteracao de backend, endpoint, schema Prisma, migrations, package, mock, seed ou backfill.
+- UI permanece mobile-first: os quatro contadores empilham em largura base e usam grade em duas colunas a partir de `sm` e quatro colunas em desktop largo.
+- Builder/Quick Copy nao esteve acessivel como ferramenta callable; foram usadas a captura enviada pelo usuario e a referencia local `_product/proto/admin/Psicologos/Detalhes do psicologo/Geral.png`.
+- ADR criado: `adrs/0329-admin-psicologo-contadores-tracao-engajamento.md`.
+
+### Criterios do ajuste de contadores
+
+- [x] WhatsApp, Favoritado e Visualizacoes de perfil aparecem dentro do contador `Tracao` com menor peso textual.
+- [x] `Tracao` destaca o resultado real da classificacao de tracao do psicologo.
+- [x] A aba Geral exibe um novo contador `Engajamento` com diagnostico real.
+- [x] A ordem visual dos contadores e `Ranking`, `Avaliacoes`, `Tracao`, `Engajamento`.
+- [x] Nenhum mock, seed artificial, endpoint simulado, package novo ou migration foi criado.
+- [x] Nenhum `<img>` cru foi usado.
+
+### Validacao complementar do ajuste de contadores
+
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/psicologos/[id]/client.tsx"`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build` executado com sucesso apos tentativas intermediarias bloqueadas por outro `next build` em andamento e uma tentativa bloqueada por falta de espaco em disco (`ENOSPC`). Perfis temporarios de browser em `.tmp/chrome-*` foram removidos para liberar espaco antes da validacao final.
+- Smoke HTTP local: GET http://localhost:3002/psicologos/cmrgztri7000tn0uh1q4n8vxf retornou 200.

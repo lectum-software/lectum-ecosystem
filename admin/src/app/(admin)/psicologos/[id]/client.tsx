@@ -370,26 +370,28 @@ const REGISTRY_VERIFICATION_TONE: Record<string, string> = {
 };
 
 const METRIC_ICONS: Record<string, LucideIcon> = {
+  engagement: MessageCircle,
   favorites: Heart,
   profile_views: Eye,
   ranking: Trophy,
   rating_avg: Star,
+  traction: BarChart3,
   whatsapp_clicks: MessageCircle,
-};
-
-const GENERAL_METRIC_ORDER: Record<string, number> = {
-  ranking: 0,
-  rating_avg: 1,
-  whatsapp_clicks: 2,
-  favorites: 3,
-  profile_views: 4,
 };
 
 const GENERAL_METRIC_LABELS: Record<string, string> = {
   favorites: "Favoritado",
+  profile_views: "Visualizações de perfil",
   ranking: "Ranking",
-  rating_avg: "Avaliação",
+  rating_avg: "Avaliações",
+  whatsapp_clicks: "WhatsApp",
 };
+
+const GENERAL_TRACTION_SIGNAL_IDS = ["whatsapp_clicks", "favorites", "profile_views"] as const;
+
+const GENERAL_TAB_STATISTICS_QUERY = {
+  period: "all",
+} as const satisfies AdminPsychologistStatisticsQuery;
 
 type StatisticsSeriesPoint = AdminPsychologistStatistics["business"]["series"][number];
 type StatisticsSeriesMetricKey = Exclude<keyof StatisticsSeriesPoint, "date">;
@@ -1674,12 +1676,11 @@ const formatMetricValue = (metric: AdminPsychologistDetailMetric) => {
 const formatMetricLabel = (metric: AdminPsychologistDetailMetric) =>
   GENERAL_METRIC_LABELS[metric.id] ?? metric.label;
 
-const orderGeneralMetrics = (metrics: AdminPsychologistDetailMetric[]) =>
-  [...metrics].sort(
-    (a, b) =>
-      (GENERAL_METRIC_ORDER[a.id] ?? Number.MAX_SAFE_INTEGER) -
-      (GENERAL_METRIC_ORDER[b.id] ?? Number.MAX_SAFE_INTEGER),
-  );
+const findGeneralMetric = (metrics: AdminPsychologistDetailMetric[], id: string) =>
+  metrics.find((metric) => metric.id === id);
+
+const formatRatingCountLabel = (count: number) =>
+  `${numberFormatter.format(count)} ${count === 1 ? "avaliação" : "avaliações"}`;
 
 const formatEngagementMetricValue = (metric: AdminPsychologistEngagementMetric) => {
   if (!metric.available || metric.value === null) return "Indisponível";
@@ -2036,7 +2037,13 @@ const DetailHeader = ({
   );
 };
 
-const MetricCard = ({ metric }: { metric: AdminPsychologistDetailMetric }) => {
+const MetricCard = ({
+  footer,
+  metric,
+}: {
+  footer?: ReactNode;
+  metric: AdminPsychologistDetailMetric;
+}) => {
   const Icon = METRIC_ICONS[metric.id] ?? Trophy;
 
   return (
@@ -2044,6 +2051,78 @@ const MetricCard = ({ metric }: { metric: AdminPsychologistDetailMetric }) => {
       <MetricIconCircle icon={Icon} metricId={metric.id} />
       <p className="mt-4 text-sm font-extrabold text-muted">{formatMetricLabel(metric)}</p>
       <p className="mt-2 text-3xl font-extrabold text-foreground">{formatMetricValue(metric)}</p>
+      {footer ? <p className="mt-2 text-xs font-bold text-subtle">{footer}</p> : null}
+    </div>
+  );
+};
+
+const TractionMetricCard = ({
+  isError,
+  isLoading,
+  metrics,
+  statistics,
+}: {
+  isError: boolean;
+  isLoading: boolean;
+  metrics: AdminPsychologistDetailMetric[];
+  statistics?: AdminPsychologistStatistics;
+}) => {
+  const traction = statistics?.business.traction;
+  const value = traction?.label ?? (isLoading ? "Carregando" : isError ? "Indisponível" : "—");
+
+  return (
+    <div
+      aria-busy={isLoading && !traction}
+      className="rounded-card border border-border/75 bg-surface/95 p-4 shadow-admin-soft"
+    >
+      <MetricIconCircle icon={METRIC_ICONS.traction} metricId="traction" />
+      <p className="mt-4 text-sm font-extrabold text-muted">Tração</p>
+      <p className="mt-2 text-2xl font-extrabold leading-tight text-foreground sm:text-3xl">
+        {value}
+      </p>
+      <dl className="mt-4 grid grid-cols-3 gap-2">
+        {GENERAL_TRACTION_SIGNAL_IDS.map((metricId) => {
+          const metric = findGeneralMetric(metrics, metricId);
+
+          return (
+            <div className="min-w-0 rounded-2xl bg-surface-muted/60 px-2.5 py-2" key={metricId}>
+              <dt className="text-[11px] font-bold leading-tight text-muted">
+                {metric ? formatMetricLabel(metric) : GENERAL_METRIC_LABELS[metricId]}
+              </dt>
+              <dd className="mt-1 text-sm font-extrabold text-foreground">
+                {metric ? formatMetricValue(metric) : "—"}
+              </dd>
+            </div>
+          );
+        })}
+      </dl>
+    </div>
+  );
+};
+
+const EngagementMetricCard = ({
+  isError,
+  isLoading,
+  statistics,
+}: {
+  isError: boolean;
+  isLoading: boolean;
+  statistics?: AdminPsychologistStatistics;
+}) => {
+  const diagnosis = statistics?.community.engagement_diagnosis;
+  const value = diagnosis?.label ?? (isLoading ? "Carregando" : isError ? "Indisponível" : "—");
+
+  return (
+    <div
+      aria-busy={isLoading && !diagnosis}
+      className="rounded-card border border-border/75 bg-surface/95 p-4 shadow-admin-soft"
+    >
+      <MetricIconCircle icon={METRIC_ICONS.engagement} metricId="engagement" />
+      <p className="mt-4 text-sm font-extrabold text-muted">Engajamento</p>
+      <p className="mt-2 text-2xl font-extrabold leading-tight text-foreground sm:text-3xl">
+        {value}
+      </p>
+      <p className="mt-2 text-xs font-bold text-subtle">Diagnóstico geral nas comunidades</p>
     </div>
   );
 };
@@ -2524,17 +2603,35 @@ const RecentActivity = ({
 };
 
 const GeneralTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: string }) => {
-  const metrics = orderGeneralMetrics(detail.general.metrics);
   const billingQuery = useAdminPsychologistBilling(id);
+  const generalStatisticsQuery = useAdminPsychologistStatistics(id, GENERAL_TAB_STATISTICS_QUERY);
+  const metrics = detail.general.metrics;
+  const rankingMetric = findGeneralMetric(metrics, "ranking");
+  const ratingMetric = findGeneralMetric(metrics, "rating_avg");
 
   return (
     <div className="space-y-5" data-psychologist-detail-tab="geral">
       <section>
         <h2 className="sr-only">Métricas principais</h2>
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
-          {metrics.map((metric) => (
-            <MetricCard key={metric.id} metric={metric} />
-          ))}
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          {rankingMetric ? <MetricCard metric={rankingMetric} /> : null}
+          {ratingMetric ? (
+            <MetricCard
+              footer={formatRatingCountLabel(detail.header.rating_count)}
+              metric={ratingMetric}
+            />
+          ) : null}
+          <TractionMetricCard
+            isError={generalStatisticsQuery.isError}
+            isLoading={generalStatisticsQuery.isLoading && !generalStatisticsQuery.data}
+            metrics={metrics}
+            statistics={generalStatisticsQuery.data}
+          />
+          <EngagementMetricCard
+            isError={generalStatisticsQuery.isError}
+            isLoading={generalStatisticsQuery.isLoading && !generalStatisticsQuery.data}
+            statistics={generalStatisticsQuery.data}
+          />
         </div>
       </section>
 
