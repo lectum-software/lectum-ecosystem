@@ -887,3 +887,36 @@ Frontend esperado:
 - `NODE_OPTIONS=--max-old-space-size=8192 pnpm check`
 - Browser local/headless autenticado em `http://localhost:3002/pacientes?period=all` validou desktop `1366x900` e mobile `390x844`: os dois blocos internos nao exibem **Grafico**, nao possuem o `span` de icone no cabecalho, nao exibem as linhas descritivas removidas, preservam os donuts/legendas reais e nao geram overflow horizontal. Screenshots salvos em `.tmp/patient-dashboard-clean-charts-desktop.png` e `.tmp/patient-dashboard-clean-charts-mobile.png`.
 - Admin temporario de validacao `codex-patient-clean-charts-*` foi removido do banco apos a verificacao.
+
+## Ajuste pos-feedback 2026-07-28 - Bloco Intencao x Engajamento
+
+- Pedido do usuario: assim como existe **Tracao x Engajamento** no dashboard de psicologos, adicionar em `/pacientes`, abaixo de **Intencao e engajamento dos pacientes**, um bloco **Intencao x Engajamento** para entender a relacao entre as duas metricas.
+- O backend passou a retornar `intent_engagement` no payload real de `GET /api/admin/private/patients/dashboard`, cruzando a classificacao unica de intencao com a classificacao unica de engajamento ja calculadas para cada paciente do periodo.
+- A matriz tem 16 celulas: **Frios**, **Curiosos**, **Interessados** e **Qualificados** versus **Muito engajados**, **Engajados**, **Pouco engajados** e **Sem engajamento**, com contagem, percentual da base, percentual da linha e percentual da coluna.
+- O bloco tambem exibe metricas resumidas de alta intencao entre pacientes engajados, alta intencao entre pouco/sem engajamento e diferenca observada em pontos percentuais.
+- A UI permanece mobile-first: em telas estreitas a matriz empilha por categoria de intencao; no desktop progride para matriz com colunas de engajamento e resumo lateral.
+- A leitura e explicitamente observacional, agregada e interna ao Admin; nao indica causalidade, atendimento, diagnostico, conversa, ranking publico ou lista nominal de pacientes.
+- Nao houve schema Prisma, migration, package novo, tracking, seed, mock, endpoint paralelo, backfill artificial ou uso de `<img>`.
+- Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente; as referencias auditaveis foram `_product/proto/admin/Pacientes/Pacientes - Dashboard.png`, o comportamento existente de **Tracao x Engajamento** em `/psicologos` e o pedido/screenshot enviado pelo usuario em 2026-07-28.
+- ADR atualizado: `adrs/0314-admin-patient-dashboard-intent-distribution.md`.
+
+### Criterios de aceite do ajuste
+
+- [x] O bloco **Intencao x Engajamento** aparece abaixo de **Intencao e engajamento dos pacientes**.
+- [x] A relacao usa dados reais e classificacoes backend por paciente unico, sem recalculo no cliente.
+- [x] A matriz cruza as quatro categorias de intencao com os quatro niveis de engajamento.
+- [x] O resumo lateral mostra alta intencao entre engajados, alta intencao entre pouco/sem engajamento e diferenca observada.
+- [x] Layout mobile-first preservado em 390px sem overflow horizontal.
+- [x] Nenhum mock, seed, dado artificial, migration, package novo, endpoint simulado ou `<img>` foi adicionado.
+
+### Validacao complementar executada
+
+- `pnpm --dir backend exec biome check --write "src/modules/api/admin/private/patients/dashboard/DTOs/IAdminPatientsDashboardDTO.ts" "src/modules/api/admin/private/patients/dashboard/use-cases/services.ts"`
+- `pnpm --dir admin exec biome check --write "src/api/req/patients/index.ts" "src/app/(admin)/pacientes/client.tsx"`
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `NODE_OPTIONS=--max-old-space-size=8192 pnpm --dir admin check`
+- `NODE_OPTIONS=--max-old-space-size=8192 pnpm --dir admin build` via `cmd /c` no Windows
+- `NODE_OPTIONS=--max-old-space-size=8192 pnpm check`
+- Servico local `buildPatientsDashboard({ period: "all" })` validou `intent_engagement` com 16 celulas, soma das celulas igual a 155 pacientes reais, total coerente com `intent_analysis.total_patients`, `high_intent_patients=22` e diferenca observada de `+100 p.p.` na base local.
+- Browser local/headless autenticado em `http://localhost:3002/pacientes?period=all` com Admin temporario real removido ao final validou desktop `1366x900` e mobile `390x844`: bloco abaixo de **Intencao e engajamento dos pacientes**, textos/labels de matriz e resumo lateral presentes, 16 celulas logicas renderizadas em matriz desktop/mobile e sem overflow horizontal. Screenshots salvos em `.tmp/patient-dashboard-intent-engagement-matrix-desktop.png` e `.tmp/patient-dashboard-intent-engagement-matrix-mobile.png`.

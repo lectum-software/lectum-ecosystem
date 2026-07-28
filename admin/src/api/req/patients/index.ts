@@ -456,6 +456,45 @@ export type PatientsDashboardEngagementAnalysis = {
   total_patients: number;
 };
 
+export type PatientsDashboardIntentEngagementCellId =
+  `${PatientsDashboardIntentSegmentId}_${PatientsDashboardEngagementSegmentId}`;
+
+export type PatientsDashboardIntentEngagementCell = {
+  column_percentage: number;
+  count: number;
+  engagement_id: PatientsDashboardEngagementSegmentId;
+  engagement_label: PatientsDashboardEngagementSegment["label"];
+  id: PatientsDashboardIntentEngagementCellId;
+  intent_id: PatientsDashboardIntentSegmentId;
+  intent_label: PatientsDashboardIntentSegment["label"];
+  percentage: number;
+  row_percentage: number;
+};
+
+export type PatientsDashboardIntentEngagementRate = {
+  high_intent_count: number;
+  high_intent_rate: number | null;
+  patients: number;
+};
+
+export type PatientsDashboardIntentEngagement = {
+  cells: PatientsDashboardIntentEngagementCell[];
+  comparison: {
+    high_engagement: PatientsDashboardIntentEngagementRate;
+    low_engagement: PatientsDashboardIntentEngagementRate;
+    rate_difference_points: number | null;
+  };
+  description: string;
+  source: "profile_view_event+psychologist_favorite+contact_request";
+  totals: {
+    high_engagement_patients: number;
+    high_intent_patients: number;
+    low_engagement_patients: number;
+    patients: number;
+  };
+  unavailable_reason: string | null;
+};
+
 export type PatientsDashboardIntentFilterId = "all" | PatientsDashboardIntentSegmentId;
 
 export type PatientsDashboardIntentFilterOption = {
@@ -567,6 +606,7 @@ export type AdminPatientsDashboard = {
     reason: string;
   };
   intent_filters: PatientsDashboardIntentFilters;
+  intent_engagement: PatientsDashboardIntentEngagement;
   intent_analysis: PatientsDashboardIntentAnalysis;
   locations: {
     cities: PatientsDashboardBreakdownItem[];

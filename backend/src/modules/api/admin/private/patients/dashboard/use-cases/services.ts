@@ -15,6 +15,7 @@ import type {
   AdminPatientsDashboardEngagementAnalysis,
   AdminPatientsDashboardEngagementSegmentId,
   AdminPatientsDashboardIntentAnalysis,
+  AdminPatientsDashboardIntentEngagement,
   AdminPatientsDashboardIntentFilterId,
   AdminPatientsDashboardIntentSegmentId,
   AdminPatientsDashboardMetric,
@@ -76,6 +77,7 @@ type PatientsDashboardIntentCounts = {
 type PatientsDashboardIntentClassification = {
   analysis: AdminPatientsDashboardIntentAnalysis;
   engagementAnalysis: AdminPatientsDashboardEngagementAnalysis;
+  engagementSegmentByPatientId: Map<string, AdminPatientsDashboardEngagementSegmentId>;
   segmentByPatientId: Map<string, AdminPatientsDashboardIntentSegmentId>;
 };
 
@@ -177,6 +179,10 @@ const PATIENT_ENGAGEMENT_SEGMENT_ORDER: AdminPatientsDashboardEngagementSegmentI
   "low_engagement",
   "no_engagement",
 ];
+const PATIENT_INTENT_ENGAGEMENT_HIGH_INTENT_SEGMENTS =
+  new Set<AdminPatientsDashboardIntentSegmentId>(["objective", "very_qualified"]);
+const PATIENT_INTENT_ENGAGEMENT_HIGH_ENGAGEMENT_SEGMENTS =
+  new Set<AdminPatientsDashboardEngagementSegmentId>(["engaged", "very_engaged"]);
 const ANONYMOUS_CONVERSION_BUCKETS = [
   { id: "same_day", label: "Mesmo dia" },
   { id: "days_1_3", label: "1-3 dias" },
@@ -523,6 +529,7 @@ const buildPatientIntentClassification = (
     PATIENT_ENGAGEMENT_SEGMENT_ORDER.map((segmentId) => [segmentId, 0]),
   );
   const segmentByPatientId = new Map<string, AdminPatientsDashboardIntentSegmentId>();
+  const engagementSegmentByPatientId = new Map<string, AdminPatientsDashboardEngagementSegmentId>();
   const signalTotals = createIntentCounts();
 
   for (const patient of patients) {
@@ -530,6 +537,7 @@ const buildPatientIntentClassification = (
     const segmentId = classifyPatientIntent(counts);
     const engagementSegmentId = classifyPatientEngagement(counts);
     segmentByPatientId.set(patient.id, segmentId);
+    engagementSegmentByPatientId.set(patient.id, engagementSegmentId);
     segmentCounts.set(segmentId, (segmentCounts.get(segmentId) ?? 0) + 1);
     engagementSegmentCounts.set(
       engagementSegmentId,
@@ -580,7 +588,112 @@ const buildPatientIntentClassification = (
       source: PATIENT_INTENT_SOURCE,
       total_patients: patients.length,
     },
+    engagementSegmentByPatientId,
     segmentByPatientId,
+  };
+};
+
+const buildPatientIntentEngagement = (params: {
+  engagementSegmentByPatientId: Map<string, AdminPatientsDashboardEngagementSegmentId>;
+  patients: AdminPatientSnapshotRecord[];
+  segmentByPatientId: Map<string, AdminPatientsDashboardIntentSegmentId>;
+}): AdminPatientsDashboardIntentEngagement => {
+  const cellCounts = new Map<string, number>();
+  const intentTotals = new Map<AdminPatientsDashboardIntentSegmentId, number>(
+    PATIENT_INTENT_SEGMENT_ORDER.map((segmentId) => [segmentId, 0]),
+  );
+  const engagementTotals = new Map<AdminPatientsDashboardEngagementSegmentId, number>(
+    PATIENT_ENGAGEMENT_SEGMENT_ORDER.map((segmentId) => [segmentId, 0]),
+  );
+  const comparison = {
+    high_engagement: {
+      high_intent_count: 0,
+      high_intent_rate: null as number | null,
+      patients: 0,
+    },
+    low_engagement: {
+      high_intent_count: 0,
+      high_intent_rate: null as number | null,
+      patients: 0,
+    },
+    rate_difference_points: null as number | null,
+  };
+  let highIntentPatients = 0;
+
+  for (const patient of params.patients) {
+    const intentId = params.segmentByPatientId.get(patient.id) ?? "cold";
+    const engagementId = params.engagementSegmentByPatientId.get(patient.id) ?? "no_engagement";
+    const cellId = `${intentId}_${engagementId}`;
+    const hasHighIntent = PATIENT_INTENT_ENGAGEMENT_HIGH_INTENT_SEGMENTS.has(intentId);
+    const hasHighEngagement = PATIENT_INTENT_ENGAGEMENT_HIGH_ENGAGEMENT_SEGMENTS.has(engagementId);
+    const comparisonBucket = hasHighEngagement
+      ? comparison.high_engagement
+      : comparison.low_engagement;
+
+    cellCounts.set(cellId, (cellCounts.get(cellId) ?? 0) + 1);
+    intentTotals.set(intentId, (intentTotals.get(intentId) ?? 0) + 1);
+    engagementTotals.set(engagementId, (engagementTotals.get(engagementId) ?? 0) + 1);
+    comparisonBucket.patients += 1;
+    if (hasHighIntent) {
+      highIntentPatients += 1;
+      comparisonBucket.high_intent_count += 1;
+    }
+  }
+
+  comparison.high_engagement.high_intent_rate =
+    comparison.high_engagement.patients > 0
+      ? safePercentage(
+          comparison.high_engagement.high_intent_count,
+          comparison.high_engagement.patients,
+        )
+      : null;
+  comparison.low_engagement.high_intent_rate =
+    comparison.low_engagement.patients > 0
+      ? safePercentage(
+          comparison.low_engagement.high_intent_count,
+          comparison.low_engagement.patients,
+        )
+      : null;
+  comparison.rate_difference_points =
+    typeof comparison.high_engagement.high_intent_rate === "number" &&
+    typeof comparison.low_engagement.high_intent_rate === "number"
+      ? roundPercent(
+          comparison.high_engagement.high_intent_rate - comparison.low_engagement.high_intent_rate,
+        )
+      : null;
+
+  return {
+    cells: PATIENT_INTENT_SEGMENT_ORDER.flatMap((intentId) =>
+      PATIENT_ENGAGEMENT_SEGMENT_ORDER.map((engagementId) => {
+        const count = cellCounts.get(`${intentId}_${engagementId}`) ?? 0;
+
+        return {
+          column_percentage: safePercentage(count, engagementTotals.get(engagementId) ?? 0),
+          count,
+          engagement_id: engagementId,
+          engagement_label: PATIENT_ENGAGEMENT_SEGMENT_LABELS[engagementId],
+          id: `${intentId}_${engagementId}` as const,
+          intent_id: intentId,
+          intent_label: PATIENT_INTENT_SEGMENT_LABELS[intentId],
+          percentage: safePercentage(count, params.patients.length),
+          row_percentage: safePercentage(count, intentTotals.get(intentId) ?? 0),
+        };
+      }),
+    ),
+    comparison,
+    description:
+      "Relação observacional entre intenção e engajamento dos pacientes no período selecionado; não indica causalidade, diagnóstico, atendimento ou conversa.",
+    source: PATIENT_INTENT_SOURCE,
+    totals: {
+      high_engagement_patients: comparison.high_engagement.patients,
+      high_intent_patients: highIntentPatients,
+      low_engagement_patients: comparison.low_engagement.patients,
+      patients: params.patients.length,
+    },
+    unavailable_reason:
+      params.patients.length === 0
+        ? "Sem pacientes reais no período selecionado para comparar Intenção e Engajamento."
+        : null,
   };
 };
 
@@ -1667,6 +1780,11 @@ export const buildPatientsDashboard = async (
     signupIdentities: anonymousConversionSignupIdentities,
   });
   const intentClassification = buildPatientIntentClassification(currentPatients, intentSignals);
+  const intentEngagement = buildPatientIntentEngagement({
+    engagementSegmentByPatientId: intentClassification.engagementSegmentByPatientId,
+    patients: currentPatients,
+    segmentByPatientId: intentClassification.segmentByPatientId,
+  });
   const intentFilters = buildPatientIntentFilters({
     currentPatients,
     currentPeriodPatients,
@@ -1729,6 +1847,7 @@ export const buildPatientsDashboard = async (
       "Localização usa apenas capturas agregadas e coarse de visitor_location no período selecionado; cidades com baixa frequência são agrupadas, e coordenadas, IP e endereço não são retornados.",
       "Análise de intenção usa apenas agregados de abertura de perfil, favoritos ativos e cliques no WhatsApp; não expõe conversa, diagnóstico ou atendimento.",
       "Engajamento dos pacientes classifica pacientes únicos pelo volume de ações reais de descoberta e contato no período; retornos ao mesmo perfil reforçam a categoria, mas não substituem eventos persistidos.",
+      "Intenção x Engajamento cruza as duas classificações agregadas por paciente único para leitura observacional; não indica causalidade, atendimento, diagnóstico ou conversa.",
       "Filtros por intenção nos blocos agregados usam a mesma classificação real do período e não recalculam segmentos a partir de dados exibidos no cliente.",
     ],
     demographics: buildDemographics(currentPeriodPatients),
@@ -1739,6 +1858,7 @@ export const buildPatientsDashboard = async (
       reason: "Exportação não exibida porque ainda não existe endpoint real para pacientes.",
     },
     intent_filters: intentFilters,
+    intent_engagement: intentEngagement,
     intent_analysis: intentClassification.analysis,
     locations: locationSummary,
     operating_system_usage: operatingSystemUsage,
@@ -1794,6 +1914,16 @@ export const buildPatientsDashboard = async (
               id: "patient_operating_system_usage",
               label: "Sistema operacional dos pacientes",
               source: "visitor_session",
+            },
+          ]
+        : []),
+      ...(intentEngagement.unavailable_reason
+        ? [
+            {
+              description: intentEngagement.unavailable_reason,
+              id: "patient_intent_engagement",
+              label: "Intenção x Engajamento",
+              source: intentEngagement.source,
             },
           ]
         : []),

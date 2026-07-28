@@ -93,3 +93,17 @@ A classificacao e exclusiva por paciente e usa estes criterios operacionais:
 - **Muito engajados**: clique no WhatsApp, quatro ou mais acoes reais, ou multiplos retornos ao mesmo perfil.
 
 A UI agora mostra donuts espelhados: intencao em Frios/Curiosos/Interessados/Qualificados e engajamento em Muito engajados/Engajados/Pouco engajados/Sem engajamento. A coluna de intencao removeu a barra horizontal e os cards de contadores para manter foco no grafico. Nao houve schema Prisma, migration, package novo, tracking, seed, mock, endpoint paralelo ou backfill.
+
+## Atualização 2026-07-28 - Intenção x Engajamento
+
+Por pedido de produto, o dashboard `/pacientes` ganhou um bloco **Intenção x Engajamento** logo abaixo de **Intenção e engajamento dos pacientes**, seguindo a lógica analítica do bloco **Tração x Engajamento** de psicólogos sem expor listas nominais.
+
+O contrato `GET /api/admin/private/patients/dashboard` passa a retornar `intent_engagement`, calculado no backend com as classificações reais já existentes de intenção e engajamento por paciente único. A matriz cruza as quatro categorias de intenção (**Frios**, **Curiosos**, **Interessados** e **Qualificados**) com os quatro níveis de engajamento (**Muito engajados**, **Engajados**, **Pouco engajados** e **Sem engajamento**), sempre sobre a mesma base de pacientes do período.
+
+Para facilitar a leitura executiva, o payload também retorna uma comparação agregada:
+
+- alta intenção = **Interessados** + **Qualificados**;
+- alto engajamento = **Engajados** + **Muito engajados**;
+- diferença observada = taxa de alta intenção entre pacientes com alto engajamento menos a taxa de alta intenção entre pacientes com pouco ou nenhum engajamento.
+
+Essa leitura é observacional e interna ao Admin. Ela não indica causalidade, diagnóstico, atendimento, conversa, prioridade de cuidado, ranking público ou pressão comercial individual. Não houve schema Prisma, migration, package novo, tracking, seed, mock, endpoint paralelo ou backfill.

@@ -17,7 +17,14 @@ import {
   UserRound,
   UsersRound,
 } from "lucide-react";
-import { type FocusEvent, type ReactNode, useMemo, useState, useSyncExternalStore } from "react";
+import {
+  type FocusEvent,
+  Fragment,
+  type ReactNode,
+  useMemo,
+  useState,
+  useSyncExternalStore,
+} from "react";
 import { useAdminPatientsDashboard } from "@/api/callers/patients";
 import { resolveApiError } from "@/api/handle";
 import type {
@@ -43,6 +50,9 @@ const CARD_ORDER = [
   "new_signups",
 ] as const;
 type DeviceUsageItem = AdminPatientsDashboard["device_usage"]["items"][number];
+type PatientIntentEngagementCell = AdminPatientsDashboard["intent_engagement"]["cells"][number];
+type PatientIntentSegmentId = PatientsDashboardIntentSegment["id"];
+type PatientEngagementSegmentId = PatientsDashboardEngagementSegment["id"];
 type PatientsDashboardPeriodValue = NonNullable<PatientsDashboardQuery["period"]>;
 type PatientsDashboardPeriodPreset = Exclude<PatientsDashboardPeriodValue, "custom">;
 type PatientsDashboardRange = Pick<PatientsDashboardQuery, "from" | "to">;
@@ -109,6 +119,18 @@ const PATIENT_ENGAGEMENT_CHART_COLORS = {
   no_engagement: "#64748b",
   very_engaged: "#13a85b",
 } satisfies Record<PatientsDashboardEngagementSegment["id"], string>;
+const PATIENT_INTENT_ENGAGEMENT_ROW_ORDER: PatientIntentSegmentId[] = [
+  "very_qualified",
+  "objective",
+  "curious",
+  "cold",
+];
+const PATIENT_INTENT_ENGAGEMENT_COLUMN_ORDER: PatientEngagementSegmentId[] = [
+  "very_engaged",
+  "engaged",
+  "low_engagement",
+  "no_engagement",
+];
 const LOCATION_RANKING_LIMIT = 5;
 const BRAZIL_STATE_CODES = new Set([
   "AC",
@@ -439,6 +461,15 @@ const formatPercentageValue = (value: number) => `${numberFormatter.format(value
 
 const formatNullablePercentage = (value: number | null) =>
   typeof value === "number" ? formatPercentageValue(value) : "Indisponível";
+
+const formatRateDifference = (value: number | null) => {
+  if (typeof value !== "number") return "Sem base";
+  if (value === 0) return "0 p.p.";
+
+  const prefix = value > 0 ? "+" : "-";
+
+  return `${prefix}${numberFormatter.format(Math.abs(value))} p.p.`;
+};
 
 const formatDaysMetric = (value: number | null) => {
   if (typeof value !== "number") return "Indisponível";
@@ -1127,6 +1158,223 @@ const PatientIntentAnalysisCard = ({ summary }: { summary: AdminPatientsDashboar
           <PatientEngagementDonutChart items={engagement.items} total={engagement.total_patients} />
         </section>
       </div>
+    </CardShell>
+  );
+};
+
+const findPatientIntentEngagementCell = (
+  summary: AdminPatientsDashboard["intent_engagement"],
+  intentId: PatientIntentSegmentId,
+  engagementId: PatientEngagementSegmentId,
+) => {
+  const found = summary.cells.find(
+    (cell) => cell.intent_id === intentId && cell.engagement_id === engagementId,
+  );
+  if (found) return found;
+
+  return {
+    column_percentage: 0,
+    count: 0,
+    engagement_id: engagementId,
+    engagement_label: (summary.cells.find((cell) => cell.engagement_id === engagementId)
+      ?.engagement_label ?? engagementId) as PatientIntentEngagementCell["engagement_label"],
+    id: `${intentId}_${engagementId}` as PatientIntentEngagementCell["id"],
+    intent_id: intentId,
+    intent_label: (summary.cells.find((cell) => cell.intent_id === intentId)?.intent_label ??
+      intentId) as PatientIntentEngagementCell["intent_label"],
+    percentage: 0,
+    row_percentage: 0,
+  };
+};
+
+const PatientIntentEngagementMetric = ({ label, value }: { label: string; value: ReactNode }) => (
+  <div className="rounded-2xl bg-surface-muted p-3">
+    <p className="text-[0.68rem] font-black uppercase tracking-[0.08em] text-subtle">{label}</p>
+    <p className="mt-1 text-base font-black text-foreground">{value}</p>
+  </div>
+);
+
+const PatientIntentEngagementCellCard = ({
+  cell,
+  showEngagementLabel = false,
+}: {
+  cell: PatientIntentEngagementCell;
+  showEngagementLabel?: boolean;
+}) => {
+  const color = PATIENT_ENGAGEMENT_CHART_COLORS[cell.engagement_id];
+  const hasData = cell.count > 0;
+  const intensity = hasData ? 0.08 + Math.min(0.2, (cell.row_percentage / 100) * 0.2) : 0;
+
+  return (
+    <article
+      aria-label={`${cell.intent_label} com ${cell.engagement_label}: ${numberFormatter.format(
+        cell.count,
+      )} paciente(s), ${formatPercentageValue(cell.percentage)} da base.`}
+      className="min-h-[7.75rem] min-w-0 rounded-[1.2rem] border p-3"
+      style={{
+        backgroundColor: hasData ? hexToRgba(color, intensity) : "var(--admin-surface-muted)",
+        borderColor: hasData ? hexToRgba(color, 0.32) : "var(--admin-border)",
+      }}
+    >
+      {showEngagementLabel ? (
+        <div className="mb-2 flex items-center gap-2">
+          <span
+            aria-hidden
+            className="h-2.5 w-2.5 shrink-0 rounded-full"
+            style={{ backgroundColor: color }}
+          />
+          <h4 className="min-w-0 text-xs font-black text-foreground">{cell.engagement_label}</h4>
+        </div>
+      ) : null}
+      <p className="text-lg font-black text-foreground">
+        {numberFormatter.format(cell.count)}
+        <span className="ml-1 text-xs font-bold text-muted">
+          ({formatPercentageValue(cell.percentage)})
+        </span>
+      </p>
+      <p className="mt-2 text-[0.72rem] font-bold leading-5 text-muted">
+        {formatPercentageValue(cell.row_percentage)} dentro de {cell.intent_label.toLowerCase()}.
+      </p>
+    </article>
+  );
+};
+
+const PatientIntentEngagementCard = ({ summary }: { summary: AdminPatientsDashboard }) => {
+  const intentEngagement = summary.intent_engagement;
+  const highEngagement = intentEngagement.comparison.high_engagement;
+  const lowEngagement = intentEngagement.comparison.low_engagement;
+  const rateDifference = intentEngagement.comparison.rate_difference_points;
+
+  return (
+    <CardShell className="p-5">
+      <PanelTitle
+        description={formatSelectedPeriod(summary.period)}
+        icon={TrendingUp}
+        title="Intenção x Engajamento"
+      />
+
+      {intentEngagement.totals.patients === 0 ? (
+        <p className="mt-5 rounded-2xl border border-dashed border-border bg-surface-muted p-4 text-sm font-bold text-muted">
+          {intentEngagement.unavailable_reason ??
+            "Sem pacientes reais no período selecionado para comparar Intenção e Engajamento."}
+        </p>
+      ) : (
+        <div className="mt-5 grid gap-5 xl:grid-cols-[minmax(0,1.18fr)_minmax(280px,0.82fr)]">
+          <div className="min-w-0">
+            <div className="grid gap-3 lg:hidden">
+              {PATIENT_INTENT_ENGAGEMENT_ROW_ORDER.map((intentId) => {
+                const rowCells = PATIENT_INTENT_ENGAGEMENT_COLUMN_ORDER.map((engagementId) =>
+                  findPatientIntentEngagementCell(intentEngagement, intentId, engagementId),
+                );
+                const intentLabel = rowCells[0]?.intent_label ?? intentId;
+
+                return (
+                  <section
+                    className="rounded-[1.35rem] border border-border bg-surface p-3"
+                    key={`patient-mobile-intent-engagement-${intentId}`}
+                  >
+                    <h3 className="text-sm font-black text-foreground">{intentLabel}</h3>
+                    <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                      {rowCells.map((cell) => (
+                        <PatientIntentEngagementCellCard
+                          cell={cell}
+                          key={cell.id}
+                          showEngagementLabel
+                        />
+                      ))}
+                    </div>
+                  </section>
+                );
+              })}
+            </div>
+
+            <div className="hidden gap-2 lg:grid lg:grid-cols-[104px_repeat(4,minmax(0,1fr))]">
+              <div className="hidden lg:block" aria-hidden />
+              {PATIENT_INTENT_ENGAGEMENT_COLUMN_ORDER.map((engagementId) => {
+                const label =
+                  intentEngagement.cells.find((cell) => cell.engagement_id === engagementId)
+                    ?.engagement_label ?? engagementId;
+
+                return (
+                  <p
+                    className="rounded-2xl bg-surface-muted px-3 py-2 text-center text-xs font-black text-muted"
+                    key={`patient-intent-engagement-column-${engagementId}`}
+                  >
+                    {label}
+                  </p>
+                );
+              })}
+
+              {PATIENT_INTENT_ENGAGEMENT_ROW_ORDER.map((intentId) => {
+                const rowCells = PATIENT_INTENT_ENGAGEMENT_COLUMN_ORDER.map((engagementId) =>
+                  findPatientIntentEngagementCell(intentEngagement, intentId, engagementId),
+                );
+                const intentLabel = rowCells[0]?.intent_label ?? intentId;
+
+                return (
+                  <Fragment key={`patient-intent-engagement-row-${intentId}`}>
+                    <p className="grid place-items-center rounded-2xl bg-surface-muted px-2 text-center text-[0.72rem] font-black text-muted">
+                      {intentLabel}
+                    </p>
+                    {rowCells.map((cell) => (
+                      <PatientIntentEngagementCellCard cell={cell} key={cell.id} />
+                    ))}
+                  </Fragment>
+                );
+              })}
+            </div>
+          </div>
+
+          <aside className="grid content-start gap-3">
+            <PatientIntentEngagementMetric
+              label="Alta intenção entre engajados"
+              value={
+                <>
+                  {formatNullablePercentage(highEngagement.high_intent_rate)}
+                  <span className="ml-1 text-xs font-bold text-muted">
+                    · {numberFormatter.format(highEngagement.high_intent_count)}/
+                    {numberFormatter.format(highEngagement.patients)}
+                  </span>
+                </>
+              }
+            />
+            <PatientIntentEngagementMetric
+              label="Alta intenção entre pouco/sem engajamento"
+              value={
+                <>
+                  {formatNullablePercentage(lowEngagement.high_intent_rate)}
+                  <span className="ml-1 text-xs font-bold text-muted">
+                    · {numberFormatter.format(lowEngagement.high_intent_count)}/
+                    {numberFormatter.format(lowEngagement.patients)}
+                  </span>
+                </>
+              }
+            />
+            <PatientIntentEngagementMetric
+              label="Diferença observada"
+              value={formatRateDifference(rateDifference)}
+            />
+            <div className="rounded-[1.35rem] border border-border bg-surface-muted p-4 text-xs font-bold leading-5 text-muted">
+              {typeof rateDifference === "number" ? (
+                <>
+                  Leitura observacional: pacientes engajados apresentam{" "}
+                  <span className="font-black text-foreground">
+                    {formatRateDifference(rateDifference)}
+                  </span>{" "}
+                  na taxa de alta intenção versus pacientes pouco ou sem engajamento.
+                </>
+              ) : (
+                "Leitura observacional: ainda não há base suficiente para comparar alta intenção entre engajados e pouco ou sem engajamento."
+              )}{" "}
+              Alta intenção considera{" "}
+              <span className="font-black text-foreground">Interessados</span> e{" "}
+              <span className="font-black text-foreground">Qualificados</span>; alto engajamento
+              considera <span className="font-black text-foreground">Engajados</span> e{" "}
+              <span className="font-black text-foreground">Muito engajados</span>.
+            </div>
+          </aside>
+        </div>
+      )}
     </CardShell>
   );
 };
@@ -2207,6 +2455,8 @@ const DashboardContent = ({
       <AnonymousConversionCard summary={summary} />
 
       <PatientIntentAnalysisCard summary={summary} />
+
+      <PatientIntentEngagementCard summary={summary} />
 
       <Statistics allowLocalLocationPreview={allowLocalLocationPreview} summary={summary} />
     </div>
