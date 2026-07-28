@@ -299,56 +299,74 @@ const VisualExampleBadge = ({ example }: { example: VisualExample }) => (
   </span>
 );
 
-const ColumnHeaderWithExamples = ({
-  examples,
-  label,
+const getVisualExample = (examples: readonly VisualExample[], index: number) =>
+  examples[index % examples.length];
+
+const ValueWithVisualExample = ({
+  actual,
+  example,
+  tone,
 }: {
-  examples: readonly VisualExample[];
-  label: string;
+  actual: ReactNode;
+  example: VisualExample;
+  tone: keyof typeof textToneClassName;
 }) => (
-  <div className="flex min-w-0 flex-col items-start gap-2">
-    <span className="font-semibold">{label}</span>
-    <span className="text-[0.65rem] font-medium normal-case leading-4 tracking-normal text-subtle">
-      Exemplos visuais
+  <div className="flex min-w-0 flex-col items-start gap-1.5">
+    <StatusText tone={tone}>{actual}</StatusText>
+    <span className="text-[0.62rem] font-semibold uppercase tracking-[0.08em] text-subtle">
+      Exemplo visual
     </span>
-    <span className="flex flex-wrap gap-1.5">
-      {examples.map((example) => (
-        <VisualExampleBadge example={example} key={example.label} />
-      ))}
-    </span>
+    <VisualExampleBadge example={example} />
   </div>
 );
 
-const VisualExamplesPanel = () => (
-  <div className="rounded-3xl border border-border bg-surface-muted/60 p-4 shadow-control">
-    <p className="text-xs font-bold uppercase tracking-[0.08em] text-muted">Exemplos visuais</p>
-    <div className="mt-3 grid gap-4 sm:grid-cols-2">
-      <div>
-        <p className="text-xs font-semibold text-foreground">Intenção</p>
-        <div className="mt-2 flex flex-wrap gap-1.5">
-          {INTENT_VISUAL_EXAMPLES.map((example) => (
-            <VisualExampleBadge example={example} key={example.label} />
-          ))}
-        </div>
-      </div>
-      <div>
-        <p className="text-xs font-semibold text-foreground">Engajamento</p>
-        <div className="mt-2 flex flex-wrap gap-1.5">
-          {ENGAGEMENT_VISUAL_EXAMPLES.map((example) => (
-            <VisualExampleBadge example={example} key={example.label} />
-          ))}
-        </div>
-      </div>
-    </div>
-  </div>
-);
+const resolvePatientListVisualFields = ({
+  item,
+  rowIndex,
+}: {
+  item: PatientsListItem;
+  rowIndex: number;
+}) => ({
+  engagementExample: getVisualExample(ENGAGEMENT_VISUAL_EXAMPLES, rowIndex),
+  engagementTone: resolveEngagementTone(item),
+  intentExample: getVisualExample(INTENT_VISUAL_EXAMPLES, rowIndex),
+  intentTone: resolveIntentTone(item),
+});
+
+const PatientIntentValue = ({ item, rowIndex }: { item: PatientsListItem; rowIndex: number }) => {
+  const { intentExample, intentTone } = resolvePatientListVisualFields({ item, rowIndex });
+
+  return (
+    <ValueWithVisualExample actual={item.intent.label} example={intentExample} tone={intentTone} />
+  );
+};
+
+const PatientEngagementValue = ({
+  item,
+  rowIndex,
+}: {
+  item: PatientsListItem;
+  rowIndex: number;
+}) => {
+  const { engagementExample, engagementTone } = resolvePatientListVisualFields({ item, rowIndex });
+
+  return (
+    <ValueWithVisualExample
+      actual={item.engagement.label}
+      example={engagementExample}
+      tone={engagementTone}
+    />
+  );
+};
 
 const PatientMobileCard = ({
   item,
   onOpenDetail,
+  rowIndex,
 }: {
   item: PatientsListItem;
   onOpenDetail: (href: string) => void;
+  rowIndex: number;
 }) => (
   <button
     className="w-full rounded-3xl border border-border bg-surface p-4 text-left shadow-control transition hover:border-primary/30 hover:shadow-admin-soft"
@@ -378,13 +396,13 @@ const PatientMobileCard = ({
       <div>
         <dt className="font-semibold text-muted">Intenção</dt>
         <dd className="mt-1">
-          <StatusText tone={resolveIntentTone(item)}>{item.intent.label}</StatusText>
+          <PatientIntentValue item={item} rowIndex={rowIndex} />
         </dd>
       </div>
       <div>
         <dt className="font-semibold text-muted">Engajamento</dt>
         <dd className="mt-1">
-          <StatusText tone={resolveEngagementTone(item)}>{item.engagement.label}</StatusText>
+          <PatientEngagementValue item={item} rowIndex={rowIndex} />
         </dd>
       </div>
     </dl>
@@ -400,9 +418,13 @@ const PatientsTable = ({
 }) => (
   <>
     <div className="grid min-w-0 gap-3 p-3 lg:hidden">
-      <VisualExamplesPanel />
-      {items.map((item) => (
-        <PatientMobileCard item={item} key={item.id} onOpenDetail={onOpenDetail} />
+      {items.map((item, rowIndex) => (
+        <PatientMobileCard
+          item={item}
+          key={item.id}
+          onOpenDetail={onOpenDetail}
+          rowIndex={rowIndex}
+        />
       ))}
     </div>
 
@@ -421,16 +443,12 @@ const PatientsTable = ({
             <th className="px-5 py-4 font-semibold">Paciente</th>
             <th className="px-3 py-4 font-semibold">Data de cadastro</th>
             <th className="px-3 py-4 font-semibold">Perfil</th>
-            <th className="px-3 py-4">
-              <ColumnHeaderWithExamples examples={INTENT_VISUAL_EXAMPLES} label="Intenção" />
-            </th>
-            <th className="px-3 py-4">
-              <ColumnHeaderWithExamples examples={ENGAGEMENT_VISUAL_EXAMPLES} label="Engajamento" />
-            </th>
+            <th className="px-3 py-4 font-semibold">Intenção</th>
+            <th className="px-3 py-4 font-semibold">Engajamento</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-border">
-          {items.map((item) => (
+          {items.map((item, rowIndex) => (
             <tr
               aria-label={`Abrir detalhe administrativo de ${item.name}`}
               className="cursor-pointer transition hover:bg-primary-soft/35 focus:bg-primary-soft/60 focus:outline-none"
@@ -463,10 +481,10 @@ const PatientsTable = ({
                 <CompactBadge tone={item.status}>{item.status_label}</CompactBadge>
               </td>
               <td className="whitespace-nowrap px-3 py-4">
-                <StatusText tone={resolveIntentTone(item)}>{item.intent.label}</StatusText>
+                <PatientIntentValue item={item} rowIndex={rowIndex} />
               </td>
               <td className="whitespace-nowrap px-3 py-4">
-                <StatusText tone={resolveEngagementTone(item)}>{item.engagement.label}</StatusText>
+                <PatientEngagementValue item={item} rowIndex={rowIndex} />
               </td>
             </tr>
           ))}

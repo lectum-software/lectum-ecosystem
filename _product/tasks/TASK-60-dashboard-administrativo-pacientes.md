@@ -984,3 +984,31 @@ Frontend esperado:
 - Browser local/headless autenticado em `http://localhost:3002/pacientes/lista` validou desktop `1366x900` com exemplos visuais nos cabecalhos e linhas reais com cinco celulas; validou mobile `390x844` com os oito labels possiveis e `scrollWidth=390`. Screenshots salvos em `.tmp/patient-list-examples-desktop.png` e `.tmp/patient-list-examples-mobile.png`.
 - `pnpm --dir admin check` foi executado, mas segue bloqueado por alteracao local fora do escopo em `admin/src/app/(admin)/psicologos/lista/client.tsx:699` (`aria-label` em `div` sem role). A validacao direcionada do arquivo alterado nesta task passou.
 - Admin temporario de validacao `codex-patient-list-examples-*` foi removido do banco apos a verificacao.
+
+## Ajuste pos-feedback 2026-07-28 - Exemplos nas linhas da lista
+
+- Pedido do usuario: os exemplos de **Intencao** e **Engajamento** nao devem ficar no header; devem aparecer associados aos itens listados para visualizar os estados na propria tabela.
+- Os cabecalhos desktop voltaram a exibir apenas **Intencao** e **Engajamento**.
+- Cada linha/card passa a manter o valor real retornado pelo backend e, abaixo dele, um chip **Exemplo visual** alternando os estados possiveis para visualizacao da UI.
+- A distribuicao visual percorre os quatro exemplos de **Intencao** (**Frio**, **Curioso**, **Interessado**, **Qualificado**) e os quatro de **Engajamento** (**Sem engajamento**, **Pouco engajado**, **Engajado**, **Muito engajado**) nas linhas renderizadas.
+- Os chips sao marcados explicitamente como **Exemplo visual** e nao alteram backend, payload, filtros, ordenacao, paginacao, classificacao real, navegacao para detalhe, schema Prisma, migration, package, seed, mock, backfill, endpoint simulado ou `<img>`.
+- Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente; as referencias auditaveis foram o screenshot enviado pelo usuario em 2026-07-28 e `_product/proto/admin/Pacientes/Pacientes - Dashboard.png`.
+- ADR nao foi atualizado porque a mudanca continua sendo apenas visual/local de UI, sem decisao arquitetural, integracao, regra de dominio ou trade-off novo.
+
+### Criterios de aceite do ajuste
+
+- [x] Os cabecalhos **Intencao** e **Engajamento** nao exibem mais todos os exemplos.
+- [x] Os exemplos aparecem nas linhas/cards listados, abaixo do valor real de cada coluna.
+- [x] Os oito resultados possiveis aparecem distribuídos entre os itens renderizados.
+- [x] Os valores reais das linhas continuam visiveis e separados dos chips **Exemplo visual**.
+- [x] Layout mobile-first validado em 390px sem overflow horizontal.
+
+### Validacao complementar executada
+
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/pacientes/lista/client.tsx"`
+- `pnpm --dir admin exec eslint "src/app/(admin)/pacientes/lista/client.tsx"`
+- `pnpm --dir admin exec tsc --noEmit --pretty false`
+- `pnpm --dir admin check`
+- `NODE_OPTIONS=--max-old-space-size=8192 pnpm --dir admin build`
+- Browser local/headless autenticado em `http://localhost:3002/pacientes/lista` validou desktop `1366x900`: cabecalhos limpos, exemplos no corpo da tabela e linhas com cinco celulas; validou mobile `390x844`: exemplos nos cards e `scrollWidth=390`. Screenshots salvos em `.tmp/patient-list-row-examples-desktop.png` e `.tmp/patient-list-row-examples-mobile.png`.
+- Admin temporario de validacao `codex-patient-row-examples-*` foi removido do banco apos a verificacao.
