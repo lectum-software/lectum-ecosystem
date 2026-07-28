@@ -1,6 +1,9 @@
 import type { Resolve } from "@/helpers/return";
 import { error, msg } from "@/helpers/translate";
-import { diagnoseAdminCommunityEngagement } from "@/utils/admin-community-engagement-diagnosis";
+import {
+  calculateAdminPatientCommunityEngagementScore,
+  diagnoseAdminCommunityEngagement,
+} from "@/utils/admin-community-engagement-diagnosis";
 import type {
   AdminPatientsListEngagementId,
   AdminPatientsListFilters,
@@ -40,9 +43,11 @@ type PatientsListIntentCounts = {
 type PatientsListCommunityEngagementCounts = {
   interactions: number;
   normalizedInteractions: number;
+  normalizedWeightedScore: number;
   posts: number;
   replies: number;
   saves: number;
+  uncappedNormalizedWeightedScore: number;
   votes: number;
 };
 
@@ -240,9 +245,11 @@ const getIntentCountsForPatient = (
 const createCommunityEngagementCounts = (): PatientsListCommunityEngagementCounts => ({
   interactions: 0,
   normalizedInteractions: 0,
+  normalizedWeightedScore: 0,
   posts: 0,
   replies: 0,
   saves: 0,
+  uncappedNormalizedWeightedScore: 0,
   votes: 0,
 });
 
@@ -264,7 +271,7 @@ const classifyPatientCommunityEngagement = (
   if (counts.interactions <= 0) return "no_engagement";
 
   const diagnosis = diagnoseAdminCommunityEngagement({
-    interactions: counts.normalizedInteractions,
+    interactions: counts.normalizedWeightedScore,
     source: PATIENT_LIST_COMMUNITY_ENGAGEMENT_SOURCE,
   });
 
@@ -343,10 +350,20 @@ const buildPatientListClassifications = (
 
     const engagementCounts =
       communityEngagementCountsByPatient.get(patient.id) ?? createCommunityEngagementCounts();
+    const activeDays = patientActiveDaysUntil(patient.created_at, today);
+    const weightedScore = calculateAdminPatientCommunityEngagementScore({
+      activeDays,
+      posts: engagementCounts.posts,
+      replies: engagementCounts.replies,
+      saves: engagementCounts.saves,
+      votes: engagementCounts.votes,
+    });
     engagementCounts.normalizedInteractions = normalizeCountToThirtyDays(
       engagementCounts.interactions,
-      patientActiveDaysUntil(patient.created_at, today),
+      activeDays,
     );
+    engagementCounts.normalizedWeightedScore = weightedScore.weighted_score_30d;
+    engagementCounts.uncappedNormalizedWeightedScore = weightedScore.uncapped_weighted_score_30d;
     engagementByPatientId.set(patient.id, classifyPatientCommunityEngagement(engagementCounts));
   }
 

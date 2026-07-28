@@ -1,7 +1,10 @@
 import type { Resolve } from "@/helpers/return";
 import { error, msg } from "@/helpers/translate";
 import {
-  diagnoseAdminCommunityEngagement,
+  ADMIN_COMMUNITY_ENGAGEMENT_SCORE_THRESHOLDS,
+  ADMIN_PSYCHOLOGIST_COMMUNITY_ENGAGEMENT_SCORE_CONFIG,
+  calculateAdminPsychologistCommunityEngagementScore,
+  diagnoseAdminPsychologistWeightedCommunityEngagement,
   formatAdminPsychologistCommunityEngagementDiagnosis,
 } from "@/utils/admin-community-engagement-diagnosis";
 import { crpExperienceYears } from "@/utils/professional-experience";
@@ -671,16 +674,28 @@ const buildTractionSummary = (input: {
 
 const buildEngagementSummary = (input: {
   activeDays: number;
+  patientReplies: number;
   posts: number;
   replies: number;
   votes: number;
 }): AdminPsychologistsListItem["engagement"] => {
   const interactions = input.posts + input.replies + input.votes;
+  const weightedScore = calculateAdminPsychologistCommunityEngagementScore({
+    activeDays: input.activeDays,
+    patientReplies: input.patientReplies,
+    posts: input.posts,
+    replies: input.replies,
+    votes: input.votes,
+  });
   const normalizedInteractions = normalizeCountToThirtyDays(interactions, input.activeDays);
   const diagnosis = formatAdminPsychologistCommunityEngagementDiagnosis(
-    diagnoseAdminCommunityEngagement({
-      interactions: normalizedInteractions,
+    diagnoseAdminPsychologistWeightedCommunityEngagement({
+      activeDays: input.activeDays,
+      patientReplies: input.patientReplies,
+      posts: input.posts,
+      replies: input.replies,
       source: COMMUNITY_ENGAGEMENT_SOURCE,
+      votes: input.votes,
     }),
   );
 
@@ -691,15 +706,27 @@ const buildEngagementSummary = (input: {
       active_days: input.activeDays,
       interactions,
       normalized_interactions_30d: normalizedInteractions,
+      normalized_patient_replies_30d: weightedScore.normalized_patient_replies_30d,
+      normalized_weighted_score_30d: weightedScore.weighted_score_30d,
+      patient_replies: input.patientReplies,
       posts: input.posts,
       replies: input.replies,
+      uncapped_normalized_weighted_score_30d: weightedScore.uncapped_weighted_score_30d,
       votes: input.votes,
     },
     source: COMMUNITY_ENGAGEMENT_SOURCE,
     thresholds: {
       active_interactions_30d: COMMUNITY_ENGAGEMENT_ACTIVE_30D,
+      active_score_30d: ADMIN_COMMUNITY_ENGAGEMENT_SCORE_THRESHOLDS.engaged_score_30d,
+      high_value_patient_replies_for_very_active_30d:
+        ADMIN_PSYCHOLOGIST_COMMUNITY_ENGAGEMENT_SCORE_CONFIG.very_engaged_min_patient_replies_30d,
       highly_active_interactions_30d: COMMUNITY_ENGAGEMENT_HIGHLY_ACTIVE_30D,
+      highly_active_score_30d: ADMIN_COMMUNITY_ENGAGEMENT_SCORE_THRESHOLDS.very_engaged_score_30d,
       minimum_signal_interactions_30d: COMMUNITY_ENGAGEMENT_MINIMUM_SIGNAL_30D,
+      minimum_signal_score_30d:
+        ADMIN_COMMUNITY_ENGAGEMENT_SCORE_THRESHOLDS.minimum_signal_score_30d,
+      score_caps_30d: ADMIN_PSYCHOLOGIST_COMMUNITY_ENGAGEMENT_SCORE_CONFIG.caps_30d,
+      weights: ADMIN_PSYCHOLOGIST_COMMUNITY_ENGAGEMENT_SCORE_CONFIG.weights,
     },
   };
 };
@@ -712,6 +739,7 @@ const buildItem = (
     communityVoteCounts: Map<string, number>;
     date: Date;
     favoriteCounts: Map<string, number>;
+    patientReplyCounts: Map<string, number>;
     profileViewCounts: Map<string, number>;
     rankingById: Map<string, { position: number; score: number }>;
     whatsappCounts: Map<string, number>;
@@ -727,6 +755,7 @@ const buildItem = (
   const whatsappClicks = params.whatsappCounts.get(userId) ?? 0;
   const posts = params.communityPostCounts.get(userId) ?? 0;
   const replies = params.communityReplyCounts.get(userId) ?? 0;
+  const patientReplies = params.patientReplyCounts.get(userId) ?? 0;
   const votes = params.communityVoteCounts.get(userId) ?? 0;
 
   return {
@@ -740,6 +769,7 @@ const buildItem = (
     email: profile.user.email,
     engagement: buildEngagementSummary({
       activeDays,
+      patientReplies,
       posts,
       replies,
       votes,
@@ -787,11 +817,12 @@ const listEngagementLevelFromItem = (
 const resolveTractionEngagementQuadrant = (
   item: AdminPsychologistsListItem,
 ): AdminPsychologistsListTractionEngagementQuadrantId => {
-  const hasStrongTraction = item.traction.id === "strong_traction";
   const engagementLevel = listEngagementLevelFromItem(item);
-  const tractionPrefix = hasStrongTraction ? "strong_traction" : "low_traction";
+  const tractionPrefix =
+    item.traction.id === "insufficient_data" ? "low_traction" : item.traction.id;
+  const quadrantId = `${tractionPrefix}_${engagementLevel}`;
 
-  return `${tractionPrefix}_${engagementLevel}` as AdminPsychologistsListTractionEngagementQuadrantId;
+  return quadrantId as AdminPsychologistsListTractionEngagementQuadrantId;
 };
 
 const matchesSignalFilters = (
@@ -1038,6 +1069,7 @@ export const listAdminPsychologists = async (
     communityReplyGroups,
     communityVoteGroups,
     favoriteGroups,
+    patientReplyGroups,
     profileViewGroups,
     whatsappGroups,
     ranked,
@@ -1046,6 +1078,7 @@ export const listAdminPsychologists = async (
     repository.listCommunityReplyCounts(ids),
     repository.listCommunityVoteCounts(ids),
     repository.listFavoriteCounts(ids),
+    repository.listPatientReplyCounts(ids),
     repository.listProfileViewCounts(ids),
     repository.listWhatsappClickCounts(ids),
     rankPsychologistCandidates(rankingCandidates, null),
@@ -1055,6 +1088,7 @@ export const listAdminPsychologists = async (
   const communityReplyCounts = mapAuthorCountGroups(communityReplyGroups);
   const communityVoteCounts = mapUserCountGroups(communityVoteGroups);
   const favoriteCounts = mapCountGroups(favoriteGroups);
+  const patientReplyCounts = mapAuthorCountGroups(patientReplyGroups);
   const profileViewCounts = mapCountGroups(profileViewGroups);
   const whatsappCounts = mapCountGroups(whatsappGroups);
   const rankingById = new Map(
@@ -1076,6 +1110,7 @@ export const listAdminPsychologists = async (
         communityVoteCounts,
         date: now,
         favoriteCounts,
+        patientReplyCounts,
         profileViewCounts,
         rankingById,
         whatsappCounts,

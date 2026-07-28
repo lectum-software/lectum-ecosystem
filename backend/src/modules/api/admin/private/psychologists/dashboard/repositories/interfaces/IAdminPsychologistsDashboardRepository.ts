@@ -104,7 +104,7 @@ export type AdminPsychologistEventRecord = {
 };
 
 export type AdminPsychologistCommunityEngagementEventRecord = AdminPsychologistEventRecord & {
-  type: "post" | "reply" | "vote";
+  type: "patient_reply" | "post" | "reply" | "vote";
 };
 
 export type AdminPsychologistPlatformPageViewRecord = {

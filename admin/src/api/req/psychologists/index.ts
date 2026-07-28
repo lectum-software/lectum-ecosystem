@@ -20,15 +20,19 @@ export type PsychologistsListStatus = "free" | "pending" | "unpublished" | "veri
 
 export type PsychologistsListEngagementId = "ativo" | "muito_ativo" | "pouco_ativo" | "sem_base";
 
+export type PsychologistsListTractionEngagementCategoryId = Exclude<
+  PsychologistsListTractionCategoryId,
+  "insufficient_data"
+>;
+
+export type PsychologistsListTractionEngagementLevelId =
+  | "engaged"
+  | "low_engaged"
+  | "no_engagement"
+  | "very_engaged";
+
 export type PsychologistsListTractionEngagementQuadrantId =
-  | "low_traction_engaged"
-  | "low_traction_low_engaged"
-  | "low_traction_no_engagement"
-  | "low_traction_very_engaged"
-  | "strong_traction_engaged"
-  | "strong_traction_low_engaged"
-  | "strong_traction_no_engagement"
-  | "strong_traction_very_engaged";
+  `${PsychologistsListTractionEngagementCategoryId}_${PsychologistsListTractionEngagementLevelId}`;
 
 export type PsychologistsListExperience = "0_4" | "5_9" | "10_plus" | "unknown";
 
@@ -490,15 +494,19 @@ export type PsychologistsDashboardTractionResults = {
   unavailable_reason: string | null;
 };
 
+export type PsychologistsDashboardTractionEngagementCategoryId = Exclude<
+  PsychologistsDashboardTractionCategoryId,
+  "insufficient_data"
+>;
+
+export type PsychologistsDashboardTractionEngagementLevelId =
+  | "engaged"
+  | "low_engaged"
+  | "no_engagement"
+  | "very_engaged";
+
 export type PsychologistsDashboardTractionEngagementQuadrantId =
-  | "low_traction_engaged"
-  | "low_traction_low_engaged"
-  | "low_traction_no_engagement"
-  | "low_traction_very_engaged"
-  | "strong_traction_engaged"
-  | "strong_traction_low_engaged"
-  | "strong_traction_no_engagement"
-  | "strong_traction_very_engaged";
+  `${PsychologistsDashboardTractionEngagementCategoryId}_${PsychologistsDashboardTractionEngagementLevelId}`;
 
 export type PsychologistsDashboardTractionEngagementQuadrant = {
   count: number;
@@ -509,6 +517,7 @@ export type PsychologistsDashboardTractionEngagementQuadrant = {
   totals: {
     community_interactions: number;
     favorites: number;
+    patient_replies: number;
     posts: number;
     profile_views: number;
     replies: number;
@@ -541,14 +550,30 @@ export type PsychologistsDashboardTractionEngagementResults = {
   quadrants: PsychologistsDashboardTractionEngagementQuadrant[];
   source: "profile_view_event+contact_request+psychologist_favorite+community_post+post_reply+post_vote";
   thresholds: {
+    engaged_score_30d: number;
     engaged_interactions_30d: number;
     high_engagement_interactions_30d: number;
+    high_value_patient_replies_for_very_engaged_30d: number;
+    highly_engaged_score_30d: number;
     highly_engaged_interactions_30d: number;
     minimum_active_days: number;
+    minimum_signal_score_30d: number;
     minimum_signal_interactions_30d: number;
+    score_caps_30d: {
+      patient_replies: null;
+      posts: number;
+      replies: number;
+      votes: number;
+    };
     traction_strong_whatsapp_high_30d: number;
     traction_strong_whatsapp_with_conversion_30d: number;
     traction_strong_conversion_rate_percent: number;
+    weights: {
+      patient_replies: number;
+      posts: number;
+      replies: number;
+      votes: number;
+    };
   };
   totals: {
     community_interactions: number;
@@ -558,6 +583,7 @@ export type PsychologistsDashboardTractionEngagementResults = {
     low_engaged_psychologists: number;
     low_engagement_psychologists: number;
     no_engagement_psychologists: number;
+    patient_replies: number;
     posts: number;
     psychologists: number;
     replies: number;
@@ -661,15 +687,35 @@ export type PsychologistsListEngagement = {
     active_days: number;
     interactions: number;
     normalized_interactions_30d: number;
+    normalized_patient_replies_30d: number;
+    normalized_weighted_score_30d: number;
+    patient_replies: number;
     posts: number;
     replies: number;
+    uncapped_normalized_weighted_score_30d: number;
     votes: number;
   };
   source: "community_post+post_reply+post_vote.user_id";
   thresholds: {
     active_interactions_30d: number;
+    active_score_30d: number;
+    high_value_patient_replies_for_very_active_30d: number;
     highly_active_interactions_30d: number;
+    highly_active_score_30d: number;
     minimum_signal_interactions_30d: number;
+    minimum_signal_score_30d: number;
+    score_caps_30d: {
+      patient_replies: null;
+      posts: number;
+      replies: number;
+      votes: number;
+    };
+    weights: {
+      patient_replies: number;
+      posts: number;
+      replies: number;
+      votes: number;
+    };
   };
 };
 

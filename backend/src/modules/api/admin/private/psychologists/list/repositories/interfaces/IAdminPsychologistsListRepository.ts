@@ -139,6 +139,7 @@ export interface IAdminPsychologistsListRepository {
   listCommunityReplyCounts(psychologistIds: string[]): Promise<AdminPsychologistAuthorCountGroup[]>;
   listCommunityVoteCounts(psychologistIds: string[]): Promise<AdminPsychologistUserCountGroup[]>;
   listFavoriteCounts(psychologistIds: string[]): Promise<AdminPsychologistCountGroup[]>;
+  listPatientReplyCounts(psychologistIds: string[]): Promise<AdminPsychologistAuthorCountGroup[]>;
   listProfileViewCounts(psychologistIds: string[]): Promise<AdminPsychologistCountGroup[]>;
   listPsychologistProfiles(): Promise<AdminPsychologistListProfileRecord[]>;
   listPublicRankingCandidates(): Promise<AdminPsychologistListRankingCandidateRecord[]>;

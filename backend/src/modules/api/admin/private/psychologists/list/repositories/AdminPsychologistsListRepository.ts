@@ -359,6 +359,37 @@ export class AdminPsychologistsListRepository implements IAdminPsychologistsList
     });
   }
 
+  async listPatientReplyCounts(psychologistIds: string[]) {
+    if (psychologistIds.length === 0) return [];
+
+    return prisma.post_reply.groupBy({
+      by: ["author_id"],
+      where: {
+        author_id: psychologistIdsWhere(psychologistIds),
+        author: {
+          active: true,
+          deleted: false,
+          role: "psicologo",
+        },
+        deleted: false,
+        post: {
+          author: {
+            deleted: false,
+            role: "paciente",
+          },
+          community: {
+            deleted: false,
+          },
+          deleted: false,
+          status: "publicado",
+        },
+      },
+      _count: {
+        _all: true,
+      },
+    });
+  }
+
   async listCommunityVoteCounts(psychologistIds: string[]) {
     if (psychologistIds.length === 0) return [];
 

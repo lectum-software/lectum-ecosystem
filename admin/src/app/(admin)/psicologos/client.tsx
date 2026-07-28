@@ -49,6 +49,7 @@ type DeviceUsageItem = AdminPsychologistsDashboard["device_usage"]["items"][numb
 type TractionCategoryItem = AdminPsychologistsDashboard["traction"]["categories"][number];
 type TractionEngagementQuadrantItem =
   AdminPsychologistsDashboard["traction_engagement"]["quadrants"][number];
+type TractionEngagementAxisCategoryId = Exclude<TractionCategoryItem["id"], "insufficient_data">;
 type PsychologistEngagementDonutBucketId =
   | "engaged"
   | "low_engaged"
@@ -295,22 +296,11 @@ const TRACTION_CHART_COLORS = {
   unconverted_traffic: "#ef4444",
 } satisfies Record<TractionCategoryItem["id"], string>;
 
-const TRACTION_ENGAGEMENT_COLORS = {
-  low_traction_engaged: "#8b5cf6",
-  low_traction_low_engaged: "#f59f00",
-  low_traction_no_engagement: "#64748b",
-  low_traction_very_engaged: "#a855f7",
-  strong_traction_engaged: "#308ce8",
-  strong_traction_low_engaged: "#f59f00",
-  strong_traction_no_engagement: "#64748b",
-  strong_traction_very_engaged: "#13a85b",
-} satisfies Record<TractionEngagementQuadrantItem["id"], string>;
-
 const PSYCHOLOGIST_ENGAGEMENT_DONUT_COLORS = {
-  engaged: TRACTION_ENGAGEMENT_COLORS.strong_traction_engaged,
-  low_engaged: TRACTION_ENGAGEMENT_COLORS.low_traction_low_engaged,
-  no_engagement: TRACTION_ENGAGEMENT_COLORS.low_traction_no_engagement,
-  very_engaged: TRACTION_ENGAGEMENT_COLORS.strong_traction_very_engaged,
+  engaged: "#308ce8",
+  low_engaged: "#f59f00",
+  no_engagement: "#64748b",
+  very_engaged: "#13a85b",
 } satisfies Record<PsychologistEngagementDonutBucketId, string>;
 
 const TRACTION_ENGAGEMENT_MATRIX_COLUMNS: {
@@ -336,28 +326,32 @@ const TRACTION_ENGAGEMENT_MATRIX_COLUMNS: {
 ];
 
 const TRACTION_ENGAGEMENT_MATRIX_ROWS: {
-  ids: TractionEngagementQuadrantItem["id"][];
+  id: TractionEngagementAxisCategoryId;
   label: string;
 }[] = [
   {
-    ids: [
-      "strong_traction_very_engaged",
-      "strong_traction_engaged",
-      "strong_traction_low_engaged",
-      "strong_traction_no_engagement",
-    ],
+    id: "strong_traction",
     label: "Tração forte",
   },
   {
-    ids: [
-      "low_traction_very_engaged",
-      "low_traction_engaged",
-      "low_traction_low_engaged",
-      "low_traction_no_engagement",
-    ],
-    label: "Sem tração forte",
+    id: "unconverted_interest",
+    label: "Interesse Não Convertido",
+  },
+  {
+    id: "unconverted_traffic",
+    label: "Tráfego Não Convertido",
+  },
+  {
+    id: "low_traction",
+    label: "Baixa Tração",
   },
 ];
+
+const buildTractionEngagementQuadrantId = (
+  tractionCategoryId: TractionEngagementAxisCategoryId,
+  engagementLevel: PsychologistEngagementDonutBucketId,
+): TractionEngagementQuadrantItem["id"] =>
+  `${tractionCategoryId}_${engagementLevel}` as TractionEngagementQuadrantItem["id"];
 
 const buildTractionEngagementListHref = (
   quadrantId: TractionEngagementQuadrantItem["id"],
@@ -2544,6 +2538,7 @@ const findTractionEngagementQuadrant = (
     totals: {
       community_interactions: 0,
       favorites: 0,
+      patient_replies: 0,
       posts: 0,
       profile_views: 0,
       replies: 0,
@@ -2580,11 +2575,19 @@ const buildTractionEngagementRowCells = (
   tractionEngagement: AdminPsychologistsDashboard["traction_engagement"],
   row: (typeof TRACTION_ENGAGEMENT_MATRIX_ROWS)[number],
 ): TractionEngagementMatrixCell[] => {
-  const quadrants = row.ids.map((id) => findTractionEngagementQuadrant(tractionEngagement, id));
+  const quadrants = TRACTION_ENGAGEMENT_MATRIX_COLUMNS.map((column) =>
+    findTractionEngagementQuadrant(
+      tractionEngagement,
+      buildTractionEngagementQuadrantId(row.id, column.id),
+    ),
+  );
   const rowTotal = quadrants.reduce((total, quadrant) => total + Math.max(0, quadrant.count), 0);
 
   return quadrants.map((quadrant, index) => ({
-    color: TRACTION_ENGAGEMENT_COLORS[quadrant.id],
+    color:
+      PSYCHOLOGIST_ENGAGEMENT_DONUT_COLORS[
+        TRACTION_ENGAGEMENT_MATRIX_COLUMNS[index]?.id ?? "no_engagement"
+      ],
     columnLabel: TRACTION_ENGAGEMENT_MATRIX_COLUMNS[index]?.label ?? quadrant.label,
     quadrant,
     rowLabel: row.label,
@@ -2718,7 +2721,7 @@ const DashboardTractionEngagementCard = ({ summary }: { summary: AdminPsychologi
               })}
             </div>
 
-            <div className="hidden gap-2 lg:grid lg:grid-cols-[104px_repeat(4,minmax(0,1fr))]">
+            <div className="hidden gap-2 lg:grid lg:grid-cols-[132px_repeat(4,minmax(0,1fr))]">
               <div className="hidden lg:block" aria-hidden />
               {TRACTION_ENGAGEMENT_MATRIX_COLUMNS.map((column) => (
                 <p
@@ -2818,14 +2821,17 @@ const DashboardTractionEngagementCard = ({ summary }: { summary: AdminPsychologi
               ) : (
                 "Impacto observado: ainda não há base suficiente para comparar a tração entre muito engajados, engajados e pouco ou sem engajamento no período."
               )}{" "}
-              Critério: Muito engajado ={" "}
+              Critério ponderado: Muito engajado ={" "}
+              {numberFormatter.format(tractionEngagement.thresholds.highly_engaged_score_30d)}+
+              pontos/30d e pelo menos{" "}
               {numberFormatter.format(
-                tractionEngagement.thresholds.highly_engaged_interactions_30d,
-              )}
-              +; Engajado ={" "}
-              {numberFormatter.format(tractionEngagement.thresholds.engaged_interactions_30d)}+;
-              Pouco engajado = ao menos 1 interação, mas abaixo desse corte normalizado; Sem
-              engajamento = 0 interações em comunidades no período.
+                tractionEngagement.thresholds.high_value_patient_replies_for_very_engaged_30d,
+              )}{" "}
+              respostas a posts de pacientes/30d; Engajado ={" "}
+              {numberFormatter.format(tractionEngagement.thresholds.engaged_score_30d)}+ pontos/30d;
+              Pouco engajado = ao menos 1 intera&ccedil;&atilde;o, mas abaixo desse corte ponderado;
+              Sem engajamento = 0 intera&ccedil;&otilde;es em comunidades. Votos, posts e respostas
+              fora de posts de pacientes t&ecirc;m teto de pontua&ccedil;&atilde;o.
             </div>
           </aside>
         </div>

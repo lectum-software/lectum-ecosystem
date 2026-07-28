@@ -801,6 +801,15 @@ export class AdminPsychologistsDashboardRepository
         select: {
           author_id: true,
           createdAt: true,
+          post: {
+            select: {
+              author: {
+                select: {
+                  role: true,
+                },
+              },
+            },
+          },
         },
         where: {
           author: {
@@ -877,7 +886,8 @@ export class AdminPsychologistsDashboardRepository
       ...replies.map((reply) => ({
         createdAt: reply.createdAt,
         psychologist_id: reply.author_id,
-        type: "reply" as const,
+        type:
+          reply.post.author.role === "paciente" ? ("patient_reply" as const) : ("reply" as const),
       })),
       ...votes.map((vote) => ({
         createdAt: vote.createdAt,

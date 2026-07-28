@@ -441,15 +441,19 @@ export type AdminPsychologistsDashboardTractionResults = {
   unavailable_reason: string | null;
 };
 
+export type AdminPsychologistsDashboardTractionEngagementTractionCategoryId = Exclude<
+  AdminPsychologistsDashboardTractionCategoryId,
+  "insufficient_data"
+>;
+
+export type AdminPsychologistsDashboardTractionEngagementLevelId =
+  | "engaged"
+  | "low_engaged"
+  | "no_engagement"
+  | "very_engaged";
+
 export type AdminPsychologistsDashboardTractionEngagementQuadrantId =
-  | "low_traction_engaged"
-  | "low_traction_low_engaged"
-  | "low_traction_no_engagement"
-  | "low_traction_very_engaged"
-  | "strong_traction_engaged"
-  | "strong_traction_low_engaged"
-  | "strong_traction_no_engagement"
-  | "strong_traction_very_engaged";
+  `${AdminPsychologistsDashboardTractionEngagementTractionCategoryId}_${AdminPsychologistsDashboardTractionEngagementLevelId}`;
 
 export type AdminPsychologistsDashboardTractionEngagementQuadrant = {
   count: number;
@@ -460,6 +464,7 @@ export type AdminPsychologistsDashboardTractionEngagementQuadrant = {
   totals: {
     community_interactions: number;
     favorites: number;
+    patient_replies: number;
     posts: number;
     profile_views: number;
     replies: number;
@@ -492,14 +497,30 @@ export type AdminPsychologistsDashboardTractionEngagementResults = {
   quadrants: AdminPsychologistsDashboardTractionEngagementQuadrant[];
   source: "profile_view_event+contact_request+psychologist_favorite+community_post+post_reply+post_vote";
   thresholds: {
+    engaged_score_30d: number;
     engaged_interactions_30d: number;
     high_engagement_interactions_30d: number;
+    high_value_patient_replies_for_very_engaged_30d: number;
+    highly_engaged_score_30d: number;
     highly_engaged_interactions_30d: number;
     minimum_active_days: number;
+    minimum_signal_score_30d: number;
     minimum_signal_interactions_30d: number;
+    score_caps_30d: {
+      patient_replies: null;
+      posts: number;
+      replies: number;
+      votes: number;
+    };
     traction_strong_whatsapp_high_30d: number;
     traction_strong_whatsapp_with_conversion_30d: number;
     traction_strong_conversion_rate_percent: number;
+    weights: {
+      patient_replies: number;
+      posts: number;
+      replies: number;
+      votes: number;
+    };
   };
   totals: {
     community_interactions: number;
@@ -509,6 +530,7 @@ export type AdminPsychologistsDashboardTractionEngagementResults = {
     low_engaged_psychologists: number;
     low_engagement_psychologists: number;
     no_engagement_psychologists: number;
+    patient_replies: number;
     posts: number;
     psychologists: number;
     replies: number;

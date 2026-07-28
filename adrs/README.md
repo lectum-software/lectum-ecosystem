@@ -159,3 +159,5 @@ Formato recomendado:
 - [ADR-0336 - Query key canonica para filtros da lista Admin de psicologos](0336-query-key-filtros-lista-psicologos-admin.md) - Accepted
 - [ADR-0337 - Detalhamento de Engajamento no dashboard Admin de psicologos](0337-detalhamento-engajamento-tracao-dashboard-psicologos.md) - Accepted
 - [ADR-0338 - Engajamento comunitario de pacientes e sem dados insuficientes em psicologos](0338-engajamento-comunitario-pacientes-e-sem-dados-insuficientes-psicologos.md) - Accepted
+- [ADR-0339 - Categorias de tracao nao convertida na matriz Tracao x Engajamento](0339-tracao-engajamento-categorias-nao-convertidas.md) - Accepted
+- [ADR-0340 - Score ponderado de engajamento comunitario no Admin](0340-engajamento-ponderado-admin.md) - Accepted

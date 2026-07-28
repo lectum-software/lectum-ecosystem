@@ -1,7 +1,12 @@
 import type { Resolve } from "@/helpers/return";
 import { error, msg } from "@/helpers/translate";
 import { extractPsychologistSignupAnalyticsVisitorId } from "@/modules/api/public/analytics/helpers/signup-identity";
-import { diagnoseAdminCommunityEngagement } from "@/utils/admin-community-engagement-diagnosis";
+import {
+  ADMIN_COMMUNITY_ENGAGEMENT_SCORE_THRESHOLDS,
+  ADMIN_PSYCHOLOGIST_COMMUNITY_ENGAGEMENT_SCORE_CONFIG,
+  calculateAdminPsychologistCommunityEngagementScore,
+  diagnoseAdminPsychologistWeightedCommunityEngagement,
+} from "@/utils/admin-community-engagement-diagnosis";
 import type { AdminOperatingSystemType } from "@/utils/admin-operating-system";
 import {
   ADMIN_OPERATING_SYSTEM_LABELS,
@@ -41,8 +46,10 @@ import type {
   AdminPsychologistsDashboardQuery,
   AdminPsychologistsDashboardSummary,
   AdminPsychologistsDashboardTractionCategoryId,
+  AdminPsychologistsDashboardTractionEngagementLevelId,
   AdminPsychologistsDashboardTractionEngagementQuadrantId,
   AdminPsychologistsDashboardTractionEngagementResults,
+  AdminPsychologistsDashboardTractionEngagementTractionCategoryId,
   AdminPsychologistsDashboardTractionResults,
   IAdminPsychologistsDashboardDTO,
 } from "../DTOs/IAdminPsychologistsDashboardDTO";
@@ -107,6 +114,16 @@ const TRACTION_CATEGORY_ORDER: AdminPsychologistsDashboardTractionCategoryId[] =
   "insufficient_data",
 ];
 
+const TRACTION_ENGAGEMENT_TRACTION_CATEGORY_ORDER: AdminPsychologistsDashboardTractionEngagementTractionCategoryId[] =
+  ["strong_traction", "unconverted_interest", "unconverted_traffic", "low_traction"];
+
+const TRACTION_ENGAGEMENT_LEVEL_ORDER: AdminPsychologistsDashboardTractionEngagementLevelId[] = [
+  "very_engaged",
+  "engaged",
+  "low_engaged",
+  "no_engagement",
+];
+
 const TRACTION_CATEGORY_CONFIG = {
   insufficient_data: {
     description:
@@ -135,63 +152,61 @@ const TRACTION_CATEGORY_CONFIG = {
   { description: string; label: string }
 >;
 
-const TRACTION_ENGAGEMENT_QUADRANT_ORDER: AdminPsychologistsDashboardTractionEngagementQuadrantId[] =
-  [
-    "strong_traction_very_engaged",
-    "strong_traction_engaged",
-    "strong_traction_low_engaged",
-    "strong_traction_no_engagement",
-    "low_traction_very_engaged",
-    "low_traction_engaged",
-    "low_traction_low_engaged",
-    "low_traction_no_engagement",
-  ];
-
-const TRACTION_ENGAGEMENT_QUADRANT_CONFIG = {
-  low_traction_engaged: {
-    description:
-      "Psic\u00f3logos engajados em comunidades, mas ainda sem Tra\u00e7\u00e3o Forte no per\u00edodo.",
-    label: "Sem tra\u00e7\u00e3o forte + engajado",
+const TRACTION_ENGAGEMENT_LEVEL_CONFIG = {
+  engaged: {
+    description: "engajamento consistente em comunidades",
+    label: "engajado",
   },
-  low_traction_low_engaged: {
-    description:
-      "Psic\u00f3logos sem Tra\u00e7\u00e3o Forte e com poucas intera\u00e7\u00f5es reais em comunidades.",
-    label: "Sem tra\u00e7\u00e3o forte + pouco engajado",
+  low_engaged: {
+    description: "poucas intera\u00e7\u00f5es reais em comunidades",
+    label: "pouco engajado",
   },
-  low_traction_no_engagement: {
-    description:
-      "Psic\u00f3logos sem Tra\u00e7\u00e3o Forte e sem nenhuma intera\u00e7\u00e3o real em comunidades no per\u00edodo.",
-    label: "Sem tra\u00e7\u00e3o forte + sem engajamento",
+  no_engagement: {
+    description: "nenhuma intera\u00e7\u00e3o real em comunidades no per\u00edodo",
+    label: "sem engajamento",
   },
-  low_traction_very_engaged: {
-    description:
-      "Psic\u00f3logos muito engajados em comunidades, mas ainda sem Tra\u00e7\u00e3o Forte no per\u00edodo.",
-    label: "Sem tra\u00e7\u00e3o forte + muito engajado",
-  },
-  strong_traction_engaged: {
-    description:
-      "Psic\u00f3logos com Tra\u00e7\u00e3o Forte e engajamento consistente em comunidades.",
-    label: "Tra\u00e7\u00e3o forte + engajado",
-  },
-  strong_traction_low_engaged: {
-    description:
-      "Psic\u00f3logos com Tra\u00e7\u00e3o Forte mesmo com poucas intera\u00e7\u00f5es comunit\u00e1rias no per\u00edodo.",
-    label: "Tra\u00e7\u00e3o forte + pouco engajado",
-  },
-  strong_traction_no_engagement: {
-    description:
-      "Psic\u00f3logos com Tra\u00e7\u00e3o Forte mesmo sem nenhuma intera\u00e7\u00e3o real em comunidades no per\u00edodo.",
-    label: "Tra\u00e7\u00e3o forte + sem engajamento",
-  },
-  strong_traction_very_engaged: {
-    description:
-      "Psic\u00f3logos com Tra\u00e7\u00e3o Forte e volume muito alto de intera\u00e7\u00f5es em comunidades.",
-    label: "Tra\u00e7\u00e3o forte + muito engajado",
+  very_engaged: {
+    description: "volume muito alto de intera\u00e7\u00f5es em comunidades",
+    label: "muito engajado",
   },
 } satisfies Record<
-  AdminPsychologistsDashboardTractionEngagementQuadrantId,
+  AdminPsychologistsDashboardTractionEngagementLevelId,
   { description: string; label: string }
 >;
+
+const buildTractionEngagementQuadrantId = (
+  tractionCategoryId: AdminPsychologistsDashboardTractionEngagementTractionCategoryId,
+  engagementLevel: AdminPsychologistsDashboardTractionEngagementLevelId,
+): AdminPsychologistsDashboardTractionEngagementQuadrantId => {
+  const id = `${tractionCategoryId}_${engagementLevel}`;
+
+  return id as AdminPsychologistsDashboardTractionEngagementQuadrantId;
+};
+
+const TRACTION_ENGAGEMENT_QUADRANT_ORDER: AdminPsychologistsDashboardTractionEngagementQuadrantId[] =
+  TRACTION_ENGAGEMENT_TRACTION_CATEGORY_ORDER.flatMap((tractionCategoryId) =>
+    TRACTION_ENGAGEMENT_LEVEL_ORDER.map((engagementLevel) =>
+      buildTractionEngagementQuadrantId(tractionCategoryId, engagementLevel),
+    ),
+  );
+
+const mapTractionCategoryToEngagementAxis = (
+  tractionCategoryId: AdminPsychologistsDashboardTractionCategoryId,
+): AdminPsychologistsDashboardTractionEngagementTractionCategoryId =>
+  tractionCategoryId === "insufficient_data" ? "low_traction" : tractionCategoryId;
+
+const getTractionEngagementQuadrantConfig = (input: {
+  engagementLevel: AdminPsychologistsDashboardTractionEngagementLevelId;
+  tractionCategoryId: AdminPsychologistsDashboardTractionEngagementTractionCategoryId;
+}) => {
+  const traction = TRACTION_CATEGORY_CONFIG[input.tractionCategoryId];
+  const engagement = TRACTION_ENGAGEMENT_LEVEL_CONFIG[input.engagementLevel];
+
+  return {
+    description: `Psic\u00f3logos em ${traction.label} com ${engagement.description}.`,
+    label: `${traction.label} + ${engagement.label}`,
+  };
+};
 
 const DEVICE_LABELS: Record<AdminPsychologistsDashboardDeviceType, string> = {
   desktop: "Desktop",
@@ -1233,8 +1248,12 @@ const buildTractionResults = (params: {
 type CommunityEngagementSignalCounts = {
   interactions: number;
   normalizedInteractions: number;
+  normalizedPatientReplies: number;
+  normalizedWeightedScore: number;
+  patientReplies: number;
   posts: number;
   replies: number;
+  uncappedNormalizedWeightedScore: number;
   votes: number;
 };
 
@@ -1247,14 +1266,19 @@ const countCommunityEngagementEventsByPsychologist = (
     const current = counts.get(event.psychologist_id) ?? {
       interactions: 0,
       normalizedInteractions: 0,
+      normalizedPatientReplies: 0,
+      normalizedWeightedScore: 0,
+      patientReplies: 0,
       posts: 0,
       replies: 0,
+      uncappedNormalizedWeightedScore: 0,
       votes: 0,
     };
 
     current.interactions += 1;
     if (event.type === "post") current.posts += 1;
-    if (event.type === "reply") current.replies += 1;
+    if (event.type === "reply" || event.type === "patient_reply") current.replies += 1;
+    if (event.type === "patient_reply") current.patientReplies += 1;
     if (event.type === "vote") current.votes += 1;
 
     counts.set(event.psychologist_id, current);
@@ -1266,14 +1290,13 @@ const countCommunityEngagementEventsByPsychologist = (
 const emptyTractionEngagementTotals = () => ({
   community_interactions: 0,
   favorites: 0,
+  patient_replies: 0,
   posts: 0,
   profile_views: 0,
   replies: 0,
   votes: 0,
   whatsapp_clicks: 0,
 });
-
-type TractionEngagementLevel = "engaged" | "low_engaged" | "no_engagement" | "very_engaged";
 
 const emptyTractionEngagementRate = () => ({
   psychologists: 0,
@@ -1284,7 +1307,7 @@ const emptyTractionEngagementRate = () => ({
 const engagementLevelFromSignals = (input: {
   diagnosisId: string;
   interactions: number;
-}): TractionEngagementLevel => {
+}): AdminPsychologistsDashboardTractionEngagementLevelId => {
   if (input.interactions <= 0) return "no_engagement";
   if (input.diagnosisId === "muito_ativo") return "very_engaged";
   if (input.diagnosisId === "ativo") return "engaged";
@@ -1293,12 +1316,12 @@ const engagementLevelFromSignals = (input: {
 };
 
 const resolveTractionEngagementQuadrantId = (input: {
-  engagementLevel: TractionEngagementLevel;
-  hasStrongTraction: boolean;
+  engagementLevel: AdminPsychologistsDashboardTractionEngagementLevelId;
+  tractionCategoryId: AdminPsychologistsDashboardTractionCategoryId;
 }): AdminPsychologistsDashboardTractionEngagementQuadrantId => {
-  const tractionPrefix = input.hasStrongTraction ? "strong_traction" : "low_traction";
+  const tractionCategoryId = mapTractionCategoryToEngagementAxis(input.tractionCategoryId);
 
-  return `${tractionPrefix}_${input.engagementLevel}` as AdminPsychologistsDashboardTractionEngagementQuadrantId;
+  return buildTractionEngagementQuadrantId(tractionCategoryId, input.engagementLevel);
 };
 
 const assignTractionEngagementRate = (rate: ReturnType<typeof emptyTractionEngagementRate>) => {
@@ -1372,9 +1395,13 @@ const buildTractionEngagementResults = (params: {
     low_engaged_psychologists: 0,
     low_engagement_psychologists: 0,
     no_engagement_psychologists: 0,
+    patient_replies: communityEngagementEvents.filter((event) => event.type === "patient_reply")
+      .length,
     posts: communityEngagementEvents.filter((event) => event.type === "post").length,
     psychologists: params.profiles.length,
-    replies: communityEngagementEvents.filter((event) => event.type === "reply").length,
+    replies: communityEngagementEvents.filter(
+      (event) => event.type === "reply" || event.type === "patient_reply",
+    ).length,
     strong_traction_psychologists: 0,
     very_engaged_psychologists: 0,
     votes: communityEngagementEvents.filter((event) => event.type === "vote").length,
@@ -1389,14 +1416,30 @@ const buildTractionEngagementResults = (params: {
     const engagementSignals = communityEngagementCounts.get(psychologistId) ?? {
       interactions: 0,
       normalizedInteractions: 0,
+      normalizedPatientReplies: 0,
+      normalizedWeightedScore: 0,
+      patientReplies: 0,
       posts: 0,
       replies: 0,
+      uncappedNormalizedWeightedScore: 0,
       votes: 0,
     };
+    const weightedEngagementScore = calculateAdminPsychologistCommunityEngagementScore({
+      activeDays,
+      patientReplies: engagementSignals.patientReplies,
+      posts: engagementSignals.posts,
+      replies: engagementSignals.replies,
+      votes: engagementSignals.votes,
+    });
     engagementSignals.normalizedInteractions = normalizeCountToThirtyDays(
       engagementSignals.interactions,
       activeDays,
     );
+    engagementSignals.normalizedPatientReplies =
+      weightedEngagementScore.normalized_patient_replies_30d;
+    engagementSignals.normalizedWeightedScore = weightedEngagementScore.weighted_score_30d;
+    engagementSignals.uncappedNormalizedWeightedScore =
+      weightedEngagementScore.uncapped_weighted_score_30d;
 
     const tractionCategoryId = classifyTractionCategory({
       activeDays,
@@ -1410,9 +1453,13 @@ const buildTractionEngagementResults = (params: {
         profileViews > 0 ? roundPercent((whatsappClicks / profileViews) * 100) : null,
     });
     const hasStrongTraction = tractionCategoryId === "strong_traction";
-    const engagementDiagnosis = diagnoseAdminCommunityEngagement({
-      interactions: engagementSignals.normalizedInteractions,
+    const engagementDiagnosis = diagnoseAdminPsychologistWeightedCommunityEngagement({
+      activeDays,
+      patientReplies: engagementSignals.patientReplies,
+      posts: engagementSignals.posts,
+      replies: engagementSignals.replies,
       source: COMMUNITY_ENGAGEMENT_SOURCE,
+      votes: engagementSignals.votes,
     });
     const engagementLevel = engagementLevelFromSignals({
       diagnosisId: engagementDiagnosis.id,
@@ -1420,7 +1467,7 @@ const buildTractionEngagementResults = (params: {
     });
     const quadrantId = resolveTractionEngagementQuadrantId({
       engagementLevel,
-      hasStrongTraction,
+      tractionCategoryId,
     });
     const quadrant = quadrants.get(quadrantId);
 
@@ -1459,6 +1506,7 @@ const buildTractionEngagementResults = (params: {
       quadrant.count += 1;
       quadrant.totals.community_interactions += engagementSignals.interactions;
       quadrant.totals.favorites += favorites;
+      quadrant.totals.patient_replies += engagementSignals.patientReplies;
       quadrant.totals.posts += engagementSignals.posts;
       quadrant.totals.profile_views += profileViews;
       quadrant.totals.replies += engagementSignals.replies;
@@ -1498,33 +1546,47 @@ const buildTractionEngagementResults = (params: {
     comparison,
     description:
       "Rela\u00e7\u00e3o observacional entre envolvimento real em comunidades e Tra\u00e7\u00e3o Forte no per\u00edodo selecionado; n\u00e3o indica causalidade, ranking ou puni\u00e7\u00e3o.",
-    quadrants: TRACTION_ENGAGEMENT_QUADRANT_ORDER.map((id) => {
-      const config = TRACTION_ENGAGEMENT_QUADRANT_CONFIG[id];
-      const values = quadrants.get(id) ?? {
-        count: 0,
-        totals: emptyTractionEngagementTotals(),
-      };
+    quadrants: TRACTION_ENGAGEMENT_TRACTION_CATEGORY_ORDER.flatMap((tractionCategoryId) =>
+      TRACTION_ENGAGEMENT_LEVEL_ORDER.map((engagementLevel) => {
+        const id = buildTractionEngagementQuadrantId(tractionCategoryId, engagementLevel);
+        const config = getTractionEngagementQuadrantConfig({
+          engagementLevel,
+          tractionCategoryId,
+        });
+        const values = quadrants.get(id) ?? {
+          count: 0,
+          totals: emptyTractionEngagementTotals(),
+        };
 
-      return {
-        count: values.count,
-        description: config.description,
-        id,
-        label: config.label,
-        percentage: safePercentage(values.count, params.profiles.length),
-        totals: values.totals,
-      };
-    }),
+        return {
+          count: values.count,
+          description: config.description,
+          id,
+          label: config.label,
+          percentage: safePercentage(values.count, params.profiles.length),
+          totals: values.totals,
+        };
+      }),
+    ),
     source:
       "profile_view_event+contact_request+psychologist_favorite+community_post+post_reply+post_vote",
     thresholds: {
+      engaged_score_30d: ADMIN_COMMUNITY_ENGAGEMENT_SCORE_THRESHOLDS.engaged_score_30d,
       engaged_interactions_30d: TRACTION_ENGAGEMENT_ENGAGED_INTERACTIONS_30D,
       high_engagement_interactions_30d: TRACTION_ENGAGEMENT_ENGAGED_INTERACTIONS_30D,
+      high_value_patient_replies_for_very_engaged_30d:
+        ADMIN_PSYCHOLOGIST_COMMUNITY_ENGAGEMENT_SCORE_CONFIG.very_engaged_min_patient_replies_30d,
+      highly_engaged_score_30d: ADMIN_COMMUNITY_ENGAGEMENT_SCORE_THRESHOLDS.very_engaged_score_30d,
       highly_engaged_interactions_30d: TRACTION_ENGAGEMENT_VERY_ENGAGED_INTERACTIONS_30D,
       minimum_active_days: TRACTION_MIN_ACTIVE_DAYS,
+      minimum_signal_score_30d:
+        ADMIN_COMMUNITY_ENGAGEMENT_SCORE_THRESHOLDS.minimum_signal_score_30d,
       minimum_signal_interactions_30d: TRACTION_ENGAGEMENT_MINIMUM_SIGNAL_30D,
+      score_caps_30d: ADMIN_PSYCHOLOGIST_COMMUNITY_ENGAGEMENT_SCORE_CONFIG.caps_30d,
       traction_strong_conversion_rate_percent: TRACTION_STRONG_CONVERSION_RATE_PERCENT,
       traction_strong_whatsapp_high_30d: TRACTION_WHATSAPP_HIGH_30D,
       traction_strong_whatsapp_with_conversion_30d: TRACTION_WHATSAPP_HIGH_WITH_CONVERSION_30D,
+      weights: ADMIN_PSYCHOLOGIST_COMMUNITY_ENGAGEMENT_SCORE_CONFIG.weights,
     },
     totals: totalSignals,
     unavailable_reason:

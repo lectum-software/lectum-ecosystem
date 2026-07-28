@@ -17,7 +17,7 @@ Cada task é auto-suficiente e deve ser executada isoladamente por uma IA usando
 - A referência visual ativa é Builder Quick Copy + imagens exportadas em `_product/proto`.
 - O Builder está autenticado no espaço `Lectum` e o Quick Copy foi validado via `builder.io code`.
 - Existem 62 JPEGs exportados em `_product/proto`: 61 telas de produto e 1 ícone isolado.
-- A fila operacional agora possui 95 tasks: `TASK-00` a `TASK-89`, incluindo complementos `TASK-18A`, `TASK-29A`/`TASK-29B` e `TASK-31A` a `TASK-31C`.
+- A fila operacional agora possui 96 tasks: `TASK-00` a `TASK-90`, incluindo complementos `TASK-18A`, `TASK-29A`/`TASK-29B` e `TASK-31A` a `TASK-31C`.
 
 ## Inventário visual ativo
 
@@ -170,6 +170,7 @@ ou cortesia manual.
 | 87 | [TASK-87 - Padronizar graficos de donut no Admin](TASK-87-admin-graficos-donut.md) | Completed | 46, 51, 53, 60, 61, 79, 84 |
 | 88 | [TASK-88 - Seletor de conversao no titulo e filtro de plano na trilha pre-cadastro dos psicologos Admin](TASK-88-seletor-conversao-titulo-filtro-plano-psicologos-admin.md) | Completed | 53, 72, 82, 86 |
 | 89 | [TASK-89 - Comparativo Tracao x Engajamento no dashboard Admin de psicologos](TASK-89-tracao-engajamento-dashboard-psicologos-admin.md) | Completed | 53, 72, 84, 88 |
+| 90 | [TASK-90 - Engajamento ponderado no Admin](TASK-90-engajamento-ponderado-admin.md) | Completed | 53, 54, 60, 89 |
 
 ## Ordem operacional recomendada sem bloqueios
 
@@ -277,6 +278,7 @@ Execute uma por vez, sempre validando, marcando critérios, ADR e commit/push:
 40. [TASK-86 - Trilha pre-cadastro dos psicologos no dashboard Admin](TASK-86-trilha-pre-cadastro-psicologos-admin.md)
 41. [TASK-88 - Seletor de conversao no titulo e filtro de plano na trilha pre-cadastro dos psicologos Admin](TASK-88-seletor-conversao-titulo-filtro-plano-psicologos-admin.md)
 42. [TASK-89 - Comparativo Tracao x Engajamento no dashboard Admin de psicologos](TASK-89-tracao-engajamento-dashboard-psicologos-admin.md)
+43. [TASK-90 - Engajamento ponderado no Admin](TASK-90-engajamento-ponderado-admin.md)
 
 ### 1. Trilha executavel agora apos TASK-10
 

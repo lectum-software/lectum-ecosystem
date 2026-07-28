@@ -1,7 +1,12 @@
 import type { Resolve } from "@/helpers/return";
 import { error, msg } from "@/helpers/translate";
 import { extractPatientSignupAnalyticsVisitorId } from "@/modules/api/public/analytics/helpers/signup-identity";
-import { diagnoseAdminCommunityEngagement } from "@/utils/admin-community-engagement-diagnosis";
+import {
+  ADMIN_COMMUNITY_ENGAGEMENT_SCORE_THRESHOLDS,
+  ADMIN_PATIENT_COMMUNITY_ENGAGEMENT_SCORE_CONFIG,
+  calculateAdminPatientCommunityEngagementScore,
+  diagnoseAdminCommunityEngagement,
+} from "@/utils/admin-community-engagement-diagnosis";
 import type { AdminOperatingSystemType } from "@/utils/admin-operating-system";
 import {
   ADMIN_OPERATING_SYSTEM_LABELS,
@@ -82,9 +87,11 @@ type PatientsDashboardIntentCounts = {
 type PatientsDashboardCommunityEngagementCounts = {
   interactions: number;
   normalizedInteractions: number;
+  normalizedWeightedScore: number;
   posts: number;
   replies: number;
   saves: number;
+  uncappedNormalizedWeightedScore: number;
   votes: number;
 };
 
@@ -508,9 +515,11 @@ const getIntentCountsForPatient = (
 const createCommunityEngagementCounts = (): PatientsDashboardCommunityEngagementCounts => ({
   interactions: 0,
   normalizedInteractions: 0,
+  normalizedWeightedScore: 0,
   posts: 0,
   replies: 0,
   saves: 0,
+  uncappedNormalizedWeightedScore: 0,
   votes: 0,
 });
 
@@ -532,7 +541,7 @@ const classifyPatientCommunityEngagement = (
   if (counts.interactions <= 0) return "no_engagement";
 
   const diagnosis = diagnoseAdminCommunityEngagement({
-    interactions: counts.normalizedInteractions,
+    interactions: counts.normalizedWeightedScore,
     source: PATIENT_COMMUNITY_ENGAGEMENT_SOURCE,
   });
 
@@ -650,10 +659,17 @@ const buildPatientCommunityEngagementClassification = (params: {
 
   for (const patient of params.patients) {
     const counts = countsByPatient.get(patient.id) ?? createCommunityEngagementCounts();
-    counts.normalizedInteractions = normalizeCountToThirtyDays(
-      counts.interactions,
-      getPatientActiveDaysInRange(patient, params.range),
-    );
+    const activeDays = getPatientActiveDaysInRange(patient, params.range);
+    const weightedScore = calculateAdminPatientCommunityEngagementScore({
+      activeDays,
+      posts: counts.posts,
+      replies: counts.replies,
+      saves: counts.saves,
+      votes: counts.votes,
+    });
+    counts.normalizedInteractions = normalizeCountToThirtyDays(counts.interactions, activeDays);
+    counts.normalizedWeightedScore = weightedScore.weighted_score_30d;
+    counts.uncappedNormalizedWeightedScore = weightedScore.uncapped_weighted_score_30d;
 
     const segmentId = classifyPatientCommunityEngagement(counts);
     engagementSegmentByPatientId.set(patient.id, segmentId);
@@ -676,6 +692,15 @@ const buildPatientCommunityEngagementClassification = (params: {
       privacy_note:
         "Indicador agregado interno do Admin; não é exibido a pacientes ou psicólogos e não infere sessão, atendimento, diagnóstico ou conteúdo de conversa.",
       source: PATIENT_COMMUNITY_ENGAGEMENT_SOURCE,
+      thresholds: {
+        engaged_score_30d: ADMIN_COMMUNITY_ENGAGEMENT_SCORE_THRESHOLDS.engaged_score_30d,
+        minimum_signal_score_30d:
+          ADMIN_COMMUNITY_ENGAGEMENT_SCORE_THRESHOLDS.minimum_signal_score_30d,
+        passive_saves_score_cap_30d: ADMIN_PATIENT_COMMUNITY_ENGAGEMENT_SCORE_CONFIG.caps_30d.saves,
+        passive_votes_score_cap_30d: ADMIN_PATIENT_COMMUNITY_ENGAGEMENT_SCORE_CONFIG.caps_30d.votes,
+        very_engaged_score_30d: ADMIN_COMMUNITY_ENGAGEMENT_SCORE_THRESHOLDS.very_engaged_score_30d,
+        weights: ADMIN_PATIENT_COMMUNITY_ENGAGEMENT_SCORE_CONFIG.weights,
+      },
       total_patients: params.patients.length,
     },
     engagementSegmentByPatientId,

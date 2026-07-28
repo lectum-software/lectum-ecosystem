@@ -222,8 +222,41 @@ A leitura deve ser agregada, nao publica e nao punitiva. Ela deve cruzar sinais 
 - `pnpm --dir backend check`
 - `pnpm --dir admin check`
 - `pnpm --dir backend build`
-- `NODE_OPTIONS=--max-old-space-size=8192 pnpm --dir admin build`
-- `NODE_OPTIONS=--max-old-space-size=8192 pnpm check`
+- `pnpm --dir admin build`
+- `pnpm check`
 - Smoke de servico local `buildPsychologistsDashboard({ period: "all" })` retornou 8 quadrantes sem `insufficient_data`, totais `no_engagement_psychologists=9`, `low_engaged_psychologists=5`, `very_engaged_psychologists=1`, `insufficient_data_psychologists=0` e soma igual a 15 psicologos reais.
 - Smoke HTTP local retornou 200 para `http://localhost:3002/psicologos`, `http://localhost:3002/pacientes`, `http://localhost:3002/psicologos/lista?traction_engagement=low_traction_no_engagement` e `http://localhost:3002/pacientes/lista`.
 - Browser local/headless autenticado em `http://localhost:3002/psicologos` e `http://localhost:3002/psicologos/lista?traction_engagement=low_traction_no_engagement` validou mobile `390x844`, `scrollWidth=390`, **Sem engajamento** presente, nenhum link `traction_engagement=insufficient_data` e ausencia do texto de criterio `Dados insuficientes = menos de`. Screenshots salvos em `.tmp/admin-psychologists-engagement-mobile.png` e `.tmp/admin-psychologists-list-no-engagement-mobile.png`.
+
+## Execucao complementar: categorias nao convertidas na matriz Tracao x Engajamento (2026-07-28)
+
+- Pedido do usuario: em **Tracao x Engajamento**, adicionar **Interesse Nao Convertido** e **Trafego Nao Convertido** na parte de tracao.
+- Backend Admin: `GET /api/admin/private/psychologists/dashboard` passou a retornar 16 quadrantes em `traction_engagement`, cruzando **Tracao forte**, **Interesse Nao Convertido**, **Trafego Nao Convertido** e **Baixa Tracao** com **Muito engajado**, **Engajado**, **Pouco engajado** e **Sem engajamento**.
+- Backend Admin: a classificacao isolada `insufficient_data` continua fora do eixo composto, conforme ADR-0338, e permanece mapeada operacionalmente para **Baixa Tracao** na matriz para nao reintroduzir **Dados Insuficientes** em `traction_engagement`.
+- Lista Admin: o filtro composto `traction_engagement` passou a aceitar os novos recortes `unconverted_interest_*` e `unconverted_traffic_*`, mantendo links reais da matriz para `/psicologos/lista`.
+- Frontend Admin: a matriz em `/psicologos` agora exibe as linhas **Tracao forte**, **Interesse Nao Convertido**, **Trafego Nao Convertido** e **Baixa Tracao**, com layout mobile-first e grade desktop compacta.
+- Builder/Quick Copy nao estava exposto como ferramenta callable neste ambiente; a execucao usou `_product/tasks/PROTO-INVENTORY.md`, a referencia local `_product/proto/admin/Psicólogos/Psicólogos - Dashboard.png` e a captura enviada pelo usuario.
+- Nenhuma alteracao em `backend/prisma/schema.prisma` ou `backend/prisma/migrations`; `pnpm --dir backend db:migrate` nao se aplica.
+- ADR criado: `adrs/0339-tracao-engajamento-categorias-nao-convertidas.md`.
+
+### Criterios complementares
+
+- [x] A matriz **Tracao x Engajamento** exibe **Interesse Nao Convertido** e **Trafego Nao Convertido** como linhas de tracao.
+- [x] Os novos cruzamentos usam dados reais ja calculados de tracao e engajamento, sem mock, seed, endpoint simulado, package novo ou migration.
+- [x] Os links da matriz para a lista Admin preservam o filtro composto com `unconverted_interest_*` e `unconverted_traffic_*`.
+- [x] **Dados Insuficientes** permanece fora da matriz composta, restrito a analise isolada de **Tracao**.
+- [x] A UI permanece mobile-first e sem `<img>` cru.
+
+### Validacao complementar
+
+- `pnpm --dir backend exec biome check "src/modules/api/admin/private/psychologists/dashboard/DTOs/IAdminPsychologistsDashboardDTO.ts" "src/modules/api/admin/private/psychologists/dashboard/use-cases/services.ts" "src/modules/api/admin/private/psychologists/list/DTOs/IAdminPsychologistsListDTO.ts" "src/modules/api/admin/private/psychologists/list/use-cases/services.ts"`
+- `pnpm --dir admin exec biome check "src/api/req/psychologists/index.ts" "src/app/(admin)/psicologos/client.tsx" "src/app/(admin)/psicologos/lista/client.tsx"`
+- `pnpm --dir backend check`
+- `pnpm --dir admin check`
+- `pnpm --dir backend build`
+- `NODE_OPTIONS=--max-old-space-size=8192 pnpm --dir admin build`
+- `NODE_OPTIONS=--max-old-space-size=8192 pnpm check`
+- Smoke de servico local `buildPsychologistsDashboard({ period: "all" })`: retornou 16 quadrantes, incluindo `unconverted_interest_very_engaged` e `unconverted_traffic_no_engagement`, com 15 psicologos reais no total.
+- HTTP local no Admin dev server: `GET http://localhost:3002/psicologos`, `GET http://localhost:3002/psicologos/lista?traction_engagement=unconverted_interest_no_engagement` e `GET http://localhost:3002/psicologos/lista?traction_engagement=unconverted_traffic_engaged` retornaram 200.
+- Validacao estatica do build: bundle de `/psicologos`/`/psicologos/lista` contem **Interesse Nao Convertido**, **Trafego Nao Convertido**, `unconverted_interest_very_engaged`, `unconverted_traffic_no_engagement` e `lg:grid-cols-[132px_repeat(4,minmax(0,1fr))]`.
+- Browser local/headless autenticado em 390x844 validou `/psicologos` e `/psicologos/lista?engagement=sem_base`, com `scrollWidth=390` e screenshots em `.tmp/admin-psychologists-weighted-engagement-mobile.png` e `.tmp/admin-psychologists-list-weighted-engagement-mobile.png`.

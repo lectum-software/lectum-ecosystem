@@ -211,6 +211,19 @@ export type AdminPatientsDashboardEngagementAnalysis = {
   patients_with_engagement: number;
   privacy_note: string;
   source: "community_post+post_reply+post_vote+post_save+post_reply_save";
+  thresholds: {
+    engaged_score_30d: number;
+    minimum_signal_score_30d: number;
+    passive_saves_score_cap_30d: number;
+    passive_votes_score_cap_30d: number;
+    very_engaged_score_30d: number;
+    weights: {
+      posts: number;
+      replies: number;
+      saves: number;
+      votes: number;
+    };
+  };
   total_patients: number;
 };
 

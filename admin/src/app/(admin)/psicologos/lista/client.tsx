@@ -190,23 +190,63 @@ const TRACTION_ENGAGEMENT_FILTER_OPTIONS: PsychologistsListOption[] = [
   },
   {
     count: 0,
+    id: "unconverted_interest_very_engaged",
+    label: "Interesse n\u00e3o convertido + muito engajado",
+  },
+  {
+    count: 0,
+    id: "unconverted_interest_engaged",
+    label: "Interesse n\u00e3o convertido + engajado",
+  },
+  {
+    count: 0,
+    id: "unconverted_interest_low_engaged",
+    label: "Interesse n\u00e3o convertido + pouco engajado",
+  },
+  {
+    count: 0,
+    id: "unconverted_interest_no_engagement",
+    label: "Interesse n\u00e3o convertido + sem engajamento",
+  },
+  {
+    count: 0,
+    id: "unconverted_traffic_very_engaged",
+    label: "Tr\u00e1fego n\u00e3o convertido + muito engajado",
+  },
+  {
+    count: 0,
+    id: "unconverted_traffic_engaged",
+    label: "Tr\u00e1fego n\u00e3o convertido + engajado",
+  },
+  {
+    count: 0,
+    id: "unconverted_traffic_low_engaged",
+    label: "Tr\u00e1fego n\u00e3o convertido + pouco engajado",
+  },
+  {
+    count: 0,
+    id: "unconverted_traffic_no_engagement",
+    label: "Tr\u00e1fego n\u00e3o convertido + sem engajamento",
+  },
+  {
+    count: 0,
     id: "low_traction_very_engaged",
-    label: "Sem tra\u00e7\u00e3o forte + muito engajado",
+    label: "Baixa tra\u00e7\u00e3o + muito engajado",
   },
   {
     count: 0,
     id: "low_traction_engaged",
-    label: "Sem tra\u00e7\u00e3o forte + engajado",
+    label: "Baixa tra\u00e7\u00e3o + engajado",
   },
   {
     count: 0,
     id: "low_traction_low_engaged",
-    label: "Sem tra\u00e7\u00e3o forte + pouco engajado",
+    label: "Baixa tra\u00e7\u00e3o + pouco engajado",
   },
   {
     count: 0,
     id: "low_traction_no_engagement",
-    label: "Sem tra\u00e7\u00e3o forte + sem engajamento",
+    label: "Baixa tra\u00e7\u00e3o + sem engajamento",
   },
 ];
 
@@ -222,13 +262,13 @@ const ENGAGEMENT_FILTER_OPTIONS: PsychologistsListOption[] = [
   { count: 0, id: "muito_ativo", label: "Muito engajado" },
   { count: 0, id: "ativo", label: "Engajado" },
   { count: 0, id: "pouco_ativo", label: "Pouco engajado" },
-  { count: 0, id: "sem_base", label: "Sem base" },
+  { count: 0, id: "sem_base", label: "Sem engajamento" },
 ];
 const PSYCHOLOGIST_ENGAGEMENT_LABEL_BY_ID: Record<PsychologistsListEngagementId, string> = {
   ativo: "Engajado",
   muito_ativo: "Muito engajado",
   pouco_ativo: "Pouco engajado",
-  sem_base: "Sem base",
+  sem_base: "Sem engajamento",
 };
 const listTractionCategories = new Set<PsychologistsListTractionCategoryId>(
   TRACTION_FILTER_OPTIONS.map((option) => option.id as PsychologistsListTractionCategoryId),

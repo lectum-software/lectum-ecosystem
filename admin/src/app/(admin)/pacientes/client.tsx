@@ -1156,6 +1156,12 @@ const PatientIntentAnalysisCard = ({ summary }: { summary: AdminPatientsDashboar
             </div>
           </div>
           <PatientEngagementDonutChart items={engagement.items} total={engagement.total_patients} />
+          <p className="mt-3 rounded-2xl bg-surface px-3 py-2 text-xs font-bold leading-5 text-muted">
+            Critério ponderado: Muito engajado ={" "}
+            {numberFormatter.format(engagement.thresholds.very_engaged_score_30d)}+ pontos/30d;
+            Engajado = {numberFormatter.format(engagement.thresholds.engaged_score_30d)}+
+            pontos/30d. Posts e respostas pesam mais; votos e salvamentos têm teto de pontuação.
+          </p>
         </section>
       </div>
     </CardShell>
