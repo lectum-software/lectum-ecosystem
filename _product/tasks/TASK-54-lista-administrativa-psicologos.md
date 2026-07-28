@@ -130,6 +130,7 @@ Frontend esperado:
 - `pnpm --dir admin check`
 - `pnpm --dir admin build`
 - `pnpm check`
+- HTTP local `GET http://localhost:3002/psicologos/lista?engagement=muito_ativo&traction=strong_traction` retornou `200`.
 - Browser local com admin real.
 
 ## Notas de execução
@@ -608,3 +609,27 @@ Frontend esperado:
   - apos clicar no **X**, a URL removeu `traction_engagement`, a contagem voltou para `0` e nenhum resumo/aviso de filtros ficou visivel;
   - sem filtros em `/psicologos/lista`: nao ha texto **Filtros aplicados**, nao ha mensagem **Nenhum filtro aplicado** e nao ha faixa branca;
   - desktop `1440x1000` e mobile base `390x844`: sem overflow horizontal de viewport.
+
+## Correcao de regressao: aplicacao de filtros na lista Admin (2026-07-28)
+
+- Pedido do usuario: filtros ativos como `traction=strong_traction` e `engagement=muito_ativo` apareciam como tags na URL/UI, mas a tabela ainda exibia profissionais fora desses recortes.
+- Causa identificada: `GET /api/admin/private/psychologists` ja aceitava e aplicava os filtros reais, mas a query key do TanStack Query em `admin/src/api/cache/keys.ts` nao incluia todos os parametros novos de `PsychologistsListQuery`. Ao alterar apenas esses filtros, o Admin podia reutilizar a mesma entrada de cache da lista sem filtro.
+- Frontend Admin: `normalizePsychologistsList` passou a incluir `traction`, `engagement`, `traction_engagement`, `profile_status`, `registry_status`, `available_today`, `more_experienced`, `verified`, `specialty`, `race_color` e `religion`, alinhando a cache key ao contrato HTTP real da lista.
+- Nao houve alteracao de backend, Prisma/migrations, packages, dados, seed, mock, endpoint paralelo, filtros disponiveis ou layout visual.
+- Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente; a correcao foi comportamental de cache/query key e preservou a referencia visual da lista Admin.
+- ADR criado: `adrs/0336-query-key-filtros-lista-psicologos-admin.md`.
+
+### Criterios complementares
+
+- [x] Alterar **Tracao** muda a query key da lista e dispara nova leitura da API.
+- [x] Alterar **Engajamento** muda a query key da lista e dispara nova leitura da API.
+- [x] O filtro composto `traction_engagement` continua tendo cache key propria para links vindos do dashboard.
+- [x] Os demais filtros suportados pela URL/API permanecem representados na cache key da listagem.
+- [x] Nenhum backend, Prisma/migrations, package, mock, seed ou endpoint paralelo foi criado.
+
+### Validacao complementar
+
+- `pnpm --dir admin exec biome check --write "src/api/cache/keys.ts"`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check`
