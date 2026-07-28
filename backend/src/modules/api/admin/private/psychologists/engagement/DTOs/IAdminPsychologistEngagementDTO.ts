@@ -294,6 +294,7 @@ export type AdminPsychologistStatisticsDTO = {
       replies: AdminPsychologistContentFormatDistribution;
       source: "community_post.media_type+community_post_media+post_reply.media_type";
     };
+    engagement_diagnosis: AdminCommunityEngagementDiagnosis;
     series: AdminPsychologistStatisticsSeriesPoint[];
   };
   period: AdminPsychologistStatisticsPeriod;

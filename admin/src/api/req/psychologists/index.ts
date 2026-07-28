@@ -1029,6 +1029,12 @@ export type AdminPsychologistEngagementMetric = {
   value: number | null;
 };
 
+export type AdminCommunityEngagementDiagnosis = {
+  id: "ativo" | "muito_ativo" | "pouco_ativo" | "sem_base";
+  label: "Ativo" | "Muito ativo" | "Pouco ativo" | "Sem base";
+  source: string;
+};
+
 export type AdminPsychologistBusinessTractionCategoryId =
   | "insufficient_data"
   | "low_traction"
@@ -1089,11 +1095,7 @@ export type AdminPsychologistStatistics = {
         source: "community_post.author.role=paciente+post_reply.author_id";
       };
       downvotes: number;
-      engagement_diagnosis?: {
-        id: "ativo" | "muito_ativo" | "pouco_ativo" | "sem_base";
-        label: "Ativo" | "Muito ativo" | "Pouco ativo" | "Sem base";
-        source: string;
-      };
+      engagement_diagnosis?: AdminCommunityEngagementDiagnosis;
       following: boolean;
       id: string;
       interactions: number;
@@ -1113,6 +1115,7 @@ export type AdminPsychologistStatistics = {
       replies: AdminPsychologistContentFormatDistribution;
       source: "community_post.media_type+community_post_media+post_reply.media_type";
     };
+    engagement_diagnosis: AdminCommunityEngagementDiagnosis;
     series: AdminPsychologistStatisticsPoint[];
   };
   period: {

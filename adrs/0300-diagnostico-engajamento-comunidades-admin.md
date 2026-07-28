@@ -75,3 +75,11 @@ Tambem foi solicitado separar votos em **Upvotes** e **Downvotes** para entender
 - A regra compartilhada removeu a dependencia de `maxInteractions` da pessoa no periodo. O diagnostico agora usa apenas o total real de interacoes daquela comunidade no recorte selecionado.
 - As faixas passam a ser absolutas e independentes: **Sem base** para 0 a 2 interacoes, **Pouco ativo** para 3 a 5, **Ativo** para 6 a 11 e **Muito ativo** para 12 ou mais.
 - A mudanca preserva o contrato `engagement_diagnosis`, os ids/labels existentes, as fontes first-party reais e a ordenacao por interacoes; nao ha endpoint paralelo, schema Prisma, migration, package novo, mock, seed ou backfill.
+
+## Ajuste de agregacao visual 2026-07-27
+
+- Pedido do usuario: alem do resultado individual por comunidade, o psicologo deve ter um resultado geral de engajamento exibido na frente do titulo **Estatisticas de comunidade**.
+- O resultado geral do psicologo no recorte selecionado passa a ser o melhor diagnostico individual entre as comunidades ativas do periodo: se qualquer comunidade for **Muito ativo**, o geral e **Muito ativo**; caso contrario, se qualquer comunidade for **Ativo**, o geral e **Ativo**; depois **Pouco ativo**; sem comunidade classificada acima disso, **Sem base**.
+- O endpoint real de estatisticas do psicologo agora expõe `community.engagement_diagnosis` com essa agregacao de melhor resultado, enquanto `community.communities[].engagement_diagnosis` continua representando o diagnostico individual de cada comunidade.
+- A UI Admin mostra a tag **Engajamento geral: ...** ao lado do titulo **Estatisticas de comunidade**. A tabela **Comunidades ativas** permanece com os resultados individuais por linha.
+- Essa agregacao prepara a base para um grafico geral futuro de engajamento de psicologos sem criar endpoint paralelo, schema Prisma, migration, package novo, mock, seed ou backfill.

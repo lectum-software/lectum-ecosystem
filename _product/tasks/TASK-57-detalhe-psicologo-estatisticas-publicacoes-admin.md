@@ -418,3 +418,34 @@ Exibir estatísticas de negócio/comunidade e publicações do psicólogo com da
 - `pnpm --dir backend build`
 - `pnpm --dir backend typecheck` apos falha transiente de `prisma generate` com `ENOTEMPTY` durante a primeira execucao de `pnpm check`.
 - `pnpm check` reexecutado com sucesso.
+
+## Ajuste pos-feedback 2026-07-27 - Tag de engajamento geral em Estatisticas de comunidade
+
+- Pedido do usuario: manter a tabela **Comunidades ativas** mostrando o engajamento individual de cada comunidade, mas exibir uma tag na frente do titulo **Estatisticas de comunidade** com o resultado geral do psicologo.
+- O resultado geral e derivado do melhor diagnostico individual entre as comunidades ativas do periodo selecionado: **Muito ativo** prevalece sobre **Ativo**, que prevalece sobre **Pouco ativo**, que prevalece sobre **Sem base**.
+- O endpoint real `GET /api/admin/private/psychologists/:id/statistics` agora expõe `community.engagement_diagnosis` com essa agregacao, enquanto `community.communities[].engagement_diagnosis` continua individual por comunidade.
+- A UI Admin renderiza a tag **Engajamento geral: ...** ao lado do titulo **Estatisticas de comunidade**, reaproveitando as cores dos badges individuais e mantendo layout mobile-first.
+- A decisao prepara a base para um grafico geral futuro de engajamento dos psicologos sem endpoint paralelo, schema Prisma, migration, package novo, mock, seed ou backfill.
+- Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente; o ajuste usou o padrao visual existente da aba **Estatisticas** e o inventario/proto local como referencia auditavel.
+- ADR atualizado: `adrs/0300-diagnostico-engajamento-comunidades-admin.md`.
+
+### Criterios de aceite do ajuste
+
+- [x] A tabela **Comunidades ativas** continua exibindo o engajamento individual por comunidade.
+- [x] O titulo **Estatisticas de comunidade** exibe uma tag com o engajamento geral do psicologo.
+- [x] O engajamento geral usa o melhor resultado individual do periodo selecionado.
+- [x] O contrato real expõe `community.engagement_diagnosis` sem criar endpoint paralelo.
+- [x] Nenhum mock, seed, endpoint simulado, migration, package novo ou backfill artificial foi adicionado.
+
+### Validacao complementar executada
+
+- `pnpm --dir backend exec biome check --write src/utils/admin-community-engagement-diagnosis.ts src/modules/api/admin/private/psychologists/engagement/DTOs/IAdminPsychologistEngagementDTO.ts src/modules/api/admin/private/psychologists/engagement/use-cases/services.ts`
+- `pnpm --dir admin exec biome check --write src/api/req/psychologists/index.ts "src/app/(admin)/psicologos/[id]/client.tsx"`
+- Smoke direto do helper com `pnpm --dir backend exec tsx -e`, confirmando individuais **Pouco ativo**, **Ativo**, **Muito ativo** e geral **Muito ativo** pelo melhor diagnostico.
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check`
+- Busca no build Admin em `admin/.next` confirmou a presenca de **Engajamento geral** no chunk da pagina de psicologo.
+- Chamada direta do service local foi tentada, mas o banco de desenvolvimento recusou nova conexao por limite de sessoes (`EMAXCONNSESSION`); a validacao funcional da agregacao ficou coberta pelo smoke do helper compartilhado e pelos checks/builds.

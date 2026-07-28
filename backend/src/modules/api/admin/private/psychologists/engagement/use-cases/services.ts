@@ -1,6 +1,9 @@
 import type { Resolve } from "@/helpers/return";
 import { error, msg } from "@/helpers/translate";
-import { diagnoseAdminCommunityEngagement } from "@/utils/admin-community-engagement-diagnosis";
+import {
+  bestAdminCommunityEngagementDiagnosis,
+  diagnoseAdminCommunityEngagement,
+} from "@/utils/admin-community-engagement-diagnosis";
 import type { AdminOperatingSystemType } from "@/utils/admin-operating-system";
 import {
   ADMIN_OPERATING_SYSTEM_LABELS,
@@ -1374,6 +1377,10 @@ export const showAdminPsychologistStatistics = async (
     psychologistId: userId,
     repository,
   });
+  const communityEngagementDiagnosis = bestAdminCommunityEngagementDiagnosis({
+    diagnoses: communityItems.map((community) => community.engagement_diagnosis),
+    source: "community.engagement_diagnosis:max",
+  });
   const communityContentDistribution = {
     posts: buildContentFormatDistribution(communityPosts, classifyPostContentFormat),
     replies: buildContentFormatDistribution(communityReplies, classifyReplyContentFormat),
@@ -1557,6 +1564,7 @@ export const showAdminPsychologistStatistics = async (
       ],
       communities: communityItems,
       content_distribution: communityContentDistribution,
+      engagement_diagnosis: communityEngagementDiagnosis,
       series: communitySeries,
     },
     period: period.period,
