@@ -2274,12 +2274,17 @@ const Statistics = ({
           />
           <LocationOverview locations={displayLocations} preview={showLocationPreview} />
         </CardShell>
-        <PlatformUsageCard
-          intentFilter={intentFilters.platformUsage}
-          onIntentFilterChange={setIntentFilter("platformUsage")}
-          platformUsage={platformUsage}
-          summary={summary}
-        />
+        <div className="order-2 min-w-0 xl:order-3 xl:col-span-2">
+          <AnonymousConversionCard summary={summary} />
+        </div>
+        <div className="order-3 min-w-0 xl:order-2">
+          <PlatformUsageCard
+            intentFilter={intentFilters.platformUsage}
+            onIntentFilterChange={setIntentFilter("platformUsage")}
+            platformUsage={platformUsage}
+            summary={summary}
+          />
+        </div>
       </div>
     </section>
   );
@@ -2451,8 +2456,6 @@ const DashboardContent = ({
         />
         <TimelineChart points={summary.series.points} visibleMetricKeys={activeMetricKeys} />
       </CardShell>
-
-      <AnonymousConversionCard summary={summary} />
 
       <PatientIntentAnalysisCard summary={summary} />
 
