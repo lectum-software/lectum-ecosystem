@@ -772,25 +772,34 @@ const buildItem = (
   };
 };
 
-const isHighEngagementCategory = (id: AdminPsychologistsListEngagementCategoryId) =>
-  id === "ativo" || id === "muito_ativo";
+type ListTractionEngagementLevel = "engaged" | "low_engaged" | "very_engaged";
+
+const listEngagementLevelFromCategory = (
+  id: AdminPsychologistsListEngagementCategoryId,
+): ListTractionEngagementLevel => {
+  if (id === "muito_ativo") return "very_engaged";
+  if (id === "ativo") return "engaged";
+
+  return "low_engaged";
+};
 
 const resolveTractionEngagementQuadrant = (
   item: AdminPsychologistsListItem,
 ): AdminPsychologistsListTractionEngagementQuadrantId => {
   const hasStrongTraction = item.traction.id === "strong_traction";
-  const hasHighEngagement = isHighEngagementCategory(item.engagement.id);
+  const engagementLevel = listEngagementLevelFromCategory(item.engagement.id);
+  const hasClassifiedEngagement =
+    engagementLevel === "engaged" || engagementLevel === "very_engaged";
   const hasInsufficientData =
     item.traction.signals.active_days < TRACTION_MIN_ACTIVE_DAYS &&
     !hasStrongTraction &&
-    !hasHighEngagement;
+    !hasClassifiedEngagement;
 
   if (hasInsufficientData) return "insufficient_data";
-  if (hasStrongTraction && hasHighEngagement) return "strong_traction_high_engagement";
-  if (hasStrongTraction) return "strong_traction_low_engagement";
-  if (hasHighEngagement) return "low_traction_high_engagement";
 
-  return "low_traction_low_engagement";
+  const tractionPrefix = hasStrongTraction ? "strong_traction" : "low_traction";
+
+  return `${tractionPrefix}_${engagementLevel}` as AdminPsychologistsListTractionEngagementQuadrantId;
 };
 
 const matchesSignalFilters = (

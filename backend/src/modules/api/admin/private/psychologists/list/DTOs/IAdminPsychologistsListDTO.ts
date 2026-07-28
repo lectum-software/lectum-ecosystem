@@ -24,10 +24,12 @@ export const ADMIN_PSYCHOLOGISTS_LIST_EXPERIENCE = ["0_4", "5_9", "10_plus", "un
 
 export const ADMIN_PSYCHOLOGISTS_LIST_TRACTION_ENGAGEMENT_QUADRANTS = [
   "insufficient_data",
-  "low_traction_high_engagement",
-  "low_traction_low_engagement",
-  "strong_traction_high_engagement",
-  "strong_traction_low_engagement",
+  "low_traction_engaged",
+  "low_traction_low_engaged",
+  "low_traction_very_engaged",
+  "strong_traction_engaged",
+  "strong_traction_low_engaged",
+  "strong_traction_very_engaged",
 ] as const;
 
 export type AdminPsychologistsListSort = (typeof ADMIN_PSYCHOLOGISTS_LIST_SORTS)[number];

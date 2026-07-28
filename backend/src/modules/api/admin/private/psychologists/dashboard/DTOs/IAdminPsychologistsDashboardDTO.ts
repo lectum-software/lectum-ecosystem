@@ -443,10 +443,12 @@ export type AdminPsychologistsDashboardTractionResults = {
 
 export type AdminPsychologistsDashboardTractionEngagementQuadrantId =
   | "insufficient_data"
-  | "low_traction_high_engagement"
-  | "low_traction_low_engagement"
-  | "strong_traction_high_engagement"
-  | "strong_traction_low_engagement";
+  | "low_traction_engaged"
+  | "low_traction_low_engaged"
+  | "low_traction_very_engaged"
+  | "strong_traction_engaged"
+  | "strong_traction_low_engaged"
+  | "strong_traction_very_engaged";
 
 export type AdminPsychologistsDashboardTractionEngagementQuadrant = {
   count: number;
@@ -473,29 +475,40 @@ export type AdminPsychologistsDashboardTractionEngagementRate = {
 
 export type AdminPsychologistsDashboardTractionEngagementResults = {
   comparison: {
+    engaged: AdminPsychologistsDashboardTractionEngagementRate;
     high_engagement: AdminPsychologistsDashboardTractionEngagementRate;
+    low_engaged: AdminPsychologistsDashboardTractionEngagementRate;
     low_engagement: AdminPsychologistsDashboardTractionEngagementRate;
+    engaged_vs_low_rate_difference_points: number | null;
     rate_difference_points: number | null;
+    very_engaged: AdminPsychologistsDashboardTractionEngagementRate;
+    very_vs_low_rate_difference_points: number | null;
   };
   description: string;
   quadrants: AdminPsychologistsDashboardTractionEngagementQuadrant[];
   source: "profile_view_event+contact_request+psychologist_favorite+community_post+post_reply+post_vote";
   thresholds: {
+    engaged_interactions_30d: number;
     high_engagement_interactions_30d: number;
+    highly_engaged_interactions_30d: number;
     minimum_active_days: number;
+    minimum_signal_interactions_30d: number;
     traction_strong_whatsapp_high_30d: number;
     traction_strong_whatsapp_with_conversion_30d: number;
     traction_strong_conversion_rate_percent: number;
   };
   totals: {
     community_interactions: number;
+    engaged_psychologists: number;
     high_engagement_psychologists: number;
     insufficient_data_psychologists: number;
+    low_engaged_psychologists: number;
     low_engagement_psychologists: number;
     posts: number;
     psychologists: number;
     replies: number;
     strong_traction_psychologists: number;
+    very_engaged_psychologists: number;
     votes: number;
   };
   unavailable_reason: string | null;

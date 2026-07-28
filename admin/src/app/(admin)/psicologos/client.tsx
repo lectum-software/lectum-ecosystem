@@ -18,7 +18,7 @@ import {
   UsersRound,
 } from "lucide-react";
 import Link from "next/link";
-import { type FocusEvent, type ReactNode, useMemo, useState } from "react";
+import { type FocusEvent, Fragment, type ReactNode, useMemo, useState } from "react";
 import { useAdminPsychologistsDashboard } from "@/api/callers/psychologists";
 import { resolveApiError } from "@/api/handle";
 import type {
@@ -50,9 +50,10 @@ type TractionCategoryItem = AdminPsychologistsDashboard["traction"]["categories"
 type TractionEngagementQuadrantItem =
   AdminPsychologistsDashboard["traction_engagement"]["quadrants"][number];
 type PsychologistEngagementDonutBucketId =
-  | "high_engagement"
+  | "engaged"
   | "insufficient_data"
-  | "low_engagement";
+  | "low_engaged"
+  | "very_engaged";
 type PsychologistsDonutChartItem = {
   color: string;
   count: number;
@@ -296,23 +297,58 @@ const TRACTION_CHART_COLORS = {
 
 const TRACTION_ENGAGEMENT_COLORS = {
   insufficient_data: "#94a3b8",
-  low_traction_high_engagement: "#8b5cf6",
-  low_traction_low_engagement: "#f59f00",
-  strong_traction_high_engagement: "#13a85b",
-  strong_traction_low_engagement: "#308ce8",
+  low_traction_engaged: "#8b5cf6",
+  low_traction_low_engaged: "#f59f00",
+  low_traction_very_engaged: "#a855f7",
+  strong_traction_engaged: "#308ce8",
+  strong_traction_low_engaged: "#f59f00",
+  strong_traction_very_engaged: "#13a85b",
 } satisfies Record<TractionEngagementQuadrantItem["id"], string>;
 
 const PSYCHOLOGIST_ENGAGEMENT_DONUT_COLORS = {
-  high_engagement: TRACTION_ENGAGEMENT_COLORS.strong_traction_high_engagement,
+  engaged: TRACTION_ENGAGEMENT_COLORS.strong_traction_engaged,
   insufficient_data: TRACTION_ENGAGEMENT_COLORS.insufficient_data,
-  low_engagement: TRACTION_ENGAGEMENT_COLORS.low_traction_low_engagement,
+  low_engaged: TRACTION_ENGAGEMENT_COLORS.low_traction_low_engaged,
+  very_engaged: TRACTION_ENGAGEMENT_COLORS.strong_traction_very_engaged,
 } satisfies Record<PsychologistEngagementDonutBucketId, string>;
 
-const TRACTION_ENGAGEMENT_MATRIX_ORDER: TractionEngagementQuadrantItem["id"][] = [
-  "strong_traction_high_engagement",
-  "strong_traction_low_engagement",
-  "low_traction_high_engagement",
-  "low_traction_low_engagement",
+const TRACTION_ENGAGEMENT_MATRIX_COLUMNS: {
+  headerClassName: string;
+  id: PsychologistEngagementDonutBucketId;
+  label: string;
+}[] = [
+  {
+    headerClassName: "bg-primary-soft text-primary",
+    id: "very_engaged",
+    label: "Muito engajado",
+  },
+  {
+    headerClassName: "bg-primary-soft/70 text-primary",
+    id: "engaged",
+    label: "Engajado",
+  },
+  {
+    headerClassName: "bg-surface-muted text-muted",
+    id: "low_engaged",
+    label: "Pouco engajado",
+  },
+];
+
+const TRACTION_ENGAGEMENT_MATRIX_ROWS: {
+  className: string;
+  ids: TractionEngagementQuadrantItem["id"][];
+  label: string;
+}[] = [
+  {
+    className: "bg-primary-soft text-primary",
+    ids: ["strong_traction_very_engaged", "strong_traction_engaged", "strong_traction_low_engaged"],
+    label: "Tração forte",
+  },
+  {
+    className: "bg-surface-muted text-muted",
+    ids: ["low_traction_very_engaged", "low_traction_engaged", "low_traction_low_engaged"],
+    label: "Sem tração forte",
+  },
 ];
 
 const TRACTION_ENGAGEMENT_LIST_INSTRUCTION =
@@ -2357,14 +2393,15 @@ const buildPsychologistEngagementDonutItems = (
 
   return [
     buildItem(
-      "high_engagement",
-      "Alto engajamento",
-      Math.max(0, tractionEngagement.totals.high_engagement_psychologists),
+      "very_engaged",
+      "Muito engajado",
+      Math.max(0, tractionEngagement.totals.very_engaged_psychologists),
     ),
+    buildItem("engaged", "Engajado", Math.max(0, tractionEngagement.totals.engaged_psychologists)),
     buildItem(
-      "low_engagement",
-      "Baixo engajamento",
-      Math.max(0, tractionEngagement.totals.low_engagement_psychologists),
+      "low_engaged",
+      "Pouco engajado",
+      Math.max(0, tractionEngagement.totals.low_engaged_psychologists),
     ),
     buildItem(
       "insufficient_data",
@@ -2582,8 +2619,9 @@ const DashboardTractionEngagementCard = ({ summary }: { summary: AdminPsychologi
   if (!tractionEngagement) return null;
 
   const insufficientData = findTractionEngagementQuadrant(tractionEngagement, "insufficient_data");
-  const highEngagement = tractionEngagement.comparison.high_engagement;
-  const lowEngagement = tractionEngagement.comparison.low_engagement;
+  const veryEngaged = tractionEngagement.comparison.very_engaged;
+  const engaged = tractionEngagement.comparison.engaged;
+  const lowEngaged = tractionEngagement.comparison.low_engaged;
   const rateDifference = tractionEngagement.comparison.rate_difference_points;
 
   return (
@@ -2609,88 +2647,77 @@ const DashboardTractionEngagementCard = ({ summary }: { summary: AdminPsychologi
       ) : (
         <div className="mt-5 grid gap-5 xl:grid-cols-[minmax(0,1.18fr)_minmax(280px,0.82fr)]">
           <div className="min-w-0">
-            <div className="grid gap-2 sm:grid-cols-[88px_minmax(0,1fr)_minmax(0,1fr)]">
+            <div className="grid gap-2 sm:grid-cols-[88px_repeat(3,minmax(0,1fr))]">
               <div className="hidden sm:block" aria-hidden />
-              <p className="rounded-2xl bg-primary-soft px-3 py-2 text-center text-xs font-black text-primary">
-                Alto engajamento
-              </p>
-              <p className="rounded-2xl bg-surface-muted px-3 py-2 text-center text-xs font-black text-muted">
-                Baixo engajamento
-              </p>
+              {TRACTION_ENGAGEMENT_MATRIX_COLUMNS.map((column) => (
+                <p
+                  className={cn(
+                    "hidden rounded-2xl px-3 py-2 text-center text-xs font-black sm:block",
+                    column.headerClassName,
+                  )}
+                  key={column.id}
+                >
+                  {column.label}
+                </p>
+              ))}
 
-              <p className="hidden place-items-center rounded-2xl bg-primary-soft px-2 text-center text-[0.68rem] font-black text-primary sm:grid">
-                Tração forte
-              </p>
-              {TRACTION_ENGAGEMENT_MATRIX_ORDER.slice(0, 2).map((id) => {
-                const quadrant = findTractionEngagementQuadrant(tractionEngagement, id);
-                const color = TRACTION_ENGAGEMENT_COLORS[id];
+              {TRACTION_ENGAGEMENT_MATRIX_ROWS.map((row) => (
+                <Fragment key={row.label}>
+                  <p
+                    className={cn(
+                      "hidden place-items-center rounded-2xl px-2 text-center text-[0.68rem] font-black sm:grid",
+                      row.className,
+                    )}
+                  >
+                    {row.label}
+                  </p>
+                  {row.ids.map((id) => {
+                    const quadrant = findTractionEngagementQuadrant(tractionEngagement, id);
+                    const color = TRACTION_ENGAGEMENT_COLORS[id];
 
-                return (
-                  <TractionEngagementQuadrantButton
-                    color={color}
-                    key={id}
-                    planSegment={tractionEngagementPlanSegment}
-                    quadrant={quadrant}
-                  />
-                );
-              })}
-
-              <p className="hidden place-items-center rounded-2xl bg-surface-muted px-2 text-center text-[0.68rem] font-black text-muted sm:grid">
-                Sem tração forte
-              </p>
-              {TRACTION_ENGAGEMENT_MATRIX_ORDER.slice(2).map((id) => {
-                const quadrant = findTractionEngagementQuadrant(tractionEngagement, id);
-                const color = TRACTION_ENGAGEMENT_COLORS[id];
-
-                return (
-                  <TractionEngagementQuadrantButton
-                    color={color}
-                    key={id}
-                    planSegment={tractionEngagementPlanSegment}
-                    quadrant={quadrant}
-                  />
-                );
-              })}
+                    return (
+                      <TractionEngagementQuadrantButton
+                        color={color}
+                        key={id}
+                        planSegment={tractionEngagementPlanSegment}
+                        quadrant={quadrant}
+                      />
+                    );
+                  })}
+                </Fragment>
+              ))}
             </div>
 
-            {insufficientData.count > 0 ? (
-              <article className="mt-3 rounded-[1.35rem] border border-border bg-surface-muted p-4">
-                <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span
-                        aria-hidden
-                        className="h-3 w-3 shrink-0 rounded-full"
-                        style={{ backgroundColor: TRACTION_ENGAGEMENT_COLORS.insufficient_data }}
-                      />
-                      <h3 className="text-sm font-black text-foreground">
-                        {insufficientData.label}
-                      </h3>
-                    </div>
-                    <p className="mt-1 text-xs font-bold leading-5 text-muted">
-                      {insufficientData.description}
-                    </p>
-                  </div>
-                  <p className="text-sm font-black text-foreground">
-                    {numberFormatter.format(insufficientData.count)}
-                    <span className="ml-1 text-xs font-bold text-muted">
-                      ({formatPercentageValue(insufficientData.percentage)})
-                    </span>
-                  </p>
-                </div>
-              </article>
-            ) : null}
+            <div className="mt-3">
+              <TractionEngagementQuadrantButton
+                color={TRACTION_ENGAGEMENT_COLORS.insufficient_data}
+                planSegment={tractionEngagementPlanSegment}
+                quadrant={insufficientData}
+              />
+            </div>
           </div>
 
           <aside className="grid content-start gap-3">
             <TractionEngagementMetric
+              label="Tração entre muito engajados"
+              value={
+                <>
+                  {formatNullablePercentage(veryEngaged.strong_traction_rate)}
+                  <span className="ml-1 text-xs font-bold text-muted">
+                    · {numberFormatter.format(veryEngaged.strong_traction_count)}/
+                    {numberFormatter.format(veryEngaged.psychologists)}
+                  </span>
+                </>
+              }
+            />
+            <TractionEngagementMetric
               label="Tração entre engajados"
               value={
                 <>
-                  {formatNullablePercentage(highEngagement.strong_traction_rate)}
+                  {formatNullablePercentage(engaged.strong_traction_rate)}
                   <span className="ml-1 text-xs font-bold text-muted">
-                    · {numberFormatter.format(highEngagement.strong_traction_count)}/
-                    {numberFormatter.format(highEngagement.psychologists)}
+                    · {numberFormatter.format(engaged.strong_traction_count)}/
+                    {numberFormatter.format(engaged.psychologists)}
                   </span>
                 </>
               }
@@ -2699,10 +2726,10 @@ const DashboardTractionEngagementCard = ({ summary }: { summary: AdminPsychologi
               label="Tração entre pouco engajados"
               value={
                 <>
-                  {formatNullablePercentage(lowEngagement.strong_traction_rate)}
+                  {formatNullablePercentage(lowEngaged.strong_traction_rate)}
                   <span className="ml-1 text-xs font-bold text-muted">
-                    · {numberFormatter.format(lowEngagement.strong_traction_count)}/
-                    {numberFormatter.format(lowEngagement.psychologists)}
+                    · {numberFormatter.format(lowEngaged.strong_traction_count)}/
+                    {numberFormatter.format(lowEngaged.psychologists)}
                   </span>
                 </>
               }
@@ -2714,20 +2741,24 @@ const DashboardTractionEngagementCard = ({ summary }: { summary: AdminPsychologi
             <div className="rounded-[1.35rem] border border-border bg-surface-muted p-4 text-xs font-bold leading-5 text-muted">
               {typeof rateDifference === "number" ? (
                 <>
-                  Impacto observado: psicólogos com alto engajamento apresentam{" "}
+                  Impacto observado: psicólogos muito engajados e engajados apresentam, juntos,{" "}
                   <span className="font-black text-foreground">
                     {formatRateDifference(rateDifference)}
                   </span>{" "}
                   na taxa de tração forte versus pouco engajados no período.
                 </>
               ) : (
-                "Impacto observado: ainda não há base suficiente para comparar a tração entre engajados e pouco engajados no período."
+                "Impacto observado: ainda não há base suficiente para comparar a tração entre muito engajados, engajados e pouco engajados no período."
               )}{" "}
-              Critério:{" "}
+              Critério: Muito engajado ={" "}
               {numberFormatter.format(
-                tractionEngagement.thresholds.high_engagement_interactions_30d,
+                tractionEngagement.thresholds.highly_engaged_interactions_30d,
               )}
-              + interações em comunidade a cada 30 dias.
+              +; Engajado ={" "}
+              {numberFormatter.format(tractionEngagement.thresholds.engaged_interactions_30d)}+;
+              Pouco engajado = abaixo desse corte; Dados insuficientes = menos de{" "}
+              {numberFormatter.format(tractionEngagement.thresholds.minimum_active_days)} dias
+              ativos sem sinal forte.
             </div>
           </aside>
         </div>

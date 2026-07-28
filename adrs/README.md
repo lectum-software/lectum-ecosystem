@@ -157,3 +157,4 @@ Formato recomendado:
 - [ADR-0334 - Filtros administrativos antes de Especialidade na lista Admin de psicologos](0334-filtros-administrativos-modal-lista-psicologos.md) - Accepted
 - [ADR-0335 - Tracao e engajamento em duas colunas no dashboard Admin de psicologos](0335-tracao-engajamento-duas-colunas-dashboard-psicologos.md) - Accepted
 - [ADR-0336 - Query key canonica para filtros da lista Admin de psicologos](0336-query-key-filtros-lista-psicologos-admin.md) - Accepted
+- [ADR-0337 - Detalhamento de Engajamento no dashboard Admin de psicologos](0337-detalhamento-engajamento-tracao-dashboard-psicologos.md) - Accepted

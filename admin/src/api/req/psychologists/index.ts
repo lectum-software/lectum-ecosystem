@@ -22,10 +22,12 @@ export type PsychologistsListEngagementId = "ativo" | "muito_ativo" | "pouco_ati
 
 export type PsychologistsListTractionEngagementQuadrantId =
   | "insufficient_data"
-  | "low_traction_high_engagement"
-  | "low_traction_low_engagement"
-  | "strong_traction_high_engagement"
-  | "strong_traction_low_engagement";
+  | "low_traction_engaged"
+  | "low_traction_low_engaged"
+  | "low_traction_very_engaged"
+  | "strong_traction_engaged"
+  | "strong_traction_low_engaged"
+  | "strong_traction_very_engaged";
 
 export type PsychologistsListExperience = "0_4" | "5_9" | "10_plus" | "unknown";
 
@@ -489,10 +491,12 @@ export type PsychologistsDashboardTractionResults = {
 
 export type PsychologistsDashboardTractionEngagementQuadrantId =
   | "insufficient_data"
-  | "low_traction_high_engagement"
-  | "low_traction_low_engagement"
-  | "strong_traction_high_engagement"
-  | "strong_traction_low_engagement";
+  | "low_traction_engaged"
+  | "low_traction_low_engaged"
+  | "low_traction_very_engaged"
+  | "strong_traction_engaged"
+  | "strong_traction_low_engaged"
+  | "strong_traction_very_engaged";
 
 export type PsychologistsDashboardTractionEngagementQuadrant = {
   count: number;
@@ -519,29 +523,40 @@ export type PsychologistsDashboardTractionEngagementRate = {
 
 export type PsychologistsDashboardTractionEngagementResults = {
   comparison: {
+    engaged: PsychologistsDashboardTractionEngagementRate;
     high_engagement: PsychologistsDashboardTractionEngagementRate;
+    low_engaged: PsychologistsDashboardTractionEngagementRate;
     low_engagement: PsychologistsDashboardTractionEngagementRate;
+    engaged_vs_low_rate_difference_points: number | null;
     rate_difference_points: number | null;
+    very_engaged: PsychologistsDashboardTractionEngagementRate;
+    very_vs_low_rate_difference_points: number | null;
   };
   description: string;
   quadrants: PsychologistsDashboardTractionEngagementQuadrant[];
   source: "profile_view_event+contact_request+psychologist_favorite+community_post+post_reply+post_vote";
   thresholds: {
+    engaged_interactions_30d: number;
     high_engagement_interactions_30d: number;
+    highly_engaged_interactions_30d: number;
     minimum_active_days: number;
+    minimum_signal_interactions_30d: number;
     traction_strong_whatsapp_high_30d: number;
     traction_strong_whatsapp_with_conversion_30d: number;
     traction_strong_conversion_rate_percent: number;
   };
   totals: {
     community_interactions: number;
+    engaged_psychologists: number;
     high_engagement_psychologists: number;
     insufficient_data_psychologists: number;
+    low_engaged_psychologists: number;
     low_engagement_psychologists: number;
     posts: number;
     psychologists: number;
     replies: number;
     strong_traction_psychologists: number;
+    very_engaged_psychologists: number;
     votes: number;
   };
   unavailable_reason: string | null;

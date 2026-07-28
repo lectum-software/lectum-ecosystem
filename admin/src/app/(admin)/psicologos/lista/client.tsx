@@ -170,23 +170,38 @@ const REGISTRY_STATUS_FILTER_OPTIONS: PsychologistsListOption[] = [
 const TRACTION_ENGAGEMENT_FILTER_OPTIONS: PsychologistsListOption[] = [
   {
     count: 0,
-    id: "strong_traction_high_engagement",
-    label: "Tração forte + alto engajamento",
+    id: "strong_traction_very_engaged",
+    label: "Tra\u00e7\u00e3o forte + muito engajado",
   },
   {
     count: 0,
-    id: "strong_traction_low_engagement",
-    label: "Tração forte + baixo engajamento",
+    id: "strong_traction_engaged",
+    label: "Tra\u00e7\u00e3o forte + engajado",
   },
   {
     count: 0,
-    id: "low_traction_high_engagement",
-    label: "Alto engajamento + baixa tração",
+    id: "strong_traction_low_engaged",
+    label: "Tra\u00e7\u00e3o forte + pouco engajado",
   },
   {
     count: 0,
-    id: "low_traction_low_engagement",
-    label: "Baixa tração + baixo engajamento",
+    id: "low_traction_very_engaged",
+    label: "Sem tra\u00e7\u00e3o forte + muito engajado",
+  },
+  {
+    count: 0,
+    id: "low_traction_engaged",
+    label: "Sem tra\u00e7\u00e3o forte + engajado",
+  },
+  {
+    count: 0,
+    id: "low_traction_low_engaged",
+    label: "Sem tra\u00e7\u00e3o forte + pouco engajado",
+  },
+  {
+    count: 0,
+    id: "insufficient_data",
+    label: "Dados insuficientes",
   },
 ];
 
