@@ -49,6 +49,17 @@ type DeviceUsageItem = AdminPsychologistsDashboard["device_usage"]["items"][numb
 type TractionCategoryItem = AdminPsychologistsDashboard["traction"]["categories"][number];
 type TractionEngagementQuadrantItem =
   AdminPsychologistsDashboard["traction_engagement"]["quadrants"][number];
+type PsychologistEngagementDonutBucketId =
+  | "high_engagement"
+  | "insufficient_data"
+  | "low_engagement";
+type PsychologistsDonutChartItem = {
+  color: string;
+  count: number;
+  id: string;
+  label: string;
+  percentage: number;
+};
 type PlanSegmentFilter = PsychologistsDashboardPlanSegment;
 type SignupMethodItem = AdminPsychologistsDashboard["signup_method"]["items"][number];
 type SupplyDemandSortKey = "psychologists" | "searches" | "searches_per_psychologist";
@@ -290,6 +301,12 @@ const TRACTION_ENGAGEMENT_COLORS = {
   strong_traction_high_engagement: "#13a85b",
   strong_traction_low_engagement: "#308ce8",
 } satisfies Record<TractionEngagementQuadrantItem["id"], string>;
+
+const PSYCHOLOGIST_ENGAGEMENT_DONUT_COLORS = {
+  high_engagement: TRACTION_ENGAGEMENT_COLORS.strong_traction_high_engagement,
+  insufficient_data: TRACTION_ENGAGEMENT_COLORS.insufficient_data,
+  low_engagement: TRACTION_ENGAGEMENT_COLORS.low_traction_low_engagement,
+} satisfies Record<PsychologistEngagementDonutBucketId, string>;
 
 const TRACTION_ENGAGEMENT_MATRIX_ORDER: TractionEngagementQuadrantItem["id"][] = [
   "strong_traction_high_engagement",
@@ -2182,206 +2199,250 @@ const CardsGrid = ({
   );
 };
 
-const TractionDonutChart = ({
-  traction,
+const PsychologistsDonutChart = ({
+  ariaLabel,
+  emptyMessage,
+  items,
+  total,
 }: {
-  traction: AdminPsychologistsDashboard["traction"];
+  ariaLabel: string;
+  emptyMessage: string;
+  items: PsychologistsDonutChartItem[];
+  total: number;
 }) => {
-  const center = 60;
-  const radius = 48;
-  const innerRadius = 31;
-  const total = Math.max(0, traction.totals.psychologists);
-  const visibleItems = traction.categories.filter((item) => item.count > 0);
+  const radius = 42;
+  const circumference = 2 * Math.PI * radius;
+  const visibleItems = items.filter((item) => item.count > 0);
   const segments = visibleItems.reduce<{
-    currentAngle: number;
+    cumulative: number;
     items: Array<{
-      endAngle: number;
-      item: TractionCategoryItem;
-      share: number;
-      startAngle: number;
+      dash: number;
+      item: PsychologistsDonutChartItem;
+      strokeDashoffset: number;
     }>;
   }>(
     (accumulator, item) => {
       const share = total > 0 ? item.count / total : 0;
-      if (share <= 0) return accumulator;
-
-      const startAngle = accumulator.currentAngle;
-      const endAngle = startAngle + share * 360;
+      const dash = share * circumference;
 
       return {
-        currentAngle: endAngle,
-        items: accumulator.items.concat({
-          endAngle,
-          item,
-          share,
-          startAngle,
-        }),
+        cumulative: accumulator.cumulative + dash,
+        items: [
+          ...accumulator.items,
+          {
+            dash,
+            item,
+            strokeDashoffset: -accumulator.cumulative,
+          },
+        ],
       };
     },
-    { currentAngle: -90, items: [] },
+    { cumulative: 0, items: [] },
   ).items;
 
-  if (total === 0) {
+  if (items.length === 0 || visibleItems.length === 0 || total === 0) {
     return (
       <p className="mt-5 rounded-2xl border border-dashed border-border bg-surface-muted p-4 text-sm font-bold text-muted">
-        {traction.unavailable_reason ??
-          "Sem psicólogos ativos no período selecionado para classificar Tração."}
+        {emptyMessage}
       </p>
     );
   }
 
-  const ariaLabel =
-    "Gráfico de donut de Tração dos psicólogos: " +
-    traction.categories
-      .map(
-        (item) =>
-          item.label +
-          ": " +
-          numberFormatter.format(item.count) +
-          " (" +
-          formatPercentageValue(item.percentage) +
-          ")",
-      )
-      .join("; ") +
-    ".";
-
   return (
-    <figure className="mt-5 grid gap-5 lg:grid-cols-[minmax(11rem,15rem)_1fr] lg:items-center">
-      <svg
-        aria-label={ariaLabel}
-        className="mx-auto aspect-square w-44 sm:w-48"
-        role="img"
-        viewBox="0 0 120 120"
-      >
-        <circle
-          cx={center}
-          cy={center}
-          fill="var(--admin-surface-muted)"
-          r={radius}
-          stroke="var(--admin-border)"
-          strokeWidth="1"
-        />
-        {segments.map((segment) => {
-          const color = TRACTION_CHART_COLORS[segment.item.id];
-          const labelPoint = getPiePoint(
-            center,
-            radius * 0.58,
-            (segment.startAngle + segment.endAngle) / 2,
-          );
-          const percentageLabel = formatPercentageValue(segment.item.percentage);
-
-          if (segment.share >= 0.999) {
-            return (
-              <g key={segment.item.id}>
-                <circle
-                  cx={center}
-                  cy={center}
-                  fill={color}
-                  r={radius}
-                  stroke="var(--admin-surface)"
-                  strokeWidth="1.4"
-                />
-                {renderPiePercentageLabel({
-                  color,
-                  label: percentageLabel,
-                  x: center,
-                  y: center,
-                })}
-              </g>
-            );
-          }
-
-          return (
-            <g key={segment.item.id}>
-              <path
-                d={buildPieSlicePath(center, radius, segment.startAngle, segment.endAngle)}
-                fill={color}
-                stroke="var(--admin-surface)"
-                strokeWidth="1.4"
-              />
-              {segment.share > 1
-                ? renderPiePercentageLabel({
-                    color,
-                    label: percentageLabel,
-                    x: labelPoint.x,
-                    y: labelPoint.y,
-                  })
-                : null}
-            </g>
-          );
-        })}
-        <circle
-          aria-hidden
-          cx={center}
-          cy={center}
-          fill="var(--admin-surface)"
-          r={innerRadius}
-          stroke="var(--admin-surface)"
-          strokeWidth="1"
-        />
-        <text
-          fill="var(--admin-foreground)"
-          fontSize="15"
-          fontWeight="900"
-          textAnchor="middle"
-          x={center}
-          y={center - 2}
+    <figure className="mt-5">
+      <div className="grid min-w-0 gap-5 2xl:grid-cols-[170px_minmax(0,1fr)] 2xl:items-center">
+        <svg
+          aria-label={ariaLabel}
+          className="mx-auto aspect-square w-full max-w-[12rem] min-w-0"
+          role="img"
+          viewBox="0 0 120 120"
         >
-          {numberFormatter.format(total)}
-        </text>
-        <text
-          fill="var(--admin-muted)"
-          fontSize="8"
-          fontWeight="700"
-          textAnchor="middle"
-          x={center}
-          y={center + 12}
-        >
-          total
-        </text>
-      </svg>
-      <figcaption className="grid gap-3 md:grid-cols-2">
-        {traction.categories.map((item) => {
-          const color = TRACTION_CHART_COLORS[item.id];
+          <circle
+            cx="60"
+            cy="60"
+            fill="none"
+            r={radius}
+            stroke="var(--admin-surface-muted)"
+            strokeWidth="18"
+          />
+          {segments.map(({ dash, item, strokeDashoffset }) => (
+            <circle
+              cx="60"
+              cy="60"
+              fill="none"
+              key={item.id}
+              r={radius}
+              stroke={item.color}
+              strokeDasharray={`${dash} ${circumference - dash}`}
+              strokeDashoffset={strokeDashoffset}
+              strokeWidth="18"
+              transform="rotate(-90 60 60)"
+            />
+          ))}
+          <text
+            fill="var(--admin-foreground)"
+            fontSize="15"
+            fontWeight="900"
+            textAnchor="middle"
+            x="60"
+            y="58"
+          >
+            {numberFormatter.format(total)}
+          </text>
+          <text
+            fill="var(--admin-muted)"
+            fontSize="8"
+            fontWeight="700"
+            textAnchor="middle"
+            x="60"
+            y="72"
+          >
+            total
+          </text>
+        </svg>
 
-          return (
-            <article
-              className={cn(
-                "rounded-2xl bg-surface-muted p-3",
-                item.id === "insufficient_data" && "md:col-span-2",
-              )}
+        <div className="min-w-0 space-y-3">
+          {items.map((item) => (
+            <div
+              className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-start gap-3"
               key={item.id}
             >
-              <div className="flex items-start justify-between gap-3">
-                <span className="flex min-w-0 items-center gap-2 text-sm font-black text-foreground">
-                  <span
-                    aria-hidden
-                    className="mt-0.5 h-3 w-3 shrink-0 rounded-full"
-                    style={{ backgroundColor: color }}
-                  />
-                  <span>{item.label}</span>
+              <span className="flex min-w-0 items-start gap-2 text-sm font-semibold leading-5 text-foreground">
+                <span
+                  aria-hidden
+                  className="mt-1 h-2.5 w-2.5 shrink-0 rounded-full"
+                  style={{ backgroundColor: item.color }}
+                />
+                <span className="min-w-0 break-words">{item.label}</span>
+              </span>
+              <span className="shrink-0 text-right text-sm font-semibold text-foreground">
+                {numberFormatter.format(item.count)}{" "}
+                <span className="text-xs font-medium text-muted">
+                  ({formatPercentageValue(item.percentage)})
                 </span>
-                <span className="shrink-0 text-sm font-black text-foreground">
-                  {numberFormatter.format(item.count)}{" "}
-                  <span className="font-bold text-muted">
-                    ({formatPercentageValue(item.percentage)})
-                  </span>
-                </span>
-              </div>
-              <p className="mt-1 text-xs font-bold leading-5 text-muted">{item.description}</p>
-            </article>
-          );
-        })}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+      <figcaption className="sr-only">
+        {items
+          .map(
+            (item) =>
+              `${item.label}: ${numberFormatter.format(item.count)} (${formatPercentageValue(
+                item.percentage,
+              )})`,
+          )
+          .join("; ")}
       </figcaption>
     </figure>
   );
 };
 
+const buildPsychologistEngagementDonutItems = (
+  tractionEngagement: AdminPsychologistsDashboard["traction_engagement"],
+): PsychologistsDonutChartItem[] => {
+  const total = Math.max(0, tractionEngagement.totals.psychologists);
+  const buildItem = (
+    id: PsychologistEngagementDonutBucketId,
+    label: string,
+    count: number,
+  ): PsychologistsDonutChartItem => ({
+    color: PSYCHOLOGIST_ENGAGEMENT_DONUT_COLORS[id],
+    count,
+    id,
+    label,
+    percentage: total > 0 ? toOneDecimal((count / total) * 100) : 0,
+  });
+
+  return [
+    buildItem(
+      "high_engagement",
+      "Alto engajamento",
+      Math.max(0, tractionEngagement.totals.high_engagement_psychologists),
+    ),
+    buildItem(
+      "low_engagement",
+      "Baixo engajamento",
+      Math.max(0, tractionEngagement.totals.low_engagement_psychologists),
+    ),
+    buildItem(
+      "insufficient_data",
+      "Dados insuficientes",
+      Math.max(0, tractionEngagement.totals.insufficient_data_psychologists),
+    ),
+  ];
+};
+
+const TractionDonutChart = ({
+  traction,
+}: {
+  traction: AdminPsychologistsDashboard["traction"];
+}) => {
+  const total = Math.max(0, traction.totals.psychologists);
+  const items = traction.categories.map((item) => ({
+    color: TRACTION_CHART_COLORS[item.id],
+    count: item.count,
+    id: item.id,
+    label: item.label,
+    percentage: item.percentage,
+  }));
+  const ariaLabel = `Gráfico de donut de Tração dos psicólogos: ${traction.categories
+    .map(
+      (item) =>
+        `${item.label}: ${numberFormatter.format(item.count)} (${formatPercentageValue(
+          item.percentage,
+        )})`,
+    )
+    .join("; ")}.`;
+
+  return (
+    <PsychologistsDonutChart
+      ariaLabel={ariaLabel}
+      emptyMessage={
+        traction.unavailable_reason ??
+        "Sem psicólogos ativos no período selecionado para classificar Tração."
+      }
+      items={items}
+      total={total}
+    />
+  );
+};
+
+const PsychologistEngagementDonutChart = ({
+  tractionEngagement,
+}: {
+  tractionEngagement: AdminPsychologistsDashboard["traction_engagement"];
+}) => {
+  const total = Math.max(0, tractionEngagement.totals.psychologists);
+  const items = buildPsychologistEngagementDonutItems(tractionEngagement);
+  const ariaLabel = `Gráfico de donut de Engajamento dos psicólogos: ${items
+    .map(
+      (item) =>
+        `${item.label}: ${numberFormatter.format(item.count)} (${formatPercentageValue(
+          item.percentage,
+        )})`,
+    )
+    .join("; ")}.`;
+
+  return (
+    <PsychologistsDonutChart
+      ariaLabel={ariaLabel}
+      emptyMessage={
+        tractionEngagement.unavailable_reason ??
+        "Sem psicólogos ativos no período selecionado para classificar Engajamento."
+      }
+      items={items}
+      total={total}
+    />
+  );
+};
 const DashboardTractionCard = ({ summary }: { summary: AdminPsychologistsDashboard }) => {
   const [tractionPlanSegment, setTractionPlanSegment] = useState<PlanSegmentFilter>("all");
   const tractionSegmentSummary = getPlanSegmentSummary(summary, tractionPlanSegment);
   const traction = tractionSegmentSummary.traction;
-  if (!traction) return null;
+  const tractionEngagement = tractionSegmentSummary.traction_engagement;
+  if (!traction || !tractionEngagement) return null;
 
   return (
     <CardShell className="p-5">
@@ -2389,7 +2450,7 @@ const DashboardTractionCard = ({ summary }: { summary: AdminPsychologistsDashboa
         <PanelTitle
           description={formatSelectedPeriod(summary.period)}
           icon={Activity}
-          title="Tração"
+          title="Tração e engajamento dos psicólogos"
         />
         <PlanSegmentSelect
           id="traction-plan-segment"
@@ -2397,11 +2458,37 @@ const DashboardTractionCard = ({ summary }: { summary: AdminPsychologistsDashboa
           value={tractionPlanSegment}
         />
       </div>
-      <TractionDonutChart traction={traction} />
+
+      <div className="mt-5 grid gap-4 xl:grid-cols-2">
+        <section className="min-w-0 rounded-[1.6rem] border border-border/75 bg-surface-muted/70 p-4">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <h3 className="text-lg font-bold text-foreground">Tração</h3>
+              <p className="mt-1 text-3xl font-black text-foreground">
+                {numberFormatter.format(traction.totals.psychologists)}
+              </p>
+              <p className="mt-1 text-sm font-bold text-muted">psicólogos considerados</p>
+            </div>
+          </div>
+          <TractionDonutChart traction={traction} />
+        </section>
+
+        <section className="min-w-0 rounded-[1.6rem] border border-border/75 bg-surface-muted/70 p-4">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <h3 className="text-lg font-bold text-foreground">Engajamento</h3>
+              <p className="mt-1 text-3xl font-black text-foreground">
+                {numberFormatter.format(tractionEngagement.totals.psychologists)}
+              </p>
+              <p className="mt-1 text-sm font-bold text-muted">psicólogos considerados</p>
+            </div>
+          </div>
+          <PsychologistEngagementDonutChart tractionEngagement={tractionEngagement} />
+        </section>
+      </div>
     </CardShell>
   );
 };
-
 const findTractionEngagementQuadrant = (
   tractionEngagement: AdminPsychologistsDashboard["traction_engagement"],
   id: TractionEngagementQuadrantItem["id"],

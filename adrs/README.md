@@ -155,3 +155,4 @@ Formato recomendado:
 - [ADR-0332 - Catalogo canonico de especialidades na lista Admin de psicologos](0332-catalogo-especialidades-lista-admin-psicologos.md) - Accepted
 - [ADR-0333 - Quadrantes de Tracao x Engajamento navegam para lista filtrada](0333-quadrantes-tracao-engajamento-lista-filtrada.md) - Accepted
 - [ADR-0334 - Filtros administrativos antes de Especialidade na lista Admin de psicologos](0334-filtros-administrativos-modal-lista-psicologos.md) - Accepted
+- [ADR-0335 - Tracao e engajamento em duas colunas no dashboard Admin de psicologos](0335-tracao-engajamento-duas-colunas-dashboard-psicologos.md) - Accepted

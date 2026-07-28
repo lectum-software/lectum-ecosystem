@@ -71,3 +71,32 @@ As metricas sao calculadas dentro da janela temporal selecionada e normalizadas 
 - Nao houve alteracao de `backend/prisma/schema.prisma` nem de `backend/prisma/migrations`; portanto `pnpm --dir backend db:migrate` nao se aplica.
 - A classificacao e agregada e operacional. Nao deve ser exibida em perfil publico nem usada como ranking.
 - A interface da Tracao deve priorizar leitura executiva: pizza + categorias com quantidade, percentual e descricao curta, sem exibir totais tecnicos ou criterios de corte no card.
+
+## Ajuste pos-feedback 2026-07-28 - Tracao e engajamento em duas colunas
+
+- Pedido do usuario: transformar o bloco superior **Tracao** em duas colunas, **Tracao** e **Engajamento**, semelhante ao bloco **Intencao e engajamento dos pacientes** do dashboard `/pacientes`.
+- O card superior de `/psicologos` passou a se chamar **Tracao e engajamento dos psicologos** e manteve o periodo logo abaixo do titulo.
+- A coluna **Tracao** usa o contrato real `traction` ja existente, com donut e legenda focados na distribuicao por categoria.
+- A coluna **Engajamento** deriva os buckets **Alto engajamento**, **Baixo engajamento** e **Dados insuficientes** dos totais reais de `traction_engagement`, sem alterar backend, contrato HTTP, endpoint, migration, seed, mock ou backfill.
+- O filtro por plano do card continua unico e agora aplica o mesmo segmento as duas colunas.
+- O bloco detalhado **Tracao x Engajamento** permanece abaixo para manter a matriz observacional e a navegacao por quadrantes para a lista filtrada.
+- Builder/Quick Copy nao estava exposto como ferramenta callable neste ambiente; a execucao usou `_product/tasks/PROTO-INVENTORY.md`, a referencia local `_product/proto/admin/Psicólogos/Psicólogos - Dashboard.png`, o padrao real de `/pacientes` e a captura enviada pelo usuario.
+- ADR criado: `adrs/0335-tracao-engajamento-duas-colunas-dashboard-psicologos.md`.
+
+### Criterios de aceite do ajuste
+
+- [x] O card superior de tracao foi reorganizado como **Tracao e engajamento dos psicologos**.
+- [x] Em desktop amplo, o layout progride para duas colunas: **Tracao** e **Engajamento**.
+- [x] Em telas estreitas, as colunas empilham em abordagem mobile-first.
+- [x] A coluna **Tracao** continua usando dados reais de `traction`.
+- [x] A coluna **Engajamento** usa dados reais de `traction_engagement.totals`, sem mock ou endpoint paralelo.
+- [x] O filtro por plano permanece real e segmenta as duas colunas.
+- [x] Nenhum package novo, schema Prisma, migration, seed, mock, dado artificial ou `<img>` foi adicionado.
+
+### Validacao complementar executada
+
+- `pnpm --dir admin exec biome check "src/app/(admin)/psicologos/client.tsx"`
+- `pnpm --dir admin check`
+- `NODE_OPTIONS=--max-old-space-size=8192 pnpm --dir admin build`
+- `pnpm check`
+- Smoke local de `http://localhost:3002/psicologos` no Admin dev server.
