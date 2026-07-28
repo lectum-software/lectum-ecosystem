@@ -445,9 +445,11 @@ export type AdminPsychologistsDashboardTractionEngagementQuadrantId =
   | "insufficient_data"
   | "low_traction_engaged"
   | "low_traction_low_engaged"
+  | "low_traction_no_engagement"
   | "low_traction_very_engaged"
   | "strong_traction_engaged"
   | "strong_traction_low_engaged"
+  | "strong_traction_no_engagement"
   | "strong_traction_very_engaged";
 
 export type AdminPsychologistsDashboardTractionEngagementQuadrant = {
@@ -480,9 +482,12 @@ export type AdminPsychologistsDashboardTractionEngagementResults = {
     low_engaged: AdminPsychologistsDashboardTractionEngagementRate;
     low_engagement: AdminPsychologistsDashboardTractionEngagementRate;
     engaged_vs_low_rate_difference_points: number | null;
+    engaged_vs_no_rate_difference_points: number | null;
+    no_engagement: AdminPsychologistsDashboardTractionEngagementRate;
     rate_difference_points: number | null;
     very_engaged: AdminPsychologistsDashboardTractionEngagementRate;
     very_vs_low_rate_difference_points: number | null;
+    very_vs_no_rate_difference_points: number | null;
   };
   description: string;
   quadrants: AdminPsychologistsDashboardTractionEngagementQuadrant[];
@@ -504,6 +509,7 @@ export type AdminPsychologistsDashboardTractionEngagementResults = {
     insufficient_data_psychologists: number;
     low_engaged_psychologists: number;
     low_engagement_psychologists: number;
+    no_engagement_psychologists: number;
     posts: number;
     psychologists: number;
     replies: number;

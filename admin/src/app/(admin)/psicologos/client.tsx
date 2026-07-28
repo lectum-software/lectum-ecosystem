@@ -53,6 +53,7 @@ type PsychologistEngagementDonutBucketId =
   | "engaged"
   | "insufficient_data"
   | "low_engaged"
+  | "no_engagement"
   | "very_engaged";
 type PsychologistsDonutChartItem = {
   color: string;
@@ -299,9 +300,11 @@ const TRACTION_ENGAGEMENT_COLORS = {
   insufficient_data: "#94a3b8",
   low_traction_engaged: "#8b5cf6",
   low_traction_low_engaged: "#f59f00",
+  low_traction_no_engagement: "#64748b",
   low_traction_very_engaged: "#a855f7",
   strong_traction_engaged: "#308ce8",
   strong_traction_low_engaged: "#f59f00",
+  strong_traction_no_engagement: "#64748b",
   strong_traction_very_engaged: "#13a85b",
 } satisfies Record<TractionEngagementQuadrantItem["id"], string>;
 
@@ -309,6 +312,7 @@ const PSYCHOLOGIST_ENGAGEMENT_DONUT_COLORS = {
   engaged: TRACTION_ENGAGEMENT_COLORS.strong_traction_engaged,
   insufficient_data: TRACTION_ENGAGEMENT_COLORS.insufficient_data,
   low_engaged: TRACTION_ENGAGEMENT_COLORS.low_traction_low_engaged,
+  no_engagement: TRACTION_ENGAGEMENT_COLORS.low_traction_no_engagement,
   very_engaged: TRACTION_ENGAGEMENT_COLORS.strong_traction_very_engaged,
 } satisfies Record<PsychologistEngagementDonutBucketId, string>;
 
@@ -332,6 +336,11 @@ const TRACTION_ENGAGEMENT_MATRIX_COLUMNS: {
     id: "low_engaged",
     label: "Pouco engajado",
   },
+  {
+    headerClassName: "bg-surface-muted/80 text-muted",
+    id: "no_engagement",
+    label: "Sem engajamento",
+  },
 ];
 
 const TRACTION_ENGAGEMENT_MATRIX_ROWS: {
@@ -341,12 +350,22 @@ const TRACTION_ENGAGEMENT_MATRIX_ROWS: {
 }[] = [
   {
     className: "bg-primary-soft text-primary",
-    ids: ["strong_traction_very_engaged", "strong_traction_engaged", "strong_traction_low_engaged"],
+    ids: [
+      "strong_traction_very_engaged",
+      "strong_traction_engaged",
+      "strong_traction_low_engaged",
+      "strong_traction_no_engagement",
+    ],
     label: "Tração forte",
   },
   {
     className: "bg-surface-muted text-muted",
-    ids: ["low_traction_very_engaged", "low_traction_engaged", "low_traction_low_engaged"],
+    ids: [
+      "low_traction_very_engaged",
+      "low_traction_engaged",
+      "low_traction_low_engaged",
+      "low_traction_no_engagement",
+    ],
     label: "Sem tração forte",
   },
 ];
@@ -2404,6 +2423,11 @@ const buildPsychologistEngagementDonutItems = (
       Math.max(0, tractionEngagement.totals.low_engaged_psychologists),
     ),
     buildItem(
+      "no_engagement",
+      "Sem engajamento",
+      Math.max(0, tractionEngagement.totals.no_engagement_psychologists),
+    ),
+    buildItem(
       "insufficient_data",
       "Dados insuficientes",
       Math.max(0, tractionEngagement.totals.insufficient_data_psychologists),
@@ -2622,6 +2646,7 @@ const DashboardTractionEngagementCard = ({ summary }: { summary: AdminPsychologi
   const veryEngaged = tractionEngagement.comparison.very_engaged;
   const engaged = tractionEngagement.comparison.engaged;
   const lowEngaged = tractionEngagement.comparison.low_engaged;
+  const noEngagement = tractionEngagement.comparison.no_engagement;
   const rateDifference = tractionEngagement.comparison.rate_difference_points;
 
   return (
@@ -2647,7 +2672,7 @@ const DashboardTractionEngagementCard = ({ summary }: { summary: AdminPsychologi
       ) : (
         <div className="mt-5 grid gap-5 xl:grid-cols-[minmax(0,1.18fr)_minmax(280px,0.82fr)]">
           <div className="min-w-0">
-            <div className="grid gap-2 sm:grid-cols-[88px_repeat(3,minmax(0,1fr))]">
+            <div className="grid gap-2 sm:grid-cols-[88px_repeat(4,minmax(0,1fr))]">
               <div className="hidden sm:block" aria-hidden />
               {TRACTION_ENGAGEMENT_MATRIX_COLUMNS.map((column) => (
                 <p
@@ -2735,6 +2760,18 @@ const DashboardTractionEngagementCard = ({ summary }: { summary: AdminPsychologi
               }
             />
             <TractionEngagementMetric
+              label="Tração entre sem engajamento"
+              value={
+                <>
+                  {formatNullablePercentage(noEngagement.strong_traction_rate)}
+                  <span className="ml-1 text-xs font-bold text-muted">
+                    · {numberFormatter.format(noEngagement.strong_traction_count)}/
+                    {numberFormatter.format(noEngagement.psychologists)}
+                  </span>
+                </>
+              }
+            />
+            <TractionEngagementMetric
               label="Diferença observada"
               value={formatRateDifference(rateDifference)}
             />
@@ -2745,10 +2782,10 @@ const DashboardTractionEngagementCard = ({ summary }: { summary: AdminPsychologi
                   <span className="font-black text-foreground">
                     {formatRateDifference(rateDifference)}
                   </span>{" "}
-                  na taxa de tração forte versus pouco engajados no período.
+                  na taxa de tração forte versus pouco ou sem engajamento no período.
                 </>
               ) : (
-                "Impacto observado: ainda não há base suficiente para comparar a tração entre muito engajados, engajados e pouco engajados no período."
+                "Impacto observado: ainda não há base suficiente para comparar a tração entre muito engajados, engajados e pouco ou sem engajamento no período."
               )}{" "}
               Critério: Muito engajado ={" "}
               {numberFormatter.format(
@@ -2756,7 +2793,8 @@ const DashboardTractionEngagementCard = ({ summary }: { summary: AdminPsychologi
               )}
               +; Engajado ={" "}
               {numberFormatter.format(tractionEngagement.thresholds.engaged_interactions_30d)}+;
-              Pouco engajado = abaixo desse corte; Dados insuficientes = menos de{" "}
+              Pouco engajado = ao menos 1 interação, mas abaixo desse corte normalizado; Sem
+              engajamento = 0 interações em comunidades no período; Dados insuficientes = menos de{" "}
               {numberFormatter.format(tractionEngagement.thresholds.minimum_active_days)} dias
               ativos sem sinal forte.
             </div>

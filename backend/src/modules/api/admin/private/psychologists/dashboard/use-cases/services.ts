@@ -140,9 +140,11 @@ const TRACTION_ENGAGEMENT_QUADRANT_ORDER: AdminPsychologistsDashboardTractionEng
     "strong_traction_very_engaged",
     "strong_traction_engaged",
     "strong_traction_low_engaged",
+    "strong_traction_no_engagement",
     "low_traction_very_engaged",
     "low_traction_engaged",
     "low_traction_low_engaged",
+    "low_traction_no_engagement",
     "insufficient_data",
   ];
 
@@ -162,6 +164,11 @@ const TRACTION_ENGAGEMENT_QUADRANT_CONFIG = {
       "Psic\u00f3logos sem Tra\u00e7\u00e3o Forte e com poucas intera\u00e7\u00f5es reais em comunidades.",
     label: "Sem tra\u00e7\u00e3o forte + pouco engajado",
   },
+  low_traction_no_engagement: {
+    description:
+      "Psic\u00f3logos sem Tra\u00e7\u00e3o Forte e sem nenhuma intera\u00e7\u00e3o real em comunidades no per\u00edodo.",
+    label: "Sem tra\u00e7\u00e3o forte + sem engajamento",
+  },
   low_traction_very_engaged: {
     description:
       "Psic\u00f3logos muito engajados em comunidades, mas ainda sem Tra\u00e7\u00e3o Forte no per\u00edodo.",
@@ -176,6 +183,11 @@ const TRACTION_ENGAGEMENT_QUADRANT_CONFIG = {
     description:
       "Psic\u00f3logos com Tra\u00e7\u00e3o Forte mesmo com poucas intera\u00e7\u00f5es comunit\u00e1rias no per\u00edodo.",
     label: "Tra\u00e7\u00e3o forte + pouco engajado",
+  },
+  strong_traction_no_engagement: {
+    description:
+      "Psic\u00f3logos com Tra\u00e7\u00e3o Forte mesmo sem nenhuma intera\u00e7\u00e3o real em comunidades no per\u00edodo.",
+    label: "Tra\u00e7\u00e3o forte + sem engajamento",
   },
   strong_traction_very_engaged: {
     description:
@@ -1267,7 +1279,7 @@ const emptyTractionEngagementTotals = () => ({
   whatsapp_clicks: 0,
 });
 
-type TractionEngagementLevel = "engaged" | "low_engaged" | "very_engaged";
+type TractionEngagementLevel = "engaged" | "low_engaged" | "no_engagement" | "very_engaged";
 
 const emptyTractionEngagementRate = () => ({
   psychologists: 0,
@@ -1275,9 +1287,13 @@ const emptyTractionEngagementRate = () => ({
   strong_traction_rate: null as number | null,
 });
 
-const engagementLevelFromDiagnosis = (id: string): TractionEngagementLevel => {
-  if (id === "muito_ativo") return "very_engaged";
-  if (id === "ativo") return "engaged";
+const engagementLevelFromSignals = (input: {
+  diagnosisId: string;
+  interactions: number;
+}): TractionEngagementLevel => {
+  if (input.interactions <= 0) return "no_engagement";
+  if (input.diagnosisId === "muito_ativo") return "very_engaged";
+  if (input.diagnosisId === "ativo") return "engaged";
 
   return "low_engaged";
 };
@@ -1350,9 +1366,12 @@ const buildTractionEngagementResults = (params: {
     low_engaged: emptyTractionEngagementRate(),
     low_engagement: emptyTractionEngagementRate(),
     engaged_vs_low_rate_difference_points: null as number | null,
+    engaged_vs_no_rate_difference_points: null as number | null,
+    no_engagement: emptyTractionEngagementRate(),
     rate_difference_points: null as number | null,
     very_engaged: emptyTractionEngagementRate(),
     very_vs_low_rate_difference_points: null as number | null,
+    very_vs_no_rate_difference_points: null as number | null,
   };
   const totalSignals = {
     community_interactions: communityEngagementEvents.length,
@@ -1361,6 +1380,7 @@ const buildTractionEngagementResults = (params: {
     insufficient_data_psychologists: 0,
     low_engaged_psychologists: 0,
     low_engagement_psychologists: 0,
+    no_engagement_psychologists: 0,
     posts: communityEngagementEvents.filter((event) => event.type === "post").length,
     psychologists: params.profiles.length,
     replies: communityEngagementEvents.filter((event) => event.type === "reply").length,
@@ -1403,7 +1423,10 @@ const buildTractionEngagementResults = (params: {
       interactions: engagementSignals.normalizedInteractions,
       source: COMMUNITY_ENGAGEMENT_SOURCE,
     });
-    const engagementLevel = engagementLevelFromDiagnosis(engagementDiagnosis.id);
+    const engagementLevel = engagementLevelFromSignals({
+      diagnosisId: engagementDiagnosis.id,
+      interactions: engagementSignals.interactions,
+    });
     const hasClassifiedEngagement =
       engagementLevel === "engaged" || engagementLevel === "very_engaged";
     const hasInsufficientData =
@@ -1432,12 +1455,19 @@ const buildTractionEngagementResults = (params: {
       if (hasStrongTraction) comparison.high_engagement.strong_traction_count += 1;
       totalSignals.engaged_psychologists += 1;
       totalSignals.high_engagement_psychologists += 1;
-    } else {
+    } else if (engagementLevel === "low_engaged") {
       comparison.low_engaged.psychologists += 1;
       if (hasStrongTraction) comparison.low_engaged.strong_traction_count += 1;
       comparison.low_engagement.psychologists += 1;
       if (hasStrongTraction) comparison.low_engagement.strong_traction_count += 1;
       totalSignals.low_engaged_psychologists += 1;
+      totalSignals.low_engagement_psychologists += 1;
+    } else {
+      comparison.no_engagement.psychologists += 1;
+      if (hasStrongTraction) comparison.no_engagement.strong_traction_count += 1;
+      comparison.low_engagement.psychologists += 1;
+      if (hasStrongTraction) comparison.low_engagement.strong_traction_count += 1;
+      totalSignals.no_engagement_psychologists += 1;
       totalSignals.low_engagement_psychologists += 1;
     }
 
@@ -1456,6 +1486,7 @@ const buildTractionEngagementResults = (params: {
   assignTractionEngagementRate(comparison.very_engaged);
   assignTractionEngagementRate(comparison.engaged);
   assignTractionEngagementRate(comparison.low_engaged);
+  assignTractionEngagementRate(comparison.no_engagement);
   assignTractionEngagementRate(comparison.high_engagement);
   assignTractionEngagementRate(comparison.low_engagement);
   comparison.rate_difference_points = differenceBetweenTractionRates(
@@ -1466,9 +1497,17 @@ const buildTractionEngagementResults = (params: {
     comparison.very_engaged,
     comparison.low_engaged,
   );
+  comparison.very_vs_no_rate_difference_points = differenceBetweenTractionRates(
+    comparison.very_engaged,
+    comparison.no_engagement,
+  );
   comparison.engaged_vs_low_rate_difference_points = differenceBetweenTractionRates(
     comparison.engaged,
     comparison.low_engaged,
+  );
+  comparison.engaged_vs_no_rate_difference_points = differenceBetweenTractionRates(
+    comparison.engaged,
+    comparison.no_engagement,
   );
 
   return {

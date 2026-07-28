@@ -131,3 +131,37 @@ A leitura deve ser agregada, nao publica e nao punitiva. Ela deve cruzar sinais 
 - Smoke local no Admin dev server: `GET http://localhost:3002/psicologos` e `GET http://localhost:3002/psicologos/lista?traction_engagement=strong_traction_very_engaged` retornaram 200.
 - Validacao estatica do build: bundle de `/psicologos` contem `strong_traction_very_engaged`, `low_traction_engaged` e **Muito engajado**.
 - Tentativa de smoke direto do use case foi limitada pelo banco de desenvolvimento com `EMAXCONNSESSION`; nao houve reset nem comando destrutivo.
+
+## Execucao complementar: Sem engajamento para psicologos (2026-07-28)
+
+- Pedido do usuario: assim como pacientes exibem a categoria **Sem engajamento**, psicologos tambem precisam separar aqueles que nunca engajaram.
+- Backend Admin: `GET /api/admin/private/psychologists/dashboard` passou a retornar `no_engagement` em `traction_engagement.comparison` e `no_engagement_psychologists` em `totals`, separando psicologos com 0 interacoes reais em comunidades no periodo.
+- Backend Admin: **Pouco engajado** passou a representar psicologos com ao menos 1 interacao real, mas abaixo do corte normalizado de **Engajado**; **Sem engajamento** representa 0 interacoes, preservando **Dados insuficientes** para perfis com menos de 7 dias ativos sem sinal forte.
+- Backend Admin: os quadrantes do dashboard foram expandidos para oito recortes reais de tracao forte/sem tracao forte cruzados com **Muito engajado**, **Engajado**, **Pouco engajado** e **Sem engajamento**, mais **Dados insuficientes**.
+- Lista Admin: o filtro composto `traction_engagement` passou a aceitar `strong_traction_no_engagement` e `low_traction_no_engagement`, mantendo os links reais do dashboard para `/psicologos/lista`.
+- Lista Admin: a coluna **Engajamento** passa a exibir **Sem engajamento** quando o psicologo tem 0 interacoes reais em comunidades, evitando que os links do dashboard cheguem a uma lista com badge **Sem base** para esses casos.
+- Frontend Admin: o donut de **Engajamento** e a matriz **Tracao x Engajamento** exibem a nova categoria **Sem engajamento**, preservando layout mobile-first e links para lista.
+- Builder/Quick Copy nao estava exposto como ferramenta callable neste ambiente; a execucao usou `_product/tasks/PROTO-INVENTORY.md`, a referencia local `_product/proto/admin/Psicólogos/Psicólogos - Dashboard.png` e as capturas enviadas pelo usuario.
+- Nenhuma alteracao em `backend/prisma/schema.prisma` ou `backend/prisma/migrations`; `pnpm --dir backend db:migrate` nao se aplica.
+- ADR atualizado: `adrs/0337-detalhamento-engajamento-tracao-dashboard-psicologos.md`.
+
+### Criterios complementares
+
+- [x] O bloco **Engajamento** detalha os psicologos entre **Muito engajado**, **Engajado**, **Pouco engajado**, **Sem engajamento** e **Dados insuficientes**.
+- [x] O bloco **Tracao x Engajamento** cruza tracao com **Muito engajado**, **Engajado**, **Pouco engajado** e **Sem engajamento**, mantendo **Dados insuficientes** separado.
+- [x] Psicologos com 0 interacoes reais em comunidades no periodo entram em **Sem engajamento** quando nao forem **Dados insuficientes**.
+- [x] Os links da matriz usam filtro real `traction_engagement` na lista Admin com os novos recortes `*_no_engagement`.
+- [x] A leitura continua observacional, mobile-first e sem `<img>` cru.
+- [x] Nenhum mock, seed artificial, endpoint simulado, package novo ou migration foi criado.
+
+### Validacao complementar
+
+- `pnpm --dir backend exec biome check "src/modules/api/admin/private/psychologists/dashboard/DTOs/IAdminPsychologistsDashboardDTO.ts" "src/modules/api/admin/private/psychologists/dashboard/use-cases/services.ts" "src/modules/api/admin/private/psychologists/list/DTOs/IAdminPsychologistsListDTO.ts" "src/modules/api/admin/private/psychologists/list/use-cases/services.ts"`
+- `pnpm --dir admin exec biome check "src/api/req/psychologists/index.ts" "src/app/(admin)/psicologos/client.tsx" "src/app/(admin)/psicologos/lista/client.tsx"`
+- `pnpm --dir backend check`
+- `pnpm --dir admin check`
+- `pnpm --dir backend build`
+- `pnpm --dir admin build`
+- `pnpm check`
+- Smoke local no Admin dev server: `GET http://localhost:3002/psicologos` e `GET http://localhost:3002/psicologos/lista?traction_engagement=low_traction_no_engagement` retornaram 200.
+- Validacao estatica do build: bundle de `/psicologos` contem **Sem engajamento**, `strong_traction_no_engagement` e `low_traction_no_engagement`.

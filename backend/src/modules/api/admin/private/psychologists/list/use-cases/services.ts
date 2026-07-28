@@ -772,13 +772,14 @@ const buildItem = (
   };
 };
 
-type ListTractionEngagementLevel = "engaged" | "low_engaged" | "very_engaged";
+type ListTractionEngagementLevel = "engaged" | "low_engaged" | "no_engagement" | "very_engaged";
 
-const listEngagementLevelFromCategory = (
-  id: AdminPsychologistsListEngagementCategoryId,
+const listEngagementLevelFromItem = (
+  item: AdminPsychologistsListItem,
 ): ListTractionEngagementLevel => {
-  if (id === "muito_ativo") return "very_engaged";
-  if (id === "ativo") return "engaged";
+  if (item.engagement.signals.interactions <= 0) return "no_engagement";
+  if (item.engagement.id === "muito_ativo") return "very_engaged";
+  if (item.engagement.id === "ativo") return "engaged";
 
   return "low_engaged";
 };
@@ -787,7 +788,7 @@ const resolveTractionEngagementQuadrant = (
   item: AdminPsychologistsListItem,
 ): AdminPsychologistsListTractionEngagementQuadrantId => {
   const hasStrongTraction = item.traction.id === "strong_traction";
-  const engagementLevel = listEngagementLevelFromCategory(item.engagement.id);
+  const engagementLevel = listEngagementLevelFromItem(item);
   const hasClassifiedEngagement =
     engagementLevel === "engaged" || engagementLevel === "very_engaged";
   const hasInsufficientData =

@@ -185,6 +185,11 @@ const TRACTION_ENGAGEMENT_FILTER_OPTIONS: PsychologistsListOption[] = [
   },
   {
     count: 0,
+    id: "strong_traction_no_engagement",
+    label: "Tra\u00e7\u00e3o forte + sem engajamento",
+  },
+  {
+    count: 0,
     id: "low_traction_very_engaged",
     label: "Sem tra\u00e7\u00e3o forte + muito engajado",
   },
@@ -197,6 +202,11 @@ const TRACTION_ENGAGEMENT_FILTER_OPTIONS: PsychologistsListOption[] = [
     count: 0,
     id: "low_traction_low_engaged",
     label: "Sem tra\u00e7\u00e3o forte + pouco engajado",
+  },
+  {
+    count: 0,
+    id: "low_traction_no_engagement",
+    label: "Sem tra\u00e7\u00e3o forte + sem engajamento",
   },
   {
     count: 0,
@@ -857,11 +867,19 @@ const resolveTractionLabel = (item: PsychologistsListItem) => {
 };
 
 const resolveEngagementLabel = (item: PsychologistsListItem) => {
-  const label = PSYCHOLOGIST_ENGAGEMENT_LABEL_BY_ID[item.engagement.id] ?? item.engagement.label;
+  if (item.engagement.signals.interactions <= 0) {
+    return { label: "Sem engajamento", tone: "inactive" as const };
+  }
+
+  const label =
+    item.engagement.id === "sem_base"
+      ? "Pouco engajado"
+      : (PSYCHOLOGIST_ENGAGEMENT_LABEL_BY_ID[item.engagement.id] ?? item.engagement.label);
 
   if (item.engagement.id === "muito_ativo") return { label, tone: "active" as const };
   if (item.engagement.id === "ativo") return { label, tone: "info" as const };
-  if (item.engagement.id === "pouco_ativo") return { label, tone: "warning" as const };
+  if (item.engagement.id === "pouco_ativo" || item.engagement.id === "sem_base")
+    return { label, tone: "warning" as const };
 
   return { label, tone: "inactive" as const };
 };

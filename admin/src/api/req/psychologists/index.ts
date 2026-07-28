@@ -24,9 +24,11 @@ export type PsychologistsListTractionEngagementQuadrantId =
   | "insufficient_data"
   | "low_traction_engaged"
   | "low_traction_low_engaged"
+  | "low_traction_no_engagement"
   | "low_traction_very_engaged"
   | "strong_traction_engaged"
   | "strong_traction_low_engaged"
+  | "strong_traction_no_engagement"
   | "strong_traction_very_engaged";
 
 export type PsychologistsListExperience = "0_4" | "5_9" | "10_plus" | "unknown";
@@ -493,9 +495,11 @@ export type PsychologistsDashboardTractionEngagementQuadrantId =
   | "insufficient_data"
   | "low_traction_engaged"
   | "low_traction_low_engaged"
+  | "low_traction_no_engagement"
   | "low_traction_very_engaged"
   | "strong_traction_engaged"
   | "strong_traction_low_engaged"
+  | "strong_traction_no_engagement"
   | "strong_traction_very_engaged";
 
 export type PsychologistsDashboardTractionEngagementQuadrant = {
@@ -528,9 +532,12 @@ export type PsychologistsDashboardTractionEngagementResults = {
     low_engaged: PsychologistsDashboardTractionEngagementRate;
     low_engagement: PsychologistsDashboardTractionEngagementRate;
     engaged_vs_low_rate_difference_points: number | null;
+    engaged_vs_no_rate_difference_points: number | null;
+    no_engagement: PsychologistsDashboardTractionEngagementRate;
     rate_difference_points: number | null;
     very_engaged: PsychologistsDashboardTractionEngagementRate;
     very_vs_low_rate_difference_points: number | null;
+    very_vs_no_rate_difference_points: number | null;
   };
   description: string;
   quadrants: PsychologistsDashboardTractionEngagementQuadrant[];
@@ -552,6 +559,7 @@ export type PsychologistsDashboardTractionEngagementResults = {
     insufficient_data_psychologists: number;
     low_engaged_psychologists: number;
     low_engagement_psychologists: number;
+    no_engagement_psychologists: number;
     posts: number;
     psychologists: number;
     replies: number;

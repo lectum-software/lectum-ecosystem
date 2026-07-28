@@ -26,9 +26,11 @@ export const ADMIN_PSYCHOLOGISTS_LIST_TRACTION_ENGAGEMENT_QUADRANTS = [
   "insufficient_data",
   "low_traction_engaged",
   "low_traction_low_engaged",
+  "low_traction_no_engagement",
   "low_traction_very_engaged",
   "strong_traction_engaged",
   "strong_traction_low_engaged",
+  "strong_traction_no_engagement",
   "strong_traction_very_engaged",
 ] as const;
 
