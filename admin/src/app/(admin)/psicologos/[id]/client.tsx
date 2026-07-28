@@ -4525,18 +4525,18 @@ const PsychologistPlatformDeviceUsageSection = ({
                       <div className="mt-2 flex flex-wrap gap-1.5">
                         {operatingSystems.map((operatingSystem) => (
                           <span
-                            className="rounded-full bg-surface px-2 py-1 text-[0.68rem] font-black text-muted"
+                            className="text-[0.68rem] font-black text-muted"
                             key={operatingSystem.id}
                           >
                             {operatingSystem.label}:{" "}
-                            {formatDeviceSessionCount(operatingSystem.count)} ?{" "}
+                            {formatDeviceSessionCount(operatingSystem.count)} ·{" "}
                             {formatDevicePercentage(operatingSystem.percentage)}
                           </span>
                         ))}
                       </div>
                     ) : (
                       <p className="mt-2 text-[0.68rem] font-bold text-subtle">
-                        Sistema operacional n?o identificado.
+                        Sistema operacional não identificado.
                       </p>
                     )
                   ) : null}

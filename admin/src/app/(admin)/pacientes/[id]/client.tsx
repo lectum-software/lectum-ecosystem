@@ -2932,7 +2932,7 @@ const PatientPlatformDeviceUsageSection = ({
                     <div className="mt-2 flex flex-wrap gap-1.5">
                       {operatingSystems.map((operatingSystem) => (
                         <span
-                          className="rounded-full bg-surface px-2 py-1 text-[0.68rem] font-black text-muted"
+                          className="text-[0.68rem] font-black text-muted"
                           key={operatingSystem.id}
                         >
                           {operatingSystem.label}: {formatDeviceSessionCount(operatingSystem.count)}{" "}
