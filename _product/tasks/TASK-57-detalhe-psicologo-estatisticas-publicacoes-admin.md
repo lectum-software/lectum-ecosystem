@@ -449,3 +449,26 @@ Exibir estatísticas de negócio/comunidade e publicações do psicólogo com da
 - `pnpm check`
 - Busca no build Admin em `admin/.next` confirmou a presenca de **Engajamento geral** no chunk da pagina de psicologo.
 - Chamada direta do service local foi tentada, mas o banco de desenvolvimento recusou nova conexao por limite de sessoes (`EMAXCONNSESSION`); a validacao funcional da agregacao ficou coberta pelo smoke do helper compartilhado e pelos checks/builds.
+
+## Ajuste pos-feedback 2026-07-27 - Tag de engajamento geral em Comunidades ativas
+
+- Pedido do usuario: mover a tag **Engajamento geral** do titulo **Estatisticas de comunidade** para o titulo **Comunidades ativas**.
+- A tabela continua exibindo o diagnostico individual por comunidade, e a tag geral agora fica no bloco que lista essas comunidades, usando o melhor diagnostico individual do mesmo periodo/filtro de **Comunidades ativas**.
+- Nao houve alteracao de contrato backend, calculo, schema Prisma, migration, package, mock, seed ou backfill.
+- Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente; o ajuste reutilizou o padrao visual existente da aba **Estatisticas**.
+- ADR atualizado: `adrs/0300-diagnostico-engajamento-comunidades-admin.md`.
+
+### Criterios de aceite do ajuste
+
+- [x] **Estatisticas de comunidade** nao exibe mais a tag de engajamento geral.
+- [x] **Comunidades ativas** exibe a tag **Engajamento geral: ...** ao lado do titulo.
+- [x] A tag usa o melhor diagnostico individual do periodo do bloco **Comunidades ativas**.
+- [x] A tabela continua exibindo o engajamento individual por comunidade.
+
+### Validacao complementar executada
+
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/psicologos/[id]/client.tsx"`
+- `pnpm --dir admin exec eslint "src/app/(admin)/psicologos/[id]/client.tsx"`
+- `pnpm --dir admin check` reexecutado com sucesso apos uma primeira falha transiente sem diagnostico do `eslint`.
+- `pnpm --dir admin build`
+- `pnpm check` foi executado, mas ficou bloqueado por alteracoes locais nao relacionadas da TASK-89 em `backend/src/modules/api/admin/private/psychologists/dashboard/*` e `backend/swagger/api.json` com aviso Biome de variavel nao usada/formatacao.

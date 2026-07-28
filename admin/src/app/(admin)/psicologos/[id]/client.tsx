@@ -2817,10 +2817,12 @@ const ActiveCommunityAvatar = ({
 
 const ActiveCommunitiesBlock = ({
   communities,
+  engagementDiagnosis,
   isRefreshing,
   periodControls,
 }: {
   communities: PsychologistStatisticsCommunityItem[];
+  engagementDiagnosis: AdminPsychologistStatistics["community"]["engagement_diagnosis"];
   isRefreshing: boolean;
   periodControls: ReactNode;
 }) => (
@@ -2829,6 +2831,14 @@ const ActiveCommunitiesBlock = ({
       <div className="min-w-0">
         <div className="flex flex-wrap items-center gap-2">
           <h2 className="text-lg font-bold text-foreground">Comunidades ativas</h2>
+          <Badge
+            className={cn(
+              "border border-current/10",
+              communityEngagementDiagnosisClassName(engagementDiagnosis.id),
+            )}
+          >
+            Engajamento geral: {engagementDiagnosis.label}
+          </Badge>
           {isRefreshing ? (
             <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary-soft px-2.5 py-1 text-[11px] font-black text-primary">
               <Loader2 aria-hidden className="h-3.5 w-3.5 animate-spin" />
@@ -4884,7 +4894,6 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: st
   const activeCommunitiesStatistics = activeCommunitiesStatisticsQuery.data;
   const activityHoursStatistics = activityHoursStatisticsQuery.data;
   const businessTraction = businessStatistics.business.traction;
-  const communityEngagementDiagnosis = communityStatistics.community.engagement_diagnosis;
   const businessMetricMap = new Map(
     businessStatistics.business.cards.map((metric) => [metric.id, metric]),
   );
@@ -5089,14 +5098,6 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: st
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2">
                 <h2 className="text-lg font-bold text-foreground">Estatísticas de comunidade</h2>
-                <Badge
-                  className={cn(
-                    "border border-current/10",
-                    communityEngagementDiagnosisClassName(communityEngagementDiagnosis.id),
-                  )}
-                >
-                  Engajamento geral: {communityEngagementDiagnosis.label}
-                </Badge>
                 {isCommunityRefreshing ? (
                   <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary-soft px-2.5 py-1 text-[11px] font-black text-primary">
                     <Loader2 aria-hidden className="h-3.5 w-3.5 animate-spin" />
@@ -5171,6 +5172,7 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: st
 
         <ActiveCommunitiesBlock
           communities={activeCommunities}
+          engagementDiagnosis={activeCommunitiesStatistics.community.engagement_diagnosis}
           isRefreshing={isActiveCommunitiesRefreshing}
           periodControls={
             <StatisticsPeriodControls

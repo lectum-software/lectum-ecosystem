@@ -83,3 +83,10 @@ Tambem foi solicitado separar votos em **Upvotes** e **Downvotes** para entender
 - O endpoint real de estatisticas do psicologo agora expõe `community.engagement_diagnosis` com essa agregacao de melhor resultado, enquanto `community.communities[].engagement_diagnosis` continua representando o diagnostico individual de cada comunidade.
 - A UI Admin mostra a tag **Engajamento geral: ...** ao lado do titulo **Estatisticas de comunidade**. A tabela **Comunidades ativas** permanece com os resultados individuais por linha.
 - Essa agregacao prepara a base para um grafico geral futuro de engajamento de psicologos sem criar endpoint paralelo, schema Prisma, migration, package novo, mock, seed ou backfill.
+
+## Ajuste visual 2026-07-27 - tag no bloco Comunidades ativas
+
+- Pedido do usuario: a tag de resultado geral nao deve ficar em **Estatisticas de comunidade**; ela deve ficar ao lado de **Comunidades ativas**.
+- A UI moveu a tag **Engajamento geral: ...** para o cabecalho do bloco **Comunidades ativas**, mantendo a tabela com o diagnostico individual por comunidade.
+- Como **Comunidades ativas** possui filtro de periodo independente, a tag passa a usar `activeCommunitiesStatistics.community.engagement_diagnosis`, isto e, o melhor diagnostico individual do mesmo recorte exibido na tabela.
+- Nao houve mudanca no calculo backend nem no contrato `community.engagement_diagnosis`.
