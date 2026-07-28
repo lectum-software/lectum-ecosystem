@@ -1113,7 +1113,7 @@ const ErrorState = ({ message, onRetry }: { message: string; onRetry: () => void
           <AlertTriangle aria-hidden className="h-5 w-5" />
         </div>
         <div>
-          <h2 className="text-lg font-black">Não foi possível carregar o paciente</h2>
+          <h2 className="text-lg font-bold">Não foi possível carregar o paciente</h2>
           <p className="mt-1 text-sm text-muted">{message}</p>
         </div>
       </div>
@@ -1459,7 +1459,7 @@ const ActivityList = ({
     <CardShell className="p-5">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h2 className="text-lg font-black text-foreground">{title}</h2>
+          <h2 className="text-lg font-bold text-foreground">{title}</h2>
           <p className="mt-1 text-sm text-muted">
             Registro simples dos principais eventos reais encontrados.
           </p>
@@ -1761,7 +1761,7 @@ const ActivitiesTab = ({ id }: { id: string }) => {
       <CardShell className="overflow-hidden">
         <div className="flex flex-col gap-2 border-b border-border p-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h2 className="text-xl font-black text-foreground">Atividades da conta</h2>
+            <h2 className="text-xl font-bold text-foreground">Atividades da conta</h2>
             <p className="mt-1 text-sm text-muted">
               Mostrando {numberFormatter.format(activities.data.length)} de{" "}
               {numberFormatter.format(activities.count)} eventos principais filtrados.
@@ -3387,7 +3387,7 @@ const InfoCard = ({
       <div className="flex items-start gap-3">
         <IconCircle icon={Icon} />
         <div>
-          <h2 className="text-lg font-extrabold text-foreground">{title}</h2>
+          <h2 className="text-lg font-bold text-foreground">{title}</h2>
           {description ? <p className="mt-1 text-sm text-muted">{description}</p> : null}
         </div>
       </div>
@@ -3914,7 +3914,7 @@ const PatientPublicationFullContent = ({ item }: { item: PatientsDetailPublicati
         </p>
         <span className="text-xs font-bold text-subtle">{formatDateTime(item.created_at)}</span>
       </div>
-      <h3 className="mt-3 text-base font-black text-foreground">
+      <h3 className="mt-3 text-base font-bold text-foreground">
         {item.title.trim() || "Post sem título"}
       </h3>
       <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-muted">
@@ -3937,7 +3937,7 @@ const PublicationsTab = ({ detail }: { detail: AdminPatientDetail }) => {
         <div className="flex items-start gap-3">
           <IconCircle icon={FileText} />
           <div>
-            <h2 className="text-lg font-extrabold text-foreground">Publicações</h2>
+            <h2 className="text-lg font-bold text-foreground">Publicações</h2>
             <p className="mt-1 text-sm text-muted">{detail.publications.coverage_note}</p>
           </div>
         </div>
@@ -3971,7 +3971,7 @@ const PublicationsTab = ({ detail }: { detail: AdminPatientDetail }) => {
                     <span className="font-bold">{formatDateTime(item.created_at)}</span>
                     <span className="font-bold text-subtle">/{item.community.slug}</span>
                   </div>
-                  <h3 className="mt-2 line-clamp-1 text-sm font-black text-foreground sm:text-base">
+                  <h3 className="mt-2 line-clamp-1 text-sm font-bold text-foreground sm:text-base">
                     {item.title.trim() || "Post sem título"}
                   </h3>
                   <p className="mt-1 line-clamp-2 text-sm leading-5 text-muted">
@@ -4204,7 +4204,7 @@ const PatientReportMedia = ({ report }: { report: AdminPatientReportItem }) => {
 
 const PatientReportReporterHistory = ({ report }: { report: AdminPatientReportItem }) => (
   <section className="mt-5 border-t border-border/70 pt-4">
-    <h4 className="text-sm font-black text-foreground">Histórico de denúncias</h4>
+    <h4 className="text-sm font-bold text-foreground">Histórico de denúncias</h4>
     <div className="mt-3 divide-y divide-border/70">
       <article
         className="py-2 text-sm"
@@ -4268,7 +4268,7 @@ const PatientReportListItem = ({ report }: { report: AdminPatientReportItem }) =
           Conteúdo denunciado
         </p>
         <PatientReportContentHeader report={report} />
-        {title ? <h3 className="mt-3 text-lg font-black text-foreground">{title}</h3> : null}
+        {title ? <h3 className="mt-3 text-lg font-bold text-foreground">{title}</h3> : null}
         <div className="mt-3 space-y-4">
           <div className="min-w-0 whitespace-pre-wrap text-sm leading-6 text-muted">
             {report.content.body || report.content.excerpt || "Conteúdo sem texto disponível."}
@@ -5080,7 +5080,7 @@ const AccountStatusActionForm = ({
       <div className="flex items-start gap-3">
         <IconCircle icon={Icon} />
         <div>
-          <h3 className="text-base font-black text-foreground">{config.title}</h3>
+          <h3 className="text-base font-bold text-foreground">{config.title}</h3>
           <p className="mt-1 text-sm font-bold leading-6 text-muted">{config.description}</p>
         </div>
       </div>
@@ -5164,7 +5164,7 @@ const AccountTab = ({ id }: { id: string }) => {
           <div className="flex gap-3">
             <IconCircle icon={Lock} />
             <div>
-              <h2 className="text-lg font-black text-foreground">Conta Google sem senha local</h2>
+              <h2 className="text-lg font-bold text-foreground">Conta Google sem senha local</h2>
               <p className="mt-1 text-sm font-bold leading-6 text-muted">
                 Esta conta acessa via Google. Alteração ou criação de senha local estão
                 indisponíveis.
@@ -5198,13 +5198,13 @@ const AccountTab = ({ id }: { id: string }) => {
         <InfoCard contentAsDescriptionList={false} icon={KeyRound} title="Senha e recuperação">
           <div className="grid gap-5">
             <div>
-              <h3 className="mb-2 text-sm font-black text-foreground">
+              <h3 className="mb-2 text-sm font-bold text-foreground">
                 Ação preferencial: link de redefinição
               </h3>
               <AccountPasswordResetForm account={account} id={id} />
             </div>
             <div>
-              <h3 className="mb-2 text-sm font-black text-foreground">
+              <h3 className="mb-2 text-sm font-bold text-foreground">
                 Suporte excepcional: senha temporária
               </h3>
               <AccountTemporaryPasswordForm account={account} id={id} />

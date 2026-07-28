@@ -382,3 +382,30 @@ Criar o shell de detalhe do psicólogo e as abas Geral e Perfil/Cadastro com dad
 - `pnpm check`
 - API local com admin temporario real removido ao final: `GET /api/admin/private/psychologists/cmrwmw35t0000xkuhxoceh77v` retornou `profile.personal.full_name="Ana Beatriz Lima"`; `GET /api/admin/private/patients/cmrqsrab5001f1guh2ve5oy90?period=all` retornou `header.name="Paciente preview 52"`.
 - Browser local/headless via Chrome CDP em viewport 390x844: `/psicologos/cmrwmw35t0000xkuhxoceh77v?tab=perfil` exibiu a linha **Nome completo / Ana Beatriz Lima** e `scrollWidth=390`; `/pacientes/cmrqsrab5001f1guh2ve5oy90?tab=perfil` exibiu a linha **Nome de exibicao / Paciente preview 52** e `scrollWidth=390`.
+
+
+## Ajuste pos-feedback 2026-07-27 - Peso textual dos titulos em todas as abas de detalhe
+
+- Pedido do usuario: aplicar o mesmo peso textual reduzido aos titulos das paginas de detalhe administrativo do psicologo.
+- A UI do Admin alterou os titulos semanticos `h2`, `h3` e `h4` do detalhe de psicologo de `font-black`/`font-extrabold` para `font-bold`, que no escopo `admin-premium-pilot` computa como `font-weight: 600`.
+- Cobertura: abas **Geral**, **Perfil e cadastro**, **Assinatura**, **Estatisticas**, **Publicacoes**, **Avaliacoes**, **Denuncias**, **Atividades** e **Conta**.
+- A alteracao preservou copy, hierarquia, icones, filtros, contratos, calculos e dados reais; valores, badges, labels de tabela e botoes nao foram rebaixados como titulo de bloco.
+- Nao houve schema Prisma, migration, package novo, seed, mock, endpoint simulado, tracking ou backfill artificial. `db:migrate` nao se aplicou.
+- Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente; as referencias auditaveis foram o screenshot enviado pelo usuario em 2026-07-27 e os PNGs locais em `_product/proto/admin/Psicologos/Detalhes do psicologo/`.
+- ADR nao atualizado por se tratar de ajuste visual local de tipografia sem decisao arquitetural nova.
+
+### Criterios de aceite do ajuste
+
+- [x] Os titulos de blocos do detalhe de psicologo usam peso textual reduzido e computam como `font-weight: 600`.
+- [x] A cobertura inclui Geral, Perfil e cadastro, Assinatura, Estatisticas, Publicacoes, Avaliacoes, Denuncias, Atividades e Conta.
+- [x] Nenhuma copy, filtro, icone, contrato, calculo ou dado real foi alterado.
+- [x] O layout permanece mobile-first e sem overflow horizontal em 390px.
+- [x] Nenhum schema Prisma, migration, package novo, mock, seed ou endpoint simulado foi adicionado.
+
+### Validacao complementar executada
+
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/psicologos/[id]/client.tsx" "src/app/(admin)/pacientes/[id]/client.tsx"`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check`
+- Browser local/headless via Chrome CDP em `http://localhost:3002/psicologos/cmrwmw35t0000xkuhxoceh77v`: desktop `1366x900` e mobile `390x844` validaram as abas Geral, Perfil, Plano, Estatisticas, Publicacoes, Avaliacoes, Denuncias, Atividades e Conta sem `font-black`/`font-extrabold` em titulos `h2`/`h3`/`h4` visiveis e sem overflow horizontal. Admin temporario real removido ao final.

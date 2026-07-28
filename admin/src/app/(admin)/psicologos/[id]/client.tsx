@@ -2474,7 +2474,7 @@ const RecentActivity = ({
     <CardShell className="p-5">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h2 className="text-lg font-black text-foreground">Atividades recentes</h2>
+          <h2 className="text-lg font-bold text-foreground">Atividades recentes</h2>
           <p className="mt-1 text-sm text-muted">
             Registro simples dos principais eventos reais encontrados.
           </p>
@@ -2578,7 +2578,7 @@ const InfoCard = ({
     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       <div className="flex items-center gap-3">
         <IconCircle icon={Icon} />
-        <h2 className="text-lg font-extrabold text-foreground">{title}</h2>
+        <h2 className="text-lg font-bold text-foreground">{title}</h2>
       </div>
       {action ? <div className="w-full sm:w-auto">{action}</div> : null}
     </div>
@@ -2607,7 +2607,7 @@ const VideoCard = ({ detail }: { detail: AdminPsychologistDetail }) => {
     <CardShell className="p-5">
       <div className="flex items-center gap-3">
         <IconCircle icon={Video} />
-        <h2 className="text-lg font-black text-foreground">Vídeo de apresentação</h2>
+        <h2 className="text-lg font-bold text-foreground">Vídeo de apresentação</h2>
       </div>
 
       {videoSrc ? (
@@ -2828,7 +2828,7 @@ const ActiveCommunitiesBlock = ({
     <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-start">
       <div className="min-w-0">
         <div className="flex flex-wrap items-center gap-2">
-          <h2 className="text-lg font-black text-foreground">Comunidades ativas</h2>
+          <h2 className="text-lg font-bold text-foreground">Comunidades ativas</h2>
           {isRefreshing ? (
             <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary-soft px-2.5 py-1 text-[11px] font-black text-primary">
               <Loader2 aria-hidden className="h-3.5 w-3.5 animate-spin" />
@@ -3033,7 +3033,7 @@ const ContentFormatDistributionCard = ({
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
-            <h3 className="text-lg font-black text-foreground">{title}</h3>
+            <h3 className="text-lg font-bold text-foreground">{title}</h3>
             {isRefreshing ? (
               <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary-soft px-2.5 py-1 text-[11px] font-black text-primary">
                 <Loader2 aria-hidden className="h-3.5 w-3.5 animate-spin" />
@@ -3821,7 +3821,7 @@ const StatisticsVideoCard = ({
       <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-start">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
-            <h2 className="text-lg font-black leading-tight text-foreground">
+            <h2 className="text-lg font-bold leading-tight text-foreground">
               Análises do vídeo de apresentação
             </h2>
             {isRefreshing ? (
@@ -4065,7 +4065,7 @@ const PsychologistTrafficSourcesCard = ({
       <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-start">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
-            <h2 className="text-lg font-black text-foreground">Origem do tráfego</h2>
+            <h2 className="text-lg font-bold text-foreground">Origem do tráfego</h2>
             {traffic.updated_at ? (
               <Badge className="bg-surface-muted text-muted">
                 Atualizado em {formatDateOnly(traffic.updated_at)}
@@ -4127,7 +4127,7 @@ const PsychologistTrafficSourcesCard = ({
           >
             <div className="min-w-0">
               <div className="flex min-w-0 flex-wrap items-center gap-2">
-                <h3 className="text-sm font-black text-foreground">{source.label}</h3>
+                <h3 className="text-sm font-bold text-foreground">{source.label}</h3>
                 {source.badge === "primary_source" ? (
                   <Badge className="bg-primary-soft text-primary">{"Principal origem"}</Badge>
                 ) : null}
@@ -4301,7 +4301,7 @@ const PsychologistPlatformDeviceUsageSection = ({
     <section className="min-w-0">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h3 className="text-sm font-black text-foreground">Devices</h3>
+          <h3 className="text-sm font-bold text-foreground">Devices</h3>
           <p className="mt-1 text-xs font-bold leading-5 text-muted">
             Sessões autenticadas do psicólogo por tipo de dispositivo no período.
           </p>
@@ -4485,7 +4485,7 @@ const PsychologistPlatformUsageCard = ({
       <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-start">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
-            <h2 className="text-lg font-black text-foreground">Uso da plataforma</h2>
+            <h2 className="text-lg font-bold text-foreground">Uso da plataforma</h2>
             {isRefreshing ? (
               <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary-soft px-2.5 py-1 text-[11px] font-black text-primary">
                 <Loader2 aria-hidden className="h-3.5 w-3.5 animate-spin" />
@@ -4521,7 +4521,7 @@ const PsychologistPlatformUsageCard = ({
 
       <div className="mt-5 grid gap-5 lg:grid-cols-2">
         <section className="min-w-0">
-          <h3 className="text-sm font-black text-foreground">Páginas mais acessadas</h3>
+          <h3 className="text-sm font-bold text-foreground">Páginas mais acessadas</h3>
           {usage.unavailable_reason ? (
             <p className="mt-3 rounded-2xl border border-dashed border-border bg-surface-muted p-4 text-sm font-bold text-muted">
               {usage.unavailable_reason}
@@ -4621,7 +4621,7 @@ const PsychologistPlatformActivityHoursCard = ({
       <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-start">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
-            <h2 className="text-lg font-black text-foreground">
+            <h2 className="text-lg font-bold text-foreground">
               Hor&aacute;rios de maior atividade
             </h2>
             {isRefreshing ? (
@@ -4975,7 +4975,7 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: st
           <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-start">
             <div className="min-w-0 xl:col-span-2">
               <div className="flex flex-wrap items-center gap-2">
-                <h2 className="text-lg font-black text-foreground">Estatísticas de negócio</h2>
+                <h2 className="text-lg font-bold text-foreground">Estatísticas de negócio</h2>
                 <Badge
                   className={cn(
                     "border border-current/10",
@@ -5088,7 +5088,7 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: st
           <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-start">
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2">
-                <h2 className="text-lg font-black text-foreground">Estatísticas de comunidade</h2>
+                <h2 className="text-lg font-bold text-foreground">Estatísticas de comunidade</h2>
                 <Badge
                   className={cn(
                     "border border-current/10",
@@ -5546,7 +5546,7 @@ const PublicationItemMain = ({ item }: { item: AdminPsychologistPublicationItem 
       <div className="min-w-0">
         <PublicationItemHeader item={item} />
         {item.type === "post" ? (
-          <h3 className="mt-2 line-clamp-1 text-sm font-black text-foreground sm:text-base">
+          <h3 className="mt-2 line-clamp-1 text-sm font-bold text-foreground sm:text-base">
             {item.title}
           </h3>
         ) : null}
@@ -5822,7 +5822,7 @@ const PublicationsTab = ({ createdAt, id }: { createdAt: string; id: string }) =
       <CardShell className="overflow-hidden">
         <div className="flex flex-col gap-3 border-b border-border p-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h2 className="text-xl font-black text-foreground">Publicações</h2>
+            <h2 className="text-xl font-bold text-foreground">Publicações</h2>
             <p className="mt-1 text-sm text-muted">
               Mostrando {numberFormatter.format(publications.data.length)} de{" "}
               {numberFormatter.format(publications.count)} registros.
@@ -6297,7 +6297,7 @@ const PsychologistReportMedia = ({ report }: { report: AdminPsychologistReportIt
 
 const PsychologistReportReporterHistory = ({ report }: { report: AdminPsychologistReportItem }) => (
   <section className="mt-5 border-t border-border/70 pt-4">
-    <h4 className="text-sm font-black text-foreground">Histórico de denúncias</h4>
+    <h4 className="text-sm font-bold text-foreground">Histórico de denúncias</h4>
     <div className="mt-3 divide-y divide-border/70">
       <article
         className="py-2 text-sm"
@@ -6422,7 +6422,7 @@ const PsychologistReportListItem = ({
           Conteúdo denunciado
         </p>
         <PsychologistReportContentHeader report={report} />
-        {title ? <h3 className="mt-3 text-lg font-black text-foreground">{title}</h3> : null}
+        {title ? <h3 className="mt-3 text-lg font-bold text-foreground">{title}</h3> : null}
         <div className="mt-3 space-y-4">
           <div className="min-w-0 whitespace-pre-wrap text-sm leading-6 text-muted">
             {report.content.body || report.content.excerpt || "Conteúdo sem texto disponível."}
@@ -6476,7 +6476,7 @@ const ReportModerationDialog = ({
             <p className="text-xs font-black uppercase tracking-[0.2em] text-primary">
               Denúncias e moderação
             </p>
-            <h3 className="mt-1 text-xl font-black text-foreground">{title}</h3>
+            <h3 className="mt-1 text-xl font-bold text-foreground">{title}</h3>
             <p className="mt-2 text-sm font-bold leading-6 text-muted">
               {state.report.content.type === "post" ? "Post" : "Resposta"} em{" "}
               {state.report.content.community.name}: {state.report.content.title}
@@ -7204,7 +7204,7 @@ const ActivitiesTab = ({ id }: { id: string }) => {
       <CardShell className="overflow-hidden">
         <div className="flex flex-col gap-2 border-b border-border p-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h2 className="text-xl font-black text-foreground">Atividades da conta</h2>
+            <h2 className="text-xl font-bold text-foreground">Atividades da conta</h2>
             <p className="mt-1 text-sm text-muted">
               Mostrando {numberFormatter.format(activities.data.length)} de{" "}
               {numberFormatter.format(activities.count)} eventos principais filtrados.
@@ -7842,7 +7842,7 @@ const AccountStatusActionForm = ({
       <div className="flex items-start gap-3">
         <IconCircle icon={Icon} />
         <div>
-          <h3 className="text-base font-black text-foreground">{config.title}</h3>
+          <h3 className="text-base font-bold text-foreground">{config.title}</h3>
           <p className="mt-1 text-sm font-bold leading-6 text-muted">{config.description}</p>
         </div>
       </div>
@@ -7926,7 +7926,7 @@ const AccountTab = ({ id }: { id: string }) => {
           <div className="flex gap-3">
             <IconCircle icon={Lock} />
             <div>
-              <h2 className="text-lg font-black text-foreground">Conta Google sem senha local</h2>
+              <h2 className="text-lg font-bold text-foreground">Conta Google sem senha local</h2>
               <p className="mt-1 text-sm font-bold leading-6 text-muted">
                 Esta conta acessa via Google. Alteração ou criação de senha local estão
                 indisponíveis.
@@ -7960,13 +7960,13 @@ const AccountTab = ({ id }: { id: string }) => {
         <InfoCard icon={KeyRound} title="Senha e recuperação">
           <div className="grid gap-5">
             <div>
-              <h3 className="mb-2 text-sm font-black text-foreground">
+              <h3 className="mb-2 text-sm font-bold text-foreground">
                 Ação preferencial: link de redefinição
               </h3>
               <AccountPasswordResetForm account={account} id={id} />
             </div>
             <div>
-              <h3 className="mb-2 text-sm font-black text-foreground">
+              <h3 className="mb-2 text-sm font-bold text-foreground">
                 Suporte excepcional: senha temporária
               </h3>
               <AccountTemporaryPasswordForm account={account} id={id} />
@@ -8091,7 +8091,7 @@ const CurrentPlanCard = ({
     <CardShell className="p-5">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h2 className="text-xl font-black text-foreground">Plano atual</h2>
+          <h2 className="text-xl font-bold text-foreground">Plano atual</h2>
         </div>
         <IconCircle icon={Wallet} />
       </div>
@@ -8156,7 +8156,7 @@ const ActiveCourtesyCard = ({ billing, id }: { billing: AdminPsychologistBilling
     <CardShell className="p-5">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h2 className="text-xl font-black text-foreground">Cortesia ativa</h2>
+          <h2 className="text-xl font-bold text-foreground">Cortesia ativa</h2>
           <p className="mt-1 text-sm text-muted">
             Dados usados para a concessão administrativa vigente.
           </p>
@@ -8207,7 +8207,7 @@ const PaymentMethodCard = ({ billing }: { billing: AdminPsychologistBilling }) =
   <CardShell className="p-5">
     <div className="flex items-start justify-between gap-4">
       <div>
-        <h2 className="text-xl font-black text-foreground">Forma de pagamento</h2>
+        <h2 className="text-xl font-bold text-foreground">Forma de pagamento</h2>
         <p className="mt-1 text-sm text-muted">Somente brand, final e validade quando existirem.</p>
       </div>
       <IconCircle icon={CreditCard} />
@@ -8241,7 +8241,7 @@ const PaymentMethodCard = ({ billing }: { billing: AdminPsychologistBilling }) =
 
 const PaymentHistoryCard = ({ billing }: { billing: AdminPsychologistBilling }) => (
   <CardShell className="p-5 xl:col-span-2">
-    <h2 className="text-xl font-black text-foreground">Histórico de pagamentos</h2>
+    <h2 className="text-xl font-bold text-foreground">Histórico de pagamentos</h2>
 
     {!billing.payment_history.available ? (
       <div className="mt-5 rounded-2xl border border-dashed border-border bg-surface-muted p-4 text-sm font-bold text-muted">
@@ -8368,7 +8368,7 @@ const CourtesyGrantForm = ({ billing, id }: { billing: AdminPsychologistBilling;
       <CardShell className="p-5">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <h2 className="text-xl font-black text-foreground">Conceder cortesia</h2>
+            <h2 className="text-xl font-bold text-foreground">Conceder cortesia</h2>
           </div>
           <IconCircle icon={Gift} />
         </div>
@@ -8470,7 +8470,7 @@ const CourtesyGrantForm = ({ billing, id }: { billing: AdminPsychologistBilling;
                   Confirmação forte
                 </p>
                 <h3
-                  className="mt-1 text-xl font-black text-foreground"
+                  className="mt-1 text-xl font-bold text-foreground"
                   id="courtesy-confirmation-title"
                 >
                   Conceder cortesia
@@ -8688,7 +8688,7 @@ const RegistryVerificationDialog = ({
             <p className="text-xs font-black uppercase tracking-[0.14em] text-primary">
               Verificação profissional
             </p>
-            <h3 className="mt-1 text-2xl font-black text-foreground">{title}</h3>
+            <h3 className="mt-1 text-2xl font-bold text-foreground">{title}</h3>
           </div>
           <button
             aria-label="Fechar"
@@ -9146,7 +9146,7 @@ const RegistryVerificationCard = ({ id }: { id: string }) => {
         <div className="flex items-start gap-3">
           <IconCircle icon={ShieldCheck} />
           <div>
-            <h2 className="text-lg font-black text-foreground">Registro profissional</h2>
+            <h2 className="text-lg font-bold text-foreground">Registro profissional</h2>
           </div>
         </div>
         {registryVerificationBadge(registry)}
@@ -9170,7 +9170,7 @@ const RegistryVerificationCard = ({ id }: { id: string }) => {
       </div>
 
       <div className="mt-5">
-        <h3 className="text-sm font-black text-foreground">Últimas tentativas</h3>
+        <h3 className="text-sm font-bold text-foreground">Últimas tentativas</h3>
         {registry.latest_attempts.length === 0 ? (
           <p className="mt-3 rounded-2xl bg-surface-muted p-4 text-sm font-bold text-muted">
             {emptyAttemptsText}
@@ -10071,7 +10071,7 @@ const ProfileTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: strin
           <CardShell className="p-5">
             <div className="flex items-center gap-3">
               <IconCircle icon={CheckCircle2} />
-              <h2 className="text-lg font-black text-foreground">Selos e facilidades</h2>
+              <h2 className="text-lg font-bold text-foreground">Selos e facilidades</h2>
             </div>
             <div className="mt-4 grid gap-3">
               {activeFeatures.length > 0 ? (
@@ -10089,7 +10089,7 @@ const ProfileTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: strin
           <CardShell className="p-5">
             <div className="flex items-center gap-3">
               <IconCircle icon={Mail} />
-              <h2 className="text-lg font-black text-foreground">Bio</h2>
+              <h2 className="text-lg font-bold text-foreground">Bio</h2>
             </div>
             <div className="mt-4">
               <TextBlock empty="Nenhuma bio cadastrada.">{profile.content.bio}</TextBlock>
@@ -10099,7 +10099,7 @@ const ProfileTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: strin
           <CardShell className="p-5">
             <div className="flex items-center gap-3">
               <IconCircle icon={Globe2} />
-              <h2 className="text-lg font-black text-foreground">Texto de apresentação</h2>
+              <h2 className="text-lg font-bold text-foreground">Texto de apresentação</h2>
             </div>
             <div className="mt-4">
               <TextBlock empty="Nenhum texto de apresentação cadastrado.">
