@@ -1,6 +1,7 @@
 import type { Resolve } from "@/helpers/return";
 import { error, msg } from "@/helpers/translate";
 import { extractPsychologistSignupAnalyticsVisitorId } from "@/modules/api/public/analytics/helpers/signup-identity";
+import { diagnoseAdminCommunityEngagement } from "@/utils/admin-community-engagement-diagnosis";
 import type { AdminOperatingSystemType } from "@/utils/admin-operating-system";
 import {
   ADMIN_OPERATING_SYSTEM_LABELS,
@@ -40,11 +41,14 @@ import type {
   AdminPsychologistsDashboardQuery,
   AdminPsychologistsDashboardSummary,
   AdminPsychologistsDashboardTractionCategoryId,
+  AdminPsychologistsDashboardTractionEngagementQuadrantId,
+  AdminPsychologistsDashboardTractionEngagementResults,
   AdminPsychologistsDashboardTractionResults,
   IAdminPsychologistsDashboardDTO,
 } from "../DTOs/IAdminPsychologistsDashboardDTO";
 import { AdminPsychologistsDashboardRepository } from "../repositories/AdminPsychologistsDashboardRepository";
 import type {
+  AdminPsychologistCommunityEngagementEventRecord,
   AdminPsychologistDirectoryFilterSearchRecord,
   AdminPsychologistEventRecord,
   AdminPsychologistPlatformPageViewRecord,
@@ -75,6 +79,8 @@ const TRACTION_PROFILE_VIEWS_HIGH_30D = 60;
 const TRACTION_STRONG_CONVERSION_RATE_PERCENT = 5;
 const TRACTION_WHATSAPP_HIGH_30D = 5;
 const TRACTION_WHATSAPP_HIGH_WITH_CONVERSION_30D = 3;
+const COMMUNITY_ENGAGEMENT_SOURCE = "community_post+post_reply+post_vote.user_id";
+const TRACTION_ENGAGEMENT_HIGH_INTERACTIONS_30D = 6;
 const PRE_SIGNUP_CONVERSION_FIRST_TOUCH_LIMIT = 6;
 const PRE_SIGNUP_CONVERSION_FIRST_TOUCH_SAMPLE_THRESHOLD = 3;
 const PRE_SIGNUP_CONVERSION_SESSION_LABEL = "Sessão sem página capturada";
@@ -124,6 +130,46 @@ const TRACTION_CATEGORY_CONFIG = {
   },
 } satisfies Record<
   AdminPsychologistsDashboardTractionCategoryId,
+  { description: string; label: string }
+>;
+
+const TRACTION_ENGAGEMENT_QUADRANT_ORDER: AdminPsychologistsDashboardTractionEngagementQuadrantId[] =
+  [
+    "strong_traction_high_engagement",
+    "strong_traction_low_engagement",
+    "low_traction_high_engagement",
+    "low_traction_low_engagement",
+    "insufficient_data",
+  ];
+
+const TRACTION_ENGAGEMENT_QUADRANT_CONFIG = {
+  insufficient_data: {
+    description:
+      "Perfis com menos de 7 dias ativos no per\u00edodo e sem sinal forte de tra\u00e7\u00e3o ou engajamento para classificar com seguran\u00e7a.",
+    label: "Dados Insuficientes",
+  },
+  low_traction_high_engagement: {
+    description:
+      "Psic\u00f3logos que participam da comunidade, mas ainda n\u00e3o chegam a Tra\u00e7\u00e3o Forte.",
+    label: "Alto engajamento + baixa tra\u00e7\u00e3o",
+  },
+  low_traction_low_engagement: {
+    description:
+      "Psic\u00f3logos sem Tra\u00e7\u00e3o Forte e com poucas intera\u00e7\u00f5es reais na comunidade.",
+    label: "Baixa tra\u00e7\u00e3o + baixo engajamento",
+  },
+  strong_traction_high_engagement: {
+    description:
+      "Psic\u00f3logos com Tra\u00e7\u00e3o Forte e alto envolvimento em comunidades no per\u00edodo.",
+    label: "Tra\u00e7\u00e3o forte + alto engajamento",
+  },
+  strong_traction_low_engagement: {
+    description:
+      "Psic\u00f3logos com Tra\u00e7\u00e3o Forte mesmo com baixa atividade comunit\u00e1ria no per\u00edodo.",
+    label: "Tra\u00e7\u00e3o forte + baixo engajamento",
+  },
+} satisfies Record<
+  AdminPsychologistsDashboardTractionEngagementQuadrantId,
   { description: string; label: string }
 >;
 
@@ -427,6 +473,12 @@ const metric = (params: {
 
 const safePercentage = (value: number, total: number) => {
   if (total <= 0) return 0;
+
+  return roundPercent((value / total) * 100);
+};
+
+const safeNullablePercentage = (value: number, total: number) => {
+  if (total <= 0) return null;
 
   return roundPercent((value / total) * 100);
 };
@@ -1154,6 +1206,237 @@ const buildTractionResults = (params: {
     unavailable_reason:
       totalPsychologists === 0
         ? "Sem psic\u00f3logos ativos no fim do per\u00edodo selecionado para classificar tra\u00e7\u00e3o."
+        : null,
+  };
+};
+
+type CommunityEngagementSignalCounts = {
+  interactions: number;
+  normalizedInteractions: number;
+  posts: number;
+  replies: number;
+  votes: number;
+};
+
+const countCommunityEngagementEventsByPsychologist = (
+  events: AdminPsychologistCommunityEngagementEventRecord[],
+) => {
+  const counts = new Map<string, CommunityEngagementSignalCounts>();
+
+  for (const event of events) {
+    const current = counts.get(event.psychologist_id) ?? {
+      interactions: 0,
+      normalizedInteractions: 0,
+      posts: 0,
+      replies: 0,
+      votes: 0,
+    };
+
+    current.interactions += 1;
+    if (event.type === "post") current.posts += 1;
+    if (event.type === "reply") current.replies += 1;
+    if (event.type === "vote") current.votes += 1;
+
+    counts.set(event.psychologist_id, current);
+  }
+
+  return counts;
+};
+
+const emptyTractionEngagementTotals = () => ({
+  community_interactions: 0,
+  favorites: 0,
+  posts: 0,
+  profile_views: 0,
+  replies: 0,
+  votes: 0,
+  whatsapp_clicks: 0,
+});
+
+const buildTractionEngagementResults = (params: {
+  communityEngagementEvents: AdminPsychologistCommunityEngagementEventRecord[];
+  favorites: AdminPsychologistEventRecord[];
+  profileViews: AdminPsychologistEventRecord[];
+  profiles: AdminPsychologistProfileRecord[];
+  range: AdminPsychologistsDashboardDateRange;
+  whatsappClicks: AdminPsychologistEventRecord[];
+}): AdminPsychologistsDashboardTractionEngagementResults => {
+  const analyzedPsychologistIds = new Set(params.profiles.map((profile) => profile.user.id));
+  const communityEngagementEvents = params.communityEngagementEvents.filter((event) =>
+    analyzedPsychologistIds.has(event.psychologist_id),
+  );
+  const favoriteEvents = params.favorites.filter((event) =>
+    analyzedPsychologistIds.has(event.psychologist_id),
+  );
+  const profileViewEvents = params.profileViews.filter((event) =>
+    analyzedPsychologistIds.has(event.psychologist_id),
+  );
+  const whatsappClickEvents = params.whatsappClicks.filter((event) =>
+    analyzedPsychologistIds.has(event.psychologist_id),
+  );
+  const communityEngagementCounts =
+    countCommunityEngagementEventsByPsychologist(communityEngagementEvents);
+  const favoriteCounts = countEventsByPsychologist(favoriteEvents);
+  const profileViewCounts = countEventsByPsychologist(profileViewEvents);
+  const whatsappClickCounts = countEventsByPsychologist(whatsappClickEvents);
+  const quadrants = new Map(
+    TRACTION_ENGAGEMENT_QUADRANT_ORDER.map((id) => [
+      id,
+      {
+        count: 0,
+        totals: emptyTractionEngagementTotals(),
+      },
+    ]),
+  );
+  const comparison = {
+    high_engagement: {
+      psychologists: 0,
+      strong_traction_count: 0,
+      strong_traction_rate: null as number | null,
+    },
+    low_engagement: {
+      psychologists: 0,
+      strong_traction_count: 0,
+      strong_traction_rate: null as number | null,
+    },
+    rate_difference_points: null as number | null,
+  };
+  const totalSignals = {
+    community_interactions: communityEngagementEvents.length,
+    high_engagement_psychologists: 0,
+    insufficient_data_psychologists: 0,
+    low_engagement_psychologists: 0,
+    posts: communityEngagementEvents.filter((event) => event.type === "post").length,
+    psychologists: params.profiles.length,
+    replies: communityEngagementEvents.filter((event) => event.type === "reply").length,
+    strong_traction_psychologists: 0,
+    votes: communityEngagementEvents.filter((event) => event.type === "vote").length,
+  };
+
+  for (const profile of params.profiles) {
+    const psychologistId = profile.user.id;
+    const activeDays = getProfileActiveDaysInRange(profile, params.range);
+    const favorites = favoriteCounts.get(psychologistId) ?? 0;
+    const profileViews = profileViewCounts.get(psychologistId) ?? 0;
+    const whatsappClicks = whatsappClickCounts.get(psychologistId) ?? 0;
+    const engagementSignals = communityEngagementCounts.get(psychologistId) ?? {
+      interactions: 0,
+      normalizedInteractions: 0,
+      posts: 0,
+      replies: 0,
+      votes: 0,
+    };
+    engagementSignals.normalizedInteractions = normalizeCountToThirtyDays(
+      engagementSignals.interactions,
+      activeDays,
+    );
+
+    const tractionCategoryId = classifyTractionCategory({
+      activeDays,
+      favorites,
+      normalizedFavorites: normalizeCountToThirtyDays(favorites, activeDays),
+      normalizedProfileViews: normalizeCountToThirtyDays(profileViews, activeDays),
+      normalizedWhatsappClicks: normalizeCountToThirtyDays(whatsappClicks, activeDays),
+      profileViews,
+      whatsappClicks,
+      whatsappConversionRate:
+        profileViews > 0 ? roundPercent((whatsappClicks / profileViews) * 100) : null,
+    });
+    const hasStrongTraction = tractionCategoryId === "strong_traction";
+    const engagementDiagnosis = diagnoseAdminCommunityEngagement({
+      interactions: engagementSignals.normalizedInteractions,
+      source: COMMUNITY_ENGAGEMENT_SOURCE,
+    });
+    const hasHighEngagement =
+      engagementDiagnosis.id === "ativo" || engagementDiagnosis.id === "muito_ativo";
+    const hasInsufficientData =
+      activeDays < TRACTION_MIN_ACTIVE_DAYS && !hasStrongTraction && !hasHighEngagement;
+    const quadrantId: AdminPsychologistsDashboardTractionEngagementQuadrantId = hasInsufficientData
+      ? "insufficient_data"
+      : hasStrongTraction && hasHighEngagement
+        ? "strong_traction_high_engagement"
+        : hasStrongTraction
+          ? "strong_traction_low_engagement"
+          : hasHighEngagement
+            ? "low_traction_high_engagement"
+            : "low_traction_low_engagement";
+    const quadrant = quadrants.get(quadrantId);
+
+    if (hasStrongTraction) totalSignals.strong_traction_psychologists += 1;
+    if (hasInsufficientData) {
+      totalSignals.insufficient_data_psychologists += 1;
+    } else if (hasHighEngagement) {
+      comparison.high_engagement.psychologists += 1;
+      if (hasStrongTraction) comparison.high_engagement.strong_traction_count += 1;
+      totalSignals.high_engagement_psychologists += 1;
+    } else {
+      comparison.low_engagement.psychologists += 1;
+      if (hasStrongTraction) comparison.low_engagement.strong_traction_count += 1;
+      totalSignals.low_engagement_psychologists += 1;
+    }
+
+    if (quadrant) {
+      quadrant.count += 1;
+      quadrant.totals.community_interactions += engagementSignals.interactions;
+      quadrant.totals.favorites += favorites;
+      quadrant.totals.posts += engagementSignals.posts;
+      quadrant.totals.profile_views += profileViews;
+      quadrant.totals.replies += engagementSignals.replies;
+      quadrant.totals.votes += engagementSignals.votes;
+      quadrant.totals.whatsapp_clicks += whatsappClicks;
+    }
+  }
+
+  comparison.high_engagement.strong_traction_rate = safeNullablePercentage(
+    comparison.high_engagement.strong_traction_count,
+    comparison.high_engagement.psychologists,
+  );
+  comparison.low_engagement.strong_traction_rate = safeNullablePercentage(
+    comparison.low_engagement.strong_traction_count,
+    comparison.low_engagement.psychologists,
+  );
+  comparison.rate_difference_points =
+    typeof comparison.high_engagement.strong_traction_rate === "number" &&
+    typeof comparison.low_engagement.strong_traction_rate === "number"
+      ? roundPercent(
+          comparison.high_engagement.strong_traction_rate -
+            comparison.low_engagement.strong_traction_rate,
+        )
+      : null;
+
+  return {
+    comparison,
+    description:
+      "Rela\u00e7\u00e3o observacional entre envolvimento real em comunidades e Tra\u00e7\u00e3o Forte no per\u00edodo selecionado; n\u00e3o indica causalidade, ranking ou puni\u00e7\u00e3o.",
+    quadrants: TRACTION_ENGAGEMENT_QUADRANT_ORDER.map((id) => {
+      const config = TRACTION_ENGAGEMENT_QUADRANT_CONFIG[id];
+      const values = quadrants.get(id) ?? {
+        count: 0,
+        totals: emptyTractionEngagementTotals(),
+      };
+
+      return {
+        count: values.count,
+        description: config.description,
+        id,
+        label: config.label,
+        percentage: safePercentage(values.count, params.profiles.length),
+        totals: values.totals,
+      };
+    }),
+    source:
+      "profile_view_event+contact_request+psychologist_favorite+community_post+post_reply+post_vote",
+    thresholds: {
+      high_engagement_interactions_30d: TRACTION_ENGAGEMENT_HIGH_INTERACTIONS_30D,
+      minimum_active_days: TRACTION_MIN_ACTIVE_DAYS,
+      traction_strong_conversion_rate_percent: TRACTION_STRONG_CONVERSION_RATE_PERCENT,
+      traction_strong_whatsapp_high_30d: TRACTION_WHATSAPP_HIGH_30D,
+      traction_strong_whatsapp_with_conversion_30d: TRACTION_WHATSAPP_HIGH_WITH_CONVERSION_30D,
+    },
+    totals: totalSignals,
+    unavailable_reason:
+      params.profiles.length === 0
+        ? "Sem psic\u00f3logos ativos no fim do per\u00edodo selecionado para comparar tra\u00e7\u00e3o e engajamento."
         : null,
   };
 };
@@ -1964,6 +2247,7 @@ const buildConversionBySignupMethod = (profiles: AdminPsychologistProfileRecord[
   });
 
 const buildPlanSegmentSummaries = (params: {
+  communityEngagementEvents: AdminPsychologistCommunityEngagementEventRecord[];
   currentNewSignups: AdminPsychologistProfileRecord[];
   currentProfiles: AdminPsychologistProfileRecord[];
   date: Date;
@@ -2059,6 +2343,14 @@ const buildPlanSegmentSummaries = (params: {
           range: params.range,
           whatsappClicks: params.whatsappContactRequests,
         }),
+        traction_engagement: buildTractionEngagementResults({
+          communityEngagementEvents: params.communityEngagementEvents,
+          favorites: params.favoriteEvents,
+          profileViews: params.profileViewEvents,
+          profiles: segmentProfiles,
+          range: params.range,
+          whatsappClicks: params.whatsappContactRequests,
+        }),
         traffic_sources: {
           ...trafficSources,
           source: "page_view_event.traffic_source+target_type=psychologist" as const,
@@ -2142,6 +2434,7 @@ export const buildPsychologistsDashboard = async (
   const currentPeriodPsychologistIds = currentNewSignups.map((profile) => profile.user.id);
   const psychologistUserIds = profiles.map((profile) => profile.user.id);
   const [
+    communityEngagementEvents,
     directoryFilterSearchActions,
     favoriteEvents,
     rankingCandidates,
@@ -2155,6 +2448,7 @@ export const buildPsychologistsDashboard = async (
     preSignupConversionLinkedSessions,
     preSignupConversionSignupIdentities,
   ] = await Promise.all([
+    repository.listCommunityEngagementEvents(current),
     repository.listDirectoryFilterSearchActions(current),
     repository.listFavoriteEvents(current),
     repository.listPublicRankingCandidates(),
@@ -2227,6 +2521,7 @@ export const buildPsychologistsDashboard = async (
     signupIdentities: preSignupConversionSignupIdentities,
   });
   const planSegments = buildPlanSegmentSummaries({
+    communityEngagementEvents,
     currentNewSignups,
     currentProfiles,
     date: current.end,
@@ -2252,6 +2547,7 @@ export const buildPsychologistsDashboard = async (
   const operatingSystemUsage = buildOperatingSystemUsage(platformSessions);
   const trafficSources = planSegments.all.traffic_sources;
   const traction = planSegments.all.traction;
+  const tractionEngagement = planSegments.all.traction_engagement;
   const statistics = planSegments.all.statistics;
   const profileNameByUserId = new Map(
     profiles.map((profile) => [profile.user.id, profile.user.name]),
@@ -2373,6 +2669,7 @@ export const buildPsychologistsDashboard = async (
       source: "user+professional_subscription",
     },
     traction,
+    traction_engagement: tractionEngagement,
     traffic_sources: {
       ...trafficSources,
       source: "page_view_event.traffic_source+target_type=psychologist",
@@ -2386,6 +2683,17 @@ export const buildPsychologistsDashboard = async (
               id: "psychologist_traction",
               label: "Tra\u00e7\u00e3o dos psic\u00f3logos",
               source: "profile_view_event+contact_request+psychologist_favorite",
+            },
+          ]
+        : []),
+      ...(tractionEngagement.unavailable_reason
+        ? [
+            {
+              description:
+                "O comparativo Tra\u00e7\u00e3o x Engajamento depende de ao menos um perfil de psic\u00f3logo ativo no per\u00edodo selecionado.",
+              id: "psychologist_traction_engagement",
+              label: "Tra\u00e7\u00e3o x Engajamento",
+              source: tractionEngagement.source,
             },
           ]
         : []),

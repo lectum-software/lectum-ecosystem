@@ -46,6 +46,8 @@ type DashboardPeriodPreset = Exclude<DashboardPeriodValue, "custom">;
 type DashboardRange = Pick<PsychologistsDashboardQuery, "from" | "to">;
 type DeviceUsageItem = AdminPsychologistsDashboard["device_usage"]["items"][number];
 type TractionCategoryItem = AdminPsychologistsDashboard["traction"]["categories"][number];
+type TractionEngagementQuadrantItem =
+  AdminPsychologistsDashboard["traction_engagement"]["quadrants"][number];
 type PlanSegmentFilter = PsychologistsDashboardPlanSegment;
 type SignupMethodItem = AdminPsychologistsDashboard["signup_method"]["items"][number];
 type SupplyDemandSortKey = "psychologists" | "searches" | "searches_per_psychologist";
@@ -272,6 +274,21 @@ const TRACTION_CHART_COLORS = {
   unconverted_interest: "#8b5cf6",
   unconverted_traffic: "#ef4444",
 } satisfies Record<TractionCategoryItem["id"], string>;
+
+const TRACTION_ENGAGEMENT_COLORS = {
+  insufficient_data: "#94a3b8",
+  low_traction_high_engagement: "#8b5cf6",
+  low_traction_low_engagement: "#f59f00",
+  strong_traction_high_engagement: "#13a85b",
+  strong_traction_low_engagement: "#308ce8",
+} satisfies Record<TractionEngagementQuadrantItem["id"], string>;
+
+const TRACTION_ENGAGEMENT_MATRIX_ORDER: TractionEngagementQuadrantItem["id"][] = [
+  "strong_traction_high_engagement",
+  "strong_traction_low_engagement",
+  "low_traction_high_engagement",
+  "low_traction_low_engagement",
+];
 
 const SIGNUP_METHOD_CHART_COLORS = {
   email_password: "#13a85b",
@@ -710,6 +727,7 @@ const getPlanSegmentSummary = (summary: AdminPsychologistsDashboard, segment: Pl
     signup_method: summary.signup_method,
     statistics: summary.statistics,
     traction: summary.traction,
+    traction_engagement: summary.traction_engagement,
     traffic_sources: summary.traffic_sources,
   };
 
@@ -2361,6 +2379,242 @@ const DashboardTractionCard = ({ summary }: { summary: AdminPsychologistsDashboa
   );
 };
 
+const findTractionEngagementQuadrant = (
+  tractionEngagement: AdminPsychologistsDashboard["traction_engagement"],
+  id: TractionEngagementQuadrantItem["id"],
+) =>
+  tractionEngagement.quadrants.find((quadrant) => quadrant.id === id) ?? {
+    count: 0,
+    description: "",
+    id,
+    label: "",
+    percentage: 0,
+    totals: {
+      community_interactions: 0,
+      favorites: 0,
+      posts: 0,
+      profile_views: 0,
+      replies: 0,
+      votes: 0,
+      whatsapp_clicks: 0,
+    },
+  };
+
+const TractionEngagementMetric = ({ label, value }: { label: string; value: ReactNode }) => (
+  <div className="rounded-2xl bg-surface-muted p-3">
+    <p className="text-[0.68rem] font-black uppercase tracking-[0.08em] text-subtle">{label}</p>
+    <p className="mt-1 text-base font-black text-foreground">{value}</p>
+  </div>
+);
+
+const formatRateDifference = (value: number | null) => {
+  if (typeof value !== "number") return "Sem base";
+  if (value === 0) return "0 p.p.";
+
+  const prefix = value > 0 ? "+" : "-";
+
+  return `${prefix}${numberFormatter.format(Math.abs(value))} p.p.`;
+};
+
+const DashboardTractionEngagementCard = ({ summary }: { summary: AdminPsychologistsDashboard }) => {
+  const [tractionEngagementPlanSegment, setTractionEngagementPlanSegment] =
+    useState<PlanSegmentFilter>("all");
+  const segmentSummary = getPlanSegmentSummary(summary, tractionEngagementPlanSegment);
+  const tractionEngagement = segmentSummary.traction_engagement;
+
+  if (!tractionEngagement) return null;
+
+  const insufficientData = findTractionEngagementQuadrant(tractionEngagement, "insufficient_data");
+  const highEngagement = tractionEngagement.comparison.high_engagement;
+  const lowEngagement = tractionEngagement.comparison.low_engagement;
+
+  return (
+    <CardShell className="p-5">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <PanelTitle
+          description={formatSelectedPeriod(summary.period)}
+          icon={TrendingUp}
+          title="Tração x Engajamento"
+        />
+        <PlanSegmentSelect
+          id="traction-engagement-plan-segment"
+          onChange={setTractionEngagementPlanSegment}
+          value={tractionEngagementPlanSegment}
+        />
+      </div>
+
+      {tractionEngagement.totals.psychologists === 0 ? (
+        <p className="mt-5 rounded-2xl border border-dashed border-border bg-surface-muted p-4 text-sm font-bold text-muted">
+          {tractionEngagement.unavailable_reason ??
+            "Sem psicólogos ativos no período selecionado para comparar Tração e Engajamento."}
+        </p>
+      ) : (
+        <div className="mt-5 grid gap-5 xl:grid-cols-[minmax(0,1.18fr)_minmax(280px,0.82fr)]">
+          <div className="min-w-0">
+            <div className="grid gap-2 sm:grid-cols-[88px_minmax(0,1fr)_minmax(0,1fr)]">
+              <div className="hidden sm:block" aria-hidden />
+              <p className="rounded-2xl bg-primary-soft px-3 py-2 text-center text-xs font-black text-primary">
+                Alto engajamento
+              </p>
+              <p className="rounded-2xl bg-surface-muted px-3 py-2 text-center text-xs font-black text-muted">
+                Baixo engajamento
+              </p>
+
+              <p className="hidden place-items-center rounded-2xl bg-primary-soft px-2 text-center text-[0.68rem] font-black text-primary sm:grid">
+                Tração forte
+              </p>
+              {TRACTION_ENGAGEMENT_MATRIX_ORDER.slice(0, 2).map((id) => {
+                const quadrant = findTractionEngagementQuadrant(tractionEngagement, id);
+                const color = TRACTION_ENGAGEMENT_COLORS[id];
+
+                return (
+                  <article
+                    className="rounded-[1.35rem] border border-border bg-surface-muted p-4"
+                    key={id}
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span
+                            aria-hidden
+                            className="h-3 w-3 shrink-0 rounded-full"
+                            style={{ backgroundColor: color }}
+                          />
+                          <h3 className="text-sm font-black text-foreground">{quadrant.label}</h3>
+                        </div>
+                        <p className="mt-2 text-xs font-bold leading-5 text-muted">
+                          {quadrant.description}
+                        </p>
+                      </div>
+                      <p className="shrink-0 text-right text-base font-black text-foreground">
+                        {numberFormatter.format(quadrant.count)}
+                        <span className="ml-1 text-xs font-bold text-muted">
+                          ({formatPercentageValue(quadrant.percentage)})
+                        </span>
+                      </p>
+                    </div>
+                    <p className="mt-3 text-xs font-bold text-subtle">
+                      {numberFormatter.format(quadrant.totals.community_interactions)} interações ·{" "}
+                      {numberFormatter.format(quadrant.totals.whatsapp_clicks)} WhatsApp
+                    </p>
+                  </article>
+                );
+              })}
+
+              <p className="hidden place-items-center rounded-2xl bg-surface-muted px-2 text-center text-[0.68rem] font-black text-muted sm:grid">
+                Sem tração forte
+              </p>
+              {TRACTION_ENGAGEMENT_MATRIX_ORDER.slice(2).map((id) => {
+                const quadrant = findTractionEngagementQuadrant(tractionEngagement, id);
+                const color = TRACTION_ENGAGEMENT_COLORS[id];
+
+                return (
+                  <article
+                    className="rounded-[1.35rem] border border-border bg-surface-muted p-4"
+                    key={id}
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span
+                            aria-hidden
+                            className="h-3 w-3 shrink-0 rounded-full"
+                            style={{ backgroundColor: color }}
+                          />
+                          <h3 className="text-sm font-black text-foreground">{quadrant.label}</h3>
+                        </div>
+                        <p className="mt-2 text-xs font-bold leading-5 text-muted">
+                          {quadrant.description}
+                        </p>
+                      </div>
+                      <p className="shrink-0 text-right text-base font-black text-foreground">
+                        {numberFormatter.format(quadrant.count)}
+                        <span className="ml-1 text-xs font-bold text-muted">
+                          ({formatPercentageValue(quadrant.percentage)})
+                        </span>
+                      </p>
+                    </div>
+                    <p className="mt-3 text-xs font-bold text-subtle">
+                      {numberFormatter.format(quadrant.totals.community_interactions)} interações ·{" "}
+                      {numberFormatter.format(quadrant.totals.whatsapp_clicks)} WhatsApp
+                    </p>
+                  </article>
+                );
+              })}
+            </div>
+
+            {insufficientData.count > 0 ? (
+              <article className="mt-3 rounded-[1.35rem] border border-border bg-surface-muted p-4">
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span
+                        aria-hidden
+                        className="h-3 w-3 shrink-0 rounded-full"
+                        style={{ backgroundColor: TRACTION_ENGAGEMENT_COLORS.insufficient_data }}
+                      />
+                      <h3 className="text-sm font-black text-foreground">
+                        {insufficientData.label}
+                      </h3>
+                    </div>
+                    <p className="mt-1 text-xs font-bold leading-5 text-muted">
+                      {insufficientData.description}
+                    </p>
+                  </div>
+                  <p className="text-sm font-black text-foreground">
+                    {numberFormatter.format(insufficientData.count)}
+                    <span className="ml-1 text-xs font-bold text-muted">
+                      ({formatPercentageValue(insufficientData.percentage)})
+                    </span>
+                  </p>
+                </div>
+              </article>
+            ) : null}
+          </div>
+
+          <aside className="grid content-start gap-3">
+            <TractionEngagementMetric
+              label="Tração entre engajados"
+              value={
+                <>
+                  {formatNullablePercentage(highEngagement.strong_traction_rate)}
+                  <span className="ml-1 text-xs font-bold text-muted">
+                    · {numberFormatter.format(highEngagement.strong_traction_count)}/
+                    {numberFormatter.format(highEngagement.psychologists)}
+                  </span>
+                </>
+              }
+            />
+            <TractionEngagementMetric
+              label="Tração entre pouco engajados"
+              value={
+                <>
+                  {formatNullablePercentage(lowEngagement.strong_traction_rate)}
+                  <span className="ml-1 text-xs font-bold text-muted">
+                    · {numberFormatter.format(lowEngagement.strong_traction_count)}/
+                    {numberFormatter.format(lowEngagement.psychologists)}
+                  </span>
+                </>
+              }
+            />
+            <TractionEngagementMetric
+              label="Diferença observada"
+              value={formatRateDifference(tractionEngagement.comparison.rate_difference_points)}
+            />
+            <div className="rounded-[1.35rem] border border-border bg-surface-muted p-4 text-xs font-bold leading-5 text-muted">
+              Leitura observacional: alto engajamento significa pelo menos{" "}
+              {numberFormatter.format(
+                tractionEngagement.thresholds.high_engagement_interactions_30d,
+              )}{" "}
+              interações em comunidade normalizadas por 30 dias. Não indica causalidade.
+            </div>
+          </aside>
+        </div>
+      )}
+    </CardShell>
+  );
+};
+
 const TrafficSourceMetricValue = ({
   className,
   percentage,
@@ -2536,6 +2790,7 @@ const DashboardContent = ({
           <TimelineChart points={summary.timeline.points} visibleMetricKeys={activeMetricKeys} />
         </DashboardOverviewPanel>
         <DashboardTractionCard summary={summary} />
+        <DashboardTractionEngagementCard summary={summary} />
         <DashboardTrafficSourcesCard summary={summary} />
       </section>
 

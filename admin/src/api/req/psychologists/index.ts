@@ -475,6 +475,66 @@ export type PsychologistsDashboardTractionResults = {
   unavailable_reason: string | null;
 };
 
+export type PsychologistsDashboardTractionEngagementQuadrantId =
+  | "insufficient_data"
+  | "low_traction_high_engagement"
+  | "low_traction_low_engagement"
+  | "strong_traction_high_engagement"
+  | "strong_traction_low_engagement";
+
+export type PsychologistsDashboardTractionEngagementQuadrant = {
+  count: number;
+  description: string;
+  id: PsychologistsDashboardTractionEngagementQuadrantId;
+  label: string;
+  percentage: number;
+  totals: {
+    community_interactions: number;
+    favorites: number;
+    posts: number;
+    profile_views: number;
+    replies: number;
+    votes: number;
+    whatsapp_clicks: number;
+  };
+};
+
+export type PsychologistsDashboardTractionEngagementRate = {
+  psychologists: number;
+  strong_traction_count: number;
+  strong_traction_rate: number | null;
+};
+
+export type PsychologistsDashboardTractionEngagementResults = {
+  comparison: {
+    high_engagement: PsychologistsDashboardTractionEngagementRate;
+    low_engagement: PsychologistsDashboardTractionEngagementRate;
+    rate_difference_points: number | null;
+  };
+  description: string;
+  quadrants: PsychologistsDashboardTractionEngagementQuadrant[];
+  source: "profile_view_event+contact_request+psychologist_favorite+community_post+post_reply+post_vote";
+  thresholds: {
+    high_engagement_interactions_30d: number;
+    minimum_active_days: number;
+    traction_strong_whatsapp_high_30d: number;
+    traction_strong_whatsapp_with_conversion_30d: number;
+    traction_strong_conversion_rate_percent: number;
+  };
+  totals: {
+    community_interactions: number;
+    high_engagement_psychologists: number;
+    insufficient_data_psychologists: number;
+    low_engagement_psychologists: number;
+    posts: number;
+    psychologists: number;
+    replies: number;
+    strong_traction_psychologists: number;
+    votes: number;
+  };
+  unavailable_reason: string | null;
+};
+
 export type PsychologistsDashboardPlanSegment = "all" | "courtesy" | "free" | "subscribers";
 
 export type PsychologistsDashboardPlanSegmentSummary = {
@@ -487,6 +547,7 @@ export type PsychologistsDashboardPlanSegmentSummary = {
   signup_method: PsychologistsDashboardSignupMethod;
   statistics: PsychologistsDashboardStatistics;
   traction: PsychologistsDashboardTractionResults;
+  traction_engagement: PsychologistsDashboardTractionEngagementResults;
   traffic_sources: PsychologistsDashboardTrafficSources;
 };
 
@@ -1612,6 +1673,7 @@ export type AdminPsychologistsDashboard = {
     source: "user+professional_subscription";
   };
   traction: PsychologistsDashboardTractionResults;
+  traction_engagement: PsychologistsDashboardTractionEngagementResults;
   traffic_sources: PsychologistsDashboardTrafficSources;
   unavailable: PsychologistsDashboardUnavailableMetric[];
 };

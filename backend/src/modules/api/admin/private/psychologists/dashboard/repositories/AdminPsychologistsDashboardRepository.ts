@@ -776,6 +776,117 @@ export class AdminPsychologistsDashboardRepository
     });
   }
 
+  async listCommunityEngagementEvents(range: AdminPsychologistsDashboardDateRange) {
+    const [posts, replies, votes] = await Promise.all([
+      prisma.community_post.findMany({
+        select: {
+          author_id: true,
+          createdAt: true,
+        },
+        where: {
+          author: {
+            active: true,
+            deleted: false,
+            role: "psicologo",
+          },
+          community: {
+            deleted: false,
+          },
+          createdAt: eventCreatedAtWhere(range),
+          deleted: false,
+          status: "publicado",
+        },
+      }),
+      prisma.post_reply.findMany({
+        select: {
+          author_id: true,
+          createdAt: true,
+        },
+        where: {
+          author: {
+            active: true,
+            deleted: false,
+            role: "psicologo",
+          },
+          createdAt: eventCreatedAtWhere(range),
+          deleted: false,
+          post: {
+            community: {
+              deleted: false,
+            },
+            deleted: false,
+            status: "publicado",
+          },
+        },
+      }),
+      prisma.post_vote.findMany({
+        select: {
+          createdAt: true,
+          user_id: true,
+        },
+        where: {
+          createdAt: eventCreatedAtWhere(range),
+          deleted: false,
+          OR: [
+            {
+              post_id: {
+                not: null,
+              },
+              post: {
+                community: {
+                  deleted: false,
+                },
+                deleted: false,
+                status: "publicado",
+              },
+            },
+            {
+              reply_id: {
+                not: null,
+              },
+              reply: {
+                deleted: false,
+                post: {
+                  community: {
+                    deleted: false,
+                  },
+                  deleted: false,
+                  status: "publicado",
+                },
+              },
+            },
+          ],
+          user: {
+            active: true,
+            deleted: false,
+            role: "psicologo",
+          },
+          value: {
+            in: [1, -1],
+          },
+        },
+      }),
+    ]);
+
+    return [
+      ...posts.map((post) => ({
+        createdAt: post.createdAt,
+        psychologist_id: post.author_id,
+        type: "post" as const,
+      })),
+      ...replies.map((reply) => ({
+        createdAt: reply.createdAt,
+        psychologist_id: reply.author_id,
+        type: "reply" as const,
+      })),
+      ...votes.map((vote) => ({
+        createdAt: vote.createdAt,
+        psychologist_id: vote.user_id,
+        type: "vote" as const,
+      })),
+    ];
+  }
+
   async listFavoriteEvents(range: AdminPsychologistsDashboardDateRange) {
     return prisma.psychologist_favorite.findMany({
       where: {

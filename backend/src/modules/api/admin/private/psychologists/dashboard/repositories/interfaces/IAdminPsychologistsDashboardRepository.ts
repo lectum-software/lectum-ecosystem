@@ -103,6 +103,10 @@ export type AdminPsychologistEventRecord = {
   psychologist_id: string;
 };
 
+export type AdminPsychologistCommunityEngagementEventRecord = AdminPsychologistEventRecord & {
+  type: "post" | "reply" | "vote";
+};
+
 export type AdminPsychologistPlatformPageViewRecord = {
   duration_seconds: number | null;
   normalized_path: string;
@@ -172,6 +176,9 @@ export type AdminPsychologistDirectoryFilterSearchRecord = {
 };
 
 export interface IAdminPsychologistsDashboardRepository {
+  listCommunityEngagementEvents(
+    range: AdminPsychologistsDashboardDateRange,
+  ): Promise<AdminPsychologistCommunityEngagementEventRecord[]>;
   listFavoriteEvents(
     range: AdminPsychologistsDashboardDateRange,
   ): Promise<AdminPsychologistEventRecord[]>;
