@@ -105,9 +105,15 @@ Tambem foi solicitado separar votos em **Upvotes** e **Downvotes** para entender
 - A mudanca e apenas de apresentacao no Admin; o contrato `community.communities[]`, a regra de `engagement_diagnosis`, as faixas absolutas e a agregacao geral permanecem inalterados.
 - Para a visualizacao local solicitada em 2026-07-28, foram criados registros de atividade no banco de desenvolvimento com ids `viz_engagement_example_*` para o psicologo `cmrgztri7000tn0uh1q4n8vxf`, cobrindo as quatro faixas. Esses registros nao sao migration, seed, endpoint ou fallback de producao.
 
+## Ajuste visual 2026-07-28 - copy da tag geral
+
+- A tag geral no cabecalho de **Comunidades ativas** deixa de exibir o prefixo **Engajamento geral:** para reduzir redundancia visual com o contexto do bloco.
+- Quando o diagnostico geral e `muito_ativo`, a copy da tag geral passa a ser **Muito engajado**.
+- A alteracao e somente de copy/presentacao da tag geral no detalhe administrativo do psicologo. O contrato `community.engagement_diagnosis`, o id `muito_ativo`, a label de psicologo **Muito engajado** na tabela e a regra de agregacao permanecem inalterados.
+
 ## Ajuste de nomenclatura para psicologos 2026-07-28
 
-- Pedido do usuario: para psicologos, os resultados de engajamento devem ser exibidos como **Muito engajamento**, **Engajado** e **Pouco engajado**, em vez de **Muito ativo**, **Ativo** e **Pouco ativo**.
+- Pedido do usuario: para psicologos, os resultados de engajamento devem ser exibidos como **Muito engajado**, **Engajado** e **Pouco engajado**, em vez de **Muito ativo**, **Ativo** e **Pouco ativo**.
 - Mantemos os ids tecnicos `muito_ativo`, `ativo`, `pouco_ativo` e `sem_base` para preservar filtros, URLs, historico de decisoes e compatibilidade de integracao.
 - O mapeamento de labels foi especializado para os endpoints administrativos de psicologos; a regra compartilhada de calculo e prioridade continua inalterada.
 - **Sem base** permanece como label compartilhada para ausencia/amostra insuficiente.

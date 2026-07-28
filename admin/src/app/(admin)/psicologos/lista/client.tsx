@@ -199,14 +199,14 @@ const TRACTION_FILTER_OPTIONS: PsychologistsListOption[] = [
 ];
 
 const ENGAGEMENT_FILTER_OPTIONS: PsychologistsListOption[] = [
-  { count: 0, id: "muito_ativo", label: "Muito engajamento" },
+  { count: 0, id: "muito_ativo", label: "Muito engajado" },
   { count: 0, id: "ativo", label: "Engajado" },
   { count: 0, id: "pouco_ativo", label: "Pouco engajado" },
   { count: 0, id: "sem_base", label: "Sem base" },
 ];
 const PSYCHOLOGIST_ENGAGEMENT_LABEL_BY_ID: Record<PsychologistsListEngagementId, string> = {
   ativo: "Engajado",
-  muito_ativo: "Muito engajamento",
+  muito_ativo: "Muito engajado",
   pouco_ativo: "Pouco engajado",
   sem_base: "Sem base",
 };

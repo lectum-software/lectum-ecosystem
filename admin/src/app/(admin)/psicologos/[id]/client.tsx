@@ -2866,7 +2866,7 @@ const PSYCHOLOGIST_COMMUNITY_ENGAGEMENT_LABEL_BY_ID: Record<
   string
 > = {
   ativo: "Engajado",
-  muito_ativo: "Muito engajamento",
+  muito_ativo: "Muito engajado",
   pouco_ativo: "Pouco engajado",
   sem_base: "Sem base",
 };
@@ -2930,7 +2930,7 @@ const ActiveCommunitiesBlock = ({
               communityEngagementDiagnosisClassName(engagementDiagnosis.id),
             )}
           >
-            Engajamento geral: {formatPsychologistCommunityEngagementLabel(engagementDiagnosis)}
+            {formatPsychologistCommunityEngagementLabel(engagementDiagnosis)}
           </Badge>
           {isRefreshing ? (
             <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary-soft px-2.5 py-1 text-[11px] font-black text-primary">

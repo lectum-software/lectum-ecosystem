@@ -14,7 +14,7 @@ export type AdminPsychologistCommunityEngagementDiagnosis = Omit<
   AdminCommunityEngagementDiagnosis,
   "label"
 > & {
-  label: "Engajado" | "Muito engajamento" | "Pouco engajado" | "Sem base";
+  label: "Engajado" | "Muito engajado" | "Pouco engajado" | "Sem base";
 };
 
 const labelByDiagnosis: Record<
@@ -32,7 +32,7 @@ const psychologistLabelByDiagnosis: Record<
   AdminPsychologistCommunityEngagementDiagnosis["label"]
 > = {
   ativo: "Engajado",
-  muito_ativo: "Muito engajamento",
+  muito_ativo: "Muito engajado",
   pouco_ativo: "Pouco engajado",
   sem_base: "Sem base",
 };

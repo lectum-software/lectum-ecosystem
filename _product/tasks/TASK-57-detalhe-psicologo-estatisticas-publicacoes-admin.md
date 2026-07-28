@@ -499,9 +499,36 @@ Exibir estatísticas de negócio/comunidade e publicações do psicólogo com da
 - SQL local confirmou 4 comunidades ativas do psicologo no periodo: 12 interacoes (**Muito ativo**), 6 (**Ativo**), 3 (**Pouco ativo**) e 1 (**Sem base**).
 - Browser local/headless via Chrome/CDP em `http://localhost:3002/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=estatisticas` confirmou: `4 Comunidades` na primeira coluna, ausencia da badge `3 comunidades`/`4 comunidades` e presenca das quatro labels de engajamento na tabela.
 
+## Ajuste pos-feedback 2026-07-28 - Copy da tag geral de engajamento
+
+- Pedido do usuario: a tag ao lado de **Comunidades ativas** deve remover o prefixo **Engajamento geral:** e exibir **Muito engajado** no caso do diagnostico geral `muito_ativo`.
+- A mudanca e de copy/apresentacao para psicologos no Admin; a tabela continua exibindo o diagnostico individual retornado pelo contrato real, incluindo **Muito engajado** para a faixa `muito_ativo`.
+- Nao houve alteracao de ids tecnicos, calculo, rotas, schema Prisma, migration, package, mock, seed ou backfill.
+- Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente; foram usados o screenshot enviado pelo usuario e o padrao visual existente da aba **Estatisticas**.
+- ADR atualizado: `adrs/0300-diagnostico-engajamento-comunidades-admin.md`.
+
+### Criterios de aceite do ajuste
+
+- [x] A tag geral em **Comunidades ativas** nao exibe mais o prefixo **Engajamento geral:**.
+- [x] Quando o diagnostico geral e `muito_ativo`, a tag geral exibe **Muito engajado**.
+- [x] A tabela preserva o diagnostico individual por comunidade, incluindo **Muito engajado** quando aplicavel.
+- [x] Nenhum endpoint simulado, migration, package novo ou mock em codigo foi adicionado.
+
+### Validacao complementar executada
+
+- `pnpm --dir admin exec biome check "src/app/(admin)/psicologos/[id]/client.tsx"`
+- `pnpm --dir admin exec eslint "src/app/(admin)/psicologos/[id]/client.tsx"`
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build` (primeira execucao encontrou outro `next build` em andamento; reexecucao apos aguardar concluiu com sucesso).
+- `pnpm check` (primeira execucao atingiu timeout local enquanto processos filhos ainda rodavam; reexecucao com timeout maior concluiu com sucesso).
+- Browser local/headless via Chrome/CDP em `http://localhost:3002/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=estatisticas` confirmou **Muito engajado** na tag geral, ausencia de **Engajamento geral:**, preservacao do diagnostico individual na tabela e `4 Comunidades` no cabecalho.
+- Limpeza pos-validacao confirmou `0` tokens administrativos temporarios com prefixo `admin-codex-visual-20260728-label-` e nenhum diretorio temporario de Chrome/TS restante.
+
 ## Ajuste pos-feedback 2026-07-28 - nomenclatura de engajamento de psicologos
 
-- Pedido do usuario: os resultados de engajamento de psicologos devem usar as labels **Muito engajamento**, **Engajado** e **Pouco engajado**, em vez de **Muito ativo**, **Ativo** e **Pouco ativo**.
+- Pedido do usuario: os resultados de engajamento de psicologos devem usar as labels **Muito engajado**, **Engajado** e **Pouco engajado**, em vez de **Muito ativo**, **Ativo** e **Pouco ativo**.
 - A mudanca preserva os ids tecnicos `muito_ativo`, `ativo`, `pouco_ativo` e `sem_base`, os filtros, os limiares, a ordenacao e as fontes reais ja existentes.
 - O backend dos endpoints administrativos de psicologos passou a formatar a label de `engagement_diagnosis` e de `engagement` com a nomenclatura de engajamento, sem alterar pacientes.
 - A UI Admin tambem mapeia os ids para as novas labels na lista e na aba **Estatisticas**, garantindo a copy correta mesmo quando o dev server ainda estiver usando resposta antiga em cache.
@@ -510,20 +537,21 @@ Exibir estatísticas de negócio/comunidade e publicações do psicólogo com da
 
 ### Criterios de aceite do ajuste
 
-- [x] A lista administrativa de psicologos mostra **Muito engajamento**, **Engajado** e **Pouco engajado** na coluna/filtro de **Engajamento**.
-- [x] A aba **Estatisticas** do psicologo mostra **Engajamento geral: Muito engajamento**, **Engajamento geral: Engajado** ou **Engajamento geral: Pouco engajado** conforme o id retornado.
-- [x] As linhas de **Comunidades ativas** mostram o resultado individual com **Muito engajamento**, **Engajado**, **Pouco engajado** ou **Sem base**.
+- [x] A lista administrativa de psicologos mostra **Muito engajado**, **Engajado** e **Pouco engajado** na coluna/filtro de **Engajamento**.
+- [x] A aba **Estatisticas** do psicologo mostra **Muito engajado**, **Engajado** ou **Pouco engajado** conforme o id retornado.
+- [x] As linhas de **Comunidades ativas** mostram o resultado individual com **Muito engajado**, **Engajado**, **Pouco engajado** ou **Sem base**.
 - [x] Nenhum contrato de id, calculo de faixa, endpoint, migration, package novo ou mock foi adicionado.
 
 ### Validacao complementar executada
 
 - `pnpm --dir backend exec biome check --write src/utils/admin-community-engagement-diagnosis.ts src/modules/api/admin/private/psychologists/list/DTOs/IAdminPsychologistsListDTO.ts src/modules/api/admin/private/psychologists/list/use-cases/services.ts src/modules/api/admin/private/psychologists/engagement/DTOs/IAdminPsychologistEngagementDTO.ts src/modules/api/admin/private/psychologists/engagement/use-cases/services.ts`
 - `pnpm --dir admin exec biome check --write src/api/req/psychologists/index.ts "src/app/(admin)/psicologos/lista/client.tsx" "src/app/(admin)/psicologos/[id]/client.tsx"`
+- `pnpm --dir admin exec eslint "src/app/(admin)/psicologos/lista/client.tsx" "src/app/(admin)/psicologos/[id]/client.tsx"`
 - `pnpm --dir backend check`
 - `pnpm --dir backend build`
 - `pnpm --dir admin check`
 - `pnpm --dir admin build`
 - `pnpm check`
-- Smoke direto do helper confirmou `["Muito engajamento","Engajado","Pouco engajado","Sem base"]` para 12, 6, 3 e 0 interacoes.
-- Browser local/headless em `http://localhost:3002/psicologos/lista?sort=relevance&limit=8` confirmou **Muito engajamento** e ausencia de **Muito ativo**/**Pouco ativo** na lista.
-- Browser local/headless em `http://localhost:3002/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=estatisticas` confirmou **Engajamento geral: Muito engajamento**, **Engajado**, **Pouco engajado**, **Sem base** e ausencia de **Muito ativo**/**Pouco ativo**. Admin temporario real usado na validacao foi removido ao final.
+- Smoke direto do helper confirmou `["Muito engajado","Engajado","Pouco engajado","Sem base"]` para 12, 6, 3 e 0 interacoes.
+- Browser local/headless em `http://localhost:3002/psicologos/lista?sort=relevance&limit=8` confirmou **Muito engajado** e ausencia de **Muito engajamento**/**Muito ativo** na lista.
+- Browser local/headless em `http://localhost:3002/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=estatisticas` confirmou **Muito engajado**, **Engajado**, **Pouco engajado**, **Sem base**, ausencia de **Engajamento geral:**/**Muito engajamento**/**Muito ativo** e `4 Comunidades`. Admin temporario real usado na validacao foi removido ao final.
