@@ -72,3 +72,24 @@ O bloco do dashboard Admin de pacientes foi reorganizado de **Analise da intenca
 - **Engajamento dos pacientes**: separa os sinais reais de comportamento em um grafico de barras para aberturas de perfil, favoritos ativos, cliques no WhatsApp e retornos ao perfil.
 
 A decisao evita misturar temperatura/intencao com volume de acoes observadas. O contrato `intent_analysis` permanece o mesmo; a mudanca e somente de hierarquia visual no Admin, sem endpoint novo, schema Prisma, migration, package, tracking, seed, mock ou backfill. A UI informa que uma pessoa pode gerar mais de um sinal, entao o grafico de engajamento mede acoes reais e nao pacientes unicos.
+
+
+## Atualizacao 2026-07-28 - Engajamento por paciente unico
+
+Apos novo feedback de produto, o bloco deixou de usar `intent_analysis.signal_totals` como grafico de barras de acoes na coluna **Engajamento dos pacientes**. Acoes continuam disponiveis no contrato de intencao para compatibilidade, mas a leitura visual de engajamento passa a exigir pacientes unicos por nivel.
+
+Foi adicionado `engagement_analysis` ao payload de `GET /api/admin/private/patients/dashboard`, calculado no backend com os mesmos sinais reais ja usados pela intencao:
+
+- abertura de perfil de psicologo via `profile_view_event`;
+- favorito ativo via `psychologist_favorite`;
+- clique no WhatsApp via `contact_request`;
+- retorno ao mesmo perfil como reforco derivado de aberturas repetidas para o mesmo psicologo.
+
+A classificacao e exclusiva por paciente e usa estes criterios operacionais:
+
+- **Sem engajamento**: nenhuma acao real no periodo;
+- **Pouco engajados**: uma unica acao de descoberta, sem favorito, retorno ou WhatsApp;
+- **Engajados**: favorito, retorno ao mesmo perfil ou pelo menos duas acoes reais;
+- **Muito engajados**: clique no WhatsApp, quatro ou mais acoes reais, ou multiplos retornos ao mesmo perfil.
+
+A UI agora mostra donuts espelhados: intencao em Frios/Curiosos/Interessados/Qualificados e engajamento em Muito engajados/Engajados/Pouco engajados/Sem engajamento. A coluna de intencao removeu a barra horizontal e os cards de contadores para manter foco no grafico. Nao houve schema Prisma, migration, package novo, tracking, seed, mock, endpoint paralelo ou backfill.

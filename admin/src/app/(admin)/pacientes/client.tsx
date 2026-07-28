@@ -5,15 +5,11 @@ import {
   AlertTriangle,
   ChevronDown,
   ChevronRight,
-  Eye,
-  Flame,
   Loader2,
   type LucideIcon,
   MapPin,
-  MessageCircle,
   RefreshCw,
   Smartphone,
-  Snowflake,
   Target,
   TrendingUp,
   UserCheck,
@@ -28,6 +24,7 @@ import type {
   AdminPatientsDashboard,
   PatientsDashboardBreakdownItem,
   PatientsDashboardDailyPoint,
+  PatientsDashboardEngagementSegment,
   PatientsDashboardIntentFilterId,
   PatientsDashboardIntentFilterOption,
   PatientsDashboardIntentSegment,
@@ -106,18 +103,12 @@ const PATIENT_INTENT_CHART_COLORS = {
   objective: "#f59f00",
   very_qualified: "#13a85b",
 } satisfies Record<PatientsDashboardIntentSegment["id"], string>;
-const PATIENT_INTENT_ICONS = {
-  cold: Snowflake,
-  curious: Eye,
-  objective: Target,
-  very_qualified: Flame,
-} satisfies Record<PatientsDashboardIntentSegment["id"], LucideIcon>;
-const PATIENT_INTENT_TONE_CLASS_NAMES = {
-  cold: "bg-surface-muted text-muted",
-  curious: "bg-primary-soft text-primary",
-  objective: "bg-warning/10 text-warning",
-  very_qualified: "bg-success/10 text-success",
-} satisfies Record<PatientsDashboardIntentSegment["id"], string>;
+const PATIENT_ENGAGEMENT_CHART_COLORS = {
+  engaged: "#f59f00",
+  low_engagement: "#308ce8",
+  no_engagement: "#64748b",
+  very_engaged: "#13a85b",
+} satisfies Record<PatientsDashboardEngagementSegment["id"], string>;
 const LOCATION_RANKING_LIMIT = 5;
 const BRAZIL_STATE_CODES = new Set([
   "AC",
@@ -1027,84 +1018,6 @@ const MiniBar = ({
   </div>
 );
 
-const PatientIntentSegmentCard = ({ segment }: { segment: PatientsDashboardIntentSegment }) => {
-  const Icon = PATIENT_INTENT_ICONS[segment.id];
-  const color = PATIENT_INTENT_CHART_COLORS[segment.id];
-
-  return (
-    <div className="min-w-0 rounded-2xl border border-border/75 bg-surface p-4">
-      <div className="flex items-start justify-between gap-3">
-        <span
-          className={cn(
-            "grid h-10 w-10 shrink-0 place-items-center rounded-full",
-            PATIENT_INTENT_TONE_CLASS_NAMES[segment.id],
-          )}
-        >
-          <Icon aria-hidden className="h-5 w-5" />
-        </span>
-        <span className="rounded-full bg-surface-muted px-2.5 py-1 text-xs font-black text-foreground">
-          {formatPercentageValue(segment.percentage)}
-        </span>
-      </div>
-      <p className="mt-4 text-xs font-black uppercase tracking-[0.12em] text-muted">
-        {segment.label}
-      </p>
-      <p className="mt-1 text-2xl font-black text-foreground">
-        {numberFormatter.format(segment.count)}
-      </p>
-      <div className="mt-3 h-2 overflow-hidden rounded-full bg-surface-muted">
-        <div
-          aria-hidden
-          className="h-full rounded-full"
-          style={{ backgroundColor: color, width: `${segment.percentage}%` }}
-        />
-      </div>
-      <p className="mt-3 text-xs font-bold leading-5 text-muted">{segment.description}</p>
-    </div>
-  );
-};
-
-const PatientIntentDistributionBar = ({
-  items,
-  total,
-}: {
-  items: PatientsDashboardIntentSegment[];
-  total: number;
-}) => (
-  <div
-    aria-label="Distribuição percentual de intenção dos pacientes"
-    className="flex h-3 overflow-hidden rounded-full bg-surface-muted"
-    role="img"
-  >
-    {total > 0 ? (
-      items.map((segment) =>
-        segment.count > 0 ? (
-          <span
-            className="h-full"
-            key={segment.id}
-            style={{
-              backgroundColor: PATIENT_INTENT_CHART_COLORS[segment.id],
-              width: `${segment.percentage}%`,
-            }}
-            title={`${segment.label}: ${formatPercentageValue(segment.percentage)}`}
-          />
-        ) : null,
-      )
-    ) : (
-      <span className="h-full w-full bg-surface-muted" />
-    )}
-  </div>
-);
-
-type PatientEngagementSignal = {
-  color: string;
-  description: string;
-  icon: LucideIcon;
-  id: keyof AdminPatientsDashboard["intent_analysis"]["signal_totals"];
-  label: string;
-  value: number;
-};
-
 const buildPatientIntentDonutItems = (items: PatientsDashboardIntentSegment[]) =>
   items.map((item) => ({
     color: PATIENT_INTENT_CHART_COLORS[item.id],
@@ -1114,42 +1027,14 @@ const buildPatientIntentDonutItems = (items: PatientsDashboardIntentSegment[]) =
     percentage: item.percentage,
   }));
 
-const buildPatientEngagementSignals = (
-  signalTotals: AdminPatientsDashboard["intent_analysis"]["signal_totals"],
-): PatientEngagementSignal[] => [
-  {
-    color: PATIENT_INTENT_CHART_COLORS.curious,
-    description: "Aberturas reais de perfis públicos de psicólogos.",
-    icon: Eye,
-    id: "profile_views",
-    label: "Aberturas de perfil",
-    value: signalTotals.profile_views,
-  },
-  {
-    color: PATIENT_INTENT_CHART_COLORS.objective,
-    description: "Psicólogos favoritados que continuam ativos na base.",
-    icon: Target,
-    id: "favorites",
-    label: "Favoritos ativos",
-    value: signalTotals.favorites,
-  },
-  {
-    color: PATIENT_INTENT_CHART_COLORS.very_qualified,
-    description: "Cliques reais no WhatsApp dentro do período.",
-    icon: MessageCircle,
-    id: "whatsapp_clicks",
-    label: "Cliques no WhatsApp",
-    value: signalTotals.whatsapp_clicks,
-  },
-  {
-    color: "#8b5cf6",
-    description: "Retornos relevantes ao mesmo perfil de psicólogo.",
-    icon: RefreshCw,
-    id: "repeated_profile_views",
-    label: "Retornos ao perfil",
-    value: signalTotals.repeated_profile_views,
-  },
-];
+const buildPatientEngagementDonutItems = (items: PatientsDashboardEngagementSegment[]) =>
+  items.map((item) => ({
+    color: PATIENT_ENGAGEMENT_CHART_COLORS[item.id],
+    count: item.count,
+    id: item.id,
+    label: item.label,
+    percentage: item.percentage,
+  }));
 
 const PatientIntentDonutChart = ({
   items,
@@ -1173,107 +1058,31 @@ const PatientIntentDonutChart = ({
   />
 );
 
-const PatientEngagementBarsChart = ({
-  signals,
-  totalPatients,
+const PatientEngagementDonutChart = ({
+  items,
+  total,
 }: {
-  signals: PatientEngagementSignal[];
-  totalPatients: number;
-}) => {
-  const totalSignals = signals.reduce((sum, signal) => sum + signal.value, 0);
-  const maxSignalValue = Math.max(1, ...signals.map((signal) => signal.value));
-
-  return (
-    <div className="mt-5 rounded-2xl border border-border/70 bg-surface p-4">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <p className="text-xs font-black uppercase tracking-[0.12em] text-muted">
-            Sinais observados
-          </p>
-          <p className="mt-1 text-3xl font-black text-foreground">
-            {numberFormatter.format(totalSignals)}
-          </p>
-          <p className="mt-1 text-sm font-bold text-muted">ações reais no período selecionado</p>
-        </div>
-        <span className="grid h-12 w-12 place-items-center rounded-full bg-primary-soft text-primary">
-          <Activity aria-hidden className="h-5 w-5" />
-        </span>
-      </div>
-
-      <div
-        aria-label={`Gráfico de barras de engajamento dos pacientes: ${signals
-          .map((signal) => `${signal.label}: ${numberFormatter.format(signal.value)}`)
-          .join("; ")}.`}
-        className="mt-5 space-y-4"
-        role="img"
-      >
-        {signals.map((signal) => {
-          const barWidth = signal.value > 0 ? (signal.value / maxSignalValue) * 100 : 0;
-          const patientRate =
-            totalPatients > 0 ? Math.round((signal.value / totalPatients) * 1000) / 10 : null;
-
-          return (
-            <div className="space-y-2" key={signal.id}>
-              <div className="flex items-start justify-between gap-3 text-sm">
-                <div className="min-w-0">
-                  <p className="font-bold text-foreground">{signal.label}</p>
-                  <p className="mt-0.5 text-xs font-semibold leading-5 text-muted">
-                    {patientRate === null
-                      ? "Sem base de pacientes no período."
-                      : `${formatPercentageValue(patientRate)} sobre a base considerada.`}
-                  </p>
-                </div>
-                <span className="shrink-0 text-right font-black text-foreground">
-                  {numberFormatter.format(signal.value)}
-                </span>
-              </div>
-              <div className="h-2.5 overflow-hidden rounded-full bg-surface-muted">
-                <div
-                  aria-hidden
-                  className="h-full rounded-full"
-                  style={{ backgroundColor: signal.color, width: `${barWidth}%` }}
-                />
-              </div>
-            </div>
-          );
-        })}
-      </div>
-
-      <p className="mt-4 text-xs font-semibold leading-5 text-subtle">
-        Uma pessoa pode gerar mais de um sinal; por isso o gráfico mede ações reais, não pacientes
-        únicos.
-      </p>
-    </div>
-  );
-};
-
-const PatientEngagementSignalCard = ({ signal }: { signal: PatientEngagementSignal }) => {
-  const Icon = signal.icon;
-
-  return (
-    <div className="min-w-0 rounded-2xl border border-border/75 bg-surface p-4">
-      <div className="flex items-start justify-between gap-3">
-        <span
-          className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-surface-muted"
-          style={{ color: signal.color }}
-        >
-          <Icon aria-hidden className="h-5 w-5" />
-        </span>
-        <span className="rounded-full bg-surface-muted px-2.5 py-1 text-xs font-black text-foreground">
-          {numberFormatter.format(signal.value)}
-        </span>
-      </div>
-      <p className="mt-4 text-xs font-black uppercase tracking-[0.12em] text-muted">
-        {signal.label}
-      </p>
-      <p className="mt-2 text-xs font-bold leading-5 text-muted">{signal.description}</p>
-    </div>
-  );
-};
+  items: PatientsDashboardEngagementSegment[];
+  total: number;
+}) => (
+  <DonutChart
+    ariaLabel={`Gráfico de donut de engajamento dos pacientes: ${items
+      .map(
+        (item) =>
+          `${item.label}: ${numberFormatter.format(item.count)} pacientes, ${formatPercentageValue(
+            item.percentage,
+          )}`,
+      )
+      .join("; ")}.`}
+    emptyMessage="Sem pacientes reais no período para calcular engajamento."
+    items={buildPatientEngagementDonutItems(items)}
+    total={total}
+  />
+);
 
 const PatientIntentAnalysisCard = ({ summary }: { summary: AdminPatientsDashboard }) => {
   const intent = summary.intent_analysis;
-  const engagementSignals = buildPatientEngagementSignals(intent.signal_totals);
+  const engagement = summary.engagement_analysis;
 
   return (
     <CardShell className="p-5">
@@ -1310,14 +1119,6 @@ const PatientIntentAnalysisCard = ({ summary }: { summary: AdminPatientsDashboar
             Distribuição dos pacientes reais entre Frios, Curiosos, Interessados e Qualificados.
           </p>
           <PatientIntentDonutChart items={intent.items} total={intent.total_patients} />
-          <div className="mt-5">
-            <PatientIntentDistributionBar items={intent.items} total={intent.total_patients} />
-          </div>
-          <div className="mt-5 grid gap-3 sm:grid-cols-2">
-            {intent.items.map((segment) => (
-              <PatientIntentSegmentCard key={segment.id} segment={segment} />
-            ))}
-          </div>
         </section>
 
         <section className="min-w-0 rounded-[1.6rem] border border-border/75 bg-surface-muted/70 p-4">
@@ -1325,23 +1126,20 @@ const PatientIntentAnalysisCard = ({ summary }: { summary: AdminPatientsDashboar
             <div>
               <p className="text-xs font-black uppercase tracking-[0.12em] text-muted">Gráfico</p>
               <h3 className="mt-1 text-lg font-bold text-foreground">Engajamento dos pacientes</h3>
-              <p className="mt-1 text-sm font-bold leading-6 text-muted">
-                Sinais de descoberta e contato gerados por pacientes no período.
+              <p className="mt-1 text-3xl font-black text-foreground">
+                {numberFormatter.format(engagement.total_patients)}
               </p>
+              <p className="mt-1 text-sm font-bold text-muted">pacientes considerados</p>
             </div>
             <span className="grid h-12 w-12 place-items-center rounded-full bg-surface text-success">
               <Activity aria-hidden className="h-5 w-5" />
             </span>
           </div>
-          <PatientEngagementBarsChart
-            signals={engagementSignals}
-            totalPatients={intent.total_patients}
-          />
-          <div className="mt-5 grid gap-3 sm:grid-cols-2">
-            {engagementSignals.map((signal) => (
-              <PatientEngagementSignalCard key={signal.id} signal={signal} />
-            ))}
-          </div>
+          <p className="mt-4 text-sm font-bold leading-6 text-muted">
+            Distribuição dos pacientes reais entre Muito engajados, Engajados, Pouco engajados e Sem
+            engajamento.
+          </p>
+          <PatientEngagementDonutChart items={engagement.items} total={engagement.total_patients} />
         </section>
       </div>
     </CardShell>

@@ -12,6 +12,8 @@ import type {
   AdminPatientsDashboardBreakdownItem,
   AdminPatientsDashboardDateRange,
   AdminPatientsDashboardDeviceType,
+  AdminPatientsDashboardEngagementAnalysis,
+  AdminPatientsDashboardEngagementSegmentId,
   AdminPatientsDashboardIntentAnalysis,
   AdminPatientsDashboardIntentFilterId,
   AdminPatientsDashboardIntentSegmentId,
@@ -73,6 +75,7 @@ type PatientsDashboardIntentCounts = {
 
 type PatientsDashboardIntentClassification = {
   analysis: AdminPatientsDashboardIntentAnalysis;
+  engagementAnalysis: AdminPatientsDashboardEngagementAnalysis;
   segmentByPatientId: Map<string, AdminPatientsDashboardIntentSegmentId>;
 };
 
@@ -161,6 +164,18 @@ const PATIENT_INTENT_SEGMENT_ORDER: AdminPatientsDashboardIntentSegmentId[] = [
 const PATIENT_INTENT_FILTER_ORDER: AdminPatientsDashboardIntentFilterId[] = [
   "all",
   ...PATIENT_INTENT_SEGMENT_ORDER,
+];
+const PATIENT_ENGAGEMENT_SEGMENT_LABELS = {
+  engaged: "Engajados",
+  low_engagement: "Pouco engajados",
+  no_engagement: "Sem engajamento",
+  very_engaged: "Muito engajados",
+} as const satisfies Record<AdminPatientsDashboardEngagementSegmentId, string>;
+const PATIENT_ENGAGEMENT_SEGMENT_ORDER: AdminPatientsDashboardEngagementSegmentId[] = [
+  "very_engaged",
+  "engaged",
+  "low_engagement",
+  "no_engagement",
 ];
 const ANONYMOUS_CONVERSION_BUCKETS = [
   { id: "same_day", label: "Mesmo dia" },
@@ -431,6 +446,27 @@ const classifyPatientIntent = (
   return "cold";
 };
 
+const patientEngagementActionCount = (counts: PatientsDashboardIntentCounts) =>
+  Math.max(0, counts.profile_views) +
+  Math.max(0, counts.favorites) +
+  Math.max(0, counts.whatsapp_clicks);
+
+const classifyPatientEngagement = (
+  counts: PatientsDashboardIntentCounts,
+): AdminPatientsDashboardEngagementSegmentId => {
+  const actionCount = patientEngagementActionCount(counts);
+
+  if (actionCount === 0) return "no_engagement";
+  if (counts.whatsapp_clicks > 0 || counts.repeated_profile_views >= 2 || actionCount >= 4) {
+    return "very_engaged";
+  }
+  if (counts.favorites > 0 || counts.repeated_profile_views > 0 || actionCount >= 2) {
+    return "engaged";
+  }
+
+  return "low_engagement";
+};
+
 const getIntentCountsForPatient = (
   countsByPatient: Map<string, PatientsDashboardIntentCounts>,
   patientId: string,
@@ -483,14 +519,22 @@ const buildPatientIntentClassification = (
   const segmentCounts = new Map<AdminPatientsDashboardIntentSegmentId, number>(
     PATIENT_INTENT_SEGMENT_ORDER.map((segmentId) => [segmentId, 0]),
   );
+  const engagementSegmentCounts = new Map<AdminPatientsDashboardEngagementSegmentId, number>(
+    PATIENT_ENGAGEMENT_SEGMENT_ORDER.map((segmentId) => [segmentId, 0]),
+  );
   const segmentByPatientId = new Map<string, AdminPatientsDashboardIntentSegmentId>();
   const signalTotals = createIntentCounts();
 
   for (const patient of patients) {
     const counts = countsByPatient.get(patient.id) ?? createIntentCounts();
     const segmentId = classifyPatientIntent(counts);
+    const engagementSegmentId = classifyPatientEngagement(counts);
     segmentByPatientId.set(patient.id, segmentId);
     segmentCounts.set(segmentId, (segmentCounts.get(segmentId) ?? 0) + 1);
+    engagementSegmentCounts.set(
+      engagementSegmentId,
+      (engagementSegmentCounts.get(engagementSegmentId) ?? 0) + 1,
+    );
     signalTotals.profile_views += counts.profile_views;
     signalTotals.repeated_profile_views += counts.repeated_profile_views;
     signalTotals.favorites += counts.favorites;
@@ -500,6 +544,7 @@ const buildPatientIntentClassification = (
   const totalSignals =
     signalTotals.profile_views + signalTotals.favorites + signalTotals.whatsapp_clicks;
   const coldPatients = segmentCounts.get("cold") ?? 0;
+  const patientsWithoutEngagement = engagementSegmentCounts.get("no_engagement") ?? 0;
 
   return {
     analysis: {
@@ -519,6 +564,21 @@ const buildPatientIntentClassification = (
       source: PATIENT_INTENT_SOURCE,
       total_patients: patients.length,
       total_signals: totalSignals,
+    },
+    engagementAnalysis: {
+      coverage_note:
+        "Distribuição por pacientes existentes no fim do período, usando somente ações reais de descoberta e contato dentro do site.",
+      items: PATIENT_ENGAGEMENT_SEGMENT_ORDER.map((segmentId) => ({
+        count: engagementSegmentCounts.get(segmentId) ?? 0,
+        id: segmentId,
+        label: PATIENT_ENGAGEMENT_SEGMENT_LABELS[segmentId],
+        percentage: safePercentage(engagementSegmentCounts.get(segmentId) ?? 0, patients.length),
+      })),
+      patients_with_engagement: Math.max(0, patients.length - patientsWithoutEngagement),
+      privacy_note:
+        "Indicador agregado interno do Admin; não é exibido a pacientes ou psicólogos e não infere sessão, atendimento, diagnóstico ou conteúdo de conversa.",
+      source: PATIENT_INTENT_SOURCE,
+      total_patients: patients.length,
     },
     segmentByPatientId,
   };
@@ -1668,10 +1728,12 @@ export const buildPatientsDashboard = async (
       "Tempo médio do paciente usa pageviews autenticados first-party e ignora períodos em que o app fica oculto/minimizado quando o navegador envia eventos de visibilidade.",
       "Localização usa apenas capturas agregadas e coarse de visitor_location no período selecionado; cidades com baixa frequência são agrupadas, e coordenadas, IP e endereço não são retornados.",
       "Análise de intenção usa apenas agregados de abertura de perfil, favoritos ativos e cliques no WhatsApp; não expõe conversa, diagnóstico ou atendimento.",
+      "Engajamento dos pacientes classifica pacientes únicos pelo volume de ações reais de descoberta e contato no período; retornos ao mesmo perfil reforçam a categoria, mas não substituem eventos persistidos.",
       "Filtros por intenção nos blocos agregados usam a mesma classificação real do período e não recalculam segmentos a partir de dados exibidos no cliente.",
     ],
     demographics: buildDemographics(currentPeriodPatients),
     device_usage: deviceUsage,
+    engagement_analysis: intentClassification.engagementAnalysis,
     export: {
       available: false,
       reason: "Exportação não exibida porque ainda não existe endpoint real para pacientes.",

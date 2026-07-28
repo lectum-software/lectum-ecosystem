@@ -827,3 +827,37 @@ Frontend esperado:
 - `pnpm check`
 - Browser local/headless autenticado em `http://localhost:3002/pacientes?period=all` com Admin temporario real removido ao final: confirmou o bloco **Intencao e engajamento dos pacientes**, as secoes **Intencao dos pacientes** e **Engajamento dos pacientes**, donut de intencao, barras de engajamento e percentual arredondado `14,2% sobre a base considerada.`; screenshot salvo em `.tmp/patient-dashboard-intent-engagement-browser.png`.
 - Durante a validacao, o primeiro build complementar encontrou `ENOSPC` por falta de espaco em artefatos gerados; foram removidos apenas caches/artefatos temporarios de build/browser dentro do workspace e o build foi reexecutado com sucesso.
+
+
+## Ajuste pos-feedback 2026-07-28 - Foco nos graficos de intencao e engajamento
+
+- Pedido do usuario: na coluna **Intencao dos pacientes**, remover a barra horizontal e os quatro contadores abaixo dela, mantendo o foco no grafico; na coluna **Engajamento dos pacientes**, criar um espelho da primeira coluna com grafico por nivel (**Muito engajados**, **Engajados**, **Pouco engajados** e **Sem engajamento**), sem descrever cada sinal.
+- O backend de `GET /api/admin/private/patients/dashboard` passou a retornar `engagement_analysis`, calculado somente com os mesmos sinais reais ja persistidos de abertura de perfil, favoritos ativos e cliques no WhatsApp, sem endpoint paralelo, tracking novo, seed, mock ou backfill.
+- A classificacao de engajamento e por paciente unico: sem acao real entra em **Sem engajamento**; uma acao de descoberta entra em **Pouco engajados**; favorito, retorno ao mesmo perfil ou duas/mais acoes entram em **Engajados**; clique no WhatsApp, quatro/mais acoes ou multiplos retornos entram em **Muito engajados**.
+- A UI mobile-first manteve o bloco **Intencao e engajamento dos pacientes** em duas colunas no desktop e empilhado em telas estreitas. A coluna de intencao exibe somente o donut e a legenda; a coluna de engajamento espelha a estrutura com donut proprio por nivel.
+- Nao houve alteracao de schema Prisma, migration, package novo, seed, mock, dado artificial, backfill, uso de `<img>` ou mudanca nos filtros por intencao ja existentes.
+- Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente; as referencias auditaveis foram `_product/proto/admin/Pacientes/Pacientes - Dashboard.png` e os screenshots enviados pelo usuario em 2026-07-27/2026-07-28.
+- ADR atualizado: `adrs/0314-admin-patient-dashboard-intent-distribution.md`.
+
+### Criterios de aceite do ajuste
+
+- [x] A coluna **Intencao dos pacientes** nao renderiza mais a barra horizontal percentual.
+- [x] A coluna **Intencao dos pacientes** nao renderiza mais os quatro cards/contadores de Frios, Curiosos, Interessados e Qualificados abaixo do grafico.
+- [x] O foco visual da coluna **Intencao dos pacientes** permanece no donut com legenda real.
+- [x] A coluna **Engajamento dos pacientes** espelha a primeira coluna com grafico de donut proprio.
+- [x] O grafico de engajamento usa niveis por paciente unico: **Muito engajados**, **Engajados**, **Pouco engajados** e **Sem engajamento**.
+- [x] O engajamento e calculado no backend com dados reais e nao descreve cada sinal na UI.
+- [x] Layout mobile-first preservado, sem novo package, mock, seed, migration, endpoint simulado ou `<img>`.
+
+### Validacao complementar executada
+
+- `pnpm --dir backend exec biome check --write "src/modules/api/admin/private/patients/dashboard/DTOs/IAdminPatientsDashboardDTO.ts" "src/modules/api/admin/private/patients/dashboard/use-cases/services.ts"`
+- `pnpm --dir admin exec biome check --write "src/api/req/patients/index.ts" "src/app/(admin)/pacientes/client.tsx"`
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `NODE_OPTIONS=--max-old-space-size=8192 pnpm --dir admin check`
+- `NODE_OPTIONS=--max-old-space-size=8192 pnpm --dir admin build` via `cmd /c` no Windows; o build concluiu com avisos de cache Webpack corrompido/recriado, sem falhar.
+- `NODE_OPTIONS=--max-old-space-size=8192 pnpm check`
+- Servico local `buildPatientsDashboard({ period: "all" })` retornou `engagement_analysis.items` com **Muito engajados**, **Engajados**, **Pouco engajados** e **Sem engajamento**, totalizando 155 pacientes reais na base local.
+- HTTP local `GET /api/admin/private/patients/dashboard?period=all` com Admin temporario real retornou `engagement_analysis.items` com os quatro niveis e percentuais reais; o Admin temporario foi removido ao final.
+- Browser local/headless em `http://localhost:3002/pacientes?period=all` validou desktop `1366x900` e mobile `390x844`: donuts de intencao e engajamento presentes, barra percentual antiga ausente, textos antigos de sinais individuais ausentes e `scrollWidth` sem overflow horizontal. Screenshots salvos em `.tmp/patient-dashboard-engagement-donut-desktop.png` e `.tmp/patient-dashboard-engagement-donut-mobile.png`.

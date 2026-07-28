@@ -434,6 +434,28 @@ export type PatientsDashboardIntentAnalysis = {
   total_signals: number;
 };
 
+export type PatientsDashboardEngagementSegmentId =
+  | "engaged"
+  | "low_engagement"
+  | "no_engagement"
+  | "very_engaged";
+
+export type PatientsDashboardEngagementSegment = {
+  count: number;
+  id: PatientsDashboardEngagementSegmentId;
+  label: "Engajados" | "Muito engajados" | "Pouco engajados" | "Sem engajamento";
+  percentage: number;
+};
+
+export type PatientsDashboardEngagementAnalysis = {
+  coverage_note: string;
+  items: PatientsDashboardEngagementSegment[];
+  patients_with_engagement: number;
+  privacy_note: string;
+  source: "profile_view_event+psychologist_favorite+contact_request";
+  total_patients: number;
+};
+
 export type PatientsDashboardIntentFilterId = "all" | PatientsDashboardIntentSegmentId;
 
 export type PatientsDashboardIntentFilterOption = {
@@ -539,6 +561,7 @@ export type AdminPatientsDashboard = {
     };
   };
   device_usage: PatientsDashboardDeviceUsage;
+  engagement_analysis: PatientsDashboardEngagementAnalysis;
   export: {
     available: false;
     reason: string;
