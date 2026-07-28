@@ -438,3 +438,29 @@ Criar o shell de detalhe do psicólogo e as abas Geral e Perfil/Cadastro com dad
 - `pnpm --dir admin check`
 - `pnpm --dir admin build` executado com sucesso apos tentativas intermediarias bloqueadas por outro `next build` em andamento e uma tentativa bloqueada por falta de espaco em disco (`ENOSPC`). Perfis temporarios de browser em `.tmp/chrome-*` foram removidos para liberar espaco antes da validacao final.
 - Smoke HTTP local: GET http://localhost:3002/psicologos/cmrgztri7000tn0uh1q4n8vxf retornou 200.
+
+
+## Ajuste pos-feedback 2026-07-28 - Tracao sem sinais internos
+
+- Pedido direto de produto aplicado na aba Admin `Geral` do detalhe do psicologo.
+- O contador `Tracao` passou a exibir somente o resultado real `business.traction.label`, sem listar `WhatsApp`, `Favoritado` e `Visualizacoes de perfil` dentro do card.
+- Os sinais continuam disponiveis nos blocos detalhados de estatisticas e nao foram removidos do contrato, tracking, backend ou calculo de tracao.
+- Nao houve alteracao de backend, endpoint, schema Prisma, migrations, package, mock, seed ou backfill.
+- UI permanece mobile-first com os quatro contadores na ordem `Ranking`, `Avaliacoes`, `Tracao`, `Engajamento`.
+- Builder/Quick Copy nao esteve acessivel como ferramenta callable; foram usadas a captura enviada pelo usuario e a referencia local `_product/proto/admin/Psicologos/Detalhes do psicologo/Geral.png`.
+- ADR atualizado: `adrs/0329-admin-psicologo-contadores-tracao-engajamento.md`.
+
+### Criterios do ajuste pos-feedback
+
+- [x] O contador `Tracao` nao exibe `WhatsApp`, `Favoritado` nem `Visualizacoes de perfil` dentro do card.
+- [x] `Tracao` continua destacando o resultado real da classificacao de tracao do psicologo.
+- [x] A ordem visual dos contadores permanece `Ranking`, `Avaliacoes`, `Tracao`, `Engajamento`.
+- [x] Nenhum mock, seed artificial, endpoint simulado, package novo ou migration foi criado.
+- [x] Nenhum `<img>` cru foi usado.
+
+### Validacao complementar do ajuste pos-feedback
+
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/psicologos/[id]/client.tsx" "../adrs/0329-admin-psicologo-contadores-tracao-engajamento.md" "../_product/tasks/TASK-55-detalhe-psicologo-geral-perfil-admin.md"`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- Smoke HTTP local: GET http://localhost:3002/psicologos/cmrgztri7000tn0uh1q4n8vxf retornou 200.

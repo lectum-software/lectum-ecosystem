@@ -387,8 +387,6 @@ const GENERAL_METRIC_LABELS: Record<string, string> = {
   whatsapp_clicks: "WhatsApp",
 };
 
-const GENERAL_TRACTION_SIGNAL_IDS = ["whatsapp_clicks", "favorites", "profile_views"] as const;
-
 const GENERAL_TAB_STATISTICS_QUERY = {
   period: "all",
 } as const satisfies AdminPsychologistStatisticsQuery;
@@ -2059,12 +2057,10 @@ const MetricCard = ({
 const TractionMetricCard = ({
   isError,
   isLoading,
-  metrics,
   statistics,
 }: {
   isError: boolean;
   isLoading: boolean;
-  metrics: AdminPsychologistDetailMetric[];
   statistics?: AdminPsychologistStatistics;
 }) => {
   const traction = statistics?.business.traction;
@@ -2080,22 +2076,6 @@ const TractionMetricCard = ({
       <p className="mt-2 text-2xl font-extrabold leading-tight text-foreground sm:text-3xl">
         {value}
       </p>
-      <dl className="mt-4 grid grid-cols-3 gap-2">
-        {GENERAL_TRACTION_SIGNAL_IDS.map((metricId) => {
-          const metric = findGeneralMetric(metrics, metricId);
-
-          return (
-            <div className="min-w-0 rounded-2xl bg-surface-muted/60 px-2.5 py-2" key={metricId}>
-              <dt className="text-[11px] font-bold leading-tight text-muted">
-                {metric ? formatMetricLabel(metric) : GENERAL_METRIC_LABELS[metricId]}
-              </dt>
-              <dd className="mt-1 text-sm font-extrabold text-foreground">
-                {metric ? formatMetricValue(metric) : "—"}
-              </dd>
-            </div>
-          );
-        })}
-      </dl>
     </div>
   );
 };
@@ -2624,7 +2604,6 @@ const GeneralTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: strin
           <TractionMetricCard
             isError={generalStatisticsQuery.isError}
             isLoading={generalStatisticsQuery.isLoading && !generalStatisticsQuery.data}
-            metrics={metrics}
             statistics={generalStatisticsQuery.data}
           />
           <EngagementMetricCard
