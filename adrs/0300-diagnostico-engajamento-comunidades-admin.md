@@ -97,3 +97,10 @@ Tambem foi solicitado separar votos em **Upvotes** e **Downvotes** para entender
 - O detalhe administrativo do paciente agora expõe `communities.engagement_diagnosis` como o melhor diagnostico individual entre `communities.items[].engagement_diagnosis` no periodo selecionado.
 - A tag **Engajamento geral: ...** fica no cabecalho de **Comunidades ativas** do paciente, e a tabela preserva o diagnostico individual por comunidade.
 - A decisao mantém a regra compartilhada de prioridade (**Muito ativo** > **Ativo** > **Pouco ativo** > **Sem base**) e nao altera fontes first-party, schema Prisma, migrations, packages, seeds ou backfills.
+
+## Ajuste visual 2026-07-28 - contagem no cabecalho da tabela
+
+- A contagem de comunidades ativas deixou de ser exibida como badge isolada abaixo da descricao do bloco.
+- A primeira coluna da tabela passa a incorporar a quantidade dinamica, usando **1 Comunidade** ou **N Comunidades**. A decisao reduz redundancia visual e mantem a contagem no ponto em que o admin inicia a leitura da lista.
+- A mudanca e apenas de apresentacao no Admin; o contrato `community.communities[]`, a regra de `engagement_diagnosis`, as faixas absolutas e a agregacao geral permanecem inalterados.
+- Para a visualizacao local solicitada em 2026-07-28, foram criados registros de atividade no banco de desenvolvimento com ids `viz_engagement_example_*` para o psicologo `cmrgztri7000tn0uh1q4n8vxf`, cobrindo as quatro faixas. Esses registros nao sao migration, seed, endpoint ou fallback de producao.

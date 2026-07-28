@@ -2840,6 +2840,9 @@ const formatCoverageRate = (community: PsychologistStatisticsCommunityItem) =>
 const formatCommunityPeriodActions = (actions: number) =>
   `${numberFormatter.format(actions)} ${actions === 1 ? "ação" : "ações"} no período`;
 
+const formatActiveCommunitiesColumnHeading = (count: number) =>
+  `${numberFormatter.format(count)} ${count === 1 ? "Comunidade" : "Comunidades"}`;
+
 const communityEngagementDiagnosisClassName = (id: string | undefined) =>
   cn(
     "whitespace-nowrap",
@@ -2926,9 +2929,6 @@ const ActiveCommunitiesBlock = ({
           Comunidades em que o psicólogo realizou post, resposta, upvote ou downvote no período,
           ordenadas da mais ativa para a menos ativa.
         </p>
-        <Badge className="mt-3 w-fit bg-surface-muted text-muted">
-          {numberFormatter.format(communities.length)} comunidades
-        </Badge>
       </div>
       {periodControls}
     </div>
@@ -2947,7 +2947,7 @@ const ActiveCommunitiesBlock = ({
           <thead className="bg-surface-muted/80">
             <tr className="text-xs font-black text-muted">
               <th className="px-4 py-3" scope="col">
-                Comunidade
+                {formatActiveCommunitiesColumnHeading(communities.length)}
               </th>
               <th className="px-4 py-3 text-center" scope="col">
                 Ranking

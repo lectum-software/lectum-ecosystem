@@ -472,3 +472,29 @@ Exibir estatísticas de negócio/comunidade e publicações do psicólogo com da
 - `pnpm --dir admin check` reexecutado com sucesso apos uma primeira falha transiente sem diagnostico do `eslint`.
 - `pnpm --dir admin build`
 - `pnpm check` foi executado, mas ficou bloqueado por alteracoes locais nao relacionadas da TASK-89 em `backend/src/modules/api/admin/private/psychologists/dashboard/*` e `backend/swagger/api.json` com aviso Biome de variavel nao usada/formatacao.
+
+## Ajuste pos-feedback 2026-07-28 - Contagem no cabecalho de Comunidades ativas
+
+- Pedido do usuario: remover a tag separada **3 comunidades**, levar a quantidade para o cabecalho da primeira coluna da tabela como **N Comunidades** e preencher o psicologo local `cmrgztri7000tn0uh1q4n8vxf` com exemplos das quatro faixas de **Engajamento** para visualizacao.
+- A UI do Admin removeu a badge solta de contagem e passou a renderizar o titulo da primeira coluna como contagem dinamica singular/plural (**1 Comunidade** ou **N Comunidades**), preservando a estrutura mobile-first e a tabela real.
+- Para a visualizacao local solicitada, o banco de desenvolvimento recebeu registros persistidos de atividade com ids `viz_engagement_example_*`, vinculados ao psicologo alvo e a comunidades existentes, produzindo **Sem base**, **Pouco ativo**, **Ativo** e **Muito ativo** pela regra real de interacoes do periodo. Nao houve seed, migration, endpoint paralelo ou mock em codigo.
+- Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente; foram usados o screenshot enviado pelo usuario e o PNG local `_product/proto/admin/Psicologos/Detalhes do psicologo/Estatisticas.png` como referencias auditaveis.
+- Nao houve alteracao em Prisma schema ou migrations; `pnpm --dir backend db:migrate` nao foi necessario.
+- ADR atualizado: `adrs/0300-diagnostico-engajamento-comunidades-admin.md`.
+
+### Criterios de aceite do ajuste
+
+- [x] A tag separada **3 comunidades** nao aparece mais no bloco **Comunidades ativas**.
+- [x] A primeira coluna da tabela exibe a contagem dinamica, por exemplo **4 Comunidades**.
+- [x] O psicologo local `cmrgztri7000tn0uh1q4n8vxf` possui linhas de exemplo cobrindo **Sem base**, **Pouco ativo**, **Ativo** e **Muito ativo** pela regra real de engajamento.
+- [x] Nenhum endpoint simulado, migration, package novo ou mock em codigo foi adicionado.
+
+### Validacao complementar executada
+
+- `pnpm --dir admin exec biome check "src/app/(admin)/psicologos/[id]/client.tsx"`
+- `pnpm --dir admin exec eslint "src/app/(admin)/psicologos/[id]/client.tsx"`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build` (primeira execucao falhou por cache/stale typecheck apontando `Link` em `pacientes/lista`; repeticao com a arvore atual passou sem erros).
+- `pnpm check`
+- SQL local confirmou 4 comunidades ativas do psicologo no periodo: 12 interacoes (**Muito ativo**), 6 (**Ativo**), 3 (**Pouco ativo**) e 1 (**Sem base**).
+- Browser local/headless via Chrome/CDP em `http://localhost:3002/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=estatisticas` confirmou: `4 Comunidades` na primeira coluna, ausencia da badge `3 comunidades`/`4 comunidades` e presenca das quatro labels de engajamento na tabela.
