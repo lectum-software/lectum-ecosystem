@@ -165,3 +165,32 @@ A leitura deve ser agregada, nao publica e nao punitiva. Ela deve cruzar sinais 
 - `pnpm check`
 - Smoke local no Admin dev server: `GET http://localhost:3002/psicologos` e `GET http://localhost:3002/psicologos/lista?traction_engagement=low_traction_no_engagement` retornaram 200.
 - Validacao estatica do build: bundle de `/psicologos` contem **Sem engajamento**, `strong_traction_no_engagement` e `low_traction_no_engagement`.
+
+## Execucao complementar: layout dos quadrantes alinhado a Pacientes (2026-07-28)
+
+- Pedido do usuario: replicar o layout dos quadrantes de **Intencao x Engajamento** de pacientes no bloco **Tracao x Engajamento** de psicologos.
+- Frontend Admin: a matriz de **Tracao x Engajamento** deixou de usar cards altos com texto de instrucao e CTA visual, passando a usar o mesmo padrao visual compacto de pacientes: cabecalhos neutros, labels de linha neutros, cards com contagem, percentual da base e percentual dentro da linha.
+- Frontend Admin: no mobile, os quadrantes passam a ser agrupados por linha de tracao em secoes responsivas, como acontece em pacientes; no desktop, a matriz usa `lg:grid` com label lateral e quatro colunas de engajamento.
+- Frontend Admin: os quadrantes continuam sendo links reais para `/psicologos/lista?traction_engagement=...`, mas a chamada visual **Ver lista** foi removida para preservar o layout espelhado de pacientes.
+- Frontend Admin: **Dados insuficientes** permanece exibido em card compacto separado, porque nao faz parte dos eixos de tracao e engajamento.
+- Builder/Quick Copy nao estava exposto como ferramenta callable neste ambiente; a execucao usou `_product/tasks/PROTO-INVENTORY.md`, a referencia local `_product/proto/admin/Psicólogos/Psicólogos - Dashboard.png` e as capturas enviadas pelo usuario.
+- Nenhuma alteracao em `backend/prisma/schema.prisma` ou `backend/prisma/migrations`; `pnpm --dir backend db:migrate` nao se aplica.
+- ADR atualizado: `adrs/0337-detalhamento-engajamento-tracao-dashboard-psicologos.md`.
+
+### Criterios complementares
+
+- [x] A matriz **Tracao x Engajamento** de psicologos usa o mesmo layout visual compacto da matriz **Intencao x Engajamento** de pacientes.
+- [x] Os cards dos quadrantes mostram contagem, percentual da base e percentual dentro da linha, sem CTA visual alto.
+- [x] O layout mobile agrupa quadrantes por linha de tracao, como em pacientes.
+- [x] Os links reais para a lista filtrada continuam funcionando.
+- [x] A UI permanece mobile-first e sem `<img>` cru.
+- [x] Nenhum mock, seed artificial, endpoint simulado, package novo ou migration foi criado.
+
+### Validacao complementar
+
+- `pnpm --dir admin exec biome check "src/app/(admin)/psicologos/client.tsx"`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check`
+- Smoke local no Admin dev server: `GET http://localhost:3002/psicologos` e `GET http://localhost:3002/psicologos/lista?traction_engagement=strong_traction_no_engagement` retornaram 200.
+- Validacao estatica do build: bundle de `/psicologos` contem `lg:grid-cols-[104px_repeat(4,minmax(0,1fr))]`, **Dados insuficientes** e **Sem engajamento**.

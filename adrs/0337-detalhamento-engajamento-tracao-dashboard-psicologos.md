@@ -14,7 +14,9 @@ O bloco **Tração e engajamento dos psicólogos** agregava o envolvimento comun
 **Alto engajamento** e **Baixo engajamento**. O produto pediu detalhamento explícito entre
 **Muito engajado**, **Engajado**, **Pouco engajado** e **Dados insuficientes**, incluindo o bloco
 **Tração x Engajamento**. Em complemento, a leitura precisou separar psicólogos que nunca engajaram
-no período como **Sem engajamento**, espelhando a categoria já usada no dashboard de pacientes.
+no período como **Sem engajamento**, espelhando a categoria já usada no dashboard de pacientes. Em
+seguida, o produto pediu que o layout dos quadrantes de psicólogos seguisse o mesmo padrão visual
+compacto do bloco **Intenção x Engajamento** de pacientes.
 
 Builder/Quick Copy não está exposto como ferramenta callable neste ambiente. A execução usou
 `_product/tasks/PROTO-INVENTORY.md`, a referência local
@@ -39,6 +41,11 @@ Builder/Quick Copy não está exposto como ferramenta callable neste ambiente. A
   de **Dados insuficientes**.
 - Atualizar o filtro composto `traction_engagement` da lista Admin para aceitar os novos ids dos
   oito recortes e o recorte de dados insuficientes.
+- Renderizar a matriz **Tração x Engajamento** com o mesmo layout de **Intenção x Engajamento** de
+  pacientes: cabeçalhos neutros, labels laterais neutros, cards compactos com contagem, percentual
+  da base e percentual dentro da linha, mantendo os cards como links reais para a lista filtrada.
+- Manter **Dados insuficientes** em card compacto separado, pois esse recorte não pertence aos eixos
+  de tração e engajamento.
 
 ## Consequências
 
@@ -49,8 +56,8 @@ Builder/Quick Copy não está exposto como ferramenta callable neste ambiente. A
   Na lista, psicólogos com 0 interações reais exibem badge **Sem engajamento** para manter a leitura
   consistente com o dashboard.
 - O texto de apoio mantém a leitura como observacional e não causal.
-- O bloco fica maior no desktop, mas segue mobile-first: no mobile os cards aparecem em fluxo único,
-  e no desktop a matriz usa quatro colunas.
+- O bloco segue mobile-first: no mobile os cards são agrupados por linha de tração; no desktop a
+  matriz usa quatro colunas no mesmo padrão compacto de pacientes.
 
 ## Validação
 
@@ -63,6 +70,9 @@ Builder/Quick Copy não está exposto como ferramenta callable neste ambiente. A
 - `pnpm check`
 - Smoke local no Admin dev server: `GET http://localhost:3002/psicologos` e `GET http://localhost:3002/psicologos/lista?traction_engagement=low_traction_no_engagement` retornaram 200.
 - Validação estática do build: bundle de `/psicologos` contém **Sem engajamento**, `strong_traction_no_engagement` e `low_traction_no_engagement`.
+- Validação complementar de layout: `pnpm --dir admin exec biome check "src/app/(admin)/psicologos/client.tsx"`, `pnpm --dir admin check`, `pnpm --dir admin build` e `pnpm check`.
+- Smoke complementar de layout: `GET http://localhost:3002/psicologos` e `GET http://localhost:3002/psicologos/lista?traction_engagement=strong_traction_no_engagement` retornaram 200.
+- Validação estática complementar: bundle de `/psicologos` contém `lg:grid-cols-[104px_repeat(4,minmax(0,1fr))]`, **Dados insuficientes** e **Sem engajamento**.
 - Tentativa de smoke direto do use case foi limitada pelo banco de desenvolvimento com `EMAXCONNSESSION`; não houve reset nem comando destrutivo.
 
 ## Pendências

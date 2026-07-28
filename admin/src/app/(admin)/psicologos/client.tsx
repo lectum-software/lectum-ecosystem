@@ -317,39 +317,32 @@ const PSYCHOLOGIST_ENGAGEMENT_DONUT_COLORS = {
 } satisfies Record<PsychologistEngagementDonutBucketId, string>;
 
 const TRACTION_ENGAGEMENT_MATRIX_COLUMNS: {
-  headerClassName: string;
   id: PsychologistEngagementDonutBucketId;
   label: string;
 }[] = [
   {
-    headerClassName: "bg-primary-soft text-primary",
     id: "very_engaged",
     label: "Muito engajado",
   },
   {
-    headerClassName: "bg-primary-soft/70 text-primary",
     id: "engaged",
     label: "Engajado",
   },
   {
-    headerClassName: "bg-surface-muted text-muted",
     id: "low_engaged",
     label: "Pouco engajado",
   },
   {
-    headerClassName: "bg-surface-muted/80 text-muted",
     id: "no_engagement",
     label: "Sem engajamento",
   },
 ];
 
 const TRACTION_ENGAGEMENT_MATRIX_ROWS: {
-  className: string;
   ids: TractionEngagementQuadrantItem["id"][];
   label: string;
 }[] = [
   {
-    className: "bg-primary-soft text-primary",
     ids: [
       "strong_traction_very_engaged",
       "strong_traction_engaged",
@@ -359,7 +352,6 @@ const TRACTION_ENGAGEMENT_MATRIX_ROWS: {
     label: "Tração forte",
   },
   {
-    className: "bg-surface-muted text-muted",
     ids: [
       "low_traction_very_engaged",
       "low_traction_engaged",
@@ -369,9 +361,6 @@ const TRACTION_ENGAGEMENT_MATRIX_ROWS: {
     label: "Sem tração forte",
   },
 ];
-
-const TRACTION_ENGAGEMENT_LIST_INSTRUCTION =
-  "Clique neste botão para ver a lista de profissionais deste quadrante.";
 
 const buildTractionEngagementListHref = (
   quadrantId: TractionEngagementQuadrantItem["id"],
@@ -2587,52 +2576,89 @@ const formatRateDifference = (value: number | null) => {
   return `${prefix}${numberFormatter.format(Math.abs(value))} p.p.`;
 };
 
-const TractionEngagementQuadrantButton = ({
+type TractionEngagementMatrixCell = {
+  color: string;
+  columnLabel: string;
+  quadrant: TractionEngagementQuadrantItem;
+  rowLabel: string;
+  rowPercentage: number;
+};
+
+const buildTractionEngagementRowCells = (
+  tractionEngagement: AdminPsychologistsDashboard["traction_engagement"],
+  row: (typeof TRACTION_ENGAGEMENT_MATRIX_ROWS)[number],
+): TractionEngagementMatrixCell[] => {
+  const quadrants = row.ids.map((id) => findTractionEngagementQuadrant(tractionEngagement, id));
+  const rowTotal = quadrants.reduce((total, quadrant) => total + Math.max(0, quadrant.count), 0);
+
+  return quadrants.map((quadrant, index) => ({
+    color: TRACTION_ENGAGEMENT_COLORS[quadrant.id],
+    columnLabel: TRACTION_ENGAGEMENT_MATRIX_COLUMNS[index]?.label ?? quadrant.label,
+    quadrant,
+    rowLabel: row.label,
+    rowPercentage: rowTotal > 0 ? toOneDecimal((Math.max(0, quadrant.count) / rowTotal) * 100) : 0,
+  }));
+};
+
+const TractionEngagementQuadrantCard = ({
   color,
+  description,
+  headingLabel,
+  intensityPercentage,
   planSegment,
   quadrant,
+  showEngagementLabel = false,
 }: {
   color: string;
+  description: string;
+  headingLabel?: string;
+  intensityPercentage?: number;
   planSegment: PlanSegmentFilter;
   quadrant: TractionEngagementQuadrantItem;
-}) => (
-  <Link
-    aria-label={`Ver lista de profissionais em ${quadrant.label}`}
-    className="group flex min-h-[13.25rem] flex-col justify-between rounded-[1.35rem] border border-border bg-surface-muted p-4 text-left transition duration-200 ease-out hover:-translate-y-0.5 hover:border-primary/35 hover:bg-primary-soft/45 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
-    href={buildTractionEngagementListHref(quadrant.id, planSegment)}
-  >
-    <div className="flex items-start justify-between gap-3">
-      <div className="min-w-0">
-        <div className="flex items-center gap-2">
+  showEngagementLabel?: boolean;
+}) => {
+  const hasData = quadrant.count > 0;
+  const intensity = hasData
+    ? 0.08 + Math.min(0.2, ((intensityPercentage ?? quadrant.percentage) / 100) * 0.2)
+    : 0;
+
+  return (
+    <Link
+      aria-label={`Ver lista de profissionais em ${quadrant.label}`}
+      className="block min-h-[7.75rem] min-w-0 rounded-[1.2rem] border p-3 text-left transition duration-200 ease-out hover:-translate-y-0.5 hover:border-primary/35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
+      href={buildTractionEngagementListHref(quadrant.id, planSegment)}
+      style={{
+        backgroundColor: hasData ? hexToRgba(color, intensity) : "var(--admin-surface-muted)",
+        borderColor: hasData ? hexToRgba(color, 0.32) : "var(--admin-border)",
+      }}
+    >
+      {showEngagementLabel ? (
+        <div className="mb-2 flex items-center gap-2">
           <span
             aria-hidden
-            className="h-3 w-3 shrink-0 rounded-full"
+            className="h-2.5 w-2.5 shrink-0 rounded-full"
             style={{ backgroundColor: color }}
           />
-          <h3 className="text-sm font-black text-foreground">{quadrant.label}</h3>
+          <h4 className="min-w-0 text-xs font-black text-foreground">
+            {headingLabel ?? quadrant.label}
+          </h4>
         </div>
-        <p className="mt-2 text-xs font-bold leading-5 text-muted">
-          {TRACTION_ENGAGEMENT_LIST_INSTRUCTION}
-        </p>
-      </div>
-      <p className="shrink-0 text-right text-base font-black text-foreground">
+      ) : null}
+      <p className="text-lg font-black text-foreground">
         {numberFormatter.format(quadrant.count)}
         <span className="ml-1 text-xs font-bold text-muted">
           ({formatPercentageValue(quadrant.percentage)})
         </span>
       </p>
-    </div>
-    <div className="mt-3 flex flex-col gap-3">
-      <p className="text-xs font-bold text-subtle">
-        {numberFormatter.format(quadrant.totals.community_interactions)} interações ·{" "}
-        {numberFormatter.format(quadrant.totals.whatsapp_clicks)} WhatsApp
+      <p className="mt-2 text-[0.72rem] font-bold leading-5 text-muted">{description}</p>
+      <p className="sr-only">
+        Clique para ver a lista de profissionais deste quadrante.{" "}
+        {numberFormatter.format(quadrant.totals.community_interactions)} interações e{" "}
+        {numberFormatter.format(quadrant.totals.whatsapp_clicks)} cliques de WhatsApp.
       </p>
-      <span className="inline-flex h-10 w-full items-center justify-center rounded-full bg-primary px-4 text-xs font-black text-white shadow-control transition group-hover:bg-primary-hover sm:w-auto sm:self-start">
-        Ver lista
-      </span>
-    </div>
-  </Link>
-);
+    </Link>
+  );
+};
 
 const DashboardTractionEngagementCard = ({ summary }: { summary: AdminPsychologistsDashboard }) => {
   const [tractionEngagementPlanSegment, setTractionEngagementPlanSegment] =
@@ -2672,54 +2698,82 @@ const DashboardTractionEngagementCard = ({ summary }: { summary: AdminPsychologi
       ) : (
         <div className="mt-5 grid gap-5 xl:grid-cols-[minmax(0,1.18fr)_minmax(280px,0.82fr)]">
           <div className="min-w-0">
-            <div className="grid gap-2 sm:grid-cols-[88px_repeat(4,minmax(0,1fr))]">
-              <div className="hidden sm:block" aria-hidden />
+            <div className="grid gap-3 lg:hidden">
+              {TRACTION_ENGAGEMENT_MATRIX_ROWS.map((row) => {
+                const rowCells = buildTractionEngagementRowCells(tractionEngagement, row);
+
+                return (
+                  <section
+                    className="rounded-[1.35rem] border border-border bg-surface p-3"
+                    key={`psychologist-mobile-traction-engagement-${row.label}`}
+                  >
+                    <h3 className="text-sm font-black text-foreground">{row.label}</h3>
+                    <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                      {rowCells.map((cell) => (
+                        <TractionEngagementQuadrantCard
+                          color={cell.color}
+                          description={`${formatPercentageValue(cell.rowPercentage)} dentro de ${cell.rowLabel.toLowerCase()}.`}
+                          headingLabel={cell.columnLabel}
+                          intensityPercentage={cell.rowPercentage}
+                          key={cell.quadrant.id}
+                          planSegment={tractionEngagementPlanSegment}
+                          quadrant={cell.quadrant}
+                          showEngagementLabel
+                        />
+                      ))}
+                    </div>
+                  </section>
+                );
+              })}
+            </div>
+
+            <div className="hidden gap-2 lg:grid lg:grid-cols-[104px_repeat(4,minmax(0,1fr))]">
+              <div className="hidden lg:block" aria-hidden />
               {TRACTION_ENGAGEMENT_MATRIX_COLUMNS.map((column) => (
                 <p
-                  className={cn(
-                    "hidden rounded-2xl px-3 py-2 text-center text-xs font-black sm:block",
-                    column.headerClassName,
-                  )}
-                  key={column.id}
+                  className="rounded-2xl bg-surface-muted px-3 py-2 text-center text-xs font-black text-muted"
+                  key={`psychologist-traction-engagement-column-${column.id}`}
                 >
                   {column.label}
                 </p>
               ))}
 
-              {TRACTION_ENGAGEMENT_MATRIX_ROWS.map((row) => (
-                <Fragment key={row.label}>
-                  <p
-                    className={cn(
-                      "hidden place-items-center rounded-2xl px-2 text-center text-[0.68rem] font-black sm:grid",
-                      row.className,
-                    )}
-                  >
-                    {row.label}
-                  </p>
-                  {row.ids.map((id) => {
-                    const quadrant = findTractionEngagementQuadrant(tractionEngagement, id);
-                    const color = TRACTION_ENGAGEMENT_COLORS[id];
+              {TRACTION_ENGAGEMENT_MATRIX_ROWS.map((row) => {
+                const rowCells = buildTractionEngagementRowCells(tractionEngagement, row);
 
-                    return (
-                      <TractionEngagementQuadrantButton
-                        color={color}
-                        key={id}
+                return (
+                  <Fragment key={`psychologist-traction-engagement-row-${row.label}`}>
+                    <p className="grid place-items-center rounded-2xl bg-surface-muted px-2 text-center text-[0.72rem] font-black text-muted">
+                      {row.label}
+                    </p>
+                    {rowCells.map((cell) => (
+                      <TractionEngagementQuadrantCard
+                        color={cell.color}
+                        description={`${formatPercentageValue(cell.rowPercentage)} dentro de ${cell.rowLabel.toLowerCase()}.`}
+                        intensityPercentage={cell.rowPercentage}
+                        key={cell.quadrant.id}
                         planSegment={tractionEngagementPlanSegment}
-                        quadrant={quadrant}
+                        quadrant={cell.quadrant}
                       />
-                    );
-                  })}
-                </Fragment>
-              ))}
+                    ))}
+                  </Fragment>
+                );
+              })}
             </div>
 
-            <div className="mt-3">
-              <TractionEngagementQuadrantButton
-                color={TRACTION_ENGAGEMENT_COLORS.insufficient_data}
-                planSegment={tractionEngagementPlanSegment}
-                quadrant={insufficientData}
-              />
-            </div>
+            <section className="mt-3 rounded-[1.35rem] border border-border bg-surface p-3">
+              <h3 className="text-sm font-black text-foreground">Dados insuficientes</h3>
+              <div className="mt-3">
+                <TractionEngagementQuadrantCard
+                  color={TRACTION_ENGAGEMENT_COLORS.insufficient_data}
+                  description={`${formatPercentageValue(insufficientData.percentage)} da base analisada.`}
+                  headingLabel="Dados insuficientes"
+                  planSegment={tractionEngagementPlanSegment}
+                  quadrant={insufficientData}
+                  showEngagementLabel
+                />
+              </div>
+            </section>
           </div>
 
           <aside className="grid content-start gap-3">
