@@ -954,3 +954,33 @@ Frontend esperado:
 - Servico local `listAdminPatients({ limit: 3 })` retornou `status=200`, `count=155`, `source="user+patient_profile+visitor_location+profile_view_event+psychologist_favorite+contact_request"` e itens reais com `status` (Perfil), `intent` e `engagement` preenchidos.
 - Browser local/headless autenticado em `http://localhost:3002/pacientes/lista` validou desktop `1366x900` com os cinco cabecalhos solicitados e linhas com cinco celulas; validou mobile `390x844` com labels **Data de cadastro**, **Perfil**, **Intencao** e **Engajamento** e `scrollWidth=390`. Screenshots salvos em `.tmp/patient-list-columns-desktop.png` e `.tmp/patient-list-columns-mobile.png`.
 - Admin temporario de validacao `codex-patient-list-columns-*` foi removido do banco apos a verificacao.
+
+## Ajuste pos-feedback 2026-07-28 - Exemplos visuais de intencao e engajamento
+
+- Pedido do usuario: nas colunas **Intencao** e **Engajamento**, exibir todos os resultados possiveis como exemplo apenas para visualizacao.
+- A lista `/pacientes/lista` passou a mostrar chips de **Exemplos visuais** diretamente nos cabecalhos desktop das colunas **Intencao** e **Engajamento**.
+- Em mobile, como nao ha colunas, os mesmos exemplos aparecem em um painel compacto antes dos cards de pacientes.
+- Os exemplos sao apenas uma legenda visual de estados possiveis: nao alteram linhas reais, filtros, ordenacao, payload, classificacao backend, contagem, paginacao ou navegacao para detalhe.
+- Resultados exibidos para **Intencao**: **Frio**, **Curioso**, **Interessado** e **Qualificado**.
+- Resultados exibidos para **Engajamento**: **Sem engajamento**, **Pouco engajado**, **Engajado** e **Muito engajado**.
+- Nao houve backend, contrato HTTP, schema Prisma, migration, package novo, mock, seed, backfill, dado artificial, endpoint simulado ou `<img>`.
+- Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente; as referencias auditaveis foram o screenshot enviado pelo usuario em 2026-07-28 e `_product/proto/admin/Pacientes/Pacientes - Dashboard.png`.
+- ADR nao foi atualizado porque a mudanca e somente uma legenda visual temporaria/local de UI, sem decisao arquitetural, integracao, regra de dominio ou trade-off novo.
+
+### Criterios de aceite do ajuste
+
+- [x] A coluna **Intencao** exibe exemplos visuais dos quatro resultados possiveis.
+- [x] A coluna **Engajamento** exibe exemplos visuais dos quatro resultados possiveis.
+- [x] Os valores reais das linhas continuam vindo do backend e nao foram substituidos por exemplos.
+- [x] Em mobile, os exemplos aparecem em painel proprio antes dos cards e o layout permanece sem overflow horizontal em 390px.
+- [x] Nenhum mock, seed, dado artificial, migration, package novo, endpoint simulado ou `<img>` foi adicionado.
+
+### Validacao complementar executada
+
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/pacientes/lista/client.tsx"`
+- `pnpm --dir admin exec eslint "src/app/(admin)/pacientes/lista/client.tsx"`
+- `pnpm --dir admin exec tsc --noEmit --pretty false`
+- `NODE_OPTIONS=--max-old-space-size=8192 pnpm --dir admin build`
+- Browser local/headless autenticado em `http://localhost:3002/pacientes/lista` validou desktop `1366x900` com exemplos visuais nos cabecalhos e linhas reais com cinco celulas; validou mobile `390x844` com os oito labels possiveis e `scrollWidth=390`. Screenshots salvos em `.tmp/patient-list-examples-desktop.png` e `.tmp/patient-list-examples-mobile.png`.
+- `pnpm --dir admin check` foi executado, mas segue bloqueado por alteracao local fora do escopo em `admin/src/app/(admin)/psicologos/lista/client.tsx:699` (`aria-label` em `div` sem role). A validacao direcionada do arquivo alterado nesta task passou.
+- Admin temporario de validacao `codex-patient-list-examples-*` foi removido do banco apos a verificacao.

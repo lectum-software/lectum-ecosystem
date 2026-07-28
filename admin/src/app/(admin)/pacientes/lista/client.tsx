@@ -234,6 +234,32 @@ const textToneClassName = {
   warning: "text-warning",
 } as const;
 
+const visualExampleToneClassName = {
+  active: "border-success/20 bg-success/10 text-success",
+  inactive: "border-border bg-surface-muted text-muted",
+  info: "border-primary/20 bg-primary-soft text-primary",
+  warning: "border-warning/20 bg-warning/10 text-warning",
+} as const satisfies Record<keyof typeof textToneClassName, string>;
+
+type VisualExample = {
+  label: string;
+  tone: keyof typeof visualExampleToneClassName;
+};
+
+const INTENT_VISUAL_EXAMPLES = [
+  { label: "Frio", tone: "inactive" },
+  { label: "Curioso", tone: "info" },
+  { label: "Interessado", tone: "warning" },
+  { label: "Qualificado", tone: "active" },
+] as const satisfies readonly VisualExample[];
+
+const ENGAGEMENT_VISUAL_EXAMPLES = [
+  { label: "Sem engajamento", tone: "inactive" },
+  { label: "Pouco engajado", tone: "warning" },
+  { label: "Engajado", tone: "info" },
+  { label: "Muito engajado", tone: "active" },
+] as const satisfies readonly VisualExample[];
+
 const StatusText = ({
   children,
   tone,
@@ -261,6 +287,61 @@ const resolveEngagementTone = (item: PatientsListItem): keyof typeof textToneCla
 
   return "inactive";
 };
+
+const VisualExampleBadge = ({ example }: { example: VisualExample }) => (
+  <span
+    className={cn(
+      "inline-flex min-h-6 items-center rounded-full border px-2 py-0.5 text-[0.68rem] font-bold leading-4 normal-case tracking-normal",
+      visualExampleToneClassName[example.tone],
+    )}
+  >
+    {example.label}
+  </span>
+);
+
+const ColumnHeaderWithExamples = ({
+  examples,
+  label,
+}: {
+  examples: readonly VisualExample[];
+  label: string;
+}) => (
+  <div className="flex min-w-0 flex-col items-start gap-2">
+    <span className="font-semibold">{label}</span>
+    <span className="text-[0.65rem] font-medium normal-case leading-4 tracking-normal text-subtle">
+      Exemplos visuais
+    </span>
+    <span className="flex flex-wrap gap-1.5">
+      {examples.map((example) => (
+        <VisualExampleBadge example={example} key={example.label} />
+      ))}
+    </span>
+  </div>
+);
+
+const VisualExamplesPanel = () => (
+  <div className="rounded-3xl border border-border bg-surface-muted/60 p-4 shadow-control">
+    <p className="text-xs font-bold uppercase tracking-[0.08em] text-muted">Exemplos visuais</p>
+    <div className="mt-3 grid gap-4 sm:grid-cols-2">
+      <div>
+        <p className="text-xs font-semibold text-foreground">Intenção</p>
+        <div className="mt-2 flex flex-wrap gap-1.5">
+          {INTENT_VISUAL_EXAMPLES.map((example) => (
+            <VisualExampleBadge example={example} key={example.label} />
+          ))}
+        </div>
+      </div>
+      <div>
+        <p className="text-xs font-semibold text-foreground">Engajamento</p>
+        <div className="mt-2 flex flex-wrap gap-1.5">
+          {ENGAGEMENT_VISUAL_EXAMPLES.map((example) => (
+            <VisualExampleBadge example={example} key={example.label} />
+          ))}
+        </div>
+      </div>
+    </div>
+  </div>
+);
 
 const PatientMobileCard = ({
   item,
@@ -319,6 +400,7 @@ const PatientsTable = ({
 }) => (
   <>
     <div className="grid min-w-0 gap-3 p-3 lg:hidden">
+      <VisualExamplesPanel />
       {items.map((item) => (
         <PatientMobileCard item={item} key={item.id} onOpenDetail={onOpenDetail} />
       ))}
@@ -339,8 +421,12 @@ const PatientsTable = ({
             <th className="px-5 py-4 font-semibold">Paciente</th>
             <th className="px-3 py-4 font-semibold">Data de cadastro</th>
             <th className="px-3 py-4 font-semibold">Perfil</th>
-            <th className="px-3 py-4 font-semibold">Intenção</th>
-            <th className="px-3 py-4 font-semibold">Engajamento</th>
+            <th className="px-3 py-4">
+              <ColumnHeaderWithExamples examples={INTENT_VISUAL_EXAMPLES} label="Intenção" />
+            </th>
+            <th className="px-3 py-4">
+              <ColumnHeaderWithExamples examples={ENGAGEMENT_VISUAL_EXAMPLES} label="Engajamento" />
+            </th>
           </tr>
         </thead>
         <tbody className="divide-y divide-border">
