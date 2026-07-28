@@ -548,3 +548,32 @@ Frontend esperado:
   - desktop `1440x1000`: labels iniciais `Plano`, `Status perfil`, `Status registro`, `Tracao`, `Engajamento`, `Especialidade`, `orderOk=true`, `hasQuadrante=false`, `scrollWidth=1425`, `innerWidth=1440`;
   - aplicacao real dos filtros gerou URL com `engagement=ativo` e `traction=strong_traction`;
   - mobile base `390x844`: mesma ordem de labels, `orderOk=true`, `hasQuadrante=false`, `scrollWidth=390`, `innerWidth=390`.
+
+## Ajuste complementar: ordenacao compacta e resumo de filtros aplicados (2026-07-28)
+
+- Pedido do usuario: reduzir o tamanho visual do filtro **Ordenar por** na lista Admin de psicologos e informar quais filtros estao sendo usados para filtrar a tabela.
+- Frontend Admin: o seletor **Ordenar por** em `/psicologos/lista` passou para altura compacta (`40px`) e largura desktop de `220px`, mantendo largura responsiva no mobile.
+- Frontend Admin: foi adicionado o bloco **Filtros aplicados** entre os controles principais e o card da tabela, exibindo busca textual e filtros ativos reais em labels compactos; quando nao houver filtros, o bloco informa que nenhum filtro foi aplicado.
+- A contagem do botao **Filtros ativos** continua usando `active_filters_count` retornado pelo backend e cai para a quantidade calculada pela URL enquanto a query ainda carrega.
+- Nao houve alteracao de backend, Prisma/migrations, packages, dados, filtros disponiveis, ordenacao, paginacao ou contratos de API.
+- Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente; a referencia auditavel permaneceu `_product/proto/admin/Psicologos/Psicologos- Lista.png`, a captura enviada pelo usuario e o browser local.
+- ADR novo nao se aplica: ajuste visual/UX local sem nova decisao arquitetural, integracao, regra de dominio ou trade-off relevante.
+
+### Criterios complementares
+
+- [x] O seletor **Ordenar por** ficou compacto e mais alinhado a densidade da tabela.
+- [x] A lista informa explicitamente os filtros ativos usados na tabela.
+- [x] O bloco de filtros aplicados cobre busca, Plano, Status perfil, Status registro, Tracao, Engajamento e demais filtros suportados pela URL/API.
+- [x] O estado sem filtros ativos informa que nenhum filtro foi aplicado.
+- [x] A UI permanece mobile-first em base aproximada de `390px` e sem overflow horizontal de viewport.
+- [x] Nenhum backend, Prisma/migrations, package, mock, seed ou endpoint paralelo foi criado.
+
+### Validacao complementar
+
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/psicologos/lista/client.tsx"`
+- `pnpm --dir admin exec eslint "src/app/(admin)/psicologos/lista/client.tsx"`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- Browser local/headless/CDP com admin temporario real removido ao final em `http://localhost:3002/psicologos/lista?sort=relevance&limit=8&q=T%C3%BAlio&plan=courtesy&profile_status=active&registry_status=active&traction=strong_traction&engagement=muito_ativo`:
+  - desktop `1440x1000`: bloco **Filtros aplicados** mostrou Busca, Plano, Status perfil, Status registro, Tracao e Engajamento; seletor de ordenacao mediu `220x40`; `scrollWidth=1440`, `innerWidth=1440`;
+  - mobile base `390x844`: mesmos filtros visiveis; seletor de ordenacao mediu `258x38`; `scrollWidth=390`, `innerWidth=390`.

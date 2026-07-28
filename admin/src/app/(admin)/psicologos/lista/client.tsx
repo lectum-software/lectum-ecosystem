@@ -622,6 +622,98 @@ const FilterPanel = ({
   );
 };
 
+type ActiveFilterItem = {
+  label: string;
+  value?: string;
+};
+
+const optionLabel = (options: PsychologistsListOption[] | undefined, value?: string) => {
+  if (!value) return undefined;
+
+  return options?.find((option) => option.id === value)?.label ?? value;
+};
+
+const buildActiveFilterItems = (query: PsychologistsListQuery, data?: AdminPsychologistsList) => {
+  const active: ActiveFilterItem[] = [];
+  const filters = data?.filters;
+
+  if (query.q?.trim()) active.push({ label: "Busca", value: query.q.trim() });
+
+  const optionFilters: Array<{
+    key: FilterQueryKey;
+    label: string;
+    options: PsychologistsListOption[] | undefined;
+  }> = [
+    { key: "plan", label: "Plano", options: PLAN_FILTER_OPTIONS },
+    { key: "profile_status", label: "Status perfil", options: PROFILE_STATUS_FILTER_OPTIONS },
+    { key: "registry_status", label: "Status registro", options: REGISTRY_STATUS_FILTER_OPTIONS },
+    { key: "traction", label: "Tração", options: TRACTION_FILTER_OPTIONS },
+    { key: "engagement", label: "Engajamento", options: ENGAGEMENT_FILTER_OPTIONS },
+    {
+      key: "traction_engagement",
+      label: "Quadrante",
+      options: TRACTION_ENGAGEMENT_FILTER_OPTIONS,
+    },
+    { key: "specialty", label: "Especialidade", options: filters?.specialties },
+    { key: "service", label: "Serviço", options: filters?.services },
+    { key: "modality", label: "Modalidade", options: MODALITY_FILTER_OPTIONS },
+    { key: "approach", label: "Abordagem", options: filters?.approaches },
+    { key: "target_audience", label: "Público", options: filters?.target_audience },
+    { key: "state", label: "Estado", options: filters?.states },
+    { key: "city", label: "Cidade", options: filters?.cities },
+    { key: "gender", label: "Gênero", options: filters?.genders },
+    { key: "race_color", label: "Raça/cor", options: filters?.race_colors },
+    { key: "religion", label: "Religião", options: filters?.religions },
+    { key: "language", label: "Idioma", options: filters?.languages },
+  ];
+
+  for (const filter of optionFilters) {
+    const value = query[filter.key];
+    if (typeof value !== "string" || !value) continue;
+
+    active.push({
+      label: filter.label,
+      value: optionLabel(filter.options, value),
+    });
+  }
+
+  for (const option of FILTER_FEATURE_OPTIONS) {
+    if (query[option.name] === true) active.push({ label: option.label });
+  }
+
+  return active;
+};
+
+const ActiveFiltersSummary = ({ filters }: { filters: ActiveFilterItem[] }) => (
+  <section
+    aria-label="Filtros aplicados na tabela"
+    className="rounded-[22px] border border-border/80 bg-surface px-4 py-3 shadow-control"
+  >
+    <div className="flex flex-col gap-2 lg:flex-row lg:items-start lg:gap-3">
+      <p className="shrink-0 text-xs font-semibold uppercase tracking-[0.12em] text-muted">
+        Filtros aplicados
+      </p>
+      {filters.length > 0 ? (
+        <div className="flex min-w-0 flex-wrap gap-2">
+          {filters.map((filter) => (
+            <span
+              className="inline-flex min-h-7 items-center rounded-full border border-border bg-surface-muted px-3 text-xs font-medium leading-5 text-muted"
+              key={`${filter.label}-${filter.value ?? "ativo"}`}
+            >
+              <span className="font-semibold text-foreground">{filter.label}</span>
+              {filter.value ? <span>: {filter.value}</span> : null}
+            </span>
+          ))}
+        </div>
+      ) : (
+        <p className="text-sm font-medium leading-5 text-muted">
+          Nenhum filtro aplicado; a tabela mostra todos os psicólogos no recorte atual.
+        </p>
+      )}
+    </div>
+  </section>
+);
+
 const SearchBox = ({ onSearch, value }: { onSearch: (value: string) => void; value?: string }) => {
   const [draft, setDraft] = useState(value || "");
   const onSearchRef = useRef(onSearch);
@@ -1209,6 +1301,7 @@ export const AdminPsychologistsListClient = () => {
   const items = summary?.data ?? [];
   const pages = summary?.pages ?? 1;
   const page = Math.min(query.page ?? 1, pages);
+  const activeFilterItems = useMemo(() => buildActiveFilterItems(query, summary), [query, summary]);
 
   return (
     <div className="min-w-0 max-w-full space-y-7 overflow-x-clip">
@@ -1241,21 +1334,23 @@ export const AdminPsychologistsListClient = () => {
             <Filter aria-hidden className="h-4 w-4" />
             Filtros ativos
             <span className="rounded-full bg-primary-soft px-2 py-0.5 text-xs font-medium text-primary">
-              {summary?.active_filters_count ?? 0}
+              {summary?.active_filters_count ?? activeFilterItems.length}
             </span>
           </button>
         </div>
+
+        <ActiveFiltersSummary filters={activeFilterItems} />
 
         <CardShell className="overflow-hidden">
           <div className="flex flex-col gap-3 border-b border-border px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-sm font-semibold text-foreground">
               {summary ? numberFormatter.format(summary.count) : "—"} psicólogos encontrados
             </p>
-            <label className="flex w-full min-w-0 flex-col gap-1 text-xs font-medium text-muted sm:w-auto sm:flex-row sm:items-center sm:gap-3">
+            <label className="flex w-full min-w-0 items-center justify-between gap-2 text-xs font-medium text-muted sm:w-auto sm:justify-end">
               <span className="shrink-0">Ordenar por</span>
-              <span className="relative block min-w-0 text-sm font-medium text-foreground sm:w-[266px]">
+              <span className="relative block min-w-0 flex-1 text-sm font-medium text-foreground sm:w-[220px] sm:flex-none">
                 <select
-                  className="h-12 w-full min-w-0 appearance-none rounded-full border border-border bg-surface py-0 pl-4 pr-12 text-sm font-medium text-foreground shadow-control outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/15"
+                  className="h-10 w-full min-w-0 appearance-none rounded-control border border-border bg-surface py-0 pl-3 pr-9 text-sm font-medium text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/15"
                   onChange={(event) =>
                     replaceParams({ sort: event.target.value as PsychologistsListSort })
                   }
@@ -1269,7 +1364,7 @@ export const AdminPsychologistsListClient = () => {
                 </select>
                 <ChevronRight
                   aria-hidden
-                  className="pointer-events-none absolute right-5 top-1/2 h-4 w-4 -translate-y-1/2 rotate-90 text-foreground"
+                  className="pointer-events-none absolute right-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 rotate-90 text-foreground"
                 />
               </span>
             </label>
