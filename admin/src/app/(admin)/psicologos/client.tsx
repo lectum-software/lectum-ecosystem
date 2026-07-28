@@ -51,7 +51,6 @@ type TractionEngagementQuadrantItem =
   AdminPsychologistsDashboard["traction_engagement"]["quadrants"][number];
 type PsychologistEngagementDonutBucketId =
   | "engaged"
-  | "insufficient_data"
   | "low_engaged"
   | "no_engagement"
   | "very_engaged";
@@ -297,7 +296,6 @@ const TRACTION_CHART_COLORS = {
 } satisfies Record<TractionCategoryItem["id"], string>;
 
 const TRACTION_ENGAGEMENT_COLORS = {
-  insufficient_data: "#94a3b8",
   low_traction_engaged: "#8b5cf6",
   low_traction_low_engaged: "#f59f00",
   low_traction_no_engagement: "#64748b",
@@ -310,7 +308,6 @@ const TRACTION_ENGAGEMENT_COLORS = {
 
 const PSYCHOLOGIST_ENGAGEMENT_DONUT_COLORS = {
   engaged: TRACTION_ENGAGEMENT_COLORS.strong_traction_engaged,
-  insufficient_data: TRACTION_ENGAGEMENT_COLORS.insufficient_data,
   low_engaged: TRACTION_ENGAGEMENT_COLORS.low_traction_low_engaged,
   no_engagement: TRACTION_ENGAGEMENT_COLORS.low_traction_no_engagement,
   very_engaged: TRACTION_ENGAGEMENT_COLORS.strong_traction_very_engaged,
@@ -2416,11 +2413,6 @@ const buildPsychologistEngagementDonutItems = (
       "Sem engajamento",
       Math.max(0, tractionEngagement.totals.no_engagement_psychologists),
     ),
-    buildItem(
-      "insufficient_data",
-      "Dados insuficientes",
-      Math.max(0, tractionEngagement.totals.insufficient_data_psychologists),
-    ),
   ];
 };
 
@@ -2668,7 +2660,6 @@ const DashboardTractionEngagementCard = ({ summary }: { summary: AdminPsychologi
 
   if (!tractionEngagement) return null;
 
-  const insufficientData = findTractionEngagementQuadrant(tractionEngagement, "insufficient_data");
   const veryEngaged = tractionEngagement.comparison.very_engaged;
   const engaged = tractionEngagement.comparison.engaged;
   const lowEngaged = tractionEngagement.comparison.low_engaged;
@@ -2760,20 +2751,6 @@ const DashboardTractionEngagementCard = ({ summary }: { summary: AdminPsychologi
                 );
               })}
             </div>
-
-            <section className="mt-3 rounded-[1.35rem] border border-border bg-surface p-3">
-              <h3 className="text-sm font-black text-foreground">Dados insuficientes</h3>
-              <div className="mt-3">
-                <TractionEngagementQuadrantCard
-                  color={TRACTION_ENGAGEMENT_COLORS.insufficient_data}
-                  description={`${formatPercentageValue(insufficientData.percentage)} da base analisada.`}
-                  headingLabel="Dados insuficientes"
-                  planSegment={tractionEngagementPlanSegment}
-                  quadrant={insufficientData}
-                  showEngagementLabel
-                />
-              </div>
-            </section>
           </div>
 
           <aside className="grid content-start gap-3">
@@ -2848,9 +2825,7 @@ const DashboardTractionEngagementCard = ({ summary }: { summary: AdminPsychologi
               +; Engajado ={" "}
               {numberFormatter.format(tractionEngagement.thresholds.engaged_interactions_30d)}+;
               Pouco engajado = ao menos 1 interação, mas abaixo desse corte normalizado; Sem
-              engajamento = 0 interações em comunidades no período; Dados insuficientes = menos de{" "}
-              {numberFormatter.format(tractionEngagement.thresholds.minimum_active_days)} dias
-              ativos sem sinal forte.
+              engajamento = 0 interações em comunidades no período.
             </div>
           </aside>
         </div>

@@ -1038,3 +1038,37 @@ Frontend esperado:
 - `NODE_OPTIONS=--max-old-space-size=8192 pnpm check` (apos uma primeira tentativa com timeout de 244s, reexecutado com timeout maior e concluido sem erros)
 - Browser local/headless autenticado em `http://localhost:3002/pacientes/lista` validou desktop `1366x900` e mobile `390x844`: nenhum texto de **Perfil**, **Intencao** ou **Engajamento** ficou em elemento com `rounded-full`, `border` ou `bg-*`; mobile retornou `scrollWidth=390`. Screenshots salvos em `.tmp/patient-list-plain-text-tags-desktop.png` e `.tmp/patient-list-plain-text-tags-mobile.png`.
 - Admin temporario de validacao `codex-patient-list-plain-text-*` foi removido do banco apos a verificacao.
+
+## Ajuste pos-feedback 2026-07-28 - Engajamento comunitario de pacientes
+
+- Pedido do usuario: em pacientes, **Engajamento** deve considerar somente acoes em comunidades; cliques no WhatsApp, abertura de perfil, favoritos e retornos ao perfil devem permanecer em **Intencao**.
+- Backend Admin: `GET /api/admin/private/patients/dashboard` agora calcula `engagement_analysis` a partir de `community_post`, `post_reply`, `post_vote`, `post_save` e `post_reply_save`, filtrando pacientes reais e conteudos publicados/nao deletados.
+- Backend Admin: `intent_analysis` permanece calculado por `profile_view_event`, `psychologist_favorite` e `contact_request`; `intent_engagement` cruza a intencao de busca com o novo engajamento comunitario.
+- Lista Admin: `/pacientes/lista` tambem passou a exibir **Engajamento** por acoes comunitarias reais, mantendo WhatsApp/perfil/favorito apenas como sinais de **Intencao**.
+- A classificacao de engajamento usa a mesma fundacao de diagnostico comunitario ja usada no produto: 0 interacoes = **Sem engajamento**; interacoes abaixo do corte normalizado = **Pouco engajado**; cortes normalizados superiores = **Engajado** e **Muito engajado**.
+- Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente; a execucao usou `_product/tasks/PROTO-INVENTORY.md`, `_product/proto/admin/Pacientes/Pacientes - Dashboard.png` e as capturas enviadas pelo usuario.
+- Nenhuma alteracao em `backend/prisma/schema.prisma` ou `backend/prisma/migrations`; `pnpm --dir backend db:migrate` nao se aplica.
+- ADR criado: `adrs/0338-engajamento-comunitario-pacientes-e-sem-dados-insuficientes-psicologos.md`.
+
+### Criterios complementares
+
+- [x] **Engajamento dos pacientes** usa somente `community_post`, `post_reply`, `post_vote`, `post_save` e `post_reply_save`.
+- [x] Abertura de perfil, favorito, clique no WhatsApp e retorno ao perfil permanecem somente em **Intencao**.
+- [x] `intent_engagement` cruza intencao de busca com engajamento comunitario, sem misturar os sinais no calculo de engajamento.
+- [x] A lista de pacientes usa a mesma regra comunitaria para a coluna **Engajamento**.
+- [x] Nenhum mock, seed artificial, endpoint simulado, package novo ou migration foi criado.
+
+### Validacao complementar
+
+- `pnpm --dir backend exec biome check --write "src/modules/api/admin/private/patients/dashboard/DTOs/IAdminPatientsDashboardDTO.ts" "src/modules/api/admin/private/patients/dashboard/repositories/AdminPatientsDashboardRepository.ts" "src/modules/api/admin/private/patients/dashboard/use-cases/services.ts" "src/modules/api/admin/private/psychologists/dashboard/DTOs/IAdminPsychologistsDashboardDTO.ts" "src/modules/api/admin/private/psychologists/dashboard/use-cases/services.ts" "src/modules/api/admin/private/psychologists/list/DTOs/IAdminPsychologistsListDTO.ts" "src/modules/api/admin/private/psychologists/list/use-cases/services.ts"`
+- `pnpm --dir backend exec biome check --write "src/modules/api/admin/private/patients/list/DTOs/IAdminPatientsListDTO.ts" "src/modules/api/admin/private/patients/list/repositories/AdminPatientsListRepository.ts" "src/modules/api/admin/private/patients/list/use-cases/services.ts"`
+- `pnpm --dir admin exec biome check --write "src/api/req/patients/index.ts" "src/api/req/psychologists/index.ts" "src/app/(admin)/psicologos/client.tsx" "src/app/(admin)/psicologos/lista/client.tsx"`
+- `pnpm --dir admin exec biome check --write "src/api/req/patients/list.ts"`
+- `pnpm --dir backend check`
+- `pnpm --dir admin check`
+- `pnpm --dir backend build`
+- `NODE_OPTIONS=--max-old-space-size=8192 pnpm --dir admin build`
+- `NODE_OPTIONS=--max-old-space-size=8192 pnpm check`
+- Smoke de servico local `buildPatientsDashboard({ period: "all" })` retornou `engagement_analysis.source="community_post+post_reply+post_vote+post_save+post_reply_save"`, `intent_engagement.source` combinando intencao + comunidade, 16 celulas e itens reais **Muito engajados**, **Engajados**, **Pouco engajados** e **Sem engajamento**.
+- Smoke de servico local `listAdminPatients({ limit: 5 })` retornou `source` com tabelas de intencao + comunidade e labels reais de engajamento por comunidade, sem mock.
+- Browser local/headless autenticado em `http://localhost:3002/pacientes` e `http://localhost:3002/pacientes/lista` validou mobile `390x844`, `scrollWidth=390`, textos de **Engajamento** e **Sem engajamento** presentes. Screenshots salvos em `.tmp/admin-patients-engagement-mobile.png` e `.tmp/admin-patients-list-engagement-mobile.png`.

@@ -23,7 +23,6 @@ export const ADMIN_PSYCHOLOGISTS_LIST_STATUSES = [
 export const ADMIN_PSYCHOLOGISTS_LIST_EXPERIENCE = ["0_4", "5_9", "10_plus", "unknown"] as const;
 
 export const ADMIN_PSYCHOLOGISTS_LIST_TRACTION_ENGAGEMENT_QUADRANTS = [
-  "insufficient_data",
   "low_traction_engaged",
   "low_traction_low_engaged",
   "low_traction_no_engagement",

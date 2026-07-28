@@ -73,7 +73,7 @@ export type AdminPatientsListSummary = {
   pages: number;
   per_page: number;
   sort: AdminPatientsListSort;
-  source: "user+patient_profile+visitor_location+profile_view_event+psychologist_favorite+contact_request";
+  source: "user+patient_profile+visitor_location+profile_view_event+psychologist_favorite+contact_request+community_post+post_reply+post_vote+post_save+post_reply_save";
 };
 
 export type IAdminPatientsListDTO = Request & {

@@ -145,15 +145,9 @@ const TRACTION_ENGAGEMENT_QUADRANT_ORDER: AdminPsychologistsDashboardTractionEng
     "low_traction_engaged",
     "low_traction_low_engaged",
     "low_traction_no_engagement",
-    "insufficient_data",
   ];
 
 const TRACTION_ENGAGEMENT_QUADRANT_CONFIG = {
-  insufficient_data: {
-    description:
-      "Perfis com menos de 7 dias ativos no per\u00edodo e sem sinal forte de tra\u00e7\u00e3o ou engajamento para classificar com seguran\u00e7a.",
-    label: "Dados Insuficientes",
-  },
   low_traction_engaged: {
     description:
       "Psic\u00f3logos engajados em comunidades, mas ainda sem Tra\u00e7\u00e3o Forte no per\u00edodo.",
@@ -1300,11 +1294,8 @@ const engagementLevelFromSignals = (input: {
 
 const resolveTractionEngagementQuadrantId = (input: {
   engagementLevel: TractionEngagementLevel;
-  hasInsufficientData: boolean;
   hasStrongTraction: boolean;
 }): AdminPsychologistsDashboardTractionEngagementQuadrantId => {
-  if (input.hasInsufficientData) return "insufficient_data";
-
   const tractionPrefix = input.hasStrongTraction ? "strong_traction" : "low_traction";
 
   return `${tractionPrefix}_${input.engagementLevel}` as AdminPsychologistsDashboardTractionEngagementQuadrantId;
@@ -1427,21 +1418,14 @@ const buildTractionEngagementResults = (params: {
       diagnosisId: engagementDiagnosis.id,
       interactions: engagementSignals.interactions,
     });
-    const hasClassifiedEngagement =
-      engagementLevel === "engaged" || engagementLevel === "very_engaged";
-    const hasInsufficientData =
-      activeDays < TRACTION_MIN_ACTIVE_DAYS && !hasStrongTraction && !hasClassifiedEngagement;
     const quadrantId = resolveTractionEngagementQuadrantId({
       engagementLevel,
-      hasInsufficientData,
       hasStrongTraction,
     });
     const quadrant = quadrants.get(quadrantId);
 
     if (hasStrongTraction) totalSignals.strong_traction_psychologists += 1;
-    if (hasInsufficientData) {
-      totalSignals.insufficient_data_psychologists += 1;
-    } else if (engagementLevel === "very_engaged") {
+    if (engagementLevel === "very_engaged") {
       comparison.very_engaged.psychologists += 1;
       if (hasStrongTraction) comparison.very_engaged.strong_traction_count += 1;
       comparison.high_engagement.psychologists += 1;

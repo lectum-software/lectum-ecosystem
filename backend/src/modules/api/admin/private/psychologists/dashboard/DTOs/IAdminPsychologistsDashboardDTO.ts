@@ -442,7 +442,6 @@ export type AdminPsychologistsDashboardTractionResults = {
 };
 
 export type AdminPsychologistsDashboardTractionEngagementQuadrantId =
-  | "insufficient_data"
   | "low_traction_engaged"
   | "low_traction_low_engaged"
   | "low_traction_no_engagement"

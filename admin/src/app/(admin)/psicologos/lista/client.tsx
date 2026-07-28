@@ -208,11 +208,6 @@ const TRACTION_ENGAGEMENT_FILTER_OPTIONS: PsychologistsListOption[] = [
     id: "low_traction_no_engagement",
     label: "Sem tra\u00e7\u00e3o forte + sem engajamento",
   },
-  {
-    count: 0,
-    id: "insufficient_data",
-    label: "Dados insuficientes",
-  },
 ];
 
 const TRACTION_FILTER_OPTIONS: PsychologistsListOption[] = [

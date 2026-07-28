@@ -789,15 +789,6 @@ const resolveTractionEngagementQuadrant = (
 ): AdminPsychologistsListTractionEngagementQuadrantId => {
   const hasStrongTraction = item.traction.id === "strong_traction";
   const engagementLevel = listEngagementLevelFromItem(item);
-  const hasClassifiedEngagement =
-    engagementLevel === "engaged" || engagementLevel === "very_engaged";
-  const hasInsufficientData =
-    item.traction.signals.active_days < TRACTION_MIN_ACTIVE_DAYS &&
-    !hasStrongTraction &&
-    !hasClassifiedEngagement;
-
-  if (hasInsufficientData) return "insufficient_data";
-
   const tractionPrefix = hasStrongTraction ? "strong_traction" : "low_traction";
 
   return `${tractionPrefix}_${engagementLevel}` as AdminPsychologistsListTractionEngagementQuadrantId;

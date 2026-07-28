@@ -194,3 +194,36 @@ A leitura deve ser agregada, nao publica e nao punitiva. Ela deve cruzar sinais 
 - `pnpm check`
 - Smoke local no Admin dev server: `GET http://localhost:3002/psicologos` e `GET http://localhost:3002/psicologos/lista?traction_engagement=strong_traction_no_engagement` retornaram 200.
 - Validacao estatica do build: bundle de `/psicologos` contem `lg:grid-cols-[104px_repeat(4,minmax(0,1fr))]`, **Dados insuficientes** e **Sem engajamento**.
+
+## Execucao complementar: remover Dados insuficientes do engajamento (2026-07-28)
+
+- Pedido do usuario: em psicologos, remover **Dados insuficientes** como opcao de **Engajamento**; se nao houver engajamento no periodo, o psicologo deve entrar em **Sem engajamento**.
+- Backend Admin: `traction_engagement` do dashboard nao retorna mais o quadrante `insufficient_data`; perfis com 0 interacoes reais em comunidades entram em `*_no_engagement`, mesmo quando possuem menos de 7 dias ativos.
+- Backend Admin: `insufficient_data_psychologists` permanece no payload de totais apenas por compatibilidade e fica em 0 nessa leitura composta; a categoria **Dados Insuficientes** continua existindo somente na analise isolada de **Tracao**.
+- Lista Admin: o filtro composto `traction_engagement` removeu `insufficient_data` das opcoes e a resolucao backend da lista passou a devolver sempre um dos oito cruzamentos reais de tracao forte/sem tracao forte x engajamento.
+- Frontend Admin: o donut de **Engajamento** e a matriz **Tracao x Engajamento** exibem apenas **Muito engajado**, **Engajado**, **Pouco engajado** e **Sem engajamento**; o card separado de **Dados insuficientes** foi removido.
+- Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente; a execucao usou `_product/tasks/PROTO-INVENTORY.md`, `_product/proto/admin/Psicólogos/Psicólogos - Dashboard.png` e as capturas enviadas pelo usuario.
+- Nenhuma alteracao em `backend/prisma/schema.prisma` ou `backend/prisma/migrations`; `pnpm --dir backend db:migrate` nao se aplica.
+- ADR criado: `adrs/0338-engajamento-comunitario-pacientes-e-sem-dados-insuficientes-psicologos.md`.
+
+### Criterios complementares
+
+- [x] O bloco **Engajamento** de psicologos nao exibe mais **Dados insuficientes**.
+- [x] A matriz **Tracao x Engajamento** nao exibe card/filtro para `insufficient_data`.
+- [x] Psicologos com 0 interacoes reais em comunidades no periodo entram em **Sem engajamento**.
+- [x] Os links reais da matriz continuam usando os oito quadrantes `strong_traction_*` e `low_traction_*`.
+- [x] A categoria **Dados Insuficientes** permanece apenas na leitura isolada de **Tracao**.
+- [x] Nenhum mock, seed artificial, endpoint simulado, package novo ou migration foi criado.
+
+### Validacao complementar
+
+- `pnpm --dir backend exec biome check --write "src/modules/api/admin/private/patients/dashboard/DTOs/IAdminPatientsDashboardDTO.ts" "src/modules/api/admin/private/patients/dashboard/repositories/AdminPatientsDashboardRepository.ts" "src/modules/api/admin/private/patients/dashboard/use-cases/services.ts" "src/modules/api/admin/private/psychologists/dashboard/DTOs/IAdminPsychologistsDashboardDTO.ts" "src/modules/api/admin/private/psychologists/dashboard/use-cases/services.ts" "src/modules/api/admin/private/psychologists/list/DTOs/IAdminPsychologistsListDTO.ts" "src/modules/api/admin/private/psychologists/list/use-cases/services.ts"`
+- `pnpm --dir admin exec biome check --write "src/api/req/patients/index.ts" "src/api/req/psychologists/index.ts" "src/app/(admin)/psicologos/client.tsx" "src/app/(admin)/psicologos/lista/client.tsx"`
+- `pnpm --dir backend check`
+- `pnpm --dir admin check`
+- `pnpm --dir backend build`
+- `NODE_OPTIONS=--max-old-space-size=8192 pnpm --dir admin build`
+- `NODE_OPTIONS=--max-old-space-size=8192 pnpm check`
+- Smoke de servico local `buildPsychologistsDashboard({ period: "all" })` retornou 8 quadrantes sem `insufficient_data`, totais `no_engagement_psychologists=9`, `low_engaged_psychologists=5`, `very_engaged_psychologists=1`, `insufficient_data_psychologists=0` e soma igual a 15 psicologos reais.
+- Smoke HTTP local retornou 200 para `http://localhost:3002/psicologos`, `http://localhost:3002/pacientes`, `http://localhost:3002/psicologos/lista?traction_engagement=low_traction_no_engagement` e `http://localhost:3002/pacientes/lista`.
+- Browser local/headless autenticado em `http://localhost:3002/psicologos` e `http://localhost:3002/psicologos/lista?traction_engagement=low_traction_no_engagement` validou mobile `390x844`, `scrollWidth=390`, **Sem engajamento** presente, nenhum link `traction_engagement=insufficient_data` e ausencia do texto de criterio `Dados insuficientes = menos de`. Screenshots salvos em `.tmp/admin-psychologists-engagement-mobile.png` e `.tmp/admin-psychologists-list-no-engagement-mobile.png`.

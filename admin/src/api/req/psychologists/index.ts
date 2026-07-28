@@ -21,7 +21,6 @@ export type PsychologistsListStatus = "free" | "pending" | "unpublished" | "veri
 export type PsychologistsListEngagementId = "ativo" | "muito_ativo" | "pouco_ativo" | "sem_base";
 
 export type PsychologistsListTractionEngagementQuadrantId =
-  | "insufficient_data"
   | "low_traction_engaged"
   | "low_traction_low_engaged"
   | "low_traction_no_engagement"
@@ -492,7 +491,6 @@ export type PsychologistsDashboardTractionResults = {
 };
 
 export type PsychologistsDashboardTractionEngagementQuadrantId =
-  | "insufficient_data"
   | "low_traction_engaged"
   | "low_traction_low_engaged"
   | "low_traction_no_engagement"

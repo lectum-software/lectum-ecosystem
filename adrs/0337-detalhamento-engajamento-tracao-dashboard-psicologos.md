@@ -78,3 +78,7 @@ Builder/Quick Copy não está exposto como ferramenta callable neste ambiente. A
 ## Pendências
 
 - Nenhuma pendência externa.
+
+## Atualizacao 2026-07-28 - Superseded por ADR-0338
+
+A parte desta ADR que mantinha **Dados insuficientes** no donut de **Engajamento** e em **Tracao x Engajamento** foi substituida pela ADR-0338. A partir dela, `traction_engagement` usa somente os oito cruzamentos reais de tracao x engajamento; psicologos com 0 interacoes reais entram em **Sem engajamento**. **Dados Insuficientes** permanece somente na analise isolada de **Tracao**.

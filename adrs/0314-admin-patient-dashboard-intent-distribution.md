@@ -107,3 +107,7 @@ Para facilitar a leitura executiva, o payload também retorna uma comparação a
 - diferença observada = taxa de alta intenção entre pacientes com alto engajamento menos a taxa de alta intenção entre pacientes com pouco ou nenhum engajamento.
 
 Essa leitura é observacional e interna ao Admin. Ela não indica causalidade, diagnóstico, atendimento, conversa, prioridade de cuidado, ranking público ou pressão comercial individual. Não houve schema Prisma, migration, package novo, tracking, seed, mock, endpoint paralelo ou backfill.
+
+## Atualizacao 2026-07-28 - Superseded por ADR-0338
+
+A parte desta ADR que calculava `engagement_analysis` de pacientes com sinais de intencao foi substituida pela ADR-0338. A partir dela, engajamento de pacientes usa somente acoes comunitarias (`community_post`, `post_reply`, `post_vote`, `post_save`, `post_reply_save`), enquanto abertura de perfil, favorito, WhatsApp e retorno ao perfil permanecem em **Intencao**.

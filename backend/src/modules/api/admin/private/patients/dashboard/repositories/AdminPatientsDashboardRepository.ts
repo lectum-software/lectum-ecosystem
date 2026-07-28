@@ -338,6 +338,12 @@ export type AdminPatientIntentWhatsappClickRecord = Prisma.contact_requestGetPay
   select: typeof patientIntentWhatsappClickSelect;
 }>;
 
+export type AdminPatientCommunityEngagementEventRecord = {
+  createdAt: Date;
+  patient_id: string;
+  type: "post" | "post_save" | "reply" | "reply_save" | "vote";
+};
+
 export class AdminPatientsDashboardRepository {
   async listPatientSnapshots(): Promise<AdminPatientSnapshotRecord[]> {
     return prisma.user.findMany({
@@ -677,6 +683,155 @@ export class AdminPatientsDashboardRepository {
       profileViews,
       whatsappClicks,
     };
+  }
+
+  async listCommunityEngagementEvents(
+    range: AdminPatientsDashboardDateRange,
+  ): Promise<AdminPatientCommunityEngagementEventRecord[]> {
+    const createdAt = rangeWhere(range);
+    const publishedPostWhere = {
+      community: {
+        deleted: false,
+      },
+      deleted: false,
+      status: "publicado",
+    } satisfies Prisma.community_postWhereInput;
+
+    const [posts, replies, votes, postSaves, replySaves] = await Promise.all([
+      prisma.community_post.findMany({
+        orderBy: {
+          createdAt: "asc",
+        },
+        select: {
+          author_id: true,
+          createdAt: true,
+        },
+        where: {
+          ...publishedPostWhere,
+          author: {
+            deleted: false,
+            role: "paciente",
+          },
+          createdAt,
+        },
+      }),
+      prisma.post_reply.findMany({
+        orderBy: {
+          createdAt: "asc",
+        },
+        select: {
+          author_id: true,
+          createdAt: true,
+        },
+        where: {
+          author: {
+            deleted: false,
+            role: "paciente",
+          },
+          createdAt,
+          deleted: false,
+          post: publishedPostWhere,
+        },
+      }),
+      prisma.post_vote.findMany({
+        orderBy: {
+          createdAt: "asc",
+        },
+        select: {
+          createdAt: true,
+          user_id: true,
+        },
+        where: {
+          createdAt,
+          deleted: false,
+          OR: [
+            {
+              post: publishedPostWhere,
+            },
+            {
+              reply: {
+                deleted: false,
+                post: publishedPostWhere,
+              },
+            },
+          ],
+          user: {
+            deleted: false,
+            role: "paciente",
+          },
+          value: {
+            in: [1, -1],
+          },
+        },
+      }),
+      prisma.post_save.findMany({
+        orderBy: {
+          createdAt: "asc",
+        },
+        select: {
+          createdAt: true,
+          user_id: true,
+        },
+        where: {
+          createdAt,
+          deleted: false,
+          post: publishedPostWhere,
+          user: {
+            deleted: false,
+            role: "paciente",
+          },
+        },
+      }),
+      prisma.post_reply_save.findMany({
+        orderBy: {
+          createdAt: "asc",
+        },
+        select: {
+          createdAt: true,
+          user_id: true,
+        },
+        where: {
+          createdAt,
+          deleted: false,
+          reply: {
+            deleted: false,
+            post: publishedPostWhere,
+          },
+          user: {
+            deleted: false,
+            role: "paciente",
+          },
+        },
+      }),
+    ]);
+
+    return [
+      ...posts.map((post) => ({
+        createdAt: post.createdAt,
+        patient_id: post.author_id,
+        type: "post" as const,
+      })),
+      ...replies.map((reply) => ({
+        createdAt: reply.createdAt,
+        patient_id: reply.author_id,
+        type: "reply" as const,
+      })),
+      ...votes.map((vote) => ({
+        createdAt: vote.createdAt,
+        patient_id: vote.user_id,
+        type: "vote" as const,
+      })),
+      ...postSaves.map((save) => ({
+        createdAt: save.createdAt,
+        patient_id: save.user_id,
+        type: "post_save" as const,
+      })),
+      ...replySaves.map((save) => ({
+        createdAt: save.createdAt,
+        patient_id: save.user_id,
+        type: "reply_save" as const,
+      })),
+    ].sort((left, right) => left.createdAt.getTime() - right.createdAt.getTime());
   }
 
   async countNewPatients(range: AdminPatientsDashboardDateRange): Promise<number> {

@@ -452,7 +452,7 @@ export type PatientsDashboardEngagementAnalysis = {
   items: PatientsDashboardEngagementSegment[];
   patients_with_engagement: number;
   privacy_note: string;
-  source: "profile_view_event+psychologist_favorite+contact_request";
+  source: "community_post+post_reply+post_vote+post_save+post_reply_save";
   total_patients: number;
 };
 
@@ -485,7 +485,7 @@ export type PatientsDashboardIntentEngagement = {
     rate_difference_points: number | null;
   };
   description: string;
-  source: "profile_view_event+psychologist_favorite+contact_request";
+  source: "profile_view_event+psychologist_favorite+contact_request+community_post+post_reply+post_vote+post_save+post_reply_save";
   totals: {
     high_engagement_patients: number;
     high_intent_patients: number;
