@@ -7,6 +7,12 @@ export const ADMIN_PATIENTS_LIST_PROVIDERS = ["email_password", "google"] as con
 export type AdminPatientsListSort = (typeof ADMIN_PATIENTS_LIST_SORTS)[number];
 export type AdminPatientsListStatus = (typeof ADMIN_PATIENTS_LIST_STATUSES)[number];
 export type AdminPatientsListProvider = (typeof ADMIN_PATIENTS_LIST_PROVIDERS)[number];
+export type AdminPatientsListIntentId = "cold" | "curious" | "objective" | "very_qualified";
+export type AdminPatientsListEngagementId =
+  | "engaged"
+  | "low_engagement"
+  | "no_engagement"
+  | "very_engaged";
 
 export type AdminPatientsListQuery = {
   gender?: string;
@@ -40,6 +46,14 @@ export type AdminPatientsListItem = {
   gender: string | null;
   gender_label: string;
   id: string;
+  engagement: {
+    id: AdminPatientsListEngagementId;
+    label: "Engajado" | "Muito engajado" | "Pouco engajado" | "Sem engajamento";
+  };
+  intent: {
+    id: AdminPatientsListIntentId;
+    label: "Curioso" | "Frio" | "Interessado" | "Qualificado";
+  };
   last_location_at: Date | null;
   name: string;
   onboarding_completed_at: Date | null;
@@ -59,7 +73,7 @@ export type AdminPatientsListSummary = {
   pages: number;
   per_page: number;
   sort: AdminPatientsListSort;
-  source: "user+patient_profile+visitor_location";
+  source: "user+patient_profile+visitor_location+profile_view_event+psychologist_favorite+contact_request";
 };
 
 export type IAdminPatientsListDTO = Request & {

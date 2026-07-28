@@ -10,6 +10,27 @@ const latestLocationSelect = {
   user_id: true,
 } satisfies Prisma.visitor_locationSelect;
 
+const patientIntentProfileViewSelect = {
+  createdAt: true,
+  id: true,
+  psychologist_id: true,
+  viewer_id: true,
+} satisfies Prisma.profile_view_eventSelect;
+
+const patientIntentFavoriteSelect = {
+  createdAt: true,
+  id: true,
+  psychologist_id: true,
+  user_id: true,
+} satisfies Prisma.psychologist_favoriteSelect;
+
+const patientIntentWhatsappClickSelect = {
+  createdAt: true,
+  id: true,
+  psychologist_id: true,
+  user_id: true,
+} satisfies Prisma.contact_requestSelect;
+
 const patientListSelect = {
   active: true,
   avatar: true,
@@ -52,5 +73,84 @@ export class AdminPatientsListRepository {
         role: "paciente",
       },
     });
+  }
+
+  async listIntentSignals(patientIds: string[]) {
+    if (patientIds.length === 0) {
+      return {
+        favorites: [],
+        profileViews: [],
+        whatsappClicks: [],
+      };
+    }
+
+    const profileViews = await prisma.profile_view_event.findMany({
+      orderBy: {
+        createdAt: "asc",
+      },
+      select: patientIntentProfileViewSelect,
+      where: {
+        deleted: false,
+        psychologist: {
+          deleted: false,
+          role: "psicologo",
+        },
+        source: "profile_page",
+        viewer: {
+          deleted: false,
+          role: "paciente",
+        },
+        viewer_id: {
+          in: patientIds,
+        },
+      },
+    });
+    const favorites = await prisma.psychologist_favorite.findMany({
+      orderBy: {
+        createdAt: "asc",
+      },
+      select: patientIntentFavoriteSelect,
+      where: {
+        deleted: false,
+        psychologist: {
+          deleted: false,
+          role: "psicologo",
+        },
+        user: {
+          deleted: false,
+          role: "paciente",
+        },
+        user_id: {
+          in: patientIds,
+        },
+      },
+    });
+    const whatsappClicks = await prisma.contact_request.findMany({
+      orderBy: {
+        createdAt: "asc",
+      },
+      select: patientIntentWhatsappClickSelect,
+      where: {
+        channel: "whatsapp",
+        deleted: false,
+        psychologist: {
+          deleted: false,
+          role: "psicologo",
+        },
+        user: {
+          deleted: false,
+          role: "paciente",
+        },
+        user_id: {
+          in: patientIds,
+        },
+      },
+    });
+
+    return {
+      favorites,
+      profileViews,
+      whatsappClicks,
+    };
   }
 }

@@ -5,6 +5,12 @@ import type { ApiResponse } from "@/api/types";
 export type PatientsListSort = "name" | "recent";
 export type PatientsListStatus = "active" | "inactive";
 export type PatientsListProvider = "email_password" | "google";
+export type PatientsListIntentId = "cold" | "curious" | "objective" | "very_qualified";
+export type PatientsListEngagementId =
+  | "engaged"
+  | "low_engagement"
+  | "no_engagement"
+  | "very_engaged";
 
 export type PatientsListQuery = {
   gender?: string;
@@ -32,6 +38,14 @@ export type PatientsListItem = {
   gender: string | null;
   gender_label: string;
   id: string;
+  engagement: {
+    id: PatientsListEngagementId;
+    label: "Engajado" | "Muito engajado" | "Pouco engajado" | "Sem engajamento";
+  };
+  intent: {
+    id: PatientsListIntentId;
+    label: "Curioso" | "Frio" | "Interessado" | "Qualificado";
+  };
   last_location_at: string | null;
   name: string;
   onboarding_completed_at: string | null;
@@ -55,7 +69,7 @@ export type AdminPatientsList = {
   pages: number;
   per_page: number;
   sort: PatientsListSort;
-  source: "user+patient_profile+visitor_location";
+  source: "user+patient_profile+visitor_location+profile_view_event+psychologist_favorite+contact_request";
 };
 
 const cleanParams = (input: PatientsListQuery) => ({

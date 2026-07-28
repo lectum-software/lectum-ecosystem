@@ -920,3 +920,37 @@ Frontend esperado:
 - `NODE_OPTIONS=--max-old-space-size=8192 pnpm check`
 - Servico local `buildPatientsDashboard({ period: "all" })` validou `intent_engagement` com 16 celulas, soma das celulas igual a 155 pacientes reais, total coerente com `intent_analysis.total_patients`, `high_intent_patients=22` e diferenca observada de `+100 p.p.` na base local.
 - Browser local/headless autenticado em `http://localhost:3002/pacientes?period=all` com Admin temporario real removido ao final validou desktop `1366x900` e mobile `390x844`: bloco abaixo de **Intencao e engajamento dos pacientes**, textos/labels de matriz e resumo lateral presentes, 16 celulas logicas renderizadas em matriz desktop/mobile e sem overflow horizontal. Screenshots salvos em `.tmp/patient-dashboard-intent-engagement-matrix-desktop.png` e `.tmp/patient-dashboard-intent-engagement-matrix-mobile.png`.
+
+## Ajuste pos-feedback 2026-07-28 - Colunas da lista de pacientes
+
+- Pedido do usuario: na rota `/pacientes/lista`, exibir somente as colunas **Paciente**, **Data de cadastro**, **Perfil**, **Intencao** e **Engajamento**.
+- A tabela desktop agora usa exatamente essas cinco colunas e remove a coluna visual de **Acoes**; a navegacao para o detalhe permanece pelo clique/teclado na linha.
+- Os cards mobile exibem os mesmos campos (**Data de cadastro**, **Perfil**, **Intencao** e **Engajamento**) em layout mobile-first, sem criar tabela comprimida nem overflow horizontal em 390px.
+- **Perfil** continua sendo o status operacional real da conta (`user.active`), exibido como **Ativo** ou **Inativo**.
+- **Intencao** e **Engajamento** passaram a vir do backend da lista, calculados apenas com sinais reais ja persistidos de `profile_view_event`, `psychologist_favorite` e `contact_request` para os pacientes reais da pagina retornada.
+- A regra e observacional e interna ao Admin: a intencao usa os pesos ja adotados no dashboard de pacientes; o engajamento classifica acoes reais em **Sem engajamento**, **Pouco engajado**, **Engajado** e **Muito engajado**, sem inferencia clinica, diagnostico, atendimento, ranking publico, mock, seed ou backfill.
+- O contrato `GET /api/admin/private/patients` foi enriquecido com `intent` e `engagement` e a fonte declarada passou a citar as tabelas reais de sinais; nao houve endpoint paralelo, tracking novo, schema Prisma, migration, package novo, dado artificial ou `<img>`.
+- Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente; as referencias auditaveis foram `_product/proto/admin/Pacientes/Pacientes - Dashboard.png` e o screenshot enviado pelo usuario em 2026-07-28.
+- ADR atualizado: `adrs/0281-submenu-admin-pacientes.md`.
+
+### Criterios de aceite do ajuste
+
+- [x] O desktop de `/pacientes/lista` renderiza os cabecalhos exatamente como **Paciente**, **Data de cadastro**, **Perfil**, **Intencao** e **Engajamento**.
+- [x] Cada linha da tabela desktop possui cinco celulas de dados alinhadas as colunas solicitadas.
+- [x] Os cards mobile exibem os mesmos campos e permanecem sem overflow horizontal em 390px.
+- [x] **Intencao** e **Engajamento** sao calculados no backend com sinais reais ja persistidos, sem mock, seed, backfill, tracking novo ou endpoint simulado.
+- [x] A navegacao para o detalhe do paciente permanece disponivel por clique/teclado na linha ou no card, mesmo sem a coluna visual de acoes.
+- [x] Nenhum schema Prisma, migration, package novo, dado artificial ou `<img>` foi adicionado.
+
+### Validacao complementar executada
+
+- `pnpm --dir backend exec biome check --write "src/modules/api/admin/private/patients/list/DTOs/IAdminPatientsListDTO.ts" "src/modules/api/admin/private/patients/list/repositories/AdminPatientsListRepository.ts" "src/modules/api/admin/private/patients/list/use-cases/services.ts"`
+- `pnpm --dir admin exec biome check --write "src/api/req/patients/list.ts" "src/app/(admin)/pacientes/lista/client.tsx"`
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir admin check`
+- `NODE_OPTIONS=--max-old-space-size=8192 pnpm --dir admin build` (a primeira tentativa encontrou outro processo `next build` em execucao; a reexecucao concluiu com sucesso)
+- `NODE_OPTIONS=--max-old-space-size=8192 pnpm check`
+- Servico local `listAdminPatients({ limit: 3 })` retornou `status=200`, `count=155`, `source="user+patient_profile+visitor_location+profile_view_event+psychologist_favorite+contact_request"` e itens reais com `status` (Perfil), `intent` e `engagement` preenchidos.
+- Browser local/headless autenticado em `http://localhost:3002/pacientes/lista` validou desktop `1366x900` com os cinco cabecalhos solicitados e linhas com cinco celulas; validou mobile `390x844` com labels **Data de cadastro**, **Perfil**, **Intencao** e **Engajamento** e `scrollWidth=390`. Screenshots salvos em `.tmp/patient-list-columns-desktop.png` e `.tmp/patient-list-columns-mobile.png`.
+- Admin temporario de validacao `codex-patient-list-columns-*` foi removido do banco apos a verificacao.

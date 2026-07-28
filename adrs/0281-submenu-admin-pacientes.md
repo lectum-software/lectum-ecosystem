@@ -81,3 +81,36 @@ Validação:
 - `listAdminPatients({ limit: 1 })` retornou dados reais (`count=151`, `items=1`).
 - `GET http://localhost:3002/pacientes/lista` retornou `200`.
 - `GET http://localhost:3001/api/admin/private/patients?limit=1` sem token Admin retornou `401`.
+
+## Revisao 2026-07-28 - Lista com intencao e engajamento
+
+Novo feedback de produto definiu que a rota real `/pacientes/lista` deve priorizar uma leitura operacional curta com as colunas **Paciente**, **Data de cadastro**, **Perfil**, **Intencao** e **Engajamento**.
+
+Decisoes:
+
+- Manter `/pacientes/lista` como rota dedicada e paginada, mas reduzir a tabela desktop para as cinco colunas solicitadas.
+- Remover a coluna visual de acoes; o detalhe continua acessivel pelo clique/teclado na linha ou no card mobile.
+- Usar **Perfil** como status real da conta (`user.active` -> **Ativo**/**Inativo**), sem criar status clinico ou moderacao de paciente.
+- Calcular **Intencao** e **Engajamento** no backend a partir de sinais observacionais reais e ja persistidos: `profile_view_event`, `psychologist_favorite` e `contact_request`.
+- Reutilizar a logica observacional do dashboard de pacientes: intencao por pesos de descoberta/retorno/favorito/WhatsApp; engajamento por intensidade de acoes reais por paciente.
+- Nao expor esses campos fora do Admin, nao tratar as classificacoes como diagnostico, decisao clinica, atendimento, causalidade ou ranking publico.
+- Nao criar schema Prisma, migration, tracking novo, endpoint paralelo, package, seed, mock, backfill ou dado artificial para preencher as colunas.
+
+Consequencias:
+
+- A lista fica mais densa e alinhada ao pedido do usuario, com navegacao de detalhe preservada sem botao extra por linha.
+- O contrato `GET /api/admin/private/patients` passa a incluir `intent` e `engagement`, e a string `source` declara tambem as tabelas reais de sinais utilizadas.
+- Os sinais sao buscados apenas para os pacientes reais da pagina retornada, evitando consulta nominal desnecessaria fora da pagina atual.
+- A leitura continua interna ao Admin e baseada em eventos first-party ja existentes.
+
+Validacao:
+
+- `pnpm --dir backend exec biome check --write "src/modules/api/admin/private/patients/list/DTOs/IAdminPatientsListDTO.ts" "src/modules/api/admin/private/patients/list/repositories/AdminPatientsListRepository.ts" "src/modules/api/admin/private/patients/list/use-cases/services.ts"`
+- `pnpm --dir admin exec biome check --write "src/api/req/patients/list.ts" "src/app/(admin)/pacientes/lista/client.tsx"`
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir admin check`
+- `NODE_OPTIONS=--max-old-space-size=8192 pnpm --dir admin build`
+- `NODE_OPTIONS=--max-old-space-size=8192 pnpm check`
+- `listAdminPatients({ limit: 3 })` validou retorno real com `status` (Perfil), `intent`, `engagement` e `source` enriquecido.
+- Browser local/headless em `http://localhost:3002/pacientes/lista` validou desktop `1366x900` e mobile `390x844`, sem overflow horizontal no mobile. Screenshots salvos em `.tmp/patient-list-columns-desktop.png` e `.tmp/patient-list-columns-mobile.png`.

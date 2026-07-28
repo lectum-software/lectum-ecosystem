@@ -4,13 +4,11 @@ import {
   AlertTriangle,
   ChevronLeft,
   ChevronRight,
-  Eye,
   RefreshCw,
   Search,
   UsersRound,
 } from "lucide-react";
 import Image from "next/image";
-import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { type ReactNode, useEffect, useMemo, useState } from "react";
 import { useAdminPatientsList } from "@/api/callers/patients/list";
@@ -118,13 +116,6 @@ const formatDate = (value: string | null) => {
   if (Number.isNaN(date.getTime())) return "—";
 
   return dateFormatter.format(date);
-};
-
-const formatLocation = (item: PatientsListItem) => {
-  const cityState = [item.city, item.state].filter(Boolean).join(", ");
-  if (cityState) return cityState;
-
-  return item.country || "—";
 };
 
 const Avatar = ({ name, src }: { name: string; src: string | null }) => {
@@ -236,16 +227,40 @@ const CompactBadge = ({
   </span>
 );
 
-const RowActions = ({ item }: { item: PatientsListItem }) => (
-  <Link
-    aria-label={`Abrir detalhe administrativo de ${item.name}`}
-    className="inline-grid h-10 w-10 place-items-center rounded-2xl border border-border bg-surface text-primary shadow-control transition hover:border-primary/45 hover:bg-primary-soft"
-    href={item.detail_url}
-    onClick={(event) => event.stopPropagation()}
-  >
-    <Eye aria-hidden className="h-4 w-4" />
-  </Link>
+const textToneClassName = {
+  active: "text-success",
+  inactive: "text-muted",
+  info: "text-primary",
+  warning: "text-warning",
+} as const;
+
+const StatusText = ({
+  children,
+  tone,
+}: {
+  children: ReactNode;
+  tone: keyof typeof textToneClassName;
+}) => (
+  <span className={cn("inline text-sm font-medium leading-5", textToneClassName[tone])}>
+    {children}
+  </span>
 );
+
+const resolveIntentTone = (item: PatientsListItem): keyof typeof textToneClassName => {
+  if (item.intent.id === "very_qualified") return "active";
+  if (item.intent.id === "objective") return "warning";
+  if (item.intent.id === "curious") return "info";
+
+  return "inactive";
+};
+
+const resolveEngagementTone = (item: PatientsListItem): keyof typeof textToneClassName => {
+  if (item.engagement.id === "very_engaged") return "active";
+  if (item.engagement.id === "engaged") return "info";
+  if (item.engagement.id === "low_engagement") return "warning";
+
+  return "inactive";
+};
 
 const PatientMobileCard = ({
   item,
@@ -267,24 +282,29 @@ const PatientMobileCard = ({
           {item.email}
         </p>
       </div>
-      <CompactBadge tone={item.status}>{item.status_label}</CompactBadge>
     </div>
     <dl className="mt-4 grid grid-cols-2 gap-3 text-xs">
       <div>
-        <dt className="font-semibold text-muted">Cadastro</dt>
+        <dt className="font-semibold text-muted">Data de cadastro</dt>
         <dd className="mt-1 font-bold text-foreground">{formatDate(item.created_at)}</dd>
       </div>
       <div>
-        <dt className="font-semibold text-muted">Origem</dt>
-        <dd className="mt-1 font-bold text-foreground">{item.provider_label}</dd>
+        <dt className="font-semibold text-muted">Perfil</dt>
+        <dd className="mt-1">
+          <CompactBadge tone={item.status}>{item.status_label}</CompactBadge>
+        </dd>
       </div>
       <div>
-        <dt className="font-semibold text-muted">Gênero</dt>
-        <dd className="mt-1 font-bold text-foreground">{item.gender_label}</dd>
+        <dt className="font-semibold text-muted">Intenção</dt>
+        <dd className="mt-1">
+          <StatusText tone={resolveIntentTone(item)}>{item.intent.label}</StatusText>
+        </dd>
       </div>
       <div>
-        <dt className="font-semibold text-muted">Cidade/UF</dt>
-        <dd className="mt-1 font-bold text-foreground">{formatLocation(item)}</dd>
+        <dt className="font-semibold text-muted">Engajamento</dt>
+        <dd className="mt-1">
+          <StatusText tone={resolveEngagementTone(item)}>{item.engagement.label}</StatusText>
+        </dd>
       </div>
     </dl>
   </button>
@@ -298,23 +318,29 @@ const PatientsTable = ({
   onOpenDetail: (href: string) => void;
 }) => (
   <>
-    <div className="grid gap-3 lg:hidden">
+    <div className="grid min-w-0 gap-3 p-3 lg:hidden">
       {items.map((item) => (
         <PatientMobileCard item={item} key={item.id} onOpenDetail={onOpenDetail} />
       ))}
     </div>
 
-    <div className="hidden overflow-x-auto lg:block">
-      <table className="w-full table-auto text-left text-sm">
-        <thead className="border-b border-border text-xs font-bold uppercase tracking-[0.08em] text-muted">
+    <div className="hidden min-w-0 max-w-full overflow-hidden lg:block">
+      <table className="w-full table-fixed text-left text-sm">
+        <caption className="sr-only">Lista administrativa de pacientes</caption>
+        <colgroup>
+          <col className="w-[38%]" />
+          <col className="w-[16%]" />
+          <col className="w-[14%]" />
+          <col className="w-[16%]" />
+          <col className="w-[16%]" />
+        </colgroup>
+        <thead className="border-b border-border bg-surface-muted/70 text-xs text-muted">
           <tr>
-            <th className="px-5 py-4">Paciente</th>
-            <th className="px-3 py-4">Status</th>
-            <th className="px-3 py-4">Origem</th>
-            <th className="px-3 py-4">Cidade/UF</th>
-            <th className="px-3 py-4">Cadastro</th>
-            <th className="px-3 py-4">Gênero</th>
-            <th className="px-5 py-4 text-center">Ações</th>
+            <th className="px-5 py-4 font-semibold">Paciente</th>
+            <th className="px-3 py-4 font-semibold">Data de cadastro</th>
+            <th className="px-3 py-4 font-semibold">Perfil</th>
+            <th className="px-3 py-4 font-semibold">Intenção</th>
+            <th className="px-3 py-4 font-semibold">Engajamento</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-border">
@@ -344,23 +370,17 @@ const PatientsTable = ({
                   </div>
                 </div>
               </td>
-              <td className="whitespace-nowrap px-3 py-4">
-                <CompactBadge tone={item.status}>{item.status_label}</CompactBadge>
-              </td>
-              <td className="whitespace-nowrap px-3 py-4 font-semibold text-foreground">
-                {item.provider_label}
-              </td>
-              <td className="whitespace-nowrap px-3 py-4 font-semibold text-foreground">
-                {formatLocation(item)}
-              </td>
               <td className="whitespace-nowrap px-3 py-4 font-semibold text-foreground">
                 {formatDate(item.created_at)}
               </td>
-              <td className="whitespace-nowrap px-3 py-4 font-semibold text-foreground">
-                {item.gender_label}
+              <td className="whitespace-nowrap px-3 py-4">
+                <CompactBadge tone={item.status}>{item.status_label}</CompactBadge>
               </td>
-              <td className="px-5 py-4 text-center">
-                <RowActions item={item} />
+              <td className="whitespace-nowrap px-3 py-4">
+                <StatusText tone={resolveIntentTone(item)}>{item.intent.label}</StatusText>
+              </td>
+              <td className="whitespace-nowrap px-3 py-4">
+                <StatusText tone={resolveEngagementTone(item)}>{item.engagement.label}</StatusText>
               </td>
             </tr>
           ))}
