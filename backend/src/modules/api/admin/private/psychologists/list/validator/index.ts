@@ -1,4 +1,4 @@
-﻿import { type IValidatorRequest, validator } from "@/utils/validator";
+import { type IValidatorRequest, validator } from "@/utils/validator";
 export const schema: IValidatorRequest = {
   query: [
     {
@@ -54,6 +54,27 @@ export const schema: IValidatorRequest = {
       coerse: "string",
       method: "string",
       max: 20,
+      optional: true,
+    },
+    {
+      key: "traction",
+      coerse: "string",
+      method: "string",
+      max: 60,
+      optional: true,
+    },
+    {
+      key: "engagement",
+      coerse: "string",
+      method: "string",
+      max: 40,
+      optional: true,
+    },
+    {
+      key: "traction_engagement",
+      coerse: "string",
+      method: "string",
+      max: 60,
       optional: true,
     },
     {

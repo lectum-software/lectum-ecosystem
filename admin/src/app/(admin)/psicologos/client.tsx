@@ -17,6 +17,7 @@ import {
   UserPlus,
   UsersRound,
 } from "lucide-react";
+import Link from "next/link";
 import { type FocusEvent, type ReactNode, useMemo, useState } from "react";
 import { useAdminPsychologistsDashboard } from "@/api/callers/psychologists";
 import { resolveApiError } from "@/api/handle";
@@ -59,6 +60,13 @@ const PLAN_SEGMENT_FILTER_OPTIONS: { id: PlanSegmentFilter; label: string }[] = 
   { id: "free", label: "Gratuitos" },
   { id: "courtesy", label: "Cortesia" },
 ];
+
+const LIST_PLAN_FILTER_BY_SEGMENT = {
+  all: null,
+  courtesy: "courtesy",
+  free: "free",
+  subscribers: "professional",
+} satisfies Record<PlanSegmentFilter, string | null>;
 
 const SUPPLY_DEMAND_SORT_OPTIONS: { id: SupplyDemandSortKey; label: string }[] = [
   { id: "searches", label: "Mais buscas" },
@@ -289,6 +297,21 @@ const TRACTION_ENGAGEMENT_MATRIX_ORDER: TractionEngagementQuadrantItem["id"][] =
   "low_traction_high_engagement",
   "low_traction_low_engagement",
 ];
+
+const TRACTION_ENGAGEMENT_LIST_INSTRUCTION =
+  "Clique neste botão para ver a lista de profissionais deste quadrante.";
+
+const buildTractionEngagementListHref = (
+  quadrantId: TractionEngagementQuadrantItem["id"],
+  planSegment: PlanSegmentFilter,
+) => {
+  const params = new URLSearchParams({ traction_engagement: quadrantId });
+  const plan = LIST_PLAN_FILTER_BY_SEGMENT[planSegment];
+
+  if (plan) params.set("plan", plan);
+
+  return `/psicologos/lista?${params.toString()}`;
+};
 
 const SIGNUP_METHOD_CHART_COLORS = {
   email_password: "#13a85b",
@@ -2416,6 +2439,53 @@ const formatRateDifference = (value: number | null) => {
   return `${prefix}${numberFormatter.format(Math.abs(value))} p.p.`;
 };
 
+const TractionEngagementQuadrantButton = ({
+  color,
+  planSegment,
+  quadrant,
+}: {
+  color: string;
+  planSegment: PlanSegmentFilter;
+  quadrant: TractionEngagementQuadrantItem;
+}) => (
+  <Link
+    aria-label={`Ver lista de profissionais em ${quadrant.label}`}
+    className="group flex min-h-[13.25rem] flex-col justify-between rounded-[1.35rem] border border-border bg-surface-muted p-4 text-left transition duration-200 ease-out hover:-translate-y-0.5 hover:border-primary/35 hover:bg-primary-soft/45 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
+    href={buildTractionEngagementListHref(quadrant.id, planSegment)}
+  >
+    <div className="flex items-start justify-between gap-3">
+      <div className="min-w-0">
+        <div className="flex items-center gap-2">
+          <span
+            aria-hidden
+            className="h-3 w-3 shrink-0 rounded-full"
+            style={{ backgroundColor: color }}
+          />
+          <h3 className="text-sm font-black text-foreground">{quadrant.label}</h3>
+        </div>
+        <p className="mt-2 text-xs font-bold leading-5 text-muted">
+          {TRACTION_ENGAGEMENT_LIST_INSTRUCTION}
+        </p>
+      </div>
+      <p className="shrink-0 text-right text-base font-black text-foreground">
+        {numberFormatter.format(quadrant.count)}
+        <span className="ml-1 text-xs font-bold text-muted">
+          ({formatPercentageValue(quadrant.percentage)})
+        </span>
+      </p>
+    </div>
+    <div className="mt-3 flex flex-col gap-3">
+      <p className="text-xs font-bold text-subtle">
+        {numberFormatter.format(quadrant.totals.community_interactions)} interações ·{" "}
+        {numberFormatter.format(quadrant.totals.whatsapp_clicks)} WhatsApp
+      </p>
+      <span className="inline-flex h-10 w-full items-center justify-center rounded-full bg-primary px-4 text-xs font-black text-white shadow-control transition group-hover:bg-primary-hover sm:w-auto sm:self-start">
+        Ver lista
+      </span>
+    </div>
+  </Link>
+);
+
 const DashboardTractionEngagementCard = ({ summary }: { summary: AdminPsychologistsDashboard }) => {
   const [tractionEngagementPlanSegment, setTractionEngagementPlanSegment] =
     useState<PlanSegmentFilter>("all");
@@ -2469,36 +2539,12 @@ const DashboardTractionEngagementCard = ({ summary }: { summary: AdminPsychologi
                 const color = TRACTION_ENGAGEMENT_COLORS[id];
 
                 return (
-                  <article
-                    className="rounded-[1.35rem] border border-border bg-surface-muted p-4"
+                  <TractionEngagementQuadrantButton
+                    color={color}
                     key={id}
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-2">
-                          <span
-                            aria-hidden
-                            className="h-3 w-3 shrink-0 rounded-full"
-                            style={{ backgroundColor: color }}
-                          />
-                          <h3 className="text-sm font-black text-foreground">{quadrant.label}</h3>
-                        </div>
-                        <p className="mt-2 text-xs font-bold leading-5 text-muted">
-                          {quadrant.description}
-                        </p>
-                      </div>
-                      <p className="shrink-0 text-right text-base font-black text-foreground">
-                        {numberFormatter.format(quadrant.count)}
-                        <span className="ml-1 text-xs font-bold text-muted">
-                          ({formatPercentageValue(quadrant.percentage)})
-                        </span>
-                      </p>
-                    </div>
-                    <p className="mt-3 text-xs font-bold text-subtle">
-                      {numberFormatter.format(quadrant.totals.community_interactions)} interações ·{" "}
-                      {numberFormatter.format(quadrant.totals.whatsapp_clicks)} WhatsApp
-                    </p>
-                  </article>
+                    planSegment={tractionEngagementPlanSegment}
+                    quadrant={quadrant}
+                  />
                 );
               })}
 
@@ -2510,36 +2556,12 @@ const DashboardTractionEngagementCard = ({ summary }: { summary: AdminPsychologi
                 const color = TRACTION_ENGAGEMENT_COLORS[id];
 
                 return (
-                  <article
-                    className="rounded-[1.35rem] border border-border bg-surface-muted p-4"
+                  <TractionEngagementQuadrantButton
+                    color={color}
                     key={id}
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-2">
-                          <span
-                            aria-hidden
-                            className="h-3 w-3 shrink-0 rounded-full"
-                            style={{ backgroundColor: color }}
-                          />
-                          <h3 className="text-sm font-black text-foreground">{quadrant.label}</h3>
-                        </div>
-                        <p className="mt-2 text-xs font-bold leading-5 text-muted">
-                          {quadrant.description}
-                        </p>
-                      </div>
-                      <p className="shrink-0 text-right text-base font-black text-foreground">
-                        {numberFormatter.format(quadrant.count)}
-                        <span className="ml-1 text-xs font-bold text-muted">
-                          ({formatPercentageValue(quadrant.percentage)})
-                        </span>
-                      </p>
-                    </div>
-                    <p className="mt-3 text-xs font-bold text-subtle">
-                      {numberFormatter.format(quadrant.totals.community_interactions)} interações ·{" "}
-                      {numberFormatter.format(quadrant.totals.whatsapp_clicks)} WhatsApp
-                    </p>
-                  </article>
+                    planSegment={tractionEngagementPlanSegment}
+                    quadrant={quadrant}
+                  />
                 );
               })}
             </div>

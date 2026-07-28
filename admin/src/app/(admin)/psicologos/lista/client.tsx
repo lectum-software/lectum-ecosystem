@@ -35,10 +35,13 @@ import { useAdminPsychologistsList } from "@/api/callers/psychologists";
 import { resolveApiError } from "@/api/handle";
 import type {
   AdminPsychologistsList,
+  PsychologistsListEngagementId,
   PsychologistsListItem,
   PsychologistsListOption,
   PsychologistsListQuery,
   PsychologistsListSort,
+  PsychologistsListTractionCategoryId,
+  PsychologistsListTractionEngagementQuadrantId,
 } from "@/api/req/psychologists";
 import { cn } from "@/lib/utils";
 
@@ -70,6 +73,7 @@ const FILTER_KEYS = [
   "available_today",
   "city",
   "discount_first_session",
+  "engagement",
   "gender",
   "language",
   "modality",
@@ -85,6 +89,8 @@ const FILTER_KEYS = [
   "specialty",
   "state",
   "target_audience",
+  "traction",
+  "traction_engagement",
 ] as const satisfies readonly (keyof PsychologistsListQuery)[];
 
 type FilterQueryKey = (typeof FILTER_KEYS)[number];
@@ -161,6 +167,55 @@ const REGISTRY_STATUS_FILTER_OPTIONS: PsychologistsListOption[] = [
   { count: 0, id: "pending", label: "Pendente" },
 ];
 
+const TRACTION_ENGAGEMENT_FILTER_OPTIONS: PsychologistsListOption[] = [
+  {
+    count: 0,
+    id: "strong_traction_high_engagement",
+    label: "Tração forte + alto engajamento",
+  },
+  {
+    count: 0,
+    id: "strong_traction_low_engagement",
+    label: "Tração forte + baixo engajamento",
+  },
+  {
+    count: 0,
+    id: "low_traction_high_engagement",
+    label: "Alto engajamento + baixa tração",
+  },
+  {
+    count: 0,
+    id: "low_traction_low_engagement",
+    label: "Baixa tração + baixo engajamento",
+  },
+];
+
+const TRACTION_FILTER_OPTIONS: PsychologistsListOption[] = [
+  { count: 0, id: "strong_traction", label: "Tração Forte" },
+  { count: 0, id: "unconverted_traffic", label: "Tráfego Não Convertido" },
+  { count: 0, id: "unconverted_interest", label: "Interesse Não Convertido" },
+  { count: 0, id: "low_traction", label: "Baixa Tração" },
+  { count: 0, id: "insufficient_data", label: "Dados Insuficientes" },
+];
+
+const ENGAGEMENT_FILTER_OPTIONS: PsychologistsListOption[] = [
+  { count: 0, id: "muito_ativo", label: "Muito ativo" },
+  { count: 0, id: "ativo", label: "Ativo" },
+  { count: 0, id: "pouco_ativo", label: "Pouco ativo" },
+  { count: 0, id: "sem_base", label: "Sem base" },
+];
+const listTractionCategories = new Set<PsychologistsListTractionCategoryId>(
+  TRACTION_FILTER_OPTIONS.map((option) => option.id as PsychologistsListTractionCategoryId),
+);
+const listEngagementCategories = new Set<PsychologistsListEngagementId>(
+  ENGAGEMENT_FILTER_OPTIONS.map((option) => option.id as PsychologistsListEngagementId),
+);
+const listTractionEngagementQuadrants = new Set<PsychologistsListTractionEngagementQuadrantId>(
+  TRACTION_ENGAGEMENT_FILTER_OPTIONS.map(
+    (option) => option.id as PsychologistsListTractionEngagementQuadrantId,
+  ),
+);
+
 const CardShell = ({ children, className }: { children?: ReactNode; className?: string }) => (
   <section
     className={cn(
@@ -181,6 +236,28 @@ const parsePositiveNumber = (value: string | null, fallback: number) => {
 
 const parseBoolean = (value: string | null) => (value === "true" ? true : undefined);
 
+const parseTractionCategory = (
+  value: string | null,
+): PsychologistsListTractionCategoryId | undefined =>
+  value && listTractionCategories.has(value as PsychologistsListTractionCategoryId)
+    ? (value as PsychologistsListTractionCategoryId)
+    : undefined;
+
+const parseEngagementCategory = (
+  value: string | null,
+): PsychologistsListEngagementId | undefined =>
+  value && listEngagementCategories.has(value as PsychologistsListEngagementId)
+    ? (value as PsychologistsListEngagementId)
+    : undefined;
+
+const parseTractionEngagementQuadrant = (
+  value: string | null,
+): PsychologistsListTractionEngagementQuadrantId | undefined =>
+  value &&
+  listTractionEngagementQuadrants.has(value as PsychologistsListTractionEngagementQuadrantId)
+    ? (value as PsychologistsListTractionEngagementQuadrantId)
+    : undefined;
+
 const parseQuery = (params: URLSearchParams): PsychologistsListQuery => {
   const sort = params.get("sort") as PsychologistsListSort | null;
 
@@ -190,6 +267,7 @@ const parseQuery = (params: URLSearchParams): PsychologistsListQuery => {
     available_today: parseBoolean(params.get("available_today")),
     city: params.get("city") || undefined,
     discount_first_session: parseBoolean(params.get("discount_first_session")),
+    engagement: parseEngagementCategory(params.get("engagement")),
     gender: params.get("gender") || undefined,
     language: params.get("language") || undefined,
     limit: Math.min(50, parsePositiveNumber(params.get("limit"), 12)),
@@ -208,6 +286,8 @@ const parseQuery = (params: URLSearchParams): PsychologistsListQuery => {
     specialty: params.get("specialty") || undefined,
     state: params.get("state") || undefined,
     target_audience: params.get("target_audience") || undefined,
+    traction: parseTractionCategory(params.get("traction")),
+    traction_engagement: parseTractionEngagementQuadrant(params.get("traction_engagement")),
   };
 };
 
@@ -378,9 +458,58 @@ const FilterPanel = ({
   const toggleFilterFeature = (name: FilterFeatureKey) => {
     onFilter(name, query[name] === true ? null : true);
   };
+  const updateTractionFilter = (value: string) => {
+    onFilter("traction", value || null);
 
+    if (value) onFilter("traction_engagement", null);
+  };
+  const updateEngagementFilter = (value: string) => {
+    onFilter("engagement", value || null);
+
+    if (value) onFilter("traction_engagement", null);
+  };
   return (
     <>
+      <FilterSelectField
+        className="col-span-2"
+        label="Plano"
+        onChange={(value) => onFilter("plan", value || null)}
+        options={PLAN_FILTER_OPTIONS}
+        placeholder="Todos os planos"
+        value={query.plan}
+      />
+      <FilterSelectField
+        className="col-span-2"
+        label="Status perfil"
+        onChange={(value) => onFilter("profile_status", value || null)}
+        options={PROFILE_STATUS_FILTER_OPTIONS}
+        placeholder="Todos"
+        value={query.profile_status}
+      />
+      <FilterSelectField
+        className="col-span-2"
+        label="Status registro"
+        onChange={(value) => onFilter("registry_status", value || null)}
+        options={REGISTRY_STATUS_FILTER_OPTIONS}
+        placeholder="Todos"
+        value={query.registry_status}
+      />
+      <FilterSelectField
+        className="col-span-2"
+        label="Tração"
+        onChange={updateTractionFilter}
+        options={TRACTION_FILTER_OPTIONS}
+        placeholder="Todas"
+        value={query.traction}
+      />
+      <FilterSelectField
+        className="col-span-2"
+        label="Engajamento"
+        onChange={updateEngagementFilter}
+        options={ENGAGEMENT_FILTER_OPTIONS}
+        placeholder="Todos"
+        value={query.engagement}
+      />
       <FilterSelectField
         className="col-span-2"
         label="Especialidade"
@@ -404,30 +533,6 @@ const FilterPanel = ({
         options={MODALITY_FILTER_OPTIONS}
         placeholder="Todas as modalidades"
         value={query.modality}
-      />
-      <FilterSelectField
-        className="col-span-2"
-        label="Plano"
-        onChange={(value) => onFilter("plan", value || null)}
-        options={PLAN_FILTER_OPTIONS}
-        placeholder="Todos os planos"
-        value={query.plan}
-      />
-      <FilterSelectField
-        className="col-span-2"
-        label="Perfil"
-        onChange={(value) => onFilter("profile_status", value || null)}
-        options={PROFILE_STATUS_FILTER_OPTIONS}
-        placeholder="Todos"
-        value={query.profile_status}
-      />
-      <FilterSelectField
-        className="col-span-2"
-        label="Registro profissional"
-        onChange={(value) => onFilter("registry_status", value || null)}
-        options={REGISTRY_STATUS_FILTER_OPTIONS}
-        placeholder="Todos"
-        value={query.registry_status}
       />
       <FilterSelectField
         className="col-span-2"
@@ -556,25 +661,26 @@ const SearchBox = ({ onSearch, value }: { onSearch: (value: string) => void; val
   );
 };
 
-const badgeClassName = {
-  active: "bg-emerald-50 text-emerald-700",
-  courtesy: "bg-surface-muted text-muted",
-  free: "bg-surface-muted text-muted",
-  inactive: "bg-surface-muted text-muted",
-  pending: "bg-orange-50 text-orange-700",
-  professional: "bg-surface-muted text-muted",
+const statusTextClassName = {
+  active: "text-success",
+  courtesy: "text-muted",
+  danger: "text-danger",
+  free: "text-muted",
+  info: "text-primary",
+  inactive: "text-muted",
+  pending: "text-warning",
+  professional: "text-muted",
+  warning: "text-warning",
 } as const;
 
-const CompactBadge = ({
+const StatusText = ({
   children,
   tone,
 }: {
   children: ReactNode;
-  tone: keyof typeof badgeClassName;
+  tone: keyof typeof statusTextClassName;
 }) => (
-  <span
-    className={cn("inline-flex rounded-full px-2.5 py-1 text-xs font-bold", badgeClassName[tone])}
-  >
+  <span className={cn("inline text-sm font-medium leading-5", statusTextClassName[tone])}>
     {children}
   </span>
 );
@@ -617,6 +723,30 @@ const resolveProfileLabel = (item: PsychologistsListItem) =>
     ? { label: "Ativo", tone: "active" as const }
     : { label: "Inativo", tone: "inactive" as const };
 
+const resolveTractionLabel = (item: PsychologistsListItem) => {
+  if (item.traction.id === "strong_traction")
+    return { label: item.traction.label, tone: "active" as const };
+  if (item.traction.id === "unconverted_interest")
+    return { label: item.traction.label, tone: "info" as const };
+  if (item.traction.id === "unconverted_traffic")
+    return { label: item.traction.label, tone: "warning" as const };
+  if (item.traction.id === "insufficient_data")
+    return { label: item.traction.label, tone: "inactive" as const };
+
+  return { label: item.traction.label, tone: "danger" as const };
+};
+
+const resolveEngagementLabel = (item: PsychologistsListItem) => {
+  if (item.engagement.id === "muito_ativo")
+    return { label: item.engagement.label, tone: "active" as const };
+  if (item.engagement.id === "ativo")
+    return { label: item.engagement.label, tone: "info" as const };
+  if (item.engagement.id === "pouco_ativo")
+    return { label: item.engagement.label, tone: "warning" as const };
+
+  return { label: item.engagement.label, tone: "inactive" as const };
+};
+
 const RowActions = ({ item }: { item: PsychologistsListItem }) => (
   <div className="flex shrink-0 items-center justify-center gap-1.5">
     <Link
@@ -646,6 +776,8 @@ const PsychologistCard = ({ item }: { item: PsychologistsListItem }) => {
   const plan = resolvePlanLabel(item);
   const profile = resolveProfileLabel(item);
   const registry = resolveRegistryLabel(item);
+  const traction = resolveTractionLabel(item);
+  const engagement = resolveEngagementLabel(item);
 
   return (
     <article
@@ -674,10 +806,12 @@ const PsychologistCard = ({ item }: { item: PsychologistsListItem }) => {
         <RowActions item={item} />
       </div>
 
-      <div className="mt-4 flex flex-wrap gap-2">
-        <CompactBadge tone={plan.tone}>{plan.label}</CompactBadge>
-        <CompactBadge tone={profile.tone}>Perfil {profile.label}</CompactBadge>
-        <CompactBadge tone={registry.tone}>Registro {registry.label}</CompactBadge>
+      <div className="mt-4 flex flex-wrap gap-x-4 gap-y-1.5">
+        <StatusText tone={plan.tone}>{plan.label}</StatusText>
+        <StatusText tone={profile.tone}>Perfil {profile.label}</StatusText>
+        <StatusText tone={registry.tone}>Registro {registry.label}</StatusText>
+        <StatusText tone={traction.tone}>Tração {traction.label}</StatusText>
+        <StatusText tone={engagement.tone}>Engajamento {engagement.label}</StatusText>
       </div>
 
       <dl className="mt-4 grid max-w-xs gap-2 text-xs text-muted">
@@ -710,13 +844,15 @@ const PsychologistsTable = ({
       <table className="w-full table-fixed text-left text-sm">
         <caption className="sr-only">Lista administrativa de psicólogos</caption>
         <colgroup>
-          <col className="w-[7%]" />
-          <col className="w-[31%]" />
-          <col className="w-[14%]" />
+          <col className="w-[6%]" />
+          <col className="w-[25%]" />
           <col className="w-[12%]" />
-          <col className="w-[11%]" />
+          <col className="w-[10%]" />
+          <col className="w-[8%]" />
+          <col className="w-[9%]" />
           <col className="w-[13%]" />
-          <col className="w-[12%]" />
+          <col className="w-[10%]" />
+          <col className="w-[7%]" />
         </colgroup>
         <thead className="border-b border-border bg-surface-muted/70 text-xs text-muted">
           <tr>
@@ -726,6 +862,8 @@ const PsychologistsTable = ({
             <th className="px-2 py-4 font-semibold">Plano</th>
             <th className="px-2 py-4 font-semibold">Perfil</th>
             <th className="px-2 py-4 font-semibold">Registro</th>
+            <th className="px-2 py-4 font-semibold">Tração</th>
+            <th className="px-2 py-4 font-semibold">Engajamento</th>
             <th className="px-2 py-4 text-center font-semibold">Ações</th>
           </tr>
         </thead>
@@ -734,6 +872,8 @@ const PsychologistsTable = ({
             const plan = resolvePlanLabel(item);
             const profile = resolveProfileLabel(item);
             const registry = resolveRegistryLabel(item);
+            const traction = resolveTractionLabel(item);
+            const engagement = resolveEngagementLabel(item);
 
             return (
               <tr
@@ -776,13 +916,19 @@ const PsychologistsTable = ({
                   {formatRegistrationDate(item.created_at)}
                 </td>
                 <td className="whitespace-nowrap px-2 py-3">
-                  <CompactBadge tone={plan.tone}>{plan.label}</CompactBadge>
+                  <StatusText tone={plan.tone}>{plan.label}</StatusText>
                 </td>
                 <td className="whitespace-nowrap px-2 py-3">
-                  <CompactBadge tone={profile.tone}>{profile.label}</CompactBadge>
+                  <StatusText tone={profile.tone}>{profile.label}</StatusText>
                 </td>
                 <td className="whitespace-nowrap px-2 py-3">
-                  <CompactBadge tone={registry.tone}>{registry.label}</CompactBadge>
+                  <StatusText tone={registry.tone}>{registry.label}</StatusText>
+                </td>
+                <td className="px-2 py-3">
+                  <StatusText tone={traction.tone}>{traction.label}</StatusText>
+                </td>
+                <td className="px-2 py-3">
+                  <StatusText tone={engagement.tone}>{engagement.label}</StatusText>
                 </td>
                 <td className="px-2 py-3 text-center">
                   <RowActions item={item} />
@@ -1083,14 +1229,31 @@ export const AdminPsychologistsListClient = () => {
       </header>
 
       <div className="min-w-0 space-y-4">
-        <div className="flex min-w-0 flex-col gap-3 xl:flex-row xl:items-end xl:justify-between">
-          <div className="min-w-0 xl:w-full xl:max-w-[560px]">
+        <div className="flex min-w-0 flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+          <div className="min-w-0 lg:w-full lg:max-w-[560px]">
             <SearchBox onSearch={(value) => replaceParams({ q: value || null })} value={query.q} />
           </div>
-          <div className="flex min-w-0 flex-col gap-2 text-sm font-medium text-foreground sm:flex-row sm:flex-wrap sm:items-end xl:flex-nowrap xl:justify-end">
-            <label className="flex min-w-0 flex-col gap-1 text-xs font-medium text-muted sm:min-w-[210px]">
-              Ordenar por
-              <span className="relative block text-sm font-medium text-foreground">
+          <button
+            className="inline-flex h-12 w-full min-w-0 items-center justify-center gap-2 rounded-full border border-border bg-surface px-4 text-sm font-medium text-foreground shadow-control transition hover:border-primary hover:text-primary sm:w-auto"
+            onClick={openFilters}
+            type="button"
+          >
+            <Filter aria-hidden className="h-4 w-4" />
+            Filtros ativos
+            <span className="rounded-full bg-primary-soft px-2 py-0.5 text-xs font-medium text-primary">
+              {summary?.active_filters_count ?? 0}
+            </span>
+          </button>
+        </div>
+
+        <CardShell className="overflow-hidden">
+          <div className="flex flex-col gap-3 border-b border-border px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-sm font-semibold text-foreground">
+              {summary ? numberFormatter.format(summary.count) : "—"} psicólogos encontrados
+            </p>
+            <label className="flex w-full min-w-0 flex-col gap-1 text-xs font-medium text-muted sm:w-auto sm:flex-row sm:items-center sm:gap-3">
+              <span className="shrink-0">Ordenar por</span>
+              <span className="relative block min-w-0 text-sm font-medium text-foreground sm:w-[266px]">
                 <select
                   className="h-12 w-full min-w-0 appearance-none rounded-full border border-border bg-surface py-0 pl-4 pr-12 text-sm font-medium text-foreground shadow-control outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/15"
                   onChange={(event) =>
@@ -1110,25 +1273,6 @@ export const AdminPsychologistsListClient = () => {
                 />
               </span>
             </label>
-            <button
-              className="inline-flex h-12 min-w-0 items-center justify-center gap-2 rounded-full border border-border bg-surface px-4 text-sm font-medium text-foreground shadow-control transition hover:border-primary hover:text-primary"
-              onClick={openFilters}
-              type="button"
-            >
-              <Filter aria-hidden className="h-4 w-4" />
-              Filtros ativos
-              <span className="rounded-full bg-primary-soft px-2 py-0.5 text-xs font-medium text-primary">
-                {summary?.active_filters_count ?? 0}
-              </span>
-            </button>
-          </div>
-        </div>
-
-        <CardShell className="overflow-hidden">
-          <div className="border-b border-border px-4 py-4">
-            <p className="text-sm font-semibold text-foreground">
-              {summary ? numberFormatter.format(summary.count) : "—"} psicólogos encontrados
-            </p>
           </div>
 
           <div className="p-4 lg:p-0">

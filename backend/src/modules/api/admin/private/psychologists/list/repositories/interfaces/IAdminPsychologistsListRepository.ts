@@ -88,6 +88,21 @@ export type AdminPsychologistListProfileRecord = {
   whatsapp: string | null;
 };
 
+export type AdminPsychologistListSpecialtyCatalogRecord = {
+  category: {
+    active: boolean;
+    id: string;
+    name: string;
+    position: number;
+    slug: string;
+  } | null;
+  category_id: string | null;
+  id: string;
+  name: string;
+  position: number;
+  slug: string;
+};
+
 export type AdminPsychologistListRankingCandidateRecord = Omit<
   AdminPsychologistListProfileRecord,
   "registry_checks" | "subscriptions"
@@ -105,9 +120,28 @@ export type AdminPsychologistCountGroup = {
   psychologist_id: string;
 };
 
+export type AdminPsychologistAuthorCountGroup = {
+  _count: {
+    _all: number;
+  };
+  author_id: string;
+};
+
+export type AdminPsychologistUserCountGroup = {
+  _count: {
+    _all: number;
+  };
+  user_id: string;
+};
+
 export interface IAdminPsychologistsListRepository {
+  listCommunityPostCounts(psychologistIds: string[]): Promise<AdminPsychologistAuthorCountGroup[]>;
+  listCommunityReplyCounts(psychologistIds: string[]): Promise<AdminPsychologistAuthorCountGroup[]>;
+  listCommunityVoteCounts(psychologistIds: string[]): Promise<AdminPsychologistUserCountGroup[]>;
   listFavoriteCounts(psychologistIds: string[]): Promise<AdminPsychologistCountGroup[]>;
+  listProfileViewCounts(psychologistIds: string[]): Promise<AdminPsychologistCountGroup[]>;
   listPsychologistProfiles(): Promise<AdminPsychologistListProfileRecord[]>;
   listPublicRankingCandidates(): Promise<AdminPsychologistListRankingCandidateRecord[]>;
+  listSpecialtyCatalog(): Promise<AdminPsychologistListSpecialtyCatalogRecord[]>;
   listWhatsappClickCounts(psychologistIds: string[]): Promise<AdminPsychologistCountGroup[]>;
 }

@@ -9,6 +9,25 @@ const catalogSelect = {
   slug: true,
 } satisfies Prisma.specialtySelect;
 
+const specialtyCategorySelect = {
+  active: true,
+  id: true,
+  name: true,
+  position: true,
+  slug: true,
+} satisfies Prisma.specialty_categorySelect;
+
+const specialtyFilterCatalogSelect = {
+  category: {
+    select: specialtyCategorySelect,
+  },
+  category_id: true,
+  id: true,
+  name: true,
+  position: true,
+  slug: true,
+} satisfies Prisma.specialtySelect;
+
 const profileBaseSelect = {
   accepts_insurance: true,
   academic_formations: true,
@@ -190,6 +209,21 @@ const psychologistIdsWhere = (psychologistIds: string[]) => ({
 });
 
 export class AdminPsychologistsListRepository implements IAdminPsychologistsListRepository {
+  async listSpecialtyCatalog() {
+    return prisma.specialty.findMany({
+      orderBy: [{ category: { position: "asc" } }, { position: "asc" }, { name: "asc" }],
+      select: specialtyFilterCatalogSelect,
+      where: {
+        active: true,
+        deleted: false,
+        category: {
+          active: true,
+          deleted: false,
+        },
+      },
+    });
+  }
+
   async listPsychologistProfiles() {
     return prisma.psychologist_profile.findMany({
       orderBy: {
@@ -270,6 +304,125 @@ export class AdminPsychologistsListRepository implements IAdminPsychologistsList
           },
           take: 1,
         },
+      },
+    });
+  }
+
+  async listCommunityPostCounts(psychologistIds: string[]) {
+    if (psychologistIds.length === 0) return [];
+
+    return prisma.community_post.groupBy({
+      by: ["author_id"],
+      where: {
+        author_id: psychologistIdsWhere(psychologistIds),
+        author: {
+          active: true,
+          deleted: false,
+          role: "psicologo",
+        },
+        community: {
+          deleted: false,
+        },
+        deleted: false,
+        status: "publicado",
+      },
+      _count: {
+        _all: true,
+      },
+    });
+  }
+
+  async listCommunityReplyCounts(psychologistIds: string[]) {
+    if (psychologistIds.length === 0) return [];
+
+    return prisma.post_reply.groupBy({
+      by: ["author_id"],
+      where: {
+        author_id: psychologistIdsWhere(psychologistIds),
+        author: {
+          active: true,
+          deleted: false,
+          role: "psicologo",
+        },
+        deleted: false,
+        post: {
+          community: {
+            deleted: false,
+          },
+          deleted: false,
+          status: "publicado",
+        },
+      },
+      _count: {
+        _all: true,
+      },
+    });
+  }
+
+  async listCommunityVoteCounts(psychologistIds: string[]) {
+    if (psychologistIds.length === 0) return [];
+
+    return prisma.post_vote.groupBy({
+      by: ["user_id"],
+      where: {
+        deleted: false,
+        user_id: psychologistIdsWhere(psychologistIds),
+        value: {
+          in: [1, -1],
+        },
+        user: {
+          active: true,
+          deleted: false,
+          role: "psicologo",
+        },
+        OR: [
+          {
+            post_id: {
+              not: null,
+            },
+            post: {
+              community: {
+                deleted: false,
+              },
+              deleted: false,
+              status: "publicado",
+            },
+          },
+          {
+            reply_id: {
+              not: null,
+            },
+            reply: {
+              deleted: false,
+              post: {
+                community: {
+                  deleted: false,
+                },
+                deleted: false,
+                status: "publicado",
+              },
+            },
+          },
+        ],
+      },
+      _count: {
+        _all: true,
+      },
+    });
+  }
+
+  async listProfileViewCounts(psychologistIds: string[]) {
+    if (psychologistIds.length === 0) return [];
+
+    return prisma.profile_view_event.groupBy({
+      by: ["psychologist_id"],
+      where: {
+        deleted: false,
+        psychologist_id: psychologistIdsWhere(psychologistIds),
+        source: "profile_page",
+      },
+      _count: {
+        _all: true,
       },
     });
   }

@@ -1,4 +1,5 @@
-﻿import type { Request } from "express";
+import type { Request } from "express";
+import type { AdminCommunityEngagementDiagnosis } from "@/utils/admin-community-engagement-diagnosis";
 
 export const ADMIN_PSYCHOLOGISTS_LIST_SORTS = [
   "relevance",
@@ -18,9 +19,20 @@ export const ADMIN_PSYCHOLOGISTS_LIST_STATUSES = [
 
 export const ADMIN_PSYCHOLOGISTS_LIST_EXPERIENCE = ["0_4", "5_9", "10_plus", "unknown"] as const;
 
+export const ADMIN_PSYCHOLOGISTS_LIST_TRACTION_ENGAGEMENT_QUADRANTS = [
+  "insufficient_data",
+  "low_traction_high_engagement",
+  "low_traction_low_engagement",
+  "strong_traction_high_engagement",
+  "strong_traction_low_engagement",
+] as const;
+
 export type AdminPsychologistsListSort = (typeof ADMIN_PSYCHOLOGISTS_LIST_SORTS)[number];
 export type AdminPsychologistsListStatus = (typeof ADMIN_PSYCHOLOGISTS_LIST_STATUSES)[number];
 export type AdminPsychologistsListExperience = (typeof ADMIN_PSYCHOLOGISTS_LIST_EXPERIENCE)[number];
+export type AdminPsychologistsListEngagementCategoryId = AdminCommunityEngagementDiagnosis["id"];
+export type AdminPsychologistsListTractionEngagementQuadrantId =
+  (typeof ADMIN_PSYCHOLOGISTS_LIST_TRACTION_ENGAGEMENT_QUADRANTS)[number];
 
 export type AdminPsychologistsListQuery = {
   accepts_insurance?: boolean;
@@ -28,6 +40,7 @@ export type AdminPsychologistsListQuery = {
   available_today?: boolean;
   city?: string;
   discount_first_session?: boolean;
+  engagement?: AdminPsychologistsListEngagementCategoryId;
   experience?: AdminPsychologistsListExperience;
   gender?: string;
   language?: string;
@@ -48,6 +61,8 @@ export type AdminPsychologistsListQuery = {
   state?: string;
   status?: AdminPsychologistsListStatus;
   target_audience?: string;
+  traction?: AdminPsychologistsListTractionCategoryId;
+  traction_engagement?: AdminPsychologistsListTractionEngagementQuadrantId;
   verified?: boolean;
 };
 
@@ -68,6 +83,58 @@ export type AdminPsychologistsListRegistryVerification = {
     | "pendente"
     | "rejeitado";
   status_label: string;
+};
+
+export type AdminPsychologistsListTractionCategoryId =
+  | "insufficient_data"
+  | "low_traction"
+  | "strong_traction"
+  | "unconverted_interest"
+  | "unconverted_traffic";
+
+export type AdminPsychologistsListTractionSummary = {
+  description: string;
+  id: AdminPsychologistsListTractionCategoryId;
+  label: string;
+  signals: {
+    active_days: number;
+    favorites: number;
+    normalized_favorites_30d: number;
+    normalized_profile_views_30d: number;
+    normalized_whatsapp_clicks_30d: number;
+    profile_views: number;
+    whatsapp_clicks: number;
+    whatsapp_conversion_rate_percent: number | null;
+  };
+  source: "profile_view_event+contact_request+psychologist_favorite";
+  thresholds: {
+    favorites_high_30d: number;
+    minimum_active_days: number;
+    profile_views_high_30d: number;
+    strong_conversion_rate_percent: number;
+    whatsapp_high_30d: number;
+    whatsapp_high_with_conversion_30d: number;
+  };
+};
+
+export type AdminPsychologistsListEngagementSummary = Omit<
+  AdminCommunityEngagementDiagnosis,
+  "source"
+> & {
+  signals: {
+    active_days: number;
+    interactions: number;
+    normalized_interactions_30d: number;
+    posts: number;
+    replies: number;
+    votes: number;
+  };
+  source: "community_post+post_reply+post_vote.user_id";
+  thresholds: {
+    active_interactions_30d: number;
+    highly_active_interactions_30d: number;
+    minimum_signal_interactions_30d: number;
+  };
 };
 
 export type AdminPsychologistsListFilters = {
@@ -96,6 +163,7 @@ export type AdminPsychologistsListItem = {
   detail_url: string;
   discount_first_session: boolean;
   email: string;
+  engagement: AdminPsychologistsListEngagementSummary;
   experience_years: number | null;
   favorites_count: number;
   gender: string | null;
@@ -112,6 +180,7 @@ export type AdminPsychologistsListItem = {
   social_value: boolean;
   state: string | null;
   status: "free" | "pending" | "unpublished" | "verified";
+  traction: AdminPsychologistsListTractionSummary;
   registry_verification: AdminPsychologistsListRegistryVerification;
   verified: boolean;
   whatsapp_clicks_count: number;
@@ -126,7 +195,7 @@ export type AdminPsychologistsListSummary = {
   pages: number;
   per_page: number;
   sort: AdminPsychologistsListSort;
-  source: "user+psychologist_profile+professional_subscription+public_ranking";
+  source: "user+psychologist_profile+professional_subscription+public_ranking+profile_view_event+contact_request+psychologist_favorite+community_post+post_reply+post_vote";
 };
 
 export type IAdminPsychologistsListDTO = Request & {

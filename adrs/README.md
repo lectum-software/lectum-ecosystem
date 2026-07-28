@@ -150,3 +150,8 @@ Formato recomendado:
 - [ADR-0324 - Canais canonicos de origem do trafego no Admin](0324-canais-origem-trafego-admin.md) - Accepted
 - [ADR-0326 - Graficos radiais do Admin como donut](0326-admin-graficos-donut.md) - Accepted
 - [ADR-0327 - Dashboard Admin enxuto sem blocos analiticos secundarios](0327-dashboard-admin-enxuto.md) - Accepted
+- [ADR-0330 - Comparativo Tracao x Engajamento no dashboard Admin de psicologos](0330-tracao-engajamento-dashboard-psicologos-admin.md) - Accepted
+- [ADR-0331 - Colunas de Tracao e Engajamento na lista Admin de psicologos](0331-colunas-tracao-engajamento-lista-psicologos-admin.md) - Accepted
+- [ADR-0332 - Catalogo canonico de especialidades na lista Admin de psicologos](0332-catalogo-especialidades-lista-admin-psicologos.md) - Accepted
+- [ADR-0333 - Quadrantes de Tracao x Engajamento navegam para lista filtrada](0333-quadrantes-tracao-engajamento-lista-filtrada.md) - Accepted
+- [ADR-0334 - Filtros administrativos antes de Especialidade na lista Admin de psicologos](0334-filtros-administrativos-modal-lista-psicologos.md) - Accepted

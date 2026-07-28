@@ -18,6 +18,15 @@ export type PsychologistsListSort =
 
 export type PsychologistsListStatus = "free" | "pending" | "unpublished" | "verified";
 
+export type PsychologistsListEngagementId = "ativo" | "muito_ativo" | "pouco_ativo" | "sem_base";
+
+export type PsychologistsListTractionEngagementQuadrantId =
+  | "insufficient_data"
+  | "low_traction_high_engagement"
+  | "low_traction_low_engagement"
+  | "strong_traction_high_engagement"
+  | "strong_traction_low_engagement";
+
 export type PsychologistsListExperience = "0_4" | "5_9" | "10_plus" | "unknown";
 
 export type PsychologistsListQuery = {
@@ -26,6 +35,7 @@ export type PsychologistsListQuery = {
   available_today?: boolean;
   city?: string;
   discount_first_session?: boolean;
+  engagement?: PsychologistsListEngagementId;
   experience?: PsychologistsListExperience;
   gender?: string;
   language?: string;
@@ -46,6 +56,8 @@ export type PsychologistsListQuery = {
   state?: string;
   status?: PsychologistsListStatus;
   target_audience?: string;
+  traction?: PsychologistsListTractionCategoryId;
+  traction_engagement?: PsychologistsListTractionEngagementQuadrantId;
   verified?: boolean;
 };
 
@@ -584,6 +596,62 @@ export type AdminPsychologistRegistryVerificationSummary = {
   status_label: string;
 };
 
+export type PsychologistsListTractionCategoryId =
+  | "insufficient_data"
+  | "low_traction"
+  | "strong_traction"
+  | "unconverted_interest"
+  | "unconverted_traffic";
+
+export type PsychologistsListTraction = {
+  description: string;
+  id: PsychologistsListTractionCategoryId;
+  label:
+    | "Baixa Tração"
+    | "Dados Insuficientes"
+    | "Interesse Não Convertido"
+    | "Tração Forte"
+    | "Tráfego Não Convertido";
+  signals: {
+    active_days: number;
+    favorites: number;
+    normalized_favorites_30d: number;
+    normalized_profile_views_30d: number;
+    normalized_whatsapp_clicks_30d: number;
+    profile_views: number;
+    whatsapp_clicks: number;
+    whatsapp_conversion_rate_percent: number | null;
+  };
+  source: "profile_view_event+contact_request+psychologist_favorite";
+  thresholds: {
+    favorites_high_30d: number;
+    minimum_active_days: number;
+    profile_views_high_30d: number;
+    strong_conversion_rate_percent: number;
+    whatsapp_high_30d: number;
+    whatsapp_high_with_conversion_30d: number;
+  };
+};
+
+export type PsychologistsListEngagement = {
+  id: PsychologistsListEngagementId;
+  label: "Ativo" | "Muito ativo" | "Pouco ativo" | "Sem base";
+  signals: {
+    active_days: number;
+    interactions: number;
+    normalized_interactions_30d: number;
+    posts: number;
+    replies: number;
+    votes: number;
+  };
+  source: "community_post+post_reply+post_vote.user_id";
+  thresholds: {
+    active_interactions_30d: number;
+    highly_active_interactions_30d: number;
+    minimum_signal_interactions_30d: number;
+  };
+};
+
 export type PsychologistsListFilters = {
   approaches: PsychologistsListOption[];
   cities: PsychologistsListOption[];
@@ -610,6 +678,7 @@ export type PsychologistsListItem = {
   detail_url: string;
   discount_first_session: boolean;
   email: string;
+  engagement: PsychologistsListEngagement;
   experience_years: number | null;
   favorites_count: number;
   gender: string | null;
@@ -626,6 +695,7 @@ export type PsychologistsListItem = {
   social_value: boolean;
   state: string | null;
   status: PsychologistsListStatus;
+  traction: PsychologistsListTraction;
   registry_verification: AdminPsychologistRegistryVerificationSummary;
   verified: boolean;
   whatsapp_clicks_count: number;
@@ -640,7 +710,7 @@ export type AdminPsychologistsList = {
   pages: number;
   per_page: number;
   sort: PsychologistsListSort;
-  source: "user+psychologist_profile+professional_subscription+public_ranking";
+  source: "user+psychologist_profile+professional_subscription+public_ranking+profile_view_event+contact_request+psychologist_favorite+community_post+post_reply+post_vote";
 };
 
 export type AdminPsychologistDetailStatus = "free" | "pending" | "unpublished" | "verified";
@@ -1690,6 +1760,7 @@ const cleanListParams = (input: PsychologistsListQuery) => ({
   ...(input.available_today ? { available_today: input.available_today } : {}),
   ...(input.city ? { city: input.city } : {}),
   ...(input.discount_first_session ? { discount_first_session: input.discount_first_session } : {}),
+  ...(input.engagement ? { engagement: input.engagement } : {}),
   ...(input.experience ? { experience: input.experience } : {}),
   ...(input.gender ? { gender: input.gender } : {}),
   ...(input.language ? { language: input.language } : {}),
@@ -1710,6 +1781,8 @@ const cleanListParams = (input: PsychologistsListQuery) => ({
   ...(input.state ? { state: input.state } : {}),
   ...(input.status ? { status: input.status } : {}),
   ...(input.target_audience ? { target_audience: input.target_audience } : {}),
+  ...(input.traction ? { traction: input.traction } : {}),
+  ...(input.traction_engagement ? { traction_engagement: input.traction_engagement } : {}),
   ...(input.verified ? { verified: input.verified } : {}),
 });
 

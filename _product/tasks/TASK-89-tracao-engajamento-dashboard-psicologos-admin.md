@@ -67,3 +67,34 @@ A leitura deve ser agregada, nao publica e nao punitiva. Ela deve cruzar sinais 
 - Referencia visual local: `_product/proto/admin/Psicologos/Psicologos - Dashboard.png` (arquivo real no workspace: `_product/proto/admin/Psicólogos/Psicólogos - Dashboard.png`).
 - Builder/Quick Copy deve ser usado se estiver disponivel como ferramenta callable; caso contrario, registrar a limitacao e usar a captura/proto local.
 - Nao ha alteracao planejada em `backend/prisma/schema.prisma` nem em `backend/prisma/migrations`; portanto `pnpm --dir backend db:migrate` nao se aplica salvo mudanca de escopo.
+
+## Execucao complementar: quadrantes acionaveis para lista filtrada (2026-07-28)
+
+- Pedido do usuario: transformar os quatro blocos dos quadrantes em botoes que navegam para a lista Admin de psicologos com o filtro do quadrante selecionado e trocar as descricoes por uma orientacao de clique.
+- Frontend Admin: os quatro quadrantes da matriz **Tracao x Engajamento** em `/psicologos` agora sao links/botoes para `/psicologos/lista?traction_engagement=...`, mantendo contagem, percentual e sinais agregados.
+- Frontend Admin: o filtro por plano selecionado no bloco tambem e levado para a lista como `plan=professional`, `plan=free` ou `plan=courtesy` quando aplicavel.
+- Lista Admin: o filtro composto **Quadrante** (`traction_engagement`) e aceito no contrato e nos search params para links profundos vindos do dashboard; a modal principal da lista permanece sem reintroduzir o campo **Quadrante**, conforme decisao complementar registrada na TASK-54.
+- Backend Admin: `GET /api/admin/private/psychologists` valida e aplica `traction_engagement` apos calcular tracao/engajamento reais por psicologo, sem mock, seed, endpoint paralelo, package novo ou migration.
+- Builder/Quick Copy nao estava exposto como ferramenta callable neste ambiente; a execucao usou `_product/tasks/PROTO-INVENTORY.md`, a referencia local `_product/proto/admin/Psicólogos/Psicólogos - Dashboard.png` e a captura enviada pelo usuario.
+- Nenhuma alteracao em `backend/prisma/schema.prisma` ou `backend/prisma/migrations`; `pnpm --dir backend db:migrate` nao se aplica.
+- ADR criado: `adrs/0333-quadrantes-tracao-engajamento-lista-filtrada.md`.
+
+### Criterios complementares
+
+- [x] Os quatro blocos dos quadrantes sao botoes/links para a lista Admin de psicologos.
+- [x] Cada botao leva a lista com o filtro composto do quadrante selecionado.
+- [x] Quando o bloco esta segmentado por plano, a navegacao preserva o plano na lista.
+- [x] As descricoes dos quatro quadrantes foram substituidas por orientacao para clicar e ver a lista de profissionais.
+- [x] O filtro composto usa dados reais ja calculados na lista, sem mock, endpoint simulado, package novo ou migration.
+- [x] A UI permanece mobile-first e nao usa `<img>` cru.
+
+### Validacao complementar
+
+- `pnpm --dir backend exec biome check "src/modules/api/admin/private/psychologists/list/DTOs/IAdminPsychologistsListDTO.ts" "src/modules/api/admin/private/psychologists/list/repositories/interfaces/IAdminPsychologistsListRepository.ts" "src/modules/api/admin/private/psychologists/list/repositories/AdminPsychologistsListRepository.ts" "src/modules/api/admin/private/psychologists/list/use-cases/services.ts" "src/modules/api/admin/private/psychologists/list/validator/index.ts"`
+- `pnpm --dir admin exec biome check "src/api/req/psychologists/index.ts" "src/app/(admin)/psicologos/client.tsx" "src/app/(admin)/psicologos/lista/client.tsx"`
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check`
+- Smoke local no Admin dev server: `GET http://localhost:3002/psicologos` retornou 200 e `GET http://localhost:3002/psicologos/lista?traction_engagement=strong_traction_high_engagement` retornou 200.

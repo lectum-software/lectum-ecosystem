@@ -432,3 +432,119 @@ Frontend esperado:
 - `pnpm --dir admin check`
 - `pnpm --dir admin build`
 - Browser local/headless autenticado em `http://localhost:3002/psicologos/lista?sort=relevance&limit=8`: controles presentes, busca `fontWeight=500`/`fontSize=14px`, seletor `fontWeight=500`/`fontSize=14px`, botao **Filtros ativos** `fontWeight=500`/`fontSize=14px`, contador `fontWeight=500` e sem overflow horizontal de viewport.
+
+## Ajuste complementar: texto simples nos status da tabela (2026-07-28)
+
+- Pedido do usuario: remover as tags/pilulas da tabela de `/psicologos/lista` e manter texto normal para reduzir o peso visual.
+- Frontend Admin: as celulas de **Plano**, **Perfil**, **Registro**, **Tracao** e **Engajamento** passaram a usar texto simples com cor por token (`text-success`, `text-primary`, `text-warning`, `text-danger` e `text-muted`), sem fundo, borda, arredondamento ou padding de tag.
+- O mesmo componente de texto foi aplicado aos cards mobile-first da lista para manter consistencia entre desktop e base mobile `390px`.
+- Nao houve alteracao de backend, Prisma/migrations, packages, contratos de API, dados, filtros, ordenacao ou paginacao.
+- ADR novo nao se aplica: ajuste puramente visual sem decisao arquitetural, integracao, regra de dominio ou trade-off novo.
+
+### Criterios complementares
+
+- [x] As colunas **Plano**, **Perfil**, **Registro**, **Tracao** e **Engajamento** nao renderizam mais tags/pilulas na tabela desktop.
+- [x] Os valores permanecem legiveis como texto normal e preservam o significado por cor sem aumentar o peso visual.
+- [x] Os cards mobile-first da lista usam o mesmo tratamento textual.
+- [x] A lista continua sem overflow horizontal em desktop e mobile base `390px`.
+- [x] Nenhum backend, Prisma/migrations ou package foi alterado.
+
+### Validacao complementar
+
+- `pnpm --dir admin exec biome format --write "src/app/(admin)/psicologos/lista/client.tsx"`
+- `pnpm --dir admin exec eslint "src/app/(admin)/psicologos/lista/client.tsx"`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- Browser local/headless/CDP com admin temporario real removido ao final em `http://localhost:3002/psicologos/lista?sort=relevance&limit=8`:
+  - desktop `1440x1000`: 8 linhas reais, 40 textos de status nas celulas, `hasPillClass=false`, `document.documentElement.scrollWidth=1425` e `innerWidth=1440`;
+  - mobile base `390x844`: 40 textos de status nos cards, `hasPillClass=false`, `document.documentElement.scrollWidth=390` e `innerWidth=390`.
+
+## Execucao complementar: colunas de Tracao e Engajamento (2026-07-28)
+
+- Pedido do usuario: adicionar as colunas **Tracao** e **Engajamento** na lista Admin de psicologos.
+- Frontend Admin: a tabela desktop de `/psicologos/lista` agora exibe **Tracao** e **Engajamento** entre **Registro** e **Acoes**; os cards mobile-first exibem os mesmos rotulos como sinais compactos.
+- Frontend Admin: a modal de filtros tambem recebeu recortes opcionais por **Tracao**, **Engajamento** e **Quadrante** combinando ambos, com os identificadores reais retornados pelo contrato da lista e persistencia por URL/search params somente ao aplicar a modal.
+- Backend Admin: `GET /api/admin/private/psychologists` passou a retornar `traction` e `engagement` por profissional, calculados sem mock a partir de `profile_view_event`, `contact_request`, `psychologist_favorite`, `community_post`, `post_reply` e `post_vote`.
+- Backend Admin: os parametros opcionais `traction`, `engagement` e `traction_engagement` sao validados e aplicados depois de calcular as classificacoes reais de cada psicologo.
+- Builder/Quick Copy `vcp://quickcopy/vcp-24aaa2941d814e5b90572bc93ae50e2a` nao esta exposto como ferramenta callable neste ambiente; a execucao usou `_product/proto/admin/Psicólogos/Psicólogos- Lista.png`, a captura enviada pelo usuario e o codigo real da lista.
+- Nao houve alteracao de Prisma schema/migrations, package, seed, mock, backfill ou endpoint paralelo.
+- ADR criado: `adrs/0331-colunas-tracao-engajamento-lista-psicologos-admin.md`.
+
+### Criterios complementares
+
+- [x] A tabela desktop exibe as novas colunas **Tracao** e **Engajamento**.
+- [x] Os cards mobile-first exibem **Tracao** e **Engajamento** sem usar `<img>` cru.
+- [x] **Tracao** usa categorias reais da lista: Tracao Forte, Trafego Nao Convertido, Interesse Nao Convertido, Baixa Tracao e Dados Insuficientes.
+- [x] **Engajamento** usa categorias reais da lista: Muito ativo, Ativo, Pouco ativo e Sem base.
+- [x] Os valores sao calculados no backend a partir de sinais reais, sem mock ou endpoint simulado.
+- [x] A UI permanece mobile-first em base aproximada de 390px e sem overflow horizontal de viewport.
+- [x] O recorte opcional **Quadrante** combina tracao e engajamento sem criar dado derivado persistente.
+- [x] Nenhum Prisma schema/migration ou package foi alterado.
+
+### Validacao complementar
+
+- `pnpm --dir backend exec biome check --write "src/modules/api/admin/private/psychologists/list/DTOs/IAdminPsychologistsListDTO.ts" "src/modules/api/admin/private/psychologists/list/repositories/AdminPsychologistsListRepository.ts" "src/modules/api/admin/private/psychologists/list/repositories/interfaces/IAdminPsychologistsListRepository.ts" "src/modules/api/admin/private/psychologists/list/use-cases/services.ts" "src/modules/api/admin/private/psychologists/list/validator/index.ts"`
+- `pnpm --dir admin exec biome check --write "src/api/req/psychologists/index.ts" "src/app/(admin)/psicologos/lista/client.tsx"`
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check`
+- Smoke de servico real com `.env` local: `listAdminPsychologists({ limit: 3, sort: "relevance" })` retornou `status=200`, `count=15`, `rows=3`, primeiro item com `traction="strong_traction"`, `engagement="muito_ativo"` e fontes reais declaradas.
+- Smoke de filtros reais: `traction="strong_traction"` e `engagement="muito_ativo"` retornaram `status=200`/`active_filters_count=1`; valor invalido de `traction` retornou `status=400`.
+- Browser local/headless/CDP autenticado com admin temporario real removido ao final em `http://localhost:3002/psicologos/lista?sort=relevance&limit=8`:
+  - desktop `1440x1000`: headers `Rank, Psicologo, Data de cadastro, Plano, Perfil, Registro, Tracao, Engajamento, Acoes`, 8 linhas reais, `document.documentElement.scrollWidth=1425` e `innerWidth=1440`;
+  - mobile base `390x844`: cards reais exibindo **Tracao** e **Engajamento**, `document.documentElement.scrollWidth=390` e `innerWidth=390`.
+
+## Ajuste complementar: catalogo canonico de especialidades no filtro Admin (2026-07-28)
+
+- Pedido do usuario: garantir que todas as especialidades no filtro da lista do painel Admin sejam as mesmas exibidas aos pacientes.
+- Backend Admin: `GET /api/admin/private/psychologists` deixou de montar `filters.specialties` apenas a partir das especialidades presentes nos perfis de psicologos e passou a buscar o catalogo ativo real de `specialties` + `specialty_categories`.
+- A regra de catalogo agora espelha a busca publica de pacientes: especialidade ativa, nao deletada, categoria ativa/nao deletada e ordenacao por posicao da categoria, posicao da especialidade e nome.
+- Os contadores continuam derivados dos perfis administrativos reais; especialidades sem psicologos vinculados aparecem no filtro com `count=0` e retornam vazio honesto quando selecionadas.
+- A UI Admin nao recebeu lista hardcoded nem mock; o select existente continua consumindo `filters.specialties` do contrato real.
+- Nao houve alteracao de Prisma schema/migrations, packages, seed, mock, backfill ou endpoint paralelo.
+- Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente; a referencia auditavel permaneceu `_product/proto/admin/Psicologos/Psicologos- Lista.png` e a captura enviada pelo usuario.
+- ADR criado: `adrs/0332-catalogo-especialidades-lista-admin-psicologos.md`.
+
+### Criterios complementares
+
+- [x] O filtro **Especialidade** da lista Admin usa o mesmo catalogo ativo exibido aos pacientes.
+- [x] Especialidades ativas sem psicologos vinculados continuam disponiveis como opcoes com `count=0`.
+- [x] A selecao de uma especialidade sem resultado retorna estado vazio honesto, sem mock ou dado artificial.
+- [x] Nenhum frontend hardcoded, endpoint paralelo, package novo ou migration foi criado.
+
+### Validacao complementar
+
+- `pnpm --dir backend exec biome check --write "src/modules/api/admin/private/psychologists/list/repositories/AdminPsychologistsListRepository.ts" "src/modules/api/admin/private/psychologists/list/repositories/interfaces/IAdminPsychologistsListRepository.ts" "src/modules/api/admin/private/psychologists/list/use-cases/services.ts"`
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- Smoke local via `tsx` com `pool_size=1`: catalogo Admin e catalogo da busca de pacientes retornaram `adminCount=92`, `patientCount=92`, `same=true` e os mesmos primeiros slugs (`ansiedade`, `ansiedade-generalizada-tag`, `sindrome-do-panico`, `fobias`, `toc`).
+
+## Ajuste complementar: filtros administrativos antes de Especialidade (2026-07-28)
+
+- Pedido do usuario: na modal da lista de psicologos, adicionar antes de **Especialidade** os filtros administrativos **Plano**, **Status perfil**, **Status registro**, **Tracao** e **Engajamento**.
+- Frontend Admin: a modal de `/psicologos/lista` agora inicia com **Plano**, **Status perfil**, **Status registro**, **Tracao**, **Engajamento** e so depois **Especialidade**, mantendo a composicao mobile-first e sem `<img>` cru.
+- Frontend Admin: o campo visual **Quadrante** foi removido da modal para nao interromper a ordem solicitada; o parametro legado `traction_engagement` continua sendo parseado/limpo quando **Tracao** ou **Engajamento** sao selecionados, preservando links existentes.
+- Backend/Admin API: os filtros simples `traction` e `engagement` continuam usando categorias reais calculadas a partir dos sinais administrativos existentes, sem mock, endpoint paralelo, package novo ou migration.
+- Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente; a referencia auditavel permaneceu `_product/proto/admin/Psicologos/Psicologos- Lista.png`, a captura enviada pelo usuario e o browser local.
+- ADR criado: `adrs/0334-filtros-administrativos-modal-lista-psicologos.md`.
+
+### Criterios complementares
+
+- [x] **Plano**, **Status perfil**, **Status registro**, **Tracao** e **Engajamento** aparecem antes de **Especialidade** na modal.
+- [x] **Tracao** e **Engajamento** aplicam parametros reais na URL/API (`traction` e `engagement`) somente ao aplicar filtros.
+- [x] O campo **Quadrante** nao aparece mais na modal principal, mas links existentes por `traction_engagement` continuam aceitos.
+- [x] A modal permanece mobile-first na base aproximada de `390px` e sem overflow horizontal de viewport.
+- [x] Nenhum Prisma schema/migration, package, mock, seed ou endpoint paralelo foi criado.
+
+### Validacao complementar
+
+- `pnpm --dir admin exec biome check --write "src/api/req/psychologists/index.ts" "src/app/(admin)/psicologos/lista/client.tsx"`
+- `pnpm --dir admin check`
+- `NEXT_PRIVATE_BUILD_WORKER=0 node .\node_modules\next\dist\bin\next build --webpack --debug` em `admin/`
+- `pnpm check`
+- Browser local/headless/CDP com admin temporario real removido ao final em `http://localhost:3002/psicologos/lista?sort=relevance&limit=8`:
+  - desktop `1440x1000`: labels iniciais `Plano`, `Status perfil`, `Status registro`, `Tracao`, `Engajamento`, `Especialidade`, `orderOk=true`, `hasQuadrante=false`, `scrollWidth=1425`, `innerWidth=1440`;
+  - aplicacao real dos filtros gerou URL com `engagement=ativo` e `traction=strong_traction`;
+  - mobile base `390x844`: mesma ordem de labels, `orderOk=true`, `hasQuadrante=false`, `scrollWidth=390`, `innerWidth=390`.
