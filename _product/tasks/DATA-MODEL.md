@@ -412,6 +412,26 @@ perfil e seguem contabilizados como anônimos.
 
 Regras: `content_video_watch_session` é exclusivo para consumo de mídia de vídeo em posts/respostas de comunidade. Não registra texto do post, comentários, payload de formulário, IP bruto, user-agent bruto, token, query sensível ou conteúdo de WhatsApp. Não há backfill histórico. Autovisualização autenticada do autor do conteúdo deve ser excluída das métricas; a preferência V1 é não persistir essa sessão. Retenção de conteúdo não deve ser inferida de `page_view_event.duration_seconds`.
 
+`content_attention_session` (complemento 2026-07-29, atenção real em posts/respostas de comunidade):
+
+| Campo | Tipo | Notas |
+|---|---|---|
+| `target_type` | `String` | `"post"` ou `"reply"`; alvo autoral do psicólogo que recebeu atenção no feed/detalhe. |
+| `target_id` | `String` | ID canônico do post ou da resposta. |
+| `post_id` | `String?` | FK `community_post.id`; preenchido para posts e para respostas quando disponível para agregação por thread. |
+| `reply_id` | `String?` | FK `post_reply.id`; preenchido somente para alvo `reply`. |
+| `community_id` | `String` | FK `community.id`, derivada do alvo. |
+| `psychologist_id` | `String` | autor psicólogo que recebeu a atenção; facilita agregação Admin sem inferência posterior. |
+| `viewer_id` | `String?` | usuário autenticado que viu o conteúdo, quando existir; anônimos ficam nulos. |
+| `visitor_id`, `session_id`, `session_key` | `String` | identidade first-party e chave idempotente por alvo+sessão (`@@unique([target_type, target_id, session_key])`). |
+| `source_path` | `String?` | caminho sanitizado em que a atenção foi medida, sem query sensível. |
+| `attention_seconds` | `Int @default(0)` | segundos acumulados em que o card/conteúdo esteve visível com aba ativa; heartbeats atualizam pelo maior valor recebido. |
+| `last_event_at` | `DateTime @default(now())` | última atualização recebida. |
+| `@@index([target_type, target_id, createdAt])`, `@@index([community_id, createdAt])`, `@@index([psychologist_id, createdAt])`, `@@index([viewer_id, createdAt])`, `@@index([post_id, createdAt])`, `@@index([reply_id, createdAt])`, `@@index([last_event_at])` | | consultas Admin por período, psicólogo, conteúdo e recência. |
+| `@@map("content_attention_sessions")` | | Tabela first-party para tempo real de atenção em conteúdo comunitário. |
+
+Regras: a coleta usa `IntersectionObserver`, `document.visibilityState` e foco da janela no frontend; não conta aba em segundo plano/minimizada ou conteúdo fora do viewport. Um card conta como visível quando atinge 35% do card ou 160px de altura visível. O backend não persiste autovisualização autenticada do próprio autor psicólogo, não registra texto/conteúdo do post, IP bruto, user-agent bruto, payload sensível ou WhatsApp e não faz backfill histórico. Essa fonte sustenta a Visibilidade por tempo no Admin.
+
 `visitor_session` (analytics admin, TASK-47):
 
 | Campo | Tipo | Notas |
@@ -853,7 +873,7 @@ Adicionado na TASK-49 para sustentar a aba Admin Tráfego sem integração de te
 | `target_type` / `target_id` | `String?` | Derivado de URLs seguras, como psicólogo, comunidade ou post. |
 | `display_mode` | `String` | `browser`, `standalone`, `fullscreen`, `minimal-ui`, `unknown`. |
 | `is_entry` / `entry_path` | `Boolean` / `String?` | Identifica página de entrada por sessão. |
-| `duration_seconds` | `Int?` | Atualizado por troca de rota/pagehide quando o browser permitir. |
+| `duration_seconds` | `Int?` | Atualizado por troca de rota, pagehide, aba oculta ou janela sem foco quando o browser permitir. |
 | `occurred_at` | `DateTime` | Momento do evento; datas fora da janela confiável são normalizadas no backend. |
 
 `important_action_event`:
@@ -940,6 +960,7 @@ Para evitar referência a tabela inexistente, criar nesta ordem (cada uma com su
 6. `profile_view_event` quando analytics/notificacao de visualizacao entrar no escopo (TASK-20/29B).
 7. `subscription_plan`/`professional_subscription`/`billing_address`/`payment_method`/`payment_event` (TASK-31..33) — após TASK-03.
 8. `content_video_watch_session` (TASK-75) depois de TASK-71/TASK-72, para analytics first-party de retenção de vídeo de posts/respostas sem backfill.
+9. `content_attention_session` (complemento 2026-07-29) depois de `content_video_watch_session`, para medir tempo real de atenção em posts/respostas autorais no viewport sem backfill.
 
 ## Complemento 2026-06-26 - mensagens `wa.me` personalizadas
 
@@ -948,3 +969,4 @@ Para evitar referência a tabela inexistente, criar nesta ordem (cada uma com su
 - O fallback de primeiro nome útil normaliza espaços, remove prefixos/títulos profissionais de início (`Dr.`, `Dra.`, `Psicólogo`, `Psicóloga`, `Psi`/`Psic.`) e usa o primeiro termo restante que não seja partícula de nome (`de`, `da`, `do`, `das`, `dos`, `di`, `du`, `e`); se não houver nome, mantém fallback genérico.
 - O texto do `wa.me` é contextual: perfil (`encontrei seu perfil na Lectum`), post profissional (`encontrei seu post na Lectum`) e resposta/comentário profissional (`encontrei sua resposta na Lectum`).
 - O contrato permanece uma string URL pública; não há exposição do telefone bruto fora do link de intenção.
+

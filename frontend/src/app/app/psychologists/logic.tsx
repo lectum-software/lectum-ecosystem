@@ -58,6 +58,7 @@ import type {
   DirectoryPsychologistVideoWatchPayload,
 } from "@/api/generator/types/directory";
 import type { DisplayMode, ImportantActionTrackingRequest } from "@/api/req/analytics";
+import { documentHasUserAttention } from "@/components/analytics/attention";
 import { getOrCreateAnalyticsIdentity } from "@/components/analytics/storage";
 import { useProgressiveConversion } from "@/components/conversion/progressive-conversion-provider";
 import { PsychologistWhatsAppRedirectButton } from "@/components/psychologists/psychologist-whatsapp-redirect-button";
@@ -1901,6 +1902,11 @@ export const PsychologistsLogic = () => {
         : 0;
       const currentTime = Math.max(0, video.currentTime || 0);
 
+      if (!documentHasUserAttention()) {
+        state.lastPosition = currentTime;
+        return state;
+      }
+
       if (state.lastPosition > 2 && currentTime + 1 < state.lastPosition) {
         state.replayCount += 1;
       }
@@ -1986,6 +1992,46 @@ export const PsychologistsLogic = () => {
       trackFeaturedVideoWatch,
     ],
   );
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const syncAttentionBoundary = (options?: { flush?: boolean }) => {
+      const video = backgroundVideoRef.current;
+      if (!video || !featuredPsychologistId || !activeVideoSource) return;
+
+      const state = ensureFeedVideoAnalyticsState(featuredPsychologistId, activeVideoSource);
+      state.lastPosition = Math.max(0, video.currentTime || state.lastPosition);
+
+      if (options?.flush) {
+        flushFeedVideoAnalytics(video, { force: true });
+      }
+    };
+
+    const handleVisibilityChange = () => {
+      syncAttentionBoundary({ flush: !documentHasUserAttention() });
+    };
+    const handleFocus = () => syncAttentionBoundary();
+    const handleBlur = () => syncAttentionBoundary({ flush: true });
+    const handlePageHide = () => syncAttentionBoundary({ flush: true });
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    window.addEventListener("focus", handleFocus);
+    window.addEventListener("blur", handleBlur);
+    window.addEventListener("pagehide", handlePageHide);
+
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.removeEventListener("focus", handleFocus);
+      window.removeEventListener("blur", handleBlur);
+      window.removeEventListener("pagehide", handlePageHide);
+    };
+  }, [
+    activeVideoSource,
+    ensureFeedVideoAnalyticsState,
+    featuredPsychologistId,
+    flushFeedVideoAnalytics,
+  ]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;

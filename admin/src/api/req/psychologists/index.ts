@@ -520,12 +520,18 @@ export type PsychologistsDashboardProfileExposureCategoryId =
   | "standard_exposure";
 
 export type PsychologistsDashboardProfileExposureTotals = {
+  community_post_attention_seconds: number;
   community_post_views: number;
+  community_reply_attention_seconds: number;
   community_reply_views: number;
   exposure_score: number;
+  profile_attention_seconds: number;
+  profile_surface_attention_seconds: number;
+  profile_video_attention_seconds: number;
   profile_views: number;
   qualified_video_views: number;
   search_result_impressions: number;
+  visibility_seconds: number;
 };
 
 export type PsychologistsDashboardProfileExposureCategory = {
@@ -538,30 +544,31 @@ export type PsychologistsDashboardProfileExposureCategory = {
 };
 
 export type PsychologistsProfileExposureSource =
-  "profile_view_event.source=profile_page/search_result+profile_video_watch_session+page_view_event.target_type=post/reply";
+  "page_view_event.target_type=psychologist.duration_seconds+content_attention_session.attention_seconds+profile_video_watch_session.watched_seconds";
 
 export type PsychologistsProfileExposureThresholds = {
   adaptation_period_days: number;
-  qualified_video_watch_seconds: number;
-  weights: {
-    community_post_view: number;
-    community_reply_view: number;
-    profile_view: number;
-    qualified_video_view: number;
-    search_result_impression: number;
-  };
+  attention_unit_seconds: number;
+  content_attention_min_visible_pixels: number;
+  content_attention_min_visible_ratio: number;
+  max_attention_seconds_per_session: number;
 };
 
 export type PsychologistsProfileExposureBenchmark = {
   adaptation_period_days: number;
-  basis: "non_zero_weighted_exposure_score_outside_adaptation_period";
+  basis: "non_zero_attention_seconds_outside_adaptation_period";
   eligible_psychologists: number;
   exposed_psychologists: number;
   p25_exposure_score: number | null;
+  p25_visibility_seconds: number | null;
   p50_exposure_score: number | null;
+  p50_visibility_seconds: number | null;
   p75_exposure_score: number | null;
+  p75_visibility_seconds: number | null;
   standard_max_exposure_score: number | null;
+  standard_max_visibility_seconds: number | null;
   standard_min_exposure_score: number | null;
+  standard_min_visibility_seconds: number | null;
 };
 
 export type PsychologistsDashboardProfileExposureResults = {

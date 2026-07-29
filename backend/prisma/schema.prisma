@@ -79,6 +79,8 @@ model user {
   page_view_events                        page_view_event[]             @relation("page_view_event_user")
   important_action_events                 important_action_event[]      @relation("important_action_event_user")
   content_video_watch_sessions            content_video_watch_session[] @relation("content_video_watch_session_viewer")
+  content_attention_sessions              content_attention_session[]   @relation("content_attention_session_viewer")
+  received_content_attention_sessions     content_attention_session[]   @relation("content_attention_session_psychologist")
   billing_addresses                       billing_address[]             @relation("billing_address_user")
   payment_methods                         payment_method[]              @relation("payment_method_user")
   logs                                    log__user[]                   @relation("log__user_user")
@@ -814,29 +816,30 @@ model professional_review {
 }
 
 model community {
-  id                        String                     @id @default(cuid())
-  deleted                   Boolean                    @default(false)
-  deletedAt                 DateTime?                  @map("deleted_at")
-  updatedAt                 DateTime                   @default(now()) @updatedAt @map("updated_at")
-  createdAt                 DateTime                   @default(now()) @map("created_at")
-  name                      String
-  slug                      String                     @unique
-  active                    Boolean                    @default(true)
-  deactivatedAt             DateTime?                  @map("deactivated_at")
-  description               String?
-  category                  String?
-  members_count             Int                        @default(0)
-  avatar_url                String?                    @map("avatar_url")
-  visual_primary_color      String?                    @map("visual_primary_color")
-  visual_primary_dark_color String?                    @map("visual_primary_dark_color")
-  visual_soft_color         String?                    @map("visual_soft_color")
-  visual_text_color         String?                    @map("visual_text_color")
-  visual_gradient_color     String?                    @map("visual_gradient_color")
-  members                   community_member[]         @relation("community_member_community")
-  posts                     community_post[]           @relation("community_post_community")
-  rules                     community_rule[]           @relation("community_rule_community")
-  moderation_events         content_moderation_event[] @relation("content_moderation_event_community")
+  id                           String                        @id @default(cuid())
+  deleted                      Boolean                       @default(false)
+  deletedAt                    DateTime?                     @map("deleted_at")
+  updatedAt                    DateTime                      @default(now()) @updatedAt @map("updated_at")
+  createdAt                    DateTime                      @default(now()) @map("created_at")
+  name                         String
+  slug                         String                        @unique
+  active                       Boolean                       @default(true)
+  deactivatedAt                DateTime?                     @map("deactivated_at")
+  description                  String?
+  category                     String?
+  members_count                Int                           @default(0)
+  avatar_url                   String?                       @map("avatar_url")
+  visual_primary_color         String?                       @map("visual_primary_color")
+  visual_primary_dark_color    String?                       @map("visual_primary_dark_color")
+  visual_soft_color            String?                       @map("visual_soft_color")
+  visual_text_color            String?                       @map("visual_text_color")
+  visual_gradient_color        String?                       @map("visual_gradient_color")
+  members                      community_member[]            @relation("community_member_community")
+  posts                        community_post[]              @relation("community_post_community")
+  rules                        community_rule[]              @relation("community_rule_community")
+  moderation_events            content_moderation_event[]    @relation("content_moderation_event_community")
   content_video_watch_sessions content_video_watch_session[] @relation("content_video_watch_session_community")
+  content_attention_sessions   content_attention_session[]   @relation("content_attention_session_community")
 
   @@index([slug])
   @@index([slug, active, deleted])
@@ -896,34 +899,35 @@ model community_suggestion {
 }
 
 model community_post {
-  id                 String                   @id @default(cuid())
-  deleted            Boolean                  @default(false)
-  deletedAt          DateTime?                @map("deleted_at")
-  updatedAt          DateTime                 @default(now()) @updatedAt @map("updated_at")
-  createdAt          DateTime                 @default(now()) @map("created_at")
-  edited_at          DateTime?
-  community_id       String
-  author_id          String
-  title              String
-  content            String
-  media_url          String?
-  media_type         String?
-  anonymous          Boolean                  @default(true)
-  status             String                   @default("publicado")
-  upvotes_count      Int                      @default(0)
-  downvotes_count    Int                      @default(0)
-  replies_count      Int                      @default(0)
-  saves_count        Int                      @default(0)
-  community          community                @relation("community_post_community", fields: [community_id], references: [id], onDelete: Cascade)
-  author             user                     @relation("community_post_author", fields: [author_id], references: [id], onDelete: Cascade)
-  media_items        community_post_media[]   @relation("community_post_media_post")
-  replies            post_reply[]             @relation("post_reply_post")
-  votes              post_vote[]              @relation("post_vote_post")
-  saves              post_save[]              @relation("post_save_post")
-  shares             post_share[]             @relation("post_share_post")
-  notification_mutes post_notification_mute[] @relation("post_notification_mute_post")
-  reports            post_report[]            @relation("post_report_post")
+  id                   String                        @id @default(cuid())
+  deleted              Boolean                       @default(false)
+  deletedAt            DateTime?                     @map("deleted_at")
+  updatedAt            DateTime                      @default(now()) @updatedAt @map("updated_at")
+  createdAt            DateTime                      @default(now()) @map("created_at")
+  edited_at            DateTime?
+  community_id         String
+  author_id            String
+  title                String
+  content              String
+  media_url            String?
+  media_type           String?
+  anonymous            Boolean                       @default(true)
+  status               String                        @default("publicado")
+  upvotes_count        Int                           @default(0)
+  downvotes_count      Int                           @default(0)
+  replies_count        Int                           @default(0)
+  saves_count          Int                           @default(0)
+  community            community                     @relation("community_post_community", fields: [community_id], references: [id], onDelete: Cascade)
+  author               user                          @relation("community_post_author", fields: [author_id], references: [id], onDelete: Cascade)
+  media_items          community_post_media[]        @relation("community_post_media_post")
+  replies              post_reply[]                  @relation("post_reply_post")
+  votes                post_vote[]                   @relation("post_vote_post")
+  saves                post_save[]                   @relation("post_save_post")
+  shares               post_share[]                  @relation("post_share_post")
+  notification_mutes   post_notification_mute[]      @relation("post_notification_mute_post")
+  reports              post_report[]                 @relation("post_report_post")
   video_watch_sessions content_video_watch_session[] @relation("content_video_watch_session_post")
+  attention_sessions   content_attention_session[]   @relation("content_attention_session_post")
 
   @@index([community_id, status, createdAt])
   @@index([author_id])
@@ -948,30 +952,31 @@ model community_post_media {
 }
 
 model post_reply {
-  id              String            @id @default(cuid())
-  deleted         Boolean           @default(false)
-  deletedAt       DateTime?         @map("deleted_at")
-  updatedAt       DateTime          @default(now()) @updatedAt @map("updated_at")
-  createdAt       DateTime          @default(now()) @map("created_at")
-  edited_at       DateTime?
-  post_id         String
-  author_id       String
-  parent_reply_id String?
-  title           String?
-  content         String
-  media_url       String?
-  media_type      String?
-  upvotes_count   Int               @default(0)
-  downvotes_count Int               @default(0)
-  post            community_post    @relation("post_reply_post", fields: [post_id], references: [id], onDelete: Cascade)
-  author          user              @relation("post_reply_author", fields: [author_id], references: [id], onDelete: Cascade)
-  parent_reply    post_reply?       @relation("post_reply_thread", fields: [parent_reply_id], references: [id], onDelete: Cascade)
-  replies         post_reply[]      @relation("post_reply_thread")
-  votes           post_vote[]       @relation("post_vote_reply")
-  shares          post_share[]      @relation("post_share_reply")
-  saves           post_reply_save[] @relation("post_reply_save_reply")
-  reports         post_report[]     @relation("post_report_reply")
+  id                   String                        @id @default(cuid())
+  deleted              Boolean                       @default(false)
+  deletedAt            DateTime?                     @map("deleted_at")
+  updatedAt            DateTime                      @default(now()) @updatedAt @map("updated_at")
+  createdAt            DateTime                      @default(now()) @map("created_at")
+  edited_at            DateTime?
+  post_id              String
+  author_id            String
+  parent_reply_id      String?
+  title                String?
+  content              String
+  media_url            String?
+  media_type           String?
+  upvotes_count        Int                           @default(0)
+  downvotes_count      Int                           @default(0)
+  post                 community_post                @relation("post_reply_post", fields: [post_id], references: [id], onDelete: Cascade)
+  author               user                          @relation("post_reply_author", fields: [author_id], references: [id], onDelete: Cascade)
+  parent_reply         post_reply?                   @relation("post_reply_thread", fields: [parent_reply_id], references: [id], onDelete: Cascade)
+  replies              post_reply[]                  @relation("post_reply_thread")
+  votes                post_vote[]                   @relation("post_vote_reply")
+  shares               post_share[]                  @relation("post_share_reply")
+  saves                post_reply_save[]             @relation("post_reply_save_reply")
+  reports              post_report[]                 @relation("post_report_reply")
   video_watch_sessions content_video_watch_session[] @relation("content_video_watch_session_reply")
+  attention_sessions   content_attention_session[]   @relation("content_attention_session_reply")
 
   @@index([post_id, parent_reply_id, createdAt])
   @@index([author_id])
@@ -1018,6 +1023,42 @@ model content_video_watch_session {
   @@index([reply_id, createdAt])
   @@index([last_event_at])
   @@map("content_video_watch_sessions")
+}
+
+model content_attention_session {
+  id                String          @id @default(cuid())
+  deleted           Boolean         @default(false)
+  deletedAt         DateTime?       @map("deleted_at")
+  updatedAt         DateTime        @default(now()) @updatedAt @map("updated_at")
+  createdAt         DateTime        @default(now()) @map("created_at")
+  target_type       String          @map("target_type")
+  target_id         String          @map("target_id")
+  post_id           String?         @map("post_id")
+  reply_id          String?         @map("reply_id")
+  community_id      String          @map("community_id")
+  psychologist_id   String          @map("psychologist_id")
+  viewer_id         String?         @map("viewer_id")
+  visitor_id        String          @map("visitor_id")
+  session_id        String          @map("session_id")
+  session_key       String          @map("session_key")
+  source_path       String?         @map("source_path")
+  attention_seconds Int             @default(0)
+  last_event_at     DateTime        @default(now()) @map("last_event_at")
+  community         community       @relation("content_attention_session_community", fields: [community_id], references: [id], onDelete: Cascade)
+  post              community_post? @relation("content_attention_session_post", fields: [post_id], references: [id], onDelete: Cascade)
+  reply             post_reply?     @relation("content_attention_session_reply", fields: [reply_id], references: [id], onDelete: Cascade)
+  psychologist      user            @relation("content_attention_session_psychologist", fields: [psychologist_id], references: [id], onDelete: Cascade)
+  viewer            user?           @relation("content_attention_session_viewer", fields: [viewer_id], references: [id], onDelete: SetNull)
+
+  @@unique([target_type, target_id, session_key])
+  @@index([target_type, target_id, createdAt])
+  @@index([community_id, createdAt])
+  @@index([psychologist_id, createdAt])
+  @@index([viewer_id, createdAt])
+  @@index([post_id, createdAt])
+  @@index([reply_id, createdAt])
+  @@index([last_event_at])
+  @@map("content_attention_sessions")
 }
 
 model post_vote {

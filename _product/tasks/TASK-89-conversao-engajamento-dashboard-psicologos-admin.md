@@ -334,3 +334,50 @@ A leitura deve ser agregada, nao publica e nao punitiva. Ela deve cruzar sinais 
 - `pnpm check`
 - API local `GET http://localhost:3001/api/admin/private/psychologists/dashboard?period=all` retornou 200 com `profile_conversion_engagement.source` de engajamento recebido e categorias de `profile_exposure` rotuladas como **Visibilidade**.
 - Browser local/headless autenticado em `http://localhost:3002/psicologos`: desktop `1920x1080` validou três cards na mesma linha e ordem **Visibilidade**, **Engajamento**, **Conversão**; mobile `390x844` validou `scrollWidth=390`, mesma ordem vertical, ausência de copy pública **Exposição** e tooltip de engajamento recebido. Screenshots salvos em `.tmp/admin-psychologists-visibility-engagement-desktop.png` e `.tmp/admin-psychologists-visibility-engagement-mobile.png`.
+
+
+## Ajuste pós-feedback 2026-07-29 - Visibilidade por tempo real de atenção
+
+- Pedido do usuário: substituir o score/pontos de **Visibilidade** pelo próprio tempo de atenção recebido pelo psicólogo, sem contabilizar tempo de aba/janela minimizada, oculta ou sem foco.
+- Backend: criação real de `content_attention_session` para persistir segundos de atenção em posts e respostas autorais de psicólogos na comunidade, sem backfill histórico.
+- Backend: novo endpoint first-party `POST /api/public/analytics/content-attention`, com autenticação opcional, validação real, exclusão de autovisualização autenticada e persistência idempotente por alvo/sessão.
+- Backend Admin: `profile_exposure` permanece como nome técnico por compatibilidade, mas passa a classificar **Visibilidade** por segundos reais de atenção, usando `content_attention_session.attention_seconds`, `page_view_event.duration_seconds` de perfil e `profile_video_watch_session.watched_seconds`.
+- Backend Admin: aparição em listagem deixa de pontuar Visibilidade; WhatsApp continua exclusivo de Conversão.
+- Frontend: cards de comunidade passam a medir atenção em posts/respostas de psicólogos com `IntersectionObserver`, exigindo pelo menos 35% do card ou 160px de altura visível.
+- Frontend: trackers de pageview, conteúdo e vídeo pausam quando o documento fica oculto ou sem foco, evitando contabilizar tempo em tela minimizada/fora de atenção.
+- Admin: a faixa padrão de **Visibilidade** é exibida como tempo (`s`, `min`, `h`) e a UI explica que a métrica é tempo real de atenção, não pontos.
+- Para evitar inflar o tempo de perfil quando o vídeo é assistido na mesma superfície, o agregado usa a maior atenção entre perfil e vídeo de apresentação como superfície de perfil/vídeo, somando depois a atenção em posts e respostas de comunidade.
+- Builder/Quick Copy não estava exposto como ferramenta callable neste ambiente; a execução usou `_product/tasks/PROTO-INVENTORY.md`, `_product/proto/admin/Psicólogos/Psicólogos - Dashboard.png` e as capturas enviadas pelo usuário.
+- Migration aplicada/validada com `pnpm --dir backend db:migrate -- --name content_attention_sessions_check`; um estado intermediário de timeout do `migrate dev` foi reparado de forma não destrutiva, sem reset de banco nem perda de dados.
+- ADR criado: `adrs/0354-visibilidade-tempo-real-atencao-dashboard-psicologos-admin.md`.
+
+### Critérios complementares
+
+- [x] **Visibilidade** usa tempo real de atenção em vez de score ponderado/pontos.
+- [x] Aparição em listagem não pontua Visibilidade.
+- [x] Atenção em posts/respostas autorais de psicólogos é persistida em tabela real, sem mock, seed ou endpoint simulado.
+- [x] Tempo em aba/janela oculta, minimizada ou sem foco não é contabilizado pelos trackers ajustados.
+- [x] A faixa padrão do Admin é exibida como duração, não como pontos.
+- [x] A UI permanece mobile-first e sem `<img>` cru.
+- [x] ADR relevante registrado.
+- [x] `pnpm --dir backend db:migrate` foi executado durante a task.
+- [x] Checks/builds relevantes executados e verdes.
+- [x] Commit próprio criado e push executado.
+
+### Validação complementar
+
+- `pnpm --dir backend db:migrate -- --name content_attention_sessions_check`
+- `pnpm --dir backend exec biome check --write "src/utils/admin-profile-exposure.ts" "src/modules/api/admin/private/psychologists/dashboard/DTOs/IAdminPsychologistsDashboardDTO.ts" "src/modules/api/admin/private/psychologists/dashboard/repositories/AdminPsychologistsDashboardRepository.ts" "src/modules/api/admin/private/psychologists/dashboard/repositories/interfaces/IAdminPsychologistsDashboardRepository.ts" "src/modules/api/admin/private/psychologists/dashboard/use-cases/services.ts" "src/modules/api/public/analytics/content-attention" "src/main/server/imports/write.ts"`
+- `pnpm --dir frontend exec biome check --write "src/api/req/analytics/index.ts" "src/api/callers/analytics/index.tsx" "src/components/analytics/attention.ts" "src/components/analytics/content-attention-tracker.ts" "src/components/analytics/content-video-watch-tracker.ts" "src/components/analytics/page-view-tracker.tsx" "src/components/community/community-post-card.tsx" "src/app/app/psychologist/[id]/logic.tsx" "src/app/app/psychologists/logic.tsx"`
+- `pnpm --dir admin exec biome check --write "src/api/req/psychologists/index.ts" "src/app/(admin)/psicologos/client.tsx"`
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir admin check`
+- `NODE_OPTIONS=--max-old-space-size=8192 pnpm --dir admin build`
+- `pnpm --dir frontend check`
+- `NODE_OPTIONS=--max-old-space-size=8192 pnpm --dir frontend build`
+- `NODE_OPTIONS=--max-old-space-size=8192 pnpm check`
+- Smoke backend com `buildPsychologistsDashboard({ period: "all" })`: retornou `profile_exposure.source` baseado em segundos de atenção, `thresholds.content_attention_min_visible_pixels=160`, `totals.search_result_impressions=0`, categorias de **Visibilidade** e `plan_segments` com `profile_exposure`.
+- Smoke HTTP real em `POST http://localhost:3001/api/public/analytics/content-attention` com post publicado de psicólogo: retornou 200 com `tracked=true`; registros de validação foram removidos do banco.
+- HTTP local no Admin dev server: `GET http://localhost:3002/psicologos` retornou 200.
+- Browser local/headless autenticado em `http://localhost:3002/psicologos`: desktop `1920x1080` validou três cards na mesma linha e ordem **Visibilidade**, **Engajamento**, **Conversão**; mobile `390x844` validou `scrollWidth=390`, mesma ordem vertical, **Tempo real de atenção**, ausência de cópia pública **Exposição**/**score ponderado** e regra de 160px visível. Screenshots salvos em `.tmp/admin-psychologists-visibility-time-desktop.png` e `.tmp/admin-psychologists-visibility-time-mobile.png`.

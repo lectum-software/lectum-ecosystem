@@ -7,14 +7,19 @@ export type AdminProfileExposureCategoryId =
 
 export type AdminProfileExposureBenchmark = {
   adaptation_period_days: number;
-  basis: "non_zero_weighted_exposure_score_outside_adaptation_period";
+  basis: "non_zero_attention_seconds_outside_adaptation_period";
   eligible_psychologists: number;
   exposed_psychologists: number;
   p25_exposure_score: number | null;
+  p25_visibility_seconds: number | null;
   p50_exposure_score: number | null;
+  p50_visibility_seconds: number | null;
   p75_exposure_score: number | null;
+  p75_visibility_seconds: number | null;
   standard_max_exposure_score: number | null;
+  standard_max_visibility_seconds: number | null;
   standard_min_exposure_score: number | null;
+  standard_min_visibility_seconds: number | null;
 };
 
 export type AdminProfileExposureSignals = {
@@ -31,20 +36,16 @@ export const ADMIN_PROFILE_EXPOSURE_CATEGORY_ORDER: AdminProfileExposureCategory
 ];
 
 export const ADMIN_PROFILE_EXPOSURE_SOURCE =
-  "profile_view_event.source=profile_page/search_result+profile_video_watch_session+page_view_event.target_type=post/reply" as const;
+  "page_view_event.target_type=psychologist.duration_seconds+content_attention_session.attention_seconds+profile_video_watch_session.watched_seconds" as const;
 
 export type AdminProfileExposureSource = typeof ADMIN_PROFILE_EXPOSURE_SOURCE;
 
 export const ADMIN_PROFILE_EXPOSURE_THRESHOLDS = {
   adaptation_period_days: 30,
-  qualified_video_watch_seconds: 3,
-  weights: {
-    community_post_view: 0.75,
-    community_reply_view: 0.5,
-    profile_view: 1,
-    qualified_video_view: 1.5,
-    search_result_impression: 0.25,
-  },
+  attention_unit_seconds: 1,
+  content_attention_min_visible_pixels: 160,
+  content_attention_min_visible_ratio: 0.35,
+  max_attention_seconds_per_session: 86_400,
 } as const;
 
 export type AdminProfileExposureThresholds = typeof ADMIN_PROFILE_EXPOSURE_THRESHOLDS;
@@ -52,7 +53,7 @@ export type AdminProfileExposureThresholds = typeof ADMIN_PROFILE_EXPOSURE_THRES
 export const ADMIN_PROFILE_EXPOSURE_CATEGORY_CONFIG = {
   high_exposure: {
     description:
-      "Psicólogo fora da adaptação com score ponderado de Visibilidade acima da faixa padrão da plataforma no período selecionado.",
+      "Psicólogo fora da adaptação com tempo real de Visibilidade acima da faixa padrão da plataforma no período selecionado.",
     label: "Alta Visibilidade",
   },
   insufficient_data: {
@@ -62,17 +63,17 @@ export const ADMIN_PROFILE_EXPOSURE_CATEGORY_CONFIG = {
   },
   low_exposure: {
     description:
-      "Psicólogo fora da adaptação, com alguma visibilidade real, mas abaixo da faixa padrão da plataforma no período selecionado.",
+      "Psicólogo fora da adaptação, com algum tempo real de Visibilidade, mas abaixo da faixa padrão da plataforma no período selecionado.",
     label: "Baixa Visibilidade",
   },
   no_exposure: {
     description:
-      "Psicólogo fora da adaptação sem impressão em listagem, abertura de perfil, visualização qualificada de vídeo ou view de conteúdo autoral no período selecionado.",
+      "Psicólogo fora da adaptação sem tempo real de atenção em perfil, vídeo de apresentação ou conteúdo autoral no período selecionado.",
     label: "Sem Visibilidade",
   },
   standard_exposure: {
     description:
-      "Psicólogo fora da adaptação com score ponderado de Visibilidade dentro da faixa padrão da plataforma no período selecionado.",
+      "Psicólogo fora da adaptação com tempo real de Visibilidade dentro da faixa padrão da plataforma no período selecionado.",
     label: "Visibilidade Padrão",
   },
 } satisfies Record<AdminProfileExposureCategoryId, { description: string; label: string }>;
@@ -101,19 +102,15 @@ const median = (sortedValues: number[]) => {
 };
 
 export const calculateAdminProfileExposureScore = (input: {
-  communityPostViews: number;
-  communityReplyViews: number;
-  profileViews: number;
-  qualifiedVideoViews: number;
-  searchResultImpressions: number;
+  communityPostAttentionSeconds: number;
+  communityReplyAttentionSeconds: number;
+  profileAttentionSeconds: number;
+  profileVideoAttentionSeconds: number;
 }) =>
   roundAdminProfileExposureNumber(
-    input.searchResultImpressions *
-      ADMIN_PROFILE_EXPOSURE_THRESHOLDS.weights.search_result_impression +
-      input.communityReplyViews * ADMIN_PROFILE_EXPOSURE_THRESHOLDS.weights.community_reply_view +
-      input.communityPostViews * ADMIN_PROFILE_EXPOSURE_THRESHOLDS.weights.community_post_view +
-      input.profileViews * ADMIN_PROFILE_EXPOSURE_THRESHOLDS.weights.profile_view +
-      input.qualifiedVideoViews * ADMIN_PROFILE_EXPOSURE_THRESHOLDS.weights.qualified_video_view,
+    input.communityPostAttentionSeconds +
+      input.communityReplyAttentionSeconds +
+      Math.max(input.profileAttentionSeconds, input.profileVideoAttentionSeconds),
   );
 
 export const buildAdminProfileExposureBenchmark = (input: {
@@ -129,14 +126,19 @@ export const buildAdminProfileExposureBenchmark = (input: {
 
   return {
     adaptation_period_days: ADMIN_PROFILE_EXPOSURE_THRESHOLDS.adaptation_period_days,
-    basis: "non_zero_weighted_exposure_score_outside_adaptation_period",
+    basis: "non_zero_attention_seconds_outside_adaptation_period",
     eligible_psychologists: input.eligiblePsychologists,
     exposed_psychologists: nonZeroExposureScores.length,
     p25_exposure_score: p25,
+    p25_visibility_seconds: p25,
     p50_exposure_score: median(nonZeroExposureScores),
+    p50_visibility_seconds: median(nonZeroExposureScores),
     p75_exposure_score: p75,
+    p75_visibility_seconds: p75,
     standard_max_exposure_score: p75,
+    standard_max_visibility_seconds: p75,
     standard_min_exposure_score: p25,
+    standard_min_visibility_seconds: p25,
   };
 };
 

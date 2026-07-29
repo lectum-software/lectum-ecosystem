@@ -57,6 +57,7 @@ import type {
 } from "@/api/generator/types/directory";
 import type { FreeProfessionalProfileActivationPendingField } from "@/api/generator/types/free-profile";
 import type { PostListPost } from "@/api/generator/types/posts";
+import { documentHasUserAttention } from "@/components/analytics/attention";
 import { CommunityPostCard } from "@/components/community/community-post-card";
 import { MentorBadge } from "@/components/community/mentor-badge";
 import { useProgressiveConversion } from "@/components/conversion/progressive-conversion-provider";
@@ -1164,6 +1165,8 @@ const PresentationVideo = ({ profile }: { profile: DirectoryPsychologistProfile 
       };
 
       const addWatchedRange = (from: number, to: number) => {
+        if (!documentHasUserAttention()) return;
+
         const start = Math.max(0, Math.floor(Math.min(from, to)));
         const end = Math.max(0, Math.ceil(Math.max(from, to)));
 
@@ -1173,6 +1176,8 @@ const PresentationVideo = ({ profile }: { profile: DirectoryPsychologistProfile 
       };
 
       const handlePlay = () => {
+        if (!documentHasUserAttention()) return;
+
         if (hasStartedRef.current && completedRef.current && video.currentTime < 1.5) {
           replayCountRef.current += 1;
           completedRef.current = false;
@@ -1183,6 +1188,11 @@ const PresentationVideo = ({ profile }: { profile: DirectoryPsychologistProfile 
       };
 
       const handleTimeUpdate = () => {
+        if (!documentHasUserAttention()) {
+          lastPlaybackPositionRef.current = video.currentTime || lastPlaybackPositionRef.current;
+          return;
+        }
+
         const currentTime = video.currentTime || 0;
         const previousTime = lastPlaybackPositionRef.current || 0;
 
@@ -1206,6 +1216,12 @@ const PresentationVideo = ({ profile }: { profile: DirectoryPsychologistProfile 
       };
 
       const handleEnded = () => {
+        if (!documentHasUserAttention()) {
+          lastPlaybackPositionRef.current = video.currentTime || lastPlaybackPositionRef.current;
+          flushVideoAnalytics(video, false, true);
+          return;
+        }
+
         if (Number.isFinite(video.duration) && video.duration > 0) {
           addWatchedRange(lastPlaybackPositionRef.current, video.duration);
           maxPositionRef.current = Math.max(maxPositionRef.current, video.duration);
@@ -1218,12 +1234,40 @@ const PresentationVideo = ({ profile }: { profile: DirectoryPsychologistProfile 
       };
 
       const handlePause = () => flushVideoAnalytics(video, false, true);
-      const handlePageHide = () => flushVideoAnalytics(video, false, true);
+      const syncAttentionBoundary = () => {
+        lastPlaybackPositionRef.current = video.currentTime || lastPlaybackPositionRef.current;
+      };
+      const handleVisibilityChange = () => {
+        if (documentHasUserAttention()) {
+          if (!video.paused) {
+            hasStartedRef.current = true;
+            syncAttentionBoundary();
+          }
+          return;
+        }
+
+        syncAttentionBoundary();
+        flushVideoAnalytics(video, false, true);
+      };
+      const handleFocus = () => {
+        if (!video.paused) syncAttentionBoundary();
+      };
+      const handleBlur = () => {
+        syncAttentionBoundary();
+        flushVideoAnalytics(video, false, true);
+      };
+      const handlePageHide = () => {
+        syncAttentionBoundary();
+        flushVideoAnalytics(video, false, true);
+      };
 
       video.addEventListener("play", handlePlay);
       video.addEventListener("timeupdate", handleTimeUpdate);
       video.addEventListener("ended", handleEnded);
       video.addEventListener("pause", handlePause);
+      document.addEventListener("visibilitychange", handleVisibilityChange);
+      window.addEventListener("focus", handleFocus);
+      window.addEventListener("blur", handleBlur);
       window.addEventListener("pagehide", handlePageHide);
 
       cleanupTrackingRef.current = () => {
@@ -1231,6 +1275,9 @@ const PresentationVideo = ({ profile }: { profile: DirectoryPsychologistProfile 
         video.removeEventListener("timeupdate", handleTimeUpdate);
         video.removeEventListener("ended", handleEnded);
         video.removeEventListener("pause", handlePause);
+        document.removeEventListener("visibilitychange", handleVisibilityChange);
+        window.removeEventListener("focus", handleFocus);
+        window.removeEventListener("blur", handleBlur);
         window.removeEventListener("pagehide", handlePageHide);
       };
     },

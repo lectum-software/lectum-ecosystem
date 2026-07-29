@@ -6,7 +6,10 @@ import type {
   AdminPsychologistsDashboardDateRange,
   AdminPsychologistsDashboardDirectoryFilterItem,
 } from "../DTOs/IAdminPsychologistsDashboardDTO";
-import type { IAdminPsychologistsDashboardRepository } from "./interfaces/IAdminPsychologistsDashboardRepository";
+import type {
+  AdminPsychologistContentAttentionRecord,
+  IAdminPsychologistsDashboardRepository,
+} from "./interfaces/IAdminPsychologistsDashboardRepository";
 
 const QUALIFIED_VIDEO_WATCH_SECONDS = 3;
 
@@ -1262,6 +1265,105 @@ export class AdminPsychologistsDashboardRepository
         createdAt: true,
         psychologist_id: true,
       },
+    });
+  }
+
+  async listProfileAttentionSeconds(
+    range: AdminPsychologistsDashboardDateRange,
+    psychologistIds: string[],
+  ) {
+    const uniquePsychologistIds = [...new Set(psychologistIds.filter(Boolean))];
+    if (uniquePsychologistIds.length === 0) return [];
+
+    const views = await prisma.page_view_event.findMany({
+      orderBy: {
+        occurred_at: "asc",
+      },
+      select: {
+        duration_seconds: true,
+        target_id: true,
+        user_id: true,
+      },
+      where: {
+        deleted: false,
+        duration_seconds: {
+          gt: 0,
+        },
+        occurred_at: eventCreatedAtWhere(range),
+        page_kind: "psychologist_profile",
+        target_id: {
+          in: uniquePsychologistIds,
+        },
+        target_type: "psychologist",
+      },
+    });
+    const secondsByPsychologistId = new Map<string, number>();
+
+    for (const view of views) {
+      const psychologistId = view.target_id;
+      if (!psychologistId) continue;
+      if (view.user_id && view.user_id === psychologistId) continue;
+
+      secondsByPsychologistId.set(
+        psychologistId,
+        (secondsByPsychologistId.get(psychologistId) ?? 0) + (view.duration_seconds ?? 0),
+      );
+    }
+
+    return [...secondsByPsychologistId.entries()].map(([psychologist_id, attention_seconds]) => ({
+      attention_seconds,
+      psychologist_id,
+    }));
+  }
+
+  async listProfileVideoAttentionSeconds(range: AdminPsychologistsDashboardDateRange) {
+    const groups = await prisma.profile_video_watch_session.groupBy({
+      by: ["psychologist_id"],
+      where: {
+        createdAt: eventCreatedAtWhere(range),
+        deleted: false,
+        watched_seconds: {
+          gt: 0,
+        },
+      },
+      _sum: {
+        watched_seconds: true,
+      },
+    });
+
+    return groups.map((group) => ({
+      attention_seconds: group._sum.watched_seconds ?? 0,
+      psychologist_id: group.psychologist_id,
+    }));
+  }
+
+  async listCommunityContentAttentionSeconds(
+    range: AdminPsychologistsDashboardDateRange,
+  ): Promise<AdminPsychologistContentAttentionRecord[]> {
+    const groups = await prisma.content_attention_session.groupBy({
+      by: ["psychologist_id", "target_type"],
+      where: {
+        attention_seconds: {
+          gt: 0,
+        },
+        createdAt: eventCreatedAtWhere(range),
+        deleted: false,
+      },
+      _sum: {
+        attention_seconds: true,
+      },
+    });
+
+    return groups.flatMap((group) => {
+      if (group.target_type !== "post" && group.target_type !== "reply") return [];
+
+      return [
+        {
+          attention_seconds: group._sum.attention_seconds ?? 0,
+          psychologist_id: group.psychologist_id,
+          target_type: group.target_type,
+        },
+      ];
     });
   }
 

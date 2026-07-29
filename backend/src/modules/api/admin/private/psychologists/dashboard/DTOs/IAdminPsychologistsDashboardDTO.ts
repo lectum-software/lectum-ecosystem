@@ -460,12 +460,18 @@ export type AdminPsychologistsDashboardProfileExposureCategoryId =
   | "standard_exposure";
 
 export type AdminPsychologistsDashboardProfileExposureTotals = {
+  community_post_attention_seconds: number;
   community_post_views: number;
+  community_reply_attention_seconds: number;
   community_reply_views: number;
   exposure_score: number;
+  profile_attention_seconds: number;
+  profile_surface_attention_seconds: number;
+  profile_video_attention_seconds: number;
   profile_views: number;
   qualified_video_views: number;
   search_result_impressions: number;
+  visibility_seconds: number;
 };
 
 export type AdminPsychologistsDashboardProfileExposureCategory = {

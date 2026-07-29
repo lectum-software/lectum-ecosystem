@@ -69,6 +69,7 @@ import apiPrivatePsychologistFreeProfile from "@/modules/api/private/psychologis
 import apiPrivatePsychologistReviews from "@/modules/api/private/psychologist/reviews";
 import apiPrivatePsychologistWhatsappVerification from "@/modules/api/private/psychologist/whatsapp-verification";
 import apiPublicAnalyticsAction from "@/modules/api/public/analytics/action";
+import apiPublicAnalyticsContentAttention from "@/modules/api/public/analytics/content-attention";
 import apiPublicAnalyticsContentVideoWatch from "@/modules/api/public/analytics/content-video-watch";
 import apiPublicAnalyticsLocationCapture from "@/modules/api/public/analytics/location-capture";
 import apiPublicAnalyticsPageView from "@/modules/api/public/analytics/page-view";
@@ -139,6 +140,7 @@ mountRoute("/api/private/account", privateAuth, apiPrivateAccount);
 mountRoute("/api/private/community", optionalAuth, apiPrivateCommunity);
 mountRoute("/api/private/posts", optionalAuth, apiPrivatePosts);
 mountRoute("/api/public/analytics/action", apiPublicAnalyticsAction);
+mountRoute("/api/public/analytics/content-attention", apiPublicAnalyticsContentAttention);
 mountRoute("/api/public/analytics/content-video-watch", apiPublicAnalyticsContentVideoWatch);
 mountRoute("/api/public/analytics/location-capture", apiPublicAnalyticsLocationCapture);
 mountRoute("/api/public/analytics/page-view", apiPublicAnalyticsPageView);

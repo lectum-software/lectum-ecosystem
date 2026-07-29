@@ -170,6 +170,29 @@ export type ContentVideoWatchTrackingResponse = {
   skipped_reason?: "self_view" | null;
 };
 
+export type ContentAttentionTargetType = "post" | "reply";
+
+export type ContentAttentionTrackingRequest = {
+  visitor_id: string;
+  session_id: string;
+  target_type: ContentAttentionTargetType;
+  target_id: string;
+  attention_seconds: number;
+  path?: string | null;
+};
+
+export type ContentAttentionTrackingResponse = {
+  tracked: boolean;
+  id: string | null;
+  visitor_id: string;
+  session_id: string;
+  user_id: string | null;
+  target_type: ContentAttentionTargetType;
+  target_id: string;
+  attention_seconds: number;
+  skipped_reason?: "self_view" | null;
+};
+
 export const trackPageView = async (body: PageViewTrackingRequest) => {
   const handle = callEndpoint({
     route: "/api/public/analytics/page-view",
@@ -227,6 +250,20 @@ export const trackContentVideoWatch = async (body: ContentVideoWatchTrackingRequ
   });
 };
 
+export const trackContentAttention = async (body: ContentAttentionTrackingRequest) => {
+  const handle = callEndpoint({
+    route: "/api/public/analytics/content-attention",
+    method: "POST",
+    body,
+  });
+
+  return handleReq<ContentAttentionTrackingResponse>({
+    ...handle,
+    hideError: true,
+    signOutOnUnauthorized: false,
+  });
+};
+
 export const sendPageViewDurationBeacon = (id: string, body: PageViewDurationRequest) => {
   if (typeof window === "undefined") return false;
 
@@ -254,6 +291,33 @@ export const sendContentVideoWatchBeacon = (body: ContentVideoWatchTrackingReque
 
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
   const url = `${apiUrl}/api/public/analytics/content-video-watch`;
+  const token = getToken();
+  const payload = JSON.stringify(body);
+
+  try {
+    void fetch(url, {
+      body: payload,
+      credentials: "include",
+      headers: {
+        "Accept-Language": "pt",
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      keepalive: true,
+      method: "POST",
+    });
+
+    return true;
+  } catch {
+    return false;
+  }
+};
+
+export const sendContentAttentionBeacon = (body: ContentAttentionTrackingRequest) => {
+  if (typeof window === "undefined") return false;
+
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+  const url = `${apiUrl}/api/public/analytics/content-attention`;
   const token = getToken();
   const payload = JSON.stringify(body);
 

@@ -2,6 +2,7 @@
 
 import { useMutation } from "@tanstack/react-query";
 import type {
+  ContentAttentionTrackingRequest,
   ContentVideoWatchTrackingRequest,
   ImportantActionTrackingRequest,
   LocationCaptureRequest,
@@ -30,5 +31,11 @@ export const useImportantActionTracking = () => {
 export const useContentVideoWatchTracking = () => {
   return useMutation({
     mutationFn: (body: ContentVideoWatchTrackingRequest) => api.trackContentVideoWatch(body),
+  });
+};
+
+export const useContentAttentionTracking = () => {
+  return useMutation({
+    mutationFn: (body: ContentAttentionTrackingRequest) => api.trackContentAttention(body),
   });
 };

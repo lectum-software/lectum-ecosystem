@@ -4160,6 +4160,83 @@
         ]
       }
     },
+    "/api/public/analytics/content-attention": {
+      "post": {
+        "tags": ["[API] - ANALYTICS (Public)"],
+        "description": "Endpoint (Public)",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "properties": {
+                  "attention_seconds": {
+                    "description": "Parâmetro attention_seconds do body.",
+                    "nullable": false,
+                    "required": true,
+                    "type": "string"
+                  },
+                  "path": {
+                    "description": "Parâmetro path do body.",
+                    "nullable": true,
+                    "required": false,
+                    "type": "string"
+                  },
+                  "session_id": {
+                    "description": "Parâmetro session_id do body.",
+                    "nullable": false,
+                    "required": true,
+                    "type": "string"
+                  },
+                  "target_id": {
+                    "description": "Parâmetro target_id do body.",
+                    "nullable": false,
+                    "required": true,
+                    "type": "string"
+                  },
+                  "target_type": {
+                    "description": "Parâmetro target_type do body.",
+                    "nullable": false,
+                    "required": true,
+                    "type": "string"
+                  },
+                  "visitor_id": {
+                    "description": "Parâmetro visitor_id do body.",
+                    "nullable": false,
+                    "required": true,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "visitor_id",
+                  "session_id",
+                  "target_type",
+                  "target_id",
+                  "attention_seconds"
+                ],
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful operation"
+          },
+          "400": {
+            "description": "Validation error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "deviceHeader": []
+          }
+        ]
+      }
+    },
     "/api/public/analytics/content-video-watch": {
       "post": {
         "tags": ["[API] - ANALYTICS (Public)"],

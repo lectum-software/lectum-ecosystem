@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { usePathname, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useRef } from "react";
@@ -8,6 +8,7 @@ import {
   sendPageViewDurationBeacon,
   updatePageViewDuration,
 } from "@/api/req/analytics";
+import { documentHasUserAttention } from "./attention";
 import { getOrCreateAnalyticsIdentity, safeGetItem, safeSetItem } from "./storage";
 
 const UTM_KEYS = ["utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term"] as const;
@@ -117,7 +118,7 @@ export const PageViewTracker = () => {
   const { mutateAsync: trackImportantAction } = useImportantActionTracking();
   const currentRef = useRef<CurrentPageView | null>(null);
   const lastRouteKeyRef = useRef<string | null>(null);
-  const lastHiddenAtRef = useRef<number | null>(null);
+  const lastInactiveAtRef = useRef<number | null>(null);
 
   const flushCurrentDuration = useCallback((keepalive: boolean, finalize: boolean) => {
     const current = currentRef.current;
@@ -203,22 +204,22 @@ export const PageViewTracker = () => {
       .then((response) => {
         if (!response.id || lastRouteKeyRef.current !== requestKey) return;
 
-        const hiddenAt = lastHiddenAtRef.current;
-        const hiddenBeforeResponse = document.visibilityState === "hidden";
+        const inactiveAt = lastInactiveAtRef.current;
+        const inactiveBeforeResponse = !documentHasUserAttention();
         const accumulatedVisibleMs =
-          hiddenBeforeResponse && hiddenAt !== null && hiddenAt >= startedAt
-            ? Math.max(0, hiddenAt - startedAt)
+          inactiveBeforeResponse && inactiveAt !== null && inactiveAt >= startedAt
+            ? Math.max(0, inactiveAt - startedAt)
             : 0;
 
         currentRef.current = {
           accumulatedVisibleMs,
-          activeStartedAt: hiddenBeforeResponse ? null : startedAt,
+          activeStartedAt: inactiveBeforeResponse ? null : startedAt,
           id: response.id,
           sessionId: identity.sessionId,
           visitorId: identity.visitorId,
         };
 
-        if (hiddenBeforeResponse) {
+        if (inactiveBeforeResponse) {
           flushCurrentDuration(true, false);
         }
       })
@@ -228,38 +229,43 @@ export const PageViewTracker = () => {
   }, [flushCurrentDuration, pathname, routeKey, search, trackPageView]);
 
   useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === "hidden") {
-        lastHiddenAtRef.current = Date.now();
-        flushCurrentDuration(true, false);
-        return;
-      }
-
-      if (document.visibilityState === "visible") {
-        lastHiddenAtRef.current = null;
-        const current = currentRef.current;
-        if (!current || current.activeStartedAt !== null) return;
-
-        currentRef.current = {
-          ...current,
-          activeStartedAt: Date.now(),
-        };
-      }
-    };
-    const handlePageHide = () => {
-      lastHiddenAtRef.current = Date.now();
+    const pauseCurrentDuration = () => {
+      lastInactiveAtRef.current = Date.now();
       flushCurrentDuration(true, false);
     };
+    const resumeCurrentDuration = () => {
+      if (!documentHasUserAttention()) return;
+
+      lastInactiveAtRef.current = null;
+      const current = currentRef.current;
+      if (!current || current.activeStartedAt !== null) return;
+
+      currentRef.current = {
+        ...current,
+        activeStartedAt: Date.now(),
+      };
+    };
+    const handleVisibilityChange = () => {
+      if (documentHasUserAttention()) resumeCurrentDuration();
+      else pauseCurrentDuration();
+    };
+    const handleFocus = () => resumeCurrentDuration();
+    const handleBlur = () => pauseCurrentDuration();
+    const handlePageHide = () => pauseCurrentDuration();
     const handleAppInstalled = () => trackPwaAction("pwa_installed");
     const handlePromptAccepted = () => trackPwaAction("pwa_install_prompt_accepted");
 
     document.addEventListener("visibilitychange", handleVisibilityChange);
+    window.addEventListener("focus", handleFocus);
+    window.addEventListener("blur", handleBlur);
     window.addEventListener("pagehide", handlePageHide);
     window.addEventListener("appinstalled", handleAppInstalled);
     window.addEventListener("lectum:pwa-install-prompt-accepted", handlePromptAccepted);
 
     return () => {
       document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.removeEventListener("focus", handleFocus);
+      window.removeEventListener("blur", handleBlur);
       window.removeEventListener("pagehide", handlePageHide);
       window.removeEventListener("appinstalled", handleAppInstalled);
       window.removeEventListener("lectum:pwa-install-prompt-accepted", handlePromptAccepted);

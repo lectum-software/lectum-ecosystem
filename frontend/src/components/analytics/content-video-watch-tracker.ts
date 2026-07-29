@@ -7,6 +7,7 @@ import {
   sendContentVideoWatchBeacon,
   trackContentVideoWatch,
 } from "@/api/req/analytics";
+import { documentHasUserAttention } from "@/components/analytics/attention";
 import { getOrCreateAnalyticsIdentity } from "@/components/analytics/storage";
 
 const CONTENT_VIDEO_RETENTION_BUCKETS = Array.from({ length: 20 }, (_, index) => (index + 1) * 5);
@@ -176,7 +177,7 @@ export const useContentVideoWatchTracking = (
         to: number,
         options: { allowPaused?: boolean } = {},
       ) => {
-        if (document.visibilityState !== "visible") return;
+        if (!documentHasUserAttention()) return;
         if (video.paused && !options.allowPaused) return;
 
         const start = Math.max(0, Math.floor(Math.min(from, to)));
@@ -188,7 +189,7 @@ export const useContentVideoWatchTracking = (
       };
 
       const handlePlay = () => {
-        if (document.visibilityState !== "visible") return;
+        if (!documentHasUserAttention()) return;
 
         if (hasStartedRef.current && completedRef.current && video.currentTime < 1.5) {
           replayCountRef.current += 1;
@@ -200,7 +201,10 @@ export const useContentVideoWatchTracking = (
       };
 
       const handleTimeUpdate = () => {
-        if (document.visibilityState !== "visible") return;
+        if (!documentHasUserAttention()) {
+          lastPlaybackPositionRef.current = video.currentTime || lastPlaybackPositionRef.current;
+          return;
+        }
 
         const currentTime = video.currentTime || 0;
         const previousTime = lastPlaybackPositionRef.current || 0;
@@ -247,18 +251,32 @@ export const useContentVideoWatchTracking = (
       };
 
       const handlePause = () => flushVideoAnalytics(video, false, true);
+      const syncAttentionBoundary = () => {
+        lastPlaybackPositionRef.current = video.currentTime || lastPlaybackPositionRef.current;
+      };
       const handleVisibilityChange = () => {
-        if (document.visibilityState === "hidden") {
+        if (!documentHasUserAttention()) {
+          syncAttentionBoundary();
           flushVideoAnalytics(video, false, true, "keepalive");
           return;
         }
 
-        if (document.visibilityState === "visible" && !video.paused) {
+        if (!video.paused) {
           hasStartedRef.current = true;
-          lastPlaybackPositionRef.current = video.currentTime || 0;
+          syncAttentionBoundary();
         }
       };
-      const handlePageHide = () => flushVideoAnalytics(video, false, true, "keepalive");
+      const handleFocus = () => {
+        if (!video.paused) syncAttentionBoundary();
+      };
+      const handleBlur = () => {
+        syncAttentionBoundary();
+        flushVideoAnalytics(video, false, true, "keepalive");
+      };
+      const handlePageHide = () => {
+        syncAttentionBoundary();
+        flushVideoAnalytics(video, false, true, "keepalive");
+      };
 
       video.addEventListener("play", handlePlay);
       video.addEventListener("timeupdate", handleTimeUpdate);
@@ -266,6 +284,8 @@ export const useContentVideoWatchTracking = (
       video.addEventListener("ended", handleEnded);
       video.addEventListener("pause", handlePause);
       document.addEventListener("visibilitychange", handleVisibilityChange);
+      window.addEventListener("focus", handleFocus);
+      window.addEventListener("blur", handleBlur);
       window.addEventListener("pagehide", handlePageHide);
 
       cleanupTrackingRef.current = () => {
@@ -276,6 +296,8 @@ export const useContentVideoWatchTracking = (
         video.removeEventListener("ended", handleEnded);
         video.removeEventListener("pause", handlePause);
         document.removeEventListener("visibilitychange", handleVisibilityChange);
+        window.removeEventListener("focus", handleFocus);
+        window.removeEventListener("blur", handleBlur);
         window.removeEventListener("pagehide", handlePageHide);
       };
     },

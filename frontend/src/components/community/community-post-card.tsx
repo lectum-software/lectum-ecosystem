@@ -17,6 +17,7 @@ import {
 } from "react";
 import { useSavePost, useVotePost } from "@/api/callers/posts";
 import type { PostListPost, PostProfessionalReply } from "@/api/generator/types/posts";
+import { useContentAttentionTracking } from "@/components/analytics/content-attention-tracker";
 import { CommunityActionBar } from "@/components/community/community-action-bar";
 import { CommunityFollowToggle } from "@/components/community/community-follow-toggle";
 import { CommunityMediaBlock } from "@/components/community/community-media-frame";
@@ -388,6 +389,14 @@ const ProfessionalReplyPreview = ({
   showWhatsappCta?: boolean;
 }) => {
   const [contentExpanded, setContentExpanded] = useState(false);
+  const replyAttentionTarget =
+    reply?.author.role === "psicologo"
+      ? ({
+          targetId: reply.id,
+          targetType: "reply",
+        } as const)
+      : null;
+  const setReplyAttentionElement = useContentAttentionTracking(replyAttentionTarget);
 
   if (!reply) return null;
 
@@ -411,7 +420,10 @@ const ProfessionalReplyPreview = ({
 
   if (isFeedPresentation) {
     return (
-      <div className="relative grid min-w-0 cursor-pointer grid-cols-[18px_minmax(0,1fr)] gap-2 rounded-2xl border border-[#D8ECFF] bg-[#F4FAFF] p-3 dark:border-primary/20 dark:bg-primary/5">
+      <div
+        className="relative grid min-w-0 cursor-pointer grid-cols-[18px_minmax(0,1fr)] gap-2 rounded-2xl border border-[#D8ECFF] bg-[#F4FAFF] p-3 dark:border-primary/20 dark:bg-primary/5"
+        ref={setReplyAttentionElement}
+      >
         {postHref ? (
           <Link
             aria-label="Abrir post pela resposta profissional em destaque"
@@ -495,7 +507,10 @@ const ProfessionalReplyPreview = ({
   }
 
   return (
-    <div className="rounded-[18px] border border-[#D8ECFF] bg-[#F4FAFF] p-4 dark:border-primary/20 dark:bg-primary/5">
+    <div
+      className="rounded-[18px] border border-[#D8ECFF] bg-[#F4FAFF] p-4 dark:border-primary/20 dark:bg-primary/5"
+      ref={setReplyAttentionElement}
+    >
       {!profilePublicationMode ? (
         <p className="mb-3 text-[11px] font-black uppercase tracking-[0.08em] text-primary">
           Resposta profissional em destaque
@@ -658,6 +673,13 @@ export const CommunityPostCard = ({
     isReplyContribution && primaryReply
       ? { targetId: primaryReply.id, targetType: "post_reply" }
       : { targetId: post.id, targetType: "community_post" };
+  const attentionTrackingTarget = isPsychologistPost
+    ? ({
+        targetId: isReplyContribution && primaryReply ? primaryReply.id : post.id,
+        targetType: isReplyContribution && primaryReply ? "reply" : "post",
+      } as const)
+    : null;
+  const setAttentionElement = useContentAttentionTracking(attentionTrackingTarget);
   const authorWhatsappCta =
     showWhatsappCta && isPsychologistPost && displayAuthor.whatsapp_url ? (
       <CommunityWhatsAppCta
@@ -855,6 +877,7 @@ export const CommunityPostCard = ({
       )}
       onClick={handleCardClick}
       onKeyDown={handleCardKeyDown}
+      ref={setAttentionElement}
       tabIndex={openPostOnCardClick ? -1 : undefined}
     >
       {showCommunityHeader ? (

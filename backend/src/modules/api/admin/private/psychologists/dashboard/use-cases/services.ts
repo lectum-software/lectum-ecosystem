@@ -79,7 +79,8 @@ import type {
 } from "../DTOs/IAdminPsychologistsDashboardDTO";
 import { AdminPsychologistsDashboardRepository } from "../repositories/AdminPsychologistsDashboardRepository";
 import type {
-  AdminPsychologistCountRecord,
+  AdminPsychologistAttentionRecord,
+  AdminPsychologistContentAttentionRecord,
   AdminPsychologistDirectoryFilterSearchRecord,
   AdminPsychologistEventRecord,
   AdminPsychologistPlatformPageViewRecord,
@@ -1077,9 +1078,6 @@ const countEventsByPsychologist = (events: AdminPsychologistEventRecord[]) => {
   return counts;
 };
 
-const countRecordsByPsychologist = (records: AdminPsychologistCountRecord[]) =>
-  new Map(records.map((record) => [record.psychologist_id, record.count]));
-
 const getProfileActiveDaysInRange = (
   profile: AdminPsychologistProfileRecord,
   range: AdminPsychologistsDashboardDateRange,
@@ -1202,76 +1200,108 @@ const buildProfileConversionResults = (params: {
 };
 
 const emptyProfileExposureTotals = (): AdminPsychologistsDashboardProfileExposureTotals => ({
+  community_post_attention_seconds: 0,
   community_post_views: 0,
+  community_reply_attention_seconds: 0,
   community_reply_views: 0,
   exposure_score: 0,
+  profile_attention_seconds: 0,
+  profile_surface_attention_seconds: 0,
+  profile_video_attention_seconds: 0,
   profile_views: 0,
   qualified_video_views: 0,
   search_result_impressions: 0,
+  visibility_seconds: 0,
 });
 
 const addProfileExposureTotals = (
   totals: AdminPsychologistsDashboardProfileExposureTotals,
   signals: AdminPsychologistsDashboardProfileExposureTotals,
 ) => {
+  totals.community_post_attention_seconds += signals.community_post_attention_seconds;
   totals.community_post_views += signals.community_post_views;
+  totals.community_reply_attention_seconds += signals.community_reply_attention_seconds;
   totals.community_reply_views += signals.community_reply_views;
   totals.exposure_score = roundAdminProfileExposureNumber(
     totals.exposure_score + signals.exposure_score,
   );
+  totals.profile_attention_seconds += signals.profile_attention_seconds;
+  totals.profile_surface_attention_seconds += signals.profile_surface_attention_seconds;
+  totals.profile_video_attention_seconds += signals.profile_video_attention_seconds;
   totals.profile_views += signals.profile_views;
   totals.qualified_video_views += signals.qualified_video_views;
   totals.search_result_impressions += signals.search_result_impressions;
+  totals.visibility_seconds = roundAdminProfileExposureNumber(
+    totals.visibility_seconds + signals.visibility_seconds,
+  );
 };
 
 const buildProfileExposureSignalTotals = (input: {
-  communityPostViews: number;
-  communityReplyViews: number;
-  profileViews: number;
-  qualifiedVideoViews: number;
-  searchResultImpressions: number;
-}): AdminPsychologistsDashboardProfileExposureTotals => ({
-  community_post_views: input.communityPostViews,
-  community_reply_views: input.communityReplyViews,
-  exposure_score: calculateAdminProfileExposureScore(input),
-  profile_views: input.profileViews,
-  qualified_video_views: input.qualifiedVideoViews,
-  search_result_impressions: input.searchResultImpressions,
-});
+  communityPostAttentionSeconds: number;
+  communityReplyAttentionSeconds: number;
+  profileAttentionSeconds: number;
+  profileVideoAttentionSeconds: number;
+}): AdminPsychologistsDashboardProfileExposureTotals => {
+  const profileSurfaceAttentionSeconds = Math.max(
+    input.profileAttentionSeconds,
+    input.profileVideoAttentionSeconds,
+  );
+  const visibilitySeconds = calculateAdminProfileExposureScore(input);
+
+  return {
+    community_post_attention_seconds: input.communityPostAttentionSeconds,
+    community_post_views: 0,
+    community_reply_attention_seconds: input.communityReplyAttentionSeconds,
+    community_reply_views: 0,
+    exposure_score: visibilitySeconds,
+    profile_attention_seconds: input.profileAttentionSeconds,
+    profile_surface_attention_seconds: profileSurfaceAttentionSeconds,
+    profile_video_attention_seconds: input.profileVideoAttentionSeconds,
+    profile_views: 0,
+    qualified_video_views: 0,
+    search_result_impressions: 0,
+    visibility_seconds: visibilitySeconds,
+  };
+};
 
 const buildProfileExposureResults = (params: {
-  communityPostViews: AdminPsychologistCountRecord[];
-  communityReplyViews: AdminPsychologistCountRecord[];
-  profileViews: AdminPsychologistEventRecord[];
+  communityContentAttentionSeconds: AdminPsychologistContentAttentionRecord[];
+  profileAttentionSeconds: AdminPsychologistAttentionRecord[];
+  profileVideoAttentionSeconds: AdminPsychologistAttentionRecord[];
   profiles: AdminPsychologistProfileRecord[];
-  qualifiedVideoViews: AdminPsychologistCountRecord[];
   range: AdminPsychologistsDashboardDateRange;
-  searchResultImpressions: AdminPsychologistCountRecord[];
 }): AdminPsychologistsDashboardProfileExposureResults => {
   const analyzedPsychologistIds = new Set(params.profiles.map((profile) => profile.user.id));
-  const profileViewEvents = params.profileViews.filter((event) =>
-    analyzedPsychologistIds.has(event.psychologist_id),
+  const attentionSecondsByPsychologist = (records: AdminPsychologistAttentionRecord[]) => {
+    const counts = new Map<string, number>();
+
+    for (const record of records) {
+      if (!analyzedPsychologistIds.has(record.psychologist_id)) continue;
+
+      counts.set(
+        record.psychologist_id,
+        (counts.get(record.psychologist_id) ?? 0) + record.attention_seconds,
+      );
+    }
+
+    return counts;
+  };
+  const contentAttentionByPsychologistAndType = (
+    records: AdminPsychologistContentAttentionRecord[],
+    targetType: AdminPsychologistContentAttentionRecord["target_type"],
+  ) =>
+    attentionSecondsByPsychologist(records.filter((record) => record.target_type === targetType));
+  const profileAttentionCounts = attentionSecondsByPsychologist(params.profileAttentionSeconds);
+  const profileVideoAttentionCounts = attentionSecondsByPsychologist(
+    params.profileVideoAttentionSeconds,
   );
-  const profileViewCounts = countEventsByPsychologist(profileViewEvents);
-  const searchResultImpressionCounts = countRecordsByPsychologist(
-    params.searchResultImpressions.filter((record) =>
-      analyzedPsychologistIds.has(record.psychologist_id),
-    ),
+  const communityPostAttentionCounts = contentAttentionByPsychologistAndType(
+    params.communityContentAttentionSeconds,
+    "post",
   );
-  const qualifiedVideoViewCounts = countRecordsByPsychologist(
-    params.qualifiedVideoViews.filter((record) =>
-      analyzedPsychologistIds.has(record.psychologist_id),
-    ),
-  );
-  const communityPostViewCounts = countRecordsByPsychologist(
-    params.communityPostViews.filter((record) =>
-      analyzedPsychologistIds.has(record.psychologist_id),
-    ),
-  );
-  const communityReplyViewCounts = countRecordsByPsychologist(
-    params.communityReplyViews.filter((record) =>
-      analyzedPsychologistIds.has(record.psychologist_id),
-    ),
+  const communityReplyAttentionCounts = contentAttentionByPsychologistAndType(
+    params.communityContentAttentionSeconds,
+    "reply",
   );
   const exposureSignalsByPsychologist = new Map<
     string,
@@ -1283,11 +1313,10 @@ const buildProfileExposureResults = (params: {
     exposureSignalsByPsychologist.set(
       psychologistId,
       buildProfileExposureSignalTotals({
-        communityPostViews: communityPostViewCounts.get(psychologistId) ?? 0,
-        communityReplyViews: communityReplyViewCounts.get(psychologistId) ?? 0,
-        profileViews: profileViewCounts.get(psychologistId) ?? 0,
-        qualifiedVideoViews: qualifiedVideoViewCounts.get(psychologistId) ?? 0,
-        searchResultImpressions: searchResultImpressionCounts.get(psychologistId) ?? 0,
+        communityPostAttentionSeconds: communityPostAttentionCounts.get(psychologistId) ?? 0,
+        communityReplyAttentionSeconds: communityReplyAttentionCounts.get(psychologistId) ?? 0,
+        profileAttentionSeconds: profileAttentionCounts.get(psychologistId) ?? 0,
+        profileVideoAttentionSeconds: profileVideoAttentionCounts.get(psychologistId) ?? 0,
       }),
     );
   }
@@ -1359,7 +1388,7 @@ const buildProfileExposureResults = (params: {
       };
     }),
     description:
-      "Classificação interna e agregada por score ponderado de Visibilidade no período selecionado; combina impressões em listagem, views de perfil, vídeo qualificado e views de conteúdo autoral sem contar WhatsApp como Visibilidade.",
+      "Classificação interna e agregada por tempo real de Visibilidade no período selecionado; soma segundos de atenção em perfil, vídeo de apresentação e conteúdo autoral, sem contar aparição em listagem nem WhatsApp como Visibilidade.",
     source: ADMIN_PROFILE_EXPOSURE_SOURCE,
     thresholds: ADMIN_PROFILE_EXPOSURE_THRESHOLDS,
     totals: totalSignals,
@@ -2537,8 +2566,7 @@ const buildConversionBySignupMethod = (profiles: AdminPsychologistProfileRecord[
   });
 
 const buildPlanSegmentSummaries = (params: {
-  communityPostViewCounts: AdminPsychologistCountRecord[];
-  communityReplyViewCounts: AdminPsychologistCountRecord[];
+  communityContentAttentionSeconds: AdminPsychologistContentAttentionRecord[];
   currentNewSignups: AdminPsychologistProfileRecord[];
   currentProfiles: AdminPsychologistProfileRecord[];
   date: Date;
@@ -2552,13 +2580,12 @@ const buildPlanSegmentSummaries = (params: {
   preSignupConversionPageViews: AdminPsychologistPreSignupConversionPageViewRecord[];
   preSignupConversionSessions: AdminPsychologistPreSignupConversionSessionRecord[];
   preSignupConversionSignupIdentities: AdminPsychologistSignupAnalyticsIdentityRecord[];
-  profileViews: AdminPsychologistEventRecord[];
+  profileAttentionSeconds: AdminPsychologistAttentionRecord[];
+  profileVideoAttentionSeconds: AdminPsychologistAttentionRecord[];
   profiles: AdminPsychologistProfileRecord[];
   publicProfilePageViews: AdminPsychologistPublicProfilePageViewRecord[];
-  qualifiedVideoViewCounts: AdminPsychologistCountRecord[];
   range: AdminPsychologistsDashboardDateRange;
   receivedEngagementEvents: AdminPsychologistReceivedEngagementEventRecord[];
-  searchResultImpressionCounts: AdminPsychologistCountRecord[];
   whatsappContactRequests: AdminPsychologistEventRecord[];
 }) =>
   PLAN_SEGMENT_OPTIONS.reduce(
@@ -2641,13 +2668,11 @@ const buildPlanSegmentSummaries = (params: {
           whatsappClicks: params.whatsappContactRequests,
         }),
         profile_exposure: buildProfileExposureResults({
-          communityPostViews: params.communityPostViewCounts,
-          communityReplyViews: params.communityReplyViewCounts,
-          profileViews: params.profileViews,
+          communityContentAttentionSeconds: params.communityContentAttentionSeconds,
+          profileAttentionSeconds: params.profileAttentionSeconds,
+          profileVideoAttentionSeconds: params.profileVideoAttentionSeconds,
           profiles: segmentProfiles,
-          qualifiedVideoViews: params.qualifiedVideoViewCounts,
           range: params.range,
-          searchResultImpressions: params.searchResultImpressionCounts,
         }),
         traffic_sources: {
           ...trafficSources,
@@ -2755,19 +2780,12 @@ export const buildPsychologistsDashboard = async (
     repository.listPreSignupConversionSignupIdentities(currentPeriodPsychologistIds),
   ]);
   const receivedEngagementEvents = await repository.listReceivedEngagementEvents(current);
-  const [
-    communityPostViewCounts,
-    communityReplyViewCounts,
-    profileViews,
-    qualifiedVideoViewCounts,
-    searchResultImpressionCounts,
-  ] = await Promise.all([
-    repository.listCommunityPostViewCounts(current),
-    repository.listCommunityReplyViewCounts(current),
-    repository.listProfileViews(current),
-    repository.listQualifiedVideoViewCounts(current),
-    repository.listSearchResultImpressionCounts(current),
-  ]);
+  const [communityContentAttentionSeconds, profileAttentionSeconds, profileVideoAttentionSeconds] =
+    await Promise.all([
+      repository.listCommunityContentAttentionSeconds(current),
+      repository.listProfileAttentionSeconds(current, psychologistUserIds),
+      repository.listProfileVideoAttentionSeconds(current),
+    ]);
   const preSignupConversionVisitorIds = collectPreSignupConversionVisitorIds(
     buildPsychologistVisitorIds({
       linkedPageViews: preSignupConversionLinkedPageViews,
@@ -2827,8 +2845,7 @@ export const buildPsychologistsDashboard = async (
     signupIdentities: preSignupConversionSignupIdentities,
   });
   const planSegments = buildPlanSegmentSummaries({
-    communityPostViewCounts,
-    communityReplyViewCounts,
+    communityContentAttentionSeconds,
     currentNewSignups,
     currentProfiles,
     date: current.end,
@@ -2842,13 +2859,12 @@ export const buildPsychologistsDashboard = async (
     preSignupConversionPageViews,
     preSignupConversionSessions,
     preSignupConversionSignupIdentities,
-    profileViews,
+    profileAttentionSeconds,
+    profileVideoAttentionSeconds,
     profiles,
     publicProfilePageViews,
-    qualifiedVideoViewCounts,
     range: current,
     receivedEngagementEvents,
-    searchResultImpressionCounts,
     whatsappContactRequests,
   });
   const platformUsage = planSegments.all.platform_usage;

@@ -2600,10 +2600,21 @@ const formatWhatsappClicksValue = (value: number) => {
   return `${numberFormatter.format(value)} ${label}`;
 };
 
-const formatVisibilityScoreValue = (value: number) => {
-  const label = value === 1 ? "ponto" : "pontos";
+const formatVisibilityDurationValue = (value: number) => {
+  const seconds = Math.max(0, Math.round(value));
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  const remainder = seconds % 60;
 
-  return `${numberFormatter.format(value)} ${label}`;
+  if (hours > 0) {
+    return minutes > 0 ? `${hours}h ${String(minutes).padStart(2, "0")}min` : `${hours}h`;
+  }
+
+  if (minutes > 0) {
+    return remainder > 0 ? `${minutes}min ${String(remainder).padStart(2, "0")}s` : `${minutes}min`;
+  }
+
+  return `${seconds}s`;
 };
 
 const formatProfileConversionStandardRange = (
@@ -2621,13 +2632,13 @@ const formatProfileConversionStandardRange = (
 const formatProfileExposureStandardRange = (
   benchmark: AdminPsychologistsDashboard["profile_exposure"]["benchmark"],
 ) => {
-  const min = benchmark.standard_min_exposure_score;
-  const max = benchmark.standard_max_exposure_score;
+  const min = benchmark.standard_min_visibility_seconds ?? benchmark.standard_min_exposure_score;
+  const max = benchmark.standard_max_visibility_seconds ?? benchmark.standard_max_exposure_score;
 
   if (min === null || max === null) return "Sem faixa padrão no período";
-  if (min === max) return formatVisibilityScoreValue(min);
+  if (min === max) return formatVisibilityDurationValue(min);
 
-  return `${formatVisibilityScoreValue(min)} a ${formatVisibilityScoreValue(max)}`;
+  return `${formatVisibilityDurationValue(min)} a ${formatVisibilityDurationValue(max)}`;
 };
 
 const PsychologistEngagementDonutChart = ({
@@ -2674,7 +2685,9 @@ const DashboardProfileConversionCard = ({ summary }: { summary: AdminPsychologis
   const visibilityStandardRangeLabel = formatProfileExposureStandardRange(
     profileExposure.benchmark,
   );
-  const visibilityWeights = profileExposure.thresholds.weights;
+  const visibilityViewportPercentage = Math.round(
+    profileExposure.thresholds.content_attention_min_visible_ratio * 100,
+  );
 
   return (
     <CardShell className="relative z-20 overflow-visible p-5">
@@ -2698,7 +2711,7 @@ const DashboardProfileConversionCard = ({ summary }: { summary: AdminPsychologis
               <span className="inline-flex items-center gap-2">
                 <h3 className="text-lg font-bold text-foreground">Visibilidade</h3>
                 <button
-                  aria-label={`Pesos da Visibilidade: resultado em listagem ${visibilityWeights.search_result_impression}; resposta vista ${visibilityWeights.community_reply_view}; post visto ${visibilityWeights.community_post_view}; perfil aberto ${visibilityWeights.profile_view}; vídeo qualificado ${visibilityWeights.qualified_video_view}.`}
+                  aria-label="Visibilidade por tempo real de atenção: segundos em perfil, conteúdo autoral visível e vídeo de apresentação, sem contar aba minimizada ou aparição em listagem."
                   className="group relative inline-flex rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
                   type="button"
                 >
@@ -2707,12 +2720,14 @@ const DashboardProfileConversionCard = ({ summary }: { summary: AdminPsychologis
                     className="pointer-events-none absolute bottom-full left-1/2 z-50 mb-2 hidden w-72 max-w-[calc(100vw-2rem)] -translate-x-1/2 rounded-xl border border-border bg-surface p-3 text-left text-xs font-medium leading-5 text-foreground shadow-admin-soft group-hover:block group-focus:block"
                     role="tooltip"
                   >
-                    Score ponderado: resultado em listagem{" "}
-                    {numberFormatter.format(visibilityWeights.search_result_impression)}; resposta
-                    vista {numberFormatter.format(visibilityWeights.community_reply_view)}; post
-                    visto {numberFormatter.format(visibilityWeights.community_post_view)}; perfil
-                    aberto {numberFormatter.format(visibilityWeights.profile_view)}; vídeo
-                    qualificado {numberFormatter.format(visibilityWeights.qualified_video_view)}.
+                    Visibilidade mede tempo real de atenção recebido pelo psicólogo. Conta segundos
+                    em perfil e conteúdo autoral visível; pausa quando a aba/janela fica oculta ou
+                    sem foco e não pontua apenas aparição em listagem. Em cards de comunidade,
+                    considera conteúdo com pelo menos {visibilityViewportPercentage}% do card ou{" "}
+                    {numberFormatter.format(
+                      profileExposure.thresholds.content_attention_min_visible_pixels,
+                    )}
+                    px de altura visível.
                   </span>
                 </button>
               </span>
@@ -2731,7 +2746,7 @@ const DashboardProfileConversionCard = ({ summary }: { summary: AdminPsychologis
                 {visibilityStandardRangeLabel}
               </p>
               <p className="mt-1 text-[0.7rem] font-semibold leading-4 text-muted">
-                Score ponderado de visibilidade
+                Tempo real de atenção
               </p>
             </div>
           </div>
