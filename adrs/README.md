@@ -164,3 +164,4 @@ Formato recomendado:
 - [ADR-0341 - Vocabulário Conversão no Admin de psicólogos](0341-vocabulario-conversao-admin.md) - Accepted
 - [ADR-0342 - Quadrantes de Intencao x Engajamento navegam para lista filtrada](0342-quadrantes-intencao-engajamento-lista-filtrada.md) - Accepted
 - [ADR-0343 - Vocabulário Conversão no Admin de psicólogos](0343-vocabulario-conversao-admin.md) - Accepted
+- [ADR-0350 - P?ginas por tempo m?dio no uso da plataforma Admin](0350-paginas-por-tempo-medio-uso-admin.md) - Accepted

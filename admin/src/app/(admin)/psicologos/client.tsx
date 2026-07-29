@@ -72,6 +72,7 @@ type PlanSegmentFilter = PsychologistsDashboardPlanSegment;
 type SignupMethodItem = AdminPsychologistsDashboard["signup_method"]["items"][number];
 type SupplyDemandSortKey = "psychologists" | "searches" | "searches_per_psychologist";
 type ConversionJourney = "registration" | "subscription";
+type PlatformPagesView = "accesses" | "average_duration";
 
 const PLAN_SEGMENT_FILTER_OPTIONS: { id: PlanSegmentFilter; label: string }[] = [
   { id: "all", label: "Todos" },
@@ -96,6 +97,11 @@ const SUPPLY_DEMAND_SORT_OPTIONS: { id: SupplyDemandSortKey; label: string }[] =
 const CONVERSION_JOURNEY_OPTIONS: { id: ConversionJourney; label: string }[] = [
   { id: "subscription", label: "Conversão do cadastro até assinatura" },
   { id: "registration", label: "Conversão até o cadastro" },
+];
+
+const PLATFORM_PAGES_VIEW_OPTIONS: { id: PlatformPagesView; label: string }[] = [
+  { id: "accesses", label: "Páginas mais acessadas" },
+  { id: "average_duration", label: "Páginas com maior tempo médio" },
 ];
 
 const toOneDecimal = (value: number) => Math.round(value * 10) / 10;
@@ -797,6 +803,38 @@ const ConversionJourneyTitleSelect = ({
   </label>
 );
 
+const PlatformPagesTitleSelect = ({
+  id,
+  onChange,
+  value,
+}: {
+  id: string;
+  onChange: (value: PlatformPagesView) => void;
+  value: PlatformPagesView;
+}) => (
+  <label className="inline-flex max-w-full" htmlFor={id}>
+    <span className="sr-only">Selecionar ranking de páginas por acessos ou tempo médio</span>
+    <span className="relative inline-flex max-w-full items-center">
+      <select
+        className="max-w-full appearance-none truncate rounded-control bg-transparent py-0 pl-0 pr-7 text-left text-sm font-black text-foreground outline-none transition hover:text-primary focus:text-primary focus:ring-2 focus:ring-primary/20"
+        id={id}
+        onChange={(event) => onChange(event.target.value as PlatformPagesView)}
+        value={value}
+      >
+        {PLATFORM_PAGES_VIEW_OPTIONS.map((option) => (
+          <option key={option.id} value={option.id}>
+            {option.label}
+          </option>
+        ))}
+      </select>
+      <ChevronDown
+        aria-hidden
+        className="pointer-events-none absolute right-0 top-1/2 h-4 w-4 -translate-y-1/2 text-primary"
+      />
+    </span>
+  </label>
+);
+
 const getPlanSegmentSummary = (summary: AdminPsychologistsDashboard, segment: PlanSegmentFilter) =>
   summary.plan_segments?.[segment] ?? {
     device_usage: summary.device_usage,
@@ -1314,12 +1352,18 @@ const ConversionAndUsageBlocks = ({ summary }: { summary: AdminPsychologistsDash
   const [deviceUsagePlanSegment, setDeviceUsagePlanSegment] = useState<PlanSegmentFilter>("all");
   const [platformUsagePlanSegment, setPlatformUsagePlanSegment] =
     useState<PlanSegmentFilter>("all");
+  const [platformPagesView, setPlatformPagesView] = useState<PlatformPagesView>("accesses");
   const preSignupConversionSummary = getPlanSegmentSummary(summary, preSignupConversionPlanSegment);
   const signupMethodSummary = getPlanSegmentSummary(summary, signupMethodPlanSegment);
   const deviceUsageSummary = getPlanSegmentSummary(summary, deviceUsagePlanSegment);
   const platformUsageSummary = getPlanSegmentSummary(summary, platformUsagePlanSegment);
   const preSignupConversion = preSignupConversionSummary.pre_signup_conversion;
   const platformUsage = platformUsageSummary.platform_usage;
+  const platformDurationPages = platformUsage.top_pages_by_average_duration;
+  const platformMaxAverageDuration = Math.max(
+    0,
+    ...platformDurationPages.map((page) => page.average_duration_seconds),
+  );
   const selectedPeriodLabel = formatSelectedPeriod(summary.period);
 
   return (
@@ -1634,17 +1678,49 @@ const ConversionAndUsageBlocks = ({ summary }: { summary: AdminPsychologistsDash
             </p>
           ) : (
             <div className="mt-5 space-y-3">
-              <h3 className="text-sm font-black text-foreground">Páginas mais acessadas</h3>
-              {platformUsage.top_pages.map((page) => (
-                <MiniBar
-                  key={page.label}
-                  label={page.label}
-                  percentage={page.percentage}
-                  value={`${numberFormatter.format(page.count)} · ${formatPercentageValue(
-                    page.percentage,
-                  )}`}
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                <PlatformPagesTitleSelect
+                  id="psychologist-platform-pages-view"
+                  onChange={setPlatformPagesView}
+                  value={platformPagesView}
                 />
-              ))}
+                <p className="text-[0.68rem] font-bold leading-4 text-subtle sm:text-right">
+                  {platformPagesView === "accesses"
+                    ? "Ranking por quantidade de pageviews."
+                    : "Ranking por tempo médio; acessos aparecem como contexto."}
+                </p>
+              </div>
+              {platformPagesView === "accesses" ? (
+                platformUsage.top_pages.map((page) => (
+                  <MiniBar
+                    key={page.label}
+                    label={page.label}
+                    percentage={page.percentage}
+                    value={`${numberFormatter.format(page.count)} · ${formatPercentageValue(
+                      page.percentage,
+                    )}`}
+                  />
+                ))
+              ) : platformDurationPages.length === 0 ? (
+                <p className="rounded-2xl border border-dashed border-border bg-surface-muted p-3 text-sm font-bold text-muted">
+                  Sem páginas com duração confiável para calcular tempo médio no período.
+                </p>
+              ) : (
+                platformDurationPages.map((page) => (
+                  <MiniBar
+                    key={page.label}
+                    label={page.label}
+                    percentage={
+                      platformMaxAverageDuration > 0
+                        ? (page.average_duration_seconds / platformMaxAverageDuration) * 100
+                        : 0
+                    }
+                    value={`${formatSecondsMetric(page.average_duration_seconds)} méd. · ${numberFormatter.format(
+                      page.count,
+                    )} acessos`}
+                  />
+                ))
+              )}
             </div>
           )}
         </CardShell>

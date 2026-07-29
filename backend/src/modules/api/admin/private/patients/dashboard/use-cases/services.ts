@@ -1484,7 +1484,15 @@ const buildPlatformUsage = (params: {
   const pwaInstalledUsers = new Set(pwaInstalledUserIds.filter(Boolean));
   const sessionsByUser = new Map<string, Set<string>>();
   const daysByUser = new Map<string, Set<string>>();
-  const pageCounts = new Map<string, number>();
+  const pageMetrics = new Map<
+    string,
+    {
+      count: number;
+      durationSamplesCount: number;
+      durationTotalSeconds: number;
+      label: string;
+    }
+  >();
   const seriesMap = new Map(
     labels.map((label) => [
       label,
@@ -1512,7 +1520,25 @@ const buildPlatformUsage = (params: {
     daysByUser.get(userId)?.add(dateKey);
 
     const pageLabel = patientPlatformPageLabel(view);
-    pageCounts.set(pageLabel, (pageCounts.get(pageLabel) ?? 0) + 1);
+    const pageMetric = pageMetrics.get(pageLabel) ?? {
+      count: 0,
+      durationSamplesCount: 0,
+      durationTotalSeconds: 0,
+      label: pageLabel,
+    };
+    const durationSeconds =
+      typeof view.duration_seconds === "number" &&
+      Number.isFinite(view.duration_seconds) &&
+      view.duration_seconds > 0
+        ? view.duration_seconds
+        : null;
+
+    pageMetric.count += 1;
+    if (durationSeconds !== null) {
+      pageMetric.durationSamplesCount += 1;
+      pageMetric.durationTotalSeconds += durationSeconds;
+    }
+    pageMetrics.set(pageLabel, pageMetric);
 
     const point = seriesMap.get(dateKey);
     if (point) {
@@ -1568,14 +1594,36 @@ const buildPlatformUsage = (params: {
     }),
     sessions_count: totalSessions,
     source: "page_view_event+important_action_event" as const,
-    top_pages: [...pageCounts.entries()]
-      .map(([label, count]) => ({
-        count,
-        label,
+    top_pages: [...pageMetrics.values()]
+      .map((page) => ({
+        count: page.count,
+        label: page.label,
         percentage:
-          viewsWithUser.length > 0 ? roundOneDecimal((count / viewsWithUser.length) * 100) : 0,
+          viewsWithUser.length > 0 ? roundOneDecimal((page.count / viewsWithUser.length) * 100) : 0,
       }))
       .sort((left, right) => {
+        if (right.count !== left.count) return right.count - left.count;
+
+        return left.label.localeCompare(right.label, "pt-BR");
+      })
+      .slice(0, 6),
+    top_pages_by_average_duration: [...pageMetrics.values()]
+      .filter((page) => page.durationSamplesCount > 0)
+      .map((page) => ({
+        average_duration_seconds: roundOneDecimal(
+          page.durationTotalSeconds / page.durationSamplesCount,
+        ),
+        count: page.count,
+        duration_samples_count: page.durationSamplesCount,
+        label: page.label,
+      }))
+      .sort((left, right) => {
+        if (right.average_duration_seconds !== left.average_duration_seconds) {
+          return right.average_duration_seconds - left.average_duration_seconds;
+        }
+        if (right.duration_samples_count !== left.duration_samples_count) {
+          return right.duration_samples_count - left.duration_samples_count;
+        }
         if (right.count !== left.count) return right.count - left.count;
 
         return left.label.localeCompare(right.label, "pt-BR");

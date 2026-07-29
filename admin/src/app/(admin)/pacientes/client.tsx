@@ -67,6 +67,7 @@ type PatientsStatisticsIntentFilters = Record<
   PatientsStatisticsIntentFilterKey,
   PatientsDashboardIntentFilterId
 >;
+type PlatformPagesView = "accesses" | "average_duration";
 
 const PATIENTS_DASHBOARD_PERIOD_OPTIONS: {
   id: PatientsDashboardPeriodPreset;
@@ -88,6 +89,10 @@ const DEFAULT_PATIENTS_STATISTICS_INTENT_FILTERS: PatientsStatisticsIntentFilter
   platformUsage: "all",
   signupSources: "all",
 };
+const PLATFORM_PAGES_VIEW_OPTIONS: { id: PlatformPagesView; label: string }[] = [
+  { id: "accesses", label: "Páginas mais acessadas" },
+  { id: "average_duration", label: "Páginas com maior tempo médio" },
+];
 const CHART_COLORS = ["#308ce8", "#13a85b", "#64748b", "#f59f00"];
 const SIGNUP_SOURCE_CHART_COLORS: Record<string, string> = {
   email_password: "#13a85b",
@@ -593,6 +598,38 @@ const IntentFilterSelect = ({
       <ChevronDown
         aria-hidden
         className="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted"
+      />
+    </span>
+  </label>
+);
+
+const PlatformPagesTitleSelect = ({
+  id,
+  onChange,
+  value,
+}: {
+  id: string;
+  onChange: (value: PlatformPagesView) => void;
+  value: PlatformPagesView;
+}) => (
+  <label className="inline-flex max-w-full" htmlFor={id}>
+    <span className="sr-only">Selecionar ranking de páginas por acessos ou tempo médio</span>
+    <span className="relative inline-flex max-w-full items-center">
+      <select
+        className="max-w-full appearance-none truncate rounded-control bg-transparent py-0 pl-0 pr-7 text-left text-sm font-black text-foreground outline-none transition hover:text-primary focus:text-primary focus:ring-2 focus:ring-primary/20"
+        id={id}
+        onChange={(event) => onChange(event.target.value as PlatformPagesView)}
+        value={value}
+      >
+        {PLATFORM_PAGES_VIEW_OPTIONS.map((option) => (
+          <option key={option.id} value={option.id}>
+            {option.label}
+          </option>
+        ))}
+      </select>
+      <ChevronDown
+        aria-hidden
+        className="pointer-events-none absolute right-0 top-1/2 h-4 w-4 -translate-y-1/2 text-primary"
       />
     </span>
   </label>
@@ -2352,6 +2389,13 @@ const PlatformUsageCard = ({
   platformUsage: AdminPatientsDashboard["platform_usage"];
   summary: AdminPatientsDashboard;
 }) => {
+  const [platformPagesView, setPlatformPagesView] = useState<PlatformPagesView>("accesses");
+  const platformDurationPages = platformUsage.top_pages_by_average_duration;
+  const platformMaxAverageDuration = Math.max(
+    0,
+    ...platformDurationPages.map((page) => page.average_duration_seconds),
+  );
+
   return (
     <CardShell className="p-5">
       <PanelTitle
@@ -2393,17 +2437,49 @@ const PlatformUsageCard = ({
         </p>
       ) : (
         <div className="mt-5 space-y-3">
-          <h3 className="text-sm font-black text-foreground">Páginas mais acessadas</h3>
-          {platformUsage.top_pages.map((page) => (
-            <MiniBar
-              key={page.label}
-              label={page.label}
-              percentage={page.percentage}
-              value={`${numberFormatter.format(page.count)} · ${formatPercentageValue(
-                page.percentage,
-              )}`}
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <PlatformPagesTitleSelect
+              id="patients-platform-pages-view"
+              onChange={setPlatformPagesView}
+              value={platformPagesView}
             />
-          ))}
+            <p className="text-[0.68rem] font-bold leading-4 text-subtle sm:text-right">
+              {platformPagesView === "accesses"
+                ? "Ranking por quantidade de pageviews."
+                : "Ranking por tempo médio; acessos aparecem como contexto."}
+            </p>
+          </div>
+          {platformPagesView === "accesses" ? (
+            platformUsage.top_pages.map((page) => (
+              <MiniBar
+                key={page.label}
+                label={page.label}
+                percentage={page.percentage}
+                value={`${numberFormatter.format(page.count)} · ${formatPercentageValue(
+                  page.percentage,
+                )}`}
+              />
+            ))
+          ) : platformDurationPages.length === 0 ? (
+            <p className="rounded-2xl border border-dashed border-border bg-surface-muted p-3 text-sm font-bold text-muted">
+              Sem páginas com duração confiável para calcular tempo médio no período.
+            </p>
+          ) : (
+            platformDurationPages.map((page) => (
+              <MiniBar
+                key={page.label}
+                label={page.label}
+                percentage={
+                  platformMaxAverageDuration > 0
+                    ? (page.average_duration_seconds / platformMaxAverageDuration) * 100
+                    : 0
+                }
+                value={`${formatSecondsMetric(page.average_duration_seconds)} méd. · ${numberFormatter.format(
+                  page.count,
+                )} acessos`}
+              />
+            ))
+          )}
         </div>
       )}
     </CardShell>

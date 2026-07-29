@@ -113,6 +113,12 @@ export type AdminPatientsDashboardPlatformUsage = {
     label: string;
     percentage: number;
   }[];
+  top_pages_by_average_duration: {
+    average_duration_seconds: number;
+    count: number;
+    duration_samples_count: number;
+    label: string;
+  }[];
   unavailable_reason: string | null;
 };
 

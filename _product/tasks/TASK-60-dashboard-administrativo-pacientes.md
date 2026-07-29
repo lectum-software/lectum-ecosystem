@@ -1103,3 +1103,36 @@ Frontend esperado:
 - Smoke de servico local `listAdminPatients({ limit: 5, intent_engagement: "objective_low_engagement" })`: retornou status 200, `count=12`, `active_filters_count=1` e todos os itens da pagina em `objective_low_engagement`.
 - Browser local/headless autenticado em `http://localhost:3002/pacientes?period=all` validou 32 links DOM (16 mobile + 16 desktop) para `intent_engagement`, incluindo `objective_low_engagement`; em `http://localhost:3002/pacientes/lista?intent_engagement=objective_low_engagement`, validou **12 pacientes encontrados**, **1 filtro(s) ativo(s)**, `scrollWidth=390` e `viewport=390`. Screenshots salvos em `.tmp/admin-patients-intent-engagement-links.png` e `.tmp/admin-patients-list-intent-engagement-filter.png`.
 - Admin temporario de validacao `codex-intent-engagement-20260728@example.com` foi removido do banco apos a verificacao.
+
+## Ajuste pós-feedback 2026-07-29 - Páginas por tempo médio no Uso da plataforma
+
+- Pedido do usuário: em **Páginas mais acessadas**, adicionar seta/dropdown para alternar para **Páginas com maior tempo médio**, permitindo identificar em quais páginas os pacientes passam mais tempo e diferenciando tempo médio de quantidade de acessos.
+- Backend Admin: `GET /api/admin/private/patients/dashboard` agora retorna `platform_usage.top_pages_by_average_duration` também nos recortes de intenção, calculado por página normalizada a partir de `page_view_event` autenticado com `duration_seconds` positivo.
+- Frontend Admin: o título do ranking em `/pacientes` virou select com seta, alternando entre ranking por quantidade de pageviews e ranking por tempo médio; no modo de tempo, a UI mostra tempo médio e mantém a quantidade de acessos apenas como contexto.
+- Quando não há amostra de duração confiável para pacientes no período/recorte, a UI exibe estado honesto sem substituir por zero falso.
+- Builder/Quick Copy não está exposto como ferramenta callable neste ambiente; a execução usou `_product/tasks/PROTO-INVENTORY.md`, `_product/proto/admin/Pacientes/Pacientes - Dashboard.png` e o screenshot enviado pelo usuário.
+- Nenhuma alteração em `backend/prisma/schema.prisma` ou `backend/prisma/migrations`; `pnpm --dir backend db:migrate` não se aplica.
+- ADR criado: `adrs/0350-paginas-por-tempo-medio-uso-admin.md`.
+
+### Critérios complementares
+
+- [x] O card **Uso da plataforma** de `/pacientes` mantém **Páginas mais acessadas** como padrão.
+- [x] O título do ranking possui seta/dropdown e permite selecionar **Páginas com maior tempo médio**.
+- [x] O ranking por acessos continua exibindo quantidade e percentual de pageviews.
+- [x] O ranking por tempo médio usa `duration_seconds` real e exibe tempo médio separado da quantidade de acessos.
+- [x] O estado sem duração confiável para pacientes é explícito e não usa zero falso.
+- [x] A UI mobile-first foi validada em 390px e desktop sem overflow horizontal.
+- [x] Nenhum mock, seed artificial, endpoint simulado, package novo, migration ou `<img>` foi criado.
+
+### Validação complementar
+
+- `pnpm --dir backend exec biome check --write "src/utils/admin-psychologist-analytics.ts" "src/modules/api/admin/private/psychologists/dashboard/DTOs/IAdminPsychologistsDashboardDTO.ts" "src/modules/api/admin/private/patients/dashboard/DTOs/IAdminPatientsDashboardDTO.ts" "src/modules/api/admin/private/patients/dashboard/use-cases/services.ts"`
+- `pnpm --dir admin exec biome check --write "src/api/req/psychologists/index.ts" "src/api/req/patients/index.ts" "src/app/(admin)/psicologos/client.tsx" "src/app/(admin)/pacientes/client.tsx"`
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir admin check`
+- `NODE_OPTIONS=--max-old-space-size=8192 pnpm --dir admin build`
+- `NODE_OPTIONS=--max-old-space-size=8192 pnpm check`
+- Browser local/headless autenticado em `http://localhost:3002/pacientes?period=all` validou em 390px e 1366px: select inicial em **Páginas mais acessadas**, alternância para **Páginas com maior tempo médio**, estado honesto sem duração confiável na base local e `scrollWidth <= viewport`. Screenshots: `.tmp/admin-patients-platform-pages-duration-mobile.png` e `.tmp/admin-patients-platform-pages-duration-desktop.png`.
+- API local autenticada confirmou `platform_usage.top_pages_by_average_duration` no dashboard de pacientes; a base local retornou lista vazia por não haver duração confiável no recorte validado, preservando o estado honesto.
+- Admin temporário de validação `codex-pages-duration-20260729@example.com` foi removido do banco após a verificação.

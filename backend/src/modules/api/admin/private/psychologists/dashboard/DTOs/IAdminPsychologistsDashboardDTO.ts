@@ -314,6 +314,13 @@ export type AdminPsychologistsDashboardPlatformUsageTopPage = {
   percentage: number;
 };
 
+export type AdminPsychologistsDashboardPlatformUsageDurationPage = {
+  average_duration_seconds: number;
+  count: number;
+  duration_samples_count: number;
+  label: string;
+};
+
 export type AdminPsychologistsDashboardPlatformUsageSeriesPoint = {
   active_psychologists: number;
   date: string;
@@ -334,6 +341,7 @@ export type AdminPsychologistsDashboardPlatformUsage = {
   source: "page_view_event+important_action_event";
   series: AdminPsychologistsDashboardPlatformUsageSeriesPoint[];
   top_pages: AdminPsychologistsDashboardPlatformUsageTopPage[];
+  top_pages_by_average_duration: AdminPsychologistsDashboardPlatformUsageDurationPage[];
   unavailable_reason: string | null;
 };
 
