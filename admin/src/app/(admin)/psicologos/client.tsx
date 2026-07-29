@@ -2816,18 +2816,7 @@ const DashboardDemandEngagementCard = ({ summary }: { summary: AdminPsychologist
                 </>
               ) : (
                 "Impacto observado: ainda não há base suficiente para comparar a demanda entre muito engajados, engajados e pouco ou sem engajamento no período."
-              )}{" "}
-              Critério ponderado: Muito engajado ={" "}
-              {numberFormatter.format(demandEngagement.thresholds.highly_engaged_score_30d)}+
-              pontos/30d e pelo menos{" "}
-              {numberFormatter.format(
-                demandEngagement.thresholds.high_value_patient_replies_for_very_engaged_30d,
-              )}{" "}
-              respostas a posts de pacientes/30d; Engajado ={" "}
-              {numberFormatter.format(demandEngagement.thresholds.engaged_score_30d)}+ pontos/30d;
-              Pouco engajado = ao menos 1 intera&ccedil;&atilde;o, mas abaixo desse corte ponderado;
-              Sem engajamento = 0 intera&ccedil;&otilde;es em comunidades. Votos, posts e respostas
-              fora de posts de pacientes t&ecirc;m teto de pontua&ccedil;&atilde;o.
+              )}
             </div>
           </aside>
         </div>
