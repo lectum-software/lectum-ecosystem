@@ -256,3 +256,29 @@ As metricas sao calculadas dentro da janela temporal selecionada. Para Conversao
 - `NODE_OPTIONS=--max-old-space-size=8192 pnpm --dir admin build`
 - `NODE_OPTIONS=--max-old-space-size=8192 pnpm check`
 - HTTP local: `GET http://localhost:3002/psicologos` retornou 200.
+
+## Ajuste pos-feedback 2026-07-29 - Tooltip da Conversao visivel
+
+- Pedido do usuario: corrigir a tooltip das categorias de **Conversao**, que abria para baixo e ficava encoberta pelo bloco seguinte quando acionada nas linhas inferiores da legenda.
+- Frontend Admin: a tooltip inline do donut agora abre para cima (`bottom-full`), tem camada acima do card (`z-50`) e o `figure` permite overflow visivel.
+- O `title` nativo do navegador foi removido do botao de ajuda para evitar a tooltip preta duplicada sobre a tooltip customizada.
+- A cor, copy e regra das categorias seguem vindo dos dados reais da API; nao houve alteracao de contrato, backend ou persistencia.
+- Builder/Quick Copy nao estava exposto como ferramenta callable neste ambiente; a execucao usou `_product/tasks/PROTO-INVENTORY.md`, a referencia local `_product/proto/admin/Psicologos/Psicologos - Dashboard.png` e a captura enviada pelo usuario.
+- Nenhuma alteracao em `backend/prisma/schema.prisma` ou `backend/prisma/migrations`; `pnpm --dir backend db:migrate` nao se aplica.
+- ADR atualizado: `adrs/0349-conversao-bruta-percentis-admin-psicologos.md`.
+
+### Criterios complementares
+
+- [x] A tooltip das categorias de Conversao nao fica escondida pelo card **Conversao x Engajamento**.
+- [x] A tooltip customizada nao concorre com o `title` nativo do navegador.
+- [x] O ajuste permanece mobile-first, sem `<img>` e sem package novo.
+- [x] Nenhum mock, seed artificial, endpoint simulado, schema Prisma ou migration foi criado.
+
+### Validacao complementar
+
+- `pnpm --dir admin exec biome check "src/app/(admin)/psicologos/client.tsx"`
+- `pnpm --dir admin check` (a primeira execucao estourou timeout local em 124s; a segunda execucao com timeout maior passou)
+- `NODE_OPTIONS=--max-old-space-size=8192 pnpm --dir admin build`
+- `NODE_OPTIONS=--max-old-space-size=8192 pnpm check`
+- HTTP local: `GET http://localhost:3002/psicologos` retornou 200.
+- Validacao estatica: `admin/src/app/(admin)/psicologos/client.tsx` contem `bottom-full right-0 z-50` na tooltip e nao usa mais `title={item.description}` no botao de ajuda.

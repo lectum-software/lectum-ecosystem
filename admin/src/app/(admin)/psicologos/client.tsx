@@ -2290,7 +2290,7 @@ const PsychologistsDonutChart = ({
   }
 
   return (
-    <figure className="mt-5">
+    <figure className="relative z-10 mt-5 overflow-visible">
       <div className="grid min-w-0 gap-5 2xl:grid-cols-[170px_minmax(0,1fr)] 2xl:items-center">
         <svg
           aria-label={ariaLabel}
@@ -2359,12 +2359,11 @@ const PsychologistsDonutChart = ({
                   <button
                     aria-label={`${item.label}: ${item.description}`}
                     className="group relative mt-0.5 inline-flex shrink-0 rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
-                    title={item.description}
                     type="button"
                   >
                     <CircleHelp aria-hidden className="h-3.5 w-3.5 text-muted" />
                     <span
-                      className="pointer-events-none absolute left-1/2 top-full z-20 mt-2 hidden w-56 -translate-x-1/2 rounded-xl border border-border bg-surface p-3 text-left text-xs font-medium leading-5 text-foreground shadow-admin-soft group-hover:block group-focus:block"
+                      className="pointer-events-none absolute bottom-full right-0 z-50 mb-2 hidden w-64 max-w-[calc(100vw-2rem)] rounded-xl border border-border bg-surface p-3 text-left text-xs font-medium leading-5 text-foreground shadow-admin-soft group-hover:block group-focus:block sm:left-1/2 sm:right-auto sm:-translate-x-1/2"
                       role="tooltip"
                     >
                       {item.description}
