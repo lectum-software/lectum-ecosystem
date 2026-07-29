@@ -1317,6 +1317,20 @@ export type AdminPsychologistBusinessProfileConversionCategoryId =
   | "standard_conversion"
   | "strong_conversion";
 
+export type AdminPsychologistBusinessProfileConversionQualityId =
+  | "excellent_conversion"
+  | "good_conversion"
+  | "insufficient_data"
+  | "low_conversion"
+  | "no_conversion";
+
+export type AdminPsychologistBusinessProfileConversionPlatformPositionId =
+  | "above_reference"
+  | "at_reference"
+  | "below_reference"
+  | "insufficient_data"
+  | "unavailable";
+
 export type AdminPsychologistContentFormatId = "image" | "image_carousel" | "text" | "video";
 
 export type AdminPsychologistContentFormatDistribution = {
@@ -1336,10 +1350,28 @@ export type AdminPsychologistStatistics = {
     profile_conversion: {
       benchmark: PsychologistsProfileConversionBenchmark;
       description: string;
+      headline: string;
       id: AdminPsychologistBusinessProfileConversionCategoryId;
       label: string;
+      platform_position: {
+        description: string;
+        id: AdminPsychologistBusinessProfileConversionPlatformPositionId;
+        label: string;
+        reference_whatsapp_clicks: number | null;
+      };
+      quality: {
+        description: string;
+        id: AdminPsychologistBusinessProfileConversionQualityId;
+        label: string;
+        normalized_whatsapp_clicks_30d: number;
+        thresholds: {
+          excellent_whatsapp_clicks_30d: number;
+          good_whatsapp_clicks_30d: number;
+        };
+      };
       signals: {
         active_days: number;
+        normalized_whatsapp_clicks_30d: number;
         profile_age_days: number;
         whatsapp_clicks: number;
       };

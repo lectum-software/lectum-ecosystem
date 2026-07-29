@@ -393,8 +393,8 @@ const GENERAL_TAB_STATISTICS_QUERY = {
 
 type StatisticsSeriesPoint = AdminPsychologistStatistics["business"]["series"][number];
 type StatisticsSeriesMetricKey = Exclude<keyof StatisticsSeriesPoint, "date">;
-type BusinessProfileConversionCategoryId =
-  AdminPsychologistStatistics["business"]["profile_conversion"]["id"];
+type BusinessProfileConversionQualityId =
+  AdminPsychologistStatistics["business"]["profile_conversion"]["quality"]["id"];
 type StatisticsChartMetric = {
   dotRadius: number;
   icon: LucideIcon;
@@ -408,14 +408,16 @@ type StatisticsChartMetric = {
   swatchClassName: string;
 };
 
-const BUSINESS_PROFILE_CONVERSION_BADGE_CLASS: Record<BusinessProfileConversionCategoryId, string> =
-  {
-    insufficient_data: "bg-surface-muted text-subtle",
-    low_conversion: "bg-warning/10 text-warning",
-    no_conversion: "bg-danger/10 text-danger",
-    standard_conversion: "bg-primary-soft text-primary",
-    strong_conversion: "bg-success/10 text-success",
-  };
+const BUSINESS_PROFILE_CONVERSION_QUALITY_BADGE_CLASS: Record<
+  BusinessProfileConversionQualityId,
+  string
+> = {
+  excellent_conversion: "bg-success/10 text-success",
+  good_conversion: "bg-primary-soft text-primary",
+  insufficient_data: "bg-surface-muted text-subtle",
+  low_conversion: "bg-warning/10 text-warning",
+  no_conversion: "bg-danger/10 text-danger",
+};
 
 const BUSINESS_CHART_METRICS = [
   {
@@ -1682,6 +1684,38 @@ const findGeneralMetric = (metrics: AdminPsychologistDetailMetric[], id: string)
 const formatRatingCountLabel = (count: number) =>
   `${numberFormatter.format(count)} ${count === 1 ? "avaliação" : "avaliações"}`;
 
+type BusinessProfileConversion = AdminPsychologistStatistics["business"]["profile_conversion"];
+
+const formatWhatsAppClickLabel = (value: number) =>
+  `${numberFormatter.format(value)} ${value === 1 ? "contato WhatsApp" : "contatos WhatsApp"}`;
+
+const formatProfileConversionPace = (conversion: BusinessProfileConversion) =>
+  `Ritmo estimado: ${formatWhatsAppClickLabel(
+    conversion.quality.normalized_whatsapp_clicks_30d,
+  )} a cada 30 dias`;
+
+const formatProfileConversionReference = (conversion: BusinessProfileConversion) => {
+  const reference = conversion.platform_position.reference_whatsapp_clicks;
+
+  if (reference === null) return "Referência da plataforma indisponível no período";
+
+  return `Referência da plataforma: mediana de ${formatWhatsAppClickLabel(reference)} no período`;
+};
+
+const formatProfileConversionSupport = (conversion: BusinessProfileConversion) => {
+  if (conversion.quality.id === "insufficient_data") {
+    return `Perfil com ${numberFormatter.format(
+      conversion.signals.profile_age_days,
+    )} de ${numberFormatter.format(
+      conversion.thresholds.adaptation_period_days,
+    )} dias mínimos de adaptação`;
+  }
+
+  return `${formatProfileConversionPace(conversion)} · ${formatProfileConversionReference(
+    conversion,
+  )}.`;
+};
+
 const formatEngagementMetricValue = (metric: AdminPsychologistEngagementMetric) => {
   if (!metric.available || metric.value === null) return "Indisponível";
   if (metric.unit === "percentage") {
@@ -2056,6 +2090,27 @@ const MetricCard = ({
   );
 };
 
+const ProfileConversionInsightCard = ({
+  conversion,
+}: {
+  conversion: BusinessProfileConversion;
+}) => (
+  <div className="grid gap-3 rounded-3xl border border-primary/15 bg-primary-soft/25 p-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
+    <div className="min-w-0">
+      <p className="text-sm font-black leading-5 text-foreground">{conversion.headline}</p>
+      <p className="mt-1 text-xs font-bold leading-5 text-muted">
+        {formatProfileConversionSupport(conversion)}
+      </p>
+    </div>
+    <div className="rounded-2xl border border-border/70 bg-surface/90 px-3 py-2 text-left sm:text-right">
+      <p className="text-[10px] font-black uppercase tracking-[0.16em] text-subtle">
+        Qualidade individual
+      </p>
+      <p className="mt-1 text-sm font-black text-foreground">{conversion.quality.label}</p>
+    </div>
+  </div>
+);
+
 const ProfileConversionMetricCard = ({
   isError,
   isLoading,
@@ -2067,7 +2122,7 @@ const ProfileConversionMetricCard = ({
 }) => {
   const profileConversion = statistics?.business.profile_conversion;
   const value =
-    profileConversion?.label ?? (isLoading ? "Carregando" : isError ? "Indisponível" : "—");
+    profileConversion?.quality.label ?? (isLoading ? "Carregando" : isError ? "Indisponível" : "—");
 
   return (
     <div
@@ -2079,6 +2134,12 @@ const ProfileConversionMetricCard = ({
       <p className="mt-2 text-2xl font-extrabold leading-tight text-foreground sm:text-3xl">
         {value}
       </p>
+      {profileConversion ? (
+        <div className="mt-2 space-y-1 text-xs font-bold leading-5 text-subtle">
+          <p>{profileConversion.platform_position.label}</p>
+          <p>{formatProfileConversionSupport(profileConversion)}</p>
+        </div>
+      ) : null}
     </div>
   );
 };
@@ -5304,10 +5365,12 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: st
                 <Badge
                   className={cn(
                     "border border-current/10",
-                    BUSINESS_PROFILE_CONVERSION_BADGE_CLASS[businessProfileConversion.id],
+                    BUSINESS_PROFILE_CONVERSION_QUALITY_BADGE_CLASS[
+                      businessProfileConversion.quality.id
+                    ],
                   )}
                 >
-                  {businessProfileConversion.label}
+                  {businessProfileConversion.quality.label}
                 </Badge>
                 {isBusinessRefreshing ? (
                   <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary-soft px-2.5 py-1 text-[11px] font-black text-primary">
@@ -5331,6 +5394,8 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: st
               rangeError={businessStatisticsFilter.rangeError}
             />
           </div>
+
+          <ProfileConversionInsightCard conversion={businessProfileConversion} />
 
           <StatisticsMetricCarousel
             itemClassName={businessStatisticsMetricItemClassName}

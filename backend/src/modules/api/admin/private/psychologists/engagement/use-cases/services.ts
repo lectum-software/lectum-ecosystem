@@ -12,11 +12,18 @@ import {
   normalizeAdminOperatingSystem,
 } from "@/utils/admin-operating-system";
 import {
+  ADMIN_PROFILE_CONVERSION_ABSOLUTE_THRESHOLDS,
   ADMIN_PROFILE_CONVERSION_CATEGORY_CONFIG,
+  ADMIN_PROFILE_CONVERSION_PLATFORM_POSITION_CONFIG,
+  ADMIN_PROFILE_CONVERSION_QUALITY_CONFIG,
   ADMIN_PROFILE_CONVERSION_SOURCE,
   ADMIN_PROFILE_CONVERSION_THRESHOLDS,
   buildAdminProfileConversionBenchmark,
+  buildAdminProfileConversionHeadline,
   classifyAdminProfileConversionCategory,
+  classifyAdminProfileConversionPlatformPosition,
+  classifyAdminProfileConversionQuality,
+  normalizeAdminProfileConversionToThirtyDays,
 } from "@/utils/admin-profile-conversion";
 import {
   psychologistTrafficOriginDefinitions,
@@ -329,14 +336,41 @@ const buildBusinessProfileConversion = (input: {
   };
   const categoryId = classifyBusinessProfileConversionCategory(signals);
   const config = BUSINESS_PROFILE_CONVERSION_CATEGORY_CONFIG[categoryId];
+  const qualityId = classifyAdminProfileConversionQuality(signals);
+  const qualityConfig = ADMIN_PROFILE_CONVERSION_QUALITY_CONFIG[qualityId];
+  const platformPositionId = classifyAdminProfileConversionPlatformPosition(signals);
+  const platformPositionConfig =
+    ADMIN_PROFILE_CONVERSION_PLATFORM_POSITION_CONFIG[platformPositionId];
+  const normalizedWhatsappClicks30d = normalizeAdminProfileConversionToThirtyDays(
+    signals.whatsappClicks,
+    signals.activeDays,
+  );
 
   return {
     benchmark: input.benchmark,
     description: config.description,
+    headline: buildAdminProfileConversionHeadline({
+      platformPositionId,
+      qualityId,
+    }),
     id: categoryId,
     label: config.label,
+    platform_position: {
+      description: platformPositionConfig.description,
+      id: platformPositionId,
+      label: platformPositionConfig.label,
+      reference_whatsapp_clicks: input.benchmark.p50_whatsapp_clicks,
+    },
+    quality: {
+      description: qualityConfig.description,
+      id: qualityId,
+      label: qualityConfig.label,
+      normalized_whatsapp_clicks_30d: normalizedWhatsappClicks30d,
+      thresholds: ADMIN_PROFILE_CONVERSION_ABSOLUTE_THRESHOLDS,
+    },
     signals: {
       active_days: signals.activeDays,
+      normalized_whatsapp_clicks_30d: normalizedWhatsappClicks30d,
       profile_age_days: signals.profileAgeDays,
       whatsapp_clicks: signals.whatsappClicks,
     },

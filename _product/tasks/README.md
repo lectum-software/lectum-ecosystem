@@ -17,7 +17,7 @@ Cada task é auto-suficiente e deve ser executada isoladamente por uma IA usando
 - A referência visual ativa é Builder Quick Copy + imagens exportadas em `_product/proto`.
 - O Builder está autenticado no espaço `Lectum` e o Quick Copy foi validado via `builder.io code`.
 - Existem 62 JPEGs exportados em `_product/proto`: 61 telas de produto e 1 ícone isolado.
-- A fila operacional agora possui 100 tasks: `TASK-00` a `TASK-94`, incluindo complementos `TASK-18A`, `TASK-29A`/`TASK-29B` e `TASK-31A` a `TASK-31C`.
+- A fila operacional agora possui 101 tasks: `TASK-00` a `TASK-95`, incluindo complementos `TASK-18A`, `TASK-29A`/`TASK-29B` e `TASK-31A` a `TASK-31C`.
 
 ## Inventário visual ativo
 
@@ -175,6 +175,7 @@ ou cortesia manual.
 | 92 | [TASK-92 - Simplificação visual do fluxo de intenção e conversão no Dashboard Admin](TASK-92-simplificacao-fluxo-intencao-conversao-admin.md) | Completed | 91 |
 | 93 | [TASK-93 - Refinamento do alinhamento visual do fluxo de intencao e conversao no Dashboard Admin](TASK-93-refino-alinhamento-exemplo-fluxo-intencao-conversao-admin.md) | Completed | 92 |
 | 94 | [TASK-94 - Remocao do bloco Fluxo de intencao e conversao no Dashboard Admin](TASK-94-remocao-bloco-fluxo-intencao-conversao-dashboard-admin.md) | Completed | 93 |
+| 95 | [TASK-95 - Análise de qualidade da conversão no perfil Admin do psicólogo](TASK-95-analise-qualidade-conversao-perfil-psicologo-admin.md) | Completed | 57, 84, 89 |
 
 ## Ordem operacional recomendada sem bloqueios
 
@@ -238,6 +239,7 @@ Esta secao e a fila pratica para continuar o MVP sem bater nas tasks bloqueadas 
 54. [TASK-60 - Dashboard administrativo de pacientes](TASK-60-dashboard-administrativo-pacientes.md) recebeu ajuste complementar em 2026-07-29 para tornar os quadrantes de **Intencao x Engajamento** acionaveis, navegando para `/pacientes/lista?intent_engagement=...` com filtro composto real.
 55. [TASK-93 - Refinamento do alinhamento visual do fluxo de intencao e conversao no Dashboard Admin](TASK-93-refino-alinhamento-exemplo-fluxo-intencao-conversao-admin.md) foi adicionada e concluida em 2026-07-29 para reordenar pacientes de Qualificados a Frios, alinhar pontas das setas aos blocos e permitir numeros de exemplo somente em localhost quando a API nao retorna pares reais.
 56. [TASK-94 - Remocao do bloco Fluxo de intencao e conversao no Dashboard Admin](TASK-94-remocao-bloco-fluxo-intencao-conversao-dashboard-admin.md) foi adicionada e concluida em 2026-07-29 para remover o bloco de `/dashboard`, mantendo o contrato backend por compatibilidade e a tela executiva sem exemplo visual local.
+57. [TASK-95 - Análise de qualidade da conversão no perfil Admin do psicólogo](TASK-95-analise-qualidade-conversao-perfil-psicologo-admin.md) foi adicionada e concluida em 2026-07-29 para separar, no perfil individual, qualidade absoluta normalizada para 30 dias e posição relativa contra a mediana da plataforma, mantendo o dashboard `/psicologos` simples.
 
 ### 1A. Trilha Admin planejada
 
@@ -290,6 +292,7 @@ Execute uma por vez, sempre validando, marcando critérios, ADR e commit/push:
 45. [TASK-92 - Simplificação visual do fluxo de intenção e conversão no Dashboard Admin](TASK-92-simplificacao-fluxo-intencao-conversao-admin.md)
 46. [TASK-93 - Refinamento do alinhamento visual do fluxo de intencao e conversao no Dashboard Admin](TASK-93-refino-alinhamento-exemplo-fluxo-intencao-conversao-admin.md)
 47. [TASK-94 - Remocao do bloco Fluxo de intencao e conversao no Dashboard Admin](TASK-94-remocao-bloco-fluxo-intencao-conversao-dashboard-admin.md)
+48. [TASK-95 - Análise de qualidade da conversão no perfil Admin do psicólogo](TASK-95-analise-qualidade-conversao-perfil-psicologo-admin.md)
 
 ### 1. Trilha executavel agora apos TASK-10
 

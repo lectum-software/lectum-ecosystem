@@ -1,7 +1,10 @@
 import type { Request } from "express";
 import type { AdminPsychologistCommunityEngagementDiagnosis } from "@/utils/admin-community-engagement-diagnosis";
 import type {
+  AdminProfileConversionAbsoluteThresholds,
   AdminProfileConversionBenchmark,
+  AdminProfileConversionPlatformPositionId,
+  AdminProfileConversionQualityId,
   AdminProfileConversionSource,
   AdminProfileConversionThresholds,
 } from "@/utils/admin-profile-conversion";
@@ -53,10 +56,25 @@ export type AdminPsychologistBusinessProfileConversionCategoryId =
 export type AdminPsychologistBusinessProfileConversion = {
   benchmark: AdminProfileConversionBenchmark;
   description: string;
+  headline: string;
   id: AdminPsychologistBusinessProfileConversionCategoryId;
   label: string;
+  platform_position: {
+    description: string;
+    id: AdminProfileConversionPlatformPositionId;
+    label: string;
+    reference_whatsapp_clicks: number | null;
+  };
+  quality: {
+    description: string;
+    id: AdminProfileConversionQualityId;
+    label: string;
+    normalized_whatsapp_clicks_30d: number;
+    thresholds: AdminProfileConversionAbsoluteThresholds;
+  };
   signals: {
     active_days: number;
+    normalized_whatsapp_clicks_30d: number;
     profile_age_days: number;
     whatsapp_clicks: number;
   };

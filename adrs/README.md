@@ -165,3 +165,4 @@ Formato recomendado:
 - [ADR-0342 - Quadrantes de Intencao x Engajamento navegam para lista filtrada](0342-quadrantes-intencao-engajamento-lista-filtrada.md) - Accepted
 - [ADR-0343 - Vocabul√°rio Convers√£o no Admin de psic√≥logos](0343-vocabulario-conversao-admin.md) - Accepted
 - [ADR-0350 - P?ginas por tempo m?dio no uso da plataforma Admin](0350-paginas-por-tempo-medio-uso-admin.md) - Accepted
+- [ADR-0353 - Qualidade absoluta da convers„o no perfil Admin do psicÛlogo](0353-qualidade-absoluta-conversao-perfil-admin.md) - Accepted
