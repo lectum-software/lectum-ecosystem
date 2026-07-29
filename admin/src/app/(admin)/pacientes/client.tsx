@@ -1135,7 +1135,7 @@ const PatientIntentAnalysisCard = ({ summary }: { summary: AdminPatientsDashboar
         <section className="min-w-0 rounded-[1.6rem] border border-border/75 bg-surface-muted/70 p-4">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
-              <h3 className="text-lg font-bold text-foreground">Intenção dos pacientes</h3>
+              <h3 className="text-lg font-bold text-foreground">Intenção</h3>
               <p className="mt-1 text-3xl font-black text-foreground">
                 {numberFormatter.format(intent.total_patients)}
               </p>
@@ -1148,7 +1148,7 @@ const PatientIntentAnalysisCard = ({ summary }: { summary: AdminPatientsDashboar
         <section className="min-w-0 rounded-[1.6rem] border border-border/75 bg-surface-muted/70 p-4">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
-              <h3 className="text-lg font-bold text-foreground">Engajamento dos pacientes</h3>
+              <h3 className="text-lg font-bold text-foreground">Engajamento</h3>
               <p className="mt-1 text-3xl font-black text-foreground">
                 {numberFormatter.format(engagement.total_patients)}
               </p>
@@ -1156,12 +1156,6 @@ const PatientIntentAnalysisCard = ({ summary }: { summary: AdminPatientsDashboar
             </div>
           </div>
           <PatientEngagementDonutChart items={engagement.items} total={engagement.total_patients} />
-          <p className="mt-3 rounded-2xl bg-surface px-3 py-2 text-xs font-bold leading-5 text-muted">
-            Critério ponderado: Muito engajado ={" "}
-            {numberFormatter.format(engagement.thresholds.very_engaged_score_30d)}+ pontos/30d;
-            Engajado = {numberFormatter.format(engagement.thresholds.engaged_score_30d)}+
-            pontos/30d. Posts e respostas pesam mais; votos e salvamentos têm teto de pontuação.
-          </p>
         </section>
       </div>
     </CardShell>
